@@ -142,21 +142,24 @@ export default class RenderState {
 	}
 
 	/**
-	 * Inspect the scissor that the next `restore()` would install,
-	 * without mutating state. Returns the saved scissor box as a live
-	 * reference into the internal stack when scissor was active at
-	 * `save()` time, or `null` when the saved state had scissor
-	 * disabled (or the stack is empty). Caller treats `null` as
-	 * "next scissor will be inactive".
+	 * Inspect the scissor box that the next `restore()` would install,
+	 * without mutating any state. Lets renderers detect whether a
+	 * pending `restore()` will actually change the scissor (and
+	 * decide, e.g., whether to flush GPU work first).
 	 *
-	 * Internal helper for `WebGLRenderer.restore()` — the live-ref
-	 * return is deliberate (zero allocations on a hot path). Callers
-	 * MUST treat the returned array as read-only; mutating it would
-	 * corrupt the save/restore stack.
-	 * @ignore
+	 * Returns:
+	 * - `Int32Array` (length 4) — `[x, y, width, height]` of the
+	 *   saved scissor when scissor was active at the matching `save()`
+	 *   call.
+	 * - `null` — when the saved state had scissor disabled, or the
+	 *   stack is empty. Treat this as "next scissor will be inactive".
+	 *
+	 * The returned array is a **live reference into the internal
+	 * stack** — zero allocation on a hot path. Callers MUST treat it
+	 * as read-only; mutating it corrupts subsequent `restore()` calls.
 	 * @returns {Int32Array | null}
 	 */
-	_peekScissor() {
+	peekScissor() {
 		const depth = this._stackDepth - 1;
 		if (depth < 0 || !this._scissorActive[depth]) {
 			return null;
