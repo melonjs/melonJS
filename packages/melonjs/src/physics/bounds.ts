@@ -286,11 +286,12 @@ export class Bounds {
 		y1: number,
 		m?: Matrix2d | Matrix3d,
 	) {
-		if (m === undefined) {
-			// no transform: fold the 4 corners' min/max directly into
-			// the AABB without any Point allocation. Mirrors `addPoint`
-			// for each corner — using Math.min/max so the caller may
-			// pass swapped corners (x1 < x0 etc.) without breaking.
+		if (m === undefined || m.isIdentity()) {
+			// no transform (or a no-op transform): fold the 4 corners'
+			// min/max directly into the AABB without any Point or
+			// `m.apply` work. Mirrors `addPoint` for each corner —
+			// using Math.min/max so the caller may pass swapped corners
+			// (x1 < x0 etc.) without breaking.
 			const minX = Math.min(x0, x1);
 			const maxX = Math.max(x0, x1);
 			const minY = Math.min(y0, y1);

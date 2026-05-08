@@ -142,6 +142,23 @@ describe("Physics : Bounds", () => {
 			expect(b.width).toBeCloseTo(100, 5);
 			expect(b.height).toBeCloseTo(200, 5);
 		});
+		it("addFrame with an identity matrix takes the no-corner-walk fast path", () => {
+			// Sentinel: spy on `m.apply` and confirm the identity
+			// short-circuit in addFrame avoids calling it. Guards
+			// against a future refactor that drops the identity check.
+			const m = new Matrix3d();
+			let applyCalls = 0;
+			const orig = m.apply.bind(m);
+			m.apply = (v) => {
+				applyCalls += 1;
+				return orig(v);
+			};
+			const b = new Bounds();
+			b.addFrame(10, 50, 110, 250, m);
+			expect(applyCalls).toBe(0);
+			expect(b.x).toBeCloseTo(10, 5);
+			expect(b.width).toBeCloseTo(100, 5);
+		});
 		it("addFrame with Matrix3d translation shifts the AABB", () => {
 			const m = new Matrix3d();
 			m.translate(40, 30);
