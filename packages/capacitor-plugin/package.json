@@ -49,7 +49,7 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=19.3.0",
+		"melonjs": ">=18.3.0",
 		"@capacitor/app": ">=6.0.0",
 		"@capacitor/screen-orientation": ">=6.0.0",
 		"@capacitor/splash-screen": ">=6.0.0"

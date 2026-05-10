@@ -28,7 +28,7 @@ export class CapacitorPlugin extends plugin.BasePlugin {
 	constructor(options: ConnectCapacitorOptions = {}) {
 		super();
 		// minimum melonJS version this plugin is compatible with
-		this.version = "19.3.0";
+		this.version = "18.3.0";
 		this.teardown = connectCapacitor(options);
 	}
 }
