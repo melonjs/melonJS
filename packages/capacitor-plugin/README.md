@@ -85,7 +85,7 @@ Options (`ConnectCapacitorOptions`):
 | `forwardBackButton` | `true` | Forward Capacitor's `backButton` event to the engine bus so subscribers can intercept it. |
 | `onUnhandledBack` | `() => App.exitApp()` | Called when no subscriber calls `evt.preventDefault()`. Override to e.g. show a confirm dialog. |
 
-The instance exposes a `teardown()` method that removes every Capacitor listener it installed. Mostly useful for hot-reload and unit tests.
+The instance exposes a `teardown()` method that removes every Capacitor listener it installed. Mostly useful for hot-reload and unit tests. It is async: `await cap.teardown()` to wait for all removals to settle, or fire-and-forget for opportunistic detachment.
 
 ### `bindStageBack(stage, handler)`
 

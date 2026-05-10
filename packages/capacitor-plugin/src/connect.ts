@@ -13,18 +13,23 @@ interface CapacitorListenerHandle {
  * this directly.
  * @param options - tuning for which events to forward and the default
  *   action when no handler intercepts a back press.
- * @returns a teardown function that removes every listener installed.
+ * @returns an async teardown function. Awaiting it resolves once
+ *   every Capacitor listener has been removed (using
+ *   `Promise.allSettled`, so a single failed removal does not abort
+ *   the rest); calling it without awaiting still detaches everything
+ *   in the background.
  */
 export function connectCapacitor(
 	options: ConnectCapacitorOptions = {},
-): () => void {
+): () => Promise<void> {
 	const {
 		pauseOnBackground = true,
 		pauseAudio = true,
 		forwardBackButton = true,
-		onUnhandledBack = () => {
-			void App.exitApp();
-		},
+		// Return the promise from `App.exitApp()` so a rejection flows
+		// through the same async-handling path used for user-provided
+		// `onUnhandledBack` handlers.
+		onUnhandledBack = () => App.exitApp(),
 	} = options;
 
 	const handles: CapacitorListenerHandle[] = [];
@@ -69,15 +74,16 @@ export function connectCapacitor(
 		);
 	}
 
-	return () => {
-		for (const h of handles) {
-			h.remove().catch((err: unknown) => {
+	return async () => {
+		const results = await Promise.allSettled(handles.map((h) => h.remove()));
+		handles.length = 0;
+		for (const r of results) {
+			if (r.status === "rejected") {
 				console.warn(
 					"[@melonjs/capacitor-plugin] failed to remove Capacitor listener:",
-					err,
+					r.reason,
 				);
-			});
+			}
 		}
-		handles.length = 0;
 	};
 }

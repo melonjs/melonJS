@@ -13,8 +13,13 @@ import type { ConnectCapacitorOptions } from "./types.ts";
  * needed for hot-reload or unit tests).
  */
 export class CapacitorPlugin extends plugin.BasePlugin {
-	/** Detach every Capacitor listener wired by this plugin. */
-	teardown: () => void;
+	/**
+	 * Detach every Capacitor listener wired by this plugin. Returns a
+	 * promise that resolves once all `remove()` calls have settled —
+	 * `await` it from tests / hot-reload paths for deterministic
+	 * cleanup, or fire-and-forget for opportunistic detachment.
+	 */
+	teardown: () => Promise<void>;
 
 	/**
 	 * @param options - forwarded to the underlying `connectCapacitor`
