@@ -1,0 +1,85 @@
+{
+	"name": "@melonjs/capacitor-plugin",
+	"version": "1.0.0",
+	"description": "melonJS Capacitor plugin",
+	"homepage": "https://www.npmjs.com/package/@melonjs/capacitor-plugin",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"ES6",
+		"Canvas",
+		"WebGL",
+		"WebGL2",
+		"melonjs",
+		"plugin",
+		"capacitor",
+		"ionic",
+		"mobile",
+		"hybrid",
+		"ios",
+		"android"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/capacitor-plugin"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/melonJS/issues"
+	},
+	"license": "MIT",
+	"author": "AltByte Pte Ltd",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": ">=24.0.0"
+	},
+	"exports": {
+		".": "./build/index.js"
+	},
+	"types": "./build/index.d.ts",
+	"sideEffects": false,
+	"files": [
+		"build/",
+		"package.json",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"peerDependencies": {
+		"melonjs": ">=18.3.0",
+		"@capacitor/app": ">=6.0.0",
+		"@capacitor/screen-orientation": ">=6.0.0",
+		"@capacitor/splash-screen": ">=6.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@capacitor/screen-orientation": {
+			"optional": true
+		},
+		"@capacitor/splash-screen": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@capacitor/app": "^6.0.0",
+		"@capacitor/screen-orientation": "^6.0.0",
+		"@capacitor/splash-screen": "^6.0.0",
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.28.0",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.21.0",
+		"typescript": "^6.0.2"
+	},
+	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
+		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput"
+	}
+}
