@@ -11,14 +11,6 @@ const banner = [
 	" */",
 ].join("\n");
 
-// Strip the npm range prefix (`>=`, `^`, `~`, etc.) off the melonjs
-// peer dep so we can pass a bare semver string into the source as the
-// plugin's compatibility floor.
-const melonjsPeer = packageJson.peerDependencies.melonjs.replace(
-	/^[^0-9]*/,
-	"",
-);
-
 const buildOptions = {
 	entryPoints: ["src/index.ts"],
 	external: [
@@ -32,10 +24,7 @@ const buildOptions = {
 	outdir: "build",
 	sourcemap: true,
 	bundle: true,
-	define: {
-		__VERSION__: JSON.stringify(packageJson.version),
-		__MELONJS_PEER__: JSON.stringify(melonjsPeer),
-	},
+	define: { __VERSION__: JSON.stringify(packageJson.version) },
 	banner: {
 		js: banner,
 	},

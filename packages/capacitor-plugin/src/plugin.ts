@@ -1,11 +1,7 @@
 import { plugin } from "melonjs";
+import packageJson from "../package.json" with { type: "json" };
 import { connectCapacitor } from "./connect.ts";
 import type { ConnectCapacitorOptions } from "./types.ts";
-
-// Replaced at build time by esbuild's `define`, sourced from
-// `package.json` -> `peerDependencies.melonjs` (range prefix
-// stripped). Keeps the compatibility floor in a single place.
-declare const __MELONJS_PEER__: string;
 
 /**
  * melonJS plugin that bridges Capacitor's native lifecycle and
@@ -32,9 +28,11 @@ export class CapacitorPlugin extends plugin.BasePlugin {
 	 */
 	constructor(options: ConnectCapacitorOptions = {}) {
 		super();
-		// Compatibility floor: read from `peerDependencies.melonjs` at
-		// build time so the version lives in one place (package.json).
-		this.version = __MELONJS_PEER__;
+		// Compatibility floor: read straight from `peerDependencies.melonjs`
+		// so the version lives in one place (package.json). The engine's
+		// `checkVersion` regex picks the digits out of the range string,
+		// so the leading `>=` / `^` / `~` is harmless.
+		this.version = packageJson.peerDependencies.melonjs;
 		this.teardown = connectCapacitor(options);
 	}
 }
