@@ -23,7 +23,7 @@ npm install @capacitor/splash-screen
 ## Quick start
 
 ```ts
-import { boot, plugin, state, Stage, video } from "melonjs";
+import { Application, plugin, state, Stage } from "melonjs";
 import {
     CapacitorPlugin,
     bindStageBack,
@@ -32,8 +32,14 @@ import {
 } from "@melonjs/capacitor-plugin";
 
 await lockOrientation("landscape");
-boot();
-video.init(/* … */);
+
+// `new Application(...)` boots the engine and creates the renderer
+// in a single call — replaces the legacy `boot()` + `video.init(...)`
+// pair.
+const app = new Application(1024, 768, {
+    parent: "screen",
+    scaleMethod: "flex",
+});
 
 // One register call wires lifecycle (appStateChange → state.pause/resume)
 // and forwards hardware back-button presses into the engine event bus.
@@ -53,6 +59,7 @@ class PlayStage extends Stage {
     }
 }
 
+state.set(state.PLAY, new PlayStage());
 state.change(state.PLAY);
 await hideSplash({ fadeOutDuration: 300 });
 ```
