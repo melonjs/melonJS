@@ -68,6 +68,36 @@ importers:
         specifier: ^1.59.1
         version: 1.59.1
 
+  packages/capacitor-plugin:
+    devDependencies:
+      '@capacitor/app':
+        specifier: ^6.0.0
+        version: 6.0.3(@capacitor/core@6.2.1)
+      '@capacitor/screen-orientation':
+        specifier: ^6.0.0
+        version: 6.0.4(@capacitor/core@6.2.1)
+      '@capacitor/splash-screen':
+        specifier: ^6.0.0
+        version: 6.0.4(@capacitor/core@6.2.1)
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      esbuild:
+        specifier: 0.28.0
+        version: 0.28.0
+      melonjs:
+        specifier: workspace:*
+        version: link:../melonjs
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
+
   packages/create-melonjs: {}
 
   packages/debug-plugin:
@@ -307,6 +337,24 @@ packages:
 
   '@blazediff/core@1.9.1':
     resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
+
+  '@capacitor/app@6.0.3':
+    resolution: {integrity: sha512-4gFUCbcVz0N/YYN32OBFerocWXslIv3Nc90gDiRsBkJc0plwK6kIUT6PKa5WtW2kfhteUeCVXQbvArH2fH+0Ug==}
+    peerDependencies:
+      '@capacitor/core': ^6.0.0
+
+  '@capacitor/core@6.2.1':
+    resolution: {integrity: sha512-urZwxa7hVE/BnA18oCFAdizXPse6fCKanQyEqpmz6cBJ2vObwMpyJDG5jBeoSsgocS9+Ax+9vb4ducWJn0y2qQ==}
+
+  '@capacitor/screen-orientation@6.0.4':
+    resolution: {integrity: sha512-BKuGqUGvN7hSEmotI7m8UlGRRBGd9YpAzlnQAXp9VNvKkinSkreMHPrEOiR/sG3QX/vR/BJ190tGQiICmylcTg==}
+    peerDependencies:
+      '@capacitor/core': ^6.0.0
+
+  '@capacitor/splash-screen@6.0.4':
+    resolution: {integrity: sha512-uJXR+28cdaie7zIIUBvgkWgHim6Gr1itJym9voIMTmrjXkOaPtejwxYJsdQWPJz9zgGnSbXuC1mNNibLgv3OpQ==}
+    peerDependencies:
+      '@capacitor/core': ^6.0.0
 
   '@emnapi/core@1.9.2':
     resolution: {integrity: sha512-UC+ZhH3XtczQYfOlu3lNEkdW/p4dsJ1r/bP7H8+rhao3TTTMO1ATq/4DdIi23XuGoFY+Cz0JmCbdVl0hz9jZcA==}
@@ -2173,6 +2221,22 @@ snapshots:
     optional: true
 
   '@blazediff/core@1.9.1': {}
+
+  '@capacitor/app@6.0.3(@capacitor/core@6.2.1)':
+    dependencies:
+      '@capacitor/core': 6.2.1
+
+  '@capacitor/core@6.2.1':
+    dependencies:
+      tslib: 2.8.1
+
+  '@capacitor/screen-orientation@6.0.4(@capacitor/core@6.2.1)':
+    dependencies:
+      '@capacitor/core': 6.2.1
+
+  '@capacitor/splash-screen@6.0.4(@capacitor/core@6.2.1)':
+    dependencies:
+      '@capacitor/core': 6.2.1
 
   '@emnapi/core@1.9.2':
     dependencies:
