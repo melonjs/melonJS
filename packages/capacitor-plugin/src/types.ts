@@ -36,7 +36,8 @@ export interface ConnectCapacitorOptions {
 	/**
 	 * Called when a `backButton` event is dispatched and no handler
 	 * calls `evt.preventDefault()`. Default `() => App.exitApp()`
-	 * (quits the native app).
+	 * (quits the native app). May be async — useful for confirm
+	 * dialogs or other awaitable user prompts.
 	 */
-	onUnhandledBack?: () => void;
+	onUnhandledBack?: () => void | Promise<void>;
 }

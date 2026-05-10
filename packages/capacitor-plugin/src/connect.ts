@@ -45,7 +45,25 @@ export function connectCapacitor(
 		handles.push(
 			App.addListener("backButton", () => {
 				if (!emitBackEvent()) {
-					onUnhandledBack();
+					// `onUnhandledBack` is allowed to be async; wrap so a
+					// thrown / rejected promise surfaces as a console
+					// warning instead of an unhandled rejection.
+					try {
+						const ret = onUnhandledBack();
+						if (ret && typeof ret.then === "function") {
+							ret.catch((err: unknown) => {
+								console.warn(
+									"[@melonjs/capacitor-plugin] onUnhandledBack rejected:",
+									err,
+								);
+							});
+						}
+					} catch (err) {
+						console.warn(
+							"[@melonjs/capacitor-plugin] onUnhandledBack threw:",
+							err,
+						);
+					}
 				}
 			}) as unknown as CapacitorListenerHandle,
 		);
@@ -53,7 +71,12 @@ export function connectCapacitor(
 
 	return () => {
 		for (const h of handles) {
-			void h.remove();
+			h.remove().catch((err: unknown) => {
+				console.warn(
+					"[@melonjs/capacitor-plugin] failed to remove Capacitor listener:",
+					err,
+				);
+			});
 		}
 		handles.length = 0;
 	};
