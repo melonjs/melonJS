@@ -2,6 +2,11 @@ import { plugin } from "melonjs";
 import { connectCapacitor } from "./connect.ts";
 import type { ConnectCapacitorOptions } from "./types.ts";
 
+// Replaced at build time by esbuild's `define`, sourced from
+// `package.json` -> `peerDependencies.melonjs` (range prefix
+// stripped). Keeps the compatibility floor in a single place.
+declare const __MELONJS_PEER__: string;
+
 /**
  * melonJS plugin that bridges Capacitor's native lifecycle and
  * hardware-back events into the engine. Register via
@@ -27,8 +32,9 @@ export class CapacitorPlugin extends plugin.BasePlugin {
 	 */
 	constructor(options: ConnectCapacitorOptions = {}) {
 		super();
-		// minimum melonJS version this plugin is compatible with
-		this.version = "18.3.0";
+		// Compatibility floor: read from `peerDependencies.melonjs` at
+		// build time so the version lives in one place (package.json).
+		this.version = __MELONJS_PEER__;
 		this.teardown = connectCapacitor(options);
 	}
 }
