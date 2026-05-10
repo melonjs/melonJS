@@ -1,10 +1,5 @@
 # Changelog
 
-## 1.1.0
-
-### New Features
-- `--template <name>` (alias `-t`) flag to pick a starter template. `default` (current behavior, points at `melonjs/typescript-boilerplate`) and `capacitor` (points at `melonjs/typescript-boilerplate-capacitor` for iOS/Android wrapping via Capacitor) are recognized; any other value errors out with the list of known templates. Output now reports which template was used and prints template-specific next-step instructions (capacitor includes `cap add` / `cap copy` / `cap open`).
-
 ## 1.0.1
 
 ### Bug Fixes

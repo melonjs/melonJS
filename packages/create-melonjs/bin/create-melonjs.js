@@ -5,61 +5,26 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const TEMPLATES = {
-	default: "melonjs/typescript-boilerplate",
-	capacitor: "melonjs/typescript-boilerplate-capacitor",
-};
+const REPO = "melonjs/typescript-boilerplate";
 const BRANCH = "main";
 
 const green = (text) => `\x1b[32m${text}\x1b[0m`;
 const bold = (text) => `\x1b[1m${text}\x1b[0m`;
 const dim = (text) => `\x1b[2m${text}\x1b[0m`;
 
-function parseArgs(argv) {
-	const args = { positional: [], template: "default" };
-	for (let i = 0; i < argv.length; i++) {
-		const token = argv[i];
-		if (token === "--template" || token === "-t") {
-			args.template = argv[++i];
-		} else if (token?.startsWith("--template=")) {
-			args.template = token.slice("--template=".length);
-		} else if (token?.startsWith("-")) {
-			console.error(`\nError: unknown flag "${token}".\n`);
-			process.exit(1);
-		} else {
-			args.positional.push(token);
-		}
-	}
-	return args;
-}
-
 function main() {
-	const { positional, template } = parseArgs(process.argv.slice(2));
-	const projectName = positional[0];
+	const projectName = process.argv[2];
 
 	if (!projectName) {
 		console.log(`
-${bold("Usage:")} npm create melonjs ${dim("<project-name>")} ${dim("[--template <name>]")}
+${bold("Usage:")} npm create melonjs ${dim("<project-name>")}
 
-${bold("Templates:")}
-  ${dim("default")}    Plain TypeScript + Vite boilerplate (default)
-  ${dim("capacitor")}  TypeScript + Vite + Capacitor wrapper for iOS/Android
-
-${bold("Examples:")}
+${bold("Example:")}
   npm create melonjs my-game
-  npm create melonjs my-game --template capacitor
   cd my-game
   npm install
   npm run dev
 `);
-		process.exit(1);
-	}
-
-	const repo = TEMPLATES[template];
-	if (!repo) {
-		console.error(
-			`\nError: unknown template "${template}". Known templates: ${Object.keys(TEMPLATES).join(", ")}.\n`,
-		);
 		process.exit(1);
 	}
 
@@ -70,15 +35,13 @@ ${bold("Examples:")}
 		process.exit(1);
 	}
 
-	console.log(
-		`\nCreating a new melonJS game in ${green(targetDir)} (template: ${bold(template)})...\n`,
-	);
+	console.log(`\nCreating a new melonJS game in ${green(targetDir)}...\n`);
 
 	// download the boilerplate
 	// try degit first (fast, no git history)
 	const degitResult = spawnSync(
 		"npx",
-		["--yes", "degit", `${repo}#${BRANCH}`, targetDir],
+		["--yes", "degit", `${REPO}#${BRANCH}`, targetDir],
 		{
 			stdio: "inherit",
 			shell: process.platform === "win32",
@@ -96,7 +59,7 @@ ${bold("Examples:")}
 				"1",
 				"-b",
 				BRANCH,
-				`https://github.com/${repo}.git`,
+				`https://github.com/${REPO}.git`,
 				targetDir,
 			],
 			{ stdio: "inherit" },
@@ -120,25 +83,14 @@ ${bold("Examples:")}
 		writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 	}
 
-	const nextSteps =
-		template === "capacitor"
-			? `  ${dim("$")} cd ${projectName}
-  ${dim("$")} npm install
-  ${dim("$")} npm run dev          ${dim("# develop in the browser")}
-  ${dim("$")} npm run build
-  ${dim("$")} npx cap add ios      ${dim("# or: npx cap add android")}
-  ${dim("$")} npx cap copy
-  ${dim("$")} npx cap open ios     ${dim("# build & run from Xcode / Android Studio")}`
-			: `  ${dim("$")} cd ${projectName}
-  ${dim("$")} npm install
-  ${dim("$")} npm run dev`;
-
 	console.log(`
 ${green("Done!")} Created ${bold(projectName)}.
 
 Next steps:
 
-${nextSteps}
+  ${dim("$")} cd ${projectName}
+  ${dim("$")} npm install
+  ${dim("$")} npm run dev
 
 Happy game making! ${green("🍈")}
 `);
