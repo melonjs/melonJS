@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.1 - 2026-05-11
+
+### Changed
+- Bump bundled Spine runtimes (`@esotericsoftware/spine-canvas`, `spine-core`, `spine-webgl`) range from `^4.2.109` to `^4.2.114`. Picks up the empty-atlas hang fix in `AssetManagerBase` (4.2.113) — `loadTextureAtlas` no longer waits forever on an atlas with zero pages. No plugin API change.
+
 ## 2.2.0 - 2026-04-15
 
 ### Added
