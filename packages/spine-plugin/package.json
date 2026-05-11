@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/spine-plugin",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"description": "melonJS Spine plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/spine-plugin",
 	"type": "module",
@@ -50,9 +50,9 @@
 		"melonjs": ">=18.3.0"
 	},
 	"dependencies": {
-		"@esotericsoftware/spine-canvas": "^4.2.109",
-		"@esotericsoftware/spine-core": "^4.2.109",
-		"@esotericsoftware/spine-webgl": "^4.2.109"
+		"@esotericsoftware/spine-canvas": "^4.2.114",
+		"@esotericsoftware/spine-core": "^4.2.114",
+		"@esotericsoftware/spine-webgl": "^4.2.114"
 	},
 	"devDependencies": {
 		"concurrently": "^9.2.1",
