@@ -220,7 +220,7 @@ export class Color {
 			this.setColor(r, g, b, alpha);
 		} else if (typeof r === "string") {
 			this.glArray = new Float32Array([0, 0, 0, 1]);
-			this.parseCSS(r as ColorName);
+			this.parseCSS(r);
 		} else if (typeof r === "object") {
 			this.glArray = r.glArray.slice();
 		} else {
@@ -410,7 +410,7 @@ export class Color {
 	 * @returns Reference to the newly cloned object.
 	 */
 	clone() {
-		return colorPool.get(this as Color);
+		return colorPool.get(this);
 	}
 
 	/**
@@ -420,7 +420,7 @@ export class Color {
 	 */
 	copy(color: Color | string) {
 		if (typeof color === "string") {
-			return this.parseCSS(color as ColorName);
+			return this.parseCSS(color);
 		} else {
 			this.glArray.set(color.glArray);
 			return this;

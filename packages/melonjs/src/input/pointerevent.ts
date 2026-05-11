@@ -191,7 +191,7 @@ function enablePointerEvent(): void {
 				if (activeEventList.indexOf(events[i]) !== -1) {
 					pointerEventTarget.addEventListener(
 						events[i],
-						onMoveEvent as EventListener,
+						onMoveEvent,
 						{ passive: true }, // do not preventDefault on Move events
 					);
 				}
@@ -201,10 +201,7 @@ function enablePointerEvent(): void {
 				if (activeEventList.indexOf(events[i]) !== -1) {
 					pointerEventTarget.addEventListener(
 						events[i],
-						throttle(
-							onMoveEvent as unknown as () => void,
-							throttlingInterval,
-						) as EventListener,
+						throttle(onMoveEvent as unknown as () => void, throttlingInterval),
 						{ passive: true }, // do not preventDefault on Move events
 					);
 				}
