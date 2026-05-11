@@ -1,5 +1,10 @@
 # Changelog
 
+## [19.4.0] (melonJS 2) - _unreleased_
+
+### Changed
+- `throttle(fn, wait)` is now generic over its argument tuple — `throttle<T extends unknown[]>((...args: T) => void, wait)` preserves the wrapped function's parameter types. Drops the `as unknown as () => void` cast that the pointer-event handler used to need.
+
 ## [19.3.0] (melonJS 2) - _2026-05-08_
 
 ### Added

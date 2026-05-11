@@ -412,9 +412,7 @@ export default class Application {
 		// point to the current active stage "default" camera
 		const current = state.get();
 		if (typeof current !== "undefined") {
-			this.viewport = (current.cameras as unknown as Map<string, Camera2d>).get(
-				"default",
-			)!;
+			this.viewport = current.cameras.get("default")!;
 		}
 
 		// publish reset notification

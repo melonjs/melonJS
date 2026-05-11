@@ -28,11 +28,14 @@ export function defer(
  * @param [wait] - the delay in ms
  * @returns the function that will be throttled
  */
-export const throttle = (fn: () => void, wait: number = 100) => {
+export const throttle = <T extends unknown[]>(
+	fn: (...args: T) => void,
+	wait: number = 100,
+) => {
 	let inThrottle: boolean,
 		lastFn: ReturnType<typeof setTimeout>,
 		lastTime: number;
-	return (...args: [] /* empty array */) => {
+	return (...args: T) => {
 		if (!inThrottle) {
 			fn.apply(this, args);
 			lastTime = Date.now();
