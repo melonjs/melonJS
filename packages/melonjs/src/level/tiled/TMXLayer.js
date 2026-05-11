@@ -2,24 +2,61 @@ import { vector2dPool } from "../../math/vector2d.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
 import { createCanvas } from "../../video/video.js";
+import {
+	TMX_CLEAR_BIT_MASK,
+	TMX_FLIP_AD,
+	TMX_FLIP_H,
+	TMX_FLIP_V,
+} from "./constants.js";
 import Tile from "./TMXTile.js";
 import * as TMXUtils from "./TMXUtils.js";
 
+// flip-mask bit layout for layerData's G channel
+const FLIP_H_BIT = 1 << 0;
+const FLIP_V_BIT = 1 << 1;
+const FLIP_AD_BIT = 1 << 2;
+
 /**
- * Create required arrays for the given layer object
+ * extract a 3-bit flip mask from a raw 32-bit GID (Tiled's flip bits live in
+ * the upper 3 bits)
  * @ignore
  */
-function initArray(rows, cols) {
-	const array = new Array(cols);
-	for (let col = 0; col < cols; col++) {
-		// fill with null in one call — avoids per-element loop
-		array[col] = new Array(rows).fill(null);
-	}
-	return array;
+function flipMaskFromGid(gid) {
+	return (
+		(gid & TMX_FLIP_H ? FLIP_H_BIT : 0) |
+		(gid & TMX_FLIP_V ? FLIP_V_BIT : 0) |
+		(gid & TMX_FLIP_AD ? FLIP_AD_BIT : 0)
+	);
 }
 
 /**
- * Set a tiled layer Data
+ * extract a 3-bit flip mask from a Tile object's boolean flip flags
+ * @ignore
+ */
+function flipMaskFromTile(tile) {
+	return (
+		(tile.flippedX ? FLIP_H_BIT : 0) |
+		(tile.flippedY ? FLIP_V_BIT : 0) |
+		(tile.flippedAD ? FLIP_AD_BIT : 0)
+	);
+}
+
+/**
+ * reconstruct a legacy 32-bit GID (with Tiled's high flip bits set) from the
+ * cleaned GID and a 3-bit flip mask, for passing to the Tile constructor
+ * @ignore
+ */
+function gidWithFlips(gid, flipMask) {
+	return (
+		gid |
+		(flipMask & FLIP_H_BIT ? TMX_FLIP_H : 0) |
+		(flipMask & FLIP_V_BIT ? TMX_FLIP_V : 0) |
+		(flipMask & FLIP_AD_BIT ? TMX_FLIP_AD : 0)
+	);
+}
+
+/**
+ * Decode a tiled layer's data blob directly into the typed-array layerData
  * @ignore
  */
 function setLayerData(layer, bounds, data) {
@@ -35,19 +72,18 @@ function setLayerData(layer, bounds, data) {
 		width = bounds.cols;
 		height = bounds.rows;
 	}
-	// set everything
+
+	const cols = layer.cols;
+	const layerData = layer.layerData;
+	const offsetX = bounds.x;
+	const offsetY = bounds.y;
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
-			// get the value of the gid
-			const gid = data[idx++];
-			// fill the array
-			if (gid !== 0) {
-				// add a new tile to the layer
-				layer.layerData[x + bounds.x][y + bounds.y] = layer.getTileById(
-					gid,
-					x + bounds.x,
-					y + bounds.y,
-				);
+			const rawGid = data[idx++];
+			if (rawGid !== 0) {
+				const flatIdx = ((y + offsetY) * cols + (x + offsetX)) * 2;
+				layerData[flatIdx] = rawGid & TMX_CLEAR_BIT_MASK;
+				layerData[flatIdx + 1] = flipMaskFromGid(rawGid);
 			}
 		}
 	}
@@ -184,8 +220,39 @@ export default class TMXLayer extends Renderable {
 		// set a renderer
 		this.setRenderer(map.getRenderer());
 
-		// initialize the data array
-		this.layerData = initArray(this.rows, this.cols);
+		/**
+		 * The raw tile data for this layer. Each cell occupies two consecutive
+		 * `Uint16` slots: the GID (with flip bits stripped) and a 3-bit flip
+		 * mask. Cell `(x, y)` is at `layerData[(y * cols + x) * 2]` (row-major).
+		 *
+		 * The 16-bit GID slot caps per-tileset GIDs at 65 535. This matches the
+		 * planned WebGL2 shader path (`RG16UI` index texture) — switching to
+		 * `Uint32Array` would force a truncating copy at GPU upload time.
+		 * @type {Uint16Array}
+		 */
+		this.layerData = new Uint16Array(this.cols * this.rows * 2);
+
+		/**
+		 * Lazy view cache of Tile objects, indexed by `y * cols + x` (row-major).
+		 * Allocated lazily on the first `cellAt` / `getTile` call — the renderer
+		 * hot path reads `layerData` directly and never touches this cache, so
+		 * for games that never call `getTile`/`cellAt` from user code, this
+		 * stays `null` for the layer's lifetime. Invalidated entry-by-entry by
+		 * `setTile` and `clearTile`. The raw bytes in `layerData` are the source
+		 * of truth; this exists only to preserve stable Tile identity across
+		 * repeated user-facing reads.
+		 * @type {Array<Tile|null>|null}
+		 * @ignore
+		 */
+		this.cachedTile = null;
+
+		/**
+		 * Monotonically-increasing counter bumped by `setTile` and `clearTile`.
+		 * Renderers can compare against a stashed value to detect mutations and
+		 * decide whether to re-upload the layer data to the GPU.
+		 * @type {number}
+		 */
+		this.dataVersion = 0;
 
 		if (map.infinite === 0) {
 			// initialize and set the layer data
@@ -313,12 +380,22 @@ export default class TMXLayer extends Renderable {
 	/**
 	 * assign the given Tile object to the specified position
 	 * @param {Tile} tile - the tile object to be assigned
-	 * @param {number} x - x coordinate (in world/pixels coordinates)
-	 * @param {number} y - y coordinate (in world/pixels coordinates)
+	 * @param {number} x - x coordinate (in tile/column coordinates)
+	 * @param {number} y - y coordinate (in tile/row coordinates)
 	 * @returns {Tile} the tile object
 	 */
 	setTile(tile, x, y) {
-		this.layerData[x][y] = tile;
+		if (x < 0 || x >= this.cols || y < 0 || y >= this.rows) {
+			return tile;
+		}
+		const slot = y * this.cols + x;
+		const idx = slot * 2;
+		this.layerData[idx] = tile.tileId & TMX_CLEAR_BIT_MASK;
+		this.layerData[idx + 1] = flipMaskFromTile(tile);
+		if (this.cachedTile !== null) {
+			this.cachedTile[slot] = tile;
+		}
+		this.dataVersion++;
 		this.isDirty = true;
 		return tile;
 	}
@@ -352,16 +429,37 @@ export default class TMXLayer extends Renderable {
 		const _x = ~~x;
 		const _y = ~~y;
 
-		const renderer = this.getRenderer();
 		// boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
 		if (
-			boundsCheck === false ||
-			(_x >= 0 && _x < renderer.cols && _y >= 0 && _y < renderer.rows)
+			boundsCheck !== false &&
+			(_x < 0 || _x >= this.cols || _y < 0 || _y >= this.rows)
 		) {
-			return this.layerData[_x][_y];
-		} else {
 			return null;
 		}
+
+		const slot = _y * this.cols + _x;
+		const idx = slot * 2;
+		const gid = this.layerData[idx];
+		if (gid === 0) {
+			return null;
+		}
+
+		// lazy-allocate the view cache on first user-facing query — the
+		// renderer hot loop bypasses this method and reads layerData directly,
+		// so games that never call cellAt/getTile keep cachedTile null forever
+		if (this.cachedTile === null) {
+			this.cachedTile = new Array(this.cols * this.rows).fill(null);
+		} else {
+			const cached = this.cachedTile[slot];
+			if (cached !== null) {
+				return cached;
+			}
+		}
+
+		const flipMask = this.layerData[idx + 1];
+		const tile = this.getTileById(gidWithFlips(gid, flipMask), _x, _y);
+		this.cachedTile[slot] = tile;
+		return tile;
 	}
 
 	/**
@@ -375,8 +473,17 @@ export default class TMXLayer extends Renderable {
 	 * });
 	 */
 	clearTile(x, y) {
+		if (x < 0 || x >= this.cols || y < 0 || y >= this.rows) {
+			return;
+		}
 		// clearing tile
-		this.layerData[x][y] = null;
+		const slot = y * this.cols + x;
+		const idx = slot * 2;
+		this.layerData[idx] = 0;
+		this.layerData[idx + 1] = 0;
+		if (this.cachedTile !== null) {
+			this.cachedTile[slot] = null;
+		}
 		// erase the corresponding area in the canvas
 		if (this.preRender) {
 			this.canvasRenderer.clearRect(
@@ -386,6 +493,7 @@ export default class TMXLayer extends Renderable {
 				this.tileheight,
 			);
 		}
+		this.dataVersion++;
 		this.isDirty = true;
 	}
 

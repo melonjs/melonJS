@@ -1,9 +1,16 @@
 import { game } from "../../application/application.ts";
 import { getImage, getTMX } from "../../loader/loader.js";
+import { Matrix2d } from "../../math/matrix2d.ts";
 import { Vector2d } from "../../math/vector2d.ts";
 import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
+import { buildFlipTransform } from "./TMXTile.js";
 import { resolveEmbeddedImage } from "./TMXUtils.js";
+
+// shared scratch matrix for flip-transform construction in drawTileRaw — avoids
+// per-call allocation in the hot path. Single-threaded JS means it's safe to
+// share across all tilesets without contention.
+const SCRATCH_MATRIX = new Matrix2d();
 
 /**
  * a TMX Tile Set Object
@@ -549,6 +556,114 @@ export default class TMXTileset {
 
 		if (tmxTile.flipped) {
 			// restore the context to the previous state
+			renderer.restore();
+		}
+	}
+
+	/**
+	 * draw a tile at the specified position from raw (gid, flipMask) data
+	 *
+	 * Like {@link drawTile} but bypasses the {@link Tile} object entirely:
+	 * the renderer hot loop can pass the GID and flip mask straight from
+	 * `layer.layerData` without ever allocating a Tile instance.
+	 *
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {number} dx - destination x position
+	 * @param {number} dy - destination y position
+	 * @param {number} gid - the tile's global id (with flip bits already stripped)
+	 * @param {number} flipMask - 3-bit packed flip mask (H=1, V=2, AD=4)
+	 * @ignore
+	 */
+	drawTileRaw(renderer, dx, dy, gid, flipMask) {
+		let dw, dh;
+		let tileImage;
+
+		if (this.isCollection) {
+			// collection tiles can have varying sizes; compute scale per-tile
+			tileImage = this.imageCollection.get(gid);
+			const tileWidth = tileImage.width;
+			const tileHeight = tileImage.height;
+
+			if (this.tilerendersize === "grid") {
+				let scaleX = this.mapTilewidth / tileWidth;
+				let scaleY = this.mapTileheight / tileHeight;
+
+				if (this.fillmode === "preserve-aspect-fit") {
+					const scale = Math.min(scaleX, scaleY);
+					scaleX = scale;
+					scaleY = scale;
+				}
+
+				dw = tileWidth * scaleX;
+				dh = tileHeight * scaleY;
+
+				// bottom-align against tileset baseline (renderer uses tileset.tileheight)
+				dy += this.tileheight - dh;
+
+				if (this.fillmode === "preserve-aspect-fit") {
+					dx += (this.mapTilewidth - dw) / 2;
+					dy -= (this.mapTileheight - dh) / 2;
+				}
+			} else {
+				dw = tileWidth;
+				dh = tileHeight;
+			}
+		} else {
+			// spritesheet: use precomputed values
+			dw = this._renderDw;
+			dh = this._renderDh;
+			dy += this._renderDyOffset;
+			dx += this._renderDxCenter;
+			dy += this._renderDyCenter;
+		}
+
+		// check if any transformation is required
+		if (flipMask !== 0) {
+			renderer.save();
+			renderer.translate(dx, dy);
+			// rebuild the flip transform into the shared scratch matrix
+			// (size driven by the tileset's tile dims for spritesheets, the
+			// tile image's dims for collections)
+			renderer.transform(
+				buildFlipTransform(
+					SCRATCH_MATRIX,
+					flipMask,
+					this.isCollection ? tileImage.width : this.tilewidth,
+					this.isCollection ? tileImage.height : this.tileheight,
+				),
+			);
+			dx = dy = 0;
+		}
+
+		// draw the tile image
+		if (this.isCollection) {
+			renderer.drawImage(
+				tileImage,
+				0,
+				0,
+				tileImage.width,
+				tileImage.height,
+				dx,
+				dy,
+				dw,
+				dh,
+			);
+		} else {
+			const offset = this.atlas[this.getViewTileId(gid)].offset;
+			renderer.drawImage(
+				this.image,
+				offset.x,
+				offset.y,
+				this.tilewidth,
+				this.tileheight,
+				dx,
+				dy,
+				dw + renderer.uvOffset,
+				dh + renderer.uvOffset,
+			);
+		}
+
+		if (flipMask !== 0) {
 			renderer.restore();
 		}
 	}

@@ -9,6 +9,51 @@ import {
 	TMX_FLIP_V,
 } from "./constants.js";
 
+// flip-mask bit layout shared with TMXLayer.layerData's G channel
+const FLIP_H_BIT = 1 << 0;
+const FLIP_V_BIT = 1 << 1;
+const FLIP_AD_BIT = 1 << 2;
+
+/**
+ * Apply a flip-mask transform to a Matrix2d in-place. Resets the matrix to
+ * identity first, then applies the H / V / AD operations to flip / rotate a
+ * tile of `width × height` pixels around its center.
+ *
+ * This is the typed-array equivalent of `Tile.setTileTransform()` — both share
+ * the same math, but this variant is driven by a packed 3-bit mask (H=1, V=2,
+ * AD=4) so callers that have raw layerData bytes can build a flip transform
+ * without constructing a Tile.
+ *
+ * @param {Matrix2d} transform - the matrix to fill (mutated in place)
+ * @param {number} flipMask - 3-bit packed flip mask
+ * @param {number} width - tile width in pixels
+ * @param {number} height - tile height in pixels
+ * @returns {Matrix2d} the same matrix, for chaining
+ * @ignore
+ */
+export function buildFlipTransform(transform, flipMask, width, height) {
+	const halfW = width / 2;
+	const halfH = height / 2;
+	const flippedH = (flipMask & FLIP_H_BIT) !== 0;
+	const flippedV = (flipMask & FLIP_V_BIT) !== 0;
+	const flippedAD = (flipMask & FLIP_AD_BIT) !== 0;
+
+	transform.identity();
+	transform.translate(halfW, halfH);
+	if (flippedAD) {
+		transform.rotate(degToRad(-90));
+		transform.scale(-1, 1);
+	}
+	if (flippedH) {
+		transform.scale(flippedAD ? 1 : -1, flippedAD ? -1 : 1);
+	}
+	if (flippedV) {
+		transform.scale(flippedAD ? -1 : 1, flippedAD ? 1 : -1);
+	}
+	transform.translate(-halfW, -halfH);
+	return transform;
+}
+
 /**
  * a basic tile object
  * @category Tilemap

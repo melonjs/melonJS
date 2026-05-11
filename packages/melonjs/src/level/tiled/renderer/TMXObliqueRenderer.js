@@ -110,7 +110,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	}
 
 	/**
-	 * draw the tile map
+	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
 	 */
 	drawTile(renderer, x, y, tmxTile) {
@@ -123,6 +123,21 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 			tileset.tileheight +
 			this.skewY * x;
 		tileset.drawTile(renderer, dx, dy, tmxTile);
+	}
+
+	/**
+	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
+	 * rendering loop to bypass Tile construction
+	 * @ignore
+	 */
+	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
+		const dx = tileset.tileoffset.x + x * this.tilewidth + this.skewX * y;
+		const dy =
+			tileset.tileoffset.y +
+			(y + 1) * this.tileheight -
+			tileset.tileheight +
+			this.skewY * x;
+		tileset.drawTileRaw(renderer, dx, dy, gid, flipMask);
 	}
 
 	/**
@@ -205,13 +220,26 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 				break;
 		}
 
-		// main drawing loop
+		// main drawing loop — direct typed-array reads, short-circuit tileset cache
+		const cols = layer.cols;
+		const data = layer.layerData;
+		const tilesets = layer.tilesets;
+		let tilesetCache = layer.tileset;
+		if (tilesetCache === null) {
+			return;
+		}
 		for (let y = startY; y !== endY; y += incY) {
 			for (let x = startX; x !== endX; x += incX) {
-				const tmxTile = layer.cellAt(x, y, false);
-				if (tmxTile) {
-					this.drawTile(renderer, x, y, tmxTile);
+				const idx = (y * cols + x) * 2;
+				const gid = data[idx];
+				if (!gid) {
+					continue;
 				}
+				const flipMask = data[idx + 1];
+				if (!tilesetCache.contains(gid)) {
+					tilesetCache = tilesets.getTilesetByGid(gid);
+				}
+				this.drawTileRaw(renderer, x, y, gid, flipMask, tilesetCache);
 			}
 		}
 	}

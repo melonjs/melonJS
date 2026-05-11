@@ -2,6 +2,9 @@
 
 ## [19.4.0] (melonJS 2) - _unreleased_
 
+### Performance
+- TMX tile layers now back `layerData` with a flat `Uint16Array` and the orientation renderers read tile data directly from it — no `Tile` allocations during map parse or per-frame rendering. Per-layer memory drops ~25× for games that don't query tiles by coord (40 KB vs ~1 MB on a 100×100 layer). Modest FPS gain on Canvas (~2–5% in tile-heavy scenes); foundation for the upcoming WebGL2 single-quad shader path. Public API (`getTile`, `setTile`, `cellAt`, `clearTile`, `getTileId`) is unchanged.
+
 ### Changed
 - `throttle(fn, wait)` is now generic over its argument tuple — `throttle<T extends unknown[]>((...args: T) => void, wait)` preserves the wrapped function's parameter types. Drops the `as unknown as () => void` cast that the pointer-event handler used to need.
 

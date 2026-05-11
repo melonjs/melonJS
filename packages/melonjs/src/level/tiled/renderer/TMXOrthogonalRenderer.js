@@ -40,7 +40,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	}
 
 	/**
-	 * draw the tile map
+	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
 	 */
 	drawTile(renderer, x, y, tmxTile) {
@@ -51,6 +51,21 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 			tileset.tileoffset.x + x * this.tilewidth,
 			tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight,
 			tmxTile,
+		);
+	}
+
+	/**
+	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
+	 * rendering loop to bypass Tile construction
+	 * @ignore
+	 */
+	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
+		tileset.drawTileRaw(
+			renderer,
+			tileset.tileoffset.x + x * this.tilewidth,
+			tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight,
+			gid,
+			flipMask,
 		);
 	}
 
@@ -102,13 +117,34 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 				break;
 		}
 
-		// main drawing loop
+		// main drawing loop — read (gid, flipMask) straight from the typed
+		// array and resolve the tileset with a short-circuit cache (the common
+		// single-tileset case never enters the lookup branch)
+		const cols = layer.cols;
+		const data = layer.layerData;
+		const tilesets = layer.tilesets;
+		let tilesetCache = layer.tileset;
+		if (tilesetCache === null) {
+			// no tilesets attached — nothing to draw
+			vector2dPool.release(start);
+			vector2dPool.release(end);
+			return;
+		}
 		for (let y = start.y; y !== end.y; y += incY) {
 			for (let x = start.x; x !== end.x; x += incX) {
-				const tmxTile = layer.cellAt(x, y, false);
-				if (tmxTile) {
-					this.drawTile(renderer, x, y, tmxTile);
+				const idx = (y * cols + x) * 2;
+				const gid = data[idx];
+				// `!gid` covers both empty cells (0) and out-of-range reads
+				// (Uint16Array returns undefined for idx beyond length — happens
+				// when a non-default renderorder swap pushes start past `cols`)
+				if (!gid) {
+					continue;
 				}
+				const flipMask = data[idx + 1];
+				if (!tilesetCache.contains(gid)) {
+					tilesetCache = tilesets.getTilesetByGid(gid);
+				}
+				this.drawTileRaw(renderer, x, y, gid, flipMask, tilesetCache);
 			}
 		}
 
