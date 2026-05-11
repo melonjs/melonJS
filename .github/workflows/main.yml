@@ -5,7 +5,7 @@ name: Build & Test
 # The proper fix is a status-check shim workflow emitting matching job
 # names with `success` for the same paths — until that lands, docs PRs
 # need an admin-merge or a no-op non-md commit (like this one) to nudge
-# CI into running.
+# CI into running. (PR #1442 — Capacitor icon — needed this nudge.)
 on:
   push:
     branches: [master]
