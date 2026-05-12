@@ -11,12 +11,14 @@
 export function extractAttributes(gl, shader) {
 	const attributes = {};
 	// Match either `attribute <type> <name>` (GLSL 1.00) or `in <type>
-	// <name>` (GLSL 3.00), with an optional precision qualifier or other
-	// auxiliary qualifier in front of the type (`highp vec3`, `mediump
-	// vec2`, etc.). The `(?:\w+\s+)+` allows one or more words before the
-	// final identifier so multi-qualifier declarations capture the
-	// trailing name and not an intermediate qualifier.
-	const attrRx = /(?:^|\n)\s*(?:attribute|in)\s+(?:\w+\s+)+(\w+)/g;
+	// <name>` (GLSL 3.00), with an optional precision / aux qualifier in
+	// front of the type (`highp vec3`, `mediump vec2`, etc.). Whitespace
+	// inside the declaration is restricted to `[ \t]+` (horizontal only)
+	// rather than `\s+` — letting `\s` also match `\n` made the regex
+	// ambiguous around line boundaries and CodeQL flagged it as a
+	// polynomial-time ReDoS risk on shader sources with many newlines.
+	// Declarations span one line in practice, so this is a non-issue.
+	const attrRx = /(?:^|\n)[ \t]*(?:attribute|in)[ \t]+(?:\w+[ \t]+)+(\w+)/g;
 	let match;
 	let i = 0;
 
