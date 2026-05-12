@@ -116,6 +116,23 @@ function readObjectGroup(map, data, z) {
 }
 
 /**
+ * Recursively recompute absolute bounds for a container and all its
+ * descendants. Used when the container's pos changes (centering on a wider
+ * viewport): children cache their absolute bounds at addChild time, and
+ * those caches are stale until each child happens to call updateBounds on
+ * its own (which only happens organically when its own pos changes).
+ * @ignore
+ */
+function refreshAbsoluteBounds(container) {
+	container.forEach((child) => {
+		child.updateBounds(true);
+		if (child instanceof Container) {
+			refreshAbsoluteBounds(child);
+		}
+	});
+}
+
+/**
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  * @category Tilemap
@@ -425,12 +442,20 @@ export default class TMXTileMap {
 					Math.max(levelBounds.height, height),
 				);
 				// center the map if smaller than the current viewport
-				container.pos.set(
-					Math.max(0, ~~((width - levelBounds.width) / 2)),
-					Math.max(0, ~~((height - levelBounds.height) / 2)),
-					// don't change the container z position if defined
-					container.pos.z,
-				);
+				const newX = Math.max(0, ~~((width - levelBounds.width) / 2));
+				const newY = Math.max(0, ~~((height - levelBounds.height) / 2));
+				if (container.pos.x !== newX || container.pos.y !== newY) {
+					container.pos.set(newX, newY, container.pos.z);
+					// A child caches its absolute bounds (centered around
+					// ancestor.absPos at the time of the last `updateBounds`).
+					// When the parent's pos changes, descendants that don't
+					// move on their own (TMX layers, static collision
+					// objects, triggers) keep stale absolute bounds, so
+					// anything that reads them (debug overlay, viewport
+					// culling) sees the pre-centering position. Walk the
+					// tree once after a real move and refresh.
+					refreshAbsoluteBounds(container);
+				}
 			}
 
 			off(VIEWPORT_ONRESIZE, _setBounds);
