@@ -12,14 +12,16 @@ import {
  * Helper to create a mock renderable with position and ancestor
  * (SAT functions expect objects with .pos and .ancestor.getAbsolutePosition())
  */
-function createMockRenderable(x, y) {
+function createMockRenderable(x, y, ancestorOffset) {
 	const renderable = new Renderable(x, y, 0, 0);
 	renderable.anchorPoint.set(0, 0);
-	// ensure ancestor chain returns zero offset
+	const offset =
+		ancestorOffset instanceof Vector2d ? ancestorOffset : new Vector2d(0, 0);
+	// ensure ancestor chain returns the requested offset
 	if (typeof renderable.ancestor === "undefined") {
 		renderable.ancestor = {
 			getAbsolutePosition() {
-				return new Vector2d(0, 0);
+				return offset;
 			},
 		};
 	}
@@ -709,6 +711,191 @@ describe("Physics : SAT (Separating Axis Theorem)", () => {
 				expect(hit).toBe(true);
 				expect(response.overlap).toBeCloseTo(22);
 			}
+		});
+	});
+
+	// Regression: SAT must respect a non-zero ancestor.getAbsolutePosition()
+	// the same way for both colliders. Both operands resolve their world
+	// position via ancestor.getAbsolutePosition(), so the relative-position
+	// vector must subtract A's ancestor offset (the polygon/polygon path
+	// builds two absolute positions and subtracts inside isSeparatingAxis,
+	// which is correct; the ellipse paths build the difference directly
+	// and used to ADD A's ancestor offset by mistake). This was invisible
+	// whenever ancestor.abs was (0, 0), so a TMX level the same size as
+	// the viewport hid the bug; it broke every circle collision the moment
+	// the level container was shifted (`level.load` auto-centering on a
+	// wider viewport, or any manually translated container).
+	describe("non-zero ancestor offset", () => {
+		let response;
+		beforeEach(() => {
+			response = new ResponseObject();
+		});
+
+		// Each entry exercises one shape-type combination and asserts that
+		// (a) overlap detection still fires when both bodies share a
+		// non-zero ancestor offset, (b) the response overlap matches the
+		// zero-offset baseline (shift-invariance), and (c) the concrete
+		// near-miss geometry the platformer hits is detected.
+		const offset = new Vector2d(255, 0);
+		const makeCases = () => {
+			return [
+				{
+					name: "Polygon vs Polygon (Rect/Rect via testPolygonPolygon)",
+					fn: testPolygonPolygon,
+					shapeA: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					// Polygon/polygon was already correct (isSeparatingAxis
+					// subtracts internally), so this entry guards against a
+					// future regression rather than reproducing today's bug.
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Polygon vs Polygon (custom Polygon/Rect via testPolygonPolygon)",
+					fn: testPolygonPolygon,
+					shapeA: () => {
+						return new Polygon(0, 0, [
+							new Vector2d(0, 0),
+							new Vector2d(30, 0),
+							new Vector2d(15, 40),
+						]);
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Polygon vs Circle (Rect/Circle via testPolygonEllipse)",
+					fn: testPolygonEllipse,
+					shapeA: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "Polygon vs true Ellipse (Rect/Ellipse via testPolygonEllipse)",
+					fn: testPolygonEllipse,
+					shapeA: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					// non-square radii → falls through to testPolygonPolygon
+					// internally, so this exercises the conversion path too.
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Circle vs Polygon (Circle/Rect via testEllipsePolygon)",
+					fn: testEllipsePolygon,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "true Ellipse vs Polygon (Ellipse/Rect via testEllipsePolygon)",
+					fn: testEllipsePolygon,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Circle vs Circle (testEllipseEllipse fast path)",
+					fn: testEllipseEllipse,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 40);
+					}, // radius 20
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "Circle vs true Ellipse (testEllipseEllipse mixed)",
+					fn: testEllipseEllipse,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "true Ellipse vs true Ellipse (testEllipseEllipse polygonized)",
+					fn: testEllipseEllipse,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					preFixWouldMiss: false,
+				},
+			];
+		};
+
+		for (const c of makeCases()) {
+			it(`${c.name}: shift-invariant under a common ancestor offset`, () => {
+				const aRef = createMockRenderable(0, 0);
+				const bRef = createMockRenderable(15, 0);
+				const refResp = new ResponseObject();
+				const refHit = c.fn(aRef, c.shapeA(), bRef, c.shapeB(), refResp);
+				expect(refHit).toBe(true);
+
+				const aShifted = createMockRenderable(0, 0, offset);
+				const bShifted = createMockRenderable(15, 0, offset);
+				const shiftedHit = c.fn(
+					aShifted,
+					c.shapeA(),
+					bShifted,
+					c.shapeB(),
+					response,
+				);
+				expect(shiftedHit).toBe(true);
+				expect(response.overlap).toBeCloseTo(refResp.overlap);
+			});
+
+			if (c.preFixWouldMiss) {
+				it(`${c.name}: pre-fix sign error mis-placed the circle by 2 * ancestor.abs`, () => {
+					// Geometry chosen so that the bodies overlap normally,
+					// but the buggy +offset would push them ~510 px apart
+					// (far beyond any reasonable shape extent).
+					const a = createMockRenderable(0, 0, offset);
+					const b = createMockRenderable(10, 0, offset);
+					expect(c.fn(a, c.shapeA(), b, c.shapeB(), response)).toBe(true);
+				});
+			}
+		}
+
+		// Concrete repro of the platformer's player-polygon vs coin-circle
+		// collision at world.pos (255, 0). Without the SAT fix the circle's
+		// computed position is +510 px from where it should be, missing
+		// the polygon entirely.
+		it("platformer regression: player Rect vs coin Circle inside a shifted level container", () => {
+			const offset = new Vector2d(255, 0);
+			const player = createMockRenderable(785, 790, offset);
+			const coin = createMockRenderable(840, 805, offset);
+			const playerPoly = new Rect(20, 8, 35, 88).toPolygon();
+			const coinCircle = new Ellipse(17.5, 17.5, 35, 35); // radius 17.5
+			expect(
+				testPolygonEllipse(player, playerPoly, coin, coinCircle, response),
+			).toBe(true);
 		});
 	});
 });

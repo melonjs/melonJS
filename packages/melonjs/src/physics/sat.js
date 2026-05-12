@@ -300,13 +300,19 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 
 	// Fast path: both are circles
 	// Check if the distance between the centers of the two
-	// circles is greater than their combined radius.
+	// circles is greater than their combined radius. We need the absolute
+	// position of B relative to A — both sides resolve their world position
+	// via ancestor.getAbsolutePosition(), so A's offset must be subtracted
+	// too, not added. (The bug was invisible when ancestor.absPos == 0, e.g.
+	// the level was the same size as the viewport; it manifests as missed
+	// circle collisions whenever the container is shifted, such as TMX
+	// auto-centering on a wider viewport.)
 	const differenceV = T_VECTORS[--T_VECTORS_IDX]
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(ellipseB.pos)
 		.sub(a.pos)
-		.add(a.ancestor.getAbsolutePosition())
+		.sub(a.ancestor.getAbsolutePosition())
 		.sub(ellipseA.pos);
 	const radiusA = ellipseA.radius;
 	const radiusB = ellipseB.radius;
@@ -350,13 +356,19 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 	}
 
 	// Fast path: ellipse is a circle
-	// Get the position of the circle relative to the polygon.
+	// Get the position of the circle relative to the polygon. Both A and B
+	// resolve their world position via ancestor.getAbsolutePosition(), so
+	// A's ancestor offset must be subtracted (matches the polygon/polygon
+	// path which builds absolute positions). The previous `+a.ancestor.abs`
+	// was masked whenever the level container was at the origin, but missed
+	// every circle-vs-polygon collision once the container was shifted (TMX
+	// auto-centering on a wider viewport, manually translated containers).
 	const circlePos = T_VECTORS[--T_VECTORS_IDX]
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(ellipseB.pos)
 		.sub(a.pos)
-		.add(a.ancestor.getAbsolutePosition())
+		.sub(a.ancestor.getAbsolutePosition())
 		.sub(polyA.pos);
 	const radius = ellipseB.radius;
 	const radius2 = radius * radius;
