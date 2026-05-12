@@ -324,13 +324,18 @@ export default class ImageLayer extends Sprite {
 			renderer.setMask(this.mask);
 		}
 
-		renderer.drawPattern(
-			this._pattern,
-			0,
-			0,
-			viewport.width * 2,
-			viewport.height * 2,
-		);
+		// Clamp the draw extent to the source dimensions on any axis we
+		// are NOT tiling. Asking the renderer to fill past the source on
+		// a non-tiling axis is what makes Canvas (transparent fill per
+		// HTML spec) and WebGL (GL_CLAMP_TO_EDGE stretches the edge
+		// pixel) diverge — Canvas leaves the overflow transparent while
+		// WebGL stretches the bottom row (repeat-x) or right column
+		// (repeat-y) to fill it. By drawing exactly the source extent on
+		// the non-tiling axis, neither renderer enters its overflow path
+		// and the two outputs converge (issue #1290).
+		const drawW = this.repeatX ? viewport.width * 2 : width;
+		const drawH = this.repeatY ? viewport.height * 2 : height;
+		renderer.drawPattern(this._pattern, 0, 0, drawW, drawH);
 	}
 
 	// called when the layer is removed from the game world or a container
