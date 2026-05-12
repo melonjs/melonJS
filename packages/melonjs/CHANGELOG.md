@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.4.0] (melonJS 2) - _unreleased_
+## [19.4.0] (melonJS 2) - _2026-05-12_
 
 **Highlights:** rendering-focused release. The headline is GPU-accelerated WebGL 2 tile rendering for orthogonal TMX maps: visible layers now render as a single quad through a fragment shader instead of one draw per tile. Combined with the new shader-wide uniform cache, the per-fragment fast path, and the flat `Uint16Array`-backed tile data, a typical 3-layer 800×600 game on mid-tier mobile reclaims roughly **1.5–3.5 ms per frame** (~10–20% of the 60 fps budget). Dense large maps should see ~5–8× speedups on the rendering portion.
 
