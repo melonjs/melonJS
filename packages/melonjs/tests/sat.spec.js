@@ -737,81 +737,118 @@ describe("Physics : SAT (Separating Axis Theorem)", () => {
 		// zero-offset baseline (shift-invariance), and (c) the concrete
 		// near-miss geometry the platformer hits is detected.
 		const offset = new Vector2d(255, 0);
-		const makeCases = () => [
-			{
-				name: "Polygon vs Polygon (Rect/Rect via testPolygonPolygon)",
-				fn: testPolygonPolygon,
-				shapeA: () => new Rect(0, 0, 40, 40).toPolygon(),
-				shapeB: () => new Rect(0, 0, 40, 40).toPolygon(),
-				// Polygon/polygon was already correct (isSeparatingAxis
-				// subtracts internally), so this entry guards against a
-				// future regression rather than reproducing today's bug.
-				preFixWouldMiss: false,
-			},
-			{
-				name: "Polygon vs Polygon (custom Polygon/Rect via testPolygonPolygon)",
-				fn: testPolygonPolygon,
-				shapeA: () =>
-					new Polygon(0, 0, [
-						new Vector2d(0, 0),
-						new Vector2d(30, 0),
-						new Vector2d(15, 40),
-					]),
-				shapeB: () => new Rect(0, 0, 40, 40).toPolygon(),
-				preFixWouldMiss: false,
-			},
-			{
-				name: "Polygon vs Circle (Rect/Circle via testPolygonEllipse)",
-				fn: testPolygonEllipse,
-				shapeA: () => new Rect(0, 0, 40, 40).toPolygon(),
-				shapeB: () => new Ellipse(0, 0, 40, 40),
-				preFixWouldMiss: true,
-			},
-			{
-				name: "Polygon vs true Ellipse (Rect/Ellipse via testPolygonEllipse)",
-				fn: testPolygonEllipse,
-				shapeA: () => new Rect(0, 0, 40, 40).toPolygon(),
-				// non-square radii → falls through to testPolygonPolygon
-				// internally, so this exercises the conversion path too.
-				shapeB: () => new Ellipse(0, 0, 40, 24),
-				preFixWouldMiss: false,
-			},
-			{
-				name: "Circle vs Polygon (Circle/Rect via testEllipsePolygon)",
-				fn: testEllipsePolygon,
-				shapeA: () => new Ellipse(0, 0, 40, 40),
-				shapeB: () => new Rect(0, 0, 40, 40).toPolygon(),
-				preFixWouldMiss: true,
-			},
-			{
-				name: "true Ellipse vs Polygon (Ellipse/Rect via testEllipsePolygon)",
-				fn: testEllipsePolygon,
-				shapeA: () => new Ellipse(0, 0, 40, 24),
-				shapeB: () => new Rect(0, 0, 40, 40).toPolygon(),
-				preFixWouldMiss: false,
-			},
-			{
-				name: "Circle vs Circle (testEllipseEllipse fast path)",
-				fn: testEllipseEllipse,
-				shapeA: () => new Ellipse(0, 0, 40, 40), // radius 20
-				shapeB: () => new Ellipse(0, 0, 40, 40),
-				preFixWouldMiss: true,
-			},
-			{
-				name: "Circle vs true Ellipse (testEllipseEllipse mixed)",
-				fn: testEllipseEllipse,
-				shapeA: () => new Ellipse(0, 0, 40, 40),
-				shapeB: () => new Ellipse(0, 0, 40, 24),
-				preFixWouldMiss: true,
-			},
-			{
-				name: "true Ellipse vs true Ellipse (testEllipseEllipse polygonized)",
-				fn: testEllipseEllipse,
-				shapeA: () => new Ellipse(0, 0, 40, 24),
-				shapeB: () => new Ellipse(0, 0, 40, 24),
-				preFixWouldMiss: false,
-			},
-		];
+		const makeCases = () => {
+			return [
+				{
+					name: "Polygon vs Polygon (Rect/Rect via testPolygonPolygon)",
+					fn: testPolygonPolygon,
+					shapeA: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					// Polygon/polygon was already correct (isSeparatingAxis
+					// subtracts internally), so this entry guards against a
+					// future regression rather than reproducing today's bug.
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Polygon vs Polygon (custom Polygon/Rect via testPolygonPolygon)",
+					fn: testPolygonPolygon,
+					shapeA: () => {
+						return new Polygon(0, 0, [
+							new Vector2d(0, 0),
+							new Vector2d(30, 0),
+							new Vector2d(15, 40),
+						]);
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Polygon vs Circle (Rect/Circle via testPolygonEllipse)",
+					fn: testPolygonEllipse,
+					shapeA: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "Polygon vs true Ellipse (Rect/Ellipse via testPolygonEllipse)",
+					fn: testPolygonEllipse,
+					shapeA: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					// non-square radii → falls through to testPolygonPolygon
+					// internally, so this exercises the conversion path too.
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Circle vs Polygon (Circle/Rect via testEllipsePolygon)",
+					fn: testEllipsePolygon,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "true Ellipse vs Polygon (Ellipse/Rect via testEllipsePolygon)",
+					fn: testEllipsePolygon,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					shapeB: () => {
+						return new Rect(0, 0, 40, 40).toPolygon();
+					},
+					preFixWouldMiss: false,
+				},
+				{
+					name: "Circle vs Circle (testEllipseEllipse fast path)",
+					fn: testEllipseEllipse,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 40);
+					}, // radius 20
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "Circle vs true Ellipse (testEllipseEllipse mixed)",
+					fn: testEllipseEllipse,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 40);
+					},
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					preFixWouldMiss: true,
+				},
+				{
+					name: "true Ellipse vs true Ellipse (testEllipseEllipse polygonized)",
+					fn: testEllipseEllipse,
+					shapeA: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					shapeB: () => {
+						return new Ellipse(0, 0, 40, 24);
+					},
+					preFixWouldMiss: false,
+				},
+			];
+		};
 
 		for (const c of makeCases()) {
 			it(`${c.name}: shift-invariant under a common ancestor offset`, () => {
