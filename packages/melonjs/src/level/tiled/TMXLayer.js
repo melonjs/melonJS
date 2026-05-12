@@ -77,15 +77,31 @@ function setLayerData(layer, bounds, data) {
 	const layerData = layer.layerData;
 	const offsetX = bounds.x;
 	const offsetY = bounds.y;
+	// One-shot warning when a layer's flip-stripped GID won't fit in the
+	// `Uint16Array` cell — silent truncation would render the wrong tile.
+	// 65535 is far above any realistic tileset size, but flag it loudly
+	// so users with degenerate maps notice immediately.
+	let overflowedGid = 0;
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
 			const rawGid = data[idx++];
 			if (rawGid !== 0) {
 				const flatIdx = ((y + offsetY) * cols + (x + offsetX)) * 2;
-				layerData[flatIdx] = rawGid & TMX_CLEAR_BIT_MASK;
+				const cleanGid = rawGid & TMX_CLEAR_BIT_MASK;
+				if (cleanGid > 0xffff && overflowedGid === 0) {
+					overflowedGid = cleanGid;
+				}
+				layerData[flatIdx] = cleanGid;
 				layerData[flatIdx + 1] = flipMaskFromGid(rawGid);
 			}
 		}
+	}
+	if (overflowedGid !== 0) {
+		console.warn(
+			"melonJS: TMX layer contains GID " +
+				overflowedGid +
+				" which exceeds the 16-bit cell capacity (max 65535). Tiles will be truncated and render incorrectly.",
+		);
 	}
 }
 
@@ -526,7 +542,19 @@ export default class TMXLayer extends Renderable {
 		}
 		const slot = y * this.cols + x;
 		const idx = slot * 2;
-		this.layerData[idx] = tile.tileId & TMX_CLEAR_BIT_MASK;
+		const cleanGid = tile.tileId & TMX_CLEAR_BIT_MASK;
+		// `layerData` is a Uint16Array; writes silently truncate above
+		// 0xFFFF. Warn once per layer so a runtime `setTile` with a
+		// GID >= 65536 doesn't corrupt the cell undetected.
+		if (cleanGid > 0xffff && !this._truncationWarned) {
+			this._truncationWarned = true;
+			console.warn(
+				"melonJS: setTile received GID " +
+					cleanGid +
+					" which exceeds the 16-bit cell capacity (max 65535). Tile will be truncated and render incorrectly.",
+			);
+		}
+		this.layerData[idx] = cleanGid;
 		this.layerData[idx + 1] = flipMaskFromTile(tile);
 		if (this.cachedTile !== null) {
 			this.cachedTile[slot] = tile;
@@ -576,7 +604,12 @@ export default class TMXLayer extends Renderable {
 		const slot = _y * this.cols + _x;
 		const idx = slot * 2;
 		const gid = this.layerData[idx];
-		if (gid === 0) {
+		// `cellAt(x, y, false)` skips the explicit bounds check on the
+		// coords for speed, but out-of-range reads from a typed array
+		// return `undefined` — treat both that and an explicit empty
+		// cell (gid 0) as "no tile" so we never push a bogus GID into
+		// the tileset lookup path
+		if (!gid) {
 			return null;
 		}
 

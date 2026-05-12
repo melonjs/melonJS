@@ -47,9 +47,11 @@ export default class OrthogonalTMXLayerGPURenderer {
 		this.gl = renderer.gl;
 		// Standalone `GLShader` (not `ShaderEffect`) so we own both the
 		// vertex and the fragment source — they're paired in GLSL ES 3.00,
-		// which lets the index / animation lookup textures use
-		// `usampler2D` + `texelFetch` (exact integer reads, no float-
-		// decode round trip). `setBatcher("quad", this.shader)` integrates
+		// which lets the fragment shader use `texelFetch` for byte-exact
+		// reads from the index / animation lookup textures (samplers stay
+		// `sampler2D` and decode the 8-bit channels as normalized floats;
+		// `usampler2D` would conflict with the engine's multi-texture
+		// batching cache). `setBatcher("quad", this.shader)` integrates
 		// the program with the quad batcher just like a `ShaderEffect` —
 		// only the per-fragment math gets cleaner.
 		this.shader = new GLShader(
