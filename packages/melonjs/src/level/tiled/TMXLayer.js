@@ -254,6 +254,23 @@ export default class TMXLayer extends Renderable {
 		 */
 		this.dataVersion = 0;
 
+		/**
+		 * How this layer is rendered. Resolved by `onActivateEvent` to one of:
+		 *   - `"shader"`   — WebGL2 procedural shader path (single quad per tileset, fragment GID lookup)
+		 *   - `"prerender"`— offscreen-canvas bake at activation, blitted as one drawImage per frame
+		 *   - `"perTile"`  — per-frame loop, one drawImage per visible tile
+		 *
+		 * User code may set this to one of the above values (or the special
+		 * `"auto"`) before the layer is activated to override the engine's
+		 * default choice; Tiled custom properties named `renderMode` are
+		 * applied automatically via `applyTMXProperties`. If a forced mode
+		 * is ineligible (e.g. `"shader"` on Canvas), a one-shot warning is
+		 * emitted at activation and the layer falls back to the legacy path.
+		 * @type {string}
+		 * @default "auto"
+		 */
+		this.renderMode = "auto";
+
 		if (map.infinite === 0) {
 			// initialize and set the layer data
 			setLayerData(
@@ -288,16 +305,13 @@ export default class TMXLayer extends Renderable {
 
 		this.isAnimated = this.animatedTilesets.length > 0;
 
-		// check for the correct rendering method
-		if (typeof this.preRender === "undefined" && this.isAnimated === false) {
-			this.preRender = this.ancestor.getRootAncestor().preRender;
-		} else {
-			// Force pre-render off when tileset animation is used
-			this.preRender = false;
-		}
+		// resolve renderMode: shader > prerender > perTile, taking into
+		// account user-forced values, Application/world settings, and the
+		// per-layer preRender hint
+		this._resolveRenderMode();
 
-		// if pre-rendering method is use, create an offline canvas/renderer
-		if (this.preRender === true && !this.canvasRenderer) {
+		// if pre-rendering method is in use, create an offline canvas/renderer
+		if (this.renderMode === "prerender" && !this.canvasRenderer) {
 			this.canvasRenderer = new CanvasRenderer({
 				canvas: createCanvas(this.width, this.height),
 				width: this.width,
@@ -307,13 +321,135 @@ export default class TMXLayer extends Renderable {
 			// pre render the layer on the canvas
 			this.getRenderer().drawTileLayer(this.canvasRenderer, this, this);
 		}
+		// keep `preRender` boolean in sync with the resolved mode (legacy
+		// callers still read it; `Renderer.drawTileLayer` itself reads
+		// `layer.canvasRenderer`)
+		this.preRender = this.renderMode === "prerender";
 
 		this.isDirty = true;
 	}
 
+	/**
+	 * Resolve `this.renderMode` to one of "shader" / "prerender" / "perTile"
+	 * based on eligibility checks and user/world hints. Emits a single
+	 * `console.warn` at activation when a forced mode is ineligible, or
+	 * when an auto-eligible mode falls back due to a layer feature the GPU
+	 * path doesn't support (orientation, collection-of-image tileset, etc.).
+	 * @ignore
+	 */
+	_resolveRenderMode() {
+		const root = this.ancestor?.getRootAncestor?.();
+		const renderer = this.parentApp?.renderer;
+		const gpuAllowed = root?.gpuTilemap !== false;
+		const preRenderHint =
+			typeof this.preRender === "boolean" ? this.preRender : root?.preRender;
+
+		const elig = this._checkShaderEligibility(renderer, gpuAllowed);
+
+		const requested = this.renderMode;
+		// explicit "shader" — honor if eligible, warn otherwise
+		if (requested === "shader") {
+			if (elig.ok) {
+				return; // already "shader"
+			}
+			console.warn(
+				`melonJS: layer "${this.name}" forced renderMode "shader" not available (${elig.reason}) — falling back to perTile`,
+			);
+			this.renderMode = "perTile";
+			return;
+		}
+		// explicit "prerender" — honor unless animated (cache would go stale)
+		if (requested === "prerender") {
+			if (this.isAnimated) {
+				console.warn(
+					`melonJS: layer "${this.name}" forced renderMode "prerender" disabled (layer has animated tiles) — falling back to perTile`,
+				);
+				this.renderMode = "perTile";
+			}
+			return;
+		}
+		// explicit "perTile" — pass through
+		if (requested === "perTile") {
+			return;
+		}
+		// auto-resolve: shader > prerender > perTile
+		if (elig.ok) {
+			this.renderMode = "shader";
+			return;
+		}
+		// only emit an info warning when the user enabled gpuTilemap and the
+		// fallback is due to layer-specific limitations (not a missing
+		// WebGL2 context, which is a renderer-wide condition)
+		if (gpuAllowed && elig.reason !== "no-webgl2-renderer") {
+			console.warn(
+				`melonJS: layer "${this.name}" using legacy tile renderer (${elig.reason})`,
+			);
+		}
+		if (preRenderHint && !this.isAnimated) {
+			this.renderMode = "prerender";
+			return;
+		}
+		this.renderMode = "perTile";
+	}
+
+	/**
+	 * Check whether this layer is eligible for the WebGL2 shader path.
+	 * @param {object} renderer
+	 * @param {boolean} gpuAllowed - whether `gpuTilemap` is enabled at the world level
+	 * @returns {{ok: boolean, reason?: string}}
+	 * @ignore
+	 */
+	_checkShaderEligibility(renderer, gpuAllowed) {
+		if (!gpuAllowed) {
+			return { ok: false, reason: "gpuTilemap disabled" };
+		}
+		if (!renderer || renderer.WebGLVersion !== 2) {
+			return { ok: false, reason: "no-webgl2-renderer" };
+		}
+		if (this.orientation !== "orthogonal") {
+			return {
+				ok: false,
+				reason: `no gpu renderer supported yet for "${this.orientation}" orientation`,
+			};
+		}
+		if (!this.tilesets || this.tilesets.tilesets.length === 0) {
+			return { ok: false, reason: "no tilesets" };
+		}
+		// the shader iterates a fixed-size loop over candidate cells to
+		// support oversized tiles (tile dim > cell dim) drawn bottom-aligned.
+		// Loop bound is MAX_OVERFLOW + 1; anything beyond would silently clip,
+		// so refuse the shader path for layers with extreme oversampling.
+		const MAX_OVERFLOW_CELLS = 4;
+		for (const ts of this.tilesets.tilesets) {
+			if (ts.isCollection) {
+				return { ok: false, reason: "collection-of-image tileset" };
+			}
+			if (ts.tilerendersize !== "tile") {
+				return {
+					ok: false,
+					reason: `tilerendersize "${ts.tilerendersize}" not supported`,
+				};
+			}
+			if (ts.tileoffset.x !== 0 || ts.tileoffset.y !== 0) {
+				return { ok: false, reason: "non-zero tileoffset" };
+			}
+			const overflowX = Math.ceil(ts.tilewidth / this.tilewidth) - 1;
+			const overflowY = Math.ceil(ts.tileheight / this.tileheight) - 1;
+			if (overflowX > MAX_OVERFLOW_CELLS || overflowY > MAX_OVERFLOW_CELLS) {
+				return {
+					ok: false,
+					reason: `tile overflow exceeds shader limit (${MAX_OVERFLOW_CELLS} cells)`,
+				};
+			}
+		}
+		return { ok: true };
+	}
+
 	// called when the layer is removed from the game world or a container
 	onDeactivateEvent() {
-		// clear all allocated objects
+		// renderer-side caches keyed by this layer (e.g. the WebGL2 shader
+		// path's per-layer GID index texture) are cleared from the renderer's
+		// own `reset()` path — tile layers only come and go on game reset.
 		this.animatedTilesets = undefined;
 		// keep canvasRenderer for reuse — dropping the reference would leak
 		// event listeners registered by CanvasRenderer's constructor
@@ -516,28 +652,8 @@ export default class TMXLayer extends Renderable {
 	 * @ignore
 	 */
 	draw(renderer, rect) {
-		// use the offscreen canvas
-		if (this.preRender) {
-			const width = Math.min(rect.width, this.width);
-			const height = Math.min(rect.height, this.height);
-
-			// draw using the cached canvas
-			renderer.drawImage(
-				this.canvasRenderer.getCanvas(),
-				rect.pos.x,
-				rect.pos.y, // sx,sy
-				width,
-				height, // sw,sh
-				rect.pos.x,
-				rect.pos.y, // dx,dy
-				width,
-				height, // dw,dh
-			);
-		}
-		// dynamically render the layer
-		else {
-			// draw the layer
-			this.getRenderer().drawTileLayer(renderer, this, rect);
-		}
+		// dispatch to the active renderer — picks shader / preRender / perTile
+		// based on `this.renderMode` and the renderer's capabilities
+		renderer.drawTileLayer(this, rect);
 	}
 }

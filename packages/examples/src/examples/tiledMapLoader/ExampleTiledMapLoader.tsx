@@ -53,6 +53,7 @@ const createGame = () => {
 		!video.init(1024, 768, {
 			parent: "screen",
 			scaleMethod: "flex",
+			preferWebGL1: false,
 		})
 	) {
 		alert("Your browser does not support HTML5 canvas.");

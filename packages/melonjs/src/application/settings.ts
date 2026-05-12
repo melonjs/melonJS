@@ -79,6 +79,19 @@ export type ApplicationSettings = {
 	 * @default "builtin"
 	 */
 	physic: PhysicsType;
+
+	/**
+	 * Enable the WebGL2 procedural shader path for orthogonal tile layers.
+	 * When `true` (default), eligible layers render via a single quad per
+	 * tileset + a fragment shader doing per-fragment GID lookup, bypassing
+	 * the per-tile draw loop entirely. Layers that don't qualify
+	 * (Canvas/WebGL1, non-orthogonal, collection-of-image tilesets,
+	 * tilerendersize "grid", non-zero tileoffset, oversampled beyond the
+	 * shader's overflow window) fall back to the legacy path automatically.
+	 * Set to `false` to disable globally.
+	 * @default true
+	 */
+	gpuTilemap: boolean;
 	/**
 	 * if true, the renderer will fail if the browser reports a major performance caveat
 	 * (e.g. software WebGL). Set to false to allow WebGL on machines with

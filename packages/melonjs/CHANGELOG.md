@@ -2,11 +2,24 @@
 
 ## [19.4.0] (melonJS 2) - _unreleased_
 
-### Performance
-- TMX tile layers now back `layerData` with a flat `Uint16Array` and the orientation renderers read tile data directly from it — no `Tile` allocations during map parse or per-frame rendering. Per-layer memory drops ~25× for games that don't query tiles by coord (40 KB vs ~1 MB on a 100×100 layer). Modest FPS gain on Canvas (~2–5% in tile-heavy scenes); foundation for the upcoming WebGL2 single-quad shader path. Public API (`getTile`, `setTile`, `cellAt`, `clearTile`, `getTileId`) is unchanged.
+**Highlights:** rendering-focused release. The headline is GPU-accelerated WebGL 2 tile rendering for orthogonal TMX maps: visible layers now render as a single quad through a fragment shader instead of one draw per tile. Combined with the new shader-wide uniform cache, the per-fragment fast path, and the flat `Uint16Array`-backed tile data, a typical 3-layer 800×600 game on mid-tier mobile reclaims roughly **1.5–3.5 ms per frame** (~10–20% of the 60 fps budget). Dense large maps should see ~5–8× speedups on the rendering portion.
+
+### Added
+- GPU-accelerated WebGL 2 tile rendering for orthogonal TMX maps. Each visible layer renders as a single quad whose fragment shader walks the per-layer GID index texture and samples the tileset atlas, with no per-tile draw loop. Supports animated tiles, flip bits (H/V/AD), per-layer opacity/tint, per-layer blend mode, and oversized bottom-aligned tiles. Enabled by default via `Application.settings.gpuTilemap`; falls back transparently to the legacy CPU renderer on isometric/staggered/hexagonal layers, collection-of-image tilesets, non-zero `tileoffset`, or non-WebGL-2 contexts. Rough win on a mid-tier mobile GPU with a 3-layer 800×600 viewport: ~2–4 ms down to ~0.3–0.8 ms per frame; up to ~5–8× on dense large maps; effectively free on desktop GPUs.
+- WebGL: custom shaders can now be written in GLSL ES 3.00 (`#version 300 es`). Construct a `GLShader` with both vertex and fragment source in 3.00 form. The precision injector and attribute extractor handle both versions. **Note:** `ShaderEffect` is still 1.00-only since WebGL requires both stages of a program to share a version, and it pairs the user's fragment with the built-in 1.00 quad vertex shader.
+- `TextureResource` / `BufferTextureResource`: a renderer-agnostic source for textures synthesized from raw byte buffers rather than loaded from an image. Flows through the standard `TextureCache` and batcher path. Supports `rgba8` and `rgba8ui` (WebGL 2) formats. Used internally by the GPU TMX renderer.
+
+### Fixed
+- WebGL: `MaterialBatcher.uploadTexture` was using its `w` and `h` parameters (the destination quad size, not the texture's) for the `isPOT` check, which drives both the wrap-mode fallback and the `generateMipmap` gate. Visible as a `GL_INVALID_OPERATION` from `gl.generateMipmap` on WebGL 1; silent wasted work (unnecessary mipmaps, wrong `isPOT`-derived state) on WebGL 2. Texture dimensions are now derived from the source itself.
 
 ### Changed
-- `throttle(fn, wait)` is now generic over its argument tuple — `throttle<T extends unknown[]>((...args: T) => void, wait)` preserves the wrapped function's parameter types. Drops the `as unknown as () => void` cast that the pointer-event handler used to need.
+- WebGL 1: removed the unconditional `[Texture] ... is not a POT texture` warning. The engine handles NPOT correctly (clamp wrap, non-mipmapped filters). A targeted warning now fires only when `repeat: "repeat*"` is requested on an NPOT texture under WebGL 1, the one case where the user's intent is silently downgraded.
+- `throttle(fn, wait)` is now generic over its argument tuple. `throttle<T extends unknown[]>((...args: T) => void, wait)` preserves the wrapped function's parameter types.
+
+### Performance
+- TMX tile layers now back `layerData` with a flat `Uint16Array` and the orientation renderers read directly from it, with no `Tile` allocations during map parse or per-frame rendering. Per-layer memory drops ~25× (40 KB vs ~1 MB on a 100×100 layer); modest FPS gain on Canvas (~2–5% in tile-heavy scenes). Public API is unchanged.
+- WebGL: every shader the engine builds (sprite batchers, light effects, post-effect chains, the TMX GPU renderer, user-authored `GLShader` / `ShaderEffect`) now caches the last value sent for each uniform and skips redundant `gl.uniform*` calls. Vec/mat values compare element-wise so a reused scratch `Float32Array` is detected correctly. Biggest beneficiaries are the per-frame projection-matrix upload (now skipped after the first frame) and the TMX GPU renderer's layer-lifetime constants. Modest on its own, typically ~0.1–0.5 ms saved per frame on mid-tier mobile, more in scenes with many custom shaders or post-effect chains, but stacks cleanly with every other rendering win.
+- TMX GPU renderer: fragment shader branches on `uOverflow == (0, 0)` and uses a single-cell fast path for tilesets whose tiles fit the cell exactly (the common case), skipping the worst-case 25-iteration candidate-cell loop entirely. The slow path (oversized bottom-aligned tiles) is unchanged. Roughly 10–25% fragment-shader cost reduction for the common case (~0.05–0.2 ms per frame on mid-tier mobile, lost in the noise on desktop GPUs); the win compounds with viewport size since fragment work scales with pixel count.
 
 ## [19.3.0] (melonJS 2) - _2026-05-08_
 

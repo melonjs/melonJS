@@ -379,6 +379,24 @@ export default class Application {
 		this.world.app = this;
 		// set the reference to this application instance
 		this.world.physic = this.settings.physic;
+		this.world.gpuTilemap = this.settings.gpuTilemap;
+
+		// The GPU tilemap path needs a WebGL 2 renderer. Warn once at app
+		// startup when the user asked for it but the active renderer
+		// can't honor it (Canvas mode, WebGL 1 driver, `preferWebGL1`
+		// override, etc.) — individual layers will silently fall through
+		// to the legacy renderer, but the user gets one heads-up that
+		// the feature they enabled isn't actually in effect.
+		if (
+			this.settings.gpuTilemap &&
+			// duck-type rather than `instanceof WebGLRenderer` to avoid a
+			// runtime import; only the WebGL renderer carries `WebGLVersion`
+			(this.renderer as unknown as { WebGLVersion?: number }).WebGLVersion !== 2
+		) {
+			console.warn(
+				"melonJS: gpuTilemap is enabled but the active renderer is not WebGL 2 — falling back to the legacy tile renderer for every tile layer",
+			);
+		}
 
 		// app starting time
 		this.lastUpdate = globalThis.performance.now();

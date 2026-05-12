@@ -1,4 +1,3 @@
-import { isPowerOfTwo } from "./../../math/math.ts";
 import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
 import { createAtlas, TextureAtlas } from "./atlas.js";
@@ -113,26 +112,6 @@ class TextureCache {
 	 * cache the textureAltas for the given image
 	 */
 	set(image, textureAtlas) {
-		const width = image.width || image.videoWidth;
-		const height = image.height || image.videoHeight;
-
-		// warn if a non POT texture is added to the cache when using WebGL1
-		if (
-			this.renderer.WebGLVersion === 1 &&
-			(!isPowerOfTwo(width) || !isPowerOfTwo(height))
-		) {
-			const src = typeof image.src !== "undefined" ? image.src : image;
-			console.warn(
-				"[Texture] " +
-					src +
-					" is not a POT texture " +
-					"(" +
-					width +
-					"x" +
-					height +
-					")",
-			);
-		}
 		return this.cache.put(image, textureAtlas);
 	}
 
