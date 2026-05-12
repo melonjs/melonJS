@@ -316,8 +316,14 @@ export class MaterialBatcher extends Batcher {
 			// texture dimensions from the source, falling back to the
 			// passed-in values only when the source has none.
 			const source = texture.getTexture();
-			const texW = typeof source.width === "number" ? source.width : w;
-			const texH = typeof source.height === "number" ? source.height : h;
+			// `HTMLVideoElement` exposes its real pixel dimensions through
+			// `videoWidth`/`videoHeight`; `width`/`height` default to 0
+			// until the element is explicitly sized. Prefer the regular
+			// width/height when non-zero, otherwise fall back to the
+			// video-specific properties, and finally to the caller-supplied
+			// w/h for sources that have neither.
+			const texW = source.width || source.videoWidth || w;
+			const texH = source.height || source.videoHeight || h;
 			this.createTexture2D(
 				unit,
 				source,

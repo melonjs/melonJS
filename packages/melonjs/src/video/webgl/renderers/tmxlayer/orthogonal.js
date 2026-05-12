@@ -84,14 +84,19 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 */
 	reset() {
 		const batcher = this.renderer.currentBatcher;
+		const cache = this.renderer.cache;
 		const drop = (resource) => {
 			// route through the batcher so its `boundTextures` bookkeeping
-			// stays in sync; falls back to a raw `cache.delete` when no
-			// batcher is active (e.g. context tear-down)
+			// stays in sync. When no batcher is active (e.g. context tear-
+			// down) we don't have a clean GL deletion path, but we still
+			// need to free the unit assignment — `cache.delete()` only
+			// touches the image→atlas map and would leave the unit slot
+			// held forever otherwise, so call `freeTextureUnit()` too.
 			if (batcher !== undefined) {
 				batcher.deleteTexture2D(resource);
 			} else {
-				this.renderer.cache.delete(resource);
+				cache.freeTextureUnit(resource);
+				cache.delete(resource);
 			}
 		};
 		for (const resource of this.resources.values()) {

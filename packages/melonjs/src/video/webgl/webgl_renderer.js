@@ -406,12 +406,16 @@ export default class WebGLRenderer extends Renderer {
 			this._lightAtlas = undefined;
 		}
 
-		// drop the lazily-cached TMX GPU renderer — its shader program and
-		// per-layer GL textures reference the OLD context, which is gone.
-		// No `gl.deleteTexture` needed: the context tear-down already
-		// invalidated every handle. Lazy re-init happens on the next
-		// drawTileLayer shader-path call.
-		this._orthogonalTMXGPURenderer = undefined;
+		// Context-loss-only cleanup for the TMX GPU renderer: the cached
+		// `GLShader` and per-layer GL textures reference the OLD context
+		// and are invalid. On a regular `GAME_RESET` (context still
+		// valid) we already dropped per-layer textures via `.reset()`
+		// above and keep the renderer instance so its compiled shader
+		// program survives across level transitions instead of leaking a
+		// `WebGLProgram` per reset and re-paying the compile cost.
+		if (this.isContextValid === false) {
+			this._orthogonalTMXGPURenderer = undefined;
+		}
 	}
 
 	/**
