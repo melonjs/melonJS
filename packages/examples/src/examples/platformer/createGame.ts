@@ -28,7 +28,7 @@ export const createGame = () => {
 		renderer: video.AUTO,
 		preferWebGL1: false,
 		subPixel: false,
-		highPrecisionShader: !device.isMobile,
+		highPrecisionShader: false,
 	});
 
 	// register the debug plugin

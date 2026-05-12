@@ -82,6 +82,23 @@ export default class World extends Container {
 		this.preRender = false;
 
 		/**
+		 * Enable the WebGL2 procedural shader path for orthogonal tile
+		 * layers. When `true` (default), eligible layers render via a
+		 * single quad per tileset + a fragment shader doing per-pixel GID
+		 * lookup — bypassing the per-tile drawImage loop entirely.
+		 * Supported features on the shader path: animated tiles, all
+		 * three flip bits (H/V/AD), per-layer opacity/tint/blend mode,
+		 * and oversized bottom-aligned tiles up to 4 cells of overflow.
+		 * Layers that don't qualify (Canvas/WebGL1, non-orthogonal,
+		 * collection-of-image tilesets, non-zero `tileoffset`, or tile
+		 * overflow beyond the shader's 4-cell limit) fall back to the
+		 * legacy path automatically. Set to `false` to disable globally.
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.gpuTilemap = true;
+
+		/**
 		 * the active physic bodies in this simulation
 		 * @type {Set<Body>}
 		 */

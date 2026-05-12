@@ -27,6 +27,7 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import RadialGradientEffect from "./effects/radialGradient.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
+import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
 /**
@@ -348,6 +349,11 @@ export default class WebGLRenderer extends Renderer {
 		// clear gl context
 		this.clear();
 
+		// drop every per-layer GPU tilemap texture — tile layers churn on
+		// game reset and we'd otherwise leak a WebGLTexture per layer
+		// across each level transition
+		this._orthogonalTMXGPURenderer?.reset();
+
 		// initial viewport size
 		this.setViewport();
 
@@ -399,6 +405,70 @@ export default class WebGLRenderer extends Renderer {
 			});
 			this._lightAtlas = undefined;
 		}
+
+		// Context-loss-only cleanup for the TMX GPU renderer: the cached
+		// `GLShader` and per-layer GL textures reference the OLD context
+		// and are invalid. On a regular `GAME_RESET` (context still
+		// valid) we already dropped per-layer textures via `.reset()`
+		// above and keep the renderer instance so its compiled shader
+		// program survives across level transitions instead of leaking a
+		// `WebGLProgram` per reset and re-paying the compile cost.
+		if (this.isContextValid === false) {
+			this._orthogonalTMXGPURenderer = undefined;
+		}
+	}
+
+	/**
+	 * Draw a TMX tile layer through whichever path the layer's `renderMode`
+	 * resolves to. WebGL2-eligible layers (`renderMode === "shader"`) take
+	 * the procedural shader path — one quad per tileset, GID lookup in a
+	 * per-layer data texture. All other layers fall through to the base
+	 * `Renderer.drawTileLayer` (preRender blit or per-tile loop).
+	 * @param {object} layer - the TMXLayer to draw
+	 * @param {object} rect - the visible region in world coords
+	 */
+	drawTileLayer(layer, rect) {
+		if (layer.renderMode === "shader") {
+			const gpu = this._getTMXGPURendererFor(layer.orientation);
+			if (gpu !== undefined) {
+				gpu.draw(layer, rect);
+				return;
+			}
+		}
+		super.drawTileLayer(layer, rect);
+	}
+
+	/**
+	 * Lazy-init the orientation-specific GPU tilemap renderer.
+	 * @param {string} orientation
+	 * @returns {object|undefined}
+	 * @ignore
+	 */
+	_getTMXGPURendererFor(orientation) {
+		if (orientation === "orthogonal") {
+			if (this._orthogonalTMXGPURenderer === undefined) {
+				try {
+					this._orthogonalTMXGPURenderer = new OrthogonalTMXLayerGPURenderer(
+						this,
+					);
+				} catch (err) {
+					// shader compile / link failure on this driver — disable
+					// the GPU path permanently for the rest of the session
+					// (the next `drawTileLayer` call falls through to the
+					// legacy renderer). Stored as `null` so subsequent
+					// attempts short-circuit without re-trying the failing
+					// compile every frame.
+					console.warn(
+						"melonJS: GPU tilemap shader failed to compile, falling back to legacy renderer",
+						err,
+					);
+					this._orthogonalTMXGPURenderer = null;
+				}
+			}
+			return this._orthogonalTMXGPURenderer || undefined;
+		}
+		// isometric / staggered / hexagonal: phase 2
+		return undefined;
 	}
 
 	/**

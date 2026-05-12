@@ -317,7 +317,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	}
 
 	/**
-	 * draw the tile map
+	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
 	 */
 	drawTile(renderer, x, y, tmxTile) {
@@ -336,12 +336,29 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	}
 
 	/**
+	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
+	 * rendering loop to bypass Tile construction
+	 * @ignore
+	 */
+	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
+		const point = this.tileToPixelCoords(x, y, vector2dPool.get());
+
+		tileset.drawTileRaw(
+			renderer,
+			tileset.tileoffset.x + point.x,
+			tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight),
+			gid,
+			flipMask,
+		);
+
+		vector2dPool.release(point);
+	}
+
+	/**
 	 * draw the tile map
 	 * @ignore
 	 */
 	drawTileLayer(renderer, layer, rect) {
-		let tile;
-
 		// get top-left and bottom-right tile position
 		const startTile = this.pixelToTileCoords(
 			rect.pos.x,
@@ -380,6 +397,24 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		const endX = layer.cols;
 		const endY = layer.rows;
 
+		// shared hot-loop state for both stagger branches — read (gid, flipMask)
+		// straight from the typed array and resolve the tileset with a
+		// short-circuit cache.
+		// NOTE: the hex hot loop bypasses `this.drawTileRaw` and calls
+		// `tilesetCache.drawTileRaw` directly because it maintains pre-computed
+		// pixel coords (`rowPos.x`, `rowPos.y`) incrementally across the
+		// staggered iteration; going through drawTileRaw would re-derive them
+		// from layer-cell coords via tileToPixelCoords and lose the gain.
+		const layerCols = layer.cols;
+		const data = layer.layerData;
+		const tilesets = layer.tilesets;
+		let tilesetCache = layer.tileset;
+		if (tilesetCache === null) {
+			vector2dPool.release(startTile);
+			vector2dPool.release(startPos);
+			return;
+		}
+
 		if (this.staggerX) {
 			//ensure we are in the valid tile range
 			startTile.x = Math.max(0, startTile.x);
@@ -399,10 +434,22 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 				rowPos.setV(startPos);
 
 				for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x += 2) {
-					tile = layer.cellAt(rowTile.x, rowTile.y, false);
-					if (tile) {
-						// draw the tile
-						tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
+					if (rowTile.x >= 0 && rowTile.y >= 0 && rowTile.y < layer.rows) {
+						const idx = (rowTile.y * layerCols + rowTile.x) * 2;
+						const gid = data[idx];
+						if (gid) {
+							const flipMask = data[idx + 1];
+							if (!tilesetCache.contains(gid)) {
+								tilesetCache = tilesets.getTilesetByGid(gid);
+							}
+							tilesetCache.drawTileRaw(
+								renderer,
+								rowPos.x,
+								rowPos.y,
+								gid,
+								flipMask,
+							);
+						}
 					}
 					rowPos.x += this.tilewidth + this.sidelengthx;
 				}
@@ -448,10 +495,22 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 				}
 
 				for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x++) {
-					tile = layer.cellAt(rowTile.x, rowTile.y, false);
-					if (tile) {
-						// draw the tile
-						tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
+					if (rowTile.x >= 0 && rowTile.y >= 0 && rowTile.y < layer.rows) {
+						const idx = (rowTile.y * layerCols + rowTile.x) * 2;
+						const gid = data[idx];
+						if (gid) {
+							const flipMask = data[idx + 1];
+							if (!tilesetCache.contains(gid)) {
+								tilesetCache = tilesets.getTilesetByGid(gid);
+							}
+							tilesetCache.drawTileRaw(
+								renderer,
+								rowPos.x,
+								rowPos.y,
+								gid,
+								flipMask,
+							);
+						}
 					}
 					rowPos.x += this.tilewidth + this.sidelengthx;
 				}

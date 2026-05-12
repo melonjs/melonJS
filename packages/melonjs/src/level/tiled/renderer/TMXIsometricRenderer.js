@@ -85,7 +85,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	}
 
 	/**
-	 * draw the tile map
+	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
 	 */
 	drawTile(renderer, x, y, tmxTile) {
@@ -96,6 +96,21 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 			((this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth) >> 1,
 			(-tileset.tilewidth + (x + y) * tileset.tileheight) >> 2,
 			tmxTile,
+		);
+	}
+
+	/**
+	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
+	 * rendering loop to bypass Tile construction
+	 * @ignore
+	 */
+	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
+		tileset.drawTileRaw(
+			renderer,
+			((this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth) >> 1,
+			(-tileset.tilewidth + (x + y) * tileset.tileheight) >> 2,
+			gid,
+			flipMask,
 		);
 	}
 
@@ -159,7 +174,25 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		// initialize the columnItr vector
 		const columnItr = vector2dPool.get().setV(rowItr);
 
-		// main drawing loop
+		// main drawing loop — read (gid, flipMask) straight from the typed
+		// array and resolve the tileset with a short-circuit cache.
+		// NOTE: the iso hot loop bypasses `this.drawTileRaw` because it has
+		// already computed pixel coords (`x`, `y/2`) from the staggered scan;
+		// going through drawTileRaw would re-derive them from layer-cell coords
+		// and lose the precomputation.
+		const layerCols = layer.cols;
+		const layerRows = layer.rows;
+		const data = layer.layerData;
+		const tilesets = layer.tilesets;
+		let tilesetCache = tileset;
+		if (tilesetCache === null) {
+			vector2dPool.release(columnItr);
+			vector2dPool.release(rowItr);
+			vector2dPool.release(tileEnd);
+			vector2dPool.release(rectEnd);
+			vector2dPool.release(startPos);
+			return;
+		}
 		for (
 			let y = startPos.y * 2;
 			y - this.tileheight * 2 < rectEnd.y * 2;
@@ -167,19 +200,26 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		) {
 			columnItr.setV(rowItr);
 			for (let x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-				const tmxTile = layer.cellAt(columnItr.x, columnItr.y);
-				// render if a valid tile position
-				if (tmxTile) {
-					tileset = tmxTile.tileset;
-					// offset could be different per tileset
-					const offset = tileset.tileoffset;
-					// draw our tile
-					tileset.drawTile(
-						renderer,
-						offset.x + x,
-						offset.y + y / 2 - tileset.tileheight,
-						tmxTile,
-					);
+				const cx = columnItr.x;
+				const cy = columnItr.y;
+				// bounds check (this loop didn't disable it in the old path)
+				if (cx >= 0 && cx < layerCols && cy >= 0 && cy < layerRows) {
+					const idx = (cy * layerCols + cx) * 2;
+					const gid = data[idx];
+					if (gid !== 0) {
+						const flipMask = data[idx + 1];
+						if (!tilesetCache.contains(gid)) {
+							tilesetCache = tilesets.getTilesetByGid(gid);
+						}
+						const offset = tilesetCache.tileoffset;
+						tilesetCache.drawTileRaw(
+							renderer,
+							offset.x + x,
+							offset.y + y / 2 - tilesetCache.tileheight,
+							gid,
+							flipMask,
+						);
+					}
 				}
 
 				// Advance to the next column

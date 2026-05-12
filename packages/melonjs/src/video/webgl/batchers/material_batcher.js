@@ -81,16 +81,33 @@ export class MaterialBatcher extends Batcher {
 	) {
 		const gl = this.gl;
 		const isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
+		const wantsRepeat = repeat !== "no-repeat";
+		const canRepeat = isPOT || this.renderer.WebGLVersion > 1;
 		const rs =
-			repeat.search(/^repeat(-x)?$/) === 0 &&
-			(isPOT || this.renderer.WebGLVersion > 1)
+			repeat.search(/^repeat(-x)?$/) === 0 && canRepeat
 				? gl.REPEAT
 				: gl.CLAMP_TO_EDGE;
 		const rt =
-			repeat.search(/^repeat(-y)?$/) === 0 &&
-			(isPOT || this.renderer.WebGLVersion > 1)
+			repeat.search(/^repeat(-y)?$/) === 0 && canRepeat
 				? gl.REPEAT
 				: gl.CLAMP_TO_EDGE;
+
+		// Warn (only when actually downgrading) — the caller asked for tiling
+		// but we have to clamp because WebGL 1 does not allow `REPEAT` on
+		// non-power-of-two textures. Their `repeat: "repeat*"` setting will
+		// have no visible effect. Either resize the source to POT or run on
+		// a WebGL 2 context.
+		if (wantsRepeat && !canRepeat) {
+			console.warn(
+				"melonJS: repeat wrap (" +
+					repeat +
+					") requested on a non-power-of-two texture (" +
+					w +
+					"x" +
+					h +
+					") under WebGL 1 — downgrading to clamp-to-edge",
+			);
+		}
 
 		let currentTexture = texture;
 		if (!currentTexture) {
@@ -106,7 +123,12 @@ export class MaterialBatcher extends Batcher {
 
 		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
 
-		if (pixels !== null && pixels.compressed === true) {
+		if (pixels !== null && typeof pixels.upload === "function") {
+			// `TextureResource` path: the resource owns its upload (raw
+			// buffer, future synthesized sources, etc.). Keeps every
+			// `gl.texImage2D` variant in one place per source type.
+			pixels.upload(gl, gl.TEXTURE_2D);
+		} else if (pixels !== null && pixels.compressed === true) {
 			const mipmaps = pixels.mipmaps;
 			for (let i = 0; i < mipmaps.length; i++) {
 				gl.compressedTexImage2D(
@@ -174,8 +196,12 @@ export class MaterialBatcher extends Batcher {
 		if (
 			isPOT &&
 			mipmap === true &&
-			(pixels === null || pixels.compressed !== true)
+			pixels !== null &&
+			pixels.compressed !== true &&
+			typeof pixels.upload !== "function"
 		) {
+			gl.generateMipmap(gl.TEXTURE_2D);
+		} else if (pixels === null && isPOT && mipmap === true) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
 
@@ -260,19 +286,51 @@ export class MaterialBatcher extends Batcher {
 
 	/**
 	 * @ignore
+	 * @param {TextureAtlas|TextureResource} texture
+	 * @param {number} [w] - ignored when the source has its own `width` (the
+	 *   common case); kept for the legacy signature where callers passed a
+	 *   destination size. Forwarded only as a last-resort default.
+	 * @param {number} [h] - same as `w`.
+	 * @param {boolean} [force=false]
+	 * @param {boolean} [flush=true]
 	 */
 	uploadTexture(texture, w, h, force = false, flush = true) {
 		const unit = this.renderer.cache.getUnit(texture);
 		const texture2D = this.boundTextures[unit];
 
 		if (typeof texture2D === "undefined" || force) {
+			// honor a resource-specified filter (e.g. tilemap index textures
+			// need NEAREST regardless of the global antiAlias setting),
+			// otherwise fall back to the renderer-wide preference
+			const filter =
+				typeof texture.filter !== "undefined"
+					? texture.filter
+					: this.renderer.settings.antiAlias
+						? this.gl.LINEAR
+						: this.gl.NEAREST;
+			// `w`/`h` historically came from callers (e.g. `addQuad`) that
+			// passed the DESTINATION quad size, not the texture size. That
+			// broke the downstream POT check — a 480×1216 atlas drawn into
+			// a 256×256 quad reported `isPOT=true` and tripped
+			// `gl.generateMipmap` on WebGL 1. Always derive the actual
+			// texture dimensions from the source, falling back to the
+			// passed-in values only when the source has none.
+			const source = texture.getTexture();
+			// `HTMLVideoElement` exposes its real pixel dimensions through
+			// `videoWidth`/`videoHeight`; `width`/`height` default to 0
+			// until the element is explicitly sized. Prefer the regular
+			// width/height when non-zero, otherwise fall back to the
+			// video-specific properties, and finally to the caller-supplied
+			// w/h for sources that have neither.
+			const texW = source.width || source.videoWidth || w;
+			const texH = source.height || source.videoHeight || h;
 			this.createTexture2D(
 				unit,
-				texture.getTexture(),
-				this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
+				source,
+				filter,
 				texture.repeat,
-				w,
-				h,
+				texW,
+				texH,
 				texture.premultipliedAlpha,
 				undefined,
 				texture2D,

@@ -13,6 +13,7 @@ export const defaultApplicationSettings = {
 	consoleHeader: true,
 	blendMode: "normal",
 	physic: "builtin",
+	gpuTilemap: true,
 	failIfMajorPerformanceCaveat: true,
 	highPrecisionShader: true,
 	subPixel: false,

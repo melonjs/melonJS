@@ -466,6 +466,47 @@ export default class Renderer {
 	}
 
 	/**
+	 * Draw a TMX tile layer. Default behavior:
+	 *   - if `layer.canvasRenderer` is set (preRender bake), blit the cached
+	 *     offscreen canvas in a single `drawImage` call;
+	 *   - otherwise delegate to the layer's TMX orientation renderer for
+	 *     the per-tile loop.
+	 *
+	 * `WebGLRenderer` overrides this to add the procedural shader fast
+	 * path on top (when `layer.renderMode === "shader"`) and fall through
+	 * to this base behavior for all other layers.
+	 * @param {object} layer - the TMXLayer to draw
+	 * @param {Rect} rect - the visible region in world coords
+	 */
+	drawTileLayer(layer, rect) {
+		if (layer.canvasRenderer) {
+			// clamp the source rect to the cached canvas bounds — the
+			// visible region can start inside the layer (camera scrolled
+			// in from the origin) and extend past the layer's right /
+			// bottom edge, so the source width must be reduced by
+			// `rect.pos.*` to avoid reading past the canvas
+			const width = Math.min(rect.width, layer.width - rect.pos.x);
+			const height = Math.min(rect.height, layer.height - rect.pos.y);
+			if (width <= 0 || height <= 0) {
+				return;
+			}
+			this.drawImage(
+				layer.canvasRenderer.getCanvas(),
+				rect.pos.x,
+				rect.pos.y,
+				width,
+				height,
+				rect.pos.x,
+				rect.pos.y,
+				width,
+				height,
+			);
+			return;
+		}
+		layer.getRenderer().drawTileLayer(this, layer, rect);
+	}
+
+	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
 	 * @param {Color|string|Gradient} color - css color value or a Gradient object
