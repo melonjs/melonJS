@@ -73,10 +73,14 @@ function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
 	if (physic === undefined || physic === "builtin") {
 		return { adapter: undefined, legacyString: "builtin" };
 	}
-	// instance or { adapter } object — extract and pass through
+	// instance or { adapter } object — extract and pass through. The
+	// adapter's `physicLabel` becomes `world.physic` so user code can
+	// branch on `world.physic === "matter"` (etc.) without importing the
+	// concrete adapter class. Falls back to "builtin" for adapters
+	// predating the `physicLabel` field.
 	const adapter =
 		typeof physic === "object" && "adapter" in physic ? physic.adapter : physic;
-	return { adapter, legacyString: "builtin" };
+	return { adapter, legacyString: adapter?.physicLabel ?? "builtin" };
 }
 
 /**

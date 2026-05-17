@@ -259,11 +259,19 @@ export default class Body {
 		this.gravityScale = 1.0;
 
 		/**
-		 * If true this body won't be affected by the world gravity
+		 * If true this body won't be affected by the world gravity.
 		 * @public
 		 * @see {@link World.gravity}
 		 * @type {boolean}
 		 * @default false
+		 * @deprecated since 19.5.0 — use `gravityScale = 0` (or
+		 * `bodyDef.gravityScale = 0` at construction, or
+		 * `body.setGravityScale(0)` at runtime) instead. `gravityScale`
+		 * is part of the portable {@link PhysicsBody} surface and works
+		 * on every adapter; `ignoreGravity` is a builtin-only field that
+		 * the matter adapter silently ignores. The two-field check
+		 * (`!ignoreGravity && gravityScale !== 0`) used by builtin is
+		 * redundant — set `gravityScale = 0` and both branches agree.
 		 */
 		this.ignoreGravity = false;
 
@@ -843,7 +851,12 @@ export default class Body {
 			}
 		}
 
-		if (overlap.y !== 0 && !this.ignoreGravity) {
+		// Update falling/jumping flags only for gravity-affected bodies.
+		// `ignoreGravity` is the legacy opt-out; `gravityScale === 0` is the
+		// portable equivalent (see Body#gravityScale). Either disables the
+		// state machine — a hovering platform or a free-floating projectile
+		// shouldn't be marked "falling" on a head-on side collision.
+		if (overlap.y !== 0 && !this.ignoreGravity && this.gravityScale !== 0) {
 			// cancel the falling an jumping flags if necessary
 			const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
 			this.falling = overlap.y >= dir;

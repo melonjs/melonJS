@@ -354,6 +354,31 @@ export interface PhysicsAdapter {
 	readonly capabilities: AdapterCapabilities;
 
 	/**
+	 * Short adapter identifier exposed as `world.physic`. User code uses
+	 * it to branch on which physics implementation is active without
+	 * importing the adapter class — e.g.
+	 *
+	 * ```ts
+	 * if (app.world.physic === "matter") {
+	 *     // matter-only setup (constraints, etc.)
+	 * }
+	 * ```
+	 *
+	 * Convention: a single lowercase token. The first-party labels are
+	 * `"builtin"` (default — `BuiltinAdapter`) and `"matter"`
+	 * (`@melonjs/matter-adapter`). Third-party adapters should pick a
+	 * concise identifier that won't collide with future official ones.
+	 *
+	 * The reserved value `"none"` is set on `world.physic` only when the
+	 * user passes `physic: "none"` to `Application` to disable physics
+	 * entirely; adapters should not use it.
+	 *
+	 * Defaults to `"builtin"` if an adapter doesn't declare its own — keeps
+	 * legacy adapters wired in before this field was added still working.
+	 */
+	readonly physicLabel?: string;
+
+	/**
 	 * Optional display name reported on the startup banner. Defaults to
 	 * the adapter class name. Third-party packages typically set this to
 	 * their npm package id (e.g. `"@melonjs/matter-adapter"`).

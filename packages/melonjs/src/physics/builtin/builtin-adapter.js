@@ -25,6 +25,15 @@ import Detector from "./detector.js";
  */
 export default class BuiltinAdapter {
 	/**
+	 * Short adapter identifier exposed as `world.physic`. Lets user code
+	 * branch on the active physics implementation without importing the
+	 * concrete adapter class.
+	 * @type {string}
+	 * @default "builtin"
+	 */
+	physicLabel = "builtin";
+
+	/**
 	 * @param {AdapterOptions} [options]
 	 */
 	constructor(options = {}) {
@@ -481,7 +490,12 @@ export default class BuiltinAdapter {
 	 * @param {Body} body
 	 */
 	applyGravity(body) {
-		if (!body.ignoreGravity && body.gravityScale !== 0) {
+		// `ignoreGravity` is deprecated in favor of `gravityScale = 0`
+		// (see Body#ignoreGravity JSDoc). Keep both checks until the
+		// legacy field is removed — `gravityScale = 0` is the portable
+		// path that also works under matter; `ignoreGravity = true` is
+		// the legacy path that only this adapter reads.
+		if (body.gravityScale !== 0 && !body.ignoreGravity) {
 			body.force.x += body.mass * this.gravity.x * body.gravityScale;
 			body.force.y += body.mass * this.gravity.y * body.gravityScale;
 		}

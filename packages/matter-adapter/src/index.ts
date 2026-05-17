@@ -80,6 +80,7 @@ export interface MatterAdapterOptions {
  * });
  */
 export class MatterAdapter implements PhysicsAdapter {
+	readonly physicLabel = "matter";
 	readonly name = "@melonjs/matter-adapter";
 	readonly version = __VERSION__;
 	readonly url = "https://www.npmjs.com/package/@melonjs/matter-adapter";
