@@ -65,13 +65,13 @@ import type {
  */
 function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
 	adapter: PhysicsAdapter | undefined;
-	legacyString: string;
+	physicLabel: string;
 } {
 	if (physic === "none") {
-		return { adapter: undefined, legacyString: "none" };
+		return { adapter: undefined, physicLabel: "none" };
 	}
 	if (physic === undefined || physic === "builtin") {
-		return { adapter: undefined, legacyString: "builtin" };
+		return { adapter: undefined, physicLabel: "builtin" };
 	}
 	// instance or { adapter } object — extract and pass through. The
 	// adapter's `physicLabel` becomes `world.physic` so user code can
@@ -80,7 +80,7 @@ function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
 	// predating the `physicLabel` field.
 	const adapter =
 		typeof physic === "object" && "adapter" in physic ? physic.adapter : physic;
-	return { adapter, legacyString: adapter?.physicLabel ?? "builtin" };
+	return { adapter, physicLabel: adapter?.physicLabel ?? "builtin" };
 }
 
 /**
@@ -420,9 +420,7 @@ export default class Application {
 		// `new BuiltinAdapter({ gravity })` or
 		// `new MatterAdapter()` from `@melonjs/matter-adapter`), or the
 		// explicit form `{ adapter: PhysicsAdapter }`.
-		const { adapter, legacyString } = resolvePhysicSetting(
-			this.settings.physic,
-		);
+		const { adapter, physicLabel } = resolvePhysicSetting(this.settings.physic);
 
 		// create a new physic world wired to the resolved adapter
 		this.world = new World(
@@ -435,11 +433,12 @@ export default class Application {
 
 		// set the reference to this application instance
 		this.world.app = this;
-		// preserve the legacy string for the World.step() no-op gate
-		// ("builtin" runs the simulation; "none" skips it). Custom-adapter
-		// users still get "builtin" stepping — they opted in by passing
-		// the adapter instance.
-		this.world.physic = legacyString;
+		// `world.physic` carries the active adapter's identifier
+		// (`"builtin"`, `"matter"`, third-party label, or the reserved
+		// `"none"` when physics is disabled). User code branches on it;
+		// `World.step` short-circuits the simulation only when the value
+		// is `"none"`.
+		this.world.physic = physicLabel;
 		this.world.gpuTilemap = this.settings.gpuTilemap;
 
 		// report the active physics adapter once the world is wired —

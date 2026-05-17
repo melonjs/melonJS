@@ -240,6 +240,39 @@ describe("Application", () => {
 			expect(app.world.physic).toBe("builtin");
 		});
 
+		it("custom adapter's `physicLabel` propagates to world.physic", () => {
+			// A third-party adapter declares its own identifier. We don't
+			// have a full custom-adapter implementation here, just an
+			// object that satisfies the minimum the wiring touches.
+			const customAdapter = Object.assign(
+				new BuiltinAdapter({ gravity: new Vector2d(0, 0.5) }),
+				{ physicLabel: "stub" },
+			);
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+				physic: customAdapter,
+			});
+			expect(app.world.adapter).toBe(customAdapter);
+			expect(app.world.physic).toBe("stub");
+		});
+
+		it("adapter without `physicLabel` falls back to 'builtin'", () => {
+			// Legacy / third-party adapters that predate the field. We strip
+			// `physicLabel` from a BuiltinAdapter instance to simulate.
+			const legacyAdapter = new BuiltinAdapter();
+			delete legacyAdapter.physicLabel;
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+				physic: legacyAdapter,
+			});
+			expect(app.world.adapter).toBe(legacyAdapter);
+			expect(app.world.physic).toBe("builtin");
+		});
+
 		it("each Application instance gets its own adapter (no sharing)", () => {
 			const app1 = new Application(320, 240, {
 				parent: "screen",
