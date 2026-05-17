@@ -131,7 +131,9 @@ for (const { name, make } of factories) {
 			it("removeBody silently no-ops on unknown renderables", () => {
 				const r = new Renderable(0, 0, 32, 32);
 				// removed without having been added — must not throw
-				expect(() => adapter.removeBody(r)).not.toThrow();
+				expect(() => {
+					adapter.removeBody(r);
+				}).not.toThrow();
 			});
 
 			it("removed body no longer integrates", () => {
@@ -210,8 +212,12 @@ for (const { name, make } of factories) {
 				});
 				// optional method — both adapters implement it now
 				expect(typeof adapter.setSensor).toEqual("function");
-				expect(() => adapter.setSensor?.(r, true)).not.toThrow();
-				expect(() => adapter.setSensor?.(r, false)).not.toThrow();
+				expect(() => {
+					adapter.setSensor?.(r, true);
+				}).not.toThrow();
+				expect(() => {
+					adapter.setSensor?.(r, false);
+				}).not.toThrow();
 			});
 		});
 
@@ -363,14 +369,14 @@ for (const { name, make } of factories) {
 				});
 				const shapes = adapter.getBodyShapes?.(r);
 				expect(shapes).toBeDefined();
-				expect(shapes!.length).toEqual(1);
+				expect(shapes.length).toEqual(1);
 			});
 
 			it("getBodyShapes returns an empty list for unregistered renderables", () => {
 				const r = new Renderable(0, 0, 32, 32);
 				const shapes = adapter.getBodyShapes?.(r);
 				expect(shapes).toBeDefined();
-				expect(shapes!.length).toEqual(0);
+				expect(shapes.length).toEqual(0);
 			});
 		});
 
@@ -574,7 +580,7 @@ for (const { name, make } of factories) {
 					type: "dynamic",
 					shapes: [shape],
 				});
-				const shapes = adapter.getBodyShapes?.(r)!;
+				const shapes = adapter.getBodyShapes?.(r);
 				expect(shapes.length).toEqual(1);
 				const sb = shapes[0].getBounds();
 				expect(sb.left).toBeCloseTo(10, 0);
@@ -586,7 +592,7 @@ for (const { name, make } of factories) {
 
 		describe("capabilities advertise honestly", () => {
 			it("isGrounded capability matches actual implementation", () => {
-				const advertised = adapter.capabilities.isGrounded === true;
+				const advertised = adapter.capabilities.isGrounded;
 				const implemented = typeof adapter.isGrounded === "function";
 				expect(advertised).toEqual(implemented);
 			});
@@ -604,7 +610,9 @@ for (const { name, make } of factories) {
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
 				expect(typeof adapter.setAngle).toEqual("function");
-				expect(() => adapter.setAngle?.(r, Math.PI / 4)).not.toThrow();
+				expect(() => {
+					adapter.setAngle?.(r, Math.PI / 4);
+				}).not.toThrow();
 			});
 		});
 

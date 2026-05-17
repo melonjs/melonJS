@@ -778,6 +778,8 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * space convention (the debug plugin translates to the renderable
 	 * origin before drawing, and would otherwise see the bounds drawn
 	 * offset by the renderable's world position).
+	 * @param renderable - the renderable whose body bounds to read
+	 * @param out - destination `Bounds` (filled in place, also returned)
 	 */
 	getBodyAABB(renderable: Renderable, out: Bounds): Bounds | undefined {
 		const body = this.bodyMap.get(renderable);
@@ -799,6 +801,7 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * array — those are the input shape definitions in local space,
 	 * unchanged by matter's body transformation (rotation is baked into
 	 * matter's vertices, not into our local-space defs). Read-only.
+	 * @param renderable - the renderable whose body shapes to read
 	 */
 	getBodyShapes(renderable: Renderable): readonly BodyShape[] {
 		return this.defMap.get(renderable)?.shapes ?? [];
@@ -1068,6 +1071,7 @@ export class MatterAdapter implements PhysicsAdapter {
  * `MatterAdapter.Body`, etc.
  */
 // biome-ignore lint/style/useNamingConvention: namespace must match the class it merges with
+// eslint-disable-next-line @typescript-eslint/no-namespace -- intentional class+namespace declaration merge so adapter-owned types (`MatterAdapter.Body`) are reachable alongside the runtime class; cannot be expressed as a separate ES2015 module export
 export namespace MatterAdapter {
 	/**
 	 * The concrete body handle attached to `renderable.body` under

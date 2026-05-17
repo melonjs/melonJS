@@ -12,7 +12,17 @@ export default tseslint.config(
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: ["**/build", "**/docs/**/*", "**/node_modules", "**/examples"],
+		ignores: [
+			"**/build",
+			"**/docs/**/*",
+			"**/node_modules",
+			"**/examples",
+			// vitest config files are runtime build configs, intentionally
+			// outside the TS project graph — `@typescript-eslint`'s type-aware
+			// rules can't resolve them and report "not found by the project
+			// service" parsing errors. Vitest does its own config validation.
+			"**/vitest.config.ts",
+		],
 	},
 	{
 		name: "eslint/global-rules",
@@ -201,6 +211,22 @@ export default tseslint.config(
 				projectService: true,
 				tsconfigRootDir: import.meta.dirname,
 			},
+		},
+	},
+	{
+		// Test-file overrides. Tests legitimately assert preconditions
+		// (`?.()!` on optional adapter methods the test knows exist),
+		// use deprecated setup helpers like `video.init` (kept around
+		// specifically to make test scaffolding terse), and may declare
+		// async test bodies without an `await` yet. None of those
+		// patterns warrant blocking the build.
+		name: "eslint/tests",
+		files: ["**/tests/**/*.{ts,tsx,mts,cts}"],
+		rules: {
+			"@typescript-eslint/no-non-null-asserted-optional-chain": "off",
+			"@typescript-eslint/no-deprecated": "off",
+			"@typescript-eslint/require-await": "off",
+			"@typescript-eslint/unbound-method": "off",
 		},
 	},
 );
