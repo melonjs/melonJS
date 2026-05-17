@@ -44,11 +44,14 @@ That's it — every renderable that declares a `bodyDef` gets registered with ma
 ```ts
 new MatterAdapter({
     gravity?: { x: number; y: number };        // default { x: 0, y: 1 }
+    subSteps?: number;                         // default 1
     matterEngineOptions?: Matter.IEngineDefinition; // pass-through to Matter.Engine.create
 })
 ```
 
 The defaults are matter-js native (`gravity = (0, 1)` with `gravity.scale = 0.001`). For an arcade-feel platformer where the player moves a few px per step, you usually want a stronger `gravity.y` (e.g. `4`–`6`).
+
+`subSteps` divides the per-frame delta into `N` smaller integration steps. Matter's broad phase isn't swept — a body that moves more than ~one collision radius per tick can tunnel through a wall or another body — so for very fast objects (break shots in a pool game, projectiles, high-velocity launches) bump this to `2`–`4` at the cost of `N×` solver work. The default `1` reproduces the legacy single-step behaviour exactly.
 
 ## Collision Events
 
@@ -95,37 +98,55 @@ In canvas coordinates (y grows downward):
 
 ## Body helper methods
 
-The canonical portable surface is the `PhysicsAdapter` interface. As a convenience, this adapter also bolts the same operations onto `renderable.body` so the idiomatic form available on built-in `me.Body` works here too:
+The canonical portable surface is the `PhysicsAdapter` interface — every method below is also reachable as `adapter.X(renderable, ...)`. As a convenience this adapter bolts the same operations onto `renderable.body` so the idiomatic form available on built-in `me.Body` works here too:
 
 ```ts
-body.setVelocity(x, y)        // ⇔ adapter.setVelocity(renderable, { x, y })
-body.getVelocity(out?)        // ⇔ adapter.getVelocity(renderable, out)
-body.applyForce(x, y)         // ⇔ adapter.applyForce(renderable, { x, y })
-body.applyImpulse(x, y)       // ⇔ adapter.applyImpulse(renderable, { x, y })
-body.setSensor(isSensor?)     // ⇔ adapter.setSensor(renderable, isSensor)
-body.setStatic(isStatic?)     // ⇔ adapter.setStatic(renderable, isStatic)
-body.setMass(m)               // wraps Matter.Body.setMass
-body.setBounce(r)             // writes Matter.Body.restitution
-body.setGravityScale(s)       // ⇔ adapter.setGravityScale(renderable, s)
-body.setCollisionMask(mask)   // writes Matter.Body.collisionFilter.mask
-body.setCollisionType(type)   // writes Matter.Body.collisionFilter.category
+// Linear kinematics
+body.setVelocity(x, y)                       // ⇔ adapter.setVelocity(renderable, { x, y })
+body.getVelocity(out?)                       // ⇔ adapter.getVelocity(renderable, out)
+body.applyForce(x, y)                        // ⇔ adapter.applyForce(renderable, { x, y })
+body.applyForce(x, y, pointX, pointY)        // off-centre force ⇒ generates torque (matter native)
+body.applyImpulse(x, y)                      // ⇔ adapter.applyImpulse(renderable, { x, y })
+
+// Angular kinematics
+body.setAngle(rad)                           // ⇔ adapter.setAngle(renderable, rad)
+body.getAngle()                              // ⇔ adapter.getAngle(renderable)
+body.setAngularVelocity(omega)               // ⇔ adapter.setAngularVelocity(renderable, omega)
+body.getAngularVelocity()                    // ⇔ adapter.getAngularVelocity(renderable)
+body.applyTorque(t)                          // ⇔ adapter.applyTorque(renderable, t)
+
+// Body state
+body.setSensor(isSensor?)                    // ⇔ adapter.setSensor(renderable, isSensor)
+body.setStatic(isStatic?)                    // ⇔ adapter.setStatic(renderable, isStatic)
+body.setMass(m)                              // wraps Matter.Body.setMass
+body.setBounce(r)                            // writes Matter.Body.restitution
+body.setGravityScale(s)                      // ⇔ adapter.setGravityScale(renderable, s)
+body.setCollisionMask(mask)                  // writes Matter.Body.collisionFilter.mask
+body.setCollisionType(type)                  // writes Matter.Body.collisionFilter.category
 ```
 
-Pick whichever reads better at the call site — both forms are portable. The raw matter free functions (`Matter.Body.setVelocity(body, v)` etc.) are not stripped, so they remain available for matter-specific arguments like a custom application point.
+Pick whichever reads better at the call site — both forms are portable. The raw matter free functions (`Matter.Body.setVelocity(body, v)` etc.) are not stripped, so they remain available if you want to keep matter idioms verbatim.
+
+### Reaching matter-native body fields
+
+The fields that matter exposes on its `Body` interface (`frictionAir`, `friction`, `restitution`, `angle`, `angularVelocity`, `torque`, `inertia`, …) are reachable directly on the body. Cast to the published `MatterAdapter.Body` type to keep type-checking happy without taking a direct `matter-js` import:
+
+```ts
+import { MatterAdapter } from "@melonjs/matter-adapter";
+
+// e.g. tune ball-felt drag based on speed (the pool-matter example uses this
+// for a sliding-vs-rolling friction split):
+(ball.body as MatterAdapter.Body).frictionAir = isSliding ? 0.018 : 0.003;
+
+// read matter-native angular velocity:
+const omega = (ball.body as MatterAdapter.Body).angularVelocity;
+```
+
+`MatterAdapter.Body` is `ReturnType<typeof Matter.Body.create> & PhysicsBody` — you get matter's full instance shape plus the portable helper methods, without needing to import `matter-js` yourself. Code that does this is matter-only by definition; for portable rotation use the angular kinematic methods above.
 
 ## Matter-specific APIs
 
-These methods are exposed on the adapter for behaviours matter supports but the legacy SAT adapter doesn't have a clean equivalent for. Game code that uses them won't be portable back to the builtin adapter.
-
-```ts
-adapter.setAngle(renderable, angleInRadians)
-```
-Set a body's rotation. SAT bodies don't rotate (`fixedRotation` defaults to `true`); pass `fixedRotation: false` in your `bodyDef` to enable full rotational dynamics.
-
-```ts
-adapter.setSensor(renderable, isSensor)
-```
-Toggle a body between solid (matter's solver pushes contacts apart) and sensor (matter still fires `onCollisionStart` / `onCollisionActive` / `onCollisionEnd` but doesn't physically separate the bodies). Useful for one-way platforms, trigger zones, snap-to-surface ground assists, etc.
+These methods are exposed on the adapter for behaviours that matter supports natively but that the legacy SAT adapter either doesn't model or models differently. Game code that uses them won't run unchanged on the builtin adapter.
 
 ```ts
 adapter.raycast(from: Vector2d, to: Vector2d) → RaycastHit | null
@@ -136,6 +157,13 @@ Shoot a ray through the world and get the first body hit. Returns the renderable
 adapter.queryAABB(rect: Rect) → Renderable[]
 ```
 Return every renderable whose body overlaps the rectangle. Useful for AoE checks, explosion targeting, mouse picking.
+
+> **Note on rotation:** `setAngle` / `setAngularVelocity` / `applyTorque` are now portable — they're declared on `PhysicsAdapter` and implemented by both this adapter and the builtin adapter. Under matter, rotation is fully solver-aware (the body's collision shape rotates and contact response reflects it); under builtin, rotation is visual-only (the SAT solver still tests axis-aligned shapes but the renderable's transform tracks the body's angle). Code that needs rotation-correct contact response should also opt in to `fixedRotation: false` in the `bodyDef` and check `adapter.capabilities` if it must branch.
+
+```ts
+adapter.setSensor(renderable, isSensor)
+```
+Toggle a body between solid and sensor mode at runtime. Matter fires `onCollisionStart` / `onCollisionActive` / `onCollisionEnd` either way; the difference is whether the solver pushes the contacts apart. Useful for one-way platforms, trigger zones, snap-to-surface ground assists. Mirrored on the builtin adapter via `Body.setSensor` so the call is portable; the term is matter-native enough that we still document it here.
 
 ### Direct engine access
 
