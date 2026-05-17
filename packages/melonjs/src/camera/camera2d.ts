@@ -564,7 +564,7 @@ export default class Camera2d extends Renderable {
 	}
 
 	/** @ignore */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	updateTarget(_dt?: number): void {
 		if (this.target) {
 			targetV.setV(this.pos);

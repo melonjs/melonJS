@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { Bounds, Matrix2d, Matrix3d, math, Vector2d } from "../src/index.js";
+import {
+	Bounds,
+	Ellipse,
+	Matrix2d,
+	Matrix3d,
+	math,
+	Polygon,
+	Rect,
+	Vector2d,
+} from "../src/index.js";
 
 describe("Physics : Bounds", () => {
 	const bound1 = new Bounds([
@@ -298,6 +307,142 @@ describe("Physics : Bounds", () => {
 		it("bound3 pos is (-94,0)", () => {
 			expect(bound3.x).toEqual(-94);
 			expect(bound3.y).toEqual(0);
+		});
+	});
+
+	describe("addShapes", () => {
+		it("unions a single Rect into an empty bounds", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(10, 20, 30, 40), true);
+			expect(b.width).toEqual(30);
+			expect(b.height).toEqual(40);
+			expect(b.min.x).toEqual(10);
+			expect(b.min.y).toEqual(20);
+		});
+
+		it("unions multiple shapes into a single bounding box", () => {
+			const b = new Bounds();
+			b.addShapes(
+				[
+					new Rect(0, 0, 32, 32),
+					new Rect(50, 50, 10, 10),
+					new Ellipse(80, 0, 20, 40),
+				],
+				true,
+			);
+			// shapes span x=[0..70] (ellipse spans 70..90 because Ellipse is
+			// centered on pos with width/height as the diameter), y depends
+			// on the actual Ellipse layout — assert the obvious lower bound.
+			expect(b.min.x).toEqual(0);
+			expect(b.min.y).toBeLessThanOrEqual(0);
+			expect(b.max.x).toBeGreaterThanOrEqual(60);
+		});
+
+		it("accepts a Polygon directly", () => {
+			const b = new Bounds();
+			const poly = new Polygon(0, 0, [
+				new Vector2d(0, 0),
+				new Vector2d(100, 0),
+				new Vector2d(100, 50),
+			]);
+			b.addShapes(poly, true);
+			expect(b.width).toEqual(100);
+			expect(b.height).toEqual(50);
+		});
+
+		it("clear=false expands existing bounds (vs replaces them)", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(0, 0, 20, 20), true);
+			b.addShapes(new Rect(50, 50, 10, 10), false);
+			expect(b.min.x).toEqual(0);
+			expect(b.min.y).toEqual(0);
+			expect(b.max.x).toEqual(60);
+			expect(b.max.y).toEqual(60);
+		});
+
+		it("clear=true throws away the prior bounds", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(0, 0, 100, 100), true);
+			b.addShapes(new Rect(200, 200, 10, 10), true); // overwrites
+			expect(b.min.x).toEqual(200);
+			expect(b.max.x).toEqual(210);
+			expect(b.width).toEqual(10);
+		});
+
+		it("ignores shapes without a getBounds method (defensive)", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(0, 0, 50, 50), true);
+			// pretend a malformed shape sneaks in
+			b.addShapes({ notAShape: true } as unknown as Polygon, false);
+			expect(b.width).toEqual(50);
+			expect(b.height).toEqual(50);
+		});
+
+		it("empty array is a no-op (no clear, no NaN, original bounds preserved)", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(0, 0, 50, 50), true);
+			b.addShapes([], false);
+			expect(b.width).toEqual(50);
+			expect(b.height).toEqual(50);
+		});
+
+		it("empty array WITH clear=true wipes to empty bounds (not NaN)", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(0, 0, 50, 50), true);
+			b.addShapes([], true);
+			// `clear()` resets to the empty-bounds invariant
+			// (Infinity/-Infinity); width/height are well-defined (≤ 0)
+			expect(Number.isNaN(b.width)).toEqual(false);
+			expect(Number.isNaN(b.height)).toEqual(false);
+		});
+
+		it("nested Bounds object also works (Bounds has getBounds → self)", () => {
+			// Bounds doesn't have a getBounds, but Rect/Polygon do. Pin
+			// that we don't accidentally accept a raw Bounds (regression
+			// guard if someone adds getBounds() to Bounds later).
+			const inner = new Bounds();
+			inner.addShapes(new Rect(10, 10, 30, 30), true);
+			const outer = new Bounds();
+			outer.addShapes(inner as unknown as Polygon, true);
+			// no getBounds on Bounds → silently ignored → still empty
+			expect(outer.isFinite()).toEqual(false);
+		});
+
+		it("single-shape input (not array) works the same as a 1-element array", () => {
+			const a = new Bounds();
+			a.addShapes(new Rect(0, 0, 30, 30), true);
+			const b = new Bounds();
+			b.addShapes([new Rect(0, 0, 30, 30)], true);
+			expect(a.min.x).toEqual(b.min.x);
+			expect(a.max.x).toEqual(b.max.x);
+			expect(a.width).toEqual(b.width);
+			expect(a.height).toEqual(b.height);
+		});
+
+		it("shapes overlapping with negative coordinates produce correct union", () => {
+			const b = new Bounds();
+			b.addShapes([new Rect(-50, -30, 20, 20), new Rect(10, 10, 20, 20)], true);
+			expect(b.min.x).toEqual(-50);
+			expect(b.min.y).toEqual(-30);
+			expect(b.max.x).toEqual(30);
+			expect(b.max.y).toEqual(30);
+		});
+
+		it("ADVERSARIAL: passing the same shape twice does not double-count", () => {
+			const b = new Bounds();
+			const r = new Rect(0, 0, 100, 50);
+			b.addShapes([r, r], true);
+			expect(b.width).toEqual(100);
+			expect(b.height).toEqual(50);
+		});
+
+		it("ADVERSARIAL: shape with zero size still contributes a valid corner", () => {
+			const b = new Bounds();
+			b.addShapes(new Rect(42, 7, 0, 0), true);
+			expect(b.min.x).toEqual(42);
+			expect(b.min.y).toEqual(7);
+			expect(b.width).toEqual(0);
+			expect(b.height).toEqual(0);
 		});
 	});
 });

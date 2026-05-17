@@ -1,3 +1,8 @@
+/**
+ * melonJS — WebGL blend-mode showcase example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { game, Renderable, Text, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 

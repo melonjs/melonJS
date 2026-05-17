@@ -1,24 +1,24 @@
-import { Ellipse } from "./../geometries/ellipse.ts";
-import { Line, linePool } from "./../geometries/line.ts";
-import { Point, pointPool } from "../geometries/point.ts";
-import { Polygon, polygonPool } from "../geometries/polygon.ts";
-import { Rect } from "./../geometries/rectangle.ts";
-import { clamp } from "./../math/math.ts";
-import { vector2dPool } from "../math/vector2d.ts";
-import pool from "../system/legacy_pool.js";
-import timer from "./../system/timer.ts";
-import { remove } from "../utils/array.ts";
-import { Bounds, boundsPool } from "./bounds.ts";
-import { collision } from "./collision.js";
+import { Ellipse } from "../../geometries/ellipse.ts";
+import { Line, linePool } from "../../geometries/line.ts";
+import { Point, pointPool } from "../../geometries/point.ts";
+import { Polygon, polygonPool } from "../../geometries/polygon.ts";
+import { Rect } from "../../geometries/rectangle.ts";
+import { clamp } from "../../math/math.ts";
+import { vector2dPool } from "../../math/vector2d.ts";
+import pool from "../../system/legacy_pool.js";
+import timer from "../../system/timer.ts";
+import { remove } from "../../utils/array.ts";
+import { Bounds, boundsPool } from "../bounds.ts";
+import { collision } from "../collision.js";
 
 /**
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Container from "./../renderable/container.js";
- * @import Renderable from "./../renderable/renderable.js";
- * @import Sprite from "./../renderable/sprite.js";
- * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import {Vector2d} from "../math/vector2d.js";
- * @import ResponseObject from "./response.js";
+ * @import Entity from "../../renderable/entity/entity.js";
+ * @import Container from "../../renderable/container.js";
+ * @import Renderable from "../../renderable/renderable.js";
+ * @import Sprite from "../../renderable/sprite.js";
+ * @import NineSliceSprite from "../../renderable/nineslicesprite.js";
+ * @import {Vector2d} from "../../math/vector2d.js";
+ * @import ResponseObject from "../response.js";
  **/
 
 /**
@@ -150,6 +150,71 @@ export default class Body {
 		 */
 		this.mass = 1;
 
+		/**
+		 * Current rotation angle (radians). Visual-only under the built-in
+		 * SAT solver — the collision shapes themselves are NOT rotated by
+		 * angular integration; only `renderable.currentTransform` is.
+		 * Defaults to `0` and is integrated each step from
+		 * {@link Body#angularVelocity}. Set directly via
+		 * {@link Body#setAngle} or as a side effect of integration.
+		 * @public
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * // teleport the sprite to face down-right (45°):
+		 * sprite.body.angle = Math.PI / 4;
+		 */
+		this.angle = 0;
+
+		/**
+		 * Angular velocity in radians per frame. Default `0` — bodies that
+		 * never touch the angular API pay no integration cost. See
+		 * {@link Body#setAngularVelocity} and {@link Body#applyTorque}.
+		 * @public
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * // continuously spin a pickup at ~3°/frame (~180°/sec at 60fps):
+		 * pickup.body.angularVelocity = 0.05;
+		 */
+		this.angularVelocity = 0;
+
+		/**
+		 * Per-step exponential decay applied to {@link Body#angularVelocity}
+		 * — analog of `frictionAir` for rotation. `0` = no damping
+		 * (bodies spin forever); `1` = full damping per step (rotation
+		 * stops instantly). Typical values are small (`0.01` – `0.05`)
+		 * so spin decays naturally over a few seconds. Negative values
+		 * are ignored (treated as `0`); values `> 1` flip the sign each
+		 * step (overdamped — usually a foot-gun).
+		 * @public
+		 * @type {number}
+		 * @default 0
+		 * @example
+		 * // dynamite barrel spins on impact then slows to a stop:
+		 * barrel.body.angularDrag = 0.02;
+		 * barrel.body.applyTorque(120);
+		 */
+		this.angularDrag = 0;
+
+		/**
+		 * Moment-of-inertia analog used when converting force-at-offset
+		 * and torque into angular velocity: `Δω = τ / pseudoInertia`.
+		 * Defaults to a geometry-derived approximation
+		 * `(width² + height²) / 12` matching the moment of inertia of a
+		 * unit-mass rectangle. Override directly to make a body harder or
+		 * easier to spin. Auto-recomputed after every {@link Body#addShape}
+		 * call — manual overrides must come AFTER the body is fully built.
+		 * @public
+		 * @type {number}
+		 * @default `(width² + height²) / 12`
+		 * @example
+		 * // a heavy boss is hard to knock around:
+		 * boss.body.addShape(new me.Rect(0, 0, 64, 64));
+		 * boss.body.pseudoInertia *= 10;
+		 */
+		this.pseudoInertia = 1;
+
 		if (typeof this.maxVel === "undefined") {
 			/**
 			 * max velocity (to limit body velocity)
@@ -171,6 +236,18 @@ export default class Body {
 		 * @default false
 		 */
 		this.isStatic = false;
+
+		/**
+		 * Whether this body is a sensor. A sensor detects collisions and
+		 * fires the `onCollision*` events on the renderable, but does not
+		 * physically respond to the contact (the SAT solver skips the
+		 * positional push-out). Useful for triggers, ground-snap assists,
+		 * etc. — same role as Matter's `isSensor`.
+		 * @public
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.isSensor = false;
 
 		/**
 		 * The degree to which this body is affected by the world gravity
@@ -242,6 +319,257 @@ export default class Body {
 	}
 
 	/**
+	 * set this body's linear velocity. Portable across physics adapters —
+	 * under the builtin adapter this mutates `body.vel`; under Matter it
+	 * delegates to `Matter.Body.setVelocity`.
+	 * @param {number} x - velocity along the X axis
+	 * @param {number} y - velocity along the Y axis
+	 */
+	setVelocity(x, y) {
+		this.vel.set(x, y);
+	}
+
+	/**
+	 * read this body's linear velocity into an optional output vector.
+	 * @param {Vector2d} [out] - vector to write into; a new Vector2d is
+	 * allocated when omitted
+	 * @returns {Vector2d}
+	 */
+	getVelocity(out) {
+		return (out ?? vector2dPool.get()).copy(this.vel);
+	}
+
+	/**
+	 * accumulate a force on this body for the current step. Repeated calls
+	 * within a single update add together; the engine clears the
+	 * accumulator at the end of each integration step. Force magnitude
+	 * conventions differ between adapters — consult the active adapter's
+	 * docs for tuning ranges (builtin: px/frame²; Matter: Newtonian
+	 * `force/mass·dt²`, typically ~100× smaller than builtin).
+	 * @param {number} x - force along the X axis
+	 * @param {number} y - force along the Y axis
+	 * @param {number} [pointX] - world X of the application point; when
+	 *   present (along with `pointY`) and different from the body centroid,
+	 *   the resulting lever arm generates a torque
+	 *   `τ = (r.x · F.y) − (r.y · F.x)` that bumps {@link Body#angularVelocity}
+	 *   by `τ / pseudoInertia`. Omit both `pointX` and `pointY` for the
+	 *   linear-only behaviour that's compatible with code written before
+	 *   the angular API was added.
+	 * @param {number} [pointY] - world Y of the application point
+	 * @example
+	 * // pure linear thrust (2-arg form, unchanged behaviour):
+	 * ship.body.applyForce(0, -0.05);
+	 *
+	 * // off-centre push on a crate: the contact point at the top of the
+	 * // crate is above its centroid, so the same horizontal force now
+	 * // both translates AND tips the crate forward.
+	 * const topX = crate.pos.x + crate.width / 2;
+	 * const topY = crate.pos.y;
+	 * crate.body.applyForce(1.5, 0, topX, topY);
+	 *
+	 * // wind pushing on the top of a flag-pole: pole tilts, base stays put
+	 * // (only meaningful here if the base is anchored / static).
+	 * pole.body.applyForce(0.3, 0, pole.pos.x + pole.width / 2, pole.pos.y);
+	 */
+	applyForce(x, y, pointX, pointY) {
+		this.force.x += x;
+		this.force.y += y;
+		if (typeof pointX === "number" && typeof pointY === "number") {
+			// Lever arm r = point - centroid. Centroid is the geometric
+			// center of the body's bounds.
+			const bounds = this.bounds;
+			const rx = pointX - bounds.centerX;
+			const ry = pointY - bounds.centerY;
+			// Z-component of r × F.
+			const torque = rx * y - ry * x;
+			// Guard against division by zero / negative inertia
+			// (pseudoInertia is a user-tunable; nonsense values must
+			// not crash the integrator).
+			if (this.pseudoInertia > 0) {
+				this.angularVelocity += torque / this.pseudoInertia;
+			}
+		}
+	}
+
+	/**
+	 * Apply an instantaneous angular impulse: `Δω = τ / pseudoInertia`.
+	 * The angular analog of {@link Body#applyImpulse} — bypasses the
+	 * lever-arm computation in {@link Body#applyForce} for the
+	 * "just spin this up directly" case (a power-up's intrinsic spin,
+	 * an explicit thruster, a knockback spin effect on hit).
+	 * @param {number} torque - angular impulse magnitude. Positive values
+	 *   produce clockwise rotation on screen (matching the Y-down canvas
+	 *   convention); negative values rotate counter-clockwise.
+	 * @example
+	 * // give a pickup a one-shot spin-up when collected:
+	 * pickup.body.applyTorque(80);
+	 *
+	 * // explosion knockback that both pushes and spins:
+	 * crate.body.applyImpulse(impulseX, impulseY);
+	 * crate.body.applyTorque((Math.random() - 0.5) * 100);
+	 */
+	applyTorque(torque) {
+		if (this.pseudoInertia > 0) {
+			this.angularVelocity += torque / this.pseudoInertia;
+		}
+	}
+
+	/**
+	 * Set angular velocity directly. Bypasses inertia — the value is the
+	 * actual rad/frame that integration will apply next step. Use this
+	 * for "set and hold" rotation (a coin that always spins at the same
+	 * rate); use {@link Body#applyTorque} for impulse-style spin-up.
+	 * @param {number} omega - target angular velocity (rad / frame)
+	 * @example
+	 * // make a fan blade spin at a fixed rate:
+	 * fan.body.setAngularVelocity(0.1);  // ~6°/frame
+	 */
+	setAngularVelocity(omega) {
+		this.angularVelocity = omega;
+	}
+
+	/**
+	 * Read current angular velocity (rad / frame).
+	 * @returns {number}
+	 * @example
+	 * // freeze rotation if the body is spinning too fast:
+	 * if (Math.abs(body.getAngularVelocity()) > 2) {
+	 *     body.setAngularVelocity(0);
+	 * }
+	 */
+	getAngularVelocity() {
+		return this.angularVelocity;
+	}
+
+	/**
+	 * Set absolute rotation angle (radians). Updates the body's `angle`
+	 * field and re-syncs the renderable's `currentTransform` immediately
+	 * so the visual rotation reflects the new value without waiting for
+	 * the next integration step.
+	 * @param {number} rad - target angle in radians
+	 * @example
+	 * // turret aims at the player every frame:
+	 * const dx = player.centerX - turret.centerX;
+	 * const dy = player.centerY - turret.centerY;
+	 * turret.body.setAngle(Math.atan2(dy, dx));
+	 */
+	setAngle(rad) {
+		this.angle = rad;
+		// Force a transform sync so visual rotation tracks the new angle
+		// even when angular velocity is zero (the integrator block in
+		// `update()` is gated on `angularVelocity !== 0 || angle !== 0`,
+		// so a setAngle(nonzero) call alone still triggers the sync next
+		// frame; doing it here makes a manual setAngle visible without
+		// requiring an `update()` call in between).
+		this._syncAngleTransform();
+	}
+
+	/**
+	 * Read absolute rotation angle (radians).
+	 * @returns {number}
+	 */
+	getAngle() {
+		return this.angle;
+	}
+
+	/**
+	 * Sync `this.angle` to the renderable's `currentTransform`. Pivot is
+	 * the body's bounds center (matches the matter adapter's rotation
+	 * pivot — see `MatterAdapter.syncFromPhysics`). Internal helper used
+	 * by both the per-step integrator and {@link Body#setAngle}.
+	 * @ignore
+	 */
+	_syncAngleTransform() {
+		const t = this.ancestor?.currentTransform;
+		if (!t) {
+			return;
+		}
+		const bounds = this.bounds;
+		// Pivot is body-local: subtract the renderable's pos so the
+		// translate is in the local frame of the renderable.
+		const cx = bounds.centerX - this.ancestor.pos.x;
+		const cy = bounds.centerY - this.ancestor.pos.y;
+		t.identity();
+		if (this.angle !== 0) {
+			if (cx !== 0 || cy !== 0) {
+				t.translate(cx, cy);
+				t.rotate(this.angle);
+				t.translate(-cx, -cy);
+			} else {
+				t.rotate(this.angle);
+			}
+		}
+	}
+
+	/**
+	 * apply an instantaneous impulse to this body — a single-step velocity
+	 * change scaled by inverse mass (`dv = J / m`). Useful for one-shot
+	 * events like a cue strike, projectile launch, or knockback, where
+	 * mass should influence the resulting velocity change. Repeated calls
+	 * within a single update accumulate. Static bodies (mass 0) ignore
+	 * the call. Identical signature on the Matter adapter, where the
+	 * adapter integrates the impulse the same way (matter has no native
+	 * `applyImpulse`).
+	 * @param {number} x - impulse along the X axis
+	 * @param {number} y - impulse along the Y axis
+	 */
+	applyImpulse(x, y) {
+		const invMass = this.mass > 0 ? 1 / this.mass : 0;
+		this.vel.x += x * invMass;
+		this.vel.y += y * invMass;
+	}
+
+	/**
+	 * set this body's mass. Useful for variable-mass entities (projectiles
+	 * loaded with ammo, weight pickups, characters carrying objects).
+	 * Mass affects `applyImpulse` (via `dv = J / m`) and the proportional
+	 * push-out response in dynamic-dynamic collisions. A mass of 0 makes
+	 * the body inert to forces and impulses (without going static).
+	 * @param {number} m - new mass, non-negative
+	 */
+	setMass(m) {
+		this.mass = m;
+	}
+
+	/**
+	 * set this body's restitution / bounce factor. `0` = no bounce (energy
+	 * absorbed on contact); `1` = perfect elastic rebound; values in
+	 * between dampen the rebound. Applied by `Body.respondToCollision` —
+	 * see `BuiltinAdapter` docs for the cancellation math.
+	 *
+	 * Matches the `bodyDef.restitution` field name used at registration
+	 * time; the body-side property has historically been called `bounce`,
+	 * which is the canonical legacy name and is preserved.
+	 * @param {number} r - restitution factor, typically in [0, 1]
+	 */
+	setBounce(r) {
+		this.bounce = r;
+	}
+
+	/**
+	 * set this body's per-body gravity multiplier. `1` = world gravity
+	 * (default), `0` = ignore world gravity (e.g. flying enemy, underwater
+	 * float), `2` = 2× gravity (heavy-feel objects). Multiplied with the
+	 * world's `gravity.y` each frame inside `applyGravity`.
+	 * @param {number} scale - gravity scale factor
+	 */
+	setGravityScale(scale) {
+		this.gravityScale = scale;
+	}
+
+	/**
+	 * toggle this body between solid and sensor. Sensor bodies still emit
+	 * collision events (`onCollisionStart`, `onCollisionActive`,
+	 * `onCollisionEnd`) but the solver does not physically resolve the
+	 * contact — same semantics as Matter's `isSensor`. Useful for one-way
+	 * platforms, trigger zones, and ground-snap assists.
+	 * @param {boolean} [isSensor=true]
+	 */
+	setSensor(isSensor = true) {
+		this.isSensor = isSensor === true;
+	}
+
+	/**
 	 * add a collision shape to this body <br>
 	 * (note: me.Rect objects will be converted to me.Polygon before being added)
 	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
@@ -287,12 +615,32 @@ export default class Body {
 			this.fromJSON(shape);
 		}
 
+		// Refresh the bounds-derived `pseudoInertia` default whenever the
+		// body's geometry changes. The user can still override it manually
+		// after `addShape` if they need a stiffer / floppier body.
+		this._recomputePseudoInertia();
+
 		if (typeof this.onBodyUpdate === "function") {
 			this.onBodyUpdate(this);
 		}
 
 		// return the length of the shape list
 		return this.shapes.length;
+	}
+
+	/**
+	 * Recompute the default `pseudoInertia` from the current bounds.
+	 * Uses the moment-of-inertia formula for a unit-mass rectangle —
+	 * `(width² + height²) / 12` — which gives a value that scales
+	 * sensibly with body size: a small body resists rotation less, a
+	 * large body more. Clamped to a minimum of 1 to keep divisions
+	 * well-defined even on degenerate 0-size bodies.
+	 * @ignore
+	 */
+	_recomputePseudoInertia() {
+		const w = this.bounds.width;
+		const h = this.bounds.height;
+		this.pseudoInertia = Math.max(1, (w * w + h * h) / 12);
 	}
 
 	/**
@@ -678,6 +1026,26 @@ export default class Body {
 
 		// update the body ancestor position
 		this.ancestor.pos.add(this.vel);
+
+		// Angular integration — gated so bodies that never touch the
+		// rotation API pay zero cost. The instant either `angle` or
+		// `angularVelocity` becomes non-zero (via setAngle, setAngularVelocity,
+		// applyTorque, or applyForce-with-offset) the branch fires until
+		// both decay back to zero.
+		if (this.angularVelocity !== 0 || this.angle !== 0) {
+			if (this.angularDrag > 0 && this.angularVelocity !== 0) {
+				// Exponential decay matching `frictionAir`'s linear behavior:
+				// `omega *= (1 - drag)` each step. Negative drag is gated
+				// out (treated as "off") so a typo can't accidentally
+				// amplify rotation to infinity. Values > 1 still flip the
+				// sign each step — a documented foot-gun, since clamping
+				// would silently truncate a legitimate large damping value
+				// like 1.5 (which makes physical sense as "overdamped").
+				this.angularVelocity *= 1 - this.angularDrag;
+			}
+			this.angle += this.angularVelocity * deltaTime;
+			this._syncAngleTransform();
+		}
 
 		// returns true if vel is different from 0
 		return this.vel.x !== 0 || this.vel.y !== 0;

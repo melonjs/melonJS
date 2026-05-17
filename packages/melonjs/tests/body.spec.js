@@ -257,6 +257,171 @@ describe("Physics : Body", () => {
 		});
 	});
 
+	describe("setVelocity / getVelocity", () => {
+		it("setVelocity writes to body.vel", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.setVelocity(3, -4);
+			expect(body.vel.x).toEqual(3);
+			expect(body.vel.y).toEqual(-4);
+		});
+
+		it("getVelocity returns a copy by default", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.setVelocity(1, 2);
+			const v = body.getVelocity();
+			expect(v.x).toEqual(1);
+			expect(v.y).toEqual(2);
+			// mutating the returned vector must not touch body.vel
+			v.set(99, 99);
+			expect(body.vel.x).toEqual(1);
+			expect(body.vel.y).toEqual(2);
+		});
+
+		it("getVelocity writes into the provided output vector", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.setVelocity(5, 6);
+			const out = body.vel.clone().set(0, 0);
+			const r = body.getVelocity(out);
+			expect(r).toBe(out);
+			expect(out.x).toEqual(5);
+			expect(out.y).toEqual(6);
+		});
+	});
+
+	describe("applyForce", () => {
+		it("accumulates onto body.force across calls", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.applyForce(1, 2);
+			body.applyForce(3, -1);
+			expect(body.force.x).toEqual(4);
+			expect(body.force.y).toEqual(1);
+		});
+
+		it("does not mutate body.vel", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.setVelocity(7, 8);
+			body.applyForce(5, 5);
+			expect(body.vel.x).toEqual(7);
+			expect(body.vel.y).toEqual(8);
+		});
+	});
+
+	describe("applyImpulse", () => {
+		it("updates vel by impulse / mass on a dynamic body", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.mass = 2;
+			body.applyImpulse(10, -6);
+			// dv = J / m → vel becomes (5, -3)
+			expect(body.vel.x).toEqual(5);
+			expect(body.vel.y).toEqual(-3);
+		});
+
+		it("accumulates onto body.vel across calls", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.mass = 1;
+			body.applyImpulse(3, 4);
+			body.applyImpulse(-1, 2);
+			expect(body.vel.x).toEqual(2);
+			expect(body.vel.y).toEqual(6);
+		});
+
+		it("is a no-op on a static (mass 0) body", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.mass = 0;
+			body.applyImpulse(100, 100);
+			expect(body.vel.x).toEqual(0);
+			expect(body.vel.y).toEqual(0);
+		});
+
+		it("adds to existing velocity rather than replacing it", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.mass = 1;
+			body.vel.set(2, -3);
+			body.applyImpulse(5, 5);
+			expect(body.vel.x).toEqual(7);
+			expect(body.vel.y).toEqual(2);
+		});
+
+		it("scales the velocity delta correctly with mass — heavier = slower", () => {
+			const a = new Body(new Renderable(0, 0, 32, 64));
+			const b = new Body(new Renderable(0, 0, 32, 64));
+			a.mass = 1;
+			b.mass = 10;
+			a.applyImpulse(10, 0);
+			b.applyImpulse(10, 0);
+			// same impulse → b moves 10× slower
+			expect(a.vel.x).toEqual(10);
+			expect(b.vel.x).toEqual(1);
+		});
+
+		it("does not cross-contaminate vel between bodies", () => {
+			const a = new Body(new Renderable(0, 0, 32, 64));
+			const b = new Body(new Renderable(0, 0, 32, 64));
+			a.mass = 1;
+			b.mass = 1;
+			a.applyImpulse(5, 0);
+			expect(b.vel.x).toEqual(0);
+			expect(b.vel.y).toEqual(0);
+		});
+	});
+
+	describe("setMass / setBounce / setGravityScale", () => {
+		it("setMass updates body.mass", () => {
+			const body = new Body(new Renderable(0, 0, 32, 64));
+			body.setMass(5);
+			expect(body.mass).toEqual(5);
+		});
+
+		it("setMass + applyImpulse interact via dv = J / m", () => {
+			const body = new Body(new Renderable(0, 0, 32, 64));
+			body.setMass(4);
+			body.applyImpulse(8, 0);
+			expect(body.vel.x).toEqual(2);
+		});
+
+		it("setBounce updates body.bounce (matches bodyDef.restitution)", () => {
+			const body = new Body(new Renderable(0, 0, 32, 64));
+			body.setBounce(0.6);
+			expect(body.bounce).toEqual(0.6);
+		});
+
+		it("setGravityScale updates body.gravityScale", () => {
+			const body = new Body(new Renderable(0, 0, 32, 64));
+			body.setGravityScale(0);
+			expect(body.gravityScale).toEqual(0);
+			body.setGravityScale(2);
+			expect(body.gravityScale).toEqual(2);
+		});
+	});
+
+	describe("setSensor", () => {
+		it("defaults to true when called with no arguments", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			expect(body.isSensor).toEqual(false);
+			body.setSensor();
+			expect(body.isSensor).toEqual(true);
+		});
+
+		it("toggles isSensor on and off", () => {
+			const parent = new Renderable(0, 0, 32, 64);
+			const body = new Body(parent);
+			body.setSensor(true);
+			expect(body.isSensor).toEqual(true);
+			body.setSensor(false);
+			expect(body.isSensor).toEqual(false);
+		});
+	});
+
 	describe("setMaxVelocity", () => {
 		it("should set the maximum velocity", () => {
 			const parent = new Renderable(0, 0, 32, 64);

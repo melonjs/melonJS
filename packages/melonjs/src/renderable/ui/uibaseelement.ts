@@ -122,7 +122,7 @@ export default class UIBaseElement extends Container {
 	 * @param _event - the event object
 	 * @returns return false if we need to stop propagating the event
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onClick(_event?: Pointer): boolean {
 		return true;
 	}
@@ -164,7 +164,7 @@ export default class UIBaseElement extends Container {
 	 * function called when the pointer is moved over the object
 	 * @param _event - the event object
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onMove(_event?: Pointer): void {
 		// to be extended
 	}
@@ -173,7 +173,7 @@ export default class UIBaseElement extends Container {
 	 * function called when the pointer is over the object
 	 * @param _event - the event object
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onOver(_event?: Pointer): void {
 		// to be extended
 	}
@@ -200,7 +200,7 @@ export default class UIBaseElement extends Container {
 	 * function called when the pointer is leaving the object area
 	 * @param _event - the event object
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onOut(_event?: Pointer): void {
 		// to be extended
 	}
@@ -224,7 +224,7 @@ export default class UIBaseElement extends Container {
 	 * @param _event - the event object
 	 * @returns return false if we need to stop propagating the event
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onRelease(_event?: Pointer): boolean {
 		return true;
 	}

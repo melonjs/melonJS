@@ -700,13 +700,16 @@ describe("TMXTileMap", () => {
 			}
 		});
 
-		it("should assign a static Body to unnamed objects", () => {
+		it("should assign a static body definition to unnamed objects", () => {
 			const map = new TMXTileMap("test", minimalMap);
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
-				expect(obj.body).toBeDefined();
-				expect(obj.body.isStatic).toEqual(true);
+				expect(obj.bodyDef).toBeDefined();
+				expect(obj.bodyDef.type).toEqual("static");
+				// the body itself is constructed when the renderable is
+				// added to a World (adapter auto-registration). At this
+				// point we only have the declarative definition.
 			}
 		});
 
@@ -804,7 +807,7 @@ describe("TMXTileMap", () => {
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
-				expect(obj.body.collisionType).toEqual(collision.types.WORLD_SHAPE);
+				expect(obj.bodyDef.collisionType).toEqual(collision.types.WORLD_SHAPE);
 			}
 		});
 
@@ -813,7 +816,7 @@ describe("TMXTileMap", () => {
 			const objects = map.getObjects(true);
 
 			for (const obj of objects) {
-				expect(obj.body.isStatic).toEqual(true);
+				expect(obj.bodyDef.type).toEqual("static");
 			}
 		});
 	});
@@ -1015,7 +1018,7 @@ describe("TMXTileMap", () => {
 			const objects = map.getObjects(true);
 
 			expect(objects.length).toEqual(1);
-			expect(objects[0].body.collisionType).toEqual(
+			expect(objects[0].bodyDef.collisionType).toEqual(
 				collision.types.WORLD_SHAPE,
 			);
 		});
@@ -1287,12 +1290,12 @@ describe("TMXTileMap", () => {
 			expect(objects[0].isRenderable).toEqual(true);
 		});
 
-		it("should assign a static Body to tile objects", () => {
+		it("should assign a static body definition to tile objects", () => {
 			const map = new TMXTileMap("test", tileObjectMap);
 			const objects = map.getObjects(true);
 
-			expect(objects[0].body).toBeDefined();
-			expect(objects[0].body.isStatic).toEqual(true);
+			expect(objects[0].bodyDef).toBeDefined();
+			expect(objects[0].bodyDef.type).toEqual("static");
 		});
 
 		it("should position tile objects correctly", () => {

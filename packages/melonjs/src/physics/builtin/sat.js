@@ -1,4 +1,4 @@
-import { Vector2d } from "../math/vector2d.ts";
+import { Vector2d } from "../../math/vector2d.ts";
 
 /*
  * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
@@ -6,13 +6,13 @@ import { Vector2d } from "../math/vector2d.ts";
  */
 
 /**
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Container from "./../renderable/container.js";
- * @import Renderable from "./../renderable/renderable.js";
- * @import Sprite from "./../renderable/sprite.js";
- * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import {Polygon} from "../geometries/polygon.ts";
- * @import {Ellipse} from "./../geometries/ellipse.ts";
+ * @import Entity from "../../renderable/entity/entity.js";
+ * @import Container from "../../renderable/container.js";
+ * @import Renderable from "../../renderable/renderable.js";
+ * @import Sprite from "../../renderable/sprite.js";
+ * @import NineSliceSprite from "../../renderable/nineslicesprite.js";
+ * @import {Polygon} from "../../geometries/polygon.ts";
+ * @import {Ellipse} from "../../geometries/ellipse.ts";
  */
 
 /**

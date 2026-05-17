@@ -91,7 +91,14 @@ export default tseslint.config(
 			"no-unmodified-loop-condition": "error",
 			"no-unneeded-ternary": ["off", { defaultAssignment: false }],
 			"no-unreachable": "error",
-			"no-unused-vars": ["error", { args: "after-used" }],
+			"no-unused-vars": [
+				"error",
+				{ args: "after-used", argsIgnorePattern: "^_" },
+			],
+			"@typescript-eslint/no-unused-vars": [
+				"error",
+				{ args: "after-used", argsIgnorePattern: "^_" },
+			],
 			"no-unused-private-class-members": "error",
 			"no-useless-call": "off",
 			"no-useless-computed-key": "error",
@@ -160,6 +167,10 @@ export default tseslint.config(
 		rules: {
 			"no-undef": "off",
 			"no-unused-vars": "off",
+			"@typescript-eslint/no-unused-vars": [
+				"error",
+				{ args: "after-used", argsIgnorePattern: "^_" },
+			],
 			"prefer-template": "error",
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/ban-ts-comment": "off",

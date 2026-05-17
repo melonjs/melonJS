@@ -1,3 +1,8 @@
+/**
+ * melonJS — built-in WebGL shader-effect showcase example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import {
 	Application,
 	BlurEffect,
@@ -37,7 +42,8 @@ const createGame = () => {
 
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
 		const r = app.renderer;
-		const img = loader.getImage("monster")!;
+		const img = loader.getImage("monster");
+		if (!img) return;
 		const tw = img.width;
 		const th = img.height;
 

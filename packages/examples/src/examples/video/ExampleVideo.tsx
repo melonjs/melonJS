@@ -1,3 +1,8 @@
+/**
+ * melonJS — HTML5 video playback example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { game, loader, Sprite, state, Text, Vector2d, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 import videoSrc from "./assets/mov_bbb.mp4";

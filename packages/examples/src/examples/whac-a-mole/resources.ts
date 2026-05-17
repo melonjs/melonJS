@@ -1,4 +1,9 @@
 /**
+ * melonJS — Whac-A-Mole mini-game example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
+/**
  * Whack-A-Mole
  * Freely reused from the Cocos2d Whack-a-mole Tutorial
  * http://maniacdev.com/2011/01/tutorial-cocos2d-example-whack-a-mole-game/

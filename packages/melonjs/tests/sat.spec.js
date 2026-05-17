@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { Ellipse, Polygon, Rect, Renderable, Vector2d } from "../src/index.js";
-import ResponseObject from "../src/physics/response.js";
 import {
 	testEllipseEllipse,
 	testEllipsePolygon,
 	testPolygonEllipse,
 	testPolygonPolygon,
-} from "../src/physics/sat.js";
+} from "../src/physics/builtin/sat.js";
+import ResponseObject from "../src/physics/response.js";
 
 /**
  * Helper to create a mock renderable with position and ancestor

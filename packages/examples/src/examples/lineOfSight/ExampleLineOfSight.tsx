@@ -1,3 +1,8 @@
+/**
+ * melonJS — raycast-based line-of-sight demo example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import {
 	Body,
 	Color,

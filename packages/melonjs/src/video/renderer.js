@@ -133,6 +133,18 @@ export default class Renderer {
 		this.currentScissor = this.renderState.currentScissor;
 
 		/**
+		 * The thickness of lines for shape drawing operations like
+		 * {@link Renderer#strokeRect}, {@link Renderer#strokeEllipse}
+		 * and {@link Renderer#strokeLine}. Subclasses override the
+		 * storage — `CanvasRenderer` proxies it to the underlying 2D
+		 * context via a getter/setter, while `WebGLRenderer` treats it
+		 * as a regular field consumed by its shape-stroke routines.
+		 * @type {number}
+		 * @default 1
+		 */
+		this.lineWidth = 1;
+
+		/**
 		 * @ignore
 		 */
 		this.maskLevel = 0;
@@ -769,6 +781,128 @@ export default class Renderer {
 
 		return canvasTexture.canvas;
 	}
+
+	/**
+	 * Push the current transform / alpha / clip state onto an internal
+	 * stack. Pair with {@link Renderer#restore}. Implemented by subclasses.
+	 */
+	save() {}
+
+	/**
+	 * Pop the topmost saved state from the stack, restoring transform,
+	 * alpha and clip. Pair with {@link Renderer#save}. Implemented by
+	 * subclasses.
+	 */
+	restore() {}
+
+	/**
+	 * Translate the current transform by `(x, y)`. Implemented by subclasses.
+	 * @param {number} x - horizontal translation in pixels
+	 * @param {number} y - vertical translation in pixels
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	translate(x, y) {}
+
+	/**
+	 * Rotate the current transform by `angle` (radians). Implemented by subclasses.
+	 * @param {number} angle - rotation angle in radians
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	rotate(angle) {}
+
+	/**
+	 * Scale the current transform by `(x, y)`. Implemented by subclasses.
+	 * @param {number} x - horizontal scale factor
+	 * @param {number} y - vertical scale factor
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	scale(x, y) {}
+
+	/**
+	 * Set the renderer global alpha (0..1) for subsequent draw calls.
+	 * Implemented by subclasses.
+	 * @param {number} alpha - opacity value in the [0..1] range
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setGlobalAlpha(alpha) {}
+
+	/**
+	 * Fill an axis-aligned rectangle with the current color.
+	 * Implemented by subclasses.
+	 * @param {number} x - left edge in viewport pixels
+	 * @param {number} y - top edge in viewport pixels
+	 * @param {number} width - rectangle width
+	 * @param {number} height - rectangle height
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	fillRect(x, y, width, height) {}
+
+	/**
+	 * Stroke (outline) an axis-aligned rectangle with the current color
+	 * at the current {@link Renderer#lineWidth}. Implemented by subclasses.
+	 * @param {number} x - left edge in viewport pixels
+	 * @param {number} y - top edge in viewport pixels
+	 * @param {number} width - rectangle width
+	 * @param {number} height - rectangle height
+	 * @param {boolean} [fill=false] - also fill the rectangle
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	strokeRect(x, y, width, height, fill) {}
+
+	/**
+	 * Fill an axis-aligned ellipse with the current color.
+	 * Implemented by subclasses.
+	 * @param {number} x - ellipse center X in viewport pixels
+	 * @param {number} y - ellipse center Y in viewport pixels
+	 * @param {number} w - horizontal radius
+	 * @param {number} h - vertical radius
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	fillEllipse(x, y, w, h) {}
+
+	/**
+	 * Stroke (outline) an axis-aligned ellipse with the current color
+	 * at the current {@link Renderer#lineWidth}. Implemented by subclasses.
+	 * @param {number} x - ellipse center X in viewport pixels
+	 * @param {number} y - ellipse center Y in viewport pixels
+	 * @param {number} w - horizontal radius
+	 * @param {number} h - vertical radius
+	 * @param {boolean} [fill=false] - also fill the ellipse
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	strokeEllipse(x, y, w, h, fill) {}
+
+	/**
+	 * Draw a straight line between two points with the current color
+	 * at the current {@link Renderer#lineWidth}. Implemented by subclasses.
+	 * @param {number} startX - start X in viewport pixels
+	 * @param {number} startY - start Y in viewport pixels
+	 * @param {number} endX - end X in viewport pixels
+	 * @param {number} endY - end Y in viewport pixels
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	strokeLine(startX, startY, endX, endY) {}
+
+	/**
+	 * Draw an image or sub-image into the framebuffer.
+	 * Implemented by subclasses (`CanvasRenderer` / `WebGLRenderer`).
+	 *
+	 * The 9-argument signature shown here is the canonical form used
+	 * throughout the engine; the concrete renderers also accept the
+	 * shorter `drawImage(image, dx, dy)` and `drawImage(image, dx, dy,
+	 * dWidth, dHeight)` variants from the HTML Canvas2D spec.
+	 * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - the source image
+	 * @param {number} sx - source rectangle left
+	 * @param {number} sy - source rectangle top
+	 * @param {number} sw - source rectangle width
+	 * @param {number} sh - source rectangle height
+	 * @param {number} dx - destination left
+	 * @param {number} dy - destination top
+	 * @param {number} dw - destination width
+	 * @param {number} dh - destination height
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {}
 
 	/**
 	 * A mask limits rendering elements to the shape and position of the given mask object.

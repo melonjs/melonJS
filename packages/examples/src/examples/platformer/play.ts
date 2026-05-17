@@ -1,3 +1,8 @@
+/**
+ * melonJS — Platformer (built-in SAT physics) example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import {
 	type Application,
 	audio,
@@ -6,6 +11,7 @@ import {
 	plugin,
 	Stage,
 	VignetteEffect,
+	WebGLRenderer,
 } from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
@@ -45,8 +51,12 @@ export class PlayScreen extends Stage {
 			app.world.addChild(this.virtualJoypad);
 		}
 
-		// vignette post-effect + built-in color grading (always applied last)
-		app.viewport.addPostEffect(new VignetteEffect(app.renderer as any));
+		// vignette post-effect + built-in color grading (always applied last).
+		// VignetteEffect is WebGL-only; on the Canvas renderer just skip it
+		// and let the color grading still apply.
+		if (app.renderer instanceof WebGLRenderer) {
+			app.viewport.addPostEffect(new VignetteEffect(app.renderer));
+		}
 		app.viewport.colorMatrix.contrast(1.1).saturate(1.1);
 
 		// play some music

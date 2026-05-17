@@ -226,24 +226,6 @@ class Timer {
 	}
 
 	/**
-	 * compute the actual frame time and fps rate
-	 * @ignore
-	 */
-	countFPS() {
-		this.framecount++;
-		this.framedelta += this.delta;
-		if (this.framecount % 10 === 0) {
-			this.fps = clamp(
-				Math.round((1000 * this.framecount) / this.framedelta),
-				0,
-				this.maxfps,
-			);
-			this.framedelta = 0;
-			this.framecount = 0;
-		}
-	}
-
-	/**
 	 * update
 	 * @ignore
 	 */
@@ -262,6 +244,19 @@ class Timer {
 			this.delta > this.minstep && this.interpolation
 				? this.delta / this.step
 				: 1;
+
+		// update the running FPS estimate (averaged over the last 10 frames)
+		this.framecount++;
+		this.framedelta += this.delta;
+		if (this.framecount % 10 === 0) {
+			this.fps = clamp(
+				Math.round((1000 * this.framecount) / this.framedelta),
+				0,
+				this.maxfps,
+			);
+			this.framedelta = 0;
+			this.framecount = 0;
+		}
 
 		this.updateTimers();
 	}

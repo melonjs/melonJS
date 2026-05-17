@@ -256,6 +256,40 @@ export class Bounds {
 	}
 
 	/**
+	 * Expand this bounds to include every shape in `shapes`. Each shape
+	 * contributes its own `.getBounds()` (so `Rect`, `Polygon`, `Ellipse`,
+	 * `Bounds`, and anything else implementing the same getter all work);
+	 * shapes without `.getBounds()` are silently ignored. Use `clear=true`
+	 * to compute a fresh union (matches the `add` / `addBounds` shape).
+	 *
+	 * Useful for sizing a renderable from its `bodyDef.shapes` before
+	 * the underlying physics body has been constructed — used by the
+	 * TMX shape factory and {@link Trigger}.
+	 * @param shapes - one shape or an iterable of shapes
+	 * @param [clear] - reset the bounds before unioning
+	 */
+	addShapes(
+		shapes:
+			| { getBounds?: () => Bounds }
+			| Iterable<{ getBounds?: () => Bounds }>,
+		clear = false,
+	) {
+		if (clear) {
+			this.clear();
+		}
+		const iterable: Iterable<{ getBounds?: () => Bounds }> =
+			typeof (shapes as { [Symbol.iterator]?: unknown })[Symbol.iterator] ===
+			"function"
+				? (shapes as Iterable<{ getBounds?: () => Bounds }>)
+				: [shapes as { getBounds?: () => Bounds }];
+		for (const s of iterable) {
+			if (typeof s?.getBounds === "function") {
+				this.addBounds(s.getBounds());
+			}
+		}
+	}
+
+	/**
 	 * Adds the given point to the bounds definition.
 	 * @param point - The point to add to the bounds.
 	 * @param [m] - An optional transform to apply to the given point.

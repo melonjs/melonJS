@@ -1,7 +1,5 @@
 import { hasRegisteredEvents } from "../input/pointerevent.ts";
-import { Vector2d } from "../math/vector2d.ts";
 import Container from "../renderable/container.js";
-import state from "./../state/state.ts";
 import {
 	emit,
 	GAME_RESET,
@@ -9,14 +7,26 @@ import {
 	on,
 	WORLD_STEP,
 } from "../system/event.ts";
+import BuiltinAdapter from "./builtin/builtin-adapter.js";
+import QuadTree from "./builtin/quadtree.js";
 import { collision } from "./collision.js";
-import Detector from "./detector.js";
-import QuadTree from "./quadtree.js";
 
 /**
  * @import Application from "./../application/application.ts";
- * @import Body from "./body.js";
+ * @import Body from "./builtin/body.js";
+ * @import Detector from "./builtin/detector.js";
+ * @import { Vector2d } from "../math/vector2d.ts";
+ * @import { PhysicsAdapter } from "./adapter.ts";
  */
+
+/**
+ * Frozen empty Set returned by `world.bodies` when the active adapter
+ * doesn't expose a native `bodies` Set (third-party adapters that own
+ * their own body storage). Frozen so `world.bodies.add(x)` throws
+ * `TypeError` instead of silently mutating a throwaway.
+ * @ignore
+ */
+const EMPTY_BODIES = Object.freeze(new Set());
 
 /**
  * an object representing the physic world, and responsible for managing and updating all children and physics
@@ -28,8 +38,15 @@ export default class World extends Container {
 	 * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
 	 * @param {number} [width=Infinity] - width of the world container
 	 * @param {number} [height=Infinity] - height of the world container
+	 * @param {PhysicsAdapter} [adapter] - physics adapter to use; defaults to a new {@link BuiltinAdapter} instance
 	 */
-	constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
+	constructor(
+		x = 0,
+		y = 0,
+		width = Infinity,
+		height = Infinity,
+		adapter = undefined,
+	) {
 		// call the super constructor
 		super(x, y, width, height, true);
 
@@ -65,13 +82,6 @@ export default class World extends Container {
 		this.fps = 60;
 
 		/**
-		 * world gravity
-		 * @type {Vector2d}
-		 * @default <0,0.98>
-		 */
-		this.gravity = new Vector2d(0, 0.98);
-
-		/**
 		 * Enabled pre-rendering for all tile layers. <br>
 		 * If false layers are rendered dynamically, if true layers are first fully rendered into an offscreen canvas.<br>
 		 * the "best" rendering method depends of your game (amount of layer, layer size, amount of tiles per layer, etc.)<br>
@@ -99,10 +109,14 @@ export default class World extends Container {
 		this.gpuTilemap = true;
 
 		/**
-		 * the active physic bodies in this simulation
-		 * @type {Set<Body>}
+		 * the physics adapter driving this world. Defaults to a
+		 * {@link BuiltinAdapter} wrapping the engine's native SAT-based
+		 * physics. Override at `Application` construction time via
+		 * `settings.physic.adapter`. Cannot be swapped at runtime.
+		 * @type {PhysicsAdapter}
 		 */
-		this.bodies = new Set();
+		this.adapter = adapter ?? new BuiltinAdapter();
+		this.adapter.init?.(this);
 
 		/**
 		 * the instance of the game world quadtree used for broadphase (used by the builtin physic and pointer event implementation)
@@ -115,12 +129,6 @@ export default class World extends Container {
 			collision.maxDepth,
 		);
 
-		/**
-		 * the collision detector instance used by this world instance
-		 * @type {Detector}
-		 */
-		this.detector = new Detector(this);
-
 		// reset the world container on the game reset signal
 		on(GAME_RESET, this.reset, this);
 
@@ -129,6 +137,45 @@ export default class World extends Container {
 			// reset the quadtree
 			this.broadphase.clear(this.getBounds());
 		});
+	}
+
+	/**
+	 * Active physics bodies in this simulation. Backed by the active
+	 * adapter; mutating this set directly is no longer the recommended
+	 * pattern — use `world.adapter.addBody(...)` / `removeBody(...)`.
+	 *
+	 * Adapters that don't expose a native `bodies` Set (e.g. third-party
+	 * integrations that own their own body storage) cause this getter
+	 * to return a frozen empty Set, so any `world.bodies.add(...)`
+	 * attempt throws `TypeError` instead of silently mutating a
+	 * throwaway.
+	 * @returns {Set<Body>}
+	 */
+	get bodies() {
+		return (
+			/** @type {{ bodies?: Set<Body> }} */ (this.adapter).bodies ??
+			EMPTY_BODIES
+		);
+	}
+
+	/**
+	 * world gravity. Mutate to change at runtime.
+	 * @returns {Vector2d}
+	 */
+	get gravity() {
+		return this.adapter.gravity;
+	}
+	set gravity(v) {
+		this.adapter.gravity = v;
+	}
+
+	/**
+	 * the collision detector instance used by this world instance.
+	 * Available only when the active adapter is {@link BuiltinAdapter}.
+	 * @returns {Detector | undefined}
+	 */
+	get detector() {
+		return /** @type {{ detector?: Detector }} */ (this.adapter).detector;
 	}
 
 	/**
@@ -144,36 +191,42 @@ export default class World extends Container {
 		// call the parent method
 		super.reset();
 
-		// save persistent child bodies
-		const persistentBodies = [];
-		this.bodies.forEach((value) => {
-			if (value.ancestor && value.ancestor.isPersistent) {
-				persistentBodies.push(value);
-			}
-		});
-
-		// empty the list of active physic bodies
-		// Note: this should be empty already when calling the parent method
-		this.bodies.clear();
-
-		// insert persistent child bodies into the new state
-		if (persistentBodies.length > 0) {
-			persistentBodies.forEach((body) => {
-				this.addBody(body);
+		// save persistent child bodies (only meaningful for the builtin adapter)
+		const bodies = /** @type {{ bodies?: Set<Body> }} */ (this.adapter).bodies;
+		if (bodies !== undefined) {
+			const persistentBodies = [];
+			bodies.forEach((value) => {
+				if (value.ancestor && value.ancestor.isPersistent) {
+					persistentBodies.push(value);
+				}
 			});
+
+			// empty the list of active physic bodies
+			// Note: this should be empty already when calling the parent method
+			bodies.clear();
+
+			// insert persistent child bodies into the new state
+			if (persistentBodies.length > 0) {
+				persistentBodies.forEach((body) => {
+					this.addBody(body);
+				});
+			}
 		}
 	}
 
 	/**
-	 * Add a physic body to the game world
+	 * Add a physic body to the game world. Legacy API for code that
+	 * constructed `new Body(...)` directly and now wants to register it
+	 * with the active physics adapter.
 	 * @see Container.addChild
 	 * @param {Body} body
 	 * @returns {World} this game world
 	 */
 	addBody(body) {
-		//add it to the list of active body if builtin physic is enabled
 		if (this.physic === "builtin") {
-			this.bodies.add(body);
+			const bodies = /** @type {{ bodies?: Set<Body> }} */ (this.adapter)
+				.bodies;
+			bodies?.add(body);
 		}
 		return this;
 	}
@@ -185,27 +238,24 @@ export default class World extends Container {
 	 * @returns {World} this game world
 	 */
 	removeBody(body) {
-		//remove from the list of active body if builtin physic is enabled
 		if (this.physic === "builtin") {
-			this.bodies.delete(body);
+			const bodies = /** @type {{ bodies?: Set<Body> }} */ (this.adapter)
+				.bodies;
+			bodies?.delete(body);
 		}
 		return this;
 	}
 
 	/**
-	 * Apply gravity to the given body
+	 * Apply gravity to the given body. Backward-compat shim; the actual
+	 * simulation runs through the active adapter.
 	 * @private
 	 * @param {Body} body
 	 */
 	bodyApplyGravity(body) {
-		// apply gravity to the current velocity
-		if (!body.ignoreGravity && body.gravityScale !== 0) {
-			const gravity = this.gravity;
-
-			// apply gravity if defined
-			body.force.x += body.mass * gravity.x * body.gravityScale;
-			body.force.y += body.mass * gravity.y * body.gravityScale;
-		}
+		/** @type {{ applyGravity?: (b: Body) => void }} */ (
+			this.adapter
+		).applyGravity?.(body);
 	}
 
 	/**
@@ -222,7 +272,7 @@ export default class World extends Container {
 			this.broadphase.insertContainer(this);
 		}
 
-		// update the builtin physic simulation
+		// advance the active adapter's simulation
 		this.step(dt);
 
 		// call the super constructor
@@ -230,38 +280,13 @@ export default class World extends Container {
 	}
 
 	/**
-	 * update the builtin physic simulation by one step (called by the game world update method)
+	 * update the physics simulation by one step (called by the game world update method)
 	 * @param {number} dt - the time passed since the last frame update
 	 */
 	step(dt) {
 		if (this.physic === "builtin") {
-			const isPaused = state.isPaused();
-			// iterate through all bodies
-			for (const body of this.bodies) {
-				if (!body.isStatic) {
-					const ancestor = body.ancestor;
-					if (!ancestor) {
-						continue;
-					}
-					// if the game is not paused, and ancestor can be updated
-					if (
-						!(isPaused && !ancestor.updateWhenPaused) &&
-						(ancestor.inViewport || ancestor.alwaysUpdate)
-					) {
-						// apply gravity to this body
-						this.bodyApplyGravity(body);
-						// body update function (this moves it)
-						if (body.update(dt) === true) {
-							// mark ancestor as dirty
-							ancestor.isDirty = true;
-						}
-						// handle collisions against other objects
-						this.detector.collisions(ancestor);
-						// clear body force
-						body.force.set(0, 0);
-					}
-				}
-			}
+			this.adapter.step(dt);
+			this.adapter.syncFromPhysics();
 		}
 		emit(WORLD_STEP, dt);
 	}

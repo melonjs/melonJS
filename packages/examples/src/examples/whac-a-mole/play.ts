@@ -1,3 +1,8 @@
+/**
+ * melonJS — Whac-A-Mole mini-game example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { type Application, audio, loader, Sprite, Stage } from "melonjs";
 import { HUDContainer } from "./HUD";
 import { MoleManager } from "./manager";

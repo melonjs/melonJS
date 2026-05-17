@@ -1,3 +1,8 @@
+/**
+ * melonJS — drag-and-drop draggable entities example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { ColorLayer, Draggable, DropTarget, game, Text, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 

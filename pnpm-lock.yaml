@@ -126,6 +126,9 @@ importers:
       '@melonjs/debug-plugin':
         specifier: workspace:*
         version: link:../debug-plugin
+      '@melonjs/matter-adapter':
+        specifier: workspace:*
+        version: link:../matter-adapter
       '@melonjs/spine-plugin':
         specifier: workspace:*
         version: link:../spine-plugin
@@ -144,6 +147,9 @@ importers:
       ace-builds:
         specifier: ^1.43.6
         version: 1.43.6
+      matter-js:
+        specifier: ^0.20.0
+        version: 0.20.0
       melonjs:
         specifier: workspace:^
         version: link:../melonjs
@@ -165,6 +171,40 @@ importers:
       vite:
         specifier: 8.0.8
         version: 8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4)
+
+  packages/matter-adapter:
+    dependencies:
+      poly-decomp:
+        specifier: ^0.3.0
+        version: 0.3.0
+    devDependencies:
+      '@types/matter-js':
+        specifier: ^0.20.0
+        version: 0.20.2
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      esbuild:
+        specifier: 0.28.0
+        version: 0.28.0
+      matter-js:
+        specifier: ^0.20.0
+        version: 0.20.0
+      melonjs:
+        specifier: workspace:*
+        version: link:../melonjs
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@types/node@25.6.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4))
 
   packages/melonjs:
     dependencies:
@@ -807,6 +847,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/matter-js@0.20.2':
+    resolution: {integrity: sha512-3PPKy3QxvZ89h9+wdBV2488I1JLVs7DEpIkPvgO8JC1mUdiVSO37ZIvVctOTD7hIq8OAL2gJ3ugGSuUip6DhCw==}
 
   '@types/node@25.6.2':
     resolution: {integrity: sha512-sokuT28dxf9JT5Kady1fsXOvI4HVpjZa95NKT5y9PNTIrs2AsobR4GFAA90ZG8M+nxVRLysCXsVj6eGC7Vbrlw==}
@@ -1563,6 +1606,9 @@ packages:
     resolution: {integrity: sha512-BuU2qnTti9YKgK5N+IeMubp14ZUKUUw7yeJbkjtosvHiP0AZ5c8IAgEMk79D0eC8F23r4Ac/q8cAIFdm2FtyoA==}
     hasBin: true
 
+  matter-js@0.20.0:
+    resolution: {integrity: sha512-iC9fYR7zVT3HppNnsFsp9XOoQdQN2tUyfaKg4CHLH8bN+j6GT4Gw7IH2rP0tflAebrHFw730RR3DkVSZRX8hwA==}
+
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
@@ -1717,6 +1763,9 @@ packages:
   pngjs@7.0.0:
     resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
     engines: {node: '>=14.19.0'}
+
+  poly-decomp@0.3.0:
+    resolution: {integrity: sha512-hWeBxGzPYiybmI4548Fca7Up/0k1qS5+79cVHI9+H33dKya5YNb9hxl0ZnDaDgvrZSuYFBhkCK/HOnqN7gefkQ==}
 
   postcss@8.5.14:
     resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
@@ -2544,6 +2593,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/matter-js@0.20.2': {}
+
   '@types/node@25.6.2':
     dependencies:
       undici-types: 7.19.2
@@ -3321,6 +3372,8 @@ snapshots:
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
+  matter-js@0.20.0: {}
+
   mdurl@2.0.0: {}
 
   meow@14.1.0: {}
@@ -3434,6 +3487,8 @@ snapshots:
       fsevents: 2.3.2
 
   pngjs@7.0.0: {}
+
+  poly-decomp@0.3.0: {}
 
   postcss@8.5.14:
     dependencies:

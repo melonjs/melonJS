@@ -1,0 +1,75 @@
+{
+	"name": "@melonjs/matter-adapter",
+	"version": "1.0.0",
+	"description": "melonJS physics adapter for matter-js",
+	"homepage": "https://www.npmjs.com/package/@melonjs/matter-adapter",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"es6",
+		"Canvas",
+		"WebGL",
+		"game",
+		"engine",
+		"physics",
+		"matter-js",
+		"browser"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/matter-adapter"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/melonJS/issues"
+	},
+	"license": "MIT",
+	"author": "Olivier Biot (AltByte Pte Ltd)",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": ">=24.0.0"
+	},
+	"types": "./build/index.d.ts",
+	"exports": {
+		".": "./build/index.js"
+	},
+	"files": [
+		"build/",
+		"package.json",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"peerDependencies": {
+		"matter-js": ">=0.20.0",
+		"melonjs": ">=19.5.0"
+	},
+	"dependencies": {
+		"poly-decomp": "^0.3.0"
+	},
+	"devDependencies": {
+		"@types/matter-js": "^0.20.0",
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.27.3",
+		"matter-js": "^0.20.0",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.21.0",
+		"typescript": "^6.0.2",
+		"vitest": "^4.1.5"
+	},
+	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
+		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
+		"lint": "eslint src/**.ts",
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput",
+		"test": "vitest run"
+	}
+}

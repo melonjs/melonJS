@@ -3,7 +3,7 @@ import MaskEffect from "../camera/effects/mask_effect.ts";
 import { polygonPool } from "../geometries/polygon.ts";
 import { level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
-import Body from "./../physics/body.js";
+import { boundsPool } from "./../physics/bounds.ts";
 import { collision } from "./../physics/collision.js";
 import Renderable from "./renderable.js";
 
@@ -111,11 +111,26 @@ export default class Trigger extends Renderable {
 				vector2dPool.get(this.width, this.height),
 			]);
 		}
-		this.body = new Body(this, shape);
-		this.body.collisionType = collision.types.ACTION_OBJECT;
-		this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
-		this.body.setStatic(true);
-		this.resize(this.body.getBounds().width, this.body.getBounds().height);
+		// declarative body — adapter-portable, auto-registered on addChild.
+		// `isSensor: true` makes the trigger explicitly a detection-only
+		// volume. Under the builtin adapter this is a no-op for triggers
+		// (the SAT detector already skipped push-out because Trigger
+		// doesn't define `onCollision`); under Matter it is required —
+		// matter's solver always resolves contacts unless the body is
+		// flagged as a sensor.
+		this.bodyDef = {
+			type: "static",
+			shapes: Array.isArray(shape) ? shape : [shape],
+			collisionType: collision.types.ACTION_OBJECT,
+			collisionMask: collision.types.PLAYER_OBJECT,
+			isSensor: true,
+		};
+		// Size from the union of all shapes' bounds (the body itself
+		// isn't constructed until auto-registration runs on addChild).
+		const bounds = boundsPool.get();
+		bounds.addShapes(this.bodyDef.shapes, true);
+		this.resize(bounds.width, bounds.height);
+		boundsPool.release(bounds);
 	}
 
 	/**
@@ -217,15 +232,14 @@ export default class Trigger extends Renderable {
 	}
 
 	/**
-	 * onCollision callback, triggered in case of collision with this trigger
-	 * @param {ResponseObject} response - the collision response object
-	 * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
-	 * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+	 * Fire the trigger when an entity first enters the trigger zone.
+	 * Using `onCollisionStart` rather than `onCollision` so the event
+	 * runs exactly once per entry — under the legacy alias this would
+	 * fire every frame the entity was inside the trigger.
 	 */
-	onCollision() {
+	onCollisionStart() {
 		if (this.name === "Trigger") {
 			this.triggerEvent();
 		}
-		return false;
 	}
 }

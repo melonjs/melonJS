@@ -1,3 +1,8 @@
+/**
+ * melonJS — Hello World (minimal getting-started) example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { Application, Text } from "melonjs";
 import { createExampleComponent } from "../utils";
 

@@ -23,9 +23,9 @@ import { ColorMatrix } from "./math/color_matrix.ts";
 import ParticleEmitter from "./particles/emitter.ts";
 import Particle from "./particles/particle.ts";
 import ParticleEmitterSettings from "./particles/settings.js";
-import Body from "./physics/body.js";
+import Body from "./physics/builtin/body.js";
 // class definition
-import QuadTree from "./physics/quadtree.js";
+import QuadTree from "./physics/builtin/quadtree.js";
 import World from "./physics/world.js";
 // utility classes
 import { cache as plugins } from "./plugin/plugin.ts";
@@ -81,6 +81,7 @@ import OutlineEffect from "./video/webgl/effects/outline.js";
 import PixelateEffect from "./video/webgl/effects/pixelate.js";
 import ScanlineEffect from "./video/webgl/effects/scanline.js";
 import SepiaEffect from "./video/webgl/effects/sepia.js";
+import ShineEffect from "./video/webgl/effects/shine.js";
 import TintPulseEffect from "./video/webgl/effects/tintPulse.js";
 import VignetteEffect from "./video/webgl/effects/vignette.js";
 import WaveEffect from "./video/webgl/effects/wave.js";
@@ -119,7 +120,19 @@ export { ObservableVector2d } from "./math/observableVector2d.ts";
 export { ObservableVector3d } from "./math/observableVector3d.ts";
 export { Vector2d } from "./math/vector2d.ts";
 export { Vector3d } from "./math/vector3d.ts";
+export type {
+	AdapterCapabilities,
+	AdapterOptions,
+	BodyDefinition,
+	BodyShape,
+	BodyType,
+	CollisionResponse,
+	PhysicsAdapter,
+	PhysicsBody,
+	RaycastHit,
+} from "./physics/adapter.ts";
 export { Bounds } from "./physics/bounds.ts";
+export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.js";
 export { collision } from "./physics/collision.js";
 export * as plugin from "./plugin/plugin.ts";
 export { getPool } from "./pool.ts";
@@ -183,6 +196,7 @@ export {
 	SepiaEffect,
 	ShaderEffect,
 	ShakeEffect,
+	ShineEffect,
 	Sprite,
 	Stage,
 	save,

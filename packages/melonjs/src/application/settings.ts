@@ -4,13 +4,27 @@
  */
 
 import { RendererType } from "../const";
+import { PhysicsAdapter } from "../physics/adapter";
 import Renderer from "../video/renderer";
 import { Batcher } from "../video/webgl/batchers/batcher";
 import { ScaleMethod } from "./scaleMethods";
 
 type BlendMode = "normal" | "multiply" | "lighter" | "additive" | "screen";
 
-type PhysicsType = "builtin" | "none";
+/**
+ * How the application's physics is configured.
+ *
+ * - `"builtin"` (default): auto-construct a {@link BuiltinAdapter} with default options.
+ * - `"none"`: keep an adapter for API compatibility but skip the per-frame `step()` call (frozen world).
+ * - `PhysicsAdapter` instance: use the given adapter (e.g. `new BuiltinAdapter({ gravity })`,
+ *   or `new MatterAdapter()` from `@melonjs/matter-adapter`).
+ * - `{ adapter: PhysicsAdapter }`: explicit form, reserved for future per-app physics options.
+ */
+type PhysicsType =
+	| "builtin"
+	| "none"
+	| PhysicsAdapter
+	| { adapter: PhysicsAdapter };
 
 type PowerPreference = "default" | "low-power";
 

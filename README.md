@@ -212,8 +212,14 @@ Here is the list of official plugins maintained by the melonJS team:
 - [debug-plugin](https://github.com/melonjs/melonJS/tree/master/packages/debug-plugin) - a debug panel for inspecting game objects
 - [tiled-inflate-plugin](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) - enable loading and parsing of zlib, gzip and zstd compressed [Tiled](https://www.mapeditor.org/) maps
 - [spine-plugin](https://github.com/melonjs/melonJS/tree/master/packages/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations
+- [capacitor-plugin](https://github.com/melonjs/melonJS/tree/master/packages/capacitor-plugin) - bridges [Capacitor](https://capacitorjs.com/)'s native lifecycle (pause/resume, hardware back-button, orientation lock, splash) for melonJS games wrapped as iOS / Android apps
 
 If you wish to develop your own plugin, we also provide a [plugin template](https://github.com/melonjs/plugin-template) to help you get started.
+
+Physics Adapters
+-------------------------------------------------------------------------------
+Since 19.5, melonJS exposes a `PhysicsAdapter` interface so the same game code can run on either the built-in SAT physics (default) or on a third-party rigid-body engine, selected via the `physic` option on `Application`. Official adapter packages maintained by the melonJS team:
+- [matter-adapter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter) - [matter-js](https://brm.io/matter-js/) integration with rotational dynamics, constraints, sleeping bodies, continuous collision detection, and raycasts
 
 Installation
 -------------------------------------------------------------------------------
