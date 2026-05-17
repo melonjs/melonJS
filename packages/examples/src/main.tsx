@@ -113,6 +113,16 @@ const ExamplePlatformer = lazy(() =>
 		default: m.ExamplePlatformer,
 	})),
 );
+const ExamplePlatformerMatter = lazy(() =>
+	import("./examples/platformer-matter/ExamplePlatformer").then((m) => ({
+		default: m.ExamplePlatformerMatter,
+	})),
+);
+const ExamplePoolMatter = lazy(() =>
+	import("./examples/pool-matter/ExamplePool").then((m) => ({
+		default: m.ExamplePoolMatter,
+	})),
+);
 const ExampleSpaceInvaders = lazy(() =>
 	import("./examples/spaceInvaders/ExampleSpaceInvaders").then((m) => ({
 		default: m.ExampleSpaceInvaders,
@@ -329,6 +339,22 @@ const examples: {
 		sourceDir: "platformer",
 		description:
 			"Side-scrolling platformer with physics, tile collisions, enemies, collectibles, custom shaders, blend modes, particles, and multi-camera minimap.",
+	},
+	{
+		component: <ExamplePlatformerMatter />,
+		label: "Matter Platformer",
+		path: "platformer-matter",
+		sourceDir: "platformer-matter",
+		description:
+			"A version of the platformer using custom physics through the @melonjs/matter-adapter package.",
+	},
+	{
+		component: <ExamplePoolMatter />,
+		label: "Pool (Matter)",
+		path: "pool-matter",
+		sourceDir: "pool-matter",
+		description:
+			"Top-down 8-ball pool driven by @melonjs/matter-adapter — drag-to-aim, release-to-strike.",
 	},
 	{
 		component: <ExampleSpaceInvaders />,

@@ -1,3 +1,8 @@
+/**
+ * melonJS — performance benchmark (animated sprite stress test) example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { game, math, Sprite } from "melonjs";
 
 export class Fruit extends Sprite {

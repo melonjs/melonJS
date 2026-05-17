@@ -2,11 +2,13 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { game as gameFromModule } from "../src/application/application.ts";
 import {
 	Application,
+	BuiltinAdapter,
 	boot,
 	Container,
 	game,
 	Renderable,
 	state,
+	Vector2d,
 	video,
 } from "../src/index.js";
 import { initialized } from "../src/system/bootstrap.ts";
@@ -174,6 +176,82 @@ describe("Application", () => {
 			expect(app2.settings.width).toBe(640);
 			expect(app1.world).not.toBe(app2.world);
 			expect(app1.renderer).not.toBe(app2.renderer);
+		});
+	});
+
+	describe("physic setting resolves to an adapter", () => {
+		it("default (no setting) → BuiltinAdapter, world.physic === 'builtin'", () => {
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			expect(app.world.adapter).toBeInstanceOf(BuiltinAdapter);
+			expect(app.world.physic).toBe("builtin");
+		});
+
+		it("'builtin' string → BuiltinAdapter, world.physic === 'builtin'", () => {
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+				physic: "builtin",
+			});
+			expect(app.world.adapter).toBeInstanceOf(BuiltinAdapter);
+			expect(app.world.physic).toBe("builtin");
+		});
+
+		it("'none' string → BuiltinAdapter still attached, world.physic === 'none'", () => {
+			// "none" disables stepping but keeps an adapter so any code
+			// touching world.adapter doesn't crash
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+				physic: "none",
+			});
+			expect(app.world.adapter).toBeInstanceOf(BuiltinAdapter);
+			expect(app.world.physic).toBe("none");
+		});
+
+		it("PhysicsAdapter instance → used directly", () => {
+			const custom = new BuiltinAdapter({ gravity: new Vector2d(0, 0.3) });
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+				physic: custom,
+			});
+			expect(app.world.adapter).toBe(custom);
+			expect(app.world.gravity.y).toEqual(0.3);
+			expect(app.world.physic).toBe("builtin");
+		});
+
+		it("{ adapter } object → forwarded to the world", () => {
+			const custom = new BuiltinAdapter({ gravity: new Vector2d(0, 0.7) });
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+				physic: { adapter: custom },
+			});
+			expect(app.world.adapter).toBe(custom);
+			expect(app.world.gravity.y).toEqual(0.7);
+			expect(app.world.physic).toBe("builtin");
+		});
+
+		it("each Application instance gets its own adapter (no sharing)", () => {
+			const app1 = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			const app2 = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			expect(app1.world.adapter).not.toBe(app2.world.adapter);
 		});
 	});
 

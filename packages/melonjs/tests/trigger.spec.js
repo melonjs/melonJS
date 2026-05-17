@@ -131,15 +131,32 @@ describe("Trigger", () => {
 			expect(trigger.triggerSettings.setViewportBounds).toEqual(false);
 		});
 
-		it("should create a collision body", () => {
+		it("should declare a static body definition for collision", () => {
 			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 100,
 				to: "map2",
 			});
-			expect(trigger.body).toBeDefined();
-			expect(trigger.body.isStatic).toEqual(true);
+			// the body is constructed when the trigger is added to a world
+			// (adapter auto-registration); the bodyDef is set at construction
+			expect(trigger.bodyDef).toBeDefined();
+			expect(trigger.bodyDef.type).toEqual("static");
+		});
+
+		// Triggers are detection-only volumes. Marking the bodyDef as a
+		// sensor makes that intent explicit and portable: under the
+		// builtin adapter the SAT detector already skipped push-out for
+		// triggers (they don't define `onCollision`), but Matter's solver
+		// resolves every contact unless `isSensor` is set.
+		it("should declare the trigger body as a sensor", () => {
+			setup();
+			const trigger = new Trigger(0, 0, {
+				width: 50,
+				height: 100,
+				to: "map2",
+			});
+			expect(trigger.bodyDef.isSensor).toEqual(true);
 		});
 
 		it("should accept custom shapes for collision", () => {
@@ -151,7 +168,8 @@ describe("Trigger", () => {
 				shapes: [rect],
 				to: "map2",
 			});
-			expect(trigger.body).toBeDefined();
+			expect(trigger.bodyDef).toBeDefined();
+			expect(trigger.bodyDef.shapes[0]).toBe(rect);
 		});
 	});
 
@@ -296,7 +314,7 @@ describe("Trigger", () => {
 		});
 	});
 
-	describe("onCollision", () => {
+	describe("onCollisionStart", () => {
 		it("should call triggerEvent when name is 'Trigger'", () => {
 			setup();
 			const trigger = new Trigger(0, 0, {
@@ -309,27 +327,13 @@ describe("Trigger", () => {
 			game.world.addChild(trigger);
 
 			expect(trigger.fading).toEqual(false);
-			trigger.onCollision();
+			trigger.onCollisionStart();
 			expect(trigger.fading).toEqual(true);
 
 			game.world.removeChild(trigger);
 			while (game.viewport.cameraEffects.length > 0) {
 				game.viewport.removeCameraEffect(game.viewport.cameraEffects[0]);
 			}
-		});
-
-		it("should return false (not solid)", () => {
-			setup();
-			const trigger = new Trigger(0, 0, {
-				width: 50,
-				height: 50,
-				color: "#000",
-				duration: 250,
-				to: "map2",
-			});
-			// rename to skip triggerEvent logic
-			trigger.name = "test";
-			expect(trigger.onCollision()).toEqual(false);
 		});
 	});
 });

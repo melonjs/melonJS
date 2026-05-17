@@ -1,5 +1,6 @@
 import type Camera2d from "./../camera/camera2d.ts";
 import { AUTO, CANVAS, WEBGL } from "../const.ts";
+import type { PhysicsAdapter } from "../physics/adapter.ts";
 import World from "../physics/world.js";
 import state from "../state/state.ts";
 import { boot, initialized } from "../system/bootstrap.ts";
@@ -40,6 +41,43 @@ import type {
 	ApplicationSettings,
 	ResolvedApplicationSettings,
 } from "./settings.ts";
+
+/**
+ * Resolve the user-supplied `physic` setting into the (optional) adapter
+ * to pass into the {@link World} constructor plus the legacy "builtin"
+ * / "none" string the rest of the engine still reads via `world.physic`.
+ *
+ * Accepted shapes:
+ *  - `"builtin"` / `undefined` → World constructs its own BuiltinAdapter
+ *  - `"none"` → World constructs its own BuiltinAdapter that we never `step()`
+ *  - a `PhysicsAdapter` instance → forwarded to the World constructor
+ *  - `{ adapter: PhysicsAdapter }` → explicit form, room for future fields
+ *
+ * "none" still constructs an adapter so any code touching `world.adapter`
+ * keeps working; the simulation is frozen because `World.step()`
+ * short-circuits on `world.physic === "none"`.
+ *
+ * We deliberately don't import `BuiltinAdapter` here — letting `World`
+ * apply its own default avoids a circular import via
+ * `physics/collision.js`, which imports the `game` reference back from
+ * this module.
+ * @ignore
+ */
+function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
+	adapter: PhysicsAdapter | undefined;
+	legacyString: string;
+} {
+	if (physic === "none") {
+		return { adapter: undefined, legacyString: "none" };
+	}
+	if (physic === undefined || physic === "builtin") {
+		return { adapter: undefined, legacyString: "builtin" };
+	}
+	// instance or { adapter } object — extract and pass through
+	const adapter =
+		typeof physic === "object" && "adapter" in physic ? physic.adapter : physic;
+	return { adapter, legacyString: "builtin" };
+}
 
 /**
  * The Application class is the main entry point for creating a melonJS game.
@@ -372,14 +410,58 @@ export default class Application {
 			consoleHeader(this);
 		}
 
-		// create a new physic world
-		this.world = new World(0, 0, this.settings.width, this.settings.height);
+		// resolve the physic setting into (adapter, legacy-string) pair.
+		// Accepts a string ("builtin"/"none" — built-in adapters that ship
+		// in core), a {@link PhysicsAdapter} instance (e.g.
+		// `new BuiltinAdapter({ gravity })` or
+		// `new MatterAdapter()` from `@melonjs/matter-adapter`), or the
+		// explicit form `{ adapter: PhysicsAdapter }`.
+		const { adapter, legacyString } = resolvePhysicSetting(
+			this.settings.physic,
+		);
+
+		// create a new physic world wired to the resolved adapter
+		this.world = new World(
+			0,
+			0,
+			this.settings.width,
+			this.settings.height,
+			adapter,
+		);
 
 		// set the reference to this application instance
 		this.world.app = this;
-		// set the reference to this application instance
-		this.world.physic = this.settings.physic;
+		// preserve the legacy string for the World.step() no-op gate
+		// ("builtin" runs the simulation; "none" skips it). Custom-adapter
+		// users still get "builtin" stepping — they opted in by passing
+		// the adapter instance.
+		this.world.physic = legacyString;
 		this.world.gpuTilemap = this.settings.gpuTilemap;
+
+		// report the active physics adapter once the world is wired —
+		// useful confirmation when a third-party adapter (e.g.
+		// `@melonjs/matter-adapter`) is plugged in via `settings.physic`.
+		// External adapters that set `name` / `version` / `url` get logged
+		// the same way as @melonjs/debug-plugin; BuiltinAdapter falls back
+		// to just its class name. Skipped when `consoleHeader` is disabled.
+		if (this.settings.consoleHeader) {
+			if (this.world.physic === "none") {
+				console.log("physics: disabled");
+			} else if (this.world.adapter) {
+				const a = this.world.adapter as {
+					constructor: { name: string };
+					name?: string;
+					version?: string;
+					url?: string;
+				};
+				const label = a.name ?? a.constructor.name;
+				const version = a.version ? ` ${a.version}` : "";
+				const url = a.url ? ` | ${a.url}` : "";
+				console.log(`physics: ${label}${version}${url}`);
+			} else {
+				console.log("physics: enabled (no adapter)");
+			}
+		}
 
 		// The GPU tilemap path needs a WebGL 2 renderer. Warn once at app
 		// startup when the user asked for it but the active renderer

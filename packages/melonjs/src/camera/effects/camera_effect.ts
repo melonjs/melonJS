@@ -38,7 +38,7 @@ export default class CameraEffect {
 	 * Called each frame to update the effect state (e.g. modify camera offset, countdown duration).
 	 * @param _dt - time elapsed since last frame in milliseconds
 	 */
-	update(_dt: number): void {} // eslint-disable-line @typescript-eslint/no-unused-vars
+	update(_dt: number): void {}
 
 	/**
 	 * Called after the scene renders to draw visual overlays (e.g. color fills for fading).
@@ -46,7 +46,7 @@ export default class CameraEffect {
 	 * @param _width - the camera viewport width
 	 * @param _height - the camera viewport height
 	 */
-	draw(_renderer: Renderer, _width: number, _height: number): void {} // eslint-disable-line @typescript-eslint/no-unused-vars
+	draw(_renderer: Renderer, _width: number, _height: number): void {}
 
 	/**
 	 * Called when the effect is removed from the camera. Override to clean up resources.

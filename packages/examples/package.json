@@ -10,8 +10,10 @@
 	},
 	"dependencies": {
 		"@melonjs/debug-plugin": "workspace:*",
+		"@melonjs/matter-adapter": "workspace:*",
 		"@melonjs/spine-plugin": "workspace:*",
 		"@melonjs/tiled-inflate-plugin": "workspace:*",
+		"matter-js": "^0.20.0",
 		"@types/react": "^19.2.13",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.1",

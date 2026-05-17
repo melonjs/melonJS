@@ -1,3 +1,8 @@
+/**
+ * melonJS — Platformer (built-in SAT physics) example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 const base = `${import.meta.env.BASE_URL}assets/platformer/`;
 
 export const resources = [

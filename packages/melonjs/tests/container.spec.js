@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Container, Renderable } from "../src/index.js";
+import { Body, Container, Rect, Renderable } from "../src/index.js";
 
 describe("Container", () => {
 	let container;
@@ -998,6 +998,53 @@ describe("Container", () => {
 			container.addChild(child);
 			container.removeChildNow(child, true);
 			expect(destroyed).toEqual(false);
+		});
+
+		// Regression: when an adapter-specific body (e.g. a Matter.Body
+		// from @melonjs/matter-adapter) lives on a detached subtree, the
+		// fallback path used to silently leak the body. Now it warns so
+		// users notice in development.
+		it("removeChildNow warns when an adapter-specific body has no reachable adapter", () => {
+			const orphanContainer = new Container(0, 0, 100, 100);
+			const child = new Renderable(0, 0, 10, 10);
+			// adapter-specific handle (plain object, not a melonJS Body)
+			child.body = { isAdapterHandle: true };
+			orphanContainer.addChild(child);
+
+			const warnings = [];
+			const origWarn = console.warn;
+			console.warn = (...args) => {
+				warnings.push(args.join(" "));
+			};
+			try {
+				orphanContainer.removeChildNow(child, true);
+			} finally {
+				console.warn = origWarn;
+			}
+			expect(warnings.length).toEqual(1);
+			expect(warnings[0]).toMatch(/adapter-specific body/);
+		});
+
+		// Sister case: a legacy `Body` on a detached subtree should NOT
+		// warn — it routes through the legacy `world.removeBody` fallback
+		// (or just no-ops if root.removeBody is absent).
+		it("removeChildNow does not warn for a legacy Body on a detached container", () => {
+			const orphanContainer = new Container(0, 0, 100, 100);
+			const child = new Renderable(0, 0, 10, 10);
+			child.body = new Body(child, new Rect(0, 0, 10, 10));
+			orphanContainer.addChild(child);
+
+			const warnings = [];
+			const origWarn = console.warn;
+			console.warn = (...args) => {
+				warnings.push(args.join(" "));
+			};
+			try {
+				orphanContainer.removeChildNow(child, true);
+			} finally {
+				console.warn = origWarn;
+			}
+			expect(warnings.length).toEqual(0);
 		});
 	});
 

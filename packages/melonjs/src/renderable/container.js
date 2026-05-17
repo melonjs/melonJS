@@ -1,5 +1,5 @@
 import { colorPool } from "../math/color.ts";
-import Body from "../physics/body.js";
+import Body from "../physics/builtin/body.js";
 import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, on } from "../system/event.ts";
 import pool from "../system/legacy_pool.js";
@@ -13,6 +13,31 @@ import Renderable from "./renderable.js";
  */
 function deferredRemove(child, keepalive) {
 	this.removeChildNow(child, keepalive);
+}
+
+/**
+ * Register a child's physics body with the root world container when the
+ * child is added to the tree. Two paths coexist:
+ *  - `child.bodyDef`: declarative {@link BodyDefinition}, routed through
+ *    `world.adapter.addBody(child, child.bodyDef)`. Engine-portable.
+ *    Wins whenever set — even on re-registration of a previously-built
+ *    body — so pool-recycled renderables get their def fields re-applied
+ *    each time (collisionType, maxVelocity, etc. restored to the def's
+ *    values regardless of any in-game mutation).
+ *  - `child.body instanceof Body`: pre-constructed legacy {@link Body}
+ *    with no `bodyDef`, routed through `world.addBody(child.body)`.
+ *    BuiltinAdapter-only.
+ * @ignore
+ */
+function registerChildBody(child, worldContainer) {
+	if (child.bodyDef) {
+		// adapter.addBody handles both cases: builds a fresh Body when
+		// none exists, or re-applies def fields onto the existing one
+		// (legacy-bridge path) — see BuiltinAdapter.addBody.
+		worldContainer.adapter.addBody(child, child.bodyDef);
+	} else if (child.body instanceof Body) {
+		worldContainer.addBody(child.body);
+	}
 }
 
 let globalFloatingCounter = 0;
@@ -139,12 +164,6 @@ export default class Container extends Renderable {
 		 */
 		this.backgroundColor = colorPool.get(0, 0, 0, 0.0);
 
-		/**
-		 * Used by the debug panel plugin
-		 * @ignore
-		 */
-		this.drawCount = 0;
-
 		// container self apply any defined transformation
 		this.autoTransform = true;
 
@@ -262,6 +281,23 @@ export default class Container extends Renderable {
 			this.sort();
 		}
 
+		// Register physics bodies BEFORE firing onActivateEvent so that
+		// `child.body` is available inside the hook for both legacy
+		// (pre-built `new Body(...)`) AND declarative (`bodyDef`) users.
+		// Legacy users are unaffected — their body was already set in
+		// the constructor; the order swap only matters for bodyDef.
+		if (this.isAttachedToRoot()) {
+			const worldContainer = this.getRootAncestor();
+			registerChildBody(child, worldContainer);
+			// if the child is a container
+			if (child instanceof Container) {
+				// add all container child bodies
+				child.forEach((cchild) => {
+					registerChildBody(cchild, worldContainer);
+				});
+			}
+		}
+
 		if (
 			typeof child.onActivateEvent === "function" &&
 			this.isAttachedToRoot()
@@ -272,23 +308,6 @@ export default class Container extends Renderable {
 		// force container bounds update if required
 		if (this.enableChildBoundsUpdate === true) {
 			this.updateBounds();
-		}
-
-		// add a physic body(ies) to the game world
-		if (this.isAttachedToRoot()) {
-			const worldContainer = this.getRootAncestor();
-			if (child.body instanceof Body) {
-				worldContainer.addBody(child.body);
-			}
-			// if the child is a container
-			if (child instanceof Container) {
-				// add all container child bodies
-				child.forEach((cchild) => {
-					if (cchild.body instanceof Body) {
-						worldContainer.addBody(cchild.body);
-					}
-				});
-			}
 		}
 
 		// mark the container for repaint
@@ -331,6 +350,22 @@ export default class Container extends Renderable {
 			}
 			child.updateBounds();
 
+			// Register physics bodies BEFORE firing onActivateEvent so
+			// `child.body` is available in the hook for both legacy
+			// (pre-built `new Body(...)`) AND declarative (`bodyDef`)
+			// users. See addChild for the rationale.
+			if (this.isAttachedToRoot()) {
+				const worldContainer = this.getRootAncestor();
+				registerChildBody(child, worldContainer);
+				// if the child is a container
+				if (child instanceof Container) {
+					// add all container child bodies
+					child.forEach((cchild) => {
+						registerChildBody(cchild, worldContainer);
+					});
+				}
+			}
+
 			if (
 				typeof child.onActivateEvent === "function" &&
 				this.isAttachedToRoot()
@@ -341,23 +376,6 @@ export default class Container extends Renderable {
 			// force container bounds update if required
 			if (this.enableChildBoundsUpdate === true) {
 				this.updateBounds();
-			}
-
-			// add a physic body(ies) to the game world
-			if (this.isAttachedToRoot()) {
-				const worldContainer = this.getRootAncestor();
-				if (child.body instanceof Body) {
-					worldContainer.addBody(child.body);
-				}
-				// if the child is a container
-				if (child instanceof Container) {
-					// add all container child bodies
-					child.forEach((cchild) => {
-						if (cchild.body instanceof Body) {
-							worldContainer.addBody(cchild.body);
-						}
-					});
-				}
 			}
 
 			// mark the container for repaint
@@ -639,8 +657,11 @@ export default class Container extends Renderable {
 
 	/**
 	 * @ignore
+	 * @param {...*} _args - reserved; widens the signature so subclass
+	 *   overrides like `onActivateEvent(app)` remain structurally
+	 *   assignable to the base Container/Renderable type.
 	 */
-	onActivateEvent() {
+	onActivateEvent(..._args) {
 		this.forEach((child) => {
 			if (typeof child.onActivateEvent === "function") {
 				child.onActivateEvent();
@@ -675,12 +696,29 @@ export default class Container extends Renderable {
 				child.onDeactivateEvent();
 			}
 
-			// remove the body first to avoid a condition where a body can be detached
-			// from its parent, before the body is removed from the game world
-			if (child.body instanceof Body) {
+			// Remove the body first to avoid a condition where a body can
+			// be detached from its parent before it's removed from the
+			// game world. `child.body` may be a melonJS `Body` (legacy /
+			// builtin adapter) or an adapter-specific handle (e.g.
+			// `Matter.Body` under the matter adapter); either way the
+			// adapter knows how to clean it up by renderable identity.
+			if (child.body) {
 				const root = this.getRootAncestor();
-				if (root) {
-					root.removeBody(child.body);
+				/** @type {{ adapter?: { removeBody?: (r: object) => void } }} */
+				const world = root;
+				if (world?.adapter?.removeBody) {
+					world.adapter.removeBody(child);
+				} else if (child.body instanceof Body) {
+					// Container detached from the world tree — fall back to
+					// the legacy `world.removeBody(body)` path if available.
+					// This only handles a legacy `Body`; an adapter-specific
+					// handle reaching this branch silently leaks (warn so it
+					// surfaces in development).
+					root?.removeBody?.(child.body);
+				} else {
+					console.warn(
+						"melonJS: removeChildNow could not clean up an adapter-specific body — the container is not attached to a world with an adapter. The body remains in the physics engine.",
+					);
 				}
 			}
 
@@ -825,8 +863,11 @@ export default class Container extends Renderable {
 
 	/**
 	 * @ignore
+	 * @param {...*} _args - reserved; widens the signature so subclass
+	 *   overrides like `onDeactivateEvent(app)` remain structurally
+	 *   assignable to the base Container/Renderable type.
 	 */
-	onDeactivateEvent() {
+	onDeactivateEvent(..._args) {
 		this.forEach((child) => {
 			if (typeof child.onDeactivateEvent === "function") {
 				child.onDeactivateEvent();
@@ -933,8 +974,6 @@ export default class Container extends Renderable {
 	draw(renderer, viewport) {
 		const bounds = this.getBounds();
 
-		this.drawCount = 0;
-
 		// adjust position before clipping so the renderer's currentTransform
 		// sits at this container's local origin. `clipRect` then operates
 		// in container-local coords and any scale/rotation accumulated in
@@ -999,8 +1038,6 @@ export default class Container extends Renderable {
 					}
 					renderer.restore();
 				}
-
-				this.drawCount++;
 			}
 		}
 	}

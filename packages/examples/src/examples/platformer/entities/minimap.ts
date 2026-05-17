@@ -1,3 +1,8 @@
+/**
+ * melonJS — Platformer (built-in SAT physics) example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { Camera2d, event, game, level, VignetteEffect } from "melonjs";
 
 const MINIMAP_WIDTH = 180;

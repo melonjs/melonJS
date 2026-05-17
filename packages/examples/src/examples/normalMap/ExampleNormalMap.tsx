@@ -1,3 +1,8 @@
+/**
+ * melonJS — normal-map lit sprite demo example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { game, input, Light2d, Sprite, Stage, state, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 

@@ -1,3 +1,8 @@
+/**
+ * melonJS — Platformer (built-in SAT physics) example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { Polygon, Trigger } from "melonjs";
 
 // 5-pointed star polygon (unit-sized, centered at origin)
@@ -22,8 +27,10 @@ const starPoints: [
 /**
  * A custom level trigger that uses a star-shaped mask transition.
  */
+type TriggerSettings = ConstructorParameters<typeof Trigger>[2];
+
 export class LevelTrigger extends Trigger {
-	constructor(x: number, y: number, settings: any) {
+	constructor(x: number, y: number, settings: TriggerSettings) {
 		super(x, y, {
 			...settings,
 			transition: "mask",

@@ -1,3 +1,8 @@
+/**
+ * melonJS — Text + BitmapText rendering example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { Application, loader, plugin, state, video } from "melonjs";
 import { createExampleComponent } from "../utils.tsx";

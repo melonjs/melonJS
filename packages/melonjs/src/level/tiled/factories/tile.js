@@ -1,4 +1,3 @@
-import Body from "../../../physics/body.js";
 import { getDefaultShape } from "../TMXObjectFactory.js";
 
 /**
@@ -10,8 +9,14 @@ import { getDefaultShape } from "../TMXObjectFactory.js";
 export function createTileObject(settings) {
 	const shape = getDefaultShape(settings);
 	const obj = settings.tile.getRenderable(settings);
-	obj.body = new Body(obj, shape);
-	obj.body.setStatic(true);
+	// declarative body — auto-registered with the active adapter when
+	// the renderable is added to the world tree. `getDefaultShape` may
+	// return either a single shape or an array (parseTMXShapes returns
+	// an array for polygon/polyline/ellipse types), so normalize.
+	obj.bodyDef = {
+		type: "static",
+		shapes: Array.isArray(shape) ? shape : [shape],
+	};
 	obj.pos.setMuted(settings.x, settings.y, settings.z);
 	return obj;
 }

@@ -1,5 +1,18 @@
 # Changelog
 
+## 16.0.0 _unreleased_
+
+### Breaking Changes
+- Requires melonJS **19.5.0 or later** — the hitbox overlay now goes through the new `PhysicsAdapter.getBodyAABB` / `getBodyShapes` adapter API (and the velocity overlay through the existing `adapter.getVelocity`) rather than reading `renderable.body.*` directly. Older engines don't expose those methods and the plugin will refuse to load. 19.5 also moved the FPS estimate into `timer.update()` (was previously driven by this plugin's `timer.countFPS()` call) and removed the debug-only `Container.drawCount` field, both of which this version is aware of.
+
+### Improvements
+- `#draws` stat is now self-computed by counting per-frame `postDraw` calls on direct children of `game.world`, instead of reading the now-removed `Container.drawCount` field. Same number, no API surface bleeding back into the engine.
+- Help-text key label (`[X] show/hide` in the panel footer) now reverse-looks-up the key name from `input.KEY`, so a custom `debugToggle` like `KEY.SPACE` or `KEY.F1` displays correctly instead of producing garbage from a fixed `String.fromCharCode(32 + keycode)` assumption.
+- Hitbox/body overlays render correctly regardless of which physics adapter is active. Each adapter owns its own coordinate-system conversion (builtin returns local-space directly; matter subtracts world-space → local), so the debug plugin no longer relies on duck-typed body shims and is automatically compatible with future adapters.
+- Velocity vector overlay now works on **any** renderable with a body (not just `Entity`), and works under both builtin and matter physics. Previously the overlay was Entity-only and read `body.vel` directly — a builtin-only field that doesn't exist on matter bodies.
+- Velocity overlay is now independent of the hitbox option for general renderables. Previously, toggling the hitbox option off would also suppress the velocity arrow on non-`Entity` renderables (`Entity` already had the two flags independent); now both flags can be toggled independently for any renderable.
+- Overlay rendering (hitbox / velocity / quadtree) is no longer tied to panel visibility. Each overlay's checkbox in the panel is the source of truth; hiding the panel keeps any enabled overlays rendering in the world. The panel's HTML UI (FPS, draw-call counts, frame-time graph) still pauses while hidden — that's just a stats readout. Workflow: open the panel, tick the overlays you want, close the panel, keep playing with the overlays still on.
+
 ## 15.0.3
 
 ### Improvements

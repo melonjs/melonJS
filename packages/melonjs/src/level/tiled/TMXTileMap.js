@@ -530,10 +530,20 @@ export default class TMXTileMap {
 				// instantiate the object based on its type
 				const obj = createTMXObject(settings, this);
 
-				// configure collision on unnamed objects in collision groups
-				if (isCollisionGroup && !settings.name && obj.body) {
-					obj.body.collisionType = collision.types.WORLD_SHAPE;
-					obj.body.isStatic = true;
+				// configure collision on unnamed objects in collision groups.
+				// Factory output uses `bodyDef` (engine-portable, declarative).
+				// We rewrite the def fields so when the world auto-registers
+				// the body, it picks up WORLD_SHAPE / static. Legacy objects
+				// that still carry a pre-constructed `body` are patched
+				// in-place for backward compatibility.
+				if (isCollisionGroup && !settings.name) {
+					if (obj.bodyDef) {
+						obj.bodyDef.collisionType = collision.types.WORLD_SHAPE;
+						obj.bodyDef.type = "static";
+					} else if (obj.body) {
+						obj.body.collisionType = collision.types.WORLD_SHAPE;
+						obj.body.isStatic = true;
+					}
 				}
 
 				// apply per-object opacity and visibility (skip TMXLayer)

@@ -1,3 +1,8 @@
+/**
+ * melonJS — renderable clipping demo example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import {
 	Color,
 	ColorLayer,

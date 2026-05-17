@@ -6,8 +6,8 @@ import { clamp } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
-import Body from "./../physics/body.js";
 import { boundsPool } from "./../physics/bounds.ts";
+import Body from "./../physics/builtin/body.js";
 import pool from "../system/legacy_pool.js";
 
 /**
@@ -80,8 +80,13 @@ export default class Renderable extends Rect {
 		this.currentTransform.identity();
 
 		/**
-		 * the renderable physic body
-		 * @type {Body}
+		 * the renderable physics body — the handle returned by the
+		 * active {@link PhysicsAdapter}'s `addBody` (or constructed
+		 * imperatively via `new Body(...)`). Typed as the portable
+		 * {@link PhysicsBody} interface; cast to the adapter-specific
+		 * concrete type (`MatterAdapter.Body`, `BuiltinAdapter.Body`, or
+		 * the legacy {@link Body} class) to reach native fields.
+		 * @type {PhysicsBody}
 		 * @example
 		 *  // define a new Player Class
 		 *  class PlayerEntity extends me.Sprite {
@@ -116,6 +121,28 @@ export default class Renderable extends Rect {
 		 * }
 		 */
 		this.body = undefined;
+
+		/**
+		 * Declarative body definition consumed by the active
+		 * {@link PhysicsAdapter} when this renderable is added to a
+		 * container. **Adapter API only** — leave `undefined` if you
+		 * build a body imperatively via `this.body = new Body(...)`.
+		 *
+		 * When set, the parent container forwards it to
+		 * `world.adapter.addBody(this, this.bodyDef)`, which constructs
+		 * the underlying physics body (matter, builtin SAT, …) and
+		 * assigns the engine-portable wrapper to `this.body`. This is
+		 * the engine-portable path: the same `bodyDef` produces an
+		 * equivalent body under any adapter.
+		 *
+		 * Typical fields: `type` (`"static"`/`"dynamic"`/`"kinematic"`),
+		 * `shapes`, `collisionType`, `collisionMask`, `restitution`,
+		 * `frictionAir`, `density`, `gravityScale`, `isSensor`,
+		 * `maxVelocity`, `fixedRotation`. See {@link BodyDefinition}.
+		 * @type {object|undefined}
+		 * @default undefined
+		 */
+		this.bodyDef = undefined;
 
 		/**
 		 * (G)ame (U)nique (Id)entifier" <br>
@@ -885,28 +912,82 @@ export default class Renderable extends Rect {
 	}
 
 	/**
-	 * onCollision callback, triggered in case of collision,
-	 * when this renderable body is colliding with another one
-	 * @param {ResponseObject} response - the collision response object
+	 * Legacy collision callback — fires every frame this renderable body is
+	 * overlapping another body. Kept for backward compatibility with code
+	 * written against pre-19.5 melonJS; semantics are unchanged from the
+	 * 19.4 contract.
+	 *
+	 * **NOTE — `onCollision` is NOT equivalent to {@link Renderable.onCollisionActive}.**
+	 * The two handlers exist side by side and have intentionally different
+	 * contracts:
+	 *
+	 * | | `onCollision` (legacy) | `onCollisionActive` (modern) |
+	 * |---|---|---|
+	 * | Cadence for dynamic-dynamic pairs | 2× per frame per side | 1× per frame per side |
+	 * | `response.a` semantics | Fixed per pair (first body in detector call) | Always the receiver (`response.a === this`) |
+	 * | `response.b` semantics | Fixed per pair | Always the partner (`response.b === other`) |
+	 * | `response.normal` / `response.depth` | ✗ | ✓ — `normal.y < -0.7` = "push me up" |
+	 * | `return false` to skip push-out | ✓ (honored by SAT) | ✗ — use `bodyDef.isSensor` or `setSensor` instead |
+	 *
+	 * If you're writing new code, prefer `onCollisionActive`. Keep
+	 * `onCollision` only when its every-frame, return-false, fixed-`a`/`b`
+	 * semantics are what you want.
+	 *
+	 * @param {import("../physics/adapter.ts").CollisionResponse} response - the collision response object
 	 * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
-	 * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+	 * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected); the return value is only honored by the builtin SAT adapter.
 	 * @example
-	 * // collision handler
+	 * // legacy collision handler — note the receiver-side check on response.a
 	 * onCollision(response) {
 	 *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
-	 *         // makes the other object solid, by substracting the overlap vector to the current position
 	 *         this.pos.sub(response.overlapV);
 	 *         this.hurt();
-	 *         // not solid
-	 *         return false;
+	 *         return false;   // skip the SAT push-out
 	 *     }
-	 *     // Make the object solid
 	 *     return true;
-	 * },
+	 * }
 	 */
-	onCollision() {
-		return false;
+	onCollision(_response, _other) {
+		// Default returns `undefined` so that bodies without a user-defined
+		// `onCollision` get push-out by default (matches matter's "solver
+		// resolves contacts unless `isSensor`" model). A user-defined
+		// override returning `false` still opts out — that's the legacy
+		// SAT idiom for one-way platforms / triggers, preserved for
+		// backward compatibility. Subclasses that don't override this
+		// method effectively inherit the modern default.
 	}
+
+	/*
+	 * Modern collision lifecycle hooks (`onCollisionStart`,
+	 * `onCollisionActive`, `onCollisionEnd`) are intentionally NOT
+	 * defined on the base class. Subclasses override the ones they
+	 * care about; the adapter's dispatch logic checks
+	 * `typeof renderable.onCollisionX === "function"` to know whether
+	 * to fire them. Defining base stubs would make every renderable
+	 * "look like" it implements every hook, which would in turn make
+	 * the `onCollisionActive supersedes onCollision` rule fire even
+	 * for legacy-only code.
+	 *
+	 * Documented surface (subclasses implement these as needed):
+	 *
+	 *   onCollisionStart(response, other)
+	 *     One-shot on first contact. Use for stomp bounces, pickups,
+	 *     trigger entry. Receiver-symmetric (`response.a === this`,
+	 *     `response.b === other`). Same contract on every adapter.
+	 *
+	 *   onCollisionActive(response, other)
+	 *     Every step while two bodies remain in contact. The modern
+	 *     equivalent of `onCollision`, with different semantics:
+	 *       - 1× per frame per side (vs `onCollision`'s 2× for dyn-dyn)
+	 *       - `response.a === this`, `response.b === other`
+	 *       - `response.normal` is the MTV of the receiver
+	 *       - `return false` is NOT honored (use `bodyDef.isSensor`)
+	 *     When defined, `onCollision` is suppressed on the same
+	 *     renderable. Stomp idiom: `response.normal.y < -0.7`.
+	 *
+	 *   onCollisionEnd(response, other)
+	 *     One-shot when two bodies separate.
+	 */
 
 	/**
 	 * Destroy function<br>
@@ -975,9 +1056,35 @@ export default class Renderable extends Rect {
 
 	/**
 	 * OnDestroy Notification function<br>
-	 * Called by engine before deleting the object
+	 * Called by engine before deleting the object. `Stage.destroy(app)`
+	 * forwards the active Application, so subclasses that wire teardown
+	 * against the app object can override as `onDestroyEvent(app)`.
+	 * @param {...*} _args - forwarded by `destroy(...args)`; Stage passes the Application instance
 	 */
-	onDestroyEvent() {
+	onDestroyEvent(..._args) {
+		// to be extended !
+	}
+
+	/**
+	 * Lifecycle hook fired by {@link Container} when this renderable is
+	 * added to a container that is part of the active scene graph.
+	 * Override to wire up input handlers, register external listeners,
+	 * or grab adapter references — `this.parentApp` is guaranteed to be
+	 * available here. Pair with {@link Renderable#onDeactivateEvent}.
+	 * @param {...*} _args - forwarded by `Container.addChild`
+	 */
+	onActivateEvent(..._args) {
+		// to be extended !
+	}
+
+	/**
+	 * Lifecycle hook fired by {@link Container} when this renderable is
+	 * removed from its container or its container is itself removed.
+	 * Override to release input handlers, unsubscribe from events, or
+	 * drop adapter references. Pair with {@link Renderable#onActivateEvent}.
+	 * @param {...*} _args - forwarded by `Container.removeChildNow`
+	 */
+	onDeactivateEvent(..._args) {
 		// to be extended !
 	}
 }

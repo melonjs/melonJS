@@ -1,7 +1,7 @@
 import { polygonPool } from "../../geometries/polygon.ts";
 import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
-import Body from "../../physics/body.js";
+import Body from "../../physics/builtin/body.js";
 import Renderable from "../renderable.js";
 import Sprite from "../sprite.js";
 

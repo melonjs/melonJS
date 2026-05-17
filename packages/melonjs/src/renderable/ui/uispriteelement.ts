@@ -124,7 +124,7 @@ export default class UISpriteElement extends Sprite {
 	 * @param _event - the event object
 	 * @returns return false if we need to stop propagating the event
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onClick(_event?: Pointer): boolean {
 		return false;
 	}
@@ -143,7 +143,7 @@ export default class UISpriteElement extends Sprite {
 	 * function called when the pointer is over the object
 	 * @param _event - the event object
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onOver(_event?: Pointer): void {
 		// to be extended
 	}
@@ -163,7 +163,7 @@ export default class UISpriteElement extends Sprite {
 	 * function called when the pointer is leaving the object area
 	 * @param _event - the event object
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onOut(_event?: Pointer): void {
 		// to be extended
 	}
@@ -187,7 +187,7 @@ export default class UISpriteElement extends Sprite {
 	 * @param _event - the event object
 	 * @returns return false if we need to stop propagating the event
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 	onRelease(_event?: Pointer): boolean {
 		return false;
 	}
@@ -215,7 +215,7 @@ export default class UISpriteElement extends Sprite {
 	 * function called when added to the game world or a container
 	 * @ignore
 	 */
-	onActivateEvent(): void {
+	override onActivateEvent(): void {
 		// register pointer events
 		registerPointerEvent("pointerdown", this, (e) => {
 			return this.clicked(e);
@@ -238,7 +238,7 @@ export default class UISpriteElement extends Sprite {
 	 * function called when removed from the game world or a container
 	 * @ignore
 	 */
-	onDeactivateEvent(): void {
+	override onDeactivateEvent(): void {
 		// release pointer events
 		releasePointerEvent("pointerdown", this);
 		releasePointerEvent("pointerup", this);

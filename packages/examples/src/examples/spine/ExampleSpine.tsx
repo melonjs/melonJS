@@ -1,3 +1,8 @@
+/**
+ * melonJS — Spine 4.2 runtime animation example.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import Spine, { SpinePlugin } from "@melonjs/spine-plugin";
 import { event, game, input, loader, plugin, state, video } from "melonjs";

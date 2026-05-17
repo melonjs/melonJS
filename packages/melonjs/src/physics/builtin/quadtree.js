@@ -1,9 +1,9 @@
-import { Vector2d } from "../math/vector2d.ts";
+import { Vector2d } from "../../math/vector2d.ts";
 
 /**
- * @import World from "./world.js";
- * @import Container from "./../renderable/container.js";
- * @import {Bounds} from "./bounds.ts";
+ * @import World from "../world.js";
+ * @import Container from "../../renderable/container.js";
+ * @import {Bounds} from "../bounds.ts";
  */
 
 /*
