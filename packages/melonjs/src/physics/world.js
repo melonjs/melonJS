@@ -63,12 +63,29 @@ export default class World extends Container {
 		this.app = undefined;
 
 		/**
-		 * the physic engine used by melonJS
+		 * Identifier of the active physics adapter, taken from the
+		 * adapter's `physicLabel` field at `Application` construction —
+		 * `"builtin"` (default — `BuiltinAdapter`), `"matter"`
+		 * (`@melonjs/matter-adapter`), or a third-party label.
+		 * The reserved value `"none"` is set when physics is disabled via
+		 * `physic: "none"` in `ApplicationSettings`; `World.step` skips
+		 * the simulation entirely under that label, and the rest of the
+		 * world container behaves like a pure scene graph.
+		 *
+		 * User code can branch on the value without importing the
+		 * adapter class:
+		 *
+		 * ```ts
+		 * if (app.world.physic === "matter") {
+		 *     // matter-only setup (constraints, native queries, …)
+		 * }
+		 * ```
 		 * @see ApplicationSettings.physic
+		 * @see PhysicsAdapter.physicLabel
 		 * @type {string}
 		 * @default "builtin"
 		 * @example
-		 * // disable builtin physic
+		 * // disable physics entirely
 		 * app.world.physic = "none";
 		 */
 		this.physic = "builtin";
@@ -284,7 +301,10 @@ export default class World extends Container {
 	 * @param {number} dt - the time passed since the last frame update
 	 */
 	step(dt) {
-		if (this.physic === "builtin") {
+		// `physic` is the active adapter's identifier ("builtin", "matter",
+		// etc.) or the sentinel "none" when physics is disabled. The step
+		// runs under any adapter; only "none" skips it.
+		if (this.physic !== "none") {
 			this.adapter.step(dt);
 			this.adapter.syncFromPhysics();
 		}

@@ -89,7 +89,18 @@ export type ApplicationSettings = {
 	blendMode: BlendMode;
 
 	/**
-	 * the physic system to use (default: "builtin", or "none" to disable builtin physic)
+	 * The physics system to use. Accepts:
+	 * - `"builtin"` (default) — the built-in SAT physics adapter
+	 * - `"none"` — disables physics; `World.step` skips the simulation,
+	 *   the world container behaves like a pure scene graph
+	 * - a `PhysicsAdapter` instance — e.g. `new MatterAdapter()` from
+	 *   `@melonjs/matter-adapter`, or any third-party adapter
+	 * - `{ adapter: PhysicsAdapter }` — explicit form, reserved for
+	 *   future per-app physics options
+	 *
+	 * The adapter's `physicLabel` becomes `world.physic` so user code
+	 * can branch on the active engine without importing the concrete
+	 * adapter class (`app.world.physic === "matter"`, etc.).
 	 * @default "builtin"
 	 */
 	physic: PhysicsType;
