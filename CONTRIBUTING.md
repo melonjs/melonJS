@@ -23,7 +23,7 @@ Please search [existing issues](https://github.com/melonjs/melonJS/issues) first
 
 Before you begin, make sure you have the following installed:
 
-- [Node.js](https://nodejs.org/) version 20 or higher
+- [Node.js](https://nodejs.org/) version 24 or higher
 - [pnpm](https://pnpm.io/installation) package manager
 
 You can install pnpm using any of these methods:
