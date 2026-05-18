@@ -1427,7 +1427,9 @@ describe("TMXTileset", () => {
 				direction: "forward",
 				// repeat omitted
 			});
-			expect(() => new TMXTileset(baseTilesetData)).not.toThrow();
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).not.toThrow();
 		});
 
 		it("throws on reverse direction", () => {
@@ -1438,7 +1440,9 @@ describe("TMXTileset", () => {
 				direction: "reverse",
 				repeat: 0,
 			});
-			expect(() => new TMXTileset(baseTilesetData)).toThrow(/reverse/);
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).toThrow(/reverse/);
 		});
 
 		it("throws on pingpong direction", () => {
@@ -1449,7 +1453,9 @@ describe("TMXTileset", () => {
 				direction: "pingpong",
 				repeat: 0,
 			});
-			expect(() => new TMXTileset(baseTilesetData)).toThrow(/pingpong/);
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).toThrow(/pingpong/);
 		});
 
 		it("throws on a finite repeat count", () => {
@@ -1460,7 +1466,9 @@ describe("TMXTileset", () => {
 				direction: "forward",
 				repeat: 3,
 			});
-			expect(() => new TMXTileset(baseTilesetData)).toThrow(/repeat count/);
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).toThrow(/repeat count/);
 		});
 
 		it("is a no-op when no aseprite JSON sidecar is registered", () => {
