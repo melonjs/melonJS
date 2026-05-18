@@ -183,9 +183,14 @@ async function parseAsepriteFile(buffer) {
 	r.offset = 128;
 
 	const palette = []; // index → [r,g,b,a]
-	const layers = []; // [{ flags, name, ... }]
+	const layers = []; // [{ flags, name, visible, ... }]
 	const tags = []; // [{ name, from, to, direction }]
 	const frames = []; // [{ duration, cels: [{ layer, x, y, opacity, w, h, pixels|linkFrame }] }]
+	// stack of effective (ancestor-chain) visibility keyed by Aseprite's
+	// "child level" field. Layer chunks arrive in tree order — children
+	// follow their group — so we can resolve "am I inside a hidden group?"
+	// by reading the most-recent stack slot at the level above.
+	const ancestorVisible = [];
 
 	for (let f = 0; f < frameCount; f++) {
 		const frameStart = r.offset;
@@ -223,15 +228,23 @@ async function parseAsepriteFile(buffer) {
 			switch (chunkType) {
 				case CHUNK_LAYER: {
 					const flags = r.u16();
-					r.u16(); // layer type
-					r.u16(); // child level
+					r.u16(); // layer type (0=normal, 1=group, 2=tilemap)
+					const childLevel = r.u16();
 					r.u16(); // default width (unused)
 					r.u16(); // default height (unused)
 					r.u16(); // blend mode (TODO: honor non-normal modes)
 					r.u8(); // opacity
 					r.skip(3);
 					const name = r.str();
-					layers.push({ flags, name });
+					const selfVisible = (flags & LAYER_FLAG_VISIBLE) !== 0;
+					const parentVisible =
+						childLevel === 0 ? true : ancestorVisible[childLevel - 1] !== false;
+					const visible = selfVisible && parentVisible;
+					ancestorVisible[childLevel] = visible;
+					// truncate the stack past this level so a future sibling at the
+					// same level doesn't inherit a stale deeper-nested visibility
+					ancestorVisible.length = childLevel + 1;
+					layers.push({ flags, name, visible });
 					break;
 				}
 				case CHUNK_CEL: {
@@ -408,7 +421,10 @@ function composite(parsed) {
 		});
 		for (const cel of ordered) {
 			const layer = layers[cel.layer];
-			if (layer && !(layer.flags & LAYER_FLAG_VISIBLE)) {
+			// `visible` is the effective visibility (own flag AND every ancestor
+			// group's flag); a child layer inside a hidden group still has its
+			// own VISIBLE bit set but its `visible` resolves to false
+			if (layer && layer.visible === false) {
 				continue;
 			}
 
@@ -433,21 +449,23 @@ function composite(parsed) {
 			);
 			const img = new ImageData(rgba, source.w, source.h);
 
-			// putImageData ignores composite alpha — draw via an intermediate canvas
-			// so layer opacity can be applied. Skip the detour when cel is fully opaque.
-			if (cel.opacity === 255) {
-				ctx.putImageData(img, fx + cel.x, cel.y);
-			} else {
-				const tmp =
-					typeof OffscreenCanvas !== "undefined"
-						? new OffscreenCanvas(source.w, source.h)
-						: Object.assign(document.createElement("canvas"), {
-								width: source.w,
-								height: source.h,
-							});
-				tmp.getContext("2d").putImageData(img, 0, 0);
+			// Always go through an intermediate canvas + drawImage. putImageData
+			// replaces destination pixels wholesale (including any transparent
+			// holes in the source), which would erase lower layers wherever an
+			// upper layer is transparent — we need source-over compositing.
+			const tmp =
+				typeof OffscreenCanvas !== "undefined"
+					? new OffscreenCanvas(source.w, source.h)
+					: Object.assign(document.createElement("canvas"), {
+							width: source.w,
+							height: source.h,
+						});
+			tmp.getContext("2d").putImageData(img, 0, 0);
+			if (cel.opacity !== 255) {
 				ctx.globalAlpha = cel.opacity / 255;
-				ctx.drawImage(tmp, fx + cel.x, cel.y);
+			}
+			ctx.drawImage(tmp, fx + cel.x, cel.y);
+			if (cel.opacity !== 255) {
 				ctx.globalAlpha = 1;
 			}
 		}

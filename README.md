@@ -93,6 +93,7 @@ Level Editor
     - Multiple layers with per-layer alpha, tinting and blend modes (multiple background/foreground, collision and Image layers)
     - Parallax scrolling via Image layers, with parallax origin support
     - Animated and multiple Tileset support, tile sub-rectangles, embedded base64 images
+    - Native `.aseprite` / `.ase` tileset images (Tiled 1.11+ qaseprite plugin workflow), with frame tags auto-mapped to per-tile animations — no PNG export step required
     - Tileset transparency settings
     - Rectangle, Ellipse, Polygon, Polyline and Capsule (round-rect) object shapes
     - Tiled Objects with custom properties (string, number, boolean, color, file, object, list/array and class-typed)
@@ -106,7 +107,7 @@ Level Editor
 Assets
 - Asynchronous asset loading with progress tracking
 - A fully customizable preloader
-- Support for images, JSON, TMX/TSX, audio, video, binary and fonts
+- Support for images, JSON, TMX/TSX, `.aseprite` / `.ase` binary, audio, video, binary and fonts
 
 Core
 - `Application` class as the modern entry point with built-in pause, resume, and `freeze()` (hit-stop) primitives

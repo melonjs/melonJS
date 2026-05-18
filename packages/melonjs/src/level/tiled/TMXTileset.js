@@ -295,6 +295,12 @@ export default class TMXTileset {
 
 			// Tiled's convention: the animation lives on the tile whose id
 			// matches the first frame; the engine cycles through the rest.
+			// If `_parseTiles` already attached an explicit Tiled <animation>
+			// for this tile, defer to it — hand-authored TSX data wins over
+			// the auto-generated Aseprite tag.
+			if (this.animations.has(tag.from)) {
+				continue;
+			}
 			this.isAnimated = true;
 			this.animations.set(tag.from, {
 				dt: 0,

@@ -107,7 +107,9 @@ function writeLayerChunk(w, name) {
 	patchU32WriterPart(w, sizeOffset, end - sizeOffset);
 }
 
-// write a raw-image cel chunk at (x,y) on `layer`, with RGBA pixels
+// write a raw-image cel chunk at (x,y) on `layer`. The `rgbaPixels` name is
+// historical — for non-RGBA color depths the caller passes the raw per-pixel
+// bytes (2 per pixel for grayscale, 1 per pixel for indexed).
 function writeRawCelChunk(w, { layer, x, y, width, height, rgbaPixels }) {
 	const sizeOffset = w.length;
 	w.u32(0); // chunk size — patched
@@ -174,7 +176,8 @@ function writeTagsChunk(w, tags) {
 		w.u16(tag.from);
 		w.u16(tag.to);
 		w.u8(tag.direction ?? 0); // 0 = forward
-		w.zeros(8);
+		w.u16(tag.repeat ?? 0); // 0 = play forever
+		w.zeros(6); // reserved
 		w.zeros(3); // deprecated RGB
 		w.zeros(1);
 		w.str(tag.name);
@@ -577,5 +580,148 @@ describe("aseprite binary parser", () => {
 		const { bitmap } = await parseAseprite(buffer, "hidden");
 		// the cel was skipped — composite should be the canvas default (transparent black)
 		expect(readPixel(bitmap, 0, 0)).toEqual([0, 0, 0, 0]);
+	});
+
+	it("decodes 16-bit grayscale pixels as RGB", async () => {
+		// grayscale layout: 2 bytes per pixel (value, alpha)
+		// 2×2 pattern: white, mid-gray, black, light-gray — all fully opaque
+		const grayscalePixels = new Uint8Array([
+			255, 255, 128, 255, 0, 255, 200, 255,
+		]);
+		const w = new Writer();
+		writeHeader(w, { frames: 1, width: 2, height: 2, depth: 16 });
+		await writeFrame(w, { duration: 100 }, ({ layer, rawCel }) => {
+			layer("layer0");
+			rawCel({
+				layer: 0,
+				x: 0,
+				y: 0,
+				width: 2,
+				height: 2,
+				rgbaPixels: grayscalePixels,
+			});
+		});
+		const buffer = w.toBuffer();
+		patchU32(buffer, 0, buffer.byteLength);
+
+		const { bitmap } = await parseAseprite(buffer, "gray");
+		expect(readPixel(bitmap, 0, 0)).toEqual([255, 255, 255, 255]);
+		expect(readPixel(bitmap, 1, 0)).toEqual([128, 128, 128, 255]);
+		expect(readPixel(bitmap, 0, 1)).toEqual([0, 0, 0, 255]);
+		expect(readPixel(bitmap, 1, 1)).toEqual([200, 200, 200, 255]);
+	});
+
+	it("decodes 8-bit indexed pixels via palette + transparent index", async () => {
+		// header → tags-style frame containing both a palette chunk and a
+		// raw cel of palette indices. The cel pixel format is one byte per
+		// pixel, each byte indexing into the palette (or matching the
+		// transparent index for fully transparent cells).
+		const w = new Writer();
+		writeHeader(w, { frames: 1, width: 2, height: 2, depth: 8 });
+
+		const frameStart = w.length;
+		w.u32(0);
+		w.u16(0xf1fa);
+		w.u16(0xffff);
+		w.u16(100);
+		w.zeros(2);
+		w.u32(3); // 3 chunks: layer + palette + cel
+
+		// layer chunk
+		const layerStart = w.length;
+		w.u32(0);
+		w.u16(0x2004);
+		w.u16(1); // flags: visible
+		w.u16(0);
+		w.u16(0);
+		w.u16(0);
+		w.u16(0);
+		w.u16(0);
+		w.u8(255);
+		w.zeros(3);
+		w.str("indexed");
+		patchU32WriterPart(w, layerStart, w.length - layerStart);
+
+		// palette chunk: 4 entries — idx 0 = transparent (matches header's
+		// transparent index = 0), idx 1 = red, idx 2 = green, idx 3 = blue
+		const palStart = w.length;
+		w.u32(0);
+		w.u16(0x2019); // chunk type: palette
+		w.u32(4); // total entries
+		w.u32(0); // first index
+		w.u32(3); // last index
+		w.zeros(8); // reserved
+		// per-entry: flags(2) r(1) g(1) b(1) a(1)
+		w.u16(0);
+		w.u8(0);
+		w.u8(0);
+		w.u8(0);
+		w.u8(0); // idx 0
+		w.u16(0);
+		w.u8(255);
+		w.u8(0);
+		w.u8(0);
+		w.u8(255); // idx 1
+		w.u16(0);
+		w.u8(0);
+		w.u8(255);
+		w.u8(0);
+		w.u8(255); // idx 2
+		w.u16(0);
+		w.u8(0);
+		w.u8(0);
+		w.u8(255);
+		w.u8(255); // idx 3
+		patchU32WriterPart(w, palStart, w.length - palStart);
+
+		// cel chunk: 1 byte per pixel
+		const celStart = w.length;
+		w.u32(0);
+		w.u16(0x2005);
+		w.u16(0);
+		w.i16(0);
+		w.i16(0);
+		w.u8(255);
+		w.u16(0); // cel type 0 = raw
+		w.zeros(7);
+		w.u16(2);
+		w.u16(2);
+		w.bytes(new Uint8Array([0, 1, 2, 3]));
+		patchU32WriterPart(w, celStart, w.length - celStart);
+
+		patchU32WriterPart(w, frameStart, w.length - frameStart);
+
+		const buffer = w.toBuffer();
+		patchU32(buffer, 0, buffer.byteLength);
+
+		const { bitmap } = await parseAseprite(buffer, "indexed");
+		expect(readPixel(bitmap, 0, 0)).toEqual([0, 0, 0, 0]); // transparent
+		expect(readPixel(bitmap, 1, 0)).toEqual([255, 0, 0, 255]); // red
+		expect(readPixel(bitmap, 0, 1)).toEqual([0, 255, 0, 255]); // green
+		expect(readPixel(bitmap, 1, 1)).toEqual([0, 0, 255, 255]); // blue
+	});
+
+	it("surfaces a non-zero binary-encoded tag repeat count", async () => {
+		const w = new Writer();
+		writeHeader(w, { frames: 1, width: 2, height: 2 });
+		await writeFrame(w, { duration: 100 }, ({ layer, rawCel, tags }) => {
+			layer("layer0");
+			rawCel({
+				layer: 0,
+				x: 0,
+				y: 0,
+				width: 2,
+				height: 2,
+				rgbaPixels: PATTERN_2X2,
+			});
+			tags([{ name: "once", from: 0, to: 0, direction: 0, repeat: 3 }]);
+		});
+		const buffer = w.toBuffer();
+		patchU32(buffer, 0, buffer.byteLength);
+
+		const { json } = await parseAseprite(buffer, "repeat3");
+		expect(json.meta.frameTags).toEqual([
+			{ name: "once", from: 0, to: 0, direction: "forward", repeat: 3 },
+		]);
 	});
 });
