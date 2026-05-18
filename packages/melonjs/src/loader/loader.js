@@ -18,6 +18,7 @@ import {
 	tmxList,
 	videoList,
 } from "./cache.js";
+import { preloadAseprite } from "./parsers/aseprite.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadImage } from "./parsers/image.js";
@@ -224,6 +225,7 @@ function initParsers() {
 	setParser("video", preloadVideo);
 	setParser("obj", preloadOBJ);
 	setParser("mtl", preloadMTL);
+	setParser("aseprite", preloadAseprite);
 	parserInitialized = true;
 }
 
@@ -639,6 +641,18 @@ export function unload(asset) {
 
 			delete mtlList[asset.name];
 			return true;
+
+		case "aseprite": {
+			// aseprite asset populates both imgList and jsonList under the same key
+			const hadImage = asset.name in imgList;
+			const hadJson = asset.name in jsonList;
+			if (!hadImage && !hadJson) {
+				return false;
+			}
+			delete imgList[asset.name];
+			delete jsonList[asset.name];
+			return true;
+		}
 
 		default:
 			throw new Error(

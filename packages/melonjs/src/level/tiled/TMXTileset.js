@@ -1,5 +1,5 @@
 import { game } from "../../application/application.ts";
-import { getImage, getTMX } from "../../loader/loader.js";
+import { getImage, getJSON, getTMX } from "../../loader/loader.js";
 import { Matrix2d } from "../../math/matrix2d.ts";
 import { Vector2d } from "../../math/vector2d.ts";
 import timer from "../../system/timer.ts";
@@ -225,6 +225,83 @@ export default class TMXTileset {
 		// initialize atlas for spritesheet tilesets
 		if (!this.isCollection) {
 			this._initAtlas(tileset);
+			// if the tileset image was loaded from an .aseprite file, the
+			// loader produces a JSON sidecar with frame tags. Synthesize per-tile
+			// animations from those tags so animated tilesets authored in
+			// Aseprite (Tiled 1.11+ workflow) work without manual <animation>
+			// markup in the TSX.
+			this._applyAsepriteFrameTags(tileset);
+		}
+	}
+
+	/**
+	 * If `tileset.image` was loaded via the .aseprite binary parser, walk
+	 * its `meta.frameTags` and synthesize per-tile animations. Each tag
+	 * `{ from, to }` becomes an animation on tile `from` that cycles through
+	 * tiles `[from..to]` using each frame's `duration`.
+	 *
+	 * Throws on tag configurations that don't map to Tiled's animation model:
+	 * non-forward direction (Tiled animations are forward-only) and non-zero
+	 * repeat counts (Tiled animations loop forever).
+	 * @ignore
+	 */
+	_applyAsepriteFrameTags(tileset) {
+		// getJSON is a direct key lookup (no basename normalization, unlike
+		// getImage), so use the basename ourselves to match the loader's
+		// asset registration convention
+		const atlas = getJSON(getBasename("" + tileset.image));
+		if (!atlas || !atlas.meta || typeof atlas.meta.app !== "string") {
+			return;
+		}
+		if (!atlas.meta.app.includes("aseprite")) {
+			return;
+		}
+		const tags = atlas.meta.frameTags;
+		if (!Array.isArray(tags) || tags.length === 0) {
+			return;
+		}
+		const frames = atlas.meta.frames || atlas.frames || {};
+
+		for (const tag of tags) {
+			if (tag.direction !== "forward") {
+				throw new Error(
+					`melonJS: aseprite tag "${tag.name}" on tileset '${this.name}' uses ` +
+						`direction "${tag.direction}" — Tiled tile animations only support ` +
+						`forward playback. Re-export the tag as "forward" in Aseprite.`,
+				);
+			}
+			if (typeof tag.repeat === "number" && tag.repeat !== 0) {
+				throw new Error(
+					`melonJS: aseprite tag "${tag.name}" on tileset '${this.name}' has a ` +
+						`finite repeat count (${tag.repeat}) — Tiled tile animations only ` +
+						`support infinite looping. Set the tag's repeat to "∞" in Aseprite.`,
+				);
+			}
+
+			// build the animation: each frame index in [from..to] becomes a
+			// tile id; each tile's display duration comes from its frame entry.
+			const anim = [];
+			for (let f = tag.from; f <= tag.to; f++) {
+				const frame = frames[String(f)] || frames[f];
+				anim.push({
+					tileid: f,
+					duration:
+						frame && typeof frame.duration === "number" ? frame.duration : 100,
+				});
+			}
+			if (anim.length === 0) {
+				continue;
+			}
+
+			// Tiled's convention: the animation lives on the tile whose id
+			// matches the first frame; the engine cycles through the rest.
+			this.isAnimated = true;
+			this.animations.set(tag.from, {
+				dt: 0,
+				idx: 0,
+				frames: anim,
+				cur: anim[0],
+			});
 		}
 	}
 

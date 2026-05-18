@@ -70,18 +70,32 @@ export const resources = [
 		type: "image",
 		src: `${base}sprites-table-16-16.png`,
 	},
+	// aseprite tileset — exercises the binary .aseprite loader
+	{ name: "aseprite-map", type: "tmx", src: `${base}aseprite-map.tmx` },
+	{
+		name: "aseprite-tileset",
+		type: "tsx",
+		src: `${base}aseprite-tileset.xml`,
+	},
+	{
+		name: "free-tileset-1",
+		type: "aseprite",
+		src: `${base}free-tileset-1.aseprite`,
+	},
 ];
 
-export const levels = [
+export const levels: Array<{ name: string; label: string; zoom?: number }> = [
 	{ name: "village", label: "Village" },
 	{ name: "desert", label: "Desert" },
 	{ name: "sewers", label: "Sewers" },
 	{ name: "isometric", label: "Isometric" },
 	{ name: "orthogonal", label: "Orthogonal" },
 	{ name: "perspective", label: "Perspective" },
-	{ name: "hexagonal-mini", label: "Hexagonal" },
+	{ name: "hexagonal-mini", label: "Hexagonal", zoom: 3 },
 	{ name: "rpg", label: "RPG Island" },
 	{ name: "island-rotated-tiles", label: "Rotated Tiles" },
 	{ name: "desert-infinite", label: "Infinite Desert" },
 	{ name: "oblique", label: "Oblique" },
+	// 8px tiles in a 26×15 grid — bump the camera zoom so it's not lost in the viewport
+	{ name: "aseprite-map", label: "Aseprite Map", zoom: 4 },
 ];
