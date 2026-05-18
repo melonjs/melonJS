@@ -5,23 +5,43 @@
  */
 import { TiledInflatePlugin } from "@melonjs/tiled-inflate-plugin";
 import {
+	Application,
 	event,
 	game,
 	input,
 	level,
 	loader,
+	type Pointer,
 	plugin,
 	state,
-	video,
 } from "melonjs";
 import { useEffect } from "react";
 import { levels, resources } from "./resources";
 
 const loadLevel = (name: string) => {
+	const entry = levels.find((l) => l.name === name);
 	level.load(name, {
 		container: game.world,
+		// don't auto-center small maps; we anchor everything at world (0,0)
+		setViewportBounds: false,
 		onLoaded: () => {
 			game.world.backgroundColor.setColor(0, 0, 0);
+			game.world.pos.set(0, 0);
+			game.viewport.zoom = entry?.zoom ?? 1;
+
+			// expand the viewport bounds to the map size so arrow-key scrolling
+			// works on maps bigger than the canvas. Bounds default to the
+			// renderer rect, which forbids any camera movement.
+			const map = level.getCurrentLevel();
+			const mapW = map.cols * map.tilewidth;
+			const mapH = map.rows * map.tileheight;
+			game.viewport.setBounds(
+				0,
+				0,
+				Math.max(mapW, game.viewport.width),
+				Math.max(mapH, game.viewport.height),
+			);
+			game.viewport.moveTo(0, 0);
 			game.repaint();
 		},
 	});
@@ -44,7 +64,7 @@ const onKeyPressed = (_action: unknown, keyCode: number) => {
 	game.repaint();
 };
 
-const onScroll = (ev: WheelEvent) => {
+const onScroll = (ev: Pointer) => {
 	if (ev.deltaX !== 0) {
 		onKeyPressed(null, ev.deltaX < 0 ? input.KEY.LEFT : input.KEY.RIGHT);
 	}
@@ -54,16 +74,12 @@ const onScroll = (ev: WheelEvent) => {
 };
 
 const createGame = () => {
-	if (
-		!video.init(1024, 768, {
-			parent: "screen",
-			scaleMethod: "flex",
-			preferWebGL1: false,
-		})
-	) {
-		alert("Your browser does not support HTML5 canvas.");
-		return;
-	}
+	// create the melonJS Application (replaces the legacy video.init)
+	new Application(1024, 768, {
+		parent: "screen",
+		scaleMethod: "fill-max",
+		preferWebGL1: false,
+	});
 
 	// register zlib/gzip inflate for compressed Tiled maps
 	plugin.register(TiledInflatePlugin);

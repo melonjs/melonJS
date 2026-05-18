@@ -1,8 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { boot, video } from "../src/index.js";
 import Tile from "../src/level/tiled/TMXTile.js";
 import TMXTileset from "../src/level/tiled/TMXTileset.js";
-import { imgList } from "../src/loader/cache.js";
+import { imgList, jsonList } from "../src/loader/cache.js";
 
 // create a small canvas to use as a fake tile image
 function fakeImage(name, w = 64, h = 64) {
@@ -1347,6 +1347,143 @@ describe("TMXTileset", () => {
 			});
 			expect(ts.image).toBeDefined();
 			expect(ts.image.src).toContain("data:image/png;base64,");
+		});
+	});
+
+	// ==============================================================
+	// Aseprite frame-tag → tile-animation wiring
+	// ==============================================================
+	describe("aseprite frame tags", () => {
+		// register a fake image + aseprite-style JSON sidecar under "ase_tiles"
+		// so TMXTileset's getImage() / getJSON() lookups find them
+		const TILESET_NAME = "ase_tiles";
+		beforeAll(() => {
+			fakeImage(TILESET_NAME, 32, 8); // 4 tiles wide × 1 row
+		});
+		afterEach(() => {
+			delete jsonList[TILESET_NAME];
+		});
+
+		const baseTilesetData = {
+			firstgid: 1,
+			name: "aseprite",
+			tilewidth: 8,
+			tileheight: 8,
+			tilecount: 4,
+			columns: 4,
+			image: `${TILESET_NAME}.aseprite`,
+		};
+
+		// helper: build a minimal aseprite-style JSON sidecar (as produced by
+		// the .aseprite binary parser) with a single forward tag
+		function asepriteJSON(tag) {
+			return {
+				frames: {
+					0: { frame: { x: 0, y: 0, w: 8, h: 8 }, duration: 100 },
+					1: { frame: { x: 8, y: 0, w: 8, h: 8 }, duration: 150 },
+					2: { frame: { x: 16, y: 0, w: 8, h: 8 }, duration: 200 },
+					3: { frame: { x: 24, y: 0, w: 8, h: 8 }, duration: 250 },
+				},
+				meta: {
+					app: "http://www.aseprite.org/",
+					image: TILESET_NAME,
+					format: "RGBA8888",
+					size: { w: 32, h: 8 },
+					scale: "1",
+					frameTags: [tag],
+				},
+			};
+		}
+
+		it("synthesizes a tile animation from a forward tag", () => {
+			jsonList[TILESET_NAME] = asepriteJSON({
+				name: "water",
+				from: 0,
+				to: 3,
+				direction: "forward",
+				repeat: 0,
+			});
+			const ts = new TMXTileset(baseTilesetData);
+
+			expect(ts.isAnimated).toBe(true);
+			expect(ts.animations.size).toBe(1);
+
+			const anim = ts.animations.get(0);
+			expect(anim).toBeDefined();
+			expect(anim.frames).toEqual([
+				{ tileid: 0, duration: 100 },
+				{ tileid: 1, duration: 150 },
+				{ tileid: 2, duration: 200 },
+				{ tileid: 3, duration: 250 },
+			]);
+			expect(anim.cur).toEqual({ tileid: 0, duration: 100 });
+		});
+
+		it("treats a missing repeat field as infinite loop", () => {
+			jsonList[TILESET_NAME] = asepriteJSON({
+				name: "loop",
+				from: 0,
+				to: 1,
+				direction: "forward",
+				// repeat omitted
+			});
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).not.toThrow();
+		});
+
+		it("throws on reverse direction", () => {
+			jsonList[TILESET_NAME] = asepriteJSON({
+				name: "backwards",
+				from: 0,
+				to: 3,
+				direction: "reverse",
+				repeat: 0,
+			});
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).toThrow(/reverse/);
+		});
+
+		it("throws on pingpong direction", () => {
+			jsonList[TILESET_NAME] = asepriteJSON({
+				name: "bounce",
+				from: 0,
+				to: 3,
+				direction: "pingpong",
+				repeat: 0,
+			});
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).toThrow(/pingpong/);
+		});
+
+		it("throws on a finite repeat count", () => {
+			jsonList[TILESET_NAME] = asepriteJSON({
+				name: "once",
+				from: 0,
+				to: 3,
+				direction: "forward",
+				repeat: 3,
+			});
+			expect(() => {
+				return new TMXTileset(baseTilesetData);
+			}).toThrow(/repeat count/);
+		});
+
+		it("is a no-op when no aseprite JSON sidecar is registered", () => {
+			// no jsonList entry — should fall back to standard (non-animated) behavior
+			const ts = new TMXTileset(baseTilesetData);
+			expect(ts.isAnimated).toBe(false);
+			expect(ts.animations.size).toBe(0);
+		});
+
+		it("is a no-op when JSON sidecar has no aseprite app marker", () => {
+			jsonList[TILESET_NAME] = {
+				meta: { app: "texturepacker", frameTags: [] },
+			};
+			const ts = new TMXTileset(baseTilesetData);
+			expect(ts.isAnimated).toBe(false);
 		});
 	});
 });

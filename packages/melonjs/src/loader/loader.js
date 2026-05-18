@@ -18,6 +18,7 @@ import {
 	tmxList,
 	videoList,
 } from "./cache.js";
+import { preloadAseprite } from "./parsers/aseprite.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadImage } from "./parsers/image.js";
@@ -124,7 +125,7 @@ export function setOptions(options) {
  * @name setBaseURL
  * @memberof loader
  * @public
- * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface"
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "aseprite"
  * @param {string} [url="./"] - default base URL
  * @example
  * // change the base URL relative address for audio assets
@@ -147,6 +148,7 @@ export function setBaseURL(type, url = "./") {
 		baseURL["tmx"] = url;
 		baseURL["tsx"] = url;
 		baseURL["fontface"] = url;
+		baseURL["aseprite"] = url;
 	}
 }
 
@@ -224,6 +226,7 @@ function initParsers() {
 	setParser("video", preloadVideo);
 	setParser("obj", preloadOBJ);
 	setParser("mtl", preloadMTL);
+	setParser("aseprite", preloadAseprite);
 	parserInitialized = true;
 }
 
@@ -281,7 +284,7 @@ function onLoadingError(res) {
  * @typedef {object} Asset
  * @memberof loader
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video"|"aseprite")
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
  * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
  * The loader will try each source in order and use the first one that loads successfully.
@@ -639,6 +642,18 @@ export function unload(asset) {
 
 			delete mtlList[asset.name];
 			return true;
+
+		case "aseprite": {
+			// aseprite asset populates both imgList and jsonList under the same key
+			const hadImage = asset.name in imgList;
+			const hadJson = asset.name in jsonList;
+			if (!hadImage && !hadJson) {
+				return false;
+			}
+			delete imgList[asset.name];
+			delete jsonList[asset.name];
+			return true;
+		}
 
 		default:
 			throw new Error(
