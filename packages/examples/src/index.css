@@ -9,8 +9,42 @@ body:has(#screen canvas) {
 	overflow: hidden;
 }
 
+/*
+ * Centre the engine canvas in the available viewport.
+ *
+ * `scaleMethod: "fit"` on the Application scales the canvas to the
+ * largest dimension that preserves aspect ratio; the unused dimension
+ * leaves margin. Without centring rules the canvas hugs the top-left,
+ * which reads as "broken layout" on portrait examples whose aspect
+ * ratio differs from the browser window (e.g. the 720×900 plinko
+ * example in a typical landscape window).
+ *
+ * Flex with absolute positioning under the 41px example topbar keeps
+ * the centre while leaving room for the controls. When no example is
+ * mounted (`#screen` is empty), the flex container is a no-op.
+ */
+#screen {
+	position: fixed;
+	top: 41px;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/*
+	 * #screen is a `position: fixed` overlay covering everything
+	 * below the 41 px topbar. Without `pointer-events: none`, the
+	 * empty `#screen` div (after an example unmounts) still sits on
+	 * top of the index-page cards and silently swallows every click.
+	 * The canvas inside opts back in with `pointer-events: auto`.
+	 */
+	pointer-events: none;
+}
+
 #screen canvas {
 	display: block;
+	pointer-events: auto;
 }
 
 /* Example top bar */

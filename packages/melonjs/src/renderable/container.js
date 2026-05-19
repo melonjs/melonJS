@@ -252,7 +252,14 @@ export default class Container extends Renderable {
 			throw new Error(`${String(child)} is not an instance of Renderable`);
 		}
 		if (child.ancestor instanceof Container) {
-			child.ancestor.removeChildNow(child);
+			// Reparenting: detach from the previous ancestor WITHOUT
+			// destroying the child. The default `removeChildNow` path
+			// runs `destroy()` for any child not registered with the
+			// legacy `pool.push` registry (Particle pool-recycled
+			// instances are a real-world example) — which nulls
+			// `child.pos` and crashes the very next `updateBounds`
+			// call below. We're moving the child, not disposing of it.
+			child.ancestor.removeChildNow(child, true);
 		} else {
 			// only allocate a GUID if the object has no previous ancestor
 			// (e.g. move one child from one container to another)
@@ -332,7 +339,9 @@ export default class Container extends Renderable {
 		}
 		if (index >= 0 && index <= this.getChildren().length) {
 			if (child.ancestor instanceof Container) {
-				child.ancestor.removeChildNow(child);
+				// Reparenting — see Container.addChild for why
+				// `keepalive=true` is required here.
+				child.ancestor.removeChildNow(child, true);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor
 				// (e.g. move one child from one container to another)
@@ -696,6 +705,22 @@ export default class Container extends Renderable {
 				child.onDeactivateEvent();
 			}
 
+			const root = this.getRootAncestor();
+
+			// Evict the child (and any descendants if it's a container)
+			// from the broadphase quadtree. The broadphase is rebuilt
+			// each `world.update()`, but pointer events and narrow-phase
+			// queries can fire between the deferred `removeChildNow` and
+			// the next rebuild — a stale reference there would return a
+			// destroyed renderable and crash any caller that read its
+			// `pos` (e.g. `_sortReverseZ`).
+			if (root?.broadphase) {
+				if (typeof child.addChild === "function") {
+					root.broadphase.removeContainer(child);
+				}
+				root.broadphase.remove(child);
+			}
+
 			// Remove the body first to avoid a condition where a body can
 			// be detached from its parent before it's removed from the
 			// game world. `child.body` may be a melonJS `Body` (legacy /
@@ -703,7 +728,6 @@ export default class Container extends Renderable {
 			// `Matter.Body` under the matter adapter); either way the
 			// adapter knows how to clean it up by renderable identity.
 			if (child.body) {
-				const root = this.getRootAncestor();
 				/** @type {{ adapter?: { removeBody?: (r: object) => void } }} */
 				const world = root;
 				if (world?.adapter?.removeBody) {

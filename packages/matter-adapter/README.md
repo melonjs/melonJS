@@ -12,13 +12,10 @@ A [matter-js](https://brm.io/matter-js/) physics adapter for melonJS — drops i
 ## Installation
 
 ```bash
-npm install @melonjs/matter-adapter matter-js
+npm install @melonjs/matter-adapter
 ```
 
-This adapter has two peer dependencies you provide yourself:
-
-- `melonjs` ≥ 19.5
-- `matter-js` ≥ 0.20
+`matter-js` is bundled in as a regular dependency, so you don't need to install it yourself — that's the whole point of the adapter. The only peer dependency is `melonjs` ≥ 19.5 (because melonJS is the one providing the `PhysicsAdapter` interface this package implements).
 
 ## Usage
 
@@ -144,30 +141,39 @@ const omega = (ball.body as MatterAdapter.Body).angularVelocity;
 
 `MatterAdapter.Body` is `ReturnType<typeof Matter.Body.create> & PhysicsBody` — you get matter's full instance shape plus the portable helper methods, without needing to import `matter-js` yourself. Code that does this is matter-only by definition; for portable rotation use the angular kinematic methods above.
 
-## Matter-specific APIs
-
-These methods are exposed on the adapter for behaviours that matter supports natively but that the legacy SAT adapter either doesn't model or models differently. Game code that uses them won't run unchanged on the builtin adapter.
+## Raycasting
 
 ```ts
 adapter.raycast(from: Vector2d, to: Vector2d) → RaycastHit | null
 ```
-Shoot a ray through the world and get the first body hit. Returns the renderable, the intersection point, and the surface normal.
+
+Shoot a ray through the world and get the first body hit:
+
+```ts
+const hit = adapter.raycast(new Vector2d(0, 0), new Vector2d(800, 600));
+if (hit) {
+    // hit.renderable — the renderable the ray entered
+    // hit.point      — world-space entry point on the body's surface
+    // hit.normal     — outward-facing surface normal at the entry
+    // hit.fraction   — 0..1 along the ray, from `from` to `to`
+}
+```
+
+Portable — same shape under the builtin SAT adapter, this one, and `@melonjs/planck-adapter`. Implementation walks each candidate body's vertices via per-edge segment intersection, so the reported `point` and `normal` reflect actual entry geometry rather than the body centre.
+
+> **Note on rotation:** `setAngle` / `setAngularVelocity` / `applyTorque` are now portable — they're declared on `PhysicsAdapter` and implemented by both this adapter and the builtin adapter. Under matter, rotation is fully solver-aware (the body's collision shape rotates and contact response reflects it); under builtin, rotation is visual-only (the SAT solver still tests axis-aligned shapes but the renderable's transform tracks the body's angle). Code that needs rotation-correct contact response should also opt in to `fixedRotation: false` in the `bodyDef` and check `adapter.capabilities` if it must branch.
+
+## Region queries
 
 ```ts
 adapter.queryAABB(rect: Rect) → Renderable[]
 ```
-Return every renderable whose body overlaps the rectangle. Useful for AoE checks, explosion targeting, mouse picking.
 
-> **Note on rotation:** `setAngle` / `setAngularVelocity` / `applyTorque` are now portable — they're declared on `PhysicsAdapter` and implemented by both this adapter and the builtin adapter. Under matter, rotation is fully solver-aware (the body's collision shape rotates and contact response reflects it); under builtin, rotation is visual-only (the SAT solver still tests axis-aligned shapes but the renderable's transform tracks the body's angle). Code that needs rotation-correct contact response should also opt in to `fixedRotation: false` in the `bodyDef` and check `adapter.capabilities` if it must branch.
+Return every renderable whose body bounds overlap the given rectangle. Useful for area-of-effect damage, mouse / touch picking, trigger-zone sweeps, AI awareness checks. Portable — same call under builtin, matter, and planck. Under matter the implementation uses `Matter.Query.region` over the engine's body list.
 
-```ts
-adapter.setSensor(renderable, isSensor)
-```
-Toggle a body between solid and sensor mode at runtime. Matter fires `onCollisionStart` / `onCollisionActive` / `onCollisionEnd` either way; the difference is whether the solver pushes the contacts apart. Useful for one-way platforms, trigger zones, snap-to-surface ground assists. Mirrored on the builtin adapter via `Body.setSensor` so the call is portable; the term is matter-native enough that we still document it here.
+## Direct engine access
 
-### Direct engine access
-
-For matter-specific features that don't fit the portable `PhysicsAdapter` surface — constraints, compound bodies, queries, raw `Events`, plugins — the adapter exposes two escape hatches so you don't have to add `matter-js` as a direct dependency just to reach the factories:
+For matter-specific features that don't fit the portable `PhysicsAdapter` surface — constraints, compound bodies, raw `Events`, plugins — the adapter exposes two escape hatches so you don't have to add `matter-js` as a direct dependency just to reach the factories:
 
 ```ts
 const adapter = app.world.adapter as MatterAdapter;

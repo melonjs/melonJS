@@ -1,8 +1,8 @@
 {
-	"name": "@melonjs/matter-adapter",
+	"name": "@melonjs/planck-adapter",
 	"version": "1.0.0",
-	"description": "melonJS physics adapter for matter-js",
-	"homepage": "https://www.npmjs.com/package/@melonjs/matter-adapter",
+	"description": "melonJS physics adapter for planck.js (Box2D)",
+	"homepage": "https://www.npmjs.com/package/@melonjs/planck-adapter",
 	"type": "module",
 	"keywords": [
 		"2D",
@@ -15,13 +15,15 @@
 		"game",
 		"engine",
 		"physics",
-		"matter-js",
+		"planck",
+		"planck.js",
+		"box2d",
 		"browser"
 	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/melonjs/melonJS.git",
-		"directory": "packages/matter-adapter"
+		"directory": "packages/planck-adapter"
 	},
 	"bugs": {
 		"url": "https://github.com/melonjs/melonJS/issues"
@@ -47,13 +49,11 @@
 		"melonjs": ">=19.5.0"
 	},
 	"dependencies": {
-		"matter-js": "^0.20.0",
-		"poly-decomp": "^0.3.0"
+		"planck": "^1.5.0"
 	},
 	"devDependencies": {
-		"@types/matter-js": "^0.20.0",
 		"concurrently": "^9.2.1",
-		"esbuild": "^0.27.3",
+		"esbuild": "^0.28.0",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
 		"tsx": "^4.21.0",

@@ -282,12 +282,16 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		this.stats.pool.textContent = pool.getInstanceCount();
 
 		if (window.performance?.memory) {
-			const used = Number(
-				(window.performance.memory.usedJSHeapSize / 1048576).toFixed(1),
+			// Keep the `.toFixed(1)` string as-is — wrapping in `Number(...)`
+			// strips trailing zeros so 40.0 MB would render as "40/90.1MB"
+			// while 39.7 MB rendered as "39.7/90.1MB", producing the
+			// inconsistent decimal width that made the panel jitter.
+			const used = (window.performance.memory.usedJSHeapSize / 1048576).toFixed(
+				1,
 			);
-			const total = Number(
-				(window.performance.memory.totalJSHeapSize / 1048576).toFixed(1),
-			);
+			const total = (
+				window.performance.memory.totalJSHeapSize / 1048576
+			).toFixed(1);
 			this.stats.heap.textContent = `${used}/${total}MB`;
 		} else {
 			this.stats.heap.textContent = "n/a";

@@ -830,29 +830,88 @@ export class MatterAdapter implements PhysicsAdapter {
 	}
 
 	raycast(from: Vector2d, to: Vector2d): RaycastHit | null {
+		const dx = to.x - from.x;
+		const dy = to.y - from.y;
+		if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return null;
+
+		// Use `Matter.Query.ray` as a coarse AABB-broadphase filter, then
+		// do precise segment-vs-edge intersection per body to find the
+		// actual entry point + surface normal (matter only gives us a
+		// collision pair, not a parametric hit, so we compute it
+		// ourselves). Matches the precision BuiltinAdapter provides.
 		const bodies = Matter.Composite.allBodies(this.engine.world);
 		const collisions = Matter.Query.ray(bodies, from, to);
 		if (collisions.length === 0) return null;
-		const c = collisions[0];
-		const hitBody = c.bodyA;
-		const renderable = this.renderableMap.get(hitBody);
+
+		// Inner-loop hot path. Keep only the edge vector for the winning
+		// edge (`bestEdgeX/Y`) — defer the unit-vector normalise + flip
+		// to the single survivor after the loop, instead of running them
+		// for every edge that briefly held bestT.
+		let bestT = Infinity;
+		let bestEdgeX = 0;
+		let bestEdgeY = 0;
+		let bestBody: Matter.Body | null = null;
+
+		for (const collision of collisions) {
+			const candidate = collision.bodyA;
+			// Compound bodies expose actual collision shapes in
+			// `parts[1..N]`; `parts[0]` is the parent wrapper whose
+			// vertices are the convex hull, not the per-part shapes. For
+			// simple bodies `parts.length === 1` and parts[0] IS the body.
+			const parts = candidate.parts;
+			const startIdx = parts.length > 1 ? 1 : 0;
+			for (let p = startIdx; p < parts.length; p++) {
+				const vertices = parts[p].vertices;
+				const vlen = vertices.length;
+				for (let i = 0; i < vlen; i++) {
+					const a = vertices[i];
+					// `i + 1 === vlen ? 0 : i + 1` avoids the modulo
+					// (~2× faster than `(i + 1) % vlen` in V8).
+					const b = vertices[i + 1 === vlen ? 0 : i + 1];
+					const ex = b.x - a.x;
+					const ey = b.y - a.y;
+					const denom = dx * ey - dy * ex;
+					// Inline `|denom| < eps` without the Math.abs call.
+					if (denom > -1e-9 && denom < 1e-9) continue;
+					const fx = a.x - from.x;
+					const fy = a.y - from.y;
+					const t = (fx * ey - fy * ex) / denom;
+					// Early reject on t before computing s — most edges
+					// fail this check, so skipping s saves a divide.
+					if (t < 0 || t > 1 || t >= bestT) continue;
+					const s = (fx * dy - fy * dx) / denom;
+					if (s < 0 || s > 1) continue;
+					bestT = t;
+					bestEdgeX = ex;
+					bestEdgeY = ey;
+					bestBody = candidate;
+				}
+			}
+		}
+
+		if (bestBody === null) return null;
+		const renderable = this.renderableMap.get(bestBody);
 		if (!renderable) return null;
-		// approximate hit point as the nearest body center along the ray
-		// (Matter.Query.ray doesn't surface a precise hit point — for that
-		// you'd need to do your own segment intersection per body)
-		const dx = to.x - from.x;
-		const dy = to.y - from.y;
-		const segLen = Math.hypot(dx, dy);
-		const fraction =
-			segLen > 0
-				? Math.hypot(hitBody.position.x - from.x, hitBody.position.y - from.y) /
-					segLen
-				: 0;
+
+		// Edge outward normal — perpendicular to the winning edge,
+		// flipped to point back toward the ray origin (Box2D convention).
+		let nx = bestEdgeY;
+		let ny = -bestEdgeX;
+		const nLen = Math.sqrt(nx * nx + ny * ny);
+		if (nLen > 0) {
+			nx /= nLen;
+			ny /= nLen;
+		}
+		if (nx * dx + ny * dy > 0) {
+			nx = -nx;
+			ny = -ny;
+		}
+
 		return {
 			renderable,
-			point: new Vector2d(hitBody.position.x, hitBody.position.y),
-			normal: new Vector2d(c.normal.x, c.normal.y),
-			fraction: Math.min(1, Math.max(0, fraction)),
+			point: new Vector2d(from.x + dx * bestT, from.y + dy * bestT),
+			normal: new Vector2d(nx, ny),
+			fraction: bestT,
 		};
 	}
 

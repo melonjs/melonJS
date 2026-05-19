@@ -2,11 +2,12 @@ import { Vector2d } from "../../math/vector2d.ts";
 import state from "../../state/state.ts";
 import Body from "./body.js";
 import Detector from "./detector.js";
+import { raycastQuery } from "./raycast.js";
 
 /**
  * @import Renderable from "../../renderable/renderable.js";
  * @import World from "../world.js";
- * @import { AdapterCapabilities, AdapterOptions, BodyDefinition, BodyShape, PhysicsAdapter } from "../adapter.ts";
+ * @import { AdapterCapabilities, AdapterOptions, BodyDefinition, BodyShape, PhysicsAdapter, RaycastHit } from "../adapter.ts";
  */
 
 /**
@@ -45,7 +46,7 @@ export default class BuiltinAdapter {
 			constraints: false,
 			continuousCollisionDetection: false,
 			sleepingBodies: false,
-			raycasts: false,
+			raycasts: true,
 			velocityLimit: true,
 			isGrounded: true,
 		};
@@ -482,6 +483,58 @@ export default class BuiltinAdapter {
 	isGrounded(renderable) {
 		const body = renderable.body;
 		return !body.falling && !body.jumping;
+	}
+
+	/**
+	 * Cast a ray from `from` to `to` and return the nearest body hit, or
+	 * `null` if the ray reaches `to` without hitting anything. Goes
+	 * through the same SAT-based broadphase walk as the legacy
+	 * {@link Detector#rayCast} (both share `raycastQuery` in
+	 * `./raycast.js`), but returns the portable `RaycastHit` shape
+	 * (`{ renderable, point, normal, fraction }`) for parity with the
+	 * matter / planck adapters. `point` is the precise parametric entry
+	 * point on the shape surface (line-segment vs polygon edges,
+	 * quadratic ray vs ellipse), `normal` is the outward-facing surface
+	 * normal at that entry, and `fraction` is `0..1` along the ray.
+	 * @param {Vector2d} from
+	 * @param {Vector2d} to
+	 * @returns {RaycastHit | null}
+	 */
+	raycast(from, to) {
+		const hits = raycastQuery(this.world, from.x, from.y, to.x, to.y);
+		return hits[0] ?? null;
+	}
+
+	/**
+	 * Return every renderable whose bounding box overlaps the given
+	 * world-space rectangle. Walks the SAT broadphase quadtree to get a
+	 * candidate set then filters by actual AABB overlap, so output is the
+	 * precise intersection — not just same-partition neighbours. Useful
+	 * for AoE damage queries, mouse picking, trigger-zone sweeps. Portable
+	 * across `BuiltinAdapter`, `MatterAdapter`, and `PlanckAdapter`.
+	 * @param {import("../../geometries/rectangle.ts").Rect} rect
+	 * @returns {Renderable[]}
+	 */
+	queryAABB(rect) {
+		const queryBounds = rect.getBounds();
+		// Pass our own array to `retrieve` so we never touch the
+		// broadphase's shared scratch — user code may call this from
+		// inside an `onCollisionStart` handler firing mid-iteration of
+		// the SAT detector's scratch walk; sharing would clobber the
+		// outer iteration. Then filter in place so the call costs a
+		// single allocation, not two.
+		const result = [];
+		this.world.broadphase.retrieve(rect, undefined, result);
+		let writeIdx = 0;
+		for (let i = 0, len = result.length; i < len; i++) {
+			const r = result[i];
+			const b = r.getBounds?.();
+			if (b && b.overlaps(queryBounds)) {
+				result[writeIdx++] = r;
+			}
+		}
+		result.length = writeIdx;
+		return result;
 	}
 
 	/**

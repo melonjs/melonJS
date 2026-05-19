@@ -18,7 +18,11 @@
 		"publish-tiled-inflate-plugin": "gh workflow run publish.yml -f package=tiled-inflate-plugin",
 		"publish-tiled-inflate-plugin:dry": "gh workflow run publish.yml -f package=tiled-inflate-plugin -f dry-run=true",
 		"publish-spine-plugin": "gh workflow run publish.yml -f package=spine-plugin",
-		"publish-spine-plugin:dry": "gh workflow run publish.yml -f package=spine-plugin -f dry-run=true"
+		"publish-spine-plugin:dry": "gh workflow run publish.yml -f package=spine-plugin -f dry-run=true",
+		"publish-matter-adapter": "gh workflow run publish.yml -f package=matter-adapter",
+		"publish-matter-adapter:dry": "gh workflow run publish.yml -f package=matter-adapter -f dry-run=true",
+		"publish-planck-adapter": "gh workflow run publish.yml -f package=planck-adapter",
+		"publish-planck-adapter:dry": "gh workflow run publish.yml -f package=planck-adapter -f dry-run=true"
 	},
 	"packageManager": "pnpm@10.32.1",
 	"dependencies": {

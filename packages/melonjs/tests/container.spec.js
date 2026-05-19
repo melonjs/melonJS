@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Body, Container, Rect, Renderable } from "../src/index.js";
+import { Body, Container, Rect, Renderable, World } from "../src/index.js";
 
 describe("Container", () => {
 	let container;
@@ -1045,6 +1045,130 @@ describe("Container", () => {
 				console.warn = origWarn;
 			}
 			expect(warnings.length).toEqual(0);
+		});
+	});
+
+	// Integration: when a Renderable is removed from a container attached
+	// to a World, `removeChildNow` must also evict it from the world's
+	// broadphase quadtree. The broadphase is what powers pointer
+	// hit-testing AND the narrow-phase collision query, so a stale
+	// reference there would either crash (if the child was destroyed) or
+	// silently surface a removed renderable to game code.
+	describe("removeChildNow broadphase eviction", () => {
+		let world;
+		beforeEach(() => {
+			world = new World(0, 0, 800, 600);
+		});
+
+		it("evicts a single renderable from the broadphase when removed from a world child", () => {
+			const child = new Renderable(50, 50, 20, 20);
+			child.anchorPoint.set(0, 0);
+			child.isKinematic = false;
+			world.addChild(child);
+
+			// rebuild the broadphase from the container tree (what
+			// `world.update()` does each frame)
+			world.broadphase.clear();
+			world.broadphase.insertContainer(world);
+			expect(world.broadphase.retrieve(child)).toContain(child);
+
+			world.removeChildNow(child, true);
+
+			// the next pointer event / collision query that runs BEFORE
+			// `world.update()` rebuilds the tree must not see the
+			// removed renderable
+			expect(world.broadphase.retrieve(child)).not.toContain(child);
+		});
+
+		it("recursively evicts every descendant when a nested container is removed", () => {
+			const outer = new Container(0, 0, 800, 600);
+			const inner = new Container(0, 0, 800, 600);
+			const a = new Renderable(50, 50, 20, 20);
+			a.anchorPoint.set(0, 0);
+			a.isKinematic = false;
+			const b = new Renderable(500, 400, 20, 20);
+			b.anchorPoint.set(0, 0);
+			b.isKinematic = false;
+
+			inner.addChild(a);
+			inner.addChild(b);
+			outer.addChild(inner);
+			world.addChild(outer);
+
+			world.broadphase.clear();
+			world.broadphase.insertContainer(world);
+			expect(world.broadphase.retrieve(a)).toContain(a);
+			expect(world.broadphase.retrieve(b)).toContain(b);
+
+			// Use keepalive so the test doesn't depend on destroy ordering
+			world.removeChildNow(outer, true);
+
+			expect(world.broadphase.retrieve(a)).not.toContain(a);
+			expect(world.broadphase.retrieve(b)).not.toContain(b);
+			expect(world.broadphase.retrieve(inner)).not.toContain(inner);
+		});
+
+		it("retrieve never returns a destroyed renderable between removeChildNow and the next world.update()", () => {
+			// Regression for the `_sortReverseZ` crash: deferred destroys
+			// fired between two `world.update()` rebuilds left the
+			// broadphase holding refs to renderables whose `pos` had been
+			// nulled out by `destroy()`. Any caller that then iterated
+			// the retrieve() result (pointer event handlers, sort
+			// comparators) would dereference a destroyed object.
+			const child = new Renderable(50, 50, 20, 20);
+			child.anchorPoint.set(0, 0);
+			child.isKinematic = false;
+			world.addChild(child);
+
+			world.broadphase.clear();
+			world.broadphase.insertContainer(world);
+
+			// trigger the destroy path (no keepalive) — broadphase must
+			// be cleaned up BEFORE the child is destroyed
+			world.removeChildNow(child);
+
+			// any subsequent retrieve must not return the destroyed
+			// child — iterating it would read freed state
+			const probe = new Renderable(50, 50, 20, 20);
+			probe.anchorPoint.set(0, 0);
+			const results = world.broadphase.retrieve(probe);
+			expect(results).not.toContain(child);
+		});
+
+		it("leaves siblings of the removed child intact in the broadphase", () => {
+			const removed = new Renderable(50, 50, 20, 20);
+			removed.anchorPoint.set(0, 0);
+			removed.isKinematic = false;
+			const kept = new Renderable(60, 60, 20, 20);
+			kept.anchorPoint.set(0, 0);
+			kept.isKinematic = false;
+			world.addChild(removed);
+			world.addChild(kept);
+
+			world.broadphase.clear();
+			world.broadphase.insertContainer(world);
+
+			world.removeChildNow(removed, true);
+
+			expect(world.broadphase.retrieve(kept)).toContain(kept);
+			expect(world.broadphase.retrieve(removed)).not.toContain(removed);
+		});
+
+		it("evicts a renderable that also carries a legacy Body without leaking either side", () => {
+			const child = new Renderable(50, 50, 20, 20);
+			child.anchorPoint.set(0, 0);
+			child.isKinematic = false;
+			child.body = new Body(child, new Rect(0, 0, 20, 20));
+			world.addChild(child);
+
+			world.broadphase.clear();
+			world.broadphase.insertContainer(world);
+			expect(world.broadphase.retrieve(child)).toContain(child);
+
+			world.removeChildNow(child, true);
+
+			expect(world.broadphase.retrieve(child)).not.toContain(child);
+			expect(world.bodies.has(child.body)).toEqual(false);
 		});
 	});
 

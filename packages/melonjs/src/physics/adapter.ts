@@ -581,12 +581,18 @@ export interface PhysicsAdapter {
 	): boolean;
 
 	/**
-	 * Optional spatial queries — capability-gated by
-	 * {@link AdapterCapabilities.raycasts}. Adapters that don't support
-	 * these omit the methods entirely (`typeof adapter.raycast === "function"`).
+	 * Spatial queries.
+	 *
+	 * `raycast` is capability-gated by {@link AdapterCapabilities.raycasts}.
+	 * Adapters that don't support it may omit the method entirely
+	 * (`typeof adapter.raycast === "function"`).
+	 *
+	 * `queryAABB` is mandatory — every adapter must support a region query
+	 * (a broadphase walk is already needed for collision detection, so
+	 * exposing it costs nothing).
 	 */
 	raycast?(from: Vector2d, to: Vector2d): RaycastHit | null;
-	queryAABB?(rect: Rect): import("../renderable/renderable.js").default[];
+	queryAABB(rect: Rect): import("../renderable/renderable.js").default[];
 
 	/**
 	 * Return the body's axis-aligned bounding box in **renderable-local**
