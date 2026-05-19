@@ -40,6 +40,7 @@ import {
 	PEG_X_SPACING,
 	PEG_Y_SPACING,
 	PLAY_LEFT,
+	PLAY_RIGHT,
 	PLAY_W,
 } from "../constants";
 
@@ -373,6 +374,12 @@ export const buildPegField = (): Peg[] => {
 	const pegs: Peg[] = [];
 	const fieldW = (PEG_COLS - 1) * PEG_X_SPACING;
 	const baseX = PLAY_LEFT + (PLAY_W - fieldW) / 2;
+	// Wall-adjacent peg columns sit one peg-radius inside each wall so a
+	// ball dropped at the very rim hits something on every row instead
+	// of sluicing straight down the centring-gutter channel between the
+	// wall and the outermost normal column.
+	const wallLeftCx = PLAY_LEFT + PEG_RADIUS;
+	const wallRightCx = PLAY_RIGHT - PEG_RADIUS;
 	for (let row = 0; row < PEG_ROWS; row++) {
 		// Alternate rows shifted by half spacing for triangular packing.
 		// Odd rows have one fewer peg so the field stays inside `fieldW`.
@@ -384,16 +391,9 @@ export const buildPegField = (): Peg[] => {
 			const x = baseX + xOffset + col * PEG_X_SPACING;
 			pegs.push(new Peg(x - PEG_RADIUS, y - PEG_RADIUS));
 		}
-		// Plug the half-spacing gutter on odd rows: the triangular
-		// packing leaves the leftmost / rightmost slot empty (because
-		// the offset would push them outside `fieldW`), so a ball
-		// dropped at the extreme edge falls straight through to the
-		// 100-point slot without bouncing. Add a peg directly under
-		// each adjacent even-row edge peg to close it.
-		if (isOdd) {
-			pegs.push(new Peg(baseX - PEG_RADIUS, y - PEG_RADIUS));
-			pegs.push(new Peg(baseX + fieldW - PEG_RADIUS, y - PEG_RADIUS));
-		}
+		// Wall-adjacent gutter pegs — every row gets one near each wall.
+		pegs.push(new Peg(wallLeftCx - PEG_RADIUS, y - PEG_RADIUS));
+		pegs.push(new Peg(wallRightCx - PEG_RADIUS, y - PEG_RADIUS));
 	}
 	return pegs;
 };

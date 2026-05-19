@@ -269,6 +269,11 @@ export class BakedStatics extends Renderable {
 			ctx.fill();
 		};
 
+		// Wall-adjacent peg columns (one peg-radius inside each wall) —
+		// mirror the gutter-fill pegs added in `peg.ts:buildPegField`
+		// so the baked visual matches the collision geometry.
+		const wallLeftCx = PLAY_LEFT + PEG_RADIUS;
+		const wallRightCx = PLAY_RIGHT - PEG_RADIUS;
 		for (let row = 0; row < PEG_ROWS; row++) {
 			const isOdd = row % 2 === 1;
 			const colsThisRow = isOdd ? PEG_COLS - 1 : PEG_COLS;
@@ -278,14 +283,8 @@ export class BakedStatics extends Renderable {
 				const x = baseX + xOffset + col * PEG_X_SPACING;
 				drawPeg(x, y);
 			}
-			// Mirror the edge-gutter pegs added in `peg.ts:buildPegField`
-			// so the baked visual matches the collision geometry. Without
-			// these the bodies still deflect balls but the player sees an
-			// empty rim and assumes the bounce is a bug.
-			if (isOdd) {
-				drawPeg(baseX, y);
-				drawPeg(baseX + fieldW, y);
-			}
+			drawPeg(wallLeftCx, y);
+			drawPeg(wallRightCx, y);
 		}
 		void COLOR_PEG_HOT; // unused-symbol guard (hot is the white highlight inline)
 	}
