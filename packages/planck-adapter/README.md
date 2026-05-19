@@ -184,18 +184,17 @@ if (hit) {
 
 Portable — same shape under the builtin SAT adapter, `@melonjs/matter-adapter`, and this one. Implementation under planck uses Box2D's native fractional ray-cast, so curved/rotated bodies report exact-surface hit geometry rather than a body-centre approximation.
 
-## Planck-specific APIs
-
-These methods are exposed on the adapter for behaviours the builtin SAT adapter doesn't expose. Game code that uses them won't run unchanged under the builtin adapter — gate with `adapter.capabilities` or branch on `adapter instanceof PlanckAdapter` if you need a fallback.
+## Region queries
 
 ```ts
 adapter.queryAABB(rect: Rect) → Renderable[]
 ```
-Return every renderable whose body overlaps the rectangle. Useful for AoE checks, explosion targeting, mouse picking. Also available on `@melonjs/matter-adapter`.
 
-### Direct engine access
+Return every renderable whose body bounds overlap the given rectangle. Useful for area-of-effect damage, mouse / touch picking, trigger-zone sweeps, AI awareness checks. Portable — same call under builtin, matter, and planck. Under planck the implementation uses Box2D's native AABB query.
 
-For planck-specific features that don't fit the portable `PhysicsAdapter` surface — joints, particle systems, native queries, raw events — the adapter exposes two escape hatches:
+## Direct engine access
+
+For planck-specific features that don't fit the portable `PhysicsAdapter` surface — joints, particle systems, raw events — the adapter exposes two escape hatches:
 
 ```ts
 const adapter = app.world.adapter as PlanckAdapter;

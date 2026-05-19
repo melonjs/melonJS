@@ -163,18 +163,17 @@ Portable — same shape under the builtin SAT adapter, this one, and `@melonjs/p
 
 > **Note on rotation:** `setAngle` / `setAngularVelocity` / `applyTorque` are now portable — they're declared on `PhysicsAdapter` and implemented by both this adapter and the builtin adapter. Under matter, rotation is fully solver-aware (the body's collision shape rotates and contact response reflects it); under builtin, rotation is visual-only (the SAT solver still tests axis-aligned shapes but the renderable's transform tracks the body's angle). Code that needs rotation-correct contact response should also opt in to `fixedRotation: false` in the `bodyDef` and check `adapter.capabilities` if it must branch.
 
-## Matter-specific APIs
-
-These methods are exposed on the adapter for behaviours the builtin SAT adapter doesn't expose. Game code that uses them won't run unchanged under the builtin adapter — gate with `adapter.capabilities` or branch on `adapter instanceof MatterAdapter` if you need a fallback.
+## Region queries
 
 ```ts
 adapter.queryAABB(rect: Rect) → Renderable[]
 ```
-Return every renderable whose body overlaps the rectangle. Useful for AoE checks, explosion targeting, mouse picking. Also available on `@melonjs/planck-adapter`.
 
-### Direct engine access
+Return every renderable whose body bounds overlap the given rectangle. Useful for area-of-effect damage, mouse / touch picking, trigger-zone sweeps, AI awareness checks. Portable — same call under builtin, matter, and planck. Under matter the implementation uses `Matter.Query.region` over the engine's body list.
 
-For matter-specific features that don't fit the portable `PhysicsAdapter` surface — constraints, compound bodies, queries, raw `Events`, plugins — the adapter exposes two escape hatches so you don't have to add `matter-js` as a direct dependency just to reach the factories:
+## Direct engine access
+
+For matter-specific features that don't fit the portable `PhysicsAdapter` surface — constraints, compound bodies, raw `Events`, plugins — the adapter exposes two escape hatches so you don't have to add `matter-js` as a direct dependency just to reach the factories:
 
 ```ts
 const adapter = app.world.adapter as MatterAdapter;

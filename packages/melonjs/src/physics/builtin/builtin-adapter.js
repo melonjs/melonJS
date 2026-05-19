@@ -506,6 +506,33 @@ export default class BuiltinAdapter {
 	}
 
 	/**
+	 * Return every renderable whose bounding box overlaps the given
+	 * world-space rectangle. Walks the SAT broadphase quadtree to get a
+	 * candidate set then filters by actual AABB overlap, so output is the
+	 * precise intersection — not just same-partition neighbours. Useful
+	 * for AoE damage queries, mouse picking, trigger-zone sweeps. Portable
+	 * across `BuiltinAdapter`, `MatterAdapter`, and `PlanckAdapter`.
+	 * @param {import("../../geometries/rectangle.ts").Rect} rect
+	 * @returns {Renderable[]}
+	 */
+	queryAABB(rect) {
+		const queryBounds = rect.getBounds();
+		// `retrieve` returns the scratch list; copy out as we filter so the
+		// result remains stable if the caller does anything that retriggers
+		// a broadphase walk on the next tick.
+		const candidates = this.world.broadphase.retrieve(rect);
+		const result = [];
+		for (let i = 0, len = candidates.length; i < len; i++) {
+			const r = candidates[i];
+			const b = r.getBounds?.();
+			if (b && b.overlaps(queryBounds)) {
+				result.push(r);
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Apply gravity to the given body. Backward-compat shim for the
 	 * legacy `World.bodyApplyGravity` method.
 	 * @param {Body} body
