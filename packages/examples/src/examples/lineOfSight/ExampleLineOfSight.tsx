@@ -40,6 +40,7 @@ import {
 	Vector2d,
 	video,
 } from "melonjs";
+import { createExampleComponent } from "../utils";
 
 /**
  * Internal type for the strict tuple shape `Polygon` / `setVertices`
@@ -53,8 +54,6 @@ type Polyline = [Vector2d, Vector2d, Vector2d, ...Vector2d[]];
 type DemoRenderer = Renderer & {
 	fillPolygon(p: Polygon): void;
 };
-
-import { createExampleComponent } from "../utils";
 
 const VIEWPORT_W = 800;
 const VIEWPORT_H = 600;

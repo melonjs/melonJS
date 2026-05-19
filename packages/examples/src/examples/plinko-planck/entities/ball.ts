@@ -233,7 +233,8 @@ export class Ball extends Container {
 		} else {
 			this.stuckFrames = 0;
 		}
-		return super.update(dt) || true;
+		super.update(dt);
+		return true;
 	}
 
 	override onActivateEvent(): void {

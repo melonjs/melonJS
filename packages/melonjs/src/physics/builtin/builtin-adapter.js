@@ -492,9 +492,10 @@ export default class BuiltinAdapter {
 	 * {@link Detector#rayCast} (both share `raycastQuery` in
 	 * `./raycast.js`), but returns the portable `RaycastHit` shape
 	 * (`{ renderable, point, normal, fraction }`) for parity with the
-	 * matter / planck adapters. `fraction` is `0..1` along the ray.
-	 * `point` is the candidate body's AABB centre (arcade approximation,
-	 * matching matter's `Matter.Query.ray` semantics).
+	 * matter / planck adapters. `point` is the precise parametric entry
+	 * point on the shape surface (line-segment vs polygon edges,
+	 * quadratic ray vs ellipse), `normal` is the outward-facing surface
+	 * normal at that entry, and `fraction` is `0..1` along the ray.
 	 * @param {Vector2d} from
 	 * @param {Vector2d} to
 	 * @returns {RaycastHit | null}

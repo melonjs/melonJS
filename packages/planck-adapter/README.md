@@ -19,6 +19,8 @@ npm install @melonjs/planck-adapter
 
 `planck` is bundled in as a regular dependency, so you don't need to install it yourself — that's the whole point of the adapter. The only peer dependency is `melonjs` ≥ 19.5 (because melonJS is the one providing the `PhysicsAdapter` interface this package implements).
 
+> **Node 24+** is required at install time — `planck` itself declares `engines.node: ">=24.0"` and this constraint flows through. The runtime is the browser, so this only affects the build/install toolchain. If you're on an older Node version, your package manager will warn (npm) or refuse (pnpm with `engine-strict`).
+
 ## Usage
 
 Pass a `PlanckAdapter` instance as the `physic` option when constructing your `Application`:
@@ -162,24 +164,34 @@ const mass = (crate.body as PlanckAdapter.Body).getMass();
 
 `PlanckAdapter.Body` is `planck.Body & PhysicsBody` — you get planck's full instance methods plus the portable helper methods, without needing to import `planck` yourself. Code that does this is planck-only by definition; for portable rotation use the angular kinematic methods above.
 
-## Planck-specific APIs
-
-These methods are exposed on the adapter for behaviours that Box2D supports natively but that the legacy SAT adapter either doesn't model or models differently. Game code that uses them won't run unchanged on the builtin adapter.
+## Raycasting
 
 ```ts
 adapter.raycast(from: Vector2d, to: Vector2d) → RaycastHit | null
 ```
-Shoot a ray through the world and get the first body hit. Returns the renderable, the world-space intersection point, the surface normal, and the fraction along the ray (`0..1`).
+
+Shoot a ray through the world and get the first body hit:
+
+```ts
+const hit = adapter.raycast(new Vector2d(0, 0), new Vector2d(800, 600));
+if (hit) {
+    // hit.renderable — the renderable the ray entered
+    // hit.point      — world-space entry point on the body's surface
+    // hit.normal     — outward-facing surface normal at the entry
+    // hit.fraction   — 0..1 along the ray, from `from` to `to`
+}
+```
+
+Portable — same shape under the builtin SAT adapter, `@melonjs/matter-adapter`, and this one. Implementation under planck uses Box2D's native fractional ray-cast, so curved/rotated bodies report exact-surface hit geometry rather than a body-centre approximation.
+
+## Planck-specific APIs
+
+These methods are exposed on the adapter for behaviours the builtin SAT adapter doesn't expose. Game code that uses them won't run unchanged under the builtin adapter — gate with `adapter.capabilities` or branch on `adapter instanceof PlanckAdapter` if you need a fallback.
 
 ```ts
 adapter.queryAABB(rect: Rect) → Renderable[]
 ```
-Return every renderable whose body overlaps the rectangle. Useful for AoE checks, explosion targeting, mouse picking.
-
-```ts
-adapter.setSensor(renderable, isSensor)
-```
-Toggle every fixture on the body between solid and sensor mode at runtime. Sensors still fire `onCollisionStart` / `onCollisionActive` / `onCollisionEnd` — only the solver's separation step is disabled. Useful for one-way platforms, trigger zones, snap-to-surface ground assists.
+Return every renderable whose body overlaps the rectangle. Useful for AoE checks, explosion targeting, mouse picking. Also available on `@melonjs/matter-adapter`.
 
 ### Direct engine access
 

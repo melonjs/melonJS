@@ -22,7 +22,6 @@ import {
 	PLAY_LEFT,
 	PLAY_RIGHT,
 	SLOT_COUNT,
-	SLOT_HEIGHT,
 	SLOT_TOP,
 	SLOT_WALL_TOP,
 	VIEWPORT_H,
@@ -122,7 +121,3 @@ export const buildWalls = (): Wall[] => {
 
 	return walls;
 };
-
-// Re-export so `play.ts` doesn't have to know about the WALL_THICKNESS
-// implementation detail when sizing the slot sensors below.
-export { SLOT_HEIGHT, WALL_THICKNESS };

@@ -144,6 +144,7 @@ export class ScoreFly extends Container {
 		// vanishing.
 		const alpha = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
 		this.label.setOpacity(alpha);
-		return super.update(dt) || true;
+		super.update(dt);
+		return true;
 	}
 }

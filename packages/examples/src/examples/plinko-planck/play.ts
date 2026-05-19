@@ -4,7 +4,6 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 
-import type { Container } from "melonjs";
 import { type Application, Stage } from "melonjs";
 import { BakedStatics } from "./entities/bakedStatics";
 import { reapPendingBalls } from "./entities/ball";
@@ -21,28 +20,6 @@ export class PlayScreen extends Stage {
 	override onResetEvent(app: Application) {
 		this.appRef = app;
 		resetGameState();
-
-		// TEMP DEBUG — call `__childDump()` from the console to print
-		// the world's children grouped by class name.
-		(globalThis as unknown as { __childDump?: () => void }).__childDump =
-			() => {
-				const counts = new Map<string, number>();
-				const walk = (c: Container) => {
-					const children = c.getChildren();
-					for (const child of children) {
-						const name = child.constructor.name;
-						counts.set(name, (counts.get(name) ?? 0) + 1);
-						if (typeof (child as Container).getChildren === "function") {
-							walk(child as Container);
-						}
-					}
-				};
-				walk(app.world);
-				const rows = Array.from(counts.entries())
-					.sort((a, b) => b[1] - a[1])
-					.map(([k, v]) => `${k}=${v}`);
-				console.log("[children]", rows.join(" "));
-			};
 
 		// Layer 1 — single pre-baked backdrop (depth -100) covering
 		// the synthwave background + side walls + base pegs. Replaces

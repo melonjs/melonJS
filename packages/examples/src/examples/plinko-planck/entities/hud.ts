@@ -159,6 +159,7 @@ export class HUDContainer extends Container {
 			const t = 1 - creditElapsed / SCORE_PULSE_MS;
 			this.creditsText.currentTransform.scale(1 + t * 0.25, 1 + t * 0.25);
 		}
-		return super.update(dt) || true;
+		super.update(dt);
+		return true;
 	}
 }

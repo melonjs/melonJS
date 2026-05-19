@@ -235,6 +235,8 @@ export default class QuadTree {
 		for (let i = childrenLength, child; i--, (child = children[i]); ) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
+					// `rootContainer` is the world itself — it owns the
+					// quadtree, it isn't an item inside it.
 					if (child.name !== "rootContainer") {
 						this.insert(child);
 					}
@@ -322,6 +324,9 @@ export default class QuadTree {
 		for (let i = childrenLength, child; i--, (child = children[i]); ) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
+					// `rootContainer` is the world itself — it owns the
+					// quadtree, it isn't an item inside it. Mirrors the
+					// `insertContainer` guard above.
 					if (child.name !== "rootContainer") {
 						this.remove(child);
 					}

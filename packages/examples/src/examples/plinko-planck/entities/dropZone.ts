@@ -295,10 +295,10 @@ export class DropZone extends Renderable {
 		this.pulseX = x - this.pos.x;
 		// Restart the shader-driven shockwave at the click position.
 		this.shockwave?.trigger(x, DROP_BAND_Y);
-		// Returning `false` doesn't stop propagation; leave others
-		// composable. (Returning explicit false from a pointer handler
-		// in melonJS *stops* propagation — use `undefined` to keep it
-		// flowing.)
+		// Returning `false` stops propagation — the DropZone covers the
+		// whole playfield and is the only thing that should react to a
+		// click there. The earlier `return false` paths above do the
+		// same on purpose (game-over restart, no-credits no-op).
 		return false;
 	}
 
