@@ -1,6 +1,6 @@
-import { Vector2d } from "../../math/vector2d.ts";
 import { Bounds } from "../bounds.ts";
 import ResponseObject from "../response.js";
+import { raycastQuery } from "./raycast.js";
 import {
 	testEllipseEllipse,
 	testEllipsePolygon,
@@ -37,17 +37,6 @@ const SAT_LOOKUP = {
  * @import NineSliceSprite from "../../renderable/nineslicesprite.js";
  * @import {Line} from "../../geometries/line.ts";
  */
-
-// a dummy object when using Line for raycasting
-const dummyObj = {
-	pos: new Vector2d(0, 0),
-	ancestor: {
-		_absPos: new Vector2d(0, 0),
-		getAbsolutePosition: function () {
-			return this._absPos;
-		},
-	},
-};
 
 // some cache bounds object used for collision detection
 const boundsA = new Bounds();
@@ -499,50 +488,22 @@ class Detector {
 	 *    }
 	 */
 	rayCast(line, result = []) {
-		let collisionCounter = 0;
-
-		// retrieve a list of potential colliding objects from the game world
-		const candidates = this.world.broadphase.retrieve(line);
-
-		for (let i = candidates.length, objB; i--, (objB = candidates[i]); ) {
-			// fast AABB check if both bounding boxes are overlaping
-			if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
-				// go trough all defined shapes in B (if any)
-				const bLen = objB.body.shapes.length;
-				if (objB.body.shapes.length === 0) {
-					continue;
-				}
-
-				const shapeA = line;
-
-				// go through all defined shapes in B
-				let indexB = 0;
-				do {
-					const shapeB = objB.body.getShape(indexB);
-
-					// full SAT collision check
-					if (
-						SAT_LOOKUP[shapeA.type + shapeB.type].call(
-							this,
-							dummyObj, // a reference to the object A
-							shapeA,
-							objB, // a reference to the object B
-							shapeB,
-						)
-					) {
-						// we touched something !
-						result[collisionCounter] = objB;
-						collisionCounter++;
-					}
-					indexB++;
-				} while (indexB < bLen);
-			}
+		// Thin wrapper over the shared `raycastQuery` (in `./raycast.js`),
+		// which is also used by `BuiltinAdapter.raycast` to expose the
+		// portable adapter API. We drop the per-hit `{ point, normal,
+		// fraction }` info and keep just the renderable array, preserving
+		// the legacy `collision.rayCast` return shape. Note that hits are
+		// now sorted nearest-first (was unspecified-order previously);
+		// callers that depended on the unsorted order need to re-sort.
+		const fromX = line.pos.x + line.points[0].x;
+		const fromY = line.pos.y + line.points[0].y;
+		const toX = line.pos.x + line.points[1].x;
+		const toY = line.pos.y + line.points[1].y;
+		const hits = raycastQuery(this.world, fromX, fromY, toX, toY);
+		for (let i = 0; i < hits.length; i++) {
+			result[i] = hits[i].renderable;
 		}
-
-		// cap result in case it was not empty
-		result.length = collisionCounter;
-
-		// return the list of colliding objects
+		result.length = hits.length;
 		return result;
 	}
 }

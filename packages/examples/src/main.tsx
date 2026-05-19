@@ -123,6 +123,11 @@ const ExamplePoolMatter = lazy(() =>
 		default: m.ExamplePoolMatter,
 	})),
 );
+const ExamplePlinkoPlanck = lazy(() =>
+	import("./examples/plinko-planck/ExamplePlinko").then((m) => ({
+		default: m.ExamplePlinkoPlanck,
+	})),
+);
 const ExampleSpaceInvaders = lazy(() =>
 	import("./examples/spaceInvaders/ExampleSpaceInvaders").then((m) => ({
 		default: m.ExampleSpaceInvaders,
@@ -306,7 +311,7 @@ const examples: {
 		path: "line-of-sight",
 		sourceDir: "lineOfSight",
 		description:
-			"Raycasting demo with draggable objects that change color when hit by a rotating line.",
+			"Stealth-style vision cone driven by the portable adapter.raycast API.",
 	},
 	{
 		component: <ExampleMasking />,
@@ -355,6 +360,14 @@ const examples: {
 		sourceDir: "pool-matter",
 		description:
 			"Top-down 8-ball pool driven by @melonjs/matter-adapter — drag-to-aim, release-to-strike.",
+	},
+	{
+		component: <ExamplePlinkoPlanck />,
+		label: "Plinko (Planck)",
+		path: "plinko-planck",
+		sourceDir: "plinko-planck",
+		description:
+			"Neon-cyberpunk plinko driven by @melonjs/planck-adapter — click to drop balls, all-procedural rendering.",
 	},
 	{
 		component: <ExampleSpaceInvaders />,

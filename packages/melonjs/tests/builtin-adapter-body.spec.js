@@ -436,7 +436,7 @@ describe("Physics : BuiltinAdapter (Body parity with body.spec.js)", () => {
 			expect(adapter.capabilities.constraints).toEqual(false);
 			expect(adapter.capabilities.continuousCollisionDetection).toEqual(false);
 			expect(adapter.capabilities.sleepingBodies).toEqual(false);
-			expect(adapter.capabilities.raycasts).toEqual(false);
+			expect(adapter.capabilities.raycasts).toEqual(true);
 			expect(adapter.capabilities.velocityLimit).toEqual(true);
 			expect(adapter.capabilities.isGrounded).toEqual(true);
 		});

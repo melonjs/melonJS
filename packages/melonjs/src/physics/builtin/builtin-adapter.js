@@ -2,11 +2,12 @@ import { Vector2d } from "../../math/vector2d.ts";
 import state from "../../state/state.ts";
 import Body from "./body.js";
 import Detector from "./detector.js";
+import { raycastQuery } from "./raycast.js";
 
 /**
  * @import Renderable from "../../renderable/renderable.js";
  * @import World from "../world.js";
- * @import { AdapterCapabilities, AdapterOptions, BodyDefinition, BodyShape, PhysicsAdapter } from "../adapter.ts";
+ * @import { AdapterCapabilities, AdapterOptions, BodyDefinition, BodyShape, PhysicsAdapter, RaycastHit } from "../adapter.ts";
  */
 
 /**
@@ -45,7 +46,7 @@ export default class BuiltinAdapter {
 			constraints: false,
 			continuousCollisionDetection: false,
 			sleepingBodies: false,
-			raycasts: false,
+			raycasts: true,
 			velocityLimit: true,
 			isGrounded: true,
 		};
@@ -482,6 +483,25 @@ export default class BuiltinAdapter {
 	isGrounded(renderable) {
 		const body = renderable.body;
 		return !body.falling && !body.jumping;
+	}
+
+	/**
+	 * Cast a ray from `from` to `to` and return the nearest body hit, or
+	 * `null` if the ray reaches `to` without hitting anything. Goes
+	 * through the same SAT-based broadphase walk as the legacy
+	 * {@link Detector#rayCast} (both share `raycastQuery` in
+	 * `./raycast.js`), but returns the portable `RaycastHit` shape
+	 * (`{ renderable, point, normal, fraction }`) for parity with the
+	 * matter / planck adapters. `fraction` is `0..1` along the ray.
+	 * `point` is the candidate body's AABB centre (arcade approximation,
+	 * matching matter's `Matter.Query.ray` semantics).
+	 * @param {Vector2d} from
+	 * @param {Vector2d} to
+	 * @returns {RaycastHit | null}
+	 */
+	raycast(from, to) {
+		const hits = raycastQuery(this.world, from.x, from.y, to.x, to.y);
+		return hits[0] ?? null;
 	}
 
 	/**

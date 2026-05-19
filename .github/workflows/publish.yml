@@ -13,6 +13,7 @@ on:
           - tiled-inflate-plugin
           - spine-plugin
           - matter-adapter
+          - planck-adapter
           - capacitor-plugin
           - create-melonjs
       dry-run:
@@ -69,6 +70,9 @@ jobs:
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "matter-adapter" ]; then
             echo "dir=packages/matter-adapter" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build && pnpm test" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.package }}" = "planck-adapter" ]; then
+            echo "dir=packages/planck-adapter" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build && pnpm test" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "capacitor-plugin" ]; then
             echo "dir=packages/capacitor-plugin" >> "$GITHUB_OUTPUT"

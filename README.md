@@ -221,6 +221,7 @@ Physics Adapters
 -------------------------------------------------------------------------------
 Since 19.5, melonJS exposes a `PhysicsAdapter` interface so the same game code can run on either the built-in SAT physics (default) or on a third-party rigid-body engine, selected via the `physic` option on `Application`. Official adapter packages maintained by the melonJS team:
 - [matter-adapter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter) - [matter-js](https://brm.io/matter-js/) integration with rotational dynamics, constraints, sleeping bodies, continuous collision detection, and raycasts
+- [planck-adapter](https://github.com/melonjs/melonJS/tree/master/packages/planck-adapter) - [planck.js](https://piqnt.com/planck.js/) integration (Box2D 2.3.0 port) with native joints, CCD bullet flag, sleeping bodies, raycasts, and per-body gravity scale
 
 Installation
 -------------------------------------------------------------------------------

@@ -93,18 +93,21 @@ describe("QuadTree & Collision Detection", () => {
 			}
 		});
 
-		it("should return a fresh array on each call (no shared state)", () => {
+		it("reuses a single scratch array across calls (callers must consume synchronously)", () => {
 			const r1 = new Renderable(10, 10, 20, 20);
 			r1.anchorPoint.set(0, 0);
 			r1.isKinematic = false;
 			world.broadphase.insert(r1);
 
 			const results1 = world.broadphase.retrieve(r1);
+			const snapshotLen = results1.length;
 			const results2 = world.broadphase.retrieve(r1);
-			// should be separate array instances
-			expect(results1).not.toBe(results2);
-			// but same content
-			expect(results1.length).toEqual(results2.length);
+			// same array instance — the root reuses a scratch buffer so
+			// pointer events and narrow-phase queries don't allocate per
+			// call. The contract is that callers iterate immediately and
+			// don't retain the reference past the next retrieve().
+			expect(results1).toBe(results2);
+			expect(results2.length).toEqual(snapshotLen);
 		});
 
 		it("should support the sorting function parameter", () => {
@@ -922,6 +925,273 @@ describe("QuadTree & Collision Detection", () => {
 			newTopLeft.isKinematic = false;
 			world.broadphase.insert(newTopLeft);
 			expect(world.broadphase.retrieve(newTopLeft)).toContain(newTopLeft);
+		});
+	});
+
+	describe("QuadTree remove — adversarial", () => {
+		// These cover the edge cases that make `broadphase.remove` safe
+		// to wire into `Container.removeChildNow` (so the broadphase
+		// stays in sync with the scene tree across deferred-destroy
+		// mutations, instead of being rebuilt only once per
+		// `world.update`). Each test asserts both correctness
+		// (retrieve still returns the right candidates) and tree
+		// integrity (no orphaned nodes, pruning propagates).
+
+		/** Build a fresh leaf-ish Renderable at (x, y) with size (w, h). */
+		const mkItem = (x, y, w, h) => {
+			const r = new Renderable(x, y, w, h);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			return r;
+		};
+
+		/**
+		 * Walk the tree and count total objects across every level.
+		 * Used to assert "nothing is orphaned" — after a complete
+		 * remove pass, this must return 0.
+		 */
+		const countAll = (node) => {
+			let n = node.objects.length;
+			for (const sub of node.nodes) {
+				n += countAll(sub);
+			}
+			return n;
+		};
+
+		/**
+		 * Walk the tree and return the maximum depth that contains
+		 * any objects or sub-nodes. Lets us assert pruning happened.
+		 */
+		const liveDepth = (node, level = 0) => {
+			let max = node.objects.length > 0 ? level : -1;
+			for (const sub of node.nodes) {
+				const childMax = liveDepth(sub, level + 1);
+				if (childMax > max) {
+					max = childMax;
+				}
+			}
+			return max;
+		};
+
+		it("removes every leaf in a deep branch and collapses the tree back to its empty root", () => {
+			// Force a deep, narrow tree: 1 object per node before split,
+			// up to 4 levels deep. Two items in the same tiny region
+			// will keep splitting until level 4 hits.
+			world.broadphase.max_objects = 1;
+			world.broadphase.max_levels = 4;
+
+			// Cluster of items packed into the top-left 25 × 25 region,
+			// forcing the tree to split aggressively down a single
+			// branch (TL → TL → TL → ...).
+			const cluster = [
+				mkItem(2, 2, 4, 4),
+				mkItem(8, 2, 4, 4),
+				mkItem(2, 8, 4, 4),
+				mkItem(8, 8, 4, 4),
+				mkItem(14, 14, 4, 4),
+				mkItem(20, 20, 4, 4),
+			];
+			for (const it of cluster) {
+				world.broadphase.insert(it);
+			}
+
+			// All items in the same TL branch should drive the tree
+			// past level 0.
+			expect(liveDepth(world.broadphase)).toBeGreaterThan(0);
+
+			// Remove every item, verifying liveness of the remaining
+			// items after each removal (no sibling stranded by an
+			// over-eager prune).
+			while (cluster.length) {
+				const victim = cluster.shift();
+				expect(world.broadphase.remove(victim)).toEqual(true);
+				for (const survivor of cluster) {
+					expect(world.broadphase.retrieve(survivor)).toContain(survivor);
+				}
+			}
+
+			// After removing every item, the tree must be empty —
+			// no orphan leaves, no zombie objects at any level.
+			expect(countAll(world.broadphase)).toEqual(0);
+		});
+
+		it("removing all items from one quadrant leaves the other three quadrants intact", () => {
+			world.broadphase.max_objects = 2;
+
+			// Pack the top-left quadrant with enough items to force
+			// IT to split (level-1 → level-2). Other quadrants get
+			// a single item each.
+			const tlPack = [
+				mkItem(10, 10, 5, 5),
+				mkItem(20, 20, 5, 5),
+				mkItem(30, 30, 5, 5),
+				mkItem(40, 40, 5, 5),
+			];
+			const tr = mkItem(500, 10, 5, 5);
+			const bl = mkItem(10, 400, 5, 5);
+			const br = mkItem(500, 400, 5, 5);
+			for (const it of tlPack) {
+				world.broadphase.insert(it);
+			}
+			world.broadphase.insert(tr);
+			world.broadphase.insert(bl);
+			world.broadphase.insert(br);
+
+			// The TL pack alone must have triggered a deeper split.
+			expect(world.broadphase.nodes.length).toEqual(4);
+
+			// Remove every TL item.
+			for (const it of tlPack) {
+				expect(world.broadphase.remove(it)).toEqual(true);
+			}
+
+			// Survivors must all remain retrievable.
+			expect(world.broadphase.retrieve(tr)).toContain(tr);
+			expect(world.broadphase.retrieve(bl)).toContain(bl);
+			expect(world.broadphase.retrieve(br)).toContain(br);
+
+			// Only three live items left in the tree.
+			expect(countAll(world.broadphase)).toEqual(3);
+
+			// And the freshly-emptied TL branch should be prunable.
+			// (`nodes[1]` is TL per `split()` layout.)
+			expect(world.broadphase.nodes[1].isPrunable()).toEqual(true);
+		});
+
+		it("removes a boundary-straddling item held in the parent node's own objects list", () => {
+			world.broadphase.max_objects = 2;
+
+			// A wide rect that straddles the vertical centerline ends
+			// up in the root's own `objects` array (getIndex returns
+			// -1 because it can't fit in any single subnode).
+			const straddle = mkItem(380, 50, 60, 20); // crosses x = 400
+			world.broadphase.insert(straddle);
+
+			// Pack each quadrant to force a split at the root.
+			const tl = mkItem(10, 10, 5, 5);
+			const tr = mkItem(500, 10, 5, 5);
+			const bl = mkItem(10, 400, 5, 5);
+			const br = mkItem(500, 400, 5, 5);
+			for (const it of [tl, tr, bl, br]) {
+				world.broadphase.insert(it);
+			}
+
+			// Straddle should still be in the root's own objects after
+			// the split (the split logic skips straddling items —
+			// `quadtree.js:267-272`).
+			expect(world.broadphase.objects).toContain(straddle);
+
+			// Remove the straddler — the code takes the "objects[]
+			// fallback" path because `getIndex` returns -1.
+			expect(world.broadphase.remove(straddle)).toEqual(true);
+			expect(world.broadphase.objects).not.toContain(straddle);
+
+			// Quadrant items must all still be retrievable.
+			for (const it of [tl, tr, bl, br]) {
+				expect(world.broadphase.retrieve(it)).toContain(it);
+			}
+		});
+
+		it("removes the same item twice idempotently (second remove returns false)", () => {
+			const a = mkItem(100, 100, 10, 10);
+			world.broadphase.insert(a);
+
+			expect(world.broadphase.remove(a)).toEqual(true);
+			expect(world.broadphase.remove(a)).toEqual(false);
+			expect(world.broadphase.remove(a)).toEqual(false);
+		});
+
+		it("survives 50 alternating insert/remove cycles without growing the tree", () => {
+			world.broadphase.max_objects = 2;
+
+			const a = mkItem(50, 50, 10, 10);
+			const b = mkItem(550, 50, 10, 10);
+			const c = mkItem(50, 450, 10, 10);
+
+			for (let i = 0; i < 50; i++) {
+				world.broadphase.insert(a);
+				world.broadphase.insert(b);
+				world.broadphase.insert(c);
+				expect(world.broadphase.remove(a)).toEqual(true);
+				expect(world.broadphase.remove(b)).toEqual(true);
+				expect(world.broadphase.remove(c)).toEqual(true);
+			}
+
+			// Tree must be drained at the end — `countAll` ignores
+			// empty subnode wrappers, so 0 means "no zombies".
+			expect(countAll(world.broadphase)).toEqual(0);
+		});
+
+		it("removing on a freshly-cleared tree is safe and returns false", () => {
+			const a = mkItem(100, 100, 10, 10);
+			world.broadphase.insert(a);
+			world.broadphase.clear();
+
+			expect(world.broadphase.remove(a)).toEqual(false);
+			expect(countAll(world.broadphase)).toEqual(0);
+		});
+
+		it("removes an item whose position changed since insert via the stale-bounds fallback walk", () => {
+			// `remove()` first navigates via the item's *current*
+			// bounds (happy path, O(log n)). If that misses — typical
+			// when the item moved between insert and remove — it falls
+			// back to a full subnode walk so the broadphase doesn't
+			// leak stale references between rebuilds.
+			world.broadphase.max_objects = 2;
+
+			const movable = mkItem(50, 50, 10, 10);
+			const ballast1 = mkItem(60, 60, 10, 10);
+			const ballast2 = mkItem(70, 70, 10, 10);
+			world.broadphase.insert(movable);
+			world.broadphase.insert(ballast1);
+			world.broadphase.insert(ballast2);
+
+			// Move the item to a completely different quadrant.
+			movable.pos.x = 600;
+			movable.pos.y = 500;
+
+			// The fallback walk locates it in its original subnode and
+			// evicts it cleanly even though the bounds no longer match.
+			expect(world.broadphase.remove(movable)).toEqual(true);
+
+			// Restored position should no longer find the item — fully
+			// removed, not just orphaned.
+			movable.pos.x = 50;
+			movable.pos.y = 50;
+			expect(world.broadphase.retrieve(movable)).not.toContain(movable);
+		});
+
+		it("removeContainer recursively evicts every non-kinematic descendant", () => {
+			const outer = new Container(0, 0, 800, 600);
+			outer.name = "outer";
+			const inner = new Container(0, 0, 800, 600);
+			inner.name = "inner";
+
+			const leaf1 = new Renderable(10, 10, 20, 20);
+			leaf1.anchorPoint.set(0, 0);
+			leaf1.isKinematic = false;
+			const leaf2 = new Renderable(500, 400, 20, 20);
+			leaf2.anchorPoint.set(0, 0);
+			leaf2.isKinematic = false;
+			const kinematic = new Renderable(100, 100, 20, 20);
+			kinematic.anchorPoint.set(0, 0);
+			kinematic.isKinematic = true;
+
+			inner.addChild(leaf1);
+			inner.addChild(leaf2);
+			outer.addChild(inner);
+			outer.addChild(kinematic);
+
+			world.broadphase.insertContainer(outer);
+			expect(world.broadphase.retrieve(leaf1)).toContain(leaf1);
+			expect(world.broadphase.retrieve(leaf2)).toContain(leaf2);
+
+			world.broadphase.removeContainer(outer);
+			expect(world.broadphase.retrieve(leaf1)).not.toContain(leaf1);
+			expect(world.broadphase.retrieve(leaf2)).not.toContain(leaf2);
+			expect(world.broadphase.retrieve(inner)).not.toContain(inner);
+			// the broadphase should be fully empty after eviction
+			expect(world.broadphase.isPrunable()).toEqual(true);
 		});
 	});
 

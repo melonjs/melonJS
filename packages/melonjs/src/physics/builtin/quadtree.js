@@ -81,6 +81,24 @@ export default class QuadTree {
 
 		this.objects = [];
 		this.nodes = [];
+
+		/**
+		 * Total number of objects in this subtree (this node's own
+		 * `objects` plus every descendant's). Maintained by `insert`
+		 * and `remove` so `isPrunable` / `hasChildren` are O(1) reads
+		 * instead of O(tree-size) walks. Reset to 0 in `clear`.
+		 * @ignore
+		 */
+		this._subtreeCount = 0;
+
+		/**
+		 * Root-only scratch array reused across `retrieve` calls to
+		 * avoid allocating a fresh array per pointer event / per
+		 * narrow-phase query. Only the root allocates one; recursive
+		 * subnode calls receive the array via the `result` arg.
+		 * @ignore
+		 */
+		this._retrieveScratch = level === 0 ? [] : null;
 	}
 
 	/*
@@ -240,6 +258,12 @@ export default class QuadTree {
 	 * @param {object} item - object to be added
 	 */
 	insert(item) {
+		// Subtree count: this insert adds one object SOMEWHERE in
+		// this subtree (either to `this.objects` or, by recursion,
+		// to a descendant's subtree). Bumping at every level entered
+		// gives every ancestor a correct running total.
+		this._subtreeCount++;
+
 		//if we have subnodes ...
 		if (this.nodes.length > 0) {
 			const index = this.getIndex(item);
@@ -266,6 +290,11 @@ export default class QuadTree {
 			for (let i = 0, len = this.objects.length; i < len; i++) {
 				const subIndex = this.getIndex(this.objects[i]);
 				if (subIndex !== -1) {
+					// Redistribution: the item is being MOVED from
+					// `this.objects` into a subnode. The total in this
+					// subtree is unchanged, so we DON'T touch
+					// `this._subtreeCount`. The subnode's `insert`
+					// will increment its own count for the moved item.
 					this.nodes[subIndex].insert(this.objects[i]);
 				} else {
 					this.objects[writeIdx++] = this.objects[i];
@@ -276,16 +305,52 @@ export default class QuadTree {
 	}
 
 	/**
+	 * Recursively remove the given container and its descendants from
+	 * the quadtree. Mirrors `insertContainer` so the broadphase can be
+	 * kept in sync when a subtree is detached via
+	 * `Container.removeChildNow` between two `world.update()` rebuilds
+	 * (pointer events fire async in that window and would otherwise
+	 * hit destroyed renderables).
+	 * @param {Container} container - group of objects to be removed
+	 */
+	removeContainer(container) {
+		const children = container.getChildren?.();
+		if (!children) {
+			return;
+		}
+		const childrenLength = children.length;
+		for (let i = childrenLength, child; i--, (child = children[i]); ) {
+			if (child.isKinematic !== true) {
+				if (typeof child.addChild === "function") {
+					if (child.name !== "rootContainer") {
+						this.remove(child);
+					}
+					this.removeContainer(child);
+				} else if (typeof child.getBounds === "function") {
+					this.remove(child);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Return all objects that could collide with the given object
 	 * @param {object} item - object to be checked against
 	 * @param {object} [fn] - a sorting function for the returned array
 	 * @returns {object[]} array with all detected objects
 	 */
 	retrieve(item, fn, result) {
-		// reuse or create a result array to avoid concat allocations
+		// Reuse the root's scratch array across calls. Pointer events
+		// fire on every mouse move and each one used to allocate a
+		// fresh `[]`; resetting the existing array's length to 0 is
+		// allocation-free. Callers must not retain the returned array
+		// across `retrieve` calls — the builtin caller in
+		// `pointerevent.ts` and `detector.js` both iterate
+		// synchronously then drop the reference, so this is safe.
 		const isRoot = typeof result === "undefined";
 		if (isRoot) {
-			result = [];
+			result = this._retrieveScratch;
+			result.length = 0;
 		}
 
 		// add objects at this level
@@ -332,15 +397,14 @@ export default class QuadTree {
 
 		//if we have subnodes ...
 		if (this.nodes.length > 0) {
-			// determine to which node the item belongs to
+			// determine which subnode the item's CURRENT bounds maps
+			// to. If the item moved between insert and remove, this
+			// might point to a different subnode than where the item
+			// actually lives — the fallback walk below handles that.
 			const index = this.getIndex(item);
 
 			if (index !== -1) {
 				found = this.nodes[index].remove(item);
-				// trim node if empty
-				if (found && this.nodes[index].isPrunable()) {
-					this.nodes[index].clear();
-				}
 			}
 		}
 
@@ -353,6 +417,43 @@ export default class QuadTree {
 			}
 		}
 
+		// Stale-bounds fallback: the item didn't fit in the expected
+		// subnode and wasn't at this level either. The item's bounds
+		// may have changed since insert (the broadphase wasn't
+		// rebuilt in between). Walk every subnode as a last resort.
+		// Costs O(subtree) in the worst case, but only fires on the
+		// stale-position path; happy path stays O(log n).
+		if (found === false && this.nodes.length > 0) {
+			for (let i = 0; i < this.nodes.length; i++) {
+				if (this.nodes[i].remove(item)) {
+					found = true;
+					break;
+				}
+			}
+		}
+
+		if (found) {
+			this._subtreeCount--;
+
+			// Collapse: if this subtree is now fully empty (no own
+			// objects, all subnodes are empty), recycle the subnodes
+			// back to the global `QT_ARRAY` pool and drop them. Keeps
+			// the tree compact across the deferred-destroy churn that
+			// `Container.removeChildNow` produces, and lets the pool
+			// reuse the QuadTree instances on the next split.
+			if (
+				this.nodes.length > 0 &&
+				this.objects.length === 0 &&
+				this._subtreeCount === 0
+			) {
+				for (let i = 0; i < this.nodes.length; i++) {
+					this.nodes[i].clear();
+					QT_ARRAY_PUSH(this.nodes[i]);
+				}
+				this.nodes.length = 0;
+			}
+		}
+
 		return found;
 	}
 
@@ -361,7 +462,9 @@ export default class QuadTree {
 	 * @returns {boolean} true if the node is prunable
 	 */
 	isPrunable() {
-		return !(this.hasChildren() || this.objects.length > 0);
+		// O(1) thanks to the cached subtree count maintained by
+		// insert/remove. Previously a recursive `hasChildren()` walk.
+		return this._subtreeCount === 0;
 	}
 
 	/**
@@ -369,13 +472,10 @@ export default class QuadTree {
 	 * @returns {boolean} true if the node has any children
 	 */
 	hasChildren() {
-		for (let i = 0; i < this.nodes.length; i = i + 1) {
-			const subnode = this.nodes[i];
-			if (subnode.nodes.length > 0 || subnode.objects.length > 0) {
-				return true;
-			}
-		}
-		return false;
+		// Descendant content exists iff total subtree count exceeds
+		// our own object count (anything counted at this level beyond
+		// `objects` must live in a subnode).
+		return this._subtreeCount > this.objects.length;
 	}
 
 	/**
@@ -392,6 +492,8 @@ export default class QuadTree {
 		}
 		// empty the array
 		this.nodes.length = 0;
+
+		this._subtreeCount = 0;
 
 		// resize the root bounds if required
 		if (typeof bounds !== "undefined") {

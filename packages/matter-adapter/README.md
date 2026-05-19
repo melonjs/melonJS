@@ -12,13 +12,10 @@ A [matter-js](https://brm.io/matter-js/) physics adapter for melonJS — drops i
 ## Installation
 
 ```bash
-npm install @melonjs/matter-adapter matter-js
+npm install @melonjs/matter-adapter
 ```
 
-This adapter has two peer dependencies you provide yourself:
-
-- `melonjs` ≥ 19.5
-- `matter-js` ≥ 0.20
+`matter-js` is bundled in as a regular dependency, so you don't need to install it yourself — that's the whole point of the adapter. The only peer dependency is `melonjs` ≥ 19.5 (because melonJS is the one providing the `PhysicsAdapter` interface this package implements).
 
 ## Usage
 

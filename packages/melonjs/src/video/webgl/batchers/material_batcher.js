@@ -172,16 +172,24 @@ export class MaterialBatcher extends Batcher {
 			typeof globalThis.OffscreenCanvas !== "undefined" &&
 			pixels instanceof globalThis.OffscreenCanvas
 		) {
-			const imageBitmap = pixels.transferToImageBitmap();
+			// WebGL2 (and WebGL1 in modern browsers) accepts an
+			// OffscreenCanvas directly as a TexImageSource. The
+			// previous path went through `transferToImageBitmap()`,
+			// which is DESTRUCTIVE — it moves the bitmap out of the
+			// OffscreenCanvas and leaves the source blank, so any
+			// later re-upload (context loss, cache eviction, or
+			// simply a second emitter whose default particle texture
+			// happened to land at the same cache key) uploaded an
+			// empty texture. Reproduced as "ParticleEmitter sparks
+			// don't render under WebGL2" in the plinko-planck demo.
 			gl.texImage2D(
 				gl.TEXTURE_2D,
 				0,
 				gl.RGBA,
 				gl.RGBA,
 				gl.UNSIGNED_BYTE,
-				imageBitmap,
+				pixels,
 			);
-			imageBitmap.close();
 		} else {
 			gl.texImage2D(
 				gl.TEXTURE_2D,

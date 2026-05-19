@@ -273,20 +273,33 @@ class CanvasRenderTarget extends RenderTarget {
 	 * @ignore
 	 */
 	destroy(renderer) {
+		// Look up the cached texture by SOURCE identity (the `canvas`
+		// itself), NOT by `this.glTextureUnit`. The previous code
+		// path passed `getTexture2D(this.glTextureUnit)` into
+		// `deleteTexture2D`, but the `QuadBatcher` recycles texture
+		// units LRU under pressure (typically 8–16 hardware units),
+		// so the unit stored at upload time may now reference a
+		// different texture entirely — leading to either a crash
+		// (`getTexture2D` returns `undefined` → `texture.getTexture`
+		// throws) or, worse, silently deleting an unrelated texture
+		// that now occupies the recycled unit. Resolving via
+		// `renderer.cache.get(canvas)` is unit-recycling-safe: the
+		// cache map is keyed on the source image, so the lookup
+		// always returns the entry that actually belongs to *this*
+		// render target.
 		if (
 			renderer &&
 			typeof renderer.gl !== "undefined" &&
-			typeof this.glTextureUnit !== "undefined"
+			this.canvas &&
+			renderer.cache.has(this.canvas)
 		) {
 			renderer.setBatcher("quad");
-			renderer.currentBatcher.deleteTexture2D(
-				renderer.currentBatcher.getTexture2D(this.glTextureUnit),
-			);
-			this.glTextureUnit = undefined;
+			renderer.currentBatcher.deleteTexture2D(renderer.cache.get(this.canvas));
 		}
 		if (renderer) {
 			renderer.cache.delete(this.canvas);
 		}
+		this.glTextureUnit = undefined;
 		this.context = undefined;
 		this.canvas = undefined;
 	}

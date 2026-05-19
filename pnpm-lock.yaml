@@ -129,6 +129,9 @@ importers:
       '@melonjs/matter-adapter':
         specifier: workspace:*
         version: link:../matter-adapter
+      '@melonjs/planck-adapter':
+        specifier: workspace:*
+        version: link:../planck-adapter
       '@melonjs/spine-plugin':
         specifier: workspace:*
         version: link:../spine-plugin
@@ -147,9 +150,6 @@ importers:
       ace-builds:
         specifier: ^1.43.6
         version: 1.43.6
-      matter-js:
-        specifier: ^0.20.0
-        version: 0.20.0
       melonjs:
         specifier: workspace:^
         version: link:../melonjs
@@ -174,6 +174,9 @@ importers:
 
   packages/matter-adapter:
     dependencies:
+      matter-js:
+        specifier: ^0.20.0
+        version: 0.20.0
       poly-decomp:
         specifier: ^0.3.0
         version: 0.3.0
@@ -187,9 +190,6 @@ importers:
       esbuild:
         specifier: 0.28.0
         version: 0.28.0
-      matter-js:
-        specifier: ^0.20.0
-        version: 0.20.0
       melonjs:
         specifier: workspace:*
         version: link:../melonjs
@@ -254,6 +254,34 @@ importers:
       vite-plugin-glsl:
         specifier: ^1.6.0
         version: 1.6.0(esbuild@0.28.0)(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4))
+
+  packages/planck-adapter:
+    dependencies:
+      planck:
+        specifier: ^1.5.0
+        version: 1.5.0(stage-js@1.0.2)
+    devDependencies:
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      esbuild:
+        specifier: 0.28.0
+        version: 0.28.0
+      melonjs:
+        specifier: workspace:*
+        version: link:../melonjs
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@types/node@25.6.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4))
 
   packages/spine-plugin:
     dependencies:
@@ -1750,6 +1778,12 @@ packages:
     resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
+  planck@1.5.0:
+    resolution: {integrity: sha512-dlvqJE+FscZgrGUXJ5ybd0o5bvZ5XXyZNbm08xGsXp9WjXeAyWSFT6n9s/1PQcUBo4546fDXA5RMA4wbDyZw6g==}
+    engines: {node: '>=24.0'}
+    peerDependencies:
+      stage-js: ^1.0.0-alpha.12
+
   playwright-core@1.59.1:
     resolution: {integrity: sha512-HBV/RJg81z5BiiZ9yPzIiClYV/QMsDCKUyogwH9p3MCP6IYjUFu/MActgYAvK0oWyV9NlwM3GLBjADyWgydVyg==}
     engines: {node: '>=18'}
@@ -1924,6 +1958,10 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+
+  stage-js@1.0.2:
+    resolution: {integrity: sha512-EWTRBYlg7Qv9wGUao99/PfRe3KaiQqWmgSvTOXvaWnu1Jk/q/vV8yJVu6bi/3EqDZeMVnCPAjheba6OFc5k1GQ==}
+    engines: {node: '>=24.0'}
 
   std-env@4.1.0:
     resolution: {integrity: sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==}
@@ -3478,6 +3516,10 @@ snapshots:
 
   picomatch@4.0.4: {}
 
+  planck@1.5.0(stage-js@1.0.2):
+    dependencies:
+      stage-js: 1.0.2
+
   playwright-core@1.59.1: {}
 
   playwright@1.59.1:
@@ -3650,6 +3692,8 @@ snapshots:
   spdx-license-ids@3.0.23: {}
 
   stackback@0.0.2: {}
+
+  stage-js@1.0.2: {}
 
   std-env@4.1.0: {}
 
