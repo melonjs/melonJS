@@ -710,8 +710,17 @@ export function unloadAll(): void {
  */
 export function getAudioContext(): AudioContext | null {
 	if (Howler.noAudio) return null;
-	// Howler's `ctx` is declared non-nullable in @types/howler but can
-	// be undefined when `noAudio` is true (some test environments).
+	// Howler only creates its `AudioContext` lazily — on the first Howl
+	// constructor, the first volume/mute call, etc. Procedural-only
+	// users (calling `tone` without ever loading a sound file) never
+	// hit any of those code paths, leaving `Howler.ctx` undefined.
+	// Nudging `Howler.volume()` triggers Howler's internal
+	// `setupAudioContext` without changing the master volume.
+	if (!Howler.ctx) {
+		Howler.volume(Howler.volume());
+	}
+	// `ctx` is declared non-nullable in @types/howler but can still be
+	// undefined when setup couldn't create one (very restricted envs).
 	return Howler.ctx ?? null;
 }
 
