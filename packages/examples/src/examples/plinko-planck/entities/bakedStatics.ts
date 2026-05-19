@@ -283,8 +283,10 @@ export class BakedStatics extends Renderable {
 				const x = baseX + xOffset + col * PEG_X_SPACING;
 				drawPeg(x, y);
 			}
-			drawPeg(wallLeftCx, y);
-			drawPeg(wallRightCx, y);
+			if (!isOdd) {
+				drawPeg(wallLeftCx, y);
+				drawPeg(wallRightCx, y);
+			}
 		}
 		void COLOR_PEG_HOT; // unused-symbol guard (hot is the white highlight inline)
 	}

@@ -391,9 +391,12 @@ export const buildPegField = (): Peg[] => {
 			const x = baseX + xOffset + col * PEG_X_SPACING;
 			pegs.push(new Peg(x - PEG_RADIUS, y - PEG_RADIUS));
 		}
-		// Wall-adjacent gutter pegs — every row gets one near each wall.
-		pegs.push(new Peg(wallLeftCx - PEG_RADIUS, y - PEG_RADIUS));
-		pegs.push(new Peg(wallRightCx - PEG_RADIUS, y - PEG_RADIUS));
+		// Wall-adjacent gutter pegs — only on even rows so the
+		// triangular packing rhythm carries through to the rim.
+		if (!isOdd) {
+			pegs.push(new Peg(wallLeftCx - PEG_RADIUS, y - PEG_RADIUS));
+			pegs.push(new Peg(wallRightCx - PEG_RADIUS, y - PEG_RADIUS));
+		}
 	}
 	return pegs;
 };
