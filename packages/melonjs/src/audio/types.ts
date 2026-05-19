@@ -6,6 +6,99 @@
  */
 
 /**
+ * Sound asset descriptor passed to `audio.load`.
+ * @category Audio
+ */
+export interface SoundAsset {
+	/** Logical name used to play / stop / reference the sound later. */
+	name: string;
+	/**
+	 * Path or data URL to the audio resource (without extension when
+	 * using `audio.init` formats).
+	 */
+	src: string;
+	/** Begin playback immediately on load. Defaults to `false`. */
+	autoplay?: boolean;
+	/** Loop playback when the clip ends. Defaults to `false`. */
+	loop?: boolean;
+	/**
+	 * Stream the resource instead of fully decoding upfront — preferred
+	 * for long music tracks. Defaults to `false`.
+	 */
+	stream?: boolean;
+	/**
+	 * Force the HTML5 `<audio>` element backend instead of WebAudio
+	 * decoding. Defaults to `false`.
+	 */
+	html5?: boolean;
+}
+
+/**
+ * Optional settings forwarded to the underlying `fetch` request used
+ * to load audio resources. Mirrors a subset of the standard `RequestInit`
+ * surface (see
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/RequestInit | MDN — RequestInit}).
+ * @category Audio
+ */
+export interface LoadSettings {
+	/** Cache-busting query string appended to the resource URL. */
+	nocache?: string;
+	/** Forwarded to `fetch.credentials` for cross-origin authenticated requests. */
+	withCredentials?: boolean;
+}
+
+/**
+ * Spatial-audio cone + distance attributes passed to `audio.panner`.
+ * Mirrors the WebAudio `PannerNode` configuration so positional sound
+ * effects can be set up declaratively (see
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics#creating_a_panner_node | MDN — creating a panner node}
+ * for an end-to-end conceptual overview).
+ * @category Audio
+ */
+export interface PannerAttributes {
+	/**
+	 * Inner cone angle in degrees within which there is no volume
+	 * reduction. Defaults to `360` (omnidirectional).
+	 */
+	coneInnerAngle?: number | undefined;
+	/**
+	 * Outer cone angle in degrees outside which the volume is reduced
+	 * to `coneOuterGain`. Defaults to `360`.
+	 */
+	coneOuterAngle?: number | undefined;
+	/**
+	 * Linear volume multiplier (`0..1`) applied outside
+	 * `coneOuterAngle`. Defaults to `0` (silent outside the cone).
+	 */
+	coneOuterGain?: number | undefined;
+	/**
+	 * Distance-attenuation algorithm. Defaults to `"inverse"`.
+	 */
+	distanceModel?: "inverse" | "linear";
+	/**
+	 * Distance at which volume reduction stops (used by the `"linear"`
+	 * model; clamps the falloff curve for the other one). Defaults to
+	 * `10000`.
+	 */
+	maxDistance?: number;
+	/**
+	 * Spatialization algorithm — `"equalpower"` (cheap, stereo-only) or
+	 * `"HRTF"` (head-related, full 3D). Defaults to `"HRTF"`.
+	 */
+	panningModel?: "HRTF" | "equalpower";
+	/**
+	 * Reference distance for the falloff curve — volume is `1` at this
+	 * distance from the listener. Defaults to `1`.
+	 */
+	refDistance?: number;
+	/**
+	 * Steepness of the falloff curve for the `"inverse"` model.
+	 * Defaults to `1`.
+	 */
+	rolloffFactor?: number;
+}
+
+/**
  * Options for `tone`.
  * @category Audio
  */

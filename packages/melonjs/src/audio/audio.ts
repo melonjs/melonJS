@@ -2,44 +2,15 @@
 import { Howl, Howler } from "howler";
 import { clamp } from "./../math/math.ts";
 import { isDataUrl } from "./../utils/string.ts";
-import type { ToneOptions } from "./types.ts";
+import type {
+	LoadSettings,
+	PannerAttributes,
+	SoundAsset,
+	ToneOptions,
+} from "./types.ts";
 
-// re-export so `me.audio.ToneOptions` resolves alongside the function
-export type { ToneOptions };
-
-/**
- * Sound asset descriptor used by the audio loader
- */
-interface SoundAsset {
-	name: string;
-	src: string;
-	autoplay?: boolean;
-	loop?: boolean;
-	stream?: boolean;
-	html5?: boolean;
-}
-
-/**
- * Load settings for audio resources
- */
-interface LoadSettings {
-	nocache?: string;
-	withCredentials?: boolean;
-}
-
-/**
- * Panner attributes for spatial audio
- */
-interface PannerAttributes {
-	coneInnerAngle?: number;
-	coneOuterAngle?: number;
-	coneOuterGain?: number;
-	distanceModel?: string;
-	maxDistance?: number;
-	refDistance?: number;
-	rolloffFactor?: number;
-	panningModel?: string;
-}
+// re-export so `me.audio.<Type>` resolves alongside the runtime API
+export type { LoadSettings, PannerAttributes, SoundAsset, ToneOptions };
 
 /**
  * audio channel list
@@ -130,9 +101,10 @@ export function init(format: string = "mp3"): boolean {
 }
 
 /**
- * Returns the underlying {@link AudioContext} used by the audio module
- * (the same one shared with file-based playback), or `null` if audio
- * is disabled or no compatible WebAudio implementation is available.
+ * Returns the underlying WebAudio `AudioContext` used by the audio
+ * module (the same one shared with file-based playback), or `null` if
+ * audio is disabled or no compatible WebAudio implementation is
+ * available.
  *
  * Use this when you need to build a custom WebAudio graph — procedural
  * SFX, custom filters / spatial nodes, audio analysis — without
@@ -204,11 +176,16 @@ export function disable(): void {
 }
 
 /**
- * Load an audio file
- * @param sound - sound asset descriptor
+ * Load an audio file.
+ * @param sound - the {@link SoundAsset} descriptor — logical `name`,
+ *   `src` path (extensions resolved against {@link init}'s format list,
+ *   or a full data URL), and optional playback flags (`autoplay`,
+ *   `loop`, `stream`, `html5`).
  * @param [onloadcb] - function to be called when the resource is loaded
  * @param [onerrorcb] - function to be called in case of error
- * @param [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
+ * @param [settings] - optional {@link LoadSettings} — currently
+ *   `nocache` (cache-buster query string) and `withCredentials`
+ *   (cross-origin auth). Forwarded to the underlying `fetch` request.
  * @returns the amount of asset loaded (always 1 if successful)
  * @category Audio
  */
@@ -444,19 +421,13 @@ export function orientation(
 
 /**
  * get or set the panner node's attributes for a sound or group of sounds.
- * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics#creating_a_panner_node}
  * @param sound_name - audio clip name - case sensitive
- * @param [attributes] - the panner attributes to set
- * @param [attributes.coneInnerAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, inside of which there will be no volume reduction.
- * @param [attributes.coneOuterAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, outside of which the volume will be reduced to a constant value of `coneOuterGain`.
- * @param [attributes.coneOuterGain=0] - A parameter for directional audio sources, this is the gain outside of the `coneOuterAngle`. It is a linear value in the range `[0, 1]`.
- * @param [attributes.distanceModel="inverse"] - Determines algorithm used to reduce volume as audio moves away from listener. Can be `linear`, `inverse` or `exponential.
- * @param [attributes.maxDistance=10000] - The maximum distance between source and listener, after which the volume will not be reduced any further.
- * @param [attributes.refDistance=1] - A reference distance for reducing volume as source moves further from the listener. This is simply a variable of the distance model and has a different effect depending on which model is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
- * @param [attributes.rolloffFactor=1] - How quickly the volume reduces as source moves from listener. This is simply a variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]` with `inverse` and `exponential`.
- * @param [attributes.panningModel="HRTF"] - Determines which spatialization algorithm is used to position audio. Can be `HRTF` or `equalpower`.
- * @param [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
- * @returns current panner attributes.
+ * @param [attributes] - the {@link PannerAttributes} to set
+ *   (cone angles, distance model, panning algorithm, …). See the
+ *   interface for per-field defaults.
+ * @param [id] - the sound instance ID. If none is passed, all sounds
+ *   in the group will be changed.
+ * @returns the resulting {@link PannerAttributes} after the update.
  * @example
  * me.audio.panner("cling", {
  *    panningModel: 'HRTF',
@@ -472,14 +443,16 @@ export function panner(
 	id?: number,
 ): PannerAttributes {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
-		return sound.pannerAttr(
-			attributes as any,
-			id,
-		) as unknown as PannerAttributes;
-	} else {
+	if (!sound) {
 		throw new Error(`audio clip ${sound_name} does not exist`);
 	}
+	if (attributes !== undefined) {
+		// "set" overload returns the Howl for chaining; we still want
+		// to hand the caller the current attribute snapshot back.
+		if (id !== undefined) sound.pannerAttr(attributes, id);
+		else sound.pannerAttr(attributes);
+	}
+	return id !== undefined ? sound.pannerAttr(id) : sound.pannerAttr();
 }
 
 /**
@@ -746,7 +719,8 @@ export function unloadAll(): void {
  * {@link getAudioContext} to detect that case up front if your game
  * wants to show a "no audio" badge or fall back to a different
  * feedback channel.
- * @param opts - tone descriptor (frequency, duration, envelope, pan, slide)
+ * @param opts - the {@link ToneOptions} (frequency, duration,
+ *   envelope, pan, slide). See the interface for per-field defaults.
  * @example
  * // simple UI click
  * me.audio.tone({ freq: 1200, duration: 0.08, pitchSlide: 0.5 });
@@ -810,11 +784,16 @@ export function tone(opts: ToneOptions): void {
 		osc.stop(t1 + 0.02);
 	}
 
+	// Route through the audio module's master gain (the same node every
+	// other audio call goes through), so global mute / volume / fades
+	// apply uniformly — `audio.muteAll()` silences tones too, and
+	// `audio.setVolume(0.5)` halves them.
+	const out = Howler.masterGain;
 	if (pan === 0) {
-		env.connect(ctx.destination);
+		env.connect(out);
 	} else {
 		const panner = ctx.createStereoPanner();
 		panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
-		env.connect(panner).connect(ctx.destination);
+		env.connect(panner).connect(out);
 	}
 }
