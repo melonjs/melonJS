@@ -173,7 +173,6 @@ export class Slot extends Container {
 	 */
 	collect(): void {
 		this.pulseAtRef.value = timer.getTime();
-		playChime(this.score);
 
 		// Walk up to find the world container — both effects attach
 		// there so they aren't transformed by this slot's frame and
@@ -188,6 +187,10 @@ export class Slot extends Container {
 		const slotW = PLAY_W / SLOT_COUNT;
 		const cx = this.pos.x + slotW / 2;
 		const cy = this.pos.y + SLOT_HEIGHT / 2;
+
+		// Slot centre x → pan in [-1, 1] across the play area; left
+		// slots ring on the left, right slots on the right.
+		playChime(this.score, ((cx - PLAY_LEFT) / PLAY_W) * 2 - 1);
 
 		// Spark burst at the slot top. Particle count + speed scale
 		// with score tier so a 100-pointer feels meaningfully bigger

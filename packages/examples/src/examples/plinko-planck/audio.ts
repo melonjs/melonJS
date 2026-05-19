@@ -39,10 +39,19 @@ let lastClackAt = 0;
 
 /**
  * Short percussive impulse for peg hits. Sine carrier modulated by a
- * 5 ms exponential decay envelope; pitched in a 700–1400 Hz range so
- * consecutive pegs in a bounce flurry stay distinguishable.
+ * 5 ms exponential decay envelope.
+ *
+ * @param pan stereo position in `[-1, 1]` — left wall to right wall.
+ *   Cones the clack across the soundfield so a flurry of hits also
+ *   describes a path through the playfield, not just a smear of clicks.
+ * @param pitchHint `0..1` from top row (0) to bottom row (1). When
+ *   present the clack is pitched on a descending scale (top-row
+ *   bounces ring high, bottom-row bounces ring low) so a single ball
+ *   dropping through the field literally plays an arpeggio downward.
+ *   Without the hint we fall back to small random jitter so multiple
+ *   balls don't fuse into one continuous buzz.
  */
-export const playClack = (): void => {
+export const playClack = (pan = 0, pitchHint?: number): void => {
 	const c = getCtx();
 	if (!c) return;
 
@@ -51,7 +60,12 @@ export const playClack = (): void => {
 	lastClackAt = now;
 
 	const t = c.currentTime;
-	const freq = 700 + Math.random() * 700;
+	// Top row (hint = 0) rings at 1400 Hz; bottom row (hint = 1) at
+	// 700 Hz. No hint → random jitter in the same range.
+	const freq =
+		pitchHint !== undefined
+			? 1400 - pitchHint * 700
+			: 700 + Math.random() * 700;
 
 	const osc = c.createOscillator();
 	osc.type = "sine";
@@ -64,23 +78,31 @@ export const playClack = (): void => {
 	gain.gain.setValueAtTime(0.08, t);
 	gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
 
-	osc.connect(gain).connect(c.destination);
+	const panner = c.createStereoPanner();
+	panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t);
+
+	osc.connect(gain).connect(panner).connect(c.destination);
 	osc.start(t);
 	osc.stop(t + 0.1);
 };
 
 /**
  * Tonal chime for slot landings. Two stacked sine partials (a fifth
- * apart) with longer decay; base pitch scales with slot tier — a
- * 100-pointer rings at ~1320 Hz, a 2-pointer at ~440 Hz.
+ * apart) with longer decay; base pitch follows an A-minor pentatonic
+ * ladder keyed on the slot's score, so the five slot tiers ring out
+ * as `A4 / C5 / E5 / A5 / E6` — recognisable as a musical scale rather
+ * than an arbitrary pitch table.
+ *
+ * @param score the slot's point value (drives base pitch)
+ * @param pan stereo position in `[-1, 1]` — left slot pans left.
  */
-export const playChime = (score: number): void => {
+export const playChime = (score: number, pan = 0): void => {
 	const c = getCtx();
 	if (!c) return;
 
 	const t = c.currentTime;
-	// Tier-based pitch: 2 → 440 (A4), 5 → 523 (C5), 10 → 659 (E5),
-	// 30 → 880 (A5), 100 → 1320 (E6).
+	// Tier-based pitch on A-minor pentatonic: 2 → A4, 5 → C5,
+	// 10 → E5, 30 → A5, 100 → E6.
 	const base =
 		score >= 100
 			? 1320
@@ -106,9 +128,12 @@ export const playChime = (score: number): void => {
 	gain.gain.setValueAtTime(0.18, t);
 	gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
 
+	const panner = c.createStereoPanner();
+	panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t);
+
 	osc1.connect(gain);
 	osc2.connect(gain);
-	gain.connect(c.destination);
+	gain.connect(panner).connect(c.destination);
 
 	osc1.start(t);
 	osc2.start(t);

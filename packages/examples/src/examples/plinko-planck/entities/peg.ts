@@ -322,13 +322,20 @@ class PegVisual extends Renderable {
 export class Peg extends Container {
 	/** Wall-clock ms at the last hit, used to drive the flash animation. */
 	private readonly flashAtRef = { value: -Infinity };
+	/**
+	 * Row index normalised to `[0, 1]` — top row 0, bottom row 1.
+	 * Passed to `playClack` so the bounce arpeggio descends as the ball
+	 * falls through the field.
+	 */
+	private readonly rowHint: number;
 
-	constructor(x: number, y: number) {
+	constructor(x: number, y: number, row: number) {
 		const size = PEG_RADIUS * 2;
 		// pos = top-left; the body's local-space Ellipse is centered at
 		// (PEG_RADIUS, PEG_RADIUS) so the body ends up at (x + PEG_RADIUS,
 		// y + PEG_RADIUS) in world space.
 		super(x, y, size, size);
+		this.rowHint = PEG_ROWS > 1 ? row / (PEG_ROWS - 1) : 0;
 		this.anchorPoint.set(0, 0);
 		this.bodyDef = {
 			type: "static",
@@ -357,7 +364,11 @@ export class Peg extends Container {
 	 */
 	flash(): void {
 		this.flashAtRef.value = timer.getTime();
-		playClack();
+		// Centre of this peg in world coords → pan in [-1, 1] across the
+		// play area.
+		const cx = this.pos.x + this.width / 2;
+		const pan = ((cx - PLAY_LEFT) / PLAY_W) * 2 - 1;
+		playClack(pan, this.rowHint);
 	}
 }
 
@@ -391,15 +402,15 @@ export const buildPegField = (): Peg[] => {
 		const y = PEG_FIELD_TOP + row * PEG_Y_SPACING;
 		for (let col = 0; col < colsThisRow; col++) {
 			const x = baseX + xOffset + col * PEG_X_SPACING;
-			pegs.push(new Peg(x - PEG_RADIUS, y - PEG_RADIUS));
+			pegs.push(new Peg(x - PEG_RADIUS, y - PEG_RADIUS, row));
 		}
 		// Wall-adjacent gutter pegs — only on odd rows. Even rows
 		// already have a peg at `baseX` (40 px from the wall); odd
 		// rows have a wider 70 px gap (half-spacing offset + gutter),
 		// which is the channel a rim-dropped ball actually exploits.
 		if (isOdd) {
-			pegs.push(new Peg(wallLeftCx - PEG_RADIUS, y - PEG_RADIUS));
-			pegs.push(new Peg(wallRightCx - PEG_RADIUS, y - PEG_RADIUS));
+			pegs.push(new Peg(wallLeftCx - PEG_RADIUS, y - PEG_RADIUS, row));
+			pegs.push(new Peg(wallRightCx - PEG_RADIUS, y - PEG_RADIUS, row));
 		}
 	}
 	return pegs;
