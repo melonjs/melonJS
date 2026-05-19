@@ -283,7 +283,7 @@ export class BakedStatics extends Renderable {
 				const x = baseX + xOffset + col * PEG_X_SPACING;
 				drawPeg(x, y);
 			}
-			if (!isOdd) {
+			if (isOdd) {
 				drawPeg(wallLeftCx, y);
 				drawPeg(wallRightCx, y);
 			}

@@ -391,9 +391,11 @@ export const buildPegField = (): Peg[] => {
 			const x = baseX + xOffset + col * PEG_X_SPACING;
 			pegs.push(new Peg(x - PEG_RADIUS, y - PEG_RADIUS));
 		}
-		// Wall-adjacent gutter pegs — only on even rows so the
-		// triangular packing rhythm carries through to the rim.
-		if (!isOdd) {
+		// Wall-adjacent gutter pegs — only on odd rows. Even rows
+		// already have a peg at `baseX` (40 px from the wall); odd
+		// rows have a wider 70 px gap (half-spacing offset + gutter),
+		// which is the channel a rim-dropped ball actually exploits.
+		if (isOdd) {
 			pegs.push(new Peg(wallLeftCx - PEG_RADIUS, y - PEG_RADIUS));
 			pegs.push(new Peg(wallRightCx - PEG_RADIUS, y - PEG_RADIUS));
 		}
