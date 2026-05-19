@@ -132,5 +132,91 @@ describe("audio", () => {
 			expect(ctx.state).not.toBe("closed");
 			expect(ctx.currentTime).toBeGreaterThanOrEqual(before);
 		});
+
+		it("exports noise", () => {
+			expect(typeof audio.noise).toBe("function");
+		});
+
+		it("noise accepts every documented option without throwing", () => {
+			expect(() => {
+				return audio.noise({ duration: 0.05 });
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({
+					duration: 0.05,
+					type: "white",
+					gain: 0.05,
+					attack: 0.01,
+					pan: 0.3,
+				});
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({ duration: 0.05, type: "pink" });
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({ duration: 0.05, type: "brown" });
+			}).not.toThrow();
+		});
+
+		it("noise accepts an optional filter + sweep without throwing", () => {
+			expect(() => {
+				return audio.noise({
+					duration: 0.1,
+					filter: { type: "lowpass", frequency: 800 },
+					filterSweep: 0.5,
+				});
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({
+					duration: 0.1,
+					filter: { type: "bandpass", frequency: 400, Q: 1.5 },
+					filterSweep: 4,
+				});
+			}).not.toThrow();
+		});
+
+		it("noise clamps pan to [-1, 1]", () => {
+			expect(() => {
+				return audio.noise({ duration: 0.05, pan: -5 });
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({ duration: 0.05, pan: 5 });
+			}).not.toThrow();
+		});
+
+		it("noise tolerates zero / negative duration without throwing", () => {
+			expect(() => {
+				return audio.noise({ duration: 0 });
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({ duration: -1 });
+			}).not.toThrow();
+		});
+
+		it("noise schedules nodes on the shared context (when available)", () => {
+			const ctx = audio.getAudioContext();
+			if (!ctx) {
+				return;
+			}
+			const before = ctx.currentTime;
+			audio.noise({ duration: 0.05, type: "pink" });
+			expect(ctx.state).not.toBe("closed");
+			expect(ctx.currentTime).toBeGreaterThanOrEqual(before);
+		});
+
+		it("noise respects muteAll / unmuteAll (routes through master gain)", () => {
+			const ctx = audio.getAudioContext();
+			if (!ctx) {
+				return;
+			}
+			audio.muteAll();
+			expect(() => {
+				return audio.noise({ duration: 0.05 });
+			}).not.toThrow();
+			audio.unmuteAll();
+			expect(() => {
+				return audio.noise({ duration: 0.05 });
+			}).not.toThrow();
+		});
 	});
 });

@@ -99,6 +99,70 @@ export interface PannerAttributes {
 }
 
 /**
+ * Optional band-shaping filter applied to the procedural noise burst
+ * produced by `noise`. Mirrors a subset of the WebAudio `BiquadFilterNode`
+ * configuration so users can sculpt the spectral colour without dropping
+ * to a custom WebAudio graph.
+ * @category Audio
+ */
+export interface NoiseFilter {
+	/**
+	 * Filter shape — `"lowpass"`, `"highpass"`, `"bandpass"`,
+	 * `"lowshelf"`, `"highshelf"`, `"peaking"`, `"notch"`, or
+	 * `"allpass"`. See the WebAudio `BiquadFilterNode` docs.
+	 */
+	type: BiquadFilterType;
+	/** Centre / cutoff frequency in Hz. */
+	frequency: number;
+	/** Filter resonance / quality factor. Defaults to the WebAudio default (`1`). */
+	Q?: number;
+}
+
+/**
+ * Options for `noise`.
+ * @category Audio
+ */
+export interface NoiseOptions {
+	/** Total burst length in seconds (envelope decays over this window). */
+	duration: number;
+	/**
+	 * Spectral colour of the noise source:
+	 *   - `"white"` — flat, all frequencies equal (default).
+	 *   - `"pink"` — −3 dB / octave roll-off, perceptually balanced —
+	 *     classic for breath, wind, and acoustic-sounding ambient texture.
+	 *   - `"brown"` (red) — −6 dB / octave roll-off, low and rumbly —
+	 *     classic for distant thunder, ocean, low-fi rumble.
+	 */
+	type?: "white" | "pink" | "brown";
+	/** Peak gain at attack end, `0..1`. Defaults to `0.1`. */
+	gain?: number;
+	/**
+	 * Attack time in seconds — linear ramp from 0 up to `gain`.
+	 * Capped at `duration / 2`. Defaults to `0.005`.
+	 */
+	attack?: number;
+	/**
+	 * Stereo pan, `-1` (full left) to `1` (full right). Defaults to `0`.
+	 */
+	pan?: number;
+	/**
+	 * Optional {@link NoiseFilter} applied to the noise source before
+	 * the master gain. Use this to colour the noise — a lowpass on
+	 * brown noise gives "explosion thump", a highpass on white gives
+	 * "hi-hat tick", a bandpass gives "swoosh".
+	 */
+	filter?: NoiseFilter;
+	/**
+	 * Frequency multiplier applied to {@link NoiseFilter.frequency}
+	 * over `duration` as an exponential ramp. `1` = no sweep (default);
+	 * `>1` = filter opens upward (rising swoosh, laser pew);
+	 * `<1` = filter closes downward (descending thunk, explosion settle).
+	 * Has no effect when `filter` is unset.
+	 */
+	filterSweep?: number;
+}
+
+/**
  * Options for `tone`.
  * @category Audio
  */

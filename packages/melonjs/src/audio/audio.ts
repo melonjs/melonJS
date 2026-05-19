@@ -4,13 +4,22 @@ import { clamp } from "./../math/math.ts";
 import { isDataUrl } from "./../utils/string.ts";
 import type {
 	LoadSettings,
+	NoiseFilter,
+	NoiseOptions,
 	PannerAttributes,
 	SoundAsset,
 	ToneOptions,
 } from "./types.ts";
 
 // re-export so `me.audio.<Type>` resolves alongside the runtime API
-export type { LoadSettings, PannerAttributes, SoundAsset, ToneOptions };
+export type {
+	LoadSettings,
+	NoiseFilter,
+	NoiseOptions,
+	PannerAttributes,
+	SoundAsset,
+	ToneOptions,
+};
 
 /**
  * audio channel list
@@ -796,4 +805,182 @@ export function tone(opts: ToneOptions): void {
 		panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
 		env.connect(panner).connect(out);
 	}
+}
+
+/**
+ * Fill a buffer in-place with single-channel noise samples of the
+ * requested spectral colour. Pink uses Paul Kellet's refined coefficients;
+ * brown is a leaky integrator over white. Output is roughly normalised
+ * to `[-1, 1]` for both coloured variants.
+ * @ignore
+ */
+function fillNoiseBuffer(
+	data: Float32Array,
+	type: "white" | "pink" | "brown",
+): void {
+	const n = data.length;
+	if (type === "white") {
+		for (let i = 0; i < n; i++) {
+			data[i] = Math.random() * 2 - 1;
+		}
+		return;
+	}
+	if (type === "pink") {
+		let b0 = 0;
+		let b1 = 0;
+		let b2 = 0;
+		let b3 = 0;
+		let b4 = 0;
+		let b5 = 0;
+		let b6 = 0;
+		for (let i = 0; i < n; i++) {
+			const w = Math.random() * 2 - 1;
+			b0 = 0.99886 * b0 + w * 0.0555179;
+			b1 = 0.99332 * b1 + w * 0.0750759;
+			b2 = 0.969 * b2 + w * 0.153852;
+			b3 = 0.8665 * b3 + w * 0.3104856;
+			b4 = 0.55 * b4 + w * 0.5329522;
+			b5 = -0.7616 * b5 - w * 0.016898;
+			data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+			b6 = w * 0.115926;
+		}
+		return;
+	}
+	// brown: leaky integrator over white, rescaled into audible range.
+	let last = 0;
+	for (let i = 0; i < n; i++) {
+		const w = Math.random() * 2 - 1;
+		last = (last + 0.02 * w) / 1.02;
+		data[i] = last * 3.5;
+	}
+}
+
+/**
+ * Fire a single-shot envelope-shaped noise burst on the shared
+ * {@link getAudioContext} context. Sits alongside {@link tone} as the
+ * non-pitched half of the procedural-audio surface — `tone` is the right
+ * tool for anything with a clear pitch (clicks, chimes, lasers), `noise`
+ * is the right tool for anything percussive without one (explosions,
+ * hi-hats, swooshes, footsteps, wind).
+ *
+ * The output runs through the master gain shared with file-based
+ * playback, so {@link muteAll} / {@link setVolume} apply uniformly.
+ * Browser autoplay gating applies — the first call after a user
+ * gesture lets every subsequent call play.
+ *
+ * **Requires WebAudio.** When WebAudio is not supported (or audio is
+ * explicitly disabled) this is a silent no-op: {@link getAudioContext}
+ * returns `null` and nothing is scheduled.
+ * @param opts - the {@link NoiseOptions} (duration, spectral colour,
+ *   envelope, pan, optional filter + sweep). See the interface for
+ *   per-field defaults.
+ * @example
+ * // Explosion: brown rumble closing into a thud
+ * me.audio.noise({
+ *     duration: 0.8,
+ *     type: "brown",
+ *     gain: 0.4,
+ *     filter: { type: "lowpass", frequency: 800 },
+ *     filterSweep: 0.3,
+ * });
+ * // Hi-hat: short, bright, top-end only
+ * me.audio.noise({
+ *     duration: 0.05,
+ *     filter: { type: "highpass", frequency: 7000 },
+ *     gain: 0.2,
+ * });
+ * // Swoosh: bandpass white with rising sweep — UI transition, melee whoosh
+ * me.audio.noise({
+ *     duration: 0.3,
+ *     filter: { type: "bandpass", frequency: 400, Q: 1.5 },
+ *     filterSweep: 4,
+ *     gain: 0.3,
+ * });
+ * // Wind / breath: long, low-pink, no sweep
+ * me.audio.noise({
+ *     duration: 2,
+ *     type: "pink",
+ *     filter: { type: "bandpass", frequency: 600 },
+ *     gain: 0.08,
+ * });
+ * // Footstep on dirt — short brown thump
+ * me.audio.noise({
+ *     duration: 0.08,
+ *     type: "brown",
+ *     filter: { type: "lowpass", frequency: 200 },
+ *     gain: 0.25,
+ * });
+ * @category Audio
+ */
+export function noise(opts: NoiseOptions): void {
+	const ctx = getAudioContext();
+	if (!ctx) return;
+
+	const {
+		duration,
+		type = "white",
+		gain = 0.1,
+		attack = 0.005,
+		pan = 0,
+		filter,
+		filterSweep = 1,
+	} = opts;
+
+	if (ctx.state === "suspended") {
+		ctx.resume().catch(() => {
+			/* ignore */
+		});
+	}
+
+	const dur = Math.max(0.001, duration);
+	const t0 = ctx.currentTime;
+	const t1 = t0 + dur;
+	const atk = Math.max(0.001, Math.min(attack, dur / 2));
+
+	// Source: a one-shot buffer of `dur * sampleRate` random samples.
+	const sampleCount = Math.max(1, Math.ceil(dur * ctx.sampleRate));
+	const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
+	fillNoiseBuffer(buffer.getChannelData(0), type);
+	const src = ctx.createBufferSource();
+	src.buffer = buffer;
+
+	// Gain envelope — same linear-attack / exponential-decay shape as `tone`.
+	const env = ctx.createGain();
+	env.gain.setValueAtTime(0, t0);
+	env.gain.linearRampToValueAtTime(gain, t0 + atk);
+	env.gain.exponentialRampToValueAtTime(0.0001, t1);
+
+	src.connect(env);
+
+	// Optional band-shaping filter (with optional sweep on its frequency).
+	let tail: AudioNode = env;
+	if (filter !== undefined) {
+		const biquad = ctx.createBiquadFilter();
+		biquad.type = filter.type;
+		biquad.frequency.setValueAtTime(filter.frequency, t0);
+		if (filter.Q !== undefined) {
+			biquad.Q.setValueAtTime(filter.Q, t0);
+		}
+		if (filterSweep !== 1) {
+			biquad.frequency.exponentialRampToValueAtTime(
+				Math.max(0.01, filter.frequency * filterSweep),
+				t1,
+			);
+		}
+		tail.connect(biquad);
+		tail = biquad;
+	}
+
+	// Route through master gain so mute/volume apply uniformly.
+	const out = Howler.masterGain;
+	if (pan === 0) {
+		tail.connect(out);
+	} else {
+		const panner = ctx.createStereoPanner();
+		panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
+		tail.connect(panner).connect(out);
+	}
+
+	src.start(t0);
+	src.stop(t1 + 0.02);
 }
