@@ -10,7 +10,7 @@
  */
 
 /** Starting credit pool. Each ball drop costs one; high-tier slots refund. */
-export const STARTING_CREDITS = 10;
+export const STARTING_CREDITS = 20;
 
 export const gameState = {
 	/** Cumulative score across all dropped balls. */
