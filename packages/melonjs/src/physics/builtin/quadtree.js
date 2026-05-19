@@ -339,19 +339,34 @@ export default class QuadTree {
 	}
 
 	/**
-	 * Return all objects that could collide with the given object
+	 * Return all objects that could collide with the given object.
+	 *
+	 * **Re-entrancy contract:** when called with no explicit `result`
+	 * argument, this method reuses a single root-level scratch array to
+	 * avoid per-frame allocations. The returned reference is therefore
+	 * **not safe to retain** past the next `retrieve()` call, AND it is
+	 * **not safe to issue another scratch-mode `retrieve()` while iterating
+	 * the previous result** — the second call clears the scratch and
+	 * refills it, corrupting the outer iteration. In-engine callers
+	 * (`pointerevent.ts`, `detector.js`) iterate synchronously and never
+	 * recurse into `retrieve()`, so they're fine. User-facing portable
+	 * APIs (`adapter.queryAABB`, `adapter.raycast`) pass their own array
+	 * via the `result` parameter, which bypasses the scratch entirely
+	 * and is safe to call from inside collision handlers.
+	 *
 	 * @param {object} item - object to be checked against
 	 * @param {object} [fn] - a sorting function for the returned array
+	 * @param {object[]} [result] - optional caller-supplied result array.
+	 *   Pass an explicit (typically empty) array to sidestep the shared
+	 *   scratch — required for re-entrancy safety.
 	 * @returns {object[]} array with all detected objects
 	 */
 	retrieve(item, fn, result) {
 		// Reuse the root's scratch array across calls. Pointer events
 		// fire on every mouse move and each one used to allocate a
 		// fresh `[]`; resetting the existing array's length to 0 is
-		// allocation-free. Callers must not retain the returned array
-		// across `retrieve` calls — the builtin caller in
-		// `pointerevent.ts` and `detector.js` both iterate
-		// synchronously then drop the reference, so this is safe.
+		// allocation-free. See the JSDoc above for the re-entrancy
+		// contract that this optimization implies.
 		const isRoot = typeof result === "undefined";
 		if (isRoot) {
 			result = this._retrieveScratch;

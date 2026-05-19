@@ -517,18 +517,23 @@ export default class BuiltinAdapter {
 	 */
 	queryAABB(rect) {
 		const queryBounds = rect.getBounds();
-		// `retrieve` returns the scratch list; copy out as we filter so the
-		// result remains stable if the caller does anything that retriggers
-		// a broadphase walk on the next tick.
-		const candidates = this.world.broadphase.retrieve(rect);
+		// Pass our own array to `retrieve` so we never touch the
+		// broadphase's shared scratch — user code may call this from
+		// inside an `onCollisionStart` handler firing mid-iteration of
+		// the SAT detector's scratch walk; sharing would clobber the
+		// outer iteration. Then filter in place so the call costs a
+		// single allocation, not two.
 		const result = [];
-		for (let i = 0, len = candidates.length; i < len; i++) {
-			const r = candidates[i];
+		this.world.broadphase.retrieve(rect, undefined, result);
+		let writeIdx = 0;
+		for (let i = 0, len = result.length; i < len; i++) {
+			const r = result[i];
 			const b = r.getBounds?.();
 			if (b && b.overlaps(queryBounds)) {
-				result.push(r);
+				result[writeIdx++] = r;
 			}
 		}
+		result.length = writeIdx;
 		return result;
 	}
 

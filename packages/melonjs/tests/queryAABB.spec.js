@@ -178,4 +178,28 @@ describe("BuiltinAdapter.queryAABB", () => {
 		expect(b).toHaveLength(1);
 		expect(a).not.toBe(b);
 	});
+
+	it("is re-entrancy safe — a nested queryAABB during iteration of an outer one doesn't corrupt the outer", () => {
+		// Three bodies in two distinct regions.
+		const aBox = makeRectBody(world, 100, 100, 30, 30);
+		const bBox = makeRectBody(world, 500, 500, 30, 30);
+		const cBox = makeRectBody(world, 510, 510, 30, 30);
+		rebuildBroadphase(world);
+
+		const outer = adapter.queryAABB(new Rect(80, 80, 70, 70));
+		expect(outer).toEqual([aBox]);
+
+		// While "iterating" the outer result, fire a nested query in a
+		// different region (mimics what would happen if a user called
+		// queryAABB from inside an onCollisionStart handler dispatched
+		// during the SAT detector's scratch walk).
+		for (const r of outer) {
+			const inner = adapter.queryAABB(new Rect(480, 480, 80, 80));
+			expect(inner).toContain(bBox);
+			expect(inner).toContain(cBox);
+			// Outer must still refer to its own result, untouched.
+			expect(outer).toEqual([aBox]);
+			expect(r).toBe(aBox);
+		}
+	});
 });

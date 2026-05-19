@@ -24,20 +24,6 @@ import { Vector2d } from "../../math/vector2d.ts";
  * touch first").
  */
 
-// Stand-in `a` object passed to broadphase.retrieve / overlap checks.
-// SAT routines need `a.pos + a.ancestor._absPos + shapeA.pos` to equal
-// the line's start; the Line itself carries the start in its own pos,
-// so keep this at the origin.
-const _dummyRayObj = {
-	pos: new Vector2d(0, 0),
-	ancestor: {
-		_absPos: new Vector2d(0, 0),
-		getAbsolutePosition() {
-			return this._absPos;
-		},
-	},
-};
-
 /**
  * 2D cross product of (a → b) and (a → c): positive if c is to the
  * left of a → b, negative if right, zero if colinear. Reused by the
@@ -218,10 +204,13 @@ export function raycastQuery(world, fromX, fromY, toX, toY) {
 		new Vector2d(dx, dy),
 	]);
 
-	_dummyRayObj.pos.set(0, 0);
-	_dummyRayObj.ancestor._absPos.set(0, 0);
-
-	const candidates = world.broadphase.retrieve(line);
+	// Pass our own result array to `retrieve` so we never touch the
+	// broadphase's shared scratch — user code may call `adapter.raycast`
+	// from inside an `onCollisionStart` handler that itself fires mid
+	// iteration of the SAT detector's scratch walk; sharing would clobber
+	// the outer iteration.
+	const candidates = [];
+	world.broadphase.retrieve(line, undefined, candidates);
 	const hits = [];
 
 	for (let i = candidates.length - 1; i >= 0; i--) {
