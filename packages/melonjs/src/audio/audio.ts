@@ -2,6 +2,10 @@
 import { Howl, Howler } from "howler";
 import { clamp } from "./../math/math.ts";
 import { isDataUrl } from "./../utils/string.ts";
+import type { ToneOptions } from "./types.ts";
+
+// re-export so `me.audio.ToneOptions` resolves alongside the function
+export type { ToneOptions };
 
 /**
  * Sound asset descriptor used by the audio loader
@@ -123,6 +127,43 @@ export function init(format: string = "mp3"): boolean {
 	audioExts = format.split(",");
 
 	return !Howler.noAudio;
+}
+
+/**
+ * Returns the underlying {@link AudioContext} used by the audio module
+ * (the same one shared with file-based playback), or `null` if audio
+ * is disabled or no compatible WebAudio implementation is available.
+ *
+ * Use this when you need to build a custom WebAudio graph — procedural
+ * SFX, custom filters / spatial nodes, audio analysis — without
+ * spawning a second context. Browsers throttle or refuse multiple
+ * `AudioContext` instances on the same page and each has its own
+ * suspend-until-gesture state, so sharing matters.
+ *
+ * The context is lazily created on first access; the call also returns
+ * the cached instance on every subsequent call.
+ * @example
+ * const ctx = me.audio.getAudioContext();
+ * if (ctx) {
+ *     const analyser = ctx.createAnalyser();
+ *     ctx.destination.connect(analyser); // (illustrative)
+ * }
+ * @category Audio
+ */
+export function getAudioContext(): AudioContext | null {
+	if (Howler.noAudio) return null;
+	// Howler only creates its `AudioContext` lazily — on the first Howl
+	// constructor, the first volume/mute call, etc. Procedural-only
+	// users (calling `tone` without ever loading a sound file) never
+	// hit any of those code paths, leaving `Howler.ctx` undefined.
+	// Nudging `Howler.volume()` triggers Howler's internal
+	// `setupAudioContext` without changing the master volume.
+	if (!Howler.ctx) {
+		Howler.volume(Howler.volume());
+	}
+	// `ctx` is declared non-nullable in @types/howler but can still be
+	// undefined when setup couldn't create one (very restricted envs).
+	return Howler.ctx ?? null;
 }
 
 /**
@@ -687,79 +728,6 @@ export function unloadAll(): void {
 }
 
 /**
- * Returns the underlying {@link AudioContext} used by the audio module
- * (the same one Howler uses for file-based playback), or `null` if
- * audio is disabled or no compatible WebAudio implementation is
- * available.
- *
- * Use this when you need to build a custom WebAudio graph — procedural
- * SFX, custom filters / spatial nodes, audio analysis — without
- * spawning a second context. Browsers throttle or refuse multiple
- * `AudioContext` instances on the same page and each has its own
- * suspend-until-gesture state, so sharing matters.
- *
- * The context is lazily created on first access; the call also returns
- * the cached instance on every subsequent call.
- * @example
- * const ctx = me.audio.getAudioContext();
- * if (ctx) {
- *     const analyser = ctx.createAnalyser();
- *     ctx.destination.connect(analyser); // (illustrative)
- * }
- * @category Audio
- */
-export function getAudioContext(): AudioContext | null {
-	if (Howler.noAudio) return null;
-	// Howler only creates its `AudioContext` lazily — on the first Howl
-	// constructor, the first volume/mute call, etc. Procedural-only
-	// users (calling `tone` without ever loading a sound file) never
-	// hit any of those code paths, leaving `Howler.ctx` undefined.
-	// Nudging `Howler.volume()` triggers Howler's internal
-	// `setupAudioContext` without changing the master volume.
-	if (!Howler.ctx) {
-		Howler.volume(Howler.volume());
-	}
-	// `ctx` is declared non-nullable in @types/howler but can still be
-	// undefined when setup couldn't create one (very restricted envs).
-	return Howler.ctx ?? null;
-}
-
-/**
- * Options for {@link tone}.
- * @category Audio
- */
-export interface ToneOptions {
-	/**
-	 * Carrier frequency in Hz. Pass an array to layer multiple
-	 * partials (chord, bell ring, fundamental + harmonic) — they
-	 * share the gain envelope, pan, and pitch slide.
-	 */
-	freq: number | number[];
-	/** Total sound length in seconds (envelope decays over this window). */
-	duration: number;
-	/** Oscillator waveform. Defaults to `"sine"`. */
-	wave?: OscillatorType;
-	/** Peak gain at attack end, `0..1`. Defaults to `0.1`. */
-	gain?: number;
-	/**
-	 * Attack time in seconds — linear ramp from 0 up to `gain`.
-	 * Capped at `duration / 2`. Defaults to `0.005`.
-	 */
-	attack?: number;
-	/**
-	 * Stereo pan, `-1` (full left) to `1` (full right). Defaults to `0`.
-	 */
-	pan?: number;
-	/**
-	 * Frequency multiplier applied over `duration` as an exponential
-	 * ramp. `1` = no slide (default); `0.5` = slide an octave down;
-	 * `2` = slide an octave up. Useful for percussive impacts (small
-	 * value < 1) or rising stings (value > 1).
-	 */
-	pitchSlide?: number;
-}
-
-/**
  * Fire a single-shot envelope-shaped oscillator on the shared
  * {@link getAudioContext} context. Designed for the "just play a beep"
  * niche where loading an audio file is overkill — UI clicks, hit
@@ -768,11 +736,16 @@ export interface ToneOptions {
  *
  * Multi-partial `freq` makes chimes, bells, and simple chords a single
  * call; `pitchSlide` covers percussive pitch-drops and rising stings.
- * The context shares state with Howler's file-based playback, so the
- * usual browser autoplay gating applies: the first call after a user
- * gesture lets every subsequent call play.
+ * The context is shared with file-based playback, so the usual browser
+ * autoplay gating applies: the first call after a user gesture lets
+ * every subsequent call play.
  *
- * No-op if audio is disabled (`getAudioContext()` returns `null`).
+ * **Requires WebAudio.** When WebAudio is not supported (or audio is
+ * explicitly disabled) this is a silent no-op: {@link getAudioContext}
+ * returns `null` and nothing is scheduled. Use the return value of
+ * {@link getAudioContext} to detect that case up front if your game
+ * wants to show a "no audio" badge or fall back to a different
+ * feedback channel.
  * @param opts - tone descriptor (frequency, duration, envelope, pan, slide)
  * @example
  * // simple UI click
