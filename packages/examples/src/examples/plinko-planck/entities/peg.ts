@@ -29,6 +29,7 @@ import {
 	ShaderEffect,
 	timer,
 } from "melonjs";
+import { playClack } from "../audio";
 import {
 	BALL_RESTITUTION,
 	COLOR_PEG,
@@ -356,6 +357,7 @@ export class Peg extends Container {
 	 */
 	flash(): void {
 		this.flashAtRef.value = timer.getTime();
+		playClack();
 	}
 }
 

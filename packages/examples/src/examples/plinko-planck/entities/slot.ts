@@ -22,6 +22,7 @@ import {
 	Text,
 	timer,
 } from "melonjs";
+import { playChime } from "../audio";
 import {
 	COLOR_HORIZON_HI,
 	PLAY_LEFT,
@@ -172,6 +173,7 @@ export class Slot extends Container {
 	 */
 	collect(): void {
 		this.pulseAtRef.value = timer.getTime();
+		playChime(this.score);
 
 		// Walk up to find the world container — both effects attach
 		// there so they aren't transformed by this slot's frame and
