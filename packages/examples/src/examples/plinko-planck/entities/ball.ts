@@ -199,7 +199,13 @@ export class Ball extends Container {
 				new Ellipse(BALL_RADIUS, BALL_RADIUS, BALL_RADIUS * 2, BALL_RADIUS * 2),
 			],
 			collisionType: collision.types.PLAYER_OBJECT,
-			collisionMask: collision.types.WORLD_SHAPE,
+			// `ALL_OBJECT` covers WORLD_SHAPE (pegs / walls / slots) plus
+			// PLAYER_OBJECT, so balls also bump into each other —
+			// click-clack pile-ups + cross-deflections that wouldn't
+			// happen if balls were just independent samples through the
+			// peg field. The reaper + stuck-frame detection below stop
+			// slot-funnel stack-ups from accumulating.
+			collisionMask: collision.types.ALL_OBJECT,
 			density: BALL_DENSITY,
 			friction: BALL_FRICTION,
 			restitution: BALL_RESTITUTION,
