@@ -685,3 +685,154 @@ export function unloadAll(): void {
 		}
 	}
 }
+
+/**
+ * Returns the underlying {@link AudioContext} used by the audio module
+ * (the same one Howler uses for file-based playback), or `null` if
+ * audio is disabled or no compatible WebAudio implementation is
+ * available.
+ *
+ * Use this when you need to build a custom WebAudio graph — procedural
+ * SFX, custom filters / spatial nodes, audio analysis — without
+ * spawning a second context. Browsers throttle or refuse multiple
+ * `AudioContext` instances on the same page and each has its own
+ * suspend-until-gesture state, so sharing matters.
+ *
+ * The context is lazily created on first access; the call also returns
+ * the cached instance on every subsequent call.
+ * @example
+ * const ctx = me.audio.getAudioContext();
+ * if (ctx) {
+ *     const analyser = ctx.createAnalyser();
+ *     ctx.destination.connect(analyser); // (illustrative)
+ * }
+ * @category Audio
+ */
+export function getAudioContext(): AudioContext | null {
+	if (Howler.noAudio) return null;
+	// Howler's `ctx` is declared non-nullable in @types/howler but can
+	// be undefined when `noAudio` is true (some test environments).
+	return Howler.ctx ?? null;
+}
+
+/**
+ * Options for {@link tone}.
+ * @category Audio
+ */
+export interface ToneOptions {
+	/**
+	 * Carrier frequency in Hz. Pass an array to layer multiple
+	 * partials (chord, bell ring, fundamental + harmonic) — they
+	 * share the gain envelope, pan, and pitch slide.
+	 */
+	freq: number | number[];
+	/** Total sound length in seconds (envelope decays over this window). */
+	duration: number;
+	/** Oscillator waveform. Defaults to `"sine"`. */
+	wave?: OscillatorType;
+	/** Peak gain at attack end, `0..1`. Defaults to `0.1`. */
+	gain?: number;
+	/**
+	 * Attack time in seconds — linear ramp from 0 up to `gain`.
+	 * Capped at `duration / 2`. Defaults to `0.005`.
+	 */
+	attack?: number;
+	/**
+	 * Stereo pan, `-1` (full left) to `1` (full right). Defaults to `0`.
+	 */
+	pan?: number;
+	/**
+	 * Frequency multiplier applied over `duration` as an exponential
+	 * ramp. `1` = no slide (default); `0.5` = slide an octave down;
+	 * `2` = slide an octave up. Useful for percussive impacts (small
+	 * value < 1) or rising stings (value > 1).
+	 */
+	pitchSlide?: number;
+}
+
+/**
+ * Fire a single-shot envelope-shaped oscillator on the shared
+ * {@link getAudioContext} context. Designed for the "just play a beep"
+ * niche where loading an audio file is overkill — UI clicks, hit
+ * confirms, retro arcade-style cues, placeholder feedback during
+ * prototyping.
+ *
+ * Multi-partial `freq` makes chimes, bells, and simple chords a single
+ * call; `pitchSlide` covers percussive pitch-drops and rising stings.
+ * The context shares state with Howler's file-based playback, so the
+ * usual browser autoplay gating applies: the first call after a user
+ * gesture lets every subsequent call play.
+ *
+ * No-op if audio is disabled (`getAudioContext()` returns `null`).
+ * @param opts - tone descriptor (frequency, duration, envelope, pan, slide)
+ * @example
+ * // simple UI click
+ * me.audio.tone({ freq: 1200, duration: 0.08, pitchSlide: 0.5 });
+ * // chime, panned right, two partials a fifth apart
+ * me.audio.tone({ freq: [880, 1320], duration: 0.4, gain: 0.18, pan: 0.5 });
+ * // descending "thud" — square wave with a wide pitch drop
+ * me.audio.tone({ freq: 200, duration: 0.15, wave: "square", pitchSlide: 0.25 });
+ * @category Audio
+ */
+export function tone(opts: ToneOptions): void {
+	const ctx = getAudioContext();
+	if (!ctx) return;
+
+	const {
+		freq,
+		duration,
+		wave = "sine",
+		gain = 0.1,
+		attack = 0.005,
+		pan = 0,
+		pitchSlide = 1,
+	} = opts;
+
+	// Browsers suspend the context until a user gesture; calling
+	// `resume()` from inside a gesture-driven handler is a no-op once
+	// the context is running. Best-effort — ignore the promise.
+	if (ctx.state === "suspended") {
+		ctx.resume().catch(() => {
+			/* ignore */
+		});
+	}
+
+	const dur = Math.max(0.001, duration);
+	const t0 = ctx.currentTime;
+	const t1 = t0 + dur;
+	const atk = Math.max(0.001, Math.min(attack, dur / 2));
+
+	// Gain envelope shared by every partial: linear attack → exp decay.
+	// `exponentialRampToValueAtTime` won't ramp to 0, so we use a near-
+	// zero floor that's inaudible.
+	const env = ctx.createGain();
+	env.gain.setValueAtTime(0, t0);
+	env.gain.linearRampToValueAtTime(gain, t0 + atk);
+	env.gain.exponentialRampToValueAtTime(0.0001, t1);
+
+	const freqs = Array.isArray(freq) ? freq : [freq];
+	for (const f of freqs) {
+		const osc = ctx.createOscillator();
+		osc.type = wave;
+		osc.frequency.setValueAtTime(f, t0);
+		if (pitchSlide !== 1) {
+			osc.frequency.exponentialRampToValueAtTime(
+				Math.max(0.01, f * pitchSlide),
+				t1,
+			);
+		}
+		osc.connect(env);
+		osc.start(t0);
+		// Small tail so the exponential ramp has room to settle before
+		// the node is torn down.
+		osc.stop(t1 + 0.02);
+	}
+
+	if (pan === 0) {
+		env.connect(ctx.destination);
+	} else {
+		const panner = ctx.createStereoPanner();
+		panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
+		env.connect(panner).connect(ctx.destination);
+	}
+}

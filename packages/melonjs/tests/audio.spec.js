@@ -51,4 +51,86 @@ describe("audio", () => {
 		audio.setVolume(-1.0);
 		expect(audio.getVolume()).toBeGreaterThanOrEqual(0.0);
 	});
+
+	describe("procedural audio", () => {
+		it("exports getAudioContext + tone", () => {
+			expect(typeof audio.getAudioContext).toBe("function");
+			expect(typeof audio.tone).toBe("function");
+		});
+
+		it("getAudioContext returns the shared WebAudio context (or null)", () => {
+			const ctx = audio.getAudioContext();
+			// Browser/Playwright env: should be an AudioContext instance.
+			// Headless env without audio: null.
+			if (ctx !== null) {
+				expect(ctx).toBeInstanceOf(AudioContext);
+				// Same instance on every call (Howler caches its own).
+				expect(audio.getAudioContext()).toBe(ctx);
+			}
+		});
+
+		it("tone is a no-op when audio is unavailable (no throw)", () => {
+			// Even with a real context, this should never throw.
+			expect(() => {
+				return audio.tone({ freq: 440, duration: 0.05 });
+			}).not.toThrow();
+		});
+
+		it("tone accepts a number or array of partials", () => {
+			expect(() => {
+				return audio.tone({ freq: 880, duration: 0.05 });
+			}).not.toThrow();
+			expect(() => {
+				return audio.tone({ freq: [440, 660, 880], duration: 0.05 });
+			}).not.toThrow();
+		});
+
+		it("tone accepts every documented option without throwing", () => {
+			expect(() => {
+				return audio.tone({
+					freq: 1200,
+					duration: 0.08,
+					wave: "square",
+					gain: 0.05,
+					attack: 0.01,
+					pan: -0.5,
+					pitchSlide: 0.5,
+				});
+			}).not.toThrow();
+		});
+
+		it("tone clamps pan to [-1, 1]", () => {
+			// Out-of-range pan should be clamped internally, no throw.
+			expect(() => {
+				return audio.tone({ freq: 440, duration: 0.05, pan: -5 });
+			}).not.toThrow();
+			expect(() => {
+				return audio.tone({ freq: 440, duration: 0.05, pan: 5 });
+			}).not.toThrow();
+		});
+
+		it("tone tolerates zero / negative duration without throwing", () => {
+			// Internal min-duration floor avoids ramping to identical
+			// timestamps that WebAudio rejects with InvalidStateError.
+			expect(() => {
+				return audio.tone({ freq: 440, duration: 0 });
+			}).not.toThrow();
+			expect(() => {
+				return audio.tone({ freq: 440, duration: -1 });
+			}).not.toThrow();
+		});
+
+		it("tone schedules nodes on the shared context (when available)", () => {
+			const ctx = audio.getAudioContext();
+			if (!ctx) {
+				return;
+			} // headless env — skip the WebAudio assertions
+			const before = ctx.currentTime;
+			audio.tone({ freq: 880, duration: 0.05 });
+			// Time should keep advancing — sanity check we didn't blow
+			// up the context.
+			expect(ctx.state).not.toBe("closed");
+			expect(ctx.currentTime).toBeGreaterThanOrEqual(before);
+		});
+	});
 });
