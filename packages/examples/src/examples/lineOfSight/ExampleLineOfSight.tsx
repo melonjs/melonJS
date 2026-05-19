@@ -260,7 +260,12 @@ class VisionCone extends Renderable {
 	private readonly adapter: PhysicsAdapter;
 	private readonly conePolygon: Polygon;
 	private readonly polyPoints: Vector2d[];
+	// Two member sets swapped each frame so we never allocate a new
+	// `Set<Obstacle>` per update — `litObstacles` holds the previous
+	// frame's lit set, `nextLit` is filled fresh this frame, then we
+	// swap references at the end.
 	private litObstacles = new Set<Obstacle>();
+	private nextLit = new Set<Obstacle>();
 	// Scratch vectors reused across the per-ray loop to avoid 2 × rayCount
 	// Vector2d allocations per frame.
 	private readonly rayFrom = new Vector2d(0, 0);
@@ -305,7 +310,7 @@ class VisionCone extends Renderable {
 		// Polygon vertex 0 anchors the cone at the sentry's visual centre.
 		this.polyPoints[0].set(originX, originY);
 
-		const nextLit = new Set<Obstacle>();
+		this.nextLit.clear();
 
 		for (let i = 0; i < CONE_RAY_COUNT; i++) {
 			const t = i / (CONE_RAY_COUNT - 1);
@@ -321,22 +326,26 @@ class VisionCone extends Renderable {
 			this.polyPoints[i + 1].set(endX, endY);
 
 			if (hit) {
-				nextLit.add(hit.renderable as Obstacle);
+				this.nextLit.add(hit.renderable as Obstacle);
 			}
 		}
 
 		// Diff lit set: un-light those that left the cone, light the new ones.
 		for (const obstacle of this.litObstacles) {
-			if (!nextLit.has(obstacle)) {
+			if (!this.nextLit.has(obstacle)) {
 				obstacle.setLit(false);
 			}
 		}
-		for (const obstacle of nextLit) {
+		for (const obstacle of this.nextLit) {
 			if (!this.litObstacles.has(obstacle)) {
 				obstacle.setLit(true);
 			}
 		}
-		this.litObstacles = nextLit;
+		// Swap references so next frame's `nextLit.clear()` clears the
+		// just-consumed previous-frame set.
+		const tmp = this.litObstacles;
+		this.litObstacles = this.nextLit;
+		this.nextLit = tmp;
 
 		// Refresh polygon edges / bounds from the mutated points array.
 		this.conePolygon.setVertices(this.polyPoints as Polyline);

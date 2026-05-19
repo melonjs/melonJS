@@ -233,16 +233,11 @@ export class BakedStatics extends Renderable {
 			const x = PLAY_LEFT + i * slotWidth - WALL_T / 2;
 			drawWall(x, SLOT_WALL_TOP, WALL_T, dividerH);
 		}
-		// Floor strip.
-		drawWall(
-			PLAY_LEFT,
-			VIEWPORT_H - WALL_T,
-			PLAY_RIGHT - PLAY_LEFT,
-			WALL_T,
-			// Note: COLOR_WALL_HOT not used here — wall draw uses single
-			// magenta tone for all walls (the white highlight is the
-			// hot center stripe).
-		);
+		// Floor strip. `drawWall` uses a single magenta tone for every
+		// wall — COLOR_WALL_HOT (kept imported for theme parity with
+		// peg.ts) is the white highlight applied via the hot centre
+		// stripe, not a second wall colour.
+		drawWall(PLAY_LEFT, VIEWPORT_H - WALL_T, PLAY_RIGHT - PLAY_LEFT, WALL_T);
 		// Unused-symbol guard so the import doesn't drop on lint.
 		void COLOR_WALL_HOT;
 	}
@@ -282,6 +277,14 @@ export class BakedStatics extends Renderable {
 			for (let col = 0; col < colsThisRow; col++) {
 				const x = baseX + xOffset + col * PEG_X_SPACING;
 				drawPeg(x, y);
+			}
+			// Mirror the edge-gutter pegs added in `peg.ts:buildPegField`
+			// so the baked visual matches the collision geometry. Without
+			// these the bodies still deflect balls but the player sees an
+			// empty rim and assumes the bounce is a bug.
+			if (isOdd) {
+				drawPeg(baseX, y);
+				drawPeg(baseX + fieldW, y);
 			}
 		}
 		void COLOR_PEG_HOT; // unused-symbol guard (hot is the white highlight inline)
