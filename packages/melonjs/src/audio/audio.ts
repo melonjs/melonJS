@@ -158,8 +158,11 @@ export function getAudioContext(): AudioContext | null {
  */
 export function getMasterGain(): GainNode | null {
 	// Chains through `getAudioContext` so the same lazy-init nudge
-	// covers both — `Howler.masterGain` is created alongside `ctx` and
-	// is undefined until that setup runs.
+	// covers both — when audio runs on HTML5 Audio instead of WebAudio,
+	// `Howler.ctx` is null and we short-circuit here. The remaining
+	// `?? null` defends against the narrow iOS-8-webview edge case where
+	// ctx is created but `masterGain` isn't (Howler flips
+	// `usingWebAudio` to false between the two steps).
 	if (!getAudioContext()) return null;
 	return Howler.masterGain ?? null;
 }
