@@ -107,14 +107,19 @@ export function getAudioContext(): AudioContext | null {
 	// Howler only creates its `AudioContext` lazily — on the first Howl
 	// constructor, the first volume/mute call, etc. Procedural-only
 	// users (calling `tone` without ever loading a sound file) never
-	// hit any of those code paths, leaving `Howler.ctx` undefined.
-	// Nudging `Howler.volume()` triggers Howler's internal
-	// `setupAudioContext` without changing the master volume.
-	if (!Howler.ctx) {
+	// hit any of those code paths, leaving `Howler.ctx` null. Nudging
+	// `Howler.volume()` triggers Howler's internal `setupAudioContext`
+	// without changing the master volume.
+	//
+	// Gate the nudge on `usingWebAudio` so we don't fire it on every
+	// call in HTML5-only mode — `Howler.ctx` is permanently null there
+	// and the nudge can't help (the runtime check would just re-decide
+	// "no WebAudio" and return immediately).
+	if (Howler.usingWebAudio && !Howler.ctx) {
 		Howler.volume(Howler.volume());
 	}
 	// `ctx` is declared non-nullable in @types/howler but can still be
-	// undefined when setup couldn't create one (very restricted envs).
+	// null when WebAudio is unavailable (HTML5-only mode).
 	return Howler.ctx ?? null;
 }
 

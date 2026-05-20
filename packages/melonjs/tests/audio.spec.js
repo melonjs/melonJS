@@ -415,6 +415,14 @@ describe("audio", () => {
 			expect(o).toEqual([0, 1, 0]);
 			audio.unload("ori-roundtrip");
 		});
+
+		it("stereo round-trips: set then read returns the set value", async () => {
+			await loadClip("stereo-roundtrip");
+			audio.stereo("stereo-roundtrip", 0.5);
+			const p = audio.stereo("stereo-roundtrip");
+			expect(p).toBe(0.5);
+			audio.unload("stereo-roundtrip");
+		});
 	});
 
 	describe("mute / format / availability wrappers", () => {

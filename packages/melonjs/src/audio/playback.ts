@@ -177,21 +177,37 @@ export function rate(sound_name: string, ...args: number[]): number {
 	return getSoundOrThrow(sound_name).rate(...args);
 }
 
+/** @inheritDoc */
+export function stereo(sound_name: string): number;
+/** @inheritDoc */
+export function stereo(sound_name: string, pan: number, id?: number): void;
 /**
  * Get or set the stereo panning for a sound.
+ *
+ * Call with just `sound_name` to read back the group's current pan;
+ * call with a `pan` value (and optionally `id`) to write it.
  * @param sound_name - Audio clip name (case-sensitive).
  * @param pan - Pan value, `-1.0` (full left) to `1.0` (full right).
  *   Omit to read the current value.
  * @param id - Sound instance ID. When omitted, all sounds in the group
  *   are affected.
- * @returns The current pan value.
+ * @returns The current pan value when called as a getter; nothing when
+ *   called as a setter.
  * @example
- * me.audio.stereo("cling", -1);
+ * me.audio.stereo("cling", -1);   // set
+ * me.audio.stereo("cling");        // read
  * @category Audio
  */
-export function stereo(sound_name: string, pan?: number, id?: number): number {
+export function stereo(
+	sound_name: string,
+	pan?: number,
+	id?: number,
+): number | void {
 	const sound = getSoundOrThrow(sound_name);
-	return (pan !== undefined ? sound.stereo(pan, id) : sound.stereo()) as number;
+	if (pan === undefined) {
+		return sound.stereo();
+	}
+	sound.stereo(pan, id);
 }
 
 /** @inheritDoc */
