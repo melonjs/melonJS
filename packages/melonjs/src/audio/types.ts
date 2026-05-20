@@ -146,9 +146,9 @@ export interface NoiseOptions {
 	gain?: number;
 	/**
 	 * Attack time in seconds — linear ramp from 0 up to `gain`. Clamped
-	 * to `[0.001, duration / 2]` so even `attack: 0` still rises over a
-	 * single millisecond (WebAudio rejects zero-length ramps to identical
-	 * timestamps). Defaults to `0.005`.
+	 * to `[0.001, duration / 2]`. For very short durations (< 2 ms) the
+	 * upper bound wins so the envelope still fits inside the playback
+	 * window. Defaults to `0.005`.
 	 */
 	attack?: number;
 	/**
@@ -191,9 +191,9 @@ export interface ToneOptions {
 	gain?: number;
 	/**
 	 * Attack time in seconds — linear ramp from 0 up to `gain`. Clamped
-	 * to `[0.001, duration / 2]` so even `attack: 0` still rises over a
-	 * single millisecond (WebAudio rejects zero-length ramps to identical
-	 * timestamps). Defaults to `0.005`.
+	 * to `[0.001, duration / 2]`. For very short durations (< 2 ms) the
+	 * upper bound wins so the envelope still fits inside the playback
+	 * window. Defaults to `0.005`.
 	 */
 	attack?: number;
 	/**

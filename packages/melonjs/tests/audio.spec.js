@@ -175,6 +175,14 @@ describe("audio", () => {
 			}).not.toThrow();
 		});
 
+		it("tone treats an empty freq array as a no-op (no leak)", () => {
+			// Empty partials list — nothing to play. Must early-return
+			// before building env/panner so no nodes stay connected.
+			expect(() => {
+				return audio.tone({ freq: [], duration: 0.05 });
+			}).not.toThrow();
+		});
+
 		it("tone accepts every documented option without throwing", () => {
 			expect(() => {
 				return audio.tone({

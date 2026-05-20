@@ -55,7 +55,10 @@ function _buildGainEnvelope(
 	duration: number,
 	gain: number,
 ): GainNode {
-	const atk = Math.max(0.001, Math.min(attack, duration / 2));
+	// Clamp attack to `[0.001, duration / 2]`. For very short durations
+	// (< 2 ms) the range is degenerate — the upper bound wins so the
+	// envelope still fits inside the playback window.
+	const atk = Math.min(duration / 2, Math.max(0.001, attack));
 	const env = ctx.createGain();
 	env.gain.setValueAtTime(0, t0);
 	env.gain.linearRampToValueAtTime(gain, t0 + atk);
@@ -138,6 +141,12 @@ export function tone(opts: ToneOptions): void {
 		pitchSlide = 1,
 	} = opts;
 
+	const freqs = Array.isArray(freq) ? freq : [freq];
+	// Empty partial list = nothing to play. Bail before building any
+	// nodes so we don't leave an env/panner connected forever (no
+	// oscillator would ever fire `onended` to clean them up).
+	if (freqs.length === 0) return;
+
 	_resumeIfSuspended(ctx);
 
 	const dur = Math.max(0.001, duration);
@@ -146,7 +155,6 @@ export function tone(opts: ToneOptions): void {
 	const env = _buildGainEnvelope(ctx, t0, t1, attack, dur, gain);
 	const panner = _connectToOutput(ctx, env, pan, t0);
 
-	const freqs = Array.isArray(freq) ? freq : [freq];
 	// Count oscillators down to zero so the LAST one to end is the one
 	// that disconnects the shared envelope + panner — otherwise we'd
 	// leave the graph half-wired.
