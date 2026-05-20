@@ -284,4 +284,35 @@ describe("audio", () => {
 			}).not.toThrow();
 		});
 	});
+
+	describe("position / orientation (3D spatial overloads)", () => {
+		it("exports position and orientation", () => {
+			expect(typeof audio.position).toBe("function");
+			expect(typeof audio.orientation).toBe("function");
+		});
+
+		it("position throws when the clip doesn't exist (setter shape)", () => {
+			expect(() => {
+				return audio.position("nope", 1, 2, 3);
+			}).toThrow();
+		});
+
+		it("position throws when the clip doesn't exist (getter shape)", () => {
+			expect(() => {
+				return audio.position("nope");
+			}).toThrow();
+		});
+
+		it("orientation throws when the clip doesn't exist (setter shape)", () => {
+			expect(() => {
+				return audio.orientation("nope", 1, 2, 3);
+			}).toThrow();
+		});
+
+		it("orientation throws when the clip doesn't exist (getter shape)", () => {
+			expect(() => {
+				return audio.orientation("nope");
+			}).toThrow();
+		});
+	});
 });
