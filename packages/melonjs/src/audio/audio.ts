@@ -25,7 +25,7 @@ export type {
  * audio channel list
  * @ignore
  */
-const audioTracks: Record<string, Howl> = {};
+const audioTracks: Record<string, Howl | undefined> = {};
 
 /**
  * current active track
@@ -63,7 +63,7 @@ const soundLoadError = function (
 			// call error callback if defined
 			onerror_cb?.();
 			// warning
-			console.log(`${errmsg}, disabling audio`);
+			console.warn(`${errmsg}, disabling audio`);
 		} else {
 			onerror_cb?.();
 			// throw an exception and stop everything !
@@ -71,7 +71,7 @@ const soundLoadError = function (
 		}
 		// else try loading again !
 	} else {
-		audioTracks[sound_name].load();
+		audioTracks[sound_name]?.load();
 	}
 };
 
@@ -267,7 +267,7 @@ export function play(
 	volume?: number,
 ): number {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		const id = sound.play();
 		if (typeof loop === "boolean") {
 			// arg[0] can take different types in howler 2.0
@@ -307,7 +307,7 @@ export function fade(
 	id?: number,
 ): void {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		sound.fade(from, to, duration, id);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -328,7 +328,7 @@ export function fade(
  */
 export function seek(sound_name: string, ...args: number[]): number {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		return sound.seek(...args);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -349,7 +349,7 @@ export function seek(sound_name: string, ...args: number[]): number {
  */
 export function rate(sound_name: string, ...args: number[]): number {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		return sound.rate(...args);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -368,7 +368,7 @@ export function rate(sound_name: string, ...args: number[]): number {
  */
 export function stereo(sound_name: string, pan?: number, id?: number): number {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		return (
 			pan !== undefined ? sound.stereo(pan, id) : sound.stereo()
 		) as number;
@@ -395,7 +395,7 @@ export function position(
 	id?: number,
 ): number[] {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		return sound.pos(x, y, z, id) as unknown as number[];
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -421,7 +421,7 @@ export function orientation(
 	id?: number,
 ): number[] {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		return sound.orientation(x, y, z, id) as unknown as number[];
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -475,7 +475,7 @@ export function panner(
 export function stop(sound_name?: string, id?: number): void {
 	if (typeof sound_name !== "undefined") {
 		const sound = audioTracks[sound_name];
-		if (sound && typeof sound !== "undefined") {
+		if (sound) {
 			sound.stop(id);
 			// remove the defined onend callback (if any defined)
 			sound.off("end", undefined, id);
@@ -498,7 +498,7 @@ export function stop(sound_name?: string, id?: number): void {
  */
 export function pause(sound_name: string, id?: number): void {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		sound.pause(id);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -522,7 +522,7 @@ export function pause(sound_name: string, id?: number): void {
  */
 export function resume(sound_name: string, id?: number): void {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		sound.play(id);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -557,7 +557,7 @@ export function playTrack(sound_name: string, volume?: number): number {
  */
 export function stopTrack(): void {
 	if (current_track_id !== null) {
-		audioTracks[current_track_id].stop();
+		audioTracks[current_track_id]?.stop();
 		current_track_id = null;
 	}
 }
@@ -570,7 +570,7 @@ export function stopTrack(): void {
  */
 export function pauseTrack(): void {
 	if (current_track_id !== null) {
-		audioTracks[current_track_id].pause();
+		audioTracks[current_track_id]?.pause();
 	}
 }
 
@@ -587,7 +587,7 @@ export function pauseTrack(): void {
  */
 export function resumeTrack(): void {
 	if (current_track_id !== null) {
-		audioTracks[current_track_id].play();
+		audioTracks[current_track_id]?.play();
 	}
 }
 
@@ -634,7 +634,7 @@ export function mute(
 	shouldMute: boolean = true,
 ): void {
 	const sound = audioTracks[sound_name];
-	if (sound && typeof sound !== "undefined") {
+	if (sound) {
 		sound.mute(shouldMute, id);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -673,7 +673,10 @@ export function unmuteAll(): void {
  * @category Audio
  */
 export function muted(): boolean {
-	return (Howler as any)._muted;
+	// Howler doesn't expose a public muted getter — peek at the private
+	// flag that `Howler.mute(true/false)` sets internally. Narrow cast
+	// (vs. `as any`) documents the single field we're reaching for.
+	return (Howler as unknown as { _muted: boolean })._muted;
 }
 
 /**
@@ -685,12 +688,13 @@ export function muted(): boolean {
  * @category Audio
  */
 export function unload(sound_name: string): boolean {
-	if (!(sound_name in audioTracks)) {
+	const sound = audioTracks[sound_name];
+	if (!sound) {
 		return false;
 	}
 
 	// destroy the Howl object
-	audioTracks[sound_name].unload();
+	sound.unload();
 	delete audioTracks[sound_name];
 	return true;
 }
