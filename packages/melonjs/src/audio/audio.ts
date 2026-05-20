@@ -290,7 +290,6 @@ export function play(
 	if (sound) {
 		const id = sound.play();
 		if (typeof loop === "boolean") {
-			// arg[0] can take different types in howler 2.0
 			sound.loop(loop, id);
 		}
 		sound.volume(
