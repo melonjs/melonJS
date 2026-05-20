@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { event, input, type Pointer, type Renderer } from "melonjs";
+import { panForX, playStrike } from "../audio";
 import {
 	BALL_RADIUS,
 	MAX_DRAG,
@@ -143,6 +144,10 @@ export class CueBall extends Ball {
 		dy /= dist;
 		const impulse = power * STRIKE_FORCE_SCALE;
 		this.body.applyImpulse(dx * impulse, dy * impulse);
+		// Cue strike — pitched-down "thwack" panned to the cue ball's
+		// current x. Power scales gain, so soft taps are quieter than
+		// full break shots.
+		playStrike(power, panForX(cueCenterX));
 	}
 
 	override draw(renderer: Renderer): void {
