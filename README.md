@@ -62,12 +62,17 @@ Graphics
 
 Sound
 - Web Audio support with 3D spatial audio and stereo panning based on [Howler](https://howlerjs.com)
+- Built-in procedural audio primitives (envelope-shaped oscillators, white/pink/brown noise) for SFX without sample assets
+- Direct `AudioContext` / master-gain accessors for custom WebAudio graphs that mix with the engine's master volume / mute
 
 Physics
 - Polygon (SAT) based collision algorithm for accurate detection and response
-- Fast Broad-phase collision detection using spatial partitioning (QuadTree)
+- Fast broad-phase collision detection using spatial partitioning (QuadTree)
+- Raycast and AABB region queries with precise entry geometry
+- Collision lifecycle hooks on every `Renderable`
 - Collision filtering for optimized automatic collision detection
 - Multiple shapes per body for complex hitboxes
+- Pluggable `PhysicsAdapter` interface for custom physics via official adapters
 
 Input
 - Mouse and Touch device support (with mouse emulation)
@@ -219,9 +224,18 @@ If you wish to develop your own plugin, we also provide a [plugin template](http
 
 Physics Adapters
 -------------------------------------------------------------------------------
-Since 19.5, melonJS exposes a `PhysicsAdapter` interface so the same game code can run on either the built-in SAT physics (default) or on a third-party rigid-body engine, selected via the `physic` option on `Application`. Official adapter packages maintained by the melonJS team:
-- [matter-adapter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter) - [matter-js](https://brm.io/matter-js/) integration with rotational dynamics, constraints, sleeping bodies, continuous collision detection, and raycasts
-- [planck-adapter](https://github.com/melonjs/melonJS/tree/master/packages/planck-adapter) - [planck.js](https://piqnt.com/planck.js/) integration (Box2D 2.3.0 port) with native joints, CCD bullet flag, sleeping bodies, raycasts, and per-body gravity scale
+Since 19.5, melonJS exposes a `PhysicsAdapter` interface so the same game code can run on either the built-in SAT physics (default) or a third-party rigid-body engine, selected via the `physic` option on `Application`. Two official adapter packages, maintained by the melonJS team:
+
+- **[@melonjs/matter-adapter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter)** — [matter-js](https://brm.io/matter-js/) integration. Rotational dynamics, constraints (springs / hinges / pins), sleeping bodies, continuous collision detection, raycasts. Showcased by the [Matter Platformer](https://melonjs.github.io/melonJS/examples/#/platformer-matter) and [Pool (Matter)](https://melonjs.github.io/melonJS/examples/#/pool-matter) examples.
+- **[@melonjs/planck-adapter](https://github.com/melonjs/melonJS/tree/master/packages/planck-adapter)** — [planck.js](https://piqnt.com/planck.js/) integration (faithful Box2D 2.3.0 port). Native joints, CCD bullet flag, sleeping bodies, native raycasts, per-body gravity scale. Showcased by the [Neon Plinko (Planck)](https://melonjs.github.io/melonJS/examples/#/plinko-planck) example.
+
+Portable across every adapter (game code stays engine-agnostic):
+
+- `app.world.adapter.raycast(from, to)` — nearest body hit with precise entry geometry (`renderable`, `point`, `normal`, `fraction`)
+- `app.world.adapter.queryAABB(rect)` — every renderable whose body overlaps a rectangle (AoE damage, picking, trigger sweeps)
+- Collision lifecycle hooks (`onCollisionStart` / `onCollisionActive` / `onCollisionEnd`) dispatched consistently with a receiver-symmetric response shape (`response.a === this`, `response.b === other`)
+
+See the [Migrating to the Physics Adapter API](https://github.com/melonjs/melonJS/wiki/Migrating-to-the-Physics-Adapter-API), [Switching Physics Adapters](https://github.com/melonjs/melonJS/wiki/Switching-Physics-Adapters), and [BuiltinAdapter Quirks](https://github.com/melonjs/melonJS/wiki/BuiltinAdapter-Quirks) wiki pages for migration guides and the per-adapter behaviour table.
 
 Installation
 -------------------------------------------------------------------------------
