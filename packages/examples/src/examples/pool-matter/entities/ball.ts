@@ -5,15 +5,18 @@
  */
 import type { MatterAdapter } from "@melonjs/matter-adapter";
 import {
+	type CollisionResponse,
 	type Container,
 	collision,
 	Ellipse,
 	type PhysicsAdapter,
+	type Renderable,
 	type Renderer,
 	Sprite,
 	Tween,
 	Vector2d,
 } from "melonjs";
+import { panForX, playBallClick, playRailBounce } from "../audio";
 import {
 	BALL_DENSITY,
 	BALL_FRICTION_AIR_ROLL,
@@ -175,6 +178,28 @@ export class Ball extends Sprite {
 
 		// always draw, even if the broadphase culls it briefly
 		this.alwaysUpdate = true;
+	}
+
+	/**
+	 * Procedural sound on collision: ball-ball gets the upper-mid click,
+	 * ball-rail (anything that's not a Ball and not a pocket sensor) gets
+	 * the lower thud. Gain scales with the receiver's velocity at the
+	 * moment of contact; pan tracks the ball's world x.
+	 */
+	override onCollisionStart(
+		_response: CollisionResponse,
+		other: Renderable,
+	): void {
+		if (this.sinking || !this.body) return;
+		const v = this.body.getVelocity(restVelScratch);
+		const speed = Math.sqrt(v.x * v.x + v.y * v.y);
+		const pan = panForX(this.pos.x + this.width / 2);
+		if (other instanceof Ball) {
+			playBallClick(speed, pan);
+		} else if (other.body?.isSensor !== true) {
+			// Not a Ball, not a sensor → rail / cushion.
+			playRailBounce(speed, pan);
+		}
 	}
 
 	/** Is the ball nearly motionless? Used to gate "can the player strike?" */

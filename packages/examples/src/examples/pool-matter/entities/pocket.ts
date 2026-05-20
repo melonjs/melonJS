@@ -15,6 +15,7 @@ import {
 	Tween,
 	Vector2d,
 } from "melonjs";
+import { panForX, playPocketDrop, playScratch } from "../audio";
 import { gameState } from "../gameState";
 import { Ball } from "./ball";
 import { CUE_SPAWN_X, CUE_SPAWN_Y, CueBall } from "./cue";
@@ -132,6 +133,9 @@ export class Pocket extends Renderable {
 		}
 
 		if (other instanceof CueBall) {
+			// Descending fail tone panned to the pocket where the cue
+			// went down (not the respawn position).
+			playScratch(panForX(this.pos.x + this.width / 2));
 			// respawn cue at head-spot, zero velocity. `setPosition` is an
 			// adapter call (no body-level equivalent); `setVelocity` is on
 			// the body and takes primitives, no scratch needed.
@@ -157,6 +161,8 @@ export class Pocket extends Renderable {
 		// top-left of the bounds rect with width = height = 2 * radius).
 		const centerX = this.pos.x + this.width / 2;
 		const centerY = this.pos.y + this.height / 2;
+		// Satisfying drop ring, panned to the pocket location.
+		playPocketDrop(panForX(centerX));
 		other.startSink(this.adapter, centerX, centerY);
 		// "+1" pop at the pocket — visible feedback for the score tick.
 		const parent = this.ancestor as Container | undefined;
