@@ -218,5 +218,57 @@ describe("audio", () => {
 				return audio.noise({ duration: 0.05 });
 			}).not.toThrow();
 		});
+
+		// Regression guards for the WebAudio exponential-ramp rule:
+		// `exponentialRampToValueAtTime` requires the value at the start
+		// of the ramp to be strictly positive. Each of these inputs would
+		// otherwise route through such a ramp with a non-positive value
+		// and throw InvalidStateError.
+
+		it("tone tolerates gain: 0 (envelope decays linearly when peak is silent)", () => {
+			expect(() => {
+				return audio.tone({ freq: 440, duration: 0.05, gain: 0 });
+			}).not.toThrow();
+		});
+
+		it("tone tolerates freq <= 0 with pitchSlide (skips the ramp)", () => {
+			expect(() => {
+				return audio.tone({
+					freq: 0,
+					duration: 0.05,
+					pitchSlide: 0.5,
+				});
+			}).not.toThrow();
+			expect(() => {
+				return audio.tone({
+					freq: -100,
+					duration: 0.05,
+					pitchSlide: 0.5,
+				});
+			}).not.toThrow();
+		});
+
+		it("noise tolerates gain: 0 (envelope decays linearly when peak is silent)", () => {
+			expect(() => {
+				return audio.noise({ duration: 0.05, gain: 0 });
+			}).not.toThrow();
+		});
+
+		it("noise tolerates filter.frequency <= 0 with filterSweep (skips the ramp)", () => {
+			expect(() => {
+				return audio.noise({
+					duration: 0.1,
+					filter: { type: "lowpass", frequency: 0 },
+					filterSweep: 2,
+				});
+			}).not.toThrow();
+			expect(() => {
+				return audio.noise({
+					duration: 0.1,
+					filter: { type: "lowpass", frequency: -50 },
+					filterSweep: 2,
+				});
+			}).not.toThrow();
+		});
 	});
 });

@@ -72,9 +72,11 @@ export interface PannerAttributes {
 	 */
 	coneOuterGain?: number | undefined;
 	/**
-	 * Distance-attenuation algorithm. Defaults to `"inverse"`.
+	 * Distance-attenuation algorithm — `"inverse"` (default), `"linear"`,
+	 * or `"exponential"`. Matches the WebAudio `PannerNode.distanceModel`
+	 * union.
 	 */
-	distanceModel?: "inverse" | "linear";
+	distanceModel?: DistanceModelType;
 	/**
 	 * Distance at which volume reduction stops (used by the `"linear"`
 	 * model; clamps the falloff curve for the other one). Defaults to

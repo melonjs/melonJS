@@ -128,10 +128,16 @@ export function init(format: string = "mp3"): boolean {
  * The context is lazily created on first access; the call also returns
  * the cached instance on every subsequent call.
  * @example
+ * // Build a custom graph on the shared context — e.g. a side-channel
+ * // beep that's not bound to the master gain routing.
  * const ctx = me.audio.getAudioContext();
  * if (ctx) {
- *     const analyser = ctx.createAnalyser();
- *     ctx.destination.connect(analyser); // (illustrative)
+ *     const osc = ctx.createOscillator();
+ *     const gain = ctx.createGain();
+ *     gain.gain.value = 0.05;
+ *     osc.connect(gain).connect(ctx.destination);
+ *     osc.start();
+ *     osc.stop(ctx.currentTime + 0.1);
  * }
  * @category Audio
  */
@@ -454,7 +460,7 @@ export function orientation(
  *     panningModel: "HRTF",
  *     refDistance: 0.8,
  *     rolloffFactor: 2.5,
- *     distanceModel: "inverse",
+ *     distanceModel: "exponential",
  * });
  * @category Audio
  */
@@ -469,9 +475,14 @@ export function panner(
 	}
 	if (attributes !== undefined) {
 		// "set" overload returns the Howl for chaining; we still want
-		// to hand the caller the current attribute snapshot back.
-		if (id !== undefined) sound.pannerAttr(attributes, id);
-		else sound.pannerAttr(attributes);
+		// to hand the caller the current attribute snapshot back. The
+		// cast widens our `distanceModel` (full WebAudio union including
+		// `"exponential"`) to Howler's narrower declared union — the
+		// runtime accepts all three values; only the `@types/howler`
+		// declaration is incomplete.
+		const attrs = attributes as Parameters<Howl["pannerAttr"]>[0];
+		if (id !== undefined) sound.pannerAttr(attrs, id);
+		else sound.pannerAttr(attrs);
 	}
 	return id !== undefined ? sound.pannerAttr(id) : sound.pannerAttr();
 }
@@ -787,20 +798,28 @@ export function tone(opts: ToneOptions): void {
 	const t1 = t0 + dur;
 	const atk = Math.max(0.001, Math.min(attack, dur / 2));
 
-	// Gain envelope shared by every partial: linear attack → exp decay.
-	// `exponentialRampToValueAtTime` won't ramp to 0, so we use a near-
-	// zero floor that's inaudible.
+	// Gain envelope shared by every partial: linear attack → decay.
+	// Decay uses exponential when peak gain > 0 (smoother taper); falls
+	// back to linear when gain is 0 because `exponentialRampToValueAtTime`
+	// requires its starting value to be strictly positive.
 	const env = ctx.createGain();
 	env.gain.setValueAtTime(0, t0);
 	env.gain.linearRampToValueAtTime(gain, t0 + atk);
-	env.gain.exponentialRampToValueAtTime(0.0001, t1);
+	if (gain > 0) {
+		env.gain.exponentialRampToValueAtTime(0.0001, t1);
+	} else {
+		env.gain.linearRampToValueAtTime(0, t1);
+	}
 
 	const freqs = Array.isArray(freq) ? freq : [freq];
 	for (const f of freqs) {
 		const osc = ctx.createOscillator();
 		osc.type = wave;
 		osc.frequency.setValueAtTime(f, t0);
-		if (pitchSlide !== 1) {
+		// Pitch slide also goes through `exponentialRampToValueAtTime`,
+		// which needs the starting frequency to be > 0. Skip the ramp
+		// when `f <= 0` (silent / DC) so it can't throw.
+		if (pitchSlide !== 1 && f > 0) {
 			osc.frequency.exponentialRampToValueAtTime(
 				Math.max(0.01, f * pitchSlide),
 				t1,
@@ -964,11 +983,17 @@ export function noise(opts: NoiseOptions): void {
 	const src = ctx.createBufferSource();
 	src.buffer = buffer;
 
-	// Gain envelope — same linear-attack / exponential-decay shape as `tone`.
+	// Gain envelope — same linear-attack / exponential-decay shape as
+	// `tone`, with the same guard against an exp ramp from 0 (which
+	// WebAudio rejects with InvalidStateError).
 	const env = ctx.createGain();
 	env.gain.setValueAtTime(0, t0);
 	env.gain.linearRampToValueAtTime(gain, t0 + atk);
-	env.gain.exponentialRampToValueAtTime(0.0001, t1);
+	if (gain > 0) {
+		env.gain.exponentialRampToValueAtTime(0.0001, t1);
+	} else {
+		env.gain.linearRampToValueAtTime(0, t1);
+	}
 
 	src.connect(env);
 
@@ -981,7 +1006,9 @@ export function noise(opts: NoiseOptions): void {
 		if (filter.Q !== undefined) {
 			biquad.Q.setValueAtTime(filter.Q, t0);
 		}
-		if (filterSweep !== 1) {
+		// Filter sweep also goes through `exponentialRampToValueAtTime`
+		// — only schedule the ramp when both start and target are > 0.
+		if (filterSweep !== 1 && filter.frequency > 0) {
 			biquad.frequency.exponentialRampToValueAtTime(
 				Math.max(0.01, filter.frequency * filterSweep),
 				t1,
