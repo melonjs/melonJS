@@ -45,6 +45,21 @@ export const state = {
 };
 
 /**
+ * Look up a loaded `Howl` instance by logical name, or throw a
+ * uniform "audio clip X does not exist" error if it isn't loaded.
+ * Used by every per-clip helper across `playback.ts` / `audio.ts` so
+ * the error contract stays identical across the whole surface.
+ * @ignore
+ */
+export function getSoundOrThrow(sound_name: string): Howl {
+	const sound = state.tracks[sound_name];
+	if (!sound) {
+		throw new Error(`audio clip ${sound_name} does not exist`);
+	}
+	return sound;
+}
+
+/**
  * Event listener callback on load error. Retries the load up to 3
  * times, then either throws or disables audio (depending on the
  * `stopOnAudioError` flag re-exported from `audio.ts`).

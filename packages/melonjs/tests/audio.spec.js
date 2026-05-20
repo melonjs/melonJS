@@ -1,6 +1,71 @@
 import { describe, expect, it } from "vitest";
 import { audio } from "../src/index.js";
 
+// Build a valid silent WAV in-memory and serve it as a data URL.
+// Used by every test that needs an actually-loaded clip to exercise
+// the per-clip playback / spatial / mix functions.
+const makeSilentWavDataUrl = (durationSec = 0.01) => {
+	const sampleRate = 8000;
+	const numSamples = Math.max(1, Math.floor(sampleRate * durationSec));
+	const dataSize = numSamples * 2; // 16-bit mono
+	const buf = new ArrayBuffer(44 + dataSize);
+	const view = new DataView(buf);
+	let p = 0;
+	const writeStr = (s) => {
+		for (let i = 0; i < s.length; i++) {
+			view.setUint8(p++, s.charCodeAt(i));
+		}
+	};
+	const writeU32 = (v) => {
+		view.setUint32(p, v, true);
+		p += 4;
+	};
+	const writeU16 = (v) => {
+		view.setUint16(p, v, true);
+		p += 2;
+	};
+	writeStr("RIFF");
+	writeU32(36 + dataSize);
+	writeStr("WAVE");
+	writeStr("fmt ");
+	writeU32(16); // PCM chunk size
+	writeU16(1); // format = PCM
+	writeU16(1); // mono
+	writeU32(sampleRate);
+	writeU32(sampleRate * 2); // byte rate
+	writeU16(2); // block align
+	writeU16(16); // bits per sample
+	writeStr("data");
+	writeU32(dataSize);
+	// samples already zero-initialised → silence
+	const bytes = new Uint8Array(buf);
+	let bin = "";
+	for (let i = 0; i < bytes.length; i++) {
+		bin += String.fromCharCode(bytes[i]);
+	}
+	return `data:audio/wav;base64,${btoa(bin)}`;
+};
+
+const loadClip = (name) => {
+	audio.init("wav");
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => {
+			reject(new Error(`timeout loading ${name}`));
+		}, 2000);
+		audio.load(
+			{ name, src: makeSilentWavDataUrl() },
+			() => {
+				clearTimeout(timeout);
+				resolve();
+			},
+			() => {
+				clearTimeout(timeout);
+				reject(new Error(`load failed for ${name}`));
+			},
+		);
+	});
+};
+
 describe("audio", () => {
 	it("should export init function", () => {
 		expect(typeof audio.init).toBe("function");
@@ -315,71 +380,6 @@ describe("audio", () => {
 			}).toThrow();
 		});
 
-		// Build a valid silent WAV in-memory and serve it as a data URL.
-		// Lets us actually load a clip into Howler within the test env
-		// and exercise the getter overloads end-to-end.
-		const makeSilentWavDataUrl = (durationSec = 0.01) => {
-			const sampleRate = 8000;
-			const numSamples = Math.max(1, Math.floor(sampleRate * durationSec));
-			const dataSize = numSamples * 2; // 16-bit mono
-			const buf = new ArrayBuffer(44 + dataSize);
-			const view = new DataView(buf);
-			let p = 0;
-			const writeStr = (s) => {
-				for (let i = 0; i < s.length; i++) {
-					view.setUint8(p++, s.charCodeAt(i));
-				}
-			};
-			const writeU32 = (v) => {
-				view.setUint32(p, v, true);
-				p += 4;
-			};
-			const writeU16 = (v) => {
-				view.setUint16(p, v, true);
-				p += 2;
-			};
-			writeStr("RIFF");
-			writeU32(36 + dataSize);
-			writeStr("WAVE");
-			writeStr("fmt ");
-			writeU32(16); // PCM chunk size
-			writeU16(1); // format = PCM
-			writeU16(1); // mono
-			writeU32(sampleRate);
-			writeU32(sampleRate * 2); // byte rate
-			writeU16(2); // block align
-			writeU16(16); // bits per sample
-			writeStr("data");
-			writeU32(dataSize);
-			// samples already zero-initialised → silence
-			const bytes = new Uint8Array(buf);
-			let bin = "";
-			for (let i = 0; i < bytes.length; i++) {
-				bin += String.fromCharCode(bytes[i]);
-			}
-			return `data:audio/wav;base64,${btoa(bin)}`;
-		};
-
-		const loadClip = (name) => {
-			audio.init("wav");
-			return new Promise((resolve, reject) => {
-				const timeout = setTimeout(() => {
-					reject(new Error(`timeout loading ${name}`));
-				}, 2000);
-				audio.load(
-					{ name, src: makeSilentWavDataUrl() },
-					() => {
-						clearTimeout(timeout);
-						resolve();
-					},
-					() => {
-						clearTimeout(timeout);
-						reject(new Error(`load failed for ${name}`));
-					},
-				);
-			});
-		};
-
 		it("position round-trips: set then read returns the set value", async () => {
 			await loadClip("pos-roundtrip");
 			audio.position("pos-roundtrip", 10, 20, 30);
@@ -459,6 +459,153 @@ describe("audio", () => {
 			// state should leave getCurrentTrack at null.
 			audio.stopTrack();
 			expect(audio.getCurrentTrack()).toBeNull();
+		});
+	});
+
+	describe("playback contract", () => {
+		// Negative-path: every per-clip function shares the same contract
+		// — call with an unknown clip name → throw. A parameterised table
+		// locks that invariant in across the whole surface so a future
+		// refactor (e.g. swapping `if (!sound) throw` for optional
+		// chaining) can't silently turn it into a no-op.
+		describe("throws on missing clip", () => {
+			const cases = [
+				[
+					"play",
+					() => {
+						return audio.play("nope");
+					},
+				],
+				[
+					"fade",
+					() => {
+						return audio.fade("nope", 0, 1, 100);
+					},
+				],
+				[
+					"seek",
+					() => {
+						return audio.seek("nope", 0);
+					},
+				],
+				[
+					"rate",
+					() => {
+						return audio.rate("nope", 1);
+					},
+				],
+				[
+					"stereo",
+					() => {
+						return audio.stereo("nope", 0);
+					},
+				],
+				[
+					"pause",
+					() => {
+						return audio.pause("nope");
+					},
+				],
+				[
+					"resume",
+					() => {
+						return audio.resume("nope");
+					},
+				],
+				[
+					"panner",
+					() => {
+						return audio.panner("nope");
+					},
+				],
+				[
+					"stop with name",
+					() => {
+						return audio.stop("nope");
+					},
+				],
+				[
+					"mute",
+					() => {
+						return audio.mute("nope");
+					},
+				],
+			];
+
+			for (const [name, fn] of cases) {
+				it(`${name} throws when the clip doesn't exist`, () => {
+					expect(fn).toThrow();
+				});
+			}
+		});
+
+		// Positive-path: a real loaded clip + each function called against
+		// it. These don't validate that audio is actually audible (that's
+		// human-ear territory), but they prove the calls accept their
+		// happy-path args and don't crash. Catches dumb regressions —
+		// wrong number of args, missing fallthrough branch, type-cast
+		// hiding a real error.
+		describe("positive path with a loaded clip", () => {
+			const CLIP = "positive-path";
+
+			it("loads a clip, exercises every per-clip API, then unloads", async () => {
+				await loadClip(CLIP);
+
+				// play / pause / resume / stop
+				const id = audio.play(CLIP);
+				expect(typeof id).toBe("number");
+				expect(() => {
+					return audio.pause(CLIP, id);
+				}).not.toThrow();
+				expect(() => {
+					return audio.resume(CLIP, id);
+				}).not.toThrow();
+				expect(() => {
+					return audio.stop(CLIP, id);
+				}).not.toThrow();
+
+				// fade
+				const fadeId = audio.play(CLIP);
+				expect(() => {
+					return audio.fade(CLIP, 1, 0, 50, fadeId);
+				}).not.toThrow();
+				audio.stop(CLIP, fadeId);
+
+				// seek / rate (both with and without args)
+				expect(() => {
+					return audio.seek(CLIP, 0);
+				}).not.toThrow();
+				expect(typeof audio.seek(CLIP)).toBe("number");
+				expect(() => {
+					return audio.rate(CLIP, 1.5);
+				}).not.toThrow();
+				expect(typeof audio.rate(CLIP)).toBe("number");
+
+				// stereo (setter + getter)
+				expect(() => {
+					return audio.stereo(CLIP, -0.5);
+				}).not.toThrow();
+				expect(typeof audio.stereo(CLIP)).toBe("number");
+
+				// panner (set returns the resulting attributes; get returns
+				// the current attributes)
+				const attrs = audio.panner(CLIP, {
+					panningModel: "HRTF",
+					refDistance: 1,
+				});
+				expect(typeof attrs).toBe("object");
+				expect(typeof audio.panner(CLIP)).toBe("object");
+
+				// mute / unmute on the clip (not the global mute pair)
+				expect(() => {
+					return audio.mute(CLIP);
+				}).not.toThrow();
+				expect(() => {
+					return audio.unmute(CLIP);
+				}).not.toThrow();
+
+				audio.unload(CLIP);
+			});
 		});
 	});
 });

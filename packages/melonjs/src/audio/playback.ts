@@ -11,6 +11,7 @@ import { clamp } from "../math/math.ts";
 import { isDataUrl } from "../utils/string.ts";
 import {
 	getGlobalVolume,
+	getSoundOrThrow,
 	soundLoadError,
 	state,
 	stopAllPlayback,
@@ -101,25 +102,21 @@ export function play(
 	onend?: (() => void) | null,
 	volume?: number,
 ): number {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		const id = sound.play();
-		sound.loop(loop, id);
-		sound.volume(
-			typeof volume === "number" ? clamp(volume, 0.0, 1.0) : getGlobalVolume(),
-			id,
-		);
-		if (typeof onend === "function") {
-			if (loop) {
-				sound.on("end", onend, id);
-			} else {
-				sound.once("end", onend, id);
-			}
+	const sound = getSoundOrThrow(sound_name);
+	const id = sound.play();
+	sound.loop(loop, id);
+	sound.volume(
+		typeof volume === "number" ? clamp(volume, 0.0, 1.0) : getGlobalVolume(),
+		id,
+	);
+	if (typeof onend === "function") {
+		if (loop) {
+			sound.on("end", onend, id);
+		} else {
+			sound.once("end", onend, id);
 		}
-		return id;
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
 	}
+	return id;
 }
 
 /**
@@ -139,12 +136,7 @@ export function fade(
 	duration: number,
 	id?: number,
 ): void {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		sound.fade(from, to, duration, id);
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	getSoundOrThrow(sound_name).fade(from, to, duration, id);
 }
 
 /**
@@ -161,12 +153,7 @@ export function fade(
  * @category Audio
  */
 export function seek(sound_name: string, ...args: number[]): number {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		return sound.seek(...args);
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	return getSoundOrThrow(sound_name).seek(...args);
 }
 
 /**
@@ -183,12 +170,7 @@ export function seek(sound_name: string, ...args: number[]): number {
  * @category Audio
  */
 export function rate(sound_name: string, ...args: number[]): number {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		return sound.rate(...args);
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	return getSoundOrThrow(sound_name).rate(...args);
 }
 
 /**
@@ -204,14 +186,8 @@ export function rate(sound_name: string, ...args: number[]): number {
  * @category Audio
  */
 export function stereo(sound_name: string, pan?: number, id?: number): number {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		return (
-			pan !== undefined ? sound.stereo(pan, id) : sound.stereo()
-		) as number;
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	const sound = getSoundOrThrow(sound_name);
+	return (pan !== undefined ? sound.stereo(pan, id) : sound.stereo()) as number;
 }
 
 /** @inheritDoc */
@@ -247,10 +223,7 @@ export function position(
 	z?: number,
 	id?: number,
 ): [number, number, number] | void {
-	const sound = state.tracks[sound_name];
-	if (!sound) {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	const sound = getSoundOrThrow(sound_name);
 	if (x === undefined) {
 		return sound.pos();
 	}
@@ -292,10 +265,7 @@ export function orientation(
 	z?: number,
 	id?: number,
 ): [number, number, number] | void {
-	const sound = state.tracks[sound_name];
-	if (!sound) {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	const sound = getSoundOrThrow(sound_name);
 	if (x === undefined) {
 		return sound.orientation();
 	}
@@ -325,10 +295,7 @@ export function panner(
 	attributes?: PannerAttributes,
 	id?: number,
 ): PannerAttributes {
-	const sound = state.tracks[sound_name];
-	if (!sound) {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	const sound = getSoundOrThrow(sound_name);
 	if (attributes !== undefined) {
 		// "set" overload returns the Howl for chaining; we still want
 		// to hand the caller the current attribute snapshot back. The
@@ -354,18 +321,14 @@ export function panner(
  * @category Audio
  */
 export function stop(sound_name?: string, id?: number): void {
-	if (typeof sound_name !== "undefined") {
-		const sound = state.tracks[sound_name];
-		if (sound) {
-			sound.stop(id);
-			// remove the defined onend callback (if any defined)
-			sound.off("end", undefined, id);
-		} else {
-			throw new Error(`audio clip ${sound_name} does not exist`);
-		}
-	} else {
+	if (sound_name === undefined) {
 		stopAllPlayback();
+		return;
 	}
+	const sound = getSoundOrThrow(sound_name);
+	sound.stop(id);
+	// remove the defined onend callback (if any defined)
+	sound.off("end", undefined, id);
 }
 
 /**
@@ -379,12 +342,7 @@ export function stop(sound_name?: string, id?: number): void {
  * @category Audio
  */
 export function pause(sound_name: string, id?: number): void {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		sound.pause(id);
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	getSoundOrThrow(sound_name).pause(id);
 }
 
 /**
@@ -404,10 +362,5 @@ export function pause(sound_name: string, id?: number): void {
  * @category Audio
  */
 export function resume(sound_name: string, id?: number): void {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		sound.play(id);
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	getSoundOrThrow(sound_name).play(id);
 }

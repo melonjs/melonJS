@@ -17,6 +17,7 @@
 
 import {
 	getGlobalVolume,
+	getSoundOrThrow,
 	hasCodec,
 	isAudioAvailable,
 	isGlobalMuted,
@@ -222,12 +223,7 @@ export function mute(
 	id?: number,
 	shouldMute: boolean = true,
 ): void {
-	const sound = state.tracks[sound_name];
-	if (sound) {
-		sound.mute(shouldMute, id);
-	} else {
-		throw new Error(`audio clip ${sound_name} does not exist`);
-	}
+	getSoundOrThrow(sound_name).mute(shouldMute, id);
 }
 
 /**
