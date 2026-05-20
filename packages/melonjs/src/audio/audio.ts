@@ -127,18 +127,6 @@ export function init(format: string = "mp3"): boolean {
  *
  * The context is lazily created on first access; the call also returns
  * the cached instance on every subsequent call.
- * @example
- * // Build a custom graph on the shared context — e.g. a side-channel
- * // beep that's not bound to the master gain routing.
- * const ctx = me.audio.getAudioContext();
- * if (ctx) {
- *     const osc = ctx.createOscillator();
- *     const gain = ctx.createGain();
- *     gain.gain.value = 0.05;
- *     osc.connect(gain).connect(ctx.destination);
- *     osc.start();
- *     osc.stop(ctx.currentTime + 0.1);
- * }
  * @category Audio
  */
 export function getAudioContext(): AudioContext | null {
