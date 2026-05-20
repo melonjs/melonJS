@@ -21,15 +21,19 @@ import type { LoadSettings, PannerAttributes, SoundAsset } from "./types.ts";
 
 /**
  * Load an audio file.
+ *
+ * `sound.src` is treated as a base path / prefix; the URL is built as
+ * `${sound.src}${sound.name}.${ext}` for each extension configured by
+ * {@link init}, until one loads. Data URLs (`data:audio/...`) are
+ * used as-is and skip the prefix-and-extension dance.
  * @param sound - The {@link SoundAsset} descriptor — logical `name`,
- *   `src` path (extensions resolved against {@link init}'s format list,
- *   or a full data URL), and optional playback flags (`autoplay`,
- *   `loop`, `stream`, `html5`).
+ *   `src` base path / prefix (or data URL), and optional playback
+ *   flags (`autoplay`, `loop`, `stream`, `html5`).
  * @param onloadcb - Called when the resource has finished loading.
  * @param onerrorcb - Called when loading fails.
- * @param settings - Optional {@link LoadSettings} — currently `nocache`
- *   (cache-buster query string) and `withCredentials` (cross-origin
- *   auth). Forwarded to the underlying `fetch` request.
+ * @param settings - Optional {@link LoadSettings} — `nocache` (query
+ *   string appended for cache busting) and `withCredentials` (forwarded
+ *   to the underlying XHR for cross-origin authenticated requests).
  * @returns The number of assets loaded (always `1` on success).
  * @category Audio
  */
@@ -59,7 +63,7 @@ export function load(
 		src: urls,
 		volume: getGlobalVolume(),
 		autoplay: sound.autoplay === true,
-		loop: (sound.loop = true),
+		loop: sound.loop === true,
 		html5: sound.stream === true || sound.html5 === true,
 		// @ts-expect-error xhrWithCredentials is a valid Howl option but not in the type definitions
 		xhrWithCredentials: settings.withCredentials,
@@ -298,11 +302,12 @@ export function panner(
 	const sound = getSoundOrThrow(sound_name);
 	if (attributes !== undefined) {
 		// "set" overload returns the Howl for chaining; we still want
-		// to hand the caller the current attribute snapshot back. The
-		// cast widens our `distanceModel` (full WebAudio union including
-		// `"exponential"`) to Howler's narrower declared union — the
-		// runtime accepts all three values; only the `@types/howler`
-		// declaration is incomplete.
+		// to hand the caller the current attribute snapshot back. Our
+		// `distanceModel` covers the full WebAudio union (including
+		// `"exponential"`) while Howler's declared parameter type only
+		// lists `"linear" | "inverse"` — its runtime accepts all three.
+		// Cast at the boundary so the type check passes; the upstream
+		// `@types/howler` declaration is incomplete here.
 		const attrs = attributes as Parameters<Howl["pannerAttr"]>[0];
 		if (id !== undefined) sound.pannerAttr(attrs, id);
 		else sound.pannerAttr(attrs);

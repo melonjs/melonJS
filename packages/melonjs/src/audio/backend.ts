@@ -70,7 +70,7 @@ export const soundLoadError = function (
 	onerror_cb?: () => void,
 	stopOnError: boolean = true,
 ): void {
-	if (state.retryCounter++ > 3) {
+	if (state.retryCounter++ >= 3) {
 		const errmsg = `melonJS: failed loading ${sound_name}`;
 		if (!stopOnError) {
 			// disable audio

@@ -37,9 +37,14 @@ function _resumeIfSuspended(ctx: AudioContext): void {
 
 /**
  * Build the linear-attack / exponential-decay gain envelope used by
- * every procedural primitive. Falls back to a linear tail when peak
- * gain is `0` because `exponentialRampToValueAtTime` rejects a
- * non-positive starting value with `InvalidStateError`.
+ * every procedural primitive.
+ *
+ * The decay uses an exponential ramp when there's enough headroom for
+ * a smooth taper (peak gain greater than the `0.0001` near-silence
+ * floor). Otherwise we use a linear ramp to `0`, which covers both
+ * `gain === 0` (exp ramps reject a `0` start value with
+ * `InvalidStateError`) AND tiny positive gains where a target of
+ * `0.0001` would ramp UP and produce an audible click.
  * @ignore
  */
 function _buildGainEnvelope(
@@ -54,7 +59,7 @@ function _buildGainEnvelope(
 	const env = ctx.createGain();
 	env.gain.setValueAtTime(0, t0);
 	env.gain.linearRampToValueAtTime(gain, t0 + atk);
-	if (gain > 0) {
+	if (gain > 0.0001) {
 		env.gain.exponentialRampToValueAtTime(0.0001, t1);
 	} else {
 		env.gain.linearRampToValueAtTime(0, t1);
@@ -67,6 +72,9 @@ function _buildGainEnvelope(
  * module's master gain (so `muteAll` / `setVolume` apply), optionally
  * through a `StereoPanner`. Falls back to `ctx.destination` only if the
  * master gain isn't available (very restricted audio envs).
+ *
+ * Returns the `StereoPannerNode` it created (or `null` if `pan === 0`)
+ * so the caller can disconnect it once playback ends.
  * @ignore
  */
 function _connectToOutput(
@@ -74,15 +82,16 @@ function _connectToOutput(
 	source: AudioNode,
 	pan: number,
 	t0: number,
-): void {
+): StereoPannerNode | null {
 	const out = getMasterGain() ?? ctx.destination;
 	if (pan === 0) {
 		source.connect(out);
-		return;
+		return null;
 	}
 	const panner = ctx.createStereoPanner();
 	panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
 	source.connect(panner).connect(out);
+	return panner;
 }
 
 /**
@@ -135,8 +144,13 @@ export function tone(opts: ToneOptions): void {
 	const t0 = ctx.currentTime;
 	const t1 = t0 + dur;
 	const env = _buildGainEnvelope(ctx, t0, t1, attack, dur, gain);
+	const panner = _connectToOutput(ctx, env, pan, t0);
 
 	const freqs = Array.isArray(freq) ? freq : [freq];
+	// Count oscillators down to zero so the LAST one to end is the one
+	// that disconnects the shared envelope + panner — otherwise we'd
+	// leave the graph half-wired.
+	let remaining = freqs.length;
 	for (const f of freqs) {
 		const osc = ctx.createOscillator();
 		osc.type = wave;
@@ -155,9 +169,14 @@ export function tone(opts: ToneOptions): void {
 		// Small tail so the exponential ramp has room to settle before
 		// the node is torn down.
 		osc.stop(t1 + 0.02);
+		osc.onended = () => {
+			osc.disconnect();
+			if (--remaining === 0) {
+				env.disconnect();
+				panner?.disconnect();
+			}
+		};
 	}
-
-	_connectToOutput(ctx, env, pan, t0);
 }
 
 /**
@@ -315,8 +334,15 @@ export function noise(opts: NoiseOptions): void {
 		tail = biquad;
 	}
 
-	_connectToOutput(ctx, tail, pan, t0);
+	const panner = _connectToOutput(ctx, tail, pan, t0);
 
 	src.start(t0);
 	src.stop(t1 + 0.02);
+	src.onended = () => {
+		src.disconnect();
+		env.disconnect();
+		// If a filter was inserted between env and the output, tail !== env.
+		if (tail !== env) tail.disconnect();
+		panner?.disconnect();
+	};
 }

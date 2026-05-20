@@ -128,8 +128,13 @@ describe("audio", () => {
 			// Browser/Playwright env: should be an AudioContext instance.
 			// Headless env without audio: null.
 			if (ctx !== null) {
-				expect(ctx).toBeInstanceOf(AudioContext);
-				// Same instance on every call (Howler caches its own).
+				// Guard the global lookup — `webkitAudioContext`-only
+				// browsers expose `ctx` without a top-level
+				// `AudioContext` global.
+				if (typeof globalThis.AudioContext !== "undefined") {
+					expect(ctx).toBeInstanceOf(globalThis.AudioContext);
+				}
+				// Same instance on every call.
 				expect(audio.getAudioContext()).toBe(ctx);
 			}
 		});
@@ -141,8 +146,15 @@ describe("audio", () => {
 		it("getMasterGain returns the shared GainNode (or null)", () => {
 			const gain = audio.getMasterGain();
 			if (gain !== null) {
-				expect(gain).toBeInstanceOf(GainNode);
-				// Same instance on every call (shared master node).
+				// Same guard as above — `GainNode` may not be a global
+				// constructor in every WebAudio implementation.
+				if (typeof globalThis.GainNode !== "undefined") {
+					expect(gain).toBeInstanceOf(globalThis.GainNode);
+				} else {
+					// Duck-type fallback: a real GainNode has a `.gain`
+					// AudioParam.
+					expect(gain.gain).toBeDefined();
+				}
 				expect(audio.getMasterGain()).toBe(gain);
 			}
 		});

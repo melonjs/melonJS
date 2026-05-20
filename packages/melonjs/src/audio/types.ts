@@ -13,8 +13,11 @@ export interface SoundAsset {
 	/** Logical name used to play / stop / reference the sound later. */
 	name: string;
 	/**
-	 * Path or data URL to the audio resource (without extension when
-	 * using `audio.init` formats).
+	 * Base path / prefix for the audio resource. The loader builds the
+	 * full URL as `${src}${name}.${ext}` for each format configured by
+	 * `audio.init()`, so `src` is typically a directory ending in `/`.
+	 * Data URLs (`data:audio/...`) are used as-is and skip the prefix
+	 * + extension construction.
 	 */
 	src: string;
 	/** Begin playback immediately on load. Defaults to `false`. */
@@ -139,8 +142,10 @@ export interface NoiseOptions {
 	/** Peak gain at attack end, `0..1`. Defaults to `0.1`. */
 	gain?: number;
 	/**
-	 * Attack time in seconds — linear ramp from 0 up to `gain`.
-	 * Capped at `duration / 2`. Defaults to `0.005`.
+	 * Attack time in seconds — linear ramp from 0 up to `gain`. Clamped
+	 * to `[0.001, duration / 2]` so even `attack: 0` still rises over a
+	 * single millisecond (WebAudio rejects zero-length ramps to identical
+	 * timestamps). Defaults to `0.005`.
 	 */
 	attack?: number;
 	/**
@@ -182,8 +187,10 @@ export interface ToneOptions {
 	/** Peak gain at attack end, `0..1`. Defaults to `0.1`. */
 	gain?: number;
 	/**
-	 * Attack time in seconds — linear ramp from 0 up to `gain`.
-	 * Capped at `duration / 2`. Defaults to `0.005`.
+	 * Attack time in seconds — linear ramp from 0 up to `gain`. Clamped
+	 * to `[0.001, duration / 2]` so even `attack: 0` still rises over a
+	 * single millisecond (WebAudio rejects zero-length ramps to identical
+	 * timestamps). Defaults to `0.005`.
 	 */
 	attack?: number;
 	/**
