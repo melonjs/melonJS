@@ -289,9 +289,7 @@ export function play(
 	const sound = audioTracks[sound_name];
 	if (sound) {
 		const id = sound.play();
-		if (typeof loop === "boolean") {
-			sound.loop(loop, id);
-		}
+		sound.loop(loop, id);
 		sound.volume(
 			typeof volume === "number" ? clamp(volume, 0.0, 1.0) : Howler.volume(),
 			id,
