@@ -37,16 +37,19 @@ export interface SoundAsset {
 }
 
 /**
- * Optional settings forwarded to the underlying `fetch` request used
- * to load audio resources. Mirrors a subset of the standard `RequestInit`
- * surface (see
- * {@link https://developer.mozilla.org/en-US/docs/Web/API/RequestInit | MDN — RequestInit}).
+ * Optional settings applied to the audio resource load. The loader
+ * uses an XHR under the hood (via Howler), so the available knobs
+ * mirror what an XHR can be told to do.
  * @category Audio
  */
 export interface LoadSettings {
 	/** Cache-busting query string appended to the resource URL. */
 	nocache?: string;
-	/** Forwarded to `fetch.credentials` for cross-origin authenticated requests. */
+	/**
+	 * Forwarded to `XMLHttpRequest.withCredentials`. Set `true` so
+	 * cross-origin loads include cookies / auth headers (e.g. when
+	 * the audio is served from an authenticated CDN).
+	 */
 	withCredentials?: boolean;
 }
 
