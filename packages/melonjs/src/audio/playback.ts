@@ -1,15 +1,21 @@
 /**
- * File-based playback — load and play sound assets via Howler. Every
- * function in this module operates on the shared `state.tracks` map
- * exposed from `backend.ts`, so the audio module's other surfaces
- * (track helpers, mix, unload) can still see the same set of loaded
- * Howl instances.
+ * File-based playback — load audio assets, then play / pause / fade /
+ * seek / etc. Every function in this module operates on the shared
+ * `state.tracks` map exposed from `backend.ts`, so the audio module's
+ * other surfaces (track helpers, mix, unload) can see the same set of
+ * loaded sounds.
  */
 
-import { Howl, Howler } from "howler";
+import { Howl } from "howler";
 import { clamp } from "../math/math.ts";
 import { isDataUrl } from "../utils/string.ts";
-import { soundLoadError, state, stopOnAudioError } from "./backend.ts";
+import {
+	getGlobalVolume,
+	soundLoadError,
+	state,
+	stopAllPlayback,
+	stopOnAudioError,
+} from "./backend.ts";
 import type { LoadSettings, PannerAttributes, SoundAsset } from "./types.ts";
 
 /**
@@ -50,7 +56,7 @@ export function load(
 
 	state.tracks[sound.name] = new Howl({
 		src: urls,
-		volume: Howler.volume(),
+		volume: getGlobalVolume(),
 		autoplay: sound.autoplay === true,
 		loop: (sound.loop = true),
 		html5: sound.stream === true || sound.html5 === true,
@@ -100,7 +106,7 @@ export function play(
 		const id = sound.play();
 		sound.loop(loop, id);
 		sound.volume(
-			typeof volume === "number" ? clamp(volume, 0.0, 1.0) : Howler.volume(),
+			typeof volume === "number" ? clamp(volume, 0.0, 1.0) : getGlobalVolume(),
 			id,
 		);
 		if (typeof onend === "function") {
@@ -358,7 +364,7 @@ export function stop(sound_name?: string, id?: number): void {
 			throw new Error(`audio clip ${sound_name} does not exist`);
 		}
 	} else {
-		Howler.stop();
+		stopAllPlayback();
 	}
 }
 

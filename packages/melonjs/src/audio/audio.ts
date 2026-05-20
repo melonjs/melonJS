@@ -15,8 +15,15 @@
  * helpers, plus the barrel re-exports that compose the namespace.
  */
 
-import { Howler } from "howler";
-import { state } from "./backend.ts";
+import {
+	getGlobalVolume,
+	hasCodec,
+	isAudioAvailable,
+	isGlobalMuted,
+	setGlobalMuted,
+	setGlobalVolume,
+	state,
+} from "./backend.ts";
 import { play } from "./playback.ts";
 
 // Public re-exports from the split modules.
@@ -73,7 +80,7 @@ export type {
  */
 export function init(format: string = "mp3"): boolean {
 	state.audioExts = format.split(",");
-	return !Howler.noAudio;
+	return isAudioAvailable();
 }
 
 /**
@@ -83,7 +90,7 @@ export function init(format: string = "mp3"): boolean {
  * @category Audio
  */
 export function hasFormat(codec: string): boolean {
-	return hasAudio() && Howler.codecs(codec);
+	return hasCodec(codec);
 }
 
 /**
@@ -92,7 +99,7 @@ export function hasFormat(codec: string): boolean {
  * @category Audio
  */
 export function hasAudio(): boolean {
-	return !Howler.noAudio;
+	return isAudioAvailable();
 }
 
 /**
@@ -185,7 +192,7 @@ export function getCurrentTrack(): string | null {
  * @category Audio
  */
 export function setVolume(volume: number): void {
-	Howler.volume(volume);
+	setGlobalVolume(volume);
 }
 
 /**
@@ -194,7 +201,7 @@ export function setVolume(volume: number): void {
  * @category Audio
  */
 export function getVolume(): number {
-	return Howler.volume();
+	return getGlobalVolume();
 }
 
 /**
@@ -239,7 +246,7 @@ export function unmute(sound_name: string, id?: number): void {
  * @category Audio
  */
 export function muteAll(): void {
-	Howler.mute(true);
+	setGlobalMuted(true);
 }
 
 /**
@@ -247,7 +254,7 @@ export function muteAll(): void {
  * @category Audio
  */
 export function unmuteAll(): void {
-	Howler.mute(false);
+	setGlobalMuted(false);
 }
 
 /**
@@ -256,10 +263,7 @@ export function unmuteAll(): void {
  * @category Audio
  */
 export function muted(): boolean {
-	// Howler doesn't expose a public muted getter — peek at the private
-	// flag that `Howler.mute(true/false)` sets internally. Narrow cast
-	// (vs. `as any`) documents the single field we're reaching for.
-	return (Howler as unknown as { _muted: boolean })._muted;
+	return isGlobalMuted();
 }
 
 /**

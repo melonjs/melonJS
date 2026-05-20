@@ -124,3 +124,75 @@ export function getMasterGain(): GainNode | null {
 	if (!getAudioContext()) return null;
 	return Howler.masterGain ?? null;
 }
+
+// ---------------------------------------------------------------------
+// Thin wrappers over Howler's global surface. Kept internal (not
+// re-exported from `audio.ts`) so users still go through the public
+// `setVolume` / `muteAll` / `hasFormat` / etc. helpers. Their job is
+// to isolate the Howler reference to this file — when the backend
+// gets swapped, only these wrappers change.
+// ---------------------------------------------------------------------
+
+/**
+ * Get the audio module's global volume.
+ * @ignore
+ */
+export function getGlobalVolume(): number {
+	return Howler.volume();
+}
+
+/**
+ * Set the audio module's global volume.
+ * @ignore
+ */
+export function setGlobalVolume(v: number): void {
+	Howler.volume(v);
+}
+
+/**
+ * Mute or unmute the audio module globally.
+ * @ignore
+ */
+export function setGlobalMuted(muted: boolean): void {
+	Howler.mute(muted);
+}
+
+/**
+ * Whether the audio module is currently muted globally.
+ * @ignore
+ */
+export function isGlobalMuted(): boolean {
+	// Howler doesn't expose a public muted getter — peek at the private
+	// flag that `Howler.mute(true/false)` sets internally. Narrow cast
+	// (vs. `as any`) documents the single field we're reaching for.
+	return (Howler as unknown as { _muted: boolean })._muted;
+}
+
+/**
+ * Stop every playing sound on every channel.
+ * @ignore
+ */
+export function stopAllPlayback(): void {
+	Howler.stop();
+}
+
+/**
+ * Whether the given audio codec is supported by the backend / browser.
+ * @ignore
+ */
+export function hasCodec(codec: string): boolean {
+	if (!isAudioAvailable()) return false;
+	// `Howler.codecs(...)` is declared `boolean` in @types/howler but at
+	// runtime returns `undefined` for unrecognised codecs (lookup in a
+	// dict). Widen the cast so a strict comparison yields a clean
+	// boolean for the public surface (`audio.hasFormat`).
+	return (Howler.codecs(codec) as boolean | undefined) === true;
+}
+
+/**
+ * Whether at least one audio backend (HTML5 or WebAudio) is available.
+ * @ignore
+ */
+export function isAudioAvailable(): boolean {
+	return !Howler.noAudio;
+}

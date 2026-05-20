@@ -314,5 +314,151 @@ describe("audio", () => {
 				return audio.orientation("nope");
 			}).toThrow();
 		});
+
+		// Build a valid silent WAV in-memory and serve it as a data URL.
+		// Lets us actually load a clip into Howler within the test env
+		// and exercise the getter overloads end-to-end.
+		const makeSilentWavDataUrl = (durationSec = 0.01) => {
+			const sampleRate = 8000;
+			const numSamples = Math.max(1, Math.floor(sampleRate * durationSec));
+			const dataSize = numSamples * 2; // 16-bit mono
+			const buf = new ArrayBuffer(44 + dataSize);
+			const view = new DataView(buf);
+			let p = 0;
+			const writeStr = (s) => {
+				for (let i = 0; i < s.length; i++) {
+					view.setUint8(p++, s.charCodeAt(i));
+				}
+			};
+			const writeU32 = (v) => {
+				view.setUint32(p, v, true);
+				p += 4;
+			};
+			const writeU16 = (v) => {
+				view.setUint16(p, v, true);
+				p += 2;
+			};
+			writeStr("RIFF");
+			writeU32(36 + dataSize);
+			writeStr("WAVE");
+			writeStr("fmt ");
+			writeU32(16); // PCM chunk size
+			writeU16(1); // format = PCM
+			writeU16(1); // mono
+			writeU32(sampleRate);
+			writeU32(sampleRate * 2); // byte rate
+			writeU16(2); // block align
+			writeU16(16); // bits per sample
+			writeStr("data");
+			writeU32(dataSize);
+			// samples already zero-initialised → silence
+			const bytes = new Uint8Array(buf);
+			let bin = "";
+			for (let i = 0; i < bytes.length; i++) {
+				bin += String.fromCharCode(bytes[i]);
+			}
+			return `data:audio/wav;base64,${btoa(bin)}`;
+		};
+
+		const loadClip = (name) => {
+			audio.init("wav");
+			return new Promise((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					reject(new Error(`timeout loading ${name}`));
+				}, 2000);
+				audio.load(
+					{ name, src: makeSilentWavDataUrl() },
+					() => {
+						clearTimeout(timeout);
+						resolve();
+					},
+					() => {
+						clearTimeout(timeout);
+						reject(new Error(`load failed for ${name}`));
+					},
+				);
+			});
+		};
+
+		it("position round-trips: set then read returns the set value", async () => {
+			await loadClip("pos-roundtrip");
+			audio.position("pos-roundtrip", 10, 20, 30);
+			const p = audio.position("pos-roundtrip");
+			expect(p).toEqual([10, 20, 30]);
+			audio.unload("pos-roundtrip");
+		});
+
+		it("orientation round-trips: set then read returns the set value", async () => {
+			await loadClip("ori-roundtrip");
+			audio.orientation("ori-roundtrip", 0, 1, 0);
+			const o = audio.orientation("ori-roundtrip");
+			expect(o).toEqual([0, 1, 0]);
+			audio.unload("ori-roundtrip");
+		});
+	});
+
+	describe("mute / format / availability wrappers", () => {
+		it("exports muted, hasFormat, hasAudio, unmute", () => {
+			expect(typeof audio.muted).toBe("function");
+			expect(typeof audio.hasFormat).toBe("function");
+			expect(typeof audio.hasAudio).toBe("function");
+			expect(typeof audio.unmute).toBe("function");
+		});
+
+		it("hasAudio returns a boolean", () => {
+			expect(typeof audio.hasAudio()).toBe("boolean");
+		});
+
+		it("hasFormat returns a boolean for any codec string", () => {
+			expect(typeof audio.hasFormat("mp3")).toBe("boolean");
+			expect(typeof audio.hasFormat("webm")).toBe("boolean");
+			expect(typeof audio.hasFormat("bogus-codec")).toBe("boolean");
+		});
+
+		it("muted returns a boolean and tracks muteAll / unmuteAll", () => {
+			// Snapshot original state so we don't leak side-effects.
+			const wasMuted = audio.muted();
+			expect(typeof wasMuted).toBe("boolean");
+
+			audio.muteAll();
+			expect(audio.muted()).toBe(true);
+
+			audio.unmuteAll();
+			expect(audio.muted()).toBe(false);
+
+			// Restore original state.
+			if (wasMuted) {
+				audio.muteAll();
+			}
+		});
+
+		it("enable / disable are aliases for unmuteAll / muteAll", () => {
+			expect(typeof audio.enable).toBe("function");
+			expect(typeof audio.disable).toBe("function");
+			const wasMuted = audio.muted();
+
+			audio.disable();
+			expect(audio.muted()).toBe(true);
+
+			audio.enable();
+			expect(audio.muted()).toBe(false);
+
+			if (wasMuted) {
+				audio.muteAll();
+			}
+		});
+
+		it("stop() with no arguments doesn't throw (stop-all path)", () => {
+			expect(() => {
+				return audio.stop();
+			}).not.toThrow();
+		});
+
+		it("getCurrentTrack returns null when nothing is set", () => {
+			// stopTrack() clears the current id; calling it from a clean
+			// state should leave getCurrentTrack at null.
+			audio.stopTrack();
+			expect(audio.getCurrentTrack()).toBeNull();
+		});
 	});
 });
