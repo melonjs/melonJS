@@ -146,6 +146,25 @@ export function getAudioContext(): AudioContext | null {
 }
 
 /**
+ * Return the audio module's master gain node — the single `GainNode`
+ * every playback path runs through on its way to `ctx.destination`,
+ * and the lever that {@link setVolume} / {@link muteAll} manipulate.
+ *
+ * Connect to this node (instead of `ctx.destination`) whenever you
+ * build a custom WebAudio graph and want the result to respect the
+ * engine's mute / volume state. Returns `null` when audio is disabled
+ * or unavailable.
+ * @category Audio
+ */
+export function getMasterGain(): GainNode | null {
+	// Chains through `getAudioContext` so the same lazy-init nudge
+	// covers both — `Howler.masterGain` is created alongside `ctx` and
+	// is undefined until that setup runs.
+	if (!getAudioContext()) return null;
+	return Howler.masterGain ?? null;
+}
+
+/**
  * Check whether the given audio codec is supported by the browser.
  * @param codec - The audio format to check.
  * @returns `true` when the format is supported.
@@ -824,7 +843,7 @@ export function tone(opts: ToneOptions): void {
 	// other audio call goes through), so global mute / volume / fades
 	// apply uniformly — `audio.muteAll()` silences tones too, and
 	// `audio.setVolume(0.5)` halves them.
-	const out = Howler.masterGain;
+	const out = getMasterGain() ?? ctx.destination;
 	if (pan === 0) {
 		env.connect(out);
 	} else {
@@ -1007,7 +1026,7 @@ export function noise(opts: NoiseOptions): void {
 	}
 
 	// Route through master gain so mute/volume apply uniformly.
-	const out = Howler.masterGain;
+	const out = getMasterGain() ?? ctx.destination;
 	if (pan === 0) {
 		tail.connect(out);
 	} else {

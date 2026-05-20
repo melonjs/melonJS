@@ -69,6 +69,19 @@ describe("audio", () => {
 			}
 		});
 
+		it("exports getMasterGain", () => {
+			expect(typeof audio.getMasterGain).toBe("function");
+		});
+
+		it("getMasterGain returns the shared GainNode (or null)", () => {
+			const gain = audio.getMasterGain();
+			if (gain !== null) {
+				expect(gain).toBeInstanceOf(GainNode);
+				// Same instance on every call (shared master node).
+				expect(audio.getMasterGain()).toBe(gain);
+			}
+		});
+
 		it("tone is a no-op when audio is unavailable (no throw)", () => {
 			// Even with a real context, this should never throw.
 			expect(() => {
