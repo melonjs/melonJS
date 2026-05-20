@@ -750,6 +750,75 @@ export function unloadAll(): void {
 	}
 }
 
+// ---------------------------------------------------------------------
+// Procedural-audio internals — shared between `tone` and `noise`.
+// ---------------------------------------------------------------------
+
+/**
+ * Resume the AudioContext if a browser autoplay policy has it
+ * suspended. Best-effort and idempotent; the promise is intentionally
+ * unawaited because we want the same call site to work in both gesture
+ * and non-gesture contexts.
+ * @ignore
+ */
+function _resumeIfSuspended(ctx: AudioContext): void {
+	if (ctx.state === "suspended") {
+		ctx.resume().catch(() => {
+			/* ignore */
+		});
+	}
+}
+
+/**
+ * Build the linear-attack / exponential-decay gain envelope used by
+ * every procedural primitive. Falls back to a linear tail when peak
+ * gain is `0` because `exponentialRampToValueAtTime` rejects a
+ * non-positive starting value with `InvalidStateError`.
+ * @ignore
+ */
+function _buildGainEnvelope(
+	ctx: AudioContext,
+	t0: number,
+	t1: number,
+	attack: number,
+	duration: number,
+	gain: number,
+): GainNode {
+	const atk = Math.max(0.001, Math.min(attack, duration / 2));
+	const env = ctx.createGain();
+	env.gain.setValueAtTime(0, t0);
+	env.gain.linearRampToValueAtTime(gain, t0 + atk);
+	if (gain > 0) {
+		env.gain.exponentialRampToValueAtTime(0.0001, t1);
+	} else {
+		env.gain.linearRampToValueAtTime(0, t1);
+	}
+	return env;
+}
+
+/**
+ * Final hop of any procedural primitive — route `source` to the audio
+ * module's master gain (so `muteAll` / `setVolume` apply), optionally
+ * through a `StereoPanner`. Falls back to `ctx.destination` only if the
+ * master gain isn't available (very restricted audio envs).
+ * @ignore
+ */
+function _connectToOutput(
+	ctx: AudioContext,
+	source: AudioNode,
+	pan: number,
+	t0: number,
+): void {
+	const out = getMasterGain() ?? ctx.destination;
+	if (pan === 0) {
+		source.connect(out);
+		return;
+	}
+	const panner = ctx.createStereoPanner();
+	panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
+	source.connect(panner).connect(out);
+}
+
 /**
  * Fire a single-shot envelope-shaped oscillator on the shared
  * {@link getAudioContext} context. Designed for the "just play a beep"
@@ -794,32 +863,12 @@ export function tone(opts: ToneOptions): void {
 		pitchSlide = 1,
 	} = opts;
 
-	// Browsers suspend the context until a user gesture; calling
-	// `resume()` from inside a gesture-driven handler is a no-op once
-	// the context is running. Best-effort — ignore the promise.
-	if (ctx.state === "suspended") {
-		ctx.resume().catch(() => {
-			/* ignore */
-		});
-	}
+	_resumeIfSuspended(ctx);
 
 	const dur = Math.max(0.001, duration);
 	const t0 = ctx.currentTime;
 	const t1 = t0 + dur;
-	const atk = Math.max(0.001, Math.min(attack, dur / 2));
-
-	// Gain envelope shared by every partial: linear attack → decay.
-	// Decay uses exponential when peak gain > 0 (smoother taper); falls
-	// back to linear when gain is 0 because `exponentialRampToValueAtTime`
-	// requires its starting value to be strictly positive.
-	const env = ctx.createGain();
-	env.gain.setValueAtTime(0, t0);
-	env.gain.linearRampToValueAtTime(gain, t0 + atk);
-	if (gain > 0) {
-		env.gain.exponentialRampToValueAtTime(0.0001, t1);
-	} else {
-		env.gain.linearRampToValueAtTime(0, t1);
-	}
+	const env = _buildGainEnvelope(ctx, t0, t1, attack, dur, gain);
 
 	const freqs = Array.isArray(freq) ? freq : [freq];
 	for (const f of freqs) {
@@ -842,18 +891,7 @@ export function tone(opts: ToneOptions): void {
 		osc.stop(t1 + 0.02);
 	}
 
-	// Route through the audio module's master gain (the same node every
-	// other audio call goes through), so global mute / volume / fades
-	// apply uniformly — `audio.muteAll()` silences tones too, and
-	// `audio.setVolume(0.5)` halves them.
-	const out = getMasterGain() ?? ctx.destination;
-	if (pan === 0) {
-		env.connect(out);
-	} else {
-		const panner = ctx.createStereoPanner();
-		panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
-		env.connect(panner).connect(out);
-	}
+	_connectToOutput(ctx, env, pan, t0);
 }
 
 /**
@@ -975,16 +1013,12 @@ export function noise(opts: NoiseOptions): void {
 		filterSweep = 1,
 	} = opts;
 
-	if (ctx.state === "suspended") {
-		ctx.resume().catch(() => {
-			/* ignore */
-		});
-	}
+	_resumeIfSuspended(ctx);
 
 	const dur = Math.max(0.001, duration);
 	const t0 = ctx.currentTime;
 	const t1 = t0 + dur;
-	const atk = Math.max(0.001, Math.min(attack, dur / 2));
+	const env = _buildGainEnvelope(ctx, t0, t1, attack, dur, gain);
 
 	// Source: a one-shot buffer of `dur * sampleRate` random samples.
 	const sampleCount = Math.max(1, Math.ceil(dur * ctx.sampleRate));
@@ -992,19 +1026,6 @@ export function noise(opts: NoiseOptions): void {
 	fillNoiseBuffer(buffer.getChannelData(0), type);
 	const src = ctx.createBufferSource();
 	src.buffer = buffer;
-
-	// Gain envelope — same linear-attack / exponential-decay shape as
-	// `tone`, with the same guard against an exp ramp from 0 (which
-	// WebAudio rejects with InvalidStateError).
-	const env = ctx.createGain();
-	env.gain.setValueAtTime(0, t0);
-	env.gain.linearRampToValueAtTime(gain, t0 + atk);
-	if (gain > 0) {
-		env.gain.exponentialRampToValueAtTime(0.0001, t1);
-	} else {
-		env.gain.linearRampToValueAtTime(0, t1);
-	}
-
 	src.connect(env);
 
 	// Optional band-shaping filter (with optional sweep on its frequency).
@@ -1028,15 +1049,7 @@ export function noise(opts: NoiseOptions): void {
 		tail = biquad;
 	}
 
-	// Route through master gain so mute/volume apply uniformly.
-	const out = getMasterGain() ?? ctx.destination;
-	if (pan === 0) {
-		tail.connect(out);
-	} else {
-		const panner = ctx.createStereoPanner();
-		panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t0);
-		tail.connect(panner).connect(out);
-	}
+	_connectToOutput(ctx, tail, pan, t0);
 
 	src.start(t0);
 	src.stop(t1 + 0.02);
