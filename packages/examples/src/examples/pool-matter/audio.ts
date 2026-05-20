@@ -39,28 +39,32 @@ export const velocityFactor = (speed: number): number => {
 	return Math.max(0, Math.min(1, speed / 10));
 };
 
-/** Sharp "thwack" when the cue strikes the cue ball on release. */
+/** Soft wood/leather "thock" when the cue tip strikes the cue ball. */
 export const playStrike = (power: number, pan = 0): void => {
 	audio.tone({
-		freq: 1200,
-		duration: 0.08,
-		gain: 0.15 * Math.max(0.2, power),
+		freq: 350,
+		duration: 0.1,
+		gain: 0.18 * Math.max(0.2, power),
 		pan,
-		pitchSlide: 0.4,
+		pitchSlide: 0.3,
 	});
 };
 
-/** Classic billiards click on ball-ball contact. Pitch jitter so a
- *  multi-ball break doesn't smear into one buzz. */
+/**
+ * Phenolic-resin click on ball-ball contact — two partials (mid body +
+ * upper bite) with random jitter so a multi-ball break stays granular,
+ * very short duration so it reads as a dry click without lingering ring.
+ */
 export const playBallClick = (velocity: number, pan = 0): void => {
 	const v = velocityFactor(velocity);
 	if (v < 0.05) return; // skip vanishingly soft taps
+	const jitter = Math.random();
 	audio.tone({
-		freq: 900 + Math.random() * 400,
-		duration: 0.05,
-		gain: 0.1 * v,
+		freq: [420 + jitter * 80, 820 + jitter * 120],
+		duration: 0.035,
+		gain: 0.12 * v,
 		pan,
-		pitchSlide: 0.6,
+		pitchSlide: 0.5,
 	});
 };
 
