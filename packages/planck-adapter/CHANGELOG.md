@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - _unreleased_
+## 1.0.0 - _2026-05-22_
 
 Initial release of `@melonjs/planck-adapter` — a [planck.js](https://piqnt.com/planck.js/) (Box2D 2.3.0 port) physics adapter for melonJS.
 
