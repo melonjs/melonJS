@@ -1,6 +1,6 @@
 # Changelog
 
-## 16.0.0 _unreleased_
+## 16.0.0
 
 ### Breaking Changes
 - Requires melonJS **19.5.0 or later** — the hitbox overlay now goes through the new `PhysicsAdapter.getBodyAABB` / `getBodyShapes` adapter API (and the velocity overlay through the existing `adapter.getVelocity`) rather than reading `renderable.body.*` directly. Older engines don't expose those methods and the plugin will refuse to load. 19.5 also moved the FPS estimate into `timer.update()` (was previously driven by this plugin's `timer.countFPS()` call) and removed the debug-only `Container.drawCount` field, both of which this version is aware of.
