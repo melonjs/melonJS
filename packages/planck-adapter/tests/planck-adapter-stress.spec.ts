@@ -33,13 +33,10 @@ type InternalsView = {
 const internals = (adapter: PlanckAdapter): InternalsView =>
 	adapter as unknown as InternalsView;
 
-// Count bodies the planck world is actively simulating. Planck has no
-// `getBodyCount` getter; walk the body list directly.
-const planckBodyCount = (adapter: PlanckAdapter): number => {
-	let n = 0;
-	for (let b = adapter.world.getBodyList(); b; b = b.getNext()) n++;
-	return n;
-};
+// Count bodies the planck world is actively simulating — direct
+// passthrough to planck's native `getBodyCount()`.
+const planckBodyCount = (adapter: PlanckAdapter): number =>
+	adapter.world.getBodyCount();
 
 const snapshot = (adapter: PlanckAdapter) => {
 	const i = internals(adapter);
