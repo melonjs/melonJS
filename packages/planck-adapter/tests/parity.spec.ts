@@ -42,12 +42,29 @@ interface AdapterFactory {
 	 * precision 1, fine at precision 0 (within 0.5 px).
 	 */
 	aabbPrecision: number;
+	/** Expected `adapter.capabilities` shape — pinned per adapter. */
+	expectedCapabilities: {
+		constraints: boolean;
+		continuousCollisionDetection: boolean;
+		sleepingBodies: boolean;
+		raycasts: boolean;
+		velocityLimit: boolean;
+		isGrounded: boolean;
+	};
 }
 
 const factories: AdapterFactory[] = [
 	{
 		name: "BuiltinAdapter",
 		aabbPrecision: 1,
+		expectedCapabilities: {
+			constraints: false,
+			continuousCollisionDetection: false,
+			sleepingBodies: false,
+			raycasts: true,
+			velocityLimit: true,
+			isGrounded: true,
+		},
 		make() {
 			const adapter = new BuiltinAdapter({
 				gravity: new Vector2d(0, 1),
@@ -59,6 +76,14 @@ const factories: AdapterFactory[] = [
 	{
 		name: "PlanckAdapter",
 		aabbPrecision: 0,
+		expectedCapabilities: {
+			constraints: true,
+			continuousCollisionDetection: true,
+			sleepingBodies: true,
+			raycasts: true,
+			velocityLimit: true,
+			isGrounded: true,
+		},
 		make() {
 			// Gravity is in px/s² at the adapter surface (planck converts
 			// to meters internally via `pixelsPerMeter`). Use a real
@@ -84,7 +109,7 @@ beforeAll(() => {
 	});
 });
 
-for (const { name, make, aabbPrecision } of factories) {
+for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 	describe(`Adapter parity — ${name}`, () => {
 		let adapter: BuiltinAdapter | PlanckAdapter;
 		let world: World;
@@ -604,6 +629,221 @@ for (const { name, make, aabbPrecision } of factories) {
 				expect(result).toBe(out);
 				expect(out.x).toBeCloseTo(2.5, 3);
 				expect(out.y).toBeCloseTo(-1.5, 3);
+			});
+		});
+
+		// ----------------------------------------------------------
+		// 19.5 portable surface — coverage gaps surfaced when the
+		// release-prep wiki audit found `raycast` / `queryAABB` still
+		// described as matter-only. They're on every adapter now;
+		// these tests pin that.
+		// ----------------------------------------------------------
+
+		describe("adapter.capabilities — shape pin", () => {
+			it("matches the per-adapter expected capability set exactly", () => {
+				// Guards against a PR that flips a capability flag without
+				// updating callers, or a refactor that drops a key. The
+				// values themselves are pinned by the factory, so each
+				// adapter asserts its own shape.
+				expect(adapter.capabilities).toEqual(expectedCapabilities);
+			});
+		});
+
+		describe("raycast — portable hit shape", () => {
+			// Static box at (200,200)..(240,240). Ray from x=0 at y=220
+			// crosses the left face at x≈200; from x=500 at y=220 crosses
+			// the right face at x≈240. Ray well above the box must miss.
+			const placeBox = () => {
+				const wall = new Renderable(200, 200, 40, 40);
+				wall.alwaysUpdate = true;
+				wall.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 40, 40)],
+				};
+				world.addChild(wall);
+				// `world.update(dt)` rebuilds the builtin broadphase each
+				// frame; raycast / queryAABB walk that broadphase. planck
+				// indexes on `addBody`, but a single `world.update` is the
+				// portable "everything's settled" handshake here.
+				world.update(16);
+				return wall;
+			};
+
+			it("returns a hit with point / normal / fraction / renderable when the ray crosses a body", () => {
+				const wall = placeBox();
+				const hit = adapter.raycast(
+					new Vector2d(0, 220),
+					new Vector2d(400, 220),
+				);
+				expect(hit).not.toBeNull();
+				expect(hit!.renderable).toBe(wall);
+				expect(hit!.point.x).toBeCloseTo(200, aabbPrecision);
+				expect(hit!.point.y).toBeCloseTo(220, aabbPrecision);
+				expect(hit!.normal.x).toBeCloseTo(-1, aabbPrecision);
+				expect(hit!.normal.y).toBeCloseTo(0, aabbPrecision);
+				// (200 - 0) / (400 - 0) = 0.5
+				expect(hit!.fraction).toBeCloseTo(0.5, aabbPrecision);
+			});
+
+			it("returns a right-face hit (normal flips) when shot from the other side", () => {
+				placeBox();
+				const hit = adapter.raycast(
+					new Vector2d(500, 220),
+					new Vector2d(0, 220),
+				);
+				expect(hit).not.toBeNull();
+				expect(hit!.point.x).toBeCloseTo(240, aabbPrecision);
+				expect(hit!.normal.x).toBeCloseTo(1, aabbPrecision);
+			});
+
+			it("returns null when the ray misses every body", () => {
+				placeBox();
+				const hit = adapter.raycast(new Vector2d(0, 50), new Vector2d(400, 50));
+				expect(hit).toBeNull();
+			});
+		});
+
+		describe("queryAABB — portable region query", () => {
+			const placeBox = (x: number, y: number) => {
+				const r = new Renderable(x, y, 40, 40);
+				r.alwaysUpdate = true;
+				r.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 40, 40)],
+				};
+				world.addChild(r);
+				return r;
+			};
+			const flush = () => world.update(16);
+
+			it("returns every body whose AABB overlaps the region", () => {
+				const a = placeBox(100, 100);
+				placeBox(400, 100);
+				flush();
+				const hits = adapter.queryAABB(new Rect(80, 80, 80, 80));
+				expect(hits).toContain(a);
+				expect(hits.length).toEqual(1);
+			});
+
+			it("returns an empty array when the region overlaps nothing", () => {
+				placeBox(100, 100);
+				flush();
+				const hits = adapter.queryAABB(new Rect(500, 500, 40, 40));
+				expect(hits).toEqual([]);
+			});
+
+			it("returns multiple bodies when the region spans them", () => {
+				const a = placeBox(100, 100);
+				const b = placeBox(200, 100);
+				flush();
+				const hits = adapter.queryAABB(new Rect(50, 50, 300, 100));
+				expect(hits).toContain(a);
+				expect(hits).toContain(b);
+				expect(hits.length).toEqual(2);
+			});
+		});
+
+		describe("isGrounded — in-air parity", () => {
+			// Cross-adapter parity intentionally tests the in-air case
+			// only — both adapters agree that an isolated body in
+			// free-fall is NOT grounded. The "resting on a static floor"
+			// half diverges by design: builtin tracks an internal
+			// `falling` / `jumping` flag pair that gravity toggles every
+			// frame, while matter / planck track real contact pairs.
+			// See the BuiltinAdapter Quirks wiki page.
+			it("a body in mid-air with no body below is not grounded", () => {
+				const ball = new Renderable(100, 50, 32, 32);
+				ball.alwaysUpdate = true;
+				ball.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				world.addChild(ball);
+
+				world.update(16);
+				adapter.syncFromPhysics();
+				expect(adapter.isGrounded(ball)).toEqual(false);
+			});
+		});
+
+		describe("updateShape — preserves linear velocity", () => {
+			it("a moving body keeps its velocity when its shape is swapped", () => {
+				const r = new Renderable(100, 100, 32, 32);
+				r.alwaysUpdate = true;
+				r.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				world.addChild(r);
+
+				adapter.setVelocity(r, new Vector2d(5, -3));
+				// updateShape rebuilds the underlying body on matter / planck
+				// (and mutates the shape list in place on builtin); either
+				// way, the public velocity must survive.
+				adapter.updateShape(r, [new Rect(0, 0, 16, 16)]);
+				const vel = adapter.getVelocity(r);
+				expect(vel.x).toBeCloseTo(5, aabbPrecision);
+				expect(vel.y).toBeCloseTo(-3, aabbPrecision);
+			});
+		});
+
+		describe("sensor + push-out matrix", () => {
+			// Drop a dynamic body onto a static floor under each adapter's
+			// own gravity. Solid pair → body rests at the floor top.
+			// Any sensor → body passes through to below the floor bottom.
+			const setup = (
+				dynSensor: boolean,
+				staticSensor: boolean,
+			): { dyn: Renderable; floorY: number; floorBottom: number } => {
+				const floorY = 200;
+				const floorBottom = floorY + 20;
+				const floor = new Renderable(0, floorY, 800, 20);
+				floor.alwaysUpdate = true;
+				floor.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 800, 20)],
+					isSensor: staticSensor,
+				};
+				world.addChild(floor);
+
+				const dyn = new Renderable(100, 150, 32, 32);
+				dyn.alwaysUpdate = true;
+				dyn.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+					isSensor: dynSensor,
+				};
+				world.addChild(dyn);
+				return { dyn, floorY, floorBottom };
+			};
+
+			it("(solid dynamic) vs (solid static): push-out — body stops above the floor", () => {
+				const { dyn, floorY } = setup(false, false);
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(dyn.pos.y).toBeLessThan(floorY + 1);
+				expect(dyn.pos.y).toBeGreaterThan(floorY - 40);
+			});
+
+			it("(sensor dynamic) vs (solid static): no push-out — body passes through", () => {
+				const { dyn, floorBottom } = setup(true, false);
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(dyn.pos.y).toBeGreaterThan(floorBottom);
+			});
+
+			it("(solid dynamic) vs (sensor static): no push-out — body passes through", () => {
+				const { dyn, floorBottom } = setup(false, true);
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(dyn.pos.y).toBeGreaterThan(floorBottom);
+			});
+
+			it("(sensor dynamic) vs (sensor static): no push-out — body passes through", () => {
+				const { dyn, floorBottom } = setup(true, true);
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(dyn.pos.y).toBeGreaterThan(floorBottom);
 			});
 		});
 	});

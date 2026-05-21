@@ -229,12 +229,6 @@ Since 19.5, melonJS exposes a `PhysicsAdapter` interface so the same game code c
 - **[@melonjs/matter-adapter](https://github.com/melonjs/melonJS/tree/master/packages/matter-adapter)** — [matter-js](https://brm.io/matter-js/) integration. Rotational dynamics, constraints (springs / hinges / pins), sleeping bodies, continuous collision detection, raycasts. Showcased by the [Matter Platformer](https://melonjs.github.io/melonJS/examples/#/platformer-matter) and [Pool (Matter)](https://melonjs.github.io/melonJS/examples/#/pool-matter) examples.
 - **[@melonjs/planck-adapter](https://github.com/melonjs/melonJS/tree/master/packages/planck-adapter)** — [planck.js](https://piqnt.com/planck.js/) integration (faithful Box2D 2.3.0 port). Native joints, CCD bullet flag, sleeping bodies, native raycasts, per-body gravity scale. Showcased by the [Neon Plinko (Planck)](https://melonjs.github.io/melonJS/examples/#/plinko-planck) example.
 
-Portable across every adapter (game code stays engine-agnostic):
-
-- `app.world.adapter.raycast(from, to)` — nearest body hit with precise entry geometry (`renderable`, `point`, `normal`, `fraction`)
-- `app.world.adapter.queryAABB(rect)` — every renderable whose body overlaps a rectangle (AoE damage, picking, trigger sweeps)
-- Collision lifecycle hooks (`onCollisionStart` / `onCollisionActive` / `onCollisionEnd`) dispatched consistently with a receiver-symmetric response shape (`response.a === this`, `response.b === other`)
-
 See the [Migrating to the Physics Adapter API](https://github.com/melonjs/melonJS/wiki/Migrating-to-the-Physics-Adapter-API), [Switching Physics Adapters](https://github.com/melonjs/melonJS/wiki/Switching-Physics-Adapters), and [BuiltinAdapter Quirks](https://github.com/melonjs/melonJS/wiki/BuiltinAdapter-Quirks) wiki pages for migration guides and the per-adapter behaviour table.
 
 Installation
