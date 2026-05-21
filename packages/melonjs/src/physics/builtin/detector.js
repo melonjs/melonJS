@@ -488,7 +488,7 @@ class Detector {
 	 *    }
 	 */
 	rayCast(line, result = []) {
-		// Thin wrapper over the shared `raycastQuery` (in `./raycast.js`),
+		// Thin wrapper over the shared `raycastQuery` (in `./raycast.ts`),
 		// which is also used by `BuiltinAdapter.raycast` to expose the
 		// portable adapter API. We drop the per-hit `{ point, normal,
 		// fraction }` info and keep just the renderable array, preserving
