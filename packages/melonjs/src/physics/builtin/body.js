@@ -4,7 +4,7 @@ import { Point, pointPool } from "../../geometries/point.ts";
 import { Polygon, polygonPool } from "../../geometries/polygon.ts";
 import { Rect } from "../../geometries/rectangle.ts";
 import { clamp } from "../../math/math.ts";
-import { vector2dPool } from "../../math/vector2d.ts";
+import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
 import pool from "../../system/legacy_pool.js";
 import timer from "../../system/timer.ts";
 import { remove } from "../../utils/array.ts";
@@ -589,10 +589,25 @@ export default class Body {
 	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
 	 */
 	addShape(shape) {
-		if (shape instanceof Rect || shape instanceof Bounds) {
+		if (shape instanceof Rect) {
 			const poly = shape.toPolygon();
 			this.shapes.push(poly);
 			// update the body bounds
+			this.bounds.add(poly.points);
+			this.bounds.translate(poly.pos);
+		} else if (shape instanceof Bounds) {
+			// Bounds doesn't carry a `toPolygon` method — it's a primitive
+			// AABB that polygon.ts already depends on, so we keep the
+			// conversion in the consumer to avoid a cyclic import. Same
+			// rectangle-from-bounds geometry the old `Bounds.toPolygon`
+			// produced.
+			const poly = polygonPool.get(shape.x, shape.y, [
+				new Vector2d(0, 0),
+				new Vector2d(shape.width, 0),
+				new Vector2d(shape.width, shape.height),
+				new Vector2d(0, shape.height),
+			]);
+			this.shapes.push(poly);
 			this.bounds.add(poly.points);
 			this.bounds.translate(poly.pos);
 		} else if (shape instanceof Ellipse) {

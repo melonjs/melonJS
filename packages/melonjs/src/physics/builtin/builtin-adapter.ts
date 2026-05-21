@@ -342,9 +342,13 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	getBodyAABB(renderable: Renderable, out: Bounds): Bounds | undefined {
 		// Adapter-side debug surface: the body's AABB in renderable-local
 		// coordinates. Builtin Body already stores its bounds in local
-		// space, so we just copy into the caller's `out`.
+		// space, so we just copy into the caller's `out`. Gated on
+		// `this.bodies.has(body)` (same predicate as `getVelocity`) so a
+		// dangling Body reference left on `renderable.body` after
+		// `removeBody` matches the adapter contract — returns
+		// `undefined` for an unregistered body.
 		const body = renderable.body as Body | undefined;
-		if (body === undefined) {
+		if (!body || !this.bodies.has(body)) {
 			return undefined;
 		}
 		const b = body.bounds;
@@ -355,13 +359,15 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 	getBodyShapes(renderable: Renderable): readonly BodyShape[] {
 		// Adapter-side debug surface: live `shapes` list in renderable-
 		// local coordinates. Read-only — callers must not mutate.
+		// Gated on `this.bodies.has(body)` to match the adapter contract:
+		// an unregistered body (or no body) returns an empty array.
 		// `body.shapes` is typed in body.js as a union that includes a
 		// scalar `Point` variant (legacy, never produced at runtime).
-		return (
-			((renderable.body as Body | undefined)?.shapes as
-				| BodyShape[]
-				| undefined) ?? []
-		);
+		const body = renderable.body as Body | undefined;
+		if (!body || !this.bodies.has(body)) {
+			return [];
+		}
+		return body.shapes as BodyShape[];
 	}
 
 	isGrounded(renderable: Renderable): boolean {
@@ -374,7 +380,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 
 	raycast(from: Vector2d, to: Vector2d): RaycastHit | null {
 		// Goes through the same SAT-based broadphase walk as the legacy
-		// `Detector.rayCast` (both share `raycastQuery` in `./raycast.js`),
+		// `Detector.rayCast` (both share `raycastQuery` in `./raycast.ts`),
 		// and returns the portable `RaycastHit` shape (`renderable`,
 		// `point`, `normal`, `fraction`) for parity with the matter /
 		// planck adapters. `point` is the precise parametric entry point
