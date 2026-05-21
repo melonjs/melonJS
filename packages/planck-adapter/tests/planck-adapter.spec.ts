@@ -627,10 +627,9 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 				shapes: [new Rect(0, 0, 32, 32)],
 				maxVelocity: { x: 4, y: 9 },
 			});
-			const cap = adapter.getMaxVelocity?.(r);
-			expect(cap).not.toBeUndefined();
-			expect(cap!.x).toEqual(4);
-			expect(cap!.y).toEqual(9);
+			const cap = adapter.getMaxVelocity(r);
+			expect(cap.x).toEqual(4);
+			expect(cap.y).toEqual(9);
 		});
 
 		it("setMaxVelocity overrides the bodyDef value", () => {
@@ -641,9 +640,9 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 				maxVelocity: { x: 4, y: 9 },
 			});
 			adapter.setMaxVelocity(r, { x: 7, y: 12 });
-			const cap = adapter.getMaxVelocity?.(r);
-			expect(cap!.x).toEqual(7);
-			expect(cap!.y).toEqual(12);
+			const cap = adapter.getMaxVelocity(r);
+			expect(cap.x).toEqual(7);
+			expect(cap.y).toEqual(12);
 		});
 
 		it("|vel.x| is clamped to maxVelocity under sustained force", () => {

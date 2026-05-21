@@ -672,13 +672,11 @@ export class MatterAdapter implements PhysicsAdapter {
 		renderable.pos.y = p.y;
 	}
 
-	/**
-	 * Flush the per-body cached position-correction impulse so matter's
-	 * position-warming mechanism doesn't reapply stale penetration data
-	 * on the next step. Used by {@link setPosition} to keep a
-	 * discontinuous teleport from being undone by the solver.
-	 */
 	private invalidateContactsFor(body: Matter.Body): void {
+		// Flush the per-body cached position-correction impulse so matter's
+		// position-warming mechanism doesn't reapply stale penetration
+		// data on the next step. Used by setPosition to keep a
+		// discontinuous teleport from being undone by the solver.
 		// Zero the per-body cached position-correction impulse. Matter's
 		// `Resolver.postSolvePosition` applies `body.positionImpulse` to
 		// the body every step via the position-warming mechanism (for

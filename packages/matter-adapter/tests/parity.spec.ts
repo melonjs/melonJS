@@ -440,9 +440,7 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
 				adapter.removeBody(r);
-				const shapes = adapter.getBodyShapes?.(r);
-				expect(shapes).toBeDefined();
-				expect(shapes!.length).toEqual(0);
+				expect(adapter.getBodyShapes(r).length).toEqual(0);
 			});
 		});
 
@@ -1056,12 +1054,12 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				// Quirks #6 ("defer destructive ops in collision callbacks").
 				// Pins that: (a) the contact fires exactly once, (b) the
 				// post-removal queryAABB no longer returns the coin.
-				let pickedUp: Renderable | undefined;
+				let pickedUp = false;
 				const events: string[] = [];
 				class Coin extends Renderable {
 					onCollisionStart() {
 						events.push("pickup");
-						pickedUp = this;
+						pickedUp = true;
 					}
 				}
 				const player = new Renderable(100, 100, 32, 32);
@@ -1082,17 +1080,17 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				world.addChild(coin);
 
 				world.update(16);
-				expect(pickedUp).toBeDefined();
+				expect(pickedUp).toEqual(true);
 				expect(events.length).toEqual(1);
 
 				// Deferred removal — safe on every adapter.
-				pickedUp!.ancestor.removeChildNow(pickedUp!);
+				coin.ancestor.removeChildNow(coin);
 				world.update(16);
 				adapter.syncFromPhysics();
 
 				// Coin must not show up in subsequent spatial queries.
 				const hits = adapter.queryAABB(new Rect(100, 95, 30, 30));
-				expect(hits).not.toContain(pickedUp);
+				expect(hits).not.toContain(coin);
 				// And no second pickup fired.
 				expect(events.length).toEqual(1);
 			});
