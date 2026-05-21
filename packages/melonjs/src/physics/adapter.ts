@@ -2,12 +2,9 @@ import type { Ellipse } from "../geometries/ellipse.ts";
 import type { Polygon } from "../geometries/polygon.ts";
 import type { Rect } from "../geometries/rectangle.ts";
 import type { Vector2d } from "../math/vector2d.ts";
+import type Renderable from "../renderable/renderable.js";
 import type { Bounds } from "./bounds.ts";
-
-/**
- * @import Renderable from "../renderable/renderable.js";
- * @import World from "./world.js";
- */
+import type World from "./world.js";
 
 /**
  * Body simulation kind. `static` bodies never move (terrain, walls);
@@ -44,9 +41,9 @@ export type BodyShape = Rect | Ellipse | Polygon;
  */
 export interface CollisionResponse {
 	/** the renderable whose handler is firing — always `=== this`. */
-	a: import("../renderable/renderable.js").default;
+	a: Renderable;
 	/** the partner renderable — always `=== other`. */
-	b: import("../renderable/renderable.js").default;
+	b: Renderable;
 	/**
 	 * Unit minimum-translation vector for the receiver: the direction `a`
 	 * must move to separate from `b`. Same sign convention across every
@@ -320,7 +317,7 @@ export interface AdapterOptions {
 /** Result of a successful {@link PhysicsAdapter.raycast}. */
 export interface RaycastHit {
 	/** the renderable whose body the ray hit */
-	renderable: import("../renderable/renderable.js").default;
+	renderable: Renderable;
 	/** world-space hit point */
 	point: Vector2d;
 	/** surface normal at the hit point */
@@ -404,7 +401,7 @@ export interface PhysicsAdapter {
 	 * Adapters may register internal listeners, allocate native engine
 	 * state, or read world bounds here.
 	 */
-	init?(world: import("./world.js").default): void;
+	init?(world: World): void;
 
 	/** Called when the adapter is being torn down; release native resources. */
 	destroy?(): void;
@@ -427,9 +424,7 @@ export interface PhysicsAdapter {
 	 * also expose this via {@link setPosition} and skip implementing
 	 * it directly.
 	 */
-	syncToPhysics?(
-		renderable: import("../renderable/renderable.js").default,
-	): void;
+	syncToPhysics?(renderable: Renderable): void;
 
 	/**
 	 * Register a body with the simulation. Returns an opaque handle that
@@ -446,23 +441,17 @@ export interface PhysicsAdapter {
 	 * without a matching `addChild` will integrate (velocity, forces) but
 	 * never collide.
 	 */
-	addBody(
-		renderable: import("../renderable/renderable.js").default,
-		def: BodyDefinition,
-	): PhysicsBody;
+	addBody(renderable: Renderable, def: BodyDefinition): PhysicsBody;
 
 	/**
 	 * Unregister a body. Called automatically when `Container.removeChild`
 	 * detaches the renderable; direct calls are the inverse of a direct
 	 * `addBody` (rare — use `removeChild` for the normal lifecycle).
 	 */
-	removeBody(renderable: import("../renderable/renderable.js").default): void;
+	removeBody(renderable: Renderable): void;
 
 	/** Replace the body's collision geometry without re-creating the body. */
-	updateShape?(
-		renderable: import("../renderable/renderable.js").default,
-		shapes: BodyShape[],
-	): void;
+	updateShape?(renderable: Renderable, shapes: BodyShape[]): void;
 
 	/**
 	 * Portable velocity / force / position API. Every adapter implements
@@ -470,48 +459,24 @@ export interface PhysicsAdapter {
 	 * mutating the body handle directly when writing adapter-agnostic
 	 * code.
 	 */
-	getVelocity(
-		renderable: import("../renderable/renderable.js").default,
-		out?: Vector2d,
-	): Vector2d;
-	setVelocity(
-		renderable: import("../renderable/renderable.js").default,
-		v: Vector2d,
-	): void;
-	applyForce(
-		renderable: import("../renderable/renderable.js").default,
-		force: Vector2d,
-		point?: Vector2d,
-	): void;
+	getVelocity(renderable: Renderable, out?: Vector2d): Vector2d;
+	setVelocity(renderable: Renderable, v: Vector2d): void;
+	applyForce(renderable: Renderable, force: Vector2d, point?: Vector2d): void;
 	applyImpulse(
-		renderable: import("../renderable/renderable.js").default,
+		renderable: Renderable,
 		impulse: Vector2d,
 		point?: Vector2d,
 	): void;
-	setPosition(
-		renderable: import("../renderable/renderable.js").default,
-		p: Vector2d,
-	): void;
-	setAngle?(
-		renderable: import("../renderable/renderable.js").default,
-		angle: number,
-	): void;
+	setPosition(renderable: Renderable, p: Vector2d): void;
+	setAngle?(renderable: Renderable, angle: number): void;
 	/** Read absolute rotation angle (radians). Returns 0 if not tracked. */
-	getAngle?(renderable: import("../renderable/renderable.js").default): number;
+	getAngle?(renderable: Renderable): number;
 	/** Set angular velocity (rad / frame). */
-	setAngularVelocity?(
-		renderable: import("../renderable/renderable.js").default,
-		omega: number,
-	): void;
+	setAngularVelocity?(renderable: Renderable, omega: number): void;
 	/** Read angular velocity (rad / frame). Returns 0 if not tracked. */
-	getAngularVelocity?(
-		renderable: import("../renderable/renderable.js").default,
-	): number;
+	getAngularVelocity?(renderable: Renderable): number;
 	/** Apply an angular impulse (`Δω = τ / inertia`). */
-	applyTorque?(
-		renderable: import("../renderable/renderable.js").default,
-		torque: number,
-	): void;
+	applyTorque?(renderable: Renderable, torque: number): void;
 
 	/**
 	 * Runtime body-property mutators. Each maps to the corresponding
@@ -520,40 +485,25 @@ export interface PhysicsAdapter {
 	 * route to their native engine (BuiltinAdapter writes to the `Body`
 	 * handle; MatterAdapter calls Matter's `Body.set*` helpers).
 	 */
-	setStatic(
-		renderable: import("../renderable/renderable.js").default,
-		isStatic: boolean,
-	): void;
-	setGravityScale(
-		renderable: import("../renderable/renderable.js").default,
-		scale: number,
-	): void;
+	setStatic(renderable: Renderable, isStatic: boolean): void;
+	setGravityScale(renderable: Renderable, scale: number): void;
 	setFrictionAir(
-		renderable: import("../renderable/renderable.js").default,
+		renderable: Renderable,
 		friction: number | { x: number; y: number },
 	): void;
-	setMaxVelocity(
-		renderable: import("../renderable/renderable.js").default,
-		limit: { x: number; y: number },
-	): void;
+	setMaxVelocity(renderable: Renderable, limit: { x: number; y: number }): void;
 	/**
 	 * Read the body's current velocity cap (mirror of
 	 * {@link setMaxVelocity}). Returns plain `{x, y}` so callers don't
 	 * need to import a vector type. Optional — adapters that don't
 	 * implement velocity caps omit this method.
 	 */
-	getMaxVelocity?(renderable: import("../renderable/renderable.js").default): {
+	getMaxVelocity?(renderable: Renderable): {
 		x: number;
 		y: number;
 	};
-	setCollisionType(
-		renderable: import("../renderable/renderable.js").default,
-		type: number,
-	): void;
-	setCollisionMask(
-		renderable: import("../renderable/renderable.js").default,
-		mask: number,
-	): void;
+	setCollisionType(renderable: Renderable, type: number): void;
+	setCollisionMask(renderable: Renderable, mask: number): void;
 	/**
 	 * Toggle a body between solid and sensor mode. A sensor still fires
 	 * collision events (`onCollisionStart` / `onCollisionActive` /
@@ -564,10 +514,7 @@ export interface PhysicsAdapter {
 	 * Adapters without a native sensor flag emulate by toggling the
 	 * collision mask between its previous value and `NO_OBJECT`.
 	 */
-	setSensor?(
-		renderable: import("../renderable/renderable.js").default,
-		isSensor: boolean,
-	): void;
+	setSensor?(renderable: Renderable, isSensor: boolean): void;
 
 	/**
 	 * Whether the body has at least one active contact with a surface
@@ -576,9 +523,7 @@ export interface PhysicsAdapter {
 	 * has no direct equivalent and the MatterAdapter implements it by
 	 * scanning active pairs each call.
 	 */
-	isGrounded?(
-		renderable: import("../renderable/renderable.js").default,
-	): boolean;
+	isGrounded?(renderable: Renderable): boolean;
 
 	/**
 	 * Spatial queries.
@@ -592,7 +537,7 @@ export interface PhysicsAdapter {
 	 * exposing it costs nothing).
 	 */
 	raycast?(from: Vector2d, to: Vector2d): RaycastHit | null;
-	queryAABB(rect: Rect): import("../renderable/renderable.js").default[];
+	queryAABB(rect: Rect): Renderable[];
 
 	/**
 	 * Return the body's axis-aligned bounding box in **renderable-local**
@@ -612,10 +557,7 @@ export interface PhysicsAdapter {
 	 * space representation tools rely on regardless of which engine
 	 * the adapter wraps.
 	 */
-	getBodyAABB(
-		renderable: import("../renderable/renderable.js").default,
-		out: Bounds,
-	): Bounds | undefined;
+	getBodyAABB(renderable: Renderable, out: Bounds): Bounds | undefined;
 
 	/**
 	 * Return a snapshot of the body's collision shapes in
@@ -629,7 +571,5 @@ export interface PhysicsAdapter {
 	 * the underlying physics-engine body objects. Required by the
 	 * adapter contract.
 	 */
-	getBodyShapes(
-		renderable: import("../renderable/renderable.js").default,
-	): readonly BodyShape[];
+	getBodyShapes(renderable: Renderable): readonly BodyShape[];
 }

@@ -7,7 +7,7 @@ import {
 	on,
 	WORLD_STEP,
 } from "../system/event.ts";
-import BuiltinAdapter from "./builtin/builtin-adapter.js";
+import BuiltinAdapter from "./builtin/builtin-adapter.ts";
 import QuadTree from "./builtin/quadtree.js";
 import { collision } from "./collision.js";
 

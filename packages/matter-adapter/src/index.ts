@@ -332,32 +332,17 @@ export class MatterAdapter implements PhysicsAdapter {
 			// `pos` would spin the sprite around its corner. Pre-translate
 			// by the centroid-relative offset so the rotation lands on
 			// the visible center regardless of anchor.
-			const t = (
-				renderable as {
-					currentTransform?: {
-						identity?: () => unknown;
-						rotate?: (a: number) => unknown;
-						translate?: (x: number, y: number) => unknown;
-					};
-				}
-			).currentTransform;
-			if (
-				t &&
-				typeof t.identity === "function" &&
-				typeof t.rotate === "function" &&
-				typeof t.translate === "function"
-			) {
-				const off2 = this.posOffsets.get(renderable);
-				const cx = off2 ? -off2.x : 0;
-				const cy = off2 ? -off2.y : 0;
-				t.identity();
-				if (cx !== 0 || cy !== 0) {
-					t.translate(cx, cy);
-					t.rotate(body.angle);
-					t.translate(-cx, -cy);
-				} else {
-					t.rotate(body.angle);
-				}
+			const t = renderable.currentTransform;
+			const off2 = this.posOffsets.get(renderable);
+			const cx = off2 ? -off2.x : 0;
+			const cy = off2 ? -off2.y : 0;
+			t.identity();
+			if (cx !== 0 || cy !== 0) {
+				t.translate(cx, cy);
+				t.rotate(body.angle);
+				t.translate(-cx, -cy);
+			} else {
+				t.rotate(body.angle);
 			}
 		}
 	}
@@ -672,9 +657,50 @@ export class MatterAdapter implements PhysicsAdapter {
 				x: p.x - (off?.x ?? 0),
 				y: p.y - (off?.y ?? 0),
 			});
+			// Matter caches contact pairs across steps for solver continuity.
+			// After a discontinuous teleport the cached pair still holds the
+			// previous penetration depth + normal, and matter's Baumgarte
+			// position-correction phase applies that on the next step before
+			// narrow-phase invalidates the pair — yanking the body back
+			// toward the old contact point by ≈ penetration depth. Builtin
+			// and planck handle this natively (planck's `b2Body::SetTransform`
+			// documents "contacts are updated on the next call to
+			// b2World::Step"); matter doesn't, so do it ourselves.
+			this.invalidateContactsFor(body);
 		}
 		renderable.pos.x = p.x;
 		renderable.pos.y = p.y;
+	}
+
+	/**
+	 * Flush the per-body cached position-correction impulse so matter's
+	 * position-warming mechanism doesn't reapply stale penetration data
+	 * on the next step. Used by {@link setPosition} to keep a
+	 * discontinuous teleport from being undone by the solver.
+	 */
+	private invalidateContactsFor(body: Matter.Body): void {
+		// Zero the per-body cached position-correction impulse. Matter's
+		// `Resolver.postSolvePosition` applies `body.positionImpulse` to
+		// the body every step via the position-warming mechanism (for
+		// solver continuity across frames), independently of whether
+		// `pairs.list` still has an active contact. After a discontinuous
+		// teleport that cached impulse contains the OLD penetration
+		// vector, and reapplying it yanks the body back toward the old
+		// contact point by ≈ penetration depth. Zeroing it disables the
+		// warming for one frame — matter will rebuild a fresh impulse
+		// from genuine contacts on the next step if any exist.
+		// Note: engine.pairs is left alone deliberately so matter's
+		// natural pair-lifecycle (Pairs.update marking the stale pair
+		// as inactive on the next step, then moving it to collisionEnd
+		// and firing the event) still works.
+		// `positionImpulse` is a real per-body field but isn't in
+		// `@types/matter-js` (matter exposes it as a solver internal);
+		// intersect the public Body type with the field we touch rather
+		// than discarding the type entirely.
+		const impulse = (body as Matter.Body & { positionImpulse: Matter.Vector })
+			.positionImpulse;
+		impulse.x = 0;
+		impulse.y = 0;
 	}
 
 	setAngle(renderable: Renderable, angle: number): void {
@@ -1072,15 +1098,12 @@ export class MatterAdapter implements PhysicsAdapter {
 			// Matter has no native ellipse — approximate as a circle with the
 			// average radius. For tall/narrow ellipses this is a poor fit;
 			// a future improvement could synthesize a polygon hull.
-			const e = shape as unknown as {
-				pos: { x: number; y: number };
-				radiusV?: { x: number; y: number };
-				radius?: number;
-			};
-			const rx = e.radiusV?.x ?? e.radius ?? 1;
-			const ry = e.radiusV?.y ?? e.radius ?? 1;
-			const radius = (rx + ry) / 2;
-			return Matter.Bodies.circle(baseX + e.pos.x, baseY + e.pos.y, radius);
+			const radius = (shape.radiusV.x + shape.radiusV.y) / 2;
+			return Matter.Bodies.circle(
+				baseX + shape.pos.x,
+				baseY + shape.pos.y,
+				radius,
+			);
 		}
 		if (shape instanceof Polygon) {
 			// translate polygon vertices into world-space, then let Matter

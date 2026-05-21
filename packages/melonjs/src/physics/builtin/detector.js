@@ -1,6 +1,6 @@
 import { Bounds } from "../bounds.ts";
 import ResponseObject from "../response.js";
-import { raycastQuery } from "./raycast.js";
+import { raycastQuery } from "./raycast.ts";
 import {
 	testEllipseEllipse,
 	testEllipsePolygon,

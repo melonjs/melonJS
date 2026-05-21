@@ -17,6 +17,7 @@ import {
 	Bounds,
 	BuiltinAdapter,
 	boot,
+	Container,
 	collision,
 	Rect,
 	Renderable,
@@ -844,6 +845,281 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 				for (let i = 0; i < 60; i++) world.update(16);
 				adapter.syncFromPhysics();
 				expect(dyn.pos.y).toBeGreaterThan(floorBottom);
+			});
+		});
+
+		describe("raycast / queryAABB are geometric (not collision-filtered)", () => {
+			// Raycast and queryAABB are pure spatial queries — they return
+			// every body whose geometry intersects the query, regardless of
+			// `collisionType` / `collisionMask`. Box2D's RayCast and matter's
+			// Query.ray both follow this convention; the portable adapter
+			// surface inherits it. Pin that here so a future PR that adds
+			// "helpful" implicit mask filtering to one adapter is caught.
+			const placeWall = (
+				x: number,
+				collisionType: number,
+				collisionMask: number,
+			) => {
+				const wall = new Renderable(x, 200, 40, 40);
+				wall.alwaysUpdate = true;
+				wall.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 40, 40)],
+					collisionType,
+					collisionMask,
+				};
+				world.addChild(wall);
+				return wall;
+			};
+
+			it("raycast returns the nearest hit regardless of collisionMask", () => {
+				const near = placeWall(100, collision.types.WORLD_SHAPE, 0);
+				placeWall(300, collision.types.WORLD_SHAPE, collision.types.ALL_OBJECT);
+				world.update(16);
+				const hit = adapter.raycast(
+					new Vector2d(0, 220),
+					new Vector2d(500, 220),
+				);
+				expect(hit).not.toBeNull();
+				expect(hit!.renderable).toBe(near);
+			});
+
+			it("queryAABB returns every overlapping body regardless of collisionMask", () => {
+				const a = placeWall(100, collision.types.WORLD_SHAPE, 0);
+				const b = placeWall(
+					200,
+					collision.types.WORLD_SHAPE,
+					collision.types.ALL_OBJECT,
+				);
+				world.update(16);
+				const hits = adapter.queryAABB(new Rect(50, 150, 300, 200));
+				expect(hits).toContain(a);
+				expect(hits).toContain(b);
+				expect(hits.length).toEqual(2);
+			});
+		});
+
+		describe("adversarial — common gameplay patterns", () => {
+			// Patterns every game hits sooner or later. Bugs here cascade
+			// silently in production, so each test pins an invariant that
+			// is easy to break by refactoring the contact / lifecycle path.
+
+			it("deferred-removal pickup pattern — body is gone from queries the next frame", () => {
+				// The portable pickup idiom: onCollisionStart flags the coin
+				// for removal, the actual removeChildNow happens AFTER the
+				// world step. Matches the recommendation in BuiltinAdapter
+				// Quirks #6 ("defer destructive ops in collision callbacks").
+				let pickedUp: Renderable | undefined;
+				const events: string[] = [];
+				class Coin extends Renderable {
+					onCollisionStart() {
+						events.push("pickup");
+						pickedUp = this;
+					}
+				}
+				const player = new Renderable(100, 100, 32, 32);
+				player.alwaysUpdate = true;
+				player.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+					gravityScale: 0,
+				};
+				world.addChild(player);
+				const coin = new Coin(108, 100, 16, 16);
+				coin.alwaysUpdate = true;
+				coin.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 16, 16)],
+					isSensor: true,
+				};
+				world.addChild(coin);
+
+				world.update(16);
+				expect(pickedUp).toBeDefined();
+				expect(events.length).toEqual(1);
+
+				pickedUp!.ancestor.removeChildNow(pickedUp!);
+				world.update(16);
+				adapter.syncFromPhysics();
+
+				const hits = adapter.queryAABB(new Rect(100, 95, 30, 30));
+				expect(hits).not.toContain(pickedUp);
+				expect(events.length).toEqual(1);
+			});
+
+			it("setPosition out of penetration — no stale-contact correction", () => {
+				// Regression mirror of the matter-adapter parity test:
+				// teleporting a body OUT of a penetrating overlap must
+				// leave it exactly at the teleport target on the next
+				// step, with no carryover Baumgarte correction from the
+				// stale contact pair. Planck inherits the correct behavior
+				// from Box2D's b2Body::SetTransform (which documents
+				// "contacts are updated on the next call to b2World::Step").
+				const wall = new Renderable(200, 200, 40, 40);
+				wall.alwaysUpdate = true;
+				wall.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 40, 40)],
+				};
+				world.addChild(wall);
+
+				const mover = new Renderable(195, 200, 32, 32);
+				mover.alwaysUpdate = true;
+				mover.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+					gravityScale: 0,
+				};
+				world.addChild(mover);
+				world.update(16);
+
+				adapter.setPosition(mover, new Vector2d(500, 100));
+				adapter.setVelocity(mover, new Vector2d(0, 0));
+				world.update(16);
+				adapter.syncFromPhysics();
+				expect(Math.abs(mover.pos.x - 500)).toBeLessThan(1);
+				expect(Math.abs(mover.pos.y - 100)).toBeLessThan(1);
+			});
+
+			it("setPosition while in contact — teleport away from a resting body works", () => {
+				// Common cutscene / level-transition pattern: a body
+				// resting on a floor is teleported elsewhere. One step
+				// later it must be where we put it, not pulled back to
+				// the floor by a stale contact-resolution force.
+				const floor = new Renderable(0, 200, 800, 20);
+				floor.alwaysUpdate = true;
+				floor.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 800, 20)],
+				};
+				world.addChild(floor);
+
+				const ball = new Renderable(100, 150, 32, 32);
+				ball.alwaysUpdate = true;
+				ball.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				world.addChild(ball);
+
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+
+				adapter.setPosition(ball, new Vector2d(400, 50));
+				adapter.setVelocity(ball, new Vector2d(0, 0));
+				world.update(16);
+				adapter.syncFromPhysics();
+				expect(Math.abs(ball.pos.x - 400)).toBeLessThan(2);
+				expect(Math.abs(ball.pos.y - 50)).toBeLessThan(5);
+			});
+
+			it("setStatic mid-collision — frozen body stops, partner stops being pushed", () => {
+				const floor = new Renderable(0, 200, 800, 20);
+				floor.alwaysUpdate = true;
+				floor.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 800, 20)],
+				};
+				world.addChild(floor);
+
+				const dyn = new Renderable(100, 150, 32, 32);
+				dyn.alwaysUpdate = true;
+				dyn.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				world.addChild(dyn);
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				const restingY = dyn.pos.y;
+
+				adapter.setStatic(dyn, true);
+				for (let i = 0; i < 30; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(Math.abs(dyn.pos.y - restingY)).toBeLessThan(1);
+			});
+
+			it("nested-container removeChildNow de-registers the body from the adapter", () => {
+				// Common level-management pattern: bodies live inside a
+				// "level" subcontainer that gets cleared on transition.
+				// Removing the child must drain the adapter's bookkeeping,
+				// otherwise stale bodies keep showing up in raycast /
+				// queryAABB after the level is gone.
+				const sub = new Container(0, 0, 800, 600);
+				world.addChild(sub);
+
+				const r = new Renderable(100, 100, 32, 32);
+				r.alwaysUpdate = true;
+				r.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				sub.addChild(r);
+				world.update(16);
+
+				const seenBefore = adapter.queryAABB(new Rect(90, 90, 50, 50));
+				expect(seenBefore).toContain(r);
+
+				sub.removeChildNow(r, true);
+				world.update(16);
+				const seenAfter = adapter.queryAABB(new Rect(90, 90, 50, 50));
+				expect(seenAfter).not.toContain(r);
+			});
+
+			it("setSensor toggle mid-flight — one-way-platform pattern", () => {
+				// A solid floor becomes a sensor for one frame so a falling
+				// body passes through, then flips back to solid. Pin both
+				// transitions: sensor=true ⇒ body falls past; sensor=false
+				// ⇒ body lands on subsequent contact.
+				const floor = new Renderable(0, 200, 800, 20);
+				floor.alwaysUpdate = true;
+				floor.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 800, 20)],
+				};
+				world.addChild(floor);
+
+				const ball = new Renderable(100, 150, 32, 32);
+				ball.alwaysUpdate = true;
+				ball.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				world.addChild(ball);
+
+				adapter.setSensor?.(floor, true);
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(ball.pos.y).toBeGreaterThan(220);
+
+				adapter.setSensor?.(floor, false);
+				adapter.setPosition(ball, new Vector2d(100, 150));
+				adapter.setVelocity(ball, new Vector2d(0, 0));
+				for (let i = 0; i < 60; i++) world.update(16);
+				adapter.syncFromPhysics();
+				expect(ball.pos.y).toBeLessThan(201);
+				expect(ball.pos.y).toBeGreaterThan(140);
+			});
+		});
+
+		describe("maxVelocity — actually clamps under sustained force", () => {
+			it("|vel.x| stays at or below the configured cap", () => {
+				const r = new Renderable(100, 100, 32, 32);
+				r.alwaysUpdate = true;
+				r.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+					maxVelocity: { x: 5, y: 5 },
+					gravityScale: 0,
+				};
+				world.addChild(r);
+
+				for (let i = 0; i < 30; i++) {
+					adapter.applyForce(r, new Vector2d(100, 0));
+					world.update(16);
+				}
+				const vel = adapter.getVelocity(r);
+				expect(Math.abs(vel.x)).toBeLessThanOrEqual(5 + 0.1);
 			});
 		});
 	});

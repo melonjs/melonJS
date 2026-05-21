@@ -840,4 +840,52 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 			expect(matches).toContain(r);
 		});
 	});
+
+	describe("gravityScale emulation", () => {
+		// matter-js 0.20 has no per-body gravityScale field — the adapter
+		// emulates it via a counter-force loop tracked in `bodyGravityScale`
+		// (see `src/index.ts:144`). The stress spec already pins that the
+		// internal map is drained on removeBody; this test pins the
+		// behavioural side: `gravityScale: 0` actually nulls out gravity
+		// so the body doesn't fall. Easy to silently break if the gravity
+		// application path is refactored.
+		it("gravityScale: 0 prevents a body from falling under world gravity", () => {
+			const r = new Renderable(100, 100, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 0,
+			});
+			const startY = r.pos.y;
+			for (let i = 0; i < 60; i++) adapter.step(16);
+			adapter.syncFromPhysics();
+			expect(Math.abs(r.pos.y - startY)).toBeLessThan(0.1);
+		});
+
+		it("gravityScale: 0.5 falls roughly half as fast as scale: 1", () => {
+			const rFull = new Renderable(100, 100, 32, 32);
+			adapter.addBody(rFull, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 1,
+			});
+			const rHalf = new Renderable(200, 100, 32, 32);
+			adapter.addBody(rHalf, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 0.5,
+			});
+			for (let i = 0; i < 60; i++) adapter.step(16);
+			adapter.syncFromPhysics();
+			const fallFull = rFull.pos.y - 100;
+			const fallHalf = rHalf.pos.y - 100;
+			// Half-gravity body falls slower than full-gravity body.
+			expect(fallHalf).toBeLessThan(fallFull);
+			// And the ratio is in the ballpark of 0.5 (matter integrates
+			// over dt so the exact ratio drifts a bit; allow a wide band).
+			const ratio = fallHalf / fallFull;
+			expect(ratio).toBeGreaterThan(0.3);
+			expect(ratio).toBeLessThan(0.7);
+		});
+	});
 });

@@ -1,5 +1,4 @@
 import { Point } from "../geometries/point.ts";
-import { polygonPool } from "../geometries/polygon.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -475,19 +474,6 @@ export class Bounds {
 		const bounds = new Bounds();
 		bounds.addBounds(this);
 		return bounds;
-	}
-
-	/**
-	 * Returns a polygon whose edges are the same as this bounds.
-	 * @returns A new Polygon that represents this bounds.
-	 */
-	toPolygon() {
-		return polygonPool.get(this.x, this.y, [
-			new Vector2d(0, 0),
-			new Vector2d(this.width, 0),
-			new Vector2d(this.width, this.height),
-			new Vector2d(0, this.height),
-		]);
 	}
 }
 
