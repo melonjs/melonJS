@@ -1,22 +1,17 @@
 name: Build & Test
-# Docs-only PRs (markdown / media changes) skip these jobs via `paths-ignore`.
-# Required `lint`/`test` checks are satisfied for those PRs by the shim in
-# `main-docs.yml`, which mirrors this file's path filters and emits matching
-# job names that succeed immediately. Together the two form a partition —
-# exactly one runs per push/PR.
+# Runs lint + test on every push/PR — no path-filtered shim partition.
+# The previous two-workflow setup (`main.yml` + `main-docs.yml`) was
+# racy on mixed PRs (PRs touching both `.md` and code): GitHub Actions
+# evaluates `paths` / `paths-ignore` against the full PR diff, so a
+# mixed PR triggered BOTH workflows, they shared `concurrency.group`,
+# and the faster docs-shim cancelled the real CI run while still
+# reporting green checks. Docs-only PRs pay ~2 minutes of CI cost as
+# the trade-off; cheaper than silently merging a lint failure.
 on:
   push:
     branches: [master]
-    paths-ignore:
-      - '*.md'
-      - 'media/**'
-      - 'packages/melonjs/DOC_README.md'
   pull_request:
     types: [opened, synchronize]
-    paths-ignore:
-      - '*.md'
-      - 'media/**'
-      - 'packages/melonjs/DOC_README.md'
 
 concurrency:
   group: ci-${{ github.ref }}
