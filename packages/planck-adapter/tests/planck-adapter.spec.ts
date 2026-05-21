@@ -614,6 +614,54 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 			expect(shapes[0]).toEqual(rect);
 		});
 	});
+
+	describe("maxVelocity", () => {
+		// The other two adapter specs (builtin + matter) have maxVelocity
+		// coverage; planck didn't until now. Pin both halves: that
+		// `bodyDef.maxVelocity` propagates into the internal velocity-cap
+		// state, and that the cap actually clamps under sustained force.
+		it("bodyDef.maxVelocity is recorded in the velocityLimits map", () => {
+			const r = new Renderable(0, 0, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				maxVelocity: { x: 4, y: 9 },
+			});
+			const cap = adapter.getMaxVelocity(r);
+			expect(cap.x).toEqual(4);
+			expect(cap.y).toEqual(9);
+		});
+
+		it("setMaxVelocity overrides the bodyDef value", () => {
+			const r = new Renderable(0, 0, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				maxVelocity: { x: 4, y: 9 },
+			});
+			adapter.setMaxVelocity(r, { x: 7, y: 12 });
+			const cap = adapter.getMaxVelocity(r);
+			expect(cap.x).toEqual(7);
+			expect(cap.y).toEqual(12);
+		});
+
+		it("|vel.x| is clamped to maxVelocity under sustained force", () => {
+			const r = new Renderable(100, 100, 32, 32);
+			r.alwaysUpdate = true;
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				maxVelocity: { x: 5, y: 5 },
+				gravityScale: 0,
+			});
+			for (let i = 0; i < 30; i++) {
+				adapter.applyForce(r, new Vector2d(100, 0));
+				adapter.step(16);
+			}
+			const vel = adapter.getVelocity(r);
+			expect(Math.abs(vel.x)).toBeLessThanOrEqual(5 + 0.1);
+		});
+	});
 });
 
 describe("PlanckAdapter — unit conversion", () => {

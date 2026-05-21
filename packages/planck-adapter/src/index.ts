@@ -316,31 +316,16 @@ export class PlanckAdapter implements PhysicsAdapter {
 			// centroid at addBody time), but `Renderable.preDraw` pivots
 			// at `renderable.pos`. The difference is exactly `-posOffset`.
 			const angle = body.getAngle();
-			const t = (
-				renderable as {
-					currentTransform?: {
-						identity?: () => unknown;
-						rotate?: (a: number) => unknown;
-						translate?: (x: number, y: number) => unknown;
-					};
-				}
-			).currentTransform;
-			if (
-				t &&
-				typeof t.identity === "function" &&
-				typeof t.rotate === "function" &&
-				typeof t.translate === "function"
-			) {
-				const cx = off ? -off.x : 0;
-				const cy = off ? -off.y : 0;
-				t.identity();
-				if (cx !== 0 || cy !== 0) {
-					t.translate(cx, cy);
-					t.rotate(angle);
-					t.translate(-cx, -cy);
-				} else {
-					t.rotate(angle);
-				}
+			const t = renderable.currentTransform;
+			const cx = off ? -off.x : 0;
+			const cy = off ? -off.y : 0;
+			t.identity();
+			if (cx !== 0 || cy !== 0) {
+				t.translate(cx, cy);
+				t.rotate(angle);
+				t.translate(-cx, -cy);
+			} else {
+				t.rotate(angle);
 			}
 		}
 	}
@@ -1140,16 +1125,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 			// Box2D has no native ellipse — approximate as a circle with
 			// the average radius. Future improvement: polygon hull for
 			// tall/narrow ellipses.
-			const e = shape as unknown as {
-				pos: { x: number; y: number };
-				radiusV?: { x: number; y: number };
-				radius?: number;
-			};
-			const rx = e.radiusV?.x ?? e.radius ?? 1;
-			const ry = e.radiusV?.y ?? e.radius ?? 1;
-			const radius = (rx + ry) / 2;
-			const cx = e.pos.x - centroid.x;
-			const cy = e.pos.y - centroid.y;
+			const radius = (shape.radiusV.x + shape.radiusV.y) / 2;
+			const cx = shape.pos.x - centroid.x;
+			const cy = shape.pos.y - centroid.y;
 			return new planck.Circle(
 				new planck.Vec2(this.px2m(cx), this.px2m(cy)),
 				this.px2m(radius),

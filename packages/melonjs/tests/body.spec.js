@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	Body,
+	Bounds,
 	collision,
 	Ellipse,
+	Line,
+	Point,
 	Polygon,
 	Rect,
 	Renderable,
@@ -126,6 +129,90 @@ describe("Physics : Body", () => {
 			body.addShape(new Rect(16, 0, 16, 16));
 			body.addShape(new Rect(0, 16, 16, 16));
 			expect(body.shapes.length).toEqual(3);
+		});
+
+		// The next block targets every shape type the JSDoc on
+		// `Body.addShape` and `Body` constructor advertise. Each branch
+		// of the conditional in `body.js#addShape` should be hit at least
+		// once — a regression on any branch would otherwise slip past CI.
+		it("addShape accepts a Bounds — converts to polygon via inline AABB", () => {
+			// Regression: `Body.addShape(bounds)` used to call
+			// `bounds.toPolygon()`. `Bounds.toPolygon` was removed in 19.5;
+			// body.js inlines the conversion now to avoid the
+			// bounds.ts ↔ polygon.ts cycle. Pin that the path still works.
+			const b = new Bounds();
+			b.setMinMax(0, 0, 24, 16);
+			const result = body.addShape(b);
+			expect(result).toEqual(1);
+			expect(body.shapes.length).toEqual(1);
+			expect(body.shapes[0]).toBeInstanceOf(Polygon);
+			// Body bounds should match the source AABB.
+			const out = body.getBounds();
+			expect(out.width).toEqual(24);
+			expect(out.height).toEqual(16);
+		});
+
+		it("addShape accepts a Line — Line extends Polygon so hits the Polygon branch", () => {
+			const line = new Line(0, 0, [
+				{ x: 0, y: 0 },
+				{ x: 32, y: 16 },
+			]);
+			const result = body.addShape(line);
+			expect(result).toEqual(1);
+			expect(body.shapes[0]).toBe(line);
+		});
+
+		it("addShape accepts a Point", () => {
+			const p = new Point(8, 12);
+			const result = body.addShape(p);
+			expect(result).toEqual(1);
+			expect(body.shapes[0]).toBe(p);
+		});
+
+		it("addShape accepts a PhysicEditor-style JSON shape", () => {
+			// `addShape` routes objects without a known prototype to
+			// `fromJSON`, which expects an array of `{ shape: [x0,y0, x1,y1, …] }`
+			// entries (the PhysicEditor export format). One triangle:
+			const json = [
+				{
+					shape: [0, 0, 32, 0, 16, 32],
+				},
+			];
+			const result = body.addShape(json);
+			expect(result).toBeGreaterThanOrEqual(1);
+			expect(body.shapes.length).toBeGreaterThanOrEqual(1);
+		});
+
+		it("Body constructor accepts a Bounds shape", () => {
+			// Mirror the addShape Bounds test on the constructor path —
+			// the bug Copilot caught originated in `new Body(r, bounds)`
+			// just as much as `body.addShape(bounds)`.
+			const b = new Bounds();
+			b.setMinMax(0, 0, 32, 32);
+			const r = new Renderable(0, 0, 32, 32);
+			const built = new Body(r, b);
+			expect(built.shapes.length).toEqual(1);
+			expect(built.shapes[0]).toBeInstanceOf(Polygon);
+		});
+
+		it("Body constructor accepts a mixed array of shape types", () => {
+			// Multi-shape compound body with one of every supported type
+			// in a single array — the path most likely to surface a
+			// branch-ordering bug in `addShape`.
+			const b = new Bounds();
+			b.setMinMax(0, 0, 8, 8);
+			const r = new Renderable(0, 0, 64, 64);
+			const built = new Body(r, [
+				new Rect(0, 0, 16, 16),
+				new Ellipse(8, 8, 16, 16),
+				new Polygon(0, 0, [
+					{ x: 0, y: 0 },
+					{ x: 16, y: 0 },
+					{ x: 8, y: 16 },
+				]),
+				b,
+			]);
+			expect(built.shapes.length).toEqual(4);
 		});
 
 		it("getShape should return the shape at the given index", () => {

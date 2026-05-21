@@ -1,12 +1,13 @@
 /**
- * Cross-adapter parity spec.
+ * Cross-adapter parity spec — `BuiltinAdapter` vs `PlanckAdapter`.
  *
- * Runs the same test body against BOTH BuiltinAdapter and MatterAdapter
- * to catch behavioural drift in the shared PhysicsAdapter contract.
- * Things that are *supposed* to be identical regardless of physics engine
- * live here; things that are inherently engine-dependent (Newtonian-force
- * units, rotation, slope handling, etc.) belong in each adapter's own
- * spec instead.
+ * Mirror of `@melonjs/matter-adapter/tests/parity.spec.ts`. Runs the
+ * same test body against both adapters to catch behavioural drift in
+ * the shared `PhysicsAdapter` contract. Things that are *supposed* to
+ * be identical regardless of physics engine live here; things that
+ * are inherently engine-dependent (Box2D's meters-based units, native
+ * rotational dynamics, sleeping bodies, etc.) belong in the adapter's
+ * own spec instead.
  *
  * If a test in this file passes on one adapter and fails on the other,
  * that's a real bug in adapter parity, not an "expected difference."
@@ -25,21 +26,23 @@ import {
 	World,
 } from "melonjs";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { MatterAdapter } from "../src/index";
+import { PlanckAdapter } from "../src/index";
 
 interface AdapterFactory {
 	name: string;
 	make(): {
-		adapter: BuiltinAdapter | MatterAdapter;
+		adapter: BuiltinAdapter | PlanckAdapter;
 		world: World;
 	};
 	/**
-	 * Decimal-place precision for raycast / position assertions. The
-	 * builtin SAT adapter resolves contacts at full precision; matter
-	 * inflates slightly through its Verlet integration step + collision
-	 * margin, so close-to assertions use precision 0 (within 0.5 px).
+	 * Decimal-place precision for AABB assertions. The builtin SAT
+	 * adapter is exact (precision 1 → within 0.05 px). Planck converts
+	 * positions through meters, and Box2D's polygon `radius`
+	 * (≈ 2 × b2_linearSlop ≈ 0.32 px at the default `pixelsPerMeter`)
+	 * inflates AABBs by that amount in each direction — too far for
+	 * precision 1, fine at precision 0 (within 0.5 px).
 	 */
-	rayPrecision: number;
+	aabbPrecision: number;
 	/** Expected `adapter.capabilities` shape — pinned per adapter. */
 	expectedCapabilities: {
 		constraints: boolean;
@@ -54,7 +57,7 @@ interface AdapterFactory {
 const factories: AdapterFactory[] = [
 	{
 		name: "BuiltinAdapter",
-		rayPrecision: 1,
+		aabbPrecision: 1,
 		expectedCapabilities: {
 			constraints: false,
 			continuousCollisionDetection: false,
@@ -72,8 +75,8 @@ const factories: AdapterFactory[] = [
 		},
 	},
 	{
-		name: "MatterAdapter",
-		rayPrecision: 0,
+		name: "PlanckAdapter",
+		aabbPrecision: 0,
 		expectedCapabilities: {
 			constraints: true,
 			continuousCollisionDetection: true,
@@ -83,7 +86,15 @@ const factories: AdapterFactory[] = [
 			isGrounded: true,
 		},
 		make() {
-			const adapter = new MatterAdapter({ gravity: { x: 0, y: 1 } });
+			// Gravity is in px/s² at the adapter surface (planck converts
+			// to meters internally via `pixelsPerMeter`). Use a real
+			// gravity value so the collision-lifecycle tests' 60-tick
+			// fall window actually produces a contact — at the matter
+			// parity's `(0, 1)`, planck would integrate at 0.03 m/s²
+			// and the ball wouldn't reach the floor.
+			const adapter = new PlanckAdapter({
+				gravity: new Vector2d(0, 320),
+			});
 			const world = new World(0, 0, 800, 600, adapter);
 			return { adapter, world };
 		},
@@ -99,9 +110,9 @@ beforeAll(() => {
 	});
 });
 
-for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
+for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 	describe(`Adapter parity — ${name}`, () => {
-		let adapter: BuiltinAdapter | MatterAdapter;
+		let adapter: BuiltinAdapter | PlanckAdapter;
 		let world: World;
 
 		beforeEach(() => {
@@ -110,8 +121,8 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 
 		// Helper: add a renderable to the world container. The builtin
 		// adapter only integrates bodies whose renderable is in the scene
-		// tree (`body.ancestor` set); matter integrates anything added to
-		// the engine. Going through the world container is the realistic
+		// tree (`body.ancestor` set); planck integrates anything added to
+		// the world. Going through the world container is the realistic
 		// usage and makes the two adapters comparable.
 		const addToWorld = (
 			r: Renderable,
@@ -176,13 +187,10 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
-				// step once so position is in sync
 				adapter.step(16);
 				adapter.syncFromPhysics();
 				adapter.removeBody(r);
 				const yAtRemove = r.pos.y;
-				// further steps: position must NOT keep falling (body
-				// is no longer in the simulation set)
 				for (let i = 0; i < 30; i++) {
 					adapter.step(16);
 				}
@@ -245,7 +253,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
-				// optional method — both adapters implement it now
 				expect(typeof adapter.setSensor).toEqual("function");
 				expect(() => {
 					adapter.setSensor?.(r, true);
@@ -257,12 +264,11 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 		});
 
 		describe("regression — Container.removeChild auto-cleanup", () => {
-			// Previously `Container.removeChildNow` only called the adapter's
-			// removeBody when `child.body instanceof Body` (legacy melonJS
-			// Body). matter-adapter bodies (`Matter.Body` instances) failed
-			// this check and stayed in the engine after the renderable was
-			// destroyed — later collisionStart events fired on dead
-			// renderables and crashed `setCurrentAnimation` etc.
+			// Pool-recycled entities frequently take this path. `Container.
+			// removeChildNow` used to only call the adapter's removeBody
+			// when `child.body instanceof Body` (legacy melonJS Body).
+			// Third-party adapter bodies failed that check and stayed in
+			// the engine after the renderable was destroyed.
 			it("removeChild also removes the adapter-managed body", () => {
 				const r = addToWorld(new Renderable(100, 100, 32, 32), {
 					type: "dynamic",
@@ -270,8 +276,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				});
 				adapter.setVelocity(r, new Vector2d(5, 0));
 				world.removeChildNow(r, true /* keepalive */);
-				// Body unregistered → getVelocity returns zero, and stepping
-				// the adapter no longer integrates the body.
 				expect(adapter.getVelocity(r).x).toEqual(0);
 			});
 		});
@@ -319,8 +323,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 
 			it("onCollisionStart fires exactly once per contact entry", () => {
 				const { events, step } = setupContact();
-				// step long enough for the ball to fall onto the floor and
-				// stay there
 				step(60);
 				const starts = events.filter((e) => e.kind === "start");
 				// 2 = one per renderable (both have a Reporter handler); the
@@ -334,36 +336,29 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				const { events, step } = setupContact();
 				step(60);
 				const actives = events.filter((e) => e.kind === "active");
-				// "every frame in contact" — should fire many times once
-				// settled on the floor
 				expect(actives.length).toBeGreaterThan(5);
 			});
 
 			it("onCollisionEnd fires when bodies separate", () => {
 				const { events, step, ball } = setupContact();
-				step(20); // initial fall + contact
-				// teleport away and step long enough for the detector
-				// frame-diff (builtin) / matter's collisionEnd event to
-				// fire
+				// Step long enough for the ball to actually reach the floor
+				// under both gravity regimes (builtin per-frame, planck
+				// per-second). 60 ticks is the same window the start /
+				// active tests use to register contact.
+				step(60);
 				adapter.setPosition(ball, new Vector2d(2000, 0));
 				step(30);
 				const ends = events.filter((e) => e.kind === "end");
-				// At least one end event should fire — either from natural
-				// bouncing during settle, or from the explicit separation.
-				// Both adapters honour the contract; we don't pin down the
-				// exact timing since SAT bouncing behaves differently from
-				// matter rest contact.
 				expect(ends.length).toBeGreaterThan(0);
 			});
 		});
 
 		describe("debug API (getBodyAABB / getBodyShapes)", () => {
-			// Adapter-side debug surface. The contract is that both
-			// methods return geometry in renderable-LOCAL coordinates
-			// (relative to renderable.pos), so the @melonjs/debug-plugin
-			// can blit them after a translate to the renderable origin
-			// without knowing whether the underlying engine uses a
-			// world- or local-space body frame.
+			// Adapter-side debug surface. Both methods must return geometry
+			// in renderable-LOCAL coordinates (relative to renderable.pos),
+			// so `@melonjs/debug-plugin` can blit them after translating
+			// to the renderable origin without knowing whether the
+			// underlying engine uses a world- or local-space body frame.
 			it("getBodyAABB returns local-space bounds", () => {
 				const r = addToWorld(new Renderable(100, 200, 32, 32), {
 					type: "dynamic",
@@ -372,12 +367,13 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				const out = new Bounds();
 				const aabb = adapter.getBodyAABB?.(r, out);
 				expect(aabb).toBeDefined();
-				// In local space, the bounds should start at (0, 0) — not
-				// at the renderable's world position.
-				expect(aabb!.left).toBeCloseTo(0, 1);
-				expect(aabb!.top).toBeCloseTo(0, 1);
-				expect(aabb!.width).toBeCloseTo(32, 1);
-				expect(aabb!.height).toBeCloseTo(32, 1);
+				expect(aabb!.left).toBeCloseTo(0, aabbPrecision);
+				expect(aabb!.top).toBeCloseTo(0, aabbPrecision);
+				// Dimensions are `right - left`, so any per-edge drift
+				// doubles. Use a slightly wider tolerance than the
+				// single-coordinate precision.
+				expect(Math.abs(aabb!.width - 32)).toBeLessThanOrEqual(1);
+				expect(Math.abs(aabb!.height - 32)).toBeLessThanOrEqual(1);
 			});
 
 			it("getBodyAABB writes into the supplied out Bounds", () => {
@@ -428,8 +424,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
 				adapter.removeBody(r);
-				// renderable.body still points at the orphaned Body — the
-				// adapter must NOT return debug geometry for it.
 				const out = new Bounds();
 				expect(adapter.getBodyAABB?.(r, out)).toBeUndefined();
 			});
@@ -445,49 +439,35 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 		});
 
 		describe("debug API: coordinate-space adversarial", () => {
-			// These tests pin down the *contract* the debug plugin depends
+			// These tests pin down the contract the debug plugin depends
 			// on: `getBodyAABB` must return bounds in **renderable-local**
 			// coordinates regardless of where the renderable lives in the
 			// world or how the body has been moved since registration.
-			//
-			// The debug plugin's draw pass does:
-			//     renderer.translate(bounds.x, bounds.y)  // to renderable origin
-			//     renderer.stroke(adapter.getBodyAABB(...))
-			// so if the AABB is *not* in local space the hitbox renders
-			// offset by `renderable.pos`. These tests catch that
-			// regression on either adapter immediately.
-
 			it("AABB stays local-space at a non-trivial world position", () => {
 				const r = addToWorld(new Renderable(500, 300, 32, 32), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
 				const aabb = adapter.getBodyAABB?.(r, new Bounds())!;
-				expect(aabb.left).toBeCloseTo(0, 1);
-				expect(aabb.top).toBeCloseTo(0, 1);
-				expect(aabb.right).toBeCloseTo(32, 1);
-				expect(aabb.bottom).toBeCloseTo(32, 1);
+				expect(aabb.left).toBeCloseTo(0, aabbPrecision);
+				expect(aabb.top).toBeCloseTo(0, aabbPrecision);
+				expect(aabb.right).toBeCloseTo(32, aabbPrecision);
+				expect(aabb.bottom).toBeCloseTo(32, aabbPrecision);
 			});
 
 			it("AABB stays local-space at NEGATIVE world coords", () => {
-				// Negative coords are a common source of off-by-sign bugs
-				// in adapter coordinate translation — explicitly test.
 				const r = addToWorld(new Renderable(-450, -275, 32, 32), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
 				const aabb = adapter.getBodyAABB?.(r, new Bounds())!;
-				expect(aabb.left).toBeCloseTo(0, 1);
-				expect(aabb.top).toBeCloseTo(0, 1);
-				expect(aabb.right).toBeCloseTo(32, 1);
-				expect(aabb.bottom).toBeCloseTo(32, 1);
+				expect(aabb.left).toBeCloseTo(0, aabbPrecision);
+				expect(aabb.top).toBeCloseTo(0, aabbPrecision);
+				expect(aabb.right).toBeCloseTo(32, aabbPrecision);
+				expect(aabb.bottom).toBeCloseTo(32, aabbPrecision);
 			});
 
 			it("AABB reflects an OFFSET shape inside the renderable", () => {
-				// Common pattern: sprite is 64×64, the collision shape sits
-				// somewhere INSIDE the sprite bounds (e.g. a player whose
-				// hitbox is smaller than the sprite). Local-space AABB
-				// must reflect the shape's offset, not (0,0,w,h).
 				const r = addToWorld(new Renderable(0, 0, 64, 64), {
 					type: "dynamic",
 					shapes: [new Rect(10, 12, 32, 40)],
@@ -495,19 +475,11 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				const aabb = adapter.getBodyAABB?.(r, new Bounds())!;
 				expect(aabb.left).toBeCloseTo(10, 0);
 				expect(aabb.top).toBeCloseTo(12, 0);
-				expect(aabb.width).toBeCloseTo(32, 0);
-				expect(aabb.height).toBeCloseTo(40, 0);
+				expect(Math.abs(aabb.width - 32)).toBeLessThanOrEqual(1);
+				expect(Math.abs(aabb.height - 40)).toBeLessThanOrEqual(1);
 			});
 
 			it("AABB encompasses a multi-shape body in local coords", () => {
-				// Body composed of two stacked shapes — AABB must wrap
-				// both. Shapes share the origin (both start at 0, 0) and
-				// differ in extent, sidestepping a pre-existing quirk in
-				// the legacy Builtin `Body.addShape` path where the
-				// internal `bounds.translate` for an offset rect overrides
-				// rather than unions with prior shapes. Cross-adapter
-				// parity in *this* test only requires the AABB to wrap
-				// the visible shape extent, which holds on both adapters.
 				const r = addToWorld(new Renderable(200, 200, 64, 64), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 16, 16), new Rect(0, 0, 48, 32)],
@@ -515,18 +487,11 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				const aabb = adapter.getBodyAABB?.(r, new Bounds())!;
 				expect(aabb.left).toBeCloseTo(0, 0);
 				expect(aabb.top).toBeCloseTo(0, 0);
-				expect(aabb.right).toBeCloseTo(48, 0);
-				expect(aabb.bottom).toBeCloseTo(32, 0);
+				expect(Math.abs(aabb.right - 48)).toBeLessThanOrEqual(1);
+				expect(Math.abs(aabb.bottom - 32)).toBeLessThanOrEqual(1);
 			});
 
 			it("AABB stays local-space across many simulation steps (static body)", () => {
-				// Adversarial: matter's internal `body.bounds` is in WORLD
-				// space and updates every step. If the adapter forgets to
-				// re-subtract `renderable.pos` the AABB would drift each
-				// step. A **static** body is used here so matter doesn't
-				// inflate the AABB by velocity for swept-AABB / CCD —
-				// that's a separate matter-only behavior orthogonal to
-				// the coordinate-system test.
 				const r = addToWorld(new Renderable(100, 100, 32, 32), {
 					type: "static",
 					shapes: [new Rect(0, 0, 32, 32)],
@@ -547,24 +512,12 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 			});
 
 			it("AABB stays local-space while a dynamic body is falling", () => {
-				// Companion to the static test, focused on the dynamic
-				// case where matter DOES inflate the AABB by velocity for
-				// CCD. The *local-space invariant* still holds — the
-				// AABB's geometric extent is always somewhere near the
-				// origin (renderable.pos), never drifting toward the
-				// body's growing world position. Use a single step so the
-				// velocity-driven inflation is small enough to bound.
 				const r = addToWorld(new Renderable(100, 100, 32, 32), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
 				});
 				adapter.step(16);
 				const after = adapter.getBodyAABB?.(r, new Bounds())!;
-				// After ONE step, body has moved by gravity (small delta)
-				// and matter's CCD inflation is at most ~few px. We just
-				// verify the AABB hasn't escaped to "near the renderable
-				// world position" (which would mean world-space, not
-				// local-space). Bound: AABB center within 10 px of (16, 16).
 				const cx = (after.left + after.right) / 2;
 				const cy = (after.top + after.bottom) / 2;
 				expect(Math.abs(cx - 16)).toBeLessThan(10);
@@ -578,18 +531,11 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				});
 				adapter.setPosition(r, new Vector2d(1234, -567));
 				const aabb = adapter.getBodyAABB?.(r, new Bounds())!;
-				expect(aabb.left).toBeCloseTo(0, 1);
-				expect(aabb.top).toBeCloseTo(0, 1);
+				expect(aabb.left).toBeCloseTo(0, aabbPrecision);
+				expect(aabb.top).toBeCloseTo(0, aabbPrecision);
 			});
 
 			it("the debug-plugin draw transform reproduces the body's WORLD AABB", () => {
-				// This is the integration-level invariant: when the debug
-				// plugin does `translate(renderable.pos) + stroke(AABB)`,
-				// the rectangle on screen must coincide with the body's
-				// actual world-space extent. Equivalent to checking
-				//   renderable.pos + aabb_local == world_extent
-				// for every (renderable, body) pair the adapter knows
-				// about, on either adapter.
 				const r = addToWorld(new Renderable(400, 250, 32, 32), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
@@ -597,18 +543,11 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				const aabb = adapter.getBodyAABB?.(r, new Bounds())!;
 				const worldLeft = r.pos.x + aabb.left;
 				const worldTop = r.pos.y + aabb.top;
-				// The body was registered at renderable pos (400, 250)
-				// with a shape that occupies its full 32×32 extent, so
-				// the world AABB top-left must be (400, 250).
-				expect(worldLeft).toBeCloseTo(400, 1);
-				expect(worldTop).toBeCloseTo(250, 1);
+				expect(worldLeft).toBeCloseTo(400, aabbPrecision);
+				expect(worldTop).toBeCloseTo(250, aabbPrecision);
 			});
 
 			it("repeated polls are idempotent (no drift on the shared out)", () => {
-				// The adapter writes into a caller-provided `out` Bounds.
-				// Polling twice in succession must yield the same value —
-				// would catch a bug where the adapter accidentally mutated
-				// renderable.pos or other state during the read.
 				const r = addToWorld(new Renderable(123, 456, 32, 32), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
@@ -624,21 +563,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 			});
 
 			it("getBodyShapes preserves the shape origin in local coords", () => {
-				// Companion to the offset-shape AABB test: even when each
-				// individual shape is iterated by the debug plugin (after
-				// translating to the renderable origin), the shape's
-				// effective bounding box must match the input offset, not
-				// a body- or world-relative one.
-				//
-				// Cross-adapter note: BuiltinAdapter converts every input
-				// `Rect` to a `Polygon` internally (legacy SAT decomposes
-				// rects into 4-vertex polys), while MatterAdapter returns
-				// the input shapes verbatim. The debug-plugin contract is
-				// `renderer.stroke(shape)`, which calls `shape.getBounds()`
-				// under the hood — that's available on both Rect and the
-				// converted Polygon. So we test the shape via its own
-				// `getBounds()` instead of `.left`/`.top` to stay type-
-				// agnostic and exercise the same path the plugin uses.
 				const shape = new Rect(10, 12, 32, 40);
 				const r = addToWorld(new Renderable(500, 600, 64, 64), {
 					type: "dynamic",
@@ -668,7 +592,7 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 		});
 
 		describe("setAngle is callable through the interface", () => {
-			it("setAngle either rotates (matter) or no-ops (builtin) without throwing", () => {
+			it("setAngle either rotates (planck) or no-ops (builtin) without throwing", () => {
 				const r = addToWorld(new Renderable(0, 0, 32, 32), {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
@@ -736,35 +660,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 			});
 		});
 
-		describe("regression — collisionType / collisionFilter live alias", () => {
-			// On matter, body.collisionType is a getter/setter alias for
-			// body.collisionFilter.category — they share state and can't
-			// drift. Verify either name reads back the value set via the
-			// other name.
-			it("setting collisionFilter.category is readable via collisionType", () => {
-				const r = addToWorld(new Renderable(0, 0, 32, 32), {
-					type: "dynamic",
-					shapes: [new Rect(0, 0, 32, 32)],
-				});
-				const body = r.body as unknown as {
-					collisionFilter?: { category: number };
-					collisionType?: number;
-				};
-				// pick a path — write via filter, read via collisionType, or
-				// the other way around. matter exposes both as aliases; the
-				// builtin Body class only has collisionType so we test the
-				// path that exists on each adapter.
-				if (body.collisionFilter) {
-					body.collisionFilter.category = 0x42;
-					expect(body.collisionType).toEqual(0x42);
-				} else {
-					// builtin: collisionType is the canonical name
-					(body as { collisionType: number }).collisionType = 0x42;
-					expect(body.collisionType).toEqual(0x42);
-				}
-			});
-		});
-
 		// ----------------------------------------------------------
 		// 19.5 portable surface — coverage gaps surfaced when the
 		// release-prep wiki audit found `raycast` / `queryAABB` still
@@ -795,7 +690,7 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				};
 				world.addChild(wall);
 				// `world.update(dt)` rebuilds the builtin broadphase each
-				// frame; raycast / queryAABB walk that broadphase. matter
+				// frame; raycast / queryAABB walk that broadphase. planck
 				// indexes on `addBody`, but a single `world.update` is the
 				// portable "everything's settled" handshake here.
 				world.update(16);
@@ -810,12 +705,12 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				);
 				expect(hit).not.toBeNull();
 				expect(hit!.renderable).toBe(wall);
-				expect(hit!.point.x).toBeCloseTo(200, rayPrecision);
-				expect(hit!.point.y).toBeCloseTo(220, rayPrecision);
-				expect(hit!.normal.x).toBeCloseTo(-1, rayPrecision);
-				expect(hit!.normal.y).toBeCloseTo(0, rayPrecision);
+				expect(hit!.point.x).toBeCloseTo(200, aabbPrecision);
+				expect(hit!.point.y).toBeCloseTo(220, aabbPrecision);
+				expect(hit!.normal.x).toBeCloseTo(-1, aabbPrecision);
+				expect(hit!.normal.y).toBeCloseTo(0, aabbPrecision);
 				// (200 - 0) / (400 - 0) = 0.5
-				expect(hit!.fraction).toBeCloseTo(0.5, rayPrecision);
+				expect(hit!.fraction).toBeCloseTo(0.5, aabbPrecision);
 			});
 
 			it("returns a right-face hit (normal flips) when shot from the other side", () => {
@@ -825,8 +720,8 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					new Vector2d(0, 220),
 				);
 				expect(hit).not.toBeNull();
-				expect(hit!.point.x).toBeCloseTo(240, rayPrecision);
-				expect(hit!.normal.x).toBeCloseTo(1, rayPrecision);
+				expect(hit!.point.x).toBeCloseTo(240, aabbPrecision);
+				expect(hit!.normal.x).toBeCloseTo(1, aabbPrecision);
 			});
 
 			it("returns null when the ray misses every body", () => {
@@ -882,8 +777,8 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 			// free-fall is NOT grounded. The "resting on a static floor"
 			// half diverges by design: builtin tracks an internal
 			// `falling` / `jumping` flag pair that gravity toggles every
-			// frame, while matter / planck track real contact pairs. See
-			// the BuiltinAdapter Quirks wiki page.
+			// frame, while matter / planck track real contact pairs.
+			// See the BuiltinAdapter Quirks wiki page.
 			it("a body in mid-air with no body below is not grounded", () => {
 				const ball = new Renderable(100, 50, 32, 32);
 				ball.alwaysUpdate = true;
@@ -893,8 +788,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				};
 				world.addChild(ball);
 
-				// step once so contact lists / flags are populated under
-				// the current state on every adapter.
 				world.update(16);
 				adapter.syncFromPhysics();
 				expect(adapter.isGrounded(ball)).toEqual(false);
@@ -917,17 +810,15 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				// way, the public velocity must survive.
 				adapter.updateShape(r, [new Rect(0, 0, 16, 16)]);
 				const vel = adapter.getVelocity(r);
-				expect(vel.x).toBeCloseTo(5, rayPrecision);
-				expect(vel.y).toBeCloseTo(-3, rayPrecision);
+				expect(vel.x).toBeCloseTo(5, aabbPrecision);
+				expect(vel.y).toBeCloseTo(-3, aabbPrecision);
 			});
 		});
 
 		describe("sensor + push-out matrix", () => {
 			// Drop a dynamic body onto a static floor under each adapter's
-			// own gravity (geometry mirrored from the collision-lifecycle
-			// suite, which both adapters integrate cleanly within 60 ticks).
-			// Solid pair → body rests at the floor top. Any sensor → body
-			// passes through to below the floor bottom.
+			// own gravity. Solid pair → body rests at the floor top.
+			// Any sensor → body passes through to below the floor bottom.
 			const setup = (
 				dynSensor: boolean,
 				staticSensor: boolean,
@@ -958,9 +849,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				const { dyn, floorY } = setup(false, false);
 				for (let i = 0; i < 60; i++) world.update(16);
 				adapter.syncFromPhysics();
-				// dyn.pos.y is the top edge; for a 32 px body resting on the
-				// floor it should be ≈ floorY - 32 = 168. Allow a small
-				// budget for solver penetration tolerance.
 				expect(dyn.pos.y).toBeLessThan(floorY + 1);
 				expect(dyn.pos.y).toBeGreaterThan(floorY - 40);
 			});
@@ -1012,10 +900,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 			};
 
 			it("raycast returns the nearest hit regardless of collisionMask", () => {
-				// Two walls in line. Near wall has a mask that explicitly
-				// would NOT collide with anything (mask === 0). A
-				// collision-filtered raycast would skip it; a geometric
-				// raycast must return it because it's nearer.
 				const near = placeWall(100, collision.types.WORLD_SHAPE, 0);
 				placeWall(300, collision.types.WORLD_SHAPE, collision.types.ALL_OBJECT);
 				world.update(16);
@@ -1052,8 +936,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				// for removal, the actual removeChildNow happens AFTER the
 				// world step. Matches the recommendation in BuiltinAdapter
 				// Quirks #6 ("defer destructive ops in collision callbacks").
-				// Pins that: (a) the contact fires exactly once, (b) the
-				// post-removal queryAABB no longer returns the coin.
 				let pickedUp = false;
 				const events: string[] = [];
 				class Coin extends Renderable {
@@ -1083,27 +965,23 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				expect(pickedUp).toEqual(true);
 				expect(events.length).toEqual(1);
 
-				// Deferred removal — safe on every adapter.
 				coin.ancestor.removeChildNow(coin);
 				world.update(16);
 				adapter.syncFromPhysics();
 
-				// Coin must not show up in subsequent spatial queries.
 				const hits = adapter.queryAABB(new Rect(100, 95, 30, 30));
 				expect(hits).not.toContain(coin);
-				// And no second pickup fired.
 				expect(events.length).toEqual(1);
 			});
 
 			it("setPosition out of penetration — no stale-contact correction", () => {
-				// Regression: matter caches per-body position-correction
-				// impulse across steps (the "warming" mechanism) and
-				// would reapply the OLD penetration vector for one frame
-				// after a teleport, yanking the body back ≈ penetration
-				// depth toward the wall. Builtin and planck handle this
-				// natively; matter-adapter fixes it by zeroing
-				// `body.positionImpulse` inside `setPosition`. Pin
-				// drift = 0 on every adapter.
+				// Regression mirror of the matter-adapter parity test:
+				// teleporting a body OUT of a penetrating overlap must
+				// leave it exactly at the teleport target on the next
+				// step, with no carryover Baumgarte correction from the
+				// stale contact pair. Planck inherits the correct behavior
+				// from Box2D's b2Body::SetTransform (which documents
+				// "contacts are updated on the next call to b2World::Step").
 				const wall = new Renderable(200, 200, 40, 40);
 				wall.alwaysUpdate = true;
 				wall.bodyDef = {
@@ -1120,7 +998,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					gravityScale: 0,
 				};
 				world.addChild(mover);
-				// Step once so matter caches the penetrating contact pair.
 				world.update(16);
 
 				adapter.setPosition(mover, new Vector2d(500, 100));
@@ -1152,27 +1029,18 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				};
 				world.addChild(ball);
 
-				// Let it settle on the floor (real contact, no penetration).
 				for (let i = 0; i < 60; i++) world.update(16);
 				adapter.syncFromPhysics();
 
-				// Teleport up high, zero velocity.
 				adapter.setPosition(ball, new Vector2d(400, 50));
 				adapter.setVelocity(ball, new Vector2d(0, 0));
 				world.update(16);
 				adapter.syncFromPhysics();
-				// Position should be near the teleport target. Some y drift
-				// is allowed under gravity for one step (gravity is tiny);
-				// x has no force on it so should be exact.
 				expect(Math.abs(ball.pos.x - 400)).toBeLessThan(2);
 				expect(Math.abs(ball.pos.y - 50)).toBeLessThan(5);
 			});
 
 			it("setStatic mid-collision — frozen body stops, partner stops being pushed", () => {
-				// A dynamic body sitting on a floor (in active contact)
-				// is converted to static. After the toggle the formerly
-				// dynamic body must not move — and gravity must not keep
-				// applying through the (now static) contact.
 				const floor = new Renderable(0, 200, 800, 20);
 				floor.alwaysUpdate = true;
 				floor.bodyDef = {
@@ -1188,7 +1056,6 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					shapes: [new Rect(0, 0, 32, 32)],
 				};
 				world.addChild(dyn);
-				// Let it land + settle into contact with the floor.
 				for (let i = 0; i < 60; i++) world.update(16);
 				adapter.syncFromPhysics();
 				const restingY = dyn.pos.y;
@@ -1247,31 +1114,22 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				};
 				world.addChild(ball);
 
-				// Flip the floor to sensor before contact — the ball must
-				// pass straight through.
 				adapter.setSensor?.(floor, true);
 				for (let i = 0; i < 60; i++) world.update(16);
 				adapter.syncFromPhysics();
-				expect(ball.pos.y).toBeGreaterThan(220); // past the floor's bottom
+				expect(ball.pos.y).toBeGreaterThan(220);
 
-				// Now flip back to solid; teleport the ball above the
-				// floor again and assert it lands on top this time.
 				adapter.setSensor?.(floor, false);
 				adapter.setPosition(ball, new Vector2d(100, 150));
 				adapter.setVelocity(ball, new Vector2d(0, 0));
 				for (let i = 0; i < 60; i++) world.update(16);
 				adapter.syncFromPhysics();
-				// Resting on top of the floor: ball top edge ≈ 200 - 32 = 168.
 				expect(ball.pos.y).toBeLessThan(201);
 				expect(ball.pos.y).toBeGreaterThan(140);
 			});
 		});
 
 		describe("maxVelocity — actually clamps under sustained force", () => {
-			// `maxVelocity` is a hard ceiling — applying a force every step
-			// must not let `|vel|` exceed the configured limit. Pinning the
-			// behaviour, not just the config propagation that the per-adapter
-			// specs already cover.
 			it("|vel.x| stays at or below the configured cap", () => {
 				const r = new Renderable(100, 100, 32, 32);
 				r.alwaysUpdate = true;
@@ -1279,23 +1137,15 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 					type: "dynamic",
 					shapes: [new Rect(0, 0, 32, 32)],
 					maxVelocity: { x: 5, y: 5 },
-					// Disable gravity so the y component stays a clean
-					// signal of the cap (gravity would constantly fight
-					// the clamp from below).
 					gravityScale: 0,
 				};
 				world.addChild(r);
 
-				// Hammer with sustained force to push the body well past
-				// the cap if clamping is broken.
 				for (let i = 0; i < 30; i++) {
 					adapter.applyForce(r, new Vector2d(100, 0));
 					world.update(16);
 				}
 				const vel = adapter.getVelocity(r);
-				// Allow a tiny per-adapter slop (matter integrates over dt
-				// so the cap is reached asymptotically; planck rounds
-				// through meters).
 				expect(Math.abs(vel.x)).toBeLessThanOrEqual(5 + 0.1);
 			});
 		});

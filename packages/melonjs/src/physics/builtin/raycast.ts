@@ -1,9 +1,10 @@
+import type { Ellipse } from "../../geometries/ellipse.ts";
 import { linePool } from "../../geometries/line.ts";
+import type { Polygon } from "../../geometries/polygon.ts";
 import { Vector2d } from "../../math/vector2d.ts";
-
-/**
- * @import World from "../world.js";
- */
+import type Renderable from "../../renderable/renderable.js";
+import type { RaycastHit } from "../adapter.ts";
+import type World from "../world.js";
 
 /**
  * Shared internal raycast walker for the built-in physics path. Used by
@@ -24,25 +25,30 @@ import { Vector2d } from "../../math/vector2d.ts";
  * touch first").
  */
 
-/**
- * 2D cross product of (a → b) and (a → c): positive if c is to the
- * left of a → b, negative if right, zero if colinear. Reused by the
- * segment-vs-segment intersection.
- */
-function _cross(ax, ay, bx, by) {
+interface ShapeHit {
+	t: number;
+	normalX: number;
+	normalY: number;
+}
+
+function _cross(ax: number, ay: number, bx: number, by: number): number {
+	// 2D cross product of (a → b) and (a → c): positive if c is to the
+	// left of a → b, negative if right, zero if colinear. Reused by the
+	// segment-vs-segment intersection.
 	return ax * by - ay * bx;
 }
 
-/**
- * Compute the absolute world position of a shape attached to a body
- * attached to a renderable. Mirrors what SAT does:
- *   absPos = renderable.pos + ancestor.absPos + shape.pos
- * @param {object} renderable
- * @param {object} shape
- * @param {Vector2d} outPos
- */
-function _computeShapeAbsPos(renderable, shape, outPos) {
-	const ancestor = renderable.ancestor;
+function _computeShapeAbsPos(
+	renderable: Renderable,
+	shape: Polygon | Ellipse,
+	outPos: Vector2d,
+): void {
+	// Compute the absolute world position of a shape attached to a body
+	// attached to a renderable. Mirrors what SAT does:
+	//   absPos = renderable.pos + ancestor.absPos + shape.pos
+	const ancestor = renderable.ancestor as
+		| { getAbsolutePosition?(): { x: number; y: number } }
+		| undefined;
 	const ancestorAbs =
 		ancestor && typeof ancestor.getAbsolutePosition === "function"
 			? ancestor.getAbsolutePosition()
@@ -55,26 +61,23 @@ function _computeShapeAbsPos(renderable, shape, outPos) {
 
 const _shapeAbs = new Vector2d(0, 0);
 
-/**
- * Find the smallest ray parameter `t` (in `[0, 1]`) where the ray
- * `from` → `to` enters the polygon, along with the outward normal of
- * the hit edge. Returns `null` if the ray misses every edge.
- *
- * Iterates polygon edges as line segments and solves the
- * line-segment vs line-segment intersection:
- *   ray:   from + t * (to - from), t ∈ [0, 1]
- *   edge:  A + s * (B - A),         s ∈ [0, 1]
- *
- * @param {number} fromX
- * @param {number} fromY
- * @param {number} dx - to.x - from.x
- * @param {number} dy - to.y - from.y
- * @param {object} shape - a Polygon (or Rect / RoundRect that extends it)
- * @param {number} shapeAbsX
- * @param {number} shapeAbsY
- * @returns {{ t: number, normalX: number, normalY: number } | null}
- */
-function _raycastPolygon(fromX, fromY, dx, dy, shape, shapeAbsX, shapeAbsY) {
+function _raycastPolygon(
+	fromX: number,
+	fromY: number,
+	dx: number,
+	dy: number,
+	shape: Polygon,
+	shapeAbsX: number,
+	shapeAbsY: number,
+): ShapeHit | null {
+	// Find the smallest ray parameter `t` (in `[0, 1]`) where the ray
+	// `from` → `to` enters the polygon, along with the outward normal of
+	// the hit edge. Returns `null` if the ray misses every edge.
+	//
+	// Iterates polygon edges as line segments and solves the line-
+	// segment vs line-segment intersection:
+	//   ray:   from + t * (to - from), t ∈ [0, 1]
+	//   edge:  A + s * (B - A),         s ∈ [0, 1]
 	const points = shape.points;
 	const normals = shape.normals;
 	const len = points.length;
@@ -111,26 +114,24 @@ function _raycastPolygon(fromX, fromY, dx, dy, shape, shapeAbsX, shapeAbsY) {
 	return { t: bestT, normalX: normal.x, normalY: normal.y };
 }
 
-/**
- * Find the smallest ray parameter `t` where the ray enters the
- * ellipse, plus the surface normal at that point. Solves the standard
- * quadratic for `((px - cx) / rx)² + ((py - cy) / ry)² = 1`:
- *   A·t² + B·t + C = 0
- *   where:
- *     A = (dx/rx)² + (dy/ry)²
- *     B = 2 · ((dx · (fx-cx))/rx² + (dy · (fy-cy))/ry²)
- *     C = ((fx-cx)/rx)² + ((fy-cy)/ry)² - 1
- *
- * @param {number} fromX
- * @param {number} fromY
- * @param {number} dx
- * @param {number} dy
- * @param {object} shape - an Ellipse (pos = local centre, radiusV = {x, y})
- * @param {number} shapeAbsX
- * @param {number} shapeAbsY
- * @returns {{ t: number, normalX: number, normalY: number } | null}
- */
-function _raycastEllipse(fromX, fromY, dx, dy, shape, shapeAbsX, shapeAbsY) {
+function _raycastEllipse(
+	fromX: number,
+	fromY: number,
+	dx: number,
+	dy: number,
+	shape: Ellipse,
+	shapeAbsX: number,
+	shapeAbsY: number,
+): ShapeHit | null {
+	// Find the smallest ray parameter `t` where the ray enters the
+	// ellipse, plus the surface normal at that point. Solves the
+	// standard quadratic for
+	// `((px - cx) / rx)² + ((py - cy) / ry)² = 1`:
+	//   A·t² + B·t + C = 0
+	// where:
+	//   A = (dx/rx)² + (dy/ry)²
+	//   B = 2 · ((dx · (fx-cx))/rx² + (dy · (fy-cy))/ry²)
+	//   C = ((fx-cx)/rx)² + ((fy-cy)/ry)² - 1
 	const cx = shapeAbsX;
 	const cy = shapeAbsY;
 	const rx = shape.radiusV.x;
@@ -155,7 +156,7 @@ function _raycastEllipse(fromX, fromY, dx, dy, shape, shapeAbsX, shapeAbsY) {
 	// Smaller positive root in [0, 1] is the entry; if ray origin is
 	// inside the ellipse (`t0 < 0`), the entry is behind us so we use
 	// `t1` (the exit point on this side).
-	let t;
+	let t: number;
 	if (t0 >= 0 && t0 <= 1) {
 		t = t0;
 	} else if (t1 >= 0 && t1 <= 1) {
@@ -177,17 +178,15 @@ function _raycastEllipse(fromX, fromY, dx, dy, shape, shapeAbsX, shapeAbsY) {
 	return { t, normalX: nx, normalY: ny };
 }
 
-/**
- * Walk the world's broadphase and return every body the ray
- * `(fromX, fromY) → (toX, toY)` enters, sorted nearest-first.
- * @param {World} world
- * @param {number} fromX
- * @param {number} fromY
- * @param {number} toX
- * @param {number} toY
- * @returns {Array<{renderable: object, point: Vector2d, normal: Vector2d, fraction: number}>}
- */
-export function raycastQuery(world, fromX, fromY, toX, toY) {
+export function raycastQuery(
+	world: World,
+	fromX: number,
+	fromY: number,
+	toX: number,
+	toY: number,
+): RaycastHit[] {
+	// Walk the world's broadphase and return every body the ray
+	// `(fromX, fromY) → (toX, toY)` enters, sorted nearest-first.
 	const dx = toX - fromX;
 	const dy = toY - fromY;
 	const segLen = Math.hypot(dx, dy);
@@ -209,20 +208,23 @@ export function raycastQuery(world, fromX, fromY, toX, toY) {
 	// from inside an `onCollisionStart` handler that itself fires mid
 	// iteration of the SAT detector's scratch walk; sharing would clobber
 	// the outer iteration.
-	const candidates = [];
+	const candidates: Renderable[] = [];
 	world.broadphase.retrieve(line, undefined, candidates);
-	const hits = [];
+	const hits: RaycastHit[] = [];
 
 	for (let i = candidates.length - 1; i >= 0; i--) {
 		const objB = candidates[i];
-		if (!objB || !objB.body) {
+		if (!objB.body) {
 			continue;
 		}
 		if (!line.getBounds().overlaps(objB.getBounds())) {
 			continue;
 		}
 
-		const bodyB = objB.body;
+		const bodyB = objB.body as unknown as {
+			shapes: ArrayLike<unknown>;
+			getShape(i: number): Polygon | Ellipse;
+		};
 		const shapeCount = bodyB.shapes.length;
 		if (shapeCount === 0) {
 			continue;
@@ -244,7 +246,7 @@ export function raycastQuery(world, fromX, fromY, toX, toY) {
 							fromY,
 							dx,
 							dy,
-							shapeB,
+							shapeB as Ellipse,
 							_shapeAbs.x,
 							_shapeAbs.y,
 						)
@@ -253,7 +255,7 @@ export function raycastQuery(world, fromX, fromY, toX, toY) {
 							fromY,
 							dx,
 							dy,
-							shapeB,
+							shapeB as Polygon,
 							_shapeAbs.x,
 							_shapeAbs.y,
 						);

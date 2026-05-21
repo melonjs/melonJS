@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - _unreleased_
+## 1.0.0 - _2026-05-22_
 
 ### Added
 - **`MatterAdapter.Body`** — published type for `renderable.body` under this adapter. Namespace-merged with the class, defined as `ReturnType<typeof Matter.Body.create> & PhysicsBody`. Lets user code reach matter-native fields (`frictionAir`, `angle`, `angularVelocity`, `torque`, …) via `(this.body as MatterAdapter.Body).frictionAir = 0.02` without importing `matter-js` directly — the matter dependency stays behind the adapter boundary.

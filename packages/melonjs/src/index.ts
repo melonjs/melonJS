@@ -132,7 +132,7 @@ export type {
 	RaycastHit,
 } from "./physics/adapter.ts";
 export { Bounds } from "./physics/bounds.ts";
-export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.js";
+export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.ts";
 export { collision } from "./physics/collision.js";
 export * as plugin from "./plugin/plugin.ts";
 export { getPool } from "./pool.ts";
