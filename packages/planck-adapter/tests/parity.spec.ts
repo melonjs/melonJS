@@ -409,6 +409,35 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 				expect(shapes).toBeDefined();
 				expect(shapes.length).toEqual(0);
 			});
+
+			// Dangling-body case: `adapter.removeBody(r)` clears the
+			// adapter's bookkeeping but doesn't reset `renderable.body` —
+			// the field still points at the now-orphaned Body instance.
+			// Before the contract fix in 27af71d98, BuiltinAdapter checked
+			// only `body !== undefined` and happily returned debug geometry
+			// for the dangling body, in violation of the adapter contract.
+			// Pin the contract on every adapter so the regression can't
+			// come back silently.
+			it("getBodyAABB returns undefined for a body removed via adapter.removeBody", () => {
+				const r = addToWorld(new Renderable(0, 0, 32, 32), {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				});
+				adapter.removeBody(r);
+				const out = new Bounds();
+				expect(adapter.getBodyAABB?.(r, out)).toBeUndefined();
+			});
+
+			it("getBodyShapes returns [] for a body removed via adapter.removeBody", () => {
+				const r = addToWorld(new Renderable(0, 0, 32, 32), {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				});
+				adapter.removeBody(r);
+				const shapes = adapter.getBodyShapes?.(r);
+				expect(shapes).toBeDefined();
+				expect(shapes!.length).toEqual(0);
+			});
 		});
 
 		describe("debug API: coordinate-space adversarial", () => {
