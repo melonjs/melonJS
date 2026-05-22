@@ -69,19 +69,11 @@ export default class ShaderEffect {
 			return;
 		}
 
-		// build the full fragment shader by wrapping the user's apply() function
-		// with the standard texture sampling boilerplate:
-		// - uSampler: the texture sampler (automatically bound by the engine)
-		// - vColor: the vertex color (tint and opacity, pre-multiplied alpha)
-		// - vRegion: the texture UV coordinates for the current sprite region
-		// - texColor: the sampled pixel color (texture × vertex color)
-		// The user's apply(color, uv) receives texColor and vRegion,
-		// and returns the final fragment color.
+		// wrap the user's apply() with the texture-sampling boilerplate
 		const fragment = [
 			"uniform sampler2D uSampler;",
 			"varying vec4 vColor;",
 			"varying vec2 vRegion;",
-			// user-provided fragment body (uniforms + apply function)
 			fragmentBody,
 			"void main(void) {",
 			"    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",
@@ -98,13 +90,7 @@ export default class ShaderEffect {
 		);
 		this.enabled = true;
 
-		// Keep the public `enabled` gate in sync with the underlying
-		// shader's suspended state. Without this, `enabled` stays true
-		// while the GL context is lost, and the renderer's
-		// `beginPostEffect` filter (`fx.enabled !== false`) would try
-		// to bind a null program. The GLShader itself silently no-ops
-		// on its own (defense in depth), but flipping `enabled` lets
-		// the render-path filter skip the effect entirely.
+		// flip enabled across context loss so beginPostEffect skips us
 		on(ONCONTEXT_LOST, this._onContextLost, this);
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
 	}
@@ -122,9 +108,7 @@ export default class ShaderEffect {
 		if (this.destroyed) {
 			return;
 		}
-		// The underlying GLShader recompiles itself in its own
-		// ONCONTEXT_RESTORED handler — we just need to re-open the
-		// `enabled` gate so the renderer's filter sees us again.
+		// the inner GLShader recompiles itself; just re-open the gate
 		this.enabled = true;
 	}
 
@@ -194,24 +178,14 @@ export default class ShaderEffect {
 		}
 		this.destroyed = true;
 
-		// Order matters: set `enabled = false` BEFORE calling into
-		// `_shader.destroy()`. If the inner destroy throws (e.g. a
-		// flaky ANGLE `gl.deleteProgram` on a dead context), the
-		// public guards on this effect's setUniform / bind / etc are
-		// already in the safe-state, so a still-registered update
-		// loop calling `setTime(t)` never reaches a partially-torn-
-		// down shader. Without this ordering, the throw between the
-		// two statements left `enabled === true` while
-		// `_shader.uniforms === null` — the exact partial state
-		// that produced the original 19.5.0 "Cannot read properties
-		// of null (reading 'uTime')" crash on Windows + ANGLE.
+		// flip enabled BEFORE inner destroy so a thrown deleteProgram
+		// can't leave us with enabled=true + uniforms=null (19.5.0 bug)
 		this.enabled = false;
 
 		off(ONCONTEXT_LOST, this._onContextLost, this);
 		off(ONCONTEXT_RESTORED, this._onContextRestored, this);
 
-		// _shader may already be undefined on Canvas-mode effects
-		// (constructor early-returned). Guard accordingly.
+		// _shader is undefined on Canvas-mode effects (early-returned)
 		if (this._shader) {
 			this._shader.destroy();
 		}

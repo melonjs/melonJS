@@ -72,32 +72,15 @@ export default class GLShader {
 		 */
 		this.suspended = false;
 
-		// Preserve the raw (un-precisified, un-minified) source so we
-		// can rebuild against the new GL context if it's lost and
-		// restored mid-game (NVIDIA Optimus laptops with dual GPU
-		// switching, browser tab eviction recovery, etc.).
+		// raw source kept so we can recompile against a restored context
 		this._sourceVertex = vertex;
 		this._sourceFragment = fragment;
 		this._precision = precision;
 
-		// Cache every uniform value the caller writes via setUniform.
-		// After a context-lost/restored cycle the new program has a
-		// fresh uniforms map, and we replay the cached values against
-		// it so the shader's visual state is preserved transparently —
-		// user code does not have to re-apply uniforms after a GPU
-		// switch.
+		// uniform writes are cached + replayed across a context cycle
 		this._uniformCache = Object.create(null);
 
-		// If user code constructs a new shader DURING the suspended
-		// window (rare but plausible — e.g. an `event.once(
-		// LEVEL_LOADED)` handler fires while a context loss is in
-		// flight), `gl.compileShader` / `gl.linkProgram` are no-ops
-		// and the link-status check would throw. Detect the lost
-		// context up front and skip the compile; the
-		// ONCONTEXT_RESTORED subscription below will trigger
-		// `_compile()` once the new context is alive. Any `setUniform`
-		// the caller writes in the meantime is cached and replayed at
-		// that point.
+		// defer compile if constructed mid-suspended-window; replay handles it
 		if (gl.isContextLost()) {
 			this.suspended = true;
 			this.program = null;
@@ -153,10 +136,7 @@ export default class GLShader {
 
 		this.suspended = false;
 
-		// Replay cached uniform values against the new program. Skip
-		// any name that the new uniforms proxy doesn't accept (shader
-		// signature changes shouldn't happen across a context restore
-		// — same source — but the guard is cheap insurance).
+		// replay cached uniforms against the new program
 		for (const name of Object.keys(this._uniformCache)) {
 			if (typeof this.uniforms[name] !== "undefined") {
 				this.bind();
@@ -178,14 +158,12 @@ export default class GLShader {
 		this.suspended = true;
 		this.uniforms = null;
 		this.attributes = null;
-		// The context is dead — deleteProgram against it would throw
-		// on ANGLE/D3D11 (Windows). Wrap it; we only care that the JS
-		// state ends in a known, safe shape.
+		// deleteProgram against a dead ANGLE context throws — swallow it
 		if (this.program !== null) {
 			try {
 				this.gl.deleteProgram(this.program);
 			} catch {
-				// context was killed underneath us — nothing to do
+				/* context already gone */
 			}
 			this.program = null;
 		}
@@ -199,8 +177,7 @@ export default class GLShader {
 	 */
 	_onContextRestored() {
 		if (this.destroyed) {
-			// Explicit destroy beats automatic recovery; don't
-			// resurrect a shader that the user has released.
+			// destroyed shaders are not resurrected
 			return;
 		}
 		this._compile();
@@ -244,41 +221,19 @@ export default class GLShader {
 		if (this.destroyed) {
 			return;
 		}
-		// Two writes happen here: the persistent CACHE entry used by
-		// context-restored replay, and the LIVE GL write through the
-		// uniforms proxy. Decoupling them lets the hot path
-		// (per-frame typed-array writes like light uniforms) avoid
-		// allocating on every call:
-		//
-		//  * Cache: `captureValue` reuses the existing slot's array
-		//    when the shape matches, so steady-state writes don't
-		//    allocate. The snapshot is detached from the caller's
-		//    reference, so in-place mutation can't poison replay.
-		//  * Live GL write: `gl.uniform*` setters copy synchronously
-		//    into program state with no retained reference, so we
-		//    can hand them the caller's original buffer directly.
-		//    Vector / matrix types still need `.toArray()` because
-		//    the GL proxy reads `val.length` and indexes into it.
+		// cache via captureValue (slot reuse, mutation-detached); pass
+		// caller's value to GL (uniform setters copy synchronously)
 		let cached;
 		let glValue;
 		if (typeof value === "object" && value !== null) {
 			if (typeof value.toArray === "function") {
-				// Vector / matrix path: array form needed for both
-				// cache and GL. `toArray()` allocates per call (a
-				// per-class `into(out)` API would eliminate this but
-				// is out of scope for this fix); feed its result
-				// through captureValue so the CACHE slot is reused.
 				const arr = value.toArray();
 				cached = captureValue(this._uniformCache[name], arr);
 				glValue = arr;
 			} else if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-				// Array / typed array path — the hot one for light
-				// uniforms etc. Reuse the cache slot, but hand GL
-				// the original.
 				cached = captureValue(this._uniformCache[name], value);
 				glValue = value;
 			} else {
-				// plain object passthrough
 				cached = value;
 				glValue = value;
 			}
@@ -289,8 +244,7 @@ export default class GLShader {
 		this._uniformCache[name] = cached;
 
 		if (this.suspended) {
-			// Defer the live write to context-restored replay. The
-			// cache snapshot above is what gets replayed.
+			// deferred: replay handles the live write on restore
 			return;
 		}
 
@@ -346,17 +300,12 @@ export default class GLShader {
 		this.uniforms = null;
 		this.attributes = null;
 
-		// gl.deleteProgram can throw on ANGLE/D3D11 (Windows) when
-		// called against a program from a dead/foreign context — the
-		// kind of crash that produced the original 19.5.0 user report.
-		// The JS-side state nulling above has already happened, so the
-		// shader is "destroyed" regardless of whether the GPU teardown
-		// also completed.
+		// deleteProgram can throw on ANGLE/D3D11 — the 19.5.0 crash
 		if (this.program !== null) {
 			try {
 				this.gl.deleteProgram(this.program);
 			} catch {
-				// context already invalid — JS state is clean, move on
+				/* context already gone */
 			}
 			this.program = null;
 		}

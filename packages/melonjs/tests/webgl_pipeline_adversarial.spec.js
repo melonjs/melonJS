@@ -395,9 +395,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		custom.destroy();
 	});
 
-	// Helper that produces a minimal valid GLSL pair for these specs —
-	// one uniform (`uTime`), one attribute (`aVertex`). Shared by the
-	// shader-lifecycle test cluster below so each test reads compactly.
+	// minimal valid GLSL pair (uTime + aVertex) shared by the cluster
 	const makeShaderSource = () => {
 		return {
 			vertex: [
@@ -414,16 +412,10 @@ describe("WebGL pipeline adversarial integration", () => {
 		};
 	};
 
+	// ctx.skip marks SKIPPED (not "passed") on no-WebGL CI runners.
+	// Tests pair with expect.assertions(N) so a silent early-return fails.
 	const skipIfNoWebGL = (ctx) => {
 		if (!isWebGL) {
-			// `ctx.skip` marks the test as SKIPPED in vitest output —
-			// distinct from "passed". Without this guard a CI runner
-			// without WebGL would silently report every test in this
-			// cluster as passing, defeating the whole point of the
-			// regression suite. Pair every test below with
-			// `expect.assertions(N)` so a no-op early-return is also
-			// caught (the assertion count tells vitest "this many
-			// expectations MUST run; fail otherwise").
 			ctx.skip("WebGL not available in this environment");
 			return true;
 		}
@@ -431,19 +423,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	};
 
 	it("destroyed shader: setUniform / bind / getAttribLocation no-op cleanly (do not throw)", (ctx) => {
-		// Regression for the 19.5.0 crash reported on Windows + Chrome
-		// (ANGLE / D3D11): a shader's `_shader.destroy()` is called by
-		// the renderer's ONCONTEXT_LOST handler — `gl.deleteProgram`
-		// can throw on ANGLE because the program belongs to the dead
-		// context, leaving `GLShader.uniforms === null` while
-		// `ShaderEffect.enabled` still reads true. A still-registered
-		// `setTime(...)` → `setUniform("uTime", ...)` then hits the
-		// nulled uniforms map and crashes with `Cannot read properties
-		// of null (reading 'uTime')`. Mac drivers silently no-op'd on
-		// the deleted program; ANGLE rejected it strictly.
-		//
-		// `setUniform`, `bind`, and `getAttribLocation` must be
-		// defensive against a stale reference to a destroyed shader.
+		// 19.5.0 Windows + ANGLE regression — stale references on a
+		// destroyed shader must no-op instead of crashing on null uniforms
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -483,30 +464,19 @@ describe("WebGL pipeline adversarial integration", () => {
 			shader.setUniform("uNotDefined", 0);
 		}).not.toThrow();
 
-		// the no-op must not have queued any GL operations either —
-		// the destroyed-state path must hit the early `return` before
-		// any gl.* call. Assert NO_ERROR directly (a drain-only loop
-		// would silently absorb a regression where a stray gl call
-		// queued an error code).
+		// destroyed-path must hit early return before any gl.* call
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
 
 	it("GLShader._uniformCache snapshots typed-array / array writes (caller mutation does not poison replay)", (ctx) => {
-		// Regression for the cache-replay-mutation hazard surfaced in
-		// the 19.6 PR review: setUniform must DETACH the cached value
-		// from the caller's array, otherwise a downstream pattern like
-		// `const tmp = new Float32Array([r, g, b]); shader.setUniform(
-		// "uColor", tmp); tmp[0] = 0;` (or a per-frame-reused Vector3d)
-		// silently rewrites what gets replayed on context restore. The
-		// pre-restore GPU saw the original values; the post-restore GPU
-		// would see the mutated ones — silent visual divergence.
+		// cache must detach from the caller's array so post-setUniform
+		// mutation can't rewrite what gets replayed on context restore
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		expect.assertions(7);
 
-		// A shader with a vec3 uniform — accepts both Float32Array and
-		// plain Array values via the uniforms proxy.
+		// vec3 uniform — accepts both Float32Array and plain Array
 		const vertex = [
 			"attribute vec2 aVertex;",
 			"void main(void) { gl_Position = vec4(aVertex, 0.0, 1.0); }",
@@ -517,34 +487,23 @@ describe("WebGL pipeline adversarial integration", () => {
 		].join("\n");
 		const shader = new GLShader(renderer.gl, vertex, fragment);
 
-		// --- Float32Array path. Use f32-exact values (binary fractions
-		// of 2) so toEqual doesn't trip on the 32-bit-float quantization
-		// applied by the typed-array constructor itself. ---
+		// f32-exact values (powers of 2) — no toEqual quantization issues
 		const fa = new Float32Array([0.5, 0.25, 0.125]);
 		shader.setUniform("uColor", fa);
-		// cache must be a DIFFERENT object than the caller's array
 		expect(shader._uniformCache.uColor).not.toBe(fa);
-		// ...with the same numeric contents at the time of the write
 		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
-		// mutate the caller's array AFTER the setUniform call — the
-		// cache must NOT see the mutation, otherwise replay diverges
+		// mutate caller's array after the call — cache must NOT see it
 		fa[0] = 0.875;
 		fa[1] = 0.875;
 		fa[2] = 0.875;
 		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
 
-		// --- plain Array path (same invariant). The cache slot from
-		// the previous typed-array write is REUSED (via captureValue)
-		// when the length matches, so the cache may now be a
-		// Float32Array even though the caller passed an Array — the
-		// VALUES are what matter for replay correctness, not the JS
-		// type. Compare via Array.from. ---
+		// plain Array path. captureValue reuses the prior slot (so it
+		// may now be a Float32Array) — only values matter for replay
 		const arr = [0.4, 0.5, 0.6];
 		shader.setUniform("uColor", arr);
 		expect(shader._uniformCache.uColor).not.toBe(arr);
 		arr[0] = 0.0;
-		// Use toBeCloseTo per-element so this works for both Array
-		// and Float32Array (which would quantize 0.4 / 0.6 to f32).
 		const cachedArr = Array.from(shader._uniformCache.uColor);
 		expect(cachedArr[0]).toBeCloseTo(0.4, 5);
 		expect(cachedArr[1]).toBeCloseTo(0.5, 5);
@@ -565,9 +524,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		shader.destroy();
 		expect(shader.destroyed).toBe(true);
 
-		// Second destroy must early-return — without the idempotency
-		// guard, `gl.deleteProgram(null)` would warn (or, on stricter
-		// drivers, throw INVALID_OPERATION).
+		// idempotency guard — without it, deleteProgram(null) would warn / throw
 		expect(() => {
 			shader.destroy();
 		}).not.toThrow();
@@ -575,11 +532,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("GLShader.destroy is partial-state-safe under a throwing deleteProgram (ANGLE-style)", (ctx) => {
-		// Direct simulation of the ANGLE / D3D11 failure mode: even
-		// when `gl.deleteProgram` throws (program belongs to a dead
-		// context), the JS-side `destroy()` must complete — fields
-		// nulled, `destroyed` flag flipped — so subsequent callers
-		// holding a stale reference get the silent no-op path.
+		// destroy() must complete JS-side even when deleteProgram throws
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -588,12 +541,8 @@ describe("WebGL pipeline adversarial integration", () => {
 		const { vertex, fragment } = makeShaderSource();
 		const shader = new GLShader(renderer.gl, vertex, fragment);
 
-		// Sabotage just this shader's deleteProgram. Using a per-
-		// instance override on `shader.gl` mutates the shared renderer
-		// gl proxy, so the restore must run unconditionally (try /
-		// finally) — if any assertion below throws before the manual
-		// restore, the patched method would otherwise leak into every
-		// subsequent test in this file and cause cascading failures.
+		// try/finally so a mid-test failure can't leak the patched
+		// method into the shared renderer gl proxy
 		const originalDeleteProgram = shader.gl.deleteProgram.bind(shader.gl);
 		shader.gl.deleteProgram = () => {
 			throw new Error("mock ANGLE cross-context delete error");
@@ -602,16 +551,13 @@ describe("WebGL pipeline adversarial integration", () => {
 		try {
 			expect(() => {
 				shader.destroy();
-			}).not.toThrow(); // the try/catch inside destroy must contain it
+			}).not.toThrow();
 
-			// Even though deleteProgram threw, the JS state must be fully
-			// cleaned up
 			expect(shader.destroyed).toBe(true);
 			expect(shader.uniforms).toBeNull();
 			expect(shader.attributes).toBeNull();
 			expect(shader.program).toBeNull();
 
-			// And subsequent calls still no-op safely
 			expect(() => {
 				shader.setUniform("uTime", 0.5);
 			}).not.toThrow();
@@ -621,15 +567,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("ShaderEffect.destroy sets enabled=false BEFORE _shader.destroy (partial-state immunity)", (ctx) => {
-		// This is the EXACT 19.5.0 ANGLE crash scenario as a unit test.
-		// We sabotage the inner `_shader.destroy` to throw — simulating
-		// `gl.deleteProgram` throwing on a dead ANGLE context. The
-		// reordered ShaderEffect.destroy must have set
-		// `this.enabled = false` BEFORE invoking the inner destroy, so
-		// the throw can't leave behind the partial state
-		// (`_shader.uniforms === null` AND `enabled === true`) that
-		// produced "Cannot read properties of null (reading 'uTime')"
-		// on subsequent `setUniform` calls.
+		// 19.5.0 ANGLE crash as a unit test — destroy must flip enabled
+		// before the inner destroy can throw past it
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -642,11 +581,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		expect(effect.enabled).toBe(true);
 		expect(effect.destroyed).toBe(false);
 
-		// Sabotage the inner destroy. The patch is on an instance
-		// method of THIS shader (not a shared GL proxy), so leakage
-		// would only affect this shader if cleanup didn't run — but
-		// we still wrap the assertions in try / finally so the real
-		// GL resources release even on a mid-test assertion failure.
+		// try/finally so a mid-test failure still releases GL resources
 		const originalInnerDestroy = effect._shader.destroy.bind(effect._shader);
 		effect._shader.destroy = () => {
 			throw new Error("mock inner shader destroy throw");
@@ -657,21 +592,15 @@ describe("WebGL pipeline adversarial integration", () => {
 				effect.destroy();
 			}).toThrow(/mock inner shader destroy throw/);
 
-			// Critical: even though the inner destroy threw OUTWARD,
-			// `enabled` must already be false because we set it before
-			// the inner call.
+			// enabled must be false even though inner destroy threw out
 			expect(effect.enabled).toBe(false);
 			expect(effect.destroyed).toBe(true);
 
-			// And the public setUniform / bind / getAttribLocation paths
-			// must no-op via the enabled gate.
 			expect(() => {
 				effect.setUniform("foo", 1);
 			}).not.toThrow();
 			expect(effect.getAttribLocation("aVertex")).toEqual(-1);
 		} finally {
-			// Always run the real destroy to release GL resources we
-			// would have leaked otherwise.
 			originalInnerDestroy();
 		}
 	});
@@ -753,17 +682,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("GLShader survives a context-lost → restored cycle with uniform values intact", (ctx) => {
-		// The trigger for the original Windows crash was the renderer's
-		// `webglcontextlost` listener firing on a GPU switch (NVIDIA
-		// Optimus laptops), which emits ONCONTEXT_LOST and previously
-		// fully destroyed every GLShader. The new lifecycle suspends
-		// instead — keeps the source code + cached uniform values
-		// around — and rebuilds the program on ONCONTEXT_RESTORED,
-		// replaying the cached uniforms so the visual state survives
-		// the GPU transition transparently. Without the uniform replay
-		// path, any shader with one-time uniform setup (color, geom
-		// constants) would render with default uniforms after a GPU
-		// switch, a silent regression that's worse than the crash.
+		// suspend on lost, recompile + replay uniforms on restored
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -776,14 +695,12 @@ describe("WebGL pipeline adversarial integration", () => {
 		expect(shader.suspended).toBe(false);
 
 		event.emit(event.ONCONTEXT_LOST, renderer);
-		// Shader is now suspended — program released, but source +
-		// uniform cache preserved
+		// suspended: program released, source + cache preserved
 		expect(shader.suspended).toBe(true);
 		expect(shader.program).toBeNull();
 
 		event.emit(event.ONCONTEXT_RESTORED, renderer);
-		// Shader rebuilt: new program (different identity), suspended
-		// flag cleared
+		// rebuilt: new program identity, suspended cleared
 		expect(shader.suspended).toBe(false);
 		expect(shader.program).not.toBeNull();
 		expect(shader.program).not.toBe(originalProgram);
@@ -792,11 +709,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("GLShader does NOT auto-resurrect after explicit destroy", (ctx) => {
-		// An explicit `destroy()` is the user's "release this resource"
-		// signal — automatic context-loss recovery must respect that
-		// and NOT rebuild the program when ONCONTEXT_RESTORED later
-		// fires. The destroy must also unsubscribe from the events so
-		// the destroyed shader doesn't accumulate stale handlers.
+		// destroy() must unsubscribe so RESTORED doesn't rebuild the program
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1052,29 +965,11 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// =========================================================
 	//   Real WEBGL_lose_context lifecycle tests — MUST run last.
+	//   (Previous tests use event.emit; these go through the
+	//   browser's webglcontextlost/restored DOM events. Can leave
+	//   renderer scratch state subtly different across the cycle,
+	//   so they're block-isolated at the end of the spec.)
 	// =========================================================
-	//
-	// The lifecycle tests above this point emit ONCONTEXT_LOST /
-	// ONCONTEXT_RESTORED directly via the event bus, which is fast +
-	// deterministic but only exercises our subscribers. The tests in
-	// this trailing block use the WEBGL_lose_context extension to
-	// fire the actual DOM-level `webglcontextlost` /
-	// `webglcontextrestored` events on the canvas — the same path an
-	// NVIDIA Optimus GPU switch hits on a user's machine, going
-	// through the renderer's DOM listeners in `webgl_renderer.js`
-	// before fanning out via the event bus.
-	//
-	// Each real loss / restore round-trip can leave renderer scratch
-	// state subtly different (blend mode, scissor, batcher attribute
-	// bindings, texture-unit cache) — even though `reset()` runs on
-	// restored. We don't want that to bleed into the rest of the
-	// spec, so the entire block runs at the end. Within the block,
-	// each test ends in a "restored" state so consecutive tests can
-	// chain.
-	//
-	// Helpers used below:
-	//   - `loseContext(ext)` triggers loseContext + awaits microtask
-	//   - `restoreContext(ext)` triggers restoreContext + awaits
 	const tick = () => {
 		return new Promise((resolve) => {
 			setTimeout(resolve, 0);
@@ -1163,11 +1058,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: setUniform DURING the suspended window goes to cache, applied on restore", async (ctx) => {
-		// While the context is dead, we can't write to a real uniform
-		// location — but our setUniform should still accept the call
-		// and cache it for replay. This is the difference between a
-		// "shader stops accepting input until restore" model and a
-		// "shader transparently survives" model. We chose the latter.
+		// suspended-window writes are cached + replayed (not dropped)
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1186,8 +1077,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		await tick();
 		expect(shader.suspended).toBe(true);
 
-		// Write a NEW uniform value while suspended — should go to the
-		// cache without throwing or hitting GL.
+		// new write during suspended → cache only, no GL call
 		expect(() => {
 			shader.setUniform("uTime", 42.0);
 		}).not.toThrow();
@@ -1196,18 +1086,14 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 		expect(shader.suspended).toBe(false);
-		// The latest cached value (42, not the original 1) is the one
-		// replayed against the fresh uniforms map.
+		// latest write (42, not original 1) is what replays
 		expect(shader._uniformCache.uTime).toEqual(42.0);
 
 		shader.destroy();
 	});
 
 	it("real context loss: destroying a shader DURING the suspended window stays destroyed across restore", async (ctx) => {
-		// Calling destroy() during a context-lost window must work
-		// (no throws from destroy itself) AND must NOT be resurrected
-		// when the matching context-restored event later fires. The
-		// destroyed flag has authority over the suspended flag.
+		// destroyed flag wins over suspended — no resurrection on restore
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1239,11 +1125,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: three consecutive lose/restore cycles all recover with uniform state intact", async (ctx) => {
-		// Stress test the lifecycle: if any cleanup step leaks (e.g.
-		// failing to unsubscribe + re-subscribe correctly, or losing
-		// the uniform cache across cycles), repeated cycles surface
-		// it. Three cycles is enough to catch single-shot bugs that
-		// pass on the first round-trip.
+		// repetition surfaces single-cycle-pass cumulative leaks
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1267,7 +1149,7 @@ describe("WebGL pipeline adversarial integration", () => {
 			await tick();
 			expect(shader.suspended).toBe(false);
 
-			// The cached uniform value persists across every cycle.
+			// cache persists across every cycle
 			expect(shader._uniformCache.uTime).toEqual(123.456);
 		}
 
@@ -1275,10 +1157,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: ShaderEffect's `enabled` gate flips false on lost, true on restored", async (ctx) => {
-		// Pins the ShaderEffect side of the context-loss subscription.
-		// Without the `enabled` flip on lost, the renderer's
-		// `beginPostEffect` filter (`fx.enabled !== false`) would try
-		// to bind a null program during the suspended window.
+		// without the flip, beginPostEffect would try to bind a null program
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1303,19 +1182,14 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 		expect(effect.enabled).toBe(true);
-		// And destroyed flag stayed clean — context recovery is not a
-		// destroy event.
+		// destroyed stays false — restore is not a destroy event
 		expect(effect.destroyed).toBe(false);
 
 		effect.destroy();
 	});
 
 	it("real context loss: destroy() during cycle followed by a NEW lose/restore is harmless", async (ctx) => {
-		// After explicit destroy() during a suspended window, subsequent
-		// context loss/restore cycles must not touch the destroyed
-		// shader — its event subscribers were unsubscribed in destroy.
-		// If those subscribers leaked, a second cycle would try to
-		// suspend/recompile a destroyed shader.
+		// destroyed shader must not be touched by a subsequent cycle
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1360,28 +1234,14 @@ describe("WebGL pipeline adversarial integration", () => {
 		b.destroy();
 	});
 
-	// ----------------------------------------------------------------
-	//   Renderer-wide context loss / restore battery.
-	//
-	//   The tests above this point exercise GLShader and ShaderEffect
-	//   in isolation. The ones below probe everything else the
-	//   renderer owns across a real WEBGL_lose_context cycle — vertex
-	//   buffers, the texture cache, batcher GL state, default render
-	//   state (blend, depth, scissor, viewport), FBOs (render
-	//   targets), Light2d uniforms, the mesh / litQuad batchers, and
-	//   the full drawImage → flush pipeline. The intent is the same as
-	//   the rest of this spec: write the adversarial sequence first,
-	//   let it tell us what is and isn't recovered transparently, and
-	//   tighten the renderer-side ONCONTEXT_RESTORED handler until
-	//   every test in this block goes green.
-	// ----------------------------------------------------------------
+	// ---- Renderer-wide context loss / restore battery ----
+	// Probes everything else the renderer owns across the cycle:
+	// vertex buffers, texture cache, batcher GL state, default render
+	// state, FBOs, light uniforms, mesh / litQuad batchers, full
+	// drawImage → flush pipeline.
 
 	it("real context loss: gl.isContextLost() is true between loseContext and restoreContext (test infra sanity)", async (ctx) => {
-		// Sanity check on the test infrastructure itself. If
-		// `gl.isContextLost()` doesn't actually flip true between
-		// `ext.loseContext()` and `ext.restoreContext()`, then the
-		// vitest browser env isn't really losing the context and
-		// every test in this block is testing nothing.
+		// without this, vitest browser env isn't really losing context
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1402,12 +1262,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: renderer.isContextValid flips false on lost, true on restored", async (ctx) => {
-		// The renderer's public `isContextValid` flag must mirror the
-		// underlying context state. The webglcontextlost / restored
-		// listeners on the canvas are what flip it — if those didn't
-		// fire (e.g. event listener removed by mistake), the renderer
-		// would silently report "context is valid" while drawing into
-		// a dead context.
+		// public flag must mirror the underlying context state
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1428,12 +1283,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: renderer.vertexBuffer is a valid GL buffer after restore", async (ctx) => {
-		// `renderer.vertexBuffer` is created once in the constructor.
-		// After a context cycle the original `WebGLBuffer` reference
-		// belongs to a dead context — `gl.isBuffer()` against it
-		// returns false. The renderer-side ONCONTEXT_RESTORED handler
-		// must re-create it so the next bindBuffer doesn't throw
-		// INVALID_OPERATION.
+		// the renderer's restore handler must re-create vertexBuffer
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1457,12 +1307,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: indexed batchers' glVertexBuffer is valid after restore", async (ctx) => {
-		// Indexed batchers (currently only `mesh`) own their own
-		// `gl.createBuffer()` for the vertex array (non-indexed
-		// batchers share the renderer-level `vertexBuffer`). After a
-		// context cycle the indexed batchers' buffer references are
-		// from the dead context — `reset()`'s `batcher.init()` path
-		// must re-create them.
+		// indexed batchers own their own buffer; reset must re-create it
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1482,27 +1327,15 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 		expect.assertions(indexedBatchers.length);
 
-		// Pre-loss state is incidental — vitest's cross-file shared
-		// browser session may have already cycled the renderer's GL
-		// context (afterAll runs `video.init` again). The contract
-		// this test pins is "post-restore: indexed batchers' buffers
-		// are valid", not "all transitions were clean".
-
+		// pre-loss state is incidental — vitest cross-file shared session
 		ext.loseContext();
 		await tick();
 		ext.restoreContext();
 		await tick();
 
-		// post-restore: every indexed batcher's glVertexBuffer must be
-		// a re-created WebGLBuffer reference. We deliberately do NOT
-		// use `gl.isBuffer()` here — per WebGL spec, a name returned
-		// by `createBuffer` is not "the name of a buffer object" until
-		// it has been associated with one via `bindBuffer`, and
-		// `bind()` on a batcher only runs when that batcher becomes
-		// active. The contract this test pins is "init() ran +
-		// glVertexBuffer is a non-null reference"; binding (and
-		// therefore isBuffer == true) is exercised by the post-cycle
-		// `mesh batcher works after a context cycle` test below.
+		// not gl.isBuffer: per spec, a createBuffer name isn't a "buffer
+		// object" until bindBuffer; batcher.bind() runs on activation
+		// only. The post-cycle mesh batcher test covers the bound case.
 		for (const b of Array.from(renderer.batchers.values()).filter((b) => {
 			return b.useIndexBuffer === true;
 		})) {
@@ -1511,13 +1344,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: default WebGL state (blend, depth, scissor) is restored after cycle", async (ctx) => {
-		// melonJS sets a specific default state during init — BLEND
-		// enabled, DEPTH_TEST disabled, SCISSOR_TEST disabled, depth
-		// mask false. The driver resets ALL state on context restore,
-		// so the renderer's ONCONTEXT_RESTORED handler must re-apply
-		// the defaults; otherwise drawImage would draw with a
-		// random-from-the-driver blend mode and z-test state, producing
-		// visual garbage even without GL errors.
+		// driver wipes all GL state on restore; our handler re-applies it
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1540,12 +1367,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: batcher boundTextures is cleared on restore + drawing re-uploads from sources", async (ctx) => {
-		// boundTextures[unit] holds the WebGLTexture handles each
-		// batcher has bound. After a context cycle those handles are
-		// dead. `reset()`'s `batcher.init()` path drops the array
-		// entirely; the next `drawImage` then hits the create-and-
-		// upload path on uploadTexture() and re-creates from the
-		// still-alive source.
+		// dead handles cleared by reset, next draw re-uploads from source
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1589,12 +1411,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: drawImage + flush after the cycle produces no GL errors (full pipeline)", async (ctx) => {
-		// The headline integration test for this block. If buffers,
-		// textures, default state, and batcher shaders are all
-		// recovered, a vanilla `drawImage + flush` after a lose /
-		// restore cycle must leave `gl.getError()` at NO_ERROR. Any
-		// dead-context resource ref left around — buffer, texture,
-		// uniform location — will surface as INVALID_OPERATION here.
+		// headline integration test — any stale resource ref surfaces here
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1619,12 +1436,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: mesh batcher works after a context cycle", async (ctx) => {
-		// Switching to the mesh batcher with `renderer.setBatcher`
-		// uses a different shader + vertex layout (x, y, z, u, v, tint).
-		// After a context cycle the mesh batcher's GL resources (its
-		// own vertex buffer + default shader's program) must be
-		// re-bound. A clean dispatch through mesh → quad must produce
-		// no GL errors.
+		// mesh has its own buffer + shader + layout — all must re-bind
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1649,10 +1461,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: litQuad batcher (Light2d uniforms + normal map) works after a context cycle", async (ctx) => {
-		// The lit-quad path is the most state-heavy frame in the
-		// engine — uniform writes per light, a separate batcher,
-		// normal-map texture binding. After context loss every one of
-		// those resources is dead; the renderer must reset them.
+		// most state-heavy path — light uniforms, separate batcher, normal map
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1694,16 +1503,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: ShaderEffect + drawImage + flush survive the full cycle without throwing", async (ctx) => {
-		// The original 19.5.0 user-reported scenario: a frame is
-		// actively drawing through an enabled ShaderEffect when the
-		// context is lost (NVIDIA Optimus GPU switch; reproducible
-		// from DevTools with `ext.loseContext()`). The renderer's
-		// ONCONTEXT_LOST handler tears down every GLShader, and the
-		// NEXT frame's drawImage + flush must NOT crash with the
-		// `TypeError: Cannot read properties of null (reading
-		// 'uTime')` partial-destroy bug. After restoreContext, the
-		// ShaderEffect re-enables, its uniform cache replays, and the
-		// pipeline keeps drawing without throwing.
+		// 19.5.0 user-reported scenario: drawing through an enabled
+		// ShaderEffect when the context is lost mid-frame
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1752,11 +1553,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: three consecutive lose/restore cycles each leave the pipeline drawable", async (ctx) => {
-		// Repetition stress test for cumulative leaks. If any resource
-		// (buffer, texture, FBO, subscription) survives one cycle but
-		// leaks across two, three cycles surface it. If we re-create
-		// buffers in ONCONTEXT_RESTORED without freeing the old ones,
-		// we'd accumulate one zombie WebGLBuffer per cycle here.
+		// repetition stress test — cumulative leaks surface across cycles
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1779,19 +1576,10 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 	});
 
-	// ----------------------------------------------------------------
-	//   Coverage gaps from the post-PR audit:
-	//   addPostEffect dispatch through cycle, pool-recycle simulation,
-	//   add/remove during suspended window, customShader, tinted cache,
-	//   concurrent ShaderEffects, save/restore stack.
-	// ----------------------------------------------------------------
+	// ---- Coverage gaps from the post-PR audit ----
 
 	it("real context loss: Renderable.addPostEffect dispatch survives a full cycle", async (ctx) => {
-		// Closest test to the in-the-wild coin scenario. A Renderable
-		// has a ShaderEffect attached via addPostEffect; the renderer's
-		// beginPostEffect → drawImage → endPostEffect dispatch path
-		// (single-effect non-managed renderable: uses `customShader`
-		// fast path, no FBO) must keep working across a context cycle.
+		// closest to the coin scenario — beginPostEffect→draw→endPostEffect
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1841,15 +1629,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: pool-recycle simulation — renderable removed, cycle, re-added still draws", async (ctx) => {
-		// Direct simulation of the platformer coin pickup → respawn
-		// flow across a context cycle. We don't have a real pool here,
-		// but the lifecycle moves we care about are: detach the
-		// renderable from the dispatch path (`postEffects = []`), do
-		// the loseContext / restoreContext cycle, then re-attach the
-		// SAME ShaderEffect instance and verify the dispatch path
-		// still works. The C3 / C4 onActivate/onDeactivate migration
-		// covers the GAME_UPDATE subscription side; this pins the
-		// shader-survival side.
+		// detach effect, cycle, re-attach same instance, draw — survives
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1875,21 +1655,16 @@ describe("WebGL pipeline adversarial integration", () => {
 		renderer.endPostEffect(renderable);
 		renderer.flush();
 
-		// "Pickup": detach from dispatch path (renderable would be
-		// removed from its container; postEffects cleared by an
-		// equivalent of clearPostEffects() OR the renderable simply
-		// stops getting drawn). Effect itself is NOT destroyed —
-		// pool-recycled renderables keep their effect alive.
+		// "pickup": detach from dispatch path; effect itself stays alive
 		renderable.postEffects.length = 0;
 
-		// Cycle happens while the effect is detached but alive
+		// cycle happens while effect is detached but alive
 		ext.loseContext();
 		await tick();
 		ext.restoreContext();
 		await tick();
 
-		// Effect survived the cycle on its own (subscriptions are on
-		// the event bus, not on the renderable)
+		// effect survives on its own (subscriptions on the event bus)
 		expect(effect.destroyed).toBe(false);
 		expect(effect.enabled).toBe(true);
 		expect(effect._shader._uniformCache.uTime).toEqual(0.5);
@@ -1907,12 +1682,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: addPostEffect during the suspended window does not throw", async (ctx) => {
-		// User code that constructs a new ShaderEffect (or any
-		// GLShader) while the context is in the suspended window
-		// must not crash. The shader's constructor must gracefully
-		// recover — compile against the dead context returns a fake
-		// program object, but the ONCONTEXT_RESTORED subscription
-		// will recompile against the live context once it returns.
+		// constructor must defer compile and recover on restore
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1928,10 +1698,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.loseContext();
 		await tick();
 
-		// Construct a NEW ShaderEffect while the context is lost.
-		// This is genuinely unusual but plausible (game code in the
-		// middle of a level transition gets interrupted by a GPU
-		// switch). The constructor must not throw.
+		// constructing during lost context must not throw
 		let effect;
 		expect(() => {
 			effect = new ShaderEffect(
@@ -1962,11 +1729,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: 20 concurrent ShaderEffects all survive a cycle (subscription leak check)", async (ctx) => {
-		// Surfaces leaks in the ONCONTEXT_RESTORED subscription path.
-		// If even one of 20 effects fails to recompile correctly, or
-		// if any effect's subscription leaks across multiple cycles,
-		// the post-restore state diverges. 20 is overkill for normal
-		// usage but cheap to test.
+		// shared-cache bug or subscription leak collapses values across all 20
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -1985,8 +1748,7 @@ describe("WebGL pipeline adversarial integration", () => {
 				"uniform float uTime;\n" +
 					"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
 			);
-			// Distinct uniform value per effect — surfaces "every
-			// shader replays the SAME value" cache bugs
+			// distinct per-effect value — collapse = shared-cache bug
 			fx.setUniform("uTime", 0.1 + i * 0.01);
 			effects.push(fx);
 		}
@@ -1996,9 +1758,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		// Every effect re-enabled, every uniform cache intact and
-		// distinct (a shared-cache bug would collapse all values to
-		// the last write)
+		// every effect re-enabled, every cache distinct
 		for (let i = 0; i < N; i++) {
 			expect(effects[i].enabled).toBe(true);
 			expect(effects[i]._shader._uniformCache.uTime).toBeCloseTo(
@@ -2013,12 +1773,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: renderer.customShader assignment survives a cycle", async (ctx) => {
-		// `customShader` is the renderer-level handle the user assigns
-		// directly when they want a non-postEffect custom shader path
-		// (e.g. via beginPostEffect's single-effect fast path). It's a
-		// reference to a ShaderEffect; the underlying GLShader must
-		// survive the cycle so that any later `currentBatcher.useShader(
-		// customShader._shader)` doesn't bind a null program.
+		// the ShaderEffect itself must survive; reset clears the pointer
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -2043,12 +1798,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		// renderer.reset() (called inside the restore handler) sets
-		// `this.customShader = undefined`. That's the intended
-		// behavior — user code is expected to re-assign on restore
-		// just like any other renderer-wide cross-frame state.
-		// What the test pins is: the ShaderEffect itself survived
-		// the cycle, so the user CAN re-assign it.
+		// reset() sets customShader=undefined; pinned: the effect lives
 		expect(customFx.destroyed).toBe(false);
 		expect(customFx._shader._uniformCache.uTime).toEqual(1.0);
 
@@ -2056,15 +1806,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: tinted texture cache regenerates cleanly after a cycle", async (ctx) => {
-		// `renderer.tint()` produces a tinted canvas + caches the
-		// result by (source, color) in `cache.tinted`. The cache is
-		// keyed by JS references that survive a cycle, but the
-		// engine's reset path treats the tinted cache as transient
-		// state — it may or may not be retained across a context
-		// cycle, the user-facing contract is just that `cache.tint(
-		// src, color)` keeps returning a usable tinted canvas.
-		// Drawing the result post-cycle must lazy-upload the texture
-		// (cache miss path) without throwing or queuing GL errors.
+		// contract: tint() keeps returning a usable canvas; drawing
+		// re-uploads via the lazy path
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -2087,10 +1830,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		// post-cycle: tint() returns a usable canvas (may be the
-		// same reference if cache survived, or a freshly-tinted one
-		// if reset() cleared it — both are valid). Drawing it must
-		// re-upload cleanly through the lazy-upload path.
+		// post-cycle: usable canvas back (cache survived or regenerated)
 		const sameTintedCanvas = renderer.cache.tint(source, "#ff0000");
 		renderer.drawImage(sameTintedCanvas, 0, 0, 16, 16, 0, 0, 16, 16);
 		renderer.flush();
@@ -2098,19 +1838,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: save / restore stack interacting with a cycle does not throw", async (ctx) => {
-		// `renderer.save()` pushes a render-state snapshot (color,
-		// transform, blend, etc.). The engine's reset() path on
-		// context restored treats the render-state stack as
-		// transient and clears it — user code is expected to
-		// re-establish render setup after a cycle, the same way it
-		// re-establishes any other cross-frame state.
-		//
-		// What the test pins is the WEAKER but more important
-		// contract: a save / restore call sequence that straddles a
-		// context cycle must NOT throw or leave the GL state in a
-		// stuck/inconsistent shape — even if the saved snapshot
-		// itself was dropped, the public API stays callable and the
-		// renderer can continue drawing post-cycle.
+		// reset() wipes the save stack on restore — restore() against
+		// an empty stack must still be safe
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -2144,19 +1873,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	});
 
 	it("real context loss: destroying 30 ShaderEffects + cycle leaves no leaked subscriber recompiling against a destroyed shader", async (ctx) => {
-		// Subscription leak smoke test. Create N effects, destroy
-		// them all, run a lose / restore cycle. If any destroyed
-		// effect failed to unsubscribe properly, the cycle would
-		// trigger its _onContextRestored handler — which would either
-		// throw on null fields OR silently recompile a shader that
-		// the user already released. Both scenarios should be
-		// IMPOSSIBLE if destroy() unsubscribes correctly.
-		//
-		// We can't directly count subscribers from the public event
-		// API, so this test uses two indirect signals: (a) no JS
-		// exception escapes the cycle, and (b) every destroyed
-		// shader stays destroyed across the cycle (program === null,
-		// destroyed === true).
+		// subscription leak smoke test — leaked _onContextRestored
+		// handlers would throw or resurrect a destroyed shader
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}

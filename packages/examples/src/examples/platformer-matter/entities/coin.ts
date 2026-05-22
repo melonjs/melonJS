@@ -14,17 +14,9 @@ import {
 } from "melonjs";
 import { gameState } from "../gameState";
 
-// Per-instance shine shader. Each coin owns its own ShaderEffect,
-// matching the pattern used by every other ShaderEffect consumer in
-// the 19.5+ example suite (`plinko-planck/entities/peg.ts`,
-// `dropZone.ts`).
-//
-// CoinEntity is registered with `pool.register("CoinEntity", ..., true)`
-// in createGame.ts, so onDestroyEvent does NOT fire on pool return —
-// only on real destroy (level reset, app shutdown). The GAME_UPDATE
-// subscription is therefore tied to onActivateEvent / onDeactivateEvent
-// (which DO fire on every pool recycle cycle) instead of the
-// constructor / onDestroyEvent pair.
+// Per-instance shine shader. Pool-recycled (recycle:true) so
+// onDestroyEvent doesn't fire on pickup — bind GAME_UPDATE on
+// activate, unbind on deactivate.
 
 export class CoinEntity extends Collectable {
 	private shineShader: ShineEffect | undefined;
@@ -35,9 +27,6 @@ export class CoinEntity extends Collectable {
 	 * constructor
 	 */
 	constructor(x, y, _settings) {
-		// call the super constructor. Collectable defaults to a static
-		// sensor body — picked up on overlap, no physical push under
-		// either adapter.
 		super(
 			x,
 			y,
@@ -47,10 +36,7 @@ export class CoinEntity extends Collectable {
 				shapes: [new Ellipse(35 / 2, 35 / 2, 35, 35)], // coins are 35x35
 			}),
 		);
-		// shader creation + GAME_UPDATE subscription happen in
-		// onActivateEvent — `parentApp.renderer` may not be available
-		// at construction time, and the subscription must be re-bound
-		// on every pool-recycled activation anyway (see class doc).
+		// shader + subscription deferred to onActivateEvent
 	}
 
 	private attachShine(): boolean {
@@ -90,8 +76,7 @@ export class CoinEntity extends Collectable {
 		if (this.attachShine()) {
 			this.subscribeShine();
 		} else {
-			// Renderer not ready yet — defer until the level (and its
-			// renderer) is fully initialised.
+			// renderer not ready yet — defer to LEVEL_LOADED
 			event.once(event.LEVEL_LOADED, () => {
 				if (this.attachShine()) {
 					this.subscribeShine();
@@ -101,10 +86,6 @@ export class CoinEntity extends Collectable {
 	}
 
 	override onDeactivateEvent() {
-		// pool.removeChildNow fires onDeactivateEvent on every coin
-		// pickup; balance the GAME_UPDATE subscription here so we
-		// don't accumulate stale handlers across the coin's many
-		// activate/deactivate cycles.
 		this.unsubscribeShine();
 		super.onDeactivateEvent();
 	}
@@ -121,17 +102,12 @@ export class CoinEntity extends Collectable {
 	onCollisionStart() {
 		audio.play("cling", false);
 		gameState.data.score += 250;
-		// TMX objects are children of their object-layer container, not of
-		// `game.world` directly — use the actual ancestor so removeChild's
-		// `hasChild` guard doesn't throw "Child is not mine".
+		// remove from the actual ancestor (object layer), not game.world
 		(this.ancestor as Container | undefined)?.removeChild(this);
 	}
 
 	override onDestroyEvent() {
-		// Only fires on real destroy (level reset / app shutdown) —
-		// pool returns skip this hook entirely. The engine clears
-		// our postEffects on full renderable destroy; we just need to
-		// release the GAME_UPDATE subscription if it's still live.
+		// fires only on real destroy (level reset / app shutdown)
 		this.unsubscribeShine();
 		this.shineShader = undefined;
 		this.shineUpdateHandler = undefined;
