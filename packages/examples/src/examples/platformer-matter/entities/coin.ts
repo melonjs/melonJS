@@ -22,7 +22,6 @@ export class CoinEntity extends Collectable {
 	private shineShader: ShineEffect | undefined;
 	private shineUpdateHandler: (() => void) | undefined;
 	private shineSubscribed = false;
-	private deferredAttachHandler: (() => void) | undefined;
 
 	/**
 	 * constructor
@@ -72,35 +71,21 @@ export class CoinEntity extends Collectable {
 		this.shineSubscribed = false;
 	}
 
-	private cancelDeferredAttach() {
-		if (this.deferredAttachHandler) {
-			event.off(event.LEVEL_LOADED, this.deferredAttachHandler);
-			this.deferredAttachHandler = undefined;
-		}
-	}
-
 	override onActivateEvent() {
 		super.onActivateEvent();
 		if (this.attachShine()) {
 			this.subscribeShine();
 		} else {
-			// renderer not ready yet — defer to LEVEL_LOADED. Keep a
-			// handler ref so we can cancel it if we deactivate /
-			// destroy before LEVEL_LOADED fires (otherwise a pooled
-			// coin would silently re-subscribe to GAME_UPDATE).
-			this.cancelDeferredAttach();
-			this.deferredAttachHandler = () => {
-				this.deferredAttachHandler = undefined;
+			// renderer not ready yet — defer to LEVEL_LOADED
+			event.once(event.LEVEL_LOADED, () => {
 				if (this.attachShine()) {
 					this.subscribeShine();
 				}
-			};
-			event.once(event.LEVEL_LOADED, this.deferredAttachHandler);
+			});
 		}
 	}
 
 	override onDeactivateEvent() {
-		this.cancelDeferredAttach();
 		this.unsubscribeShine();
 		super.onDeactivateEvent();
 	}
@@ -123,7 +108,6 @@ export class CoinEntity extends Collectable {
 
 	override onDestroyEvent() {
 		// fires only on real destroy (level reset / app shutdown)
-		this.cancelDeferredAttach();
 		this.unsubscribeShine();
 		this.shineShader = undefined;
 		this.shineUpdateHandler = undefined;
