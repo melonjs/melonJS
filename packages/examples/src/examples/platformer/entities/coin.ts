@@ -15,19 +15,19 @@ import {
 } from "melonjs";
 import { gameState } from "../gameState";
 
-// shared shine shader for all coins — one ShineEffect instance,
-// ref-counted so it survives across level reloads / pool recycling
-let coinShader: ShineEffect | undefined;
-let coinShaderRefCount = 0;
-let coinUpdateHandler: (() => void) | undefined;
+// Per-instance shine shader. Matches the pattern used by every other
+// `ShaderEffect` consumer in the 19.5+ example suite
+// (`plinko-planck/entities/peg.ts`, `dropZone.ts`): each renderable
+// owns its own `ShaderEffect`, lifetime tied to the renderable's
+// own destroy. A previous version of this file kept a module-level
+// singleton + manual refcount to share one program across all coins,
+// which was a deviation from the rest of the codebase and made
+// every coin transitively depend on the singleton's lifecycle. Per-
+// instance is simpler and matches plinko's pattern.
 
 export class CoinEntity extends Collectable {
-	/**
-	 * Did *this* instance increment the shared shader's refcount? Without
-	 * tracking it per-instance, a coin destroyed before its LEVEL_LOADED
-	 * handler runs would over-decrement in onDestroyEvent.
-	 */
-	private didIncrementRefCount = false;
+	private shineShader: ShineEffect | undefined;
+	private shineUpdateHandler: (() => void) | undefined;
 
 	/**
 	 * constructor
@@ -44,31 +44,27 @@ export class CoinEntity extends Collectable {
 			}),
 		);
 
-		// Apply the built-in shine shader. Attempt immediately for coins
-		// constructed after the first level loaded, otherwise defer to the
-		// next LEVEL_LOADED event.
+		// Attach the shine shader as soon as a renderer is available.
+		// For the first coins in the world this happens on LEVEL_LOADED;
+		// for coins constructed afterwards it happens immediately.
 		const attach = () => {
-			if (this.didIncrementRefCount) return true;
+			if (this.shineShader) return true;
 			const renderer = this.parentApp?.renderer;
 			if (!renderer) return false;
-			if (!coinShader) {
-				coinShader = new ShineEffect(renderer, {
-					color: [1.0, 0.95, 0.7], // warm white-gold highlight
-					speed: 0.8,
-					width: 0.25, // wider, gentler glint
-					intensity: 0.22, // softer highlight
-					angle: 0.35, // slight diagonal sweep (~20°)
-					bands: 14.5, // ~14 parallel etched-rim glints
-					pulseDepth: 0.04, // very subtle brightness pulse
-				});
-				coinUpdateHandler = () => {
-					coinShader?.setTime(timer.getTime() / 1000.0);
-				};
-				event.on(event.GAME_UPDATE, coinUpdateHandler);
-			}
-			coinShaderRefCount++;
-			this.didIncrementRefCount = true;
-			this.addPostEffect(coinShader);
+			this.shineShader = new ShineEffect(renderer, {
+				color: [1.0, 0.95, 0.7], // warm white-gold highlight
+				speed: 0.8,
+				width: 0.25, // wider, gentler glint
+				intensity: 0.22, // softer highlight
+				angle: 0.35, // slight diagonal sweep (~20°)
+				bands: 14.5, // ~14 parallel etched-rim glints
+				pulseDepth: 0.04, // very subtle brightness pulse
+			});
+			this.shineUpdateHandler = () => {
+				this.shineShader?.setTime(timer.getTime() / 1000.0);
+			};
+			event.on(event.GAME_UPDATE, this.shineUpdateHandler);
+			this.addPostEffect(this.shineShader);
 			return true;
 		};
 		if (!attach()) {
@@ -101,16 +97,14 @@ export class CoinEntity extends Collectable {
 	}
 
 	onDestroyEvent() {
-		// Only release the shared shader ref if this instance acquired one.
-		if (!this.didIncrementRefCount) return;
-		this.didIncrementRefCount = false;
-		if (coinShader && --coinShaderRefCount <= 0) {
-			if (coinUpdateHandler) {
-				event.off(event.GAME_UPDATE, coinUpdateHandler);
-				coinUpdateHandler = undefined;
-			}
-			coinShader = undefined;
-			coinShaderRefCount = 0;
+		// Release the per-coin GAME_UPDATE handler — the engine's
+		// removePostEffect path destroys the `ShineEffect` itself, but
+		// it does NOT touch our event subscription. Without this
+		// off-call we'd accumulate one dead handler per coin pickup.
+		if (this.shineUpdateHandler) {
+			event.off(event.GAME_UPDATE, this.shineUpdateHandler);
+			this.shineUpdateHandler = undefined;
 		}
+		this.shineShader = undefined;
 	}
 }

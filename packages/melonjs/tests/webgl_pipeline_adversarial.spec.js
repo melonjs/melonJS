@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, GLShader, video, WebGLRenderer } from "../src/index.js";
+import {
+	boot,
+	event,
+	GLShader,
+	ShaderEffect,
+	video,
+	WebGLRenderer,
+} from "../src/index.js";
 
 /**
  * Adversarial integration tests for the WebGL pipeline.
@@ -387,6 +394,351 @@ describe("WebGL pipeline adversarial integration", () => {
 		custom.destroy();
 	});
 
+	// Helper that produces a minimal valid GLSL pair for these specs —
+	// one uniform (`uTime`), one attribute (`aVertex`). Shared by the
+	// shader-lifecycle test cluster below so each test reads compactly.
+	const makeShaderSource = () => {
+		return {
+			vertex: [
+				"attribute vec2 aVertex;",
+				"uniform mat4 uProjectionMatrix;",
+				"void main(void) {",
+				"  gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
+				"}",
+			].join("\n"),
+			fragment: [
+				"uniform float uTime;",
+				"void main(void) { gl_FragColor = vec4(uTime, 0.0, 0.0, 1.0); }",
+			].join("\n"),
+		};
+	};
+
+	const skipIfNoWebGL = (ctx) => {
+		if (!isWebGL) {
+			// `ctx.skip` marks the test as SKIPPED in vitest output —
+			// distinct from "passed". Without this guard a CI runner
+			// without WebGL would silently report every test in this
+			// cluster as passing, defeating the whole point of the
+			// regression suite. Pair every test below with
+			// `expect.assertions(N)` so a no-op early-return is also
+			// caught (the assertion count tells vitest "this many
+			// expectations MUST run; fail otherwise").
+			ctx.skip("WebGL not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
+	it("destroyed shader: setUniform / bind / getAttribLocation no-op cleanly (do not throw)", (ctx) => {
+		// Regression for the 19.5.0 crash reported on Windows + Chrome
+		// (ANGLE / D3D11): a shader's `_shader.destroy()` is called by
+		// the renderer's ONCONTEXT_LOST handler — `gl.deleteProgram`
+		// can throw on ANGLE because the program belongs to the dead
+		// context, leaving `GLShader.uniforms === null` while
+		// `ShaderEffect.enabled` still reads true. A still-registered
+		// `setTime(...)` → `setUniform("uTime", ...)` then hits the
+		// nulled uniforms map and crashes with `Cannot read properties
+		// of null (reading 'uTime')`. Mac drivers silently no-op'd on
+		// the deleted program; ANGLE rejected it strictly.
+		//
+		// `setUniform`, `bind`, and `getAttribLocation` must be
+		// defensive against a stale reference to a destroyed shader.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(12);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		// sanity: before destroy, the shader has live state
+		expect(shader.destroyed).toBe(false);
+		expect(shader.uniforms).not.toBeNull();
+		expect(shader.attributes).not.toBeNull();
+		expect(shader.program).not.toBeNull();
+
+		shader.destroy();
+
+		// after destroy, all the per-field cleanups happened AND the
+		// public `destroyed` flag flipped
+		expect(shader.destroyed).toBe(true);
+		expect(shader.uniforms).toBeNull();
+		expect(shader.attributes).toBeNull();
+		expect(shader.program).toBeNull();
+
+		// every accessor no-ops silently
+		expect(() => {
+			shader.setUniform("uTime", 1.234);
+		}).not.toThrow();
+		expect(() => {
+			shader.bind();
+		}).not.toThrow();
+		expect(shader.getAttribLocation("aVertex")).toEqual(-1);
+
+		// setUniform for an UNKNOWN uniform also stays silent — the
+		// pre-destroy code path would have thrown for an undefined
+		// uniform name, but post-destroy we never reach that branch.
+		expect(() => {
+			shader.setUniform("uNotDefined", 0);
+		}).not.toThrow();
+
+		// the no-op must not have queued any GL operations either
+		while (gl.getError() !== gl.NO_ERROR) {
+			/* drain */
+		}
+	});
+
+	it("GLShader.destroy is idempotent — double-destroy does not throw", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(3);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		shader.destroy();
+		expect(shader.destroyed).toBe(true);
+
+		// Second destroy must early-return — without the idempotency
+		// guard, `gl.deleteProgram(null)` would warn (or, on stricter
+		// drivers, throw INVALID_OPERATION).
+		expect(() => {
+			shader.destroy();
+		}).not.toThrow();
+		expect(shader.destroyed).toBe(true);
+	});
+
+	it("GLShader.destroy is partial-state-safe under a throwing deleteProgram (ANGLE-style)", (ctx) => {
+		// Direct simulation of the ANGLE / D3D11 failure mode: even
+		// when `gl.deleteProgram` throws (program belongs to a dead
+		// context), the JS-side `destroy()` must complete — fields
+		// nulled, `destroyed` flag flipped — so subsequent callers
+		// holding a stale reference get the silent no-op path.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(6);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		// Sabotage just this shader's deleteProgram. Using a per-
+		// instance override on `shader.gl` mutates the shared renderer
+		// gl proxy, so save + restore the original after the test.
+		const originalDeleteProgram = shader.gl.deleteProgram.bind(shader.gl);
+		shader.gl.deleteProgram = () => {
+			throw new Error("mock ANGLE cross-context delete error");
+		};
+
+		expect(() => {
+			shader.destroy();
+		}).not.toThrow(); // the try/catch inside destroy must contain it
+
+		// Even though deleteProgram threw, the JS state must be fully
+		// cleaned up
+		expect(shader.destroyed).toBe(true);
+		expect(shader.uniforms).toBeNull();
+		expect(shader.attributes).toBeNull();
+		expect(shader.program).toBeNull();
+
+		// And subsequent calls still no-op safely
+		expect(() => {
+			shader.setUniform("uTime", 0.5);
+		}).not.toThrow();
+
+		// restore the original so the renderer's gl isn't polluted
+		shader.gl.deleteProgram = originalDeleteProgram;
+	});
+
+	it("ShaderEffect.destroy sets enabled=false BEFORE _shader.destroy (partial-state immunity)", (ctx) => {
+		// This is the EXACT 19.5.0 ANGLE crash scenario as a unit test.
+		// We sabotage the inner `_shader.destroy` to throw — simulating
+		// `gl.deleteProgram` throwing on a dead ANGLE context. The
+		// reordered ShaderEffect.destroy must have set
+		// `this.enabled = false` BEFORE invoking the inner destroy, so
+		// the throw can't leave behind the partial state
+		// (`_shader.uniforms === null` AND `enabled === true`) that
+		// produced "Cannot read properties of null (reading 'uTime')"
+		// on subsequent `setUniform` calls.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(7);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 c, vec2 u) { return c; }",
+		);
+		expect(effect.enabled).toBe(true);
+		expect(effect.destroyed).toBe(false);
+
+		// Sabotage the inner destroy
+		const originalInnerDestroy = effect._shader.destroy.bind(effect._shader);
+		effect._shader.destroy = () => {
+			throw new Error("mock inner shader destroy throw");
+		};
+
+		expect(() => {
+			effect.destroy();
+		}).toThrow(/mock inner shader destroy throw/);
+
+		// Critical: even though the inner destroy threw OUTWARD,
+		// `enabled` must already be false because we set it before
+		// the inner call.
+		expect(effect.enabled).toBe(false);
+		expect(effect.destroyed).toBe(true);
+
+		// And the public setUniform / bind / getAttribLocation paths
+		// must no-op via the enabled gate.
+		expect(() => {
+			effect.setUniform("foo", 1);
+		}).not.toThrow();
+		expect(effect.getAttribLocation("aVertex")).toEqual(-1);
+
+		// Clean up the real GL resources we never got to release.
+		originalInnerDestroy();
+	});
+
+	it("ShaderEffect.destroy is idempotent", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(3);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 c, vec2 u) { return c; }",
+		);
+		effect.destroy();
+		expect(effect.destroyed).toBe(true);
+		expect(() => {
+			effect.destroy();
+		}).not.toThrow();
+		expect(effect.destroyed).toBe(true);
+	});
+
+	it("ShaderEffect: setUniform / bind / getAttribLocation no-op after destroy", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(4);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.destroy();
+
+		expect(effect.enabled).toBe(false);
+		expect(() => {
+			effect.setUniform("uTime", 0.5);
+		}).not.toThrow();
+		expect(() => {
+			effect.bind();
+		}).not.toThrow();
+		expect(effect.getAttribLocation("aVertex")).toEqual(-1);
+	});
+
+	it("multiple independent ShaderEffect instances: destroying one does not affect another", (ctx) => {
+		// Pins the per-instance-shader pattern the platformer-matter
+		// and platformer-builtin coin examples migrate to. plinko-planck
+		// already follows this idiom (one ShaderEffect per peg / drop
+		// zone); the platformer coins were the deviation in 19.5.0.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(5);
+
+		const a = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		const b = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+
+		a.destroy();
+
+		// b must be completely unaffected
+		expect(a.destroyed).toBe(true);
+		expect(b.destroyed).toBe(false);
+		expect(b.enabled).toBe(true);
+		expect(() => {
+			b.setUniform("uTime", 0.5);
+		}).not.toThrow();
+		expect(b._shader.program).not.toBeNull();
+
+		b.destroy();
+	});
+
+	it("GLShader survives a context-lost → restored cycle with uniform values intact", (ctx) => {
+		// The trigger for the original Windows crash was the renderer's
+		// `webglcontextlost` listener firing on a GPU switch (NVIDIA
+		// Optimus laptops), which emits ONCONTEXT_LOST and previously
+		// fully destroyed every GLShader. The new lifecycle suspends
+		// instead — keeps the source code + cached uniform values
+		// around — and rebuilds the program on ONCONTEXT_RESTORED,
+		// replaying the cached uniforms so the visual state survives
+		// the GPU transition transparently. Without the uniform replay
+		// path, any shader with one-time uniform setup (color, geom
+		// constants) would render with default uniforms after a GPU
+		// switch, a silent regression that's worse than the crash.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(6);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+		shader.setUniform("uTime", 3.14);
+		const originalProgram = shader.program;
+		expect(shader.suspended).toBe(false);
+
+		event.emit(event.ONCONTEXT_LOST, renderer);
+		// Shader is now suspended — program released, but source +
+		// uniform cache preserved
+		expect(shader.suspended).toBe(true);
+		expect(shader.program).toBeNull();
+
+		event.emit(event.ONCONTEXT_RESTORED, renderer);
+		// Shader rebuilt: new program (different identity), suspended
+		// flag cleared
+		expect(shader.suspended).toBe(false);
+		expect(shader.program).not.toBeNull();
+		expect(shader.program).not.toBe(originalProgram);
+
+		shader.destroy();
+	});
+
+	it("GLShader does NOT auto-resurrect after explicit destroy", (ctx) => {
+		// An explicit `destroy()` is the user's "release this resource"
+		// signal — automatic context-loss recovery must respect that
+		// and NOT rebuild the program when ONCONTEXT_RESTORED later
+		// fires. The destroy must also unsubscribe from the events so
+		// the destroyed shader doesn't accumulate stale handlers.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(3);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+		shader.destroy();
+		expect(shader.destroyed).toBe(true);
+
+		event.emit(event.ONCONTEXT_LOST, renderer);
+		event.emit(event.ONCONTEXT_RESTORED, renderer);
+
+		// Still destroyed; no program resurrection
+		expect(shader.destroyed).toBe(true);
+		expect(shader.program).toBeNull();
+	});
+
 	// ---- Mode flag interactions (blend, scissor) ----
 
 	it("blend mode change between batcher switches: no error", () => {
@@ -620,5 +972,315 @@ describe("WebGL pipeline adversarial integration", () => {
 				);
 			}
 		}
+	});
+
+	// =========================================================
+	//   Real WEBGL_lose_context lifecycle tests — MUST run last.
+	// =========================================================
+	//
+	// The lifecycle tests above this point emit ONCONTEXT_LOST /
+	// ONCONTEXT_RESTORED directly via the event bus, which is fast +
+	// deterministic but only exercises our subscribers. The tests in
+	// this trailing block use the WEBGL_lose_context extension to
+	// fire the actual DOM-level `webglcontextlost` /
+	// `webglcontextrestored` events on the canvas — the same path an
+	// NVIDIA Optimus GPU switch hits on a user's machine, going
+	// through the renderer's DOM listeners in `webgl_renderer.js`
+	// before fanning out via the event bus.
+	//
+	// Each real loss / restore round-trip can leave renderer scratch
+	// state subtly different (blend mode, scissor, batcher attribute
+	// bindings, texture-unit cache) — even though `reset()` runs on
+	// restored. We don't want that to bleed into the rest of the
+	// spec, so the entire block runs at the end. Within the block,
+	// each test ends in a "restored" state so consecutive tests can
+	// chain.
+	//
+	// Helpers used below:
+	//   - `loseContext(ext)` triggers loseContext + awaits microtask
+	//   - `restoreContext(ext)` triggers restoreContext + awaits
+	const tick = () => {
+		return new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+	};
+
+	it("real context loss drives the full lifecycle end-to-end (1 shader, 1 cycle)", async (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(8);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+		shader.setUniform("uTime", 7.25);
+		const originalProgram = shader.program;
+		expect(shader.suspended).toBe(false);
+		expect(shader.destroyed).toBe(false);
+
+		ext.loseContext();
+		await tick();
+		expect(shader.suspended).toBe(true);
+		expect(shader.program).toBeNull();
+
+		ext.restoreContext();
+		await tick();
+		expect(shader.suspended).toBe(false);
+		expect(shader.program).not.toBeNull();
+		expect(shader.program).not.toBe(originalProgram);
+		expect(shader._uniformCache.uTime).toEqual(7.25);
+
+		shader.destroy();
+	});
+
+	it("real context loss: multiple shaders all survive without cross-pollination", async (ctx) => {
+		// Each shader's _uniformCache is per-instance — verify two
+		// shaders with DIFFERENT uniform values both survive and don't
+		// leak into each other (e.g. a shared scratch cache would
+		// silently merge the two histories).
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(8);
+
+		const a = new GLShader(
+			gl,
+			makeShaderSource().vertex,
+			makeShaderSource().fragment,
+		);
+		const b = new GLShader(
+			gl,
+			makeShaderSource().vertex,
+			makeShaderSource().fragment,
+		);
+		a.setUniform("uTime", 1.0);
+		b.setUniform("uTime", 99.0);
+
+		ext.loseContext();
+		await tick();
+		expect(a.suspended).toBe(true);
+		expect(b.suspended).toBe(true);
+
+		ext.restoreContext();
+		await tick();
+		expect(a.suspended).toBe(false);
+		expect(b.suspended).toBe(false);
+		// Each cache replays the value its own owner set — no mixing.
+		expect(a._uniformCache.uTime).toEqual(1.0);
+		expect(b._uniformCache.uTime).toEqual(99.0);
+		// Each shader has a unique fresh program (not the same handle).
+		expect(a.program).not.toBe(b.program);
+		expect(a.program).not.toBeNull();
+
+		a.destroy();
+		b.destroy();
+	});
+
+	it("real context loss: setUniform DURING the suspended window goes to cache, applied on restore", async (ctx) => {
+		// While the context is dead, we can't write to a real uniform
+		// location — but our setUniform should still accept the call
+		// and cache it for replay. This is the difference between a
+		// "shader stops accepting input until restore" model and a
+		// "shader transparently survives" model. We chose the latter.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(5);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+		shader.setUniform("uTime", 1.0);
+
+		ext.loseContext();
+		await tick();
+		expect(shader.suspended).toBe(true);
+
+		// Write a NEW uniform value while suspended — should go to the
+		// cache without throwing or hitting GL.
+		expect(() => {
+			shader.setUniform("uTime", 42.0);
+		}).not.toThrow();
+		expect(shader._uniformCache.uTime).toEqual(42.0);
+
+		ext.restoreContext();
+		await tick();
+		expect(shader.suspended).toBe(false);
+		// The latest cached value (42, not the original 1) is the one
+		// replayed against the fresh uniforms map.
+		expect(shader._uniformCache.uTime).toEqual(42.0);
+
+		shader.destroy();
+	});
+
+	it("real context loss: destroying a shader DURING the suspended window stays destroyed across restore", async (ctx) => {
+		// Calling destroy() during a context-lost window must work
+		// (no throws from destroy itself) AND must NOT be resurrected
+		// when the matching context-restored event later fires. The
+		// destroyed flag has authority over the suspended flag.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+
+		ext.loseContext();
+		await tick();
+
+		// Destroy during the suspended window — no throw.
+		expect(() => {
+			shader.destroy();
+		}).not.toThrow();
+		expect(shader.destroyed).toBe(true);
+
+		ext.restoreContext();
+		await tick();
+
+		// Restore must NOT recompile the destroyed shader.
+		expect(shader.destroyed).toBe(true);
+		expect(shader.program).toBeNull();
+	});
+
+	it("real context loss: three consecutive lose/restore cycles all recover with uniform state intact", async (ctx) => {
+		// Stress test the lifecycle: if any cleanup step leaks (e.g.
+		// failing to unsubscribe + re-subscribe correctly, or losing
+		// the uniform cache across cycles), repeated cycles surface
+		// it. Three cycles is enough to catch single-shot bugs that
+		// pass on the first round-trip.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(9);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+		shader.setUniform("uTime", 123.456);
+
+		for (let cycle = 0; cycle < 3; cycle++) {
+			ext.loseContext();
+			await tick();
+			expect(shader.suspended).toBe(true);
+
+			ext.restoreContext();
+			await tick();
+			expect(shader.suspended).toBe(false);
+
+			// The cached uniform value persists across every cycle.
+			expect(shader._uniformCache.uTime).toEqual(123.456);
+		}
+
+		shader.destroy();
+	});
+
+	it("real context loss: ShaderEffect's `enabled` gate flips false on lost, true on restored", async (ctx) => {
+		// Pins the ShaderEffect side of the context-loss subscription.
+		// Without the `enabled` flip on lost, the renderer's
+		// `beginPostEffect` filter (`fx.enabled !== false`) would try
+		// to bind a null program during the suspended window.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		expect(effect.enabled).toBe(true);
+
+		ext.loseContext();
+		await tick();
+		expect(effect.enabled).toBe(false);
+
+		ext.restoreContext();
+		await tick();
+		expect(effect.enabled).toBe(true);
+		// And destroyed flag stayed clean — context recovery is not a
+		// destroy event.
+		expect(effect.destroyed).toBe(false);
+
+		effect.destroy();
+	});
+
+	it("real context loss: destroy() during cycle followed by a NEW lose/restore is harmless", async (ctx) => {
+		// After explicit destroy() during a suspended window, subsequent
+		// context loss/restore cycles must not touch the destroyed
+		// shader — its event subscribers were unsubscribed in destroy.
+		// If those subscribers leaked, a second cycle would try to
+		// suspend/recompile a destroyed shader.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(5);
+
+		const { vertex, fragment } = makeShaderSource();
+		const a = new GLShader(gl, vertex, fragment);
+		const b = new GLShader(gl, vertex, fragment);
+		a.setUniform("uTime", 5.0);
+		b.setUniform("uTime", 10.0);
+
+		ext.loseContext();
+		await tick();
+		a.destroy(); // destroy a during suspended window
+
+		ext.restoreContext();
+		await tick();
+
+		// a stays destroyed
+		expect(a.destroyed).toBe(true);
+		expect(a.program).toBeNull();
+		// b survives the first cycle
+		expect(b.program).not.toBeNull();
+
+		// Run a SECOND lose/restore cycle — a's subscribers must be
+		// fully gone, so the destroyed shader can't accidentally be
+		// suspended/restored.
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// a still destroyed and program still null
+		expect(a.destroyed).toBe(true);
+		expect(a.program).toBeNull();
+
+		b.destroy();
 	});
 });

@@ -1,3 +1,9 @@
+import {
+	ONCONTEXT_LOST,
+	ONCONTEXT_RESTORED,
+	off,
+	on,
+} from "../../system/event.ts";
 import GLShader from "./glshader.js";
 import quadVertex from "./shaders/quad.vert";
 
@@ -30,10 +36,23 @@ import quadVertex from "./shaders/quad.vert";
  */
 export default class ShaderEffect {
 	/**
-	 * whether this effect is active (false in Canvas mode)
+	 * whether this effect is active (false in Canvas mode, false after
+	 * {@link destroy}, and false while the WebGL context is suspended
+	 * between an `ONCONTEXT_LOST` and the matching `ONCONTEXT_RESTORED`
+	 * event).
 	 * @type {boolean}
 	 */
 	enabled = false;
+
+	/**
+	 * `true` once {@link destroy} has been called. Distinct from
+	 * `enabled` — which also toggles transiently across a context
+	 * lost / restored cycle — to give callers a stable signal for
+	 * "this effect has been explicitly released."
+	 * @type {boolean}
+	 * @readonly
+	 */
+	destroyed = false;
 
 	/**
 	 * @param {WebGLRenderer|CanvasRenderer} renderer - the current renderer instance
@@ -77,6 +96,35 @@ export default class ShaderEffect {
 			fragment,
 			precision || renderer.shaderPrecision,
 		);
+		this.enabled = true;
+
+		// Keep the public `enabled` gate in sync with the underlying
+		// shader's suspended state. Without this, `enabled` stays true
+		// while the GL context is lost, and the renderer's
+		// `beginPostEffect` filter (`fx.enabled !== false`) would try
+		// to bind a null program. The GLShader itself silently no-ops
+		// on its own (defense in depth), but flipping `enabled` lets
+		// the render-path filter skip the effect entirely.
+		on(ONCONTEXT_LOST, this._onContextLost, this);
+		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
+	}
+
+	/** @private */
+	_onContextLost() {
+		if (this.destroyed) {
+			return;
+		}
+		this.enabled = false;
+	}
+
+	/** @private */
+	_onContextRestored() {
+		if (this.destroyed) {
+			return;
+		}
+		// The underlying GLShader recompiles itself in its own
+		// ONCONTEXT_RESTORED handler — we just need to re-open the
+		// `enabled` gate so the renderer's filter sees us again.
 		this.enabled = true;
 	}
 
@@ -136,12 +184,36 @@ export default class ShaderEffect {
 	}
 
 	/**
-	 * destroy this shader effect
+	 * destroy this shader effect. Idempotent — calling destroy twice
+	 * is safe. Unsubscribes from the renderer's context-lost / restored
+	 * events so a destroyed effect is not auto-reactivated.
 	 */
 	destroy() {
-		if (this.enabled) {
+		if (this.destroyed) {
+			return;
+		}
+		this.destroyed = true;
+
+		// Order matters: set `enabled = false` BEFORE calling into
+		// `_shader.destroy()`. If the inner destroy throws (e.g. a
+		// flaky ANGLE `gl.deleteProgram` on a dead context), the
+		// public guards on this effect's setUniform / bind / etc are
+		// already in the safe-state, so a still-registered update
+		// loop calling `setTime(t)` never reaches a partially-torn-
+		// down shader. Without this ordering, the throw between the
+		// two statements left `enabled === true` while
+		// `_shader.uniforms === null` — the exact partial state
+		// that produced the original 19.5.0 "Cannot read properties
+		// of null (reading 'uTime')" crash on Windows + ANGLE.
+		this.enabled = false;
+
+		off(ONCONTEXT_LOST, this._onContextLost, this);
+		off(ONCONTEXT_RESTORED, this._onContextRestored, this);
+
+		// _shader may already be undefined on Canvas-mode effects
+		// (constructor early-returned). Guard accordingly.
+		if (this._shader) {
 			this._shader.destroy();
-			this.enabled = false;
 		}
 	}
 }
