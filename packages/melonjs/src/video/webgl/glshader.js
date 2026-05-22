@@ -88,7 +88,24 @@ export default class GLShader {
 		// switch.
 		this._uniformCache = Object.create(null);
 
-		this._compile();
+		// If user code constructs a new shader DURING the suspended
+		// window (rare but plausible — e.g. an `event.once(
+		// LEVEL_LOADED)` handler fires while a context loss is in
+		// flight), `gl.compileShader` / `gl.linkProgram` are no-ops
+		// and the link-status check would throw. Detect the lost
+		// context up front and skip the compile; the
+		// ONCONTEXT_RESTORED subscription below will trigger
+		// `_compile()` once the new context is alive. Any `setUniform`
+		// the caller writes in the meantime is cached and replayed at
+		// that point.
+		if (gl.isContextLost()) {
+			this.suspended = true;
+			this.program = null;
+			this.uniforms = null;
+			this.attributes = null;
+		} else {
+			this._compile();
+		}
 
 		on(ONCONTEXT_LOST, this._onContextLost, this);
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);

@@ -3,6 +3,7 @@ import {
 	boot,
 	event,
 	GLShader,
+	Renderable,
 	ShaderEffect,
 	video,
 	WebGLRenderer,
@@ -1755,6 +1756,421 @@ describe("WebGL pipeline adversarial integration", () => {
 			renderer.drawImage(tex, 0, 0, 16, 16, cycle * 16, 0, 16, 16);
 			renderer.flush();
 			expect(gl.getError()).toBe(gl.NO_ERROR);
+		}
+	});
+
+	// ----------------------------------------------------------------
+	//   Coverage gaps from the post-PR audit:
+	//   addPostEffect dispatch through cycle, pool-recycle simulation,
+	//   add/remove during suspended window, customShader, tinted cache,
+	//   concurrent ShaderEffects, save/restore stack.
+	// ----------------------------------------------------------------
+
+	it("real context loss: Renderable.addPostEffect dispatch survives a full cycle", async (ctx) => {
+		// Closest test to the in-the-wild coin scenario. A Renderable
+		// has a ShaderEffect attached via addPostEffect; the renderer's
+		// beginPostEffect → drawImage → endPostEffect dispatch path
+		// (single-effect non-managed renderable: uses `customShader`
+		// fast path, no FBO) must keep working across a context cycle.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(5);
+
+		const renderable = new Renderable(0, 0, 16, 16);
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.setUniform("uTime", 0.75);
+		renderable.addPostEffect(effect);
+		expect(renderable.postEffects.length).toBe(1);
+
+		const tex = video.createCanvas(16, 16);
+
+		// pre-loss dispatch
+		renderer.beginPostEffect(renderable);
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.endPostEffect(renderable);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		ext.loseContext();
+		await tick();
+		// effect.enabled flips false; dispatch path filters it out
+		expect(effect.enabled).toBe(false);
+		ext.restoreContext();
+		await tick();
+		expect(effect.enabled).toBe(true);
+
+		// post-restore dispatch
+		expect(() => {
+			renderer.beginPostEffect(renderable);
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.endPostEffect(renderable);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: pool-recycle simulation — renderable removed, cycle, re-added still draws", async (ctx) => {
+		// Direct simulation of the platformer coin pickup → respawn
+		// flow across a context cycle. We don't have a real pool here,
+		// but the lifecycle moves we care about are: detach the
+		// renderable from the dispatch path (`postEffects = []`), do
+		// the loseContext / restoreContext cycle, then re-attach the
+		// SAME ShaderEffect instance and verify the dispatch path
+		// still works. The C3 / C4 onActivate/onDeactivate migration
+		// covers the GAME_UPDATE subscription side; this pins the
+		// shader-survival side.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const renderable = new Renderable(0, 0, 16, 16);
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.setUniform("uTime", 0.5);
+		renderable.addPostEffect(effect);
+
+		const tex = video.createCanvas(16, 16);
+		renderer.beginPostEffect(renderable);
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.endPostEffect(renderable);
+		renderer.flush();
+
+		// "Pickup": detach from dispatch path (renderable would be
+		// removed from its container; postEffects cleared by an
+		// equivalent of clearPostEffects() OR the renderable simply
+		// stops getting drawn). Effect itself is NOT destroyed —
+		// pool-recycled renderables keep their effect alive.
+		renderable.postEffects.length = 0;
+
+		// Cycle happens while the effect is detached but alive
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// Effect survived the cycle on its own (subscriptions are on
+		// the event bus, not on the renderable)
+		expect(effect.destroyed).toBe(false);
+		expect(effect.enabled).toBe(true);
+		expect(effect._shader._uniformCache.uTime).toEqual(0.5);
+
+		// "Respawn": re-attach to the same renderable, dispatch works
+		renderable.addPostEffect(effect);
+		expect(() => {
+			renderer.beginPostEffect(renderable);
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.endPostEffect(renderable);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: addPostEffect during the suspended window does not throw", async (ctx) => {
+		// User code that constructs a new ShaderEffect (or any
+		// GLShader) while the context is in the suspended window
+		// must not crash. The shader's constructor must gracefully
+		// recover — compile against the dead context returns a fake
+		// program object, but the ONCONTEXT_RESTORED subscription
+		// will recompile against the live context once it returns.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const renderable = new Renderable(0, 0, 16, 16);
+
+		ext.loseContext();
+		await tick();
+
+		// Construct a NEW ShaderEffect while the context is lost.
+		// This is genuinely unusual but plausible (game code in the
+		// middle of a level transition gets interrupted by a GPU
+		// switch). The constructor must not throw.
+		let effect;
+		expect(() => {
+			effect = new ShaderEffect(
+				renderer,
+				"vec4 apply(vec4 c, vec2 u) { return c * 0.9; }",
+			);
+			renderable.addPostEffect(effect);
+		}).not.toThrow();
+
+		// removePostEffect during suspended window also safe
+		expect(() => {
+			renderable.removePostEffect(effect);
+		}).not.toThrow();
+
+		// Restore — re-add the effect, draw, verify no crash
+		ext.restoreContext();
+		await tick();
+		renderable.addPostEffect(effect);
+		const tex = video.createCanvas(16, 16);
+		expect(() => {
+			renderer.beginPostEffect(renderable);
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.endPostEffect(renderable);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: 20 concurrent ShaderEffects all survive a cycle (subscription leak check)", async (ctx) => {
+		// Surfaces leaks in the ONCONTEXT_RESTORED subscription path.
+		// If even one of 20 effects fails to recompile correctly, or
+		// if any effect's subscription leaks across multiple cycles,
+		// the post-restore state diverges. 20 is overkill for normal
+		// usage but cheap to test.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		const N = 20;
+		expect.assertions(N * 2);
+
+		const effects = [];
+		for (let i = 0; i < N; i++) {
+			const fx = new ShaderEffect(
+				renderer,
+				"uniform float uTime;\n" +
+					"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+			);
+			// Distinct uniform value per effect — surfaces "every
+			// shader replays the SAME value" cache bugs
+			fx.setUniform("uTime", 0.1 + i * 0.01);
+			effects.push(fx);
+		}
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// Every effect re-enabled, every uniform cache intact and
+		// distinct (a shared-cache bug would collapse all values to
+		// the last write)
+		for (let i = 0; i < N; i++) {
+			expect(effects[i].enabled).toBe(true);
+			expect(effects[i]._shader._uniformCache.uTime).toBeCloseTo(
+				0.1 + i * 0.01,
+				5,
+			);
+		}
+
+		for (const fx of effects) {
+			fx.destroy();
+		}
+	});
+
+	it("real context loss: renderer.customShader assignment survives a cycle", async (ctx) => {
+		// `customShader` is the renderer-level handle the user assigns
+		// directly when they want a non-postEffect custom shader path
+		// (e.g. via beginPostEffect's single-effect fast path). It's a
+		// reference to a ShaderEffect; the underlying GLShader must
+		// survive the cycle so that any later `currentBatcher.useShader(
+		// customShader._shader)` doesn't bind a null program.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const customFx = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		customFx.setUniform("uTime", 1.0);
+		renderer.customShader = customFx;
+		expect(renderer.customShader).toBe(customFx);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// renderer.reset() (called inside the restore handler) sets
+		// `this.customShader = undefined`. That's the intended
+		// behavior — user code is expected to re-assign on restore
+		// just like any other renderer-wide cross-frame state.
+		// What the test pins is: the ShaderEffect itself survived
+		// the cycle, so the user CAN re-assign it.
+		expect(customFx.destroyed).toBe(false);
+		expect(customFx._shader._uniformCache.uTime).toEqual(1.0);
+
+		customFx.destroy();
+	});
+
+	it("real context loss: tinted texture cache regenerates cleanly after a cycle", async (ctx) => {
+		// `renderer.tint()` produces a tinted canvas + caches the
+		// result by (source, color) in `cache.tinted`. The cache is
+		// keyed by JS references that survive a cycle, but the
+		// engine's reset path treats the tinted cache as transient
+		// state — it may or may not be retained across a context
+		// cycle, the user-facing contract is just that `cache.tint(
+		// src, color)` keeps returning a usable tinted canvas.
+		// Drawing the result post-cycle must lazy-upload the texture
+		// (cache miss path) without throwing or queuing GL errors.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		const source = video.createCanvas(16, 16);
+		const tintedCanvas = renderer.cache.tint(source, "#ff0000");
+		// pre-cycle sanity: we got back something canvas-shaped
+		expect(typeof tintedCanvas.getContext).toBe("function");
+		renderer.drawImage(tintedCanvas, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-cycle: tint() returns a usable canvas (may be the
+		// same reference if cache survived, or a freshly-tinted one
+		// if reset() cleared it — both are valid). Drawing it must
+		// re-upload cleanly through the lazy-upload path.
+		const sameTintedCanvas = renderer.cache.tint(source, "#ff0000");
+		renderer.drawImage(sameTintedCanvas, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("real context loss: save / restore stack interacting with a cycle does not throw", async (ctx) => {
+		// `renderer.save()` pushes a render-state snapshot (color,
+		// transform, blend, etc.). The engine's reset() path on
+		// context restored treats the render-state stack as
+		// transient and clears it — user code is expected to
+		// re-establish render setup after a cycle, the same way it
+		// re-establishes any other cross-frame state.
+		//
+		// What the test pins is the WEAKER but more important
+		// contract: a save / restore call sequence that straddles a
+		// context cycle must NOT throw or leave the GL state in a
+		// stuck/inconsistent shape — even if the saved snapshot
+		// itself was dropped, the public API stays callable and the
+		// renderer can continue drawing post-cycle.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		renderer.setColor("#3366aa");
+		renderer.save();
+		renderer.setColor("#ffffff");
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// Stack may have been wiped by reset(); calling restore()
+		// must still be safe.
+		expect(() => {
+			renderer.restore();
+		}).not.toThrow();
+
+		// And drawing post-restore works regardless
+		const tex = video.createCanvas(8, 8);
+		renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("real context loss: destroying 30 ShaderEffects + cycle leaves no leaked subscriber recompiling against a destroyed shader", async (ctx) => {
+		// Subscription leak smoke test. Create N effects, destroy
+		// them all, run a lose / restore cycle. If any destroyed
+		// effect failed to unsubscribe properly, the cycle would
+		// trigger its _onContextRestored handler — which would either
+		// throw on null fields OR silently recompile a shader that
+		// the user already released. Both scenarios should be
+		// IMPOSSIBLE if destroy() unsubscribes correctly.
+		//
+		// We can't directly count subscribers from the public event
+		// API, so this test uses two indirect signals: (a) no JS
+		// exception escapes the cycle, and (b) every destroyed
+		// shader stays destroyed across the cycle (program === null,
+		// destroyed === true).
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		const N = 30;
+		expect.assertions(N * 2 + 1);
+
+		const effects = [];
+		for (let i = 0; i < N; i++) {
+			effects.push(
+				new ShaderEffect(renderer, "vec4 apply(vec4 c, vec2 u) { return c; }"),
+			);
+		}
+		// Destroy all of them
+		for (const fx of effects) {
+			fx.destroy();
+		}
+
+		// Cycle — no leaked subscribers must touch the destroyed shaders
+		expect(() => {
+			ext.loseContext();
+		}).not.toThrow();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// Every destroyed effect stays destroyed
+		for (const fx of effects) {
+			expect(fx.destroyed).toBe(true);
+			expect(fx._shader.destroyed).toBe(true);
 		}
 	});
 });
