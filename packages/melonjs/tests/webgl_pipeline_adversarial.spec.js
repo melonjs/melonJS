@@ -503,7 +503,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		expect.assertions(5);
+		expect.assertions(7);
 
 		// A shader with a vec3 uniform — accepts both Float32Array and
 		// plain Array values via the uniforms proxy.
@@ -533,13 +533,22 @@ describe("WebGL pipeline adversarial integration", () => {
 		fa[2] = 0.875;
 		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
 
-		// --- plain Array path (same invariant). Plain Array doesn't
-		// round, so any literal works. ---
+		// --- plain Array path (same invariant). The cache slot from
+		// the previous typed-array write is REUSED (via captureValue)
+		// when the length matches, so the cache may now be a
+		// Float32Array even though the caller passed an Array — the
+		// VALUES are what matter for replay correctness, not the JS
+		// type. Compare via Array.from. ---
 		const arr = [0.4, 0.5, 0.6];
 		shader.setUniform("uColor", arr);
 		expect(shader._uniformCache.uColor).not.toBe(arr);
 		arr[0] = 0.0;
-		expect(shader._uniformCache.uColor).toEqual([0.4, 0.5, 0.6]);
+		// Use toBeCloseTo per-element so this works for both Array
+		// and Float32Array (which would quantize 0.4 / 0.6 to f32).
+		const cachedArr = Array.from(shader._uniformCache.uColor);
+		expect(cachedArr[0]).toBeCloseTo(0.4, 5);
+		expect(cachedArr[1]).toBeCloseTo(0.5, 5);
+		expect(cachedArr[2]).toBeCloseTo(0.6, 5);
 
 		shader.destroy();
 	});
@@ -581,30 +590,34 @@ describe("WebGL pipeline adversarial integration", () => {
 
 		// Sabotage just this shader's deleteProgram. Using a per-
 		// instance override on `shader.gl` mutates the shared renderer
-		// gl proxy, so save + restore the original after the test.
+		// gl proxy, so the restore must run unconditionally (try /
+		// finally) — if any assertion below throws before the manual
+		// restore, the patched method would otherwise leak into every
+		// subsequent test in this file and cause cascading failures.
 		const originalDeleteProgram = shader.gl.deleteProgram.bind(shader.gl);
 		shader.gl.deleteProgram = () => {
 			throw new Error("mock ANGLE cross-context delete error");
 		};
 
-		expect(() => {
-			shader.destroy();
-		}).not.toThrow(); // the try/catch inside destroy must contain it
+		try {
+			expect(() => {
+				shader.destroy();
+			}).not.toThrow(); // the try/catch inside destroy must contain it
 
-		// Even though deleteProgram threw, the JS state must be fully
-		// cleaned up
-		expect(shader.destroyed).toBe(true);
-		expect(shader.uniforms).toBeNull();
-		expect(shader.attributes).toBeNull();
-		expect(shader.program).toBeNull();
+			// Even though deleteProgram threw, the JS state must be fully
+			// cleaned up
+			expect(shader.destroyed).toBe(true);
+			expect(shader.uniforms).toBeNull();
+			expect(shader.attributes).toBeNull();
+			expect(shader.program).toBeNull();
 
-		// And subsequent calls still no-op safely
-		expect(() => {
-			shader.setUniform("uTime", 0.5);
-		}).not.toThrow();
-
-		// restore the original so the renderer's gl isn't polluted
-		shader.gl.deleteProgram = originalDeleteProgram;
+			// And subsequent calls still no-op safely
+			expect(() => {
+				shader.setUniform("uTime", 0.5);
+			}).not.toThrow();
+		} finally {
+			shader.gl.deleteProgram = originalDeleteProgram;
+		}
 	});
 
 	it("ShaderEffect.destroy sets enabled=false BEFORE _shader.destroy (partial-state immunity)", (ctx) => {
@@ -629,31 +642,38 @@ describe("WebGL pipeline adversarial integration", () => {
 		expect(effect.enabled).toBe(true);
 		expect(effect.destroyed).toBe(false);
 
-		// Sabotage the inner destroy
+		// Sabotage the inner destroy. The patch is on an instance
+		// method of THIS shader (not a shared GL proxy), so leakage
+		// would only affect this shader if cleanup didn't run — but
+		// we still wrap the assertions in try / finally so the real
+		// GL resources release even on a mid-test assertion failure.
 		const originalInnerDestroy = effect._shader.destroy.bind(effect._shader);
 		effect._shader.destroy = () => {
 			throw new Error("mock inner shader destroy throw");
 		};
 
-		expect(() => {
-			effect.destroy();
-		}).toThrow(/mock inner shader destroy throw/);
+		try {
+			expect(() => {
+				effect.destroy();
+			}).toThrow(/mock inner shader destroy throw/);
 
-		// Critical: even though the inner destroy threw OUTWARD,
-		// `enabled` must already be false because we set it before
-		// the inner call.
-		expect(effect.enabled).toBe(false);
-		expect(effect.destroyed).toBe(true);
+			// Critical: even though the inner destroy threw OUTWARD,
+			// `enabled` must already be false because we set it before
+			// the inner call.
+			expect(effect.enabled).toBe(false);
+			expect(effect.destroyed).toBe(true);
 
-		// And the public setUniform / bind / getAttribLocation paths
-		// must no-op via the enabled gate.
-		expect(() => {
-			effect.setUniform("foo", 1);
-		}).not.toThrow();
-		expect(effect.getAttribLocation("aVertex")).toEqual(-1);
-
-		// Clean up the real GL resources we never got to release.
-		originalInnerDestroy();
+			// And the public setUniform / bind / getAttribLocation paths
+			// must no-op via the enabled gate.
+			expect(() => {
+				effect.setUniform("foo", 1);
+			}).not.toThrow();
+			expect(effect.getAttribLocation("aVertex")).toEqual(-1);
+		} finally {
+			// Always run the real destroy to release GL resources we
+			// would have leaked otherwise.
+			originalInnerDestroy();
+		}
 	});
 
 	it("ShaderEffect.destroy is idempotent", (ctx) => {

@@ -8,7 +8,7 @@ import { extractAttributes } from "./utils/attributes.js";
 import { getMaxShaderPrecision, setPrecision } from "./utils/precision.js";
 import { compileProgram } from "./utils/program.js";
 import { minify } from "./utils/string.js";
-import { extractUniforms } from "./utils/uniforms.js";
+import { captureValue, extractUniforms } from "./utils/uniforms.js";
 
 /**
  * a base GL Shader object
@@ -244,39 +244,60 @@ export default class GLShader {
 		if (this.destroyed) {
 			return;
 		}
-		// Cache every accepted write so context-restored replay works.
-		// Snapshot every non-primitive container so a later in-place
-		// mutation on the caller's side (e.g. a per-frame `Vector2d`
-		// reused across uniforms, or a Float32Array reassigned in
-		// place) doesn't silently poison the replay value used after a
-		// GPU context restore. The same snapshot is what we hand to
-		// GL — uniform setters copy into program state immediately, so
-		// detaching it from the caller's reference costs one allocation
-		// at write time and removes a whole class of replay-vs-live
-		// divergence bugs.
+		// Two writes happen here: the persistent CACHE entry used by
+		// context-restored replay, and the LIVE GL write through the
+		// uniforms proxy. Decoupling them lets the hot path
+		// (per-frame typed-array writes like light uniforms) avoid
+		// allocating on every call:
+		//
+		//  * Cache: `captureValue` reuses the existing slot's array
+		//    when the shape matches, so steady-state writes don't
+		//    allocate. The snapshot is detached from the caller's
+		//    reference, so in-place mutation can't poison replay.
+		//  * Live GL write: `gl.uniform*` setters copy synchronously
+		//    into program state with no retained reference, so we
+		//    can hand them the caller's original buffer directly.
+		//    Vector / matrix types still need `.toArray()` because
+		//    the GL proxy reads `val.length` and indexes into it.
 		let cached;
+		let glValue;
 		if (typeof value === "object" && value !== null) {
 			if (typeof value.toArray === "function") {
-				cached = value.toArray();
+				// Vector / matrix path: array form needed for both
+				// cache and GL. `toArray()` allocates per call (a
+				// per-class `into(out)` API would eliminate this but
+				// is out of scope for this fix); feed its result
+				// through captureValue so the CACHE slot is reused.
+				const arr = value.toArray();
+				cached = captureValue(this._uniformCache[name], arr);
+				glValue = arr;
 			} else if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-				cached = value.slice();
+				// Array / typed array path — the hot one for light
+				// uniforms etc. Reuse the cache slot, but hand GL
+				// the original.
+				cached = captureValue(this._uniformCache[name], value);
+				glValue = value;
 			} else {
+				// plain object passthrough
 				cached = value;
+				glValue = value;
 			}
 		} else {
 			cached = value;
+			glValue = value;
 		}
+		this._uniformCache[name] = cached;
+
 		if (this.suspended) {
-			// Defer the write to context-restored replay. Still cache
-			// it so the latest value wins on resume.
-			this._uniformCache[name] = cached;
+			// Defer the live write to context-restored replay. The
+			// cache snapshot above is what gets replayed.
 			return;
 		}
+
 		const uniforms = this.uniforms;
 		if (typeof uniforms[name] !== "undefined") {
 			this.bind();
-			uniforms[name] = cached;
-			this._uniformCache[name] = cached;
+			uniforms[name] = glValue;
 		} else {
 			throw new Error("undefined (" + name + ") uniform for shader " + this);
 		}
