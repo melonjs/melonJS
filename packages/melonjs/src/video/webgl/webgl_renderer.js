@@ -237,6 +237,14 @@ export default class WebGLRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
+				// Drop our reference to the renderer-owned GL resources
+				// — the WebGLBuffer / WebGLTexture handles they hold all
+				// belong to a now-dead context. `gl.deleteBuffer(...)`
+				// against the dead context can throw on ANGLE; the spec
+				// says the driver auto-frees lost-context resources, so
+				// just null out the JS-side refs and let the restore
+				// handler below recreate them.
+				this.vertexBuffer = null;
 				emit(ONCONTEXT_LOST, this);
 			},
 			false,
@@ -245,7 +253,46 @@ export default class WebGLRenderer extends Renderer {
 		this.getCanvas().addEventListener(
 			"webglcontextrestored",
 			() => {
+				// Re-create the renderer's own GL state BEFORE any
+				// downstream subscriber gets the ONCONTEXT_RESTORED
+				// event — `reset()` below binds `this.vertexBuffer`, and
+				// every `GLShader._onContextRestored` handler runs
+				// against `this.gl` expecting the renderer's default
+				// state to already be in place.
+				this.vertexBuffer = this.gl.createBuffer();
+				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+
+				// Re-apply the default GL state — the driver clears
+				// ALL state on context restore (blend, depth, scissor,
+				// viewport, currently-bound program, etc.), so without
+				// this the next frame would draw with whatever the
+				// driver defaults to instead of melonJS's own setup.
+				this.gl.disable(this.gl.DEPTH_TEST);
+				this.gl.depthMask(false);
+				this.gl.disable(this.gl.SCISSOR_TEST);
+				this._scissorActive = false;
+				this.gl.enable(this.gl.BLEND);
+				this.setBlendMode(this.settings.blendMode);
+
+				// `reset()` re-inits every batcher (its `isContextValid
+				// === false` branch calls `batcher.init(this)`, which
+				// drops stale `boundTextures` + recreates each indexed
+				// batcher's own GL vertex buffer + a fresh default
+				// shader), drops the cached _lightShader / _lightAtlas
+				// / orthogonal TMX renderer, and releases the
+				// post-effect FBO pool.
 				this.reset();
+
+				// Texture cache: the JS-side TextureAtlas wrappers
+				// survive, but every per-source unit assignment in
+				// `cache.units` / `cache.usedUnits` referenced a
+				// WebGLTexture in a batcher's `boundTextures` that's
+				// just been cleared. Drop the assignments so the next
+				// `uploadTexture()` takes the create-and-upload path
+				// instead of the rebind-existing path.
+				this.cache.units.clear();
+				this.cache.usedUnits.clear();
+
 				this.isContextValid = true;
 				emit(ONCONTEXT_RESTORED, this);
 			},

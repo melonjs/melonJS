@@ -1338,4 +1338,423 @@ describe("WebGL pipeline adversarial integration", () => {
 
 		b.destroy();
 	});
+
+	// ----------------------------------------------------------------
+	//   Renderer-wide context loss / restore battery.
+	//
+	//   The tests above this point exercise GLShader and ShaderEffect
+	//   in isolation. The ones below probe everything else the
+	//   renderer owns across a real WEBGL_lose_context cycle — vertex
+	//   buffers, the texture cache, batcher GL state, default render
+	//   state (blend, depth, scissor, viewport), FBOs (render
+	//   targets), Light2d uniforms, the mesh / litQuad batchers, and
+	//   the full drawImage → flush pipeline. The intent is the same as
+	//   the rest of this spec: write the adversarial sequence first,
+	//   let it tell us what is and isn't recovered transparently, and
+	//   tighten the renderer-side ONCONTEXT_RESTORED handler until
+	//   every test in this block goes green.
+	// ----------------------------------------------------------------
+
+	it("real context loss: gl.isContextLost() is true between loseContext and restoreContext (test infra sanity)", async (ctx) => {
+		// Sanity check on the test infrastructure itself. If
+		// `gl.isContextLost()` doesn't actually flip true between
+		// `ext.loseContext()` and `ext.restoreContext()`, then the
+		// vitest browser env isn't really losing the context and
+		// every test in this block is testing nothing.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		expect(gl.isContextLost()).toBe(false);
+		ext.loseContext();
+		await tick();
+		expect(gl.isContextLost()).toBe(true);
+		ext.restoreContext();
+		await tick();
+		expect(gl.isContextLost()).toBe(false);
+	});
+
+	it("real context loss: renderer.isContextValid flips false on lost, true on restored", async (ctx) => {
+		// The renderer's public `isContextValid` flag must mirror the
+		// underlying context state. The webglcontextlost / restored
+		// listeners on the canvas are what flip it — if those didn't
+		// fire (e.g. event listener removed by mistake), the renderer
+		// would silently report "context is valid" while drawing into
+		// a dead context.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		expect(renderer.isContextValid).toBe(true);
+		ext.loseContext();
+		await tick();
+		expect(renderer.isContextValid).toBe(false);
+		ext.restoreContext();
+		await tick();
+		expect(renderer.isContextValid).toBe(true);
+	});
+
+	it("real context loss: renderer.vertexBuffer is a valid GL buffer after restore", async (ctx) => {
+		// `renderer.vertexBuffer` is created once in the constructor.
+		// After a context cycle the original `WebGLBuffer` reference
+		// belongs to a dead context — `gl.isBuffer()` against it
+		// returns false. The renderer-side ONCONTEXT_RESTORED handler
+		// must re-create it so the next bindBuffer doesn't throw
+		// INVALID_OPERATION.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		// pre-loss: it's a valid buffer
+		expect(gl.isBuffer(renderer.vertexBuffer)).toBe(true);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-restore: must still be a valid buffer (re-created)
+		expect(gl.isBuffer(renderer.vertexBuffer)).toBe(true);
+	});
+
+	it("real context loss: indexed batchers' glVertexBuffer is valid after restore", async (ctx) => {
+		// Indexed batchers (currently only `mesh`) own their own
+		// `gl.createBuffer()` for the vertex array (non-indexed
+		// batchers share the renderer-level `vertexBuffer`). After a
+		// context cycle the indexed batchers' buffer references are
+		// from the dead context — `reset()`'s `batcher.init()` path
+		// must re-create them.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		const indexedBatchers = Array.from(renderer.batchers.values()).filter(
+			(b) => {
+				return b.useIndexBuffer === true;
+			},
+		);
+		if (indexedBatchers.length === 0) {
+			ctx.skip("no indexed batchers registered");
+			return;
+		}
+		expect.assertions(indexedBatchers.length);
+
+		// Pre-loss state is incidental — vitest's cross-file shared
+		// browser session may have already cycled the renderer's GL
+		// context (afterAll runs `video.init` again). The contract
+		// this test pins is "post-restore: indexed batchers' buffers
+		// are valid", not "all transitions were clean".
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-restore: every indexed batcher's glVertexBuffer must be
+		// a re-created WebGLBuffer reference. We deliberately do NOT
+		// use `gl.isBuffer()` here — per WebGL spec, a name returned
+		// by `createBuffer` is not "the name of a buffer object" until
+		// it has been associated with one via `bindBuffer`, and
+		// `bind()` on a batcher only runs when that batcher becomes
+		// active. The contract this test pins is "init() ran +
+		// glVertexBuffer is a non-null reference"; binding (and
+		// therefore isBuffer == true) is exercised by the post-cycle
+		// `mesh batcher works after a context cycle` test below.
+		for (const b of Array.from(renderer.batchers.values()).filter((b) => {
+			return b.useIndexBuffer === true;
+		})) {
+			expect(b.glVertexBuffer).toBeInstanceOf(WebGLBuffer);
+		}
+	});
+
+	it("real context loss: default WebGL state (blend, depth, scissor) is restored after cycle", async (ctx) => {
+		// melonJS sets a specific default state during init — BLEND
+		// enabled, DEPTH_TEST disabled, SCISSOR_TEST disabled, depth
+		// mask false. The driver resets ALL state on context restore,
+		// so the renderer's ONCONTEXT_RESTORED handler must re-apply
+		// the defaults; otherwise drawImage would draw with a
+		// random-from-the-driver blend mode and z-test state, producing
+		// visual garbage even without GL errors.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		expect(gl.isEnabled(gl.BLEND)).toBe(true);
+		expect(gl.isEnabled(gl.DEPTH_TEST)).toBe(false);
+		expect(gl.isEnabled(gl.SCISSOR_TEST)).toBe(false);
+		expect(gl.getParameter(gl.DEPTH_WRITEMASK)).toBe(false);
+	});
+
+	it("real context loss: batcher boundTextures is cleared on restore + drawing re-uploads from sources", async (ctx) => {
+		// boundTextures[unit] holds the WebGLTexture handles each
+		// batcher has bound. After a context cycle those handles are
+		// dead. `reset()`'s `batcher.init()` path drops the array
+		// entirely; the next `drawImage` then hits the create-and-
+		// upload path on uploadTexture() and re-creates from the
+		// still-alive source.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const source = video.createCanvas(16, 16);
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+
+		const quad = renderer.batchers.get("quad");
+		// pre-loss: quad batcher has at least one bound texture
+		const beforeCount = quad.boundTextures.filter((t) => {
+			return typeof t !== "undefined";
+		}).length;
+		expect(beforeCount).toBeGreaterThan(0);
+		// every entry is a valid WebGLTexture
+		expect(
+			quad.boundTextures.every((t) => {
+				return t === undefined || gl.isTexture(t);
+			}),
+		).toBe(true);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-restore: boundTextures is freshly initialised to []
+		expect(quad.boundTextures.length).toEqual(0);
+
+		// drawing the SAME source after restore must re-upload (cache
+		// miss → uploadTexture → createTexture2D) without throwing
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("real context loss: drawImage + flush after the cycle produces no GL errors (full pipeline)", async (ctx) => {
+		// The headline integration test for this block. If buffers,
+		// textures, default state, and batcher shaders are all
+		// recovered, a vanilla `drawImage + flush` after a lose /
+		// restore cycle must leave `gl.getError()` at NO_ERROR. Any
+		// dead-context resource ref left around — buffer, texture,
+		// uniform location — will surface as INVALID_OPERATION here.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const tex = video.createCanvas(16, 16);
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+		expectNoGLErrors();
+	});
+
+	it("real context loss: mesh batcher works after a context cycle", async (ctx) => {
+		// Switching to the mesh batcher with `renderer.setBatcher`
+		// uses a different shader + vertex layout (x, y, z, u, v, tint).
+		// After a context cycle the mesh batcher's GL resources (its
+		// own vertex buffer + default shader's program) must be
+		// re-bound. A clean dispatch through mesh → quad must produce
+		// no GL errors.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(1);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const tex = video.createCanvas(16, 16);
+		renderer.setBatcher("mesh");
+		renderer.setBatcher("quad");
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		expectNoGLErrors();
+	});
+
+	it("real context loss: litQuad batcher (Light2d uniforms + normal map) works after a context cycle", async (ctx) => {
+		// The lit-quad path is the most state-heavy frame in the
+		// engine — uniform writes per light, a separate batcher,
+		// normal-map texture binding. After context loss every one of
+		// those resources is dead; the renderer must reset them.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(1);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const tex = video.createCanvas(16, 16);
+		const normal = video.createCanvas(16, 16);
+		const oneLight = [
+			{
+				getBounds: () => {
+					return {
+						centerX: 0,
+						centerY: 0,
+						width: 30,
+						height: 30,
+					};
+				},
+				intensity: 1,
+				color: { r: 255, g: 255, b: 255 },
+				lightHeight: 1,
+			},
+		];
+		renderer.setLightUniforms(oneLight, { r: 80, g: 80, b: 80 }, 0, 0);
+		renderer.currentNormalMap = normal;
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.currentNormalMap = null;
+		renderer.flush();
+		expectNoGLErrors();
+	});
+
+	it("real context loss: ShaderEffect + drawImage + flush survive the full cycle without throwing", async (ctx) => {
+		// The original 19.5.0 user-reported scenario: a frame is
+		// actively drawing through an enabled ShaderEffect when the
+		// context is lost (NVIDIA Optimus GPU switch; reproducible
+		// from DevTools with `ext.loseContext()`). The renderer's
+		// ONCONTEXT_LOST handler tears down every GLShader, and the
+		// NEXT frame's drawImage + flush must NOT crash with the
+		// `TypeError: Cannot read properties of null (reading
+		// 'uTime')` partial-destroy bug. After restoreContext, the
+		// ShaderEffect re-enables, its uniform cache replays, and the
+		// pipeline keeps drawing without throwing.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(7);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.setUniform("uTime", 0.5);
+		const tex = video.createCanvas(16, 16);
+
+		// Phase 1: pre-loss draws cleanly
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+
+		// Phase 2: lose mid-frame — next draw call must not throw
+		ext.loseContext();
+		await tick();
+		expect(effect.enabled).toBe(false);
+		expect(effect._shader.suspended).toBe(true);
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+
+		// Phase 3: restore — shader uniform replays, pipeline clean
+		ext.restoreContext();
+		await tick();
+		expect(effect.enabled).toBe(true);
+		expect(effect._shader._uniformCache.uTime).toEqual(0.5);
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: three consecutive lose/restore cycles each leave the pipeline drawable", async (ctx) => {
+		// Repetition stress test for cumulative leaks. If any resource
+		// (buffer, texture, FBO, subscription) survives one cycle but
+		// leaks across two, three cycles surface it. If we re-create
+		// buffers in ONCONTEXT_RESTORED without freeing the old ones,
+		// we'd accumulate one zombie WebGLBuffer per cycle here.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const tex = video.createCanvas(16, 16);
+		for (let cycle = 0; cycle < 3; cycle++) {
+			ext.loseContext();
+			await tick();
+			ext.restoreContext();
+			await tick();
+			renderer.drawImage(tex, 0, 0, 16, 16, cycle * 16, 0, 16, 16);
+			renderer.flush();
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+		}
+	});
 });
