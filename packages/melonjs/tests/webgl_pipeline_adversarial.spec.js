@@ -1188,6 +1188,39 @@ describe("WebGL pipeline adversarial integration", () => {
 		effect.destroy();
 	});
 
+	it("real context loss: a user-disabled ShaderEffect stays disabled across a cycle", async (ctx) => {
+		// dropZone-style toggling: user sets `effect.enabled = false`
+		// for visibility. Restore must NOT override that.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 c, vec2 u) { return c; }",
+		);
+		// user-disabled
+		effect.enabled = false;
+
+		ext.loseContext();
+		await tick();
+		expect(effect.enabled).toBe(false);
+
+		ext.restoreContext();
+		await tick();
+		// must stay user-disabled, not get re-enabled
+		expect(effect.enabled).toBe(false);
+		expect(effect.destroyed).toBe(false);
+
+		effect.destroy();
+	});
+
 	it("real context loss: destroy() during cycle followed by a NEW lose/restore is harmless", async (ctx) => {
 		// destroyed shader must not be touched by a subsequent cycle
 		if (skipIfNoWebGL(ctx)) {

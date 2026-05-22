@@ -100,6 +100,8 @@ export default class ShaderEffect {
 		if (this.destroyed) {
 			return;
 		}
+		// remember user-set state so restore doesn't override it
+		this._enabledBeforeSuspend = this.enabled;
 		this.enabled = false;
 	}
 
@@ -108,8 +110,10 @@ export default class ShaderEffect {
 		if (this.destroyed) {
 			return;
 		}
-		// the inner GLShader recompiles itself; just re-open the gate
-		this.enabled = true;
+		// the inner GLShader recompiles itself; restore the gate to
+		// whatever the user had it set to before the suspend
+		this.enabled = this._enabledBeforeSuspend !== false;
+		this._enabledBeforeSuspend = undefined;
 	}
 
 	/**
