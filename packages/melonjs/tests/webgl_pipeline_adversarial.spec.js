@@ -446,7 +446,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		expect.assertions(12);
+		expect.assertions(13);
 
 		const { vertex, fragment } = makeShaderSource();
 		const shader = new GLShader(renderer.gl, vertex, fragment);
@@ -482,10 +482,65 @@ describe("WebGL pipeline adversarial integration", () => {
 			shader.setUniform("uNotDefined", 0);
 		}).not.toThrow();
 
-		// the no-op must not have queued any GL operations either
-		while (gl.getError() !== gl.NO_ERROR) {
-			/* drain */
+		// the no-op must not have queued any GL operations either —
+		// the destroyed-state path must hit the early `return` before
+		// any gl.* call. Assert NO_ERROR directly (a drain-only loop
+		// would silently absorb a regression where a stray gl call
+		// queued an error code).
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("GLShader._uniformCache snapshots typed-array / array writes (caller mutation does not poison replay)", (ctx) => {
+		// Regression for the cache-replay-mutation hazard surfaced in
+		// the 19.6 PR review: setUniform must DETACH the cached value
+		// from the caller's array, otherwise a downstream pattern like
+		// `const tmp = new Float32Array([r, g, b]); shader.setUniform(
+		// "uColor", tmp); tmp[0] = 0;` (or a per-frame-reused Vector3d)
+		// silently rewrites what gets replayed on context restore. The
+		// pre-restore GPU saw the original values; the post-restore GPU
+		// would see the mutated ones — silent visual divergence.
+		if (skipIfNoWebGL(ctx)) {
+			return;
 		}
+		expect.assertions(5);
+
+		// A shader with a vec3 uniform — accepts both Float32Array and
+		// plain Array values via the uniforms proxy.
+		const vertex = [
+			"attribute vec2 aVertex;",
+			"void main(void) { gl_Position = vec4(aVertex, 0.0, 1.0); }",
+		].join("\n");
+		const fragment = [
+			"uniform vec3 uColor;",
+			"void main(void) { gl_FragColor = vec4(uColor, 1.0); }",
+		].join("\n");
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		// --- Float32Array path. Use f32-exact values (binary fractions
+		// of 2) so toEqual doesn't trip on the 32-bit-float quantization
+		// applied by the typed-array constructor itself. ---
+		const fa = new Float32Array([0.5, 0.25, 0.125]);
+		shader.setUniform("uColor", fa);
+		// cache must be a DIFFERENT object than the caller's array
+		expect(shader._uniformCache.uColor).not.toBe(fa);
+		// ...with the same numeric contents at the time of the write
+		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
+		// mutate the caller's array AFTER the setUniform call — the
+		// cache must NOT see the mutation, otherwise replay diverges
+		fa[0] = 0.875;
+		fa[1] = 0.875;
+		fa[2] = 0.875;
+		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
+
+		// --- plain Array path (same invariant). Plain Array doesn't
+		// round, so any literal works. ---
+		const arr = [0.4, 0.5, 0.6];
+		shader.setUniform("uColor", arr);
+		expect(shader._uniformCache.uColor).not.toBe(arr);
+		arr[0] = 0.0;
+		expect(shader._uniformCache.uColor).toEqual([0.4, 0.5, 0.6]);
+
+		shader.destroy();
 	});
 
 	it("GLShader.destroy is idempotent — double-destroy does not throw", (ctx) => {

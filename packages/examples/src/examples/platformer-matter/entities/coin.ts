@@ -14,19 +14,22 @@ import {
 } from "melonjs";
 import { gameState } from "../gameState";
 
-// Per-instance shine shader. Matches the pattern used by every other
-// `ShaderEffect` consumer in the 19.5+ example suite
-// (`plinko-planck/entities/peg.ts`, `dropZone.ts`): each renderable
-// owns its own `ShaderEffect`, lifetime tied to the renderable's
-// own destroy. A previous version of this file kept a module-level
-// singleton + manual refcount to share one program across all coins,
-// which was a deviation from the rest of the codebase and made
-// every coin transitively depend on the singleton's lifecycle. Per-
-// instance is simpler and matches plinko's pattern.
+// Per-instance shine shader. Each coin owns its own ShaderEffect,
+// matching the pattern used by every other ShaderEffect consumer in
+// the 19.5+ example suite (`plinko-planck/entities/peg.ts`,
+// `dropZone.ts`).
+//
+// CoinEntity is registered with `pool.register("CoinEntity", ..., true)`
+// in createGame.ts, so onDestroyEvent does NOT fire on pool return —
+// only on real destroy (level reset, app shutdown). The GAME_UPDATE
+// subscription is therefore tied to onActivateEvent / onDeactivateEvent
+// (which DO fire on every pool recycle cycle) instead of the
+// constructor / onDestroyEvent pair.
 
 export class CoinEntity extends Collectable {
 	private shineShader: ShineEffect | undefined;
 	private shineUpdateHandler: (() => void) | undefined;
+	private shineSubscribed = false;
 
 	/**
 	 * constructor
@@ -44,33 +47,66 @@ export class CoinEntity extends Collectable {
 				shapes: [new Ellipse(35 / 2, 35 / 2, 35, 35)], // coins are 35x35
 			}),
 		);
+		// shader creation + GAME_UPDATE subscription happen in
+		// onActivateEvent — `parentApp.renderer` may not be available
+		// at construction time, and the subscription must be re-bound
+		// on every pool-recycled activation anyway (see class doc).
+	}
 
-		// Attach the shine shader as soon as a renderer is available.
-		// For the first coins in the world this happens on LEVEL_LOADED;
-		// for coins constructed afterwards it happens immediately.
-		const attach = () => {
-			if (this.shineShader) return true;
-			const renderer = this.parentApp?.renderer;
-			if (!renderer) return false;
-			this.shineShader = new ShineEffect(renderer, {
-				color: [1.0, 0.95, 0.7], // warm white-gold highlight
-				speed: 0.8,
-				width: 0.2, // wider, gentler glint
-				intensity: 0.22, // softer highlight
-				angle: 0.35, // slight diagonal sweep (~20°)
-				bands: 14.5, // ~14 parallel etched-rim glints
-				pulseDepth: 0.04, // very subtle brightness pulse
-			});
-			this.shineUpdateHandler = () => {
-				this.shineShader?.setTime(timer.getTime() / 1000.0);
-			};
-			event.on(event.GAME_UPDATE, this.shineUpdateHandler);
-			this.addPostEffect(this.shineShader);
-			return true;
+	private attachShine(): boolean {
+		if (this.shineShader) return true;
+		const renderer = this.parentApp?.renderer;
+		if (!renderer) return false;
+		this.shineShader = new ShineEffect(renderer, {
+			color: [1.0, 0.95, 0.7], // warm white-gold highlight
+			speed: 0.8,
+			width: 0.2, // wider, gentler glint
+			intensity: 0.22, // softer highlight
+			angle: 0.35, // slight diagonal sweep (~20°)
+			bands: 14.5, // ~14 parallel etched-rim glints
+			pulseDepth: 0.04, // very subtle brightness pulse
+		});
+		this.shineUpdateHandler = () => {
+			this.shineShader?.setTime(timer.getTime() / 1000.0);
 		};
-		if (!attach()) {
-			event.once(event.LEVEL_LOADED, attach);
+		this.addPostEffect(this.shineShader);
+		return true;
+	}
+
+	private subscribeShine() {
+		if (this.shineSubscribed || !this.shineUpdateHandler) return;
+		event.on(event.GAME_UPDATE, this.shineUpdateHandler);
+		this.shineSubscribed = true;
+	}
+
+	private unsubscribeShine() {
+		if (!this.shineSubscribed || !this.shineUpdateHandler) return;
+		event.off(event.GAME_UPDATE, this.shineUpdateHandler);
+		this.shineSubscribed = false;
+	}
+
+	override onActivateEvent() {
+		super.onActivateEvent();
+		if (this.attachShine()) {
+			this.subscribeShine();
+		} else {
+			// Renderer not ready yet — defer until the level (and its
+			// renderer) is fully initialised.
+			event.once(event.LEVEL_LOADED, () => {
+				if (this.attachShine()) {
+					this.subscribeShine();
+				}
+			});
 		}
+	}
+
+	override onDeactivateEvent() {
+		// pool.removeChildNow fires onDeactivateEvent on every coin
+		// pickup; balance the GAME_UPDATE subscription here so we
+		// don't accumulate stale handlers across the coin's many
+		// activate/deactivate cycles.
+		this.unsubscribeShine();
+		super.onDeactivateEvent();
 	}
 
 	// called by the pool on object recycling
@@ -92,14 +128,12 @@ export class CoinEntity extends Collectable {
 	}
 
 	override onDestroyEvent() {
-		// Release the per-coin GAME_UPDATE handler — the engine's
-		// removePostEffect path destroys the `ShineEffect` itself, but
-		// it does NOT touch our event subscription. Without this
-		// off-call we'd accumulate one dead handler per coin pickup.
-		if (this.shineUpdateHandler) {
-			event.off(event.GAME_UPDATE, this.shineUpdateHandler);
-			this.shineUpdateHandler = undefined;
-		}
+		// Only fires on real destroy (level reset / app shutdown) —
+		// pool returns skip this hook entirely. The engine clears
+		// our postEffects on full renderable destroy; we just need to
+		// release the GAME_UPDATE subscription if it's still live.
+		this.unsubscribeShine();
 		this.shineShader = undefined;
+		this.shineUpdateHandler = undefined;
 	}
 }

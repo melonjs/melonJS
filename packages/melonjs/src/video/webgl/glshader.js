@@ -228,12 +228,27 @@ export default class GLShader {
 			return;
 		}
 		// Cache every accepted write so context-restored replay works.
-		// Snapshot arrays / typed arrays so a later in-place mutation
-		// on the caller's side doesn't poison the replay value.
-		const cached =
-			typeof value === "object" && typeof value.toArray === "function"
-				? value.toArray()
-				: value;
+		// Snapshot every non-primitive container so a later in-place
+		// mutation on the caller's side (e.g. a per-frame `Vector2d`
+		// reused across uniforms, or a Float32Array reassigned in
+		// place) doesn't silently poison the replay value used after a
+		// GPU context restore. The same snapshot is what we hand to
+		// GL — uniform setters copy into program state immediately, so
+		// detaching it from the caller's reference costs one allocation
+		// at write time and removes a whole class of replay-vs-live
+		// divergence bugs.
+		let cached;
+		if (typeof value === "object" && value !== null) {
+			if (typeof value.toArray === "function") {
+				cached = value.toArray();
+			} else if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+				cached = value.slice();
+			} else {
+				cached = value;
+			}
+		} else {
+			cached = value;
+		}
 		if (this.suspended) {
 			// Defer the write to context-restored replay. Still cache
 			// it so the latest value wins on resume.
