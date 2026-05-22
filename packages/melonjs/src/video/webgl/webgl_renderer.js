@@ -237,15 +237,34 @@ export default class WebGLRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
+				// driver auto-frees lost resources; just drop the ref
+				this.vertexBuffer = null;
 				emit(ONCONTEXT_LOST, this);
 			},
 			false,
 		);
-		// ctx.restoreContext()
 		this.getCanvas().addEventListener(
 			"webglcontextrestored",
 			() => {
+				// restore renderer-owned GL state before downstream subscribers run
+				this.vertexBuffer = this.gl.createBuffer();
+				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+
+				// driver wipes all GL state on restore; re-apply ours
+				this.gl.disable(this.gl.DEPTH_TEST);
+				this.gl.depthMask(false);
+				this.gl.disable(this.gl.SCISSOR_TEST);
+				this._scissorActive = false;
+				this.gl.enable(this.gl.BLEND);
+				this.setBlendMode(this.settings.blendMode);
+
+				// reset() re-inits batchers, FBO pool, light shader, TMX renderer
 				this.reset();
+
+				// stale per-source unit assignments — force re-upload on next draw
+				this.cache.units.clear();
+				this.cache.usedUnits.clear();
+
 				this.isContextValid = true;
 				emit(ONCONTEXT_RESTORED, this);
 			},

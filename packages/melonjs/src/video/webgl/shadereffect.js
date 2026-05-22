@@ -1,3 +1,9 @@
+import {
+	ONCONTEXT_LOST,
+	ONCONTEXT_RESTORED,
+	off,
+	on,
+} from "../../system/event.ts";
 import GLShader from "./glshader.js";
 import quadVertex from "./shaders/quad.vert";
 
@@ -30,10 +36,23 @@ import quadVertex from "./shaders/quad.vert";
  */
 export default class ShaderEffect {
 	/**
-	 * whether this effect is active (false in Canvas mode)
+	 * whether this effect is active (false in Canvas mode, false after
+	 * {@link destroy}, and false while the WebGL context is suspended
+	 * between an `ONCONTEXT_LOST` and the matching `ONCONTEXT_RESTORED`
+	 * event).
 	 * @type {boolean}
 	 */
 	enabled = false;
+
+	/**
+	 * `true` once {@link destroy} has been called. Distinct from
+	 * `enabled` — which also toggles transiently across a context
+	 * lost / restored cycle — to give callers a stable signal for
+	 * "this effect has been explicitly released."
+	 * @type {boolean}
+	 * @readonly
+	 */
+	destroyed = false;
 
 	/**
 	 * @param {WebGLRenderer|CanvasRenderer} renderer - the current renderer instance
@@ -50,19 +69,11 @@ export default class ShaderEffect {
 			return;
 		}
 
-		// build the full fragment shader by wrapping the user's apply() function
-		// with the standard texture sampling boilerplate:
-		// - uSampler: the texture sampler (automatically bound by the engine)
-		// - vColor: the vertex color (tint and opacity, pre-multiplied alpha)
-		// - vRegion: the texture UV coordinates for the current sprite region
-		// - texColor: the sampled pixel color (texture × vertex color)
-		// The user's apply(color, uv) receives texColor and vRegion,
-		// and returns the final fragment color.
+		// wrap the user's apply() with the texture-sampling boilerplate
 		const fragment = [
 			"uniform sampler2D uSampler;",
 			"varying vec4 vColor;",
 			"varying vec2 vRegion;",
-			// user-provided fragment body (uniforms + apply function)
 			fragmentBody,
 			"void main(void) {",
 			"    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",
@@ -78,6 +89,31 @@ export default class ShaderEffect {
 			precision || renderer.shaderPrecision,
 		);
 		this.enabled = true;
+
+		// flip enabled across context loss so beginPostEffect skips us
+		on(ONCONTEXT_LOST, this._onContextLost, this);
+		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
+	}
+
+	/** @private */
+	_onContextLost() {
+		if (this.destroyed) {
+			return;
+		}
+		// remember user-set state so restore doesn't override it
+		this._enabledBeforeSuspend = this.enabled;
+		this.enabled = false;
+	}
+
+	/** @private */
+	_onContextRestored() {
+		if (this.destroyed) {
+			return;
+		}
+		// the inner GLShader recompiles itself; restore the gate to
+		// whatever the user had it set to before the suspend
+		this.enabled = this._enabledBeforeSuspend !== false;
+		this._enabledBeforeSuspend = undefined;
 	}
 
 	/**
@@ -136,12 +172,26 @@ export default class ShaderEffect {
 	}
 
 	/**
-	 * destroy this shader effect
+	 * destroy this shader effect. Idempotent — calling destroy twice
+	 * is safe. Unsubscribes from the renderer's context-lost / restored
+	 * events so a destroyed effect is not auto-reactivated.
 	 */
 	destroy() {
-		if (this.enabled) {
+		if (this.destroyed) {
+			return;
+		}
+		this.destroyed = true;
+
+		// flip enabled BEFORE inner destroy so a thrown deleteProgram
+		// can't leave us with enabled=true + uniforms=null (19.5.0 bug)
+		this.enabled = false;
+
+		off(ONCONTEXT_LOST, this._onContextLost, this);
+		off(ONCONTEXT_RESTORED, this._onContextRestored, this);
+
+		// _shader is undefined on Canvas-mode effects (early-returned)
+		if (this._shader) {
 			this._shader.destroy();
-			this.enabled = false;
 		}
 	}
 }

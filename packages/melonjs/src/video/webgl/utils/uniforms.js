@@ -66,7 +66,7 @@ function valuesMatch(cached, val) {
  * allocates a fresh array.
  * @ignore
  */
-function captureValue(prev, val) {
+export function captureValue(prev, val) {
 	if (
 		val === null ||
 		typeof val !== "object" ||

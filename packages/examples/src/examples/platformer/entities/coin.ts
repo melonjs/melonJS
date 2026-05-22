@@ -15,19 +15,14 @@ import {
 } from "melonjs";
 import { gameState } from "../gameState";
 
-// shared shine shader for all coins — one ShineEffect instance,
-// ref-counted so it survives across level reloads / pool recycling
-let coinShader: ShineEffect | undefined;
-let coinShaderRefCount = 0;
-let coinUpdateHandler: (() => void) | undefined;
+// Per-instance shine shader. Pool-recycled (recycle:true) so
+// onDestroyEvent doesn't fire on pickup — bind GAME_UPDATE on
+// activate, unbind on deactivate.
 
 export class CoinEntity extends Collectable {
-	/**
-	 * Did *this* instance increment the shared shader's refcount? Without
-	 * tracking it per-instance, a coin destroyed before its LEVEL_LOADED
-	 * handler runs would over-decrement in onDestroyEvent.
-	 */
-	private didIncrementRefCount = false;
+	private shineShader: ShineEffect | undefined;
+	private shineUpdateHandler: (() => void) | undefined;
+	private shineSubscribed = false;
 
 	/**
 	 * constructor
@@ -43,37 +38,58 @@ export class CoinEntity extends Collectable {
 				shapes: [new Ellipse(35 / 2, 35 / 2, 35, 35)], // coins are 35x35
 			}),
 		);
+		// shader + subscription deferred to onActivateEvent
+	}
 
-		// Apply the built-in shine shader. Attempt immediately for coins
-		// constructed after the first level loaded, otherwise defer to the
-		// next LEVEL_LOADED event.
-		const attach = () => {
-			if (this.didIncrementRefCount) return true;
-			const renderer = this.parentApp?.renderer;
-			if (!renderer) return false;
-			if (!coinShader) {
-				coinShader = new ShineEffect(renderer, {
-					color: [1.0, 0.95, 0.7], // warm white-gold highlight
-					speed: 0.8,
-					width: 0.25, // wider, gentler glint
-					intensity: 0.22, // softer highlight
-					angle: 0.35, // slight diagonal sweep (~20°)
-					bands: 14.5, // ~14 parallel etched-rim glints
-					pulseDepth: 0.04, // very subtle brightness pulse
-				});
-				coinUpdateHandler = () => {
-					coinShader?.setTime(timer.getTime() / 1000.0);
-				};
-				event.on(event.GAME_UPDATE, coinUpdateHandler);
-			}
-			coinShaderRefCount++;
-			this.didIncrementRefCount = true;
-			this.addPostEffect(coinShader);
-			return true;
+	private attachShine(): boolean {
+		if (this.shineShader) return true;
+		const renderer = this.parentApp?.renderer;
+		if (!renderer) return false;
+		this.shineShader = new ShineEffect(renderer, {
+			color: [1.0, 0.95, 0.7], // warm white-gold highlight
+			speed: 0.8,
+			width: 0.25, // wider, gentler glint
+			intensity: 0.22, // softer highlight
+			angle: 0.35, // slight diagonal sweep (~20°)
+			bands: 14.5, // ~14 parallel etched-rim glints
+			pulseDepth: 0.04, // very subtle brightness pulse
+		});
+		this.shineUpdateHandler = () => {
+			this.shineShader?.setTime(timer.getTime() / 1000.0);
 		};
-		if (!attach()) {
-			event.once(event.LEVEL_LOADED, attach);
+		this.addPostEffect(this.shineShader);
+		return true;
+	}
+
+	private subscribeShine() {
+		if (this.shineSubscribed || !this.shineUpdateHandler) return;
+		event.on(event.GAME_UPDATE, this.shineUpdateHandler);
+		this.shineSubscribed = true;
+	}
+
+	private unsubscribeShine() {
+		if (!this.shineSubscribed || !this.shineUpdateHandler) return;
+		event.off(event.GAME_UPDATE, this.shineUpdateHandler);
+		this.shineSubscribed = false;
+	}
+
+	onActivateEvent() {
+		super.onActivateEvent();
+		if (this.attachShine()) {
+			this.subscribeShine();
+		} else {
+			// renderer not ready yet — defer to LEVEL_LOADED
+			event.once(event.LEVEL_LOADED, () => {
+				if (this.attachShine()) {
+					this.subscribeShine();
+				}
+			});
 		}
+	}
+
+	onDeactivateEvent() {
+		this.unsubscribeShine();
+		super.onDeactivateEvent();
 	}
 
 	// called by the pool on object recycling
@@ -101,16 +117,9 @@ export class CoinEntity extends Collectable {
 	}
 
 	onDestroyEvent() {
-		// Only release the shared shader ref if this instance acquired one.
-		if (!this.didIncrementRefCount) return;
-		this.didIncrementRefCount = false;
-		if (coinShader && --coinShaderRefCount <= 0) {
-			if (coinUpdateHandler) {
-				event.off(event.GAME_UPDATE, coinUpdateHandler);
-				coinUpdateHandler = undefined;
-			}
-			coinShader = undefined;
-			coinShaderRefCount = 0;
-		}
+		// fires only on real destroy (level reset / app shutdown)
+		this.unsubscribeShine();
+		this.shineShader = undefined;
+		this.shineUpdateHandler = undefined;
 	}
 }

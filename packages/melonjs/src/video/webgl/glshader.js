@@ -1,9 +1,14 @@
-import { ONCONTEXT_LOST, on } from "../../system/event.ts";
+import {
+	ONCONTEXT_LOST,
+	ONCONTEXT_RESTORED,
+	off,
+	on,
+} from "../../system/event.ts";
 import { extractAttributes } from "./utils/attributes.js";
 import { getMaxShaderPrecision, setPrecision } from "./utils/precision.js";
 import { compileProgram } from "./utils/program.js";
 import { minify } from "./utils/string.js";
-import { extractUniforms } from "./utils/uniforms.js";
+import { captureValue, extractUniforms } from "./utils/uniforms.js";
 
 /**
  * a base GL Shader object
@@ -45,21 +50,65 @@ export default class GLShader {
 		this.gl = gl;
 
 		/**
-		 * the vertex shader source code
-		 * @type {string}
+		 * `true` once {@link destroy} has been called. After this flag is
+		 * `true`, every method on the shader is a silent no-op — callers
+		 * holding a stale reference (e.g. a still-registered update loop)
+		 * do not crash the frame.
+		 * @type {boolean}
+		 * @readonly
 		 */
-		this.vertex = setPrecision(
-			minify(vertex),
-			precision || getMaxShaderPrecision(this.gl),
-		);
+		this.destroyed = false;
 
 		/**
-		 * the fragment shader source code
-		 * @type {string}
+		 * `true` while the WebGL context is lost (and until it's
+		 * restored). The GL program/attributes/uniforms are released
+		 * during the suspended window but the shader source code is
+		 * preserved so {@link _onContextRestored} can rebuild the
+		 * program against the new context. User code generally doesn't
+		 * read this — methods short-circuit internally — but it's
+		 * available for diagnostic / debug-plugin tooling.
+		 * @type {boolean}
+		 * @readonly
 		 */
+		this.suspended = false;
+
+		// raw source kept so we can recompile against a restored context
+		this._sourceVertex = vertex;
+		this._sourceFragment = fragment;
+		this._precision = precision;
+
+		// uniform writes are cached + replayed across a context cycle
+		this._uniformCache = Object.create(null);
+
+		// defer compile if constructed mid-suspended-window; replay handles it
+		if (gl.isContextLost()) {
+			this.suspended = true;
+			this.program = null;
+			this.uniforms = null;
+			this.attributes = null;
+		} else {
+			this._compile();
+		}
+
+		on(ONCONTEXT_LOST, this._onContextLost, this);
+		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
+	}
+
+	/**
+	 * (Re)compile the shader program against `this.gl` from the
+	 * preserved source. Called from the constructor and from
+	 * {@link _onContextRestored}. Replays any cached uniform values
+	 * against the freshly-extracted uniforms proxy.
+	 * @private
+	 */
+	_compile() {
+		this.vertex = setPrecision(
+			minify(this._sourceVertex),
+			this._precision || getMaxShaderPrecision(this.gl),
+		);
 		this.fragment = setPrecision(
-			minify(fragment),
-			precision || getMaxShaderPrecision(this.gl),
+			minify(this._sourceFragment),
+			this._precision || getMaxShaderPrecision(this.gl),
 		);
 
 		/**
@@ -85,14 +134,62 @@ export default class GLShader {
 		 */
 		this.uniforms = extractUniforms(this.gl, this);
 
-		// destroy the shader on context lost (will be recreated on context restore)
-		on(ONCONTEXT_LOST, this.destroy, this);
+		this.suspended = false;
+
+		// replay cached uniforms against the new program
+		for (const name of Object.keys(this._uniformCache)) {
+			if (typeof this.uniforms[name] !== "undefined") {
+				this.bind();
+				this.uniforms[name] = this._uniformCache[name];
+			}
+		}
+	}
+
+	/**
+	 * Handler for {@link ONCONTEXT_LOST}. Tears down the GL program
+	 * but preserves the shader source + cached uniform values so the
+	 * shader can be transparently rebuilt on context restore.
+	 * @private
+	 */
+	_onContextLost() {
+		if (this.destroyed || this.suspended) {
+			return;
+		}
+		this.suspended = true;
+		this.uniforms = null;
+		this.attributes = null;
+		// deleteProgram against a dead ANGLE context throws — swallow it
+		if (this.program !== null) {
+			try {
+				this.gl.deleteProgram(this.program);
+			} catch {
+				/* context already gone */
+			}
+			this.program = null;
+		}
+	}
+
+	/**
+	 * Handler for {@link ONCONTEXT_RESTORED}. Re-compiles and
+	 * re-links the shader against the new GL context, then replays
+	 * any cached uniform values via {@link _compile}.
+	 * @private
+	 */
+	_onContextRestored() {
+		if (this.destroyed) {
+			// destroyed shaders are not resurrected
+			return;
+		}
+		this._compile();
 	}
 
 	/**
 	 * Installs this shader program as part of current rendering state
 	 */
 	bind() {
+		if (this.destroyed || this.suspended) {
+			return;
+		}
 		this.gl.useProgram(this.program);
 	}
 
@@ -102,6 +199,9 @@ export default class GLShader {
 	 * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
 	 */
 	getAttribLocation(name) {
+		if (this.destroyed || this.suspended) {
+			return -1;
+		}
 		const attr = this.attributes[name];
 		if (typeof attr !== "undefined") {
 			return attr;
@@ -118,15 +218,40 @@ export default class GLShader {
 	 * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
 	 */
 	setUniform(name, value) {
+		if (this.destroyed) {
+			return;
+		}
+		// cache via captureValue (slot reuse, mutation-detached); pass
+		// caller's value to GL (uniform setters copy synchronously)
+		let cached;
+		let glValue;
+		if (typeof value === "object" && value !== null) {
+			if (typeof value.toArray === "function") {
+				const arr = value.toArray();
+				cached = captureValue(this._uniformCache[name], arr);
+				glValue = arr;
+			} else if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+				cached = captureValue(this._uniformCache[name], value);
+				glValue = value;
+			} else {
+				cached = value;
+				glValue = value;
+			}
+		} else {
+			cached = value;
+			glValue = value;
+		}
+		this._uniformCache[name] = cached;
+
+		if (this.suspended) {
+			// deferred: replay handles the live write on restore
+			return;
+		}
+
 		const uniforms = this.uniforms;
 		if (typeof uniforms[name] !== "undefined") {
-			// ensure this shader's program is active before setting uniforms
 			this.bind();
-			if (typeof value === "object" && typeof value.toArray === "function") {
-				uniforms[name] = value.toArray();
-			} else {
-				uniforms[name] = value;
-			}
+			uniforms[name] = glValue;
 		} else {
 			throw new Error("undefined (" + name + ") uniform for shader " + this);
 		}
@@ -158,15 +283,37 @@ export default class GLShader {
 	}
 
 	/**
-	 * destroy this shader objects resources (program, attributes, uniforms)
+	 * destroy this shader objects resources (program, attributes, uniforms).
+	 * Idempotent — calling destroy twice (or after a context-lost suspend)
+	 * is safe. Unsubscribes from the renderer's context lost / restored
+	 * events so a destroyed shader is never automatically resurrected.
 	 */
 	destroy() {
+		if (this.destroyed) {
+			return;
+		}
+		this.destroyed = true;
+
+		off(ONCONTEXT_LOST, this._onContextLost, this);
+		off(ONCONTEXT_RESTORED, this._onContextRestored, this);
+
 		this.uniforms = null;
 		this.attributes = null;
 
-		this.gl.deleteProgram(this.program);
+		// deleteProgram can throw on ANGLE/D3D11 — the 19.5.0 crash
+		if (this.program !== null) {
+			try {
+				this.gl.deleteProgram(this.program);
+			} catch {
+				/* context already gone */
+			}
+			this.program = null;
+		}
 
 		this.vertex = null;
 		this.fragment = null;
+		this._sourceVertex = null;
+		this._sourceFragment = null;
+		this._uniformCache = null;
 	}
 }

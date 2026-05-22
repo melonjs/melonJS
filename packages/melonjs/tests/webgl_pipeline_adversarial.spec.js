@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, GLShader, video, WebGLRenderer } from "../src/index.js";
+import {
+	boot,
+	event,
+	GLShader,
+	Renderable,
+	ShaderEffect,
+	video,
+	WebGLRenderer,
+} from "../src/index.js";
 
 /**
  * Adversarial integration tests for the WebGL pipeline.
@@ -387,6 +395,339 @@ describe("WebGL pipeline adversarial integration", () => {
 		custom.destroy();
 	});
 
+	// minimal valid GLSL pair (uTime + aVertex) shared by the cluster
+	const makeShaderSource = () => {
+		return {
+			vertex: [
+				"attribute vec2 aVertex;",
+				"uniform mat4 uProjectionMatrix;",
+				"void main(void) {",
+				"  gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
+				"}",
+			].join("\n"),
+			fragment: [
+				"uniform float uTime;",
+				"void main(void) { gl_FragColor = vec4(uTime, 0.0, 0.0, 1.0); }",
+			].join("\n"),
+		};
+	};
+
+	// ctx.skip marks SKIPPED (not "passed") on no-WebGL CI runners.
+	// Tests pair with expect.assertions(N) so a silent early-return fails.
+	const skipIfNoWebGL = (ctx) => {
+		if (!isWebGL) {
+			ctx.skip("WebGL not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
+	it("destroyed shader: setUniform / bind / getAttribLocation no-op cleanly (do not throw)", (ctx) => {
+		// 19.5.0 Windows + ANGLE regression — stale references on a
+		// destroyed shader must no-op instead of crashing on null uniforms
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(13);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		// sanity: before destroy, the shader has live state
+		expect(shader.destroyed).toBe(false);
+		expect(shader.uniforms).not.toBeNull();
+		expect(shader.attributes).not.toBeNull();
+		expect(shader.program).not.toBeNull();
+
+		shader.destroy();
+
+		// after destroy, all the per-field cleanups happened AND the
+		// public `destroyed` flag flipped
+		expect(shader.destroyed).toBe(true);
+		expect(shader.uniforms).toBeNull();
+		expect(shader.attributes).toBeNull();
+		expect(shader.program).toBeNull();
+
+		// every accessor no-ops silently
+		expect(() => {
+			shader.setUniform("uTime", 1.234);
+		}).not.toThrow();
+		expect(() => {
+			shader.bind();
+		}).not.toThrow();
+		expect(shader.getAttribLocation("aVertex")).toEqual(-1);
+
+		// setUniform for an UNKNOWN uniform also stays silent — the
+		// pre-destroy code path would have thrown for an undefined
+		// uniform name, but post-destroy we never reach that branch.
+		expect(() => {
+			shader.setUniform("uNotDefined", 0);
+		}).not.toThrow();
+
+		// destroyed-path must hit early return before any gl.* call
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("GLShader._uniformCache snapshots typed-array / array writes (caller mutation does not poison replay)", (ctx) => {
+		// cache must detach from the caller's array so post-setUniform
+		// mutation can't rewrite what gets replayed on context restore
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(7);
+
+		// vec3 uniform — accepts both Float32Array and plain Array
+		const vertex = [
+			"attribute vec2 aVertex;",
+			"void main(void) { gl_Position = vec4(aVertex, 0.0, 1.0); }",
+		].join("\n");
+		const fragment = [
+			"uniform vec3 uColor;",
+			"void main(void) { gl_FragColor = vec4(uColor, 1.0); }",
+		].join("\n");
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		// f32-exact values (powers of 2) — no toEqual quantization issues
+		const fa = new Float32Array([0.5, 0.25, 0.125]);
+		shader.setUniform("uColor", fa);
+		expect(shader._uniformCache.uColor).not.toBe(fa);
+		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
+		// mutate caller's array after the call — cache must NOT see it
+		fa[0] = 0.875;
+		fa[1] = 0.875;
+		fa[2] = 0.875;
+		expect(Array.from(shader._uniformCache.uColor)).toEqual([0.5, 0.25, 0.125]);
+
+		// plain Array path. captureValue reuses the prior slot (so it
+		// may now be a Float32Array) — only values matter for replay
+		const arr = [0.4, 0.5, 0.6];
+		shader.setUniform("uColor", arr);
+		expect(shader._uniformCache.uColor).not.toBe(arr);
+		arr[0] = 0.0;
+		const cachedArr = Array.from(shader._uniformCache.uColor);
+		expect(cachedArr[0]).toBeCloseTo(0.4, 5);
+		expect(cachedArr[1]).toBeCloseTo(0.5, 5);
+		expect(cachedArr[2]).toBeCloseTo(0.6, 5);
+
+		shader.destroy();
+	});
+
+	it("GLShader.destroy is idempotent — double-destroy does not throw", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(3);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		shader.destroy();
+		expect(shader.destroyed).toBe(true);
+
+		// idempotency guard — without it, deleteProgram(null) would warn / throw
+		expect(() => {
+			shader.destroy();
+		}).not.toThrow();
+		expect(shader.destroyed).toBe(true);
+	});
+
+	it("GLShader.destroy is partial-state-safe under a throwing deleteProgram (ANGLE-style)", (ctx) => {
+		// destroy() must complete JS-side even when deleteProgram throws
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(6);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+
+		// try/finally so a mid-test failure can't leak the patched
+		// method into the shared renderer gl proxy
+		const originalDeleteProgram = shader.gl.deleteProgram.bind(shader.gl);
+		shader.gl.deleteProgram = () => {
+			throw new Error("mock ANGLE cross-context delete error");
+		};
+
+		try {
+			expect(() => {
+				shader.destroy();
+			}).not.toThrow();
+
+			expect(shader.destroyed).toBe(true);
+			expect(shader.uniforms).toBeNull();
+			expect(shader.attributes).toBeNull();
+			expect(shader.program).toBeNull();
+
+			expect(() => {
+				shader.setUniform("uTime", 0.5);
+			}).not.toThrow();
+		} finally {
+			shader.gl.deleteProgram = originalDeleteProgram;
+		}
+	});
+
+	it("ShaderEffect.destroy sets enabled=false BEFORE _shader.destroy (partial-state immunity)", (ctx) => {
+		// 19.5.0 ANGLE crash as a unit test — destroy must flip enabled
+		// before the inner destroy can throw past it
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(7);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 c, vec2 u) { return c; }",
+		);
+		expect(effect.enabled).toBe(true);
+		expect(effect.destroyed).toBe(false);
+
+		// try/finally so a mid-test failure still releases GL resources
+		const originalInnerDestroy = effect._shader.destroy.bind(effect._shader);
+		effect._shader.destroy = () => {
+			throw new Error("mock inner shader destroy throw");
+		};
+
+		try {
+			expect(() => {
+				effect.destroy();
+			}).toThrow(/mock inner shader destroy throw/);
+
+			// enabled must be false even though inner destroy threw out
+			expect(effect.enabled).toBe(false);
+			expect(effect.destroyed).toBe(true);
+
+			expect(() => {
+				effect.setUniform("foo", 1);
+			}).not.toThrow();
+			expect(effect.getAttribLocation("aVertex")).toEqual(-1);
+		} finally {
+			originalInnerDestroy();
+		}
+	});
+
+	it("ShaderEffect.destroy is idempotent", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(3);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 c, vec2 u) { return c; }",
+		);
+		effect.destroy();
+		expect(effect.destroyed).toBe(true);
+		expect(() => {
+			effect.destroy();
+		}).not.toThrow();
+		expect(effect.destroyed).toBe(true);
+	});
+
+	it("ShaderEffect: setUniform / bind / getAttribLocation no-op after destroy", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(4);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.destroy();
+
+		expect(effect.enabled).toBe(false);
+		expect(() => {
+			effect.setUniform("uTime", 0.5);
+		}).not.toThrow();
+		expect(() => {
+			effect.bind();
+		}).not.toThrow();
+		expect(effect.getAttribLocation("aVertex")).toEqual(-1);
+	});
+
+	it("multiple independent ShaderEffect instances: destroying one does not affect another", (ctx) => {
+		// Pins the per-instance-shader pattern the platformer-matter
+		// and platformer-builtin coin examples migrate to. plinko-planck
+		// already follows this idiom (one ShaderEffect per peg / drop
+		// zone); the platformer coins were the deviation in 19.5.0.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(5);
+
+		const a = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		const b = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+
+		a.destroy();
+
+		// b must be completely unaffected
+		expect(a.destroyed).toBe(true);
+		expect(b.destroyed).toBe(false);
+		expect(b.enabled).toBe(true);
+		expect(() => {
+			b.setUniform("uTime", 0.5);
+		}).not.toThrow();
+		expect(b._shader.program).not.toBeNull();
+
+		b.destroy();
+	});
+
+	it("GLShader survives a context-lost → restored cycle with uniform values intact", (ctx) => {
+		// suspend on lost, recompile + replay uniforms on restored
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(6);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+		shader.setUniform("uTime", 3.14);
+		const originalProgram = shader.program;
+		expect(shader.suspended).toBe(false);
+
+		event.emit(event.ONCONTEXT_LOST, renderer);
+		// suspended: program released, source + cache preserved
+		expect(shader.suspended).toBe(true);
+		expect(shader.program).toBeNull();
+
+		event.emit(event.ONCONTEXT_RESTORED, renderer);
+		// rebuilt: new program identity, suspended cleared
+		expect(shader.suspended).toBe(false);
+		expect(shader.program).not.toBeNull();
+		expect(shader.program).not.toBe(originalProgram);
+
+		shader.destroy();
+	});
+
+	it("GLShader does NOT auto-resurrect after explicit destroy", (ctx) => {
+		// destroy() must unsubscribe so RESTORED doesn't rebuild the program
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		expect.assertions(3);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(renderer.gl, vertex, fragment);
+		shader.destroy();
+		expect(shader.destroyed).toBe(true);
+
+		event.emit(event.ONCONTEXT_LOST, renderer);
+		event.emit(event.ONCONTEXT_RESTORED, renderer);
+
+		// Still destroyed; no program resurrection
+		expect(shader.destroyed).toBe(true);
+		expect(shader.program).toBeNull();
+	});
+
 	// ---- Mode flag interactions (blend, scissor) ----
 
 	it("blend mode change between batcher switches: no error", () => {
@@ -619,6 +960,988 @@ describe("WebGL pipeline adversarial integration", () => {
 					false,
 				);
 			}
+		}
+	});
+
+	// =========================================================
+	//   Real WEBGL_lose_context lifecycle tests — MUST run last.
+	//   (Previous tests use event.emit; these go through the
+	//   browser's webglcontextlost/restored DOM events. Can leave
+	//   renderer scratch state subtly different across the cycle,
+	//   so they're block-isolated at the end of the spec.)
+	// =========================================================
+	const tick = () => {
+		return new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+	};
+
+	it("real context loss drives the full lifecycle end-to-end (1 shader, 1 cycle)", async (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(8);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+		shader.setUniform("uTime", 7.25);
+		const originalProgram = shader.program;
+		expect(shader.suspended).toBe(false);
+		expect(shader.destroyed).toBe(false);
+
+		ext.loseContext();
+		await tick();
+		expect(shader.suspended).toBe(true);
+		expect(shader.program).toBeNull();
+
+		ext.restoreContext();
+		await tick();
+		expect(shader.suspended).toBe(false);
+		expect(shader.program).not.toBeNull();
+		expect(shader.program).not.toBe(originalProgram);
+		expect(shader._uniformCache.uTime).toEqual(7.25);
+
+		shader.destroy();
+	});
+
+	it("real context loss: multiple shaders all survive without cross-pollination", async (ctx) => {
+		// Each shader's _uniformCache is per-instance — verify two
+		// shaders with DIFFERENT uniform values both survive and don't
+		// leak into each other (e.g. a shared scratch cache would
+		// silently merge the two histories).
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(8);
+
+		const a = new GLShader(
+			gl,
+			makeShaderSource().vertex,
+			makeShaderSource().fragment,
+		);
+		const b = new GLShader(
+			gl,
+			makeShaderSource().vertex,
+			makeShaderSource().fragment,
+		);
+		a.setUniform("uTime", 1.0);
+		b.setUniform("uTime", 99.0);
+
+		ext.loseContext();
+		await tick();
+		expect(a.suspended).toBe(true);
+		expect(b.suspended).toBe(true);
+
+		ext.restoreContext();
+		await tick();
+		expect(a.suspended).toBe(false);
+		expect(b.suspended).toBe(false);
+		// Each cache replays the value its own owner set — no mixing.
+		expect(a._uniformCache.uTime).toEqual(1.0);
+		expect(b._uniformCache.uTime).toEqual(99.0);
+		// Each shader has a unique fresh program (not the same handle).
+		expect(a.program).not.toBe(b.program);
+		expect(a.program).not.toBeNull();
+
+		a.destroy();
+		b.destroy();
+	});
+
+	it("real context loss: setUniform DURING the suspended window goes to cache, applied on restore", async (ctx) => {
+		// suspended-window writes are cached + replayed (not dropped)
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(5);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+		shader.setUniform("uTime", 1.0);
+
+		ext.loseContext();
+		await tick();
+		expect(shader.suspended).toBe(true);
+
+		// new write during suspended → cache only, no GL call
+		expect(() => {
+			shader.setUniform("uTime", 42.0);
+		}).not.toThrow();
+		expect(shader._uniformCache.uTime).toEqual(42.0);
+
+		ext.restoreContext();
+		await tick();
+		expect(shader.suspended).toBe(false);
+		// latest write (42, not original 1) is what replays
+		expect(shader._uniformCache.uTime).toEqual(42.0);
+
+		shader.destroy();
+	});
+
+	it("real context loss: destroying a shader DURING the suspended window stays destroyed across restore", async (ctx) => {
+		// destroyed flag wins over suspended — no resurrection on restore
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+
+		ext.loseContext();
+		await tick();
+
+		// Destroy during the suspended window — no throw.
+		expect(() => {
+			shader.destroy();
+		}).not.toThrow();
+		expect(shader.destroyed).toBe(true);
+
+		ext.restoreContext();
+		await tick();
+
+		// Restore must NOT recompile the destroyed shader.
+		expect(shader.destroyed).toBe(true);
+		expect(shader.program).toBeNull();
+	});
+
+	it("real context loss: three consecutive lose/restore cycles all recover with uniform state intact", async (ctx) => {
+		// repetition surfaces single-cycle-pass cumulative leaks
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(9);
+
+		const { vertex, fragment } = makeShaderSource();
+		const shader = new GLShader(gl, vertex, fragment);
+		shader.setUniform("uTime", 123.456);
+
+		for (let cycle = 0; cycle < 3; cycle++) {
+			ext.loseContext();
+			await tick();
+			expect(shader.suspended).toBe(true);
+
+			ext.restoreContext();
+			await tick();
+			expect(shader.suspended).toBe(false);
+
+			// cache persists across every cycle
+			expect(shader._uniformCache.uTime).toEqual(123.456);
+		}
+
+		shader.destroy();
+	});
+
+	it("real context loss: ShaderEffect's `enabled` gate flips false on lost, true on restored", async (ctx) => {
+		// without the flip, beginPostEffect would try to bind a null program
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		expect(effect.enabled).toBe(true);
+
+		ext.loseContext();
+		await tick();
+		expect(effect.enabled).toBe(false);
+
+		ext.restoreContext();
+		await tick();
+		expect(effect.enabled).toBe(true);
+		// destroyed stays false — restore is not a destroy event
+		expect(effect.destroyed).toBe(false);
+
+		effect.destroy();
+	});
+
+	it("real context loss: a user-disabled ShaderEffect stays disabled across a cycle", async (ctx) => {
+		// dropZone-style toggling: user sets `effect.enabled = false`
+		// for visibility. Restore must NOT override that.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 c, vec2 u) { return c; }",
+		);
+		// user-disabled
+		effect.enabled = false;
+
+		ext.loseContext();
+		await tick();
+		expect(effect.enabled).toBe(false);
+
+		ext.restoreContext();
+		await tick();
+		// must stay user-disabled, not get re-enabled
+		expect(effect.enabled).toBe(false);
+		expect(effect.destroyed).toBe(false);
+
+		effect.destroy();
+	});
+
+	it("real context loss: destroy() during cycle followed by a NEW lose/restore is harmless", async (ctx) => {
+		// destroyed shader must not be touched by a subsequent cycle
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(5);
+
+		const { vertex, fragment } = makeShaderSource();
+		const a = new GLShader(gl, vertex, fragment);
+		const b = new GLShader(gl, vertex, fragment);
+		a.setUniform("uTime", 5.0);
+		b.setUniform("uTime", 10.0);
+
+		ext.loseContext();
+		await tick();
+		a.destroy(); // destroy a during suspended window
+
+		ext.restoreContext();
+		await tick();
+
+		// a stays destroyed
+		expect(a.destroyed).toBe(true);
+		expect(a.program).toBeNull();
+		// b survives the first cycle
+		expect(b.program).not.toBeNull();
+
+		// Run a SECOND lose/restore cycle — a's subscribers must be
+		// fully gone, so the destroyed shader can't accidentally be
+		// suspended/restored.
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// a still destroyed and program still null
+		expect(a.destroyed).toBe(true);
+		expect(a.program).toBeNull();
+
+		b.destroy();
+	});
+
+	// ---- Renderer-wide context loss / restore battery ----
+	// Probes everything else the renderer owns across the cycle:
+	// vertex buffers, texture cache, batcher GL state, default render
+	// state, FBOs, light uniforms, mesh / litQuad batchers, full
+	// drawImage → flush pipeline.
+
+	it("real context loss: gl.isContextLost() is true between loseContext and restoreContext (test infra sanity)", async (ctx) => {
+		// without this, vitest browser env isn't really losing context
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		expect(gl.isContextLost()).toBe(false);
+		ext.loseContext();
+		await tick();
+		expect(gl.isContextLost()).toBe(true);
+		ext.restoreContext();
+		await tick();
+		expect(gl.isContextLost()).toBe(false);
+	});
+
+	it("real context loss: renderer.isContextValid flips false on lost, true on restored", async (ctx) => {
+		// public flag must mirror the underlying context state
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		expect(renderer.isContextValid).toBe(true);
+		ext.loseContext();
+		await tick();
+		expect(renderer.isContextValid).toBe(false);
+		ext.restoreContext();
+		await tick();
+		expect(renderer.isContextValid).toBe(true);
+	});
+
+	it("real context loss: renderer.vertexBuffer is a valid GL buffer after restore", async (ctx) => {
+		// the renderer's restore handler must re-create vertexBuffer
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		// pre-loss: it's a valid buffer
+		expect(gl.isBuffer(renderer.vertexBuffer)).toBe(true);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-restore: must still be a valid buffer (re-created)
+		expect(gl.isBuffer(renderer.vertexBuffer)).toBe(true);
+	});
+
+	it("real context loss: indexed batchers' glVertexBuffer is valid after restore", async (ctx) => {
+		// indexed batchers own their own buffer; reset must re-create it
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		const indexedBatchers = Array.from(renderer.batchers.values()).filter(
+			(b) => {
+				return b.useIndexBuffer === true;
+			},
+		);
+		if (indexedBatchers.length === 0) {
+			ctx.skip("no indexed batchers registered");
+			return;
+		}
+		expect.assertions(indexedBatchers.length);
+
+		// pre-loss state is incidental — vitest cross-file shared session
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// not gl.isBuffer: per spec, a createBuffer name isn't a "buffer
+		// object" until bindBuffer; batcher.bind() runs on activation
+		// only. The post-cycle mesh batcher test covers the bound case.
+		for (const b of Array.from(renderer.batchers.values()).filter((b) => {
+			return b.useIndexBuffer === true;
+		})) {
+			expect(b.glVertexBuffer).toBeInstanceOf(WebGLBuffer);
+		}
+	});
+
+	it("real context loss: default WebGL state (blend, depth, scissor) is restored after cycle", async (ctx) => {
+		// driver wipes all GL state on restore; our handler re-applies it
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		expect(gl.isEnabled(gl.BLEND)).toBe(true);
+		expect(gl.isEnabled(gl.DEPTH_TEST)).toBe(false);
+		expect(gl.isEnabled(gl.SCISSOR_TEST)).toBe(false);
+		expect(gl.getParameter(gl.DEPTH_WRITEMASK)).toBe(false);
+	});
+
+	it("real context loss: batcher boundTextures is cleared on restore + drawing re-uploads from sources", async (ctx) => {
+		// dead handles cleared by reset, next draw re-uploads from source
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const source = video.createCanvas(16, 16);
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+
+		const quad = renderer.batchers.get("quad");
+		// pre-loss: quad batcher has at least one bound texture
+		const beforeCount = quad.boundTextures.filter((t) => {
+			return typeof t !== "undefined";
+		}).length;
+		expect(beforeCount).toBeGreaterThan(0);
+		// every entry is a valid WebGLTexture
+		expect(
+			quad.boundTextures.every((t) => {
+				return t === undefined || gl.isTexture(t);
+			}),
+		).toBe(true);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-restore: boundTextures is freshly initialised to []
+		expect(quad.boundTextures.length).toEqual(0);
+
+		// drawing the SAME source after restore must re-upload (cache
+		// miss → uploadTexture → createTexture2D) without throwing
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("real context loss: drawImage + flush after the cycle produces no GL errors (full pipeline)", async (ctx) => {
+		// headline integration test — any stale resource ref surfaces here
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const tex = video.createCanvas(16, 16);
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+		expectNoGLErrors();
+	});
+
+	it("real context loss: mesh batcher works after a context cycle", async (ctx) => {
+		// mesh has its own buffer + shader + layout — all must re-bind
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(1);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const tex = video.createCanvas(16, 16);
+		renderer.setBatcher("mesh");
+		renderer.setBatcher("quad");
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		expectNoGLErrors();
+	});
+
+	it("real context loss: litQuad batcher (Light2d uniforms + normal map) works after a context cycle", async (ctx) => {
+		// most state-heavy path — light uniforms, separate batcher, normal map
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(1);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const tex = video.createCanvas(16, 16);
+		const normal = video.createCanvas(16, 16);
+		const oneLight = [
+			{
+				getBounds: () => {
+					return {
+						centerX: 0,
+						centerY: 0,
+						width: 30,
+						height: 30,
+					};
+				},
+				intensity: 1,
+				color: { r: 255, g: 255, b: 255 },
+				lightHeight: 1,
+			},
+		];
+		renderer.setLightUniforms(oneLight, { r: 80, g: 80, b: 80 }, 0, 0);
+		renderer.currentNormalMap = normal;
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.currentNormalMap = null;
+		renderer.flush();
+		expectNoGLErrors();
+	});
+
+	it("real context loss: ShaderEffect + drawImage + flush survive the full cycle without throwing", async (ctx) => {
+		// 19.5.0 user-reported scenario: drawing through an enabled
+		// ShaderEffect when the context is lost mid-frame
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(7);
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.setUniform("uTime", 0.5);
+		const tex = video.createCanvas(16, 16);
+
+		// Phase 1: pre-loss draws cleanly
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+
+		// Phase 2: lose mid-frame — next draw call must not throw
+		ext.loseContext();
+		await tick();
+		expect(effect.enabled).toBe(false);
+		expect(effect._shader.suspended).toBe(true);
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+
+		// Phase 3: restore — shader uniform replays, pipeline clean
+		ext.restoreContext();
+		await tick();
+		expect(effect.enabled).toBe(true);
+		expect(effect._shader._uniformCache.uTime).toEqual(0.5);
+		expect(() => {
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: three consecutive lose/restore cycles each leave the pipeline drawable", async (ctx) => {
+		// repetition stress test — cumulative leaks surface across cycles
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const tex = video.createCanvas(16, 16);
+		for (let cycle = 0; cycle < 3; cycle++) {
+			ext.loseContext();
+			await tick();
+			ext.restoreContext();
+			await tick();
+			renderer.drawImage(tex, 0, 0, 16, 16, cycle * 16, 0, 16, 16);
+			renderer.flush();
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+		}
+	});
+
+	// ---- Coverage gaps from the post-PR audit ----
+
+	it("real context loss: Renderable.addPostEffect dispatch survives a full cycle", async (ctx) => {
+		// closest to the coin scenario — beginPostEffect→draw→endPostEffect
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(5);
+
+		const renderable = new Renderable(0, 0, 16, 16);
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.setUniform("uTime", 0.75);
+		renderable.addPostEffect(effect);
+		expect(renderable.postEffects.length).toBe(1);
+
+		const tex = video.createCanvas(16, 16);
+
+		// pre-loss dispatch
+		renderer.beginPostEffect(renderable);
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.endPostEffect(renderable);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		ext.loseContext();
+		await tick();
+		// effect.enabled flips false; dispatch path filters it out
+		expect(effect.enabled).toBe(false);
+		ext.restoreContext();
+		await tick();
+		expect(effect.enabled).toBe(true);
+
+		// post-restore dispatch
+		expect(() => {
+			renderer.beginPostEffect(renderable);
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.endPostEffect(renderable);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: pool-recycle simulation — renderable removed, cycle, re-added still draws", async (ctx) => {
+		// detach effect, cycle, re-attach same instance, draw — survives
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(4);
+
+		const renderable = new Renderable(0, 0, 16, 16);
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		effect.setUniform("uTime", 0.5);
+		renderable.addPostEffect(effect);
+
+		const tex = video.createCanvas(16, 16);
+		renderer.beginPostEffect(renderable);
+		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.endPostEffect(renderable);
+		renderer.flush();
+
+		// "pickup": detach from dispatch path; effect itself stays alive
+		renderable.postEffects.length = 0;
+
+		// cycle happens while effect is detached but alive
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// effect survives on its own (subscriptions on the event bus)
+		expect(effect.destroyed).toBe(false);
+		expect(effect.enabled).toBe(true);
+		expect(effect._shader._uniformCache.uTime).toEqual(0.5);
+
+		// "Respawn": re-attach to the same renderable, dispatch works
+		renderable.addPostEffect(effect);
+		expect(() => {
+			renderer.beginPostEffect(renderable);
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.endPostEffect(renderable);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: addPostEffect during the suspended window does not throw", async (ctx) => {
+		// constructor must defer compile and recover on restore
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const renderable = new Renderable(0, 0, 16, 16);
+
+		ext.loseContext();
+		await tick();
+
+		// constructing during lost context must not throw
+		let effect;
+		expect(() => {
+			effect = new ShaderEffect(
+				renderer,
+				"vec4 apply(vec4 c, vec2 u) { return c * 0.9; }",
+			);
+			renderable.addPostEffect(effect);
+		}).not.toThrow();
+
+		// removePostEffect during suspended window also safe
+		expect(() => {
+			renderable.removePostEffect(effect);
+		}).not.toThrow();
+
+		// Restore — re-add the effect, draw, verify no crash
+		ext.restoreContext();
+		await tick();
+		renderable.addPostEffect(effect);
+		const tex = video.createCanvas(16, 16);
+		expect(() => {
+			renderer.beginPostEffect(renderable);
+			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.endPostEffect(renderable);
+			renderer.flush();
+		}).not.toThrow();
+
+		effect.destroy();
+	});
+
+	it("real context loss: 20 concurrent ShaderEffects all survive a cycle (subscription leak check)", async (ctx) => {
+		// shared-cache bug or subscription leak collapses values across all 20
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		const N = 20;
+		expect.assertions(N * 2);
+
+		const effects = [];
+		for (let i = 0; i < N; i++) {
+			const fx = new ShaderEffect(
+				renderer,
+				"uniform float uTime;\n" +
+					"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+			);
+			// distinct per-effect value — collapse = shared-cache bug
+			fx.setUniform("uTime", 0.1 + i * 0.01);
+			effects.push(fx);
+		}
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// every effect re-enabled, every cache distinct
+		for (let i = 0; i < N; i++) {
+			expect(effects[i].enabled).toBe(true);
+			expect(effects[i]._shader._uniformCache.uTime).toBeCloseTo(
+				0.1 + i * 0.01,
+				5,
+			);
+		}
+
+		for (const fx of effects) {
+			fx.destroy();
+		}
+	});
+
+	it("real context loss: renderer.customShader assignment survives a cycle", async (ctx) => {
+		// the ShaderEffect itself must survive; reset clears the pointer
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(3);
+
+		const customFx = new ShaderEffect(
+			renderer,
+			"uniform float uTime;\n" +
+				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
+		);
+		customFx.setUniform("uTime", 1.0);
+		renderer.customShader = customFx;
+		expect(renderer.customShader).toBe(customFx);
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// reset() sets customShader=undefined; pinned: the effect lives
+		expect(customFx.destroyed).toBe(false);
+		expect(customFx._shader._uniformCache.uTime).toEqual(1.0);
+
+		customFx.destroy();
+	});
+
+	it("real context loss: tinted texture cache regenerates cleanly after a cycle", async (ctx) => {
+		// contract: tint() keeps returning a usable canvas; drawing
+		// re-uploads via the lazy path
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		const source = video.createCanvas(16, 16);
+		const tintedCanvas = renderer.cache.tint(source, "#ff0000");
+		// pre-cycle sanity: we got back something canvas-shaped
+		expect(typeof tintedCanvas.getContext).toBe("function");
+		renderer.drawImage(tintedCanvas, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// post-cycle: usable canvas back (cache survived or regenerated)
+		const sameTintedCanvas = renderer.cache.tint(source, "#ff0000");
+		renderer.drawImage(sameTintedCanvas, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("real context loss: save / restore stack interacting with a cycle does not throw", async (ctx) => {
+		// reset() wipes the save stack on restore — restore() against
+		// an empty stack must still be safe
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		expect.assertions(2);
+
+		renderer.setColor("#3366aa");
+		renderer.save();
+		renderer.setColor("#ffffff");
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// Stack may have been wiped by reset(); calling restore()
+		// must still be safe.
+		expect(() => {
+			renderer.restore();
+		}).not.toThrow();
+
+		// And drawing post-restore works regardless
+		const tex = video.createCanvas(8, 8);
+		renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
+		renderer.flush();
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
+
+	it("real context loss: destroying 30 ShaderEffects + cycle leaves no leaked subscriber recompiling against a destroyed shader", async (ctx) => {
+		// subscription leak smoke test — leaked _onContextRestored
+		// handlers would throw or resurrect a destroyed shader
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+		const N = 30;
+		expect.assertions(N * 2 + 1);
+
+		const effects = [];
+		for (let i = 0; i < N; i++) {
+			effects.push(
+				new ShaderEffect(renderer, "vec4 apply(vec4 c, vec2 u) { return c; }"),
+			);
+		}
+		// Destroy all of them
+		for (const fx of effects) {
+			fx.destroy();
+		}
+
+		// Cycle — no leaked subscribers must touch the destroyed shaders
+		expect(() => {
+			ext.loseContext();
+		}).not.toThrow();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		// Every destroyed effect stays destroyed
+		for (const fx of effects) {
+			expect(fx.destroyed).toBe(true);
+			expect(fx._shader.destroyed).toBe(true);
 		}
 	});
 });
