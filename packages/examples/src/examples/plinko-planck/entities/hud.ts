@@ -16,9 +16,10 @@ import {
 	DROP_BAND_Y,
 	PLAY_LEFT,
 	PLAY_RIGHT,
+	SLOT_SCORES,
 	VIEWPORT_W,
 } from "../constants";
-import { gameState } from "../gameState";
+import { gameState, refundForScore } from "../gameState";
 import { hasActiveBalls } from "./ball";
 
 /** Pulse duration of the score-counter punch-up (ms). */
@@ -64,20 +65,20 @@ export class HUDContainer extends Container {
 				fillStyle: "#a8b0e8",
 				textAlign: "left",
 				textBaseline: "top",
-				text: "// @melonjs/planck-adapter demo",
+				text: "// www.melonjs.org",
 			}),
 		);
 
-		// Hint — centered below the drop band. Swapped between the
-		// "click to drop" prompt and the game-over restart prompt each
-		// frame in `update()`.
+		// Hint — centered below the drop band. Cycles between three
+		// prompts in `update()`: default "drop" prompt, "bet active"
+		// prompt with payout amount, and game-over restart prompt.
 		this.hintText = new Text(VIEWPORT_W / 2, DROP_BAND_Y + 16, {
 			font: "Courier New",
 			size: 11,
 			fillStyle: "#a8b0e8",
 			textAlign: "center",
 			textBaseline: "top",
-			text: "// click to drop a ball",
+			text: "// click to drop · tap a slot to bet",
 		});
 		this.addChild(this.hintText);
 
@@ -125,19 +126,32 @@ export class HUDContainer extends Container {
 		this.creditsText.setText(`CREDITS ${gameState.credits}`);
 		this.ballsText.setText(`BALLS ${gameState.dropped}`);
 
-		// Swap the hint to a restart prompt once the player has run
-		// out of credits AND every in-flight ball has landed. We need
-		// the world container to count balls — walk up from this HUD
-		// (which is parented to the world).
-		const world = this.ancestor as Container | null;
-		const gameOver =
-			gameState.credits <= 0 && (!world || !hasActiveBalls(world));
-		this.hintText.setText(
-			gameOver
-				? "// out of credits — click to restart"
-				: "// click to drop a ball",
-		);
-		this.hintText.fillStyle.parseCSS(gameOver ? COLOR_BALL : "#a8b0e8");
+		// Swap the hint based on the live state. Three modes:
+		//   1) game-over (no credits, playfield drained) → restart prompt
+		//   2) bet active → "BET ×N on Mpts · WIN +K" with the live payout
+		//   3) default → drop / bet instructions
+		const gameOver = gameState.credits <= 0 && !hasActiveBalls();
+		const bet = gameState.bet;
+		if (gameOver) {
+			this.hintText.setText("// out of credits — click to restart");
+			this.hintText.fillStyle.parseCSS(COLOR_BALL);
+		} else if (bet) {
+			const slotScore = SLOT_SCORES[bet.slotIndex % SLOT_SCORES.length];
+			const multiplier = bet.wager + 1;
+			const scorePayout = slotScore * multiplier;
+			// Mirrors Slot.collect()'s win refund formula:
+			//   (base_refund + wager) × multiplier
+			// so the player sees the exact credits they'll receive
+			// back if the prediction lands.
+			const creditPayout = (refundForScore(slotScore) + bet.wager) * multiplier;
+			this.hintText.setText(
+				`// BET x${multiplier} on ${slotScore}pts — WIN +${scorePayout}pts & +${creditPayout} credits`,
+			);
+			this.hintText.fillStyle.parseCSS(COLOR_BALL);
+		} else {
+			this.hintText.setText("// click to drop · tap a slot to bet");
+			this.hintText.fillStyle.parseCSS("#a8b0e8");
+		}
 
 		// Punch-up each counter when its own fly lands on it.
 		// SCORE pulses on `lastSlotAt`, CREDITS on `lastCreditAt` —
