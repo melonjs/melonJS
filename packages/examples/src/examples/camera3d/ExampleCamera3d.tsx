@@ -1,17 +1,19 @@
 /**
- * melonJS — Camera3d (perspective + orbit) example.
+ * melonJS — Camera3d (perspective) minimal example.
  *
- * A grid of sprite billboards floats in 3D space. The Camera3d orbits
- * around the center under mouse drag (and auto-rotates when idle).
- * Proves the new capabilities end-to-end:
- * - Per-sprite depth gets projected through the camera's frustum
- *   (closer sprites render larger, farther sprites smaller)
- * - The camera's pitch / yaw rotates the world view correctly
+ * Three monster sprites stacked along the camera's forward axis at
+ * z = 200 / 400 / 600. Under perspective, the front one renders
+ * largest, the back one smallest — proving:
+ *   - per-sprite depth flows from `sprite.depth` to the GPU vertex
+ *     stream (PR A)
+ *   - the Camera3d's perspective matrix scales sprites by their z
+ *     (PR B)
+ *   - painter-algorithm z-sorting puts the front sprite on top of
+ *     the ones behind it (visible occlusion order)
  *
- * Demonstrates the simplest opt-in path for Camera3d — the
- * `cameraClass: Camera3d` Application setting. Every stage the app
- * runs (including the default stage created automatically when none
- * is registered) gets a Camera3d as its default camera.
+ * On-screen controls rotate the camera (yaw / pitch) and zoom in/out.
+ * Drag the canvas to orbit. Demonstrates the simplest opt-in path —
+ * the Application-level `cameraClass: Camera3d` setting.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -20,18 +22,20 @@ import {
 	Application,
 	type Camera3d,
 	Camera3d as Camera3dClass,
-	event,
 	input,
+	loader,
 	type Pointer,
 	Sprite,
+	state,
 	video,
 } from "melonjs";
+import monsterImg from "../shaderEffects/assets/monster.png";
 import { createExampleComponent } from "../utils";
 
 const createGame = () => {
-	// Opt-in to Camera3d at the Application level — every stage in this
-	// app gets a Camera3d as its default camera. DefaultLoadingScreen
-	// stays Camera2d (hardcoded protection in its constructor).
+	// opt in to Camera3d at the Application level — every stage in this
+	// app gets a Camera3d as its default camera (the loader screen pins
+	// to Camera2d via its own constructor regardless).
 	const app = new Application(1024, 768, {
 		parent: "screen",
 		renderer: video.WEBGL,
@@ -41,110 +45,137 @@ const createGame = () => {
 
 	app.world.backgroundColor.parseCSS("#0a0a14");
 
-	// build a 64×64 colored tile per grid cell (procedural — no asset preload)
-	const makeTile = (hue: number) => {
-		const c = video.createCanvas(64, 64);
-		const ctx = c.getContext("2d");
-		if (ctx) {
-			ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
-			ctx.fillRect(0, 0, 64, 64);
-			ctx.strokeStyle = "#ffffff";
-			ctx.lineWidth = 4;
-			ctx.strokeRect(2, 2, 60, 60);
-		}
-		return c;
-	};
+	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
+		// loader.preload internally transitions to state.LOADING (the
+		// DefaultLoadingScreen). Transition back to the default game
+		// stage so its Camera3d becomes the active viewport.
+		state.change(state.DEFAULT, true);
 
-	// 5×5 grid of sprite billboards spanning x ∈ [-400, 400] and
-	// z ∈ [200, 600] (within Camera3d's default near=0.1, far=1000).
-	// We set sprite.depth AFTER addChild because Container.autoDepth
-	// (default true) would otherwise overwrite our explicit z.
-	const GRID = 5;
-	const SPAN_X = 200;
-	const SPAN_Z = 100;
-	const Z_BASE = 200;
-	for (let row = 0; row < GRID; row++) {
-		for (let col = 0; col < GRID; col++) {
-			const x = (col - (GRID - 1) / 2) * SPAN_X;
-			const y = 0;
-			const z = Z_BASE + row * SPAN_Z;
-			const hue = (col / GRID) * 360;
-			const sprite = new Sprite(x, y, {
-				framewidth: 64,
-				frameheight: 64,
-				image: makeTile(hue),
-				anchorPoint: { x: 0.5, y: 0.5 },
-			});
+		// three monsters along the camera's forward axis at increasing
+		// depth. Same x, same y — only z differs. Perspective scales
+		// each one inversely to z.
+		const depths = [200, 400, 600];
+		for (const z of depths) {
+			const sprite = new Sprite(0, 0, { image: "monster" });
+			sprite.scale(0.5);
 			app.world.addChild(sprite);
+			// set depth AFTER addChild — Container.autoDepth (default
+			// true) would otherwise overwrite our intended z
 			sprite.depth = z;
 		}
-	}
 
-	// the app's default camera is now a Camera3d (via cameraClass).
-	// Type-narrow for the perspective-specific calls.
-	const camera = app.viewport as Camera3d;
+		// the app's default camera is now a Camera3d (via cameraClass).
+		const camera = app.viewport as Camera3d;
 
-	// orbit state — yaw / pitch / distance. updated by mouse drag,
-	// applied to the camera each GAME_UPDATE tick.
-	let yaw = 0;
-	let pitch = -0.25; // slight downward tilt
-	const distance = 600;
-	const centerZ = Z_BASE + ((GRID - 1) * SPAN_Z) / 2; // center of the grid
+		// orbit state: yaw / pitch / distance. Driven by drag + buttons.
+		let yaw = 0;
+		let pitch = 0;
+		let distance = 700;
 
-	const updateCameraPos = () => {
-		// orbit around (0, 0, centerZ): place the camera on a sphere of
-		// `distance` around that point, then aim back at it.
-		camera.pos.set(
-			Math.sin(yaw) * Math.cos(pitch) * -distance,
-			Math.sin(pitch) * distance,
-			centerZ - Math.cos(yaw) * Math.cos(pitch) * distance,
-		);
-		camera.lookAt(0, 0, centerZ);
-	};
-	updateCameraPos();
-
-	// drag-to-orbit
-	let dragging = false;
-	let lastX = 0;
-	let lastY = 0;
-	const onDown = (ev: Pointer) => {
-		dragging = true;
-		lastX = ev.gameX;
-		lastY = ev.gameY;
-	};
-	const onUp = () => {
-		dragging = false;
-	};
-	const onMove = (ev: Pointer) => {
-		if (!dragging) {
-			return;
-		}
-		const dx = ev.gameX - lastX;
-		const dy = ev.gameY - lastY;
-		lastX = ev.gameX;
-		lastY = ev.gameY;
-		yaw += dx * 0.005;
-		pitch = Math.max(
-			-Math.PI / 2 + 0.1,
-			Math.min(Math.PI / 2 - 0.1, pitch - dy * 0.005),
-		);
+		const updateCameraPos = () => {
+			// orbit around the middle sprite (z = 400). When yaw/pitch
+			// are 0, the camera sits at z = 400 - distance (behind the
+			// middle sprite) and looks at it.
+			const target = 400;
+			camera.pos.set(
+				Math.sin(yaw) * Math.cos(pitch) * -distance,
+				Math.sin(pitch) * distance,
+				target - Math.cos(yaw) * Math.cos(pitch) * distance,
+			);
+			camera.lookAt(0, 0, target);
+		};
 		updateCameraPos();
-	};
-	input.registerPointerEvent("pointerdown", camera, onDown);
-	input.registerPointerEvent("pointerup", camera, onUp);
-	input.registerPointerEvent("pointermove", camera, onMove);
 
-	// gentle auto-rotate while no input. `GAME_UPDATE` emits the
-	// absolute `performance.now()` timestamp — derive a frame delta
-	// ourselves so the rotation rate stays constant regardless of
-	// session duration.
-	let lastTime = 0;
-	event.on(event.GAME_UPDATE, (time: number) => {
-		const dt = lastTime > 0 ? time - lastTime : 0;
-		lastTime = time;
-		if (!dragging) {
-			yaw += dt * 0.0003;
+		// drag-to-orbit
+		let dragging = false;
+		let lastX = 0;
+		let lastY = 0;
+		input.registerPointerEvent("pointerdown", camera, (ev: Pointer) => {
+			dragging = true;
+			lastX = ev.gameX;
+			lastY = ev.gameY;
+		});
+		input.registerPointerEvent("pointerup", camera, () => {
+			dragging = false;
+		});
+		input.registerPointerEvent("pointermove", camera, (ev: Pointer) => {
+			if (!dragging) {
+				return;
+			}
+			yaw += (ev.gameX - lastX) * 0.005;
+			pitch = Math.max(
+				-Math.PI / 2 + 0.1,
+				Math.min(Math.PI / 2 - 0.1, pitch - (ev.gameY - lastY) * 0.005),
+			);
+			lastX = ev.gameX;
+			lastY = ev.gameY;
 			updateCameraPos();
+		});
+
+		// on-screen HTML control panel — yaw / pitch / zoom / reset.
+		// HTML buttons live above the canvas; `#screen > *` already
+		// has `pointer-events: auto` (PR A's CSS fix) so they're
+		// clickable.
+		const panel = document.createElement("div");
+		panel.style.cssText =
+			"position:absolute;top:60px;left:16px;display:grid;" +
+			"grid-template-columns:repeat(3,40px);grid-template-rows:repeat(4,40px);" +
+			"gap:4px;z-index:1000;font-family:sans-serif;";
+		const mkButton = (label: string, gridArea: string, handler: () => void) => {
+			const b = document.createElement("button");
+			b.textContent = label;
+			b.style.cssText =
+				"background:#1a1a1a;color:#e0e0e0;border:1px solid #444;" +
+				"border-radius:4px;cursor:pointer;font-size:18px;" +
+				`grid-area:${gridArea};`;
+			b.addEventListener("click", handler);
+			panel.appendChild(b);
+		};
+		const YAW_STEP = 0.15;
+		const PITCH_STEP = 0.1;
+		const ZOOM_STEP = 60;
+		mkButton("▲", "1 / 2 / 2 / 3", () => {
+			pitch = Math.min(Math.PI / 2 - 0.1, pitch + PITCH_STEP);
+			updateCameraPos();
+		});
+		mkButton("◀", "2 / 1 / 3 / 2", () => {
+			yaw -= YAW_STEP;
+			updateCameraPos();
+		});
+		mkButton("●", "2 / 2 / 3 / 3", () => {
+			yaw = 0;
+			pitch = 0;
+			distance = 700;
+			updateCameraPos();
+		});
+		mkButton("▶", "2 / 3 / 3 / 4", () => {
+			yaw += YAW_STEP;
+			updateCameraPos();
+		});
+		mkButton("▼", "3 / 2 / 4 / 3", () => {
+			pitch = Math.max(-Math.PI / 2 + 0.1, pitch - PITCH_STEP);
+			updateCameraPos();
+		});
+		mkButton("−", "4 / 1 / 5 / 2", () => {
+			distance = Math.min(1500, distance + ZOOM_STEP);
+			updateCameraPos();
+		});
+		mkButton("+", "4 / 3 / 5 / 4", () => {
+			distance = Math.max(150, distance - ZOOM_STEP);
+			updateCameraPos();
+		});
+
+		const hint = document.createElement("div");
+		hint.textContent = "Drag or use controls";
+		hint.style.cssText =
+			"position:absolute;top:240px;left:16px;color:#888;" +
+			"font-family:sans-serif;font-size:12px;z-index:1000;";
+
+		const parent = app.renderer.getCanvas().parentElement;
+		if (parent) {
+			parent.style.position = "relative";
+			parent.appendChild(panel);
+			parent.appendChild(hint);
 		}
 	});
 };

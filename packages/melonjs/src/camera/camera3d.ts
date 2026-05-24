@@ -24,11 +24,12 @@ const AXIS_Y = new Vector3d(0, 1, 0);
  *   `yaw` (Y axis, look left/right), `roll` (Z axis, screen-plane
  *   bank — also exposed as `Camera2d.rotation` via Renderable
  *   inheritance for backward compatibility).
- * - **Follow offsets are target-local.** When a target is set,
- *   `followOffset` is applied in the target's local frame
- *   (Cinemachine / Unreal spring-arm / Babylon FollowCamera
- *   convention). The camera world position becomes
- *   `target.pos + target.rotation * followOffset`.
+ * - **Follow offset (PR B scope).** When a target is set,
+ *   `followOffset` is applied in **world space**:
+ *   `camera.pos = target.pos + followOffset`. Target-rotation-aware
+ *   follow (Cinemachine / Unreal spring-arm style, where the offset
+ *   rotates with the target's orientation) is deferred until a
+ *   showcase needs it (e.g. AfterBurner's banking jet).
  *
  * Known limitations (PR B scope):
  * - `Light2d` is 2D-only — visible artifacts under perspective.
@@ -96,8 +97,12 @@ export default class Camera3d extends Camera2d {
 	followOffset: Vector3d;
 
 	/**
-	 * Target-local point the camera looks at when following. Combined
-	 * with the followed target's position to compute the look direction.
+	 * Reserved for future follow-look-ahead support — currently unused
+	 * by `updateTarget`. The intent is: when wired in, the camera will
+	 * look at `target.pos + lookAhead` instead of `target.pos`, so a
+	 * follow-cam stays slightly ahead of its target (e.g. for a
+	 * cinematic forward-looking shot in AfterBurner). Field is exposed
+	 * now so user code can set it without waiting for the wiring.
 	 * @default (0, 0, 1)
 	 */
 	lookAhead: Vector3d;
@@ -227,17 +232,29 @@ export default class Camera3d extends Camera2d {
 		translateX: number,
 		translateY: number,
 	): void {
-		// rotations first (pitch then yaw — order matters for the
-		// inverse to be RPY⁻¹ = Y⁻¹P⁻¹R⁻¹; here we go with Y⁻¹P⁻¹
-		// = yaw then pitch with negated angles, applied via post-mult
-		// in reverse)
+		// Build the view matrix R⁻¹ ∘ T(-cam.pos) via the container's
+		// `currentTransform` using post-multiplication semantics.
+		//
+		// `Renderable.translate` / `.rotate` post-multiply: each call
+		// adds `currentTransform = currentTransform × M`. When this
+		// matrix is later applied to a world vertex P, the result is
+		// `currentTransform × P` — the rightmost matrix in the chain
+		// acts on P first.
+		//
+		// We want the view transform to first subtract the camera
+		// position (so vertices are camera-relative), then rotate by
+		// the camera's inverse orientation. To achieve
+		// `R(-pitch) ∘ R(-yaw) ∘ T(-pos)` as the final matrix, we
+		// post-multiply in that same left-to-right order:
+		//   1. rotate(-pitch, X)  → currentTransform = R(-pitch)
+		//   2. rotate(-yaw,   Y)  → currentTransform = R(-pitch) ∘ R(-yaw)
+		//   3. translate(-pos)    → currentTransform = R(-pitch) ∘ R(-yaw) ∘ T(-pos)
 		if (this.pitch !== 0) {
 			container.rotate(-this.pitch, AXIS_X);
 		}
 		if (this.yaw !== 0) {
 			container.rotate(-this.yaw, AXIS_Y);
 		}
-		// then translate by -camera.pos (include z)
 		container.translate(-translateX, -translateY, -this.pos.z);
 	}
 
@@ -317,27 +334,41 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
-	 * Override Camera2d's 2D follow logic to additionally resolve the
-	 * target-local `followOffset` against the target. When `target` is
-	 * set, the camera's world position becomes
-	 * `target.pos + followOffset`.
+	 * Override Camera2d's 2D follow logic to additionally resolve
+	 * `followOffset` against the target's z. When `target` is set, the
+	 * camera's world position becomes `target.pos + followOffset`.
 	 *
-	 * (PR B scope: treats `followOffset` as world-space. Target-rotation
-	 * application — so the offset rotates with the followed object —
-	 * is deferred until target orientation tracking is needed.)
-	 * @param dt - delta time in milliseconds
+	 * **Semantic change vs Camera2d.follow:** this override **does not
+	 * honor `follow_axis`, `deadzone`, or `smoothFollow` / `damping`**.
+	 * Camera3d tracks its target exactly each frame because the typical
+	 * 3D use case (behind-the-plane follow-cam, third-person orbit) wants
+	 * 1:1 tracking with no scroll-deadzone. If you need damped or
+	 * axis-constrained follow under perspective, set `target = null` and
+	 * lerp `camera.pos` toward the target manually in your `update()`.
+	 *
+	 * **PR B scope:** `followOffset` is treated as **world-space**.
+	 * Target-rotation-aware follow (where the offset rotates with the
+	 * target's orientation, Cinemachine / Unreal-style) lands when a
+	 * showcase (AfterBurner's banking jet) demands it.
+	 * @param dt - delta time in milliseconds (ignored — no damping)
 	 * @ignore
 	 */
 	override updateTarget(dt?: number): void {
-		if (this.target) {
-			// move camera to target.pos + followOffset (world-space for
-			// now; target-rotation-aware variant lands when AfterBurner
-			// needs it for the banking jet)
+		const target = this.target;
+		if (target) {
+			// duck-type the z read via `'z' in target` so this works
+			// for both `Vector3d` (when the user passed a raw vector to
+			// `follow()`) and `ObservableVector3d` (when
+			// `follow(renderable)` assigned `renderable.pos`, which is
+			// observable not plain). The previous `instanceof Vector3d`
+			// check missed the observable variant — Renderable targets
+			// silently lost their depth.
+			const targetZ =
+				"z" in target && typeof target.z === "number" ? target.z : 0;
 			this.pos.set(
-				this.target.x + this.followOffset.x,
-				this.target.y + this.followOffset.y,
-				(this.target instanceof Vector3d ? this.target.z : 0) +
-					this.followOffset.z,
+				target.x + this.followOffset.x,
+				target.y + this.followOffset.y,
+				targetZ + this.followOffset.z,
 			);
 			this.isDirty = true;
 			return;

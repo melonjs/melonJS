@@ -200,6 +200,26 @@ describe("Camera3d", () => {
 			expect(cam.pos.z).toBe(-8); // pos.z defaults to 0, + offset.z
 		});
 
+		it("updateTarget tracks z from a Renderable with non-zero depth (Copilot review #1463)", () => {
+			// Regression: `Camera2d.follow(renderable)` assigns
+			// `cam.target = renderable.pos`, which is an
+			// ObservableVector3d (not a plain Vector3d). The first cut
+			// of updateTarget did `target instanceof Vector3d` to read
+			// z, which silently treated z as 0 for every Renderable
+			// target. Duck-typed `typeof target.z === "number"` fixes it.
+			const cam = new Camera3d(0, 0, 800, 600);
+			const target = new Renderable(10, 20, 32, 32);
+			target.pos.z = 500; // non-zero depth — this MUST flow to the camera
+			cam.target = target.pos;
+			cam.setFollowOffset(0, 0, -8);
+
+			cam.updateTarget();
+
+			expect(cam.pos.x).toBe(10);
+			expect(cam.pos.y).toBe(20);
+			expect(cam.pos.z).toBe(492); // target.pos.z (500) + offset.z (-8)
+		});
+
 		it("no-op when target is null (falls through to Camera2d behavior)", () => {
 			const cam = new Camera3d(0, 0, 800, 600);
 			cam.pos.set(50, 60, 70);
