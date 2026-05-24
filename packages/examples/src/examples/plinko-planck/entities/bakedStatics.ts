@@ -48,6 +48,7 @@ import {
 	SLOT_SCORES,
 	SLOT_TOP,
 	SLOT_WALL_TOP,
+	tierForScore,
 	VIEWPORT_H,
 	VIEWPORT_W,
 } from "../constants";
@@ -100,13 +101,6 @@ export class BakedStatics extends Renderable {
 	 * with animated alpha) — see `SlotBin.draw`.
 	 */
 	private bakeSlotBins(ctx: CanvasRenderingContext2D): void {
-		const tierForScore = (score: number): number => {
-			if (score >= 100) return 4;
-			if (score >= 30) return 3;
-			if (score >= 10) return 2;
-			if (score >= 5) return 1;
-			return 0;
-		};
 		const slotWidth = (PLAY_RIGHT - PLAY_LEFT) / SLOT_COUNT;
 		for (let i = 0; i < SLOT_COUNT; i++) {
 			const x = PLAY_LEFT + i * slotWidth;

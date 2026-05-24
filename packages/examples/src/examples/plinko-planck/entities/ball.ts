@@ -248,6 +248,10 @@ export class Ball extends Container {
 		this.lastY = this.pos.y;
 		this.stuckFrames = 0;
 		this.trailAnchor.set(this.pos.x + BALL_RADIUS, this.pos.y + BALL_RADIUS);
+		// Bump the world-wide active-ball counter — drives the O(1)
+		// `gameState.activeBalls === 0` check used by HUD / slots /
+		// DropZone to gate the "playfield drained" state.
+		gameState.activeBalls += 1;
 		// Built-in Trail anchored to the ball centre. Yellow → magenta
 		// → transparent gradient, additive blend so the streak reads
 		// as a glowing comet rather than a flat ribbon. Attached to
@@ -271,6 +275,11 @@ export class Ball extends Container {
 	}
 
 	override onDeactivateEvent(): void {
+		// Mirror the counter increment from onActivateEvent. Clamp at
+		// zero so a programming error elsewhere (double-remove, reset
+		// during in-flight) can never push the counter negative and
+		// trip the `=== 0` check.
+		gameState.activeBalls = Math.max(0, gameState.activeBalls - 1);
 		const parent = this.trail.ancestor as Container | null;
 		if (parent) {
 			parent.removeChild(this.trail);
@@ -301,18 +310,16 @@ export class Ball extends Container {
 
 /**
  * True if any `Ball` is currently in the world container's children.
- * Used by the HUD to gate the GAME OVER prompt (only shown once the
- * playfield has fully drained — otherwise the player would see the
- * prompt while their last balls were still scoring).
- * @param world the world container hosting Ball children
+ * Used by the HUD / slots / DropZone to gate the GAME OVER prompt and
+ * the "betting locked while balls fall" state — both should only
+ * activate once the playfield has fully drained.
+ *
+ * Reads `gameState.activeBalls`, an integer counter incremented in
+ * `Ball.onActivateEvent` and decremented in `onDeactivateEvent`. O(1)
+ * vs the prior O(N) child-list scan that ran from every caller every
+ * frame — see the counter's doc comment in `gameState.ts`.
  */
-export const hasActiveBalls = (world: Container): boolean => {
-	const children = world.getChildren();
-	for (const c of children) {
-		if (c instanceof Ball) return true;
-	}
-	return false;
-};
+export const hasActiveBalls = (): boolean => gameState.activeBalls > 0;
 
 /**
  * Reap any balls that landed in a slot last frame. Called from

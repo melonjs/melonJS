@@ -37,6 +37,7 @@ import {
 import { gameState, resetGameState } from "../gameState";
 import { Ball, hasActiveBalls } from "./ball";
 import { ScoreFly } from "./scoreFly";
+import { findWorld } from "./util";
 
 /** Drop-zone flash duration (ms) — drives the post-click pulse animation. */
 const DROP_PULSE_MS = 500;
@@ -230,11 +231,7 @@ export class DropZone extends Renderable {
 	override onActivateEvent(): void {
 		// Walk up to the world container — Ball children attach there
 		// to participate in physics.
-		let anc: Container | null = this.ancestor as Container | null;
-		while (anc?.ancestor) {
-			anc = anc.ancestor as Container;
-		}
-		this.worldRef = anc;
+		this.worldRef = findWorld(this);
 		// Use the engine's region-based pointer API. The Pointer's
 		// `gameX/gameY` is already in viewport coords — engine
 		// accounts for `scaleMethod: "fit"`, device pixel ratio, and
@@ -267,7 +264,7 @@ export class DropZone extends Renderable {
 		// (none expected here, but ScoreFlies / spark emitters live in
 		// the world) and reset the counters. Drops resume from the
 		// next click.
-		if (gameState.credits <= 0 && !hasActiveBalls(world)) {
+		if (gameState.credits <= 0 && !hasActiveBalls()) {
 			this.restart(world);
 			return false;
 		}

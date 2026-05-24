@@ -113,9 +113,38 @@ export const SLOT_COLORS = [
 	"#ffffff", // 100 — hottest
 ];
 
+/**
+ * Map a slot's `score` value to the colour-tier index used in
+ * `SLOT_COLORS`. The same mapping is consumed by the runtime slot
+ * draw AND the baked-statics renderer — exporting it from a single
+ * source prevents the two from silently diverging when the score
+ * tiers are rebalanced.
+ *
+ * @param score the slot's point value
+ */
+export const tierForScore = (score: number): number => {
+	if (score >= 100) return 4;
+	if (score >= 30) return 3;
+	if (score >= 10) return 2;
+	if (score >= 5) return 1;
+	return 0;
+};
+
 // Particle effect on peg hit
 export const SPARK_COUNT = 6;
 export const SPARK_LIFETIME = 350; // ms
 
 /** Maximum simultaneous balls. Old balls are reaped FIFO when exceeded. */
 export const MAX_BALLS = 60;
+
+// Slot bet/feedback timing — co-located here as the rest of the
+// "feel" knobs. Tuning these from a single file makes iteration
+// faster and prevents the magic numbers from sprouting in entities.
+/** Slot landing-pulse duration (ms). Drives the white wash + tier-band punch. */
+export const SLOT_PULSE_MS = 600;
+/** Bet result (win or bust) pulse duration (ms). */
+export const BET_RESULT_PULSE_MS = 800;
+/** "TAP" idle hint breathing period (ms). 1.5 s feels alive but not nervous. */
+export const IDLE_BREATHE_MS = 1500;
+/** Full-viewport win celebration duration (ms). */
+export const WIN_FLASH_MS = 900;
