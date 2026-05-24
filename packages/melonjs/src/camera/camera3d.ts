@@ -1,5 +1,6 @@
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
+import type Renderable from "./../renderable/renderable.js";
 import Camera2d from "./camera2d.ts";
 import Frustum, { type FrustumOptions } from "./frustum.ts";
 
@@ -31,6 +32,7 @@ const AXIS_Y = new Vector3d(0, 1, 0);
  *   rotates with the target's orientation) is deferred until a
  *   showcase needs it (e.g. AfterBurner's banking jet).
  *
+ 
  * Known limitations (PR B scope):
  * - `Light2d` is 2D-only — visible artifacts under perspective.
  *   Avoid combining with Camera3d for now.
@@ -42,6 +44,12 @@ const AXIS_Y = new Vector3d(0, 1, 0);
  * - `localToWorld` / `worldToLocal` overrides fall back to the
  *   ortho-equivalent 2D projection at z=0. Full 3D unproject for
  *   arbitrary depth is future work.
+ * - `isVisible` (visibility culling) currently returns `true` for
+ *   every non-floating renderable — Camera2d's 2D rect-overlap test
+ *   doesn't translate to perspective. The GPU still clips fragments
+ *   that fall outside the frustum, so this is visually correct but
+ *   defeats the CPU-side early-out. Proper plane-based frustum
+ *   culling on `Frustum` is a follow-up.
  * @category Camera
  * @example
  * // opt in app-wide:
@@ -376,5 +384,37 @@ export default class Camera3d extends Camera2d {
 		// no target — fall through to Camera2d's behavior (no-op when
 		// target is null)
 		super.updateTarget(dt);
+	}
+
+	/**
+	 * Visibility check used by `Container.draw` to skip rendering
+	 * off-screen children. Camera2d's implementation tests the
+	 * renderable's 2D bounds rectangle against `this.worldView` (a
+	 * flat camera-aligned rect) — that test is invalid under
+	 * perspective: rotating the camera changes which world coordinates
+	 * map to the visible frustum, and a sprite at world (0, 0, 200)
+	 * might fall outside `worldView` (a rect at the camera's x/y
+	 * position) but still be perfectly visible in the projected view.
+	 *
+	 * Until plane-based frustum culling lands on {@link Frustum}, the
+	 * Camera3d override conservatively returns `true` for every
+	 * non-floating renderable — the GPU still clips out fragments
+	 * outside the frustum, so the result is visually correct. The
+	 * cost is no CPU-side early-out (every world child runs through
+	 * `draw`, even ones the GPU will throw away). Floating elements
+	 * (HUD / UI) still use Camera2d's 2D rect check — their bounds
+	 * are screen-space and don't need perspective consideration.
+	 * @param obj - the renderable to test
+	 * @param [floating] - if visibility should be tested against screen coords
+	 * @returns true if the renderable should be drawn
+	 */
+	override isVisible(
+		obj: Renderable,
+		floating: boolean = obj.floating,
+	): boolean {
+		if (floating || obj.floating) {
+			return super.isVisible(obj, floating);
+		}
+		return true;
 	}
 }
