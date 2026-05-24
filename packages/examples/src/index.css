@@ -37,14 +37,20 @@ body:has(#screen canvas) {
 	 * below the 41 px topbar. Without `pointer-events: none`, the
 	 * empty `#screen` div (after an example unmounts) still sits on
 	 * top of the index-page cards and silently swallows every click.
-	 * The canvas inside opts back in with `pointer-events: auto`.
+	 * Direct children opt back in with `pointer-events: auto` —
+	 * not just the canvas, since examples may also append HTML
+	 * controls (dropdowns, HUDs) to `#screen`. After unmount, no
+	 * children remain → nothing blocks clicks.
 	 */
 	pointer-events: none;
 }
 
+#screen > * {
+	pointer-events: auto;
+}
+
 #screen canvas {
 	display: block;
-	pointer-events: auto;
 }
 
 /* Example top bar */

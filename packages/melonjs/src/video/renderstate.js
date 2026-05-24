@@ -63,6 +63,17 @@ export default class RenderState {
 		 */
 		this.currentShader = undefined;
 
+		/**
+		 * current per-renderable depth value, pushed into the vertex stream
+		 * by the WebGL batchers as the `z` component of each vertex. Has no
+		 * visible effect under the engine's default orthographic projection;
+		 * required for perspective (Camera3d) to scale sprites by distance.
+		 * Mirrors `renderable.depth`, set by `Renderable.preDraw` via
+		 * {@link Renderer#setDepth}.
+		 * @type {number}
+		 */
+		this.currentDepth = 0;
+
 		// ---- pre-allocated save/restore stack ----
 
 		/**
@@ -110,6 +121,9 @@ export default class RenderState {
 
 		/** @ignore */
 		this._shaderStack = new Array(this._stackCapacity);
+
+		/** @ignore */
+		this._depthStack = new Float32Array(this._stackCapacity);
 	}
 
 	/**
@@ -130,6 +144,7 @@ export default class RenderState {
 		this._lineDashStack[depth] = this.lineDash;
 		this._blendStack[depth] = this.currentBlendMode;
 		this._shaderStack[depth] = this.currentShader;
+		this._depthStack[depth] = this.currentDepth;
 
 		if (scissorTestActive) {
 			this._scissorStack[depth].set(this.currentScissor);
@@ -187,6 +202,7 @@ export default class RenderState {
 			this.currentGradient = this._gradientStack[depth];
 			this.lineDash = this._lineDashStack[depth];
 			this.currentShader = this._shaderStack[depth];
+			this.currentDepth = this._depthStack[depth];
 			const scissorActive = !!this._scissorActive[depth];
 			if (scissorActive) {
 				this.currentScissor.set(this._scissorStack[depth]);
@@ -215,6 +231,7 @@ export default class RenderState {
 		this.currentScissor[2] = width;
 		this.currentScissor[3] = height;
 		this.currentShader = undefined;
+		this.currentDepth = 0;
 	}
 
 	/** @private — doubles stack capacity when exceeded */
@@ -234,6 +251,9 @@ export default class RenderState {
 		const newScissorActive = new Uint8Array(newCap);
 		newScissorActive.set(this._scissorActive);
 		this._scissorActive = newScissorActive;
+		const newDepthStack = new Float32Array(newCap);
+		newDepthStack.set(this._depthStack);
+		this._depthStack = newDepthStack;
 		this._stackCapacity = newCap;
 	}
 }

@@ -41,8 +41,10 @@ export default class QuadBatcher extends MaterialBatcher {
 		super.init(renderer, {
 			attributes: [
 				{
+					// vec3: (x, y, z). z carries `renderable.depth` for
+					// perspective projection (Camera3d). Stride = 28 bytes.
 					name: "aVertex",
-					size: 2,
+					size: 3,
 					type: renderer.gl.FLOAT,
 					normalized: false,
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
@@ -52,21 +54,21 @@ export default class QuadBatcher extends MaterialBatcher {
 					size: 2,
 					type: renderer.gl.FLOAT,
 					normalized: false,
-					offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 3 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aColor",
 					size: 4,
 					type: renderer.gl.UNSIGNED_BYTE,
 					normalized: true,
-					offset: 4 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aTextureId",
 					size: 1,
 					type: renderer.gl.FLOAT,
 					normalized: false,
-					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 6 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],
 			shader: {
@@ -221,11 +223,13 @@ export default class QuadBatcher extends MaterialBatcher {
 			m.apply(vec3);
 		}
 
+		// blits are always rendered at z = 0 (screen-space, ortho); pre-PR
+		// behavior is preserved unchanged
 		const tint = 0xffffffff;
-		this.vertexData.push(vec0.x, vec0.y, 0, 1, tint, 0);
-		this.vertexData.push(vec1.x, vec1.y, 1, 1, tint, 0);
-		this.vertexData.push(vec2.x, vec2.y, 0, 0, tint, 0);
-		this.vertexData.push(vec3.x, vec3.y, 1, 0, tint, 0);
+		this.vertexData.push(vec0.x, vec0.y, 0, 0, 1, tint, 0);
+		this.vertexData.push(vec1.x, vec1.y, 0, 1, 1, tint, 0);
+		this.vertexData.push(vec2.x, vec2.y, 0, 0, 0, tint, 0);
+		this.vertexData.push(vec3.x, vec3.y, 0, 1, 0, tint, 0);
 
 		this.flush();
 
@@ -298,12 +302,15 @@ export default class QuadBatcher extends MaterialBatcher {
 			m.apply(vec3);
 		}
 
-		// 4 vertices per quad; the index buffer provides the 6 indices
-		// textureId is the unit index for multi-texture, or 0 for single-texture fallback
+		// 4 vertices per quad; the index buffer provides the 6 indices.
+		// textureId is the unit index for multi-texture, or 0 for single-texture fallback.
+		// z is the current renderer depth (set by Renderable.preDraw); a no-op under
+		// the default ortho projection, used by perspective (Camera3d).
 		const textureId = this.useMultiTexture ? unit : 0;
-		vertexData.push(vec0.x, vec0.y, u0, v0, tint, textureId);
-		vertexData.push(vec1.x, vec1.y, u1, v0, tint, textureId);
-		vertexData.push(vec2.x, vec2.y, u0, v1, tint, textureId);
-		vertexData.push(vec3.x, vec3.y, u1, v1, tint, textureId);
+		const z = this.renderer.currentDepth;
+		vertexData.push(vec0.x, vec0.y, z, u0, v0, tint, textureId);
+		vertexData.push(vec1.x, vec1.y, z, u1, v0, tint, textureId);
+		vertexData.push(vec2.x, vec2.y, z, u0, v1, tint, textureId);
+		vertexData.push(vec3.x, vec3.y, z, u1, v1, tint, textureId);
 	}
 }

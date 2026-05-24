@@ -9,7 +9,9 @@
 // `attribute`/`varying`) so the program can pair with the 3.00 fragment
 // shader that uses `usampler2D` / `texelFetch` for integer-typed lookups.
 
-in vec2 aVertex;
+// `aVertex.z` carries per-sprite depth (renderable.depth) — a no-op under
+// the default ortho projection, used by perspective (Camera3d).
+in vec3 aVertex;
 in vec2 aRegion;
 in vec4 aColor;
 
@@ -19,7 +21,7 @@ out vec2 vRegion;
 out vec4 vColor;
 
 void main(void) {
-	gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);
+	gl_Position = uProjectionMatrix * vec4(aVertex, 1.0);
 	// premultiplied-alpha + bgra → rgba swap, same convention the batcher
 	// uses for its default sprite shader
 	vColor = vec4(aColor.bgr * aColor.a, aColor.a);

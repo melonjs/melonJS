@@ -4,134 +4,140 @@ import { buildMultiTextureFragment } from "../src/video/webgl/shaders/multitextu
 
 describe("VertexArrayBuffer", () => {
 	describe("push()", () => {
-		it("should write vertex data at the correct offsets (5 floats)", () => {
-			// vertexSize=5 matches the quad format: x, y, u, v, tint
-			const buf = new VertexArrayBuffer(5, 4);
+		// PR A (19.7) widened aVertex to vec3, adding a per-vertex `z`
+		// component at slot 2. All downstream offsets shifted by 1.
+		it("should write vertex data at the correct offsets (6 floats)", () => {
+			// vertexSize=6 matches the primitive format: x, y, z, nx, ny, color
+			const buf = new VertexArrayBuffer(6, 4);
 
-			buf.push(10, 20, 0.0, 1.0, 0xffffffff);
+			buf.push(10, 20, 5, 0.0, 1.0, 0xffffffff);
 
 			expect(buf.vertexCount).toBe(1);
 			expect(buf.bufferF32[0]).toBe(10); // x
 			expect(buf.bufferF32[1]).toBe(20); // y
-			expect(buf.bufferF32[2]).toBe(0.0); // u
-			expect(buf.bufferF32[3]).toBe(1.0); // v
-			expect(buf.bufferU32[4]).toBe(0xffffffff); // tint
+			expect(buf.bufferF32[2]).toBe(5); // z
+			expect(buf.bufferF32[3]).toBe(0.0); // u / nx
+			expect(buf.bufferF32[4]).toBe(1.0); // v / ny
+			expect(buf.bufferU32[5]).toBe(0xffffffff); // tint
 		});
 
-		it("should write vertex data with textureId (6 floats)", () => {
-			// vertexSize=6 matches the multi-texture quad format
-			const buf = new VertexArrayBuffer(6, 4);
+		it("should write vertex data with textureId (7 floats)", () => {
+			// vertexSize=7 matches the multi-texture quad format
+			const buf = new VertexArrayBuffer(7, 4);
 
-			buf.push(10, 20, 0.0, 1.0, 0xffffffff, 3);
+			buf.push(10, 20, 5, 0.0, 1.0, 0xffffffff, 3);
 
 			expect(buf.vertexCount).toBe(1);
 			expect(buf.bufferF32[0]).toBe(10); // x
 			expect(buf.bufferF32[1]).toBe(20); // y
-			expect(buf.bufferF32[2]).toBe(0.0); // u
-			expect(buf.bufferF32[3]).toBe(1.0); // v
-			expect(buf.bufferU32[4]).toBe(0xffffffff); // tint
-			expect(buf.bufferF32[5]).toBe(3); // textureId
+			expect(buf.bufferF32[2]).toBe(5); // z
+			expect(buf.bufferF32[3]).toBe(0.0); // u
+			expect(buf.bufferF32[4]).toBe(1.0); // v
+			expect(buf.bufferU32[5]).toBe(0xffffffff); // tint
+			expect(buf.bufferF32[6]).toBe(3); // textureId
 		});
 
-		it("should write default textureId 0 when not provided (vertexSize 6)", () => {
+		it("should write default textureId 0 when not provided (vertexSize 7)", () => {
+			const buf = new VertexArrayBuffer(7, 4);
+
+			buf.push(10, 20, 0, 0.0, 1.0, 0xffffffff);
+
+			expect(buf.vertexCount).toBe(1);
+			expect(buf.bufferF32[6]).toBe(0); // default 0
+		});
+
+		it("should not write textureId when vertexSize is 6", () => {
 			const buf = new VertexArrayBuffer(6, 4);
 
-			buf.push(10, 20, 0.0, 1.0, 0xffffffff);
+			// write a sentinel at offset 6
+			buf.bufferF32[6] = 99;
+			buf.push(10, 20, 0, 0.0, 1.0, 0xffffffff);
 
 			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[5]).toBe(0); // default 0
-		});
-
-		it("should not write textureId when vertexSize is 5", () => {
-			const buf = new VertexArrayBuffer(5, 4);
-
-			// write a sentinel at offset 5
-			buf.bufferF32[5] = 99;
-			buf.push(10, 20, 0.0, 1.0, 0xffffffff);
-
-			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[5]).toBe(99); // untouched
+			expect(buf.bufferF32[6]).toBe(99); // untouched
 		});
 
 		it("should write multiple vertices sequentially", () => {
-			const buf = new VertexArrayBuffer(5, 4);
+			const buf = new VertexArrayBuffer(6, 4);
 
-			buf.push(1, 2, 0.0, 0.0, 0xff000000);
-			buf.push(3, 4, 1.0, 1.0, 0x00ff0000);
+			buf.push(1, 2, 0, 0.0, 0.0, 0xff000000);
+			buf.push(3, 4, 7, 1.0, 1.0, 0x00ff0000);
 
 			expect(buf.vertexCount).toBe(2);
-			// second vertex starts at offset 5
-			expect(buf.bufferF32[5]).toBe(3); // x
-			expect(buf.bufferF32[6]).toBe(4); // y
-			expect(buf.bufferF32[7]).toBe(1.0); // u
-			expect(buf.bufferF32[8]).toBe(1.0); // v
-			expect(buf.bufferU32[9]).toBe(0x00ff0000); // tint
+			// second vertex starts at offset 6
+			expect(buf.bufferF32[6]).toBe(3); // x
+			expect(buf.bufferF32[7]).toBe(4); // y
+			expect(buf.bufferF32[8]).toBe(7); // z
+			expect(buf.bufferF32[9]).toBe(1.0); // u / nx
+			expect(buf.bufferF32[10]).toBe(1.0); // v / ny
+			expect(buf.bufferU32[11]).toBe(0x00ff0000); // tint
 		});
 
 		it("should write multiple vertices with textureId sequentially", () => {
-			const buf = new VertexArrayBuffer(6, 4);
-
-			buf.push(1, 2, 0.0, 0.0, 0xff000000, 0);
-			buf.push(3, 4, 1.0, 1.0, 0x00ff0000, 5);
-
-			expect(buf.vertexCount).toBe(2);
-			expect(buf.bufferF32[5]).toBe(0); // textureId vertex 0
-			expect(buf.bufferF32[11]).toBe(5); // textureId vertex 1
-		});
-
-		it("should write vertex data with textureId + normalTextureId (7 floats)", () => {
-			// vertexSize=7 matches the lit-pipeline quad format:
-			// x, y, u, v, tint, textureId, normalTextureId
 			const buf = new VertexArrayBuffer(7, 4);
 
-			buf.push(10, 20, 0.0, 1.0, 0xffffffff, 3, 2);
+			buf.push(1, 2, 0, 0.0, 0.0, 0xff000000, 0);
+			buf.push(3, 4, 0, 1.0, 1.0, 0x00ff0000, 5);
+
+			expect(buf.vertexCount).toBe(2);
+			expect(buf.bufferF32[6]).toBe(0); // textureId vertex 0
+			expect(buf.bufferF32[13]).toBe(5); // textureId vertex 1
+		});
+
+		it("should write vertex data with textureId + normalTextureId (8 floats)", () => {
+			// vertexSize=8 matches the lit-pipeline quad format:
+			// x, y, z, u, v, tint, textureId, normalTextureId
+			const buf = new VertexArrayBuffer(8, 4);
+
+			buf.push(10, 20, 5, 0.0, 1.0, 0xffffffff, 3, 2);
 
 			expect(buf.vertexCount).toBe(1);
 			expect(buf.bufferF32[0]).toBe(10);
 			expect(buf.bufferF32[1]).toBe(20);
-			expect(buf.bufferF32[2]).toBe(0.0);
-			expect(buf.bufferF32[3]).toBe(1.0);
-			expect(buf.bufferU32[4]).toBe(0xffffffff);
-			expect(buf.bufferF32[5]).toBe(3); // textureId
-			expect(buf.bufferF32[6]).toBe(2); // normalTextureId
+			expect(buf.bufferF32[2]).toBe(5); // z
+			expect(buf.bufferF32[3]).toBe(0.0);
+			expect(buf.bufferF32[4]).toBe(1.0);
+			expect(buf.bufferU32[5]).toBe(0xffffffff);
+			expect(buf.bufferF32[6]).toBe(3); // textureId
+			expect(buf.bufferF32[7]).toBe(2); // normalTextureId
 		});
 
-		it("should default normalTextureId to -1 when not provided (vertexSize 7)", () => {
-			// Regression test: with vertexSize=7, omitting `normalTextureId`
-			// must NOT leave stale data at offset 6. The shader's lit path
+		it("should default normalTextureId to -1 when not provided (vertexSize 8)", () => {
+			// Regression test: with vertexSize=8, omitting `normalTextureId`
+			// must NOT leave stale data at offset 7. The shader's lit path
 			// activates on `vNormalTextureId >= 0`; reading garbage there
 			// causes unlit sprites to render through the lit path with
 			// random normal-map / light state — visible as broken
 			// hemispheric shading on every WebGL example after the
 			// normal-map vertex format was introduced.
-			const buf = new VertexArrayBuffer(7, 4);
+			const buf = new VertexArrayBuffer(8, 4);
 			// poison the slot to prove push() actively writes -1
-			buf.bufferF32[6] = 99;
+			buf.bufferF32[7] = 99;
 
-			buf.push(10, 20, 0.0, 1.0, 0xffffffff, 3);
+			buf.push(10, 20, 0, 0.0, 1.0, 0xffffffff, 3);
 
-			expect(buf.bufferF32[6]).toBe(-1);
+			expect(buf.bufferF32[7]).toBe(-1);
 		});
 
 		it("should accept negative normalTextureId (sentinel for unlit)", () => {
-			const buf = new VertexArrayBuffer(7, 4);
-			buf.push(0, 0, 0, 0, 0, 0, -1);
-			expect(buf.bufferF32[6]).toBe(-1);
+			const buf = new VertexArrayBuffer(8, 4);
+			buf.push(0, 0, 0, 0, 0, 0, 0, -1);
+			expect(buf.bufferF32[7]).toBe(-1);
 		});
 
-		it("should not touch offset 6 when vertexSize is 6 (backward compat)", () => {
-			// older quad batchers using vertexSize=6 mustn't get any
-			// writes past offset 5
-			const buf = new VertexArrayBuffer(6, 4);
+		it("should not touch offset 7 when vertexSize is 7 (backward compat)", () => {
+			// older quad batchers using vertexSize=7 mustn't get any
+			// writes past offset 6
+			const buf = new VertexArrayBuffer(7, 4);
 			// pre-fill the next vertex's first slot with a sentinel
-			buf.bufferF32[6] = 77;
+			buf.bufferF32[7] = 77;
 
 			// pass a normalTextureId — should be silently dropped because
-			// vertexSize is 6 (the unlit layout has no `aNormalTextureId`)
-			buf.push(10, 20, 0, 0, 0xff, 1, 9);
-			// offset 6 is the next vertex's first float — verify push()
+			// vertexSize is 7 (the unlit layout has no `aNormalTextureId`)
+			buf.push(10, 20, 0, 0, 0, 0xff, 1, 9);
+			// offset 7 is the next vertex's first float — verify push()
 			// didn't bleed into it
-			expect(buf.bufferF32[6]).toBe(77);
+			expect(buf.bufferF32[7]).toBe(77);
 		});
 	});
 
@@ -200,21 +206,21 @@ describe("VertexArrayBuffer", () => {
 
 	describe("isFull()", () => {
 		it("should return true when adding vertices would exceed capacity", () => {
-			const buf = new VertexArrayBuffer(5, 2);
+			const buf = new VertexArrayBuffer(6, 2);
 
 			expect(buf.isFull(2)).toBe(true);
 			expect(buf.isFull(1)).toBe(false);
 
-			buf.push(0, 0, 0, 0, 0);
+			buf.push(0, 0, 0, 0, 0, 0);
 			expect(buf.isFull(1)).toBe(true);
 		});
 	});
 
 	describe("clear()", () => {
 		it("should reset vertex count to zero", () => {
-			const buf = new VertexArrayBuffer(5, 4);
+			const buf = new VertexArrayBuffer(6, 4);
 
-			buf.push(1, 2, 3, 4, 0);
+			buf.push(1, 2, 0, 3, 4, 0);
 			expect(buf.vertexCount).toBe(1);
 
 			buf.clear();

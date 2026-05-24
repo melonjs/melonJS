@@ -390,6 +390,7 @@ describe("Sprite", () => {
 				},
 				setTint: noop,
 				clearTint: noop,
+				setDepth: noop,
 				setMask: noop,
 				clearMask: noop,
 				setBlendMode: noop,

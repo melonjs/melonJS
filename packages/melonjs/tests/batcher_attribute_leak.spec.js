@@ -5,8 +5,9 @@ import { boot, video, WebGLRenderer } from "../src/index.js";
  * Regression guard for a GL state-leak between batchers.
  *
  * Each Batcher owns its own vertex attribute layout. `LitQuadBatcher` has
- * 5 attributes at stride 28 (including `aNormalTextureId` at offset 24);
- * `PrimitiveBatcher` has 3 attributes at stride 20.
+ * 5 attributes at stride 32 (including `aNormalTextureId` at offset 28);
+ * `PrimitiveBatcher` has 3 attributes at stride 24. (Strides include the
+ * vec3 `aVertex` z component added for Camera3d perspective in 19.7.)
  *
  * Vertex attribute enable/disable + stride/offset is *global* GL state, not
  * per-program. If batcher A enables a location and batcher B never disables
@@ -93,8 +94,8 @@ describe("Batcher attribute leak between switches (WebGL)", () => {
 		// End-to-end reproducer of the original report: a frame that draws a
 		// sprite (quad path) followed by a primitive (line/rect) used to
 		// throw INVALID_OPERATION on the primitive draw because quad's
-		// aNormalTextureId stayed enabled at stride 28 while the primitive
-		// buffer was only stride-20-sized.
+		// aNormalTextureId stayed enabled at a larger stride than the
+		// primitive buffer's stride.
 		if (!isWebGL) {
 			return;
 		}
@@ -153,10 +154,10 @@ describe("Batcher attribute leak between switches (WebGL)", () => {
 
 	it("switching from litQuad → primitive disables litQuad-only attribute locations", () => {
 		// The dispatch path that originally triggered the platformer crash:
-		// a normal-mapped sprite drawn through `litQuad` (5 attributes,
-		// stride 28) followed by a primitive draw (`primitive`, 3 attribs,
-		// stride 20). The lit batcher's `aNormalTextureId` and `aTextureId`
-		// must be disabled before the primitive's vertex buffer is uploaded.
+		// a normal-mapped sprite drawn through `litQuad` (5 attributes)
+		// followed by a primitive draw (`primitive`, 3 attribs). The lit
+		// batcher's `aNormalTextureId` and `aTextureId` must be disabled
+		// before the primitive's vertex buffer is uploaded.
 		if (!isWebGL) {
 			return;
 		}

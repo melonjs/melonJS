@@ -1,5 +1,24 @@
 # Changelog
 
+## [19.7.0] (melonJS 2) - _unreleased_
+
+**Highlights:** foundational vertex-pipeline work toward the 19.7 Camera3d release. Every batched-rendering shader (`Quad`, `LitQuad`, `Primitive`, GPU TMX) now carries per-sprite depth as a true `vec3` vertex attribute — unblocking perspective projection for sprites, enabling depth-aware custom `ShaderEffect`s, and aligning the entire batched pipeline with the WebGPU vertex model. Backward compatible: existing custom `GLShader` / `ShaderEffect` code keeps working unchanged.
+
+### Added
+- **`renderer.setDepth(depth)`** — new public method on the base `Renderer`. Mirrors the existing `setTint` / `setColor` state-setter pattern. Sets `renderer.currentDepth`, which the batchers read at vertex-emit time and push as the z component of each vertex. `Renderable.preDraw` now forwards `this.depth` automatically, so user code typically never needs to call `setDepth` directly.
+- Per-sprite depth on the GPU: all batched draw paths (`QuadBatcher`, `LitQuadBatcher`, `PrimitiveBatcher`, GPU TMX) now carry the renderable's `.depth` as the z component of their vertex stream. Default shaders consume it via `vec4(aVertex, 1.0)` in `gl_Position`. With an orthographic projection (the engine default), z has no visible effect — existing 2D apps render identically. With a perspective projection, sprites at different depths are correctly scaled and parallaxed by the projection matrix.
+
+### Changed
+- **Vertex attribute layout: `aVertex` widened from `vec2` to `vec3`** across `quad-multi.vert`, `quad-multi-lit.vert`, `primitive.vert`, `orthogonal-tmxlayer.vert`. `Mesh`'s shader already used `vec3 aVertex` — all batchers are now uniform. Per-vertex stride grows by 4 bytes (24 → 28 for the quad layout). Custom shaders binding attributes by name (`gl.getAttribLocation`) — the standard pattern, and what `GLShader` enforces — keep working unchanged; the byte-offset shift of `aRegion` / `aColor` / `aTextureId` is transparent because the batcher updates its own `vertexAttribPointer` offsets. Custom shaders declaring `attribute vec2 aVertex;` continue to work — WebGL silently drops the unused z component.
+- **`VertexArrayBuffer.push()` signature gained a `z` parameter** between `y` and `u`: `push(x, y, z, u, v, tint, textureId?, normalTextureId?)`. `VertexArrayBuffer` is an internal class (not exported), but **subclasses of `QuadBatcher` / `PrimitiveBatcher` that reimplement `addQuad` / `drawVertices` from scratch** (not via `super.addQuad()`) and push to `vertexData` directly need to update their push call to the 7-arg form (insert `z` after `y`, default `0` works under ortho). Subclasses that delegate to `super.addQuad()` are unaffected.
+- **`Camera2d` default near/far widened from `±1000` to `±1e6`.** With `aVertex.z` now participating in clip-space, the previous defaults would silently clip-cull any sprite with `depth` outside that range — common pitfalls being `Container.autoDepth = true` (default, assigns `pos.z = childCount`) with >1000 children, and Y-sort patterns (`sprite.depth = sprite.pos.y`) on tall maps. The new range covers every realistic 2D depth value while staying well within float32 precision. Override per-camera (`camera.near = -100; camera.far = 100`) for tighter z clipping when needed (e.g. perspective mode in Camera3d, PR B).
+
+### Fixed
+- None.
+
+### Performance
+- Stride grows ~16% per quad vertex. Real-world impact is below measurement noise on practical workloads — the extra 4 bytes per vertex sit inside the same upload + draw call.
+
 ## [19.6.0] (melonJS 2) - _2026-05-23_
 
 **Highlights:** WebGL context-loss hardening release. Fixes a Windows + Chrome crash where a GPU switch lost the WebGL context and a partial `GLShader.destroy()` left the next frame's `setUniform("uTime", …)` reading from `null` uniforms. Beyond the crash, the renderer now also transparently recovers the rest of the pipeline (vertex buffer, default GL state, batchers, texture cache) across a `webglcontextlost` → `webglcontextrestored` cycle, and shaders replay their cached uniforms on restore — so the game keeps drawing across a GPU switch without any intervention from user code.
