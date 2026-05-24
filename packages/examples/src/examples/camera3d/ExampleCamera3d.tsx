@@ -134,8 +134,14 @@ const createGame = () => {
 	input.registerPointerEvent("pointerup", camera, onUp);
 	input.registerPointerEvent("pointermove", camera, onMove);
 
-	// gentle auto-rotate while no input
-	event.on(event.GAME_UPDATE, (dt: number) => {
+	// gentle auto-rotate while no input. `GAME_UPDATE` emits the
+	// absolute `performance.now()` timestamp — derive a frame delta
+	// ourselves so the rotation rate stays constant regardless of
+	// session duration.
+	let lastTime = 0;
+	event.on(event.GAME_UPDATE, (time: number) => {
+		const dt = lastTime > 0 ? time - lastTime : 0;
+		lastTime = time;
 		if (!dragging) {
 			yaw += dt * 0.0003;
 			updateCameraPos();
