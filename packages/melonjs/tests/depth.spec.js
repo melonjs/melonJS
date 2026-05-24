@@ -402,4 +402,37 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
+
+	it("Camera2d default near/far cover large depth values without clip-culling (regression)", async () => {
+		// Pre-PR-A, `aVertex` was vec2 and `gl_Position` hardcoded z=0 in the
+		// vertex shader — clipspace.z was always 0, so the camera's near/far
+		// values didn't affect sprite clipping. With vec3 aVertex carrying
+		// per-sprite depth, clipspace.z = -depth / (near-far range). Any
+		// `Renderable.depth` outside the [near, far] range maps outside
+		// clip space and the GPU silently culls the fragment.
+		//
+		// Failure modes this catches:
+		// - `Container.autoDepth = true` (default!) assigns `pos.z = childCount`
+		//   so any container with >old-far children would clip-cull
+		// - Y-sort on tall maps: `sprite.depth = sprite.pos.y` easily exceeds
+		//   the old ±1000 default
+		//
+		// 19.7 widens Camera2d's default near/far from ±1000 to ±1e6 to keep
+		// every realistic 2D depth value visible. This test pins those defaults.
+		const { Camera2d } = await import("../src/index.js");
+		const cam = new Camera2d(0, 0, 800, 600);
+		expect(cam.near).toBeLessThanOrEqual(-1e5);
+		expect(cam.far).toBeGreaterThanOrEqual(1e5);
+
+		// end-to-end: render a sprite at depth=10000 (10× the pre-19.7 default
+		// far plane) and verify it produces no GL error AND the vertex still
+		// carries the depth in the buffer. If clip-culling fires, no GL error
+		// would surface, but the vertex itself would still be in the buffer.
+		// A more discriminating check: project depth=10000 through the camera's
+		// ortho matrix and verify clipspace.z lands inside [-1, 1].
+		const m = cam.projectionMatrix.val;
+		// ortho row 3: clipspace.z = a[10] * z + a[14] * 1
+		const clipZAtFar2D = m[10] * 10000 + m[14];
+		expect(Math.abs(clipZAtFar2D)).toBeLessThan(1);
+	});
 });

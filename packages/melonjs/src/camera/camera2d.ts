@@ -84,14 +84,21 @@ export default class Camera2d extends Renderable {
 	damping: number;
 
 	/**
-	 * the closest point relative to the camera
-	 * @default -1000
+	 * the closest point relative to the camera. Widened from `-1000` in
+	 * 19.7 to accommodate sprites at large `depth` values now that
+	 * `aVertex.z` participates in clip-space (PR A): the default
+	 * `Container.autoDepth = true` assigns `pos.z = childCount` so any
+	 * container with >1000 children would otherwise clip-cull, and the
+	 * common Y-sort pattern `sprite.depth = sprite.pos.y` exceeds 1000
+	 * on tall maps. Override per-camera if you need tighter z clipping.
+	 * @default -1e6
 	 */
 	near: number;
 
 	/**
-	 * the furthest point relative to the camera.
-	 * @default 1000
+	 * the furthest point relative to the camera. Widened from `1000` in
+	 * 19.7 — see {@link Camera2d#near}.
+	 * @default 1e6
 	 */
 	far: number;
 
@@ -206,9 +213,9 @@ export default class Camera2d extends Renderable {
 
 		this.damping = 1.0;
 
-		this.near = -1000;
+		this.near = -1e6;
 
-		this.far = 1000;
+		this.far = 1e6;
 
 		this.projectionMatrix = new Matrix3d();
 
