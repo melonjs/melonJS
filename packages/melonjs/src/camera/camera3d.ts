@@ -1,3 +1,4 @@
+import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
@@ -8,6 +9,12 @@ import Frustum, { type FrustumOptions } from "./frustum.ts";
 // allocation only happens once per module load, not per frame.
 const AXIS_X = new Vector3d(1, 0, 0);
 const AXIS_Y = new Vector3d(0, 1, 0);
+
+// Scratch matrices reused by `_rebuildFrustumPlanes` to avoid per-frame
+// allocation. Single-instance is safe because draw / update is
+// single-threaded and these are only touched inside one method.
+const _viewMatrix = new Matrix3d();
+const _viewProjection = new Matrix3d();
 
 /**
  * A perspective camera that extends {@link Camera2d} with a view
@@ -387,26 +394,22 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
-	 * Visibility check used by `Container.draw` to skip rendering
-	 * off-screen children. Camera2d's implementation tests the
-	 * renderable's 2D bounds rectangle against `this.worldView` (a
-	 * flat camera-aligned rect) — that test is invalid under
-	 * perspective: rotating the camera changes which world coordinates
-	 * map to the visible frustum, and a sprite at world (0, 0, 200)
-	 * might fall outside `worldView` (a rect at the camera's x/y
-	 * position) but still be perfectly visible in the projected view.
+	 * Visibility check used by `Container.update` (in turn driving
+	 * `Container.draw`) to skip rendering off-screen children.
 	 *
-	 * Until plane-based frustum culling lands on {@link Frustum}, the
-	 * Camera3d override conservatively returns `true` for every
-	 * non-floating renderable — the GPU still clips out fragments
-	 * outside the frustum, so the result is visually correct. The
-	 * cost is no CPU-side early-out (every world child runs through
-	 * `draw`, even ones the GPU will throw away). Floating elements
-	 * (HUD / UI) still use Camera2d's 2D rect check — their bounds
-	 * are screen-space and don't need perspective consideration.
+	 * Camera2d's implementation tests a 2D bounds-rectangle overlap
+	 * against `this.worldView` — that test is invalid under perspective:
+	 * the visible region is a frustum that widens with distance and
+	 * rotates with the camera's pitch / yaw, not a fixed axis-aligned
+	 * rect at the camera's x / y. Camera3d substitutes plane-based
+	 * frustum culling — each non-floating renderable's bounding sphere
+	 * is tested against the six frustum planes that were extracted in
+	 * the most recent `update()` call. Floating elements (HUD / UI)
+	 * still use Camera2d's 2D rect test because their bounds are
+	 * screen-space and the perspective transform doesn't apply to them.
 	 * @param obj - the renderable to test
-	 * @param [floating] - if visibility should be tested against screen coords
-	 * @returns true if the renderable should be drawn
+	 * @param [floating] - test against screen coordinates instead of frustum
+	 * @returns true if the renderable's bounds overlap the frustum
 	 */
 	override isVisible(
 		obj: Renderable,
@@ -415,6 +418,60 @@ export default class Camera3d extends Camera2d {
 		if (floating || obj.floating) {
 			return super.isVisible(obj, floating);
 		}
-		return true;
+		// bounding sphere around the renderable's 2D bounds; the z
+		// component is the renderable's depth (its world-space z).
+		// Sprite billboards face the camera so a sphere bounded by
+		// max(width, height) is the right conservative envelope.
+		const bounds = obj.getBounds();
+		const radius = Math.max(bounds.width, bounds.height) * 0.5;
+		return this.frustum.intersectsSphere(
+			bounds.centerX,
+			bounds.centerY,
+			obj.depth,
+			radius,
+		);
+	}
+
+	/**
+	 * Per-frame update — extends Camera2d's behavior (target follow,
+	 * camera effects) with rebuilding the frustum's six bounding
+	 * planes so {@link Camera3d#isVisible} returns accurate results
+	 * for the current camera state.
+	 * @param dt - delta time in milliseconds
+	 * @returns true if the camera's state changed
+	 * @ignore
+	 */
+	override update(dt?: number): boolean {
+		const dirty = super.update(dt);
+		this._rebuildFrustumPlanes();
+		return dirty;
+	}
+
+	/**
+	 * Recompute the frustum's six bounding planes from the current
+	 * `view × projection` matrix. Called from {@link Camera3d#update}
+	 * each frame; `isVisible` then tests against the cached planes.
+	 * @ignore
+	 */
+	_rebuildFrustumPlanes(): void {
+		// build the view matrix R⁻¹ ∘ T(-pos) the same way
+		// `_applyContainerViewTransform` builds it on the container —
+		// rotate first (pitch then yaw), then translate.
+		_viewMatrix.identity();
+		if (this.pitch !== 0) {
+			_viewMatrix.rotate(-this.pitch, AXIS_X);
+		}
+		if (this.yaw !== 0) {
+			_viewMatrix.rotate(-this.yaw, AXIS_Y);
+		}
+		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.pos.z);
+
+		// view × projection — the matrix that maps world coords to
+		// clip space, which `Frustum.setFromViewProjection` decomposes
+		// into the six bounding planes via Gribb-Hartmann extraction.
+		_viewProjection.copy(this.frustum.projectionMatrix);
+		_viewProjection.multiply(_viewMatrix);
+
+		this.frustum.setFromViewProjection(_viewProjection);
 	}
 }

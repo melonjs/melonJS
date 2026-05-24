@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Frustum, Matrix3d } from "../src/index.js";
+import { Frustum, Matrix3d as Matrix3dClass } from "../src/index.js";
 
 /**
  * Tests for the standalone Frustum class.
@@ -13,7 +13,7 @@ describe("Frustum", () => {
 			expect(f.aspect).toBe(1.0);
 			expect(f.near).toBe(0.1);
 			expect(f.far).toBe(1000);
-			expect(f.projectionMatrix).toBeInstanceOf(Matrix3d);
+			expect(f.projectionMatrix).toBeInstanceOf(Matrix3dClass);
 		});
 
 		it("honors constructor opts", () => {
@@ -163,6 +163,79 @@ describe("Frustum", () => {
 			expect(f2.projectionMatrix.val[0]).toBeLessThan(
 				f1.projectionMatrix.val[0],
 			);
+		});
+	});
+
+	describe("planes + culling", () => {
+		// build a frustum with a known view matrix and verify the
+		// extracted planes correctly classify world-space points and
+		// spheres. The view here is the identity — camera at origin
+		// looking down +Z (the engine's "forward" direction).
+		const buildFrustumWithIdentityView = (opts) => {
+			const f = new Frustum(opts);
+			const vp = new Matrix3dClass().copy(f.projectionMatrix); // view = identity
+			f.setFromViewProjection(vp);
+			return f;
+		};
+
+		it("setFromViewProjection populates 6 unit-normalized planes", () => {
+			const f = buildFrustumWithIdentityView();
+			expect(f.planes.length).toBe(6);
+			for (const p of f.planes) {
+				const len = Math.sqrt(p.nx * p.nx + p.ny * p.ny + p.nz * p.nz);
+				expect(len).toBeCloseTo(1, 5);
+			}
+		});
+
+		it("containsPoint accepts a point in front of the camera", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			// straight ahead at z=50
+			expect(f.containsPoint(0, 0, 50)).toBe(true);
+		});
+
+		it("containsPoint rejects a point behind the near plane", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			// z = 0.5 is between camera (z=0) and near (z=1) — behind near plane
+			expect(f.containsPoint(0, 0, 0.5)).toBe(false);
+		});
+
+		it("containsPoint rejects a point past the far plane", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			expect(f.containsPoint(0, 0, 200)).toBe(false);
+		});
+
+		it("containsPoint rejects a point outside the horizontal FOV", () => {
+			const f = buildFrustumWithIdentityView({
+				fov: Math.PI / 4,
+				near: 1,
+				far: 100,
+			});
+			// at z=10 with 45° vertical FOV (and aspect=1), the visible
+			// half-width is z * tan(fov/2) ≈ 10 * 0.414 = 4.14. A point
+			// at x=20, z=10 is well outside.
+			expect(f.containsPoint(20, 0, 10)).toBe(false);
+		});
+
+		it("intersectsSphere accepts a sphere entirely inside the frustum", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			expect(f.intersectsSphere(0, 0, 50, 1)).toBe(true);
+		});
+
+		it("intersectsSphere accepts a sphere clipping the near plane", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			// center is behind near, but radius pokes through
+			expect(f.intersectsSphere(0, 0, 0.5, 1)).toBe(true);
+		});
+
+		it("intersectsSphere rejects a sphere entirely behind the near plane", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			// center at z=-10, radius 1 → max z = -9, still behind near=1
+			expect(f.intersectsSphere(0, 0, -10, 1)).toBe(false);
+		});
+
+		it("intersectsSphere rejects a sphere far past the far plane", () => {
+			const f = buildFrustumWithIdentityView({ near: 1, far: 100 });
+			expect(f.intersectsSphere(0, 0, 500, 1)).toBe(false);
 		});
 	});
 });

@@ -1,5 +1,20 @@
 import { Matrix3d } from "../math/matrix3d.ts";
 
+/**
+ * A plane in 3D space, expressed as `Ax + By + Cz + D = 0`.
+ * `normal` is `(A, B, C)`; `constant` is `D`. Used by {@link Frustum}
+ * to represent the six bounding planes for culling.
+ * @category Camera
+ */
+export interface Plane {
+	/** plane normal (A, B, C in the plane equation) — not necessarily unit-length */
+	nx: number;
+	ny: number;
+	nz: number;
+	/** plane constant (D in the plane equation) */
+	d: number;
+}
+
 export interface FrustumOptions {
 	/** vertical field of view in radians (default: π / 3 = 60°) */
 	fov?: number;
@@ -68,6 +83,19 @@ export default class Frustum {
 	projectionMatrix: Matrix3d;
 
 	/**
+	 * The six bounding planes of this frustum in world space, in order:
+	 * left, right, bottom, top, near, far. Each plane is oriented so
+	 * its `(nx, ny, nz)` normal points **inward** — a point with
+	 * positive signed distance to a plane is on the visible side.
+	 *
+	 * Populated by {@link Frustum#setFromViewProjection}. Callers that
+	 * use {@link Frustum#intersectsSphere} or {@link Frustum#containsPoint}
+	 * must first call `setFromViewProjection` each frame the camera
+	 * moves; otherwise the planes describe a stale frustum.
+	 */
+	planes: Plane[];
+
+	/**
 	 * @param [opts] - initial parameters; any omitted field uses the
 	 *   class default
 	 */
@@ -77,6 +105,17 @@ export default class Frustum {
 		this.near = opts?.near ?? 0.1;
 		this.far = opts?.far ?? 1000;
 		this.projectionMatrix = new Matrix3d();
+		// six planes — left, right, bottom, top, near, far. Initialised
+		// to all-zero; populated by `setFromViewProjection` on first
+		// camera update.
+		this.planes = [
+			{ nx: 0, ny: 0, nz: 0, d: 0 },
+			{ nx: 0, ny: 0, nz: 0, d: 0 },
+			{ nx: 0, ny: 0, nz: 0, d: 0 },
+			{ nx: 0, ny: 0, nz: 0, d: 0 },
+			{ nx: 0, ny: 0, nz: 0, d: 0 },
+			{ nx: 0, ny: 0, nz: 0, d: 0 },
+		];
 		this.update();
 	}
 
@@ -117,5 +156,120 @@ export default class Frustum {
 		);
 		// flip Y (down) + Z (+Z forward) to match engine conventions
 		this.projectionMatrix.scale(1, -1, -1);
+	}
+
+	/**
+	 * Rebuild the six bounding {@link Frustum#planes} from a combined
+	 * `view × projection` matrix. Standard Gribb–Hartmann extraction:
+	 * each plane is one of the six combinations of the matrix's row 3
+	 * (the "w" row) ± rows 0, 1, 2.
+	 *
+	 * Call this once per frame after the camera has moved (typically
+	 * from `Camera3d.update`); the planes are then valid in world
+	 * space for that frame and can be tested against world-space
+	 * bounds via {@link Frustum#intersectsSphere} /
+	 * {@link Frustum#containsPoint}.
+	 *
+	 * Pass `projectionMatrix × viewMatrix` — i.e. the matrix that
+	 * transforms world coords directly to clip space. Equivalent to
+	 * what's uploaded to `uProjectionMatrix` in the vertex shader
+	 * (after baking the per-frame world translate into the projection,
+	 * which Camera3d does via `container.translate`).
+	 * @param viewProjection - the view × projection matrix
+	 */
+	setFromViewProjection(viewProjection: Matrix3d): void {
+		// column-major matrix: `m.val[col * 4 + row]`. Row r is the
+		// elements at indices `r, 4+r, 8+r, 12+r` (one from each column).
+		const m = viewProjection.val;
+		const r0x = m[0],
+			r0y = m[4],
+			r0z = m[8],
+			r0w = m[12];
+		const r1x = m[1],
+			r1y = m[5],
+			r1z = m[9],
+			r1w = m[13];
+		const r2x = m[2],
+			r2y = m[6],
+			r2z = m[10],
+			r2w = m[14];
+		const r3x = m[3],
+			r3y = m[7],
+			r3z = m[11],
+			r3w = m[15];
+
+		// each plane is a sum/difference of two rows, then normalized
+		// so the `(nx, ny, nz)` is unit length (so `intersectsSphere`
+		// can compare distance against radius in world units).
+		const set = (
+			idx: number,
+			nx: number,
+			ny: number,
+			nz: number,
+			d: number,
+		) => {
+			const inv = 1 / Math.sqrt(nx * nx + ny * ny + nz * nz);
+			const p = this.planes[idx];
+			p.nx = nx * inv;
+			p.ny = ny * inv;
+			p.nz = nz * inv;
+			p.d = d * inv;
+		};
+
+		// left = row3 + row0  (points pass when their signed distance > 0)
+		set(0, r3x + r0x, r3y + r0y, r3z + r0z, r3w + r0w);
+		// right = row3 - row0
+		set(1, r3x - r0x, r3y - r0y, r3z - r0z, r3w - r0w);
+		// bottom = row3 + row1
+		set(2, r3x + r1x, r3y + r1y, r3z + r1z, r3w + r1w);
+		// top = row3 - row1
+		set(3, r3x - r1x, r3y - r1y, r3z - r1z, r3w - r1w);
+		// near = row3 + row2
+		set(4, r3x + r2x, r3y + r2y, r3z + r2z, r3w + r2w);
+		// far = row3 - row2
+		set(5, r3x - r2x, r3y - r2y, r3z - r2z, r3w - r2w);
+	}
+
+	/**
+	 * Test whether a world-space sphere overlaps this frustum.
+	 * Conservative — a sphere that touches even one plane's positive
+	 * side is reported visible. Always run {@link Frustum#setFromViewProjection}
+	 * first so the planes describe the current camera view.
+	 * @param x - sphere center x in world coords
+	 * @param y - sphere center y in world coords
+	 * @param z - sphere center z in world coords
+	 * @param radius - sphere radius in world units
+	 * @returns true if the sphere is at least partially inside the frustum
+	 */
+	intersectsSphere(x: number, y: number, z: number, radius: number): boolean {
+		// for each plane, compute signed distance from sphere center.
+		// if the center is farther than `radius` on the OUTSIDE side
+		// (distance < -radius) of ANY plane, the whole sphere is outside.
+		for (let i = 0; i < 6; i++) {
+			const p = this.planes[i];
+			const distance = p.nx * x + p.ny * y + p.nz * z + p.d;
+			if (distance < -radius) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Test whether a world-space point is inside this frustum.
+	 * Always run {@link Frustum#setFromViewProjection} first.
+	 * @param x - world x
+	 * @param y - world y
+	 * @param z - world z
+	 * @returns true if the point is inside (on the positive side of every plane)
+	 */
+	containsPoint(x: number, y: number, z: number): boolean {
+		for (let i = 0; i < 6; i++) {
+			const p = this.planes[i];
+			if (p.nx * x + p.ny * y + p.nz * z + p.d < 0) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

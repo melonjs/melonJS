@@ -234,31 +234,68 @@ describe("Camera3d", () => {
 		});
 	});
 
-	describe("isVisible (frustum-aware culling)", () => {
-		it("returns true for non-floating sprites far outside Camera2d's worldView (regression)", () => {
-			// Camera2d's `isVisible` tests a 2D rect overlap against
-			// `worldView`. When Camera3d rotates / orbits, world
-			// coordinates that should be visible through the frustum
-			// can fall outside that 2D rect (which is locked to the
-			// camera's pos.x/y + width/height). Camera3d must NOT
-			// inherit that test verbatim — it would silently cull
-			// sprites mid-orbit.
+	describe("isVisible (plane-based frustum culling)", () => {
+		// Camera2d's `isVisible` tests a 2D rect overlap against
+		// `worldView` — invalid under perspective, because the visible
+		// region is a frustum that widens with distance and rotates
+		// with the camera. Camera3d overrides to do proper plane-based
+		// frustum culling: each renderable's bounding sphere is tested
+		// against the six frustum planes built in `update()`.
+		const setupCam = () => {
 			const cam = new Camera3d(0, 0, 800, 600);
-			cam.pos.set(0, 0, -500); // camera behind the world
-			cam.yaw = Math.PI / 4; // looking 45° to the right
+			// camera behind the origin, looking straight ahead
+			cam.pos.set(0, 0, -200);
+			cam.yaw = 0;
+			cam.pitch = 0;
+			cam.update(); // rebuild planes for the current pose
+			return cam;
+		};
 
-			const sprite = new Renderable(2000, 2000, 32, 32);
-			sprite.pos.z = 500;
-			// world (2000, 2000) is far outside the camera's 2D worldView
-			// (which is at camera.pos.x/y = 0,0 + width/height = 800,600).
-			// Camera3d must still return true — the GPU clips off-frustum
-			// fragments; visibility culling on the CPU is conservative.
+		it("sprite in front of the camera is visible", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 0, 32, 32);
+			sprite.pos.z = 200; // in front of camera at z=-200
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
+
+		it("sprite behind the camera is culled", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 0, 32, 32);
+			sprite.pos.z = -500; // behind camera at z=-200 (past near plane)
+			expect(cam.isVisible(sprite)).toBe(false);
+		});
+
+		it("sprite far past the far plane is culled", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 0, 32, 32);
+			sprite.pos.z = 5000; // past far=1000
+			expect(cam.isVisible(sprite)).toBe(false);
+		});
+
+		it("sprite far to the right (outside horizontal FOV) is culled", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(5000, 0, 32, 32);
+			sprite.pos.z = 100;
+			expect(cam.isVisible(sprite)).toBe(false);
+		});
+
+		it("rotating the camera brings a previously off-screen sprite into view", () => {
+			const cam = setupCam();
+			// sprite at world z = -400: behind camera (which is at z = -200
+			// looking +Z, so anything at z < -200 is behind it)
+			const sprite = new Renderable(0, 0, 64, 64);
+			sprite.pos.z = -400;
+			expect(cam.isVisible(sprite)).toBe(false);
+
+			// turn 180° around Y — camera now faces -Z, sprite at z=-400
+			// is in front
+			cam.yaw = Math.PI;
+			cam.update();
 			expect(cam.isVisible(sprite)).toBe(true);
 		});
 
 		it("delegates to Camera2d's 2D rect test for floating elements", () => {
-			// floating = screen-space, no perspective involved
-			const cam = new Camera3d(0, 0, 800, 600);
+			const cam = setupCam();
 			const inViewport = new Renderable(100, 100, 32, 32);
 			inViewport.floating = true;
 			expect(cam.isVisible(inViewport)).toBe(true);
