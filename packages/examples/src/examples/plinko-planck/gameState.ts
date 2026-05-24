@@ -126,23 +126,31 @@ export const refundForScore = (score: number): number => {
  *   wager is to let a ball land on a non-bet slot.
  */
 export const placeBetClick = (slotIndex: number): number | null => {
-	if (gameState.credits <= 0) return null;
 	const existing = gameState.bet;
-	let newWager: number;
+
+	// Same-slot stack increment.
 	if (existing && existing.slotIndex === slotIndex) {
+		// MAX_BET_WAGER rejection is silent so the cap reads — checked
+		// before the credit-reserve so the rejection reason is "cap
+		// hit", not "low on credits".
 		if (existing.wager >= MAX_BET_WAGER) return null;
+		// Credits must remain >= 1 AFTER the click — otherwise the
+		// player can never drop the ball that would settle the wager
+		// (DropZone gates drops at `credits <= 0`, which would
+		// soft-lock the game).
+		if (gameState.credits - WAGER_PER_CLICK < 1) return null;
 		existing.wager += 1;
-		newWager = existing.wager;
-	} else {
-		// Switching slots — refund the prior wager before opening the
-		// new one. Net cost of switching is `WAGER_PER_CLICK` (the new
-		// bet's first click), not `WAGER_PER_CLICK - existing.wager`.
-		if (existing) {
-			gameState.credits += existing.wager;
-		}
-		gameState.bet = { slotIndex, wager: 1 };
-		newWager = 1;
+		gameState.credits -= WAGER_PER_CLICK;
+		return existing.wager;
 	}
+
+	// Switching slot, or opening a fresh bet. Pre-refund any existing
+	// wager when computing the credit reserve — switching is usually
+	// affordable even when a fresh bet wouldn't be.
+	const refund = existing ? existing.wager : 0;
+	if (gameState.credits + refund - WAGER_PER_CLICK < 1) return null;
+	if (existing) gameState.credits += existing.wager;
+	gameState.bet = { slotIndex, wager: 1 };
 	gameState.credits -= WAGER_PER_CLICK;
-	return newWager;
+	return 1;
 };

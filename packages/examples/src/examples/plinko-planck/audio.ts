@@ -107,7 +107,10 @@ export const playBetClick = (wager: number, pan = 0): void => {
 		duration: 0.08,
 		gain: 0.1,
 		pan,
-		pitchSlide: -0.3,
+		// pitchSlide is a frequency MULTIPLIER (not delta) — < 1 slides
+		// down, > 1 slides up. 0.7 = end ~30 % below start, the right
+		// amount for a chip "tick" tail.
+		pitchSlide: 0.7,
 	});
 };
 
@@ -124,7 +127,9 @@ export const playBust = (pan = 0): void => {
 		duration: 0.2,
 		gain: 0.14,
 		pan,
-		pitchSlide: -0.8,
+		// pitchSlide is a frequency multiplier — 0.25 ends at a quarter
+		// of the start frequency for a dramatic downward "thud" tail.
+		pitchSlide: 0.25,
 	});
 };
 

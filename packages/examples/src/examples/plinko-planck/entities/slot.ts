@@ -89,7 +89,7 @@ class SlotBin extends Renderable {
 	private readonly pulseAtRef: { value: number };
 	/**
 	 * Shared "betting locked" flag, written by the parent Slot's
-	 * `update()` each frame from its own `hasActiveBalls(world)` check.
+	 * `update()` each frame from its own `hasActiveBalls()` check.
 	 * Boxed in a ref so SlotBin sees the latest value without a
 	 * back-pointer to the Slot.
 	 */
@@ -256,8 +256,8 @@ export class Slot extends Container {
 	private readonly pulseAtRef = { value: -Infinity };
 	/**
 	 * Shared "betting is currently locked" flag. Written by `update()`
-	 * each frame from `hasActiveBalls(worldRef)`; read by SlotBin's
-	 * `draw()` to grey out the idle visuals while a ball is falling.
+	 * each frame from `hasActiveBalls()`; read by SlotBin's `draw()`
+	 * to grey out the idle visuals while a ball is falling.
 	 */
 	private readonly lockedRef = { value: false };
 	/** Dynamic top label — "BET ×N" or "BUST" or empty. */
@@ -479,7 +479,7 @@ export class Slot extends Container {
 		if (!outcome.isWin) return;
 		spawnSparkBurst(world, cx, cy, 40 + tier * 4, "#ffffff", 7 + tier);
 		spawnSparkBurst(world, cx, cy, 28 + tier * 3, COLOR_BALL, 5 + tier);
-		world.addChild(new WinFlash(cx, cy), 150);
+		world.addChild(new WinFlash(cx, cy), 90);
 	}
 
 	/**

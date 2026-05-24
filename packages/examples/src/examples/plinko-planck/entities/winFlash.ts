@@ -31,9 +31,12 @@ export class WinFlash extends Renderable {
 		super(0, 0, VIEWPORT_W, VIEWPORT_H);
 		this.anchorPoint.set(0, 0);
 		this.alwaysUpdate = true;
-		// Below the HUD (depth 100) but above the playfield. ScoreFly
-		// is depth 200, so the score popup still reads in front.
-		this.depth = 150;
+		// World uses ascending z sort — higher depth draws on top.
+		// Sit ABOVE the playfield (Ball/Slot ~0, BakedStatics -100) but
+		// BELOW the HUD (depth 100) so the SCORE/CREDITS counters stay
+		// crisp during the wash. ScoreFly (depth 200) still draws on
+		// top of both so its "+M" arc reads through everything.
+		this.depth = 90;
 		this.floating = true;
 		this.blendMode = "additive";
 		this.startAt = timer.getTime();
