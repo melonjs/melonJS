@@ -304,6 +304,190 @@ describe("Camera3d", () => {
 			outsideViewport.floating = true;
 			expect(cam.isVisible(outsideViewport)).toBe(false);
 		});
+
+		// ---- vertical FOV / pitch ----
+
+		it("sprite far above the camera (outside vertical FOV) is culled", () => {
+			const cam = setupCam();
+			// Y-down: large negative y is "above" (off the top of the screen)
+			const sprite = new Renderable(0, -5000, 32, 32);
+			sprite.pos.z = 100;
+			expect(cam.isVisible(sprite)).toBe(false);
+		});
+
+		it("sprite far below the camera (outside vertical FOV) is culled", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 5000, 32, 32);
+			sprite.pos.z = 100;
+			expect(cam.isVisible(sprite)).toBe(false);
+		});
+
+		it("pitching up reveals a sprite that's above the original frustum", () => {
+			const cam = setupCam();
+			// sprite well above the camera in Y-down coords
+			const sprite = new Renderable(0, -800, 32, 32);
+			sprite.pos.z = 200;
+			expect(cam.isVisible(sprite)).toBe(false);
+
+			// pitch up — frustum tilts to include things above
+			cam.pitch = Math.PI / 3; // 60° upward
+			cam.update();
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
+
+		it("pitching down reveals a sprite that's below the original frustum", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 800, 32, 32);
+			sprite.pos.z = 200;
+			expect(cam.isVisible(sprite)).toBe(false);
+
+			cam.pitch = -Math.PI / 3; // 60° downward
+			cam.update();
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
+
+		// ---- sphere edge cases ----
+
+		it("sprite straddling the near plane (center behind, radius pokes through) is visible", () => {
+			const cam = new Camera3d(0, 0, 800, 600, { near: 1, far: 1000 });
+			cam.pos.set(0, 0, 0);
+			cam.update();
+			// sprite center at z=-0.5 (behind near plane at z=1) but radius
+			// large enough that the sphere overlaps the near plane
+			const sprite = new Renderable(0, 0, 200, 200);
+			sprite.pos.z = -0.5;
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
+
+		it("sprite at exactly the far plane is visible (edge of frustum)", () => {
+			const cam = new Camera3d(0, 0, 800, 600, { near: 0.1, far: 1000 });
+			cam.pos.set(0, 0, 0);
+			cam.update();
+			const sprite = new Renderable(0, 0, 32, 32);
+			sprite.pos.z = 1000; // exactly at far
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
+
+		it("very small sprite (1px) deep in the frustum is still classified correctly", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 0, 1, 1);
+			sprite.pos.z = 500; // well inside frustum
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
+
+		// ---- off-axis camera positions ----
+
+		it("works with camera offset in X (not just at origin)", () => {
+			const cam = new Camera3d(0, 0, 800, 600);
+			cam.pos.set(1000, 0, 0); // camera shifted right
+			cam.update();
+			// sprite at world (1000, 0, 200) is straight ahead of THIS camera
+			const sprite = new Renderable(1000, 0, 32, 32);
+			sprite.pos.z = 200;
+			expect(cam.isVisible(sprite)).toBe(true);
+			// sprite at world (0, 0, 200) is 1000 units to the left of camera —
+			// outside the horizontal FOV
+			const sprite2 = new Renderable(0, 0, 32, 32);
+			sprite2.pos.z = 200;
+			expect(cam.isVisible(sprite2)).toBe(false);
+		});
+
+		// ---- narrow FOV ----
+
+		it("narrow FOV culls sprites that wide FOV would include", () => {
+			const wideCam = new Camera3d(0, 0, 800, 600, { fov: Math.PI / 2 });
+			wideCam.pos.set(0, 0, -200);
+			wideCam.update();
+			const narrowCam = new Camera3d(0, 0, 800, 600, {
+				fov: Math.PI / 12, // 15° — very narrow telephoto
+			});
+			narrowCam.pos.set(0, 0, -200);
+			narrowCam.update();
+
+			// sprite off to the side: wide FOV should see it, narrow shouldn't
+			const sprite = new Renderable(150, 0, 32, 32);
+			sprite.pos.z = 100;
+			expect(wideCam.isVisible(sprite)).toBe(true);
+			expect(narrowCam.isVisible(sprite)).toBe(false);
+		});
+
+		// ---- regression: PR #1464 user report ----
+
+		it("user-reported regression: sprites stay visible after a single left-arrow click", () => {
+			// Reproduces the exact scenario from the user report on
+			// PR #1464: Camera3d example with 3 monsters at z=200/400/600,
+			// camera at (0, 0, -300) orbiting target z=400 at distance=700,
+			// one left-arrow click (yaw -= 0.15). Pre-frustum-culling fix,
+			// inheriting Camera2d's worldView 2D-rect test silently culled
+			// the monsters because the rect was at the camera's pos.x/y,
+			// not in the actual perspective view.
+			const cam = new Camera3d(0, 0, 1024, 768, {
+				fov: Math.PI / 3,
+				near: 0.1,
+				far: 1000,
+			});
+
+			const sprites = [200, 400, 600].map((z) => {
+				const s = new Renderable(0, 0, 112, 112); // monster size after 0.5 scale
+				s.pos.z = z;
+				return s;
+			});
+
+			// initial camera pose: yaw=0 pitch=0 distance=700 orbiting z=400
+			const orbit = (yaw, pitch, distance, target) => {
+				cam.pos.set(
+					Math.sin(yaw) * Math.cos(pitch) * -distance,
+					Math.sin(pitch) * distance,
+					target - Math.cos(yaw) * Math.cos(pitch) * distance,
+				);
+				cam.lookAt(0, 0, target);
+				cam.update();
+			};
+
+			orbit(0, 0, 700, 400);
+			// at initial pose, all 3 monsters in front of camera → visible
+			for (const s of sprites) {
+				expect(cam.isVisible(s)).toBe(true);
+			}
+
+			// simulate one left-arrow click — yaw decreases by 0.15
+			orbit(-0.15, 0, 700, 400);
+			// regression: every monster must STILL be visible after the
+			// camera orbits slightly. Pre-fix, all 3 silently disappeared.
+			for (const s of sprites) {
+				expect(cam.isVisible(s)).toBe(true);
+			}
+
+			// stress: 8 clicks to the left (yaw = -1.2 ≈ 69°) — camera
+			// orbits to the side; front monster might rotate out of view
+			// but the middle (target) one should remain inside
+			orbit(-1.2, 0, 700, 400);
+			expect(cam.isVisible(sprites[1])).toBe(true); // middle, orbited around
+		});
+
+		// ---- multi-update consistency ----
+
+		it("planes update correctly on every update() call (no stale state)", () => {
+			const cam = setupCam();
+			const sprite = new Renderable(0, 0, 32, 32);
+			sprite.pos.z = 200;
+			expect(cam.isVisible(sprite)).toBe(true);
+
+			// move camera way off, no update yet — isVisible still sees
+			// the old planes
+			cam.pos.set(10000, 10000, 10000);
+			// (no update call — verifies planes don't auto-rebuild)
+			expect(cam.isVisible(sprite)).toBe(true);
+
+			// after update, planes refresh and reflect the new pose
+			cam.update();
+			expect(cam.isVisible(sprite)).toBe(false);
+
+			// move back, update again — planes refresh
+			cam.pos.set(0, 0, -200);
+			cam.update();
+			expect(cam.isVisible(sprite)).toBe(true);
+		});
 	});
 
 	describe("backward compat with Camera2d API", () => {
