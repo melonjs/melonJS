@@ -18,6 +18,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	type Camera3d,
@@ -25,6 +26,7 @@ import {
 	input,
 	loader,
 	type Pointer,
+	plugin,
 	Sprite,
 	state,
 	video,
@@ -44,6 +46,7 @@ const createGame = () => {
 	});
 
 	app.world.backgroundColor.parseCSS("#0a0a14");
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
 		// loader.preload internally transitions to state.LOADING (the
