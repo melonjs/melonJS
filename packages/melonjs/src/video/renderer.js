@@ -189,6 +189,23 @@ export default class Renderer {
 	}
 
 	/**
+	 * Current per-renderable depth value. WebGL batchers push it into the
+	 * vertex stream as the `z` component of each vertex — a no-op under the
+	 * default orthographic projection, used by perspective (Camera3d) to
+	 * scale and parallax sprites by distance. Mirrors `renderable.depth`,
+	 * set automatically by `Renderable.preDraw` via {@link Renderer#setDepth}.
+	 * @type {number}
+	 * @default 0
+	 */
+	get currentDepth() {
+		return this.renderState.currentDepth;
+	}
+
+	set currentDepth(value) {
+		this.renderState.currentDepth = value;
+	}
+
+	/**
 	 * return the height of the canvas which this renderer draws to
 	 * @returns {number} height of the system Canvas
 	 */
@@ -937,6 +954,25 @@ export default class Renderer {
 	clearTint() {
 		// reset to default
 		this.currentTint.setFloat(1.0, 1.0, 1.0, 1.0);
+	}
+
+	/**
+	 * Set the current per-renderable depth value. WebGL batchers push it
+	 * into the vertex stream as the `z` component of each vertex — a no-op
+	 * under the default orthographic projection, used by perspective
+	 * (Camera3d) to scale and parallax sprites by distance.
+	 *
+	 * Typically called automatically by `Renderable.preDraw` from the
+	 * renderable's `depth` property. User code only needs to call this
+	 * directly when emitting draw calls outside of a `Renderable.draw()`
+	 * — e.g. from a custom `Container.draw()` override.
+	 *
+	 * Honored by the save/restore stack like `setTint` / `setColor`.
+	 * @param {number} depth - the depth value to set
+	 * @see Renderable#depth
+	 */
+	setDepth(depth) {
+		this.currentDepth = depth;
 	}
 
 	/**

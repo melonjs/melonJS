@@ -860,6 +860,12 @@ export default class Renderable extends Rect {
 		// apply the current tint and opacity
 		renderer.setTint(this.tint, this.getOpacity());
 
+		// forward depth to the renderer — pushed into the WebGL vertex
+		// stream as the `z` component by the batchers. No visible effect
+		// under the default ortho projection; required for perspective
+		// (Camera3d) to scale and parallax this renderable by distance.
+		renderer.setDepth(this.depth);
+
 		// apply blending if different from "normal"
 		if (this.blendMode !== renderer.getBlendMode()) {
 			renderer.setBlendMode(this.blendMode);

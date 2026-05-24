@@ -43,31 +43,33 @@ export default class VertexArrayBuffer {
 	 * push a new vertex to the buffer
 	 * @param {number} x - x position
 	 * @param {number} y - y position
-	 * @param {number} u - texture U coordinate
-	 * @param {number} v - texture V coordinate
+	 * @param {number} z - z position (per-renderable depth; 0 under ortho)
+	 * @param {number} u - texture U coordinate (or aNormal.x for primitives)
+	 * @param {number} v - texture V coordinate (or aNormal.y for primitives)
 	 * @param {number} tint - tint color in UINT32 (argb) format
 	 * @param {number} [textureId] - texture unit index for multi-texture batching
 	 * @param {number} [normalTextureId] - paired normal-map texture unit index, or `-1` for unlit quads
 	 * @ignore
 	 */
-	push(x, y, u, v, tint, textureId, normalTextureId) {
+	push(x, y, z, u, v, tint, textureId, normalTextureId) {
 		const offset = this.vertexCount * this.vertexSize;
 
 		this.bufferF32[offset] = x;
 		this.bufferF32[offset + 1] = y;
-		this.bufferF32[offset + 2] = u;
-		this.bufferF32[offset + 3] = v;
-		this.bufferU32[offset + 4] = tint;
-		if (this.vertexSize > 5) {
-			this.bufferF32[offset + 5] = textureId || 0;
-			if (this.vertexSize > 6) {
+		this.bufferF32[offset + 2] = z;
+		this.bufferF32[offset + 3] = u;
+		this.bufferF32[offset + 4] = v;
+		this.bufferU32[offset + 5] = tint;
+		if (this.vertexSize > 6) {
+			this.bufferF32[offset + 6] = textureId || 0;
+			if (this.vertexSize > 7) {
 				// `aNormalTextureId`: -1 (sentinel for unlit) is the safe
 				// default when the caller doesn't supply one. Writing 0
 				// here would let the fragment shader's lit path activate
 				// on unlit quads with whatever normal-map happened to be
 				// bound at unit 0 — visible as garbage hemispheric
 				// shading on every sprite.
-				this.bufferF32[offset + 6] =
+				this.bufferF32[offset + 7] =
 					typeof normalTextureId === "number" ? normalTextureId : -1;
 			}
 		}

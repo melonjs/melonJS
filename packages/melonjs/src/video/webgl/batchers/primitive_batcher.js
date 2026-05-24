@@ -21,8 +21,10 @@ export default class PrimitiveBatcher extends Batcher {
 		super.init(renderer, {
 			attributes: [
 				{
+					// vec3: (x, y, z). z carries `renderable.depth` for
+					// perspective projection (Camera3d). Stride = 24 bytes.
 					name: "aVertex",
-					size: 2,
+					size: 3,
 					type: renderer.gl.FLOAT,
 					normalized: false,
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
@@ -32,14 +34,14 @@ export default class PrimitiveBatcher extends Batcher {
 					size: 2,
 					type: renderer.gl.FLOAT,
 					normalized: false,
-					offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 3 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aColor",
 					size: 4,
 					type: renderer.gl.UNSIGNED_BYTE,
 					normalized: true,
-					offset: 4 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],
 			shader: {
@@ -104,6 +106,10 @@ export default class PrimitiveBatcher extends Batcher {
 		const vertexData = this.vertexData;
 		const alpha = this.renderer.getGlobalAlpha();
 		const colorUint32 = this.renderer.currentColor.toUint32(alpha);
+		// z = current renderer depth (Renderable.preDraw); a no-op under ortho,
+		// consumed by perspective (Camera3d). Same value for every vertex —
+		// primitives don't have per-vertex depth.
+		const z = this.renderer.currentDepth;
 
 		if (vertexData.isFull(vertexCount)) {
 			// is the vertex buffer full if we add more vertices
@@ -125,6 +131,7 @@ export default class PrimitiveBatcher extends Batcher {
 				vertexData.push(
 					x * m[0] + y * m[4] + m[12],
 					x * m[1] + y * m[5] + m[13],
+					z,
 					0,
 					0,
 					colorUint32,
@@ -133,7 +140,7 @@ export default class PrimitiveBatcher extends Batcher {
 		} else {
 			for (let i = 0; i < vertexCount; i++) {
 				const vert = verts[i];
-				vertexData.push(vert.x, vert.y, 0, 0, colorUint32);
+				vertexData.push(vert.x, vert.y, z, 0, 0, colorUint32);
 			}
 		}
 
@@ -157,6 +164,9 @@ export default class PrimitiveBatcher extends Batcher {
 		const alpha = this.renderer.getGlobalAlpha();
 		const colorUint32 = this.renderer.currentColor.toUint32(alpha);
 		const hasTransform = !viewMatrix.isIdentity();
+		// z = current renderer depth (Renderable.preDraw); a no-op under ortho,
+		// consumed by perspective (Camera3d).
+		const z = this.renderer.currentDepth;
 
 		// each line pair (2 verts) expands to 2 triangles (6 verts)
 		const expandedCount = (vertexCount / 2) * 6;
@@ -205,14 +215,14 @@ export default class PrimitiveBatcher extends Batcher {
 
 			// two triangles forming a quad around the line segment
 			// triangle 1: from+n, from-n, to-n
-			vertexData.push(fromX, fromY, nx, ny, colorUint32);
-			vertexData.push(fromX, fromY, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, -nx, -ny, colorUint32);
+			vertexData.push(fromX, fromY, z, nx, ny, colorUint32);
+			vertexData.push(fromX, fromY, z, -nx, -ny, colorUint32);
+			vertexData.push(toX, toY, z, -nx, -ny, colorUint32);
 
 			// triangle 2: from+n, to-n, to+n
-			vertexData.push(fromX, fromY, nx, ny, colorUint32);
-			vertexData.push(toX, toY, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, nx, ny, colorUint32);
+			vertexData.push(fromX, fromY, z, nx, ny, colorUint32);
+			vertexData.push(toX, toY, z, -nx, -ny, colorUint32);
+			vertexData.push(toX, toY, z, nx, ny, colorUint32);
 		}
 	}
 }
