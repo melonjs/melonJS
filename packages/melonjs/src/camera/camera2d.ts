@@ -900,8 +900,11 @@ export default class Camera2d extends Renderable {
 		// post-effect: bind FBO if shader effects are set (WebGL only)
 		const usePostEffect = r.beginPostEffect(this);
 
-		// translate the world coordinates by default to screen coordinates
-		container.translate(-translateX, -translateY);
+		// apply the world-to-camera-view transform on the container.
+		// Camera2d translates by -camera.pos; Camera3d overrides this
+		// hook to additionally apply the camera's rotation (pitch / yaw)
+		// in the correct order (R⁻¹ ∘ T(-pos), via post-multiplication).
+		this._applyContainerViewTransform(container, translateX, translateY);
 
 		this.preDraw(r);
 
@@ -1007,7 +1010,36 @@ export default class Camera2d extends Renderable {
 			}
 		}
 
-		// translate the world coordinates by default to screen coordinates
+		// revert the world-to-camera-view transform applied above
+		this._revertContainerViewTransform(container, translateX, translateY);
+	}
+
+	/**
+	 * Apply the world-to-camera-view transform to the container before
+	 * its draw walk. Camera2d translates by `-camera.pos` (plus shake
+	 * offset); Camera3d overrides this to additionally rotate by
+	 * `-camera.pitch` / `-camera.yaw` in the correct order.
+	 * @ignore
+	 */
+	_applyContainerViewTransform(
+		container: Container,
+		translateX: number,
+		translateY: number,
+	): void {
+		container.translate(-translateX, -translateY);
+	}
+
+	/**
+	 * Revert the transform applied by {@link Camera2d#_applyContainerViewTransform}.
+	 * Must undo each mutation in reverse order. Subclasses overriding
+	 * `_applyContainerViewTransform` should override this too.
+	 * @ignore
+	 */
+	_revertContainerViewTransform(
+		container: Container,
+		translateX: number,
+		translateY: number,
+	): void {
 		container.translate(translateX, translateY);
 	}
 

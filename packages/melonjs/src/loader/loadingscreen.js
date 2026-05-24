@@ -1,3 +1,4 @@
+import Camera2d from "./../camera/camera2d.ts";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.ts";
@@ -100,6 +101,17 @@ class DefaultLoadingScreen extends Stage {
 	 * @ignore
 	 */
 	#cleanedUp = false;
+
+	/**
+	 * Pin the loading screen to a Camera2d regardless of the
+	 * application's `cameraClass` setting. The loader must render
+	 * correctly even when the host app opts in to Camera3d globally
+	 * — a perspective camera applied to a 2D progress bar would
+	 * stretch / clip the bar based on its depth.
+	 */
+	constructor() {
+		super({ cameraClass: Camera2d });
+	}
 
 	/**
 	 * call when the loader is resetted

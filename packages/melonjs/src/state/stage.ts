@@ -8,6 +8,19 @@ import type Renderer from "./../video/renderer.js";
 
 interface StageSettings {
 	cameras: Camera2d[];
+	/**
+	 * Default camera class to instantiate when this stage has no
+	 * explicit `cameras` list. Overrides any app-level `cameraClass`
+	 * setting for this specific stage. Built-in stages (e.g.
+	 * {@link DefaultLoadingScreen}) pin this to {@link Camera2d} so
+	 * the loader stays 2D regardless of app-wide `cameraClass`.
+	 */
+	cameraClass?: new (
+		minX: number,
+		minY: number,
+		maxX: number,
+		maxY: number,
+	) => Camera2d;
 	onResetEvent?: (app: Application, ...args: unknown[]) => void;
 	onDestroyEvent?: (app: Application) => void;
 }
@@ -132,14 +145,32 @@ export default class Stage {
 			this.cameras.set(camera.name, camera);
 		});
 
-		// use the application's default camera if no "default" camera is defined
-		if (!this.cameras.has("default")) {
-			if (typeof default_camera === "undefined" && app) {
-				const width = app.renderer.width;
-				const height = app.renderer.height;
-				default_camera = new Camera2d(0, 0, width, height);
-			}
-			if (typeof default_camera !== "undefined") {
+		// default-camera resolution order (most-specific wins):
+		//   1. explicit `cameras` array on the stage → handled above
+		//   2. `cameraClass` on the stage settings → fresh instance,
+		//      overrides app-level (used by DefaultLoadingScreen to
+		//      pin Camera2d regardless of app.settings.cameraClass)
+		//   3. `cameraClass` on the application settings → fresh
+		//      instance per stage (Camera3d state shouldn't bleed
+		//      across stages)
+		//   4. neither set → fall back to the Camera2d module-level
+		//      singleton (preserves pre-19.7 behavior bit-for-bit
+		//      for every app that doesn't opt into cameraClass)
+		if (!this.cameras.has("default") && app) {
+			const width = app.renderer.width;
+			const height = app.renderer.height;
+			const StageCameraClass = this.settings.cameraClass;
+			const AppCameraClass = app.settings.cameraClass;
+
+			if (typeof StageCameraClass === "function") {
+				this.cameras.set("default", new StageCameraClass(0, 0, width, height));
+			} else if (typeof AppCameraClass === "function") {
+				this.cameras.set("default", new AppCameraClass(0, 0, width, height));
+			} else {
+				// no cameraClass anywhere — use the shared Camera2d singleton
+				if (typeof default_camera === "undefined") {
+					default_camera = new Camera2d(0, 0, width, height);
+				}
 				this.cameras.set("default", default_camera);
 			}
 		}

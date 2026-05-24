@@ -3,6 +3,7 @@
  * @import Renderer from "./../video/renderer.js";
  */
 
+import Camera2d from "../camera/camera2d";
 import { RendererType } from "../const";
 import { PhysicsAdapter } from "../physics/adapter";
 import Renderer from "../video/renderer";
@@ -178,6 +179,23 @@ export type ApplicationSettings = {
 	 * a custom batcher class (WebGL only)
 	 */
 	batcher?: (new (renderer: any) => Batcher) | undefined;
+
+	/**
+	 * Default camera class instantiated for any {@link Stage} that does not
+	 * explicitly provide its own cameras. Set to {@link Camera3d} to opt
+	 * every stage in the app into perspective rendering by default. Stages
+	 * can still override per-instance via `super({ cameras: [...] })` or
+	 * per-class via `super({ cameraClass: Camera2d })`. Built-in stages
+	 * (e.g. the loader screen) explicitly use {@link Camera2d} regardless
+	 * of this setting.
+	 * @default Camera2d
+	 */
+	cameraClass?: new (
+		minX: number,
+		minY: number,
+		maxX: number,
+		maxY: number,
+	) => Camera2d;
 } & (
 	| {
 			/**

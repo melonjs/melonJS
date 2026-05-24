@@ -33,6 +33,11 @@ const ExampleBlendModes = lazy(() =>
 		default: m.ExampleBlendModes,
 	})),
 );
+const ExampleCamera3d = lazy(() =>
+	import("./examples/camera3d/ExampleCamera3d").then((m) => ({
+		default: m.ExampleCamera3d,
+	})),
+);
 const ExampleClipping = lazy(() =>
 	import("./examples/clipping/ExampleClipping").then((m) => ({
 		default: m.ExampleClipping,
@@ -222,6 +227,14 @@ const examples: {
 		sourceDir: "blendModes",
 		description:
 			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
+	},
+	{
+		component: <ExampleCamera3d />,
+		label: "Camera3d (perspective)",
+		path: "camera-3d",
+		sourceDir: "camera3d",
+		description:
+			"Perspective camera orbiting a grid of sprite billboards in 3D space. Drag to rotate; closer sprites render larger.",
 	},
 	{
 		component: <ExampleClipping />,
