@@ -33,6 +33,11 @@ const ExampleBlendModes = lazy(() =>
 		default: m.ExampleBlendModes,
 	})),
 );
+const ExampleAfterBurner = lazy(() =>
+	import("./examples/afterBurner/ExampleAfterBurner").then((m) => ({
+		default: m.ExampleAfterBurner,
+	})),
+);
 const ExampleCamera3d = lazy(() =>
 	import("./examples/camera3d/ExampleCamera3d").then((m) => ({
 		default: m.ExampleCamera3d,
@@ -227,6 +232,14 @@ const examples: {
 		sourceDir: "blendModes",
 		description:
 			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
+	},
+	{
+		component: <ExampleAfterBurner />,
+		label: "AfterBurner",
+		path: "after-burner",
+		sourceDir: "afterBurner",
+		description:
+			"Behind-the-plane arcade shooter using Camera3d perspective — arrows / WASD to fly, space to shoot.",
 	},
 	{
 		component: <ExampleCamera3d />,
