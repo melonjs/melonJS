@@ -108,6 +108,11 @@ const ExampleMesh3dMaterial = lazy(() =>
 		default: m.ExampleMesh3dMaterial,
 	})),
 );
+const ExampleMultiMaterialMesh = lazy(() =>
+	import("./examples/multiMaterialMesh/ExampleMultiMaterialMesh").then((m) => ({
+		default: m.ExampleMultiMaterialMesh,
+	})),
+);
 const ExamplePlatformer = lazy(() =>
 	import("./examples/platformer/ExamplePlatformer").then((m) => ({
 		default: m.ExamplePlatformer,
@@ -336,6 +341,14 @@ const examples: {
 		sourceDir: "mesh3dMaterial",
 		description:
 			"3D cube pet models from Kenney with MTL material support — texture and colors auto-resolved from .mtl files.",
+	},
+	{
+		component: <ExampleMultiMaterialMesh />,
+		label: "Multi-material OBJ",
+		path: "multi-material-mesh",
+		sourceDir: "multiMaterialMesh",
+		description:
+			"Kenney spacecraft (CC0) with multi-material OBJ rendering — each `usemtl` group draws with its own diffuse color via the new groups[] API.",
 	},
 	{
 		component: <ExamplePlatformer />,
