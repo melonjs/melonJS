@@ -50,14 +50,22 @@ export default class MeshBatcher extends MaterialBatcher {
 	}
 
 	/**
-	 * Add a textured mesh to the batch
+	 * Add a textured mesh to the batch. When `group` is provided, only
+	 * the index slice `[group.start, group.start + group.count)` is
+	 * pushed — lets `Mesh.draw()` render multi-material OBJs one
+	 * material at a time without rebuilding geometry.
 	 * @param {object} mesh - a Mesh object with vertices, uvs, indices, and texture properties
 	 * @param {number} tint - tint color in UINT32 (argb) format
+	 * @param {{start: number, count: number}} [group] - optional index buffer slice
 	 */
-	addMesh(mesh, tint) {
+	addMesh(mesh, tint, group) {
 		const vertices = mesh.vertices;
 		const uvs = mesh.uvs;
 		const indices = mesh.indices;
+		// `triIdx` and `endLimit` bracket the index range to draw —
+		// the whole buffer by default, or just the requested group slice
+		const startIdx = group ? group.start : 0;
+		const endLimit = group ? group.start + group.count : indices.length;
 
 		// upload and activate the texture
 		const unit = this.uploadTexture(mesh.texture);
@@ -72,8 +80,8 @@ export default class MeshBatcher extends MaterialBatcher {
 		const maxIndices = this.indexBuffer.data.length;
 
 		// process triangles in chunks that fit the buffer
-		let triIdx = 0;
-		while (triIdx < indices.length) {
+		let triIdx = startIdx;
+		while (triIdx < endLimit) {
 			// figure out how many triangles fit in the current batch
 			const vertexData = this.vertexData;
 			const availVerts = maxVerts - vertexData.vertexCount;
@@ -89,7 +97,7 @@ export default class MeshBatcher extends MaterialBatcher {
 				continue;
 			}
 
-			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
+			const endIdx = Math.min(triIdx + maxTris * 3, endLimit);
 
 			// build a local vertex remap for this chunk
 			// capture base offset before pushing any vertices

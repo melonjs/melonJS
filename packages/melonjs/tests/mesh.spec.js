@@ -259,6 +259,128 @@ describe("OBJ Parser", () => {
 		expect(obj.vertexCount).toBeGreaterThan(0);
 		expect(obj.indices.length).toBeGreaterThan(0);
 	});
+
+	// ── multi-material groups (Three.js / glTF "groups" convention) ──────
+
+	it("emits a single material-less group for OBJs with no usemtl", async () => {
+		const obj = await parseOBJString(`
+			v 0 0 0
+			v 1 0 0
+			v 1 1 0
+			f 1 2 3
+		`);
+		expect(Array.isArray(obj.groups)).toBe(true);
+		expect(obj.groups.length).toBe(1);
+		expect(obj.groups[0].materialName).toBe(null);
+		expect(obj.groups[0].start).toBe(0);
+		expect(obj.groups[0].count).toBe(obj.indices.length);
+	});
+
+	it("emits one group per usemtl directive, slicing the index buffer", async () => {
+		const obj = await parseOBJString(`
+			v 0 0 0
+			v 1 0 0
+			v 1 1 0
+			v 0 1 0
+			v 2 0 0
+			v 2 1 0
+			usemtl red
+			f 1 2 3
+			usemtl blue
+			f 1 3 4
+			usemtl green
+			f 2 5 6
+		`);
+		expect(obj.groups.length).toBe(3);
+		expect(obj.groups[0].materialName).toBe("red");
+		expect(obj.groups[0].start).toBe(0);
+		expect(obj.groups[0].count).toBe(3);
+		expect(obj.groups[1].materialName).toBe("blue");
+		expect(obj.groups[1].start).toBe(3);
+		expect(obj.groups[1].count).toBe(3);
+		expect(obj.groups[2].materialName).toBe("green");
+		expect(obj.groups[2].start).toBe(6);
+		expect(obj.groups[2].count).toBe(3);
+		// every index is covered by exactly one group
+		const total = obj.groups.reduce((s, g) => {
+			return s + g.count;
+		}, 0);
+		expect(total).toBe(obj.indices.length);
+	});
+
+	it("emits an anonymous null-material group for faces declared before any usemtl", async () => {
+		const obj = await parseOBJString(`
+			v 0 0 0
+			v 1 0 0
+			v 1 1 0
+			v 0 1 0
+			f 1 2 3
+			usemtl red
+			f 1 3 4
+		`);
+		// 2 groups: the anonymous pre-usemtl chunk + the explicit "red"
+		expect(obj.groups.length).toBe(2);
+		expect(obj.groups[0].materialName).toBe(null);
+		expect(obj.groups[0].count).toBe(3);
+		expect(obj.groups[1].materialName).toBe("red");
+		expect(obj.groups[1].count).toBe(3);
+	});
+
+	it("handles triangulated quads inside a material group", async () => {
+		const obj = await parseOBJString(`
+			v 0 0 0
+			v 1 0 0
+			v 1 1 0
+			v 0 1 0
+			usemtl panels
+			f 1 2 3 4
+		`);
+		// quad → 2 triangles → 6 indices
+		expect(obj.groups.length).toBe(1);
+		expect(obj.groups[0].materialName).toBe("panels");
+		expect(obj.groups[0].count).toBe(6);
+		expect(obj.indices.length).toBe(6);
+	});
+
+	it("group boundaries survive CW→CCW winding correction", async () => {
+		// CW winding (negative volume) gets flipped; the per-triangle
+		// index reorder must not move triangles between groups
+		const obj = await parseOBJString(`
+			v -1 -1 -1
+			v -1  1 -1
+			v  1 -1 -1
+			v  1  1 -1
+			usemtl front
+			f 1 3 4
+			f 1 4 2
+		`);
+		expect(obj.groups.length).toBe(1);
+		expect(obj.groups[0].materialName).toBe("front");
+		// count is total indices, regardless of winding flip
+		expect(obj.groups[0].count).toBe(obj.indices.length);
+	});
+
+	it("empty OBJ produces an empty groups array (not null)", async () => {
+		const obj = await parseOBJString(``);
+		expect(Array.isArray(obj.groups)).toBe(true);
+		expect(obj.groups.length).toBe(0);
+	});
+
+	it("usemtl with no following faces leaves a zero-count group", async () => {
+		const obj = await parseOBJString(`
+			v 0 0 0
+			v 1 0 0
+			v 1 1 0
+			usemtl red
+			f 1 2 3
+			usemtl unused
+		`);
+		expect(obj.groups.length).toBe(2);
+		expect(obj.groups[0].materialName).toBe("red");
+		expect(obj.groups[0].count).toBe(3);
+		expect(obj.groups[1].materialName).toBe("unused");
+		expect(obj.groups[1].count).toBe(0);
+	});
 });
 
 // ── Matrix3d extensions ─────────────────────────────────────────────────────

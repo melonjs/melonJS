@@ -1,6 +1,7 @@
 import { game } from "../application/application.ts";
 import { Polygon } from "../geometries/polygon.ts";
 import { getImage, getMTL, getOBJ } from "./../loader/loader.js";
+import { Color } from "../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import {
@@ -19,6 +20,88 @@ import Renderable from "./renderable.js";
 
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
+
+// reusable color used by `draw()` to save/restore `this.tint` around
+// the multi-material per-group swap. Module-scoped so we don't
+// allocate every frame; safe because draw is single-threaded.
+const _savedTint = new Color(255, 255, 255, 1);
+
+// Lazily-allocated 1×1 white pixel used as the texture fallback for
+// flat-color (Kd-only, no `map_Kd`) MTL materials. One canvas shared
+// across every Mesh that needs it — no per-instance allocation.
+let _whitePixel = null;
+function getOrCreateWhitePixel() {
+	if (!_whitePixel) {
+		const c = document.createElement("canvas");
+		c.width = 1;
+		c.height = 1;
+		const ctx = c.getContext("2d");
+		ctx.fillStyle = "#ffffff";
+		ctx.fillRect(0, 0, 1, 1);
+		_whitePixel = c;
+	}
+	return _whitePixel;
+}
+
+// Resolve any acceptable texture input (TextureAtlas, image / canvas
+// object, or asset name) to a cached `TextureAtlas`. Throws if nothing
+// resolves — Mesh requires a texture binding for its GL pipeline.
+function resolveTextureAtlas(src) {
+	if (src instanceof TextureAtlas) {
+		return src;
+	}
+	const image = typeof src === "object" ? src : getImage(src);
+	if (!image) {
+		throw new Error("Mesh: '" + src + "' image/texture not found!");
+	}
+	return game.renderer.cache.get(image, {
+		framewidth: image.width,
+		frameheight: image.height,
+	});
+}
+
+/**
+ * Resolve an OBJ material group into a draw descriptor. Builds the
+ * group's tint from the MTL's `Kd` (defaults to white if missing) and
+ * picks the texture from `map_Kd` if the MTL provides one, else falls
+ * back to the explicit `textureSource`. Returns a self-contained
+ * record that {@link Mesh#draw} can iterate without touching the MTL
+ * cache or re-resolving anything per frame.
+ * @param {{material: string|null, start: number, count: number}} group
+ * @param {object} materials - MTL material table keyed by material name
+ * @param {string|HTMLImageElement|TextureAtlas|undefined} textureSource
+ * @returns {object} draw descriptor for this group
+ * @ignore
+ */
+function resolveGroupMaterial(group, materials, textureSource) {
+	const mat = group.materialName ? materials[group.materialName] : null;
+	const tint = new Color(255, 255, 255, 1);
+	let opacity = 1;
+	let texture = textureSource;
+	if (mat) {
+		if (mat.map_Kd) {
+			texture = mat.map_Kd;
+		}
+		if (mat.Kd) {
+			tint.setColor(
+				Math.round(mat.Kd[0] * 255),
+				Math.round(mat.Kd[1] * 255),
+				Math.round(mat.Kd[2] * 255),
+			);
+		}
+		if (typeof mat.d === "number" && mat.d < 1) {
+			opacity = mat.d;
+		}
+	}
+	return {
+		materialName: group.materialName,
+		start: group.start,
+		count: group.count,
+		texture, // resolved to TextureAtlas in the Mesh constructor once the cache is reachable
+		tint,
+		opacity,
+	};
+}
 
 /**
  * A renderable object for displaying textured triangle meshes.
@@ -70,6 +153,7 @@ export default class Mesh extends Renderable {
 		super(x, y, settings.width, settings.height);
 
 		// load geometry from OBJ model or raw data
+		let objGroups = null;
 		if (typeof settings.model === "string") {
 			const objData = getOBJ(settings.model);
 			if (!objData) {
@@ -98,6 +182,11 @@ export default class Mesh extends Renderable {
 			 * @type {number}
 			 */
 			this.vertexCount = objData.vertexCount;
+
+			// pick up the material-group list emitted by the OBJ parser
+			// (always non-null for non-empty models thanks to the
+			// parser's "anonymous group" fallback)
+			objGroups = objData.groups;
 		} else {
 			this.originalVertices =
 				settings.vertices instanceof Float32Array
@@ -129,55 +218,92 @@ export default class Mesh extends Renderable {
 		this.cullBackFaces =
 			settings.cullBackFaces !== undefined ? settings.cullBackFaces : true;
 
-		// resolve material (MTL) — applies texture, tint, and opacity
+		// resolve material (MTL) — applies texture, tint, and opacity.
+		// Two paths:
+		// - Single-material: pick the first MTL entry, apply to the whole
+		//   mesh (legacy behavior, unchanged).
+		// - Multi-material: build a per-group descriptor with each
+		//   group's texture, tint, and opacity resolved from its own MTL
+		//   entry. `draw()` later iterates the groups and swaps state
+		//   per draw.
 		let textureSource = settings.texture;
-		if (typeof settings.material === "string") {
-			const materials = getMTL(settings.material);
-			if (materials) {
-				// use the first material's properties
-				const mat = materials[Object.keys(materials)[0]];
-				if (mat) {
-					// auto-resolve texture from map_Kd if no explicit texture
-					if (!textureSource && mat.map_Kd) {
-						textureSource = mat.map_Kd;
-					}
-					// apply diffuse color as tint
-					if (mat.Kd) {
-						this.tint.setColor(
-							Math.round(mat.Kd[0] * 255),
-							Math.round(mat.Kd[1] * 255),
-							Math.round(mat.Kd[2] * 255),
-						);
-					}
-					// apply opacity
-					if (mat.d < 1.0) {
-						this.setOpacity(mat.d);
-					}
+		const materials =
+			typeof settings.material === "string" ? getMTL(settings.material) : null;
+		const isMultiMaterial =
+			materials !== null &&
+			objGroups !== null &&
+			objGroups.length > 1 &&
+			objGroups.some((g) => {
+				return g.materialName !== null;
+			});
+
+		if (isMultiMaterial) {
+			/**
+			 * Per-material submesh groups, populated when the OBJ
+			 * contains multiple `usemtl` directives AND a matching MTL
+			 * is bound via the `material` setting. Each entry slices
+			 * the shared `indices` buffer and carries its own texture +
+			 * tint + opacity, so `draw()` can render one material per
+			 * draw call without touching geometry.
+			 *
+			 * Field shape (`start`, `count`, `materialName`) matches the
+			 * Three.js / glTF "groups" convention so the structure is
+			 * familiar to anyone coming from those engines.
+			 * @type {Array<{materialName: string|null, start: number,
+			 *   count: number, texture: TextureAtlas, tint: Color,
+			 *   opacity: number}>}
+			 */
+			this.groups = objGroups.map((g) => {
+				return resolveGroupMaterial(g, materials, textureSource);
+			});
+			// the legacy `texture` / `tint` / opacity stay set from the
+			// FIRST group so single-material code paths (e.g.
+			// `toCanvas()`) still produce a sensible default
+			const first = this.groups[0];
+			textureSource = first.texture;
+			this.tint.copy(first.tint);
+			if (first.opacity < 1) {
+				this.setOpacity(first.opacity);
+			}
+		} else if (materials) {
+			// single-material path — pick the first MTL entry
+			const mat = materials[Object.keys(materials)[0]];
+			if (mat) {
+				if (!textureSource && mat.map_Kd) {
+					textureSource = mat.map_Kd;
+				}
+				if (mat.Kd) {
+					this.tint.setColor(
+						Math.round(mat.Kd[0] * 255),
+						Math.round(mat.Kd[1] * 255),
+						Math.round(mat.Kd[2] * 255),
+					);
+				}
+				if (mat.d < 1.0) {
+					this.setOpacity(mat.d);
 				}
 			}
 		}
 
-		// resolve texture
-		if (textureSource instanceof TextureAtlas) {
-			/**
-			 * the texture atlas used by this mesh
-			 * @type {TextureAtlas}
-			 */
-			this.texture = textureSource;
-		} else {
-			const image =
-				typeof textureSource === "object"
-					? textureSource
-					: getImage(textureSource);
-			if (!image) {
-				throw new Error(
-					"Mesh: '" + textureSource + "' image/texture not found!",
-				);
+		// resolve texture. For multi-material meshes that have NO
+		// per-material textures (Kenney-style flat-color models that
+		// only set `Kd`), fall back to a shared 1×1 white pixel so
+		// the GPU pipeline still has something to sample — the per-
+		// group `tint` does all the visible coloring.
+		if (!textureSource && isMultiMaterial) {
+			textureSource = getOrCreateWhitePixel();
+		}
+		this.texture = resolveTextureAtlas(textureSource);
+
+		// resolve every multi-material group's texture into a real
+		// `TextureAtlas` (cached per image) so `draw()` can swap
+		// bindings without per-frame allocation. Groups whose MTL had
+		// no `map_Kd` fall back to the shared `this.texture` (the 1×1
+		// white pixel above for Kenney-style models).
+		if (isMultiMaterial) {
+			for (const g of this.groups) {
+				g.texture = g.texture ? resolveTextureAtlas(g.texture) : this.texture;
 			}
-			this.texture = game.renderer.cache.get(image, {
-				framewidth: image.width,
-				frameheight: image.height,
-			});
 		}
 
 		/**
@@ -236,12 +362,38 @@ export default class Mesh extends Renderable {
 
 	/**
 	 * Draw the mesh (automatically called by melonJS).
-	 * Projects vertices through projectionMatrix × currentTransform and calls renderer.drawMesh().
+	 * Projects vertices through projectionMatrix × currentTransform and
+	 * calls `renderer.drawMesh()`. For multi-material meshes (OBJ files
+	 * with multiple `usemtl` directives + a bound MTL), iterates the
+	 * per-material `groups` array, swapping texture and tint per draw
+	 * so each material region renders with its own appearance.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 */
 	draw(renderer) {
 		this._projectVertices(this.pos.x, this.pos.y, 1000);
-		renderer.drawMesh(this);
+		if (this.groups && this.groups.length > 1) {
+			// Save the mesh's primary tint / texture so the per-group
+			// swaps don't leak into reads of `this.tint` / `this.texture`
+			// between frames (e.g. `toCanvas`, picking, debug overlays).
+			// `Renderable.preDraw` already called `renderer.setTint(this.tint)`,
+			// locking the renderer to the first group's color — we mutate
+			// `renderer.currentTint` directly per group instead of going
+			// through `setTint` because `setTint` multiplies into alpha,
+			// which would compound across iterations.
+			const savedTexture = this.texture;
+			_savedTint.copy(this.tint);
+			for (const g of this.groups) {
+				this.texture = g.texture;
+				this.tint.copy(g.tint);
+				renderer.currentTint.copy(g.tint);
+				renderer.drawMesh(this, g);
+			}
+			this.texture = savedTexture;
+			this.tint.copy(_savedTint);
+			renderer.currentTint.copy(_savedTint);
+		} else {
+			renderer.drawMesh(this);
+		}
 	}
 
 	/**

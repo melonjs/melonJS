@@ -392,15 +392,22 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * Draw a textured triangle mesh.
-	 * Uses per-triangle affine texture mapping with back-to-front depth sorting
-	 * (painter's algorithm) and optional backface culling.
-	 * Note: the painter's algorithm works well for convex shapes but may produce
-	 * visual artifacts with concave or self-overlapping geometry (e.g. a torus),
-	 * as Canvas 2D has no hardware depth buffer. Use the WebGL renderer for
-	 * correct depth ordering on complex meshes.
+	 * Uses per-triangle affine texture mapping with back-to-front depth
+	 * sorting (painter's algorithm) and optional backface culling.
+	 * Note: the painter's algorithm works well for convex shapes but
+	 * may produce visual artifacts with concave or self-overlapping
+	 * geometry (e.g. a torus), as Canvas 2D has no hardware depth
+	 * buffer. Use the WebGL renderer for correct depth ordering on
+	 * complex meshes.
+	 *
+	 * When `group` is provided, only the index slice
+	 * `[group.start, group.start + group.count)` is drawn — used by
+	 * multi-material OBJs to render one material at a time.
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
+	 * @param {{start: number, count: number}} [group] - optional index
+	 *   buffer slice to draw (defaults to the whole mesh)
 	 */
-	drawMesh(mesh) {
+	drawMesh(mesh, group) {
 		if (this.getGlobalAlpha() < 1 / 255) {
 			return;
 		}
@@ -408,6 +415,8 @@ export default class CanvasRenderer extends Renderer {
 		const vertices = mesh.vertices;
 		const uvs = mesh.uvs;
 		const indices = mesh.indices;
+		const startIdx = group ? group.start : 0;
+		const endLimit = group ? group.start + group.count : indices.length;
 
 		// apply tint if set
 		let image = mesh.texture.getTexture();
@@ -418,7 +427,7 @@ export default class CanvasRenderer extends Renderer {
 		const imgW = image.width;
 		const imgH = image.height;
 		const cullBack = mesh.cullBackFaces === true;
-		const triCount = indices.length / 3;
+		const triCount = (endLimit - startIdx) / 3;
 
 		// pre-allocate flat sort array (reuse across frames via closure)
 		// each entry stores: [sortKey, originalIndex]
@@ -429,7 +438,7 @@ export default class CanvasRenderer extends Renderer {
 		let visCount = 0;
 
 		// build sort keys for visible triangles (no object allocation)
-		for (let j = 0; j < indices.length; j += 3) {
+		for (let j = startIdx; j < endLimit; j += 3) {
 			const i0 = indices[j];
 			const i1 = indices[j + 1];
 			const i2 = indices[j + 2];

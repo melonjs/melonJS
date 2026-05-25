@@ -26,20 +26,33 @@ const OBJ_INDEX_OFFSET = 1;
  * Parse a Wavefront OBJ file into geometry data.
  * Supports: `v` (vertex positions), `vt` (texture coordinates),
  * `f` (faces in `v`, `v/vt`, `v/vt/vn`, or `v//vn` format),
- * `mtllib` (material library reference).
+ * `mtllib` (material library reference),
+ * `usemtl` (material group boundaries — emitted as `groups[]`).
  *
  * Features:
  * - Quad and n-gon triangulation (fan from first vertex)
  * - Automatic CW → CCW winding correction via signed volume test
  * - V texture coordinate flipped for OpenGL convention (OBJ has origin at bottom-left)
  * - Single-pass parsing with direct vertex unification (no intermediate arrays)
+ * - Material grouping: each `usemtl` switch emits a new `groups[]` entry
+ *   pointing to a slice of the unified `indices` buffer, so callers
+ *   (e.g. `Mesh`) can render each group with its own material without
+ *   touching the geometry. A model with no `usemtl` directives produces
+ *   a single group with `material: null`.
  *
- * Parsed but ignored: `vn` (normals), `g` (groups), `usemtl` (material assignment),
- * `s` (smooth shading), `o` (object name).
+ * Parsed but ignored: `vn` (normals), `g` (groups), `s` (smooth shading),
+ * `o` (object name).
  *
  * @param {string} text - raw OBJ file contents
- * @returns {object} parsed geometry with `vertices` (Float32Array), `uvs` (Float32Array),
- *   `indices` (Uint16Array), `vertexCount` (number), and `mtllib` (string|null)
+ * @returns {object} parsed geometry with `vertices` (Float32Array),
+ *   `uvs` (Float32Array), `indices` (Uint16Array), `vertexCount` (number),
+ *   `mtllib` (string|null), and `groups`
+ *   (Array<{materialName: string|null, start: number, count: number}>).
+ *   `groups` follows the Three.js / glTF convention — each entry is a
+ *   contiguous slice of the shared `indices` buffer that draws as one
+ *   submesh against a single material. Single-material models still
+ *   produce a `groups` array of length 1, so consumers don't need a
+ *   special case.
  * @ignore
  */
 function parseOBJ(text) {
@@ -89,6 +102,31 @@ function parseOBJ(text) {
 	// mtllib reference (if present)
 	let mtllib = null;
 
+	// Material grouping. Each `usemtl` switch closes the running group
+	// (recording its index count) and opens a new one. Models without
+	// any `usemtl` produce a single group spanning all indices with
+	// `materialName: null` — consumers can treat that uniformly with
+	// the multi-material path. Field name `materialName` matches the
+	// Three.js / glTF convention for "name of the material this
+	// submesh wants to be drawn with"; renderers / mesh objects look
+	// it up in their own material table.
+	const groups = [];
+	const startGroup = (materialName) => {
+		// close the previous group if it has any indices
+		const prev = groups[groups.length - 1];
+		if (prev) {
+			prev.count = indices.length - prev.start;
+		} else if (indices.length > 0) {
+			// pre-usemtl indices belong to an anonymous group
+			groups.push({
+				materialName: null,
+				start: 0,
+				count: indices.length,
+			});
+		}
+		groups.push({ materialName, start: indices.length, count: 0 });
+	};
+
 	// parse lines and build geometry in a single pass
 	const lines = text.split("\n");
 	for (let i = 0; i < lines.length; i++) {
@@ -100,6 +138,10 @@ function parseOBJ(text) {
 		const first = line[0];
 		if (first === "m" && line.startsWith("mtllib ")) {
 			mtllib = line.substring(7).trim();
+			continue;
+		}
+		if (first === "u" && line.startsWith("usemtl ")) {
+			startGroup(line.substring(7).trim());
 			continue;
 		}
 		if (first === VERTEX_PREFIX) {
@@ -164,12 +206,25 @@ function parseOBJ(text) {
 		}
 	}
 
+	// finalize the last open group (or, if no `usemtl` was ever seen,
+	// emit a single material-less group covering all indices so the
+	// `groups[]` contract is always non-empty for non-empty OBJs)
+	if (groups.length === 0) {
+		if (indices.length > 0) {
+			groups.push({ materialName: null, start: 0, count: indices.length });
+		}
+	} else {
+		const last = groups[groups.length - 1];
+		last.count = indices.length - last.start;
+	}
+
 	return {
 		vertices: new Float32Array(vertices),
 		uvs: new Float32Array(uvs),
 		indices: new Uint16Array(indices),
 		vertexCount,
 		mtllib,
+		groups,
 	};
 }
 
