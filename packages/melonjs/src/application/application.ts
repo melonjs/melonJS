@@ -441,6 +441,20 @@ export default class Application {
 		this.world.physic = physicLabel;
 		this.world.gpuTilemap = this.settings.gpuTilemap;
 
+		// If a custom cameraClass is specified, seed the world's sort
+		// mode from the camera's `defaultSortOn` static. Camera2d
+		// declares `"z"` (today's default — no behavior change for
+		// existing games); Camera3d declares `"depth"`, which switches
+		// the world to the camera-distance painter's sort required by
+		// perspective. User code can still override `world.sortOn` after
+		// this point; we only set the initial value.
+		const cameraClass = this.settings.cameraClass as
+			| { defaultSortOn?: "x" | "y" | "z" | "depth" }
+			| undefined;
+		if (cameraClass?.defaultSortOn) {
+			this.world.sortOn = cameraClass.defaultSortOn;
+		}
+
 		// report the active physics adapter once the world is wired —
 		// useful confirmation when a third-party adapter (e.g.
 		// `@melonjs/matter-adapter`) is plugged in via `settings.physic`.
@@ -530,10 +544,10 @@ export default class Application {
 	 * Accepted values : "x", "y", "z", "depth"
 	 * @see {@link World.sortOn}
 	 */
-	get sortOn(): string {
+	get sortOn(): "x" | "y" | "z" | "depth" {
 		return this.world.sortOn;
 	}
-	set sortOn(value: string) {
+	set sortOn(value: "x" | "y" | "z" | "depth") {
 		this.world.sortOn = value;
 	}
 

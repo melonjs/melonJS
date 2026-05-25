@@ -1,10 +1,13 @@
-import { Vector2d } from "../../../math/vector2d.ts";
+import { Vector3d } from "../../../math/vector3d.ts";
 import meshFragment from "./../shaders/mesh.frag";
 import meshVertex from "./../shaders/mesh.vert";
 import { MaterialBatcher } from "./material_batcher.js";
 
 // reusable vector for vertex transform
-const _v = new Vector2d();
+// Vector3d (not Vector2d) so the mesh's per-vertex z survives the
+// transform under Camera3d — for 2D-only view matrices the z column is
+// identity, so output (x, y) matches the legacy Vector2d path.
+const _v = new Vector3d();
 
 /**
  * Per-channel multiply two ARGB-packed Uint32 colors. Used by the
@@ -147,13 +150,14 @@ export default class MeshBatcher extends MaterialBatcher {
 					const i2 = origIdx * 2;
 					let x = vertices[i3];
 					let y = vertices[i3 + 1];
-					const z = vertices[i3 + 2];
+					let z = vertices[i3 + 2];
 
 					if (!isIdentity) {
-						_v.set(x, y);
+						_v.set(x, y, z);
 						m.apply(_v);
 						x = _v.x;
 						y = _v.y;
+						z = _v.z;
 					}
 
 					// per-vertex color when the mesh provides one

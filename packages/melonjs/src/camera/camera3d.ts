@@ -1,9 +1,16 @@
 import { Matrix3d } from "../math/matrix3d.ts";
+import type { ObservableVector3d } from "../math/observableVector3d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
 import Camera2d from "./camera2d.ts";
 import Frustum, { type FrustumOptions } from "./frustum.ts";
+
+// Renderable.pos is an ObservableVector3d at runtime, but Polygon's
+// thinner declaration leaks all the way up to Camera2d, so TS sees
+// `pos: Vector2d`. Funnel the cast through one place.
+type Pos3d = ObservableVector3d;
+const posZ = (p: unknown): number => (p as Pos3d).z;
 
 // reusable unit-axis vectors for rotation calls. Pure constants so
 // allocation only happens once per module load, not per frame.
@@ -51,12 +58,6 @@ const _viewProjection = new Matrix3d();
  * - `localToWorld` / `worldToLocal` overrides fall back to the
  *   ortho-equivalent 2D projection at z=0. Full 3D unproject for
  *   arbitrary depth is future work.
- * - `isVisible` (visibility culling) currently returns `true` for
- *   every non-floating renderable — Camera2d's 2D rect-overlap test
- *   doesn't translate to perspective. The GPU still clips fragments
- *   that fall outside the frustum, so this is visually correct but
- *   defeats the CPU-side early-out. Proper plane-based frustum
- *   culling on `Frustum` is a follow-up.
  * @category Camera
  * @example
  * // opt in app-wide:
@@ -75,6 +76,16 @@ const _viewProjection = new Matrix3d();
  * }
  */
 export default class Camera3d extends Camera2d {
+	/**
+	 * Override `Camera2d.defaultSortOn` to declare `"depth"` as this
+	 * camera's preferred sort mode. `Application` / `Stage` apply this
+	 * to `world.sortOn` at bootstrap, so games opting into Camera3d via
+	 * `cameraClass: Camera3d` get camera-distance painter's sort for
+	 * free — the only correct sort for alpha-blended sprites under
+	 * perspective.
+	 */
+	static override defaultSortOn: "x" | "y" | "z" | "depth" = "depth";
+
 	/**
 	 * the view frustum (perspective parameters + projection matrix).
 	 * Mutating `frustum.fov` / `aspect` / `near` / `far` directly
@@ -270,7 +281,17 @@ export default class Camera3d extends Camera2d {
 		if (this.yaw !== 0) {
 			container.rotate(-this.yaw, AXIS_Y);
 		}
-		container.translate(-translateX, -translateY, -this.pos.z);
+		container.translate(-translateX, -translateY, -posZ(this.pos));
+
+		// Refresh the container's painter's-algorithm order from the
+		// current camera position. The container's `sortOn = "depth"`
+		// comparator (set at Application bootstrap via
+		// `Camera3d.defaultSortOn`) handles the actual ordering — this
+		// `sortNow` just re-runs the same sort because the existing
+		// container lifecycle only re-sorts on child mutations, not on
+		// camera moves. Single sort per frame, uses the engine's normal
+		// sort path, no comparator hijacking.
+		container.sortNow(true);
 	}
 
 	/**
@@ -285,7 +306,7 @@ export default class Camera3d extends Camera2d {
 		translateY: number,
 	): void {
 		// reverse of apply: undo translate first, then yaw, then pitch
-		container.translate(translateX, translateY, this.pos.z);
+		container.translate(translateX, translateY, posZ(this.pos));
 		if (this.yaw !== 0) {
 			container.rotate(this.yaw, AXIS_Y);
 		}
@@ -298,18 +319,45 @@ export default class Camera3d extends Camera2d {
 	 * Point the camera at a world-space target by deriving pitch and
 	 * yaw from the direction (target − camera.pos). Roll is unaffected.
 	 *
+	 * Three call shapes:
+	 * - `lookAt(x, y, z)` — raw world coordinates
+	 * - `lookAt(vector3d)` — a 3D point
+	 * - `lookAt(renderable)` — uses `renderable.pos` (matches the
+	 *   `Renderable.lookAt(target)` signature so Camera3d is a structural
+	 *   drop-in replacement for Camera2d / Renderable in user code).
+	 *
 	 * Last-write-wins with manual `pitch` / `yaw` assignment: if you
 	 * call `lookAt(...)` then set `camera.pitch = 0.1` directly, the
 	 * next frame renders with the manual pitch.
-	 * @param x - target world x
-	 * @param y - target world y
-	 * @param z - target world z
+	 * @param xOrTarget - target world x, or a target with `pos` / `x`,`y`,`z`
+	 * @param y - target world y (only when first arg is a number)
+	 * @param z - target world z (only when first arg is a number)
 	 * @returns this camera
 	 */
-	lookAt(x: number, y: number, z: number): this {
-		const dx = x - this.pos.x;
-		const dy = y - this.pos.y;
-		const dz = z - this.pos.z;
+	override lookAt(
+		xOrTarget: number | { x: number; y: number; z?: number; pos?: Pos3d },
+		y?: number,
+		z?: number,
+	): this {
+		let tx: number;
+		let ty: number;
+		let tz: number;
+		if (typeof xOrTarget === "number") {
+			tx = xOrTarget;
+			ty = y ?? 0;
+			tz = z ?? 0;
+		} else if (xOrTarget.pos) {
+			tx = xOrTarget.pos.x;
+			ty = xOrTarget.pos.y;
+			tz = xOrTarget.pos.z;
+		} else {
+			tx = xOrTarget.x;
+			ty = xOrTarget.y;
+			tz = xOrTarget.z ?? 0;
+		}
+		const dx = tx - this.pos.x;
+		const dy = ty - this.pos.y;
+		const dz = tz - posZ(this.pos);
 
 		// yaw = atan2(dx, dz) — rotation around Y axis to face the
 		// XZ-plane projection of the direction vector
@@ -380,7 +428,7 @@ export default class Camera3d extends Camera2d {
 			// silently lost their depth.
 			const targetZ =
 				"z" in target && typeof target.z === "number" ? target.z : 0;
-			this.pos.set(
+			(this.pos as unknown as Pos3d).set(
 				target.x + this.followOffset.x,
 				target.y + this.followOffset.y,
 				targetZ + this.followOffset.z,
@@ -418,10 +466,6 @@ export default class Camera3d extends Camera2d {
 		if (floating || obj.floating) {
 			return super.isVisible(obj, floating);
 		}
-		// bounding sphere around the renderable's 2D bounds; the z
-		// component is the renderable's depth (its world-space z).
-		// Sprite billboards face the camera so a sphere bounded by
-		// max(width, height) is the right conservative envelope.
 		const bounds = obj.getBounds();
 		const radius = Math.max(bounds.width, bounds.height) * 0.5;
 		return this.frustum.intersectsSphere(
@@ -464,7 +508,7 @@ export default class Camera3d extends Camera2d {
 		if (this.yaw !== 0) {
 			_viewMatrix.rotate(-this.yaw, AXIS_Y);
 		}
-		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.pos.z);
+		_viewMatrix.translate(-this.pos.x, -this.pos.y, -posZ(this.pos));
 
 		// view × projection — the matrix that maps world coords to
 		// clip space, which `Frustum.setFromViewProjection` decomposes

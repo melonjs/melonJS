@@ -16,6 +16,46 @@ function deferredRemove(child, keepalive) {
 }
 
 /**
+ * Module-level cache of the camera position used by `_sortDepth`.
+ * Captured once per sort (in `sort` / `sortNow`) so the comparator —
+ * which runs O(N log N) times — doesn't pay a `state.current()` lookup
+ * per comparison. Safe to be module-scoped: JS is single-threaded and
+ * sort is synchronous within each container.
+ * @ignore
+ */
+let _depthCamX = 0;
+let _depthCamY = 0;
+let _depthCamZ = 0;
+
+/**
+ * Refresh the cached camera position from the active stage. Falls back
+ * to (0, 0, 0) when no camera exists yet (e.g. early init, before any
+ * stage has been set). Called just-in-time before `sortOn === "depth"`
+ * runs its sort. The camera is a `Renderable` (Camera2d/Camera3d), so
+ * `pos.z` is guaranteed by `ObservableVector3d` — no per-field guard.
+ *
+ * `Stage.cameras` is a `Map`, not an array — we read the `"default"`
+ * key (every Stage seeds this in `reset`). For split-screen setups the
+ * world sorts once per frame against the primary camera; the secondary
+ * camera sees slightly-imperfect order which is the industry-standard
+ * compromise (cf. Three.js / Pixi3D).
+ * @ignore
+ */
+function captureDepthCamera() {
+	const stage = state.current();
+	const cam = stage?.cameras?.get("default");
+	if (cam) {
+		_depthCamX = cam.pos.x;
+		_depthCamY = cam.pos.y;
+		_depthCamZ = cam.pos.z;
+	} else {
+		_depthCamX = 0;
+		_depthCamY = 0;
+		_depthCamZ = 0;
+	}
+}
+
+/**
  * Register a child's physics body with the root world container when the
  * child is added to the tree. Two paths coexist:
  *  - `child.bodyDef`: declarative {@link BodyDefinition}, routed through
@@ -190,9 +230,27 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * The property of the child object that should be used to sort on this container.
-	 * Accepted values: "x", "y", "z"
-	 * @type {string}
+	 * The property of the child object that should be used to sort on
+	 * this container.
+	 *
+	 * - `"x"` / `"y"` — 2D scroll-order (descending pos.z, then ascending
+	 *   pos.x or pos.y). Suited to side-scrollers and top-down games.
+	 * - `"z"` — descending pos.z (higher z draws on top). Default for
+	 *   `Camera2d` — matches the painter's-algorithm 2D layering model
+	 *   where pos.z is "layer index".
+	 * - `"depth"` — **Camera3d-only.** Ascending squared distance from
+	 *   the active camera (closest first in the array → far drawn first
+	 *   → close drawn on top under `Container.draw`'s reverse-iteration
+	 *   walk). This is the only correct sort for alpha-blended sprites
+	 *   under perspective projection, where neither pos.z nor pos.x/y
+	 *   layering produces correct occlusion (the closer/farther
+	 *   relationship flips as the camera orbits). Set automatically
+	 *   when an `Application` or `Stage` is constructed with
+	 *   `cameraClass: Camera3d`. Has no useful effect under `Camera2d`
+	 *   (ortho projection doesn't need camera-distance ordering) and
+	 *   pays an O(N log N) sort per frame, so don't enable it manually
+	 *   in 2D-only games.
+	 * @type {"x"|"y"|"z"|"depth"}
 	 * @default "z"
 	 */
 	get sortOn() {
@@ -200,13 +258,17 @@ export default class Container extends Renderable {
 	}
 	set sortOn(value) {
 		const v = value.toLowerCase();
-		if (v !== "x" && v !== "y" && v !== "z") {
+		if (v !== "x" && v !== "y" && v !== "z" && v !== "depth") {
 			throw new Error(
-				`Invalid sortOn value: "${value}" (expected "x", "y", or "z")`,
+				`Invalid sortOn value: "${value}" (expected "x", "y", "z", or "depth")`,
 			);
 		}
 		this._sortOn = v;
-		this._comparator = this["_sort" + v.toUpperCase()];
+		if (v === "depth") {
+			this._comparator = this._sortDepth;
+		} else {
+			this._comparator = this["_sort" + v.toUpperCase()];
+		}
 	}
 
 	/**
@@ -875,6 +937,11 @@ export default class Container extends Renderable {
 				});
 			}
 			this.pendingSort = defer(function () {
+				// refresh the cached camera position so `_sortDepth`
+				// sees the current view — no-op for x/y/z modes
+				if (this._sortOn === "depth") {
+					captureDepthCamera();
+				}
 				// sort everything in this container
 				this.getChildren().sort(this._comparator);
 				// clear the defer id
@@ -882,6 +949,34 @@ export default class Container extends Renderable {
 				// make sure we redraw everything
 				this.isDirty = true;
 			}, this);
+		}
+	}
+
+	/**
+	 * Synchronous variant of {@link Container#sort}. Sorts immediately
+	 * — no defer — using the current `_comparator`. Intended for
+	 * per-frame callers that need the order to be valid for the very
+	 * next render (e.g. `Camera3d` refreshing the `"depth"` sort after
+	 * the camera has moved, where waiting for the deferred sort tick
+	 * would render a stale frame).
+	 * @param {boolean} [recursive=false] - recursively sort sub-containers
+	 */
+	sortNow(recursive) {
+		if (this._sortOn === "depth") {
+			captureDepthCamera();
+		}
+		const children = this.getChildren();
+		if (children.length > 1) {
+			children.sort(this._comparator);
+			this.isDirty = true;
+		}
+		if (recursive === true) {
+			for (let i = 0; i < children.length; i++) {
+				const c = children[i];
+				if (c instanceof Container) {
+					c.sortNow(true);
+				}
+			}
 		}
 	}
 
@@ -913,6 +1008,32 @@ export default class Container extends Renderable {
 	 */
 	_sortReverseZ(a, b) {
 		return a.pos.z - b.pos.z;
+	}
+
+	/**
+	 * Camera-distance sorting function used by `sortOn = "depth"`.
+	 * Orders children by ascending squared distance from the cached
+	 * camera position — closest first in the array, so
+	 * {@link Container#draw}'s reverse-iteration walk paints far→near
+	 * (correct painter's algorithm for alpha-blended sprites under
+	 * perspective). The cached position is refreshed by
+	 * {@link captureDepthCamera} just before each sort runs; this
+	 * comparator stays tight (zero allocation, six subtracts + three
+	 * mul-adds per pair) for the hot O(N log N) path.
+	 *
+	 * Container children are `Renderable` instances with an
+	 * `ObservableVector3d` pos — `pos.z` is always defined, no guard
+	 * needed here.
+	 * @ignore
+	 */
+	_sortDepth(a, b) {
+		const ax = a.pos.x - _depthCamX;
+		const ay = a.pos.y - _depthCamY;
+		const az = a.pos.z - _depthCamZ;
+		const bx = b.pos.x - _depthCamX;
+		const by = b.pos.y - _depthCamY;
+		const bz = b.pos.z - _depthCamZ;
+		return ax * ax + ay * ay + az * az - (bx * bx + by * by + bz * bz);
 	}
 
 	/**

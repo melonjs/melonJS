@@ -1,4 +1,4 @@
-import { Vector2d } from "../../../math/vector2d.ts";
+import { Vector3d } from "../../../math/vector3d.ts";
 import IndexBuffer from "../buffer/index.js";
 import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
 import quadMultiVertex from "./../shaders/quad-multi.vert";
@@ -10,14 +10,18 @@ import { MaterialBatcher } from "./material_batcher.js";
  */
 
 // a pool of reusable vectors used by `addQuad` to transform the four
-// quad corners. Exported so `LitQuadBatcher` reuses the same pool —
-// JS is single-threaded and `addQuad` is synchronous, so concurrent
-// access can't happen and a single shared pool is safe.
+// quad corners. Vector3d (not Vector2d) so the per-sprite depth set on
+// `z` flows through `Matrix3d.apply` — required for Camera3d's view
+// matrix (Y/X-axis rotation) to actually rotate the vertex in 3D space.
+// For 2D-only matrices the z column is identity, so `(x, y)` output is
+// bit-identical to the Vector2d path. Exported so `LitQuadBatcher`
+// reuses the same pool — JS is single-threaded and `addQuad` is
+// synchronous, so concurrent access can't happen.
 export const V_ARRAY = [
-	new Vector2d(),
-	new Vector2d(),
-	new Vector2d(),
-	new Vector2d(),
+	new Vector3d(),
+	new Vector3d(),
+	new Vector3d(),
+	new Vector3d(),
 ];
 
 /**
@@ -212,10 +216,13 @@ export default class QuadBatcher extends MaterialBatcher {
 		// kept for any future world-space caller that wants its preDraw
 		// translate/scale honored.
 		const m = this.viewMatrix;
-		const vec0 = V_ARRAY[0].set(x, y);
-		const vec1 = V_ARRAY[1].set(x + width, y);
-		const vec2 = V_ARRAY[2].set(x, y + height);
-		const vec3 = V_ARRAY[3].set(x + width, y + height);
+		// blits are always at z = 0 (screen-space). Setting z explicitly
+		// matters because V_ARRAY is Vector3d — any leftover z from a
+		// prior addQuad would otherwise leak into the transform.
+		const vec0 = V_ARRAY[0].set(x, y, 0);
+		const vec1 = V_ARRAY[1].set(x + width, y, 0);
+		const vec2 = V_ARRAY[2].set(x, y + height, 0);
+		const vec3 = V_ARRAY[3].set(x + width, y + height, 0);
 		if (m && !m.isIdentity()) {
 			m.apply(vec0);
 			m.apply(vec1);
@@ -223,8 +230,8 @@ export default class QuadBatcher extends MaterialBatcher {
 			m.apply(vec3);
 		}
 
-		// blits are always rendered at z = 0 (screen-space, ortho); pre-PR
-		// behavior is preserved unchanged
+		// blits stay at z = 0 (screen-space, ortho); pre-PR behavior
+		// preserved unchanged
 		const tint = 0xffffffff;
 		this.vertexData.push(vec0.x, vec0.y, 0, 0, 1, tint, 0);
 		this.vertexData.push(vec1.x, vec1.y, 0, 1, 1, tint, 0);
@@ -288,12 +295,17 @@ export default class QuadBatcher extends MaterialBatcher {
 			}
 		}
 
-		// Transform vertices
+		// Transform vertices. Stamp per-sprite depth onto z BEFORE
+		// `m.apply` so Camera3d's view matrix (3D R⁻¹ ∘ T(-pos)) fully
+		// rotates the vertex. For 2D-only matrices the z column is
+		// identity, so output (x, y) is bit-identical to the legacy
+		// Vector2d path and z passes through unchanged.
 		const m = this.viewMatrix;
-		const vec0 = V_ARRAY[0].set(x, y);
-		const vec1 = V_ARRAY[1].set(x + w, y);
-		const vec2 = V_ARRAY[2].set(x, y + h);
-		const vec3 = V_ARRAY[3].set(x + w, y + h);
+		const z = this.renderer.currentDepth;
+		const vec0 = V_ARRAY[0].set(x, y, z);
+		const vec1 = V_ARRAY[1].set(x + w, y, z);
+		const vec2 = V_ARRAY[2].set(x, y + h, z);
+		const vec3 = V_ARRAY[3].set(x + w, y + h, z);
 
 		if (!m.isIdentity()) {
 			m.apply(vec0);
@@ -303,14 +315,12 @@ export default class QuadBatcher extends MaterialBatcher {
 		}
 
 		// 4 vertices per quad; the index buffer provides the 6 indices.
-		// textureId is the unit index for multi-texture, or 0 for single-texture fallback.
-		// z is the current renderer depth (set by Renderable.preDraw); a no-op under
-		// the default ortho projection, used by perspective (Camera3d).
+		// textureId is the unit index for multi-texture, or 0 for
+		// single-texture fallback.
 		const textureId = this.useMultiTexture ? unit : 0;
-		const z = this.renderer.currentDepth;
-		vertexData.push(vec0.x, vec0.y, z, u0, v0, tint, textureId);
-		vertexData.push(vec1.x, vec1.y, z, u1, v0, tint, textureId);
-		vertexData.push(vec2.x, vec2.y, z, u0, v1, tint, textureId);
-		vertexData.push(vec3.x, vec3.y, z, u1, v1, tint, textureId);
+		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, textureId);
+		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, textureId);
+		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, textureId);
+		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, textureId);
 	}
 }

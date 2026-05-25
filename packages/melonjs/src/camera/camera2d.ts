@@ -57,6 +57,16 @@ const targetV = new Vector2d();
  */
 export default class Camera2d extends Renderable {
 	/**
+	 * Preferred `Container.sortOn` mode for this camera type. Read by
+	 * `Application` (and `Stage`) at bootstrap to initialize the world
+	 * container's sort. Camera2d uses `"z"` (painter's-algorithm 2D
+	 * layering, higher pos.z draws on top); `Camera3d` overrides to
+	 * `"depth"` (camera-distance sort required by perspective).
+	 * Subclasses can override to declare their own preferred mode.
+	 */
+	static defaultSortOn: "x" | "y" | "z" | "depth" = "z";
+
+	/**
 	 * Axis definition
 	 * NONE no axis
 	 * HORIZONTAL horizontal axis only

@@ -213,4 +213,76 @@ describe("Camera3d × Stage × Application integration", () => {
 			}).not.toThrow();
 		});
 	});
+
+	describe("world.sortOn auto-bootstrap from cameraClass.defaultSortOn", () => {
+		it("Application(cameraClass: Camera3d) sets world.sortOn = 'depth'", () => {
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			expect(app.world.sortOn).toBe("depth");
+		});
+
+		it("Application(cameraClass: Camera2d) sets world.sortOn = 'z' (today's default)", () => {
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera2d,
+			});
+			expect(app.world.sortOn).toBe("z");
+		});
+
+		it("Application with no cameraClass leaves world.sortOn at its 'z' default", () => {
+			// no-op bootstrap path — exists to lock in that we never
+			// regress to silently switching modes on pre-19.7 games
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+			});
+			expect(app.world.sortOn).toBe("z");
+		});
+
+		it("custom Camera subclass with defaultSortOn = 'y' bootstraps the world to 'y'", () => {
+			class YSortCam extends Camera2d {
+				static defaultSortOn = "y";
+			}
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: YSortCam,
+			});
+			expect(app.world.sortOn).toBe("y");
+		});
+
+		it("user can override world.sortOn after construction — bootstrap is not sticky", () => {
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			expect(app.world.sortOn).toBe("depth");
+			app.world.sortOn = "x";
+			expect(app.world.sortOn).toBe("x");
+			// nothing should silently switch it back
+			expect(app.world._sortOn).toBe("x");
+		});
+
+		it("Stage.cameraClass override flips world.sortOn when the stage's camera differs from the app's", () => {
+			// app uses Camera3d (world bootstrapped to 'depth'); when a
+			// stage with `cameraClass: Camera2d` resets onto that app,
+			// the loader pattern, world.sortOn flips back to 'z' so the
+			// 2D stage paints correctly.
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			expect(app.world.sortOn).toBe("depth");
+
+			const stage = new Stage({ cameraClass: Camera2d });
+			stage.reset(app);
+			expect(app.world.sortOn).toBe("z");
+		});
+	});
 });

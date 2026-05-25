@@ -173,6 +173,29 @@ export default class Stage {
 				}
 				this.cameras.set("default", default_camera);
 			}
+
+			// Honor the stage-level cameraClass override on the world's
+			// sort mode too. `DefaultLoadingScreen` pins Camera2d via this
+			// path, which (via `Camera2d.defaultSortOn = "z"`) restores
+			// the 2D z-sort even when the surrounding Application opted
+			// into Camera3d — so the loader works correctly under a 3D
+			// app. Skip when the stage didn't override (app-level
+			// cameraClass was already applied in Application's
+			// constructor).
+			const ChosenCameraClass = StageCameraClass ?? AppCameraClass;
+			const defaultSortOn = (
+				ChosenCameraClass as
+					| { defaultSortOn?: "x" | "y" | "z" | "depth" }
+					| undefined
+			)?.defaultSortOn;
+			if (
+				StageCameraClass &&
+				defaultSortOn &&
+				app.world &&
+				app.world.sortOn !== defaultSortOn
+			) {
+				app.world.sortOn = defaultSortOn;
+			}
 		}
 
 		// reset the game

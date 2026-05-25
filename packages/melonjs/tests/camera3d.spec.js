@@ -522,4 +522,36 @@ describe("Camera3d", () => {
 			expect(cam.projectionMatrix).toBeInstanceOf(Matrix3d);
 		});
 	});
+
+	describe("defaultSortOn (Camera2d/3d bootstrap hint)", () => {
+		it("Camera2d.defaultSortOn is 'z' (preserves pre-19.7 default)", () => {
+			expect(Camera2d.defaultSortOn).toBe("z");
+		});
+
+		it("Camera3d.defaultSortOn is 'depth' (perspective painter's sort)", () => {
+			expect(Camera3d.defaultSortOn).toBe("depth");
+		});
+
+		it("Camera3d.defaultSortOn is statically inherited (own property override, not the Camera2d value)", () => {
+			// guards against a regression where someone deletes the
+			// `static override defaultSortOn` line on Camera3d, which
+			// would silently inherit Camera2d's 'z' and break all 3D apps
+			expect(Object.hasOwn(Camera3d, "defaultSortOn")).toBe(true);
+			expect(Camera3d.defaultSortOn).not.toBe(Camera2d.defaultSortOn);
+		});
+
+		it("A custom Camera3d subclass inherits 'depth' unless it overrides", () => {
+			class MyCam extends Camera3d {}
+			expect(MyCam.defaultSortOn).toBe("depth");
+		});
+
+		it("A custom Camera2d subclass can declare its own preferred mode", () => {
+			class IsoCam extends Camera2d {
+				static defaultSortOn = "y";
+			}
+			expect(IsoCam.defaultSortOn).toBe("y");
+			// the base class is untouched
+			expect(Camera2d.defaultSortOn).toBe("z");
+		});
+	});
 });

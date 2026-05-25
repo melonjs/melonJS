@@ -713,6 +713,182 @@ describe("Container", () => {
 			container.sortOn = "z";
 			expect(container._comparator).toBe(container._sortZ);
 		});
+
+		it("sortOn = 'depth' wires up the _sortDepth comparator", () => {
+			container.sortOn = "depth";
+			expect(container._sortOn).toBe("depth");
+			expect(container._comparator).toBe(container._sortDepth);
+		});
+
+		it("sortOn accepts case-insensitive 'DEPTH'", () => {
+			container.sortOn = "DEPTH";
+			expect(container._sortOn).toBe("depth");
+			expect(container._comparator).toBe(container._sortDepth);
+		});
+
+		it("sortOn rejects bogus values with a message naming the legal modes", () => {
+			expect(() => {
+				container.sortOn = "garbage";
+			}).toThrow(/expected "x", "y", "z", or "depth"/);
+		});
+
+		it("_sortDepth returns 0 for two children identical to the cached camera (degenerate)", () => {
+			container.sortOn = "depth";
+			const a = new Renderable(0, 0, 1, 1);
+			const b = new Renderable(0, 0, 1, 1);
+			// no active stage → captureDepthCamera caches (0, 0, 0); both
+			// children sit at the cached cam pos → distance² = 0 for both.
+			expect(container._sortDepth(a, b)).toBe(0);
+		});
+
+		it("_sortDepth orders children by ascending distance from the cached camera (closer first)", () => {
+			container.sortOn = "depth";
+			const close = new Renderable(10, 0, 1, 1);
+			const far = new Renderable(100, 0, 1, 1);
+			// (0,0) cached → close: 100, far: 10000 → cmp < 0 → close first
+			expect(container._sortDepth(close, far)).toBeLessThan(0);
+			expect(container._sortDepth(far, close)).toBeGreaterThan(0);
+		});
+
+		it("_sortDepth includes pos.z in the distance computation", () => {
+			container.sortOn = "depth";
+			const flat = new Renderable(0, 0, 1, 1); // pos.z = 0
+			const deep = new Renderable(0, 0, 1, 1);
+			deep.pos.z = 50; // 2500 vs 0
+			expect(container._sortDepth(flat, deep)).toBeLessThan(0);
+		});
+
+		it("_sortDepth tolerates NaN coordinates without throwing", () => {
+			container.sortOn = "depth";
+			const ok = new Renderable(0, 0, 1, 1);
+			const broken = new Renderable(0, 0, 1, 1);
+			broken.pos.x = Number.NaN;
+			// NaN propagates through arithmetic to NaN comparator output;
+			// Array.sort with NaN is implementation-defined but must not
+			// throw. We only assert no exception, not a specific order.
+			expect(() => {
+				container._sortDepth(ok, broken);
+			}).not.toThrow();
+		});
+
+		it("sortNow sorts synchronously, no defer", () => {
+			container.sortOn = "z";
+			const a = new Renderable(0, 0, 1, 1);
+			a.pos.z = 1;
+			const b = new Renderable(0, 0, 1, 1);
+			b.pos.z = 5;
+			const c = new Renderable(0, 0, 1, 1);
+			c.pos.z = 3;
+			// Bypass addChild's autoSort: shove directly into the children
+			// array so we can verify sortNow alone produces the order.
+			container.children = [a, b, c];
+			container.sortNow();
+			// _sortZ is descending: [5, 3, 1]
+			expect(
+				container.children.map((x) => {
+					return x.pos.z;
+				}),
+			).toEqual([5, 3, 1]);
+		});
+
+		it("sortNow sets isDirty when a sort actually happened", () => {
+			container.sortOn = "z";
+			const a = new Renderable(0, 0, 1, 1);
+			const b = new Renderable(0, 0, 1, 1);
+			container.children = [a, b];
+			container.isDirty = false;
+			container.sortNow();
+			expect(container.isDirty).toBe(true);
+		});
+
+		it("sortNow is a no-op for single-child / empty containers (no isDirty flip)", () => {
+			container.children = [];
+			container.isDirty = false;
+			container.sortNow();
+			expect(container.isDirty).toBe(false);
+			container.children = [new Renderable(0, 0, 1, 1)];
+			container.isDirty = false;
+			container.sortNow();
+			expect(container.isDirty).toBe(false);
+		});
+
+		it("sortNow(true) recurses into sub-containers", () => {
+			const sub = new Container(0, 0, 100, 100);
+			sub.sortOn = "z";
+			const a = new Renderable(0, 0, 1, 1);
+			a.pos.z = 1;
+			const b = new Renderable(0, 0, 1, 1);
+			b.pos.z = 5;
+			sub.children = [a, b];
+
+			container.sortOn = "z";
+			container.children = [sub];
+
+			container.sortNow(true);
+			// sub's children should now be sorted descending by z
+			expect(
+				sub.children.map((x) => {
+					return x.pos.z;
+				}),
+			).toEqual([5, 1]);
+		});
+
+		it("sortNow(false) does NOT recurse — sub-container is left untouched", () => {
+			const sub = new Container(0, 0, 100, 100);
+			sub.sortOn = "z";
+			const a = new Renderable(0, 0, 1, 1);
+			a.pos.z = 1;
+			const b = new Renderable(0, 0, 1, 1);
+			b.pos.z = 5;
+			sub.children = [a, b]; // intentionally out of order
+
+			container.children = [sub];
+			container.sortNow();
+			expect(
+				sub.children.map((x) => {
+					return x.pos.z;
+				}),
+			).toEqual([1, 5]); // unchanged
+		});
+
+		it("sortNow with sortOn='depth' produces ascending camera-distance order", () => {
+			container.sortOn = "depth";
+			const close = new Renderable(5, 0, 1, 1);
+			const mid = new Renderable(50, 0, 1, 1);
+			const far = new Renderable(500, 0, 1, 1);
+			container.children = [far, close, mid]; // intentionally unsorted
+			container.sortNow();
+			// no active stage → camera caches at (0, 0, 0) → ascending dist²
+			expect(
+				container.children.map((x) => {
+					return x.pos.x;
+				}),
+			).toEqual([5, 50, 500]);
+		});
+
+		it("sortNow with sortOn='depth' on huge coordinates doesn't overflow into wrong order", () => {
+			container.sortOn = "depth";
+			const a = new Renderable(1e5, 0, 1, 1);
+			const b = new Renderable(2e5, 0, 1, 1);
+			// dist² = 1e10 vs 4e10 — well under Number.MAX_SAFE_INTEGER (≈9e15)
+			container.children = [b, a];
+			container.sortNow();
+			expect(container.children).toEqual([a, b]);
+		});
+
+		it("sortOn='depth' on container with no children doesn't crash", () => {
+			container.sortOn = "depth";
+			expect(() => {
+				container.sortNow();
+			}).not.toThrow();
+		});
+
+		it("switching sortOn from 'depth' back to 'z' restores _sortZ", () => {
+			container.sortOn = "depth";
+			expect(container._comparator).toBe(container._sortDepth);
+			container.sortOn = "z";
+			expect(container._comparator).toBe(container._sortZ);
+		});
 	});
 
 	describe("enableChildBoundsUpdate", () => {
