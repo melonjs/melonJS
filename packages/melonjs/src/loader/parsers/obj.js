@@ -159,13 +159,20 @@ function parseOBJ(text) {
 		}
 
 		const first = line[0];
-		if (first === "m" && line.startsWith("mtllib ")) {
-			mtllib = line.substring(7).trim();
-			continue;
-		}
-		if (first === "u" && line.startsWith("usemtl ")) {
-			startGroup(line.substring(7).trim());
-			continue;
+		// tokenize once for keyword + argument lookup. The v/vt/f
+		// paths below also split on `\s+`, so this is just hoisting
+		// the same parse — handles tabs and multiple-space separators
+		// consistently across every line type.
+		if (first === "m" || first === "u") {
+			const parts = line.split(/\s+/);
+			if (parts[0] === "mtllib") {
+				mtllib = parts.slice(1).join(" ");
+				continue;
+			}
+			if (parts[0] === "usemtl") {
+				startGroup(parts.slice(1).join(" "));
+				continue;
+			}
 		}
 		if (first === VERTEX_PREFIX) {
 			const parts = line.split(/\s+/);

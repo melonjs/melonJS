@@ -2,8 +2,8 @@ import Path2D from "./../geometries/path2d.js";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
-import * as device from "../system/device.js";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
+import { createCanvas } from "./canvas_factory.js";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
@@ -287,32 +287,7 @@ export default class Renderer {
 	 * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas of the given size
 	 */
 	static createCanvas(width, height, returnOffscreenCanvas = false) {
-		if (width === 0 || height === 0) {
-			throw new Error(
-				"width or height was zero, Canvas could not be initialized !",
-			);
-		}
-		// `device.offscreenCanvas` is the engine's vetted capability
-		// check — it actually instantiates `new OffscreenCanvas(0,0)`
-		// and verifies `.getContext("2d")` returns a real context, with
-		// a try/catch for browser quirks (Safari historically only
-		// implemented WebGL{1,2} contexts on OffscreenCanvas). A bare
-		// `typeof OffscreenCanvas !== "undefined"` would let through
-		// environments where construction or 2D context creation fails
-		// and crash later callers (`getWhitePixel`, mesh solid-fill, …).
-		if (returnOffscreenCanvas === true && device.offscreenCanvas === true) {
-			const c = new globalThis.OffscreenCanvas(width, height);
-			// stub `style` for compatibility — OffscreenCanvas is detached
-			// from the DOM but downstream code may read it
-			if (typeof c.style === "undefined") {
-				c.style = {};
-			}
-			return c;
-		}
-		const c = globalThis.document.createElement("canvas");
-		c.width = width;
-		c.height = height;
-		return c;
+		return createCanvas(width, height, returnOffscreenCanvas);
 	}
 
 	/**

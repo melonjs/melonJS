@@ -54,7 +54,7 @@ Graphics
 - Built-in effects such as tinting, masking and 2D lighting (with optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights)
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
-- 3D mesh rendering with OBJ/MTL model loading, perspective projection and hardware depth testing
+- 3D mesh rendering with OBJ/MTL model loading, multi-material support, perspective projection and hardware depth testing
 - Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text with built-in typewriter effect

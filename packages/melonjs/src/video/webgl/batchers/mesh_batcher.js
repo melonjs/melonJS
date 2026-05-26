@@ -80,8 +80,10 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * Add a textured mesh to the batch. When the mesh has a
 	 * `vertexColors` array (multi-material OBJ + bound MTL), each
 	 * vertex's `aColor` attribute comes from that buffer instead of
-	 * the shared `tint` argument — so the mesh batches in a single
-	 * draw call with per-material colors baked into the vertex stream.
+	 * the shared `tint` argument — so multi-material rendering needs
+	 * no extra draw calls per material vs single-material (large
+	 * meshes still get chunked across multiple flushes to fit the
+	 * vertex/index buffer limits — same behavior as single-material).
 	 * The shared `tint` is then multiplied into each vertex color
 	 * CPU-side (via `mulPackedARGB`, before `pushMesh`), preserving
 	 * runtime flash / fade / team-color effects — the mesh shader

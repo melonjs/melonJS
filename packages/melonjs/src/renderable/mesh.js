@@ -258,11 +258,14 @@ export default class Mesh extends Renderable {
 			 * Per-vertex color buffer (one packed Uint32 per vertex)
 			 * populated for multi-material meshes. The mesh batcher
 			 * reads from this when present, pushing the per-vertex
-			 * color as the `aColor` attribute — so the whole mesh
-			 * renders in a single draw call with each material region
-			 * carrying its baked color. Multiplied at render time by
-			 * the global `mesh.tint`, so runtime tint mutation still
-			 * works as expected (flash, fade, team color, etc.).
+			 * color as the `aColor` attribute — so multi-material
+			 * rendering needs no extra draw calls per material vs
+			 * single-material rendering (the batcher still chunks
+			 * very large meshes across multiple draws to fit its
+			 * vertex/index buffer limits, same as the single-material
+			 * path). Multiplied at render time by the global
+			 * `mesh.tint`, so runtime tint mutation still works as
+			 * expected (flash, fade, team color, etc.).
 			 *
 			 * Vertices were split per-material at parse time (each
 			 * material has its own dedup scope in the OBJ parser), so
@@ -377,11 +380,14 @@ export default class Mesh extends Renderable {
 	/**
 	 * Draw the mesh (automatically called by melonJS).
 	 * Projects vertices through `projectionMatrix × currentTransform`
-	 * and hands the mesh off to `renderer.drawMesh()` in a single
-	 * call. Multi-material meshes still draw in one call — each
-	 * material's diffuse color is baked into `vertexColors` at
-	 * construction time and pushed through the renderer's per-vertex
-	 * `aColor` (WebGL) or per-triangle solid-fill (Canvas) path.
+	 * and hands the mesh off to `renderer.drawMesh()`. Multi-material
+	 * meshes need no extra `drawMesh` calls per material vs single-
+	 * material — each material's diffuse color is baked into
+	 * `vertexColors` at construction time and pushed through the
+	 * renderer's per-vertex `aColor` (WebGL) or per-triangle solid-
+	 * fill (Canvas) path. The WebGL batcher may still chunk very
+	 * large meshes across multiple `drawElements` to fit its
+	 * vertex/index buffer limits, same as the single-material path.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 */
 	draw(renderer) {

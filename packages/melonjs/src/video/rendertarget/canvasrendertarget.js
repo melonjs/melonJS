@@ -1,6 +1,6 @@
 import { clamp } from "../../math/math.ts";
 import { setPrefixed } from "../../utils/agent.ts";
-import Renderer from "../renderer.js";
+import { createCanvas } from "../canvas_factory.js";
 import RenderTarget from "./rendertarget.ts";
 
 /**
@@ -110,7 +110,7 @@ class CanvasRenderTarget extends RenderTarget {
 		if (typeof attributes.canvas !== "undefined") {
 			this.canvas = attributes.canvas;
 		} else {
-			this.canvas = Renderer.createCanvas(
+			this.canvas = createCanvas(
 				width,
 				height,
 				this.attributes.offscreenCanvas,

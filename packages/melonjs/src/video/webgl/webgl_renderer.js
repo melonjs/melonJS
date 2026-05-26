@@ -1223,11 +1223,13 @@ export default class WebGLRenderer extends Renderer {
 	 * fit the vertex/index buffer limits.
 	 *
 	 * Multi-material meshes (OBJ files with multiple `usemtl` groups +
-	 * a bound MTL) draw in a SINGLE call here — the per-material
-	 * colors are baked into `mesh.vertexColors` at construction time
-	 * and pushed through the batcher's per-vertex `aColor` attribute.
-	 * `mesh.tint` still multiplies on top at draw time, so flash /
-	 * fade / team-color via `setTint` work the same as single-material.
+	 * a bound MTL) don't add any per-material draw calls here — the
+	 * per-material colors are baked into `mesh.vertexColors` at
+	 * construction time and pushed through the batcher's per-vertex
+	 * `aColor` attribute. `mesh.tint` still multiplies on top at draw
+	 * time, so flash / fade / team-color via `setTint` work the same
+	 * as single-material. (The chunking-for-buffer-limits behavior
+	 * above still applies to multi-material meshes as well.)
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
 	 */
 	drawMesh(mesh) {
