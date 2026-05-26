@@ -20,11 +20,13 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits
  * (Kenney Space Kit 2.0, CC0).
  */
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import type { CanvasRenderer, WebGLRenderer } from "melonjs";
 import {
 	Application,
 	loader,
 	Mesh,
+	plugin,
 	Renderable,
 	Vector3d,
 	video,
@@ -34,30 +36,49 @@ import { createExampleComponent } from "../utils";
 const base = `${import.meta.env.BASE_URL}assets/multiMaterialMesh/`;
 
 // the four Kenney spacecraft to showcase; each .obj has its companion
-// .mtl with 3-5 differently-colored materials
+// .mtl with 3-5 differently-colored materials. Per-ship "team color"
+// multipliers are applied on top of the MTL palette so the four ships
+// don't all read as the same grey-and-orange blob — the multiplication
+// preserves the per-material contrast (orange wings stay brighter than
+// the body, dark cockpits stay dark) while tinting the whole craft
+// toward its team hue.
 const CRAFTS = [
-	"craft_speederA",
-	"craft_speederB",
-	"craft_racer",
-	"craft_miner",
+	{ name: "craft_speederA", tint: [1.0, 0.6, 0.55] }, // crimson
+	{ name: "craft_speederB", tint: [0.55, 0.75, 1.0] }, // ice blue
+	{ name: "craft_racer", tint: [0.55, 1.0, 0.65] }, // jade
+	{ name: "craft_miner", tint: [1.0, 0.95, 0.55] }, // gold
 ];
 
 const createGame = () => {
 	const app = new Application(1024, 768, {
 		parent: "screen",
-		renderer: video.AUTO,
+		// Multi-material 3D meshes require the WebGL renderer for usable
+		// frame rates — Canvas falls back to per-triangle solid-fill in
+		// JS, which is correct (per-vertex baked colors, global painter's
+		// sort) but is 10-50× slower than the GPU rasterizer for the
+		// same scene. Force WebGL here.
+		renderer: video.WEBGL,
 		scale: "auto",
 	});
 
 	app.world.backgroundColor.parseCSS("#0a0a1f");
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	// preload every craft's OBJ + matching MTL. `type: "mtl"` parses
 	// the materials so the Mesh constructor can look them up by name
 	// later via `material: <mtl-name>`.
 	const assets = [];
-	for (const name of CRAFTS) {
-		assets.push({ name, type: "obj", src: `${base}${name}.obj` });
-		assets.push({ name, type: "mtl", src: `${base}${name}.mtl` });
+	for (const craft of CRAFTS) {
+		assets.push({
+			name: craft.name,
+			type: "obj",
+			src: `${base}${craft.name}.obj`,
+		});
+		assets.push({
+			name: craft.name,
+			type: "mtl",
+			src: `${base}${craft.name}.mtl`,
+		});
 	}
 
 	loader.preload(assets, () => {
@@ -75,7 +96,13 @@ const createGame = () => {
 		class SpinningCraft extends Renderable {
 			mesh: Mesh;
 
-			constructor(modelName: string, x: number, y: number, size: number) {
+			constructor(
+				modelName: string,
+				teamTint: number[],
+				x: number,
+				y: number,
+				size: number,
+			) {
 				super(0, 0, 1024, 768);
 				this.anchorPoint.set(0, 0);
 				this.mesh = new Mesh(x, y, {
@@ -85,6 +112,22 @@ const createGame = () => {
 					height: size,
 					cullBackFaces: true,
 				});
+				// Apply the per-ship team color via `mesh.tint`. The
+				// per-material Kd values are already baked into the
+				// vertex stream at construction time (multi-material
+				// tier 2), so `mesh.tint` here is the global
+				// multiplier — every panel's baked color × team color.
+				// Each material's relative brightness is preserved
+				// (orange wings stay brighter than the body, dark
+				// cockpits stay dark) while the whole craft shifts
+				// toward its team hue. This is the canonical
+				// "vertex color × material color × runtime tint"
+				// pattern from real-time 3D.
+				this.mesh.tint.setColor(
+					Math.round(teamTint[0] * 255),
+					Math.round(teamTint[1] * 255),
+					Math.round(teamTint[2] * 255),
+				);
 			}
 
 			override update(dt: number): boolean {
@@ -103,23 +146,37 @@ const createGame = () => {
 			}
 		}
 
-		// 2x2 grid layout
+		// 2x2 grid layout. Y positions are shifted up from cell centers
+		// so the per-row labels (placed just above each ship) and any
+		// cut-off below the canvas in narrow viewports don't push the
+		// bottom row off-screen.
 		const cellW = 1024 / 2;
-		const cellH = 768 / 2;
-		const meshSize = 280;
+		const meshSize = 240;
+		// engine Y for each row's mesh center — top row at ~25% of the
+		// 768 canvas, bottom row at ~65%. Labels go just above (~18%
+		// below the row top edge).
+		const ROW_Y = [200, 530];
 		for (let i = 0; i < CRAFTS.length; i++) {
 			const col = i % 2;
 			const row = Math.floor(i / 2);
 			const cx = cellW * col + cellW / 2;
-			const cy = cellH * row + cellH / 2;
-			app.world.addChild(new SpinningCraft(CRAFTS[i], cx, cy, meshSize));
+			const craft = CRAFTS[i];
+			app.world.addChild(
+				new SpinningCraft(craft.name, craft.tint, cx, ROW_Y[row], meshSize),
+			);
 		}
 
-		// labels for each craft — HTML overlay since the grid is fixed
+		// HTML labels positioned above each craft. The canvas is scaled
+		// by `scale: "auto"` so we use % of the parent (which wraps the
+		// canvas) for both axes — keeps labels aligned regardless of the
+		// final display size.
 		const labelStyle =
 			"position:absolute;color:#e0e0e0;font-family:'Courier New',monospace;" +
 			"font-size:14px;font-weight:bold;text-shadow:0 0 4px #000;" +
-			"z-index:1000;pointer-events:none;";
+			"z-index:1000;pointer-events:none;transform:translate(-50%,-50%);";
+		// label Y as % of the 768 canvas height, sitting just above the
+		// mesh center (mesh half-extent ≈ meshSize/2 → ~125 engine px)
+		const LABEL_Y_PCT = [(ROW_Y[0] - 130) / 768, (ROW_Y[1] - 130) / 768];
 		const parent = app.renderer.getCanvas().parentElement;
 		if (parent) {
 			parent.style.position = "relative";
@@ -127,11 +184,8 @@ const createGame = () => {
 				const col = i % 2;
 				const row = Math.floor(i / 2);
 				const label = document.createElement("div");
-				label.textContent = CRAFTS[i].replace("craft_", "");
-				// approximate engine→screen position; close enough for
-				// labels (renderer.getCanvas().getBoundingClientRect()
-				// would be exact but this is fine for a static layout)
-				label.style.cssText = `${labelStyle}left:${(col * 0.5 + 0.25) * 100}%;top:${(row * 0.5 + 0.45) * 100}%;transform:translate(-50%,0);`;
+				label.textContent = CRAFTS[i].name.replace("craft_", "");
+				label.style.cssText = `${labelStyle}left:${(col * 0.5 + 0.25) * 100}%;top:${LABEL_Y_PCT[row] * 100}%;`;
 				parent.appendChild(label);
 			}
 		}
