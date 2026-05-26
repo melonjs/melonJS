@@ -1,7 +1,7 @@
 import { vector2dPool } from "../../math/vector2d.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
-import { createCanvas } from "../../video/video.js";
+import { createCanvas } from "../../video/canvas_factory.js";
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,

@@ -37,3 +37,14 @@ published by Casino RPG on OpenGameArt.org:
 These assets are released under **CC0 1.0 Universal (Public Domain
 Dedication)** — no attribution legally required, but provided here as a
 courtesy to the original creator.
+
+### `multiMaterialMesh` example
+
+Spacecraft 3D models (`craft_speederA`, `craft_speederB`, `craft_racer`,
+`craft_miner`) in `public/assets/multiMaterialMesh/` are taken from
+**"Space Kit (2.0)"** published by Kenney:
+
+<https://www.kenney.nl/assets/space-kit>
+
+Released under **CC0 1.0 Universal (Public Domain Dedication)** — no
+attribution legally required, credited here as a courtesy.

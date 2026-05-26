@@ -1,6 +1,6 @@
 import { clamp } from "../../math/math.ts";
 import { setPrefixed } from "../../utils/agent.ts";
-import { createCanvas } from "../video.js";
+import { createCanvas } from "../canvas_factory.js";
 import RenderTarget from "./rendertarget.ts";
 
 /**

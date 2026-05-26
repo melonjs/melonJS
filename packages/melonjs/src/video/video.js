@@ -1,8 +1,9 @@
 import { game } from "../application/application.ts";
 import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
+import { warning } from "../lang/console.js";
 import { initialized } from "../system/bootstrap.ts";
-import * as device from "./../system/device.js";
 import { on, VIDEO_INIT } from "../system/event.ts";
+import Renderer from "./renderer.js";
 
 /**
  * @namespace video
@@ -84,37 +85,18 @@ export function init(width, height, options) {
 }
 
 /**
- * Create and return a new Canvas element
+ * Create and return a new Canvas element.
  * @memberof video
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
+ * @deprecated since 19.7.0 — use {@link Renderer.createCanvas} instead.
+ * @see Renderer.createCanvas
  */
 export function createCanvas(width, height, returnOffscreenCanvas = false) {
-	let _canvas;
-
-	if (width === 0 || height === 0) {
-		throw new Error(
-			"width or height was zero, Canvas could not be initialized !",
-		);
-	}
-
-	if (device.offscreenCanvas === true && returnOffscreenCanvas === true) {
-		_canvas = new globalThis.OffscreenCanvas(0, 0);
-		// stubbing style for compatibility,
-		// as OffscreenCanvas is detached from the DOM
-		if (typeof _canvas.style === "undefined") {
-			_canvas.style = {};
-		}
-	} else {
-		// "else" create a "standard" canvas
-		_canvas = globalThis.document.createElement("canvas");
-	}
-	_canvas.width = width;
-	_canvas.height = height;
-
-	return _canvas;
+	warning("video.createCanvas", "Renderer.createCanvas", "19.7.0");
+	return Renderer.createCanvas(width, height, returnOffscreenCanvas);
 }
 
 /**

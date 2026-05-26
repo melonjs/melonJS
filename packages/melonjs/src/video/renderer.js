@@ -3,6 +3,7 @@ import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
+import { createCanvas } from "./canvas_factory.js";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
@@ -270,6 +271,52 @@ export default class Renderer {
 	 */
 	getCanvas() {
 		return this.renderTarget.canvas;
+	}
+
+	/**
+	 * Create and return a new Canvas element (or `OffscreenCanvas` when
+	 * supported and `returnOffscreenCanvas` is true). Centralized
+	 * renderer-side allocator so every scratch / fallback / render-
+	 * target canvas in the engine routes through the same
+	 * `OffscreenCanvas`-aware path, instead of duplicating
+	 * `document.createElement` calls that throw in worker contexts.
+	 * @param {number} width - canvas width in pixels
+	 * @param {number} height - canvas height in pixels
+	 * @param {boolean} [returnOffscreenCanvas=false] - return an
+	 *   `OffscreenCanvas` if the platform supports it
+	 * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas of the given size
+	 */
+	static createCanvas(width, height, returnOffscreenCanvas = false) {
+		return createCanvas(width, height, returnOffscreenCanvas);
+	}
+
+	/**
+	 * Shared 1×1 fully-white canvas used as a no-op texture fallback.
+	 * Renderers and renderables that need a "blank" texture binding
+	 * (e.g. to satisfy a shader's sampler input when there's no real
+	 * image — Kd-only `Mesh` materials, solid-color quad fills, etc.)
+	 * should use this rather than allocating their own.
+	 *
+	 * Lazily created on first call; shared across every caller; uses
+	 * `OffscreenCanvas` where supported (worker-safe). Static so it's
+	 * accessible without a renderer instance (e.g. from a `Mesh`
+	 * constructor that runs before the active renderer is set).
+	 * @returns {HTMLCanvasElement|OffscreenCanvas} the shared 1×1 white canvas
+	 */
+	static getWhitePixel() {
+		if (Renderer._whitePixel === null) {
+			const c = Renderer.createCanvas(1, 1, true);
+			const ctx = c.getContext("2d");
+			if (ctx === null) {
+				throw new Error(
+					"Renderer.getWhitePixel: 2D context unavailable on the allocated canvas",
+				);
+			}
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(0, 0, 1, 1);
+			Renderer._whitePixel = c;
+		}
+		return Renderer._whitePixel;
 	}
 
 	/**
@@ -1012,3 +1059,8 @@ export default class Renderer {
 		return this.renderTarget.toDataURL(type, quality);
 	}
 }
+
+// Backing field for `Renderer.getWhitePixel()` — declared outside the
+// class body so it's initialized to null at module load (static class
+// fields aren't universally supported in our transpile target).
+Renderer._whitePixel = null;

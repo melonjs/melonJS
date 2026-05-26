@@ -1,4 +1,3 @@
-import { warning } from "../../lang/console.js";
 import { mtlList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 
@@ -38,7 +37,6 @@ const UNSUPPORTED_MAPS = new Set([
  * - Only one `map_Kd` texture per material is supported
  * - Specular (`Ks`, `Ns`), ambient (`Ka`), and illumination model (`illum`) are parsed but ignored
  * - Normal maps (`map_bump`, `bump`), specular maps (`map_Ks`), and other texture maps are not supported
- * - Multiple materials per mesh (`usemtl`) are not supported — only the first material is used
  *
  * @param {string} text - raw MTL file contents
  * @param {string} basePath - base URL path for resolving texture references
@@ -48,7 +46,6 @@ const UNSUPPORTED_MAPS = new Set([
 function parseMTL(text, basePath) {
 	const materials = {};
 	let current = null;
-	let materialCount = 0;
 
 	const lines = text.split("\n");
 	for (let i = 0; i < lines.length; i++) {
@@ -62,7 +59,9 @@ function parseMTL(text, basePath) {
 
 		// warn on unsupported texture maps
 		if (UNSUPPORTED_MAPS.has(keyword)) {
-			warning("MTL: '" + keyword + "' is not supported and will be ignored");
+			console.warn(
+				"MTL: '" + keyword + "' is not supported and will be ignored",
+			);
 			continue;
 		}
 
@@ -72,20 +71,14 @@ function parseMTL(text, basePath) {
 			!UNSUPPORTED_MAPS.has(keyword) &&
 			keyword !== "Ks"
 		) {
-			warning("MTL: unknown property '" + keyword + "' will be ignored");
+			console.warn("MTL: unknown property '" + keyword + "' will be ignored");
 			continue;
 		}
 
 		switch (keyword) {
 			case "newmtl":
-				materialCount++;
-				if (materialCount > 1) {
-					warning(
-						"MTL: multiple materials detected — only the first material's texture will be used per mesh",
-					);
-				}
 				if (!parts[1]) {
-					warning("MTL: newmtl missing material name, skipping");
+					console.warn("MTL: newmtl missing material name, skipping");
 					break;
 				}
 				current = {

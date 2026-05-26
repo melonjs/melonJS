@@ -392,12 +392,22 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * Draw a textured triangle mesh.
-	 * Uses per-triangle affine texture mapping with back-to-front depth sorting
-	 * (painter's algorithm) and optional backface culling.
-	 * Note: the painter's algorithm works well for convex shapes but may produce
-	 * visual artifacts with concave or self-overlapping geometry (e.g. a torus),
-	 * as Canvas 2D has no hardware depth buffer. Use the WebGL renderer for
-	 * correct depth ordering on complex meshes.
+	 * Uses per-triangle affine texture mapping with back-to-front depth
+	 * sorting (painter's algorithm) and optional backface culling.
+	 * Note: the painter's algorithm works well for convex shapes but
+	 * may produce visual artifacts with concave or self-overlapping
+	 * geometry (e.g. a torus), as Canvas 2D has no hardware depth
+	 * buffer. Use the WebGL renderer for correct depth ordering on
+	 * complex meshes.
+	 *
+	 * Multi-material meshes (`mesh.vertexColors` present) render here
+	 * via per-triangle solid fill — each triangle's three vertices
+	 * share one baked material color, so we read `vertexColors[v0]`
+	 * and use it as the triangle's fillStyle, multiplied by
+	 * `currentTint`. The single shared texture (typically the 1×1
+	 * white-pixel fallback for Kd-only models) is bypassed in that
+	 * path. Canvas can't do per-material textures; if you need that,
+	 * use the WebGL renderer.
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
 	 */
 	drawMesh(mesh) {
@@ -408,15 +418,50 @@ export default class CanvasRenderer extends Renderer {
 		const vertices = mesh.vertices;
 		const uvs = mesh.uvs;
 		const indices = mesh.indices;
+		const vertexColors = mesh.vertexColors;
 
-		// apply tint if set
+		// apply tint if set. When `vertexColors` is present the solid-
+		// fill path below reads color from the baked buffer per
+		// triangle and never samples the image, so skip the tint cache
+		// allocation entirely in that case.
 		let image = mesh.texture.getTexture();
 		const tint = this.currentTint.toArray();
-		if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
+		if (
+			!vertexColors &&
+			(tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0)
+		) {
 			image = this.cache.tint(image, this.currentTint.toRGB());
 		}
 		const imgW = image.width;
 		const imgH = image.height;
+		// Solid-fill fast path: kicks in for either (a) per-vertex
+		// color meshes (multi-material) where each triangle's color
+		// comes from the baked `vertexColors`, or (b) Kd-only single-
+		// material meshes where the texture is the 1×1 white-pixel
+		// fallback. Both bypass Canvas's per-triangle affine drawImage
+		// (which produces sub-pixel artifacts mapping a 1×1 source
+		// onto large triangles) and fall back to `fill()`.
+		const solidFillKd = imgW === 1 && imgH === 1;
+		const solidFill = solidFillKd || vertexColors !== undefined;
+		// pre-extract tint as 0..1 floats for per-vertex color modulation
+		const tintR = tint[0];
+		const tintG = tint[1];
+		const tintB = tint[2];
+		let solidFillStyle = null;
+		if (solidFillKd && !vertexColors) {
+			// Single-material 1×1 path — one fill color for the whole
+			// mesh, sampled from the pre-tinted image. Routes through
+			// `Renderer.createCanvas` for `OffscreenCanvas` / worker
+			// safety.
+			if (!this._meshColorCanvas) {
+				this._meshColorCanvas = Renderer.createCanvas(1, 1, true);
+				this._meshColorCtx = this._meshColorCanvas.getContext("2d");
+			}
+			this._meshColorCtx.clearRect(0, 0, 1, 1);
+			this._meshColorCtx.drawImage(image, 0, 0);
+			const pixel = this._meshColorCtx.getImageData(0, 0, 1, 1).data;
+			solidFillStyle = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
+		}
 		const cullBack = mesh.cullBackFaces === true;
 		const triCount = indices.length / 3;
 
@@ -519,14 +564,38 @@ export default class CanvasRenderer extends Renderer {
 				y2 + (y2 > cy ? 0.5 : y2 < cy ? -0.5 : 0),
 			);
 
-			if (rawDet === 0) {
-				// degenerate UV triangle — sample a solid color from the texture
-				// (common with color-palette models where all 3 UVs map to the same point)
+			if (solidFill) {
+				// Solid-fill path. Either the texture is 1×1 (Kd-only
+				// single-material — `solidFillStyle` is pre-computed) or
+				// the mesh has per-vertex baked colors (multi-material
+				// — read color from `vertexColors[v0]` since all 3
+				// vertices of a triangle share a material color).
+				context.closePath();
+				if (vertexColors) {
+					// ARGB-packed: A R G B in 4 bytes MSB→LSB. Carries
+					// the per-material opacity (MTL `d`) baked at
+					// construction time — emit as `rgba(...)` so it
+					// reaches the canvas alpha channel rather than
+					// silently dropping to fully opaque.
+					const c = vertexColors[indices[j]];
+					const cr = Math.round(((c >>> 16) & 0xff) * tintR);
+					const cg = Math.round(((c >>> 8) & 0xff) * tintG);
+					const cb = Math.round((c & 0xff) * tintB);
+					const ca = ((c >>> 24) & 0xff) / 255;
+					context.fillStyle = `rgba(${cr},${cg},${cb},${ca})`;
+				} else {
+					context.fillStyle = solidFillStyle;
+				}
+				context.fill();
+			} else if (rawDet === 0) {
+				// degenerate UV triangle — sample a solid color from
+				// the texture (common with color-palette models where
+				// all 3 UVs map to the same point). Routes through
+				// `Renderer.createCanvas` for worker / `OffscreenCanvas`
+				// safety, matching the `solidFillKd` path above.
 				context.closePath();
 				if (!this._meshColorCanvas) {
-					this._meshColorCanvas = document.createElement("canvas");
-					this._meshColorCanvas.width = 1;
-					this._meshColorCanvas.height = 1;
+					this._meshColorCanvas = Renderer.createCanvas(1, 1, true);
 					this._meshColorCtx = this._meshColorCanvas.getContext("2d");
 				}
 				const sx = Math.min(Math.max(Math.round(u0), 0), imgW - 1);
