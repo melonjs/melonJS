@@ -46,7 +46,7 @@ function resolveTextureAtlas(src) {
  * back to the explicit `textureSource`. Returns a self-contained
  * record that {@link Mesh#draw} can iterate without touching the MTL
  * cache or re-resolving anything per frame.
- * @param {{material: string|null, start: number, count: number}} group
+ * @param {{materialName: string|null, start: number, count: number}} group
  * @param {object} materials - MTL material table keyed by material name
  * @param {string|HTMLImageElement|TextureAtlas|undefined} textureSource
  * @returns {object} draw descriptor for this group
@@ -239,15 +239,16 @@ export default class Mesh extends Renderable {
 			this.groups = objGroups.map((g) => {
 				return resolveGroupMaterial(g, materials, textureSource);
 			});
-			// the legacy `texture` / `tint` / opacity stay set from the
-			// FIRST group so single-material code paths (e.g.
-			// `toCanvas()`) still produce a sensible default
-			const first = this.groups[0];
-			textureSource = first.texture;
-			this.tint.copy(first.tint);
-			if (first.opacity < 1) {
-				this.setOpacity(first.opacity);
-			}
+			// `this.tint` stays at its default (white) — every
+			// material's Kd is already baked into `vertexColors` below,
+			// so applying the first group's tint globally would double-
+			// multiply it onto every vertex at render time. The
+			// renderer-level `setTint` path on top of the baked colors
+			// is still available for runtime flash / fade / team color.
+			// Use the first group's texture as the legacy
+			// single-material binding so callers that read `mesh.texture`
+			// (e.g. `toCanvas`) still get a sensible default.
+			textureSource = this.groups[0].texture;
 
 			/**
 			 * Per-vertex color buffer (one packed Uint32 per vertex)
@@ -274,8 +275,19 @@ export default class Mesh extends Renderable {
 				}
 			}
 		} else if (materials) {
-			// single-material path — pick the first MTL entry
-			const mat = materials[Object.keys(materials)[0]];
+			// Single-material path. Prefer the MTL entry whose name
+			// matches the OBJ's `usemtl` directive — an OBJ with one
+			// `usemtl jet_body` referencing a `.mtl` that defines
+			// `jet_body` alongside other materials should pick
+			// `jet_body`, not whichever entry happens to be first in
+			// the MTL parser's output. Fall back to the first entry
+			// when there's no `usemtl` at all (the parser emits a
+			// `materialName: null` anonymous group in that case).
+			const namedMaterial =
+				objGroups !== null && objGroups[0] && objGroups[0].materialName
+					? materials[objGroups[0].materialName]
+					: null;
+			const mat = namedMaterial ?? materials[Object.keys(materials)[0]];
 			if (mat) {
 				if (!textureSource && mat.map_Kd) {
 					textureSource = mat.map_Kd;
@@ -371,12 +383,11 @@ export default class Mesh extends Renderable {
 	/**
 	 * Draw the mesh (automatically called by melonJS).
 	 * Projects vertices through `projectionMatrix × currentTransform`
-	 * and hands the mesh off to `renderer.drawMesh()`. Multi-material
-	 * dispatch (one draw per `groups[]` entry on WebGL, one global
-	 * painter's sort with per-triangle tint on Canvas) is the
-	 * renderer's responsibility — each backend handles depth its own
-	 * way (hardware Z-buffer vs CPU painter's), so the right place to
-	 * fan out groups is inside the renderer.
+	 * and hands the mesh off to `renderer.drawMesh()` in a single
+	 * call. Multi-material meshes still draw in one call — each
+	 * material's diffuse color is baked into `vertexColors` at
+	 * construction time and pushed through the renderer's per-vertex
+	 * `aColor` (WebGL) or per-triangle solid-fill (Canvas) path.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 */
 	draw(renderer) {

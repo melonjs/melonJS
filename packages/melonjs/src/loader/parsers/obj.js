@@ -38,7 +38,7 @@ const OBJ_INDEX_OFFSET = 1;
  *   pointing to a slice of the unified `indices` buffer, so callers
  *   (e.g. `Mesh`) can render each group with its own material without
  *   touching the geometry. A model with no `usemtl` directives produces
- *   a single group with `material: null`.
+ *   a single group with `materialName: null`.
  *
  * Parsed but ignored: `vn` (normals), `g` (groups), `s` (smooth shading),
  * `o` (object name).

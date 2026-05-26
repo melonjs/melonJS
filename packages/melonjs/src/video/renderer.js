@@ -273,6 +273,43 @@ export default class Renderer {
 	}
 
 	/**
+	 * Create and return a new Canvas element (or `OffscreenCanvas` when
+	 * supported and `returnOffscreenCanvas` is true). Centralized
+	 * renderer-side allocator so every scratch / fallback / render-
+	 * target canvas in the engine routes through the same
+	 * `OffscreenCanvas`-aware path, instead of duplicating
+	 * `document.createElement` calls that throw in worker contexts.
+	 * @param {number} width - canvas width in pixels
+	 * @param {number} height - canvas height in pixels
+	 * @param {boolean} [returnOffscreenCanvas=false] - return an
+	 *   `OffscreenCanvas` if the platform supports it
+	 * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas of the given size
+	 */
+	static createCanvas(width, height, returnOffscreenCanvas = false) {
+		if (width === 0 || height === 0) {
+			throw new Error(
+				"width or height was zero, Canvas could not be initialized !",
+			);
+		}
+		if (
+			returnOffscreenCanvas === true &&
+			typeof globalThis.OffscreenCanvas !== "undefined"
+		) {
+			const c = new globalThis.OffscreenCanvas(width, height);
+			// stub `style` for compatibility — OffscreenCanvas is detached
+			// from the DOM but downstream code may read it
+			if (typeof c.style === "undefined") {
+				c.style = {};
+			}
+			return c;
+		}
+		const c = globalThis.document.createElement("canvas");
+		c.width = width;
+		c.height = height;
+		return c;
+	}
+
+	/**
 	 * Shared 1×1 fully-white canvas used as a no-op texture fallback.
 	 * Renderers and renderables that need a "blank" texture binding
 	 * (e.g. to satisfy a shader's sampler input when there's no real
@@ -287,12 +324,7 @@ export default class Renderer {
 	 */
 	static getWhitePixel() {
 		if (Renderer._whitePixel === null) {
-			const c =
-				typeof globalThis.OffscreenCanvas !== "undefined"
-					? new globalThis.OffscreenCanvas(1, 1)
-					: globalThis.document.createElement("canvas");
-			c.width = 1;
-			c.height = 1;
+			const c = Renderer.createCanvas(1, 1, true);
 			const ctx = c.getContext("2d");
 			ctx.fillStyle = "#ffffff";
 			ctx.fillRect(0, 0, 1, 1);

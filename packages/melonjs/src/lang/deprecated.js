@@ -1,4 +1,5 @@
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+import Renderer from "../video/renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import { Batcher } from "../video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "../video/webgl/batchers/primitive_batcher.js";
@@ -9,6 +10,20 @@ import { warning } from "./console.js";
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
+
+/**
+ * Create and return a new Canvas element.
+ * @param {number} width - width
+ * @param {number} height - height
+ * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
+ * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
+ * @deprecated since 19.7.0 — use {@link Renderer.createCanvas} instead.
+ * @see Renderer.createCanvas
+ */
+export function createCanvas(width, height, returnOffscreenCanvas = false) {
+	warning("video.createCanvas", "Renderer.createCanvas", "19.7.0");
+	return Renderer.createCanvas(width, height, returnOffscreenCanvas);
+}
 
 /**
  * @deprecated since 17.1.0

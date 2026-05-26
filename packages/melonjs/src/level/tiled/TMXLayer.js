@@ -1,7 +1,7 @@
 import { vector2dPool } from "../../math/vector2d.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
-import { createCanvas } from "../../video/video.js";
+import Renderer from "../../video/renderer.js";
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,
@@ -329,7 +329,7 @@ export default class TMXLayer extends Renderable {
 		// if pre-rendering method is in use, create an offline canvas/renderer
 		if (this.renderMode === "prerender" && !this.canvasRenderer) {
 			this.canvasRenderer = new CanvasRenderer({
-				canvas: createCanvas(this.width, this.height),
+				canvas: Renderer.createCanvas(this.width, this.height),
 				width: this.width,
 				height: this.height,
 				transparent: true,
