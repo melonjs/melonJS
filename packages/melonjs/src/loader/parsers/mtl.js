@@ -41,7 +41,6 @@ const UNSUPPORTED_MAPS = new Set([
  * - Only one `map_Kd` texture per material is supported
  * - Specular (`Ks`, `Ns`), ambient (`Ka`), and illumination model (`illum`) are parsed but ignored
  * - Normal maps (`map_bump`, `bump`), specular maps (`map_Ks`), and other texture maps are not supported
- * - Multiple materials per mesh (`usemtl`) are not supported — only the first material is used
  *
  * @param {string} text - raw MTL file contents
  * @param {string} basePath - base URL path for resolving texture references
@@ -82,10 +81,6 @@ function parseMTL(text, basePath) {
 
 		switch (keyword) {
 			case "newmtl":
-				// (was: warn on multi-material — obsolete since Mesh now
-				// resolves per-material draw groups via OBJ `groups[]`,
-				// see `Mesh.draw`; each named material is rendered with
-				// its own tint + texture in its own draw call)
 				if (!parts[1]) {
 					console.warn("MTL: newmtl missing material name, skipping");
 					break;
