@@ -348,7 +348,7 @@ const examples: {
 		path: "multi-material-mesh",
 		sourceDir: "multiMaterialMesh",
 		description:
-			"Kenney spacecraft (CC0) with multi-material OBJ rendering — each `usemtl` group draws with its own diffuse color via the new groups[] API.",
+			"Rotating 3D models with multiple materials and per-mesh tinting — each material region picks up its diffuse color from the .mtl file, multiplied by a runtime tint.",
 	},
 	{
 		component: <ExamplePlatformer />,
