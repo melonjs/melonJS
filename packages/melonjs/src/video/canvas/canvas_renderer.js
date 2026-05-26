@@ -400,14 +400,17 @@ export default class CanvasRenderer extends Renderer {
 	 * buffer. Use the WebGL renderer for correct depth ordering on
 	 * complex meshes.
 	 *
-	 * When `group` is provided, only the index slice
-	 * `[group.start, group.start + group.count)` is drawn — used by
-	 * multi-material OBJs to render one material at a time.
+	 * Multi-material meshes (`mesh.vertexColors` present) render here
+	 * via per-triangle solid fill — each triangle's three vertices
+	 * share one baked material color, so we read `vertexColors[v0]`
+	 * and use it as the triangle's fillStyle, multiplied by
+	 * `currentTint`. The single shared texture (typically the 1×1
+	 * white-pixel fallback for Kd-only models) is bypassed in that
+	 * path. Canvas can't do per-material textures; if you need that,
+	 * use the WebGL renderer.
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
-	 * @param {{start: number, count: number}} [group] - optional index
-	 *   buffer slice to draw (defaults to the whole mesh)
 	 */
-	drawMesh(mesh, group) {
+	drawMesh(mesh) {
 		if (this.getGlobalAlpha() < 1 / 255) {
 			return;
 		}
@@ -415,8 +418,7 @@ export default class CanvasRenderer extends Renderer {
 		const vertices = mesh.vertices;
 		const uvs = mesh.uvs;
 		const indices = mesh.indices;
-		const startIdx = group ? group.start : 0;
-		const endLimit = group ? group.start + group.count : indices.length;
+		const vertexColors = mesh.vertexColors;
 
 		// apply tint if set
 		let image = mesh.texture.getTexture();
@@ -426,8 +428,36 @@ export default class CanvasRenderer extends Renderer {
 		}
 		const imgW = image.width;
 		const imgH = image.height;
+		// Solid-fill fast path: kicks in for either (a) per-vertex
+		// color meshes (multi-material) where each triangle's color
+		// comes from the baked `vertexColors`, or (b) Kd-only single-
+		// material meshes where the texture is the 1×1 white-pixel
+		// fallback. Both bypass Canvas's per-triangle affine drawImage
+		// (which produces sub-pixel artifacts mapping a 1×1 source
+		// onto large triangles) and fall back to `fill()`.
+		const solidFillKd = imgW === 1 && imgH === 1;
+		const solidFill = solidFillKd || vertexColors !== undefined;
+		// pre-extract tint as 0..1 floats for per-vertex color modulation
+		const tintR = tint[0];
+		const tintG = tint[1];
+		const tintB = tint[2];
+		let solidFillStyle = null;
+		if (solidFillKd && !vertexColors) {
+			// Single-material 1×1 path — one fill color for the whole
+			// mesh, sampled from the pre-tinted image
+			if (!this._meshColorCanvas) {
+				this._meshColorCanvas = document.createElement("canvas");
+				this._meshColorCanvas.width = 1;
+				this._meshColorCanvas.height = 1;
+				this._meshColorCtx = this._meshColorCanvas.getContext("2d");
+			}
+			this._meshColorCtx.clearRect(0, 0, 1, 1);
+			this._meshColorCtx.drawImage(image, 0, 0);
+			const pixel = this._meshColorCtx.getImageData(0, 0, 1, 1).data;
+			solidFillStyle = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
+		}
 		const cullBack = mesh.cullBackFaces === true;
-		const triCount = (endLimit - startIdx) / 3;
+		const triCount = indices.length / 3;
 
 		// pre-allocate flat sort array (reuse across frames via closure)
 		// each entry stores: [sortKey, originalIndex]
@@ -438,7 +468,7 @@ export default class CanvasRenderer extends Renderer {
 		let visCount = 0;
 
 		// build sort keys for visible triangles (no object allocation)
-		for (let j = startIdx; j < endLimit; j += 3) {
+		for (let j = 0; j < indices.length; j += 3) {
 			const i0 = indices[j];
 			const i1 = indices[j + 1];
 			const i2 = indices[j + 2];
@@ -528,7 +558,25 @@ export default class CanvasRenderer extends Renderer {
 				y2 + (y2 > cy ? 0.5 : y2 < cy ? -0.5 : 0),
 			);
 
-			if (rawDet === 0) {
+			if (solidFill) {
+				// Solid-fill path. Either the texture is 1×1 (Kd-only
+				// single-material — `solidFillStyle` is pre-computed) or
+				// the mesh has per-vertex baked colors (multi-material
+				// — read color from `vertexColors[v0]` since all 3
+				// vertices of a triangle share a material color).
+				context.closePath();
+				if (vertexColors) {
+					// ARGB-packed: A R G B in 4 bytes MSB→LSB
+					const c = vertexColors[indices[j]];
+					const cr = Math.round(((c >>> 16) & 0xff) * tintR);
+					const cg = Math.round(((c >>> 8) & 0xff) * tintG);
+					const cb = Math.round((c & 0xff) * tintB);
+					context.fillStyle = `rgb(${cr},${cg},${cb})`;
+				} else {
+					context.fillStyle = solidFillStyle;
+				}
+				context.fill();
+			} else if (rawDet === 0) {
 				// degenerate UV triangle — sample a solid color from the texture
 				// (common with color-palette models where all 3 UVs map to the same point)
 				context.closePath();

@@ -21,11 +21,6 @@ import Renderable from "./renderable.js";
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
 
-// reusable color used by `draw()` to save/restore `this.tint` around
-// the multi-material per-group swap. Module-scoped so we don't
-// allocate every frame; safe because draw is single-threaded.
-const _savedTint = new Color(255, 255, 255, 1);
-
 // Lazily-allocated 1×1 white pixel used as the texture fallback for
 // flat-color (Kd-only, no `map_Kd`) MTL materials. One canvas shared
 // across every Mesh that needs it — no per-instance allocation.
@@ -242,13 +237,17 @@ export default class Mesh extends Renderable {
 			 * Per-material submesh groups, populated when the OBJ
 			 * contains multiple `usemtl` directives AND a matching MTL
 			 * is bound via the `material` setting. Each entry slices
-			 * the shared `indices` buffer and carries its own texture +
-			 * tint + opacity, so `draw()` can render one material per
-			 * draw call without touching geometry.
+			 * the shared `indices` buffer; field shape (`start`,
+			 * `count`, `materialName`) matches the Three.js / glTF
+			 * "groups" convention.
 			 *
-			 * Field shape (`start`, `count`, `materialName`) matches the
-			 * Three.js / glTF "groups" convention so the structure is
-			 * familiar to anyone coming from those engines.
+			 * Under the per-vertex color baking path (tier 2), the
+			 * `tint` / `opacity` fields here are informational — the
+			 * actual rendered color is baked into `vertexColors` at
+			 * construction time. Mutating `groups[i].tint` after
+			 * construction has no visible effect; use `mesh.tint` for
+			 * runtime color multiplication, or rebuild the Mesh with
+			 * new material settings.
 			 * @type {Array<{materialName: string|null, start: number,
 			 *   count: number, texture: TextureAtlas, tint: Color,
 			 *   opacity: number}>}
@@ -264,6 +263,31 @@ export default class Mesh extends Renderable {
 			this.tint.copy(first.tint);
 			if (first.opacity < 1) {
 				this.setOpacity(first.opacity);
+			}
+
+			/**
+			 * Per-vertex color buffer (one packed Uint32 per vertex)
+			 * populated for multi-material meshes. The mesh batcher
+			 * reads from this when present, pushing the per-vertex
+			 * color as the `aColor` attribute — so the whole mesh
+			 * renders in a single draw call with each material region
+			 * carrying its baked color. Multiplied at render time by
+			 * the global `mesh.tint`, so runtime tint mutation still
+			 * works as expected (flash, fade, team color, etc.).
+			 *
+			 * Vertices were split per-material at parse time (each
+			 * material has its own dedup scope in the OBJ parser), so
+			 * every vertex belongs to exactly one material group and
+			 * carries that group's color unambiguously.
+			 * @type {Uint32Array}
+			 */
+			this.vertexColors = new Uint32Array(this.vertexCount);
+			for (const g of this.groups) {
+				const c = g.tint.toUint32(g.opacity);
+				const end = g.start + g.count;
+				for (let i = g.start; i < end; i++) {
+					this.vertexColors[this.indices[i]] = c;
+				}
 			}
 		} else if (materials) {
 			// single-material path — pick the first MTL entry
@@ -362,38 +386,18 @@ export default class Mesh extends Renderable {
 
 	/**
 	 * Draw the mesh (automatically called by melonJS).
-	 * Projects vertices through projectionMatrix × currentTransform and
-	 * calls `renderer.drawMesh()`. For multi-material meshes (OBJ files
-	 * with multiple `usemtl` directives + a bound MTL), iterates the
-	 * per-material `groups` array, swapping texture and tint per draw
-	 * so each material region renders with its own appearance.
+	 * Projects vertices through `projectionMatrix × currentTransform`
+	 * and hands the mesh off to `renderer.drawMesh()`. Multi-material
+	 * dispatch (one draw per `groups[]` entry on WebGL, one global
+	 * painter's sort with per-triangle tint on Canvas) is the
+	 * renderer's responsibility — each backend handles depth its own
+	 * way (hardware Z-buffer vs CPU painter's), so the right place to
+	 * fan out groups is inside the renderer.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 */
 	draw(renderer) {
 		this._projectVertices(this.pos.x, this.pos.y, 1000);
-		if (this.groups && this.groups.length > 1) {
-			// Save the mesh's primary tint / texture so the per-group
-			// swaps don't leak into reads of `this.tint` / `this.texture`
-			// between frames (e.g. `toCanvas`, picking, debug overlays).
-			// `Renderable.preDraw` already called `renderer.setTint(this.tint)`,
-			// locking the renderer to the first group's color — we mutate
-			// `renderer.currentTint` directly per group instead of going
-			// through `setTint` because `setTint` multiplies into alpha,
-			// which would compound across iterations.
-			const savedTexture = this.texture;
-			_savedTint.copy(this.tint);
-			for (const g of this.groups) {
-				this.texture = g.texture;
-				this.tint.copy(g.tint);
-				renderer.currentTint.copy(g.tint);
-				renderer.drawMesh(this, g);
-			}
-			this.texture = savedTexture;
-			this.tint.copy(_savedTint);
-			renderer.currentTint.copy(_savedTint);
-		} else {
-			renderer.drawMesh(this);
-		}
+		renderer.drawMesh(this);
 	}
 
 	/**

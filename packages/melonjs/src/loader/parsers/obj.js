@@ -60,13 +60,21 @@ function parseOBJ(text) {
 	const texcoords = [];
 
 	// unified output arrays (built in a single pass)
-	const vertexMap = new Map();
 	const vertices = [];
 	const uvs = [];
 	const indices = [];
 	let vertexCount = 0;
 
-	// helper: look up or create a unified vertex for a v/vt pair
+	// Per-material vertex dedup: each `usemtl` switch resets the active
+	// `vertexMap` so the same (v, vt) reused across different materials
+	// produces SEPARATE unified vertices. This is the prerequisite for
+	// per-vertex color baking in `Mesh` — without it, a vertex shared
+	// between two materials couldn't carry both colors. Pre-usemtl
+	// faces use the initial empty map (the "anonymous" group).
+	let vertexMap = new Map();
+
+	// helper: look up or create a unified vertex for a v/vt pair in the
+	// current material's dedup scope
 	function addVertex(v, vt) {
 		const key = v * VT_KEY_MULTIPLIER + (vt + OBJ_INDEX_OFFSET);
 		let index = vertexMap.get(key);
@@ -125,6 +133,12 @@ function parseOBJ(text) {
 			});
 		}
 		groups.push({ materialName, start: indices.length, count: 0 });
+		// Reset the vertex dedup scope so vertices shared with the
+		// previous material get re-added as distinct unified vertices.
+		// Required for per-vertex color baking in `Mesh` — each
+		// material's vertices need their own slots in the position
+		// buffer to carry distinct colors.
+		vertexMap = new Map();
 	};
 
 	// parse lines and build geometry in a single pass

@@ -1222,17 +1222,15 @@ export default class WebGLRenderer extends Renderer {
 	 * meshes are automatically chunked across multiple draw calls to
 	 * fit the vertex/index buffer limits.
 	 *
-	 * When called with a `group` (a `{start, count}` slice of the
-	 * mesh's index buffer), only that slice is drawn — used by `Mesh`
-	 * to render multi-material OBJs one material at a time. The depth
-	 * buffer is cleared only on the first call per frame; subsequent
-	 * group draws compose against the existing depth so the multi-
-	 * material draws still test against each other.
+	 * Multi-material meshes (OBJ files with multiple `usemtl` groups +
+	 * a bound MTL) draw in a SINGLE call here — the per-material
+	 * colors are baked into `mesh.vertexColors` at construction time
+	 * and pushed through the batcher's per-vertex `aColor` attribute.
+	 * `mesh.tint` still multiplies on top at draw time, so flash /
+	 * fade / team-color via `setTint` work the same as single-material.
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
-	 * @param {{start: number, count: number}} [group] - optional index
-	 *   buffer slice to draw (defaults to the whole mesh)
 	 */
-	drawMesh(mesh, group) {
+	drawMesh(mesh) {
 		const gl = this.gl;
 
 		this.setBatcher("mesh");
@@ -1246,15 +1244,8 @@ export default class WebGLRenderer extends Renderer {
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 		gl.depthMask(true);
-		// Only clear depth on the first draw of a mesh — subsequent
-		// per-group calls within the same Mesh.draw() compose against
-		// each other so far/near occlusion across materials stays
-		// correct. Mesh signals "first call" by passing no group OR by
-		// passing group with start === 0 (the first material's slice).
-		if (!group || group.start === 0) {
-			gl.clearDepth(1.0);
-			gl.clear(gl.DEPTH_BUFFER_BIT);
-		}
+		gl.clearDepth(1.0);
+		gl.clear(gl.DEPTH_BUFFER_BIT);
 
 		// disable blending during opaque mesh rendering to avoid depth/blend conflicts
 		gl.disable(gl.BLEND);
@@ -1269,7 +1260,6 @@ export default class WebGLRenderer extends Renderer {
 		this.currentBatcher.addMesh(
 			mesh,
 			this.currentTint.toUint32(this.getGlobalAlpha()),
-			group,
 		);
 
 		// flush and restore GL state

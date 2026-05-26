@@ -1,4 +1,7 @@
-import { warning } from "../../lang/console.js";
+// `console.warn()` from `lang/console.js` is reserved for **deprecation**
+// notices (formats as "X is deprecated since version Y, please use Z"
+// — not what we want for runtime MTL parser warnings about unsupported
+// keywords). Use `console.warn` directly here.
 import { mtlList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 
@@ -48,7 +51,6 @@ const UNSUPPORTED_MAPS = new Set([
 function parseMTL(text, basePath) {
 	const materials = {};
 	let current = null;
-	let materialCount = 0;
 
 	const lines = text.split("\n");
 	for (let i = 0; i < lines.length; i++) {
@@ -62,7 +64,9 @@ function parseMTL(text, basePath) {
 
 		// warn on unsupported texture maps
 		if (UNSUPPORTED_MAPS.has(keyword)) {
-			warning("MTL: '" + keyword + "' is not supported and will be ignored");
+			console.warn(
+				"MTL: '" + keyword + "' is not supported and will be ignored",
+			);
 			continue;
 		}
 
@@ -72,20 +76,18 @@ function parseMTL(text, basePath) {
 			!UNSUPPORTED_MAPS.has(keyword) &&
 			keyword !== "Ks"
 		) {
-			warning("MTL: unknown property '" + keyword + "' will be ignored");
+			console.warn("MTL: unknown property '" + keyword + "' will be ignored");
 			continue;
 		}
 
 		switch (keyword) {
 			case "newmtl":
-				materialCount++;
-				if (materialCount > 1) {
-					warning(
-						"MTL: multiple materials detected — only the first material's texture will be used per mesh",
-					);
-				}
+				// (was: warn on multi-material — obsolete since Mesh now
+				// resolves per-material draw groups via OBJ `groups[]`,
+				// see `Mesh.draw`; each named material is rendered with
+				// its own tint + texture in its own draw call)
 				if (!parts[1]) {
-					warning("MTL: newmtl missing material name, skipping");
+					console.warn("MTL: newmtl missing material name, skipping");
 					break;
 				}
 				current = {
