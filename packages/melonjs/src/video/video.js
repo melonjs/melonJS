@@ -1,7 +1,9 @@
 import { game } from "../application/application.ts";
 import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
+import { warning } from "../lang/console.js";
 import { initialized } from "../system/bootstrap.ts";
 import { on, VIDEO_INIT } from "../system/event.ts";
+import Renderer from "./renderer.js";
 
 /**
  * @namespace video
@@ -82,11 +84,20 @@ export function init(width, height, options) {
 	return true;
 }
 
-// `createCanvas` was promoted to `Renderer.createCanvas` in 19.7.0.
-// The implementation + deprecation warning live in `lang/deprecated.js`;
-// we re-export here so existing `video.createCanvas(...)` callers keep
-// working (with a console deprecation notice) until they migrate.
-export { createCanvas } from "../lang/deprecated.js";
+/**
+ * Create and return a new Canvas element.
+ * @memberof video
+ * @param {number} width - width
+ * @param {number} height - height
+ * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
+ * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
+ * @deprecated since 19.7.0 — use {@link Renderer.createCanvas} instead.
+ * @see Renderer.createCanvas
+ */
+export function createCanvas(width, height, returnOffscreenCanvas = false) {
+	warning("video.createCanvas", "Renderer.createCanvas", "19.7.0");
+	return Renderer.createCanvas(width, height, returnOffscreenCanvas);
+}
 
 /**
  * return a reference to the parent DOM element holding the main canvas
