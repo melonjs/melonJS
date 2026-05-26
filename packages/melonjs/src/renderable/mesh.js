@@ -9,6 +9,7 @@ import {
 	normalizeVertices,
 	projectVertices,
 } from "../math/vertex.ts";
+import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 
@@ -20,23 +21,6 @@ import Renderable from "./renderable.js";
 
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
-
-// Lazily-allocated 1×1 white pixel used as the texture fallback for
-// flat-color (Kd-only, no `map_Kd`) MTL materials. One canvas shared
-// across every Mesh that needs it — no per-instance allocation.
-let _whitePixel = null;
-function getOrCreateWhitePixel() {
-	if (!_whitePixel) {
-		const c = document.createElement("canvas");
-		c.width = 1;
-		c.height = 1;
-		const ctx = c.getContext("2d");
-		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(0, 0, 1, 1);
-		_whitePixel = c;
-	}
-	return _whitePixel;
-}
 
 // Resolve any acceptable texture input (TextureAtlas, image / canvas
 // object, or asset name) to a cached `TextureAtlas`. Throws if nothing
@@ -315,7 +299,7 @@ export default class Mesh extends Renderable {
 		// the GPU pipeline still has something to sample — the per-
 		// group `tint` does all the visible coloring.
 		if (!textureSource && isMultiMaterial) {
-			textureSource = getOrCreateWhitePixel();
+			textureSource = Renderer.getWhitePixel();
 		}
 		this.texture = resolveTextureAtlas(textureSource);
 

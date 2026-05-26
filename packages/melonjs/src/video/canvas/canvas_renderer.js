@@ -444,9 +444,15 @@ export default class CanvasRenderer extends Renderer {
 		let solidFillStyle = null;
 		if (solidFillKd && !vertexColors) {
 			// Single-material 1×1 path — one fill color for the whole
-			// mesh, sampled from the pre-tinted image
+			// mesh, sampled from the pre-tinted image. Allocate the
+			// scratch sampler canvas via the OffscreenCanvas-aware path
+			// so this works inside workers / `OffscreenCanvas` contexts
+			// (a bare `document.createElement` would throw there).
 			if (!this._meshColorCanvas) {
-				this._meshColorCanvas = document.createElement("canvas");
+				this._meshColorCanvas =
+					typeof globalThis.OffscreenCanvas !== "undefined"
+						? new globalThis.OffscreenCanvas(1, 1)
+						: globalThis.document.createElement("canvas");
 				this._meshColorCanvas.width = 1;
 				this._meshColorCanvas.height = 1;
 				this._meshColorCtx = this._meshColorCanvas.getContext("2d");

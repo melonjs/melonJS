@@ -273,6 +273,35 @@ export default class Renderer {
 	}
 
 	/**
+	 * Shared 1×1 fully-white canvas used as a no-op texture fallback.
+	 * Renderers and renderables that need a "blank" texture binding
+	 * (e.g. to satisfy a shader's sampler input when there's no real
+	 * image — Kd-only `Mesh` materials, solid-color quad fills, etc.)
+	 * should use this rather than allocating their own.
+	 *
+	 * Lazily created on first call; shared across every caller; uses
+	 * `OffscreenCanvas` where supported (worker-safe). Static so it's
+	 * accessible without a renderer instance (e.g. from a `Mesh`
+	 * constructor that runs before the active renderer is set).
+	 * @returns {HTMLCanvasElement|OffscreenCanvas} the shared 1×1 white canvas
+	 */
+	static getWhitePixel() {
+		if (Renderer._whitePixel === null) {
+			const c =
+				typeof globalThis.OffscreenCanvas !== "undefined"
+					? new globalThis.OffscreenCanvas(1, 1)
+					: globalThis.document.createElement("canvas");
+			c.width = 1;
+			c.height = 1;
+			const ctx = c.getContext("2d");
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(0, 0, 1, 1);
+			Renderer._whitePixel = c;
+		}
+		return Renderer._whitePixel;
+	}
+
+	/**
 	 * return a reference to the current render target corresponding Context
 	 * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
 	 */
@@ -1012,3 +1041,8 @@ export default class Renderer {
 		return this.renderTarget.toDataURL(type, quality);
 	}
 }
+
+// Backing field for `Renderer.getWhitePixel()` — declared outside the
+// class body so it's initialized to null at module load (static class
+// fields aren't universally supported in our transpile target).
+Renderer._whitePixel = null;
