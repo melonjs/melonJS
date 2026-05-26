@@ -42,25 +42,21 @@ function resolveTextureAtlas(src) {
 /**
  * Resolve an OBJ material group into a draw descriptor. Builds the
  * group's tint from the MTL's `Kd` (defaults to white if missing) and
- * picks the texture from `map_Kd` if the MTL provides one, else falls
- * back to the explicit `textureSource`. Returns a self-contained
- * record that {@link Mesh#draw} can iterate without touching the MTL
- * cache or re-resolving anything per frame.
+ * its opacity from `d`. Returns a self-contained record carrying just
+ * the index slice + color state — per-material textures (`map_Kd`)
+ * are NOT modeled because the mesh shader uses a single `uSampler`
+ * binding shared across the whole mesh; only colors are baked
+ * per-vertex.
  * @param {{materialName: string|null, start: number, count: number}} group
  * @param {object} materials - MTL material table keyed by material name
- * @param {string|HTMLImageElement|TextureAtlas|undefined} textureSource
- * @returns {object} draw descriptor for this group
+ * @returns {{materialName: string|null, start: number, count: number, tint: Color, opacity: number}} draw descriptor for this group
  * @ignore
  */
-function resolveGroupMaterial(group, materials, textureSource) {
+function resolveGroupMaterial(group, materials) {
 	const mat = group.materialName ? materials[group.materialName] : null;
 	const tint = new Color(255, 255, 255, 1);
 	let opacity = 1;
-	let texture = textureSource;
 	if (mat) {
-		if (mat.map_Kd) {
-			texture = mat.map_Kd;
-		}
 		if (mat.Kd) {
 			tint.setColor(
 				Math.round(mat.Kd[0] * 255),
@@ -76,7 +72,6 @@ function resolveGroupMaterial(group, materials, textureSource) {
 		materialName: group.materialName,
 		start: group.start,
 		count: group.count,
-		texture, // resolved to TextureAtlas in the Mesh constructor once the cache is reachable
 		tint,
 		opacity,
 	};
@@ -233,11 +228,10 @@ export default class Mesh extends Renderable {
 			 * runtime color multiplication, or rebuild the Mesh with
 			 * new material settings.
 			 * @type {Array<{materialName: string|null, start: number,
-			 *   count: number, texture: TextureAtlas, tint: Color,
-			 *   opacity: number}>}
+			 *   count: number, tint: Color, opacity: number}>}
 			 */
 			this.groups = objGroups.map((g) => {
-				return resolveGroupMaterial(g, materials, textureSource);
+				return resolveGroupMaterial(g, materials);
 			});
 			// `this.tint` stays at its default (white) — every
 			// material's Kd is already baked into `vertexColors` below,
@@ -245,10 +239,20 @@ export default class Mesh extends Renderable {
 			// multiply it onto every vertex at render time. The
 			// renderer-level `setTint` path on top of the baked colors
 			// is still available for runtime flash / fade / team color.
-			// Use the first group's texture as the legacy
-			// single-material binding so callers that read `mesh.texture`
-			// (e.g. `toCanvas`) still get a sensible default.
-			textureSource = this.groups[0].texture;
+			// Per-material `map_Kd` textures are not switched at draw
+			// time (mesh shader has a single `uSampler`); pick up the
+			// first material's `map_Kd` for the shared texture binding
+			// if any group has one, else fall through to the white-
+			// pixel fallback further down.
+			if (!textureSource) {
+				for (const g of objGroups) {
+					const mat = g.materialName ? materials[g.materialName] : null;
+					if (mat && mat.map_Kd) {
+						textureSource = mat.map_Kd;
+						break;
+					}
+				}
+			}
 
 			/**
 			 * Per-vertex color buffer (one packed Uint32 per vertex)
@@ -315,17 +319,6 @@ export default class Mesh extends Renderable {
 			textureSource = Renderer.getWhitePixel();
 		}
 		this.texture = resolveTextureAtlas(textureSource);
-
-		// resolve every multi-material group's texture into a real
-		// `TextureAtlas` (cached per image) so `draw()` can swap
-		// bindings without per-frame allocation. Groups whose MTL had
-		// no `map_Kd` fall back to the shared `this.texture` (the 1×1
-		// white pixel above for Kenney-style models).
-		if (isMultiMaterial) {
-			for (const g of this.groups) {
-				g.texture = g.texture ? resolveTextureAtlas(g.texture) : this.texture;
-			}
-		}
 
 		/**
 		 * Projection matrix applied automatically before the model transform in draw().

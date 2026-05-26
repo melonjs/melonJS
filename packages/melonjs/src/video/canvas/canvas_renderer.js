@@ -420,10 +420,16 @@ export default class CanvasRenderer extends Renderer {
 		const indices = mesh.indices;
 		const vertexColors = mesh.vertexColors;
 
-		// apply tint if set
+		// apply tint if set. When `vertexColors` is present the solid-
+		// fill path below reads color from the baked buffer per
+		// triangle and never samples the image, so skip the tint cache
+		// allocation entirely in that case.
 		let image = mesh.texture.getTexture();
 		const tint = this.currentTint.toArray();
-		if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
+		if (
+			!vertexColors &&
+			(tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0)
+		) {
 			image = this.cache.tint(image, this.currentTint.toRGB());
 		}
 		const imgW = image.width;
@@ -566,24 +572,30 @@ export default class CanvasRenderer extends Renderer {
 				// vertices of a triangle share a material color).
 				context.closePath();
 				if (vertexColors) {
-					// ARGB-packed: A R G B in 4 bytes MSB→LSB
+					// ARGB-packed: A R G B in 4 bytes MSB→LSB. Carries
+					// the per-material opacity (MTL `d`) baked at
+					// construction time — emit as `rgba(...)` so it
+					// reaches the canvas alpha channel rather than
+					// silently dropping to fully opaque.
 					const c = vertexColors[indices[j]];
 					const cr = Math.round(((c >>> 16) & 0xff) * tintR);
 					const cg = Math.round(((c >>> 8) & 0xff) * tintG);
 					const cb = Math.round((c & 0xff) * tintB);
-					context.fillStyle = `rgb(${cr},${cg},${cb})`;
+					const ca = ((c >>> 24) & 0xff) / 255;
+					context.fillStyle = `rgba(${cr},${cg},${cb},${ca})`;
 				} else {
 					context.fillStyle = solidFillStyle;
 				}
 				context.fill();
 			} else if (rawDet === 0) {
-				// degenerate UV triangle — sample a solid color from the texture
-				// (common with color-palette models where all 3 UVs map to the same point)
+				// degenerate UV triangle — sample a solid color from
+				// the texture (common with color-palette models where
+				// all 3 UVs map to the same point). Routes through
+				// `Renderer.createCanvas` for worker / `OffscreenCanvas`
+				// safety, matching the `solidFillKd` path above.
 				context.closePath();
 				if (!this._meshColorCanvas) {
-					this._meshColorCanvas = document.createElement("canvas");
-					this._meshColorCanvas.width = 1;
-					this._meshColorCanvas.height = 1;
+					this._meshColorCanvas = Renderer.createCanvas(1, 1, true);
 					this._meshColorCtx = this._meshColorCanvas.getContext("2d");
 				}
 				const sx = Math.min(Math.max(Math.round(u0), 0), imgW - 1);

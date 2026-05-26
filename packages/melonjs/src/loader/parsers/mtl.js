@@ -1,7 +1,3 @@
-// `console.warn()` from `lang/console.js` is reserved for **deprecation**
-// notices (formats as "X is deprecated since version Y, please use Z"
-// — not what we want for runtime MTL parser warnings about unsupported
-// keywords). Use `console.warn` directly here.
 import { mtlList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 

@@ -2,6 +2,7 @@ import Path2D from "./../geometries/path2d.js";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
+import * as device from "../system/device.js";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
@@ -291,10 +292,15 @@ export default class Renderer {
 				"width or height was zero, Canvas could not be initialized !",
 			);
 		}
-		if (
-			returnOffscreenCanvas === true &&
-			typeof globalThis.OffscreenCanvas !== "undefined"
-		) {
+		// `device.offscreenCanvas` is the engine's vetted capability
+		// check — it actually instantiates `new OffscreenCanvas(0,0)`
+		// and verifies `.getContext("2d")` returns a real context, with
+		// a try/catch for browser quirks (Safari historically only
+		// implemented WebGL{1,2} contexts on OffscreenCanvas). A bare
+		// `typeof OffscreenCanvas !== "undefined"` would let through
+		// environments where construction or 2D context creation fails
+		// and crash later callers (`getWhitePixel`, mesh solid-fill, …).
+		if (returnOffscreenCanvas === true && device.offscreenCanvas === true) {
 			const c = new globalThis.OffscreenCanvas(width, height);
 			// stub `style` for compatibility — OffscreenCanvas is detached
 			// from the DOM but downstream code may read it
@@ -326,6 +332,11 @@ export default class Renderer {
 		if (Renderer._whitePixel === null) {
 			const c = Renderer.createCanvas(1, 1, true);
 			const ctx = c.getContext("2d");
+			if (ctx === null) {
+				throw new Error(
+					"Renderer.getWhitePixel: 2D context unavailable on the allocated canvas",
+				);
+			}
 			ctx.fillStyle = "#ffffff";
 			ctx.fillRect(0, 0, 1, 1);
 			Renderer._whitePixel = c;
