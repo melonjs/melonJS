@@ -305,12 +305,13 @@ export default class Mesh extends Renderable {
 			}
 		}
 
-		// resolve texture. For multi-material meshes that have NO
-		// per-material textures (Kenney-style flat-color models that
-		// only set `Kd`), fall back to a shared 1×1 white pixel so
-		// the GPU pipeline still has something to sample — the per-
-		// group `tint` does all the visible coloring.
-		if (!textureSource && isMultiMaterial) {
+		// resolve texture. Fall back to the shared 1×1 white pixel when
+		// no texture source was resolved — covers Kd-only multi-material
+		// models (Kenney style) AND single-material meshes constructed
+		// without a `texture:` or a `map_Kd`-bearing `material:` (the
+		// GPU pipeline still needs something to sample; tint / per-
+		// vertex color does the actual coloring).
+		if (!textureSource) {
 			textureSource = Renderer.getWhitePixel();
 		}
 		this.texture = resolveTextureAtlas(textureSource);

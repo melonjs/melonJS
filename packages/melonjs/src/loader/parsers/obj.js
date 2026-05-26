@@ -65,13 +65,16 @@ function parseOBJ(text) {
 	const indices = [];
 	let vertexCount = 0;
 
-	// Per-material vertex dedup: each `usemtl` switch resets the active
-	// `vertexMap` so the same (v, vt) reused across different materials
-	// produces SEPARATE unified vertices. This is the prerequisite for
-	// per-vertex color baking in `Mesh` — without it, a vertex shared
-	// between two materials couldn't carry both colors. Pre-usemtl
-	// faces use the initial empty map (the "anonymous" group).
-	let vertexMap = new Map();
+	// Per-material vertex dedup: each material name owns its own
+	// `vertexMap`, so the same (v, vt) reused across different
+	// materials produces SEPARATE unified vertices (needed for
+	// per-vertex color baking in `Mesh`), but the same material
+	// reappearing in a later `usemtl` block re-uses its existing
+	// vertex slots. Pre-usemtl faces use the `null` map (the
+	// "anonymous" group).
+	const materialMaps = new Map();
+	materialMaps.set(null, new Map());
+	let vertexMap = materialMaps.get(null);
 
 	// helper: look up or create a unified vertex for a v/vt pair in the
 	// current material's dedup scope
@@ -133,12 +136,18 @@ function parseOBJ(text) {
 			});
 		}
 		groups.push({ materialName, start: indices.length, count: 0 });
-		// Reset the vertex dedup scope so vertices shared with the
-		// previous material get re-added as distinct unified vertices.
-		// Required for per-vertex color baking in `Mesh` — each
-		// material's vertices need their own slots in the position
-		// buffer to carry distinct colors.
-		vertexMap = new Map();
+		// Swap to this material's vertex dedup scope. Vertices shared
+		// across materials get separate slots (required for per-vertex
+		// color baking in `Mesh`), but vertices reused within the same
+		// material — even across non-contiguous `usemtl` blocks — hit
+		// the cache and don't get duplicated. Lazily allocated per
+		// material name on first switch.
+		let cached = materialMaps.get(materialName);
+		if (cached === undefined) {
+			cached = new Map();
+			materialMaps.set(materialName, cached);
+		}
+		vertexMap = cached;
 	};
 
 	// parse lines and build geometry in a single pass

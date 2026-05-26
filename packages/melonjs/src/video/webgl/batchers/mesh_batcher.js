@@ -82,8 +82,10 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * vertex's `aColor` attribute comes from that buffer instead of
 	 * the shared `tint` argument — so the mesh batches in a single
 	 * draw call with per-material colors baked into the vertex stream.
-	 * The `tint` argument is then multiplied per-vertex in the shader,
-	 * preserving runtime flash / fade / team-color effects.
+	 * The shared `tint` is then multiplied into each vertex color
+	 * CPU-side (via `mulPackedARGB`, before `pushMesh`), preserving
+	 * runtime flash / fade / team-color effects — the mesh shader
+	 * itself just does `texture * aColor`, no extra uniform.
 	 * @param {object} mesh - a Mesh object with vertices, uvs, indices, and texture properties
 	 * @param {number} tint - tint color in UINT32 (argb) format
 	 */
