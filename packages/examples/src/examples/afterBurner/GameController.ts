@@ -646,7 +646,7 @@ export class GameController extends Renderable {
 		// dead in its tracks; resumed on `reset()`.
 		const stage = state.current();
 		if (stage instanceof SkyboxStage) {
-			stage.scrollPaused = true;
+			stage.setScrollPaused(true);
 		}
 		this.hud.showGameOver(this.score);
 	}
@@ -691,7 +691,7 @@ export class GameController extends Renderable {
 		// Un-freeze the ground-grid scroll alongside the music.
 		const stage = state.current();
 		if (stage instanceof SkyboxStage) {
-			stage.scrollPaused = false;
+			stage.setScrollPaused(false);
 		}
 	}
 
