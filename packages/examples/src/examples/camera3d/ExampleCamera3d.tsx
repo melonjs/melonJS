@@ -40,13 +40,17 @@ const createGame = () => {
 	// async preload completion.
 	let pointerCleanup: (() => void) | null = null;
 	let domCleanup: (() => void) | null = null;
-	// `loader.preload` is async — a same-tab navigation back to the
-	// example index before the load finishes would run the teardown
-	// returned by `createGame` while `pointerCleanup` and `domCleanup`
-	// are still null, leaking every sprite/listener/DOM-node the
-	// callback then installs. The flag below lets the callback bail
-	// out when teardown has already happened.
-	let unmounted = false;
+	// NOTE: an `unmounted` guard around the preload callback would in
+	// principle fix the "user navigates away before preload finishes"
+	// race that Copilot flagged on review. It can't be added cleanly
+	// today — `examples/utils.tsx` runs `currentTeardown()` on every
+	// React useEffect cleanup (including StrictMode's dev double-mount
+	// cycle), but the same-example remount branch only reattaches the
+	// canvas without re-invoking `createGameFn`. An `unmounted` flag
+	// flipped in teardown therefore stays `true` across the StrictMode
+	// remount, the preload callback bails for the rest of the session,
+	// and the example never renders. Picks up cleanly once the
+	// utils.tsx remount path is fixed (separate review thread).
 
 	// opt in to Camera3d at the Application level — every stage in this
 	// app gets a Camera3d as its default camera (the loader screen pins
@@ -62,13 +66,6 @@ const createGame = () => {
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
-		// Bail out if the component was unmounted while preload was in
-		// flight — otherwise we'd spawn sprites, register pointer
-		// listeners and append DOM nodes that never get cleaned up
-		// (the outer teardown already ran).
-		if (unmounted) {
-			return;
-		}
 		// loader.preload internally transitions to state.LOADING (the
 		// DefaultLoadingScreen). Transition back to the default game
 		// stage so its Camera3d becomes the active viewport.
@@ -220,7 +217,6 @@ const createGame = () => {
 	// `#screen` persists across mounts), and doesn't leave stale
 	// pointer listeners attached to a dead camera reference.
 	return () => {
-		unmounted = true;
 		if (pointerCleanup) pointerCleanup();
 		if (domCleanup) domCleanup();
 	};
