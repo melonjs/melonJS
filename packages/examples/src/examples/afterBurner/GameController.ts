@@ -100,8 +100,14 @@ export class GameController extends Renderable {
 	enemyBullets: EnemyBulletMover[] = [];
 	score = 0;
 	gameOver = false;
-	lastEnemySpawnMs = 0;
-	lastFireMs = 0;
+	// `dt`-driven countdown timers. Each frame we subtract the engine-
+	// delivered `dt`; when the value crosses 0 the corresponding event
+	// (spawn enemy / fire bullet / spawn contrail node) is allowed and
+	// the timer is re-armed to the interval. No `performance.now()` /
+	// wall-clock involved — `dt` is the right reference because the
+	// engine already paces it (frame-skipping, pause gating).
+	enemySpawnTimerMs = 0;
+	fireCooldownMs = 0;
 	hud!: HUD;
 	// Lives + post-respawn invulnerability. `lives` counts down on each
 	// hit; when it reaches zero the next hit triggers game-over. While
@@ -129,7 +135,7 @@ export class GameController extends Renderable {
 	// {@link GameController#updateContrail}.
 	contrail: ContrailNode[] = [];
 	contrailTexture!: HTMLCanvasElement;
-	lastContrailMs = 0;
+	contrailSpawnTimerMs = 0;
 	contrailStreaming = true;
 	// Long-lived ParticleEmitter for the muzzle-flash burst — created
 	// once in the constructor and re-aimed at the player's nose on each
@@ -276,13 +282,11 @@ export class GameController extends Renderable {
 	 * stopped (game-over) but keeps aging the in-flight nodes so they
 	 * fade out cleanly.
 	 */
-	updateContrail(dt: number, nowMs: number): void {
-		if (
-			this.contrailStreaming &&
-			nowMs - this.lastContrailMs >= CONTRAIL_INTERVAL_MS
-		) {
+	updateContrail(dt: number): void {
+		this.contrailSpawnTimerMs -= dt;
+		if (this.contrailStreaming && this.contrailSpawnTimerMs <= 0) {
 			this.spawnContrailNode();
-			this.lastContrailMs = nowMs;
+			this.contrailSpawnTimerMs = CONTRAIL_INTERVAL_MS;
 		}
 		const dts = dt / 1000;
 		for (let i = this.contrail.length - 1; i >= 0; i--) {
@@ -593,6 +597,12 @@ export class GameController extends Renderable {
 		this.score = 0;
 		this.lives = LIVES_START;
 		this.invulnRemainingMs = 0;
+		// Reset cooldown timers so the first frame after restart can
+		// fire / spawn immediately instead of being half-way into the
+		// previous run's countdown.
+		this.fireCooldownMs = 0;
+		this.enemySpawnTimerMs = 0;
+		this.contrailSpawnTimerMs = 0;
 		this.player.setOpacity(1);
 		this.gameOver = false;
 		this.contrailStreaming = true;
@@ -673,13 +683,8 @@ export class GameController extends Renderable {
 			}
 		}
 
-		// One `performance.now()` per tick — passed down to every
-		// helper that needs a wall-clock reference. Hot path used to
-		// call this twice (contrail + fire/spawn cooldowns).
-		const nowMs = performance.now();
-
 		// Tick the custom 3D vapor trail.
-		this.updateContrail(dt, nowMs);
+		this.updateContrail(dt);
 
 		// Reticle tracks the player's XY. We assign x/y directly
 		// (not via pos.set) so the world-z stays at the value set in
@@ -688,16 +693,17 @@ export class GameController extends Renderable {
 		this.reticle.pos.x = this.player.pos.x;
 		this.reticle.pos.y = this.player.pos.y;
 
-		if (
-			input.isKeyPressed("fire") &&
-			nowMs - this.lastFireMs >= FIRE_COOLDOWN_MS
-		) {
+		// `dt`-driven cooldowns — engine's pacing is the only clock we
+		// need here, no `performance.now()` syscall per frame.
+		this.fireCooldownMs -= dt;
+		if (input.isKeyPressed("fire") && this.fireCooldownMs <= 0) {
 			this.spawnBullet();
-			this.lastFireMs = nowMs;
+			this.fireCooldownMs = FIRE_COOLDOWN_MS;
 		}
-		if (nowMs - this.lastEnemySpawnMs >= ENEMY_SPAWN_INTERVAL_MS) {
+		this.enemySpawnTimerMs -= dt;
+		if (this.enemySpawnTimerMs <= 0) {
 			this.spawnEnemy();
-			this.lastEnemySpawnMs = nowMs;
+			this.enemySpawnTimerMs = ENEMY_SPAWN_INTERVAL_MS;
 		}
 
 		// Advance bullets, despawn past the far edge.
