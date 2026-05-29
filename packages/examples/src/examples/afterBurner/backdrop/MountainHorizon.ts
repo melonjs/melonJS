@@ -12,8 +12,10 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
 import {
+	type Application,
 	type Camera3d,
 	type CanvasRenderer,
+	event,
 	Renderable,
 	type WebGLRenderer,
 } from "melonjs";
@@ -142,85 +144,75 @@ const NEAR_FILL = "#1f0d1a";
 const NEAR_SNOW = "#ffd4c4";
 
 export class MountainHorizon extends Renderable {
+	// Layer bakes + per-canvas-size derived constants. All recomputed
+	// reactively inside `rebake()` — driven by the constructor and by
+	// `CANVAS_ONRESIZE` events. `draw()` never touches the cache key
+	// or the resize logic: it just reads the cached fields and runs
+	// `drawImage`. The two camera-dependent values (`horizonY`, `yaw`)
+	// stay in draw to avoid the update-order one-frame lag.
+	private app: Application;
 	private bakedFar: BakedLayer | null = null;
 	private bakedNear: BakedLayer | null = null;
+	private tileW = 0;
+	private baseYawToPixels = 0;
+	private readonly onResize = (): void => {
+		this.rebake();
+	};
 
-	constructor() {
+	constructor(app: Application) {
 		super(0, 0, 1, 1);
+		this.app = app;
 		this.alwaysUpdate = true;
+		this.rebake();
+		event.on(event.CANVAS_ONRESIZE, this.onResize);
 	}
 
-	private getOrBake(
-		current: BakedLayer | null,
-		tileW: number,
-		baseH: number,
-		fillColor: string,
-		snowColor: string,
-	): BakedLayer {
-		const w = Math.ceil(tileW);
-		const h = Math.ceil(baseH);
-		const key = `${w}x${h}|${fillColor}|${snowColor}`;
-		if (current && current.cacheKey === key) {
-			return current;
-		}
-		return bakeLayer(tileW, baseH, fillColor, snowColor);
+	override onDeactivateEvent(): void {
+		event.off(event.CANVAS_ONRESIZE, this.onResize);
 	}
 
-	override draw(renderer: Renderer, viewport: Camera3d): void {
-		const w = renderer.width;
-		const h = renderer.height;
-		const horizonY = computeHorizonY(viewport, h);
+	private rebake(): void {
+		const w = this.app.renderer.width;
+		const h = this.app.renderer.height;
+		this.tileW = w * 1.4;
+		this.baseYawToPixels = -this.tileW * 0.5;
 		const mountainBaseH = h * 0.18;
-		const tileW = w * 1.4;
-		const yaw = viewport.yaw;
-		const baseYawToPixels = -tileW * 0.5;
-
-		// Far range (smaller, lighter, slower parallax).
-		this.bakedFar = this.getOrBake(
-			this.bakedFar,
-			tileW,
+		this.bakedFar = bakeLayer(
+			this.tileW,
 			mountainBaseH * 0.6,
 			FAR_FILL,
 			FAR_SNOW,
 		);
-		this.drawLayer(
-			renderer,
-			horizonY,
-			this.bakedFar,
-			tileW,
-			yaw * baseYawToPixels * 0.45,
-			0.75,
-			0.5,
-		);
+		this.bakedNear = bakeLayer(this.tileW, mountainBaseH, NEAR_FILL, NEAR_SNOW);
+	}
 
-		// Near range (full height, deepest silhouette, full parallax).
-		this.bakedNear = this.getOrBake(
-			this.bakedNear,
-			tileW,
-			mountainBaseH,
-			NEAR_FILL,
-			NEAR_SNOW,
-		);
-		this.drawLayer(
-			renderer,
-			horizonY,
-			this.bakedNear,
-			tileW,
-			yaw * baseYawToPixels,
-			1.0,
-			0,
-		);
+	override draw(renderer: Renderer, viewport: Camera3d): void {
+		const horizonY = computeHorizonY(viewport, renderer.height);
+		const yawOffset = viewport.yaw * this.baseYawToPixels;
+		if (this.bakedFar) {
+			this.drawLayer(
+				renderer,
+				horizonY,
+				this.bakedFar,
+				yawOffset * 0.45,
+				0.75,
+				0.5,
+			);
+		}
+		if (this.bakedNear) {
+			this.drawLayer(renderer, horizonY, this.bakedNear, yawOffset, 1.0, 0);
+		}
 	}
 
 	private drawLayer(
 		renderer: Renderer,
 		horizonY: number,
 		baked: BakedLayer,
-		tileW: number,
 		offset: number,
 		alpha: number,
 		xShift: number,
 	): void {
+		const tileW = this.tileW;
 		renderer.setGlobalAlpha(alpha);
 		const top = horizonY - baked.tileH;
 		for (let tile = -1; tile <= 1; tile++) {

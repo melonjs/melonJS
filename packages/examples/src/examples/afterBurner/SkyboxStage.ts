@@ -23,7 +23,7 @@ export class SkyboxStage extends Stage {
 	private backdrop: BackdropContainer | null = null;
 
 	override onResetEvent(app: Application): void {
-		this.backdrop = new BackdropContainer();
+		this.backdrop = new BackdropContainer(app);
 		// `addChild(child, z)` — without the second arg the world's
 		// `autoDepth = true` would overwrite the backdrop's depth
 		// with the running child-count, landing us at z = 1 and

@@ -14,6 +14,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
 import {
+	type Application,
 	type Camera3d,
 	type CanvasRenderer,
 	Container,
@@ -42,15 +43,17 @@ export class BackdropContainer extends Container {
 	readonly mountains: MountainHorizon;
 	readonly sky: SkyGradient;
 
-	constructor() {
+	constructor(app: Application) {
 		super(0, 0, 1, 1);
 		this.floating = true;
 		this.alwaysUpdate = true;
 		// Insertion order = z-paint order within this container —
 		// SkyGradient first, then mountains over horizon, then ground
-		// grid on top.
+		// grid on top. `app` is forwarded into MountainHorizon so it
+		// can resolve the canvas dimensions for its bake without
+		// reaching for a global `game` reference (deprecated).
 		this.sky = new SkyGradient();
-		this.mountains = new MountainHorizon();
+		this.mountains = new MountainHorizon(app);
 		this.grid = new GroundGrid();
 		this.addChild(this.sky);
 		this.addChild(this.mountains);
