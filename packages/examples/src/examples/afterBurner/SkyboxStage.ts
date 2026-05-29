@@ -14,14 +14,21 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
 import { type Application, Stage } from "melonjs";
-import { BackdropContainer } from "./backdrop/BackdropContainer";
+import {
+	BACKDROP_DEPTH,
+	BackdropContainer,
+} from "./backdrop/BackdropContainer";
 
 export class SkyboxStage extends Stage {
 	private backdrop: BackdropContainer | null = null;
 
 	override onResetEvent(app: Application): void {
 		this.backdrop = new BackdropContainer();
-		app.world.addChild(this.backdrop);
+		// `addChild(child, z)` — without the second arg the world's
+		// `autoDepth = true` would overwrite the backdrop's depth
+		// with the running child-count, landing us at z = 1 and
+		// painting the backdrop ON TOP of every gameplay element.
+		app.world.addChild(this.backdrop, BACKDROP_DEPTH);
 	}
 
 	/**

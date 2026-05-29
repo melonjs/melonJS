@@ -29,8 +29,13 @@ type Renderer = CanvasRenderer | WebGLRenderer;
 // Sort key for the backdrop. Has to be larger (= farther from camera
 // under painter's-sort = drawn first) than every gameplay element.
 // Enemies spawn at z=3000, despawn at z=4000; staying well past that
-// keeps us decisively first in the sort order.
-const BACKDROP_DEPTH = 10000;
+// keeps us decisively first in the sort order. Exported so the
+// stage can pass it as the second arg of `addChild` — calling
+// `world.addChild(backdrop)` without a z lets the world's default
+// `autoDepth = true` overwrite our value with the child-count
+// index, which lands us at z = 1 and paints the backdrop on TOP of
+// every gameplay element. (Bug we just hit.)
+export const BACKDROP_DEPTH = 10000;
 
 export class BackdropContainer extends Container {
 	readonly grid: GroundGrid;
@@ -50,7 +55,6 @@ export class BackdropContainer extends Container {
 		this.addChild(this.sky);
 		this.addChild(this.mountains);
 		this.addChild(this.grid);
-		this.depth = BACKDROP_DEPTH;
 	}
 
 	override draw(renderer: Renderer, viewport: Camera3d): void {
