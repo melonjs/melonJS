@@ -247,7 +247,7 @@ const examples: {
 		path: "camera-3d",
 		sourceDir: "camera3d",
 		description:
-			"Perspective camera orbiting a grid of sprite billboards in 3D space. Drag to rotate; closer sprites render larger.",
+			"Perspective camera orbiting three sprite billboards spaced along the z axis. Drag to orbit; closer sprites render larger.",
 	},
 	{
 		component: <ExampleClipping />,

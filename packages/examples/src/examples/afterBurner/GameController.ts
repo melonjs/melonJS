@@ -251,10 +251,9 @@ export class GameController extends Renderable {
 	 * closer renderables. Particle spread is generous + additive blending
 	 * for a fireball look that reads against the dark ground.
 	 *
-	 * Note: individual particles render at their own pos with depth=0 by
-	 * default — so the burst's apparent screen position is the camera-
-	 * projection of (x, y, 0), not (x, y, z). For arcade-feel feedback
-	 * that's fine; a future polish pass could set per-particle depth.
+	 * `ParticleEmitter.addParticles()` propagates the emitter's `depth` to
+	 * each spawned particle, so the burst projects from the explosion's
+	 * world-z, not from `z = 0`.
 	 */
 	spawnExplosion(x: number, y: number, z: number, tint: string): void {
 		const emitter = new ParticleEmitter(x, y, {

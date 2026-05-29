@@ -3,6 +3,7 @@ import type { ObservableVector3d } from "../math/observableVector3d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
+import type Renderer from "./../video/renderer.js";
 import Camera2d from "./camera2d.ts";
 import Frustum, { type FrustumOptions } from "./frustum.ts";
 
@@ -40,15 +41,9 @@ const _viewProjection = new Matrix3d();
  *   rotates with the target's orientation) is deferred until a
  *   showcase needs it (e.g. AfterBurner's banking jet).
  *
- 
  * Known limitations (PR B scope):
  * - `Light2d` is 2D-only — visible artifacts under perspective.
  *   Avoid combining with Camera3d for now.
- * - `Mesh` (3D models) maintains its own self-contained projection;
- *   meshes will render incorrectly under Camera3d unless their
- *   `projectionMatrix` is manually synced to the camera's. AfterBurner
- *   and similar showcases use sprite billboards instead (which scale
- *   automatically under perspective).
  * - `localToWorld` / `worldToLocal` overrides fall back to the
  *   ortho-equivalent 2D projection at z=0. Full 3D unproject for
  *   arbitrary depth is future work.
@@ -262,14 +257,35 @@ export default class Camera3d extends Camera2d {
 		// would `w=0`-divide and NaN their projected positions).
 		// Container.draw consults this for every floating child under
 		// any camera, default or not.
-		this.screenProjection.ortho(
-			0,
-			this.width,
-			this.height,
-			0,
-			this.near,
-			this.far,
-		);
+		//
+		// The ortho z range is wide and centered on 0 (NOT the
+		// perspective `near`/`far`) because:
+		// - The perspective frustum has `near = 0.1`, so a floating
+		//   renderable left at the default `depth = 0` would sit in
+		//   front of the near plane and get clipped.
+		// - Floating UI doesn't need depth precision — z just has to
+		//   be inside the ortho range. `[-1e6, +1e6]` matches Camera2d's
+		//   own `near`/`far` defaults and gives the same "z doesn't
+		//   matter" behavior 2D code already relies on.
+		this.screenProjection.ortho(0, this.width, this.height, 0, -1e6, 1e6);
+	}
+
+	/**
+	 * Override Camera2d's non-default projection setup so that a Camera3d
+	 * used in split-screen / picture-in-picture still renders the world
+	 * with perspective instead of falling back to a 2D ortho. The
+	 * camera's perspective `projectionMatrix` is mirrored into
+	 * `worldProjection`; the surrounding `clipRect` set by the base
+	 * `draw()` handles confining the draw region to the camera's
+	 * sub-screen rect, and the frustum's `aspect` is already in sync
+	 * with the camera's width/height. `screenProjection` is left alone
+	 * because it was already set up correctly in
+	 * {@link Camera3d#_updateProjectionMatrix}.
+	 * @ignore
+	 */
+	override _setupNonDefaultProjection(renderer: Renderer): void {
+		this.worldProjection.copy(this.projectionMatrix);
+		renderer.setProjection(this.worldProjection);
 	}
 
 	/**

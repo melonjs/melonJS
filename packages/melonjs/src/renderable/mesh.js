@@ -178,6 +178,13 @@ export default class Mesh extends Renderable {
 			this.vertexCount = this.originalVertices.length / 3;
 		}
 
+		// Capture the original winding once at construction so the
+		// Camera3d world-space path can swap to a reversed copy without
+		// losing the ability to restore the original (see
+		// `_setupWorldSpace` for the rationale). Same reference — we
+		// never mutate it in place.
+		this._indicesOriginal = this.indices;
+
 		// working array for projected vertices (updated each frame in draw)
 		/**
 		 * the projected vertex positions, updated each draw call
@@ -417,26 +424,33 @@ export default class Mesh extends Renderable {
 	}
 
 	/**
-	 * Switch the mesh's `indices` buffer to a winding-reversed copy.
-	 * Called once, lazily, the first time the mesh draws under Camera3d.
-	 * Why: the world-space path Y-flips vertices on output (a reflection,
-	 * det = -1), which inverts triangle winding in screen space. Without
-	 * this swap, `cullBackFaces: true` would end up culling the front
-	 * faces and the model would look hollow. We clone the indices (the
-	 * OBJ asset cache is shared across Mesh instances built from the same
-	 * model — mutating in place would break every sibling Mesh) and swap
-	 * the second and third index of every triangle.
+	 * Build the winding-reversed indices buffer used by the Camera3d
+	 * world-space path. Called once, lazily, the first time the mesh
+	 * draws under Camera3d. Why: the world-space path Y-flips vertices
+	 * on output (a reflection, det = -1), which inverts triangle
+	 * winding in screen space. Without the swap, `cullBackFaces: true`
+	 * would end up culling the front faces and the model would look
+	 * hollow.
+	 *
+	 * Both buffers are kept alive — `_indicesOriginal` is the original
+	 * OBJ-shared (or user-supplied) winding, `_indicesReversed` is the
+	 * Camera3d-flipped copy. `draw()` swaps `this.indices` between them
+	 * each frame based on the active camera, so a Mesh that was first
+	 * drawn under Camera3d and later re-parented to a Camera2d stage
+	 * (e.g. a level transition into a 2D minigame) gets its original
+	 * winding back and stays correctly oriented under
+	 * `cullBackFaces: true`.
 	 * @ignore
 	 */
 	_setupWorldSpace() {
-		const src = this.indices;
+		const src = this._indicesOriginal;
 		const dst = new Uint16Array(src.length);
 		for (let i = 0; i < src.length; i += 3) {
 			dst[i] = src[i];
 			dst[i + 1] = src[i + 2];
 			dst[i + 2] = src[i + 1];
 		}
-		this.indices = dst;
+		this._indicesReversed = dst;
 		this._worldSpace = true;
 	}
 
@@ -488,8 +502,19 @@ export default class Mesh extends Renderable {
 			if (this._worldSpace !== true) {
 				this._setupWorldSpace();
 			}
+			// Camera3d path: use the winding-reversed indices to keep
+			// `cullBackFaces: true` correct under the Y-flip in
+			// `_projectVerticesWorld`.
+			this.indices = this._indicesReversed;
 			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
 		} else {
+			// Camera2d / no-camera path: restore the original winding.
+			// Important when the same Mesh instance was previously drawn
+			// under Camera3d (`_setupWorldSpace` ran) and is now being
+			// re-rendered under a 2D camera — without this restore the
+			// reversed indices stay in place and front-facing triangles
+			// get culled, leaving the model looking inside-out.
+			this.indices = this._indicesOriginal;
 			this._projectVertices(this.pos.x, this.pos.y, 1000);
 		}
 		renderer.drawMesh(this);

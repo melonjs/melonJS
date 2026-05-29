@@ -935,6 +935,38 @@ describe("Mesh × Camera3d world-space path", () => {
 		expect(m.vertices[2]).toBeCloseTo(188, 4);
 	});
 
+	it("draw under Camera2d after Camera3d restores the original winding", () => {
+		// Regression: _setupWorldSpace used to replace this.indices
+		// permanently, so a Mesh that was first rendered under Camera3d
+		// kept the reversed winding even when the active stage swapped
+		// back to a Camera2d. Under `cullBackFaces: true` the model
+		// would then look hollow.
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		const originalIndices = m.indices;
+
+		// First draw under Camera3d — builds the reversed buffer.
+		m.onActivateEvent();
+		m.draw(stubRenderer);
+		expect(m.indices).not.toBe(originalIndices);
+		expect(m.indices).toBe(m._indicesReversed);
+
+		// Now pretend the stage swapped to Camera2d: _useWorldSpace
+		// flips to false on next activation.
+		m._useWorldSpace = false;
+		m.draw(stubRenderer);
+
+		// The original buffer (same identity) is back in place.
+		expect(m.indices).toBe(originalIndices);
+		expect(m.indices).toBe(m._indicesOriginal);
+
+		// And a follow-up Camera3d frame re-uses the cached reversed
+		// buffer — no rebuild.
+		m._useWorldSpace = true;
+		const reversed = m._indicesReversed;
+		m.draw(stubRenderer);
+		expect(m.indices).toBe(reversed);
+	});
+
 	it("world-space output Y-flips OBJ Y-up to engine Y-down", () => {
 		const m = new Mesh(0, 0, buildPyramidSettings());
 		m.originalVertices = new Float32Array([

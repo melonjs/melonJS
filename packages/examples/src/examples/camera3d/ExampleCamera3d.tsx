@@ -40,6 +40,13 @@ const createGame = () => {
 	// async preload completion.
 	let pointerCleanup: (() => void) | null = null;
 	let domCleanup: (() => void) | null = null;
+	// `loader.preload` is async — a same-tab navigation back to the
+	// example index before the load finishes would run the teardown
+	// returned by `createGame` while `pointerCleanup` and `domCleanup`
+	// are still null, leaking every sprite/listener/DOM-node the
+	// callback then installs. The flag below lets the callback bail
+	// out when teardown has already happened.
+	let unmounted = false;
 
 	// opt in to Camera3d at the Application level — every stage in this
 	// app gets a Camera3d as its default camera (the loader screen pins
@@ -55,6 +62,13 @@ const createGame = () => {
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
+		// Bail out if the component was unmounted while preload was in
+		// flight — otherwise we'd spawn sprites, register pointer
+		// listeners and append DOM nodes that never get cleaned up
+		// (the outer teardown already ran).
+		if (unmounted) {
+			return;
+		}
 		// loader.preload internally transitions to state.LOADING (the
 		// DefaultLoadingScreen). Transition back to the default game
 		// stage so its Camera3d becomes the active viewport.
@@ -206,6 +220,7 @@ const createGame = () => {
 	// `#screen` persists across mounts), and doesn't leave stale
 	// pointer listeners attached to a dead camera reference.
 	return () => {
+		unmounted = true;
 		if (pointerCleanup) pointerCleanup();
 		if (domCleanup) domCleanup();
 	};

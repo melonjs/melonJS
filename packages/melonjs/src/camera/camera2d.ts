@@ -882,6 +882,41 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * Build and install the world + screen projections used when this
+	 * camera is non-default (split-screen, picture-in-picture, etc.).
+	 * Default behavior is a shifted ortho that places the camera's
+	 * world view at the camera's screen-rect within the full renderer
+	 * viewport. Subclasses (e.g. Camera3d) override this to install a
+	 * perspective `worldProjection` instead.
+	 * @ignore
+	 */
+	_setupNonDefaultProjection(renderer: Renderer): void {
+		const left = -this.screenX / this.zoom;
+		const top = -this.screenY / this.zoom;
+		const rw = renderer.width / this.zoom;
+		const rh = renderer.height / this.zoom;
+
+		this.worldProjection.ortho(
+			left,
+			left + rw,
+			top + rh,
+			top,
+			this.near,
+			this.far,
+		);
+		renderer.setProjection(this.worldProjection);
+
+		this.screenProjection.ortho(
+			-this.screenX,
+			-this.screenX + renderer.width,
+			-this.screenY + renderer.height,
+			-this.screenY,
+			this.near,
+			this.far,
+		);
+	}
+
+	/**
 	 * render the camera effects
 	 * @ignore
 	 */
@@ -934,31 +969,7 @@ export default class Camera2d extends Renderable {
 
 		// set camera projection for non-default cameras
 		if (isNonDefault) {
-			const left = -this.screenX / this.zoom;
-			const top = -this.screenY / this.zoom;
-			const rw = renderer.width / this.zoom;
-			const rh = renderer.height / this.zoom;
-
-			// world-space projection (maps world coords to screen viewport)
-			this.worldProjection.ortho(
-				left,
-				left + rw,
-				top + rh,
-				top,
-				this.near,
-				this.far,
-			);
-			renderer.setProjection(this.worldProjection);
-
-			// screen-space projection for floating elements
-			this.screenProjection.ortho(
-				-this.screenX,
-				-this.screenX + renderer.width,
-				-this.screenY + renderer.height,
-				-this.screenY,
-				this.near,
-				this.far,
-			);
+			this._setupNonDefaultProjection(renderer);
 		} else {
 			renderer.setProjection(this.projectionMatrix);
 		}

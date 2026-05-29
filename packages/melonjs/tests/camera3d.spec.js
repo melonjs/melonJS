@@ -118,6 +118,85 @@ describe("Camera3d", () => {
 		});
 	});
 
+	describe("screenProjection (Camera3d clip planes)", () => {
+		// Regression for PR #1464 Copilot comment 3324143818:
+		// `screenProjection` used to use the perspective `near` (0.1)
+		// as its ortho near plane, which clipped floating UI sitting
+		// at the default `depth = 0` because 0 < 0.1.
+		it("ortho z range includes 0 so floating UI at depth=0 isn't clipped", () => {
+			const cam = new Camera3d(0, 0, 800, 600);
+			// Force a rebuild path (super-constructor only calls the
+			// frustum-copy branch; we want to exercise the regular
+			// ortho-writing branch too).
+			cam.resize(800, 600);
+			// Project (px, py, 0) through screenProjection and check that
+			// the resulting NDC z lands in [-1, +1] — the visible
+			// post-clip range. Anything outside gets clipped by the GPU.
+			const v = new Vector3d(100, 100, 0);
+			cam.screenProjection.apply(v);
+			expect(v.z).toBeGreaterThanOrEqual(-1);
+			expect(v.z).toBeLessThanOrEqual(1);
+		});
+
+		it("does not depend on the perspective near/far", () => {
+			// Pushing far out (AfterBurner-class scenes do this) shouldn't
+			// shift the screen-space ortho's z behavior — the ortho is
+			// supposed to be independent of perspective settings.
+			const cam = new Camera3d(0, 0, 800, 600);
+			cam.setClipPlanes(0.1, 1000);
+			const v1 = new Vector3d(0, 0, 0);
+			cam.screenProjection.apply(v1);
+
+			cam.setClipPlanes(5, 50000);
+			const v2 = new Vector3d(0, 0, 0);
+			cam.screenProjection.apply(v2);
+
+			expect(v2.z).toBeCloseTo(v1.z, 5);
+		});
+	});
+
+	describe("non-default Camera3d projection (split-screen)", () => {
+		// Regression for PR #1464 Copilot comment 3324143943:
+		// `Camera2d._setupNonDefaultProjection` builds `worldProjection`
+		// as a 2D ortho. For Camera3d that erases the perspective —
+		// non-default Camera3d would silently render the world flat.
+		it("worldProjection mirrors the perspective projectionMatrix", () => {
+			// 256×192 sub-rect inside a 800×600 renderer (the canonical
+			// split-screen test fixture).
+			const cam = new Camera3d(0, 0, 256, 192);
+			cam.screenX = 32;
+			cam.screenY = 32;
+			// Stub renderer — `_setupNonDefaultProjection` only needs
+			// `setProjection` plus width/height for ortho math, which
+			// Camera3d's override doesn't use.
+			let installed = null;
+			const stubRenderer = {
+				width: 800,
+				height: 600,
+				setProjection(m) {
+					installed = m;
+				},
+			};
+
+			cam._setupNonDefaultProjection(stubRenderer);
+
+			// Same matrix instance as worldProjection (we install it).
+			expect(installed).toBe(cam.worldProjection);
+			// And worldProjection now equals the perspective matrix
+			// element-for-element (Camera2d would have made this ortho).
+			for (let i = 0; i < 16; i++) {
+				expect(cam.worldProjection.val[i]).toBeCloseTo(
+					cam.projectionMatrix.val[i],
+					5,
+				);
+			}
+			// Sanity: this is a perspective matrix, not ortho — element
+			// [11] is non-zero (the perspective divide row). Ortho would
+			// have [11] = 0.
+			expect(cam.worldProjection.val[11]).not.toBe(0);
+		});
+	});
+
 	describe("lookAt", () => {
 		it("derives yaw from XZ direction (target to the right → positive yaw)", () => {
 			const cam = new Camera3d(0, 0, 800, 600);
