@@ -6,6 +6,7 @@ import { clamp } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
+import { vector3dPool } from "../math/vector3d.ts";
 import { boundsPool } from "./../physics/bounds.ts";
 import Body from "./../physics/builtin/body.js";
 import pool from "../system/legacy_pool.js";
@@ -792,15 +793,20 @@ export default class Renderable extends Rect {
 	}
 
 	/**
-	 * return the renderable absolute position in the game world
-	 * @returns {Vector2d}
+	 * return the renderable absolute position in the game world. The
+	 * returned vector is a {@link Vector3d} so the z component is summed
+	 * across the ancestor chain too — important for {@link Camera3d}'s
+	 * frustum culling, which previously read `obj.depth` (local
+	 * `pos.z`) and mis-culled children nested under a container with
+	 * its own non-zero depth.
+	 * @returns {Vector3d}
 	 */
 	getAbsolutePosition() {
 		if (typeof this._absPos === "undefined") {
-			this._absPos = vector2dPool.get();
+			this._absPos = vector3dPool.get();
 		}
 		// TODO: cache the absolute position and invalidate when pos or ancestor changes
-		this._absPos.set(this.pos.x, this.pos.y);
+		this._absPos.set(this.pos.x, this.pos.y, this.pos.z);
 		if (this.ancestor && this.floating !== true) {
 			this._absPos.add(this.ancestor.getAbsolutePosition());
 		}
@@ -1009,7 +1015,7 @@ export default class Renderable extends Rect {
 		this.pos = undefined;
 
 		if (this._absPos) {
-			vector2dPool.release(this._absPos);
+			vector3dPool.release(this._absPos);
 			this._absPos = undefined;
 		}
 

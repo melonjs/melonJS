@@ -443,7 +443,15 @@ export class Color {
 	 * color.setHSLDeg(360, 1, 0.5);
 	 */
 	setHSLDeg(hDeg: number, s: number, l: number) {
-		return this.setHSL(hDeg / 360, s, l);
+		// Normalize hDeg into `[0, 360)` before dividing. `setHSL`'s
+		// internal `hue2rgb` adjusts by at most one turn (`t < 0 → +1`,
+		// `t > 1 → -1`), so multi-turn inputs like `720` or `-360`
+		// would otherwise leave the per-channel `t` value outside the
+		// valid range and land in `hue2rgb`'s fallthrough (returning
+		// `p`), which is wrong for any non-zero saturation. Modulo +
+		// add-then-modulo keeps negatives well-defined.
+		const normalized = ((hDeg % 360) + 360) % 360;
+		return this.setHSL(normalized / 360, s, l);
 	}
 
 	/**

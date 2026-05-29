@@ -567,6 +567,40 @@ describe("Camera3d", () => {
 			cam.update();
 			expect(cam.isVisible(sprite)).toBe(true);
 		});
+
+		// ---- regression: nested container child z is local ----
+		// PR #1464 review: `isVisible` mixes `getAbsolutePosition()`
+		// (which sums ancestor x/y) with `obj.depth` (which is the
+		// local pos.z), so a child inside a container that itself has
+		// a non-zero depth gets culled at its local z instead of its
+		// world z. For example: a particle at local z=0 inside an
+		// emitter at world z=500 should be inside the frustum at
+		// world z=500, but the current code tests it at z=0.
+		it("child inside a deep container is tested at its WORLD z, not local z", async () => {
+			// Camera at world z=100 with a tight near=10 / far=300 frustum
+			// so its visible z range is [110, 400]. Place the parent
+			// container at world z=200 and the child at LOCAL z=0:
+			//   - true world z of child = parent.z + child.z = 200 → INSIDE
+			//   - obj.depth (= local pos.z) = 0                 → OUTSIDE
+			// The current `isVisible` reads `obj.depth` and tests at z=0,
+			// returning false; the fix should test at the true world z
+			// and return true.
+			const cam = new Camera3d(0, 0, 800, 600, { near: 10, far: 300 });
+			cam.pos.set(0, 0, 100);
+			cam.yaw = 0;
+			cam.pitch = 0;
+			cam.update();
+
+			const Container = (await import("../src/renderable/container.js"))
+				.default;
+			const parent = new Container(0, 0, 1, 1);
+			parent.autoDepth = false; // keep our explicit z, no auto-renumber
+			parent.pos.z = 200;
+			const child = new Renderable(0, 0, 32, 32);
+			parent.addChild(child, 0);
+			expect(child.pos.z).toBe(0); // local — sanity-check the test setup
+			expect(cam.isVisible(child)).toBe(true);
+		});
 	});
 
 	describe("backward compat with Camera2d API", () => {

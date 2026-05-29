@@ -544,12 +544,14 @@ export default class Camera3d extends Camera2d {
 		// ParticleEmitter) — testing local coords against a world-
 		// space frustum mis-culls nested children even when their actual
 		// world position is inside the view.
-		// `getAbsolutePosition` walks the ancestor chain, summing parent
-		// positions, so the X/Y here are always in world space.
+		// `getAbsolutePosition` walks the ancestor chain summing
+		// parent x/y AND z; previously we read `obj.depth` (local
+		// `pos.z`) here, which silently mis-culled children of any
+		// container whose own depth was non-zero.
 		const bounds = obj.getBounds();
 		const radius = Math.max(bounds.width, bounds.height) * 0.5;
 		const absPos = obj.getAbsolutePosition();
-		return this.frustum.intersectsSphere(absPos.x, absPos.y, obj.depth, radius);
+		return this.frustum.intersectsSphere(absPos.x, absPos.y, absPos.z, radius);
 	}
 
 	/**

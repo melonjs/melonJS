@@ -43,6 +43,17 @@ import { GameController } from "./GameController";
 import { SkyboxStage } from "./SkyboxStage";
 
 const createGame = () => {
+	// NOTE: an `unmounted` guard around the preload callback would in
+	// principle fix the "user navigates away before preload finishes"
+	// race that Copilot flagged. It can't be added cleanly today —
+	// `examples/utils.tsx` runs `currentTeardown()` on every React
+	// useEffect cleanup (including StrictMode's dev double-mount
+	// cycle), but the same-example remount branch only reattaches
+	// the canvas without re-invoking `createGameFn`. An `unmounted`
+	// flag flipped in teardown therefore stays `true` across the
+	// StrictMode remount, the preload callback bails for the rest of
+	// the session, and the game never starts. Picks up cleanly once
+	// the utils.tsx remount path is fixed (separate review thread).
 	const app = new Application(1024, 768, {
 		parent: "screen",
 		renderer: video.WEBGL,

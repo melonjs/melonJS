@@ -237,6 +237,29 @@ describe("Color", () => {
 			const fromNorm = blue_color.setHSL(200 / 360, 0.65, 0.42).toRGB();
 			expect(fromDeg).toEqual(fromNorm);
 		});
+
+		// ── multi-turn wrap (the JSDoc says out-of-range hues are
+		// accepted) ─────────────────────────────────────────────────
+		// Regression for PR #1464 review: the underlying `hue2rgb`
+		// only adjusts by one turn, so degree inputs > 360 or < 0
+		// have to be normalized before delegation; otherwise hues like
+		// 720° don't match 0° despite the documented wrap behavior.
+		it("(720deg, 1, 0.5) wraps to red (two turns)", () => {
+			expect(blue_color.setHSLDeg(720, 1, 0.5).toRGB()).toEqual("rgb(255,0,0)");
+		});
+		it("(-360deg, 1, 0.5) wraps to red (negative one turn)", () => {
+			expect(blue_color.setHSLDeg(-360, 1, 0.5).toRGB()).toEqual(
+				"rgb(255,0,0)",
+			);
+		});
+		it("(480deg, 1, 0.5) wraps to green (one turn + 120°)", () => {
+			expect(blue_color.setHSLDeg(480, 1, 0.5).toRGB()).toEqual("rgb(0,255,0)");
+		});
+		it("(-120deg, 1, 0.5) wraps to blue (negative, no turn)", () => {
+			expect(blue_color.setHSLDeg(-120, 1, 0.5).toRGB()).toEqual(
+				"rgb(0,0,255)",
+			);
+		});
 		it("returns the same Color instance for chaining", () => {
 			const c = blue_color.setHSLDeg(120, 1, 0.5);
 			expect(c).toBe(blue_color);
