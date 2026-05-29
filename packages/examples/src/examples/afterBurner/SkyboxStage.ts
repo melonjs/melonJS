@@ -101,6 +101,22 @@ const SUMMIT_INDICES: number[] = MOUNTAIN_PEAKS.map((p, i, arr) => {
 	return -1;
 }).filter((i) => i >= 0);
 
+/**
+ * One pre-baked mountain layer. The polygon outline + snow caps are
+ * rasterized into the canvas ONCE at `tileW × tileH` resolution, then
+ * the per-frame `draw()` walk does a flat `drawImage` per tile —
+ * avoids the ~30 `lineTo` + ~10 summit triangles per tile per layer
+ * per frame. The cache key is the tuple of inputs that affect pixel
+ * output; any change in canvas size, base height, or layer colors
+ * invalidates the cache and forces a re-bake on the next draw.
+ */
+interface BakedMountainLayer {
+	canvas: HTMLCanvasElement;
+	tileW: number;
+	tileH: number;
+	cacheKey: string;
+}
+
 export class SkyboxStage extends Stage {
 	app: Application | null = null;
 	sky: Gradient | null = null;
@@ -113,6 +129,13 @@ export class SkyboxStage extends Stage {
 	// the player; cleared on `reset()`. Engine-level pause already
 	// freezes `update()` calls, so it doesn't need this gate.
 	scrollPaused = false;
+	// Lazily-baked offscreen canvases for the two mountain layers. Both
+	// layers' geometry is invariant across frames; only the per-frame
+	// parallax X offset, alpha, and roll rotation change. Baking once
+	// turns each layer into `drawImage` blits and skips a hot path-
+	// tracing loop. `null` until the first `draw()` builds them.
+	_bakedFar: BakedMountainLayer | null = null;
+	_bakedNear: BakedMountainLayer | null = null;
 
 	override onResetEvent(app: Application): void {
 		this.app = app;
@@ -134,19 +157,108 @@ export class SkyboxStage extends Stage {
 	}
 
 	/**
-	 * Paint one mountain range layer. Tiles three copies of
-	 * {@link MOUNTAIN_PEAKS} horizontally (so any horizontal scroll
-	 * lands at least one full tile inside the visible window) and
-	 * paints snow caps on each summit on top of the silhouette.
-	 *
-	 * `xShift` lets the caller offset peaks within the tile so the
-	 * near and far layers don't have summits stacked on top of each
-	 * other, which would defeat the depth illusion.
+	 * Bake one mountain layer's silhouette + snow caps into an
+	 * offscreen Canvas2D. Run once per (tileW, tileH, fillColor,
+	 * snowColor) combo, cached on the stage; the per-frame draw walk
+	 * just blits the result. Inside the bake, the polygon's baseline
+	 * sits at `y = tileH` (canvas bottom) and peaks extend up to
+	 * `y = 0` — the draw-time blit positions the canvas so its
+	 * bottom edge lands ON the horizon.
+	 */
+	_bakeMountainLayer(
+		tileW: number,
+		baseH: number,
+		fillColor: string,
+		snowColor: string,
+	): HTMLCanvasElement {
+		const canvas = document.createElement("canvas");
+		// Use the ceil of the tile dimensions; `baseH` is the height
+		// reached by a height = 1.0 peak, which is what we want for the
+		// canvas — taller peaks would clip, but `MOUNTAIN_PEAKS` is
+		// already normalized to [0, 1].
+		canvas.width = Math.ceil(tileW);
+		canvas.height = Math.ceil(baseH);
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			return canvas;
+		}
+		const tileH = canvas.height;
+		// Silhouette polygon — baseline at the canvas bottom, peaks
+		// going upward. Same vertex math as the live-render version,
+		// just translated into canvas-local coords.
+		ctx.fillStyle = fillColor;
+		ctx.beginPath();
+		ctx.moveTo(0, tileH);
+		for (const [px, ph] of MOUNTAIN_PEAKS) {
+			ctx.lineTo(px * tileW, tileH - ph * baseH);
+		}
+		ctx.lineTo(tileW, tileH);
+		ctx.closePath();
+		ctx.fill();
+		// Snow caps — small triangle at the top 18 % of each local-
+		// maximum peak (the precomputed `SUMMIT_INDICES` indices).
+		ctx.fillStyle = snowColor;
+		for (const i of SUMMIT_INDICES) {
+			const [px, ph] = MOUNTAIN_PEAKS[i];
+			const [lx, lh] = MOUNTAIN_PEAKS[i - 1];
+			const [rx, rh] = MOUNTAIN_PEAKS[i + 1];
+			const sx = px * tileW;
+			const sy = tileH - ph * baseH;
+			const t = 0.18;
+			const llx = (px + (lx - px) * t) * tileW;
+			const lly = tileH - (ph + (lh - ph) * t) * baseH;
+			const rrx = (px + (rx - px) * t) * tileW;
+			const rry = tileH - (ph + (rh - ph) * t) * baseH;
+			ctx.beginPath();
+			ctx.moveTo(llx, lly);
+			ctx.lineTo(sx, sy);
+			ctx.lineTo(rrx, rry);
+			ctx.closePath();
+			ctx.fill();
+		}
+		return canvas;
+	}
+
+	/**
+	 * Get the cached baked layer for this slot, re-baking if the
+	 * cache key has shifted (canvas resized, layer colors changed, …).
+	 */
+	_getBakedLayer(
+		slot: "far" | "near",
+		tileW: number,
+		baseH: number,
+		fillColor: string,
+		snowColor: string,
+	): BakedMountainLayer {
+		const key = `${Math.ceil(tileW)}x${Math.ceil(baseH)}|${fillColor}|${snowColor}`;
+		const cached = slot === "far" ? this._bakedFar : this._bakedNear;
+		if (cached && cached.cacheKey === key) {
+			return cached;
+		}
+		const baked: BakedMountainLayer = {
+			canvas: this._bakeMountainLayer(tileW, baseH, fillColor, snowColor),
+			tileW: Math.ceil(tileW),
+			tileH: Math.ceil(baseH),
+			cacheKey: key,
+		};
+		if (slot === "far") {
+			this._bakedFar = baked;
+		} else {
+			this._bakedNear = baked;
+		}
+		return baked;
+	}
+
+	/**
+	 * Paint one mountain range layer via the pre-baked canvas. Three
+	 * blits cover any horizontal scroll position (left neighbor,
+	 * visible, right neighbor). The base of each blit lands ON the
+	 * horizon (so the polygon bottom sits exactly at `horizonY`).
 	 */
 	_drawMountainLayer(
 		renderer: Renderer,
 		horizonY: number,
-		pad: number,
+		slot: "far" | "near",
 		tileW: number,
 		baseH: number,
 		offset: number,
@@ -155,58 +267,22 @@ export class SkyboxStage extends Stage {
 		alpha: number,
 		xShift: number,
 	): void {
-		renderer.setColor(fillColor);
+		const baked = this._getBakedLayer(slot, tileW, baseH, fillColor, snowColor);
 		renderer.setGlobalAlpha(alpha);
-		// Render 3 tiles (left neighbor, visible, right neighbor) so
-		// the silhouette always fully covers the canvas regardless of
-		// the parallax offset.
+		const top = horizonY - baked.tileH;
 		for (let tile = -1; tile <= 1; tile++) {
 			const baseX = tile * tileW + (offset % tileW) + xShift * tileW;
-			renderer.beginPath();
-			// Base sits AT the horizon (not below it). Adding any padding
-			// here would land inside the ground rect and read as a solid
-			// dark band — the bug the user spotted. The roll padding for
-			// the backdrop is already handled by the over-sized sky /
-			// ground rects, and the mountain polygon shares their
-			// rotation frame, so no vertical extension is needed.
-			renderer.moveTo(baseX, horizonY);
-			for (const [px, ph] of MOUNTAIN_PEAKS) {
-				renderer.lineTo(baseX + px * tileW, horizonY - ph * baseH);
-			}
-			renderer.lineTo(baseX + tileW, horizonY);
-			renderer.closePath();
-			renderer.fill();
-		}
-
-		// Snow caps — for each pre-computed summit, draw a small
-		// triangle hugging the top 30% of the peak's height. Lifts
-		// only the local maxima, ignoring floor segments and minor
-		// shoulders so the snow reads as "summit catching the sun".
-		renderer.setColor(snowColor);
-		renderer.setGlobalAlpha(alpha);
-		for (let tile = -1; tile <= 1; tile++) {
-			const baseX = tile * tileW + (offset % tileW) + xShift * tileW;
-			for (const i of SUMMIT_INDICES) {
-				const [px, ph] = MOUNTAIN_PEAKS[i];
-				const [lx, lh] = MOUNTAIN_PEAKS[i - 1];
-				const [rx, rh] = MOUNTAIN_PEAKS[i + 1];
-				const sx = baseX + px * tileW;
-				const sy = horizonY - ph * baseH;
-				// Just 18% of the way down each slope — small crest at
-				// the very tip of the peak rather than a dome covering
-				// the upper third (which read as rounded "hills").
-				const t = 0.18;
-				const llx = baseX + (px + (lx - px) * t) * tileW;
-				const lly = horizonY - (ph + (lh - ph) * t) * baseH;
-				const rrx = baseX + (px + (rx - px) * t) * tileW;
-				const rry = horizonY - (ph + (rh - ph) * t) * baseH;
-				renderer.beginPath();
-				renderer.moveTo(llx, lly);
-				renderer.lineTo(sx, sy);
-				renderer.lineTo(rrx, rry);
-				renderer.closePath();
-				renderer.fill();
-			}
+			renderer.drawImage(
+				baked.canvas,
+				0,
+				0,
+				baked.tileW,
+				baked.tileH,
+				baseX,
+				top,
+				baked.tileW,
+				baked.tileH,
+			);
 		}
 		renderer.setGlobalAlpha(1);
 	}
@@ -317,7 +393,7 @@ export class SkyboxStage extends Stage {
 			this._drawMountainLayer(
 				renderer,
 				horizonClamped,
-				pad,
+				"far",
 				tileW,
 				mountainBaseH * 0.6,
 				yaw * baseYawToPixels * 0.45,
@@ -329,7 +405,7 @@ export class SkyboxStage extends Stage {
 			this._drawMountainLayer(
 				renderer,
 				horizonClamped,
-				pad,
+				"near",
 				tileW,
 				mountainBaseH,
 				yaw * baseYawToPixels,
