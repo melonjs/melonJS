@@ -286,6 +286,21 @@ export default class Camera3d extends Camera2d {
 	override _setupNonDefaultProjection(renderer: Renderer): void {
 		this.worldProjection.copy(this.projectionMatrix);
 		renderer.setProjection(this.worldProjection);
+		// Confine the perspective NDC `[-1, +1]` to the camera's
+		// sub-rect via the GL viewport. Without this, the perspective
+		// matrix maps to the FULL canvas and `clipRect` then crops
+		// to the sub-rect — producing a cropped slice of the
+		// full-screen view rather than a properly-remapped sub-camera
+		// (PR #1464 review). WebGL's `gl.viewport` uses bottom-left
+		// origin, so the canvas-top-left `screenY` is flipped via
+		// `renderer.height - screenY - height`. Canvas renderer's
+		// inherited no-op `setViewport` swallows this safely.
+		renderer.setViewport(
+			this.screenX,
+			renderer.height - this.screenY - this.height,
+			this.width,
+			this.height,
+		);
 	}
 
 	/**

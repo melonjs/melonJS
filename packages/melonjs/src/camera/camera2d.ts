@@ -1031,6 +1031,20 @@ export default class Camera2d extends Renderable {
 		// post-effect: unbind FBO and blit to screen through shader effect
 		r.endPostEffect(this);
 
+		// Restore the full-canvas viewport for any non-default camera.
+		// Camera2d's non-default path never changes it (the sub-rect
+		// is handled via the ortho left/right/top/bottom shift +
+		// `clipRect`), so this is a no-op. Camera3d's non-default
+		// path DOES change it inside `_setupNonDefaultProjection` to
+		// remap NDC into the sub-rect — without this restore, the
+		// next camera in the stage's render order would inherit the
+		// shrunken WebGL viewport. `endPostEffect` already does this
+		// for cameras with post-effects (FBO bracket), but non-FBO
+		// non-default Camera3d cameras would otherwise leak.
+		if (isNonDefault) {
+			renderer.setViewport(0, 0, renderer.width, renderer.height);
+		}
+
 		// remove the transient colorMatrix effect so it doesn't persist between frames
 		if (this._colorMatrixEffect) {
 			const idx = this.postEffects.indexOf(this._colorMatrixEffect);

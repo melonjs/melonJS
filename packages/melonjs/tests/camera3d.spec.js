@@ -176,6 +176,7 @@ describe("Camera3d", () => {
 				setProjection(m) {
 					installed = m;
 				},
+				setViewport() {},
 			};
 
 			cam._setupNonDefaultProjection(stubRenderer);
@@ -194,6 +195,34 @@ describe("Camera3d", () => {
 			// [11] is non-zero (the perspective divide row). Ortho would
 			// have [11] = 0.
 			expect(cam.worldProjection.val[11]).not.toBe(0);
+		});
+
+		// Regression for PR #1464 review round 2: a non-default
+		// Camera3d previously installed only the perspective
+		// projection — no WebGL viewport remap. NDC then mapped to
+		// the full canvas while `clipRect` clipped to the sub-rect,
+		// producing a cropped slice of the full-canvas view instead
+		// of a fresh perspective inside the sub-rect. The fix calls
+		// `renderer.setViewport` with the sub-rect coordinates
+		// (Y-flipped from canvas-top-left to WebGL bottom-left) so
+		// NDC fills the sub-rect properly.
+		it("_setupNonDefaultProjection sets the WebGL viewport to the sub-rect", () => {
+			const cam = new Camera3d(0, 0, 256, 192);
+			cam.screenX = 32;
+			cam.screenY = 64;
+			let viewportSet = null;
+			const stubRenderer = {
+				width: 800,
+				height: 600,
+				setProjection() {},
+				setViewport(x, y, w, h) {
+					viewportSet = [x, y, w, h];
+				},
+			};
+			cam._setupNonDefaultProjection(stubRenderer);
+			expect(viewportSet).not.toBeNull();
+			// Y-flip: canvas-top-y = 64 → WebGL-bottom-y = 600 - 64 - 192 = 344
+			expect(viewportSet).toEqual([32, 344, 256, 192]);
 		});
 	});
 

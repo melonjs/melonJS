@@ -935,6 +935,53 @@ describe("Mesh × Camera3d world-space path", () => {
 		expect(m.vertices[2]).toBeCloseTo(188, 4);
 	});
 
+	it("world-space output applies currentTransform translation (PR #1464 review)", () => {
+		// Regression: `_projectVerticesWorld` used to compute the
+		// matrix-vec product `M × (vx, vy, vz)` with only the rotation/
+		// scale columns of `currentTransform`, dropping the translation
+		// column (m[12..14]). That made `mesh.translate(...)` a silent
+		// no-op under Camera3d while the Camera2d path (via
+		// `projectVertices` in vertex.ts) correctly honored it.
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		m.originalVertices = new Float32Array([0.5, 0.3, -0.2]);
+		m.vertices = new Float32Array(3);
+		m.vertexCount = 1;
+
+		// Translate the mesh by (4, 5, 6) — applied to the original
+		// transform before projection. With width=60 from
+		// `buildPyramidSettings`, the per-axis contribution is
+		// `translate × width` (= 240, 300, 360 respectively).
+		m.translate(4, 5, 6);
+		m._projectVerticesWorld(100, 50, 200);
+
+		// X: (0.5 + 4) × 60 + 100 = 4.5 × 60 + 100 = 370
+		// Y: −(0.3 + 5) × 60 + 50 = −5.3 × 60 + 50 = −268
+		// Z: (−0.2 + 6) × 60 + 200 = 5.8 × 60 + 200 = 548
+		expect(m.vertices[0]).toBeCloseTo(370, 4);
+		expect(m.vertices[1]).toBeCloseTo(-268, 4);
+		expect(m.vertices[2]).toBeCloseTo(548, 4);
+	});
+
+	it("draw picks the path from the rendering viewport, not the activation viewport (PR #1464 review)", async () => {
+		// Regression: `_useWorldSpace` is captured from `game.viewport`
+		// once at `onActivateEvent` and never updated. A stage with
+		// multiple cameras (e.g. Camera3d main + Camera2d minimap) ends
+		// up running the wrong projection for whichever camera doesn't
+		// match the activation viewport. The fix reads the path off
+		// the viewport passed into `draw(renderer, viewport)` each
+		// frame.
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		m.onActivateEvent(); // captured: _useWorldSpace=true (Camera3d in beforeAll)
+		const Camera2d = (await import("../src/camera/camera2d.ts")).default;
+		const cam2d = new Camera2d(0, 0, 800, 600);
+
+		// Pretend Camera2d renders the mesh. The world-space path
+		// should NOT run; indices should be the original (not the
+		// reversed copy).
+		m.draw(stubRenderer, cam2d);
+		expect(m.indices).toBe(m._indicesOriginal);
+	});
+
 	it("draw under Camera2d after Camera3d restores the original winding", () => {
 		// Regression: _setupWorldSpace used to replace this.indices
 		// permanently, so a Mesh that was first rendered under Camera3d

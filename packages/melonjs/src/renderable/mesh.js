@@ -406,6 +406,16 @@ export default class Mesh extends Renderable {
 		const src = this.originalVertices;
 		const scale = this.width;
 		const m = this.currentTransform.val;
+		// Include the translation column (m[12..14]) — a proper
+		// matrix-vector multiplication treats the vertex as
+		// `(vx, vy, vz, 1)` so the translation column gets added
+		// once. Previously the loop only used the rotation/scale
+		// columns, which silently dropped `mesh.translate(x, y, z)`
+		// under Camera3d while the Camera2d path (via
+		// `projectVertices` in vertex.ts) honored it.
+		const tx = m[12];
+		const ty = m[13];
+		const tz = m[14];
 
 		for (let i = 0; i < this.vertexCount; i++) {
 			const i3 = i * 3;
@@ -413,9 +423,9 @@ export default class Mesh extends Renderable {
 			const vy = src[i3 + 1];
 			const vz = src[i3 + 2];
 
-			const rx = m[0] * vx + m[4] * vy + m[8] * vz;
-			const ry = m[1] * vx + m[5] * vy + m[9] * vz;
-			const rz = m[2] * vx + m[6] * vy + m[10] * vz;
+			const rx = m[0] * vx + m[4] * vy + m[8] * vz + tx;
+			const ry = m[1] * vx + m[5] * vy + m[9] * vz + ty;
+			const rz = m[2] * vx + m[6] * vy + m[10] * vz + tz;
 
 			out[i3] = rx * scale + offsetX;
 			out[i3 + 1] = -ry * scale + offsetY;
@@ -495,10 +505,27 @@ export default class Mesh extends Renderable {
 	 * per-vertex `aColor` (WebGL) or per-triangle solid-fill (Canvas) path.
 	 * The WebGL batcher may still chunk very large meshes across multiple
 	 * `drawElements` calls to fit its vertex/index buffer limits.
+	 *
+	 * The active path is picked from the `viewport` passed in by
+	 * `Container.draw`, NOT from the activation-time `_useWorldSpace`
+	 * flag. The flag is kept as a fallback only for callers that
+	 * invoke `draw(renderer)` without a viewport (tests, batched
+	 * builds). Without the per-draw read, a stage with multiple
+	 * cameras (Camera3d main + Camera2d minimap, say) would run the
+	 * wrong projection on whichever camera didn't match activation.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Camera2d} [viewport] - the camera rendering this frame
 	 */
-	draw(renderer) {
-		if (this._useWorldSpace === true) {
+	draw(renderer, viewport) {
+		// Prefer the live viewport (per-draw) over the flag captured
+		// at activation. Falling back to the flag when no viewport is
+		// passed preserves test callers that call `draw(renderer)`
+		// directly.
+		const useWorldSpace =
+			viewport !== undefined
+				? viewport instanceof Camera3d
+				: this._useWorldSpace === true;
+		if (useWorldSpace) {
 			if (this._worldSpace !== true) {
 				this._setupWorldSpace();
 			}
