@@ -131,6 +131,13 @@ export class GameController extends Renderable {
 	contrailTexture!: HTMLCanvasElement;
 	lastContrailMs = 0;
 	contrailStreaming = true;
+	// Long-lived ParticleEmitter for the muzzle-flash burst — created
+	// once in the constructor and re-aimed at the player's nose on each
+	// shot via `burstParticles(8)`. The previous per-shot
+	// `new ParticleEmitter(…)` was tossed every 140 ms of sustained
+	// fire (~7 allocations/s) plus the `autoDestroyOnComplete`
+	// teardown each cycle. Pooling drops both.
+	muzzleEmitter!: ParticleEmitter;
 	// Targeting reticle floating in world space ahead of the player.
 	// Tracks player XY each frame so the crosshair leads the jet during
 	// banks — matches After Burner's signature aim indicator.
@@ -187,9 +194,39 @@ export class GameController extends Renderable {
 		this.reticle = new Reticle(makeReticleTexture());
 		app.world.addChild(this.reticle, PLAYER_Z + RETICLE_FORWARD_Z);
 		this.contrailTexture = makeContrailPuffTexture();
+		this.muzzleEmitter = this._makeMuzzleEmitter();
 
 		this.hud = new HUD(app);
 		this.updateCamera();
+	}
+
+	/**
+	 * Build the single pooled muzzle-flash emitter. `autoDestroyOnComplete`
+	 * stays `false` so the world tree retains the emitter across shots;
+	 * each fire reassigns its world XY then calls `burstParticles(8)`.
+	 */
+	_makeMuzzleEmitter(): ParticleEmitter {
+		const e = new ParticleEmitter(0, 0, {
+			textureSize: 10,
+			tint: "#fff2c4",
+			textureAdditive: true,
+			totalParticles: 8,
+			angle: 0,
+			angleVariation: Math.PI * 2,
+			minLife: 50,
+			maxLife: 110,
+			speed: 3,
+			speedVariation: 2,
+			minStartScale: 0.8,
+			maxStartScale: 1.4,
+			minEndScale: 0.05,
+			maxEndScale: 0.1,
+			autoDestroyOnComplete: false,
+		});
+		// Sit just ahead of the player so painter's-sort lands the
+		// burst in front of the jet's cockpit, like a real gun port.
+		this.app.world.addChild(e, PLAYER_Z + 20);
+		return e;
 	}
 
 	/**
@@ -306,34 +343,16 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Tiny additive burst at the bullet's muzzle position. Lives for
-	 * ~80ms — short enough that holding fire layers cleanly with the
-	 * 140ms cooldown and doesn't pile into a glow blob. `autoDestroyOnComplete`
-	 * cleans up the emitter once the burst finishes so we don't leak a
-	 * dead emitter per shot.
+	 * Tiny additive burst at the muzzle. Re-aims the pooled emitter at
+	 * the current player position then triggers an 8-particle burst.
+	 * Sustained fire (~7/s) is just emitter mutations + Particle pool
+	 * allocations under the hood — no ParticleEmitter teardown / new
+	 * world-tree child per shot.
 	 */
 	spawnMuzzleFlash(): void {
-		const flash = new ParticleEmitter(this.player.pos.x, this.player.pos.y, {
-			textureSize: 10,
-			tint: "#fff2c4",
-			textureAdditive: true,
-			totalParticles: 8,
-			angle: 0,
-			angleVariation: Math.PI * 2,
-			minLife: 50,
-			maxLife: 110,
-			speed: 3,
-			speedVariation: 2,
-			minStartScale: 0.8,
-			maxStartScale: 1.4,
-			minEndScale: 0.05,
-			maxEndScale: 0.1,
-			autoDestroyOnComplete: true,
-		});
-		// Sit just ahead of the player so under painter's-sort it lands
-		// in front of the jet's cockpit, like a real gun-port flash.
-		this.app.world.addChild(flash, PLAYER_Z + 20);
-		flash.burstParticles();
+		this.muzzleEmitter.pos.x = this.player.pos.x;
+		this.muzzleEmitter.pos.y = this.player.pos.y;
+		this.muzzleEmitter.burstParticles(8);
 	}
 
 	/**
@@ -654,8 +673,13 @@ export class GameController extends Renderable {
 			}
 		}
 
+		// One `performance.now()` per tick — passed down to every
+		// helper that needs a wall-clock reference. Hot path used to
+		// call this twice (contrail + fire/spawn cooldowns).
+		const nowMs = performance.now();
+
 		// Tick the custom 3D vapor trail.
-		this.updateContrail(dt, performance.now());
+		this.updateContrail(dt, nowMs);
 
 		// Reticle tracks the player's XY. We assign x/y directly
 		// (not via pos.set) so the world-z stays at the value set in
@@ -664,7 +688,6 @@ export class GameController extends Renderable {
 		this.reticle.pos.x = this.player.pos.x;
 		this.reticle.pos.y = this.player.pos.y;
 
-		const nowMs = performance.now();
 		if (
 			input.isKeyPressed("fire") &&
 			nowMs - this.lastFireMs >= FIRE_COOLDOWN_MS
