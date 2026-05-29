@@ -37,6 +37,53 @@ export const ENEMY_SPAWN_INTERVAL_MS = 700;
 export const FIRE_COOLDOWN_MS = 140;
 export const HIT_RADIUS = 60; // sphere radius for collision
 
+// ─── lives + respawn invulnerability ───────────────────────────────────
+export const LIVES_START = 3;
+// Window of invulnerability after a respawn — long enough that the
+// player isn't insta-killed by the same enemy that just hit them
+// (enemies at z=0 take ~1500ms at z=600 to leave the play area).
+export const INVULN_MS = 1500;
+// Visible blink while invulnerable (full alpha → mid alpha). Short
+// enough that 1500ms gives ~7 cycles.
+export const INVULN_BLINK_MS = 110;
+
+// ─── enemy fire ────────────────────────────────────────────────────────
+// Not every enemy is a shooter — only ~30% take a pot-shot during their
+// inbound run. Bullets travel at a fraction of the player's bullet speed
+// so dodging is actually possible, with the aim baked in at fire time
+// (no leading — too punishing under perspective at this pace).
+export const ENEMY_FIRE_CHANCE = 0.18;
+export const ENEMY_BULLET_SPEED = 900; // world units / second along aim vector
+export const ENEMY_FIRE_INTERVAL_MIN_MS = 1500;
+export const ENEMY_FIRE_INTERVAL_MAX_MS = 3000;
+// RGB tint for enemy bolts — sit visually opposite the gold player
+// bullets so the player can read what's incoming at a glance.
+export const TINT_ENEMY_BULLET_RGB: readonly [number, number, number] = [
+	255, 90, 160,
+];
+
+// ─── enemy barrel-roll ─────────────────────────────────────────────────
+// Most enemies fly straight; an occasional one barrel-rolls during the
+// inbound run so the 3D mesh sells its volume. The values are randomized
+// per-enemy inside a window — these are the bounds.
+export const ENEMY_ROLL_DURATION_MIN_MS = 600;
+export const ENEMY_ROLL_DURATION_MAX_MS = 1100;
+// Time between rolls (per enemy). Lower bound keeps any one enemy from
+// pancake-rolling continuously; upper bound means about a third of all
+// enemies will get one roll during their inbound flight (flight time at
+// SPAWN_Z=3000 / ENEMY_SPEED=600 is ~5 s).
+export const ENEMY_ROLL_INTERVAL_MIN_MS = 2200;
+export const ENEMY_ROLL_INTERVAL_MAX_MS = 5500;
+
+// ─── effect tints ──────────────────────────────────────────────────────
+// Centralized so tweaks land in one place and the gameplay code reads
+// like intent ("enemy hit fireball") instead of a hex blob.
+export const TINT_BULLET_RGB: readonly [number, number, number] = [
+	255, 230, 90,
+];
+export const TINT_ENEMY_EXPLOSION = "#ffae3a"; // warm orange fireball
+export const TINT_PLAYER_EXPLOSION = "#ff4a3a"; // deeper red — death
+
 // ─── camera banking ────────────────────────────────────────────────────
 // Pitch / yaw / roll radians at the play-bound edge. Larger = more
 // dramatic horizon + view tilt at the corners. Roll is the signature
@@ -56,42 +103,54 @@ export const PLAYER_MAX_ROLL = 0.95; // radians at full left/right input (~55°)
 export const PLAYER_MAX_PITCH = 0.45; // radians at full up/down input (~26°)
 export const PLAYER_BANK_DECAY = 6; // higher = snappier bank response (1/s)
 
-// ─── exhaust trail ─────────────────────────────────────────────────────
-export const EXHAUST_PUFF_INTERVAL_MS = 32;
-export const EXHAUST_PUFF_LIFE_MS = 380;
-// Doubled vs the single-flame design — we spawn one puff per engine pod
-// per tick, so the live count is roughly 2× the previous max.
-export const EXHAUST_PUFF_MAX = 48;
-// Engine-pod local offsets from the player center, in world units.
-// `ENGINE_X` is the lateral spacing between the two pods (rotated by
-// the player's roll each tick so the trails stay glued to the pods
-// during banks). `ENGINE_Y` anchors the top of the flame texture at
-// the engine outlet — the texture itself is built with the hot spot
-// near the top (see `makeExhaustPuffTexture`), so the visible glow
-// extends downward like a real thrust plume. `ENGINE_Z` is the
-// forward/back offset; **positive** is correct here because the world
-// container's depth sort is "ascending squared distance from camera,
-// then reverse-iterated", i.e. it paints far → near. A puff that's
-// FARTHER from the camera than the player (positive `ENGINE_Z` since
-// the camera sits at low world-z) draws BEFORE the player, so the
-// plane body — drawn after — cleanly occludes the half of the halo
-// overlapping the cockpit / wing. Only the part extending past the
-// engine outlet remains visible.
-export const ENGINE_X = 10;
-export const ENGINE_Y = 5;
-export const ENGINE_Z = 8;
-// Per-puff scale — smaller than the original single flame so the two
-// trails together read like a pair of focused jets, not a blob.
-export const EXHAUST_PUFF_SCALE = 0.65;
+// ─── contrail (custom 3D trail) ────────────────────────────────────────
+// Hand-rolled trail of additive Sprites — NOT a ParticleEmitter. Each
+// node spawns at the engine-outlet world position (rotated with the
+// plane's roll), then each frame its `depth` is increased so the node
+// recedes AWAY FROM the camera in world space. Under perspective the
+// receding node shrinks and projects higher on screen (toward the
+// horizon) — gives the classic "vapor trail vanishing into the
+// distance" silhouette, with painter's-sort guaranteed to place older
+// nodes behind newer ones AND behind the plane.
+export const CONTRAIL_INTERVAL_MS = 28;
+export const CONTRAIL_LIFE_MS = 1200;
+// World units per second the node travels in -Z (TOWARD the camera —
+// i.e. backward in the plane's flight direction, the way a real vapor
+// trail trails behind a jet). The aged nodes get LARGER under
+// perspective and project LOWER on screen, which reads as the trail
+// extending downward past the plane's tail. Reversing the sign (+Z =
+// receding into the distance) puts the trail ahead of the plane,
+// which is the bug we just fixed.
+export const CONTRAIL_TRAIL_SPEED = 900;
+// Trail node engine-pod offset, plane-local. Positive Y sits below
+// the plane center on screen (where the engines visually are). Lower
+// X spread than the exhaust because the contrail reads as one
+// merged vapor stream, not two distinct pods.
+export const CONTRAIL_OFFSET_X = 0;
+export const CONTRAIL_OFFSET_Y = 22;
+// World-space scale at spawn vs end-of-life. Stays roughly constant
+// in world units; Camera3d's perspective handles the visual shrink as
+// the node recedes. End slightly smaller so the trail tapers cleanly
+// instead of clipping to nothing.
+export const CONTRAIL_SCALE_START = 1.0;
+export const CONTRAIL_SCALE_END = 0.7;
 
-// ─── ground speed-line ─────────────────────────────────────────────────
-export const SPEED_LINE_COUNT = 14;
-export const SPEED_LINE_SCROLL_PER_S = 1.6; // cycles per second — faster = more "Mach"
+// ─── ground perspective grid ───────────────────────────────────────────
+// OutRun-style horizontal hash bands scrolling toward the camera. Sells
+// "rapidly moving terrain" much more than the previous radial chevrons.
+export const GRID_ROW_COUNT = 14; // horizontal scrolling bands
+export const GRID_SCROLL_PER_S = 0.9; // scroll cycles per second
 export const HORIZON_BASE_FRACTION = 0.55; // baseline horizon Y at pitch = 0
 
 // ─── assets ────────────────────────────────────────────────────────────
 export const SPEEDER_ASSET_BASE = `${import.meta.env.BASE_URL}assets/multiMaterialMesh/`;
 export const SPEEDER_MODEL = "craft_speederA";
+// Background music loop. `audio.load` resolves the actual URL as
+// `${BGM_PATH}${BGM_NAME}.{ext}` using the first extension from the
+// `audio.init("mp3,m4a,ogg")` list that the browser can decode, so all
+// three files live next to each other under `public/`.
+export const BGM_NAME = "ingame-loop";
+export const BGM_PATH = `${import.meta.env.BASE_URL}assets/afterBurner/bgm/`;
 
 // ─── axes for mesh rotations ───────────────────────────────────────────
 // AXIS_X is the pitch axis (nose up/down), AXIS_Y is the facing-flip

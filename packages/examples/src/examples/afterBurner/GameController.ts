@@ -15,30 +15,45 @@
  */
 import {
 	type Application,
+	audio,
 	type Camera3d,
 	input,
 	ParticleEmitter,
 	Renderable,
 	Sprite,
+	state,
 	type Vector3d,
 } from "melonjs";
 import {
 	AXIS_X,
+	AXIS_Y,
 	AXIS_Z,
+	BGM_NAME,
 	BULLET_SPEED,
+	CONTRAIL_INTERVAL_MS,
+	CONTRAIL_LIFE_MS,
+	CONTRAIL_OFFSET_X,
+	CONTRAIL_OFFSET_Y,
+	CONTRAIL_SCALE_END,
+	CONTRAIL_SCALE_START,
+	CONTRAIL_TRAIL_SPEED,
 	DESPAWN_Z_FAR,
 	DESPAWN_Z_NEAR,
+	ENEMY_BULLET_SPEED,
+	ENEMY_FIRE_CHANCE,
+	ENEMY_FIRE_INTERVAL_MAX_MS,
+	ENEMY_FIRE_INTERVAL_MIN_MS,
+	ENEMY_ROLL_DURATION_MAX_MS,
+	ENEMY_ROLL_DURATION_MIN_MS,
+	ENEMY_ROLL_INTERVAL_MAX_MS,
+	ENEMY_ROLL_INTERVAL_MIN_MS,
 	ENEMY_SPAWN_INTERVAL_MS,
 	ENEMY_SPEED,
-	ENGINE_X,
-	ENGINE_Y,
-	ENGINE_Z,
-	EXHAUST_PUFF_INTERVAL_MS,
-	EXHAUST_PUFF_LIFE_MS,
-	EXHAUST_PUFF_MAX,
-	EXHAUST_PUFF_SCALE,
 	FIRE_COOLDOWN_MS,
 	HIT_RADIUS,
+	INVULN_BLINK_MS,
+	INVULN_MS,
+	LIVES_START,
 	MAX_BANK_PITCH,
 	MAX_BANK_ROLL,
 	MAX_BANK_YAW,
@@ -51,16 +66,28 @@ import {
 	PLAYER_Z,
 	RETICLE_FORWARD_Z,
 	SPAWN_Z,
+	TINT_BULLET_RGB,
+	TINT_ENEMY_BULLET_RGB,
+	TINT_ENEMY_EXPLOSION,
+	TINT_PLAYER_EXPLOSION,
 } from "./constants";
 import { HUD } from "./HUD";
 import { Plane } from "./Plane";
 import { Reticle } from "./Reticle";
+import { SkyboxStage } from "./SkyboxStage";
+import { playEnemyHit, playFire, playPlayerDeath } from "./sfx";
 import {
-	makeExhaustPuffTexture,
+	makeContrailPuffTexture,
 	makeLaserBoltTexture,
 	makeReticleTexture,
 } from "./textures";
-import type { BulletMover, EnemyMover } from "./types";
+import type {
+	BulletMover,
+	Camera3dWithRoll,
+	ContrailNode,
+	EnemyBulletMover,
+	EnemyMover,
+} from "./types";
 
 export class GameController extends Renderable {
 	app: Application;
@@ -68,11 +95,21 @@ export class GameController extends Renderable {
 	player: Plane;
 	bullets: BulletMover[] = [];
 	enemies: EnemyMover[] = [];
+	// Same shape as `bullets` but travels enemy → player, with its own
+	// hot-pink visual so the player can read incoming fire vs outgoing.
+	enemyBullets: EnemyBulletMover[] = [];
 	score = 0;
 	gameOver = false;
 	lastEnemySpawnMs = 0;
 	lastFireMs = 0;
 	hud!: HUD;
+	// Lives + post-respawn invulnerability. `lives` counts down on each
+	// hit; when it reaches zero the next hit triggers game-over. While
+	// `invulnRemainingMs > 0` the player ignores enemy collisions and
+	// blinks visibly so the player can read the "you can't be hit"
+	// window. `invulnRemainingMs` is decremented in `update()`.
+	lives = LIVES_START;
+	invulnRemainingMs = 0;
 	// current bank state, smoothed toward an input-driven target each
 	// frame. Player mesh transform is rebuilt from these every tick.
 	playerRoll = 0;
@@ -81,14 +118,19 @@ export class GameController extends Renderable {
 	// avoids hauling around a placeholder PNG and keeps the asset list
 	// to just the Kenney mesh files.
 	bulletTexture: HTMLCanvasElement;
-	// One streaming `ParticleEmitter` per engine pod. The engine
-	// propagates `pos.z` to particles on spawn (see
-	// `ParticleEmitter.addParticles`), so trails sit at the correct
-	// Camera3d depth slice. Each tick we update `pos.x` / `pos.y`
-	// directly (not via `set`, which would reset `pos.z` to 0) to
-	// follow the player's roll-rotated engine-pod offsets.
-	exhaustL!: ParticleEmitter;
-	exhaustR!: ParticleEmitter;
+	// Hand-rolled vapor trail. Each entry is a single additive sprite
+	// that starts at the engine outlet and advances in +Z each frame
+	// so it recedes away from the camera in world space — Camera3d's
+	// perspective then projects older nodes higher on screen (toward
+	// the horizon) and smaller, giving the classic "vapor vanishing
+	// into the distance" silhouette without any ParticleEmitter
+	// painter-sort surprises. New nodes spawn from `update()` at
+	// `CONTRAIL_INTERVAL_MS` cadence; aging + cleanup is driven by
+	// {@link GameController#updateContrail}.
+	contrail: ContrailNode[] = [];
+	contrailTexture!: HTMLCanvasElement;
+	lastContrailMs = 0;
+	contrailStreaming = true;
 	// Targeting reticle floating in world space ahead of the player.
 	// Tracks player XY each frame so the crosshair leads the jet during
 	// banks — matches After Burner's signature aim indicator.
@@ -111,6 +153,9 @@ export class GameController extends Renderable {
 		// which is why fresh enemies were rendering huge instead of vanishing
 		// at the horizon. Headroom past despawn keeps the math clean.
 		this.camera.setClipPlanes(0.1, 6000);
+
+		// (light sepia camera tint was attempted here but breaks the
+		// Camera3d render — needs an engine-side fix before re-enabling)
 
 		// Bind input. The third arg is `lock` — when true, the action
 		// fires once per press (single-shot, good for jump). We want
@@ -141,70 +186,81 @@ export class GameController extends Renderable {
 		// per-frame XY follow happens in `updateReticle()`.
 		this.reticle = new Reticle(makeReticleTexture());
 		app.world.addChild(this.reticle, PLAYER_Z + RETICLE_FORWARD_Z);
-		const exhaustTexture = makeExhaustPuffTexture();
-		this.exhaustL = this._makeExhaustEmitter(exhaustTexture);
-		this.exhaustR = this._makeExhaustEmitter(exhaustTexture);
+		this.contrailTexture = makeContrailPuffTexture();
 
 		this.hud = new HUD(app);
 		this.updateCamera();
 	}
 
 	/**
-	 * Build one engine-exhaust ParticleEmitter, parent it to the world
-	 * at the engine-pod depth slice, and start it streaming. Both pods
-	 * share the same texture / settings — they only differ in spawn
-	 * position, which `updateExhaustTrail` updates per frame.
+	 * Spawn one trail node at the rear-engine outlet, factoring in the
+	 * current player roll so the spawn position stays glued to the
+	 * (rotated) tail through banks. The new node starts at the player's
+	 * own depth (just behind the plane in world Z) and ages in
+	 * {@link GameController#updateContrail}.
 	 */
-	_makeExhaustEmitter(texture: HTMLCanvasElement): ParticleEmitter {
-		const e = new ParticleEmitter(0, 0, {
-			image: texture,
-			tint: "#ffb45a",
-			textureAdditive: true,
-			frequency: EXHAUST_PUFF_INTERVAL_MS,
-			minLife: EXHAUST_PUFF_LIFE_MS,
-			maxLife: EXHAUST_PUFF_LIFE_MS,
-			minStartScale: EXHAUST_PUFF_SCALE,
-			maxStartScale: EXHAUST_PUFF_SCALE,
-			minEndScale: 0,
-			maxEndScale: 0,
-			angle: -Math.PI / 2,
-			angleVariation: 0.15,
-			speed: 0.5,
-			speedVariation: 0.2,
-			totalParticles: EXHAUST_PUFF_MAX,
-			duration: Number.POSITIVE_INFINITY,
-			// Refresh per-particle bounds every frame so Camera3d's
-			// frustum culling tests the particle's WORLD position (via
-			// `updateBounds(absolute=true)`), not the stale local
-			// bounds from construction. Without this, particles get
-			// `inViewport: false` and are silently skipped by the
-			// container's draw walk under Camera3d.
-			accurateBounds: true,
+	spawnContrailNode(): void {
+		const cosR = Math.cos(this.playerRoll);
+		const sinR = Math.sin(this.playerRoll);
+		const ox = CONTRAIL_OFFSET_X;
+		const oy = CONTRAIL_OFFSET_Y;
+		const sx = this.player.pos.x + ox * cosR - oy * sinR;
+		const sy = this.player.pos.y + ox * sinR + oy * cosR;
+		const sprite = new Sprite(sx, sy, { image: this.contrailTexture });
+		sprite.blendMode = "additive";
+		sprite.tint.parseCSS("#dfe8ff");
+		// Spawn at the plane's own depth — the trail then advances
+		// TOWARD the camera each frame, so node 0 is co-planar with
+		// the plane and node N is in front of it (closer to camera =
+		// painted later = trails over the plane silhouette, matching
+		// real vapor extending past the tail).
+		this.app.world.addChild(sprite, this.player.depth);
+		this.contrail.push({
+			sprite,
+			ageMs: 0,
+			startScale: CONTRAIL_SCALE_START,
 		});
-		this.app.world.addChild(e, PLAYER_Z + ENGINE_Z);
-		e.streamParticles();
-		return e;
+		sprite.scale(CONTRAIL_SCALE_START);
+	}
+
+	removeContrailNode(i: number): void {
+		const node = this.contrail[i];
+		this.app.world.removeChild(node.sprite);
+		this.contrail[i] = this.contrail[this.contrail.length - 1];
+		this.contrail.pop();
 	}
 
 	/**
-	 * Move both exhaust emitters to the current engine-pod positions.
-	 * Pod offsets are player-local; we rotate by the current roll so the
-	 * trails stay glued to the pods through banks. (Pitch is ignored —
-	 * its effect on engine-pod screen position is small enough not to
-	 * matter visually.) `pos.x` / `pos.y` are assigned directly so we
-	 * don't touch `pos.z` (which `addChild` set to `PLAYER_Z + ENGINE_Z`
-	 * and which propagates to each newly-spawned particle).
+	 * Per-frame tick: spawn new trail nodes at the cadence set by
+	 * `CONTRAIL_INTERVAL_MS`, then advance every existing node — push
+	 * its depth in +Z (away from camera, recede into the distance),
+	 * fade alpha + shrink scale toward zero, and despawn once it's
+	 * lived `CONTRAIL_LIFE_MS`. Skips spawning while the trail is
+	 * stopped (game-over) but keeps aging the in-flight nodes so they
+	 * fade out cleanly.
 	 */
-	updateExhaustTrail(): void {
-		const cosR = Math.cos(this.playerRoll);
-		const sinR = Math.sin(this.playerRoll);
-		const ly = ENGINE_Y;
-		const px = this.player.pos.x;
-		const py = this.player.pos.y;
-		this.exhaustL.pos.x = px + -ENGINE_X * cosR - ly * sinR;
-		this.exhaustL.pos.y = py + -ENGINE_X * sinR + ly * cosR;
-		this.exhaustR.pos.x = px + ENGINE_X * cosR - ly * sinR;
-		this.exhaustR.pos.y = py + ENGINE_X * sinR + ly * cosR;
+	updateContrail(dt: number, nowMs: number): void {
+		if (
+			this.contrailStreaming &&
+			nowMs - this.lastContrailMs >= CONTRAIL_INTERVAL_MS
+		) {
+			this.spawnContrailNode();
+			this.lastContrailMs = nowMs;
+		}
+		const dts = dt / 1000;
+		for (let i = this.contrail.length - 1; i >= 0; i--) {
+			const n = this.contrail[i];
+			n.ageMs += dt;
+			if (n.ageMs >= CONTRAIL_LIFE_MS) {
+				this.removeContrailNode(i);
+				continue;
+			}
+			const t = n.ageMs / CONTRAIL_LIFE_MS;
+			n.sprite.depth -= CONTRAIL_TRAIL_SPEED * dts;
+			n.sprite.setOpacity(1 - t);
+			const scale = n.startScale + (CONTRAIL_SCALE_END - n.startScale) * t;
+			n.sprite.scale(scale);
+		}
 	}
 
 	updateCamera(): void {
@@ -226,7 +282,7 @@ export class GameController extends Renderable {
 		// reads it back to rotate the horizon. Sign convention: banking
 		// right (positive X) rolls the cockpit left, which tilts the
 		// world to the right from the pilot's POV.
-		(this.camera as Camera3d & { roll: number }).roll =
+		(this.camera as Camera3dWithRoll).roll =
 			(-this.player.pos.x / PLAY_BOUND_X) * MAX_BANK_ROLL;
 	}
 
@@ -237,11 +293,47 @@ export class GameController extends Renderable {
 		// additive blend so overlapping bolts blow out to bright white,
 		// reads like a tracer hose against the dusk sky
 		b.blendMode = "additive";
-		b.tint.setColor(255, 230, 90);
+		b.tint.setColor(...TINT_BULLET_RGB);
 		// `addChild(child, z)` atomically sets the depth at insertion —
 		// no window where the world's sort key is stale.
 		this.app.world.addChild(b, PLAYER_Z + 40);
 		this.bullets.push({ sprite: b, vx: 0, vy: 0, vz: BULLET_SPEED });
+		this.spawnMuzzleFlash();
+		// Pan the blip with the player's X — sells "the bullets came from
+		// where the jet is on screen" without needing a real spatial
+		// audio graph.
+		playFire(this.player.pos.x / PLAY_BOUND_X);
+	}
+
+	/**
+	 * Tiny additive burst at the bullet's muzzle position. Lives for
+	 * ~80ms — short enough that holding fire layers cleanly with the
+	 * 140ms cooldown and doesn't pile into a glow blob. `autoDestroyOnComplete`
+	 * cleans up the emitter once the burst finishes so we don't leak a
+	 * dead emitter per shot.
+	 */
+	spawnMuzzleFlash(): void {
+		const flash = new ParticleEmitter(this.player.pos.x, this.player.pos.y, {
+			textureSize: 10,
+			tint: "#fff2c4",
+			textureAdditive: true,
+			totalParticles: 8,
+			angle: 0,
+			angleVariation: Math.PI * 2,
+			minLife: 50,
+			maxLife: 110,
+			speed: 3,
+			speedVariation: 2,
+			minStartScale: 0.8,
+			maxStartScale: 1.4,
+			minEndScale: 0.05,
+			maxEndScale: 0.1,
+			autoDestroyOnComplete: true,
+		});
+		// Sit just ahead of the player so under painter's-sort it lands
+		// in front of the jet's cockpit, like a real gun-port flash.
+		this.app.world.addChild(flash, PLAYER_Z + 20);
+		flash.burstParticles();
 	}
 
 	/**
@@ -294,12 +386,105 @@ export class GameController extends Renderable {
 		const dx = this.player.pos.x - ex;
 		const dy = this.player.pos.y - ey;
 		const flightTime = (SPAWN_Z - PLAYER_Z) / ENEMY_SPEED;
+		const canFire = Math.random() < ENEMY_FIRE_CHANCE;
 		this.enemies.push({
 			mesh: e,
 			vx: (dx / flightTime) * 0.4,
 			vy: (dy / flightTime) * 0.4,
 			vz: -ENEMY_SPEED,
+			// Facing was baked into `currentTransform` by Plane(facing=-1)
+			// as a rotation of π around Y. We need it as a plain number so
+			// the per-frame roll animation can rebuild the transform
+			// without losing the facing.
+			facingY: Math.PI,
+			rollTimeMs: 0,
+			rollDurationMs: 0,
+			nextRollMs:
+				ENEMY_ROLL_INTERVAL_MIN_MS +
+				Math.random() *
+					(ENEMY_ROLL_INTERVAL_MAX_MS - ENEMY_ROLL_INTERVAL_MIN_MS),
+			canFire,
+			nextFireMs: canFire
+				? ENEMY_FIRE_INTERVAL_MIN_MS +
+					Math.random() *
+						(ENEMY_FIRE_INTERVAL_MAX_MS - ENEMY_FIRE_INTERVAL_MIN_MS)
+				: Number.POSITIVE_INFINITY,
 		});
+	}
+
+	/**
+	 * Spawn a hot-pink bolt from the given enemy aimed straight at
+	 * where the player is RIGHT NOW (no leading — keeps the dodge
+	 * window honest at this game speed). Direction is normalized then
+	 * scaled to `ENEMY_BULLET_SPEED` so all enemy bullets travel at a
+	 * constant world-space speed regardless of distance.
+	 */
+	spawnEnemyBullet(e: EnemyMover): void {
+		const ex = e.mesh.pos.x;
+		const ey = e.mesh.pos.y;
+		const ez = e.mesh.depth;
+		const dx = this.player.pos.x - ex;
+		const dy = this.player.pos.y - ey;
+		const dz = this.player.depth - ez;
+		const len = Math.hypot(dx, dy, dz) || 1;
+		const inv = ENEMY_BULLET_SPEED / len;
+		const b = new Sprite(ex, ey, { image: this.bulletTexture });
+		b.blendMode = "additive";
+		b.tint.setColor(...TINT_ENEMY_BULLET_RGB);
+		this.app.world.addChild(b, ez);
+		this.enemyBullets.push({
+			sprite: b,
+			vx: dx * inv,
+			vy: dy * inv,
+			vz: dz * inv,
+		});
+	}
+
+	removeEnemyBullet(i: number): void {
+		const b = this.enemyBullets[i];
+		this.app.world.removeChild(b.sprite);
+		this.enemyBullets[i] = this.enemyBullets[this.enemyBullets.length - 1];
+		this.enemyBullets.pop();
+	}
+
+	/**
+	 * Drive each enemy's barrel-roll lifecycle for one frame: tick down
+	 * the next-roll countdown and, when it expires, snapshot a fresh
+	 * randomized roll duration. While a roll is in flight, rebuild the
+	 * mesh's `currentTransform` to facing + roll(angle) where `angle`
+	 * sweeps 0 → 2π over the roll window. When the window closes,
+	 * rebuild to facing-only so the next animation starts from a clean
+	 * baseline. Idle enemies skip the matrix rebuild entirely.
+	 */
+	updateEnemyRoll(e: EnemyMover, dt: number): void {
+		if (e.rollTimeMs > 0) {
+			e.rollTimeMs -= dt;
+			if (e.rollTimeMs <= 0) {
+				// roll just finished — reset transform to facing-only
+				e.rollTimeMs = 0;
+				e.mesh.currentTransform.identity();
+				e.mesh.currentTransform.rotate(e.facingY, AXIS_Y);
+				return;
+			}
+			const progress = 1 - e.rollTimeMs / e.rollDurationMs;
+			const angle = progress * Math.PI * 2;
+			e.mesh.currentTransform.identity();
+			e.mesh.currentTransform.rotate(e.facingY, AXIS_Y);
+			e.mesh.currentTransform.rotate(angle, AXIS_Z);
+			return;
+		}
+		e.nextRollMs -= dt;
+		if (e.nextRollMs <= 0) {
+			e.rollDurationMs =
+				ENEMY_ROLL_DURATION_MIN_MS +
+				Math.random() *
+					(ENEMY_ROLL_DURATION_MAX_MS - ENEMY_ROLL_DURATION_MIN_MS);
+			e.rollTimeMs = e.rollDurationMs;
+			e.nextRollMs =
+				ENEMY_ROLL_INTERVAL_MIN_MS +
+				Math.random() *
+					(ENEMY_ROLL_INTERVAL_MAX_MS - ENEMY_ROLL_INTERVAL_MIN_MS);
+		}
 	}
 
 	removeBullet(i: number): void {
@@ -316,12 +501,55 @@ export class GameController extends Renderable {
 		this.enemies.pop();
 	}
 
+	/**
+	 * Apply one hit. Always spawn the explosion + sound; if the player
+	 * has lives remaining, knock one off and start the post-respawn
+	 * invulnerability window. The last life triggers the full death
+	 * sequence via {@link GameController#setGameOver}.
+	 */
+	onPlayerHit(): void {
+		this.spawnExplosion(
+			this.player.pos.x,
+			this.player.pos.y,
+			this.player.depth,
+			TINT_PLAYER_EXPLOSION,
+		);
+		playPlayerDeath();
+		if (this.lives > 1) {
+			this.lives -= 1;
+			this.hud.setLives(this.lives);
+			// Mid-life hit — moderate shake, no full red overlay (the
+			// player's still flying). Recenter so the next enemy isn't
+			// already on top of us at respawn.
+			this.camera.shake(12, 360, undefined, undefined, true);
+			this.player.pos.x = 0;
+			this.player.pos.y = 0;
+			this.invulnRemainingMs = INVULN_MS;
+		} else {
+			this.lives = 0;
+			this.hud.setLives(0);
+			this.camera.shake(22, 900, undefined, undefined, true);
+			this.hud.flashDeath();
+			this.setGameOver();
+		}
+	}
+
 	setGameOver(): void {
 		this.gameOver = true;
 		// engines out — stop streaming new puffs. The already-in-flight
 		// particles will finish their lifetime + fade naturally.
-		this.exhaustL.stopStream();
-		this.exhaustR.stopStream();
+		// Stop spawning new contrail nodes; the existing ones keep
+		// ageing + fading via `updateContrail`.
+		this.contrailStreaming = false;
+		// Cut the music with the death — the silence sells the
+		// finality, and the restart will swell it back in.
+		audio.stopTrack();
+		// Freeze the ground-grid scroll so the world visibly stops
+		// dead in its tracks; resumed on `reset()`.
+		const stage = state.current();
+		if (stage instanceof SkyboxStage) {
+			stage.scrollPaused = true;
+		}
 		this.hud.showGameOver(this.score);
 	}
 
@@ -329,8 +557,14 @@ export class GameController extends Renderable {
 		for (let i = this.bullets.length - 1; i >= 0; i--) {
 			this.removeBullet(i);
 		}
+		for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+			this.removeEnemyBullet(i);
+		}
 		for (let i = this.enemies.length - 1; i >= 0; i--) {
 			this.removeEnemy(i);
+		}
+		for (let i = this.contrail.length - 1; i >= 0; i--) {
+			this.removeContrailNode(i);
 		}
 		// Assign x/y directly — Vector3d.set(x, y) would default z to 0
 		// and yank the player to the camera plane (= "player huge after
@@ -338,11 +572,23 @@ export class GameController extends Renderable {
 		this.player.pos.x = 0;
 		this.player.pos.y = 0;
 		this.score = 0;
+		this.lives = LIVES_START;
+		this.invulnRemainingMs = 0;
+		this.player.setOpacity(1);
 		this.gameOver = false;
-		this.exhaustL.streamParticles();
-		this.exhaustR.streamParticles();
+		this.contrailStreaming = true;
 		this.hud.hideGameOver();
 		this.hud.setScore(0);
+		this.hud.setLives(this.lives);
+		// Music was stopped at game-over; bring it back in on restart.
+		// `playTrack` re-registers BGM_NAME as the engine's current
+		// track so the next blur cycle pauses it automatically again.
+		audio.playTrack(BGM_NAME, 0.45);
+		// Un-freeze the ground-grid scroll alongside the music.
+		const stage = state.current();
+		if (stage instanceof SkyboxStage) {
+			stage.scrollPaused = false;
+		}
 	}
 
 	override update(dt: number): boolean {
@@ -390,9 +636,26 @@ export class GameController extends Renderable {
 		this.player.currentTransform.rotate(this.playerRoll, AXIS_Z);
 		this.player.currentTransform.rotate(this.playerPitch, AXIS_X);
 
-		// Keep the engine emitters glued to the player's engine pods.
-		// The ParticleEmitter handles spawn + lifetime + fade.
-		this.updateExhaustTrail();
+		// Post-respawn invulnerability — blink the jet so the player
+		// can read the "can't be hit" window, and tick the timer down
+		// to 0. When the timer expires we force opacity back to 1 so a
+		// late blink frame doesn't leave the jet half-transparent.
+		if (this.invulnRemainingMs > 0) {
+			this.invulnRemainingMs -= dt;
+			if (this.invulnRemainingMs <= 0) {
+				this.invulnRemainingMs = 0;
+				this.player.setOpacity(1);
+			} else {
+				const blinkOn =
+					Math.floor((INVULN_MS - this.invulnRemainingMs) / INVULN_BLINK_MS) %
+						2 ===
+					0;
+				this.player.setOpacity(blinkOn ? 1 : 0.35);
+			}
+		}
+
+		// Tick the custom 3D vapor trail.
+		this.updateContrail(dt, performance.now());
 
 		// Reticle tracks the player's XY. We assign x/y directly
 		// (not via pos.set) so the world-z stays at the value set in
@@ -425,12 +688,59 @@ export class GameController extends Renderable {
 			}
 		}
 
+		// Advance enemy bullets, resolve player hit + despawn.
+		for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+			const b = this.enemyBullets[i];
+			b.sprite.pos.x += b.vx * dts;
+			b.sprite.pos.y += b.vy * dts;
+			b.sprite.depth += b.vz * dts;
+			// Past the player or off the side — cull. Pretty generous
+			// X/Y bounds because at speed the bolt's screen position can
+			// drift well past the play rect before its z catches up.
+			if (
+				b.sprite.depth < DESPAWN_Z_NEAR ||
+				Math.abs(b.sprite.pos.x) > PLAY_BOUND_X * 3 ||
+				Math.abs(b.sprite.pos.y) > PLAY_BOUND_Y * 3
+			) {
+				this.removeEnemyBullet(i);
+				continue;
+			}
+			if (this.invulnRemainingMs > 0) {
+				continue;
+			}
+			const ddx = b.sprite.pos.x - this.player.pos.x;
+			const ddy = b.sprite.pos.y - this.player.pos.y;
+			const ddz = b.sprite.depth - this.player.depth;
+			if (ddx * ddx + ddy * ddy + ddz * ddz < HIT_RADIUS * HIT_RADIUS) {
+				this.removeEnemyBullet(i);
+				this.onPlayerHit();
+				if (this.gameOver) {
+					return true;
+				}
+			}
+		}
+
 		// Advance enemies, resolve bullet hits, then player hits.
 		for (let i = this.enemies.length - 1; i >= 0; i--) {
 			const e = this.enemies[i];
 			e.mesh.pos.x += e.vx * dts;
 			e.mesh.pos.y += e.vy * dts;
 			e.mesh.depth += e.vz * dts;
+			this.updateEnemyRoll(e, dt);
+
+			// Shooters tick their fire cooldown each frame; when it
+			// hits 0 they fire a single bolt at the player's current
+			// position, then re-randomize the next interval.
+			if (e.canFire) {
+				e.nextFireMs -= dt;
+				if (e.nextFireMs <= 0) {
+					this.spawnEnemyBullet(e);
+					e.nextFireMs =
+						ENEMY_FIRE_INTERVAL_MIN_MS +
+						Math.random() *
+							(ENEMY_FIRE_INTERVAL_MAX_MS - ENEMY_FIRE_INTERVAL_MIN_MS);
+				}
+			}
 
 			if (e.mesh.depth < DESPAWN_Z_NEAR) {
 				this.removeEnemy(i);
@@ -454,29 +764,36 @@ export class GameController extends Renderable {
 					e.mesh.pos.x,
 					e.mesh.pos.y,
 					e.mesh.depth,
-					"#ffae3a",
+					TINT_ENEMY_EXPLOSION,
 				);
+				// Pan the crunch with the kill X so far-off-screen hits
+				// audibly sit on the right side.
+				playEnemyHit(e.mesh.pos.x / PLAY_BOUND_X);
+				// Tiny kick so the kill registers physically too — short
+				// enough that rapid-fire hits don't compound into a jelly
+				// view. Axis BOTH so the shake reads as an explosion thump
+				// rather than a sideways slap.
+				this.camera.shake(4, 90);
 				this.removeEnemy(i);
 				this.score += 100;
 				this.hud.setScore(this.score);
 				continue;
 			}
 
+			// Player collision — only checked when the player isn't
+			// inside the post-respawn invulnerability window.
+			if (this.invulnRemainingMs > 0) {
+				continue;
+			}
 			const pddx = e.mesh.pos.x - this.player.pos.x;
 			const pddy = e.mesh.pos.y - this.player.pos.y;
 			const pddz = e.mesh.depth - this.player.depth;
 			if (pddx * pddx + pddy * pddy + pddz * pddz < HIT_RADIUS * HIT_RADIUS) {
-				// big red player-death burst — at the player's position so
-				// the explosion fills the cockpit view.
-				this.spawnExplosion(
-					this.player.pos.x,
-					this.player.pos.y,
-					this.player.depth,
-					"#ff4a3a",
-				);
+				this.onPlayerHit();
 				this.removeEnemy(i);
-				this.setGameOver();
-				return true;
+				if (this.gameOver) {
+					return true;
+				}
 			}
 		}
 

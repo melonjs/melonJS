@@ -28,29 +28,6 @@ function bakeGradient(g: Gradient, w: number, h: number): HTMLCanvasElement {
 }
 
 /**
- * Build a teardrop "thrust plume" texture used for engine-exhaust
- * sprites. The bright hot core sits near the TOP of the canvas; the
- * glow fades down and outward, so when the sprite's top is anchored at
- * the engine outlet, the visible flame extends behind the plane like a
- * real exhaust trail. Tinted at the Sprite level for warm engine glow.
- */
-export function makeExhaustPuffTexture(): HTMLCanvasElement {
-	const w = 32;
-	const h = 40;
-	// Radial gradient centered near the top, fades to transparent as it
-	// approaches the bottom — gives a "hot at the outlet, cooling in the
-	// plume" silhouette without needing per-pixel masking.
-	const cx = w / 2;
-	const cy = h * 0.22;
-	const g = new Gradient("radial", [cx, cy, 0, cx, cy, h * 0.75])
-		.addColorStop(0, "rgba(255, 255, 255, 1)")
-		.addColorStop(0.25, "rgba(255, 220, 160, 0.85)")
-		.addColorStop(0.6, "rgba(255, 120, 60, 0.35)")
-		.addColorStop(1, "rgba(255, 60, 30, 0)");
-	return bakeGradient(g, w, h);
-}
-
-/**
  * Build the targeting reticle texture — four arcade-style corner
  * brackets framing a small center dot. The reticle sits in world space
  * ahead of the player at `PLAYER_Z + RETICLE_FORWARD_Z`, so Camera3d
@@ -107,6 +84,24 @@ export function makeReticleTexture(): HTMLCanvasElement {
 	ctx.fill();
 
 	return c;
+}
+
+/**
+ * Build a soft cool-white puff used for the contrail behind the jet.
+ * Symmetric radial fade (bright dot at center) so the puff stays
+ * coherent as it grows over its lifetime — unlike the exhaust teardrop,
+ * which is shaped to imply a thrust direction.
+ */
+export function makeContrailPuffTexture(): HTMLCanvasElement {
+	const size = 36;
+	const cx = size / 2;
+	const cy = size / 2;
+	const g = new Gradient("radial", [cx, cy, 0, cx, cy, size / 2])
+		.addColorStop(0, "rgba(255, 255, 255, 0.95)")
+		.addColorStop(0.3, "rgba(220, 230, 255, 0.6)")
+		.addColorStop(0.7, "rgba(180, 200, 255, 0.18)")
+		.addColorStop(1, "rgba(160, 180, 255, 0)");
+	return bakeGradient(g, size, size);
 }
 
 /**

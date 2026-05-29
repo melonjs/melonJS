@@ -14,7 +14,13 @@
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
-import { type Application, Text } from "melonjs";
+import {
+	type Application,
+	type CanvasRenderer,
+	Renderable,
+	Text,
+	type WebGLRenderer,
+} from "melonjs";
 
 const CANVAS_W = 1024;
 const CANVAS_H = 768;
@@ -22,20 +28,164 @@ const CANVAS_H = 768;
 // smallest possible — the world's depth-sort then draws the HUD last,
 // on top of every other renderable.
 const HUD_Z = -150;
+// Above HUD_Z so the death flash overpaints score + game-over text.
+const FLASH_Z = -200;
+// Initial overlay alpha at the moment of death — strong enough to "white
+// out" the cockpit (red, in this case), faint enough that the player can
+// still see the explosion underneath.
+const DEATH_FLASH_ALPHA = 0.55;
+// Linear fade — matches the death rumble's ~1.1 s tail so the flash and
+// audio decay together.
+const DEATH_FLASH_FADE_MS = 1100;
+
+/**
+ * Full-screen colored overlay that fades to transparent over a fixed
+ * duration. Used as the player death "hit flash" so the cockpit washes
+ * red in time with the explosion + audio rumble.
+ *
+ * Implementation note: rendered as a floating Renderable (screen-space
+ * projection) with a manual `fillRect` so the alpha blends correctly —
+ * the engine's `ColorLayer` would `clearColor` over the framebuffer,
+ * which would overwrite the explosion underneath instead of tinting it.
+ */
+class DeathFlash extends Renderable {
+	private remainingMs = 0;
+	private startAlpha = DEATH_FLASH_ALPHA;
+
+	constructor() {
+		super(0, 0, CANVAS_W, CANVAS_H);
+		this.floating = true;
+		this.alwaysUpdate = true;
+		// Renderable defaults anchorPoint to (0.5, 0.5), which would
+		// shift our fillRect by (-w/2, -h/2) via preDraw and leave
+		// only the top-left quadrant visible — zero it so our
+		// fillRect(0, 0, w, h) covers the whole screen.
+		this.anchorPoint.set(0, 0);
+		this.setOpacity(0);
+		this.tint.parseCSS("#ff3030");
+	}
+
+	trigger(): void {
+		this.remainingMs = DEATH_FLASH_FADE_MS;
+		this.setOpacity(this.startAlpha);
+	}
+
+	hide(): void {
+		this.remainingMs = 0;
+		this.setOpacity(0);
+	}
+
+	override update(dt: number): boolean {
+		if (this.remainingMs <= 0) {
+			return false;
+		}
+		this.remainingMs -= dt;
+		if (this.remainingMs <= 0) {
+			this.setOpacity(0);
+			return false;
+		}
+		this.setOpacity((this.remainingMs / DEATH_FLASH_FADE_MS) * this.startAlpha);
+		return true;
+	}
+
+	override draw(renderer: CanvasRenderer | WebGLRenderer): void {
+		const alpha = this.getOpacity();
+		if (alpha <= 0) {
+			return;
+		}
+		renderer.save();
+		renderer.setColor(this.tint);
+		renderer.setGlobalAlpha(alpha);
+		renderer.fillRect(0, 0, CANVAS_W, CANVAS_H);
+		renderer.restore();
+	}
+}
+
+// localStorage key for the persisted high score. Picked specific
+// enough that other examples on the same origin won't collide.
+const HISCORE_KEY = "melonjs.afterBurner.hiscore";
+
+function loadHiScore(): number {
+	try {
+		const raw = localStorage.getItem(HISCORE_KEY);
+		const n = raw === null ? 0 : Number.parseInt(raw, 10);
+		return Number.isFinite(n) && n >= 0 ? n : 0;
+	} catch {
+		// localStorage may be disabled (private mode, sandboxed
+		// iframe) — fall back to a per-session score.
+		return 0;
+	}
+}
+
+function saveHiScore(value: number): void {
+	try {
+		localStorage.setItem(HISCORE_KEY, String(value));
+	} catch {
+		/* same as above — silently fail */
+	}
+}
 
 export class HUD {
 	private scoreText: Text;
+	private hiScoreText: Text;
+	private livesText: Text;
 	private gameOverLine: Text;
 	private gameOverSub: Text;
+	private deathFlash: DeathFlash;
+	private hiScore: number;
 
 	constructor(app: Application) {
-		this.scoreText = this._makeText(app, 16, 60, {
-			size: 20,
+		this.hiScore = loadHiScore();
+
+		this.scoreText = this._makeText(app, 16, 24, {
+			size: 32,
 			fillStyle: "#ffe066",
 			textAlign: "left",
 			textBaseline: "top",
 			bold: true,
 			text: "SCORE  000000",
+		});
+
+		this.hiScoreText = this._makeText(app, CANVAS_W - 16, 24, {
+			size: 32,
+			fillStyle: "#ffae3a",
+			textAlign: "right",
+			textBaseline: "top",
+			bold: true,
+			text: `HI  ${this.hiScore.toString().padStart(6, "0")}`,
+		});
+
+		// Lives readout — top-center, big enough to be glanceable but
+		// smaller than the score so the eye still goes there first.
+		this.livesText = this._makeText(app, CANVAS_W / 2, 24, {
+			size: 28,
+			fillStyle: "#ff7766",
+			textAlign: "center",
+			textBaseline: "top",
+			bold: true,
+			text: "▲ ▲ ▲",
+		});
+
+		// Music attribution — bottom-left, low-key (small size + muted
+		// tint) so it doesn't compete with the score or game-over text.
+		// The world owns the reference via `addChild`, so we don't keep
+		// a field for it here.
+		this._makeText(app, 16, CANVAS_H - 16, {
+			size: 11,
+			fillStyle: "#bbbbbb",
+			textAlign: "left",
+			textBaseline: "bottom",
+			text: "Music by davidKBD: https://www.davidkbd.com",
+		});
+
+		// Art-asset attribution — bottom-right, same muted tint as the
+		// music credit so the two read as one paired strip of credits.
+		this._makeText(app, CANVAS_W - 16, CANVAS_H - 16, {
+			size: 11,
+			fillStyle: "#bbbbbb",
+			textAlign: "right",
+			textBaseline: "bottom",
+			text: "3D assets by Kenney: https://kenney.nl/assets/space-kit",
 		});
 
 		this.gameOverLine = this._makeText(app, CANVAS_W / 2, CANVAS_H / 2 - 12, {
@@ -56,6 +206,9 @@ export class HUD {
 			text: "",
 		});
 		this.gameOverSub.setOpacity(0);
+
+		this.deathFlash = new DeathFlash();
+		app.world.addChild(this.deathFlash, FLASH_Z);
 	}
 
 	/**
@@ -82,9 +235,21 @@ export class HUD {
 		return t;
 	}
 
-	/** Refresh the score readout. Zero-padded to 6 digits. */
+	/**
+	 * Refresh the score readout. Zero-padded to 6 digits. Also bumps
+	 * the HiScore display + persists it to localStorage whenever the
+	 * running score crosses the previous best — gives the player a
+	 * visible target to beat without waiting until game-over.
+	 */
 	setScore(score: number): void {
 		this.scoreText.setText(`SCORE  ${score.toString().padStart(6, "0")}`);
+		if (score > this.hiScore) {
+			this.hiScore = score;
+			this.hiScoreText.setText(
+				`HI  ${this.hiScore.toString().padStart(6, "0")}`,
+			);
+			saveHiScore(this.hiScore);
+		}
 	}
 
 	/** Reveal the GAME OVER overlay with the final score + restart hint. */
@@ -98,5 +263,21 @@ export class HUD {
 	hideGameOver(): void {
 		this.gameOverLine.setOpacity(0);
 		this.gameOverSub.setOpacity(0);
+		this.deathFlash.hide();
+	}
+
+	/** Trigger the red full-screen death flash. Self-fading. */
+	flashDeath(): void {
+		this.deathFlash.trigger();
+	}
+
+	/**
+	 * Refresh the lives readout. Rendered as N upward triangles —
+	 * compact, matches the arcade-cabinet feel, and a single triangle
+	 * = "one life left" reads instantly.
+	 */
+	setLives(lives: number): void {
+		const n = Math.max(0, lives);
+		this.livesText.setText(n === 0 ? "—" : "▲ ".repeat(n).trim());
 	}
 }

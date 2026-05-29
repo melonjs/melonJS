@@ -77,6 +77,7 @@ const createGame = () => {
 	loader.preload(buildAssetList(), () => {
 		spawnCrafts(app);
 		spawnLabels(app);
+		spawnCredit(app);
 	});
 };
 
@@ -202,6 +203,28 @@ function spawnLabels(app: Application) {
 		label.style.cssText = `${baseStyle}left:${(col * 0.5 + 0.25) * 100}%;top:${labelYPct[row] * 100}%;`;
 		parent.appendChild(label);
 	}
+}
+
+/**
+ * Asset attribution — bottom-right of the canvas. Uses the same
+ * HTML-overlay approach as the per-craft labels so it stays aligned
+ * with the canvas under `scale: "auto"` without us having to thread a
+ * Text renderable through the world container.
+ */
+function spawnCredit(app: Application) {
+	const parent = app.renderer.getCanvas().parentElement;
+	if (!parent) {
+		return;
+	}
+	parent.style.position = "relative";
+	const credit = document.createElement("div");
+	credit.textContent =
+		"3D assets by Kenney: https://kenney.nl/assets/space-kit";
+	credit.style.cssText =
+		"position:absolute;right:16px;bottom:12px;color:#bbbbbb;" +
+		"font-family:'Courier New',monospace;font-size:11px;" +
+		"text-shadow:0 0 4px #000;z-index:1000;pointer-events:none;";
+	parent.appendChild(credit);
 }
 
 export const ExampleMultiMaterialMesh = createExampleComponent(createGame);

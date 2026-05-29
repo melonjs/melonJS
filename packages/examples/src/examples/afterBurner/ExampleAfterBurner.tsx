@@ -25,6 +25,7 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
+	audio,
 	Camera3d as Camera3dClass,
 	loader,
 	plugin,
@@ -32,7 +33,12 @@ import {
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
-import { SPEEDER_ASSET_BASE, SPEEDER_MODEL } from "./constants";
+import {
+	BGM_NAME,
+	BGM_PATH,
+	SPEEDER_ASSET_BASE,
+	SPEEDER_MODEL,
+} from "./constants";
 import { GameController } from "./GameController";
 import { SkyboxStage } from "./SkyboxStage";
 
@@ -55,6 +61,11 @@ const createGame = () => {
 	plugin.register(DebugPanelPlugin, "debugPanel");
 	(plugin.cache.debugPanel as DebugPanelPlugin).show();
 
+	// Audio init — mp3 preferred (universal), m4a as a fallback for
+	// AAC-only browsers, ogg last for the Firefox/Linux path. Howler
+	// will try them in order and use the first one it can decode.
+	audio.init("mp3,m4a,ogg");
+
 	loader.preload(
 		[
 			{
@@ -67,6 +78,14 @@ const createGame = () => {
 				type: "mtl",
 				src: `${SPEEDER_ASSET_BASE}${SPEEDER_MODEL}.mtl`,
 			},
+			// background music loop — the loader picks the first
+			// extension from the `audio.init` list whose source the
+			// browser can decode.
+			{
+				name: BGM_NAME,
+				type: "audio",
+				src: BGM_PATH,
+			},
 		],
 		() => {
 			// swap in the gradient-painting stage as the default
@@ -75,8 +94,24 @@ const createGame = () => {
 
 			const controller = new GameController(app);
 			app.world.addChild(controller);
+
+			// Start the music loop via `playTrack` (not `play`) — that
+			// registers BGM_NAME as the engine's currentTrack, which
+			// in turn hooks the engine's built-in pause-on-blur
+			// behavior (Application.pauseOnBlur=true by default →
+			// state.pause(true) → audio.pauseTrack). Volume kept
+			// moderate so the procedural SFX layer over it without
+			// ducking.
+			audio.playTrack(BGM_NAME, 0.45);
 		},
 	);
+
+	// Teardown — same-tab navigation back to the example index
+	// triggers this; without it the looping music keeps playing after
+	// the canvas is detached.
+	return () => {
+		audio.stopTrack();
+	};
 };
 
 export const ExampleAfterBurner = createExampleComponent(createGame);
