@@ -5,7 +5,6 @@ import { colorPool } from "./../math/color.ts";
 import { clamp } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { ObservableVector3d } from "../math/observableVector3d.ts";
-import { vector2dPool } from "../math/vector2d.ts";
 import { vector3dPool } from "../math/vector3d.ts";
 import { boundsPool } from "./../physics/bounds.ts";
 import Body from "./../physics/builtin/body.js";
