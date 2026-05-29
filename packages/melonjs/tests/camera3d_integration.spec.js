@@ -285,4 +285,228 @@ describe("Camera3d × Stage × Application integration", () => {
 			expect(app.world.sortOn).toBe("z");
 		});
 	});
+
+	// --- Adversarial / regression coverage --------------------------------
+	//
+	// The fix in `stage.ts` removed a `StageCameraClass &&` gate that was
+	// silently skipping `defaultSortOn` re-application whenever a stage
+	// didn't override the camera class. The bug surfaced in real apps via
+	// the engine's built-in `DefaultLoadingScreen`: that stage explicitly
+	// pins Camera2d, so it would set `world.sortOn = "z"` on a Camera3d
+	// app, and then the next user stage (which inherits the app's Camera3d
+	// without overriding) would NEVER snap back to "depth" — distant
+	// meshes painted on top of nearer ones under perspective.
+	//
+	// These tests pin down every path through `Stage.reset()`'s sortOn
+	// handling. They use raw `Stage` instances rather than driving
+	// `state.change(...)` so they don't depend on the loader implementation
+	// (the loader is a *user* of this contract, not a precondition).
+	describe("world.sortOn re-applies on every stage reset (regression for #1464 loader→stage hand-off)", () => {
+		it("loader-pinned 'z' snaps back to 'depth' when the next stage uses the app's Camera3d", () => {
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			expect(app.world.sortOn).toBe("depth");
+
+			// Simulate DefaultLoadingScreen: a stage with explicit Camera2d
+			// that pins sortOn to "z" while preload runs.
+			const loader = new Stage({ cameraClass: Camera2d });
+			loader.reset(app);
+			expect(app.world.sortOn).toBe("z");
+
+			// Now the real game stage — no explicit cameraClass, so it
+			// inherits Camera3d from the application. sortOn MUST come
+			// back to "depth" or perspective draws are sort-broken.
+			const gameplay = new Stage();
+			gameplay.reset(app);
+			expect(app.world.sortOn).toBe("depth");
+		});
+
+		it("ping-pongs cleanly across many stage swaps", () => {
+			// Three-stage chain exercising every cell of the camera/sort
+			// matrix:
+			//   app=Camera3d, stage=Camera2d  → "z"
+			//   app=Camera3d, stage=none      → "depth" (inherit app)
+			//   app=Camera3d, stage=Camera3d  → "depth"
+			//   app=Camera3d, stage=Camera2d  → "z" (round trip)
+			//   app=Camera3d, stage=none      → "depth"
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+
+			const expected = ["z", "depth", "depth", "z", "depth"];
+			const stages = [
+				new Stage({ cameraClass: Camera2d }),
+				new Stage(),
+				new Stage({ cameraClass: Camera3d }),
+				new Stage({ cameraClass: Camera2d }),
+				new Stage(),
+			];
+			for (let i = 0; i < stages.length; i++) {
+				stages[i].reset(app);
+				expect(app.world.sortOn, `stage[${i}]`).toBe(expected[i]);
+			}
+		});
+
+		it("plain App + plain Stage = no auto-apply (no chosen camera class to read defaultSortOn from)", () => {
+			// When neither the app nor the stage declares a cameraClass,
+			// the stage falls back to the module-level Camera2d
+			// singleton — but the bootstrap logic only reads
+			// `defaultSortOn` off `StageCameraClass ?? AppCameraClass`,
+			// both of which are undefined here. So sortOn stays at
+			// whatever it was, NOT auto-pinned to Camera2d's "z".
+			//
+			// This matters: it means a Camera3d stage that runs against
+			// a plain App leaves "depth" behind, and a subsequent plain
+			// stage does NOT silently flip the world back to "z". A
+			// regression in either direction would break user games
+			// that mix-and-match.
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+			});
+			// Constructor leaves sortOn at the world's default ("z").
+			expect(app.world.sortOn).toBe("z");
+
+			// Explicit Camera3d stage → pins "depth".
+			new Stage({ cameraClass: Camera3d }).reset(app);
+			expect(app.world.sortOn).toBe("depth");
+
+			// Plain stage on a plain app — no class anywhere to source
+			// defaultSortOn from, so sortOn is left alone. The previous
+			// stage's "depth" persists.
+			new Stage().reset(app);
+			expect(app.world.sortOn).toBe("depth");
+
+			// To get back to "z" without an app-level cameraClass, the
+			// next stage has to assert it via Camera2d.
+			new Stage({ cameraClass: Camera2d }).reset(app);
+			expect(app.world.sortOn).toBe("z");
+		});
+
+		it("Camera3d subclass without its own defaultSortOn still picks up the inherited 'depth' value", () => {
+			// JS static-field inheritance: a subclass that doesn't
+			// redeclare `defaultSortOn` reads the parent's value when
+			// `(SubclassedCam).defaultSortOn` is accessed. Locks in that
+			// the bootstrap doesn't accidentally require a redeclare.
+			class FollowCam extends Camera3d {}
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: FollowCam,
+			});
+			expect(app.world.sortOn).toBe("depth");
+
+			// Loader trip — should still come back to "depth".
+			new Stage({ cameraClass: Camera2d }).reset(app);
+			expect(app.world.sortOn).toBe("z");
+			new Stage().reset(app);
+			expect(app.world.sortOn).toBe("depth");
+		});
+
+		it("camera class without a `defaultSortOn` static leaves world.sortOn untouched", () => {
+			// Defensive: a user-authored Camera subclass that forgot to
+			// declare `defaultSortOn` should NOT crash and should NOT
+			// silently flip the world's existing sortOn. The bootstrap
+			// only acts when there's something to apply.
+			class NoSortOnCam extends Camera2d {}
+			// Suppress inherited static by replacing with `undefined` —
+			// own-property check: `NoSortOnCam.defaultSortOn` returns the
+			// inherited Camera2d static ("z") via the prototype chain, so
+			// we explicitly shadow it to undefined to model "no static
+			// declared at all" from the engine's perspective.
+			NoSortOnCam.defaultSortOn = undefined;
+
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: NoSortOnCam,
+			});
+			// Pin a custom value, then run a stage reset with the same
+			// (defaultSortOn-less) camera. The bootstrap MUST NOT clobber
+			// the user's pin just because the camera doesn't declare a
+			// default.
+			app.world.sortOn = "x";
+			new Stage().reset(app);
+			expect(app.world.sortOn).toBe("x");
+		});
+
+		it("Stage.onResetEvent can override sortOn AFTER the auto-apply (user override wins for the current stage)", () => {
+			// onResetEvent runs at the very end of Stage.reset() — after
+			// the camera/sortOn bootstrap. A stage that pins a custom
+			// sortOn in its onResetEvent should win for its lifetime;
+			// the auto-apply only sets the initial value for the stage.
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			expect(app.world.sortOn).toBe("depth");
+
+			class OverrideStage extends Stage {
+				onResetEvent(_app) {
+					_app.world.sortOn = "y";
+				}
+			}
+			new OverrideStage().reset(app);
+			expect(app.world.sortOn).toBe("y");
+		});
+
+		it("re-resetting the SAME stage instance is a no-op for sortOn (cameras.has('default') guard)", () => {
+			// The whole sortOn bootstrap block sits inside
+			// `if (!this.cameras.has("default") && app)`. Once a stage
+			// has been reset once, its cameras map is populated, so
+			// subsequent resets of the same instance must NOT touch
+			// sortOn — even if the user has overridden it.
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			const stage = new Stage();
+			stage.reset(app);
+			expect(app.world.sortOn).toBe("depth");
+
+			// User pins something custom after the first reset.
+			app.world.sortOn = "x";
+			// Second reset on the SAME stage instance — should NOT
+			// overwrite the user's pin.
+			stage.reset(app);
+			expect(app.world.sortOn).toBe("x");
+		});
+
+		it("Stage with explicit `cameras: [...]` skips bootstrap entirely (sortOn untouched)", () => {
+			// When a Stage is constructed with `cameras: [new MyCam(...)]`
+			// (not `cameraClass: MyCam`), the bootstrap block early-outs
+			// via the same `cameras.has("default")` guard — there's
+			// nothing to "choose" from, the caller already supplied an
+			// instance. Lock in that the world's sortOn doesn't move in
+			// this path either.
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				cameraClass: Camera3d,
+			});
+			// Loader-pin to "z" first…
+			new Stage({ cameraClass: Camera2d }).reset(app);
+			expect(app.world.sortOn).toBe("z");
+			// …then a stage that provides an explicit Camera3d INSTANCE.
+			// `Stage.cameras` is a Map keyed by camera name; the default
+			// camera is the entry named "default".
+			const cam = new Camera3d(0, 0, 400, 300);
+			cam.name = "default";
+			new Stage({ cameras: new Map([["default", cam]]) }).reset(app);
+			// The class-based bootstrap is skipped, so sortOn STAYS at
+			// "z" — the application code that hand-rolled the camera
+			// owns the world's sort mode and must set it explicitly.
+			// This locks the contract; if we ever extend the bootstrap
+			// to inspect the instance's constructor, this test should
+			// be updated deliberately, not silently.
+			expect(app.world.sortOn).toBe("z");
+		});
+	});
 });

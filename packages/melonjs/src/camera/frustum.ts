@@ -39,10 +39,12 @@ export interface FrustumOptions {
  * -Z forward, but matches the rest of the engine and lets Camera2d
  * code translate directly to Camera3d.
  *
- * Plane-based frustum culling (`containsPoint` / `intersectsSphere`)
- * is intentionally deferred until a real use case (e.g. visibility
- * culling for the AfterBurner demo) demands it — keeps this class
- * focused on the projection-math concern.
+ * Plane-based frustum culling is available via {@link Frustum#planes}
+ * (rebuilt by {@link Frustum#setFromViewProjection} per frame) plus
+ * {@link Frustum#containsPoint} / {@link Frustum#intersectsSphere} for
+ * culling tests. `Camera3d.update` calls `setFromViewProjection` once
+ * per frame so its `isVisible(obj)` queries against current planes —
+ * no per-frame setup needed from user code.
  * @category Camera
  * @example
  * const frustum = new Frustum({ fov: Math.PI / 3, aspect: 16 / 9 });
@@ -159,10 +161,10 @@ export default class Frustum {
 	}
 
 	/**
-	 * Rebuild the six bounding {@link Frustum#planes} from a combined
-	 * `view × projection` matrix. Standard Gribb–Hartmann extraction:
-	 * each plane is one of the six combinations of the matrix's row 3
-	 * (the "w" row) ± rows 0, 1, 2.
+	 * Rebuild the six bounding {@link Frustum#planes} from the world →
+	 * clip matrix. Standard Gribb–Hartmann extraction: each plane is
+	 * one of the six combinations of the matrix's row 3 (the "w" row)
+	 * ± rows 0, 1, 2.
 	 *
 	 * Call this once per frame after the camera has moved (typically
 	 * from `Camera3d.update`); the planes are then valid in world
@@ -170,12 +172,15 @@ export default class Frustum {
 	 * bounds via {@link Frustum#intersectsSphere} /
 	 * {@link Frustum#containsPoint}.
 	 *
-	 * Pass `projectionMatrix × viewMatrix` — i.e. the matrix that
-	 * transforms world coords directly to clip space. Equivalent to
-	 * what's uploaded to `uProjectionMatrix` in the vertex shader
-	 * (after baking the per-frame world translate into the projection,
-	 * which Camera3d does via `container.translate`).
-	 * @param viewProjection - the view × projection matrix
+	 * **Pass `projectionMatrix × viewMatrix`** — column-major /
+	 * gl-matrix convention: a world-space point becomes a clip-space
+	 * point via `clip = projection × view × world`, so the combined
+	 * matrix is `projection × view`. The parameter name says
+	 * `viewProjection` for that reason — it's the matrix uploaded to
+	 * `uProjectionMatrix` in the vertex shader (after Camera3d bakes
+	 * the per-frame world translate into the view via
+	 * `container.translate`).
+	 * @param viewProjection - the `projectionMatrix × viewMatrix` matrix
 	 */
 	setFromViewProjection(viewProjection: Matrix3d): void {
 		// column-major matrix: `m.val[col * 4 + row]`. Row r is the

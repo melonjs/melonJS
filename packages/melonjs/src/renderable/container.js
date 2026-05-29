@@ -37,8 +37,8 @@ let _depthCamZ = 0;
  * `Stage.cameras` is a `Map`, not an array — we read the `"default"`
  * key (every Stage seeds this in `reset`). For split-screen setups the
  * world sorts once per frame against the primary camera; the secondary
- * camera sees slightly-imperfect order which is the industry-standard
- * compromise (cf. Three.js / Pixi3D).
+ * camera sees slightly-imperfect order which is the standard
+ * compromise for split-screen rendering.
  * @ignore
  */
 function captureDepthCamera() {
@@ -233,8 +233,9 @@ export default class Container extends Renderable {
 	 * The property of the child object that should be used to sort on
 	 * this container.
 	 *
-	 * - `"x"` / `"y"` — 2D scroll-order (descending pos.z, then ascending
-	 *   pos.x or pos.y). Suited to side-scrollers and top-down games.
+	 * - `"x"` / `"y"` — 2D scroll-order, descending on both axes
+	 *   (higher pos.z first; tied z, higher pos.x or pos.y first).
+	 *   Suited to side-scrollers and top-down games.
 	 * - `"z"` — descending pos.z (higher z draws on top). Default for
 	 *   `Camera2d` — matches the painter's-algorithm 2D layering model
 	 *   where pos.z is "layer index".
@@ -1168,9 +1169,15 @@ export default class Container extends Renderable {
 				if (isFloating) {
 					renderer.save();
 					renderer.resetTransform();
-					if (isNonDefaultCamera) {
-						renderer.setProjection(viewport.screenProjection);
-					}
+					// Floating renderables draw in screen space — swap to
+					// the camera's flat screen ortho regardless of whether
+					// we're on the default camera. Under Camera2d this is
+					// a no-op (its `screenProjection` mirrors
+					// `projectionMatrix`); under Camera3d this is the only
+					// way to render floating Text / HUD / overlays without
+					// the perspective projection NaN-ing them via
+					// `w = 0` perspective divide on world-z=0 points.
+					renderer.setProjection(viewport.screenProjection);
 				}
 
 				obj.preDraw(renderer);
@@ -1178,9 +1185,15 @@ export default class Container extends Renderable {
 				obj.postDraw(renderer);
 
 				if (isFloating) {
-					if (isNonDefaultCamera) {
-						renderer.setProjection(viewport.worldProjection);
-					}
+					// Restore the projection the camera had installed for
+					// this draw pass — non-default cameras use a separate
+					// `worldProjection`; the default camera just uses
+					// `projectionMatrix` directly.
+					renderer.setProjection(
+						isNonDefaultCamera
+							? viewport.worldProjection
+							: viewport.projectionMatrix,
+					);
 					renderer.restore();
 				}
 			}

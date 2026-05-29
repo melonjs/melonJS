@@ -3,8 +3,8 @@
  *
  * Loads four Kenney Space Kit (CC0) spacecraft, each with 3-5 named
  * MTL materials (metal / metalRed / metalDark / dark / …), and renders
- * them rotating in a 2×2 grid. The OBJ parser emits a Three.js / glTF
- * style `groups[]` array keyed by `materialName`; the `Mesh`
+ * them rotating in a 2×2 grid. The OBJ parser emits a glTF-style
+ * `groups[]` array keyed by `materialName`; the `Mesh`
  * constructor bakes each material's diffuse color (`Kd`) into a
  * per-vertex color buffer so the whole mesh draws in a single GPU
  * call. `mesh.tint` then multiplies on top at render time — used here
@@ -129,7 +129,7 @@ class SpinningCraft extends Renderable {
 			material: modelName, // MTL name matches OBJ name in the Kenney pack
 			width: size,
 			height: size,
-			cullBackFaces: true,
+			cullBackFaces: false,
 		});
 		this.mesh.tint.setColor(
 			Math.round(teamTint[0] * 255),

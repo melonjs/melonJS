@@ -296,6 +296,14 @@ export default class Camera2d extends Renderable {
 			this.near,
 			this.far,
 		);
+		// Mirror the screen ortho into `screenProjection` so default-
+		// camera floating renderables can swap to it in `Container.draw`
+		// without a no-op risk. Non-default cameras overwrite this in
+		// `Camera2d.draw` (line ~946) with a screen-relative ortho;
+		// Camera3d overrides this method and sets `screenProjection`
+		// to a screen-space ortho separate from its perspective
+		// `projectionMatrix`.
+		this.screenProjection.copy(this.projectionMatrix);
 	}
 
 	/** @ignore */

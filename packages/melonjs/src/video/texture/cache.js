@@ -1,3 +1,4 @@
+import { emit, GPU_TEXTURE_CACHE_RESET } from "../../system/event.ts";
 import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
 import { createAtlas, TextureAtlas } from "./atlas.js";
@@ -51,12 +52,11 @@ class TextureCache {
 		// see https://github.com/melonjs/melonJS/issues/1280
 		if (this.renderer.currentBatcher) {
 			this.renderer.currentBatcher.flush();
-			this.renderer.currentBatcher.boundTextures.length = 0;
-			this.renderer.currentBatcher.currentTextureUnit = -1;
 		}
 		this.units.clear();
 		this.usedUnits.clear();
 		this.usedUnits.add(0);
+		emit(GPU_TEXTURE_CACHE_RESET);
 		return 0;
 	}
 
@@ -66,12 +66,9 @@ class TextureCache {
 	 * @ignore
 	 */
 	resetUnitAssignments() {
-		if (this.renderer.currentBatcher) {
-			this.renderer.currentBatcher.boundTextures.length = 0;
-			this.renderer.currentBatcher.currentTextureUnit = -1;
-		}
 		this.units.clear();
 		this.usedUnits.clear();
+		emit(GPU_TEXTURE_CACHE_RESET);
 	}
 
 	/**

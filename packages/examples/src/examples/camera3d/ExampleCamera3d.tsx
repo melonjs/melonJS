@@ -35,6 +35,12 @@ import monsterImg from "../shaderEffects/assets/monster.png";
 import { createExampleComponent } from "../utils";
 
 const createGame = () => {
+	// Stash teardown work assembled inside the loader callback so the
+	// outer `createGame` can return a single cleanup function from the
+	// async preload completion.
+	let pointerCleanup: (() => void) | null = null;
+	let domCleanup: (() => void) | null = null;
+
 	// opt in to Camera3d at the Application level — every stage in this
 	// app gets a Camera3d as its default camera (the loader screen pins
 	// to Camera2d via its own constructor regardless).
@@ -89,7 +95,10 @@ const createGame = () => {
 		};
 		updateCameraPos();
 
-		// drag-to-orbit
+		// drag-to-orbit. Pointer events are registered against the
+		// camera region; we release them on teardown so a same-tab
+		// navigation back to the example index doesn't leave listeners
+		// attached to a no-longer-mounted camera.
 		let dragging = false;
 		let lastX = 0;
 		let lastY = 0;
@@ -114,6 +123,11 @@ const createGame = () => {
 			lastY = ev.gameY;
 			updateCameraPos();
 		});
+		pointerCleanup = () => {
+			input.releasePointerEvent("pointerdown", camera);
+			input.releasePointerEvent("pointerup", camera);
+			input.releasePointerEvent("pointermove", camera);
+		};
 
 		// on-screen HTML control panel — yaw / pitch / zoom / reset.
 		// HTML buttons live above the canvas; `#screen > *` already
@@ -180,7 +194,21 @@ const createGame = () => {
 			parent.appendChild(panel);
 			parent.appendChild(hint);
 		}
+		domCleanup = () => {
+			panel.remove();
+			hint.remove();
+		};
 	});
+
+	// Returned to `createExampleComponent` so a same-tab navigation
+	// back to the example index doesn't leave the HTML control panel /
+	// hint overlay sitting on top of the index page (the canvas parent
+	// `#screen` persists across mounts), and doesn't leave stale
+	// pointer listeners attached to a dead camera reference.
+	return () => {
+		if (pointerCleanup) pointerCleanup();
+		if (domCleanup) domCleanup();
+	};
 };
 
 export const ExampleCamera3d = createExampleComponent(createGame);

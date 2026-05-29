@@ -3,7 +3,12 @@
  * @import Renderer from "./../video/renderer.js";
  */
 
-import Camera2d from "../camera/camera2d";
+// `Camera2d` is type-only here — `cameraClass` accepts the constructor
+// shape but this file never instantiates one. Importing as a value
+// would pull the Camera module into the runtime graph along the
+// `application → defaultApplicationSettings → settings` chain, opening
+// a circular-import surface. Type-only import compiles away.
+import type Camera2d from "../camera/camera2d";
 import { RendererType } from "../const";
 import { PhysicsAdapter } from "../physics/adapter";
 import Renderer from "../video/renderer";

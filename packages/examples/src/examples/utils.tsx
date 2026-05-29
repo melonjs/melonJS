@@ -11,9 +11,25 @@ import { useEffect } from "react";
 // canvas just needs re-parenting) from "switching to a different example"
 // (the previous engine is stale and would draw the wrong scene under a
 // re-parented canvas). `game.isInitialized` alone can't tell those apart.
-let currentInitFn: (() => void) | null = null;
+let currentInitFn: (() => void | (() => void)) | null = null;
+// Cleanup callback returned by the current init, if any. Run on
+// unmount so per-example DOM additions / event listeners get torn down
+// even when the engine itself outlives the React component.
+let currentTeardown: (() => void) | null = null;
 
-export const createExampleComponent = (createGameFn: () => void) => {
+/**
+ * Build a React component that initialises a melonJS example on mount
+ * and tears it down on unmount.
+ *
+ * `createGameFn` may optionally return a teardown callback — anything
+ * the example added outside the engine (extra DOM elements appended to
+ * the canvas parent, manually-registered DOM event listeners, etc.)
+ * should be undone there. The engine canvas itself is detached
+ * automatically; teardown is for example-owned side-effects only.
+ */
+export const createExampleComponent = (
+	createGameFn: () => void | (() => void),
+) => {
 	return () => {
 		useEffect(() => {
 			if (currentInitFn === createGameFn) {
@@ -40,7 +56,8 @@ export const createExampleComponent = (createGameFn: () => void) => {
 			} else {
 				// First mount of any example on this page load.
 				currentInitFn = createGameFn;
-				createGameFn();
+				const teardown = createGameFn();
+				currentTeardown = typeof teardown === "function" ? teardown : null;
 			}
 			// Detach the canvas on unmount so a navigation back to the
 			// index page (via the "← Examples" topbar link, same tab)
@@ -48,11 +65,16 @@ export const createExampleComponent = (createGameFn: () => void) => {
 			// `#screen` is `position: fixed` and covers the whole window
 			// beneath the 41 px topbar, so any leftover canvas sits on
 			// top of the index-page link cards and silently eats every
-			// click.
+			// click. Also run the per-example teardown for any DOM /
+			// listener state the example added outside the engine.
 			return () => {
 				const canvas = game.renderer?.getCanvas();
 				if (canvas?.parentElement) {
 					canvas.parentElement.removeChild(canvas);
+				}
+				if (currentTeardown) {
+					currentTeardown();
+					currentTeardown = null;
 				}
 			};
 		}, []);

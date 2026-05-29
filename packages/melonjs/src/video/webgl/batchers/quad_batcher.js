@@ -159,18 +159,23 @@ export default class QuadBatcher extends MaterialBatcher {
 			// ensure the index buffer is bound
 			this.indexBuffer.bind();
 
+			// Byte-view upload — keeps packed-color bytes intact across
+			// drivers that canonicalize NaN-pattern Float32 values on
+			// upload (see `VertexArrayBuffer.bufferU8`).
+			const byteLength =
+				vertexCount * vertexSize * Float32Array.BYTES_PER_ELEMENT;
 			if (this.renderer.WebGLVersion > 1) {
 				gl.bufferData(
 					gl.ARRAY_BUFFER,
-					vertex.toFloat32(),
+					vertex.toUint8(),
 					gl.STREAM_DRAW,
 					0,
-					vertexCount * vertexSize,
+					byteLength,
 				);
 			} else {
 				gl.bufferData(
 					gl.ARRAY_BUFFER,
-					vertex.toFloat32(0, vertexCount * vertexSize),
+					vertex.toUint8(0, byteLength),
 					gl.STREAM_DRAW,
 				);
 			}

@@ -64,10 +64,24 @@ export default class MeshBatcher extends MaterialBatcher {
 					offset: 3 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
+					// aColor: 4 normalized floats (R, G, B, A in [0, 1])
+					// rather than packed 4×UNSIGNED_BYTE. The byte-packed
+					// path is byte-identical in memory but exposes the
+					// 4-byte slot to NaN-pattern bit values when the
+					// alpha byte is 0xFF and the red byte has its high
+					// bit set (R≥0x80) — a NaN-pattern that Apple's
+					// Metal-backed WebGL driver canonicalizes on some
+					// upload paths, zeroing the bytes the shader actually
+					// reads. The float path uses values in [0, 1] which
+					// never form NaN bit patterns; trades 12 bytes of
+					// vertex memory (4 vs 16 per color) for guaranteed
+					// driver-safety. Mesh vertex counts are typically
+					// modest (sub-thousand per Mesh) so the bandwidth
+					// hit is invisible.
 					name: "aColor",
 					size: 4,
-					type: renderer.gl.UNSIGNED_BYTE,
-					normalized: true,
+					type: renderer.gl.FLOAT,
+					normalized: false,
 					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],

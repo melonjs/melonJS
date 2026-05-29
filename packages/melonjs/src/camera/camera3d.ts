@@ -6,12 +6,6 @@ import type Renderable from "./../renderable/renderable.js";
 import Camera2d from "./camera2d.ts";
 import Frustum, { type FrustumOptions } from "./frustum.ts";
 
-// Renderable.pos is an ObservableVector3d at runtime, but Polygon's
-// thinner declaration leaks all the way up to Camera2d, so TS sees
-// `pos: Vector2d`. Funnel the cast through one place.
-type Pos3d = ObservableVector3d;
-const posZ = (p: unknown): number => (p as Pos3d).z;
-
 // reusable unit-axis vectors for rotation calls. Pure constants so
 // allocation only happens once per module load, not per frame.
 const AXIS_X = new Vector3d(1, 0, 0);
@@ -110,14 +104,15 @@ export default class Camera3d extends Camera2d {
 	yaw: number;
 
 	/**
-	 * Target-local offset from the followed target. When `target` is
+	 * World-space offset from the followed target. When `target` is
 	 * set via {@link Camera2d#follow}, the camera position resolves to
 	 * `target.pos + followOffset`. Common usage: `(0, -2, -8)` for a
 	 * behind-and-above third-person view.
 	 *
-	 * (PR B scope: treated as world-space — target rotation
-	 * application is deferred until target orientation tracking is
-	 * needed, e.g. AfterBurner's banking jet.)
+	 * Treated as world-space in this release — target-rotation-aware
+	 * follow (where the offset rotates with the target's orientation,
+	 * Cinemachine / Unreal spring-arm style) is deferred until a
+	 * showcase needs it (e.g. AfterBurner's banking jet).
 	 * @default (0, 0, 0)
 	 */
 	followOffset: Vector3d;
@@ -207,6 +202,36 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * Update the perspective near/far clip distances and rebuild the
+	 * projection matrix in one shot. Anything closer than `near` or
+	 * farther than `far` is clipped by the GPU; projection math also
+	 * degrades sharply just before `far`, so size the far plane to the
+	 * deepest object in your scene with a little headroom. Defaults are
+	 * `near = 0.1`, `far = 1000` — typical AfterBurner-class scenes
+	 * with enemies spawning at z = 3000+ need to push `far` out.
+	 *
+	 * **This is the supported way to change near/far at runtime.** The
+	 * inherited `Camera2d.near` / `.far` are plain instance fields —
+	 * direct assignment (`camera.near = 5`) updates the cached value
+	 * but leaves the projection matrix stale until the next
+	 * `resize()`. TypeScript's property-vs-accessor rule prevents
+	 * shadowing the inherited fields with accessor pairs, so the
+	 * convenience method is the public contract instead.
+	 * @param near - near clip distance
+	 * @param far - far clip distance
+	 * @returns this camera (chainable)
+	 */
+	setClipPlanes(near: number, far: number): this {
+		this.near = near;
+		this.far = far;
+		this.frustum.near = near;
+		this.frustum.far = far;
+		this.frustum.update();
+		this.projectionMatrix.copy(this.frustum.projectionMatrix);
+		return this;
+	}
+
+	/**
 	 * Rebuild the projection matrix from the frustum. Called by the
 	 * base `Camera2d` constructor and by `resize()`. Camera3d's
 	 * version replaces the ortho matrix with the frustum's perspective.
@@ -216,9 +241,11 @@ export default class Camera3d extends Camera2d {
 		// guard: this is called from the Camera2d super-constructor
 		// before our `frustum` field is initialized. Fall through to
 		// Camera2d's ortho path in that case; the Camera3d constructor
-		// re-runs this method after the frustum is built. TypeScript
-		// can't model "this method runs during super-construction" so
-		// the type system sees `this.frustum` as always-defined.
+		// copies the just-built frustum matrix into `projectionMatrix`
+		// directly (without re-entering this method — that would
+		// overwrite any user-supplied `opts.aspect`). TypeScript can't
+		// model "this method runs during super-construction" so the
+		// type system sees `this.frustum` as always-defined.
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		if (!this.frustum) {
 			super._updateProjectionMatrix();
@@ -229,6 +256,20 @@ export default class Camera3d extends Camera2d {
 		this.frustum.far = this.far;
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
+		// `screenProjection` stays a flat screen-space ortho so floating
+		// renderables (HUDs, Text overlays) can swap to it during draw
+		// instead of going through the perspective projection (which
+		// would `w=0`-divide and NaN their projected positions).
+		// Container.draw consults this for every floating child under
+		// any camera, default or not.
+		this.screenProjection.ortho(
+			0,
+			this.width,
+			this.height,
+			0,
+			this.near,
+			this.far,
+		);
 	}
 
 	/**
@@ -281,17 +322,21 @@ export default class Camera3d extends Camera2d {
 		if (this.yaw !== 0) {
 			container.rotate(-this.yaw, AXIS_Y);
 		}
-		container.translate(-translateX, -translateY, -posZ(this.pos));
+		container.translate(-translateX, -translateY, -this.depth);
 
 		// Refresh the container's painter's-algorithm order from the
-		// current camera position. The container's `sortOn = "depth"`
-		// comparator (set at Application bootstrap via
-		// `Camera3d.defaultSortOn`) handles the actual ordering — this
-		// `sortNow` just re-runs the same sort because the existing
-		// container lifecycle only re-sorts on child mutations, not on
-		// camera moves. Single sort per frame, uses the engine's normal
-		// sort path, no comparator hijacking.
-		container.sortNow(true);
+		// current camera position — but ONLY when the container is on
+		// the camera-distance sort that actually depends on the camera
+		// moving. For `"x"`/`"y"`/`"z"` sorts the comparator is a pure
+		// function of `pos`, so the container's normal "re-sort on
+		// child mutation" lifecycle is sufficient and a per-camera
+		// `sortNow` would be wasted O(N log N) work each frame. Only
+		// `"depth"` keys off `(child.pos − camera.pos)²`, which DOES
+		// shift when the camera moves between two frames where no
+		// child mutated.
+		if (container.sortOn === "depth") {
+			container.sortNow(true);
+		}
 	}
 
 	/**
@@ -306,7 +351,7 @@ export default class Camera3d extends Camera2d {
 		translateY: number,
 	): void {
 		// reverse of apply: undo translate first, then yaw, then pitch
-		container.translate(translateX, translateY, posZ(this.pos));
+		container.translate(translateX, translateY, this.depth);
 		if (this.yaw !== 0) {
 			container.rotate(this.yaw, AXIS_Y);
 		}
@@ -335,7 +380,14 @@ export default class Camera3d extends Camera2d {
 	 * @returns this camera
 	 */
 	override lookAt(
-		xOrTarget: number | { x: number; y: number; z?: number; pos?: Pos3d },
+		xOrTarget:
+			| number
+			| {
+					x: number;
+					y: number;
+					z?: number;
+					pos?: ObservableVector3d;
+			  },
 		y?: number,
 		z?: number,
 	): this {
@@ -357,16 +409,18 @@ export default class Camera3d extends Camera2d {
 		}
 		const dx = tx - this.pos.x;
 		const dy = ty - this.pos.y;
-		const dz = tz - posZ(this.pos);
+		const dz = tz - this.depth;
 
 		// yaw = atan2(dx, dz) — rotation around Y axis to face the
 		// XZ-plane projection of the direction vector
 		this.yaw = Math.atan2(dx, dz);
 
-		// pitch = atan2(dy, horizontalDistance). Y-down convention
-		// means positive dy = below origin, so positive pitch points
-		// the camera downward (matches engine Y-down + intuitive
-		// "pitch up = look up").
+		// Negate `dy` so the result matches the camera's sign
+		// convention (positive pitch = camera looks up — see the
+		// `pitch` field doc). Under Y-down, a target with positive
+		// `dy` sits BELOW the camera; the camera should look DOWN,
+		// which is a NEGATIVE pitch — exactly what `atan2(-dy, …)`
+		// produces.
 		const horizontalDist = Math.sqrt(dx * dx + dz * dz);
 		this.pitch = Math.atan2(-dy, horizontalDist);
 
@@ -428,11 +482,12 @@ export default class Camera3d extends Camera2d {
 			// silently lost their depth.
 			const targetZ =
 				"z" in target && typeof target.z === "number" ? target.z : 0;
-			(this.pos as unknown as Pos3d).set(
-				target.x + this.followOffset.x,
-				target.y + this.followOffset.y,
-				targetZ + this.followOffset.z,
-			);
+			// Direct .x/.y assignment + `this.depth` (which proxies to
+			// pos.z) avoids the `as unknown as Pos3d` cast — Renderable
+			// already exposes `depth` as the proper z accessor.
+			this.pos.x = target.x + this.followOffset.x;
+			this.pos.y = target.y + this.followOffset.y;
+			this.depth = targetZ + this.followOffset.z;
 			this.isDirty = true;
 			return;
 		}
@@ -466,14 +521,19 @@ export default class Camera3d extends Camera2d {
 		if (floating || obj.floating) {
 			return super.isVisible(obj, floating);
 		}
+		// Use the renderable's WORLD position for the frustum-sphere
+		// test, not `bounds.centerX/Y`. The bounds rect is computed
+		// with `addFrame()` and can stay in local coords when the
+		// renderable is nested inside a Container (e.g. Particle inside
+		// ParticleEmitter) — testing local coords against a world-
+		// space frustum mis-culls nested children even when their actual
+		// world position is inside the view.
+		// `getAbsolutePosition` walks the ancestor chain, summing parent
+		// positions, so the X/Y here are always in world space.
 		const bounds = obj.getBounds();
 		const radius = Math.max(bounds.width, bounds.height) * 0.5;
-		return this.frustum.intersectsSphere(
-			bounds.centerX,
-			bounds.centerY,
-			obj.depth,
-			radius,
-		);
+		const absPos = obj.getAbsolutePosition();
+		return this.frustum.intersectsSphere(absPos.x, absPos.y, obj.depth, radius);
 	}
 
 	/**
@@ -493,8 +553,9 @@ export default class Camera3d extends Camera2d {
 
 	/**
 	 * Recompute the frustum's six bounding planes from the current
-	 * `view × projection` matrix. Called from {@link Camera3d#update}
-	 * each frame; `isVisible` then tests against the cached planes.
+	 * `projectionMatrix × viewMatrix` (the world → clip matrix).
+	 * Called from {@link Camera3d#update} each frame; `isVisible`
+	 * then tests against the cached planes.
 	 * @ignore
 	 */
 	_rebuildFrustumPlanes(): void {
@@ -508,11 +569,12 @@ export default class Camera3d extends Camera2d {
 		if (this.yaw !== 0) {
 			_viewMatrix.rotate(-this.yaw, AXIS_Y);
 		}
-		_viewMatrix.translate(-this.pos.x, -this.pos.y, -posZ(this.pos));
+		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
 
-		// view × projection — the matrix that maps world coords to
-		// clip space, which `Frustum.setFromViewProjection` decomposes
-		// into the six bounding planes via Gribb-Hartmann extraction.
+		// projectionMatrix × viewMatrix — the matrix that maps world
+		// coords to clip space (column-major / gl-matrix convention),
+		// which `Frustum.setFromViewProjection` decomposes into the
+		// six bounding planes via Gribb-Hartmann extraction.
 		_viewProjection.copy(this.frustum.projectionMatrix);
 		_viewProjection.multiply(_viewMatrix);
 

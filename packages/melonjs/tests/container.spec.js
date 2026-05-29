@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Body, Container, Rect, Renderable, World } from "../src/index.js";
 
 describe("Container", () => {
@@ -1376,6 +1376,208 @@ describe("Container", () => {
 			child.visibleInAllCameras = true;
 			container.addChild(child);
 			expect(child.visibleInAllCameras).toEqual(true);
+		});
+	});
+
+	// ---------------------------------------------------------------------
+	// Regression: floating renderables under the DEFAULT camera must swap
+	// to `viewport.screenProjection` before drawing.
+	//
+	// Why it broke: `Container.draw`'s floating-child branch used to
+	// trigger the projection swap ONLY when `isNonDefaultCamera` was true,
+	// because under Camera2d's default camera the projection IS the screen
+	// ortho and the swap was a no-op. Under Camera3d's default camera the
+	// projection is perspective — and projecting a world-z=0 floating
+	// point through perspective produces `w = 0`, NaN'ing the screen
+	// position. HUD Text was either invisible or in the wrong place.
+	//
+	// Fix: always swap to `viewport.screenProjection` for floating
+	// children regardless of `isNonDefaultCamera`; Camera2d's
+	// `_updateProjectionMatrix` mirrors `screenProjection` to
+	// `projectionMatrix` so the swap is harmless on the 2D path.
+	describe("floating-child projection swap (Camera3d HUD regression)", () => {
+		// Minimal fake camera that mimics the Camera2d / Camera3d
+		// surface Container.draw touches. `isDefault: true` exercises
+		// the path the bug skipped.
+		function makeFakeCamera({ isDefault } = { isDefault: true }) {
+			return {
+				isDefault,
+				screenProjection: { __id: "screenProjection" },
+				projectionMatrix: { __id: "projectionMatrix" },
+				worldProjection: { __id: "worldProjection" },
+				width: 800,
+				height: 600,
+				pos: { x: 0, y: 0 },
+				colorMatrix: {
+					isIdentity: () => {
+						return true;
+					},
+				},
+				isVisible: () => {
+					return true;
+				},
+			};
+		}
+
+		// Minimal fake renderer that records every setProjection call.
+		// All other methods are no-ops; Container.draw also calls
+		// `clearColor`, `clipRect`, `save`, `restore`, `translate`,
+		// `transform`, `resetTransform`, plus the renderable's own
+		// pre/draw/post lifecycle.
+		function makeFakeRenderer() {
+			const calls = [];
+			const noop = () => {};
+			return {
+				setProjection: vi.fn((p) => {
+					return calls.push({ op: "setProjection", id: p.__id });
+				}),
+				save: vi.fn(() => {
+					return calls.push({ op: "save" });
+				}),
+				restore: vi.fn(() => {
+					return calls.push({ op: "restore" });
+				}),
+				resetTransform: noop,
+				translate: noop,
+				transform: noop,
+				clearColor: noop,
+				clipRect: noop,
+				setColor: noop,
+				clearMask: noop,
+				setMask: noop,
+				setBlendMode: noop,
+				getBlendMode: () => {
+					return "normal";
+				},
+				setTint: noop,
+				clearTint: noop,
+				setDepth: noop,
+				setGlobalAlpha: noop,
+				globalAlpha: () => {
+					return 1;
+				},
+				getGlobalAlpha: () => {
+					return 1;
+				},
+				setCustomShader: noop,
+				clearCustomShader: noop,
+				beginPostEffect: noop,
+				endPostEffect: noop,
+				currentTransform: {
+					isIdentity: () => {
+						return true;
+					},
+				},
+				calls,
+			};
+		}
+
+		it("swaps to screenProjection BEFORE drawing a floating child under the default camera (the regression)", () => {
+			// Setup: a floating renderable inside a container, the
+			// default camera as viewport.
+			const c = new Container(0, 0, 800, 600, true);
+			const floatingChild = new Renderable(0, 0, 10, 10);
+			floatingChild.floating = true;
+			c.addChild(floatingChild);
+			const cam = makeFakeCamera({ isDefault: true });
+			const r = makeFakeRenderer();
+
+			c.draw(r, cam);
+
+			// The swap MUST happen — under the default Camera3d this
+			// is the only thing keeping HUD positions from NaN'ing.
+			expect(r.setProjection).toHaveBeenCalledWith(cam.screenProjection);
+		});
+
+		it("restores the camera's drawing projection AFTER a floating child", () => {
+			// After the floating child's postDraw, the projection must
+			// flip back to whatever the camera was drawing with —
+			// `projectionMatrix` for the default camera,
+			// `worldProjection` for non-default cameras.
+			const c = new Container(0, 0, 800, 600, true);
+			const floatingChild = new Renderable(0, 0, 10, 10);
+			floatingChild.floating = true;
+			c.addChild(floatingChild);
+			const cam = makeFakeCamera({ isDefault: true });
+			const r = makeFakeRenderer();
+
+			c.draw(r, cam);
+
+			// On the default-camera path the restore target is
+			// `projectionMatrix`; the swap must appear AFTER the
+			// initial swap-to-screenProjection.
+			const projCalls = r.calls.filter((c) => {
+				return c.op === "setProjection";
+			});
+			expect(projCalls.length).toBeGreaterThanOrEqual(2);
+			expect(projCalls[0].id).toBe("screenProjection");
+			expect(projCalls[projCalls.length - 1].id).toBe("projectionMatrix");
+		});
+
+		it("uses worldProjection (not projectionMatrix) to restore on non-default cameras", () => {
+			// Non-default cameras (split-screen, minimaps) draw the
+			// world through `worldProjection` rather than the base
+			// `projectionMatrix`. The restore after a floating child
+			// has to use the same one.
+			const c = new Container(0, 0, 800, 600, true);
+			const floatingChild = new Renderable(0, 0, 10, 10);
+			floatingChild.floating = true;
+			// Non-default cameras default to NOT showing floating
+			// elements; force visibility so the swap path runs.
+			floatingChild.visibleInAllCameras = true;
+			c.addChild(floatingChild);
+			const cam = makeFakeCamera({ isDefault: false });
+			const r = makeFakeRenderer();
+
+			c.draw(r, cam);
+
+			const projCalls = r.calls.filter((c) => {
+				return c.op === "setProjection";
+			});
+			expect(projCalls[0].id).toBe("screenProjection");
+			expect(projCalls[projCalls.length - 1].id).toBe("worldProjection");
+		});
+
+		it("does NOT touch the projection for non-floating children", () => {
+			// Sanity: regular world-space children must NOT trigger
+			// the screen-projection swap. A regression that always
+			// swapped would invert the camera transform for everything.
+			const c = new Container(0, 0, 800, 600, true);
+			const normalChild = new Renderable(0, 0, 10, 10);
+			c.addChild(normalChild);
+			const cam = makeFakeCamera({ isDefault: true });
+			const r = makeFakeRenderer();
+
+			c.draw(r, cam);
+
+			expect(r.setProjection).not.toHaveBeenCalled();
+		});
+
+		it("save() and restore() stay balanced across floating-child draws", () => {
+			// The projection swap is paired with a renderer.save() /
+			// restore() so the resetTransform() inside the floating
+			// branch doesn't leak into siblings. Verify the bracket
+			// stays balanced (Container's outer save + each Renderable's
+			// preDraw save → so two save/restore pairs per child).
+			const c = new Container(0, 0, 800, 600, true);
+			const a = new Renderable(0, 0, 10, 10);
+			const b = new Renderable(0, 0, 10, 10);
+			a.floating = true;
+			b.floating = true;
+			c.addChild(a);
+			c.addChild(b);
+			const cam = makeFakeCamera({ isDefault: true });
+			const r = makeFakeRenderer();
+
+			c.draw(r, cam);
+
+			// Same count both ways — an imbalance would be a regression
+			// (leaks the projection / transform / scissor / blend stack
+			// state to the next sibling or frame).
+			expect(r.save.mock.calls.length).toBe(r.restore.mock.calls.length);
+			// At least two pairs (one per floating child's outer bracket
+			// in Container.draw).
+			expect(r.save.mock.calls.length).toBeGreaterThanOrEqual(2);
 		});
 	});
 

@@ -32,13 +32,16 @@ export const BlackBerry = /BlackBerry/i.test(ua);
 export const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
 export const ejecta = "ejecta" in globalThis;
 export const isWeixin = /MicroMessenger/i.test(ua);
+// Node.js detection — `process.release.name === "node"` is the
+// official runtime identifier (set by V8 / Node.js itself). The cast
+// is contained in one variable so the rest of the check reads as plain
+// dotted access without repeating `as unknown as ...` three times.
+const _proc = (globalThis as { process?: { release?: { name: string } } })
+	.process;
 export const nodeJS =
-	typeof (globalThis as unknown as { process?: { release?: { name: string } } })
-		.process !== "undefined" &&
-	typeof (globalThis as unknown as { process?: { release?: { name: string } } })
-		.process?.release !== "undefined" &&
-	(globalThis as unknown as { process?: { release?: { name: string } } })
-		.process?.release?.name === "node";
+	typeof _proc !== "undefined" &&
+	typeof _proc.release !== "undefined" &&
+	_proc.release.name === "node";
 export const isMobile =
 	/Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
 export const webApp =

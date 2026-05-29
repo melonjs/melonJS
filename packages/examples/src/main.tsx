@@ -235,11 +235,11 @@ const examples: {
 	},
 	{
 		component: <ExampleAfterBurner />,
-		label: "AfterBurner",
+		label: "AfterBurner Clone",
 		path: "after-burner",
 		sourceDir: "afterBurner",
 		description:
-			"Behind-the-plane arcade shooter using Camera3d perspective — arrows / WASD to fly, space to shoot.",
+			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models — arrows / WASD to fly, space to shoot.",
 	},
 	{
 		component: <ExampleCamera3d />,

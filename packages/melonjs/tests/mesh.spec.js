@@ -1,10 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	boot,
+	Camera3d,
 	Matrix2d,
 	Matrix3d,
+	Mesh,
 	Renderable,
+	Stage,
+	state,
 	Vector2d,
 	Vector3d,
+	video,
 } from "../src/index.js";
 import { normalizeVertices, projectVertices } from "../src/math/vertex.ts";
 
@@ -260,7 +266,7 @@ describe("OBJ Parser", () => {
 		expect(obj.indices.length).toBeGreaterThan(0);
 	});
 
-	// ── multi-material groups (Three.js / glTF "groups" convention) ──────
+	// ── multi-material groups (glTF "groups" convention) ─────────────────
 
 	it("emits a single material-less group for OBJs with no usemtl", async () => {
 		const obj = await parseOBJString(`
@@ -796,5 +802,155 @@ describe("Matrix3d / Matrix2d round-trip", () => {
 		expect(m2.val[4]).toBeCloseTo(3, 5); // scaleY
 		expect(m2.tx).toBeCloseTo(20, 5); // tx = 10 * scaleX
 		expect(m2.ty).toBeCloseTo(60, 5); // ty = 20 * scaleY
+	});
+});
+
+/**
+ * Mesh.draw() picks a projection path based on the active camera:
+ * - Camera2d (or any non-Camera3d) → legacy self-projection via
+ *   `projectionMatrix × currentTransform`.
+ * - Camera3d → world-space output via `_projectVerticesWorld`, with
+ *   a lazy one-time triangle-winding reversal so backface culling
+ *   stays correct under the Y-flip in that path.
+ *
+ * These tests cover the runtime branch + the lazy setup, plus the
+ * vertex math itself (offsets, scale, Y-flip).
+ */
+describe("Mesh × Camera3d world-space path", () => {
+	beforeAll(() => {
+		boot();
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+			cameraClass: Camera3d,
+		});
+		// state.change is async; force a stage swap so game.viewport
+		// becomes the Camera3d the test cares about.
+		const s = new Stage({ cameraClass: Camera3d });
+		state.set(state.DEFAULT, s);
+		state.change(state.DEFAULT, true);
+	});
+
+	afterAll(() => {
+		// reset to default Camera2d so later spec files don't inherit
+		// our Camera3d viewport.
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.AUTO,
+		});
+	});
+
+	// Minimal mesh-shaped object passed to drawMesh — the path we test
+	// only mutates the Mesh itself, so the renderer can be a stub. Mesh
+	// constructor doesn't need a texture for raw-vertex meshes that
+	// route through the white-pixel fallback.
+	const stubRenderer = { drawMesh() {} };
+
+	// 12-vertex / 4-triangle pyramid as a minimal raw-data Mesh. Keeps
+	// the test isolated from the OBJ + MTL loader.
+	function buildPyramidSettings() {
+		return {
+			vertices: new Float32Array([
+				// apex
+				0, 1, 0,
+				// base
+				-1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1,
+			]),
+			uvs: new Float32Array([0.5, 0, 0, 1, 1, 1, 1, 1, 0, 1]),
+			indices: new Uint16Array([
+				0,
+				1,
+				2,
+				0,
+				2,
+				3,
+				0,
+				3,
+				4,
+				0,
+				4,
+				1, // sides
+			]),
+			width: 60,
+			height: 60,
+			cullBackFaces: true,
+		};
+	}
+
+	it("activation under Camera3d marks the mesh for world-space draw", () => {
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		expect(m._useWorldSpace).toBeUndefined();
+		// onActivateEvent fires when the renderable joins the world.
+		// Calling it directly mirrors what addChild does in production.
+		m.onActivateEvent();
+		expect(m._useWorldSpace).toBe(true);
+	});
+
+	it("first draw under Camera3d swaps indices to a winding-reversed copy", () => {
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		m.onActivateEvent();
+		const original = m.indices;
+
+		expect(m._worldSpace).toBeUndefined();
+		m.draw(stubRenderer);
+
+		expect(m._worldSpace).toBe(true);
+		expect(m.indices).not.toBe(original);
+		// every triangle's last two indices should be swapped vs original
+		for (let i = 0; i < original.length; i += 3) {
+			expect(m.indices[i]).toBe(original[i]);
+			expect(m.indices[i + 1]).toBe(original[i + 2]);
+			expect(m.indices[i + 2]).toBe(original[i + 1]);
+		}
+	});
+
+	it("second draw doesn't rebuild the winding-reversed indices", () => {
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		m.onActivateEvent();
+		m.draw(stubRenderer);
+		const swapped = m.indices;
+		m.draw(stubRenderer);
+		// identity-equal — proves _setupWorldSpace ran exactly once
+		expect(m.indices).toBe(swapped);
+	});
+
+	it("world-space output scales by width and translates by (px, py, pz)", () => {
+		// Probe _projectVerticesWorld directly so the test doesn't depend
+		// on normalizeVertices' centering rules — pick an axis-aligned
+		// source where every component is independently verifiable.
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		m.originalVertices = new Float32Array([0.5, 0.3, -0.2]);
+		m.vertices = new Float32Array(3);
+		m.vertexCount = 1;
+		m._projectVerticesWorld(100, 50, 200);
+
+		// X: 0.5 × width(60) + 100 = 130
+		// Y: −(0.3) × 60 + 50    = −18 + 50 = 32   (Y-flip is the engine's
+		//                                            Y-up→Y-down convention)
+		// Z: (−0.2) × 60 + 200   = −12 + 200 = 188
+		expect(m.vertices[0]).toBeCloseTo(130, 4);
+		expect(m.vertices[1]).toBeCloseTo(32, 4);
+		expect(m.vertices[2]).toBeCloseTo(188, 4);
+	});
+
+	it("world-space output Y-flips OBJ Y-up to engine Y-down", () => {
+		const m = new Mesh(0, 0, buildPyramidSettings());
+		m.originalVertices = new Float32Array([
+			0,
+			0.4,
+			0, // +Y_obj should land at -Y_world
+			0,
+			-0.4,
+			0, // -Y_obj should land at +Y_world
+		]);
+		m.vertices = new Float32Array(6);
+		m.vertexCount = 2;
+		m._projectVerticesWorld(0, 0, 0);
+
+		// width = 60 from buildPyramidSettings
+		expect(m.vertices[1]).toBeCloseTo(-24, 4);
+		expect(m.vertices[4]).toBeCloseTo(24, 4);
 	});
 });

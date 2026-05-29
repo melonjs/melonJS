@@ -1242,9 +1242,15 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(this.customShader);
 		}
 
-		// enable depth testing for 3D mesh rendering
+		// enable depth testing for 3D mesh rendering. LEQUAL (not LESS) so
+		// that coplanar triangles obey the OBJ's draw order — Kenney-style
+		// low-poly assets layer feature primitives (eye socket, pupil,
+		// nose) coincident with the underlying head/body face, listing
+		// the layer triangles AFTER the base. With LESS, later coplanar
+		// fragments lose the z-test and the eye sockets disappear into
+		// the head; with LEQUAL they win, matching the author's intent.
 		gl.enable(gl.DEPTH_TEST);
-		gl.depthFunc(gl.LESS);
+		gl.depthFunc(gl.LEQUAL);
 		gl.depthMask(true);
 		gl.clearDepth(1.0);
 		gl.clear(gl.DEPTH_BUFFER_BIT);
