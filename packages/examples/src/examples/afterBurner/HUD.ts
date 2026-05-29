@@ -18,6 +18,7 @@ import {
 	type Application,
 	type CanvasRenderer,
 	Renderable,
+	save,
 	Text,
 	type WebGLRenderer,
 } from "melonjs";
@@ -101,29 +102,11 @@ class DeathFlash extends Renderable {
 	}
 }
 
-// localStorage key for the persisted high score. Picked specific
-// enough that other examples on the same origin won't collide.
-const HISCORE_KEY = "melonjs.afterBurner.hiscore";
-
-function loadHiScore(): number {
-	try {
-		const raw = localStorage.getItem(HISCORE_KEY);
-		const n = raw === null ? 0 : Number.parseInt(raw, 10);
-		return Number.isFinite(n) && n >= 0 ? n : 0;
-	} catch {
-		// localStorage may be disabled (private mode, sandboxed
-		// iframe) — fall back to a per-session score.
-		return 0;
-	}
-}
-
-function saveHiScore(value: number): void {
-	try {
-		localStorage.setItem(HISCORE_KEY, String(value));
-	} catch {
-		/* same as above — silently fail */
-	}
-}
+// Persistent HiScore key under `me.save`. The engine wires up the
+// localStorage round-trip + private-mode fallback for us; we just
+// declare the key + default once at HUD construction and read/write
+// `save[HISCORE_KEY]` as a plain property afterward.
+const HISCORE_KEY = "afterBurnerHiScore";
 
 export class HUD {
 	private scoreText: Text;
@@ -135,7 +118,11 @@ export class HUD {
 	private hiScore: number;
 
 	constructor(app: Application) {
-		this.hiScore = loadHiScore();
+		// Register the HiScore key with a default of 0. `save.add` is
+		// idempotent — it loads the persisted value on second-and-later
+		// game opens, so this also doubles as the "load on boot" step.
+		save.add({ [HISCORE_KEY]: 0 });
+		this.hiScore = (save[HISCORE_KEY] as number) ?? 0;
 
 		this.scoreText = this._makeText(app, 16, 24, {
 			size: 32,
@@ -248,7 +235,9 @@ export class HUD {
 			this.hiScoreText.setText(
 				`HI  ${this.hiScore.toString().padStart(6, "0")}`,
 			);
-			saveHiScore(this.hiScore);
+			// Assigning through `save` triggers the engine's
+			// localStorage write — no manual try/catch needed.
+			save[HISCORE_KEY] = score;
 		}
 	}
 

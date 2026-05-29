@@ -19,6 +19,7 @@ import {
 	type Camera3d,
 	input,
 	ParticleEmitter,
+	pool,
 	Renderable,
 	Sprite,
 	state,
@@ -88,6 +89,61 @@ import type {
 	EnemyBulletMover,
 	EnemyMover,
 } from "./types";
+
+// ─── Pool keys for `me.pool` ───────────────────────────────────────────
+// One-time registered subclasses of Sprite, built on the fly inside the
+// `GameController` constructor (the texture isn't available before that).
+// `pool.pull(name, x, y)` reuses an existing instance (calling its
+// `onResetEvent`) before falling back to construction; `world.removeChild`
+// automatically returns the sprite to the pool, no manual release call.
+const POOL_PLAYER_BULLET = "AfterBurnerPlayerBullet";
+const POOL_ENEMY_BULLET = "AfterBurnerEnemyBullet";
+const POOL_CONTRAIL_NODE = "AfterBurnerContrailNode";
+
+/**
+ * Build a `Sprite` subclass with the given texture + RGB tint pre-applied.
+ * Both the constructor and `onResetEvent` take `(x, y)`, so the pool can
+ * call either on `pull(name, x, y)` without the call site caring whether
+ * this is a fresh instance or a recycled one.
+ */
+function buildBulletClass(
+	texture: HTMLCanvasElement,
+	tint: readonly [number, number, number],
+) {
+	return class BulletSprite extends Sprite {
+		constructor(x: number, y: number) {
+			super(x, y, { image: texture });
+			this.blendMode = "additive";
+			this.tint.setColor(...tint);
+		}
+		onResetEvent(x: number, y: number): void {
+			this.pos.x = x;
+			this.pos.y = y;
+			this.tint.setColor(...tint);
+		}
+	};
+}
+
+/**
+ * Same idea for the cool-white contrail puffs — but the lifecycle ages
+ * scale + alpha, so `onResetEvent` has to put both BACK to their
+ * "freshly spawned" values when a recycled sprite gets reused.
+ */
+function buildContrailClass(texture: HTMLCanvasElement) {
+	return class ContrailSprite extends Sprite {
+		constructor(x: number, y: number) {
+			super(x, y, { image: texture });
+			this.blendMode = "additive";
+			this.tint.parseCSS("#dfe8ff");
+		}
+		onResetEvent(x: number, y: number): void {
+			this.pos.x = x;
+			this.pos.y = y;
+			this.setOpacity(1);
+			this.tint.parseCSS("#dfe8ff");
+		}
+	};
+}
 
 export class GameController extends Renderable {
 	app: Application;
@@ -202,6 +258,27 @@ export class GameController extends Renderable {
 		this.contrailTexture = makeContrailPuffTexture();
 		this.muzzleEmitter = this._makeMuzzleEmitter();
 
+		// Register the three Sprite subclasses with `me.pool` so
+		// `pool.pull(name, x, y)` recycles instances and
+		// `world.removeChild(sprite)` auto-returns them to the pool.
+		// Re-registering on every example mount is fine — `register`
+		// simply overwrites the entry.
+		pool.register(
+			POOL_PLAYER_BULLET,
+			buildBulletClass(this.bulletTexture, TINT_BULLET_RGB),
+			true,
+		);
+		pool.register(
+			POOL_ENEMY_BULLET,
+			buildBulletClass(this.bulletTexture, TINT_ENEMY_BULLET_RGB),
+			true,
+		);
+		pool.register(
+			POOL_CONTRAIL_NODE,
+			buildContrailClass(this.contrailTexture),
+			true,
+		);
+
 		this.hud = new HUD(app);
 		this.updateCamera();
 	}
@@ -249,9 +326,7 @@ export class GameController extends Renderable {
 		const oy = CONTRAIL_OFFSET_Y;
 		const sx = this.player.pos.x + ox * cosR - oy * sinR;
 		const sy = this.player.pos.y + ox * sinR + oy * cosR;
-		const sprite = new Sprite(sx, sy, { image: this.contrailTexture });
-		sprite.blendMode = "additive";
-		sprite.tint.parseCSS("#dfe8ff");
+		const sprite = pool.pull(POOL_CONTRAIL_NODE, sx, sy) as Sprite;
 		// Spawn at the plane's own depth — the trail then advances
 		// TOWARD the camera each frame, so node 0 is co-planar with
 		// the plane and node N is in front of it (closer to camera =
@@ -328,13 +403,15 @@ export class GameController extends Renderable {
 	}
 
 	spawnBullet(): void {
-		const b = new Sprite(this.player.pos.x, this.player.pos.y, {
-			image: this.bulletTexture,
-		});
-		// additive blend so overlapping bolts blow out to bright white,
-		// reads like a tracer hose against the dusk sky
-		b.blendMode = "additive";
-		b.tint.setColor(...TINT_BULLET_RGB);
+		// `pool.pull` reuses an existing sprite (running its
+		// `onResetEvent`) before allocating a new one — the additive
+		// blend mode + gold tint are pre-baked into the registered
+		// subclass.
+		const b = pool.pull(
+			POOL_PLAYER_BULLET,
+			this.player.pos.x,
+			this.player.pos.y,
+		) as Sprite;
 		// `addChild(child, z)` atomically sets the depth at insertion —
 		// no window where the world's sort key is stale.
 		this.app.world.addChild(b, PLAYER_Z + 40);
@@ -451,9 +528,7 @@ export class GameController extends Renderable {
 		const dz = this.player.depth - ez;
 		const len = Math.hypot(dx, dy, dz) || 1;
 		const inv = ENEMY_BULLET_SPEED / len;
-		const b = new Sprite(ex, ey, { image: this.bulletTexture });
-		b.blendMode = "additive";
-		b.tint.setColor(...TINT_ENEMY_BULLET_RGB);
+		const b = pool.pull(POOL_ENEMY_BULLET, ex, ey) as Sprite;
 		this.app.world.addChild(b, ez);
 		this.enemyBullets.push({
 			sprite: b,
