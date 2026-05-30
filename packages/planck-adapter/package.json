@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/planck-adapter",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "melonJS physics adapter for planck.js (Box2D)",
 	"homepage": "https://www.npmjs.com/package/@melonjs/planck-adapter",
 	"type": "module",
@@ -46,7 +46,7 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=19.5.0"
+		"melonjs": ">=19.7.0"
 	},
 	"dependencies": {
 		"planck": "^1.5.0"

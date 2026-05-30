@@ -7,8 +7,10 @@ import {
 	on,
 	WORLD_STEP,
 } from "../system/event.ts";
+import { AABB3d } from "./broadphase/aabb3d.ts";
+import Octree from "./broadphase/octree.ts";
+import QuadTree from "./broadphase/quadtree.ts";
 import BuiltinAdapter from "./builtin/builtin-adapter.ts";
-import QuadTree from "./builtin/quadtree.js";
 import { collision } from "./collision.js";
 
 /**
@@ -136,24 +138,92 @@ export default class World extends Container {
 		this.adapter.init?.(this);
 
 		/**
-		 * the instance of the game world quadtree used for broadphase (used by the builtin physic and pointer event implementation)
-		 * @type {QuadTree}
+		 * Spatial broadphase used by built-in physics and pointer event
+		 * picking. The concrete class depends on {@link Container#sortOn}:
+		 * under `"depth"` (the value `Camera3d.defaultSortOn` sets on stage
+		 * reset), this is an {@link Octree}; under any 2D sortOn it's a
+		 * {@link QuadTree}. The choice is reactive — the `sortOn` setter
+		 * swaps the broadphase if a 2D↔3D boundary crossing occurs, so
+		 * stage transitions between Camera2d and Camera3d stages are
+		 * handled transparently.
+		 * @type {QuadTree | Octree}
 		 */
-		this.broadphase = new QuadTree(
-			this,
-			this.getBounds().clone(),
-			collision.maxChildren,
-			collision.maxDepth,
-		);
+		this.broadphase = this.#makeBroadphase();
 
 		// reset the world container on the game reset signal
 		on(GAME_RESET, this.reset, this);
 
 		// update the broadband world bounds if a new level is loaded
 		on(LEVEL_LOADED, () => {
-			// reset the quadtree
-			this.broadphase.clear(this.getBounds());
+			// reset the broadphase (impl-agnostic — both classes accept
+			// the matching bounds shape here; the setter would have
+			// already swapped impl if sortOn flipped).
+			this.broadphase.clear(this.#broadphaseBounds());
 		});
+	}
+
+	/**
+	 * Override the inherited `Container.sortOn` setter so the
+	 * broadphase swaps to match when crossing a 2D↔3D boundary. See
+	 * the `broadphase` JSDoc for why the swap is reactive rather than
+	 * Stage-driven. The 2D/3D classification key is `"depth"` — every
+	 * other sortOn value lives in the 2D regime.
+	 * @returns {"x"|"y"|"z"|"depth"}
+	 */
+	get sortOn() {
+		return this._sortOn;
+	}
+	/**
+	 * @param {"x"|"y"|"z"|"depth"} value
+	 */
+	set sortOn(value) {
+		const was3D = this._sortOn === "depth";
+		// delegate to Container's setter for validation + comparator
+		super.sortOn = value;
+		const now3D = this._sortOn === "depth";
+		if (was3D !== now3D) {
+			this.broadphase = this.#makeBroadphase();
+		}
+	}
+
+	#makeBroadphase() {
+		return this._sortOn === "depth"
+			? new Octree(
+					this,
+					this.#broadphaseBounds(),
+					collision.maxChildren,
+					collision.maxDepth,
+				)
+			: new QuadTree(
+					this,
+					/** @type {import("./bounds.ts").Bounds} */ (
+						this.#broadphaseBounds()
+					),
+					collision.maxChildren,
+					collision.maxDepth,
+				);
+	}
+
+	#broadphaseBounds() {
+		if (this._sortOn === "depth") {
+			// Camera3d games conventionally center the play area on the
+			// world origin (items at e.g. x ∈ [-PLAY_BOUND_X, PLAY_BOUND_X])
+			// — `world.getBounds()` returns the 2D viewport rect (0..w,
+			// 0..h) which DOESN'T contain those items. Using viewport
+			// bounds as the octree root would cause negative-coord items
+			// to be misclassified into octants whose AABBs don't contain
+			// them, breaking `querySphere`'s spatial pruning.
+			//
+			// Use a generous origin-centred box instead. ±10000 covers
+			// arcade-3D scales (AfterBurner ≈ ±350 xy, ±1000 z); items
+			// outside still work — `getIndex` keeps them at root.objects
+			// so retrieve / queryAABB / querySphere walk them via the
+			// root-level pass, just without the spatial-partition win.
+			const aabb = new AABB3d();
+			aabb.setMinMax(-10000, -10000, -10000, 10000, 10000, 10000);
+			return aabb;
+		}
+		return this.getBounds().clone();
 	}
 
 	/**

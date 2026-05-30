@@ -1,6 +1,7 @@
 import { TupleToUnion } from "type-fest";
 import { Point } from "../geometries/point.ts";
 import { createPool } from "../system/pool.ts";
+import { damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d";
 import { Vector3d } from "./vector3d";
 
@@ -460,15 +461,39 @@ export class ObservableVector3d {
 
 	/**
 	 * Linearly interpolate between this vector and the given one.
-	 * @param v other vector
-	 * @param alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+	 * Frame-rate dependent at a fixed alpha — for smooth tracking
+	 * use {@link ObservableVector3d.damp} instead.
+	 * @param v - other vector
+	 * @param alpha - distance along the line (alpha = 0 → this vector, alpha = 1 → `v`)
 	 * @returns Reference to this object for method chaining
 	 */
 	lerp(v: Vector3d | ObservableVector3d, alpha: number) {
 		this.set(
-			this.x + (v.x - this.x) * alpha,
-			this.y + (v.y - this.y) * alpha,
-			this.z + (v.z - this.z) * alpha,
+			lerp(this.x, v.x, alpha),
+			lerp(this.y, v.y, alpha),
+			lerp(this.z, v.z, alpha),
+		);
+		return this;
+	}
+
+	/**
+	 * Frame-rate independent exponential damping toward `target`.
+	 * Per-component wrapper around {@link damp} that triggers the
+	 * change-callback exactly once via the underlying {@link set}.
+	 * @param target - vector to approach (Vector2d treats `z` as 0)
+	 * @param lambda - decay rate in `1/seconds` (higher = snappier)
+	 * @param dt - delta time in **seconds**
+	 * @returns Reference to this object for method chaining
+	 */
+	damp(
+		target: Vector2d | Vector3d | ObservableVector3d,
+		lambda: number,
+		dt: number,
+	) {
+		this.set(
+			damp(this.x, target.x, lambda, dt),
+			damp(this.y, target.y, lambda, dt),
+			damp(this.z, "z" in target ? target.z : 0, lambda, dt),
 		);
 		return this;
 	}

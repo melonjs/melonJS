@@ -527,7 +527,7 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 		it("Renderable.onCollision is invoked when two bodies collide", () => {
 			const events: { a: Renderable; b: Renderable }[] = [];
 			class Reporter extends Renderable {
-				onCollision(_response: unknown, other: Renderable) {
+				override onCollision(_response: unknown, other: Renderable) {
 					events.push({ a: this, b: other });
 					return false;
 				}
@@ -559,7 +559,7 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 			let modernAFires = 0;
 			let legacyBFires = 0;
 			class WithBoth extends Renderable {
-				onCollision() {
+				override onCollision() {
 					legacyAFires++;
 					return true;
 				}
@@ -568,7 +568,7 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 				}
 			}
 			class LegacyOnly extends Renderable {
-				onCollision() {
+				override onCollision() {
 					legacyBFires++;
 					return true;
 				}
@@ -603,7 +603,7 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 		it("supersedes is per-side, not per-pair", () => {
 			const fires: string[] = [];
 			class A extends Renderable {
-				onCollision() {
+				override onCollision() {
 					fires.push("A.legacy");
 					return true;
 				}
@@ -612,7 +612,7 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 				}
 			}
 			class B extends Renderable {
-				onCollision() {
+				override onCollision() {
 					fires.push("B.legacy");
 					return true;
 				}

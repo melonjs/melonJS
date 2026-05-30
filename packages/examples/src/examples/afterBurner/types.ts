@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
-import type { Camera3d, Mesh, Sprite } from "melonjs";
+import type { Camera3d, Mesh, Sprite, Tween } from "melonjs";
 
 export interface BulletMover {
 	sprite: Sprite;
@@ -19,25 +19,16 @@ export interface EnemyMover {
 	vz: number;
 	/**
 	 * Initial facing rotation (radians around Y), captured at spawn so
-	 * the per-frame roll animation can rebuild `currentTransform` from
-	 * a clean baseline each tick instead of accumulating drift.
+	 * the per-roll Tween's onUpdate can rebuild `currentTransform`
+	 * from a clean baseline each frame instead of accumulating drift.
 	 */
 	facingY: number;
 	/**
-	 * Milliseconds remaining in the current barrel-roll animation;
-	 * counts down from `rollDurationMs` to 0. `0` means the enemy isn't
-	 * rolling. When the timer reaches 0 we re-arm `nextRollMs`.
+	 * Active barrel-roll Tween. Kept on the mover so `removeEnemy`
+	 * can `.stop()` it — without that the Tween would keep firing
+	 * its `onUpdate` against a destroyed mesh.
 	 */
-	rollTimeMs: number;
-	/** Total duration of the in-flight roll (snapshot of when it began). */
-	rollDurationMs: number;
-	/**
-	 * Time-until-next-roll countdown. Decrements each frame; when it
-	 * hits 0 we kick off a new roll and reset both this and the
-	 * `rollTimeMs` window. Initialized to a randomized delay so the
-	 * squadron doesn't roll in lockstep.
-	 */
-	nextRollMs: number;
+	rollTween: Tween;
 	/**
 	 * `true` if this enemy ever shoots — rolled at spawn from
 	 * `ENEMY_FIRE_CHANCE` so each fly-by is a clear "this one's a

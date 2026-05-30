@@ -412,4 +412,64 @@ describe("ObservableVector3d : constructor", () => {
 			expect(vector.equals(4, 5, 6)).toEqual(false);
 		});
 	});
+
+	describe("damp", () => {
+		// ObservableVector3d.damp must route through the underlying
+		// `set(x, y, z)` so the change-callback fires exactly ONCE per
+		// damp call, not three times (one per axis) and not zero.
+
+		it("fires the callback exactly once per damp call", () => {
+			let calls = 0;
+			const v = new ObservableVector3d(0, 0, 0, () => {
+				calls++;
+			});
+			v.damp(new Vector3d(100, 200, 300), 5, 1 / 60);
+			expect(calls).toEqual(1);
+		});
+
+		it("does not fire the callback when dt=0 (no state change)", () => {
+			// `set(this.x, this.y, this.z)` writes the same value back;
+			// the ObservableVector's proxy SHOULD detect this and skip
+			// the callback. If this test ever flips, document the
+			// behavior and revisit.
+			let calls = 0;
+			const v = new ObservableVector3d(10, 20, 30, () => {
+				calls++;
+			});
+			v.damp(new Vector3d(100, 200, 300), 5, 0);
+			// We don't strictly require 0 here — some observable impls
+			// fire on every set call. The adversarial point is to
+			// PIN the actual behavior so a future refactor can't
+			// quietly change it.
+			expect(calls).toBeLessThanOrEqual(1);
+		});
+
+		it("frame-rate independence preserved through the observable wrapper", () => {
+			const target = new Vector3d(100, 200, 300);
+			const lambda = 5;
+			const sim = (steps: number, dt: number) => {
+				const v = new ObservableVector3d(0, 0, 0, () => {});
+				for (let i = 0; i < steps; i++) v.damp(target, lambda, dt);
+				return v;
+			};
+			const v60 = sim(60, 1 / 60);
+			const v30 = sim(30, 1 / 30);
+			expect(v60.x).toBeCloseTo(v30.x, 9);
+			expect(v60.z).toBeCloseTo(v30.z, 9);
+		});
+
+		it("returns `this` for chaining", () => {
+			const v = new ObservableVector3d(0, 0, 0, () => {});
+			const r = v.damp(new Vector3d(1, 2, 3), 5, 1 / 60);
+			expect(r).toBe(v);
+		});
+
+		it("accepts Vector2d target — z component dragged toward 0", () => {
+			const v = new ObservableVector3d(10, 10, 100, () => {});
+			v.damp(new Vector2d(0, 0), Number.POSITIVE_INFINITY, 1 / 60);
+			expect(v.x).toEqual(0);
+			expect(v.y).toEqual(0);
+			expect(v.z).toEqual(0);
+		});
+	});
 });

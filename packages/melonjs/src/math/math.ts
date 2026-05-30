@@ -189,6 +189,61 @@ export function pow(n: number) {
 }
 
 /**
+ * Linear interpolation between two scalar values.
+ * `t = 0` returns `a`, `t = 1` returns `b`. Values of `t` outside
+ * `[0, 1]` extrapolate — the result is NOT clamped.
+ *
+ * **Don't use this for smooth follow at a fixed alpha per frame.**
+ * `x = lerp(x, target, 0.1)` per frame converges 2× faster at 60 fps
+ * than at 30 fps — the visual feel changes with the frame rate. Use
+ * {@link damp} instead for frame-rate-independent smoothing.
+ * @param a - the value at `t = 0`
+ * @param b - the value at `t = 1`
+ * @param t - the interpolation parameter (typically `0..1`, but not clamped)
+ * @returns `a + (b - a) * t`
+ * @example
+ * math.lerp(0, 10, 0.5);  // 5
+ * math.lerp(0, 10, 1.5);  // 15 (extrapolation past `b`)
+ */
+export function lerp(a: number, b: number, t: number): number {
+	return a + (b - a) * t;
+}
+
+/**
+ * Frame-rate-independent exponential damping toward a target.
+ *
+ * After total elapsed time `t_total` (in seconds), the result
+ * satisfies
+ * `result = current + (target - current) * (1 - exp(-lambda * t_total))`
+ * regardless of how `t_total` was split across `dt` calls. Same
+ * algorithm as `THREE.MathUtils.damp` in Three.js.
+ *
+ * `lambda` is the decay rate in `1/seconds` — higher = snappier
+ * convergence. A rule of thumb: `lambda = 5` reaches ≈ 99% of the
+ * target in one second; `lambda = 10` reaches ≈ 99% in ~0.5 s.
+ *
+ * Use this — NOT `lerp(current, target, alpha)` per frame — whenever
+ * the smoothing should feel the same regardless of frame rate
+ * (camera follow, value tracking, input smoothing).
+ * @param current - the current value (carries forward across frames)
+ * @param target - the value to approach
+ * @param lambda - decay rate in 1/seconds. Higher = snappier.
+ * @param dt - delta time in **seconds** (note: melonJS engine `dt` is in ms; divide by 1000)
+ * @returns the new value, one step closer to `target`
+ * @example
+ * // frame-rate independent smooth follow:
+ * cameraX = math.damp(cameraX, target.x, 5, dt / 1000);
+ */
+export function damp(
+	current: number,
+	target: number,
+	lambda: number,
+	dt: number,
+): number {
+	return current + (target - current) * (1 - Math.exp(-lambda * dt));
+}
+
+/**
  * Linearly interpolate a value from an array at the given position.
  * The array is treated as evenly spaced samples along the 0–1 range.
  * @param values - array of values to interpolate between

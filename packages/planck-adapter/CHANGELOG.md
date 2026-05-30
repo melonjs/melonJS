@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 - _unreleased_
+
+### Changed
+- **Minimum melonJS bumped to 19.7.0.** The `PhysicsAdapter` interface gained the required `raycasts3d: boolean` capability and the optional `raycast3d?` / `querySphere?` methods in 19.7 alongside `Camera3d` + the `Octree` broadphase. `@melonjs/planck-adapter` declares `raycasts3d: false` and omits both 3D methods — planck (Box2D) is 2D-only, so any `world.raycast3d` / `world.adapter.querySphere?(...)` call under this adapter falls through to `null` / `undefined` at the call site.
+
 ## 1.0.0 - _2026-05-22_
 
 Initial release of `@melonjs/planck-adapter` — a [planck.js](https://piqnt.com/planck.js/) (Box2D 2.3.0 port) physics adapter for melonJS.

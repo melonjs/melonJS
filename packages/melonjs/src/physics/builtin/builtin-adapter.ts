@@ -1,5 +1,7 @@
 import type { Rect } from "../../geometries/rectangle.ts";
+import { Sphere } from "../../geometries/sphere.ts";
 import { Vector2d } from "../../math/vector2d.ts";
+import { Vector3d } from "../../math/vector3d.ts";
 import type Renderable from "../../renderable/renderable.js";
 import state from "../../state/state.ts";
 import type {
@@ -9,8 +11,10 @@ import type {
 	BodyShape,
 	PhysicsAdapter,
 	RaycastHit,
+	RaycastHit3d,
 } from "../adapter.ts";
 import type { Bounds } from "../bounds.ts";
+import type Octree from "../broadphase/octree.ts";
 import type World from "../world.js";
 import Body from "./body.js";
 import Detector from "./detector.js";
@@ -44,6 +48,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		continuousCollisionDetection: false,
 		sleepingBodies: false,
 		raycasts: true,
+		raycasts3d: true,
 		velocityLimit: true,
 		isGrounded: true,
 	};
@@ -389,6 +394,166 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// at that entry; `fraction` is `0..1` along the ray.
 		const hits = raycastQuery(this.world, from.x, from.y, to.x, to.y);
 		return hits[0] ?? null;
+	}
+
+	raycast3d(from: Vector3d, to: Vector3d): RaycastHit3d | null {
+		// Available only when the broadphase is an Octree (i.e. the
+		// active camera's sortOn is "depth"). Under a 2D sortOn the
+		// world's broadphase is a QuadTree and there's no z partition
+		// to walk, so we return null. User code can guard via
+		// `world.adapter.capabilities.raycasts3d` AND
+		// `world.sortOn === "depth"` to skip a no-op call.
+		if (this.world.sortOn !== "depth") {
+			return null;
+		}
+		const octree = this.world.broadphase as Octree;
+
+		const dx = to.x - from.x;
+		const dy = to.y - from.y;
+		const dz = to.z - from.z;
+
+		// Broadphase walk: only visit octants the ray segment
+		// (`from` → `to`, `t ∈ [0, 1]`) actually crosses, via slab
+		// AABB tests at each node. Strictly tighter candidate set
+		// than enclosing the segment in a single AABB — saves the
+		// per-candidate narrow-phase cost on long rays whose
+		// segment-AABB would cover most of the scene.
+		const candidates: Renderable[] = [];
+		octree.queryRay(from.x, from.y, from.z, dx, dy, dz, 1, candidates);
+
+		let bestFraction = Number.POSITIVE_INFINITY;
+		let bestRenderable: Renderable | null = null;
+		let bestEntryT = 0;
+		let bestCx = 0;
+		let bestCy = 0;
+		let bestCz = 0;
+
+		for (let i = 0, len = candidates.length; i < len; i++) {
+			const r = candidates[i];
+			if (typeof r.getAbsolutePosition !== "function") continue;
+			const center = r.getAbsolutePosition();
+			const cx = center.x;
+			const cy = center.y;
+			// `getAbsolutePosition()` returns Vector3d; the engine's
+			// stale .js typings expose Vector2d as the union member,
+			// so `.z` may not be visible to TS even though it's
+			// always present at runtime.
+			const cz = (center as { z?: number }).z ?? 0;
+			// bounding-sphere radius = bounds half-diagonal (matches
+			// `Camera3d.isVisible`'s circumradius convention).
+			const bounds = r.getBounds();
+			const w = bounds.width;
+			const h = bounds.height;
+			const radius = Math.sqrt(w * w + h * h) * 0.5;
+			// Ray–sphere intersection in parametric form: solve
+			//   |from + t·(to − from) − center|² = r²
+			// for t ∈ [0, 1]. Take the smaller root (entry).
+			const ox = from.x - cx;
+			const oy = from.y - cy;
+			const oz = from.z - cz;
+			const a = dx * dx + dy * dy + dz * dz;
+			if (a === 0) continue;
+			const b = 2 * (ox * dx + oy * dy + oz * dz);
+			const c = ox * ox + oy * oy + oz * oz - radius * radius;
+			const disc = b * b - 4 * a * c;
+			if (disc < 0) continue;
+			const sqrtDisc = Math.sqrt(disc);
+			const t0 = (-b - sqrtDisc) / (2 * a);
+			const t1 = (-b + sqrtDisc) / (2 * a);
+			// Hit table (t0 < t1 always when the ray crosses the
+			// sphere):
+			//   t0 ∈ [0, 1]            — segment enters in-range; t=t0
+			//   t0 < 0 ≤ t1            — `from` is inside the sphere; t=0
+			//   t0 < 0 and t1 < 0      — sphere behind `from`; miss
+			//   t0 > 1                 — sphere past `to`; miss
+			// The `t1 ≥ 0` guard on the inside-sphere branch is
+			// independent of whether `t1` is ≤ 1, because a sphere
+			// that fully encloses the segment (t0 < 0, t1 > 1)
+			// still counts as a t=0 hit at the ray origin.
+			let t: number;
+			if (t0 >= 0 && t0 <= 1) {
+				t = t0;
+			} else if (t0 < 0 && t1 >= 0) {
+				t = 0;
+			} else {
+				continue;
+			}
+			if (t < bestFraction) {
+				bestFraction = t;
+				bestRenderable = r;
+				bestEntryT = t;
+				bestCx = cx;
+				bestCy = cy;
+				bestCz = cz;
+			}
+		}
+
+		if (bestRenderable === null) {
+			return null;
+		}
+
+		const pointX = from.x + dx * bestEntryT;
+		const pointY = from.y + dy * bestEntryT;
+		const pointZ = from.z + dz * bestEntryT;
+		const nx = pointX - bestCx;
+		const ny = pointY - bestCy;
+		const nz = pointZ - bestCz;
+		const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+
+		return {
+			renderable: bestRenderable,
+			point: new Vector3d(pointX, pointY, pointZ),
+			normal: new Vector3d(nx / nLen, ny / nLen, nz / nLen),
+			fraction: bestFraction,
+		};
+	}
+
+	querySphere(center: Vector3d, radius: number): Renderable[];
+	querySphere(sphere: Sphere): Renderable[];
+	querySphere(
+		centerOrSphere: Vector3d | Sphere,
+		radius?: number,
+	): Renderable[] {
+		// Active only under a 3D broadphase. Return [] for the 2D case
+		// so user code can call this unconditionally without a
+		// `sortOn === "depth"` guard sprinkled at every call site.
+		const result: Renderable[] = [];
+		if (this.world.sortOn !== "depth") {
+			return result;
+		}
+		// Unpack the two call shapes. We resolve to the loose (cx,
+		// cy, cz, r) form once, then run the single shared narrow
+		// phase below — no duplication between the Vector3d and
+		// Sphere paths.
+		const isSphere = centerOrSphere instanceof Sphere;
+		const cx = isSphere ? centerOrSphere.pos.x : centerOrSphere.x;
+		const cy = isSphere ? centerOrSphere.pos.y : centerOrSphere.y;
+		const cz = isSphere ? centerOrSphere.pos.z : centerOrSphere.z;
+		const r = isSphere ? centerOrSphere.radius : radius!;
+		const octree = this.world.broadphase as Octree;
+		// Broadphase walk: octree returns candidates whose octant the
+		// sphere overlaps. Then narrow-phase by actual centre distance
+		// so callers don't have to repeat the test (matches how
+		// `queryAABB` does the bounds-overlap filter at this level).
+		octree.querySphere(cx, cy, cz, r, result);
+		const r2 = r * r;
+		let writeIdx = 0;
+		for (let i = 0, len = result.length; i < len; i++) {
+			const item = result[i];
+			if (typeof item.getAbsolutePosition !== "function") continue;
+			const p = item.getAbsolutePosition();
+			const dx = p.x - cx;
+			const dy = p.y - cy;
+			// `getAbsolutePosition()` returns Vector3d; legacy .js
+			// typings expose `Vector2d | Vector3d` — `.z` is always
+			// present at runtime under Camera3d.
+			const dz = ((p as { z?: number }).z ?? 0) - cz;
+			if (dx * dx + dy * dy + dz * dz <= r2) {
+				result[writeIdx++] = item;
+			}
+		}
+		result.length = writeIdx;
+		return result;
 	}
 
 	queryAABB(rect: Rect): Renderable[] {

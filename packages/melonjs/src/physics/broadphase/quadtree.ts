@@ -1,22 +1,61 @@
 import { Vector2d } from "../../math/vector2d.ts";
+import type Container from "../../renderable/container.js";
+import type { Bounds } from "../bounds.ts";
+import type World from "../world.js";
 
-/**
- * @import World from "../world.js";
- * @import Container from "../../renderable/container.js";
- * @import {Bounds} from "../bounds.ts";
- */
+// Moved from `physics/builtin/quadtree.js` in 19.7.0 alongside the
+// addition of `Octree`. Lives next to `Octree` and `AABB3d` under
+// `physics/broadphase/` because none of the three are built-in-physics
+// specific — pointer-event picking and any third-party adapter that
+// reads `world.broadphase` use the same surface.
 
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
  * https://github.com/timohausmann/quadtree-js/
- **/
+ */
+
+/**
+ * Minimal axis-aligned rectangle shape consumed by `QuadTree` — the
+ * full {@link Bounds} class satisfies it structurally, so do the
+ * `{ left, top, width, height }` POJOs `split` allocates for
+ * subnodes. Kept as an exported interface so any subclass / adapter
+ * that constructs its own root bounds doesn't have to import
+ * `Bounds`.
+ */
+export interface QuadRect {
+	left: number;
+	top: number;
+	width: number;
+	height: number;
+}
+
+/**
+ * Structural shape for an item inserted into the `QuadTree`. Every
+ * Renderable satisfies it; `getBounds()` is the only required
+ * member. `isFloating` triggers the viewport-localToWorld coord
+ * remap; `isKinematic` / `name` / `addChild` are consulted only by
+ * `insertContainer` / `removeContainer` when walking a subtree.
+ */
+export interface QuadTreeItem {
+	getBounds(): QuadRect;
+	isFloating?: boolean;
+	isKinematic?: boolean;
+	name?: string;
+}
+
+/**
+ * Optional comparator passed to {@link QuadTree.retrieve} — invoked
+ * once on the assembled candidate array, only when `retrieve` was
+ * called in root mode (no caller-supplied `result`).
+ */
+export type QuadTreeSortFn = (a: QuadTreeItem, b: QuadTreeItem) => number;
 
 /**
  * a pool of `QuadTree` objects
  * @ignore
  */
-const QT_ARRAY = [];
+const QT_ARRAY: QuadTree[] = [];
 
 /**
  * will pop a quadtree object from the array
@@ -24,14 +63,14 @@ const QT_ARRAY = [];
  * @ignore
  */
 function QT_ARRAY_POP(
-	world,
-	bounds,
+	world: World,
+	bounds: QuadRect,
 	max_objects = 4,
 	max_levels = 4,
 	level = 0,
-) {
+): QuadTree {
 	if (QT_ARRAY.length > 0) {
-		const _qt = QT_ARRAY.pop();
+		const _qt = QT_ARRAY.pop()!;
 		_qt.world = world;
 		_qt.bounds = bounds;
 		_qt.max_objects = max_objects;
@@ -47,7 +86,7 @@ function QT_ARRAY_POP(
  * Push back a quadtree back into the array
  * @ignore
  */
-function QT_ARRAY_PUSH(qt) {
+function QT_ARRAY_PUSH(qt: QuadTree) {
 	QT_ARRAY.push(qt);
 }
 
@@ -60,17 +99,49 @@ const QT_VECTOR = new Vector2d();
 /**
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @category Physics
- * @see game.world.broadphase
+ * @see World.broadphase
  */
 export default class QuadTree {
+	world: World;
+	bounds: QuadRect | Bounds;
+	max_objects: number;
+	max_levels: number;
+	level: number;
+	objects: QuadTreeItem[];
+	nodes: QuadTree[];
+
 	/**
-	 * @param {World} world - the physic world this QuadTree belongs to
-	 * @param {Bounds} bounds - bounds of the node
-	 * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
-	 * @param {number} [max_levels=4] - total max levels inside root Quadtree
-	 * @param {number} [level] - deepth level, required for subnodes
+	 * Total number of objects in this subtree (this node's own
+	 * `objects` plus every descendant's). Maintained by `insert`
+	 * and `remove` so `isPrunable` / `hasChildren` are O(1) reads
+	 * instead of O(tree-size) walks. Reset to 0 in `clear`.
+	 * @ignore
 	 */
-	constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+	_subtreeCount: number;
+
+	/**
+	 * Root-only scratch array reused across `retrieve` calls to
+	 * avoid allocating a fresh array per pointer event / per
+	 * narrow-phase query. Only the root allocates one; recursive
+	 * subnode calls receive the array via the `result` arg.
+	 * @ignore
+	 */
+	_retrieveScratch: QuadTreeItem[] | null;
+
+	/**
+	 * @param world - the physic world this QuadTree belongs to
+	 * @param bounds - bounds of the node
+	 * @param [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+	 * @param [max_levels=4] - total max levels inside root QuadTree
+	 * @param [level] - depth level, required for subnodes
+	 */
+	constructor(
+		world: World,
+		bounds: QuadRect | Bounds,
+		max_objects = 4,
+		max_levels = 4,
+		level = 0,
+	) {
 		this.world = world;
 		this.bounds = bounds;
 
@@ -82,22 +153,7 @@ export default class QuadTree {
 		this.objects = [];
 		this.nodes = [];
 
-		/**
-		 * Total number of objects in this subtree (this node's own
-		 * `objects` plus every descendant's). Maintained by `insert`
-		 * and `remove` so `isPrunable` / `hasChildren` are O(1) reads
-		 * instead of O(tree-size) walks. Reset to 0 in `clear`.
-		 * @ignore
-		 */
 		this._subtreeCount = 0;
-
-		/**
-		 * Root-only scratch array reused across `retrieve` calls to
-		 * avoid allocating a fresh array per pointer event / per
-		 * narrow-phase query. Only the root allocates one; recursive
-		 * subnode calls receive the array via the `result` arg.
-		 * @ignore
-		 */
 		this._retrieveScratch = level === 0 ? [] : null;
 	}
 
@@ -170,14 +226,16 @@ export default class QuadTree {
 
 	/*
 	 * Determine which node the object belongs to
-	 * @param {Rect} rect bounds of the area to be checked
-	 * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
+	 * @param item - the object to be classified
+	 * @returns integer index of the subnode (0-3), or -1 if the item
+	 * cannot completely fit within a subnode and is part of the
+	 * parent node
 	 */
-	getIndex(item) {
+	getIndex(item: QuadTreeItem): number {
 		const bounds = item.getBounds();
 
-		let rx;
-		let ry;
+		let rx: number;
+		let ry: number;
 
 		// use game world coordinates for floating items
 		if (item.isFloating === true) {
@@ -224,15 +282,18 @@ export default class QuadTree {
 
 	/**
 	 * Insert the given object container into the node.
-	 * @param {Container} container - group of objects to be added
+	 * @param container - group of objects to be added
 	 */
-	insertContainer(container) {
+	insertContainer(container: Container) {
 		// use getChildren() to lazily initialise an empty array — Container
 		// stores `children` as `undefined` until first access, which would
 		// otherwise crash here for a freshly-constructed world.
 		const children = container.getChildren();
 		const childrenLength = children.length;
-		for (let i = childrenLength, child; i--, (child = children[i]); ) {
+		for (
+			let i = childrenLength, child: ContainerOrChild;
+			i--, (child = children[i] as ContainerOrChild);
+		) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
 					// `rootContainer` is the world itself — it owns the
@@ -241,7 +302,7 @@ export default class QuadTree {
 						this.insert(child);
 					}
 					// recursively insert all children
-					this.insertContainer(child);
+					this.insertContainer(child as unknown as Container);
 				} else {
 					// only insert object with a bounding box
 					// Probably redundant with `isKinematic`
@@ -257,9 +318,9 @@ export default class QuadTree {
 	 * Insert the given object into the node. If the node
 	 * exceeds the capacity, it will split and add all
 	 * objects to their corresponding subnodes.
-	 * @param {object} item - object to be added
+	 * @param item - object to be added
 	 */
-	insert(item) {
+	insert(item: QuadTreeItem) {
 		// Subtree count: this insert adds one object SOMEWHERE in
 		// this subtree (either to `this.objects` or, by recursion,
 		// to a descendant's subtree). Bumping at every level entered
@@ -313,15 +374,18 @@ export default class QuadTree {
 	 * `Container.removeChildNow` between two `world.update()` rebuilds
 	 * (pointer events fire async in that window and would otherwise
 	 * hit destroyed renderables).
-	 * @param {Container} container - group of objects to be removed
+	 * @param container - group of objects to be removed
 	 */
-	removeContainer(container) {
+	removeContainer(container: Container) {
 		const children = container.getChildren?.();
 		if (!children) {
 			return;
 		}
 		const childrenLength = children.length;
-		for (let i = childrenLength, child; i--, (child = children[i]); ) {
+		for (
+			let i = childrenLength, child: ContainerOrChild;
+			i--, (child = children[i] as ContainerOrChild);
+		) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
 					// `rootContainer` is the world itself — it owns the
@@ -330,7 +394,7 @@ export default class QuadTree {
 					if (child.name !== "rootContainer") {
 						this.remove(child);
 					}
-					this.removeContainer(child);
+					this.removeContainer(child as unknown as Container);
 				} else if (typeof child.getBounds === "function") {
 					this.remove(child);
 				}
@@ -353,30 +417,36 @@ export default class QuadTree {
 	 * APIs (`adapter.queryAABB`, `adapter.raycast`) pass their own array
 	 * via the `result` parameter, which bypasses the scratch entirely
 	 * and is safe to call from inside collision handlers.
-	 *
-	 * @param {object} item - object to be checked against
-	 * @param {object} [fn] - a sorting function for the returned array
-	 * @param {object[]} [result] - optional caller-supplied result array.
-	 *   Pass an explicit (typically empty) array to sidestep the shared
-	 *   scratch — required for re-entrancy safety.
-	 * @returns {object[]} array with all detected objects
+	 * @param item - object to be checked against
+	 * @param [fn] - a sorting function for the returned array
+	 * @param [result] - optional caller-supplied result array. Pass an
+	 *   explicit (typically empty) array to sidestep the shared scratch —
+	 *   required for re-entrancy safety.
+	 * @returns array with all detected objects
 	 */
-	retrieve(item, fn, result) {
+	retrieve(
+		item: QuadTreeItem,
+		fn?: QuadTreeSortFn,
+		result?: QuadTreeItem[],
+	): QuadTreeItem[] {
 		// Reuse the root's scratch array across calls. Pointer events
 		// fire on every mouse move and each one used to allocate a
 		// fresh `[]`; resetting the existing array's length to 0 is
 		// allocation-free. See the JSDoc above for the re-entrancy
 		// contract that this optimization implies.
 		const isRoot = typeof result === "undefined";
+		let out: QuadTreeItem[];
 		if (isRoot) {
-			result = this._retrieveScratch;
-			result.length = 0;
+			out = this._retrieveScratch!;
+			out.length = 0;
+		} else {
+			out = result;
 		}
 
 		// add objects at this level
 		const objects = this.objects;
 		for (let i = 0, len = objects.length; i < len; i++) {
-			result.push(objects[i]);
+			out.push(objects[i]);
 		}
 
 		//if we have subnodes ...
@@ -385,29 +455,29 @@ export default class QuadTree {
 
 			//if rect fits into a subnode ..
 			if (index !== -1) {
-				this.nodes[index].retrieve(item, undefined, result);
+				this.nodes[index].retrieve(item, undefined, out);
 			} else {
 				//if rect does not fit into a subnode, check it against all subnodes
 				for (let i = 0; i < this.nodes.length; i++) {
-					this.nodes[i].retrieve(item, undefined, result);
+					this.nodes[i].retrieve(item, undefined, out);
 				}
 			}
 		}
 
 		if (isRoot && typeof fn === "function") {
-			result.sort(fn);
+			out.sort(fn);
 		}
 
-		return result;
+		return out;
 	}
 
 	/**
 	 * Remove the given item from the quadtree.
 	 * (this function won't recalculate the impacted node)
-	 * @param {object} item - object to be removed
-	 * @returns {boolean} true if the item was found and removed.
+	 * @param item - object to be removed
+	 * @returns true if the item was found and removed.
 	 */
-	remove(item) {
+	remove(item: QuadTreeItem): boolean {
 		let found = false;
 
 		if (typeof item.getBounds === "undefined") {
@@ -428,7 +498,7 @@ export default class QuadTree {
 			}
 		}
 
-		if (found === false) {
+		if (!found) {
 			// try and remove the item from the list of items in this node
 			const idx = this.objects.indexOf(item);
 			if (idx !== -1) {
@@ -443,7 +513,7 @@ export default class QuadTree {
 		// rebuilt in between). Walk every subnode as a last resort.
 		// Costs O(subtree) in the worst case, but only fires on the
 		// stale-position path; happy path stays O(log n).
-		if (found === false && this.nodes.length > 0) {
+		if (!found && this.nodes.length > 0) {
 			for (let i = 0; i < this.nodes.length; i++) {
 				if (this.nodes[i].remove(item)) {
 					found = true;
@@ -479,9 +549,9 @@ export default class QuadTree {
 
 	/**
 	 * return true if the node is prunable
-	 * @returns {boolean} true if the node is prunable
+	 * @returns true if the node is prunable
 	 */
-	isPrunable() {
+	isPrunable(): boolean {
 		// O(1) thanks to the cached subtree count maintained by
 		// insert/remove. Previously a recursive `hasChildren()` walk.
 		return this._subtreeCount === 0;
@@ -489,9 +559,9 @@ export default class QuadTree {
 
 	/**
 	 * return true if the node has any children
-	 * @returns {boolean} true if the node has any children
+	 * @returns true if the node has any children
 	 */
-	hasChildren() {
+	hasChildren(): boolean {
 		// Descendant content exists iff total subtree count exceeds
 		// our own object count (anything counted at this level beyond
 		// `objects` must live in a subnode).
@@ -500,9 +570,9 @@ export default class QuadTree {
 
 	/**
 	 * clear the quadtree
-	 * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
+	 * @param [bounds] - the bounds to be cleared
 	 */
-	clear(bounds) {
+	clear(bounds?: Bounds) {
 		this.objects.length = 0;
 
 		for (let i = 0; i < this.nodes.length; i++) {
@@ -517,7 +587,7 @@ export default class QuadTree {
 
 		// resize the root bounds if required
 		if (typeof bounds !== "undefined") {
-			this.bounds.setMinMax(
+			(this.bounds as Bounds).setMinMax(
 				bounds.min.x,
 				bounds.min.y,
 				bounds.max.x,
@@ -525,4 +595,15 @@ export default class QuadTree {
 			);
 		}
 	}
+}
+
+/**
+ * Structural shape consumed by `insertContainer` / `removeContainer`
+ * when walking a Container's `getChildren()`. Captures only the
+ * fields the walk inspects — keeps the conversion strict-mode clean
+ * without leaking `any`.
+ * @ignore
+ */
+interface ContainerOrChild extends QuadTreeItem {
+	addChild?: (...args: unknown[]) => unknown;
 }
