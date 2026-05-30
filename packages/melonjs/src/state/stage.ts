@@ -200,16 +200,17 @@ export default class Stage {
 		// inherited the loader's Camera2d → "z" sortOn and a Camera3d
 		// sub-stage would never snap back to "depth".
 		if (isFirstReset && app?.world) {
-			let chosenClass:
-				| { defaultSortOn?: "x" | "y" | "z" | "depth" }
-				| undefined;
+			type SortAwareCameraClass = {
+				defaultSortOn?: "x" | "y" | "z" | "depth";
+			};
+			let chosenClass: SortAwareCameraClass | undefined;
 			if (typeof StageCameraClass === "function") {
-				chosenClass = StageCameraClass;
+				chosenClass = StageCameraClass as unknown as SortAwareCameraClass;
 			} else if (typeof AppCameraClass === "function") {
-				chosenClass = AppCameraClass;
+				chosenClass = AppCameraClass as unknown as SortAwareCameraClass;
 			} else if (this.settings.cameras.length > 0) {
 				chosenClass = this.settings.cameras[0]
-					.constructor as typeof chosenClass;
+					.constructor as unknown as SortAwareCameraClass;
 			}
 			const defaultSortOn = chosenClass?.defaultSortOn;
 			if (defaultSortOn && app.world.sortOn !== defaultSortOn) {
