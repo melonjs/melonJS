@@ -655,7 +655,7 @@ export default class Application {
 		// otherwise-discarded `Application` would otherwise keep the
 		// batchers (and their renderer reference) alive for the rest
 		// of the page's lifetime.
-		this.renderer?.destroy?.();
+		this.renderer?.destroy();
 
 		// remove the canvas from the DOM
 		if (removeCanvas && this.renderer) {
