@@ -163,6 +163,27 @@ describe("Sphere", () => {
 			expect(a.overlaps(b)).toEqual(true);
 			expect(a.overlaps(c)).toEqual(false);
 		});
+
+		it("honors documented negative-radius semantics (treated as |r|)", () => {
+			// Regression caught by CodeRabbit: a naked `this.radius +
+			// other.radius` would collapse a (+5, -5) pair to a combined
+			// `r = 0`, breaking overlap semantics that `contains()`
+			// preserves via its sign-cancelling `radius * radius`.
+			// Verify a negative-on-one-side pair behaves identically to
+			// the all-positive equivalent.
+			const a = new Sphere(0, 0, 0, 5);
+			const bNeg = new Sphere(8, 0, 0, -5);
+			const bPos = new Sphere(8, 0, 0, 5);
+			// Centres at distance 8; combined |r| = 10 → overlap.
+			expect(a.overlaps(bNeg)).toEqual(true);
+			expect(a.overlaps(bPos)).toEqual(a.overlaps(bNeg));
+			// Push centre to distance 11 (combined |r| still 10) — both
+			// should now report NO overlap.
+			bNeg.pos.x = 11;
+			bPos.pos.x = 11;
+			expect(a.overlaps(bNeg)).toEqual(false);
+			expect(a.overlaps(bPos)).toEqual(a.overlaps(bNeg));
+		});
 	});
 
 	describe("overlapsAABB", () => {

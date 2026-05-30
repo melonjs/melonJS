@@ -110,7 +110,12 @@ export class Sphere {
 		const dx = this.pos.x - other.pos.x;
 		const dy = this.pos.y - other.pos.y;
 		const dz = this.pos.z - other.pos.z;
-		const r = this.radius + other.radius;
+		// Use |r| on each side so negative radii behave like their
+		// absolute value (matches the documented contract in
+		// {@link Sphere.radius} and the sign-cancelling `r * r` in
+		// {@link Sphere.contains}). A naked `this.radius + other.radius`
+		// would collapse to ~0 when one side passes a negative.
+		const r = Math.abs(this.radius) + Math.abs(other.radius);
 		return dx * dx + dy * dy + dz * dz <= r * r;
 	}
 
