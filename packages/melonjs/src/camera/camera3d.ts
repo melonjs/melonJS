@@ -564,7 +564,14 @@ export default class Camera3d extends Camera2d {
 		// `pos.z`) here, which silently mis-culled children of any
 		// container whose own depth was non-zero.
 		const bounds = obj.getBounds();
-		const radius = Math.max(bounds.width, bounds.height) * 0.5;
+		// Half-diagonal — the conservative bounding-sphere radius for
+		// a rectangular bounds rect. `max(w, h) * 0.5` is the
+		// inradius and can mark a renderable invisible while one of
+		// its corners is still on-screen near a frustum edge; the
+		// circumradius √(w² + h²) / 2 always encloses every corner.
+		const radius =
+			Math.sqrt(bounds.width * bounds.width + bounds.height * bounds.height) *
+			0.5;
 		const absPos = obj.getAbsolutePosition();
 		return this.frustum.intersectsSphere(absPos.x, absPos.y, absPos.z, radius);
 	}

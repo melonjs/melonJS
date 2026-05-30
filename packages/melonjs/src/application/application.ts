@@ -649,6 +649,14 @@ export default class Application {
 			this.world.destroy();
 		}
 
+		// tear down the renderer's batchers so their `event.on(...)`
+		// subscriptions (e.g. `GPU_TEXTURE_CACHE_RESET` on
+		// `MaterialBatcher`) don't leak across the disposal — every
+		// otherwise-discarded `Application` would otherwise keep the
+		// batchers (and their renderer reference) alive for the rest
+		// of the page's lifetime.
+		this.renderer?.destroy?.();
+
 		// remove the canvas from the DOM
 		if (removeCanvas && this.renderer) {
 			const canvas = this.renderer.getCanvas();

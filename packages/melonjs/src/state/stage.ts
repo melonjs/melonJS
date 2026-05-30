@@ -209,8 +209,22 @@ export default class Stage {
 			} else if (typeof AppCameraClass === "function") {
 				chosenClass = AppCameraClass as unknown as SortAwareCameraClass;
 			} else if (this.settings.cameras.length > 0) {
-				chosenClass = this.settings.cameras[0]
-					.constructor as unknown as SortAwareCameraClass;
+				// Read the camera actually registered under the "default"
+				// key, NOT `settings.cameras[0]`. A split-screen / minimap
+				// stage can list a non-default Camera2d before its main
+				// Camera3d in the cameras array, and `[0].constructor`
+				// would pick the wrong class — leaving `world.sortOn` at
+				// "z" while the main perspective view needed "depth".
+				//
+				// Gated on `settings.cameras.length > 0` so the
+				// shared-Camera2d-singleton fallback (no cameraClass +
+				// no explicit cameras anywhere) leaves `world.sortOn`
+				// untouched, preserving pre-19.7 behavior.
+				const defaultCam = this.cameras.get("default");
+				if (defaultCam) {
+					chosenClass =
+						defaultCam.constructor as unknown as SortAwareCameraClass;
+				}
 			}
 			const defaultSortOn = chosenClass?.defaultSortOn;
 			if (defaultSortOn && app.world.sortOn !== defaultSortOn) {

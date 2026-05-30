@@ -362,6 +362,22 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * Reset context state
 	 */
+	/**
+	 * Tear down this renderer and free GPU/event resources. Walks every
+	 * registered batcher's `destroy()` so cross-renderer subscriptions
+	 * (`GPU_TEXTURE_CACHE_RESET` on `MaterialBatcher`, etc.) don't
+	 * leak across `Application.destroy()` cycles. Safe to call multiple
+	 * times — subsequent calls are no-ops.
+	 */
+	destroy() {
+		if (this.batchers) {
+			this.batchers.forEach((batcher) => {
+				batcher.destroy?.();
+			});
+			this.batchers.clear();
+		}
+	}
+
 	reset() {
 		super.reset();
 

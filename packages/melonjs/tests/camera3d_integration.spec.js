@@ -307,6 +307,30 @@ describe("Camera3d × Stage × Application integration", () => {
 			stage.reset(app);
 			expect(app.world.sortOn).toBe("depth");
 		});
+
+		// Regression for PR #1464 review round 3: the prior fix read
+		// `settings.cameras[0].constructor`, which picks the wrong
+		// class for a split-screen / minimap stage whose array lists
+		// a non-default Camera2d BEFORE its main Camera3d.
+		it("explicit `cameras: [...]` reads the camera registered as 'default', not [0]", () => {
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+			});
+			expect(app.world.sortOn).toBe("z");
+
+			// Non-default Camera2d minimap listed FIRST, main Camera3d
+			// listed second but explicitly named "default".
+			const minimap = new Camera2d(0, 0, 100, 100);
+			minimap.name = "minimap";
+			const main = new Camera3d(0, 0, 400, 300);
+			main.name = "default";
+
+			new Stage({ cameras: [minimap, main] }).reset(app);
+			// Reading `[0].constructor` would give Camera2d → "z";
+			// reading the "default"-named entry gives Camera3d → "depth".
+			expect(app.world.sortOn).toBe("depth");
+		});
 	});
 
 	// --- Adversarial / regression coverage --------------------------------
