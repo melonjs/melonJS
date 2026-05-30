@@ -338,7 +338,16 @@ export class GameController extends Renderable {
 			ageMs: 0,
 			startScale: CONTRAIL_SCALE_START,
 		});
-		sprite.scale(CONTRAIL_SCALE_START);
+		// Reset transform then apply the spawn scale — `Renderable.scale`
+		// is multiplicative on top of `currentTransform`, so a pooled
+		// sprite would otherwise carry its previous run's scale, and
+		// the per-frame scale update below would compound each tick.
+		sprite.currentTransform.identity();
+		sprite.currentTransform.scale(
+			CONTRAIL_SCALE_START,
+			CONTRAIL_SCALE_START,
+			1,
+		);
 	}
 
 	removeContrailNode(i: number): void {
@@ -375,7 +384,10 @@ export class GameController extends Renderable {
 			n.sprite.depth -= CONTRAIL_TRAIL_SPEED * dts;
 			n.sprite.setOpacity(1 - t);
 			const scale = n.startScale + (CONTRAIL_SCALE_END - n.startScale) * t;
-			n.sprite.scale(scale);
+			// Absolute scale set: identity + scale, so this frame's
+			// scale is THE scale (not multiplied onto last frame's).
+			n.sprite.currentTransform.identity();
+			n.sprite.currentTransform.scale(scale, scale, 1);
 		}
 	}
 

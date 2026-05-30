@@ -26,6 +26,17 @@ function deferredRemove(child, keepalive) {
 let _depthCamX = 0;
 let _depthCamY = 0;
 let _depthCamZ = 0;
+// World-space offset of the container currently being sorted. Captured
+// once per sort alongside `_depthCam*` so `_sortDepth` can translate
+// each child's LOCAL `pos.x/y/z` into the world frame the camera
+// distance is computed in. Without this, a container at world z=500
+// (e.g. a particle emitter) would compare its children at local z=0
+// against `_depthCam*` (world coords), producing a meaningless
+// distance and an incorrect painter-sort order when the camera sits
+// closer to the container's world position than to the global origin.
+let _depthOffsetX = 0;
+let _depthOffsetY = 0;
+let _depthOffsetZ = 0;
 
 /**
  * Refresh the cached camera position from the active stage. Falls back
@@ -53,6 +64,21 @@ function captureDepthCamera() {
 		_depthCamY = 0;
 		_depthCamZ = 0;
 	}
+}
+
+/**
+ * Capture the world-space position of the given container into the
+ * module-level `_depthOffset*` triple. Called once per sort by `sort` /
+ * `sortNow` before walking the children, so `_sortDepth` can translate
+ * each child's LOCAL `pos.x/y/z` into world space without paying for
+ * an `ancestor.getAbsolutePosition()` walk per comparator call.
+ * @ignore
+ */
+function captureDepthOffset(container) {
+	const abs = container.getAbsolutePosition();
+	_depthOffsetX = abs.x;
+	_depthOffsetY = abs.y;
+	_depthOffsetZ = abs.z;
 }
 
 /**
@@ -938,10 +964,12 @@ export default class Container extends Renderable {
 				});
 			}
 			this.pendingSort = defer(function () {
-				// refresh the cached camera position so `_sortDepth`
-				// sees the current view — no-op for x/y/z modes
+				// refresh the cached camera + container offset so
+				// `_sortDepth` sees the current view in world space —
+				// no-op for x/y/z modes.
 				if (this._sortOn === "depth") {
 					captureDepthCamera();
+					captureDepthOffset(this);
 				}
 				// sort everything in this container
 				this.getChildren().sort(this._comparator);
@@ -965,6 +993,7 @@ export default class Container extends Renderable {
 	sortNow(recursive) {
 		if (this._sortOn === "depth") {
 			captureDepthCamera();
+			captureDepthOffset(this);
 		}
 		const children = this.getChildren();
 		if (children.length > 1) {
@@ -1028,12 +1057,21 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortDepth(a, b) {
-		const ax = a.pos.x - _depthCamX;
-		const ay = a.pos.y - _depthCamY;
-		const az = a.pos.z - _depthCamZ;
-		const bx = b.pos.x - _depthCamX;
-		const by = b.pos.y - _depthCamY;
-		const bz = b.pos.z - _depthCamZ;
+		// Translate each child's LOCAL `pos` into world space via the
+		// parent container's offset (captured once per sort by
+		// `captureDepthOffset`). For the world container itself the
+		// offset is (0, 0, 0), so this collapses to the original
+		// local-only math. For nested containers (an emitter at
+		// world z=500, particles at local z=0) it's the difference
+		// between "particles all sort identically because their
+		// local d²=0" and "particles sort by their actual world
+		// distance from the camera".
+		const ax = a.pos.x + _depthOffsetX - _depthCamX;
+		const ay = a.pos.y + _depthOffsetY - _depthCamY;
+		const az = a.pos.z + _depthOffsetZ - _depthCamZ;
+		const bx = b.pos.x + _depthOffsetX - _depthCamX;
+		const by = b.pos.y + _depthOffsetY - _depthCamY;
+		const bz = b.pos.z + _depthOffsetZ - _depthCamZ;
 		return ax * ax + ay * ay + az * az - (bx * bx + by * by + bz * bz);
 	}
 

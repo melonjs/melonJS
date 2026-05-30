@@ -140,6 +140,13 @@ export default class Stage {
 	 * @ignore
 	 */
 	reset(app: Application, ...extraArgs: unknown[]): void {
+		// Snapshot whether this is the first reset of this stage instance
+		// BEFORE we touch the cameras map. Used below to gate the
+		// `defaultSortOn` re-apply — once the cameras map is populated,
+		// subsequent resets must NOT trample the user's `world.sortOn`
+		// override.
+		const isFirstReset = !this.cameras.has("default");
+
 		// add all defined cameras
 		this.settings.cameras.forEach((camera) => {
 			this.cameras.set(camera.name, camera);
@@ -156,11 +163,11 @@ export default class Stage {
 		//   4. neither set → fall back to the Camera2d module-level
 		//      singleton (preserves pre-19.7 behavior bit-for-bit
 		//      for every app that doesn't opt into cameraClass)
+		const StageCameraClass = this.settings.cameraClass;
+		const AppCameraClass = app?.settings.cameraClass;
 		if (!this.cameras.has("default") && app) {
 			const width = app.renderer.width;
 			const height = app.renderer.height;
-			const StageCameraClass = this.settings.cameraClass;
-			const AppCameraClass = app.settings.cameraClass;
 
 			if (typeof StageCameraClass === "function") {
 				this.cameras.set("default", new StageCameraClass(0, 0, width, height));
@@ -173,26 +180,39 @@ export default class Stage {
 				}
 				this.cameras.set("default", default_camera);
 			}
+		}
 
-			// Re-apply the chosen camera class's `defaultSortOn` to the
-			// world on every stage reset — NOT just when the stage
-			// overrides `cameraClass`. Required because
-			// `DefaultLoadingScreen` pins Camera2d (→ `sortOn = "z"`)
-			// while the surrounding Application may have opted into
-			// Camera3d (→ `sortOn = "depth"`). Without this re-apply,
-			// a Camera3d app that goes through the default loader sees
-			// its first real stage inherit `"z"` from the loader, and
-			// distant meshes paint on top of nearer ones (broken
-			// painter's algorithm under perspective). User code can
-			// still override `world.sortOn` from inside
-			// `Stage.onResetEvent`, which runs after this block.
-			const ChosenCameraClass = StageCameraClass ?? AppCameraClass;
-			const defaultSortOn = (
-				ChosenCameraClass as
-					| { defaultSortOn?: "x" | "y" | "z" | "depth" }
-					| undefined
-			)?.defaultSortOn;
-			if (defaultSortOn && app.world && app.world.sortOn !== defaultSortOn) {
+		// Re-apply the chosen camera's `defaultSortOn` to the world on
+		// the FIRST reset of this stage — NOT on re-resets (`isFirstReset`
+		// gate above), and NOT when the camera came from the
+		// shared-Camera2d-singleton fallback (preserves pre-19.7
+		// behavior for apps that don't opt into `cameraClass`).
+		//
+		// Sources for the chosen class, in priority order:
+		//   1. `Stage({ cameraClass: ... })` — the loader uses this to
+		//      pin Camera2d on a Camera3d app
+		//   2. `Application({ cameraClass: ... })`
+		//   3. `Stage({ cameras: [new MyCam(...)] })` — the documented
+		//      explicit-camera pattern. Pulls the class off the
+		//      already-instantiated camera's `constructor`.
+		//
+		// Without (3), a stage using the explicit pattern silently
+		// inherited the loader's Camera2d → "z" sortOn and a Camera3d
+		// sub-stage would never snap back to "depth".
+		if (isFirstReset && app?.world) {
+			let chosenClass:
+				| { defaultSortOn?: "x" | "y" | "z" | "depth" }
+				| undefined;
+			if (typeof StageCameraClass === "function") {
+				chosenClass = StageCameraClass;
+			} else if (typeof AppCameraClass === "function") {
+				chosenClass = AppCameraClass;
+			} else if (this.settings.cameras.length > 0) {
+				chosenClass = this.settings.cameras[0]
+					.constructor as typeof chosenClass;
+			}
+			const defaultSortOn = chosenClass?.defaultSortOn;
+			if (defaultSortOn && app.world.sortOn !== defaultSortOn) {
 				app.world.sortOn = defaultSortOn;
 			}
 		}

@@ -284,6 +284,29 @@ describe("Camera3d × Stage × Application integration", () => {
 			stage.reset(app);
 			expect(app.world.sortOn).toBe("z");
 		});
+
+		// Regression for PR #1464 review round 2: the `defaultSortOn`
+		// re-apply was nested INSIDE the `if (!this.cameras.has("default"))`
+		// branch, which is skipped entirely when the user opts into the
+		// documented explicit-cameras pattern (`new Stage({ cameras:
+		// [new Camera3d(...)] })`). World.sortOn therefore stayed at the
+		// app's default — "z" if the app didn't also opt into Camera3d —
+		// and a hand-rolled Camera3d stage on a Camera2d app would
+		// silently render with the wrong painter sort.
+		it("Stage with explicit Camera3d in `cameras: [...]` array sets world.sortOn = 'depth'", () => {
+			const app = new Application(400, 300, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				// app uses Camera2d default — world starts at 'z'
+			});
+			expect(app.world.sortOn).toBe("z");
+
+			const stage = new Stage({
+				cameras: [new Camera3d(0, 0, 400, 300)],
+			});
+			stage.reset(app);
+			expect(app.world.sortOn).toBe("depth");
+		});
 	});
 
 	// --- Adversarial / regression coverage --------------------------------
@@ -479,13 +502,14 @@ describe("Camera3d × Stage × Application integration", () => {
 			expect(app.world.sortOn).toBe("x");
 		});
 
-		it("Stage with explicit `cameras: [...]` skips bootstrap entirely (sortOn untouched)", () => {
-			// When a Stage is constructed with `cameras: [new MyCam(...)]`
-			// (not `cameraClass: MyCam`), the bootstrap block early-outs
-			// via the same `cameras.has("default")` guard — there's
-			// nothing to "choose" from, the caller already supplied an
-			// instance. Lock in that the world's sortOn doesn't move in
-			// this path either.
+		it("Stage with explicit `cameras: [...]` pins sortOn from the camera's constructor (PR #1464 round 2)", () => {
+			// Updated from the prior contract (which silently inherited
+			// the loader's "z") after PR #1464 round 2 review: a stage
+			// constructed with `cameras: [new MyCam(...)]` (not
+			// `cameraClass: MyCam`) should now pull `defaultSortOn` off
+			// the supplied instance's `constructor`. Otherwise the user's
+			// hand-rolled Camera3d would silently inherit the loader's
+			// "z" and a fresh stage would never snap back to "depth".
 			const app = new Application(400, 300, {
 				parent: "screen",
 				renderer: video.CANVAS,
@@ -495,18 +519,12 @@ describe("Camera3d × Stage × Application integration", () => {
 			new Stage({ cameraClass: Camera2d }).reset(app);
 			expect(app.world.sortOn).toBe("z");
 			// …then a stage that provides an explicit Camera3d INSTANCE.
-			// `Stage.cameras` is a Map keyed by camera name; the default
-			// camera is the entry named "default".
 			const cam = new Camera3d(0, 0, 400, 300);
 			cam.name = "default";
 			new Stage({ cameras: new Map([["default", cam]]) }).reset(app);
-			// The class-based bootstrap is skipped, so sortOn STAYS at
-			// "z" — the application code that hand-rolled the camera
-			// owns the world's sort mode and must set it explicitly.
-			// This locks the contract; if we ever extend the bootstrap
-			// to inspect the instance's constructor, this test should
-			// be updated deliberately, not silently.
-			expect(app.world.sortOn).toBe("z");
+			// Reads `cam.constructor.defaultSortOn` = Camera3d's "depth"
+			// → snaps the world back to "depth".
+			expect(app.world.sortOn).toBe("depth");
 		});
 	});
 });

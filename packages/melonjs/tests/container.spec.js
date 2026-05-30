@@ -758,6 +758,39 @@ describe("Container", () => {
 			expect(container._sortDepth(flat, deep)).toBeLessThan(0);
 		});
 
+		it("_sortDepth uses WORLD positions, not local pos (PR #1464 review)", () => {
+			// Regression: `_sortDepth` used to read `a.pos.x/y/z` directly,
+			// which is the LOCAL position inside the container. The
+			// cached camera position is in WORLD space, so the resulting
+			// distance is meaningless for any container whose own
+			// `pos` is non-zero (a particle emitter at world z=500, say).
+			// The fix walks each child's absolute world position via
+			// `getAbsolutePosition()`.
+			//
+			// Test: container at world x=100. Children at local x = ±10
+			// (= world 110 and 90). Camera cached at (0, 0, 0) — siblings'
+			// world distances differ (12100 vs 8100) so child B should
+			// sort closer. Local-only math would give both d²=100 (10²
+			// and (-10)²) and the comparator would return 0 — wrong.
+			container.sortOn = "depth";
+			container.autoDepth = false; // keep our explicit local pos
+			container.pos.x = 100;
+			const a = new Renderable(10, 0, 1, 1); // local 10 → world 110
+			const b = new Renderable(0, 0, 1, 1);
+			b.pos.x = -10; // local -10 → world 90
+			container.addChild(a, 0);
+			container.addChild(b, 0);
+			// `_sortDepth` reads module-level `_depthCam*` + `_depthOffset*`
+			// triples. The offsets are captured by `sortNow` (and `sort`)
+			// before they invoke the comparator. Drive through `sortNow`
+			// so the offset for this container is registered before our
+			// direct `_sortDepth(a, b)` call below sees it.
+			container.sortNow();
+			// Local-only: |10|² == |-10|² == 100 → cmp = 0 (wrong order).
+			// World: 110² (= 12100) > 90² (= 8100) → cmp(a,b) > 0 → b closer.
+			expect(container._sortDepth(a, b)).toBeGreaterThan(0);
+		});
+
 		it("_sortDepth tolerates NaN coordinates without throwing", () => {
 			container.sortOn = "depth";
 			const ok = new Renderable(0, 0, 1, 1);
