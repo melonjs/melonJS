@@ -33,6 +33,14 @@ const createGame = () => {
 	// Initialize the video.
 	if (
 		!video.init(1024, 768, {
+			// `parent: "screen"` — without this the engine falls back to
+			// `document.body`, and on this page body has no flow content
+			// (#screen is `position: fixed`, so it's pulled out of the
+			// flow). Initial body.height matches Vite's transient overlay
+			// (~814 px) and then collapses to ~43 px once that clears,
+			// taking the Flex-scaled canvas with it (the user-reported
+			// "screen became a horizontal banner").
+			parent: "screen",
 			scaleMethod: ScaleMethods.Flex,
 			renderer: video.AUTO,
 			transparent: false,
