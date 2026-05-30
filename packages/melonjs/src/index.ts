@@ -3,10 +3,12 @@ import "./polyfill/index.ts";
 
 import Application, { setDefaultGame } from "./application/application.ts";
 import Camera2d from "./camera/camera2d.ts";
+import Camera3d from "./camera/camera3d.ts";
 import CameraEffect from "./camera/effects/camera_effect.ts";
 import FadeEffect from "./camera/effects/fade_effect.ts";
 import MaskEffect from "./camera/effects/mask_effect.ts";
 import ShakeEffect from "./camera/effects/shake_effect.ts";
+import Frustum from "./camera/frustum.ts";
 import Pointer from "./input/pointer.ts";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -150,6 +152,7 @@ export {
 	BlurEffect,
 	Body,
 	Camera2d,
+	Camera3d,
 	CameraEffect,
 	CanvasRenderer,
 	CanvasRenderTarget,
@@ -167,6 +170,7 @@ export {
 	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
 	FadeEffect,
 	FlashEffect,
+	Frustum,
 	GLShader,
 	GlowEffect,
 	Gradient,

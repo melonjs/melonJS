@@ -333,6 +333,13 @@ export class Batcher {
 			const gl = this.gl;
 			const vertexSize = vertex.vertexSize;
 
+			// Upload byte length covers exactly the vertices we've pushed.
+			// Use the Uint8 view (NOT Float32) to keep packed-color bytes
+			// intact — see `VertexArrayBuffer.bufferU8` for why this matters
+			// on Metal-backed drivers.
+			const byteLength =
+				vertexCount * vertexSize * Float32Array.BYTES_PER_ELEMENT;
+
 			if (this.useIndexBuffer && this.indexBuffer.length > 0) {
 				// indexed drawing path — bind own buffers
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.glVertexBuffer);
@@ -348,15 +355,15 @@ export class Batcher {
 				if (this.renderer.WebGLVersion > 1) {
 					gl.bufferData(
 						gl.ARRAY_BUFFER,
-						vertex.toFloat32(),
+						vertex.toUint8(),
 						gl.STREAM_DRAW,
 						0,
-						vertexCount * vertexSize,
+						byteLength,
 					);
 				} else {
 					gl.bufferData(
 						gl.ARRAY_BUFFER,
-						vertex.toFloat32(0, vertexCount * vertexSize),
+						vertex.toUint8(0, byteLength),
 						gl.STREAM_DRAW,
 					);
 				}
@@ -377,15 +384,15 @@ export class Batcher {
 				if (this.renderer.WebGLVersion > 1) {
 					gl.bufferData(
 						gl.ARRAY_BUFFER,
-						vertex.toFloat32(),
+						vertex.toUint8(),
 						gl.STREAM_DRAW,
 						0,
-						vertexCount * vertexSize,
+						byteLength,
 					);
 				} else {
 					gl.bufferData(
 						gl.ARRAY_BUFFER,
-						vertex.toFloat32(0, vertexCount * vertexSize),
+						vertex.toUint8(0, byteLength),
 						gl.STREAM_DRAW,
 					);
 				}

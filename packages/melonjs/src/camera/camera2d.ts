@@ -57,6 +57,16 @@ const targetV = new Vector2d();
  */
 export default class Camera2d extends Renderable {
 	/**
+	 * Preferred `Container.sortOn` mode for this camera type. Read by
+	 * `Application` (and `Stage`) at bootstrap to initialize the world
+	 * container's sort. Camera2d uses `"z"` (painter's-algorithm 2D
+	 * layering, higher pos.z draws on top); `Camera3d` overrides to
+	 * `"depth"` (camera-distance sort required by perspective).
+	 * Subclasses can override to declare their own preferred mode.
+	 */
+	static defaultSortOn: "x" | "y" | "z" | "depth" = "z";
+
+	/**
 	 * Axis definition
 	 * NONE no axis
 	 * HORIZONTAL horizontal axis only
@@ -286,6 +296,14 @@ export default class Camera2d extends Renderable {
 			this.near,
 			this.far,
 		);
+		// Mirror the screen ortho into `screenProjection` so default-
+		// camera floating renderables can swap to it in `Container.draw`
+		// without a no-op risk. Non-default cameras overwrite this in
+		// `Camera2d.draw` (line ~946) with a screen-relative ortho;
+		// Camera3d overrides this method and sets `screenProjection`
+		// to a screen-space ortho separate from its perspective
+		// `projectionMatrix`.
+		this.screenProjection.copy(this.projectionMatrix);
 	}
 
 	/** @ignore */
@@ -864,6 +882,41 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * Build and install the world + screen projections used when this
+	 * camera is non-default (split-screen, picture-in-picture, etc.).
+	 * Default behavior is a shifted ortho that places the camera's
+	 * world view at the camera's screen-rect within the full renderer
+	 * viewport. Subclasses (e.g. Camera3d) override this to install a
+	 * perspective `worldProjection` instead.
+	 * @ignore
+	 */
+	_setupNonDefaultProjection(renderer: Renderer): void {
+		const left = -this.screenX / this.zoom;
+		const top = -this.screenY / this.zoom;
+		const rw = renderer.width / this.zoom;
+		const rh = renderer.height / this.zoom;
+
+		this.worldProjection.ortho(
+			left,
+			left + rw,
+			top + rh,
+			top,
+			this.near,
+			this.far,
+		);
+		renderer.setProjection(this.worldProjection);
+
+		this.screenProjection.ortho(
+			-this.screenX,
+			-this.screenX + renderer.width,
+			-this.screenY + renderer.height,
+			-this.screenY,
+			this.near,
+			this.far,
+		);
+	}
+
+	/**
 	 * render the camera effects
 	 * @ignore
 	 */
@@ -900,8 +953,11 @@ export default class Camera2d extends Renderable {
 		// post-effect: bind FBO if shader effects are set (WebGL only)
 		const usePostEffect = r.beginPostEffect(this);
 
-		// translate the world coordinates by default to screen coordinates
-		container.translate(-translateX, -translateY);
+		// apply the world-to-camera-view transform on the container.
+		// Camera2d translates by -camera.pos; Camera3d overrides this
+		// hook to additionally apply the camera's rotation (pitch / yaw)
+		// in the correct order (R⁻¹ ∘ T(-pos), via post-multiplication).
+		this._applyContainerViewTransform(container, translateX, translateY);
 
 		this.preDraw(r);
 
@@ -913,31 +969,7 @@ export default class Camera2d extends Renderable {
 
 		// set camera projection for non-default cameras
 		if (isNonDefault) {
-			const left = -this.screenX / this.zoom;
-			const top = -this.screenY / this.zoom;
-			const rw = renderer.width / this.zoom;
-			const rh = renderer.height / this.zoom;
-
-			// world-space projection (maps world coords to screen viewport)
-			this.worldProjection.ortho(
-				left,
-				left + rw,
-				top + rh,
-				top,
-				this.near,
-				this.far,
-			);
-			renderer.setProjection(this.worldProjection);
-
-			// screen-space projection for floating elements
-			this.screenProjection.ortho(
-				-this.screenX,
-				-this.screenX + renderer.width,
-				-this.screenY + renderer.height,
-				-this.screenY,
-				this.near,
-				this.far,
-			);
+			this._setupNonDefaultProjection(renderer);
 		} else {
 			renderer.setProjection(this.projectionMatrix);
 		}
@@ -999,6 +1031,20 @@ export default class Camera2d extends Renderable {
 		// post-effect: unbind FBO and blit to screen through shader effect
 		r.endPostEffect(this);
 
+		// Restore the full-canvas viewport for any non-default camera.
+		// Camera2d's non-default path never changes it (the sub-rect
+		// is handled via the ortho left/right/top/bottom shift +
+		// `clipRect`), so this is a no-op. Camera3d's non-default
+		// path DOES change it inside `_setupNonDefaultProjection` to
+		// remap NDC into the sub-rect — without this restore, the
+		// next camera in the stage's render order would inherit the
+		// shrunken WebGL viewport. `endPostEffect` already does this
+		// for cameras with post-effects (FBO bracket), but non-FBO
+		// non-default Camera3d cameras would otherwise leak.
+		if (isNonDefault) {
+			renderer.setViewport(0, 0, renderer.width, renderer.height);
+		}
+
 		// remove the transient colorMatrix effect so it doesn't persist between frames
 		if (this._colorMatrixEffect) {
 			const idx = this.postEffects.indexOf(this._colorMatrixEffect);
@@ -1007,7 +1053,36 @@ export default class Camera2d extends Renderable {
 			}
 		}
 
-		// translate the world coordinates by default to screen coordinates
+		// revert the world-to-camera-view transform applied above
+		this._revertContainerViewTransform(container, translateX, translateY);
+	}
+
+	/**
+	 * Apply the world-to-camera-view transform to the container before
+	 * its draw walk. Camera2d translates by `-camera.pos` (plus shake
+	 * offset); Camera3d overrides this to additionally rotate by
+	 * `-camera.pitch` / `-camera.yaw` in the correct order.
+	 * @ignore
+	 */
+	_applyContainerViewTransform(
+		container: Container,
+		translateX: number,
+		translateY: number,
+	): void {
+		container.translate(-translateX, -translateY);
+	}
+
+	/**
+	 * Revert the transform applied by {@link Camera2d#_applyContainerViewTransform}.
+	 * Must undo each mutation in reverse order. Subclasses overriding
+	 * `_applyContainerViewTransform` should override this too.
+	 * @ignore
+	 */
+	_revertContainerViewTransform(
+		container: Container,
+		translateX: number,
+		translateY: number,
+	): void {
 		container.translate(translateX, translateY);
 	}
 

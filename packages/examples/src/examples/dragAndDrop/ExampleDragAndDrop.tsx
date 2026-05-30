@@ -130,7 +130,14 @@ class DropTarget2 extends DropTarget1 {
 
 const createGame = () => {
 	// Initialize the video.
-	if (!video.init(1024, 768, { scale: "auto", renderer: video.CANVAS })) {
+	// `parent: "screen"` — see ExampleBenchmark for the rationale.
+	if (
+		!video.init(1024, 768, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+		})
+	) {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

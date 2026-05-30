@@ -33,6 +33,16 @@ const ExampleBlendModes = lazy(() =>
 		default: m.ExampleBlendModes,
 	})),
 );
+const ExampleAfterBurner = lazy(() =>
+	import("./examples/afterBurner/ExampleAfterBurner").then((m) => ({
+		default: m.ExampleAfterBurner,
+	})),
+);
+const ExampleCamera3d = lazy(() =>
+	import("./examples/camera3d/ExampleCamera3d").then((m) => ({
+		default: m.ExampleCamera3d,
+	})),
+);
 const ExampleClipping = lazy(() =>
 	import("./examples/clipping/ExampleClipping").then((m) => ({
 		default: m.ExampleClipping,
@@ -222,6 +232,22 @@ const examples: {
 		sourceDir: "blendModes",
 		description:
 			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
+	},
+	{
+		component: <ExampleAfterBurner />,
+		label: "AfterBurner Clone",
+		path: "after-burner",
+		sourceDir: "afterBurner",
+		description:
+			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models — arrows / WASD to fly, space to shoot.",
+	},
+	{
+		component: <ExampleCamera3d />,
+		label: "Camera3d (perspective)",
+		path: "camera-3d",
+		sourceDir: "camera3d",
+		description:
+			"Perspective camera orbiting three sprite billboards spaced along the z axis. Drag to orbit; closer sprites render larger.",
 	},
 	{
 		component: <ExampleClipping />,

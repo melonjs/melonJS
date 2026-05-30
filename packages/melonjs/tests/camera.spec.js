@@ -874,10 +874,23 @@ describe("Camera2d", () => {
 	});
 
 	describe("worldProjection / screenProjection", () => {
-		it("should be identity by default", () => {
+		it("worldProjection should be identity by default (set only on non-default camera draw)", () => {
 			const { camera } = setup();
 			expect(camera.worldProjection.isIdentity()).toEqual(true);
-			expect(camera.screenProjection.isIdentity()).toEqual(true);
+		});
+
+		it("screenProjection mirrors the screen ortho even on the default camera", () => {
+			// Camera2d's `_updateProjectionMatrix` keeps `screenProjection`
+			// in sync with `projectionMatrix` so `Container.draw` can swap
+			// to it for floating renderables under ANY camera, including
+			// the default. Used to be identity-by-default; that behavior
+			// fell over under Camera3d because the perspective projection
+			// would NaN floating Text positions.
+			const { camera } = setup();
+			expect(camera.screenProjection.isIdentity()).toEqual(false);
+			expect(camera.screenProjection.equals(camera.projectionMatrix)).toEqual(
+				true,
+			);
 		});
 
 		it("should be updated after drawing a non-default camera", () => {
@@ -896,7 +909,7 @@ describe("Camera2d", () => {
 			expect(cam.screenProjection.isIdentity()).toEqual(false);
 		});
 
-		it("should remain identity after drawing a default camera", () => {
+		it("worldProjection should remain identity after drawing a default camera", () => {
 			setup();
 			const r = video.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
@@ -905,10 +918,13 @@ describe("Camera2d", () => {
 			cam.draw(r, game.world);
 
 			expect(cam.worldProjection.isIdentity()).toEqual(true);
-			expect(cam.screenProjection.isIdentity()).toEqual(true);
+			// `screenProjection` stays a meaningful ortho (matches
+			// `projectionMatrix`) so floating-renderable swaps work on the
+			// default camera too.
+			expect(cam.screenProjection.equals(cam.projectionMatrix)).toEqual(true);
 		});
 
-		it("should be reset to identity after reset()", () => {
+		it("worldProjection should be reset to identity after reset()", () => {
 			setup();
 			const r = video.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
@@ -923,7 +939,9 @@ describe("Camera2d", () => {
 
 			cam.reset(0, 0);
 			expect(cam.worldProjection.isIdentity()).toEqual(true);
-			expect(cam.screenProjection.isIdentity()).toEqual(true);
+			// `screenProjection` is reset to mirror the (just-rebuilt)
+			// `projectionMatrix`, which for a Camera2d is the screen ortho.
+			expect(cam.screenProjection.equals(cam.projectionMatrix)).toEqual(true);
 		});
 	});
 

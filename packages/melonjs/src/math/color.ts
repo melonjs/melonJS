@@ -380,11 +380,26 @@ export class Color {
 	}
 
 	/**
-	 * Sets the color to the specified HSL values.
-	 * @param h - The hue [0 .. 1].
-	 * @param s - The saturation [0 .. 1].
-	 * @param l - The lightness [0 .. 1].
+	 * Sets the color from HSL values, **with hue in `[0..1]`** (the
+	 * GLSL / WebGL shader convention — `0 = red`, `1/3 = green`,
+	 * `2/3 = blue`, `1` = back to red). If you're coming from CSS /
+	 * Photoshop / D3 and have a hue in degrees (`0..360`), divide by
+	 * 360 first — or call {@link Color#setHSLDeg} which does it for you.
+	 *
+	 * Hue wraps at integer boundaries, so `h = 1` and `h = 0` produce
+	 * the same red. Saturation `0` short-circuits to a grey at the
+	 * requested lightness, ignoring hue. Lightness `0` or `1` produce
+	 * pure black or pure white regardless of the other two.
+	 * @param h - The hue, normalized to `[0..1]` (NOT degrees).
+	 * @param s - The saturation `[0..1]`.
+	 * @param l - The lightness `[0..1]`.
 	 * @returns Reference to this object for method chaining.
+	 * @see {@link Color#setHSLDeg} for the degrees-based variant.
+	 * @example
+	 * // pure green (hue 1/3, full saturation, mid lightness)
+	 * color.setHSL(1 / 3, 1, 0.5);
+	 * // CSS hsl(200deg, 80%, 60%) — divide hue by 360 first
+	 * color.setHSL(200 / 360, 0.8, 0.6);
 	 */
 	setHSL(h: number, s: number, l: number) {
 		let r;
@@ -403,6 +418,40 @@ export class Color {
 		}
 
 		return this.setColor(r * 255, g * 255, b * 255);
+	}
+
+	/**
+	 * Sets the color from HSL values with **hue in degrees `[0..360]`**
+	 * — the CSS / Photoshop / D3 convention. Thin convenience wrapper
+	 * over {@link Color#setHSL}: divides `hDeg` by 360 and delegates.
+	 * Saturation and lightness stay in `[0..1]` (the same units CSS
+	 * percentages would normalize to).
+	 *
+	 * Use this when you're working from CSS color values, color-picker
+	 * output, or any standard color reference. Prefer {@link Color#setHSL}
+	 * when your hue is already normalized (e.g. from `Math.random()`,
+	 * a noise function, or a shader uniform).
+	 * @param hDeg - The hue in degrees `[0..360]`. Values outside the
+	 *   range are accepted (the underlying hue calc wraps).
+	 * @param s - The saturation `[0..1]`.
+	 * @param l - The lightness `[0..1]`.
+	 * @returns Reference to this object for method chaining.
+	 * @example
+	 * // CSS hsl(200deg, 80%, 60%)
+	 * color.setHSLDeg(200, 0.8, 0.6);
+	 * // 360° wraps back to red — same as setHSLDeg(0, ...)
+	 * color.setHSLDeg(360, 1, 0.5);
+	 */
+	setHSLDeg(hDeg: number, s: number, l: number) {
+		// Normalize hDeg into `[0, 360)` before dividing. `setHSL`'s
+		// internal `hue2rgb` adjusts by at most one turn (`t < 0 → +1`,
+		// `t > 1 → -1`), so multi-turn inputs like `720` or `-360`
+		// would otherwise leave the per-channel `t` value outside the
+		// valid range and land in `hue2rgb`'s fallthrough (returning
+		// `p`), which is wrong for any non-zero saturation. Modulo +
+		// add-then-modulo keeps negatives well-defined.
+		const normalized = ((hDeg % 360) + 360) % 360;
+		return this.setHSL(normalized / 360, s, l);
 	}
 
 	/**

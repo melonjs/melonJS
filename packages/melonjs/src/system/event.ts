@@ -335,6 +335,28 @@ export const ONCONTEXT_LOST = "renderer.contextlost";
  */
 export const ONCONTEXT_RESTORED = "renderer.contextrestored";
 
+/**
+ * Emitted by the GPU texture cache after a unit-reassignment reset
+ * (either because the shader's sampler range was exhausted, or via
+ * explicit `resetUnitAssignments()`). Subscribers — typically batchers
+ * — should drop any cached `texture → unit` tracking they hold so they
+ * re-bind on first use. Without that, the `texture === boundTextures[unit]`
+ * short-circuit in `bindTexture2D` lets a batcher skip the actual
+ * `gl.bindTexture` call while a different texture sits at the unit on
+ * the GPU. The historical symptom was mesh draws coming out as black
+ * silhouettes (sampling a transparent HUD Text canvas) and
+ * sprite/bullet draws turning pure white (sampling the multi-material
+ * white-pixel fallback).
+ *
+ * Named GPU-prefixed rather than WEBGL- because the same contract
+ * applies to any GPU backend that batches textures across draw calls
+ * (WebGL today, WebGPU once it lands).
+ *
+ * Data passed: none
+ * @see event.on
+ */
+export const GPU_TEXTURE_CACHE_RESET = "renderer.gpu.texturecachereset";
+
 interface Events {
 	[DOM_READY]: () => void;
 	[BOOT]: () => void;
@@ -386,6 +408,7 @@ interface Events {
 	[VIEWPORT_ONCHANGE]: (position: Vector2d) => void;
 	[ONCONTEXT_LOST]: (renderer: Renderer) => void;
 	[ONCONTEXT_RESTORED]: (renderer: Renderer) => void;
+	[GPU_TEXTURE_CACHE_RESET]: () => void;
 }
 
 const eventEmitter = new EventEmitter<Events>();

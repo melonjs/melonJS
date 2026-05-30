@@ -3,8 +3,8 @@
  *
  * Loads four Kenney Space Kit (CC0) spacecraft, each with 3-5 named
  * MTL materials (metal / metalRed / metalDark / dark / …), and renders
- * them rotating in a 2×2 grid. The OBJ parser emits a Three.js / glTF
- * style `groups[]` array keyed by `materialName`; the `Mesh`
+ * them rotating in a 2×2 grid. The OBJ parser emits a glTF-style
+ * `groups[]` array keyed by `materialName`; the `Mesh`
  * constructor bakes each material's diffuse color (`Kd`) into a
  * per-vertex color buffer so the whole mesh draws in a single GPU
  * call. `mesh.tint` then multiplies on top at render time — used here
@@ -77,6 +77,7 @@ const createGame = () => {
 	loader.preload(buildAssetList(), () => {
 		spawnCrafts(app);
 		spawnLabels(app);
+		spawnCredit(app);
 	});
 };
 
@@ -129,7 +130,7 @@ class SpinningCraft extends Renderable {
 			material: modelName, // MTL name matches OBJ name in the Kenney pack
 			width: size,
 			height: size,
-			cullBackFaces: true,
+			cullBackFaces: false,
 		});
 		this.mesh.tint.setColor(
 			Math.round(teamTint[0] * 255),
@@ -202,6 +203,28 @@ function spawnLabels(app: Application) {
 		label.style.cssText = `${baseStyle}left:${(col * 0.5 + 0.25) * 100}%;top:${labelYPct[row] * 100}%;`;
 		parent.appendChild(label);
 	}
+}
+
+/**
+ * Asset attribution — bottom-right of the canvas. Uses the same
+ * HTML-overlay approach as the per-craft labels so it stays aligned
+ * with the canvas under `scale: "auto"` without us having to thread a
+ * Text renderable through the world container.
+ */
+function spawnCredit(app: Application) {
+	const parent = app.renderer.getCanvas().parentElement;
+	if (!parent) {
+		return;
+	}
+	parent.style.position = "relative";
+	const credit = document.createElement("div");
+	credit.textContent =
+		"3D assets by Kenney: https://kenney.nl/assets/space-kit";
+	credit.style.cssText =
+		"position:absolute;right:16px;bottom:12px;color:#bbbbbb;" +
+		"font-family:'Courier New',monospace;font-size:11px;" +
+		"text-shadow:0 0 4px #000;z-index:1000;pointer-events:none;";
+	parent.appendChild(credit);
 }
 
 export const ExampleMultiMaterialMesh = createExampleComponent(createGame);

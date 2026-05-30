@@ -266,6 +266,13 @@ export default class Renderer {
 	}
 
 	/**
+	 * Release any renderer-owned resources. Default is a no-op;
+	 * subclasses override to tear down batchers, FBO pools, GL
+	 * programs, etc. Called by {@link Application#destroy}.
+	 */
+	destroy() {}
+
+	/**
 	 * return a reference to the current render target corresponding canvas which this renderer draws to
 	 * @returns {HTMLCanvasElement}
 	 */

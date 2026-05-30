@@ -1,4 +1,5 @@
 import { isPowerOfTwo } from "../../../math/math.ts";
+import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
 import { Batcher } from "./batcher.js";
 
 /**
@@ -36,6 +37,42 @@ export class MaterialBatcher extends Batcher {
 		 * @ignore
 		 */
 		this.currentSamplerUnit = -1;
+
+		// Drop our `texture → unit` tracking whenever the renderer-wide
+		// texture cache reassigns units. Without this, our
+		// `bindTexture2D` short-circuit (`texture ===
+		// boundTextures[unit]`) would skip the actual `gl.bindTexture`
+		// call after a reset — the unit on the GPU is now occupied by
+		// whichever texture triggered the reset (or whichever batcher
+		// drew next), and we'd sample that one instead. Symptom was
+		// meshes coming out black and sprites/bullets coming out
+		// white. Inherited by every MaterialBatcher subclass
+		// (QuadBatcher, LitQuadBatcher, MeshBatcher) so each one gets
+		// the same handler automatically — PrimitiveBatcher extends
+		// `Batcher` directly and has no texture state, so it doesn't
+		// need this.
+		if (!this._onCacheReset) {
+			this._onCacheReset = () => {
+				this.boundTextures.length = 0;
+				this.currentTextureUnit = -1;
+				this.currentSamplerUnit = -1;
+			};
+			on(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
+		}
+	}
+
+	/**
+	 * Free resources used by the batcher. Currently unsubscribes the
+	 * texture-cache-reset listener so a discarded batcher doesn't keep
+	 * accumulating handlers (relevant on context loss / renderer
+	 * teardown).
+	 * @ignore
+	 */
+	destroy() {
+		if (this._onCacheReset) {
+			off(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
+			this._onCacheReset = null;
+		}
 	}
 
 	/**

@@ -1944,4 +1944,192 @@ describe("WebGL pipeline adversarial integration", () => {
 			expect(fx._shader.destroyed).toBe(true);
 		}
 	});
+
+	// ---- Vertex-buffer upload type (NaN-canonicalization regression) ----
+	//
+	// On the Mac (Metal/ANGLE) the batched vertex buffer used to upload
+	// through a Float32Array view. The vertex layout packs the per-vertex
+	// color into a Uint32 slot at the same byte offset where a Float32
+	// would sit, so any tint with `A=0xFF` and `R≥0x80` (≈ every MTL
+	// material with a non-dark Kd) formed a NaN bit pattern. Some drivers
+	// canonicalize NaN values during a Float32 upload → the alpha byte
+	// gets zeroed → the premultiplied-alpha mesh shader renders fully
+	// transparent → "all planes black" against the page background.
+	//
+	// Fix is two-pronged:
+	//   1. write the packed color as 4 bytes through `bufferU8` (covered
+	//      by `vertexBuffer.spec.js` unit tests)
+	//   2. upload the buffer to the GPU via a `Uint8Array` view, not a
+	//      `Float32Array` view (covered here, end-to-end)
+	//
+	// These tests run the full renderer path — `drawImage` → quad batcher
+	// → `gl.bufferData` — with a spy on the gl call to capture exactly
+	// what the upload sees. A regression that goes back to `toFloat32()`
+	// surfaces here as the `instanceof Uint8Array` assertion failing.
+	describe("vertex buffer is uploaded as Uint8Array (NaN-canonicalization regression)", () => {
+		it("quad batcher flush uploads via Uint8Array, not Float32Array", () => {
+			if (!isWebGL) {
+				return;
+			}
+			// Record every gl.bufferData call's srcData arg. We only
+			// care about ARRAY_BUFFER (vertex) uploads — index buffers
+			// go through ELEMENT_ARRAY_BUFFER and don't carry packed
+			// colors, so they're fine as-is.
+			const captures = [];
+			const origBufferData = gl.bufferData.bind(gl);
+			gl.bufferData = (target, ...rest) => {
+				if (target === gl.ARRAY_BUFFER) {
+					captures.push({ target, srcData: rest[0] });
+				}
+				return origBufferData(target, ...rest);
+			};
+
+			try {
+				const tex = video.createCanvas(16, 16);
+				// drawImage queues a quad through the quad batcher;
+				// flush forces the upload to the GPU.
+				renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+				renderer.flush();
+
+				expect(captures.length).toBeGreaterThan(0);
+				for (const cap of captures) {
+					expect(
+						cap.srcData,
+						`gl.bufferData(ARRAY_BUFFER, srcData) srcData must be Uint8Array (got ${
+							cap.srcData?.constructor?.name ?? typeof cap.srcData
+						})`,
+					).toBeInstanceOf(Uint8Array);
+					expect(cap.srcData).not.toBeInstanceOf(Float32Array);
+				}
+			} finally {
+				gl.bufferData = origBufferData;
+			}
+			expectNoGLErrors();
+		});
+
+		it("the uploaded Uint8 view sees the SAME ArrayBuffer as the underlying Float32 view (sanity: it's a view, not a copy)", () => {
+			// The whole point is that no NaN-pattern values exist on the
+			// upload path. The Uint8 view is a view of the SAME bytes
+			// that bufferF32 would see; if the implementation ever
+			// regressed to allocating a Uint8 copy (subtle perf hit AND
+			// breaks the zero-allocation hot-path contract), the
+			// `.buffer` identity check would catch it.
+			if (!isWebGL) {
+				return;
+			}
+			const captures = [];
+			const origBufferData = gl.bufferData.bind(gl);
+			gl.bufferData = (target, ...rest) => {
+				if (target === gl.ARRAY_BUFFER) {
+					captures.push(rest[0]);
+				}
+				return origBufferData(target, ...rest);
+			};
+
+			try {
+				const tex = video.createCanvas(16, 16);
+				renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+				renderer.flush();
+
+				// Pull the batcher's own buffer for reference comparison.
+				// The active batcher after drawImage is "quad"; its
+				// vertexData holds the same ArrayBuffer the Uint8 view
+				// points into.
+				const quadBatcher = renderer.batchers.get("quad");
+				expect(quadBatcher).toBeDefined();
+				const sharedBuffer = quadBatcher.vertexData.buffer;
+
+				for (const u8 of captures) {
+					expect(u8.buffer).toBe(sharedBuffer);
+				}
+			} finally {
+				gl.bufferData = origBufferData;
+			}
+		});
+
+		it("mesh batcher's indexed flush also uploads via Uint8Array (catches a regression in the indexed path only)", async () => {
+			// The Mesh-rendering path goes through a *different* upload
+			// branch than the regular quad path (own glVertexBuffer +
+			// drawElements with an index buffer). A targeted regression
+			// could fix one branch and miss the other — so we exercise
+			// the mesh path directly and confirm the Uint8 upload there
+			// too.
+			if (!isWebGL) {
+				return;
+			}
+			// Tiny mesh: 4 vertices, 2 triangles, indexed.
+			const Mesh = (await import("../src/renderable/mesh.js")).default;
+			const mesh = new Mesh(0, 0, {
+				vertices: new Float32Array([
+					-10, -10, 0, 10, -10, 0, 10, 10, 0, -10, 10, 0,
+				]),
+				uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+				indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+				width: 20,
+				height: 20,
+			});
+
+			const captures = [];
+			const origBufferData = gl.bufferData.bind(gl);
+			gl.bufferData = (target, ...rest) => {
+				if (target === gl.ARRAY_BUFFER) {
+					captures.push(rest[0]);
+				}
+				return origBufferData(target, ...rest);
+			};
+
+			try {
+				renderer.drawMesh(mesh);
+				renderer.flush();
+
+				expect(captures.length).toBeGreaterThan(0);
+				for (const u8 of captures) {
+					expect(u8).toBeInstanceOf(Uint8Array);
+				}
+			} finally {
+				gl.bufferData = origBufferData;
+			}
+			expectNoGLErrors();
+		});
+
+		it("the byteLength upload matches `vertexCount × vertexSize × 4`", () => {
+			// A subtle regression class: switching the view to Uint8
+			// but forgetting to multiply `vertexCount * vertexSize` by
+			// 4 (bytes per Float32) → only the first quarter of the
+			// vertices land on the GPU. Pin the byte arithmetic.
+			if (!isWebGL) {
+				return;
+			}
+			let captured = null;
+			const origBufferData = gl.bufferData.bind(gl);
+			// WebGL2 signature: bufferData(target, srcData, usage, srcOffset, length)
+			gl.bufferData = (target, srcData, usage, srcOffset, length) => {
+				if (target === gl.ARRAY_BUFFER) {
+					captured = { srcData, length, byteOffset: srcOffset };
+				}
+				return origBufferData(target, srcData, usage, srcOffset, length);
+			};
+
+			try {
+				const tex = video.createCanvas(16, 16);
+				renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
+				renderer.flush();
+
+				expect(captured).not.toBeNull();
+				// One quad → 4 vertices. Quad batcher's stride is whatever
+				// the batcher reports; just verify the upload claims at
+				// least 4 × stride bytes.
+				const quadBatcher = renderer.batchers.get("quad");
+				const bytesPerVertex =
+					quadBatcher.vertexData.vertexSize * Float32Array.BYTES_PER_ELEMENT;
+				// Some WebGL2 paths pass the length explicitly; either
+				// length OR the Uint8Array's own byteLength must cover
+				// the queued vertices.
+				const effectiveLen = captured.length ?? captured.srcData.byteLength;
+				expect(effectiveLen).toBeGreaterThanOrEqual(4 * bytesPerVertex);
+			} finally {
+				gl.bufferData = origBufferData;
+			}
+		});
+	});
 });

@@ -1,3 +1,4 @@
+import Camera2d from "./../camera/camera2d.ts";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.ts";
@@ -102,6 +103,17 @@ class DefaultLoadingScreen extends Stage {
 	#cleanedUp = false;
 
 	/**
+	 * Pin the loading screen to a Camera2d regardless of the
+	 * application's `cameraClass` setting. The loader must render
+	 * correctly even when the host app opts in to Camera3d globally
+	 * — a perspective camera applied to a 2D progress bar would
+	 * stretch / clip the bar based on its depth.
+	 */
+	constructor() {
+		super({ cameraClass: Camera2d });
+	}
+
+	/**
 	 * call when the loader is resetted
 	 * @ignore
 	 */
@@ -147,12 +159,23 @@ class DefaultLoadingScreen extends Stage {
 	#cleanup() {
 		this.#cleanedUp = true;
 
+		// Tolerate the case where the user's preload callback already
+		// removed our children — `world.reset()` is a common pattern
+		// in user setup code (the benchmark example does this), and
+		// it nukes every world child including our progress bar +
+		// logo. Calling `removeChild` on a non-child throws "Child is
+		// not mine.", which propagates up through the LOADER_COMPLETE
+		// emit chain and corrupts downstream state.
 		if (this.progressBar) {
-			this.#app.world.removeChild(this.progressBar);
+			if (this.#app.world.hasChild(this.progressBar)) {
+				this.#app.world.removeChild(this.progressBar);
+			}
 			this.progressBar = null;
 		}
 		if (this.logoSprite) {
-			this.#app.world.removeChild(this.logoSprite);
+			if (this.#app.world.hasChild(this.logoSprite)) {
+				this.#app.world.removeChild(this.logoSprite);
+			}
 			this.logoSprite = null;
 		}
 

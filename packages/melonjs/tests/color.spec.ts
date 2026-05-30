@@ -128,11 +128,141 @@ describe("Color", () => {
 		it("(0, 0, 1) value is rgb(255,255,255)", () => {
 			expect(blue_color.setHSL(0, 0, 1).toRGB()).toEqual("rgb(255,255,255)");
 		});
-		it("(0.5, 1, 0.25) value is rgb(0,255,255)", () => {
+		it("(0.5, 1, 0.25) value is rgb(0,127,127)", () => {
 			expect(blue_color.setHSL(0.5, 1, 0.25).toRGB()).toEqual("rgb(0,127,127)");
 		});
-		it("(0, 0, .75) value is rgb(0,255,255)", () => {
+		it("(0, 0, .75) value is rgb(191,191,191)", () => {
 			expect(blue_color.setHSL(0, 0, 0.75).toRGB()).toEqual("rgb(191,191,191)");
+		});
+
+		// ── full hue wheel coverage at full saturation, mid lightness ──
+		// catches sign / branch errors in `hue2rgb` that the achromatic-
+		// only cases above miss. Reference values from the standard
+		// HSL→RGB formula: h in [0..1] maps red → yellow → green → cyan →
+		// blue → magenta → red.
+		it("(0, 1, 0.5) is pure red rgb(255,0,0)", () => {
+			expect(blue_color.setHSL(0, 1, 0.5).toRGB()).toEqual("rgb(255,0,0)");
+		});
+		it("(1/6, 1, 0.5) is yellow rgb(255,255,0)", () => {
+			expect(blue_color.setHSL(1 / 6, 1, 0.5).toRGB()).toEqual(
+				"rgb(255,255,0)",
+			);
+		});
+		it("(1/3, 1, 0.5) is green rgb(0,255,0)", () => {
+			expect(blue_color.setHSL(1 / 3, 1, 0.5).toRGB()).toEqual("rgb(0,255,0)");
+		});
+		it("(0.5, 1, 0.5) is cyan rgb(0,255,255)", () => {
+			expect(blue_color.setHSL(0.5, 1, 0.5).toRGB()).toEqual("rgb(0,255,255)");
+		});
+		it("(2/3, 1, 0.5) is blue rgb(0,0,255)", () => {
+			expect(blue_color.setHSL(2 / 3, 1, 0.5).toRGB()).toEqual("rgb(0,0,255)");
+		});
+		it("(5/6, 1, 0.5) is magenta rgb(255,0,255)", () => {
+			expect(blue_color.setHSL(5 / 6, 1, 0.5).toRGB()).toEqual(
+				"rgb(255,0,255)",
+			);
+		});
+		it("(1, 1, 0.5) wraps to red rgb(255,0,0)", () => {
+			// h=1 should equal h=0 (the hue wheel is circular)
+			expect(blue_color.setHSL(1, 1, 0.5).toRGB()).toEqual("rgb(255,0,0)");
+		});
+
+		// ── lightness extremes preserve achromatic regardless of hue ──
+		it("(0.25, 1, 0) is black regardless of hue", () => {
+			expect(blue_color.setHSL(0.25, 1, 0).toRGB()).toEqual("rgb(0,0,0)");
+		});
+		it("(0.25, 1, 1) is white regardless of hue", () => {
+			expect(blue_color.setHSL(0.25, 1, 1).toRGB()).toEqual("rgb(255,255,255)");
+		});
+
+		// ── partial saturation desaturates toward grey ──
+		it("(1/3, 0.5, 0.5) is desaturated green rgb(63,191,63)", () => {
+			// hue stays green; saturation 0.5 pulls r,b channels toward
+			// the mid-grey at p≈0.25 (63 after `~~` truncation in `get r`),
+			// g stays at q≈0.75 (191).
+			expect(blue_color.setHSL(1 / 3, 0.5, 0.5).toRGB()).toEqual(
+				"rgb(63,191,63)",
+			);
+		});
+
+		// ── lightness above 0.5 uses the upper-half branch (q = l+s-l*s) ──
+		// distinct codepath from the l<0.5 branch — must produce the
+		// pastel variant of the same hue rather than the saturated one.
+		it("(0.5, 1, 0.75) is pastel cyan rgb(127,255,255)", () => {
+			expect(blue_color.setHSL(0.5, 1, 0.75).toRGB()).toEqual(
+				"rgb(127,255,255)",
+			);
+		});
+
+		// ── chaining returns `this` (the color), not a fresh instance ──
+		it("returns the same Color instance for chaining", () => {
+			const c = blue_color.setHSL(0.5, 1, 0.5);
+			expect(c).toBe(blue_color);
+		});
+	});
+
+	describe("setHSLDeg (degrees variant)", () => {
+		// CSS / Photoshop / D3 convention: hue in [0..360].
+		// Should produce the same RGB as setHSL(hDeg/360, s, l).
+		it("(0deg, 1, 0.5) is pure red rgb(255,0,0)", () => {
+			expect(blue_color.setHSLDeg(0, 1, 0.5).toRGB()).toEqual("rgb(255,0,0)");
+		});
+		it("(120deg, 1, 0.5) is pure green rgb(0,255,0)", () => {
+			expect(blue_color.setHSLDeg(120, 1, 0.5).toRGB()).toEqual("rgb(0,255,0)");
+		});
+		it("(240deg, 1, 0.5) is pure blue rgb(0,0,255)", () => {
+			expect(blue_color.setHSLDeg(240, 1, 0.5).toRGB()).toEqual("rgb(0,0,255)");
+		});
+		it("(180deg, 1, 0.5) is cyan rgb(0,255,255)", () => {
+			expect(blue_color.setHSLDeg(180, 1, 0.5).toRGB()).toEqual(
+				"rgb(0,255,255)",
+			);
+		});
+		it("(360deg, 1, 0.5) wraps to red rgb(255,0,0)", () => {
+			expect(blue_color.setHSLDeg(360, 1, 0.5).toRGB()).toEqual("rgb(255,0,0)");
+		});
+		it("(60deg, 1, 0.5) is yellow rgb(255,255,0)", () => {
+			expect(blue_color.setHSLDeg(60, 1, 0.5).toRGB()).toEqual(
+				"rgb(255,255,0)",
+			);
+		});
+		it("(300deg, 1, 0.5) is magenta rgb(255,0,255)", () => {
+			expect(blue_color.setHSLDeg(300, 1, 0.5).toRGB()).toEqual(
+				"rgb(255,0,255)",
+			);
+		});
+		it("matches setHSL with hue/360 for the same s,l", () => {
+			// pick a non-cardinal hue to exercise the actual divide
+			const fromDeg = blue_color.setHSLDeg(200, 0.65, 0.42).toRGB();
+			const fromNorm = blue_color.setHSL(200 / 360, 0.65, 0.42).toRGB();
+			expect(fromDeg).toEqual(fromNorm);
+		});
+
+		// ── multi-turn wrap (the JSDoc says out-of-range hues are
+		// accepted) ─────────────────────────────────────────────────
+		// Regression for PR #1464 review: the underlying `hue2rgb`
+		// only adjusts by one turn, so degree inputs > 360 or < 0
+		// have to be normalized before delegation; otherwise hues like
+		// 720° don't match 0° despite the documented wrap behavior.
+		it("(720deg, 1, 0.5) wraps to red (two turns)", () => {
+			expect(blue_color.setHSLDeg(720, 1, 0.5).toRGB()).toEqual("rgb(255,0,0)");
+		});
+		it("(-360deg, 1, 0.5) wraps to red (negative one turn)", () => {
+			expect(blue_color.setHSLDeg(-360, 1, 0.5).toRGB()).toEqual(
+				"rgb(255,0,0)",
+			);
+		});
+		it("(480deg, 1, 0.5) wraps to green (one turn + 120°)", () => {
+			expect(blue_color.setHSLDeg(480, 1, 0.5).toRGB()).toEqual("rgb(0,255,0)");
+		});
+		it("(-120deg, 1, 0.5) wraps to blue (negative, no turn)", () => {
+			expect(blue_color.setHSLDeg(-120, 1, 0.5).toRGB()).toEqual(
+				"rgb(0,0,255)",
+			);
+		});
+		it("returns the same Color instance for chaining", () => {
+			const c = blue_color.setHSLDeg(120, 1, 0.5);
+			expect(c).toBe(blue_color);
 		});
 	});
 

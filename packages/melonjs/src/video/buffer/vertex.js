@@ -21,6 +21,16 @@ export default class VertexArrayBuffer {
 		// Float32 and Uint32 view of the vertex data array buffer
 		this.bufferF32 = new Float32Array(this.buffer);
 		this.bufferU32 = new Uint32Array(this.buffer);
+		// Byte view used only for `gl.bufferData` UPLOADS via
+		// `toUint8()` — bypasses NaN canonicalization that some drivers
+		// (notably Apple's Metal-backed ANGLE) perform when the same
+		// 4-byte slot is uploaded through a `Float32Array` view and
+		// happens to form a NaN bit pattern (`A=0xFF` AND `R≥0x80`,
+		// which covers most non-faded MTL diffuse colors). NOT used
+		// for writing packed colors into the buffer — `bufferU32[i] =
+		// tint` is byte-identical (V8 doesn't canonicalize at the
+		// typed-array write site) and cheaper (one store vs four).
+		this.bufferU8 = new Uint8Array(this.buffer);
 	}
 
 	/**
@@ -99,7 +109,12 @@ export default class VertexArrayBuffer {
 	}
 
 	/**
-	 * push a new vertex to the buffer (mesh format: x, y, z, u, v, tint)
+	 * push a new vertex to the buffer (mesh format: x, y, z, u, v, tint).
+	 * Color is unpacked from the ARGB Uint32 input into 4 normalized
+	 * `[0, 1]` floats — the mesh batcher's `aColor` attribute is
+	 * `FLOAT × 4` rather than `UNSIGNED_BYTE × 4` to avoid NaN-pattern
+	 * bit values getting canonicalized on Metal-backed WebGL drivers.
+	 * See `mesh_batcher.init` for the rationale.
 	 * @ignore
 	 */
 	pushMesh(x, y, z, u, v, tint) {
@@ -110,7 +125,10 @@ export default class VertexArrayBuffer {
 		this.bufferF32[offset + 2] = z;
 		this.bufferF32[offset + 3] = u;
 		this.bufferF32[offset + 4] = v;
-		this.bufferU32[offset + 5] = tint;
+		this.bufferF32[offset + 5] = ((tint >> 16) & 0xff) / 255; // R
+		this.bufferF32[offset + 6] = ((tint >> 8) & 0xff) / 255; // G
+		this.bufferF32[offset + 7] = (tint & 0xff) / 255; // B
+		this.bufferF32[offset + 8] = ((tint >>> 24) & 0xff) / 255; // A
 
 		this.vertexCount++;
 
@@ -138,6 +156,21 @@ export default class VertexArrayBuffer {
 			return this.bufferU32.subarray(begin, end);
 		} else {
 			return this.bufferU32;
+		}
+	}
+
+	/**
+	 * return a byte-view reference to the data — use this for `gl.bufferData`
+	 * uploads to avoid the NaN-canonicalization that some drivers perform
+	 * on Float32 uploads of the same backing buffer (see the constructor's
+	 * `bufferU8` comment).
+	 * @ignore
+	 */
+	toUint8(byteBegin, byteEnd) {
+		if (typeof byteEnd !== "undefined") {
+			return this.bufferU8.subarray(byteBegin, byteEnd);
+		} else {
+			return this.bufferU8;
 		}
 	}
 }

@@ -1,4 +1,5 @@
 import { game } from "../application/application.ts";
+import Camera3d from "../camera/camera3d.ts";
 import { Polygon } from "../geometries/polygon.ts";
 import { getImage, getMTL, getOBJ } from "./../loader/loader.js";
 import { Color } from "../math/color.ts";
@@ -177,6 +178,13 @@ export default class Mesh extends Renderable {
 			this.vertexCount = this.originalVertices.length / 3;
 		}
 
+		// Capture the original winding once at construction so the
+		// Camera3d world-space path can swap to a reversed copy without
+		// losing the ability to restore the original (see
+		// `_setupWorldSpace` for the rationale). Same reference — we
+		// never mutate it in place.
+		this._indicesOriginal = this.indices;
+
 		// working array for projected vertices (updated each frame in draw)
 		/**
 		 * the projected vertex positions, updated each draw call
@@ -217,8 +225,8 @@ export default class Mesh extends Renderable {
 			 * contains multiple `usemtl` directives AND a matching MTL
 			 * is bound via the `material` setting. Each entry slices
 			 * the shared `indices` buffer; field shape (`start`,
-			 * `count`, `materialName`) matches the Three.js / glTF
-			 * "groups" convention.
+			 * `count`, `materialName`) matches the glTF "groups"
+			 * convention.
 			 *
 			 * Under the per-vertex color baking path (tier 2), the
 			 * `tint` / `opacity` fields here are informational — the
@@ -378,20 +386,164 @@ export default class Mesh extends Renderable {
 	}
 
 	/**
-	 * Draw the mesh (automatically called by melonJS).
-	 * Projects vertices through `projectionMatrix × currentTransform`
-	 * and hands the mesh off to `renderer.drawMesh()`. Multi-material
-	 * meshes need no extra `drawMesh` calls per material vs single-
-	 * material — each material's diffuse color is baked into
-	 * `vertexColors` at construction time and pushed through the
-	 * renderer's per-vertex `aColor` (WebGL) or per-triangle solid-
-	 * fill (Canvas) path. The WebGL batcher may still chunk very
-	 * large meshes across multiple `drawElements` to fit its
-	 * vertex/index buffer limits, same as the single-material path.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * Project vertices into **world space** for the Camera3d render path.
+	 * Bypasses {@link Mesh#projectionMatrix} (the self-contained
+	 * perspective that's meaningful only under Camera2d) and emits
+	 * vertices that the active 3D camera then projects via its own
+	 * view + projection matrices, the same way it does for Sprites.
+	 *
+	 * Per-vertex math: `currentTransform × originalVertex`, then a uniform
+	 * scale by `this.width`, a Y-flip (OBJ Y-up → engine Y-down), and a
+	 * translate to `(offsetX, offsetY, offsetZ)`.
+	 *
+	 * @param {number} offsetX - world X to place the mesh center at
+	 * @param {number} offsetY - world Y to place the mesh center at
+	 * @param {number} offsetZ - world Z to place the mesh center at
+	 * @ignore
 	 */
-	draw(renderer) {
-		this._projectVertices(this.pos.x, this.pos.y, 1000);
+	_projectVerticesWorld(offsetX, offsetY, offsetZ) {
+		const out = this.vertices;
+		const src = this.originalVertices;
+		const scale = this.width;
+		const m = this.currentTransform.val;
+		// Include the translation column (m[12..14]) — a proper
+		// matrix-vector multiplication treats the vertex as
+		// `(vx, vy, vz, 1)` so the translation column gets added
+		// once. Previously the loop only used the rotation/scale
+		// columns, which silently dropped `mesh.translate(x, y, z)`
+		// under Camera3d while the Camera2d path (via
+		// `projectVertices` in vertex.ts) honored it.
+		const tx = m[12];
+		const ty = m[13];
+		const tz = m[14];
+
+		for (let i = 0; i < this.vertexCount; i++) {
+			const i3 = i * 3;
+			const vx = src[i3];
+			const vy = src[i3 + 1];
+			const vz = src[i3 + 2];
+
+			const rx = m[0] * vx + m[4] * vy + m[8] * vz + tx;
+			const ry = m[1] * vx + m[5] * vy + m[9] * vz + ty;
+			const rz = m[2] * vx + m[6] * vy + m[10] * vz + tz;
+
+			out[i3] = rx * scale + offsetX;
+			out[i3 + 1] = -ry * scale + offsetY;
+			out[i3 + 2] = rz * scale + offsetZ;
+		}
+	}
+
+	/**
+	 * Build the winding-reversed indices buffer used by the Camera3d
+	 * world-space path. Called once, lazily, the first time the mesh
+	 * draws under Camera3d. Why: the world-space path Y-flips vertices
+	 * on output (a reflection, det = -1), which inverts triangle
+	 * winding in screen space. Without the swap, `cullBackFaces: true`
+	 * would end up culling the front faces and the model would look
+	 * hollow.
+	 *
+	 * Both buffers are kept alive — `_indicesOriginal` is the original
+	 * OBJ-shared (or user-supplied) winding, `_indicesReversed` is the
+	 * Camera3d-flipped copy. `draw()` swaps `this.indices` between them
+	 * each frame based on the active camera, so a Mesh that was first
+	 * drawn under Camera3d and later re-parented to a Camera2d stage
+	 * (e.g. a level transition into a 2D minigame) gets its original
+	 * winding back and stays correctly oriented under
+	 * `cullBackFaces: true`.
+	 * @ignore
+	 */
+	_setupWorldSpace() {
+		const src = this._indicesOriginal;
+		const dst = new Uint16Array(src.length);
+		for (let i = 0; i < src.length; i += 3) {
+			dst[i] = src[i];
+			dst[i + 1] = src[i + 2];
+			dst[i + 2] = src[i + 1];
+		}
+		this._indicesReversed = dst;
+		this._worldSpace = true;
+	}
+
+	/**
+	 * Resolve the projection mode once when the mesh enters the world.
+	 * The active stage's camera class determines which path `draw()` takes
+	 * for the rest of the mesh's lifetime — no per-frame branch is needed,
+	 * and we don't depend on the `me.game` singleton during the draw loop.
+	 *
+	 * Detection walks the ancestor chain to the root container, which is
+	 * the active stage's world (Stage.world). The world's `_currentCamera`
+	 * is set by the stage at draw time, but we can instead read off the
+	 * mesh's already-set ancestors against the active viewport — at this
+	 * point in the engine lifecycle, `game.viewport` is the right camera
+	 * to use as the source of truth, captured here ONCE rather than per
+	 * frame.
+	 * @ignore
+	 */
+	onActivateEvent(...args) {
+		super.onActivateEvent(...args);
+		this._useWorldSpace = game.viewport instanceof Camera3d;
+	}
+
+	/**
+	 * Draw the mesh (automatically called by melonJS). Picks between two
+	 * projection paths based on the camera that was active when this mesh
+	 * was added to the world (captured in {@link Mesh#onActivateEvent}):
+	 *
+	 * - **Camera3d** → world-space output via {@link Mesh#_projectVerticesWorld}.
+	 *   Vertices land in world coordinates at `(pos.x, pos.y, depth)`; the
+	 *   camera's perspective handles the final projection per-frame on the
+	 *   GPU. Triangle winding is reversed once at first draw so back-face
+	 *   culling stays correct under the Y-flip.
+	 * - **Camera2d** (or no camera) → legacy self-projection via
+	 *   {@link Mesh#projectionMatrix} × {@link Renderable#currentTransform},
+	 *   emitting vertices in pixel-ish space directly. Backwards-compatible
+	 *   with single-mesh-in-a-2D-scene usage.
+	 *
+	 * Multi-material meshes need no extra `drawMesh` calls per material vs
+	 * single-material — each material's diffuse color is baked into
+	 * `vertexColors` at construction time and pushed through the renderer's
+	 * per-vertex `aColor` (WebGL) or per-triangle solid-fill (Canvas) path.
+	 * The WebGL batcher may still chunk very large meshes across multiple
+	 * `drawElements` calls to fit its vertex/index buffer limits.
+	 *
+	 * The active path is picked from the `viewport` passed in by
+	 * `Container.draw`, NOT from the activation-time `_useWorldSpace`
+	 * flag. The flag is kept as a fallback only for callers that
+	 * invoke `draw(renderer)` without a viewport (tests, batched
+	 * builds). Without the per-draw read, a stage with multiple
+	 * cameras (Camera3d main + Camera2d minimap, say) would run the
+	 * wrong projection on whichever camera didn't match activation.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Camera2d} [viewport] - the camera rendering this frame
+	 */
+	draw(renderer, viewport) {
+		// Prefer the live viewport (per-draw) over the flag captured
+		// at activation. Falling back to the flag when no viewport is
+		// passed preserves test callers that call `draw(renderer)`
+		// directly.
+		const useWorldSpace =
+			viewport !== undefined
+				? viewport instanceof Camera3d
+				: this._useWorldSpace === true;
+		if (useWorldSpace) {
+			if (this._worldSpace !== true) {
+				this._setupWorldSpace();
+			}
+			// Camera3d path: use the winding-reversed indices to keep
+			// `cullBackFaces: true` correct under the Y-flip in
+			// `_projectVerticesWorld`.
+			this.indices = this._indicesReversed;
+			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
+		} else {
+			// Camera2d / no-camera path: restore the original winding.
+			// Important when the same Mesh instance was previously drawn
+			// under Camera3d (`_setupWorldSpace` ran) and is now being
+			// re-rendered under a 2D camera — without this restore the
+			// reversed indices stay in place and front-facing triangles
+			// get culled, leaving the model looking inside-out.
+			this.indices = this._indicesOriginal;
+			this._projectVertices(this.pos.x, this.pos.y, 1000);
+		}
 		renderer.drawMesh(this);
 	}
 

@@ -14,7 +14,8 @@ const resources = [
 ];
 
 export const createGame = () => {
-	video.init(640, 480);
+	// `parent: "screen"` — see ExampleBenchmark for the rationale.
+	video.init(640, 480, { parent: "screen" });
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");

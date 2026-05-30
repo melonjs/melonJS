@@ -303,11 +303,15 @@ export default class LitQuadBatcher extends QuadBatcher {
 			normalTextureId = unit;
 		}
 
+		// Stamp per-sprite depth onto z BEFORE `m.apply` — see
+		// `QuadBatcher.addQuad` for the full rationale. V_ARRAY is the
+		// shared Vector3d pool from `QuadBatcher`.
 		const m = this.viewMatrix;
-		const vec0 = V_ARRAY[0].set(x, y);
-		const vec1 = V_ARRAY[1].set(x + w, y);
-		const vec2 = V_ARRAY[2].set(x, y + h);
-		const vec3 = V_ARRAY[3].set(x + w, y + h);
+		const z = this.renderer.currentDepth;
+		const vec0 = V_ARRAY[0].set(x, y, z);
+		const vec1 = V_ARRAY[1].set(x + w, y, z);
+		const vec2 = V_ARRAY[2].set(x, y + h, z);
+		const vec3 = V_ARRAY[3].set(x + w, y + h, z);
 
 		if (!m.isIdentity()) {
 			m.apply(vec0);
@@ -317,13 +321,10 @@ export default class LitQuadBatcher extends QuadBatcher {
 		}
 
 		const textureId = this.useMultiTexture ? unit : 0;
-		// z = current renderer depth (Renderable.preDraw); a no-op under ortho,
-		// consumed by perspective (Camera3d) — matches QuadBatcher.addQuad.
-		const z = this.renderer.currentDepth;
 		vertexData.push(
 			vec0.x,
 			vec0.y,
-			z,
+			vec0.z,
 			u0,
 			v0,
 			tint,
@@ -333,7 +334,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		vertexData.push(
 			vec1.x,
 			vec1.y,
-			z,
+			vec1.z,
 			u1,
 			v0,
 			tint,
@@ -343,7 +344,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		vertexData.push(
 			vec2.x,
 			vec2.y,
-			z,
+			vec2.z,
 			u0,
 			v1,
 			tint,
@@ -353,7 +354,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		vertexData.push(
 			vec3.x,
 			vec3.y,
-			z,
+			vec3.z,
 			u1,
 			v1,
 			tint,
@@ -389,11 +390,12 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// `QuadBatcher.blitTexture` for the rationale. Only caller today
 		// is `WebGLRenderer.blitEffect`, which resets `currentTransform`
 		// to identity, so the matrix branch is dormant in practice.
+		// Explicit z = 0 because V_ARRAY is Vector3d (shared with addQuad).
 		const m = this.viewMatrix;
-		const vec0 = V_ARRAY[0].set(x, y);
-		const vec1 = V_ARRAY[1].set(x + width, y);
-		const vec2 = V_ARRAY[2].set(x, y + height);
-		const vec3 = V_ARRAY[3].set(x + width, y + height);
+		const vec0 = V_ARRAY[0].set(x, y, 0);
+		const vec1 = V_ARRAY[1].set(x + width, y, 0);
+		const vec2 = V_ARRAY[2].set(x, y + height, 0);
+		const vec3 = V_ARRAY[3].set(x + width, y + height, 0);
 		if (m && !m.isIdentity()) {
 			m.apply(vec0);
 			m.apply(vec1);

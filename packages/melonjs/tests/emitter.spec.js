@@ -228,6 +228,102 @@ describe("ParticleEmitter", () => {
 		});
 	});
 
+	// ---------------------------------------------------------------------
+	// Regression: `update(dt)` MUST always run Container.update on the
+	// children (the particle walk + per-child visibility refresh), even
+	// when `this.isDirty` is already true.
+	//
+	// The bug was the obvious-looking
+	//     this.isDirty = this.isDirty || super.update(dt);
+	// JS `||` short-circuits when the LHS is truthy — so on any frame
+	// where the emitter was already dirty (very common: after spawning
+	// particles, after a position change, etc.), `super.update(dt)`
+	// never ran. Each particle stayed at its previous `inViewport`
+	// state and was skipped by `Container.draw` — under Camera3d, where
+	// particles start with `inViewport = false` until the first walk
+	// computes it, the whole exhaust trail stayed invisible.
+	//
+	// Fix: cache the result of `super.update(dt)` in a local, THEN OR
+	// into `isDirty` so the call always runs.
+	describe("update() short-circuit regression (visibility refresh on dirty frames)", () => {
+		it("calls super.update(dt) even when this.isDirty is already true", () => {
+			const em = new ParticleEmitter(100, 100, {
+				width: 16,
+				height: 16,
+				totalParticles: 4,
+			});
+			// Spy on Container's update — that's `super.update` from
+			// inside ParticleEmitter.
+			const containerProto = Object.getPrototypeOf(Object.getPrototypeOf(em));
+			const superUpdate = vi.spyOn(containerProto, "update");
+
+			// Force the precondition that previously masked the bug.
+			em.isDirty = true;
+			em.update(16);
+
+			expect(superUpdate).toHaveBeenCalledTimes(1);
+			expect(superUpdate).toHaveBeenCalledWith(16);
+
+			superUpdate.mockRestore();
+		});
+
+		it("propagates the children-dirty signal into emitter.isDirty (true ∨ ? = true)", () => {
+			// Even if children come back clean (super.update returns
+			// false), the emitter must remain dirty if it was already
+			// dirty before the call. Verifies the OR semantics are
+			// preserved — the fix is `cache local → OR in`, not
+			// `replace`.
+			const em = new ParticleEmitter(100, 100, {
+				width: 16,
+				height: 16,
+				totalParticles: 4,
+			});
+			const containerProto = Object.getPrototypeOf(Object.getPrototypeOf(em));
+			vi.spyOn(containerProto, "update").mockReturnValue(false);
+
+			em.isDirty = true;
+			em.update(16);
+
+			expect(em.isDirty).toBe(true);
+			vi.restoreAllMocks();
+		});
+
+		it("particle update runs on every frame — burst, then dirty frame, then assert particle moved", () => {
+			// End-to-end signal: spawn particles, mark emitter dirty
+			// (which we know the bug skipped), advance time, and verify
+			// at least one particle's position has changed. If
+			// super.update were short-circuited, particles would never
+			// see their `update(dt)` and stay frozen at spawn position.
+			const em = new ParticleEmitter(100, 100, {
+				width: 1,
+				height: 1,
+				totalParticles: 4,
+				// pure horizontal motion so position deltas are easy to
+				// detect; avoid randomness on the angle so the test is
+				// deterministic.
+				angle: 0,
+				angleVariation: 0,
+				speed: 5,
+				speedVariation: 0,
+				minLife: 10_000,
+				maxLife: 10_000,
+				gravity: 0,
+				wind: 0,
+				onlyInViewport: false,
+			});
+			em.burstParticles(2);
+			const particle = em.getChildren()[0];
+			const startX = particle.pos.x;
+
+			// Pin the precondition that triggered the original bug:
+			// emitter is already dirty when update fires.
+			em.isDirty = true;
+			em.update(16);
+
+			expect(particle.pos.x).not.toBe(startX);
+		});
+	});
+
 	describe("particle transform (closed-form equivalence)", () => {
 		// Reference implementation: the original 4-step builder.
 		function buildReference(scale, angle, posX, posY, halfW, halfH) {

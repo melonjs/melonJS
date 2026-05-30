@@ -87,7 +87,17 @@ class DeviceInfo extends Renderable {
 }
 
 const createGame = () => {
-	if (!video.init(480, 320, { scaleMethod: "flex", renderer: video.CANVAS })) {
+	if (
+		!video.init(480, 320, {
+			// see ExampleBenchmark — without `parent: "screen"` the
+			// engine falls back to `document.body`, whose dev-mode
+			// transient height collapses and shrinks the Flex-scaled
+			// canvas down to a horizontal banner.
+			parent: "screen",
+			scaleMethod: "flex",
+			renderer: video.CANVAS,
+		})
+	) {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

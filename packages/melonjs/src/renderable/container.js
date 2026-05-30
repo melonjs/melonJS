@@ -16,6 +16,72 @@ function deferredRemove(child, keepalive) {
 }
 
 /**
+ * Module-level cache of the camera position used by `_sortDepth`.
+ * Captured once per sort (in `sort` / `sortNow`) so the comparator —
+ * which runs O(N log N) times — doesn't pay a `state.current()` lookup
+ * per comparison. Safe to be module-scoped: JS is single-threaded and
+ * sort is synchronous within each container.
+ * @ignore
+ */
+let _depthCamX = 0;
+let _depthCamY = 0;
+let _depthCamZ = 0;
+// World-space offset of the container currently being sorted. Captured
+// once per sort alongside `_depthCam*` so `_sortDepth` can translate
+// each child's LOCAL `pos.x/y/z` into the world frame the camera
+// distance is computed in. Without this, a container at world z=500
+// (e.g. a particle emitter) would compare its children at local z=0
+// against `_depthCam*` (world coords), producing a meaningless
+// distance and an incorrect painter-sort order when the camera sits
+// closer to the container's world position than to the global origin.
+let _depthOffsetX = 0;
+let _depthOffsetY = 0;
+let _depthOffsetZ = 0;
+
+/**
+ * Refresh the cached camera position from the active stage. Falls back
+ * to (0, 0, 0) when no camera exists yet (e.g. early init, before any
+ * stage has been set). Called just-in-time before `sortOn === "depth"`
+ * runs its sort. The camera is a `Renderable` (Camera2d/Camera3d), so
+ * `pos.z` is guaranteed by `ObservableVector3d` — no per-field guard.
+ *
+ * `Stage.cameras` is a `Map`, not an array — we read the `"default"`
+ * key (every Stage seeds this in `reset`). For split-screen setups the
+ * world sorts once per frame against the primary camera; the secondary
+ * camera sees slightly-imperfect order which is the standard
+ * compromise for split-screen rendering.
+ * @ignore
+ */
+function captureDepthCamera() {
+	const stage = state.current();
+	const cam = stage?.cameras?.get("default");
+	if (cam) {
+		_depthCamX = cam.pos.x;
+		_depthCamY = cam.pos.y;
+		_depthCamZ = cam.pos.z;
+	} else {
+		_depthCamX = 0;
+		_depthCamY = 0;
+		_depthCamZ = 0;
+	}
+}
+
+/**
+ * Capture the world-space position of the given container into the
+ * module-level `_depthOffset*` triple. Called once per sort by `sort` /
+ * `sortNow` before walking the children, so `_sortDepth` can translate
+ * each child's LOCAL `pos.x/y/z` into world space without paying for
+ * an `ancestor.getAbsolutePosition()` walk per comparator call.
+ * @ignore
+ */
+function captureDepthOffset(container) {
+	const abs = container.getAbsolutePosition();
+	_depthOffsetX = abs.x;
+	_depthOffsetY = abs.y;
+	_depthOffsetZ = abs.z;
+}
+
+/**
  * Register a child's physics body with the root world container when the
  * child is added to the tree. Two paths coexist:
  *  - `child.bodyDef`: declarative {@link BodyDefinition}, routed through
@@ -190,9 +256,28 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * The property of the child object that should be used to sort on this container.
-	 * Accepted values: "x", "y", "z"
-	 * @type {string}
+	 * The property of the child object that should be used to sort on
+	 * this container.
+	 *
+	 * - `"x"` / `"y"` — 2D scroll-order, descending on both axes
+	 *   (higher pos.z first; tied z, higher pos.x or pos.y first).
+	 *   Suited to side-scrollers and top-down games.
+	 * - `"z"` — descending pos.z (higher z draws on top). Default for
+	 *   `Camera2d` — matches the painter's-algorithm 2D layering model
+	 *   where pos.z is "layer index".
+	 * - `"depth"` — **Camera3d-only.** Ascending squared distance from
+	 *   the active camera (closest first in the array → far drawn first
+	 *   → close drawn on top under `Container.draw`'s reverse-iteration
+	 *   walk). This is the only correct sort for alpha-blended sprites
+	 *   under perspective projection, where neither pos.z nor pos.x/y
+	 *   layering produces correct occlusion (the closer/farther
+	 *   relationship flips as the camera orbits). Set automatically
+	 *   when an `Application` or `Stage` is constructed with
+	 *   `cameraClass: Camera3d`. Has no useful effect under `Camera2d`
+	 *   (ortho projection doesn't need camera-distance ordering) and
+	 *   pays an O(N log N) sort per frame, so don't enable it manually
+	 *   in 2D-only games.
+	 * @type {"x"|"y"|"z"|"depth"}
 	 * @default "z"
 	 */
 	get sortOn() {
@@ -200,13 +285,17 @@ export default class Container extends Renderable {
 	}
 	set sortOn(value) {
 		const v = value.toLowerCase();
-		if (v !== "x" && v !== "y" && v !== "z") {
+		if (v !== "x" && v !== "y" && v !== "z" && v !== "depth") {
 			throw new Error(
-				`Invalid sortOn value: "${value}" (expected "x", "y", or "z")`,
+				`Invalid sortOn value: "${value}" (expected "x", "y", "z", or "depth")`,
 			);
 		}
 		this._sortOn = v;
-		this._comparator = this["_sort" + v.toUpperCase()];
+		if (v === "depth") {
+			this._comparator = this._sortDepth;
+		} else {
+			this._comparator = this["_sort" + v.toUpperCase()];
+		}
 	}
 
 	/**
@@ -875,6 +964,13 @@ export default class Container extends Renderable {
 				});
 			}
 			this.pendingSort = defer(function () {
+				// refresh the cached camera + container offset so
+				// `_sortDepth` sees the current view in world space —
+				// no-op for x/y/z modes.
+				if (this._sortOn === "depth") {
+					captureDepthCamera();
+					captureDepthOffset(this);
+				}
 				// sort everything in this container
 				this.getChildren().sort(this._comparator);
 				// clear the defer id
@@ -882,6 +978,35 @@ export default class Container extends Renderable {
 				// make sure we redraw everything
 				this.isDirty = true;
 			}, this);
+		}
+	}
+
+	/**
+	 * Synchronous variant of {@link Container#sort}. Sorts immediately
+	 * — no defer — using the current `_comparator`. Intended for
+	 * per-frame callers that need the order to be valid for the very
+	 * next render (e.g. `Camera3d` refreshing the `"depth"` sort after
+	 * the camera has moved, where waiting for the deferred sort tick
+	 * would render a stale frame).
+	 * @param {boolean} [recursive=false] - recursively sort sub-containers
+	 */
+	sortNow(recursive) {
+		if (this._sortOn === "depth") {
+			captureDepthCamera();
+			captureDepthOffset(this);
+		}
+		const children = this.getChildren();
+		if (children.length > 1) {
+			children.sort(this._comparator);
+			this.isDirty = true;
+		}
+		if (recursive === true) {
+			for (let i = 0; i < children.length; i++) {
+				const c = children[i];
+				if (c instanceof Container) {
+					c.sortNow(true);
+				}
+			}
 		}
 	}
 
@@ -913,6 +1038,41 @@ export default class Container extends Renderable {
 	 */
 	_sortReverseZ(a, b) {
 		return a.pos.z - b.pos.z;
+	}
+
+	/**
+	 * Camera-distance sorting function used by `sortOn = "depth"`.
+	 * Orders children by ascending squared distance from the cached
+	 * camera position — closest first in the array, so
+	 * {@link Container#draw}'s reverse-iteration walk paints far→near
+	 * (correct painter's algorithm for alpha-blended sprites under
+	 * perspective). The cached position is refreshed by
+	 * {@link captureDepthCamera} just before each sort runs; this
+	 * comparator stays tight (zero allocation, six subtracts + three
+	 * mul-adds per pair) for the hot O(N log N) path.
+	 *
+	 * Container children are `Renderable` instances with an
+	 * `ObservableVector3d` pos — `pos.z` is always defined, no guard
+	 * needed here.
+	 * @ignore
+	 */
+	_sortDepth(a, b) {
+		// Translate each child's LOCAL `pos` into world space via the
+		// parent container's offset (captured once per sort by
+		// `captureDepthOffset`). For the world container itself the
+		// offset is (0, 0, 0), so this collapses to the original
+		// local-only math. For nested containers (an emitter at
+		// world z=500, particles at local z=0) it's the difference
+		// between "particles all sort identically because their
+		// local d²=0" and "particles sort by their actual world
+		// distance from the camera".
+		const ax = a.pos.x + _depthOffsetX - _depthCamX;
+		const ay = a.pos.y + _depthOffsetY - _depthCamY;
+		const az = a.pos.z + _depthOffsetZ - _depthCamZ;
+		const bx = b.pos.x + _depthOffsetX - _depthCamX;
+		const by = b.pos.y + _depthOffsetY - _depthCamY;
+		const bz = b.pos.z + _depthOffsetZ - _depthCamZ;
+		return ax * ax + ay * ay + az * az - (bx * bx + by * by + bz * bz);
 	}
 
 	/**
@@ -1047,9 +1207,15 @@ export default class Container extends Renderable {
 				if (isFloating) {
 					renderer.save();
 					renderer.resetTransform();
-					if (isNonDefaultCamera) {
-						renderer.setProjection(viewport.screenProjection);
-					}
+					// Floating renderables draw in screen space — swap to
+					// the camera's flat screen ortho regardless of whether
+					// we're on the default camera. Under Camera2d this is
+					// a no-op (its `screenProjection` mirrors
+					// `projectionMatrix`); under Camera3d this is the only
+					// way to render floating Text / HUD / overlays without
+					// the perspective projection NaN-ing them via
+					// `w = 0` perspective divide on world-z=0 points.
+					renderer.setProjection(viewport.screenProjection);
 				}
 
 				obj.preDraw(renderer);
@@ -1057,9 +1223,15 @@ export default class Container extends Renderable {
 				obj.postDraw(renderer);
 
 				if (isFloating) {
-					if (isNonDefaultCamera) {
-						renderer.setProjection(viewport.worldProjection);
-					}
+					// Restore the projection the camera had installed for
+					// this draw pass — non-default cameras use a separate
+					// `worldProjection`; the default camera just uses
+					// `projectionMatrix` directly.
+					renderer.setProjection(
+						isNonDefaultCamera
+							? viewport.worldProjection
+							: viewport.projectionMatrix,
+					);
 					renderer.restore();
 				}
 			}

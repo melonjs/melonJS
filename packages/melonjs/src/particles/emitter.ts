@@ -215,9 +215,13 @@ export default class ParticleEmitter extends Container {
 	// Add count particles in the game world
 	/** @ignore */
 	addParticles(count: number): void {
-		// pos is an ObservableVector3d at runtime; the renderable typedef exposes
-		// it as Vector2d, so we read .z through an unknown cast.
-		const z = (this.pos as unknown as { z: number }).z;
+		// Propagate the emitter's depth onto each new particle via
+		// `Container.addChild(child, z)` so Camera3d projects them at
+		// the emitter's z slice (not at the world origin, which would
+		// place them on the wrong perspective plane for explosions /
+		// exhaust trails attached to a moving Mesh).
+		// `Renderable.depth` proxies to `pos.z` — same value, no cast.
+		const z = this.depth;
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
 			this.addChild(particlePool.get(this), z);
@@ -286,8 +290,16 @@ export default class ParticleEmitter extends Container {
 			this._dt = 0;
 		}
 
-		// Update particles
-		this.isDirty = this.isDirty || super.update(dt);
+		// Update particles. `super.update(dt)` walks every child
+		// (each Particle) through Container.update — visibility check,
+		// per-particle `update(dt)`, etc. CRITICAL: assign it to a
+		// local first, then OR into `this.isDirty`. Writing this as
+		// `this.isDirty = this.isDirty || super.update(dt)` would
+		// short-circuit when `isDirty` is already true (very common),
+		// silently skipping the whole child walk — particles would
+		// keep `inViewport = false` and never draw.
+		const childrenDirty = super.update(dt);
+		this.isDirty = this.isDirty || childrenDirty;
 
 		// Launch new particles, if emitter is Stream
 		if (this._enabled && this._stream) {

@@ -123,15 +123,20 @@ export default class PrimitiveBatcher extends Batcher {
 		}
 
 		if (!viewMatrix.isIdentity()) {
+			// Full 3D transform including the z column (m[8] / m[9] /
+			// m[10] / m[14]) so Camera3d's view matrix (X/Y-axis
+			// rotation) actually rotates the primitive in 3D. For 2D
+			// matrices those slots are identity, so output (x, y, z)
+			// is bit-identical to the legacy 2D-only multiply.
 			const m = viewMatrix.val;
 			for (let i = 0; i < vertexCount; i++) {
 				const vert = verts[i];
 				const x = vert.x;
 				const y = vert.y;
 				vertexData.push(
-					x * m[0] + y * m[4] + m[12],
-					x * m[1] + y * m[5] + m[13],
-					z,
+					x * m[0] + y * m[4] + z * m[8] + m[12],
+					x * m[1] + y * m[5] + z * m[9] + m[13],
+					x * m[2] + y * m[6] + z * m[10] + m[14],
 					0,
 					0,
 					colorUint32,
@@ -187,18 +192,28 @@ export default class PrimitiveBatcher extends Batcher {
 			const from = verts[i];
 			const to = verts[i + 1];
 
-			// apply view matrix to base positions without mutating inputs
-			let fromX, fromY, toX, toY;
+			// apply view matrix to base positions without mutating
+			// inputs. Includes the z column for parity with the simple-
+			// line path and Vector3d quad batcher — Camera3d's view
+			// matrix needs depth-aware rotation. Note: the perpendicular
+			// normal is still computed in pre-projection world space,
+			// which appears non-perpendicular under perspective — known
+			// limitation, separate from the Vector3d migration.
+			let fromX, fromY, fromZ, toX, toY, toZ;
 			if (hasTransform) {
-				fromX = from.x * m[0] + from.y * m[4] + m[12];
-				fromY = from.x * m[1] + from.y * m[5] + m[13];
-				toX = to.x * m[0] + to.y * m[4] + m[12];
-				toY = to.x * m[1] + to.y * m[5] + m[13];
+				fromX = from.x * m[0] + from.y * m[4] + z * m[8] + m[12];
+				fromY = from.x * m[1] + from.y * m[5] + z * m[9] + m[13];
+				fromZ = from.x * m[2] + from.y * m[6] + z * m[10] + m[14];
+				toX = to.x * m[0] + to.y * m[4] + z * m[8] + m[12];
+				toY = to.x * m[1] + to.y * m[5] + z * m[9] + m[13];
+				toZ = to.x * m[2] + to.y * m[6] + z * m[10] + m[14];
 			} else {
 				fromX = from.x;
 				fromY = from.y;
+				fromZ = z;
 				toX = to.x;
 				toY = to.y;
+				toZ = z;
 			}
 
 			// compute perpendicular unit normal
@@ -215,14 +230,14 @@ export default class PrimitiveBatcher extends Batcher {
 
 			// two triangles forming a quad around the line segment
 			// triangle 1: from+n, from-n, to-n
-			vertexData.push(fromX, fromY, z, nx, ny, colorUint32);
-			vertexData.push(fromX, fromY, z, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, z, -nx, -ny, colorUint32);
+			vertexData.push(fromX, fromY, fromZ, nx, ny, colorUint32);
+			vertexData.push(fromX, fromY, fromZ, -nx, -ny, colorUint32);
+			vertexData.push(toX, toY, toZ, -nx, -ny, colorUint32);
 
 			// triangle 2: from+n, to-n, to+n
-			vertexData.push(fromX, fromY, z, nx, ny, colorUint32);
-			vertexData.push(toX, toY, z, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, z, nx, ny, colorUint32);
+			vertexData.push(fromX, fromY, fromZ, nx, ny, colorUint32);
+			vertexData.push(toX, toY, toZ, -nx, -ny, colorUint32);
+			vertexData.push(toX, toY, toZ, nx, ny, colorUint32);
 		}
 	}
 }
