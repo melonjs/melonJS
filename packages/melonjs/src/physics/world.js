@@ -7,11 +7,8 @@ import {
 	on,
 	WORLD_STEP,
 } from "../system/event.ts";
-import { AABB3d } from "./broadphase/aabb3d.ts";
-import Octree from "./broadphase/octree.ts";
-import QuadTree from "./broadphase/quadtree.ts";
+import { createBroadphase } from "./broadphase/factory.ts";
 import BuiltinAdapter from "./builtin/builtin-adapter.ts";
-import { collision } from "./collision.js";
 
 /**
  * @import Application from "./../application/application.ts";
@@ -153,17 +150,22 @@ export default class World extends Container {
 		 * `world.adapter.raycast(...)` instead.
 		 * @type {import("./broadphase/broadphase.ts").Broadphase}
 		 */
-		this.broadphase = this.#makeBroadphase();
+		this.broadphase = createBroadphase(this);
 
 		// reset the world container on the game reset signal
 		on(GAME_RESET, this.reset, this);
 
-		// update the broadband world bounds if a new level is loaded
+		// reset the broadphase on level load. 2D path resizes the
+		// QuadTree root to match the new world bounds; 3D path just
+		// clears contents because the Octree root is a fixed
+		// origin-centred box that doesn't depend on the level's 2D
+		// extent.
 		on(LEVEL_LOADED, () => {
-			// reset the broadphase (impl-agnostic — both classes accept
-			// the matching bounds shape here; the setter would have
-			// already swapped impl if sortOn flipped).
-			this.broadphase.clear(this.#broadphaseBounds());
+			if (this._sortOn === "depth") {
+				this.broadphase.clear();
+			} else {
+				this.broadphase.clear(this.getBounds().clone());
+			}
 		});
 	}
 
@@ -187,48 +189,8 @@ export default class World extends Container {
 		super.sortOn = value;
 		const now3D = this._sortOn === "depth";
 		if (was3D !== now3D) {
-			this.broadphase = this.#makeBroadphase();
+			this.broadphase = createBroadphase(this);
 		}
-	}
-
-	#makeBroadphase() {
-		return this._sortOn === "depth"
-			? new Octree(
-					this,
-					this.#broadphaseBounds(),
-					collision.maxChildren,
-					collision.maxDepth,
-				)
-			: new QuadTree(
-					this,
-					/** @type {import("./bounds.ts").Bounds} */ (
-						this.#broadphaseBounds()
-					),
-					collision.maxChildren,
-					collision.maxDepth,
-				);
-	}
-
-	#broadphaseBounds() {
-		if (this._sortOn === "depth") {
-			// Camera3d games conventionally center the play area on the
-			// world origin (items at e.g. x ∈ [-PLAY_BOUND_X, PLAY_BOUND_X])
-			// — `world.getBounds()` returns the 2D viewport rect (0..w,
-			// 0..h) which DOESN'T contain those items. Using viewport
-			// bounds as the octree root would cause negative-coord items
-			// to be misclassified into octants whose AABBs don't contain
-			// them, breaking `querySphere`'s spatial pruning.
-			//
-			// Use a generous origin-centred box instead. ±10000 covers
-			// arcade-3D scales (AfterBurner ≈ ±350 xy, ±1000 z); items
-			// outside still work — `getIndex` keeps them at root.objects
-			// so retrieve / queryAABB / querySphere walk them via the
-			// root-level pass, just without the spatial-partition win.
-			const aabb = new AABB3d();
-			aabb.setMinMax(-10000, -10000, -10000, 10000, 10000, 10000);
-			return aabb;
-		}
-		return this.getBounds().clone();
 	}
 
 	/**
