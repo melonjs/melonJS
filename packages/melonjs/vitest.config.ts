@@ -26,22 +26,7 @@ export default defineConfig(() =>
 			include: ["**/*.{test,spec}.[jt]s?(x)"],
 			browser: {
 				enabled: true,
-				// Swiftshader flags enable software WebGL2 in headless
-				// chromium so pixel-level renderer tests (mesh depth,
-				// TMX layer shader) run in CI instead of skipping. The
-				// flags belong on the `playwright()` provider call, not
-				// on the per-instance config — `BrowserInstanceOption`
-				// has no `launchOptions` field.
-				provider: playwright({
-					launchOptions: {
-						args: [
-							"--use-gl=angle",
-							"--use-angle=swiftshader",
-							"--enable-unsafe-swiftshader",
-							"--ignore-gpu-blocklist",
-						],
-					},
-				}),
+				provider: playwright(),
 				instances: [
 					{
 						browser: "chromium",
