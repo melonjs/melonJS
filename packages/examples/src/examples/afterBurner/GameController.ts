@@ -17,11 +17,15 @@ import {
 	type Application,
 	audio,
 	type Camera3d,
+	ChromaticAberrationEffect,
+	GlowEffect,
 	input,
 	math,
 	ParticleEmitter,
 	pool,
 	Renderable,
+	type Renderer,
+	ScanlineEffect,
 	Sprite,
 	state,
 	Tween,
@@ -151,12 +155,25 @@ function buildBulletClass(
  * scale + alpha, so `onResetEvent` has to put both BACK to their
  * "freshly spawned" values when a recycled sprite gets reused.
  */
-function buildContrailClass(texture: HTMLCanvasElement) {
+function buildContrailClass(texture: HTMLCanvasElement, renderer: Renderer) {
 	return class ContrailSprite extends Sprite {
 		constructor(x: number, y: number) {
 			super(x, y, { image: texture });
 			this.blendMode = "additive";
 			this.tint.parseCSS("#dfe8ff");
+			// Warm-orange outer glow against the cool-white puff core —
+			// the GlowEffect samples 8 neighbours in transparent pixels
+			// and bleeds the color outward, so the cool vapor reads as
+			// hot afterburner exhaust. One effect per pooled instance;
+			// pool reuse keeps it alive across re-spawns.
+			this.addPostEffect(
+				new GlowEffect(renderer, {
+					color: [1.0, 0.55, 0.15],
+					width: 4,
+					intensity: 1.8,
+					textureSize: [texture.width, texture.height],
+				}),
+			);
 		}
 		onResetEvent(x: number, y: number): void {
 			this.pos.x = x;
@@ -244,6 +261,22 @@ export class GameController extends Renderable {
 		// despawn keeps the math clean.
 		this.camera.setClipPlanes(0.1, 6000);
 
+		// Light sepia tint uniforms the palette across the skybox, mesh
+		// materials, and HUD into one warm wash — sells the After Burner
+		// look without dimming readability. Superlight scanlines stack on
+		// top for an arcade-cabinet feel; both compose via the camera's
+		// post-FX pipeline.
+		this.camera.colorMatrix.sepia(0.18);
+		this.camera.addPostEffect(
+			new ScanlineEffect(app.renderer, { opacity: 0.08 }),
+		);
+		this.camera.addPostEffect(
+			new ChromaticAberrationEffect(app.renderer, {
+				offset: 1.5,
+				textureSize: [this.camera.width, this.camera.height],
+			}),
+		);
+
 		this.bindInputs();
 
 		// Player jet — speederA mesh facing the horizon (+Z). `addChild(z)`
@@ -306,7 +339,7 @@ export class GameController extends Renderable {
 		);
 		pool.register(
 			POOL_CONTRAIL_NODE,
-			buildContrailClass(this.contrailTexture),
+			buildContrailClass(this.contrailTexture, this.app.renderer),
 			true,
 		);
 	}
