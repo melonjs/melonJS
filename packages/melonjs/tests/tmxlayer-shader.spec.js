@@ -183,6 +183,42 @@ describe("TMXLayer shader path", () => {
 	});
 
 	/**
+	 * Regression for #1471: `reset()` used to grab
+	 * `renderer.currentBatcher`, but uploads always go through the quad
+	 * batcher (see `_drawLayer`). When the previous-frame draw left
+	 * `currentBatcher` as a `PrimitiveBatcher` (e.g. the debug plugin's
+	 * quadtree overlay), the reset path tried to call
+	 * `deleteTexture2D` on a batcher that doesn't expose it — crash on
+	 * any stage change. `reset()` now pins to `batchers.get("quad")`.
+	 */
+	it("survives reset() even when currentBatcher is not a MaterialBatcher", (ctx) => {
+		requireWebGL2(ctx);
+		const gpu = renderer._getTMXGPURendererFor("orthogonal");
+		const quad = renderer.setBatcher("quad");
+
+		const layer = {
+			cols: 2,
+			rows: 2,
+			layerData: new Uint16Array(2 * 2 * 2),
+			dataVersion: 0,
+		};
+		quad.uploadTexture(gpu._getResource(layer), layer.cols, layer.rows);
+		expect(gpu.resources.size).toBe(1);
+
+		// Now mimic the debug-plugin quadtree overlay leaving the
+		// primitive batcher as `currentBatcher` before the level reset.
+		renderer.setBatcher("primitive");
+		expect(renderer.currentBatcher).not.toBe(quad);
+
+		// Pre-fix this throws `TypeError: batcher.deleteTexture2D is not
+		// a function` and the resource map is never cleared.
+		expect(() => {
+			gpu.reset();
+		}).not.toThrow();
+		expect(gpu.resources.size).toBe(0);
+	});
+
+	/**
 	 * Animation lookup: non-animated tilesets don't allocate a lookup
 	 * entry at all (saves a texture unit + a GL texture); animated
 	 * tilesets get a `tileCount × 1` RGBA8 texture initialized to
