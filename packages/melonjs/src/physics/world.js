@@ -7,9 +7,8 @@ import {
 	on,
 	WORLD_STEP,
 } from "../system/event.ts";
+import { createBroadphase } from "./broadphase/factory.ts";
 import BuiltinAdapter from "./builtin/builtin-adapter.ts";
-import QuadTree from "./builtin/quadtree.js";
-import { collision } from "./collision.js";
 
 /**
  * @import Application from "./../application/application.ts";
@@ -136,24 +135,62 @@ export default class World extends Container {
 		this.adapter.init?.(this);
 
 		/**
-		 * the instance of the game world quadtree used for broadphase (used by the builtin physic and pointer event implementation)
-		 * @type {QuadTree}
+		 * Spatial broadphase used by built-in physics and pointer
+		 * event picking. The concrete class depends on
+		 * {@link Container#sortOn}: under `"depth"` (the value
+		 * `Camera3d.defaultSortOn` sets on stage reset) it's an
+		 * `Octree`; under any 2D sortOn it's a `QuadTree`. The choice
+		 * is reactive — the `sortOn` setter swaps the broadphase if a
+		 * 2D↔3D boundary crossing occurs, so stage transitions between
+		 * Camera2d and Camera3d stages are handled transparently.
+		 *
+		 * Implementation detail — game code shouldn't reach in here.
+		 * Use `world.adapter.queryAABB(rect)` /
+		 * `world.adapter.querySphere(sphere)` /
+		 * `world.adapter.raycast(...)` instead.
+		 * @type {import("./broadphase/broadphase.ts").Broadphase}
 		 */
-		this.broadphase = new QuadTree(
-			this,
-			this.getBounds().clone(),
-			collision.maxChildren,
-			collision.maxDepth,
-		);
+		this.broadphase = createBroadphase(this);
 
 		// reset the world container on the game reset signal
 		on(GAME_RESET, this.reset, this);
 
-		// update the broadband world bounds if a new level is loaded
+		// reset the broadphase on level load. 2D path resizes the
+		// QuadTree root to match the new world bounds; 3D path just
+		// clears contents because the Octree root is a fixed
+		// origin-centred box that doesn't depend on the level's 2D
+		// extent.
 		on(LEVEL_LOADED, () => {
-			// reset the quadtree
-			this.broadphase.clear(this.getBounds());
+			if (this._sortOn === "depth") {
+				this.broadphase.clear();
+			} else {
+				this.broadphase.clear(this.getBounds().clone());
+			}
 		});
+	}
+
+	/**
+	 * Override the inherited `Container.sortOn` setter so the
+	 * broadphase swaps to match when crossing a 2D↔3D boundary. See
+	 * the `broadphase` JSDoc for why the swap is reactive rather than
+	 * Stage-driven. The 2D/3D classification key is `"depth"` — every
+	 * other sortOn value lives in the 2D regime.
+	 * @returns {"x"|"y"|"z"|"depth"}
+	 */
+	get sortOn() {
+		return this._sortOn;
+	}
+	/**
+	 * @param {"x"|"y"|"z"|"depth"} value
+	 */
+	set sortOn(value) {
+		const was3D = this._sortOn === "depth";
+		// delegate to Container's setter for validation + comparator
+		super.sortOn = value;
+		const now3D = this._sortOn === "depth";
+		if (was3D !== now3D) {
+			this.broadphase = createBroadphase(this);
+		}
 	}
 
 	/**

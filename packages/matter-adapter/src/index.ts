@@ -90,6 +90,10 @@ export class MatterAdapter implements PhysicsAdapter {
 		continuousCollisionDetection: true,
 		sleepingBodies: true,
 		raycasts: true,
+		// Matter.js is 2D-only; no `raycast3d` method. User code under
+		// Camera3d should run on the builtin adapter (or a future 3D
+		// adapter) if it needs `world.adapter.raycast3d?(...)`.
+		raycasts3d: false,
 		velocityLimit: true,
 		isGrounded: true,
 	};

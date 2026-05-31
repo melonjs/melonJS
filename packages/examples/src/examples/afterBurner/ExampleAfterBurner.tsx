@@ -26,7 +26,7 @@ import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	audio,
-	Camera3d as Camera3dClass,
+	Camera3d,
 	loader,
 	plugin,
 	state,
@@ -58,19 +58,17 @@ const createGame = () => {
 		parent: "screen",
 		renderer: video.WEBGL,
 		scale: "auto",
-		cameraClass: Camera3dClass,
+		cameraClass: Camera3d,
 	});
 
 	// world.backgroundColor stays transparent (alpha 0) — the SkyboxStage
 	// paints the actual visible background each frame
 	app.world.backgroundColor.setColor(0, 0, 0, 0);
 
-	// Register the debug panel and open it by default. The `S` key (its
-	// usual toggle) is bound by `GameController` for WASD-down movement,
-	// so the panel would never come up via keyboard here — calling
-	// `show()` directly side-steps that conflict.
+	// Register the debug panel. Its usual toggle key (`S`) is bound by
+	// `GameController` for WASD-down movement, so the panel won't open
+	// via keyboard here — toggle it via the debug-plugin button instead.
 	plugin.register(DebugPanelPlugin, "debugPanel");
-	(plugin.cache.debugPanel as DebugPanelPlugin).show();
 
 	// Audio init — mp3 preferred (universal), m4a as a fallback for
 	// AAC-only browsers, ogg last for the Firefox/Linux path. Howler

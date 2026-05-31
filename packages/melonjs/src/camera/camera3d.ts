@@ -577,6 +577,55 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * Bulk frustum cull via the world's {@link Octree}. Returns every
+	 * renderable whose octant the current frustum overlaps —
+	 * conservative (some renderables may still narrow-cull out
+	 * via {@link Camera3d#isVisible}'s per-sphere test) but
+	 * O(visible + walk) instead of O(scene).
+	 *
+	 * Only applicable under `cameraClass: Camera3d` (or any setup
+	 * where `world.sortOn === "depth"` and the broadphase is an
+	 * Octree). Returns an empty array under a 2D broadphase — call
+	 * sites can guard on the array length or branch on
+	 * `world.sortOn`.
+	 *
+	 * For a 1000-renderable scene with ~50 visible, expect a 5-20×
+	 * speedup over walking every renderable and per-item
+	 * {@link Camera3d#isVisible}.
+	 * @param world - the world to cull (its broadphase must be an Octree); typed structurally to sidestep the Camera3d → World import cycle
+	 * @param world.broadphase - the world's spatial broadphase
+	 * @param world.sortOn - guard: returns empty unless this equals `"depth"`
+	 * @param [out] - caller-supplied result array (re-entrancy-safe)
+	 * @returns visible-renderable candidates
+	 * @example
+	 * const visible = camera.queryVisible(app.world);
+	 * for (const r of visible) {
+	 *   // narrow-phase per-renderable visibility (sphere / OBB) if needed
+	 *   if (camera.isVisible(r)) r.draw(renderer);
+	 * }
+	 */
+	queryVisible(
+		world: { broadphase: unknown; sortOn: string },
+		out?: Renderable[],
+	): Renderable[] {
+		const result = out ?? [];
+		result.length = 0;
+		if (world.sortOn !== "depth") {
+			return result;
+		}
+		// Duck-typed: the Octree exposes `queryFrustum`; the QuadTree
+		// doesn't. We don't import the class here to avoid the cycle.
+		const broadphase = world.broadphase as {
+			queryFrustum?: (
+				planes: Frustum["planes"],
+				out?: Renderable[],
+			) => Renderable[];
+		};
+		broadphase.queryFrustum?.(this.frustum.planes, result);
+		return result;
+	}
+
+	/**
 	 * Per-frame update — extends Camera2d's behavior (target follow,
 	 * camera effects) with rebuilding the frustum's six bounding
 	 * planes so {@link Camera3d#isVisible} returns accurate results

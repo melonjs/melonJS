@@ -1,7 +1,9 @@
 import type { Ellipse } from "../geometries/ellipse.ts";
 import type { Polygon } from "../geometries/polygon.ts";
 import type { Rect } from "../geometries/rectangle.ts";
+import type { Sphere } from "../geometries/sphere.ts";
 import type { Vector2d } from "../math/vector2d.ts";
+import type { Vector3d } from "../math/vector3d.ts";
 import type Renderable from "../renderable/renderable.js";
 import type { Bounds } from "./bounds.ts";
 import type World from "./world.js";
@@ -292,6 +294,13 @@ export interface AdapterCapabilities {
 	/** supports {@link PhysicsAdapter.raycast} */
 	raycasts: boolean;
 	/**
+	 * supports {@link PhysicsAdapter.raycast3d}. 2D-only adapters
+	 * (matter, planck) report `false` and omit the method; users can
+	 * branch on this flag before calling
+	 * `world.adapter.raycast3d?.(...)` to skip a no-op delegation.
+	 */
+	raycasts3d: boolean;
+	/**
 	 * supports {@link BodyDefinition.maxVelocity} /
 	 * {@link PhysicsAdapter.setMaxVelocity}. BuiltinAdapter does this
 	 * via its kinematic integrator; MatterAdapter via an `afterUpdate`
@@ -322,6 +331,25 @@ export interface RaycastHit {
 	point: Vector2d;
 	/** surface normal at the hit point */
 	normal: Vector2d;
+	/** position along the ray, `0..1` from `from` to `to` */
+	fraction: number;
+}
+
+/**
+ * Result of a successful {@link PhysicsAdapter.raycast3d}. Same
+ * shape as {@link RaycastHit}, with Vector3d in place of Vector2d.
+ * 3D adapters approximate each renderable's collision volume as a
+ * bounding sphere centred on `renderable.getAbsolutePosition()`
+ * with radius = the renderable's bounds circumradius — same model
+ * `Camera3d.isVisible` uses for frustum culling.
+ */
+export interface RaycastHit3d {
+	/** the renderable the ray hit */
+	renderable: Renderable;
+	/** world-space hit point (sphere entry) */
+	point: Vector3d;
+	/** surface normal at the hit point (outward from sphere centre) */
+	normal: Vector3d;
 	/** position along the ray, `0..1` from `from` to `to` */
 	fraction: number;
 }
@@ -537,7 +565,57 @@ export interface PhysicsAdapter {
 	 * exposing it costs nothing).
 	 */
 	raycast?(from: Vector2d, to: Vector2d): RaycastHit | null;
+	/**
+	 * Optional 3D variant of {@link PhysicsAdapter.raycast}. Walks
+	 * the world's {@link Octree} (active only under `cameraClass:
+	 * Camera3d`) and returns the nearest renderable whose bounding
+	 * sphere the ray intersects. 2D adapters omit this method;
+	 * call sites should check `capabilities.raycasts3d` first.
+	 */
+	raycast3d?(from: Vector3d, to: Vector3d): RaycastHit3d | null;
 	queryAABB(rect: Rect): Renderable[];
+	/**
+	 * Optional 3D sphere region query — returns renderables whose
+	 * `getAbsolutePosition()` lies within `radius` of `center`.
+	 * The narrow phase is a point-in-sphere test against each
+	 * candidate's centre; callers wanting bounding-sphere overlap
+	 * should intersect with the candidate's bounds afterwards.
+	 *
+	 * Two call shapes:
+	 * - `querySphere(center: Vector3d, radius: number)` — loose form
+	 * - `querySphere(sphere: Sphere)` — packaged form, the
+	 *   idiomatic surface once a query shape needs to be passed
+	 *   around or cached
+	 *
+	 * Active only under a 3D broadphase ({@link Octree}, set when
+	 * `world.sortOn === "depth"`). Adapters that don't expose a 3D
+	 * spatial index omit the method.
+	 * @example
+	 * // Loose form — quick one-off query:
+	 * const nearby = world.adapter.querySphere?.(enemy.pos, HIT_RADIUS);
+	 * @example
+	 * // Idiomatic form — give an entity its own bounding sphere and
+	 * // reuse it each frame:
+	 * import { Sphere } from "melonjs";
+	 *
+	 * class Enemy extends Renderable {
+	 *   collider = new Sphere(0, 0, 0, 30);
+	 *
+	 *   update(dt) {
+	 *     // keep the sphere glued to this renderable's pose
+	 *     this.collider.pos.set(this.pos.x, this.pos.y, this.pos.z);
+	 *     // query — returns every renderable whose centre is within
+	 *     // this enemy's collider
+	 *     const nearby = world.adapter.querySphere?.(this.collider) ?? [];
+	 *     for (const r of nearby) {
+	 *       // narrow-phase / kind filter / etc.
+	 *     }
+	 *     return super.update(dt);
+	 *   }
+	 * }
+	 */
+	querySphere?(center: Vector3d, radius: number): Renderable[];
+	querySphere?(sphere: Sphere): Renderable[];
 
 	/**
 	 * Return the body's axis-aligned bounding box in **renderable-local**

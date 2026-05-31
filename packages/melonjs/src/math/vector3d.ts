@@ -1,6 +1,6 @@
 import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
-import { clamp } from "./math.ts";
+import { clamp, damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d.ts";
 
 /**
@@ -377,14 +377,34 @@ export class Vector3d {
 
 	/**
 	 * Linearly interpolate between this vector and the given one.
-	 * @param v other vector
-	 * @param alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+	 * Frame-rate dependent at a fixed alpha — for smooth tracking
+	 * use {@link Vector3d.damp} instead.
+	 * @param v - other vector
+	 * @param alpha - distance along the line (alpha = 0 → this vector, alpha = 1 → `v`)
 	 * @returns Reference to this object for method chaining
 	 */
 	lerp(v: Vector3d, alpha: number) {
-		this.x += (v.x - this.x) * alpha;
-		this.y += (v.y - this.y) * alpha;
-		this.z += (v.z - this.z) * alpha;
+		this.x = lerp(this.x, v.x, alpha);
+		this.y = lerp(this.y, v.y, alpha);
+		this.z = lerp(this.z, v.z, alpha);
+		return this;
+	}
+
+	/**
+	 * Frame-rate independent exponential damping toward `target`.
+	 * Wrapper around {@link damp} applied per component.
+	 * @param target - vector to approach (Vector2d treats `z` as 0)
+	 * @param lambda - decay rate in `1/seconds` (higher = snappier)
+	 * @param dt - delta time in **seconds**
+	 * @returns Reference to this object for method chaining
+	 * @example
+	 * // smooth-follow a Camera3d target at a frame-rate independent rate:
+	 * camera.pos.damp(target.pos, 5, dt / 1000);
+	 */
+	damp(target: Vector2d | Vector3d, lambda: number, dt: number) {
+		this.x = damp(this.x, target.x, lambda, dt);
+		this.y = damp(this.y, target.y, lambda, dt);
+		this.z = damp(this.z, "z" in target ? target.z : 0, lambda, dt);
 		return this;
 	}
 

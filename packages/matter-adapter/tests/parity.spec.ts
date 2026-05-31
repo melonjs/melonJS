@@ -46,6 +46,7 @@ interface AdapterFactory {
 		continuousCollisionDetection: boolean;
 		sleepingBodies: boolean;
 		raycasts: boolean;
+		raycasts3d: boolean;
 		velocityLimit: boolean;
 		isGrounded: boolean;
 	};
@@ -60,6 +61,7 @@ const factories: AdapterFactory[] = [
 			continuousCollisionDetection: false,
 			sleepingBodies: false,
 			raycasts: true,
+			raycasts3d: true,
 			velocityLimit: true,
 			isGrounded: true,
 		},
@@ -79,6 +81,7 @@ const factories: AdapterFactory[] = [
 			continuousCollisionDetection: true,
 			sleepingBodies: true,
 			raycasts: true,
+			raycasts3d: false,
 			velocityLimit: true,
 			isGrounded: true,
 		},
@@ -1083,8 +1086,11 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 				expect(pickedUp).toEqual(true);
 				expect(events.length).toEqual(1);
 
-				// Deferred removal — safe on every adapter.
-				coin.ancestor.removeChildNow(coin);
+				// Deferred removal — safe on every adapter. `ancestor` is
+				// typed `Entity | Container`; only Container exposes
+				// `removeChildNow`, and we know this coin was attached to
+				// the world (a Container) above.
+				(coin.ancestor as Container).removeChildNow(coin);
 				world.update(16);
 				adapter.syncFromPhysics();
 

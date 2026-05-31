@@ -137,6 +137,86 @@ describe("Vector3d", () => {
 		expect(a.clone().lerp(b, 1).equals(b)).toEqual(true);
 	});
 
+	it("damp — dt=0 leaves vector unchanged", () => {
+		a.set(10, 20, 30);
+		b.set(100, 200, 300);
+		const before = a.clone();
+		a.damp(b, 5, 0);
+		expect(a.equals(before)).toEqual(true);
+	});
+
+	it("damp — lambda=0 leaves vector unchanged", () => {
+		a.set(10, 20, 30);
+		b.set(100, 200, 300);
+		const before = a.clone();
+		a.damp(b, 0, 0.5);
+		expect(a.equals(before)).toEqual(true);
+	});
+
+	it("damp — lambda=Infinity snaps to target", () => {
+		a.set(0, 0, 0);
+		b.set(100, 200, 300);
+		a.damp(b, Number.POSITIVE_INFINITY, 1 / 60);
+		expect(a.equals(b)).toEqual(true);
+	});
+
+	it("damp — equal target = no movement (idempotent)", () => {
+		a.set(10, 20, 30);
+		a.damp(a, 5, 1 / 60);
+		expect(a.x).toEqual(10);
+		expect(a.y).toEqual(20);
+		expect(a.z).toEqual(30);
+	});
+
+	it("damp — frame-rate independence on all 3 components over 1 second", () => {
+		// Same total elapsed dt, same result regardless of cadence.
+		const target = new Vector3d(100, 200, 300);
+		const lambda = 5;
+		const sim = (steps: number, dt: number) => {
+			const v = new Vector3d(0, 0, 0);
+			for (let i = 0; i < steps; i++) v.damp(target, lambda, dt);
+			return v;
+		};
+		const v60 = sim(60, 1 / 60);
+		const v30 = sim(30, 1 / 30);
+		expect(v60.x).toBeCloseTo(v30.x, 9);
+		expect(v60.y).toBeCloseTo(v30.y, 9);
+		expect(v60.z).toBeCloseTo(v30.z, 9);
+		// Matches the closed form per axis.
+		expect(v60.x).toBeCloseTo(100 * (1 - Math.exp(-5)), 6);
+		expect(v60.y).toBeCloseTo(200 * (1 - Math.exp(-5)), 6);
+		expect(v60.z).toBeCloseTo(300 * (1 - Math.exp(-5)), 6);
+	});
+
+	it("damp — Vector2d target treats z as 0 (Camera3d ergonomics)", () => {
+		// A 2D target should pull the z component toward 0, not crash
+		// or leave z unchanged. Matches Vector3d.add's Vector2d
+		// handling.
+		const v3 = new Vector3d(10, 10, 100);
+		const v2 = new Vector2d(0, 0);
+		v3.damp(v2, Number.POSITIVE_INFINITY, 1 / 60);
+		expect(v3.x).toEqual(0);
+		expect(v3.y).toEqual(0);
+		expect(v3.z).toEqual(0);
+	});
+
+	it("damp — returns `this` for chaining", () => {
+		a.set(0, 0, 0);
+		const r = a.damp(b, 5, 1 / 60);
+		expect(r).toBe(a);
+	});
+
+	it("damp — monotonic approach, no overshoot", () => {
+		a.set(0, 0, 0);
+		b.set(100, 100, 100);
+		for (let i = 0; i < 1000; i++) {
+			a.damp(b, 5, 1 / 60);
+			expect(a.x).toBeLessThanOrEqual(100);
+			expect(a.y).toBeLessThanOrEqual(100);
+			expect(a.z).toBeLessThanOrEqual(100);
+		}
+	});
+
 	it("normalize function", () => {
 		a.set(x, 0, 0);
 		b.set(0, -y, 0);

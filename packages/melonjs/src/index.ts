@@ -25,9 +25,8 @@ import { ColorMatrix } from "./math/color_matrix.ts";
 import ParticleEmitter from "./particles/emitter.ts";
 import Particle from "./particles/particle.ts";
 import ParticleEmitterSettings from "./particles/settings.js";
-import Body from "./physics/builtin/body.js";
 // class definition
-import QuadTree from "./physics/builtin/quadtree.js";
+import Body from "./physics/builtin/body.js";
 import World from "./physics/world.js";
 // utility classes
 import { cache as plugins } from "./plugin/plugin.ts";
@@ -104,6 +103,7 @@ export { Point } from "./geometries/point.ts";
 export { Polygon } from "./geometries/polygon.ts";
 export { Rect } from "./geometries/rectangle.ts";
 export { RoundRect } from "./geometries/roundrect.ts";
+export { Sphere } from "./geometries/sphere.ts";
 export * as input from "./input/input.ts";
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";
@@ -132,6 +132,7 @@ export type {
 	PhysicsAdapter,
 	PhysicsBody,
 	RaycastHit,
+	RaycastHit3d,
 } from "./physics/adapter.ts";
 export { Bounds } from "./physics/bounds.ts";
 export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.ts";
@@ -191,7 +192,6 @@ export {
 	plugins,
 	pool,
 	QuadBatcher,
-	QuadTree,
 	Renderable,
 	Renderer,
 	RenderState,

@@ -18,12 +18,14 @@ import {
 	audio,
 	type Camera3d,
 	input,
+	math,
 	ParticleEmitter,
 	pool,
 	Renderable,
 	Sprite,
 	state,
-	type Vector3d,
+	Tween,
+	Vector3d,
 } from "melonjs";
 import {
 	AXIS_X,
@@ -89,6 +91,26 @@ import type {
 	EnemyBulletMover,
 	EnemyMover,
 } from "./types";
+
+/**
+ * Lightweight tag on bullets / enemies so the broadphase walk in
+ * the per-frame bullet × enemy hit loop can filter
+ * {@link adapter.querySphere} candidates by kind in O(1) —
+ * `world.adapter.querySphere(center, r)` returns every non-kinematic
+ * renderable centred within `r` (including particles, the player,
+ * the reticle), so we tag the two we care about at spawn time and
+ * skip the rest. The tag has no runtime cost — just a string field.
+ */
+type RenderableWithKind = (Renderable | Sprite) & {
+	__kind?: "bullet" | "enemy";
+};
+
+/**
+ * Module-level scratch for the `world.adapter.querySphere` centre
+ * argument. Reused each frame to avoid Vector3d allocation in the
+ * bullet × enemy hit check (one call per live enemy each tick).
+ */
+const _sphereCenter = new Vector3d();
 
 // ─── Pool keys for `me.pool` ───────────────────────────────────────────
 // One-time registered subclasses of Sprite, built on the fly inside the
@@ -217,21 +239,42 @@ export class GameController extends Renderable {
 		this.alwaysUpdate = true; // tick even when off-camera
 
 		// Push the far plane out — enemies spawn at z = 3000 and despawn at
-		// z = 4000, which is way past the engine default (`far = 1000`).
-		// Anything beyond `far` gets clipped or projects with bad w-divides,
-		// which is why fresh enemies were rendering huge instead of vanishing
-		// at the horizon. Headroom past despawn keeps the math clean.
+		// z = 4000, way past the engine default (`far = 1000`). Anything
+		// beyond `far` clips or projects with bad w-divides; headroom past
+		// despawn keeps the math clean.
 		this.camera.setClipPlanes(0.1, 6000);
 
-		// (light sepia camera tint was attempted here but breaks the
-		// Camera3d render — needs an engine-side fix before re-enabling)
+		this.bindInputs();
 
-		// Bind input. The third arg is `lock` — when true, the action
-		// fires once per press (single-shot, good for jump). We want
-		// hold-to-repeat for everything except restart, so default
-		// `lock = false` for movement + fire (own cooldown handles
-		// fire rate). Restart stays lock=true so spamming R doesn't
-		// thrash the reset.
+		// Player jet — speederA mesh facing the horizon (+Z). `addChild(z)`
+		// atomically sets `pos.z`, so the world's depth sort key is correct
+		// from the first frame.
+		this.player = new Plane({ size: 60, facing: 1 });
+		app.world.addChild(this.player, PLAYER_Z);
+
+		this.bulletTexture = makeLaserBoltTexture();
+		this.contrailTexture = makeContrailPuffTexture();
+
+		// Reticle floats ahead of the player in world z so Camera3d shrinks
+		// it relative to the jet automatically. Per-frame XY follow is in
+		// `tickPlayerInput`.
+		this.reticle = new Reticle(makeReticleTexture());
+		app.world.addChild(this.reticle, PLAYER_Z + RETICLE_FORWARD_Z);
+
+		this.muzzleEmitter = this._makeMuzzleEmitter();
+
+		this.registerPools();
+
+		this.hud = new HUD(app);
+		this.updateCamera();
+	}
+
+	/**
+	 * Map the keys this game cares about onto named actions. Movement +
+	 * fire are hold-to-repeat (default `lock = false`); restart uses
+	 * `lock = true` so spamming R can't thrash the reset.
+	 */
+	private bindInputs(): void {
 		input.bindKey(input.KEY.LEFT, "left");
 		input.bindKey(input.KEY.A, "left");
 		input.bindKey(input.KEY.RIGHT, "right");
@@ -242,27 +285,15 @@ export class GameController extends Renderable {
 		input.bindKey(input.KEY.S, "down");
 		input.bindKey(input.KEY.SPACE, "fire");
 		input.bindKey(input.KEY.R, "restart", true);
+	}
 
-		// Player jet — speederA mesh facing the horizon (+Z). `addChild`
-		// with z atomically sets pos.z (= depth) at insertion, so the
-		// world's depth sort key is correct from the first frame.
-		this.player = new Plane({ size: 60, facing: 1 });
-		app.world.addChild(this.player, PLAYER_Z);
-
-		this.bulletTexture = makeLaserBoltTexture();
-		// Reticle sits at world z = PLAYER_Z + RETICLE_FORWARD_Z so
-		// Camera3d shrinks it relative to the player automatically. The
-		// per-frame XY follow happens in `updateReticle()`.
-		this.reticle = new Reticle(makeReticleTexture());
-		app.world.addChild(this.reticle, PLAYER_Z + RETICLE_FORWARD_Z);
-		this.contrailTexture = makeContrailPuffTexture();
-		this.muzzleEmitter = this._makeMuzzleEmitter();
-
-		// Register the three Sprite subclasses with `me.pool` so
-		// `pool.pull(name, x, y)` recycles instances and
-		// `world.removeChild(sprite)` auto-returns them to the pool.
-		// Re-registering on every example mount is fine — `register`
-		// simply overwrites the entry.
+	/**
+	 * Register the three pooled Sprite subclasses with `me.pool`. After
+	 * this, `pool.pull(name, x, y)` recycles instances and
+	 * `world.removeChild(sprite)` auto-returns them. Re-registering on
+	 * each example mount overwrites the prior entry, no leak.
+	 */
+	private registerPools(): void {
 		pool.register(
 			POOL_PLAYER_BULLET,
 			buildBulletClass(this.bulletTexture, TINT_BULLET_RGB),
@@ -278,9 +309,6 @@ export class GameController extends Renderable {
 			buildContrailClass(this.contrailTexture),
 			true,
 		);
-
-		this.hud = new HUD(app);
-		this.updateCamera();
 	}
 
 	/**
@@ -427,6 +455,19 @@ export class GameController extends Renderable {
 		// `addChild(child, z)` atomically sets the depth at insertion —
 		// no window where the world's sort key is stale.
 		this.app.world.addChild(b, PLAYER_Z + 40);
+		// Tag bullets so the per-frame bullet×enemy broadphase walk
+		// (see the enemy-update loop) can filter sphere candidates by
+		// kind without having to call `indexOf` against `this.bullets`.
+		(b as RenderableWithKind).__kind = "bullet";
+		// `Sprite` defaults `isKinematic = true`, which means
+		// `World.broadphase.insertContainer` skips it. We need the
+		// bullet to live in the broadphase so the per-frame
+		// `querySphere(enemy.pos, HIT_RADIUS)` walk can find it as a
+		// candidate. Opt the bullet in by flipping isKinematic before
+		// the world's next update tick. This costs nothing — bullets
+		// have no body, so there's no SAT side effect; pointer events
+		// don't fire on bullets either.
+		b.isKinematic = false;
 		this.bullets.push({ sprite: b, vx: 0, vy: 0, vz: BULLET_SPEED });
 		this.spawnMuzzleFlash();
 		// Pan the blip with the player's X — sells "the bullets came from
@@ -488,10 +529,19 @@ export class GameController extends Renderable {
 		// sits on top of the baked MTL palette).
 		const e = new Plane({ size: 80, facing: -1 });
 		e.randomizeTint();
-		const ex = (Math.random() * 2 - 1) * PLAY_BOUND_X;
-		const ey = (Math.random() * 2 - 1) * PLAY_BOUND_Y;
+		const ex = math.randomFloat(-PLAY_BOUND_X, PLAY_BOUND_X);
+		const ey = math.randomFloat(-PLAY_BOUND_Y, PLAY_BOUND_Y);
 		e.pos.set(ex, ey);
 		this.app.world.addChild(e, SPAWN_Z);
+		// Tag for the broadphase-filter walk; see {@link RenderableWithKind}.
+		(e as unknown as RenderableWithKind).__kind = "enemy";
+		// Opt the enemy into the broadphase (see the matching note in
+		// `spawnBullet`). The bullet-side `querySphere` walk doesn't
+		// need this — it queries around the enemy and only filters for
+		// bullets — but flipping it now keeps the broadphase the
+		// authoritative spatial index for any future query in the
+		// other direction (e.g. enemy-of-bullet for explosion AoE).
+		e.isKinematic = false;
 		// partial homing — enemies drift toward where the player IS at
 		// spawn, not where they end up. Adds genuine threat without being
 		// a guaranteed hit.
@@ -499,29 +549,69 @@ export class GameController extends Renderable {
 		const dy = this.player.pos.y - ey;
 		const flightTime = (SPAWN_Z - PLAYER_Z) / ENEMY_SPEED;
 		const canFire = Math.random() < ENEMY_FIRE_CHANCE;
-		this.enemies.push({
+		const mover: EnemyMover = {
 			mesh: e,
 			vx: (dx / flightTime) * 0.4,
 			vy: (dy / flightTime) * 0.4,
 			vz: -ENEMY_SPEED,
 			// Facing was baked into `currentTransform` by Plane(facing=-1)
 			// as a rotation of π around Y. We need it as a plain number so
-			// the per-frame roll animation can rebuild the transform
-			// without losing the facing.
+			// the roll Tween can rebuild the transform each frame without
+			// losing the facing.
 			facingY: Math.PI,
-			rollTimeMs: 0,
-			rollDurationMs: 0,
-			nextRollMs:
-				ENEMY_ROLL_INTERVAL_MIN_MS +
-				Math.random() *
-					(ENEMY_ROLL_INTERVAL_MAX_MS - ENEMY_ROLL_INTERVAL_MIN_MS),
+			rollTween: this.makeRollTween(e, Math.PI),
 			canFire,
 			nextFireMs: canFire
-				? ENEMY_FIRE_INTERVAL_MIN_MS +
-					Math.random() *
-						(ENEMY_FIRE_INTERVAL_MAX_MS - ENEMY_FIRE_INTERVAL_MIN_MS)
+				? math.randomFloat(
+						ENEMY_FIRE_INTERVAL_MIN_MS,
+						ENEMY_FIRE_INTERVAL_MAX_MS,
+					)
 				: Number.POSITIVE_INFINITY,
-		});
+		};
+		this.enemies.push(mover);
+	}
+
+	/**
+	 * Build (and start) a self-rescheduling barrel-roll Tween for this
+	 * enemy mesh. The Tween waits a randomized delay, sweeps a `roll`
+	 * state from 0 → 2π over a randomized duration, then re-creates
+	 * itself to cycle indefinitely. Replaces the previous hand-rolled
+	 * `rollTimeMs` / `rollDurationMs` / `nextRollMs` state machine —
+	 * Tween is the right primitive for "interpolate this property over
+	 * a known duration with easing".
+	 */
+	private makeRollTween(mesh: Plane, facingY: number): Tween {
+		const state = { roll: 0 };
+		const delay = math.randomFloat(
+			ENEMY_ROLL_INTERVAL_MIN_MS,
+			ENEMY_ROLL_INTERVAL_MAX_MS,
+		);
+		const duration = math.randomFloat(
+			ENEMY_ROLL_DURATION_MIN_MS,
+			ENEMY_ROLL_DURATION_MAX_MS,
+		);
+		return new Tween(state)
+			.to({ roll: Math.PI * 2 }, duration)
+			.delay(delay)
+			.onUpdate(() => {
+				mesh.currentTransform.identity();
+				mesh.currentTransform.rotate(facingY, AXIS_Y);
+				mesh.currentTransform.rotate(state.roll, AXIS_Z);
+			})
+			.onComplete(() => {
+				// Snap back to facing-only so the next idle period
+				// starts from a clean baseline.
+				mesh.currentTransform.identity();
+				mesh.currentTransform.rotate(facingY, AXIS_Y);
+				// Schedule the next cycle. Locate THIS enemy in the
+				// mover list to swap in the fresh tween — direct
+				// reference closure would leak the old mover if the
+				// enemy was already removed.
+				const idx = this.enemies.findIndex((m) => m.mesh === mesh);
+				if (idx === -1) return;
+				this.enemies[idx].rollTween = this.makeRollTween(mesh, facingY);
+			})
+			.start();
 	}
 
 	/**
@@ -557,46 +647,6 @@ export class GameController extends Renderable {
 		this.enemyBullets.pop();
 	}
 
-	/**
-	 * Drive each enemy's barrel-roll lifecycle for one frame: tick down
-	 * the next-roll countdown and, when it expires, snapshot a fresh
-	 * randomized roll duration. While a roll is in flight, rebuild the
-	 * mesh's `currentTransform` to facing + roll(angle) where `angle`
-	 * sweeps 0 → 2π over the roll window. When the window closes,
-	 * rebuild to facing-only so the next animation starts from a clean
-	 * baseline. Idle enemies skip the matrix rebuild entirely.
-	 */
-	updateEnemyRoll(e: EnemyMover, dt: number): void {
-		if (e.rollTimeMs > 0) {
-			e.rollTimeMs -= dt;
-			if (e.rollTimeMs <= 0) {
-				// roll just finished — reset transform to facing-only
-				e.rollTimeMs = 0;
-				e.mesh.currentTransform.identity();
-				e.mesh.currentTransform.rotate(e.facingY, AXIS_Y);
-				return;
-			}
-			const progress = 1 - e.rollTimeMs / e.rollDurationMs;
-			const angle = progress * Math.PI * 2;
-			e.mesh.currentTransform.identity();
-			e.mesh.currentTransform.rotate(e.facingY, AXIS_Y);
-			e.mesh.currentTransform.rotate(angle, AXIS_Z);
-			return;
-		}
-		e.nextRollMs -= dt;
-		if (e.nextRollMs <= 0) {
-			e.rollDurationMs =
-				ENEMY_ROLL_DURATION_MIN_MS +
-				Math.random() *
-					(ENEMY_ROLL_DURATION_MAX_MS - ENEMY_ROLL_DURATION_MIN_MS);
-			e.rollTimeMs = e.rollDurationMs;
-			e.nextRollMs =
-				ENEMY_ROLL_INTERVAL_MIN_MS +
-				Math.random() *
-					(ENEMY_ROLL_INTERVAL_MAX_MS - ENEMY_ROLL_INTERVAL_MIN_MS);
-		}
-	}
-
 	removeBullet(i: number): void {
 		const b = this.bullets[i];
 		this.app.world.removeChild(b.sprite);
@@ -606,6 +656,11 @@ export class GameController extends Renderable {
 
 	removeEnemy(i: number): void {
 		const e = this.enemies[i];
+		// Stop the roll Tween BEFORE detaching the mesh — otherwise its
+		// onUpdate would fire one more frame against a destroyed
+		// renderable, and its onComplete would re-create a new Tween
+		// for an enemy that's already gone.
+		e.rollTween.stop();
 		this.app.world.removeChild(e.mesh);
 		this.enemies[i] = this.enemies[this.enemies.length - 1];
 		this.enemies.pop();
@@ -651,6 +706,12 @@ export class GameController extends Renderable {
 		// Stop spawning new contrail nodes; the existing ones keep
 		// ageing + fading via `updateContrail`.
 		this.contrailStreaming = false;
+		// Freeze the in-flight enemies. `tickEnemies` won't run while
+		// `gameOver` is true so their motion stops, but the roll
+		// Tweens run on the engine's tween clock — independent of our
+		// update loop — so without this they'd keep spinning while the
+		// game-over overlay is up.
+		for (const enemy of this.enemies) enemy.rollTween.stop();
 		// Cut the music with the death — the silence sells the
 		// finality, and the restart will swell it back in.
 		audio.stopTrack();
@@ -708,16 +769,31 @@ export class GameController extends Renderable {
 	}
 
 	override update(dt: number): boolean {
-		const dts = dt / 1000;
-
 		if (this.gameOver) {
-			if (input.isKeyPressed("restart")) {
-				this.reset();
-			}
+			if (input.isKeyPressed("restart")) this.reset();
 			return true;
 		}
 
-		// Player input → XY movement, clamped to play bounds.
+		this.tickPlayerInput(dt);
+		this.updateContrail(dt);
+		this.tickFireAndSpawn(dt);
+		this.tickBullets(dt);
+		if (this.tickEnemyBullets(dt)) return true; // game-over fast path
+		if (this.tickEnemies(dt)) return true;
+		this.updateCamera();
+		return true;
+	}
+
+	/**
+	 * Read the input axes → clamped XY movement → mesh bank/pitch
+	 * transform → reticle follow → invulnerability blink.
+	 * Self-contained: nothing else reads input or writes
+	 * `player.currentTransform`.
+	 */
+	private tickPlayerInput(dt: number): void {
+		const dts = dt / 1000;
+
+		// Input → unit vector in the play plane.
 		let dx = 0;
 		let dy = 0;
 		if (input.isKeyPressed("left")) dx -= 1;
@@ -729,59 +805,69 @@ export class GameController extends Renderable {
 			dx *= inv;
 			dy *= inv;
 		}
-		this.player.pos.x = Math.max(
-			-PLAY_BOUND_X,
-			Math.min(PLAY_BOUND_X, this.player.pos.x + dx * PLAYER_SPEED * dts),
-		);
-		this.player.pos.y = Math.max(
-			-PLAY_BOUND_Y,
-			Math.min(PLAY_BOUND_Y, this.player.pos.y + dy * PLAYER_SPEED * dts),
-		);
 
-		// Bank the player mesh toward the input direction. Roll into
-		// turns (left input → left wing down), pitch with vertical input
-		// (up input → nose down on screen, i.e. climbing). Sign matches
-		// the way the mesh is Y-flipped on output. Exponential decay so
-		// the response is critically-damped, not snappy.
-		const decay = 1 - Math.exp(-PLAYER_BANK_DECAY * dts);
+		// Advance + clamp to play bounds.
+		const px = this.player.pos.x + dx * PLAYER_SPEED * dts;
+		const py = this.player.pos.y + dy * PLAYER_SPEED * dts;
+		this.player.pos.x = math.clamp(px, -PLAY_BOUND_X, PLAY_BOUND_X);
+		this.player.pos.y = math.clamp(py, -PLAY_BOUND_Y, PLAY_BOUND_Y);
+
+		// Frame-rate independent damping toward the input-driven bank
+		// target. Sign matches the Y-flipped mesh output (left input
+		// → left wing down; up input → nose down on screen = climb).
 		const targetRoll = -dx * PLAYER_MAX_ROLL;
 		const targetPitch = dy * PLAYER_MAX_PITCH;
-		this.playerRoll += (targetRoll - this.playerRoll) * decay;
-		this.playerPitch += (targetPitch - this.playerPitch) * decay;
+		this.playerRoll = math.damp(
+			this.playerRoll,
+			targetRoll,
+			PLAYER_BANK_DECAY,
+			dts,
+		);
+		this.playerPitch = math.damp(
+			this.playerPitch,
+			targetPitch,
+			PLAYER_BANK_DECAY,
+			dts,
+		);
 		this.player.currentTransform.identity();
 		this.player.currentTransform.rotate(this.playerRoll, AXIS_Z);
 		this.player.currentTransform.rotate(this.playerPitch, AXIS_X);
 
-		// Post-respawn invulnerability — blink the jet so the player
-		// can read the "can't be hit" window, and tick the timer down
-		// to 0. When the timer expires we force opacity back to 1 so a
-		// late blink frame doesn't leave the jet half-transparent.
-		if (this.invulnRemainingMs > 0) {
-			this.invulnRemainingMs -= dt;
-			if (this.invulnRemainingMs <= 0) {
-				this.invulnRemainingMs = 0;
-				this.player.setOpacity(1);
-			} else {
-				const blinkOn =
-					Math.floor((INVULN_MS - this.invulnRemainingMs) / INVULN_BLINK_MS) %
-						2 ===
-					0;
-				this.player.setOpacity(blinkOn ? 1 : 0.35);
-			}
-		}
-
-		// Tick the custom 3D vapor trail.
-		this.updateContrail(dt);
-
-		// Reticle tracks the player's XY. We assign x/y directly
-		// (not via pos.set) so the world-z stays at the value set in
-		// `addChild(reticle, PLAYER_Z + RETICLE_FORWARD_Z)` — Vector3d.set
-		// would default z to 0 and yank the reticle to the camera plane.
+		// Reticle follows player XY. Assign per-component so the world-z
+		// set by `addChild(reticle, PLAYER_Z + RETICLE_FORWARD_Z)`
+		// survives — `pos.set(x, y)` would default z to 0.
 		this.reticle.pos.x = this.player.pos.x;
 		this.reticle.pos.y = this.player.pos.y;
 
-		// `dt`-driven cooldowns — engine's pacing is the only clock we
-		// need here, no `performance.now()` syscall per frame.
+		this.tickInvulnBlink(dt);
+	}
+
+	/**
+	 * Decrement the post-respawn invulnerability window and pulse the
+	 * jet opacity so the "can't be hit" state is readable. Snaps opacity
+	 * back to 1 on expiry so a half-frame can't leave the jet
+	 * see-through.
+	 */
+	private tickInvulnBlink(dt: number): void {
+		if (this.invulnRemainingMs <= 0) return;
+		this.invulnRemainingMs -= dt;
+		if (this.invulnRemainingMs <= 0) {
+			this.invulnRemainingMs = 0;
+			this.player.setOpacity(1);
+			return;
+		}
+		const blinkOn =
+			Math.floor((INVULN_MS - this.invulnRemainingMs) / INVULN_BLINK_MS) % 2 ===
+			0;
+		this.player.setOpacity(blinkOn ? 1 : 0.35);
+	}
+
+	/**
+	 * Tick the `dt`-driven fire cooldown + enemy spawn timer. Each
+	 * crosses zero independently, fires the matching spawn, then
+	 * re-arms.
+	 */
+	private tickFireAndSpawn(dt: number): void {
 		this.fireCooldownMs -= dt;
 		if (input.isKeyPressed("fire") && this.fireCooldownMs <= 0) {
 			this.spawnBullet();
@@ -792,27 +878,38 @@ export class GameController extends Renderable {
 			this.spawnEnemy();
 			this.enemySpawnTimerMs = ENEMY_SPAWN_INTERVAL_MS;
 		}
+	}
 
-		// Advance bullets, despawn past the far edge.
+	/**
+	 * Advance player bullets, despawning anything past the far edge.
+	 */
+	private tickBullets(dt: number): void {
+		const dts = dt / 1000;
 		for (let i = this.bullets.length - 1; i >= 0; i--) {
 			const b = this.bullets[i];
 			b.sprite.pos.x += b.vx * dts;
 			b.sprite.pos.y += b.vy * dts;
 			b.sprite.depth += b.vz * dts;
-			if (b.sprite.depth > DESPAWN_Z_FAR) {
-				this.removeBullet(i);
-			}
+			if (b.sprite.depth > DESPAWN_Z_FAR) this.removeBullet(i);
 		}
+	}
 
-		// Advance enemy bullets, resolve player hit + despawn.
+	/**
+	 * Advance enemy bullets, despawn off-bounds, then test each
+	 * surviving bullet against the player. Returns `true` if a hit
+	 * triggered game-over so the caller can fast-path out of update().
+	 */
+	private tickEnemyBullets(dt: number): boolean {
+		const dts = dt / 1000;
 		for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
 			const b = this.enemyBullets[i];
 			b.sprite.pos.x += b.vx * dts;
 			b.sprite.pos.y += b.vy * dts;
 			b.sprite.depth += b.vz * dts;
-			// Past the player or off the side — cull. Pretty generous
-			// X/Y bounds because at speed the bolt's screen position can
-			// drift well past the play rect before its z catches up.
+
+			// Cull bolts past the player or way off-screen. Generous XY
+			// bounds: at speed the bolt's projected screen position can
+			// drift far past the play rect before its z catches up.
 			if (
 				b.sprite.depth < DESPAWN_Z_NEAR ||
 				Math.abs(b.sprite.pos.x) > PLAY_BOUND_X * 3 ||
@@ -821,99 +918,146 @@ export class GameController extends Renderable {
 				this.removeEnemyBullet(i);
 				continue;
 			}
-			if (this.invulnRemainingMs > 0) {
+
+			if (this.invulnRemainingMs > 0) continue;
+			if (
+				!this.withinPlayerHitRadius(
+					b.sprite.pos.x,
+					b.sprite.pos.y,
+					b.sprite.depth,
+				)
+			) {
 				continue;
 			}
-			const ddx = b.sprite.pos.x - this.player.pos.x;
-			const ddy = b.sprite.pos.y - this.player.pos.y;
-			const ddz = b.sprite.depth - this.player.depth;
-			if (ddx * ddx + ddy * ddy + ddz * ddz < HIT_RADIUS * HIT_RADIUS) {
-				this.removeEnemyBullet(i);
-				this.onPlayerHit();
-				if (this.gameOver) {
-					return true;
-				}
-			}
+			this.removeEnemyBullet(i);
+			this.onPlayerHit();
+			if (this.gameOver) return true;
 		}
+		return false;
+	}
 
-		// Advance enemies, resolve bullet hits, then player hits.
+	/**
+	 * Advance enemies, tick their AI fire cadence, then resolve
+	 * collisions (player bullets first, then the player itself).
+	 * Returns `true` if a hit triggered game-over.
+	 */
+	private tickEnemies(dt: number): boolean {
+		const dts = dt / 1000;
 		for (let i = this.enemies.length - 1; i >= 0; i--) {
 			const e = this.enemies[i];
 			e.mesh.pos.x += e.vx * dts;
 			e.mesh.pos.y += e.vy * dts;
 			e.mesh.depth += e.vz * dts;
-			this.updateEnemyRoll(e, dt);
-
-			// Shooters tick their fire cooldown each frame; when it
-			// hits 0 they fire a single bolt at the player's current
-			// position, then re-randomize the next interval.
-			if (e.canFire) {
-				e.nextFireMs -= dt;
-				if (e.nextFireMs <= 0) {
-					this.spawnEnemyBullet(e);
-					e.nextFireMs =
-						ENEMY_FIRE_INTERVAL_MIN_MS +
-						Math.random() *
-							(ENEMY_FIRE_INTERVAL_MAX_MS - ENEMY_FIRE_INTERVAL_MIN_MS);
-				}
-			}
+			// Roll animation runs as a Tween (self-rescheduling) —
+			// nothing to tick here per frame.
+			this.tickEnemyFire(e, dt);
 
 			if (e.mesh.depth < DESPAWN_Z_NEAR) {
 				this.removeEnemy(i);
 				continue;
 			}
 
-			let hit = false;
-			for (let j = this.bullets.length - 1; j >= 0; j--) {
-				const b = this.bullets[j];
-				const ddx = e.mesh.pos.x - b.sprite.pos.x;
-				const ddy = e.mesh.pos.y - b.sprite.pos.y;
-				const ddz = e.mesh.depth - b.sprite.depth;
-				if (ddx * ddx + ddy * ddy + ddz * ddz < HIT_RADIUS * HIT_RADIUS) {
-					this.removeBullet(j);
-					hit = true;
-					break;
-				}
-			}
-			if (hit) {
-				this.spawnExplosion(
-					e.mesh.pos.x,
-					e.mesh.pos.y,
-					e.mesh.depth,
-					TINT_ENEMY_EXPLOSION,
-				);
-				// Pan the crunch with the kill X so far-off-screen hits
-				// audibly sit on the right side.
-				playEnemyHit(e.mesh.pos.x / PLAY_BOUND_X);
-				// Tiny kick so the kill registers physically too — short
-				// enough that rapid-fire hits don't compound into a jelly
-				// view. Axis BOTH so the shake reads as an explosion thump
-				// rather than a sideways slap.
-				this.camera.shake(4, 90);
+			if (this.enemyHitByPlayerBullet(e)) {
+				this.scoreEnemyKill(e);
 				this.removeEnemy(i);
-				this.score += 100;
-				this.hud.setScore(this.score);
 				continue;
 			}
 
-			// Player collision — only checked when the player isn't
-			// inside the post-respawn invulnerability window.
-			if (this.invulnRemainingMs > 0) {
-				continue;
-			}
-			const pddx = e.mesh.pos.x - this.player.pos.x;
-			const pddy = e.mesh.pos.y - this.player.pos.y;
-			const pddz = e.mesh.depth - this.player.depth;
-			if (pddx * pddx + pddy * pddy + pddz * pddz < HIT_RADIUS * HIT_RADIUS) {
+			if (this.invulnRemainingMs > 0) continue;
+			if (
+				this.withinPlayerHitRadius(e.mesh.pos.x, e.mesh.pos.y, e.mesh.depth)
+			) {
 				this.onPlayerHit();
 				this.removeEnemy(i);
-				if (this.gameOver) {
+				if (this.gameOver) return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Decrement an enemy's fire-cooldown; on expiry, fire one bolt at
+	 * the player's current position and randomize the next interval.
+	 * Non-shooter enemies have `nextFireMs = +Infinity` so the branch
+	 * inside never trips.
+	 */
+	private tickEnemyFire(e: EnemyMover, dt: number): void {
+		if (!e.canFire) return;
+		e.nextFireMs -= dt;
+		if (e.nextFireMs > 0) return;
+		this.spawnEnemyBullet(e);
+		e.nextFireMs = math.randomFloat(
+			ENEMY_FIRE_INTERVAL_MIN_MS,
+			ENEMY_FIRE_INTERVAL_MAX_MS,
+		);
+	}
+
+	/**
+	 * Walk the world's broadphase for player bullets within HIT_RADIUS
+	 * of this enemy. Returns `true` (and removes the bullet that hit)
+	 * on the first match. Without this pass the bullet × enemy check is
+	 * O(K × M) per frame; the Octree-backed broadphase brings it to
+	 * O(M × candidates-near-enemy) — sparse in 3D because the tree
+	 * partitions in z as well as x/y.
+	 *
+	 * Bullets opt into the broadphase via `isKinematic = false` at
+	 * spawn time AND carry `__kind = "bullet"` so we can drop the
+	 * unrelated candidates (particles, player, reticle, contrail) in
+	 * O(1) per hit.
+	 */
+	private enemyHitByPlayerBullet(e: EnemyMover): boolean {
+		_sphereCenter.set(e.mesh.pos.x, e.mesh.pos.y, e.mesh.depth);
+		const candidates =
+			this.app.world.adapter.querySphere?.(_sphereCenter, HIT_RADIUS) ?? [];
+		for (let k = 0; k < candidates.length; k++) {
+			const c = candidates[k] as RenderableWithKind;
+			if (c.__kind !== "bullet") continue;
+			// Linear-in-bullets indexOf, but only on a confirmed hit —
+			// keeps the per-frame complexity at O(M × candidates).
+			const sprite = c as Sprite;
+			for (let j = this.bullets.length - 1; j >= 0; j--) {
+				if (this.bullets[j].sprite === sprite) {
+					this.removeBullet(j);
 					return true;
 				}
 			}
 		}
+		return false;
+	}
 
-		this.updateCamera();
-		return true;
+	/**
+	 * On a confirmed enemy kill: explosion VFX at the enemy position,
+	 * audio pan with the X-position, brief camera kick, score bump,
+	 * HUD update.
+	 */
+	private scoreEnemyKill(e: EnemyMover): void {
+		this.spawnExplosion(
+			e.mesh.pos.x,
+			e.mesh.pos.y,
+			e.mesh.depth,
+			TINT_ENEMY_EXPLOSION,
+		);
+		// Pan the crunch with the kill's X so far-off-screen hits sit
+		// on the right side audibly.
+		playEnemyHit(e.mesh.pos.x / PLAY_BOUND_X);
+		// Tiny shake — short enough that rapid-fire kills don't compound
+		// into a jelly view; long enough that the kill registers as a
+		// physical event.
+		this.camera.shake(4, 90);
+		this.score += 100;
+		this.hud.setScore(this.score);
+	}
+
+	/**
+	 * Squared-distance sphere test against the player. Inlines the
+	 * narrow phase used by both `tickEnemyBullets` and `tickEnemies`
+	 * for the player-hit check, dropping three copies of the same
+	 * `dx²+dy²+dz² < r²` math down to one.
+	 */
+	private withinPlayerHitRadius(x: number, y: number, z: number): boolean {
+		const dx = x - this.player.pos.x;
+		const dy = y - this.player.pos.y;
+		const dz = z - this.player.depth;
+		return dx * dx + dy * dy + dz * dz < HIT_RADIUS * HIT_RADIUS;
 	}
 }

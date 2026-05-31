@@ -107,6 +107,67 @@ describe("Vector2d", () => {
 		expect(a.clone().lerp(b, 1).equals(b)).toEqual(true);
 	});
 
+	it("damp — dt=0 leaves vector unchanged", () => {
+		a.set(10, 20);
+		b.set(100, 200);
+		const before = a.clone();
+		a.damp(b, 5, 0);
+		expect(a.equals(before)).toEqual(true);
+	});
+
+	it("damp — lambda=0 leaves vector unchanged", () => {
+		a.set(10, 20);
+		b.set(100, 200);
+		const before = a.clone();
+		a.damp(b, 0, 0.5);
+		expect(a.equals(before)).toEqual(true);
+	});
+
+	it("damp — lambda=Infinity snaps to target", () => {
+		a.set(0, 0);
+		b.set(100, 200);
+		a.damp(b, Number.POSITIVE_INFINITY, 1 / 60);
+		expect(a.equals(b)).toEqual(true);
+	});
+
+	it("damp — equal target = no movement (idempotent)", () => {
+		a.set(10, 20);
+		a.damp(a, 5, 1 / 60);
+		expect(a.x).toEqual(10);
+		expect(a.y).toEqual(20);
+	});
+
+	it("damp — frame-rate independence over 1 second", () => {
+		const target = new Vector2d(100, 200);
+		const lambda = 5;
+		const sim = (steps: number, dt: number) => {
+			const v = new Vector2d(0, 0);
+			for (let i = 0; i < steps; i++) v.damp(target, lambda, dt);
+			return v;
+		};
+		const v60 = sim(60, 1 / 60);
+		const v30 = sim(30, 1 / 30);
+		expect(v60.x).toBeCloseTo(v30.x, 9);
+		expect(v60.y).toBeCloseTo(v30.y, 9);
+		expect(v60.x).toBeCloseTo(100 * (1 - Math.exp(-5)), 6);
+	});
+
+	it("damp — returns `this` for chaining", () => {
+		a.set(0, 0);
+		const r = a.damp(b, 5, 1 / 60);
+		expect(r).toBe(a);
+	});
+
+	it("damp — monotonic approach, no overshoot", () => {
+		a.set(0, 0);
+		b.set(100, 100);
+		for (let i = 0; i < 1000; i++) {
+			a.damp(b, 5, 1 / 60);
+			expect(a.x).toBeLessThanOrEqual(100);
+			expect(a.y).toBeLessThanOrEqual(100);
+		}
+	});
+
 	it("normalize function", () => {
 		a.set(x, 0);
 		b.set(0, -y);

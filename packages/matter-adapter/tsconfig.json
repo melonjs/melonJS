@@ -1,7 +1,9 @@
 {
 	"extends": "tsconfig/base.json",
 	"compilerOptions": {
-		"noEmit": true
+		"noEmit": true,
+		"skipLibCheck": true,
+		"types": ["node"]
 	},
 	"include": ["src", "scripts", "tests"]
 }

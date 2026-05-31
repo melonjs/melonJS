@@ -1,6 +1,6 @@
 import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
-import { clamp } from "./math.ts";
+import { clamp, damp, lerp } from "./math.ts";
 
 /**
  * a generic 2D Vector Object
@@ -328,13 +328,32 @@ export class Vector2d {
 
 	/**
 	 * Linearly interpolate between this vector and the given one.
-	 * @param v other vector
-	 * @param alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+	 * Frame-rate dependent at a fixed alpha — for smooth tracking
+	 * use {@link Vector2d.damp} instead.
+	 * @param v - other vector
+	 * @param alpha - distance along the line (alpha = 0 → this vector, alpha = 1 → `v`)
 	 * @returns Reference to this object for method chaining
 	 */
 	lerp(v: Vector2d, alpha: number) {
-		this.x += (v.x - this.x) * alpha;
-		this.y += (v.y - this.y) * alpha;
+		this.x = lerp(this.x, v.x, alpha);
+		this.y = lerp(this.y, v.y, alpha);
+		return this;
+	}
+
+	/**
+	 * Frame-rate independent exponential damping toward `target`.
+	 * Wrapper around {@link damp} applied per component.
+	 * @param target - vector to approach
+	 * @param lambda - decay rate in `1/seconds` (higher = snappier)
+	 * @param dt - delta time in **seconds**
+	 * @returns Reference to this object for method chaining
+	 * @example
+	 * // smooth-follow a target point at a frame-rate independent rate:
+	 * this.pos.damp(target.pos, 5, dt / 1000);
+	 */
+	damp(target: Vector2d, lambda: number, dt: number) {
+		this.x = damp(this.x, target.x, lambda, dt);
+		this.y = damp(this.y, target.y, lambda, dt);
 		return this;
 	}
 
