@@ -2,6 +2,7 @@ import { Vector2d } from "../../math/vector2d.ts";
 import type Container from "../../renderable/container.js";
 import type { Bounds } from "../bounds.ts";
 import type World from "../world.js";
+import type { Broadphase } from "./broadphase.ts";
 
 // Moved from `physics/builtin/quadtree.js` in 19.7.0 alongside the
 // addition of `Octree`. Lives next to `Octree` and `AABB3d` under
@@ -101,7 +102,7 @@ const QT_VECTOR = new Vector2d();
  * @category Physics
  * @see World.broadphase
  */
-export default class QuadTree {
+export default class QuadTree implements Broadphase<QuadTreeItem> {
 	world: World;
 	bounds: QuadRect | Bounds;
 	max_objects: number;

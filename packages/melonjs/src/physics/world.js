@@ -138,15 +138,20 @@ export default class World extends Container {
 		this.adapter.init?.(this);
 
 		/**
-		 * Spatial broadphase used by built-in physics and pointer event
-		 * picking. The concrete class depends on {@link Container#sortOn}:
-		 * under `"depth"` (the value `Camera3d.defaultSortOn` sets on stage
-		 * reset), this is an {@link Octree}; under any 2D sortOn it's a
-		 * {@link QuadTree}. The choice is reactive — the `sortOn` setter
-		 * swaps the broadphase if a 2D↔3D boundary crossing occurs, so
-		 * stage transitions between Camera2d and Camera3d stages are
-		 * handled transparently.
-		 * @type {QuadTree | Octree}
+		 * Spatial broadphase used by built-in physics and pointer
+		 * event picking. The concrete class depends on
+		 * {@link Container#sortOn}: under `"depth"` (the value
+		 * `Camera3d.defaultSortOn` sets on stage reset) it's an
+		 * `Octree`; under any 2D sortOn it's a `QuadTree`. The choice
+		 * is reactive — the `sortOn` setter swaps the broadphase if a
+		 * 2D↔3D boundary crossing occurs, so stage transitions between
+		 * Camera2d and Camera3d stages are handled transparently.
+		 *
+		 * Implementation detail — game code shouldn't reach in here.
+		 * Use `world.adapter.queryAABB(rect)` /
+		 * `world.adapter.querySphere(sphere)` /
+		 * `world.adapter.raycast(...)` instead.
+		 * @type {import("./broadphase/broadphase.ts").Broadphase}
 		 */
 		this.broadphase = this.#makeBroadphase();
 

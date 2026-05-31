@@ -337,10 +337,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 			let c = candidates.length, candidate;
 			c--, (candidate = candidates[c]);
 		) {
-			if (
-				eventHandlers.has(candidate) &&
-				(candidate as any).isKinematic !== true
-			) {
+			if (eventHandlers.has(candidate) && candidate.isKinematic !== true) {
 				const handlers = eventHandlers.get(candidate)!;
 				const region = handlers.region;
 				const ancestor = region.ancestor;

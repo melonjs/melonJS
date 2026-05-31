@@ -3,6 +3,7 @@ import { Vector2d } from "../../math/vector2d.ts";
 import type Container from "../../renderable/container.js";
 import type World from "../world.js";
 import { AABB3d } from "./aabb3d.ts";
+import type { Broadphase } from "./broadphase.ts";
 
 /**
  * Scratch reused by `getIndex` to read viewport-localToWorld for
@@ -135,7 +136,7 @@ function itemZ(item: OctreeItem): number {
  * @category Physics
  * @see World.broadphase
  */
-export default class Octree {
+export default class Octree implements Broadphase<OctreeItem> {
 	world: World;
 	bounds: OctRect | AABB3d;
 	max_objects: number;

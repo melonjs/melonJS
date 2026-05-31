@@ -26,7 +26,6 @@ import ParticleEmitter from "./particles/emitter.ts";
 import Particle from "./particles/particle.ts";
 import ParticleEmitterSettings from "./particles/settings.js";
 // class definition
-import QuadTree from "./physics/broadphase/quadtree.ts";
 import Body from "./physics/builtin/body.js";
 import World from "./physics/world.js";
 // utility classes
@@ -193,7 +192,6 @@ export {
 	plugins,
 	pool,
 	QuadBatcher,
-	QuadTree,
 	Renderable,
 	Renderer,
 	RenderState,
