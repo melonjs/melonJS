@@ -32,6 +32,16 @@ export default defineConfig(() =>
 						browser: "chromium",
 						headless: true,
 						screenshotFailures: false,
+						launchOptions: {
+							args: [
+								"--headless=new",
+								"--use-gl=angle",
+								"--use-angle=swiftshader",
+								"--enable-unsafe-swiftshader",
+								"--enable-features=Vulkan",
+								"--ignore-gpu-blocklist",
+							],
+						},
 					},
 				],
 			},

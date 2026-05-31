@@ -61,6 +61,43 @@ const createGame = () => {
 		cameraClass: Camera3d,
 	});
 
+	// ─── BENCH for #1468 (POST-refactor) — DELETE before merging ────────
+	const r = app.renderer as unknown as {
+		drawMesh: (mesh: unknown) => void;
+	};
+	const origDrawMesh = r.drawMesh.bind(r);
+	let meshCalls = 0;
+	let meshTimeMs = 0;
+	let frames = 0;
+	r.drawMesh = (mesh: unknown) => {
+		const t0 = performance.now();
+		origDrawMesh(mesh);
+		meshTimeMs += performance.now() - t0;
+		meshCalls++;
+	};
+	const tickFrames = () => {
+		frames++;
+		requestAnimationFrame(tickFrames);
+	};
+	requestAnimationFrame(tickFrames);
+	setInterval(() => {
+		if (frames > 0 && meshCalls > 0) {
+			const callsPerFrame = meshCalls / frames;
+			const timePerFrame = meshTimeMs / frames;
+			console.log(
+				`[BENCH #1468 post-refactor] frames=${frames}  ` +
+					`drawMesh/frame=${callsPerFrame.toFixed(1)}  ` +
+					`drawMesh time/frame=${timePerFrame.toFixed(3)}ms  ` +
+					`(${((timePerFrame / 16.667) * 100).toFixed(1)}% of 60fps budget)  ` +
+					`per-call=${((meshTimeMs / meshCalls) * 1000).toFixed(1)}µs`,
+			);
+		}
+		frames = 0;
+		meshCalls = 0;
+		meshTimeMs = 0;
+	}, 2000);
+	// ─── END BENCH ──────────────────────────────────────────────────────
+
 	// world.backgroundColor stays transparent (alpha 0) — the SkyboxStage
 	// paints the actual visible background each frame
 	app.world.backgroundColor.setColor(0, 0, 0, 0);

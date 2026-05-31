@@ -9,6 +9,7 @@ import {
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
 	on,
+	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
@@ -201,7 +202,7 @@ export default class WebGLRenderer extends Renderer {
 
 		// default WebGL state(s)
 		// depth testing disabled for 2D (painter's algorithm handles z-ordering).
-		// drawMesh() enables it temporarily for 3D mesh rendering.
+		// `MeshBatcher.bind()` enables it temporarily for 3D mesh rendering.
 		this.gl.disable(this.gl.DEPTH_TEST);
 		this.gl.depthMask(false);
 
@@ -556,13 +557,18 @@ export default class WebGLRenderer extends Renderer {
 
 		if (this.currentBatcher !== batcher) {
 			if (this.currentBatcher !== undefined) {
-				// flush the current batcher and release its vertex attribute locations
+				// flush the current batcher, then let it tear down any
+				// state it set up at `bind()` time (Mesh batcher restores
+				// non-mesh blend/depth defaults here, for example)
 				this.currentBatcher.flush();
 				this.currentBatcher.unbind();
 			}
 			// rebind the renderer's shared vertex buffer (custom batchers may have bound their own)
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 			this.currentBatcher = batcher;
+			// `bind()` is where each batcher sets up its own GL state
+			// (vertex attributes, plus mode-specific state like depth /
+			// blend for `MeshBatcher`). Renderer doesn't need to know.
 			this.currentBatcher.bind();
 			// sync the projection matrix to the new batcher
 			this.currentBatcher.setProjection(this.projectionMatrix);
@@ -863,11 +869,16 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 
-		// rebind parent render target (or screen) and restore viewport
+		// rebind parent render target (or screen) and restore viewport.
+		// The attachments we're returning to are different physical
+		// buffers than the FBO we just unbound — let batchers with
+		// target-scoped state invalidate it (e.g. `MeshBatcher`'s lazy
+		// depth clear flag).
 		if (parentRT) {
 			parentRT.bind();
 		}
 		this.setViewport(0, 0, w, h);
+		emit(RENDER_TARGET_CHANGED);
 
 		if (effects.length === 1) {
 			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
@@ -996,6 +1007,7 @@ export default class WebGLRenderer extends Renderer {
 		const gl = this.gl;
 		gl.clearColor(0, 0, 0, 0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
+		emit(RENDER_TARGET_CHANGED);
 	}
 
 	/**
@@ -1059,8 +1071,11 @@ export default class WebGLRenderer extends Renderer {
 		const clearColor = this.backgroundColor.toArray();
 		gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 		this.lineWidth = 1;
-		// clear color + stencil (depth buffer is only used by drawMesh, which clears it locally)
+		// Color + stencil are cleared here. Depth (if any batcher cares
+		// — currently only `MeshBatcher`) is cleared lazily on the first
+		// draw of its mode via the `onTargetChanged()` → `bind()` path.
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+		emit(RENDER_TARGET_CHANGED);
 	}
 
 	/**
@@ -1251,6 +1266,14 @@ export default class WebGLRenderer extends Renderer {
 	drawMesh(mesh) {
 		const gl = this.gl;
 
+		// `setBatcher("mesh")` delegates all mesh-mode state setup
+		// (DEPTH_TEST enable, LEQUAL, depthMask, one-shot per-target
+		// depth clear, BLEND off) to `MeshBatcher.bind()`. Switching
+		// away from the mesh batcher restores non-mesh defaults via
+		// `MeshBatcher.unbind()`. Consecutive `drawMesh` calls pay
+		// zero state cost between them; the GPU's LEQUAL depth test
+		// resolves inter-mesh occlusion per pixel against the
+		// accumulated depth buffer.
 		this.setBatcher("mesh");
 
 		// apply custom shader if set on the renderable (via preDraw)
@@ -1258,23 +1281,9 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(this.customShader);
 		}
 
-		// enable depth testing for 3D mesh rendering. LEQUAL (not LESS) so
-		// that coplanar triangles obey the OBJ's draw order — Kenney-style
-		// low-poly assets layer feature primitives (eye socket, pupil,
-		// nose) coincident with the underlying head/body face, listing
-		// the layer triangles AFTER the base. With LESS, later coplanar
-		// fragments lose the z-test and the eye sockets disappear into
-		// the head; with LEQUAL they win, matching the author's intent.
-		gl.enable(gl.DEPTH_TEST);
-		gl.depthFunc(gl.LEQUAL);
-		gl.depthMask(true);
-		gl.clearDepth(1.0);
-		gl.clear(gl.DEPTH_BUFFER_BIT);
-
-		// disable blending during opaque mesh rendering to avoid depth/blend conflicts
-		gl.disable(gl.BLEND);
-
-		// toggle backface culling based on mesh property
+		// toggle backface culling per-mesh — varies across meshes in
+		// the same run, so this stays here rather than in the batcher's
+		// bind/unbind lifecycle.
 		if (mesh.cullBackFaces) {
 			gl.enable(gl.CULL_FACE);
 			gl.cullFace(gl.BACK);
@@ -1286,17 +1295,11 @@ export default class WebGLRenderer extends Renderer {
 			this.currentTint.toUint32(this.getGlobalAlpha()),
 		);
 
-		// flush and restore GL state
 		this.flush();
 
 		if (mesh.cullBackFaces) {
 			gl.disable(gl.CULL_FACE);
 		}
-
-		// restore blending and depth state
-		gl.enable(gl.BLEND);
-		gl.disable(gl.DEPTH_TEST);
-		gl.depthMask(false);
 
 		// revert to default shader if custom was applied
 		if (this.customShader != null) {

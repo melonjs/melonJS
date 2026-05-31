@@ -357,6 +357,21 @@ export const ONCONTEXT_RESTORED = "renderer.contextrestored";
  */
 export const GPU_TEXTURE_CACHE_RESET = "renderer.gpu.texturecachereset";
 
+/**
+ * Fired by the WebGL renderer whenever the active framebuffer's
+ * attachments change identity — frame start (`clear()`),
+ * non-camera FBO bind (`clearRenderTarget()`), post-effect FBO
+ * unbind (`endPostEffect()`). Batchers with target-scoped state
+ * (depth-clear flag, instance buffers keyed on the target, sort
+ * accumulators, etc.) subscribe to invalidate it. Batchers without
+ * target-scoped state don't subscribe and pay nothing for the
+ * broadcast — same shape as `GPU_TEXTURE_CACHE_RESET`.
+ *
+ * Data passed: none
+ * @see event.on
+ */
+export const RENDER_TARGET_CHANGED = "renderer.target.changed";
+
 interface Events {
 	[DOM_READY]: () => void;
 	[BOOT]: () => void;
@@ -409,6 +424,7 @@ interface Events {
 	[ONCONTEXT_LOST]: (renderer: Renderer) => void;
 	[ONCONTEXT_RESTORED]: (renderer: Renderer) => void;
 	[GPU_TEXTURE_CACHE_RESET]: () => void;
+	[RENDER_TARGET_CHANGED]: () => void;
 }
 
 const eventEmitter = new EventEmitter<Events>();
