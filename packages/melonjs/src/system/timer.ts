@@ -117,9 +117,8 @@ class Timer {
 		// reset delta counting variables
 		this.framedelta = 0;
 		this.framecount = 0;
-		this.step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
-		// define some step with some margin
-		this.minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
+		this.step = 1000 / this.maxfps;
+		this.minstep = (1000 / this.maxfps) * 1.25;
 	}
 
 	/**

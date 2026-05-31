@@ -18,6 +18,7 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import timer from "../system/timer.ts";
 import type Renderer from "./../video/renderer.js";
 import ColorMatrixEffect from "./../video/webgl/effects/colorMatrix.js";
 import type CameraEffect from "./effects/camera_effect.ts";
@@ -590,7 +591,7 @@ export default class Camera2d extends Renderable {
 
 	/** @ignore */
 
-	updateTarget(_dt?: number): void {
+	updateTarget(dt?: number): void {
 		if (this.target) {
 			targetV.setV(this.pos);
 
@@ -627,7 +628,11 @@ export default class Camera2d extends Renderable {
 						this.pos.setV(targetV);
 						return;
 					} else {
-						this.pos.lerp(targetV, this.damping);
+						// Frame-rate independent follow: re-anchor the parametric
+						// `damping` to a damp lambda at the engine's target rate.
+						const lambda = -Math.log(1 - this.damping) * timer.maxfps;
+						const dts = (dt ?? timer.step) / 1000;
+						this.pos.damp(targetV, lambda, dts);
 					}
 				} else {
 					this.pos.setV(targetV);
