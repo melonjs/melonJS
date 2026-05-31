@@ -18,6 +18,7 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import timer from "../system/timer.ts";
 import type Renderer from "./../video/renderer.js";
 import ColorMatrixEffect from "./../video/webgl/effects/colorMatrix.js";
 import type CameraEffect from "./effects/camera_effect.ts";
@@ -590,7 +591,7 @@ export default class Camera2d extends Renderable {
 
 	/** @ignore */
 
-	updateTarget(_dt?: number): void {
+	updateTarget(dt?: number): void {
 		if (this.target) {
 			targetV.setV(this.pos);
 
@@ -627,7 +628,23 @@ export default class Camera2d extends Renderable {
 						this.pos.setV(targetV);
 						return;
 					} else {
-						this.pos.lerp(targetV, this.damping);
+						// Frame-rate independent follow. The damping field is a
+						// parametric 0..1 fraction tuned by users against the
+						// engine's target framerate (`timer.maxfps`, default 60):
+						// at the target rate, covering `damping` of the remaining
+						// gap per frame requires `lambda = -ln(1 - damping) *
+						// maxfps`. Plugging that into the exponential decay
+						// recovers the legacy lerp behaviour at the target frame
+						// rate exactly, while wall-clock convergence stays
+						// constant if the actual frame rate drifts (slow machine,
+						// high-refresh display, throttled tab). The no-arg
+						// `updateTarget()` call falls back to the precise
+						// `1 / maxfps` frame duration — NOT `timer.step` (which
+						// is `Math.ceil(1000 / maxfps)` for safe scheduling
+						// and would introduce a ~2% overshoot per frame here).
+						const lambda = -Math.log(1 - this.damping) * timer.maxfps;
+						const dts = dt !== undefined ? dt / 1000 : 1 / timer.maxfps;
+						this.pos.damp(targetV, lambda, dts);
 					}
 				} else {
 					this.pos.setV(targetV);

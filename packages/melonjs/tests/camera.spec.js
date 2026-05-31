@@ -11,6 +11,7 @@ import {
 	Polygon,
 	Renderable,
 	ShakeEffect,
+	timer,
 	Vector2d,
 	video,
 } from "../src/index.js";
@@ -1566,6 +1567,140 @@ describe("Camera2d", () => {
 			// draw again — colorMatrix still works (effect recreated/re-added transiently)
 			cam.draw(video.renderer, game.world);
 			expect(cam._colorMatrixEffect).not.toBeNull();
+		});
+	});
+
+	/**
+	 * Smooth follow under frame-rate independence (#1473 math.damp dogfood).
+	 * Pre-fix, `updateTarget` ran `pos.lerp(target, damping)` — a parametric
+	 * per-frame fraction. Same `damping=0.1` covered 10% of the gap per
+	 * frame whether running at 30, 60, 120 or 144Hz, so wall-clock
+	 * convergence sped up linearly with refresh rate. Post-fix, the camera
+	 * uses `pos.damp(target, lambda, dt)` with
+	 * `lambda = -ln(1 - damping) * timer.maxfps`, which recovers the legacy
+	 * per-frame fraction at the configured target framerate AND keeps
+	 * wall-clock convergence stable across actual frame-rate drift.
+	 */
+	describe("smooth-follow frame-rate independence", () => {
+		const runOneFrame = (camera, target, dampingValue, dt) => {
+			// Widen bounds past camera dimensions — `_followH` clamps to
+			// `bounds.width - camera.width`, which is 0 for the setup
+			// default (1000 bounds, 1000 camera). Then nuke the deadzone:
+			// `setDeadzone(0, 0)` zeroes its size but still positions it
+			// at camera-center (~500, 500), which makes _followH compare
+			// against half-camera offsets. We want a clean math test, so
+			// override `deadzone.pos` to (0, 0) too — that way _followH
+			// becomes `targetX = min(target.x, bounds.right)` and the
+			// gap the camera closes is exactly `target.x - camera.pos.x`.
+			camera.setBounds(0, 0, 5000, 5000);
+			camera.setDeadzone(0, 0);
+			camera.deadzone.pos.set(0, 0);
+			camera.pos.set(0, 0, 0);
+			camera.follow(target, camera.AXIS.BOTH, dampingValue);
+			// follow() runs one updateTarget() internally; reset position
+			// so the test's explicit updateTarget() runs against the
+			// known starting state, not the post-follow snapshot.
+			camera.pos.set(0, 0, 0);
+			camera.updateTarget(dt);
+			return camera.pos.x;
+		};
+
+		it("preserves the legacy per-frame fraction at the configured target framerate (60fps default)", () => {
+			const { camera } = setup();
+			const target = new Vector2d(100, 100);
+			// 60fps: dt = 1000/60 ms. damping = 0.1 → at the target rate
+			// we expect 10% of the gap covered (legacy lerp behaviour).
+			const before = timer.maxfps;
+			timer.maxfps = 60;
+			try {
+				const x = runOneFrame(camera, target, 0.1, 1000 / 60);
+				expect(x).toBeCloseTo(10, 1); // 10% of 100
+			} finally {
+				timer.maxfps = before;
+			}
+		});
+
+		it("matches the legacy per-frame fraction when the engine targets 30fps", () => {
+			const { camera } = setup();
+			const target = new Vector2d(100, 100);
+			const before = timer.maxfps;
+			timer.maxfps = 30;
+			try {
+				// 30fps: dt = 1000/30 ms. damping = 0.1 → at the target rate
+				// we still expect 10% covered, because the lambda derivation
+				// re-anchors to whatever timer.maxfps is.
+				const x = runOneFrame(camera, target, 0.1, 1000 / 30);
+				expect(x).toBeCloseTo(10, 1);
+			} finally {
+				timer.maxfps = before;
+			}
+		});
+
+		it("matches the legacy per-frame fraction when the engine targets 120fps", () => {
+			const { camera } = setup();
+			const target = new Vector2d(100, 100);
+			const before = timer.maxfps;
+			timer.maxfps = 120;
+			try {
+				const x = runOneFrame(camera, target, 0.1, 1000 / 120);
+				expect(x).toBeCloseTo(10, 1);
+			} finally {
+				timer.maxfps = before;
+			}
+		});
+
+		it("converges to the same wall-clock fraction across actual frame-rate drift (60fps target)", () => {
+			// At 60fps target, simulate a full wall-clock second of frames
+			// under three actual refresh scenarios: 30Hz (slow), 60Hz
+			// (matched), 144Hz (high-refresh). All three must end up at the
+			// same fraction covered after 1 wall-clock second — that's the
+			// frame-rate independence the fix introduces.
+			const before = timer.maxfps;
+			timer.maxfps = 60;
+			try {
+				const simulate = (actualHz) => {
+					const { camera } = setup();
+					const target = new Vector2d(100, 100);
+					camera.setBounds(0, 0, 5000, 5000);
+					camera.setDeadzone(0, 0);
+					camera.deadzone.pos.set(0, 0);
+					camera.pos.set(0, 0, 0);
+					camera.follow(target, camera.AXIS.BOTH, 0.1);
+					camera.pos.set(0, 0, 0);
+					const frames = actualHz;
+					const dt = 1000 / actualHz;
+					for (let i = 0; i < frames; i++) {
+						camera.updateTarget(dt);
+					}
+					return camera.pos.x;
+				};
+
+				const slow = simulate(30);
+				const matched = simulate(60);
+				const fast = simulate(144);
+
+				// All three should agree on the fraction covered to within
+				// floating-point noise — they're all simulating 1 wall-clock
+				// second of follow.
+				expect(slow).toBeCloseTo(matched, 1);
+				expect(fast).toBeCloseTo(matched, 1);
+			} finally {
+				timer.maxfps = before;
+			}
+		});
+
+		it("damping = 1.0 still snaps directly to the target (no damp path)", () => {
+			const { camera } = setup();
+			const target = new Vector2d(100, 100);
+			camera.setBounds(0, 0, 5000, 5000);
+			camera.setDeadzone(0, 0);
+			camera.deadzone.pos.set(0, 0);
+			camera.pos.set(0, 0, 0);
+			camera.follow(target, camera.AXIS.BOTH, 1);
+			camera.pos.set(0, 0, 0);
+			camera.updateTarget(1000 / 60);
+			expect(camera.pos.x).toBe(100);
+			expect(camera.pos.y).toBe(100);
 		});
 	});
 });
