@@ -26,7 +26,7 @@ import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	audio,
-	Camera3d as Camera3dClass,
+	Camera3d,
 	loader,
 	plugin,
 	state,
@@ -58,7 +58,7 @@ const createGame = () => {
 		parent: "screen",
 		renderer: video.WEBGL,
 		scale: "auto",
-		cameraClass: Camera3dClass,
+		cameraClass: Camera3d,
 	});
 
 	// world.backgroundColor stays transparent (alpha 0) — the SkyboxStage
