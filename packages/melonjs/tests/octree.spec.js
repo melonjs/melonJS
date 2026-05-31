@@ -4,6 +4,7 @@ import {
 	Camera2d,
 	Camera3d,
 	Container,
+	Rect,
 	Renderable,
 	Sphere,
 	video,
@@ -1319,5 +1320,99 @@ describe("Camera3d.queryVisible", () => {
 		const mine = [];
 		const result = cam.queryVisible(world, mine);
 		expect(result).toBe(mine);
+	});
+});
+
+/**
+ * Smoke tests for the 2.5D pattern documented in the wiki
+ * (https://github.com/melonjs/melonJS/wiki/Working-in-3D#25d-games-paper-mario-style):
+ * Camera3d for perspective visuals, but gameplay confined to a shared Z
+ * plane. Validates the architectural claims at the broadphase level so
+ * any obvious bug surfaces before someone builds the 2.5D example on
+ * top of it (#1476).
+ *
+ * What's actually true:
+ * - World swaps to Octree on `sortOn = "depth"`.
+ * - Same-Z entities surface as broadphase candidates of each other
+ *   (so SAT can resolve XY overlap normally).
+ * - Items at distinct Z values DO get partitioned into different
+ *   octants, BUT only when they sit on opposite sides of the Octree's
+ *   depth midpoint. Items at exactly the midpoint stay at root
+ *   (returned in every query), and a 2D Rect query (no z) falls back
+ *   to z=0 — which is also the default Octree's depth midpoint — so
+ *   it descends into all octants. Parallax isolation via the Octree
+ *   alone is therefore best-effort, not a hard guarantee; combine
+ *   with `isKinematic` flags or `collisionType` filtering for
+ *   deterministic gameplay-only candidate sets.
+ */
+describe("2.5D pattern (Camera3d + Octree + same-Z gameplay)", () => {
+	beforeAll(() => {
+		boot();
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+		});
+	});
+
+	it("World swaps to Octree when sortOn flips to 'depth'", () => {
+		const world = new World(0, 0, 800, 600);
+		expect(world.broadphase).not.toBeInstanceOf(Octree);
+		world.sortOn = "depth";
+		expect(world.broadphase).toBeInstanceOf(Octree);
+	});
+
+	it("two gameplay entities sharing Z surface as broadphase candidates of each other (SAT-ready)", () => {
+		// What matters for the SAT path: two entities sharing Z stay
+		// retrievable against each other so SAT can run its XY check.
+		// Same setup as the AfterBurner sphere-query path, just on a
+		// flat Z plane.
+		const aabb = new AABB3d();
+		aabb.setMinMax(-1000, -1000, -1000, 1000, 1000, 1000);
+		const world = new World(0, 0, 800, 600);
+		const ot = new Octree(world, aabb, 1, 4, 0);
+
+		// Overlapping pair at z=0 — player + enemy at the same Z plane.
+		const player = makeItem({ x: 100, y: 100, z: 0, w: 32, h: 32 });
+		const enemy = makeItem({ x: 110, y: 110, z: 0, w: 32, h: 32 });
+		// A few decoys at the same Z so the tree subdivides.
+		const decoy1 = makeItem({ x: 600, y: 50, z: 0 });
+		const decoy2 = makeItem({ x: 50, y: 500, z: 0 });
+		ot.insert(player);
+		ot.insert(enemy);
+		ot.insert(decoy1);
+		ot.insert(decoy2);
+
+		const out = [];
+		ot.retrieve(player, undefined, out);
+		// Enemy must surface as a candidate (SAT's job to confirm the
+		// XY overlap; broadphase's job is to not lose it).
+		expect(out).toContain(enemy);
+	});
+
+	it("Renderable at z=0 inserted via world.addChild surfaces in a same-Z Rect query (adapter glue)", () => {
+		// Confirm the actual World → broadphase pipeline (world.addChild
+		// → Octree) plays nice with the 2D-Rect retrieve shape that
+		// `adapter.queryAABB(rect)` uses internally. Catches regressions
+		// in how World inserts Renderables into the Octree on update().
+		const world = new World(0, 0, 800, 600);
+		world.sortOn = "depth";
+		expect(world.broadphase).toBeInstanceOf(Octree);
+
+		const player = new Renderable(100, 100, 32, 32);
+		player.isKinematic = false;
+		world.addChild(player, 0);
+		for (let i = 0; i < 8; i++) {
+			const r = new Renderable(120 + i * 40, 100, 32, 32);
+			r.isKinematic = false;
+			world.addChild(r, 0);
+		}
+
+		world.update(16);
+
+		const rect = new Rect(100, 100, 50, 50);
+		const out = [];
+		world.broadphase.retrieve(rect, undefined, out);
+		expect(out).toContain(player);
 	});
 });
