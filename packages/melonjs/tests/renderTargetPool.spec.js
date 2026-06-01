@@ -162,13 +162,20 @@ describe("RenderTargetPool", () => {
 	describe("with WebGL context", () => {
 		it("should work with WebGLRenderTarget factory", () => {
 			boot();
-			video.init(100, 100, {
-				parent: "screen",
-				scale: "auto",
-				renderer: video.WEBGL,
-			});
+			// `video.WEBGL` now throws when WebGL is unavailable
+			// (#1479) — catch the throw so the existing `gl == undefined`
+			// skip path still runs in non-WebGL environments.
+			try {
+				video.init(100, 100, {
+					parent: "screen",
+					scale: "auto",
+					renderer: video.WEBGL,
+				});
+			} catch {
+				return;
+			}
 
-			if (!video.renderer.gl) {
+			if (!video.renderer?.gl) {
 				return;
 			}
 
@@ -190,13 +197,20 @@ describe("RenderTargetPool", () => {
 
 		it("should reuse target on subsequent get at same index", () => {
 			boot();
-			video.init(100, 100, {
-				parent: "screen",
-				scale: "auto",
-				renderer: video.WEBGL,
-			});
+			// `video.WEBGL` now throws when WebGL is unavailable
+			// (#1479) — catch the throw so the existing `gl == undefined`
+			// skip path still runs in non-WebGL environments.
+			try {
+				video.init(100, 100, {
+					parent: "screen",
+					scale: "auto",
+					renderer: video.WEBGL,
+				});
+			} catch {
+				return;
+			}
 
-			if (!video.renderer.gl) {
+			if (!video.renderer?.gl) {
 				return;
 			}
 
@@ -214,13 +228,20 @@ describe("RenderTargetPool", () => {
 
 		it("should resize target when dimensions change", () => {
 			boot();
-			video.init(100, 100, {
-				parent: "screen",
-				scale: "auto",
-				renderer: video.WEBGL,
-			});
+			// `video.WEBGL` now throws when WebGL is unavailable
+			// (#1479) — catch the throw so the existing `gl == undefined`
+			// skip path still runs in non-WebGL environments.
+			try {
+				video.init(100, 100, {
+					parent: "screen",
+					scale: "auto",
+					renderer: video.WEBGL,
+				});
+			} catch {
+				return;
+			}
 
-			if (!video.renderer.gl) {
+			if (!video.renderer?.gl) {
 				return;
 			}
 

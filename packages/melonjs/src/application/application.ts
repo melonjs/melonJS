@@ -5,6 +5,7 @@ import World from "../physics/world.js";
 import state from "../state/state.ts";
 import { boot, initialized } from "../system/bootstrap.ts";
 import * as device from "../system/device.js";
+import { isWebGLSupported } from "../system/device.js";
 import {
 	BLUR,
 	emit,
@@ -33,6 +34,7 @@ import { getUriFragment } from "../utils/utils.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import type Renderer from "./../video/renderer.js";
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
+import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
 import { consoleHeader } from "./header.ts";
 import { onresize } from "./resize.ts";
@@ -342,8 +344,32 @@ export default class Application {
 		if (typeof this.settings.renderer === "number") {
 			switch (this.settings.renderer) {
 				case AUTO:
-				case WEBGL:
+					// "I want WebGL if available, Canvas otherwise" — try
+					// WebGL, silently fall back to Canvas if it isn't
+					// available.
 					this.renderer = autoDetectRenderer(this.settings as any);
+					break;
+				case WEBGL:
+					// "I require WebGL" — fail loudly if it isn't
+					// available instead of silently falling back to
+					// Canvas. Camera3d, mesh rendering, ShaderEffect /
+					// post-FX, GPU tilemap and Light2d all require a
+					// WebGL context; falling back to Canvas would
+					// produce a silently broken scene with no signal to
+					// the dev about why. Use `video.AUTO` to opt into
+					// the fall-back behavior explicitly.
+					if (!isWebGLSupported(this.settings)) {
+						throw new Error(
+							"Application: `renderer: video.WEBGL` was requested " +
+								"but the WebGL context could not be created in this " +
+								"environment (driver-blocklisted GPU, " +
+								"`failIfMajorPerformanceCaveat: true` on a software " +
+								"renderer, etc.). Use `video.AUTO` if Canvas " +
+								"fallback is acceptable, or check " +
+								"`device.isWebGLSupported()` before construction.",
+						);
+					}
+					this.renderer = new WebGLRenderer(this.settings as any);
 					break;
 				default:
 					this.renderer = new CanvasRenderer(this.settings as any);
@@ -353,6 +379,44 @@ export default class Application {
 			const CustomRenderer = this.settings.renderer as any;
 			// a renderer class
 			this.renderer = new CustomRenderer(this.settings);
+		}
+
+		// Cross-check the chosen camera class against the renderer the
+		// engine actually instantiated. Camera classes that declare
+		// `static defaultSortOn = "depth"` (Camera3d and any subclass)
+		// need the WebGL backend — depth attachment, projection matrix
+		// uniform, `drawMesh`, frustum culling — none of which the
+		// Canvas renderer provides. Catches the
+		// `{ renderer: video.AUTO, cameraClass: Camera3d }` combination
+		// where AUTO fell back to Canvas and the user wouldn't otherwise
+		// see anything go wrong until the first frame rendered a black
+		// canvas. Uses `defaultSortOn === "depth"` as the signal so
+		// Application doesn't need to import the concrete Camera3d class.
+		//
+		// Warn (not throw) so unit-level integration tests that bypass
+		// real rendering can still verify the `cameraClass → world.sortOn`
+		// bootstrap wiring under Canvas without crashing. The strong
+		// failure mode for users who genuinely need WebGL is to set
+		// `renderer: video.WEBGL` — that throws above when WebGL is
+		// unavailable, which is the right signal at construction time.
+		const CameraClass = this.settings.cameraClass as
+			| { defaultSortOn?: string; name?: string }
+			| undefined;
+		if (
+			CameraClass?.defaultSortOn === "depth" &&
+			!(this.renderer instanceof WebGLRenderer)
+		) {
+			console.warn(
+				`Application: \`cameraClass\` (${
+					CameraClass.name ?? "anonymous"
+				}) declares \`defaultSortOn = "depth"\` (Camera3d or subclass), ` +
+					"which requires the WebGL renderer — the active renderer is " +
+					"the Canvas backend, which has no depth buffer, no 3D " +
+					"projection path, and no `drawMesh`. The scene will not " +
+					"render correctly. Use `{ renderer: video.WEBGL }` (throws " +
+					"if WebGL is unavailable) instead of `video.AUTO` (silently " +
+					"falls back to Canvas).",
+			);
 		}
 
 		// make this the active game instance for modules that reference the global
