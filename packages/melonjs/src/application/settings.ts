@@ -36,7 +36,22 @@ type PowerPreference = "default" | "low-power";
 
 export type ApplicationSettings = {
 	/**
-	 * renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
+	 * Renderer to use. Three built-in modes (constants from `me.video`):
+	 *
+	 * - {@link CANVAS} — HTML5 Canvas backend. No shader / mesh /
+	 *   Camera3d support.
+	 * - {@link WEBGL} — **requires WebGL**. Throws at `new Application(...)`
+	 *   time if WebGL is unavailable (driver-blocklisted GPU, perf-caveat
+	 *   failure, etc.). Use this when your scene needs Camera3d, Mesh,
+	 *   ShaderEffect, Light2d or GPU tilemap — you'd rather fail fast
+	 *   than render a stuck blank canvas.
+	 * - {@link AUTO} — try WebGL, silently fall back to Canvas if
+	 *   unavailable. Application construction always succeeds. The
+	 *   WebGL-only subsystems (Camera3d, Mesh, ShaderEffect, Light2d,
+	 *   GPU tilemap) silently stop working under the Canvas fallback —
+	 *   if your scene depends on any of those, use `WEBGL` instead.
+	 *
+	 * Or pass a custom `Renderer` subclass instance for full control.
 	 * @default AUTO
 	 */
 	renderer: RendererType | Renderer;
@@ -193,6 +208,15 @@ export type ApplicationSettings = {
 	 * per-class via `super({ cameraClass: Camera2d })`. Built-in stages
 	 * (e.g. the loader screen) explicitly use {@link Camera2d} regardless
 	 * of this setting.
+	 *
+	 * **WebGL requirement.** Camera classes whose
+	 * `static defaultSortOn === "depth"` (Camera3d and any subclass) need
+	 * the WebGL renderer — perspective projection, depth attachment and
+	 * mesh draw all live in the WebGL backend. Pairing such a
+	 * `cameraClass` with `renderer: video.AUTO` on a system where AUTO
+	 * falls back to Canvas emits a `console.warn` at construction time
+	 * and produces a non-functional render. Use `renderer: video.WEBGL`
+	 * to get a hard throw instead.
 	 * @default Camera2d
 	 */
 	cameraClass?: new (

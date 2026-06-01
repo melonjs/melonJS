@@ -25,6 +25,15 @@ const _viewProjection = new Matrix3d();
  * replacement for `Camera2d` — inherits the post-effect FBO bracket,
  * color-matrix, fade / shake / follow plumbing, and screen viewport.
  *
+ * **WebGL required.** Camera3d's perspective projection, depth-buffer
+ * painter sort and mesh draw path all live in the WebGL renderer; the
+ * Canvas backend has none of these and would render a stuck blank scene.
+ * Construct the Application with `renderer: video.WEBGL` to get a hard
+ * throw at construction time if WebGL is unavailable. Pairing
+ * `cameraClass: Camera3d` with `video.AUTO` will emit a `console.warn`
+ * at construction (and silently misrender) when AUTO falls back to
+ * Canvas — see {@link ApplicationSettings.renderer} for the contract.
+ *
  * Conventions:
  * - **Y-down + +Z forward.** Sprite at higher `pos.y` appears lower
  *   on screen (same as Camera2d). Sprite at higher `pos.z` is

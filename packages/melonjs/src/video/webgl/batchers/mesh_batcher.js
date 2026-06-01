@@ -40,6 +40,26 @@ function mulPackedARGB(a, b) {
 /**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
+ *
+ * Owns mesh-mode GL state ownership (since 19.7 / #1468):
+ *
+ * - {@link MeshBatcher#bind} enters mesh mode — enables `DEPTH_TEST` +
+ *   `LEQUAL` + `depthMask`, disables `BLEND`, and runs a one-shot
+ *   `clearDepth(1.0) + clear(DEPTH_BUFFER_BIT)` if the active target's
+ *   depth attachment is still dirty. Subsequent mesh draws against the
+ *   same target rely on the accumulated depth buffer.
+ * - {@link MeshBatcher#unbind} exits mesh mode — restores non-mesh
+ *   defaults (`BLEND` on, `DEPTH_TEST` off, `depthMask` false) that the
+ *   2D rendering paths assume.
+ * - Subscribes to {@link event.RENDER_TARGET_CHANGED} (emitted by the
+ *   renderer at frame-start `clear()`, non-camera FBO bind, post-effect
+ *   FBO unbind) to re-arm the lazy depth clear whenever the active
+ *   framebuffer's attachments change identity.
+ *
+ * The WebGLRenderer doesn't know any of this — `setBatcher("mesh")` calls
+ * `bind()` and the batcher sets up its own pass. Same lifecycle ports
+ * cleanly to a future WebGPU renderer: `bind()` becomes "begin a
+ * depth-enabled `RenderPassEncoder`", `unbind()` ends it.
  * @category Rendering
  */
 export default class MeshBatcher extends MaterialBatcher {
