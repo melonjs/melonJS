@@ -139,7 +139,7 @@ describe("system/platform", () => {
 			expect(isIPadOnMacUA(undefined)).toBe(false);
 		});
 
-		it("does not flag a Mac touch-bar laptop (`maxTouchPoints === 1`)", () => {
+		it("does not flag a device reporting `maxTouchPoints === 1`", () => {
 			// The check uses `> 1`, not `> 0`. A hypothetical single-point
 			// touch device should not trip it — multi-touch is iPad-class.
 			expect(isIPadOnMacUA({ platform: "MacIntel", maxTouchPoints: 1 })).toBe(

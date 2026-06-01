@@ -9,8 +9,8 @@
  * linux `true` if the device is a Linux platform
  * chromeOS `true` if the device is running on ChromeOS.
  * wp `true` if the device is a Windows Phone platform (deprecated)
- * BlackBerry`true` if the device is a BlackBerry platform (deprecated)
- * Kindle`true` if the device is a Kindle platform (deprecated)
+ * BlackBerry `true` if the device is a BlackBerry platform (deprecated)
+ * Kindle `true` if the device is a Kindle platform (deprecated)
  * ejecta `true` if running under Ejecta
  * isWeixin `true` if running under Wechat
  * nodeJS `true` if running under node.js
@@ -43,21 +43,21 @@ const isIPadOnMacUA =
 export const iOS = /iPhone|iPad|iPod/i.test(ua) || isIPadOnMacUA;
 export const android = /Android/i.test(ua);
 /**
- * @deprecated Android 2.x predates 2012. Will be removed in 20.x.
+ * @deprecated since 19.7.0 — Android 2.x predates 2012. Will be removed in 20.x.
  */
 export const android2 = /Android 2/i.test(ua);
 export const linux = /Linux/i.test(ua);
 export const chromeOS = /CrOS/.test(ua);
 /**
- * @deprecated Windows Phone was EOL'd by Microsoft in 2017. Will be removed in 20.x.
+ * @deprecated since 19.7.0 — Windows Phone was EOL'd by Microsoft in 2017. Will be removed in 20.x.
  */
 export const wp = /Windows Phone/i.test(ua);
 /**
- * @deprecated BlackBerry stopped shipping BB10 devices in 2016. Will be removed in 20.x.
+ * @deprecated since 19.7.0 — BlackBerry stopped shipping BB10 devices in 2016. Will be removed in 20.x.
  */
 export const BlackBerry = /BlackBerry/i.test(ua);
 /**
- * @deprecated Kindle has a negligible market share and behaves like Android. Will be removed in 20.x.
+ * @deprecated since 19.7.0 — Kindle has a negligible market share and behaves like Android. Will be removed in 20.x.
  */
 export const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
 export const ejecta = "ejecta" in globalThis;
@@ -78,7 +78,7 @@ export const nodeJS =
 // `wp` / `BlackBerry` / `Kindle` — the underlying platforms are EOL
 // and the regexes were burning cycles on every page load for
 // hardware nobody ships.
-export const isMobile = /Mobi/i.test(ua) || iOS || android || false;
+export const isMobile = /Mobi/i.test(ua) || iOS || android;
 export const webApp =
 	(typeof globalThis.navigator !== "undefined" &&
 		"standalone" in globalThis.navigator &&

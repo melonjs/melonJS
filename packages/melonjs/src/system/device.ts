@@ -39,9 +39,20 @@ let accelInitialized = false;
 let deviceOrientationInitialized = false;
 // swipe utility fn & flag
 let swipeEnabled = true;
-// a reusable DOMRect — the `width`/`height` are mutated each call; `x`/`y`
-// stay at 0, so the `right`/`bottom` getters track `width`/`height`.
-const domRect = new DOMRect(0, 0, 0, 0);
+// a reusable cached rect for getElementBounds() fallback. Plain object
+// literal (not `new DOMRect()`) so module load doesn't ReferenceError in
+// Node / SSR environments where the DOMRect constructor isn't defined.
+// All fields are mutable here; cast to `DOMRect` at the return site.
+const domRect = {
+	left: 0,
+	top: 0,
+	x: 0,
+	y: 0,
+	width: 0,
+	height: 0,
+	right: 0,
+	bottom: 0,
+};
 
 // supported videoCodecs lookup (lazily populated on first hasVideoFormat call)
 let videoCodecs: Record<string, string> | undefined;
@@ -242,7 +253,7 @@ export const devicePixelRatio = globalThis.devicePixelRatio || 1;
 
 /**
  * equals to true if a mobile device.
- * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
+ * (Android | iPhone | iPad | iPod | any UA matching `Mobi`)
  */
 export const isMobile = platform.isMobile;
 
@@ -601,7 +612,7 @@ export function getParentElement(element: string | HTMLElement) {
 /**
  * return the DOM element for the given element name or HTMLElement object
  * @param element - the parent element name or a HTMLElement object
- * @returns the corresponding DOM Element or null if not existing
+ * @returns the corresponding DOM Element (falls back to `document.body` when the lookup fails or the input isn't an HTMLElement)
  * @category Application
  */
 export function getElement(element: string | HTMLElement): HTMLElement {
@@ -643,9 +654,9 @@ export function getElementBounds(element: string | HTMLElement): DOMRect {
 	) {
 		return element.getBoundingClientRect();
 	} else {
-		domRect.width = globalThis.innerWidth;
-		domRect.height = globalThis.innerHeight;
-		return domRect;
+		domRect.width = domRect.right = globalThis.innerWidth;
+		domRect.height = domRect.bottom = globalThis.innerHeight;
+		return domRect as DOMRect;
 	}
 }
 
