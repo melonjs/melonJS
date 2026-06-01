@@ -656,6 +656,39 @@ export default class Application {
 	}
 
 	/**
+	 * Trigger a fullscreen request for this application. Defaults to fullscreening
+	 * the canvas parent element, so the rendered viewport (and any sibling HUD)
+	 * goes fullscreen together.
+	 * @param element - optional element to fullscreen instead of the canvas parent
+	 * @example
+	 * // bind F to toggle fullscreen
+	 * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
+	 * me.event.on(me.event.KEYDOWN, (action) => {
+	 *   if (action === "toggleFullscreen") {
+	 *     if (!me.device.isFullscreen()) app.requestFullscreen();
+	 *     else app.exitFullscreen();
+	 *   }
+	 * });
+	 * @category Application
+	 */
+	requestFullscreen(element?: Element): void {
+		if (device.hasFullscreenSupport && !device.isFullscreen()) {
+			const target = element ?? this.parentElement;
+			target.requestFullscreen?.().catch(console.error);
+		}
+	}
+
+	/**
+	 * Exit fullscreen mode for this application.
+	 * @category Application
+	 */
+	exitFullscreen(): void {
+		if (device.hasFullscreenSupport && device.isFullscreen()) {
+			globalThis.document.exitFullscreen().catch(console.error);
+		}
+	}
+
+	/**
 	 * The HTML canvas element associated with this application's renderer.
 	 * @example
 	 * // access the canvas DOM element

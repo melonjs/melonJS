@@ -50,9 +50,9 @@ class FSControl extends UISpriteElement {
 	 */
 	onClick(/* event */) {
 		if (!device.isFullscreen()) {
-			device.requestFullscreen();
+			game.requestFullscreen();
 		} else {
-			device.exitFullscreen();
+			game.exitFullscreen();
 		}
 		return false;
 	}

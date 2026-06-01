@@ -126,9 +126,9 @@ export const createGame = () => {
 			}
 			if (keyCode === input.KEY.F) {
 				if (!device.isFullscreen()) {
-					device.requestFullscreen();
+					_app.requestFullscreen();
 				} else {
-					device.exitFullscreen();
+					_app.exitFullscreen();
 				}
 			}
 		});

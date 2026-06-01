@@ -448,6 +448,7 @@ export function isFullscreen() {
  *       me.device.exitFullscreen();
  *    }
  * });
+ * @deprecated since 19.7.0 — use {@link Application#requestFullscreen app.requestFullscreen()} instead. The static helper still works for backwards compat but relies on the deprecated global-game canvas lookup.
  * @category Application
  */
 export function requestFullscreen(element?: Element) {
@@ -465,6 +466,7 @@ export function requestFullscreen(element?: Element) {
 
 /**
  * Exit fullscreen mode. Requires fullscreen support from the browser/device.
+ * @deprecated since 19.7.0 — use {@link Application#exitFullscreen app.exitFullscreen()} instead.
  */
 export const exitFullscreen = () => {
 	if (hasFullscreenSupport && isFullscreen()) {
