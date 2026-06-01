@@ -1,4 +1,5 @@
 import { Vector3d } from "../../../math/vector3d.ts";
+import { off, on, RENDER_TARGET_CHANGED } from "../../../system/event.ts";
 import meshFragment from "./../shaders/mesh.frag";
 import meshVertex from "./../shaders/mesh.vert";
 import { MaterialBatcher } from "./material_batcher.js";
@@ -91,6 +92,87 @@ export default class MeshBatcher extends MaterialBatcher {
 			},
 			indexed: true,
 		});
+		/**
+		 * Tracks whether the active framebuffer's depth attachment still
+		 * needs a clear before this batcher's next draw. Flipped to
+		 * `true` by the `RENDER_TARGET_CHANGED` listener installed
+		 * below (frame start, post-effect FBO bind/unbind), back to
+		 * `false` by the first `bind()` of the new target after the
+		 * lazy clear runs. Lifts depth clearing from per-mesh (legacy)
+		 * to per-target — same model Three.js uses. The GPU's `LEQUAL`
+		 * depth test then resolves inter-mesh occlusion per pixel
+		 * against the accumulated buffer.
+		 * @ignore
+		 */
+		this._depthDirty = true;
+
+		// Subscribe to the renderer's target-changed broadcast so we
+		// re-arm the lazy depth clear whenever the active framebuffer's
+		// attachments change identity (FBO bind/unbind for post-effects,
+		// frame-start `clear()`). Same pattern as `MaterialBatcher`'s
+		// `GPU_TEXTURE_CACHE_RESET` subscription — only batchers that
+		// care subscribe, so non-mesh batchers pay nothing for this.
+		if (!this._onTargetChanged) {
+			this._onTargetChanged = () => {
+				this._depthDirty = true;
+			};
+			on(RENDER_TARGET_CHANGED, this._onTargetChanged);
+		}
+	}
+
+	/**
+	 * Unsubscribe the `RENDER_TARGET_CHANGED` listener so a discarded
+	 * batcher doesn't keep getting notified (relevant on context loss /
+	 * renderer teardown). Delegates to `MaterialBatcher.destroy()` for
+	 * the texture-cache-reset listener.
+	 * @ignore
+	 */
+	destroy() {
+		if (this._onTargetChanged) {
+			off(RENDER_TARGET_CHANGED, this._onTargetChanged);
+			this._onTargetChanged = null;
+		}
+		super.destroy();
+	}
+
+	/**
+	 * Enter mesh-mode GL state: depth test on (LEQUAL — `LEQUAL` not
+	 * `LESS` so coplanar triangles obey the OBJ's draw order; Kenney
+	 * low-poly assets layer feature primitives like eye sockets / pupils
+	 * coincident with the underlying face, and `LESS` would lose them),
+	 * depth write on, blend off. The depth attachment is cleared lazily
+	 * here so frames with no mesh content pay nothing for a clear they
+	 * wouldn't have used.
+	 *
+	 * The renderer doesn't need to know any of this; it just calls
+	 * `bind()` during a `setBatcher` transition and the mesh batcher
+	 * sets up its own pass. The same pattern ports cleanly to WebGPU:
+	 * `bind()` becomes "begin a depth-enabled render pass" there.
+	 */
+	bind() {
+		super.bind();
+		const gl = this.gl;
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+		gl.depthMask(true);
+		gl.disable(gl.BLEND);
+		if (this._depthDirty) {
+			gl.clearDepth(1.0);
+			gl.clear(gl.DEPTH_BUFFER_BIT);
+			this._depthDirty = false;
+		}
+	}
+
+	/**
+	 * Exit mesh-mode GL state: restore the non-mesh defaults (blend on,
+	 * depth test off, depth write off) that 2D rendering paths assume.
+	 */
+	unbind() {
+		super.unbind();
+		const gl = this.gl;
+		gl.enable(gl.BLEND);
+		gl.disable(gl.DEPTH_TEST);
+		gl.depthMask(false);
 	}
 
 	/**
