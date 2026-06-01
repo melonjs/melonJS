@@ -287,7 +287,8 @@ export let alpha = 0;
  * Specify whether to automatically bring the window to the front
  * @default true
  */
-export const autoFocus = true;
+// eslint-disable-next-line prefer-const -- public mutable flag; reassignable via internal setters even though no setter exists today
+export let autoFocus = true;
 
 /**
  * specify a function to execute when the Device is fully loaded and ready
