@@ -361,7 +361,12 @@ export default class ParticleEmitter extends Container {
 			this._defaultParticle.destroy();
 			this._defaultParticle = undefined;
 		}
+		// Clear the image reference so a discarded emitter doesn't pin a
+		// (potentially large) image / canvas alive via `settings.image`.
+		// `this.settings = undefined` was here too but offered no GC win
+		// — once the emitter itself is unreferenced, `settings` follows —
+		// and it required a `as unknown as ParticleEmitterSettings` cast
+		// that lied about the field type. Dropped.
 		this.settings.image = undefined;
-		this.settings = undefined as unknown as ParticleEmitterSettings;
 	}
 }

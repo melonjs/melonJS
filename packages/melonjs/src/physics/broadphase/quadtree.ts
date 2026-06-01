@@ -1,5 +1,4 @@
 import { Vector2d } from "../../math/vector2d.ts";
-import type Container from "../../renderable/container.js";
 import type { Bounds } from "../bounds.ts";
 import type World from "../world.js";
 import type { Broadphase } from "./broadphase.ts";
@@ -283,9 +282,18 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 
 	/**
 	 * Insert the given object container into the node.
+	 *
+	 * Typed against the structural duck shape (`getChildren() →
+	 * ContainerOrChild[]`) rather than the concrete `Container` class
+	 * so the recursive call below — where `child` is the structural
+	 * `ContainerOrChild` shape from `getChildren()`, not a `Container`
+	 * instance — type-checks without an `as unknown as Container` cast.
+	 * `Container` itself satisfies the shape (its `getChildren()`
+	 * returns `Renderable[]`, which matches the looser structural
+	 * `ContainerOrChild[]`).
 	 * @param container - group of objects to be added
 	 */
-	insertContainer(container: Container) {
+	insertContainer(container: ContainerLike) {
 		// use getChildren() to lazily initialise an empty array — Container
 		// stores `children` as `undefined` until first access, which would
 		// otherwise crash here for a freshly-constructed world.
@@ -293,17 +301,17 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 		const childrenLength = children.length;
 		for (
 			let i = childrenLength, child: ContainerOrChild;
-			i--, (child = children[i] as ContainerOrChild);
+			i--, (child = children[i]);
 		) {
 			if (child.isKinematic !== true) {
-				if (typeof child.addChild === "function") {
+				if (typeof child.addChild === "function" && hasGetChildren(child)) {
 					// `rootContainer` is the world itself — it owns the
 					// quadtree, it isn't an item inside it.
 					if (child.name !== "rootContainer") {
 						this.insert(child);
 					}
-					// recursively insert all children
-					this.insertContainer(child as unknown as Container);
+					// `child` narrowed by `hasGetChildren` — no assertion.
+					this.insertContainer(child);
 				} else {
 					// only insert object with a bounding box
 					// Probably redundant with `isKinematic`
@@ -377,7 +385,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 	 * hit destroyed renderables).
 	 * @param container - group of objects to be removed
 	 */
-	removeContainer(container: Container) {
+	removeContainer(container: ContainerLikeOptional) {
 		const children = container.getChildren?.();
 		if (!children) {
 			return;
@@ -385,7 +393,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 		const childrenLength = children.length;
 		for (
 			let i = childrenLength, child: ContainerOrChild;
-			i--, (child = children[i] as ContainerOrChild);
+			i--, (child = children[i]);
 		) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
@@ -395,7 +403,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 					if (child.name !== "rootContainer") {
 						this.remove(child);
 					}
-					this.removeContainer(child as unknown as Container);
+					this.removeContainer(child);
 				} else if (typeof child.getBounds === "function") {
 					this.remove(child);
 				}
@@ -603,8 +611,39 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
  * when walking a Container's `getChildren()`. Captures only the
  * fields the walk inspects — keeps the conversion strict-mode clean
  * without leaking `any`.
+ *
+ * `getChildren` is optional because leaf renderables don't have it;
+ * the recursive `insertContainer` narrows via {@link hasGetChildren}.
  * @ignore
  */
 interface ContainerOrChild extends QuadTreeItem {
 	addChild?: (...args: unknown[]) => unknown;
+	getChildren?: () => ContainerOrChild[];
+}
+
+/**
+ * Structural shape used as the `insertContainer` /
+ * `removeContainer` parameter type. Named (rather than inline) so the
+ * JSDoc-aware lint doesn't require nested `@param container.getChildren`
+ * documentation at every call site. `Container` itself satisfies this
+ * shape; the optional variant covers the case where the World's lazy
+ * `children` accessor returns `undefined`.
+ * @ignore
+ */
+type ContainerLike = { getChildren(): ContainerOrChild[] };
+/** @ignore */
+type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
+
+/**
+ * Type predicate: narrows a `ContainerOrChild` to one whose
+ * `getChildren` is definitely a function. Lets the recursive
+ * `insertContainer(child)` call pass without an
+ * `as Required<Pick<..., "getChildren">>` assertion.
+ * @param c - the candidate to test
+ * @returns true if `c` has a callable `getChildren`
+ */
+function hasGetChildren(
+	c: ContainerOrChild,
+): c is ContainerOrChild & ContainerLike {
+	return typeof c.getChildren === "function";
 }

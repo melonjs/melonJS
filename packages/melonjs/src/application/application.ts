@@ -551,9 +551,13 @@ export default class Application {
 		// the feature they enabled isn't actually in effect.
 		if (
 			this.settings.gpuTilemap &&
-			// duck-type rather than `instanceof WebGLRenderer` to avoid a
-			// runtime import; only the WebGL renderer carries `WebGLVersion`
-			(this.renderer as unknown as { WebGLVersion?: number }).WebGLVersion !== 2
+			// `gpuTilemap` is meaningful only under WebGL2 — Canvas has no
+			// shader path, and WebGL1 lacks the required extensions. The
+			// `instanceof WebGLRenderer` check narrows `this.renderer` so
+			// `WebGLVersion` (defined as a getter on `WebGLRenderer`) is
+			// well-typed — no `as unknown as ...` cast needed.
+			(!(this.renderer instanceof WebGLRenderer) ||
+				this.renderer.WebGLVersion !== 2)
 		) {
 			console.warn(
 				"melonJS: gpuTilemap is enabled but the active renderer is not WebGL 2 — falling back to the legacy tile renderer for every tile layer",

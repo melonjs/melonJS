@@ -53,9 +53,13 @@ export default class Body {
 
 		if (typeof this.shapes === "undefined") {
 			/**
-			 * The collision shapes of the body
+			 * The collision shapes of the body. Always an array — every
+			 * mutation path goes through `push` / `includes`. The
+			 * non-array `Point` that used to be in this union was a
+			 * mis-doc and broke downstream `shapes.length` reads in
+			 * TypeScript.
 			 * @ignore
-			 * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
+			 * @type {(Polygon|Line|Ellipse|Point)[]}
 			 */
 			this.shapes = [];
 		}

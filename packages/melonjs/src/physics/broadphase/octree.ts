@@ -1,6 +1,5 @@
 import { Sphere } from "../../geometries/sphere.ts";
 import { Vector2d } from "../../math/vector2d.ts";
-import type Container from "../../renderable/container.js";
 import type World from "../world.js";
 import { AABB3d } from "./aabb3d.ts";
 import type { Broadphase } from "./broadphase.ts";
@@ -322,19 +321,20 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * leaf. Mirrors `QuadTree.insertContainer`.
 	 * @param container - group of objects to be added
 	 */
-	insertContainer(container: Container) {
+	insertContainer(container: ContainerLike) {
 		const children = container.getChildren();
 		const childrenLength = children.length;
 		for (
 			let i = childrenLength, child: ContainerOrChild;
-			i--, (child = children[i] as ContainerOrChild);
+			i--, (child = children[i]);
 		) {
 			if (child.isKinematic !== true) {
-				if (typeof child.addChild === "function") {
+				if (typeof child.addChild === "function" && hasGetChildren(child)) {
 					if (child.name !== "rootContainer") {
 						this.insert(child);
 					}
-					this.insertContainer(child as unknown as Container);
+					// `child` narrowed by `hasGetChildren` — no assertion.
+					this.insertContainer(child);
 				} else if (typeof child.getBounds === "function") {
 					this.insert(child);
 				}
@@ -388,7 +388,7 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * the octree. Mirror of `QuadTree.removeContainer`.
 	 * @param container - group of objects to be removed
 	 */
-	removeContainer(container: Container) {
+	removeContainer(container: ContainerLikeOptional) {
 		const children = container.getChildren?.();
 		if (!children) {
 			return;
@@ -396,14 +396,14 @@ export default class Octree implements Broadphase<OctreeItem> {
 		const childrenLength = children.length;
 		for (
 			let i = childrenLength, child: ContainerOrChild;
-			i--, (child = children[i] as ContainerOrChild);
+			i--, (child = children[i]);
 		) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
 					if (child.name !== "rootContainer") {
 						this.remove(child);
 					}
-					this.removeContainer(child as unknown as Container);
+					this.removeContainer(child);
 				} else if (typeof child.getBounds === "function") {
 					this.remove(child);
 				}
@@ -949,9 +949,29 @@ export default class Octree implements Broadphase<OctreeItem> {
 /**
  * Structural shape consumed by `insertContainer` / `removeContainer`
  * — captures only the fields the walk inspects. Same approach as
- * QuadTree.
+ * QuadTree. `getChildren` is optional because leaf renderables don't
+ * have it; the recursive walk narrows via {@link hasGetChildren}.
  * @ignore
  */
 interface ContainerOrChild extends OctreeItem {
 	addChild?: (...args: unknown[]) => unknown;
+	getChildren?: () => ContainerOrChild[];
+}
+
+/** @ignore */
+type ContainerLike = { getChildren(): ContainerOrChild[] };
+/** @ignore */
+type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
+
+/**
+ * Type predicate mirror of QuadTree's. Narrows a `ContainerOrChild`
+ * to one whose `getChildren` is definitely a function, letting the
+ * recursive `insertContainer(child)` call pass without an assertion.
+ * @param c - the candidate to test
+ * @returns true if `c` has a callable `getChildren`
+ */
+function hasGetChildren(
+	c: ContainerOrChild,
+): c is ContainerOrChild & ContainerLike {
+	return typeof c.getChildren === "function";
 }

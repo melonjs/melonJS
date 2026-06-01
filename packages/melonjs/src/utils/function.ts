@@ -4,6 +4,12 @@
 
 /**
  * Executes a function as soon as the interpreter is idle (stack empty).
+ *
+ * Generic over the target function's tail-args tuple so call sites pass
+ * the function's actual parameters without lying to TypeScript via
+ * `as unknown as (...args: unknown[]) => unknown` casts. The compiler
+ * infers `TArgs` from the trailing rest args and constrains `func` to
+ * accept them.
  * @param func - The function to be deferred.
  * @param thisArg - The value to be passed as the this parameter to the target function when the deferred function is called
  * @param args - Optional additional arguments to carry for the function.
@@ -14,10 +20,10 @@
  * // with the current context and [1, 2, 3] as parameter
  * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
-export function defer(
-	func: (...args: unknown[]) => unknown,
+export function defer<TArgs extends unknown[]>(
+	func: (...args: TArgs) => unknown,
 	thisArg: unknown,
-	...args: unknown[]
+	...args: TArgs
 ) {
 	return setTimeout(func.bind(thisArg), 0, ...args);
 }
