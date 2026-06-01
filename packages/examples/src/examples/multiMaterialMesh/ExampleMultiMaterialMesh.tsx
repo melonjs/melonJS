@@ -62,14 +62,30 @@ const CRAFTS = [
 // ─── entry point ──────────────────────────────────────────────────
 
 const createGame = () => {
-	const app = new Application(CANVAS_W, CANVAS_H, {
-		parent: "screen",
-		// Multi-material 3D meshes need the WebGL renderer for usable
-		// frame rates — Canvas would solid-fill per triangle in JS,
-		// correct but 10-50× slower than the GPU rasterizer.
-		renderer: video.WEBGL,
-		scale: "auto",
-	});
+	// `renderer: video.WEBGL` throws (post #1479) when the browser/GPU
+	// can't provide a context. Surface a clear browser-level message
+	// instead of letting the React tree render a stuck blank canvas.
+	let app: Application;
+	try {
+		app = new Application(CANVAS_W, CANVAS_H, {
+			parent: "screen",
+			// Multi-material 3D meshes need the WebGL renderer for usable
+			// frame rates — Canvas would solid-fill per triangle in JS,
+			// correct but 10-50× slower than the GPU rasterizer.
+			renderer: video.WEBGL,
+			scale: "auto",
+		});
+	} catch (err) {
+		const reason = err instanceof Error ? err.message : String(err);
+		globalThis.alert(
+			"This example couldn't start: WebGL isn't available in this browser.\n\n" +
+				"The 3D mesh rendering used by this showcase requires a WebGL-capable " +
+				"browser/GPU. Try enabling hardware acceleration in your browser " +
+				"settings, or open this example in a different browser.\n\n" +
+				`Details: ${reason}`,
+		);
+		throw err;
+	}
 
 	app.world.backgroundColor.parseCSS("#0a0a1f");
 	plugin.register(DebugPanelPlugin, "debugPanel");

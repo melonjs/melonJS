@@ -88,8 +88,19 @@ export default class Camera2d extends Renderable {
 	smoothFollow: boolean;
 
 	/**
-	 * Camera damping for smooth transition [0 .. 1].
-	 * 1 being the maximum value and will snap the camera to the target position
+	 * Camera damping for smooth follow `[0 .. 1]`. `1` snaps the camera
+	 * to the target every frame (no smoothing); lower values produce a
+	 * trailing follow — `0.1` is a soft springy follow, `0.5` is snappy.
+	 *
+	 * **Frame-rate independent (since 19.7 / #1478).** The value is the
+	 * fraction of the gap covered per frame at the engine's target
+	 * framerate ({@link timer.maxfps}, default 60). The underlying
+	 * implementation switched from `pos.lerp` to `pos.damp` with
+	 * `lambda = -ln(1 - damping) * timer.maxfps`, so the legacy
+	 * per-frame fraction is recovered exactly at the target rate AND
+	 * the wall-clock convergence stays constant when the actual frame
+	 * rate drifts (slow machine, throttled tab, high-refresh display).
+	 * Existing `damping` tuning carries over with no changes.
 	 * @default 1.0
 	 */
 	damping: number;

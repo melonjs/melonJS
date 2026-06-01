@@ -54,12 +54,34 @@ const createGame = () => {
 	// StrictMode remount, the preload callback bails for the rest of
 	// the session, and the game never starts. Picks up cleanly once
 	// the utils.tsx remount path is fixed (separate review thread).
-	const app = new Application(1024, 768, {
-		parent: "screen",
-		renderer: video.WEBGL,
-		scale: "auto",
-		cameraClass: Camera3d,
-	});
+	// AfterBurner requires WebGL — `renderer: video.WEBGL` throws (post
+	// #1479) when the browser/GPU can't provide a context (driver
+	// blocklisted, software fallback failing the perf-caveat check, etc.).
+	// Surface a clear browser-level message to the user instead of
+	// letting the React tree render a stuck blank canvas with an obscure
+	// error buried in the dev console.
+	let app: Application;
+	try {
+		app = new Application(1024, 768, {
+			parent: "screen",
+			renderer: video.WEBGL,
+			scale: "auto",
+			cameraClass: Camera3d,
+		});
+	} catch (err) {
+		const reason = err instanceof Error ? err.message : String(err);
+		globalThis.alert(
+			"AfterBurner couldn't start: WebGL isn't available in this browser.\n\n" +
+				"This showcase uses Camera3d + 3D mesh rendering, which require a " +
+				"WebGL-capable browser/GPU. Try enabling hardware acceleration in " +
+				"your browser settings, or open this example in a different browser.\n\n" +
+				`Details: ${reason}`,
+		);
+		// Re-throw so the React example boundary doesn't think we
+		// initialized successfully — the gallery's error tile is the right
+		// fallback UI.
+		throw err;
+	}
 
 	// world.backgroundColor stays transparent (alpha 0) — the SkyboxStage
 	// paints the actual visible background each frame
