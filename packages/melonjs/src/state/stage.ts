@@ -200,14 +200,21 @@ export default class Stage {
 		// inherited the loader's Camera2d → "z" sortOn and a Camera3d
 		// sub-stage would never snap back to "depth".
 		if (isFirstReset && app?.world) {
+			// Every camera class in the engine carries
+			// `static defaultSortOn: "x" | "y" | "z" | "depth"` (see
+			// `Camera2d.defaultSortOn = "z"`, `Camera3d.defaultSortOn =
+			// "depth"`), but the constructor-shape type used by
+			// `settings.cameraClass` doesn't expose statics. Read the
+			// static via a structural narrowing instead of a
+			// constructor-to-static cast.
 			type SortAwareCameraClass = {
 				defaultSortOn?: "x" | "y" | "z" | "depth";
 			};
 			let chosenClass: SortAwareCameraClass | undefined;
 			if (typeof StageCameraClass === "function") {
-				chosenClass = StageCameraClass as unknown as SortAwareCameraClass;
+				chosenClass = StageCameraClass as SortAwareCameraClass;
 			} else if (typeof AppCameraClass === "function") {
-				chosenClass = AppCameraClass as unknown as SortAwareCameraClass;
+				chosenClass = AppCameraClass as SortAwareCameraClass;
 			} else if (this.settings.cameras.length > 0) {
 				// Read the camera actually registered under the "default"
 				// key, NOT `settings.cameras[0]`. A split-screen / minimap

@@ -1,5 +1,4 @@
 import { Vector2d } from "../../math/vector2d.ts";
-import type Container from "../../renderable/container.js";
 import type { Bounds } from "../bounds.ts";
 import type World from "../world.js";
 import type { Broadphase } from "./broadphase.ts";
@@ -283,9 +282,18 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 
 	/**
 	 * Insert the given object container into the node.
+	 *
+	 * Typed against the structural duck shape (`getChildren() →
+	 * ContainerOrChild[]`) rather than the concrete `Container` class
+	 * so the recursive call below — where `child` is the structural
+	 * `ContainerOrChild` shape from `getChildren()`, not a `Container`
+	 * instance — type-checks without an `as unknown as Container` cast.
+	 * `Container` itself satisfies the shape (its `getChildren()`
+	 * returns `Renderable[]`, which matches the looser structural
+	 * `ContainerOrChild[]`).
 	 * @param container - group of objects to be added
 	 */
-	insertContainer(container: Container) {
+	insertContainer(container: { getChildren(): ContainerOrChild[] }) {
 		// use getChildren() to lazily initialise an empty array — Container
 		// stores `children` as `undefined` until first access, which would
 		// otherwise crash here for a freshly-constructed world.
@@ -293,7 +301,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 		const childrenLength = children.length;
 		for (
 			let i = childrenLength, child: ContainerOrChild;
-			i--, (child = children[i] as ContainerOrChild);
+			i--, (child = children[i]);
 		) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
@@ -302,8 +310,12 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 					if (child.name !== "rootContainer") {
 						this.insert(child);
 					}
-					// recursively insert all children
-					this.insertContainer(child as unknown as Container);
+					// recursively insert all children — `addChild` and
+					// `getChildren` always come together on real
+					// containers (gated above via the `addChild` check).
+					this.insertContainer(
+						child as Required<Pick<ContainerOrChild, "getChildren">>,
+					);
 				} else {
 					// only insert object with a bounding box
 					// Probably redundant with `isKinematic`
@@ -377,7 +389,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 	 * hit destroyed renderables).
 	 * @param container - group of objects to be removed
 	 */
-	removeContainer(container: Container) {
+	removeContainer(container: { getChildren?(): ContainerOrChild[] }) {
 		const children = container.getChildren?.();
 		if (!children) {
 			return;
@@ -385,7 +397,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 		const childrenLength = children.length;
 		for (
 			let i = childrenLength, child: ContainerOrChild;
-			i--, (child = children[i] as ContainerOrChild);
+			i--, (child = children[i]);
 		) {
 			if (child.isKinematic !== true) {
 				if (typeof child.addChild === "function") {
@@ -395,7 +407,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 					if (child.name !== "rootContainer") {
 						this.remove(child);
 					}
-					this.removeContainer(child as unknown as Container);
+					this.removeContainer(child);
 				} else if (typeof child.getBounds === "function") {
 					this.remove(child);
 				}
@@ -603,8 +615,14 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
  * when walking a Container's `getChildren()`. Captures only the
  * fields the walk inspects — keeps the conversion strict-mode clean
  * without leaking `any`.
+ *
+ * `getChildren` is optional on the type but is what marks a value
+ * as a container in the recursive walk (alongside `addChild`).
+ * Including it here lets the recursive `insertContainer(child)` call
+ * pass without an `as unknown as Container` cast.
  * @ignore
  */
 interface ContainerOrChild extends QuadTreeItem {
 	addChild?: (...args: unknown[]) => unknown;
+	getChildren?: () => ContainerOrChild[];
 }

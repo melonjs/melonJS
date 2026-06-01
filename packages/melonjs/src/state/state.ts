@@ -603,11 +603,7 @@ const state = {
 			// apply transition effect if configured
 			if (_transitionConfig.duration && _stages[stateId].transition) {
 				const onComplete = () => {
-					defer(
-						_switchState as unknown as (...args: unknown[]) => unknown,
-						state,
-						stateId,
-					);
+					defer(_switchState, state, stateId);
 				};
 
 				switch (_transitionType) {
@@ -680,11 +676,7 @@ const state = {
 				if (forceChange) {
 					_switchState(stateId);
 				} else {
-					defer(
-						_switchState as unknown as (...args: unknown[]) => unknown,
-						this,
-						stateId,
-					);
+					defer(_switchState, this, stateId);
 				}
 			}
 		}
