@@ -5,7 +5,6 @@ import World from "../physics/world.js";
 import state from "../state/state.ts";
 import { boot, initialized } from "../system/bootstrap.ts";
 import * as device from "../system/device.js";
-import { isWebGLSupported } from "../system/device.js";
 import {
 	BLUR,
 	emit,
@@ -358,7 +357,7 @@ export default class Application {
 					// produce a silently broken scene with no signal to
 					// the dev about why. Use `video.AUTO` to opt into
 					// the fall-back behavior explicitly.
-					if (!isWebGLSupported(this.settings)) {
+					if (!device.isWebGLSupported(this.settings)) {
 						throw new Error(
 							"Application: `renderer: video.WEBGL` was requested " +
 								"but the WebGL context could not be created in this " +
