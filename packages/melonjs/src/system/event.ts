@@ -358,14 +358,26 @@ export const ONCONTEXT_RESTORED = "renderer.contextrestored";
 export const GPU_TEXTURE_CACHE_RESET = "renderer.gpu.texturecachereset";
 
 /**
- * Fired by the WebGL renderer whenever the active framebuffer's
- * attachments change identity — frame start (`clear()`),
- * non-camera FBO bind (`clearRenderTarget()`), post-effect FBO
- * unbind (`endPostEffect()`). Batchers with target-scoped state
- * (depth-clear flag, instance buffers keyed on the target, sort
- * accumulators, etc.) subscribe to invalidate it. Batchers without
- * target-scoped state don't subscribe and pay nothing for the
- * broadcast — same shape as `GPU_TEXTURE_CACHE_RESET`.
+ * Fired by the WebGL renderer at the start of a new render pass on the
+ * active target. The signal is "begin new render pass — invalidate any
+ * target-scoped state you've accumulated", not strictly "the framebuffer
+ * identity changed". Emitted from:
+ *
+ * - `clear()` — frame start: the active target's color/stencil were just
+ *   wiped, depth wasn't (lazy), so a new pass begins now.
+ * - `clearRenderTarget()` — a non-camera FBO was just bound and color-
+ *   cleared, beginning a new pass on it.
+ * - `endPostEffect()` — the parent target was rebound (a physical change
+ *   of framebuffer identity), beginning a new pass on it.
+ *
+ * Subscribers with target-scoped state (depth-clear flag, instance buffers
+ * keyed on the target, sort accumulators, etc.) invalidate it here.
+ * Batchers without target-scoped state don't subscribe and pay nothing —
+ * same shape as `GPU_TEXTURE_CACHE_RESET`.
+ *
+ * The future WebGPU renderer will emit this when it begins a new
+ * `RenderPassEncoder` (clear loadOps replace `clear()` calls in WebGPU's
+ * declarative pass descriptors).
  *
  * Data passed: none
  * @see event.on

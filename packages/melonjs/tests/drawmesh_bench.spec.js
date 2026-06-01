@@ -8,26 +8,22 @@ import {
 } from "../src/index.js";
 
 /**
- * First-pass benchmark for `WebGLRenderer.drawMesh` to inform issue #1468
- * (mesh batching). Measures per-mesh cost across mesh counts on a synthetic
- * scene to isolate the drawMesh path from world-tree walk / collision / etc.
+ * Benchmark for `WebGLRenderer.drawMesh` introduced alongside issue #1468.
+ * Measures per-mesh cost across mesh counts on a synthetic scene to isolate
+ * the drawMesh path from world-tree walk / collision / etc.
  *
- * The current `drawMesh` does:
- *   - setBatcher("mesh")
- *   - enable DEPTH_TEST + LEQUAL + clear DEPTH_BUFFER_BIT  ← per mesh
- *   - disable BLEND
- *   - addMesh → vertices/indices appended to the mesh batcher
- *   - flush() → drawElements                                ← per mesh
- *   - restore state
+ * Under the post-#1468 architecture, depth-mode state (DEPTH_TEST + LEQUAL +
+ * depthMask + the lazy per-target `clear(DEPTH_BUFFER_BIT)` + BLEND off)
+ * lives on `MeshBatcher.bind()` / `unbind()`. A run of consecutive
+ * `drawMesh` calls pays the state cost once on mesh-mode enter; the GPU's
+ * LEQUAL depth test then resolves inter-mesh occlusion per pixel against
+ * the accumulated buffer. So per-mesh cost in a hot loop is dominated by
+ * (1) addMesh's CPU geometry walk and (2) the per-call `flush()` →
+ * drawElements (CPU command-buffer overhead + GPU rasterization).
  *
- * So per-mesh cost = (1) depth-buffer clear (FBO bandwidth) + (2) drawElements
- * (CPU command-buffer overhead + GPU rasterization) + (3) GL state toggles
- * (cached driver-side, near-zero on modern stacks).
- *
- * Issue #1468 proposes batching N meshes into a single drawElements with one
- * depth clear per frame — amortizing (1) and (2). This benchmark establishes
- * the current baseline; comparing under a future batching impl quantifies
- * the actual win.
+ * A future batching pass (queue multiple meshes between flushes) would
+ * amortize (2) across the run. This baseline lets that future change be
+ * measured directly against today's numbers.
  */
 describe("drawMesh benchmark (baseline for #1468)", () => {
 	let renderer;

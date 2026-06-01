@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	Matrix3d,
@@ -63,6 +63,22 @@ describe("Mesh depth handling (issue #1468)", () => {
 			video.renderer.WebGLVersion === 2
 		) {
 			renderer = video.renderer;
+		}
+	});
+
+	afterAll(() => {
+		// Restore the video subsystem to AUTO so this spec doesn't leak
+		// a forced-WebGL renderer into other test files that share the
+		// `video` global. Mirrors the cleanup pattern in the existing
+		// `tmxlayer-shader.spec.js` / `texture-resource.spec.js` WebGL2
+		// integration specs.
+		try {
+			video.init(128, 128, {
+				parent: "screen",
+				renderer: video.AUTO,
+			});
+		} catch {
+			// ignore — nothing to restore if init never succeeded
 		}
 	});
 
@@ -300,7 +316,14 @@ describe("Mesh depth handling (issue #1468)", () => {
 			// persist. Green's farther z fails the LEQUAL test against
 			// red's stored depth → green pixels rejected → red stays
 			// visible → CORRECT.
-			renderer.clearColor("#000000");
+			//
+			// Use `renderer.clear()` (not `clearColor()`) so the lazy
+			// depth clear is re-armed via the `RENDER_TARGET_CHANGED`
+			// event broadcast — otherwise depth values written by a
+			// previous test in the same spec file persist into this
+			// run and the readback becomes order-dependent.
+			renderer.backgroundColor.setColor(0, 0, 0, 255);
+			renderer.clear();
 			const red = makeQuadMesh(64, 64, 10, [220, 20, 20, 255]);
 			const green = makeQuadMesh(64, 64, -10, [20, 220, 20, 255]);
 			// makeQuadMesh sets `cullBackFaces: false`, so drawMesh skips
@@ -321,7 +344,11 @@ describe("Mesh depth handling (issue #1468)", () => {
 			// the other — this is a smoke test that the shared depth
 			// buffer doesn't accidentally reject same-z pixels via
 			// LEQUAL's edge case.
-			renderer.clearColor("#000000");
+			//
+			// `clear()` (not `clearColor()`) so the lazy depth clear
+			// re-arms via `RENDER_TARGET_CHANGED`.
+			renderer.backgroundColor.setColor(0, 0, 0, 255);
+			renderer.clear();
 			const left = makeQuadMesh(32, 64, 0, [220, 20, 20, 255]);
 			const right = makeQuadMesh(96, 64, 0, [20, 20, 220, 255]);
 			drawWithTint(left);
