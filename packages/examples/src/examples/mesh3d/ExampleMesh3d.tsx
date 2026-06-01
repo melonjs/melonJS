@@ -22,11 +22,28 @@ import { createExampleComponent } from "../utils";
 const base = `${import.meta.env.BASE_URL}assets/mesh3d/`;
 
 const createGame = () => {
-	const app = new Application(1024, 768, {
-		parent: "screen",
-		renderer: video.AUTO,
-		scale: "auto",
-	});
+	// mesh3d uses `me.Mesh`, which requires WebGL. Switch to
+	// `renderer: video.WEBGL` so the engine throws (post #1479) when the
+	// browser/GPU can't provide a context, instead of silently falling
+	// back to Canvas and producing a broken scene with no signal.
+	let app: Application;
+	try {
+		app = new Application(1024, 768, {
+			parent: "screen",
+			renderer: video.WEBGL,
+			scale: "auto",
+		});
+	} catch (err) {
+		const reason = err instanceof Error ? err.message : String(err);
+		globalThis.alert(
+			"This example couldn't start: WebGL isn't available in this browser.\n\n" +
+				"The 3D mesh rendering used by this showcase requires a WebGL-capable " +
+				"browser/GPU. Try enabling hardware acceleration in your browser " +
+				"settings, or open this example in a different browser.\n\n" +
+				`Details: ${reason}`,
+		);
+		throw err;
+	}
 
 	app.world.backgroundColor.parseCSS("#1a1a2e");
 	plugin.register(DebugPanelPlugin, "debugPanel");
