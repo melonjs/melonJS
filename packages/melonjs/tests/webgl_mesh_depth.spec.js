@@ -301,9 +301,11 @@ describe("Mesh depth handling (issue #1468)", () => {
 			// red's stored depth → green pixels rejected → red stays
 			// visible → CORRECT.
 			renderer.clearColor("#000000");
-			renderer.gl.disable(renderer.gl.CULL_FACE);
 			const red = makeQuadMesh(64, 64, 10, [220, 20, 20, 255]);
 			const green = makeQuadMesh(64, 64, -10, [20, 220, 20, 255]);
+			// makeQuadMesh sets `cullBackFaces: false`, so drawMesh skips
+			// the CULL_FACE toggle entirely — no need to disable it here
+			// (which would leak the disabled state across to other tests).
 			drawWithTint(red);
 			drawWithTint(green);
 			const px = readCenterPixel();
