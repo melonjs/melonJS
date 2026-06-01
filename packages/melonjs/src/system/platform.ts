@@ -5,12 +5,12 @@
  * ua the user agent string for the current device
  * iOS `true` if the device is an iOS platform
  * android `true` if the device is an Android platform
- * android2 `true` if the device is an Android 2.x platform
+ * android2 `true` if the device is an Android 2.x platform (deprecated)
  * linux `true` if the device is a Linux platform
  * chromeOS `true` if the device is running on ChromeOS.
- * wp `true` if the device is a Windows Phone platform
- * BlackBerry`true` if the device is a BlackBerry platform
- * Kindle`true` if the device is a Kindle platform
+ * wp `true` if the device is a Windows Phone platform (deprecated)
+ * BlackBerry`true` if the device is a BlackBerry platform (deprecated)
+ * Kindle`true` if the device is a Kindle platform (deprecated)
  * ejecta `true` if running under Ejecta
  * isWeixin `true` if running under Wechat
  * nodeJS `true` if running under node.js
@@ -22,13 +22,43 @@ export const ua =
 	typeof globalThis.navigator !== "undefined"
 		? globalThis.navigator.userAgent
 		: "";
-export const iOS = /iPhone|iPad|iPod/i.test(ua);
+
+// iPadOS 13+ (Sept 2019) ships Safari with the desktop Mac UA — no `iPad`
+// token. Feature-detect the iPad-on-Mac-UA case so `iOS` / `isMobile`
+// don't miss every modern iPad:
+//
+// - `navigator.platform === "MacIntel"` is the Mac identity Apple keeps
+//   frozen on Apple Silicon Macs/iPads for backwards compat (same trick
+//   as `Win32` on 64-bit Windows). NOT a CPU check — `MacIntel` persists
+//   on M1/M2/M3/M4.
+// - `maxTouchPoints > 1` excludes actual Macs (no touchscreens) and
+//   keeps real iPads (multi-touch digitizers).
+const _nav =
+	typeof globalThis.navigator !== "undefined"
+		? globalThis.navigator
+		: undefined;
+const isIPadOnMacUA =
+	_nav?.platform === "MacIntel" && (_nav?.maxTouchPoints ?? 0) > 1;
+
+export const iOS = /iPhone|iPad|iPod/i.test(ua) || isIPadOnMacUA;
 export const android = /Android/i.test(ua);
+/**
+ * @deprecated Android 2.x predates 2012. Will be removed in 20.x.
+ */
 export const android2 = /Android 2/i.test(ua);
 export const linux = /Linux/i.test(ua);
 export const chromeOS = /CrOS/.test(ua);
+/**
+ * @deprecated Windows Phone was EOL'd by Microsoft in 2017. Will be removed in 20.x.
+ */
 export const wp = /Windows Phone/i.test(ua);
+/**
+ * @deprecated BlackBerry stopped shipping BB10 devices in 2016. Will be removed in 20.x.
+ */
 export const BlackBerry = /BlackBerry/i.test(ua);
+/**
+ * @deprecated Kindle has a negligible market share and behaves like Android. Will be removed in 20.x.
+ */
 export const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
 export const ejecta = "ejecta" in globalThis;
 export const isWeixin = /MicroMessenger/i.test(ua);
@@ -42,8 +72,13 @@ export const nodeJS =
 	typeof _proc !== "undefined" &&
 	typeof _proc.release !== "undefined" &&
 	_proc.release.name === "node";
-export const isMobile =
-	/Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
+// `Mobi` substring matches Firefox + Chrome + Safari mobile UAs in
+// 2026 (MDN's recommended fallback); the `iOS || android` chain
+// catches the few outliers and the iPad-on-Mac-UA case. Dropped
+// `wp` / `BlackBerry` / `Kindle` — the underlying platforms are EOL
+// and the regexes were burning cycles on every page load for
+// hardware nobody ships.
+export const isMobile = /Mobi/i.test(ua) || iOS || android || false;
 export const webApp =
 	(typeof globalThis.navigator !== "undefined" &&
 		"standalone" in globalThis.navigator &&

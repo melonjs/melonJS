@@ -81,10 +81,70 @@ describe("system/platform", () => {
 		// `isMobile` is the OR of the mobile-UA hits — verify it's not
 		// silently true on our desktop runner (a regression in the OR
 		// chain would page every test that branches on this).
-		it("isMobile === iOS || android || wp || BlackBerry || Kindle || /Mobi/.test(ua)", () => {
-			const expected =
-				/Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle;
+		//
+		// Note: as of #1467, `wp` / `BlackBerry` / `Kindle` are deprecated
+		// and NO LONGER participate in this OR chain. Their underlying
+		// platforms are EOL (Windows Phone 2017, BB10 2016) and the
+		// regexes were burning cycles for hardware nobody ships. The
+		// exports themselves stay around so any external consumer
+		// (third-party plugin, user code) keeps working through 19.x.
+		it("isMobile === /Mobi/.test(ua) || iOS || android", () => {
+			const expected = /Mobi/i.test(ua) || iOS || android;
 			expect(isMobile).toBe(expected);
+		});
+	});
+
+	describe("iPadOS 13+ detection (#1467)", () => {
+		// iPadOS 13 (Sept 2019) made Safari ship the desktop Mac UA by
+		// default — no `iPad` token. Pure UA regex misses every modern
+		// iPad. The fix layers a feature-detection check on top:
+		// `navigator.platform === "MacIntel"` (Apple-frozen legacy
+		// string, persists on Apple Silicon Macs/iPads for compat) +
+		// `maxTouchPoints > 1` (Macs don't have touchscreens; iPads do).
+		//
+		// The module computes `iOS` at load time from `globalThis`, so
+		// these tests assert the LOGIC of the documented check by
+		// recreating it inline against stubbed navigator shapes. This
+		// is verification of the contract; the runtime-load value in
+		// real chromium is covered by the shape / desktop-defaults
+		// blocks above.
+		const isIPadOnMacUA = (
+			nav: { platform?: string; maxTouchPoints?: number } | undefined,
+		): boolean =>
+			nav?.platform === "MacIntel" && (nav?.maxTouchPoints ?? 0) > 1;
+
+		it("detects an Apple Silicon iPad reporting as Mac (platform=MacIntel, maxTouchPoints=5)", () => {
+			expect(isIPadOnMacUA({ platform: "MacIntel", maxTouchPoints: 5 })).toBe(
+				true,
+			);
+		});
+
+		it("does not flag an actual Mac (platform=MacIntel, no touch)", () => {
+			expect(isIPadOnMacUA({ platform: "MacIntel", maxTouchPoints: 0 })).toBe(
+				false,
+			);
+		});
+
+		it("does not flag a Mac with `maxTouchPoints` undefined (older Safari)", () => {
+			expect(isIPadOnMacUA({ platform: "MacIntel" })).toBe(false);
+		});
+
+		it("does not flag Windows touchscreen (platform=Win32, maxTouchPoints=10)", () => {
+			expect(isIPadOnMacUA({ platform: "Win32", maxTouchPoints: 10 })).toBe(
+				false,
+			);
+		});
+
+		it("does not flag a missing navigator (Node/SSR)", () => {
+			expect(isIPadOnMacUA(undefined)).toBe(false);
+		});
+
+		it("does not flag a Mac touch-bar laptop (`maxTouchPoints === 1`)", () => {
+			// The check uses `> 1`, not `> 0`. A hypothetical single-point
+			// touch device should not trip it — multi-touch is iPad-class.
+			expect(isIPadOnMacUA({ platform: "MacIntel", maxTouchPoints: 1 })).toBe(
+				false,
+			);
 		});
 	});
 });
