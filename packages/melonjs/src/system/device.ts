@@ -425,7 +425,9 @@ export function enableSwipe(enable?: boolean) {
 
 /**
  * Returns true if the browser/device is in full screen mode.
- * @deprecated since 19.7.0 — use {@link Application#isFullscreen app.isFullscreen()} instead.
+ * Pure document-state probe — no Application context needed, since the
+ * browser tracks exactly one fullscreen element per document regardless
+ * of how many Applications are running.
  * @category Application
  */
 export function isFullscreen() {
@@ -457,7 +459,6 @@ export function isFullscreen() {
  * @category Application
  */
 export function requestFullscreen(element?: Element) {
-	// eslint-disable-next-line @typescript-eslint/no-deprecated -- this whole function is the deprecated wrapper; internal use of the matching deprecated probe is fine
 	if (hasFullscreenSupport && !isFullscreen()) {
 		// eslint-disable-next-line @typescript-eslint/no-deprecated -- no Application context available from this static API
 		const target = (element ?? getParent()) as ElementLegacy;
@@ -478,7 +479,6 @@ export function requestFullscreen(element?: Element) {
  * @deprecated since 19.7.0 — use {@link Application#exitFullscreen app.exitFullscreen()} instead.
  */
 export const exitFullscreen = () => {
-	// eslint-disable-next-line @typescript-eslint/no-deprecated -- this whole function is the deprecated wrapper; internal use of the matching deprecated probe is fine
 	if (hasFullscreenSupport && isFullscreen()) {
 		document.exitFullscreen().catch(console.error);
 	}

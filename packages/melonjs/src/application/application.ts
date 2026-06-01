@@ -657,10 +657,12 @@ export default class Application {
 
 	/**
 	 * Returns `true` if the browser/device is currently in fullscreen mode.
+	 * Thin convenience around {@link device.isFullscreen} so the
+	 * fullscreen trio (`isFullscreen` / `requestFullscreen` /
+	 * `exitFullscreen`) lives together on the app instance.
 	 * @category Application
 	 */
 	isFullscreen(): boolean {
-		// eslint-disable-next-line @typescript-eslint/no-deprecated -- device.isFullscreen is the canonical probe; only the public API surface moved
 		return device.isFullscreen();
 	}
 
