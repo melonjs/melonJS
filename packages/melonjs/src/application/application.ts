@@ -656,23 +656,34 @@ export default class Application {
 	}
 
 	/**
-	 * Trigger a fullscreen request for this application. Defaults to fullscreening
-	 * the canvas parent element, so the rendered viewport (and any sibling HUD)
-	 * goes fullscreen together.
-	 * @param element - optional element to fullscreen instead of the canvas parent
+	 * Returns `true` if the browser/device is currently in fullscreen mode.
+	 * @category Application
+	 */
+	isFullscreen(): boolean {
+		// eslint-disable-next-line @typescript-eslint/no-deprecated -- device.isFullscreen is the canonical probe; only the public API surface moved
+		return device.isFullscreen();
+	}
+
+	/**
+	 * Trigger a fullscreen request for this application. Defaults to this
+	 * application's `parentElement` (the container the canvas was appended
+	 * into — see {@link Application#getParentElement}), so the canvas and
+	 * any sibling HUD / overlay markup inside that container go fullscreen
+	 * together.
+	 * @param element - optional element to fullscreen instead of `this.parentElement`
 	 * @example
 	 * // bind F to toggle fullscreen
 	 * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
 	 * me.event.on(me.event.KEYDOWN, (action) => {
 	 *   if (action === "toggleFullscreen") {
-	 *     if (!me.device.isFullscreen()) app.requestFullscreen();
+	 *     if (!app.isFullscreen()) app.requestFullscreen();
 	 *     else app.exitFullscreen();
 	 *   }
 	 * });
 	 * @category Application
 	 */
 	requestFullscreen(element?: Element): void {
-		if (device.hasFullscreenSupport && !device.isFullscreen()) {
+		if (device.hasFullscreenSupport && !this.isFullscreen()) {
 			const target = element ?? this.parentElement;
 			target.requestFullscreen?.().catch(console.error);
 		}
@@ -683,7 +694,7 @@ export default class Application {
 	 * @category Application
 	 */
 	exitFullscreen(): void {
-		if (device.hasFullscreenSupport && device.isFullscreen()) {
+		if (device.hasFullscreenSupport && this.isFullscreen()) {
 			globalThis.document.exitFullscreen().catch(console.error);
 		}
 	}

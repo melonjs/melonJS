@@ -18,9 +18,15 @@ type NavigatorLegacy = Navigator & {
 type DocumentLegacy = Document & {
 	mozFullScreenEnabled?: boolean;
 	mozFullScreenElement?: Element;
+	webkitFullscreenEnabled?: boolean;
+	webkitFullscreenElement?: Element;
+	msFullscreenEnabled?: boolean;
+	msFullscreenElement?: Element;
 };
 type ElementLegacy = Element & {
 	mozRequestFullScreen?: () => void;
+	webkitRequestFullscreen?: () => void;
+	msRequestFullscreen?: () => void;
 };
 type DeviceOrientationEventCtor = typeof DeviceOrientationEvent & {
 	requestPermission?: () => Promise<"granted" | "denied" | "default">;
@@ -185,10 +191,10 @@ export const hasAccelerometer = !!globalThis.DeviceMotionEvent;
 export const hasFullscreenSupport =
 	typeof globalThis.document !== "undefined" &&
 	!!(
-		prefixed(
-			"fullscreenEnabled",
-			globalThis.document as unknown as Record<string, unknown>,
-		) || (globalThis.document as DocumentLegacy).mozFullScreenEnabled
+		globalThis.document.fullscreenEnabled ||
+		(globalThis.document as DocumentLegacy).webkitFullscreenEnabled ||
+		(globalThis.document as DocumentLegacy).mozFullScreenEnabled ||
+		(globalThis.document as DocumentLegacy).msFullscreenEnabled
 	);
 
 /**
@@ -419,19 +425,18 @@ export function enableSwipe(enable?: boolean) {
 
 /**
  * Returns true if the browser/device is in full screen mode.
+ * @deprecated since 19.7.0 — use {@link Application#isFullscreen app.isFullscreen()} instead.
  * @category Application
  */
 export function isFullscreen() {
-	if (hasFullscreenSupport) {
-		return !!(
-			prefixed(
-				"fullscreenElement",
-				globalThis.document as unknown as Record<string, unknown>,
-			) || (globalThis.document as DocumentLegacy).mozFullScreenElement
-		);
-	} else {
-		return false;
-	}
+	if (!hasFullscreenSupport) return false;
+	const doc = globalThis.document as DocumentLegacy;
+	return !!(
+		doc.fullscreenElement ||
+		doc.webkitFullscreenElement ||
+		doc.mozFullScreenElement ||
+		doc.msFullscreenElement
+	);
 }
 
 /**
@@ -452,15 +457,19 @@ export function isFullscreen() {
  * @category Application
  */
 export function requestFullscreen(element?: Element) {
+	// eslint-disable-next-line @typescript-eslint/no-deprecated -- this whole function is the deprecated wrapper; internal use of the matching deprecated probe is fine
 	if (hasFullscreenSupport && !isFullscreen()) {
 		// eslint-disable-next-line @typescript-eslint/no-deprecated -- no Application context available from this static API
 		const target = (element ?? getParent()) as ElementLegacy;
-		const vendor = prefixed(
-			"requestFullscreen",
-			target as unknown as Record<string, unknown>,
-		) as (() => void) | undefined;
-		const request = vendor ?? target.mozRequestFullScreen;
-		request?.call(target);
+		/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(target)` below */
+		const request =
+			target.requestFullscreen ||
+			target.webkitRequestFullscreen ||
+			target.mozRequestFullScreen ||
+			target.msRequestFullscreen;
+		/* eslint-enable @typescript-eslint/unbound-method */
+		const result = request?.call(target);
+		if (result instanceof Promise) result.catch(console.error);
 	}
 }
 
@@ -469,6 +478,7 @@ export function requestFullscreen(element?: Element) {
  * @deprecated since 19.7.0 — use {@link Application#exitFullscreen app.exitFullscreen()} instead.
  */
 export const exitFullscreen = () => {
+	// eslint-disable-next-line @typescript-eslint/no-deprecated -- this whole function is the deprecated wrapper; internal use of the matching deprecated probe is fine
 	if (hasFullscreenSupport && isFullscreen()) {
 		document.exitFullscreen().catch(console.error);
 	}
