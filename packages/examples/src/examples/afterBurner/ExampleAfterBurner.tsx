@@ -62,7 +62,7 @@ const createGame = () => {
 	// error buried in the dev console.
 	let app: Application;
 	try {
-		app = new Application(1024, 768, {
+		app = new Application(1024, 576, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			scale: "auto",
