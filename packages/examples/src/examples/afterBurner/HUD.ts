@@ -167,7 +167,7 @@ export class HUD {
 		// tint) so it doesn't compete with the score or game-over text.
 		// The world owns the reference via `addChild`, so we don't keep
 		// a field for it here.
-		this._makeText(app, 16, h - 16, {
+		this._makeText(app, 16, h - 6, {
 			size: 11,
 			fillStyle: "#bbbbbb",
 			textAlign: "left",
@@ -175,14 +175,24 @@ export class HUD {
 			text: "Music by davidKBD: https://www.davidkbd.com",
 		});
 
+		// Engine attribution — bottom-center, paired with the same muted
+		// tint so it reads as one connected credits strip across the bottom.
+		this._makeText(app, w / 2, h - 6, {
+			size: 11,
+			fillStyle: "#bbbbbb",
+			textAlign: "center",
+			textBaseline: "bottom",
+			text: "Powered by melonJS: https://melonjs.org",
+		});
+
 		// Art-asset attribution — bottom-right, same muted tint as the
 		// music credit so the two read as one paired strip of credits.
-		this._makeText(app, w - 16, h - 16, {
+		this._makeText(app, w - 16, h - 6, {
 			size: 11,
 			fillStyle: "#bbbbbb",
 			textAlign: "right",
 			textBaseline: "bottom",
-			text: "3D assets by Kenney: https://kenney.nl/assets/space-kit",
+			text: "3D assets by Kenney: https://kenney.nl",
 		});
 
 		this.gameOverLine = this._makeText(app, w / 2, h / 2 - 12, {
