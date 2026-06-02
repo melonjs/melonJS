@@ -43,6 +43,16 @@ import type {
 	ResolvedApplicationSettings,
 } from "./settings.ts";
 
+// vendor-prefixed fullscreen entry points still ship on older WebKit /
+// Gecko / IE-derived engines; spelled out here so requestFullscreen()
+// works on any browser whose `hasFullscreenSupport` flag was set via a
+// prefix probe rather than the unprefixed standard.
+type ElementWithLegacyFullscreen = Element & {
+	mozRequestFullScreen?: () => void;
+	webkitRequestFullscreen?: () => void;
+	msRequestFullscreen?: () => void;
+};
+
 /**
  * Resolve the user-supplied `physic` setting into the (optional) adapter
  * to pass into the {@link World} constructor plus the legacy "builtin"
@@ -686,8 +696,17 @@ export default class Application {
 	 */
 	requestFullscreen(element?: Element): void {
 		if (device.hasFullscreenSupport && !this.isFullscreen()) {
-			const target = element ?? this.parentElement;
-			target.requestFullscreen?.().catch(console.error);
+			const target = (element ??
+				this.parentElement) as ElementWithLegacyFullscreen;
+			/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(target)` below */
+			const request =
+				target.requestFullscreen ||
+				target.webkitRequestFullscreen ||
+				target.mozRequestFullScreen ||
+				target.msRequestFullscreen;
+			/* eslint-enable @typescript-eslint/unbound-method */
+			const result = request?.call(target);
+			if (result instanceof Promise) result.catch(console.error);
 		}
 	}
 

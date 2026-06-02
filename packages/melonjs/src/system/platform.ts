@@ -33,14 +33,20 @@ export const ua =
 //   on M1/M2/M3/M4.
 // - `maxTouchPoints > 1` excludes actual Macs (no touchscreens) and
 //   keeps real iPads (multi-touch digitizers).
+//
+// Exported so the spec file can assert the SAME predicate the module
+// evaluates at load time (no drift between docs and implementation).
+type NavigatorLike = { platform?: string; maxTouchPoints?: number };
+export function isIPadOnMacUA(nav: NavigatorLike | undefined): boolean {
+	return nav?.platform === "MacIntel" && (nav?.maxTouchPoints ?? 0) > 1;
+}
+
 const _nav =
 	typeof globalThis.navigator !== "undefined"
 		? globalThis.navigator
 		: undefined;
-const isIPadOnMacUA =
-	_nav?.platform === "MacIntel" && (_nav?.maxTouchPoints ?? 0) > 1;
 
-export const iOS = /iPhone|iPad|iPod/i.test(ua) || isIPadOnMacUA;
+export const iOS = /iPhone|iPad|iPod/i.test(ua) || isIPadOnMacUA(_nav);
 export const android = /Android/i.test(ua);
 /**
  * @deprecated since 19.7.0 — Android 2.x predates 2012. Will be removed in 20.x.

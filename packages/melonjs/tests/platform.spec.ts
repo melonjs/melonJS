@@ -6,6 +6,7 @@ import {
 	chromeOS,
 	ejecta,
 	iOS,
+	isIPadOnMacUA,
 	isMobile,
 	isWeixin,
 	Kindle,
@@ -102,18 +103,13 @@ describe("system/platform", () => {
 		// string, persists on Apple Silicon Macs/iPads for compat) +
 		// `maxTouchPoints > 1` (Macs don't have touchscreens; iPads do).
 		//
-		// The module computes `iOS` at load time from `globalThis`, so
-		// these tests assert the LOGIC of the documented check by
-		// recreating it inline against stubbed navigator shapes. This
-		// is verification of the contract; the runtime-load value in
-		// real chromium is covered by the shape / desktop-defaults
-		// blocks above.
-		const isIPadOnMacUA = (
-			nav: { platform?: string; maxTouchPoints?: number } | undefined,
-		): boolean =>
-			nav?.platform === "MacIntel" && (nav?.maxTouchPoints ?? 0) > 1;
+		// These tests assert the REAL exported `isIPadOnMacUA` predicate
+		// from `platform.ts` — the same function the module calls at
+		// load time to compute `iOS`. No drift possible: a regression
+		// in the predicate (e.g. flipping `> 1` to `> 0`, or dropping
+		// the `platform === "MacIntel"` check) surfaces here.
 
-		it("detects an Apple Silicon iPad reporting as Mac (platform=MacIntel, maxTouchPoints=5)", () => {
+		it("flags an Apple Silicon iPad reporting as Mac (platform=MacIntel, maxTouchPoints=5)", () => {
 			expect(isIPadOnMacUA({ platform: "MacIntel", maxTouchPoints: 5 })).toBe(
 				true,
 			);

@@ -81,7 +81,7 @@ const keyUpEvent: KeyEventHandler = (options) => {
 export const keyBoardEventTarget = null;
 
 export function initKeyboardEvent() {
-	if (globalThis.addEventListener) {
+	if (typeof globalThis.addEventListener === "function") {
 		globalThis.addEventListener(
 			"keydown",
 			(e) => {
