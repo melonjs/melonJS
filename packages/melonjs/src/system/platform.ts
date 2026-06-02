@@ -34,9 +34,15 @@ export const ua =
 // - `maxTouchPoints > 1` excludes actual Macs (no touchscreens) and
 //   keeps real iPads (multi-touch digitizers).
 //
-// Exported so the spec file can assert the SAME predicate the module
-// evaluates at load time (no drift between docs and implementation).
 type NavigatorLike = { platform?: string; maxTouchPoints?: number };
+/**
+ * iPad-on-Mac-UA predicate. Exported so the spec file can assert the
+ * SAME function the module evaluates at load time (no drift between
+ * docs and implementation), but marked `@internal` because it's a
+ * test-seam, not a stable public API — the engine reserves the right
+ * to change / inline / rename it without a breaking-change bump.
+ * @internal
+ */
 export function isIPadOnMacUA(nav: NavigatorLike | undefined): boolean {
 	return nav?.platform === "MacIntel" && (nav?.maxTouchPoints ?? 0) > 1;
 }
