@@ -17,7 +17,7 @@
  * - `GameController.ts` — per-frame tick (player, enemies, bullets,
  *   exhaust, collision, score, camera follow)
  *
- * Controls: arrow keys / WASD to maneuver, space to fire, R to restart.
+ * Controls: arrow keys / WASD to maneuver, space to fire, R to restart, F to toggle fullscreen.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
@@ -27,6 +27,8 @@ import {
 	Application,
 	audio,
 	Camera3d,
+	event,
+	input,
 	loader,
 	plugin,
 	state,
@@ -137,10 +139,21 @@ const createGame = () => {
 		},
 	);
 
+	// F toggles fullscreen for this app's canvas parent.
+	const onKeyDown = (_action: string | undefined, keyCode: number) => {
+		if (keyCode === input.KEY.F) {
+			if (!app.isFullscreen()) app.requestFullscreen();
+			else app.exitFullscreen();
+		}
+	};
+	event.on(event.KEYDOWN, onKeyDown);
+
 	// Teardown — same-tab navigation back to the example index
 	// triggers this; without it the looping music keeps playing after
-	// the canvas is detached.
+	// the canvas is detached, and the F-key handler would leak across
+	// remounts (stacking up duplicate fullscreen toggles per press).
 	return () => {
+		event.off(event.KEYDOWN, onKeyDown);
 		audio.stopTrack();
 	};
 };
