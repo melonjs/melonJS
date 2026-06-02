@@ -99,6 +99,12 @@ const createGame = () => {
 	// will try them in order and use the first one it can decode.
 	audio.init("mp3,m4a,ogg");
 
+	// hoisted so both the preload callback (assigns it) and the teardown
+	// closure (reads it for `event.off`) can see the same reference
+	let onKeyDown:
+		| ((action: string | undefined, keyCode: number) => void)
+		| undefined;
+
 	loader.preload(
 		[
 			{
@@ -135,25 +141,34 @@ const createGame = () => {
 			// state.pause(true) → audio.pauseTrack). Volume kept
 			// moderate so the procedural SFX layer over it without
 			// ducking.
+			// F toggles fullscreen for this app's canvas parent. Registered
+			// INSIDE the preload callback (not at createGame's sync tail)
+			// so it survives the React StrictMode dev double-mount cycle:
+			// utils.tsx runs teardown on the first unmount, then the
+			// canvas remount path doesn't re-run createGame — registering
+			// here instead means the listener installs after StrictMode
+			// settles, alongside the rest of the game-running state.
+			onKeyDown = (_action, keyCode) => {
+				if (keyCode === input.KEY.F) {
+					if (!app.isFullscreen()) app.requestFullscreen();
+					else app.exitFullscreen();
+				}
+			};
+			event.on(event.KEYDOWN, onKeyDown);
+
 			audio.playTrack(BGM_NAME, 0.45);
 		},
 	);
-
-	// F toggles fullscreen for this app's canvas parent.
-	const onKeyDown = (_action: string | undefined, keyCode: number) => {
-		if (keyCode === input.KEY.F) {
-			if (!app.isFullscreen()) app.requestFullscreen();
-			else app.exitFullscreen();
-		}
-	};
-	event.on(event.KEYDOWN, onKeyDown);
 
 	// Teardown — same-tab navigation back to the example index
 	// triggers this; without it the looping music keeps playing after
 	// the canvas is detached, and the F-key handler would leak across
 	// remounts (stacking up duplicate fullscreen toggles per press).
+	// `onKeyDown` is undefined if teardown fires before preload
+	// completes (StrictMode dev unmount path); skip the off in that
+	// case — the closure was never registered.
 	return () => {
-		event.off(event.KEYDOWN, onKeyDown);
+		if (onKeyDown !== undefined) event.off(event.KEYDOWN, onKeyDown);
 		audio.stopTrack();
 	};
 };
