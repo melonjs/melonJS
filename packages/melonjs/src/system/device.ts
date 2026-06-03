@@ -14,14 +14,6 @@ type NavigatorLegacy = Navigator & {
 	userLanguage?: string;
 	standalone?: boolean;
 };
-type DocumentLegacy = Document & {
-	mozFullScreenEnabled?: boolean;
-	mozFullScreenElement?: Element;
-	webkitFullscreenEnabled?: boolean;
-	webkitFullscreenElement?: Element;
-	msFullscreenEnabled?: boolean;
-	msFullscreenElement?: Element;
-};
 type DeviceOrientationEventCtor = typeof DeviceOrientationEvent & {
 	requestPermission?: () => Promise<"granted" | "denied" | "default">;
 };
@@ -179,17 +171,12 @@ export const screenOrientation =
  */
 export const hasAccelerometer = !!globalThis.DeviceMotionEvent;
 
-/**
- * Browser full screen support
- */
-export const hasFullscreenSupport =
-	typeof globalThis.document !== "undefined" &&
-	!!(
-		globalThis.document.fullscreenEnabled ||
-		(globalThis.document as DocumentLegacy).webkitFullscreenEnabled ||
-		(globalThis.document as DocumentLegacy).mozFullScreenEnabled ||
-		(globalThis.document as DocumentLegacy).msFullscreenEnabled
-	);
+// `hasFullscreenSupport` + `isFullscreen` live in `system/fullscreen.ts` —
+// factored out so `lang/deprecated.js` can use them without depending on
+// `device.ts` (would create a circular dep with the deprecated-wrapper
+// re-exports below). Re-exported here so `me.device.hasFullscreenSupport`
+// / `me.device.isFullscreen` stay unchanged for consumers.
+export { hasFullscreenSupport, isFullscreen } from "./fullscreen.ts";
 
 /**
  * Device WebAudio Support
@@ -417,33 +404,12 @@ export function enableSwipe(enable?: boolean) {
 	}
 }
 
-/**
- * Returns true if the browser/device is in full screen mode.
- * Pure document-state probe — no Application context needed, since the
- * browser tracks exactly one fullscreen element per document regardless
- * of how many Applications are running.
- * @category Application
- */
-export function isFullscreen() {
-	if (!hasFullscreenSupport) return false;
-	const doc = globalThis.document as DocumentLegacy;
-	return !!(
-		doc.fullscreenElement ||
-		doc.webkitFullscreenElement ||
-		doc.mozFullScreenElement ||
-		doc.msFullscreenElement
-	);
-}
-
-// `requestFullscreen` and `exitFullscreen` were deprecated in 19.7.0 in favour
-// of `Application#requestFullscreen` / `Application#exitFullscreen`. The
-// implementations live with the other deprecated functions in `lang/deprecated.js`
-// and emit a runtime warning when called; re-exported under `me.device.*` for
-// backwards compatibility. The disable below is intentional — the whole point
-// is to surface these names under the device namespace; consumers still get the
-// `@deprecated` JSDoc + runtime warning when they call them.
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export { exitFullscreen, requestFullscreen } from "../lang/deprecated.js";
+// `requestFullscreen` / `exitFullscreen` were removed from `me.device.*` in
+// 19.7.0 — the implementations live in `lang/deprecated.js` and surface at
+// the top level via `index.ts`'s `export * from "./lang/deprecated.js"`,
+// so `me.requestFullscreen()` keeps working as a top-level deprecated shim
+// with the canonical migration target being `Application#requestFullscreen` /
+// `Application#exitFullscreen`.
 
 /**
  * Return a string representing the orientation of the device screen.

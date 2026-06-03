@@ -1,4 +1,4 @@
-import { hasFullscreenSupport, isFullscreen } from "../system/device.ts";
+import { hasFullscreenSupport, isFullscreen } from "../system/fullscreen.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import { getParent } from "../video/video.js";
