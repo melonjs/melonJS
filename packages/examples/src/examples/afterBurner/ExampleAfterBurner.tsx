@@ -22,7 +22,6 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	audio,
@@ -30,7 +29,6 @@ import {
 	event,
 	input,
 	loader,
-	plugin,
 	state,
 	video,
 } from "melonjs";
@@ -88,11 +86,6 @@ const createGame = () => {
 	// world.backgroundColor stays transparent (alpha 0) — the SkyboxStage
 	// paints the actual visible background each frame
 	app.world.backgroundColor.setColor(0, 0, 0, 0);
-
-	// Register the debug panel. Its usual toggle key (`S`) is bound by
-	// `GameController` for WASD-down movement, so the panel won't open
-	// via keyboard here — toggle it via the debug-plugin button instead.
-	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	// Audio init — mp3 preferred (universal), m4a as a fallback for
 	// AAC-only browsers, ogg last for the Firefox/Linux path. Howler
