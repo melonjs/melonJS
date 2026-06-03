@@ -404,12 +404,15 @@ export function enableSwipe(enable?: boolean) {
 	}
 }
 
-// `requestFullscreen` / `exitFullscreen` were removed from `me.device.*` in
-// 19.7.0 — the implementations live in `lang/deprecated.js` and surface at
-// the top level via `index.ts`'s `export * from "./lang/deprecated.js"`,
-// so `me.requestFullscreen()` keeps working as a top-level deprecated shim
-// with the canonical migration target being `Application#requestFullscreen` /
-// `Application#exitFullscreen`.
+// `requestFullscreen` / `exitFullscreen` were deprecated in 19.7.0 — the
+// implementations live with the rest of the engine's deprecation surface in
+// `lang/deprecated.js`. Re-exported here so they stay reachable as
+// `me.device.requestFullscreen` / `me.device.exitFullscreen` for backwards
+// compat; the disable below covers the re-export of `@deprecated` symbols
+// (the whole point — consumers still get the JSDoc + runtime warning when
+// they call them).
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+export { exitFullscreen, requestFullscreen } from "../lang/deprecated.js";
 
 /**
  * Return a string representing the orientation of the device screen.
