@@ -34,18 +34,24 @@ export const ua =
 // - `maxTouchPoints > 1` excludes actual Macs (no touchscreens) and
 //   keeps real iPads (multi-touch digitizers).
 //
-type NavigatorLike = { platform?: string; maxTouchPoints?: number };
 /**
  * iPad-on-Mac-UA predicate. Exported so the spec file can assert the
  * SAME function the module evaluates at load time (no drift between
  * docs and implementation), but marked `@internal` because it's a
  * test-seam, not a stable public API — the engine reserves the right
  * to change / inline / rename it without a breaking-change bump.
+ *
+ * Parameter shape is `Partial<Pick<Navigator, ...>>` rather than a
+ * named alias so no engine-defined type leaks into the emitted
+ * `.d.ts` (`tsconfig.build.json` doesn't currently set
+ * `stripInternal`).
  * @param nav - a `navigator`-shaped object (or `undefined` for Node/SSR)
  * @returns `true` when `nav` looks like an iPad reporting under the iPadOS-13+ desktop Mac UA
  * @internal
  */
-export function isIPadOnMacUA(nav: NavigatorLike | undefined): boolean {
+export function isIPadOnMacUA(
+	nav: Partial<Pick<Navigator, "platform" | "maxTouchPoints">> | undefined,
+): boolean {
 	return nav?.platform === "MacIntel" && (nav?.maxTouchPoints ?? 0) > 1;
 }
 
