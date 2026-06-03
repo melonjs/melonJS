@@ -52,6 +52,17 @@ type ElementWithLegacyFullscreen = Element & {
 	webkitRequestFullscreen?: () => void;
 	msRequestFullscreen?: () => void;
 };
+// `document.exitFullscreen()` is the modern entry but older WebKit /
+// Gecko / IE-derived browsers shipped vendor-prefixed variants. Same
+// rationale as `ElementWithLegacyFullscreen`: kept here as a local
+// intersection so `app.exitFullscreen()` no-ops cleanly on every
+// browser whose `hasFullscreenSupport` was set via a prefix probe.
+// Note: Mozilla uses `mozCancelFullScreen` (not `mozExitFullScreen`).
+type DocumentWithLegacyExitFullscreen = Document & {
+	webkitExitFullscreen?: () => Promise<void> | void;
+	mozCancelFullScreen?: () => Promise<void> | void;
+	msExitFullscreen?: () => Promise<void> | void;
+};
 
 /**
  * Resolve the user-supplied `physic` setting into the (optional) adapter
@@ -715,9 +726,17 @@ export default class Application {
 	 * @category Application
 	 */
 	exitFullscreen(): void {
-		if (device.hasFullscreenSupport && this.isFullscreen()) {
-			globalThis.document.exitFullscreen().catch(console.error);
-		}
+		if (!device.hasFullscreenSupport || !this.isFullscreen()) return;
+		const doc = globalThis.document as DocumentWithLegacyExitFullscreen;
+		/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(doc)` below */
+		const exit =
+			doc.exitFullscreen ||
+			doc.webkitExitFullscreen ||
+			doc.mozCancelFullScreen ||
+			doc.msExitFullscreen;
+		/* eslint-enable @typescript-eslint/unbound-method */
+		const result = exit?.call(doc);
+		if (result instanceof Promise) result.catch(console.error);
 	}
 
 	/**

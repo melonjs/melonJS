@@ -22,6 +22,9 @@ type DocumentLegacy = Document & {
 	webkitFullscreenElement?: Element;
 	msFullscreenEnabled?: boolean;
 	msFullscreenElement?: Element;
+	webkitExitFullscreen?: () => Promise<void> | void;
+	mozCancelFullScreen?: () => Promise<void> | void;
+	msExitFullscreen?: () => Promise<void> | void;
 };
 type ElementLegacy = Element & {
 	mozRequestFullScreen?: () => void;
@@ -479,9 +482,17 @@ export function requestFullscreen(element?: Element) {
  * @deprecated since 19.7.0 — use {@link Application#exitFullscreen app.exitFullscreen()} instead.
  */
 export const exitFullscreen = () => {
-	if (hasFullscreenSupport && isFullscreen()) {
-		document.exitFullscreen().catch(console.error);
-	}
+	if (!hasFullscreenSupport || !isFullscreen()) return;
+	const doc = globalThis.document as DocumentLegacy;
+	/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(doc)` below */
+	const exit =
+		doc.exitFullscreen ||
+		doc.webkitExitFullscreen ||
+		doc.mozCancelFullScreen ||
+		doc.msExitFullscreen;
+	/* eslint-enable @typescript-eslint/unbound-method */
+	const result = exit?.call(doc);
+	if (result instanceof Promise) result.catch(console.error);
 };
 
 /**
