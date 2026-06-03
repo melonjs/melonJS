@@ -1,5 +1,7 @@
+import { hasFullscreenSupport, isFullscreen } from "../system/device.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
+import { getParent } from "../video/video.js";
 import { Batcher } from "../video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "../video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "../video/webgl/batchers/quad_batcher.js";
@@ -146,3 +148,57 @@ WebGLRenderer.prototype.setCompositor = function (name = "default", shader) {
  * Use lowercase `math` export instead.
  */
 export * as Math from "./../math/math.ts";
+
+/**
+ * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
+ *
+ * Re-exported under `me.device.*` for backwards compatibility; the canonical
+ * post-19.7 entry point is `Application#requestFullscreen`, which uses the
+ * Application's own `parentElement` instead of the deprecated global-game canvas lookup.
+ * @param {Element} [element] - the element to be set in full-screen mode
+ * @deprecated since 19.7.0 — use {@link Application#requestFullscreen} instead.
+ */
+export function requestFullscreen(element) {
+	warning(
+		"device.requestFullscreen",
+		"Application#requestFullscreen",
+		"19.7.0",
+	);
+	if (!hasFullscreenSupport || isFullscreen()) {
+		return;
+	}
+	const target = element ?? getParent();
+	const request =
+		target.requestFullscreen ||
+		target.webkitRequestFullscreen ||
+		target.mozRequestFullScreen ||
+		target.msRequestFullscreen;
+	const result = request?.call(target);
+	if (result instanceof Promise) {
+		result.catch(console.error);
+	}
+}
+
+/**
+ * Exit fullscreen mode. Requires fullscreen support from the browser/device.
+ *
+ * Re-exported under `me.device.*` for backwards compatibility; the canonical
+ * post-19.7 entry point is `Application#exitFullscreen`.
+ * @deprecated since 19.7.0 — use {@link Application#exitFullscreen} instead.
+ */
+export function exitFullscreen() {
+	warning("device.exitFullscreen", "Application#exitFullscreen", "19.7.0");
+	if (!hasFullscreenSupport || !isFullscreen()) {
+		return;
+	}
+	const doc = globalThis.document;
+	const exit =
+		doc.exitFullscreen ||
+		doc.webkitExitFullscreen ||
+		doc.mozCancelFullScreen ||
+		doc.msExitFullscreen;
+	const result = exit?.call(doc);
+	if (result instanceof Promise) {
+		result.catch(console.error);
+	}
+}

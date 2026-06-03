@@ -1,5 +1,4 @@
 import { prefixed } from "./../utils/agent.ts";
-import { getParent } from "./../video/video.js";
 import { DOMContentLoaded } from "./dom.ts";
 import { BLUR, emit, FOCUS } from "./event.ts";
 import * as device_platform from "./platform.ts";
@@ -22,14 +21,6 @@ type DocumentLegacy = Document & {
 	webkitFullscreenElement?: Element;
 	msFullscreenEnabled?: boolean;
 	msFullscreenElement?: Element;
-	webkitExitFullscreen?: () => Promise<void> | void;
-	mozCancelFullScreen?: () => Promise<void> | void;
-	msExitFullscreen?: () => Promise<void> | void;
-};
-type ElementLegacy = Element & {
-	mozRequestFullScreen?: () => void;
-	webkitRequestFullscreen?: () => void;
-	msRequestFullscreen?: () => void;
 };
 type DeviceOrientationEventCtor = typeof DeviceOrientationEvent & {
 	requestPermission?: () => Promise<"granted" | "denied" | "default">;
@@ -444,56 +435,15 @@ export function isFullscreen() {
 	);
 }
 
-/**
- * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
- * @param [element] - the element to be set in full-screen mode.
- * @example
- * // add a keyboard shortcut to toggle Fullscreen mode on/off
- * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
- * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
- *    // toggle fullscreen on/off
- *    if (action === "toggleFullscreen") {
- *       me.device.requestFullscreen();
- *    } else {
- *       me.device.exitFullscreen();
- *    }
- * });
- * @deprecated since 19.7.0 — use {@link Application#requestFullscreen app.requestFullscreen()} instead. The static helper still works for backwards compat but relies on the deprecated global-game canvas lookup.
- * @category Application
- */
-export function requestFullscreen(element?: Element) {
-	if (hasFullscreenSupport && !isFullscreen()) {
-		// eslint-disable-next-line @typescript-eslint/no-deprecated -- no Application context available from this static API
-		const target = (element ?? getParent()) as ElementLegacy;
-		/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(target)` below */
-		const request =
-			target.requestFullscreen ||
-			target.webkitRequestFullscreen ||
-			target.mozRequestFullScreen ||
-			target.msRequestFullscreen;
-		/* eslint-enable @typescript-eslint/unbound-method */
-		const result = request?.call(target);
-		if (result instanceof Promise) result.catch(console.error);
-	}
-}
-
-/**
- * Exit fullscreen mode. Requires fullscreen support from the browser/device.
- * @deprecated since 19.7.0 — use {@link Application#exitFullscreen app.exitFullscreen()} instead.
- */
-export const exitFullscreen = () => {
-	if (!hasFullscreenSupport || !isFullscreen()) return;
-	const doc = globalThis.document as DocumentLegacy;
-	/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(doc)` below */
-	const exit =
-		doc.exitFullscreen ||
-		doc.webkitExitFullscreen ||
-		doc.mozCancelFullScreen ||
-		doc.msExitFullscreen;
-	/* eslint-enable @typescript-eslint/unbound-method */
-	const result = exit?.call(doc);
-	if (result instanceof Promise) result.catch(console.error);
-};
+// `requestFullscreen` and `exitFullscreen` were deprecated in 19.7.0 in favour
+// of `Application#requestFullscreen` / `Application#exitFullscreen`. The
+// implementations live with the other deprecated functions in `lang/deprecated.js`
+// and emit a runtime warning when called; re-exported under `me.device.*` for
+// backwards compatibility. The disable below is intentional — the whole point
+// is to surface these names under the device namespace; consumers still get the
+// `@deprecated` JSDoc + runtime warning when they call them.
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+export { exitFullscreen, requestFullscreen } from "../lang/deprecated.js";
 
 /**
  * Return a string representing the orientation of the device screen.
