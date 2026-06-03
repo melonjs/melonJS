@@ -173,7 +173,7 @@ function enablePointerEvent(): void {
 			throttlingInterval = ~~(1000 / timer.maxfps);
 		}
 
-		if (device.autoFocus) {
+		if (device.focusOptions.auto) {
 			device.focus();
 			pointerEventTarget.addEventListener(
 				activeEventList[2], // MOUSE/POINTER DOWN

@@ -281,11 +281,47 @@ export let beta = 0;
  */
 export let alpha = 0;
 
+// `focusOptions.auto` is the canonical, user-settable focus-on-restore flag.
+// Wrapped in an object because ESM namespace-import bindings are read-only —
+// users can't do `me.device.autoFocus = false` (TypeError on namespace import),
+// but `me.device.focusOptions.auto = false` writes through to the mutable
+// property on the exported object.
+//
+// The `autoFocus` boolean below stays exported as a deprecated alias for
+// backwards compat (see #1486); the Proxy setter keeps it in sync so any
+// remaining `if (device.autoFocus)` reader still observes the current state.
+
 /**
- * Specify whether to automatically bring the window to the front
- * @default true
+ * Application-level focus options. Mutate `.auto` to opt out of the engine's
+ * "bring the window to the front on visibility restore" behaviour.
+ * @default { auto: true }
+ * @example
+ * // disable the auto-focus-on-restore behaviour
+ * me.device.focusOptions.auto = false;
  */
-// eslint-disable-next-line prefer-const -- public mutable flag; reassignable via internal setters even though no setter exists today
+export const focusOptions: { auto: boolean } = new Proxy(
+	{ auto: true },
+	{
+		set(target, prop, value) {
+			Reflect.set(target, prop, value);
+			if (prop === "auto") {
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- intentional sync of the legacy alias with the new canonical source of truth
+				autoFocus = value as boolean;
+			}
+			return true;
+		},
+	},
+);
+
+/**
+ * Specify whether to automatically bring the window to the front.
+ * @default true
+ * @deprecated since 19.7.0 — use {@link focusOptions}.auto instead. The
+ * ESM namespace export here is a read-only binding, so `me.device.autoFocus
+ * = false` always threw a TypeError externally; `focusOptions.auto` is the
+ * mutable surface. This export stays for backwards compat with code that
+ * READS the flag and is kept in sync with `focusOptions.auto`.
+ */
 export let autoFocus = true;
 
 /**
@@ -355,7 +391,7 @@ export function initVisibilityEvents() {
 			"focus",
 			() => {
 				emit(FOCUS);
-				if (autoFocus) {
+				if (focusOptions.auto) {
 					focus();
 				}
 			},
@@ -368,7 +404,7 @@ export function initVisibilityEvents() {
 			() => {
 				if (globalThis.document.visibilityState === "visible") {
 					emit(FOCUS);
-					if (autoFocus) {
+					if (focusOptions.auto) {
 						focus();
 					}
 				} else {
