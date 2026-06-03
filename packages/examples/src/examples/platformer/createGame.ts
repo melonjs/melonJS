@@ -75,10 +75,10 @@ export const createGame = () => {
 				audio.setVolume(audio.getVolume() - 0.1);
 			}
 			if (keyCode === input.KEY.F) {
-				if (!device.isFullscreen()) {
-					device.requestFullscreen();
+				if (!_app.isFullscreen()) {
+					_app.requestFullscreen();
 				} else {
-					device.exitFullscreen();
+					_app.exitFullscreen();
 				}
 			}
 		});

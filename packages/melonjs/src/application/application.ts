@@ -43,6 +43,27 @@ import type {
 	ResolvedApplicationSettings,
 } from "./settings.ts";
 
+// vendor-prefixed fullscreen entry points still ship on older WebKit /
+// Gecko / IE-derived engines; spelled out here so requestFullscreen()
+// works on any browser whose `hasFullscreenSupport` flag was set via a
+// prefix probe rather than the unprefixed standard.
+type ElementWithLegacyFullscreen = Element & {
+	mozRequestFullScreen?: () => void;
+	webkitRequestFullscreen?: () => void;
+	msRequestFullscreen?: () => void;
+};
+// `document.exitFullscreen()` is the modern entry but older WebKit /
+// Gecko / IE-derived browsers shipped vendor-prefixed variants. Same
+// rationale as `ElementWithLegacyFullscreen`: kept here as a local
+// intersection so `app.exitFullscreen()` no-ops cleanly on every
+// browser whose `hasFullscreenSupport` was set via a prefix probe.
+// Note: Mozilla uses `mozCancelFullScreen` (not `mozExitFullScreen`).
+type DocumentWithLegacyExitFullscreen = Document & {
+	webkitExitFullscreen?: () => Promise<void> | void;
+	mozCancelFullScreen?: () => Promise<void> | void;
+	msExitFullscreen?: () => Promise<void> | void;
+};
+
 /**
  * Resolve the user-supplied `physic` setting into the (optional) adapter
  * to pass into the {@link World} constructor plus the legacy "builtin"
@@ -653,6 +674,69 @@ export default class Application {
 	 */
 	getParentElement(): HTMLElement {
 		return this.parentElement;
+	}
+
+	/**
+	 * Returns `true` if the browser/device is currently in fullscreen mode.
+	 * Thin convenience around {@link device.isFullscreen} so the
+	 * fullscreen trio (`isFullscreen` / `requestFullscreen` /
+	 * `exitFullscreen`) lives together on the app instance.
+	 * @category Application
+	 */
+	isFullscreen(): boolean {
+		return device.isFullscreen();
+	}
+
+	/**
+	 * Trigger a fullscreen request for this application. Defaults to this
+	 * application's `parentElement` (the container the canvas was appended
+	 * into — see {@link Application#getParentElement}), so the canvas and
+	 * any sibling HUD / overlay markup inside that container go fullscreen
+	 * together.
+	 * @param element - optional element to fullscreen instead of `this.parentElement`
+	 * @example
+	 * // bind F to toggle fullscreen
+	 * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
+	 * me.event.on(me.event.KEYDOWN, (action) => {
+	 *   if (action === "toggleFullscreen") {
+	 *     if (!app.isFullscreen()) app.requestFullscreen();
+	 *     else app.exitFullscreen();
+	 *   }
+	 * });
+	 * @category Application
+	 */
+	requestFullscreen(element?: Element): void {
+		if (device.hasFullscreenSupport && !this.isFullscreen()) {
+			const target = (element ??
+				this.parentElement) as ElementWithLegacyFullscreen;
+			/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(target)` below */
+			const request =
+				target.requestFullscreen ||
+				target.webkitRequestFullscreen ||
+				target.mozRequestFullScreen ||
+				target.msRequestFullscreen;
+			/* eslint-enable @typescript-eslint/unbound-method */
+			const result = request?.call(target);
+			if (result instanceof Promise) result.catch(console.error);
+		}
+	}
+
+	/**
+	 * Exit fullscreen mode for this application.
+	 * @category Application
+	 */
+	exitFullscreen(): void {
+		if (!device.hasFullscreenSupport || !this.isFullscreen()) return;
+		const doc = globalThis.document as DocumentWithLegacyExitFullscreen;
+		/* eslint-disable @typescript-eslint/unbound-method -- `this` is restored explicitly via `.call(doc)` below */
+		const exit =
+			doc.exitFullscreen ||
+			doc.webkitExitFullscreen ||
+			doc.mozCancelFullScreen ||
+			doc.msExitFullscreen;
+		/* eslint-enable @typescript-eslint/unbound-method */
+		const result = exit?.call(doc);
+		if (result instanceof Promise) result.catch(console.error);
 	}
 
 	/**

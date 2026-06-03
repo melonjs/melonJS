@@ -23,8 +23,6 @@ import {
 	type WebGLRenderer,
 } from "melonjs";
 
-const CANVAS_W = 1024;
-const CANVAS_H = 768;
 // World-Z = camera position, so the squared distance to camera is the
 // smallest possible — the world's depth-sort then draws the HUD last,
 // on top of every other renderable.
@@ -52,9 +50,13 @@ const DEATH_FLASH_FADE_MS = 1100;
 class DeathFlash extends Renderable {
 	private remainingMs = 0;
 	private startAlpha = DEATH_FLASH_ALPHA;
+	private screenW: number;
+	private screenH: number;
 
-	constructor() {
-		super(0, 0, CANVAS_W, CANVAS_H);
+	constructor(width: number, height: number) {
+		super(0, 0, width, height);
+		this.screenW = width;
+		this.screenH = height;
 		this.floating = true;
 		this.alwaysUpdate = true;
 		// Renderable defaults anchorPoint to (0.5, 0.5), which would
@@ -97,7 +99,7 @@ class DeathFlash extends Renderable {
 		renderer.save();
 		renderer.setColor(this.tint);
 		renderer.setGlobalAlpha(alpha);
-		renderer.fillRect(0, 0, CANVAS_W, CANVAS_H);
+		renderer.fillRect(0, 0, this.screenW, this.screenH);
 		renderer.restore();
 	}
 }
@@ -124,6 +126,14 @@ export class HUD {
 		save.add({ [HISCORE_KEY]: 0 });
 		this.hiScore = (save[HISCORE_KEY] as number) ?? 0;
 
+		// Read the canvas dimensions from the live viewport so the
+		// overlay positions track whatever size the example was
+		// configured with (1024×576 today vs the original 1024×768)
+		// instead of hard-coding numbers that silently drift when the
+		// game's aspect ratio is retuned.
+		const w = app.viewport.width;
+		const h = app.viewport.height;
+
 		this.scoreText = this._makeText(app, 16, 24, {
 			size: 32,
 			fillStyle: "#ffe066",
@@ -133,7 +143,7 @@ export class HUD {
 			text: "SCORE  000000",
 		});
 
-		this.hiScoreText = this._makeText(app, CANVAS_W - 16, 24, {
+		this.hiScoreText = this._makeText(app, w - 16, 24, {
 			size: 32,
 			fillStyle: "#ffae3a",
 			textAlign: "right",
@@ -144,7 +154,7 @@ export class HUD {
 
 		// Lives readout — top-center, big enough to be glanceable but
 		// smaller than the score so the eye still goes there first.
-		this.livesText = this._makeText(app, CANVAS_W / 2, 24, {
+		this.livesText = this._makeText(app, w / 2, 24, {
 			size: 28,
 			fillStyle: "#ff7766",
 			textAlign: "center",
@@ -157,7 +167,7 @@ export class HUD {
 		// tint) so it doesn't compete with the score or game-over text.
 		// The world owns the reference via `addChild`, so we don't keep
 		// a field for it here.
-		this._makeText(app, 16, CANVAS_H - 16, {
+		this._makeText(app, 16, h - 6, {
 			size: 11,
 			fillStyle: "#bbbbbb",
 			textAlign: "left",
@@ -165,17 +175,27 @@ export class HUD {
 			text: "Music by davidKBD: https://www.davidkbd.com",
 		});
 
+		// Engine attribution — bottom-center, paired with the same muted
+		// tint so it reads as one connected credits strip across the bottom.
+		this._makeText(app, w / 2, h - 6, {
+			size: 11,
+			fillStyle: "#bbbbbb",
+			textAlign: "center",
+			textBaseline: "bottom",
+			text: "Powered by melonJS: https://melonjs.org",
+		});
+
 		// Art-asset attribution — bottom-right, same muted tint as the
 		// music credit so the two read as one paired strip of credits.
-		this._makeText(app, CANVAS_W - 16, CANVAS_H - 16, {
+		this._makeText(app, w - 16, h - 6, {
 			size: 11,
 			fillStyle: "#bbbbbb",
 			textAlign: "right",
 			textBaseline: "bottom",
-			text: "3D assets by Kenney: https://kenney.nl/assets/space-kit",
+			text: "3D assets by Kenney: https://kenney.nl",
 		});
 
-		this.gameOverLine = this._makeText(app, CANVAS_W / 2, CANVAS_H / 2 - 12, {
+		this.gameOverLine = this._makeText(app, w / 2, h / 2 - 12, {
 			size: 42,
 			fillStyle: "#ff5566",
 			textAlign: "center",
@@ -185,7 +205,7 @@ export class HUD {
 		});
 		this.gameOverLine.setOpacity(0);
 
-		this.gameOverSub = this._makeText(app, CANVAS_W / 2, CANVAS_H / 2 + 32, {
+		this.gameOverSub = this._makeText(app, w / 2, h / 2 + 32, {
 			size: 18,
 			fillStyle: "#cccccc",
 			textAlign: "center",
@@ -194,7 +214,7 @@ export class HUD {
 		});
 		this.gameOverSub.setOpacity(0);
 
-		this.deathFlash = new DeathFlash();
+		this.deathFlash = new DeathFlash(w, h);
 		app.world.addChild(this.deathFlash, FLASH_Z);
 	}
 

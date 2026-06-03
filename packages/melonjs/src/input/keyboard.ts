@@ -1,5 +1,4 @@
 import { emit, KEYDOWN, KEYUP } from "../system/event.ts";
-import { isMobile } from "../system/platform.ts";
 import { preventDefault as preventDefaultAction } from "./input.ts";
 
 // corresponding actions
@@ -82,17 +81,15 @@ const keyUpEvent: KeyEventHandler = (options) => {
 export const keyBoardEventTarget = null;
 
 export function initKeyboardEvent() {
-	if (!isMobile) {
-		if (globalThis.addEventListener) {
-			globalThis.addEventListener(
-				"keydown",
-				(e) => {
-					keyDownEvent(e);
-				},
-				false,
-			);
-			globalThis.addEventListener("keyup", keyUpEvent, false);
-		}
+	if (typeof globalThis.addEventListener === "function") {
+		globalThis.addEventListener(
+			"keydown",
+			(e) => {
+				keyDownEvent(e);
+			},
+			false,
+		);
+		globalThis.addEventListener("keyup", keyUpEvent, false);
 	}
 }
 

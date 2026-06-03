@@ -17,18 +17,18 @@
  * - `GameController.ts` — per-frame tick (player, enemies, bullets,
  *   exhaust, collision, score, camera follow)
  *
- * Controls: arrow keys / WASD to maneuver, space to fire, R to restart.
+ * Controls: arrow keys / WASD to maneuver, space to fire, R to restart, F to toggle fullscreen.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	audio,
 	Camera3d,
+	event,
+	input,
 	loader,
-	plugin,
 	state,
 	video,
 } from "melonjs";
@@ -62,7 +62,7 @@ const createGame = () => {
 	// error buried in the dev console.
 	let app: Application;
 	try {
-		app = new Application(1024, 768, {
+		app = new Application(1024, 576, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			scale: "auto",
@@ -87,15 +87,16 @@ const createGame = () => {
 	// paints the actual visible background each frame
 	app.world.backgroundColor.setColor(0, 0, 0, 0);
 
-	// Register the debug panel. Its usual toggle key (`S`) is bound by
-	// `GameController` for WASD-down movement, so the panel won't open
-	// via keyboard here — toggle it via the debug-plugin button instead.
-	plugin.register(DebugPanelPlugin, "debugPanel");
-
 	// Audio init — mp3 preferred (universal), m4a as a fallback for
 	// AAC-only browsers, ogg last for the Firefox/Linux path. Howler
 	// will try them in order and use the first one it can decode.
 	audio.init("mp3,m4a,ogg");
+
+	// hoisted so both the preload callback (assigns it) and the teardown
+	// closure (reads it for `event.off`) can see the same reference
+	let onKeyDown:
+		| ((action: string | undefined, keyCode: number) => void)
+		| undefined;
 
 	loader.preload(
 		[
@@ -133,14 +134,34 @@ const createGame = () => {
 			// state.pause(true) → audio.pauseTrack). Volume kept
 			// moderate so the procedural SFX layer over it without
 			// ducking.
+			// F toggles fullscreen for this app's canvas parent. Registered
+			// INSIDE the preload callback (not at createGame's sync tail)
+			// so it survives the React StrictMode dev double-mount cycle:
+			// utils.tsx runs teardown on the first unmount, then the
+			// canvas remount path doesn't re-run createGame — registering
+			// here instead means the listener installs after StrictMode
+			// settles, alongside the rest of the game-running state.
+			onKeyDown = (_action, keyCode) => {
+				if (keyCode === input.KEY.F) {
+					if (!app.isFullscreen()) app.requestFullscreen();
+					else app.exitFullscreen();
+				}
+			};
+			event.on(event.KEYDOWN, onKeyDown);
+
 			audio.playTrack(BGM_NAME, 0.45);
 		},
 	);
 
 	// Teardown — same-tab navigation back to the example index
 	// triggers this; without it the looping music keeps playing after
-	// the canvas is detached.
+	// the canvas is detached, and the F-key handler would leak across
+	// remounts (stacking up duplicate fullscreen toggles per press).
+	// `onKeyDown` is undefined if teardown fires before preload
+	// completes (StrictMode dev unmount path); skip the off in that
+	// case — the closure was never registered.
 	return () => {
+		if (onKeyDown !== undefined) event.off(event.KEYDOWN, onKeyDown);
 		audio.stopTrack();
 	};
 };
