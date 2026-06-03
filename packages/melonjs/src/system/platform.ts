@@ -41,6 +41,8 @@ type NavigatorLike = { platform?: string; maxTouchPoints?: number };
  * docs and implementation), but marked `@internal` because it's a
  * test-seam, not a stable public API — the engine reserves the right
  * to change / inline / rename it without a breaking-change bump.
+ * @param nav - a `navigator`-shaped object (or `undefined` for Node/SSR)
+ * @returns `true` when `nav` looks like an iPad reporting under the iPadOS-13+ desktop Mac UA
  * @internal
  */
 export function isIPadOnMacUA(nav: NavigatorLike | undefined): boolean {
