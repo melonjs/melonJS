@@ -135,6 +135,159 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			expect(pattern.repeat).toEqual("no-repeat");
 		});
 
+		it("a sprite atlas + a createPattern over the same image hold independent units (real-world #1448)", (ctx) => {
+			requireWebGL(ctx);
+			// Mirrors the original real-world breakage that drove #1448:
+			// a Sprite using `cache.get(image)` (default "no-repeat") and
+			// a separately-created `createPattern(image, "repeat-x")`
+			// shared one unit pre-fix, so the sprite's draws silently
+			// sampled with the pattern's wrap mode after the pattern was
+			// uploaded. Post-fix, each has its own (source, repeat) slot.
+			const canvas = new CanvasTexture(32, 32);
+
+			// Step 1: a sprite-like atlas allocates a unit for (source, no-repeat)
+			const spriteAtlas = video.renderer.cache.get(canvas.canvas);
+			const spriteUnit = video.renderer.cache.getUnit(spriteAtlas);
+
+			// Step 2: a pattern allocates a separate unit for (source, repeat-x)
+			const pattern = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			const patternUnit = video.renderer.cache.peekUnit(pattern);
+
+			// Both must remain valid AND distinct
+			expect(spriteUnit).toBeGreaterThanOrEqual(0);
+			expect(patternUnit).toBeGreaterThanOrEqual(0);
+			expect(spriteUnit).not.toEqual(patternUnit);
+
+			// The sprite's lookup must still resolve to its original unit
+			// (not the pattern's — that was the pre-fix bug).
+			expect(video.renderer.cache.peekUnit(spriteAtlas)).toEqual(spriteUnit);
+		});
+
+		it("unit exhaustion mid-multi-repeat allocation: cache recovers cleanly", (ctx) => {
+			requireWebGL(ctx);
+			// `allocateTextureUnit` calls `units.clear()` when it can't
+			// find a free unit, wiping the whole nested `Map<source,
+			// Map<repeat, unit>>`. After the reset, subsequent
+			// `getUnit` calls must successfully re-allocate; nothing
+			// should be wedged by stale inner-Map state.
+			const canvas = new CanvasTexture(32, 32);
+			const cache = video.renderer.cache;
+
+			// Squeeze the cache to a tiny capacity so exhaustion fires
+			// after just a couple of distinct (source, repeat) pairs.
+			const originalMax = cache.max_size;
+			cache.max_size = 2;
+			try {
+				const repeats = ["no-repeat", "repeat", "repeat-x", "repeat-y"];
+				const allocated = repeats.map((repeat) =>
+					cache.getUnit({
+						sources: new Map([["d", canvas.canvas]]),
+						activeAtlas: "d",
+						repeat,
+					}),
+				);
+
+				// Every call returned a defined unit (no `undefined` from
+				// a botched recovery path).
+				for (const u of allocated) {
+					expect(u).toBeGreaterThanOrEqual(0);
+					expect(u).toBeLessThan(cache.max_size);
+				}
+
+				// After exhaustion the cache should have re-started from
+				// the new most-recent (source, repeat). It MUST still be
+				// usable — fresh getUnit returns a defined unit.
+				const fresh = cache.getUnit({
+					sources: new Map([["d", canvas.canvas]]),
+					activeAtlas: "d",
+					repeat: "no-repeat",
+				});
+				expect(fresh).toBeGreaterThanOrEqual(0);
+			} finally {
+				cache.max_size = originalMax;
+				cache.clear();
+			}
+		});
+
+		it("mutating texture.repeat after getUnit reroutes subsequent lookups", (ctx) => {
+			requireWebGL(ctx);
+			// Pinning the contract: `getUnit` / `peekUnit` re-read
+			// `texture.repeat` on every call. A consumer that mutates
+			// `.repeat` on a live TextureAtlas effectively switches it
+			// to a different `(source, repeat)` slot — the OLD unit is
+			// orphaned in `units[source][oldRepeat]` until explicit
+			// cleanup, and the NEW lookup either reuses or allocates
+			// under the new repeat. This is intentional behaviour, but
+			// without a test nothing would catch a future change to
+			// "cache the unit on the texture object".
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = {
+				sources: new Map([["d", source]]),
+				activeAtlas: "d",
+				repeat: "repeat-x",
+			};
+
+			const unitA = video.renderer.cache.getUnit(tex);
+			tex.repeat = "repeat-y";
+			const unitB = video.renderer.cache.getUnit(tex);
+
+			expect(unitB).not.toEqual(unitA);
+			expect(video.renderer.cache.peekUnit(tex)).toEqual(unitB);
+
+			// Revert the repeat and the original unit still resolves.
+			tex.repeat = "repeat-x";
+			expect(video.renderer.cache.peekUnit(tex)).toEqual(unitA);
+		});
+
+		it("cache.clear() mid-pattern-lifecycle wipes every (source, repeat) entry", (ctx) => {
+			requireWebGL(ctx);
+			// Calling `clear()` between two createPattern calls must
+			// wipe ALL units, not leak the prior pattern's entry under
+			// the nested structure.
+			const canvas = new CanvasTexture(32, 32);
+
+			video.renderer.createPattern(canvas.canvas, "repeat-x");
+			expect(video.renderer.cache.usedUnits.size).toBeGreaterThan(0);
+
+			video.renderer.cache.clear();
+			expect(video.renderer.cache.usedUnits.size).toEqual(0);
+			expect(video.renderer.cache.units.size).toEqual(0);
+
+			// Fresh createPattern after clear() must allocate from a
+			// clean slate (no stale entry confusing the lookup).
+			const fresh = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			expect(fresh).toBeDefined();
+			expect(video.renderer.cache.peekUnit(fresh)).toBeGreaterThanOrEqual(0);
+		});
+
+		it("freeTextureUnit on a never-allocated texture is a silent no-op", (ctx) => {
+			requireWebGL(ctx);
+			// Guards the new `perRepeat?.get(repeat)` chain — if the
+			// outer Map has no entry for `source`, or the inner Map has
+			// no entry for `repeat`, freeTextureUnit must just no-op,
+			// not throw or corrupt `usedUnits`.
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = {
+				sources: new Map([["d", source]]),
+				activeAtlas: "d",
+				repeat: "repeat-x",
+			};
+			const before = video.renderer.cache.usedUnits.size;
+			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
+			expect(video.renderer.cache.usedUnits.size).toEqual(before);
+
+			// Now allocate, free, free-again — the second free must be
+			// a no-op too (the outer Map's source entry was deleted by
+			// the first free's inner-cleanup branch).
+			video.renderer.cache.getUnit(tex);
+			video.renderer.cache.freeTextureUnit(tex);
+			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
+		});
+
 		it("TextureCache.delete(image) frees every repeat's unit, not just the first", (ctx) => {
 			requireWebGL(ctx);
 			// Regression guard for a follow-on of the #1448 fix: with the
