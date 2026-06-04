@@ -288,6 +288,150 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
 		});
 
+		it("two patterns with SAME (source, repeat) share one unit (orphan-handle contract)", (ctx) => {
+			requireWebGL(ctx);
+			// Pre-#1448 and post-fix: multiple TextureAtlas wrappers
+			// built from the same source with the same repeat mode share
+			// one GL texture unit. `freeTextureUnit` on either handle
+			// drops the unit; the other handle's `peekUnit` then returns
+			// -1 even though the JS-side wrapper is still live. Not a
+			// bug — it's the inherent contract of unit-allocation-per-
+			// (source, repeat). Pinning prevents a future refactor from
+			// silently changing the sharing semantics.
+			const canvas = new CanvasTexture(32, 32);
+
+			const p1 = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			const p2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
+
+			const u1 = video.renderer.cache.peekUnit(p1);
+			const u2 = video.renderer.cache.peekUnit(p2);
+			expect(u1).toEqual(u2);
+			expect(u1).toBeGreaterThanOrEqual(0);
+
+			video.renderer.cache.freeTextureUnit(p1);
+
+			// p2's handle is technically orphaned now — the shared unit
+			// is gone. Both peekUnit calls return -1.
+			expect(video.renderer.cache.peekUnit(p1)).toEqual(-1);
+			expect(video.renderer.cache.peekUnit(p2)).toEqual(-1);
+		});
+
+		it("resetUnitAssignments wipes units, leaves cache intact, re-allocates cleanly", (ctx) => {
+			requireWebGL(ctx);
+			// `resetUnitAssignments` is called when a shader's sampler
+			// range is exceeded mid-batch. It clears the `units` map
+			// AND `usedUnits` but leaves the atlas multimap (`cache`)
+			// alone, then emits `GPU_TEXTURE_CACHE_RESET` so batchers
+			// drop their boundTextures tracking. After the reset,
+			// `peekUnit` on previously-cached atlases must return -1
+			// (units gone) but `cache.has(image)` stays true (atlas
+			// still cached), and the next `getUnit` re-allocates from
+			// a clean slate.
+			const canvas = new CanvasTexture(32, 32);
+			const pattern = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			expect(video.renderer.cache.peekUnit(pattern)).toBeGreaterThanOrEqual(0);
+			expect(video.renderer.cache.has(canvas.canvas)).toBe(true);
+
+			video.renderer.cache.resetUnitAssignments();
+
+			expect(video.renderer.cache.peekUnit(pattern)).toEqual(-1);
+			expect(video.renderer.cache.usedUnits.size).toEqual(0);
+			expect(video.renderer.cache.units.size).toEqual(0);
+			// Atlas multimap intact — `cache.has(image)` still true even
+			// though no unit is allocated.
+			expect(video.renderer.cache.has(canvas.canvas)).toBe(true);
+
+			// Re-allocation works without manual intervention.
+			const reAllocatedUnit = video.renderer.cache.getUnit(pattern);
+			expect(reAllocatedUnit).toBeGreaterThanOrEqual(0);
+		});
+
+		it("`usedUnits.size` matches the sum of inner-map sizes in `units` after mixed ops", (ctx) => {
+			requireWebGL(ctx);
+			// Sanity invariant: the total count of allocated units
+			// (tracked in `usedUnits`) must always equal the number of
+			// (source, repeat) entries across all inner Maps in `units`.
+			// A drift means either a unit leaked into `usedUnits`
+			// without a corresponding `units` entry, OR an entry in
+			// `units` points at a unit that's already been freed.
+			const c1 = new CanvasTexture(32, 32);
+			const c2 = new CanvasTexture(48, 48);
+			const cache = video.renderer.cache;
+			const sumInner = () => {
+				let total = 0;
+				for (const inner of cache.units.values()) {
+					total += inner.size;
+				}
+				return total;
+			};
+
+			video.renderer.createPattern(c1.canvas, "repeat-x");
+			video.renderer.createPattern(c1.canvas, "repeat-y");
+			video.renderer.createPattern(c2.canvas, "no-repeat");
+			expect(cache.usedUnits.size).toEqual(sumInner());
+
+			cache.freeTextureUnit({
+				sources: new Map([["d", c1.canvas]]),
+				activeAtlas: "d",
+				repeat: "repeat-x",
+			});
+			expect(cache.usedUnits.size).toEqual(sumInner());
+
+			cache.delete(c2.canvas);
+			expect(cache.usedUnits.size).toEqual(sumInner());
+		});
+
+		it("cache.get(image, {framewidth, frameheight}) with multiple atlases under one image", (ctx) => {
+			requireWebGL(ctx);
+			// Post-#1448 the multimap can hold several atlases under
+			// one image (one per repeat mode). `cache.get(image,
+			// frame)` iterates every entry matching the image key
+			// looking for `_atlas.width === frame.framewidth &&
+			// _atlas.height === frame.frameheight`. Worth noting:
+			// pattern atlases produced by `createAtlas` only carry
+			// their dimensions under `meta.size`, NOT as top-level
+			// `.width` / `.height` — so for pattern-only entries the
+			// framewidth refinement loop matches nothing and the
+			// `cache.get(image)[0]` fallback wins. Either way the
+			// contract is "return a defined entry, don't crash".
+			const canvas = new CanvasTexture(32, 32);
+			video.renderer.createPattern(canvas.canvas, "repeat-x");
+			video.renderer.createPattern(canvas.canvas, "repeat-y");
+
+			let entry;
+			expect(() => {
+				entry = video.renderer.cache.get(canvas.canvas, {
+					framewidth: 32,
+					frameheight: 32,
+				});
+			}).not.toThrow();
+			expect(entry).toBeDefined();
+			// The entry is a TextureAtlas (whatever framewidth the
+			// loop did or didn't match); minimum sanity is that it
+			// exposes the standard atlas surface.
+			expect(typeof entry.getAtlas).toEqual("function");
+		});
+
+		it("freeTextureUnit on a texture whose sources Map is empty is a silent no-op", (ctx) => {
+			requireWebGL(ctx);
+			// Defensive guard around `_unitKey` and the nested-map
+			// lookup. `texture.sources.get(texture.activeAtlas)` would
+			// return `undefined` here — the cache's
+			// `Map<undefined, perRepeat>` lookup is unlikely to find a
+			// hit, and `perRepeat?.` short-circuits cleanly. Must not
+			// throw or corrupt state.
+			const tex = {
+				sources: new Map(), // empty — no activeAtlas key
+				activeAtlas: "missing",
+				repeat: "repeat-x",
+			};
+			const before = video.renderer.cache.usedUnits.size;
+			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
+			expect(() => video.renderer.cache.peekUnit(tex)).not.toThrow();
+			expect(video.renderer.cache.peekUnit(tex)).toEqual(-1);
+			expect(video.renderer.cache.usedUnits.size).toEqual(before);
+		});
+
 		it("TextureCache.delete(image) frees every repeat's unit, not just the first", (ctx) => {
 			requireWebGL(ctx);
 			// Regression guard for a follow-on of the #1448 fix: with the
