@@ -22,9 +22,13 @@ class TextureCache {
 		// when the same image was used as both a sprite/atlas AND a
 		// pattern, or as multiple patterns with different repeat modes —
 		// see https://github.com/melonjs/melonJS/issues/1448. The nested
-		// Map keeps the outer key the source object (preserves the
-		// implicit "GC the source → drop the units" hygiene) and adds
-		// the wrap mode as the inner discriminator.
+		// `Map<source, Map<repeat, unit>>` discriminates by wrap mode
+		// while keeping the outer key the source object so it lines up
+		// with the rest of the cache's source-keyed API (`set` / `has` /
+		// `get` / `delete` all take an image). Explicit eviction happens
+		// via `delete(image)` (free all repeats) and `clear()` (wipe the
+		// whole map); `Map` keys are strong references, so the entries
+		// don't drop when the source goes out of scope user-side.
 		this.units = new Map();
 		this.usedUnits = new Set();
 		this.max_size = max_size;
@@ -202,8 +206,13 @@ class TextureCache {
 	 */
 	delete(image) {
 		if (this.cache.has(image)) {
-			const texture = this.cache.get(image)[0];
-			if (typeof texture !== "undefined") {
+			// Free every atlas registered under this image, not just the
+			// first one. Post-#1448 (units keyed by (source, repeat))
+			// multiple atlases can coexist for one image — freeing only
+			// `cache.get(image)[0]` would leak the remaining repeats'
+			// texture units after `this.cache.delete(image)` wipes the
+			// entire multimap bucket.
+			for (const texture of this.cache.get(image)) {
 				this.freeTextureUnit(texture);
 			}
 			this.cache.delete(image);

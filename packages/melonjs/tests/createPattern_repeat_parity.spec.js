@@ -1,22 +1,24 @@
 /**
- * Repro + parity guard for #1448 — `WebGLRenderer.createPattern` keys its
- * texture cache by the source `image` alone, so a second call with a
- * different repeat mode deletes the first call's GL texture before
- * uploading the new one. The returned `pattern1` handle survives as a JS
- * object (its `.repeat` field still reads "repeat-x") but its underlying
- * GL texture is the one bound for `pattern2`'s "repeat-y" wrap mode —
- * any draw using `pattern1` silently samples with the wrong mode.
+ * Regression guard + parity check for #1448.
  *
- * Canvas mode isn't affected: `CanvasRenderer.createPattern` returns a
- * fresh `CanvasPattern` per call and doesn't cache textures. So Canvas
- * is the *correct* reference behaviour; WebGL is expected to match it.
+ * Pre-fix, `WebGLRenderer.createPattern` keyed its texture cache by the
+ * source `image` alone, so a second call with a different repeat mode
+ * deleted the first call's GL texture before uploading the new one. The
+ * returned `pattern1` handle survived as a JS object (its `.repeat`
+ * field still read "repeat-x") but its underlying GL texture was the
+ * one bound for `pattern2`'s "repeat-y" wrap mode — any draw using
+ * `pattern1` silently sampled with the wrong mode.
  *
- * Tests below run the same `createPattern(image, "repeat-x") +
+ * Canvas mode wasn't affected: `CanvasRenderer.createPattern` returns a
+ * fresh `CanvasPattern` per call and doesn't cache textures. Canvas was
+ * the correct reference behaviour all along; WebGL now matches it.
+ *
+ * Tests run the same `createPattern(image, "repeat-x") +
  * createPattern(image, "repeat-y")` scenario under each renderer with
- * forced `video.init(..., { renderer: video.<MODE> })`, then assert the
- * same user-visible invariants in both blocks. Today the Canvas block
- * passes and the WebGL block fails; after the fix both pass and the
- * behaviour matches.
+ * forced `video.init(..., { renderer: video.<MODE> })`, asserting the
+ * same user-visible invariants in both blocks. Both blocks pass against
+ * the fix; the WebGL block fails (`usedUnits.size` stays flat) against
+ * any future regression that re-keys the cache by source alone.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, CanvasTexture, video } from "../src/index.js";
@@ -131,6 +133,29 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			const pattern = video.renderer.createPattern(canvas.canvas);
 			expect(pattern).toBeDefined();
 			expect(pattern.repeat).toEqual("no-repeat");
+		});
+
+		it("TextureCache.delete(image) frees every repeat's unit, not just the first", (ctx) => {
+			requireWebGL(ctx);
+			// Regression guard for a follow-on of the #1448 fix: with the
+			// units map now keyed by (source, repeat), `delete(image)`
+			// must iterate every atlas registered under `image` and free
+			// each one's unit. The old single-atlas free path leaked
+			// every repeat after the first (the multimap bucket got
+			// wiped by `cache.delete(image)` but only one
+			// `freeTextureUnit` ran), so additional units stayed in
+			// `usedUnits` forever.
+			const canvas = new CanvasTexture(32, 32);
+			const baseline = video.renderer.cache.usedUnits.size;
+
+			video.renderer.createPattern(canvas.canvas, "repeat-x");
+			video.renderer.createPattern(canvas.canvas, "repeat-y");
+			expect(video.renderer.cache.usedUnits.size).toBe(baseline + 2);
+
+			video.renderer.cache.delete(canvas.canvas);
+
+			// Both repeats' units must be reclaimed, not just one.
+			expect(video.renderer.cache.usedUnits.size).toBe(baseline);
 		});
 	});
 });
