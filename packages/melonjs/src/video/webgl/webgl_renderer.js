@@ -593,7 +593,7 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * Create a pattern with the specified repetition
 	 * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
-	 * @param {string} repeat - Define how the pattern should be repeated
+	 * @param {string} [repeat="no-repeat"] - Define how the pattern should be repeated. One of `"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`.
 	 * @returns {TextureAtlas} the patterned texture created
 	 * @see ImageLayer#repeat
 	 * @example
@@ -602,7 +602,7 @@ export default class WebGLRenderer extends Renderer {
 	 * let vertical   = renderer.createPattern(image, "repeat-y");
 	 * let basic      = renderer.createPattern(image, "no-repeat");
 	 */
-	createPattern(image, repeat) {
+	createPattern(image, repeat = "no-repeat") {
 		this.setBatcher("quad");
 
 		if (
@@ -622,12 +622,15 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 
-		// clean up any previous pattern texture for this image
-		// see https://github.com/melonjs/melonJS/issues/1278
-		if (this.cache.has(image)) {
-			this.currentBatcher.deleteTexture2D(this.cache.get(image));
-		}
-
+		// No band-aid texture cleanup here anymore — the cache's
+		// `(source, repeat)` unit keying (see TextureCache._unitKey)
+		// already separates this call from any previous createPattern
+		// over the same image with a different repeat mode. A repeat
+		// match against an existing call reuses the same unit, and
+		// `uploadTexture`'s `boundTextures[unit]` check short-circuits
+		// a redundant GL upload. Fixes #1448 (the prior delete-and-
+		// replace trampled the still-live pattern returned by the
+		// earlier call).
 		const texture = new TextureAtlas(
 			createAtlas(image.width, image.height, "pattern", repeat),
 			image,

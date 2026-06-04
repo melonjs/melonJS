@@ -17,10 +17,32 @@ class TextureCache {
 		// cache uses an array to allow for duplicated key
 		this.cache = new ArrayMultimap();
 		this.tinted = new Map();
+		// `units` keys each (source, repeat-mode) pair to a distinct GL
+		// texture unit. Keying by source alone (pre-19.7.0) collided
+		// when the same image was used as both a sprite/atlas AND a
+		// pattern, or as multiple patterns with different repeat modes —
+		// see https://github.com/melonjs/melonJS/issues/1448. The nested
+		// Map keeps the outer key the source object (preserves the
+		// implicit "GC the source → drop the units" hygiene) and adds
+		// the wrap mode as the inner discriminator.
 		this.units = new Map();
 		this.usedUnits = new Set();
 		this.max_size = max_size;
 		this.clear();
+	}
+
+	/**
+	 * @ignore
+	 * Resolve the `(source, repeat)` pair for a TextureAtlas. Defaults
+	 * the repeat to `"no-repeat"` to match `atlas.js`'s own default,
+	 * so a TextureAtlas without an explicit `repeat` keys consistently
+	 * regardless of how it was constructed.
+	 */
+	_unitKey(texture) {
+		return {
+			source: texture.sources.get(texture.activeAtlas),
+			repeat: texture.repeat || "no-repeat",
+		};
 	}
 
 	/**
@@ -75,12 +97,16 @@ class TextureCache {
 	 * @ignore
 	 */
 	freeTextureUnit(texture) {
-		const source = texture.sources.get(texture.activeAtlas);
-		const unit = this.units.get(source);
+		const { source, repeat } = this._unitKey(texture);
+		const perRepeat = this.units.get(source);
+		const unit = perRepeat?.get(repeat);
 		// was a texture unit allocated ?
 		if (typeof unit !== "undefined") {
 			this.usedUnits.delete(unit);
-			this.units.delete(source);
+			perRepeat.delete(repeat);
+			if (perRepeat.size === 0) {
+				this.units.delete(source);
+			}
 		}
 	}
 
@@ -88,11 +114,16 @@ class TextureCache {
 	 * @ignore
 	 */
 	getUnit(texture) {
-		const source = texture.sources.get(texture.activeAtlas);
-		if (!this.units.has(source)) {
-			this.units.set(source, this.allocateTextureUnit());
+		const { source, repeat } = this._unitKey(texture);
+		let perRepeat = this.units.get(source);
+		if (perRepeat === undefined) {
+			perRepeat = new Map();
+			this.units.set(source, perRepeat);
 		}
-		return this.units.get(source);
+		if (!perRepeat.has(repeat)) {
+			perRepeat.set(repeat, this.allocateTextureUnit());
+		}
+		return perRepeat.get(repeat);
 	}
 
 	/**
@@ -100,8 +131,9 @@ class TextureCache {
 	 * return the texture unit for the given texture, or -1 if not allocated
 	 */
 	peekUnit(texture) {
-		const source = texture.sources.get(texture.activeAtlas);
-		return this.units.has(source) ? this.units.get(source) : -1;
+		const { source, repeat } = this._unitKey(texture);
+		const perRepeat = this.units.get(source);
+		return perRepeat?.has(repeat) ? perRepeat.get(repeat) : -1;
 	}
 
 	/**

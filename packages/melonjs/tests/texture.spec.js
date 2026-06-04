@@ -264,9 +264,9 @@ describe("Texture", () => {
 			expect(pattern.repeat).toEqual("repeat");
 		});
 
-		it("should clean up previous pattern when repeat mode changes", () => {
+		it("allocates a separate texture unit per (image, repeat) pair (#1448)", () => {
 			if (typeof video.renderer.gl === "undefined") {
-				return;
+				return; // WebGL-only — Canvas createPattern doesn't allocate GL units
 			}
 			const canvas = new CanvasTexture(32, 32);
 
@@ -276,15 +276,19 @@ describe("Texture", () => {
 
 			const usedUnitsBefore = video.renderer.cache.usedUnits.size;
 
-			// create pattern with different repeat — should clean up the previous one
+			// Pre-19.7.0 this call deleted pattern1's GL texture and reused
+			// its unit (the `cache.has(image) / deleteTexture2D(...)` band-aid
+			// in createPattern) — net unit delta was zero, and pattern1's
+			// returned handle silently pointed at the new wrap mode. After
+			// #1448's fix the unit map keys by `(source, repeat)`, so
+			// pattern2 gets its own unit and pattern1's stays live.
 			const pattern2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
 			expect(pattern2.repeat).toEqual("repeat-x");
 			expect(pattern2).not.toBe(pattern1);
 
-			// texture units should not leak
-			expect(video.renderer.cache.usedUnits.size).toBeLessThanOrEqual(
-				usedUnitsBefore,
-			);
+			// Net: one additional bound texture unit, not the same one
+			// reused.
+			expect(video.renderer.cache.usedUnits.size).toEqual(usedUnitsBefore + 1);
 		});
 	});
 
