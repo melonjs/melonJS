@@ -623,14 +623,15 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		// No band-aid texture cleanup here anymore — the cache's
-		// `(source, repeat)` unit keying (see TextureCache._unitKey)
-		// already separates this call from any previous createPattern
-		// over the same image with a different repeat mode. A repeat
-		// match against an existing call reuses the same unit, and
-		// `uploadTexture`'s `boundTextures[unit]` check short-circuits
-		// a redundant GL upload. Fixes #1448 (the prior delete-and-
-		// replace trampled the still-live pattern returned by the
-		// earlier call).
+		// `(source, repeat)` unit keying (see `TextureCache.getUnit` /
+		// `peekUnit` / `freeTextureUnit`, which inline the `(source,
+		// repeat)` lookup) already separates this call from any
+		// previous createPattern over the same image with a different
+		// repeat mode. A repeat match against an existing call reuses
+		// the same unit, and `uploadTexture`'s `boundTextures[unit]`
+		// check short-circuits a redundant GL upload. Fixes #1448 (the
+		// prior delete-and-replace trampled the still-live pattern
+		// returned by the earlier call).
 		const texture = new TextureAtlas(
 			createAtlas(image.width, image.height, "pattern", repeat),
 			image,
