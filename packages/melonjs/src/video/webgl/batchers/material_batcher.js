@@ -259,15 +259,29 @@ export class MaterialBatcher extends Batcher {
 	 */
 	deleteTexture2D(texture) {
 		if (typeof texture.getTexture === "function") {
-			const unit = this.renderer.cache.peekUnit(texture);
-			if (unit !== -1) {
-				const texture2D = this.boundTextures[unit];
-				if (typeof texture2D !== "undefined") {
-					this.gl.deleteTexture(texture2D);
-					this.unbindTexture2D(texture2D);
+			// Iterate every atlas registered under this image — post-#1448,
+			// the multimap can hold multiple atlases per image (one per
+			// repeat mode), each bound to its own GL texture in
+			// `boundTextures`. Without this loop the OTHER repeats' GL
+			// textures would be orphaned: `cache.delete(image)` frees
+			// every (source, repeat) unit, but only THIS texture's
+			// `boundTextures[unit]` would be deleted+unbound, leaving
+			// stale binds on the freed units until something overwrites.
+			const image = texture.getTexture();
+			const cache = this.renderer.cache;
+			if (cache.has(image)) {
+				for (const atlas of cache.cache.get(image)) {
+					const unit = cache.peekUnit(atlas);
+					if (unit !== -1) {
+						const texture2D = this.boundTextures[unit];
+						if (typeof texture2D !== "undefined") {
+							this.gl.deleteTexture(texture2D);
+							this.unbindTexture2D(texture2D);
+						}
+					}
 				}
 			}
-			this.renderer.cache.delete(texture.getTexture());
+			cache.delete(image);
 		} else {
 			this.gl.deleteTexture(texture);
 			this.unbindTexture2D(texture);

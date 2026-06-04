@@ -3,6 +3,16 @@ import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
 import { createAtlas, TextureAtlas } from "./atlas.js";
 
+// Canonical repeat values accepted by `CanvasRenderingContext2D.createPattern`
+// (per WHATWG Canvas2D spec). Anything outside this set is silently clamped
+// to `"no-repeat"` at the GL wrap-mode mapping; the cache normalizes here so
+// a typo'd repeat string (e.g. `"repat-x"`) doesn't allocate its own unit
+// indefinitely and leak texture-unit slots.
+const VALID_REPEATS = new Set(["repeat", "repeat-x", "repeat-y", "no-repeat"]);
+function normalizeRepeat(repeat) {
+	return VALID_REPEATS.has(repeat) ? repeat : "no-repeat";
+}
+
 /**
  * a basic texture cache object
  * @ignore
@@ -17,6 +27,18 @@ class TextureCache {
 		// cache uses an array to allow for duplicated key
 		this.cache = new ArrayMultimap();
 		this.tinted = new Map();
+		// `units` keys each (source, repeat-mode) pair to a distinct GL
+		// texture unit. Keying by source alone (pre-19.7.0) collided
+		// when the same image was used as both a sprite/atlas AND a
+		// pattern, or as multiple patterns with different repeat modes —
+		// see https://github.com/melonjs/melonJS/issues/1448. The nested
+		// `Map<source, Map<repeat, unit>>` discriminates by wrap mode
+		// while keeping the outer key the source object so it lines up
+		// with the rest of the cache's source-keyed API (`set` / `has` /
+		// `get` / `delete` all take an image). Explicit eviction happens
+		// via `delete(image)` (free all repeats) and `clear()` (wipe the
+		// whole map); `Map` keys are strong references, so the entries
+		// don't drop when the source goes out of scope user-side.
 		this.units = new Map();
 		this.usedUnits = new Set();
 		this.max_size = max_size;
@@ -73,14 +95,24 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 *
+	 * Hot-path note: `getUnit` / `peekUnit` / `freeTextureUnit` are
+	 * called per-texture per-draw, so the `(source, repeat)` lookup is
+	 * inlined here rather than going through a helper that allocates a
+	 * `{source, repeat}` object on every call.
 	 */
 	freeTextureUnit(texture) {
 		const source = texture.sources.get(texture.activeAtlas);
-		const unit = this.units.get(source);
+		const repeat = normalizeRepeat(texture.repeat);
+		const perRepeat = this.units.get(source);
+		const unit = perRepeat?.get(repeat);
 		// was a texture unit allocated ?
 		if (typeof unit !== "undefined") {
 			this.usedUnits.delete(unit);
-			this.units.delete(source);
+			perRepeat.delete(repeat);
+			if (perRepeat.size === 0) {
+				this.units.delete(source);
+			}
 		}
 	}
 
@@ -89,10 +121,16 @@ class TextureCache {
 	 */
 	getUnit(texture) {
 		const source = texture.sources.get(texture.activeAtlas);
-		if (!this.units.has(source)) {
-			this.units.set(source, this.allocateTextureUnit());
+		const repeat = normalizeRepeat(texture.repeat);
+		let perRepeat = this.units.get(source);
+		if (perRepeat === undefined) {
+			perRepeat = new Map();
+			this.units.set(source, perRepeat);
 		}
-		return this.units.get(source);
+		if (!perRepeat.has(repeat)) {
+			perRepeat.set(repeat, this.allocateTextureUnit());
+		}
+		return perRepeat.get(repeat);
 	}
 
 	/**
@@ -101,7 +139,9 @@ class TextureCache {
 	 */
 	peekUnit(texture) {
 		const source = texture.sources.get(texture.activeAtlas);
-		return this.units.has(source) ? this.units.get(source) : -1;
+		const repeat = normalizeRepeat(texture.repeat);
+		const perRepeat = this.units.get(source);
+		return perRepeat?.has(repeat) ? perRepeat.get(repeat) : -1;
 	}
 
 	/**
@@ -170,8 +210,13 @@ class TextureCache {
 	 */
 	delete(image) {
 		if (this.cache.has(image)) {
-			const texture = this.cache.get(image)[0];
-			if (typeof texture !== "undefined") {
+			// Free every atlas registered under this image, not just the
+			// first one. Post-#1448 (units keyed by (source, repeat))
+			// multiple atlases can coexist for one image — freeing only
+			// `cache.get(image)[0]` would leak the remaining repeats'
+			// texture units after `this.cache.delete(image)` wipes the
+			// entire multimap bucket.
+			for (const texture of this.cache.get(image)) {
 				this.freeTextureUnit(texture);
 			}
 			this.cache.delete(image);

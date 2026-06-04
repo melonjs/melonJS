@@ -225,7 +225,7 @@ export default class CanvasRenderer extends Renderer {
 	/**
 	 * Create a pattern with the specified repetition
 	 * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
-	 * @param {string} repeat - Define how the pattern should be repeated
+	 * @param {string} [repeat="no-repeat"] - Define how the pattern should be repeated. One of `"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`.
 	 * @returns {CanvasPattern}
 	 * @see ImageLayer#repeat
 	 * @example
@@ -234,7 +234,12 @@ export default class CanvasRenderer extends Renderer {
 	 * let vertical   = renderer.createPattern(image, "repeat-y");
 	 * let basic      = renderer.createPattern(image, "no-repeat");
 	 */
-	createPattern(image, repeat) {
+	createPattern(image, repeat = "no-repeat") {
+		// DOM `CanvasRenderingContext2D.createPattern` throws a
+		// TypeError when called without a `repeat` argument; defaulting
+		// at the engine boundary matches the WebGL renderer's behaviour
+		// (where TextureAtlas would have defaulted to "no-repeat"
+		// internally anyway) so both renderers behave identically.
 		return this.getContext().createPattern(image, repeat);
 	}
 

@@ -160,6 +160,92 @@ describe("Texture", () => {
 			expect(unit1).toEqual(1);
 		});
 
+		// Helper: build a minimal TextureAtlas-shaped object that
+		// `TextureCache.getUnit` / `peekUnit` / `freeTextureUnit` can use.
+		// They only read `texture.sources.get(texture.activeAtlas)` and
+		// `texture.repeat`, so a stub captures the exact contract.
+		function makeFakeTexture(source, repeat) {
+			return {
+				sources: new Map([["default", source]]),
+				activeAtlas: "default",
+				repeat,
+			};
+		}
+
+		it("peekUnit returns -1 before getUnit, the unit after, and -1 after free", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = makeFakeTexture(source, "repeat-x");
+
+			expect(cache.peekUnit(tex)).toEqual(-1);
+
+			const unit = cache.getUnit(tex);
+			expect(unit).toBeGreaterThanOrEqual(0);
+			expect(cache.peekUnit(tex)).toEqual(unit);
+
+			cache.freeTextureUnit(tex);
+			expect(cache.peekUnit(tex)).toEqual(-1);
+		});
+
+		it("getUnit allocates distinct units for distinct (source, repeat) pairs", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const texX = makeFakeTexture(source, "repeat-x");
+			const texY = makeFakeTexture(source, "repeat-y");
+
+			const unitX = cache.getUnit(texX);
+			const unitY = cache.getUnit(texY);
+
+			expect(unitX).not.toEqual(unitY);
+			expect(cache.peekUnit(texX)).toEqual(unitX);
+			expect(cache.peekUnit(texY)).toEqual(unitY);
+		});
+
+		it("getUnit on the SAME (source, repeat) is idempotent", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = makeFakeTexture(source, "no-repeat");
+
+			const first = cache.getUnit(tex);
+			const second = cache.getUnit(tex);
+			expect(second).toEqual(first);
+		});
+
+		it("freeing the last repeat under a source removes the source from `units`", () => {
+			// Prevents the outer Map from leaking empty inner Maps as
+			// users churn through distinct (source, repeat) combinations.
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = makeFakeTexture(source, "no-repeat");
+
+			cache.getUnit(tex);
+			expect(cache.units.has(source)).toBe(true);
+
+			cache.freeTextureUnit(tex);
+			expect(cache.units.has(source)).toBe(false);
+		});
+
+		it("freeing one repeat keeps the source entry alive for the other repeat", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const texX = makeFakeTexture(source, "repeat-x");
+			const texY = makeFakeTexture(source, "repeat-y");
+
+			cache.getUnit(texX);
+			cache.getUnit(texY);
+			cache.freeTextureUnit(texX);
+
+			expect(cache.units.has(source)).toBe(true);
+			const inner = cache.units.get(source);
+			expect(inner.has("repeat-x")).toBe(false);
+			expect(inner.has("repeat-y")).toBe(true);
+		});
+
 		it("should flush and reset when texture units are exhausted", () => {
 			cache.max_size = 2;
 			cache.allocateTextureUnit();
@@ -264,9 +350,9 @@ describe("Texture", () => {
 			expect(pattern.repeat).toEqual("repeat");
 		});
 
-		it("should clean up previous pattern when repeat mode changes", () => {
+		it("allocates a separate texture unit per (image, repeat) pair (#1448)", () => {
 			if (typeof video.renderer.gl === "undefined") {
-				return;
+				return; // WebGL-only — Canvas createPattern doesn't allocate GL units
 			}
 			const canvas = new CanvasTexture(32, 32);
 
@@ -276,15 +362,19 @@ describe("Texture", () => {
 
 			const usedUnitsBefore = video.renderer.cache.usedUnits.size;
 
-			// create pattern with different repeat — should clean up the previous one
+			// Pre-19.7.0 this call deleted pattern1's GL texture and reused
+			// its unit (the `cache.has(image) / deleteTexture2D(...)` band-aid
+			// in createPattern) — net unit delta was zero, and pattern1's
+			// returned handle silently pointed at the new wrap mode. After
+			// #1448's fix the unit map keys by `(source, repeat)`, so
+			// pattern2 gets its own unit and pattern1's stays live.
 			const pattern2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
 			expect(pattern2.repeat).toEqual("repeat-x");
 			expect(pattern2).not.toBe(pattern1);
 
-			// texture units should not leak
-			expect(video.renderer.cache.usedUnits.size).toBeLessThanOrEqual(
-				usedUnitsBefore,
-			);
+			// Net: one additional bound texture unit, not the same one
+			// reused.
+			expect(video.renderer.cache.usedUnits.size).toEqual(usedUnitsBefore + 1);
 		});
 	});
 
