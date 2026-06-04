@@ -3,6 +3,16 @@ import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
 import { createAtlas, TextureAtlas } from "./atlas.js";
 
+// Canonical repeat values accepted by `CanvasRenderingContext2D.createPattern`
+// (per WHATWG Canvas2D spec). Anything outside this set is silently clamped
+// to `"no-repeat"` at the GL wrap-mode mapping; the cache normalizes here so
+// a typo'd repeat string (e.g. `"repat-x"`) doesn't allocate its own unit
+// indefinitely and leak texture-unit slots.
+const VALID_REPEATS = new Set(["repeat", "repeat-x", "repeat-y", "no-repeat"]);
+function normalizeRepeat(repeat) {
+	return VALID_REPEATS.has(repeat) ? repeat : "no-repeat";
+}
+
 /**
  * a basic texture cache object
  * @ignore
@@ -33,20 +43,6 @@ class TextureCache {
 		this.usedUnits = new Set();
 		this.max_size = max_size;
 		this.clear();
-	}
-
-	/**
-	 * @ignore
-	 * Resolve the `(source, repeat)` pair for a TextureAtlas. Defaults
-	 * the repeat to `"no-repeat"` to match `atlas.js`'s own default,
-	 * so a TextureAtlas without an explicit `repeat` keys consistently
-	 * regardless of how it was constructed.
-	 */
-	_unitKey(texture) {
-		return {
-			source: texture.sources.get(texture.activeAtlas),
-			repeat: texture.repeat || "no-repeat",
-		};
 	}
 
 	/**
@@ -99,9 +95,15 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 *
+	 * Hot-path note: `getUnit` / `peekUnit` / `freeTextureUnit` are
+	 * called per-texture per-draw, so the `(source, repeat)` lookup is
+	 * inlined here rather than going through a helper that allocates a
+	 * `{source, repeat}` object on every call.
 	 */
 	freeTextureUnit(texture) {
-		const { source, repeat } = this._unitKey(texture);
+		const source = texture.sources.get(texture.activeAtlas);
+		const repeat = normalizeRepeat(texture.repeat);
 		const perRepeat = this.units.get(source);
 		const unit = perRepeat?.get(repeat);
 		// was a texture unit allocated ?
@@ -118,7 +120,8 @@ class TextureCache {
 	 * @ignore
 	 */
 	getUnit(texture) {
-		const { source, repeat } = this._unitKey(texture);
+		const source = texture.sources.get(texture.activeAtlas);
+		const repeat = normalizeRepeat(texture.repeat);
 		let perRepeat = this.units.get(source);
 		if (perRepeat === undefined) {
 			perRepeat = new Map();
@@ -135,7 +138,8 @@ class TextureCache {
 	 * return the texture unit for the given texture, or -1 if not allocated
 	 */
 	peekUnit(texture) {
-		const { source, repeat } = this._unitKey(texture);
+		const source = texture.sources.get(texture.activeAtlas);
+		const repeat = normalizeRepeat(texture.repeat);
 		const perRepeat = this.units.get(source);
 		return perRepeat?.has(repeat) ? perRepeat.get(repeat) : -1;
 	}

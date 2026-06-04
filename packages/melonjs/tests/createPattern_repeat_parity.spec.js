@@ -440,6 +440,75 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			expect(video.renderer.cache.usedUnits.size).toEqual(before);
 		});
 
+		it("MaterialBatcher.deleteTexture2D wipes EVERY repeat's bound GL texture, not just the called one", (ctx) => {
+			requireWebGL(ctx);
+			// Integration test for the boundary between `cache.delete`
+			// (which post-#1448 frees every (source, repeat) unit) and
+			// `MaterialBatcher.deleteTexture2D` (which deletes the GL
+			// texture at `boundTextures[unit]` and unbinds it). With
+			// only the cache-level fix, `deleteTexture2D` would still
+			// delete just the called texture's GL handle while
+			// `cache.delete(image)` freed every other repeat's unit —
+			// orphaning the OTHER repeats' bound GL textures, which
+			// would then be left over at unit slots that the cache now
+			// thinks are free for reallocation. Stale binds + GL leak.
+			//
+			// Surface: probe `boundTextures` directly to confirm BOTH
+			// units' GL handles got cleaned up.
+			const canvas = new CanvasTexture(32, 32);
+			video.renderer.setBatcher("quad");
+			const batcher = video.renderer.currentBatcher;
+
+			const horiz = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			const vert = video.renderer.createPattern(canvas.canvas, "repeat-y");
+
+			const ux = video.renderer.cache.peekUnit(horiz);
+			const uy = video.renderer.cache.peekUnit(vert);
+			expect(ux).toBeGreaterThanOrEqual(0);
+			expect(uy).toBeGreaterThanOrEqual(0);
+			expect(batcher.boundTextures[ux]).toBeDefined();
+			expect(batcher.boundTextures[uy]).toBeDefined();
+
+			batcher.deleteTexture2D(horiz);
+
+			// BOTH bound GL textures must be cleared, not just horiz's.
+			expect(batcher.boundTextures[ux]).toBeUndefined();
+			expect(batcher.boundTextures[uy]).toBeUndefined();
+
+			// And both units must be reclaimable.
+			expect(video.renderer.cache.peekUnit(horiz)).toEqual(-1);
+			expect(video.renderer.cache.peekUnit(vert)).toEqual(-1);
+		});
+
+		it("normalizes unknown/typo'd repeat values to `no-repeat` (no unit leak on bad input)", (ctx) => {
+			requireWebGL(ctx);
+			// Defensive normalization: only the four canonical repeat
+			// values produce distinct GL wrap behaviour. A typo like
+			// `"repat-x"` would silently clamp at the GL mapping but
+			// would still allocate its own (source, "repat-x") unit
+			// pre-normalization — slowly leaking texture-unit slots on
+			// user code that builds repeat strings dynamically.
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const cache = video.renderer.cache;
+
+			const noRepeat = {
+				sources: new Map([["d", source]]),
+				activeAtlas: "d",
+				repeat: "no-repeat",
+			};
+			const typo = {
+				sources: new Map([["d", source]]),
+				activeAtlas: "d",
+				repeat: "repat-x",
+			};
+
+			const unitNoRepeat = cache.getUnit(noRepeat);
+			const unitTypo = cache.getUnit(typo);
+			expect(unitTypo).toEqual(unitNoRepeat);
+		});
+
 		it("TextureCache.delete(image) frees every repeat's unit, not just the first", (ctx) => {
 			requireWebGL(ctx);
 			// Regression guard for a follow-on of the #1448 fix: with the
