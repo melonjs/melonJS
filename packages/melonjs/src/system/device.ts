@@ -282,11 +282,33 @@ export let beta = 0;
 export let alpha = 0;
 
 /**
- * Specify whether to automatically bring the window to the front
+ * Specify whether to automatically bring the window to the front.
+ *
+ * Read this binding to inspect the current value; the write surface
+ * is {@link setAutoFocus} — direct assignment via the ESM namespace
+ * (`me.device.autoFocus = false`) always threw a `TypeError`, since
+ * namespace imports are read-only externally regardless of `let` /
+ * `const`. The setter is the only way to mutate the flag from
+ * user code.
  * @default true
  */
-// eslint-disable-next-line prefer-const -- public mutable flag; reassignable via internal setters even though no setter exists today
+// eslint-disable-next-line prefer-const -- public mutable flag, reassigned by `setAutoFocus()` below
 export let autoFocus = true;
+
+/**
+ * Update the {@link autoFocus} flag.
+ * Mirrors the `enableSwipe` / similar function-setter shape used
+ * elsewhere in this module — the engine's "bring the window to
+ * the front on visibility restore" behaviour can be toggled via
+ * `me.device.setAutoFocus(false)`.
+ * @param enable - `true` to keep the default focus-on-restore behaviour, `false` to opt out
+ * @example
+ * // disable the auto-focus-on-restore behaviour
+ * me.device.setAutoFocus(false);
+ */
+export function setAutoFocus(enable: boolean): void {
+	autoFocus = enable;
+}
 
 /**
  * specify a function to execute when the Device is fully loaded and ready
