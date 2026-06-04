@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>#1448 — createPattern repeat-mode parity</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #111; color: #ddd; font: 13px/1.5 ui-monospace, monospace; }
+    main { max-width: 720px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 16px; margin: 0 0 12px; }
+    h2 { font-size: 14px; margin: 24px 0 8px; opacity: 0.9; }
+    p { margin: 0 0 8px; opacity: 0.8; }
+    code, pre { background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 3px; padding: 1px 4px; font-size: 12px; color: #e6c97f; }
+    .swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; border: 1px solid #333; margin-right: 4px; }
+    .legend { font-size: 12px; opacity: 0.7; }
+    #screen { display: block; margin: 16px 0; }
+    /* melonJS scales the canvas via CSS for `scale: "auto"`. Pin a sensible
+       display size so the demo isn't reflowed by the container. */
+    #screen canvas { display: block; image-rendering: pixelated; border: 1px solid #444; }
+    .pass { color: #6c6; }
+    .fail { color: #f66; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>#1448 — <code>WebGLRenderer.createPattern</code> repeat-mode parity</h1>
+    <p>
+      Source image is a 64&times;64 tile: <span class="swatch" style="background:#f80"></span><strong>orange top stripe</strong> (8&nbsp;px),
+      <span class="swatch" style="background:#08f"></span><strong>blue left stripe</strong> (8&nbsp;px), dark grey background.
+    </p>
+    <p>
+      Two <code>createPattern</code> calls over that ONE source: top band uses <code>"repeat-x"</code>, left band uses <code>"repeat-y"</code>.
+    </p>
+
+    <h2>WebGL renderer</h2>
+    <div id="screen"></div>
+
+    <h2>What to look for</h2>
+    <p class="legend">
+      <span class="pass">PASS (post-fix):</span> top band tiles horizontally &mdash; orange stripe runs across the full width, blue stripe appears only at the start of each tile column.
+      Left band tiles vertically &mdash; blue stripe runs down the full height, orange stripe appears only at the top of each tile row.
+    </p>
+    <p class="legend">
+      <span class="fail">FAIL (pre-fix):</span> both bands show the SAME wrap mode &mdash; whichever <code>createPattern</code> call ran last wins. Typically you&rsquo;d see the top band rendering with <code>repeat-y</code> (vertical stripes only) or the left band showing <code>repeat-x</code> (horizontal tiling). Either way one of the two looks wrong.
+    </p>
+
+    <h2>How this is rendered</h2>
+    <pre>const horiz = app.renderer.createPattern(source, "repeat-x");
+const vert  = app.renderer.createPattern(source, "repeat-y");
+
+// inside a custom Renderable's draw():
+renderer.drawPattern(horiz, 0,   0,   640, 64);   // top band
+renderer.drawPattern(vert,  0,   80,  64,  240);  // left band</pre>
+  </main>
+
+  <script type="module">
+    // Import melonJS directly from this checkout's freshly-built bundle.
+    // The page MUST be served over HTTP (e.g. `npx http-server /tmp -p 9999`)
+    // — file:// blocks ESM imports in browsers.
+    import * as me from "./packages/melonjs/build/index.js";
+
+    // 1. Build the recognizable source tile in an offscreen canvas.
+    const source = document.createElement("canvas");
+    source.width = 64;
+    source.height = 64;
+    const ctx = source.getContext("2d");
+    ctx.fillStyle = "#222"; ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = "#f80"; ctx.fillRect(0, 0, 64, 8);  // top horizontal stripe
+    ctx.fillStyle = "#08f"; ctx.fillRect(0, 0, 8, 64);  // left vertical stripe
+
+    // 2. Boot a small WebGL Application. The fix lives in `cache.js` /
+    //    `webgl_renderer.js` so we need video.WEBGL to exercise it.
+    const app = new me.Application(640, 320, {
+      parent: "screen",
+      renderer: me.video.WEBGL,
+      failIfMajorPerformanceCaveat: false,
+      scale: "auto",
+    });
+
+    // 3. Custom Renderable that does the two drawPattern calls per frame.
+    //    Engine's render loop drives the actual GL submission.
+    let frameCount = 0;
+    class PatternDemo extends me.Renderable {
+      constructor() {
+        super(0, 0, 640, 320);
+        // Create both patterns from the SAME source image. Pre-#1448
+        // the second call silently deleted the first's GL texture; the
+        // first handle (`horiz`) would then render with `vert`'s wrap
+        // mode. Post-fix, both retain their own units.
+        this.horiz = app.renderer.createPattern(source, "repeat-x");
+        this.vert  = app.renderer.createPattern(source, "repeat-y");
+        this.floating = true;
+        this.alwaysUpdate = true;
+        this.anchorPoint.set(0, 0);
+        console.log("PatternDemo ctor: horiz", this.horiz, "vert", this.vert);
+      }
+      draw(renderer) {
+        if (frameCount++ < 3) console.log("draw() running, frame", frameCount, "renderer:", renderer?.constructor?.name);
+        // Diagnostic: paint a red fill rect so we know draw() is being
+        // called and the renderer is alive.
+        renderer.setColor("#ff0000");
+        renderer.fillRect(0, 0, 50, 50);
+        renderer.drawPattern(this.horiz, 0, 60,  640, 64);
+        renderer.drawPattern(this.vert,  0, 140, 64, 180);
+      }
+    }
+    const demo = new PatternDemo();
+    app.world.addChild(demo);
+    console.log("after addChild, world children:", app.world.children.length);
+  </script>
+</body>
+</html>

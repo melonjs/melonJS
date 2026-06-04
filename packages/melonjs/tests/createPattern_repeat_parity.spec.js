@@ -179,13 +179,13 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			cache.max_size = 2;
 			try {
 				const repeats = ["no-repeat", "repeat", "repeat-x", "repeat-y"];
-				const allocated = repeats.map((repeat) =>
-					cache.getUnit({
+				const allocated = repeats.map((repeat) => {
+					return cache.getUnit({
 						sources: new Map([["d", canvas.canvas]]),
 						activeAtlas: "d",
 						repeat,
-					}),
-				);
+					});
+				});
 
 				// Every call returned a defined unit (no `undefined` from
 				// a botched recovery path).
@@ -277,7 +277,9 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 				repeat: "repeat-x",
 			};
 			const before = video.renderer.cache.usedUnits.size;
-			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
+			expect(() => {
+				video.renderer.cache.freeTextureUnit(tex);
+			}).not.toThrow();
 			expect(video.renderer.cache.usedUnits.size).toEqual(before);
 
 			// Now allocate, free, free-again — the second free must be
@@ -285,7 +287,9 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// the first free's inner-cleanup branch).
 			video.renderer.cache.getUnit(tex);
 			video.renderer.cache.freeTextureUnit(tex);
-			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
+			expect(() => {
+				video.renderer.cache.freeTextureUnit(tex);
+			}).not.toThrow();
 		});
 
 		it("two patterns with SAME (source, repeat) share one unit (orphan-handle contract)", (ctx) => {
@@ -426,8 +430,12 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 				repeat: "repeat-x",
 			};
 			const before = video.renderer.cache.usedUnits.size;
-			expect(() => video.renderer.cache.freeTextureUnit(tex)).not.toThrow();
-			expect(() => video.renderer.cache.peekUnit(tex)).not.toThrow();
+			expect(() => {
+				video.renderer.cache.freeTextureUnit(tex);
+			}).not.toThrow();
+			expect(() => {
+				video.renderer.cache.peekUnit(tex);
+			}).not.toThrow();
 			expect(video.renderer.cache.peekUnit(tex)).toEqual(-1);
 			expect(video.renderer.cache.usedUnits.size).toEqual(before);
 		});

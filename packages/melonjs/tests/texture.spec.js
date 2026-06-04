@@ -164,11 +164,13 @@ describe("Texture", () => {
 		// `TextureCache.getUnit` / `peekUnit` / `freeTextureUnit` can use.
 		// They only read `texture.sources.get(texture.activeAtlas)` and
 		// `texture.repeat`, so a stub captures the exact contract.
-		const makeFakeTexture = (source, repeat) => ({
-			sources: new Map([["default", source]]),
-			activeAtlas: "default",
-			repeat,
-		});
+		function makeFakeTexture(source, repeat) {
+			return {
+				sources: new Map([["default", source]]),
+				activeAtlas: "default",
+				repeat,
+			};
+		}
 
 		it("peekUnit returns -1 before getUnit, the unit after, and -1 after free", () => {
 			const source = document.createElement("canvas");
