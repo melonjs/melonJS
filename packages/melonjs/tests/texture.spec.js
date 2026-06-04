@@ -160,6 +160,90 @@ describe("Texture", () => {
 			expect(unit1).toEqual(1);
 		});
 
+		// Helper: build a minimal TextureAtlas-shaped object that
+		// `TextureCache.getUnit` / `peekUnit` / `freeTextureUnit` can use.
+		// They only read `texture.sources.get(texture.activeAtlas)` and
+		// `texture.repeat`, so a stub captures the exact contract.
+		const makeFakeTexture = (source, repeat) => ({
+			sources: new Map([["default", source]]),
+			activeAtlas: "default",
+			repeat,
+		});
+
+		it("peekUnit returns -1 before getUnit, the unit after, and -1 after free", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = makeFakeTexture(source, "repeat-x");
+
+			expect(cache.peekUnit(tex)).toEqual(-1);
+
+			const unit = cache.getUnit(tex);
+			expect(unit).toBeGreaterThanOrEqual(0);
+			expect(cache.peekUnit(tex)).toEqual(unit);
+
+			cache.freeTextureUnit(tex);
+			expect(cache.peekUnit(tex)).toEqual(-1);
+		});
+
+		it("getUnit allocates distinct units for distinct (source, repeat) pairs", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const texX = makeFakeTexture(source, "repeat-x");
+			const texY = makeFakeTexture(source, "repeat-y");
+
+			const unitX = cache.getUnit(texX);
+			const unitY = cache.getUnit(texY);
+
+			expect(unitX).not.toEqual(unitY);
+			expect(cache.peekUnit(texX)).toEqual(unitX);
+			expect(cache.peekUnit(texY)).toEqual(unitY);
+		});
+
+		it("getUnit on the SAME (source, repeat) is idempotent", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = makeFakeTexture(source, "no-repeat");
+
+			const first = cache.getUnit(tex);
+			const second = cache.getUnit(tex);
+			expect(second).toEqual(first);
+		});
+
+		it("freeing the last repeat under a source removes the source from `units`", () => {
+			// Prevents the outer Map from leaking empty inner Maps as
+			// users churn through distinct (source, repeat) combinations.
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const tex = makeFakeTexture(source, "no-repeat");
+
+			cache.getUnit(tex);
+			expect(cache.units.has(source)).toBe(true);
+
+			cache.freeTextureUnit(tex);
+			expect(cache.units.has(source)).toBe(false);
+		});
+
+		it("freeing one repeat keeps the source entry alive for the other repeat", () => {
+			const source = document.createElement("canvas");
+			source.width = 32;
+			source.height = 32;
+			const texX = makeFakeTexture(source, "repeat-x");
+			const texY = makeFakeTexture(source, "repeat-y");
+
+			cache.getUnit(texX);
+			cache.getUnit(texY);
+			cache.freeTextureUnit(texX);
+
+			expect(cache.units.has(source)).toBe(true);
+			const inner = cache.units.get(source);
+			expect(inner.has("repeat-x")).toBe(false);
+			expect(inner.has("repeat-y")).toBe(true);
+		});
+
 		it("should flush and reset when texture units are exhausted", () => {
 			cache.max_size = 2;
 			cache.allocateTextureUnit();
