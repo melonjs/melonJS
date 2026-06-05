@@ -73,8 +73,20 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 		return calls;
 	}
 
-	it("clipRect under identity transform: scissor matches the input rect", () => {
+	// Runtime skip helper. Produces a real "skipped" reporter status
+	// instead of silently no-op'ing with an early `return`, which
+	// hides regressions behind a green check. Mirrors the helper
+	// pattern in `webgl_pipeline_adversarial.spec.js`.
+	const skipIfNoWebGL = (ctx) => {
 		if (!isWebGL) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
+	it("clipRect under identity transform: scissor matches the input rect", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -94,8 +106,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 		expect(calls[0].h).toBe(60);
 	});
 
-	it("clipRect under a translated transform: scissor honors the translation", () => {
-		if (!isWebGL) {
+	it("clipRect under a translated transform: scissor honors the translation", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -119,8 +131,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 
 	// ---- Fixed bugs (flipped from `it.fails` after #1349 fix) ----
 
-	it("Bug #1349 (fixed): clipRect under a scaled transform produces a scaled scissor box", () => {
-		if (!isWebGL) {
+	it("Bug #1349 (fixed): clipRect under a scaled transform produces a scaled scissor box", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -140,8 +152,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 		expect(calls[0].h).toBe(60);
 	});
 
-	it("Bug #1349 (fixed): clipRect under a rotated transform produces the rotated AABB", () => {
-		if (!isWebGL) {
+	it("Bug #1349 (fixed): clipRect under a rotated transform produces the rotated AABB", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -162,8 +174,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 
 	// ---- Bug #1 (call site) — Container nested in a translated wrapper ----
 
-	it("Bug #1349 (fixed): Container nested in a translated wrapper produces a correctly-placed scissor", () => {
-		if (!isWebGL) {
+	it("Bug #1349 (fixed): Container nested in a translated wrapper produces a correctly-placed scissor", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		// reproducer matches the visual demo in the Clipping example:
@@ -215,8 +227,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 
 	// ---- Regression guard: full-canvas input is an explicit "no clip" signal ----
 
-	it("clipRect with input matching the canvas size disables the scissor without running transform math", () => {
-		if (!isWebGL) {
+	it("clipRect with input matching the canvas size disables the scissor without running transform math", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		// Reproduces the `ColorLayer.draw` contract: ColorLayer is a
@@ -292,8 +304,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 		return calls;
 	}
 
-	it("vertices queued inside a nested clip flush under that clip's scissor", () => {
-		if (!isWebGL) {
+	it("vertices queued inside a nested clip flush under that clip's scissor", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -342,8 +354,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 
 	// ---- Regression guard: nested save/restore correctly snapshots the scissor box ----
 
-	it("nested save/restore restores the outer scissor box after an inner clipRect", () => {
-		if (!isWebGL) {
+	it("nested save/restore restores the outer scissor box after an inner clipRect", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -372,8 +384,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 	// ---- Regression guard: AABB ≥ canvas under a non-identity transform
 	// disables the scissor (transform-aware fast path).
 
-	it("clipRect whose screen-space AABB covers the canvas disables the scissor", () => {
-		if (!isWebGL) {
+	it("clipRect whose screen-space AABB covers the canvas disables the scissor", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -399,8 +411,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 	// (TRIANGLES → LINES) forces a `PrimitiveBatcher` flush; that flush
 	// must happen under the active scissor.
 
-	it("primitive mode switch (fillRect → strokeLine) inside a clip stays clipped", () => {
-		if (!isWebGL) {
+	it("primitive mode switch (fillRect → strokeLine) inside a clip stays clipped", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
@@ -430,17 +442,17 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 	// ---- Regression guard: batcher swap inside a clip flushes the
 	// outgoing batcher under the active scissor (primitive ↔ quad).
 
-	it("alternating fillRect ↔ drawImage inside a clip stays clipped across batcher swaps", () => {
-		if (!isWebGL) {
+	it("alternating fillRect ↔ drawImage inside a clip stays clipped across batcher swaps", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		// build a 4×4 image source (HTMLCanvasElement) for drawImage.
 		const src = document.createElement("canvas");
 		src.width = 4;
 		src.height = 4;
-		const ctx = src.getContext("2d");
-		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(0, 0, 4, 4);
+		const srcCtx = src.getContext("2d");
+		srcCtx.fillStyle = "#ffffff";
+		srcCtx.fillRect(0, 0, 4, 4);
 
 		renderer.save();
 		renderer.resetTransform();
@@ -473,8 +485,8 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 	// must drain BEFORE a subsequent `clipRect` activates a new scissor
 	// — symmetric to the `restore()` flush-ordering fix.
 
-	it("pre-clip vertices flush under no scissor, post-clip vertices flush under the new scissor", () => {
-		if (!isWebGL) {
+	it("pre-clip vertices flush under no scissor, post-clip vertices flush under the new scissor", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.save();
