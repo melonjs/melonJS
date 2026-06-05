@@ -678,7 +678,7 @@ export default class Renderer {
 	 * @returns {number}
 	 */
 	globalAlpha() {
-		return this.currentColor.normalizedRGBA[3];
+		return this.currentColor.alpha;
 	}
 
 	/**

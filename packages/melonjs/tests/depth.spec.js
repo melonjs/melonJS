@@ -347,10 +347,10 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		// distinctive tint: solid red with full alpha = 0xff0000ff in ABGR
 		// (drawImage's currentTint converts to uint32 via toUint32(alpha))
 		renderer.save();
-		renderer.setTint(
-			{ r: 255, g: 0, b: 0, alpha: 1.0, normalizedRGBA: [1, 0, 0, 1] },
-			1.0,
-		);
+		// `setTint` accepts a CSS color string and parses it via
+		// `Color.copy`; using the public surface keeps the test from
+		// depending on Color's private backing array shape.
+		renderer.setTint("#ff0000", 1.0);
 		renderer.setDepth(11);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 		renderer.restore();
