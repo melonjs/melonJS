@@ -74,10 +74,10 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Cross-batcher transitions in a single "frame" ----
 
-	it("frame: sprite → primitive → sprite produces no GL error", () => {
+	it("frame: sprite → primitive → sprite produces no GL error", (ctx) => {
 		// Common pattern: world-space sprites, debug primitive overlay,
 		// more sprites (UI). Every transition must reset stride/attrib/program.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(16, 16);
@@ -88,11 +88,11 @@ describe("WebGL pipeline adversarial integration", () => {
 		expectNoGLErrors();
 	});
 
-	it("frame: lit sprite → unlit sprite → lit sprite (mixed lighting in one frame)", () => {
+	it("frame: lit sprite → unlit sprite → lit sprite (mixed lighting in one frame)", (ctx) => {
 		// SpriteIlluminator-style scene: ambient backdrop (unlit), prop with
 		// normal map (lit), more backdrop. The dispatch must flip between
 		// `quad` and `litQuad` cleanly each time.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(16, 16);
@@ -127,12 +127,12 @@ describe("WebGL pipeline adversarial integration", () => {
 		expectNoGLErrors();
 	});
 
-	it("frame: setLightUniforms with no lights followed by sprite draw uses quad's program", () => {
+	it("frame: setLightUniforms with no lights followed by sprite draw uses quad's program", (ctx) => {
 		// The exact platformer reproducer: every camera frame calls
 		// setLightUniforms even when there are no lights; that call writes
 		// to litQuad's shader and would leave gl.useProgram pointing at it.
 		// The next drawImage must NOT render quad data through litQuad's shader.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.setBatcher("quad");
@@ -150,11 +150,11 @@ describe("WebGL pipeline adversarial integration", () => {
 		expectNoGLErrors();
 	});
 
-	it("frame: mesh → sprite → primitive (three different vertex layouts)", () => {
+	it("frame: mesh → sprite → primitive (three different vertex layouts)", (ctx) => {
 		// Mesh batcher has its own vertex format (x, y, z, u, v, tint).
 		// Switching from mesh to quad to primitive requires three different
 		// stride/offset configurations.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(16, 16);
@@ -171,11 +171,11 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Texture-slot pressure ----
 
-	it("frame: many distinct textures forces multi-texture overflow + reset", () => {
+	it("frame: many distinct textures forces multi-texture overflow + reset", (ctx) => {
 		// Push more distinct textures than the batcher's sampler range to
 		// trigger the overflow path (`flush + cache.resetUnitAssignments`).
 		// The end state must still draw correctly with no GL errors.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const quad = renderer.batchers.get("quad");
@@ -192,11 +192,11 @@ describe("WebGL pipeline adversarial integration", () => {
 		expectNoGLErrors();
 	});
 
-	it("frame: same texture used by quad AND litQuad in the same frame", () => {
+	it("frame: same texture used by quad AND litQuad in the same frame", (ctx) => {
 		// The texture cache is shared between batchers. A texture used unlit
 		// (slot N in quad) then lit (slot M in litQuad) must work without
 		// double-binding to a now-stale unit.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(16, 16);
@@ -226,10 +226,10 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- save / restore stack interactions ----
 
-	it("save/restore around a batcher switch: state stays consistent", () => {
+	it("save/restore around a batcher switch: state stays consistent", (ctx) => {
 		// renderer.save() snapshots color/transform/blend; the batcher
 		// switching should not corrupt that snapshot.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(8, 8);
@@ -265,11 +265,11 @@ describe("WebGL pipeline adversarial integration", () => {
 		};
 	}
 
-	it("light count: 3 → 0 zeroes the lit batcher's uLightCount on next call", () => {
+	it("light count: 3 → 0 zeroes the lit batcher's uLightCount on next call", (ctx) => {
 		// Stage transitions can drop active-light count to 0. The lit
 		// batcher must update — leftover non-zero count would make a
 		// subsequent normal-mapped sprite read garbage from light array slots.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");
@@ -286,10 +286,10 @@ describe("WebGL pipeline adversarial integration", () => {
 		expect(lit._lightCount).toBe(0);
 	});
 
-	it("light count: 9 (over MAX_LIGHTS) clamps to MAX_LIGHTS without overflow", () => {
+	it("light count: 9 (over MAX_LIGHTS) clamps to MAX_LIGHTS without overflow", (ctx) => {
 		// Boundary check: count > MAX_LIGHTS must clamp, not overrun the
 		// 8-slot uLightPos array.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");
@@ -305,10 +305,10 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Repeated batcher switching (worst-case frame churn) ----
 
-	it("100 alternating batcher switches in one frame: no error, no leak", () => {
+	it("100 alternating batcher switches in one frame: no error, no leak", (ctx) => {
 		// Pathological-but-valid: a frame that bounces between sprite and
 		// primitive draws 100 times. Each switch must flush + unbind cleanly.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(8, 8);
@@ -322,8 +322,8 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Empty flushes ----
 
-	it("flushing an empty batcher is a no-op (no error, no draw)", () => {
-		if (!isWebGL) {
+	it("flushing an empty batcher is a no-op (no error, no draw)", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.setBatcher("quad");
@@ -336,11 +336,11 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Vertex attribute consistency ----
 
-	it("after every batcher switch, gl.useProgram matches the active batcher's program", () => {
+	it("after every batcher switch, gl.useProgram matches the active batcher's program", (ctx) => {
 		// Universal invariant: whatever public API was just called, the
 		// active program must be the active batcher's. Otherwise the next
 		// flush draws through the wrong shader.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const names = ["quad", "litQuad", "primitive", "mesh"];
@@ -356,12 +356,12 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- ShaderEffect / custom shader interactions ----
 
-	it("custom shader on quad → revert: useMultiTexture flips off and back on", () => {
+	it("custom shader on quad → revert: useMultiTexture flips off and back on", (ctx) => {
 		// QuadBatcher.useShader(non-default) sets useMultiTexture=false
 		// (single-texture fallback path). useShader(default) must
 		// restore it. Use a real custom shader so the test actually
 		// exercises both transitions.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const quad = renderer.setBatcher("quad");
@@ -730,10 +730,10 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Mode flag interactions (blend, scissor) ----
 
-	it("blend mode change between batcher switches: no error", () => {
+	it("blend mode change between batcher switches: no error", (ctx) => {
 		// setBlendMode flushes the current batcher and updates GL state.
 		// Doing this between unrelated draws shouldn't corrupt either batch.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const tex = video.createCanvas(8, 8);
@@ -750,7 +750,7 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Fuzz: random sequences of public APIs ----
 
-	it("fuzz: 1000 random ops produce no GL error and leave no batcher in a stuck state", () => {
+	it("fuzz: 1000 random ops produce no GL error and leave no batcher in a stuck state", (ctx) => {
 		// Random sequences of public renderer ops. After every op,
 		// `gl.getError()` must be `NO_ERROR` and `gl.CURRENT_PROGRAM` must
 		// match the active batcher's program. Failure dumps the seed and
@@ -758,7 +758,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		//
 		// Deterministic: a seeded LCG drives the choices, so any failure
 		// here is a single-line repro from the printed seed.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 
@@ -933,12 +933,12 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Per-batcher unbind symmetry ----
 
-	it("every registered batcher's unbind disables exactly its own attribute locations", () => {
+	it("every registered batcher's unbind disables exactly its own attribute locations", (ctx) => {
 		// Generic invariant on the Batcher contract: unbind must only
 		// touch locations it owns, never leave one of its own enabled,
 		// never disable a location it doesn't own (e.g. one belonging to a
 		// different batcher's currently-active program).
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		for (const [name, batcher] of renderer.batchers) {
@@ -1967,8 +1967,8 @@ describe("WebGL pipeline adversarial integration", () => {
 	// what the upload sees. A regression that goes back to `toFloat32()`
 	// surfaces here as the `instanceof Uint8Array` assertion failing.
 	describe("vertex buffer is uploaded as Uint8Array (NaN-canonicalization regression)", () => {
-		it("quad batcher flush uploads via Uint8Array, not Float32Array", () => {
-			if (!isWebGL) {
+		it("quad batcher flush uploads via Uint8Array, not Float32Array", (ctx) => {
+			if (skipIfNoWebGL(ctx)) {
 				return;
 			}
 			// Record every gl.bufferData call's srcData arg. We only
@@ -2007,14 +2007,14 @@ describe("WebGL pipeline adversarial integration", () => {
 			expectNoGLErrors();
 		});
 
-		it("the uploaded Uint8 view sees the SAME ArrayBuffer as the underlying Float32 view (sanity: it's a view, not a copy)", () => {
+		it("the uploaded Uint8 view sees the SAME ArrayBuffer as the underlying Float32 view (sanity: it's a view, not a copy)", (ctx) => {
 			// The whole point is that no NaN-pattern values exist on the
 			// upload path. The Uint8 view is a view of the SAME bytes
 			// that bufferF32 would see; if the implementation ever
 			// regressed to allocating a Uint8 copy (subtle perf hit AND
 			// breaks the zero-allocation hot-path contract), the
 			// `.buffer` identity check would catch it.
-			if (!isWebGL) {
+			if (skipIfNoWebGL(ctx)) {
 				return;
 			}
 			const captures = [];
@@ -2047,14 +2047,14 @@ describe("WebGL pipeline adversarial integration", () => {
 			}
 		});
 
-		it("mesh batcher's indexed flush also uploads via Uint8Array (catches a regression in the indexed path only)", async () => {
+		it("mesh batcher's indexed flush also uploads via Uint8Array (catches a regression in the indexed path only)", async (ctx) => {
 			// The Mesh-rendering path goes through a *different* upload
 			// branch than the regular quad path (own glVertexBuffer +
 			// drawElements with an index buffer). A targeted regression
 			// could fix one branch and miss the other — so we exercise
 			// the mesh path directly and confirm the Uint8 upload there
 			// too.
-			if (!isWebGL) {
+			if (skipIfNoWebGL(ctx)) {
 				return;
 			}
 			// Tiny mesh: 4 vertices, 2 triangles, indexed.
@@ -2092,12 +2092,12 @@ describe("WebGL pipeline adversarial integration", () => {
 			expectNoGLErrors();
 		});
 
-		it("the byteLength upload matches `vertexCount × vertexSize × 4`", () => {
+		it("the byteLength upload matches `vertexCount × vertexSize × 4`", (ctx) => {
 			// A subtle regression class: switching the view to Uint8
 			// but forgetting to multiply `vertexCount * vertexSize` by
 			// 4 (bytes per Float32) → only the first quarter of the
 			// vertices land on the GPU. Pin the byte arithmetic.
-			if (!isWebGL) {
+			if (skipIfNoWebGL(ctx)) {
 				return;
 			}
 			let captured = null;
