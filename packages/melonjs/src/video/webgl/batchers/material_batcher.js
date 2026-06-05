@@ -163,7 +163,12 @@ export class MaterialBatcher extends Batcher {
 		if (pixels !== null && typeof pixels.upload === "function") {
 			// `TextureResource` path: the resource owns its upload (raw
 			// buffer, future synthesized sources, etc.). Keeps every
-			// `gl.texImage2D` variant in one place per source type.
+			// backend-specific upload call in one place per source type.
+			// The resource's `upload(context, target)` contract is
+			// renderer-agnostic — we pass `gl` here because this is the
+			// WebGL batcher; a future WebGPU batcher would pass its own
+			// `renderer.getContext()` result and the resource subclass
+			// implementing that backend would handle it.
 			pixels.upload(gl, gl.TEXTURE_2D);
 		} else if (pixels !== null && pixels.compressed === true) {
 			const mipmaps = pixels.mipmaps;

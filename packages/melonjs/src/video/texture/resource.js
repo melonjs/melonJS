@@ -1,5 +1,5 @@
 /**
- * A texture data source that knows how to upload itself to a WebGL
+ * A texture data source that knows how to upload itself to a GPU
  * texture. Subclasses provide the actual upload logic for their kind
  * of source (raw buffer, image, compressed data, etc.).
  *
@@ -8,13 +8,18 @@
  * shape (`sources`, `activeAtlas`, `getTexture()`, plus `width` /
  * `height` / `premultipliedAlpha` / `repeat` / `filter`) the cache
  * uses for unit allocation and the batcher uses for `boundTextures`
- * bookkeeping. The cache therefore owns every `gl.bindTexture` call,
+ * bookkeeping. The cache therefore owns every backend bind call,
  * which keeps the JS-side binding state in lockstep with the actual
- * GL state across all texture kinds — image atlases included.
+ * backend state across all texture kinds — image atlases included.
  *
- * Subclasses MUST implement `upload(gl, target)`. The framework calls
- * it once per texture on first use (and again on forced re-upload via
- * `batcher.uploadTexture(resource, w, h, true)`).
+ * Subclasses MUST implement `upload(context, target)`. The framework
+ * calls it once per texture on first use (and again on forced re-upload
+ * via `batcher.uploadTexture(resource, w, h, true)`). `context` is the
+ * renderer's backend context (the value returned by
+ * `renderer.getContext()`) — a `WebGLRenderingContext` /
+ * `WebGL2RenderingContext` today, the WebGPU equivalent once that
+ * renderer lands. The signature stays the same; each concrete
+ * subclass uses whatever the context happens to be.
  *
  * @category Rendering
  */
@@ -54,7 +59,7 @@ export class TextureResource {
 	/**
 	 * Returns the upload "source" the batcher hands to `createTexture2D`.
 	 * For a resource this is the resource itself — `createTexture2D`
-	 * dispatches to `resource.upload(gl, target)`.
+	 * dispatches to `resource.upload(context, target)`.
 	 * @ignore
 	 */
 	getTexture() {
@@ -62,15 +67,18 @@ export class TextureResource {
 	}
 
 	/**
-	 * Issue the `gl.texImage2D` (or equivalent) call that uploads this
-	 * resource's data into the currently-bound `TEXTURE_2D` slot.
-	 * Subclasses MUST override.
+	 * Issue the backend-specific upload call (`gl.texImage2D` on WebGL,
+	 * the WebGPU equivalent once that renderer lands) that places this
+	 * resource's data into the currently-bound texture slot. Subclasses
+	 * MUST override.
 	 * @abstract
-	 * @param {WebGLRenderingContext|WebGL2RenderingContext} gl
-	 * @param {number} target - `gl.TEXTURE_2D` (or future cube-map targets)
+	 * @param {WebGLRenderingContext|WebGL2RenderingContext} context - the
+	 *   renderer's backend context, as returned by `renderer.getContext()`
+	 * @param {number} target - the target to upload into (`TEXTURE_2D` on
+	 *   WebGL today, the WebGPU equivalent once that lands)
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	upload(gl, target) {
+	upload(context, target) {
 		throw new Error("TextureResource subclasses must implement upload()");
 	}
 }
@@ -115,39 +123,39 @@ export class BufferTextureResource extends TextureResource {
 	}
 
 	/** @ignore */
-	upload(gl, target) {
+	upload(context, target) {
 		if (this.format === "rgba8ui") {
 			// `RGBA8UI` / `RGBA_INTEGER` are WebGL 2-only enums. On a
 			// WebGL 1 context they're `undefined`, which would otherwise
 			// silently invoke `texImage2D` with bogus values and corrupt
 			// the texture — surface a clear error so callers know to
 			// either drop down to `rgba8` or guard their construction.
-			if (typeof gl.RGBA8UI === "undefined") {
+			if (typeof context.RGBA8UI === "undefined") {
 				throw new Error(
 					'BufferTextureResource: format "rgba8ui" requires a WebGL 2 context',
 				);
 			}
-			gl.texImage2D(
+			context.texImage2D(
 				target,
 				0,
-				gl.RGBA8UI,
+				context.RGBA8UI,
 				this.width,
 				this.height,
 				0,
-				gl.RGBA_INTEGER,
-				gl.UNSIGNED_BYTE,
+				context.RGBA_INTEGER,
+				context.UNSIGNED_BYTE,
 				this.data,
 			);
 		} else {
-			gl.texImage2D(
+			context.texImage2D(
 				target,
 				0,
-				gl.RGBA,
+				context.RGBA,
 				this.width,
 				this.height,
 				0,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
+				context.RGBA,
+				context.UNSIGNED_BYTE,
 				this.data,
 			);
 		}
