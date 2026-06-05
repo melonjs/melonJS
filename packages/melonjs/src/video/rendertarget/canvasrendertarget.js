@@ -255,7 +255,7 @@ class CanvasRenderTarget extends RenderTarget {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
 	 */
 	invalidate(renderer) {
-		if (typeof renderer.gl !== "undefined") {
+		if (renderer.type.startsWith("WebGL")) {
 			// flush pending draws referencing the current texture data
 			renderer.flush();
 			renderer.setBatcher("quad");
@@ -289,7 +289,7 @@ class CanvasRenderTarget extends RenderTarget {
 		// render target.
 		if (
 			renderer &&
-			typeof renderer.gl !== "undefined" &&
+			renderer.type.startsWith("WebGL") &&
 			this.canvas &&
 			renderer.cache.has(this.canvas)
 		) {

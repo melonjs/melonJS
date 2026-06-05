@@ -24,7 +24,9 @@ export default abstract class RenderTarget {
 	/**
 	 * Bind this render target as the active draw destination.
 	 * All subsequent draw calls will render into this target until {@link unbind} is called.
-	 * No-op by default — subclasses override for GPU render targets (e.g. WebGL FBOs).
+	 * No-op by default — subclasses override for GPU render targets
+	 * (a WebGL FBO today, a `GPURenderPassEncoder` once the WebGPU
+	 * renderer lands).
 	 */
 	bind(): void {}
 
