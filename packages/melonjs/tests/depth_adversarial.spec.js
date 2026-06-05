@@ -65,10 +65,11 @@ describe("depth pipeline adversarial integration", () => {
 		});
 	});
 
+	// Internal helpers called from inside it() callbacks. By the time
+	// we reach these, the calling test has already skipped via
+	// `skipIfNoWebGL(ctx)` if WebGL isn't available — so we can use
+	// `gl` directly without guarding here.
 	function expectNoGLErrors() {
-		if (!isWebGL) {
-			return;
-		}
 		const err = gl.getError();
 		if (err !== gl.NO_ERROR) {
 			expect.fail(`GL error after draw: 0x${err.toString(16)}`);
@@ -76,18 +77,23 @@ describe("depth pipeline adversarial integration", () => {
 	}
 
 	function drainGLErrors() {
-		if (!isWebGL) {
-			return;
-		}
 		while (gl.getError() !== gl.NO_ERROR) {
 			/* drain stale errors from previous tests */
 		}
 	}
 
+	const skipIfNoWebGL = (ctx) => {
+		if (!isWebGL) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
 	// ---- cross-batcher depth persistence ----
 
-	it("currentDepth survives a quad → primitive → quad batcher switch", () => {
-		if (!isWebGL) {
+	it("currentDepth survives a quad → primitive → quad batcher switch", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.setDepth(33);
@@ -106,8 +112,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- mid-batch per-vertex emission ----
 
-	it("mid-batch depth change produces per-vertex distinct z without retroactive rewrite", () => {
-		if (!isWebGL) {
+	it("mid-batch depth change produces per-vertex distinct z without retroactive rewrite", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -143,8 +149,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- composite renderable inheritance ----
 
-	it("NineSliceSprite (9-quad renderable) — every emitted quad inherits the same depth", () => {
-		if (!isWebGL) {
+	it("NineSliceSprite (9-quad renderable) — every emitted quad inherits the same depth", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -181,8 +187,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- parent/child depth nesting via save/restore stack ----
 
-	it("nested preDraw/postDraw — child's vertices carry child's depth, then stack pops back", () => {
-		if (!isWebGL) {
+	it("nested preDraw/postDraw — child's vertices carry child's depth, then stack pops back", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -227,8 +233,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- blitTexture invariant (post-fx blits always z=0) ----
 
-	it("blitTexture ignores currentDepth and emits z=0 (screen-space invariant)", () => {
-		if (!isWebGL) {
+	it("blitTexture ignores currentDepth and emits z=0 (screen-space invariant)", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		// install a deeply non-zero depth — the blit path should not pick it up
@@ -295,8 +301,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- Mesh batcher independence ----
 
-	it("Mesh batcher's pushMesh ignores currentDepth (Mesh owns its own projection)", () => {
-		if (!isWebGL) {
+	it("Mesh batcher's pushMesh ignores currentDepth (Mesh owns its own projection)", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		// poison currentDepth — pushMesh must not pick this up; mesh vertices
@@ -346,8 +352,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- backward compat: custom shader declaring vec2 aVertex ----
 
-	it("custom GLShader declaring `attribute vec2 aVertex` renders without GL error", () => {
-		if (!isWebGL) {
+	it("custom GLShader declaring `attribute vec2 aVertex` renders without GL error", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		drainGLErrors();
@@ -418,8 +424,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- extreme values ----
 
-	it("setDepth tolerates extreme values without GL errors", () => {
-		if (!isWebGL) {
+	it("setDepth tolerates extreme values without GL errors", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		drainGLErrors();
@@ -445,8 +451,8 @@ describe("depth pipeline adversarial integration", () => {
 		renderer.setDepth(0);
 	});
 
-	it("setDepth(NaN) / setDepth(Infinity) do not throw or produce GL errors", () => {
-		if (!isWebGL) {
+	it("setDepth(NaN) / setDepth(Infinity) do not throw or produce GL errors", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		drainGLErrors();
@@ -474,8 +480,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- flush boundary ----
 
-	it("flushing mid-frame and continuing to draw preserves depth correctly", () => {
-		if (!isWebGL) {
+	it("flushing mid-frame and continuing to draw preserves depth correctly", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -503,8 +509,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- fuzz ----
 
-	it("fuzz: 500 random (setDepth, draw, batcher-switch) ops produce no GL error", () => {
-		if (!isWebGL) {
+	it("fuzz: 500 random (setDepth, draw, batcher-switch) ops produce no GL error", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		drainGLErrors();
@@ -558,8 +564,8 @@ describe("depth pipeline adversarial integration", () => {
 
 	// ---- one final sanity end-to-end ----
 
-	it("end-to-end frame: sprite + primitive + nineslice at varying depths, no error", () => {
-		if (!isWebGL) {
+	it("end-to-end frame: sprite + primitive + nineslice at varying depths, no error", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		drainGLErrors();

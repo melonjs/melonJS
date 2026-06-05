@@ -61,8 +61,18 @@ describe("Batcher attribute leak between switches (WebGL)", () => {
 		return set;
 	}
 
-	it("switching from quad → primitive disables quad-only attribute locations", () => {
+	// Runtime skip helper — visible "skipped" reporter status instead
+	// of silent early-return. Mirrors `webgl_pipeline_adversarial.spec.js`.
+	const skipIfNoWebGL = (ctx) => {
 		if (!isWebGL) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
+	it("switching from quad → primitive disables quad-only attribute locations", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 
@@ -90,13 +100,13 @@ describe("Batcher attribute leak between switches (WebGL)", () => {
 		expect(leaked).toEqual([]);
 	});
 
-	it("drawing after quad → primitive switch produces no GL error", () => {
+	it("drawing after quad → primitive switch produces no GL error", (ctx) => {
 		// End-to-end reproducer of the original report: a frame that draws a
 		// sprite (quad path) followed by a primitive (line/rect) used to
 		// throw INVALID_OPERATION on the primitive draw because quad's
 		// aNormalTextureId stayed enabled at a larger stride than the
 		// primitive buffer's stride.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 
@@ -121,10 +131,10 @@ describe("Batcher attribute leak between switches (WebGL)", () => {
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
 
-	it("Batcher.unbind disables exactly the locations bind/useShader enabled", () => {
+	it("Batcher.unbind disables exactly the locations bind/useShader enabled", (ctx) => {
 		// Symmetry test: bind enables N locations, unbind disables those same
 		// N locations and no others.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 
@@ -152,13 +162,13 @@ describe("Batcher attribute leak between switches (WebGL)", () => {
 		renderer.setBatcher("quad");
 	});
 
-	it("switching from litQuad → primitive disables litQuad-only attribute locations", () => {
+	it("switching from litQuad → primitive disables litQuad-only attribute locations", (ctx) => {
 		// The dispatch path that originally triggered the platformer crash:
 		// a normal-mapped sprite drawn through `litQuad` (5 attributes)
 		// followed by a primitive draw (`primitive`, 3 attribs). The lit
 		// batcher's `aNormalTextureId` and `aTextureId` must be disabled
 		// before the primitive's vertex buffer is uploaded.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 
@@ -209,8 +219,16 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		});
 	});
 
-	it("unlit sprite (no normalMap, no lights) dispatches to `quad`", () => {
+	const skipIfNoWebGL = (ctx) => {
 		if (!isWebGL) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
+	it("unlit sprite (no normalMap, no lights) dispatches to `quad`", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.activeLightCount = 0;
@@ -220,8 +238,8 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(renderer.currentBatcher).toBe(renderer.batchers.get("quad"));
 	});
 
-	it("normal-mapped sprite WITH active lights dispatches to `litQuad`", () => {
-		if (!isWebGL) {
+	it("normal-mapped sprite WITH active lights dispatches to `litQuad`", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.activeLightCount = 1;
@@ -232,11 +250,11 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(renderer.currentBatcher).toBe(renderer.batchers.get("litQuad"));
 	});
 
-	it("normal-mapped sprite WITHOUT active lights still uses `quad` (nothing to light)", () => {
+	it("normal-mapped sprite WITHOUT active lights still uses `quad` (nothing to light)", (ctx) => {
 		// A sprite with normalMap but no Light2d in the scene has no lit
 		// math to run — the unlit batcher renders it identically to a plain
 		// sprite, at full texture-unit capacity.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.activeLightCount = 0;
@@ -247,8 +265,8 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(renderer.currentBatcher).toBe(renderer.batchers.get("quad"));
 	});
 
-	it("active lights but no normalMap on the sprite still uses `quad` (no normal to sample)", () => {
-		if (!isWebGL) {
+	it("active lights but no normalMap on the sprite still uses `quad` (no normal to sample)", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		renderer.activeLightCount = 3;
@@ -258,11 +276,11 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(renderer.currentBatcher).toBe(renderer.batchers.get("quad"));
 	});
 
-	it("`quad` keeps full texture-unit capacity (no halving)", () => {
+	it("`quad` keeps full texture-unit capacity (no halving)", (ctx) => {
 		// The whole reason for splitting batchers: unlit `quad` is no longer
 		// punished for the lit pipeline's paired-sampler layout. Capacity
 		// equals `min(maxTextures, 16)`, not `floor(maxTextures / 2)`.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const quad = renderer.batchers.get("quad");
@@ -270,8 +288,8 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(quad.maxBatchTextures).toBe(expected);
 	});
 
-	it("`litQuad` halves texture-unit capacity for paired (color, normal) layout", () => {
-		if (!isWebGL) {
+	it("`litQuad` halves texture-unit capacity for paired (color, normal) layout", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");
@@ -282,8 +300,8 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(lit.maxBatchTextures).toBe(expected);
 	});
 
-	it("`setLightUniforms` updates renderer.activeLightCount and forwards to litQuad", () => {
-		if (!isWebGL) {
+	it("`setLightUniforms` updates renderer.activeLightCount and forwards to litQuad", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");
@@ -308,10 +326,10 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(lit._lightCount).toBe(2);
 	});
 
-	it("setLightUniforms tolerates undefined / empty inputs (no throw, count = 0)", () => {
+	it("setLightUniforms tolerates undefined / empty inputs (no throw, count = 0)", (ctx) => {
 		// Camera2d.draw forwards `stage?._activeLights` — when there's no
 		// active stage, both lights and ambient are undefined.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		expect(() => {
@@ -330,7 +348,7 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(renderer.activeLightCount).toBe(0);
 	});
 
-	it("setLightUniforms must not leak gl.useProgram out of the active batcher", () => {
+	it("setLightUniforms must not leak gl.useProgram out of the active batcher", (ctx) => {
 		// Real-world reproducer for the bug that broke the platformer:
 		// every camera draw calls `renderer.setLightUniforms(...)` even
 		// when the scene has no lights. That call writes to litQuad's
@@ -338,7 +356,7 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		// program. If the renderer doesn't restore the active batcher's
 		// program before the next draw, quad's 4-attribute vertex data gets
 		// fed to litQuad's 5-attribute shader and renders as garbage.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const gl = renderer.gl;
@@ -396,7 +414,15 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		});
 	});
 
-	it("cached normal-map rebind updates boundTextures and currentTextureUnit", () => {
+	const skipIfNoWebGL = (ctx) => {
+		if (!isWebGL) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
+	it("cached normal-map rebind updates boundTextures and currentTextureUnit", (ctx) => {
 		// Original Copilot-reported footgun: the cached branch in
 		// `bindNormalMap` was using raw `gl.activeTexture` + `gl.bindTexture`,
 		// which set GL state correctly but didn't update MaterialBatcher's
@@ -404,7 +430,7 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		// `bindTexture2D(cached, unit, false)` so a subsequent color-texture
 		// upload at the same unit can correctly skip the rebind (or,
 		// conversely, knows the slot is already taken).
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");
@@ -429,12 +455,12 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		expect(lit.currentTextureUnit).toBe(unit);
 	});
 
-	it("cached rebind to the SAME unit doesn't trigger redundant work", () => {
+	it("cached rebind to the SAME unit doesn't trigger redundant work", (ctx) => {
 		// Sanity check: if the bookkeeping already says this unit holds the
 		// texture, the cached path should be a true no-op (no flush, no
 		// activeTexture, no bindTexture). `bindTexture2D` skips the work
 		// when `texture === boundTextures[unit] && unit === currentTextureUnit`.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");

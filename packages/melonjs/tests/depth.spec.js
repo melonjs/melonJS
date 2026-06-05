@@ -208,10 +208,18 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		});
 	});
 
+	const skipIfNoWebGL = (ctx) => {
+		if (!isWebGL) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return true;
+		}
+		return false;
+	};
+
 	// QuadBatcher layout: aVertex(3) + aRegion(2) + aColor(4 UBYTE = 1 float-slot)
 	// + aTextureId(1) = 7 float-slots * 4 bytes = 28 bytes
-	it("QuadBatcher declares aVertex size 3, stride 28", () => {
-		if (!isWebGL) {
+	it("QuadBatcher declares aVertex size 3, stride 28", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -224,8 +232,8 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 	});
 
 	// LitQuadBatcher adds aNormalTextureId at the tail → 8 float-slots = 32 bytes
-	it("LitQuadBatcher declares aVertex size 3, stride 32", () => {
-		if (!isWebGL) {
+	it("LitQuadBatcher declares aVertex size 3, stride 32", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("litQuad");
@@ -239,8 +247,8 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 
 	// PrimitiveBatcher: aVertex(3) + aNormal(2) + aColor(4 UBYTE = 1 float-slot)
 	// = 6 float-slots * 4 bytes = 24 bytes
-	it("PrimitiveBatcher declares aVertex size 3, stride 24", () => {
-		if (!isWebGL) {
+	it("PrimitiveBatcher declares aVertex size 3, stride 24", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("primitive");
@@ -252,8 +260,8 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		expect(batcher.stride).toBe(24);
 	});
 
-	it("renderer.setDepth value is emitted as the z component of every vertex (quad)", () => {
-		if (!isWebGL) {
+	it("renderer.setDepth value is emitted as the z component of every vertex (quad)", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 
@@ -283,8 +291,8 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		batcher.vertexData.clear();
 	});
 
-	it("default depth = 0 produces z = 0 in the vertex stream", () => {
-		if (!isWebGL) {
+	it("default depth = 0 produces z = 0 in the vertex stream", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -305,8 +313,8 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		batcher.vertexData.clear();
 	});
 
-	it("emits the same depth across all vertices of a primitive draw", () => {
-		if (!isWebGL) {
+	it("emits the same depth across all vertices of a primitive draw", (ctx) => {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("primitive");
@@ -326,7 +334,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		batcher.vertexData.clear();
 	});
 
-	it("tint slot survives at the correct offset after vertex layout widening (regression)", () => {
+	it("tint slot survives at the correct offset after vertex layout widening (regression)", (ctx) => {
 		// The original PR A had a bug where `VertexArrayBuffer.push()` still
 		// indexed by the old (pre-vec3) positional layout. The caller passed
 		// (x, y, z, u, v, tint, textureId) but push() wrote arg 4 ("v") to
@@ -337,7 +345,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		// Guard: verify that after a drawImage with a known tint, the tint
 		// slot at the new offset 5 contains the actual tint uint32 — NOT a
 		// reinterpreted float.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		const batcher = renderer.setBatcher("quad");
@@ -376,11 +384,11 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		batcher.vertexData.clear();
 	});
 
-	it("draws without GL error after vertex layout widening (regression)", () => {
+	it("draws without GL error after vertex layout widening (regression)", (ctx) => {
 		// End-to-end: a frame of sprite + primitive draws at non-zero depth
 		// must not produce INVALID_OPERATION (stride mismatch) or
 		// INVALID_VALUE (out-of-range attribute) on either path.
-		if (!isWebGL) {
+		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 

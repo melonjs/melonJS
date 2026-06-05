@@ -340,9 +340,10 @@ describe("Texture", () => {
 	});
 
 	describe("createPattern", () => {
-		it("should create a pattern texture", () => {
+		it("should create a pattern texture", (ctx) => {
 			if (typeof video.renderer.gl === "undefined") {
-				return; // skip in Canvas mode
+				ctx.skip("WebGL renderer not available in this environment");
+				return;
 			}
 			const canvas = new CanvasTexture(32, 32);
 			const pattern = video.renderer.createPattern(canvas.canvas, "repeat");
@@ -350,9 +351,10 @@ describe("Texture", () => {
 			expect(pattern.repeat).toEqual("repeat");
 		});
 
-		it("allocates a separate texture unit per (image, repeat) pair (#1448)", () => {
+		it("allocates a separate texture unit per (image, repeat) pair (#1448)", (ctx) => {
 			if (typeof video.renderer.gl === "undefined") {
-				return; // WebGL-only — Canvas createPattern doesn't allocate GL units
+				ctx.skip("WebGL-only — Canvas createPattern doesn't allocate GL units");
+				return;
 			}
 			const canvas = new CanvasTexture(32, 32);
 
