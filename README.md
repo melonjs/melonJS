@@ -67,8 +67,8 @@ Sound
 
 Physics
 - Polygon (SAT) based collision algorithm for accurate detection and response
-- Fast broad-phase collision detection using spatial partitioning (QuadTree)
-- Raycast and AABB region queries with precise entry geometry
+- Fast broad-phase collision detection using spatial partitioning (QuadTree in 2D, Octree in 3D, swapped automatically)
+- Raycast, AABB and sphere region queries with precise entry geometry, including 3D raycasts (`raycast3d`)
 - Collision lifecycle hooks on every `Renderable`
 - Collision filtering for optimized automatic collision detection
 - Multiple shapes per body for complex hitboxes
@@ -82,7 +82,8 @@ Input
 
 Camera
 - Multi-camera support (split-screen, minimaps, multiple viewports)
-- Camera follow with configurable deadzone and damping
+- Optional perspective camera (`Camera3d`) with frustum culling for 2.5D / 3D-projected scenes — drop-in subclass of the default 2D camera
+- Camera follow with configurable deadzone and frame-rate-independent damping
 - Built-in shake, fade, flash, and mask-based transition effects
 - Per-camera post-processing pipeline with stackable shader effects and color grading (ColorMatrix)
 
