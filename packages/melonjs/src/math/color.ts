@@ -205,7 +205,7 @@ for (const [name, rgb] of CSS_COLORS) {
  * @category Math
  */
 export class Color {
-	private glArray: Float32Array;
+	private normalizedRGBA: Float32Array;
 
 	/**
 	 * Creates a new Color instance.
@@ -216,13 +216,13 @@ export class Color {
 	 */
 	constructor(r: Color | string | number = 0, g = 0, b = 0, alpha = 1.0) {
 		if (typeof r === "number") {
-			this.glArray = new Float32Array([0, 0, 0, 1]);
+			this.normalizedRGBA = new Float32Array([0, 0, 0, 1]);
 			this.setColor(r, g, b, alpha);
 		} else if (typeof r === "string") {
-			this.glArray = new Float32Array([0, 0, 0, 1]);
+			this.normalizedRGBA = new Float32Array([0, 0, 0, 1]);
 			this.parseCSS(r);
 		} else if (typeof r === "object") {
-			this.glArray = r.glArray.slice();
+			this.normalizedRGBA = r.normalizedRGBA.slice();
 		} else {
 			throw new Error("Color: invalid parameter");
 		}
@@ -233,7 +233,7 @@ export class Color {
 	 * @returns The red component [0 .. 255].
 	 */
 	get r() {
-		return ~~(this.glArray[0] * 255);
+		return ~~(this.normalizedRGBA[0] * 255);
 	}
 
 	/**
@@ -241,7 +241,7 @@ export class Color {
 	 * @param value - The red component [0 .. 255].
 	 */
 	set r(value) {
-		this.glArray[0] = clamp(value, 0, 255) / 255.0;
+		this.normalizedRGBA[0] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -249,7 +249,7 @@ export class Color {
 	 * @returns The green component [0 .. 255].
 	 */
 	get g() {
-		return ~~(this.glArray[1] * 255);
+		return ~~(this.normalizedRGBA[1] * 255);
 	}
 
 	/**
@@ -257,7 +257,7 @@ export class Color {
 	 * @param value - The green component [0 .. 255].
 	 */
 	set g(value) {
-		this.glArray[1] = clamp(value, 0, 255) / 255.0;
+		this.normalizedRGBA[1] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -265,7 +265,7 @@ export class Color {
 	 * @returns The blue component [0 .. 255].
 	 */
 	get b() {
-		return ~~(this.glArray[2] * 255);
+		return ~~(this.normalizedRGBA[2] * 255);
 	}
 
 	/**
@@ -273,7 +273,7 @@ export class Color {
 	 * @param value - The blue component [0 .. 255].
 	 */
 	set b(value) {
-		this.glArray[2] = clamp(value, 0, 255) / 255.0;
+		this.normalizedRGBA[2] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -281,7 +281,7 @@ export class Color {
 	 * @returns The alpha component [0.0 .. 1.0].
 	 */
 	get alpha() {
-		return this.glArray[3];
+		return this.normalizedRGBA[3];
 	}
 
 	/**
@@ -289,7 +289,7 @@ export class Color {
 	 * @param value - The alpha component [0.0 .. 1.0].
 	 */
 	set alpha(value) {
-		this.glArray[3] = clamp(value, 0, 1.0);
+		this.normalizedRGBA[3] = clamp(value, 0, 1.0);
 	}
 
 	/**
@@ -318,7 +318,7 @@ export class Color {
 	 * @returns Reference to this object for method chaining.
 	 */
 	setFloat(r: number, g: number, b: number, alpha = 1.0) {
-		const a = this.glArray;
+		const a = this.normalizedRGBA;
 		a[0] = clamp(r, 0, 1.0);
 		a[1] = clamp(g, 0, 1.0);
 		a[2] = clamp(b, 0, 1.0);
@@ -471,7 +471,7 @@ export class Color {
 		if (typeof color === "string") {
 			return this.parseCSS(color);
 		} else {
-			this.glArray.set(color.glArray);
+			this.normalizedRGBA.set(color.normalizedRGBA);
 			return this;
 		}
 	}
@@ -482,10 +482,23 @@ export class Color {
 	 * @returns Reference to this object for method chaining.
 	 */
 	add(color: Color) {
-		this.glArray[0] = clamp(this.glArray[0] + color.glArray[0], 0, 1);
-		this.glArray[1] = clamp(this.glArray[1] + color.glArray[1], 0, 1);
-		this.glArray[2] = clamp(this.glArray[2] + color.glArray[2], 0, 1);
-		this.glArray[3] = (this.glArray[3] + color.glArray[3]) / 2;
+		this.normalizedRGBA[0] = clamp(
+			this.normalizedRGBA[0] + color.normalizedRGBA[0],
+			0,
+			1,
+		);
+		this.normalizedRGBA[1] = clamp(
+			this.normalizedRGBA[1] + color.normalizedRGBA[1],
+			0,
+			1,
+		);
+		this.normalizedRGBA[2] = clamp(
+			this.normalizedRGBA[2] + color.normalizedRGBA[2],
+			0,
+			1,
+		);
+		this.normalizedRGBA[3] =
+			(this.normalizedRGBA[3] + color.normalizedRGBA[3]) / 2;
 
 		return this;
 	}
@@ -497,9 +510,9 @@ export class Color {
 	 */
 	darken(scale: number) {
 		scale = clamp(scale, 0, 1);
-		this.glArray[0] *= scale;
-		this.glArray[1] *= scale;
-		this.glArray[2] *= scale;
+		this.normalizedRGBA[0] *= scale;
+		this.normalizedRGBA[1] *= scale;
+		this.normalizedRGBA[2] *= scale;
 
 		return this;
 	}
@@ -512,9 +525,12 @@ export class Color {
 	 */
 	lerp(color: Color, alpha: number) {
 		alpha = clamp(alpha, 0, 1);
-		this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
-		this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
-		this.glArray[2] += (color.glArray[2] - this.glArray[2]) * alpha;
+		this.normalizedRGBA[0] +=
+			(color.normalizedRGBA[0] - this.normalizedRGBA[0]) * alpha;
+		this.normalizedRGBA[1] +=
+			(color.normalizedRGBA[1] - this.normalizedRGBA[1]) * alpha;
+		this.normalizedRGBA[2] +=
+			(color.normalizedRGBA[2] - this.normalizedRGBA[2]) * alpha;
 
 		return this;
 	}
@@ -526,18 +542,18 @@ export class Color {
 	 */
 	lighten(scale: number) {
 		scale = clamp(scale, 0, 1);
-		this.glArray[0] = clamp(
-			this.glArray[0] + (1 - this.glArray[0]) * scale,
+		this.normalizedRGBA[0] = clamp(
+			this.normalizedRGBA[0] + (1 - this.normalizedRGBA[0]) * scale,
 			0,
 			1,
 		);
-		this.glArray[1] = clamp(
-			this.glArray[1] + (1 - this.glArray[1]) * scale,
+		this.normalizedRGBA[1] = clamp(
+			this.normalizedRGBA[1] + (1 - this.normalizedRGBA[1]) * scale,
 			0,
 			1,
 		);
-		this.glArray[2] = clamp(
-			this.glArray[2] + (1 - this.glArray[2]) * scale,
+		this.normalizedRGBA[2] = clamp(
+			this.normalizedRGBA[2] + (1 - this.normalizedRGBA[2]) * scale,
 			0,
 			1,
 		);
@@ -574,10 +590,10 @@ export class Color {
 	 */
 	equals(color: Color) {
 		return (
-			this.glArray[0] === color.glArray[0] &&
-			this.glArray[1] === color.glArray[1] &&
-			this.glArray[2] === color.glArray[2] &&
-			this.glArray[3] === color.glArray[3]
+			this.normalizedRGBA[0] === color.normalizedRGBA[0] &&
+			this.normalizedRGBA[1] === color.normalizedRGBA[1] &&
+			this.normalizedRGBA[2] === color.normalizedRGBA[2] &&
+			this.normalizedRGBA[3] === color.normalizedRGBA[3]
 		);
 	}
 
@@ -676,7 +692,7 @@ export class Color {
 	 * @returns A Uint32 ARGB representation of this color
 	 */
 	toUint32(alpha = 1.0) {
-		const a = this.glArray;
+		const a = this.normalizedRGBA;
 
 		const ur = (a[0] * 255) >> 0;
 		const ug = (a[1] * 255) >> 0;
@@ -690,7 +706,7 @@ export class Color {
 	 * @returns A Float Array representation of this color
 	 */
 	toArray() {
-		return this.glArray;
+		return this.normalizedRGBA;
 	}
 
 	/**
@@ -698,7 +714,7 @@ export class Color {
 	 * @returns The color in "#RRGGBB" format
 	 */
 	toHex() {
-		const a = this.glArray;
+		const a = this.normalizedRGBA;
 		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}`;
 	}
 
@@ -707,8 +723,8 @@ export class Color {
 	 * @param alpha - The alpha value [0.0 .. 1.0] to use in the output string.
 	 * @returns The color in "#RRGGBBAA" format
 	 */
-	toHex8(alpha = this.glArray[3]) {
-		const a = this.glArray;
+	toHex8(alpha = this.normalizedRGBA[3]) {
+		const a = this.normalizedRGBA;
 		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}${toHex((alpha * 255) >> 0)}`;
 	}
 

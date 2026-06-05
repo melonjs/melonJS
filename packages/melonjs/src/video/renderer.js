@@ -73,7 +73,8 @@ export default class Renderer {
 		this.isContextValid = true;
 
 		/**
-		 * The GPU renderer string (WebGL only, undefined for Canvas)
+		 * The GPU device identifier string (set by GPU renderers — WebGL today,
+		 * WebGPU once it lands; undefined for Canvas).
 		 * @type {string|undefined}
 		 */
 		this.GPURenderer = undefined;
@@ -81,7 +82,7 @@ export default class Renderer {
 		/**
 		 * an optional custom shader to use instead of the default one.
 		 * Set by a renderable's preDraw when a shader is assigned.
-		 * (WebGL only, ignored by Canvas renderer)
+		 * (GPU renderers only; ignored by Canvas renderer)
 		 * @type {GLShader|ShaderEffect|undefined}
 		 * @ignore
 		 */
@@ -190,9 +191,10 @@ export default class Renderer {
 	}
 
 	/**
-	 * Current per-renderable depth value. WebGL batchers push it into the
-	 * vertex stream as the `z` component of each vertex — a no-op under the
-	 * default orthographic projection, used by perspective (Camera3d) to
+	 * Current per-renderable depth value. GPU batchers (WebGL today,
+	 * WebGPU once it lands) push it into the vertex stream as the `z`
+	 * component of each vertex — a no-op under the default orthographic
+	 * projection, used by perspective (Camera3d) to
 	 * scale and parallax sprites by distance. Mirrors `renderable.depth`,
 	 * set automatically by `Renderable.preDraw` via {@link Renderer#setDepth}.
 	 * @type {number}
@@ -336,9 +338,11 @@ export default class Renderer {
 
 	/**
 	 * return the list of supported compressed texture formats.
-	 * The base implementation returns null for all formats (no GPU compressed texture support).
-	 * The WebGL renderer overrides this with actual extension availability.
-	 * @returns {Object} an object with one key per extension family, each value is the WebGL extension object or null
+	 * The base implementation returns null for all formats (no GPU
+	 * compressed texture support). GPU renderers (WebGL today, WebGPU
+	 * once it lands) override this with the backend-specific extension /
+	 * feature query.
+	 * @returns {Object} an object with one key per extension family, each value is the backend's compressed-texture handle or null
 	 */
 	getSupportedCompressedTextureFormats() {
 		return {
@@ -474,9 +478,10 @@ export default class Renderer {
 
 	/**
 	 * set the current blend mode.
-	 * Subclasses (CanvasRenderer, WebGLRenderer) implement the actual GL/Canvas logic.
+	 * Subclasses (CanvasRenderer, WebGLRenderer, WebGPURenderer once it
+	 * lands) implement the actual backend logic.
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (WebGL only)
+	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (GPU renderers only)
 	 */
 	setBlendMode(mode = "normal") {
 		this.currentBlendMode = mode;
@@ -487,11 +492,12 @@ export default class Renderer {
 	 *
 	 * Called once per camera per frame by `Camera2d.draw()` (after the
 	 * FBO is bound, before the world tree walk fires `Sprite.draw` for
-	 * any normal-mapped sprite). The WebGL renderer overrides this to
-	 * pack the lights into the lit shader's uniform buffers; the Canvas
-	 * renderer cannot do per-pixel normal-map lighting and silently
-	 * ignores the call. The first time a non-empty light list is passed
-	 * in Canvas mode, a one-shot console warning is emitted.
+	 * any normal-mapped sprite). GPU renderers (WebGL today, WebGPU once
+	 * it lands) override this to pack the lights into the lit shader's
+	 * uniform buffers; the Canvas renderer cannot do per-pixel normal-map
+	 * lighting and silently ignores the call. The first time a non-empty
+	 * light list is passed in Canvas mode, a one-shot console warning is
+	 * emitted.
 	 *
 	 * Stage stays renderer-agnostic by passing the raw scene data —
 	 * lights iterable and ambient color — and letting the renderer
@@ -672,7 +678,7 @@ export default class Renderer {
 	 * @returns {number}
 	 */
 	globalAlpha() {
-		return this.currentColor.glArray[3];
+		return this.currentColor.normalizedRGBA[3];
 	}
 
 	/**
@@ -720,7 +726,8 @@ export default class Renderer {
 	}
 
 	/**
-	 * set/change the current projection matrix (WebGL only)
+	 * set/change the current projection matrix (GPU renderers only —
+	 * the Canvas renderer applies projection via the 2D context's transform stack).
 	 * @param {Matrix3d} matrix
 	 */
 	setProjection(matrix) {
@@ -956,7 +963,8 @@ export default class Renderer {
 
 	/**
 	 * Draw an image or sub-image into the framebuffer.
-	 * Implemented by subclasses (`CanvasRenderer` / `WebGLRenderer`).
+	 * Implemented by subclasses (`CanvasRenderer` / `WebGLRenderer` /
+	 * future `WebGPURenderer`).
 	 *
 	 * The 9-argument signature shown here is the canonical form used
 	 * throughout the engine; the concrete renderers also accept the
@@ -1011,10 +1019,11 @@ export default class Renderer {
 	}
 
 	/**
-	 * Set the current per-renderable depth value. WebGL batchers push it
-	 * into the vertex stream as the `z` component of each vertex — a no-op
-	 * under the default orthographic projection, used by perspective
-	 * (Camera3d) to scale and parallax sprites by distance.
+	 * Set the current per-renderable depth value. GPU batchers (WebGL
+	 * today, WebGPU once it lands) push it into the vertex stream as the
+	 * `z` component of each vertex — a no-op under the default
+	 * orthographic projection, used by perspective (Camera3d) to scale
+	 * and parallax sprites by distance.
 	 *
 	 * Typically called automatically by `Renderable.preDraw` from the
 	 * renderable's `depth` property. User code only needs to call this

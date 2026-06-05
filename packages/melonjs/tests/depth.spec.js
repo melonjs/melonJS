@@ -348,7 +348,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		// (drawImage's currentTint converts to uint32 via toUint32(alpha))
 		renderer.save();
 		renderer.setTint(
-			{ r: 255, g: 0, b: 0, alpha: 1.0, glArray: [1, 0, 0, 1] },
+			{ r: 255, g: 0, b: 0, alpha: 1.0, normalizedRGBA: [1, 0, 0, 1] },
 			1.0,
 		);
 		renderer.setDepth(11);
