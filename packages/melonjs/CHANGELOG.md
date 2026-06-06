@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.7.0] (melonJS 2) - _unreleased_
+## [19.7.0] (melonJS 2) - _2026-06-06_
 
 **Highlights:** `Camera3d` perspective camera lands. Every batched shader now carries per-sprite depth as `vec3 aVertex`, unlocking 3D-projected sprites and meshes. Backward compatible with existing 2D code.
 
