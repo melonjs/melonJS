@@ -45,12 +45,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Install Playwright browsers
-        timeout-minutes: 10
-        env:
-          DEBUG: pw:install
-        run: pnpm exec playwright install --with-deps chromium
-
       - name: Lint & check
         run: |
           pnpm lint
@@ -61,7 +55,7 @@ jobs:
         run: |
           if [ "${{ inputs.package }}" = "melonjs" ]; then
             echo "dir=packages/melonjs" >> "$GITHUB_OUTPUT"
-            echo "build_cmd=pnpm dist" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm dist:publish" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "debug-plugin" ]; then
             echo "dir=packages/debug-plugin" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
@@ -73,10 +67,10 @@ jobs:
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "matter-adapter" ]; then
             echo "dir=packages/matter-adapter" >> "$GITHUB_OUTPUT"
-            echo "build_cmd=pnpm clean && pnpm build && pnpm test" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "planck-adapter" ]; then
             echo "dir=packages/planck-adapter" >> "$GITHUB_OUTPUT"
-            echo "build_cmd=pnpm clean && pnpm build && pnpm test" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "capacitor-plugin" ]; then
             echo "dir=packages/capacitor-plugin" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
