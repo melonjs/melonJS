@@ -84,7 +84,7 @@
 		"doc": "typedoc src/index.ts --tsconfig tsconfig.build.json --readme DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false",
 		"doc:watch": "typedoc src/index.ts --tsconfig tsconfig.build.json --readme DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
-		"prepublishOnly": "pnpm dist",
+		"prepublishOnly": "pnpm dist:publish",
 		"clean": "tsx scripts/clean.ts",
 		"types": "tsc --project tsconfig.build.json",
 		"test:types": "tsc"
