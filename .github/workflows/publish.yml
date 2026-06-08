@@ -46,6 +46,9 @@ jobs:
         run: pnpm install
 
       - name: Install Playwright browsers
+        timeout-minutes: 10
+        env:
+          DEBUG: pw:install
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Lint & check
