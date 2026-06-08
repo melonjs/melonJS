@@ -80,6 +80,7 @@
 		"lint": "eslint src tests",
 		"build": "pnpm lint && tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
+		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md .",
 		"doc": "typedoc src/index.ts --tsconfig tsconfig.build.json --readme DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false",
 		"doc:watch": "typedoc src/index.ts --tsconfig tsconfig.build.json --readme DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
