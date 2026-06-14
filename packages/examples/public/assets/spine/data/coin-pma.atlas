@@ -3,17 +3,16 @@ coin-pma.png
 	filter: Linear, Linear
 	pma: true
 coin-front-logo
-	bounds: 2, 570, 305, 302
+	bounds: 328, 286, 305, 302
 coin-front-shine-logo
-	bounds: 2, 286, 282, 282
+	bounds: 635, 22, 282, 282
 coin-front-shine-spineboy
-	bounds: 305, 283, 282, 282
+	bounds: 635, 306, 282, 282
 coin-front-spineboy
-	bounds: 309, 567, 305, 302
-	rotate: 90
+	bounds: 21, 286, 305, 302
 coin-side-round
 	bounds: 2, 2, 144, 282
 coin-side-straight
-	bounds: 286, 286, 17, 282
+	bounds: 2, 306, 17, 282
 shine
-	bounds: 148, 39, 72, 245
+	bounds: 919, 343, 72, 245

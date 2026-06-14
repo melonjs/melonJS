@@ -1,20 +1,33 @@
 /**
- * melonJS — Spine 4.2 runtime animation example.
+ * melonJS — Spine 4.3 runtime animation example.
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import Spine, { SpinePlugin } from "@melonjs/spine-plugin";
-import { event, game, input, loader, plugin, state, video } from "melonjs";
+import {
+	Application,
+	event,
+	input,
+	loader,
+	plugin,
+	state,
+	video,
+} from "melonjs";
 import { useEffect, useState } from "react";
 import { characters, resources } from "./resources";
 
+let app: Application | null = null;
 let currentSpine: InstanceType<typeof Spine> | null = null;
 
 const loadCharacter = (char: (typeof characters)[number]) => {
+	if (!app) {
+		return;
+	}
+
 	// remove previous spine object
 	if (currentSpine) {
-		game.world.removeChild(currentSpine);
+		app.world.removeChild(currentSpine);
 		currentSpine = null;
 	}
 
@@ -38,52 +51,53 @@ const loadCharacter = (char: (typeof characters)[number]) => {
 	spineObj.setAnimation(0, char.animation, true);
 
 	// add to world
-	game.world.addChild(spineObj);
+	app.world.addChild(spineObj);
 	currentSpine = spineObj;
+	// biome-ignore lint/suspicious/noExplicitAny: TEMP debug hook
+	(window as any).__spine = spineObj;
 };
 
-let initialized = false;
-
 const createGame = () => {
-	if (initialized) {
-		return;
-	}
-	initialized = true;
-
-	if (
-		!video.init(1462, 1119, {
-			parent: "screen",
-			renderer: video.AUTO,
-			scale: "auto",
-			scaleMethod: "fit",
-			antiAlias: true,
-		})
-	) {
-		alert("Your browser does not support HTML5 canvas.");
+	if (app) {
 		return;
 	}
 
-	// register plugins
-	plugin.register(DebugPanelPlugin);
+	// scale relative to the `#screen` flex container (below the example
+	// topbar) rather than the default `window` parent, so `fit` does not
+	// overshoot the topbar height
+	const scaleTarget = document.getElementById("screen");
+	app = new Application(1462, 1119, {
+		parent: "screen",
+		renderer: video.AUTO,
+		scale: "auto",
+		scaleMethod: "fit",
+		...(scaleTarget ? { scaleTarget } : {}),
+		antiAlias: true,
+	});
+
+	// register plugins against this application instance
+	plugin.register(DebugPanelPlugin, "debugPanel");
 	(plugin.get(DebugPanelPlugin) as DebugPanelPlugin)?.show();
-	plugin.register(SpinePlugin);
+	plugin.register(SpinePlugin, "SpinePlugin", app);
 
 	// set cross-origin
 	loader.setOptions({ crossOrigin: "anonymous" });
 
 	loader.preload(resources, () => {
 		event.on(event.KEYDOWN, (_action: unknown, keyCode: number) => {
-			if (keyCode === input.KEY.F) {
-				if (!document.fullscreenElement) {
-					document.documentElement.requestFullscreen();
+			if (keyCode === input.KEY.F && app) {
+				if (app.isFullscreen()) {
+					app.exitFullscreen();
 				} else {
-					document.exitFullscreen();
+					app.requestFullscreen();
 				}
 			}
 		});
 
 		state.change(state.DEFAULT, true);
-		game.world.backgroundColor.parseCSS("#202020");
+		if (app) {
+			app.world.backgroundColor.parseCSS("#202020");
+		}
 
 		// load default character
 		loadCharacter(characters[0]);
@@ -132,9 +146,7 @@ const CharacterSelector = () => {
 
 export const ExampleSpine = () => {
 	useEffect(() => {
-		if (!game.isInitialized) {
-			createGame();
-		}
+		createGame();
 	}, []);
 	return <CharacterSelector />;
 };

@@ -1,10 +1,22 @@
 import * as spineCanvas from "@esotericsoftware/spine-canvas";
-import { MeshAttachment, Physics, Vector2 } from "@esotericsoftware/spine-core";
+import {
+	MeshAttachment,
+	Physics,
+	Skeleton,
+	Vector2,
+} from "@esotericsoftware/spine-core";
 import * as spineWebGL from "@esotericsoftware/spine-webgl";
 import { Math, plugin, Renderable } from "melonjs";
+import { getManagedContext } from "./glContext.js";
 import SkeletonRenderer from "./SkeletonRenderer.js";
 import SpineBatcher from "./SpineBatcher.js";
 import { SpinePlugin } from "./SpinePlugin.js";
+
+// Spine 4.3 ships an official Y-down switch — every Spine integration that
+// targets a Y-down framework (pixi-v8/v7, phaser-v3/v4, canvaskit) does this.
+// melonJS is Y-down, so flip Spine globally once and let the runtime handle
+// gravity inversion, world-transform Y-direction, and scaleY semantics.
+Skeleton.yDown = true;
 
 // a temporary array used for skeleton.getBounds();
 const tempArray = [];
@@ -102,24 +114,26 @@ export default class Spine extends Renderable {
 
 		if (this.isWebGL) {
 			this.runtime = spineWebGL;
-			this.canvas = renderer.renderTarget.canvas;
+			// the shared canvas-backed managed context, so all spine GL
+			// resources self-restore after a WebGL context loss
+			const glContext = getManagedContext(renderer.getCanvas());
 			// register the Spine batcher with the melonJS renderer (once)
 			if (!renderer.batchers.has("spine")) {
-				renderer.addBatcher(new SpineBatcher(renderer, this.canvas), "spine");
+				renderer.addBatcher(new SpineBatcher(renderer), "spine");
 			}
 			this.spineBatcher = renderer.batchers.get("spine");
 
 			// spine skeleton renderer
 			this.skeletonRenderer = new this.runtime.SkeletonRenderer(
-				this.canvas,
+				glContext,
 				true,
 			);
 
 			// debug renderer still uses Spine's own GL pipeline
-			this.shapesShader = this.runtime.Shader.newColored(this.canvas);
-			this.shapes = new this.runtime.ShapeRenderer(this.canvas);
+			this.shapesShader = this.runtime.Shader.newColored(glContext);
+			this.shapes = new this.runtime.ShapeRenderer(glContext);
 			this.skeletonDebugRenderer = new this.runtime.SkeletonDebugRenderer(
-				this.canvas,
+				glContext,
 			);
 		} else {
 			this.runtime = spineCanvas;
@@ -201,16 +215,9 @@ export default class Spine extends Renderable {
 		if (!this.isWebGL) {
 			this.skeletonRenderer.triangleRendering = skeletonData.skins.some(
 				(skin) => {
-					for (const attachments of skin.attachments) {
-						if (attachments) {
-							for (const attachment of Object.values(attachments)) {
-								if (attachment instanceof MeshAttachment) {
-									return true;
-								}
-							}
-						}
-					}
-					return false;
+					return skin.getAttachments().some((entry) => {
+						return entry.attachment instanceof MeshAttachment;
+					});
 				},
 			);
 		}
@@ -226,37 +233,31 @@ export default class Spine extends Renderable {
 
 		// get a reference to the root bone
 		this.root = this.skeleton.getRootBone();
-
-		// invert physics gravity to match Y-down coordinate system
-		for (const constraint of this.skeleton.physicsConstraints) {
-			constraint.data.gravity = -constraint.data.gravity;
-			constraint.gravity = -constraint.gravity;
-		}
 	}
 
 	/**
-	 * Flip the Spine skeleton on the horizontal axis (around its center).
+	 * Flip the Spine skeleton on the horizontal axis (around its root bone).
 	 * @param {boolean} [flip=true] - `true` to flip this Spine object.
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	flipX(flip = true) {
 		if (this.isSpineFlipped.x !== flip) {
 			this.isSpineFlipped.x = flip;
-			this.root.scaleX *= -1;
+			this.root.pose.scaleX *= -1;
 			this.isDirty = true;
 		}
 		return this;
 	}
 
 	/**
-	 * Flip the Spine skeleton on the vertical axis (around its center).
+	 * Flip the Spine skeleton on the vertical axis (around its root bone).
 	 * @param {boolean} [flip=true] - `true` to flip this Spine object.
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	flipY(flip = true) {
 		if (this.isSpineFlipped.y !== flip) {
 			this.isSpineFlipped.y = flip;
-			this.root.scaleY *= -1;
+			this.root.pose.scaleY *= -1;
 			this.isDirty = true;
 		}
 		return this;
@@ -269,12 +270,7 @@ export default class Spine extends Renderable {
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
-		if (this.isWebGL) {
-			this.skeleton.getRootBone().rotation -= Math.radToDeg(angle);
-		} else {
-			// rotation for rootBone is in degrees (anti-clockwise)
-			this.skeleton.getRootBone().rotation -= Math.radToDeg(angle) + 90;
-		}
+		this.skeleton.getRootBone().pose.rotation -= Math.radToDeg(angle);
 		// apply melonJS transform as well
 		return super.rotate(angle, v);
 	}
@@ -288,8 +284,8 @@ export default class Spine extends Renderable {
 	scale(x, y = x) {
 		if (this.isWebGL) {
 			// WebGL: SpineBatcher ignores currentTransform, scale through root bone
-			this.root.scaleX *= x;
-			this.root.scaleY *= y;
+			this.root.pose.scaleX *= x;
+			this.root.pose.scaleY *= y;
 		}
 		// Canvas: scale through currentTransform only (applied by preDraw),
 		// which scales both region bone transforms and mesh world vertices uniformly
@@ -311,12 +307,12 @@ export default class Spine extends Renderable {
 			bounds.clear();
 
 			if (typeof this.skeleton !== "undefined") {
-				const rootBone = this.skeleton.getRootBone();
-
 				this.skeleton.getBounds(this.boneOffset, this.boneSize, tempArray);
 
-				const minX = this.boneOffset.x - rootBone.x;
-				const minY = this.boneOffset.y - rootBone.y;
+				// getBounds returns world-space coords; convert back to local
+				// space by subtracting the skeleton position we set in update().
+				const minX = this.boneOffset.x - this.skeleton.x;
+				const minY = this.boneOffset.y - this.skeleton.y;
 
 				bounds.addFrame(
 					minX,
@@ -356,17 +352,17 @@ export default class Spine extends Renderable {
 		if (typeof this.skeleton !== "undefined") {
 			const deltaSeconds = dt / 1000;
 
-			// update skeleton time for physics simulation (Spine 4.2+)
+			// advance skeleton time for physics simulation
 			this.skeleton.update(deltaSeconds);
 
 			// update and apply the animation state
 			this.animationState.update(deltaSeconds);
 			this.animationState.apply(this.skeleton);
 
-			// update the root bone position
-			const rootBone = this.skeleton.getRootBone();
-			rootBone.x = this.pos.x;
-			rootBone.y = this.pos.y;
+			// position the skeleton (added directly to root worldX/worldY,
+			// bypassing Skeleton.yDir scaling that would flip a rootBone.pose.y)
+			this.skeleton.x = this.pos.x;
+			this.skeleton.y = this.pos.y;
 
 			// world transforms
 			this.skeleton.updateWorldTransform(Physics.update);
@@ -571,7 +567,7 @@ export default class Spine extends Renderable {
 	 * me.game.world.addChild(spineChar);
 	 */
 	setSkinByName(skinName) {
-		this.skeleton.setSkinByName(skinName);
+		this.skeleton.setSkin(skinName);
 	}
 
 	/**
@@ -594,7 +590,7 @@ export default class Spine extends Renderable {
 			}
 		}
 		this.skeleton.setSkin(combined);
-		this.skeleton.setToSetupPose();
+		this.skeleton.setupPose();
 	}
 
 	/**
@@ -680,9 +676,7 @@ export default class Spine extends Renderable {
 	 * Reset this skeleton to the setup pose.
 	 */
 	setToSetupPose() {
-		this.skeleton.setToSetupPose();
-		// Spine uses Y-up, melonJS uses Y-down
-		this.skeleton.getRootBone().scaleY *= -1;
+		this.skeleton.setupPose();
 		this.skeleton.updateWorldTransform(Physics.reset);
 		// reset flip flags
 		this.isSpineFlipped.y = false;

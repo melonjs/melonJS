@@ -4,83 +4,75 @@ cloud-pot-pma.png
 	pma: true
 	scale: 0.5
 cloud-base-1
-	bounds: 2, 300, 233, 210
+	bounds: 450, 122, 233, 210
+	rotate: 90
 cloud-base-10
-	bounds: 214, 113, 97, 101
+	bounds: 874, 127, 97, 101
 cloud-base-2
-	bounds: 2, 90, 210, 208
+	bounds: 662, 147, 210, 208
 cloud-base-3
-	bounds: 237, 346, 175, 164
+	bounds: 137, 167, 175, 164
 cloud-base-4
-	bounds: 414, 347, 176, 163
+	bounds: 2, 2, 176, 163
 cloud-base-5
-	bounds: 313, 89, 145, 125
+	bounds: 874, 230, 145, 125
 cloud-base-6
-	bounds: 744, 374, 161, 136
+	bounds: 662, 9, 161, 136
 cloud-base-7
-	bounds: 592, 361, 150, 149
+	bounds: 180, 16, 150, 149
 cloud-base-8
-	bounds: 237, 216, 154, 128
+	bounds: 2, 173, 154, 128
+	rotate: 90
 cloud-base-9
-	bounds: 907, 402, 107, 108
+	bounds: 332, 140, 107, 108
 cloud-cheeks
-	bounds: 2, 9, 218, 79
+	bounds: 332, 41, 218, 79
 cloud-eyes-closed
-	bounds: 744, 350, 132, 22
+	bounds: 137, 333, 132, 22
 cloud-eyes-open
-	bounds: 592, 333, 133, 26
+	bounds: 2, 329, 133, 26
 cloud-eyes-reflex
-	bounds: 393, 224, 120, 17
-	rotate: 90
+	bounds: 271, 338, 120, 17
 cloud-mouth-closed
-	bounds: 907, 374, 49, 16
+	bounds: 314, 259, 49, 16
 cloud-mouth-open
-	bounds: 222, 15, 59, 35
+	bounds: 825, 90, 59, 35
 leaf-big
-	bounds: 214, 218, 20, 49
+	bounds: 403, 295, 20, 49
 leaf-small
-	bounds: 958, 373, 17, 30
-	rotate: 90
+	bounds: 425, 314, 17, 30
 petal-1
-	bounds: 283, 2, 26, 18
+	bounds: 973, 210, 26, 18
 petal-2
-	bounds: 283, 22, 28, 17
-	rotate: 90
+	bounds: 403, 253, 28, 17
 petal-3
-	bounds: 214, 269, 29, 21
-	rotate: 90
+	bounds: 403, 272, 29, 21
 pot-base
-	bounds: 222, 52, 76, 59
+	bounds: 314, 277, 76, 59
 pot-eyes-closed
-	bounds: 878, 363, 46, 9
+	bounds: 403, 346, 46, 9
 pot-eyes-open
-	bounds: 222, 2, 40, 11
+	bounds: 973, 197, 40, 11
 pot-mouth-open
-	bounds: 990, 374, 14, 16
+	bounds: 434, 272, 14, 16
 pot-mouth-pouty
-	bounds: 300, 93, 18, 10
-	rotate: 90
+	bounds: 1001, 218, 18, 10
 pot-mouth-smile
-	bounds: 300, 77, 14, 10
-	rotate: 90
+	bounds: 314, 213, 14, 10
 pot-mouth-smile-big
-	bounds: 878, 352, 20, 9
+	bounds: 379, 255, 20, 9
+	rotate: 90
 rain-blue
-	bounds: 926, 360, 12, 18
-	rotate: 90
+	bounds: 433, 252, 12, 18
 rain-color
-	bounds: 264, 4, 9, 17
-	rotate: 90
+	bounds: 314, 225, 9, 17
 rain-green
-	bounds: 900, 349, 12, 18
-	rotate: 90
+	bounds: 365, 257, 12, 18
 rain-white
-	bounds: 727, 337, 12, 22
+	bounds: 434, 290, 12, 22
 rain-white-reflex
-	bounds: 2, 2, 5, 10
-	rotate: 90
+	bounds: 425, 302, 5, 10
 stem
-	bounds: 907, 392, 8, 105
-	rotate: 90
+	bounds: 393, 250, 8, 105
 stem-end
-	bounds: 300, 62, 13, 13
+	bounds: 314, 244, 13, 13

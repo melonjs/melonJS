@@ -6,10 +6,11 @@ import {
 } from "@esotericsoftware/spine-core";
 import { Color as MColor, Math as MMath, Polygon } from "melonjs";
 
-/**
- * Vertex size in floats: position(2) + color(4) + uv(2) = 8
- */
-const VERTEX_SIZE = 8;
+// World vertices are stored positions-only (stride 2). UVs come straight
+// from the spine sequence (`sequence.getUVs(index)`), passed to drawMesh
+// alongside the position buffer — no interleave step, no copy.
+// Per-vertex color isn't needed either: canvas tinting is applied per slot
+// through renderer.setTint() / setGlobalAlpha() before the mesh is drawn.
 
 /**
  * Spine blend mode enum to melonJS blend mode string mapping
@@ -21,8 +22,8 @@ const DEBUG_REGION_COLOR = "green";
 const DEBUG_MESH_COLOR = "yellow";
 const DEBUG_CLIP_COLOR = "blue";
 
-// shared vertex buffer, grown as needed
-let worldVertices = new Float32Array(VERTEX_SIZE * 1024);
+// shared vertex buffer (positions only, stride 2), grown as needed
+let worldVertices = new Float32Array(2 * 1024);
 
 /**
  * @classdesc
@@ -56,9 +57,8 @@ export default class SkeletonRenderer {
 	 */
 	premultipliedAlpha = false;
 
-	// reusable color instances to avoid allocations
+	// reusable color instance to avoid allocations
 	tintColor = new MColor();
-	tempColor = new MColor();
 
 	// clipping state
 	clipper = new SkeletonClipping();
@@ -76,42 +76,60 @@ export default class SkeletonRenderer {
 	 */
 	draw(renderer, skeleton) {
 		const clipper = this.clipper;
-		const drawOrder = skeleton.drawOrder;
+		const drawOrder = skeleton.drawOrder.appliedPose;
 		const skeletonColor = skeleton.color;
 		const clippingMask = this.clippingMask;
 		const debugRendering = this.debugRendering;
 
 		for (let i = 0, n = drawOrder.length; i < n; i++) {
-			const clippedVertexSize = clipper.isClipping() ? 2 : VERTEX_SIZE;
 			const slot = drawOrder[i];
 			const bone = slot.bone;
 			let image;
 			let region;
 			let triangles;
+			let meshUVs;
 
 			if (!bone.active) {
-				clipper.clipEndWithSlot(slot);
+				clipper.clipEnd(slot);
 				renderer.clearMask();
 				continue;
 			}
 
-			const attachment = slot.getAttachment();
+			const slotPose = slot.appliedPose;
+			const attachment = slotPose.attachment;
 
 			if (attachment instanceof RegionAttachment) {
-				region = attachment.region;
+				const sequence = attachment.sequence;
+				region = sequence.regions[sequence.resolveIndex(slotPose)];
 				image = region.texture.getImage();
 			} else if (
 				this.triangleRendering &&
 				attachment instanceof MeshAttachment
 			) {
-				this.computeMeshVertices(slot, attachment, clippedVertexSize);
+				const sequence = attachment.sequence;
+				const sequenceIndex = sequence.resolveIndex(slotPose);
+				if (worldVertices.length < attachment.worldVerticesLength) {
+					worldVertices = new Float32Array(attachment.worldVerticesLength);
+				}
+				// stride 2 — positions only; UVs come from sequence.getUVs()
+				attachment.computeWorldVertices(
+					skeleton,
+					slot,
+					0,
+					attachment.worldVerticesLength,
+					worldVertices,
+					0,
+					2,
+				);
+				meshUVs = sequence.getUVs(sequenceIndex);
 				triangles = attachment.triangles;
-				region = attachment.region;
+				region = sequence.regions[sequenceIndex];
 				image = region.texture.getImage();
 			} else if (attachment instanceof ClippingAttachment) {
 				const vertices = this.clippingVertices;
-				clipper.clipStart(slot, attachment);
+				clipper.clipStart(skeleton, slot, attachment);
 				attachment.computeWorldVertices(
+					skeleton,
 					slot,
 					0,
 					attachment.worldVerticesLength,
@@ -126,13 +144,13 @@ export default class SkeletonRenderer {
 				}
 				continue;
 			} else {
-				clipper.clipEndWithSlot(slot);
+				clipper.clipEnd(slot);
 				renderer.clearMask();
 				continue;
 			}
 
 			if (image) {
-				const slotColor = slot.color;
+				const slotColor = slotPose.color;
 				const regionColor = attachment.color;
 				const color = this.tintColor;
 
@@ -145,7 +163,11 @@ export default class SkeletonRenderer {
 					skeletonColor.a * slotColor.a * regionColor.a,
 				);
 
-				renderer.setGlobalAlpha(color.a);
+				// melonJS Color exposes alpha as `.alpha`, NOT `.a` — reading
+				// `color.a` is undefined and the canvas spec silently ignores
+				// an undefined globalAlpha assignment, so slot-alpha animation
+				// would never fade attachments under Canvas
+				renderer.setGlobalAlpha(color.alpha);
 				renderer.setTint(color);
 				renderer.setBlendMode(
 					BLEND_MODES[slot.data.blendMode],
@@ -153,13 +175,14 @@ export default class SkeletonRenderer {
 				);
 
 				if (triangles) {
-					this.drawMesh(renderer, image, worldVertices, triangles);
+					this.drawMesh(renderer, image, worldVertices, meshUVs, triangles);
 				} else {
 					this.drawRegion(
 						renderer,
 						image,
 						bone,
 						attachment,
+						slotPose,
 						region,
 						clipper.isClipping() ? clippingMask : null,
 						debugRendering,
@@ -168,7 +191,7 @@ export default class SkeletonRenderer {
 
 				renderer.restore();
 			}
-			clipper.clipEndWithSlot(slot);
+			clipper.clipEnd(slot);
 			renderer.clearMask();
 		}
 		clipper.clipEnd();
@@ -180,41 +203,54 @@ export default class SkeletonRenderer {
 	 * @param {HTMLImageElement} image
 	 * @param {Bone} bone
 	 * @param {RegionAttachment} attachment
+	 * @param {SlotPose} slotPose - the slot's applied pose (resolves sequence offsets)
 	 * @param {TextureRegion} region
 	 * @param {Polygon|null} mask - clipping mask if active
 	 * @param {boolean} debug - whether to draw debug outline
 	 * @ignore
 	 */
-	drawRegion(renderer, image, bone, attachment, region, mask, debug) {
+	drawRegion(renderer, image, bone, attachment, slotPose, region, mask, debug) {
 		const atlasScale = attachment.width / region.originalWidth;
+		const bonePose = bone.appliedPose;
+		const offsets = attachment.getOffsets(slotPose);
 		let w = region.width;
 		let h = region.height;
-		const hW = w / 2;
-		const hH = h / 2;
 
 		renderer.transform(
-			bone.a,
-			bone.c,
-			bone.b,
-			bone.d,
-			bone.worldX,
-			bone.worldY,
+			bonePose.a,
+			bonePose.c,
+			bonePose.b,
+			bonePose.d,
+			bonePose.worldX,
+			bonePose.worldY,
 		);
-		renderer.translate(attachment.offset[0], attachment.offset[1]);
+		renderer.translate(offsets[0], offsets[1]);
 		renderer.rotate(MMath.degToRad(attachment.rotation));
 		renderer.scale(
 			atlasScale * attachment.scaleX,
 			atlasScale * attachment.scaleY,
 		);
-		renderer.translate(hW, hH);
+		// Translate to the CENTER of the texture region (pre-rotation
+		// dimensions — for a 90°-rotated atlas region, the texels in the
+		// atlas are stored rotated, so the center is still at the
+		// pre-rotation midpoint here).
+		renderer.translate(w / 2, h / 2);
 		if (region.degrees === 90) {
+			// the atlas region is stored 90° rotated — un-rotate, and
+			// from now on `w`/`h` reflect the upright dest-quad dimensions
 			const t = w;
 			w = h;
 			h = t;
 			renderer.rotate(-MMath.ETA);
 		}
+		// Y-flip to undo Spine's Y-up source orientation, then translate
+		// to the TOP-LEFT of the upright dst quad — note `w`/`h` here are
+		// post-swap, so for 90°-rotated atlas regions this correctly
+		// uses the upright dest dimensions instead of the (incorrect)
+		// pre-rotation halves. Matches the official spine-canvas
+		// SkeletonRenderer.drawImages path.
 		renderer.scale(1, -1);
-		renderer.translate(-hW, -hH);
+		renderer.translate(-w / 2, -h / 2);
 
 		if (mask) {
 			renderer.setMask(mask);
@@ -241,35 +277,36 @@ export default class SkeletonRenderer {
 	 * Draw a mesh attachment as a series of textured triangles.
 	 * @param {CanvasRenderer} renderer
 	 * @param {HTMLImageElement} image
-	 * @param {Float32Array} vertices - world vertices
+	 * @param {Float32Array} vertices - world positions, stride 2 (x, y per vertex)
+	 * @param {NumberArrayLike} uvs - atlas UVs from `sequence.getUVs(index)`, stride 2
 	 * @param {number[]} triangles - triangle indices
 	 * @ignore
 	 */
-	drawMesh(renderer, image, vertices, triangles) {
+	drawMesh(renderer, image, vertices, uvs, triangles) {
 		// subtract 1 pixel to avoid edge bleeding (matches official spine-canvas)
 		const imgW = image.width - 1;
 		const imgH = image.height - 1;
 
 		for (let j = 0; j < triangles.length; j += 3) {
-			const t1 = triangles[j] * VERTEX_SIZE;
-			const t2 = triangles[j + 1] * VERTEX_SIZE;
-			const t3 = triangles[j + 2] * VERTEX_SIZE;
+			const t1 = triangles[j] * 2;
+			const t2 = triangles[j + 1] * 2;
+			const t3 = triangles[j + 2] * 2;
 
 			this.drawTriangle(
 				renderer,
 				image,
 				vertices[t1],
 				vertices[t1 + 1],
-				vertices[t1 + 6] * imgW,
-				vertices[t1 + 7] * imgH,
+				uvs[t1] * imgW,
+				uvs[t1 + 1] * imgH,
 				vertices[t2],
 				vertices[t2 + 1],
-				vertices[t2 + 6] * imgW,
-				vertices[t2 + 7] * imgH,
+				uvs[t2] * imgW,
+				uvs[t2 + 1] * imgH,
 				vertices[t3],
 				vertices[t3 + 1],
-				vertices[t3 + 6] * imgW,
-				vertices[t3 + 7] * imgH,
+				uvs[t3] * imgW,
+				uvs[t3 + 1] * imgH,
 			);
 		}
 	}
@@ -320,52 +357,6 @@ export default class SkeletonRenderer {
 		if (this.debugRendering) {
 			renderer.setColor(DEBUG_MESH_COLOR);
 			renderer.stroke();
-		}
-	}
-
-	/**
-	 * Compute world vertices for a mesh attachment with color and UV data.
-	 * @param {Slot} slot
-	 * @param {MeshAttachment} mesh
-	 * @param {number} vertexSize - floats per vertex
-	 * @ignore
-	 */
-	computeMeshVertices(slot, mesh, vertexSize) {
-		const skeletonColor = slot.bone.skeleton.color;
-		const slotColor = slot.color;
-		const regionColor = mesh.color;
-		const alpha = skeletonColor.a * slotColor.a * regionColor.a;
-
-		this.tempColor.setFloat(
-			skeletonColor.r * slotColor.r * regionColor.r,
-			skeletonColor.g * slotColor.g * regionColor.g,
-			skeletonColor.b * slotColor.b * regionColor.b,
-			alpha,
-		);
-
-		if (worldVertices.length < mesh.worldVerticesLength) {
-			worldVertices = new Float32Array(mesh.worldVerticesLength);
-		}
-		mesh.computeWorldVertices(
-			slot,
-			0,
-			mesh.worldVerticesLength,
-			worldVertices,
-			0,
-			vertexSize,
-		);
-
-		const uvs = mesh.uvs;
-		const color = this.tempColor.toArray();
-		const vertexCount = mesh.worldVerticesLength / 2;
-		for (let i = 0, u = 0, v = 2; i < vertexCount; i++) {
-			worldVertices[v++] = color[0];
-			worldVertices[v++] = color[1];
-			worldVertices[v++] = color[2];
-			worldVertices[v++] = color[3];
-			worldVertices[v++] = uvs[u++];
-			worldVertices[v++] = uvs[u++];
-			v += 2;
 		}
 	}
 }

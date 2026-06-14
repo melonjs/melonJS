@@ -4,61 +4,52 @@ tank-pma.png
 	pma: true
 	scale: 0.5
 antenna
-	bounds: 650, 857, 11, 152
-	rotate: 90
+	bounds: 941, 507, 11, 152
 cannon
-	bounds: 434, 376, 466, 29
-	rotate: 90
+	bounds: 2, 377, 466, 29
 cannon-connector
-	bounds: 349, 241, 56, 68
-	rotate: 90
+	bounds: 951, 511, 56, 68
 ground
-	bounds: 255, 330, 512, 177
-	rotate: 90
+	bounds: 2, 25, 512, 177
 guntower
-	bounds: 650, 870, 365, 145
-machinegun
-	bounds: 255, 299, 166, 29
-machinegun-mount
-	bounds: 2, 2, 36, 48
+	bounds: 649, 2, 365, 145
 	rotate: 90
+machinegun
+	bounds: 773, 630, 166, 29
+machinegun-mount
+	bounds: 647, 498, 36, 48
 rock
-	bounds: 465, 552, 290, 64
+	bounds: 707, 369, 290, 64
 	rotate: 90
 smoke-glow
-	bounds: 531, 563, 50, 50
+	bounds: 871, 508, 50, 50
 smoke-puff01-bg
-	bounds: 465, 458, 92, 62
-	rotate: 90
+	bounds: 773, 373, 92, 62
 smoke-puff01-fg
-	bounds: 115, 138, 88, 59
+	bounds: 867, 319, 88, 59
 smoke-puff02-fg
-	bounds: 255, 235, 92, 62
+	bounds: 868, 380, 92, 62
 smoke-puff03-fg
-	bounds: 531, 685, 92, 62
+	bounds: 868, 444, 92, 62
 smoke-puff04-fg
-	bounds: 465, 378, 78, 48
-	rotate: 90
+	bounds: 796, 269, 78, 48
 tank-bottom
-	bounds: 115, 199, 643, 138
-	rotate: 90
+	bounds: 2, 408, 643, 138
 tank-bottom-shadow
-	bounds: 2, 844, 646, 171
+	bounds: 2, 204, 646, 171
 tank-top
-	bounds: 2, 138, 704, 111
-	rotate: 90
+	bounds: 2, 548, 704, 111
 tread
-	bounds: 626, 794, 48, 15
-	rotate: 90
+	bounds: 647, 481, 48, 15
 tread-inside
-	bounds: 434, 360, 13, 14
+	bounds: 994, 565, 13, 14
 wheel-big
-	bounds: 2, 40, 96, 96
+	bounds: 773, 532, 96, 96
 wheel-big-overlay
-	bounds: 531, 749, 93, 93
+	bounds: 773, 437, 93, 93
 wheel-mid
-	bounds: 531, 615, 68, 68
+	bounds: 952, 581, 68, 68
 wheel-mid-overlay
-	bounds: 100, 68, 68, 68
+	bounds: 871, 560, 68, 68
 wheel-small
-	bounds: 205, 161, 36, 36
+	bounds: 986, 474, 36, 36

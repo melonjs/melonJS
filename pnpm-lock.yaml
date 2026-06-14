@@ -286,14 +286,14 @@ importers:
   packages/spine-plugin:
     dependencies:
       '@esotericsoftware/spine-canvas':
-        specifier: ^4.2.114
-        version: 4.2.114
+        specifier: ^4.3.7
+        version: 4.3.7
       '@esotericsoftware/spine-core':
-        specifier: ^4.2.114
-        version: 4.2.114
+        specifier: ^4.3.7
+        version: 4.3.7
       '@esotericsoftware/spine-webgl':
-        specifier: ^4.2.114
-        version: 4.2.114
+        specifier: ^4.3.7
+        version: 4.3.7
     devDependencies:
       concurrently:
         specifier: ^9.2.1
@@ -636,14 +636,14 @@ packages:
     resolution: {integrity: sha512-rZAP3aVgB9ds9KOeUSL+zZ21hPmo8dh6fnIFwRQj5EAZl9gzR7wxYbYXYysAM8CTqGmUGyp2S4kUdV17MnGuWQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@esotericsoftware/spine-canvas@4.2.114':
-    resolution: {integrity: sha512-S3dCXYfp5188n9JXLQQWBHfDxmBLWZlyEBZ2SXm3EIq6CSOzs8U+BT0iMCJOe1qRcNdysOxbCsOJsGOtIknjuw==}
+  '@esotericsoftware/spine-canvas@4.3.7':
+    resolution: {integrity: sha512-pH5wrfbF3YbwmDKUDNTfMQpc4YEY3DKw4ne0nXCd/sdiPQSVzK/tOS5t3hgkC6mBk7sEeutt/8kG1gAbytQTWw==}
 
-  '@esotericsoftware/spine-core@4.2.114':
-    resolution: {integrity: sha512-YB5DFjRXbvS6pusY1XNPFurgp8mGsS9ii7lqpIzi3LgNQt8H6+br8l/zqOzHjeY38aAXQfaDdvUNOES2KHrOPg==}
+  '@esotericsoftware/spine-core@4.3.7':
+    resolution: {integrity: sha512-adB/LcFivaAk3C03iBXXcXmpo7INZ6orWWhXnM5j0wOBHUhAGhDWJyBGuVcZzZXcvjJSKCh1SJ7BhmQH5AIDcw==}
 
-  '@esotericsoftware/spine-webgl@4.2.114':
-    resolution: {integrity: sha512-cD3twxmPNnuYCCk5vVFELOHdY4rkd8j7OtfYqB9pkEoi32V00fUh8qQFF5gC0lgefMTdid0dL8FPIkW/swmcLg==}
+  '@esotericsoftware/spine-webgl@4.3.7':
+    resolution: {integrity: sha512-zBPtuK/4qrPISQQGnlF5qb+TyuX4xaY7s2Rd2nnVhf/Ox36vnGTAxFrO6gYbHvvAkggQcyulLKxL83i7Wm3zMQ==}
 
   '@gerrit0/mini-shiki@3.23.0':
     resolution: {integrity: sha512-bEMORlG0cqdjVyCEuU0cDQbORWX+kYCeo0kV1lbxF5bt4r7SID2l9bqsxJEM0zndaxpOUT7riCyIVEuqq/Ynxg==}
@@ -671,8 +671,8 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
-  '@napi-rs/wasm-runtime@1.1.4':
-    resolution: {integrity: sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==}
+  '@napi-rs/wasm-runtime@1.1.5':
+    resolution: {integrity: sha512-AWPoBRJ9tsnVhor4sjO7rkni+7p+2IAEFj6cx06UgP10jkQHqay/36uRV/bFkgrh18D9vb4cr8Q0Pthskgzy+Q==}
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
@@ -1801,8 +1801,8 @@ packages:
   poly-decomp@0.3.0:
     resolution: {integrity: sha512-hWeBxGzPYiybmI4548Fca7Up/0k1qS5+79cVHI9+H33dKya5YNb9hxl0ZnDaDgvrZSuYFBhkCK/HOnqN7gefkQ==}
 
-  postcss@8.5.14:
-    resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
+  postcss@8.5.15:
+    resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -2011,6 +2011,10 @@ packages:
 
   tinyglobby@0.2.16:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
+    engines: {node: '>=12.0.0'}
+
+  tinyglobby@0.2.17:
+    resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
 
   tinyrainbow@3.1.0:
@@ -2451,15 +2455,15 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@esotericsoftware/spine-canvas@4.2.114':
+  '@esotericsoftware/spine-canvas@4.3.7':
     dependencies:
-      '@esotericsoftware/spine-core': 4.2.114
+      '@esotericsoftware/spine-core': 4.3.7
 
-  '@esotericsoftware/spine-core@4.2.114': {}
+  '@esotericsoftware/spine-core@4.3.7': {}
 
-  '@esotericsoftware/spine-webgl@4.2.114':
+  '@esotericsoftware/spine-webgl@4.3.7':
     dependencies:
-      '@esotericsoftware/spine-core': 4.2.114
+      '@esotericsoftware/spine-core': 4.3.7
 
   '@gerrit0/mini-shiki@3.23.0':
     dependencies:
@@ -2487,7 +2491,7 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
-  '@napi-rs/wasm-runtime@1.1.4(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
+  '@napi-rs/wasm-runtime@1.1.5(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
       '@emnapi/core': 1.9.2
       '@emnapi/runtime': 1.9.2
@@ -2550,7 +2554,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.9.2
       '@emnapi/runtime': 1.9.2
-      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+      '@napi-rs/wasm-runtime': 1.1.5(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
     optional: true
 
   '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.15':
@@ -3532,7 +3536,7 @@ snapshots:
 
   poly-decomp@0.3.0: {}
 
-  postcss@8.5.14:
+  postcss@8.5.15:
     dependencies:
       nanoid: 3.3.12
       picocolors: 1.1.1
@@ -3740,6 +3744,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
 
+  tinyglobby@0.2.17:
+    dependencies:
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
+
   tinyrainbow@3.1.0: {}
 
   to-regex-range@5.0.1:
@@ -3836,9 +3845,9 @@ snapshots:
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.14
+      postcss: 8.5.15
       rolldown: 1.0.0-rc.15
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 25.6.2
       esbuild: 0.28.0

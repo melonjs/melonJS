@@ -1,74 +1,62 @@
 owl-pma.png
-	size: 1024, 512
+	size: 1024, 1024
 	filter: Linear, Linear
 	pma: true
 	scale: 0.5
 L_eye-closed
-	bounds: 512, 5, 90, 86
-	rotate: 90
+	bounds: 721, 342, 90, 86
 L_eye-iris
-	bounds: 600, 10, 90, 86
-	rotate: 90
+	bounds: 629, 415, 90, 86
 L_eye-light
-	bounds: 688, 4, 21, 20
-	rotate: 90
+	bounds: 254, 599, 21, 20
 L_eye-pupil
-	bounds: 856, 13, 63, 60
-	rotate: 90
+	bounds: 119, 351, 63, 60
 L_foot
-	bounds: 834, 78, 64, 48
+	bounds: 63, 316, 64, 48
 	rotate: 90
 L_wing
-	bounds: 349, 4, 81, 110
-	rotate: 90
+	bounds: 741, 430, 81, 110
 R_eye-closed
-	bounds: 637, 119, 90, 86
-	rotate: 90
+	bounds: 916, 421, 90, 86
 R_eye-iris
-	bounds: 688, 27, 90, 86
-	rotate: 90
+	bounds: 824, 421, 90, 86
 R_eye-light
-	bounds: 710, 4, 21, 20
-	rotate: 90
+	bounds: 41, 599, 21, 20
 R_eye-pupil
-	bounds: 884, 80, 63, 60
-	rotate: 90
+	bounds: 629, 353, 63, 60
 R_foot
-	bounds: 845, 145, 64, 48
-	rotate: 90
+	bounds: 184, 332, 64, 48
 R_wing
-	bounds: 421, 93, 81, 110
+	bounds: 875, 509, 81, 110
 beak
-	bounds: 776, 2, 39, 41
+	bounds: 2, 578, 39, 41
 beak-down
-	bounds: 817, 3, 37, 40
+	bounds: 280, 579, 37, 40
 body
-	bounds: 2, 7, 248, 196
+	bounds: 302, 423, 248, 196
 feather-1
-	bounds: 918, 18, 59, 60
+	bounds: 2, 345, 59, 60
 feather-2
-	bounds: 781, 144, 62, 65
+	bounds: 904, 354, 62, 65
 feather-3
-	bounds: 776, 45, 56, 76
+	bounds: 421, 345, 56, 76
 head-base
-	bounds: 621, 211, 299, 237
-	rotate: 90
+	bounds: 2, 382, 299, 237
 leaf-1
-	bounds: 559, 102, 76, 101
+	bounds: 276, 332, 76, 101
 leaf-2
-	bounds: 252, 4, 65, 95
-	rotate: 90
+	bounds: 354, 326, 65, 95
 leaf-3
-	bounds: 252, 71, 132, 77
-	rotate: 90
+	bounds: 741, 542, 132, 77
 leaf-4
-	bounds: 461, 2, 89, 49
-	rotate: 90
+	bounds: 813, 370, 89, 49
 leaf-5
-	bounds: 504, 97, 53, 106
+	bounds: 958, 513, 53, 106
 leaf-6
-	bounds: 331, 87, 88, 116
+	bounds: 651, 503, 88, 116
 leaf-7
-	bounds: 725, 123, 54, 86
+	bounds: 573, 357, 54, 86
 wood
-	bounds: 2, 205, 617, 305
+	bounds: 354, 2, 617, 295
+	offsets: 0, 0, 617, 305
+	rotate: 90

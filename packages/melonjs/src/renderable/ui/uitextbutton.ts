@@ -1,3 +1,4 @@
+import type Camera2d from "../../camera/camera2d.ts";
 import { RoundRect } from "../../geometries/roundrect.ts";
 import type { Bounds } from "../../physics/bounds.ts";
 import type Renderer from "../../video/renderer.js";
@@ -145,7 +146,7 @@ export default class UITextButton extends UIBaseElement {
 		this.addChild(this.bitmapText);
 	}
 
-	override draw(renderer: Renderer): void {
+	override draw(renderer: Renderer, viewport?: Camera2d): void {
 		const r = renderer as any;
 		if (this.hover) {
 			r.setColor(this.hoverOnColor);
@@ -155,6 +156,6 @@ export default class UITextButton extends UIBaseElement {
 		r.fill(this.border);
 		r.setColor(this.borderStrokeColor);
 		r.stroke(this.border);
-		super.draw(renderer as any);
+		super.draw(renderer as any, viewport as any);
 	}
 }

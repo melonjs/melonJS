@@ -16,6 +16,14 @@ const FLIP_H_BIT = 1 << 0;
 const FLIP_V_BIT = 1 << 1;
 const FLIP_AD_BIT = 1 << 2;
 
+// session-wide latch for the "gpuTilemap requested but no WebGL2" warning.
+// Emitted at most once across all TMXLayer instances so a multi-layer map
+// doesn't spam the console; deferred to the first layer that actually hits
+// the fallback so apps without any tilemap stay quiet (the prior heads-up
+// at Application init time fired regardless of whether a TMX layer was
+// ever loaded).
+let _warnedNoWebGL2Once = false;
+
 /**
  * extract a 3-bit flip mask from a raw 32-bit GID (Tiled's flip bits live in
  * the upper 3 bits)
@@ -393,13 +401,26 @@ export default class TMXLayer extends Renderable {
 			this.renderMode = "shader";
 			return;
 		}
-		// only emit an info warning when the user enabled gpuTilemap and the
-		// fallback is due to layer-specific limitations (not a missing
-		// WebGL2 context, which is a renderer-wide condition)
-		if (gpuAllowed && elig.reason !== "no-webgl2-renderer") {
-			console.warn(
-				`melonJS: layer "${this.name}" using legacy tile renderer (${elig.reason})`,
-			);
+		// only emit an info warning when the user enabled gpuTilemap and
+		// the fallback is meaningful. Layer-specific limitations (isometric
+		// orientation, collection-of-image tileset, etc.) get a per-layer
+		// warning because they're actionable per layer. The renderer-wide
+		// "no WebGL2 context" case gets a single session-scoped warning
+		// — emitted from the first TMX layer that hits it, so apps with
+		// no tilemap loaded stay quiet.
+		if (gpuAllowed) {
+			if (elig.reason === "no-webgl2-renderer") {
+				if (!_warnedNoWebGL2Once) {
+					_warnedNoWebGL2Once = true;
+					console.warn(
+						"melonJS: gpuTilemap is enabled but the active renderer is not WebGL 2 — falling back to the legacy tile renderer for every tile layer",
+					);
+				}
+			} else {
+				console.warn(
+					`melonJS: layer "${this.name}" using legacy tile renderer (${elig.reason})`,
+				);
+			}
 		}
 		if (preRenderHint && !this.isAnimated) {
 			this.renderMode = "prerender";

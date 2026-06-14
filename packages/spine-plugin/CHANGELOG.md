@@ -1,5 +1,40 @@
 # Changelog
 
+## 3.0.0 - _2026-06-14_
+
+### **BREAKING CHANGES**
+
+- **Spine 4.3 editor required** — bundled Spine runtimes bumped from `^4.2.114` to `^4.3.7`. The 4.2 and 4.3 skeleton data formats are incompatible both ways: existing `.json`/`.skel` exports must be re-exported from a Spine 4.3 editor, and 4.3 exports will not load on plugin 2.x
+- the plugin now sets `Skeleton.yDown = true` (the official 4.3 Y-down switch, same approach as Spine's own pixi/phaser/canvaskit integrations). Code that reached into `spineObject.skeleton` and compensated for the old manual Y-flip (root bone `scaleY = -1`, inverted physics gravity) must drop those workarounds — the runtime now handles Y-down natively
+- Spine 4.3 moved bone/slot state into poses: code accessing `bone.x/.scaleX/.worldX` etc. through `spineObject.skeleton` must use `bone.pose.*` (unconstrained, for writing) or `bone.appliedPose.*` (constrained, for reading world transforms); `slot.color`/`slot.getAttachment()` are now `slot.appliedPose.color`/`slot.appliedPose.attachment`
+- other 4.3 core renames that surface through `spineObject.skeleton`: `setToSetupPose()` → `setupPose()`, `physicsConstraints` → `physics`, `MixBlend`/`MixDirection` removed (use `TrackEntry.additive`), `MeshAttachment.getParentMesh()` → `getSourceMesh()`. The plugin's own `Spine.setToSetupPose()` wrapper keeps its name
+
+### Added
+
+- Spine 4.3 feature support inherited with the runtime bump: slider constraints, sequence timelines, non-linear animation mixing (`TrackEntry.mixInterpolation`), convex/inverse clipping, physics force direction vectors (`skeleton.windX/Y`, `gravityX/Y`)
+- **WebGL context-loss recovery** — the plugin now survives a `webglcontextlost`/`webglcontextrestored` cycle (melonJS ≥ 19.7 recovery machinery): `SpineBatcher` builds its GPU resources in `init()` so the renderer's restore path can re-create them, and all spine GL resources (atlas textures, debug pipeline) are funneled through a single shared canvas-backed `ManagedWebGLRenderingContext` so spine's own restorables actually fire (a managed context built from a raw GL context has no element to listen on and silently never restores)
+
+### Changed
+
+- minimum melonJS version is now **19.7.1** (was 18.3.0) — required for the WebGL context-loss restore + blend-cache invalidation fix the plugin's recovery path relies on
+- skeleton positioning now goes through `skeleton.x/y` instead of writing to the root bone pose — root-bone-relative user code (e.g. custom bone offsets) is unaffected
+- `flipX()`/`flipY()` JSDoc corrected: flipping is around the root bone, not the visual center (behavior unchanged, was always root-relative)
+- mesh auto-detection for the canvas renderer now uses the public `Skin.getAttachments()` API instead of walking spine's internal `skin.attachments` array
+
+### Performance
+
+- Canvas `SkeletonRenderer` mesh vertex buffer slimmed from 8 floats per vertex down to 2 (positions only) — first removed the 4 dead per-vertex color floats (canvas tinting is applied per slot via `setTint()`/`setGlobalAlpha()`), then dropped the UV interleave entirely (UVs now read straight from `sequence.getUVs(index)` in `drawMesh`). Halves the buffer twice over, eliminates a per-vertex copy pass, and removes the dedicated `computeMeshVertices` method. Verified pixel-identical across all 15 example skeletons (cold-start harness drift falls in the same noise floor with the change applied or not)
+
+### Fixed
+
+- Canvas `SkeletonRenderer` no longer corrupts mesh vertex data while a `ClippingAttachment` is active — the stride-2 "clipped vertex size" was inherited from spine-webgl's `clipTriangles` repacking, which the canvas path never performs: positions were written at stride 2 then read at the full vertex stride, scrambling any mesh drawn inside an active clip (latent since the 4.2 plugin; canvas meshes are clipped per-triangle, so no example skeleton ever exposed it)
+- Canvas `SkeletonRenderer` now uses `color.alpha` (the melonJS `Color` accessor) instead of `color.a`, which was always `undefined`. Canvas's `globalAlpha = undefined` is silently ignored, so slot-alpha animation never faded attachments — the canvas renderer behaved as if every slot were fully opaque. Visible on `powerup` (the trailing stars stayed at full opacity instead of fading) and any other skeleton with slot-alpha keyframes
+- Canvas `SkeletonRenderer` correctly handles atlas regions packed at 90° rotation (`region.degrees === 90`) — the `translate(-w/2, -h/2)` after the dimension swap was using the *pre-swap* half-dimensions, so any attachment whose texture region was rotated in the atlas drew with its quad offset by `±(w−h)/2`. Visible as the tank turret floating detached from the chassis and the raptor rider's visor tilted off his head on canvas (WebGL was unaffected). Now matches the official `spine-canvas` SkeletonRenderer math by re-deriving the halves from post-swap `w`/`h`
+
+### Removed
+
+- all manual Y-down plumbing made obsolete by `Skeleton.yDown`: the root-bone `scaleY` inversion in `setToSetupPose()`, the per-constraint physics gravity flip in `setSkeleton()`, and the `+90°` Canvas rotation offset in `rotate()`
+
 ## 2.2.1 - 2026-05-11
 
 ### Changed

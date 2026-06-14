@@ -1,5 +1,5 @@
 /**
- * melonJS — Spine 4.2 runtime animation example.
+ * melonJS — Spine 4.3 runtime animation example.
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
@@ -48,9 +48,6 @@ export const resources = [
 	// raptor
 	{ name: "raptor-pma.atlas", type: "spine", src: `${base}raptor-pma.atlas` },
 	{ name: "raptor-pro.json", type: "spine", src: `${base}raptor-pro.json` },
-	// sack
-	{ name: "sack-pma.atlas", type: "spine", src: `${base}sack-pma.atlas` },
-	{ name: "sack-pro.json", type: "spine", src: `${base}sack-pro.json` },
 	// speedy
 	{ name: "speedy-pma.atlas", type: "spine", src: `${base}speedy-pma.atlas` },
 	{ name: "speedy-ess.json", type: "spine", src: `${base}speedy-ess.json` },
@@ -190,15 +187,6 @@ export const characters = [
 		x: 550,
 		y: 1050,
 		scale: 0.7,
-	},
-	{
-		name: "sack",
-		label: "Sack",
-		atlas: "sack-pma.atlas",
-		json: "sack-pro.json",
-		animation: "walk",
-		x: 750,
-		y: 950,
 	},
 	{
 		name: "speedy",

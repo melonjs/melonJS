@@ -1192,7 +1192,9 @@ export default class Container extends Renderable {
 			renderer.clearColor(this.backgroundColor);
 		}
 
-		const isNonDefaultCamera = !viewport.isDefault;
+		// viewport is documented optional — legacy subclass overrides call
+		// `super.draw(renderer)` without one; treat that as the default camera
+		const isNonDefaultCamera = viewport ? !viewport.isDefault : false;
 
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
@@ -1215,7 +1217,9 @@ export default class Container extends Renderable {
 					// way to render floating Text / HUD / overlays without
 					// the perspective projection NaN-ing them via
 					// `w = 0` perspective divide on world-z=0 points.
-					renderer.setProjection(viewport.screenProjection);
+					if (viewport) {
+						renderer.setProjection(viewport.screenProjection);
+					}
 				}
 
 				obj.preDraw(renderer);
@@ -1227,11 +1231,13 @@ export default class Container extends Renderable {
 					// this draw pass — non-default cameras use a separate
 					// `worldProjection`; the default camera just uses
 					// `projectionMatrix` directly.
-					renderer.setProjection(
-						isNonDefaultCamera
-							? viewport.worldProjection
-							: viewport.projectionMatrix,
-					);
+					if (viewport) {
+						renderer.setProjection(
+							isNonDefaultCamera
+								? viewport.worldProjection
+								: viewport.projectionMatrix,
+						);
+					}
 					renderer.restore();
 				}
 			}

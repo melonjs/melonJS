@@ -564,26 +564,13 @@ export default class Application {
 			}
 		}
 
-		// The GPU tilemap path needs a WebGL 2 renderer. Warn once at app
-		// startup when the user asked for it but the active renderer
-		// can't honor it (Canvas mode, WebGL 1 driver, `preferWebGL1`
-		// override, etc.) — individual layers will silently fall through
-		// to the legacy renderer, but the user gets one heads-up that
-		// the feature they enabled isn't actually in effect.
-		if (
-			this.settings.gpuTilemap &&
-			// `gpuTilemap` is meaningful only under WebGL2 — Canvas has no
-			// shader path, and WebGL1 lacks the required extensions. The
-			// `instanceof WebGLRenderer` check narrows `this.renderer` so
-			// `WebGLVersion` (defined as a getter on `WebGLRenderer`) is
-			// well-typed — no `as unknown as ...` cast needed.
-			(!(this.renderer instanceof WebGLRenderer) ||
-				this.renderer.WebGLVersion !== 2)
-		) {
-			console.warn(
-				"melonJS: gpuTilemap is enabled but the active renderer is not WebGL 2 — falling back to the legacy tile renderer for every tile layer",
-			);
-		}
+		// The GPU tilemap path needs a WebGL 2 renderer. The previous
+		// "gpuTilemap is enabled but the active renderer is not WebGL 2"
+		// app-init warning was emitted regardless of whether a tilemap
+		// was ever loaded, so apps with no TMX layers (e.g. spine demos
+		// under Canvas) got a spurious noise line. TMXLayer now emits a
+		// single deferred warning the first time a layer hits the
+		// no-WebGL2 fallback, so the heads-up only fires when relevant.
 
 		// app starting time
 		this.lastUpdate = globalThis.performance.now();

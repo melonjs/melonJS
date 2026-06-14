@@ -15,9 +15,15 @@ import Spine from "./Spine.js";
  * @augments plugin.BasePlugin
  */
 export class SpinePlugin extends plugin.BasePlugin {
-	constructor() {
+	/**
+	 * @param {Application} [app] - the application instance this plugin
+	 * belongs to (defaults to the active game instance). Pass it through
+	 * `plugin.register(SpinePlugin, "SpinePlugin", app)` when running
+	 * multiple applications.
+	 */
+	constructor(app) {
 		// call the super constructor
-		super();
+		super(app);
 
 		// minimum melonJS version expected to run this plugin
 		this.version = peerDependencies["melonjs"];

@@ -3,65 +3,56 @@ alien.png
 	filter: Linear, Linear
 	scale: 0.5
 back-foot
-	bounds: 1013, 577, 8, 6
+	bounds: 1003, 482, 8, 6
 back-shin
-	bounds: 712, 387, 21, 24
+	bounds: 1000, 447, 21, 24
 back-thigh
-	bounds: 971, 135, 24, 24
+	bounds: 998, 418, 24, 24
 backarmor
-	bounds: 159, 61, 81, 91
-	rotate: 90
+	bounds: 2, 32, 81, 91
 blown-up-neck
-	bounds: 252, 90, 77, 52
+	bounds: 458, 60, 77, 52
 body
-	bounds: 516, 2, 98, 118
-	rotate: 90
+	bounds: 800, 20, 98, 118
 burst01
-	bounds: 2, 48, 143, 155
-	rotate: 90
+	bounds: 160, 17, 143, 155
 burst02
-	bounds: 207, 144, 156, 181
+	bounds: 2, 125, 156, 181
 burst03-bg
-	bounds: 735, 356, 276, 227
+	bounds: 371, 114, 276, 227
 burst03-fg
-	bounds: 371, 190, 339, 221
+	bounds: 371, 343, 339, 221
 eye
-	bounds: 252, 13, 75, 75
+	bounds: 305, 37, 75, 75
 eye-highlight
-	bounds: 1000, 166, 22, 22
+	bounds: 998, 394, 22, 22
 eye-pupil
-	bounds: 712, 367, 18, 18
+	bounds: 1003, 498, 18, 18
 eye-stalk
-	bounds: 640, 114, 74, 66
-	rotate: 90
+	bounds: 382, 46, 74, 66
 front-foot
-	bounds: 1013, 565, 10, 6
-	rotate: 90
+	bounds: 1003, 490, 10, 6
 front-lower-arm
-	bounds: 640, 57, 55, 63
-	rotate: 90
+	bounds: 85, 60, 55, 63
 front-shin
-	bounds: 971, 190, 25, 28
-	rotate: 90
+	bounds: 971, 414, 25, 28
 front-thigh
-	bounds: 971, 161, 27, 27
+	bounds: 971, 444, 27, 27
 front-upper-arm
-	bounds: 971, 217, 57, 28
-	rotate: 90
+	bounds: 649, 313, 57, 28
 head
-	bounds: 365, 52, 149, 136
+	bounds: 649, 2, 149, 136
 lower-back-arm
-	bounds: 971, 308, 51, 46
+	bounds: 971, 518, 51, 46
 metaljaw
-	bounds: 516, 102, 122, 86
+	bounds: 900, 52, 122, 86
 splat01
-	bounds: 712, 102, 257, 252
+	bounds: 712, 312, 257, 252
 splat01-fg
-	bounds: 2, 193, 203, 132
+	bounds: 160, 174, 203, 132
 splat02
-	bounds: 2, 327, 367, 256
+	bounds: 2, 308, 367, 256
 splat03
-	bounds: 371, 413, 362, 170
+	bounds: 649, 140, 362, 170
 upper-back-arm
-	bounds: 971, 276, 30, 43
-	rotate: 90
+	bounds: 971, 473, 30, 43
