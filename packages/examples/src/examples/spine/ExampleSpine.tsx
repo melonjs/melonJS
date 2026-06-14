@@ -4,7 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import Spine, { SpinePlugin } from "@melonjs/spine-plugin";
+import Spine, { Slider, SpinePlugin } from "@melonjs/spine-plugin";
 import {
 	Application,
 	event,
@@ -53,8 +53,6 @@ const loadCharacter = (char: (typeof characters)[number]) => {
 	// add to world
 	app.world.addChild(spineObj);
 	currentSpine = spineObj;
-	// biome-ignore lint/suspicious/noExplicitAny: TEMP debug hook
-	(window as any).__spine = spineObj;
 };
 
 const createGame = () => {
@@ -76,8 +74,9 @@ const createGame = () => {
 	});
 
 	// register plugins against this application instance
+	// (debug panel is hidden by default — press "s" to toggle, or append
+	// "#debug" to the URL)
 	plugin.register(DebugPanelPlugin, "debugPanel");
-	(plugin.get(DebugPanelPlugin) as DebugPanelPlugin)?.show();
 	plugin.register(SpinePlugin, "SpinePlugin", app);
 
 	// set cross-origin
@@ -140,6 +139,68 @@ const CharacterSelector = () => {
 					</option>
 				))}
 			</select>
+			{selected === "diamond" && <SliderControl />}
+		</div>
+	);
+};
+
+// Interactive showcase for the Spine 4.3 `Slider` constraint API.
+//
+// The diamond's "rotation" Slider is auto-driven by its control bone,
+// which the playing animation rotates — so the diamond spins on its
+// own. We leave the auto-driving alone and let the HTML range input
+// scrub `slider.pose.mix` from 0 → 1, which scales how much of the
+// pre-baked rotation pose actually applies. At mix=0 the rotation pose
+// has zero influence (diamond freezes in setup pose); at mix=1 it
+// applies fully (full spin); in between you can see the rotation
+// amplitude dialled down live while the slider itself keeps ticking
+// (see the read-out below).
+const SliderControl = () => {
+	const [mix, setMix] = useState(1);
+	const [sliderTime, setSliderTime] = useState(0);
+
+	useEffect(() => {
+		if (!currentSpine) return;
+		const slider = currentSpine.findConstraint("rotation");
+		if (!(slider instanceof Slider)) return;
+		slider.pose.mix = mix;
+	}, [mix]);
+
+	// poll the Slider's auto-driven time so the read-out updates while
+	// the diamond spins (we never write to time — bone drives it)
+	useEffect(() => {
+		let raf = 0;
+		const tick = () => {
+			if (currentSpine) {
+				const slider = currentSpine.findConstraint("rotation");
+				if (slider instanceof Slider) setSliderTime(slider.pose.time);
+			}
+			raf = requestAnimationFrame(tick);
+		};
+		raf = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(raf);
+	}, []);
+
+	return (
+		<div style={{ marginTop: 12, color: "#e0e0e0", fontSize: 12 }}>
+			<div style={{ marginBottom: 4 }}>
+				<code>Slider</code> API · rotation intensity
+			</div>
+			<input
+				type="range"
+				min={0}
+				max={1}
+				step={0.01}
+				value={mix}
+				onChange={(e) => setMix(+e.target.value)}
+				style={{ width: 200 }}
+			/>
+			<div style={{ marginTop: 4, fontSize: 10, color: "#888" }}>
+				findConstraint("rotation").pose.mix = {mix.toFixed(2)}
+				<br />
+				findConstraint("rotation").pose.time = {sliderTime.toFixed(2)}s
+				<span style={{ color: "#666" }}> · bone-driven (auto)</span>
+			</div>
 		</div>
 	);
 };

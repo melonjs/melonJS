@@ -1,0 +1,79 @@
+diamond-pma.png
+	size: 1024, 512
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+lower-side
+	bounds: 585, 78, 77, 78
+	offsets: 0, 0, 78, 79
+lower-side-0
+	bounds: 904, 135, 77, 78
+	offsets: 0, 0, 78, 79
+lower-side-6
+	bounds: 904, 135, 77, 78
+	offsets: 0, 0, 78, 79
+lower-side-1
+	bounds: 872, 16, 77, 78
+	offsets: 0, 0, 78, 79
+lower-side-2
+	bounds: 851, 55, 77, 78
+	offsets: 0, 0, 78, 79
+	rotate: 180
+lower-side-3
+	bounds: 810, 55, 77, 78
+	offsets: 0, 0, 78, 79
+lower-side-4
+	bounds: 731, 55, 77, 78
+	offsets: 0, 0, 78, 79
+lower-side-5
+	bounds: 653, 55, 77, 78
+	offsets: 0, 0, 78, 79
+top
+	bounds: 2, 135, 154, 133
+	offsets: 0, 0, 154, 134
+top-0
+	bounds: 90, 2, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 270
+top-6
+	bounds: 90, 2, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 270
+top-1
+	bounds: 781, 135, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 180
+top-2
+	bounds: 625, 135, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 180
+top-3
+	bounds: 469, 135, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 180
+top-4
+	bounds: 313, 135, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 180
+top-5
+	bounds: 157, 135, 154, 133
+	offsets: 0, 0, 154, 134
+	rotate: 180
+upper-side
+	bounds: 2, 78, 78, 55
+upper-side-0
+	bounds: 505, 78, 78, 55
+upper-side-6
+	bounds: 505, 78, 78, 55
+upper-side-1
+	bounds: 426, 21, 78, 55
+upper-side-2
+	bounds: 426, 78, 78, 55
+upper-side-3
+	bounds: 346, 22, 78, 55
+upper-side-4
+	bounds: 346, 78, 78, 55
+upper-side-5
+	bounds: 2, 21, 78, 55
+upper-side-gradient
+	bounds: 225, 33, 119, 84

@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.0 - _2026-06-14_
+
+### Added
+
+- `Spine.findConstraint(name)` — convenience wrapper around the unified 4.3 constraints list; matches the `findBone()`/`findSlot()` shape and resolves any constraint type (IK, transform, path, physics, Slider) by name. Return type is typed as a union of the five concrete constraint classes (`SpineConstraint` typedef) for `instanceof` narrowing without a cast
+- `Spine.getConstraintNames()` — list all constraint names defined on the skeleton (mirrors `getAnimationNames()`/`getSkinNames()`)
+- spine-core constraint classes re-exported from `@melonjs/spine-plugin` so `instanceof` narrowing of `findConstraint()` results doesn't require a second runtime import (the plugin already owns the spine-core re-export, so identity matches): the new 4.3 Slider classes (`Slider`, `SliderData`, `SliderTimeline`, `SliderMixTimeline`) plus the four pre-existing constraint classes (`IkConstraint`, `TransformConstraint`, `PathConstraint`, `PhysicsConstraint`)
+
+### Fixed
+
+- `setSkeleton()` actually loads binary `.skel` skeletons — was hardcoded to `SkeletonJson` for every input, so passing a `.skel` file (loaded as a `Uint8Array` by the asset manager) threw inside the JSON parser. Now dispatches to `SkeletonBinary` for `.skel` filenames and `SkeletonJson` otherwise. The README and JSDoc have claimed binary support since the original 1.x release; this is the first version where it works. The `spineboy` example in the live preview now loads from `spineboy-pro.skel` to give the binary path continuous coverage
+
+### Chore
+
+- dev deps: `tsx` ^4.21.0 → ^4.22.4, `typescript` ^6.0.2 → ^6.0.3 (no consumer impact — devDependencies aren't installed by npm consumers of the plugin)
+
 ## 3.0.0 - _2026-06-14_
 
 ### **BREAKING CHANGES**

@@ -146,7 +146,7 @@ importers:
         version: 19.2.3(@types/react@19.2.14)
       '@vitejs/plugin-react':
         specifier: ^6.0.1
-        version: 6.0.1(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4))
+        version: 6.0.1(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.22.4)(yaml@2.8.4))
       ace-builds:
         specifier: ^1.43.6
         version: 1.43.6
@@ -170,7 +170,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: 8.0.8
-        version: 8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4)
+        version: 8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.22.4)(yaml@2.8.4)
 
   packages/matter-adapter:
     dependencies:
@@ -308,10 +308,10 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
+        specifier: ^4.22.4
+        version: 4.22.4
       typescript:
-        specifier: ^6.0.2
+        specifier: ^6.0.3
         version: 6.0.3
 
   packages/tiled-inflate-plugin:
@@ -2051,6 +2051,11 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
+  tsx@4.22.4:
+    resolution: {integrity: sha512-X8EX+XV4QR5xCsrgxaED954zTDfY8KqlDtskKEL0cHhyS/P8b4IFOvGDQpsC9Q1XnLq915wEfwwY/zzskCtmhg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   turbo@2.9.12:
     resolution: {integrity: sha512-lCPgus1NuTiBdaITWqzSH/Ff6HVL8HHGBtOXHg1dHRfcshN79XkygSdh0M6g8b0td91ILLG5MTkLOkp5UvyPJw==}
     hasBin: true
@@ -2742,10 +2747,10 @@ snapshots:
       '@typescript-eslint/types': 8.59.2
       eslint-visitor-keys: 5.0.1
 
-  '@vitejs/plugin-react@6.0.1(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4))':
+  '@vitejs/plugin-react@6.0.1(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.22.4)(yaml@2.8.4))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.7
-      vite: 8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4)
+      vite: 8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.22.4)(yaml@2.8.4)
 
   '@vitest/browser-playwright@4.1.5(playwright@1.59.1)(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4))(vitest@4.1.5)':
     dependencies:
@@ -3777,6 +3782,12 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
+  tsx@4.22.4:
+    dependencies:
+      esbuild: 0.28.0
+    optionalDependencies:
+      fsevents: 2.3.3
+
   turbo@2.9.12:
     optionalDependencies:
       '@turbo/darwin-64': 2.9.12
@@ -3853,6 +3864,20 @@ snapshots:
       esbuild: 0.28.0
       fsevents: 2.3.3
       tsx: 4.21.0
+      yaml: 2.8.4
+
+  vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.22.4)(yaml@2.8.4):
+    dependencies:
+      lightningcss: 1.32.0
+      picomatch: 4.0.4
+      postcss: 8.5.15
+      rolldown: 1.0.0-rc.15
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 25.6.2
+      esbuild: 0.28.0
+      fsevents: 2.3.3
+      tsx: 4.22.4
       yaml: 2.8.4
 
   vitest@4.1.5(@types/node@25.6.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.8(@types/node@25.6.2)(esbuild@0.28.0)(tsx@4.21.0)(yaml@2.8.4)):

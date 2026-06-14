@@ -20,7 +20,8 @@ A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.x runtime integration
 - **Clipping attachments** via melonJS masking (canvas) and Spine's SkeletonClipping (WebGL)
 - **Skin support** including mix-and-match skin combining via `setCombinedSkin()`
 - **Animation state events** (start, end, complete, event, interrupt, dispose)
-- **Skeleton introspection** — `findBone()`, `findSlot()`, `getAnimationNames()`, `getSkinNames()`
+- **Skeleton introspection** — `findBone()`, `findSlot()`, `findConstraint()`, `getAnimationNames()`, `getSkinNames()`
+- **Spine 4.3 Slider constraints** — full runtime support; all constraint classes (`Slider`/`SliderData`/`SliderTimeline`/`SliderMixTimeline`, plus `IkConstraint`, `TransformConstraint`, `PathConstraint`, `PhysicsConstraint`) re-exported for one-import `instanceof` narrowing of `findConstraint()` results
 - **Animation queuing** — `setAnimation()`, `addAnimation()`, `setEmptyAnimation()`
 - **Debug rendering** for bones, regions, meshes, and clipping areas
 - **Auto-detection** of mesh attachments for optimized canvas rendering (fast path for region-only skeletons)
@@ -109,8 +110,37 @@ me.loader.preload(DataManifest, function() {
 |---|---|
 | `findBone(boneName)` | Find a bone by name |
 | `findSlot(slotName)` | Find a slot by name |
+| `findConstraint(constraintName)` | Find a constraint by name (IK / Transform / Path / Physics / **Slider**) — added in 3.1.0 |
+| `getConstraintNames()` | Get the list of constraint names available in the skeleton — added in 3.1.0 |
 | `setToSetupPose()` | Reset skeleton to setup pose |
 | `setSkeleton(atlasFile, jsonFile)` | Load a skeleton (if not set via constructor) |
+
+### Spine 4.3 Slider constraints
+
+Spine 4.3 introduced [Slider constraints](https://esotericsoftware.com/blog/Spine-4.3-released#slider-constraints) — a pre-baked animation indexed by a numeric `time` value, optionally driven by a bone's rotation. The plugin re-exports the Spine runtime's Slider classes (and the four pre-existing constraint classes) alongside the default `Spine` export so consumers can do `instanceof Slider` (or `instanceof IkConstraint`, etc.) without a second import from `@esotericsoftware/spine-core`:
+
+```javascript
+import Spine, {
+    // 4.3 Slider classes
+    Slider, SliderData, SliderTimeline, SliderMixTimeline,
+    // other constraint classes — for narrowing findConstraint() results
+    IkConstraint, TransformConstraint, PathConstraint, PhysicsConstraint,
+} from "@melonjs/spine-plugin";
+
+const diamond = new Spine(750, 600, { atlasFile: "diamond-pma.atlas", jsonFile: "diamond-pro.json" });
+diamond.setAnimation(0, "idle-rotating", true);
+
+// query the "rotation" Slider constraint
+const slider = diamond.findConstraint("rotation");
+if (slider instanceof Slider) {
+    // scrub a slider manually (disable bone auto-driving first)
+    slider.bone = null;
+    slider.pose.time = 1.0;   // jump to t=1s in the slider's animation
+    slider.pose.mix = 1.0;    // 0..1 — how much of the slider pose to apply
+}
+```
+
+See the [diamond example](https://melonjs.github.io/melonJS/examples/#/spine) for an interactive demo.
 
 ### Transform
 | Method | Description |
@@ -125,12 +155,12 @@ me.loader.preload(DataManifest, function() {
 
 | @melonjs/spine-plugin | melonJS | spine-runtime |
 |---|---|---|
-| v3.0.0 | v19.7.1 (or higher) | v4.3.x |
-| v2.2.0 | v18.3.0 (or higher) | v4.2.x |
-| v2.1.0 | v18.3.0 (or higher) | v4.2.x |
-| v2.0.1 | v18.2.1 (or higher) | v4.2.x |
-| v2.0.0 | v18.2.0 | v4.2.x |
-| v1.5.x | v15.12.x — v18.0.x | v4.1, v4.2-beta |
+| v3.x.x | v19.7.1 (or higher) | v4.3.x |
+| v2.2.x | v18.3.0 (or higher) | v4.2.x |
+| v2.1.x | v18.3.0 (or higher) | v4.2.x |
+| v2.0.x | v18.2.1 (or higher) | v4.2.x |
+| v2.0.0 | v18.2.0 (or higher) | v4.2.x |
+| v1.5.x | v15.12.0 (or higher)| v4.1, v4.2-beta |
 
 > **Note:** skeleton data is editor-version locked — plugin 3.x requires assets exported from a Spine **4.3** editor; 4.2 exports will not load (and vice-versa on plugin 2.x).
 
