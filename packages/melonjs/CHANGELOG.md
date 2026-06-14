@@ -1,5 +1,12 @@
 # Changelog
 
+## [19.7.1] (melonJS 2) - _2026-06-14_
+
+### Fixed
+- WebGL context restore left `blendFunc`/`blendEquation` at driver defaults when the cached blend mode matched the requested one — `setBlendMode()`'s state cache survived the context loss and short-circuited the re-apply in the `webglcontextrestored` handler. Scenes drawing exclusively with one blend mode (e.g. all-PMA "normal") never triggered a cache miss afterwards, so transparent texels rendered opaque black until a blend-mode change. The restore handler now invalidates the cache before re-applying. (Found via the spine-plugin context-loss verification — the 19.6 hardening scenes all happened to change blend modes post-restore, masking the desync.)
+- `UITextButton` crashed with a TypeError (`viewport.isDefault` on `undefined`) on every draw — its `draw()` override dropped the `viewport` argument when chaining to `Container.draw()` (#1499, regression introduced with multi-camera support in #1310). `Container.draw()` now also honors its documented-optional `viewport` parameter, so legacy subclass overrides that chain up with `super.draw(renderer)` keep working (treated as the default camera; the floating-child projection swap is skipped)
+- "gpuTilemap is enabled but the active renderer is not WebGL 2" warning was emitted at every `Application` init whenever the gpuTilemap setting (default `true`) couldn't be honored — including apps that never load a TMX layer (e.g. the spine demo under Canvas). The warning is now deferred to the first `TMXLayer` that actually hits the no-WebGL2 fallback, latched once per session so multi-layer maps don't spam the console. Apps without any tilemap stay quiet.
+
 ## [19.7.0] (melonJS 2) - _2026-06-06_
 
 **Highlights:** `Camera3d` perspective camera lands. Every batched shader now carries per-sprite depth as `vec3 aVertex`, unlocking 3D-projected sprites and meshes. Backward compatible with existing 2D code.

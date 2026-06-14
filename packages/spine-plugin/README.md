@@ -1,20 +1,20 @@
 # melonJS Spine Plugin
 
-A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.2 runtime integration for the [melonJS](http://www.melonjs.org) game engine, using the official [@esotericsoftware/spine-webgl](https://www.npmjs.com/package/@esotericsoftware/spine-webgl) and [@esotericsoftware/spine-canvas](https://www.npmjs.com/package/@esotericsoftware/spine-canvas) runtimes.
+A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.x runtime integration for the [melonJS](http://www.melonjs.org) game engine, using the official [@esotericsoftware/spine-webgl](https://www.npmjs.com/package/@esotericsoftware/spine-webgl) and [@esotericsoftware/spine-canvas](https://www.npmjs.com/package/@esotericsoftware/spine-canvas) runtimes.
 
 ![melonjs-spine-gif](https://github.com/melonjs/spine-plugin/assets/4033090/dc259c8e-def6-419e-83a9-cda374715686)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/melonjs/melonJS/blob/master/packages/spine-plugin/LICENSE)
 [![NPM Package](https://img.shields.io/npm/v/@melonjs/spine-plugin)](https://www.npmjs.com/package/@melonjs/spine-plugin)
-[![Spine Runtime](https://img.shields.io/badge/spine--runtime-4.2-orange)](http://esotericsoftware.com/spine-runtimes)
+[![Spine Runtime](https://img.shields.io/badge/spine--runtime-4.3-orange)](http://esotericsoftware.com/spine-runtimes)
 
-[Live Example](https://melonjs.github.io/melonJS/examples/#/spine) — 17 official Spine characters including spineboy, raptor, owl, dragon, and more
+[Live Example](https://melonjs.github.io/melonJS/examples/#/spine) — 15 official Spine characters including spineboy, raptor, owl, dragon, and more
 
 ## Features
 -------------------------------------------------------------------------------
 - **WebGL rendering** via custom `SpineBatcher` extending melonJS `Batcher` with two-color tinting and indexed drawing
 - **Canvas rendering** with full mesh, clipping, tinting, and blend mode support
-- **Spine 4.2 physics** support with automatic gravity correction for Y-down coordinate system
+- **Spine physics** support — native Y-down handling via the official `Skeleton.yDown` runtime switch, including physics force direction vectors (`windX/Y`, `gravityX/Y`)
 - **Two-color tinting** (dark/light color) using Spine's official shader
 - **Blend modes** (Normal, Additive, Multiply, Screen) with premultiplied alpha support
 - **Clipping attachments** via melonJS masking (canvas) and Spine's SkeletonClipping (WebGL)
@@ -30,7 +30,7 @@ A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.2 runtime integration
 ## Installation
 -------------------------------------------------------------------------------
 This plugin is already bundled with the required Spine [4.x runtime](package.json#dependencies), so there is no need to install it separately.
->Note: this plugin requires melonJS version 18.3.0 or higher.
+>Note: this plugin requires melonJS version 19.7.1 or higher.
 
 To install the plugin using npm:
 
@@ -125,11 +125,14 @@ me.loader.preload(DataManifest, function() {
 
 | @melonjs/spine-plugin | melonJS | spine-runtime |
 |---|---|---|
+| v3.0.0 | v19.7.1 (or higher) | v4.3.x |
 | v2.2.0 | v18.3.0 (or higher) | v4.2.x |
 | v2.1.0 | v18.3.0 (or higher) | v4.2.x |
 | v2.0.1 | v18.2.1 (or higher) | v4.2.x |
 | v2.0.0 | v18.2.0 | v4.2.x |
 | v1.5.x | v15.12.x — v18.0.x | v4.1, v4.2-beta |
+
+> **Note:** skeleton data is editor-version locked — plugin 3.x requires assets exported from a Spine **4.3** editor; 4.2 exports will not load (and vice-versa on plugin 2.x).
 
 ## Questions, need help ?
 -------------------------------------------------------------------------------

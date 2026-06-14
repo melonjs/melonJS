@@ -24,6 +24,6 @@
 		"react-router-dom": "^7.14.1",
 		"tsconfig": "workspace:^",
 		"typescript": "^6.0.2",
-		"vite": "8.0.8"
+		"vite": "8.0.16"
 	}
 }

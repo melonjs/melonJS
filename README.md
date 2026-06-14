@@ -17,7 +17,7 @@ A modern & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](https://melonjs.org/img/alex4-github.png)
 
-[melonJS](https://melonjs.org/) is an open-source 2D game engine designed for indie developers — post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance, all packed into just over 100 KB minzipped of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
+[melonJS](https://melonjs.org/) is an open-source 2.5D game engine designed for indie developers — perspective and orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance. Runs on WebGL or Canvas2D with automatic fallback, tree-shakeable so you only pay for what you use, and the entire engine fits in ~150 KB minzipped of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
 
 [melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained by the team at AltByte in Singapore.
 
@@ -30,9 +30,9 @@ melonJS is designed so you can **focus on making games, not on graphics plumbing
 
 - **True renderer abstraction** — Write your game once, run it on WebGL or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API, with automatic fallback when WebGL is not available. Designed to support future backends (WebGPU) without touching game code.
 
-- **Complete engine, minimal footprint** — Physics, tilemaps, audio, input, cameras, tweens, particles, UI — a full 2D game stack in a single tree-shakeable ES module. No dependency sprawl, no library stitching.
+- **Complete engine, minimal footprint** — Physics, tilemaps, audio, input, cameras, tweens, particles, UI — a full game stack in a single tree-shakeable ES module. No dependency sprawl, no library stitching.
 
-- **Tiled as a first-class citizen** — Deep [Tiled](https://www.mapeditor.org) integration built into the core: orthogonal, isometric, hexagonal and staggered maps, animated tilesets, collision shapes, object properties, compressed formats — all parsed and rendered natively.
+- **Tiled as a first-class citizen** — Deep [Tiled](https://www.mapeditor.org) integration built into the core: orthogonal, isometric, hexagonal and staggered maps, animated tilesets, collision shapes, object properties, compressed formats — all parsed and rendered natively, with GPU-accelerated tile rendering for orthogonal maps under WebGL 2.
 
 - **Batteries included, hackable by design** — Get started in minutes with minimal setup. When you need to go deeper: ES6 classes throughout, a plugin system for engine extensions, and a clean architecture that's easy to extend without fighting the framework.
 
@@ -46,15 +46,15 @@ Compatibility
 - Compatible with all major browsers (Chrome, Safari, Firefox, Opera, Edge) and mobile devices
 
 Graphics
-- 2D sprite-based graphic engine
 - Fast WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
 - Extensible batcher system for custom rendering pipelines
 - High DPI resolution & Canvas advanced auto scaling
-- Sprite with 9-slice scaling option, and animation management
-- Built-in effects such as tinting, masking and 2D lighting (with optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights)
+- Sprite with 9-slice scaling option, frame animation, and optional per-pixel normal-map shading for 3D-looking dynamic lights
+- Built-in effects such as tinting, masking, and CSS-style blend modes (normal, additive, multiply, screen, darken, lighten)
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
-- 3D mesh rendering with OBJ/MTL model loading, multi-material support, perspective projection and hardware depth testing
+- 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d`
+- `Light2d` as a first-class `Renderable` — multiple dynamic lights, radial-gradient falloff, illumination-only mode, and procedural rendering via `drawLight`
 - Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text with built-in typewriter effect
@@ -88,12 +88,13 @@ Camera
 - Per-camera post-processing pipeline with stackable shader effects and color grading (ColorMatrix)
 
 UI
-- Clickable, hoverable and draggable UI elements
-- Drag-and-drop support
-- Text buttons with built-in styling
+- `UIBaseElement` / `UISpriteElement` containers for clickable, hoverable and holdable elements with full pointer-event wiring
+- `Draggable` / `DropTarget` for drag-and-drop with configurable overlap or contains-check
+- `UITextButton` text button with hover, press, and key-bind support — built on `BitmapText`
 
 Level Editor
 - [Tiled](https://www.mapeditor.org) map format [up to 1.12](https://doc.mapeditor.org/en/stable/reference/tmx-changelog/) built-in support for easy level design
+    - **GPU-accelerated tile rendering** for orthogonal maps under WebGL 2 — each layer draws as a single quad with no per-tile loop, ~5–8× faster than the legacy CPU renderer on dense maps. Honors animated tiles, flip bits, per-layer opacity/tint/blend, and oversized bottom-aligned tiles; falls back transparently to the CPU renderer on isometric/staggered/hexagonal layers or non-WebGL-2 contexts
     - Uncompressed and [compressed](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric, Hexagonal (both normal and staggered) and Oblique maps
     - Multiple layers with per-layer alpha, tinting and blend modes (multiple background/foreground, collision and Image layers)
@@ -121,7 +122,7 @@ Core
 - Tween effects with multiple easing functions (Quadratic, Cubic, Elastic, Bounce, etc.) and Bezier/Catmull-Rom interpolation
 - Transition effects
 - Pooling support for object recycling
-- Basic Particle System
+- Particle system with `ParticleEmitter` (emission rate, lifetime, velocity, gravity, blend modes)
 - EventEmitter based event system
 - Persistent data storage (save/load via localStorage)
 - Plugin system for extending engine capabilities
@@ -171,6 +172,7 @@ Examples
 * [Compressed Textures](https://melonjs.github.io/melonJS/examples/#/compressed-textures) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/compressedTextures))
 * [3D Mesh](https://melonjs.github.io/melonJS/examples/#/mesh-3d) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3d))
 * [3D Mesh Material](https://melonjs.github.io/melonJS/examples/#/mesh-3d-material) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3dMaterial))
+* [AfterBurner Clone](https://melonjs.github.io/melonJS/examples/#/after-burner) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner)) — `Camera3d` + 3D Mesh arcade shooter
 * [Trail](https://melonjs.github.io/melonJS/examples/#/trail) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/trail))
 * [Shader Effects](https://melonjs.github.io/melonJS/examples/#/shader-effects) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/shaderEffects))
 * [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))

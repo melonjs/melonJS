@@ -1,5 +1,6 @@
 import { Shader } from "@esotericsoftware/spine-webgl";
 import { Batcher } from "melonjs";
+import { getManagedContext } from "./glContext.js";
 
 /**
  * Spine blend mode enum to melonJS blend mode string mapping
@@ -19,12 +20,19 @@ const VERTEX_SIZE = 12;
  */
 export default class SpineBatcher extends Batcher {
 	/**
+	 * Initialize (or re-initialize) the batcher.
+	 * Settings are built here rather than in the constructor so the
+	 * renderer's context-restore recovery can re-create all GPU
+	 * resources with a bare `batcher.init(renderer)` call, matching
+	 * the engine's built-in batchers.
 	 * @param {WebGLRenderer} renderer - the current WebGL renderer session
-	 * @param {WebGLRenderingContext|WebGL2RenderingContext} canvas - the GL context for Spine shader creation
+	 * @ignore
 	 */
-	constructor(renderer, canvas) {
+	init(renderer) {
 		// create the official Spine two-color shader and extract its source
-		const spineShader = Shader.newTwoColoredTextured(canvas);
+		const spineShader = Shader.newTwoColoredTextured(
+			getManagedContext(renderer.getCanvas()),
+		);
 		const shaderSource = {
 			vertex: spineShader.getVertexShaderSource(),
 			fragment: spineShader.getFragmentSource(),
@@ -32,7 +40,7 @@ export default class SpineBatcher extends Batcher {
 		spineShader.dispose();
 
 		// Spine vertex layout: a_position(2) + a_color(4) + a_texCoords(2) + a_color2(4)
-		super(renderer, {
+		super.init(renderer, {
 			attributes: [
 				{
 					name: Shader.POSITION,

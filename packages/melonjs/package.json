@@ -1,6 +1,6 @@
 {
 	"name": "melonjs",
-	"version": "19.7.0",
+	"version": "19.7.1",
 	"description": "melonJS Game Engine",
 	"homepage": "http://www.melonjs.org/",
 	"type": "module",
@@ -70,7 +70,7 @@
 		"type-fest": "^5.5.0",
 		"typedoc": "^0.28.19",
 		"typescript": "^6.0.2",
-		"vite": "8.0.8",
+		"vite": "8.0.16",
 		"vite-plugin-glsl": "^1.6.0"
 	},
 	"scripts": {

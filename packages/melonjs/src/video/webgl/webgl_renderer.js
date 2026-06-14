@@ -257,6 +257,10 @@ export default class WebGLRenderer extends Renderer {
 				this.gl.disable(this.gl.SCISSOR_TEST);
 				this._scissorActive = false;
 				this.gl.enable(this.gl.BLEND);
+				// invalidate the blend cache: blendFunc/blendEquation are back
+				// at driver defaults, so a matching cached mode would otherwise
+				// short-circuit setBlendMode and never re-apply them
+				this.currentBlendMode = undefined;
 				this.setBlendMode(this.settings.blendMode);
 
 				// reset() re-inits batchers, FBO pool, light shader, TMX renderer

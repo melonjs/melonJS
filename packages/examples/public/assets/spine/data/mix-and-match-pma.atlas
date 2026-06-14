@@ -1,363 +1,327 @@
 mix-and-match-pma.png
-	size: 1024, 512
+	size: 2048, 512
 	filter: Linear, Linear
 	pma: true
 	scale: 0.5
 base-head
-	bounds: 587, 2, 95, 73
+	bounds: 378, 110, 95, 73
 boy/arm-front
-	bounds: 558, 271, 36, 115
+	bounds: 345, 55, 36, 115
+	rotate: 180
 boy/backpack
-	bounds: 235, 109, 119, 153
+	bounds: 498, 258, 119, 153
+	rotate: 270
 boy/backpack-pocket
-	bounds: 328, 73, 34, 62
-	rotate: 90
+	bounds: 985, 6, 34, 62
 boy/backpack-strap-front
-	bounds: 665, 79, 38, 88
+	bounds: 888, 6, 38, 88
 boy/backpack-up
-	bounds: 395, 364, 21, 70
-	rotate: 90
+	bounds: 795, 9, 21, 70
 boy/body
-	bounds: 251, 264, 97, 132
+	bounds: 250, 171, 97, 132
 	rotate: 90
 boy/boot-ribbon-front
-	bounds: 648, 131, 9, 11
+	bounds: 396, 366, 9, 11
 boy/collar
-	bounds: 744, 4, 73, 29
-	rotate: 90
+	bounds: 129, 46, 73, 29
 boy/ear
-	bounds: 383, 109, 19, 23
-	rotate: 90
+	bounds: 117, 194, 19, 23
 boy/eye-back-low-eyelid
-	bounds: 739, 284, 17, 6
-	rotate: 90
+	bounds: 773, 276, 17, 6
 boy/eye-back-pupil
-	bounds: 832, 443, 8, 9
-	rotate: 90
+	bounds: 120, 255, 8, 9
 boy/eye-back-up-eyelid
-	bounds: 558, 264, 23, 5
+	bounds: 224, 354, 23, 5
+	rotate: 270
 boy/eye-back-up-eyelid-back
-	bounds: 802, 491, 19, 10
-	rotate: 90
+	bounds: 375, 258, 19, 10
 boy/eye-front-low-eyelid
-	bounds: 386, 363, 22, 7
-	rotate: 90
+	bounds: 167, 361, 22, 7
 boy/eye-front-pupil
-	bounds: 816, 389, 9, 9
+	bounds: 494, 353, 9, 9
 boy/eye-front-up-eyelid
-	bounds: 160, 71, 31, 6
-	rotate: 90
+	bounds: 155, 346, 31, 6
+	rotate: 270
 boy/eye-front-up-eyelid-back
-	bounds: 801, 434, 26, 9
-	rotate: 90
+	bounds: 322, 368, 26, 9
 boy/eye-iris-back
-	bounds: 618, 264, 17, 17
+	bounds: 692, 33, 17, 17
 boy/eye-iris-front
-	bounds: 727, 264, 18, 18
+	bounds: 1003, 75, 18, 18
 boy/eye-white-back
-	bounds: 580, 131, 20, 12
+	bounds: 1002, 219, 20, 12
 boy/eye-white-front
-	bounds: 510, 130, 27, 13
+	bounds: 560, 249, 27, 13
 boy/eyebrow-back
-	bounds: 751, 88, 20, 11
-	rotate: 90
+	bounds: 281, 366, 20, 11
 boy/eyebrow-front
-	bounds: 483, 130, 25, 11
+	bounds: 254, 366, 25, 11
 boy/hair-back
-	bounds: 494, 388, 122, 81
-	rotate: 90
+	bounds: 737, 81, 122, 81
+	rotate: 270
 boy/hair-bangs
-	bounds: 667, 284, 70, 37
+	bounds: 102, 18, 70, 37
 boy/hair-side
-	bounds: 789, 374, 25, 43
+	bounds: 939, 105, 25, 43
 boy/hand-backfingers
-	bounds: 467, 364, 19, 21
+	bounds: 494, 45, 19, 21
 boy/hand-front-fingers
-	bounds: 488, 364, 19, 21
+	bounds: 313, 108, 19, 21
 boy/hat
-	bounds: 615, 417, 93, 56
-	rotate: 90
+	bounds: 817, 126, 93, 56
 boy/leg-front
-	bounds: 138, 104, 31, 158
+	bounds: 90, 219, 31, 158
+	rotate: 180
 boy/mouth-close
-	bounds: 551, 365, 21, 5
-	rotate: 90
+	bounds: 231, 372, 21, 5
 girl-blue-cape/mouth-close
-	bounds: 551, 365, 21, 5
-	rotate: 90
+	bounds: 231, 372, 21, 5
 girl-spring-dress/mouth-close
-	bounds: 551, 365, 21, 5
-	rotate: 90
+	bounds: 231, 372, 21, 5
 girl/mouth-close
-	bounds: 551, 365, 21, 5
-	rotate: 90
+	bounds: 231, 372, 21, 5
 boy/mouth-smile
-	bounds: 705, 79, 29, 7
+	bounds: 193, 370, 29, 7
 boy/nose
-	bounds: 836, 473, 17, 10
-	rotate: 90
+	bounds: 303, 367, 17, 10
 boy/pompom
-	bounds: 747, 273, 48, 43
-	rotate: 90
+	bounds: 820, 40, 48, 43
 boy/zip
-	bounds: 648, 144, 14, 23
+	bounds: 1006, 260, 14, 23
 girl-blue-cape/back-eyebrow
-	bounds: 602, 131, 18, 12
+	bounds: 623, 145, 18, 12
 girl-blue-cape/body-dress
-	bounds: 2, 264, 109, 246
+	bounds: 155, 268, 109, 241
+	offsets: 0, 0, 109, 246
+	rotate: 90
 girl-blue-cape/body-ribbon
-	bounds: 615, 283, 50, 38
+	bounds: 743, 41, 50, 38
 girl-blue-cape/cape-back
-	bounds: 2, 69, 134, 193
+	bounds: 383, 184, 134, 193
+	rotate: 180
 girl-blue-cape/cape-back-up
-	bounds: 386, 387, 123, 106
-	rotate: 90
+	bounds: 518, 139, 123, 106
 girl-blue-cape/cape-ribbon
-	bounds: 675, 264, 50, 18
+	bounds: 295, 33, 50, 18
 girl-blue-cape/cape-shoulder-back
-	bounds: 751, 110, 49, 59
+	bounds: 601, 15, 49, 59
 girl-blue-cape/cape-shoulder-front
-	bounds: 113, 264, 62, 76
-	rotate: 90
+	bounds: 901, 68, 62, 76
 girl-blue-cape/cape-up-front
-	bounds: 399, 264, 98, 117
+	bounds: 924, 123, 98, 117
 	rotate: 90
 girl-blue-cape/ear
-	bounds: 775, 2, 19, 23
+	bounds: 951, 286, 19, 23
 girl-spring-dress/ear
-	bounds: 775, 2, 19, 23
+	bounds: 951, 286, 19, 23
 girl/ear
-	bounds: 775, 2, 19, 23
+	bounds: 951, 286, 19, 23
 girl-blue-cape/eye-back-low-eyelid
-	bounds: 802, 463, 17, 6
+	bounds: 350, 371, 17, 6
 girl-spring-dress/eye-back-low-eyelid
-	bounds: 802, 463, 17, 6
+	bounds: 350, 371, 17, 6
 girl/eye-back-low-eyelid
-	bounds: 802, 463, 17, 6
+	bounds: 350, 371, 17, 6
 girl-blue-cape/eye-back-pupil
-	bounds: 816, 367, 8, 9
+	bounds: 972, 291, 8, 9
 girl-spring-dress/eye-back-pupil
-	bounds: 816, 367, 8, 9
+	bounds: 972, 291, 8, 9
 girl/eye-back-pupil
-	bounds: 816, 367, 8, 9
+	bounds: 972, 291, 8, 9
 girl-blue-cape/eye-back-up-eyelid
-	bounds: 554, 131, 24, 12
+	bounds: 72, 107, 24, 12
 girl-spring-dress/eye-back-up-eyelid
-	bounds: 554, 131, 24, 12
+	bounds: 72, 107, 24, 12
 girl/eye-back-up-eyelid
-	bounds: 554, 131, 24, 12
+	bounds: 72, 107, 24, 12
 girl-blue-cape/eye-back-up-eyelid-back
-	bounds: 832, 453, 17, 11
-	rotate: 90
+	bounds: 647, 275, 17, 11
 girl-spring-dress/eye-back-up-eyelid-back
-	bounds: 832, 453, 17, 11
-	rotate: 90
+	bounds: 647, 275, 17, 11
 girl/eye-back-up-eyelid-back
-	bounds: 832, 453, 17, 11
-	rotate: 90
+	bounds: 647, 275, 17, 11
 girl-blue-cape/eye-front-low-eyelid
-	bounds: 739, 303, 18, 6
-	rotate: 90
+	bounds: 587, 254, 18, 6
 girl-spring-dress/eye-front-low-eyelid
-	bounds: 739, 303, 18, 6
-	rotate: 90
+	bounds: 587, 254, 18, 6
 girl/eye-front-low-eyelid
-	bounds: 739, 303, 18, 6
-	rotate: 90
+	bounds: 587, 254, 18, 6
 girl-blue-cape/eye-front-pupil
-	bounds: 816, 378, 9, 9
+	bounds: 640, 368, 9, 9
 girl-spring-dress/eye-front-pupil
-	bounds: 816, 378, 9, 9
+	bounds: 640, 368, 9, 9
 girl/eye-front-pupil
-	bounds: 816, 378, 9, 9
+	bounds: 640, 368, 9, 9
 girl-blue-cape/eye-front-up-eyelid
-	bounds: 392, 77, 30, 14
-	rotate: 90
+	bounds: 2, 26, 30, 14
 girl-spring-dress/eye-front-up-eyelid
-	bounds: 392, 77, 30, 14
-	rotate: 90
+	bounds: 2, 26, 30, 14
 girl/eye-front-up-eyelid
-	bounds: 392, 77, 30, 14
-	rotate: 90
+	bounds: 2, 26, 30, 14
 girl-blue-cape/eye-front-up-eyelid-back
-	bounds: 455, 130, 26, 11
+	bounds: 228, 114, 26, 11
 girl-spring-dress/eye-front-up-eyelid-back
-	bounds: 455, 130, 26, 11
+	bounds: 228, 114, 26, 11
 girl/eye-front-up-eyelid-back
-	bounds: 455, 130, 26, 11
+	bounds: 228, 114, 26, 11
 girl-blue-cape/eye-iris-back
-	bounds: 637, 264, 17, 17
+	bounds: 354, 36, 17, 17
 girl-blue-cape/eye-iris-front
-	bounds: 802, 471, 18, 18
+	bounds: 1004, 95, 18, 18
 girl-blue-cape/eye-white-back
-	bounds: 596, 264, 20, 16
+	bounds: 608, 245, 20, 16
 girl-spring-dress/eye-white-back
-	bounds: 596, 264, 20, 16
+	bounds: 608, 245, 20, 16
 girl-blue-cape/eye-white-front
-	bounds: 796, 5, 20, 16
-	rotate: 90
+	bounds: 791, 206, 20, 16
 girl-spring-dress/eye-white-front
-	bounds: 796, 5, 20, 16
-	rotate: 90
+	bounds: 791, 206, 20, 16
 girl/eye-white-front
-	bounds: 796, 5, 20, 16
-	rotate: 90
+	bounds: 791, 206, 20, 16
 girl-blue-cape/front-eyebrow
-	bounds: 608, 149, 18, 12
-	rotate: 90
+	bounds: 67, 153, 18, 12
 girl-blue-cape/hair-back
-	bounds: 508, 145, 117, 98
-	rotate: 90
+	bounds: 813, 184, 117, 98
 girl-blue-cape/hair-bangs
-	bounds: 673, 419, 91, 40
-	rotate: 90
+	bounds: 378, 68, 91, 40
 girl-blue-cape/hair-head-side-back
-	bounds: 196, 331, 30, 52
+	bounds: 507, 232, 30, 52
 	rotate: 90
 girl-blue-cape/hair-head-side-front
-	bounds: 738, 323, 41, 42
+	bounds: 59, 27, 41, 42
 girl-blue-cape/hair-side
-	bounds: 473, 3, 36, 71
+	bounds: 947, 2, 36, 71
+	rotate: 180
 girl-blue-cape/hand-front-fingers
-	bounds: 509, 365, 19, 21
+	bounds: 578, 116, 19, 21
 girl-spring-dress/hand-front-fingers
-	bounds: 509, 365, 19, 21
+	bounds: 578, 116, 19, 21
 girl-blue-cape/leg-front
-	bounds: 168, 72, 30, 158
-	rotate: 90
+	bounds: 60, 219, 30, 158
+	rotate: 180
 girl-blue-cape/mouth-smile
-	bounds: 736, 79, 29, 7
+	bounds: 162, 370, 29, 7
 girl-spring-dress/mouth-smile
-	bounds: 736, 79, 29, 7
+	bounds: 162, 370, 29, 7
 girl/mouth-smile
-	bounds: 736, 79, 29, 7
+	bounds: 162, 370, 29, 7
 girl-blue-cape/nose
-	bounds: 747, 264, 11, 7
+	bounds: 972, 302, 11, 7
 girl-spring-dress/nose
-	bounds: 747, 264, 11, 7
+	bounds: 972, 302, 11, 7
 girl/nose
-	bounds: 747, 264, 11, 7
+	bounds: 972, 302, 11, 7
 girl-blue-cape/sleeve-back
-	bounds: 767, 79, 42, 29
+	bounds: 599, 113, 42, 29
 girl-blue-cape/sleeve-front
-	bounds: 408, 76, 52, 119
-	rotate: 90
+	bounds: 472, 68, 52, 119
+	rotate: 180
 girl-spring-dress/arm-front
-	bounds: 596, 282, 17, 111
+	bounds: 122, 266, 17, 111
 girl-spring-dress/back-eyebrow
-	bounds: 801, 420, 18, 12
+	bounds: 904, 170, 18, 12
 girl-spring-dress/body-up
-	bounds: 179, 4, 64, 66
+	bounds: 951, 311, 64, 66
 girl-spring-dress/cloak-down
-	bounds: 775, 27, 50, 50
+	bounds: 65, 167, 50, 50
 girl-spring-dress/cloak-up
-	bounds: 360, 7, 64, 58
-	rotate: 90
+	bounds: 515, 84, 61, 58
+	offsets: 0, 0, 64, 58
 girl-spring-dress/eye-iris-back
-	bounds: 656, 264, 17, 17
+	bounds: 882, 112, 17, 17
 girl-spring-dress/eye-iris-front
-	bounds: 814, 492, 18, 18
+	bounds: 932, 211, 18, 18
 girl-spring-dress/front-eyebrow
-	bounds: 822, 472, 18, 12
-	rotate: 90
+	bounds: 643, 202, 18, 12
 girl-spring-dress/hair-back
-	bounds: 196, 363, 147, 93
-	rotate: 90
+	bounds: 802, 284, 147, 93
 girl-spring-dress/hair-bangs
-	bounds: 696, 326, 91, 40
-	rotate: 90
+	bounds: 67, 70, 91, 40
 girl-spring-dress/hair-head-side-back
-	bounds: 529, 76, 30, 52
+	bounds: 549, 7, 30, 52
 girl-spring-dress/hair-head-side-front
-	bounds: 781, 323, 41, 42
+	bounds: 451, 28, 41, 42
 girl-spring-dress/hair-side
-	bounds: 511, 3, 36, 71
+	bounds: 370, 8, 36, 71
+	rotate: 180
 girl-spring-dress/leg-front
-	bounds: 171, 104, 30, 158
+	bounds: 30, 219, 30, 158
+	rotate: 180
 girl-spring-dress/neck
-	bounds: 138, 70, 20, 32
+	bounds: 928, 34, 20, 32
 girl-spring-dress/shoulder-ribbon
-	bounds: 622, 131, 36, 24
-	rotate: 90
+	bounds: 174, 20, 36, 24
 girl-spring-dress/skirt
-	bounds: 113, 328, 182, 81
-	rotate: 90
+	bounds: 629, 201, 182, 81
 girl-spring-dress/underskirt
-	bounds: 2, 2, 175, 65
+	bounds: 2, 42, 175, 65
+	rotate: 90
 girl/arm-front
-	bounds: 577, 395, 36, 115
+	bounds: 986, 280, 36, 115
+	rotate: 90
 girl/back-eyebrow
-	bounds: 834, 492, 18, 12
-	rotate: 90
+	bounds: 53, 205, 18, 12
 girl/bag-base
-	bounds: 191, 264, 62, 58
-	rotate: 90
+	bounds: 164, 93, 62, 58
 girl/bag-strap-front
-	bounds: 385, 265, 12, 96
+	bounds: 141, 282, 12, 95
+	offsets: 0, 1, 12, 96
 girl/bag-top
-	bounds: 738, 367, 49, 50
+	bounds: 407, 12, 49, 50
 girl/body
-	bounds: 356, 130, 97, 132
+	bounds: 138, 152, 97, 132
 girl/boot-ribbon-front
-	bounds: 539, 130, 13, 13
+	bounds: 491, 364, 13, 13
 girl/eye-iris-back
-	bounds: 821, 424, 17, 17
+	bounds: 237, 255, 17, 17
 girl/eye-iris-front
-	bounds: 812, 443, 18, 18
+	bounds: 195, 350, 18, 18
 girl/eye-white-back
-	bounds: 814, 5, 20, 16
-	rotate: 90
+	bounds: 791, 266, 20, 16
 girl/front-eyebrow
-	bounds: 816, 400, 18, 12
-	rotate: 90
+	bounds: 231, 358, 18, 12
 girl/hair-back
-	bounds: 291, 363, 147, 93
-	rotate: 90
+	bounds: 653, 284, 147, 93
 girl/hair-bangs
-	bounds: 715, 419, 91, 40
-	rotate: 90
+	bounds: 577, 72, 91, 40
 girl/hair-flap-down-front
-	bounds: 288, 5, 70, 65
+	bounds: 178, 27, 70, 65
 girl/hair-head-side-back
-	bounds: 561, 77, 30, 52
+	bounds: 870, 25, 30, 52
 girl/hair-head-side-front
-	bounds: 757, 419, 41, 42
-	rotate: 90
+	bounds: 252, 39, 41, 42
 girl/hair-patch
-	bounds: 245, 4, 66, 41
-	rotate: 90
+	bounds: 820, 85, 66, 41
 girl/hair-side
-	bounds: 549, 3, 36, 71
+	bounds: 511, 12, 36, 71
+	rotate: 180
 girl/hair-strand-back-1
-	bounds: 684, 3, 58, 74
+	bounds: 642, 23, 56, 74
+	offsets: 2, 0, 58, 74
 girl/hair-strand-back-2
-	bounds: 692, 171, 91, 58
-	rotate: 90
+	bounds: 221, 79, 90, 53
+	offsets: 1, 0, 91, 58
 girl/hair-strand-back-3
-	bounds: 615, 323, 92, 79
+	bounds: 643, 107, 92, 79
 	rotate: 90
 girl/hair-strand-front-1
-	bounds: 518, 269, 38, 94
+	bounds: 966, 69, 38, 94
 girl/hair-strand-front-2
-	bounds: 593, 79, 70, 50
+	bounds: 547, 37, 70, 50
 girl/hair-strand-front-3
-	bounds: 705, 88, 44, 81
+	bounds: 699, 25, 44, 81
 girl/hand-front-fingers
-	bounds: 530, 365, 19, 21
+	bounds: 231, 179, 19, 21
 girl/hat
-	bounds: 608, 169, 93, 82
-	rotate: 90
+	bounds: 69, 109, 93, 82
+	rotate: 180
 girl/leg-front
-	bounds: 203, 104, 30, 158
+	bounds: 2, 219, 30, 158
 girl/pompom
-	bounds: 757, 462, 48, 43
-	rotate: 90
+	bounds: 295, 53, 48, 43
 girl/scarf
-	bounds: 455, 143, 119, 51
-	rotate: 90
+	bounds: 217, 126, 119, 51
 girl/scarf-back
-	bounds: 420, 2, 72, 51
-	rotate: 90
+	bounds: 932, 231, 72, 51
 girl/zip
-	bounds: 356, 109, 19, 25
-	rotate: 90
+	bounds: 724, 174, 19, 25

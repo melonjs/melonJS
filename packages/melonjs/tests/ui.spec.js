@@ -1,7 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
 	Container,
+	game,
 	UIBaseElement,
 	UISpriteElement,
 	UITextButton,
@@ -389,6 +390,45 @@ describe("UI", () => {
 					});
 				}).toThrow();
 			});
+		});
+	});
+
+	// ─── Real draw pass ──────────────────────────────────────────────────────────
+	// Structural tests alone let UITextButton ship broken for months (#1499) —
+	// these run each widget through the actual production draw chain
+	// (Camera2d.draw → World.draw → widget.draw) with the real renderer.
+
+	describe("real draw pass", () => {
+		const drawPass = (widget) => {
+			game.world.addChild(widget);
+			widget.inViewport = true;
+			const drawSpy = vi.spyOn(widget, "draw");
+			try {
+				expect(() => {
+					game.viewport.draw(video.renderer, game.world);
+				}).not.toThrow();
+				// the widget must actually be reached by the draw walk,
+				// and receive the camera as its viewport
+				expect(drawSpy).toHaveBeenCalled();
+				expect(drawSpy.mock.calls[0][1]).toBe(game.viewport);
+			} finally {
+				drawSpy.mockRestore();
+				game.world.removeChildNow(widget);
+			}
+		};
+
+		it("UIBaseElement draws through the production chain", () => {
+			drawPass(new UIBaseElement(50, 50, 100, 100));
+		});
+
+		it("UISpriteElement draws through the production chain", () => {
+			drawPass(
+				new UISpriteElement(50, 50, {
+					image: video.createCanvas(32, 32),
+					framewidth: 32,
+					frameheight: 32,
+				}),
+			);
 		});
 	});
 });

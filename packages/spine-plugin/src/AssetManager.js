@@ -1,6 +1,7 @@
 import * as spineCanvas from "@esotericsoftware/spine-canvas";
 import * as spineWebGL from "@esotericsoftware/spine-webgl";
 import { loader, utils } from "melonjs";
+import { getManagedContext } from "./glContext.js";
 
 /**
  * @classdesc
@@ -20,7 +21,12 @@ export default class AssetManager {
 		 */
 		this.spineAssetManager =
 			renderer.WebGLVersion >= 1
-				? new spineWebGL.AssetManager(renderer.getContext(), pathPrefix)
+				? new spineWebGL.AssetManager(
+						// the shared canvas-backed managed context, so loaded
+						// GLTextures survive a WebGL context loss
+						getManagedContext(renderer.getCanvas()),
+						pathPrefix,
+					)
 				: new spineCanvas.AssetManager(pathPrefix);
 
 		// register the spine custom parser with the melonJS loader
