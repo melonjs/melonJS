@@ -535,7 +535,7 @@ export class Matrix3d {
 
 	/**
 	 * generate an orthogonal projection matrix, with the result replacing the current matrix
-	 * <img src="images/glOrtho.gif"/><br>
+	 * <img src="images/glortho.gif"/><br>
 	 * @param left - farthest left on the x-axis
 	 * @param right - farthest right on the x-axis
 	 * @param bottom - farthest down on the y-axis
