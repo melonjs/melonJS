@@ -22,6 +22,20 @@ Skeleton.yDown = true;
 const tempArray = [];
 
 /**
+ * Union of the five concrete constraint classes Spine 4.3 exposes via
+ * `skeleton.constraints` — returned by {@link Spine.findConstraint}.
+ * Narrow with `instanceof` against the corresponding re-export
+ * (`Slider`, `IkConstraint`, etc. from this plugin or
+ * `@esotericsoftware/spine-core`).
+ * @typedef {import("@esotericsoftware/spine-core").Slider
+ *   | import("@esotericsoftware/spine-core").IkConstraint
+ *   | import("@esotericsoftware/spine-core").TransformConstraint
+ *   | import("@esotericsoftware/spine-core").PathConstraint
+ *   | import("@esotericsoftware/spine-core").PhysicsConstraint
+ * } SpineConstraint
+ */
+
+/**
  * @classdesc
  * A renderable object to render Spine animated skeleton.
  * @augments Renderable
@@ -197,8 +211,14 @@ export default class Spine extends Renderable {
 		// Create the texture atlas and skeleton data.
 		const atlas = this.plugin.assetManager.require(atlasFile);
 		const atlasLoader = new this.runtime.AtlasAttachmentLoader(atlas);
-		const skeletonJson = new this.runtime.SkeletonJson(atlasLoader);
-		const skeletonData = skeletonJson.readSkeletonData(
+		// pick the binary or json reader based on file extension — the asset
+		// manager already loads .skel as a Uint8Array and .json as text, so
+		// we just need to dispatch to the matching SkeletonReader
+		const isBinary = jsonFile.endsWith(".skel");
+		const skeletonReader = isBinary
+			? new this.runtime.SkeletonBinary(atlasLoader)
+			: new this.runtime.SkeletonJson(atlasLoader);
+		const skeletonData = skeletonReader.readSkeletonData(
 			this.plugin.assetManager.require(jsonFile),
 		);
 
@@ -619,6 +639,43 @@ export default class Spine extends Renderable {
 	 */
 	findSlot(slotName) {
 		return this.skeleton.findSlot(slotName);
+	}
+
+	/**
+	 * Find a constraint (Slider, IK, transform, path, or physics) by name.
+	 * Convenience wrapper around the 4.3 unified constraints list — like
+	 * {@link findBone}/{@link findSlot} but for any constraint type.
+	 *
+	 * Returns the constraint instance whose `data.name` matches; use
+	 * `instanceof Slider` (etc., re-exported by this plugin) to narrow
+	 * the type if you need the constraint's specific pose API.
+	 * @param {string} constraintName - the constraint name
+	 * @returns {SpineConstraint|null} the constraint, or null if not found
+	 * @example
+	 * // drive a Slider constraint manually (4.3+)
+	 * const rot = spine.findConstraint("rotation");
+	 * rot.pose.time = 1.5;   // animation seconds; loops if `loop: true`
+	 * rot.pose.mix = 1.0;    // 0..1+ — blend toward the constrained pose
+	 */
+	findConstraint(constraintName) {
+		const constraints = this.skeleton.constraints;
+		for (let i = 0, n = constraints.length; i < n; i++) {
+			if (constraints[i].data.name === constraintName) {
+				return constraints[i];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get the list of constraint names available in this skeleton
+	 * (Slider, IK, transform, path, physics — 4.3 unified list).
+	 * @returns {string[]} array of constraint names
+	 */
+	getConstraintNames() {
+		return this.skeleton.constraints.map((c) => {
+			return c.data.name;
+		});
 	}
 
 	/**

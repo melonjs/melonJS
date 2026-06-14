@@ -9,6 +9,17 @@ export const resources = [
 	// alien
 	{ name: "alien-ess.json", type: "spine", src: `${base}alien-ess.json` },
 	{ name: "alien.atlas", type: "spine", src: `${base}alien.atlas` },
+	// celestial-circus — physics-constraint showcase (swing, body parts in wind)
+	{
+		name: "celestial-circus-pma.atlas",
+		type: "spine",
+		src: `${base}celestial-circus-pma.atlas`,
+	},
+	{
+		name: "celestial-circus-pro.json",
+		type: "spine",
+		src: `${base}celestial-circus-pro.json`,
+	},
 	// coin
 	{ name: "coin-pma.atlas", type: "spine", src: `${base}coin-pma.atlas` },
 	{ name: "coin-pro.json", type: "spine", src: `${base}coin-pro.json` },
@@ -19,6 +30,13 @@ export const resources = [
 		src: `${base}cloud-pot-pma.atlas`,
 	},
 	{ name: "cloud-pot.json", type: "spine", src: `${base}cloud-pot.json` },
+	// diamond — 4.3 sequence-timeline showcase
+	{
+		name: "diamond-pma.atlas",
+		type: "spine",
+		src: `${base}diamond-pma.atlas`,
+	},
+	{ name: "diamond-pro.json", type: "spine", src: `${base}diamond-pro.json` },
 	// dragon
 	{ name: "dragon-ess.json", type: "spine", src: `${base}dragon-ess.json` },
 	{ name: "dragon-pma.atlas", type: "spine", src: `${base}dragon-pma.atlas` },
@@ -48,16 +66,28 @@ export const resources = [
 	// raptor
 	{ name: "raptor-pma.atlas", type: "spine", src: `${base}raptor-pma.atlas` },
 	{ name: "raptor-pro.json", type: "spine", src: `${base}raptor-pro.json` },
+	// snowglobe — physics + transform constraint showcase
+	{
+		name: "snowglobe-pma.atlas",
+		type: "spine",
+		src: `${base}snowglobe-pma.atlas`,
+	},
+	{
+		name: "snowglobe-pro.json",
+		type: "spine",
+		src: `${base}snowglobe-pro.json`,
+	},
 	// speedy
 	{ name: "speedy-pma.atlas", type: "spine", src: `${base}speedy-pma.atlas` },
 	{ name: "speedy-ess.json", type: "spine", src: `${base}speedy-ess.json` },
-	// spineboy
+	// spineboy — loaded from the binary .skel format to exercise the
+	// SkeletonBinary reader path on every page load
 	{
 		name: "spineboy-pma.atlas",
 		type: "spine",
 		src: `${base}spineboy-pma.atlas`,
 	},
-	{ name: "spineboy-pro.json", type: "spine", src: `${base}spineboy-pro.json` },
+	{ name: "spineboy-pro.skel", type: "spine", src: `${base}spineboy-pro.skel` },
 	// stretchyman
 	{
 		name: "stretchyman-pma.atlas",
@@ -89,7 +119,7 @@ export const characters = [
 		name: "spineboy",
 		label: "Spineboy",
 		atlas: "spineboy-pma.atlas",
-		json: "spineboy-pro.json",
+		json: "spineboy-pro.skel",
 		animation: "walk",
 		x: 600,
 		y: 950,
@@ -102,6 +132,18 @@ export const characters = [
 		animation: "death",
 		x: 600,
 		y: 1000,
+	},
+	{
+		name: "celestial-circus",
+		label: "Celestial Circus",
+		atlas: "celestial-circus-pma.atlas",
+		json: "celestial-circus-pro.json",
+		// Physics-constraint showcase — swing, body, arms all driven by
+		// PhysicsConstraint for natural secondary motion.
+		animation: "swing",
+		x: 750,
+		y: 850,
+		scale: 0.35,
 	},
 	{
 		name: "coin",
@@ -121,6 +163,17 @@ export const characters = [
 		x: 600,
 		y: 950,
 		scale: 0.6,
+	},
+	{
+		name: "diamond",
+		label: "Diamond",
+		atlas: "diamond-pma.atlas",
+		json: "diamond-pro.json",
+		// Sequence-timeline showcase added in Spine 4.3 — the diamond cycles
+		// through pre-rendered rotation frames via `SequenceTimeline`.
+		animation: "size-changing-rotation-perspective",
+		x: 750,
+		y: 600,
 	},
 	{
 		name: "dragon",
@@ -187,6 +240,18 @@ export const characters = [
 		x: 550,
 		y: 1050,
 		scale: 0.7,
+	},
+	{
+		name: "snowglobe",
+		label: "Snowglobe",
+		atlas: "snowglobe-pma.atlas",
+		json: "snowglobe-pro.json",
+		// Trigger "shake" via the animation list selector; idle keeps
+		// the snow + transform constraint chain alive between shakes.
+		animation: "shake",
+		x: 750,
+		y: 950,
+		scale: 0.4,
 	},
 	{
 		name: "speedy",

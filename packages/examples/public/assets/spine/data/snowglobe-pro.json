@@ -1,0 +1,2663 @@
+{
+"skeleton": {
+	"hash": "XjftLLZ3qbw",
+	"spine": "4.3.75-beta",
+	"x": -938.9836,
+	"y": -1030.9485,
+	"width": 1839,
+	"height": 2699.5,
+	"images": "./images/",
+	"audio": null
+},
+"bones": [
+	{ "name": "root" },
+	{ "name": "globe-holder", "parent": "root", "x": -22.98364, "y": 187.9301, "icon": "gear" },
+	{ "name": "globe-texture", "parent": "globe-holder", "y": 600.1214, "color": "af81ccff", "icon": "ik" },
+	{ "name": "snowball-perspective", "parent": "globe-texture", "y": -1521.4907, "color": "abe323ff", "icon": "arrowsB" },
+	{ "name": "hips", "parent": "globe-texture", "x": -56.02482, "y": -153.3264, "color": "ffc714ff" },
+	{
+		"name": "body",
+		"parent": "hips",
+		"length": 152.41463,
+		"rotation": 71.62106,
+		"x": -0.6513672,
+		"y": 0.7533264,
+		"color": "ffc714ff"
+	},
+	{ "name": "body-top", "parent": "body", "rotation": -71.62106, "x": 152.41464, "color": "ffc714ff" },
+	{ "name": "arm-up-r", "parent": "body-top", "x": -104.74087, "y": 32.94037, "color": "ff2121ff" },
+	{ "name": "arm-up-r2", "parent": "arm-up-r", "length": 164.1133, "rotation": -111.25282, "color": "ff2121ff" },
+	{ "name": "arm-r-elbow", "parent": "arm-up-r2", "x": 164.1133, "color": "ff2121ff" },
+	{ "name": "glove-r", "parent": "arm-r-elbow", "x": -20.08212, "y": 73.23392, "color": "ff2121ff", "icon": "handRight" },
+	{ "name": "arm-up-l", "parent": "body-top", "x": 100.70194, "y": -8.316528, "color": "1d53ffff" },
+	{
+		"name": "arm-up-l2",
+		"parent": "arm-up-l",
+		"length": 176.15987,
+		"rotation": -94.56383,
+		"x": -0.38936615,
+		"y": 2.3361816,
+		"color": "1d53ffff"
+	},
+	{ "name": "arm-l-elbow", "parent": "arm-up-l2", "x": 176.1598, "color": "1d53ffff" },
+	{ "name": "glove-l", "parent": "arm-l-elbow", "x": -21.88321, "y": 16.96602, "color": "1d53ffff", "icon": "handRight" },
+	{ "name": "red-gift-scale", "parent": "globe-texture", "color": "af81ccff" },
+	{ "name": "red-gift-rotator", "parent": "red-gift-scale", "color": "af81ccff" },
+	{ "name": "red-present-container", "parent": "red-gift-rotator", "x": 0.6629162, "y": 753.2364, "inherit": "onlyTranslation", "color": "abe323ff" },
+	{ "name": "red-present-control", "parent": "red-present-container", "x": -1.6116533, "y": -108.25098, "color": "abe323ff", "icon": "arrowsB" },
+	{ "name": "blue-gift-scale", "parent": "globe-texture", "color": "af81ccff" },
+	{ "name": "blue-gift-rotator", "parent": "blue-gift-scale", "x": -85.11102, "y": 97.27014, "color": "af81ccff" },
+	{ "name": "blue-present-container", "parent": "blue-gift-rotator", "x": 472.84805, "y": 194.00977, "inherit": "onlyTranslation", "color": "8bff21ff" },
+	{ "name": "blue-present-control", "parent": "blue-present-container", "x": -2.668884, "y": 20.444885, "color": "8bff21ff", "icon": "arrowsB" },
+	{ "name": "green-present-container", "parent": "red-gift-rotator", "x": -535.3342, "y": -278.1923, "inherit": "onlyTranslation", "color": "abe323ff" },
+	{ "name": "green-present-control", "parent": "green-present-container", "x": 1.1033936, "y": 109.78088, "color": "abe323ff", "icon": "arrowsB" },
+	{ "name": "blue-present-inverse", "parent": "blue-present-container", "x": -0.6393127, "y": 130.04126, "color": "ff0000ff", "icon": "warning" },
+	{
+		"name": "leg-up-r",
+		"parent": "hips",
+		"length": 163.4836,
+		"rotation": -112.59713,
+		"x": -50.07043,
+		"y": 20.318573,
+		"color": "800c0cff"
+	},
+	{ "name": "leg-knee-r", "parent": "leg-up-r", "x": 163.4836, "color": "800c0cff" },
+	{ "name": "shoe-r", "parent": "leg-knee-r", "x": -104.6734, "y": -130.33023, "color": "800c0cff" },
+	{ "name": "shoe-r-rotator", "parent": "shoe-r", "length": 115.05034, "rotation": 18.270496, "color": "800c0cff" },
+	{ "name": "shoe-r-tip", "parent": "shoe-r-rotator", "x": 115.05034, "color": "800c0cff" },
+	{
+		"name": "leg-up-l",
+		"parent": "hips",
+		"length": 208.55424,
+		"rotation": -93.0848,
+		"x": 47.65195,
+		"y": -12.191132,
+		"color": "352a95ff"
+	},
+	{ "name": "leg-knee-l", "parent": "leg-up-l", "x": 208.55426, "color": "352a95ff" },
+	{ "name": "shoe-l", "parent": "leg-knee-l", "x": 33.61369, "y": -112.1332, "color": "352a95ff" },
+	{ "name": "shoe-l-rotator", "parent": "shoe-l", "length": 132.2727, "rotation": -5.00235, "color": "352a95ff" },
+	{ "name": "shoe-l-tip", "parent": "shoe-l-rotator", "x": 133.0207, "color": "352a95ff" },
+	{ "name": "head-base", "parent": "body-top", "x": 30.619804, "y": 132.4328, "color": "ffc714ff", "icon": "square" },
+	{ "name": "scarf-ribbon-top-r", "parent": "body-top", "x": -297.9442, "y": 70.74274, "color": "ff3996ff" },
+	{ "name": "scarf-end-r", "parent": "scarf-ribbon-top-r", "x": -94.4173, "y": -119.47595, "color": "ff3996ff" },
+	{ "name": "scarf-ribbon-top-l", "parent": "body-top", "x": 217.1001, "y": 0.9210205, "color": "23a8e3ff" },
+	{ "name": "scarf-end-l", "parent": "scarf-ribbon-top-l", "x": 55.03946, "y": -130.21527, "color": "23a8e3ff" },
+	{ "name": "face-holder", "parent": "head-base", "x": 10.299007, "y": -34.50751, "color": "ffc714ff", "icon": "asterisk" },
+	{ "name": "nose", "parent": "head-base", "x": 24.05509, "y": -52.89307, "color": "abe323ff", "icon": "arrowsB" },
+	{
+		"name": "hat",
+		"parent": "head-base",
+		"length": 168.7782,
+		"rotation": 100.74266,
+		"x": -13.507034,
+		"y": 148.2426,
+		"color": "abe323ff"
+	},
+	{ "name": "hat2", "parent": "hat", "length": 79.22675, "rotation": 62.92135, "x": 168.77826, "color": "abe323ff" },
+	{ "name": "hat3", "parent": "hat2", "length": 66.20998, "rotation": 105.20158, "x": 79.22677, "color": "abe323ff" },
+	{ "name": "head-inverse", "parent": "head-base", "x": -104.60988, "y": 307.5087, "color": "de564275", "icon": "warning" },
+	{ "name": "eyellid-r-up", "parent": "face-holder", "x": -73.40207, "y": 30.1546, "color": "ff5197ff", "icon": "arrowUpDown" },
+	{ "name": "slower-face-holder", "parent": "head-base", "x": 3.7485256, "y": -18.68262, "color": "ff9513ff", "icon": "asterisk" },
+	{ "name": "eyellid-r-down", "parent": "slower-face-holder", "x": -103.61182, "y": -37.35583, "color": "ff5197ff", "icon": "arrowUpDown" },
+	{ "name": "eyellid-l-up", "parent": "face-holder", "x": 68.87413, "y": 21.862793, "color": "ff8913ff", "icon": "arrowUpDown" },
+	{ "name": "eyellid-l-down", "parent": "slower-face-holder", "x": 91.73176, "y": -52.28113, "color": "ff8913ff", "icon": "arrowUpDown" },
+	{ "name": "pupil-r", "parent": "face-holder", "x": -65.94128, "y": 2.395935, "color": "ff5197ff", "icon": "star" },
+	{ "name": "pupil-l", "parent": "face-holder", "x": 52.91402, "y": -3.81311, "color": "ff8913ff", "icon": "star" },
+	{ "name": "mouth", "parent": "face-holder", "x": -2.6555824, "y": -60.00464, "color": "ffc714ff", "icon": "mouth" },
+	{
+		"name": "hair-l",
+		"parent": "face-holder",
+		"length": 172.6006,
+		"rotation": -47.05459,
+		"x": 40.90534,
+		"y": 113.90497,
+		"color": "ffc714ff"
+	},
+	{
+		"name": "hair-r",
+		"parent": "face-holder",
+		"length": 139.48906,
+		"rotation": -131.5029,
+		"x": -52.62213,
+		"y": 114.4519,
+		"color": "ffc714ff"
+	},
+	{ "name": "snow-scale", "parent": "globe-texture", "rotation": -22.80861, "scaleY": 0.6733458, "color": "af81ccff" },
+	{ "name": "snow-rotator", "parent": "snow-scale", "color": "af81ccff" },
+	{ "name": "snow-holder", "parent": "snow-rotator", "x": -217.1861, "y": 675.505, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder2", "parent": "snow-rotator", "x": 487.4106, "y": -233.54736, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder3", "parent": "snow-rotator", "x": 429.8348, "y": 570.5404, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder4", "parent": "snow-rotator", "x": -536.0267, "y": 77.91662, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder5", "parent": "snow-rotator", "x": -217.1861, "y": -772.6465, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-scale2", "parent": "globe-texture", "rotation": 14.309006, "scaleY": 0.6733458, "color": "af81ccff" },
+	{ "name": "snow-rotator2", "parent": "snow-scale2", "color": "af81ccff" },
+	{ "name": "snow-holder6", "parent": "snow-rotator2", "x": -217.1861, "y": 675.505, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder7", "parent": "snow-rotator2", "x": 487.4106, "y": -233.54736, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder8", "parent": "snow-rotator2", "x": 429.8348, "y": 570.5404, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder9", "parent": "snow-rotator2", "x": -536.0267, "y": 77.91662, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder10", "parent": "snow-rotator2", "x": -217.1861, "y": -772.6465, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder11", "parent": "snow-rotator", "x": -708.8731, "y": -219.3346, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{
+		"name": "snow-holder12",
+		"parent": "snow-rotator",
+		"rotation": -42.7092,
+		"x": -605.4508,
+		"y": 81.90302,
+		"inherit": "onlyTranslation",
+		"color": "af81ccff"
+	},
+	{ "name": "snow-holder13", "parent": "snow-rotator", "x": 367.90805, "y": -412.7979, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder14", "parent": "snow-rotator2", "x": -333.6146, "y": -365.8064, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{ "name": "snow-holder15", "parent": "snow-rotator2", "x": 440.0856, "y": -442.6213, "inherit": "onlyTranslation", "color": "af81ccff" },
+	{
+		"name": "shoelace",
+		"parent": "leg-knee-r",
+		"length": 32.99379,
+		"rotation": 23.75445,
+		"x": 31.235184,
+		"y": -19.45947,
+		"color": "abe323ff"
+	},
+	{
+		"name": "shoelace2",
+		"parent": "shoelace",
+		"length": 33.32024,
+		"rotation": -1.1573162,
+		"x": 35.63193,
+		"y": -1.3863373,
+		"color": "abe323ff"
+	},
+	{ "name": "shoelace3", "parent": "shoelace2", "length": 37.99091, "rotation": -1.0051208, "x": 33.32025, "color": "abe323ff" },
+	{
+		"name": "shoelace4",
+		"parent": "shoelace",
+		"length": 33.32024,
+		"rotation": -1.1573162,
+		"x": 35.63193,
+		"y": 9.31433,
+		"color": "abe323ff"
+	},
+	{ "name": "shoelace5", "parent": "shoelace4", "length": 37.99091, "rotation": -1.0051208, "x": 33.32025, "color": "abe323ff" },
+	{
+		"name": "shoelace6",
+		"parent": "leg-knee-l",
+		"length": 32.99379,
+		"rotation": 4.242126,
+		"x": 39.86275,
+		"y": -32.96949,
+		"color": "abe323ff"
+	},
+	{
+		"name": "shoelace7",
+		"parent": "shoelace6",
+		"length": 33.32024,
+		"rotation": -1.1573162,
+		"x": 35.63193,
+		"y": -1.3863373,
+		"color": "abe323ff"
+	},
+	{ "name": "shoelace8", "parent": "shoelace7", "length": 37.99091, "rotation": -1.0051208, "x": 33.32025, "color": "abe323ff" },
+	{
+		"name": "shoelace9",
+		"parent": "shoelace6",
+		"length": 33.32024,
+		"rotation": -1.1573162,
+		"x": 35.63193,
+		"y": 9.31433,
+		"color": "abe323ff"
+	},
+	{ "name": "shoelace10", "parent": "shoelace9", "length": 37.99091, "rotation": -1.0051208, "x": 33.32025, "color": "abe323ff" }
+],
+"slots": [
+	{ "name": "globe-shadow", "bone": "globe-holder", "attachment": "globe-shadow", "blend": "multiply" },
+	{ "name": "globe-base-back", "bone": "globe-holder", "attachment": "globe-base-back" },
+	{ "name": "elf-shadow", "bone": "globe-holder", "attachment": "elf-shadow" },
+	{ "name": "globe-texture", "bone": "globe-holder", "attachment": "globe-texture" },
+	{ "name": "snow/snow", "bone": "globe-holder" },
+	{ "name": "snow/snow2", "bone": "snow-holder", "attachment": "snow" },
+	{ "name": "snow/snow11", "bone": "snow-holder6", "attachment": "snow" },
+	{ "name": "snow/snow8", "bone": "snow-holder", "attachment": "snow" },
+	{ "name": "snow/snow12", "bone": "snow-holder6", "attachment": "snow" },
+	{ "name": "snow/snow3", "bone": "snow-holder2", "attachment": "snow" },
+	{ "name": "snow/snow24", "bone": "snow-holder13", "attachment": "snow" },
+	{ "name": "snow/snow13", "bone": "snow-holder7", "attachment": "snow" },
+	{ "name": "snow/snow28", "bone": "snow-holder15", "attachment": "snow" },
+	{ "name": "snow/snow26", "bone": "snow-holder14", "attachment": "snow" },
+	{ "name": "snow/snow10", "bone": "snow-holder2", "attachment": "snow" },
+	{ "name": "snow/snow25", "bone": "snow-holder13", "attachment": "snow" },
+	{ "name": "snow/snow14", "bone": "snow-holder7", "attachment": "snow" },
+	{ "name": "snow/snow29", "bone": "snow-holder15", "attachment": "snow" },
+	{ "name": "snow/snow27", "bone": "snow-holder14", "attachment": "snow" },
+	{ "name": "snow/snow4", "bone": "snow-holder3", "attachment": "snow" },
+	{ "name": "snow/snow15", "bone": "snow-holder8", "attachment": "snow" },
+	{ "name": "snow/snow9", "bone": "snow-holder3", "attachment": "snow" },
+	{ "name": "snow/snow16", "bone": "snow-holder8", "attachment": "snow" },
+	{ "name": "snow/snow5", "bone": "snow-holder4", "attachment": "snow" },
+	{ "name": "snow/snow22", "bone": "snow-holder12", "attachment": "snow" },
+	{ "name": "snow/snow20", "bone": "snow-holder11", "attachment": "snow" },
+	{ "name": "snow/snow17", "bone": "snow-holder9", "attachment": "snow" },
+	{ "name": "snow/snow7", "bone": "snow-holder4", "attachment": "snow" },
+	{ "name": "snow/snow23", "bone": "snow-holder12", "attachment": "snow" },
+	{ "name": "snow/snow21", "bone": "snow-holder11", "attachment": "snow" },
+	{ "name": "snow/snow18", "bone": "snow-holder9", "attachment": "snow" },
+	{ "name": "snow/snow6", "bone": "snow-holder5", "attachment": "snow" },
+	{ "name": "snow/snow19", "bone": "snow-holder10", "attachment": "snow" },
+	{ "name": "spineboy/scarf/scarf-pompom-l", "bone": "scarf-end-l", "attachment": "scarf-pompom-l" },
+	{ "name": "spineboy/scarf/scarf-end-l", "bone": "scarf-end-l", "attachment": "scarf-end-l" },
+	{ "name": "spineboy/scarf/scarf-ribbon-middle-l", "bone": "scarf-ribbon-top-l", "attachment": "scarf-ribbon-middle-l" },
+	{ "name": "spineboy/scarf/scarf-ribbon-bottom-l", "bone": "scarf-ribbon-top-l", "attachment": "scarf-ribbon-bottom-l" },
+	{ "name": "spineboy/scarf/scarf-ribbon-top-l", "bone": "scarf-ribbon-top-l", "attachment": "scarf-ribbon-top-l" },
+	{ "name": "spineboy/scarf/scarf-pompom-r", "bone": "scarf-end-r", "attachment": "scarf-pompom-r" },
+	{ "name": "spineboy/scarf/scarf-end-r", "bone": "scarf-end-r", "attachment": "scarf-end-r" },
+	{ "name": "spineboy/scarf/scarf-ribbon-middle-r", "bone": "scarf-ribbon-top-r", "attachment": "scarf-ribbon-middle-r" },
+	{ "name": "spineboy/scarf/scarf-ribbon-top-r", "bone": "scarf-ribbon-top-r", "attachment": "scarf-ribbon-top-r" },
+	{ "name": "spineboy/scarf/scarf-ribbon-bottom-r", "bone": "scarf-ribbon-top-r", "attachment": "scarf-ribbon-bottom-r" },
+	{ "name": "spineboy/shoe-r", "bone": "shoe-r", "attachment": "shoe-r" },
+	{ "name": "spineboy/shoe-l", "bone": "shoe-l", "attachment": "shoe-l" },
+	{ "name": "spineboy/shoelace", "bone": "shoelace", "attachment": "shoelace" },
+	{ "name": "spineboy/shoelace2", "bone": "shoelace6", "attachment": "shoelace" },
+	{ "name": "spineboy/string", "bone": "shoelace2", "attachment": "string" },
+	{ "name": "spineboy/string3", "bone": "shoelace7", "attachment": "string" },
+	{ "name": "spineboy/string2", "bone": "shoelace4", "attachment": "string" },
+	{ "name": "spineboy/string4", "bone": "shoelace9", "attachment": "string" },
+	{ "name": "spineboy/leg-down-r", "bone": "leg-knee-r", "attachment": "leg-down-r" },
+	{ "name": "spineboy/leg-down-l", "bone": "shoe-l", "attachment": "leg-down-l" },
+	{ "name": "spineboy/leg-up-l-fuzzy", "bone": "leg-knee-l", "attachment": "leg-up-l-fuzzy" },
+	{ "name": "spineboy/leg-up-r-fuzzy", "bone": "leg-knee-r", "attachment": "leg-up-r-fuzzy" },
+	{ "name": "spineboy/leg-up-r", "bone": "leg-up-r", "attachment": "leg-up-r" },
+	{ "name": "spineboy/leg-up-l", "bone": "leg-up-l", "attachment": "leg-up-l" },
+	{ "name": "spineboy/body", "bone": "hips", "attachment": "body" },
+	{ "name": "spineboy/arm-up-r", "bone": "arm-up-r", "attachment": "arm-up-r" },
+	{ "name": "spineboy/arm-up-l", "bone": "arm-up-l", "attachment": "arm-up-l" },
+	{ "name": "spineboy/arm-down-l", "bone": "arm-l-elbow", "attachment": "arm-down-l" },
+	{ "name": "spineboy/arm-down-r", "bone": "arm-r-elbow", "attachment": "arm-down-r" },
+	{ "name": "spineboy/arm-down-r-fuzzy", "bone": "glove-r", "attachment": "arm-down-r-fuzzy" },
+	{ "name": "spineboy/arm-down-l-fuzzy", "bone": "glove-l", "attachment": "arm-down-l-fuzzy" },
+	{ "name": "spineboy/glove-r", "bone": "glove-r", "attachment": "glove-r" },
+	{ "name": "spineboy/glove-l", "bone": "glove-l", "attachment": "glove-l" },
+	{ "name": "spineboy/scarf-shadow", "bone": "body-top", "attachment": "scarf-shadow" },
+	{ "name": "spineboy/neck-scarf", "bone": "body-top", "attachment": "neck-scarf" },
+	{ "name": "spineboy/hat", "bone": "hat", "attachment": "hat" },
+	{ "name": "spineboy/ear-r", "bone": "head-base", "attachment": "ear-r" },
+	{ "name": "spineboy/ear-l", "bone": "head-base", "attachment": "ear-l" },
+	{ "name": "spineboy/eye-white-r", "bone": "head-base", "attachment": "eye-white-r" },
+	{ "name": "spineboy/eye-white-r2", "bone": "head-base", "attachment": "eye-white-r" },
+	{ "name": "spineboy/iris-r", "bone": "pupil-r", "attachment": "iris-r" },
+	{ "name": "spineboy/pupil-r", "bone": "pupil-r", "attachment": "pupil-r" },
+	{ "name": "spineboy/eye-reflex-r", "bone": "face-holder", "attachment": "eye-reflex-r" },
+	{ "name": "spineboy/eye-white-l", "bone": "head-base", "attachment": "eye-white-l" },
+	{ "name": "spineboy/eye-white-l2", "bone": "head-base", "attachment": "eye-white-l" },
+	{ "name": "spineboy/iris-l", "bone": "pupil-l", "attachment": "iris-l" },
+	{ "name": "spineboy/pupil-l", "bone": "pupil-l", "attachment": "pupil-l" },
+	{ "name": "spineboy/eye-reflex-l", "bone": "face-holder", "attachment": "eye-reflex-l" },
+	{ "name": "spineboy/head-base", "bone": "head-base", "attachment": "head-base" },
+	{ "name": "spineboy/nose-shadow", "bone": "face-holder", "attachment": "nose-shadow" },
+	{ "name": "spineboy/nose", "bone": "nose", "attachment": "nose" },
+	{ "name": "spineboy/eyelashes-r", "bone": "eyellid-r-up", "attachment": "eyelashes-r" },
+	{ "name": "spineboy/eyelashes-l", "bone": "eyellid-l-up", "attachment": "eyelashes-l" },
+	{ "name": "spineboy/mouth", "bone": "mouth", "attachment": "mouth" },
+	{ "name": "spineboy/hair/hair-side", "bone": "head-base", "attachment": "hair-side" },
+	{ "name": "spineboy/hair/hair-side2", "bone": "head-base", "attachment": "hair-side" },
+	{ "name": "spineboy/hair/hair-front", "bone": "head-base", "attachment": "hair-front" },
+	{ "name": "spineboy/hair/hair-strand-1", "bone": "head-base", "attachment": "hair-strand-1" },
+	{ "name": "spineboy/hair/hair-strand-2", "bone": "head-base", "attachment": "hair-strand-2" },
+	{ "name": "spineboy/hair/hair-strand-3", "bone": "head-base", "attachment": "hair-strand-3" },
+	{ "name": "spineboy/hair/hair-strand-4", "bone": "head-base", "attachment": "hair-strand-4" },
+	{ "name": "spineboy/hair/hair-strand-5", "bone": "head-base", "attachment": "hair-strand-5" },
+	{ "name": "spineboy/hair/hair-strand-6", "bone": "head-base", "attachment": "hair-strand-6" },
+	{ "name": "spineboy/gift-decoration", "bone": "body", "attachment": "gift-decoration" },
+	{ "name": "spineboy/gift-base", "bone": "body", "attachment": "gift-base" },
+	{ "name": "spineboy/glove-shadow-r", "bone": "glove-r", "attachment": "glove-shadow-r" },
+	{ "name": "spineboy/glove-shadow-l", "bone": "glove-l", "attachment": "glove-shadow-l" },
+	{ "name": "spineboy/glove-fingers-r", "bone": "glove-r", "attachment": "glove-fingers-r" },
+	{ "name": "spineboy/glove-fingers-l", "bone": "glove-l", "attachment": "glove-fingers-l" },
+	{ "name": "red-present/red-present-base", "bone": "red-present-container", "attachment": "red-present-base" },
+	{ "name": "red-present/red-present-decoration", "bone": "red-present-container", "attachment": "red-present-decoration" },
+	{ "name": "blue-present/blue-present-base", "bone": "blue-present-container", "attachment": "blue-present-base" },
+	{ "name": "blue-present/blue-present-decoration", "bone": "blue-present-control", "attachment": "blue-present-decoration" },
+	{ "name": "green-present/green-present-base", "bone": "green-present-container", "attachment": "green-present-base" },
+	{ "name": "green-present/green-present-decoration", "bone": "green-present-container", "attachment": "green-present-decoration" },
+	{ "name": "globe-borders", "bone": "globe-holder", "attachment": "globe-borders" },
+	{ "name": "globe-reflections", "bone": "globe-holder", "attachment": "globe-reflections" },
+	{ "name": "globe-base-front", "bone": "globe-holder", "attachment": "globe-base-front" }
+],
+"constraints": [
+	{
+		"type": "physics",
+		"name": "blue-present/blue-present-container",
+		"bone": "blue-present-container",
+		"x": 1,
+		"y": 1,
+		"limit": 400,
+		"inertia": 0.3235,
+		"damping": 0.9018
+	},
+	{
+		"type": "transform",
+		"name": "blue-present/blue-present-control",
+		"source": "blue-present-control",
+		"bones": [ "blue-present-inverse" ],
+		"x": 2.0295715,
+		"y": 109.59637,
+		"properties": {
+			"x": {
+				"to": {
+					"x": { "max": 100 }
+				}
+			},
+			"y": {
+				"to": {
+					"y": { "max": 100 }
+				}
+			}
+		},
+		"mixX": -1
+	},
+	{
+		"type": "physics",
+		"name": "blue-present/blue-present-control",
+		"bone": "blue-present-control",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3137
+	},
+	{
+		"type": "physics",
+		"name": "hips",
+		"bone": "hips",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"inertia": 0.227,
+		"strength": 74.8,
+		"damping": 0.9141
+	},
+	{ "type": "physics", "name": "body", "bone": "body", "rotate": 0.3889, "limit": 500 },
+	{
+		"type": "physics",
+		"name": "body-top",
+		"bone": "body-top",
+		"x": 0.4573,
+		"y": 0.4658,
+		"limit": 500,
+		"inertia": 0.362,
+		"strength": 112.9
+	},
+	{
+		"type": "physics",
+		"name": "head-base",
+		"bone": "head-base",
+		"x": 0.3248,
+		"y": 0.3248,
+		"limit": 500,
+		"inertia": 0.362
+	},
+	{
+		"type": "physics",
+		"name": "nose",
+		"bone": "nose",
+		"x": 0.6532,
+		"y": 0.6127,
+		"limit": 500,
+		"inertia": 0.2353
+	},
+	{
+		"type": "transform",
+		"name": "inverse-head",
+		"source": "nose",
+		"bones": [ "head-inverse" ],
+		"x": -128.665,
+		"y": 360.4018,
+		"properties": {
+			"x": {
+				"to": {
+					"x": { "max": 100 }
+				}
+			},
+			"y": {
+				"to": {
+					"y": { "max": 100 }
+				}
+			}
+		},
+		"mixX": -1
+	},
+	{
+		"type": "transform",
+		"name": "face-holder",
+		"source": "nose",
+		"bones": [ "face-holder" ],
+		"x": -13.75608,
+		"y": 18.38556,
+		"properties": {
+			"x": {
+				"to": {
+					"x": { "max": 100 }
+				}
+			},
+			"y": {
+				"to": {
+					"y": { "max": 100 }
+				}
+			}
+		},
+		"mixX": 0.6
+	},
+	{
+		"type": "transform",
+		"name": "slower-face-holder",
+		"source": "nose",
+		"bones": [ "slower-face-holder" ],
+		"x": -20.30656,
+		"y": 34.21045,
+		"properties": {
+			"x": {
+				"to": {
+					"x": { "max": 100 }
+				}
+			},
+			"y": {
+				"to": {
+					"y": { "max": 100 }
+				}
+			}
+		},
+		"mixX": 0.2
+	},
+	{ "type": "physics", "name": "leg-up-r", "bone": "leg-up-r", "rotate": 1, "limit": 500, "damping": 0.816 },
+	{ "type": "physics", "name": "leg-knee-r", "bone": "leg-knee-r", "x": 1, "y": 1, "limit": 500 },
+	{
+		"type": "physics",
+		"name": "shoe-r",
+		"bone": "shoe-r",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"inertia": 0.3333
+	},
+	{ "type": "physics", "name": "shoe-r-rotator", "bone": "shoe-r-rotator", "rotate": 0.5214, "limit": 500 },
+	{
+		"type": "physics",
+		"name": "shoe-r-tip",
+		"bone": "shoe-r-tip",
+		"x": 0.5085,
+		"y": 0.4872,
+		"limit": 500,
+		"inertia": 0.3333
+	},
+	{ "type": "physics", "name": "leg-up-l", "bone": "leg-up-l", "rotate": 0.4402, "limit": 500, "damping": 0.908 },
+	{ "type": "physics", "name": "leg-knee-l", "bone": "leg-knee-l", "x": 1, "y": 1, "limit": 500 },
+	{
+		"type": "physics",
+		"name": "shoe-l",
+		"bone": "shoe-l",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"inertia": 0.2549
+	},
+	{ "type": "physics", "name": "shoe-l-rotator", "bone": "shoe-l-rotator", "rotate": 0.5128, "limit": 500, "inertia": 0.2059 },
+	{
+		"type": "physics",
+		"name": "shoe-l-tip",
+		"bone": "shoe-l-tip",
+		"x": 0.3121,
+		"y": 0.3353,
+		"limit": 500,
+		"inertia": 0.2941
+	},
+	{ "type": "physics", "name": "arm-up-r2", "bone": "arm-up-r2", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "arm-r-elbow", "bone": "arm-r-elbow", "x": 0.5385, "y": 0.6368, "limit": 500 },
+	{ "type": "physics", "name": "glove-r", "bone": "glove-r", "x": 0.5385, "y": 0.6368, "limit": 500 },
+	{ "type": "physics", "name": "arm-up-l2", "bone": "arm-up-l2", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "arm-l-elbow", "bone": "arm-l-elbow", "x": 0.5385, "y": 0.6368, "limit": 500 },
+	{ "type": "physics", "name": "glove-l", "bone": "glove-l", "x": 0.5385, "y": 0.6368, "limit": 500 },
+	{ "type": "physics", "name": "scarf/scarf-ribbon-top-r", "bone": "scarf-ribbon-top-r", "x": 1, "y": 1, "limit": 500 },
+	{
+		"type": "physics",
+		"name": "scarf/scarf-end-r",
+		"bone": "scarf-end-r",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"strength": 69.9,
+		"damping": 0.7853
+	},
+	{ "type": "physics", "name": "scarf/scarf-ribbon-top-l", "bone": "scarf-ribbon-top-l", "x": 1, "y": 1, "limit": 500 },
+	{
+		"type": "physics",
+		"name": "scarf/scarf-end-l",
+		"bone": "scarf-end-l",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"strength": 70,
+		"damping": 0.79
+	},
+	{
+		"type": "physics",
+		"name": "green-present/green-present-container",
+		"bone": "green-present-container",
+		"x": 1,
+		"y": 1,
+		"limit": 400,
+		"damping": 0.7362
+	},
+	{ "type": "physics", "name": "green-present/green-present-control", "bone": "green-present-control", "x": 1, "y": 1, "limit": 300 },
+	{
+		"type": "physics",
+		"name": "red-present/red-present-container",
+		"bone": "red-present-container",
+		"x": 1,
+		"y": 1,
+		"limit": 400,
+		"damping": 0.6994
+	},
+	{
+		"type": "physics",
+		"name": "red-present/red-present-control",
+		"bone": "red-present-control",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.2353
+	},
+	{ "type": "physics", "name": "snowball-perspective", "bone": "snowball-perspective", "x": 0.5043, "y": 0.4744, "limit": 500 },
+	{ "type": "physics", "name": "hat", "bone": "hat", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "hat2", "bone": "hat2", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "hat3", "bone": "hat3", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "hair-r", "bone": "hair-r", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "hair-l", "bone": "hair-l", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace", "bone": "shoelace", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace3", "bone": "shoelace3", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace6", "bone": "shoelace6", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace5", "bone": "shoelace5", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace4", "bone": "shoelace4", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace2", "bone": "shoelace2", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace7", "bone": "shoelace7", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace9", "bone": "shoelace9", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace10", "bone": "shoelace10", "rotate": 1, "limit": 500 },
+	{ "type": "physics", "name": "shoelaces/shoelace8", "bone": "shoelace8", "rotate": 1, "limit": 500 }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"elf-shadow": {
+				"elf-shadow": { "x": -1, "y": -31.378616, "width": 790, "height": 315 }
+			},
+			"globe-base-back": {
+				"globe-base-back": {
+					"type": "mesh",
+					"uvs": [ 1, 0.5680193, 1, 1, 0, 1, 0, 0.5707112, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0, 3, 4, 0, 4, 5, 0 ],
+					"vertices": [ 1.0, 2.0, 609.0, -659.1, 1.0, 1.0, 2.0, 609.0, -882.0, 1.0, 1.0, 2.0, -602.0, -882.0, 1.0, 1.0, 2.0, -602.0, -660.49, 1.0, 1.0, 3.0, -602.0, 1155.49, 1.0, 1.0, 3.0, 609.0, 1155.49, 1.0 ],
+					"hull": 6,
+					"edges": [ 2, 4, 8, 10, 4, 6, 6, 8, 2, 0, 0, 10 ],
+					"width": 1211.0,
+					"height": 516.0
+				}
+			},
+			"globe-base-front": {
+				"globe-base-front": {
+					"type": "mesh",
+					"uvs": [ 0.10758418, 1.0257587E-5, 0.262862, 0.1623014, 0.3567463, 0.19956954, 0.4879388, 0.2167242, 0.7179419, 0.1690576, 0.8830857, 0, 0.9098958, 0, 0.945217, 0.21741587, 0.9814121, 0.4402118, 0.9999897, 0.8651867, 0.999973, 1, 0.8728285, 0.99999, 0.7410733, 0.8734932, 0.4862266, 0.9836186, 0.24262825, 0.8580142, 0.1259981, 1, 1.011982E-5, 1, 9.422016E-6, 0.8370192, 0.011741316, 0.4521228, 0.05236702, 0.201605, 0.08506068, 0, 0.4822542, 0.4555318, 0.23582172, 0.3551262, 0.7538224, 0.3729821, 0.8616755, 0.685797, 0.7222482, 0.7912056, 0.24010015, 0.7813096, 0.4870494, 0.8459638, 0.1343305, 0.6879928 ],
+					"triangles": [ 24, 23, 8, 19, 20, 0, 7, 4, 5, 5, 6, 7, 1, 19, 0, 23, 3, 4, 21, 2, 3, 22, 1, 2, 22, 19, 1, 7, 23, 4, 23, 21, 3, 22, 2, 21, 25, 21, 23, 26, 22, 21, 26, 21, 27, 27, 21, 25, 25, 23, 24, 28, 22, 26, 28, 18, 22, 22, 18, 19, 23, 7, 8, 9, 10, 24, 14, 15, 28, 15, 16, 28, 16, 17, 28, 12, 24, 11, 10, 11, 24, 12, 13, 27, 13, 14, 27, 14, 28, 26, 12, 27, 25, 12, 25, 24, 24, 8, 9, 14, 26, 27, 17, 18, 28 ],
+					"vertices": [ 1.0, 2.0, -549.09, -659.01, 1.0, 1.0, 2.0, -329.84, -807.67, 1.0, 1.0, 2.0, -197.27, -841.81, 1.0, 1.0, 2.0, -12.03, -857.52, 1.0, 1.0, 2.0, 312.73, -813.86, 1.0, 1.0, 2.0, 545.92, -659.0, 1.0, 1.0, 2.0, 583.77, -659.0, 1.0, 2.0, 3.0, 633.65, 663.34, 0.5192, 2.0, 633.65, -858.15, 0.4808, 2.0, 3.0, 684.75, 459.26, 0.6635, 2.0, 684.75, -1062.23, 0.3365, 2.0, 3.0, 710.99, 69.98, 0.7404, 2.0, 710.99, -1451.51, 0.2596, 1.0, 3.0, 710.96, -53.51, 1.0, 2.0, 3.0, 531.43, -53.5, 0.8654, 2.0, 531.43, -1574.99, 0.1346, 2.0, 3.0, 345.4, 62.37, 0.7404, 2.0, 345.4, -1459.12, 0.2596, 2.0, 3.0, -14.45, -38.5, 0.9038, 2.0, -14.45, -1559.99, 0.0962, 2.0, 3.0, -358.41, 76.55, 0.7404, 2.0, -358.41, -1444.94, 0.2596, 2.0, 3.0, -523.09, -53.51, 0.8654, 2.0, -523.09, -1575.0, 0.1346, 1.0, 3.0, -700.99, -53.51, 1.0, 2.0, 3.0, -700.99, 95.78, 0.7404, 2.0, -700.99, -1425.71, 0.2596, 2.0, 3.0, -684.42, 448.35, 0.6635, 2.0, -684.42, -1073.14, 0.3365, 2.0, 3.0, -627.06, 677.82, 0.5192, 2.0, -627.06, -843.67, 0.4808, 1.0, 2.0, -580.89, -659.0, 1.0, 2.0, 3.0, -20.06, 445.22, 0.1538, 2.0, -20.06, -1076.27, 0.8462, 2.0, 3.0, -368.02, 537.2, 0.2115, 2.0, -368.02, -984.3, 0.7885, 2.0, 3.0, 363.4, 520.84, 0.2115, 2.0, 363.4, -1000.65, 0.7885, 2.0, 3.0, 515.69, 234.3, 0.5192, 2.0, 515.69, -1287.19, 0.4808, 2.0, 3.0, 318.81, 137.75, 0.4327, 2.0, 318.81, -1383.74, 0.5673, 2.0, 3.0, -361.98, 146.81, 0.4327, 2.0, -361.98, -1374.68, 0.5673, 2.0, 3.0, -13.29, 87.59, 0.4327, 2.0, -13.29, -1433.9, 0.5673, 2.0, 3.0, -511.33, 232.29, 0.5192, 2.0, -511.33, -1289.2, 0.4808 ],
+					"hull": 21,
+					"edges": [ 0, 40, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 16, 18, 18, 20, 22, 24, 26, 28, 32, 34, 34, 36, 20, 22, 24, 26, 28, 30, 30, 32, 10, 12, 36, 38, 38, 40, 12, 14, 14, 16, 48, 20, 56, 32 ],
+					"width": 1412.0,
+					"height": 916.0
+				}
+			},
+			"globe-borders": {
+				"globe-borders": { "x": 0.5, "y": 599.6214, "scaleX": 2, "scaleY": 2, "width": 880, "height": 881 }
+			},
+			"globe-reflections": {
+				"globe-reflections": { "y": 602.1214, "width": 1292, "height": 1670 }
+			},
+			"globe-shadow": {
+				"globe-shadow": { "x": 3.5, "y": -852.8786, "width": 1839, "height": 732 }
+			},
+			"globe-texture": {
+				"globe-texture": { "x": 0.5, "y": 599.6214, "scaleX": 2, "scaleY": 2, "width": 880, "height": 881 }
+			},
+			"blue-present/blue-present-base": {
+				"blue-present-base": {
+					"type": "mesh",
+					"uvs": [ 0.5085273, 0, 1, 0.1883471, 0.9680134, 0.7366468, 0.5169318, 1, 0.4862865, 1, 0.03326034, 0.7385526, 0, 0.1883692, 0.4914586, 0, 0.4991068, 0.3960362 ],
+					"triangles": [ 8, 7, 0, 8, 0, 1, 6, 7, 8, 3, 4, 8, 2, 8, 1, 5, 6, 8, 4, 5, 8, 2, 3, 8 ],
+					"vertices": [ 2.0, 22.0, 4.77, 112.27, 0.33, 25.0, 2.74, 2.67, 0.67, 2.0, 22.0, 128.62, 60.09, 0.66, 25.0, 126.59, -49.5, 0.34, 2.0, 22.0, 120.56, -91.78, 0.33, 25.0, 118.53, -201.38, 0.67, 2.0, 22.0, 6.89, -164.73, 0.66, 25.0, 4.86, -274.33, 0.34, 2.0, 22.0, -0.83, -164.73, 0.66, 25.0, -2.86, -274.33, 0.34, 2.0, 22.0, -115.0, -92.31, 0.33, 25.0, -117.03, -201.91, 0.67, 2.0, 22.0, -123.38, 60.09, 0.66, 25.0, -125.41, -49.51, 0.34, 2.0, 22.0, 0.47, 112.27, 0.33, 25.0, -1.56, 2.67, 0.67, 2.0, 22.0, 2.4, 2.56, 0.99532, 25.0, 0.37, -107.03, 0.00468 ],
+					"hull": 8,
+					"edges": [ 0, 14, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 12, 14, 10, 12 ],
+					"width": 252.0,
+					"height": 277.0
+				}
+			},
+			"blue-present/blue-present-decoration": {
+				"blue-present-decoration": {
+					"type": "mesh",
+					"uvs": [ 0.6673938, 1, 0.4515407, 1, 0.1359234, 0.8958503, 0, 0.6497505, 0, 0.4514023, 0.08513424, 0.13367617, 0.3916822, 0, 0.578513, 0, 0.8179472, 0.10796356, 1, 0.3871216, 1, 0.5707779, 0.8995723, 0.8389168, 0.496888, 0.4752777 ],
+					"triangles": [ 12, 6, 7, 12, 7, 8, 12, 8, 9, 5, 6, 12, 4, 5, 12, 12, 9, 10, 3, 4, 12, 11, 12, 10, 2, 3, 12, 1, 2, 12, 12, 0, 1, 11, 0, 12 ],
+					"vertices": [ 2.0, 22.0, 17.68, 22.27, 0.7885, 25.0, 15.65, -87.33, 0.2115, 2.0, 22.0, 0.2, 22.27, 0.7885, 25.0, -1.83, -87.33, 0.2115, 2.0, 22.0, -25.37, 30.6, 0.7404, 25.0, -27.4, -79.0, 0.2596, 2.0, 22.0, -36.38, 50.29, 0.6731, 25.0, -38.41, -59.31, 0.3269, 2.0, 22.0, -36.38, 66.15, 0.6923, 25.0, -38.41, -43.44, 0.3077, 2.0, 22.0, -29.48, 91.57, 0.6731, 25.0, -31.51, -18.02, 0.3269, 2.0, 22.0, -4.65, 102.27, 0.6827, 25.0, -6.68, -7.33, 0.3173, 2.0, 22.0, 10.48, 102.27, 0.6827, 25.0, 8.45, -7.33, 0.3173, 2.0, 22.0, 29.88, 93.63, 0.6731, 25.0, 27.85, -15.97, 0.3269, 2.0, 22.0, 44.62, 71.3, 0.6923, 25.0, 42.59, -38.3, 0.3077, 2.0, 22.0, 44.62, 56.6, 0.6731, 25.0, 42.59, -52.99, 0.3269, 2.0, 22.0, 36.49, 35.15, 0.7404, 25.0, 34.46, -74.44, 0.2596, 2.0, 22.0, 3.87, 64.24, 0.7596, 25.0, 1.84, -45.35, 0.2404 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 0, 22 ],
+					"width": 81.0,
+					"height": 80.0
+				}
+			},
+			"green-present/green-present-base": {
+				"green-present-base": {
+					"type": "mesh",
+					"uvs": [ 0.5127923, 0, 0.9993762, 0.18859564, 0.969793, 0.7353626, 0.5165515, 1, 0.4860758, 1, 0.026795885, 0.7375828, 1.0393938E-5, 0.184892, 0.4905577, 0, 0.4986897, 0.4007907 ],
+					"triangles": [ 8, 0, 1, 8, 7, 0, 2, 3, 8, 3, 4, 8, 4, 5, 8, 5, 6, 8, 2, 8, 1, 6, 7, 8 ],
+					"vertices": [ 1.0, 24.0, 2.45, 1.41, 1.0, 2.0, 23.0, 126.18, 58.95, 0.5, 24.0, 125.07, -50.83, 0.5, 2.0, 23.0, 118.72, -92.5, 0.5, 24.0, 117.62, -202.28, 0.5, 1.0, 23.0, 4.51, -165.81, 1.0, 1.0, 23.0, -3.17, -165.81, 1.0, 2.0, 23.0, -118.91, -93.12, 0.5, 24.0, -120.02, -202.9, 0.5, 2.0, 23.0, -125.66, 59.98, 0.5, 24.0, -126.77, -49.8, 0.5, 2.0, 23.0, -2.05, 111.19, 0.00106, 24.0, -3.15, 1.41, 0.99894, 2.0, 23.0, 0.0, 0.17, 0.99915, 24.0, -1.1, -109.61, 8.5E-4 ],
+					"hull": 8,
+					"edges": [ 0, 14, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 12, 14, 10, 12 ],
+					"width": 252.0,
+					"height": 277.0
+				}
+			},
+			"green-present/green-present-decoration": {
+				"green-present-decoration": {
+					"type": "mesh",
+					"uvs": [ 0.6665047, 0.999989, 0.4271519, 0.9999897, 0.1361732, 0.8863953, 0, 0.65593, 0, 0.4230884, 0.0939346, 0.10946542, 0.4036858, 0, 0.584374, 0, 0.8190338, 0.12134474, 1, 0.399329, 1, 0.6060352, 0.8870853, 0.831749, 0.4928566, 0.4801113 ],
+					"triangles": [ 0, 1, 12, 1, 2, 12, 0, 12, 11, 2, 3, 12, 11, 12, 10, 3, 4, 12, 12, 9, 10, 4, 5, 12, 5, 6, 12, 12, 8, 9, 12, 7, 8, 12, 6, 7 ],
+					"vertices": [ 2.0, 23.0, 15.32, 21.19, 0.7115, 24.0, 14.22, -88.59, 0.2885, 2.0, 23.0, -4.07, 21.19, 0.7115, 24.0, -5.17, -88.59, 0.2885, 2.0, 23.0, -27.64, 30.28, 0.7019, 24.0, -28.74, -79.5, 0.2981, 2.0, 23.0, -38.67, 48.72, 0.6346, 24.0, -39.77, -61.06, 0.3654, 2.0, 23.0, -38.67, 67.35, 0.6346, 24.0, -39.77, -42.44, 0.3654, 2.0, 23.0, -31.06, 92.44, 0.6058, 24.0, -32.16, -17.35, 0.3942, 2.0, 23.0, -5.97, 101.19, 0.6346, 24.0, -7.07, -8.59, 0.3654, 2.0, 23.0, 8.67, 101.19, 0.6346, 24.0, 7.57, -8.59, 0.3654, 2.0, 23.0, 27.68, 91.48, 0.6058, 24.0, 26.57, -18.3, 0.3942, 2.0, 23.0, 42.33, 69.25, 0.6346, 24.0, 41.23, -40.53, 0.3654, 2.0, 23.0, 42.33, 52.71, 0.6346, 24.0, 41.23, -57.07, 0.3654, 2.0, 23.0, 33.19, 34.65, 0.7019, 24.0, 32.08, -75.13, 0.2981, 2.0, 23.0, 1.26, 62.78, 0.7115, 24.0, 0.15, -47.0, 0.2885 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 0, 22 ],
+					"width": 81.0,
+					"height": 80.0
+				}
+			},
+			"red-present/red-present-base": {
+				"red-present-base": {
+					"type": "mesh",
+					"uvs": [ 0.5191754, 0, 0.998863, 0.18782033, 0.969058, 0.7389682, 0.5143693, 1, 0.48537925, 1, 0.03064885, 0.7366589, 0.001016473, 0.18575315, 0.4927152, 0, 0.4955962, 0.39969215 ],
+					"triangles": [ 6, 7, 8, 8, 7, 0, 2, 3, 8, 3, 4, 8, 4, 5, 8, 2, 8, 1, 5, 6, 8, 8, 0, 1 ],
+					"vertices": [ 2.0, 18.0, 5.78, 111.01, 0.00184, 17.0, 4.17, 2.76, 0.99816, 2.0, 18.0, 126.66, 58.99, 0.5, 17.0, 125.05, -49.26, 0.5, 2.0, 18.0, 119.15, -93.68, 0.5, 17.0, 117.54, -201.93, 0.5, 1.0, 18.0, 4.57, -165.99, 1.0, 1.0, 18.0, -2.74, -165.99, 1.0, 2.0, 18.0, -117.33, -93.04, 0.5, 17.0, -118.94, -201.29, 0.5, 2.0, 18.0, -124.8, 59.56, 0.5, 17.0, -126.41, -48.69, 0.5, 1.0, 17.0, -2.5, 2.76, 1.0, 2.0, 18.0, -0.16, 0.3, 0.99862, 17.0, -1.77, -107.95, 0.00138 ],
+					"hull": 8,
+					"edges": [ 0, 14, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14 ],
+					"width": 252.0,
+					"height": 277.0
+				}
+			},
+			"red-present/red-present-decoration": {
+				"red-present-decoration": {
+					"type": "mesh",
+					"uvs": [ 0.4611672, 1, 0.1598345, 0.9228897, 0, 0.6746948, 0, 0.4320145, 0.09257284, 0.1396942, 0.3912148, 0, 0.5795477, 0, 0.827071, 0.13417816, 1, 0.3851318, 1, 0.6112655, 0.902404, 0.859462, 0.6306665, 1, 0.4961432, 0.4706222 ],
+					"triangles": [ 12, 5, 6, 3, 4, 12, 12, 7, 8, 10, 11, 12, 12, 11, 0, 0, 1, 12, 1, 2, 12, 10, 12, 9, 2, 3, 12, 12, 8, 9, 4, 5, 12, 12, 6, 7 ],
+					"vertices": [ 2.0, 18.0, -0.24, 21.01, 0.7404, 17.0, -1.85, -87.24, 0.2596, 2.0, 18.0, -24.94, 27.18, 0.7212, 17.0, -26.56, -81.07, 0.2788, 2.0, 18.0, -38.05, 47.04, 0.5865, 17.0, -39.66, -61.21, 0.4135, 2.0, 18.0, -38.05, 66.45, 0.6346, 17.0, -39.66, -41.8, 0.3654, 2.0, 18.0, -30.46, 89.84, 0.5962, 17.0, -32.07, -18.41, 0.4038, 2.0, 18.0, -5.97, 101.01, 0.6538, 17.0, -7.58, -7.24, 0.3462, 2.0, 18.0, 9.47, 101.01, 0.6538, 17.0, 7.86, -7.24, 0.3462, 2.0, 18.0, 29.77, 90.28, 0.5962, 17.0, 28.16, -17.97, 0.4038, 2.0, 18.0, 43.95, 70.2, 0.6346, 17.0, 42.34, -38.05, 0.3654, 2.0, 18.0, 43.95, 52.11, 0.5865, 17.0, 42.34, -56.14, 0.4135, 2.0, 18.0, 35.95, 32.26, 0.7115, 17.0, 34.33, -75.99, 0.2885, 2.0, 18.0, 13.66, 21.01, 0.7404, 17.0, 12.05, -87.24, 0.2596, 2.0, 18.0, 2.63, 63.36, 0.75, 17.0, 1.02, -44.89, 0.25 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 0, 22 ],
+					"width": 82.0,
+					"height": 80.0
+				}
+			},
+			"snow/snow": {
+				"snow": { "x": -492, "y": 1041.6213, "width": 54, "height": 55 }
+			},
+			"snow/snow2": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow3": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow4": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow5": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow6": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow7": {
+				"snow": {
+					"x": 58.20776,
+					"y": 106.43701,
+					"scaleX": 0.8474675,
+					"scaleY": 0.8474675,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow8": {
+				"snow": {
+					"x": 123.14294,
+					"y": -91.46912,
+					"scaleX": 0.7380015,
+					"scaleY": 0.7380015,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow9": {
+				"snow": {
+					"x": -58.2077,
+					"y": -176.28613,
+					"scaleX": 0.3434151,
+					"scaleY": 0.3434151,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow10": {
+				"snow": {
+					"x": -219.52625,
+					"y": 59.87085,
+					"scaleX": 0.6638462,
+					"scaleY": 0.6638462,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow11": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow12": {
+				"snow": {
+					"x": 123.14294,
+					"y": -91.46912,
+					"scaleX": 0.7380015,
+					"scaleY": 0.7380015,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow13": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow14": {
+				"snow": {
+					"x": -219.52625,
+					"y": 59.87085,
+					"scaleX": 0.6638462,
+					"scaleY": 0.6638462,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow15": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow16": {
+				"snow": {
+					"x": -58.2077,
+					"y": -176.28613,
+					"scaleX": 0.3434151,
+					"scaleY": 0.3434151,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow17": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow18": {
+				"snow": {
+					"x": 58.20776,
+					"y": 106.43701,
+					"scaleX": 0.8474675,
+					"scaleY": 0.8474675,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow19": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow20": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow21": {
+				"snow": {
+					"x": 62.06006,
+					"y": -107.36938,
+					"scaleX": 0.4137333,
+					"scaleY": 0.4137333,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow22": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow23": {
+				"snow": {
+					"x": 58.20776,
+					"y": 106.43701,
+					"scaleX": 0.8474675,
+					"scaleY": 0.8474675,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow24": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow25": {
+				"snow": {
+					"x": -219.52625,
+					"y": 59.87085,
+					"scaleX": 0.6638462,
+					"scaleY": 0.6638462,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow26": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow27": {
+				"snow": {
+					"x": -219.52625,
+					"y": 59.87085,
+					"scaleX": 0.6638462,
+					"scaleY": 0.6638462,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"snow/snow28": {
+				"snow": { "scaleX": 0.5336742, "scaleY": 0.5336742, "rotation": -27.830215, "width": 54, "height": 55 }
+			},
+			"snow/snow29": {
+				"snow": {
+					"x": -219.52625,
+					"y": 59.87085,
+					"scaleX": 0.6638462,
+					"scaleY": 0.6638462,
+					"rotation": -27.830215,
+					"width": 54,
+					"height": 55
+				}
+			},
+			"spineboy/hair/hair-front": {
+				"hair-front": {
+					"type": "mesh",
+					"uvs": [ 0.7110685, 0.161474, 0.8137725, 0.4227262, 0.8862787, 0.7859523, 0.9999895, 0.8522516, 0.9999996, 0.9999898, 0.7939223, 0.9999908, 0.6870591, 0.8698609, 0.5407766, 0.884962, 0.3414274, 0.8074812, 0, 0.520748, 0, 0.23602703, 0.2153633, 4.88013E-7, 0.4925028, 0.007040299, 0.16789624, 0.3378878, 0.3548046, 0.41858095, 0.6377632, 0.4262658, 0.3924458, 0.5991792, 0.540415, 0.6030216, 0.6611267, 0.6145492, 0.2211132, 0.5876516 ],
+					"triangles": [ 13, 10, 11, 14, 11, 12, 15, 12, 0, 15, 0, 1, 18, 15, 1, 18, 1, 2, 13, 11, 14, 14, 12, 15, 9, 10, 13, 19, 13, 14, 9, 13, 19, 17, 16, 14, 19, 14, 16, 15, 17, 14, 8, 19, 16, 9, 19, 8, 8, 16, 7, 17, 15, 18, 6, 18, 2, 17, 18, 6, 7, 17, 6, 16, 17, 7, 5, 6, 2, 4, 5, 2, 4, 2, 3 ],
+					"vertices": [ 2.0, 41.0, 91.31, 146.39, 0.25, 36.0, 101.61, 111.88, 0.75, 1.0, 36.0, 132.32, 59.11, 1.0, 3.0, 55.0, 138.59, 11.43, 0.35268, 41.0, 143.7, 20.25, 0.5577, 36.0, 154.0, -14.26, 0.08962, 2.0, 55.0, 171.56, 27.2, 0.6731, 41.0, 177.7, 6.85, 0.3269, 2.0, 55.0, 193.41, 6.87, 0.6731, 41.0, 177.7, -22.99, 0.3269, 2.0, 42.0, 102.33, -4.61, 0.3269, 55.0, 151.43, -38.24, 0.6731, 2.0, 42.0, 70.38, 21.68, 0.5192, 55.0, 110.42, -43.72, 0.4808, 3.0, 42.0, 26.64, 18.63, 0.22166, 55.0, 82.85, -77.81, 0.50261, 41.0, 40.39, 0.24, 0.27573, 3.0, 42.0, -32.97, 34.28, 0.2019, 55.0, 30.78, -110.78, 0.28772, 41.0, -19.21, 15.9, 0.51038, 2.0, 41.0, -121.3, 73.82, 0.7308, 36.0, -111.0, 39.31, 0.2692, 2.0, 41.0, -121.3, 131.33, 0.25, 36.0, -111.0, 96.82, 0.75, 2.0, 41.0, -56.91, 179.01, 0.25, 36.0, -46.61, 144.5, 0.75, 2.0, 41.0, 25.96, 177.59, 0.25, 36.0, 36.26, 143.08, 0.75, 2.0, 41.0, -71.1, 110.75, 0.6731, 36.0, -60.8, 76.25, 0.3269, 2.0, 55.0, -23.99, -54.33, 0.14286, 41.0, -15.21, 94.45, 0.85714, 3.0, 55.0, 34.78, 6.54, 0.35671, 41.0, 69.39, 92.9, 0.39329, 36.0, 79.69, 58.39, 0.25, 3.0, 42.0, -17.71, 76.36, 0.125, 55.0, 10.38, -70.95, 0.30385, 41.0, -3.96, 57.97, 0.57115, 3.0, 42.0, 26.53, 75.58, 0.0481, 55.0, 41.09, -39.09, 0.5769, 41.0, 40.29, 57.2, 0.375, 3.0, 42.0, 62.62, 73.25, 0.0962, 55.0, 67.38, -14.26, 0.57077, 41.0, 76.38, 54.87, 0.33303, 2.0, 42.0, -68.94, 78.69, 0.2019, 41.0, -55.19, 60.3, 0.7981 ],
+					"hull": 13,
+					"edges": [ 0, 24, 8, 10, 16, 18, 20, 22, 22, 24, 18, 20, 0, 2, 6, 8, 14, 16, 10, 12, 12, 14, 4, 6, 34, 12, 2, 4 ],
+					"width": 299.0,
+					"height": 202.0
+				}
+			},
+			"spineboy/hair/hair-side": {
+				"hair-side": {
+					"type": "mesh",
+					"uvs": [ 1, 0.3483658, 0.4710397, 0.999989, 0, 1, 0.18032807, 9.477138E-6, 1, 0 ],
+					"triangles": [ 0, 1, 2, 3, 4, 0, 0, 2, 3 ],
+					"vertices": [ 2.0, 36.0, -91.0, 44.57, 0.5481, 41.0, -101.3, 79.08, 0.4519, 2.0, 56.0, 129.4, 11.36, 0.3846, 36.0, -119.56, -24.5, 0.6154, 2.0, 56.0, 146.26, -7.69, 0.3846, 36.0, -145.0, -24.5, 0.6154, 2.0, 36.0, -135.26, 81.5, 0.76857, 41.0, -145.56, 116.01, 0.23143, 2.0, 36.0, -91.0, 81.5, 0.5481, 41.0, -101.3, 116.01, 0.4519 ],
+					"hull": 5,
+					"edges": [ 2, 4, 4, 6, 6, 8, 2, 0, 0, 8 ],
+					"width": 54.0,
+					"height": 106.0
+				}
+			},
+			"spineboy/hair/hair-side2": {
+				"hair-side": {
+					"type": "mesh",
+					"uvs": [ 1, 0.3483658, 0.4710397, 0.999989, 0, 1, 0.18032807, 9.477138E-6, 1, 0 ],
+					"triangles": [ 3, 4, 0, 0, 1, 2, 0, 2, 3 ],
+					"vertices": [ 2.0, 36.0, 77.15, 44.57, 0.5481, 41.0, 66.85, 79.08, 0.4519, 2.0, 56.0, -31.91, 186.13, 0.3846, 36.0, 118.21, -19.5, 0.6154, 1.0, 36.0, 144.36, -14.14, 1.0, 1.0, 36.0, 127.84, 72.93, 1.0, 2.0, 36.0, 77.15, 81.5, 0.5481, 41.0, 66.85, 116.01, 0.4519 ],
+					"hull": 5,
+					"edges": [ 2, 4, 4, 6, 6, 8, 2, 0, 0, 8 ],
+					"width": 54.0,
+					"height": 106.0
+				}
+			},
+			"spineboy/hair/hair-strand-1": {
+				"hair-strand-1": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 3, 0, 1, 2, 3 ],
+					"vertices": [ 2.0, 55.0, 116.59, -21.36, 0.18286, 42.0, 90.94, 32.39, 0.81714, 2.0, 55.0, 66.17, -75.53, 0.18286, 42.0, 16.94, 32.39, 0.81714, 2.0, 36.0, 41.0, 109.5, 0.4038, 41.0, 30.7, 144.01, 0.5962, 2.0, 36.0, 115.0, 109.5, 0.4038, 41.0, 104.7, 144.01, 0.5962 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 74.0,
+					"height": 130.0
+				}
+			},
+			"spineboy/hair/hair-strand-2": {
+				"hair-strand-2": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 0, 1, 3 ],
+					"vertices": [ 2.0, 55.0, 152.23, -28.57, 0.75, 42.0, 109.94, 1.39, 0.25, 2.0, 55.0, 116.8, -66.64, 0.75, 42.0, 57.94, 1.39, 0.25, 2.0, 36.0, 82.0, 79.5, 0.2596, 41.0, 71.7, 114.01, 0.7404, 2.0, 36.0, 134.0, 79.5, 0.2596, 41.0, 123.7, 114.01, 0.7404 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 52.0,
+					"height": 131.0
+				}
+			},
+			"spineboy/hair/hair-strand-3": {
+				"hair-strand-3": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 0, 2, 3, 0, 1, 2 ],
+					"vertices": [ 1.0, 55.0, 162.14, 30.51, 1.0, 1.0, 55.0, 108.31, -27.32, 1.0, 2.0, 36.0, 105.0, 86.5, 0.6731, 41.0, 94.7, 121.01, 0.3269, 2.0, 55.0, 85.27, 102.05, 0.4904, 36.0, 184.0, 86.5, 0.5096 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6, 4, 0 ],
+					"width": 79.0,
+					"height": 105.0
+				}
+			},
+			"spineboy/hair/hair-strand-4": {
+				"hair-strand-4": {
+					"type": "mesh",
+					"uvs": [ 0.22257993, 7.171184E-7, 0.5402112, 0.3435695, 0.8481991, 0.6767075, 1, 0.8409043, 0.9999985, 0.9999862, 0.8910485, 0.9916927, 0.5966807, 0.7230385, 0.2843933, 0.4380301, 0.02941515, 0.20532484, 1.1939555E-6, 1.0382384E-5 ],
+					"triangles": [ 8, 0, 1, 7, 8, 1, 8, 9, 0, 6, 7, 1, 2, 6, 1, 3, 6, 2, 5, 6, 3, 4, 5, 3 ],
+					"vertices": [ 2.0, 36.0, -33.75, 127.5, 0.5192, 41.0, -44.05, 162.01, 0.4808, 4.0, 55.0, -42.59, -44.74, 0.2665, 36.0, -10.56, 80.09, 0.17307, 41.0, -20.86, 114.6, 0.4739, 42.0, -34.62, 132.98, 0.08653, 3.0, 55.0, 6.38, -59.61, 0.46618, 41.0, 1.62, 68.62, 0.27422, 42.0, -12.14, 87.01, 0.2596, 3.0, 55.0, 30.52, -66.93, 0.53241, 41.0, 12.7, 45.96, 0.09259, 42.0, -1.05, 64.35, 0.375, 2.0, 55.0, 46.59, -81.89, 0.625, 42.0, -1.06, 42.4, 0.375, 2.0, 55.0, 40.33, -86.93, 0.625, 42.0, -9.01, 43.54, 0.375, 3.0, 55.0, -1.45, -77.4, 0.4936, 41.0, -16.74, 62.23, 0.2468, 42.0, -30.5, 80.61, 0.2596, 4.0, 55.0, -45.77, -67.3, 0.32123, 36.0, -29.24, 67.05, 0.10897, 41.0, -39.54, 101.56, 0.48327, 42.0, -53.29, 119.95, 0.08653, 3.0, 55.0, -81.96, -59.04, 0.09972, 36.0, -47.85, 99.17, 0.3269, 41.0, -58.15, 133.67, 0.57338, 2.0, 36.0, -50.0, 127.5, 0.5192, 41.0, -60.3, 162.01, 0.4808 ],
+					"hull": 10,
+					"edges": [ 8, 10, 16, 18, 6, 8, 18, 0, 14, 16, 0, 2, 10, 12, 12, 14, 2, 4, 4, 6 ],
+					"width": 73.0,
+					"height": 138.0
+				}
+			},
+			"spineboy/hair/hair-strand-5": {
+				"hair-strand-5": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 0, 1, 2, 0, 2, 3 ],
+					"vertices": [ 2.0, 56.0, 55.65, 97.74, 0.3269, 42.0, -30.06, 26.39, 0.6731, 2.0, 56.0, 88.12, 61.04, 0.3269, 42.0, -79.06, 26.39, 0.6731, 2.0, 36.0, -55.0, 67.5, 0.125, 41.0, -65.3, 102.01, 0.875, 2.0, 36.0, -6.0, 67.5, 0.125, 41.0, -16.3, 102.01, 0.875 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6, 4, 0 ],
+					"width": 49.0,
+					"height": 94.0
+				}
+			},
+			"spineboy/hair/hair-strand-6": {
+				"hair-strand-6": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 0, 1, 3 ],
+					"vertices": [ 1.0, 56.0, 71.96, 5.36, 1.0, 1.0, 56.0, 89.86, -14.87, 1.0, 2.0, 41.0, -123.3, 126.01, 0.2596, 36.0, -113.0, 91.5, 0.7404, 2.0, 41.0, -96.3, 126.01, 0.2596, 36.0, -86.0, 91.5, 0.7404 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 27.0,
+					"height": 69.0
+				}
+			},
+			"spineboy/scarf/scarf-end-l": {
+				"scarf-end-l": {
+					"type": "mesh",
+					"uvs": [ 0.4734017, 0.20702964, 1, 0.6246052, 1, 1, 0.5334542, 0.9999377, 0.2517072, 0.677409, 1.0691583E-5, 0.3892803, 0, 0, 0.238173, 0.02989248, 0.808234, 0.571269, 0.6411575, 0.4890924, 0.4546159, 0.3471513, 0.7352395, 0.8831662, 0.5632966, 0.799122, 0.3540455, 0.619828 ],
+					"triangles": [ 11, 8, 1, 0, 1, 8, 11, 1, 2, 3, 11, 2, 3, 4, 12, 12, 13, 9, 0, 8, 9, 3, 12, 11, 11, 12, 8, 12, 9, 8, 13, 10, 9, 4, 5, 13, 13, 5, 10, 5, 7, 10, 5, 6, 7, 10, 7, 0, 12, 4, 13, 10, 0, 9 ],
+					"vertices": [ 3.0, 6.0, 105.44, -10.2, 0.45489, 39.0, -111.66, -11.12, 0.33361, 40.0, -166.7, 119.09, 0.2115, 1.0, 40.0, -34.52, 28.06, 1.0, 1.0, 40.0, -34.52, -53.77, 1.0, 2.0, 39.0, -96.58, -183.97, 0.4519, 40.0, -151.62, -53.76, 0.5481, 2.0, 6.0, 49.8, -112.74, 0.5769, 39.0, -167.3, -113.66, 0.4231, 1.0, 6.0, -13.38, -49.93, 1.0, 1.0, 6.0, -13.38, 34.93, 1.0, 1.0, 6.0, 46.4, 28.42, 1.0, 2.0, 39.0, -27.61, -90.52, 0.6346, 40.0, -82.65, 39.69, 0.3654, 3.0, 6.0, 147.55, -71.69, 0.29545, 39.0, -69.55, -72.61, 0.60835, 40.0, -124.59, 57.6, 0.0962, 2.0, 6.0, 100.73, -40.75, 0.6731, 39.0, -116.37, -41.67, 0.3269, 2.0, 39.0, -45.94, -158.52, 0.6346, 40.0, -100.97, -28.3, 0.3654, 3.0, 6.0, 128.01, -139.28, 0.29545, 39.0, -89.09, -140.2, 0.60835, 40.0, -144.13, -9.98, 0.0962, 2.0, 6.0, 75.49, -100.19, 0.6731, 39.0, -141.61, -101.11, 0.3269 ],
+					"hull": 8,
+					"edges": [ 4, 6, 10, 12, 12, 14, 4, 2, 6, 8, 8, 10, 2, 0, 0, 14 ],
+					"width": 251.0,
+					"height": 218.0
+				}
+			},
+			"spineboy/scarf/scarf-end-r": {
+				"scarf-end-r": {
+					"type": "mesh",
+					"uvs": [ 0.9999897, 0.2862567, 0.765674, 0.6287042, 0.4765738, 0.9999894, 0, 1, 0, 0.3743607, 0.4482236, 0.34612295, 0.7673784, 0, 1, 0, 0.3432269, 0.7834705, 0.15262617, 0.7978473, 0.1890991, 0.4897687, 0.3596986, 0.5123611, 0.5267683, 0.6787236, 0.9020872, 0.2350905, 0.4750002, 0.4836073, 0.811493, 0.09953564 ],
+					"triangles": [ 3, 4, 9, 2, 3, 9, 10, 4, 5, 9, 4, 10, 11, 10, 5, 2, 9, 8, 9, 10, 8, 8, 10, 11, 2, 8, 12, 11, 5, 14, 12, 11, 14, 12, 8, 11, 2, 12, 1, 15, 14, 5, 15, 12, 14, 13, 1, 12, 1, 13, 0, 13, 12, 15, 15, 5, 6, 0, 13, 7, 13, 15, 7, 15, 6, 7 ],
+					"vertices": [ 1.0, 7.0, 40.36, -10.53, 1.0, 2.0, 7.0, -30.41, -69.77, 0.71056, 38.0, 257.21, 11.9, 0.28944, 2.0, 37.0, 75.49, -171.81, 0.7212, 38.0, 169.91, -52.33, 0.2788, 1.0, 38.0, 25.98, -52.33, 1.0, 1.0, 38.0, 25.98, 55.9, 1.0, 2.0, 37.0, 66.93, -58.69, 0.7212, 38.0, 161.34, 60.79, 0.2788, 1.0, 7.0, -29.89, 38.99, 1.0, 1.0, 7.0, 40.36, 38.99, 1.0, 3.0, 7.0, -157.98, -96.55, 0.0385, 37.0, 35.22, -134.35, 0.75814, 38.0, 129.64, -14.87, 0.20336, 2.0, 37.0, -22.34, -136.84, 0.5962, 38.0, 72.07, -17.36, 0.4038, 2.0, 37.0, -11.33, -83.54, 0.5962, 38.0, 83.09, 35.94, 0.4038, 3.0, 7.0, -153.01, -49.65, 0.0385, 37.0, 40.19, -87.45, 0.75814, 38.0, 134.61, 32.03, 0.20336, 2.0, 7.0, -102.56, -78.43, 0.2115, 37.0, 90.65, -116.23, 0.7885, 1.0, 7.0, 10.79, -1.68, 1.0, 2.0, 7.0, -118.19, -44.67, 0.2115, 37.0, 75.01, -82.47, 0.7885, 1.0, 7.0, -16.57, 21.77, 1.0 ],
+					"hull": 8,
+					"edges": [ 10, 12, 12, 14, 2, 0, 0, 14, 2, 4, 4, 6, 6, 8, 8, 10, 16, 24, 24, 26, 22, 28, 28, 30 ],
+					"width": 302.0,
+					"height": 173.0
+				}
+			},
+			"spineboy/scarf/scarf-pompom-l": {
+				"scarf-pompom-l": { "x": -4.019745, "y": -1.2729492, "width": 99, "height": 91 }
+			},
+			"spineboy/scarf/scarf-pompom-r": {
+				"scarf-pompom-r": { "x": 8.481384, "y": -6.333984, "width": 97, "height": 94 }
+			},
+			"spineboy/scarf/scarf-ribbon-bottom-l": {
+				"scarf-ribbon-bottom-l": {
+					"type": "mesh",
+					"uvs": [ 0.910851, 0.22709936, 1, 0.18972343, 1, 1, 0.5565766, 1, 0, 0.4078148, 0, 0, 0.4349894, 0, 0.642383, 0.3396551, 0.7196594, 0.7832264, 0.5897786, 0.6473645, 0.3887305, 0.3112839 ],
+					"triangles": [ 10, 6, 7, 9, 10, 7, 3, 10, 9, 8, 7, 0, 9, 7, 8, 3, 9, 8, 0, 1, 2, 8, 0, 2, 3, 8, 2, 10, 5, 6, 4, 5, 10, 4, 10, 3 ],
+					"vertices": [ 2.0, 6.0, 212.81, -24.91, 0.0577, 39.0, -4.29, -25.83, 0.9423, 2.0, 6.0, 231.62, -20.99, 0.0577, 39.0, 14.52, -21.91, 0.9423, 1.0, 39.0, 14.52, -106.99, 1.0, 2.0, 6.0, 138.06, -106.07, 0.01143, 39.0, -79.04, -106.99, 0.98857, 1.0, 6.0, 20.62, -43.89, 1.0, 1.0, 6.0, 20.62, -1.07, 1.0, 2.0, 6.0, 112.4, -1.07, 0.60106, 39.0, -104.7, -1.99, 0.39894, 2.0, 6.0, 156.16, -36.73, 0.17143, 39.0, -60.94, -37.65, 0.82857, 2.0, 6.0, 172.47, -83.31, 0.25, 39.0, -44.63, -84.23, 0.75, 2.0, 6.0, 145.06, -69.04, 0.4808, 39.0, -72.04, -69.96, 0.5192, 2.0, 6.0, 102.64, -33.75, 0.7115, 39.0, -114.46, -34.67, 0.2885 ],
+					"hull": 8,
+					"edges": [ 4, 6, 8, 10, 6, 8, 10, 12, 12, 14, 4, 2, 2, 0, 0, 14 ],
+					"width": 211.0,
+					"height": 105.0
+				}
+			},
+			"spineboy/scarf/scarf-ribbon-bottom-r": {
+				"scarf-ribbon-bottom-r": {
+					"type": "mesh",
+					"uvs": [ 1, 0.3259417, 0.9999895, 0.6413183, 0.3871764, 1, 0, 1, 0, 0, 0.8313045, 0, 1, 0, 0.3046011, 0.7062442, 0.11243788, 0.5619688, 0.12619112, 0.21274324 ],
+					"triangles": [ 9, 4, 5, 8, 4, 9, 8, 9, 7, 3, 4, 8, 3, 8, 7, 2, 3, 7, 7, 9, 5, 0, 2, 7, 7, 5, 6, 6, 0, 7, 1, 2, 0 ],
+					"vertices": [ 2.0, 6.0, -108.38, 38.78, 0.8173, 37.0, 189.56, -31.97, 0.1827, 2.0, 6.0, -108.38, 2.82, 0.7788, 37.0, 189.56, -67.92, 0.2212, 2.0, 6.0, -236.46, -38.07, 0.38718, 37.0, 61.48, -108.81, 0.61282, 1.0, 37.0, -19.44, -108.81, 1.0, 1.0, 37.0, -19.44, 5.19, 1.0, 2.0, 6.0, -143.64, 75.93, 0.7981, 37.0, 154.31, 5.19, 0.2019, 1.0, 6.0, -108.38, 75.93, 1.0, 2.0, 6.0, -253.72, -4.58, 0.5481, 37.0, 44.23, -75.32, 0.4519, 2.0, 6.0, -293.88, 11.87, 0.25524, 37.0, 4.06, -58.87, 0.74476, 2.0, 6.0, -291.01, 51.68, 0.1442, 37.0, 6.94, -19.06, 0.8558 ],
+					"hull": 7,
+					"edges": [ 6, 8, 2, 0, 0, 12, 2, 4, 4, 6, 4, 0, 8, 10, 10, 12, 14, 12 ],
+					"width": 209.0,
+					"height": 114.0
+				}
+			},
+			"spineboy/scarf/scarf-ribbon-middle-l": {
+				"scarf-ribbon-middle-l": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.7021528, 0.3964875, 0.6757837, 0.6150722, 0.4916301, 0.739327 ],
+					"triangles": [ 1, 6, 0, 6, 5, 0, 5, 4, 0, 4, 3, 0, 1, 2, 6, 5, 6, 4, 4, 6, 2, 4, 2, 3 ],
+					"vertices": [ 1.0, 39.0, 33.52, -95.99, 1.0, 1.0, 39.0, -92.48, -95.99, 1.0, 1.0, 39.0, -92.48, 84.01, 1.0, 1.0, 39.0, 33.52, 84.01, 1.0, 2.0, 6.0, 213.09, 13.57, 0.1827, 39.0, -4.01, 12.64, 0.8173, 2.0, 6.0, 209.77, -25.78, 0.0962, 39.0, -7.33, -26.7, 0.9038, 2.0, 6.0, 186.57, -48.15, 0.1154, 39.0, -30.53, -49.07, 0.8846 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 126.0,
+					"height": 180.0
+				}
+			},
+			"spineboy/scarf/scarf-ribbon-middle-r": {
+				"scarf-ribbon-middle-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.35576335, 0.6553306, 0.2990078, 0.2574273, 0.459666, 0.8566094 ],
+					"triangles": [ 1, 6, 0, 0, 4, 3, 1, 4, 6, 1, 5, 4, 1, 2, 5, 0, 6, 4, 4, 5, 3, 5, 2, 3 ],
+					"vertices": [ 1.0, 37.0, 96.56, -96.81, 1.0, 1.0, 37.0, -26.44, -96.81, 1.0, 1.0, 37.0, -26.44, 80.19, 1.0, 1.0, 37.0, 96.56, 80.19, 1.0, 2.0, 7.0, -175.88, 2.0, 0.2885, 37.0, 17.32, -35.8, 0.7115, 2.0, 7.0, -182.86, 72.43, 0.1731, 37.0, 10.34, 34.63, 0.8269, 2.0, 7.0, -163.1, -33.63, 0.3654, 37.0, 30.1, -71.43, 0.6346 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 123.0,
+					"height": 177.0
+				}
+			},
+			"spineboy/scarf/scarf-ribbon-top-l": {
+				"scarf-ribbon-top-l": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.8310798, 0.335736, 0.5183124, 0.3313758, 0.8506615, 0.7343846, 0.968007, 0.7415873 ],
+					"triangles": [ 1, 6, 0, 5, 4, 6, 6, 7, 0, 0, 7, 3, 3, 7, 4, 7, 6, 4, 4, 5, 3, 5, 2, 3, 1, 5, 6, 1, 2, 5 ],
+					"vertices": [ 1.0, 39.0, 27.52, -17.99, 1.0, 1.0, 6.0, 34.62, -17.07, 1.0, 1.0, 6.0, 34.62, 97.93, 1.0, 1.0, 39.0, 27.52, 97.01, 1.0, 2.0, 6.0, 209.15, 59.32, 0.2788, 39.0, -7.95, 58.4, 0.7212, 2.0, 6.0, 143.47, 59.82, 0.2788, 39.0, -73.63, 58.9, 0.7212, 2.0, 6.0, 213.26, 13.48, 0.1154, 39.0, -3.84, 12.56, 0.8846, 2.0, 6.0, 237.9, 12.65, 0.10857, 39.0, 20.8, 11.73, 0.89143 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6, 8, 14 ],
+					"width": 210.0,
+					"height": 115.0
+				}
+			},
+			"spineboy/scarf/scarf-ribbon-top-r": {
+				"scarf-ribbon-top-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.07534892, 0.3838115, 0.3760372, 0.3648102 ],
+					"triangles": [ 5, 2, 3, 4, 2, 5, 1, 2, 4, 1, 4, 5, 5, 3, 0, 0, 1, 5 ],
+					"vertices": [ 1.0, 6.0, -94.38, 59.93, 1.0, 1.0, 37.0, -7.44, -10.81, 1.0, 1.0, 37.0, -7.44, 94.19, 1.0, 2.0, 6.0, -94.38, 164.93, 0.0962, 37.0, 203.56, 94.19, 0.9038, 2.0, 6.0, -289.48, 124.63, 0.1731, 37.0, 8.46, 53.89, 0.8269, 2.0, 6.0, -226.04, 126.63, 0.5192, 37.0, 71.91, 55.89, 0.4808 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 211.0,
+					"height": 105.0
+				}
+			},
+			"spineboy/arm-down-l": {
+				"arm-down-l": { "x": -19.99335, "y": 17.789745, "rotation": 94.56383, "width": 112, "height": 108 }
+			},
+			"spineboy/arm-down-l-fuzzy": {
+				"arm-down-l-fuzzy": { "x": 4.639465, "y": -8.48702, "rotation": 94.56383, "width": 113, "height": 118 }
+			},
+			"spineboy/arm-down-r": {
+				"arm-down-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.22927767, 0.20266885, 0.7512996, 0.4203996, 0.16814005, 0.5711363, 0.6925136, 0.7453211 ],
+					"triangles": [ 4, 2, 3, 1, 6, 7, 6, 2, 4, 1, 2, 6, 0, 1, 7, 5, 4, 3, 7, 6, 5, 5, 3, 0, 7, 5, 0, 6, 4, 5 ],
+					"vertices": [ 2.0, 10.0, 29.4, 54.69, 0.3269, 9.0, 9.32, 127.93, 0.6731, 1.0, 9.0, 64.05, -12.8, 1.0, 1.0, 9.0, -34.74, -51.23, 1.0, 2.0, 10.0, -69.39, 16.27, 0.3269, 9.0, -89.47, 89.5, 0.6731, 2.0, 10.0, -7.18, -84.41, 0.3654, 9.0, -27.27, -11.17, 0.6346, 1.0, 10.0, -14.25, -2.58, 1.0, 2.0, 10.0, 32.56, -78.85, 0.3654, 9.0, 12.48, -5.62, 0.6346, 1.0, 10.0, 21.07, 1.63, 1.0 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6, 8, 10, 12, 14 ],
+					"width": 151.0,
+					"height": 106.0
+				}
+			},
+			"spineboy/arm-down-r-fuzzy": {
+				"arm-down-r-fuzzy": { "x": 7.396271, "y": 6.435028, "rotation": 111.25282, "width": 122, "height": 132 }
+			},
+			"spineboy/arm-up-l": {
+				"arm-up-l": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.3590959, 0.14081118, 0.2537972, 0.8166793, 0.7116181, 0.14275914, 0.5742718, 0.8283658 ],
+					"triangles": [ 5, 1, 2, 6, 7, 4, 0, 1, 7, 1, 5, 7, 7, 6, 0, 7, 5, 4, 5, 2, 4, 6, 4, 3, 4, 2, 3, 3, 0, 6 ],
+					"vertices": [ 2.0, 12.0, 200.43, 66.47, 0.1538, 13.0, 24.27, 66.47, 0.8462, 2.0, 12.0, 208.15, -30.23, 0.1538, 13.0, 31.99, -30.23, 0.8462, 1.0, 12.0, -19.13, -48.37, 1.0, 1.0, 12.0, -26.84, 48.32, 1.0, 2.0, 12.0, 10.11, -11.09, 0.3942, 13.0, -166.05, -11.09, 0.6058, 1.0, 13.0, -11.63, -9.01, 1.0, 2.0, 12.0, 7.83, 23.03, 0.3942, 13.0, -168.33, 23.03, 0.6058, 1.0, 13.0, -11.45, 22.19, 1.0 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6, 8, 10, 12, 14 ],
+					"width": 97.0,
+					"height": 228.0
+				}
+			},
+			"spineboy/arm-up-r": {
+				"arm-up-r": {
+					"type": "mesh",
+					"uvs": [ 0.9999987, 0.318478, 0.5164994, 1, 0, 1, 0, 0.6869648, 0.4217568, 0, 1, 0, 0.12480613, 0.801356, 0.6157273, 0.10828899, 0.3903367, 0.8645159, 0.847294, 0.1765715 ],
+					"triangles": [ 1, 8, 0, 9, 0, 8, 3, 4, 7, 0, 9, 5, 9, 7, 5, 7, 4, 5, 6, 7, 9, 2, 8, 1, 2, 6, 8, 2, 3, 6, 3, 7, 6, 9, 8, 6 ],
+					"vertices": [ 1.0, 8.0, 30.75, 40.25, 1.0, 2.0, 9.0, 18.91, 39.81, 0.4038, 8.0, 183.02, 39.81, 0.5962, 2.0, 9.0, 40.44, -15.55, 0.4038, 8.0, 204.56, -15.55, 0.5962, 2.0, 9.0, -20.24, -39.15, 0.4038, 8.0, 143.87, -39.15, 0.5962, 1.0, 8.0, -6.89, -45.75, 1.0, 1.0, 8.0, -30.98, 16.23, 1.0, 1.0, 9.0, -3.27, -17.15, 1.0, 2.0, 9.0, -158.09, -16.79, 0.2404, 8.0, 6.03, -16.79, 0.7596, 1.0, 9.0, -2.09, 16.07, 1.0, 2.0, 9.0, -154.5, 13.18, 0.2404, 8.0, 9.61, 13.18, 0.7596 ],
+					"hull": 6,
+					"edges": [ 8, 10, 0, 10, 0, 2, 2, 4, 4, 6, 6, 8, 12, 14, 16, 18 ],
+					"width": 115.0,
+					"height": 208.0
+				}
+			},
+			"spineboy/body": {
+				"body": {
+					"type": "mesh",
+					"uvs": [ 0.9999896, 0.4038197, 0.9642604, 0.5252139, 0.917816, 0.6830144, 0.8876443, 0.7855265, 0.8245227, 0.99999, 0, 1, 9.7733E-6, 0.6068133, 0.05297742, 0.4837688, 0.1050875, 0.3627165, 0.1605232, 0.23393872, 0.2612236, 1.039356E-5, 1, 0, 0.3699221, 0.3899103, 0.7751069, 0.4637301, 0.2067226, 0.7706653, 0.6513012, 0.8626163, 0.2644052, 0.6450418, 0.331936, 0.507763, 0.7300862, 0.6010092, 0.6822517, 0.7382883 ],
+					"triangles": [ 1, 13, 0, 11, 13, 12, 17, 8, 12, 18, 12, 13, 18, 13, 1, 17, 12, 18, 8, 9, 12, 0, 13, 11, 9, 10, 12, 12, 10, 11, 7, 8, 17, 19, 17, 18, 16, 7, 17, 19, 18, 2, 14, 16, 15, 6, 7, 16, 14, 6, 16, 3, 19, 2, 15, 19, 3, 4, 15, 3, 5, 6, 14, 5, 15, 4, 5, 14, 15, 15, 16, 19, 16, 17, 19, 2, 18, 1 ],
+					"vertices": [ 2.0, 5.0, 141.09, -121.38, 0.3558, 6.0, 111.62, -49.02, 0.6442, 3.0, 4.0, 149.09, 59.71, 0.2404, 5.0, 103.16, -123.51, 0.26806, 6.0, 101.68, -85.68, 0.49154, 3.0, 4.0, 136.18, 12.06, 0.6058, 5.0, 53.87, -126.29, 0.25, 6.0, 88.77, -133.34, 0.1442, 1.0, 4.0, 127.79, -18.9, 1.0, 1.0, 4.0, 110.24, -83.67, 1.0, 1.0, 4.0, -118.98, -83.67, 1.0, 1.0, 4.0, -118.97, 35.07, 1.0, 3.0, 4.0, -104.25, 72.23, 0.6058, 5.0, 35.17, 120.85, 0.25, 6.0, -151.65, -73.17, 0.1442, 3.0, 4.0, -89.76, 108.79, 0.2404, 5.0, 74.43, 118.63, 0.26806, 6.0, -137.17, -36.61, 0.49154, 2.0, 5.0, 116.19, 116.26, 0.3558, 6.0, -121.75, 2.28, 0.6442, 1.0, 5.0, 192.06, 111.97, 1.0, 1.0, 5.0, 256.82, -82.93, 1.0, 2.0, 4.0, -16.14, 100.57, 0.36308, 6.0, -63.54, -44.82, 0.63692, 2.0, 4.0, 96.5, 78.28, 0.23682, 6.0, 49.1, -67.11, 0.76318, 2.0, 4.0, -61.51, -14.41, 0.7885, 6.0, -108.91, -159.81, 0.2115, 2.0, 4.0, 62.09, -42.18, 0.7885, 6.0, 14.68, -187.58, 0.2115, 2.0, 4.0, -45.47, 23.52, 0.5962, 6.0, -92.88, -121.87, 0.4038, 2.0, 4.0, -26.7, 64.98, 0.46053, 6.0, -74.1, -80.41, 0.53947, 2.0, 4.0, 83.99, 36.82, 0.47466, 6.0, 36.58, -108.57, 0.52534, 2.0, 4.0, 70.69, -4.64, 0.5962, 6.0, 23.29, -150.03, 0.4038 ],
+					"hull": 12,
+					"edges": [ 20, 22, 0, 22, 10, 12, 8, 10, 6, 8, 18, 20, 16, 18, 12, 14, 14, 16, 4, 6, 0, 2, 2, 4 ],
+					"width": 278.0,
+					"height": 302.0
+				}
+			},
+			"spineboy/ear-l": {
+				"ear-l": {
+					"type": "mesh",
+					"uvs": [ 1, 0.2543917, 0.5993566, 1, 0, 1, 0, 0.4091126, 0.8345233, 0, 1, 0, 0.3097005, 0.6901365, 0.926296, 0.13440415 ],
+					"triangles": [ 2, 6, 1, 1, 6, 0, 2, 3, 6, 6, 7, 0, 6, 4, 7, 6, 3, 4, 7, 5, 0, 7, 4, 5 ],
+					"vertices": [ 2.0, 36.0, 163.0, 10.32, 0.7885, 46.0, 267.61, -297.19, 0.2115, 1.0, 36.0, 119.33, -63.5, 1.0, 1.0, 36.0, 54.0, -63.5, 1.0, 1.0, 36.0, 54.0, -5.0, 1.0, 2.0, 36.0, 144.96, 35.5, 0.7885, 46.0, 249.57, -272.01, 0.2115, 2.0, 36.0, 163.0, 35.5, 0.8462, 46.0, 267.61, -272.01, 0.1538, 1.0, 36.0, 87.76, -32.82, 1.0, 2.0, 36.0, 154.97, 22.19, 0.8846, 46.0, 259.58, -285.31, 0.1154 ],
+					"hull": 6,
+					"edges": [ 4, 6, 8, 10, 6, 8, 0, 10, 2, 4, 0, 2, 12, 14 ],
+					"width": 109.0,
+					"height": 99.0
+				}
+			},
+			"spineboy/ear-r": {
+				"ear-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0, 0.4329441, 0.44023165, 0.6716028, 0.7697212 ],
+					"triangles": [ 1, 5, 0, 1, 2, 4, 0, 5, 3, 4, 2, 3, 5, 4, 3, 1, 4, 5 ],
+					"vertices": [ 1.0, 36.0, -96.0, -60.5, 1.0, 2.0, 36.0, -185.0, -60.5, 0.7981, 46.0, -80.39, -368.01, 0.2019, 2.0, 36.0, -185.0, 71.5, 0.9038, 46.0, -80.39, -236.01, 0.0962, 2.0, 36.0, -96.0, 71.5, 0.8654, 46.0, 8.61, -236.01, 0.1346, 1.0, 36.0, -146.47, 13.39, 1.0, 1.0, 36.0, -125.23, -30.1, 1.0 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 89.0,
+					"height": 132.0
+				}
+			},
+			"spineboy/eye-reflex-l": {
+				"eye-reflex-l": { "x": 70.701, "y": 9.007507, "width": 24, "height": 26 }
+			},
+			"spineboy/eye-reflex-r": {
+				"eye-reflex-r": { "x": -85.299, "y": 22.00757, "width": 20, "height": 24 }
+			},
+			"spineboy/eye-white-l": {
+				"eye-white-l": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 122.0, -82.63, 38.74, -116.41, 6.08, 29.77, 127.63, 38.03 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 69.0,
+					"height": 85.0
+				}
+			},
+			"spineboy/eye-white-l2": {
+				"eye-white-l": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 1.0, 48.0, 115.25, -59.82, 1.0, 1.0, 41.0, 39.7, -43.99, 1.0, 1.0, 41.0, 39.7, 41.01, 1.0, 2.0, 48.0, 115.25, 25.18, 0.55714, 41.0, 108.7, 41.01, 0.44286 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 69.0,
+					"height": 85.0
+				}
+			},
+			"spineboy/eye-white-r": {
+				"eye-white-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 3, 0, 1, 2, 3 ],
+					"vertices": [ -32.11, -107.28, -126.89, -88.14, -120.51, 63.79, -21.6, 42.77 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 67.0,
+					"height": 96.0
+				}
+			},
+			"spineboy/eye-white-r2": {
+				"eye-white-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 1.0, 41.0, -56.3, -38.99, 1.0, 1.0, 36.0, -113.0, -73.5, 1.0, 1.0, 41.0, -123.3, 57.01, 1.0, 1.0, 41.0, -56.3, 57.01, 1.0 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 67.0,
+					"height": 96.0
+				}
+			},
+			"spineboy/eyelashes-l": {
+				"eyelashes-l": {
+					"type": "mesh",
+					"uvs": [ 0.23720233, 0.3874248, 0.3715814, 0.22967957, 0.5323214, 0.11448604, 0.6920742, 0, 0.8586611, 0, 0.999989, 0.12650333, 0.9752024, 0.2568823, 0.829762, 0.1023923, 0.6812972, 0.14215824, 0.6010893, 0.2100308, 0.4739304, 0.3176337, 0.3566298, 0.4926518, 0.2171287, 0.7007941, 0.16280243, 0.8083049, 0.06593704, 1, 1.0847225E-5, 0.999999, 0, 0.8148341, 0.04492351, 0.6955587, 0.1005686, 0.5478167 ],
+					"triangles": [ 12, 18, 11, 18, 0, 11, 11, 0, 10, 0, 1, 10, 10, 1, 9, 1, 2, 9, 9, 2, 8, 8, 3, 7, 8, 2, 3, 7, 3, 4, 17, 18, 12, 13, 14, 16, 14, 15, 16, 16, 17, 13, 13, 17, 12, 6, 7, 5, 7, 4, 5 ],
+					"vertices": [ 2.0, 41.0, 54.88, 11.4, 0.2788, 50.0, -13.99, -10.46, 0.7212, 2.0, 41.0, 63.48, 23.86, 0.2404, 50.0, -5.39, 2.0, 0.7596, 2.0, 41.0, 73.77, 32.96, 0.2885, 50.0, 4.9, 11.1, 0.7115, 3.0, 41.0, 83.99, 42.01, 0.19873, 36.0, 94.29, 7.5, 0.1346, 50.0, 15.12, 20.14, 0.66667, 3.0, 41.0, 94.66, 42.01, 0.34937, 36.0, 104.95, 7.5, 0.3173, 50.0, 25.78, 20.14, 0.33333, 2.0, 41.0, 103.7, 32.01, 0.5577, 36.0, 114.0, -2.49, 0.4423, 2.0, 41.0, 102.11, 21.71, 0.5577, 36.0, 112.41, -12.79, 0.4423, 3.0, 41.0, 92.81, 33.92, 0.1731, 36.0, 103.1, -0.59, 0.3173, 50.0, 23.93, 12.06, 0.5096, 3.0, 41.0, 83.3, 30.78, 0.19873, 36.0, 93.6, -3.73, 0.1346, 50.0, 14.43, 8.91, 0.66667, 2.0, 41.0, 78.17, 25.41, 0.2885, 50.0, 9.3, 3.55, 0.7115, 2.0, 41.0, 70.03, 16.91, 0.2404, 50.0, 1.16, -4.95, 0.7596, 2.0, 41.0, 62.53, 3.09, 0.2788, 50.0, -6.35, -18.78, 0.7212, 2.0, 41.0, 53.6, -13.36, 0.4231, 50.0, -15.28, -35.22, 0.5769, 2.0, 41.0, 50.12, -21.85, 0.6154, 50.0, -18.75, -43.71, 0.3846, 1.0, 41.0, 43.92, -36.99, 1.0, 1.0, 41.0, 39.7, -36.99, 1.0, 2.0, 41.0, 39.7, -22.36, 0.8173, 50.0, -29.17, -44.23, 0.1827, 2.0, 41.0, 42.58, -12.94, 0.6154, 50.0, -26.3, -34.8, 0.3846, 2.0, 41.0, 46.14, -1.27, 0.4231, 50.0, -22.74, -23.13, 0.5769 ],
+					"hull": 19,
+					"edges": [ 6, 8, 8, 10, 10, 12, 30, 32, 28, 30, 12, 14, 14, 16, 2, 0, 0, 36, 20, 22, 22, 24, 2, 4, 4, 6, 16, 18, 18, 20, 32, 34, 34, 36, 24, 26, 26, 28 ],
+					"width": 64.0,
+					"height": 79.0
+				}
+			},
+			"spineboy/eyelashes-r": {
+				"eyelashes-r": {
+					"type": "mesh",
+					"uvs": [ 0.3167386, 0, 0.474083, 0, 0.5853926, 0.11317608, 0.6820034, 0.21140698, 0.7914842, 0.3227237, 0.8988724, 0.4319126, 0.9520998, 0.6042912, 0.9884935, 0.722153, 0.9830352, 1, 0.9105806, 1, 0.850908, 0.7677592, 0.7934032, 0.6324216, 0.7349067, 0.4947504, 0.6461434, 0.3974155, 0.5399715, 0.2809908, 0.4382871, 0.19768503, 0.3400003, 0.1171627, 0.1776378, 0.2005012, 0, 0.372695, 0, 0.3137307, 0.1100111, 0.10017498 ],
+					"triangles": [ 18, 19, 17, 19, 20, 17, 17, 20, 16, 20, 0, 16, 16, 0, 1, 11, 6, 7, 14, 15, 3, 15, 2, 3, 11, 12, 6, 14, 3, 4, 12, 5, 6, 12, 13, 5, 13, 4, 5, 13, 14, 4, 16, 1, 2, 15, 16, 2, 7, 8, 10, 8, 9, 10, 10, 11, 7 ],
+					"vertices": [ 3.0, 41.0, -100.03, 61.01, 0.25891, 47.0, -26.63, 30.85, 0.50069, 36.0, -89.73, 26.5, 0.2404, 3.0, 41.0, -89.96, 61.01, 0.0481, 47.0, -16.56, 30.85, 0.7404, 36.0, -79.66, 26.5, 0.2115, 3.0, 41.0, -82.83, 50.37, 0.0481, 47.0, -9.43, 20.21, 0.8173, 36.0, -72.53, 15.86, 0.1346, 3.0, 41.0, -76.65, 41.14, 0.0962, 47.0, -3.25, 10.98, 0.8269, 36.0, -66.35, 6.63, 0.0769, 2.0, 41.0, -69.64, 30.67, 0.1538, 47.0, 3.76, 0.52, 0.8462, 2.0, 41.0, -62.77, 20.41, 0.26049, 47.0, 10.63, -9.75, 0.73951, 2.0, 41.0, -59.36, 4.2, 0.40119, 47.0, 14.04, -25.95, 0.59881, 2.0, 41.0, -57.04, -6.88, 0.5769, 47.0, 16.37, -37.03, 0.4231, 2.0, 41.0, -57.38, -32.99, 0.7308, 49.0, 52.78, -11.46, 0.2692, 2.0, 41.0, -62.02, -32.99, 0.7308, 49.0, 48.14, -11.46, 0.2692, 2.0, 41.0, -65.84, -11.16, 0.5769, 47.0, 7.56, -41.32, 0.4231, 2.0, 41.0, -69.52, 1.56, 0.3624, 47.0, 3.88, -28.6, 0.6376, 2.0, 41.0, -73.26, 14.5, 0.2, 47.0, 0.14, -15.65, 0.8, 2.0, 41.0, -78.95, 23.65, 0.1538, 47.0, -5.54, -6.5, 0.8462, 3.0, 41.0, -85.74, 34.59, 0.0962, 47.0, -12.34, 4.44, 0.8269, 36.0, -75.44, 0.09, 0.0769, 3.0, 41.0, -92.25, 42.43, 0.0481, 47.0, -18.85, 12.27, 0.8173, 36.0, -81.95, 7.92, 0.1346, 3.0, 41.0, -98.54, 49.99, 0.0192, 47.0, -25.14, 19.84, 0.7404, 36.0, -88.24, 15.49, 0.2404, 3.0, 41.0, -108.93, 42.16, 0.0577, 47.0, -35.53, 12.01, 0.5, 36.0, -98.63, 7.65, 0.4423, 2.0, 41.0, -120.3, 25.97, 0.5577, 36.0, -110.0, -8.53, 0.4423, 2.0, 41.0, -120.3, 31.52, 0.5577, 36.0, -110.0, -2.99, 0.4423, 3.0, 41.0, -113.26, 51.59, 0.25484, 47.0, -39.86, 21.44, 0.30286, 36.0, -102.96, 17.08, 0.4423 ],
+					"hull": 21,
+					"edges": [ 0, 40, 0, 2, 16, 18, 36, 38, 38, 40, 32, 34, 34, 36, 18, 20, 14, 16, 28, 30, 30, 32, 2, 4, 4, 6, 24, 26, 26, 28, 6, 8, 8, 10, 20, 22, 22, 24, 10, 12, 12, 14 ],
+					"width": 64.0,
+					"height": 94.0
+				}
+			},
+			"spineboy/gift-base": {
+				"gift-base": {
+					"type": "mesh",
+					"uvs": [ 0.3575563, 0.944485, 5.504116E-6, 0.7098895, 0.1240952, 1.192093E-7, 0.587533, 1.192093E-7, 1, 0.2512039, 0.9999903, 0.3164348, 0.7774381, 1 ],
+					"triangles": [ 3, 1, 2, 6, 0, 5, 5, 3, 4, 0, 1, 3, 0, 3, 5 ],
+					"vertices": [ 1.0, 14.0, 103.18, -119.47, 1.0, 2.0, 14.0, 61.39, -212.12, 0.4423, 10.0, 80.54, 6.99, 0.5577, 2.0, 14.0, -88.97, -193.12, 0.4423, 10.0, -68.94, -18.0, 0.5577, 1.0, 14.0, -98.15, -78.09, 1.0, 2.0, 14.0, -53.99, 28.47, 0.6442, 10.0, -99.07, 204.3, 0.3558, 2.0, 14.0, -40.39, 29.55, 0.99582, 10.0, -86.36, 209.24, 0.00418, 2.0, 14.0, 106.43, -14.32, 0.6442, 10.0, 66.88, 209.38, 0.3558 ],
+					"hull": 7,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 0, 12 ],
+					"width": 249.0,
+					"height": 209.0
+				}
+			},
+			"spineboy/gift-decoration": {
+				"gift-decoration": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 3, 0, 1, 2, 3 ],
+					"vertices": [ 2.0, 14.0, -60.84, -30.27, 0.7981, 10.0, -88.76, 146.08, 0.2019, 2.0, 14.0, -53.28, -124.96, 0.7981, 10.0, -54.33, 57.54, 0.2019, 2.0, 14.0, -133.02, -131.33, 0.7981, 10.0, -128.88, 28.54, 0.2019, 2.0, 14.0, -140.58, -36.63, 0.7981, 10.0, -163.32, 117.08, 0.2019 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 95.0,
+					"height": 80.0
+				}
+			},
+			"spineboy/glove-fingers-l": {
+				"glove-fingers-l": { "x": 5.91919, "y": 13.18352, "rotation": 94.56383, "width": 78, "height": 102 }
+			},
+			"spineboy/glove-fingers-r": {
+				"glove-fingers-r": { "x": 2.4773254, "y": 6.667846, "rotation": 111.25282, "width": 82, "height": 111 }
+			},
+			"spineboy/glove-l": {
+				"glove-l": { "x": -1.416687, "y": 17.11226, "rotation": 94.56383, "width": 79, "height": 122 }
+			},
+			"spineboy/glove-r": {
+				"glove-r": { "x": -4.53836, "y": 1.2567444, "rotation": 111.25282, "width": 87, "height": 130 }
+			},
+			"spineboy/glove-shadow-l": {
+				"glove-shadow-l": { "x": 18.09665, "y": -7.412826, "rotation": 94.56383, "width": 55, "height": 113 }
+			},
+			"spineboy/glove-shadow-r": {
+				"glove-shadow-r": { "x": 11.227325, "y": 18.654816, "rotation": 111.25282, "width": 76, "height": 124 }
+			},
+			"spineboy/hat": {
+				"hat": {
+					"type": "mesh",
+					"uvs": [ 0.5200411, 0.10531787, 0.6846747, 0.211247, 0.8018957, 0.3453317, 0.9019391, 0.4597677, 0.9748059, 0.5431173, 0.9999997, 0.7125246, 0.9624408, 0.8524799, 0.6508801, 1, 0.3453288, 1, 1.264736E-6, 0.8457613, 0, 0.650735, 0.1320716, 0.5128516, 0.2078907, 0.3935839, 0.2759247, 0.2865626, 0.3148487, 0.17297083, 0.2724677, 0.08156908, 0.10739065, 0.11629592, 0.1406006, 0.12061013, 0.1989706, 0.1044714, 0.2713764, 0.126502, 0.2740002, 0.20855005, 0.1787833, 0.24469043, 0.1105517, 0.2060533, 0.05218188, 0.16499166, 0.03610925, 0.098187, 0.08273055, 0.0477804, 0.1987454, 1.8253922E-7, 0.35926175, 0.001868712, 0.3096913, 0.5358658, 0.3362405, 0.4323534, 0.744588, 0.5218305, 0.7117178, 0.4209802, 0.42359355, 0.23707646, 0.40071675, 0.11479813, 0.5723284, 0.20583567, 0.6376471, 0.32983285, 0.3711283, 0.3590327 ],
+					"triangles": [ 23, 24, 16, 19, 17, 18, 20, 17, 19, 16, 24, 25, 21, 22, 20, 22, 17, 20, 17, 23, 16, 22, 23, 17, 15, 16, 25, 26, 15, 25, 35, 34, 1, 33, 15, 27, 0, 33, 27, 33, 14, 15, 1, 34, 0, 33, 0, 34, 32, 33, 34, 14, 33, 32, 32, 13, 14, 36, 13, 32, 32, 34, 35, 15, 26, 27, 35, 1, 2, 12, 13, 36, 31, 35, 2, 29, 12, 36, 36, 35, 31, 30, 31, 3, 29, 11, 12, 29, 31, 28, 28, 11, 29, 30, 28, 31, 8, 28, 7, 7, 30, 6, 30, 7, 28, 28, 9, 10, 6, 30, 5, 9, 28, 8, 28, 10, 11, 30, 4, 5, 4, 30, 3, 31, 2, 3, 36, 31, 29, 36, 32, 35 ],
+					"vertices": [ 4.0, 36.0, -6.87, 309.05, 0.06268, 43.0, 156.76, -36.5, 0.71311, 44.0, -37.97, -5.91, 0.02232, 46.0, 97.74, 1.55, 0.2019, 3.0, 36.0, 43.51, 262.34, 0.30379, 43.0, 101.47, -77.29, 0.45581, 46.0, 148.12, -45.17, 0.2404, 3.0, 36.0, 79.38, 203.21, 0.64956, 43.0, 36.69, -101.51, 0.19664, 46.0, 183.99, -104.3, 0.1538, 3.0, 36.0, 109.99, 152.74, 0.82831, 43.0, -18.6, -122.18, 0.03709, 46.0, 214.6, -154.77, 0.1346, 1.0, 36.0, 132.29, 115.98, 1.0, 1.0, 36.0, 140.0, 41.28, 1.0, 1.0, 36.0, 128.51, -20.44, 1.0, 1.0, 36.0, 33.17, -85.5, 1.0, 1.0, 36.0, -60.33, -85.5, 1.0, 1.0, 36.0, -166.0, -17.48, 1.0, 1.0, 36.0, -166.0, 68.53, 1.0, 3.0, 36.0, -125.59, 129.33, 0.76024, 43.0, 2.31, 113.64, 0.10516, 46.0, -20.98, -178.18, 0.1346, 3.0, 36.0, -102.39, 181.93, 0.7245, 43.0, 49.66, 81.04, 0.1217, 46.0, 2.22, -125.58, 0.1538, 3.0, 36.0, -81.57, 229.13, 0.24967, 43.0, 92.15, 51.79, 0.61573, 46.0, 23.04, -78.38, 0.1346, 4.0, 36.0, -69.66, 279.22, 0.03073, 43.0, 139.15, 30.75, 0.64459, 44.0, 13.89, 40.38, 0.12278, 46.0, 34.95, -28.29, 0.2019, 4.0, 43.0, 181.17, 35.98, 0.5372, 44.0, 37.67, 5.35, 0.25926, 45.0, 16.06, 38.7, 0.00164, 46.0, 21.99, 12.02, 0.2019, 4.0, 43.0, 175.54, 88.46, 0.01442, 44.0, 81.84, 34.25, 0.08005, 45.0, 32.37, -11.5, 0.60742, 46.0, -28.53, -3.3, 0.2981, 3.0, 44.0, 71.55, 33.22, 0.17083, 45.0, 34.07, -1.31, 0.46377, 46.0, -18.37, -5.2, 0.3654, 2.0, 45.0, 26.6, 16.41, 0.6346, 46.0, -0.5, 1.92, 0.3654, 2.0, 45.0, 35.88, 38.75, 0.6346, 46.0, 21.65, -7.8, 0.3654, 2.0, 45.0, 72.03, 40.27, 0.6346, 46.0, 22.45, -43.98, 0.3654, 2.0, 45.0, 88.55, 11.46, 0.6346, 46.0, -6.68, -59.92, 0.3654, 3.0, 44.0, 69.78, 71.96, 0.09644, 45.0, 71.92, -9.75, 0.53816, 46.0, -27.56, -42.88, 0.3654, 3.0, 44.0, 92.01, 59.61, 0.14659, 45.0, 54.17, -27.97, 0.48801, 46.0, -45.42, -24.77, 0.3654, 3.0, 44.0, 105.02, 32.72, 0.11359, 45.0, 24.82, -33.47, 0.46259, 46.0, -50.34, 4.69, 0.42381, 3.0, 44.0, 97.58, 7.38, 0.35601, 45.0, 2.31, -19.65, 0.32669, 46.0, -36.07, 26.92, 0.3173, 4.0, 43.0, 220.71, 51.44, 0.17861, 44.0, 69.44, -22.83, 0.45304, 45.0, -19.46, 15.43, 0.16645, 46.0, -0.57, 47.99, 0.2019, 3.0, 43.0, 210.75, 3.33, 0.40533, 44.0, 22.07, -35.85, 0.39277, 46.0, 48.54, 47.17, 0.2019, 1.0, 36.0, -71.23, 119.18, 1.0, 2.0, 36.0, -63.11, 164.83, 0.76706, 43.0, 25.54, 45.64, 0.23294, 1.0, 36.0, 61.84, 125.37, 1.0, 2.0, 36.0, 51.79, 169.85, 0.99849, 43.0, 9.06, -68.18, 0.00151, 4.0, 36.0, -36.38, 250.95, 0.26631, 43.0, 105.17, 3.33, 0.65677, 44.0, -25.99, 58.15, 1.0E-5, 46.0, 68.23, -56.56, 0.0769, 3.0, 36.0, -43.38, 304.87, 0.08619, 43.0, 159.45, 0.15, 0.78881, 46.0, 61.23, -2.64, 0.125, 3.0, 36.0, 9.13, 264.73, 0.26631, 43.0, 110.22, -43.96, 0.65679, 46.0, 113.74, -42.78, 0.0769, 3.0, 36.0, 29.12, 210.04, 0.74167, 43.0, 52.77, -53.4, 0.23913, 46.0, 133.73, -97.47, 0.0192, 3.0, 36.0, -52.43, 197.17, 0.71081, 43.0, 55.32, 29.13, 0.22919, 46.0, 52.18, -110.34, 0.06 ],
+					"hull": 28,
+					"edges": [ 8, 10, 10, 12, 12, 14, 16, 18, 20, 22, 14, 16, 18, 20, 26, 28, 40, 42, 28, 30, 38, 40, 36, 38, 32, 34, 34, 36, 42, 44, 30, 32, 52, 54, 50, 52, 44, 46, 48, 50, 46, 48, 2, 0, 0, 54, 22, 24, 24, 26, 2, 4, 4, 6, 6, 8, 68, 66 ],
+					"width": 306.0,
+					"height": 441.0
+				}
+			},
+			"spineboy/head-base": {
+				"head-base": {
+					"type": "mesh",
+					"uvs": [ 0.75, 1, 0.25, 1, 0, 0.75, 0, 0.25, 0.25, 0, 0.75, 0, 1, 0.25, 1, 0.75, 0.5, 0.75, 0.2938643, 0.7676215, 0.7908637, 0.4893797, 0.5, 0.5, 0.2600195, 0.459784, 0.8843492, 0.4670979, 0.4957727, 0.2889579, 0.6325261, 0.7502691, 0.3255361, 0.7261866, 0.6897341, 0.744847, 0.15329434, 0.3993187, 0.3326608, 0.585766, 0.6993617, 0.5943911, 0.720308, 0.7786523, 0.1983423, 0.7758329, 0.1247635, 0.7229682, 0.07523921, 0.610191, 0.08585154, 0.4967085, 0.8385408, 0.7899556, 0.9078749, 0.7342716, 0.9460792, 0.6348862, 0.9361743, 0.5532617, 0.9159208, 0.7393597, 0.8523612, 0.8117292, 0.9621457, 0.636562, 0.9794803, 0.5459142, 0.7221648, 0.8302513, 0.6367885, 0.5431257, 0.7543442, 0.4255235, 0.3999773, 0.5463141, 0.3178828, 0.4112892, 0.1692382, 0.34789035, 0.04150091, 0.6222963, 0.09250639, 0.7384467, 0.1803376, 0.8182485, 0.05455365, 0.4532668, 0.6936759, 0.9087173, 0.3331173, 0.9105644, 0.514787, 0.9530424, 0.3776078, 0.8311483, 0.66865, 0.831148, 0.5268365, 0.8782436, 0.3313837, 0.6595455, 0.2909321, 0.5119166, 0.2015127, 0.4084066, 0.6757905, 0.6919313, 0.683881, 0.6372063, 0.7400873, 0.54812, 0.7733003, 0.5099406, 0.8473904, 0.4603066, 0.7821772, 0.7919598 ],
+					"triangles": [ 1, 46, 0, 1, 45, 46, 46, 44, 0, 7, 31, 30, 30, 31, 27, 31, 7, 0, 0, 44, 31, 34, 31, 44, 1, 2, 42, 42, 2, 41, 41, 23, 42, 1, 42, 45, 9, 42, 22, 42, 9, 45, 45, 47, 46, 46, 49, 44, 30, 32, 7, 32, 33, 7, 2, 40, 41, 2, 3, 40, 32, 30, 28, 40, 24, 41, 33, 32, 29, 24, 40, 25, 40, 3, 43, 25, 40, 43, 29, 13, 33, 7, 33, 6, 33, 13, 6, 25, 43, 18, 13, 57, 6, 43, 3, 18, 6, 36, 5, 39, 3, 4, 14, 4, 5, 31, 34, 58, 46, 47, 49, 45, 9, 47, 49, 48, 44, 44, 48, 34, 47, 8, 49, 49, 15, 48, 49, 8, 15, 9, 16, 47, 47, 16, 8, 48, 21, 34, 48, 17, 21, 48, 15, 17, 34, 21, 58, 17, 27, 58, 17, 58, 21, 16, 9, 22, 50, 16, 22, 17, 15, 53, 16, 50, 8, 8, 50, 37, 50, 19, 37, 15, 8, 53, 53, 8, 54, 37, 11, 8, 8, 11, 35, 17, 53, 27, 54, 8, 35, 11, 37, 38, 36, 55, 35, 37, 51, 38, 35, 11, 36, 38, 14, 11, 11, 14, 36, 10, 36, 57, 57, 36, 6, 14, 38, 39, 18, 39, 52, 38, 52, 39, 18, 3, 39, 14, 39, 4, 36, 14, 5, 58, 26, 31, 27, 26, 58, 31, 26, 27, 27, 55, 28, 56, 29, 28, 30, 27, 28, 32, 28, 29, 54, 27, 53, 27, 20, 55, 54, 20, 27, 28, 55, 56, 10, 57, 13, 29, 56, 10, 29, 10, 13, 54, 35, 20, 20, 35, 55, 56, 55, 36, 56, 36, 10, 42, 23, 22, 41, 24, 23, 23, 50, 22, 19, 23, 24, 51, 24, 25, 50, 23, 19, 51, 25, 12, 12, 25, 52, 52, 25, 18, 51, 19, 24, 19, 51, 37, 51, 12, 38, 12, 52, 38 ],
+					"vertices": [ 1.0, 36.0, 67.0, -134.5, 1.0, 1.0, 36.0, -67.0, -134.5, 1.0, 1.0, 36.0, -134.0, -67.25, 1.0, 1.0, 36.0, -134.0, 67.25, 1.0, 1.0, 36.0, -67.0, 134.5, 1.0, 1.0, 36.0, 67.0, 134.5, 1.0, 1.0, 36.0, 134.0, 67.25, 1.0, 1.0, 36.0, 134.0, -67.25, 1.0, 1.0, 41.0, -10.3, -32.74, 1.0, 3.0, 49.0, 44.62, -15.95, 0.3173, 41.0, -65.54, -37.48, 0.48574, 36.0, -55.24, -71.99, 0.19696, 1.0, 50.0, -1.22, 15.5, 1.0, 1.0, 41.0, -10.3, 34.51, 1.0, 1.0, 47.0, -1.21, 15.17, 1.0, 2.0, 41.0, 92.71, 43.36, 0.5096, 36.0, 103.01, 8.85, 0.4904, 1.0, 41.0, -11.43, 91.28, 1.0, 1.0, 41.0, 25.22, -32.82, 1.0, 1.0, 41.0, -57.06, -26.34, 1.0, 2.0, 50.0, -28.32, -53.22, 0.08857, 41.0, 40.55, -31.36, 0.91143, 3.0, 47.0, -29.81, 31.44, 0.4038, 41.0, -103.22, 61.59, 0.4242, 36.0, -92.92, 27.08, 0.172, 2.0, 47.0, 18.26, -18.72, 0.8462, 41.0, -55.15, 11.44, 0.1538, 1.0, 50.0, -25.74, -12.75, 1.0, 2.0, 51.0, -36.44, -3.99, 0.2404, 41.0, 48.74, -40.45, 0.7596, 2.0, 49.0, 19.02, -18.16, 0.8654, 41.0, -91.14, -39.69, 0.1346, 1.0, 49.0, -0.7, -3.94, 1.0, 2.0, 49.0, -13.97, 26.4, 0.7115, 36.0, -113.84, -29.64, 0.2885, 2.0, 41.0, -121.29, 35.39, 0.4038, 36.0, -110.99, 0.88, 0.5962, 2.0, 51.0, -4.75, -7.04, 0.49737, 41.0, 80.43, -43.49, 0.50263, 2.0, 51.0, 13.83, 7.94, 0.6346, 41.0, 99.01, -28.51, 0.3654, 2.0, 51.0, 24.07, 34.68, 0.6923, 41.0, 109.25, -1.78, 0.3077, 2.0, 51.0, 21.41, 56.64, 0.5288, 41.0, 106.6, 20.18, 0.4712, 1.0, 36.0, 111.47, -64.39, 1.0, 1.0, 36.0, 94.43, -83.86, 1.0, 1.0, 36.0, 123.86, -36.74, 1.0, 1.0, 36.0, 128.5, -12.35, 1.0, 1.0, 41.0, 49.24, -54.33, 1.0, 1.0, 41.0, 26.36, 22.91, 1.0, 1.0, 41.0, 57.87, 54.54, 1.0, 1.0, 41.0, -37.11, 22.05, 1.0, 1.0, 41.0, -59.11, 58.37, 1.0, 1.0, 41.0, -98.94, 75.42, 1.0, 1.0, 36.0, -122.88, -32.9, 1.0, 1.0, 36.0, -109.21, -64.14, 1.0, 1.0, 36.0, -85.67, -85.61, 1.0, 2.0, 41.0, -129.68, 47.08, 0.18857, 36.0, -119.38, 12.57, 0.81143, 1.0, 36.0, 51.91, -109.95, 1.0, 1.0, 36.0, -44.72, -110.44, 1.0, 1.0, 36.0, 3.96, -121.87, 1.0, 1.0, 41.0, -43.1, -54.57, 1.0, 1.0, 41.0, 34.9, -54.57, 1.0, 1.0, 41.0, -3.11, -67.24, 1.0, 2.0, 47.0, 17.91, -38.57, 0.42621, 41.0, -55.49, -8.41, 0.57379, 2.0, 47.0, 7.07, 1.15, 0.97735, 49.0, 43.83, 52.83, 0.02265, 2.0, 47.0, -16.89, 28.99, 0.8942, 41.0, -90.29, 59.15, 0.1058, 2.0, 50.0, -32.06, -38.99, 0.47659, 41.0, 36.81, -17.12, 0.52341, 2.0, 50.0, -29.89, -24.26, 0.81857, 41.0, 38.98, -2.4, 0.18143, 3.0, 50.0, -14.83, -0.3, 0.99856, 51.0, -31.14, 58.02, 0.001, 41.0, 54.04, 21.56, 4.4E-4, 2.0, 50.0, -5.93, 9.97, 0.9991, 51.0, -22.24, 68.29, 9.0E-4, 3.0, 50.0, 13.93, 23.32, 0.09636, 41.0, 82.8, 45.18, 0.56593, 36.0, 93.1, 10.68, 0.33771, 2.0, 51.0, -19.86, -7.57, 0.3654, 41.0, 65.32, -44.03, 0.6346 ],
+					"hull": 8,
+					"edges": [ 2, 4, 14, 0, 12, 14, 0, 2, 4, 6, 6, 8, 10, 12, 8, 10 ],
+					"width": 268.0,
+					"height": 269.0
+				}
+			},
+			"spineboy/iris-l": {
+				"iris-l": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 2.0, 53.0, 36.79, -42.18, 0.9327, 41.0, 89.7, -45.99, 0.0673, 2.0, 53.0, -42.21, -42.18, 0.9327, 41.0, 10.7, -45.99, 0.0673, 2.0, 53.0, -42.21, 38.82, 0.9327, 41.0, 10.7, 35.01, 0.0673, 2.0, 53.0, 36.79, 38.82, 0.9327, 41.0, 89.7, 35.01, 0.0673 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 79.0,
+					"height": 81.0
+				}
+			},
+			"spineboy/iris-r": {
+				"iris-r": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 2.0, 41.0, -31.3, -39.99, 0.0673, 52.0, 34.64, -42.39, 0.9327, 2.0, 41.0, -110.3, -39.99, 0.0673, 52.0, -44.36, -42.39, 0.9327, 2.0, 41.0, -110.3, 41.01, 0.0673, 52.0, -44.36, 38.61, 0.9327, 2.0, 41.0, -31.3, 41.01, 0.0673, 52.0, 34.64, 38.61, 0.9327 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 79.0,
+					"height": 81.0
+				}
+			},
+			"spineboy/leg-down-l": {
+				"leg-down-l": {
+					"type": "mesh",
+					"uvs": [ 0.9684103, 0.7028664, 0.537856, 0.999999, 0.3188437, 0.9999994, 0, 1, 0, 0.4039637, 0.6013722, 1.0016496E-5, 1, 0, 0.10356632, 0.5947528, 0.7517382, 0.21529508, 0.15270574, 0.8003805, 0.8511868, 0.5396359 ],
+					"triangles": [ 7, 4, 5, 2, 9, 1, 3, 4, 7, 3, 7, 9, 3, 9, 2, 9, 7, 8, 1, 9, 10, 8, 5, 6, 10, 8, 6, 0, 10, 6, 1, 10, 0, 7, 5, 8, 9, 8, 10 ],
+					"vertices": [ 2.0, 32.0, 31.57, 31.56, 0.6731, 33.0, -2.05, 143.69, 0.3269, 2.0, 32.0, 65.77, -45.5, 0.47964, 33.0, 32.16, 66.63, 0.52036, 1.0, 33.0, 34.32, 26.61, 1.0, 1.0, 33.0, 37.46, -31.65, 1.0, 2.0, 32.0, 10.96, -147.03, 1.0E-5, 33.0, -22.65, -34.89, 0.99999, 2.0, 32.0, -35.7, -39.33, 0.6731, 33.0, -69.32, 72.8, 0.3269, 1.0, 32.0, -39.63, 33.51, 1.0, 2.0, 32.0, 29.18, -127.07, 0.375, 33.0, -4.43, -14.93, 0.625, 1.0, 32.0, -15.47, -10.68, 1.0, 2.0, 32.0, 49.43, -116.97, 0.375, 33.0, 15.82, -4.83, 0.625, 1.0, 32.0, 16.26, 9.25, 1.0 ],
+					"hull": 7,
+					"edges": [ 10, 12, 6, 8, 8, 10, 2, 0, 0, 12, 2, 4, 4, 6, 14, 16, 18, 20 ],
+					"width": 183.0,
+					"height": 101.0
+				}
+			},
+			"spineboy/leg-down-r": {
+				"leg-down-r": {
+					"type": "mesh",
+					"uvs": [ 0.2643927, 4.488975E-7, 0.99347, 0.5504246, 0.9999995, 1, 0.488574, 0.9999996, 0, 0.234056, 1.4284253E-4, 1.829583E-5, 0.13099967, 0.12257352, 0.6332564, 0.8625045, 0.29583925, 0.09034547, 0.9024257, 0.6964014 ],
+					"triangles": [ 0, 1, 8, 6, 5, 0, 6, 0, 8, 4, 5, 6, 7, 4, 6, 6, 8, 7, 3, 4, 7, 9, 1, 2, 7, 9, 2, 3, 7, 2, 7, 8, 9, 9, 8, 1 ],
+					"vertices": [ 2.0, 27.0, -137.38, -133.01, 6.0E-5, 28.0, -32.7, -2.68, 0.99994, 2.0, 27.0, -73.54, 7.27, 0.8654, 28.0, 31.13, 137.6, 0.1346, 1.0, 27.0, 11.19, 43.56, 1.0, 2.0, 27.0, 39.48, -24.44, 0.8654, 28.0, 144.15, 105.89, 0.1346, 2.0, 27.0, -78.45, -149.73, 0.02343, 28.0, 26.22, -19.39, 0.97657, 1.0, 28.0, -18.08, -37.81, 1.0, 2.0, 27.0, -106.8, -141.09, 0.1346, 28.0, -2.12, -10.76, 0.8654, 1.0, 27.0, 5.45, -16.03, 1.0, 2.0, 27.0, -122.02, -121.72, 0.1346, 28.0, -17.34, 8.62, 0.8654, 1.0, 27.0, -40.88, 6.67, 1.0 ],
+					"hull": 6,
+					"edges": [ 0, 2, 2, 4, 6, 8, 10, 0, 8, 10, 4, 6, 12, 14, 18, 16 ],
+					"width": 144.0,
+					"height": 205.0
+				}
+			},
+			"spineboy/leg-up-l": {
+				"leg-up-l": {
+					"type": "mesh",
+					"uvs": [ 0.9497534, 0.9999897, 0.011166018, 0.9999897, 0, 0, 1, 0, 0.22103666, 0.875025, 0.3103643, 0.142531, 0.6118446, 0.88117, 0.7570023, 0.146218 ],
+					"triangles": [ 1, 2, 4, 6, 7, 0, 1, 4, 6, 1, 6, 0, 3, 0, 7, 5, 2, 3, 5, 4, 2, 6, 4, 5, 7, 5, 3, 7, 6, 5 ],
+					"vertices": [ 1.0, 32.0, 32.62, 67.97, 1.0, 1.0, 32.0, 39.13, -52.93, 1.0, 2.0, 31.0, -44.81, -70.14, 0.6346, 32.0, -253.36, -70.14, 0.3654, 2.0, 31.0, -51.75, 58.67, 0.6346, 32.0, -260.3, 58.67, 0.3654, 2.0, 31.0, 209.67, -27.87, 0.3462, 32.0, 1.11, -27.87, 0.6538, 1.0, 31.0, -5.26, -27.91, 1.0, 2.0, 31.0, 208.75, 22.57, 0.3462, 32.0, 0.2, 22.57, 0.6538, 1.0, 31.0, -7.28, 29.68, 1.0 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6, 8, 10, 12, 14 ],
+					"width": 129.0,
+					"height": 293.0
+				}
+			},
+			"spineboy/leg-up-l-fuzzy": {
+				"leg-up-l-fuzzy": { "x": 4.70047, "y": -27.19045, "rotation": 93.0848, "width": 146, "height": 130 }
+			},
+			"spineboy/leg-up-r": {
+				"leg-up-r": {
+					"type": "mesh",
+					"uvs": [ 0.9999895, 0.3084633, 0.4711975, 0.838207, 0, 0.8264462, 0, 0.6212536, 0.3700212, 0.004522641, 0.9999998, 3.162422E-7, 0.12938634, 0.670067, 0.3724736, 0.7462979, 0.5271252, 0.10047164, 0.8549242, 0.1984824 ],
+					"triangles": [ 2, 7, 1, 2, 6, 7, 2, 3, 6, 1, 7, 0, 6, 3, 8, 7, 6, 9, 0, 7, 9, 6, 8, 9, 3, 4, 8, 0, 9, 5, 9, 8, 5, 8, 4, 5 ],
+					"vertices": [ 1.0, 26.0, 10.06, 67.1, 1.0, 1.0, 27.0, 16.55, 43.34, 1.0, 1.0, 27.0, 43.39, -29.7, 1.0, 1.0, 27.0, -9.46, -51.7, 1.0, 1.0, 26.0, -28.29, -61.44, 1.0, 1.0, 26.0, -69.4, 34.04, 1.0, 2.0, 26.0, 158.39, -26.76, 0.3654, 27.0, -5.09, -26.76, 0.6346, 2.0, 26.0, 162.62, 18.45, 0.3654, 27.0, -0.86, 18.45, 0.6346, 1.0, 26.0, -13.54, -27.23, 1.0, 1.0, 26.0, -9.07, 33.22, 1.0 ],
+					"hull": 6,
+					"edges": [ 0, 2, 4, 6, 6, 8, 8, 10, 2, 4, 10, 0, 12, 16, 14, 18 ],
+					"width": 165.0,
+					"height": 279.0
+				}
+			},
+			"spineboy/leg-up-r-fuzzy": {
+				"leg-up-r-fuzzy": { "x": -21.418365, "y": -16.04837, "rotation": 112.59713, "width": 129, "height": 142 }
+			},
+			"spineboy/mouth": {
+				"mouth": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 36.36, -8.99, -40.64, -8.99, -40.64, 17.01, 36.36, 17.01 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 77.0,
+					"height": 26.0
+				}
+			},
+			"spineboy/neck-scarf": {
+				"neck-scarf": { "x": 4.619804, "y": 28.4328, "width": 284, "height": 227 }
+			},
+			"spineboy/nose": {
+				"nose": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 3, 0, 1, 2, 3 ],
+					"vertices": [ 2.0, 41.0, 25.7, -37.99, 0.8269, 42.0, 11.94, -19.61, 0.1731, 1.0, 41.0, -7.3, -37.99, 1.0, 2.0, 41.0, -7.3, -9.99, 0.7212, 42.0, -21.06, 8.39, 0.2788, 2.0, 41.0, 25.7, -9.99, 0.8269, 42.0, 11.94, 8.39, 0.1731 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 33.0,
+					"height": 28.0
+				}
+			},
+			"spineboy/nose-shadow": {
+				"nose-shadow": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 21.7, -49.99, -8.3, -49.99, -8.3, -20.99, 21.7, -20.99 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 30.0,
+					"height": 29.0
+				}
+			},
+			"spineboy/pupil-l": {
+				"pupil-l": { "x": -0.713028, "y": -0.6793823, "width": 63, "height": 63 }
+			},
+			"spineboy/pupil-r": {
+				"pupil-r": { "x": -2.857723, "y": -0.8884277, "width": 63, "height": 63 }
+			},
+			"spineboy/scarf-shadow": {
+				"scarf-shadow": { "x": -10.380196, "y": -22.0672, "width": 298, "height": 148 }
+			},
+			"spineboy/shoe-l": {
+				"shoe-l": {
+					"type": "mesh",
+					"uvs": [ 1, 0.2087514, 0.8456813, 0.6884787, 0.7434969, 0.9999895, 0.03753701, 0.9999981, 1.1132797E-5, 0.6207144, 0.11886736, 0.17002913, 0.3440893, 1.0007844E-5, 0.974974, 9.599142E-6, 0.3211302, 0.17540726, 0.2585686, 0.702462, 0.7423788, 0.1829366, 0.6965008, 0.7067644, 0.4233145, 0.8498223 ],
+					"triangles": [ 11, 9, 8, 12, 9, 11, 2, 11, 1, 12, 11, 2, 3, 4, 9, 3, 9, 12, 3, 12, 2, 10, 11, 8, 8, 6, 10, 1, 10, 0, 8, 4, 5, 8, 5, 6, 10, 6, 7, 10, 7, 0, 9, 4, 8, 1, 11, 10 ],
+					"vertices": [ 1.0, 34.0, 3.02, 38.18, 1.0, 2.0, 34.0, 95.39, 36.03, 0.5577, 35.0, -37.63, 36.03, 0.4423, 2.0, 34.0, 155.4, 34.44, 0.1346, 35.0, 22.38, 34.44, 0.8654, 2.0, 34.0, 165.13, -34.05, 0.1346, 35.0, 32.11, -34.05, 0.8654, 2.0, 34.0, 94.3, -47.83, 0.5577, 35.0, -38.72, -47.83, 0.4423, 1.0, 34.0, 7.89, -48.35, 1.0, 1.0, 34.0, -27.2, -31.04, 1.0, 1.0, 34.0, -35.9, 30.17, 1.0, 1.0, 34.0, 6.11, -28.58, 1.0, 2.0, 34.0, 106.12, -20.56, 0.1538, 35.0, -26.91, -20.56, 0.8462, 1.0, 34.0, 1.72, 12.49, 1.0, 2.0, 34.0, 100.89, 22.04, 0.1538, 35.0, -32.13, 22.04, 0.8462, 1.0, 35.0, -1.46, -0.64, 1.0 ],
+					"hull": 8,
+					"edges": [ 4, 6, 12, 14, 6, 8, 4, 2, 2, 0, 0, 14, 8, 10, 10, 12, 16, 18, 20, 22 ],
+					"width": 98.0,
+					"height": 190.0
+				}
+			},
+			"spineboy/shoe-r": {
+				"shoe-r": {
+					"type": "mesh",
+					"uvs": [ 0.999999, 0.3803082, 0.9195305, 0.7698902, 0.7643295, 0.9999894, 0, 1, 3.604378E-6, 0.6719966, 0.12132508, 0.2958799, 0.2583887, 0, 0.8793552, 8.691221E-6, 0.2538003, 0.738705, 0.7521456, 0.768903, 0.3839114, 0.3066422, 0.8454326, 0.3229026 ],
+					"triangles": [ 9, 10, 11, 1, 9, 0, 8, 4, 10, 2, 3, 8, 3, 4, 8, 2, 9, 1, 2, 8, 9, 8, 10, 9, 9, 11, 0, 10, 4, 5, 11, 7, 0, 11, 10, 7, 5, 6, 10, 10, 6, 7 ],
+					"vertices": [ 1.0, 29.0, 25.72, 38.07, 1.0, 2.0, 29.0, 98.51, 36.47, 0.3269, 30.0, -16.55, 36.47, 0.6731, 2.0, 29.0, 142.21, 26.08, 0.125, 30.0, 27.16, 26.08, 0.875, 2.0, 29.0, 147.29, -40.99, 0.125, 30.0, 32.24, -40.99, 0.875, 2.0, 29.0, 86.45, -45.59, 0.3269, 30.0, -28.6, -45.59, 0.6731, 1.0, 29.0, 15.89, -40.22, 1.0, 1.0, 29.0, -39.9, -32.35, 1.0, 1.0, 29.0, -44.02, 22.14, 1.0, 1.0, 30.0, -17.91, -22.38, 1.0, 1.0, 30.0, -15.62, 21.77, 1.0, 2.0, 29.0, 16.14, -17.03, 0.6827, 30.0, -98.91, -17.03, 0.3173, 2.0, 29.0, 16.09, 23.7, 0.6827, 30.0, -98.96, 23.7, 0.3173 ],
+					"hull": 8,
+					"edges": [ 4, 6, 12, 14, 6, 8, 4, 2, 2, 0, 0, 14, 8, 10, 10, 12, 16, 20, 18, 22 ],
+					"width": 88.0,
+					"height": 186.0
+				}
+			},
+			"spineboy/shoelace": {
+				"shoelace": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 33.04, 20.35, 32.19, -21.64, -3.8, -20.91, -2.95, 21.08 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 42.0,
+					"height": 36.0
+				}
+			},
+			"spineboy/shoelace2": {
+				"shoelace": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 33.04, 20.35, 32.19, -21.64, -3.8, -20.91, -2.95, 21.08 ],
+					"hull": 4,
+					"edges": [ 0, 2, 2, 4, 4, 6, 0, 6 ],
+					"width": 42.0,
+					"height": 36.0
+				}
+			},
+			"spineboy/string": {
+				"string": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0.8, 0, 0.6, 0, 0.4, 0, 0.20000003, 0, 0, 1, 0, 1, 0.2, 1, 0.4, 1, 0.6, 1, 0.8 ],
+					"triangles": [ 0, 1, 11, 1, 2, 11, 11, 2, 10, 2, 3, 10, 10, 3, 9, 3, 4, 9, 9, 4, 8, 4, 5, 8, 8, 5, 7, 5, 6, 7 ],
+					"vertices": [ 1.0, 78.0, 40.58, 4.4, 1.0, 1.0, 78.0, 40.76, -5.6, 1.0, 3.0, 76.0, 88.27, -8.77, 0.05881, 77.0, 52.77, -6.32, 0.21898, 78.0, 19.56, -5.97, 0.72222, 3.0, 76.0, 67.07, -8.34, 0.17861, 77.0, 31.57, -6.32, 0.36152, 78.0, -1.64, -6.35, 0.45987, 3.0, 76.0, 45.87, -7.91, 0.3863, 77.0, 10.37, -6.32, 0.37091, 78.0, -22.83, -6.72, 0.24279, 3.0, 76.0, 24.68, -7.48, 0.67244, 77.0, -10.83, -6.32, 0.23343, 78.0, -44.03, -7.09, 0.09413, 1.0, 76.0, 3.48, -7.06, 1.0, 1.0, 76.0, 3.69, 2.94, 1.0, 3.0, 76.0, 24.88, 2.51, 0.67901, 77.0, -10.83, 3.68, 0.24222, 78.0, -44.21, 2.91, 0.07877, 3.0, 76.0, 46.08, 2.09, 0.39506, 77.0, 10.37, 3.68, 0.38946, 78.0, -23.01, 3.28, 0.21548, 3.0, 76.0, 67.27, 1.66, 0.18519, 77.0, 31.57, 3.68, 0.38567, 78.0, -1.81, 3.65, 0.42915, 3.0, 76.0, 88.47, 1.23, 0.06173, 77.0, 52.77, 3.68, 0.23654, 78.0, 19.38, 4.02, 0.70173 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 22, 0 ],
+					"width": 10.0,
+					"height": 106.0
+				}
+			},
+			"spineboy/string2": {
+				"string": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0.8, 0, 0.6, 0, 0.4, 0, 0.20000003, 0, 0, 1, 0, 1, 0.2, 1, 0.4, 1, 0.6, 1, 0.8 ],
+					"triangles": [ 0, 1, 11, 1, 2, 11, 11, 2, 10, 2, 3, 10, 10, 3, 9, 3, 4, 9, 9, 4, 8, 4, 5, 8, 8, 5, 7, 5, 6, 7 ],
+					"vertices": [ 1.0, 80.0, 40.58, 4.4, 1.0, 1.0, 80.0, 40.76, -5.6, 1.0, 3.0, 76.0, 88.27, -8.77, 0.05881, 79.0, 52.77, -6.32, 0.21898, 80.0, 19.56, -5.97, 0.72222, 3.0, 76.0, 67.07, -8.34, 0.17861, 79.0, 31.57, -6.32, 0.36152, 80.0, -1.64, -6.35, 0.45987, 3.0, 76.0, 45.87, -7.91, 0.3863, 79.0, 10.37, -6.32, 0.37091, 80.0, -22.83, -6.72, 0.24279, 3.0, 76.0, 24.68, -7.48, 0.67244, 79.0, -10.83, -6.32, 0.23343, 80.0, -44.03, -7.09, 0.09413, 1.0, 76.0, 3.48, -7.06, 1.0, 1.0, 76.0, 3.69, 2.94, 1.0, 3.0, 76.0, 24.88, 2.51, 0.67901, 79.0, -10.83, 3.68, 0.24222, 80.0, -44.21, 2.91, 0.07877, 3.0, 76.0, 46.08, 2.09, 0.39506, 79.0, 10.37, 3.68, 0.38946, 80.0, -23.01, 3.28, 0.21548, 3.0, 76.0, 67.27, 1.66, 0.18519, 79.0, 31.57, 3.68, 0.38567, 80.0, -1.81, 3.65, 0.42915, 3.0, 76.0, 88.47, 1.23, 0.06173, 79.0, 52.77, 3.68, 0.23654, 80.0, 19.38, 4.02, 0.70173 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 22, 0 ],
+					"width": 10.0,
+					"height": 106.0
+				}
+			},
+			"spineboy/string3": {
+				"string": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0.8, 0, 0.6, 0, 0.4, 0, 0.20000003, 0, 0, 1, 0, 1, 0.2, 1, 0.4, 1, 0.6, 1, 0.8 ],
+					"triangles": [ 0, 1, 11, 1, 2, 11, 11, 2, 10, 2, 3, 10, 10, 3, 9, 3, 4, 9, 9, 4, 8, 4, 5, 8, 8, 5, 7, 5, 6, 7 ],
+					"vertices": [ 1.0, 83.0, 40.58, 4.4, 1.0, 1.0, 83.0, 40.76, -5.6, 1.0, 3.0, 81.0, 88.27, -8.77, 0.05881, 82.0, 52.77, -6.32, 0.21898, 83.0, 19.56, -5.97, 0.72222, 3.0, 81.0, 67.07, -8.34, 0.17861, 82.0, 31.57, -6.32, 0.36152, 83.0, -1.64, -6.35, 0.45987, 3.0, 81.0, 45.87, -7.91, 0.3863, 82.0, 10.37, -6.32, 0.37091, 83.0, -22.83, -6.72, 0.24279, 3.0, 81.0, 24.68, -7.48, 0.67244, 82.0, -10.83, -6.32, 0.23343, 83.0, -44.03, -7.09, 0.09413, 1.0, 81.0, 3.48, -7.06, 1.0, 1.0, 81.0, 3.69, 2.94, 1.0, 3.0, 81.0, 24.88, 2.51, 0.67901, 82.0, -10.83, 3.68, 0.24222, 83.0, -44.21, 2.91, 0.07877, 3.0, 81.0, 46.08, 2.09, 0.39506, 82.0, 10.37, 3.68, 0.38946, 83.0, -23.01, 3.28, 0.21548, 3.0, 81.0, 67.27, 1.66, 0.18519, 82.0, 31.57, 3.68, 0.38567, 83.0, -1.81, 3.65, 0.42915, 3.0, 81.0, 88.47, 1.23, 0.06173, 82.0, 52.77, 3.68, 0.23654, 83.0, 19.38, 4.02, 0.70173 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 22, 0 ],
+					"width": 10.0,
+					"height": 106.0
+				}
+			},
+			"spineboy/string4": {
+				"string": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0.8, 0, 0.6, 0, 0.4, 0, 0.20000003, 0, 0, 1, 0, 1, 0.2, 1, 0.4, 1, 0.6, 1, 0.8 ],
+					"triangles": [ 0, 1, 11, 1, 2, 11, 11, 2, 10, 2, 3, 10, 10, 3, 9, 3, 4, 9, 9, 4, 8, 4, 5, 8, 8, 5, 7, 5, 6, 7 ],
+					"vertices": [ 1.0, 85.0, 40.58, 4.4, 1.0, 1.0, 85.0, 40.76, -5.6, 1.0, 3.0, 81.0, 88.27, -8.77, 0.05881, 84.0, 52.77, -6.32, 0.21898, 85.0, 19.56, -5.97, 0.72222, 3.0, 81.0, 67.07, -8.34, 0.17861, 84.0, 31.57, -6.32, 0.36152, 85.0, -1.64, -6.35, 0.45987, 3.0, 81.0, 45.87, -7.91, 0.3863, 84.0, 10.37, -6.32, 0.37091, 85.0, -22.83, -6.72, 0.24279, 3.0, 81.0, 24.68, -7.48, 0.67244, 84.0, -10.83, -6.32, 0.23343, 85.0, -44.03, -7.09, 0.09413, 1.0, 81.0, 3.48, -7.06, 1.0, 1.0, 81.0, 3.69, 2.94, 1.0, 3.0, 81.0, 24.88, 2.51, 0.67901, 84.0, -10.83, 3.68, 0.24222, 85.0, -44.21, 2.91, 0.07877, 3.0, 81.0, 46.08, 2.09, 0.39506, 84.0, 10.37, 3.68, 0.38946, 85.0, -23.01, 3.28, 0.21548, 3.0, 81.0, 67.27, 1.66, 0.18519, 84.0, 31.57, 3.68, 0.38567, 85.0, -1.81, 3.65, 0.42915, 3.0, 81.0, 88.47, 1.23, 0.06173, 84.0, 52.77, 3.68, 0.23654, 85.0, 19.38, 4.02, 0.70173 ],
+					"hull": 12,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 22, 0 ],
+					"width": 10.0,
+					"height": 106.0
+				}
+			}
+		}
+	}
+],
+"animations": {
+	"eyeblink": {
+		"bones": {
+			"eyellid-l-down": {
+				"translate": [
+					{
+						"curve": [ 0.2157551, 0, 0.15555555, -13.927757, 0.2157551, 0, 0.15555555, 45.71246 ]
+					},
+					{
+						"time": 0.23333333,
+						"x": -13.927757,
+						"y": 45.71246,
+						"curve": [ 0.3666667, -13.927757, 0.5, 0, 0.3666667, 45.71246, 0.5, 0 ]
+					},
+					{ "time": 0.6333333 }
+				]
+			},
+			"eyellid-l-up": {
+				"translate": [
+					{
+						"curve": [ 0.2157551, 0, 0.15555555, 27.46164, 0.2157551, 0, 0.15555555, -38.43774 ]
+					},
+					{
+						"time": 0.23333333,
+						"x": 27.46164,
+						"y": -38.43774,
+						"curve": [ 0.3666667, 27.46164, 0.5, 0, 0.3666667, -38.43774, 0.5, 0 ]
+					},
+					{ "time": 0.6333333 }
+				]
+			},
+			"eyellid-r-down": {
+				"translate": [
+					{
+						"curve": [ 0.2157551, 0, 0.15555555, 12.27263, 0.2157551, 0, 0.15555555, 17.911377 ]
+					},
+					{
+						"time": 0.23333333,
+						"x": 12.27263,
+						"y": 17.911377,
+						"curve": [ 0.3666667, 12.27263, 0.5, 0, 0.3666667, 17.911377, 0.5, 0 ]
+					},
+					{ "time": 0.6333333 }
+				]
+			},
+			"eyellid-r-up": {
+				"translate": [
+					{
+						"curve": [ 0.2157551, 0, 0.15555555, -32.40664, 0.2157551, 0, 0.15555555, -39.19385 ]
+					},
+					{
+						"time": 0.23333333,
+						"x": -32.40664,
+						"y": -39.19385,
+						"curve": [ 0.3666667, -32.40664, 0.5, 0, 0.3666667, -39.19385, 0.5, 0 ]
+					},
+					{ "time": 0.6333333 }
+				]
+			}
+		}
+	},
+	"idle": {
+		"bones": {
+			"blue-gift-rotator": {
+				"rotate": [
+					{},
+					{ "time": 2.1, "value": 360 }
+				],
+				"scale": [
+					{ "y": 0.9327923 }
+				]
+			},
+			"blue-gift-scale": {
+				"scale": [
+					{ "y": 0.5136493 }
+				]
+			},
+			"eyellid-l-down": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, -13.927757, 1.6824218, 0, 1.6222223, 45.71246 ]
+					},
+					{
+						"time": 1.7,
+						"x": -13.927757,
+						"y": 45.71246,
+						"curve": [ 1.8333334, -13.927757, 1.9666667, 0, 1.8333334, 45.71246, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"eyellid-l-up": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, 27.46164, 1.6824218, 0, 1.6222223, -38.43774 ]
+					},
+					{
+						"time": 1.7,
+						"x": 27.46164,
+						"y": -38.43774,
+						"curve": [ 1.8333334, 27.46164, 1.9666667, 0, 1.8333334, -38.43774, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"eyellid-r-down": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, 12.27263, 1.6824218, 0, 1.6222223, 17.911377 ]
+					},
+					{
+						"time": 1.7,
+						"x": 12.27263,
+						"y": 17.911377,
+						"curve": [ 1.8333334, 12.27263, 1.9666667, 0, 1.8333334, 17.911377, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"eyellid-r-up": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, -32.40664, 1.6824218, 0, 1.6222223, -39.19385 ]
+					},
+					{
+						"time": 1.7,
+						"x": -32.40664,
+						"y": -39.19385,
+						"curve": [ 1.8333334, -32.40664, 1.9666667, 0, 1.8333334, -39.19385, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"hat": {
+				"translate": [
+					{
+						"y": 34.57214,
+						"curve": [ 0.14533335, 0, 0.2893333, 0, 0.14533335, 16.69141, 0.2893333, -15.249855 ]
+					},
+					{
+						"time": 0.4333333,
+						"y": -15.249855,
+						"curve": [ 0.5777778, 0, 0.7222222, 0, 0.5777778, -15.249855, 0.7222222, 46.34327 ]
+					},
+					{
+						"time": 0.8666667,
+						"y": 46.34327,
+						"curve": [ 1.0444444, 0, 1.2222222, 0, 1.0444444, 46.34327, 1.2222222, -23.16584 ]
+					},
+					{
+						"time": 1.4,
+						"y": -23.16584,
+						"curve": [ 1.5666667, 0, 1.7333333, 0, 1.5666667, -23.16584, 1.7333333, 23.173565 ]
+					},
+					{ "time": 1.9, "y": 46.34327, "curve": "stepped" },
+					{
+						"time": 1.9333333,
+						"y": 46.34327,
+						"curve": [ 1.9893334, 0, 2.0453334, 0, 1.9893334, 46.34327, 2.0453334, 41.52576 ]
+					},
+					{ "time": 2.1, "y": 34.57214 }
+				]
+			},
+			"hat2": {
+				"translate": [
+					{
+						"y": 46.34327,
+						"curve": [ 0.2, 0, 0.4, 0, 0.2, 46.34327, 0.4, -15.249855 ]
+					},
+					{
+						"time": 0.6,
+						"y": -15.249855,
+						"curve": [ 0.7444445, 0, 0.8888889, 0, 0.7444445, -15.249855, 0.8888889, 46.34327 ]
+					},
+					{
+						"time": 1.0333333,
+						"y": 46.34327,
+						"curve": [ 1.211111, 0, 1.388889, 0, 1.211111, 46.34327, 1.388889, -23.16584 ]
+					},
+					{
+						"time": 1.5666667,
+						"y": -23.16584,
+						"curve": [ 1.7333333, 0, 1.9, 0, 1.7333333, -23.16584, 1.9, 23.173565 ]
+					},
+					{ "time": 2.0666666, "y": 46.34327 }
+				]
+			},
+			"hips": {
+				"translate": [
+					{
+						"curve": [ 0.3, 0, 0.6, 0, 0.3, 0, 0.6, 68.57495 ]
+					},
+					{
+						"time": 0.9,
+						"y": 68.57495,
+						"curve": [ 1.288889, 0, 1.6777778, 0, 1.288889, 68.57495, 1.6777778, 22.85832 ]
+					},
+					{ "time": 2.0666666 }
+				]
+			},
+			"red-gift-rotator": {
+				"rotate": [
+					{},
+					{ "time": 2.1, "value": 360 }
+				]
+			},
+			"red-gift-scale": {
+				"scale": [
+					{ "x": 0.880983, "y": 0.4104343 }
+				]
+			},
+			"scarf-end-l": {
+				"rotate": [
+					{
+						"value": 0.5296132,
+						"curve": [ 0.12251866, -3.596789, 0.2445928, -10.181583 ]
+					},
+					{
+						"time": 0.3666667,
+						"value": -10.181583,
+						"curve": [ 0.5111112, -10.181583, 0.6555555, 6.646122 ]
+					},
+					{
+						"time": 0.8,
+						"value": 6.646122,
+						"curve": [ 0.988889, 6.646122, 1.1777778, -10.181583 ]
+					},
+					{
+						"time": 1.3666667,
+						"value": -10.181583,
+						"curve": [ 1.5555556, -10.181583, 1.7444444, 3.7834816 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 3.7834816,
+						"curve": [ 1.989037, 3.7834816, 2.044741, 2.412534 ]
+					},
+					{ "time": 2.1, "value": 0.5296132 }
+				]
+			},
+			"scarf-end-r": {
+				"rotate": [
+					{
+						"value": 0.5296132,
+						"curve": [ 0.12251866, -3.596789, 0.2445928, -10.181583 ]
+					},
+					{
+						"time": 0.3666667,
+						"value": -10.181583,
+						"curve": [ 0.5111112, -10.181583, 0.6555555, 6.646122 ]
+					},
+					{
+						"time": 0.8,
+						"value": 6.646122,
+						"curve": [ 0.988889, 6.646122, 1.1777778, -10.181583 ]
+					},
+					{
+						"time": 1.3666667,
+						"value": -10.181583,
+						"curve": [ 1.5555556, -10.181583, 1.7444444, 3.7834816 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 3.7834816,
+						"curve": [ 1.989037, 3.7834816, 2.044741, 2.412534 ]
+					},
+					{ "time": 2.1, "value": 0.5296132 }
+				]
+			},
+			"scarf-ribbon-top-l": {
+				"rotate": [
+					{ "value": -10.181583 },
+					{ "time": 0.4333333, "value": 6.646122 },
+					{ "time": 1, "value": -10.181583 },
+					{ "time": 1.5666667, "value": 3.7834816 },
+					{ "time": 2.1, "value": -10.181583 }
+				]
+			},
+			"scarf-ribbon-top-r": {
+				"rotate": [
+					{ "value": -10.181583 },
+					{ "time": 0.4333333, "value": 6.646122 },
+					{ "time": 1, "value": -10.181583 },
+					{ "time": 1.5666667, "value": 3.7834816 },
+					{ "time": 2.1, "value": -10.181583 }
+				]
+			},
+			"shoe-l-rotator": {
+				"translate": [
+					{},
+					{ "time": 1.0666667, "y": 24.27437 },
+					{ "time": 2.1 }
+				]
+			},
+			"shoe-r": {
+				"translate": [
+					{},
+					{ "time": 0.7333333, "y": 24.27437 },
+					{ "time": 2.1 }
+				]
+			},
+			"shoelace2": {
+				"rotate": [
+					{
+						"value": 9.579038,
+						"curve": [ 0.08933334, 0.3324852, 0.1779999, -10.465658 ]
+					},
+					{
+						"time": 0.2666667,
+						"value": -10.465658,
+						"curve": [ 0.4333333, -10.465658, 0.6, 22.626997 ]
+					},
+					{
+						"time": 0.7666666,
+						"value": 22.626997,
+						"curve": [ 0.9444445, 22.626997, 1.1222222, -10.465658 ]
+					},
+					{
+						"time": 1.3,
+						"value": -10.465658,
+						"curve": [ 1.5, -10.465658, 1.7, 22.626997 ]
+					},
+					{
+						"time": 1.9,
+						"value": 22.626997,
+						"curve": [ 1.966889, 22.626997, 2.033778, 16.554504 ]
+					},
+					{ "time": 2.1, "value": 9.579038 }
+				]
+			},
+			"shoelace3": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"shoelace4": {
+				"rotate": [
+					{
+						"value": 9.579038,
+						"curve": [ 0.08933334, 0.3324852, 0.1779999, -10.465658 ]
+					},
+					{
+						"time": 0.2666667,
+						"value": -10.465658,
+						"curve": [ 0.4333333, -10.465658, 0.6, 22.626997 ]
+					},
+					{
+						"time": 0.7666666,
+						"value": 22.626997,
+						"curve": [ 0.9444445, 22.626997, 1.1222222, -10.465658 ]
+					},
+					{
+						"time": 1.3,
+						"value": -10.465658,
+						"curve": [ 1.5, -10.465658, 1.7, 22.626997 ]
+					},
+					{
+						"time": 1.9,
+						"value": 22.626997,
+						"curve": [ 1.966889, 22.626997, 2.033778, 16.554504 ]
+					},
+					{ "time": 2.1, "value": 9.579038 }
+				]
+			},
+			"shoelace5": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"shoelace7": {
+				"rotate": [
+					{
+						"value": 9.579038,
+						"curve": [ 0.08933334, 0.3324852, 0.1779999, -10.465658 ]
+					},
+					{
+						"time": 0.2666667,
+						"value": -10.465658,
+						"curve": [ 0.4333333, -10.465658, 0.6, 22.626997 ]
+					},
+					{
+						"time": 0.7666666,
+						"value": 22.626997,
+						"curve": [ 0.9444445, 22.626997, 1.1222222, -10.465658 ]
+					},
+					{
+						"time": 1.3,
+						"value": -10.465658,
+						"curve": [ 1.5, -10.465658, 1.7, 22.626997 ]
+					},
+					{
+						"time": 1.9,
+						"value": 22.626997,
+						"curve": [ 1.966889, 22.626997, 2.033778, 16.554504 ]
+					},
+					{ "time": 2.1, "value": 9.579038 }
+				]
+			},
+			"shoelace8": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"shoelace9": {
+				"rotate": [
+					{
+						"value": -10.465658,
+						"curve": [ 0.16666667, -10.465658, 0.3333333, 22.626997 ]
+					},
+					{
+						"time": 0.5,
+						"value": 22.626997,
+						"curve": [ 0.6777778, 22.626997, 0.8555555, -10.465658 ]
+					},
+					{
+						"time": 1.0333333,
+						"value": -10.465658,
+						"curve": [ 1.2333333, -10.465658, 1.4333333, 22.626997 ]
+					},
+					{
+						"time": 1.6333333,
+						"value": 22.626997,
+						"curve": [ 1.788889, 22.626997, 1.9444444, -10.465658 ]
+					},
+					{ "time": 2.1, "value": -10.465658 }
+				]
+			},
+			"shoelace10": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"snow-rotator": {
+				"rotate": [
+					{ "value": 203.2258 },
+					{ "time": 0.9, "value": 360, "curve": "stepped" },
+					{ "time": 0.9333333 },
+					{ "time": 2.1, "value": 203.2258 }
+				]
+			},
+			"snow-rotator2": {
+				"rotate": [
+					{},
+					{ "time": 2.1, "value": 360 }
+				]
+			}
+		},
+		"drawOrder": [
+			{
+				"offsets": [
+					{ "slot": "red-present/red-present-base", "offset": -98 },
+					{ "slot": "red-present/red-present-decoration", "offset": -98 },
+					{ "slot": "blue-present/blue-present-base", "offset": -98 },
+					{ "slot": "blue-present/blue-present-decoration", "offset": -98 }
+				]
+			},
+			{ "time": 0.5666666 },
+			{
+				"time": 1.0333333,
+				"offsets": [
+					{ "slot": "green-present/green-present-base", "offset": -71 },
+					{ "slot": "green-present/green-present-decoration", "offset": -71 }
+				]
+			},
+			{
+				"time": 1.8,
+				"offsets": [
+					{ "slot": "red-present/red-present-base", "offset": -98 },
+					{ "slot": "red-present/red-present-decoration", "offset": -98 }
+				]
+			}
+		]
+	},
+	"shake": {
+		"bones": {
+			"blue-gift-rotator": {
+				"rotate": [
+					{},
+					{ "time": 2.1, "value": 360 }
+				],
+				"scale": [
+					{ "y": 0.9327923 }
+				]
+			},
+			"blue-gift-scale": {
+				"scale": [
+					{ "y": 0.5136493 }
+				]
+			},
+			"eyellid-l-down": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, -13.927757, 1.6824218, 0, 1.6222223, 45.71246 ]
+					},
+					{
+						"time": 1.7,
+						"x": -13.927757,
+						"y": 45.71246,
+						"curve": [ 1.8333334, -13.927757, 1.9666667, 0, 1.8333334, 45.71246, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"eyellid-l-up": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, 27.46164, 1.6824218, 0, 1.6222223, -38.43774 ]
+					},
+					{
+						"time": 1.7,
+						"x": 27.46164,
+						"y": -38.43774,
+						"curve": [ 1.8333334, 27.46164, 1.9666667, 0, 1.8333334, -38.43774, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"eyellid-r-down": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, 12.27263, 1.6824218, 0, 1.6222223, 17.911377 ]
+					},
+					{
+						"time": 1.7,
+						"x": 12.27263,
+						"y": 17.911377,
+						"curve": [ 1.8333334, 12.27263, 1.9666667, 0, 1.8333334, 17.911377, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"eyellid-r-up": {
+				"translate": [
+					{
+						"time": 1.4666667,
+						"curve": [ 1.6824218, 0, 1.6222223, -32.40664, 1.6824218, 0, 1.6222223, -39.19385 ]
+					},
+					{
+						"time": 1.7,
+						"x": -32.40664,
+						"y": -39.19385,
+						"curve": [ 1.8333334, -32.40664, 1.9666667, 0, 1.8333334, -39.19385, 1.9666667, 0 ]
+					},
+					{ "time": 2.1 }
+				]
+			},
+			"globe-holder": {
+				"translate": [
+					{
+						"y": 294.9225,
+						"curve": [ 0.07777778, 0, 0.15555555, 0, 0.07777778, 294.9225, 0.15555555, 811.0368 ]
+					},
+					{
+						"time": 0.23333333,
+						"y": 811.0368,
+						"curve": [ 0.3333333, 0, 0.4333333, 0, 0.3333333, 811.0368, 0.4333333, 0 ]
+					},
+					{
+						"time": 0.5333333,
+						"curve": [ 0.6222222, 0, 0.7111111, 0, 0.6222222, 0, 0.7111111, 619.1398 ]
+					},
+					{
+						"time": 0.8,
+						"y": 619.1398,
+						"curve": [ 0.8888889, 0, 0.9777778, 0, 0.8888889, 619.1398, 0.9777778, 0 ]
+					},
+					{
+						"time": 1.0666667,
+						"curve": [ 1.3, 0, 1.7555555, 0, 1.3, 0, 1.7555555, 294.9225 ]
+					},
+					{ "time": 2.1, "y": 294.9225 }
+				]
+			},
+			"hat": {
+				"translate": [
+					{
+						"y": 34.57214,
+						"curve": [ 0.14533335, 0, 0.2893333, 0, 0.14533335, 16.69141, 0.2893333, -15.249855 ]
+					},
+					{
+						"time": 0.4333333,
+						"y": -15.249855,
+						"curve": [ 0.5777778, 0, 0.7222222, 0, 0.5777778, -15.249855, 0.7222222, 46.34327 ]
+					},
+					{
+						"time": 0.8666667,
+						"y": 46.34327,
+						"curve": [ 1.0444444, 0, 1.2222222, 0, 1.0444444, 46.34327, 1.2222222, -23.16584 ]
+					},
+					{
+						"time": 1.4,
+						"y": -23.16584,
+						"curve": [ 1.5666667, 0, 1.7333333, 0, 1.5666667, -23.16584, 1.7333333, 23.173565 ]
+					},
+					{ "time": 1.9, "y": 46.34327, "curve": "stepped" },
+					{
+						"time": 1.9333333,
+						"y": 46.34327,
+						"curve": [ 1.9893334, 0, 2.0453334, 0, 1.9893334, 46.34327, 2.0453334, 41.52576 ]
+					},
+					{ "time": 2.1, "y": 34.57214 }
+				]
+			},
+			"hat2": {
+				"translate": [
+					{
+						"y": 46.34327,
+						"curve": [ 0.2, 0, 0.4, 0, 0.2, 46.34327, 0.4, -15.249855 ]
+					},
+					{
+						"time": 0.6,
+						"y": -15.249855,
+						"curve": [ 0.7444445, 0, 0.8888889, 0, 0.7444445, -15.249855, 0.8888889, 46.34327 ]
+					},
+					{
+						"time": 1.0333333,
+						"y": 46.34327,
+						"curve": [ 1.211111, 0, 1.388889, 0, 1.211111, 46.34327, 1.388889, -23.16584 ]
+					},
+					{
+						"time": 1.5666667,
+						"y": -23.16584,
+						"curve": [ 1.7333333, 0, 1.9, 0, 1.7333333, -23.16584, 1.9, 23.173565 ]
+					},
+					{ "time": 2.0666666, "y": 46.34327 }
+				]
+			},
+			"hips": {
+				"translate": [
+					{
+						"curve": [ 0.3, 0, 0.6, 0, 0.3, 0, 0.6, 68.57495 ]
+					},
+					{
+						"time": 0.9,
+						"y": 68.57495,
+						"curve": [ 1.288889, 0, 1.6777778, 0, 1.288889, 68.57495, 1.6777778, 22.85832 ]
+					},
+					{ "time": 2.0666666 }
+				]
+			},
+			"red-gift-rotator": {
+				"rotate": [
+					{},
+					{ "time": 2.1, "value": 360 }
+				]
+			},
+			"red-gift-scale": {
+				"scale": [
+					{ "x": 0.880983, "y": 0.4104343 }
+				]
+			},
+			"scarf-end-l": {
+				"rotate": [
+					{
+						"value": 0.5296132,
+						"curve": [ 0.12251866, -3.596789, 0.2445928, -10.181583 ]
+					},
+					{
+						"time": 0.3666667,
+						"value": -10.181583,
+						"curve": [ 0.5111112, -10.181583, 0.6555555, 6.646122 ]
+					},
+					{
+						"time": 0.8,
+						"value": 6.646122,
+						"curve": [ 0.988889, 6.646122, 1.1777778, -10.181583 ]
+					},
+					{
+						"time": 1.3666667,
+						"value": -10.181583,
+						"curve": [ 1.5555556, -10.181583, 1.7444444, 3.7834816 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 3.7834816,
+						"curve": [ 1.989037, 3.7834816, 2.044741, 2.412534 ]
+					},
+					{ "time": 2.1, "value": 0.5296132 }
+				]
+			},
+			"scarf-end-r": {
+				"rotate": [
+					{
+						"value": 0.5296132,
+						"curve": [ 0.12251866, -3.596789, 0.2445928, -10.181583 ]
+					},
+					{
+						"time": 0.3666667,
+						"value": -10.181583,
+						"curve": [ 0.5111112, -10.181583, 0.6555555, 6.646122 ]
+					},
+					{
+						"time": 0.8,
+						"value": 6.646122,
+						"curve": [ 0.988889, 6.646122, 1.1777778, -10.181583 ]
+					},
+					{
+						"time": 1.3666667,
+						"value": -10.181583,
+						"curve": [ 1.5555556, -10.181583, 1.7444444, 3.7834816 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 3.7834816,
+						"curve": [ 1.989037, 3.7834816, 2.044741, 2.412534 ]
+					},
+					{ "time": 2.1, "value": 0.5296132 }
+				]
+			},
+			"scarf-ribbon-top-l": {
+				"rotate": [
+					{ "value": -10.181583 },
+					{ "time": 0.4333333, "value": 6.646122 },
+					{ "time": 1, "value": -10.181583 },
+					{ "time": 1.5666667, "value": 3.7834816 },
+					{ "time": 2.1, "value": -10.181583 }
+				]
+			},
+			"scarf-ribbon-top-r": {
+				"rotate": [
+					{ "value": -10.181583 },
+					{ "time": 0.4333333, "value": 6.646122 },
+					{ "time": 1, "value": -10.181583 },
+					{ "time": 1.5666667, "value": 3.7834816 },
+					{ "time": 2.1, "value": -10.181583 }
+				]
+			},
+			"shoe-l-rotator": {
+				"translate": [
+					{},
+					{ "time": 1.0666667, "y": 24.27437 },
+					{ "time": 2.1 }
+				]
+			},
+			"shoe-r": {
+				"translate": [
+					{},
+					{ "time": 0.7333333, "y": 24.27437 },
+					{ "time": 2.1 }
+				]
+			},
+			"shoelace2": {
+				"rotate": [
+					{
+						"value": 9.579038,
+						"curve": [ 0.08933334, 0.3324852, 0.1779999, -10.465658 ]
+					},
+					{
+						"time": 0.2666667,
+						"value": -10.465658,
+						"curve": [ 0.4333333, -10.465658, 0.6, 22.626997 ]
+					},
+					{
+						"time": 0.7666666,
+						"value": 22.626997,
+						"curve": [ 0.9444445, 22.626997, 1.1222222, -10.465658 ]
+					},
+					{
+						"time": 1.3,
+						"value": -10.465658,
+						"curve": [ 1.5, -10.465658, 1.7, 22.626997 ]
+					},
+					{
+						"time": 1.9,
+						"value": 22.626997,
+						"curve": [ 1.966889, 22.626997, 2.033778, 16.554504 ]
+					},
+					{ "time": 2.1, "value": 9.579038 }
+				]
+			},
+			"shoelace3": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"shoelace4": {
+				"rotate": [
+					{
+						"value": 9.579038,
+						"curve": [ 0.08933334, 0.3324852, 0.1779999, -10.465658 ]
+					},
+					{
+						"time": 0.2666667,
+						"value": -10.465658,
+						"curve": [ 0.4333333, -10.465658, 0.6, 22.626997 ]
+					},
+					{
+						"time": 0.7666666,
+						"value": 22.626997,
+						"curve": [ 0.9444445, 22.626997, 1.1222222, -10.465658 ]
+					},
+					{
+						"time": 1.3,
+						"value": -10.465658,
+						"curve": [ 1.5, -10.465658, 1.7, 22.626997 ]
+					},
+					{
+						"time": 1.9,
+						"value": 22.626997,
+						"curve": [ 1.966889, 22.626997, 2.033778, 16.554504 ]
+					},
+					{ "time": 2.1, "value": 9.579038 }
+				]
+			},
+			"shoelace5": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"shoelace7": {
+				"rotate": [
+					{
+						"value": 9.579038,
+						"curve": [ 0.08933334, 0.3324852, 0.1779999, -10.465658 ]
+					},
+					{
+						"time": 0.2666667,
+						"value": -10.465658,
+						"curve": [ 0.4333333, -10.465658, 0.6, 22.626997 ]
+					},
+					{
+						"time": 0.7666666,
+						"value": 22.626997,
+						"curve": [ 0.9444445, 22.626997, 1.1222222, -10.465658 ]
+					},
+					{
+						"time": 1.3,
+						"value": -10.465658,
+						"curve": [ 1.5, -10.465658, 1.7, 22.626997 ]
+					},
+					{
+						"time": 1.9,
+						"value": 22.626997,
+						"curve": [ 1.966889, 22.626997, 2.033778, 16.554504 ]
+					},
+					{ "time": 2.1, "value": 9.579038 }
+				]
+			},
+			"shoelace8": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"shoelace9": {
+				"rotate": [
+					{
+						"value": -10.465658,
+						"curve": [ 0.16666667, -10.465658, 0.3333333, 22.626997 ]
+					},
+					{
+						"time": 0.5,
+						"value": 22.626997,
+						"curve": [ 0.6777778, 22.626997, 0.8555555, -10.465658 ]
+					},
+					{
+						"time": 1.0333333,
+						"value": -10.465658,
+						"curve": [ 1.2333333, -10.465658, 1.4333333, 22.626997 ]
+					},
+					{
+						"time": 1.6333333,
+						"value": 22.626997,
+						"curve": [ 1.788889, 22.626997, 1.9444444, -10.465658 ]
+					},
+					{ "time": 2.1, "value": -10.465658 }
+				]
+			},
+			"shoelace10": {
+				"rotate": [
+					{
+						"value": 12.907213,
+						"curve": [ 0.10088882, 3.147792, 0.2004443, -10.465658 ]
+					},
+					{
+						"time": 0.3,
+						"value": -10.465658,
+						"curve": [ 0.4666667, -10.465658, 0.6333333, 22.626997 ]
+					},
+					{
+						"time": 0.8,
+						"value": 22.626997,
+						"curve": [ 0.9777778, 22.626997, 1.1555555, -10.465658 ]
+					},
+					{
+						"time": 1.3333334,
+						"value": -10.465658,
+						"curve": [ 1.5333333, -10.465658, 1.7333333, 22.626997 ]
+					},
+					{
+						"time": 1.9333333,
+						"value": 22.626997,
+						"curve": [ 1.9893334, 22.626997, 2.0453334, 18.39689 ]
+					},
+					{ "time": 2.1, "value": 12.907213 }
+				]
+			},
+			"snow-rotator": {
+				"rotate": [
+					{ "value": 203.2258 },
+					{ "time": 0.9, "value": 360, "curve": "stepped" },
+					{ "time": 0.9333333 },
+					{ "time": 2.1, "value": 203.2258 }
+				]
+			},
+			"snow-rotator2": {
+				"rotate": [
+					{},
+					{ "time": 2.1, "value": 360 }
+				]
+			}
+		},
+		"drawOrder": [
+			{
+				"offsets": [
+					{ "slot": "red-present/red-present-base", "offset": -98 },
+					{ "slot": "red-present/red-present-decoration", "offset": -98 },
+					{ "slot": "blue-present/blue-present-base", "offset": -98 },
+					{ "slot": "blue-present/blue-present-decoration", "offset": -98 }
+				]
+			},
+			{ "time": 0.5666666 },
+			{
+				"time": 1.0333333,
+				"offsets": [
+					{ "slot": "green-present/green-present-base", "offset": -71 },
+					{ "slot": "green-present/green-present-decoration", "offset": -71 }
+				]
+			},
+			{
+				"time": 1.8,
+				"offsets": [
+					{ "slot": "red-present/red-present-base", "offset": -98 },
+					{ "slot": "red-present/red-present-decoration", "offset": -98 }
+				]
+			}
+		]
+	}
+}
+}
