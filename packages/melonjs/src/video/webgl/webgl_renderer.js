@@ -22,6 +22,7 @@ import {
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
+import LitMeshBatcher from "./batchers/lit_mesh_batcher";
 import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
@@ -199,6 +200,7 @@ export default class WebGLRenderer extends Renderer {
 		}
 		this.addBatcher(new (CustomBatcher || PrimitiveBatcher)(this), "primitive");
 		this.addBatcher(new MeshBatcher(this), "mesh");
+		this.addBatcher(new LitMeshBatcher(this), "litMesh");
 
 		// default WebGL state(s)
 		// depth testing disabled for 2D (painter's algorithm handles z-ordering).
@@ -1274,15 +1276,18 @@ export default class WebGLRenderer extends Renderer {
 	drawMesh(mesh) {
 		const gl = this.gl;
 
-		// `setBatcher("mesh")` delegates all mesh-mode state setup
-		// (DEPTH_TEST enable, LEQUAL, depthMask, one-shot per-target
-		// depth clear, BLEND off) to `MeshBatcher.bind()`. Switching
-		// away from the mesh batcher restores non-mesh defaults via
-		// `MeshBatcher.unbind()`. Consecutive `drawMesh` calls pay
-		// zero state cost between them; the GPU's LEQUAL depth test
-		// resolves inter-mesh occlusion per pixel against the
-		// accumulated depth buffer.
-		this.setBatcher("mesh");
+		// Route to the lit or unlit mesh batcher. `mesh.lit` meshes use the
+		// `LitMeshBatcher` (world-space normals + lighting); everything else
+		// uses the lean unlit `MeshBatcher`. Both share the mesh-mode depth
+		// state, so mixing them keeps inter-mesh occlusion correct.
+		//
+		// `setBatcher` delegates all mesh-mode state setup (DEPTH_TEST enable,
+		// LEQUAL, depthMask, one-shot per-target depth clear, BLEND off) to the
+		// batcher's `bind()`. Switching away restores non-mesh defaults via
+		// `unbind()`. Consecutive same-kind `drawMesh` calls pay zero state cost
+		// between them; the GPU's LEQUAL depth test resolves inter-mesh
+		// occlusion per pixel against the accumulated depth buffer.
+		this.setBatcher(mesh.lit === true ? "litMesh" : "mesh");
 
 		// apply custom shader if set on the renderable (via preDraw)
 		if (this.customShader != null) {

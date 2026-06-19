@@ -25,7 +25,16 @@ export default defineConfig({
 		dedupe: ["melonjs"],
 	},
 	optimizeDeps: {
-		// Prevent pre-bundling the plugin so it resolves melonjs from the workspace
-		exclude: ["@melonjs/tiled-inflate-plugin"],
+		// Don't pre-bundle the workspace packages. Vite caches a pre-bundled
+		// copy of deps and does NOT re-bundle on a workspace rebuild, so a
+		// pre-bundled `melonjs` silently serves stale engine code after
+		// `pnpm build` (you edit the engine, rebuild, and the example keeps
+		// running the old bundle until a `--force` restart). Excluding them
+		// makes the dev server pick up `build/index.js` changes on reload.
+		exclude: [
+			"melonjs",
+			"@melonjs/debug-plugin",
+			"@melonjs/tiled-inflate-plugin",
+		],
 	},
 });

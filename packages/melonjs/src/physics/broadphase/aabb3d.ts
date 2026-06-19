@@ -1,5 +1,16 @@
 import { Vector3d } from "../../math/vector3d.ts";
+import { transformedBounds } from "../../math/vertex.ts";
 import type { XYZPoint } from "../../utils/types.ts";
+
+// column-major 4×4 identity, used when `fromVertices` is called without a matrix
+const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
+// Module scratch for `fromVertices`. `transformedBounds` (the shared vertex.ts
+// helper) writes into `[x, y, z]` number arrays, but AABB3d stores `{x, y, z}`
+// objects — these bridge the two without per-call allocation. Reused across
+// calls; never escapes the method.
+const _fvMin = [Infinity, Infinity, Infinity];
+const _fvMax = [-Infinity, -Infinity, -Infinity];
 
 /**
  * A 3D axis-aligned bounding box — the 3D sibling of {@link Bounds}.
@@ -16,8 +27,10 @@ import type { XYZPoint } from "../../utils/types.ts";
  *
  * Lives next to {@link Octree} under `physics/broadphase/` rather
  * than `math/` to mirror {@link Bounds} (which lives in `physics/`,
- * not `math/`). Aabb is a primitive of the broadphase, not a generic
- * math primitive — it never escapes a query result.
+ * not `math/`). It originated as a broadphase-internal primitive; it is
+ * now also the public 3D-bounds type returned by {@link Mesh#getBounds3d}
+ * (the 3D analog of {@link Renderable#getBounds} → {@link Bounds}), built
+ * from mesh geometry via {@link AABB3d#fromVertices}.
  * @category Geometry
  */
 export class AABB3d {
@@ -236,6 +249,40 @@ export class AABB3d {
 		if (aabb.max.x > this.max.x) this.max.x = aabb.max.x;
 		if (aabb.max.y > this.max.y) this.max.y = aabb.max.y;
 		if (aabb.max.z > this.max.z) this.max.z = aabb.max.z;
+	}
+
+	/**
+	 * Build this AABB from a flat vertex buffer (`x,y,z` triplets), optionally
+	 * transformed by a column-major 4×4 matrix — the bridge from raw mesh /
+	 * glTF geometry (e.g. a {@link Mesh}'s vertices or a parsed glTF node) to an
+	 * `AABB3d`. **Replaces** the current bounds (seeds empty, then folds in the
+	 * `count` vertices); for the point-array form use {@link AABB3d#addPoint}.
+	 *
+	 * The per-vertex math is **delegated to {@link transformedBounds}** (the
+	 * shared `math/vertex.ts` helper) rather than duplicated here, so the
+	 * flat-buffer ↔ AABB conversion stays in one place. Allocation-free.
+	 * @param src - source vertex positions (`x,y,z` triplets)
+	 * @param count - number of vertices to read from `src`
+	 * @param [matrix] - optional column-major 4×4 (16 elements); identity if omitted
+	 * @returns this AABB, for chaining
+	 * @example
+	 * // bounds of a glTF node's geometry under its world transform
+	 * const box = new AABB3d().fromVertices(node.vertices, node.vertexCount, node.world);
+	 */
+	fromVertices(src: Float32Array, count: number, matrix?: ArrayLike<number>) {
+		// seed empty so the result is built purely from these vertices
+		_fvMin[0] = _fvMin[1] = _fvMin[2] = Infinity;
+		_fvMax[0] = _fvMax[1] = _fvMax[2] = -Infinity;
+		transformedBounds(src, count, matrix ?? IDENTITY, _fvMin, _fvMax);
+		this.setMinMax(
+			_fvMin[0],
+			_fvMin[1],
+			_fvMin[2],
+			_fvMax[0],
+			_fvMax[1],
+			_fvMax[2],
+		);
+		return this;
 	}
 
 	/**

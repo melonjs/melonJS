@@ -10,6 +10,7 @@ import {
 	normalizeVertices,
 	projectVertices,
 } from "../math/vertex.ts";
+import { AABB3d } from "../physics/broadphase/aabb3d.ts";
 import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
@@ -85,6 +86,17 @@ function resolveGroupMaterial(group, materials) {
  * Includes a built-in perspective projection and supports 3D transforms
  * through the standard Renderable API (`rotate`, `scale`, `translate`).
  * Works on both WebGL (hardware depth testing) and Canvas (painter's algorithm) renderers.
+ *
+ * **Pivot — transforms are applied about the mesh's local origin `(0, 0, 0)`,
+ * NOT a normalized anchor point.** Unlike a {@link Sprite} (whose
+ * {@link Renderable#anchorPoint} recenters a `width`×`height` box), a mesh has
+ * real vertex coordinates, so rotation and scale pivot around the model origin
+ * the geometry is authored against — the standard convention for 3D meshes.
+ * Place the origin where you want the pivot at authoring time (or nest the
+ * mesh under a transformed parent to pivot elsewhere). Consequently, on the
+ * `Camera3d` world-space path the mesh opts out of the anchor offset entirely
+ * (see {@link Renderable#applyAnchorTransform}); the legacy 2D path still
+ * honors `anchorPoint` for backward compatibility.
  * @category Game Objects
  */
 export default class Mesh extends Renderable {
@@ -98,9 +110,12 @@ export default class Mesh extends Renderable {
 	 * @param {Uint16Array|number[]} [settings.indices] - triangle vertex indices (alternative to settings.model)
 	 * @param {HTMLImageElement|TextureAtlas|string} [settings.texture] - the texture to apply (image name, HTMLImageElement, or TextureAtlas). If omitted and settings.material is provided, the texture is resolved from the MTL material's map_Kd.
 	 * @param {string} [settings.material] - name of a preloaded MTL material (via loader.preload with type "mtl"). When provided, the diffuse texture (map_Kd), tint color (Kd), and opacity (d) are automatically applied.
-	 * @param {number} settings.width - display width in pixels (the 3D model is normalized and scaled to fit this size)
-	 * @param {number} settings.height - display height in pixels (the 3D model is normalized and scaled to fit this size)
+	 * @param {number} settings.width - display width in pixels. With normalization on (the default) the model is scaled to fit this size; with `normalize: false` this is the uniform pixels-per-unit scale applied to the raw geometry.
+	 * @param {number} [settings.height] - display height in pixels (normalized models only; ignored when `normalize: false`)
 	 * @param {boolean} [settings.cullBackFaces=true] - enable backface culling
+	 * @param {boolean} [settings.normalize=true] - fit the source geometry into a `[-0.5, 0.5]` unit cube before scaling, so `width`/`height` behave like a Sprite. Set `false` to keep the geometry's real-world coordinates — required when several meshes share one coordinate space (e.g. nodes of an imported glTF scene) so their relative scale and layout are preserved.
+	 * @param {number} [settings.scale] - world-space scale (pixels per source unit) for the Camera3d path; defaults to `width`. Set this when `width`/`height` describe the renderable's world bounds (frustum culling) rather than the geometry scale — see {@link Mesh#meshScale}.
+	 * @param {boolean} [settings.rightHanded=false] - treat the source as right-handed (Y-up, e.g. glTF) under the `Camera3d` world path. The default Y-up→Y-down bridge negates Y only (a reflection, which mirrors the scene left/right); `true` negates Y **and** Z (a rotation) so chirality is preserved and the result matches the authoring tool. See {@link Mesh#rightHanded}.
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -116,6 +131,18 @@ export default class Mesh extends Renderable {
 	 *     texture: "cube_texture",
 	 *     width: 200,
 	 *     height: 200,
+	 * });
+	 *
+	 * // create from raw geometry that already carries its own world scale
+	 * // (e.g. a glTF scene node) — keep real coordinates, no mirror
+	 * let node = new me.Mesh(0, 0, {
+	 *     vertices: positions, // Float32Array of x,y,z triplets
+	 *     uvs: texcoords,      // Float32Array of u,v pairs
+	 *     indices: tris,       // Uint16Array of triangle indices
+	 *     texture: baseColorImage,
+	 *     width: 32,           // pixels per unit
+	 *     normalize: false,
+	 *     rightHanded: true,
 	 * });
 	 *
 	 * // 3D rotation using the standard rotate() API
@@ -171,8 +198,16 @@ export default class Mesh extends Renderable {
 				settings.uvs instanceof Float32Array
 					? settings.uvs
 					: new Float32Array(settings.uvs);
+			// Preserve a typed index buffer as-is — coercing a Uint32Array to
+			// Uint16Array would truncate index values > 65535, silently
+			// corrupting meshes with more than 65535 vertices (the glTF parser
+			// emits Uint32 indices for exactly that case). Only a plain JS
+			// array is materialized, as Uint16 (the small-mesh default). The
+			// batcher chunks large meshes into ≤maxVertices flushes, so its own
+			// index buffer never needs more than 16 bits regardless.
 			this.indices =
-				settings.indices instanceof Uint16Array
+				settings.indices instanceof Uint16Array ||
+				settings.indices instanceof Uint32Array
 					? settings.indices
 					: new Uint16Array(settings.indices);
 			this.vertexCount = this.originalVertices.length / 3;
@@ -193,12 +228,71 @@ export default class Mesh extends Renderable {
 		this.vertices = new Float32Array(this.vertexCount * 3);
 
 		/**
+		 * the source per-vertex normals (x,y,z triplets), or `undefined` if the
+		 * mesh was built without them. Supplied by the glTF loader; used for
+		 * lit shading under a `Camera3d` (see {@link LightingEnvironment}).
+		 * @type {Float32Array|undefined}
+		 */
+		this.originalNormals =
+			settings.normals !== undefined
+				? settings.normals instanceof Float32Array
+					? settings.normals
+					: new Float32Array(settings.normals)
+				: undefined;
+
+		/**
+		 * world-space normals for the current draw, recomputed from
+		 * {@link Mesh#originalNormals} along the Camera3d path. Empty (zero) when
+		 * the mesh has no source normals — the shader then ignores lighting.
+		 * @type {Float32Array}
+		 */
+		this.normals = new Float32Array(this.vertexCount * 3);
+
+		/**
+		 * Whether this mesh is lit by the active {@link LightingEnvironment}.
+		 * When `true` it renders through the lit mesh batcher (diffuse shading
+		 * from the scene's lights, using {@link Mesh#originalNormals}); when
+		 * `false` (the default) it uses the lean unlit path and pays no lighting
+		 * cost. The glTF loader sets this on scene meshes when the scene has
+		 * lights. Only meaningful under a `Camera3d` + WebGL.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.lit = settings.lit === true;
+
+		/**
 		 * whether to cull back-facing triangles
 		 * @type {boolean}
 		 * @default true
 		 */
 		this.cullBackFaces =
 			settings.cullBackFaces !== undefined ? settings.cullBackFaces : true;
+
+		/**
+		 * Treat the source geometry as right-handed (Y-up, e.g. glTF) under
+		 * the Camera3d world path. The default (`false`) Y-up→Y-down bridge
+		 * negates Y only — a reflection, which mirrors the scene left/right.
+		 * When `true`, the bridge negates Y **and** Z (a 180° rotation about
+		 * X, determinant +1) so chirality is preserved and the result matches
+		 * the authoring tool (no mirror); triangle winding is left untouched
+		 * since a rotation doesn't invert it.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.rightHanded = settings.rightHanded === true;
+
+		/**
+		 * Uniform world-space scale (pixels per source unit) applied along the
+		 * Camera3d world path. Defaults to `width`. Scene loaders (e.g. glTF)
+		 * set this independently of `width` / `height` so those can describe
+		 * the renderable's world-space bounds (used for frustum culling) while
+		 * the geometry is still scaled by this factor — `width` alone can't
+		 * serve both roles for a non-normalized scene mesh.
+		 * @type {number}
+		 * @default settings.width
+		 */
+		this.meshScale =
+			typeof settings.scale === "number" ? settings.scale : this.width;
 
 		// resolve material (MTL) — applies texture, tint, and opacity.
 		// Two paths:
@@ -343,8 +437,13 @@ export default class Mesh extends Renderable {
 		this.projectionMatrix.translate(0, 0, -2.5);
 
 		// normalize original vertices to fit within [-0.5, 0.5] range
-		// so that width/height scaling works like Sprite
-		normalizeVertices(this.originalVertices);
+		// so that width/height scaling works like Sprite. Scene meshes
+		// (e.g. a glTF node that already carries its own world transform
+		// and shares a coordinate space with sibling meshes) opt out via
+		// `normalize: false` to preserve real-world scale across the scene.
+		if (settings.normalize !== false) {
+			normalizeVertices(this.originalVertices);
+		}
 
 		this.anchorPoint.set(0.5, 0.5);
 
@@ -393,8 +492,9 @@ export default class Mesh extends Renderable {
 	 * view + projection matrices, the same way it does for Sprites.
 	 *
 	 * Per-vertex math: `currentTransform × originalVertex`, then a uniform
-	 * scale by `this.width`, a Y-flip (OBJ Y-up → engine Y-down), and a
-	 * translate to `(offsetX, offsetY, offsetZ)`.
+	 * scale by `this.width`, the Y-up→Y-down bridge (negate Y, and also Z when
+	 * {@link Mesh#rightHanded} is set so the bridge is a rotation rather than a
+	 * mirror), and a translate to `(offsetX, offsetY, offsetZ)`.
 	 *
 	 * @param {number} offsetX - world X to place the mesh center at
 	 * @param {number} offsetY - world Y to place the mesh center at
@@ -404,7 +504,7 @@ export default class Mesh extends Renderable {
 	_projectVerticesWorld(offsetX, offsetY, offsetZ) {
 		const out = this.vertices;
 		const src = this.originalVertices;
-		const scale = this.width;
+		const scale = this.meshScale;
 		const m = this.currentTransform.val;
 		// Include the translation column (m[12..14]) — a proper
 		// matrix-vector multiplication treats the vertex as
@@ -416,6 +516,10 @@ export default class Mesh extends Renderable {
 		const tx = m[12];
 		const ty = m[13];
 		const tz = m[14];
+		// right-handed source (glTF): negate Z as well as Y so the Y-up→
+		// Y-down bridge is a rotation (det +1, no mirror) rather than a
+		// reflection. Left-handed default keeps Z as-is (legacy reflection).
+		const zSign = this.rightHanded ? -1 : 1;
 
 		for (let i = 0; i < this.vertexCount; i++) {
 			const i3 = i * 3;
@@ -429,7 +533,52 @@ export default class Mesh extends Renderable {
 
 			out[i3] = rx * scale + offsetX;
 			out[i3 + 1] = -ry * scale + offsetY;
-			out[i3 + 2] = rz * scale + offsetZ;
+			out[i3 + 2] = zSign * rz * scale + offsetZ;
+		}
+	}
+
+	/**
+	 * Project {@link Mesh#originalNormals} into world space for lit shading,
+	 * storing the result in {@link Mesh#normals}. Applies the rotation/scale of
+	 * {@link Renderable#currentTransform} (no translation), the same Y-down /
+	 * `rightHanded` Y/Z bridge as {@link Mesh#_projectVerticesWorld}, then
+	 * renormalizes. No-op when the mesh has no source normals.
+	 *
+	 * Note: uses the transform's rotation/scale columns directly rather than
+	 * the inverse-transpose, so normals are exact under rotation + uniform
+	 * scale (the common case); a strongly non-uniform scale would skew them
+	 * slightly — acceptable for the diffuse lighting path.
+	 * @ignore
+	 */
+	_projectNormalsWorld() {
+		const src = this.originalNormals;
+		if (src === undefined) {
+			return;
+		}
+		const out = this.normals;
+		const m = this.currentTransform.val;
+		const zSign = this.rightHanded ? -1 : 1;
+		for (let i = 0; i < this.vertexCount; i++) {
+			const i3 = i * 3;
+			const nx = src[i3];
+			const ny = src[i3 + 1];
+			const nz = src[i3 + 2];
+			const rx = m[0] * nx + m[4] * ny + m[8] * nz;
+			const ry = -(m[1] * nx + m[5] * ny + m[9] * nz); // Y-down flip
+			const rz = zSign * (m[2] * nx + m[6] * ny + m[10] * nz);
+			const len = Math.hypot(rx, ry, rz);
+			if (len > 1e-8) {
+				out[i3] = rx / len;
+				out[i3 + 1] = ry / len;
+				out[i3 + 2] = rz / len;
+			} else {
+				// degenerate normal → fall back to +Y (a unit vector) rather
+				// than zero: the shader does `normalize(vNormal)`, and
+				// normalize((0,0,0)) is NaN (black/garbage fragment).
+				out[i3] = 0;
+				out[i3 + 1] = 1;
+				out[i3 + 2] = 0;
+			}
 		}
 	}
 
@@ -453,14 +602,25 @@ export default class Mesh extends Renderable {
 	 * @ignore
 	 */
 	_setupWorldSpace() {
-		const src = this._indicesOriginal;
-		const dst = new Uint16Array(src.length);
-		for (let i = 0; i < src.length; i += 3) {
-			dst[i] = src[i];
-			dst[i + 1] = src[i + 2];
-			dst[i + 2] = src[i + 1];
+		// Only the reflection bridge (left-handed, Y-only negate) inverts
+		// winding and needs the reversed copy. `rightHanded` meshes (all glTF
+		// scenes) use a rotation bridge that preserves winding, so they keep
+		// `_indicesOriginal` and never read the reversed buffer — skip the
+		// allocation entirely for them.
+		if (this.rightHanded !== true) {
+			const src = this._indicesOriginal;
+			// match the source index type (Uint16Array OR Uint32Array): a copy
+			// into a hard-coded Uint16Array would truncate indices for meshes
+			// with > 65535 vertices.
+			const Ctor = src.constructor;
+			const dst = new Ctor(src.length);
+			for (let i = 0; i < src.length; i += 3) {
+				dst[i] = src[i];
+				dst[i + 1] = src[i + 2];
+				dst[i + 2] = src[i + 1];
+			}
+			this._indicesReversed = dst;
 		}
-		this._indicesReversed = dst;
 		this._worldSpace = true;
 	}
 
@@ -482,6 +642,48 @@ export default class Mesh extends Renderable {
 	onActivateEvent(...args) {
 		super.onActivateEvent(...args);
 		this._useWorldSpace = game.viewport instanceof Camera3d;
+	}
+
+	/**
+	 * The mesh's world-space 3D axis-aligned bounding box, as projected by the
+	 * most recent draw. This is the 3D analog of {@link Renderable#getBounds}
+	 * (which returns a flat 2D box from `width`/`height` and so cannot describe
+	 * a mesh's real extent).
+	 *
+	 * Under a `Camera3d` the mesh projects its vertices into world space every
+	 * frame (see {@link Mesh#_projectVerticesWorld}), so the returned box tracks
+	 * the live transform / animation. Under the 2D path the projected vertices
+	 * are screen-space, so the box is only meaningful after a Camera3d draw —
+	 * use {@link Renderable#getBounds} for the 2D case.
+	 *
+	 * The same {@link AABB3d} instance is returned each call (recomputed in
+	 * place), so copy it (`.clone()`) if you need to keep it.
+	 * @returns {AABB3d} the world-space bounding box (reused instance)
+	 */
+	getBounds3d() {
+		if (this._bounds3d === undefined) {
+			/** @ignore */
+			this._bounds3d = new AABB3d();
+		}
+		// `this.vertices` holds the last draw's world-space positions under
+		// Camera3d — bound them directly (identity matrix). Delegates the
+		// min/max sweep to AABB3d.fromVertices → transformedBounds.
+		return this._bounds3d.fromVertices(this.vertices, this.vertexCount);
+	}
+
+	/**
+	 * Prepare the renderer for drawing the mesh. On the `Camera3d` world-space
+	 * path the mesh emits final world coordinates, so it opts out of the base
+	 * anchor-point offset ({@link Renderable#applyAnchorTransform} = `false`) —
+	 * otherwise the offset would leak into the shared mesh view matrix. The 2D
+	 * path keeps the anchor. See the class description for the pivot rationale.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 */
+	preDraw(renderer) {
+		// world-space meshes pivot about their own origin, not a bounds-box
+		// anchor (see Mesh class doc + Renderable#applyAnchorTransform)
+		this.applyAnchorTransform = this._useWorldSpace !== true;
+		super.preDraw(renderer);
 	}
 
 	/**
@@ -529,11 +731,26 @@ export default class Mesh extends Renderable {
 			if (this._worldSpace !== true) {
 				this._setupWorldSpace();
 			}
-			// Camera3d path: use the winding-reversed indices to keep
-			// `cullBackFaces: true` correct under the Y-flip in
-			// `_projectVerticesWorld`.
-			this.indices = this._indicesReversed;
+			// Camera3d path. The reflection bridge (Y-only negate) inverts
+			// winding, so it needs the reversed indices to keep
+			// `cullBackFaces: true` correct. The rotation bridge
+			// (`rightHanded`: Y+Z negate) preserves winding, so the
+			// original indices are already correct.
+			this.indices = this.rightHanded
+				? this._indicesOriginal
+				: this._indicesReversed;
+			// Emit FINAL world coordinates: the node origin is baked into
+			// pos/depth and the geometry carries its own extent. The anchor
+			// offset is suppressed for this path via `applyAnchorTransform`
+			// (set in `preDraw`), so it does not leak into the view matrix.
 			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
+			// world-space normals — only when this mesh is lit (the unlit batcher
+			// never reads `normals`, so projecting them otherwise is wasted
+			// per-frame work; glTF meshes carry normals even when the scene has
+			// no lights). No-op without source normals.
+			if (this.lit === true) {
+				this._projectNormalsWorld();
+			}
 		} else {
 			// Camera2d / no-camera path: restore the original winding.
 			// Important when the same Mesh instance was previously drawn

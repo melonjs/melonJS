@@ -108,6 +108,11 @@ const ExampleMasking = lazy(() =>
 		default: m.ExampleMasking,
 	})),
 );
+const ExampleGltf = lazy(() =>
+	import("./examples/gltf/ExampleGltf").then((m) => ({
+		default: m.ExampleGltf,
+	})),
+);
 const ExampleMesh3d = lazy(() =>
 	import("./examples/mesh3d/ExampleMesh3d").then((m) => ({
 		default: m.ExampleMesh3d,
@@ -359,6 +364,14 @@ const examples: {
 		sourceDir: "mesh3d",
 		description:
 			"Rotating textured 3D objects (cube, sphere, teapot) loaded from OBJ files with checkerboard texture and perspective projection.",
+	},
+	{
+		component: <ExampleGltf />,
+		label: "glTF Scene",
+		path: "gltf",
+		sourceDir: "gltf",
+		description:
+			"A Blender-authored scene (Kenney Platformer Kit, CC0) exported to GLB and loaded via the glTF Tier-1 importer — each node instantiated as a Mesh under a Camera3d.",
 	},
 	{
 		component: <ExampleMesh3dMaterial />,

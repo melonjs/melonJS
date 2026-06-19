@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/debug-plugin",
-	"version": "16.0.0",
+	"version": "16.1.0",
 	"description": "melonJS debug plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/debug-plugin",
 	"type": "module",
@@ -43,7 +43,7 @@
 		"README.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=19.5.0"
+		"melonjs": ">=19.8.0"
 	},
 	"devDependencies": {
 		"concurrently": "^9.2.1",

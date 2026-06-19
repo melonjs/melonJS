@@ -1,5 +1,25 @@
 # Changelog
 
+## [19.8.0] (melonJS 2) - _unreleased_
+
+**Highlights:** glTF / GLB scene loading lands — author a 3D scene in Blender (or any DCC tool), export a `.glb`, and load it like a Tiled map with `me.level.load(...)`. Scene meshes are lit by the authored sun, and 3D meshes can now report a real bounding box.
+
+### Added
+- **glTF / GLB scene loader (Tier 1)** — preload a `.glb`/`.gltf` and it auto-registers with the `level` director, so `me.level.load(name, { scale, rightHanded, onLoaded })` instantiates every mesh node as a `Mesh` in one call, exactly like a Tiled map. Parses the static node graph, mesh primitives (`POSITION` / `NORMAL` / `TEXCOORD_0` / `COLOR_0` / indices), materials (`pbrMetallicRoughness.baseColorTexture` + `baseColorFactor`), perspective cameras, scene bounds, and `KHR_lights_punctual` lights. `loader.getGLTF(name)` returns the raw `{ nodes, cameras, lights, bounds }` descriptor for custom framing/instantiation. View under a `Camera3d`. New **glTF Scene** example (Kenney Platformer Kit, CC0).
+- **glTF material color** — `baseColorFactor` is applied as the mesh tint, so a solid-colored *untextured* material renders its color (previously it fell back to white). **Vertex colors** (`COLOR_0`, float or normalized byte/short, VEC3/VEC4) are read into per-vertex colors — untextured vertex-colored meshes (MagicaVoxel exports, vertex-painted models) render correctly. Factor, vertex color, and texture compose (`factor × vertexColor × texel`), and work under lighting.
+- **3D mesh lighting** — `Light3d` (a manipulable directional light) + `LightingEnvironment` (a scene-level light container the mesh shader reads; `LightingEnvironment.default` is the active one). Loading a glTF scene instantiates its authored `KHR_lights_punctual` directional lights automatically, so meshes are lit by the same sun set up in the authoring tool. Half-Lambert diffuse + an ambient floor for a soft, stylized look. Meshes opt in via `mesh.lit` and render through a dedicated `LitMeshBatcher` — standalone unlit meshes keep the lean path and pay nothing for lighting. Directional lights only this release (point/spot are parsed but not yet shaded).
+- **`Mesh.getBounds3d()`** — the mesh's world-space `AABB3d` (the 3D analog of `getBounds()`, which only describes a flat 2D box). Powers the debug-plugin's new 3D bounding-box wireframe overlay.
+- **`Camera3d.worldToScreen(world, out?)`** — project a world point to screen-pixel coordinates (perspective divide included); returns `null` for points behind the camera. Useful for HUD elements pinned to 3D objects, picking, and debug overlays.
+- **`AABB3d`** now exported, with `AABB3d.fromVertices(src, count, matrix?)` to build a box from a flat vertex buffer (delegates to the new `transformedBounds`).
+- **Mesh `lit` / `normals` settings** and per-vertex world-space normal projection for the Camera3d lighting path.
+
+### Changed
+- **`Renderable.applyAnchorTransform`** (default `true`) — new flag gating whether `preDraw` applies the `anchorPoint` offset to the renderer transform. `Mesh` sets it `false` on the `Camera3d` world-space path: a 3D mesh is positioned by its transform and has no anchor, so the normalized offset must not leak into the shared mesh view matrix.
+- **`Mesh` preserves `Uint32Array` index buffers** instead of coercing them to `Uint16Array` — meshes with more than 65,535 vertices (e.g. high-poly glTF nodes) no longer have their indices silently truncated.
+
+### Fixed
+- **glTF/3D meshes rendered at the wrong position under `Camera3d`** — props appeared sunk into / overlapping the surfaces they rested on, even though their parsed placement was numerically identical to the authoring tool. `Renderable.preDraw` was baking each mesh's normalized anchor-point offset (`width/2`, `height/2`) into the shared mesh batcher view matrix; since scene meshes size their bounds box per node, every mesh shifted by a different amount and lost their relative placement. The world-space mesh path now opts out of the anchor offset (see `applyAnchorTransform`), so meshes land exactly where the authoring tool put them.
+
 ## [19.7.1] (melonJS 2) - _2026-06-14_
 
 ### Fixed

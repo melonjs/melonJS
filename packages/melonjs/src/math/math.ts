@@ -215,8 +215,8 @@ export function lerp(a: number, b: number, t: number): number {
  * After total elapsed time `t_total` (in seconds), the result
  * satisfies
  * `result = current + (target - current) * (1 - exp(-lambda * t_total))`
- * regardless of how `t_total` was split across `dt` calls. Same
- * algorithm as `THREE.MathUtils.damp` in Three.js.
+ * regardless of how `t_total` was split across `dt` calls — the standard
+ * frame-rate-independent exponential `damp` formulation.
  *
  * `lambda` is the decay rate in `1/seconds` — higher = snappier
  * convergence. A rule of thumb: `lambda = 5` reaches ≈ 99% of the

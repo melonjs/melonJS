@@ -116,8 +116,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 	 * Vertices are in canvas-space (0..128) so they project 1:1 under
 	 * the ortho projection set up in `setupOrthoProjection`.
 	 */
-	const makeQuadMesh = (cx, cy, z, tintRGBA) => {
-		const half = 24;
+	const makeQuadMesh = (cx, cy, z, tintRGBA, half = 24) => {
 		const verts = new Float32Array([
 			cx - half,
 			cy - half,
@@ -361,6 +360,75 @@ describe("Mesh depth handling (issue #1468)", () => {
 			gl.readPixels(96, 64, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pxRight);
 			expect(pxLeft[0]).toBeGreaterThan(150);
 			expect(pxRight[2]).toBeGreaterThan(150);
+		});
+
+		// ── ADVERSARIAL: depth accumulation across many meshes ──────────────
+		// Each drawMesh flushes immediately (separate draw call), so inter-mesh
+		// occlusion relies entirely on the depth buffer ACCUMULATING across a
+		// long run of draws via the one-shot per-target clear. These probe the
+		// exact glTF-scene shape: many props + platforms in one mesh run.
+		//
+		// The lazy depth clear fires on the first MeshBatcher.bind() of a new
+		// target — i.e. on a batcher *transition*. A real frame always has 2D
+		// / camera content before the mesh run, so the transition (and thus
+		// the depth clear) happens every frame. These tests share one renderer
+		// across the file, and consecutive mesh-only tests would otherwise
+		// leak stale depth into each other, so `freshFrame()` reproduces a real
+		// frame: clear (arms the lazy depth clear) + a 2D draw (puts the
+		// batcher in non-mesh state) so the first mesh below transitions and
+		// triggers the clear. Without this, the assertions become order-
+		// dependent (a test artifact, not an engine bug — every case here
+		// passes in isolation).
+		const freshFrame = () => {
+			renderer.backgroundColor.setColor(0, 0, 0, 255);
+			renderer.clear();
+			renderer.setColor("#000000");
+			renderer.fillRect(0, 0, 1, 1); // force a non-mesh batcher state
+		};
+
+		it("a near mesh survives MANY farther meshes drawn after it", (ctx) => {
+			requireWebGL2(ctx);
+			setupOrthoProjection();
+			freshFrame();
+			// closest mesh first, then 16 farther meshes all over the centre.
+			// If the depth buffer is wiped/not-accumulated between draws, a
+			// later far mesh overwrites the near one → red lost.
+			drawWithTint(makeQuadMesh(64, 64, 100, [220, 20, 20, 255]));
+			for (let i = 0; i < 16; i++) {
+				drawWithTint(makeQuadMesh(64, 64, 80 - i * 5, [20, 220, 20, 255]));
+			}
+			const px = readCenterPixel();
+			expect(px[0]).toBeGreaterThan(150); // red (nearest) still wins
+			expect(px[1]).toBeLessThan(80);
+		});
+
+		it("a large far 'platform' drawn LAST does not overwrite a near 'prop'", (ctx) => {
+			requireWebGL2(ctx);
+			setupOrthoProjection();
+			freshFrame();
+			// THE glTF-scene scenario: a small near prop drawn first, then a
+			// big far platform (full canvas) drawn LAST that covers the prop's
+			// screen pixels. Correct depth → the platform's farther z is
+			// rejected and the prop survives. A depth-accumulation bug → the
+			// platform paints over the prop → prop "sinks into" the platform.
+			drawWithTint(makeQuadMesh(64, 64, 50, [220, 20, 20, 255], 12)); // prop
+			drawWithTint(makeQuadMesh(64, 64, -50, [20, 220, 20, 255], 64)); // platform
+			const px = readCenterPixel();
+			expect(px[0]).toBeGreaterThan(150); // prop (red) survives
+			expect(px[1]).toBeLessThan(80);
+		});
+
+		it("a near 'prop' drawn AFTER a far 'platform' also wins (painter-correct order)", (ctx) => {
+			requireWebGL2(ctx);
+			setupOrthoProjection();
+			freshFrame();
+			// the other order: platform first, prop second. Prop is nearer →
+			// must paint over the platform regardless of order.
+			drawWithTint(makeQuadMesh(64, 64, -50, [20, 220, 20, 255], 64)); // platform
+			drawWithTint(makeQuadMesh(64, 64, 50, [220, 20, 20, 255], 12)); // prop
+			const px = readCenterPixel();
+			expect(px[0]).toBeGreaterThan(150); // prop (red) on top
+			expect(px[1]).toBeLessThan(80);
 		});
 	});
 });

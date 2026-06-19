@@ -1,5 +1,6 @@
 import { Matrix3d } from "../math/matrix3d.ts";
 import type { ObservableVector3d } from "../math/observableVector3d.ts";
+import { Vector2d } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
@@ -17,6 +18,8 @@ const AXIS_Y = new Vector3d(0, 1, 0);
 // single-threaded and these are only touched inside one method.
 const _viewMatrix = new Matrix3d();
 const _viewProjection = new Matrix3d();
+// scratch point for worldToScreen, reused to avoid per-call allocation
+const _wsPoint = new Vector3d();
 
 /**
  * A perspective camera that extends {@link Camera2d} with a view
@@ -647,6 +650,62 @@ export default class Camera3d extends Camera2d {
 		const dirty = super.update(dt);
 		this._rebuildFrustumPlanes();
 		return dirty;
+	}
+
+	/**
+	 * Project a world-space point to 2D screen (canvas pixel) coordinates
+	 * through this camera's view + perspective projection (perspective divide
+	 * included). The origin is top-left with **y down**, matching where
+	 * geometry at `world` rasterizes and the engine's 2D draw space — so the
+	 * result can be fed straight to the 2D draw API (HUD pinned to a 3D object,
+	 * picking, debug overlays such as the 3D bounding-box wireframe).
+	 *
+	 * **Returns `null` when the point is at or behind the camera** (clip
+	 * `w ≤ 0`) — projecting it would yield a mirrored/degenerate pixel, so
+	 * callers (e.g. a debug wireframe) can skip it cleanly instead of drawing
+	 * garbage. Otherwise returns the screen-space pixel coordinates.
+	 * @param world - the world-space point to project
+	 * @param [out] - optional Vector2d to receive the result (allocated if omitted)
+	 * @returns the screen-space pixel coordinates, or `null` if behind the camera
+	 */
+	worldToScreen(
+		world: Vector3d,
+		out: Vector2d = new Vector2d(),
+	): Vector2d | null {
+		// projection × view — built exactly like `_rebuildFrustumPlanes`:
+		// rotate (pitch then yaw), translate by -pos, then pre-multiply by the
+		// frustum projection.
+		_viewMatrix.identity();
+		if (this.pitch !== 0) {
+			_viewMatrix.rotate(-this.pitch, AXIS_X);
+		}
+		if (this.yaw !== 0) {
+			_viewMatrix.rotate(-this.yaw, AXIS_Y);
+		}
+		_viewMatrix.translate(-this.pos.x, -this.pos.y, -this.depth);
+		_viewProjection.copy(this.frustum.projectionMatrix);
+		_viewProjection.multiply(_viewMatrix);
+
+		// clip-space w (column-major): reject points at/behind the camera before
+		// the perspective divide would mirror them.
+		const m = _viewProjection.val;
+		const w = m[3] * world.x + m[7] * world.y + m[11] * world.z + m[15];
+		if (w <= 0) {
+			return null;
+		}
+
+		// `Matrix3d.apply` divides by the clip-space w → normalized device
+		// coordinates in [-1, 1].
+		_wsPoint.set(world.x, world.y, world.z);
+		_viewProjection.apply(_wsPoint);
+
+		// NDC → screen pixels. NDC +y points up, screen +y points down, so the
+		// y axis is flipped.
+		out.set(
+			(_wsPoint.x * 0.5 + 0.5) * this.width,
+			(1 - (_wsPoint.y * 0.5 + 0.5)) * this.height,
+		);
+		return out;
 	}
 
 	/**
