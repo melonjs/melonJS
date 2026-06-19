@@ -12,9 +12,182 @@ import {
 	Vector3d,
 	video,
 } from "../src/index.js";
-import { normalizeVertices, projectVertices } from "../src/math/vertex.ts";
+import {
+	boundingRadius,
+	normalizeVertices,
+	projectVertices,
+	transformedBounds,
+} from "../src/math/vertex.ts";
 
 // ── Vertex Utilities ────────────────────────────────────────────────────────
+
+describe("transformedBounds()", () => {
+	const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
+	it("extends an AABB by identity-transformed vertices", () => {
+		const v = new Float32Array([-1, 2, 0, 3, -4, 5]);
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(v, 2, IDENTITY, min, max);
+		expect(min).toEqual([-1, -4, 0]);
+		expect(max).toEqual([3, 2, 5]);
+	});
+
+	it("applies the matrix translation + scale", () => {
+		// scale 2, translate (10, 20, 30) — column-major
+		const m = [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 10, 20, 30, 1];
+		const v = new Float32Array([1, 1, 1]);
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(v, 1, m, min, max);
+		expect(min).toEqual([12, 22, 32]);
+		expect(max).toEqual([12, 22, 32]);
+	});
+
+	it("accumulates across multiple calls (multi-node scene)", () => {
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(new Float32Array([0, 0, 0]), 1, IDENTITY, min, max);
+		transformedBounds(new Float32Array([5, -3, 7]), 1, IDENTITY, min, max);
+		expect(min).toEqual([0, -3, 0]);
+		expect(max).toEqual([5, 0, 7]);
+	});
+
+	// ── adversarial ──────────────────────────────────────────────────────
+
+	it("ADVERSARIAL: captures ROTATED extents (catches row/col-major transposition)", () => {
+		// +90° about Z (column-major): (x,y,z) → (-y, x, z).
+		// A transposed implementation (reading rows, not columns) would give a
+		// different result — the prior tests, being diagonal-only, can't see it.
+		const m = [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+		const v = new Float32Array([2, 0, 0, 0, 3, 0]); // → (0,2,0) and (-3,0,0)
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(v, 2, m, min, max);
+		expect(min[0]).toBeCloseTo(-3, 5);
+		expect(min[1]).toBeCloseTo(0, 5);
+		expect(max[0]).toBeCloseTo(0, 5);
+		expect(max[1]).toBeCloseTo(2, 5);
+	});
+
+	it("ADVERSARIAL: applies off-diagonal (shear) columns, not just the diagonal", () => {
+		// shear X by 0.5·Y (m4 set). A diagonal-only impl would drop the term
+		// and place the vertex at x=0 instead of x=1.
+		const m = [1, 0, 0, 0, 0.5, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+		const v = new Float32Array([0, 2, 0]); // x' = 0 + 0.5·2 = 1 → (1, 2, 0)
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(v, 1, m, min, max);
+		expect(min).toEqual([1, 2, 0]);
+		expect(max).toEqual([1, 2, 0]);
+	});
+
+	it("ADVERSARIAL: reads only the first `count` vertices, ignoring trailing data", () => {
+		const v = new Float32Array([1, 1, 1, 99, 99, 99]); // 2nd vert must be ignored
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(v, 1, IDENTITY, min, max);
+		expect(min).toEqual([1, 1, 1]);
+		expect(max).toEqual([1, 1, 1]);
+	});
+
+	it("ADVERSARIAL: negative (mirroring) scale keeps min ≤ max ordering", () => {
+		const m = [-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1];
+		const v = new Float32Array([2, 3, 4, -2, -3, -4]); // → (-2,-3,-4),(2,3,4)
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(v, 2, m, min, max);
+		expect(min).toEqual([-2, -3, -4]);
+		expect(max).toEqual([2, 3, 4]);
+	});
+
+	it("ADVERSARIAL: count = 0 leaves the seeded AABB untouched", () => {
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		transformedBounds(new Float32Array([5, 5, 5]), 0, IDENTITY, min, max);
+		expect(min).toEqual([Infinity, Infinity, Infinity]);
+		expect(max).toEqual([-Infinity, -Infinity, -Infinity]);
+	});
+
+	it("ADVERSARIAL: accumulates across nodes with DIFFERENT transforms", () => {
+		const min = [Infinity, Infinity, Infinity];
+		const max = [-Infinity, -Infinity, -Infinity];
+		// node A: translated +X; node B: translated -Y — union must span both
+		transformedBounds(
+			new Float32Array([0, 0, 0]),
+			1,
+			[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1],
+			min,
+			max,
+		);
+		transformedBounds(
+			new Float32Array([0, 0, 0]),
+			1,
+			[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, -7, 0, 1],
+			min,
+			max,
+		);
+		expect(min).toEqual([0, -7, 0]);
+		expect(max).toEqual([10, 0, 0]);
+	});
+});
+
+describe("boundingRadius()", () => {
+	it("returns the distance to the farthest vertex (no matrix)", () => {
+		const v = new Float32Array([1, 0, 0, 0, 3, 0, 0, 0, 0]);
+		expect(boundingRadius(v, 3)).toBeCloseTo(3, 5);
+	});
+
+	it("applies the matrix rotation/scale but ignores translation", () => {
+		// scale 2 + translate (100,100,100): radius must reflect scale (2)
+		// not the translation, since it is measured around the node origin
+		const m = [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 100, 100, 100, 1];
+		const v = new Float32Array([1, 0, 0]);
+		expect(boundingRadius(v, 1, m)).toBeCloseTo(2, 5);
+	});
+
+	it("is zero for a single vertex at the origin", () => {
+		expect(boundingRadius(new Float32Array([0, 0, 0]), 1)).toBe(0);
+	});
+
+	// ── adversarial ──────────────────────────────────────────────────────
+
+	it("ADVERSARIAL: is INVARIANT under pure rotation (length is preserved)", () => {
+		// +90° about Z: a rotation must not change the radius at all.
+		const m = [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+		const v = new Float32Array([2, 0, 0]);
+		expect(boundingRadius(v, 1, m)).toBeCloseTo(2, 5);
+		// same value as the un-transformed radius
+		expect(boundingRadius(v, 1)).toBeCloseTo(2, 5);
+	});
+
+	it("ADVERSARIAL: picks the farthest vertex AFTER non-uniform scale, not before", () => {
+		// pre-scale both vertices are length 1 (a tie). Scaling Y by 10 makes
+		// the y-axis vertex the farthest — the radius must reflect the
+		// post-transform distance, not the pre-transform one.
+		const m = [1, 0, 0, 0, 0, 10, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+		const v = new Float32Array([1, 0, 0, 0, 1, 0]);
+		expect(boundingRadius(v, 2, m)).toBeCloseTo(10, 5);
+	});
+
+	it("ADVERSARIAL: reads only the first `count` vertices", () => {
+		// the far (100,0,0) vertex must be ignored at count = 1
+		const v = new Float32Array([1, 0, 0, 100, 0, 0]);
+		expect(boundingRadius(v, 1)).toBeCloseTo(1, 5);
+	});
+
+	it("ADVERSARIAL: returns 0 for count = 0", () => {
+		expect(boundingRadius(new Float32Array([9, 9, 9]), 0)).toBe(0);
+	});
+
+	it("ADVERSARIAL: ignores even a huge translation (radius is origin-centered)", () => {
+		// translation in the millions must not inflate the radius — it is
+		// measured around the transform's own origin (for the cull sphere).
+		const m = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1e6, -1e6, 1e6, 1];
+		const v = new Float32Array([3, 0, 0]);
+		expect(boundingRadius(v, 1, m)).toBeCloseTo(3, 5);
+	});
+});
 
 describe("normalizeVertices()", () => {
 	it("centers vertices at the origin", () => {
@@ -1031,5 +1204,99 @@ describe("Mesh × Camera3d world-space path", () => {
 		// width = 60 from buildPyramidSettings
 		expect(m.vertices[1]).toBeCloseTo(-24, 4);
 		expect(m.vertices[4]).toBeCloseTo(24, 4);
+	});
+
+	// ── review fixes ──────────────────────────────────────────────────────
+
+	const litPyramid = () => {
+		const s = buildPyramidSettings();
+		s.normals = new Float32Array(s.vertices.length); // 5 verts × 3
+		for (let i = 0; i < s.normals.length; i += 3) {
+			s.normals[i + 1] = 1; // +Y
+		}
+		s.rightHanded = true;
+		return s;
+	};
+
+	it("C1: an UNLIT world-space mesh skips normal projection (perf gate)", () => {
+		const m = new Mesh(0, 0, litPyramid());
+		m.onActivateEvent(); // _useWorldSpace = true
+		m.lit = false;
+		m.draw(stubRenderer); // Camera3d world-space path, but unlit
+		// normals must stay zero — the unlit batcher never reads them
+		expect(
+			Array.from(m.normals).every((v) => {
+				return v === 0;
+			}),
+		).toBe(true);
+	});
+
+	it("C1: a LIT world-space mesh DOES project normals", () => {
+		const m = new Mesh(0, 0, litPyramid());
+		m.onActivateEvent();
+		m.lit = true;
+		m.draw(stubRenderer);
+		// +Y source normals → world +Y after the rightHanded Y-flip is (0,-1,0)
+		expect(
+			Array.from(m.normals).some((v) => {
+				return v !== 0;
+			}),
+		).toBe(true);
+		expect(m.normals[1]).toBeCloseTo(-1, 5); // first normal's y
+	});
+
+	it("L1: a degenerate (zero) source normal projects to unit +Y, not NaN/zero", () => {
+		const s = buildPyramidSettings();
+		s.normals = new Float32Array(s.vertices.length); // all zero
+		s.rightHanded = true;
+		const m = new Mesh(0, 0, s);
+		m._projectNormalsWorld();
+		expect([m.normals[0], m.normals[1], m.normals[2]]).toEqual([0, 1, 0]);
+		expect(Number.isNaN(m.normals[0])).toBe(false);
+	});
+
+	it("H2: a rightHanded mesh skips the reversed-index allocation", () => {
+		const m = new Mesh(0, 0, litPyramid()); // rightHanded: true
+		m.onActivateEvent();
+		m.draw(stubRenderer);
+		expect(m._indicesReversed).toBeUndefined(); // never allocated
+		expect(m.indices).toBe(m._indicesOriginal); // uses original winding
+	});
+
+	it("H2: a non-rightHanded reversed buffer matches the source index type", () => {
+		const m = new Mesh(0, 0, buildPyramidSettings()); // rightHanded: false
+		// force a Uint32 source to prove no Uint16 truncation in the copy
+		m._indicesOriginal = new Uint32Array([0, 1, 2, 3, 4, 5]);
+		m._setupWorldSpace();
+		expect(m._indicesReversed).toBeInstanceOf(Uint32Array);
+		// winding reversed per triangle
+		expect(Array.from(m._indicesReversed)).toEqual([0, 2, 1, 3, 5, 4]);
+	});
+
+	it("preserves a Uint32 index buffer — no >65535 truncation (large meshes)", () => {
+		// 70000 wraps to 4464 under a Uint16 coercion; it must survive intact
+		const idx = new Uint32Array([0, 1, 70000]);
+		const m = new Mesh(0, 0, {
+			vertices: new Float32Array(3),
+			uvs: new Float32Array(2),
+			indices: idx,
+			width: 10,
+			normalize: false,
+		});
+		expect(m.indices).toBeInstanceOf(Uint32Array);
+		expect(m.indices[2]).toBe(70000); // not truncated to 4464
+		expect(m.indices).toBe(idx); // kept by reference, no copy
+	});
+
+	it("materializes a plain index array as Uint16 (small-mesh default)", () => {
+		const m = new Mesh(0, 0, {
+			vertices: new Float32Array(3),
+			uvs: new Float32Array(2),
+			indices: [0, 1, 2],
+			width: 10,
+			normalize: false,
+		});
+		expect(m.indices).toBeInstanceOf(Uint16Array);
+		expect(Array.from(m.indices)).toEqual([0, 1, 2]);
 	});
 });

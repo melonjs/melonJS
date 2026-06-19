@@ -224,6 +224,29 @@ export default class Renderable extends Rect {
 		this.autoTransform = true;
 
 		/**
+		 * Whether {@link Renderable#preDraw} applies the
+		 * {@link Renderable#anchorPoint} offset to the renderer transform.
+		 *
+		 * When `true` (the default), the renderable is shifted by
+		 * `-anchorPoint × (width, height)` so its anchor — not its top-left
+		 * corner — aligns with its position. Correct for sprites and other 2D
+		 * renderables.
+		 *
+		 * Set to `false` for a renderable that emits its own final world
+		 * coordinates and takes its origin from geometry rather than a bounds
+		 * box — e.g. a {@link Mesh} on the `Camera3d` world-space path (a 3D
+		 * mesh is positioned by its transform and has no anchor). The WebGL mesh
+		 * batcher reuses this same renderer transform as its **view matrix**,
+		 * so applying the normalized anchor there would shift every mesh by
+		 * half its OWN bounds box; because scene meshes size that box per node,
+		 * props and the platforms they rest on would drift apart and overlap.
+		 * @type {boolean}
+		 * @default true
+		 * @see Mesh#preDraw
+		 */
+		this.applyAnchorTransform = true;
+
+		/**
 		 * Define the renderable opacity<br>
 		 * Set to zero if you do not wish an object to be drawn
 		 * @see Renderable#setOpacity
@@ -859,8 +882,13 @@ export default class Renderable extends Rect {
 			renderer.translate(-this.pos.x, -this.pos.y);
 		}
 
-		// offset by the anchor point
-		renderer.translate(-ax, -ay);
+		// offset by the anchor point — unless this renderable manages its own
+		// world placement (see Renderable#applyAnchorTransform), in which case
+		// the normalized anchor offset must not leak into the renderer/view
+		// transform.
+		if (this.applyAnchorTransform !== false) {
+			renderer.translate(-ax, -ay);
+		}
 
 		// apply the current tint and opacity
 		renderer.setTint(this.tint, this.getOpacity());

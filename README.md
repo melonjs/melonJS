@@ -32,7 +32,7 @@ melonJS is designed so you can **focus on making games, not on graphics plumbing
 
 - **Complete engine, minimal footprint** — Physics, tilemaps, audio, input, cameras, tweens, particles, UI — a full game stack in a single tree-shakeable ES module. No dependency sprawl, no library stitching.
 
-- **Tiled as a first-class citizen** — Deep [Tiled](https://www.mapeditor.org) integration built into the core: orthogonal, isometric, hexagonal and staggered maps, animated tilesets, collision shapes, object properties, compressed formats — all parsed and rendered natively, with GPU-accelerated tile rendering for orthogonal maps under WebGL 2.
+- **Scenes, loaded in one call** — `me.level.load(name)` brings an authored scene straight into your world. [Tiled](https://www.mapeditor.org) is a first-class citizen for **2D** — orthogonal, isometric, hexagonal & staggered maps, animated tilesets, collision shapes, object properties, compressed formats, with GPU-accelerated tile rendering under WebGL 2 — and **glTF / GLB** is the equivalent for **3D scenes**: author in Blender (or any DCC tool), export a `.glb`, and the whole scene — meshes, materials, cameras, and lights — loads under a `Camera3d`, no per-mesh wiring.
 
 - **Batteries included, hackable by design** — Get started in minutes with minimal setup. When you need to go deeper: ES6 classes throughout, a plugin system for engine extensions, and a clean architecture that's easy to extend without fighting the framework.
 
@@ -49,12 +49,14 @@ Graphics
 - Fast WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
 - Extensible batcher system for custom rendering pipelines
 - High DPI resolution & Canvas advanced auto scaling
-- Sprite with 9-slice scaling option, frame animation, and optional per-pixel normal-map shading for 3D-looking dynamic lights
+- Sprite with 9-slice scaling option and frame animation
 - Built-in effects such as tinting, masking, and CSS-style blend modes (normal, additive, multiply, screen, darken, lighten)
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
 - 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d`
-- `Light2d` as a first-class `Renderable` — multiple dynamic lights, radial-gradient falloff, illumination-only mode, and procedural rendering via `drawLight`
+- Lighting, in 2D and 3D:
+    - **2D** — `Light2d` as a first-class `Renderable` (multiple dynamic lights, radial-gradient falloff, illumination-only mode, procedural rendering via `drawLight`), plus optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights
+    - **3D** — directional lights via `Light3d` / `LightingEnvironment` (half-Lambert diffuse + ambient floor), auto-loaded from a glTF scene's authored sun
 - Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text with built-in typewriter effect
@@ -92,7 +94,8 @@ UI
 - `Draggable` / `DropTarget` for drag-and-drop with configurable overlap or contains-check
 - `UITextButton` text button with hover, press, and key-bind support — built on `BitmapText`
 
-Level Editor
+Scenes
+- Load a scene in one call with `me.level.load(name)` — 2D Tiled maps and 3D glTF scenes alike, auto-registered on preload
 - [Tiled](https://www.mapeditor.org) map format [up to 1.12](https://doc.mapeditor.org/en/stable/reference/tmx-changelog/) built-in support for easy level design
     - **GPU-accelerated tile rendering** for orthogonal maps under WebGL 2 — each layer draws as a single quad with no per-tile loop, ~5–8× faster than the legacy CPU renderer on dense maps. Honors animated tiles, flip bits, per-layer opacity/tint/blend, and oversized bottom-aligned tiles; falls back transparently to the CPU renderer on isometric/staggered/hexagonal layers or non-WebGL-2 contexts
     - Uncompressed and [compressed](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
@@ -110,11 +113,17 @@ Level Editor
     - Dynamic Layer and Object/Group ordering
     - Dynamic Entity loading via an extensible object factory registry — register custom handlers for any Tiled class name without modifying engine code
     - Shape based Tile collision support
+- glTF / GLB 3D scenes — load an authored 3D scene with `me.level.load(...)`, the same one call as a Tiled map
+    - The whole scene loads at once — meshes, materials, cameras and lights — viewed under a `Camera3d`
+    - Automatically lit by the scene's directional lights (the sun set up in the authoring tool)
+    - Textured, solid-colored, and vertex-colored materials
+    - `.glb` and self-contained `.gltf` files
+    - Works with any glTF authoring tool (Blender, Maya, 3ds Max, Cinema 4D, …)
 
 Assets
 - Asynchronous asset loading with progress tracking
 - A fully customizable preloader
-- Support for images, JSON, TMX/TSX, `.aseprite` / `.ase` binary, audio, video, binary and fonts
+- Support for images, JSON, TMX/TSX, glTF / GLB 3D scenes, `.aseprite` / `.ase` binary, audio, video, binary and fonts
 
 Core
 - `Application` class as the modern entry point with built-in pause, resume, and `freeze()` (hit-stop) primitives
@@ -173,6 +182,7 @@ Examples
 * [3D Mesh](https://melonjs.github.io/melonJS/examples/#/mesh-3d) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3d))
 * [3D Mesh Material](https://melonjs.github.io/melonJS/examples/#/mesh-3d-material) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3dMaterial))
 * [AfterBurner Clone](https://melonjs.github.io/melonJS/examples/#/after-burner) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/afterBurner)) — `Camera3d` + 3D Mesh arcade shooter
+* [glTF Scene](https://melonjs.github.io/melonJS/examples/#/gltf) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/gltf)) — a Blender-authored, lit 3D scene loaded with `me.level.load`
 * [Trail](https://melonjs.github.io/melonJS/examples/#/trail) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/trail))
 * [Shader Effects](https://melonjs.github.io/melonJS/examples/#/shader-effects) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/shaderEffects))
 * [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))

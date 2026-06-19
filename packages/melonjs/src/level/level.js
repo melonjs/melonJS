@@ -3,6 +3,7 @@ import { getTMX } from "./../loader/loader.js";
 import state from "./../state/state.ts";
 import { emit, LEVEL_LOADED } from "../system/event.ts";
 import { resetGUID } from "./../utils/utils.ts";
+import GLTFScene from "./gltf/GLTFScene.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 
 // our levels
@@ -30,13 +31,22 @@ function safeLoadLevel(levelId, options, restart) {
 	// update current level index
 	currentLevelIdx = levelIdx.indexOf(levelId);
 
-	// add the specified level to the game world
-	loadTMXLevel(
-		levelId,
-		options.container,
-		options.flatten,
-		options.setViewportBounds,
-	);
+	// add the specified level to the game world. TMX maps keep their
+	// dedicated loader (GUID reset + viewport bounds + object flattening);
+	// other formats (glTF/GLB scenes, …) use the generic duck-typed
+	// `addTo(container, options)` interface.
+	const targetLevel = levels[levelId];
+	if (targetLevel.format === "tmx") {
+		loadTMXLevel(
+			levelId,
+			options.container,
+			options.flatten,
+			options.setViewportBounds,
+		);
+	} else {
+		options.container.anchorPoint.set(0, 0);
+		targetLevel.addTo(options.container, options);
+	}
 
 	// publish the corresponding message
 	emit(LEVEL_LOADED, levelId);
@@ -85,32 +95,43 @@ export const level = {
 	 * @name add
 	 * @memberof level
 	 * @public
-	 * @param {string} format - level format (only "tmx" supported)
+	 * @param {string} format - level format ("tmx" for Tiled maps, "gltf" / "glb" for 3D scenes)
 	 * @param {string} levelId - the level id (or name)
 	 * @param {Function} [callback] - a function to be called once the level is loaded
 	 * @returns {boolean} true if the level was loaded
 	 */
 	add(format, levelId, callback) {
+		let levelObject;
 		switch (format) {
 			case "tmx":
-				// just load the level with the XML stuff
-				if (levels[levelId] == null) {
-					levels[levelId] = new TMXTileMap(levelId, getTMX(levelId));
-					levelIdx.push(levelId);
-				} else {
-					return false;
-				}
-
-				// call the callback if defined
-				if (callback) {
-					callback();
-				}
-				// true if level loaded
-				return true;
-
+				levelObject = () => {
+					return new TMXTileMap(levelId, getTMX(levelId));
+				};
+				break;
+			case "gltf":
+			case "glb":
+				levelObject = () => {
+					return new GLTFScene(levelId);
+				};
+				break;
 			default:
 				throw new Error("no level loader defined for format " + format);
 		}
+
+		// register the level once (idempotent)
+		if (levels[levelId] == null) {
+			levels[levelId] = levelObject();
+			levelIdx.push(levelId);
+		} else {
+			return false;
+		}
+
+		// call the callback if defined
+		if (callback) {
+			callback();
+		}
+		// true if level loaded
+		return true;
 	},
 
 	/**
@@ -123,8 +144,10 @@ export const level = {
 	 * @param {object} [options] - additional optional parameters
 	 * @param {Container} [options.container=game.world] - container in which to load the specified level
 	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-	 * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-	 * @param {boolean} [options.setViewportBounds=true] - if true, set the viewport bounds to the map size
+	 * @param {boolean} [options.flatten=game.mergeGroup] - (TMX only) if true, flatten all objects into the given container
+	 * @param {boolean} [options.setViewportBounds=true] - (TMX only) if true, set the viewport bounds to the map size
+	 * @param {number} [options.scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
+	 * @param {boolean} [options.rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
 	 * @returns {boolean} true if the level was successfully loaded
 	 * @example
 	 * // the game assets to be be preloaded
@@ -168,23 +191,19 @@ export const level = {
 			throw new Error("level " + levelId + " not found");
 		}
 
-		if (levels[levelId] instanceof TMXTileMap) {
-			// check the status of the state mngr
-			const wasRunning = state.isRunning();
+		// check the status of the state mngr
+		const wasRunning = state.isRunning();
 
-			if (wasRunning) {
-				// stop the game loop to avoid
-				// some silly side effects
-				state.stop();
+		if (wasRunning) {
+			// stop the game loop to avoid
+			// some silly side effects
+			state.stop();
 
-				setTimeout(() => {
-					safeLoadLevel(levelId, options, true);
-				});
-			} else {
-				safeLoadLevel(levelId, options);
-			}
+			setTimeout(() => {
+				safeLoadLevel(levelId, options, true);
+			});
 		} else {
-			throw new Error("no level loader defined");
+			safeLoadLevel(levelId, options);
 		}
 		return true;
 	},

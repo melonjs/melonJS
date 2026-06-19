@@ -161,6 +161,12 @@ export default class TMXTileMap {
 		this.name = levelId;
 
 		/**
+		 * level format discriminator used by the level director's dispatch
+		 * @type {string}
+		 */
+		this.format = "tmx";
+
+		/**
 		 * width of the tilemap in tiles
 		 * @type {number}
 		 */

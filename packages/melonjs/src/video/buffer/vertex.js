@@ -136,6 +136,34 @@ export default class VertexArrayBuffer {
 	}
 
 	/**
+	 * push a new lit-mesh vertex (mesh format + a world-space normal):
+	 * x, y, z, u, v, tint, nx, ny, nz. Used by the lit mesh batcher, whose
+	 * vertex layout is 12 floats (the 9 of {@link pushMesh} plus `aNormal`).
+	 * @ignore
+	 */
+	pushMeshLit(x, y, z, u, v, tint, nx, ny, nz) {
+		const offset = this.vertexCount * this.vertexSize;
+
+		this.bufferF32[offset] = x;
+		this.bufferF32[offset + 1] = y;
+		this.bufferF32[offset + 2] = z;
+		this.bufferF32[offset + 3] = u;
+		this.bufferF32[offset + 4] = v;
+		this.bufferF32[offset + 5] = ((tint >> 16) & 0xff) / 255; // R
+		this.bufferF32[offset + 6] = ((tint >> 8) & 0xff) / 255; // G
+		this.bufferF32[offset + 7] = (tint & 0xff) / 255; // B
+		this.bufferF32[offset + 8] = ((tint >>> 24) & 0xff) / 255; // A
+		// world-space normal (aNormal)
+		this.bufferF32[offset + 9] = nx;
+		this.bufferF32[offset + 10] = ny;
+		this.bufferF32[offset + 11] = nz;
+
+		this.vertexCount++;
+
+		return this;
+	}
+
+	/**
 	 * return a reference to the data in Float32 format
 	 * @ignore
 	 */

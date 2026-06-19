@@ -10,6 +10,7 @@ import {
 	video,
 	World,
 } from "../src/index.js";
+import { transformedBounds } from "../src/math/vertex.ts";
 import { AABB3d } from "../src/physics/broadphase/aabb3d.ts";
 import Octree from "../src/physics/broadphase/octree.ts";
 
@@ -134,6 +135,83 @@ describe("Octree", () => {
 			a.setMinMax(10, 20, 30, 40, 50, 60);
 			expect(b.min).toEqual({ x: 1, y: 2, z: 3 });
 			expect(b.max).toEqual({ x: 4, y: 5, z: 6 });
+		});
+
+		describe("fromVertices (flat-buffer bridge → transformedBounds)", () => {
+			it("builds the AABB from a flat vertex buffer (no matrix = identity)", () => {
+				const v = new Float32Array([-1, 2, 0, 3, -4, 5]);
+				const a = new AABB3d().fromVertices(v, 2);
+				expect(a.min).toEqual({ x: -1, y: -4, z: 0 });
+				expect(a.max).toEqual({ x: 3, y: 2, z: 5 });
+			});
+
+			it("returns `this` for chaining", () => {
+				const a = new AABB3d();
+				expect(a.fromVertices(new Float32Array([0, 0, 0]), 1)).toBe(a);
+			});
+
+			it("applies a matrix (scale + translate)", () => {
+				const m = [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 10, 20, 30, 1];
+				const a = new AABB3d().fromVertices(new Float32Array([1, 1, 1]), 1, m);
+				expect(a.min).toEqual({ x: 12, y: 22, z: 32 });
+				expect(a.max).toEqual({ x: 12, y: 22, z: 32 });
+			});
+
+			it("ADVERSARIAL: captures ROTATED extents (transposition catch)", () => {
+				// +90° about Z: (x,y,z) → (-y, x, z)
+				const m = [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+				const v = new Float32Array([2, 0, 0, 0, 3, 0]); // → (0,2,0),(-3,0,0)
+				const a = new AABB3d().fromVertices(v, 2, m);
+				expect(a.min.x).toBeCloseTo(-3, 5);
+				expect(a.min.y).toBeCloseTo(0, 5);
+				expect(a.max.x).toBeCloseTo(0, 5);
+				expect(a.max.y).toBeCloseTo(2, 5);
+			});
+
+			it("ADVERSARIAL: REPLACES prior bounds (does not accumulate)", () => {
+				const a = new AABB3d();
+				a.setMinMax(-999, -999, -999, 999, 999, 999); // stale, must be gone
+				a.fromVertices(new Float32Array([1, 1, 1]), 1);
+				expect(a.min).toEqual({ x: 1, y: 1, z: 1 });
+				expect(a.max).toEqual({ x: 1, y: 1, z: 1 });
+			});
+
+			it("ADVERSARIAL: reads only the first `count` vertices", () => {
+				const v = new Float32Array([1, 1, 1, 99, 99, 99]);
+				const a = new AABB3d().fromVertices(v, 1);
+				expect(a.max).toEqual({ x: 1, y: 1, z: 1 });
+			});
+
+			it("ADVERSARIAL: count = 0 yields the empty (non-finite) AABB", () => {
+				const a = new AABB3d().fromVertices(new Float32Array([5, 5, 5]), 0);
+				expect(a.min.x).toBe(Infinity);
+				expect(a.max.x).toBe(-Infinity);
+				expect(a.isFinite()).toBe(false);
+			});
+
+			it("delegates to transformedBounds (results match the helper exactly)", () => {
+				// proves fromVertices is a thin bridge, not a re-implementation
+				const v = new Float32Array([-2, 7, 1, 5, -3, 9, 0, 0, -4, 11, 2, 6]);
+				const m = [1.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 3, 0, -8, 4, 2, 1];
+				const refMin = [Infinity, Infinity, Infinity];
+				const refMax = [-Infinity, -Infinity, -Infinity];
+				transformedBounds(v, 4, m, refMin, refMax);
+				const a = new AABB3d().fromVertices(v, 4, m);
+				expect([a.min.x, a.min.y, a.min.z]).toEqual(refMin);
+				expect([a.max.x, a.max.y, a.max.z]).toEqual(refMax);
+			});
+
+			it("ADVERSARIAL: scratch reuse — two boxes don't bleed into each other", () => {
+				// fromVertices uses module scratch arrays; a second call must not
+				// corrupt the first box's result
+				const a = new AABB3d().fromVertices(new Float32Array([1, 1, 1]), 1);
+				const b = new AABB3d().fromVertices(
+					new Float32Array([100, 100, 100]),
+					1,
+				);
+				expect(a.max).toEqual({ x: 1, y: 1, z: 1 }); // unchanged by b
+				expect(b.max).toEqual({ x: 100, y: 100, z: 100 });
+			});
 		});
 
 		it("survives NaN / Infinity bounds — flagged by isFinite", () => {

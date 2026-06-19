@@ -11,6 +11,7 @@ import { getBasename } from "../utils/file.ts";
 import {
 	binList,
 	fontList,
+	gltfList,
 	imgList,
 	jsonList,
 	mtlList,
@@ -21,6 +22,7 @@ import {
 import { preloadAseprite } from "./parsers/aseprite.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadFontFace } from "./parsers/fontface.js";
+import { preloadGLTF } from "./parsers/gltf.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadJSON } from "./parsers/json.js";
 import { preloadMTL } from "./parsers/mtl.js";
@@ -226,6 +228,8 @@ function initParsers() {
 	setParser("video", preloadVideo);
 	setParser("obj", preloadOBJ);
 	setParser("mtl", preloadMTL);
+	setParser("gltf", preloadGLTF);
+	setParser("glb", preloadGLTF);
 	setParser("aseprite", preloadAseprite);
 	parserInitialized = true;
 }
@@ -635,6 +639,15 @@ export function unload(asset) {
 			delete objList[asset.name];
 			return true;
 
+		case "gltf":
+		case "glb":
+			if (!(asset.name in gltfList)) {
+				return false;
+			}
+
+			delete gltfList[asset.name];
+			return true;
+
 		case "mtl":
 			if (!(asset.name in mtlList)) {
 				return false;
@@ -751,6 +764,16 @@ export function unloadAll() {
 		}
 	}
 
+	// unload all glTF/GLB scene resources
+	for (name in gltfList) {
+		if (gltfList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "glb",
+			});
+		}
+	}
+
 	// unload all audio resources
 	audio.unloadAll();
 }
@@ -854,6 +877,60 @@ export function getOBJ(elt) {
 	elt = "" + elt;
 	if (elt in objList) {
 		return objList[elt];
+	}
+	return null;
+}
+
+/**
+ * a parsed glTF/GLB scene descriptor, as returned by {@link loader.getGLTF}
+ * @typedef {object} GLTFData
+ * @property {object[]} nodes - one entry per mesh primitive (accumulated `world` transform, `vertices`, `normals`, `uvs`, `indices`, `vertexCount`, decoded baseColor `image`, `doubleSided`)
+ * @property {object[]} cameras - glTF cameras, each with its `world` transform + perspective parameters
+ * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, world-space `direction`/`position`, `name`)
+ * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
+ */
+
+/**
+ * return the parsed glTF/GLB scene descriptor for the given asset name.
+ *
+ * The descriptor is `{ nodes, cameras, lights, bounds }`:
+ * - `nodes` — one entry per mesh primitive, each carrying its accumulated
+ *   `world` transform (16 floats, column-major), `vertices`, `normals`,
+ *   `uvs`, `indices`, `vertexCount`, a decoded baseColor `image` (or `null`),
+ *   and a `doubleSided` flag.
+ * - `cameras` — glTF cameras, each with its `world` transform + perspective
+ *   parameters.
+ * - `lights` — parsed `KHR_lights_punctual` lights (`type`, `color`,
+ *   `intensity`, world-space `direction`/`position`); empty without the
+ *   extension. The level director instantiates directional ones automatically.
+ * - `bounds` — world-space `{ min, max }` (glTF units), handy for framing.
+ *
+ * Most code never needs this: a preloaded glTF/GLB auto-registers with the
+ * {@link level} director, so the whole scene loads into a container in one
+ * call via `me.level.load(name)` — exactly like a Tiled map. Reach for
+ * `getGLTF` only when you want to inspect the raw descriptor (e.g. to frame
+ * a `Camera3d` from the embedded camera).
+ * @memberof loader
+ * @param {string} elt - name of the glTF/GLB file (as specified in the preload list)
+ * @returns {GLTFData|null} the parsed scene descriptor, or `null` if not found
+ * @category Assets
+ * @example
+ * me.loader.preload(
+ *     [{ name: "diorama", type: "glb", src: "scenes/diorama.glb" }],
+ *     () => {
+ *         // load the whole scene into the world (view under a Camera3d)
+ *         me.level.load("diorama", { scale: 32 });
+ *
+ *         // ...or inspect the raw descriptor for custom framing
+ *         const scene = me.loader.getGLTF("diorama");
+ *         const { min, max } = scene.bounds;
+ *     },
+ * );
+ */
+export function getGLTF(elt) {
+	elt = "" + elt;
+	if (elt in gltfList) {
+		return gltfList[elt];
 	}
 	return null;
 }

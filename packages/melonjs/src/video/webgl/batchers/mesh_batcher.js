@@ -10,6 +10,22 @@ import { MaterialBatcher } from "./material_batcher.js";
 // identity, so output (x, y) matches the legacy Vector2d path.
 const _v = new Vector3d();
 
+// Reused scratch for addMesh's per-chunk vertex dedup (`_remap`) and absolute
+// index list (`_chunkIndices`), so a chunk doesn't allocate a fresh Map +
+// array per mesh per frame (GC pressure on the draw path). Safe because
+// addMesh runs synchronously and never re-enters (flush() only draws). Shared
+// by MeshBatcher and LitMeshBatcher — only one addMesh runs at a time.
+const _remap = new Map();
+const _chunkIndices = [];
+
+// Shared lazy-depth-clear state for the mesh-mode pass. Module-level (not
+// per-instance) so the unlit `MeshBatcher` and the `LitMeshBatcher` — which
+// extends it and inherits `bind()` — coordinate on a SINGLE depth clear per
+// target. If each kept its own flag, switching between the two mid-frame would
+// re-clear the shared depth buffer and break inter-mesh occlusion. The first
+// `bind()` of either clears + marks clean; `RENDER_TARGET_CHANGED` re-arms it.
+let _meshDepthDirty = true;
+
 /**
  * Per-channel multiply two ARGB-packed Uint32 colors. Used by the
  * multi-material mesh path to combine a vertex's baked material color
@@ -69,75 +85,72 @@ export default class MeshBatcher extends MaterialBatcher {
 	 */
 	init(renderer) {
 		super.init(renderer, {
-			attributes: [
-				{
-					name: "aVertex",
-					size: 3,
-					type: renderer.gl.FLOAT,
-					normalized: false,
-					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
-				},
-				{
-					name: "aRegion",
-					size: 2,
-					type: renderer.gl.FLOAT,
-					normalized: false,
-					offset: 3 * Float32Array.BYTES_PER_ELEMENT,
-				},
-				{
-					// aColor: 4 normalized floats (R, G, B, A in [0, 1])
-					// rather than packed 4×UNSIGNED_BYTE. The byte-packed
-					// path is byte-identical in memory but exposes the
-					// 4-byte slot to NaN-pattern bit values when the
-					// alpha byte is 0xFF and the red byte has its high
-					// bit set (R≥0x80) — a NaN-pattern that Apple's
-					// Metal-backed WebGL driver canonicalizes on some
-					// upload paths, zeroing the bytes the shader actually
-					// reads. The float path uses values in [0, 1] which
-					// never form NaN bit patterns; trades 12 bytes of
-					// vertex memory (4 vs 16 per color) for guaranteed
-					// driver-safety. Mesh vertex counts are typically
-					// modest (sub-thousand per Mesh) so the bandwidth
-					// hit is invisible.
-					name: "aColor",
-					size: 4,
-					type: renderer.gl.FLOAT,
-					normalized: false,
-					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
-				},
-			],
-			shader: {
-				vertex: meshVertex,
-				fragment: meshFragment,
-			},
+			attributes: this._attributeLayout(renderer),
+			shader: this._shaderSources(),
 			indexed: true,
 		});
-		/**
-		 * Tracks whether the active framebuffer's depth attachment still
-		 * needs a clear before this batcher's next draw. Flipped to
-		 * `true` by the `RENDER_TARGET_CHANGED` listener installed
-		 * below (frame start, post-effect FBO bind/unbind), back to
-		 * `false` by the first `bind()` of the new target after the
-		 * lazy clear runs. Lifts depth clearing from per-mesh (legacy)
-		 * to per-target — same model Three.js uses. The GPU's `LEQUAL`
-		 * depth test then resolves inter-mesh occlusion per pixel
-		 * against the accumulated buffer.
-		 * @ignore
-		 */
-		this._depthDirty = true;
 
-		// Subscribe to the renderer's target-changed broadcast so we
-		// re-arm the lazy depth clear whenever the active framebuffer's
-		// attachments change identity (FBO bind/unbind for post-effects,
-		// frame-start `clear()`). Same pattern as `MaterialBatcher`'s
-		// `GPU_TEXTURE_CACHE_RESET` subscription — only batchers that
-		// care subscribe, so non-mesh batchers pay nothing for this.
+		// Subscribe to the renderer's target-changed broadcast so we re-arm the
+		// shared lazy depth clear (`_meshDepthDirty`) whenever the active
+		// framebuffer's attachments change identity (FBO bind/unbind for
+		// post-effects, frame-start `clear()`). Same pattern as
+		// `MaterialBatcher`'s `GPU_TEXTURE_CACHE_RESET` subscription — only
+		// batchers that care subscribe.
 		if (!this._onTargetChanged) {
 			this._onTargetChanged = () => {
-				this._depthDirty = true;
+				_meshDepthDirty = true;
 			};
 			on(RENDER_TARGET_CHANGED, this._onTargetChanged);
 		}
+	}
+
+	/**
+	 * The vertex attribute layout. The base (unlit) mesh batcher is
+	 * `aVertex` (3) + `aRegion` (2) + `aColor` (4) = 9 floats. Subclasses
+	 * (e.g. {@link LitMeshBatcher}) append their own attributes.
+	 * @ignore
+	 */
+	_attributeLayout(renderer) {
+		return [
+			{
+				name: "aVertex",
+				size: 3,
+				type: renderer.gl.FLOAT,
+				normalized: false,
+				offset: 0 * Float32Array.BYTES_PER_ELEMENT,
+			},
+			{
+				name: "aRegion",
+				size: 2,
+				type: renderer.gl.FLOAT,
+				normalized: false,
+				offset: 3 * Float32Array.BYTES_PER_ELEMENT,
+			},
+			{
+				// aColor: 4 normalized floats (R, G, B, A in [0, 1]) rather
+				// than packed 4×UNSIGNED_BYTE. The byte-packed path is
+				// byte-identical in memory but exposes the 4-byte slot to
+				// NaN-pattern bit values when the alpha byte is 0xFF and the
+				// red byte has its high bit set (R≥0x80) — a NaN-pattern that
+				// Apple's Metal-backed WebGL driver canonicalizes on some
+				// upload paths, zeroing the bytes the shader reads. The float
+				// path uses values in [0, 1] which never form NaN bit patterns.
+				name: "aColor",
+				size: 4,
+				type: renderer.gl.FLOAT,
+				normalized: false,
+				offset: 5 * Float32Array.BYTES_PER_ELEMENT,
+			},
+		];
+	}
+
+	/**
+	 * The shader sources for this batcher (unlit by default). Subclasses
+	 * override to supply a lit shader.
+	 * @ignore
+	 */
+	_shaderSources() {
+		return { vertex: meshVertex, fragment: meshFragment };
 	}
 
 	/**
@@ -176,10 +189,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		gl.depthFunc(gl.LEQUAL);
 		gl.depthMask(true);
 		gl.disable(gl.BLEND);
-		if (this._depthDirty) {
+		if (_meshDepthDirty) {
 			gl.clearDepth(1.0);
 			gl.clear(gl.DEPTH_BUFFER_BIT);
-			this._depthDirty = false;
+			_meshDepthDirty = false;
 		}
 	}
 
@@ -193,6 +206,26 @@ export default class MeshBatcher extends MaterialBatcher {
 		gl.enable(gl.BLEND);
 		gl.disable(gl.DEPTH_TEST);
 		gl.depthMask(false);
+	}
+
+	/**
+	 * Write one vertex into the buffer. The base (unlit) layout is
+	 * `x, y, z, u, v, color`. Subclasses override to append per-vertex data
+	 * matching their {@link MeshBatcher#_attributeLayout} (e.g.
+	 * {@link LitMeshBatcher} pushes the world-space normal too).
+	 * @param {object} vertexData - the batcher's vertex buffer
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
+	 * @param {number} u
+	 * @param {number} v
+	 * @param {number} color - packed ARGB Uint32
+	 * @param {object} _mesh - the source mesh (unused here; for subclasses)
+	 * @param {number} _i3 - the source vertex's `index * 3` (for subclasses)
+	 * @ignore
+	 */
+	_pushVertex(vertexData, x, y, z, u, v, color, _mesh, _i3) {
+		vertexData.pushMesh(x, y, z, u, v, color);
 	}
 
 	/**
@@ -248,19 +281,19 @@ export default class MeshBatcher extends MaterialBatcher {
 
 			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
 
-			// build a local vertex remap for this chunk
+			// build a local vertex remap for this chunk (reused scratch)
 			// capture base offset before pushing any vertices
 			const baseOffset = vertexData.vertexCount;
-			const remap = new Map();
-			const chunkIndices = [];
+			_remap.clear();
+			_chunkIndices.length = 0;
 			let localCount = 0;
 
 			for (let j = triIdx; j < endIdx; j++) {
 				const origIdx = indices[j];
-				let localIdx = remap.get(origIdx);
+				let localIdx = _remap.get(origIdx);
 				if (localIdx === undefined) {
 					localIdx = localCount++;
-					remap.set(origIdx, localIdx);
+					_remap.set(origIdx, localIdx);
 
 					const i3 = origIdx * 3;
 					const i2 = origIdx * 2;
@@ -285,14 +318,27 @@ export default class MeshBatcher extends MaterialBatcher {
 					const vertColor = vertexColors
 						? mulPackedARGB(vertexColors[origIdx], tint)
 						: tint;
-					vertexData.pushMesh(x, y, z, uvs[i2], uvs[i2 + 1], vertColor);
+					// delegate the actual write so subclasses can add per-vertex
+					// data (e.g. LitMeshBatcher appends the world-space normal).
+					this._pushVertex(
+						vertexData,
+						x,
+						y,
+						z,
+						uvs[i2],
+						uvs[i2 + 1],
+						vertColor,
+						mesh,
+						i3,
+					);
 				}
 				// absolute index = baseOffset + localIdx
-				chunkIndices.push(baseOffset + localIdx);
+				_chunkIndices.push(baseOffset + localIdx);
 			}
 
-			// add raw indices (already absolute, bypass rebasing)
-			this.indexBuffer.addRaw(chunkIndices);
+			// add raw indices (already absolute, bypass rebasing) — addRaw
+			// copies the values, so reusing `_chunkIndices` next chunk is safe
+			this.indexBuffer.addRaw(_chunkIndices);
 			triIdx = endIdx;
 		}
 	}

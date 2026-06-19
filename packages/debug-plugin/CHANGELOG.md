@@ -1,5 +1,13 @@
 # Changelog
 
+## 16.1.0
+
+### Requirements
+- Requires melonJS **19.8.0 or later** — the 3D mesh bounding-box overlay uses the new `Mesh.getBounds3d()` and `Camera3d.worldToScreen()` APIs (and the exported `AABB3d` type) introduced in 19.8.
+
+### Improvements
+- The hitbox overlay now draws a correct **3D bounding-box wireframe** for `Mesh` renderables under a `Camera3d`. Previously a mesh only got the inherited flat 2D `getBounds()` rectangle — screen-flat, oversized, and unrelated to the 3D geometry. The new overlay projects the 8 corners of the mesh's world-space `AABB3d` through the camera (`Camera3d.worldToScreen`) and strokes the 12 edges in a screen-space pass, so the box tracks the mesh in perspective. Meshes under a `Camera2d` (the self-projected 2D path) keep the existing 2D box.
+
 ## 16.0.0
 
 ### Breaking Changes

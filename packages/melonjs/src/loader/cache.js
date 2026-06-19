@@ -25,3 +25,6 @@ export const objList = {};
 
 // contains all the MTL material files
 export const mtlList = {};
+
+// contains all the parsed glTF/GLB scene descriptors
+export const gltfList = {};

@@ -2,14 +2,18 @@ import {
 	BitmapText,
 	Bounds,
 	Camera2d,
+	Camera3d,
 	Container,
 	Entity,
 	game,
 	ImageLayer,
+	Matrix3d,
+	Mesh,
 	plugin,
 	Renderable,
 	Text,
 	Vector2d,
+	Vector3d,
 } from "melonjs";
 
 /**
@@ -22,6 +26,102 @@ import {
  */
 const sharedBodyAABB = new Bounds();
 const sharedBodyVel = new Vector2d();
+
+// Scratch for the Mesh 3D bounding-box wireframe overlay. The 8 box corners
+// (world space) and their projected screen positions are reused every frame;
+// the two matrices save/restore the perspective projection around the
+// screen-space line pass. Single-instance is safe — drawing is synchronous.
+const _meshCorners = Array.from({ length: 8 }, () => {
+	return new Vector3d();
+});
+const _meshScreen = Array.from({ length: 8 }, () => {
+	return new Vector2d();
+});
+const _meshSavedProj = new Matrix3d();
+const _meshScreenProj = new Matrix3d();
+// the 12 edges of a box, indexing the 8 corners laid out by
+// `strokeMeshWireframe`: near face (z=min) 0-3, far face (z=max) 4-7.
+const BOX_EDGES = [
+	[0, 1],
+	[1, 2],
+	[2, 3],
+	[3, 0], // near face
+	[4, 5],
+	[5, 6],
+	[6, 7],
+	[7, 4], // far face
+	[0, 4],
+	[1, 5],
+	[2, 6],
+	[3, 7], // connecting edges
+];
+
+/**
+ * Draw a {@link Mesh}'s world-space 3D bounding box as a green wireframe
+ * under a `Camera3d`. The 8 corners of `mesh.getBounds3d()` are projected to
+ * screen via `camera.worldToScreen`, then the 12 edges are stroked in a
+ * screen-space pass (identity transform + a screen-ortho projection) so the
+ * lines land exactly where the perspective-projected mesh is drawn.
+ *
+ * This replaces the flat 2D `getBounds()` rectangle the generic overlay would
+ * draw, which cannot describe a 3D mesh's extent.
+ * @param {*} renderer
+ * @param {import("./index").DebugPanelPlugin} panel
+ * @param {import("melonjs").Mesh} mesh
+ * @param {import("melonjs").Camera3d} camera
+ */
+function strokeMeshWireframe(renderer, panel, mesh, camera) {
+	const box = mesh.getBounds3d();
+	if (!box.isFinite()) {
+		return;
+	}
+	const min = box.min;
+	const max = box.max;
+	// near face (z = min): 0..3, far face (z = max): 4..7
+	_meshCorners[0].set(min.x, min.y, min.z);
+	_meshCorners[1].set(max.x, min.y, min.z);
+	_meshCorners[2].set(max.x, max.y, min.z);
+	_meshCorners[3].set(min.x, max.y, min.z);
+	_meshCorners[4].set(min.x, min.y, max.z);
+	_meshCorners[5].set(max.x, min.y, max.z);
+	_meshCorners[6].set(max.x, max.y, max.z);
+	_meshCorners[7].set(min.x, max.y, max.z);
+	for (let i = 0; i < 8; i++) {
+		// worldToScreen returns null for a corner at/behind the camera —
+		// projecting it would mirror the point and draw edges shooting across
+		// the screen, so skip the whole box when the mesh straddles the camera.
+		if (camera.worldToScreen(_meshCorners[i], _meshScreen[i]) === null) {
+			return;
+		}
+	}
+
+	// stroke the edges in screen space: drop the camera view transform and
+	// swap the perspective projection for a screen ortho, so the already-
+	// projected pixel coordinates draw 1:1. The projection isn't part of the
+	// save/restore stack, so it's saved/restored explicitly (same pattern as
+	// the renderer's own blit path).
+	renderer.save();
+	_meshSavedProj.copy(renderer.projectionMatrix);
+	renderer.currentTransform.identity();
+	_meshScreenProj.ortho(0, camera.width, camera.height, 0, -1, 1);
+	renderer.setProjection(_meshScreenProj);
+	renderer.setColor("green");
+	renderer.lineWidth = 1;
+	for (const [a, b] of BOX_EDGES) {
+		renderer.strokeLine(
+			_meshScreen[a].x,
+			_meshScreen[a].y,
+			_meshScreen[b].x,
+			_meshScreen[b].y,
+		);
+	}
+	// flush the lines under the screen projection before restoring the
+	// perspective projection, or they'd be re-projected on the next flush.
+	renderer.flush();
+	renderer.setProjection(_meshSavedProj);
+	renderer.restore();
+	panel.counters.inc("shapes");
+}
 
 /**
  * Stroke the orange body AABB and the red collision shapes for the
@@ -107,6 +207,18 @@ export function applyPatches(panel) {
 		// only fires for children the world actually draws.
 		if (this.ancestor === game.world) {
 			panel.counters.inc("draws");
+		}
+
+		// Mesh under a Camera3d: draw the proper 3D bounding-box wireframe
+		// instead of the flat, oversized 2D getBounds() box (which can't
+		// describe 3D geometry). Under a Camera2d a mesh self-projects to 2D,
+		// so it falls through to the generic box below.
+		if (this instanceof Mesh && panel.options.hitbox) {
+			const cam = this.parentApp?.viewport ?? game.viewport;
+			if (cam instanceof Camera3d) {
+				strokeMeshWireframe(renderer, panel, this, cam);
+				return;
+			}
 		}
 
 		// skip types that have their own dedicated patches, or when no

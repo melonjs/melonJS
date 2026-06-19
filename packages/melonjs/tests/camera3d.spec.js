@@ -6,6 +6,7 @@ import {
 	Frustum,
 	Matrix3d,
 	Renderable,
+	Vector2d,
 	Vector3d,
 	video,
 } from "../src/index.js";
@@ -694,6 +695,86 @@ describe("Camera3d", () => {
 			expect(IsoCam.defaultSortOn).toBe("y");
 			// the base class is untouched
 			expect(Camera2d.defaultSortOn).toBe("z");
+		});
+	});
+
+	describe("worldToScreen", () => {
+		const W = 800;
+		const H = 600;
+		// camera at the origin looking straight down +Z (the engine's
+		// "forward / away" axis), Y-down. A forward-axis point lands at the
+		// screen centre; offsets move predictably.
+		const mk = () => {
+			const cam = new Camera3d(0, 0, W, H);
+			cam.pos.set(0, 0, 0);
+			cam.lookAt(0, 0, 100); // yaw = pitch = 0, looking down +Z
+			return cam;
+		};
+
+		it("projects a forward-axis point to the screen centre", () => {
+			const p = mk().worldToScreen(new Vector3d(0, 0, 100));
+			expect(p.x).toBeCloseTo(W / 2, 0);
+			expect(p.y).toBeCloseTo(H / 2, 0);
+		});
+
+		it("maps +X world to the right and +Y world downward (Y-down)", () => {
+			const cam = mk();
+			const right = cam.worldToScreen(new Vector3d(10, 0, 100));
+			const down = cam.worldToScreen(new Vector3d(0, 10, 100));
+			expect(right.x).toBeGreaterThan(W / 2); // +X → right
+			expect(right.y).toBeCloseTo(H / 2, 0);
+			expect(down.y).toBeGreaterThan(H / 2); // +Y → down
+			expect(down.x).toBeCloseTo(W / 2, 0);
+		});
+
+		it("keeps an on-axis point centred regardless of depth (perspective)", () => {
+			const cam = mk();
+			expect(cam.worldToScreen(new Vector3d(0, 0, 50)).x).toBeCloseTo(W / 2, 0);
+			expect(cam.worldToScreen(new Vector3d(0, 0, 900)).x).toBeCloseTo(
+				W / 2,
+				0,
+			);
+		});
+
+		it("foreshortens: an off-axis point's screen offset shrinks with depth", () => {
+			const cam = mk();
+			const close = cam.worldToScreen(new Vector3d(10, 0, 50));
+			const far = cam.worldToScreen(new Vector3d(10, 0, 500));
+			expect(close.x - W / 2).toBeGreaterThan(far.x - W / 2);
+			expect(far.x).toBeGreaterThan(W / 2); // still right of centre
+		});
+
+		it("writes into the provided out vector and returns it", () => {
+			const out = new Vector2d();
+			const r = mk().worldToScreen(new Vector3d(0, 0, 100), out);
+			expect(r).toBe(out);
+			expect(out.x).toBeCloseTo(W / 2, 0);
+		});
+
+		it("reacts to camera yaw — a forward point shifts off-centre when the camera turns", () => {
+			const cam = mk();
+			const centred = cam.worldToScreen(new Vector3d(0, 0, 100)).x;
+			cam.yaw = 0.3; // turn right → the point is now to the left of view
+			const turned = cam.worldToScreen(new Vector3d(0, 0, 100)).x;
+			expect(Math.abs(turned - centred)).toBeGreaterThan(1);
+		});
+
+		it("H3: returns null for a point behind the camera (clip w ≤ 0)", () => {
+			const cam = mk(); // at origin, looking down +Z
+			// in front → a real pixel
+			expect(cam.worldToScreen(new Vector3d(0, 0, 100))).not.toBeNull();
+			// behind the camera (−Z) → null, not a mirrored garbage pixel
+			expect(cam.worldToScreen(new Vector3d(0, 0, -100))).toBeNull();
+		});
+
+		it("H3: does NOT write into `out` when the point is behind the camera", () => {
+			const cam = mk();
+			const out = new Vector2d();
+			out.set(-12345, -67890); // sentinel
+			const r = cam.worldToScreen(new Vector3d(0, 0, -50), out);
+			expect(r).toBeNull();
+			expect(out.x).toBe(-12345); // untouched
+			expect(out.y).toBe(-67890);
 		});
 	});
 });

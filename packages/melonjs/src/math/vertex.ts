@@ -137,6 +137,126 @@ export function projectVertices(
 	}
 }
 
+/**
+ * Extend an axis-aligned bounding box by a set of 3D vertices transformed
+ * through a 4x4 matrix (translation included). `min` / `max` are updated in
+ * place, so the function can be called repeatedly to accumulate the bounds of
+ * many transformed vertex sets (e.g. every node of a scene graph). Seed `min`
+ * with `+Infinity` and `max` with `-Infinity` before the first call.
+ * @param src - source vertex positions (x,y,z triplets)
+ * @param count - number of vertices to read from `src`
+ * @param matrix - 4x4 matrix values (column-major, 16 elements)
+ * @param min - `[x,y,z]` lower corner, extended in place
+ * @param max - `[x,y,z]` upper corner, extended in place
+ */
+export function transformedBounds(
+	src: Float32Array,
+	count: number,
+	matrix: ArrayLike<number>,
+	min: number[],
+	max: number[],
+) {
+	const m0 = matrix[0];
+	const m1 = matrix[1];
+	const m2 = matrix[2];
+	const m4 = matrix[4];
+	const m5 = matrix[5];
+	const m6 = matrix[6];
+	const m8 = matrix[8];
+	const m9 = matrix[9];
+	const m10 = matrix[10];
+	const m12 = matrix[12];
+	const m13 = matrix[13];
+	const m14 = matrix[14];
+
+	for (let i = 0; i < count; i++) {
+		const i3 = i * 3;
+		const vx = src[i3];
+		const vy = src[i3 + 1];
+		const vz = src[i3 + 2];
+
+		const wx = m0 * vx + m4 * vy + m8 * vz + m12;
+		const wy = m1 * vx + m5 * vy + m9 * vz + m13;
+		const wz = m2 * vx + m6 * vy + m10 * vz + m14;
+
+		if (wx < min[0]) {
+			min[0] = wx;
+		}
+		if (wy < min[1]) {
+			min[1] = wy;
+		}
+		if (wz < min[2]) {
+			min[2] = wz;
+		}
+		if (wx > max[0]) {
+			max[0] = wx;
+		}
+		if (wy > max[1]) {
+			max[1] = wy;
+		}
+		if (wz > max[2]) {
+			max[2] = wz;
+		}
+	}
+}
+
+/**
+ * Compute the bounding-sphere radius of a set of 3D vertices around the local
+ * origin — the distance to the farthest vertex. When a matrix is supplied,
+ * each vertex is taken through its rotation/scale columns (the translation is
+ * ignored, so the radius stays centered on the transform's own origin). Handy
+ * for frustum / culling bounds on a transformed mesh.
+ * @param src - source vertex positions (x,y,z triplets)
+ * @param count - number of vertices to read from `src`
+ * @param [matrix] - optional 4x4 matrix (column-major); only the upper 3x3 rotation/scale is applied
+ * @returns the radius of the smallest origin-centered sphere enclosing the vertices
+ */
+export function boundingRadius(
+	src: Float32Array,
+	count: number,
+	matrix?: ArrayLike<number>,
+): number {
+	let maxLenSq = 0;
+	if (matrix === undefined) {
+		for (let i = 0; i < count; i++) {
+			const i3 = i * 3;
+			const vx = src[i3];
+			const vy = src[i3 + 1];
+			const vz = src[i3 + 2];
+			const lenSq = vx * vx + vy * vy + vz * vz;
+			if (lenSq > maxLenSq) {
+				maxLenSq = lenSq;
+			}
+		}
+		return Math.sqrt(maxLenSq);
+	}
+
+	const m0 = matrix[0];
+	const m1 = matrix[1];
+	const m2 = matrix[2];
+	const m4 = matrix[4];
+	const m5 = matrix[5];
+	const m6 = matrix[6];
+	const m8 = matrix[8];
+	const m9 = matrix[9];
+	const m10 = matrix[10];
+
+	for (let i = 0; i < count; i++) {
+		const i3 = i * 3;
+		const vx = src[i3];
+		const vy = src[i3 + 1];
+		const vz = src[i3 + 2];
+		const ox = m0 * vx + m4 * vy + m8 * vz;
+		const oy = m1 * vx + m5 * vy + m9 * vz;
+		const oz = m2 * vx + m6 * vy + m10 * vz;
+		const lenSq = ox * ox + oy * oy + oz * oz;
+		if (lenSq > maxLenSq) {
+			maxLenSq = lenSq;
+		}
+	}
+	return Math.sqrt(maxLenSq);
+}
+
 const _defaultNormal: XYPoint = { x: 0, y: 0 };
 
 /**

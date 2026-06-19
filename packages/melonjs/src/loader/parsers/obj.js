@@ -48,7 +48,7 @@ const OBJ_INDEX_OFFSET = 1;
  *   `uvs` (Float32Array), `indices` (Uint16Array), `vertexCount` (number),
  *   `mtllib` (string|null), and `groups`
  *   (Array<{materialName: string|null, start: number, count: number}>).
- *   `groups` follows the Three.js / glTF convention — each entry is a
+ *   `groups` follows the glTF convention — each entry is a
  *   contiguous slice of the shared `indices` buffer that draws as one
  *   submesh against a single material. Single-material models still
  *   produce a `groups` array of length 1, so consumers don't need a
@@ -118,7 +118,7 @@ function parseOBJ(text) {
 	// any `usemtl` produce a single group spanning all indices with
 	// `materialName: null` — consumers can treat that uniformly with
 	// the multi-material path. Field name `materialName` matches the
-	// Three.js / glTF convention for "name of the material this
+	// glTF convention for "name of the material this
 	// submesh wants to be drawn with"; renderers / mesh objects look
 	// it up in their own material table.
 	const groups = [];

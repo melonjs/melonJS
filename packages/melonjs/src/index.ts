@@ -112,6 +112,8 @@ export {
 	registerTiledObjectClass,
 	registerTiledObjectFactory,
 } from "./level/tiled/TMXObjectFactory.js";
+export { Light3d } from "./lighting/light3d.ts";
+export { LightingEnvironment } from "./lighting/lighting_environment.ts";
 
 export * as loader from "./loader/loader.js";
 export { Color } from "./math/color.ts";
@@ -135,6 +137,7 @@ export type {
 	RaycastHit3d,
 } from "./physics/adapter.ts";
 export { Bounds } from "./physics/bounds.ts";
+export { AABB3d } from "./physics/broadphase/aabb3d.ts";
 export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.ts";
 export { collision } from "./physics/collision.js";
 export * as plugin from "./plugin/plugin.ts";

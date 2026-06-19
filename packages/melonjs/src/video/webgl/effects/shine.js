@@ -3,7 +3,7 @@ import ShaderEffect from "../shadereffect.js";
 /**
  * A shader effect that sweeps a bright highlight band across the sprite —
  * the classic "shine" pass commonly used for coins, gems, polished metal,
- * and hover-highlighted UI elements. Similar to pixi-filters' ShineFilter.
+ * and hover-highlighted UI elements.
  *
  * Set `bands` > 1 to tile the sweep into N parallel glints (useful for the
  * "etched grooves" look of a coin's rim). An optional subtle brightness
