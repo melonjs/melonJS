@@ -576,6 +576,18 @@ export default class Camera3d extends Camera2d {
 		// `pos.z`) here, which silently mis-culled children of any
 		// container whose own depth was non-zero.
 		const bounds = obj.getBounds();
+		// A grouping container with no intrinsic size has infinite / cleared
+		// bounds (left=+∞, right=-∞). Its width/height are non-finite, so the
+		// radius below would be NaN and `intersectsSphere` would silently report
+		// it (and its whole subtree) invisible — skipping both its draw AND its
+		// update. Such a container can't be frustum-culled meaningfully, so treat
+		// it as always visible and let its children be culled individually
+		// (matching Camera2d, which special-cases the same sentinel). This is
+		// what keeps e.g. a GLTFModel rig (meshes nested under a sizeless
+		// container) rendering under a 3D camera.
+		if (!bounds.isFinite()) {
+			return true;
+		}
 		// Half-diagonal — the conservative bounding-sphere radius for
 		// a rectangular bounds rect. `max(w, h) * 0.5` is the
 		// inradius and can mark a renderable invisible while one of

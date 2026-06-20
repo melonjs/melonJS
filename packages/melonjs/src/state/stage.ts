@@ -1,8 +1,9 @@
 import type Application from "./../application/application.ts";
 import Camera2d from "./../camera/camera2d.ts";
+import type Light2d from "./../lighting/light2d.ts";
+import type { Light3d } from "./../lighting/light3d.ts";
 import { Color } from "./../math/color.ts";
 import type World from "./../physics/world.js";
-import type Light2d from "./../renderable/light2d.js";
 import { emit, STAGE_RESET } from "../system/event.ts";
 import type Renderer from "./../video/renderer.js";
 
@@ -81,6 +82,14 @@ export default class Stage {
 	_activeLights: Set<Light2d>;
 
 	/**
+	 * Internal set of active 3D lights, auto-populated by `Light3d`'s
+	 * `onActivateEvent` / `onDeactivateEvent` hooks. Read by the lit mesh
+	 * batcher each frame to shade `lit` meshes under a `Camera3d`.
+	 * @ignore
+	 */
+	_activeLights3d: Set<Light3d>;
+
+	/**
 	 * an ambient light that will be added to the stage rendering
 	 * @default "#000000"
 	 * @see Light2d
@@ -113,6 +122,7 @@ export default class Stage {
 		this.cameras = new Map();
 		this.lights = new Map();
 		this._activeLights = new Set();
+		this._activeLights3d = new Set();
 		this.ambientLight = new Color(0, 0, 0, 0);
 		this.ambientLightingColor = new Color(0, 0, 0, 1);
 		this.settings = Object.assign({}, default_settings, settings || {});
@@ -133,6 +143,23 @@ export default class Stage {
 	 */
 	_unregisterLight(light: Light2d): void {
 		this._activeLights.delete(light);
+	}
+
+	/**
+	 * Called by `Light3d.onActivateEvent` to register a 3D light with the stage.
+	 * Read by the lit mesh batcher. Users normally don't call this.
+	 * @ignore
+	 */
+	_registerLight3d(light: Light3d): void {
+		this._activeLights3d.add(light);
+	}
+
+	/**
+	 * Called by `Light3d.onDeactivateEvent` to deregister a 3D light.
+	 * @ignore
+	 */
+	_unregisterLight3d(light: Light3d): void {
+		this._activeLights3d.delete(light);
 	}
 
 	/**
@@ -369,6 +396,7 @@ export default class Stage {
 		});
 		this.lights.clear();
 		this._activeLights.clear();
+		this._activeLights3d.clear();
 		// notify the object
 		this.onDestroyEvent(app);
 	}

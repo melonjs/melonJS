@@ -470,4 +470,282 @@ describe("Sprite", () => {
 			expect(s.normalMap).toBeNull();
 		});
 	});
+
+	describe("animation API (options + speed)", () => {
+		// fresh 4-frame sprite (64×64 image / 32px frames = indices 0..3),
+		// isolated from the shared `sprite` above
+		const makeSprite = () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 32,
+				frameheight: 32,
+				image: video.createCanvas(64, 64),
+			});
+			s.addAnimation("a", [0, 1, 2, 3], 100); // 4 frames, 100ms each
+			s.addAnimation("b", [0, 1], 100);
+			return s;
+		};
+
+		// ── legacy forms must keep working (non-breaking) ──────────────────
+
+		it("legacy: loops by default", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.update(400); // one full cycle → wraps to frame 0
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+			expect(s.isCurrentAnimation("a")).toBe(true);
+		});
+
+		it("legacy: a string 2nd arg chains to the next animation", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", "b");
+			s.update(400);
+			expect(s.isCurrentAnimation("b")).toBe(true);
+		});
+
+		it("legacy: a function returning false holds the last frame (called once)", () => {
+			const s = makeSprite();
+			let calls = 0;
+			s.setCurrentAnimation("a", () => {
+				calls++;
+				return false;
+			});
+			s.update(400);
+			expect(s.getCurrentAnimationFrame()).toBe(3); // held at last frame
+			expect(calls).toBe(1);
+		});
+
+		it("legacy: a function returning truthy keeps looping (called each cycle)", () => {
+			const s = makeSprite();
+			let calls = 0;
+			s.setCurrentAnimation("a", () => {
+				calls++;
+				return true;
+			});
+			s.update(400);
+			s.update(400);
+			expect(calls).toBe(2);
+			expect(s.isCurrentAnimation("a")).toBe(true);
+		});
+
+		// ── new options-object form ────────────────────────────────────────
+
+		it("options loop:false plays once, holds the last frame, fires onComplete once", () => {
+			const s = makeSprite();
+			let done = 0;
+			s.setCurrentAnimation("a", {
+				loop: false,
+				onComplete: () => {
+					done++;
+				},
+			});
+			s.update(400); // completes
+			expect(s.getCurrentAnimationFrame()).toBe(3);
+			expect(done).toBe(1);
+			// must NOT advance or re-fire afterwards
+			s.update(400);
+			s.update(400);
+			expect(done).toBe(1);
+			expect(s.getCurrentAnimationFrame()).toBe(3);
+		});
+
+		it("options onComplete (looping) fires every cycle", () => {
+			const s = makeSprite();
+			let n = 0;
+			s.setCurrentAnimation("a", {
+				onComplete: () => {
+					n++;
+				},
+			});
+			s.update(400);
+			s.update(400);
+			expect(n).toBe(2);
+			expect(s.isCurrentAnimation("a")).toBe(true);
+		});
+
+		it("options next chains, firing onComplete first", () => {
+			const s = makeSprite();
+			const order = [];
+			s.setCurrentAnimation("a", {
+				next: "b",
+				onComplete: () => {
+					return order.push("done");
+				},
+			});
+			s.update(400);
+			expect(s.isCurrentAnimation("b")).toBe(true);
+			expect(order).toEqual(["done"]);
+		});
+
+		it("options speed:2 advances twice as fast", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", { speed: 2 });
+			s.update(50); // 50 × 2 = 100 effective → one frame
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("options speed:0.5 advances half as fast", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", { speed: 0.5 });
+			s.update(100); // 100 × 0.5 = 50 < 100 → no advance
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+			s.update(100); // cumulative 100 → advance one frame
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("getAnimationNames returns every defined animation", () => {
+			// the Sprite constructor auto-defines a "default" animation
+			expect(makeSprite().getAnimationNames().sort()).toEqual([
+				"a",
+				"b",
+				"default",
+			]);
+		});
+
+		// ── adversarial ────────────────────────────────────────────────────
+
+		it("ADVERSARIAL: a play-once animation un-sticks when another is selected", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", { loop: false });
+			s.update(400); // done + held
+			s.setCurrentAnimation("b"); // switch
+			expect(s._animDone).toBe(false);
+			s.update(100);
+			expect(s.isCurrentAnimation("b")).toBe(true);
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("ADVERSARIAL: speed resets to 1 when switching without a speed option", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", { speed: 4 });
+			s.setCurrentAnimation("b"); // no speed → back to 1×
+			s.update(50); // 50 < 100 at 1× → no advance
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+		});
+
+		it("ADVERSARIAL: speed:0 freezes the animation", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", { speed: 0 });
+			s.update(1000);
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+		});
+
+		it("ADVERSARIAL: options onComplete return value is ignored (only the legacy fn holds)", () => {
+			const s = makeSprite();
+			// returning false from onComplete must NOT hold — only the legacy
+			// bare-function form has that contract
+			s.setCurrentAnimation("a", {
+				onComplete: () => {
+					return false;
+				},
+			});
+			s.update(400);
+			expect(s.isCurrentAnimation("a")).toBe(true); // still looping
+			expect(s.getCurrentAnimationFrame()).toBe(0); // wrapped, not held
+		});
+
+		it("ADVERSARIAL: animationpause halts the options path too", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a", { loop: true });
+			s.animationpause = true;
+			s.update(400);
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+		});
+
+		it("ADVERSARIAL: re-selecting the SAME animation is a no-op (no reset mid-play)", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.update(100); // idx → 1
+			s.setCurrentAnimation("a"); // same anim → must not reset to frame 0
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		// ── play() / pause() / stop() shorthands (2D ↔ 3D parity) ──────────
+
+		it("play(name) switches to and starts the animation", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.play("b");
+			expect(s.isCurrentAnimation("b")).toBe(true);
+			expect(s.animationpause).toBe(false);
+		});
+
+		it("play(name, options) forwards options (loop:false holds last frame)", () => {
+			const s = makeSprite();
+			let done = 0;
+			s.play("a", {
+				loop: false,
+				onComplete: () => {
+					return done++;
+				},
+			});
+			s.update(400); // one cycle
+			expect(s.getCurrentAnimationFrame()).toBe(3); // held
+			expect(done).toBe(1);
+			s.update(400); // _animDone → frozen
+			expect(s.getCurrentAnimationFrame()).toBe(3);
+		});
+
+		it("play() with no argument resumes after pause()", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.pause();
+			expect(s.animationpause).toBe(true);
+			s.update(100); // paused → no advance
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+			s.play();
+			expect(s.animationpause).toBe(false);
+			s.update(100);
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("pause() returns this and freezes the current frame", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.update(100); // idx → 1
+			expect(s.pause()).toBe(s); // chainable
+			s.update(1000); // frozen
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("stop() resets to the first frame and pauses", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.update(150); // idx → 1
+			expect(s.stop()).toBe(s); // chainable
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+			expect(s.animationpause).toBe(true);
+			s.update(1000); // stays put
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+		});
+
+		it("ADVERSARIAL: stop() then play() restarts from the first frame", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.update(250); // idx → 2
+			s.stop(); // → frame 0, paused
+			s.play(); // resume
+			s.update(100); // advance one frame from 0
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("ADVERSARIAL: stop() clears a held play-once so it can advance again", () => {
+			const s = makeSprite();
+			s.play("a", { loop: false });
+			s.update(400); // held at last frame, _animDone
+			s.stop(); // resets frame + clears _animDone
+			s.play("a"); // loop again
+			s.update(100);
+			expect(s.getCurrentAnimationFrame()).toBe(1); // advancing again
+		});
+
+		it("ADVERSARIAL: play(name) un-pauses in one call", () => {
+			const s = makeSprite();
+			s.setCurrentAnimation("a");
+			s.pause();
+			s.play("b"); // must both switch AND resume
+			expect(s.isCurrentAnimation("b")).toBe(true);
+			s.update(100);
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+	});
 });

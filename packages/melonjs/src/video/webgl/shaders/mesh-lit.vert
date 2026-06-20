@@ -1,4 +1,4 @@
-// Lit mesh vertex shader (Camera3d + LightingEnvironment). Same as mesh.vert
+// Lit mesh vertex shader (Camera3d + Light3d). Same as mesh.vert
 // plus a world-space normal carried to the fragment shader for diffuse shading.
 attribute vec3 aVertex;
 attribute vec2 aRegion;

@@ -11,9 +11,11 @@ import { fetchData } from "./fetchdata.js";
  * texture, ready to instantiate as melonJS {@link Mesh} renderables.
  *
  * Tier 1 scope: static node graph + mesh primitives (POSITION / TEXCOORD_0
- * / indices) + pbrMetallicRoughness.baseColorTexture (and baseColorFactor).
- * Out of scope: skinning, animations, morph targets, full PBR maps,
- * KHR extensions, Draco compression.
+ * / indices) + pbrMetallicRoughness.baseColorTexture (and baseColorFactor) +
+ * node TRS animation (translation / rotation / scale channels, the rigid
+ * hierarchical animation used by e.g. Kenney's blocky characters).
+ * Out of scope: skinning (vertex skinning / JOINTS_0 / WEIGHTS_0), morph
+ * targets, full PBR maps, KHR extensions, Draco compression.
  * @ignore
  */
 
@@ -77,28 +79,68 @@ export function parseGLB(arrayBuffer) {
 }
 
 /**
- * Resolve every glTF buffer to a Uint8Array (GLB bin chunk or data: URI).
+ * Resolve a glTF relative resource URI (external `.bin` / image) against the
+ * asset's own URL, the same way a browser resolves a relative `<img src>`.
+ * Returns an absolute URL string, or `null` when the asset URL is unknown
+ * (e.g. a GLB parsed straight from an ArrayBuffer in a test) — the caller then
+ * fails with a clear "external resource" message instead of fetching garbage.
  * @ignore
  */
-function resolveBuffers(json, bin) {
-	return (json.buffers || []).map((buffer) => {
-		if (buffer.uri === undefined) {
-			return bin;
-		}
-		if (buffer.uri.startsWith("data:")) {
-			const base64 = buffer.uri.slice(buffer.uri.indexOf(",") + 1);
-			const binary = atob(base64);
-			const out = new Uint8Array(binary.length);
-			for (let i = 0; i < binary.length; i++) {
-				out[i] = binary.charCodeAt(i);
+function resolveURI(uri, baseURI) {
+	if (baseURI === undefined || baseURI === null) {
+		return null;
+	}
+	// `new URL` handles ./, ../, %20-encoding and absolute base normalization.
+	// Resolve the (possibly relative) asset URL against the document first so a
+	// page-relative `data.src` like "assets/x.gltf" becomes absolute.
+	const absoluteBase = new URL(
+		baseURI,
+		typeof document !== "undefined" ? document.baseURI : undefined,
+	);
+	return new URL(uri, absoluteBase).href;
+}
+
+/**
+ * Decode a single base64 `data:` URI payload into a Uint8Array.
+ * @ignore
+ */
+function decodeDataURI(uri) {
+	const base64 = uri.slice(uri.indexOf(",") + 1);
+	const binary = atob(base64);
+	const out = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) {
+		out[i] = binary.charCodeAt(i);
+	}
+	return out;
+}
+
+/**
+ * Resolve every glTF buffer to a Uint8Array. Handles the GLB binary chunk
+ * (no uri), embedded `data:` URIs, and external `.bin` files fetched relative
+ * to the asset URL (`baseURI`). Async because external buffers are fetched.
+ * @ignore
+ */
+function resolveBuffers(json, bin, baseURI, settings) {
+	return Promise.all(
+		(json.buffers || []).map((buffer) => {
+			if (buffer.uri === undefined) {
+				return bin;
 			}
-			return out;
-		}
-		// external .bin not supported in Tier 1
-		throw new Error(
-			`glTF: external buffer uri not supported ("${buffer.uri}")`,
-		);
-	});
+			if (buffer.uri.startsWith("data:")) {
+				return decodeDataURI(buffer.uri);
+			}
+			// external .bin — fetch it relative to the asset URL
+			const url = resolveURI(buffer.uri, baseURI);
+			if (url === null) {
+				throw new Error(
+					`glTF: external buffer "${buffer.uri}" cannot be resolved without the asset URL`,
+				);
+			}
+			return fetchData(url, "arrayBuffer", settings).then((ab) => {
+				return new Uint8Array(ab);
+			});
+		}),
+	);
 }
 
 /**
@@ -175,14 +217,21 @@ function readVertexColors(json, buffers, accessorIndex) {
 
 const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 
-/** Compose a node's local matrix from its `matrix` or TRS fields. @ignore */
-export function nodeLocalMatrix(node) {
-	if (node.matrix) {
-		return node.matrix.slice();
-	}
-	const [tx, ty, tz] = node.translation || [0, 0, 0];
-	const [qx, qy, qz, qw] = node.rotation || [0, 0, 0, 1];
-	const [sx, sy, sz] = node.scale || [1, 1, 1];
+/**
+ * Compose a column-major 4x4 local matrix from translation / rotation
+ * (quaternion) / scale arrays — the glTF TRS convention — writing into `out`.
+ * In-place so the per-frame animation pose path allocates nothing.
+ * @param {number[]} out - 16-element destination (returned)
+ * @param {number[]} translation - [tx, ty, tz]
+ * @param {number[]} rotation - quaternion [qx, qy, qz, qw]
+ * @param {number[]} scale - [sx, sy, sz]
+ * @returns {number[]} `out`
+ * @ignore
+ */
+export function composeTRSInto(out, translation, rotation, scale) {
+	const [tx, ty, tz] = translation;
+	const [qx, qy, qz, qw] = rotation;
+	const [sx, sy, sz] = scale;
 	const x2 = qx + qx;
 	const y2 = qy + qy;
 	const z2 = qz + qz;
@@ -195,24 +244,47 @@ export function nodeLocalMatrix(node) {
 	const wx = qw * x2;
 	const wy = qw * y2;
 	const wz = qw * z2;
-	return [
-		(1 - (yy + zz)) * sx,
-		(xy + wz) * sx,
-		(xz - wy) * sx,
-		0,
-		(xy - wz) * sy,
-		(1 - (xx + zz)) * sy,
-		(yz + wx) * sy,
-		0,
-		(xz + wy) * sz,
-		(yz - wx) * sz,
-		(1 - (xx + yy)) * sz,
-		0,
-		tx,
-		ty,
-		tz,
-		1,
-	];
+	out[0] = (1 - (yy + zz)) * sx;
+	out[1] = (xy + wz) * sx;
+	out[2] = (xz - wy) * sx;
+	out[3] = 0;
+	out[4] = (xy - wz) * sy;
+	out[5] = (1 - (xx + zz)) * sy;
+	out[6] = (yz + wx) * sy;
+	out[7] = 0;
+	out[8] = (xz + wy) * sz;
+	out[9] = (yz - wx) * sz;
+	out[10] = (1 - (xx + yy)) * sz;
+	out[11] = 0;
+	out[12] = tx;
+	out[13] = ty;
+	out[14] = tz;
+	out[15] = 1;
+	return out;
+}
+
+/**
+ * Allocating form of {@link composeTRSInto} — returns a fresh 16-element array.
+ * @param {number[]} translation - [tx, ty, tz]
+ * @param {number[]} rotation - quaternion [qx, qy, qz, qw]
+ * @param {number[]} scale - [sx, sy, sz]
+ * @returns {number[]} 16-element column-major matrix
+ * @ignore
+ */
+export function composeTRS(translation, rotation, scale) {
+	return composeTRSInto(new Array(16), translation, rotation, scale);
+}
+
+/** Compose a node's local matrix from its `matrix` or TRS fields. @ignore */
+export function nodeLocalMatrix(node) {
+	if (node.matrix) {
+		return node.matrix.slice();
+	}
+	return composeTRS(
+		node.translation || [0, 0, 0],
+		node.rotation || [0, 0, 0, 1],
+		node.scale || [1, 1, 1],
+	);
 }
 
 /**
@@ -278,9 +350,13 @@ function normalize3(v) {
 	return len > 1e-8 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 1, 0];
 }
 
-/** Column-major 4x4 multiply: a * b. @ignore */
-export function multiplyMatrix(a, b) {
-	const out = new Array(16);
+/**
+ * Column-major 4x4 multiply `a * b`, writing into `out`. `out` must NOT alias
+ * `a` or `b` (results are written as they're computed). In-place so the
+ * per-frame pose path allocates nothing.
+ * @ignore
+ */
+export function multiplyMatrixInto(out, a, b) {
 	for (let col = 0; col < 4; col++) {
 		for (let row = 0; row < 4; row++) {
 			out[col * 4 + row] =
@@ -293,13 +369,19 @@ export function multiplyMatrix(a, b) {
 	return out;
 }
 
+/** Allocating form of {@link multiplyMatrixInto}: `a * b` → fresh array. @ignore */
+export function multiplyMatrix(a, b) {
+	return multiplyMatrixInto(new Array(16), a, b);
+}
+
 /**
- * Decode a glTF image (embedded bufferView or data URI) into an
- * HTMLImageElement.
+ * Decode a glTF image into an HTMLImageElement. Handles the three sources:
+ * an embedded `bufferView`, an inline `data:` URI, and an external image file
+ * referenced by relative `uri` (resolved against the asset URL `baseURI`).
  * @returns {Promise<HTMLImageElement>}
  * @ignore
  */
-function decodeImage(json, buffers, imageIndex) {
+function decodeImage(json, buffers, imageIndex, baseURI, settings) {
 	const image = json.images[imageIndex];
 	let blob;
 	if (image.bufferView !== undefined) {
@@ -312,6 +394,21 @@ function decodeImage(json, buffers, imageIndex) {
 		blob = new Blob([slice], { type: image.mimeType || "image/png" });
 	} else if (image.uri && image.uri.startsWith("data:")) {
 		return loadImageFromUrl(image.uri);
+	} else if (image.uri) {
+		// external image file — resolve relative to the asset URL and let the
+		// browser fetch it directly (no object-URL to revoke). Forward the
+		// loader's crossOrigin so a cross-origin texture isn't tainted (which
+		// would throw on the WebGL `texImage2D` upload); same-origin is
+		// unaffected.
+		const url = resolveURI(image.uri, baseURI);
+		if (url === null) {
+			return Promise.reject(
+				new Error(
+					`glTF: external image "${image.uri}" cannot be resolved without the asset URL`,
+				),
+			);
+		}
+		return loadImageFromUrl(url, false, settings?.crossOrigin);
 	} else {
 		return Promise.reject(new Error("glTF: unsupported image source"));
 	}
@@ -322,9 +419,14 @@ function decodeImage(json, buffers, imageIndex) {
 }
 
 /** @ignore */
-function loadImageFromUrl(url, revoke = false) {
+function loadImageFromUrl(url, revoke = false, crossOrigin) {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
+		// must be set before `src` to take effect; only for real (non-blob,
+		// non-data) URLs that may be cross-origin
+		if (typeof crossOrigin === "string") {
+			img.crossOrigin = crossOrigin;
+		}
 		img.onload = () => {
 			if (revoke) {
 				URL.revokeObjectURL(url);
@@ -343,18 +445,23 @@ function loadImageFromUrl(url, revoke = false) {
 
 /**
  * Parse a glTF/GLB ArrayBuffer into a flat, instantiable scene descriptor.
- * @param {ArrayBuffer} arrayBuffer
- * @returns {Promise<object>} `{ nodes, cameras, bounds }`
+ * @param {ArrayBuffer} arrayBuffer - the .glb / .gltf bytes
+ * @param {string} [baseURI] - the asset's own URL, used to resolve external
+ * `.bin` buffers and image files referenced by relative `uri`. Omit for a fully
+ * self-contained GLB (embedded buffers + data-URI / bufferView images).
+ * @param {object} [settings] - loader settings forwarded to `fetchData` for
+ * external resources (crossOrigin / withCredentials / nocache).
+ * @returns {Promise<object>} `{ nodes, cameras, lights, bounds, graph, animations }`
  * @ignore
  */
-export async function parseGLTF(arrayBuffer) {
+export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	const { json, bin } = parseGLB(arrayBuffer);
-	const buffers = resolveBuffers(json, bin);
+	const buffers = await resolveBuffers(json, bin, baseURI, settings);
 
 	// decode every image once, keyed by image index
 	const images = await Promise.all(
 		(json.images || []).map((_, i) => {
-			return decodeImage(json, buffers, i);
+			return decodeImage(json, buffers, i, baseURI, settings);
 		}),
 	);
 
@@ -363,13 +470,13 @@ export async function parseGLTF(arrayBuffer) {
 		if (materialIndex === undefined) {
 			return null;
 		}
-		const mat = json.materials[materialIndex];
+		const mat = json.materials?.[materialIndex];
 		const tex = mat?.pbrMetallicRoughness?.baseColorTexture;
 		if (!tex) {
 			return null;
 		}
-		const imageIndex = json.textures[tex.index].source;
-		return images[imageIndex] || null;
+		const imageIndex = json.textures?.[tex.index]?.source;
+		return imageIndex !== undefined ? images[imageIndex] || null : null;
 	};
 
 	// resolve material index -> baseColorFactor [r,g,b,a] in 0..1 (defaults to
@@ -381,10 +488,45 @@ export async function parseGLTF(arrayBuffer) {
 			return [1, 1, 1, 1];
 		}
 		return (
-			json.materials[materialIndex]?.pbrMetallicRoughness?.baseColorFactor ?? [
-				1, 1, 1, 1,
-			]
+			json.materials?.[materialIndex]?.pbrMetallicRoughness
+				?.baseColorFactor ?? [1, 1, 1, 1]
 		);
+	};
+
+	// resolve material index -> melonJS texture wrap mode, honoring the glTF
+	// sampler's `wrapS` / `wrapT`. The glTF default sampler wrap is REPEAT
+	// (10497) on both axes — many exporters author UVs outside `[0, 1]` that
+	// rely on it, so a missing sampler / texture must default to "repeat", not
+	// clamp. CLAMP_TO_EDGE is 33071; MIRRORED_REPEAT (33648) has no melonJS
+	// equivalent and maps to plain repeat.
+	const CLAMP = 33071;
+	const materialTextureRepeat = (materialIndex) => {
+		let wrapS = 10497;
+		let wrapT = 10497;
+		const tex =
+			materialIndex !== undefined
+				? json.materials?.[materialIndex]?.pbrMetallicRoughness
+						?.baseColorTexture
+				: undefined;
+		if (tex) {
+			const samplerIndex = json.textures?.[tex.index]?.sampler;
+			const sampler =
+				samplerIndex !== undefined ? json.samplers?.[samplerIndex] : undefined;
+			wrapS = sampler?.wrapS ?? 10497;
+			wrapT = sampler?.wrapT ?? 10497;
+		}
+		const repeatS = wrapS !== CLAMP;
+		const repeatT = wrapT !== CLAMP;
+		if (repeatS && repeatT) {
+			return "repeat";
+		}
+		if (repeatS) {
+			return "repeat-x";
+		}
+		if (repeatT) {
+			return "repeat-y";
+		}
+		return "no-repeat";
 	};
 
 	// walk the active scene's node graph, accumulating world matrices.
@@ -400,11 +542,78 @@ export async function parseGLTF(arrayBuffer) {
 	const sceneIndex = json.scene ?? 0;
 	const roots = json.scenes?.[sceneIndex]?.nodes ?? [];
 
+	// Read one mesh primitive's geometry (positions / uvs / indices / normals /
+	// colors) + resolved material color. Shared by the flat static `meshNodes`
+	// list and the hierarchical `graph` (animated path) so geometry is read
+	// exactly once per primitive and both views share the same typed arrays.
+	const readPrimitiveGeometry = (prim) => {
+		const vertices = readAccessor(json, buffers, prim.attributes.POSITION);
+		const uvs =
+			prim.attributes.TEXCOORD_0 !== undefined
+				? readAccessor(json, buffers, prim.attributes.TEXCOORD_0)
+				: new Float32Array((vertices.length / 3) * 2);
+		const vertexCount = vertices.length / 3;
+		let indices;
+		if (prim.indices !== undefined) {
+			const raw = readAccessor(json, buffers, prim.indices);
+			indices = raw instanceof Uint32Array ? raw : Uint16Array.from(raw);
+		} else {
+			// non-indexed primitive (drawArrays-style): synthesize a
+			// sequential index buffer so the geometry is still drawable.
+			const Indexed = vertexCount > 65535 ? Uint32Array : Uint16Array;
+			indices = new Indexed(vertexCount);
+			for (let i = 0; i < vertexCount; i++) {
+				indices[i] = i;
+			}
+		}
+		// per-vertex normals for lit shading — read NORMAL when present,
+		// otherwise synthesize them from the geometry so a mesh without
+		// authored normals can still be lit.
+		const normals =
+			prim.attributes.NORMAL !== undefined
+				? readAccessor(json, buffers, prim.attributes.NORMAL)
+				: computeFlatNormals(vertices, indices, vertexCount);
+		// optional per-vertex colors (COLOR_0) → packed ARGB Uint32, for
+		// untextured vertex-colored meshes (MagicaVoxel, vertex paint).
+		const colors =
+			prim.attributes.COLOR_0 !== undefined
+				? readVertexColors(json, buffers, prim.attributes.COLOR_0)
+				: undefined;
+		return {
+			vertices,
+			normals,
+			uvs,
+			indices,
+			vertexCount,
+			image: materialImage(prim.material),
+			// texture wrap mode from the glTF sampler (default REPEAT) — see
+			// materialTextureRepeat; carried so the Mesh samples tiling UVs
+			// correctly instead of clamping to flat edge texels
+			textureRepeat: materialTextureRepeat(prim.material),
+			// baseColorFactor [r,g,b,a] — applied as the mesh tint so a
+			// solid-colored (untextured) material renders its color
+			baseColorFactor: materialBaseColor(prim.material),
+			// per-vertex colors (COLOR_0), packed ARGB, or undefined
+			colors,
+			// honor the glTF material's double-sided flag — many props
+			// (coins, fences, foliage) are thin/flat double-sided
+			// geometry that a single-sided back-face cull would gut
+			doubleSided:
+				prim.material !== undefined &&
+				json.materials?.[prim.material]?.doubleSided === true,
+		};
+	};
+
 	// Guard against cyclic node graphs. Per the glTF spec the node hierarchy
 	// is a strict tree (each node has at most one parent), so a node visited
 	// twice means the file is malformed — skip it rather than recursing
 	// forever into a stack overflow.
 	const visited = new Set();
+
+	// the full node hierarchy (animated path): glTF node index → graph node
+	// carrying rest TRS, children, and any mesh primitives. Built alongside the
+	// flat `meshNodes` from the same single geometry read.
+	const graphNodes = {};
 
 	const visit = (nodeIndex, parentWorld) => {
 		if (visited.has(nodeIndex)) {
@@ -413,64 +622,30 @@ export async function parseGLTF(arrayBuffer) {
 		visited.add(nodeIndex);
 		const node = json.nodes[nodeIndex];
 		const world = multiplyMatrix(parentWorld, nodeLocalMatrix(node));
+		const nodeName = node.name || `node_${nodeIndex}`;
+		const primitives = [];
 		if (node.mesh !== undefined) {
-			const primitives = json.meshes[node.mesh].primitives;
-			for (const prim of primitives) {
-				const vertices = readAccessor(json, buffers, prim.attributes.POSITION);
-				const uvs =
-					prim.attributes.TEXCOORD_0 !== undefined
-						? readAccessor(json, buffers, prim.attributes.TEXCOORD_0)
-						: new Float32Array((vertices.length / 3) * 2);
-				const vertexCount = vertices.length / 3;
-				let indices;
-				if (prim.indices !== undefined) {
-					const raw = readAccessor(json, buffers, prim.indices);
-					indices = raw instanceof Uint32Array ? raw : Uint16Array.from(raw);
-				} else {
-					// non-indexed primitive (drawArrays-style): synthesize a
-					// sequential index buffer so the geometry is still drawable.
-					const Indexed = vertexCount > 65535 ? Uint32Array : Uint16Array;
-					indices = new Indexed(vertexCount);
-					for (let i = 0; i < vertexCount; i++) {
-						indices[i] = i;
-					}
-				}
-				// per-vertex normals for lit shading — read NORMAL when present,
-				// otherwise synthesize them from the geometry so a mesh without
-				// authored normals can still be lit.
-				const normals =
-					prim.attributes.NORMAL !== undefined
-						? readAccessor(json, buffers, prim.attributes.NORMAL)
-						: computeFlatNormals(vertices, indices, vertexCount);
-				// optional per-vertex colors (COLOR_0) → packed ARGB Uint32, for
-				// untextured vertex-colored meshes (MagicaVoxel, vertex paint).
-				const colors =
-					prim.attributes.COLOR_0 !== undefined
-						? readVertexColors(json, buffers, prim.attributes.COLOR_0)
-						: undefined;
-				meshNodes.push({
-					name: node.name || `node_${nodeIndex}`,
-					world,
-					vertices,
-					normals,
-					uvs,
-					indices,
-					vertexCount,
-					image: materialImage(prim.material),
-					// baseColorFactor [r,g,b,a] — applied as the mesh tint so a
-					// solid-colored (untextured) material renders its color
-					baseColorFactor: materialBaseColor(prim.material),
-					// per-vertex colors (COLOR_0), packed ARGB, or undefined
-					colors,
-					// honor the glTF material's double-sided flag — many props
-					// (coins, fences, foliage) are thin/flat double-sided
-					// geometry that a single-sided back-face cull would gut
-					doubleSided:
-						prim.material !== undefined &&
-						json.materials[prim.material]?.doubleSided === true,
-				});
+			for (const prim of json.meshes[node.mesh].primitives) {
+				const geo = readPrimitiveGeometry(prim);
+				primitives.push(geo);
+				// flat static entry — same shape (+ world + name) as before so the
+				// static path and bounds computation are unchanged
+				meshNodes.push({ name: nodeName, world, ...geo });
 			}
 		}
+		// graph node: rest TRS (glTF defaults when a field is absent), an explicit
+		// `matrix` if the node used one, children, and its mesh primitives. The
+		// animated path samples into a mutable copy of this TRS each frame.
+		graphNodes[nodeIndex] = {
+			index: nodeIndex,
+			name: nodeName,
+			translation: node.translation ? node.translation.slice() : [0, 0, 0],
+			rotation: node.rotation ? node.rotation.slice() : [0, 0, 0, 1],
+			scale: node.scale ? node.scale.slice() : [1, 1, 1],
+			matrix: node.matrix ? node.matrix.slice() : null,
+			children: (node.children || []).slice(),
+			primitives,
+		};
 		if (node.camera !== undefined) {
 			cameras.push({ ...json.cameras[node.camera], world });
 		}
@@ -516,7 +691,53 @@ export async function parseGLTF(arrayBuffer) {
 		max[0] = max[1] = max[2] = 0;
 	}
 
-	return { nodes: meshNodes, cameras, lights, bounds: { min, max } };
+	// node-TRS animation clips. Each channel binds a sampler (keyframe times +
+	// values) to a node's translation / rotation / scale. Other paths (weights /
+	// morph targets) are skipped — out of Tier-1 scope. Channels targeting a node
+	// outside the active scene are dropped. `duration` is the latest keyframe
+	// time across the clip's samplers (seconds).
+	const animations = (json.animations || []).map((anim, ai) => {
+		let duration = 0;
+		const channels = [];
+		for (const ch of anim.channels) {
+			const path = ch.target?.path;
+			const nodeIndex = ch.target?.node;
+			if (
+				nodeIndex === undefined ||
+				graphNodes[nodeIndex] === undefined ||
+				(path !== "translation" && path !== "rotation" && path !== "scale")
+			) {
+				continue;
+			}
+			const sampler = anim.samplers[ch.sampler];
+			const times = readAccessor(json, buffers, sampler.input);
+			const values = readAccessor(json, buffers, sampler.output);
+			if (times.length > 0) {
+				duration = Math.max(duration, times[times.length - 1]);
+			}
+			channels.push({
+				node: nodeIndex,
+				path,
+				times,
+				values,
+				// component count per keyframe value (rotation = quaternion VEC4)
+				stride: path === "rotation" ? 4 : 3,
+				interpolation: sampler.interpolation || "LINEAR",
+			});
+		}
+		return { name: anim.name || `anim_${ai}`, duration, channels };
+	});
+
+	return {
+		nodes: meshNodes,
+		cameras,
+		lights,
+		bounds: { min, max },
+		// hierarchical node graph + animation clips for the animated path; the
+		// static path ignores both. `graph.nodes` is keyed by glTF node index.
+		graph: { roots, nodes: graphNodes },
+		animations,
+	};
 }
 
 /**
@@ -534,7 +755,10 @@ export function preloadGLTF(data, onload, onerror, settings) {
 	}
 	fetchData(data.src, "arrayBuffer", settings)
 		.then((buffer) => {
-			return parseGLTF(buffer);
+			// pass the asset URL so external `.bin` / image `uri`s resolve
+			// relative to it (a GLB with an external texture, like Kenney's
+			// blocky characters, loads as-shipped without repackaging)
+			return parseGLTF(buffer, data.src, settings);
 		})
 		.then((scene) => {
 			gltfList[data.name] = scene;

@@ -1,5 +1,6 @@
-import { LightingEnvironment } from "../../../lighting/lighting_environment.ts";
+import state from "../../../state/state.ts";
 import { MAX_LIGHTS } from "../lighting/constants.ts";
+import { packMeshLights } from "../lighting/pack3d.ts";
 import litFragment from "./../shaders/mesh-lit.frag";
 import litVertex from "./../shaders/mesh-lit.vert";
 import MeshBatcher from "./mesh_batcher.js";
@@ -13,14 +14,14 @@ const litFragmentResolved = litFragment.replaceAll(
 	String(MAX_LIGHTS),
 );
 
-// ambient used when a lit mesh is drawn with no active lights — render it
-// fullbright (white ambient) rather than dark, so a `lit` mesh without a
-// populated LightingEnvironment still looks like the unlit path.
+// ambient used when a lit mesh is drawn with no active directional lights —
+// render it fullbright (white ambient) rather than dark, so a `lit` mesh in a
+// scene without lights still looks like the unlit path.
 const _WHITE_AMBIENT = new Float32Array([1, 1, 1]);
 
 /**
- * A {@link MeshBatcher} variant that shades meshes with the active
- * {@link LightingEnvironment} (half-Lambert diffuse from directional lights +
+ * A {@link MeshBatcher} variant that shades meshes with the active stage's
+ * {@link Light3d} lights (half-Lambert diffuse from directional lights +
  * ambient). It extends the unlit batcher, adding a world-space `aNormal`
  * vertex attribute (12-float layout vs 9) and a lit shader.
  *
@@ -69,20 +70,26 @@ export default class LitMeshBatcher extends MeshBatcher {
 
 	/**
 	 * Enter the mesh-mode pass (depth state via the inherited base) and upload
-	 * the active lighting environment to the lit shader. With no lights, a
-	 * white ambient keeps the mesh fullbright.
+	 * the active stage's 3D lights to the lit shader. With NO lights at all
+	 * (no directional and no ambient), a white ambient keeps a `lit` mesh
+	 * fullbright (so it matches the unlit path); an ambient-only scene still
+	 * uses its real ambient.
 	 */
 	bind() {
 		super.bind();
-		const lit = LightingEnvironment.default.pack();
+		const stage = state.current();
+		const lit = packMeshLights(stage ? stage._activeLights3d : null);
 		const shader = this.currentShader;
 		shader.setUniform("uLightCount", lit.count);
 		if (lit.count > 0) {
 			shader.setUniform("uLightDir", lit.directions);
 			shader.setUniform("uLightColor", lit.colors);
-			shader.setUniform("uAmbient", lit.ambient);
-		} else {
-			shader.setUniform("uAmbient", _WHITE_AMBIENT);
 		}
+		// use the packed ambient whenever any light contributed (directional
+		// OR ambient); fall back to fullbright white only when the scene has no
+		// 3D lights at all — otherwise an ambient-only setup would be ignored.
+		const a = lit.ambient;
+		const hasLight = lit.count > 0 || a[0] > 0 || a[1] > 0 || a[2] > 0;
+		shader.setUniform("uAmbient", hasLight ? a : _WHITE_AMBIENT);
 	}
 }

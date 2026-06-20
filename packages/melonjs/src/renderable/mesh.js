@@ -116,6 +116,7 @@ export default class Mesh extends Renderable {
 	 * @param {boolean} [settings.normalize=true] - fit the source geometry into a `[-0.5, 0.5]` unit cube before scaling, so `width`/`height` behave like a Sprite. Set `false` to keep the geometry's real-world coordinates — required when several meshes share one coordinate space (e.g. nodes of an imported glTF scene) so their relative scale and layout are preserved.
 	 * @param {number} [settings.scale] - world-space scale (pixels per source unit) for the Camera3d path; defaults to `width`. Set this when `width`/`height` describe the renderable's world bounds (frustum culling) rather than the geometry scale — see {@link Mesh#meshScale}.
 	 * @param {boolean} [settings.rightHanded=false] - treat the source as right-handed (Y-up, e.g. glTF) under the `Camera3d` world path. The default Y-up→Y-down bridge negates Y only (a reflection, which mirrors the scene left/right); `true` negates Y **and** Z (a rotation) so chirality is preserved and the result matches the authoring tool. See {@link Mesh#rightHanded}.
+	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) applied to the resolved texture. Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -230,7 +231,7 @@ export default class Mesh extends Renderable {
 		/**
 		 * the source per-vertex normals (x,y,z triplets), or `undefined` if the
 		 * mesh was built without them. Supplied by the glTF loader; used for
-		 * lit shading under a `Camera3d` (see {@link LightingEnvironment}).
+		 * lit shading under a `Camera3d` (see {@link Light3d}).
 		 * @type {Float32Array|undefined}
 		 */
 		this.originalNormals =
@@ -249,7 +250,7 @@ export default class Mesh extends Renderable {
 		this.normals = new Float32Array(this.vertexCount * 3);
 
 		/**
-		 * Whether this mesh is lit by the active {@link LightingEnvironment}.
+		 * Whether this mesh is lit by the active stage's {@link Light3d} lights.
 		 * When `true` it renders through the lit mesh batcher (diffuse shading
 		 * from the scene's lights, using {@link Mesh#originalNormals}); when
 		 * `false` (the default) it uses the lean unlit path and pays no lighting
@@ -420,10 +421,29 @@ export default class Mesh extends Renderable {
 		// without a `texture:` or a `map_Kd`-bearing `material:` (the
 		// GPU pipeline still needs something to sample; tint / per-
 		// vertex color does the actual coloring).
+		const hasRealTexture = !!textureSource;
 		if (!textureSource) {
 			textureSource = Renderer.getWhitePixel();
 		}
 		this.texture = resolveTextureAtlas(textureSource);
+
+		// Optional texture wrap mode. Some assets author UVs outside the
+		// `[0, 1]` range and rely on the sampler repeating the texture (this is
+		// the glTF default sampler behavior); the mesh would otherwise clamp to
+		// the edge texels and look flat / untextured. Applied only to a real
+		// texture — never the shared white-pixel fallback, which is global and
+		// must stay `"no-repeat"`. One of `"repeat"` / `"repeat-x"` /
+		// `"repeat-y"` / `"no-repeat"`.
+		//
+		// NOTE: `cache.get(image)` returns a TextureAtlas shared per source
+		// image, so this sets the wrap mode IMAGE-GLOBALLY — every consumer of
+		// the same image object samples with this wrap. Harmless for glTF (each
+		// asset decodes its own image objects), but don't point two meshes that
+		// need different wrap modes at the same image. (Tracked in #1503, to be
+		// fixed with the #1410 TextureCache refactor.)
+		if (hasRealTexture && typeof settings.textureRepeat === "string") {
+			this.texture.repeat = settings.textureRepeat;
+		}
 
 		/**
 		 * Projection matrix applied automatically before the model transform in draw().

@@ -10,6 +10,7 @@ import MaskEffect from "./camera/effects/mask_effect.ts";
 import ShakeEffect from "./camera/effects/shake_effect.ts";
 import Frustum from "./camera/frustum.ts";
 import Pointer from "./input/pointer.ts";
+import GLTFModel from "./level/gltf/GLTFModel.js";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -21,6 +22,7 @@ import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
+import Light2d from "./lighting/light2d.ts";
 import { ColorMatrix } from "./math/color_matrix.ts";
 import ParticleEmitter from "./particles/emitter.ts";
 import Particle from "./particles/particle.ts";
@@ -37,7 +39,6 @@ import { Draggable } from "./renderable/draggable.js";
 import { DropTarget } from "./renderable/dragndrop.js";
 import Entity from "./renderable/entity/entity.js";
 import ImageLayer from "./renderable/imagelayer.js";
-import Light2d from "./renderable/light2d.js";
 import Mesh from "./renderable/mesh.js";
 import NineSliceSprite from "./renderable/nineslicesprite.js";
 import Renderable from "./renderable/renderable.js";
@@ -113,7 +114,6 @@ export {
 	registerTiledObjectFactory,
 } from "./level/tiled/TMXObjectFactory.js";
 export { Light3d } from "./lighting/light3d.ts";
-export { LightingEnvironment } from "./lighting/lighting_environment.ts";
 
 export * as loader from "./loader/loader.js";
 export { Color } from "./math/color.ts";
@@ -176,6 +176,7 @@ export {
 	FlashEffect,
 	Frustum,
 	GLShader,
+	GLTFModel,
 	GlowEffect,
 	Gradient,
 	HologramEffect,

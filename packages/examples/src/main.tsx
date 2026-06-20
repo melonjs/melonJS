@@ -113,6 +113,11 @@ const ExampleGltf = lazy(() =>
 		default: m.ExampleGltf,
 	})),
 );
+const ExampleGltfCharacter = lazy(() =>
+	import("./examples/gltf/ExampleGltfCharacter").then((m) => ({
+		default: m.ExampleGltfCharacter,
+	})),
+);
 const ExampleMesh3d = lazy(() =>
 	import("./examples/mesh3d/ExampleMesh3d").then((m) => ({
 		default: m.ExampleMesh3d,
@@ -372,6 +377,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A Blender-authored scene (Kenney Platformer Kit, CC0) exported to GLB and loaded via the glTF Tier-1 importer — each node instantiated as a Mesh under a Camera3d.",
+	},
+	{
+		component: <ExampleGltfCharacter />,
+		label: "glTF Animated Model",
+		path: "gltf-character",
+		sourceDir: "gltf",
+		description:
+			"A rigged blocky character (Kenney Blocky Characters, CC0) loaded from GLB — node-TRS animation over a rigid hierarchy (walk, idle, sprint, …) driven through the Sprite-aligned setCurrentAnimation / play / pause / stop API.",
 	},
 	{
 		component: <ExampleMesh3dMaterial />,
