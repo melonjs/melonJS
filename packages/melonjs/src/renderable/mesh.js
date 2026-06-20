@@ -170,6 +170,16 @@ export default class Mesh extends Renderable {
 	 *     rightHanded: true,
 	 * });
 	 *
+	 * // material settings (WebGL) — usually set for you by the glTF/OBJ loader,
+	 * // but available directly on a hand-built mesh too
+	 * let sign = new me.Mesh(0, 0, {
+	 *     vertices, uvs, indices, texture: "neon-sign",
+	 *     width: 64, normalize: false,
+	 *     textureFilter: "nearest",   // crisp pixel-art upscaling
+	 *     alphaCutoff: 0.5,           // discard texels below 0.5 alpha (cutout)
+	 *     emissive: [0.9, 0.2, 0.6],  // glow, independent of scene lights
+	 * });
+	 *
 	 * // 3D rotation using the standard rotate() API
 	 * mesh.rotate(Math.PI / 4, new me.Vector3d(0, 1, 0)); // rotate around Y axis
 	 *
