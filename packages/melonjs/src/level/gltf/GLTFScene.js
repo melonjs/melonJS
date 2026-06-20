@@ -144,8 +144,10 @@ export default class GLTFScene {
 				// honor the glTF sampler wrap (default REPEAT) so tiling UVs
 				// (UVs outside [0,1]) sample correctly instead of clamping flat
 				textureRepeat: node.textureRepeat,
-				// light this mesh (via the lit batcher) when the scene has lights
-				lit,
+				// light this mesh (via the lit batcher) when the scene has lights —
+				// unless the material is KHR_materials_unlit (baked lighting, must
+				// not be shaded again)
+				lit: lit && node.unlit !== true,
 				// honor the glTF material's double-sided flag: thin/flat props
 				// (coins, fences, foliage) are double-sided and must NOT be
 				// back-face culled, or half their faces vanish

@@ -1053,6 +1053,59 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 		expect(lightsOf(container)).toHaveLength(0);
 		expect(container.kids[0].lit).toBe(false);
 	});
+
+	it("KHR_materials_unlit: an unlit-material mesh stays unlit even in a lit scene", async () => {
+		// a lit scene (directional light) whose single mesh uses an unlit material
+		const UNLIT = "__gltf_unlit_in_lit";
+		const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+		const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+		const indices = new Uint16Array([0, 1, 2]);
+		const { bin, offsets } = packParts([positions, normals, indices]);
+		const json = {
+			asset: { version: "2.0" },
+			scene: 0,
+			scenes: [{ nodes: [0, 1] }],
+			extensionsUsed: ["KHR_lights_punctual", "KHR_materials_unlit"],
+			extensions: {
+				KHR_lights_punctual: {
+					lights: [{ type: "directional", color: [1, 1, 1], intensity: 1000 }],
+				},
+			},
+			nodes: [
+				{ mesh: 0 },
+				{ extensions: { KHR_lights_punctual: { light: 0 } } },
+			],
+			materials: [{ extensions: { KHR_materials_unlit: {} } }],
+			meshes: [
+				{
+					primitives: [
+						{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 },
+					],
+				},
+			],
+			accessors: [
+				{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+				{ bufferView: 1, componentType: 5126, count: 3, type: "VEC3" },
+				{ bufferView: 2, componentType: 5123, count: 3, type: "SCALAR" },
+			],
+			bufferViews: [
+				{ buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength },
+				{ buffer: 0, byteOffset: offsets[1], byteLength: normals.byteLength },
+				{ buffer: 0, byteOffset: offsets[2], byteLength: indices.byteLength },
+			],
+			buffers: [{ byteLength: bin.length }],
+		};
+		gltfList[UNLIT] = await parseGLTF(packGLB(json, bin));
+
+		const container = fakeContainer();
+		new GLTFScene(UNLIT).addTo(container, { scale: 10 });
+		// the scene IS lit (directional light added)…
+		expect(lightsOf(container).length).toBeGreaterThan(0);
+		// …but the unlit material opts this mesh out of the lit path
+		expect(container.kids[0].lit).toBe(false);
+
+		delete gltfList[UNLIT];
+	});
 });
 
 // ── ADVERSARIAL: matrix multiply (node hierarchy) ────────────────────────────
@@ -1573,5 +1626,59 @@ describe("parseGLTF() — texture wrap mode", () => {
 		// buildSceneGLB's mesh nodes have no material at all
 		const scene = await parseGLTF(buildSceneGLB());
 		expect(scene.nodes[0].textureRepeat).toBe("repeat");
+	});
+});
+
+// ── material flags: KHR_materials_unlit ──────────────────────────────────────
+
+// single textured-less triangle whose material carries the given extensions
+function buildMaterialGLB(material) {
+	const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+	const indices = new Uint16Array([0, 1, 2]);
+	const { bin, offsets } = packParts([positions, indices]);
+	const json = {
+		asset: { version: "2.0" },
+		scene: 0,
+		scenes: [{ nodes: [0] }],
+		nodes: [{ mesh: 0 }],
+		materials: [material],
+		meshes: [
+			{
+				primitives: [{ attributes: { POSITION: 0 }, indices: 1, material: 0 }],
+			},
+		],
+		accessors: [
+			{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+			{ bufferView: 1, componentType: 5123, count: 3, type: "SCALAR" },
+		],
+		bufferViews: [
+			{ buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength },
+			{ buffer: 0, byteOffset: offsets[1], byteLength: indices.byteLength },
+		],
+		buffers: [{ byteLength: bin.length }],
+	};
+	return packGLB(json, bin);
+}
+
+describe("parseGLTF() — KHR_materials_unlit", () => {
+	it("flags a material with the extension as unlit", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ extensions: { KHR_materials_unlit: {} } }),
+		);
+		expect(scene.nodes[0].unlit).toBe(true);
+	});
+
+	it("a material without the extension is not unlit", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				pbrMetallicRoughness: { baseColorFactor: [1, 0, 0, 1] },
+			}),
+		);
+		expect(scene.nodes[0].unlit).toBe(false);
+	});
+
+	it("ADVERSARIAL: a primitive with no material is not unlit", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].unlit).toBe(false);
 	});
 });

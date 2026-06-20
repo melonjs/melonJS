@@ -529,6 +529,17 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return "no-repeat";
 	};
 
+	// resolve material index -> whether it opts out of lighting via
+	// `KHR_materials_unlit` (a common stylized workflow: lighting is baked into
+	// the texture, so the engine must NOT shade it again or it double-lights).
+	const materialUnlit = (materialIndex) => {
+		return (
+			materialIndex !== undefined &&
+			json.materials?.[materialIndex]?.extensions?.KHR_materials_unlit !==
+				undefined
+		);
+	};
+
 	// walk the active scene's node graph, accumulating world matrices.
 	// A malformed asset is not allowed to crash the loader: a missing scene
 	// or scene-node list degrades to an empty (but valid) descriptor rather
@@ -601,6 +612,9 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			doubleSided:
 				prim.material !== undefined &&
 				json.materials?.[prim.material]?.doubleSided === true,
+			// KHR_materials_unlit — the material bakes its own lighting and must
+			// not be shaded again (skips the lit path even in a lit scene)
+			unlit: materialUnlit(prim.material),
 		};
 	};
 
