@@ -1,5 +1,7 @@
+import { getBasename } from "../../utils/file.ts";
 import { mtlList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
+import { preloadImage } from "./image.js";
 
 // supported MTL properties
 const SUPPORTED_PROPS = new Set([
@@ -144,7 +146,53 @@ export function preloadMTL(data, onload, onerror, settings) {
 
 	fetchData(data.src, "text", settings)
 		.then((response) => {
-			mtlList[data.name] = parseMTL(response, basePath);
+			const materials = parseMTL(response, basePath);
+			mtlList[data.name] = materials;
+			// Auto-load the diffuse textures referenced by `map_Kd`, resolved
+			// relative to the MTL file and registered under that resolved path —
+			// so a Mesh built with `material:` (and no explicit `texture:`) finds
+			// them via `getImage(map_Kd)` without the caller having to preload
+			// each texture separately (parity with the glTF loader, which fetches
+			// a scene's external textures automatically). A texture that fails to
+			// load is warned and skipped (the mesh falls back to the white pixel),
+			// so one missing map_Kd doesn't abort the whole load.
+			const texturePaths = [
+				...new Set(
+					Object.values(materials)
+						.map((material) => {
+							return material.map_Kd;
+						})
+						.filter(Boolean),
+				),
+			];
+			return Promise.all(
+				texturePaths.map((path) => {
+					return new Promise((resolve) => {
+						// register under the basename — `getImage` (used by Mesh to
+						// resolve `map_Kd`) normalizes its lookup key via getBasename,
+						// so the image must be stored under that same key to be found.
+						const loading = preloadImage(
+							{ name: getBasename(path), src: path },
+							resolve,
+							() => {
+								console.warn(
+									`melonJS: MTL texture "${path}" could not be loaded`,
+								);
+								resolve();
+							},
+							settings,
+						);
+						// preloadImage returns 0 when the image is already cached —
+						// it then never calls our onload, so resolve now to avoid
+						// hanging the Promise.all.
+						if (loading === 0) {
+							resolve();
+						}
+					});
+				}),
+			);
+		})
+		.then(() => {
 			if (typeof onload === "function") {
 				onload();
 			}

@@ -631,6 +631,26 @@ describe("Camera3d", () => {
 			expect(child.pos.z).toBe(0); // local — sanity-check the test setup
 			expect(cam.isVisible(child)).toBe(true);
 		});
+
+		it("ADVERSARIAL: a sizeless container (infinite bounds) is always visible, never NaN-culled", async () => {
+			// A logical grouping container with no intrinsic size has
+			// infinite / cleared bounds (left=+∞, right=-∞), so width/height
+			// are non-finite and the bounding-sphere radius would be NaN.
+			// `intersectsSphere(_, NaN)` is false, which would silently cull the
+			// container AND skip its whole subtree (both draw and update). Such a
+			// container can't be frustum-culled meaningfully, so it must report
+			// visible and let its children be culled individually — the bug that
+			// kept a GLTFModel rig (meshes nested under a sizeless container)
+			// from rendering under a 3D camera.
+			const cam = setupCam();
+			const Container = (await import("../src/renderable/container.js"))
+				.default;
+			const group = new Container(0, 0); // default width/height = Infinity
+			expect(group.getBounds().isFinite()).toBe(false);
+			// place it well outside any finite frustum sphere — still visible
+			group.pos.set(99999, 99999);
+			expect(cam.isVisible(group)).toBe(true);
+		});
 	});
 
 	describe("backward compat with Camera2d API", () => {

@@ -1,12 +1,12 @@
 import { initKeyboardEvent } from "../input/keyboard.ts";
 import { registerBuiltinTiledClass } from "../level/tiled/TMXObjectFactory.js";
+import Light2d from "../lighting/light2d.ts";
 import { setNocache } from "../loader/loader.js";
 import Particle from "../particles/particle.ts";
 import Collectable from "../renderable/collectable.js";
 import ColorLayer from "../renderable/colorlayer.js";
 import Entity from "../renderable/entity/entity.js";
 import ImageLayer from "../renderable/imagelayer.js";
-import Light2d from "../renderable/light2d.js";
 import NineSliceSprite from "../renderable/nineslicesprite.js";
 import Renderable from "../renderable/renderable.js";
 import Sprite from "../renderable/sprite.js";

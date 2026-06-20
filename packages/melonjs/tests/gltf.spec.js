@@ -1,12 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-	boot,
-	LightingEnvironment,
-	level,
-	loader,
-	Mesh,
-	video,
-} from "../src/index.js";
+import { boot, Light3d, level, loader, Mesh, video } from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
 import { gltfList } from "../src/loader/cache.js";
 import {
@@ -345,6 +338,35 @@ describe("parseGLTF() robustness", () => {
 		await expect(
 			parseGLTF(packGLB(json, new Uint8Array(positions.buffer))),
 		).rejects.toThrow(/unsupported accessor/);
+	});
+
+	it("ADVERSARIAL: a primitive referencing a material with no `materials` array degrades to defaults (no throw)", async () => {
+		const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+		const json = {
+			asset: { version: "2.0" },
+			scene: 0,
+			scenes: [{ nodes: [0] }],
+			nodes: [{ mesh: 0 }],
+			// prim.material points at an entry, but `materials` is absent entirely
+			meshes: [{ primitives: [{ attributes: { POSITION: 0 }, material: 0 }] }],
+			accessors: [
+				{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+			],
+			bufferViews: [
+				{ buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+			],
+			buffers: [{ byteLength: positions.byteLength }],
+		};
+		const scene = await parseGLTF(
+			packGLB(json, new Uint8Array(positions.buffer)),
+		);
+		const node = scene.nodes[0];
+		// material helpers fall back gracefully rather than throwing on the
+		// missing `materials` array
+		expect(node.image).toBeNull();
+		expect(node.baseColorFactor).toEqual([1, 1, 1, 1]);
+		expect(node.textureRepeat).toBe("repeat");
+		expect(node.doubleSided).toBe(false);
 	});
 });
 
@@ -985,7 +1007,6 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 
 	afterAll(() => {
 		delete gltfList[NAME];
-		LightingEnvironment.default.clear();
 	});
 
 	const fakeContainer = () => {
@@ -997,41 +1018,40 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 			},
 		};
 	};
+	const lightsOf = (c) => {
+		return c.kids.filter((k) => {
+			return k instanceof Light3d;
+		});
+	};
 
-	it("adds the authored directional light + flags meshes lit", () => {
-		LightingEnvironment.default.clear();
+	it("adds the authored directional light (+ ambient fill) as world children + flags meshes lit", () => {
 		const scene = new GLTFScene(NAME);
 		const container = fakeContainer();
 		scene.addTo(container, { scale: 10 });
 
-		expect(LightingEnvironment.default.lights).toHaveLength(1);
+		// lights are ordinary Light3d renderables added to the world (the level
+		// director's container.reset() removes them on the next load — same
+		// lifecycle as Light2d, so the scene tracks nothing)
+		const lights = lightsOf(container);
+		const directional = lights.filter((l) => {
+			return l.type === "directional";
+		});
+		const ambient = lights.filter((l) => {
+			return l.type === "ambient";
+		});
+		expect(directional).toHaveLength(1);
+		expect(ambient).toHaveLength(1); // soft ambient fill
 		expect(container.kids[0].lit).toBe(true);
-		const L = LightingEnvironment.default.lights[0];
-		expect(L.type).toBe("directional");
 		// glTF dir (0,0,-1) → render space [x, -y, zSign·z] (zSign=-1) → (0,0,1)
-		expect(L.direction.z).toBeCloseTo(1, 5);
-
-		scene.destroy();
-		expect(LightingEnvironment.default.lights).toHaveLength(0); // cleaned up
-	});
-
-	it("ADVERSARIAL: reloading replaces the scene's lights (no accumulation)", () => {
-		LightingEnvironment.default.clear();
-		const scene = new GLTFScene(NAME);
-		scene.addTo(fakeContainer(), { scale: 10 });
-		scene.addTo(fakeContainer(), { scale: 10 }); // re-add same instance
-		expect(LightingEnvironment.default.lights).toHaveLength(1); // not 2
-		scene.destroy();
+		expect(directional[0].direction.z).toBeCloseTo(1, 5);
 	});
 
 	it("options.lights:false leaves meshes unlit and adds no lights", () => {
-		LightingEnvironment.default.clear();
 		const scene = new GLTFScene(NAME);
 		const container = fakeContainer();
 		scene.addTo(container, { scale: 10, lights: false });
-		expect(LightingEnvironment.default.lights).toHaveLength(0);
+		expect(lightsOf(container)).toHaveLength(0);
 		expect(container.kids[0].lit).toBe(false);
-		scene.destroy();
 	});
 });
 
@@ -1309,5 +1329,249 @@ describe("parseGLTF() — node hierarchy accumulation", () => {
 		expect(w[0]).toBeCloseTo(2, 5); // composed scale x
 		// a child vertex at local (1,0,0): 2*1 + 12 = 14
 		expect(applyMat(w, [1, 0, 0])[0]).toBeCloseTo(14, 5);
+	});
+});
+
+// ── node graph + animation parsing ──────────────────────────────────────────
+
+// Build a GLB with a 2-node hierarchy (root → mesh child) and one "walk" clip
+// animating the root's translation (LINEAR) and the child's rotation (STEP).
+function buildAnimGLB() {
+	const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+	const indices = new Uint16Array([0, 1, 2]);
+	const times = new Float32Array([0, 0.5, 1]); // 3 keyframes, duration 1s
+	const transValues = new Float32Array([0, 0, 0, 1, 0, 0, 2, 0, 0]); // VEC3 × 3
+	// VEC4 × 3 quaternions (identity, 90°Z, 180°Z) — values are not asserted
+	const r = Math.SQRT1_2;
+	const rotValues = new Float32Array([0, 0, 0, 1, 0, 0, r, r, 0, 0, 1, 0]);
+	const { bin, offsets } = packParts([
+		positions,
+		indices,
+		times,
+		transValues,
+		rotValues,
+	]);
+	const json = {
+		asset: { version: "2.0" },
+		scene: 0,
+		scenes: [{ nodes: [0] }],
+		nodes: [
+			{ name: "root", translation: [0, 0, 0], children: [1] },
+			{ name: "child", mesh: 0, translation: [5, 0, 0] },
+		],
+		meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1 }] }],
+		animations: [
+			{
+				name: "walk",
+				channels: [
+					{ sampler: 0, target: { node: 0, path: "translation" } },
+					{ sampler: 1, target: { node: 1, path: "rotation" } },
+					// a weights channel must be silently dropped (out of scope)
+					{ sampler: 0, target: { node: 0, path: "weights" } },
+				],
+				samplers: [
+					{ input: 2, output: 3, interpolation: "LINEAR" },
+					{ input: 2, output: 4, interpolation: "STEP" },
+				],
+			},
+		],
+		accessors: [
+			{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+			{ bufferView: 1, componentType: 5123, count: 3, type: "SCALAR" },
+			{ bufferView: 2, componentType: 5126, count: 3, type: "SCALAR" },
+			{ bufferView: 3, componentType: 5126, count: 3, type: "VEC3" },
+			{ bufferView: 4, componentType: 5126, count: 3, type: "VEC4" },
+		],
+		bufferViews: [
+			{ buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength },
+			{ buffer: 0, byteOffset: offsets[1], byteLength: indices.byteLength },
+			{ buffer: 0, byteOffset: offsets[2], byteLength: times.byteLength },
+			{ buffer: 0, byteOffset: offsets[3], byteLength: transValues.byteLength },
+			{ buffer: 0, byteOffset: offsets[4], byteLength: rotValues.byteLength },
+		],
+		buffers: [{ byteLength: bin.length }],
+	};
+	return packGLB(json, bin);
+}
+
+describe("parseGLTF() — node graph", () => {
+	it("emits the full hierarchy keyed by node index, with rest TRS + children", async () => {
+		const scene = await parseGLTF(buildAnimGLB());
+		expect(scene.graph.roots).toEqual([0]);
+		const root = scene.graph.nodes[0];
+		expect(root.name).toBe("root");
+		expect(root.children).toEqual([1]);
+		expect(root.translation).toEqual([0, 0, 0]);
+		expect(root.rotation).toEqual([0, 0, 0, 1]); // default identity quat
+		expect(root.scale).toEqual([1, 1, 1]); // default
+		expect(root.primitives).toHaveLength(0); // empty transform node
+	});
+
+	it("attaches mesh primitives to their node in the graph", async () => {
+		const scene = await parseGLTF(buildAnimGLB());
+		const child = scene.graph.nodes[1];
+		expect(child.name).toBe("child");
+		expect(child.translation).toEqual([5, 0, 0]);
+		expect(child.primitives).toHaveLength(1);
+		expect(child.primitives[0].vertexCount).toBe(3);
+	});
+
+	it("graph primitives share the SAME typed arrays as the flat node list (single read)", async () => {
+		const scene = await parseGLTF(buildAnimGLB());
+		// flat meshNodes[0] is node 1's primitive; graph.nodes[1].primitives[0]
+		// must reference the identical buffer (not a re-read copy)
+		expect(scene.graph.nodes[1].primitives[0].vertices).toBe(
+			scene.nodes[0].vertices,
+		);
+	});
+});
+
+describe("parseGLTF() — animations", () => {
+	it("parses clips with name, duration, and per-channel keyframes", async () => {
+		const scene = await parseGLTF(buildAnimGLB());
+		expect(scene.animations).toHaveLength(1);
+		const clip = scene.animations[0];
+		expect(clip.name).toBe("walk");
+		expect(clip.duration).toBeCloseTo(1, 6); // last keyframe time
+	});
+
+	it("resolves each channel's node, path, interpolation, stride + buffers", async () => {
+		const { animations } = await parseGLTF(buildAnimGLB());
+		const chans = animations[0].channels;
+		const trans = chans.find((c) => {
+			return c.path === "translation";
+		});
+		const rot = chans.find((c) => {
+			return c.path === "rotation";
+		});
+		expect(trans.node).toBe(0);
+		expect(trans.stride).toBe(3);
+		expect(trans.interpolation).toBe("LINEAR");
+		expect(Array.from(trans.times)).toEqual([0, 0.5, 1]);
+		expect(Array.from(trans.values)).toEqual([0, 0, 0, 1, 0, 0, 2, 0, 0]);
+		expect(rot.node).toBe(1);
+		expect(rot.stride).toBe(4); // quaternion
+		expect(rot.interpolation).toBe("STEP");
+	});
+
+	it("ADVERSARIAL: drops unsupported channel paths (weights / morph targets)", async () => {
+		const { animations } = await parseGLTF(buildAnimGLB());
+		// only translation + rotation survive; the `weights` channel is dropped
+		expect(animations[0].channels).toHaveLength(2);
+		expect(
+			animations[0].channels.some((c) => {
+				return c.path === "weights";
+			}),
+		).toBe(false);
+	});
+
+	it("ADVERSARIAL: a static asset reports an empty animations array (+ a graph)", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.animations).toEqual([]);
+		// the graph is still emitted for every scene
+		expect(Object.keys(scene.graph.nodes).length).toBeGreaterThan(0);
+	});
+});
+
+// ── texture wrap (sampler wrapS / wrapT → melonJS repeat mode) ───────────────
+
+// a 1×1 transparent PNG as a data URI — decodes in the browser test env so the
+// material's baseColorTexture resolves to a real image
+const PNG_1x1 =
+	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+
+// Build a single textured triangle whose material's sampler uses the given
+// wrap modes. `sampler` may be omitted entirely to exercise the glTF default.
+function buildWrapGLB(sampler) {
+	const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+	const uvs = new Float32Array([0, 0, 1, 0, 0, 1]);
+	const indices = new Uint16Array([0, 1, 2]);
+	const { bin, offsets } = packParts([positions, uvs, indices]);
+	const json = {
+		asset: { version: "2.0" },
+		scene: 0,
+		scenes: [{ nodes: [0] }],
+		nodes: [{ mesh: 0 }],
+		meshes: [
+			{
+				primitives: [
+					{
+						attributes: { POSITION: 0, TEXCOORD_0: 1 },
+						indices: 2,
+						material: 0,
+					},
+				],
+			},
+		],
+		materials: [{ pbrMetallicRoughness: { baseColorTexture: { index: 0 } } }],
+		textures: [
+			sampler === undefined ? { source: 0 } : { source: 0, sampler: 0 },
+		],
+		samplers: sampler === undefined ? undefined : [sampler],
+		images: [{ uri: PNG_1x1 }],
+		accessors: [
+			{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+			{ bufferView: 1, componentType: 5126, count: 3, type: "VEC2" },
+			{ bufferView: 2, componentType: 5123, count: 3, type: "SCALAR" },
+		],
+		bufferViews: [
+			{ buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength },
+			{ buffer: 0, byteOffset: offsets[1], byteLength: uvs.byteLength },
+			{ buffer: 0, byteOffset: offsets[2], byteLength: indices.byteLength },
+		],
+		buffers: [{ byteLength: bin.length }],
+	};
+	return packGLB(json, bin);
+}
+
+describe("parseGLTF() — texture wrap mode", () => {
+	const REPEAT = 10497;
+	const CLAMP = 33071;
+
+	it("defaults to REPEAT when no sampler is present (glTF spec default)", async () => {
+		const scene = await parseGLTF(buildWrapGLB(undefined));
+		expect(scene.nodes[0].textureRepeat).toBe("repeat");
+	});
+
+	it("REPEAT on both axes → 'repeat'", async () => {
+		const scene = await parseGLTF(
+			buildWrapGLB({ wrapS: REPEAT, wrapT: REPEAT }),
+		);
+		expect(scene.nodes[0].textureRepeat).toBe("repeat");
+	});
+
+	it("CLAMP on both axes → 'no-repeat'", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ wrapS: CLAMP, wrapT: CLAMP }));
+		expect(scene.nodes[0].textureRepeat).toBe("no-repeat");
+	});
+
+	it("REPEAT-S / CLAMP-T → 'repeat-x'", async () => {
+		const scene = await parseGLTF(
+			buildWrapGLB({ wrapS: REPEAT, wrapT: CLAMP }),
+		);
+		expect(scene.nodes[0].textureRepeat).toBe("repeat-x");
+	});
+
+	it("CLAMP-S / REPEAT-T → 'repeat-y'", async () => {
+		const scene = await parseGLTF(
+			buildWrapGLB({ wrapS: CLAMP, wrapT: REPEAT }),
+		);
+		expect(scene.nodes[0].textureRepeat).toBe("repeat-y");
+	});
+
+	it("ADVERSARIAL: a sampler that omits wrapS/wrapT defaults each to REPEAT", async () => {
+		const scene = await parseGLTF(buildWrapGLB({})); // empty sampler
+		expect(scene.nodes[0].textureRepeat).toBe("repeat");
+	});
+
+	it("ADVERSARIAL: MIRRORED_REPEAT (no melonJS equivalent) maps to plain repeat", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ wrapS: 33648, wrapT: 33648 }));
+		expect(scene.nodes[0].textureRepeat).toBe("repeat");
+	});
+
+	it("ADVERSARIAL: an untextured material still defaults to 'repeat'", async () => {
+		// buildSceneGLB's mesh nodes have no material at all
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].textureRepeat).toBe("repeat");
 	});
 });

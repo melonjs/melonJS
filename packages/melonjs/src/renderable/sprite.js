@@ -4,6 +4,7 @@ import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
+import { parseAnimationOptions } from "./animation.ts";
 import Renderable from "./renderable.js";
 
 // flicker interval in ms (~15 flashes per second)
@@ -142,6 +143,16 @@ export default class Sprite extends Renderable {
 
 		// animation frame delta
 		this.dt = 0;
+
+		// playback rate multiplier set per-play via the options form of
+		// setCurrentAnimation (1 = authored speed). Scales how fast `dt`
+		// accumulates, on top of each frame's `delay`.
+		this._animSpeed = 1;
+
+		// set true when a `loop: false` animation has completed its single
+		// cycle, so update() stops advancing without touching `animationpause`
+		// (cleared whenever a new animation is selected).
+		this._animDone = false;
 
 		/**
 		 * flicker settings
@@ -388,17 +399,55 @@ export default class Sprite extends Renderable {
 	}
 
 	/**
-	 * play or resume the current animation or video
+	 * Play an animation, or resume the current animation / video. A shorthand:
+	 * call with an animation id to switch to (and start) it, or with no argument
+	 * to resume after {@link Sprite#pause}. Always clears the paused state. The
+	 * options mirror {@link Sprite#setCurrentAnimation} and the 3D
+	 * {@link GLTFModel#play}, so 2D and 3D animation share one API.
+	 * @param {string} [name] - animation id to play; omit to just resume
+	 * @param {string|Function|object} [options] - loop / chain / completion behavior (see {@link Sprite#setCurrentAnimation})
+	 * @returns {Sprite} Reference to this object for method chaining
+	 * @example
+	 * sprite.play("walk");                  // switch to + play "walk"
+	 * sprite.play("die", { loop: false });  // play once, hold the last frame
+	 * sprite.pause();
+	 * sprite.play();                        // resume
 	 */
-	play() {
+	play(name, options) {
 		this.animationpause = false;
+		// `name` only applies to frame animations; a video sprite just resumes
+		if (name !== undefined && !this.isVideo) {
+			this.setCurrentAnimation(name, options);
+		}
+		return this;
 	}
 
 	/**
-	 * play or resume the current animation or video
+	 * Pause the current animation or video, freezing the current frame. Resume
+	 * with {@link Sprite#play}.
+	 * @returns {Sprite} Reference to this object for method chaining
 	 */
 	pause() {
 		this.animationpause = true;
+		return this;
+	}
+
+	/**
+	 * Stop the current animation or video and reset it to the first frame
+	 * (paused). (Use {@link Sprite#pause} instead to freeze in place.)
+	 * @returns {Sprite} Reference to this object for method chaining
+	 */
+	stop() {
+		this.animationpause = true;
+		this._animDone = false;
+		this.dt = 0;
+		if (this.isVideo) {
+			this.image.pause();
+			this.image.currentTime = 0;
+		} else if (this.current.name !== undefined && this.current.length > 0) {
+			this.setAnimationFrame(0);
+		}
+		return this;
 	}
 
 	/**
@@ -566,15 +615,40 @@ export default class Sprite extends Renderable {
 			if (!this.isCurrentAnimation(name)) {
 				this.current.name = name;
 				this.current.length = this.anim[this.current.name].length;
-				if (typeof resetAnim === "string") {
-					this.resetAnim = this.setCurrentAnimation.bind(
-						this,
-						resetAnim,
-						null,
-						true,
-					);
-				} else if (typeof resetAnim === "function") {
-					this.resetAnim = resetAnim;
+				const opts = parseAnimationOptions(resetAnim);
+				this._animSpeed = opts.speed;
+				this._animDone = false;
+				const onComplete = opts.onComplete;
+				if (opts.legacyFn) {
+					// legacy bare-function callback: invoked at each loop end,
+					// return `false` to hold the last frame (contract unchanged)
+					this.resetAnim = onComplete;
+				} else if (typeof opts.next === "string") {
+					// chain to another animation when this one ends (the legacy
+					// string form and the options `next` field), firing
+					// `onComplete` first when provided
+					const next = opts.next;
+					this.resetAnim = () => {
+						if (typeof onComplete === "function") {
+							onComplete();
+						}
+						this.setCurrentAnimation(next, null, true);
+					};
+				} else if (opts.loop === false) {
+					// play once: fire onComplete, hold the last frame, and stop
+					// advancing (without touching `animationpause`)
+					this.resetAnim = () => {
+						if (typeof onComplete === "function") {
+							onComplete();
+						}
+						this._animDone = true;
+						return false;
+					};
+				} else if (typeof onComplete === "function") {
+					// loop forever, firing onComplete at each cycle
+					this.resetAnim = () => {
+						onComplete();
+					};
 				} else {
 					this.resetAnim = undefined;
 				}
@@ -617,6 +691,19 @@ export default class Sprite extends Renderable {
 	 */
 	isCurrentAnimation(name) {
 		return this.current.name === name;
+	}
+
+	/**
+	 * the names of every animation defined on this sprite (via
+	 * {@link Sprite#addAnimation}).
+	 * @returns {string[]} the defined animation names
+	 * @example
+	 * sprite.addAnimation("walk", [0, 1, 2, 3]);
+	 * sprite.addAnimation("idle", [4, 5]);
+	 * sprite.getAnimationNames(); // ["walk", "idle"]
+	 */
+	getAnimationNames() {
+		return Object.keys(this.anim);
 	}
 
 	/**
@@ -728,11 +815,13 @@ export default class Sprite extends Renderable {
 			this.isDirty = !this.image.paused;
 		} else {
 			// Update animation if necessary
-			if (!this.animationpause && this.current.length > 1) {
+			if (!this.animationpause && !this._animDone && this.current.length > 1) {
 				let duration = this.getAnimationFrameObjectByIndex(
 					this.current.idx,
 				).delay;
-				this.dt += dt;
+				// `_animSpeed` (per-play multiplier) scales how fast the frame
+				// delay is consumed — 2 = twice as fast, 0.5 = half speed
+				this.dt += dt * this._animSpeed;
 				while (this.dt >= duration) {
 					this.isDirty = true;
 					this.dt -= duration;

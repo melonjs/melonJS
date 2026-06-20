@@ -475,4 +475,51 @@ describe("loader", () => {
 		);
 		expect(result).toBe(1);
 	});
+
+	describe("MTL texture auto-loading (map_Kd)", () => {
+		it("auto-loads a material's map_Kd texture relative to the .mtl, registered under its resolved path", async () => {
+			await expect(
+				new Promise((resolve, reject) => {
+					loader.load(
+						{ name: "cubemtl", type: "mtl", src: "/data/models/cube.mtl" },
+						() => {
+							const mats = loader.getMTL("cubemtl");
+							// map_Kd resolved relative to the .mtl folder
+							const mapKd = mats?.cube?.map_Kd;
+							// the texture was loaded WITHOUT a separate preload entry,
+							// registered under the resolved map_Kd path
+							resolve(
+								mapKd === "/data/models/cube.png" &&
+									loader.getImage("/data/models/cube.png") !== null,
+							);
+						},
+						() => {
+							reject(new Error("failed to load cube.mtl"));
+						},
+					);
+				}),
+			).resolves.toBe(true);
+		});
+
+		it("does not abort the load when a map_Kd texture is missing (mesh falls back to white)", async () => {
+			// the .mtl parses fine; only the (absent) texture fails → onload still fires
+			await expect(
+				new Promise((resolve, reject) => {
+					loader.load(
+						{
+							name: "cubemtl2",
+							type: "mtl",
+							src: "/data/models/cube-missing.mtl",
+						},
+						() => {
+							resolve(loader.getMTL("cubemtl2") !== null);
+						},
+						() => {
+							reject(new Error("MTL load aborted"));
+						},
+					);
+				}),
+			).resolves.toBe(true);
+		});
+	});
 });

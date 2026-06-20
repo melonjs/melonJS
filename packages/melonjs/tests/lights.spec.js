@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
+	Color,
 	Container,
 	Ellipse,
 	game,
@@ -2017,5 +2018,57 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 
 		expect(setColorCalls).toBe(0);
 		expect(setIntensityCalls).toBe(0);
+	});
+});
+
+describe("Light2d — constructor & setRadii", () => {
+	beforeAll(() => {
+		boot();
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+		});
+	});
+
+	it("accepts a CSS color string", () => {
+		const l = new Light2d(0, 0, 10, 10, "#ff0000");
+		expect([l.color.r, l.color.g, l.color.b]).toEqual([255, 0, 0]);
+		l.destroy();
+	});
+
+	it("accepts a Color instance (copied, not aliased)", () => {
+		const c = new Color(10, 20, 30, 1);
+		const l = new Light2d(0, 0, 10, 10, c);
+		expect([l.color.r, l.color.g, l.color.b]).toEqual([10, 20, 30]);
+		expect(l.color).not.toBe(c); // pooled copy, not the same instance
+		l.destroy();
+	});
+
+	it("defaults: blendMode 'lighter', illuminationOnly false, lightHeight = max(rx,ry)*0.075", () => {
+		const l = new Light2d(0, 0, 40, 20);
+		expect(l.blendMode).toBe("lighter");
+		expect(l.illuminationOnly).toBe(false);
+		expect(l.lightHeight).toBeCloseTo(40 * 0.075, 6); // max(40,20)*0.075
+		l.destroy();
+	});
+
+	it("setRadii updates radii and the bounding box", () => {
+		const l = new Light2d(50, 50, 10, 10);
+		l.setRadii(40, 20);
+		expect(l.radiusX).toBe(40);
+		expect(l.radiusY).toBe(20);
+		// resize(radiusX*2, radiusY*2) → bbox 80 × 40
+		expect(l.getBounds().width).toBe(80);
+		expect(l.getBounds().height).toBe(40);
+		l.destroy();
+	});
+
+	it("setRadii with one argument applies it to both axes", () => {
+		const l = new Light2d(0, 0, 10, 10);
+		l.setRadii(25);
+		expect(l.radiusX).toBe(25);
+		expect(l.radiusY).toBe(25);
+		l.destroy();
 	});
 });

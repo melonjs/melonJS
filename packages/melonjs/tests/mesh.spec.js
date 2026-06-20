@@ -1299,4 +1299,45 @@ describe("Mesh × Camera3d world-space path", () => {
 		expect(m.indices).toBeInstanceOf(Uint16Array);
 		expect(Array.from(m.indices)).toEqual([0, 1, 2]);
 	});
+
+	// ── textureRepeat setting (tiling UVs, e.g. glTF default wrap) ──────────
+
+	it("textureRepeat applies the wrap mode to a real texture", () => {
+		const m = new Mesh(0, 0, {
+			vertices: new Float32Array(9),
+			uvs: new Float32Array(6),
+			indices: [0, 1, 2],
+			texture: video.createCanvas(8, 8),
+			width: 10,
+			normalize: false,
+			textureRepeat: "repeat",
+		});
+		expect(m.texture.repeat).toBe("repeat");
+	});
+
+	it("texture defaults to 'no-repeat' when textureRepeat is omitted", () => {
+		const m = new Mesh(0, 0, {
+			vertices: new Float32Array(9),
+			uvs: new Float32Array(6),
+			indices: [0, 1, 2],
+			texture: video.createCanvas(8, 8),
+			width: 10,
+			normalize: false,
+		});
+		expect(m.texture.repeat).toBe("no-repeat");
+	});
+
+	it("ADVERSARIAL: textureRepeat is ignored for the white-pixel fallback (no global mutation)", () => {
+		// no texture/material → the shared 1×1 white pixel is used; mutating its
+		// repeat would poison every other untextured mesh in the engine
+		const m = new Mesh(0, 0, {
+			vertices: new Float32Array(9),
+			uvs: new Float32Array(6),
+			indices: [0, 1, 2],
+			width: 10,
+			normalize: false,
+			textureRepeat: "repeat",
+		});
+		expect(m.texture.repeat).not.toBe("repeat");
+	});
 });

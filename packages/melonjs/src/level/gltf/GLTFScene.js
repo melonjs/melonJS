@@ -1,15 +1,15 @@
 import { Light3d } from "../../lighting/light3d.ts";
-import { LightingEnvironment } from "../../lighting/lighting_environment.ts";
 import { getGLTF } from "../../loader/loader.js";
 import { boundingRadius } from "../../math/vertex.ts";
 import Mesh from "../../renderable/mesh.js";
+import GLTFModel from "./GLTFModel.js";
 
 /**
  * @classdesc
  * A loadable 3D scene parsed from a glTF / GLB asset. Instances are created
  * and registered with the {@link level} director (usually automatically by
  * the preloader), so a glTF scene loads with the same one-call ergonomics as
- * a Tiled map: `me.level.load("myScene")`.
+ * a Tiled map: `level.load("myScene")`.
  *
  * Each glTF mesh node is instantiated as a {@link Mesh} carrying its own
  * world transform, so the scene's relative scale and layout are preserved.
@@ -35,13 +35,6 @@ export default class GLTFScene {
 		 * @type {object}
 		 */
 		this.data = getGLTF(levelId);
-		/**
-		 * the Light3d instances this scene added to the active
-		 * LightingEnvironment, so they can be removed on reload / destroy.
-		 * @type {Light3d[]}
-		 * @ignore
-		 */
-		this._lights = [];
 	}
 
 	/**
@@ -64,16 +57,17 @@ export default class GLTFScene {
 
 	/**
 	 * Instantiate every glTF mesh node as a `Mesh` in the given container.
-	 * Called by the level director on `me.level.load(...)`.
+	 * Called by the level director on `level.load(...)`.
 	 * @param {Container} container - the target container (e.g. `game.world`)
 	 * @param {object} [options]
 	 * @param {number} [options.scale=1] - pixels per glTF unit (uniform scene scale)
 	 * @param {boolean} [options.rightHanded=true] - convert glTF Y-up right-handed
 	 * geometry to the engine's Y-down via a rotation (no mirror). See the wiki.
-	 * @param {boolean} [options.lights=true] - instantiate the scene's authored
-	 * `KHR_lights_punctual` directional lights into {@link LightingEnvironment}.default
-	 * so the meshes are lit by the sun set up in the authoring tool. Set false to
-	 * keep the meshes unlit / manage lighting yourself.
+	 * @param {boolean} [options.lights=true] - add the scene's authored
+	 * `KHR_lights_punctual` directional lights (plus a soft ambient fill) to the
+	 * world as {@link Light3d} renderables, so the meshes are lit by the sun set
+	 * up in the authoring tool. Set false to keep the meshes unlit / manage
+	 * lighting yourself with `world.addChild(new Light3d(...))`.
 	 */
 	addTo(container, options = {}) {
 		if (!this.data) {
@@ -95,6 +89,19 @@ export default class GLTFScene {
 		// from reassigning per-child depth (the GPU depth test resolves
 		// occlusion between meshes under Camera3d)
 		container.autoDepth = false;
+
+		// Animated asset → keep the node hierarchy intact inside one rig-driven
+		// GLTFModel (a parent transform carries its children). Static asset →
+		// the flat-mesh path below. The model is named after the asset so it can
+		// be retrieved from the world (`world.getChildByName(name)[0]`) to drive
+		// playback. Lights are still instantiated (shared block at the end).
+		if ((this.data.animations ?? []).length > 0) {
+			const model = new GLTFModel(this.data, { scale, rightHanded, lit });
+			model.name = this.name;
+			container.addChild(model);
+			this._addLights(container, zSign, options);
+			return;
+		}
 
 		for (const node of this.data.nodes) {
 			const m = node.world;
@@ -134,6 +141,9 @@ export default class GLTFScene {
 				scale,
 				normalize: false,
 				rightHanded,
+				// honor the glTF sampler wrap (default REPEAT) so tiling UVs
+				// (UVs outside [0,1]) sample correctly instead of clamping flat
+				textureRepeat: node.textureRepeat,
 				// light this mesh (via the lit batcher) when the scene has lights
 				lit,
 				// honor the glTF material's double-sided flag: thin/flat props
@@ -171,19 +181,34 @@ export default class GLTFScene {
 			container.addChild(mesh);
 		}
 
-		// Instantiate the scene's authored directional lights into the active
-		// LightingEnvironment so the meshes are lit by the same sun set up in
-		// the authoring tool (Blender etc.). Re-loading replaces this scene's
-		// own lights (tracked in `_lights`); other lights are left alone.
-		this._removeLights();
-		if (options.lights !== false) {
-			for (const light of this.data.lights ?? []) {
-				if (light.type !== "directional") {
-					// point / spot lights are parsed but not yet shaded
-					continue;
-				}
-				const d = light.direction;
-				const l3d = new Light3d({
+		this._addLights(container, zSign, options);
+	}
+
+	/**
+	 * Add the scene's authored directional lights (plus a soft ambient fill) to
+	 * the world as {@link Light3d} renderables, so the meshes are lit by the
+	 * same sun set up in the authoring tool (Blender etc.). Shared by the static
+	 * and animated paths. The lights are ordinary world children — the level
+	 * director's `container.reset()` removes them on the next load, exactly like
+	 * {@link Light2d}, so there's nothing to track or tear down here.
+	 * @param {Container} container - the target container the lights are added to
+	 * @param {number} zSign - the Y-up→Y-down Z bridge sign (rightHanded → -1)
+	 * @param {object} options - the `addTo` options (`lights` toggle)
+	 * @ignore
+	 */
+	_addLights(container, zSign, options) {
+		if (options.lights === false) {
+			return;
+		}
+		let added = 0;
+		for (const light of this.data.lights ?? []) {
+			if (light.type !== "directional") {
+				// point / spot lights are parsed but not yet shaded
+				continue;
+			}
+			const d = light.direction;
+			container.addChild(
+				new Light3d({
 					type: "directional",
 					// bring the glTF-space direction into render space (same
 					// Y-down / rightHanded Y/Z bridge the geometry uses)
@@ -193,28 +218,26 @@ export default class GLTFScene {
 					// not meaningful for a stylized Lambert shader, so use a unit
 					// intensity and let the app tune `light.intensity` if needed.
 					intensity: 1,
-				});
-				LightingEnvironment.default.addLight(l3d);
-				this._lights.push(l3d);
-			}
+				}),
+			);
+			added++;
 		}
-	}
-
-	/** Remove the lights this scene previously added. @ignore */
-	_removeLights() {
-		for (const light of this._lights) {
-			LightingEnvironment.default.removeLight(light);
+		// a soft ambient fill so the shadow side of lit meshes isn't pure black.
+		// `KHR_lights_punctual` has no ambient light type, so this is an engine
+		// default; only meaningful when the scene actually has directional lights
+		// (otherwise the meshes render fullbright / unlit).
+		if (added > 0) {
+			container.addChild(
+				new Light3d({ type: "ambient", color: "#ffffff", intensity: 0.3 }),
+			);
 		}
-		this._lights.length = 0;
 	}
 
 	/**
-	 * Director cleanup hook (parity with `TMXTileMap.destroy`). The meshes are
-	 * owned by the container (reset by the director on the next load); here we
-	 * also pull this scene's lights back out of the active LightingEnvironment.
+	 * Director cleanup hook (parity with `TMXTileMap.destroy`). Nothing to do —
+	 * the meshes and lights are ordinary world children, removed by the
+	 * director's `container.reset()` on the next load.
 	 * @ignore
 	 */
-	destroy() {
-		this._removeLights();
-	}
+	destroy() {}
 }
