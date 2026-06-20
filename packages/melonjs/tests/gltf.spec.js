@@ -899,6 +899,25 @@ describe("GLTFScene → Mesh instantiation", () => {
 		expect(a.getBounds().width).toBeGreaterThan(0);
 	});
 
+	it("propagates a MASK material's alpha cutout to the instantiated Mesh", async () => {
+		const CUTOUT = "__gltf_cutout_scene";
+		gltfList[CUTOUT] = await parseGLTF(
+			buildMaterialGLB({ alphaMode: "MASK", alphaCutoff: 0.3 }),
+		);
+		const scene = new GLTFScene(CUTOUT);
+		const container = {
+			autoDepth: true,
+			kids: [],
+			addChild(c) {
+				this.kids.push(c);
+			},
+		};
+		scene.addTo(container);
+		// the cutout threshold rides from material → parser → Mesh
+		expect(container.kids[0].alphaCutoff).toBe(0.3);
+		delete gltfList[CUTOUT];
+	});
+
 	it("keeps raw geometry untouched when normalize is disabled", () => {
 		// glTF nodes share one coordinate space, so addTo passes
 		// normalize:false — the raw vertices must survive verbatim
@@ -1710,5 +1729,42 @@ describe("parseGLTF() — KHR_materials_unlit", () => {
 	it("ADVERSARIAL: a primitive with no material is not unlit", async () => {
 		const scene = await parseGLTF(buildSceneGLB());
 		expect(scene.nodes[0].unlit).toBe(false);
+	});
+});
+
+// ── material flags: alpha cutout (alphaMode MASK) ────────────────────────────
+
+describe("parseGLTF() — alpha cutout (alphaMode MASK)", () => {
+	it("MASK with an explicit alphaCutoff uses that threshold", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ alphaMode: "MASK", alphaCutoff: 0.25 }),
+		);
+		expect(scene.nodes[0].alphaCutoff).toBe(0.25);
+	});
+
+	it("MASK without an alphaCutoff defaults to the spec 0.5", async () => {
+		const scene = await parseGLTF(buildMaterialGLB({ alphaMode: "MASK" }));
+		expect(scene.nodes[0].alphaCutoff).toBe(0.5);
+	});
+
+	it("OPAQUE (default) yields no cutout (0)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1] },
+			}),
+		);
+		expect(scene.nodes[0].alphaCutoff).toBe(0);
+	});
+
+	it("ADVERSARIAL: BLEND mode is not a cutout (0 — alphaCutoff ignored)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ alphaMode: "BLEND", alphaCutoff: 0.9 }),
+		);
+		expect(scene.nodes[0].alphaCutoff).toBe(0);
+	});
+
+	it("ADVERSARIAL: a primitive with no material has no cutout (0)", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].alphaCutoff).toBe(0);
 	});
 });

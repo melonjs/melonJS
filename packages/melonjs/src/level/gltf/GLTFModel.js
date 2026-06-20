@@ -140,6 +140,8 @@ export default class GLTFModel extends Container {
 					textureRepeat: prim.textureRepeat,
 					// honor the glTF sampler magnification filter (nearest = pixel-art)
 					textureFilter: prim.textureFilter,
+					// alpha cutout threshold (glTF alphaMode MASK)
+					alphaCutoff: prim.alphaCutoff,
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
 				});

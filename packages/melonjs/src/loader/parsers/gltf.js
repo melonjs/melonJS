@@ -570,6 +570,21 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return undefined;
 	};
 
+	// resolve material index -> alpha cutout threshold. glTF `alphaMode:
+	// "MASK"` is a hard cutout: a fragment is fully opaque where its alpha is
+	// >= `alphaCutoff` and fully discarded below it (foliage, fences,
+	// chain-link, decals — crisp edges, no blending or back-to-front sorting).
+	// The spec default `alphaCutoff` is 0.5. Any other mode (OPAQUE / BLEND) →
+	// 0, i.e. no discard (the mesh path renders opaque; BLEND is out of scope).
+	const materialAlphaCutoff = (materialIndex) => {
+		const mat =
+			materialIndex !== undefined ? json.materials?.[materialIndex] : undefined;
+		if (mat?.alphaMode === "MASK") {
+			return mat.alphaCutoff ?? 0.5;
+		}
+		return 0;
+	};
+
 	// walk the active scene's node graph, accumulating world matrices.
 	// A malformed asset is not allowed to crash the loader: a missing scene
 	// or scene-node list degrades to an empty (but valid) descriptor rather
@@ -649,6 +664,8 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			// KHR_materials_unlit — the material bakes its own lighting and must
 			// not be shaded again (skips the lit path even in a lit scene)
 			unlit: materialUnlit(prim.material),
+			// alpha cutout threshold (glTF alphaMode MASK); 0 = no discard
+			alphaCutoff: materialAlphaCutoff(prim.material),
 		};
 	};
 

@@ -90,6 +90,11 @@ export default class MeshBatcher extends MaterialBatcher {
 			indexed: true,
 		});
 
+		// last `uAlphaCutoff` value pushed to the current shader, so consecutive
+		// meshes sharing a cutoff don't re-issue the uniform. -1 is an impossible
+		// cutoff (valid range 0..1), forcing the first mesh of a pass to set it.
+		this.currentAlphaCutoff = -1;
+
 		// Subscribe to the renderer's target-changed broadcast so we re-arm the
 		// shared lazy depth clear (`_meshDepthDirty`) whenever the active
 		// framebuffer's attachments change identity (FBO bind/unbind for
@@ -254,6 +259,20 @@ export default class MeshBatcher extends MaterialBatcher {
 		if (unit !== this.currentSamplerUnit) {
 			this.currentShader.setUniform("uSampler", unit);
 			this.currentSamplerUnit = unit;
+		}
+
+		// alpha cutout (glTF alphaMode MASK): discard fragments whose final alpha
+		// is below the mesh's threshold (0 = disabled). The built-in mesh shaders
+		// declare `uAlphaCutoff`; a custom shader without it is left untouched.
+		// Each mesh is flushed on its own (see WebGLRenderer.drawMesh), so setting
+		// the uniform before the vertices are pushed is enough — no extra flush.
+		const cutoff = mesh.alphaCutoff || 0;
+		if (
+			cutoff !== this.currentAlphaCutoff &&
+			this.currentShader.uniforms.uAlphaCutoff !== undefined
+		) {
+			this.currentShader.setUniform("uAlphaCutoff", cutoff);
+			this.currentAlphaCutoff = cutoff;
 		}
 
 		const m = this.viewMatrix;

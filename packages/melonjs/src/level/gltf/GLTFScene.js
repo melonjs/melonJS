@@ -146,6 +146,9 @@ export default class GLTFScene {
 				textureRepeat: node.textureRepeat,
 				// honor the glTF sampler magnification filter (nearest for pixel-art)
 				textureFilter: node.textureFilter,
+				// alpha cutout threshold (glTF alphaMode MASK) — discard fully
+				// transparent texels so cutout props (foliage, fences) read crisp
+				alphaCutoff: node.alphaCutoff,
 				// light this mesh (via the lit batcher) when the scene has lights —
 				// unless the material is KHR_materials_unlit (baked lighting, must
 				// not be shaded again)

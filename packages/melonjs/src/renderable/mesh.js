@@ -118,6 +118,7 @@ export default class Mesh extends Renderable {
 	 * @param {boolean} [settings.rightHanded=false] - treat the source as right-handed (Y-up, e.g. glTF) under the `Camera3d` world path. The default Y-up→Y-down bridge negates Y only (a reflection, which mirrors the scene left/right); `true` negates Y **and** Z (a rotation) so chirality is preserved and the result matches the authoring tool. See {@link Mesh#rightHanded}.
 	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) applied to the resolved texture. Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
 	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. WebGL only (ignored by the Canvas renderer).
+	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. WebGL mesh path only.
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -261,6 +262,19 @@ export default class Mesh extends Renderable {
 		 * @default false
 		 */
 		this.lit = settings.lit === true;
+
+		/**
+		 * Alpha cutout threshold. A fragment whose final alpha is below this
+		 * value is discarded — a hard-edged cutout (foliage, fences, chain-link,
+		 * decals) that needs no blending or back-to-front sorting. `0` (the
+		 * default) disables the cutout and the mesh renders fully opaque. Set by
+		 * the glTF loader from a material's `alphaMode: "MASK"` / `alphaCutoff`.
+		 * WebGL mesh path only (the Canvas renderer ignores it).
+		 * @type {number}
+		 * @default 0
+		 */
+		this.alphaCutoff =
+			typeof settings.alphaCutoff === "number" ? settings.alphaCutoff : 0;
 
 		/**
 		 * whether to cull back-facing triangles
