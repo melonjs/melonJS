@@ -26,6 +26,10 @@ const _chunkIndices = [];
 // `bind()` of either clears + marks clean; `RENDER_TARGET_CHANGED` re-arms it.
 let _meshDepthDirty = true;
 
+// shared zero emissive, passed to the shader when a mesh has no emission so the
+// `uEmissive` add is a no-op. Never mutated.
+const _ZERO_EMISSIVE = new Float32Array(3);
+
 /**
  * Per-channel multiply two ARGB-packed Uint32 colors. Used by the
  * multi-material mesh path to combine a vertex's baked material color
@@ -94,6 +98,12 @@ export default class MeshBatcher extends MaterialBatcher {
 		// meshes sharing a cutoff don't re-issue the uniform. -1 is an impossible
 		// cutoff (valid range 0..1), forcing the first mesh of a pass to set it.
 		this.currentAlphaCutoff = -1;
+
+		// last `uEmissive` value pushed (per channel), same redundant-set guard.
+		// -1 is an impossible emissive (valid range 0..∞), forcing the first set.
+		this.currentEmissiveR = -1;
+		this.currentEmissiveG = -1;
+		this.currentEmissiveB = -1;
 
 		// Subscribe to the renderer's target-changed broadcast so we re-arm the
 		// shared lazy depth clear (`_meshDepthDirty`) whenever the active
@@ -273,6 +283,26 @@ export default class MeshBatcher extends MaterialBatcher {
 		) {
 			this.currentShader.setUniform("uAlphaCutoff", cutoff);
 			this.currentAlphaCutoff = cutoff;
+		}
+
+		// emissive (glTF emissiveFactor / MTL Ke): a self-illumination color
+		// added to the final fragment, unaffected by lighting. Same per-mesh,
+		// flush-free, guarded-by-uniform-presence pattern as the cutoff above.
+		// `undefined` (no emission) → the shared zero vector, a no-op add.
+		const em = mesh.emissive;
+		const er = em ? em[0] : 0;
+		const eg = em ? em[1] : 0;
+		const eb = em ? em[2] : 0;
+		if (
+			(er !== this.currentEmissiveR ||
+				eg !== this.currentEmissiveG ||
+				eb !== this.currentEmissiveB) &&
+			this.currentShader.uniforms.uEmissive !== undefined
+		) {
+			this.currentShader.setUniform("uEmissive", em ?? _ZERO_EMISSIVE);
+			this.currentEmissiveR = er;
+			this.currentEmissiveG = eg;
+			this.currentEmissiveB = eb;
 		}
 
 		const m = this.viewMatrix;

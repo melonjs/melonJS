@@ -585,6 +585,30 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return 0;
 	};
 
+	// resolve material index -> emissive color [r,g,b] (0..1, possibly HDR), or
+	// undefined when the material has no (non-zero) emission. glTF `emissiveFactor`
+	// self-illuminates a surface (neon, lava, screens, glowing eyes) independently
+	// of scene lights; `KHR_materials_emissive_strength` scales it past 1 for a
+	// brighter glow (default strength 1). A zero factor → undefined so the Mesh
+	// stays on the lean no-emissive path.
+	const materialEmissive = (materialIndex) => {
+		const mat =
+			materialIndex !== undefined ? json.materials?.[materialIndex] : undefined;
+		const f = mat?.emissiveFactor;
+		if (!f) {
+			return undefined;
+		}
+		const strength =
+			mat.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1;
+		const r = f[0] * strength;
+		const g = f[1] * strength;
+		const b = f[2] * strength;
+		if (r === 0 && g === 0 && b === 0) {
+			return undefined;
+		}
+		return [r, g, b];
+	};
+
 	// walk the active scene's node graph, accumulating world matrices.
 	// A malformed asset is not allowed to crash the loader: a missing scene
 	// or scene-node list degrades to an empty (but valid) descriptor rather
@@ -666,6 +690,9 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			unlit: materialUnlit(prim.material),
 			// alpha cutout threshold (glTF alphaMode MASK); 0 = no discard
 			alphaCutoff: materialAlphaCutoff(prim.material),
+			// emissive color [r,g,b] (glTF emissiveFactor × emissive_strength), or
+			// undefined when the material doesn't self-illuminate
+			emissive: materialEmissive(prim.material),
 		};
 	};
 

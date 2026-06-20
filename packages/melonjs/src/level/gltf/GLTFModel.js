@@ -142,6 +142,8 @@ export default class GLTFModel extends Container {
 					textureFilter: prim.textureFilter,
 					// alpha cutout threshold (glTF alphaMode MASK)
 					alphaCutoff: prim.alphaCutoff,
+					// emissive color (glTF emissiveFactor) — self-illumination
+					emissive: prim.emissive,
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
 				});

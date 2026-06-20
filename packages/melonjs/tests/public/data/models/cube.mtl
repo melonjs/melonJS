@@ -1,3 +1,4 @@
 newmtl cube
 Kd 1.0 1.0 1.0
+Ke 0.0 1.0 0.5
 map_Kd cube.png

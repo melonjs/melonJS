@@ -1768,3 +1768,47 @@ describe("parseGLTF() — alpha cutout (alphaMode MASK)", () => {
 		expect(scene.nodes[0].alphaCutoff).toBe(0);
 	});
 });
+
+// ── material flags: emissive (emissiveFactor) ────────────────────────────────
+
+describe("parseGLTF() — emissive", () => {
+	it("reads emissiveFactor into the emissive color", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ emissiveFactor: [1, 0.5, 0] }),
+		);
+		expect(Array.from(scene.nodes[0].emissive)).toEqual([1, 0.5, 0]);
+	});
+
+	it("KHR_materials_emissive_strength scales the factor (HDR glow)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				emissiveFactor: [1, 0.5, 0],
+				extensions: {
+					KHR_materials_emissive_strength: { emissiveStrength: 3 },
+				},
+			}),
+		);
+		expect(Array.from(scene.nodes[0].emissive)).toEqual([3, 1.5, 0]);
+	});
+
+	it("a material with no emissiveFactor has no emissive (undefined)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1] },
+			}),
+		);
+		expect(scene.nodes[0].emissive).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: an all-zero emissiveFactor collapses to no emissive (undefined)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ emissiveFactor: [0, 0, 0] }),
+		);
+		expect(scene.nodes[0].emissive).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: a primitive with no material has no emissive (undefined)", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].emissive).toBeUndefined();
+	});
+});

@@ -501,6 +501,23 @@ describe("loader", () => {
 			).resolves.toBe(true);
 		});
 
+		it("parses a material's Ke (emissive) color", async () => {
+			await expect(
+				new Promise((resolve, reject) => {
+					loader.load(
+						{ name: "cubemtl_ke", type: "mtl", src: "/data/models/cube.mtl" },
+						() => {
+							const mats = loader.getMTL("cubemtl_ke");
+							resolve(JSON.stringify(mats?.cube?.Ke));
+						},
+						() => {
+							reject(new Error("failed to load cube.mtl"));
+						},
+					);
+				}),
+			).resolves.toBe(JSON.stringify([0, 1, 0.5]));
+		});
+
 		it("does not abort the load when a map_Kd texture is missing (mesh falls back to white)", async () => {
 			// the .mtl parses fine; only the (absent) texture fails → onload still fires
 			await expect(

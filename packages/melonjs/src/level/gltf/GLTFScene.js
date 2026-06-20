@@ -149,6 +149,9 @@ export default class GLTFScene {
 				// alpha cutout threshold (glTF alphaMode MASK) — discard fully
 				// transparent texels so cutout props (foliage, fences) read crisp
 				alphaCutoff: node.alphaCutoff,
+				// emissive color (glTF emissiveFactor) — self-illumination so neon /
+				// lava / screens glow regardless of scene lighting
+				emissive: node.emissive,
 				// light this mesh (via the lit batcher) when the scene has lights —
 				// unless the material is KHR_materials_unlit (baked lighting, must
 				// not be shaded again)

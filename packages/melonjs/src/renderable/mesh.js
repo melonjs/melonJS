@@ -42,6 +42,27 @@ function resolveTextureAtlas(src) {
 }
 
 /**
+ * Normalize an emissive color input (`[r, g, b]` array / Float32Array, or
+ * nullish) into a `Float32Array(3)`, or `undefined` when there's no emission
+ * (nullish or all-zero) so the Mesh stays on the lean no-emissive path.
+ * @param {number[]|Float32Array|undefined|null} src
+ * @returns {Float32Array|undefined}
+ * @ignore
+ */
+function toEmissive(src) {
+	if (src === undefined || src === null) {
+		return undefined;
+	}
+	const r = src[0] || 0;
+	const g = src[1] || 0;
+	const b = src[2] || 0;
+	if (r === 0 && g === 0 && b === 0) {
+		return undefined;
+	}
+	return new Float32Array([r, g, b]);
+}
+
+/**
  * Resolve an OBJ material group into a draw descriptor. Builds the
  * group's tint from the MTL's `Kd` (defaults to white if missing) and
  * its opacity from `d`. Returns a self-contained record carrying just
@@ -119,6 +140,7 @@ export default class Mesh extends Renderable {
 	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) applied to the resolved texture. Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
 	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. WebGL only (ignored by the Canvas renderer).
 	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. WebGL mesh path only.
+	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). WebGL mesh path only.
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -277,6 +299,18 @@ export default class Mesh extends Renderable {
 			typeof settings.alphaCutoff === "number" ? settings.alphaCutoff : 0;
 
 		/**
+		 * Emissive (self-illumination) color as an `[r, g, b]` `Float32Array`
+		 * (0..1, may exceed 1 for HDR glow), added on top of the lit/unlit color
+		 * so the surface glows independently of the scene lights (neon, lava,
+		 * screens, glowing eyes). `undefined` (the default) means no emission and
+		 * keeps the mesh on the lean path. Set by the glTF loader from a material's
+		 * `emissiveFactor` (× `KHR_materials_emissive_strength`) and by the OBJ
+		 * loader from an MTL's `Ke`. WebGL mesh path only.
+		 * @type {Float32Array|undefined}
+		 */
+		this.emissive = toEmissive(settings.emissive);
+
+		/**
 		 * whether to cull back-facing triangles
 		 * @type {boolean}
 		 * @default true
@@ -426,6 +460,12 @@ export default class Mesh extends Renderable {
 				}
 				if (mat.d < 1.0) {
 					this.setOpacity(mat.d);
+				}
+				// MTL emissive (Ke) — self-illumination, kept separate from the
+				// diffuse tint so it glows regardless of scene lighting
+				const ke = toEmissive(mat.Ke);
+				if (ke !== undefined) {
+					this.emissive = ke;
 				}
 			}
 		}

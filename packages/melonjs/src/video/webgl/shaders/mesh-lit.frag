@@ -9,6 +9,7 @@
 
 uniform sampler2D uSampler;
 uniform float uAlphaCutoff;               // alpha cutout threshold (0 = disabled)
+uniform vec3 uEmissive;                   // self-illumination color (0 = none)
 
 uniform int uLightCount;
 uniform vec3 uLightDir[__MAX_LIGHTS__];   // surface→light, normalized (world space)
@@ -39,5 +40,7 @@ void main(void) {
         lit += uLightColor[i] * (ndl * ndl);
     }
 
-    gl_FragColor = vec4(base.rgb * lit, base.a);
+    // emissive self-illuminates: added AFTER lighting so it glows at full
+    // strength regardless of the scene lights (neon, lava, glowing eyes).
+    gl_FragColor = vec4(base.rgb * lit + uEmissive, base.a);
 }

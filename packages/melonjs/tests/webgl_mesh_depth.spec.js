@@ -512,4 +512,65 @@ describe("Mesh depth handling (issue #1468)", () => {
 			expect(px[0]).toBeGreaterThan(50); // kept (≈99), not discarded (≈0)
 		});
 	});
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Layer 2 — emissive (glTF emissiveFactor / MTL Ke)
+	// ──────────────────────────────────────────────────────────────────────
+	//
+	// The mesh shaders ADD `uEmissive` to the final color, so a surface glows
+	// regardless of lighting. These draw a BLACK-tinted mesh (no diffuse
+	// contribution) so any color in the readback comes purely from the emissive
+	// add — proving the uniform path runs and both shaders still compile.
+
+	describe("emissive (Layer 2)", () => {
+		const readCenter = () => {
+			const gl = renderer.gl;
+			const px = new Uint8Array(4);
+			gl.finish();
+			gl.readPixels(64, 64, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+			return px;
+		};
+
+		const setupOrtho = () => {
+			const proj = new Matrix3d();
+			proj.ortho(0, 128, 128, 0, -1000, 1000);
+			renderer.setProjection(proj);
+		};
+
+		const freshFrame = () => {
+			renderer.backgroundColor.setColor(0, 0, 0, 255);
+			renderer.clear();
+			renderer.setColor("#000000");
+			renderer.fillRect(0, 0, 1, 1); // force a non-mesh batcher state
+		};
+
+		const drawEmissiveMesh = (emissive) => {
+			const mesh = makeQuadMesh(64, 64, 0, [0, 0, 0, 255]); // black diffuse
+			mesh.emissive = emissive; // Float32Array(3) or undefined
+			renderer.currentTint.setColor(0, 0, 0, 255);
+			renderer.drawMesh(mesh);
+		};
+
+		it("a black mesh with green emissive glows green", (ctx) => {
+			requireWebGL2(ctx);
+			setupOrtho();
+			freshFrame();
+			drawEmissiveMesh(new Float32Array([0, 1, 0]));
+			const px = readCenter();
+			expect(px[0]).toBeLessThan(60); // no red
+			expect(px[1]).toBeGreaterThan(180); // green from emissive add
+		});
+
+		it("a black mesh with no emissive stays black (uniform resets between meshes)", (ctx) => {
+			requireWebGL2(ctx);
+			setupOrtho();
+			freshFrame();
+			// draw an emissive mesh first, then a non-emissive one over it: the
+			// batcher must reset uEmissive back to zero or the glow would leak.
+			drawEmissiveMesh(new Float32Array([0, 1, 0]));
+			drawEmissiveMesh(undefined);
+			const px = readCenter();
+			expect(px[1]).toBeLessThan(60); // green did NOT leak into mesh 2
+		});
+	});
 });
