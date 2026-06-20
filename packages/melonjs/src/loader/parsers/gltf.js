@@ -540,6 +540,36 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		);
 	};
 
+	// resolve material index -> texture magnification filter from the glTF
+	// sampler: `"nearest"` (9728, crisp pixel-art upscaling) or `"linear"`
+	// (9729, smooth). `undefined` when the sampler doesn't specify one, so the
+	// engine keeps its global antiAlias default — only an explicit NEAREST/LINEAR
+	// overrides it.
+	const NEAREST = 9728;
+	const LINEAR = 9729;
+	const materialTextureFilter = (materialIndex) => {
+		const tex =
+			materialIndex !== undefined
+				? json.materials?.[materialIndex]?.pbrMetallicRoughness
+						?.baseColorTexture
+				: undefined;
+		if (!tex) {
+			return undefined;
+		}
+		const samplerIndex = json.textures?.[tex.index]?.sampler;
+		const magFilter =
+			samplerIndex !== undefined
+				? json.samplers?.[samplerIndex]?.magFilter
+				: undefined;
+		if (magFilter === NEAREST) {
+			return "nearest";
+		}
+		if (magFilter === LINEAR) {
+			return "linear";
+		}
+		return undefined;
+	};
+
 	// walk the active scene's node graph, accumulating world matrices.
 	// A malformed asset is not allowed to crash the loader: a missing scene
 	// or scene-node list degrades to an empty (but valid) descriptor rather
@@ -601,6 +631,10 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			// materialTextureRepeat; carried so the Mesh samples tiling UVs
 			// correctly instead of clamping to flat edge texels
 			textureRepeat: materialTextureRepeat(prim.material),
+			// texture magnification filter from the glTF sampler ("nearest" for
+			// crisp pixel-art, "linear" for smooth) — undefined keeps the engine
+			// default
+			textureFilter: materialTextureFilter(prim.material),
 			// baseColorFactor [r,g,b,a] — applied as the mesh tint so a
 			// solid-colored (untextured) material renders its color
 			baseColorFactor: materialBaseColor(prim.material),

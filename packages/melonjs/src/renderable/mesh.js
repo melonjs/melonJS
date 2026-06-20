@@ -117,6 +117,7 @@ export default class Mesh extends Renderable {
 	 * @param {number} [settings.scale] - world-space scale (pixels per source unit) for the Camera3d path; defaults to `width`. Set this when `width`/`height` describe the renderable's world bounds (frustum culling) rather than the geometry scale — see {@link Mesh#meshScale}.
 	 * @param {boolean} [settings.rightHanded=false] - treat the source as right-handed (Y-up, e.g. glTF) under the `Camera3d` world path. The default Y-up→Y-down bridge negates Y only (a reflection, which mirrors the scene left/right); `true` negates Y **and** Z (a rotation) so chirality is preserved and the result matches the authoring tool. See {@link Mesh#rightHanded}.
 	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) applied to the resolved texture. Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
+	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. WebGL only (ignored by the Canvas renderer).
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -443,6 +444,20 @@ export default class Mesh extends Renderable {
 		// fixed with the #1410 TextureCache refactor.)
 		if (hasRealTexture && typeof settings.textureRepeat === "string") {
 			this.texture.repeat = settings.textureRepeat;
+		}
+
+		// Optional texture magnification filter (`"nearest"` for crisp pixel-art
+		// upscaling, `"linear"` for smooth). When omitted the texture keeps the
+		// renderer's global `antiAlias` default. WebGL only — the Canvas renderer
+		// ignores it. Same image-global caveat as `textureRepeat` above (#1503).
+		if (
+			hasRealTexture &&
+			typeof settings.textureFilter === "string" &&
+			game.renderer.gl
+		) {
+			const gl = game.renderer.gl;
+			this.texture.filter =
+				settings.textureFilter === "nearest" ? gl.NEAREST : gl.LINEAR;
 		}
 
 		/**

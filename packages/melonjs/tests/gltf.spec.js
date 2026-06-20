@@ -1629,6 +1629,36 @@ describe("parseGLTF() — texture wrap mode", () => {
 	});
 });
 
+describe("parseGLTF() — texture magnification filter", () => {
+	const NEAREST = 9728;
+	const LINEAR = 9729;
+
+	it("magFilter NEAREST → 'nearest' (crisp pixel-art)", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ magFilter: NEAREST }));
+		expect(scene.nodes[0].textureFilter).toBe("nearest");
+	});
+
+	it("magFilter LINEAR → 'linear'", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ magFilter: LINEAR }));
+		expect(scene.nodes[0].textureFilter).toBe("linear");
+	});
+
+	it("no sampler → undefined (keeps the engine's antiAlias default)", async () => {
+		const scene = await parseGLTF(buildWrapGLB(undefined));
+		expect(scene.nodes[0].textureFilter).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: a sampler without magFilter → undefined (no override)", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ wrapS: 10497 }));
+		expect(scene.nodes[0].textureFilter).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: an untextured material → undefined", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].textureFilter).toBeUndefined();
+	});
+});
+
 // ── material flags: KHR_materials_unlit ──────────────────────────────────────
 
 // single textured-less triangle whose material carries the given extensions

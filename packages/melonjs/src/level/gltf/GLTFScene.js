@@ -144,6 +144,8 @@ export default class GLTFScene {
 				// honor the glTF sampler wrap (default REPEAT) so tiling UVs
 				// (UVs outside [0,1]) sample correctly instead of clamping flat
 				textureRepeat: node.textureRepeat,
+				// honor the glTF sampler magnification filter (nearest for pixel-art)
+				textureFilter: node.textureFilter,
 				// light this mesh (via the lit batcher) when the scene has lights —
 				// unless the material is KHR_materials_unlit (baked lighting, must
 				// not be shaded again)

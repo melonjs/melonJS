@@ -138,6 +138,8 @@ export default class GLTFModel extends Container {
 					// honor the glTF sampler wrap (default REPEAT) — many exporters
 					// author UVs outside [0,1] that tile; clamping flattens them
 					textureRepeat: prim.textureRepeat,
+					// honor the glTF sampler magnification filter (nearest = pixel-art)
+					textureFilter: prim.textureFilter,
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
 				});
