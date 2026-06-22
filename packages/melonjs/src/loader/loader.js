@@ -243,10 +243,11 @@ function completeLoading(onloadcb) {
 	const callback = onloadcb || onload;
 	if (typeof callback === "function") {
 		callback();
-		emit(LOADER_COMPLETE);
-	} else {
-		throw new Error("no load callback defined");
 	}
+	// always signal completion — with the Promise form of preload() a callback
+	// is optional (you can `await` instead), so a missing callback is no longer
+	// an error; the loading screen / consumers react to LOADER_COMPLETE.
+	emit(LOADER_COMPLETE);
 }
 
 /**
@@ -371,6 +372,9 @@ export function setParser(type, parserFn) {
  * @param {Asset[]} assets - list of assets to load
  * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
+ * @returns {Promise<void>} resolves once every asset has loaded (rejects on a
+ * load failure). The `onloadcb` callback is still invoked on success, so both
+ * the callback and `await` forms work — use whichever you prefer.
  * @example
  * game.assets = [
  *   // PNG tileset
@@ -407,8 +411,10 @@ export function setParser(type, parserFn) {
  *   me.loader.load({name: "avatar", type:"video", src: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZ..."};
  * ];
  * ...
- * // set all resources to be loaded
+ * // set all resources to be loaded (callback form)
  * me.loader.preload(game.assets, () => this.loaded());
+ * // ...or await it (the callback still fires too)
+ * await me.loader.preload(game.assets);
  * @category Assets
  */
 export function preload(assets, onloadcb, switchToLoadState = true) {
@@ -417,38 +423,37 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 		onload = onloadcb;
 	}
 
-	// parse the resources and collect promises for each asset
-	const promises = [];
-	for (let i = 0; i < assets.length; i++) {
-		const asset = assets[i];
-		const promise = new Promise((resolve, reject) => {
-			const count = load(
-				asset,
-				() => {
-					onResourceLoaded(asset);
-					resolve();
-				},
-				(err) => {
-					onLoadingError.call(this, asset);
-					reject(err);
-				},
-			);
-			resourceCount += count;
-			if (count === 0) {
-				// asset already loaded, resolve immediately
-				resolve();
-			}
-		});
-		promises.push(promise);
-	}
+	// parse the resources and collect a promise for each asset. `load()` now
+	// returns a Promise in its no-callback form, so there's no need to wrap a
+	// callback in `new Promise` here — just layer the progress / error reporting
+	// on top of it. Each asset counts as one toward the progress total (parsers
+	// load 0 or 1 resource; a cached asset resolves immediately and still
+	// reports progress, keeping `loadCount`/`resourceCount` balanced).
+	const promises = assets.map((asset) => {
+		resourceCount += 1;
+		return load(asset)
+			.then(() => {
+				onResourceLoaded(asset);
+			})
+			.catch((err) => {
+				// onLoadingError emits LOADER_ERROR and throws by design, so this
+				// re-rejects → Promise.all (and the returned promise) reject and
+				// `await loader.preload(...)` surfaces the failure. The trailing
+				// throw keeps the rejection meaningful should it ever stop throwing.
+				onLoadingError.call(this, asset);
+				throw err;
+			});
+	});
 
 	if (switchToLoadState === true) {
 		// switch to the loading screen
 		state.change(state.LOADING);
 	}
 
-	// call the completion callback as soon as all assets are loaded
-	Promise.all(promises).then(() => {
+	// Resolve once every asset has loaded; call the completion callback on
+	// success (back-compat). Returned so callers can `await loader.preload(...)`
+	// instead of (or as well as) passing a callback.
+	return Promise.all(promises).then(() => {
 		completeLoading(onload);
 	});
 }
@@ -501,10 +506,15 @@ export function reload(src) {
  * @param {Asset} asset
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
- * @returns {number} the amount of corresponding resource to be preloaded
+ * @returns {number|Promise<void>} with `onload`/`onerror` provided, the amount
+ * of corresponding resource to be preloaded (the legacy callback form). With
+ * **both omitted**, a Promise that resolves once the asset has loaded, so you
+ * can `await loader.load(asset)` for a one-off dynamic load.
  * @example
- * // load an image asset
+ * // load an image asset (callback form)
  * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, () => this.onload(), () => this.onerror());
+ * // ...or await a single dynamic asset (no callbacks)
+ * await me.loader.load({name: "avatar", type: "image", src: "data/avatar.png"});
  * // load a compressed texture with fallback chain
  * me.loader.load({name: "terrain", type:"image", src: ["data/gfx/terrain.astc.ktx", "data/gfx/terrain.dds", "data/gfx/terrain.png"]}, () => this.onload());
  * // load a base64 image asset
@@ -555,12 +565,36 @@ export function load(asset, onload, onerror) {
 		throw new Error("load : unknown or invalid resource type : " + asset.type);
 	}
 
-	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-	return parser.call(this, asset, onload, onerror, {
+	const settings = {
 		nocache: nocache,
 		crossOrigin: crossOrigin,
 		withCredentials: withCredentials,
-	});
+	};
+
+	// Promise form: with no callbacks, resolve once the asset (and any
+	// sub-resources) have loaded — for a one-off `await loader.load(asset)`.
+	// The legacy callback form below still returns the resource count.
+	if (onload === undefined && onerror === undefined) {
+		return new Promise((resolve, reject) => {
+			// parser returns the amount of asset to be loaded (usually 1, more
+			// if it splits into several); 0 means already cached → resolve now.
+			const count = parser.call(
+				this,
+				asset,
+				() => {
+					resolve();
+				},
+				reject,
+				settings,
+			);
+			if (count === 0) {
+				resolve();
+			}
+		});
+	}
+
+	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
+	return parser.call(this, asset, onload, onerror, settings);
 }
 
 /**
