@@ -899,6 +899,25 @@ describe("GLTFScene → Mesh instantiation", () => {
 		expect(a.getBounds().width).toBeGreaterThan(0);
 	});
 
+	it("propagates a MASK material's alpha cutout to the instantiated Mesh", async () => {
+		const CUTOUT = "__gltf_cutout_scene";
+		gltfList[CUTOUT] = await parseGLTF(
+			buildMaterialGLB({ alphaMode: "MASK", alphaCutoff: 0.3 }),
+		);
+		const scene = new GLTFScene(CUTOUT);
+		const container = {
+			autoDepth: true,
+			kids: [],
+			addChild(c) {
+				this.kids.push(c);
+			},
+		};
+		scene.addTo(container);
+		// the cutout threshold rides from material → parser → Mesh
+		expect(container.kids[0].alphaCutoff).toBe(0.3);
+		delete gltfList[CUTOUT];
+	});
+
 	it("keeps raw geometry untouched when normalize is disabled", () => {
 		// glTF nodes share one coordinate space, so addTo passes
 		// normalize:false — the raw vertices must survive verbatim
@@ -1052,6 +1071,59 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 		scene.addTo(container, { scale: 10, lights: false });
 		expect(lightsOf(container)).toHaveLength(0);
 		expect(container.kids[0].lit).toBe(false);
+	});
+
+	it("KHR_materials_unlit: an unlit-material mesh stays unlit even in a lit scene", async () => {
+		// a lit scene (directional light) whose single mesh uses an unlit material
+		const UNLIT = "__gltf_unlit_in_lit";
+		const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+		const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+		const indices = new Uint16Array([0, 1, 2]);
+		const { bin, offsets } = packParts([positions, normals, indices]);
+		const json = {
+			asset: { version: "2.0" },
+			scene: 0,
+			scenes: [{ nodes: [0, 1] }],
+			extensionsUsed: ["KHR_lights_punctual", "KHR_materials_unlit"],
+			extensions: {
+				KHR_lights_punctual: {
+					lights: [{ type: "directional", color: [1, 1, 1], intensity: 1000 }],
+				},
+			},
+			nodes: [
+				{ mesh: 0 },
+				{ extensions: { KHR_lights_punctual: { light: 0 } } },
+			],
+			materials: [{ extensions: { KHR_materials_unlit: {} } }],
+			meshes: [
+				{
+					primitives: [
+						{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 },
+					],
+				},
+			],
+			accessors: [
+				{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+				{ bufferView: 1, componentType: 5126, count: 3, type: "VEC3" },
+				{ bufferView: 2, componentType: 5123, count: 3, type: "SCALAR" },
+			],
+			bufferViews: [
+				{ buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength },
+				{ buffer: 0, byteOffset: offsets[1], byteLength: normals.byteLength },
+				{ buffer: 0, byteOffset: offsets[2], byteLength: indices.byteLength },
+			],
+			buffers: [{ byteLength: bin.length }],
+		};
+		gltfList[UNLIT] = await parseGLTF(packGLB(json, bin));
+
+		const container = fakeContainer();
+		new GLTFScene(UNLIT).addTo(container, { scale: 10 });
+		// the scene IS lit (directional light added)…
+		expect(lightsOf(container).length).toBeGreaterThan(0);
+		// …but the unlit material opts this mesh out of the lit path
+		expect(container.kids[0].lit).toBe(false);
+
+		delete gltfList[UNLIT];
 	});
 });
 
@@ -1573,5 +1645,183 @@ describe("parseGLTF() — texture wrap mode", () => {
 		// buildSceneGLB's mesh nodes have no material at all
 		const scene = await parseGLTF(buildSceneGLB());
 		expect(scene.nodes[0].textureRepeat).toBe("repeat");
+	});
+});
+
+describe("parseGLTF() — texture magnification filter", () => {
+	const NEAREST = 9728;
+	const LINEAR = 9729;
+
+	it("magFilter NEAREST → 'nearest' (crisp pixel-art)", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ magFilter: NEAREST }));
+		expect(scene.nodes[0].textureFilter).toBe("nearest");
+	});
+
+	it("magFilter LINEAR → 'linear'", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ magFilter: LINEAR }));
+		expect(scene.nodes[0].textureFilter).toBe("linear");
+	});
+
+	it("no sampler → undefined (keeps the engine's antiAlias default)", async () => {
+		const scene = await parseGLTF(buildWrapGLB(undefined));
+		expect(scene.nodes[0].textureFilter).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: a sampler without magFilter → undefined (no override)", async () => {
+		const scene = await parseGLTF(buildWrapGLB({ wrapS: 10497 }));
+		expect(scene.nodes[0].textureFilter).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: an untextured material → undefined", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].textureFilter).toBeUndefined();
+	});
+});
+
+// ── material flags: KHR_materials_unlit ──────────────────────────────────────
+
+// single textured-less triangle whose material carries the given extensions
+function buildMaterialGLB(material) {
+	const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+	const indices = new Uint16Array([0, 1, 2]);
+	const { bin, offsets } = packParts([positions, indices]);
+	const json = {
+		asset: { version: "2.0" },
+		scene: 0,
+		scenes: [{ nodes: [0] }],
+		nodes: [{ mesh: 0 }],
+		materials: [material],
+		meshes: [
+			{
+				primitives: [{ attributes: { POSITION: 0 }, indices: 1, material: 0 }],
+			},
+		],
+		accessors: [
+			{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+			{ bufferView: 1, componentType: 5123, count: 3, type: "SCALAR" },
+		],
+		bufferViews: [
+			{ buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength },
+			{ buffer: 0, byteOffset: offsets[1], byteLength: indices.byteLength },
+		],
+		buffers: [{ byteLength: bin.length }],
+	};
+	return packGLB(json, bin);
+}
+
+describe("parseGLTF() — KHR_materials_unlit", () => {
+	it("flags a material with the extension as unlit", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ extensions: { KHR_materials_unlit: {} } }),
+		);
+		expect(scene.nodes[0].unlit).toBe(true);
+	});
+
+	it("a material without the extension is not unlit", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				pbrMetallicRoughness: { baseColorFactor: [1, 0, 0, 1] },
+			}),
+		);
+		expect(scene.nodes[0].unlit).toBe(false);
+	});
+
+	it("ADVERSARIAL: a primitive with no material is not unlit", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].unlit).toBe(false);
+	});
+});
+
+// ── material flags: alpha cutout (alphaMode MASK) ────────────────────────────
+
+describe("parseGLTF() — alpha cutout (alphaMode MASK)", () => {
+	it("MASK with an explicit alphaCutoff uses that threshold", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ alphaMode: "MASK", alphaCutoff: 0.25 }),
+		);
+		expect(scene.nodes[0].alphaCutoff).toBe(0.25);
+	});
+
+	it("MASK without an alphaCutoff defaults to the spec 0.5", async () => {
+		const scene = await parseGLTF(buildMaterialGLB({ alphaMode: "MASK" }));
+		expect(scene.nodes[0].alphaCutoff).toBe(0.5);
+	});
+
+	it("OPAQUE (default) yields no cutout (0)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1] },
+			}),
+		);
+		expect(scene.nodes[0].alphaCutoff).toBe(0);
+	});
+
+	it("ADVERSARIAL: BLEND mode is not a cutout (0 — alphaCutoff ignored)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ alphaMode: "BLEND", alphaCutoff: 0.9 }),
+		);
+		expect(scene.nodes[0].alphaCutoff).toBe(0);
+	});
+
+	it("ADVERSARIAL: a primitive with no material has no cutout (0)", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].alphaCutoff).toBe(0);
+	});
+});
+
+// ── material flags: emissive (emissiveFactor) ────────────────────────────────
+
+describe("parseGLTF() — emissive", () => {
+	it("reads emissiveFactor into the emissive color", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ emissiveFactor: [1, 0.5, 0] }),
+		);
+		expect(Array.from(scene.nodes[0].emissive)).toEqual([1, 0.5, 0]);
+	});
+
+	it("KHR_materials_emissive_strength scales the factor (HDR glow)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				emissiveFactor: [1, 0.5, 0],
+				extensions: {
+					KHR_materials_emissive_strength: { emissiveStrength: 3 },
+				},
+			}),
+		);
+		expect(Array.from(scene.nodes[0].emissive)).toEqual([3, 1.5, 0]);
+	});
+
+	it("a material with no emissiveFactor has no emissive (undefined)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({
+				pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1] },
+			}),
+		);
+		expect(scene.nodes[0].emissive).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: an all-zero emissiveFactor collapses to no emissive (undefined)", async () => {
+		const scene = await parseGLTF(
+			buildMaterialGLB({ emissiveFactor: [0, 0, 0] }),
+		);
+		expect(scene.nodes[0].emissive).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: a primitive with no material has no emissive (undefined)", async () => {
+		const scene = await parseGLTF(buildSceneGLB());
+		expect(scene.nodes[0].emissive).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: a malformed (short) emissiveFactor never yields NaN", async () => {
+		// a non-spec asset writing only 1 component must not produce a NaN that
+		// would reach the uEmissive uniform (NaN !== 0 dodges the zero-collapse)
+		const scene = await parseGLTF(buildMaterialGLB({ emissiveFactor: [1] }));
+		const e = scene.nodes[0].emissive;
+		expect(e).toEqual([1, 0, 0]);
+		expect(
+			e.some((c) => {
+				return Number.isNaN(c);
+			}),
+		).toBe(false);
 	});
 });

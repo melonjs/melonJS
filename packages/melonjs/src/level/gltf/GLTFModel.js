@@ -133,10 +133,17 @@ export default class GLTFModel extends Container {
 					scale: this.scale,
 					normalize: false,
 					rightHanded,
-					lit,
+					// KHR_materials_unlit materials skip the lit path even in a lit scene
+					lit: lit && prim.unlit !== true,
 					// honor the glTF sampler wrap (default REPEAT) — many exporters
 					// author UVs outside [0,1] that tile; clamping flattens them
 					textureRepeat: prim.textureRepeat,
+					// honor the glTF sampler magnification filter (nearest = pixel-art)
+					textureFilter: prim.textureFilter,
+					// alpha cutout threshold (glTF alphaMode MASK)
+					alphaCutoff: prim.alphaCutoff,
+					// emissive color (glTF emissiveFactor) — self-illumination
+					emissive: prim.emissive,
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
 				});

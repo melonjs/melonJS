@@ -10,6 +10,7 @@ export const defaultApplicationSettings = {
 	powerPreference: "default",
 	transparent: false,
 	antiAlias: false,
+	textureFilter: "auto",
 	consoleHeader: true,
 	blendMode: "normal",
 	physic: "builtin",

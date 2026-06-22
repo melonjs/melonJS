@@ -10,13 +10,40 @@ import { MaterialBatcher } from "./material_batcher.js";
 // identity, so output (x, y) matches the legacy Vector2d path.
 const _v = new Vector3d();
 
-// Reused scratch for addMesh's per-chunk vertex dedup (`_remap`) and absolute
-// index list (`_chunkIndices`), so a chunk doesn't allocate a fresh Map +
-// array per mesh per frame (GC pressure on the draw path). Safe because
-// addMesh runs synchronously and never re-enters (flush() only draws). Shared
-// by MeshBatcher and LitMeshBatcher — only one addMesh runs at a time.
-const _remap = new Map();
+// Reused scratch for addMesh's per-chunk vertex dedup and absolute index list
+// (`_chunkIndices`), so a chunk allocates nothing per mesh per frame (GC
+// pressure on the draw path). Safe because addMesh runs synchronously and never
+// re-enters (flush() only draws). Shared by MeshBatcher and LitMeshBatcher —
+// only one addMesh runs at a time.
+//
+// Dedup uses a "versioned" typed-array remap rather than a `Map`: a `Map` here
+// churned the GC badly, because V8's `Map.clear()` drops the backing table, so
+// re-filling it each chunk reallocated as it grew — and the cost scaled with
+// vertex count (a dense mesh = MBs/sec of garbage). Instead, `_remapSlot[orig]`
+// holds the local index assigned to original-vertex `orig` THIS chunk, valid
+// only when `_remapStamp[orig] === _stamp`. Bumping `_stamp` per chunk
+// invalidates every entry in O(1) — no clearing, no allocation. The arrays grow
+// lazily (to a power of two ≥ the largest mesh's vertex count) and are reused.
+let _remapSlot = new Int32Array(0);
+let _remapStamp = new Int32Array(0);
+let _stamp = 0;
 const _chunkIndices = [];
+
+/**
+ * Ensure the versioned-remap scratch arrays can index every vertex of a mesh
+ * with `vertexCount` vertices. Grows to the next power of two and reuses
+ * thereafter (one-time cost when a larger mesh first appears).
+ * @ignore
+ */
+function ensureRemapCapacity(vertexCount) {
+	if (_remapSlot.length >= vertexCount) {
+		return;
+	}
+	// next power of two ≥ vertexCount (Math.clz32 → leading-zero count)
+	const cap = vertexCount <= 1 ? 1 : 1 << (32 - Math.clz32(vertexCount - 1));
+	_remapSlot = new Int32Array(cap);
+	_remapStamp = new Int32Array(cap); // zero-filled; _stamp is always ≥ 1 in use
+}
 
 // Shared lazy-depth-clear state for the mesh-mode pass. Module-level (not
 // per-instance) so the unlit `MeshBatcher` and the `LitMeshBatcher` — which
@@ -25,6 +52,10 @@ const _chunkIndices = [];
 // re-clear the shared depth buffer and break inter-mesh occlusion. The first
 // `bind()` of either clears + marks clean; `RENDER_TARGET_CHANGED` re-arms it.
 let _meshDepthDirty = true;
+
+// shared zero emissive, passed to the shader when a mesh has no emission so the
+// `uEmissive` add is a no-op. Never mutated.
+const _ZERO_EMISSIVE = new Float32Array(3);
 
 /**
  * Per-channel multiply two ARGB-packed Uint32 colors. Used by the
@@ -90,6 +121,17 @@ export default class MeshBatcher extends MaterialBatcher {
 			indexed: true,
 		});
 
+		// last `uAlphaCutoff` value pushed to the current shader, so consecutive
+		// meshes sharing a cutoff don't re-issue the uniform. -1 is an impossible
+		// cutoff (valid range 0..1), forcing the first mesh of a pass to set it.
+		this.currentAlphaCutoff = -1;
+
+		// last `uEmissive` value pushed (per channel), same redundant-set guard.
+		// -1 is an impossible emissive (valid range 0..∞), forcing the first set.
+		this.currentEmissiveR = -1;
+		this.currentEmissiveG = -1;
+		this.currentEmissiveB = -1;
+
 		// Subscribe to the renderer's target-changed broadcast so we re-arm the
 		// shared lazy depth clear (`_meshDepthDirty`) whenever the active
 		// framebuffer's attachments change identity (FBO bind/unbind for
@@ -151,6 +193,29 @@ export default class MeshBatcher extends MaterialBatcher {
 	 */
 	_shaderSources() {
 		return { vertex: meshVertex, fragment: meshFragment };
+	}
+
+	/**
+	 * Invalidate the per-mesh `uAlphaCutoff` / `uEmissive` caches when the bound
+	 * shader (GL program) changes — the new program's uniforms are at their own
+	 * defaults, so the next mesh must re-issue them rather than trust the cache.
+	 * Mirrors the base batcher's `currentSamplerUnit` reset (same condition), and
+	 * matters when a custom mesh shader declaring those uniforms is interleaved
+	 * with the built-in one on this batcher (e.g. `drawMesh` swapping a custom
+	 * shader in and back out).
+	 * @ignore
+	 */
+	useShader(shader) {
+		if (
+			this.currentShader !== shader ||
+			this.renderer.currentProgram !== shader.program
+		) {
+			this.currentAlphaCutoff = -1;
+			this.currentEmissiveR = -1;
+			this.currentEmissiveG = -1;
+			this.currentEmissiveB = -1;
+		}
+		super.useShader(shader);
 	}
 
 	/**
@@ -256,10 +321,48 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentSamplerUnit = unit;
 		}
 
+		// alpha cutout (glTF alphaMode MASK): discard fragments whose final alpha
+		// is below the mesh's threshold (0 = disabled). The built-in mesh shaders
+		// declare `uAlphaCutoff`; a custom shader without it is left untouched.
+		// Each mesh is flushed on its own (see WebGLRenderer.drawMesh), so setting
+		// the uniform before the vertices are pushed is enough — no extra flush.
+		const cutoff = mesh.alphaCutoff || 0;
+		if (
+			cutoff !== this.currentAlphaCutoff &&
+			this.currentShader.uniforms.uAlphaCutoff !== undefined
+		) {
+			this.currentShader.setUniform("uAlphaCutoff", cutoff);
+			this.currentAlphaCutoff = cutoff;
+		}
+
+		// emissive (glTF emissiveFactor / MTL Ke): a self-illumination color
+		// added to the final fragment, unaffected by lighting. Same per-mesh,
+		// flush-free, guarded-by-uniform-presence pattern as the cutoff above.
+		// `undefined` (no emission) → the shared zero vector, a no-op add.
+		const em = mesh.emissive;
+		const er = em ? em[0] : 0;
+		const eg = em ? em[1] : 0;
+		const eb = em ? em[2] : 0;
+		if (
+			(er !== this.currentEmissiveR ||
+				eg !== this.currentEmissiveG ||
+				eb !== this.currentEmissiveB) &&
+			this.currentShader.uniforms.uEmissive !== undefined
+		) {
+			this.currentShader.setUniform("uEmissive", em ?? _ZERO_EMISSIVE);
+			this.currentEmissiveR = er;
+			this.currentEmissiveG = eg;
+			this.currentEmissiveB = eb;
+		}
+
 		const m = this.viewMatrix;
 		const isIdentity = m.isIdentity();
 		const maxVerts = this.vertexData.maxVertex;
 		const maxIndices = this.indexBuffer.data.length;
+
+		// size the versioned-remap scratch for this mesh's vertex range (one-time
+		// growth; reused across frames thereafter)
+		ensureRemapCapacity(mesh.vertexCount);
 
 		// process triangles in chunks that fit the buffer
 		let triIdx = 0;
@@ -281,19 +384,29 @@ export default class MeshBatcher extends MaterialBatcher {
 
 			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
 
-			// build a local vertex remap for this chunk (reused scratch)
-			// capture base offset before pushing any vertices
+			// build a local vertex remap for this chunk (reused scratch).
+			// capture base offset before pushing any vertices. Bump the stamp to
+			// invalidate the whole remap in O(1) (resetting before int32 overflow,
+			// ~weeks of continuous rendering away, keeps the stored stamps valid).
 			const baseOffset = vertexData.vertexCount;
-			_remap.clear();
+			if (_stamp >= 0x7fffffff) {
+				_remapStamp.fill(0);
+				_stamp = 0;
+			}
+			_stamp++;
 			_chunkIndices.length = 0;
 			let localCount = 0;
 
 			for (let j = triIdx; j < endIdx; j++) {
 				const origIdx = indices[j];
-				let localIdx = _remap.get(origIdx);
-				if (localIdx === undefined) {
+				let localIdx;
+				if (_remapStamp[origIdx] === _stamp) {
+					// already emitted this chunk — reuse its local index
+					localIdx = _remapSlot[origIdx];
+				} else {
 					localIdx = localCount++;
-					_remap.set(origIdx, localIdx);
+					_remapStamp[origIdx] = _stamp;
+					_remapSlot[origIdx] = localIdx;
 
 					const i3 = origIdx * 3;
 					const i2 = origIdx * 2;

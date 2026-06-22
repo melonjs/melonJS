@@ -726,6 +726,38 @@ export default class Renderer {
 	}
 
 	/**
+	 * Resolve the default texture filter **mode** for this renderer, decoupled
+	 * from {@link Renderer#setAntiAlias} (which controls polygon-edge MSAA on GPU
+	 * backends). Honors the `textureFilter` setting (`"nearest"` / `"linear"`),
+	 * falling back to the `antiAlias` setting when it's `"auto"` (the default).
+	 *
+	 * Backend-neutral on purpose: it returns the mode as a string so each GPU
+	 * backend maps it to its own enum (WebGL `gl.LINEAR` / `gl.NEAREST`, a future
+	 * WebGPU renderer `GPUFilterMode`). The Canvas renderer has no per-texture
+	 * filtering, so this is informational there.
+	 * @returns {"linear"|"nearest"} the resolved default filter mode
+	 */
+	getDefaultTextureFilter() {
+		const mode = this.settings.textureFilter;
+		if (mode === "linear" || mode === "nearest") {
+			return mode;
+		}
+		// "auto" (or unset) → follow the antiAlias setting
+		return this.settings.antiAlias ? "linear" : "nearest";
+	}
+
+	/**
+	 * Set the default texture magnification/minification filter at runtime,
+	 * decoupled from {@link Renderer#setAntiAlias}. The base implementation just
+	 * records the setting (the Canvas renderer has no per-texture filtering);
+	 * GPU backends override this to re-apply the filter to live textures.
+	 * @param {"auto"|"nearest"|"linear"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 */
+	setTextureFilter(mode = "auto") {
+		this.settings.textureFilter = mode;
+	}
+
+	/**
 	 * set/change the current projection matrix (GPU renderers only —
 	 * the Canvas renderer applies projection via the 2D context's transform stack).
 	 * @param {Matrix3d} matrix

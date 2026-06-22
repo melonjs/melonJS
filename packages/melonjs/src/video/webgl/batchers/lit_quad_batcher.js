@@ -218,11 +218,10 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
 	 */
 	uploadNormalMap(image, unit) {
-		const gl = this.gl;
 		this.createTexture2D(
 			unit,
 			image,
-			this.renderer.settings.antiAlias ? gl.LINEAR : gl.NEAREST,
+			this.renderer._glTextureFilter(),
 			"no-repeat",
 			image.width,
 			image.height,

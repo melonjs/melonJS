@@ -98,6 +98,41 @@ export type ApplicationSettings = {
 	antiAlias: boolean;
 
 	/**
+	 * Default texture magnification/minification filter, **decoupled from
+	 * `antiAlias`** (WebGL only — the 2D Canvas renderer has no per-texture
+	 * filtering and ignores this).
+	 *
+	 * `antiAlias` conflates two separate concerns: polygon-edge antialiasing
+	 * (MSAA) *and* texture sampling smoothness. This setting separates the
+	 * texture half out, so you can choose them independently — e.g. smooth
+	 * textures with no MSAA, or crisp pixel-art textures *with* MSAA edges.
+	 *
+	 * - `"auto"` (default) — follow `antiAlias` (`linear` when `true`, `nearest`
+	 *   when `false`): unchanged behavior.
+	 * - `"nearest"` — crisp/pixelated upscaling, regardless of `antiAlias`.
+	 * - `"linear"` — smooth, regardless of `antiAlias`.
+	 *
+	 * This is the **default** for every texture; a {@link Mesh} can still override
+	 * it per-mesh via its own `textureFilter` setting (which wins).
+	 * @default "auto"
+	 * @example
+	 * // smooth textures but NO polygon-edge MSAA
+	 * const app = new Application(1024, 768, {
+	 *     renderer: video.WEBGL,
+	 *     antiAlias: false,        // MSAA off
+	 *     textureFilter: "linear", // textures still filtered smooth
+	 * });
+	 *
+	 * // crisp pixel-art textures WITH MSAA-smoothed edges
+	 * new Application(1024, 768, {
+	 *     renderer: video.WEBGL,
+	 *     antiAlias: true,          // MSAA on
+	 *     textureFilter: "nearest", // textures stay crisp
+	 * });
+	 */
+	textureFilter: "auto" | "nearest" | "linear";
+
+	/**
 	 * whether to display melonJS version and basic device information in the console
 	 * @default true
 	 */

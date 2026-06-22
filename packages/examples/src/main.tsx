@@ -118,6 +118,11 @@ const ExampleGltfCharacter = lazy(() =>
 		default: m.ExampleGltfCharacter,
 	})),
 );
+const ExampleNightCity = lazy(() =>
+	import("./examples/nightcity/ExampleNightCity").then((m) => ({
+		default: m.ExampleNightCity,
+	})),
+);
 const ExampleMesh3d = lazy(() =>
 	import("./examples/mesh3d/ExampleMesh3d").then((m) => ({
 		default: m.ExampleMesh3d,
@@ -376,7 +381,7 @@ const examples: {
 		path: "gltf",
 		sourceDir: "gltf",
 		description:
-			"A Blender-authored scene (Kenney Platformer Kit, CC0) exported to GLB and loaded via the glTF Tier-1 importer — each node instantiated as a Mesh under a Camera3d.",
+			"A Blender-authored scene (Kenney Platformer Kit, CC0) exported to GLB.",
 	},
 	{
 		component: <ExampleGltfCharacter />,
@@ -384,7 +389,15 @@ const examples: {
 		path: "gltf-character",
 		sourceDir: "gltf",
 		description:
-			"A rigged blocky character (Kenney Blocky Characters, CC0) loaded from GLB — node-TRS animation over a rigid hierarchy (walk, idle, sprint, …) driven through the Sprite-aligned setCurrentAnimation / play / pause / stop API.",
+			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleNightCity />,
+		label: "Night City Flythrough",
+		path: "night-city",
+		sourceDir: "nightcity",
+		description:
+			"A low-poly procedural downtown using emissive geometry to build a night-city view, with a looping Camera3d flythrough.",
 	},
 	{
 		component: <ExampleMesh3dMaterial />,

@@ -7,6 +7,7 @@ import { preloadImage } from "./image.js";
 const SUPPORTED_PROPS = new Set([
 	"newmtl",
 	"Kd",
+	"Ke",
 	"d",
 	"Tr",
 	"map_Kd",
@@ -20,6 +21,7 @@ const SUPPORTED_PROPS = new Set([
 // unsupported texture maps (would need multi-texture or shader changes)
 const UNSUPPORTED_MAPS = new Set([
 	"map_Ka",
+	"map_Ke",
 	"map_Ks",
 	"map_Ns",
 	"map_d",
@@ -32,8 +34,8 @@ const UNSUPPORTED_MAPS = new Set([
 
 /**
  * Parse a Wavefront MTL file into material data.
- * Supports: `newmtl`, `Kd` (diffuse color), `map_Kd` (diffuse texture),
- * `d`/`Tr` (opacity/transparency).
+ * Supports: `newmtl`, `Kd` (diffuse color), `Ke` (emissive color), `map_Kd`
+ * (diffuse texture), `d`/`Tr` (opacity/transparency).
  *
  * Limitations:
  * - Only one `map_Kd` texture per material is supported
@@ -86,6 +88,7 @@ function parseMTL(text, basePath) {
 				current = {
 					name: parts[1],
 					Kd: [1, 1, 1],
+					Ke: [0, 0, 0],
 					d: 1.0,
 					map_Kd: null,
 				};
@@ -95,6 +98,18 @@ function parseMTL(text, basePath) {
 			case "Kd":
 				if (current) {
 					current.Kd = [
+						parseFloat(parts[1]),
+						parseFloat(parts[2]),
+						parseFloat(parts[3]),
+					];
+				}
+				break;
+
+			case "Ke":
+				// emissive color (self-illumination — Blender's OBJ exporter
+				// writes it for materials with an emission shader)
+				if (current) {
+					current.Ke = [
 						parseFloat(parts[1]),
 						parseFloat(parts[2]),
 						parseFloat(parts[3]),

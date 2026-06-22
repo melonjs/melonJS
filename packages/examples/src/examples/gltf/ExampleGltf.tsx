@@ -82,6 +82,7 @@ const createGame = () => {
 			renderer: video.WEBGL, // Mesh rendering requires WebGL
 			scale: "auto",
 			cameraClass: Camera3dClass,
+			antiAlias: true,
 		});
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
@@ -133,8 +134,9 @@ const createGame = () => {
 		// here). A wide lens exaggerates near-field perspective so the rounded
 		// grass front-lip looms over and visually swallows props behind it;
 		// matching the glTF `yfov` reproduces the Blender look.
-		if (scene.cameras.length > 0 && scene.cameras[0].perspective?.yfov) {
-			camera.fov = scene.cameras[0].perspective.yfov;
+		const yfov = scene.cameras[0]?.perspective?.yfov;
+		if (yfov) {
+			camera.fov = yfov;
 		}
 
 		// Showcase framing: a Blender-style 3/4 bird's-eye. The embedded glTF
@@ -156,11 +158,13 @@ const createGame = () => {
 
 		const updateCam = () => {
 			distance = clamp(distance, 120, 3000);
+			// x/y via pos, z via `depth` (Camera3d's documented z accessor — the
+			// inherited `pos.set` is typed 2-arg; `depth` proxies to `pos.z`)
 			camera.pos.set(
 				cx + Math.sin(yaw) * Math.cos(pitch) * -distance,
 				cy + Math.sin(pitch) * distance, // up = -Y
-				cz - Math.cos(yaw) * Math.cos(pitch) * distance,
 			);
+			camera.depth = cz - Math.cos(yaw) * Math.cos(pitch) * distance;
 			camera.lookAt(cx, cy, cz);
 		};
 		updateCam();

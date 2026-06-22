@@ -529,6 +529,90 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return "no-repeat";
 	};
 
+	// resolve material index -> whether it opts out of lighting via
+	// `KHR_materials_unlit` (a common stylized workflow: lighting is baked into
+	// the texture, so the engine must NOT shade it again or it double-lights).
+	const materialUnlit = (materialIndex) => {
+		return (
+			materialIndex !== undefined &&
+			json.materials?.[materialIndex]?.extensions?.KHR_materials_unlit !==
+				undefined
+		);
+	};
+
+	// resolve material index -> texture magnification filter from the glTF
+	// sampler: `"nearest"` (9728, crisp pixel-art upscaling) or `"linear"`
+	// (9729, smooth). `undefined` when the sampler doesn't specify one, so the
+	// engine keeps its global antiAlias default — only an explicit NEAREST/LINEAR
+	// overrides it.
+	const NEAREST = 9728;
+	const LINEAR = 9729;
+	const materialTextureFilter = (materialIndex) => {
+		const tex =
+			materialIndex !== undefined
+				? json.materials?.[materialIndex]?.pbrMetallicRoughness
+						?.baseColorTexture
+				: undefined;
+		if (!tex) {
+			return undefined;
+		}
+		const samplerIndex = json.textures?.[tex.index]?.sampler;
+		const magFilter =
+			samplerIndex !== undefined
+				? json.samplers?.[samplerIndex]?.magFilter
+				: undefined;
+		if (magFilter === NEAREST) {
+			return "nearest";
+		}
+		if (magFilter === LINEAR) {
+			return "linear";
+		}
+		return undefined;
+	};
+
+	// resolve material index -> alpha cutout threshold. glTF `alphaMode:
+	// "MASK"` is a hard cutout: a fragment is fully opaque where its alpha is
+	// >= `alphaCutoff` and fully discarded below it (foliage, fences,
+	// chain-link, decals — crisp edges, no blending or back-to-front sorting).
+	// The spec default `alphaCutoff` is 0.5. Any other mode (OPAQUE / BLEND) →
+	// 0, i.e. no discard (the mesh path renders opaque; BLEND is out of scope).
+	const materialAlphaCutoff = (materialIndex) => {
+		const mat =
+			materialIndex !== undefined ? json.materials?.[materialIndex] : undefined;
+		if (mat?.alphaMode === "MASK") {
+			return mat.alphaCutoff ?? 0.5;
+		}
+		return 0;
+	};
+
+	// resolve material index -> emissive color [r,g,b] (0..1, possibly HDR), or
+	// undefined when the material has no (non-zero) emission. glTF `emissiveFactor`
+	// self-illuminates a surface (neon, lava, screens, glowing eyes) independently
+	// of scene lights; `KHR_materials_emissive_strength` scales it past 1 for a
+	// brighter glow (default strength 1). A zero factor → undefined so the Mesh
+	// stays on the lean no-emissive path.
+	const materialEmissive = (materialIndex) => {
+		const mat =
+			materialIndex !== undefined ? json.materials?.[materialIndex] : undefined;
+		const f = mat?.emissiveFactor;
+		if (!f) {
+			return undefined;
+		}
+		const strength =
+			mat.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1;
+		// `|| 0` guards a malformed (short) emissiveFactor: a missing component
+		// would otherwise be `undefined * strength = NaN`, and NaN reaches the
+		// `uEmissive` uniform (NaN !== 0, so the all-zero collapse below misses
+		// it) → NaN fragments. Valid glTF always has 3 components.
+		const r = (f[0] || 0) * strength;
+		const g = (f[1] || 0) * strength;
+		const b = (f[2] || 0) * strength;
+		if (r === 0 && g === 0 && b === 0) {
+			return undefined;
+		}
+		return [r, g, b];
+	};
+
 	// walk the active scene's node graph, accumulating world matrices.
 	// A malformed asset is not allowed to crash the loader: a missing scene
 	// or scene-node list degrades to an empty (but valid) descriptor rather
@@ -590,6 +674,10 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			// materialTextureRepeat; carried so the Mesh samples tiling UVs
 			// correctly instead of clamping to flat edge texels
 			textureRepeat: materialTextureRepeat(prim.material),
+			// texture magnification filter from the glTF sampler ("nearest" for
+			// crisp pixel-art, "linear" for smooth) — undefined keeps the engine
+			// default
+			textureFilter: materialTextureFilter(prim.material),
 			// baseColorFactor [r,g,b,a] — applied as the mesh tint so a
 			// solid-colored (untextured) material renders its color
 			baseColorFactor: materialBaseColor(prim.material),
@@ -601,6 +689,14 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			doubleSided:
 				prim.material !== undefined &&
 				json.materials?.[prim.material]?.doubleSided === true,
+			// KHR_materials_unlit — the material bakes its own lighting and must
+			// not be shaded again (skips the lit path even in a lit scene)
+			unlit: materialUnlit(prim.material),
+			// alpha cutout threshold (glTF alphaMode MASK); 0 = no discard
+			alphaCutoff: materialAlphaCutoff(prim.material),
+			// emissive color [r,g,b] (glTF emissiveFactor × emissive_strength), or
+			// undefined when the material doesn't self-illuminate
+			emissive: materialEmissive(prim.material),
 		};
 	};
 

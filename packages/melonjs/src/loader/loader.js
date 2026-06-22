@@ -885,7 +885,7 @@ export function getOBJ(elt) {
  * a parsed glTF/GLB scene descriptor, as returned by {@link loader.getGLTF}
  * @typedef {object} GLTFData
  * @property {object[]} nodes - one entry per mesh primitive (accumulated `world` transform, `vertices`, `normals`, `uvs`, `indices`, `vertexCount`, decoded baseColor `image`, `doubleSided`)
- * @property {object[]} cameras - glTF cameras, each with its `world` transform + perspective parameters
+ * @property {Array<{world: number[], type?: string, perspective?: {yfov?: number, aspectRatio?: number, znear?: number, zfar?: number}, orthographic?: object}>} cameras - glTF cameras, each with its `world` transform + the glTF camera parameters (`perspective` for perspective cameras, `orthographic` otherwise)
  * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, world-space `direction`/`position`, `name`)
  * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
  */

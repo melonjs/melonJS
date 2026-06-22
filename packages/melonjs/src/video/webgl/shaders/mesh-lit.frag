@@ -8,6 +8,8 @@
 // preprocessor regardless of how it handles macros.)
 
 uniform sampler2D uSampler;
+uniform float uAlphaCutoff;               // alpha cutout threshold (0 = disabled)
+uniform vec3 uEmissive;                   // self-illumination color (0 = none)
 
 uniform int uLightCount;
 uniform vec3 uLightDir[__MAX_LIGHTS__];   // surface→light, normalized (world space)
@@ -21,6 +23,12 @@ varying vec3 vNormal;
 void main(void) {
     vec4 base = texture2D(uSampler, vRegion) * vColor;
 
+    // hard alpha cutout (glTF alphaMode MASK) — discard before any shading
+    // so cut-away texels cost nothing and never write depth.
+    if (base.a < uAlphaCutoff) {
+        discard;
+    }
+
     vec3 N = normalize(vNormal);
     vec3 lit = uAmbient;
     for (int i = 0; i < __MAX_LIGHTS__; i++) {
@@ -32,5 +40,7 @@ void main(void) {
         lit += uLightColor[i] * (ndl * ndl);
     }
 
-    gl_FragColor = vec4(base.rgb * lit, base.a);
+    // emissive self-illuminates: added AFTER lighting so it glows at full
+    // strength regardless of the scene lights (neon, lava, glowing eyes).
+    gl_FragColor = vec4(base.rgb * lit + uEmissive, base.a);
 }
