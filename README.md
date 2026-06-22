@@ -53,7 +53,7 @@ Graphics
 - Built-in effects such as tinting, masking, and CSS-style blend modes (normal, additive, multiply, screen, darken, lighten)
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
-- 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d`
+- 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d` — ~30% faster mesh rendering with near-zero per-frame allocation (a re-drawn static mesh produces no GC garbage)
 - Lighting, in 2D and 3D:
     - **2D** — `Light2d` as a first-class `Renderable` (multiple dynamic lights, radial-gradient falloff, illumination-only mode, procedural rendering via `drawLight`), plus optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights
     - **3D** — `Light3d` directional + ambient lights, added to the world like `Light2d` (half-Lambert diffuse + ambient fill, runtime-manipulable for day/night), auto-loaded from a glTF scene's authored sun

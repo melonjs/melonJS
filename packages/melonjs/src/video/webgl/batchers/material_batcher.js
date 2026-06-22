@@ -364,14 +364,14 @@ export class MaterialBatcher extends Batcher {
 
 		if (typeof texture2D === "undefined" || force) {
 			// honor a resource-specified filter (e.g. tilemap index textures
-			// need NEAREST regardless of the global antiAlias setting),
-			// otherwise fall back to the renderer-wide preference
+			// need NEAREST regardless of the global setting, or a Mesh's own
+			// `textureFilter`), otherwise fall back to the renderer-wide default
+			// (the `textureFilter` setting, decoupled from MSAA — see
+			// WebGLRenderer#getDefaultTextureFilter)
 			const filter =
 				typeof texture.filter !== "undefined"
 					? texture.filter
-					: this.renderer.settings.antiAlias
-						? this.gl.LINEAR
-						: this.gl.NEAREST;
+					: this.renderer._glTextureFilter();
 			// `w`/`h` historically came from callers (e.g. `addQuad`) that
 			// passed the DESTINATION quad size, not the texture size. That
 			// broke the downstream POT check — a 480×1216 atlas drawn into

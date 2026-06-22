@@ -1672,31 +1672,70 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
+	 * Map the backend-neutral default filter mode
+	 * ({@link Renderer#getDefaultTextureFilter}) to the GL enum
+	 * (`gl.LINEAR` / `gl.NEAREST`) used for textures that don't carry their own
+	 * `texture.filter`. The neutral resolver lives on the base renderer so a
+	 * future WebGPU backend reuses it and maps to `GPUFilterMode` instead.
+	 * @returns {number} `gl.LINEAR` or `gl.NEAREST`
+	 * @ignore
+	 */
+	_glTextureFilter() {
+		return this.getDefaultTextureFilter() === "linear"
+			? this.gl.LINEAR
+			: this.gl.NEAREST;
+	}
+
+	/**
+	 * Re-apply a min/mag filter to every currently-bound texture across all
+	 * batchers (see https://github.com/melonjs/melonJS/issues/1279). Shared by
+	 * {@link WebGLRenderer#setAntiAlias} and {@link WebGLRenderer#setTextureFilter}.
+	 * @param {number} filter - `gl.LINEAR` or `gl.NEAREST`
+	 * @ignore
+	 */
+	_reapplyTextureFilter(filter) {
+		const gl = this.gl;
+		this.batchers.forEach((batcher) => {
+			if (batcher.boundTextures) {
+				for (let i = 0; i < batcher.boundTextures.length; i++) {
+					if (typeof batcher.boundTextures[i] !== "undefined") {
+						gl.activeTexture(gl.TEXTURE0 + i);
+						gl.bindTexture(gl.TEXTURE_2D, batcher.boundTextures[i]);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+					}
+				}
+				// reset so next bindTexture2D re-selects the correct unit
+				batcher.currentTextureUnit = -1;
+			}
+		});
+	}
+
+	/**
 	 * enable/disable image smoothing (scaling interpolation)
 	 * @param {boolean} [enable=false]
 	 */
 	setAntiAlias(enable = false) {
 		if (this.settings.antiAlias !== enable) {
 			super.setAntiAlias(enable);
-			// update the GL texture filtering on all bound textures
-			// see https://github.com/melonjs/melonJS/issues/1279
-			const gl = this.gl;
-			const filter = enable ? gl.LINEAR : gl.NEAREST;
-			this.batchers.forEach((batcher) => {
-				if (batcher.boundTextures) {
-					for (let i = 0; i < batcher.boundTextures.length; i++) {
-						if (typeof batcher.boundTextures[i] !== "undefined") {
-							gl.activeTexture(gl.TEXTURE0 + i);
-							gl.bindTexture(gl.TEXTURE_2D, batcher.boundTextures[i]);
-							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-						}
-					}
-					// reset so next bindTexture2D re-selects the correct unit
-					batcher.currentTextureUnit = -1;
-				}
-			});
+			// re-filter bound textures to the resolved default — honors an explicit
+			// `textureFilter` (so toggling antiAlias won't override a "nearest" /
+			// "linear" choice), and tracks antiAlias when `textureFilter` is "auto".
+			this._reapplyTextureFilter(this._glTextureFilter());
 		}
+	}
+
+	/**
+	 * Set the default texture magnification/minification filter at runtime,
+	 * decoupled from {@link WebGLRenderer#setAntiAlias} (which controls MSAA).
+	 * Records the setting (via the base) then re-filters every currently-bound
+	 * texture. WebGL only.
+	 * @param {"auto"|"nearest"|"linear"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 * @see Renderer#getDefaultTextureFilter
+	 */
+	setTextureFilter(mode = "auto") {
+		super.setTextureFilter(mode);
+		this._reapplyTextureFilter(this._glTextureFilter());
 	}
 
 	/**
