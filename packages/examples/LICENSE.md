@@ -48,3 +48,19 @@ Spacecraft 3D models (`craft_speederA`, `craft_speederB`, `craft_racer`,
 
 Released under **CC0 1.0 Universal (Public Domain Dedication)** — no
 attribution legally required, credited here as a courtesy.
+
+### `gltf` examples
+
+The 3D scenes in `public/assets/gltf/` are authored/assembled from CC0 kits
+published by Kenney:
+
+- `platformer-diorama.glb` (**glTF Scene**) — **"Platformer Kit"**
+  (<https://www.kenney.nl/assets/platformer-kit>)
+- `character.glb` (**glTF Animated Model**) — **"Blocky Characters"**
+  (<https://www.kenney.nl/assets/blocky-characters>)
+
+All released under **CC0 1.0 Universal (Public Domain Dedication)** — no
+attribution legally required, credited here as a courtesy.
+
+The **Night City Flythrough** example uses no external assets — its city is
+generated procedurally from raw mesh data at runtime.
