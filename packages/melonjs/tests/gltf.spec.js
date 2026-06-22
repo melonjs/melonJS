@@ -1811,4 +1811,13 @@ describe("parseGLTF() — emissive", () => {
 		const scene = await parseGLTF(buildSceneGLB());
 		expect(scene.nodes[0].emissive).toBeUndefined();
 	});
+
+	it("ADVERSARIAL: a malformed (short) emissiveFactor never yields NaN", async () => {
+		// a non-spec asset writing only 1 component must not produce a NaN that
+		// would reach the uEmissive uniform (NaN !== 0 dodges the zero-collapse)
+		const scene = await parseGLTF(buildMaterialGLB({ emissiveFactor: [1] }));
+		const e = scene.nodes[0].emissive;
+		expect(e).toEqual([1, 0, 0]);
+		expect(e.some((c) => Number.isNaN(c))).toBe(false);
+	});
 });

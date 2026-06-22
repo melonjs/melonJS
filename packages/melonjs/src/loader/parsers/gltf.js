@@ -600,9 +600,13 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		}
 		const strength =
 			mat.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1;
-		const r = f[0] * strength;
-		const g = f[1] * strength;
-		const b = f[2] * strength;
+		// `|| 0` guards a malformed (short) emissiveFactor: a missing component
+		// would otherwise be `undefined * strength = NaN`, and NaN reaches the
+		// `uEmissive` uniform (NaN !== 0, so the all-zero collapse below misses
+		// it) → NaN fragments. Valid glTF always has 3 components.
+		const r = (f[0] || 0) * strength;
+		const g = (f[1] || 0) * strength;
+		const b = (f[2] || 0) * strength;
 		if (r === 0 && g === 0 && b === 0) {
 			return undefined;
 		}

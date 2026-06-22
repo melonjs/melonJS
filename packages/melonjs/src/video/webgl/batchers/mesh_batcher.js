@@ -196,6 +196,29 @@ export default class MeshBatcher extends MaterialBatcher {
 	}
 
 	/**
+	 * Invalidate the per-mesh `uAlphaCutoff` / `uEmissive` caches when the bound
+	 * shader (GL program) changes — the new program's uniforms are at their own
+	 * defaults, so the next mesh must re-issue them rather than trust the cache.
+	 * Mirrors the base batcher's `currentSamplerUnit` reset (same condition), and
+	 * matters when a custom mesh shader declaring those uniforms is interleaved
+	 * with the built-in one on this batcher (e.g. `drawMesh` swapping a custom
+	 * shader in and back out).
+	 * @ignore
+	 */
+	useShader(shader) {
+		if (
+			this.currentShader !== shader ||
+			this.renderer.currentProgram !== shader.program
+		) {
+			this.currentAlphaCutoff = -1;
+			this.currentEmissiveR = -1;
+			this.currentEmissiveG = -1;
+			this.currentEmissiveB = -1;
+		}
+		super.useShader(shader);
+	}
+
+	/**
 	 * Unsubscribe the `RENDER_TARGET_CHANGED` listener so a discarded
 	 * batcher doesn't keep getting notified (relevant on context loss /
 	 * renderer teardown). Delegates to `MaterialBatcher.destroy()` for
