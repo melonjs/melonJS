@@ -1818,6 +1818,10 @@ describe("parseGLTF() — emissive", () => {
 		const scene = await parseGLTF(buildMaterialGLB({ emissiveFactor: [1] }));
 		const e = scene.nodes[0].emissive;
 		expect(e).toEqual([1, 0, 0]);
-		expect(e.some((c) => Number.isNaN(c))).toBe(false);
+		expect(
+			e.some((c) => {
+				return Number.isNaN(c);
+			}),
+		).toBe(false);
 	});
 });
