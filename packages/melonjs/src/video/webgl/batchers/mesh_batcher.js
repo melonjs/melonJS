@@ -10,13 +10,40 @@ import { MaterialBatcher } from "./material_batcher.js";
 // identity, so output (x, y) matches the legacy Vector2d path.
 const _v = new Vector3d();
 
-// Reused scratch for addMesh's per-chunk vertex dedup (`_remap`) and absolute
-// index list (`_chunkIndices`), so a chunk doesn't allocate a fresh Map +
-// array per mesh per frame (GC pressure on the draw path). Safe because
-// addMesh runs synchronously and never re-enters (flush() only draws). Shared
-// by MeshBatcher and LitMeshBatcher — only one addMesh runs at a time.
-const _remap = new Map();
+// Reused scratch for addMesh's per-chunk vertex dedup and absolute index list
+// (`_chunkIndices`), so a chunk allocates nothing per mesh per frame (GC
+// pressure on the draw path). Safe because addMesh runs synchronously and never
+// re-enters (flush() only draws). Shared by MeshBatcher and LitMeshBatcher —
+// only one addMesh runs at a time.
+//
+// Dedup uses a "versioned" typed-array remap rather than a `Map`: a `Map` here
+// churned the GC badly, because V8's `Map.clear()` drops the backing table, so
+// re-filling it each chunk reallocated as it grew — and the cost scaled with
+// vertex count (a dense mesh = MBs/sec of garbage). Instead, `_remapSlot[orig]`
+// holds the local index assigned to original-vertex `orig` THIS chunk, valid
+// only when `_remapStamp[orig] === _stamp`. Bumping `_stamp` per chunk
+// invalidates every entry in O(1) — no clearing, no allocation. The arrays grow
+// lazily (to a power of two ≥ the largest mesh's vertex count) and are reused.
+let _remapSlot = new Int32Array(0);
+let _remapStamp = new Int32Array(0);
+let _stamp = 0;
 const _chunkIndices = [];
+
+/**
+ * Ensure the versioned-remap scratch arrays can index every vertex of a mesh
+ * with `vertexCount` vertices. Grows to the next power of two and reuses
+ * thereafter (one-time cost when a larger mesh first appears).
+ * @ignore
+ */
+function ensureRemapCapacity(vertexCount) {
+	if (_remapSlot.length >= vertexCount) {
+		return;
+	}
+	// next power of two ≥ vertexCount (Math.clz32 → leading-zero count)
+	const cap = vertexCount <= 1 ? 1 : 1 << (32 - Math.clz32(vertexCount - 1));
+	_remapSlot = new Int32Array(cap);
+	_remapStamp = new Int32Array(cap); // zero-filled; _stamp is always ≥ 1 in use
+}
 
 // Shared lazy-depth-clear state for the mesh-mode pass. Module-level (not
 // per-instance) so the unlit `MeshBatcher` and the `LitMeshBatcher` — which
@@ -310,6 +337,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		const maxVerts = this.vertexData.maxVertex;
 		const maxIndices = this.indexBuffer.data.length;
 
+		// size the versioned-remap scratch for this mesh's vertex range (one-time
+		// growth; reused across frames thereafter)
+		ensureRemapCapacity(mesh.vertexCount);
+
 		// process triangles in chunks that fit the buffer
 		let triIdx = 0;
 		while (triIdx < indices.length) {
@@ -330,19 +361,29 @@ export default class MeshBatcher extends MaterialBatcher {
 
 			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
 
-			// build a local vertex remap for this chunk (reused scratch)
-			// capture base offset before pushing any vertices
+			// build a local vertex remap for this chunk (reused scratch).
+			// capture base offset before pushing any vertices. Bump the stamp to
+			// invalidate the whole remap in O(1) (resetting before int32 overflow,
+			// ~weeks of continuous rendering away, keeps the stored stamps valid).
 			const baseOffset = vertexData.vertexCount;
-			_remap.clear();
+			if (_stamp >= 0x7fffffff) {
+				_remapStamp.fill(0);
+				_stamp = 0;
+			}
+			_stamp++;
 			_chunkIndices.length = 0;
 			let localCount = 0;
 
 			for (let j = triIdx; j < endIdx; j++) {
 				const origIdx = indices[j];
-				let localIdx = _remap.get(origIdx);
-				if (localIdx === undefined) {
+				let localIdx;
+				if (_remapStamp[origIdx] === _stamp) {
+					// already emitted this chunk — reuse its local index
+					localIdx = _remapSlot[origIdx];
+				} else {
 					localIdx = localCount++;
-					_remap.set(origIdx, localIdx);
+					_remapStamp[origIdx] = _stamp;
+					_remapSlot[origIdx] = localIdx;
 
 					const i3 = origIdx * 3;
 					const i2 = origIdx * 2;
