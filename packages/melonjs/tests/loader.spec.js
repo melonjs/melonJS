@@ -539,4 +539,120 @@ describe("loader", () => {
 			).resolves.toBe(true);
 		});
 	});
+
+	// preload() and load() support BOTH a legacy callback form and a Promise
+	// (await) form; these cover the two forms side-by-side.
+	describe("callback form (legacy)", () => {
+		it("preload() invokes the completion callback", async () => {
+			// drive the test off the callback itself (don't await preload's return)
+			await new Promise((resolve) => {
+				loader.preload(
+					[{ name: "cb_pre", type: "image", src: imgURI }],
+					() => {
+						resolve();
+					},
+					false, // don't switch to the loading screen in the test
+				);
+			});
+			expect(loader.getImage("cb_pre")).toBeTruthy();
+		});
+
+		it("load() invokes the onload callback", async () => {
+			await new Promise((resolve) => {
+				loader.load({ name: "cb_load", type: "image", src: imgURI }, () => {
+					resolve();
+				});
+			});
+			expect(loader.getImage("cb_load")).toBeTruthy();
+		});
+
+		it("load() invokes onerror on a failed asset", async () => {
+			let errored = false;
+			await new Promise((resolve) => {
+				loader.load(
+					{ name: "cb_bad", type: "image", src: "data:image/png;base64,Zm9v" },
+					() => {
+						resolve();
+					},
+					() => {
+						errored = true;
+						resolve();
+					},
+				);
+			});
+			expect(errored).toBe(true);
+		});
+
+		it("load() with callbacks still returns the resource count", () => {
+			const count = loader.load(
+				{ name: "cb_count", type: "image", src: imgURI },
+				() => {},
+				() => {},
+			);
+			expect(typeof count).toBe("number");
+		});
+	});
+
+	describe("promise form (await)", () => {
+		it("preload() resolves as a Promise, and the callback still fires too", async () => {
+			let cbFired = false;
+			await loader.preload(
+				[{ name: "promise_pre", type: "image", src: imgURI }],
+				() => {
+					cbFired = true;
+				},
+				false,
+			);
+			expect(cbFired).toBe(true);
+			expect(loader.getImage("promise_pre")).toBeTruthy();
+		});
+
+		it("preload() resolves with no callback at all (pure await)", async () => {
+			await loader.preload(
+				[{ name: "promise_pre_nocb", type: "image", src: imgURI }],
+				undefined,
+				false,
+			);
+			expect(loader.getImage("promise_pre_nocb")).toBeTruthy();
+		});
+
+		it("load() with no callbacks resolves as a Promise", async () => {
+			await loader.load({ name: "promise_load", type: "image", src: imgURI });
+			expect(loader.getImage("promise_load")).toBeTruthy();
+		});
+
+		it("ADVERSARIAL: load() (promise form) rejects on a failed asset", async () => {
+			let rejected = false;
+			await loader
+				.load({
+					name: "promise_bad",
+					type: "image",
+					src: "data:image/png;base64,Zm9v", // not a valid PNG → onerror
+				})
+				.catch(() => {
+					rejected = true;
+				});
+			expect(rejected).toBe(true);
+		});
+
+		it("ADVERSARIAL: preload() (promise form) rejects when an asset fails", async () => {
+			let rejected = false;
+			await loader
+				.preload(
+					[
+						{
+							name: "promise_bad2",
+							type: "image",
+							src: "data:image/png;base64,Zm9v",
+						},
+					],
+					undefined,
+					false,
+				)
+				.catch(() => {
+					rejected = true;
+				});
+			expect(rejected).toBe(true);
+		});
+	});
 });
