@@ -38,11 +38,13 @@ import Container from "./renderable/container.js";
 import { Draggable } from "./renderable/draggable.js";
 import { DropTarget } from "./renderable/dragndrop.js";
 import Entity from "./renderable/entity/entity.js";
+import FrameAnimation from "./renderable/frameAnimation.js";
 import ImageLayer from "./renderable/imagelayer.js";
 import Mesh from "./renderable/mesh.js";
 import NineSliceSprite from "./renderable/nineslicesprite.js";
 import Renderable from "./renderable/renderable.js";
 import Sprite from "./renderable/sprite.js";
+import Sprite3d from "./renderable/sprite3d.js";
 import BitmapText from "./renderable/text/bitmaptext.js";
 import BitmapTextData from "./renderable/text/bitmaptextdata.ts";
 import Text from "./renderable/text/text.js";
@@ -174,6 +176,7 @@ export {
 	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
 	FadeEffect,
 	FlashEffect,
+	FrameAnimation,
 	Frustum,
 	GLShader,
 	GLTFModel,
@@ -206,6 +209,7 @@ export {
 	ShakeEffect,
 	ShineEffect,
 	Sprite,
+	Sprite3d,
 	Stage,
 	save,
 	state,

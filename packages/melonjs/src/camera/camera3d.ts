@@ -20,6 +20,11 @@ const _viewMatrix = new Matrix3d();
 const _viewProjection = new Matrix3d();
 // scratch point for worldToScreen, reused to avoid per-call allocation
 const _wsPoint = new Vector3d();
+// scratch reused by the orientation-basis accessors (getBasis / getRight / …),
+// to avoid per-call allocation on the billboard draw path.
+const _basis = new Matrix3d();
+const _bScratchA = new Vector3d();
+const _bScratchB = new Vector3d();
 
 /**
  * A perspective camera that extends {@link Camera2d} with a view
@@ -236,6 +241,63 @@ export default class Camera3d extends Camera2d {
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
 		return this;
+	}
+
+	/**
+	 * Write the camera's world-space orientation basis into the given vectors:
+	 * `right` (camera local +X), `up` (+Y), and `forward` (+Z — the direction the
+	 * camera looks). Derived from `yaw` / `pitch` (the inverse of the view
+	 * rotation), so they update as the camera turns. Handy for orienting
+	 * camera-facing geometry — e.g. {@link Sprite3d} billboards.
+	 * @param right - receives the right axis (unit)
+	 * @param up - receives the up axis (unit)
+	 * @param forward - receives the forward / look axis (unit)
+	 * @returns this camera, for chaining
+	 */
+	getBasis(right: Vector3d, up: Vector3d, forward: Vector3d): this {
+		// camera world orientation R = inverse of the view rotation. The view is
+		// R(-pitch, X) ∘ R(-yaw, Y) (see _applyContainerViewTransform), so
+		// R = R(yaw, Y) ∘ R(pitch, X); the columns of R (column-major `val`) are
+		// the camera's right / up / forward axes in world space.
+		_basis.identity();
+		_basis.rotate(this.yaw, AXIS_Y);
+		_basis.rotate(this.pitch, AXIS_X);
+		const v = _basis.val;
+		right.set(v[0], v[1], v[2]);
+		up.set(v[4], v[5], v[6]);
+		forward.set(v[8], v[9], v[10]);
+		return this;
+	}
+
+	/**
+	 * The camera's world-space right axis (unit). See {@link Camera3d#getBasis}.
+	 * @param out - vector to write into (returned)
+	 * @returns `out`
+	 */
+	getRight(out: Vector3d): Vector3d {
+		this.getBasis(out, _bScratchA, _bScratchB);
+		return out;
+	}
+
+	/**
+	 * The camera's world-space up axis (unit). See {@link Camera3d#getBasis}.
+	 * @param out - vector to write into (returned)
+	 * @returns `out`
+	 */
+	getUp(out: Vector3d): Vector3d {
+		this.getBasis(_bScratchA, out, _bScratchB);
+		return out;
+	}
+
+	/**
+	 * The camera's world-space forward / look axis (unit). See
+	 * {@link Camera3d#getBasis}.
+	 * @param out - vector to write into (returned)
+	 * @returns `out`
+	 */
+	getForward(out: Vector3d): Vector3d {
+		this.getBasis(_bScratchA, _bScratchB, out);
+		return out;
 	}
 
 	/**

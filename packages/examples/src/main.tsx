@@ -123,6 +123,11 @@ const ExampleNightCity = lazy(() =>
 		default: m.ExampleNightCity,
 	})),
 );
+const ExampleBillboard = lazy(() =>
+	import("./examples/billboard/ExampleBillboard").then((m) => ({
+		default: m.ExampleBillboard,
+	})),
+);
 const ExampleMesh3d = lazy(() =>
 	import("./examples/mesh3d/ExampleMesh3d").then((m) => ({
 		default: m.ExampleMesh3d,
@@ -398,6 +403,14 @@ const examples: {
 		sourceDir: "nightcity",
 		description:
 			"A low-poly procedural downtown using emissive geometry to build a night-city view, with a looping Camera3d flythrough.",
+	},
+	{
+		component: <ExampleBillboard />,
+		label: "Billboard Sprites",
+		path: "billboard",
+		sourceDir: "billboard",
+		description:
+			"Sprite3d billboard modes (fixed / cylindrical / spherical) under an auto-orbiting, pitching and zooming Camera3d — the 2.5D building block: textured sprites that face the camera in a 3D scene.",
 	},
 	{
 		component: <ExampleMesh3dMaterial />,
