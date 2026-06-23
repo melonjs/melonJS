@@ -27,7 +27,10 @@ const _combinedMatrix = new Matrix3d();
 // Resolve any acceptable texture input (TextureAtlas, image / canvas
 // object, or asset name) to a cached `TextureAtlas`. Throws if nothing
 // resolves — Mesh requires a texture binding for its GL pipeline.
-function resolveTextureAtlas(src) {
+// `framewidth`/`frameheight` define the spritesheet cell size (defaulting
+// to the whole image); a subclass like Sprite3d passes them so the atlas
+// carries an animation frame grid.
+function resolveTextureAtlas(src, framewidth, frameheight) {
 	if (src instanceof TextureAtlas) {
 		return src;
 	}
@@ -36,8 +39,8 @@ function resolveTextureAtlas(src) {
 		throw new Error("Mesh: '" + src + "' image/texture not found!");
 	}
 	return game.renderer.cache.get(image, {
-		framewidth: image.width,
-		frameheight: image.height,
+		framewidth: framewidth || image.width,
+		frameheight: frameheight || image.height,
 	});
 }
 
@@ -490,7 +493,11 @@ export default class Mesh extends Renderable {
 		if (!textureSource) {
 			textureSource = Renderer.getWhitePixel();
 		}
-		this.texture = resolveTextureAtlas(textureSource);
+		this.texture = resolveTextureAtlas(
+			textureSource,
+			settings.framewidth,
+			settings.frameheight,
+		);
 
 		// Optional texture wrap mode. Some assets author UVs outside the
 		// `[0, 1]` range and rely on the sampler repeating the texture (this is

@@ -469,6 +469,61 @@ describe("Sprite", () => {
 			s.destroy();
 			expect(s.normalMap).toBeNull();
 		});
+
+		// integration: the shared FrameAnimation engine must drive the actual
+		// draw — advancing a frame must change the source rect handed to drawImage
+		it("animation advances the source frame fed to drawImage (update → draw)", () => {
+			// 128×32 sheet, 32px frames → frame i sourced at sx = i * 32
+			const s = new Sprite(0, 0, {
+				framewidth: 32,
+				frameheight: 32,
+				image: video.createCanvas(128, 32),
+			});
+			s.addAnimation("walk", [0, 1, 2, 3], 100);
+			s.setCurrentAnimation("walk");
+
+			const noop = () => {};
+			const sx = [];
+			const stub = {
+				drawImage: (_img, sxArg) => {
+					return sx.push(sxArg);
+				},
+				save: noop,
+				restore: noop,
+				translate: noop,
+				scale: noop,
+				transform: noop,
+				rotate: noop,
+				setGlobalAlpha: noop,
+				globalAlpha: () => {
+					return 1;
+				},
+				setTint: noop,
+				clearTint: noop,
+				setDepth: noop,
+				setMask: noop,
+				clearMask: noop,
+				setBlendMode: noop,
+				getBlendMode: () => {
+					return "normal";
+				},
+				beginPostEffect: noop,
+				endPostEffect: noop,
+				currentNormalMap: null,
+			};
+			const drawOnce = () => {
+				s.preDraw(stub);
+				s.draw(stub);
+				s.postDraw(stub);
+			};
+
+			drawOnce(); // frame 0 → sx 0
+			s.update(100);
+			drawOnce(); // frame 1 → sx 32
+			s.update(100);
+			drawOnce(); // frame 2 → sx 64
+			expect(sx).toEqual([0, 32, 64]);
+		});
 	});
 
 	describe("animation API (options + speed)", () => {
@@ -484,6 +539,26 @@ describe("Sprite", () => {
 			s.addAnimation("b", [0, 1], 100);
 			return s;
 		};
+
+		// ── addAnimation frame delay defaulting ────────────────────────────
+
+		it("addAnimation defaults each frame delay to animationspeed", () => {
+			const s = makeSprite();
+			// no per-call speed → falls back to the sprite's animationspeed (100)
+			s.addAnimation("def", [0, 1]);
+			expect(s.anim["def"].frames[0].delay).toBe(100);
+			expect(s.anim["def"].frames[1].delay).toBe(100);
+		});
+
+		it("addAnimation honors a sprite-level animationspeed override", () => {
+			const s = makeSprite();
+			s.animationspeed = 250; // flows through the accessor to the engine
+			s.addAnimation("slow", [0, 1]);
+			expect(s.anim["slow"].frames[0].delay).toBe(250);
+			// an explicit per-call speed still wins over the default
+			s.addAnimation("fast", [0, 1], 30);
+			expect(s.anim["fast"].frames[0].delay).toBe(30);
+		});
 
 		// ── legacy forms must keep working (non-breaking) ──────────────────
 
@@ -608,7 +683,8 @@ describe("Sprite", () => {
 			s.setCurrentAnimation("a", { loop: false });
 			s.update(400); // done + held
 			s.setCurrentAnimation("b"); // switch
-			expect(s._animDone).toBe(false);
+			// `_animDone` is the internal hold flag, now owned by the shared engine
+			expect(s._frameAnim._animDone).toBe(false);
 			s.update(100);
 			expect(s.isCurrentAnimation("b")).toBe(true);
 			expect(s.getCurrentAnimationFrame()).toBe(1);

@@ -4,7 +4,7 @@ import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
-import { parseAnimationOptions } from "./animation.ts";
+import FrameAnimation from "./frameAnimation.js";
 import Renderable from "./renderable.js";
 
 // flicker interval in ms (~15 flashes per second)
@@ -68,18 +68,14 @@ export default class Sprite extends Renderable {
 		// call the super constructor
 		super(x, y, 0, 0);
 
-		/**
-		 * @type {boolean}
-		 * @default false
-		 */
-		this.animationpause = false;
-
-		/**
-		 * animation cycling speed (delay between frame in ms)
-		 * @type {number}
-		 * @default 100
-		 */
-		this.animationspeed = 100;
+		// the shared frame-animation engine — owns this sprite's animation state
+		// (exposed via the `anim` / `current` / `animationspeed` / `animationpause`
+		// accessors below) and calls back into `_applyFrame` on each frame change.
+		// Created up front, before the texture is resolved, so the setup code can
+		// use the accessors.
+		this._frameAnim = new FrameAnimation(this, (region) => {
+			this._applyFrame(region);
+		});
 
 		/**
 		 * global offset for the position to draw from on the source image.
@@ -114,45 +110,6 @@ export default class Sprite extends Renderable {
 		 * @ignore
 		 */
 		this._normalMap = null;
-
-		// hold all defined animation
-		this.anim = {};
-
-		// a flag to reset animation
-		this.resetAnim = undefined;
-
-		// current frame information
-		// (reusing current, any better/cleaner place?)
-		this.current = {
-			// the current animation name
-			name: undefined,
-			// length of the current animation name
-			length: 0,
-			//current frame texture offset
-			offset: vector2dPool.get(0, 0),
-			// current frame size
-			width: 0,
-			height: 0,
-			// Source rotation angle for pre-rotating the source image
-			angle: 0,
-			// current frame index
-			idx: 0,
-			// trim offset for trimmed sprites
-			trim: null,
-		};
-
-		// animation frame delta
-		this.dt = 0;
-
-		// playback rate multiplier set per-play via the options form of
-		// setCurrentAnimation (1 = authored speed). Scales how fast `dt`
-		// accumulates, on top of each frame's `delay`.
-		this._animSpeed = 1;
-
-		// set true when a `loop: false` animation has completed its single
-		// cycle, so update() stops advancing without touching `animationpause`
-		// (cleared whenever a new animation is selected).
-		this._animDone = false;
 
 		/**
 		 * flicker settings
@@ -349,6 +306,57 @@ export default class Sprite extends Renderable {
 	}
 
 	/**
+	 * defined animations, keyed by id (see {@link Sprite#addAnimation}).
+	 * @type {object}
+	 */
+	get anim() {
+		return this._frameAnim.anim;
+	}
+
+	/**
+	 * current frame information (name / index / texture offset & size / trim).
+	 * @type {object}
+	 */
+	get current() {
+		return this._frameAnim.current;
+	}
+
+	/**
+	 * elapsed time within the current animation frame, in milliseconds.
+	 * @type {number}
+	 */
+	get dt() {
+		return this._frameAnim.dt;
+	}
+	set dt(value) {
+		this._frameAnim.dt = value;
+	}
+
+	/**
+	 * animation cycling speed (delay between frames in ms).
+	 * @type {number}
+	 * @default 100
+	 */
+	get animationspeed() {
+		return this._frameAnim.animationspeed;
+	}
+	set animationspeed(value) {
+		this._frameAnim.animationspeed = value;
+	}
+
+	/**
+	 * pause the frame animation, freezing the current frame.
+	 * @type {boolean}
+	 * @default false
+	 */
+	get animationpause() {
+		return this._frameAnim.animationpause;
+	}
+	set animationpause(value) {
+		this._frameAnim.animationpause = value;
+	}
+
+	/**
 	 * The optional normal-map image paired with this sprite's color
 	 * texture (SpriteIlluminator workflow). When set, the WebGL
 	 * renderer's lit pipeline samples this texture for per-pixel
@@ -439,13 +447,15 @@ export default class Sprite extends Renderable {
 	 */
 	stop() {
 		this.animationpause = true;
-		this._animDone = false;
-		this.dt = 0;
 		if (this.isVideo) {
+			// clear the frame-anim timer/hold flags too (parity with the legacy
+			// unconditional reset), then rewind the video
+			this._frameAnim.resetTimer();
 			this.image.pause();
 			this.image.currentTime = 0;
-		} else if (this.current.name !== undefined && this.current.length > 0) {
-			this.setAnimationFrame(0);
+		} else {
+			// rewind the frame animation to its first frame
+			this._frameAnim.rewind();
 		}
 		return this;
 	}
@@ -507,70 +517,7 @@ export default class Sprite extends Renderable {
 	 * this.setCurrentAnimation("stand");
 	 */
 	addAnimation(name, index, animationspeed) {
-		this.anim[name] = {
-			name: name,
-			frames: [],
-			idx: 0,
-			length: 0,
-		};
-
-		// # of frames
-		let counter = 0;
-
-		if (typeof this.textureAtlas !== "object") {
-			return 0;
-		}
-
-		if (index == null) {
-			index = [];
-			// create a default animation with all frame
-			Object.keys(this.textureAtlas).forEach((v, i) => {
-				index[i] = i;
-			});
-		}
-
-		// set each frame configuration (offset, size, etc..)
-		for (let i = 0, len = index.length; i < len; i++) {
-			const frame = index[i];
-			let frameObject;
-			if (typeof frame === "number" || typeof frame === "string") {
-				frameObject = {
-					name: frame,
-					delay: animationspeed || this.animationspeed,
-				};
-			} else {
-				frameObject = frame;
-			}
-			const frameObjectName = frameObject.name;
-			if (typeof frameObjectName === "number") {
-				if (typeof this.textureAtlas[frameObjectName] !== "undefined") {
-					// see https://github.com/melonjs/melonJS/issues/1281
-					this.anim[name].frames[i] = Object.assign(
-						{},
-						this.textureAtlas[frameObjectName],
-						frameObject,
-					);
-					counter++;
-				}
-			} else {
-				// string
-				if (this.source.getFormat().includes("Spritesheet")) {
-					throw new Error(
-						"string parameters for addAnimation are not allowed for standard spritesheet based Texture",
-					);
-				} else {
-					this.anim[name].frames[i] = Object.assign(
-						{},
-						this.textureAtlas[this.atlasIndices[frameObjectName]],
-						frameObject,
-					);
-					counter++;
-				}
-			}
-		}
-		this.anim[name].length = counter;
-
-		return counter;
+		return this._frameAnim.addAnimation(name, index, animationspeed);
 	}
 
 	/**
@@ -611,56 +558,7 @@ export default class Sprite extends Renderable {
 	 * });
 	 */
 	setCurrentAnimation(name, resetAnim, preserve_dt = false) {
-		if (typeof this.anim[name] !== "undefined") {
-			if (!this.isCurrentAnimation(name)) {
-				this.current.name = name;
-				this.current.length = this.anim[this.current.name].length;
-				const opts = parseAnimationOptions(resetAnim);
-				this._animSpeed = opts.speed;
-				this._animDone = false;
-				const onComplete = opts.onComplete;
-				if (opts.legacyFn) {
-					// legacy bare-function callback: invoked at each loop end,
-					// return `false` to hold the last frame (contract unchanged)
-					this.resetAnim = onComplete;
-				} else if (typeof opts.next === "string") {
-					// chain to another animation when this one ends (the legacy
-					// string form and the options `next` field), firing
-					// `onComplete` first when provided
-					const next = opts.next;
-					this.resetAnim = () => {
-						if (typeof onComplete === "function") {
-							onComplete();
-						}
-						this.setCurrentAnimation(next, null, true);
-					};
-				} else if (opts.loop === false) {
-					// play once: fire onComplete, hold the last frame, and stop
-					// advancing (without touching `animationpause`)
-					this.resetAnim = () => {
-						if (typeof onComplete === "function") {
-							onComplete();
-						}
-						this._animDone = true;
-						return false;
-					};
-				} else if (typeof onComplete === "function") {
-					// loop forever, firing onComplete at each cycle
-					this.resetAnim = () => {
-						onComplete();
-					};
-				} else {
-					this.resetAnim = undefined;
-				}
-				this.setAnimationFrame(0);
-				if (!preserve_dt) {
-					this.dt = 0;
-				}
-				this.isDirty = true;
-			}
-		} else {
-			throw new Error("animation id '" + name + "' not defined");
-		}
+		this._frameAnim.setCurrentAnimation(name, resetAnim, preserve_dt);
 		return this;
 	}
 
@@ -671,11 +569,9 @@ export default class Sprite extends Renderable {
 	 * @see Sprite#animationspeed
 	 */
 	reverseAnimation(name) {
-		if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
-			this.anim[name].frames.reverse();
-		} else {
-			this.anim[this.current.name].frames.reverse();
-		}
+		this._frameAnim.reverseAnimation(name);
+		// reversing doesn't re-apply a frame, so mark dirty here (the host owns
+		// its dirty flag)
 		this.isDirty = true;
 		return this;
 	}
@@ -690,7 +586,7 @@ export default class Sprite extends Renderable {
 	 * }
 	 */
 	isCurrentAnimation(name) {
-		return this.current.name === name;
+		return this._frameAnim.isCurrentAnimation(name);
 	}
 
 	/**
@@ -703,7 +599,7 @@ export default class Sprite extends Renderable {
 	 * sprite.getAnimationNames(); // ["walk", "idle"]
 	 */
 	getAnimationNames() {
-		return Object.keys(this.anim);
+		return this._frameAnim.getAnimationNames();
 	}
 
 	/**
@@ -716,17 +612,20 @@ export default class Sprite extends Renderable {
 	 * mySprite.setRegion(mytexture.getRegion("shadedDark13.png"));
 	 */
 	setRegion(region) {
+		this._frameAnim.setRegion(region);
+		return this;
+	}
+
+	/**
+	 * Apply the current frame's texture region to this sprite's geometry: swap
+	 * the source sub-texture, then resolve size / anchor (honoring trimming).
+	 * Invoked by the shared {@link FrameAnimation} engine via `setRegion`.
+	 * @param {object} region - the texture region object
+	 * @ignore
+	 */
+	_applyFrame(region) {
 		// set the source texture for the given region
 		this.image = this.source.getTexture(region);
-		// set the sprite offset within the texture
-		this.current.offset.setV(region.offset);
-		// set angle if defined
-		this.current.angle = typeof region.angle === "number" ? region.angle : 0;
-		// update the current frame size (trimmed dimensions, used for drawing)
-		this.current.width = region.width;
-		this.current.height = region.height;
-		// cache trim offset for drawing
-		this.current.trim = region.trim || null;
 
 		if (region.trimmed && region.sourceSize) {
 			// use the original untrimmed size for stable bounds across trimmed frames
@@ -760,8 +659,9 @@ export default class Sprite extends Renderable {
 
 		// update the sprite bounding box
 		this.updateBounds();
+		// the frame changed → this sprite needs a redraw (the host owns its
+		// dirty flag; the FrameAnimation engine never sets it)
 		this.isDirty = true;
-		return this;
 	}
 
 	/**
@@ -773,10 +673,8 @@ export default class Sprite extends Renderable {
 	 * this.setAnimationFrame();
 	 */
 	setAnimationFrame(index = 0) {
-		this.current.idx = index % this.current.length;
-		return this.setRegion(
-			this.getAnimationFrameObjectByIndex(this.current.idx),
-		);
+		this._frameAnim.setAnimationFrame(index);
+		return this;
 	}
 
 	/**
@@ -784,7 +682,7 @@ export default class Sprite extends Renderable {
 	 * @returns {number} current animation frame index
 	 */
 	getCurrentAnimationFrame() {
-		return this.current.idx;
+		return this._frameAnim.getCurrentAnimationFrame();
 	}
 
 	/**
@@ -794,7 +692,7 @@ export default class Sprite extends Renderable {
 	 * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
 	 */
 	getAnimationFrameObjectByIndex(id) {
-		return this.anim[this.current.name].frames[id];
+		return this._frameAnim.getAnimationFrameObjectByIndex(id);
 	}
 
 	/**
@@ -814,45 +712,9 @@ export default class Sprite extends Renderable {
 			}
 			this.isDirty = !this.image.paused;
 		} else {
-			// Update animation if necessary
-			if (!this.animationpause && !this._animDone && this.current.length > 1) {
-				let duration = this.getAnimationFrameObjectByIndex(
-					this.current.idx,
-				).delay;
-				// `_animSpeed` (per-play multiplier) scales how fast the frame
-				// delay is consumed — 2 = twice as fast, 0.5 = half speed
-				this.dt += dt * this._animSpeed;
-				while (this.dt >= duration) {
-					this.isDirty = true;
-					this.dt -= duration;
-
-					const nextFrame =
-						this.current.length > 1 ? this.current.idx + 1 : this.current.idx;
-					this.setAnimationFrame(nextFrame);
-
-					// Switch animation if we reach the end of the strip and a callback is defined
-					if (this.current.idx === 0) {
-						if (typeof this.onended === "function") {
-							this.onended();
-						}
-						if (typeof this.resetAnim === "function") {
-							// Otherwise is must be callable
-							if (this.resetAnim() === false) {
-								// Reset to last frame
-								this.setAnimationFrame(this.current.length - 1);
-
-								// Bail early without skipping any more frames.
-								this.dt %= duration;
-								break;
-							}
-						}
-					}
-					// Get next frame duration
-					duration = this.getAnimationFrameObjectByIndex(
-						this.current.idx,
-					).delay;
-				}
-			}
+			// advance the shared frame-animation engine; a frame change marks this
+			// sprite dirty via `_applyFrame` (the engine owns no dirty flag)
+			this._frameAnim.update(dt);
 		}
 
 		//update the "flickering" state if necessary
@@ -867,6 +729,8 @@ export default class Sprite extends Renderable {
 			this.isDirty = true;
 		}
 
+		// `isDirty` is the single source of truth — sub-updates above set it,
+		// `Renderable.update` returns it
 		return super.update(dt);
 	}
 
@@ -964,6 +828,8 @@ export default class Sprite extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
+		// release the engine's pooled `current.offset`
+		this._frameAnim.destroy();
 		vector2dPool.release(this.offset);
 		this.offset = undefined;
 		if (this.isVideo) {
