@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.8.0] (melonJS 2) - _unreleased_
+## [19.8.0] (melonJS 2) - _2026-06-26_
 
 **Highlights:** glTF / GLB scene loading lands — author a 3D scene in Blender (or any DCC tool), export a `.glb`, and load it like a Tiled map with `level.load(...)`. Animated models play back through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`. Scene meshes are lit by the authored sun, and 3D meshes can now report a real bounding box. And `Sprite3d` brings the 2.5D workflow — billboarded, frame-animated cut-out sprites that face a `Camera3d` (the Paper Mario look), sharing one `FrameAnimation` engine with the 2D `Sprite`.
 
