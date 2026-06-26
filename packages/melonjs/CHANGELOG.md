@@ -2,7 +2,7 @@
 
 ## [19.8.0] (melonJS 2) - _unreleased_
 
-**Highlights:** glTF / GLB scene loading lands — author a 3D scene in Blender (or any DCC tool), export a `.glb`, and load it like a Tiled map with `level.load(...)`. Animated models play back through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`. Scene meshes are lit by the authored sun, and 3D meshes can now report a real bounding box.
+**Highlights:** glTF / GLB scene loading lands — author a 3D scene in Blender (or any DCC tool), export a `.glb`, and load it like a Tiled map with `level.load(...)`. Animated models play back through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`. Scene meshes are lit by the authored sun, and 3D meshes can now report a real bounding box. And `Sprite3d` brings the 2.5D workflow — billboarded, frame-animated cut-out sprites that face a `Camera3d` (the Paper Mario look), sharing one `FrameAnimation` engine with the 2D `Sprite`.
 
 ### Added
 - **`loader.preload()` / `loader.load()` are now `await`-able** — `preload(assets)` returns a `Promise<void>` that resolves once every asset has loaded (and rejects on failure), so you can `await loader.preload(assets)` instead of nesting an `onload` callback. `load(asset)` called **without** callbacks likewise returns a Promise for a one-off dynamic load. Both are fully back-compat: the callback forms (and `loader.onload` / `LOADER_PROGRESS` / `LOADER_ERROR` events) are unchanged, and `load(asset, onload, onerror)` still returns the resource count. (`preload` was already promise-based internally — it just didn't hand the promise back.)
