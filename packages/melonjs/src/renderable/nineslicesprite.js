@@ -6,6 +6,16 @@ import Sprite from "./sprite.js";
  * @import { TextureAtlas } from "./../video/texture/atlas.js";
  */
 
+// Reusable scratch for the 9-slice grid, refilled on every draw. A
+// NineSliceSprite is drawn synchronously on the main thread (drawImage never
+// re-enters another NineSliceSprite.draw), so a shared module-level buffer is
+// safe and keeps draw() free of per-frame allocation. These hold the per-axis
+// source/dest *offsets*; the slice sizes are derived inline in the draw loop.
+const sColX = [0, 0, 0];
+const dColX = [0, 0, 0];
+const sRowY = [0, 0, 0];
+const dRowY = [0, 0, 0];
+
 /**
  * A NineSliceSprite is similar to a Sprite, but it uses 9-slice scaling to stretch its inner area to fit the size of the Renderable,
  * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
@@ -86,6 +96,31 @@ export default class NineSliceSprite extends Sprite {
 	}
 
 	/**
+	 * Apply the current animation/atlas frame. The base {@link Sprite} swaps the
+	 * sub-texture, resolves the anchor (honoring trimming) and resizes itself to
+	 * the frame — but for a NineSliceSprite the size is the user-specified
+	 * "expanded" target that the 9 slices stretch to fill, and must NOT track the
+	 * frame. We delegate to the base for the texture/anchor work, then restore the
+	 * expanded size it clobbered. (Fixes #1115, where animating a NineSliceSprite
+	 * let the per-frame source size shrink the panel to a single frame.)
+	 * @param {object} region - the texture region object
+	 * @ignore
+	 */
+	_applyFrame(region) {
+		// capture the expanded size BEFORE super runs: its `this.width =` writes
+		// route through our setter and overwrite nss_width/nss_height
+		const w = this.nss_width;
+		const h = this.nss_height;
+		super._applyFrame(region);
+		// during construction nss_* is still undefined (the constructor sets the
+		// expanded size right after super()), so only restore once it exists
+		if (w !== undefined) {
+			this.width = w;
+			this.height = h;
+		}
+	}
+
+	/**
 	 * @ignore
 	 */
 	draw(renderer) {
@@ -119,130 +154,47 @@ export default class NineSliceSprite extends Sprite {
 		const corner_width = this.insetx || w / 4;
 		const corner_height = this.insety || h / 4;
 
-		// OPTIMIZE ME !
-
-		// DRAW CORNERS
-
-		// Top Left
-		renderer.drawImage(
-			this.image,
-			sx, // sx
-			sy, // sy
-			corner_width,
-			corner_height, // sw,sh
-			dx,
-			dy, // dx,dy
-			corner_width,
-			corner_height, // dw,dh
-		);
-
-		// Top Right
-		renderer.drawImage(
-			this.image,
-			sx + w - corner_width, // sx
-			sy, // sy
-			corner_width,
-			corner_height, // sw,sh
-			dx + this.nss_width - corner_width, // dx
-			dy, // dy
-			corner_width,
-			corner_height, // dw,dh
-		);
-		// Bottom Left
-		renderer.drawImage(
-			this.image,
-			sx, // sx
-			sy + h - corner_height, // sy
-			corner_width,
-			corner_height, // sw,sh
-			dx, // dx
-			dy + this.nss_height - corner_height, // dy
-			corner_width,
-			corner_height, // dw,dh
-		);
-		// Bottom Right
-		renderer.drawImage(
-			this.image,
-			sx + w - corner_width, // sx
-			sy + h - corner_height, // sy
-			corner_width,
-			corner_height, // sw,sh
-			dx + this.nss_width - corner_width, //dx
-			dy + this.nss_height - corner_height, // dy
-			corner_width,
-			corner_height, // dw,dh
-		);
-
-		// DRAW SIDES and CENTER
 		const image_center_width = w - (corner_width << 1);
 		const image_center_height = h - (corner_height << 1);
 
 		const target_center_width = this.nss_width - (corner_width << 1);
 		const target_center_height = this.nss_height - (corner_height << 1);
 
-		//Top center
-		renderer.drawImage(
-			this.image,
-			sx + corner_width, // sx
-			sy, // sy
-			image_center_width, // sw
-			corner_height, // sh
-			dx + corner_width, // dx
-			dy, // dy
-			target_center_width, // dw
-			corner_height, // dh
-		);
+		// The 9-slice grid is separable per axis: each column/row is an unscaled
+		// corner, a stretched center, then an unscaled corner. Fill the shared
+		// scratch with the per-axis source/dest offsets (no per-draw allocation).
+		sColX[0] = sx;
+		sColX[1] = sx + corner_width;
+		sColX[2] = sx + w - corner_width;
+		dColX[0] = dx;
+		dColX[1] = dx + corner_width;
+		dColX[2] = dx + this.nss_width - corner_width;
+		sRowY[0] = sy;
+		sRowY[1] = sy + corner_height;
+		sRowY[2] = sy + h - corner_height;
+		dRowY[0] = dy;
+		dRowY[1] = dy + corner_height;
+		dRowY[2] = dy + this.nss_height - corner_height;
 
-		//Bottom center
-		renderer.drawImage(
-			this.image,
-			sx + corner_width, // sx
-			sy + h - corner_height, // sy
-			image_center_width, // sw
-			corner_height, // sh
-			dx + corner_width, // dx
-			dy + this.nss_height - corner_height, // dx
-			target_center_width, // dw
-			corner_height, // dh
-		);
-
-		// Middle Left
-		renderer.drawImage(
-			this.image,
-			sx, // sx
-			sy + corner_height, // sy
-			corner_width, // sw
-			image_center_height, // sh
-			dx, // dx
-			dy + corner_height, // dy
-			corner_width, // dw
-			target_center_height, // dh
-		);
-
-		// Middle Right
-		renderer.drawImage(
-			this.image,
-			sx + w - corner_width, // sx
-			sy + corner_height, // sy
-			corner_width, // sw
-			image_center_height, // sh
-			dx + this.nss_width - corner_width, // dx
-			dy + corner_height, // dy
-			corner_width, // dw
-			target_center_height, // dh
-		);
-
-		// Middle Center
-		renderer.drawImage(
-			this.image,
-			sx + corner_width, // sx
-			sy + corner_height, // sy
-			image_center_width, // sw
-			image_center_height, // sh
-			dx + corner_width, // dx
-			dy + corner_height, // dy
-			target_center_width, // dw
-			target_center_height, // dh
-		);
+		// blit the 9 slices: corners keep their size, the center column/row stretch.
+		for (let r = 0; r < 3; r++) {
+			const sh = r === 1 ? image_center_height : corner_height;
+			const dh = r === 1 ? target_center_height : corner_height;
+			for (let c = 0; c < 3; c++) {
+				const sw = c === 1 ? image_center_width : corner_width;
+				const dw = c === 1 ? target_center_width : corner_width;
+				renderer.drawImage(
+					this.image,
+					sColX[c], // sx
+					sRowY[r], // sy
+					sw, // sw
+					sh, // sh
+					dColX[c], // dx
+					dRowY[r], // dy
+					dw, // dw
+					dh, // dh
+				);
+			}
+		}
 	}
 }
