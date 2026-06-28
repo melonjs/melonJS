@@ -110,18 +110,15 @@ class WavyText extends Container {
 		y: number,
 		text: string,
 		settings: ConstructorParameters<typeof BitmapText>[2],
-		amplitude = 6,
-		speed = 0.008,
-		phaseStep = 0.6,
+		amplitude = 10,
+		speed = 0.009,
+		phaseStep = 0.7,
 	) {
 		super(x, y);
 		this.amplitude = amplitude;
 		this.speed = speed;
 		this.phaseStep = phaseStep;
 		this.alwaysUpdate = true;
-		// keep the container's bounds in sync with its (moving) glyphs, otherwise
-		// it has empty bounds and the camera culls the whole group
-		this.enableChildBoundsUpdate = true;
 
 		// lay glyphs out left-to-right by measured advance
 		const measurer = new BitmapText(0, 0, settings);
@@ -133,6 +130,12 @@ class WavyText extends Container {
 			measurer.setText(ch === " " ? "M" : ch); // spaces measure to 0 otherwise
 			cx += measurer.measureText().width;
 		}
+
+		// Fixed, non-empty bounds so the camera never culls the group. Deriving
+		// bounds from the (continuously moving) child glyphs is what let MELONA
+		// occasionally vanish; a stable box covering the text + wave is robust.
+		this.width = cx;
+		this.height = (Number(settings.size) || 1) * 16 + this.amplitude * 2;
 	}
 
 	override update(dt: number) {
@@ -289,9 +292,9 @@ export class TextScreen extends Stage {
 			{ text: "," },
 			{
 				text: " stroke",
-				fillStyle: "#12141d",
-				strokeStyle: ACCENT,
-				lineWidth: 3,
+				fillStyle: ACCENT,
+				strokeStyle: INK,
+				lineWidth: 1.5,
 			},
 			{ text: "," },
 			{ text: " opacity", fillStyle: INK, opacity: 0.45 },
