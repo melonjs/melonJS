@@ -292,9 +292,9 @@ export class TextScreen extends Stage {
 			{ text: "," },
 			{
 				text: " stroke",
-				fillStyle: ACCENT,
-				strokeStyle: INK,
-				lineWidth: 1.5,
+				fillStyle: INK,
+				strokeStyle: ACCENT,
+				lineWidth: 1,
 			},
 			{ text: "," },
 			{ text: " opacity", fillStyle: INK, opacity: 0.45 },
