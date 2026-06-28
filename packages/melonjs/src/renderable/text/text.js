@@ -17,8 +17,38 @@ import setContextStyle from "./textstyle.js";
 const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
+// CSS generic font families must NOT be quoted: quoting a generic keyword turns
+// it into a (nonexistent) specific family name, so the browser silently falls
+// back to its default serif. These are kept unquoted by setFont().
+const genericFontFamilies = new Set([
+	"serif",
+	"sans-serif",
+	"monospace",
+	"cursive",
+	"fantasy",
+	"system-ui",
+	"ui-serif",
+	"ui-sans-serif",
+	"ui-monospace",
+	"ui-rounded",
+	"math",
+	"emoji",
+	"fangsong",
+]);
+
 /**
- * a generic system font object.
+ * a Text object: draws a string using a system or web font.
+ *
+ * The text is rasterised to a cached texture, so it draws as fast as a sprite
+ * while staying fully styleable — `fillStyle`, `strokeStyle` + `lineWidth`, and
+ * per-object opacity — with multi-line text (embedded `\n`), optional
+ * `wordWrapWidth` word-wrapping, and chainable {@link Text#bold} /
+ * {@link Text#italic}. `font` accepts any CSS family, including the generic
+ * keywords (`sans-serif`, `monospace`, …); a web font loaded through the
+ * `fontface` loader is referenced by its family name.
+ *
+ * For a crisp, tintable, retro look — or large amounts of mostly-static text —
+ * consider {@link BitmapText} instead.
  * @category Text
  */
 export default class Text extends Renderable {
@@ -26,19 +56,43 @@ export default class Text extends Renderable {
 	 * @param {number} x - position of the text object
 	 * @param {number} y - position of the text object
 	 * @param {object} settings - the text configuration
-	 * @param {string} settings.font - a CSS family font name
-	 * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
-	 * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
-	 * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
-	 * @param {number} [settings.lineWidth=0] - line width, in pixels, when drawing stroke
-	 * @param {string} [settings.textAlign="left"] - horizontal text alignment
-	 * @param {string} [settings.textBaseline="top"] - the text baseline
+	 * @param {string} settings.font - a CSS font family: a specific name (`"Arial"`), a generic keyword (`"sans-serif"`, `"monospace"`, …), or a web font loaded via the `fontface` loader (referenced by its family name)
+	 * @param {number|string} settings.size - the font size: a number in pixels, or a CSS size string with a unit (`"24px"` / `"1.5em"` / `"18pt"`)
+	 * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value used to fill the glyphs
+	 * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value used for the glyph outline (drawn when `lineWidth` > 0)
+	 * @param {number} [settings.lineWidth=0] - outline width in pixels (0 = no stroke)
+	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
+	 * @param {string} [settings.textBaseline="top"] - the text baseline ("top", "hanging", "middle", "alphabetic", "ideographic", "bottom")
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
 	 * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
-	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixels of a line before it wraps
 	 * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
 	 * @example
-	 * let font = new Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+	 * // a styled, word-wrapped, multi-line label using a generic system font
+	 * const label = new Text(8, 8, {
+	 *     font: "sans-serif",          // any CSS family (generic keywords work too)
+	 *     size: 24,                    // number (px) or a "1.5em" / "18pt" string
+	 *     fillStyle: "#ffffff",
+	 *     strokeStyle: "#202020",
+	 *     lineWidth: 2,                // outline the glyphs
+	 *     textAlign: "left",
+	 *     textBaseline: "top",
+	 *     wordWrapWidth: 200,          // wrap lines longer than 200px
+	 *     text: "Hello melonJS!\nStyled, wrapped, multi-line text.",
+	 * });
+	 * label.bold();                    // bold() / italic() are chainable
+	 * label.setOpacity(0.8);           // per-object transparency
+	 * app.world.addChild(label);
+	 * @example
+	 * // a web font (loaded via the fontface loader) is used by its family name
+	 * loader.preload(
+	 *     [{ name: "kenpixel", type: "fontface", src: "data/font/kenvector.woff2" }],
+	 *     () => {
+	 *         app.world.addChild(
+	 *             new Text(0, 0, { font: "kenpixel", size: 32, text: "Web font" }),
+	 *         );
+	 *     },
+	 * );
 	 */
 	constructor(x, y, settings) {
 		// call the parent constructor
@@ -234,7 +288,14 @@ export default class Text extends Renderable {
 		// font name and type
 		const font_names = font.split(",").map((value) => {
 			value = value.trim();
-			return !/(^".*"$)|(^'.*'$)/.test(value) ? '"' + value + '"' : value;
+			// leave already-quoted names and CSS generic families untouched
+			if (
+				/(^".*"$)|(^'.*'$)/.test(value) ||
+				genericFontFamilies.has(value.toLowerCase())
+			) {
+				return value;
+			}
+			return `"${value}"`;
 		});
 
 		// font size

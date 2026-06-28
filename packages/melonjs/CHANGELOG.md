@@ -2,7 +2,11 @@
 
 ## [19.9.0] (melonJS 2) - _unreleased_
 
+### Added
+- **BMFont XML font support for `BitmapText`** — bitmap fonts can now be loaded from the AngelCode BMFont **XML** flavour in addition to the text `.fnt` format (the serialisation is auto-detected). Many bitmap-font tools and asset packs (itch.io, dafont, …) export PNG + XML; those now load directly through the standard preloader (`{ type: "binary" }`), with no offline conversion step. The XML is parsed with a dependency-free regex parser (no `DOMParser`), so it also works outside the browser (Node / SSR) — unlike the DOM-based TMX XML path.
+
 ### Fixed
+- **`Text` generic CSS font families silently fell back to serif** — `setFont` quoted *every* family name, which turned a CSS generic keyword (`sans-serif`, `monospace`, `serif`, `system-ui`, …) into a quoted, nonexistent specific family, so the browser rendered its default serif instead. Generic families are now left unquoted; specific names (e.g. `"Arial"`, `"My Font"`) are still quoted so names with spaces keep working.
 - **Animated `NineSliceSprite` collapsed to its frame size** (#1115) — a `NineSliceSprite` driven by an animation (or any per-frame texture change) had its user-specified "expanded" `width`/`height` overwritten by each frame's source dimensions, shrinking the 9-slice panel to a single frame after the first animation step. Static nine-slices were unaffected because the frame is applied only once (during construction, before the expanded size is set). `NineSliceSprite` now applies a new frame by swapping only the source sub-texture, leaving the expanded size and bounds intact. First-ever test coverage for `NineSliceSprite` (the class previously had none).
 
 ### Changed
