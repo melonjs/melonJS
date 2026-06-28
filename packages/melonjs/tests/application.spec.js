@@ -101,6 +101,29 @@ describe("Application", () => {
 		});
 	});
 
+	describe("physics startup banner", () => {
+		it("reports the built-in adapter via its stable physicLabel, not a class name", () => {
+			boot();
+			const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+			try {
+				// consoleHeader defaults to true, so the banner is emitted
+				const app = new Application(64, 64, {
+					parent: "screen",
+					renderer: video.CANVAS,
+				});
+				expect(app).toBeInstanceOf(Application);
+				const lines = spy.mock.calls.map((args) => {
+					return args.join(" ");
+				});
+				// must use the physicLabel ("builtin"), never constructor.name —
+				// which is mangled (e.g. "ry") in minified builds
+				expect(lines).toContain("physics: builtin");
+			} finally {
+				spy.mockRestore();
+			}
+		});
+	});
+
 	describe("repaint / sortOn", () => {
 		it("repaint() should set isDirty to true", () => {
 			game.isDirty = false;

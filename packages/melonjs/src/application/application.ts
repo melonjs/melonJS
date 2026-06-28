@@ -552,10 +552,14 @@ export default class Application {
 				const a = this.world.adapter as {
 					constructor: { name: string };
 					name?: string;
+					physicLabel?: string;
 					version?: string;
 					url?: string;
 				};
-				const label = a.name ?? a.constructor.name;
+				// prefer the adapter's declared name, then its stable physicLabel;
+				// `constructor.name` is a last resort (it's mangled in minified
+				// builds, e.g. the built-in adapter would print "physics: ry")
+				const label = a.name ?? a.physicLabel ?? a.constructor.name;
 				const version = a.version ? ` ${a.version}` : "";
 				const url = a.url ? ` | ${a.url}` : "";
 				console.log(`physics: ${label}${version}${url}`);

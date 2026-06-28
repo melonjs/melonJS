@@ -404,9 +404,10 @@ export interface PhysicsAdapter {
 	readonly physicLabel?: string;
 
 	/**
-	 * Optional display name reported on the startup banner. Defaults to
-	 * the adapter class name. Third-party packages typically set this to
-	 * their npm package id (e.g. `"@melonjs/matter-adapter"`).
+	 * Optional display name reported on the startup banner. Falls back to the
+	 * adapter's `physicLabel`, then its class name — avoid relying on the latter,
+	 * as it is mangled in minified builds. Third-party packages typically set
+	 * this to their npm package id (e.g. `"@melonjs/matter-adapter"`).
 	 */
 	readonly name?: string;
 	/**
