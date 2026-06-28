@@ -11,10 +11,15 @@ import { TextScreen } from "./text.ts";
 const base = `${import.meta.env.BASE_URL}assets/text/`;
 
 const createGame = () => {
-	const _app = new Application(640, 480, {
+	// authored at 2× (1280×960) so the canvas renders close to native pixels on
+	// a HiDPI display, minimising the upscale blur of a low-res backing store
+	const _app = new Application(1280, 960, {
 		parent: "screen",
 		scale: "auto",
 		renderer: video.AUTO,
+		// nearest-neighbour sampling keeps the pixel bitmap fonts crisp and avoids
+		// atlas glyph bleeding; at ~native scale the web/system fonts stay sharp too
+		antiAlias: false,
 	});
 
 	// register the debug plugin
@@ -23,10 +28,19 @@ const createGame = () => {
 	// set all resources to be loaded
 	loader.preload(
 		[
-			{ name: "xolo12", type: "image", src: `${base}xolo12.png` },
-			{ name: "xolo12", type: "binary", src: `${base}xolo12.fnt` },
-			{ name: "arialfancy", type: "image", src: `${base}arialfancy.png` },
-			{ name: "arialfancy", type: "binary", src: `${base}arialfancy.fnt` },
+			// pixel bitmap fonts (frostyfreeze, BMFont XML → converted to .fnt)
+			{ name: "minogram", type: "image", src: `${base}minogram.png` },
+			{ name: "minogram", type: "binary", src: `${base}minogram.fnt` },
+			{ name: "thick", type: "image", src: `${base}thick.png` },
+			{ name: "thick", type: "binary", src: `${base}thick.fnt` },
+			// nine-slice dialogue panel
+			{ name: "panel", type: "image", src: `${base}panel.png` },
+			// loaded web font (used via font-family "kenpixel")
+			{
+				name: "kenpixel",
+				type: "fontface",
+				src: `${base}kenvector_future.woff2`,
+			},
 		],
 		() => {
 			state.set(state.PLAY, new TextScreen());
