@@ -6,7 +6,13 @@ import { bitmapTextDataPool } from "./bitmaptextdata.ts";
 import TextMetrics from "./textmetrics.js";
 
 /**
- * a bitmap font object
+ * a bitmap font object.
+ *
+ * The font descriptor uses the AngelCode BMFont format and may be supplied in
+ * either flavour — the **text** (`.fnt`) or the **XML** form — the
+ * serialisation is auto-detected, so packs that ship an `.xml` descriptor load
+ * as-is, with no conversion step. Load the descriptor as a `binary` asset and
+ * its page image as an `image` asset, then reference both by the same name.
  * @category Text
  */
 export default class BitmapText extends Renderable {
@@ -14,8 +20,8 @@ export default class BitmapText extends Renderable {
 	 * @param {number} x - position of the text object
 	 * @param {number} y - position of the text object
 	 * @param {object} settings - the text configuration
-	 * @param {string|Image} settings.font - a font name to identify the corresponing source image
-	 * @param {string} [settings.fontData=settings.font] - the bitmap font data corresponding name, or the bitmap font data itself
+	 * @param {string|Image} settings.font - a font name to identify the corresponding source image
+	 * @param {string} [settings.fontData=settings.font] - the bitmap font data corresponding name, or the bitmap font data itself (AngelCode BMFont, `.fnt` text or `.xml`)
 	 * @param {number} [settings.size] - size a scaling ratio
 	 * @param {Color|string} [settings.fillStyle] - a CSS color value used to tint the bitmapText (@see BitmapText.tint)
 	 * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
@@ -26,17 +32,20 @@ export default class BitmapText extends Renderable {
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
 	 * @param {(string|string[])} [settings.text] - a string, or an array of strings
 	 * @example
-	 * // Use loader.preload or loader.load to load assets
+	 * // Load the BMFont descriptor as a "binary" asset and its page as an "image".
+	 * // Both the text (.fnt) and XML (.xml) BMFont flavours are accepted and
+	 * // auto-detected, so an .xml descriptor can be used directly:
 	 * loader.preload([
+	 *     // text (.fnt) BMFont
 	 *     { name: "arial", type: "binary", src: "data/font/arial.fnt" },
-	 *     { name: "arial", type: "image", src: "data/font/arial.png" },
+	 *     { name: "arial", type: "image",  src: "data/font/arial.png" },
+	 *     // XML BMFont (exported by many bitmap-font tools) — loaded as-is
+	 *     { name: "pixel", type: "binary", src: "data/font/pixel.xml" },
+	 *     { name: "pixel", type: "image",  src: "data/font/pixel.png" },
 	 * ])
 	 * // Then create an instance of your bitmap font:
-	 * let myFont = new BitmapText(x, y, {font:"arial", text:"Hello"});
-	 * // two possibilities for using "myFont"
-	 * // either call the draw function from your Renderable draw function
-	 * myFont.draw(renderer, "Hello!", 0, 0);
-	 * // or just add it to the world container
+	 * let myFont = new BitmapText(x, y, { font: "arial", text: "Hello" });
+	 * // add it to the world container
 	 * app.world.addChild(myFont);
 	 */
 	constructor(x, y, settings) {

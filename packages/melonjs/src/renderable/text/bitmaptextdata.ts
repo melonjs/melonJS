@@ -78,7 +78,8 @@ function createSpaceGlyph(glyphs: any) {
 }
 
 /**
- * a bitmap font data object
+ * a bitmap font data object — parses the AngelCode BMFont format in both its
+ * text (`.fnt`) and XML serialisations (the flavour is auto-detected).
  * @category Text
  */
 export default class BitmapTextData {
@@ -104,6 +105,82 @@ export default class BitmapTextData {
 			);
 		}
 
+		this.capHeight = 1;
+		this.descent = 0;
+		this.glyphMinTop = Infinity;
+		this.glyphMaxBottom = 0;
+		this.glyphs = {};
+
+		// AngelCode BMFont ships in a text (.fnt) and an XML flavour — same data,
+		// different serialisation. Detect which and dispatch.
+		if (fontData.trimStart().startsWith("<")) {
+			this.parseXML(fontData);
+		} else {
+			this.parseText(fontData);
+		}
+
+		if (this.glyphMinTop === Infinity) {
+			this.glyphMinTop = 0;
+		}
+
+		this.descent += this.padBottom;
+
+		createSpaceGlyph(this.glyphs);
+
+		let capGlyph: Glyph | undefined;
+		for (let i = 0; i < capChars.length; i++) {
+			const capChar = capChars[i];
+			capGlyph = this.glyphFor(capChar.charCodeAt(0));
+			if (capGlyph) {
+				break;
+			}
+		}
+		if (!capGlyph) {
+			for (const charCode in this.glyphs) {
+				if (Object.prototype.hasOwnProperty.call(this.glyphs, charCode)) {
+					const glyph = this.glyphs[charCode];
+					if (glyph.height === 0 || glyph.width === 0) {
+						continue;
+					}
+					this.capHeight = Math.max(this.capHeight, glyph.height);
+				}
+			}
+		} else {
+			this.capHeight = capGlyph.height;
+		}
+		this.capHeight -= this.padTop + this.padBottom;
+	}
+
+	/**
+	 * Record a parsed glyph and fold it into the font's vertical metrics.
+	 * @ignore
+	 */
+	recordGlyph(glyph: Glyph, baseLine: number) {
+		if (glyph.width > 0 && glyph.height > 0) {
+			this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
+			this.glyphMinTop = Math.min(this.glyphMinTop, glyph.yoffset);
+			this.glyphMaxBottom = Math.max(
+				this.glyphMaxBottom,
+				glyph.yoffset + glyph.height,
+			);
+		}
+		this.glyphs[glyph.id] = glyph;
+	}
+
+	/**
+	 * Look up a glyph by char code, honestly typed as possibly missing (the
+	 * glyph map's index signature otherwise hides that a lookup can be absent).
+	 * @ignore
+	 */
+	glyphFor(id: number): Glyph | undefined {
+		return this.glyphs[id];
+	}
+
+	/**
+	 * Parse the AngelCode BMFont text (.fnt) format.
+	 * @ignore
+	 */
+	parseText(fontData: string) {
 		const lines = fontData.split(/\r\n|\n/);
 		const padding = fontData.match(/padding=\d+,\d+,\d+,\d+/g);
 		if (!padding) {
@@ -116,17 +193,7 @@ export default class BitmapTextData {
 		this.padBottom = parseFloat(paddingValues[2]);
 		this.padRight = parseFloat(paddingValues[3]);
 		this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight=\d+/g));
-
-		this.capHeight = 1;
-		this.descent = 0;
-		this.glyphMinTop = Infinity;
-		this.glyphMaxBottom = 0;
-		this.glyphs = {};
-
 		const baseLine = parseFloat(getValueFromPair(lines[1], /base=\d+/g));
-		const padY = this.padTop + this.padBottom;
-
-		let glyph: Glyph | null | undefined;
 
 		for (let i = 4; i < lines.length; i++) {
 			const line = lines[i];
@@ -139,15 +206,13 @@ export default class BitmapTextData {
 				const second = parseFloat(characterValues[4]);
 				const amount = parseFloat(characterValues[6]);
 
-				glyph = this.glyphs[first];
-				if (glyph !== null && typeof glyph !== "undefined") {
+				const glyph = this.glyphFor(first);
+				if (glyph) {
 					glyph.setKerning(second, amount);
 				}
 			} else {
-				glyph = new Glyph();
-
-				const ch = parseFloat(characterValues[2]);
-				glyph.id = ch;
+				const glyph = new Glyph();
+				glyph.id = parseFloat(characterValues[2]);
 				glyph.x = parseFloat(characterValues[4]);
 				glyph.y = parseFloat(characterValues[6]);
 				glyph.width = parseFloat(characterValues[8]);
@@ -155,50 +220,71 @@ export default class BitmapTextData {
 				glyph.xoffset = parseFloat(characterValues[12]);
 				glyph.yoffset = parseFloat(characterValues[14]);
 				glyph.xadvance = parseFloat(characterValues[16]);
-
-				if (glyph.width > 0 && glyph.height > 0) {
-					this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
-					this.glyphMinTop = Math.min(this.glyphMinTop, glyph.yoffset);
-					this.glyphMaxBottom = Math.max(
-						this.glyphMaxBottom,
-						glyph.yoffset + glyph.height,
-					);
-				}
-
-				this.glyphs[ch] = glyph;
+				this.recordGlyph(glyph, baseLine);
 			}
 		}
+	}
 
-		if (this.glyphMinTop === Infinity) {
-			this.glyphMinTop = 0;
+	/**
+	 * Parse the AngelCode BMFont XML format (same data as the .fnt text form).
+	 * Padding is optional in XML exports (e.g. frostyfreeze) and defaults to 0.
+	 * @ignore
+	 */
+	parseXML(fontData: string) {
+		// Parsed with simple regex rather than DOMParser, so it also works where
+		// no DOM is available (Node / SSR / headless). BMFont XML is a flat,
+		// attributes-only format, which makes this safe and dependency-free.
+		const attrs = (tag: string) => {
+			const out = new Map<string, string>();
+			// bounded name/whitespace repetition keeps this strictly linear (no
+			// polynomial backtracking) on arbitrary font data; BMFont attribute
+			// names and the surrounding spacing are always short
+			for (const m of tag.matchAll(/(\w{1,64})\s{0,8}=\s{0,8}"([^"]*)"/g)) {
+				out.set(m[1], m[2]);
+			}
+			return out;
+		};
+		const num = (o: Map<string, string>, name: string) => {
+			return parseFloat(o.get(name) ?? "0");
+		};
+
+		const commonTag = fontData.match(/<common\b[^>]*>/);
+		if (commonTag === null) {
+			throw new Error("Invalid BMFont XML: missing <common> element.");
 		}
+		const infoTag = fontData.match(/<info\b[^>]*>/);
+		const info = infoTag ? attrs(infoTag[0]) : new Map<string, string>();
+		const common = attrs(commonTag[0]);
 
-		this.descent += this.padBottom;
+		// padding is optional in XML exports (e.g. frostyfreeze) → default to 0
+		const pad = (info.get("padding") ?? "0,0,0,0").split(",");
+		this.padTop = parseFloat(pad[0]);
+		this.padLeft = parseFloat(pad[1]);
+		this.padBottom = parseFloat(pad[2]);
+		this.padRight = parseFloat(pad[3]);
+		this.lineHeight = num(common, "lineHeight");
+		const baseLine = num(common, "base");
 
-		createSpaceGlyph(this.glyphs);
-
-		let capGlyph: Glyph | null = null;
-		for (let i = 0; i < capChars.length; i++) {
-			const capChar = capChars[i];
-			capGlyph = this.glyphs[capChar.charCodeAt(0)];
-			if (capGlyph) {
-				break;
+		for (const m of fontData.matchAll(/<char\b[^>]*>/g)) {
+			const a = attrs(m[0]);
+			const glyph = new Glyph();
+			glyph.id = num(a, "id");
+			glyph.x = num(a, "x");
+			glyph.y = num(a, "y");
+			glyph.width = num(a, "width");
+			glyph.height = num(a, "height");
+			glyph.xoffset = num(a, "xoffset");
+			glyph.yoffset = num(a, "yoffset");
+			glyph.xadvance = num(a, "xadvance");
+			this.recordGlyph(glyph, baseLine);
+		}
+		for (const m of fontData.matchAll(/<kerning\b[^>]*>/g)) {
+			const a = attrs(m[0]);
+			const glyph = this.glyphFor(num(a, "first"));
+			if (glyph) {
+				glyph.setKerning(num(a, "second"), num(a, "amount"));
 			}
 		}
-		if (!capGlyph) {
-			for (const charCode in this.glyphs) {
-				if (Object.prototype.hasOwnProperty.call(this.glyphs, charCode)) {
-					glyph = this.glyphs[charCode];
-					if (glyph.height === 0 || glyph.width === 0) {
-						continue;
-					}
-					this.capHeight = Math.max(this.capHeight, glyph.height);
-				}
-			}
-		} else {
-			this.capHeight = capGlyph.height;
-		}
-		this.capHeight -= padY;
 	}
 }
 

@@ -64,3 +64,20 @@ attribution legally required, credited here as a courtesy.
 
 The **Night City Flythrough** example uses no external assets — its city is
 generated procedurally from raw mesh data at runtime.
+
+### `text` example
+
+Pixel bitmap fonts `minogram` and `thick` in `public/assets/text/` are from
+**"Pixel Bitmap Fonts (PNG + XML)"** by frostyfreeze:
+
+<https://frostyfreeze.itch.io/pixel-bitmap-fonts-png-xml>
+
+Credited here to the author; refer to the pack page for its license terms. The
+originals are AngelCode BMFont **XML** (`minogram_6x10` / `thick_8x8`); they were
+converted to the `.fnt` text format for this example (the PNG atlases are
+unchanged).
+
+The dialogue panel `panel.png` and the web font `kenvector_future.woff2` in the
+same folder are from UI packs published by **Kenney** (<https://www.kenney.nl>),
+released under **CC0 1.0 Universal (Public Domain Dedication)** — no attribution
+legally required, credited here as a courtesy.
