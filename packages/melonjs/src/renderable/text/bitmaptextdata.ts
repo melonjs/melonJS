@@ -236,7 +236,10 @@ export default class BitmapTextData {
 		// attributes-only format, which makes this safe and dependency-free.
 		const attrs = (tag: string) => {
 			const out = new Map<string, string>();
-			for (const m of tag.matchAll(/(\w+)\s*=\s*"([^"]*)"/g)) {
+			// bounded name/whitespace repetition keeps this strictly linear (no
+			// polynomial backtracking) on arbitrary font data; BMFont attribute
+			// names and the surrounding spacing are always short
+			for (const m of tag.matchAll(/(\w{1,64})\s{0,8}=\s{0,8}"([^"]*)"/g)) {
 				out.set(m[1], m[2]);
 			}
 			return out;
