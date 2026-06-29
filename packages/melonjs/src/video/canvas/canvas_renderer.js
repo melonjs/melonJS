@@ -741,10 +741,19 @@ export default class CanvasRenderer extends Renderer {
 				// replay path2D interpolated points onto the native context
 				const context = this.getContext();
 				const points = this.path2D.points;
+				const subPaths = this.path2D.subPaths;
 				context.beginPath();
 				context.moveTo(points[0].x, points[0].y);
+				let s = 0;
 				for (let i = 1; i < points.length; i++) {
-					context.lineTo(points[i].x, points[i].y);
+					// break at each sub-path boundary (moveTo) so sub-paths aren't
+					// joined; native fill() then carves holes via its winding rule
+					if (s < subPaths.length && i === subPaths[s]) {
+						context.moveTo(points[i].x, points[i].y);
+						s++;
+					} else {
+						context.lineTo(points[i].x, points[i].y);
+					}
 				}
 				if (fill === true) {
 					context.fill();

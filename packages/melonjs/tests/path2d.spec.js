@@ -1,5 +1,26 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import Path2D from "../src/geometries/path2d.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import Path2D from "../src/geometries/path2d.ts";
+
+// barycentric point-in-triangle test against a flat triangle-vertex list, used
+// to assert that holes are actually carved out of the triangulated fill
+const pointInTriangulation = (vertices, px, py) => {
+	const inTriangle = (a, b, c) => {
+		const d = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
+		if (d === 0) {
+			return false;
+		}
+		const wa = ((b.y - c.y) * (px - c.x) + (c.x - b.x) * (py - c.y)) / d;
+		const wb = ((c.y - a.y) * (px - c.x) + (a.x - c.x) * (py - c.y)) / d;
+		const wc = 1 - wa - wb;
+		return wa >= 0 && wb >= 0 && wc >= 0;
+	};
+	for (let i = 0; i < vertices.length; i += 3) {
+		if (inTriangle(vertices[i], vertices[i + 1], vertices[i + 2])) {
+			return true;
+		}
+	}
+	return false;
+};
 
 describe("Path2D", () => {
 	let path;
@@ -363,6 +384,395 @@ describe("Path2D", () => {
 			// square = 2 triangles = 6 vertices
 			// (earcut produces 4 unique points with 6 index entries -> 6 triangle verts)
 			expect(triangles.length).toBe(6);
+		});
+	});
+
+	describe("sub-paths and holes (ticket #1253)", () => {
+		it("a single sub-path records no boundaries", () => {
+			path.parseSVGPath("M 0 0 L 100 0 L 100 100 L 0 100 Z");
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("a second M records exactly one sub-path boundary", () => {
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 25 L 75 25 L 75 75 L 25 75 Z",
+			);
+			expect(path.subPaths.length).toBe(1);
+		});
+
+		it("two extra M commands record two boundaries", () => {
+			path.parseSVGPath(
+				"M 0 0 L 10 0 L 10 10 Z M 20 20 L 30 20 L 30 30 Z M 40 40 L 50 40 L 50 50 Z",
+			);
+			expect(path.subPaths.length).toBe(2);
+		});
+
+		it("the boundary index points at the start of the new sub-path", () => {
+			path.parseSVGPath("M 0 0 L 100 0 Z M 50 50 L 80 50");
+			// outer sub-path: M 0 0 L 100 0 Z -> points [(0,0),(100,0),(100,0),(0,0)]
+			expect(path.subPaths.length).toBe(1);
+			const boundary = path.subPaths[0];
+			// the point at the boundary index is the new sub-path's start (50,50)
+			expect(path.points[boundary].x).toBe(50);
+			expect(path.points[boundary].y).toBe(50);
+		});
+
+		it("triangulates a square-with-square-hole into a ring (8 triangles)", () => {
+			// outer + inner square (the inner one is a hole). For a polygon with
+			// holes earcut yields (n + 2h - 2) triangles; here n=8, h=1 -> 8.
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 25 L 25 75 L 75 75 L 75 25 Z",
+			);
+			const triangles = path.triangulatePath();
+			expect(triangles.length).toBe(24); // 8 triangles * 3 vertices
+		});
+
+		it("the hole leaves the interior uncovered", () => {
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 25 L 25 75 L 75 75 L 75 25 Z",
+			);
+			const v = path.triangulatePath();
+			// centre (50,50) is inside the hole -> not covered
+			expect(pointInTriangulation(v, 50, 50)).toBe(false);
+			// a point in the ring (10,50) -> covered
+			expect(pointInTriangulation(v, 10, 50)).toBe(true);
+		});
+
+		it("beginPath clears recorded sub-paths", () => {
+			path.parseSVGPath("M 0 0 L 10 0 Z M 5 5 L 8 5");
+			expect(path.subPaths.length).toBeGreaterThan(0);
+			path.beginPath();
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("rect stays a single sub-path", () => {
+			path.rect(0, 0, 100, 100);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("roundRect arc joins do not create spurious sub-paths", () => {
+			// arcTo introduces float-precision joins; the distance threshold must
+			// keep roundRect as a single continuous sub-path.
+			path.roundRect(0, 0, 100, 100, 10);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("closePath closes the current sub-path, not the first", () => {
+			path.parseSVGPath("M 0 0 L 100 0 L 100 100 Z M 25 25 L 75 25 L 75 75 Z");
+			// the last point must be the second sub-path's start (25,25), proving
+			// closePath returned to the current sub-path rather than the origin
+			const last = path.points[path.points.length - 1];
+			expect(last.x).toBe(25);
+			expect(last.y).toBe(25);
+		});
+	});
+
+	describe("sub-paths and holes — adversarial (ticket #1253)", () => {
+		// ---- structural invariants -------------------------------------------
+
+		it("never records a boundary at index 0 (first sub-path is the outer)", () => {
+			path.parseSVGPath(
+				"M 0 0 L 10 0 L 10 10 Z M 2 2 L 4 2 L 4 4 Z M 6 6 L 8 6 L 8 8 Z",
+			);
+			for (const idx of path.subPaths) {
+				expect(idx).toBeGreaterThan(0);
+			}
+		});
+
+		it("every boundary index is even (keeps GL_LINES pairing aligned)", () => {
+			// points are pushed in pairs (segStart, segEnd); a boundary must land on
+			// a segStart or the line list / canvas moveTo would desync
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z " +
+					"M 10 10 L 20 10 L 20 20 Z " +
+					"M 40 40 Q 50 30 60 40 Q 50 60 40 40 Z",
+			);
+			expect(path.subPaths.length).toBe(2);
+			for (const idx of path.subPaths) {
+				expect(idx % 2).toBe(0);
+			}
+		});
+
+		it("every boundary index is strictly inside the points array", () => {
+			path.parseSVGPath("M 0 0 L 100 0 Z M 25 25 L 75 25 Z M 40 40 L 60 40");
+			for (const idx of path.subPaths) {
+				expect(idx).toBeGreaterThan(0);
+				expect(idx).toBeLessThan(path.points.length);
+			}
+		});
+
+		it("keeps the points array even-length with several sub-paths", () => {
+			path.parseSVGPath(
+				"M 0 0 L 10 0 Z M 1 1 L 2 1 Z M 3 3 L 4 3 Z M 5 5 L 6 5 Z",
+			);
+			expect(path.points.length % 2).toBe(0);
+		});
+
+		it("boundaries are strictly increasing", () => {
+			path.parseSVGPath(
+				"M 0 0 L 10 0 Z M 1 1 L 2 1 Z M 3 3 L 4 3 Z M 5 5 L 6 5 Z",
+			);
+			for (let i = 1; i < path.subPaths.length; i++) {
+				expect(path.subPaths[i]).toBeGreaterThan(path.subPaths[i - 1]);
+			}
+		});
+
+		// ---- the significant-gap heuristic -----------------------------------
+
+		it("a sub-pixel pen-up gap does NOT split the sub-path", () => {
+			// a move smaller than the threshold is treated as float noise, not a
+			// new sub-path (this is what keeps arc/roundRect joins continuous)
+			path.moveTo(0, 0);
+			path.lineTo(100, 0);
+			path.moveTo(100.0005, 0); // ~5e-4 px away -> below threshold
+			path.lineTo(200, 0);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("a clearly separated pen-up gap DOES split the sub-path", () => {
+			path.moveTo(0, 0);
+			path.lineTo(100, 0);
+			path.moveTo(105, 0); // 5 px away -> above threshold
+			path.lineTo(200, 0);
+			expect(path.subPaths.length).toBe(1);
+		});
+
+		it("an exactly coincident M is not a new sub-path", () => {
+			// pen is already at (100,0); moving there again is a no-op gap
+			path.moveTo(0, 0);
+			path.lineTo(100, 0);
+			path.moveTo(100, 0);
+			path.lineTo(200, 0);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		// ---- only-moveTo / empty / malformed input ---------------------------
+
+		it("a leading M before any draw never records a boundary", () => {
+			path.parseSVGPath("M 50 50 L 100 50 L 100 100 Z");
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("consecutive M with no draw collapse to the last M", () => {
+			path.parseSVGPath("M 0 0 M 50 50 L 100 50");
+			expect(path.subPaths.length).toBe(0);
+			expect(path.points[0].x).toBe(50);
+			expect(path.points[0].y).toBe(50);
+		});
+
+		it("a trailing M with no following draw records no boundary", () => {
+			path.parseSVGPath("M 0 0 L 10 0 M 99 99");
+			expect(path.subPaths.length).toBe(0);
+			expect(path.points.length).toBe(2);
+		});
+
+		it("only-M paths produce no points and no sub-paths", () => {
+			path.parseSVGPath("M 0 0 M 10 10 M 20 20");
+			expect(path.points.length).toBe(0);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("an empty path string does not throw and leaves nothing", () => {
+			expect(() => {
+				path.parseSVGPath("");
+			}).not.toThrow();
+			expect(path.points.length).toBe(0);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("a whitespace-only path string does not throw", () => {
+			expect(() => {
+				path.parseSVGPath("   \n\t ");
+			}).not.toThrow();
+			expect(path.points.length).toBe(0);
+		});
+
+		it("an unsupported command warns but does not throw", () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			expect(() => {
+				path.parseSVGPath("M 0 0 S 10 10 20 20");
+			}).not.toThrow();
+			expect(warn).toHaveBeenCalled();
+			warn.mockRestore();
+		});
+
+		it("the no-arg constructor produces an empty path", () => {
+			const p = new Path2D();
+			expect(p.points.length).toBe(0);
+			expect(p.subPaths.length).toBe(0);
+		});
+
+		// ---- triangulation with holes ----------------------------------------
+
+		it("standalone ellipse() records no sub-path boundary", () => {
+			path.beginPath();
+			path.ellipse(50, 50, 40, 30, 0, 0, Math.PI * 2);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("standalone arc() records no sub-path boundary", () => {
+			path.beginPath();
+			path.arc(50, 50, 40, 0, Math.PI * 2);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("carves a hole regardless of hole winding (earcut path)", () => {
+			// outer CW, inner ALSO CW (same winding) — earcut still treats the
+			// second ring as a hole, so the centre stays uncovered
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 25 L 75 25 L 75 75 L 25 75 Z",
+			);
+			const v = path.triangulatePath();
+			expect(pointInTriangulation(v, 50, 50)).toBe(false);
+			expect(pointInTriangulation(v, 10, 50)).toBe(true);
+		});
+
+		it("carves a hole even when the hole ring is not closed with Z", () => {
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 25 L 25 75 L 75 75 L 75 25",
+			);
+			expect(path.subPaths.length).toBe(1);
+			const v = path.triangulatePath();
+			expect(pointInTriangulation(v, 50, 50)).toBe(false);
+			expect(pointInTriangulation(v, 10, 50)).toBe(true);
+		});
+
+		it("supports several holes in one shape (a face: 2 eyes + mouth)", () => {
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z " + // face
+					"M 20 20 L 35 20 L 35 35 L 20 35 Z " + // left eye
+					"M 65 20 L 80 20 L 80 35 L 65 35 Z " + // right eye
+					"M 30 65 L 70 65 L 70 80 L 30 80 Z", // mouth
+			);
+			expect(path.subPaths.length).toBe(3);
+			const v = path.triangulatePath();
+			expect(v.length % 3).toBe(0);
+			expect(v.length).toBeGreaterThan(0);
+			// each hole centre is uncovered
+			expect(pointInTriangulation(v, 27, 27)).toBe(false); // left eye
+			expect(pointInTriangulation(v, 72, 27)).toBe(false); // right eye
+			expect(pointInTriangulation(v, 50, 72)).toBe(false); // mouth
+			// solid forehead area is covered
+			expect(pointInTriangulation(v, 50, 10)).toBe(true);
+		});
+
+		it("a hole entirely outside the outer contour covers nothing extra", () => {
+			// degenerate authoring: the 'hole' sits outside the outer square
+			path.parseSVGPath(
+				"M 0 0 L 50 0 L 50 50 L 0 50 Z M 200 200 L 250 200 L 250 250 L 200 250 Z",
+			);
+			expect(() => {
+				return path.triangulatePath();
+			}).not.toThrow();
+			const v = path.triangulatePath();
+			expect(v.length % 3).toBe(0);
+		});
+
+		it("a self-intersecting outline triangulates without throwing", () => {
+			path.parseSVGPath("M 0 0 L 100 100 L 100 0 L 0 100 Z");
+			expect(() => {
+				return path.triangulatePath();
+			}).not.toThrow();
+			const v = path.triangulatePath();
+			expect(v.length % 3).toBe(0);
+		});
+
+		it("a zero-area (collinear) hole does not throw", () => {
+			path.parseSVGPath("M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 50 L 75 50");
+			expect(() => {
+				return path.triangulatePath();
+			}).not.toThrow();
+		});
+
+		// ---- caching / reuse / dirtiness -------------------------------------
+
+		it("returns the cached triangulation on a second call", () => {
+			path.parseSVGPath("M 0 0 L 100 0 L 100 100 L 0 100 Z");
+			const first = path.triangulatePath();
+			const second = path.triangulatePath();
+			expect(second).toBe(first); // same array reference, not recomputed
+			expect(second.length).toBe(first.length);
+		});
+
+		it("recomputes after the path changes from holed to solid", () => {
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z M 25 25 L 25 75 L 75 75 L 75 25 Z",
+			);
+			expect(pointInTriangulation(path.triangulatePath(), 50, 50)).toBe(false);
+			// rebuild as a plain solid square on the SAME instance
+			path.parseSVGPath("M 0 0 L 100 0 L 100 100 L 0 100 Z");
+			expect(path.subPaths.length).toBe(0);
+			// the hole must be gone — centre now covered
+			expect(pointInTriangulation(path.triangulatePath(), 50, 50)).toBe(true);
+		});
+
+		it("reusing the instance does not leak sub-paths across parses", () => {
+			path.parseSVGPath("M 0 0 L 10 0 Z M 5 5 L 8 5 Z");
+			expect(path.subPaths.length).toBe(1);
+			path.parseSVGPath("M 0 0 L 10 0 L 10 10 Z"); // single sub-path now
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		// ---- mid-path pen-up via curve helpers -------------------------------
+
+		it("rect() called mid-path starts a new sub-path", () => {
+			path.moveTo(0, 0);
+			path.lineTo(50, 0);
+			path.rect(200, 200, 50, 50);
+			expect(path.subPaths.length).toBe(1);
+			expect(path.points[path.subPaths[0]].x).toBe(200);
+			expect(path.points[path.subPaths[0]].y).toBe(200);
+		});
+
+		it("a far disjoint arc() mid-path records a pen-up boundary", () => {
+			path.moveTo(0, 0);
+			path.lineTo(50, 0);
+			path.arc(300, 300, 20, 0, Math.PI);
+			expect(path.subPaths.length).toBe(1);
+		});
+
+		// ---- pen tracking across sub-paths (H/V/A regression) ----------------
+
+		it("an arc opening a hole forms a true circle, not a spiral", () => {
+			// regression: the A handler must start from the current pen position
+			// (startPoint, set by the preceding M), not the previous sub-path's last
+			// point — otherwise the hole's arc is computed from the wrong origin and
+			// degenerates into a spiral with a radial slit.
+			path.parseSVGPath(
+				"M 0 50 A 50 50 0 0 1 100 50 A 50 50 0 0 1 0 50 Z " + // outer disc
+					"M 25 50 A 25 25 0 0 0 75 50 A 25 25 0 0 0 25 50 Z", // hole r=25 @ (50,50)
+			);
+			expect(path.subPaths.length).toBe(1);
+			// every point of the hole sub-path must lie on the r=25 circle @ (50,50)
+			for (let i = path.subPaths[0]; i < path.points.length; i++) {
+				const dx = path.points[i].x - 50;
+				const dy = path.points[i].y - 50;
+				expect(Math.sqrt(dx * dx + dy * dy)).toBeCloseTo(25, 1);
+			}
+			// and the carved hole is centred and round
+			const v = path.triangulatePath();
+			expect(pointInTriangulation(v, 50, 50)).toBe(false); // hole centre
+			expect(pointInTriangulation(v, 8, 50)).toBe(true); // ring (left)
+			expect(pointInTriangulation(v, 92, 50)).toBe(true); // ring (right)
+			expect(pointInTriangulation(v, 50, 8)).toBe(true); // ring (top)
+			expect(pointInTriangulation(v, 50, 92)).toBe(true); // ring (bottom)
+		});
+
+		it("H/V opening a hole start from the current pen position", () => {
+			// same pen-tracking fix as the A command, exercised through H and V
+			path.parseSVGPath(
+				"M 0 0 L 100 0 L 100 100 L 0 100 Z " + // outer
+					"M 25 25 H 50 V 50 H -50 V -50 Z", // hole via relative H/V
+			);
+			expect(path.subPaths.length).toBe(1);
+			const boundary = path.subPaths[0];
+			// the hole starts exactly at the M target (25,25)
+			expect(path.points[boundary].x).toBe(25);
+			expect(path.points[boundary].y).toBe(25);
+			// first H is relative to the pen (25,25) -> (75,25), NOT to the outer
+			// contour's last point
+			expect(path.points[boundary + 1].x).toBe(75);
+			expect(path.points[boundary + 1].y).toBe(25);
 		});
 	});
 });

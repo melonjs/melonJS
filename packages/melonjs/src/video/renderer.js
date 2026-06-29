@@ -1,4 +1,4 @@
-import Path2D from "./../geometries/path2d.js";
+import Path2D from "./../geometries/path2d.ts";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";

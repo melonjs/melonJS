@@ -1,49 +1,54 @@
 import { TAU } from "./../math/math.ts";
 import { earcut } from "./earcut.ts";
-import { pointPool } from "./point.ts";
+import { type Point, pointPool } from "./point.ts";
 import { endpointToCenterParameterization } from "./toarccanvas.ts";
 
 /**
- * additional import for TypeScript
- * @import {Point} from "./point.ts";
- */
-
-/**
- * A simplified Path2D implementation, used internally by both the WebGL and Canvas renderers
- * to build and interpolate 2D paths from SVG commands or direct method calls.
+ * A simplified `Path2D` implementation, used internally by both the WebGL and
+ * Canvas renderers to build and interpolate 2D paths from SVG commands or direct
+ * method calls. Its method semantics follow the standard
+ * [Path2D](https://developer.mozilla.org/en-US/docs/Web/API/Path2D) API.
  *
- * This implementation supports a single continuous path (sub-path). SVG strings containing
- * multiple `M` (moveTo) commands will be treated as one continuous path rather than
- * separate sub-paths, which may produce unexpected fill results for shapes with holes
- * or disconnected regions. For complex multi-part shapes, draw each sub-path separately.
+ * **Sub-paths:** a new sub-path begins on every `moveTo` (and on each `M` in an
+ * SVG string). For {@link fill}, the first sub-path is the outer contour and
+ * each subsequent sub-path is treated as a hole — so shapes with holes or
+ * disconnected regions (a donut, a ring, the letter "O", text outlines) fill
+ * correctly. The Canvas renderer fills via the native winding rule; the WebGL
+ * renderer triangulates with holes via earcut (subsequent sub-paths = holes),
+ * which matches the native result for the usual case of oppositely-wound holes.
  *
  * Supported SVG commands: M, L, H, V, Q, C, A, Z (uppercase only).
  * @category Geometry
  */
 class Path2D {
-	constructor(svgPath) {
-		/**
-		 * the points defining the current path
-		 * @type {Point[]}
-		 */
-		this.points = [];
+	/**
+	 * the points defining the current path
+	 */
+	points: Point[] = [];
 
-		/**
-		 * space between interpolated points for quadratic and bezier curve approx. in pixels.
-		 * @type {number}
-		 * @default 2
-		 */
-		this.arcResolution = 2;
+	/**
+	 * start index (into {@link points}) of each sub-path after the first; used
+	 * as the hole indices when triangulating, and as the `moveTo` boundaries
+	 * when the Canvas renderer replays the path.
+	 */
+	subPaths: number[] = [];
 
-		/* @ignore */
-		this.vertices = [];
+	/**
+	 * space between interpolated points for quadratic and bezier curve approx. in pixels.
+	 * @default 2
+	 */
+	arcResolution = 2;
 
-		/* @ignore */
-		this.startPoint = pointPool.get();
+	/* @ignore */
+	vertices: Point[] = [];
 
-		/* @ignore */
-		this.isDirty = false;
+	/* @ignore */
+	startPoint: Point = pointPool.get();
 
+	/* @ignore */
+	isDirty = false;
+
+	constructor(svgPath?: string) {
 		if (typeof svgPath === "string") {
 			this.parseSVGPath(svgPath);
 		}
@@ -54,18 +59,19 @@ class Path2D {
 	 * Clears any existing path data before parsing (calls {@link beginPath} internally).
 	 *
 	 * Supported commands:
-	 * - **M** x y — move to (sets the starting point)
+	 * - **M** x y — move to (starts a new sub-path)
 	 * - **L** x y — line to
 	 * - **H** dx — horizontal line (relative offset from current x)
 	 * - **V** dy — vertical line (relative offset from current y)
 	 * - **Q** cx cy x y — quadratic Bézier curve
 	 * - **C** cx1 cy1 cx2 cy2 x y — cubic Bézier curve
 	 * - **A** rx ry xRot largeArc sweep x y — elliptical arc
-	 * - **Z** — close path (line back to the starting M point)
+	 * - **Z** — close the current sub-path (line back to its starting point)
 	 *
-	 * After parsing, the generated points are available in {@link points} and can be
-	 * rendered using the renderer's `stroke()` and `fill()` methods.
-	 *
+	 * Multiple `M` commands define separate sub-paths; on {@link fill} the first
+	 * is the outer contour and the rest are holes. After parsing, the generated
+	 * points are available in {@link points} and can be rendered using the
+	 * renderer's `stroke()` and `fill()` methods.
 	 * @example
 	 * // draw a heart shape
 	 * renderer.path2D.parseSVGPath(
@@ -73,20 +79,26 @@ class Path2D {
 	 * );
 	 * renderer.setColor("#EF5350");
 	 * renderer.fill();
-	 *
-	 * @param {string} svgPath - An SVG path data string (e.g. "M 0 0 L 100 0 L 50 100 Z").
-	 * Only uppercase (absolute) commands are supported. The path must be a single
-	 * continuous shape — multiple M commands within one string are not treated as
-	 * separate sub-paths and may produce incorrect fill results.
+	 * @example
+	 * // a donut: an outer ring with an inner hole (two `M` sub-paths)
+	 * renderer.path2D.parseSVGPath(
+	 *   "M 0 40 A 40 40 0 1 0 80 40 A 40 40 0 1 0 0 40 Z " +
+	 *   "M 20 40 A 20 20 0 1 0 60 40 A 20 20 0 1 0 20 40 Z"
+	 * );
+	 * renderer.fill();
+	 * @param svgPath - An SVG path data string (e.g. "M 0 0 L 100 0 L 50 100 Z").
+	 * Only uppercase (absolute) commands are supported.
 	 */
-	parseSVGPath(svgPath) {
+	parseSVGPath(svgPath: string) {
 		// Split path into commands and coordinates
 		const pathCommands = svgPath.match(/([a-df-z])[^a-df-z]*/gi);
-		const points = this.points;
 		const startPoint = this.startPoint;
-		let lastPoint;
 
 		this.beginPath();
+
+		if (pathCommands === null) {
+			return;
+		}
 
 		// Process each command and corresponding coordinates
 		for (let i = 0; i < pathCommands.length; i++) {
@@ -102,17 +114,20 @@ class Path2D {
 				case "A":
 					{
 						// SVG A command: rx ry xAxisRotation largeArcFlag sweepFlag x y
-						lastPoint =
-							points.length === 0 ? startPoint : points[points.length - 1];
+						// the current pen position is always tracked by startPoint (set
+						// by the preceding M/line/curve). Use it rather than the last
+						// pushed point so an arc that is the first command of a new
+						// sub-path (e.g. a circular hole) starts from the right place.
 						const [rx, ry, xAxisRotation, largeArcFlag, sweepFlag, x, y] =
 							coordinates;
 						const p = endpointToCenterParameterization(
-							lastPoint.x,
-							lastPoint.y,
+							startPoint.x,
+							startPoint.y,
 							x,
 							y,
-							largeArcFlag,
-							sweepFlag,
+							// SVG flags are parsed as 0/1; the parameterization expects booleans
+							largeArcFlag !== 0,
+							sweepFlag !== 0,
 							rx,
 							ry,
 							xAxisRotation,
@@ -182,32 +197,40 @@ class Path2D {
 					}
 					break;
 				case "H":
-					// H take 1 coordinate
-					lastPoint =
-						points.length === 0 ? startPoint : points[points.length - 1];
-					this.lineTo(lastPoint.x + coordinates[0], lastPoint.y);
+					// H take 1 coordinate, relative to the current pen position
+					this.lineTo(startPoint.x + coordinates[0], startPoint.y);
 					break;
 				case "V":
-					// V take 1 coordinate
-					lastPoint =
-						points.length === 0 ? startPoint : points[points.length - 1];
-					this.lineTo(lastPoint.x, lastPoint.y + coordinates[0]);
+					// V take 1 coordinate, relative to the current pen position
+					this.lineTo(startPoint.x, startPoint.y + coordinates[0]);
 					break;
 				case "M":
-					// M takes 2 coordinates
-					this.moveTo(...coordinates);
+					// M takes 2 coordinates (starts a new sub-path)
+					this.moveTo(coordinates[0], coordinates[1]);
 					break;
 				case "L":
 					// L takes 2 coordinates
-					this.lineTo(...coordinates);
+					this.lineTo(coordinates[0], coordinates[1]);
 					break;
 				case "Q":
 					// Q takes 4 coordinates
-					this.quadraticCurveTo(...coordinates);
+					this.quadraticCurveTo(
+						coordinates[0],
+						coordinates[1],
+						coordinates[2],
+						coordinates[3],
+					);
 					break;
 				case "C":
 					// C takes 6 coordinates
-					this.bezierCurveTo(...coordinates);
+					this.bezierCurveTo(
+						coordinates[0],
+						coordinates[1],
+						coordinates[2],
+						coordinates[3],
+						coordinates[4],
+						coordinates[5],
+					);
 					break;
 				case "Z":
 					this.closePath();
@@ -229,18 +252,23 @@ class Path2D {
 		});
 		this.isDirty = true;
 		this.points.length = 0;
+		this.subPaths.length = 0;
 		this.startPoint.set(0, 0);
 	}
 
 	/**
-	 * causes the point of the pen to move back to the start of the current path.
+	 * causes the point of the pen to move back to the start of the current sub-path.
 	 * It tries to draw a straight line from the current point to the start.
 	 * If the shape has already been closed or has only one point, this function does nothing.
 	 */
 	closePath() {
 		const points = this.points;
 		if (points.length > 0) {
-			const firstPoint = points[0];
+			// the start of the current sub-path (the last recorded boundary, or
+			// the very first point when there is only one sub-path)
+			const startIndex =
+				this.subPaths.length > 0 ? this.subPaths[this.subPaths.length - 1] : 0;
+			const firstPoint = points[startIndex];
 			if (!firstPoint.equals(points[points.length - 1])) {
 				this.lineTo(firstPoint.x, firstPoint.y);
 			}
@@ -249,18 +277,23 @@ class Path2D {
 	}
 
 	/**
-	 * triangulate the shape defined by this path into an array of triangles
-	 * @returns {Point[]} an array of vertices representing the triangulated path or shape
+	 * triangulate the shape defined by this path into an array of triangles.
+	 * Sub-paths after the first are treated as holes.
+	 * @returns an array of vertices representing the triangulated path or shape
 	 */
 	triangulatePath() {
 		const vertices = this.vertices;
 
 		if (this.isDirty) {
 			const points = this.points;
+			const data: number[] = [];
+			for (let i = 0; i < points.length; i++) {
+				data.push(points[i].x, points[i].y);
+			}
+			// sub-paths after the first become holes (their start indices)
 			const indices = earcut(
-				points.flatMap((p) => {
-					return [p.x, p.y];
-				}),
+				data,
+				this.subPaths.length > 0 ? this.subPaths : null,
 			);
 			const indicesLength = indices.length;
 
@@ -287,27 +320,40 @@ class Path2D {
 	}
 
 	/**
-	 * moves the starting point of the current path to the (x, y) coordinates.
-	 * @param {number} x - the x-axis (horizontal) coordinate of the point.
-	 * @param {number} y - the y-axis (vertical) coordinate of the point.
+	 * moves the starting point of a new sub-path to the (x, y) coordinates.
+	 * @param x - the x-axis (horizontal) coordinate of the point.
+	 * @param y - the y-axis (vertical) coordinate of the point.
 	 */
-	moveTo(x, y) {
+	moveTo(x: number, y: number) {
 		this.startPoint.set(x, y);
 		this.isDirty = true;
 	}
 
 	/**
-	 * connects the last point in the current path to the (x, y) coordinates with a straight line.
-	 * @param {number} x - the x-axis coordinate of the line's end point.
-	 * @param {number} y - the y-axis coordinate of the line's end point.
+	 * connects the last point in the current sub-path to the (x, y) coordinates with a straight line.
+	 * @param x - the x-axis coordinate of the line's end point.
+	 * @param y - the y-axis coordinate of the line's end point.
 	 */
-	lineTo(x, y) {
+	lineTo(x: number, y: number) {
 		const points = this.points;
 		const startPoint = this.startPoint;
 		const lastPoint =
 			points.length === 0 ? startPoint : points[points.length - 1];
 
 		if (!startPoint.equals(lastPoint)) {
+			// the pen moved without drawing: start this segment from the pen
+			// position. A *significant* gap marks a genuinely new sub-path (e.g.
+			// an SVG `M` mid-path) → record its start so fill treats it as a hole
+			// and the Canvas replay can `moveTo` across it. Float-precision noise
+			// from arc/roundRect joins (well below this threshold) is ignored, so
+			// those stay single sub-paths.
+			if (points.length > 0) {
+				const dx = startPoint.x - lastPoint.x;
+				const dy = startPoint.y - lastPoint.y;
+				if (dx * dx + dy * dy > 1e-6) {
+					this.subPaths.push(points.length);
+				}
+			}
 			points.push(pointPool.get(startPoint.x, startPoint.y));
 		} else {
 			points.push(pointPool.get(lastPoint.x, lastPoint.y));
@@ -323,14 +369,21 @@ class Path2D {
 	/**
 	 * adds an arc to the current path which is centered at (x, y) position with the given radius,
 	 * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
-	 * @param {number} x - the horizontal coordinate of the arc's center.
-	 * @param {number} y - the vertical coordinate of the arc's center.
-	 * @param {number} radius - the arc's radius. Must be positive.
-	 * @param {number} startAngle - the angle at which the arc starts in radians, measured from the positive x-axis.
-	 * @param {number} endAngle - the angle at which the arc ends in radians, measured from the positive x-axis.
-	 * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
+	 * @param x - the horizontal coordinate of the arc's center.
+	 * @param y - the vertical coordinate of the arc's center.
+	 * @param radius - the arc's radius. Must be positive.
+	 * @param startAngle - the angle at which the arc starts in radians, measured from the positive x-axis.
+	 * @param endAngle - the angle at which the arc ends in radians, measured from the positive x-axis.
+	 * @param [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
 	 */
-	arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
+	arc(
+		x: number,
+		y: number,
+		radius: number,
+		startAngle: number,
+		endAngle: number,
+		anticlockwise = false,
+	) {
 		// based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
 		//bring angles all in [0, 2*PI] range
 		if (startAngle === endAngle) {
@@ -391,13 +444,13 @@ class Path2D {
 
 	/**
 	 * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
-	 * @param {number} x1 - the x-axis coordinate of the first control point.
-	 * @param {number} y1 - the y-axis coordinate of the first control point.
-	 * @param {number} x2 - the x-axis coordinate of the second control point.
-	 * @param {number} y2 - the y-axis coordinate of the second control point.
-	 * @param {number} radius - the arc's radius. Must be positive.
+	 * @param x1 - the x-axis coordinate of the first control point.
+	 * @param y1 - the y-axis coordinate of the first control point.
+	 * @param x2 - the x-axis coordinate of the second control point.
+	 * @param y2 - the y-axis coordinate of the second control point.
+	 * @param radius - the arc's radius. Must be positive.
 	 */
-	arcTo(x1, y1, x2, y2, radius) {
+	arcTo(x1: number, y1: number, x2: number, y2: number, radius: number) {
 		const points = this.points;
 		const startPoint = this.startPoint;
 		const lastPoint =
@@ -457,23 +510,23 @@ class Path2D {
 	/**
 	 * adds an elliptical arc to the path which is centered at (x, y) position with the radii radiusX and radiusY
 	 * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
-	 * @param {number} x - the x-axis (horizontal) coordinate of the ellipse's center.
-	 * @param {number} y - the  y-axis (vertical) coordinate of the ellipse's center.
-	 * @param {number} radiusX - the ellipse's major-axis radius. Must be non-negative.
-	 * @param {number} radiusY - the ellipse's minor-axis radius. Must be non-negative.
-	 * @param {number} rotation - the rotation of the ellipse, expressed in radians.
-	 * @param {number} startAngle - the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
-	 * @param {number} endAngle - the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
-	 * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
+	 * @param x - the x-axis (horizontal) coordinate of the ellipse's center.
+	 * @param y - the  y-axis (vertical) coordinate of the ellipse's center.
+	 * @param radiusX - the ellipse's major-axis radius. Must be non-negative.
+	 * @param radiusY - the ellipse's minor-axis radius. Must be non-negative.
+	 * @param rotation - the rotation of the ellipse, expressed in radians.
+	 * @param startAngle - the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
+	 * @param endAngle - the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
+	 * @param [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
 	 */
 	ellipse(
-		x,
-		y,
-		radiusX,
-		radiusY,
-		rotation,
-		startAngle,
-		endAngle,
+		x: number,
+		y: number,
+		radiusX: number,
+		radiusY: number,
+		rotation: number,
+		startAngle: number,
+		endAngle: number,
 		anticlockwise = false,
 	) {
 		// based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
@@ -544,12 +597,12 @@ class Path2D {
 
 	/**
 	 * Adds a quadratic Bézier curve to the path.
-	 * @param {number} cpX - The x-coordinate of the control point.
-	 * @param {number} cpY - The y-coordinate of the control point.
-	 * @param {number} x - The x-coordinate of the end point of the curve.
-	 * @param {number} y - The y-coordinate of the end point of the curve.
+	 * @param cpX - The x-coordinate of the control point.
+	 * @param cpY - The y-coordinate of the control point.
+	 * @param x - The x-coordinate of the end point of the curve.
+	 * @param y - The y-coordinate of the end point of the curve.
 	 */
-	quadraticCurveTo(cpX, cpY, x, y) {
+	quadraticCurveTo(cpX: number, cpY: number, x: number, y: number) {
 		const points = this.points;
 		const startPoint = this.startPoint;
 		// capture coordinates (not reference) since lineTo mutates startPoint
@@ -581,14 +634,21 @@ class Path2D {
 
 	/**
 	 * Adds a cubic Bézier curve to the path.
-	 * @param {number} cp1X - The x-coordinate of the first control point.
-	 * @param {number} cp1Y - The y-coordinate of the first control point.
-	 * @param {number} cp2X - The x-coordinate of the second control point.
-	 * @param {number} cp2Y - The y-coordinate of the second control point.
-	 * @param {number} x - The x-coordinate of the end point of the curve.
-	 * @param {number} y - The y-coordinate of the end point of the curve.
+	 * @param cp1X - The x-coordinate of the first control point.
+	 * @param cp1Y - The y-coordinate of the first control point.
+	 * @param cp2X - The x-coordinate of the second control point.
+	 * @param cp2Y - The y-coordinate of the second control point.
+	 * @param x - The x-coordinate of the end point of the curve.
+	 * @param y - The y-coordinate of the end point of the curve.
 	 */
-	bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, x, y) {
+	bezierCurveTo(
+		cp1X: number,
+		cp1Y: number,
+		cp2X: number,
+		cp2Y: number,
+		x: number,
+		y: number,
+	) {
 		const points = this.points;
 		const startPoint = this.startPoint;
 		// capture coordinates (not reference) since lineTo mutates startPoint
@@ -632,22 +692,16 @@ class Path2D {
 
 	/**
 	 * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
-	 * @param {number} x - the x-axis coordinate of the rectangle's starting point.
-	 * @param {number} y - the y-axis coordinate of the rectangle's starting point.
-	 * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
-	 * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
+	 * @param x - the x-axis coordinate of the rectangle's starting point.
+	 * @param y - the y-axis coordinate of the rectangle's starting point.
+	 * @param width - the rectangle's width. Positive values are to the right, and negative to the left.
+	 * @param height - the rectangle's height. Positive values are down, and negative are up.
 	 */
-	rect(x, y, width, height) {
+	rect(x: number, y: number, width: number, height: number) {
 		this.moveTo(x, y);
 		this.lineTo(x + width, y);
-
-		this.moveTo(x + width, y);
 		this.lineTo(x + width, y + height);
-
-		this.moveTo(x + width, y + height);
 		this.lineTo(x, y + height);
-
-		this.moveTo(x, y + height);
 		this.lineTo(x, y);
 
 		this.isDirty = true;
@@ -655,26 +709,29 @@ class Path2D {
 
 	/**
 	 * adds an rounded rectangle to the current path.
-	 * @param {number} x - the x-axis coordinate of the rectangle's starting point.
-	 * @param {number} y - the y-axis coordinate of the rectangle's starting point.
-	 * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
-	 * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
-	 * @param {number} radius - the arc's radius to draw the borders. Must be positive.
+	 * @param x - the x-axis coordinate of the rectangle's starting point.
+	 * @param y - the y-axis coordinate of the rectangle's starting point.
+	 * @param width - the rectangle's width. Positive values are to the right, and negative to the left.
+	 * @param height - the rectangle's height. Positive values are down, and negative are up.
+	 * @param radius - the arc's radius to draw the borders. Must be positive.
 	 */
-	roundRect(x, y, width, height, radius) {
+	roundRect(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radius: number,
+	) {
 		this.moveTo(x + radius, y);
 		this.lineTo(x + width - radius, y);
 		this.arcTo(x + width, y, x + width, y + radius, radius);
 
-		this.moveTo(x + width, y + radius);
 		this.lineTo(x + width, y + height - radius);
 		this.arcTo(x + width, y + height, x + width - radius, y + height, radius);
 
-		this.moveTo(x + width - radius, y + height);
 		this.lineTo(x + radius, y + height);
 		this.arcTo(x, y + height, x, y + height - radius, radius);
 
-		this.moveTo(x, y + height - radius);
 		this.lineTo(x, y + radius);
 		this.arcTo(x, y, x + radius, y, radius);
 
