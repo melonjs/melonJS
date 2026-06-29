@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import Path2D from "../src/geometries/path2d.js";
+import Path2D from "../src/geometries/path2d.ts";
 import { Application } from "../src/index.js";
 
 describe("Bezier Curves", () => {
