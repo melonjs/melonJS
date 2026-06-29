@@ -4,20 +4,46 @@ import { type Point, pointPool } from "./point.ts";
 import { endpointToCenterParameterization } from "./toarccanvas.ts";
 
 /**
- * A simplified `Path2D` implementation, used internally by both the WebGL and
- * Canvas renderers to build and interpolate 2D paths from SVG commands or direct
- * method calls. Its method semantics follow the standard
+ * A 2D path builder used by both the WebGL and Canvas renderers to build and
+ * interpolate paths from SVG command strings or direct method calls. Its method
+ * semantics follow the standard
  * [Path2D](https://developer.mozilla.org/en-US/docs/Web/API/Path2D) API.
  *
- * **Sub-paths:** a new sub-path begins on every `moveTo` (and on each `M` in an
- * SVG string). For {@link fill}, the first sub-path is the outer contour and
- * each subsequent sub-path is treated as a hole — so shapes with holes or
- * disconnected regions (a donut, a ring, the letter "O", text outlines) fill
- * correctly. The Canvas renderer fills via the native winding rule; the WebGL
- * renderer triangulates with holes via earcut (subsequent sub-paths = holes),
- * which matches the native result for the usual case of oppositely-wound holes.
+ * Each renderer exposes a reusable instance as `renderer.path2D`; you can also
+ * create your own with `new Path2D()`. Build a path (via {@link parseSVGPath} or
+ * the imperative {@link moveTo}/{@link lineTo}/curve methods), then draw it with
+ * the renderer's `stroke()` (outline) and `fill()` (solid) methods. Curves and
+ * arcs are flattened into line segments; {@link arcResolution} controls how fine
+ * that approximation is.
  *
- * Supported SVG commands: M, L, H, V, Q, C, A, Z (uppercase only).
+ * **Sub-paths & holes:** a new sub-path begins on every {@link moveTo} (and on
+ * each `M` in an SVG string). When filled, the first sub-path is the outer
+ * contour and each subsequent sub-path is treated as a hole — so shapes with
+ * holes or disconnected regions (a donut, a ring, the letter "O", text outlines)
+ * fill correctly. The Canvas renderer fills via the native non-zero winding rule
+ * (so holes should be wound opposite to the outer contour); the WebGL renderer
+ * triangulates with holes via earcut, which matches that result for the usual
+ * case of oppositely-wound holes. Sub-path boundaries are tracked in
+ * {@link subPaths}.
+ *
+ * Supported SVG commands: `M`, `L`, `H`, `V`, `Q`, `C`, `A`, `Z` (uppercase /
+ * absolute only; `H` and `V` take a relative offset).
+ * @example
+ * // build a path with the imperative API, then fill and outline it
+ * const path = renderer.path2D;
+ * path.beginPath();
+ * path.moveTo(50, 0);
+ * path.lineTo(100, 100);
+ * path.lineTo(0, 100);
+ * path.closePath();
+ * renderer.setColor("#4CAF50");
+ * renderer.fill(); // fill the current path
+ * renderer.setColor("#1B5E20");
+ * renderer.stroke(); // outline the current path
+ * @example
+ * // the same triangle from an SVG path string
+ * renderer.path2D.parseSVGPath("M 50 0 L 100 100 L 0 100 Z");
+ * renderer.fill();
  * @category Geometry
  */
 class Path2D {
@@ -68,8 +94,8 @@ class Path2D {
 	 * - **A** rx ry xRot largeArc sweep x y — elliptical arc
 	 * - **Z** — close the current sub-path (line back to its starting point)
 	 *
-	 * Multiple `M` commands define separate sub-paths; on {@link fill} the first
-	 * is the outer contour and the rest are holes. After parsing, the generated
+	 * Multiple `M` commands define separate sub-paths; when filled the first is
+	 * the outer contour and the rest are holes. After parsing, the generated
 	 * points are available in {@link points} and can be rendered using the
 	 * renderer's `stroke()` and `fill()` methods.
 	 * @example
@@ -243,7 +269,12 @@ class Path2D {
 	}
 
 	/**
-	 * begin a new path
+	 * begin a new (empty) path, discarding all previously recorded points and
+	 * sub-paths. Called automatically by {@link parseSVGPath}.
+	 * @example
+	 * path.beginPath();
+	 * path.rect(0, 0, 100, 60);
+	 * renderer.fill();
 	 */
 	beginPath() {
 		// empty the cache and recycle all vectors
@@ -260,6 +291,12 @@ class Path2D {
 	 * causes the point of the pen to move back to the start of the current sub-path.
 	 * It tries to draw a straight line from the current point to the start.
 	 * If the shape has already been closed or has only one point, this function does nothing.
+	 * @example
+	 * path.beginPath();
+	 * path.moveTo(0, 0);
+	 * path.lineTo(50, 0);
+	 * path.lineTo(25, 40);
+	 * path.closePath(); // draw the final edge back to (0, 0)
 	 */
 	closePath() {
 		const points = this.points;
@@ -277,9 +314,14 @@ class Path2D {
 	}
 
 	/**
-	 * triangulate the shape defined by this path into an array of triangles.
-	 * Sub-paths after the first are treated as holes.
-	 * @returns an array of vertices representing the triangulated path or shape
+	 * triangulate the shape defined by this path into a flat list of triangle
+	 * vertices (every three consecutive points form one triangle). Sub-paths
+	 * after the first are treated as holes. Used by the WebGL renderer to fill,
+	 * and cached until the path changes.
+	 * @returns the triangulated vertices, three per triangle
+	 * @example
+	 * path.parseSVGPath("M 0 0 L 100 0 L 50 100 Z");
+	 * const verts = path.triangulatePath(); // 3 vertices = 1 triangle
 	 */
 	triangulatePath() {
 		const vertices = this.vertices;
@@ -323,6 +365,10 @@ class Path2D {
 	 * moves the starting point of a new sub-path to the (x, y) coordinates.
 	 * @param x - the x-axis (horizontal) coordinate of the point.
 	 * @param y - the y-axis (vertical) coordinate of the point.
+	 * @example
+	 * path.beginPath();
+	 * path.moveTo(20, 20); // lift the pen to (20, 20): starts a new sub-path
+	 * path.lineTo(80, 20);
 	 */
 	moveTo(x: number, y: number) {
 		this.startPoint.set(x, y);
@@ -333,6 +379,11 @@ class Path2D {
 	 * connects the last point in the current sub-path to the (x, y) coordinates with a straight line.
 	 * @param x - the x-axis coordinate of the line's end point.
 	 * @param y - the y-axis coordinate of the line's end point.
+	 * @example
+	 * path.beginPath();
+	 * path.moveTo(0, 0);
+	 * path.lineTo(50, 0); // horizontal segment
+	 * path.lineTo(50, 50); // vertical segment (an "L" shape)
 	 */
 	lineTo(x: number, y: number) {
 		const points = this.points;
@@ -375,6 +426,11 @@ class Path2D {
 	 * @param startAngle - the angle at which the arc starts in radians, measured from the positive x-axis.
 	 * @param endAngle - the angle at which the arc ends in radians, measured from the positive x-axis.
 	 * @param [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
+	 * @example
+	 * // a full circle of radius 40 centred at (50, 50)
+	 * path.beginPath();
+	 * path.arc(50, 50, 40, 0, Math.PI * 2);
+	 * renderer.stroke();
 	 */
 	arc(
 		x: number,
@@ -449,6 +505,12 @@ class Path2D {
 	 * @param x2 - the x-axis coordinate of the second control point.
 	 * @param y2 - the y-axis coordinate of the second control point.
 	 * @param radius - the arc's radius. Must be positive.
+	 * @example
+	 * // round the corner where two segments meet at (50, 0)
+	 * path.beginPath();
+	 * path.moveTo(0, 0);
+	 * path.arcTo(50, 0, 50, 50, 20);
+	 * path.lineTo(50, 50);
 	 */
 	arcTo(x1: number, y1: number, x2: number, y2: number, radius: number) {
 		const points = this.points;
@@ -518,6 +580,11 @@ class Path2D {
 	 * @param startAngle - the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
 	 * @param endAngle - the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
 	 * @param [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
+	 * @example
+	 * // a 45°-rotated ellipse, filled
+	 * path.beginPath();
+	 * path.ellipse(50, 50, 60, 30, Math.PI / 4, 0, Math.PI * 2);
+	 * renderer.fill();
 	 */
 	ellipse(
 		x: number,
@@ -601,6 +668,10 @@ class Path2D {
 	 * @param cpY - The y-coordinate of the control point.
 	 * @param x - The x-coordinate of the end point of the curve.
 	 * @param y - The y-coordinate of the end point of the curve.
+	 * @example
+	 * path.beginPath();
+	 * path.moveTo(0, 50);
+	 * path.quadraticCurveTo(50, 0, 100, 50); // one control point at (50, 0)
 	 */
 	quadraticCurveTo(cpX: number, cpY: number, x: number, y: number) {
 		const points = this.points;
@@ -640,6 +711,10 @@ class Path2D {
 	 * @param cp2Y - The y-coordinate of the second control point.
 	 * @param x - The x-coordinate of the end point of the curve.
 	 * @param y - The y-coordinate of the end point of the curve.
+	 * @example
+	 * path.beginPath();
+	 * path.moveTo(0, 50);
+	 * path.bezierCurveTo(25, 0, 75, 100, 100, 50); // two control points
 	 */
 	bezierCurveTo(
 		cp1X: number,
@@ -696,6 +771,10 @@ class Path2D {
 	 * @param y - the y-axis coordinate of the rectangle's starting point.
 	 * @param width - the rectangle's width. Positive values are to the right, and negative to the left.
 	 * @param height - the rectangle's height. Positive values are down, and negative are up.
+	 * @example
+	 * path.beginPath();
+	 * path.rect(10, 10, 80, 50);
+	 * renderer.fill();
 	 */
 	rect(x: number, y: number, width: number, height: number) {
 		this.moveTo(x, y);
@@ -714,6 +793,10 @@ class Path2D {
 	 * @param width - the rectangle's width. Positive values are to the right, and negative to the left.
 	 * @param height - the rectangle's height. Positive values are down, and negative are up.
 	 * @param radius - the arc's radius to draw the borders. Must be positive.
+	 * @example
+	 * path.beginPath();
+	 * path.roundRect(10, 10, 80, 50, 12); // 12px corner radius
+	 * renderer.fill();
 	 */
 	roundRect(
 		x: number,
