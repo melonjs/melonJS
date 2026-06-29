@@ -300,17 +300,28 @@ class Path2D {
 	 */
 	closePath() {
 		const points = this.points;
-		if (points.length > 0) {
-			// the start of the current sub-path (the last recorded boundary, or
-			// the very first point when there is only one sub-path)
-			const startIndex =
-				this.subPaths.length > 0 ? this.subPaths[this.subPaths.length - 1] : 0;
-			const firstPoint = points[startIndex];
-			if (!firstPoint.equals(points[points.length - 1])) {
-				this.lineTo(firstPoint.x, firstPoint.y);
-			}
-			this.isDirty = true;
+		if (points.length === 0) {
+			return;
 		}
+		// if the pen has moved (via moveTo / `M`) without drawing since, the
+		// current sub-path is empty — closing it is a no-op (matches native
+		// Path2D). Detected the same way lineTo detects a new sub-path: a
+		// significant gap between the pen (startPoint) and the last drawn point.
+		const lastPoint = points[points.length - 1];
+		const dx = this.startPoint.x - lastPoint.x;
+		const dy = this.startPoint.y - lastPoint.y;
+		if (dx * dx + dy * dy > 1e-6) {
+			return;
+		}
+		// the start of the current sub-path (the last recorded boundary, or
+		// the very first point when there is only one sub-path)
+		const startIndex =
+			this.subPaths.length > 0 ? this.subPaths[this.subPaths.length - 1] : 0;
+		const firstPoint = points[startIndex];
+		if (!firstPoint.equals(lastPoint)) {
+			this.lineTo(firstPoint.x, firstPoint.y);
+		}
+		this.isDirty = true;
 	}
 
 	/**

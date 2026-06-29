@@ -774,5 +774,46 @@ describe("Path2D", () => {
 			expect(path.points[boundary + 1].x).toBe(75);
 			expect(path.points[boundary + 1].y).toBe(25);
 		});
+
+		it("H after Z resolves against the closed sub-path's start point", () => {
+			// after Z the pen returns to the sub-path start (0,0); a following H is
+			// relative to that, not to the last drawn point
+			path.parseSVGPath("M 0 0 L 50 0 L 50 50 Z H 30");
+			const last = path.points[path.points.length - 1];
+			expect(last.x).toBe(30); // 0 + 30
+			expect(last.y).toBe(0);
+		});
+
+		// ---- closePath on an empty / just-moved sub-path -----------------------
+
+		it("closePath after a bare trailing M (unclosed prior sub-path) is a no-op", () => {
+			// prior sub-path left open (no Z), then a bare `M` and `Z`: the current
+			// sub-path is empty, so closePath must not draw a stray segment back to
+			// the first contour nor record a phantom hole
+			path.parseSVGPath("M 0 0 L 10 0 M 99 99 Z");
+			expect(path.subPaths.length).toBe(0);
+			expect(path.points.length).toBe(2);
+			expect(path.points[1].x).toBe(10);
+			expect(path.points[1].y).toBe(0);
+		});
+
+		it("closePath right after a mid-path moveTo (no draw) is a no-op", () => {
+			path.moveTo(0, 0);
+			path.lineTo(50, 0);
+			path.moveTo(200, 200); // open an empty sub-path
+			const before = path.points.length;
+			path.closePath();
+			expect(path.points.length).toBe(before); // nothing added
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("closePath still closes a non-empty current sub-path after a hole", () => {
+			// guard against the no-op check over-firing: the second sub-path IS
+			// drawn, so its Z must close it back to its own start (25,25)
+			path.parseSVGPath("M 0 0 L 100 0 L 100 100 Z M 25 25 L 75 25 L 75 75 Z");
+			const last = path.points[path.points.length - 1];
+			expect(last.x).toBe(25);
+			expect(last.y).toBe(25);
+		});
 	});
 });
