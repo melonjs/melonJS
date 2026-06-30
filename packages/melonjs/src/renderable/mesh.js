@@ -13,6 +13,7 @@ import {
 import { AABB3d } from "../physics/broadphase/aabb3d.ts";
 import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
+import Texture2d from "./../video/texture/texture2d.ts";
 import Renderable from "./renderable.js";
 
 /**
@@ -34,7 +35,16 @@ function resolveTextureAtlas(src, framewidth, frameheight) {
 	if (src instanceof TextureAtlas) {
 		return src;
 	}
-	const image = typeof src === "object" ? src : getImage(src);
+	// a non-atlas Texture2d (e.g. a procedural NoiseTexture2d) is bound via its
+	// baked source; an image/canvas object flows through; a {string} is a key.
+	let image;
+	if (src instanceof Texture2d) {
+		image = src.getTexture();
+	} else if (typeof src === "object") {
+		image = src;
+	} else {
+		image = getImage(src);
+	}
 	if (!image) {
 		throw new Error("Mesh: '" + src + "' image/texture not found!");
 	}

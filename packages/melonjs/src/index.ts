@@ -68,6 +68,8 @@ import RenderState from "./video/renderstate.js";
 import CanvasRenderTarget from "./video/rendertarget/canvasrendertarget.js";
 import RenderTarget from "./video/rendertarget/rendertarget.ts";
 import { TextureAtlas } from "./video/texture/atlas.js";
+import NoiseTexture2d from "./video/texture/noise_texture2d.js";
+import Texture2d from "./video/texture/texture2d.ts";
 import { Batcher } from "./video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "./video/webgl/batchers/quad_batcher.js";
@@ -122,6 +124,8 @@ export { Color } from "./math/color.ts";
 export * as math from "./math/math.ts";
 export { Matrix2d } from "./math/matrix2d.ts";
 export { Matrix3d } from "./math/matrix3d.ts";
+export type { FractalType, NoiseSettings, NoiseType } from "./math/noise.ts";
+export { Noise } from "./math/noise.ts";
 export { ObservableVector2d } from "./math/observableVector2d.ts";
 export { ObservableVector3d } from "./math/observableVector3d.ts";
 export { Vector2d } from "./math/vector2d.ts";
@@ -189,6 +193,7 @@ export {
 	MaskEffect,
 	Mesh,
 	NineSliceSprite,
+	NoiseTexture2d,
 	OutlineEffect,
 	Particle,
 	ParticleEmitter,
@@ -214,6 +219,7 @@ export {
 	save,
 	state,
 	Text,
+	Texture2d,
 	TextureAtlas,
 	Tile,
 	TintPulseEffect,

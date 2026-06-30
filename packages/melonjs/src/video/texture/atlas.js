@@ -6,6 +6,7 @@ import pool from "../../system/legacy_pool.js";
 import { parseAseprite } from "./parser/aseprite.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
+import Texture2d from "./texture2d.ts";
 
 /**
  * additional import for TypeScript
@@ -67,7 +68,7 @@ export function identifyFormat(app) {
  * );
  * @category Game Objects
  */
-export class TextureAtlas {
+export class TextureAtlas extends Texture2d {
 	/**
 	 * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
@@ -103,6 +104,7 @@ export class TextureAtlas {
 	 * );
 	 */
 	constructor(atlases, src, options) {
+		super();
 		// backward compat: 3rd arg used to be a `cache` boolean.
 		const opts =
 			typeof options === "boolean" ? { cache: options } : options || {};

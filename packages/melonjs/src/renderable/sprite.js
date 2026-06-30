@@ -4,6 +4,7 @@ import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
+import Texture2d from "./../video/texture/texture2d.ts";
 import FrameAnimation from "./frameAnimation.js";
 import Renderable from "./renderable.js";
 
@@ -25,7 +26,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} x - the x coordinates of the sprite object
 	 * @param {number} y - the y coordinates of the sprite object
 	 * @param {object} settings - Configuration parameters for the Sprite object
-	 * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|CompressedImage|string} settings.image - reference to spritesheet image, a texture atlas, a video element, a compressed texture, or to a texture atlas
+	 * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|Texture2d|TextureAtlas|CompressedImage|string} settings.image - reference to a spritesheet image, a {@link Texture2d} asset (e.g. a {@link TextureAtlas}), a video element, a compressed texture, or a loader key
 	 * @param {string} [settings.name=""] - name of this object
 	 * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
 	 * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
@@ -34,7 +35,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|Texture2d|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
 	 * let sprite = new me.Sprite(0, 0, {
@@ -142,11 +143,16 @@ export default class Sprite extends Renderable {
 				}
 			}
 		} else {
-			// HTMLImageElement/HTMLVideoElementCanvas or {string}
-			this.image =
-				typeof settings.image === "object"
-					? settings.image
-					: getImage(settings.image);
+			// a non-atlas Texture2d (e.g. a procedural NoiseTexture2d) resolves
+			// to its baked canvas; an HTMLImageElement/HTMLVideoElement/canvas
+			// flows through as-is; a {string} is resolved as a loader key.
+			if (settings.image instanceof Texture2d) {
+				this.image = settings.image.getTexture();
+			} else if (typeof settings.image === "object") {
+				this.image = settings.image;
+			} else {
+				this.image = getImage(settings.image);
+			}
 			// throw an error if image ends up being null/undefined
 			if (!this.image) {
 				throw new Error(
@@ -374,6 +380,11 @@ export default class Sprite extends Renderable {
 		if (value === null || value === undefined) {
 			this._normalMap = null;
 			return;
+		}
+		// a Texture2d asset (e.g. a procedural NoiseTexture2d) resolves to its
+		// baked canvas, so it can be assigned directly like the `image` slot.
+		if (value instanceof Texture2d) {
+			value = value.getTexture();
 		}
 		if (
 			typeof value !== "object" ||
