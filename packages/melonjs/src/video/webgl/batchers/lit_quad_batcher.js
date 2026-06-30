@@ -104,8 +104,22 @@ export default class LitQuadBatcher extends QuadBatcher {
 		this.boundNormalMaps = new Array(halved).fill(null);
 
 		/**
-		 * Map from a normal-map source image to its GL texture object.
-		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, WebGLTexture>}
+		 * Per-slot content `version` of the normal map currently bound there. An
+		 * animated source keeps a stable canvas reference across re-bakes but
+		 * bumps its `version`, so `addQuad` compares this (not just the reference)
+		 * to know when to re-bind/re-upload. `-1` = nothing bound.
+		 * @type {number[]}
+		 * @ignore
+		 */
+		this.boundNormalVersions = new Array(halved).fill(-1);
+
+		/**
+		 * Map from a normal-map source image to its uploaded GL texture and the
+		 * source `version` it was uploaded at. A source that bumps its `version`
+		 * (e.g. an animated {@link NoiseTexture2d}) is re-uploaded on next bind —
+		 * the three.js `Texture.needsUpdate` model, scoped to normal maps which
+		 * live outside the color `TextureCache`.
+		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, {tex: WebGLTexture, version: number}>}
 		 * @ignore
 		 */
 		this.normalMapTextures = new Map();
@@ -145,6 +159,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		super.reset();
 		this.bindNormalSamplers();
 		this.boundNormalMaps.fill(null);
+		this.boundNormalVersions.fill(-1);
 		this.normalMapTextures.clear();
 		this._lightCount = 0;
 		this.defaultShader.setUniform("uLightCount", 0);
@@ -195,15 +210,19 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 */
 	bindNormalMap(image, unit) {
 		const cached = this.normalMapTextures.get(image);
-		if (typeof cached !== "undefined") {
+		// `image.version` (the dynamic-texture revision; absent ⇒ 0/static) lets
+		// an animated source force a re-upload by bumping it — only when it
+		// actually changed, not every frame.
+		const version = image.version ?? 0;
+		if (typeof cached !== "undefined" && cached.version === version) {
 			// `bindTexture2D` updates `boundTextures[unit]` and
 			// `currentTextureUnit` so subsequent color-texture binds don't
 			// land on the wrong unit thinking it's still free. `flush=false`
 			// so we don't disturb the in-progress lit batch.
-			this.bindTexture2D(cached, unit, false);
+			this.bindTexture2D(cached.tex, unit, false);
 			return;
 		}
-		this.uploadNormalMap(image, unit);
+		this.uploadNormalMap(image, unit, version);
 	}
 
 	/**
@@ -216,8 +235,14 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * encoding for any non-opaque texel.
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
 	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
+	 * @param {number} [version=0] - the source revision being uploaded
 	 */
-	uploadNormalMap(image, unit) {
+	uploadNormalMap(image, unit, version = 0) {
+		// Reuse the existing GL texture handle when re-uploading a changed source
+		// (an animated NoiseTexture2d): `createTexture2D` re-`texImage2D`s into the
+		// passed handle instead of churning a new texture object every frame. The
+		// source dimensions are stable, so the same handle stays valid.
+		const prev = this.normalMapTextures.get(image);
 		this.createTexture2D(
 			unit,
 			image,
@@ -227,10 +252,13 @@ export default class LitQuadBatcher extends QuadBatcher {
 			image.height,
 			false,
 			undefined,
-			undefined,
+			prev?.tex,
 			false,
 		);
-		this.normalMapTextures.set(image, this.boundTextures[unit]);
+		this.normalMapTextures.set(image, {
+			tex: this.boundTextures[unit],
+			version,
+		});
 	}
 
 	/**
@@ -276,6 +304,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 				this.flush();
 				this.renderer.cache.resetUnitAssignments();
 				this.boundNormalMaps.fill(null);
+				this.boundNormalVersions.fill(-1);
 				unit = this.uploadTexture(texture, w, h, reupload, false);
 			}
 		} else {
@@ -290,14 +319,19 @@ export default class LitQuadBatcher extends QuadBatcher {
 		if (normalMap !== null && this.useMultiTexture) {
 			const normalUnit = this.maxBatchTextures + unit;
 			const prev = this.boundNormalMaps[unit];
-			if (prev !== normalMap) {
-				// flush any pending vertices that referenced the previous
-				// normal map at this slot before rebinding
-				if (prev !== null) {
+			const version = normalMap.version ?? 0;
+			// Re-bind when the source changed OR an animated source bumped its
+			// content `version`. A reference-only check would freeze animated
+			// textures, whose canvas reference is stable across re-bakes.
+			if (prev !== normalMap || this.boundNormalVersions[unit] !== version) {
+				// flush any pending vertices that referenced a DIFFERENT normal
+				// map at this slot before rebinding over it
+				if (prev !== null && prev !== normalMap) {
 					this.flush();
 				}
 				this.bindNormalMap(normalMap, normalUnit);
 				this.boundNormalMaps[unit] = normalMap;
+				this.boundNormalVersions[unit] = version;
 			}
 			normalTextureId = unit;
 		}

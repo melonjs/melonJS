@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { boot, Matrix3d, video, WebGLRenderer } from "../src/index.js";
 
 /**
  * Regression guard for a GL state-leak between batchers.
@@ -441,7 +441,7 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		lit.bindNormalMap(normal, unit);
 		const tex = lit.boundTextures[unit];
 		expect(tex).toBeDefined();
-		expect(lit.normalMapTextures.get(normal)).toBe(tex);
+		expect(lit.normalMapTextures.get(normal).tex).toBe(tex);
 
 		// simulate the bookkeeping going stale (e.g. another unit took over,
 		// the slot was reset, etc.). The cached rebind must restore it.
@@ -476,5 +476,48 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		lit.bindNormalMap(normal, unit);
 		expect(lit.boundTextures[unit]).toBe(before.tex);
 		expect(lit.currentTextureUnit).toBe(before.currentUnit);
+	});
+
+	it("animated normal map re-uploads when its version bumps across frames (addQuad gating)", (ctx) => {
+		// Regression for the frozen-ripples bug: addQuad used to (re)bind the
+		// normal map only when the *reference* changed. An animated NoiseTexture2d
+		// keeps a stable canvas reference across re-bakes (bumping `canvas.version`
+		// instead), so the reference-only guard skipped the re-upload forever and
+		// the surface froze at frame 0. addQuad must now also re-upload on a
+		// version bump.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const lit = renderer.batchers.get("litQuad");
+		renderer.setBatcher("litQuad");
+		lit.viewMatrix = new Matrix3d(); // identity — skip the transform branch
+
+		const colorTex = renderer.cache.get(video.createCanvas(8, 8), {
+			framewidth: 8,
+			frameheight: 8,
+		});
+		const normal = video.createCanvas(8, 8); // a "dynamic" source
+		normal.version = 1;
+
+		let uploads = 0;
+		const orig = lit.uploadNormalMap;
+		lit.uploadNormalMap = function spy(img, unit, version) {
+			if (img === normal) {
+				uploads++;
+			}
+			return orig.call(this, img, unit, version);
+		};
+		try {
+			// frame 1: first upload (reference is new)
+			lit.addQuad(colorTex, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff, false, normal);
+			// frame 2: SAME reference, bumped version (simulates update(dt)'s re-bake)
+			normal.version = 2;
+			lit.addQuad(colorTex, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff, false, normal);
+		} finally {
+			lit.uploadNormalMap = orig;
+			renderer.setBatcher("quad");
+		}
+		// with the reference-only guard this was 1 (frozen); must be 2
+		expect(uploads).toBe(2);
 	});
 });

@@ -1,7 +1,7 @@
 import Camera3d from "../camera/camera3d.ts";
 import { getImage } from "../loader/loader.js";
 import { Vector3d } from "../math/vector3d.ts";
-import { TextureAtlas } from "../video/texture/atlas.js";
+import Texture2d from "../video/texture/texture2d.ts";
 import FrameAnimation from "./frameAnimation.js";
 import Mesh from "./mesh.js";
 
@@ -19,7 +19,9 @@ const WORLD_UP = new Vector3d(0, -1, 0);
 // base class). Runs before `super()`, so it must not touch `this`.
 function imageSize(settings) {
 	const src = settings.image ?? settings.texture;
-	if (src instanceof TextureAtlas) {
+	// any Texture2d asset (a TextureAtlas, or a procedural NoiseTexture2d)
+	// exposes its drawable source via getTexture()
+	if (src instanceof Texture2d) {
 		const texture = src.getTexture();
 		return { w: texture.width, h: texture.height };
 	}
@@ -95,7 +97,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} x - world x position
 	 * @param {number} y - world y position
 	 * @param {object} settings - configuration
-	 * @param {HTMLImageElement|TextureAtlas|string} [settings.image] - the sprite texture (image name, image, or atlas). Alias: `settings.texture`.
+	 * @param {HTMLImageElement|Texture2d|string} [settings.image] - the sprite texture (image name, image, or a {@link Texture2d} asset such as a {@link TextureAtlas}). Alias: `settings.texture`.
 	 * @param {number} [settings.width=settings.framewidth] - quad width in world units (pixels)
 	 * @param {number} [settings.height=settings.width] - quad height in world units
 	 * @param {number} [settings.framewidth] - width of a single frame within a spritesheet (enables frame animation)
