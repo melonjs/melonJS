@@ -1,11 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
+	Matrix3d,
 	Renderable,
 	RenderState,
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+
+// `setDepth` only feeds depth into the vertex stream under a perspective
+// projection (a depth scene / Camera3d); under the default ortho projection it
+// keeps currentDepth at 0 so a sort key can't clip (see sprite-depth.spec.js).
+// These suites exercise the depth-carrying pipeline, so they run "in 3D".
+const PERSPECTIVE = new Matrix3d().perspective(Math.PI / 4, 1.333, 0.1, 2000);
 
 /**
  * Test suite for per-renderable depth plumbing (19.7).
@@ -80,6 +87,7 @@ describe("Renderer.setDepth", () => {
 			failIfMajorPerformanceCaveat: false,
 		});
 		renderer = video.renderer;
+		renderer.setProjection(PERSPECTIVE); // depth-carry path
 	});
 
 	afterAll(() => {
@@ -130,6 +138,7 @@ describe("Renderable.preDraw forwards depth", () => {
 			failIfMajorPerformanceCaveat: false,
 		});
 		renderer = video.renderer;
+		renderer.setProjection(PERSPECTIVE); // depth-carry path
 	});
 
 	afterAll(() => {
@@ -197,6 +206,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 			failIfMajorPerformanceCaveat: false,
 		});
 		renderer = video.renderer;
+		renderer.setProjection(PERSPECTIVE); // depth-carry path
 		isWebGL = renderer instanceof WebGLRenderer;
 	});
 

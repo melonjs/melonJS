@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	GLShader,
+	Matrix3d,
 	NineSliceSprite,
 	RenderState,
 	ShaderEffect,
@@ -9,6 +10,12 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+
+// `setDepth` only carries depth into the vertex stream under a perspective
+// projection (a depth scene / Camera3d); under ortho it keeps currentDepth at 0
+// so a sort key can't clip (see sprite-depth.spec.js). This suite exercises the
+// depth-carrying pipeline, so it runs "in 3D".
+const PERSPECTIVE = new Matrix3d().perspective(Math.PI / 4, 1.333, 0.1, 2000);
 
 /**
  * Adversarial integration tests for the per-renderable depth pipeline
@@ -51,6 +58,7 @@ describe("depth pipeline adversarial integration", () => {
 			failIfMajorPerformanceCaveat: false,
 		});
 		renderer = video.renderer;
+		renderer.setProjection(PERSPECTIVE); // depth-carry path
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
