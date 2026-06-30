@@ -324,8 +324,12 @@ export default class LitQuadBatcher extends QuadBatcher {
 			// content `version`. A reference-only check would freeze animated
 			// textures, whose canvas reference is stable across re-bakes.
 			if (prev !== normalMap || this.boundNormalVersions[unit] !== version) {
-				// flush any pending vertices that referenced a DIFFERENT normal
-				// map at this slot before rebinding over it
+				// Only a DIFFERENT source needs the pending vertices flushed before
+				// rebinding over its slot. A version-only bump (same reference, an
+				// animated re-bake) re-uploads into the same GL handle WITHOUT a
+				// flush — `version` only changes between frames (via `update()`) and
+				// the batch is flushed at each frame/camera boundary, so no in-flight
+				// vertices ever reference stale content.
 				if (prev !== null && prev !== normalMap) {
 					this.flush();
 				}

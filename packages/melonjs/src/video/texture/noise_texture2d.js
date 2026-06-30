@@ -34,6 +34,11 @@ const lerp = (a, b, t) => {
  * re-bake bumps a `version` the renderer reads, so the GPU texture re-uploads
  * automatically (and only when it actually changed — the three.js
  * `Texture.needsUpdate` model).
+ *
+ * Note: live re-upload is currently wired through the lit **normal-map**
+ * pipeline ({@link Sprite#normalMap} + {@link Light2d}). An `animated` texture
+ * used as a plain color `image` bakes a static snapshot — the color texture
+ * cache does not yet honor `version` — so animate normals, not albedos, for now.
  * @augments Texture2d
  * @category Game Objects
  * @example
