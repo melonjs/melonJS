@@ -1067,7 +1067,17 @@ export default class Renderer {
 	 * @see Renderable#depth
 	 */
 	setDepth(depth) {
-		this.currentDepth = depth;
+		// A sprite's depth rides into clip-space as `aVertex.z`. Under an
+		// orthographic (2D) projection that z is a painter's sort key only — the
+		// world is CPU-sorted on `pos.z` — and must stay out of clip-space, or a
+		// large sort value (e.g. a `baseZ + pos.y` Y-sort, or `autoDepth` on a big
+		// world) clips the sprite against near/far and it silently vanishes. A
+		// perspective projection (Camera3d) genuinely uses z for parallax + depth,
+		// so pass it through. Perspective ⇔ the projection's w-from-z term is
+		// non-zero (`val[11] === -1`); orthographic leaves it 0. Gated here (once
+		// per renderable) so the per-quad batcher hot path is untouched. Mesh
+		// geometry z is unaffected — only this sprite/quad sort key is zeroed.
+		this.currentDepth = this.projectionMatrix.val[11] !== 0 ? depth : 0;
 	}
 
 	/**
