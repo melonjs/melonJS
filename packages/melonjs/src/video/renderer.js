@@ -1077,6 +1077,7 @@ export default class Renderer {
 		// non-zero (`val[11] === -1`); orthographic leaves it 0. Gated here (once
 		// per renderable) so the per-quad batcher hot path is untouched. Mesh
 		// geometry z is unaffected — only this sprite/quad sort key is zeroed.
+		// val[11] is the projection's z→w (perspective-divide) term: 0 ⇒ orthographic, non-zero ⇒ perspective.
 		this.currentDepth = this.projectionMatrix.val[11] !== 0 ? depth : 0;
 	}
 
