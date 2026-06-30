@@ -186,11 +186,20 @@ class NoiseTexture2d extends Texture2d {
 		return this;
 	}
 
-	/** raw noise sample at a texture pixel (2D, or 3D when animated) @ignore */
+	/**
+	 * Raw noise sample at a texture pixel (2D, or 3D when animated). The time
+	 * axis is divided by the noise frequency so that, after `getNoise3d` scales
+	 * all coords by frequency, the field evolves at `speed` noise-units/second —
+	 * decoupled from the spatial frequency (otherwise low-frequency textures
+	 * would animate imperceptibly slowly).
+	 * @ignore
+	 */
 	_rawNoise(x, y) {
-		return this.animated
-			? this.noise.getNoise3d(x, y, this.time)
-			: this.noise.getNoise2d(x, y);
+		if (!this.animated) {
+			return this.noise.getNoise2d(x, y);
+		}
+		const z = this.time / (this.noise.frequency || 1);
+		return this.noise.getNoise3d(x, y, z);
 	}
 
 	/**
