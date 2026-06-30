@@ -210,18 +210,23 @@ class PlayScreen extends Stage {
 
 		// ── ripples: a LIVE-ANIMATED fBm normal map (3D, time on the z axis) ──
 		this.ripples = new NoiseTexture2d({
-			width: 128,
-			height: 128,
+			width: 160,
+			height: 160,
 			type: "simplex",
 			seed: 1,
-			frequency: 0.06,
+			frequency: 0.05,
 			octaves: 4,
 			gain: 0.55,
+			// domain warp gives the ripples an organic, flowing-water character
+			// rather than plain blobby noise
+			domainWarp: true,
+			domainWarpAmp: 8,
+			domainWarpFrequency: 0.04,
 			seamless: true,
 			asNormalMap: true,
-			bumpStrength: 2.5,
+			bumpStrength: 2.0,
 			animated: true,
-			speed: 0.6,
+			speed: 0.5,
 		});
 
 		const water = new Sprite(w / 2, horizonY + bandH / 2, {
@@ -244,7 +249,7 @@ class PlayScreen extends Stage {
 		this.glitter = new Light2d(
 			w / 2,
 			horizonY + bandH * 0.45,
-			70,
+			120,
 			bandH * 0.9,
 			"#ffcf9a",
 			1.4,
@@ -361,6 +366,9 @@ const createGame = () => {
 		// normal-map lighting needs the WebGL lit pipeline; under video.AUTO a
 		// Canvas fallback would draw the flat albedo with no shimmer.
 		renderer: video.WEBGL,
+		// LINEAR texture filtering — the ripple normal map is small (128²) and
+		// stretched over the whole band; without this it upscales blocky.
+		antiAlias: true,
 	});
 
 	state.set(state.PLAY, new PlayScreen());
