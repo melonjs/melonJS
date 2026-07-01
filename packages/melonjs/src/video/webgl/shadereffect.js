@@ -103,6 +103,13 @@ export default class ShaderEffect {
 		);
 		this.enabled = true;
 
+		/**
+		 * whether the fragment declares a `uTime` uniform — so {@link setTime}
+		 * knows if there's anything to update
+		 * @ignore
+		 */
+		this._usesTime = fragmentBody.includes("uTime");
+
 		// flip enabled across context loss so beginPostEffect skips us
 		on(ONCONTEXT_LOST, this._onContextLost, this);
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
@@ -138,6 +145,36 @@ export default class ShaderEffect {
 		if (this.enabled) {
 			this._shader.setUniform(name, value);
 		}
+	}
+
+	/**
+	 * Set the shader's `uTime` uniform (elapsed time, in seconds). A convenience
+	 * over `setUniform("uTime", ...)`; call it once per frame from your update
+	 * loop to animate a shader that declares `uniform float uTime` (e.g. scrolling
+	 * a static noise texture's UVs, pulsing, waving). Drive it with whatever clock
+	 * you like — real time, a paused/scaled/scrubbed one.
+	 *
+	 * No-op if the shader does not declare a `uTime` uniform (nothing to update),
+	 * or in Canvas mode. The engine does NOT call this for you — animation is
+	 * opt-in, exactly like re-baking a {@link NoiseTexture2d} with `update(dt)`.
+	 * @param {number} seconds - elapsed time in seconds
+	 * @returns {ShaderEffect} this effect for chaining
+	 * @example
+	 * // a shader that scrolls a static seamless noise texture over time
+	 * const flow = new me.ShaderEffect(renderer, `
+	 *     uniform float uTime;
+	 *     vec4 apply(vec4 color, vec2 uv) {
+	 *         return texture2D(uSampler, uv + vec2(uTime * 0.05, 0.0));
+	 *     }`);
+	 * mySprite.shader = flow;
+	 * // then in your Stage's update(dt):
+	 * flow.setTime(me.timer.getTime() / 1000);
+	 */
+	setTime(seconds) {
+		if (this.enabled && this._usesTime) {
+			this._shader.setUniform("uTime", seconds);
+		}
+		return this;
 	}
 
 	/** @ignore */
