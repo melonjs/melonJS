@@ -1187,6 +1187,8 @@ export default class WebGLRenderer extends Renderer {
 		const shader = this.customShader;
 		if (shader != null) {
 			this.currentBatcher.useShader(shader);
+			// (re)bind any extra textures a ShaderEffect declared via setTexture
+			shader._prepareTextures?.(this.currentBatcher);
 		}
 
 		// force reuploading if the given image is a HTMLVideoElement or a
