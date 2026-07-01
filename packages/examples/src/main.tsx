@@ -98,11 +98,6 @@ const ExampleSpriteIlluminator = lazy(() =>
 		default: m.ExampleSpriteIlluminator,
 	})),
 );
-const ExampleWater = lazy(() =>
-	import("./examples/water/ExampleWater").then((m) => ({
-		default: m.ExampleWater,
-	})),
-);
 const ExampleWaterRefraction = lazy(() =>
 	import("./examples/waterRefraction/ExampleWaterRefraction").then((m) => ({
 		default: m.ExampleWaterRefraction,
@@ -365,14 +360,6 @@ const examples: {
 		sourceDir: "spriteIlluminator",
 		description:
 			"Per-pixel sprite lighting from normal maps. Animated character + foreground prop tile lit by a moving cursor light, faithfully ported from CodeAndWeb's cocos2d-x demo.",
-	},
-	{
-		component: <ExampleWater />,
-		label: "Water Surface",
-		path: "water",
-		sourceDir: "water",
-		description:
-			"Procedural ocean: CPU-noise mountains, a color-ramped NoiseTexture2d albedo and a live-animated ripple normal map lit per-pixel by a Light2d. A day↔night slider cross-fades the sky and lerps the sun→moon lighting.",
 	},
 	{
 		component: <ExampleWaterRefraction />,
