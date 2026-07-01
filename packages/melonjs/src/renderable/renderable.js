@@ -464,7 +464,9 @@ export default class Renderable extends Rect {
 	set shader(value) {
 		// destroy existing effects before replacing
 		for (const effect of this.postEffects) {
-			if (typeof effect.destroy === "function") {
+			// `effect.shared` opts a shader out of auto-destroy — it is reused
+			// across renderables, so freeing it here would break the others.
+			if (typeof effect.destroy === "function" && !effect.shared) {
 				effect.destroy();
 			}
 		}
@@ -513,7 +515,9 @@ export default class Renderable extends Rect {
 	 */
 	clearPostEffects() {
 		for (const effect of this.postEffects) {
-			if (typeof effect.destroy === "function") {
+			// `effect.shared` opts a shader out of auto-destroy — it is reused
+			// across renderables, so freeing it here would break the others.
+			if (typeof effect.destroy === "function" && !effect.shared) {
 				effect.destroy();
 			}
 		}
@@ -530,7 +534,9 @@ export default class Renderable extends Rect {
 		const idx = this.postEffects.indexOf(effect);
 		if (idx !== -1) {
 			this.postEffects.splice(idx, 1);
-			if (typeof effect.destroy === "function") {
+			// `effect.shared` opts a shader out of auto-destroy — it is reused
+			// across renderables, so freeing it here would break the others.
+			if (typeof effect.destroy === "function" && !effect.shared) {
 				effect.destroy();
 			}
 		}
@@ -1086,7 +1092,9 @@ export default class Renderable extends Rect {
 
 		// destroy any shader effects if not done by the user through onDestroyEvent()
 		for (const effect of this.postEffects) {
-			if (typeof effect.destroy === "function") {
+			// `effect.shared` opts a shader out of auto-destroy — it is reused
+			// across renderables, so freeing it here would break the others.
+			if (typeof effect.destroy === "function" && !effect.shared) {
 				effect.destroy();
 			}
 		}

@@ -60,6 +60,18 @@ export default class GLShader {
 		this.destroyed = false;
 
 		/**
+		 * When `true`, a renderable will NOT auto-destroy this shader when it is
+		 * removed from its `postEffects` (via the `shader` setter,
+		 * `removePostEffect`, `clearPostEffects`) or when the renderable itself
+		 * is destroyed. Set this on a shader shared across several renderables so
+		 * one of them going away doesn't free the GL program still used by the
+		 * others — you then own its lifecycle and call {@link destroy} yourself.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.shared = false;
+
+		/**
 		 * `true` while the WebGL context is lost (and until it's
 		 * restored). The GL program/attributes/uniforms are released
 		 * during the suspended window but the shader source code is
