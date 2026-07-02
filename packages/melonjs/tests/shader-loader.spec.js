@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
+	GLShader,
 	loader,
 	ShaderEffect,
 	video,
@@ -205,6 +206,78 @@ describe("ShaderEffect.clone", () => {
 		fx.destroy();
 		expect(() => {
 			fx.clone();
+		}).toThrow(/destroyed/);
+	});
+});
+
+// GLShader is not ShaderEffect's base class (ShaderEffect wraps one by
+// composition) — so it carries its own clone(), with the same semantics,
+// for full custom vertex+fragment programs.
+describe("GLShader.clone", () => {
+	let renderer;
+	let isWebGL;
+	let gl;
+
+	const VERTEX =
+		"attribute vec2 aVertex;\nvoid main(void) { gl_Position = vec4(aVertex, 0.0, 1.0); }";
+	const FRAGMENT =
+		"uniform float uIntensity;\nvoid main(void) { gl_FragColor = vec4(uIntensity); }";
+
+	beforeAll(() => {
+		renderer = video.renderer;
+		isWebGL = renderer instanceof WebGLRenderer;
+		if (isWebGL) {
+			gl = renderer.gl;
+		}
+	});
+
+	it("compiles an independent program and replays uniform values", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const orig = new GLShader(gl, VERTEX, FRAGMENT);
+		orig.setUniform("uIntensity", 0.4);
+
+		const copy = orig.clone();
+		expect(copy).toBeInstanceOf(GLShader);
+		expect(copy).not.toBe(orig);
+		expect(copy.program).not.toBe(orig.program);
+
+		const loc = gl.getUniformLocation(copy.program, "uIntensity");
+		expect(gl.getUniform(copy.program, loc)).toBeCloseTo(0.4);
+
+		orig.destroy();
+		copy.destroy();
+	});
+
+	it("always resets `shared` to false, and clones are destroy-independent", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const orig = new GLShader(gl, VERTEX, FRAGMENT);
+		orig.shared = true;
+
+		const copy = orig.clone();
+		expect(copy.shared).toBe(false); // ownership does not carry
+		expect(orig.shared).toBe(true);
+
+		orig.destroy();
+		expect(copy.destroyed).toBe(false);
+		expect(gl.isProgram(copy.program)).toBe(true);
+		copy.destroy();
+	});
+
+	it("throws when cloning a destroyed shader", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const shader = new GLShader(gl, VERTEX, FRAGMENT);
+		shader.destroy();
+		expect(() => {
+			shader.clone();
 		}).toThrow(/destroyed/);
 	});
 });

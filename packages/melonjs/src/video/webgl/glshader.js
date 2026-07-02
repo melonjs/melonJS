@@ -295,6 +295,44 @@ export default class GLShader {
 	}
 
 	/**
+	 * Create an independent copy of this shader, compiled as its own GL
+	 * program from the same vertex + fragment sources (and precision), with
+	 * every uniform value set so far replayed onto the copy. Use it when
+	 * several renderables need the same custom shader with *different*
+	 * uniform values — a single instance has a single set of uniforms.
+	 *
+	 * Ownership and lifecycle state do NOT carry over: the clone's
+	 * {@link shared} flag is **always reset to `false`**, even when cloning
+	 * a shared shader — the clone is caller-owned and will be auto-destroyed
+	 * by the renderable it is assigned to, unless you explicitly set
+	 * `shared = true` on it yourself. Note that `ShaderEffect` (which wraps
+	 * a GLShader by composition) has its own `clone()` with the same
+	 * semantics, which additionally copies its effect-level state (extra
+	 * `setTexture` bindings).
+	 * @returns {GLShader} a new, caller-owned shader (`shared === false`)
+	 */
+	clone() {
+		if (this.destroyed) {
+			throw new Error("GLShader.clone: shader has been destroyed");
+		}
+		const copy = new GLShader(
+			this.gl,
+			this._sourceVertex,
+			this._sourceFragment,
+			this._precision,
+		);
+		// replay this shader's cached uniform values onto the clone (the same
+		// snapshot store the context-loss recovery replays from). Every cached
+		// name passed setUniform on the identical source, so it exists on the
+		// clone's program too; if the clone was constructed mid-context-loss,
+		// setUniform defers to its own cache for replay on restore.
+		for (const name of Object.keys(this._uniformCache)) {
+			copy.setUniform(name, this._uniformCache[name]);
+		}
+		return copy;
+	}
+
+	/**
 	 * destroy this shader objects resources (program, attributes, uniforms).
 	 * Idempotent — calling destroy twice (or after a context-lost suspend)
 	 * is safe. Unsubscribes from the renderer's context lost / restored
