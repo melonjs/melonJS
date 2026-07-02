@@ -29,7 +29,7 @@ export const mtlList = {};
 // contains all the parsed glTF/GLB scene descriptors
 export const gltfList = {};
 
-// contains all the preloaded shader assets, keyed by name →
-// { source, effect } (effect is the shared, precompiled ShaderEffect;
-// null when preloaded before video.init, compiled on first getShader)
+// contains all the preloaded shader assets, keyed by name → the shared,
+// precompiled ShaderEffect (compiled at load time; video.init is an
+// inherent precondition of the preload flow)
 export const shaderList = {};

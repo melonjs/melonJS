@@ -47,6 +47,10 @@ describe("shader asset preloading", () => {
 		expect(typeof fx._shader.uniforms.uIntensity).not.toBe("undefined");
 		// SHARED semantics: the same instance on every call
 		expect(loader.getShader("flash-inline")).toBe(fx);
+
+		// clean up the global loader cache (and its GL program)
+		loader.unload({ name: "flash-inline", type: "shader" });
+		expect(fx.destroyed).toBe(true);
 	});
 
 	it("loads source from a URL (data: URI) too", async (ctx) => {

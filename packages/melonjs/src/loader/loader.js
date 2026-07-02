@@ -29,7 +29,7 @@ import { preloadJSON } from "./parsers/json.js";
 import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
-import { compileShaderAsset, preloadShader } from "./parsers/shader.js";
+import { preloadShader } from "./parsers/shader.js";
 import { preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
 
@@ -707,15 +707,13 @@ export function unload(asset) {
 		}
 
 		case "shader": {
-			const entry = shaderList[asset.name];
-			if (typeof entry === "undefined") {
+			const effect = shaderList[asset.name];
+			if (typeof effect === "undefined") {
 				return false;
 			}
 			// the loader owns the shared ShaderEffect — actually free the GL
 			// program, don't just drop the cache entry
-			if (entry.effect !== null) {
-				entry.effect.destroy();
-			}
+			effect.destroy();
 			delete shaderList[asset.name];
 			return true;
 		}
@@ -1017,8 +1015,9 @@ export function getGLTF(elt) {
  *
  * Shader assets are WebGL-only: under the Canvas renderer the returned
  * effect is an inert stub (same behavior as constructing a `ShaderEffect`
- * directly). If the asset was preloaded *before* `video.init()`, it is
- * compiled on first access instead of at load time.
+ * directly). Note that shader assets require `video.init()` to have been
+ * called — an inherent precondition of the preload flow, since the loading
+ * screen itself needs the renderer.
  * @memberof loader
  * @param {string} elt - name of the shader asset (as specified in the preload list)
  * @returns {ShaderEffect|null} the shared, precompiled effect, or `null` if not found
@@ -1041,13 +1040,8 @@ export function getGLTF(elt) {
  */
 export function getShader(elt) {
 	elt = "" + elt;
-	const entry = shaderList[elt];
-	if (typeof entry !== "undefined") {
-		if (entry.effect === null) {
-			// preloaded before video.init() — compile on first access
-			entry.effect = compileShaderAsset(entry.source);
-		}
-		return entry.effect;
+	if (elt in shaderList) {
+		return shaderList[elt];
 	}
 	return null;
 }

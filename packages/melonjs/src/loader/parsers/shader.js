@@ -36,9 +36,11 @@ export function compileShaderAsset(source) {
  * parse/preload a shader asset (a GLSL fragment body following the
  * ShaderEffect convention: uniform declarations + `vec4 apply(vec4, vec2)`),
  * from a `src` URL (or data: URI) or inline GLSL via the `data` field.
- * Compiled into a shared ShaderEffect at load time when the renderer exists
- * (so the GLSL compile cost lands in the loading screen and compile errors
- * carry the asset name); otherwise compiled lazily on first `getShader`.
+ * Always compiled into a shared ShaderEffect AT LOAD TIME, so the GLSL
+ * compile cost lands in the loading screen and compile errors carry the
+ * asset name. `video.init()` is an inherent precondition of the preload
+ * flow (the loading screen itself needs the renderer, and a failed init
+ * throws and halts) — loading a shader without it fails with a clear error.
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
@@ -52,18 +54,10 @@ export function preloadShader(data, onload, onerror, settings) {
 		return 0;
 	}
 
-	const store = (source) => {
-		shaderList[data.name] = {
-			source,
-			effect:
-				typeof _renderer !== "undefined" ? compileShaderAsset(source) : null,
-		};
-	};
-
 	// inline GLSL source via the `data` field (same convention as inline TMX)
 	if (typeof data.data === "string") {
 		try {
-			store(data.data);
+			shaderList[data.name] = compileShaderAsset(data.data);
 		} catch (error) {
 			if (typeof onerror === "function") {
 				onerror(new Error(`shader asset "${data.name}": ${error.message}`));
@@ -78,7 +72,7 @@ export function preloadShader(data, onload, onerror, settings) {
 
 	fetchData(data.src, "text", settings)
 		.then((source) => {
-			store(source);
+			shaderList[data.name] = compileShaderAsset(source);
 			if (typeof onload === "function") {
 				onload();
 			}
