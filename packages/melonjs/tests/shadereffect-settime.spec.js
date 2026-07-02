@@ -31,7 +31,6 @@ describe("ShaderEffect.setTime (manual uTime helper)", () => {
 			renderer,
 			"uniform float uTime;\nvec4 apply(vec4 color, vec2 uv) { return color * (0.5 + 0.5 * sin(uTime)); }",
 		);
-		expect(fx._usesTime).toBe(true);
 
 		let written = null;
 		const orig = fx._shader.setUniform.bind(fx._shader);
@@ -56,7 +55,6 @@ describe("ShaderEffect.setTime (manual uTime helper)", () => {
 			renderer,
 			"vec4 apply(vec4 color, vec2 uv) { return color; }",
 		);
-		expect(fx._usesTime).toBe(false);
 
 		let touched = false;
 		const orig = fx._shader.setUniform.bind(fx._shader);
@@ -68,6 +66,35 @@ describe("ShaderEffect.setTime (manual uTime helper)", () => {
 		};
 
 		fx.setTime(1.0);
+		expect(touched).toBe(false);
+	});
+
+	// regression: detection must key off the compiled program's ACTIVE uniforms,
+	// not a substring scan — a similarly-named uniform (uTimeScale) contains the
+	// text "uTime" but has no uTime uniform, so setTime must stay a silent no-op
+	// (a substring match would call setUniform("uTime", …), which throws).
+	it("does not false-positive on a similarly-named uniform (uTimeScale)", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const fx = new ShaderEffect(
+			renderer,
+			"uniform float uTimeScale;\nvec4 apply(vec4 color, vec2 uv) { return color * uTimeScale; }",
+		);
+
+		let touched = false;
+		const orig = fx._shader.setUniform.bind(fx._shader);
+		fx._shader.setUniform = (name, value) => {
+			if (name === "uTime") {
+				touched = true;
+			}
+			return orig(name, value);
+		};
+
+		expect(() => {
+			fx.setTime(1.0);
+		}).not.toThrow();
 		expect(touched).toBe(false);
 	});
 });

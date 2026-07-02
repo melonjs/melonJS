@@ -104,11 +104,12 @@ export default class ShaderEffect {
 		this.enabled = true;
 
 		/**
-		 * whether the fragment declares a `uTime` uniform — so {@link setTime}
-		 * knows if there's anything to update
+		 * the WebGL renderer that owns this effect — kept so destroy and
+		 * context-loss can release the texture units reserved on its cache
+		 * for extra samplers ({@link setTexture})
 		 * @ignore
 		 */
-		this._usesTime = fragmentBody.includes("uTime");
+		this._renderer = renderer;
 
 		/**
 		 * extra texture samplers bound via {@link setTexture}, keyed by the
@@ -131,6 +132,17 @@ export default class ShaderEffect {
 		// remember user-set state so restore doesn't override it
 		this._enabledBeforeSuspend = this.enabled;
 		this.enabled = false;
+		// GL texture handles + unit reservations are invalid after a context
+		// loss — drop the handles and release the reserved units so, on restore,
+		// _prepareTextures re-reserves + re-uploads instead of re-binding a
+		// stale (black/invalid) handle
+		for (const entry of this._extraTextures.values()) {
+			if (entry.unit !== undefined) {
+				this._renderer.cache.releaseUnit(entry.unit);
+				entry.unit = undefined;
+			}
+			entry.tex = null;
+		}
 	}
 
 	/** @private */
@@ -179,7 +191,13 @@ export default class ShaderEffect {
 	 * flow.setTime(me.timer.getTime() / 1000);
 	 */
 	setTime(seconds) {
-		if (this.enabled && this._usesTime) {
+		// detect `uTime` from the compiled program's ACTIVE uniforms at call
+		// time — not a substring scan of the source (which false-positives on
+		// `uTimeScale`, comments, or a `uTime` the compiler optimised out and
+		// would make setUniform throw), and not cached (so it stays correct
+		// across a context-loss recompile). `enabled` is false while suspended
+		// or destroyed, so the uniforms map is never null here.
+		if (this.enabled && typeof this._shader.uniforms.uTime !== "undefined") {
 			this._shader.setUniform("uTime", seconds);
 		}
 		return this;
@@ -218,11 +236,22 @@ export default class ShaderEffect {
 	setTexture(name, image, repeat = "no-repeat") {
 		if (this.enabled) {
 			const existing = this._extraTextures.get(name);
-			if (existing && existing.tex !== null) {
-				// release the previous GL texture before replacing the binding
-				this._shader.gl.deleteTexture(existing.tex);
+			if (existing) {
+				// release the previous GL texture + unit reservation before
+				// replacing the binding
+				if (existing.tex !== null) {
+					this._shader.gl.deleteTexture(existing.tex);
+				}
+				if (existing.unit !== undefined) {
+					this._renderer.cache.releaseUnit(existing.unit);
+				}
 			}
-			this._extraTextures.set(name, { image, repeat, tex: null });
+			this._extraTextures.set(name, {
+				image,
+				repeat,
+				tex: null,
+				unit: undefined,
+			});
 		}
 		return this;
 	}
@@ -240,14 +269,34 @@ export default class ShaderEffect {
 		if (!this.enabled || this._extraTextures.size === 0) {
 			return;
 		}
+		const cache = batcher.renderer.cache;
 		const filter = batcher.renderer._glTextureFilter();
-		// reserve high units so they never collide with `uSampler` (unit 0 on a
-		// blit) or the batcher's low, rotating color-texture units
-		let unit = batcher.maxBatchTextures - 1;
+		// hand out units from the TOP of the batcher's range, counting down, so
+		// they never collide with `uSampler` (unit 0 on a blit) or the low,
+		// rotating color-texture units. Each unit is reserved in the cache the
+		// first time it's claimed, so `allocateTextureUnit` can't hand the same
+		// unit to a sprite's own texture in the single-effect customShader path.
+		let nextUnit = batcher.maxBatchTextures - 1;
 		for (const [name, entry] of this._extraTextures) {
+			if (entry.unit === undefined) {
+				if (nextUnit < 1) {
+					// more extra textures than the batcher can hold beside
+					// uSampler — bind what fits, warn once, skip the rest
+					if (!this._textureOverflowWarned) {
+						this._textureOverflowWarned = true;
+						console.warn(
+							`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
+						);
+					}
+					break;
+				}
+				entry.unit = nextUnit;
+				cache.reserveUnit(nextUnit);
+			}
+			nextUnit = entry.unit - 1;
 			if (entry.tex === null) {
 				batcher.createTexture2D(
-					unit,
+					entry.unit,
 					entry.image,
 					filter,
 					entry.repeat,
@@ -258,12 +307,11 @@ export default class ShaderEffect {
 					undefined,
 					false, // flush — the following draw flushes with everything bound
 				);
-				entry.tex = batcher.boundTextures[unit];
+				entry.tex = batcher.boundTextures[entry.unit];
 			} else {
-				batcher.bindTexture2D(entry.tex, unit, false);
+				batcher.bindTexture2D(entry.tex, entry.unit, false);
 			}
-			this._shader.setUniform(name, unit);
-			unit--;
+			this._shader.setUniform(name, entry.unit);
 		}
 	}
 
@@ -331,8 +379,12 @@ export default class ShaderEffect {
 
 		// _shader is undefined on Canvas-mode effects (early-returned)
 		if (this._shader) {
-			// release any extra textures bound via setTexture
+			// release any extra textures bound via setTexture — both the GL
+			// handle and the cache unit reservation
 			for (const entry of this._extraTextures.values()) {
+				if (entry.unit !== undefined) {
+					this._renderer.cache.releaseUnit(entry.unit);
+				}
 				if (entry.tex !== null) {
 					this._shader.gl.deleteTexture(entry.tex);
 				}

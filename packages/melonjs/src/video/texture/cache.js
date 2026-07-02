@@ -41,6 +41,12 @@ class TextureCache {
 		// don't drop when the source goes out of scope user-side.
 		this.units = new Map();
 		this.usedUnits = new Set();
+		// units held out of `allocateTextureUnit` for shader extra-samplers
+		// (`ShaderEffect.setTexture`). Reference-counted (unit → count) so a
+		// unit shared by several effects stays reserved until the last one
+		// releases it. Not touched by `clear()` — reservations are owned by the
+		// effects, and released on their destroy / context-loss.
+		this.reservedUnits = new Map();
 		this.max_size = max_size;
 		this.clear();
 	}
@@ -59,10 +65,11 @@ class TextureCache {
 	 * @ignore
 	 */
 	allocateTextureUnit() {
-		// find the first unit available among the max_size
+		// find the first unit available among the max_size (skip units held
+		// for shader extra-samplers via `reserveUnit`)
 		for (let unit = 0; unit < this.max_size; unit++) {
 			// Check if unit is available
-			if (!this.usedUnits.has(unit)) {
+			if (!this.usedUnits.has(unit) && !this.reservedUnits.has(unit)) {
 				// Add to used set
 				this.usedUnits.add(unit);
 				// return the new unit
@@ -77,9 +84,41 @@ class TextureCache {
 		}
 		this.units.clear();
 		this.usedUnits.clear();
-		this.usedUnits.add(0);
+		// return the first non-reserved unit (reservations survive the reset)
+		let unit = 0;
+		while (this.reservedUnits.has(unit)) {
+			unit++;
+		}
+		this.usedUnits.add(unit);
 		emit(GPU_TEXTURE_CACHE_RESET);
-		return 0;
+		return unit;
+	}
+
+	/**
+	 * Reserve a texture unit so {@link allocateTextureUnit} never hands it to a
+	 * color texture — used by `ShaderEffect.setTexture` to hold high units for
+	 * its extra samplers. Reference-counted, so a unit shared by several effects
+	 * stays reserved until the last one releases it.
+	 * @param {number} unit - the texture unit to reserve
+	 * @ignore
+	 */
+	reserveUnit(unit) {
+		this.reservedUnits.set(unit, (this.reservedUnits.get(unit) || 0) + 1);
+	}
+
+	/**
+	 * Release a unit previously held by {@link reserveUnit}. The unit becomes
+	 * allocatable again once its last holder releases it.
+	 * @param {number} unit - the texture unit to release
+	 * @ignore
+	 */
+	releaseUnit(unit) {
+		const count = this.reservedUnits.get(unit);
+		if (count > 1) {
+			this.reservedUnits.set(unit, count - 1);
+		} else {
+			this.reservedUnits.delete(unit);
+		}
 	}
 
 	/**

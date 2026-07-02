@@ -123,4 +123,41 @@ describe("ShaderEffect.setTexture (extra sampler binding)", () => {
 		expect(gl.isTexture(first)).toBe(false);
 		expect(fx._extraTextures.size).toBe(0);
 	});
+
+	// #1533 review: the reserved unit must be held out of the texture cache's
+	// allocator, or a sprite's own texture could be handed the same unit in the
+	// single-effect customShader path and clobber the extra sampler.
+	it("reserves its unit against the allocator and releases it on destroy", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const cache = renderer.cache;
+		cache.resetUnitAssignments();
+
+		const red = solidCanvas(255, 0, 0);
+		const fx = new ShaderEffect(
+			renderer,
+			"uniform sampler2D uExtra;\nvec4 apply(vec4 color, vec2 uv) { return texture2D(uExtra, uv); }",
+		);
+		fx.setTexture("uExtra", red);
+
+		const batcher = renderer.setBatcher("quad");
+		batcher.useShader(fx);
+		fx._prepareTextures(batcher);
+
+		const unit = batcher.maxBatchTextures - 1;
+		expect(cache.reservedUnits.has(unit)).toBe(true);
+
+		// fill every unit below the reserved one, then the next allocation must
+		// SKIP the reserved unit rather than hand it out
+		for (let u = 0; u < unit; u++) {
+			cache.allocateTextureUnit();
+		}
+		expect(cache.allocateTextureUnit()).not.toBe(unit);
+		cache.resetUnitAssignments(); // clean up (reservations survive)
+
+		fx.destroy();
+		expect(cache.reservedUnits.has(unit)).toBe(false);
+	});
 });
