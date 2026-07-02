@@ -281,3 +281,122 @@ describe("GLShader.clone", () => {
 		}).toThrow(/destroyed/);
 	});
 });
+
+/**
+ * Adversarial: shader assets + clone across a REAL WebGL context loss
+ * (WEBGL_lose_context), mirroring webgl_pipeline_adversarial.spec.js.
+ * Runs last — losing the context mid-suite would poison earlier tests.
+ */
+describe("shader assets + clone under context loss", () => {
+	let renderer;
+	let isWebGL;
+	let gl;
+
+	const tick = () => {
+		return new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+	};
+
+	beforeAll(() => {
+		renderer = video.renderer;
+		isWebGL = renderer instanceof WebGLRenderer;
+		if (isWebGL) {
+			gl = renderer.gl;
+		}
+	});
+
+	it("two concurrent loads of the same name resolve to ONE shared effect", async (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		// both fetches start before either resolves — the parser's post-fetch
+		// re-check must keep the first stored effect (a second compile would
+		// orphan a live GL program, pinned by its context-loss subscriptions)
+		const src = `data:text/plain,${encodeURIComponent(FLASH)}`;
+		await Promise.all([
+			loader.load({ name: "flash-race", type: "shader", src }),
+			loader.load({ name: "flash-race", type: "shader", src }),
+		]);
+
+		const fx = loader.getShader("flash-race");
+		expect(fx).toBeInstanceOf(ShaderEffect);
+		expect(loader.getShader("flash-race")).toBe(fx);
+
+		expect(loader.unload({ name: "flash-race", type: "shader" })).toBe(true);
+		expect(fx.destroyed).toBe(true);
+	});
+
+	it("clone() during a lost context does not throw, and works after restore", async (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip();
+			return;
+		}
+		const orig = new ShaderEffect(renderer, FLASH);
+		orig.setUniform("uIntensity", 0.6);
+
+		ext.loseContext();
+		await tick();
+
+		// cloning mid-loss must not throw (the clone's program is deferred,
+		// its uniforms map is null — the replay must defer, not crash)
+		let copy;
+		expect(() => {
+			copy = orig.clone();
+		}).not.toThrow();
+		expect(copy.shared).toBe(false);
+
+		ext.restoreContext();
+		await tick();
+
+		// after restore the clone has its own live program with the copied
+		// uniform value replayed onto it
+		expect(gl.isProgram(copy._shader.program)).toBe(true);
+		expect(copy._shader.program).not.toBe(orig._shader.program);
+		const loc = gl.getUniformLocation(copy._shader.program, "uIntensity");
+		expect(gl.getUniform(copy._shader.program, loc)).toBeCloseTo(0.6);
+
+		orig.destroy();
+		copy.destroy();
+	});
+
+	it("a preloaded shader asset survives a full context loss/restore cycle", async (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip();
+			return;
+		}
+		await loader.load({ name: "flash-cycle", type: "shader", data: FLASH });
+		const fx = loader.getShader("flash-cycle");
+		fx.setUniform("uIntensity", 0.3);
+
+		ext.loseContext();
+		await tick();
+		// suspended: the effect gates itself off
+		expect(fx.enabled).toBe(false);
+
+		ext.restoreContext();
+		await tick();
+
+		// transparently recovered: same shared instance, re-enabled, fresh
+		// program with the cached uniform value replayed
+		expect(loader.getShader("flash-cycle")).toBe(fx);
+		expect(fx.enabled).toBe(true);
+		expect(gl.isProgram(fx._shader.program)).toBe(true);
+		const loc = gl.getUniformLocation(fx._shader.program, "uIntensity");
+		expect(gl.getUniform(fx._shader.program, loc)).toBeCloseTo(0.3);
+
+		expect(loader.unload({ name: "flash-cycle", type: "shader" })).toBe(true);
+		expect(fx.destroyed).toBe(true);
+	});
+});

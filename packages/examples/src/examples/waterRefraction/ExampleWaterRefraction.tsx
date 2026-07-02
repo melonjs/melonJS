@@ -231,7 +231,11 @@ class PlayScreen extends Stage {
 		input.releasePointerEvent("pointermove", this.app.viewport);
 		input.releasePointerEvent("pointerdown", this.app.viewport);
 		// the loader owns the shared shader — unloading is what frees it
-		// (the floor sprite's own cleanup skips it, since `shared` is true)
+		// (the floor sprite's own cleanup skips it, since `shared` is true).
+		// NOTE: this example is single-stage, so its onDestroyEvent only fires
+		// on final teardown. In a multi-stage game, unload in your GAME's
+		// teardown instead — onDestroyEvent fires on every stage switch, and
+		// a re-entered stage would then getShader() a name that's gone.
 		loader.unload({ name: "refraction", type: "shader" });
 		this.panel?.remove();
 	}

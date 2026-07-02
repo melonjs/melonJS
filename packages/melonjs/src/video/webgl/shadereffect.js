@@ -361,10 +361,19 @@ export default class ShaderEffect {
 		);
 		// Canvas-mode effects are inert stubs — nothing further to copy
 		if (this._shader && copy._shader) {
-			// replay this effect's cached uniform values onto the clone
-			// (same snapshot store the context-loss recovery replays from)
+			// replay this effect's cached uniform values onto the clone (same
+			// snapshot store the context-loss recovery replays from). When the
+			// clone was constructed during a LOST context its program compiles
+			// deferred and `uniforms` is null — skip the active-uniform check
+			// and let the suspended setUniform cache the value for the restore
+			// replay (which re-validates). Note the cache also holds sampler
+			// unit indices written by _prepareTextures — harmless to replay,
+			// the clone's own first draw re-reserves and overwrites them.
 			for (const name of Object.keys(this._shader._uniformCache)) {
-				if (typeof copy._shader.uniforms[name] !== "undefined") {
+				if (
+					copy._shader.suspended ||
+					typeof copy._shader.uniforms[name] !== "undefined"
+				) {
 					copy._shader.setUniform(name, this._shader._uniformCache[name]);
 				}
 			}

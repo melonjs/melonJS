@@ -322,12 +322,16 @@ export default class GLShader {
 			this._precision,
 		);
 		// replay this shader's cached uniform values onto the clone (the same
-		// snapshot store the context-loss recovery replays from). Every cached
-		// name passed setUniform on the identical source, so it exists on the
-		// clone's program too; if the clone was constructed mid-context-loss,
-		// setUniform defers to its own cache for replay on restore.
+		// snapshot store the context-loss recovery replays from). When the
+		// clone is constructed mid-context-loss its program compiles deferred
+		// (`uniforms` is null) — the suspended setUniform caches values for
+		// the restore replay. When live, validate against the clone's active
+		// uniforms (same guard the restore replay uses) so a name cached
+		// during an earlier suspended window can't make setUniform throw.
 		for (const name of Object.keys(this._uniformCache)) {
-			copy.setUniform(name, this._uniformCache[name]);
+			if (copy.suspended || typeof copy.uniforms[name] !== "undefined") {
+				copy.setUniform(name, this._uniformCache[name]);
+			}
 		}
 		return copy;
 	}

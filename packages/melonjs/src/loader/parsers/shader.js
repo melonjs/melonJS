@@ -70,9 +70,26 @@ export function preloadShader(data, onload, onerror, settings) {
 		return 1;
 	}
 
+	if (typeof data.src !== "string") {
+		if (typeof onerror === "function") {
+			onerror(
+				new Error(
+					`shader asset "${data.name}": needs a \`src\` URL or inline GLSL via \`data\``,
+				),
+			);
+		}
+		return 1;
+	}
+
 	fetchData(data.src, "text", settings)
 		.then((source) => {
-			shaderList[data.name] = compileShaderAsset(source);
+			// a concurrent load for the same name may have stored while this
+			// fetch was in flight — compiling again would orphan a live GL
+			// program (pinned by its context-loss event subscriptions, so
+			// never GC-eligible and unreachable by unload)
+			if (typeof shaderList[data.name] === "undefined") {
+				shaderList[data.name] = compileShaderAsset(source);
+			}
 			if (typeof onload === "function") {
 				onload();
 			}
