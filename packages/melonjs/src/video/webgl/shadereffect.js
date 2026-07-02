@@ -75,6 +75,25 @@ export default class ShaderEffect {
 	 * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp')
 	 */
 	constructor(renderer, fragmentBody, precision) {
+		/**
+		 * the renderer this effect was created for — kept so destroy and
+		 * context-loss can release the texture units reserved on its cache
+		 * for extra samplers ({@link setTexture}), and so {@link clone} can
+		 * compile an independent copy
+		 * @ignore
+		 */
+		this._renderer = renderer;
+
+		/**
+		 * the construction "recipe" (fragment body + precision), kept so
+		 * {@link clone} can compile an independent copy. Stored before the
+		 * Canvas-mode early return so cloning behaves consistently there too.
+		 * @ignore
+		 */
+		this._fragmentBody = fragmentBody;
+		/** @ignore */
+		this._precision = precision;
+
 		if (typeof renderer.gl === "undefined") {
 			console.warn(
 				"ShaderEffect requires WebGL and is disabled in Canvas mode",
@@ -102,14 +121,6 @@ export default class ShaderEffect {
 			precision || renderer.shaderPrecision,
 		);
 		this.enabled = true;
-
-		/**
-		 * the WebGL renderer that owns this effect — kept so destroy and
-		 * context-loss can release the texture units reserved on its cache
-		 * for extra samplers ({@link setTexture})
-		 * @ignore
-		 */
-		this._renderer = renderer;
 
 		/**
 		 * extra texture samplers bound via {@link setTexture}, keyed by the
@@ -313,6 +324,57 @@ export default class ShaderEffect {
 			}
 			this._shader.setUniform(name, entry.unit);
 		}
+	}
+
+	/**
+	 * Create an independent copy of this effect, compiled as its own GL
+	 * program. Use it when several renderables need the same effect with
+	 * *different* uniform values — a single instance has a single set of
+	 * uniforms, shared by everything it is assigned to.
+	 *
+	 * The clone copies the **recipe**: the fragment source, float precision,
+	 * every uniform value set so far, and any extra textures bound via
+	 * {@link setTexture} (the clone uploads and owns its own GL copies).
+	 * It does NOT copy **ownership or lifecycle** state — in particular the
+	 * clone's {@link shared} flag is **always reset to `false`**, even when
+	 * cloning a shared shader (such as one returned by `loader.getShader()`):
+	 * the clone is caller-owned and will be auto-destroyed by the renderable
+	 * it is assigned to, exactly like a hand-constructed effect. Set
+	 * `shared = true` on the clone yourself if you intend to reuse it across
+	 * several renderables.
+	 * @returns {ShaderEffect} a new, caller-owned effect (`shared === false`)
+	 * @example
+	 * // the loader's shader is ONE shared program — one uniform state for all
+	 * sprite.shader = loader.getShader("flash");
+	 * // the boss needs its own intensity — clone a private, caller-owned copy
+	 * boss.shader = loader.getShader("flash").clone();
+	 * boss.shader.setUniform("uIntensity", 0.9);
+	 */
+	clone() {
+		if (this.destroyed) {
+			throw new Error("ShaderEffect.clone: effect has been destroyed");
+		}
+		const copy = new ShaderEffect(
+			this._renderer,
+			this._fragmentBody,
+			this._precision,
+		);
+		// Canvas-mode effects are inert stubs — nothing further to copy
+		if (this._shader && copy._shader) {
+			// replay this effect's cached uniform values onto the clone
+			// (same snapshot store the context-loss recovery replays from)
+			for (const name of Object.keys(this._shader._uniformCache)) {
+				if (typeof copy._shader.uniforms[name] !== "undefined") {
+					copy._shader.setUniform(name, this._shader._uniformCache[name]);
+				}
+			}
+			// re-declare extra textures — the clone uploads + owns its own
+			// GL texture and unit reservation on first draw
+			for (const [name, entry] of this._extraTextures) {
+				copy.setTexture(name, entry.image, entry.repeat);
+			}
+		}
+		return copy;
 	}
 
 	/** @ignore */

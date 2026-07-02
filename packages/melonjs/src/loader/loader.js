@@ -16,6 +16,7 @@ import {
 	jsonList,
 	mtlList,
 	objList,
+	shaderList,
 	tmxList,
 	videoList,
 } from "./cache.js";
@@ -28,6 +29,7 @@ import { preloadJSON } from "./parsers/json.js";
 import { preloadMTL } from "./parsers/mtl.js";
 import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
+import { compileShaderAsset, preloadShader } from "./parsers/shader.js";
 import { preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
 
@@ -127,7 +129,7 @@ export function setOptions(options) {
  * @name setBaseURL
  * @memberof loader
  * @public
- * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "aseprite"
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "aseprite", "shader"
  * @param {string} [url="./"] - default base URL
  * @example
  * // change the base URL relative address for audio assets
@@ -151,6 +153,7 @@ export function setBaseURL(type, url = "./") {
 		baseURL["tsx"] = url;
 		baseURL["fontface"] = url;
 		baseURL["aseprite"] = url;
+		baseURL["shader"] = url;
 	}
 }
 
@@ -231,6 +234,7 @@ function initParsers() {
 	setParser("gltf", preloadGLTF);
 	setParser("glb", preloadGLTF);
 	setParser("aseprite", preloadAseprite);
+	setParser("shader", preloadShader);
 	parserInitialized = true;
 }
 
@@ -289,11 +293,11 @@ function onLoadingError(res) {
  * @typedef {object} Asset
  * @memberof loader
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video"|"aseprite")
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video"|"aseprite"|"shader")
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
  * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
  * The loader will try each source in order and use the first one that loads successfully.
- * @property {string} [data]  - TMX data if not provided through a src url
+ * @property {string} [data]  - inline content if not provided through a src url: TMX data for "tmx" assets, GLSL source (the ShaderEffect fragment-body convention) for "shader" assets
  * @property {boolean} [stream=false] - Set to true to not to wait for large audio or video file to be downloaded before playing.
  * @property {boolean} [autoplay=false] - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
  * @property {boolean} [loop=false] - Set to true to automatically loop the audio or video when playing
@@ -702,6 +706,20 @@ export function unload(asset) {
 			return true;
 		}
 
+		case "shader": {
+			const entry = shaderList[asset.name];
+			if (typeof entry === "undefined") {
+				return false;
+			}
+			// the loader owns the shared ShaderEffect — actually free the GL
+			// program, don't just drop the cache entry
+			if (entry.effect !== null) {
+				entry.effect.destroy();
+			}
+			delete shaderList[asset.name];
+			return true;
+		}
+
 		default:
 			throw new Error(
 				"unload : unknown or invalid resource type : " + asset.type,
@@ -804,6 +822,16 @@ export function unloadAll() {
 			unload({
 				name: name,
 				type: "glb",
+			});
+		}
+	}
+
+	// unload all shader resources (destroys their shared GL programs)
+	for (name in shaderList) {
+		if (shaderList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "shader",
 			});
 		}
 	}
@@ -965,6 +993,61 @@ export function getGLTF(elt) {
 	elt = "" + elt;
 	if (elt in gltfList) {
 		return gltfList[elt];
+	}
+	return null;
+}
+
+/**
+ * Return the precompiled `ShaderEffect` for the given "shader" asset —
+ * compiled once during preloading, ready to assign to a renderable or
+ * camera `shader` property.
+ *
+ * **This returns a SHARED instance**: the *same* `ShaderEffect` object on
+ * every call, owned by the loader (its `shared` flag is `true`). That means:
+ * - it is safe to assign to any number of renderables — none of their
+ *   cleanup paths will auto-destroy it, only {@link loader.unload} /
+ *   {@link loader.unloadAll} free it (and its GL program);
+ * - all of them share ONE set of uniform values — `setUniform` on it
+ *   affects every renderable using the shader.
+ *
+ * When a renderable needs its **own** uniform values, make a private,
+ * caller-owned copy with `ShaderEffect.clone()` — the clone's `shared` flag
+ * is reset to `false`, so it is auto-destroyed with the renderable it is
+ * assigned to, like any hand-constructed effect.
+ *
+ * Shader assets are WebGL-only: under the Canvas renderer the returned
+ * effect is an inert stub (same behavior as constructing a `ShaderEffect`
+ * directly). If the asset was preloaded *before* `video.init()`, it is
+ * compiled on first access instead of at load time.
+ * @memberof loader
+ * @param {string} elt - name of the shader asset (as specified in the preload list)
+ * @returns {ShaderEffect|null} the shared, precompiled effect, or `null` if not found
+ * @category Assets
+ * @example
+ * me.loader.preload([
+ *     // from a file (or data: URI)
+ *     { name: "waterRipple", type: "shader", src: "shaders/waterRipple.frag" },
+ *     // or inline GLSL via the `data` field
+ *     { name: "flash", type: "shader", data: `
+ *         uniform float uIntensity;
+ *         vec4 apply(vec4 color, vec2 uv) { return mix(color, vec4(1.0), uIntensity); }
+ *     ` },
+ * ], () => {
+ *     // one shared program — same uniform state for every user
+ *     mySprite.shader = me.loader.getShader("waterRipple");
+ *     // private copy with its own uniforms (caller-owned, shared = false)
+ *     boss.shader = me.loader.getShader("flash").clone();
+ * });
+ */
+export function getShader(elt) {
+	elt = "" + elt;
+	const entry = shaderList[elt];
+	if (typeof entry !== "undefined") {
+		if (entry.effect === null) {
+			// preloaded before video.init() — compile on first access
+			entry.effect = compileShaderAsset(entry.source);
+		}
+		return entry.effect;
 	}
 	return null;
 }
