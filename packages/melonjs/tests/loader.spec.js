@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { audio, boot, event, loader } from "../src/index.js";
+import { fontList, videoList } from "../src/loader/cache.js";
 
 describe("loader", () => {
 	let audioURI;
@@ -653,6 +654,27 @@ describe("loader", () => {
 					rejected = true;
 				});
 			expect(rejected).toBe(true);
+		});
+	});
+
+	// regression: unloadAll used to dispatch videoList entries as type "json"
+	// (so videos were never removed) and fontList entries as type "font" (an
+	// unknown type — unloadAll THREW if any fontface had ever been loaded).
+	// Runs last: unloadAll wipes every cache this spec has populated.
+	describe("unloadAll routes every cache through its own type", () => {
+		it("unloads video + fontface entries without throwing", () => {
+			// seed the caches directly — the bug lived purely in unloadAll's
+			// per-list type strings, which seeding exercises in full
+			const ff = new FontFace("unloadall-test", "url(data:font/woff2;base64,)");
+			globalThis.document.fonts.add(ff);
+			fontList["unloadall-test"] = ff;
+			videoList["unloadall-test"] = document.createElement("video");
+
+			expect(() => {
+				loader.unloadAll();
+			}).not.toThrow();
+			expect("unloadall-test" in fontList).toBe(false);
+			expect("unloadall-test" in videoList).toBe(false);
 		});
 	});
 });

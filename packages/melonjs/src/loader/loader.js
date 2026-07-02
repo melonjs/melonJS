@@ -640,7 +640,7 @@ export function unload(asset) {
 
 		case "fontface":
 			if (
-				typeof typeof globalThis.document !== "undefined" &&
+				typeof globalThis.document !== "undefined" &&
 				typeof globalThis.document.fonts !== "undefined"
 			) {
 				globalThis.document.fonts.delete(fontList[asset.name]);
@@ -779,17 +779,17 @@ export function unloadAll() {
 		if (videoList.hasOwnProperty(name)) {
 			unload({
 				name: name,
-				type: "json",
+				type: "video",
 			});
 		}
 	}
 
-	// unload all video resources
+	// unload all font resources
 	for (name in fontList) {
 		if (fontList.hasOwnProperty(name)) {
 			unload({
 				name: name,
-				type: "font",
+				type: "fontface",
 			});
 		}
 	}
