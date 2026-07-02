@@ -18,17 +18,21 @@
  * pointer swell, depth fog and animated caustics ride on top. No per-frame CPU
  * noise re-bake, no `Light2d`; `setTexture` is what makes the second sampler a
  * one-liner (see issue #1532).
+ *
+ * The fragment ships as a preloaded `"shader"` asset: compiled once at load
+ * time and retrieved as a shared, loader-owned `ShaderEffect` via
+ * `loader.getShader()` — freed with `loader.unload()` on stage teardown.
  */
 import {
 	type Application,
 	input,
+	loader,
 	NoiseTexture2d,
-	ShaderEffect,
+	type ShaderEffect,
 	Sprite,
 	Stage,
 	state,
 	video,
-	type WebGLRenderer,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
@@ -139,11 +143,9 @@ class PlayScreen extends Stage {
 			seamless: true,
 		});
 
-		// the refraction effect: one custom fragment, two textures
-		this.effect = new ShaderEffect(
-			app.renderer as WebGLRenderer,
-			REFRACTION_FRAGMENT,
-		);
+		// the refraction effect, preloaded as a "shader" asset — compiled once
+		// during loading; getShader returns the SHARED, loader-owned instance
+		this.effect = loader.getShader("refraction") as ShaderEffect;
 		// bind the noise as an extra sampler — "repeat" so the projected/scrolled
 		// floor UVs wrap seamlessly toward the horizon
 		this.effect.setTexture("uNoise", noise.getTexture(), "repeat");
@@ -228,7 +230,9 @@ class PlayScreen extends Stage {
 	onDestroyEvent() {
 		input.releasePointerEvent("pointermove", this.app.viewport);
 		input.releasePointerEvent("pointerdown", this.app.viewport);
-		this.effect.destroy();
+		// the loader owns the shared shader — unloading is what frees it
+		// (the floor sprite's own cleanup skips it, since `shared` is true)
+		loader.unload({ name: "refraction", type: "shader" });
 		this.panel?.remove();
 	}
 }
@@ -245,7 +249,17 @@ const createGame = () => {
 	});
 
 	state.set(state.PLAY, new PlayScreen());
-	state.change(state.PLAY);
+
+	// ship the refraction shader as a preloaded "shader" asset: compiled once
+	// at load time (inline GLSL via `data` here — a `.frag` URL via `src`
+	// works the same) and retrieved ready-made with loader.getShader()
+	loader.preload(
+		[{ name: "refraction", type: "shader", data: REFRACTION_FRAGMENT }],
+		() => {
+			state.change(state.PLAY);
+		},
+		false,
+	);
 };
 
 export const ExampleWaterRefraction = createExampleComponent(createGame);
