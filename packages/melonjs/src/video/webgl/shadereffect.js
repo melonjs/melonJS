@@ -103,6 +103,22 @@ export default class ShaderEffect {
 		);
 		this.enabled = true;
 
+		/**
+		 * the WebGL renderer that owns this effect — kept so destroy and
+		 * context-loss can release the texture units reserved on its cache
+		 * for extra samplers ({@link setTexture})
+		 * @ignore
+		 */
+		this._renderer = renderer;
+
+		/**
+		 * extra texture samplers bound via {@link setTexture}, keyed by the
+		 * uniform name → `{ image, repeat, tex }` (`tex` is the uploaded GL
+		 * texture, created lazily on first draw)
+		 * @ignore
+		 */
+		this._extraTextures = new Map();
+
 		// flip enabled across context loss so beginPostEffect skips us
 		on(ONCONTEXT_LOST, this._onContextLost, this);
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
@@ -116,6 +132,17 @@ export default class ShaderEffect {
 		// remember user-set state so restore doesn't override it
 		this._enabledBeforeSuspend = this.enabled;
 		this.enabled = false;
+		// GL texture handles + unit reservations are invalid after a context
+		// loss — drop the handles and release the reserved units so, on restore,
+		// _prepareTextures re-reserves + re-uploads instead of re-binding a
+		// stale (black/invalid) handle
+		for (const entry of this._extraTextures.values()) {
+			if (entry.unit !== undefined) {
+				this._renderer.cache.releaseUnit(entry.unit);
+				entry.unit = undefined;
+			}
+			entry.tex = null;
+		}
 	}
 
 	/** @private */
@@ -137,6 +164,154 @@ export default class ShaderEffect {
 	setUniform(name, value) {
 		if (this.enabled) {
 			this._shader.setUniform(name, value);
+		}
+	}
+
+	/**
+	 * Set the shader's `uTime` uniform (elapsed time, in seconds). A convenience
+	 * over `setUniform("uTime", ...)`; call it once per frame from your update
+	 * loop to animate a shader that declares `uniform float uTime` (e.g. scrolling
+	 * a static noise texture's UVs, pulsing, waving). Drive it with whatever clock
+	 * you like — real time, a paused/scaled/scrubbed one.
+	 *
+	 * No-op if the shader does not declare a `uTime` uniform (nothing to update),
+	 * or in Canvas mode. The engine does NOT call this for you — animation is
+	 * opt-in, exactly like re-baking a {@link NoiseTexture2d} with `update(dt)`.
+	 * @param {number} seconds - elapsed time in seconds
+	 * @returns {ShaderEffect} this effect for chaining
+	 * @example
+	 * // a shader that scrolls a static seamless noise texture over time
+	 * const flow = new me.ShaderEffect(renderer, `
+	 *     uniform float uTime;
+	 *     vec4 apply(vec4 color, vec2 uv) {
+	 *         return texture2D(uSampler, uv + vec2(uTime * 0.05, 0.0));
+	 *     }`);
+	 * mySprite.shader = flow;
+	 * // then in your Stage's update(dt):
+	 * flow.setTime(me.timer.getTime() / 1000);
+	 */
+	setTime(seconds) {
+		// detect `uTime` from the compiled program's ACTIVE uniforms at call
+		// time — not a substring scan of the source (which false-positives on
+		// `uTimeScale`, comments, or a `uTime` the compiler optimised out and
+		// would make setUniform throw), and not cached (so it stays correct
+		// across a context-loss recompile). `enabled` is false while suspended
+		// or destroyed, so the uniforms map is never null here.
+		if (this.enabled && typeof this._shader.uniforms.uTime !== "undefined") {
+			this._shader.setUniform("uTime", seconds);
+		}
+		return this;
+	}
+
+	/**
+	 * Bind an **extra** texture to a named `sampler2D` uniform in this shader, so
+	 * a custom effect can read a *second* texture — a noise map, mask, gradient,
+	 * flow/lookup table — besides the sprite/target it post-processes (`uSampler`).
+	 * The engine uploads, caches, and re-binds it to a reserved texture unit each
+	 * time the effect draws, and points the sampler uniform at it — no raw WebGL
+	 * texture-unit juggling.
+	 *
+	 * Declare the sampler in your fragment (`uniform sampler2D <name>;`) and pass
+	 * that name here. Any engine texture works — e.g. `noiseTexture.getTexture()`.
+	 * No-op in Canvas mode.
+	 * @param {string} name - the `sampler2D` uniform name declared in the fragment
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - the texture source
+	 * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [repeat="no-repeat"] - wrap mode; use `"repeat"` for a tiled/scrolled texture (power-of-two size under WebGL 1)
+	 * @returns {ShaderEffect} this effect for chaining
+	 * @example
+	 * // "water": distort the sprite by a static noise texture scrolled over time
+	 * const noise = new me.NoiseTexture2d({ width: 256, height: 256, seamless: true });
+	 * const water = new me.ShaderEffect(renderer, `
+	 *     uniform sampler2D uNoise;
+	 *     uniform float uTime;
+	 *     vec4 apply(vec4 color, vec2 uv) {
+	 *         vec2 flow = texture2D(uNoise, uv + uTime * 0.03).rg - 0.5;
+	 *         return texture2D(uSampler, uv + flow * 0.02);
+	 *     }`);
+	 * water.setTexture("uNoise", noise.getTexture(), "repeat");
+	 * waterSprite.shader = water;
+	 * // each frame, in your Stage's update(dt):
+	 * water.setTime(me.timer.getTime() / 1000);
+	 */
+	setTexture(name, image, repeat = "no-repeat") {
+		if (this.enabled) {
+			const existing = this._extraTextures.get(name);
+			if (existing) {
+				// release the previous GL texture + unit reservation before
+				// replacing the binding
+				if (existing.tex !== null) {
+					this._shader.gl.deleteTexture(existing.tex);
+				}
+				if (existing.unit !== undefined) {
+					this._renderer.cache.releaseUnit(existing.unit);
+				}
+			}
+			this._extraTextures.set(name, {
+				image,
+				repeat,
+				tex: null,
+				unit: undefined,
+			});
+		}
+		return this;
+	}
+
+	/**
+	 * (Re)bind this effect's extra textures ({@link setTexture}) to reserved GL
+	 * texture units and point their sampler uniforms at them. Called by the
+	 * renderer right after this effect's shader is bound — for both the
+	 * post-effect blit and the single-effect `customShader` sprite path — so the
+	 * bindings survive the batcher's rotating color-texture pool.
+	 * @param {object} batcher - the active batcher (owns the GL texture units)
+	 * @ignore
+	 */
+	_prepareTextures(batcher) {
+		if (!this.enabled || this._extraTextures.size === 0) {
+			return;
+		}
+		const cache = batcher.renderer.cache;
+		const filter = batcher.renderer._glTextureFilter();
+		// hand out units from the TOP of the batcher's range, counting down, so
+		// they never collide with `uSampler` (unit 0 on a blit) or the low,
+		// rotating color-texture units. Each unit is reserved in the cache the
+		// first time it's claimed, so `allocateTextureUnit` can't hand the same
+		// unit to a sprite's own texture in the single-effect customShader path.
+		let nextUnit = batcher.maxBatchTextures - 1;
+		for (const [name, entry] of this._extraTextures) {
+			if (entry.unit === undefined) {
+				if (nextUnit < 1) {
+					// more extra textures than the batcher can hold beside
+					// uSampler — bind what fits, warn once, skip the rest
+					if (!this._textureOverflowWarned) {
+						this._textureOverflowWarned = true;
+						console.warn(
+							`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
+						);
+					}
+					break;
+				}
+				entry.unit = nextUnit;
+				cache.reserveUnit(nextUnit);
+			}
+			nextUnit = entry.unit - 1;
+			if (entry.tex === null) {
+				batcher.createTexture2D(
+					entry.unit,
+					entry.image,
+					filter,
+					entry.repeat,
+					entry.image.width,
+					entry.image.height,
+					false, // premultipliedAlpha — keep raw texel values
+					false, // mipmap — not needed, and NPOT-unsafe under WebGL 1
+					undefined,
+					false, // flush — the following draw flushes with everything bound
+				);
+				entry.tex = batcher.boundTextures[entry.unit];
+			} else {
+				batcher.bindTexture2D(entry.tex, entry.unit, false);
+			}
+			this._shader.setUniform(name, entry.unit);
 		}
 	}
 
@@ -204,6 +379,17 @@ export default class ShaderEffect {
 
 		// _shader is undefined on Canvas-mode effects (early-returned)
 		if (this._shader) {
+			// release any extra textures bound via setTexture — both the GL
+			// handle and the cache unit reservation
+			for (const entry of this._extraTextures.values()) {
+				if (entry.unit !== undefined) {
+					this._renderer.cache.releaseUnit(entry.unit);
+				}
+				if (entry.tex !== null) {
+					this._shader.gl.deleteTexture(entry.tex);
+				}
+			}
+			this._extraTextures.clear();
 			this._shader.destroy();
 		}
 	}

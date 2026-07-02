@@ -98,9 +98,9 @@ const ExampleSpriteIlluminator = lazy(() =>
 		default: m.ExampleSpriteIlluminator,
 	})),
 );
-const ExampleWater = lazy(() =>
-	import("./examples/water/ExampleWater").then((m) => ({
-		default: m.ExampleWater,
+const ExampleWaterRefraction = lazy(() =>
+	import("./examples/waterRefraction/ExampleWaterRefraction").then((m) => ({
+		default: m.ExampleWaterRefraction,
 	})),
 );
 const ExampleLineOfSight = lazy(() =>
@@ -362,12 +362,12 @@ const examples: {
 			"Per-pixel sprite lighting from normal maps. Animated character + foreground prop tile lit by a moving cursor light, faithfully ported from CodeAndWeb's cocos2d-x demo.",
 	},
 	{
-		component: <ExampleWater />,
-		label: "Water Surface",
-		path: "water",
-		sourceDir: "water",
+		component: <ExampleWaterRefraction />,
+		label: "Water Refraction",
+		path: "water-refraction",
+		sourceDir: "waterRefraction",
 		description:
-			"Procedural ocean: CPU-noise mountains, a color-ramped NoiseTexture2d albedo and a live-animated ripple normal map lit per-pixel by a Light2d. A day↔night slider cross-fades the sky and lerps the sun→moon lighting.",
+			"GPU UV-refraction: a tiled pool floor rippled through a custom ShaderEffect that samples a second, static NoiseTexture2d bound via setTexture() — scrolled on the GPU (setTime), no per-frame CPU re-bake. Pointer swells, animated caustics, live ripple-strength slider.",
 	},
 	{
 		component: <ExampleLineOfSight />,

@@ -214,6 +214,10 @@ export default class QuadBatcher extends MaterialBatcher {
 		this.boundTextures[0] = source;
 		shader.setUniform("uSampler", 0);
 
+		// (re)bind any extra textures a ShaderEffect declared via setTexture,
+		// to their reserved high units — after the source claims unit 0
+		shader._prepareTextures?.(this);
+
 		// push a screen-aligned quad with Y-flipped UVs, transformed by
 		// the current renderer transform. `WebGLRenderer.blitEffect` (the
 		// only caller today) resets `currentTransform` to identity before
