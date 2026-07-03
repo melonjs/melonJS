@@ -135,10 +135,13 @@ class TextureCache {
 	/**
 	 * @ignore
 	 *
-	 * Hot-path note: `getUnit` / `peekUnit` / `freeTextureUnit` are
-	 * called per-texture per-draw, so the `(source, repeat)` lookup is
-	 * inlined here rather than going through a helper that allocates a
-	 * `{source, repeat}` object on every call.
+	 * Frees the single `(source, repeat)` unit matching the texture's
+	 * current `repeat` field — deliberately granular, so freeing one live
+	 * consumer (e.g. one of two patterns with different repeats over the
+	 * same image) never evicts the other's unit. When a SOURCE goes away
+	 * entirely, use {@link freeAllUnits} instead — a source can hold units
+	 * under several repeat modes (per-mesh `textureRepeat` overrides,
+	 * #1503) that this granular free would leave pinned.
 	 */
 	freeTextureUnit(texture) {
 		const source = texture.sources.get(texture.activeAtlas);
@@ -157,30 +160,63 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 *
+	 * Free every texture unit allocated for the texture's source, across
+	 * ALL repeat modes. A single source can hold several `(source, repeat)`
+	 * units — patterns with different repeats over one image, or meshes
+	 * sampling one image with per-mesh `textureRepeat` overrides (#1503) —
+	 * and the source going away invalidates all of them at once.
 	 */
-	getUnit(texture) {
+	freeAllUnits(texture) {
 		const source = texture.sources.get(texture.activeAtlas);
-		const repeat = normalizeRepeat(texture.repeat);
+		const perRepeat = this.units.get(source);
+		if (typeof perRepeat !== "undefined") {
+			for (const unit of perRepeat.values()) {
+				this.usedUnits.delete(unit);
+			}
+			this.units.delete(source);
+		}
+	}
+
+	/**
+	 * @ignore
+	 * @param {string} [repeat] - overrides the texture's own `repeat` for the
+	 * unit lookup — sampler state per use (a mesh's `textureRepeat`), so one
+	 * source can be sampled with several wrap modes without mutating the
+	 * shared atlas (#1503). Omit to use `texture.repeat`.
+	 *
+	 * Hot-path note: `getUnit` / `peekUnit` are called per-texture per-draw,
+	 * so the `(source, repeat)` lookup is inlined here rather than going
+	 * through a helper that allocates a `{source, repeat}` object per call.
+	 */
+	getUnit(texture, repeat) {
+		const source = texture.sources.get(texture.activeAtlas);
+		const wrap = normalizeRepeat(
+			typeof repeat === "string" ? repeat : texture.repeat,
+		);
 		let perRepeat = this.units.get(source);
 		if (perRepeat === undefined) {
 			perRepeat = new Map();
 			this.units.set(source, perRepeat);
 		}
-		if (!perRepeat.has(repeat)) {
-			perRepeat.set(repeat, this.allocateTextureUnit());
+		if (!perRepeat.has(wrap)) {
+			perRepeat.set(wrap, this.allocateTextureUnit());
 		}
-		return perRepeat.get(repeat);
+		return perRepeat.get(wrap);
 	}
 
 	/**
 	 * @ignore
 	 * return the texture unit for the given texture, or -1 if not allocated
+	 * @param {string} [repeat] - same per-use wrap override as {@link getUnit}
 	 */
-	peekUnit(texture) {
+	peekUnit(texture, repeat) {
 		const source = texture.sources.get(texture.activeAtlas);
-		const repeat = normalizeRepeat(texture.repeat);
+		const wrap = normalizeRepeat(
+			typeof repeat === "string" ? repeat : texture.repeat,
+		);
 		const perRepeat = this.units.get(source);
-		return perRepeat?.has(repeat) ? perRepeat.get(repeat) : -1;
+		return perRepeat?.has(wrap) ? perRepeat.get(wrap) : -1;
 	}
 
 	/**
@@ -254,9 +290,14 @@ class TextureCache {
 			// multiple atlases can coexist for one image — freeing only
 			// `cache.get(image)[0]` would leak the remaining repeats'
 			// texture units after `this.cache.delete(image)` wipes the
-			// entire multimap bucket.
+			// entire multimap bucket. Deleting an image means the SOURCE
+			// is going away, so sweep ALL repeat modes per atlas
+			// (`freeAllUnits`) — one atlas can hold several per-repeat
+			// units via per-mesh `textureRepeat` overrides (#1503), which
+			// the granular `freeTextureUnit` (keyed on the atlas's current
+			// `repeat` field) would leave pinned in `units`/`usedUnits`.
 			for (const texture of this.cache.get(image)) {
-				this.freeTextureUnit(texture);
+				this.freeAllUnits(texture);
 			}
 			this.cache.delete(image);
 		}

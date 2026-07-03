@@ -1302,7 +1302,7 @@ describe("Mesh × Camera3d world-space path", () => {
 
 	// ── textureRepeat setting (tiling UVs, e.g. glTF default wrap) ──────────
 
-	it("textureRepeat applies the wrap mode to a real texture", () => {
+	it("textureRepeat is kept per-mesh and never mutates the shared atlas (#1503)", () => {
 		const m = new Mesh(0, 0, {
 			vertices: new Float32Array(9),
 			uvs: new Float32Array(6),
@@ -1312,10 +1312,14 @@ describe("Mesh × Camera3d world-space path", () => {
 			normalize: false,
 			textureRepeat: "repeat",
 		});
-		expect(m.texture.repeat).toBe("repeat");
+		// the wrap lives on the mesh (threaded to the batcher at draw
+		// time), NOT on the per-image TextureAtlas shared with every
+		// other consumer of the same image
+		expect(m.textureRepeat).toBe("repeat");
+		expect(m.texture.repeat).toBe("no-repeat");
 	});
 
-	it("texture defaults to 'no-repeat' when textureRepeat is omitted", () => {
+	it("textureRepeat is undefined when omitted (mesh samples with the texture's own wrap)", () => {
 		const m = new Mesh(0, 0, {
 			vertices: new Float32Array(9),
 			uvs: new Float32Array(6),
@@ -1324,6 +1328,7 @@ describe("Mesh × Camera3d world-space path", () => {
 			width: 10,
 			normalize: false,
 		});
+		expect(m.textureRepeat).toBeUndefined();
 		expect(m.texture.repeat).toBe("no-repeat");
 	});
 
@@ -1339,5 +1344,8 @@ describe("Mesh × Camera3d world-space path", () => {
 			textureRepeat: "repeat",
 		});
 		expect(m.texture.repeat).not.toBe("repeat");
+		// the per-mesh override is dropped too — a REPEAT sample of the
+		// shared 1×1 white pixel would just burn a texture unit for nothing
+		expect(m.textureRepeat).toBeUndefined();
 	});
 });

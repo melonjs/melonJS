@@ -314,8 +314,19 @@ export default class MeshBatcher extends MaterialBatcher {
 		const indices = mesh.indices;
 		const vertexColors = mesh.vertexColors;
 
-		// upload and activate the texture
-		const unit = this.uploadTexture(mesh.texture);
+		// upload and activate the texture. The mesh's own `textureRepeat`
+		// (when set) is threaded through as a per-use wrap override — sampler
+		// state per mesh, never a mutation of the shared per-image atlas
+		// (#1503). The unit cache keys by `(source, repeat)`, so meshes with
+		// different wraps over one image coexist on distinct GL textures.
+		const unit = this.uploadTexture(
+			mesh.texture,
+			undefined,
+			undefined,
+			false,
+			true,
+			mesh.textureRepeat,
+		);
 		if (unit !== this.currentSamplerUnit) {
 			this.currentShader.setUniform("uSampler", unit);
 			this.currentSamplerUnit = unit;

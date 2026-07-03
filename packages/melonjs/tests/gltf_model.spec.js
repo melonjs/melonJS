@@ -143,9 +143,12 @@ describe("GLTFModel", () => {
 
 	it("forwards the glTF texture wrap mode onto each part mesh", () => {
 		const mesh = childOf(makeModel());
-		// PRIM() carries textureRepeat:"repeat" + a real texture → the atlas
-		// must end up REPEAT-wrapped (tiling UVs sample correctly vs clamping)
-		expect(mesh.texture.repeat).toBe("repeat");
+		// PRIM() carries textureRepeat:"repeat" + a real texture → the part
+		// mesh must sample REPEAT-wrapped (tiling UVs vs clamping). The wrap
+		// is per-mesh (threaded to the batcher at draw time) — the shared
+		// per-image atlas stays untouched (#1503).
+		expect(mesh.textureRepeat).toBe("repeat");
+		expect(mesh.texture.repeat).toBe("no-repeat");
 	});
 
 	it("poses to the bind/rest pose on construction (parent at origin → child at its local x)", () => {

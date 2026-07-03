@@ -357,9 +357,15 @@ export class MaterialBatcher extends Batcher {
 	 * @param {number} [h] - same as `w`.
 	 * @param {boolean} [force=false]
 	 * @param {boolean} [flush=true]
+	 * @param {string} [repeat] - per-use wrap-mode override (a mesh's
+	 *   `textureRepeat`, #1503) — sampled with this wrap without mutating
+	 *   the shared atlas's `repeat`. The texture-unit cache keys by
+	 *   `(source, repeat)`, so each wrap gets its own unit + GL texture.
+	 *   Omit to use `texture.repeat`.
 	 */
-	uploadTexture(texture, w, h, force = false, flush = true) {
-		const unit = this.renderer.cache.getUnit(texture);
+	uploadTexture(texture, w, h, force = false, flush = true, repeat) {
+		const wrap = typeof repeat === "string" ? repeat : texture.repeat;
+		const unit = this.renderer.cache.getUnit(texture, wrap);
 		const texture2D = this.boundTextures[unit];
 
 		if (typeof texture2D === "undefined" || force) {
@@ -392,7 +398,7 @@ export class MaterialBatcher extends Batcher {
 				unit,
 				source,
 				filter,
-				texture.repeat,
+				wrap,
 				texW,
 				texH,
 				texture.premultipliedAlpha,

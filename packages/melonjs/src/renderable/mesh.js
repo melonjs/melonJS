@@ -150,7 +150,7 @@ export default class Mesh extends Renderable {
 	 * @param {boolean} [settings.normalize=true] - fit the source geometry into a `[-0.5, 0.5]` unit cube before scaling, so `width`/`height` behave like a Sprite. Set `false` to keep the geometry's real-world coordinates — required when several meshes share one coordinate space (e.g. nodes of an imported glTF scene) so their relative scale and layout are preserved.
 	 * @param {number} [settings.scale] - world-space scale (pixels per source unit) for the Camera3d path; defaults to `width`. Set this when `width`/`height` describe the renderable's world bounds (frustum culling) rather than the geometry scale — see {@link Mesh#meshScale}.
 	 * @param {boolean} [settings.rightHanded=false] - treat the source as right-handed (Y-up, e.g. glTF) under the `Camera3d` world path. The default Y-up→Y-down bridge negates Y only (a reflection, which mirrors the scene left/right); `true` negates Y **and** Z (a rotation) so chirality is preserved and the result matches the authoring tool. See {@link Mesh#rightHanded}.
-	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) applied to the resolved texture. Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
+	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) this mesh samples its texture with (per-mesh — it does not modify the shared texture, so other meshes/sprites using the same image are unaffected). Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
 	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. WebGL only (ignored by the Canvas renderer).
 	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. WebGL mesh path only.
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). WebGL mesh path only.
@@ -509,28 +509,39 @@ export default class Mesh extends Renderable {
 			settings.frameheight,
 		);
 
-		// Optional texture wrap mode. Some assets author UVs outside the
-		// `[0, 1]` range and rely on the sampler repeating the texture (this is
-		// the glTF default sampler behavior); the mesh would otherwise clamp to
-		// the edge texels and look flat / untextured. Applied only to a real
-		// texture — never the shared white-pixel fallback, which is global and
-		// must stay `"no-repeat"`. One of `"repeat"` / `"repeat-x"` /
-		// `"repeat-y"` / `"no-repeat"`.
-		//
-		// NOTE: `cache.get(image)` returns a TextureAtlas shared per source
-		// image, so this sets the wrap mode IMAGE-GLOBALLY — every consumer of
-		// the same image object samples with this wrap. Harmless for glTF (each
-		// asset decodes its own image objects), but don't point two meshes that
-		// need different wrap modes at the same image. (Tracked in #1503, to be
-		// fixed with the #1410 TextureCache refactor.)
-		if (hasRealTexture && typeof settings.textureRepeat === "string") {
-			this.texture.repeat = settings.textureRepeat;
-		}
+		/**
+		 * Per-mesh texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"`
+		 * / `"no-repeat"`), or `undefined` to sample with the texture's own
+		 * wrap. Some assets author UVs outside the `[0, 1]` range and rely on
+		 * the sampler repeating the texture (this is the glTF default sampler
+		 * behavior); the mesh would otherwise clamp to the edge texels and
+		 * look flat / untextured.
+		 *
+		 * Kept on the mesh and threaded to the batcher at draw time — sampler
+		 * state per use, like a GL sampler object — so it never mutates the
+		 * per-image `TextureAtlas` shared with every other consumer of the
+		 * same image (#1503). Two meshes (or a mesh and a sprite) can point
+		 * at one image with different wrap modes; the texture cache keys GL
+		 * units by `(source, repeat)` so each wrap gets its own GL texture.
+		 * Applied only to a real texture — never the shared white-pixel
+		 * fallback, which is global and must stay `"no-repeat"`.
+		 * @type {string|undefined}
+		 */
+		this.textureRepeat =
+			hasRealTexture && typeof settings.textureRepeat === "string"
+				? settings.textureRepeat
+				: undefined;
 
 		// Optional texture magnification filter (`"nearest"` for crisp pixel-art
 		// upscaling, `"linear"` for smooth). When omitted the texture keeps the
 		// renderer's global `antiAlias` default. WebGL only — the Canvas renderer
-		// ignores it. Same image-global caveat as `textureRepeat` above (#1503).
+		// ignores it.
+		//
+		// NOTE: unlike `textureRepeat` above, this still mutates the shared
+		// per-image atlas — the texture-unit cache doesn't discriminate by
+		// filter, so a true per-mesh filter needs the unit-key change planned
+		// with the #1410 TextureCache refactor. Two consumers of one image
+		// wanting different filters is last-writer-wins until then.
 		if (
 			hasRealTexture &&
 			typeof settings.textureFilter === "string" &&
