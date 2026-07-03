@@ -228,23 +228,56 @@ describe("Mesh textureRepeat vs shared TextureAtlas (issue #1503)", () => {
 		const image = makeSolidImage();
 		const atlas = renderer.cache.get(image);
 
-		// upload the same source under two wrap modes (this is what the
-		// per-mesh override produces; pre-fix it was also reachable by
-		// mutating `atlas.repeat` between uploads)
+		// upload the same source under two wrap modes via the per-use
+		// override — what the per-mesh `textureRepeat` produces at draw
+		// time; the shared atlas is never touched
 		renderer.setBatcher("quad");
-		atlas.repeat = "repeat";
-		renderer.currentBatcher.uploadTexture(atlas);
-		atlas.repeat = "no-repeat";
-		renderer.currentBatcher.uploadTexture(atlas);
+		renderer.currentBatcher.uploadTexture(
+			atlas,
+			undefined,
+			undefined,
+			false,
+			true,
+			"repeat",
+		);
+		renderer.currentBatcher.uploadTexture(atlas); // atlas's own wrap: "no-repeat"
 		expect(renderer.cache.units.get(image).size).toBe(2);
 
 		const usedBefore = renderer.cache.usedUnits.size;
 		renderer.cache.delete(image);
 
-		// pre-fix, freeTextureUnit only released the unit matching the
-		// atlas's CURRENT repeat field — the "repeat" unit stayed pinned
-		// in units/usedUnits until a full cache reset
+		// pre-fix, delete's per-atlas freeTextureUnit only released the
+		// unit matching each atlas's CURRENT repeat field — the "repeat"
+		// unit stayed pinned in units/usedUnits until a full cache reset
 		expect(renderer.cache.units.has(image)).toBe(false);
 		expect(renderer.cache.usedUnits.size).toBe(usedBefore - 2);
+	});
+
+	it("deleteTexture2D purges the GL binding of every per-repeat unit (no stale rebinds)", (ctx) => {
+		requireWebGL(ctx);
+		const image = makeSolidImage();
+		const atlas = renderer.cache.get(image);
+		renderer.setBatcher("quad");
+		const batcher = renderer.currentBatcher;
+
+		batcher.uploadTexture(atlas, undefined, undefined, false, true, "repeat");
+		batcher.uploadTexture(atlas); // atlas's own wrap: "no-repeat"
+		const units = [...renderer.cache.units.get(image).values()];
+		expect(units.length).toBe(2);
+		for (const unit of units) {
+			expect(batcher.getTexture2D(unit)).toBeDefined();
+		}
+
+		batcher.deleteTexture2D(atlas);
+
+		// the cache freed the units AND the batcher dropped both GL
+		// bindings. A stale `boundTextures[unit]` entry on a freed unit
+		// would make the next texture allocated on that unit look
+		// "already uploaded" and silently bind the wrong texture (the
+		// hazard flagged in the #1537 review).
+		expect(renderer.cache.units.has(image)).toBe(false);
+		for (const unit of units) {
+			expect(batcher.getTexture2D(unit)).toBeUndefined();
+		}
 	});
 });

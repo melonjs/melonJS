@@ -207,6 +207,21 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * return every texture unit allocated for the given texture's source,
+	 * across ALL repeat modes — the unload-time counterpart of the per-use
+	 * `getUnit(texture, repeat)` override (#1503): a single source can hold
+	 * one unit per wrap mode it was sampled with, and per-repeat `peekUnit`
+	 * lookups would only ever find the one matching the texture's current
+	 * `repeat` field. Not a hot path (allocates the result array).
+	 */
+	peekAllUnits(texture) {
+		const source = texture.sources.get(texture.activeAtlas);
+		const perRepeat = this.units.get(source);
+		return typeof perRepeat !== "undefined" ? [...perRepeat.values()] : [];
+	}
+
+	/**
+	 * @ignore
 	 * return the texture unit for the given texture, or -1 if not allocated
 	 * @param {string} [repeat] - same per-use wrap override as {@link getUnit}
 	 */
