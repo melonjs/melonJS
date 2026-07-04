@@ -14,6 +14,36 @@ const _fwd = new Vector3d();
 // module singleton, only ever copied/crossed-from, never mutated in place.
 const WORLD_UP = new Vector3d(0, -1, 0);
 
+// named shorthands for common origin points, same 0..1 (x: left→right,
+// y: top→bottom) convention as the 2D Renderable anchorPoint
+const ORIGIN_PRESETS = {
+	center: { x: 0.5, y: 0.5 },
+	top: { x: 0.5, y: 0 },
+	bottom: { x: 0.5, y: 1 },
+	left: { x: 0, y: 0.5 },
+	right: { x: 1, y: 0.5 },
+	"top-left": { x: 0, y: 0 },
+	"top-right": { x: 1, y: 0 },
+	"bottom-left": { x: 0, y: 1 },
+	"bottom-right": { x: 1, y: 1 },
+};
+
+// resolve settings.originPoint (preset name or {x,y}) to a normalized pair
+function resolveOrigin(settings) {
+	const o = settings.originPoint;
+	if (typeof o === "string") {
+		const preset = ORIGIN_PRESETS[o];
+		if (!preset) {
+			throw new Error(`Sprite3d: unknown originPoint preset '${o}'`);
+		}
+		return preset;
+	}
+	if (o && typeof o.x === "number" && typeof o.y === "number") {
+		return o;
+	}
+	return ORIGIN_PRESETS.center;
+}
+
 // Resolve just the source image dimensions for sizing the quad, without
 // touching the renderer (the texture atlas itself is resolved by the Mesh
 // base class). Runs before `super()`, so it must not touch `this`.
@@ -91,6 +121,15 @@ function imageSize(settings) {
  * coin.setCurrentAnimation("spin");
  * coin.flipX();             // face the other way (mirrors the sprite)
  * app.world.addChild(coin);
+ *
+ * // a character anchored at the feet, so `pos` sits on the ground plane
+ * // instead of at the sprite's geometric center
+ * const hero = new Sprite3d(0, 0, {
+ *     image: "hero",
+ *     width: 48, height: 64,
+ *     billboard: "cylindrical",
+ *     originPoint: "bottom", // == { x: 0.5, y: 1 }
+ * });
  */
 export default class Sprite3d extends Mesh {
 	/**
@@ -106,6 +145,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {object[]} [settings.anims] - predefined animations (same shape as {@link Sprite})
 	 * @param {number} [settings.z=0] - 3D depth (world z); also settable later via `.depth`
 	 * @param {boolean|string} [settings.billboard=false] - billboard mode: `false` (fixed orientation), `true` / `"cylindrical"` (faces the camera but stays upright — the 2.5D default), or `"spherical"` (faces the camera on all axes). Only applies under a `Camera3d`.
+	 * @param {string|{x:number,y:number}} [settings.originPoint="center"] - anchor of the quad relative to `pos`, normalized 0..1 (`x`: 0 left→1 right, `y`: 0 top→1 bottom, same convention as the 2D Renderable anchorPoint). Also accepts the shorthands `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. Baked as a constant local offset — composes with billboarding, flips, and trimmed/rotated atlas frames. Does not affect the frustum-cull bounds.
 	 * @param {boolean} [settings.flipX=false] - mirror the sprite horizontally (see {@link Sprite3d#flipX})
 	 * @param {boolean} [settings.flipY=false] - mirror the sprite vertically (see {@link Sprite3d#flipY})
 	 * @param {boolean} [settings.lit=false] - shade through the lit mesh batcher (see {@link Mesh})
@@ -132,22 +172,31 @@ export default class Sprite3d extends Mesh {
 		}
 		const hw = w / 2;
 		const hh = h / 2;
+		// local-space offset shifting the quad so `originPoint` — not the
+		// geometric center — lands at `pos`. X follows the image convention
+		// directly (0=left…1=right). Y is inverted: local +Y is the TOP of the
+		// art (see the UV/trim mapping in `_applyFrame` and `WORLD_UP` below),
+		// while `originPoint.y` follows the image convention of 0=top…1=bottom.
+		const origin = resolveOrigin(settings);
+		const originOffsetX = (0.5 - origin.x) * w;
+		const originOffsetY = (origin.y - 0.5) * h;
 		// a unit quad with the real pixel size baked in, in the XY plane, facing
-		// +Z. `normalize: false` + `scale: 1` keeps these coordinates as-is so the
-		// fixed-orientation (non-billboard) case renders at the right size, and
-		// the billboard path reuses the local (±hw, ±hh) offsets directly.
+		// +Z, shifted by the origin offset. `normalize: false` + `scale: 1` keeps
+		// these coordinates as-is so the fixed-orientation (non-billboard) case
+		// renders at the right size, and the billboard path reuses the local
+		// (±hw + offset, ±hh + offset) offsets directly.
 		const vertices = new Float32Array([
-			-hw,
-			-hh,
+			-hw + originOffsetX,
+			-hh + originOffsetY,
 			0,
-			hw,
-			-hh,
+			hw + originOffsetX,
+			-hh + originOffsetY,
 			0,
-			hw,
-			hh,
+			hw + originOffsetX,
+			hh + originOffsetY,
 			0,
-			-hw,
-			hh,
+			-hw + originOffsetX,
+			hh + originOffsetY,
 			0,
 		]);
 		// V flipped (1→0 top to bottom) so the texture renders upright under the
@@ -168,7 +217,11 @@ export default class Sprite3d extends Mesh {
 			framewidth: settings.framewidth,
 			frameheight: settings.frameheight,
 			// width/height drive the frustum-cull bounds; use the larger side so
-			// the cull sphere always encloses the quad whatever way it faces
+			// the cull sphere always encloses the quad whatever way it faces.
+			// NOTE: with a non-center originPoint the cull sphere is centered on
+			// `pos`, not on the shifted quad — an extreme anchor (e.g.
+			// "top-left") can under-size the bounds on one side. Left as a known
+			// limitation; revisit if it causes visible pop-in.
 			width: Math.max(w, h),
 			height: Math.max(w, h),
 			scale: 1,
@@ -197,6 +250,13 @@ export default class Sprite3d extends Mesh {
 		this._halfW = hw;
 		/** @ignore */
 		this._halfH = hh;
+		// local-space offset pinning `originPoint` to `pos` (0,0 = centered,
+		// the default). Applied in `_applyFrame` after the flip, so mirroring
+		// happens around the art's own center while the anchor stays fixed.
+		/** @ignore */
+		this._originOffsetX = originOffsetX;
+		/** @ignore */
+		this._originOffsetY = originOffsetY;
 		// reference logical (untrimmed) frame size the world quad maps to,
 		// captured from the first applied frame so trimmed frames can be scaled
 		// into the same world footprint (0 = not captured yet)
@@ -528,8 +588,9 @@ export default class Sprite3d extends Mesh {
 	 * {@link Sprite}'s sub-texture / size / anchor swap). Rewrites both the quad's
 	 * UVs (the atlas sub-rect, with a 90° corner permutation for packer-rotated
 	 * regions) and its local vertices (the trimmed art's sub-rectangle within the
-	 * logical frame, scaled into the quad's world footprint), so trimmed and
-	 * rotated `TextureAtlas` regions render at full parity with the 2D `Sprite`.
+	 * logical frame, scaled into the quad's world footprint, then shifted by the
+	 * origin offset), so trimmed and rotated `TextureAtlas` regions render at
+	 * full parity with the 2D `Sprite`.
 	 * @param {object} region - the texture region object
 	 * @ignore
 	 */
@@ -617,6 +678,13 @@ export default class Sprite3d extends Mesh {
 			yt = -yt;
 			yb = -yb;
 		}
+		// pin `originPoint` to `pos` (added last, after the flip, so mirroring
+		// still happens about the art's own center rather than the shifted
+		// anchor)
+		xl += this._originOffsetX;
+		xr += this._originOffsetX;
+		yt += this._originOffsetY;
+		yb += this._originOffsetY;
 		const v = this.originalVertices;
 		// c0 BL, c1 BR, c2 TR, c3 TL (z stays 0)
 		v[0] = xl;
@@ -719,7 +787,8 @@ export default class Sprite3d extends Mesh {
 		}
 
 		// emit the 4 corners as center ± right·localX ± up·localY (the local
-		// offsets are the baked ±hw / ±hh quad coordinates)
+		// offsets are the baked ±hw / ±hh quad coordinates, already shifted by
+		// the origin offset)
 		const out = this.vertices;
 		const src = this.originalVertices;
 		const rx = _right.x;
