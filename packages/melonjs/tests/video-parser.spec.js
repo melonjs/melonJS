@@ -18,6 +18,15 @@ import { preloadVideo } from "../src/loader/parsers/video.js";
  *   (autoplay omitted) still waited on canplay → preload hung forever on
  *   those browsers and the game never started.
  */
+
+// self-contained inline source — no fixture file, no 404 fetch from the
+// browser runner. Enough for the parser's MIME sniff + canPlayType gate
+// (isDataUrl requires a non-empty base64 payload — this one is the WebM/EBML
+// magic bytes); the payload never needs to fully decode because these tests
+// assert WIRING, not playback — a no-op onerror swallows any media error.
+const WEBM_DATA_URL = "data:video/webm;base64,GkXf";
+const noop = () => {};
+
 describe("video parser wiring", () => {
 	afterAll(() => {
 		for (const name of Object.keys(videoList)) {
@@ -30,9 +39,9 @@ describe("video parser wiring", () => {
 
 	it("does not set a crossorigin attribute when crossOrigin is not configured", () => {
 		preloadVideo(
-			{ name: "vp-default", type: "video", src: "media/clip.webm" },
+			{ name: "vp-default", type: "video", src: WEBM_DATA_URL },
 			undefined,
-			undefined,
+			noop,
 			{},
 		);
 		// the string "undefined" would map to Anonymous (forced CORS)
@@ -41,18 +50,18 @@ describe("video parser wiring", () => {
 
 	it("honors an explicitly configured crossOrigin, including the empty string", () => {
 		preloadVideo(
-			{ name: "vp-cors", type: "video", src: "media/clip.webm" },
+			{ name: "vp-cors", type: "video", src: WEBM_DATA_URL },
 			undefined,
-			undefined,
+			noop,
 			{ crossOrigin: "anonymous" },
 		);
 		expect(videoList["vp-cors"].getAttribute("crossorigin")).toBe("anonymous");
 
 		// "" is a VALID value (maps to anonymous) and must not be dropped
 		preloadVideo(
-			{ name: "vp-cors-empty", type: "video", src: "media/clip.webm" },
+			{ name: "vp-cors-empty", type: "video", src: WEBM_DATA_URL },
 			undefined,
-			undefined,
+			noop,
 			{ crossOrigin: "" },
 		);
 		expect(videoList["vp-cors-empty"].getAttribute("crossorigin")).toBe("");
@@ -60,9 +69,9 @@ describe("video parser wiring", () => {
 
 	it("completes on loadedmetadata when autoplay is omitted (Safari never fires canplay without autoplay)", () => {
 		preloadVideo(
-			{ name: "vp-noauto", type: "video", src: "media/clip.webm" },
+			{ name: "vp-noauto", type: "video", src: WEBM_DATA_URL },
 			() => {},
-			undefined,
+			noop,
 			{},
 		);
 		const el = videoList["vp-noauto"];
@@ -75,11 +84,11 @@ describe("video parser wiring", () => {
 			{
 				name: "vp-auto",
 				type: "video",
-				src: "media/clip.webm",
+				src: WEBM_DATA_URL,
 				autoplay: true,
 			},
 			() => {},
-			undefined,
+			noop,
 			{},
 		);
 		const el = videoList["vp-auto"];
