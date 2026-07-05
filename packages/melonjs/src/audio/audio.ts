@@ -31,6 +31,7 @@ import { play } from "./playback.ts";
 export {
 	getAudioContext,
 	getMasterGain,
+	setStopOnAudioError,
 	stopOnAudioError,
 } from "./backend.ts";
 export {
@@ -274,6 +275,12 @@ export function unload(sound_name: string): boolean {
 	const sound = state.tracks[sound_name];
 	if (!sound) {
 		return false;
+	}
+
+	// forget the current-track pointer if it referenced this sound, so
+	// getCurrentTrack() / pauseTrack() / resumeTrack() don't act on a ghost
+	if (state.currentTrackId === sound_name) {
+		state.currentTrackId = null;
 	}
 
 	// destroy the Howl object

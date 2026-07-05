@@ -17,10 +17,29 @@ import { Howl, Howler } from "howler";
  *
  * When `true`, melonJS throws an exception and aborts loading.
  * When `false`, melonJS disables sound and logs a warning to the console.
+ *
+ * Read-only through the `me.audio` namespace (module namespace properties
+ * can't be assigned) — change it with {@link setStopOnAudioError}.
  * @default true
+ * @see setStopOnAudioError
  */
-// eslint-disable-next-line prefer-const
 export let stopOnAudioError: boolean = true;
+
+/**
+ * Set the {@link stopOnAudioError} flag — whether an audio clip that still
+ * fails after its retries throws (aborting loading) or just disables sound
+ * with a console warning. This setter is the supported way to change the
+ * flag: assigning `me.audio.stopOnAudioError = false` directly throws a
+ * TypeError, because module namespace properties are read-only.
+ * @param value - `true` to throw on a failed load, `false` to disable sound instead
+ * @example
+ * // don't abort the whole game when audio fails to load
+ * me.audio.setStopOnAudioError(false);
+ * @category Audio
+ */
+export function setStopOnAudioError(value: boolean): void {
+	stopOnAudioError = value;
+}
 
 /**
  * Cross-module mutable state. A single object so multiple consumers
@@ -33,14 +52,16 @@ export let stopOnAudioError: boolean = true;
  *   even though the type signature wouldn't normally admit it.
  * - `currentTrackId` — the name of the currently-playing track managed
  *   by the `playTrack` / `stopTrack` helpers.
- * - `retryCounter` — retry counter for `soundLoadError`'s back-off.
+ * - `retryCounters` — per-sound retry counters for `soundLoadError`'s
+ *   back-off, keyed by sound name (a single shared counter let parallel
+ *   loads steal each other's retry budget).
  * - `audioExts` — the active list of audio formats set by `init`.
  * @ignore
  */
 export const state = {
 	tracks: {} as Record<string, Howl | undefined>,
 	currentTrackId: null as string | null,
-	retryCounter: 0,
+	retryCounters: {} as Record<string, number>,
 	audioExts: [] as string[],
 };
 
@@ -70,7 +91,12 @@ export const soundLoadError = function (
 	onerror_cb?: () => void,
 	stopOnError: boolean = true,
 ): void {
-	if (state.retryCounter++ >= 3) {
+	// per-sound retry budget — a single shared counter let parallel loads
+	// steal each other's retries: three failures of one flaky file pushed
+	// ANOTHER sound's first failure straight over the give-up threshold
+	const retries = state.retryCounters[sound_name] ?? 0;
+	if (retries >= 3) {
+		delete state.retryCounters[sound_name];
 		const errmsg = `melonJS: failed loading ${sound_name}`;
 		if (!stopOnError) {
 			// disable audio
@@ -82,6 +108,7 @@ export const soundLoadError = function (
 			throw new Error(errmsg);
 		}
 	} else {
+		state.retryCounters[sound_name] = retries + 1;
 		state.tracks[sound_name]?.load();
 	}
 };

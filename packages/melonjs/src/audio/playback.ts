@@ -43,6 +43,13 @@ export function load(
 	onerrorcb?: () => void,
 	settings: LoadSettings = {},
 ): number {
+	// already loaded? Return 0 ("cached", like every other asset parser) —
+	// re-preloading a manifest (e.g. re-entering a stage that preloads) used
+	// to silently replace the Howl and leak the old instance's decoded
+	// buffers / HTML5 nodes. Unload first to genuinely reload a clip.
+	if (typeof state.tracks[sound.name] !== "undefined") {
+		return 0;
+	}
 	const urls: string[] = [];
 	if (state.audioExts.length === 0) {
 		throw new Error(
@@ -71,7 +78,7 @@ export function load(
 			soundLoadError.call(this, sound.name, onerrorcb, stopOnAudioError);
 		},
 		onload() {
-			state.retryCounter = 0;
+			delete state.retryCounters[sound.name];
 			if (typeof onloadcb === "function") {
 				onloadcb();
 			}
@@ -143,12 +150,19 @@ export function fade(
 	getSoundOrThrow(sound_name).fade(from, to, duration, id);
 }
 
+/** @inheritDoc */
+export function seek(sound_name: string): number;
+/** @inheritDoc */
+export function seek(sound_name: string, seek: number, id?: number): void;
 /**
  * Get or set the playback position of a sound.
  * @param sound_name - Audio clip name (case-sensitive).
- * @param args - Optional seek position in seconds, optionally followed
- *   by the sound instance ID.
- * @returns The current seek position when no extra arguments are given.
+ * @param pos - Seek position in seconds. Omit to read.
+ * @param id - Sound instance ID. When omitted, all sounds in the group
+ *   are affected.
+ * @returns The current seek position when called as a getter; nothing
+ *   when called as a setter (the Howl object Howler returns from the
+ *   setter form is an internal, not part of this API).
  * @example
  * // read the current position of the background music
  * let current_pos = me.audio.seek("dst-gameforest");
@@ -156,16 +170,38 @@ export function fade(
  * me.audio.seek("dst-gameforest", 0);
  * @category Audio
  */
-export function seek(sound_name: string, ...args: number[]): number {
-	return getSoundOrThrow(sound_name).seek(...args);
+export function seek(
+	sound_name: string,
+	pos?: number,
+	id?: number,
+): number | void {
+	const sound = getSoundOrThrow(sound_name);
+	if (pos === undefined) {
+		return sound.seek();
+	}
+	// forward the exact arity — Howler's core methods dispatch on argument
+	// count, so an explicit trailing undefined would be parsed as an id
+	if (id === undefined) {
+		sound.seek(pos);
+	} else {
+		sound.seek(pos, id);
+	}
 }
 
+/** @inheritDoc */
+export function rate(sound_name: string): number;
+/** @inheritDoc */
+export function rate(sound_name: string, rate: number, id?: number): void;
 /**
  * Get or set the playback rate of a sound.
  * @param sound_name - Audio clip name (case-sensitive).
- * @param args - Optional playback rate (`0.5..4.0`, where `1.0` is
- *   normal speed), optionally followed by the sound instance ID.
- * @returns The current playback rate when no extra arguments are given.
+ * @param rate - Playback rate (`0.5..4.0`, where `1.0` is normal
+ *   speed). Omit to read.
+ * @param id - Sound instance ID. When omitted, all sounds in the group
+ *   are affected.
+ * @returns The current playback rate when called as a getter; nothing
+ *   when called as a setter (the Howl object Howler returns from the
+ *   setter form is an internal, not part of this API).
  * @example
  * // read the current playback rate
  * let rate = me.audio.rate("dst-gameforest");
@@ -173,8 +209,22 @@ export function seek(sound_name: string, ...args: number[]): number {
  * me.audio.rate("dst-gameforest", 2.0);
  * @category Audio
  */
-export function rate(sound_name: string, ...args: number[]): number {
-	return getSoundOrThrow(sound_name).rate(...args);
+export function rate(
+	sound_name: string,
+	rate?: number,
+	id?: number,
+): number | void {
+	const sound = getSoundOrThrow(sound_name);
+	if (rate === undefined) {
+		return sound.rate();
+	}
+	// forward the exact arity — Howler's core methods dispatch on argument
+	// count, so an explicit trailing undefined would be parsed as an id
+	if (id === undefined) {
+		sound.rate(rate);
+	} else {
+		sound.rate(rate, id);
+	}
 }
 
 /** @inheritDoc */
@@ -205,7 +255,9 @@ export function stereo(
 ): number | void {
 	const sound = getSoundOrThrow(sound_name);
 	if (pan === undefined) {
-		return sound.stereo();
+		// Howler keeps the group pan at null until it's first set — the
+		// documented return type is a number, so map that to centered
+		return sound.stereo() ?? 0;
 	}
 	sound.stereo(pan, id);
 }
@@ -245,7 +297,9 @@ export function position(
 ): [number, number, number] | void {
 	const sound = getSoundOrThrow(sound_name);
 	if (x === undefined) {
-		return sound.pos();
+		// Howler keeps the group position at null until it's first set — the
+		// documented return type is a tuple, so map that to the origin
+		return sound.pos() ?? [0, 0, 0];
 	}
 	sound.pos(x, y, z, id);
 }
@@ -383,5 +437,31 @@ export function pause(sound_name: string, id?: number): void {
  * @category Audio
  */
 export function resume(sound_name: string, id?: number): void {
-	getSoundOrThrow(sound_name).play(id);
+	const sound = getSoundOrThrow(sound_name);
+	if (typeof id !== "undefined") {
+		sound.play(id);
+		return;
+	}
+	// "all sounds in the group are resumed" (see JSDoc above): Howler's bare
+	// play() only auto-resumes when EXACTLY ONE instance is paused — with two
+	// or more (e.g. pause() without id pauses the whole group) it spawns a
+	// brand-new instance from 0 and leaves the paused ones stuck. Howler has
+	// no public instance list, so read _sounds directly (same justified
+	// private access as the Howler `_muted` read in audio.ts).
+	const sounds = (
+		sound as unknown as {
+			_sounds: { _paused: boolean; _ended: boolean; _id: number }[];
+		}
+	)._sounds;
+	const paused = sounds.filter((s) => {
+		return s._paused && !s._ended;
+	});
+	if (paused.length === 0) {
+		// nothing to resume — keep the legacy start-playback behavior
+		sound.play();
+		return;
+	}
+	for (const s of paused) {
+		sound.play(s._id);
+	}
 }
