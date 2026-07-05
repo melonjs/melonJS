@@ -724,10 +724,26 @@ describe("Path2D", () => {
 			expect(path.points[path.subPaths[0]].y).toBe(200);
 		});
 
-		it("a far disjoint arc() mid-path records a pen-up boundary", () => {
+		it("a far arc() mid-path CONNECTS from the current point (native Path2D semantics)", () => {
+			// unlike rect() above, native arc() never starts a sub-path on its
+			// own — it always joins from the current point with a straight
+			// line. (This originally asserted the pre-fix auto-detach, which
+			// was the accident of an unconditional moveTo inside arc().)
 			path.moveTo(0, 0);
 			path.lineTo(50, 0);
 			path.arc(300, 300, 20, 0, Math.PI);
+			expect(path.subPaths.length).toBe(0);
+		});
+
+		it("the canonical circle-hole idiom — explicit moveTo before arc() — records the boundary", () => {
+			// outer square
+			path.moveTo(0, 0);
+			path.lineTo(100, 0);
+			path.lineTo(100, 100);
+			path.lineTo(0, 100);
+			// pen-up to the arc start, then the hole circle
+			path.moveTo(70, 50);
+			path.arc(50, 50, 20, 0, Math.PI * 2);
 			expect(path.subPaths.length).toBe(1);
 		});
 
