@@ -93,15 +93,18 @@ export class Matrix2d {
 			this.val[7] = values[7]; // h - m12
 			this.val[8] = values[8]; // i - m22
 		} else if (values.length === 6) {
-			this.val[0] = values[0]; // a
-			this.val[1] = values[2]; // c
-			this.val[2] = values[4]; // e
-			this.val[3] = values[1]; // b
-			this.val[4] = values[3]; // d
-			this.val[5] = values[5]; // f
-			this.val[6] = 0; // g
-			this.val[7] = 0; // h
-			this.val[8] = 1; // i
+			// canvas-style (a, b, c, d, e, f): (a, b) is the first column
+			// (m00/m10), (c, d) the second (m01/m11), (e, f) the translation
+			// (m02/m12 — the tx/ty getters read val[6]/val[7])
+			this.val[0] = values[0]; // a - m00
+			this.val[1] = values[1]; // b - m10
+			this.val[2] = 0; // m20
+			this.val[3] = values[2]; // c - m01
+			this.val[4] = values[3]; // d - m11
+			this.val[5] = 0; // m21
+			this.val[6] = values[4]; // e - m02 (tx)
+			this.val[7] = values[5]; // f - m12 (ty)
+			this.val[8] = 1; // m22
 		}
 
 		return this;
