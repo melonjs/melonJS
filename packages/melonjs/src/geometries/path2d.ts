@@ -60,6 +60,16 @@ class Path2D {
 	subPaths: number[] = [];
 
 	/**
+	 * whether the pen has been explicitly placed (via {@link moveTo}) since
+	 * the last {@link beginPath} — distinguishes "virgin path" from "pen
+	 * parked at (0, 0)" so {@link arc}/{@link ellipse}/{@link arcTo} know
+	 * whether to start fresh or connect from the current point (the native
+	 * Path2D behavior).
+	 * @ignore
+	 */
+	private penMoved = false;
+
+	/**
 	 * space between interpolated points for quadratic and bezier curve approx. in pixels.
 	 * @default 2
 	 */
@@ -158,8 +168,9 @@ class Path2D {
 							ry,
 							xAxisRotation,
 						);
-						// generate arc points inline using lineTo (not ellipse/arc
-						// which call moveTo and break path continuity)
+						// generate arc points inline using lineTo — the SVG
+						// endpoint parameterization (large-arc/sweep flags)
+						// needs custom math that ellipse() doesn't expose
 						{
 							let { startAngle, endAngle } = p;
 							const {
@@ -285,6 +296,7 @@ class Path2D {
 		this.points.length = 0;
 		this.subPaths.length = 0;
 		this.startPoint.set(0, 0);
+		this.penMoved = false;
 	}
 
 	/**
@@ -383,7 +395,25 @@ class Path2D {
 	 */
 	moveTo(x: number, y: number) {
 		this.startPoint.set(x, y);
+		this.penMoved = true;
 		this.isDirty = true;
+	}
+
+	/**
+	 * Start the outline of an arc/ellipse at (x, y): per the native Path2D
+	 * spec, when the path already has content the arc is CONNECTED to the
+	 * current point with a straight line — only a virgin path (no points, no
+	 * explicit moveTo) starts fresh. An unconditional moveTo here would
+	 * silently start a new sub-path, which fill() treats as a HOLE cut out
+	 * of the shape.
+	 * @ignore
+	 */
+	private connectTo(x: number, y: number) {
+		if (this.points.length === 0 && !this.penMoved) {
+			this.moveTo(x, y);
+		} else {
+			this.lineTo(x, y);
+		}
 	}
 
 	/**
@@ -490,7 +520,7 @@ class Path2D {
 		const dangle = diff / nr_of_interpolation_points;
 		const angleStep = dangle * direction;
 
-		this.moveTo(
+		this.connectTo(
 			x + radius * Math.cos(startAngle),
 			y + radius * Math.sin(startAngle),
 		);
@@ -556,7 +586,7 @@ class Path2D {
 		const tangent2_pointx = x1 + b0 * adj_l;
 		const tangent2_pointy = y1 + b1 * adj_l;
 
-		this.moveTo(tangent1_pointx, tangent1_pointy);
+		this.connectTo(tangent1_pointx, tangent1_pointy);
 
 		let bisec0 = (a0 + b0) / 2.0;
 		let bisec1 = (a1 + b1) / 2.0;
@@ -652,7 +682,7 @@ class Path2D {
 
 		const sx = radiusX * Math.cos(startAngle);
 		const sy = radiusY * Math.sin(startAngle);
-		this.moveTo(
+		this.connectTo(
 			x + sx * cos_rotation - sy * sin_rotation,
 			y + sx * sin_rotation + sy * cos_rotation,
 		);
