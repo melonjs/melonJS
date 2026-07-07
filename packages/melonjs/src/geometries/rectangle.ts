@@ -54,8 +54,7 @@ export class Rect extends Polygon {
 	 * right coordinate of the Rectangle
 	 */
 	get right() {
-		const w = this.width;
-		return this.left + w || w;
+		return this.left + this.width;
 	}
 
 	/**
@@ -69,8 +68,7 @@ export class Rect extends Polygon {
 	 * bottom coordinate of the Rectangle
 	 */
 	get bottom() {
-		const h = this.height;
-		return this.top + h || h;
+		return this.top + this.height;
 	}
 
 	/**
@@ -290,7 +288,16 @@ export class Rect extends Polygon {
 	 * @returns a new Polygon that represents this rectangle.
 	 */
 	toPolygon() {
-		return polygonPool.get(this.left, this.top, this.points as PolygonVertices);
+		// clone the vertices: Polygon.setVertices stores a Vector2d[] by
+		// reference, and handing out this rect's live points would let any
+		// transform on the "new" polygon silently corrupt the rectangle
+		return polygonPool.get(
+			this.left,
+			this.top,
+			this.points.map((p) => {
+				return p.clone();
+			}) as PolygonVertices,
+		);
 	}
 }
 

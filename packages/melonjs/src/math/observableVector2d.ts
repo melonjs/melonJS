@@ -440,14 +440,17 @@ export class ObservableVector2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	moveTowards(target: Vector2d | ObservableVector2d, step: number) {
-		const angle = Math.atan2(target.y - this.y, target.x - this.x);
-
 		const distance = this.distance(target);
 
-		if (distance === 0 || (step >= 0 && distance <= step * step)) {
-			return target;
+		// within one step (and not fleeing): land exactly on the target —
+		// and always mutate/return `this` (via set(), so observers fire),
+		// never the caller's target
+		if (distance === 0 || (step >= 0 && distance <= step)) {
+			this.set(target.x, target.y);
+			return this;
 		}
 
+		const angle = Math.atan2(target.y - this.y, target.x - this.x);
 		this.set(this.x + Math.cos(angle) * step, this.y + Math.sin(angle) * step);
 
 		return this;

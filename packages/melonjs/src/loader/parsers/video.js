@@ -60,7 +60,14 @@ export function preloadVideo(data, onload, onerror, settings) {
 	videoElement.setAttribute("playsinline", "true");
 	videoElement.setAttribute("disablePictureInPicture", "true");
 	videoElement.setAttribute("controls", "false");
-	videoElement.setAttribute("crossorigin", settings.crossOrigin);
+	// only stamp crossorigin when actually configured: per the HTML spec a
+	// MISSING attribute means no CORS, but an INVALID value (e.g. the string
+	// "undefined") maps to Anonymous — which force-enables CORS and breaks
+	// cross-origin sources served without CORS headers. Note "" is a valid
+	// value (anonymous), so guard on type, not truthiness.
+	if (typeof settings.crossOrigin === "string") {
+		videoElement.setAttribute("crossorigin", settings.crossOrigin);
+	}
 
 	if (data.autoplay === true) {
 		videoElement.setAttribute("autoplay", "true");
@@ -70,8 +77,14 @@ export function preloadVideo(data, onload, onerror, settings) {
 	}
 
 	if (typeof onload === "function") {
-		// some mobile browser (e.g. safari) won't emit the canplay event if autoplay is disabled
-		if (data.stream === true || data.autoplay === false) {
+		// some mobile browsers (e.g. safari) won't emit the canplay event
+		// unless the video actually plays — only wait for it when autoplay
+		// was explicitly requested; everywhere else (including the common
+		// case of autoplay simply omitted) loadedmetadata is the reliable
+		// "preloaded" signal, otherwise preload hangs forever on
+		// autoplay-restricted browsers. Streaming videos always use
+		// loadedmetadata — their preload="metadata" never buffers to canplay.
+		if (data.stream === true || data.autoplay !== true) {
 			videoElement.onloadedmetadata = () => {
 				if (typeof onload === "function") {
 					onload();

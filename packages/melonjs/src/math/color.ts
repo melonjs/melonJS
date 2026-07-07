@@ -43,7 +43,7 @@ const hex8Rx =
 const CSS_COLORS = [
 	// CSS1
 	["black", [0, 0, 0]],
-	["silver", [192, 192, 129]],
+	["silver", [192, 192, 192]],
 	["gray", [128, 128, 128]],
 	["white", [255, 255, 255]],
 	["maroon", [128, 0, 0]],
@@ -63,7 +63,7 @@ const CSS_COLORS = [
 	["orange", [255, 165, 0]],
 
 	// CSS3
-	["aliceblue", [240, 248, 245]],
+	["aliceblue", [240, 248, 255]],
 	["antiquewhite", [250, 235, 215]],
 	["aquamarine", [127, 255, 212]],
 	["azure", [240, 255, 255]],
@@ -72,7 +72,7 @@ const CSS_COLORS = [
 	["blanchedalmond", [255, 235, 205]],
 	["blueviolet", [138, 43, 226]],
 	["brown", [165, 42, 42]],
-	["burlywood", [222, 184, 35]],
+	["burlywood", [222, 184, 135]],
 	["cadetblue", [95, 158, 160]],
 	["chartreuse", [127, 255, 0]],
 	["chocolate", [210, 105, 30]],
@@ -80,12 +80,13 @@ const CSS_COLORS = [
 	["cornflowerblue", [100, 149, 237]],
 	["cornsilk", [255, 248, 220]],
 	["crimson", [220, 20, 60]],
+	["cyan", [0, 255, 255]],
 	["darkblue", [0, 0, 139]],
 	["darkcyan", [0, 139, 139]],
 	["darkgoldenrod", [184, 134, 11]],
-	["darkgray[*]", [169, 169, 169]],
+	["darkgray", [169, 169, 169]],
 	["darkgreen", [0, 100, 0]],
-	["darkgrey[*]", [169, 169, 169]],
+	["darkgrey", [169, 169, 169]],
 	["darkkhaki", [189, 183, 107]],
 	["darkmagenta", [139, 0, 139]],
 	["darkolivegreen", [85, 107, 47]],
@@ -140,6 +141,7 @@ const CSS_COLORS = [
 	["lightyellow", [255, 255, 224]],
 	["limegreen", [50, 205, 50]],
 	["linen", [250, 240, 230]],
+	["magenta", [255, 0, 255]],
 	["mediumaquamarine", [102, 205, 170]],
 	["mediumblue", [0, 0, 205]],
 	["mediumorchid", [186, 85, 211]],
@@ -191,6 +193,9 @@ const CSS_COLORS = [
 	["wheat", [245, 222, 179]],
 	["whitesmoke", [245, 245, 245]],
 	["yellowgreen", [154, 205, 50]],
+
+	// CSS4
+	["rebeccapurple", [102, 51, 153]],
 ] as const;
 
 type ColorName = (typeof CSS_COLORS)[number][0];

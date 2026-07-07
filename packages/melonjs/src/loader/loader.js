@@ -545,23 +545,35 @@ export function load(asset, onload, onerror) {
 		initParsers();
 	}
 
+	// Resolve the effective src WITHOUT mutating the caller's asset
+	// descriptor: load() used to write the transformed url back into
+	// asset.src, so retrying the same object — loader.reload() after a
+	// failure, or simply load()ing the same manifest entry twice —
+	// prepended baseURL onto an already-transformed src and fetched a
+	// mangled URL. Caches, events and failure tracking all key on the
+	// caller's original src; only the parser sees the resolved one.
+	let src = asset.src;
+
 	// strip url() wrapper for fontface assets so baseURL can be prepended to the raw path
-	if (asset.type === "fontface" && typeof asset.src === "string") {
-		const urlMatch = asset.src.match(/^url\(\s*['"]?(.*?)['"]?\s*\)$/);
+	if (asset.type === "fontface" && typeof src === "string") {
+		const urlMatch = src.match(/^url\(\s*['"]?(.*?)['"]?\s*\)$/);
 		if (urlMatch) {
-			asset.src = urlMatch[1];
+			src = urlMatch[1];
 		}
 	}
 
 	// transform the url if necessary (skip for local() font sources and data URIs)
 	if (
 		typeof baseURL[asset.type] !== "undefined" &&
-		typeof asset.src === "string" &&
-		!asset.src.startsWith("local(") &&
-		!asset.src.startsWith("data:")
+		typeof src === "string" &&
+		!src.startsWith("local(") &&
+		!src.startsWith("data:")
 	) {
-		asset.src = baseURL[asset.type] + asset.src;
+		src = baseURL[asset.type] + src;
 	}
+
+	const resource =
+		src === asset.src ? asset : Object.assign({}, asset, { src });
 
 	const parser = parsers.get(asset.type);
 
@@ -584,7 +596,7 @@ export function load(asset, onload, onerror) {
 			// if it splits into several); 0 means already cached → resolve now.
 			const count = parser.call(
 				this,
-				asset,
+				resource,
 				() => {
 					resolve();
 				},
@@ -598,7 +610,7 @@ export function load(asset, onload, onerror) {
 	}
 
 	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-	return parser.call(this, asset, onload, onerror, settings);
+	return parser.call(this, resource, onload, onerror, settings);
 }
 
 /**
@@ -639,6 +651,11 @@ export function unload(asset) {
 			return true;
 
 		case "fontface":
+			// membership guard like every other type — FontFaceSet.delete is
+			// WebIDL-typed and THROWS on undefined instead of returning false
+			if (!(asset.name in fontList)) {
+				return false;
+			}
 			if (
 				typeof globalThis.document !== "undefined" &&
 				typeof globalThis.document.fonts !== "undefined"
