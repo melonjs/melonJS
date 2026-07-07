@@ -2,6 +2,7 @@ import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
 import { nextPowerOfTwo } from "../../math/math.ts";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
+import { resolveAnchorPoint } from "../anchorPoint.ts";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
@@ -64,7 +65,7 @@ export default class Text extends Renderable {
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
 	 * @param {string} [settings.textBaseline="top"] - the text baseline ("top", "hanging", "middle", "alphabetic", "ideographic", "bottom")
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
-	 * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixels of a line before it wraps
 	 * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
 	 * @example
@@ -205,7 +206,11 @@ export default class Text extends Renderable {
 
 		// anchor point
 		if (typeof settings.anchorPoint !== "undefined") {
-			this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+			const anchor = resolveAnchorPoint(settings.anchorPoint, "Text", {
+				x: 0,
+				y: 0,
+			});
+			this.anchorPoint.set(anchor.x, anchor.y);
 		} else {
 			this.anchorPoint.set(0, 0);
 		}

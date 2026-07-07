@@ -8,6 +8,7 @@ import {
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import * as stringUtil from "./../utils/string.ts";
+import { resolveAnchorPoint } from "./anchorPoint.ts";
 import Sprite from "./sprite.js";
 
 /**
@@ -29,7 +30,7 @@ export default class ImageLayer extends Sprite {
 	 * @param {number} [settings.z=0] - z-index position
 	 * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
 	 * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [settings.repeat="repeat"] - define if and how an Image Layer should be repeated. See {@link ImageLayer#repeat}
-	 * @param {number|Vector2d} [settings.anchorPoint=<0.0,0.0>] - Define how the image is anchored to the viewport bound. By default, its upper-left corner is anchored to the viewport bounds upper left corner.
+	 * @param {number|string|Vector2d|{x:number,y:number}} [settings.anchorPoint=<0.0,0.0>] - Define how the image is anchored to the viewport bound. By default, its upper-left corner is anchored to the viewport bounds upper left corner. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"` (anchored relative to the viewport, e.g. `"bottom"` = bottom-center of the viewport); a bare number anchors both axes.
 	 * @example
 	 * // create a repetitive background pattern on the X axis using the citycloud image asset
 	 * app.world.addChild(new me.ImageLayer(0, 0, {
@@ -38,6 +39,16 @@ export default class ImageLayer extends Sprite {
 	 * }), 1);
 	 */
 	constructor(x, y, settings) {
+		// bare-number shorthand (anchors both axes) — normalize BEFORE super():
+		// the Sprite base constructor consumes the same settings.anchorPoint,
+		// and the shared resolver doesn't accept bare numbers (pre-super
+		// settings mutation has precedent, e.g. Entity / TMXTileMap)
+		if (typeof settings.anchorPoint === "number") {
+			settings.anchorPoint = {
+				x: settings.anchorPoint,
+				y: settings.anchorPoint,
+			};
+		}
 		// call the constructor
 		super(x, y, settings);
 
@@ -74,11 +85,13 @@ export default class ImageLayer extends Sprite {
 		if (typeof settings.anchorPoint === "undefined") {
 			this.anchorPoint.set(0, 0);
 		} else {
-			if (typeof settings.anchorPoint === "number") {
-				this.anchorPoint.set(settings.anchorPoint, settings.anchorPoint);
-			} /* vector */ else {
-				this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
-			}
+			// preset name or {x, y} (bare numbers were normalized pre-super);
+			// invalid values warn + keep the historical silent (0, 0) outcome
+			const anchor = resolveAnchorPoint(settings.anchorPoint, "ImageLayer", {
+				x: 0,
+				y: 0,
+			});
+			this.anchorPoint.set(anchor.x, anchor.y);
 		}
 
 		this.repeat = settings.repeat || "repeat";

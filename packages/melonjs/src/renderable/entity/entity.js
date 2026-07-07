@@ -2,6 +2,7 @@ import { polygonPool } from "../../geometries/polygon.ts";
 import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import Body from "../../physics/builtin/body.js";
+import { resolveAnchorPoint } from "../anchorPoint.ts";
 import Renderable from "../renderable.js";
 import Sprite from "../sprite.js";
 
@@ -170,7 +171,7 @@ export default class Entity extends Renderable {
 	 * @param {string} [settings.name] - object entity name
 	 * @param {string} [settings.id] - object unique IDs
 	 * @param {Image|string} [settings.image] - resource name of a spritesheet to use for the entity renderable component
-	 * @param {Vector2d} [settings.anchorPoint=0.0] - Entity anchor point
+	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint=0.0] - Entity anchor point. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 * @param {number} [settings.framewidth=settings.width] - width of a single frame in the given spritesheet
 	 * @param {number} [settings.frameheight=settings.width] - height of a single frame in the given spritesheet
 	 * @param {string} [settings.type] - object type
@@ -203,7 +204,11 @@ export default class Entity extends Renderable {
 
 		// Update anchorPoint
 		if (settings.anchorPoint) {
-			this.anchorPoint.setMuted(settings.anchorPoint.x, settings.anchorPoint.y);
+			const anchor = resolveAnchorPoint(settings.anchorPoint, "Entity", {
+				x: 0,
+				y: 0,
+			});
+			this.anchorPoint.setMuted(anchor.x, anchor.y);
 		} else {
 			// for backward compatibility
 			this.anchorPoint.setMuted(0, 0);

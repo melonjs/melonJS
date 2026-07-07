@@ -5,6 +5,7 @@ import { vector2dPool } from "../math/vector2d.ts";
 import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
+import { resolveAnchorPoint } from "./anchorPoint.ts";
 import FrameAnimation from "./frameAnimation.js";
 import Renderable from "./renderable.js";
 
@@ -34,7 +35,7 @@ export default class Sprite extends Renderable {
 	 * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
-	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
+	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame). Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. For spritesheet atlases the anchor also becomes the cached atlas's per-frame pivot (see {@link TextureAtlas}).
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|Texture2d|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
@@ -68,6 +69,16 @@ export default class Sprite extends Renderable {
 	constructor(x, y, settings) {
 		// call the super constructor
 		super(x, y, 0, 0);
+
+		// Resolve the anchor once, up front (preset name or {x, y} object;
+		// invalid values warn + keep the historical silent (0, 0) outcome —
+		// see resolveAnchorPoint). The resolved pair also rides into the
+		// texture-cache descriptor below: spritesheet atlases store it as the
+		// cached per-frame pivot, so presets and {x, y} objects behave
+		// identically on both paths.
+		const resolvedAnchor = settings.anchorPoint
+			? resolveAnchorPoint(settings.anchorPoint, "Sprite", { x: 0, y: 0 })
+			: null;
 
 		// the shared frame-animation engine — owns this sprite's animation state
 		// (exposed via the `anim` / `current` / `animationspeed` / `animationpause`
@@ -207,7 +218,15 @@ export default class Sprite extends Renderable {
 					this.current.height =
 					settings.frameheight =
 						settings.frameheight || this.image.height;
-				this.source = game.renderer.cache.get(this.image, settings);
+				this.source = game.renderer.cache.get(
+					this.image,
+					// forward the RESOLVED anchor into the atlas descriptor —
+					// never the caller's raw value (a preset string, or an
+					// aliased Vector2d, must not land in the shared cache)
+					resolvedAnchor
+						? Object.assign({}, settings, { anchorPoint: resolvedAnchor })
+						: settings,
+				);
 				this.textureAtlas = this.source.getAtlas();
 			}
 		}
@@ -269,9 +288,9 @@ export default class Sprite extends Renderable {
 			this.rotate(settings.rotation);
 		}
 
-		// update anchorPoint
-		if (settings.anchorPoint) {
-			this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+		// update anchorPoint (resolved once at the top of the constructor)
+		if (resolvedAnchor) {
+			this.anchorPoint.set(resolvedAnchor.x, resolvedAnchor.y);
 		}
 
 		if (typeof settings.tint !== "undefined") {

@@ -574,6 +574,15 @@ export default class Mesh extends Renderable {
 
 		this.anchorPoint.set(0.5, 0.5);
 
+		// Subclasses that bake the anchor offset directly into their vertex
+		// data (e.g. Sprite3d) set this true, so preDraw suppresses the base
+		// anchor translate on BOTH camera paths — the vertex bake is then the
+		// single anchoring mechanism (the Camera2d fallback loses its exact
+		// pixel-shift anchor for such subclasses; that path is documented as
+		// degraded for them anyway). Plain meshes keep the legacy 2D anchor.
+		/** @ignore */
+		this._anchorBaked = false;
+
 		// skip applying the 3D transform to the 2D renderer context in preDraw
 		// the full 3D transform is applied to vertices in draw() instead
 		this.autoTransform = false;
@@ -808,8 +817,12 @@ export default class Mesh extends Renderable {
 	 */
 	preDraw(renderer) {
 		// world-space meshes pivot about their own origin, not a bounds-box
-		// anchor (see Mesh class doc + Renderable#applyAnchorTransform)
-		this.applyAnchorTransform = this._useWorldSpace !== true;
+		// anchor (see Mesh class doc + Renderable#applyAnchorTransform); a
+		// subclass with a vertex-baked anchor (`_anchorBaked`) opts out on
+		// both paths — recomputed here every frame, so a one-shot constructor
+		// assignment could never stick
+		this.applyAnchorTransform =
+			this._useWorldSpace !== true && this._anchorBaked !== true;
 		super.preDraw(renderer);
 	}
 

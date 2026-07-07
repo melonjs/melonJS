@@ -1,6 +1,7 @@
 import { polygonPool } from "../geometries/polygon.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { collision } from "./../physics/collision.js";
+import { resolveAnchorPoint } from "./anchorPoint.ts";
 import Sprite from "./sprite.js";
 
 /**
@@ -12,6 +13,7 @@ export default class Collectable extends Sprite {
 	 * @param {number} x - the x coordinates of the collectable
 	 * @param {number} y - the y coordinates of the collectable
 	 * @param {object} settings - See {@link Sprite}
+	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0,y:0}] - anchor point (note the backward-compatible `(0, 0)` default, unlike Sprite's centered one). Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 */
 	constructor(x, y, settings) {
 		// call the super constructor
@@ -50,7 +52,11 @@ export default class Collectable extends Sprite {
 
 		// Update anchorPoint
 		if (settings.anchorPoint) {
-			this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+			const anchor = resolveAnchorPoint(settings.anchorPoint, "Collectable", {
+				x: 0,
+				y: 0,
+			});
+			this.anchorPoint.set(anchor.x, anchor.y);
 		} else {
 			// for backward compatibility
 			this.anchorPoint.set(0, 0);

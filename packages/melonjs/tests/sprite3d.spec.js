@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	Camera3d,
+	Mesh,
 	Sprite3d,
 	Vector2d,
 	Vector3d,
@@ -639,5 +640,243 @@ describe("Sprite3d resource cleanup", () => {
 		s.destroy();
 		// the pooled Vector2d is returned and the reference cleared
 		expect(s._frameAnim.current.offset).toBeNull();
+	});
+});
+
+describe("Sprite3d anchorPoint (vertex-baked anchor)", () => {
+	beforeAll(() => {
+		boot();
+		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+	});
+
+	const makeTex = (w = 4, h = 4) => {
+		const c = document.createElement("canvas");
+		c.width = w;
+		c.height = h;
+		c.getContext("2d").fillRect(0, 0, w, h);
+		return c;
+	};
+
+	// 20×30 quad at (100, 50): hw = 10, hh = 15
+	const mk = (anchor, extra = {}) => {
+		const settings = {
+			image: makeTex(),
+			width: 20,
+			height: 30,
+			z: -200,
+			...extra,
+		};
+		if (anchor !== undefined) {
+			settings.anchorPoint = anchor;
+		}
+		return new Sprite3d(100, 50, settings);
+	};
+
+	const localXs = (v) => {
+		return [v[0], v[3], v[6], v[9]];
+	};
+	const localYs = (v) => {
+		return [v[1], v[4], v[7], v[10]];
+	};
+
+	it('"bottom" bakes the local quad shifted so the bottom edge is at the origin', () => {
+		const v = mk("bottom").originalVertices;
+		// offsetY = (1 - 0.5) * 30 = +15 → local y ∈ {0, 30} (local +Y = art top)
+		expect(new Set(localYs(v))).toEqual(new Set([0, 30]));
+		expect(new Set(localXs(v))).toEqual(new Set([-10, 10]));
+	});
+
+	it('"top-left" bakes both offsets', () => {
+		const v = mk("top-left").originalVertices;
+		// offsetX = (0.5 - 0) * 20 = +10; offsetY = (0 - 0.5) * 30 = -15
+		expect(new Set(localXs(v))).toEqual(new Set([0, 20]));
+		expect(new Set(localYs(v))).toEqual(new Set([-30, 0]));
+	});
+
+	it('"bottom": feet land exactly at pos on the fixed-orientation path', () => {
+		const s = mk("bottom");
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const ys = [s.vertices[1], s.vertices[4], s.vertices[7], s.vertices[10]];
+		// world Y is negated local Y: feet (local 0) at pos.y, head at pos.y - h
+		expect(Math.max(...ys)).toBeCloseTo(50, 5);
+		expect(Math.min(...ys)).toBeCloseTo(20, 5);
+		const xs = [s.vertices[0], s.vertices[3], s.vertices[6], s.vertices[9]];
+		expect(Math.min(...xs)).toBeCloseTo(90, 5);
+		expect(Math.max(...xs)).toBeCloseTo(110, 5);
+	});
+
+	it('"bottom" + cylindrical billboard: feet stay planted and upright at any yaw/pitch', () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = mk("bottom", { billboard: "cylindrical" });
+		for (const [yaw, pitch] of [
+			[0, 0],
+			[0.8, -0.3],
+			[-1.2, 0.6],
+		]) {
+			cam.yaw = yaw;
+			cam.pitch = pitch;
+			s._billboardCam = cam;
+			s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+			const v = s.vertices;
+			const ys = [v[1], v[4], v[7], v[10]];
+			// two corners at the feet (pos.y), two at the head (pos.y - h)
+			expect(
+				ys.filter((y) => {
+					return Math.abs(y - 50) < 1e-4;
+				}).length,
+			).toBe(2);
+			expect(
+				ys.filter((y) => {
+					return Math.abs(y - 20) < 1e-4;
+				}).length,
+			).toBe(2);
+			// the vertical edge (c0 → c3) is purely world-up: no x/z drift
+			expect(Math.abs(v[9] - v[0])).toBeLessThan(1e-4);
+			expect(Math.abs(v[11] - v[2])).toBeLessThan(1e-4);
+		}
+	});
+
+	it('"bottom-left" + flipX: anchor stays pinned, extents unchanged, toggle restores', () => {
+		const s = mk("bottom-left");
+		const before = Array.from(s.originalVertices);
+		expect(new Set(localXs(s.originalVertices))).toEqual(new Set([0, 20]));
+		expect(new Set(localYs(s.originalVertices))).toEqual(new Set([0, 30]));
+
+		s.flipX();
+		// mirrored about the art's own center, then re-pinned: same extents
+		expect(new Set(localXs(s.originalVertices))).toEqual(new Set([0, 20]));
+		expect(new Set(localYs(s.originalVertices))).toEqual(new Set([0, 30]));
+
+		s.flipX(false);
+		expect(Array.from(s.originalVertices)).toEqual(before);
+	});
+
+	it('trimmed atlas region + "bottom": trim mapping plus the anchor offset', () => {
+		const img = makeTex(200, 200);
+		const s = new Sprite3d(0, 0, {
+			image: img,
+			width: 200,
+			height: 200,
+			anchorPoint: "bottom",
+		});
+		// same trimmed region as the un-anchored mapping test above
+		s.setRegion({
+			offset: { x: 10, y: 20 },
+			width: 120,
+			height: 140,
+			trimmed: true,
+			trim: { x: 40, y: 30, w: 120, h: 140 },
+			sourceSize: { w: 200, h: 200 },
+			angle: 0,
+		});
+		const v = s.originalVertices;
+		// offsetY = +100 on top of the (-60,-70)…(60,70) trim mapping
+		expect([v[0], v[1]]).toEqual([-60, 30]);
+		expect([v[6], v[7]]).toEqual([60, 170]);
+		// UVs are untouched by the anchor
+		expect(v && s.uvs[0]).toBeCloseTo(0.05, 5);
+		expect(s.uvs[5]).toBeCloseTo(0.1, 5);
+	});
+
+	it("runtime anchorPoint.set() re-bakes the quad and grows the cull bounds (region path)", () => {
+		const s = mk(undefined); // centered default
+		expect(new Set(localYs(s.originalVertices))).toEqual(new Set([-15, 15]));
+		expect(s.width).toBe(30); // max(w, h), legacy centered bounds
+
+		s.isDirty = false;
+		s.anchorPoint.set(0.5, 1);
+
+		expect(s._anchorOffsetX).toBe(0);
+		expect(s._anchorOffsetY).toBe(15);
+		expect(new Set(localYs(s.originalVertices))).toEqual(new Set([0, 30]));
+		expect(s.isDirty).toBe(true);
+		// circumradius about pos: √2 · hypot(hw + |ox|, hh + |oy|)
+		expect(s.width).toBeCloseTo(Math.SQRT2 * Math.hypot(10, 30), 5);
+		expect(s.height).toBeCloseTo(Math.SQRT2 * Math.hypot(10, 30), 5);
+	});
+
+	it("runtime anchorPoint.set() re-bakes the plain quad on the no-region path", () => {
+		const s = mk("bottom");
+		// force the named-atlas path where no frame region ever landed
+		s._region = null;
+		s.anchorPoint.set(0.5, 0.5);
+		expect(new Set(localYs(s.originalVertices))).toEqual(new Set([-15, 15]));
+		expect(new Set(localXs(s.originalVertices))).toEqual(new Set([-10, 10]));
+	});
+
+	it("cull bounds: grown exactly for the bottom anchor, unchanged for the centered default", () => {
+		const centered = new Sprite3d(0, 0, {
+			image: makeTex(),
+			width: 130,
+			height: 225,
+		});
+		expect(centered.width).toBe(225);
+
+		const anchored = new Sprite3d(0, 0, {
+			image: makeTex(),
+			width: 130,
+			height: 225,
+			anchorPoint: "bottom",
+		});
+		// √2 · hypot(65, 112.5 + 112.5) ≈ 331.22 — the sphere derived from
+		// this (radius = side/√2) exactly encloses the billboard sweep
+		expect(anchored.width).toBeCloseTo(Math.SQRT2 * Math.hypot(65, 225), 4);
+		expect(anchored.width).toBeGreaterThan(225);
+	});
+
+	it("the anchor is never applied as a renderer transform, on either camera path", () => {
+		const noop = () => {};
+		const fakeRenderer = {
+			save: noop,
+			restore: noop,
+			resetTransform: noop,
+			translate: noop,
+			transform: noop,
+			setColor: noop,
+			setBlendMode: noop,
+			getBlendMode: () => {
+				return "normal";
+			},
+			setTint: noop,
+			clearTint: noop,
+			setDepth: noop,
+			setGlobalAlpha: noop,
+			globalAlpha: () => {
+				return 1;
+			},
+			getGlobalAlpha: () => {
+				return 1;
+			},
+			setCustomShader: noop,
+			clearCustomShader: noop,
+			beginPostEffect: noop,
+			endPostEffect: noop,
+			currentTransform: {
+				isIdentity: () => {
+					return true;
+				},
+			},
+		};
+
+		for (const sprite of [mk("bottom"), mk(undefined)]) {
+			sprite._useWorldSpace = true;
+			sprite.preDraw(fakeRenderer);
+			expect(sprite.applyAnchorTransform).toBe(false);
+			sprite._useWorldSpace = false;
+			sprite.preDraw(fakeRenderer);
+			expect(sprite.applyAnchorTransform).toBe(false);
+		}
+
+		// a plain Mesh keeps the legacy 2D anchor behavior
+		const mesh = new Mesh(0, 0, {
+			vertices: [0, 0, 0, 10, 0, 0, 10, 10, 0],
+			uvs: [0, 0, 1, 0, 1, 1],
+			indices: [0, 1, 2],
+			width: 10,
+			normalize: false,
+		});
+		mesh._useWorldSpace = false;
+		mesh.preDraw(fakeRenderer);
+		expect(mesh.applyAnchorTransform).toBe(true);
 	});
 });

@@ -40,7 +40,7 @@ export default class NineSliceSprite extends Sprite {
 	 * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
-	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
+	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame). Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 * @example
 	 * this.panelSprite = new me.NineSliceSprite(0, 0, {
 	 *     image : game.texture,

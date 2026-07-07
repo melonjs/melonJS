@@ -2,6 +2,7 @@ import Camera3d from "../camera/camera3d.ts";
 import { getImage } from "../loader/loader.js";
 import { Vector3d } from "../math/vector3d.ts";
 import Texture2d from "../video/texture/texture2d.ts";
+import { resolveAnchorPoint } from "./anchorPoint.ts";
 import FrameAnimation from "./frameAnimation.js";
 import Mesh from "./mesh.js";
 
@@ -14,34 +15,36 @@ const _fwd = new Vector3d();
 // module singleton, only ever copied/crossed-from, never mutated in place.
 const WORLD_UP = new Vector3d(0, -1, 0);
 
-// named shorthands for common origin points, same 0..1 (x: left→right,
-// y: top→bottom) convention as the 2D Renderable anchorPoint
-const ORIGIN_PRESETS = {
-	center: { x: 0.5, y: 0.5 },
-	top: { x: 0.5, y: 0 },
-	bottom: { x: 0.5, y: 1 },
-	left: { x: 0, y: 0.5 },
-	right: { x: 1, y: 0.5 },
-	"top-left": { x: 0, y: 0 },
-	"top-right": { x: 1, y: 0 },
-	"bottom-left": { x: 0, y: 1 },
-	"bottom-right": { x: 1, y: 1 },
-};
+// Frustum-cull side length for an anchored quad: Camera3d derives its cull
+// sphere radius as √(w²+h²)/2 from the bounds, so passing side = radius·√2
+// with radius = the farthest corner's distance from `pos` (rotation about
+// `pos` under billboarding preserves corner distances) makes the sphere
+// exactly enclose the quad in any orientation. Never smaller than the legacy
+// centered bounds (max of the quad's sides), so the default is unchanged.
+function cullSideForAnchor(hw, hh, offsetX, offsetY) {
+	return Math.max(
+		Math.max(hw, hh) * 2,
+		Math.SQRT2 * Math.hypot(hw + Math.abs(offsetX), hh + Math.abs(offsetY)),
+	);
+}
 
-// resolve settings.originPoint (preset name or {x,y}) to a normalized pair
-function resolveOrigin(settings) {
-	const o = settings.originPoint;
-	if (typeof o === "string") {
-		const preset = ORIGIN_PRESETS[o];
-		if (!preset) {
-			throw new Error(`Sprite3d: unknown originPoint preset '${o}'`);
-		}
-		return preset;
-	}
-	if (o && typeof o.x === "number" && typeof o.y === "number") {
-		return o;
-	}
-	return ORIGIN_PRESETS.center;
+// Write the plain (frame-less) anchored quad into `out` (12 floats):
+// corners at ±hw/±hh shifted by the anchor offset, z = 0. Used for the
+// constructor bake and for runtime anchor changes on the no-region path.
+function bakeQuadVertices(hw, hh, offsetX, offsetY, out) {
+	out[0] = -hw + offsetX;
+	out[1] = -hh + offsetY;
+	out[2] = 0;
+	out[3] = hw + offsetX;
+	out[4] = -hh + offsetY;
+	out[5] = 0;
+	out[6] = hw + offsetX;
+	out[7] = hh + offsetY;
+	out[8] = 0;
+	out[9] = -hw + offsetX;
+	out[10] = hh + offsetY;
+	out[11] = 0;
+	return out;
 }
 
 // Resolve just the source image dimensions for sizing the quad, without
@@ -88,6 +91,14 @@ function imageSize(settings) {
  * world-space path; under a 2D `Camera2d` it falls back to the mesh's
  * self-projection and **billboarding has no effect** (a 2D scene has no camera
  * orientation to face). Use a regular {@link Sprite} for 2D.
+ *
+ * **Anchoring.** Unlike its {@link Mesh} parent — where `anchorPoint` is inert
+ * on the 3D path and transforms pivot at the model origin — Sprite3d's
+ * `anchorPoint` is live: the anchor is baked into the quad's local vertices
+ * (never applied as a renderer transform on either camera path) and can be
+ * changed at runtime via `anchorPoint.set(...)`, which re-bakes the quad and
+ * re-derives the cull bounds. Same key, convention and centered default as
+ * the 2D {@link Sprite}, including the named presets (`"bottom"`, …).
  * @augments Mesh
  * @category Game Objects
  * @example
@@ -128,7 +139,7 @@ function imageSize(settings) {
  *     image: "hero",
  *     width: 48, height: 64,
  *     billboard: "cylindrical",
- *     originPoint: "bottom", // == { x: 0.5, y: 1 }
+ *     anchorPoint: "bottom", // == { x: 0.5, y: 1 }
  * });
  */
 export default class Sprite3d extends Mesh {
@@ -145,7 +156,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {object[]} [settings.anims] - predefined animations (same shape as {@link Sprite})
 	 * @param {number} [settings.z=0] - 3D depth (world z); also settable later via `.depth`
 	 * @param {boolean|string} [settings.billboard=false] - billboard mode: `false` (fixed orientation), `true` / `"cylindrical"` (faces the camera but stays upright — the 2.5D default), or `"spherical"` (faces the camera on all axes). Only applies under a `Camera3d`.
-	 * @param {string|{x:number,y:number}} [settings.originPoint="center"] - anchor of the quad relative to `pos`, normalized 0..1 (`x`: 0 left→1 right, `y`: 0 top→1 bottom, same convention as the 2D Renderable anchorPoint). Also accepts the shorthands `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. Baked as a constant local offset — composes with billboarding, flips, and trimmed/rotated atlas frames. Does not affect the frustum-cull bounds.
+	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5,y:0.5}] - anchor of the quad relative to `pos` — same key, normalized 0..1 convention (`x`: 0 left→1 right, `y`: 0 top→1 bottom) and centered default as the 2D {@link Sprite}. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. Baked into the quad's local vertices (composes with billboarding, flips, and trimmed/rotated atlas frames) — never applied as a renderer transform on either camera path. Mutable at runtime via `this.anchorPoint.set(...)` (re-bakes the quad and re-derives the cull bounds). Invalid values throw.
 	 * @param {boolean} [settings.flipX=false] - mirror the sprite horizontally (see {@link Sprite3d#flipX})
 	 * @param {boolean} [settings.flipY=false] - mirror the sprite vertically (see {@link Sprite3d#flipY})
 	 * @param {boolean} [settings.lit=false] - shade through the lit mesh batcher (see {@link Mesh})
@@ -172,33 +183,31 @@ export default class Sprite3d extends Mesh {
 		}
 		const hw = w / 2;
 		const hh = h / 2;
-		// local-space offset shifting the quad so `originPoint` — not the
-		// geometric center — lands at `pos`. X follows the image convention
-		// directly (0=left…1=right). Y is inverted: local +Y is the TOP of the
-		// art (see the UV/trim mapping in `_applyFrame` and `WORLD_UP` below),
-		// while `originPoint.y` follows the image convention of 0=top…1=bottom.
-		const origin = resolveOrigin(settings);
-		const originOffsetX = (0.5 - origin.x) * w;
-		const originOffsetY = (origin.y - 0.5) * h;
+		// local-space offset shifting the quad so `anchorPoint` — not the
+		// geometric center — lands at `pos`. Resolved PRE-super: the quad
+		// vertices below are built before super(), and the inherited
+		// ObservablePoint doesn't exist yet (it is wired up post-super).
+		// X follows the image convention directly (0=left…1=right). Y is
+		// inverted: local +Y is the TOP of the art (see the UV/trim mapping in
+		// `_applyFrame` and `WORLD_UP` below), while `anchorPoint.y` follows
+		// the image convention of 0=top…1=bottom.
+		const anchor = settings.anchorPoint
+			? resolveAnchorPoint(settings.anchorPoint, "Sprite3d")
+			: { x: 0.5, y: 0.5 };
+		const anchorOffsetX = (0.5 - anchor.x) * w;
+		const anchorOffsetY = (anchor.y - 0.5) * h;
 		// a unit quad with the real pixel size baked in, in the XY plane, facing
-		// +Z, shifted by the origin offset. `normalize: false` + `scale: 1` keeps
+		// +Z, shifted by the anchor offset. `normalize: false` + `scale: 1` keeps
 		// these coordinates as-is so the fixed-orientation (non-billboard) case
 		// renders at the right size, and the billboard path reuses the local
 		// (±hw + offset, ±hh + offset) offsets directly.
-		const vertices = new Float32Array([
-			-hw + originOffsetX,
-			-hh + originOffsetY,
-			0,
-			hw + originOffsetX,
-			-hh + originOffsetY,
-			0,
-			hw + originOffsetX,
-			hh + originOffsetY,
-			0,
-			-hw + originOffsetX,
-			hh + originOffsetY,
-			0,
-		]);
+		const vertices = bakeQuadVertices(
+			hw,
+			hh,
+			anchorOffsetX,
+			anchorOffsetY,
+			new Float32Array(12),
+		);
 		// V flipped (1→0 top to bottom) so the texture renders upright under the
 		// Y-down render space, matching Sprite. Overwritten per-frame by
 		// `_applyFrame` once an animation/region is selected.
@@ -216,14 +225,18 @@ export default class Sprite3d extends Mesh {
 			texture: settings.image ?? settings.texture,
 			framewidth: settings.framewidth,
 			frameheight: settings.frameheight,
-			// width/height drive the frustum-cull bounds; use the larger side so
-			// the cull sphere always encloses the quad whatever way it faces.
-			// NOTE: with a non-center originPoint the cull sphere is centered on
-			// `pos`, not on the shifted quad — an extreme anchor (e.g.
-			// "top-left") can under-size the bounds on one side. Left as a known
-			// limitation; revisit if it causes visible pop-in.
-			width: Math.max(w, h),
-			height: Math.max(w, h),
+			// width/height drive the frustum-cull bounds. Camera3d culls with a
+			// sphere centered on `pos` of radius √(w²+h²)/2 = side/√2; the
+			// billboard corners orbit `pos` at radius hypot(hw+|offX|, hh+|offY|)
+			// (rotation about `pos` preserves corner distances, and trimmed
+			// frames stay inside the ±hw/±hh box). Passing side = radius·√2
+			// makes the sphere exactly enclose the quad in ANY orientation.
+			// For the centered default this degrades to max(w, h) — unchanged
+			// legacy bounds; a non-center anchor grows them just enough that
+			// e.g. a bottom-anchored character can't pop out while its head is
+			// still on screen.
+			width: cullSideForAnchor(hw, hh, anchorOffsetX, anchorOffsetY),
+			height: cullSideForAnchor(hw, hh, anchorOffsetX, anchorOffsetY),
 			scale: 1,
 			normalize: false,
 			rightHanded: true,
@@ -250,13 +263,25 @@ export default class Sprite3d extends Mesh {
 		this._halfW = hw;
 		/** @ignore */
 		this._halfH = hh;
-		// local-space offset pinning `originPoint` to `pos` (0,0 = centered,
+		// local-space offset pinning `anchorPoint` to `pos` (0,0 = centered,
 		// the default). Applied in `_applyFrame` after the flip, so mirroring
 		// happens around the art's own center while the anchor stays fixed.
 		/** @ignore */
-		this._originOffsetX = originOffsetX;
+		this._anchorOffsetX = anchorOffsetX;
 		/** @ignore */
-		this._originOffsetY = originOffsetY;
+		this._anchorOffsetY = anchorOffsetY;
+		// the anchor lives in the vertex data — tell Mesh.preDraw to suppress
+		// the base transform-level anchor on BOTH camera paths (single
+		// anchoring mechanism; see Mesh#_anchorBaked)
+		this._anchorBaked = true;
+		// Repurpose the inherited anchorPoint as the LIVE anchor API (unlike
+		// Mesh, where it stays inert on the world path): setMuted first — the
+		// base updateBounds callback must not fire on a half-initialized
+		// object — then swap in the re-bake callback for runtime changes.
+		this.anchorPoint.setMuted(anchor.x, anchor.y);
+		this.anchorPoint.setCallback(() => {
+			this._onAnchorChanged();
+		});
 		// reference logical (untrimmed) frame size the world quad maps to,
 		// captured from the first applied frame so trimmed frames can be scaled
 		// into the same world footprint (0 = not captured yet)
@@ -364,6 +389,51 @@ export default class Sprite3d extends Mesh {
 		if (settings.flipY) {
 			this.flipY(true);
 		}
+	}
+
+	/**
+	 * anchorPoint changed at runtime (the ObservablePoint callback wired in
+	 * the constructor): recompute the baked local offset from the live anchor
+	 * and the art size, re-bake the quad, and re-derive the frustum-cull
+	 * bounds. Preserves the base ObservablePoint contract (updateBounds +
+	 * isDirty, see Renderable's anchorPoint callback).
+	 * @ignore
+	 */
+	_onAnchorChanged() {
+		const hw = this._halfW;
+		const hh = this._halfH;
+		this._anchorOffsetX = (0.5 - this.anchorPoint.x) * hw * 2;
+		this._anchorOffsetY = (this.anchorPoint.y - 0.5) * hh * 2;
+		if (this._region !== null) {
+			// re-applies the trim/rotation mapping + flips + the new offsets
+			this._applyFrame(this._region);
+		} else {
+			// named-atlas path where no frame region ever landed — re-bake the
+			// plain constructor quad
+			bakeQuadVertices(
+				hw,
+				hh,
+				this._anchorOffsetX,
+				this._anchorOffsetY,
+				this.originalVertices,
+			);
+		}
+		// Resize the bounds box directly: the Rect width/height setters run
+		// Polygon.recalc(), which walks `this.normals` — a field Mesh
+		// repurposes for per-vertex lighting normals (a Float32Array), so the
+		// setters would throw here. The polygon edge/normal machinery is
+		// unused by meshes anyway; mutating the corner points + updateBounds
+		// is exactly the setter minus recalc.
+		const cullSide = cullSideForAnchor(
+			hw,
+			hh,
+			this._anchorOffsetX,
+			this._anchorOffsetY,
+		);
+		this.points[1].x = this.points[2].x = cullSide;
+		this.points[2].y = this.points[3].y = cullSide;
+		this.updateBounds();
+		this.isDirty = true;
 	}
 
 	/**
@@ -589,7 +659,7 @@ export default class Sprite3d extends Mesh {
 	 * UVs (the atlas sub-rect, with a 90° corner permutation for packer-rotated
 	 * regions) and its local vertices (the trimmed art's sub-rectangle within the
 	 * logical frame, scaled into the quad's world footprint, then shifted by the
-	 * origin offset), so trimmed and rotated `TextureAtlas` regions render at
+	 * anchor offset), so trimmed and rotated `TextureAtlas` regions render at
 	 * full parity with the 2D `Sprite`.
 	 * @param {object} region - the texture region object
 	 * @ignore
@@ -678,13 +748,13 @@ export default class Sprite3d extends Mesh {
 			yt = -yt;
 			yb = -yb;
 		}
-		// pin `originPoint` to `pos` (added last, after the flip, so mirroring
+		// pin `anchorPoint` to `pos` (added last, after the flip, so mirroring
 		// still happens about the art's own center rather than the shifted
 		// anchor)
-		xl += this._originOffsetX;
-		xr += this._originOffsetX;
-		yt += this._originOffsetY;
-		yb += this._originOffsetY;
+		xl += this._anchorOffsetX;
+		xr += this._anchorOffsetX;
+		yt += this._anchorOffsetY;
+		yb += this._anchorOffsetY;
 		const v = this.originalVertices;
 		// c0 BL, c1 BR, c2 TR, c3 TL (z stays 0)
 		v[0] = xl;
@@ -788,7 +858,7 @@ export default class Sprite3d extends Mesh {
 
 		// emit the 4 corners as center ± right·localX ± up·localY (the local
 		// offsets are the baked ±hw / ±hh quad coordinates, already shifted by
-		// the origin offset)
+		// the anchor offset)
 		const out = this.vertices;
 		const src = this.originalVertices;
 		const rx = _right.x;
