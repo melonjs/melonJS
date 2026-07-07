@@ -130,7 +130,10 @@ function resolveGroupMaterial(group, materials) {
  * mesh under a transformed parent to pivot elsewhere). Consequently, on the
  * `Camera3d` world-space path the mesh opts out of the anchor offset entirely
  * (see {@link Renderable#applyAnchorTransform}); the legacy 2D path still
- * honors `anchorPoint` for backward compatibility.
+ * honors `anchorPoint` for backward compatibility. Subclasses that bake the
+ * anchor into their vertex data instead (e.g. {@link Sprite3d}, via the
+ * internal `_anchorBaked` flag) opt out on **both** paths — for those, the
+ * vertex bake is the single anchoring mechanism.
  * @category Game Objects
  */
 export default class Mesh extends Renderable {
@@ -812,7 +815,9 @@ export default class Mesh extends Renderable {
 	 * path the mesh emits final world coordinates, so it opts out of the base
 	 * anchor-point offset ({@link Renderable#applyAnchorTransform} = `false`) —
 	 * otherwise the offset would leak into the shared mesh view matrix. The 2D
-	 * path keeps the anchor. See the class description for the pivot rationale.
+	 * path keeps the anchor — except for subclasses with a vertex-baked anchor
+	 * (`_anchorBaked`, e.g. {@link Sprite3d}), which suppress it on both paths.
+	 * See the class description for the pivot rationale.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 */
 	preDraw(renderer) {

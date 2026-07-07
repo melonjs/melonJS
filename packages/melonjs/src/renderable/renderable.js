@@ -57,7 +57,12 @@ export default class Renderable extends Rect {
 		 * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
 		 * <br>
 		 * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-		 * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+		 * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`, or (since 19.9) a plain string preset such as `bottom`. </i>
+		 * <br>
+		 * At construction time, `settings.anchorPoint` also accepts the named presets
+		 * `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`,
+		 * `"bottom-left"`, `"bottom-right"` on every renderable that consumes it
+		 * (Sprite, Entity, Collectable, ImageLayer, Text, BitmapText, Sprite3d and subclasses).
 		 * @type {ObservablePoint}
 		 * @default <0.5,0.5>
 		 */
