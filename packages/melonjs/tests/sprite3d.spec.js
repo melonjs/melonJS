@@ -1096,3 +1096,59 @@ describe("Sprite3d anchorPoint — adversarial", () => {
 		expect(new Set(ys(s.originalVertices))).toEqual(new Set([0, 32]));
 	});
 });
+
+describe("Sprite3d anchorPoint — remaining gap coverage", () => {
+	beforeAll(() => {
+		boot();
+		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+	});
+
+	const makeTex = () => {
+		const c = document.createElement("canvas");
+		c.width = 4;
+		c.height = 4;
+		c.getContext("2d").fillRect(0, 0, 4, 4);
+		return c;
+	};
+
+	const localYs = (v) => {
+		return [v[1], v[4], v[7], v[10]];
+	};
+
+	it('flipY keeps a "bottom" anchor pinned (art mirrors inside the box)', () => {
+		const s = new Sprite3d(100, 50, {
+			image: makeTex(),
+			width: 20,
+			height: 30,
+			anchorPoint: "bottom",
+		});
+		const before = Array.from(s.originalVertices);
+		s.flipY();
+		// mirrored about the art's own center, then re-pinned: same extents
+		expect(new Set(localYs(s.originalVertices))).toEqual(new Set([0, 30]));
+		s.flipY(false);
+		expect(Array.from(s.originalVertices)).toEqual(before);
+	});
+
+	it("REGRESSION GUARD: the legacy centered bounds would NOT enclose a bottom-anchored quad", () => {
+		// the review scenario: a 130×225 bottom-anchored character. The old
+		// bounds side max(w, h) = 225 gives a cull radius of √(225²+225²)/2 ≈
+		// 159.1, while the head corners sit hypot(65, 225) ≈ 234.2 from pos —
+		// the sprite culled while a third of it was still on screen. This
+		// pins that the shipped bounds DO enclose it and the old ones don't.
+		const w = 130;
+		const h = 225;
+		const farthestCorner = Math.hypot(w / 2, h);
+		const legacyRadius = Math.hypot(Math.max(w, h), Math.max(w, h)) / 2;
+		expect(farthestCorner).toBeGreaterThan(legacyRadius); // the old bug
+
+		const s = new Sprite3d(0, 0, {
+			image: makeTex(),
+			width: w,
+			height: h,
+			anchorPoint: "bottom",
+		});
+		const shippedRadius = Math.hypot(s.width, s.height) / 2;
+		expect(shippedRadius).toBeGreaterThanOrEqual(farthestCorner - 1e-6);
+	});
+});

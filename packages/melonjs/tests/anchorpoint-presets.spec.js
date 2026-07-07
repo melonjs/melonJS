@@ -7,12 +7,14 @@ import {
 	ImageLayer,
 	loader,
 	NineSliceSprite,
+	pool,
 	Sprite,
 	Sprite3d,
 	Text,
 	Vector2d,
 	video,
 } from "../src/index.js";
+import { applyTMXProperties } from "../src/level/tiled/TMXUtils.js";
 
 /**
  * The `settings.anchorPoint` contract, shared by every renderable that
@@ -386,5 +388,71 @@ describe("Sprite backward compatibility — adversarial", () => {
 			anchorPoint: "bottom",
 		});
 		expect([n.anchorPoint.x, n.anchorPoint.y]).toEqual([0.5, 1]);
+	});
+});
+
+describe("preset table — every name maps to its documented value", () => {
+	// validates the WHOLE table (a typo'd pair in one preset would otherwise
+	// slip through tests that only exercise "bottom"/"top-left")
+	const TABLE = [
+		["center", 0.5, 0.5],
+		["top", 0.5, 0],
+		["bottom", 0.5, 1],
+		["left", 0, 0.5],
+		["right", 1, 0.5],
+		["top-left", 0, 0],
+		["top-right", 1, 0],
+		["bottom-left", 0, 1],
+		["bottom-right", 1, 1],
+	];
+
+	it.each(TABLE)('"%s" resolves to (%f, %f)', (name, x, y) => {
+		const s = new Sprite(0, 0, { image: freshImage(), anchorPoint: name });
+		expect(s.anchorPoint.x).toBe(x);
+		expect(s.anchorPoint.y).toBe(y);
+	});
+});
+
+describe("Tiled property chain", () => {
+	it("a Tiled string property anchorPoint = 'bottom' survives coercion as a string", () => {
+		const obj = {};
+		applyTMXProperties(obj, {
+			properties: [{ name: "anchorPoint", type: "string", value: "bottom" }],
+		});
+		expect(obj.anchorPoint).toBe("bottom");
+		// ...and lands correctly through a renderable constructor
+		const s = new Sprite(0, 0, {
+			image: freshImage(),
+			anchorPoint: obj.anchorPoint,
+		});
+		expect([s.anchorPoint.x, s.anchorPoint.y]).toEqual([0.5, 1]);
+	});
+
+	it("a numeric Tiled anchorPoint property still expands to {x, y} (legacy rule)", () => {
+		const obj = {};
+		applyTMXProperties(obj, {
+			properties: [{ name: "anchorPoint", type: "string", value: "0.5" }],
+		});
+		expect(obj.anchorPoint).toEqual({ x: 0.5, y: 0.5 });
+	});
+});
+
+describe("pool recycling", () => {
+	it("a pooled Text resolves presets on pull AND on recycle", () => {
+		const t1 = pool.pull("Text", 0, 0, {
+			font: "Arial",
+			size: 16,
+			anchorPoint: "bottom",
+		});
+		expect([t1.anchorPoint.x, t1.anchorPoint.y]).toEqual([0.5, 1]);
+		pool.push(t1);
+		// recycled instance must re-resolve the NEW settings, not keep the old
+		const t2 = pool.pull("Text", 0, 0, {
+			font: "Arial",
+			size: 16,
+			anchorPoint: "top-right",
+		});
+		expect([t2.anchorPoint.x, t2.anchorPoint.y]).toEqual([1, 0]);
+		pool.push(t2);
 	});
 });
