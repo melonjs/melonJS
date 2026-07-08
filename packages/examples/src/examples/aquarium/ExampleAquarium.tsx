@@ -301,9 +301,8 @@ const createGame = () => {
 		antiAlias: true,
 	});
 
-	// register the debug plugin and open it by default (toggle with the S key)
+	// register the debug plugin (hidden by default; press S to toggle)
 	plugin.register(DebugPanelPlugin, "debugPanel");
-	(plugin.get("debugPanel") as { show?: () => void })?.show?.();
 
 	state.set(state.PLAY, new PlayScreen());
 

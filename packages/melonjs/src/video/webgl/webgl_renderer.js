@@ -885,6 +885,19 @@ export default class WebGLRenderer extends Renderer {
 		// flush pending geometry so the capture holds everything drawn so far
 		this.flush();
 
+		// a non-null `target` must be a capture this method previously returned
+		// (a FrameTexture) — any other Texture2d has no `glTexture` and would
+		// mis-drive the isTexture/reallocation logic below
+		if (
+			typeof options.target !== "undefined" &&
+			options.target !== null &&
+			!(options.target instanceof FrameTexture)
+		) {
+			throw new Error(
+				"WebGLRenderer.toFrameTexture: `target` must be a capture returned by this method",
+			);
+		}
+
 		// destination:
 		//  - no `target`            → the shared, renderer-owned slot (default;
 		//                             overwritten by the next parameterless call)

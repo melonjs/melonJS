@@ -130,13 +130,10 @@ export default class CanvasRenderer extends Renderer {
 				? undefined
 				: options.target;
 		if (typeof frame === "undefined") {
-			// mint a fresh capture (empty shared slot, or target: null)
-			const canvas = globalThis.document
-				? globalThis.document.createElement("canvas")
-				: new OffscreenCanvas(w, h);
-			canvas.width = w;
-			canvas.height = h;
-			frame = new CanvasFrameTexture(canvas);
+			// mint a fresh capture (empty shared slot, or target: null). Route
+			// through the engine's canvas factory so it honors the same
+			// OffscreenCanvas capability gating as everything else.
+			frame = new CanvasFrameTexture(Renderer.createCanvas(w, h));
 			if (shared) {
 				this._frameTexture = frame;
 			}
@@ -150,6 +147,11 @@ export default class CanvasRenderer extends Renderer {
 		}
 
 		const ctx = frame.canvas.getContext("2d");
+		if (ctx === null) {
+			throw new Error(
+				"CanvasRenderer.toFrameTexture: 2D context unavailable on the capture canvas",
+			);
+		}
 		ctx.clearRect(0, 0, w, h);
 		ctx.drawImage(src, x, y, w, h, 0, 0, w, h);
 		return frame;
