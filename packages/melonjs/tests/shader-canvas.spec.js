@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, loader, ShaderEffect, video } from "../src/index.js";
+import { boot, loader, ShaderEffect, Texture2d, video } from "../src/index.js";
 
 /**
  * Shader assets under a CANVAS renderer (e.g. a video.AUTO fallback):
@@ -26,11 +26,18 @@ describe("shader assets under the Canvas renderer", () => {
 		expect(fx.enabled).toBe(false); // born disabled → filtered from post-effect passes
 		expect(fx.shared).toBe(true); // still loader-owned
 
-		// every method no-ops without throwing
+		// every method no-ops without throwing — including a Texture2d asset
+		// passed directly (the unwrap runs before the enabled check)
+		class CanvasTexture extends Texture2d {
+			getTexture() {
+				return document.createElement("canvas");
+			}
+		}
 		expect(() => {
 			fx.setUniform("uIntensity", 1.0);
 			fx.setTime(1.0);
 			fx.setTexture("uNoise", document.createElement("canvas"));
+			fx.setTexture("uNoise2", new CanvasTexture());
 		}).not.toThrow();
 
 		// clone still works (the recipe is stored before the Canvas-mode
