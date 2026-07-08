@@ -105,8 +105,10 @@ export default class WebGLRenderer extends Renderer {
 		 * @ignore
 		 */
 		// projections saved by beginPostEffect, one per (possibly nested)
-		// active pass — a stack, matching RenderTargetPool's base stack
+		// active pass — preallocated slots + a depth counter (zero-alloc
+		// steady state), matching RenderTargetPool's base stack
 		this._effectProjectionStack = [];
+		this._effectPassDepth = 0;
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -396,11 +398,11 @@ export default class WebGLRenderer extends Renderer {
 	reset() {
 		super.reset();
 
-		// drop any pass state orphaned by a mid-pass exception — stale
-		// entries would leak a matrix per pass and inflate the pool's
-		// nesting depth forever (the pool's own stack is cleared via its
-		// destroy() below)
-		this._effectProjectionStack.length = 0;
+		// drop any pass state orphaned by a mid-pass exception — a stale
+		// depth would misalign every later pass and inflate the pool's
+		// nesting forever (the pool's own stack is cleared via its
+		// destroy() below; the preallocated slots are kept for reuse)
+		this._effectPassDepth = 0;
 
 		// clear gl context
 		this.clear();
@@ -834,8 +836,15 @@ export default class WebGLRenderer extends Renderer {
 		this.flush();
 		this.save();
 		// save the current projection (not part of the render state stack) —
-		// pushed per pass so nested passes each restore their own
-		this._effectProjectionStack.push(this.projectionMatrix.clone());
+		// one preallocated slot per nesting depth, so nested passes each
+		// restore their own without per-frame allocation
+		let savedProjection = this._effectProjectionStack[this._effectPassDepth];
+		if (typeof savedProjection === "undefined") {
+			savedProjection = this._effectProjectionStack[this._effectPassDepth] =
+				new Matrix3d();
+		}
+		savedProjection.copy(this.projectionMatrix);
+		this._effectPassDepth++;
 
 		const rt = this._renderTargetPool.begin(isCamera, effects.length, w, h);
 		// FBO creation/resize uses TEXTURE0 — invalidate the batcher's cache for that unit
@@ -946,7 +955,10 @@ export default class WebGLRenderer extends Renderer {
 
 		// restore renderer state and projection saved in beginPostEffect
 		this.restore();
-		this.projectionMatrix.copy(this._effectProjectionStack.pop());
+		this._effectPassDepth--;
+		this.projectionMatrix.copy(
+			this._effectProjectionStack[this._effectPassDepth],
+		);
 		this.currentBatcher.setProjection(this.projectionMatrix);
 	}
 
@@ -2531,6 +2543,18 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		this.maskLevel++;
+		if (this.maskLevel > 0x7f) {
+			// mask levels live in the stencil's low 7 bits — the high bit is
+			// reserved as #gradientMask's temporary marker, and an 8-bit
+			// stencil couldn't represent deeper nesting anyway
+			this.maskLevel = 0x7f;
+			if (this._maskDepthWarned !== true) {
+				this._maskDepthWarned = true;
+				console.warn(
+					"melonJS: setMask nesting deeper than 127 — mask level clamped",
+				);
+			}
+		}
 
 		// Write phase: increment stencil for the drawn shape's pixels so each
 		// setMask call adds +1 to stencil inside the shape. This lets chained

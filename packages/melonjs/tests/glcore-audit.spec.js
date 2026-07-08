@@ -222,6 +222,23 @@ describe("video/GL core audit reproductions", () => {
 		}
 	});
 
+	it("mask nesting depth is clamped below the gradient marker bit", (ctx) => {
+		requireWebGL(ctx);
+		// #gradientMask reserves stencil bit 0x80 as its temporary marker —
+		// mask levels must stay in the low 7 bits or the marker can collide
+		// (an 8-bit stencil couldn't represent deeper nesting anyway)
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		try {
+			for (let i = 0; i < 130; i++) {
+				renderer.setMask(new Rect(0, 0, 4, 4));
+			}
+			expect(renderer.maskLevel).toBeLessThan(0x80);
+		} finally {
+			renderer.clearMask();
+			warnSpy.mockRestore();
+		}
+	});
+
 	it("reset() clears the effect-projection stack (mid-pass exception recovery)", (ctx) => {
 		requireWebGL(ctx);
 		// simulate a draw throwing between begin and end: the pass never
@@ -237,9 +254,9 @@ describe("video/GL core audit reproductions", () => {
 			_postEffectManaged: false,
 		};
 		renderer.beginPostEffect(orphan);
-		expect(renderer._effectProjectionStack.length).toBe(1);
+		expect(renderer._effectPassDepth).toBe(1);
 		renderer.reset();
-		expect(renderer._effectProjectionStack.length).toBe(0);
+		expect(renderer._effectPassDepth).toBe(0);
 		effect.destroy();
 	});
 });
