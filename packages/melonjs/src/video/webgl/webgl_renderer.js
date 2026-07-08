@@ -104,7 +104,9 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {Matrix3d}
 		 * @ignore
 		 */
-		this._savedEffectProjection = new Matrix3d();
+		// projections saved by beginPostEffect, one per (possibly nested)
+		// active pass — a stack, matching RenderTargetPool's base stack
+		this._effectProjectionStack = [];
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -161,6 +163,10 @@ export default class WebGLRenderer extends Renderer {
 
 		// current gradient state (null when using solid color)
 		this._currentGradient = null;
+
+		// whether the innermost active mask (setMask) is inverted — needed by
+		// #gradientMask to gate/restore the exact stencil test setMask set
+		this._maskInvert = false;
 
 		/**
 		 * The current transformation matrix used for transformations on the overall scene
@@ -314,22 +320,22 @@ export default class WebGLRenderer extends Renderer {
 			supportedCompressedTextureFormats = {
 				astc:
 					gl.getExtension("WEBGL_compressed_texture_astc") ||
-					this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
+					gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
 				bptc:
 					gl.getExtension("EXT_texture_compression_bptc") ||
-					this._gl.getExtension("WEBKIT_EXT_texture_compression_bptc"),
+					gl.getExtension("WEBKIT_EXT_texture_compression_bptc"),
 				s3tc:
 					gl.getExtension("WEBGL_compressed_texture_s3tc") ||
-					this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"),
+					gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"),
 				s3tc_srgb:
 					gl.getExtension("WEBGL_compressed_texture_s3tc_srgb") ||
-					this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc_srgb"),
+					gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc_srgb"),
 				pvrtc:
 					gl.getExtension("WEBGL_compressed_texture_pvrtc") ||
-					this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc"),
+					gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc"),
 				etc1:
 					gl.getExtension("WEBGL_compressed_texture_etc1") ||
-					this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc1"),
+					gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc1"),
 				etc2:
 					gl.getExtension("WEBGL_compressed_texture_etc") ||
 					gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc") ||
@@ -819,8 +825,9 @@ export default class WebGLRenderer extends Renderer {
 		// since FBO construction temporarily changes GL framebuffer bindings
 		this.flush();
 		this.save();
-		// save the current projection (not part of the render state stack)
-		this._savedEffectProjection.copy(this.projectionMatrix);
+		// save the current projection (not part of the render state stack) —
+		// pushed per pass so nested passes each restore their own
+		this._effectProjectionStack.push(this.projectionMatrix.clone());
 
 		const rt = this._renderTargetPool.begin(isCamera, effects.length, w, h);
 		// FBO creation/resize uses TEXTURE0 — invalidate the batcher's cache for that unit
@@ -931,7 +938,7 @@ export default class WebGLRenderer extends Renderer {
 
 		// restore renderer state and projection saved in beginPostEffect
 		this.restore();
-		this.projectionMatrix.copy(this._savedEffectProjection);
+		this.projectionMatrix.copy(this._effectProjectionStack.pop());
 		this.currentBatcher.setProjection(this.projectionMatrix);
 	}
 
@@ -1057,6 +1064,13 @@ export default class WebGLRenderer extends Renderer {
 	 * Disable the scissor test, allowing rendering to the full viewport.
 	 */
 	disableScissor() {
+		if (this._scissorActive === true) {
+			// drain quads batched under the scissor BEFORE turning the test
+			// off — GL scissor applies at draw time, not at batch time
+			// (mirrors enableScissor / clipRect / restore, which all flush
+			// for exactly this reason)
+			this.flush();
+		}
 		this.gl.disable(this.gl.SCISSOR_TEST);
 		this._scissorActive = false;
 	}
@@ -1126,7 +1140,10 @@ export default class WebGLRenderer extends Renderer {
 	clearRect(x, y, width, height) {
 		this.save();
 		this.clipRect(x, y, width, height);
-		this.clearColor();
+		// actual transparent black, per the JSDoc above and the Canvas
+		// renderer's native clearRect — the bare clearColor() default
+		// ("#000000") parses with alpha 1 and would paint OPAQUE black
+		this.clearColor("rgba(0,0,0,0)");
 		this.restore();
 	}
 
@@ -2260,7 +2277,6 @@ export default class WebGLRenderer extends Renderer {
 		const gl = this.gl;
 		const grad = this._currentGradient;
 		const hasMask = this.maskLevel > 0;
-		const stencilRef = hasMask ? this.maskLevel + 1 : 1;
 		this._currentGradient = null;
 
 		this.flush();
@@ -2268,10 +2284,21 @@ export default class WebGLRenderer extends Renderer {
 		gl.enable(gl.STENCIL_TEST);
 		gl.colorMask(false, false, false, false);
 
+		// The stencil value of currently-VISIBLE pixels, as established by
+		// setMask: 0 for an inverted mask, maskLevel otherwise. The shape's
+		// visible pixels are tagged with a high-bit marker (mask levels only
+		// use the low 7 bits, so the marker can never collide with one),
+		// the gradient is clipped to the marker, then the marker is cleared
+		// and setMask's exact render test is re-installed.
+		const visibleRef = this._maskInvert === true ? 0 : this.maskLevel;
+		let markRef = 1;
+
 		if (hasMask) {
-			// nest within existing mask level
-			gl.stencilFunc(gl.EQUAL, this.maskLevel, 0xff);
-			gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+			markRef = 0x80 | visibleRef;
+			// tag: only pixels that are visible under the active mask
+			// (low bits == visibleRef) get the marker written
+			gl.stencilFunc(gl.EQUAL, markRef, 0x7f);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 		} else {
 			gl.clear(gl.STENCIL_BUFFER_BIT);
 			gl.stencilFunc(gl.ALWAYS, 1, 0xff);
@@ -2281,9 +2308,9 @@ export default class WebGLRenderer extends Renderer {
 		drawShape();
 		this.flush();
 
-		// use stencil to clip gradient
+		// use stencil to clip the gradient to the marked pixels
 		gl.colorMask(true, true, true, true);
-		gl.stencilFunc(gl.EQUAL, stencilRef, 0xff);
+		gl.stencilFunc(gl.EQUAL, markRef, 0xff);
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 
 		this._currentGradient = grad;
@@ -2291,16 +2318,18 @@ export default class WebGLRenderer extends Renderer {
 		this.flush();
 
 		if (hasMask) {
-			// restore the parent mask level by decrementing stencil
+			// clear the marker: write the visible value back on the shape's
+			// pixels (REPLACE writes the func ref — a no-op on unmarked
+			// visible pixels, and it strips the high bit from marked ones)
 			this._currentGradient = null;
 			gl.colorMask(false, false, false, false);
-			gl.stencilFunc(gl.EQUAL, stencilRef, 0xff);
-			gl.stencilOp(gl.KEEP, gl.KEEP, gl.DECR);
+			gl.stencilFunc(gl.EQUAL, visibleRef, 0x7f);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 			drawShape();
 			this.flush();
 			gl.colorMask(true, true, true, true);
-			// restore parent mask stencil test
-			gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+			// re-install the exact render test setMask had established
+			gl.stencilFunc(gl.EQUAL, visibleRef, 0xff);
 			gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 			this._currentGradient = grad;
 		} else {
@@ -2524,6 +2553,7 @@ export default class WebGLRenderer extends Renderer {
 			gl.stencilFunc(gl.EQUAL, this.maskLevel, 0xff);
 		}
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+		this._maskInvert = invert === true;
 	}
 
 	/**
@@ -2535,6 +2565,7 @@ export default class WebGLRenderer extends Renderer {
 			// flush the batcher
 			this.flush();
 			this.maskLevel = 0;
+			this._maskInvert = false;
 			this.gl.disable(this.gl.STENCIL_TEST);
 		}
 	}

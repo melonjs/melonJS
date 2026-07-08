@@ -1255,31 +1255,59 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} height
 	 */
 	clipRect(x, y, width, height) {
+		const context = this.getContext();
+		const t = context.getTransform();
+
+		// The two skip-optimizations below (full-viewport no-op and
+		// same-as-last-clip) must reason in DEVICE space — the rect arrives
+		// in LOCAL coordinates (e.g. Container clipping translates first,
+		// then clips at (0, 0)), so comparing raw values against the canvas
+		// box or the cache is wrong under any transform. The WebGL renderer
+		// transforms the rect the same way (see the #1349 fix).
+		if (t.b !== 0 || t.c !== 0) {
+			// rotated/skewed: the axis-aligned skip logic can't reason about
+			// the clipped region — always clip, and poison the cache so a
+			// following axis-aligned call can't false-match
+			context.beginPath();
+			context.rect(x, y, width, height);
+			context.clip();
+			this.currentScissor[0] = Number.NaN;
+			return;
+		}
+
+		// axis-aligned device-space box (scale can be negative — normalize)
+		let dx = x * t.a + t.e;
+		let dy = y * t.d + t.f;
+		let dw = width * t.a;
+		let dh = height * t.d;
+		if (dw < 0) {
+			dx += dw;
+			dw = -dw;
+		}
+		if (dh < 0) {
+			dy += dh;
+			dh = -dh;
+		}
+
 		const canvas = this.getCanvas();
-		// if requested box is different from the current canvas size;
-		if (
-			x !== 0 ||
-			y !== 0 ||
-			width !== canvas.width ||
-			height !== canvas.height
-		) {
+		// if the requested box is different from the full canvas;
+		if (dx !== 0 || dy !== 0 || dw !== canvas.width || dh !== canvas.height) {
 			const currentScissor = this.currentScissor;
 			// if different from the current scissor box
 			if (
-				currentScissor[0] !== x ||
-				currentScissor[1] !== y ||
-				currentScissor[2] !== width ||
-				currentScissor[3] !== height
+				currentScissor[0] !== dx ||
+				currentScissor[1] !== dy ||
+				currentScissor[2] !== dw ||
+				currentScissor[3] !== dh
 			) {
-				const context = this.getContext();
 				context.beginPath();
 				context.rect(x, y, width, height);
 				context.clip();
-				// save the new currentScissor box
-				currentScissor[0] = x;
-				currentScissor[1] = y;
-				currentScissor[2] = width;
-				currentScissor[3] = height;
+				// save the new scissor box in device space
+				currentScissor[0] = dx;
+				currentScissor[1] = dy;
+				currentScissor[2] = dw;
+				currentScissor[3] = dh;
 			}
 		}
 	}

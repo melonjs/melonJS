@@ -7,8 +7,11 @@
  * Renderer-agnostic — the actual RenderTarget creation is delegated to a
  * factory function provided by the renderer (WebGL, WebGPU, etc.).
  *
- * Camera effects use pool indices 0 and 1 (capture + ping-pong),
- * sprite effects use indices 2 and 3.
+ * Camera effects use pool indices 0 and 1 (capture + ping-pong); sprite
+ * effects use indices 2 and 3, and each NESTED sprite pass (a multi-effect
+ * renderable drawn inside another multi-effect renderable) gets its own pair
+ * above that (4/5, 6/7, …), tracked by a stack of active bases so begin/end
+ * pairs compose like save/restore.
  * Render targets are lazily created and resized to match the required dimensions.
  * @ignore
  */
@@ -21,10 +24,23 @@ export default class RenderTargetPool {
 		this._factory = factory;
 		/** @type {RenderTarget[]} */
 		this._pool = [];
-		/** @type {number} */
-		this._activeBase = -1;
-		/** @type {number} */
-		this._previousBase = -1;
+		/**
+		 * active pass bases, innermost last — a STACK, so nested begin/end
+		 * pairs unwind correctly (two scalars silently corrupted the pool on
+		 * nested passes: the inner end() popped the outer pass's slot)
+		 * @type {number[]}
+		 */
+		this._baseStack = [];
+	}
+
+	/**
+	 * The base index of the innermost active pass, or -1 when none.
+	 * @returns {number}
+	 */
+	get activeBase() {
+		return this._baseStack.length > 0
+			? this._baseStack[this._baseStack.length - 1]
+			: -1;
 	}
 
 	/**
@@ -53,16 +69,24 @@ export default class RenderTargetPool {
 	 * @returns {RenderTarget} the capture target (ready to bind)
 	 */
 	begin(isCamera, effectCount, width, height) {
-		const newBase = isCamera ? 0 : 2;
-		// guard against nested sprite post-effect passes (not yet supported)
-		if (!isCamera && this._activeBase === newBase) {
-			return this.get(this._activeBase, width, height);
+		let newBase;
+		if (isCamera) {
+			newBase = 0;
+		} else {
+			// each nested sprite pass gets its own capture/ping-pong pair
+			// (2/3, then 4/5, 6/7, … — lazily allocated)
+			let depth = 0;
+			for (const base of this._baseStack) {
+				if (base >= 2) {
+					depth++;
+				}
+			}
+			newBase = 2 + depth * 2;
 		}
-		this._previousBase = this._activeBase;
-		this._activeBase = newBase;
-		const rt = this.get(this._activeBase, width, height);
+		this._baseStack.push(newBase);
+		const rt = this.get(newBase, width, height);
 		if (effectCount > 1) {
-			this.get(this._activeBase + 1, width, height);
+			this.get(newBase + 1, width, height);
 		}
 		return rt;
 	}
@@ -72,10 +96,11 @@ export default class RenderTargetPool {
 	 * @returns {RenderTarget|undefined} the capture target, or undefined if no active pass
 	 */
 	getCaptureTarget() {
-		if (this._activeBase < 0) {
+		const base = this.activeBase;
+		if (base < 0) {
 			return undefined;
 		}
-		return this._pool[this._activeBase];
+		return this._pool[base];
 	}
 
 	/**
@@ -83,10 +108,11 @@ export default class RenderTargetPool {
 	 * @returns {RenderTarget|undefined} the ping-pong target, or undefined if no active pass
 	 */
 	getPingPongTarget() {
-		if (this._activeBase < 0) {
+		const base = this.activeBase;
+		if (base < 0) {
 			return undefined;
 		}
-		return this._pool[this._activeBase + 1];
+		return this._pool[base + 1];
 	}
 
 	/**
@@ -95,10 +121,10 @@ export default class RenderTargetPool {
 	 * @returns {RenderTarget|null} the parent target, or null if returning to screen
 	 */
 	end() {
-		this._activeBase = this._previousBase;
-		this._previousBase = -1;
-		if (this._activeBase >= 0 && this._pool[this._activeBase]) {
-			return this._pool[this._activeBase];
+		this._baseStack.pop();
+		const base = this.activeBase;
+		if (base >= 0 && this._pool[base]) {
+			return this._pool[base];
 		}
 		return null;
 	}
@@ -126,7 +152,6 @@ export default class RenderTargetPool {
 			}
 		}
 		this._pool.length = 0;
-		this._activeBase = -1;
-		this._previousBase = -1;
+		this._baseStack.length = 0;
 	}
 }

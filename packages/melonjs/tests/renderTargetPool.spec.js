@@ -30,19 +30,19 @@ describe("RenderTargetPool", () => {
 		});
 
 		it("should default activeBase to -1", () => {
-			expect(pool._activeBase).toEqual(-1);
+			expect(pool.activeBase).toEqual(-1);
 		});
 	});
 
 	describe("begin()", () => {
 		it("should set activeBase to 0 for camera", () => {
 			pool.begin(true, 1, 100, 100);
-			expect(pool._activeBase).toEqual(0);
+			expect(pool.activeBase).toEqual(0);
 		});
 
 		it("should set activeBase to 2 for sprites", () => {
 			pool.begin(false, 1, 100, 100);
-			expect(pool._activeBase).toEqual(2);
+			expect(pool.activeBase).toEqual(2);
 		});
 
 		it("should create render target via factory", () => {
@@ -73,7 +73,7 @@ describe("RenderTargetPool", () => {
 		});
 
 		it("should return the correct pool index for camera", () => {
-			pool._activeBase = 0;
+			pool._baseStack.push(0);
 			pool._pool[0] = { id: "capture-cam" };
 			pool._pool[1] = { id: "pingpong-cam" };
 
@@ -82,7 +82,7 @@ describe("RenderTargetPool", () => {
 		});
 
 		it("should return the correct pool index for sprite", () => {
-			pool._activeBase = 2;
+			pool._baseStack.push(2);
 			pool._pool[2] = { id: "capture-sprite" };
 			pool._pool[3] = { id: "pingpong-sprite" };
 
@@ -96,15 +96,46 @@ describe("RenderTargetPool", () => {
 			pool._pool[2] = { id: "spr0" };
 			pool._pool[3] = { id: "spr1" };
 
-			pool._activeBase = 0;
+			pool._baseStack.push(0);
 			expect(pool.getCaptureTarget().id).toEqual("cam0");
 
-			pool._activeBase = 2;
+			pool._baseStack.push(2);
 			expect(pool.getCaptureTarget().id).toEqual("spr0");
 
 			// camera targets still intact
-			pool._activeBase = 0;
+			pool._baseStack.push(0);
 			expect(pool.getCaptureTarget().id).toEqual("cam0");
+		});
+	});
+
+	describe("nested sprite passes (the 2026-07 GL-core audit fix)", () => {
+		it("allocates a distinct pair per nesting level and unwinds like a stack", () => {
+			// pre-fix, the pool tracked two scalars: a nested sprite begin()
+			// early-returned without pushing, the inner end() popped the
+			// OUTER pass's slot, and the outer endPostEffect dereferenced
+			// undefined — a per-frame crash for a 2-effect renderable drawn
+			// inside a 2-effect container
+			const cam = pool.begin(true, 2, 100, 100);
+			const outer = pool.begin(false, 2, 100, 100);
+			expect(pool.activeBase).toEqual(2);
+			const inner = pool.begin(false, 2, 100, 100);
+			expect(pool.activeBase).toEqual(4); // its own pair, above the outer
+			expect(inner).not.toBe(outer);
+
+			expect(pool.end()).toBe(outer); // inner end → back to the outer pass
+			expect(pool.activeBase).toEqual(2);
+			expect(pool.end()).toBe(cam); // outer end → back to the camera pass
+			expect(pool.end()).toBeNull(); // camera end → back to the screen
+			expect(pool.activeBase).toEqual(-1);
+		});
+
+		it("getCaptureTarget/getPingPongTarget follow the innermost pass", () => {
+			pool.begin(false, 2, 100, 100);
+			const outerCapture = pool.getCaptureTarget();
+			pool.begin(false, 2, 100, 100);
+			expect(pool.getCaptureTarget()).not.toBe(outerCapture);
+			pool.end();
+			expect(pool.getCaptureTarget()).toBe(outerCapture);
 		});
 	});
 
@@ -112,10 +143,10 @@ describe("RenderTargetPool", () => {
 		it("should restore previous activeBase", () => {
 			pool.begin(true, 1, 100, 100);
 			pool.begin(false, 1, 100, 100);
-			expect(pool._activeBase).toEqual(2);
+			expect(pool.activeBase).toEqual(2);
 
 			const parent = pool.end();
-			expect(pool._activeBase).toEqual(0);
+			expect(pool.activeBase).toEqual(0);
 			expect(parent).toBe(pool._pool[0]);
 		});
 
