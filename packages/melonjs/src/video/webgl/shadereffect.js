@@ -174,7 +174,12 @@ export default class ShaderEffect {
 	 * @param {object|Float32Array} value - the value to assign to that uniform
 	 */
 	setUniform(name, value) {
-		if (this.enabled) {
+		// forward whenever a shader exists (WebGL mode): GLShader handles the
+		// suspended (context-lost) state by deferring to its uniform cache.
+		// Gating on `enabled` here silently dropped values set during a loss
+		// window — defeating that replay — or while the user had the effect
+		// disabled. Canvas stubs have no shader and keep no-oping.
+		if (typeof this._shader !== "undefined") {
 			this._shader.setUniform(name, value);
 		}
 	}
@@ -209,7 +214,14 @@ export default class ShaderEffect {
 		// would make setUniform throw), and not cached (so it stays correct
 		// across a context-loss recompile). `enabled` is false while suspended
 		// or destroyed, so the uniforms map is never null here.
-		if (this.enabled && typeof this._shader.uniforms.uTime !== "undefined") {
+		// skipped while suspended (uniforms === null mid-context-loss; a
+		// per-frame call self-heals on the next frame) and on Canvas stubs;
+		// a USER-disabled but live effect still takes the value
+		if (
+			typeof this._shader !== "undefined" &&
+			!this._shader.suspended &&
+			typeof this._shader.uniforms.uTime !== "undefined"
+		) {
 			this._shader.setUniform("uTime", seconds);
 		}
 		return this;
@@ -247,29 +259,37 @@ export default class ShaderEffect {
 	 * water.setTime(me.timer.getTime() / 1000);
 	 */
 	setTexture(name, image, repeat = "no-repeat") {
+		// Canvas stub: no shader, keep the inert no-op
+		if (typeof this._shader === "undefined") {
+			return this;
+		}
 		// accept a Texture2d asset directly — resolve it to its backing source
 		if (image instanceof Texture2d) {
 			image = image.getTexture();
 		}
-		if (this.enabled) {
-			const existing = this._extraTextures.get(name);
-			if (existing) {
-				// release the previous GL texture + unit reservation before
-				// replacing the binding
-				if (existing.tex !== null) {
-					this._shader.gl.deleteTexture(existing.tex);
-				}
-				if (existing.unit !== undefined) {
-					this._renderer.cache.releaseUnit(existing.unit);
-				}
+		// store the entry regardless of `enabled`: the GL work happens lazily
+		// in _prepareTextures on the next enabled draw, so a binding set while
+		// the effect is disabled — or mid-context-loss, where entries set
+		// during the window used to vanish permanently — survives intact
+		// (the loss handler already nulled `tex`/`unit`, so the replacement
+		// cleanup below is naturally safe in that window)
+		const existing = this._extraTextures.get(name);
+		if (existing) {
+			// release the previous GL texture + unit reservation before
+			// replacing the binding
+			if (existing.tex !== null) {
+				this._shader.gl.deleteTexture(existing.tex);
 			}
-			this._extraTextures.set(name, {
-				image,
-				repeat,
-				tex: null,
-				unit: undefined,
-			});
+			if (existing.unit !== undefined) {
+				this._renderer.cache.releaseUnit(existing.unit);
+			}
 		}
+		this._extraTextures.set(name, {
+			image,
+			repeat,
+			tex: null,
+			unit: undefined,
+		});
 		return this;
 	}
 

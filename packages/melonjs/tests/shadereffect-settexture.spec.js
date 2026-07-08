@@ -221,3 +221,99 @@ describe("ShaderEffect.setTexture (extra sampler binding)", () => {
 		expect(cache.reservedUnits.has(unit)).toBe(false);
 	});
 });
+
+/**
+ * setUniform / setTexture must not silently drop values while the effect is
+ * disabled — whether by the user, or automatically during a context-loss
+ * window (where dropping defeats GLShader's suspend-cache replay: the value
+ * set mid-loss should survive the restore). Found by the 2026-07 GL-core
+ * audit; runs LAST in this file because losing the context disrupts GL state.
+ */
+describe("ShaderEffect value-setting while disabled (audit fix)", () => {
+	let renderer;
+	let gl;
+	let isWebGL;
+
+	beforeAll(() => {
+		boot();
+		video.init(SIZE, SIZE, {
+			parent: "screen",
+			renderer: video.WEBGL,
+			failIfMajorPerformanceCaveat: false,
+			antiAlias: false,
+		});
+		renderer = video.renderer;
+		isWebGL = renderer instanceof WebGLRenderer;
+		if (isWebGL) {
+			gl = renderer.gl;
+		}
+	});
+
+	const tick = () => {
+		return new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
+	};
+
+	it("setUniform while USER-disabled applies once re-enabled", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const fx = new ShaderEffect(
+			renderer,
+			"uniform float uIntensity;\nvec4 apply(vec4 color, vec2 uv) { return color * uIntensity; }",
+		);
+		fx.setUniform("uIntensity", 0.25);
+		fx.enabled = false;
+		fx.setUniform("uIntensity", 0.75); // must not be dropped
+		fx.enabled = true;
+		const loc = fx._shader.gl.getUniformLocation(
+			fx._shader.program,
+			"uIntensity",
+		);
+		expect(fx._shader.gl.getUniform(fx._shader.program, loc)).toBeCloseTo(
+			0.75,
+			5,
+		);
+		fx.destroy();
+	});
+
+	it("setUniform + setTexture during a context-loss window survive the restore", async (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (!ext) {
+			ctx.skip();
+			return;
+		}
+		const fx = new ShaderEffect(
+			renderer,
+			"uniform float uIntensity;\nuniform sampler2D uExtra;\nvec4 apply(vec4 color, vec2 uv) { return texture2D(uExtra, uv) * uIntensity; }",
+		);
+		fx.setUniform("uIntensity", 0.25);
+
+		ext.loseContext();
+		await tick();
+		expect(fx.enabled).toBe(false); // auto-disabled during the window
+
+		// values set MID-LOSS must survive: setUniform defers to the
+		// GLShader suspend cache; setTexture stores its entry for the lazy
+		// _prepareTextures upload on the next enabled draw
+		fx.setUniform("uIntensity", 0.75);
+		fx.setTexture("uExtra", solidCanvas(255, 0, 0));
+
+		ext.restoreContext();
+		await tick();
+		await tick();
+		expect(fx.enabled).toBe(true);
+
+		const shader = fx._shader;
+		const loc = shader.gl.getUniformLocation(shader.program, "uIntensity");
+		expect(shader.gl.getUniform(shader.program, loc)).toBeCloseTo(0.75, 5);
+		expect(fx._extraTextures.has("uExtra")).toBe(true);
+		fx.destroy();
+	});
+});
