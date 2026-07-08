@@ -174,12 +174,13 @@ export default class ShaderEffect {
 	 * @param {object|Float32Array} value - the value to assign to that uniform
 	 */
 	setUniform(name, value) {
-		// forward whenever a shader exists (WebGL mode): GLShader handles the
-		// suspended (context-lost) state by deferring to its uniform cache.
-		// Gating on `enabled` here silently dropped values set during a loss
-		// window — defeating that replay — or while the user had the effect
-		// disabled. Canvas stubs have no shader and keep no-oping.
-		if (typeof this._shader !== "undefined") {
+		// forward whenever a live shader exists (WebGL mode): GLShader handles
+		// the suspended (context-lost) state by deferring to its uniform
+		// cache. Gating on `enabled` here silently dropped values set during
+		// a loss window — defeating that replay — or while the user had the
+		// effect disabled. Canvas stubs (no shader) and destroyed effects
+		// (partial-state immunity, see destroy()) keep no-oping.
+		if (typeof this._shader !== "undefined" && this.destroyed !== true) {
 			this._shader.setUniform(name, value);
 		}
 	}
@@ -219,6 +220,7 @@ export default class ShaderEffect {
 		// a USER-disabled but live effect still takes the value
 		if (
 			typeof this._shader !== "undefined" &&
+			this.destroyed !== true &&
 			!this._shader.suspended &&
 			typeof this._shader.uniforms.uTime !== "undefined"
 		) {
@@ -259,8 +261,8 @@ export default class ShaderEffect {
 	 * water.setTime(me.timer.getTime() / 1000);
 	 */
 	setTexture(name, image, repeat = "no-repeat") {
-		// Canvas stub: no shader, keep the inert no-op
-		if (typeof this._shader === "undefined") {
+		// Canvas stub (no shader) and destroyed effects: keep the inert no-op
+		if (typeof this._shader === "undefined" || this.destroyed === true) {
 			return this;
 		}
 		// accept a Texture2d asset directly — resolve it to its backing source
