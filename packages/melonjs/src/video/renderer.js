@@ -19,6 +19,7 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  * @import {Line} from "./../geometries/line.ts";
  * @import {Ellipse} from "./../geometries/ellipse.ts";
  * @import {Bounds} from "./../physics/bounds.ts";
+ * @import {default as Texture2d} from "./texture/texture2d.ts";
  */
 
 /**
@@ -1116,6 +1117,36 @@ export default class Renderer {
 	 */
 	toDataURL(type = "image/png", quality) {
 		return this.renderTarget.toDataURL(type, quality);
+	}
+
+	/**
+	 * Capture the current frame — everything drawn to the active framebuffer /
+	 * canvas so far — into a {@link Texture2d}, on the GPU where possible (no
+	 * `readPixels` round-trip). The fourth member of the {@link Renderer#toDataURL}
+	 * / {@link Renderer#toBlob} / {@link Renderer#toImageBitmap} family — "the
+	 * current frame as X" — and the only one whose result can stay GPU-resident,
+	 * ready to feed a shader as a screen texture (water refraction, heat haze,
+	 * frosted glass).
+	 *
+	 * Abstract on the base renderer: the concrete backends implement it —
+	 * {@link WebGLRenderer#toFrameTexture} (a `copyTexImage2D` into a live GPU
+	 * texture, bound as an extra sampler via {@link ShaderEffect#setTexture}) and
+	 * {@link CanvasRenderer#toFrameTexture} (an offscreen-canvas copy, for family
+	 * parity — custom shaders don't run under Canvas).
+	 * @param {object} [options]
+	 * @param {Texture2d|null} [options.target] - controls the destination: omit
+	 *   for the shared renderer slot (default); pass a capture previously
+	 *   returned by this method to refresh it in place; pass `null` to mint a
+	 *   fresh, caller-owned capture
+	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
+	 *   only this sub-region of the frame
+	 * @returns {Texture2d} a texture holding the captured frame
+	 * @example
+	 * effect.setTexture("uScene", renderer.toFrameTexture());
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	toFrameTexture(options) {
+		throw new Error("toFrameTexture() is not implemented by this renderer");
 	}
 }
 
