@@ -213,7 +213,8 @@ class PlayScreen extends Stage {
 
 		// the refraction effect, preloaded as a "shader" asset
 		this.effect = loader.getShader("aquariumWater") as ShaderEffect;
-		this.effect.setTexture("uNoise", noise.getTexture(), "repeat");
+		// pass the NoiseTexture2d asset directly — setTexture resolves it (19.9)
+		this.effect.setTexture("uNoise", noise, "repeat");
 		this.effect.setUniform("uStrength", 0.02);
 
 		// seabed backdrop (z 0), stretched to the viewport

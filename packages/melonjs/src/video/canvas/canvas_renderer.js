@@ -97,8 +97,10 @@ export default class CanvasRenderer extends Renderer {
 	 * Canvas renderer, so the result is a plain drawable for CPU-side reuse
 	 * rather than a live shader input.
 	 * @param {object} [options]
-	 * @param {Texture2d} [options.target] - a capture previously returned here to
-	 *   refresh in place, instead of the shared renderer slot
+	 * @param {Texture2d|null} [options.target] - controls the destination: omit
+	 *   for the shared renderer slot (default); pass a capture previously
+	 *   returned by this method to refresh it in place; pass `null` to mint a
+	 *   fresh, caller-owned capture (mirrors {@link WebGLRenderer#toFrameTexture})
 	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
 	 *   only this sub-region (canvas pixels, top-left origin)
 	 * @returns {Texture2d} a texture holding the captured frame
@@ -127,11 +129,8 @@ export default class CanvasRenderer extends Renderer {
 			: options.target === null
 				? undefined
 				: options.target;
-		if (
-			typeof frame === "undefined" ||
-			frame.width !== w ||
-			frame.height !== h
-		) {
+		if (typeof frame === "undefined") {
+			// mint a fresh capture (empty shared slot, or target: null)
 			const canvas = globalThis.document
 				? globalThis.document.createElement("canvas")
 				: new OffscreenCanvas(w, h);
@@ -141,6 +140,13 @@ export default class CanvasRenderer extends Renderer {
 			if (shared) {
 				this._frameTexture = frame;
 			}
+		} else if (frame.width !== w || frame.height !== h) {
+			// resize the SAME capture in place (keep the object identity, like
+			// the WebGL variant) rather than returning a different instance
+			frame.canvas.width = w;
+			frame.canvas.height = h;
+			frame.width = w;
+			frame.height = h;
 		}
 
 		const ctx = frame.canvas.getContext("2d");

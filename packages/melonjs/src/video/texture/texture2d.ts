@@ -1,20 +1,28 @@
 /**
+ * Compile-time-only brand key; no runtime value can hold it.
+ * @ignore
+ */
+declare const gpuResidentBrand: unique symbol;
+
+/**
  * An opaque, GPU-resident texture backing — the source a GPU-resident
- * {@link Texture2d} resolves to (for example the framebuffer copy a future
- * `renderer.toFrameTexture()` produces). Such a backing uploads/binds itself
- * through the texture cache instead of being read back to the CPU. Its
+ * {@link Texture2d} resolves to (for example the framebuffer copy
+ * {@link WebGLRenderer#toFrameTexture} produces). Such a backing uploads/binds
+ * itself through the texture cache instead of being read back to the CPU. Its
  * concrete shape is an engine internal that may change between releases:
  * obtain values from the engine and pass them back to the engine — do not
  * construct or inspect them.
+ *
+ * Nominally branded with a `unique symbol`, so only engine-provided values
+ * satisfy the type — a plain object is NOT assignable, keeping
+ * {@link Texture2dSource} (and {@link Texture2d#getTexture}) honestly typed.
  */
 export interface GPUResidentTexture {
 	/**
-	 * Structural brand only — GPU-resident backings are opaque and expose no
-	 * public runtime member. Present so this stays distinct from a plain
-	 * object without naming any internal class in the public type surface.
+	 * Phantom nominal brand — never present at runtime.
 	 * @ignore
 	 */
-	readonly __gpuResidentTexture?: never;
+	readonly [gpuResidentBrand]: true;
 }
 
 /**

@@ -10,17 +10,19 @@ import {
 
 /**
  * `renderer.toFrameTexture()` captures the current framebuffer into a
- * {@link Texture2d} entirely on the GPU (WebGL2 blitFramebuffer / WebGL1
- * copyTexImage2D — no readPixels round-trip), for screen-space effects (water
- * refraction, heat haze, glass). The fourth member of the toDataURL / toBlob /
- * toImageBitmap family; the only one that never leaves the GPU. Ticket #1544.
+ * {@link Texture2d} entirely on the GPU (copyTexImage2D to allocate, then
+ * copyTexSubImage2D to refresh — no readPixels round-trip), for screen-space
+ * effects (water refraction, heat haze, glass). The fourth member of the
+ * toDataURL / toBlob / toImageBitmap family; the only one that never leaves the
+ * GPU. Ticket #1544.
  *
  * Capture CONTENT is verified by attaching the returned texture to a scratch
  * framebuffer and reading it back. The live-bind SAMPLING path (a shader
  * reading the capture) is verified separately with a normally-uploaded texture:
- * the headless software rasterizer used in CI cannot *sample* a blit-destination
- * texture (it captures + reads back fine, and real GPUs sample it fine), so the
- * two concerns are checked independently.
+ * the headless software rasterizer used in CI does not reliably *sample* the
+ * RGB capture texture (it captures + reads back fine, and real GPUs sample it
+ * fine — see the Aquarium example), so the two concerns are checked
+ * independently.
  */
 const SIZE = 32;
 

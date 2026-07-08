@@ -814,9 +814,10 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * Capture the current frame — everything drawn to the active framebuffer so
-	 * far — into a {@link Texture2d}, entirely on the GPU (a single
-	 * `copyTexSubImage2D`, no `readPixels` round-trip or pipeline stall). The
-	 * fourth member of the {@link Renderer#toDataURL} / {@link Renderer#toBlob} /
+	 * far — into a {@link Texture2d}, entirely on the GPU (a `copyTexImage2D` on
+	 * the first capture, then `copyTexSubImage2D` to refresh in place; no
+	 * `readPixels` round-trip or pipeline stall). The fourth member of the
+	 * {@link Renderer#toDataURL} / {@link Renderer#toBlob} /
 	 * {@link Renderer#toImageBitmap} family — "the current frame as X" — and the
 	 * only one whose result never leaves the GPU.
 	 *
@@ -838,10 +839,11 @@ export default class WebGLRenderer extends Renderer {
 	 * each frame into the shared slot refreshes what the shader samples without
 	 * any re-bind.
 	 *
-	 * Color only (RGBA); the framebuffer's depth is not captured. By default the
-	 * result is a shared, renderer-owned texture valid until the next
-	 * parameterless call — pass `options.target` for an independent, caller-owned
-	 * capture (e.g. two captures alive in the same frame).
+	 * Color only, captured into an RGB texture (opaque — samples with alpha = 1);
+	 * the framebuffer's depth is not captured. By default the result is a shared,
+	 * renderer-owned texture valid until the next parameterless call — pass
+	 * `options.target` for an independent, caller-owned capture (e.g. two
+	 * captures alive in the same frame).
 	 * @param {object} [options]
 	 * @param {Texture2d|null} [options.target] - controls the destination: omit
 	 *   for the shared renderer slot (default); pass a capture previously
@@ -917,31 +919,35 @@ export default class WebGLRenderer extends Renderer {
 			}
 		}
 
-		// Copy the bound framebuffer into the capture texture with
-		// copyTexImage2D — the standard framebuffer→texture path (Three.js
-		// copyFramebufferToTexture uses it). An RGB internalformat is a valid
-		// subset of BOTH an alpha-less default framebuffer (melonJS creates the
-		// context with `alpha: transparent`, usually false) AND an RGBA camera
-		// FBO, so the copy never trips INVALID_OPERATION on a format mismatch,
-		// and the capture samples as an opaque backdrop (alpha = 1). Unlike a
-		// blitFramebuffer destination — which some drivers won't sample in the
-		// same frame — a copyTexImage2D texture samples reliably everywhere.
+		// Copy the bound framebuffer into the capture texture — the standard
+		// framebuffer→texture path (Three.js copyFramebufferToTexture uses it).
+		// An RGB internalformat is a valid subset of BOTH an alpha-less default
+		// framebuffer (melonJS creates the context with `alpha: transparent`,
+		// usually false) AND an RGBA camera FBO, so the copy never trips
+		// INVALID_OPERATION on a format mismatch, and the capture samples as an
+		// opaque backdrop (alpha = 1). Unlike a blitFramebuffer destination —
+		// which some drivers won't sample in the same frame — an RGB texture
+		// copied this way samples reliably everywhere.
 		const batcher = this.setBatcher("quad");
 		const unit = batcher.maxBatchTextures - 1;
 		if (frame.glTexture === null) {
+			// first capture into this slot: copyTexImage2D allocates the RGB
+			// storage AND copies in one call
 			frame.glTexture = gl.createTexture();
-			// bind through the batcher so boundTextures stays in lockstep; the
-			// sampler params only need setting once (copyTexImage2D re-specifies
-			// the storage, not the parameters)
 			batcher.bindTexture2D(frame.glTexture, unit, false);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, x, y, w, h, 0);
 		} else {
+			// steady state: refresh the existing storage in place — no per-frame
+			// reallocation. Same size is guaranteed (a size change nulls
+			// glTexture above via the shared-slot realloc), so copyTexSubImage2D
+			// is valid and copies RGB from either an RGB or RGBA source.
 			batcher.bindTexture2D(frame.glTexture, unit, false);
+			gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, x, y, w, h);
 		}
-		gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, x, y, w, h, 0);
 
 		return frame;
 	}
