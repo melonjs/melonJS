@@ -4,6 +4,7 @@ import {
 	off,
 	on,
 } from "../../system/event.ts";
+import Texture2d from "../texture/texture2d.ts";
 import GLShader from "./glshader.js";
 import quadVertex from "./shaders/quad.vert";
 
@@ -223,10 +224,11 @@ export default class ShaderEffect {
 	 * texture-unit juggling.
 	 *
 	 * Declare the sampler in your fragment (`uniform sampler2D <name>;`) and pass
-	 * that name here. Any engine texture works — e.g. `noiseTexture.getTexture()`.
-	 * No-op in Canvas mode.
+	 * that name here. Any engine texture works — a {@link Texture2d} asset
+	 * (`NoiseTexture2d`, `TextureAtlas`, …) can be passed directly, or a raw
+	 * drawable source. No-op in Canvas mode.
 	 * @param {string} name - the `sampler2D` uniform name declared in the fragment
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - the texture source
+	 * @param {Texture2d|HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - the texture: an engine texture asset, or a raw drawable source
 	 * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [repeat="no-repeat"] - wrap mode; use `"repeat"` for a tiled/scrolled texture (power-of-two size under WebGL 1)
 	 * @returns {ShaderEffect} this effect for chaining
 	 * @example
@@ -239,12 +241,16 @@ export default class ShaderEffect {
 	 *         vec2 flow = texture2D(uNoise, uv + uTime * 0.03).rg - 0.5;
 	 *         return texture2D(uSampler, uv + flow * 0.02);
 	 *     }`);
-	 * water.setTexture("uNoise", noise.getTexture(), "repeat");
+	 * water.setTexture("uNoise", noise, "repeat");
 	 * waterSprite.shader = water;
 	 * // each frame, in your Stage's update(dt):
 	 * water.setTime(me.timer.getTime() / 1000);
 	 */
 	setTexture(name, image, repeat = "no-repeat") {
+		// accept a Texture2d asset directly — resolve it to its backing source
+		if (image instanceof Texture2d) {
+			image = image.getTexture();
+		}
 		if (this.enabled) {
 			const existing = this._extraTextures.get(name);
 			if (existing) {

@@ -1,5 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, ShaderEffect, video, WebGLRenderer } from "../src/index.js";
+import {
+	boot,
+	NoiseTexture2d,
+	ShaderEffect,
+	Texture2d,
+	video,
+	WebGLRenderer,
+} from "../src/index.js";
 
 /**
  * `ShaderEffect.setTexture(name, image)` binds an extra `sampler2D` (a noise
@@ -85,6 +92,59 @@ describe("ShaderEffect.setTexture (extra sampler binding)", () => {
 
 		passthrough.destroy();
 		extra.destroy();
+	});
+
+	it("accepts a Texture2d asset directly, without the .getTexture() dance", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const blue = solidCanvas(0, 0, 255);
+
+		// a minimal Texture2d subclass wrapping a red canvas — the same
+		// contract every texture asset (TextureAtlas, NoiseTexture2d…)
+		// implements
+		class CanvasTexture extends Texture2d {
+			constructor(canvas) {
+				super();
+				this._canvas = canvas;
+			}
+			getTexture() {
+				return this._canvas;
+			}
+		}
+
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform sampler2D uExtra;\nvec4 apply(vec4 color, vec2 uv) { return texture2D(uExtra, uv); }",
+		);
+		// the asset object itself — not asset.getTexture()
+		effect.setTexture("uExtra", new CanvasTexture(solidCanvas(255, 0, 0)));
+		const sampled = drawCentrePixel(effect, blue);
+		expect(sampled[0]).toBeGreaterThan(200); // red — asset resolved + sampled
+		expect(sampled[2]).toBeLessThan(60);
+		effect.destroy();
+	});
+
+	it("accepts a NoiseTexture2d asset directly (the documented idiom, minus .getTexture())", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const blue = solidCanvas(0, 0, 255);
+		const noise = new NoiseTexture2d({ width: SIZE, height: SIZE });
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform sampler2D uNoise;\nvec4 apply(vec4 color, vec2 uv) { return vec4(vec3(texture2D(uNoise, uv).r), 1.0); }",
+		);
+		effect.setTexture("uNoise", noise);
+		const sampled = drawCentrePixel(effect, blue);
+		// noise output is greyscale: not the blue source, and alpha intact —
+		// proves the asset was resolved to its baked canvas and sampled
+		expect(sampled[0]).toBe(sampled[2]); // grey: r === b
+		expect(sampled[3]).toBe(255);
+		effect.destroy();
+		noise.destroy();
 	});
 
 	it("uploads to a reserved unit, sets the sampler, caches, and frees on destroy", (ctx) => {
