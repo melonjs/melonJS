@@ -299,6 +299,9 @@ const createGame = () => {
 		// toFrameTexture + ShaderEffect are WebGL features
 		renderer: video.WEBGL,
 		antiAlias: true,
+		// render at sub-pixel positions so the slow-swimming fish glide smoothly
+		// instead of snapping pixel-to-pixel (default floors dx/dy to integers)
+		subPixel: true,
 	});
 
 	// register the debug plugin (hidden by default; press S to toggle)
