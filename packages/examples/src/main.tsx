@@ -98,9 +98,9 @@ const ExampleSpriteIlluminator = lazy(() =>
 		default: m.ExampleSpriteIlluminator,
 	})),
 );
-const ExampleWaterRefraction = lazy(() =>
-	import("./examples/waterRefraction/ExampleWaterRefraction").then((m) => ({
-		default: m.ExampleWaterRefraction,
+const ExampleAquarium = lazy(() =>
+	import("./examples/aquarium/ExampleAquarium").then((m) => ({
+		default: m.ExampleAquarium,
 	})),
 );
 const ExampleLineOfSight = lazy(() =>
@@ -362,12 +362,12 @@ const examples: {
 			"Per-pixel sprite lighting from normal maps. Animated character + foreground prop tile lit by a moving cursor light, faithfully ported from CodeAndWeb's cocos2d-x demo.",
 	},
 	{
-		component: <ExampleWaterRefraction />,
-		label: "Water Refraction",
-		path: "water-refraction",
-		sourceDir: "waterRefraction",
+		component: <ExampleAquarium />,
+		label: "Aquarium",
+		path: "aquarium",
+		sourceDir: "aquarium",
 		description:
-			"GPU UV-refraction: a tiled pool floor rippled through a custom ShaderEffect that samples a second, static NoiseTexture2d bound via setTexture() — scrolled on the GPU (setTime), no per-frame CPU re-bake. Pointer swells, animated caustics, live ripple-strength slider.",
+			"Screen-space water refraction via renderer.toFrameTexture(): fish swim across a planted tank, then a full-screen water surface captures the live frame on the GPU and re-samples it through a scrolling NoiseTexture2d flow map — the fish shimmer as if seen through moving water, with no readPixels round-trip. The industry-standard screen-texture pattern (Godot hint_screen_texture / Unity _CameraOpaqueTexture).",
 	},
 	{
 		component: <ExampleLineOfSight />,

@@ -35,11 +35,6 @@ export class FrameTexture extends Texture2d {
 		 */
 		this.glTexture = null;
 		/**
-		 * the blit-destination framebuffer (WebGL2 capture path), or null
-		 * @type {WebGLFramebuffer|null}
-		 */
-		this._fbo = null;
-		/**
 		 * marks this as a live GPU-resident source — see {@link ShaderEffect#setTexture}
 		 * @type {boolean}
 		 */
@@ -60,14 +55,9 @@ export class FrameTexture extends Texture2d {
 	 * capture and is done with it. Idempotent.
 	 */
 	destroy() {
-		const gl = this._renderer.gl;
 		if (this.glTexture !== null) {
-			gl.deleteTexture(this.glTexture);
+			this._renderer.gl.deleteTexture(this.glTexture);
 			this.glTexture = null;
-		}
-		if (this._fbo !== null) {
-			gl.deleteFramebuffer(this._fbo);
-			this._fbo = null;
 		}
 	}
 }

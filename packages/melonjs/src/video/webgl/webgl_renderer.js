@@ -917,94 +917,31 @@ export default class WebGLRenderer extends Renderer {
 			}
 		}
 
-		// The destination is an RGBA texture (RGBA is what shaders sample
-		// cleanly). The tricky part is copying from an ALPHA-LESS framebuffer —
-		// melonJS creates the default context with `alpha: transparent`
-		// (usually false), so the backbuffer has no alpha, and both
-		// copyTexImage2D and copyTexSubImage2D into an RGBA texture are then
-		// INVALID_OPERATION under WebGL2.
+		// Copy the bound framebuffer into the capture texture with
+		// copyTexImage2D — the standard framebuffer→texture path (Three.js
+		// copyFramebufferToTexture uses it). An RGB internalformat is a valid
+		// subset of BOTH an alpha-less default framebuffer (melonJS creates the
+		// context with `alpha: transparent`, usually false) AND an RGBA camera
+		// FBO, so the copy never trips INVALID_OPERATION on a format mismatch,
+		// and the capture samples as an opaque backdrop (alpha = 1). Unlike a
+		// blitFramebuffer destination — which some drivers won't sample in the
+		// same frame — a copyTexImage2D texture samples reliably everywhere.
 		const batcher = this.setBatcher("quad");
 		const unit = batcher.maxBatchTextures - 1;
-		if (this.WebGLVersion > 1) {
-			// WebGL2: blitFramebuffer converts formats, filling a missing alpha
-			// with 1 — so an alpha-less source lands as an opaque RGBA texture.
-			// It also reads/writes framebuffers directly (no texture-unit games).
-			const srcFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-			if (frame.glTexture === null) {
-				const tex = gl.createTexture();
-				// bind through the batcher (keeps boundTextures consistent) only
-				// to set the sampler params; the copy itself is an FBO blit
-				batcher.bindTexture2D(tex, unit, false);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0,
-					gl.RGBA,
-					w,
-					h,
-					0,
-					gl.RGBA,
-					gl.UNSIGNED_BYTE,
-					null,
-				);
-				frame.glTexture = tex;
-			}
-			// one reusable scratch FBO for the blit destination. The target
-			// texture is attached only for the blit and DETACHED immediately
-			// after — a texture left attached to a framebuffer is refused for
-			// sampling by strict drivers (feedback-loop protection).
-			if (typeof this._captureFBO === "undefined") {
-				this._captureFBO = gl.createFramebuffer();
-			}
-			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, srcFB);
-			gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._captureFBO);
-			gl.framebufferTexture2D(
-				gl.DRAW_FRAMEBUFFER,
-				gl.COLOR_ATTACHMENT0,
-				gl.TEXTURE_2D,
-				frame.glTexture,
-				0,
-			);
-			gl.blitFramebuffer(
-				x,
-				y,
-				x + w,
-				y + h,
-				0,
-				0,
-				w,
-				h,
-				gl.COLOR_BUFFER_BIT,
-				gl.NEAREST,
-			);
-			// detach the texture and restore the source framebuffer
-			gl.framebufferTexture2D(
-				gl.DRAW_FRAMEBUFFER,
-				gl.COLOR_ATTACHMENT0,
-				gl.TEXTURE_2D,
-				null,
-				0,
-			);
-			gl.bindFramebuffer(gl.FRAMEBUFFER, srcFB);
-		} else {
-			// WebGL1: copyTexImage2D(RGBA) fills a missing alpha with 1 (ES2
-			// semantics), so it works from an alpha-less framebuffer. Realloc
-			// per capture — the legacy path; live-bind reads the handle fresh.
-			if (frame.glTexture !== null) {
-				gl.deleteTexture(frame.glTexture);
-			}
-			const tex = gl.createTexture();
-			batcher.bindTexture2D(tex, unit, false);
+		if (frame.glTexture === null) {
+			frame.glTexture = gl.createTexture();
+			// bind through the batcher so boundTextures stays in lockstep; the
+			// sampler params only need setting once (copyTexImage2D re-specifies
+			// the storage, not the parameters)
+			batcher.bindTexture2D(frame.glTexture, unit, false);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, x, y, w, h, 0);
-			frame.glTexture = tex;
+		} else {
+			batcher.bindTexture2D(frame.glTexture, unit, false);
 		}
+		gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, x, y, w, h, 0);
 
 		return frame;
 	}
