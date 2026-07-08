@@ -220,6 +220,62 @@ describe("ShaderEffect.setTexture (extra sampler binding)", () => {
 		fx.destroy();
 		expect(cache.reservedUnits.has(unit)).toBe(false);
 	});
+
+	// #1543 review (Copilot): replacing a bound sampler must KEEP its reserved
+	// unit — releasing it (then re-reserving lazily) opens a window, unbounded
+	// while the effect is disabled, in which the allocator could hand that unit
+	// to a regular texture and reintroduce the collision reserveUnit() prevents.
+	it("keeps the reserved unit when a bound sampler is replaced while disabled", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const cache = renderer.cache;
+		cache.resetUnitAssignments();
+
+		const fx = new ShaderEffect(
+			renderer,
+			"uniform sampler2D uExtra;\nvec4 apply(vec4 color, vec2 uv) { return texture2D(uExtra, uv); }",
+		);
+		fx.setTexture("uExtra", solidCanvas(255, 0, 0));
+
+		const batcher = renderer.setBatcher("quad");
+		batcher.useShader(fx);
+		fx._prepareTextures(batcher);
+
+		const unit = fx._extraTextures.get("uExtra").unit;
+		const firstTex = fx._extraTextures.get("uExtra").tex;
+		expect(unit).toBeTypeOf("number");
+		expect(cache.reservedUnits.has(unit)).toBe(true);
+
+		// disable, then swap the image for the same sampler name
+		fx.enabled = false;
+		fx.setTexture("uExtra", solidCanvas(0, 255, 0));
+
+		const replaced = fx._extraTextures.get("uExtra");
+		// same reservation held across the replace (not dropped to undefined)…
+		expect(replaced.unit).toBe(unit);
+		expect(cache.reservedUnits.has(unit)).toBe(true);
+		// …old GL texture freed, new one pending a re-upload
+		expect(gl.isTexture(firstTex)).toBe(false);
+		expect(replaced.tex).toBe(null);
+
+		// the allocator still refuses to hand that unit out while disabled
+		for (let u = 0; u < unit; u++) {
+			cache.allocateTextureUnit();
+		}
+		expect(cache.allocateTextureUnit()).not.toBe(unit);
+		cache.resetUnitAssignments();
+
+		// re-enable → the new image uploads into the SAME unit
+		fx.enabled = true;
+		fx._prepareTextures(batcher);
+		expect(fx._extraTextures.get("uExtra").unit).toBe(unit);
+		expect(gl.isTexture(fx._extraTextures.get("uExtra").tex)).toBe(true);
+
+		fx.destroy();
+		expect(cache.reservedUnits.has(unit)).toBe(false);
+	});
 });
 
 /**

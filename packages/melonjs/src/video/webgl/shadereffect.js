@@ -272,25 +272,25 @@ export default class ShaderEffect {
 		// store the entry regardless of `enabled`: the GL work happens lazily
 		// in _prepareTextures on the next enabled draw, so a binding set while
 		// the effect is disabled — or mid-context-loss, where entries set
-		// during the window used to vanish permanently — survives intact
-		// (the loss handler already nulled `tex`/`unit`, so the replacement
-		// cleanup below is naturally safe in that window)
+		// during the window used to vanish permanently — survives intact.
 		const existing = this._extraTextures.get(name);
-		if (existing) {
-			// release the previous GL texture + unit reservation before
-			// replacing the binding
-			if (existing.tex !== null) {
-				this._shader.gl.deleteTexture(existing.tex);
-			}
-			if (existing.unit !== undefined) {
-				this._renderer.cache.releaseUnit(existing.unit);
-			}
+		if (existing && existing.tex !== null) {
+			// drop the old GL texture so the new image re-uploads into the
+			// SAME reserved unit (kept below) on the next enabled draw
+			this._shader.gl.deleteTexture(existing.tex);
 		}
 		this._extraTextures.set(name, {
 			image,
 			repeat,
 			tex: null,
-			unit: undefined,
+			// keep any unit already reserved for this sampler across the
+			// replace: releasing it here (then re-reserving lazily) would open
+			// a window — unbounded while the effect is disabled — in which the
+			// cache allocator could hand that high unit to a regular texture,
+			// reintroducing the collision reserveUnit() exists to prevent. The
+			// reservation is released only where the unit is truly invalid:
+			// context loss (_onContextLost) and destroy().
+			unit: existing ? existing.unit : undefined,
 		});
 		return this;
 	}

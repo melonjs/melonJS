@@ -27,7 +27,8 @@ describe("shader assets under the Canvas renderer", () => {
 		expect(fx.shared).toBe(true); // still loader-owned
 
 		// every method no-ops without throwing — including a Texture2d asset
-		// passed directly (the unwrap runs before the enabled check)
+		// passed directly: the Canvas stub has no `_shader`, so setTexture
+		// returns early before any unwrap (getTexture() is never called)
 		class CanvasTexture extends Texture2d {
 			getTexture() {
 				return document.createElement("canvas");

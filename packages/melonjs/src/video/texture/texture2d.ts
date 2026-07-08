@@ -1,18 +1,33 @@
-import type { TextureResource } from "./resource.js";
+/**
+ * An opaque, GPU-resident texture backing — the source a GPU-resident
+ * {@link Texture2d} resolves to (for example the framebuffer copy a future
+ * `renderer.toFrameTexture()` produces). Such a backing uploads/binds itself
+ * through the texture cache instead of being read back to the CPU. Its
+ * concrete shape is an engine internal that may change between releases:
+ * obtain values from the engine and pass them back to the engine — do not
+ * construct or inspect them.
+ */
+export interface GPUResidentTexture {
+	/**
+	 * Structural brand only — GPU-resident backings are opaque and expose no
+	 * public runtime member. Present so this stays distinct from a plain
+	 * object without naming any internal class in the public type surface.
+	 * @ignore
+	 */
+	readonly __gpuResidentTexture?: never;
+}
 
 /**
  * The backing source a {@link Texture2d} resolves to through
  * {@link Texture2d#getTexture}: a drawable (canvas/image) for CPU-backed
- * assets, or a renderer texture resource for GPU-resident ones — a resource
- * uploads/binds itself through the texture cache instead of being read back
- * to the CPU.
+ * assets, or an opaque {@link GPUResidentTexture} for GPU-resident ones.
  */
 export type Texture2dSource =
 	| HTMLCanvasElement
 	| HTMLImageElement
 	| OffscreenCanvas
 	| ImageBitmap
-	| TextureResource;
+	| GPUResidentTexture;
 
 /**
  * Abstract base for a 2D texture asset — an object that owns a texture
