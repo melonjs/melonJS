@@ -367,7 +367,7 @@ const examples: {
 		path: "aquarium",
 		sourceDir: "aquarium",
 		description:
-			"Screen-space water refraction via renderer.toFrameTexture(): fish swim across a planted tank, then a full-screen water surface captures the live frame on the GPU and re-samples it through a scrolling NoiseTexture2d flow map — the fish shimmer as if seen through moving water, with no readPixels round-trip. The industry-standard screen-texture pattern (Godot hint_screen_texture / Unity _CameraOpaqueTexture).",
+			"Screen-space refraction via renderer.toFrameTexture(): swimming fish rippled through the live scene, captured on the GPU and distorted by a scrolling NoiseTexture2d.",
 	},
 	{
 		component: <ExampleLineOfSight />,

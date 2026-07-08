@@ -3,25 +3,30 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  *
- * Fish swim across a planted tank; a full-screen water surface then refracts
- * the LIVE scene rendered behind it. The surface renderable, drawn last, calls
- * `renderer.toFrameTexture()` in its `draw()` to grab everything painted so far
- * (background + fish + bubbles) as a GPU-resident `Texture2d`, hands it to a
- * custom `ShaderEffect` as an extra sampler (`uScene`), and distorts it with a
- * scrolling `NoiseTexture2d` flow map — so the fish shimmer as if seen through
- * moving water, per-frame, with no `readPixels` round-trip.
+ * A user-contributed aquarium adapted to the 19.9 API: a seabed scene with
+ * swimming fish, seen through a rippling water surface. The surface renderable,
+ * drawn last, calls `renderer.toFrameTexture()` in its `draw()` to grab the
+ * frame rendered so far (seabed + fish) as a GPU-resident `Texture2d`, binds it
+ * to a custom `ShaderEffect` as an extra sampler (`uScene`), and refracts it
+ * through a scrolling `NoiseTexture2d` flow map — replacing the original's
+ * `readPixels` screen-capture with a zero-stall GPU copy.
  *
  * This is the industry-standard "screen texture" pattern (Godot
  * `hint_screen_texture` / Unity `_CameraOpaqueTexture` / Three.js
- * `copyFramebufferToTexture`): capture the opaque scene, sample it from the
- * refracting surface. `toFrameTexture()` returns the public `Texture2d`, so it
- * plugs straight into `setTexture()` and is re-captured every frame into the
- * same shared slot — the shader samples the latest frame with no re-bind.
+ * `copyFramebufferToTexture`). `toFrameTexture()` returns the public
+ * `Texture2d`, so it plugs straight into `setTexture()` and is re-captured every
+ * frame into the same shared slot — the shader samples the latest frame with no
+ * re-bind.
+ *
+ * Assets: TexturePacker atlas contributed with the original demo — a top-down
+ * seabed background, a 4-frame fish swim sheet, and a water texture.
  */
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	type Application,
 	loader,
 	NoiseTexture2d,
+	plugin,
 	type ShaderEffect,
 	Sprite,
 	Stage,
@@ -30,161 +35,64 @@ import {
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
-// The refraction fragment (GLSL ES 1.00). It ignores the surface quad's own
-// texture and re-samples the CAPTURED scene (uScene) in screen space, offset by
-// a scrolling noise flow field — plus a caustic shimmer and a faint underwater
-// tint. Sampling in screen space (gl_FragCoord / uResolution) matches the
-// capture's coordinate system regardless of the quad's own UVs.
+const base = `${import.meta.env.BASE_URL}assets/aquarium/`;
+
+// Atlas region rects (TexturePacker frames in aquarium.webp, 1024²).
+const REGION = {
+	poolWater: { x: 1, y: 1, w: 740, h: 494 },
+	seabed: { x: 1, y: 497, w: 720, h: 480 },
+	swim: { x: 873, y: 228, w: 128, h: 128 }, // 2×2 grid of 64px frames
+};
+
+// crop a sub-region of the atlas image into its own canvas, optionally scaled
+// to a target size (so a full-viewport sprite's framewidth matches its image
+// exactly → clean [0,1] UVs)
+const crop = (
+	img: CanvasImageSource,
+	r: { x: number; y: number; w: number; h: number },
+	dw = r.w,
+	dh = r.h,
+) => {
+	const c = document.createElement("canvas");
+	c.width = dw;
+	c.height = dh;
+	const ctx = c.getContext("2d") as CanvasRenderingContext2D;
+	ctx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, dw, dh);
+	return c;
+};
+
+// The refraction fragment (GLSL ES 1.00). The surface quad fills the viewport,
+// so its UV (top-left origin) spans the screen. We re-sample the CAPTURED scene
+// (uScene) at that UV, displaced by a scrolling noise flow field, then modulate
+// it with the water texture (uSampler) for a wet, caustic sheen. The capture is
+// a framebuffer copy (Y-up), so Y is flipped once into `s`.
 const WATER_FRAGMENT = `
-uniform sampler2D uScene;   // the captured frame, bound each draw via setTexture
+uniform sampler2D uScene;   // captured frame, bound each draw via setTexture
 uniform sampler2D uNoise;   // static seamless flow map
 uniform float uTime;        // seconds (setTime)
-uniform vec2  uResolution;  // framebuffer size in pixels
 uniform float uStrength;    // ripple strength (slider)
 
 vec4 apply(vec4 color, vec2 uv) {
-	vec2 s = gl_FragCoord.xy / uResolution;
+	vec2 s = vec2(uv.x, 1.0 - uv.y);
 
-	// two noise layers scrolling in different directions → a living flow field
+	// two noise layers scrolling apart → a living flow field
 	vec2 f1 = texture2D(uNoise, s * 1.6 + vec2(uTime * 0.03, uTime * 0.05)).rg;
 	vec2 f2 = texture2D(uNoise, s * 2.7 - vec2(uTime * 0.04, uTime * 0.02)).rg;
-	vec2 flow = (f1 + f2 - 1.0);
+	vec2 flow = f1 + f2 - 1.0;
 
-	// refract the captured scene: sample it at the displaced screen coord
-	vec2 rUV = clamp(s + flow * uStrength, 0.0, 1.0);
-	vec3 scene = texture2D(uScene, rUV).rgb;
+	// refract the captured scene at the displaced screen coord
+	vec3 scene = texture2D(uScene, clamp(s + flow * uStrength, 0.0, 1.0)).rgb;
 
-	// caustic sparkle where the flow layers pinch together, brighter up top
-	float caustic = pow(max(f1.r * f2.g, 0.0), 3.0) * (1.0 - s.y) * 1.5;
-	scene += vec3(0.10, 0.22, 0.26) * caustic;
+	// the water texture (uSampler), gently scrolled, as a wet sheen over it
+	vec3 water = texture2D(uSampler, uv * 0.6 + flow * 0.02).rgb;
+	vec3 outc = scene * (0.75 + 0.5 * water);
 
-	// gentle underwater colour grade
-	scene = mix(scene, scene * vec3(0.82, 0.96, 1.06), 0.35);
-	return vec4(scene, 1.0);
+	// caustic sparkle where the flow layers pinch together
+	float caustic = pow(max(f1.r * f2.g, 0.0), 3.0) * 1.2;
+	outc += vec3(0.10, 0.20, 0.24) * caustic;
+	return vec4(outc, 1.0);
 }
 `;
-
-type Rgb = [number, number, number];
-
-// paint a small side-on fish: an elliptical body, a tail fin and an eye
-const fishCanvas = (w: number, h: number, body: Rgb, fin: Rgb) => {
-	const canvas = document.createElement("canvas");
-	canvas.width = w;
-	canvas.height = h;
-	const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-	const [br, bg, bb] = body;
-	const [fr, fg, fb] = fin;
-
-	// tail fin (triangle at the back / left)
-	ctx.fillStyle = `rgb(${fr}, ${fg}, ${fb})`;
-	ctx.beginPath();
-	ctx.moveTo(2, h / 2);
-	ctx.lineTo(w * 0.34, h * 0.2);
-	ctx.lineTo(w * 0.34, h * 0.8);
-	ctx.closePath();
-	ctx.fill();
-
-	// body (ellipse), facing right
-	ctx.fillStyle = `rgb(${br}, ${bg}, ${bb})`;
-	ctx.beginPath();
-	ctx.ellipse(w * 0.6, h / 2, w * 0.34, h * 0.32, 0, 0, Math.PI * 2);
-	ctx.fill();
-
-	// top fin
-	ctx.fillStyle = `rgba(${fr}, ${fg}, ${fb}, 0.9)`;
-	ctx.beginPath();
-	ctx.moveTo(w * 0.5, h * 0.2);
-	ctx.lineTo(w * 0.72, h * 0.06);
-	ctx.lineTo(w * 0.72, h * 0.42);
-	ctx.closePath();
-	ctx.fill();
-
-	// belly highlight
-	ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-	ctx.beginPath();
-	ctx.ellipse(w * 0.62, h * 0.62, w * 0.24, h * 0.12, 0, 0, Math.PI * 2);
-	ctx.fill();
-
-	// eye
-	ctx.fillStyle = "#fff";
-	ctx.beginPath();
-	ctx.arc(w * 0.82, h * 0.42, Math.max(2, w * 0.05), 0, Math.PI * 2);
-	ctx.fill();
-	ctx.fillStyle = "#111";
-	ctx.beginPath();
-	ctx.arc(w * 0.84, h * 0.42, Math.max(1, w * 0.025), 0, Math.PI * 2);
-	ctx.fill();
-	return canvas;
-};
-
-// the tank backdrop: a vertical water gradient, a sandy bottom, and a few
-// simple plant fronds — a static, opaque scene for the surface to refract
-const tankCanvas = (w: number, h: number) => {
-	const canvas = document.createElement("canvas");
-	canvas.width = w;
-	canvas.height = h;
-	const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-	const grad = ctx.createLinearGradient(0, 0, 0, h);
-	grad.addColorStop(0, "#0a6b86");
-	grad.addColorStop(0.6, "#064b63");
-	grad.addColorStop(1, "#04303f");
-	ctx.fillStyle = grad;
-	ctx.fillRect(0, 0, w, h);
-
-	// soft light shafts from the top
-	ctx.globalAlpha = 0.08;
-	ctx.fillStyle = "#bfefff";
-	for (let i = 0; i < 5; i++) {
-		const x = (i + 0.5) * (w / 5);
-		ctx.beginPath();
-		ctx.moveTo(x - 10, 0);
-		ctx.lineTo(x + 10, 0);
-		ctx.lineTo(x + 60, h);
-		ctx.lineTo(x + 30, h);
-		ctx.closePath();
-		ctx.fill();
-	}
-	ctx.globalAlpha = 1;
-
-	// plants (wavy fronds) rooted in the sand
-	const plant = (px: number, ph: number, hue: string) => {
-		ctx.strokeStyle = hue;
-		ctx.lineWidth = 5;
-		ctx.lineCap = "round";
-		for (let b = -1; b <= 1; b++) {
-			ctx.beginPath();
-			ctx.moveTo(px, h - 24);
-			ctx.quadraticCurveTo(
-				px + b * 22 + 14,
-				h - 24 - ph * 0.5,
-				px + b * 10,
-				h - 24 - ph,
-			);
-			ctx.stroke();
-		}
-	};
-	plant(w * 0.12, h * 0.42, "#0c8a4a");
-	plant(w * 0.2, h * 0.3, "#0aa15a");
-	plant(w * 0.8, h * 0.5, "#0c8a4a");
-	plant(w * 0.9, h * 0.34, "#0aa15a");
-
-	// sandy bottom
-	const sand = ctx.createLinearGradient(0, h - 28, 0, h);
-	sand.addColorStop(0, "#c9a86a");
-	sand.addColorStop(1, "#a8874c");
-	ctx.fillStyle = sand;
-	ctx.beginPath();
-	ctx.moveTo(0, h - 20);
-	for (let x = 0; x <= w; x += 24) {
-		ctx.lineTo(x, h - 20 - Math.sin(x * 0.05) * 4);
-	}
-	ctx.lineTo(w, h);
-	ctx.lineTo(0, h);
-	ctx.closePath();
-	ctx.fill();
-	return canvas;
-};
 
 // a fish that swims horizontally and turns around at the tank edges
 class Fish extends Sprite {
@@ -198,18 +106,23 @@ class Fish extends Sprite {
 	constructor(
 		x: number,
 		y: number,
-		image: HTMLCanvasElement,
+		sheet: HTMLCanvasElement,
 		speed: number,
+		scale: number,
 		bounds: { min: number; max: number },
 	) {
-		super(x, y, { image, framewidth: image.width, frameheight: image.height });
+		super(x, y, { image: sheet, framewidth: 64, frameheight: 64 });
+		this.addAnimation("swim", [0, 1, 2, 3], 120);
+		this.setCurrentAnimation("swim");
+		this.scale(scale, scale);
 		this.speed = speed;
 		this.minX = bounds.min;
 		this.maxX = bounds.max;
 		this.baseY = y;
 		this.bobPhase = x * 0.05;
-		this.bobAmp = 6 + Math.abs(speed) * 0.2;
-		this.flipX(speed < 0);
+		this.bobAmp = 5 + Math.abs(speed) * 0.15;
+		// art faces left; flip when swimming right
+		this.flipX(speed > 0);
 	}
 
 	update(dt: number) {
@@ -221,46 +134,37 @@ class Fish extends Sprite {
 		if (this.pos.x < this.minX) {
 			this.pos.x = this.minX;
 			this.speed = Math.abs(this.speed);
-			this.flipX(false);
+			this.flipX(true);
 		} else if (this.pos.x > this.maxX) {
 			this.pos.x = this.maxX;
 			this.speed = -Math.abs(this.speed);
-			this.flipX(true);
+			this.flipX(false);
 		}
 		return true;
 	}
 }
 
 // the water surface: drawn LAST, it captures the frame rendered so far and
-// re-draws it refracted. A full-viewport renderable whose draw() grabs the
-// backdrop via toFrameTexture(), binds it to the shader (uScene), and blits a
-// full-screen quad through that shader.
+// re-draws it refracted. A full-viewport sprite (framewidth/frameheight = the
+// viewport, so it covers every pixel) whose draw() grabs the backdrop via
+// toFrameTexture() and hands it to the shader as uScene.
 class WaterSurface extends Sprite {
 	private effect: ShaderEffect;
 
 	constructor(
-		x: number,
-		y: number,
 		w: number,
 		h: number,
+		waterTex: HTMLCanvasElement,
 		effect: ShaderEffect,
 	) {
-		// a 1x1 white image stretched to the viewport — the shader ignores it
-		// (it samples the captured scene instead), it just supplies the quad
-		const white = document.createElement("canvas");
-		white.width = 1;
-		white.height = 1;
-		const ctx = white.getContext("2d") as CanvasRenderingContext2D;
-		ctx.fillStyle = "#fff";
-		ctx.fillRect(0, 0, 1, 1);
-		super(x, y, {
-			image: white,
-			framewidth: 1,
-			frameheight: 1,
+		// the water texture stretched over the whole viewport is the quad's
+		// albedo (uSampler); the shader multiplies the captured scene by it
+		super(w / 2, h / 2, {
+			image: waterTex,
+			framewidth: w,
+			frameheight: h,
 			anchorPoint: { x: 0.5, y: 0.5 },
 		});
-		// stretch the 1x1 quad to fill the whole viewport
-		this.scale(w, h);
 		this.effect = effect;
 		this.shader = effect;
 	}
@@ -286,6 +190,13 @@ class PlayScreen extends Stage {
 		const w = app.viewport.width;
 		const h = app.viewport.height;
 
+		const atlas = loader.getImage("aquariumAtlas") as HTMLImageElement;
+		// seabed + water pre-scaled to the viewport so a full-screen sprite's
+		// framewidth/frameheight matches its image (clean UVs, exact cover)
+		const seabed = crop(atlas, REGION.seabed, w, h);
+		const water = crop(atlas, REGION.poolWater, w, h);
+		const swimSheet = crop(atlas, REGION.swim); // natural 128×128 (2×2 of 64)
+
 		// static seamless noise flow map (baked once; scrolled on the GPU)
 		const noise = new NoiseTexture2d({
 			width: 256,
@@ -303,41 +214,32 @@ class PlayScreen extends Stage {
 		// the refraction effect, preloaded as a "shader" asset
 		this.effect = loader.getShader("aquariumWater") as ShaderEffect;
 		this.effect.setTexture("uNoise", noise.getTexture(), "repeat");
-		this.effect.setUniform("uResolution", new Float32Array([w, h]));
 		this.effect.setUniform("uStrength", 0.02);
 
-		// backdrop (z 0)
-		const tank = new Sprite(w / 2, h / 2, {
-			image: tankCanvas(w, h),
+		// seabed backdrop (z 0), stretched to the viewport
+		const bg = new Sprite(w / 2, h / 2, {
+			image: seabed,
 			framewidth: w,
 			frameheight: h,
 			anchorPoint: { x: 0.5, y: 0.5 },
 		});
-		app.world.addChild(tank, 0);
+		app.world.addChild(bg, 0);
 
 		// a school of fish (z 1..) swimming at various depths and speeds
-		const palette: Array<{ body: Rgb; fin: Rgb; size: number }> = [
-			{ body: [244, 148, 42], fin: [214, 92, 20], size: 54 }, // clownfish
-			{ body: [86, 170, 220], fin: [40, 120, 190], size: 44 }, // blue tang
-			{ body: [230, 210, 90], fin: [200, 160, 40], size: 40 }, // yellow
-			{ body: [220, 90, 120], fin: [170, 50, 90], size: 48 }, // pink
-			{ body: [150, 210, 150], fin: [90, 160, 100], size: 36 }, // green
-		];
-		for (let i = 0; i < 7; i++) {
-			const p = palette[i % palette.length];
-			const img = fishCanvas(p.size, p.size * 0.66, p.body, p.fin);
+		for (let i = 0; i < 6; i++) {
 			const dir = i % 2 === 0 ? 1 : -1;
-			const speed = dir * (36 + (i % 3) * 22);
-			const y = 70 + ((i * 47) % (h - 150));
-			const x = 60 + ((i * 97) % (w - 120));
+			const speed = dir * (34 + (i % 3) * 20);
+			const scale = 0.7 + (i % 3) * 0.25;
+			const y = 60 + ((i * 53) % (h - 130));
+			const x = 60 + ((i * 101) % (w - 120));
 			app.world.addChild(
-				new Fish(x, y, img, speed, { min: 40, max: w - 40 }),
+				new Fish(x, y, swimSheet, speed, scale, { min: 40, max: w - 40 }),
 				1 + i,
 			);
 		}
 
 		// the water surface post-pass (z 100, above everything it refracts)
-		app.world.addChild(new WaterSurface(w / 2, h / 2, w, h, this.effect), 100);
+		app.world.addChild(new WaterSurface(w, h, water, this.effect), 100);
 
 		this.buildSlider(app);
 	}
@@ -390,17 +292,25 @@ class PlayScreen extends Stage {
 const createGame = () => {
 	video.init(728, 410, {
 		parent: "screen",
-		scaleMethod: "flex",
+		// fixed internal resolution scaled to fit (keeps viewport 728×410, so
+		// full-screen renderables cover it regardless of the container size)
+		scale: "auto",
 		// toFrameTexture + ShaderEffect are WebGL features
 		renderer: video.WEBGL,
 		antiAlias: true,
 	});
 
+	// register the debug plugin and open it by default (toggle with the S key)
+	plugin.register(DebugPanelPlugin, "debugPanel");
+	(plugin.get("debugPanel") as { show?: () => void })?.show?.();
+
 	state.set(state.PLAY, new PlayScreen());
 
-	// preload the refraction shader (compiled once at load time)
 	loader.preload(
-		[{ name: "aquariumWater", type: "shader", data: WATER_FRAGMENT }],
+		[
+			{ name: "aquariumAtlas", type: "image", src: `${base}aquarium.webp` },
+			{ name: "aquariumWater", type: "shader", data: WATER_FRAGMENT },
+		],
 		() => {
 			state.change(state.PLAY);
 		},

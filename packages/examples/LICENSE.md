@@ -26,6 +26,15 @@ SOFTWARE.
 
 ## Third-party assets
 
+### `aquarium` example
+
+The texture atlas in `public/assets/aquarium/aquarium.webp` was contributed by
+a melonJS user with their aquarium demo (adapted here to the `toFrameTexture`
+API). It packs a top-down seabed background ("Free Top-Down Seabed Objects
+Pixel Art"), a fish animation sheet, and a water-surface texture. Provided by
+the contributor for use in the melonJS examples; refer to the original asset
+packs for any upstream attribution terms.
+
 ### `pool-matter` example
 
 Pool table backdrop and 16 numbered-ball sprites in
