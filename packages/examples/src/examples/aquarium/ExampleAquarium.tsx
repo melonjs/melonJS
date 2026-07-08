@@ -215,7 +215,7 @@ class PlayScreen extends Stage {
 		this.effect = loader.getShader("aquariumWater") as ShaderEffect;
 		// pass the NoiseTexture2d asset directly — setTexture resolves it (19.9)
 		this.effect.setTexture("uNoise", noise, "repeat");
-		this.effect.setUniform("uStrength", 0.02);
+		this.effect.setUniform("uStrength", 0.013);
 
 		// seabed backdrop (z 0), stretched to the viewport
 		const bg = new Sprite(w / 2, h / 2, {
@@ -258,7 +258,7 @@ class PlayScreen extends Stage {
 		slider.min = "0";
 		slider.max = "0.06";
 		slider.step = "0.002";
-		slider.value = "0.02";
+		slider.value = "0.013";
 		slider.style.cssText = "width:190px;display:block;";
 		slider.addEventListener("input", () => {
 			this.effect.setUniform("uStrength", Number.parseFloat(slider.value));
