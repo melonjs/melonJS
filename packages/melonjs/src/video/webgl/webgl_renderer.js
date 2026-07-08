@@ -164,9 +164,11 @@ export default class WebGLRenderer extends Renderer {
 		// current gradient state (null when using solid color)
 		this._currentGradient = null;
 
-		// whether the innermost active mask (setMask) is inverted — needed by
-		// #gradientMask to gate/restore the exact stencil test setMask set
-		this._maskInvert = false;
+		// the stencil value of currently-VISIBLE pixels under the innermost
+		// active mask, as installed by setMask (0 for an inverted mask,
+		// maskLevel otherwise) — the single source #gradientMask gates and
+		// restores against
+		this._maskVisibleRef = 0;
 
 		/**
 		 * The current transformation matrix used for transformations on the overall scene
@@ -393,6 +395,12 @@ export default class WebGLRenderer extends Renderer {
 
 	reset() {
 		super.reset();
+
+		// drop any pass state orphaned by a mid-pass exception — stale
+		// entries would leak a matrix per pass and inflate the pool's
+		// nesting depth forever (the pool's own stack is cleared via its
+		// destroy() below)
+		this._effectProjectionStack.length = 0;
 
 		// clear gl context
 		this.clear();
@@ -2284,13 +2292,13 @@ export default class WebGLRenderer extends Renderer {
 		gl.enable(gl.STENCIL_TEST);
 		gl.colorMask(false, false, false, false);
 
-		// The stencil value of currently-VISIBLE pixels, as established by
-		// setMask: 0 for an inverted mask, maskLevel otherwise. The shape's
-		// visible pixels are tagged with a high-bit marker (mask levels only
-		// use the low 7 bits, so the marker can never collide with one),
-		// the gradient is clipped to the marker, then the marker is cleared
-		// and setMask's exact render test is re-installed.
-		const visibleRef = this._maskInvert === true ? 0 : this.maskLevel;
+		// The stencil value of currently-VISIBLE pixels, as installed by
+		// setMask (its single source of truth). The shape's visible pixels
+		// are tagged with a high-bit marker (mask levels only use the low 7
+		// bits, so the marker can never collide with one), the gradient is
+		// clipped to the marker, then the marker is cleared and setMask's
+		// exact render test is re-installed.
+		const visibleRef = this._maskVisibleRef;
 		let markRef = 1;
 
 		if (hasMask) {
@@ -2553,7 +2561,7 @@ export default class WebGLRenderer extends Renderer {
 			gl.stencilFunc(gl.EQUAL, this.maskLevel, 0xff);
 		}
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-		this._maskInvert = invert === true;
+		this._maskVisibleRef = invert === true ? 0 : this.maskLevel;
 	}
 
 	/**
@@ -2565,7 +2573,7 @@ export default class WebGLRenderer extends Renderer {
 			// flush the batcher
 			this.flush();
 			this.maskLevel = 0;
-			this._maskInvert = false;
+			this._maskVisibleRef = 0;
 			this.gl.disable(this.gl.STENCIL_TEST);
 		}
 	}

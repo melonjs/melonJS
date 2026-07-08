@@ -221,4 +221,25 @@ describe("video/GL core audit reproductions", () => {
 			}
 		}
 	});
+
+	it("reset() clears the effect-projection stack (mid-pass exception recovery)", (ctx) => {
+		requireWebGL(ctx);
+		// simulate a draw throwing between begin and end: the pass never
+		// ends, leaving a stale entry — reset() (GAME_RESET / context
+		// restore) must clear it or every later pass leaks a matrix and
+		// the pool's nesting depth inflates forever
+		const effect = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 color, vec2 uv) { return color; }",
+		);
+		const orphan = {
+			postEffects: [effect, effect],
+			_postEffectManaged: false,
+		};
+		renderer.beginPostEffect(orphan);
+		expect(renderer._effectProjectionStack.length).toBe(1);
+		renderer.reset();
+		expect(renderer._effectProjectionStack.length).toBe(0);
+		effect.destroy();
+	});
 });

@@ -64,6 +64,30 @@ describe("CanvasRenderer clipRect vs transforms", () => {
 		expect(pixel(40, 5)[0]).toBeGreaterThan(200);
 	});
 
+	it("an axis-aligned clip after a ROTATED clip is not skipped via a stale cache", () => {
+		// the rotated path can't cache an axis-aligned box, so it must poison
+		// the cache — an inert poison (e.g. NaN into an Int32Array, which
+		// coerces to 0) leaves a frankenstein box behind that a later
+		// axis-aligned clip can false-match, skipping its own clip()
+		paintBackground();
+		renderer.save();
+		renderer.clipRect(2, 2, 60, 60); // cache [2,2,60,60], x ∈ [2,62]
+		renderer.rotate(0.3);
+		renderer.clipRect(-20, -20, 120, 120); // rotated: huge box, ≈ no-op clip
+		renderer.rotate(-0.3);
+		// broken poison → cache [0,2,60,60]; this request matches it exactly
+		// and gets skipped, leaving x clipped to 62 instead of 60
+		renderer.clipRect(0, 2, 60, 60);
+		renderer.setColor("#ff0000");
+		renderer.fillRect(0, 0, 64, 64);
+		renderer.restore();
+
+		// x ∈ (60, 62] must be clipped by the last requested box
+		expect(pixel(61, 30)[0]).toBeLessThan(50);
+		// inside every clip: painted
+		expect(pixel(30, 30)[0]).toBeGreaterThan(200);
+	});
+
 	it("a nested same-size clip is not skipped via the stale scissor cache", () => {
 		paintBackground();
 		renderer.save();

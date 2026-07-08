@@ -1267,15 +1267,19 @@ export default class CanvasRenderer extends Renderer {
 		if (t.b !== 0 || t.c !== 0) {
 			// rotated/skewed: the axis-aligned skip logic can't reason about
 			// the clipped region — always clip, and poison the cache so a
-			// following axis-aligned call can't false-match
+			// following axis-aligned call can't false-match. The cache is an
+			// Int32Array (NaN would coerce to 0!) and widths are normalized
+			// to >= 0 below, so -1 in the width slot can never match.
 			context.beginPath();
 			context.rect(x, y, width, height);
 			context.clip();
-			this.currentScissor[0] = Number.NaN;
+			this.currentScissor[2] = -1;
 			return;
 		}
 
-		// axis-aligned device-space box (scale can be negative — normalize)
+		// axis-aligned device-space box (scale can be negative — normalize),
+		// floored/ceiled to integers so the Int32Array cache is exact under
+		// fractional transforms (same discipline as the WebGL clipRect)
 		let dx = x * t.a + t.e;
 		let dy = y * t.d + t.f;
 		let dw = width * t.a;
@@ -1288,26 +1292,30 @@ export default class CanvasRenderer extends Renderer {
 			dy += dh;
 			dh = -dh;
 		}
+		const ix = Math.floor(dx);
+		const iy = Math.floor(dy);
+		const iw = Math.ceil(dx + dw) - ix;
+		const ih = Math.ceil(dy + dh) - iy;
 
 		const canvas = this.getCanvas();
 		// if the requested box is different from the full canvas;
-		if (dx !== 0 || dy !== 0 || dw !== canvas.width || dh !== canvas.height) {
+		if (ix !== 0 || iy !== 0 || iw !== canvas.width || ih !== canvas.height) {
 			const currentScissor = this.currentScissor;
 			// if different from the current scissor box
 			if (
-				currentScissor[0] !== dx ||
-				currentScissor[1] !== dy ||
-				currentScissor[2] !== dw ||
-				currentScissor[3] !== dh
+				currentScissor[0] !== ix ||
+				currentScissor[1] !== iy ||
+				currentScissor[2] !== iw ||
+				currentScissor[3] !== ih
 			) {
 				context.beginPath();
 				context.rect(x, y, width, height);
 				context.clip();
 				// save the new scissor box in device space
-				currentScissor[0] = dx;
-				currentScissor[1] = dy;
-				currentScissor[2] = dw;
-				currentScissor[3] = dh;
+				currentScissor[0] = ix;
+				currentScissor[1] = iy;
+				currentScissor[2] = iw;
+				currentScissor[3] = ih;
 			}
 		}
 	}
