@@ -9,6 +9,7 @@ import {
 import { Gradient } from "./../gradient.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
+import { CanvasFrameTexture } from "./../texture/frametexture.js";
 
 /**
  * additional import for TypeScript
@@ -18,6 +19,8 @@ import TextureCache from "./../texture/cache.js";
  * @import {Line} from "./../../geometries/line.ts";
  * @import {Ellipse} from "./../../geometries/ellipse.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import {default as Texture2d} from "../texture/texture2d.ts";
  */
 
 /**
@@ -83,6 +86,67 @@ export default class CanvasRenderer extends Renderer {
 		// drop the per-light gradient cache; entries will lazily re-bake on
 		// the next `drawLight()` call.
 		this._lightCache = undefined;
+	}
+
+	/**
+	 * Capture the current frame into a {@link Texture2d} — the Canvas-renderer
+	 * counterpart of {@link WebGLRenderer#toFrameTexture}, keeping the
+	 * `toDataURL` / `toBlob` / `toImageBitmap` family renderer-complete. Backed
+	 * by an offscreen `<canvas>` copy of the drawing buffer (Canvas rendering is
+	 * immediate, so no flush is needed). Custom shaders don't run under the
+	 * Canvas renderer, so the result is a plain drawable for CPU-side reuse
+	 * rather than a live shader input.
+	 * @param {object} [options]
+	 * @param {Texture2d} [options.target] - a capture previously returned here to
+	 *   refresh in place, instead of the shared renderer slot
+	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
+	 *   only this sub-region (canvas pixels, top-left origin)
+	 * @returns {Texture2d} a texture holding the captured frame
+	 */
+	toFrameTexture(options = {}) {
+		const src = this.getCanvas();
+		let x = 0;
+		let y = 0;
+		let w = src.width;
+		let h = src.height;
+		const region = options.region;
+		if (typeof region !== "undefined") {
+			const rx = typeof region.pos !== "undefined" ? region.pos.x : region.x;
+			const ry = typeof region.pos !== "undefined" ? region.pos.y : region.y;
+			x = Math.max(0, Math.floor(rx || 0));
+			y = Math.max(0, Math.floor(ry || 0));
+			w = Math.max(1, Math.min(src.width - x, Math.ceil(region.width)));
+			h = Math.max(1, Math.min(src.height - y, Math.ceil(region.height)));
+		}
+
+		// no target → shared slot; target: null → mint owned; target: <capture>
+		// → refresh in place (mirrors WebGLRenderer#toFrameTexture)
+		const shared = typeof options.target === "undefined";
+		let frame = shared
+			? this._frameTexture
+			: options.target === null
+				? undefined
+				: options.target;
+		if (
+			typeof frame === "undefined" ||
+			frame.width !== w ||
+			frame.height !== h
+		) {
+			const canvas = globalThis.document
+				? globalThis.document.createElement("canvas")
+				: new OffscreenCanvas(w, h);
+			canvas.width = w;
+			canvas.height = h;
+			frame = new CanvasFrameTexture(canvas);
+			if (shared) {
+				this._frameTexture = frame;
+			}
+		}
+
+		const ctx = frame.canvas.getContext("2d");
+		ctx.clearRect(0, 0, w, h);
+		ctx.drawImage(src, x, y, w, h, 0, 0, w, h);
+		return frame;
 	}
 
 	/**

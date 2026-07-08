@@ -17,6 +17,7 @@ import RenderTargetPool from "../rendertarget/render_target_pool.js";
 import WebGLRenderTarget from "../rendertarget/webglrendertarget.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
+import { FrameTexture } from "./../texture/frametexture.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
 import {
 	generateJoinCircles,
@@ -42,6 +43,7 @@ import { getMaxShaderPrecision } from "./utils/precision.js";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
  * @import {Batcher} from "./batchers/batcher.js";
+ * @import {default as Texture2d} from "../texture/texture2d.ts";
  */
 
 // reusable constants for 2D→3D matrix operations
@@ -464,6 +466,14 @@ export default class WebGLRenderer extends Renderer {
 			this._lightAtlas = undefined;
 		}
 
+		// the shared frame-capture texture (toFrameTexture) holds a GL texture
+		// tied to this context — drop it so the next capture reallocates. Safe
+		// on a still-valid context too (a resize/reset just re-creates it).
+		if (typeof this._frameTexture !== "undefined") {
+			this._frameTexture.destroy();
+			this._frameTexture = undefined;
+		}
+
 		// Context-loss-only cleanup for the TMX GPU renderer: the cached
 		// `GLShader` and per-layer GL textures reference the OLD context
 		// and are invalid. On a regular `GAME_RESET` (context still
@@ -800,6 +810,203 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 		return this._lightAtlas;
+	}
+
+	/**
+	 * Capture the current frame — everything drawn to the active framebuffer so
+	 * far — into a {@link Texture2d}, entirely on the GPU (a single
+	 * `copyTexSubImage2D`, no `readPixels` round-trip or pipeline stall). The
+	 * fourth member of the {@link Renderer#toDataURL} / {@link Renderer#toBlob} /
+	 * {@link Renderer#toImageBitmap} family — "the current frame as X" — and the
+	 * only one whose result never leaves the GPU.
+	 *
+	 * The capture reflects the framebuffer **at the call site** (a `flush()`
+	 * runs first), so call it right before drawing the surface that needs the
+	 * backdrop — the Godot `BackBufferCopy` placement model. It reads whichever
+	 * framebuffer is currently bound: the backbuffer normally, or a camera's
+	 * post-effect FBO during that pass — so it works under both `Camera2d` and
+	 * `Camera3d`. Under a perspective camera, "drawn so far" is draw order, not
+	 * depth order: capture after the opaque scene, just before the refracting
+	 * surface (same guidance as Unity `_CameraOpaqueTexture` / Godot screen
+	 * texture).
+	 *
+	 * Feed the result straight into a custom post-effect:
+	 * ```js
+	 * effect.setTexture("uScene", renderer.toFrameTexture());
+	 * ```
+	 * {@link ShaderEffect#setTexture} binds the **live** handle, so re-capturing
+	 * each frame into the shared slot refreshes what the shader samples without
+	 * any re-bind.
+	 *
+	 * Color only (RGBA); the framebuffer's depth is not captured. By default the
+	 * result is a shared, renderer-owned texture valid until the next
+	 * parameterless call — pass `options.target` for an independent, caller-owned
+	 * capture (e.g. two captures alive in the same frame).
+	 * @param {object} [options]
+	 * @param {Texture2d|null} [options.target] - controls the destination: omit
+	 *   for the shared renderer slot (default); pass a capture previously
+	 *   returned by this method to refresh it in place; pass `null` to mint a
+	 *   fresh, caller-owned capture (for two independent captures in one frame —
+	 *   `destroy()` it yourself when done)
+	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
+	 *   only this sub-region (framebuffer pixels, bottom-left origin); a smaller
+	 *   region is a proportionally cheaper copy. Defaults to the whole framebuffer.
+	 * @returns {Texture2d} a GPU-resident texture holding the captured frame
+	 * @example
+	 * // a water surface that refracts the scene rendered behind it
+	 * draw(renderer) {
+	 *     const scene = renderer.toFrameTexture();          // grab the backdrop
+	 *     this.shader.setTexture("uScene", scene);          // live-bound
+	 *     super.draw(renderer);                             // draw the rippling water
+	 * }
+	 */
+	toFrameTexture(options = {}) {
+		const gl = this.gl;
+		const canvas = this.getCanvas();
+
+		// resolve the capture rect in framebuffer pixels (default: everything).
+		// accepts a Rect (pos + width/height), a Bounds, or a plain {x,y,w,h}.
+		let x = 0;
+		let y = 0;
+		let w = canvas.width;
+		let h = canvas.height;
+		const region = options.region;
+		if (typeof region !== "undefined") {
+			const rx = typeof region.pos !== "undefined" ? region.pos.x : region.x;
+			const ry = typeof region.pos !== "undefined" ? region.pos.y : region.y;
+			x = Math.max(0, Math.floor(rx || 0));
+			y = Math.max(0, Math.floor(ry || 0));
+			w = Math.max(1, Math.min(canvas.width - x, Math.ceil(region.width)));
+			h = Math.max(1, Math.min(canvas.height - y, Math.ceil(region.height)));
+		}
+
+		// flush pending geometry so the capture holds everything drawn so far
+		this.flush();
+
+		// destination:
+		//  - no `target`            → the shared, renderer-owned slot (default;
+		//                             overwritten by the next parameterless call)
+		//  - `target: null`         → mint a fresh, caller-owned capture (for two
+		//                             independent captures alive in one frame)
+		//  - `target: <capture>`    → refresh that caller-owned capture in place
+		const shared = typeof options.target === "undefined";
+		let frame = shared
+			? this._frameTexture
+			: options.target === null
+				? undefined
+				: options.target;
+
+		// (re)allocate when missing, resized, or the GL handle went stale (a
+		// context-loss/restore cycle deletes it — gl.isTexture catches that)
+		if (
+			typeof frame === "undefined" ||
+			frame.width !== w ||
+			frame.height !== h ||
+			frame.glTexture === null ||
+			gl.isTexture(frame.glTexture) === false
+		) {
+			if (typeof frame !== "undefined") {
+				frame.destroy();
+				frame.width = w;
+				frame.height = h;
+			} else {
+				frame = new FrameTexture(this, w, h);
+			}
+			if (shared) {
+				this._frameTexture = frame;
+			}
+		}
+
+		// The destination is an RGBA texture (RGBA is what shaders sample
+		// cleanly). The tricky part is copying from an ALPHA-LESS framebuffer —
+		// melonJS creates the default context with `alpha: transparent`
+		// (usually false), so the backbuffer has no alpha, and both
+		// copyTexImage2D and copyTexSubImage2D into an RGBA texture are then
+		// INVALID_OPERATION under WebGL2.
+		const batcher = this.setBatcher("quad");
+		const unit = batcher.maxBatchTextures - 1;
+		if (this.WebGLVersion > 1) {
+			// WebGL2: blitFramebuffer converts formats, filling a missing alpha
+			// with 1 — so an alpha-less source lands as an opaque RGBA texture.
+			// It also reads/writes framebuffers directly (no texture-unit games).
+			const srcFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+			if (frame.glTexture === null) {
+				const tex = gl.createTexture();
+				// bind through the batcher (keeps boundTextures consistent) only
+				// to set the sampler params; the copy itself is an FBO blit
+				batcher.bindTexture2D(tex, unit, false);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0,
+					gl.RGBA,
+					w,
+					h,
+					0,
+					gl.RGBA,
+					gl.UNSIGNED_BYTE,
+					null,
+				);
+				frame.glTexture = tex;
+			}
+			// one reusable scratch FBO for the blit destination. The target
+			// texture is attached only for the blit and DETACHED immediately
+			// after — a texture left attached to a framebuffer is refused for
+			// sampling by strict drivers (feedback-loop protection).
+			if (typeof this._captureFBO === "undefined") {
+				this._captureFBO = gl.createFramebuffer();
+			}
+			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, srcFB);
+			gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._captureFBO);
+			gl.framebufferTexture2D(
+				gl.DRAW_FRAMEBUFFER,
+				gl.COLOR_ATTACHMENT0,
+				gl.TEXTURE_2D,
+				frame.glTexture,
+				0,
+			);
+			gl.blitFramebuffer(
+				x,
+				y,
+				x + w,
+				y + h,
+				0,
+				0,
+				w,
+				h,
+				gl.COLOR_BUFFER_BIT,
+				gl.NEAREST,
+			);
+			// detach the texture and restore the source framebuffer
+			gl.framebufferTexture2D(
+				gl.DRAW_FRAMEBUFFER,
+				gl.COLOR_ATTACHMENT0,
+				gl.TEXTURE_2D,
+				null,
+				0,
+			);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, srcFB);
+		} else {
+			// WebGL1: copyTexImage2D(RGBA) fills a missing alpha with 1 (ES2
+			// semantics), so it works from an alpha-less framebuffer. Realloc
+			// per capture — the legacy path; live-bind reads the handle fresh.
+			if (frame.glTexture !== null) {
+				gl.deleteTexture(frame.glTexture);
+			}
+			const tex = gl.createTexture();
+			batcher.bindTexture2D(tex, unit, false);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, x, y, w, h, 0);
+			frame.glTexture = tex;
+		}
+
+		return frame;
 	}
 
 	/**

@@ -265,8 +265,14 @@ export default class ShaderEffect {
 		if (typeof this._shader === "undefined" || this.destroyed === true) {
 			return this;
 		}
-		// accept a Texture2d asset directly — resolve it to its backing source
-		if (image instanceof Texture2d) {
+		// A GPU-resident LIVE source (a frame capture from
+		// renderer.toFrameTexture): keep the wrapper and bind its live GL
+		// handle every draw — never upload a static copy — so re-capturing
+		// into the same slot each frame is picked up with no re-bind. Any
+		// other Texture2d is a static asset: resolve it to its backing
+		// drawable source once.
+		const live = image instanceof Texture2d && image.isGPUResident === true;
+		if (!live && image instanceof Texture2d) {
 			image = image.getTexture();
 		}
 		// store the entry regardless of `enabled`: the GL work happens lazily
@@ -275,14 +281,17 @@ export default class ShaderEffect {
 		// during the window used to vanish permanently — survives intact.
 		const existing = this._extraTextures.get(name);
 		if (existing && existing.tex !== null) {
-			// drop the old GL texture so the new image re-uploads into the
-			// SAME reserved unit (kept below) on the next enabled draw
+			// drop the old STATIC GL texture we own so the new image re-uploads
+			// into the SAME reserved unit (kept below) on the next enabled draw.
+			// A live entry never owns a GL texture (tex stays null — the
+			// renderer/caller owns the handle), so this correctly skips it.
 			this._shader.gl.deleteTexture(existing.tex);
 		}
 		this._extraTextures.set(name, {
 			image,
 			repeat,
 			tex: null,
+			live,
 			// keep any unit already reserved for this sampler across the
 			// replace: releasing it here (then re-reserving lazily) would open
 			// a window — unbounded while the effect is disabled — in which the
@@ -333,6 +342,18 @@ export default class ShaderEffect {
 				cache.reserveUnit(nextUnit);
 			}
 			nextUnit = entry.unit - 1;
+			if (entry.live === true) {
+				// live GPU-resident source (frame capture): bind the current
+				// handle fresh each draw — the renderer refreshes it in place,
+				// so this samples the latest frame. Never uploaded, never freed
+				// by this effect. Skip binding if not captured yet (null).
+				const glTex = entry.image.glTexture;
+				if (glTex !== null && typeof glTex !== "undefined") {
+					batcher.bindTexture2D(glTex, entry.unit, false);
+					this._shader.setUniform(name, entry.unit);
+				}
+				continue;
+			}
 			if (entry.tex === null) {
 				batcher.createTexture2D(
 					entry.unit,
