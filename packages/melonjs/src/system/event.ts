@@ -8,6 +8,7 @@ import { Vector2d } from "../math/vector2d.ts";
 import { Draggable } from "../renderable/draggable.js";
 import type Stage from "../state/stage.ts";
 import Renderer from "../video/renderer.js";
+import type { Texture2dSource } from "../video/texture/texture2d.ts";
 import { EventEmitter } from "./eventEmitter.js";
 
 /**
@@ -452,7 +453,7 @@ interface Events {
 	[ONCONTEXT_RESTORED]: (renderer: Renderer) => void;
 	[GPU_TEXTURE_CACHE_RESET]: () => void;
 	[RENDER_TARGET_CHANGED]: (renderer?: object) => void;
-	[TEXTURE2D_DESTROYED]: (source: HTMLCanvasElement | HTMLImageElement) => void;
+	[TEXTURE2D_DESTROYED]: (source: Texture2dSource) => void;
 }
 
 const eventEmitter = new EventEmitter<Events>();
