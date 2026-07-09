@@ -101,8 +101,9 @@ export default class CanvasRenderer extends Renderer {
 	 *   for the shared renderer slot (default); pass a capture previously
 	 *   returned by this method to refresh it in place; pass `null` to mint a
 	 *   fresh, caller-owned capture (mirrors {@link WebGLRenderer#toFrameTexture})
-	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
-	 *   only this sub-region (canvas pixels, top-left origin)
+	 * @param {Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
+	 *   only this sub-region (canvas pixels, top-left origin). A {@link Bounds}
+	 *   (or any `{x, y, width, height}`); from a {@link Rect} pass `rect.getBounds()`.
 	 * @returns {Texture2d} a texture holding the captured frame
 	 */
 	toFrameTexture(options = {}) {
@@ -126,8 +127,8 @@ export default class CanvasRenderer extends Renderer {
 		let h = src.height;
 		const region = options.region;
 		if (typeof region !== "undefined") {
-			const rx = typeof region.pos !== "undefined" ? region.pos.x : region.x;
-			const ry = typeof region.pos !== "undefined" ? region.pos.y : region.y;
+			const rx = region.x;
+			const ry = region.y;
 			// clamp the origin into the canvas first, then size to what remains
 			// (matches WebGLRenderer#toFrameTexture); missing width/height
 			// defaults to "the rest of the canvas from x/y"

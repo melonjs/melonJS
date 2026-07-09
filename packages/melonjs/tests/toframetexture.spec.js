@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Bounds,
 	boot,
 	CanvasRenderer,
+	Rect,
 	ShaderEffect,
 	Texture2d,
 	video,
@@ -209,22 +211,31 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		right.destroy();
 	});
 
-	it("accepts a Rect-style region (pos + width/height), not just {x,y,...}", (ctx) => {
+	it("accepts a Bounds region — and a Rect via getBounds()", (ctx) => {
 		if (!isWebGL) {
 			ctx.skip();
 			return;
 		}
 		paintHalves();
-		// same LEFT-half region, expressed as a Rect (pos) — exercises the
-		// region.pos branch of the coordinate resolver
-		const frame = renderer.toFrameTexture({
+		// a real Bounds over the LEFT half (x2 y2 w8 h8)
+		const bounds = new Bounds([
+			{ x: 2, y: 2 },
+			{ x: 10, y: 10 },
+		]);
+		const a = renderer.toFrameTexture({ target: null, region: bounds });
+		expect(a.width).toBe(8);
+		expect(readCapture(a, 4, 4)[0]).toBeGreaterThan(200); // red (left)
+		a.destroy();
+
+		// the documented migration path for a Rect: rect.getBounds()
+		const rect = new Rect(2, 2, 8, 8);
+		const b = renderer.toFrameTexture({
 			target: null,
-			region: { pos: { x: 2, y: 2 }, width: 8, height: 8 },
+			region: rect.getBounds(),
 		});
-		expect(frame.width).toBe(8);
-		const px = readCapture(frame, 4, 4);
-		expect(px[0]).toBeGreaterThan(200); // red (left)
-		frame.destroy();
+		expect(b.width).toBe(8);
+		expect(readCapture(b, 4, 4)[0]).toBeGreaterThan(200); // red (left)
+		b.destroy();
 	});
 
 	it("reallocates when the backing handle goes stale (context-loss self-heal)", (ctx) => {

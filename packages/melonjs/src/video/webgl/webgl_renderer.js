@@ -850,9 +850,11 @@ export default class WebGLRenderer extends Renderer {
 	 *   returned by this method to refresh it in place; pass `null` to mint a
 	 *   fresh, caller-owned capture (for two independent captures in one frame —
 	 *   `destroy()` it yourself when done)
-	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
+	 * @param {Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
 	 *   only this sub-region (framebuffer pixels, bottom-left origin); a smaller
 	 *   region is a proportionally cheaper copy. Defaults to the whole framebuffer.
+	 *   A {@link Bounds} (or any `{x, y, width, height}`); from a {@link Rect}
+	 *   pass `rect.getBounds()`.
 	 * @returns {Texture2d} a GPU-resident texture holding the captured frame
 	 * @example
 	 * // a water surface that refracts the scene rendered behind it
@@ -867,15 +869,16 @@ export default class WebGLRenderer extends Renderer {
 		const canvas = this.getCanvas();
 
 		// resolve the capture rect in framebuffer pixels (default: everything).
-		// accepts a Rect (pos + width/height), a Bounds, or {x, y, width, height}.
+		// a Bounds — or any object exposing numeric x/y/width/height (a Rect via
+		// `rect.getBounds()`).
 		let x = 0;
 		let y = 0;
 		let w = canvas.width;
 		let h = canvas.height;
 		const region = options.region;
 		if (typeof region !== "undefined") {
-			const rx = typeof region.pos !== "undefined" ? region.pos.x : region.x;
-			const ry = typeof region.pos !== "undefined" ? region.pos.y : region.y;
+			const rx = region.x;
+			const ry = region.y;
 			// clamp the ORIGIN into the framebuffer first, then size to what
 			// remains — an out-of-range x/y must not push x+w past the edge, or
 			// copyTex(Sub)Image2D throws INVALID_VALUE. Missing width/height
