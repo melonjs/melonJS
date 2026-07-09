@@ -29,22 +29,22 @@
 		"@biomejs/biome": "2.4.11",
 		"@eslint/js": "^10.0.1",
 		"@types/node": "^25.6.0",
-		"@vitest/browser": "^4.1.8",
-		"@vitest/browser-playwright": "^4.1.8",
-		"eslint": "^10.2.0",
+		"@vitest/browser": "^4.1.10",
+		"@vitest/browser-playwright": "^4.1.10",
+		"eslint": "^10.6.0",
 		"eslint-plugin-jsdoc": "^62.9.0",
-		"globals": "^17.5.0",
-		"lefthook": "^2.1.5",
+		"globals": "^17.7.0",
+		"lefthook": "^2.1.10",
 		"tsconfig": "workspace:^",
-		"tsx": "^4.21.0",
-		"turbo": "^2.9.14",
+		"tsx": "^4.23.0",
+		"turbo": "^2.10.4",
 		"typescript": "^6.0.2",
-		"typescript-eslint": "^8.58.2",
-		"vitest": "^4.1.8"
+		"typescript-eslint": "^8.63.0",
+		"vitest": "^4.1.10"
 	},
 	"devDependencies": {
 		"eslint-plugin-react-refresh": "^0.5.2",
-		"playwright": "^1.59.1"
+		"playwright": "^1.61.1"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

@@ -56,9 +56,9 @@
 		"esbuild": "^0.28.0",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
-		"tsx": "^4.21.0",
+		"tsx": "^4.23.0",
 		"typescript": "^6.0.2",
-		"vitest": "^4.1.5"
+		"vitest": "^4.1.10"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",

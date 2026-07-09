@@ -49,10 +49,10 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=18.3.0",
 		"@capacitor/app": ">=6.0.0",
 		"@capacitor/screen-orientation": ">=6.0.0",
-		"@capacitor/splash-screen": ">=6.0.0"
+		"@capacitor/splash-screen": ">=6.0.0",
+		"melonjs": ">=18.3.0"
 	},
 	"peerDependenciesMeta": {
 		"@capacitor/screen-orientation": {
@@ -70,7 +70,7 @@
 		"esbuild": "^0.28.0",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
-		"tsx": "^4.21.0",
+		"tsx": "^4.23.0",
 		"typescript": "^6.0.2"
 	},
 	"scripts": {
