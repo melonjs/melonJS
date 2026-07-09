@@ -74,7 +74,7 @@ describe("fetchData file:// XHR fallback", () => {
 	it("rejects on a non-0/200 XHR status", async () => {
 		stubXHR({ status: 404 });
 		await expect(fetchData("file:///missing.json", "json")).rejects.toThrow(
-			/status 404/,
+			/not ok: 404/,
 		);
 	});
 
