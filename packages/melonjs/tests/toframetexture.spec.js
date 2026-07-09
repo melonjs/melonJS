@@ -160,20 +160,71 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		owned.destroy();
 	});
 
-	it("captures only the requested sub-region", (ctx) => {
+	// paint the framebuffer LEFT half red, RIGHT half blue at KNOWN pixel coords
+	// via scissored clears — bypasses the bare harness's centred projection (an
+	// engine drawImage lands offset), so region x maps 1:1 to framebuffer x
+	const paintHalves = () => {
+		renderer.flush();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.viewport(0, 0, SIZE, SIZE);
+		gl.enable(gl.SCISSOR_TEST);
+		gl.scissor(0, 0, SIZE / 2, SIZE);
+		gl.clearColor(1, 0, 0, 1);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+		gl.scissor(SIZE / 2, 0, SIZE / 2, SIZE);
+		gl.clearColor(0, 0, 1, 1);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+		gl.disable(gl.SCISSOR_TEST);
+	};
+
+	it("captures the CORRECT sub-region offset (not just any painted pixels)", (ctx) => {
 		if (!isWebGL) {
 			ctx.skip();
 			return;
 		}
-		paintScene("#ff0000");
-		// capture a 16x16 region around the centre (known painted)
-		const frame = renderer.toFrameTexture({
-			region: { x: 8, y: 8, width: 16, height: 16 },
+		paintHalves();
+		// a region fully in the LEFT half (x < SIZE/2) must read red; one in the
+		// RIGHT half, blue. If the x offset were ignored (always captured from 0),
+		// BOTH would read red — this distinguishes a correct offset from a full
+		// capture (and would also catch an x-mirror).
+		const left = renderer.toFrameTexture({
+			target: null,
+			region: { x: 2, y: 2, width: 8, height: 8 },
 		});
-		expect(frame.width).toBe(16);
-		expect(frame.height).toBe(16);
-		const px = readCapture(frame, 8, 8);
-		expect(px[0]).toBeGreaterThan(200);
+		const lpx = readCapture(left, 4, 4);
+		expect(lpx[0]).toBeGreaterThan(200); // red
+		expect(lpx[2]).toBeLessThan(60);
+
+		const right = renderer.toFrameTexture({
+			target: null,
+			region: { x: SIZE / 2 + 4, y: 2, width: 8, height: 8 },
+		});
+		const rpx = readCapture(right, 4, 4);
+		expect(rpx[2]).toBeGreaterThan(200); // blue
+		expect(rpx[0]).toBeLessThan(60);
+
+		expect(left.width).toBe(8);
+		expect(right.width).toBe(8);
+		left.destroy();
+		right.destroy();
+	});
+
+	it("accepts a Rect-style region (pos + width/height), not just {x,y,...}", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		paintHalves();
+		// same LEFT-half region, expressed as a Rect (pos) — exercises the
+		// region.pos branch of the coordinate resolver
+		const frame = renderer.toFrameTexture({
+			target: null,
+			region: { pos: { x: 2, y: 2 }, width: 8, height: 8 },
+		});
+		expect(frame.width).toBe(8);
+		const px = readCapture(frame, 4, 4);
+		expect(px[0]).toBeGreaterThan(200); // red (left)
+		frame.destroy();
 	});
 
 	it("reallocates when the backing handle goes stale (context-loss self-heal)", (ctx) => {
@@ -470,6 +521,72 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		expect(frame.width).toBeLessThanOrEqual(SIZE);
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	});
+
+	it("rejects a capture that belongs to a DIFFERENT renderer", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		// a real capture from THIS renderer, re-owned by a fake renderer — the
+		// instanceof check passes but the ownership check must reject it (else
+		// frame.destroy() would delete a texture on the wrong GL context)
+		const owned = renderer.toFrameTexture({ target: null });
+		owned._renderer = { gl: renderer.gl }; // a different object, not `renderer`
+		expect(() => {
+			renderer.toFrameTexture({ target: owned });
+		}).toThrow(/different renderer/);
+		owned._renderer = renderer; // restore so destroy hits the right context
+		owned.destroy();
+	});
+
+	it("treats a GPU-resident Texture2d WITHOUT a glTexture as a static asset", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		// a Texture2d that CLAIMS GPU-residency but exposes no glTexture handle:
+		// the live path reads .glTexture, so taking it would silently never bind.
+		// It must fall back to the static getTexture() unwrap instead.
+		const backing = document.createElement("canvas");
+		backing.width = SIZE;
+		backing.height = SIZE;
+		class FakeGPUResident extends Texture2d {
+			constructor() {
+				super();
+				this.isGPUResident = true; // no glTexture field
+			}
+			getTexture() {
+				return backing;
+			}
+		}
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform sampler2D uX;\nvec4 apply(vec4 c, vec2 uv) { return texture2D(uX, uv); }",
+		);
+		effect.setTexture("uX", new FakeGPUResident());
+		const entry = effect._extraTextures.get("uX");
+		expect(entry.live).toBe(false); // NOT taken as a live source
+		expect(entry.image).toBe(backing); // unwrapped to its drawable instead
+		effect.destroy();
+	});
+
+	it("invalidateUnit is a no-op (no throw) for an out-of-range unit", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const lit = renderer.batchers.get("litQuad");
+		if (!lit) {
+			ctx.skip();
+			return;
+		}
+		// a unit far past the array bounds must neither throw nor corrupt state
+		expect(() => {
+			lit.invalidateUnit(9999);
+			renderer.invalidateTextureUnit(9999);
+		}).not.toThrow();
+		expect(lit.boundNormalMaps.length).toBe(lit.maxBatchTextures);
+	});
 });
 
 describe("CanvasRenderer.toFrameTexture", () => {
@@ -510,5 +627,53 @@ describe("CanvasRenderer.toFrameTexture", () => {
 		expect(() => {
 			renderer.toFrameTexture({ target: {} });
 		}).toThrow(/capture returned by this method/);
+	});
+
+	it("captures the correct canvas sub-region and clamps out-of-bounds", () => {
+		const ctx2d = renderer.getContext();
+		ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+		ctx2d.fillStyle = "#ff0000"; // left half red
+		ctx2d.fillRect(0, 0, SIZE / 2, SIZE);
+		ctx2d.fillStyle = "#0000ff"; // right half blue
+		ctx2d.fillRect(SIZE / 2, 0, SIZE / 2, SIZE);
+
+		// a RIGHT region must read blue — proves the x offset is honored
+		const right = renderer.toFrameTexture({
+			target: null,
+			region: { x: SIZE - 8, y: 4, width: 6, height: 6 },
+		});
+		const px = right
+			.getTexture()
+			.getContext("2d")
+			.getImageData(3, 3, 1, 1).data;
+		expect(px[2]).toBeGreaterThan(200); // blue
+		expect(px[0]).toBeLessThan(60);
+
+		// an out-of-bounds origin must clamp to a valid capture, not throw
+		expect(() => {
+			const oob = renderer.toFrameTexture({
+				target: null,
+				region: { x: 9999, y: 9999, width: 50, height: 50 },
+			});
+			expect(oob.width).toBeGreaterThanOrEqual(1);
+			expect(oob.width).toBeLessThanOrEqual(SIZE);
+		}).not.toThrow();
+	});
+
+	it("refreshes a canvas target IN PLACE on a size change (same object)", () => {
+		const a = renderer.toFrameTexture({
+			target: null,
+			region: { x: 0, y: 0, width: 8, height: 8 },
+		});
+		expect(a.width).toBe(8);
+		// re-capture a DIFFERENT size into the same target — must keep the object
+		// identity (matches the WebGL variant), not return a new instance
+		const b = renderer.toFrameTexture({
+			target: a,
+			region: { x: 0, y: 0, width: 16, height: 16 },
+		});
+		expect(b).toBe(a);
+		expect(a.width).toBe(16);
+		expect(a.canvas.width).toBe(16);
 	});
 });
