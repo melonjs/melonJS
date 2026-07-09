@@ -867,7 +867,7 @@ export default class WebGLRenderer extends Renderer {
 		const canvas = this.getCanvas();
 
 		// resolve the capture rect in framebuffer pixels (default: everything).
-		// accepts a Rect (pos + width/height), a Bounds, or a plain {x,y,w,h}.
+		// accepts a Rect (pos + width/height), a Bounds, or {x, y, width, height}.
 		let x = 0;
 		let y = 0;
 		let w = canvas.width;
@@ -876,26 +876,39 @@ export default class WebGLRenderer extends Renderer {
 		if (typeof region !== "undefined") {
 			const rx = typeof region.pos !== "undefined" ? region.pos.x : region.x;
 			const ry = typeof region.pos !== "undefined" ? region.pos.y : region.y;
-			x = Math.max(0, Math.floor(rx || 0));
-			y = Math.max(0, Math.floor(ry || 0));
-			w = Math.max(1, Math.min(canvas.width - x, Math.ceil(region.width)));
-			h = Math.max(1, Math.min(canvas.height - y, Math.ceil(region.height)));
+			// clamp the ORIGIN into the framebuffer first, then size to what
+			// remains — an out-of-range x/y must not push x+w past the edge, or
+			// copyTex(Sub)Image2D throws INVALID_VALUE. Missing width/height
+			// defaults to "the rest of the framebuffer from x/y".
+			x = Math.min(Math.max(0, Math.floor(rx || 0)), canvas.width - 1);
+			y = Math.min(Math.max(0, Math.floor(ry || 0)), canvas.height - 1);
+			const rw = Number.isFinite(region.width)
+				? Math.ceil(region.width)
+				: canvas.width - x;
+			const rh = Number.isFinite(region.height)
+				? Math.ceil(region.height)
+				: canvas.height - y;
+			w = Math.max(1, Math.min(canvas.width - x, rw));
+			h = Math.max(1, Math.min(canvas.height - y, rh));
 		}
 
 		// flush pending geometry so the capture holds everything drawn so far
 		this.flush();
 
-		// a non-null `target` must be a capture this method previously returned
-		// (a FrameTexture) — any other Texture2d has no `glTexture` and would
-		// mis-drive the isTexture/reallocation logic below
-		if (
-			typeof options.target !== "undefined" &&
-			options.target !== null &&
-			!(options.target instanceof FrameTexture)
-		) {
-			throw new Error(
-				"WebGLRenderer.toFrameTexture: `target` must be a capture returned by this method",
-			);
+		// a non-null `target` must be a capture THIS renderer previously returned
+		// (a FrameTexture) — any other Texture2d has no `glTexture`, and a capture
+		// from a different renderer would delete textures on the wrong GL context
+		if (typeof options.target !== "undefined" && options.target !== null) {
+			if (!(options.target instanceof FrameTexture)) {
+				throw new Error(
+					"WebGLRenderer.toFrameTexture: `target` must be a capture returned by this method",
+				);
+			}
+			if (options.target._renderer !== this) {
+				throw new Error(
+					"WebGLRenderer.toFrameTexture: `target` belongs to a different renderer",
+				);
+			}
 		}
 
 		// destination:

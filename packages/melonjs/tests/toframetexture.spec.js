@@ -433,6 +433,43 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		spy.mockRestore();
 		effect.destroy();
 	});
+
+	it("rejects a target that is not a capture from this renderer", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		// not a FrameTexture at all
+		expect(() => {
+			renderer.toFrameTexture({ target: {} });
+		}).toThrow();
+		// a Texture2d but not a capture
+		class NotACapture extends Texture2d {
+			getTexture() {
+				return document.createElement("canvas");
+			}
+		}
+		expect(() => {
+			renderer.toFrameTexture({ target: new NotACapture() });
+		}).toThrow(/capture returned by this method/);
+	});
+
+	it("clamps an out-of-bounds region instead of erroring", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		paintScene("#ff0000");
+		// x/y past the framebuffer + a size that would overflow — must not throw
+		// (INVALID_VALUE) and must still yield a valid capture
+		const frame = renderer.toFrameTexture({
+			region: { x: SIZE + 100, y: SIZE + 100, width: SIZE, height: SIZE },
+		});
+		expect(gl.isTexture(frame.glTexture)).toBe(true);
+		expect(frame.width).toBeGreaterThanOrEqual(1);
+		expect(frame.width).toBeLessThanOrEqual(SIZE);
+		expect(gl.getError()).toBe(gl.NO_ERROR);
+	});
 });
 
 describe("CanvasRenderer.toFrameTexture", () => {
@@ -467,5 +504,11 @@ describe("CanvasRenderer.toFrameTexture", () => {
 		const a = renderer.toFrameTexture();
 		const b = renderer.toFrameTexture();
 		expect(b).toBe(a);
+	});
+
+	it("rejects a target that is not a canvas capture", () => {
+		expect(() => {
+			renderer.toFrameTexture({ target: {} });
+		}).toThrow(/capture returned by this method/);
 	});
 });

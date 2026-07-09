@@ -51,22 +51,27 @@ export type Texture2dSource =
  * `CompressedImage` data are accepted too, but are not part of this class
  * hierarchy.
  *
- * Most assets are CPU-backed and resolve to a drawable canvas/image.
- * Subclasses may also be **GPU-resident**, resolving to a renderer texture
- * resource that never leaves the GPU — the contract deliberately admits both
- * (a future WebGPU backend follows the same shape with a `GPUTexture`-backed
- * resource).
+ * Most assets are **CPU-backed** and resolve to a drawable canvas/image — those
+ * are the ones assignable to {@link Sprite#image} / {@link Sprite#normalMap} /
+ * an {@link ImageLayer} (which upload the drawable through the texture cache).
+ * Subclasses may also be **GPU-resident**, resolving to an opaque renderer
+ * backing that never leaves the GPU (e.g. the capture returned by
+ * `renderer.toFrameTexture()`). A GPU-resident texture is **not** a drawable
+ * source: use it as a custom-shader sampler via {@link ShaderEffect#setTexture}
+ * (which binds its live GL handle), NOT as `Sprite#image`. The contract admits
+ * both (a future WebGPU backend follows the same shape with a `GPUTexture`).
  *
  * Concrete implementations:
- * - {@link TextureAtlas} — packed multi-region sprite sheet
+ * - {@link TextureAtlas} — packed multi-region sprite sheet (CPU-backed)
  * @category Game Objects
  */
 export default abstract class Texture2d {
 	/**
-	 * Return the backing source for this texture — a drawable canvas/image
-	 * for CPU-backed assets, or a renderer texture resource for GPU-resident
-	 * ones. Assignable to {@link Sprite#image}, {@link Sprite#normalMap}, an
-	 * {@link ImageLayer}, or bound as a sampler uniform in a custom shader.
+	 * Return the backing source for this texture — a drawable canvas/image for
+	 * CPU-backed assets (assignable to {@link Sprite#image} /
+	 * {@link Sprite#normalMap} / an {@link ImageLayer}), or an opaque
+	 * GPU-resident backing for GPU-resident ones (bind those as a custom-shader
+	 * sampler via {@link ShaderEffect#setTexture}; they are not drawable sources).
 	 * @returns the backing source
 	 */
 	abstract getTexture(): Texture2dSource;

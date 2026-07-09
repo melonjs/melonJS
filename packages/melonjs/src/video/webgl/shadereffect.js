@@ -268,10 +268,14 @@ export default class ShaderEffect {
 		// A GPU-resident LIVE source (a frame capture from
 		// renderer.toFrameTexture): keep the wrapper and bind its live GL
 		// handle every draw — never upload a static copy — so re-capturing
-		// into the same slot each frame is picked up with no re-bind. Any
-		// other Texture2d is a static asset: resolve it to its backing
-		// drawable source once.
-		const live = image instanceof Texture2d && image.isGPUResident === true;
+		// into the same slot each frame is picked up with no re-bind. The live
+		// path reads `.glTexture`, so require that handle to be present;
+		// otherwise fall through and unwrap like any static Texture2d asset,
+		// rather than take the live branch and silently never bind.
+		const live =
+			image instanceof Texture2d &&
+			image.isGPUResident === true &&
+			"glTexture" in image;
 		if (!live && image instanceof Texture2d) {
 			image = image.getTexture();
 		}

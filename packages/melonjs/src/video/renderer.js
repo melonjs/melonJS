@@ -1139,7 +1139,9 @@ export default class Renderer {
 	 *   returned by this method to refresh it in place; pass `null` to mint a
 	 *   fresh, caller-owned capture
 	 * @param {Rect|Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
-	 *   only this sub-region of the frame
+	 *   only this sub-region of the frame. NOTE the origin differs by backend:
+	 *   WebGL uses framebuffer coords (**bottom-left** origin), Canvas uses
+	 *   **top-left** — relevant when a region is used under `video.AUTO`.
 	 * @returns {Texture2d} a texture holding the captured frame
 	 * @example
 	 * effect.setTexture("uScene", renderer.toFrameTexture());
