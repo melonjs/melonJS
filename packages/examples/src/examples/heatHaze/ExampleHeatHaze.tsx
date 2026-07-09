@@ -106,6 +106,7 @@ class PlayScreen extends Stage {
 	private effect!: ShaderEffect;
 	private w = 0;
 	private h = 0;
+	private noiseTextures: NoiseTexture2d[] = [];
 
 	onResetEvent(app: Application) {
 		this.w = app.viewport.width;
@@ -128,10 +129,29 @@ class PlayScreen extends Stage {
 		wctx.fillRect(0, 0, w, h);
 
 		// Enough DISTINCT normal-mapped tiles to fill the lit batcher's normal-map
-		// units up to the top one — that top unit is exactly what toFrameTexture
-		// grabs as its scratch unit, so this is the case the invalidation guards.
+		// units up to the top one — that top unit overlaps the units the capture
+		// and the haze effect's samplers bind, so this is the case the
+		// invalidation guards. Build each distinct (albedo, normal) ONCE and
+		// reuse it across repeated grid cells.
 		const maxTextures = app.renderer.maxTextures ?? 16;
 		const distinctTiles = Math.min(24, Math.ceil(maxTextures / 2) + 2);
+		const albedos: HTMLCanvasElement[] = [];
+		const normals: HTMLCanvasElement[] = [];
+		for (let v = 0; v < distinctTiles; v++) {
+			albedos.push(tileAlbedo(96, (v * 37) % 360));
+			const n = new NoiseTexture2d({
+				width: 96,
+				height: 96,
+				type: "simplex",
+				seed: 3 + v * 5,
+				frequency: 0.06 + (v % 4) * 0.01,
+				octaves: 3,
+				asNormalMap: true,
+				bumpStrength: 2.2,
+			});
+			this.noiseTextures.push(n);
+			normals.push(n.getTexture() as HTMLCanvasElement);
+		}
 
 		const cols = 6;
 		const rows = 4;
@@ -141,22 +161,9 @@ class PlayScreen extends Stage {
 		for (let r = 0; r < rows; r++) {
 			for (let cx = 0; cx < cols; cx++) {
 				const variant = k % distinctTiles;
-				// each variant gets its OWN albedo + procedural normal map, so the
-				// lit batcher assigns them to distinct (color, normal) unit pairs
-				const albedo = tileAlbedo(96, (variant * 37) % 360);
-				const normal = new NoiseTexture2d({
-					width: 96,
-					height: 96,
-					type: "simplex",
-					seed: 3 + variant * 5,
-					frequency: 0.06 + (variant % 4) * 0.01,
-					octaves: 3,
-					asNormalMap: true,
-					bumpStrength: 2.2,
-				});
 				const tile = new Sprite(cx * tileW + tileW / 2, r * tileH + tileH / 2, {
-					image: albedo,
-					normalMap: normal.getTexture(),
+					image: albedos[variant],
+					normalMap: normals[variant],
 					framewidth: 96,
 					frameheight: 96,
 					anchorPoint: { x: 0.5, y: 0.5 },
@@ -182,6 +189,7 @@ class PlayScreen extends Stage {
 			octaves: 3,
 			seamless: true,
 		});
+		this.noiseTextures.push(noise);
 		this.effect = loader.getShader("heatHaze") as ShaderEffect;
 		this.effect.setTexture("uNoise", noise, "repeat");
 		this.effect.setUniform("uStrength", 0.02);
@@ -205,6 +213,11 @@ class PlayScreen extends Stage {
 
 	onDestroyEvent() {
 		loader.unload({ name: "heatHaze", type: "shader" });
+		// free the baked NoiseTexture2d canvases (tile normals + haze flow map)
+		for (const n of this.noiseTextures) {
+			n.destroy();
+		}
+		this.noiseTextures = [];
 	}
 }
 

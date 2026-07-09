@@ -352,26 +352,31 @@ export default class ShaderEffect {
 					batcher.bindTexture2D(glTex, entry.unit, false);
 					this._shader.setUniform(name, entry.unit);
 				}
-				continue;
-			}
-			if (entry.tex === null) {
-				batcher.createTexture2D(
-					entry.unit,
-					entry.image,
-					filter,
-					entry.repeat,
-					entry.image.width,
-					entry.image.height,
-					false, // premultipliedAlpha — keep raw texel values
-					false, // mipmap — not needed, and NPOT-unsafe under WebGL 1
-					undefined,
-					false, // flush — the following draw flushes with everything bound
-				);
-				entry.tex = batcher.boundTextures[entry.unit];
 			} else {
-				batcher.bindTexture2D(entry.tex, entry.unit, false);
+				if (entry.tex === null) {
+					batcher.createTexture2D(
+						entry.unit,
+						entry.image,
+						filter,
+						entry.repeat,
+						entry.image.width,
+						entry.image.height,
+						false, // premultipliedAlpha — keep raw texel values
+						false, // mipmap — not needed, and NPOT-unsafe under WebGL 1
+						undefined,
+						false, // flush — the following draw flushes with everything bound
+					);
+					entry.tex = batcher.boundTextures[entry.unit];
+				} else {
+					batcher.bindTexture2D(entry.tex, entry.unit, false);
+				}
+				this._shader.setUniform(name, entry.unit);
 			}
-			this._shader.setUniform(name, entry.unit);
+			// this sampler was bound to a reserved high unit DIRECTLY (bypassing
+			// the shared texture cache), which overlaps the lit quad batcher's
+			// normal-map units — invalidate it on the OTHER batchers so a later
+			// lit draw re-binds its normal there instead of sampling this texture
+			batcher.renderer.invalidateTextureUnit(entry.unit, batcher);
 		}
 	}
 

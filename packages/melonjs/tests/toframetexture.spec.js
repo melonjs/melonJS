@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
 	CanvasRenderer,
@@ -350,6 +350,88 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		expect(lit.boundTextures.length).toBe(0); // colours cleared (base handler)
 		expect(lit.boundNormalMaps[0]).toBe(null); // normals cleared (the gap fix)
 		expect(lit.boundNormalVersions[0]).toBe(-1);
+	});
+
+	// invalidateTextureUnit is the shared primitive: it must clear the unit on
+	// EVERY batcher except the one that just bound it. GPU-independent.
+	it("invalidateTextureUnit clears a unit on all batchers except the excluded one", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const quad = renderer.batchers.get("quad");
+		const lit = renderer.batchers.get("litQuad");
+		if (!quad || !lit) {
+			ctx.skip();
+			return;
+		}
+		const glUnit = lit.maxBatchTextures + 1; // a real lit normal-map GL unit
+		lit.boundNormalMaps[1] = { fake: "normal" };
+		quad.boundTextures[glUnit] = { fake: "color" };
+
+		// exclude the quad batcher → its binding is kept, the lit one is dropped
+		renderer.invalidateTextureUnit(glUnit, quad);
+		expect(lit.boundNormalMaps[1]).toBe(null); // lit invalidated
+		expect(quad.boundTextures[glUnit]).toEqual({ fake: "color" }); // quad kept
+	});
+
+	// the crux of the completeness fix: an effect with MULTIPLE extra samplers
+	// binds them to several top units (counting down) — ALL of which overlap lit
+	// normal-map units — so _prepareTextures must invalidate EVERY one, not just
+	// the scratch. Verified GPU-independently by spying on the shared primitive.
+	it("_prepareTextures invalidates every reserved sampler unit an effect binds", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const quad = renderer.batchers.get("quad");
+		if (!quad) {
+			ctx.skip();
+			return;
+		}
+		const mk = (col) => {
+			const c = document.createElement("canvas");
+			c.width = SIZE;
+			c.height = SIZE;
+			const x = c.getContext("2d");
+			x.fillStyle = col;
+			x.fillRect(0, 0, SIZE, SIZE);
+			return c;
+		};
+		// TWO extra samplers → bound to units (maxBatchTextures-1) and (-2)
+		const effect = new ShaderEffect(
+			renderer,
+			"uniform sampler2D uA;\nuniform sampler2D uB;\nvec4 apply(vec4 c, vec2 uv) { return texture2D(uA, uv) + texture2D(uB, uv); }",
+		);
+		effect.setTexture("uA", mk("#ff0000"));
+		effect.setTexture("uB", mk("#00ff00"));
+
+		const spy = vi.spyOn(renderer, "invalidateTextureUnit");
+		renderer.save();
+		renderer.customShader = effect;
+		renderer.drawImage(mk("#000000"), 0, 0, SIZE, SIZE, 0, 0, SIZE, SIZE);
+		renderer.flush();
+		renderer.customShader = undefined;
+		renderer.restore();
+
+		const u1 = quad.maxBatchTextures - 1;
+		const u2 = quad.maxBatchTextures - 2;
+		const calls = spy.mock.calls;
+		const units = calls.map((c) => {
+			return c[0];
+		});
+		// BOTH sampler units invalidated (the second one is the bug the review
+		// caught — the pre-fix code only invalidated the scratch unit)
+		expect(units).toContain(u1);
+		expect(units).toContain(u2);
+		// each excludes the drawing (quad) batcher, whose cache is already correct
+		const callForU2 = calls.find((c) => {
+			return c[0] === u2;
+		});
+		expect(callForU2?.[1]).toBe(quad);
+
+		spy.mockRestore();
+		effect.destroy();
 	});
 });
 

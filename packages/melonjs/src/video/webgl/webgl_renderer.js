@@ -963,16 +963,35 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		// the scratch bind clobbered GL `unit` OUTSIDE the shared texture-cache
-		// accounting (bound directly, not via allocateTextureUnit), so the OTHER
-		// batchers' unit caches don't know it changed. Invalidate it on each —
-		// critically the lit quad batcher, whose normal-map slots occupy the top
-		// half of the unit range and overlap this scratch unit; without this a
-		// later lit draw could sample the capture as a normal map.
-		for (const b of this.batchers.values()) {
-			b.invalidateUnit?.(unit);
-		}
+		// accounting (bound directly, not via allocateTextureUnit), so other
+		// batchers' unit caches don't know it changed — invalidate it on all of
+		// them (see invalidateTextureUnit).
+		this.invalidateTextureUnit(unit);
 
 		return frame;
+	}
+
+	/**
+	 * Forget the cached binding for GL texture `unit` on every batcher (except
+	 * `except`). Call this whenever a texture is bound to a unit **directly** —
+	 * bypassing the shared texture cache and its `GPU_TEXTURE_CACHE_RESET`
+	 * coordination — as {@link WebGLRenderer#toFrameTexture}'s capture copy and
+	 * {@link ShaderEffect#_prepareTextures}'s reserved extra samplers both do.
+	 * Those binds land on the TOP of the unit range, which overlaps the lit quad
+	 * batcher's normal-map units; without invalidation a later lit draw would
+	 * assume its normal map is still resident there and skip re-binding it,
+	 * sampling the directly-bound texture as a normal map (wrong lighting).
+	 * @param {number} unit - the GL texture unit that was clobbered
+	 * @param {Batcher} [except] - a batcher to skip (the one that just bound the
+	 *   texture — its own cache is already accurate)
+	 * @ignore
+	 */
+	invalidateTextureUnit(unit, except) {
+		for (const b of this.batchers.values()) {
+			if (b !== except) {
+				b.invalidateUnit?.(unit);
+			}
+		}
 	}
 
 	/**
