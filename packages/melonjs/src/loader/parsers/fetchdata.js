@@ -1,4 +1,83 @@
 /**
+ * Whether `url` must be loaded over the `file:` scheme — either an absolute
+ * `file://` URL, or a relative URL resolved against a `file:` document (the
+ * case for a Cordova/Capacitor build packaged into an APK, where the app runs
+ * from `file://`). `fetch()` cannot load such URLs in several WebView contexts
+ * (it rejects with an opaque network error), whereas `XMLHttpRequest` can.
+ * @param {string} url
+ * @returns {boolean}
+ * @ignore
+ */
+function isFileProtocol(url) {
+	return (
+		url.startsWith("file://") ||
+		(typeof globalThis.location !== "undefined" &&
+			globalThis.location.protocol === "file:")
+	);
+}
+
+/**
+ * `file:`-scheme loader via `XMLHttpRequest` — the fallback for contexts where
+ * `fetch()` refuses local files (Cordova/Capacitor APK on Android). A
+ * successful local read reports `status === 0` (there is no HTTP status).
+ * @param {string} url
+ * @param {string} responseType - 'json' | 'text' | 'blob' | 'arrayBuffer'
+ * @param {object} settings
+ * @returns {Promise}
+ * @ignore
+ */
+function fetchDataXHR(url, responseType, settings) {
+	return new Promise((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		xhr.open("GET", url, true);
+		xhr.withCredentials = settings.withCredentials === true;
+		// `json` is parsed from the response text; blob/arrayBuffer use the
+		// native XHR response types (a text default covers json + text).
+		xhr.responseType =
+			responseType === "blob"
+				? "blob"
+				: responseType === "arrayBuffer"
+					? "arraybuffer"
+					: "text";
+
+		xhr.onload = () => {
+			// status 0 = a successful `file:` read (no HTTP status); 200 covers
+			// a same-origin http(s) server if this path is ever hit there
+			if (xhr.status !== 0 && xhr.status !== 200) {
+				reject(
+					new Error(
+						`fetchData: XHR failed loading ${url} (status ${xhr.status})`,
+					),
+				);
+				return;
+			}
+			try {
+				switch (responseType) {
+					case "json":
+						resolve(JSON.parse(xhr.responseText));
+						break;
+					case "text":
+						resolve(xhr.responseText);
+						break;
+					case "blob":
+					case "arrayBuffer":
+						resolve(xhr.response);
+						break;
+					default:
+						reject(new Error("Invalid response type: " + responseType));
+				}
+			} catch (error) {
+				reject(error);
+			}
+		};
+		xhr.onerror = () => {
+			reject(new Error(`fetchData: XHR error loading ${url}`));
+		};
+		xhr.send();
+	});
+}
+
+/**
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
  * @param {string} responseType - The type of response expected ('json', 'text', 'blob', 'arrayBuffer').
@@ -15,6 +94,14 @@
  *     });
  */
 export function fetchData(url, responseType, settings = {}) {
+	// `fetch()` can't load `file:` URLs in several WebView contexts — notably a
+	// Cordova/Capacitor APK on Android, where the app is served from `file://`
+	// and `fetch()` rejects with a network error. Fall back to XHR there, which
+	// supports the `file:` scheme.
+	if (isFileProtocol(url)) {
+		return fetchDataXHR(url, responseType, settings);
+	}
+
 	return fetch(url, {
 		method: "GET",
 		// internally nocache is a string with a generated random number
