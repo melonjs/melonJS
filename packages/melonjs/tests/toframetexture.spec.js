@@ -211,7 +211,7 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		right.destroy();
 	});
 
-	it("accepts a Bounds region — and a Rect via getBounds()", (ctx) => {
+	it("accepts a Bounds region", (ctx) => {
 		if (!isWebGL) {
 			ctx.skip();
 			return;
@@ -224,18 +224,54 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		]);
 		const a = renderer.toFrameTexture({ target: null, region: bounds });
 		expect(a.width).toBe(8);
+		expect(a.height).toBe(8);
 		expect(readCapture(a, 4, 4)[0]).toBeGreaterThan(200); // red (left)
 		a.destroy();
+	});
 
-		// the documented migration path for a Rect: rect.getBounds()
-		const rect = new Rect(2, 2, 8, 8);
-		const b = renderer.toFrameTexture({
+	// the documented migration path for a Rect region: pass rect.getBounds().
+	// Adversarial: prove the Rect's ACTUAL position + size drive the capture —
+	// a right-half Rect must read blue, a left-half Rect red, each sized to the
+	// Rect (so a dropped offset or a wrong size can't pass).
+	it("captures the exact region a Rect describes, via rect.getBounds()", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		paintHalves(); // framebuffer: left half red, right half blue
+
+		// sanity: getBounds() reflects the Rect's position + size (non-square, to
+		// catch a width/height swap)
+		const rightRect = new Rect(SIZE / 2 + 2, 4, 8, 6);
+		const rb = rightRect.getBounds();
+		expect(rb.x).toBe(SIZE / 2 + 2);
+		expect(rb.y).toBe(4);
+		expect(rb.width).toBe(8);
+		expect(rb.height).toBe(6);
+
+		// a Rect fully in the RIGHT half → blue, sized 8x6. If the x offset were
+		// dropped it would capture the left (red); a width/height swap → 6x8.
+		const right = renderer.toFrameTexture({
 			target: null,
-			region: rect.getBounds(),
+			region: rightRect.getBounds(),
 		});
-		expect(b.width).toBe(8);
-		expect(readCapture(b, 4, 4)[0]).toBeGreaterThan(200); // red (left)
-		b.destroy();
+		expect(right.width).toBe(8);
+		expect(right.height).toBe(6);
+		const rpx = readCapture(right, 4, 3);
+		expect(rpx[2]).toBeGreaterThan(200); // blue
+		expect(rpx[0]).toBeLessThan(60);
+		right.destroy();
+
+		// the mirror case: a Rect fully in the LEFT half → red — proves the
+		// position (not a constant) selects what's captured
+		const left = renderer.toFrameTexture({
+			target: null,
+			region: new Rect(2, 4, 8, 6).getBounds(),
+		});
+		const lpx = readCapture(left, 4, 3);
+		expect(lpx[0]).toBeGreaterThan(200); // red
+		expect(lpx[2]).toBeLessThan(60);
+		left.destroy();
 	});
 
 	it("reallocates when the backing handle goes stale (context-loss self-heal)", (ctx) => {
