@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchData } from "../src/loader/parsers/fetchdata.js";
+import { fetchData, isFileProtocol } from "../src/loader/parsers/fetchdata.js";
 
 /**
  * `fetch()` cannot load `file:` URLs in several WebView contexts — notably a
@@ -99,5 +99,54 @@ describe("fetchData file:// XHR fallback", () => {
 		expect(data).toEqual({ ok: 1 });
 		expect(fetchSpy).toHaveBeenCalledTimes(1);
 		expect(XHRSpy).not.toHaveBeenCalled();
+	});
+
+	it("resolves a blob file:// via xhr.response", async () => {
+		const fakeBlob = { size: 3, type: "" };
+		const calls = stubXHR({ status: 0, response: fakeBlob });
+		const data = await fetchData("file:///data/clip.webm", "blob");
+		expect(data).toBe(fakeBlob);
+		expect(calls.responseType).toBe("blob"); // native XHR blob type
+	});
+
+	// the XHR json() does JSON.parse, mirroring fetch's throw-on-invalid-JSON
+	it("rejects on malformed json over file://", async () => {
+		stubXHR({ status: 0, text: "{ not json" });
+		await expect(fetchData("file:///data/bad.json", "json")).rejects.toThrow();
+	});
+
+	// the shared responseType switch guards the default branch for both transports
+	it("rejects an unknown responseType after a successful file:// read", async () => {
+		stubXHR({ status: 0, text: "{}" });
+		await expect(fetchData("file:///data/x.json", "banana")).rejects.toThrow(
+			/Invalid response type/,
+		);
+	});
+});
+
+/**
+ * The routing decision itself. The document protocol is injected (rather than
+ * stubbing `globalThis.location`, which is non-configurable in a real browser)
+ * so both branches — absolute `file://` and a relative URL under a `file:`
+ * document (the real Cordova case) — are covered directly.
+ */
+describe("isFileProtocol", () => {
+	it("is true for an absolute file:// url regardless of the document protocol", () => {
+		expect(isFileProtocol("file:///android_asset/www/x.json", "https:")).toBe(
+			true,
+		);
+	});
+
+	it("is true for a RELATIVE url when the document is served from file: (Cordova)", () => {
+		expect(isFileProtocol("data/level.json", "file:")).toBe(true);
+	});
+
+	it("is false for a relative url under http(s)", () => {
+		expect(isFileProtocol("data/level.json", "https:")).toBe(false);
+		expect(isFileProtocol("https://example.com/x.json", "https:")).toBe(false);
+	});
+
+	it("is false when there is no hosting document (protocol undefined)", () => {
+		expect(isFileProtocol("data/level.json", undefined)).toBe(false);
 	});
 });

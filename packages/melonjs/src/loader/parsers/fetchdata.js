@@ -3,17 +3,16 @@
  * `file://` URL, or a relative URL resolved against a `file:` document (the
  * case for a Cordova/Capacitor build packaged into an APK, where the app runs
  * from `file://`). `fetch()` cannot load such URLs in several WebView contexts
- * (it rejects with an opaque network error), whereas `XMLHttpRequest` can.
+ * (it rejects with an opaque network error), whereas `XMLHttpRequest` can. The
+ * document `protocol` is injectable so the relative-URL branch is unit-testable
+ * (`location` is non-configurable in a real browser).
  * @param {string} url
+ * @param {string} [protocol] - the hosting document's protocol
  * @returns {boolean}
  * @ignore
  */
-function isFileProtocol(url) {
-	return (
-		url.startsWith("file://") ||
-		(typeof globalThis.location !== "undefined" &&
-			globalThis.location.protocol === "file:")
-	);
+export function isFileProtocol(url, protocol = globalThis.location?.protocol) {
+	return url.startsWith("file://") || protocol === "file:";
 }
 
 /**
