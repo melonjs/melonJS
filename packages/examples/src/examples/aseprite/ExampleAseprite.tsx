@@ -16,11 +16,33 @@ export const ExampleAseprite = () => {
 	}, []);
 
 	return (
-		<div>
+		// float above the fixed #screen overlay (see index.css), like the
+		// tiledMapLoader / spine selectors — in normal flow the game surface
+		// paints over the controls
+		<div
+			style={{
+				position: "absolute",
+				top: 44,
+				left: 16,
+				zIndex: 1000,
+				display: "flex",
+				alignItems: "center",
+				gap: 8,
+			}}
+		>
 			<div>Animation:</div>
 			<select
 				name="animation_name"
 				id="animation_name"
+				defaultValue="run front"
+				style={{
+					padding: "6px 12px",
+					fontSize: 14,
+					background: "#1a1a1a",
+					color: "#e0e0e0",
+					border: "1px solid #444",
+					borderRadius: 4,
+				}}
 				onChange={(event) => {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 					(paladin.renderable as me.Sprite).setCurrentAnimation(
