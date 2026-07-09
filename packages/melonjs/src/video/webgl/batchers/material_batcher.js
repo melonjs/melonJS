@@ -52,13 +52,27 @@ export class MaterialBatcher extends Batcher {
 		// `Batcher` directly and has no texture state, so it doesn't
 		// need this.
 		if (!this._onCacheReset) {
+			// delegate to an overridable method so subclasses that track extra
+			// per-unit bindings (lit normal maps) can drop those on a reset too
 			this._onCacheReset = () => {
-				this.boundTextures.length = 0;
-				this.currentTextureUnit = -1;
-				this.currentSamplerUnit = -1;
+				this._onTextureCacheReset();
 			};
 			on(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
 		}
+	}
+
+	/**
+	 * Drop every cached texture binding after a {@link GPU_TEXTURE_CACHE_RESET}
+	 * (the shared texture cache reassigned units — our per-unit view is stale).
+	 * Subclasses that pair extra samplers to units (lit normal maps) override to
+	 * forget those too; without that they'd assume the extra texture is still
+	 * resident and skip re-binding it after the reset.
+	 * @ignore
+	 */
+	_onTextureCacheReset() {
+		this.boundTextures.length = 0;
+		this.currentTextureUnit = -1;
+		this.currentSamplerUnit = -1;
 	}
 
 	/**
@@ -347,6 +361,25 @@ export class MaterialBatcher extends Batcher {
 			}
 		}
 		return unit;
+	}
+
+	/**
+	 * Forget whatever texture this batcher believes is bound to `unit`, so the
+	 * next bind to it re-issues the GL bind. Used when a GL texture unit is
+	 * clobbered OUTSIDE this batcher's own accounting — e.g.
+	 * {@link WebGLRenderer#toFrameTexture}, which binds its capture to a scratch
+	 * unit directly (not via the shared texture cache), so a different batcher's
+	 * unit cache would otherwise skip a needed re-bind. Subclasses that pair
+	 * extra samplers to the same unit (lit normal maps) override to drop those
+	 * too.
+	 * @param {number} unit - the GL texture unit to invalidate
+	 * @ignore
+	 */
+	invalidateUnit(unit) {
+		delete this.boundTextures[unit];
+		if (this.currentTextureUnit === unit) {
+			this.currentTextureUnit = -1;
+		}
 	}
 
 	/**

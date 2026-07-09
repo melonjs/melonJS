@@ -962,6 +962,16 @@ export default class WebGLRenderer extends Renderer {
 			gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, x, y, w, h);
 		}
 
+		// the scratch bind clobbered GL `unit` OUTSIDE the shared texture-cache
+		// accounting (bound directly, not via allocateTextureUnit), so the OTHER
+		// batchers' unit caches don't know it changed. Invalidate it on each —
+		// critically the lit quad batcher, whose normal-map slots occupy the top
+		// half of the unit range and overlap this scratch unit; without this a
+		// later lit draw could sample the capture as a normal map.
+		for (const b of this.batchers.values()) {
+			b.invalidateUnit?.(unit);
+		}
+
 		return frame;
 	}
 

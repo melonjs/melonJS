@@ -255,6 +255,102 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		effect.destroy();
 		uploader.destroy();
 	});
+
+	// toFrameTexture binds its capture to a scratch unit (the top of the quad
+	// batcher's range) directly, bypassing the shared texture-cache accounting.
+	// The LIT quad batcher parks normal maps in the top half of the unit range,
+	// so that scratch unit overlaps a normal-map slot — without invalidating it
+	// across batchers, a later lit draw would assume the normal is still resident
+	// and skip re-binding it, sampling the just-captured frame AS a normal map.
+	it("invalidates the scratch unit across all batchers so lighting survives a capture", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const quad = renderer.batchers.get("quad");
+		const lit = renderer.batchers.get("litQuad");
+		if (!quad || !lit) {
+			ctx.skip();
+			return;
+		}
+
+		// the exact unit toFrameTexture uses, and its paired lit normal-map slot
+		const scratch = quad.maxBatchTextures - 1;
+		const normalIndex = scratch - lit.maxBatchTextures;
+		const normalInRange =
+			normalIndex >= 0 && normalIndex < lit.maxBatchTextures;
+
+		// seed the caches as a prior lit draw would: a colour texture the quad
+		// batcher thinks is at the scratch unit, and a normal map the lit batcher
+		// thinks is paired to it
+		quad.boundTextures[scratch] = { fake: "color" };
+		if (normalInRange) {
+			lit.boundNormalMaps[normalIndex] = { fake: "normal" };
+			lit.boundNormalVersions[normalIndex] = 7;
+		}
+
+		paintScene("#ff0000");
+		const frame = renderer.toFrameTexture();
+
+		// the stale color view of the scratch unit is cleared…
+		expect(quad.boundTextures[scratch]).toBeUndefined();
+		// …and (the crux) the lit batcher forgot its normal pairing for that unit,
+		// so the next lit draw re-binds the real normal instead of the capture
+		if (normalInRange) {
+			expect(lit.boundNormalMaps[normalIndex]).toBe(null);
+			expect(lit.boundNormalVersions[normalIndex]).toBe(-1);
+		}
+		// and the capture itself is intact — both features coexist
+		expect(gl.isTexture(frame.glTexture)).toBe(true);
+	});
+
+	// adversarial: invalidateUnit must ONLY touch the normal slot for GL units in
+	// the normal range (top half), never for a low colour/albedo unit
+	it("invalidateUnit only drops the normal pairing for units in the normal range", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const lit = renderer.batchers.get("litQuad");
+		if (!lit) {
+			ctx.skip();
+			return;
+		}
+		// a LOW unit (0) is a colour/albedo unit — its clobber must NOT drop the
+		// normal at index 0 (which lives at GL unit maxBatchTextures + 0)
+		lit.boundTextures[0] = { fake: true };
+		lit.boundNormalMaps[0] = { keep: true };
+		lit.invalidateUnit(0);
+		expect(lit.boundTextures[0]).toBeUndefined(); // colour cleared
+		expect(lit.boundNormalMaps[0]).toEqual({ keep: true }); // normal untouched
+
+		// the GL unit that DOES pair to normal index 0 must drop it
+		lit.invalidateUnit(lit.maxBatchTextures + 0);
+		expect(lit.boundNormalMaps[0]).toBe(null);
+	});
+
+	// the latent gap this surfaced: a full texture-cache reset (unit-pool wrap)
+	// must clear the lit normal-map cache too, not just colours
+	it("a texture-cache reset clears the lit normal-map cache, not just colors", (ctx) => {
+		if (!isWebGL) {
+			ctx.skip();
+			return;
+		}
+		const lit = renderer.batchers.get("litQuad");
+		if (!lit) {
+			ctx.skip();
+			return;
+		}
+		lit.boundTextures[0] = { fake: "color" };
+		lit.boundNormalMaps[0] = { fake: "normal" };
+		lit.boundNormalVersions[0] = 9;
+
+		renderer.cache.resetUnitAssignments(); // emits GPU_TEXTURE_CACHE_RESET
+
+		expect(lit.boundTextures.length).toBe(0); // colours cleared (base handler)
+		expect(lit.boundNormalMaps[0]).toBe(null); // normals cleared (the gap fix)
+		expect(lit.boundNormalVersions[0]).toBe(-1);
+	});
 });
 
 describe("CanvasRenderer.toFrameTexture", () => {

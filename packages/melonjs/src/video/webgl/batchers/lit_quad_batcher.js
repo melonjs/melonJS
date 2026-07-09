@@ -167,6 +167,40 @@ export default class LitQuadBatcher extends QuadBatcher {
 	}
 
 	/**
+	 * Also drop the normal-map pairing when its paired unit is invalidated.
+	 * Normal maps live at units `maxBatchTextures..2*maxBatchTextures-1`
+	 * (indexed by the paired albedo unit), so a clobber of one of those GL
+	 * units — e.g. {@link WebGLRenderer#toFrameTexture}'s scratch bind, which
+	 * lands on the top unit — must forget the pairing or the next lit draw
+	 * would assume the normal is still resident and skip re-binding it,
+	 * sampling the clobbering texture as a normal map.
+	 * @param {number} unit - the GL texture unit to invalidate
+	 * @ignore
+	 */
+	invalidateUnit(unit) {
+		super.invalidateUnit(unit);
+		const n = unit - this.maxBatchTextures;
+		if (n >= 0 && n < this.maxBatchTextures) {
+			this.boundNormalMaps[n] = null;
+			this.boundNormalVersions[n] = -1;
+		}
+	}
+
+	/**
+	 * On a full texture-cache reset, also forget the paired normal-map
+	 * bindings — the base handler only clears the color `boundTextures`, so a
+	 * lit draw after a reset would otherwise assume a normal map is still bound
+	 * (and skip re-binding it) while its GL unit may have been reused for a
+	 * color texture.
+	 * @ignore
+	 */
+	_onTextureCacheReset() {
+		super._onTextureCacheReset();
+		this.boundNormalMaps.fill(null);
+		this.boundNormalVersions.fill(-1);
+	}
+
+	/**
 	 * Upload per-frame Light2d uniforms used by the lit fragment path.
 	 * Called once per camera per frame (before the world tree walk).
 	 * Lights past `MAX_LIGHTS` are silently ignored.

@@ -103,6 +103,11 @@ const ExampleAquarium = lazy(() =>
 		default: m.ExampleAquarium,
 	})),
 );
+const ExampleHeatHaze = lazy(() =>
+	import("./examples/heatHaze/ExampleHeatHaze").then((m) => ({
+		default: m.ExampleHeatHaze,
+	})),
+);
 const ExampleLineOfSight = lazy(() =>
 	import("./examples/lineOfSight/ExampleLineOfSight").then((m) => ({
 		default: m.ExampleLineOfSight,
@@ -368,6 +373,14 @@ const examples: {
 		sourceDir: "aquarium",
 		description:
 			"Screen-space refraction via renderer.toFrameTexture(): swimming fish rippled through the live scene, captured on the GPU and distorted by a scrolling NoiseTexture2d.",
+	},
+	{
+		component: <ExampleHeatHaze />,
+		label: "Heat Haze",
+		path: "heat-haze",
+		sourceDir: "heatHaze",
+		description:
+			"renderer.toFrameTexture() over a LIT scene: normal-mapped tiles under a moving Light2d, distorted by a rising heat-haze that captures the lit frame.",
 	},
 	{
 		component: <ExampleLineOfSight />,
