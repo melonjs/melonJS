@@ -185,6 +185,7 @@ class PlayScreen extends Stage {
 	private elapsed = 0;
 	private effect!: ShaderEffect;
 	private panel?: HTMLDivElement;
+	private noise?: NoiseTexture2d;
 
 	onResetEvent(app: Application) {
 		const w = app.viewport.width;
@@ -210,6 +211,7 @@ class PlayScreen extends Stage {
 			domainWarpAmp: 8,
 			seamless: true,
 		});
+		this.noise = noise;
 
 		// the refraction effect, preloaded as a "shader" asset
 		this.effect = loader.getShader("aquariumWater") as ShaderEffect;
@@ -286,6 +288,9 @@ class PlayScreen extends Stage {
 
 	onDestroyEvent() {
 		loader.unload({ name: "aquariumWater", type: "shader" });
+		// free the baked NoiseTexture2d canvas (engine texture asset)
+		this.noise?.destroy();
+		this.noise = undefined;
 		this.panel?.remove();
 	}
 }

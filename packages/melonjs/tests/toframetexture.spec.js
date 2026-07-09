@@ -64,7 +64,8 @@ describe("WebGLRenderer.toFrameTexture", () => {
 	};
 
 	// read a capture's content back directly: attach its GL texture to a scratch
-	// FBO (the RGBA capture texture is colour-renderable) and readPixels
+	// FBO (the RGB capture texture is colour-renderable) and readPixels — RGBA
+	// readback of an RGB texture returns alpha = 255 (opaque)
 	const readCapture = (frame, px = SIZE / 2, py = SIZE / 2) => {
 		const fb = gl.createFramebuffer();
 		gl.bindFramebuffer(gl.FRAMEBUFFER, fb);

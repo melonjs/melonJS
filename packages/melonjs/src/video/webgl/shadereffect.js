@@ -346,6 +346,7 @@ export default class ShaderEffect {
 				cache.reserveUnit(nextUnit);
 			}
 			nextUnit = entry.unit - 1;
+			let bound = false;
 			if (entry.live === true) {
 				// live GPU-resident source (frame capture): bind the current
 				// handle fresh each draw — the renderer refreshes it in place,
@@ -355,6 +356,7 @@ export default class ShaderEffect {
 				if (glTex !== null && typeof glTex !== "undefined") {
 					batcher.bindTexture2D(glTex, entry.unit, false);
 					this._shader.setUniform(name, entry.unit);
+					bound = true;
 				}
 			} else {
 				if (entry.tex === null) {
@@ -375,12 +377,17 @@ export default class ShaderEffect {
 					batcher.bindTexture2D(entry.tex, entry.unit, false);
 				}
 				this._shader.setUniform(name, entry.unit);
+				bound = true;
 			}
-			// this sampler was bound to a reserved high unit DIRECTLY (bypassing
-			// the shared texture cache), which overlaps the lit quad batcher's
-			// normal-map units — invalidate it on the OTHER batchers so a later
-			// lit draw re-binds its normal there instead of sampling this texture
-			batcher.renderer.invalidateTextureUnit(entry.unit, batcher);
+			// only when we actually bound: this sampler took a reserved high unit
+			// DIRECTLY (bypassing the shared texture cache), which overlaps the
+			// lit quad batcher's normal-map units — invalidate it on the OTHER
+			// batchers so a later lit draw re-binds its normal there instead of
+			// sampling this texture. A skipped live bind (no capture yet) clobbers
+			// nothing, so there's nothing to invalidate.
+			if (bound) {
+				batcher.renderer.invalidateTextureUnit(entry.unit, batcher);
+			}
 		}
 	}
 
