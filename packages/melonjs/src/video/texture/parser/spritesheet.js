@@ -13,8 +13,8 @@ export function parseSpriteSheet(data, textureAtlas) {
 	const spacing = data.spacing || 0;
 	const margin = data.margin || 0;
 
-	let width = image.width;
-	let height = image.height;
+	const width = image.width;
+	const height = image.height;
 
 	// calculate the sprite count (line, col)
 	const spritecount = vector2dPool.get(
@@ -22,7 +22,10 @@ export function parseSpriteSheet(data, textureAtlas) {
 		~~((height - margin + spacing) / (data.frameheight + spacing)),
 	);
 
-	// verifying the texture size
+	// verifying the texture size. The frame GRID is implicitly truncated by
+	// the floored spritecount above; the UV divisor below must stay the
+	// PHYSICAL image size — the GPU texture is uploaded at full size, so
+	// dividing by a truncated size would scale/shift every frame's UVs.
 	if (
 		width % (data.framewidth + spacing) !== 0 ||
 		height % (data.frameheight + spacing) !== 0
@@ -33,9 +36,6 @@ export function parseSpriteSheet(data, textureAtlas) {
 			computed_width - width !== spacing &&
 			computed_height - height !== spacing
 		) {
-			// "truncate size" if delta is different from the spacing size
-			width = computed_width;
-			height = computed_height;
 			// warning message
 			console.warn(
 				"Spritesheet Texture for image: " +
@@ -44,10 +44,10 @@ export function parseSpriteSheet(data, textureAtlas) {
 					(data.framewidth + spacing) +
 					"x" +
 					(data.frameheight + spacing) +
-					", truncating effective size to " +
-					width +
+					", truncating the frame grid to " +
+					computed_width +
 					"x" +
-					height,
+					computed_height,
 			);
 		}
 	}

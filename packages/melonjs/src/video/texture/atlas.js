@@ -250,8 +250,8 @@ export class TextureAtlas extends Texture2d {
 			this.activeAtlas = this.atlases.keys().next().value;
 		}
 
-		// if format not recognized
-		if (this.atlases.length === 0) {
+		// if format not recognized (`atlases` is a Map — `.size`, not `.length`)
+		if (this.atlases.size === 0) {
 			throw new Error("texture atlas format not supported");
 		}
 
@@ -368,8 +368,11 @@ export class TextureAtlas extends Texture2d {
 	addRegion(name, x, y, w, h) {
 		const source = this.getTexture();
 		const atlas = this.getAtlas();
-		const dw = source.width;
-		const dh = source.height;
+		// an unsized HTMLVideoElement reports width/height = 0 — its real
+		// pixel dimensions are videoWidth/videoHeight (same fallback as
+		// `uploadTexture` and `TextureCache.get`)
+		const dw = source.width || source.videoWidth;
+		const dh = source.height || source.videoHeight;
 
 		atlas[name] = {
 			name: name,
@@ -475,8 +478,15 @@ export class TextureAtlas extends Texture2d {
 		]);
 		// Cache source coordinates
 		// see https://github.com/melonjs/melonJS/issues/1281
-		const key = `${s.x},${s.y},${w},${h}`;
-		atlas[key] = atlas[name];
+		// keyed by the REGION rect (x, y, width, height) — the same key shape
+		// `getUVs(sx, sy, sw, sh)` builds for coordinate lookups. (Keying by
+		// the texture dimensions instead made the alias unmatchable for any
+		// sub-region AND poisoned full-image lookups whenever a frame sat at
+		// (0,0): "0,0,texW,texH" pointed at that frame, not the whole image.)
+		const key = `${s.x},${s.y},${sw},${sh}`;
+		if (key !== name) {
+			atlas[key] = atlas[name];
+		}
 
 		return atlas[name].uvs;
 	}
@@ -592,11 +602,20 @@ export class TextureAtlas extends Texture2d {
 		// first pass: collect regions and compute max dimensions
 		const regions = [];
 		for (const i in names) {
-			const name = Array.isArray(names) ? names[i] : i;
+			const isArray = Array.isArray(names);
+			const name = isArray ? names[i] : i;
+			// in dictionary mode, only iterate real regions: a region's `name`
+			// matches its dictionary key. This skips both the coordinate-alias
+			// keys added by `addUVs` (#1281 — they'd duplicate every frame) and
+			// non-region entries like the aseprite parser's `anims` dictionary
+			// (whose value has no `name`, and which `getRegion` would otherwise
+			// happily return as a NaN-sized pseudo-region).
+			if (!isArray && (names[i] == null || names[i].name !== i)) {
+				continue;
+			}
 			const region = this.getRegion(name);
-			// skip non-region keys (e.g. "anims" added by Aseprite parser)
 			if (region == null) {
-				if (Array.isArray(names)) {
+				if (isArray) {
 					throw new Error("Texture - region for " + name + " not found");
 				}
 				continue;
@@ -649,7 +668,13 @@ export class TextureAtlas extends Texture2d {
 		}
 
 		for (const i in names) {
-			const name = Array.isArray(names) ? names[i] : i;
+			const isArray = Array.isArray(names);
+			const name = isArray ? names[i] : i;
+			// dictionary mode: skip coordinate-alias keys and non-region
+			// entries (see getAnimationSettings for the full rationale)
+			if (!isArray && (names[i] == null || names[i].name !== i)) {
+				continue;
+			}
 			const region = this.getRegion(name);
 			if (region == null) {
 				throw new Error("Texture - region for " + name + " not found");

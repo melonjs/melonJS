@@ -11,29 +11,38 @@ import { Vector2d } from "../../../math/vector2d.ts";
 export function parseAseprite(data, textureAtlas) {
 	const atlas = {};
 
+	// per-frame durations in frame order, consumed by the frameTags loop
+	// below to build per-frame animation delays
+	const frameDurations = [];
+
 	const frames = data.frames;
 	for (const name in frames) {
-		const frame = frames[name].frame;
-		const trimmed = !!frame.trimmed;
+		// in aseprite's JSON export (hash and array forms alike), `trimmed`,
+		// `spriteSourceSize`, `sourceSize`, `rotated`, `pivot` and `duration`
+		// are SIBLINGS of the `frame` rect on each entry — same layout as
+		// TexturePacker's (see texturepacker.js)
+		const entry = frames[name];
+		const frame = entry.frame;
+		const trimmed = !!entry.trimmed;
 
 		let trim;
 
 		if (trimmed) {
 			trim = {
-				x: frame.spriteSourceSize.x,
-				y: frame.spriteSourceSize.y,
-				w: frame.spriteSourceSize.w,
-				h: frame.spriteSourceSize.h,
+				x: entry.spriteSourceSize.x,
+				y: entry.spriteSourceSize.y,
+				w: entry.spriteSourceSize.w,
+				h: entry.spriteSourceSize.h,
 			};
 		}
 
 		let originX;
 		let originY;
 		// Pixel-based offset origin from the top-left of the source frame
-		const hasTextureAnchorPoint = frame.sourceSize && frame.pivot;
+		const hasTextureAnchorPoint = entry.sourceSize && entry.pivot;
 		if (hasTextureAnchorPoint) {
-			originX = frame.sourceSize.w * frame.pivot.x - (trimmed ? trim.x : 0);
-			originY = frame.sourceSize.h * frame.pivot.y - (trimmed ? trim.y : 0);
+			originX = entry.sourceSize.w * entry.pivot.x - (trimmed ? trim.x : 0);
+			originY = entry.sourceSize.h * entry.pivot.y - (trimmed ? trim.y : 0);
 		}
 
 		atlas[name] = {
@@ -47,26 +56,34 @@ export function parseAseprite(data, textureAtlas) {
 			trim: trim,
 			width: frame.w,
 			height: frame.h,
-			angle: frame.rotated === true ? -ETA : 0,
+			sourceSize: entry.sourceSize || { w: frame.w, h: frame.h },
+			angle: entry.rotated === true ? -ETA : 0,
 		};
+		frameDurations.push(entry.duration);
 		textureAtlas.addUVs(atlas, name, data.meta.size.w, data.meta.size.h);
 	}
 
 	const anims = {};
 	for (const name in data.meta.frameTags) {
 		const anim = data.meta.frameTags[name];
-		// aseprite provide a range from [from] to [to], so build the corresponding index array
+		// aseprite provides a [from..to] frame range plus a per-frame
+		// `duration` (ms) on each frame — build frame objects carrying each
+		// frame's own delay so the animation plays at its authored timing
+		// (100 ms is aseprite's default duration, used as a safety net)
 		const indexArray = Array.from(
 			{ length: anim.to - anim.from + 1 },
 			(_, i) => {
-				return anim.from + i;
+				const idx = anim.from + i;
+				return {
+					name: idx,
+					delay:
+						typeof frameDurations[idx] === "number" ? frameDurations[idx] : 100,
+				};
 			},
 		);
 		anims[name] = {
 			name: anim.name,
 			index: indexArray,
-			// aseprite provide animation speed between frame, melonJS expect total duration for a given animation
-			speed: 10 * (indexArray.length - 1),
 			// only "forward" is supported for now
 			direction: anim.direction,
 		};
