@@ -194,6 +194,16 @@ export default class WebGLRenderer extends Renderer {
 		this.currentProgram = undefined;
 
 		/**
+		 * the GL texture unit currently active (`gl.activeTexture`) — global
+		 * GL state, so tracked once per renderer and shared by every batcher
+		 * through the `MaterialBatcher.currentTextureUnit` accessor. `-1`
+		 * forces the next bind to re-issue `gl.activeTexture`.
+		 * @type {number}
+		 * @ignore
+		 */
+		this._activeTextureUnit = -1;
+
+		/**
 		 * The list of active batchers
 		 * @type {Map<Batcher>}
 		 */
@@ -283,6 +293,10 @@ export default class WebGLRenderer extends Renderer {
 				// stale per-source unit assignments — force re-upload on next draw
 				this.cache.units.clear();
 				this.cache.usedUnits.clear();
+
+				// the restored context is back at TEXTURE0 — invalidate the
+				// shared active-unit tracking so the next bind re-issues it
+				this._activeTextureUnit = -1;
 
 				this.isContextValid = true;
 				emit(ONCONTEXT_RESTORED, this);
@@ -1055,10 +1069,12 @@ export default class WebGLRenderer extends Renderer {
 		this._effectPassDepth++;
 
 		const rt = this._renderTargetPool.begin(isCamera, effects.length, w, h);
-		// FBO creation/resize uses TEXTURE0 — invalidate the batcher's cache for that unit
-		if (this.currentBatcher && this.currentBatcher.boundTextures) {
-			delete this.currentBatcher.boundTextures[0];
-		}
+		// FBO creation/resize binds (then nulls) TEXTURE0 — invalidate EVERY
+		// batcher's cache for that unit, not just the current one: a batcher
+		// that isn't current right now would otherwise keep trusting its stale
+		// `boundTextures[0]` and skip the re-bind, sampling an unbound texture
+		// (opaque black) for as long as the post effect is active
+		this.invalidateTextureUnit(0);
 		rt.bind();
 		this.setViewport(0, 0, w, h);
 		this.disableScissor();
@@ -1120,7 +1136,7 @@ export default class WebGLRenderer extends Renderer {
 			parentRT.bind();
 		}
 		this.setViewport(0, 0, w, h);
-		emit(RENDER_TARGET_CHANGED);
+		emit(RENDER_TARGET_CHANGED, this);
 
 		if (effects.length === 1) {
 			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
@@ -1252,7 +1268,7 @@ export default class WebGLRenderer extends Renderer {
 		const gl = this.gl;
 		gl.clearColor(0, 0, 0, 0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
-		emit(RENDER_TARGET_CHANGED);
+		emit(RENDER_TARGET_CHANGED, this);
 	}
 
 	/**
@@ -1327,7 +1343,7 @@ export default class WebGLRenderer extends Renderer {
 		// — currently only `MeshBatcher`) is cleared lazily on the first
 		// draw of its mode via the `onTargetChanged()` → `bind()` path.
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-		emit(RENDER_TARGET_CHANGED);
+		emit(RENDER_TARGET_CHANGED, this);
 	}
 
 	/**

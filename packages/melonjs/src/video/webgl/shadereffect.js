@@ -331,6 +331,13 @@ export default class ShaderEffect {
 		let nextUnit = batcher.maxBatchTextures - 1;
 		for (const [name, entry] of this._extraTextures) {
 			if (entry.unit === undefined) {
+				// skip units other holders already reserved — another effect's
+				// extra samplers, or the lit batcher's paired normal-map range
+				// (its color-slot pairing is fixed arithmetic, so squatting on
+				// one of its units would corrupt lit sampling)
+				while (nextUnit >= 1 && cache.reservedUnits.has(nextUnit)) {
+					nextUnit--;
+				}
 				if (nextUnit < 1) {
 					// more extra textures than the batcher can hold beside
 					// uSampler — bind what fits, warn once, skip the rest

@@ -45,13 +45,16 @@ function ensureRemapCapacity(vertexCount) {
 	_remapStamp = new Int32Array(cap); // zero-filled; _stamp is always ≥ 1 in use
 }
 
-// Shared lazy-depth-clear state for the mesh-mode pass. Module-level (not
-// per-instance) so the unlit `MeshBatcher` and the `LitMeshBatcher` — which
-// extends it and inherits `bind()` — coordinate on a SINGLE depth clear per
-// target. If each kept its own flag, switching between the two mid-frame would
-// re-clear the shared depth buffer and break inter-mesh occlusion. The first
-// `bind()` of either clears + marks clean; `RENDER_TARGET_CHANGED` re-arms it.
-let _meshDepthDirty = true;
+// The lazy-depth-clear state for the mesh-mode pass lives on the RENDERER
+// (`renderer._meshDepthDirty`), not per batcher instance: the unlit
+// `MeshBatcher` and the `LitMeshBatcher` — which extends it and inherits
+// `bind()` — must coordinate on a SINGLE depth clear per target (per-instance
+// flags would re-clear the shared depth buffer when switching between the two
+// mid-frame and break inter-mesh occlusion), while two coexisting renderers
+// must NOT share it (a module-level flag let one Application's `clear()`
+// re-arm — or steal — the other's depth clear mid-frame). The first `bind()`
+// of either batcher clears + marks clean; `RENDER_TARGET_CHANGED` from the
+// owning renderer re-arms it.
 
 // shared zero emissive, passed to the shader when a mesh has no emission so the
 // `uEmissive` add is a no-op. Never mutated.
@@ -132,15 +135,23 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentEmissiveG = -1;
 		this.currentEmissiveB = -1;
 
+		// arm the (renderer-owned) lazy depth clear for the first mesh pass
+		renderer._meshDepthDirty = true;
+
 		// Subscribe to the renderer's target-changed broadcast so we re-arm the
-		// shared lazy depth clear (`_meshDepthDirty`) whenever the active
+		// lazy depth clear (`renderer._meshDepthDirty`) whenever the active
 		// framebuffer's attachments change identity (FBO bind/unbind for
 		// post-effects, frame-start `clear()`). Same pattern as
 		// `MaterialBatcher`'s `GPU_TEXTURE_CACHE_RESET` subscription — only
 		// batchers that care subscribe.
 		if (!this._onTargetChanged) {
-			this._onTargetChanged = () => {
-				_meshDepthDirty = true;
+			this._onTargetChanged = (emitter) => {
+				// the event is global — ignore broadcasts from OTHER renderer
+				// instances (several Applications can coexist on one page);
+				// a missing emitter (legacy/manual emit) is treated as ours
+				if (emitter === undefined || emitter === this.renderer) {
+					this.renderer._meshDepthDirty = true;
+				}
 			};
 			on(RENDER_TARGET_CHANGED, this._onTargetChanged);
 		}
@@ -254,10 +265,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		gl.depthFunc(gl.LEQUAL);
 		gl.depthMask(true);
 		gl.disable(gl.BLEND);
-		if (_meshDepthDirty) {
+		if (this.renderer._meshDepthDirty) {
 			gl.clearDepth(1.0);
 			gl.clear(gl.DEPTH_BUFFER_BIT);
-			_meshDepthDirty = false;
+			this.renderer._meshDepthDirty = false;
 		}
 	}
 

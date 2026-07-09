@@ -186,7 +186,17 @@ export class Batcher {
 		this.vertexData.clear();
 
 		if (this.useIndexBuffer) {
-			this.indexBuffer.clear();
+			// re-create the GL buffers rather than just clearing counters: on
+			// context restore the old buffer objects belong to the LOST
+			// context, and every upload through them would silently fail
+			// (mesh draws vanish). `deleteBuffer` on a lost-context object is
+			// a harmless no-op, so plain resets stay leak-free too. The
+			// quad-family batchers (non-indexed, static pattern) re-create
+			// their own index buffer in their reset() override.
+			const gl = this.gl;
+			gl.deleteBuffer(this.glVertexBuffer);
+			this.glVertexBuffer = gl.createBuffer();
+			this.indexBuffer.recreate();
 		}
 	}
 

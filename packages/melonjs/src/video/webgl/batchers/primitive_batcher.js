@@ -102,7 +102,6 @@ export default class PrimitiveBatcher extends Batcher {
 			return;
 		}
 
-		const viewMatrix = this.viewMatrix;
 		const vertexData = this.vertexData;
 		const alpha = this.renderer.getGlobalAlpha();
 		const colorUint32 = this.renderer.currentColor.toUint32(alpha);
@@ -111,17 +110,42 @@ export default class PrimitiveBatcher extends Batcher {
 		// primitives don't have per-vertex depth.
 		const z = this.renderer.currentDepth;
 
-		if (vertexData.isFull(vertexCount)) {
-			// is the vertex buffer full if we add more vertices
-			this.flush();
-		}
-
 		// flush if drawing vertices with a different drawing mode
 		if (mode !== this.mode) {
 			this.flush(this.mode);
 			this.mode = mode;
 		}
 
+		if (vertexCount < vertexData.maxVertex) {
+			// fast path: the shape fits in one batch
+			if (vertexData.isFull(vertexCount)) {
+				// is the vertex buffer full if we add more vertices
+				this.flush();
+			}
+			this.#pushRange(verts, 0, vertexCount, colorUint32, z);
+		} else {
+			// a single shape larger than the whole vertex buffer (a filled
+			// ellipse already exceeds it at radius ≳ 435 px) — split it into
+			// buffer-sized chunks; without this, the typed-array writes past
+			// the buffer end are silently dropped while the draw call still
+			// uses the full count, raising GL errors and rendering nothing
+			this.#drawVerticesChunked(mode, verts, vertexCount, colorUint32, z);
+		}
+
+		// force flush for primitive using LINE_STRIP or LINE_LOOP
+		if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
+			this.flush(this.mode);
+		}
+	}
+
+	/**
+	 * Push `verts[start..end)` into the vertex buffer, transformed by the
+	 * current view matrix. The caller guarantees the range fits.
+	 * @ignore
+	 */
+	#pushRange(verts, start, end, colorUint32, z) {
+		const viewMatrix = this.viewMatrix;
+		const vertexData = this.vertexData;
 		if (!viewMatrix.isIdentity()) {
 			// Full 3D transform including the z column (m[8] / m[9] /
 			// m[10] / m[14]) so Camera3d's view matrix (X/Y-axis
@@ -129,7 +153,7 @@ export default class PrimitiveBatcher extends Batcher {
 			// matrices those slots are identity, so output (x, y, z)
 			// is bit-identical to the legacy 2D-only multiply.
 			const m = viewMatrix.val;
-			for (let i = 0; i < vertexCount; i++) {
+			for (let i = start; i < end; i++) {
 				const vert = verts[i];
 				const x = vert.x;
 				const y = vert.y;
@@ -143,15 +167,86 @@ export default class PrimitiveBatcher extends Batcher {
 				);
 			}
 		} else {
-			for (let i = 0; i < vertexCount; i++) {
+			for (let i = start; i < end; i++) {
 				const vert = verts[i];
 				vertexData.push(vert.x, vert.y, z, 0, 0, colorUint32);
 			}
 		}
+	}
 
-		// force flush for primitive using LINE_STRIP or LINE_LOOP
-		if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
-			this.flush(this.mode);
+	/**
+	 * Draw an over-capacity vertex list as a sequence of buffer-sized chunks,
+	 * split on primitive boundaries so every triangle/line stays whole:
+	 *
+	 * - TRIANGLES / LINES chunk on multiples of 3 / 2, POINTS anywhere.
+	 * - LINE_STRIP re-pushes the boundary vertex so the connecting segment
+	 *   is preserved; LINE_LOOP additionally appends the first vertex at the
+	 *   very end (drawn as open strips, the final duplicate closes the loop).
+	 * - TRIANGLE_STRIP overlaps 2 boundary vertices; TRIANGLE_FAN re-anchors
+	 *   every chunk on `verts[0]` and overlaps 1. (Strip chunk parity can
+	 *   flip triangle winding at a boundary — irrelevant here, the primitive
+	 *   pipeline never enables face culling.)
+	 * @ignore
+	 */
+	#drawVerticesChunked(mode, verts, vertexCount, colorUint32, z) {
+		const gl = this.gl;
+		// stay one below maxVertex to match isFull()'s `>=` convention
+		const capacity = this.vertexData.maxVertex - 1;
+		let step = capacity;
+		let overlap = 0;
+		let anchor = false;
+		let drawMode = mode;
+		switch (mode) {
+			case gl.TRIANGLES:
+				step = capacity - (capacity % 3);
+				break;
+			case gl.LINES:
+				step = capacity - (capacity % 2);
+				break;
+			case gl.LINE_STRIP:
+				overlap = 1;
+				break;
+			case gl.LINE_LOOP:
+				// chunks are open strips; the loop is closed explicitly below
+				overlap = 1;
+				drawMode = gl.LINE_STRIP;
+				break;
+			case gl.TRIANGLE_STRIP:
+				overlap = 2;
+				break;
+			case gl.TRIANGLE_FAN:
+				overlap = 1;
+				anchor = true;
+				break;
+			default:
+				// POINTS: any split works
+				break;
+		}
+		this.mode = drawMode;
+
+		let start = 0;
+		while (start < vertexCount) {
+			// each chunk starts on an empty buffer
+			this.flush(drawMode);
+			const anchored = anchor && start > 0;
+			if (anchored) {
+				this.#pushRange(verts, 0, 1, colorUint32, z);
+			}
+			const count = Math.min(vertexCount - start, step - (anchored ? 1 : 0));
+			this.#pushRange(verts, start, start + count, colorUint32, z);
+			start += count;
+			if (start < vertexCount) {
+				start -= overlap;
+			}
+		}
+
+		if (mode === gl.LINE_LOOP) {
+			// close the loop: duplicate the first vertex after the last one
+			if (this.vertexData.isFull(1)) {
+				this.flush(drawMode);
+				this.#pushRange(verts, vertexCount - 1, vertexCount, colorUint32, z);
+			}
+			this.#pushRange(verts, 0, 1, colorUint32, z);
 		}
 	}
 
@@ -173,13 +268,6 @@ export default class PrimitiveBatcher extends Batcher {
 		// consumed by perspective (Camera3d).
 		const z = this.renderer.currentDepth;
 
-		// each line pair (2 verts) expands to 2 triangles (6 verts)
-		const expandedCount = (vertexCount / 2) * 6;
-
-		if (vertexData.isFull(expandedCount)) {
-			this.flush();
-		}
-
 		// switch to TRIANGLES mode
 		if (this.mode !== this.gl.TRIANGLES) {
 			this.flush(this.mode);
@@ -191,6 +279,15 @@ export default class PrimitiveBatcher extends Batcher {
 		for (let i = 0; i < vertexCount; i += 2) {
 			const from = verts[i];
 			const to = verts[i + 1];
+
+			// each line pair expands to 2 triangles (6 vertices) — check
+			// capacity per pair, so a dashed/long thick-line path larger than
+			// the whole buffer flushes mid-shape instead of silently dropping
+			// the out-of-range writes (pairs are independent quads, so a
+			// mid-shape flush is invisible)
+			if (vertexData.isFull(6)) {
+				this.flush();
+			}
 
 			// apply view matrix to base positions without mutating
 			// inputs. Includes the z column for parity with the simple-

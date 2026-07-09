@@ -379,10 +379,25 @@ export const GPU_TEXTURE_CACHE_RESET = "renderer.gpu.texturecachereset";
  * `RenderPassEncoder` (clear loadOps replace `clear()` calls in WebGPU's
  * declarative pass descriptors).
  *
- * Data passed: none
+ * Data passed: the emitting renderer. Subscribers holding per-renderer
+ * state should ignore broadcasts from other renderer instances (several
+ * Applications can coexist on one page); a missing argument (legacy
+ * emitters) should be treated as "mine".
  * @see event.on
  */
 export const RENDER_TARGET_CHANGED = "renderer.target.changed";
+
+/**
+ * Fired when a {@link Texture2d} asset is destroyed, with its backing
+ * drawable source. GPU-side caches keyed by source image — e.g. the lit
+ * batcher's per-image normal-map textures — subscribe to release the GL
+ * texture and drop their entry, so destroying a texture (a per-level
+ * {@link NoiseTexture2d}, for instance) doesn't leak GPU memory.
+ *
+ * Data passed: the destroyed texture's backing canvas/image
+ * @see event.on
+ */
+export const TEXTURE2D_DESTROYED = "texture2d.destroyed";
 
 interface Events {
 	[DOM_READY]: () => void;
@@ -436,7 +451,8 @@ interface Events {
 	[ONCONTEXT_LOST]: (renderer: Renderer) => void;
 	[ONCONTEXT_RESTORED]: (renderer: Renderer) => void;
 	[GPU_TEXTURE_CACHE_RESET]: () => void;
-	[RENDER_TARGET_CHANGED]: () => void;
+	[RENDER_TARGET_CHANGED]: (renderer?: object) => void;
+	[TEXTURE2D_DESTROYED]: (source: HTMLCanvasElement | HTMLImageElement) => void;
 }
 
 const eventEmitter = new EventEmitter<Events>();

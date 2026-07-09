@@ -1,3 +1,5 @@
+import { emit, TEXTURE2D_DESTROYED } from "../../system/event.ts";
+
 /**
  * Compile-time-only brand key; no runtime value can hold it.
  * @ignore
@@ -79,8 +81,14 @@ export default abstract class Texture2d {
 	/**
 	 * Release any GPU/CPU resources held by this texture. The texture must not
 	 * be used after calling destroy.
-	 * No-op by default — subclasses override when they own resources (a baked
-	 * canvas, a cached GL texture, a pooled render target).
+	 *
+	 * Broadcasts {@link event.TEXTURE2D_DESTROYED} with the backing source so
+	 * GPU-side caches keyed by source image (e.g. the lit batcher's normal-map
+	 * textures) release what they hold for it. Subclasses that own additional
+	 * resources override this and call `super.destroy()` FIRST — the source
+	 * must still be resolvable when the event fires.
 	 */
-	destroy(): void {}
+	destroy(): void {
+		emit(TEXTURE2D_DESTROYED, this.getTexture());
+	}
 }

@@ -1,3 +1,4 @@
+import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
 import { MAX_LIGHTS } from "../lighting/constants.ts";
 import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
@@ -128,6 +129,84 @@ export default class LitQuadBatcher extends QuadBatcher {
 		this._maxLights = MAX_LIGHTS;
 		this.defaultShader.setUniform("uLightCount", 0);
 		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
+
+		// release the cached GL texture when a Texture2d normal-map source
+		// (e.g. a per-level NoiseTexture2d) is destroyed — `normalMapTextures`
+		// keys sources strongly and is otherwise only emptied on full reset
+		if (!this._onTexture2dDestroyed) {
+			this._onTexture2dDestroyed = (source) => {
+				this.evictNormalMap(source);
+			};
+			on(TEXTURE2D_DESTROYED, this._onTexture2dDestroyed);
+		}
+	}
+
+	/**
+	 * Unsubscribe the `TEXTURE2D_DESTROYED` listener; delegates to
+	 * `MaterialBatcher.destroy()` for the texture-cache-reset one.
+	 * @ignore
+	 */
+	destroy() {
+		if (this._onTexture2dDestroyed) {
+			off(TEXTURE2D_DESTROYED, this._onTexture2dDestroyed);
+			this._onTexture2dDestroyed = null;
+		}
+		super.destroy();
+	}
+
+	/**
+	 * Activating the lit batcher claims the paired normal-map unit range
+	 * `[maxBatchTextures, 2*maxBatchTextures)` for good: the pairing is baked
+	 * into the lit shader's sampler bindings, while the renderer-wide unit
+	 * allocator would otherwise happily assign those same units to color
+	 * textures (an unlit sprite's, a mesh's, a pattern's) — each batcher
+	 * tracks its bindings per-instance, so whichever bound second silently
+	 * clobbered the other's texture. Reserving through the cache keeps the
+	 * allocator away; done lazily on first bind so unlit games keep their
+	 * full unit pool, and left reserved thereafter (a lit game stays lit).
+	 * @ignore
+	 */
+	bind() {
+		super.bind();
+		if (this._normalRangeReserved !== true) {
+			this._normalRangeReserved = true;
+			const cache = this.renderer.cache;
+			for (let i = 0; i < this.maxBatchTextures; i++) {
+				const unit = this.maxBatchTextures + i;
+				if (cache.reservedUnits.has(unit)) {
+					// a ShaderEffect extra sampler claimed a unit in our fixed
+					// range before lighting first activated — its texture and
+					// the paired normal map for color slot `i` now collide
+					console.warn(
+						`LitQuadBatcher: texture unit ${unit} is already reserved (ShaderEffect.setTexture?) and overlaps the paired normal-map range — expect sampling conflicts`,
+					);
+				}
+				cache.reserveUnit(unit);
+			}
+			// evict any color texture the allocator parked in the normal range
+			// before lighting first activated (units are sticky once assigned)
+			cache.resetUnitAssignments();
+		}
+	}
+
+	/**
+	 * Release the cached GL texture uploaded for the given normal-map source
+	 * and clear any slot bookkeeping referencing it. Safe to call for images
+	 * that were never bound.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
+	 */
+	evictNormalMap(image) {
+		const cached = this.normalMapTextures.get(image);
+		if (typeof cached !== "undefined") {
+			this.gl.deleteTexture(cached.tex);
+			this.normalMapTextures.delete(image);
+			for (let i = 0; i < this.boundNormalMaps.length; i++) {
+				if (this.boundNormalMaps[i] === image) {
+					this.boundNormalMaps[i] = null;
+					this.boundNormalVersions[i] = -1;
+				}
+			}
+		}
 	}
 
 	/**
@@ -486,10 +565,11 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		this.flush();
 
+		// see QuadBatcher.blitTexture — unit 0 is nulled renderer-wide
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		this.currentTextureUnit = -1;
-		delete this.boundTextures[0];
+		this.renderer.invalidateTextureUnit(0);
 
 		this.useShader(this.defaultShader);
 	}

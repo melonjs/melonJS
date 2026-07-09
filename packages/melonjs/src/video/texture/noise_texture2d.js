@@ -341,6 +341,10 @@ class NoiseTexture2d extends Texture2d {
 	 * Release the baked canvas. The texture must not be used after destroy.
 	 */
 	destroy() {
+		// broadcasts TEXTURE2D_DESTROYED with the baked canvas so the lit
+		// batcher's normal-map cache frees its GL texture — before the
+		// canvas reference is dropped below
+		super.destroy();
 		this._canvas = null;
 		this._imageData = null;
 		this._heights = null;

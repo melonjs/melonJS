@@ -50,4 +50,26 @@ export default class WebGLIndexBuffer extends IndexBuffer {
 	bind() {
 		this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffer);
 	}
+
+	/**
+	 * Replace the underlying GL buffer with a fresh one, deleting the old.
+	 * Needed on context restore — the old buffer object belongs to the lost
+	 * context and every upload through it would silently fail. Also keeps
+	 * plain resets leak-free (`deleteBuffer` on a lost-context object is a
+	 * harmless no-op).
+	 */
+	recreate() {
+		this.gl.deleteBuffer(this.buffer);
+		this.buffer = this.gl.createBuffer();
+		this.length = 0;
+	}
+
+	/**
+	 * Delete the underlying GL buffer. The index buffer must not be used
+	 * after calling destroy.
+	 */
+	destroy() {
+		this.gl.deleteBuffer(this.buffer);
+		this.buffer = null;
+	}
 }

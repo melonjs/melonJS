@@ -20,10 +20,8 @@ export class MaterialBatcher extends Batcher {
 	init(renderer, settings) {
 		super.init(renderer, settings);
 
-		/**
-		 * the current active texture unit
-		 * @ignore
-		 */
+		// invalidate the active-unit tracking (see the currentTextureUnit
+		// accessor — the state lives on the renderer, shared by all batchers)
 		this.currentTextureUnit = -1;
 
 		/**
@@ -73,6 +71,26 @@ export class MaterialBatcher extends Batcher {
 		this.boundTextures.length = 0;
 		this.currentTextureUnit = -1;
 		this.currentSamplerUnit = -1;
+	}
+
+	/**
+	 * The GL texture unit currently active (`gl.activeTexture`). Tracked on
+	 * the RENDERER, not per batcher: the active unit is global GL state
+	 * shared by every batcher instance, and a per-batcher copy desyncs as
+	 * soon as another batcher (or a blit, or an FBO pass) moves the active
+	 * unit — the stale copy then lets `bindTexture2D` skip `gl.activeTexture`
+	 * and bind (or upload) a texture onto whatever unit is REALLY active.
+	 * Symptom was video force-re-uploads overwriting a mesh texture with
+	 * video frames after a mesh pass.
+	 * @type {number}
+	 * @ignore
+	 */
+	get currentTextureUnit() {
+		return this.renderer._activeTextureUnit;
+	}
+
+	set currentTextureUnit(unit) {
+		this.renderer._activeTextureUnit = unit;
 	}
 
 	/**
@@ -166,6 +184,15 @@ export class MaterialBatcher extends Batcher {
 		}
 
 		this.bindTexture2D(currentTexture, unit, flush);
+
+		// `bindTexture2D` skips the GL calls entirely when its bookkeeping says
+		// the texture is already bound and active — but the `texImage2D` below
+		// writes through whatever unit/binding is REALLY active in GL. Force
+		// both (uploads are a cold path) so a re-upload can never land on a
+		// foreign texture even if the tracked state went stale.
+		gl.activeTexture(gl.TEXTURE0 + unit);
+		gl.bindTexture(gl.TEXTURE_2D, currentTexture);
+		this.currentTextureUnit = unit;
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);

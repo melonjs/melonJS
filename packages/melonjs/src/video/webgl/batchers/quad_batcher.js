@@ -100,6 +100,12 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	createIndexBuffer() {
+		// free the previous GL buffer first (reset / context-restore path) —
+		// recreating without deleting orphaned one ~12 KB ELEMENT_ARRAY
+		// buffer per reset until GC collected the wrapper
+		if (this.indexBuffer) {
+			this.indexBuffer.destroy();
+		}
 		const maxQuads = this.vertexData.maxVertex / 4;
 		this.indexBuffer = new IndexBuffer(
 			this.gl,
@@ -249,12 +255,14 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		this.flush();
 
-		// unbind the texture to prevent feedback loop on next frame, and
-		// drop the unit-0 cache slot so the next bind re-issues activeTexture.
+		// unbind the texture to prevent feedback loop on next frame, and drop
+		// EVERY batcher's unit-0 slot — unit 0's GL binding is now null, and a
+		// non-current batcher trusting its stale record would skip the re-bind
+		// and sample an unbound texture (opaque black)
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		this.currentTextureUnit = -1;
-		delete this.boundTextures[0];
+		this.renderer.invalidateTextureUnit(0);
 
 		// restore the default shader (also re-enables multi-texture batching)
 		this.useShader(this.defaultShader);
