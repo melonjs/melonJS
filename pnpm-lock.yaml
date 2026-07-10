@@ -14,9 +14,9 @@ overrides:
   shell-quote: ^1.8.4
   markdown-it: ^14.2.0
   react-router: ^7.15.1
-  vitest: ^4.1.8
-  '@vitest/browser': ^4.1.8
-  '@vitest/browser-playwright': ^4.1.8
+  vitest: ^4.1.10
+  '@vitest/browser': ^4.1.10
+  '@vitest/browser-playwright': ^4.1.10
 
 importers:
 
@@ -977,12 +977,12 @@ packages:
     resolution: {integrity: sha512-nMoXGEiRpT7m3W7NsbvrM2aKNwiNHZf+zEpUCvMteGjZFvfT96Q9fh7QyB98dvDWXiKvrLxA7bJ1mCOOv+JQPw==}
     peerDependencies:
       playwright: '*'
-      vitest: ^4.1.8
+      vitest: ^4.1.10
 
   '@vitest/browser@4.1.10':
     resolution: {integrity: sha512-UDwuWGwXj646CBx/bQHOaJSX7np0I8JL/UKQYa1e4QrVHH8VdWtx8eaOuf8sy0ShwDgR6NjJAsp5eF6vjF6qng==}
     peerDependencies:
-      vitest: ^4.1.8
+      vitest: ^4.1.10
 
   '@vitest/expect@4.1.10':
     resolution: {integrity: sha512-YsCn+qAk1GWjQOWFEsEcL2gNQ0zmVmQu3T03qP6UyjhtmdtwtbuI+DASn/7iQB3HGTXkdBwGddzxPlmiql5vlA==}
@@ -2178,7 +2178,7 @@ packages:
       '@edge-runtime/vm': '*'
       '@opentelemetry/api': ^1.9.0
       '@types/node': ^20.0.0 || ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': ^4.1.8
+      '@vitest/browser-playwright': ^4.1.10
       '@vitest/browser-preview': 4.1.10
       '@vitest/browser-webdriverio': 4.1.10
       '@vitest/coverage-istanbul': 4.1.10
