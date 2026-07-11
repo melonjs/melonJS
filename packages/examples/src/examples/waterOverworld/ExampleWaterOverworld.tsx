@@ -30,9 +30,9 @@ export const ExampleWaterOverworld = () => {
 				borderRadius: 4,
 			}}
 		>
-			A/D move · W jump · hold Shift to run — the pond refracts the scene via{" "}
-			<code>screen_texture</code> / <code>screen_uv</code> /{" "}
-			<code>noise_uv</code>
+			A/D or ←/→ move · W/↑ jump · hold Shift to run · S toggles the debug panel
+			— the pond refracts the scene via <code>screen_texture</code> /{" "}
+			<code>screen_uv</code> / <code>noise_uv</code>
 		</div>
 	);
 };

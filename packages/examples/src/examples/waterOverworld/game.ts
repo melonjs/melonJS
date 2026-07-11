@@ -3,7 +3,8 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { loader, state, video } from "melonjs";
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { loader, plugin, state, video } from "melonjs";
 import { registerEntities } from "./entities";
 import { WaterOverworldStage } from "./play";
 
@@ -48,6 +49,9 @@ export const createGame = () => {
 		alert("This example requires WebGL");
 		return;
 	}
+
+	// register the debug plugin (press "S" to toggle the panel)
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	registerEntities();
 

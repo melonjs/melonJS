@@ -244,8 +244,11 @@ export class Male extends me.Sprite {
 		this.body.setFriction(0.5, 0);
 
 		me.input.bindKey(me.input.KEY.A, "left");
+		me.input.bindKey(me.input.KEY.LEFT, "left");
 		me.input.bindKey(me.input.KEY.D, "right");
+		me.input.bindKey(me.input.KEY.RIGHT, "right");
 		me.input.bindKey(me.input.KEY.W, "jump", true);
+		me.input.bindKey(me.input.KEY.UP, "jump", true);
 		me.input.bindKey(me.input.KEY.SHIFT, "runLock");
 
 		this.alwaysUpdate = true;
@@ -294,8 +297,11 @@ export class Male extends me.Sprite {
 
 	override onDeactivateEvent() {
 		me.input.unbindKey(me.input.KEY.A);
+		me.input.unbindKey(me.input.KEY.LEFT);
 		me.input.unbindKey(me.input.KEY.D);
+		me.input.unbindKey(me.input.KEY.RIGHT);
 		me.input.unbindKey(me.input.KEY.W);
+		me.input.unbindKey(me.input.KEY.UP);
 		me.input.unbindKey(me.input.KEY.SHIFT);
 	}
 }
