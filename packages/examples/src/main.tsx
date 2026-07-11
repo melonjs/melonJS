@@ -226,6 +226,11 @@ const ExampleVideo = lazy(() =>
 		default: m.ExampleVideo,
 	})),
 );
+const ExampleWaterOverworld = lazy(() =>
+	import("./examples/waterOverworld/ExampleWaterOverworld").then((m) => ({
+		default: m.ExampleWaterOverworld,
+	})),
+);
 const ExampleWhacAMole = lazy(() =>
 	import("./examples/whac-a-mole/ExampleWhacAMole").then((m) => ({
 		default: m.ExampleWhacAMole,
@@ -573,6 +578,14 @@ const examples: {
 		sourceDir: "video",
 		description:
 			"Video playback using the asset loader and Sprite class to display an MP4 video on canvas.",
+	},
+	{
+		component: <ExampleWaterOverworld />,
+		label: "Water Overworld",
+		path: "waterOverworld",
+		sourceDir: "waterOverworld",
+		description:
+			"Side-scroller overworld with a refracting pond — the Godot-style screen_texture / screen_uv / noise_uv shader builtins.",
 	},
 	{
 		component: <ExampleWhacAMole />,

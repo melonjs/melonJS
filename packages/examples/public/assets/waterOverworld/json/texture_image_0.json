@@ -1,0 +1,165 @@
+{"frames": [
+
+{
+	"filename": "2dWater",
+	"frame": {"x":743,"y":387,"w":480,"h":480},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":480},
+	"sourceSize": {"w":480,"h":480},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "Angel Statue",
+	"frame": {"x":1983,"y":1,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "Birch1",
+	"frame": {"x":1627,"y":663,"w":80,"h":112},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":80,"h":112},
+	"sourceSize": {"w":80,"h":112},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "Campfire with food sheet",
+	"frame": {"x":1627,"y":405,"w":160,"h":256},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":160,"h":256},
+	"sourceSize": {"w":160,"h":256},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "cloud5",
+	"frame": {"x":743,"y":349,"w":110,"h":35},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":110,"h":35},
+	"sourceSize": {"w":110,"h":35},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "Cooking area",
+	"frame": {"x":803,"y":935,"w":768,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":768,"h":64},
+	"sourceSize": {"w":768,"h":64},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "GandalfHardcore Background layers",
+	"frame": {"x":1,"y":1,"w":1024,"h":346},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1024,"h":346},
+	"sourceSize": {"w":1024,"h":346},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "GandalfHardcore Portal sheet",
+	"frame": {"x":1225,"y":789,"w":640,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":640,"h":64},
+	"sourceSize": {"w":640,"h":64},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "HP bar preview",
+	"frame": {"x":1027,"y":1,"w":696,"h":384},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":696,"h":384},
+	"sourceSize": {"w":696,"h":384},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "male_idle",
+	"frame": {"x":1,"y":874,"w":800,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":64},
+	"sourceSize": {"w":800,"h":64},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "male_run",
+	"frame": {"x":1,"y":940,"w":800,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":64},
+	"sourceSize": {"w":800,"h":64},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "male_walk",
+	"frame": {"x":803,"y":869,"w":800,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":64},
+	"sourceSize": {"w":800,"h":64},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "sun",
+	"frame": {"x":1789,"y":405,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "TilesAssets",
+	"frame": {"x":1225,"y":387,"w":400,"h":400},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":400,"h":400},
+	"sourceSize": {"w":400,"h":400},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "Tree2",
+	"frame": {"x":1725,"y":1,"w":256,"h":208},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":208},
+	"sourceSize": {"w":256,"h":208},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "water2ds",
+	"frame": {"x":1,"y":349,"w":740,"h":523},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":740,"h":523},
+	"sourceSize": {"w":740,"h":523},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "Weeping Willow1",
+	"frame": {"x":1725,"y":211,"w":224,"h":192},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":224,"h":192},
+	"sourceSize": {"w":224,"h":192},
+	"pivot": {"x":0.5,"y":0.5}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "texture_image_0.webp",
+	"format": "RGBA8888",
+	"size": {"w":2048,"h":1024},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:100c99bc6065c58490c69f6f368c4ee3:6e253f253e708684eaeaa46c77137f6f:c6b1571f4a98eab5c8284aa57b587db1$"
+}
+}
