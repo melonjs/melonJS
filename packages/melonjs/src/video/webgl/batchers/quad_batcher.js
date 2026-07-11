@@ -220,6 +220,9 @@ export default class QuadBatcher extends MaterialBatcher {
 		this.boundTextures[0] = source;
 		shader.setUniform("uSampler", 0);
 
+		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
+		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
+
 		// (re)bind any extra textures a ShaderEffect declared via setTexture,
 		// to their reserved high units — after the source claims unit 0
 		shader._prepareTextures?.(this);
@@ -309,6 +312,19 @@ export default class QuadBatcher extends MaterialBatcher {
 			if (unit !== this.currentSamplerUnit) {
 				this.currentShader.setUniform("uSampler", unit);
 				this.currentSamplerUnit = unit;
+			}
+			// feed the effect's `noise_uv` builtin (frame-local UVs) with this
+			// quad's frame rect — min() normalizes flipped (swapped) UVs
+			if (typeof this.currentShader._setNoiseUVRect === "function") {
+				const source = texture.getTexture();
+				this.currentShader._setNoiseUVRect(
+					source.width || source.videoWidth || 1,
+					source.height || source.videoHeight || 1,
+					w,
+					h,
+					Math.min(u0, u1),
+					Math.min(v0, v1),
+				);
 			}
 		}
 

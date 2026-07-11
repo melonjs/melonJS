@@ -936,7 +936,7 @@ export default class WebGLRenderer extends Renderer {
 		//  - `target: <capture>`    → refresh that caller-owned capture in place
 		const shared = typeof options.target === "undefined";
 		let frame = shared
-			? this._frameTexture
+			? this.getSharedFrameTexture()
 			: options.target === null
 				? undefined
 				: options.target;
@@ -999,6 +999,23 @@ export default class WebGLRenderer extends Renderer {
 		this.invalidateTextureUnit(unit);
 
 		return frame;
+	}
+
+	/**
+	 * The renderer-owned shared frame-capture slot, minted lazily so it has a
+	 * stable identity from the moment an effect is constructed — before the
+	 * first actual capture fills it (`glTexture` stays `null` until then, and
+	 * the live-sampler bind path skips unfilled captures). `ShaderEffect`
+	 * wires `: screen_texture` annotated samplers to this object.
+	 * @returns {FrameTexture} the shared capture slot
+	 * @ignore
+	 */
+	getSharedFrameTexture() {
+		if (typeof this._frameTexture === "undefined") {
+			const canvas = this.getCanvas();
+			this._frameTexture = new FrameTexture(this, canvas.width, canvas.height);
+		}
+		return this._frameTexture;
 	}
 
 	/**
@@ -1112,6 +1129,20 @@ export default class WebGLRenderer extends Renderer {
 		const h = canvas.height;
 
 		this.flush();
+
+		// `screen_texture` shader builtin (Godot BackBufferCopy semantics):
+		// refresh the shared frame capture the effects' live samplers are
+		// wired to. For a CAMERA effect the "screen" is the scene itself —
+		// capture the still-bound camera FBO before unbinding it. For a
+		// renderable's effect chain the "screen" is everything drawn behind
+		// it — captured from the parent target after it is rebound below.
+		const needsScreenTexture = effects.some((fx) => {
+			return fx._screenTextureUniforms?.length > 0;
+		});
+		if (needsScreenTexture && isCamera) {
+			this.toFrameTexture();
+		}
+
 		rt1.unbind();
 
 		// get parent render target for rebinding after blits
@@ -1137,6 +1168,11 @@ export default class WebGLRenderer extends Renderer {
 		}
 		this.setViewport(0, 0, w, h);
 		emit(RENDER_TARGET_CHANGED, this);
+
+		// see needsScreenTexture above — the scene behind this renderable
+		if (needsScreenTexture && !isCamera) {
+			this.toFrameTexture();
+		}
 
 		if (effects.length === 1) {
 			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
@@ -1439,6 +1475,15 @@ export default class WebGLRenderer extends Renderer {
 		// active lights AND this sprite has a normal map. Otherwise the
 		// unlit `quad` batcher is faster (full texture-unit capacity, no
 		// paired normal upload, no per-fragment lighting math).
+		// Godot BackBufferCopy semantics for the `screen_texture` shader
+		// builtin: refresh the shared frame capture with everything drawn so
+		// far BEFORE this sprite's own quad, so the effect samples the scene
+		// behind it. Must run before setBatcher below — toFrameTexture
+		// flushes and switches to the quad batcher internally.
+		if (this.customShader?._screenTextureUniforms?.length > 0) {
+			this.toFrameTexture();
+		}
+
 		const useLit =
 			this.batchers.has("litQuad") &&
 			this.activeLightCount > 0 &&

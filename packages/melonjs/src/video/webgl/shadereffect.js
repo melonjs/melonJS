@@ -8,6 +8,113 @@ import Texture2d from "../texture/texture2d.ts";
 import GLShader from "./glshader.js";
 import quadVertex from "./shaders/quad.vert";
 
+/*
+ * ---- Godot-style shader builtins ------------------------------------------
+ *
+ * Inside a ShaderEffect fragment body, three names get special treatment so
+ * users never compute screen/frame UVs by hand (same ergonomics as Godot's
+ * `hint_screen_texture` / `SCREEN_UV`):
+ *
+ * - `uniform sampler2D <name> : screen_texture;` — the engine strips the
+ *   annotation and keeps the sampler filled with a capture of everything
+ *   drawn so far (BackBufferCopy semantics, via the renderer's shared
+ *   toFrameTexture slot). An optional wrap mode is accepted:
+ *   `: screen_texture(repeat)`.
+ * - `screen_uv`  — varying with this fragment's position in that capture
+ *   (0..1 across the screen).
+ * - `noise_uv`   — varying with a frame-local coordinate across the drawn
+ *   object (undoes atlas packing; scaled to object pixels so patterns keep
+ *   their density when the destination is scaled).
+ *
+ * The builtins only activate when referenced, and never when the body
+ * carries its OWN declaration of the identifier — a shader that used these
+ * names before this feature keeps compiling unchanged.
+ */
+const SCREEN_TEXTURE_ANNOTATION =
+	/\buniform\s+sampler2D\s+([A-Za-z_]\w*)\s*:\s*screen_texture(?:\((repeat|repeat-x|repeat-y|no-repeat)\))?\s*;/g;
+const SCREEN_UV_IDENTIFIER = /\bscreen_uv\b/;
+const NOISE_UV_IDENTIFIER = /\bnoise_uv\b/;
+
+/**
+ * whether the body declares `name` itself (as a varying/uniform/attribute) —
+ * the engine then leaves that identifier fully user-managed
+ * @ignore
+ */
+function hasOwnDeclaration(source, name) {
+	return new RegExp(
+		`\\b(?:varying|uniform|attribute)\\s+\\w+\\s+${name}\\s*;`,
+	).test(source);
+}
+
+/**
+ * Parse the builtin usages out of a fragment body: collect and strip the
+ * `: screen_texture` annotations, and detect the `screen_uv` / `noise_uv`
+ * varyings. Bodies without builtins pass through byte-identical.
+ * @ignore
+ */
+function parseShaderBuiltins(fragmentBody) {
+	const screenTextures = [];
+	const body = fragmentBody.replace(
+		SCREEN_TEXTURE_ANNOTATION,
+		(match, name, repeat = "no-repeat") => {
+			screenTextures.push({ name, repeat });
+			// keep the plain `uniform sampler2D <name>;` declaration
+			return match.replace(/\s*:\s*screen_texture(?:\([\w-]+\))?/, "");
+		},
+	);
+	const screenUV =
+		(screenTextures.length > 0 || SCREEN_UV_IDENTIFIER.test(body)) &&
+		!hasOwnDeclaration(body, "screen_uv");
+	const noiseUV =
+		NOISE_UV_IDENTIFIER.test(body) && !hasOwnDeclaration(body, "noise_uv");
+	return { body, screenTextures, screenUV, noiseUV };
+}
+
+/**
+ * The effect's vertex shader: the stock quad template, or — when a builtin
+ * varying is in play — a variant that additionally computes `screen_uv`
+ * (clip space → 0..1) and/or `noise_uv` (atlas UV → frame-local, fed by
+ * `_setNoiseUVRect` through the `ME_*` uniforms). Built deterministically
+ * from a template; user source is never rewritten.
+ * @ignore
+ */
+function buildEffectVertex(builtins) {
+	if (!builtins.screenUV && !builtins.noiseUV) {
+		return quadVertex;
+	}
+	return [
+		"attribute vec3 aVertex;",
+		"attribute vec2 aRegion;",
+		"attribute vec4 aColor;",
+		"uniform mat4 uProjectionMatrix;",
+		"varying vec2 vRegion;",
+		"varying vec4 vColor;",
+		...(builtins.screenUV ? ["varying vec2 screen_uv;"] : []),
+		...(builtins.noiseUV
+			? [
+					"uniform vec2 ME_size_obj;",
+					"uniform vec2 ME_size_img;",
+					"uniform vec2 ME_offset;",
+					"varying vec2 noise_uv;",
+				]
+			: []),
+		"void main(void) {",
+		"    vec4 ME_clip = uProjectionMatrix * vec4(aVertex, 1.0);",
+		"    gl_Position = ME_clip;",
+		...(builtins.screenUV
+			? ["    screen_uv = ME_clip.xy / ME_clip.w * 0.5 + 0.5;"]
+			: []),
+		...(builtins.noiseUV
+			? [
+					"    noise_uv = aRegion * (ME_size_img / ME_size_obj) - ME_offset / ME_size_obj;",
+				]
+			: []),
+		"    vColor = vec4(aColor.bgr * aColor.a, aColor.a);",
+		"    vRegion = aRegion;",
+		"}",
+	].join("\n");
+}
+
 /**
  * A simplified shader class for applying custom fragment effects to renderables.
  * Only requires a fragment `apply()` function — the vertex shader, uniforms, and
@@ -34,6 +141,23 @@ import quadVertex from "./shaders/quad.vert";
  * mySprite.shader = pulse;
  * // update the uniform each frame
  * pulse.setUniform("uTime", time);
+ * @example
+ * // Godot-style shader builtins — no JS plumbing, no UV math:
+ * // `: screen_texture` keeps the sampler filled with everything drawn so
+ * // far (BackBufferCopy semantics; one screen copy per draw of the effect),
+ * // `screen_uv` is this fragment's 0..1 screen position, and `noise_uv`
+ * // runs 0..1 across the sprite regardless of its atlas frame.
+ * const water = new ShaderEffect(renderer, `
+ *     uniform sampler2D uNoise;
+ *     uniform sampler2D screenTex : screen_texture;
+ *     uniform float uTime;
+ *     vec4 apply(vec4 color, vec2 uv) {
+ *         vec2 flow = texture2D(uNoise, noise_uv + uTime * 0.25).rg;
+ *         vec4 refracted = texture2D(screenTex, screen_uv + flow * 0.005);
+ *         return refracted * texture2D(uSampler, uv + flow * 0.005);
+ *     }
+ * `);
+ * water.setTexture("uNoise", noiseTexture.getTexture(), "repeat");
  */
 export default class ShaderEffect {
 	/**
@@ -102,12 +226,29 @@ export default class ShaderEffect {
 			return;
 		}
 
+		// Godot-style builtins: parse & strip `: screen_texture` annotations,
+		// detect the free `screen_uv` / `noise_uv` varyings (see the module
+		// header). A body using none of them passes through untouched.
+		const builtins = parseShaderBuiltins(fragmentBody);
+
+		/**
+		 * samplers annotated `: screen_texture` — the renderer checks this to
+		 * know when to refresh the shared frame capture before the effect draws
+		 * @type {Array<{name: string, repeat: string}>}
+		 * @ignore
+		 */
+		this._screenTextureUniforms = builtins.screenTextures;
+		/** @ignore */
+		this._hasNoiseUV = builtins.noiseUV;
+
 		// wrap the user's apply() with the texture-sampling boilerplate
 		const fragment = [
 			"uniform sampler2D uSampler;",
 			"varying vec4 vColor;",
 			"varying vec2 vRegion;",
-			fragmentBody,
+			...(builtins.screenUV ? ["varying vec2 screen_uv;"] : []),
+			...(builtins.noiseUV ? ["varying vec2 noise_uv;"] : []),
+			builtins.body,
 			"void main(void) {",
 			"    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",
 			"    gl_FragColor = apply(texColor, vRegion);",
@@ -117,7 +258,7 @@ export default class ShaderEffect {
 		/** @ignore */
 		this._shader = new GLShader(
 			renderer.gl,
-			quadVertex,
+			buildEffectVertex(builtins),
 			fragment,
 			precision || renderer.shaderPrecision,
 		);
@@ -130,6 +271,17 @@ export default class ShaderEffect {
 		 * @ignore
 		 */
 		this._extraTextures = new Map();
+
+		// wire every annotated screen sampler to the renderer's shared frame
+		// capture — a live GPU-resident entry, re-bound fresh on each draw and
+		// skipped while no capture has been taken yet
+		for (const screenTexture of builtins.screenTextures) {
+			this.setTexture(
+				screenTexture.name,
+				renderer.getSharedFrameTexture(),
+				screenTexture.repeat,
+			);
+		}
 
 		// flip enabled across context loss so beginPostEffect skips us
 		on(ONCONTEXT_LOST, this._onContextLost, this);
@@ -227,6 +379,94 @@ export default class ShaderEffect {
 			this._shader.setUniform("uTime", seconds);
 		}
 		return this;
+	}
+
+	/**
+	 * Feed the `noise_uv` builtin's frame rect for the object about to draw:
+	 * the source texture dimensions, the destination (object) dimensions, and
+	 * the frame's top-left UV origin. Called by the quad batchers per draw;
+	 * a no-op unless this effect's fragment actually uses `noise_uv` (the
+	 * `ME_*` uniforms only exist — and are only active — then).
+	 * @param {number} sourceWidth - source texture width in pixels
+	 * @param {number} sourceHeight - source texture height in pixels
+	 * @param {number} objectWidth - destination (object) width in pixels
+	 * @param {number} objectHeight - destination (object) height in pixels
+	 * @param {number} u0 - the frame's left UV coordinate (flip-normalized)
+	 * @param {number} v0 - the frame's top UV coordinate (flip-normalized)
+	 * @ignore
+	 */
+	_setNoiseUVRect(
+		sourceWidth,
+		sourceHeight,
+		objectWidth,
+		objectHeight,
+		u0,
+		v0,
+	) {
+		if (
+			this._hasNoiseUV !== true ||
+			typeof this._shader === "undefined" ||
+			this.destroyed === true ||
+			this._shader.suspended
+		) {
+			return;
+		}
+		// guard each set on the ACTIVE uniforms map — the compiler eliminates
+		// the ME_* uniforms when `noise_uv` ends up unused, and setUniform
+		// throws on inactive uniforms
+		const uniforms = this._shader.uniforms;
+		if (typeof uniforms.ME_size_obj !== "undefined") {
+			this._shader.setUniform("ME_size_obj", [
+				Math.max(Math.abs(objectWidth), 1),
+				Math.max(Math.abs(objectHeight), 1),
+			]);
+		}
+		if (typeof uniforms.ME_size_img !== "undefined") {
+			this._shader.setUniform("ME_size_img", [
+				Math.max(sourceWidth, 1),
+				Math.max(sourceHeight, 1),
+			]);
+		}
+		if (typeof uniforms.ME_offset !== "undefined") {
+			this._shader.setUniform("ME_offset", [
+				u0 * Math.max(sourceWidth, 1),
+				v0 * Math.max(sourceHeight, 1),
+			]);
+		}
+	}
+
+	/**
+	 * Apply the wrap mode a `: screen_texture(<repeat>)` annotation asked for
+	 * onto the live capture handle. Captures are NPOT (canvas-sized), which
+	 * WebGL 1 cannot repeat — warn once and keep the clamp there. The unit is
+	 * force-activated first: the batcher's bind may have been skipped as
+	 * redundant while the GL active unit points elsewhere.
+	 * @ignore
+	 */
+	_applyCaptureWrap(batcher, glTex, entry) {
+		const gl = batcher.gl;
+		if (batcher.renderer.WebGLVersion === 1) {
+			if (this._captureWrapWarned !== true) {
+				this._captureWrapWarned = true;
+				console.warn(
+					"ShaderEffect: screen_texture(" +
+						entry.repeat +
+						") needs WebGL 2 (captures are non-power-of-two) — using clamp-to-edge",
+				);
+			}
+			return;
+		}
+		gl.activeTexture(gl.TEXTURE0 + entry.unit);
+		gl.bindTexture(gl.TEXTURE_2D, glTex);
+		batcher.currentTextureUnit = entry.unit;
+		const wrapS = /^repeat(-x)?$/.test(entry.repeat)
+			? gl.REPEAT
+			: gl.CLAMP_TO_EDGE;
+		const wrapT = /^repeat(-y)?$/.test(entry.repeat)
+			? gl.REPEAT
+			: gl.CLAMP_TO_EDGE;
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapS);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapT);
 	}
 
 	/**
@@ -362,6 +602,11 @@ export default class ShaderEffect {
 				const glTex = entry.image.glTexture;
 				if (glTex !== null && typeof glTex !== "undefined") {
 					batcher.bindTexture2D(glTex, entry.unit, false);
+					if (entry.repeat !== "no-repeat") {
+						// `: screen_texture(repeat)` — captures are created
+						// clamped; apply the requested wrap on the live handle
+						this._applyCaptureWrap(batcher, glTex, entry);
+					}
 					this._shader.setUniform(name, entry.unit);
 					bound = true;
 				}
