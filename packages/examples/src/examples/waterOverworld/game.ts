@@ -31,14 +31,19 @@ const resources = [
 export const createGame = () => {
 	// the water shader needs WebGL (ShaderEffect is inert under Canvas)
 	try {
-		video.init(960, 640, {
-			parent: "screen",
-			renderer: video.WEBGL,
-			scale: "auto",
-			scaleMethod: "fit",
-			antiAlias: false,
-			subPixel: false,
-		});
+		if (
+			!video.init(960, 640, {
+				parent: "screen",
+				renderer: video.WEBGL,
+				scale: "auto",
+				scaleMethod: "fit",
+				antiAlias: false,
+				subPixel: false,
+			})
+		) {
+			alert("This example requires WebGL");
+			return;
+		}
 	} catch {
 		alert("This example requires WebGL");
 		return;

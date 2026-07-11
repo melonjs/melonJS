@@ -121,11 +121,25 @@ export class CollisionTP extends me.Renderable {
 
 /** a drifting-sky cloud — a single centered atlas frame */
 export class Cloud extends me.Sprite {
+	private speed = 1 + Math.random();
+	private startX = -141;
+
 	constructor(x: number, y: number, settings: any = {}) {
 		settings.image = getGameTexture();
 		settings.region = "cloud5";
 		settings.anchorPoint = { x: 0.5, y: 0.5 };
 		super(x, y, settings);
+		this.alwaysUpdate = true;
+	}
+
+	override update(dt: number) {
+		super.update(dt);
+		// drift right, respawn off the left edge (original demo behavior)
+		this.pos.x += this.speed;
+		if (this.pos.x >= 1040) {
+			this.pos.x = this.startX - (50 + Math.random() * 200);
+		}
+		return true;
 	}
 }
 
@@ -303,17 +317,34 @@ export class WaterTextureObj extends me.Sprite {
 
 	constructor(x: number, y: number, settings: any = {}) {
 		const texture = getGameTexture();
-		// the two water frames are full atlas regions — getAnimationSettings
-		// builds the atlas/indices/frame-size settings for them directly
-		Object.assign(
-			settings,
-			texture.getAnimationSettings(["2dWater", "water2ds"]),
-		);
+		// the two water frames, used verbatim (no trim/re-align — the 2dWater
+		// art carries its own transparent sky band above the water surface)
+		const built = buildStripSettings(texture, [
+			{
+				region: "2dWater",
+				frameW: 480,
+				frameH: 480,
+				count: 1,
+				anim: "water",
+				delay: 100,
+			},
+			{
+				region: "water2ds",
+				frameW: 740,
+				frameH: 523,
+				count: 1,
+				anim: "water2",
+				delay: 100,
+			},
+		]);
+		settings.image = texture;
+		settings.atlas = built.atlas;
+		settings.atlasIndices = built.atlasIndices;
+		settings.framewidth = built.framewidth;
+		settings.frameheight = built.frameheight;
 		settings.anchorPoint = { x: 0.5, y: 0.5 };
 		super(x, y, settings);
-		this.addAnimation("water", [{ name: "2dWater", delay: 100 }]);
-		this.addAnimation("water2", [{ name: "water2ds", delay: 100 }]);
-		this.setCurrentAnimation("water");
+		addStripAnimations(this, built.animations, "water");
 
 		const scale = settings.inspectors?.scale ?? { x: 1, y: 1 };
 		this.scale(scale.x, scale.y);
