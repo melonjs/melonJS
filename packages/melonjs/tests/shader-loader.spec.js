@@ -399,4 +399,164 @@ describe("shader assets + clone under context loss", () => {
 		expect(loader.unload({ name: "flash-cycle", type: "shader" })).toBe(true);
 		expect(fx.destroyed).toBe(true);
 	});
+
+	/*
+	 * {vertex, fragment} program pairs → a raw, shared GLShader. Each test
+	 * is adversarial: it pins a behavior a plausible implementation
+	 * shortcut would break (wrong return type, swapped sources, cache
+	 * clobbering, half-registered failures, missing destroy).
+	 */
+	describe("{vertex, fragment} program pairs", () => {
+		// distinct, actively-used uniforms in EACH stage — proves both
+		// sources reached the right stage of the linked program (swapped
+		// vertex/fragment would fail to compile: attributes are
+		// vertex-only)
+		const PAIR_VERTEX = [
+			"attribute vec3 aVertex;",
+			"uniform mat4 uProjectionMatrix;",
+			"uniform float uVertOnly;",
+			"void main(void) {",
+			"    gl_Position = uProjectionMatrix * vec4(aVertex.xy, aVertex.z + uVertOnly, 1.0);",
+			"}",
+		].join("\n");
+		const PAIR_FRAGMENT = [
+			"uniform float uFragOnly;",
+			"void main(void) {",
+			"    gl_FragColor = vec4(uFragOnly, 0.0, 0.0, 1.0);",
+			"}",
+		].join("\n");
+
+		it("inline pair compiles into a shared raw GLShader — not a ShaderEffect", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "pair-inline",
+				type: "shader",
+				data: { vertex: PAIR_VERTEX, fragment: PAIR_FRAGMENT },
+			});
+
+			const shader = loader.getShader("pair-inline");
+			expect(shader).toBeInstanceOf(GLShader);
+			expect(shader).not.toBeInstanceOf(ShaderEffect);
+			expect(shader.shared).toBe(true);
+			// both stages' uniforms are active on the linked program — the
+			// sources landed in the RIGHT stages
+			expect(typeof shader.uniforms.uVertOnly).not.toBe("undefined");
+			expect(typeof shader.uniforms.uFragOnly).not.toBe("undefined");
+			// shared semantics: same instance on every call
+			expect(loader.getShader("pair-inline")).toBe(shader);
+
+			expect(loader.unload({ name: "pair-inline", type: "shader" })).toBe(true);
+			expect(shader.destroyed).toBe(true);
+			expect(loader.getShader("pair-inline")).toBe(null);
+		});
+
+		it("src pair fetches BOTH URLs and compiles them into their stages", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "pair-src",
+				type: "shader",
+				src: {
+					vertex: `data:text/plain,${encodeURIComponent(PAIR_VERTEX)}`,
+					fragment: `data:text/plain,${encodeURIComponent(PAIR_FRAGMENT)}`,
+				},
+			});
+
+			const shader = loader.getShader("pair-src");
+			expect(shader).toBeInstanceOf(GLShader);
+			expect(typeof shader.uniforms.uVertOnly).not.toBe("undefined");
+			expect(typeof shader.uniforms.uFragOnly).not.toBe("undefined");
+
+			loader.unload({ name: "pair-src", type: "shader" });
+		});
+
+		it("a second load of the same name keeps the first instance (no clobber)", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "pair-dup",
+				type: "shader",
+				data: { vertex: PAIR_VERTEX, fragment: PAIR_FRAGMENT },
+			});
+			const first = loader.getShader("pair-dup");
+			await loader.load({
+				name: "pair-dup",
+				type: "shader",
+				data: { vertex: PAIR_VERTEX, fragment: PAIR_FRAGMENT },
+			});
+			expect(loader.getShader("pair-dup")).toBe(first);
+			expect(first.destroyed).toBe(false);
+
+			loader.unload({ name: "pair-dup", type: "shader" });
+		});
+
+		it("clone() yields a caller-owned (non-shared) GLShader copy", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "pair-clone",
+				type: "shader",
+				data: { vertex: PAIR_VERTEX, fragment: PAIR_FRAGMENT },
+			});
+			const shader = loader.getShader("pair-clone");
+			const copy = shader.clone();
+			expect(copy).toBeInstanceOf(GLShader);
+			expect(copy).not.toBe(shader);
+			expect(copy.shared).toBe(false);
+			// independent programs: destroying the copy leaves the shared one
+			copy.destroy();
+			expect(shader.destroyed).toBe(false);
+
+			loader.unload({ name: "pair-clone", type: "shader" });
+		});
+
+		it("rejects a pair missing one source, with the asset name — and registers nothing", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await expect(
+				loader.load({
+					name: "pair-halved",
+					type: "shader",
+					src: { fragment: "data:text/plain,void%20main(void)%20%7B%7D" },
+				}),
+			).rejects.toThrow(/pair-halved.*vertex/);
+			// a failed load must not leave a half-registered cache entry
+			expect(loader.getShader("pair-halved")).toBe(null);
+
+			await expect(
+				loader.load({
+					name: "pair-halved-inline",
+					type: "shader",
+					data: { vertex: PAIR_VERTEX },
+				}),
+			).rejects.toThrow(/pair-halved-inline/);
+			expect(loader.getShader("pair-halved-inline")).toBe(null);
+		});
+
+		it("rejects invalid GLSL in a pair, with the asset name — and registers nothing", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await expect(
+				loader.load({
+					name: "pair-broken",
+					type: "shader",
+					data: { vertex: "not glsl", fragment: PAIR_FRAGMENT },
+				}),
+			).rejects.toThrow(/pair-broken/);
+			expect(loader.getShader("pair-broken")).toBe(null);
+		});
+	});
 });

@@ -728,9 +728,11 @@ export function unload(asset) {
 			if (typeof effect === "undefined") {
 				return false;
 			}
-			// the loader owns the shared ShaderEffect — actually free the GL
-			// program, don't just drop the cache entry
-			effect.destroy();
+			// the loader owns the shared ShaderEffect/GLShader — actually free
+			// the GL program, don't just drop the cache entry. A `null` entry
+			// is a {vertex, fragment} pair loaded under the Canvas renderer
+			// (no GL program to free).
+			effect?.destroy();
 			delete shaderList[asset.name];
 			return true;
 		}
@@ -1030,14 +1032,21 @@ export function getGLTF(elt) {
  * is reset to `false`, so it is auto-destroyed with the renderable it is
  * assigned to, like any hand-constructed effect.
  *
- * Shader assets are WebGL-only: under the Canvas renderer the returned
- * effect is an inert stub (same behavior as constructing a `ShaderEffect`
- * directly). Note that shader assets require `video.init()` to have been
- * called — an inherent precondition of the preload flow, since the loading
- * screen itself needs the renderer.
+ * A shader asset declared as a **`{vertex, fragment}` program pair** (see
+ * the example) compiles into a raw {@link GLShader} instead — the type the
+ * advanced paths take directly (a `Mesh` custom shader,
+ * `renderer.customShader`, a custom batcher). Same shared-instance
+ * semantics, and `GLShader.clone()` likewise yields a caller-owned copy.
+ *
+ * Shader assets are WebGL-only: under the Canvas renderer a fragment-body
+ * asset returns an inert `ShaderEffect` stub (same behavior as constructing
+ * one directly), and a program-pair asset returns `null` (a raw GL program
+ * has no canvas analog). Note that shader assets require `video.init()` to
+ * have been called — an inherent precondition of the preload flow, since
+ * the loading screen itself needs the renderer.
  * @memberof loader
  * @param {string} elt - name of the shader asset (as specified in the preload list)
- * @returns {ShaderEffect|null} the shared, precompiled effect, or `null` if not found
+ * @returns {ShaderEffect|GLShader|null} the shared, precompiled shader, or `null` if not found
  * @category Assets
  * @example
  * me.loader.preload([
@@ -1048,11 +1057,18 @@ export function getGLTF(elt) {
  *         uniform float uIntensity;
  *         vec4 apply(vec4 color, vec2 uv) { return mix(color, vec4(1.0), uIntensity); }
  *     ` },
+ *     // or a complete {vertex, fragment} program pair → a raw GLShader
+ *     { name: "toonMesh", type: "shader", src: {
+ *         vertex: "shaders/toon.vert",
+ *         fragment: "shaders/toon.frag",
+ *     } },
  * ], () => {
  *     // one shared program — same uniform state for every user
  *     mySprite.shader = me.loader.getShader("waterRipple");
  *     // private copy with its own uniforms (caller-owned, shared = false)
  *     boss.shader = me.loader.getShader("flash").clone();
+ *     // a program pair comes back as a GLShader, e.g. for a custom Mesh shader
+ *     renderer.drawMesh(myMesh, { shader: me.loader.getShader("toonMesh") });
  * });
  */
 export function getShader(elt) {
