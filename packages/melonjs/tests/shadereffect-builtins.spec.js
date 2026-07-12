@@ -282,6 +282,99 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 		fx.destroy();
 	});
 
+	it("samples the scene on the CAMERA post-effect (blit) path", (ctx) => {
+		requireWebGL(ctx);
+
+		// swizzling identity effect on a camera-managed chain: the "screen"
+		// is the scene captured from the camera FBO before it is unbound
+		const fx = new ShaderEffect(
+			renderer,
+			`
+			uniform sampler2D screenTex : screen_texture;
+			vec4 apply(vec4 color, vec2 uv) {
+				return vec4(texture2D(screenTex, screen_uv).bgr, 1.0);
+			}
+		`,
+		);
+		const spy = vi.spyOn(renderer, "toFrameTexture");
+		const camera = {
+			postEffects: [fx],
+			_postEffectManaged: true,
+			isDefault: true,
+		};
+
+		renderer.clearColor("#000000ff");
+		expect(renderer.beginPostEffect(camera)).toBe(true);
+		// in the real pipeline the camera re-applies its projection at the
+		// start of every FBO pass — replay that for the bare harness
+		renderer.currentBatcher.setProjection(renderer.projectionMatrix);
+		// the scene, drawn INTO the camera FBO: red top half, blue bottom
+		renderer.drawImage(solidCanvas(255, 0, 0, 64, 32), 0, 0);
+		renderer.drawImage(solidCanvas(0, 0, 255, 64, 32), 0, 32);
+		renderer.endPostEffect(camera);
+		renderer.flush();
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		spy.mockRestore();
+
+		// blitted output = the scene swizzled, with orientation preserved
+		const top = readPixel(32, 12);
+		expect(top[2]).toBeGreaterThan(200); // red scene → blue out
+		expect(top[0]).toBeLessThan(60);
+		const bottom = readPixel(32, 52);
+		expect(bottom[0]).toBeGreaterThan(200); // blue scene → red out
+		expect(bottom[2]).toBeLessThan(60);
+
+		fx.destroy();
+	});
+
+	it("samples the scene BEHIND the object on the multi-effect chain path", (ctx) => {
+		requireWebGL(ctx);
+
+		// two effects on a non-managed renderable force the FBO chain; the
+		// last one outputs the screen capture — which must be the MAGENTA
+		// backdrop behind the object, not the object's own (gray) rendering
+		const passthrough = new ShaderEffect(
+			renderer,
+			`
+			vec4 apply(vec4 color, vec2 uv) {
+				return color;
+			}
+		`,
+		);
+		const screen = new ShaderEffect(
+			renderer,
+			`
+			uniform sampler2D screenTex : screen_texture;
+			vec4 apply(vec4 color, vec2 uv) {
+				// opaque only where the object drew, sampling the screen there
+				return vec4(texture2D(screenTex, screen_uv).rgb, color.a);
+			}
+		`,
+		);
+		const sprite = {
+			postEffects: [passthrough, screen],
+			_postEffectManaged: false,
+		};
+
+		renderer.clearColor("#ff00ffff"); // magenta backdrop
+		expect(renderer.beginPostEffect(sprite)).toBe(true);
+		// the object: a gray quad in the middle of its capture FBO
+		renderer.drawImage(solidCanvas(64, 64, 64, 32, 32), 16, 16, 32, 32);
+		renderer.endPostEffect(sprite);
+		renderer.flush();
+
+		// where the object drew, the screen (magenta) shows through — true
+		// "everything behind me" semantics on the chain path too
+		const inside = readPixel(32, 32);
+		expect(inside[0]).toBeGreaterThan(200);
+		expect(inside[1]).toBeLessThan(60);
+		expect(inside[2]).toBeGreaterThan(200);
+
+		passthrough.destroy();
+		screen.destroy();
+	});
+
 	it("clone keeps the builtins wired", (ctx) => {
 		requireWebGL(ctx);
 		const fx = new ShaderEffect(renderer, IDENTITY_SCREEN);
