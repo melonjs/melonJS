@@ -308,7 +308,7 @@ export class Male extends me.Sprite {
 
 /**
  * The pond — an animated water sprite whose post effect refracts
- * EVERYTHING drawn behind it, using the Godot-style shader builtins:
+ * EVERYTHING drawn behind it, using the shader builtins:
  *
  * - `screenTex : screen_texture` — the engine keeps this sampler filled
  *   with a capture of the screen so far (no JS plumbing)

@@ -837,13 +837,12 @@ export default class WebGLRenderer extends Renderer {
 	 *
 	 * The capture reflects the framebuffer **at the call site** (a `flush()`
 	 * runs first), so call it right before drawing the surface that needs the
-	 * backdrop — the Godot `BackBufferCopy` placement model. It reads whichever
+	 * backdrop — the classic back-buffer-copy placement model. It reads whichever
 	 * framebuffer is currently bound: the backbuffer normally, or a camera's
 	 * post-effect FBO during that pass — so it works under both `Camera2d` and
 	 * `Camera3d`. Under a perspective camera, "drawn so far" is draw order, not
 	 * depth order: capture after the opaque scene, just before the refracting
-	 * surface (same guidance as Unity `_CameraOpaqueTexture` / Godot screen
-	 * texture).
+	 * surface (the usual opaque-scene-texture guidance).
 	 *
 	 * Feed the result straight into a custom post-effect:
 	 * ```js
@@ -1130,7 +1129,7 @@ export default class WebGLRenderer extends Renderer {
 
 		this.flush();
 
-		// `screen_texture` shader builtin (Godot BackBufferCopy semantics):
+		// `screen_texture` shader builtin (back-buffer copy semantics):
 		// refresh the shared frame capture the effects' live samplers are
 		// wired to. For a CAMERA effect the "screen" is the scene itself —
 		// capture the still-bound camera FBO before unbinding it. For a
@@ -1475,7 +1474,7 @@ export default class WebGLRenderer extends Renderer {
 		// active lights AND this sprite has a normal map. Otherwise the
 		// unlit `quad` batcher is faster (full texture-unit capacity, no
 		// paired normal upload, no per-fragment lighting math).
-		// Godot BackBufferCopy semantics for the `screen_texture` shader
+		// Back-buffer copy semantics for the `screen_texture` shader
 		// builtin: refresh the shared frame capture with everything drawn so
 		// far BEFORE this sprite's own quad, so the effect samples the scene
 		// behind it. Must run before setBatcher below — toFrameTexture

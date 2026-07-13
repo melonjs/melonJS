@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { boot, ShaderEffect, video, WebGLRenderer } from "../src/index.js";
 
 /**
- * Godot-style shader builtins in ShaderEffect:
+ * Shader builtins in ShaderEffect:
  *
  * - `uniform sampler2D name : screen_texture;` — auto-wired to the
- *   renderer's shared frame capture (BackBufferCopy semantics)
+ *   renderer's shared frame capture (back-buffer copy semantics)
  * - `screen_uv` — free varying, fragment position in that capture
  * - `noise_uv`  — free varying, frame-local 0..1 across the drawn object
  *
@@ -221,7 +221,7 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 		// a GRAY source drawn through an effect that returns the SCREEN with
 		// channels swizzled (.bgr) — output pixels prove all three at once:
 		// the effect ran (not the gray source), it sampled the true backdrop
-		// (BackBufferCopy), and screen_uv orientation matches (top stays top)
+		// (back-buffer copy), and screen_uv orientation matches (top stays top)
 		const fx = new ShaderEffect(
 			renderer,
 			`

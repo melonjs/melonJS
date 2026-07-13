@@ -9,15 +9,14 @@ import GLShader from "./glshader.js";
 import quadVertex from "./shaders/quad.vert";
 
 /*
- * ---- Godot-style shader builtins ------------------------------------------
+ * ---- Shader builtins -------------------------------------------------------
  *
  * Inside a ShaderEffect fragment body, three names get special treatment so
- * users never compute screen/frame UVs by hand (same ergonomics as Godot's
- * `hint_screen_texture` / `SCREEN_UV`):
+ * users never compute screen/frame UVs by hand:
  *
  * - `uniform sampler2D <name> : screen_texture;` — the engine strips the
  *   annotation and keeps the sampler filled with a capture of everything
- *   drawn so far (BackBufferCopy semantics, via the renderer's shared
+ *   drawn so far (a back-buffer copy, via the renderer's shared
  *   toFrameTexture slot). An optional wrap mode is accepted:
  *   `: screen_texture(repeat)`.
  * - `screen_uv`  — varying with this fragment's position in that capture
@@ -142,9 +141,9 @@ function buildEffectVertex(builtins) {
  * // update the uniform each frame
  * pulse.setUniform("uTime", time);
  * @example
- * // Godot-style shader builtins — no JS plumbing, no UV math:
+ * // Shader builtins — no JS plumbing, no UV math:
  * // `: screen_texture` keeps the sampler filled with everything drawn so
- * // far (BackBufferCopy semantics; one screen copy per draw of the effect),
+ * // far (a back-buffer copy; one screen copy per draw of the effect),
  * // `screen_uv` is this fragment's 0..1 screen position, and `noise_uv`
  * // runs 0..1 across the sprite regardless of its atlas frame.
  * const water = new ShaderEffect(renderer, `
@@ -226,7 +225,7 @@ export default class ShaderEffect {
 			return;
 		}
 
-		// Godot-style builtins: parse & strip `: screen_texture` annotations,
+		// Shader builtins: parse & strip `: screen_texture` annotations,
 		// detect the free `screen_uv` / `noise_uv` varyings (see the module
 		// header). A body using none of them passes through untouched.
 		const builtins = parseShaderBuiltins(fragmentBody);
