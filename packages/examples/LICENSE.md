@@ -51,6 +51,12 @@ courtesy to the original creator.
 
 Spacecraft 3D models (`craft_speederA`, `craft_speederB`, `craft_racer`,
 `craft_miner`) in `public/assets/multiMaterialMesh/` are taken from
+The Water Overworld example (`waterOverworld/`) uses the
+**"Free Pixel Art Side Scroller Asset Pack (32x32) Overworld"** published by
+**GandalfHardcore**, free to use:
+
+<https://gandalfhardcore.itch.io/free-pixel-art-sidescroller-asset-pack-32x32-overworld>
+
 **"Space Kit (2.0)"** published by Kenney:
 
 <https://www.kenney.nl/assets/space-kit>
