@@ -2,7 +2,7 @@
 
 ## [19.9.0] (melonJS 2) - _unreleased_
 
-**Highlights:** shaders get a full asset workflow — preload GLSL like any other asset (`loader.getShader()`), write screen-reading water / heat-haze effects with zero plumbing via the new `screen_texture` / `screen_uv` / `noise_uv` builtins, capture the frame on the GPU with `renderer.toFrameTexture()`, and drive it all with the new procedural `Noise` / `NoiseTexture2d` generators. Plus anchor-point presets across every renderable, holes in `Path2D`/SVG fills, and a large stability batch: 40+ fixes across the loader, audio, texture atlas, and WebGL batchers.
+**Highlights:** shader effects made easy. Effects that used to demand WebGL expertise — a pond rippling with the scene reflected in it, heat haze, frosted glass — now take a few lines of shader code: the engine hands your effect the screen behind it and the right coordinates, animated noise textures come built-in, and shaders preload like any other asset. See the new **Water Overworld** example for all of it in action. Also in this release: named anchor presets (`"bottom"`, `"top-left"`, …) on every renderable, shapes with holes in `Path2D`/SVG fills, and a 40+ bug-fix sweep across the loader, audio, texture atlas, and WebGL rendering.
 
 ### Added
 - **`renderer.toFrameTexture()`** — GPU capture of everything drawn so far, as a live `Texture2d` for shader input (back-buffer-copy semantics; Canvas parity via an offscreen copy). Closes [#1544](https://github.com/melonjs/melonJS/issues/1544) (initial approach contributed by @Vareniel)
