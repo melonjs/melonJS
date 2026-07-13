@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  *
- * Scene and water shader contributed by the melonJS editor team; pixel art
+ * Scene and water shader contributed by @Vareniel; pixel art
  * from GandalfHardcore's free 32x32 side-scroller asset pack (itch.io,
  * free to reuse).
  */
@@ -316,7 +316,7 @@ export class Male extends me.Sprite {
  * - `noise_uv`  — 0..1 across the water sprite itself, so the seamless
  *   noise textures tile independently of where the frame sits in the atlas
  *
- * Shader and tuning by the melonJS editor team (ported verbatim).
+ * Shader and tuning by @Vareniel (ported verbatim).
  */
 export class WaterTextureObj extends me.Sprite {
 	private water: me.ShaderEffect;

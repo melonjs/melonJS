@@ -5,8 +5,8 @@
 **Highlights:** shaders get a full asset workflow — preload GLSL like any other asset (`loader.getShader()`), write screen-reading water / heat-haze effects with zero plumbing via the new `screen_texture` / `screen_uv` / `noise_uv` builtins, capture the frame on the GPU with `renderer.toFrameTexture()`, and drive it all with the new procedural `Noise` / `NoiseTexture2d` generators. Plus anchor-point presets across every renderable, holes in `Path2D`/SVG fills, and a large stability batch: 40+ fixes across the loader, audio, texture atlas, and WebGL batchers.
 
 ### Added
-- **`renderer.toFrameTexture()`** — GPU capture of everything drawn so far, as a live `Texture2d` for shader input (back-buffer-copy semantics; Canvas parity via an offscreen copy). Closes [#1544](https://github.com/melonjs/melonJS/issues/1544) (initial approach contributed by the melonJS editor team)
-- **Shader builtins: `screen_texture` / `screen_uv` / `noise_uv`** — annotate a sampler with `: screen_texture` and the engine keeps it filled with the screen behind the object; `screen_uv` / `noise_uv` are free varyings for screen-space and frame-local (atlas-independent) coordinates. No JS plumbing, fully backward compatible. See the new **Water Overworld** example (design and demo scene contributed by the melonJS editor team)
+- **`renderer.toFrameTexture()`** — GPU capture of everything drawn so far, as a live `Texture2d` for shader input (back-buffer-copy semantics; Canvas parity via an offscreen copy). Closes [#1544](https://github.com/melonjs/melonJS/issues/1544) (initial approach contributed by @Vareniel)
+- **Shader builtins: `screen_texture` / `screen_uv` / `noise_uv`** — annotate a sampler with `: screen_texture` and the engine keeps it filled with the screen behind the object; `screen_uv` / `noise_uv` are free varyings for screen-space and frame-local (atlas-independent) coordinates. No JS plumbing, fully backward compatible. See the new **Water Overworld** example (design and demo scene contributed by @Vareniel)
 - **Shader preloading: `"shader"` asset type + `loader.getShader()` + `clone()`** — GLSL compiles at load time; `getShader()` returns the shared, loader-owned instance (`clone()` for per-renderable uniform values). A `{vertex, fragment}` pair compiles into a shared raw `GLShader` instead, for `Mesh` / custom-batcher shaders
 - **`ShaderEffect.setTexture(name, image[, repeat])`** — bind extra `sampler2D` textures (noise, masks, LUTs) to an effect with no GL plumbing; see the reworked **Water Refraction** example. Closes [#1532](https://github.com/melonjs/melonJS/issues/1532) (thanks @Vareniel)
 - **`ShaderEffect.setTime(seconds)`** — one-call `uTime` convention for shader animation; a safe no-op when the shader doesn't declare it
@@ -18,7 +18,7 @@
 - **BMFont XML support for `BitmapText`** — the AngelCode XML flavour loads directly through the standard preloader, auto-detected alongside the text `.fnt` format
 
 ### Fixed
-- Asset loading failed over the `file:` protocol (Cordova/Capacitor APK) — `fetchData` now falls back to `XMLHttpRequest` where `fetch()` refuses `file://` (thanks to the melonJS editor team)
+- Asset loading failed over the `file:` protocol (Cordova/Capacitor APK) — `fetchData` now falls back to `XMLHttpRequest` where `fetch()` refuses `file://` (thanks @Vareniel)
 - `loader.unloadAll()` threw if a fontface was loaded, and never actually freed videos
 - `loader.load()` mutated the caller's asset descriptor, double-prepending `baseURL` on retries; `loader.unload()` of a never-loaded fontface threw
 - Video preloading hung on autoplay-restricted browsers (e.g. iOS Safari) unless `autoplay: false` was spelled out, and every video was fetched with forced anonymous CORS
