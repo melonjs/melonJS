@@ -637,10 +637,15 @@ export function getParentBounds(element: string | HTMLElement) {
 }
 
 /**
- * returns true if the device supports WebGL
+ * Returns true if the device supports WebGL 2 — the version the WebGL
+ * renderer requires since 20.0. This probes the same context type that
+ * renderer construction requests, so the two can never disagree.
+ *
+ * When it returns false, `renderer: video.AUTO` falls back to the Canvas
+ * renderer and `renderer: video.WEBGL` throws at construction time.
  * @param [options] - context creation options
- * @param [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
- * @returns true if WebGL is supported
+ * @param [options.failIfMajorPerformanceCaveat=true] - if true, report WebGL as unsupported when the browser warns that a context would perform dramatically worse than a native application (e.g. a software rasterizer). Set false to accept WebGL on blocklisted drivers or software renderers.
+ * @returns true if WebGL 2 is supported
  * @category Application
  */
 export function isWebGLSupported(options?: {

@@ -181,9 +181,15 @@ export type ApplicationSettings = {
 	 */
 	gpuTilemap: boolean;
 	/**
-	 * if true, the renderer will fail if the browser reports a major performance caveat
-	 * (e.g. software WebGL). Set to false to allow WebGL on machines with
-	 * blocklisted GPU drivers or software renderers.
+	 * If true, treat WebGL as unavailable when the browser warns that a
+	 * context would perform dramatically worse than a native application
+	 * (a software rasterizer, a blocklisted driver). Note this is stricter
+	 * than the WebGL default, which is `false`.
+	 *
+	 * Combined with the WebGL 2 requirement, the effect is: under
+	 * {@link AUTO} such a machine gets the Canvas renderer, and under
+	 * {@link WEBGL} construction throws. Set to `false` to accept a
+	 * software or blocklisted WebGL context instead.
 	 * @default true
 	 */
 	failIfMajorPerformanceCaveat: boolean;
