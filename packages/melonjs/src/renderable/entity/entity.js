@@ -388,8 +388,10 @@ export default class Entity extends Renderable {
 			this.children.splice(0, 1);
 		}
 
-		// call the parent destroy method
-		super.destroy(arguments);
+		// call the parent destroy method, spreading the actual arguments —
+		// passing the `arguments` object itself would hand subclasses'
+		// `onDestroyEvent(app)` an Arguments wrapper instead of the value
+		super.destroy(...arguments);
 	}
 
 	/**

@@ -154,11 +154,15 @@ export default class NineSliceSprite extends Sprite {
 		const corner_width = this.insetx || w / 4;
 		const corner_height = this.insety || h / 4;
 
-		const image_center_width = w - (corner_width << 1);
-		const image_center_height = h - (corner_height << 1);
+		// `* 2`, not `<< 1`: corners default to w/4 which is fractional for
+		// widths not divisible by 4, and the bit-shift truncates to int32 —
+		// desyncing the center-slice size from the un-truncated corner
+		// offsets below (up to ~2px of seam/bleed on the stretched panel)
+		const image_center_width = w - corner_width * 2;
+		const image_center_height = h - corner_height * 2;
 
-		const target_center_width = this.nss_width - (corner_width << 1);
-		const target_center_height = this.nss_height - (corner_height << 1);
+		const target_center_width = this.nss_width - corner_width * 2;
+		const target_center_height = this.nss_height - corner_height * 2;
 
 		// The 9-slice grid is separable per axis: each column/row is an unscaled
 		// corner, a stretched center, then an unscaled corner. Fill the shared

@@ -55,16 +55,45 @@ export function onresize(game: Application): void {
 			canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
 		}
 
+		let measuredElement;
 		if (typeof game.settings.scaleTarget !== "undefined") {
 			// get the bounds of the given scale target
-			nodeBounds = device.getElementBounds(game.settings.scaleTarget);
+			measuredElement = game.settings.scaleTarget;
+			nodeBounds = device.getElementBounds(measuredElement);
 		} else {
 			// get the maximum canvas size within the parent div containing the canvas container
-			nodeBounds = device.getParentBounds(game.getParentElement());
+			measuredElement = device.getParentElement(game.getParentElement());
+			nodeBounds = device.getElementBounds(measuredElement);
 		}
 
-		const _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
-		const _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
+		let availWidth = nodeBounds.width;
+		let availHeight = nodeBounds.height;
+		// The space available to a child is the measured element's CONTENT
+		// box; `getBoundingClientRect` returns the border box. On an
+		// auto-sized container the difference (padding + border) gets baked
+		// into the canvas size and re-measured on the next pass — growing
+		// the canvas by that amount on every resize event (#1231). The
+		// window-fallback path (string target / document.body) has no
+		// padding concept and is left untouched.
+		if (
+			typeof measuredElement === "object" &&
+			typeof globalThis.getComputedStyle === "function"
+		) {
+			const style = globalThis.getComputedStyle(measuredElement);
+			availWidth -=
+				(parseFloat(style.paddingLeft) || 0) +
+				(parseFloat(style.paddingRight) || 0) +
+				(parseFloat(style.borderLeftWidth) || 0) +
+				(parseFloat(style.borderRightWidth) || 0);
+			availHeight -=
+				(parseFloat(style.paddingTop) || 0) +
+				(parseFloat(style.paddingBottom) || 0) +
+				(parseFloat(style.borderTopWidth) || 0) +
+				(parseFloat(style.borderBottomWidth) || 0);
+		}
+
+		const _max_width = Math.min(canvasMaxWidth, Math.max(0, availWidth));
+		const _max_height = Math.min(canvasMaxHeight, Math.max(0, availHeight));
 
 		// calculate final canvas width & height
 		const screenRatio = _max_width / _max_height;

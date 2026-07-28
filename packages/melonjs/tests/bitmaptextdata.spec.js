@@ -182,15 +182,18 @@ for (const format of ["text", "xml"]) {
 			expect(g.id).toBe(8364);
 		});
 
-		it("maps padding to top / left / bottom / right in order", () => {
+		it("maps padding in AngelCode order: up, right, down, left", () => {
+			// the previous version of this test codified a parser bug — it
+			// asserted padLeft received AngelCode's RIGHT value (index 1) and
+			// padRight the LEFT value (index 3); BMFont padding is T/R/B/L
 			const d = font({
 				padding: "1,2,3,4",
 				chars: [{ id: 65, width: 6, height: 10, xadvance: 6 }],
 			});
 			expect(d.padTop).toBe(1);
-			expect(d.padLeft).toBe(2);
+			expect(d.padRight).toBe(2);
 			expect(d.padBottom).toBe(3);
-			expect(d.padRight).toBe(4);
+			expect(d.padLeft).toBe(4);
 		});
 
 		it("stores positive AND negative kerning amounts", () => {

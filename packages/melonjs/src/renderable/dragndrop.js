@@ -57,7 +57,7 @@ export class DropTarget extends Renderable {
 	setCheckMethod(checkMethod) {
 		//  We can improve this check,
 		//  because now you can use every method in theory
-		if (typeof this.getBounds()[this.checkMethod] === "function") {
+		if (typeof this.getBounds()[checkMethod] === "function") {
 			this.checkMethod = checkMethod;
 		}
 	}

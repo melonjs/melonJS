@@ -160,80 +160,82 @@ const CONSUMERS = [
 	},
 ];
 
-describe.each(CONSUMERS)("settings.anchorPoint on $name", ({
-	make,
-	defaults,
-	throws,
-}) => {
-	it('resolves the "bottom" preset to (0.5, 1)', () => {
-		const r = make("bottom");
-		expect(r.anchorPoint.x).toBe(0.5);
-		expect(r.anchorPoint.y).toBe(1);
-	});
-
-	it('resolves the "top-left" preset to (0, 0)', () => {
-		const r = make("top-left");
-		expect(r.anchorPoint.x).toBe(0);
-		expect(r.anchorPoint.y).toBe(0);
-	});
-
-	it("a preset and its equivalent {x, y} object land identically", () => {
-		const a = make("bottom");
-		const b = make({ x: 0.5, y: 1 });
-		expect(a.anchorPoint.x).toBe(b.anchorPoint.x);
-		expect(a.anchorPoint.y).toBe(b.anchorPoint.y);
-	});
-
-	it("still accepts a Vector2d instance (back-compat)", () => {
-		const r = make(new Vector2d(0.25, 0.75));
-		expect(r.anchorPoint.x).toBe(0.25);
-		expect(r.anchorPoint.y).toBe(0.75);
-	});
-
-	it("out-of-range values pass through unclamped (back-compat)", () => {
-		const r = make({ x: -0.5, y: 2 });
-		expect(r.anchorPoint.x).toBe(-0.5);
-		expect(r.anchorPoint.y).toBe(2);
-	});
-
-	it("the default is preserved when no anchorPoint is given", () => {
-		const r = make(undefined);
-		expect(r.anchorPoint.x).toBe(defaults.x);
-		expect(r.anchorPoint.y).toBe(defaults.y);
-	});
-
-	const garbage = [
-		["an unknown preset", "botom"],
-		["a wrong-cased key object", { X: 1, Y: 1 }],
-		["a string-valued object", { x: "1", y: "1" }],
-		["a NaN component", { x: Number.NaN, y: 1 }],
-	];
-
-	if (throws) {
-		it.each(garbage)("throws on %s (new API surface)", (_label, value) => {
-			expect(() => {
-				make(value);
-			}).toThrow();
+describe.each(CONSUMERS)(
+	"settings.anchorPoint on $name",
+	({ make, defaults, throws }) => {
+		it('resolves the "bottom" preset to (0.5, 1)', () => {
+			const r = make("bottom");
+			expect(r.anchorPoint.x).toBe(0.5);
+			expect(r.anchorPoint.y).toBe(1);
 		});
-	} else {
-		it.each(
-			garbage,
-		)("warns and keeps the legacy (0, 0) outcome on %s — never throws", (_label, value) => {
-			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			try {
-				let r;
+
+		it('resolves the "top-left" preset to (0, 0)', () => {
+			const r = make("top-left");
+			expect(r.anchorPoint.x).toBe(0);
+			expect(r.anchorPoint.y).toBe(0);
+		});
+
+		it("a preset and its equivalent {x, y} object land identically", () => {
+			const a = make("bottom");
+			const b = make({ x: 0.5, y: 1 });
+			expect(a.anchorPoint.x).toBe(b.anchorPoint.x);
+			expect(a.anchorPoint.y).toBe(b.anchorPoint.y);
+		});
+
+		it("still accepts a Vector2d instance (back-compat)", () => {
+			const r = make(new Vector2d(0.25, 0.75));
+			expect(r.anchorPoint.x).toBe(0.25);
+			expect(r.anchorPoint.y).toBe(0.75);
+		});
+
+		it("out-of-range values pass through unclamped (back-compat)", () => {
+			const r = make({ x: -0.5, y: 2 });
+			expect(r.anchorPoint.x).toBe(-0.5);
+			expect(r.anchorPoint.y).toBe(2);
+		});
+
+		it("the default is preserved when no anchorPoint is given", () => {
+			const r = make(undefined);
+			expect(r.anchorPoint.x).toBe(defaults.x);
+			expect(r.anchorPoint.y).toBe(defaults.y);
+		});
+
+		const garbage = [
+			["an unknown preset", "botom"],
+			["a wrong-cased key object", { X: 1, Y: 1 }],
+			["a string-valued object", { x: "1", y: "1" }],
+			["a NaN component", { x: Number.NaN, y: 1 }],
+		];
+
+		if (throws) {
+			it.each(garbage)("throws on %s (new API surface)", (_label, value) => {
 				expect(() => {
-					r = make(value);
-				}).not.toThrow();
-				expect(r.anchorPoint.x).toBe(0);
-				expect(r.anchorPoint.y).toBe(0);
-				expect(warnSpy).toHaveBeenCalled();
-			} finally {
-				warnSpy.mockRestore();
-			}
-		});
-	}
-});
+					make(value);
+				}).toThrow();
+			});
+		} else {
+			it.each(garbage)(
+				"warns and keeps the legacy (0, 0) outcome on %s — never throws",
+				(_label, value) => {
+					const warnSpy = vi
+						.spyOn(console, "warn")
+						.mockImplementation(() => {});
+					try {
+						let r;
+						expect(() => {
+							r = make(value);
+						}).not.toThrow();
+						expect(r.anchorPoint.x).toBe(0);
+						expect(r.anchorPoint.y).toBe(0);
+						expect(warnSpy).toHaveBeenCalled();
+					} finally {
+						warnSpy.mockRestore();
+					}
+				},
+			);
+		}
+	},
+);
 
 describe("ImageLayer bare-number shorthand", () => {
 	it("anchorPoint: 0.3 anchors both axes and never reaches the strict resolver", () => {

@@ -81,18 +81,24 @@ describe("Texture", () => {
 			expect(retrieved).toBe(entry1);
 		});
 
-		it("should retrieve specific atlas by frame dimensions", () => {
+		it("returns the first registered atlas regardless of frame dimensions (#1489)", () => {
 			const canvas = new CanvasTexture(64, 64);
 			// auto-create default atlas (full image: 64x64)
 			const defaultEntry = cache.get(canvas.canvas);
 			expect(defaultEntry).toBeDefined();
 
-			// request with a specific atlas frame size that matches
-			const entry = cache.get(canvas.canvas, {
-				framewidth: 64,
-				frameheight: 64,
-			});
-			expect(entry).toBeDefined();
+			// Codifies the single-result contract: the frame-dimension
+			// "refinement" documented on get() was dead code for years (the
+			// compared properties were never set — see #1489), so a frame
+			// size — matching or not — must return the SAME first atlas.
+			// Changing this to real multi-atlas selection is a #1410 design
+			// decision, and this test failing is the intended tripwire.
+			expect(
+				cache.get(canvas.canvas, { framewidth: 64, frameheight: 64 }),
+			).toBe(defaultEntry);
+			expect(
+				cache.get(canvas.canvas, { framewidth: 32, frameheight: 16 }),
+			).toBe(defaultEntry);
 		});
 
 		it("should keep different images as separate cache entries", () => {
@@ -356,6 +362,12 @@ describe("Texture", () => {
 				ctx.skip("WebGL-only — Canvas createPattern doesn't allocate GL units");
 				return;
 			}
+			// start from a drained unit pool: the 50 sibling tests above can
+			// leave it near exhaustion, and an exhaustion reset firing INSIDE
+			// createPattern below would clear `usedUnits` mid-test and break
+			// the +1 arithmetic (engine behavior is by-design; the test must
+			// simply not straddle a reset)
+			video.renderer.cache.resetUnitAssignments();
 			const canvas = new CanvasTexture(32, 32);
 
 			// create initial pattern

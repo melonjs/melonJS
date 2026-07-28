@@ -500,6 +500,17 @@ export default class ShaderEffect {
 	 * water.setTime(me.timer.getTime() / 1000);
 	 */
 	setTexture(name, image, repeat = "no-repeat") {
+		// Explicitly reject HTMLVideoElement — it duck-types past the static
+		// upload path, which uploads ONCE (`entry.tex === null` guard in
+		// _prepareTextures) and would silently freeze the sampler on the
+		// video's first frame. Same contract as Sprite.normalMap. Checked
+		// before the Canvas/destroyed no-op guard so the error is raised
+		// consistently under every renderer.
+		if (typeof image?.videoWidth === "number") {
+			throw new TypeError(
+				"ShaderEffect.setTexture does not support HTMLVideoElement (extra textures upload once and would freeze on the first frame)",
+			);
+		}
 		// Canvas stub (no shader) and destroyed effects: keep the inert no-op
 		if (typeof this._shader === "undefined" || this.destroyed === true) {
 			return this;

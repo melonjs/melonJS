@@ -191,7 +191,10 @@ export default class BitmapText extends Renderable {
 			if (!Array.isArray(value)) {
 				this._text = ("" + value).split("\n");
 			} else {
-				this._text = value;
+				// copy — storing the caller's array by reference would let
+				// destroy() (`_text.length = 0`) wipe it, and external
+				// mutation would change the rendered text without isDirty
+				this._text = value.slice();
 			}
 			this.isDirty = true;
 		}

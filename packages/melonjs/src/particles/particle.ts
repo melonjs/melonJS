@@ -156,8 +156,16 @@ export default class Particle extends Renderable {
 
 		if (this.alive && this.life <= 0) {
 			const parent = this.ancestor as Container;
-			// use true for keepalive since we recycle the instance directly here after
-			parent.removeChild(this, true);
+			// IMMEDIATE removal (not the deferred `removeChild`) because the
+			// instance is released to the pool on the next line: a deferred
+			// removal leaves a stale `removeChildNow` pending against this
+			// instance, so a same-frame respawn recycling it would be
+			// silently killed by that timer, and a same-frame emitter
+			// teardown would destroy an instance already sitting in the
+			// pool (poisoning every later `particlePool.get()`). The
+			// immediate splice is safe here — `Container.update` walks its
+			// children in reverse. keepalive=true since we recycle directly.
+			parent.removeChildNow(this, true);
 			particlePool.release(this);
 			this.alive = false;
 			return false;

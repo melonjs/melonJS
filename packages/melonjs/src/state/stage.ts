@@ -383,6 +383,20 @@ export default class Stage {
 	 * @ignore
 	 */
 	destroy(app: Application): void {
+		// destroy the cameras this stage constructed (the fresh per-stage
+		// `cameraClass` instances) — without this, every state switch leaks
+		// a zombie camera still subscribed to GAME_RESET/CANVAS_ONRESIZE.
+		// NOT stage-owned (so not destroyed here): user instances from
+		// `settings.cameras` (re-added from settings on the next reset) and
+		// the shared module-level Camera2d singleton (reused across stages)
+		this.cameras.forEach((camera) => {
+			if (
+				camera !== default_camera &&
+				!this.settings.cameras.includes(camera)
+			) {
+				camera.destroy();
+			}
+		});
 		// clear all cameras
 		this.cameras.clear();
 		// clear all lights — Light2d.onDeactivateEvent will deregister each

@@ -1,5 +1,29 @@
 # Changelog
 
+## [19.9.1] (melonJS 2) - _2026-07-28_
+
+### Fixed
+- video sprite frames stalled (~4fps) in fullscreen — a pending `requestVideoFrameCallback` now keeps the browser delivering frames at full rate
+- video sprites never paused on `state.pause()` (wrong event name)
+- `onVisibilityChange` fired a spurious leave/enter pair every frame for visible renderables
+- destroyed cameras kept reacting to game reset / canvas resize; stages now destroy the cameras they construct (one leaked per state switch with `cameraClass`)
+- camera bounds clamp ignored a non-zero world origin, making the far edges unreachable
+- dead particles were pool-released while their removal was still deferred — same-frame respawns could silently vanish
+- a completed `loop: false` animation could never be replayed via `play()` / `setCurrentAnimation()`
+- animation frames with a `0` delay froze the game in an infinite loop
+- `Container` / `Entity` `destroy()` passed an `Arguments` object to `onDestroyEvent` instead of the actual arguments
+- `DropTarget.setCheckMethod()` accepted invalid method names (validated the wrong variable)
+- `Container.getNextChild()` returned the first child for a non-member instead of `undefined`
+- `Text` / `BitmapText` `destroy()` wiped a caller-provided string array (now copied on assignment)
+- `NineSliceSprite` showed ~2px seams for region sizes not divisible by 4 (fractional corners were truncated)
+- the canvas slowly grew on window resize inside auto-sized wrappers ([#1231](https://github.com/melonjs/melonJS/issues/1231)) — the canvas now defaults to `display: block` and auto-scale measures the container's content box
+- `ShaderEffect.setTexture()` rejects `HTMLVideoElement` with a `TypeError` instead of silently freezing on the first frame
+- BMFont `padding` was parsed with `padLeft` / `padRight` swapped (AngelCode order is up/right/down/left)
+- removed the texture cache's dead frame-dimension refinement ([#1489](https://github.com/melonjs/melonJS/issues/1489)); the first-registered-atlas behavior is now explicit
+
+### Performance
+- video textures upload to the GPU only when a new frame was actually presented (previously every render tick, per sprite)
+
 ## [19.9.0] (melonJS 2) - _2026-07-14_
 
 **Highlights:** shader effects made easy. Effects that used to demand WebGL expertise, like a pond rippling with the scene reflected in it, heat haze, or frosted glass, now take a few lines of shader code: the engine hands your effect the screen behind it and the right coordinates, animated noise textures come built-in, and shaders preload like any other asset. See the new **Water Overworld** example for all of it in action. Also in this release: named anchor presets (`"bottom"`, `"top-left"`, and friends) on every renderable, shapes with holes in `Path2D`/SVG fills, and a 40+ bug-fix sweep across the loader, audio, texture atlas, and WebGL rendering.
