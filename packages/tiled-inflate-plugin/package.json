@@ -45,14 +45,14 @@
 	},
 	"dependencies": {
 		"fzstd": "^0.1.1",
-		"js-base64": "^3.8.1",
+		"js-base64": "^3.9.1",
 		"pako": "^2.1.0"
 	},
 	"devDependencies": {
 		"esbuild": "^0.27.4",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
-		"tsx": "^4.23.0",
+		"tsx": "^4.23.1",
 		"typescript": "^6.0.2"
 	},
 	"scripts": {

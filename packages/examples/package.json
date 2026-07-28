@@ -16,14 +16,14 @@
 		"@melonjs/tiled-inflate-plugin": "workspace:*",
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^6.0.3",
+		"@vitejs/plugin-react": "^6.0.4",
 		"ace-builds": "^1.44.0",
 		"melonjs": "workspace:^",
-		"react": "^19.2.7",
-		"react-dom": "^19.2.7",
+		"react": "^19.2.8",
+		"react-dom": "^19.2.8",
 		"react-router-dom": "^7.18.1",
 		"tsconfig": "workspace:^",
 		"typescript": "^6.0.2",
-		"vite": "8.0.16"
+		"vite": "8.1.5"
 	}
 }
