@@ -14,6 +14,7 @@ import {
 	CANVAS_ONRESIZE,
 	emit,
 	GAME_RESET,
+	off,
 	on,
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
@@ -322,9 +323,12 @@ export default class Camera2d extends Renderable {
 	_followH(target: Vector2d | Vector3d): number {
 		let targetX = this.pos.x;
 		if (target.x - this.pos.x > this.deadzone.right) {
+			// clamp against the bounds' right EDGE — `bounds.width` is
+			// `right - left`, so using it as a max only worked for a
+			// zero-origin world and cut `left` px off the far side
 			targetX = Math.min(
 				target.x - this.deadzone.right,
-				this.bounds.width - this.width,
+				this.bounds.right - this.width,
 			);
 		} else if (target.x - this.pos.x < this.deadzone.pos.x) {
 			targetX = Math.max(target.x - this.deadzone.pos.x, this.bounds.left);
@@ -338,7 +342,7 @@ export default class Camera2d extends Renderable {
 		if (target.y - this.pos.y > this.deadzone.bottom) {
 			targetY = Math.min(
 				target.y - this.deadzone.bottom,
-				this.bounds.height - this.height,
+				this.bounds.bottom - this.height,
 			);
 		} else if (target.y - this.pos.y < this.deadzone.pos.y) {
 			targetY = Math.max(target.y - this.deadzone.pos.y, this.bounds.top);
@@ -591,8 +595,10 @@ export default class Camera2d extends Renderable {
 		const _x = this.pos.x;
 		const _y = this.pos.y;
 
-		this.pos.x = clamp(x, this.bounds.left, this.bounds.width - this.width);
-		this.pos.y = clamp(y, this.bounds.top, this.bounds.height - this.height);
+		// clamp against the bounds' far edges — `bounds.width/height` are
+		// extents (`right - left`), correct as a max only for a zero origin
+		this.pos.x = clamp(x, this.bounds.left, this.bounds.right - this.width);
+		this.pos.y = clamp(y, this.bounds.top, this.bounds.bottom - this.height);
 
 		//publish the VIEWPORT_ONCHANGE event if necessary
 		if (_x !== this.pos.x || _y !== this.pos.y) {
@@ -1106,6 +1112,14 @@ export default class Camera2d extends Renderable {
 	 * @ignore
 	 */
 	override destroy(): void {
+		// unsubscribe the constructor-registered global listeners — without
+		// this a destroyed camera stays reachable forever and keeps reacting
+		// to GAME_RESET (TypeError on freed state) and CANVAS_ONRESIZE
+		// (duplicate VIEWPORT_ONRESIZE emits from zombie cameras)
+		/* eslint-disable @typescript-eslint/unbound-method -- listener identity must match the `on(...)` registration */
+		off(GAME_RESET, this.reset, this);
+		off(CANVAS_ONRESIZE, this.resize, this);
+		/* eslint-enable @typescript-eslint/unbound-method */
 		// clean up the internal colorMatrix effect (may not be in postEffects if identity)
 		if (this._colorMatrixEffect) {
 			if (typeof this._colorMatrixEffect.destroy === "function") {

@@ -2,7 +2,7 @@ import { game } from "../application/application.ts";
 import { getImage } from "./../loader/loader.js";
 import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
-import { on } from "../system/event.ts";
+import { on, STATE_PAUSE } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
 import { resolveAnchorPoint } from "./anchorPoint.ts";
@@ -194,9 +194,33 @@ export default class Sprite extends Renderable {
 				 * pause the video when losing focus
 				 * @ignore
 				 */
-				this.removeStatePauseListener = on("statePause", () => {
+				this.removeStatePauseListener = on(STATE_PAUSE, () => {
 					this.image.pause();
 				});
+
+				// Keep a video-frame callback pending while this sprite is
+				// alive: Chromium parks detached (never-in-DOM) videos on a
+				// ~250ms background timer when the page compositor idles
+				// (e.g. fullscreen direct scanout) — a pending rVFC forces
+				// full-rate frame delivery. The callback also stamps a
+				// monotonic frame counter on the element (the same
+				// duck-typed `version` convention as NoiseTexture2d) so
+				// update()/drawImage only repaint/re-upload when a frame
+				// actually arrived. Browsers without rVFC never get the
+				// stamp and stay on the legacy repaint-while-playing path.
+				this._lastVideoFrameVersion = -1;
+				if (typeof this.image.requestVideoFrameCallback === "function") {
+					this.image.version ??= 0;
+					const tick = () => {
+						// self-healing bump (never a bare `++`): a sharing
+						// sprite's destroy() deletes the stamp, and
+						// `undefined++` would poison the counter with NaN
+						// (NaN !== NaN → permanently dirty + re-uploading)
+						this.image.version = (this.image.version ?? -1) + 1;
+						this._videoFrameHandle = this.image.requestVideoFrameCallback(tick);
+					};
+					this._videoFrameHandle = this.image.requestVideoFrameCallback(tick);
+				}
 
 				// call the onended when the video has ended
 				this.image.onended = () => {
@@ -562,7 +586,7 @@ export default class Sprite extends Renderable {
 	 * this.setCurrentAnimation("walk");
 	 *
 	 * // set "walk" animation if it is not the current animation
-	 * if (this.isCurrentAnimation("walk")) {
+	 * if (!this.isCurrentAnimation("walk")) {
 	 *     this.setCurrentAnimation("walk");
 	 * }
 	 *
@@ -740,7 +764,20 @@ export default class Sprite extends Renderable {
 			} else if (this.image.paused) {
 				this.image.play();
 			}
-			this.isDirty = !this.image.paused;
+			// set-only (never assign false — that would stomp a dirty flag
+			// set earlier in the tick, e.g. by a tween on a paused sprite)
+			if (this.image.version === undefined) {
+				// no rVFC tracking (old browsers): repaint while playing
+				if (!this.image.paused) {
+					this.isDirty = true;
+				}
+			} else if (this.image.version !== this._lastVideoFrameVersion) {
+				// a new frame was presented since we last looked; deliberately
+				// not gated on `paused` so a seek while paused (stop() rewind)
+				// still repaints with the presented frame
+				this._lastVideoFrameVersion = this.image.version;
+				this.isDirty = true;
+			}
 		} else {
 			// advance the shared frame-animation engine; a frame change marks this
 			// sprite dirty via `_applyFrame` (the engine owns no dirty flag)
@@ -864,6 +901,14 @@ export default class Sprite extends Renderable {
 		this.offset = undefined;
 		if (this.isVideo) {
 			this.removeStatePauseListener();
+			if (typeof this._videoFrameHandle !== "undefined") {
+				this.image.cancelVideoFrameCallback(this._videoFrameHandle);
+				// drop the frame-counter stamp so a later non-Sprite consumer
+				// (manual renderer.drawImage) gets the legacy per-frame upload
+				// path back; a still-alive sprite sharing this element simply
+				// re-stamps on its next presented frame
+				delete this.image.version;
+			}
 			this.image.onended = undefined;
 			this.image.pause();
 			this.image.currentTime = 0;

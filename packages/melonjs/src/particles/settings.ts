@@ -159,7 +159,9 @@ export interface ParticleEmitterSettings {
 	blendMode: string;
 
 	/**
-	 * Update particles only in the viewport; remove when out of viewport.
+	 * Only repaint particles while they are inside the viewport (off-screen
+	 * particles keep simulating and living out their lifetime, but do not
+	 * mark the scene dirty).
 	 * @default true
 	 */
 	onlyInViewport: boolean;

@@ -254,20 +254,15 @@ class TextureCache {
 	 * return the textureAltas for the given image
 	 */
 	get(image, atlas) {
+		// Always the FIRST atlas registered for this image. A framewidth/
+		// frameheight-based refinement loop lived here for years but was
+		// provably dead (#1489): it compared top-level `.width`/`.height`
+		// on the parsed atlas dict — properties the parsers never set
+		// (frames are keyed by name) — so it never selected anything else.
+		// Whether multi-atlas selection should exist at all is a design
+		// question deferred to the #1410 cache refactor; the single-result
+		// contract is codified in texture.spec.js.
 		let entry = this.cache.get(image)[0];
-
-		if (typeof entry !== "undefined" && typeof atlas !== "undefined") {
-			this.cache.forEach((value, key) => {
-				const _atlas = value.getAtlas();
-				if (
-					key === image &&
-					_atlas.width === atlas.framewidth &&
-					_atlas.height === atlas.frameheight
-				) {
-					entry = value;
-				}
-			});
-		}
 
 		if (typeof entry === "undefined") {
 			if (!atlas) {

@@ -303,24 +303,19 @@ describe("VertexArrayBuffer", () => {
 			// 9 floats: x, y, z, u, v, r, g, b, a.
 			const MESH_VERTEX_SIZE = 9;
 
-			it.each(
-				NAN_PATTERN_COLORS,
-			)("$name unpacks to RGBA floats in [0, 1] (no NaN possible)", ({
-				tint,
-				b,
-				g,
-				r,
-				a,
-			}) => {
-				const buf = new VertexArrayBuffer(MESH_VERTEX_SIZE, 4);
-				buf.pushMesh(0, 0, 0, 0, 0, tint);
+			it.each(NAN_PATTERN_COLORS)(
+				"$name unpacks to RGBA floats in [0, 1] (no NaN possible)",
+				({ tint, b, g, r, a }) => {
+					const buf = new VertexArrayBuffer(MESH_VERTEX_SIZE, 4);
+					buf.pushMesh(0, 0, 0, 0, 0, tint);
 
-				// Color floats sit at offsets 5..8 of the first vertex.
-				expect(buf.bufferF32[5]).toBeCloseTo(r / 255, 5);
-				expect(buf.bufferF32[6]).toBeCloseTo(g / 255, 5);
-				expect(buf.bufferF32[7]).toBeCloseTo(b / 255, 5);
-				expect(buf.bufferF32[8]).toBeCloseTo(a / 255, 5);
-			});
+					// Color floats sit at offsets 5..8 of the first vertex.
+					expect(buf.bufferF32[5]).toBeCloseTo(r / 255, 5);
+					expect(buf.bufferF32[6]).toBeCloseTo(g / 255, 5);
+					expect(buf.bufferF32[7]).toBeCloseTo(b / 255, 5);
+					expect(buf.bufferF32[8]).toBeCloseTo(a / 255, 5);
+				},
+			);
 
 			it("never produces a NaN float for any of the historical NaN-pattern packed colors", () => {
 				// The whole point of the FLOAT × 4 path: by writing
@@ -398,30 +393,25 @@ describe("VertexArrayBuffer", () => {
 			// wrote, AND the byte view sees the same little-endian
 			// layout the GPU's `UNSIGNED_BYTE × 4 normalized` aColor
 			// attribute expects.
-			it.each(
-				NAN_PATTERN_COLORS,
-			)("$name round-trips through the Uint32 view AND lays out bytes the GPU expects", ({
-				tint,
-				b,
-				g,
-				r,
-				a,
-			}) => {
-				// vertexSize=6: x, y, z, u, v, color (sprite format).
-				const buf = new VertexArrayBuffer(6, 4);
-				buf.push(0, 0, 0, 0, 0, tint);
+			it.each(NAN_PATTERN_COLORS)(
+				"$name round-trips through the Uint32 view AND lays out bytes the GPU expects",
+				({ tint, b, g, r, a }) => {
+					// vertexSize=6: x, y, z, u, v, color (sprite format).
+					const buf = new VertexArrayBuffer(6, 4);
+					buf.push(0, 0, 0, 0, 0, tint);
 
-				// The exact packed value sits at the Uint32 slot
-				expect(buf.bufferU32[5]).toBe(tint);
+					// The exact packed value sits at the Uint32 slot
+					expect(buf.bufferU32[5]).toBe(tint);
 
-				// Little-endian byte layout: B, G, R, A — matches
-				// what the GPU's UNSIGNED_BYTE × 4 attribute reads.
-				const byteOffset = 5 * 4;
-				expect(buf.bufferU8[byteOffset]).toBe(b);
-				expect(buf.bufferU8[byteOffset + 1]).toBe(g);
-				expect(buf.bufferU8[byteOffset + 2]).toBe(r);
-				expect(buf.bufferU8[byteOffset + 3]).toBe(a);
-			});
+					// Little-endian byte layout: B, G, R, A — matches
+					// what the GPU's UNSIGNED_BYTE × 4 attribute reads.
+					const byteOffset = 5 * 4;
+					expect(buf.bufferU8[byteOffset]).toBe(b);
+					expect(buf.bufferU8[byteOffset + 1]).toBe(g);
+					expect(buf.bufferU8[byteOffset + 2]).toBe(r);
+					expect(buf.bufferU8[byteOffset + 3]).toBe(a);
+				},
+			);
 
 			it("textureId slot in vertexSize=7 writes through the float view", () => {
 				// Color sits at slot 5 (Uint32); textureId at slot 6

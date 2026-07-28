@@ -188,10 +188,11 @@ export default class BitmapTextData {
 		}
 		const paddingValues = padding[0].split("=")[1].split(",");
 
+		// AngelCode order is up, RIGHT, down, LEFT (T/R/B/L, like CSS)
 		this.padTop = parseFloat(paddingValues[0]);
-		this.padLeft = parseFloat(paddingValues[1]);
+		this.padRight = parseFloat(paddingValues[1]);
 		this.padBottom = parseFloat(paddingValues[2]);
-		this.padRight = parseFloat(paddingValues[3]);
+		this.padLeft = parseFloat(paddingValues[3]);
 		this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight=\d+/g));
 		const baseLine = parseFloat(getValueFromPair(lines[1], /base=\d+/g));
 
@@ -258,10 +259,11 @@ export default class BitmapTextData {
 
 		// padding is optional in XML exports (e.g. frostyfreeze) → default to 0
 		const pad = (info.get("padding") ?? "0,0,0,0").split(",");
+		// AngelCode order is up, RIGHT, down, LEFT (T/R/B/L, like CSS)
 		this.padTop = parseFloat(pad[0]);
-		this.padLeft = parseFloat(pad[1]);
+		this.padRight = parseFloat(pad[1]);
 		this.padBottom = parseFloat(pad[2]);
-		this.padRight = parseFloat(pad[3]);
+		this.padLeft = parseFloat(pad[3]);
 		this.lineHeight = num(common, "lineHeight");
 		const baseLine = num(common, "base");
 

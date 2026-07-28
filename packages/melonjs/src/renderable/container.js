@@ -578,9 +578,11 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} child
 	 */
 	getNextChild(child) {
-		const index = this.getChildren().indexOf(child) + 1;
-		if (index >= 0 && index < this.getChildren().length) {
-			return this.getChildAt(index);
+		const index = this.getChildren().indexOf(child);
+		// `indexOf` returns -1 for a non-member — without this check the +1
+		// would alias "not found" to index 0 and return the first child
+		if (index !== -1 && index + 1 < this.getChildren().length) {
+			return this.getChildAt(index + 1);
 		}
 		return undefined;
 	}
@@ -1098,8 +1100,10 @@ export default class Container extends Renderable {
 	destroy() {
 		// empty the container
 		this.reset();
-		// call the parent destroy method
-		super.destroy(arguments);
+		// call the parent destroy method, spreading the actual arguments —
+		// passing the `arguments` object itself would hand subclasses'
+		// `onDestroyEvent(app)` an Arguments wrapper instead of the value
+		super.destroy(...arguments);
 
 		colorPool.release(this.backgroundColor);
 	}
@@ -1129,14 +1133,18 @@ export default class Container extends Renderable {
 				globalFloatingCounter++;
 			}
 
-			// check if object is in any active cameras
-			obj.inViewport = false;
+			// check if object is in any active cameras — accumulate into a
+			// local and assign ONCE: assigning `false` then `true` through
+			// the setter would fire `onVisibilityChange` (a change-detecting
+			// setter) twice per frame for every continuously-visible object
+			let inViewport = false;
 			// iterate through all cameras
 			cameras.forEach((camera) => {
 				if (camera.isVisible(obj, isFloating)) {
-					obj.inViewport = true;
+					inViewport = true;
 				}
 			});
+			obj.inViewport = inViewport;
 
 			// update our object
 			this.isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);

@@ -1496,10 +1496,25 @@ export default class WebGLRenderer extends Renderer {
 			shader._prepareTextures?.(this.currentBatcher);
 		}
 
-		// force reuploading if the given image is a HTMLVideoElement or a
-		// force re-upload for video elements
-		const reupload = typeof image.videoWidth !== "undefined";
 		const texture = this.cache.get(image);
+		// Video sources need their GL texture refreshed as the video plays.
+		// When a Sprite tracks the element via requestVideoFrameCallback it
+		// stamps a monotonic `version` counter on it (same duck-typed
+		// convention as NoiseTexture2d) — re-upload only when a new frame was
+		// actually presented, recorded per cached atlas so a shared element
+		// drawn by several sprites uploads once per frame. Without the stamp
+		// (no rVFC support / manual drawImage callers), or on the lit path
+		// (each batcher owns a separate GL texture — one shared record would
+		// go stale across them), keep the legacy per-frame force re-upload.
+		let reupload = false;
+		if (typeof image.videoWidth !== "undefined") {
+			if (image.version === undefined || useLit) {
+				reupload = true;
+			} else if (texture._videoFrameVersion !== image.version) {
+				texture._videoFrameVersion = image.version;
+				reupload = true;
+			}
+		}
 		const uvs = texture.getUVs(sx, sy, sw, sh);
 		if (useLit) {
 			this.currentBatcher.addQuad(

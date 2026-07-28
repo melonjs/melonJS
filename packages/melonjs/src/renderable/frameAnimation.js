@@ -184,7 +184,12 @@ export default class FrameAnimation {
 	 */
 	setCurrentAnimation(name, resetAnim, preserve_dt = false) {
 		if (typeof this.anim[name] !== "undefined") {
-			if (!this.isCurrentAnimation(name)) {
+			// re-selecting the already-current animation is a no-op (so the
+			// common call-every-frame idiom doesn't restart it) — EXCEPT when
+			// a play-once (`loop: false`) run has completed: without the
+			// `_animDone` escape, a finished animation could never be
+			// replayed (`_animDone` stayed set and new options were dropped)
+			if (!this.isCurrentAnimation(name) || this._animDone) {
 				this.current.name = name;
 				this.current.length = this.anim[this.current.name].length;
 				const opts = parseAnimationOptions(resetAnim);
@@ -383,6 +388,14 @@ export default class FrameAnimation {
 				}
 				// Get next frame duration
 				duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+
+				// a zero (or negative) frame delay would never drain `dt` and
+				// spin this loop forever — treat it as "fastest possible":
+				// advance at most one frame per update tick
+				if (duration <= 0) {
+					this.dt = 0;
+					break;
+				}
 			}
 		}
 		return changed;

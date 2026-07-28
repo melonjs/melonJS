@@ -468,7 +468,17 @@ export default class Application {
 		});
 
 		// add our canvas (default to document.body if settings.parent is undefined)
-		this.parentElement.appendChild(this.renderer.getCanvas());
+		const canvas = this.renderer.getCanvas();
+		// the browser default `display: inline` puts the canvas on the text
+		// baseline, so an auto-sized ancestor measures canvas + baseline gap —
+		// and the auto-scale resize path then re-applies that few-px excess on
+		// EVERY resize event (the slow canvas-growth loop of #1231). `block`
+		// removes the gap. Only applied when the canvas carries no explicit
+		// inline display, so user styling stays authoritative.
+		if (canvas.style.display === "") {
+			canvas.style.display = "block";
+		}
+		this.parentElement.appendChild(canvas);
 
 		// Mobile browser hacks
 		if (device.platform.isMobile) {

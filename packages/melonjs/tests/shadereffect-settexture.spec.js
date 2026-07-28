@@ -311,6 +311,22 @@ describe("ShaderEffect value-setting while disabled (audit fix)", () => {
 		});
 	};
 
+	it("rejects an HTMLVideoElement source with a clear TypeError", () => {
+		// extra textures upload ONCE (`entry.tex === null` guard in
+		// _prepareTextures) — a video would silently freeze on its first
+		// frame, so it must be rejected up front (same contract as
+		// Sprite.normalMap). The guard sits before the Canvas/destroyed
+		// no-op, so no WebGL requirement here: it throws under any renderer.
+		const effect = new ShaderEffect(
+			video.renderer,
+			"uniform sampler2D uVid;\nvec4 apply(vec4 color, vec2 uv) { return color; }",
+		);
+		expect(() => {
+			effect.setTexture("uVid", document.createElement("video"));
+		}).toThrow(TypeError);
+		effect.destroy();
+	});
+
 	it("setUniform while USER-disabled applies once re-enabled", (ctx) => {
 		if (!isWebGL) {
 			ctx.skip();
