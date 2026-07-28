@@ -23,8 +23,9 @@ const CLAMP_TO_EDGE = 0x812f;
 const ACTIVE_TEXTURE = 0x84e0;
 const TEXTURE0 = 0x84c0;
 
-// Build a minimal mock gl context. `extras` overrides any default field —
-// the `webGL1` helper omits the WebGL1-undefined `DEPTH_STENCIL_ATTACHMENT`.
+// Build a minimal mock gl context, WebGL2-shaped: the packed depth-stencil
+// constants are always present on a real WebGL 2 context (the WebGL 1
+// missing-constant fallback was removed with WebGL 1 support in 20.0).
 function makeMockGL(extras = {}) {
 	const calls = {
 		renderbufferStorage: [],
@@ -32,7 +33,9 @@ function makeMockGL(extras = {}) {
 		texImage2D: [],
 	};
 	const base = {
-		// constants — the bug's blast radius depends on which are present
+		// constants — always present on a WebGL 2 context
+		DEPTH_STENCIL,
+		DEPTH_STENCIL_ATTACHMENT,
 		RENDERBUFFER,
 		FRAMEBUFFER,
 		FRAMEBUFFER_COMPLETE,
@@ -90,15 +93,13 @@ function makeMockGL(extras = {}) {
 }
 
 describe("WebGLRenderTarget", () => {
-	describe("WebGL1 stencil constant fallbacks", () => {
+	describe("packed depth-stencil attachment", () => {
 		let gl;
 		beforeEach(() => {
-			// WebGL1 worst case: gl context exposes neither DEPTH_STENCIL nor
-			// DEPTH_STENCIL_ATTACHMENT (both `undefined`).
 			gl = makeMockGL();
 		});
 
-		it("falls back to numeric DEPTH_STENCIL (0x84F9) for renderbufferStorage", () => {
+		it("uses the context's DEPTH_STENCIL for renderbufferStorage", () => {
 			const target = new WebGLRenderTarget(gl, 256, 128);
 			expect(target).toBeDefined();
 
@@ -110,7 +111,7 @@ describe("WebGLRenderTarget", () => {
 			expect(call[3]).toBe(128);
 		});
 
-		it("falls back to numeric DEPTH_STENCIL_ATTACHMENT (0x821A) for framebufferRenderbuffer", () => {
+		it("uses the context's DEPTH_STENCIL_ATTACHMENT for framebufferRenderbuffer", () => {
 			const target = new WebGLRenderTarget(gl, 256, 128);
 			expect(target).toBeDefined();
 
@@ -121,8 +122,8 @@ describe("WebGLRenderTarget", () => {
 			expect(call[2]).toBe(RENDERBUFFER);
 		});
 
-		it("uses gl context constants when they are exposed (WebGL2 path)", () => {
-			// WebGL2-style: constants present on the gl object.
+		it("honors whatever constant values the context exposes", () => {
+			// paranoia: values must be read off the context, never hardcoded
 			const webgl2 = makeMockGL({
 				DEPTH_STENCIL: 0x99aa,
 				DEPTH_STENCIL_ATTACHMENT: 0x99bb,
@@ -134,7 +135,7 @@ describe("WebGLRenderTarget", () => {
 			expect(webgl2.__calls.framebufferRenderbuffer[0][1]).toBe(0x99bb);
 		});
 
-		it("resize() reuses the same fallback constant", () => {
+		it("resize() reuses the context constant", () => {
 			const target = new WebGLRenderTarget(gl, 256, 128);
 			gl.__calls.renderbufferStorage.length = 0;
 

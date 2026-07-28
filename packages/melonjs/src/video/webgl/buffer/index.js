@@ -9,7 +9,7 @@ export default class WebGLIndexBuffer extends IndexBuffer {
 	/**
 	 * @param {WebGLRenderingContext|WebGL2RenderingContext} gl - the WebGL context
 	 * @param {number} maxIndices - maximum number of indices this buffer can hold
-	 * @param {boolean} [useUint32=false] - use Uint32 indices (WebGL2) instead of Uint16 (WebGL1)
+	 * @param {boolean} [useUint32=false] - use Uint32 indices instead of Uint16 (a capacity knob — Uint16 keeps index uploads half the size)
 	 */
 	constructor(gl, maxIndices, useUint32 = false) {
 		super(maxIndices, useUint32);

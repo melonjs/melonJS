@@ -62,7 +62,7 @@ describe("Mesh anchor-point leak under Camera3d (glTF prop-sink bug)", () => {
 		}
 		if (
 			video.renderer instanceof WebGLRenderer &&
-			video.renderer.WebGLVersion === 2
+			typeof video.renderer.gl !== "undefined"
 		) {
 			renderer = video.renderer;
 		}

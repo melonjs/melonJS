@@ -100,19 +100,24 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	createIndexBuffer() {
-		// free the previous GL buffer first (reset / context-restore path) —
-		// recreating without deleting orphaned one ~12 KB ELEMENT_ARRAY
-		// buffer per reset until GC collected the wrapper
-		if (this.indexBuffer) {
-			this.indexBuffer.destroy();
-		}
-		const maxQuads = this.vertexData.maxVertex / 4;
-		this.indexBuffer = new IndexBuffer(
-			this.gl,
-			maxQuads * 6,
-			this.renderer.WebGLVersion > 1,
-		);
-		this.indexBuffer.fillQuadPattern(maxQuads);
+		// The ELEMENT_ARRAY_BUFFER binding is vertex-state state, so the
+		// buffer must be created and captured with THIS batcher's vertex
+		// state current — `captureIndexBuffer` owns that protocol (and
+		// restores whatever was bound, so rebuilding a non-current batcher
+		// never disturbs the in-flight one).
+		this.vertexState.captureIndexBuffer(undefined, () => {
+			// free the previous GL buffer first (reset / context-restore
+			// path) — recreating without deleting orphaned one ~12 KB
+			// ELEMENT_ARRAY buffer per reset until GC collected the wrapper
+			if (this.indexBuffer) {
+				this.indexBuffer.destroy();
+			}
+			const maxQuads = this.vertexData.maxVertex / 4;
+			// Uint32 indices — OES_element_index_uint is core in WebGL 2
+			this.indexBuffer = new IndexBuffer(this.gl, maxQuads * 6, true);
+			this.indexBuffer.fillQuadPattern(maxQuads);
+			this.vertexState.descriptor.indexBuffer = this.indexBuffer;
+		});
 	}
 
 	/**
@@ -162,29 +167,21 @@ export default class QuadBatcher extends MaterialBatcher {
 			const gl = this.gl;
 			const vertexSize = vertex.vertexSize;
 
-			// ensure the index buffer is bound
-			this.indexBuffer.bind();
+			// (index buffer binding is captured in the vertex state — no
+			// per-flush rebind)
 
 			// Byte-view upload — keeps packed-color bytes intact across
 			// drivers that canonicalize NaN-pattern Float32 values on
 			// upload (see `VertexArrayBuffer.bufferU8`).
 			const byteLength =
 				vertexCount * vertexSize * Float32Array.BYTES_PER_ELEMENT;
-			if (this.renderer.WebGLVersion > 1) {
-				gl.bufferData(
-					gl.ARRAY_BUFFER,
-					vertex.toUint8(),
-					gl.STREAM_DRAW,
-					0,
-					byteLength,
-				);
-			} else {
-				gl.bufferData(
-					gl.ARRAY_BUFFER,
-					vertex.toUint8(0, byteLength),
-					gl.STREAM_DRAW,
-				);
-			}
+			gl.bufferData(
+				gl.ARRAY_BUFFER,
+				vertex.toUint8(),
+				gl.STREAM_DRAW,
+				0,
+				byteLength,
+			);
 
 			// 4 vertices per quad -> vertexCount/4 quads -> *6 indices per quad
 			const indexCount = (vertexCount / 4) * 6;

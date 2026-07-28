@@ -1,4 +1,3 @@
-import { isPowerOfTwo } from "../../../math/math.ts";
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
 import { Batcher } from "./batcher.js";
 
@@ -105,6 +104,7 @@ export class MaterialBatcher extends Batcher {
 			off(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
 			this._onCacheReset = null;
 		}
+		super.destroy();
 	}
 
 	/**
@@ -149,34 +149,12 @@ export class MaterialBatcher extends Batcher {
 		flush = true,
 	) {
 		const gl = this.gl;
-		const isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
-		const wantsRepeat = repeat !== "no-repeat";
-		const canRepeat = isPOT || this.renderer.WebGLVersion > 1;
+		// WebGL 2: REPEAT wrap and mipmaps work on NPOT textures — no
+		// power-of-two gating (the WebGL 1 clamp-downgrade path is gone)
 		const rs =
-			repeat.search(/^repeat(-x)?$/) === 0 && canRepeat
-				? gl.REPEAT
-				: gl.CLAMP_TO_EDGE;
+			repeat.search(/^repeat(-x)?$/) === 0 ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 		const rt =
-			repeat.search(/^repeat(-y)?$/) === 0 && canRepeat
-				? gl.REPEAT
-				: gl.CLAMP_TO_EDGE;
-
-		// Warn (only when actually downgrading) — the caller asked for tiling
-		// but we have to clamp because WebGL 1 does not allow `REPEAT` on
-		// non-power-of-two textures. Their `repeat: "repeat*"` setting will
-		// have no visible effect. Either resize the source to POT or run on
-		// a WebGL 2 context.
-		if (wantsRepeat && !canRepeat) {
-			console.warn(
-				"melonJS: repeat wrap (" +
-					repeat +
-					") requested on a non-power-of-two texture (" +
-					w +
-					"x" +
-					h +
-					") under WebGL 1 — downgrading to clamp-to-edge",
-			);
-		}
+			repeat.search(/^repeat(-y)?$/) === 0 ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
 		let currentTexture = texture;
 		if (!currentTexture) {
@@ -224,38 +202,37 @@ export class MaterialBatcher extends Batcher {
 					mipmaps[i].data,
 				);
 			}
-		} else if (pixels === null || typeof pixels.byteLength !== "undefined") {
-			if (this.renderer.WebGLVersion > 1) {
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0,
-					gl.RGBA,
-					w,
-					h,
-					0,
-					gl.RGBA,
-					gl.UNSIGNED_BYTE,
-					pixels,
-					0,
-				);
-			} else {
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0,
-					gl.RGBA,
-					w,
-					h,
-					0,
-					gl.RGBA,
-					gl.UNSIGNED_BYTE,
-					pixels,
-				);
-			}
+		} else if (pixels === null) {
+			// allocation without data — srcOffset overload requires a view
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				gl.RGBA,
+				w,
+				h,
+				0,
+				gl.RGBA,
+				gl.UNSIGNED_BYTE,
+				null,
+			);
+		} else if (typeof pixels.byteLength !== "undefined") {
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				gl.RGBA,
+				w,
+				h,
+				0,
+				gl.RGBA,
+				gl.UNSIGNED_BYTE,
+				pixels,
+				0,
+			);
 		} else if (
 			typeof globalThis.OffscreenCanvas !== "undefined" &&
 			pixels instanceof globalThis.OffscreenCanvas
 		) {
-			// WebGL2 (and WebGL1 in modern browsers) accepts an
+			// WebGL2 accepts an
 			// OffscreenCanvas directly as a TexImageSource. The
 			// previous path went through `transferToImageBitmap()`,
 			// which is DESTRUCTIVE — it moves the bitmap out of the
@@ -284,15 +261,12 @@ export class MaterialBatcher extends Batcher {
 			);
 		}
 
+		// WebGL 2 mipmaps NPOT textures fine — no POT gate
 		if (
-			isPOT &&
 			mipmap === true &&
-			pixels !== null &&
-			pixels.compressed !== true &&
-			typeof pixels.upload !== "function"
+			(pixels === null ||
+				(pixels.compressed !== true && typeof pixels.upload !== "function"))
 		) {
-			gl.generateMipmap(gl.TEXTURE_2D);
-		} else if (pixels === null && isPOT && mipmap === true) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
 
@@ -443,7 +417,7 @@ export class MaterialBatcher extends Batcher {
 			// passed the DESTINATION quad size, not the texture size. That
 			// broke the downstream POT check — a 480×1216 atlas drawn into
 			// a 256×256 quad reported `isPOT=true` and tripped
-			// `gl.generateMipmap` on WebGL 1. Always derive the actual
+			// `gl.generateMipmap` POT checks historically. Always derive the actual
 			// texture dimensions from the source, falling back to the
 			// passed-in values only when the source has none.
 			const source = texture.getTexture();

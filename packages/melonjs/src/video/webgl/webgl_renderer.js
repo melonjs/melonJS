@@ -1,5 +1,4 @@
 import { Color, colorPool } from "./../../math/color.ts";
-import { isPowerOfTwo } from "./../../math/math.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
 import { Bounds } from "../../physics/bounds.ts";
 import {
@@ -209,8 +208,8 @@ export default class WebGLRenderer extends Renderer {
 		 */
 		this.batchers = new Map();
 
-		// bind the vertex buffer
-		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+		// (no raw vertex-buffer bind here — each batcher's vertex state
+		// captures its buffers at init, and bind() binds the upload target)
 
 		// Create the default batchers. The lit-aware quad batcher is only
 		// created when no custom batcher override is supplied — its lit
@@ -252,7 +251,10 @@ export default class WebGLRenderer extends Renderer {
 		this.cache = new TextureCache(this, this.maxTextures);
 
 		// set the renderer type
-		this.type = "WebGL" + this.WebGLVersion;
+		this.type = "WebGL2";
+
+		// this backend renders TMX tile layers on the GPU (see TMXLayer)
+		this.supportsShaderTileLayers = true;
 
 		// to simulate context lost and restore in WebGL:
 		// let ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
@@ -272,8 +274,9 @@ export default class WebGLRenderer extends Renderer {
 			"webglcontextrestored",
 			() => {
 				// restore renderer-owned GL state before downstream subscribers run
+				// (no raw bind needed — reset() below re-inits every batcher,
+				// rebuilding their vertex states against this new buffer)
 				this.vertexBuffer = this.gl.createBuffer();
-				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 
 				// driver wipes all GL state on restore; re-apply ours
 				this.gl.disable(this.gl.DEPTH_TEST);
@@ -318,12 +321,13 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * The WebGL version used by this renderer (1 or 2)
+	 * The WebGL version used by this renderer.
 	 * @type {number}
-	 * @default 1
+	 * @default 2
+	 * @deprecated since 20.0.0 — the WebGL renderer is WebGL 2 only, this is always `2`
 	 */
 	get WebGLVersion() {
-		return this.renderTarget.WebGLVersion;
+		return 2;
 	}
 
 	/**
@@ -409,6 +413,12 @@ export default class WebGLRenderer extends Renderer {
 			});
 			this.batchers.clear();
 		}
+		// the shared vertex buffer is renderer-owned (batchers only
+		// reference it), so it is released here rather than per batcher
+		if (this.vertexBuffer) {
+			this.gl.deleteBuffer(this.vertexBuffer);
+			this.vertexBuffer = null;
+		}
 	}
 
 	reset() {
@@ -430,13 +440,6 @@ export default class WebGLRenderer extends Renderer {
 
 		// initial viewport size
 		this.setViewport();
-
-		// rebind the vertex buffer if required (e.g in case of context loss)
-		if (
-			this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer
-		) {
-			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
-		}
 
 		this.currentBatcher = undefined;
 		this.currentProgram = undefined;
@@ -609,8 +612,6 @@ export default class WebGLRenderer extends Renderer {
 				this.currentBatcher.flush();
 				this.currentBatcher.unbind();
 			}
-			// rebind the renderer's shared vertex buffer (custom batchers may have bound their own)
-			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 			this.currentBatcher = batcher;
 			// `bind()` is where each batcher sets up its own GL state
 			// (vertex attributes, plus mode-specific state like depth /
@@ -650,23 +651,6 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	createPattern(image, repeat = "no-repeat") {
 		this.setBatcher("quad");
-
-		if (
-			this.WebGLVersion === 1 &&
-			(!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))
-		) {
-			const src = typeof image.src !== "undefined" ? image.src : image;
-			throw new Error(
-				"[WebGL Renderer] " +
-					src +
-					" is not a POT texture " +
-					"(" +
-					image.width +
-					"x" +
-					image.height +
-					")",
-			);
-		}
 
 		// No band-aid texture cleanup here anymore — the cache's
 		// `(source, repeat)` unit keying (see `TextureCache.getUnit` /
@@ -1853,25 +1837,13 @@ export default class WebGLRenderer extends Renderer {
 					break;
 
 				case "darken":
-					if (this.WebGLVersion > 1) {
-						gl.blendEquation(gl.MIN);
-						gl.blendFunc(gl.ONE, gl.ONE);
-					} else {
-						gl.blendEquation(gl.FUNC_ADD);
-						gl.blendFunc(srcAlpha, gl.ONE_MINUS_SRC_ALPHA);
-						this.currentBlendMode = "normal";
-					}
+					gl.blendEquation(gl.MIN);
+					gl.blendFunc(gl.ONE, gl.ONE);
 					break;
 
 				case "lighten":
-					if (this.WebGLVersion > 1) {
-						gl.blendEquation(gl.MAX);
-						gl.blendFunc(gl.ONE, gl.ONE);
-					} else {
-						gl.blendEquation(gl.FUNC_ADD);
-						gl.blendFunc(srcAlpha, gl.ONE_MINUS_SRC_ALPHA);
-						this.currentBlendMode = "normal";
-					}
+					gl.blendEquation(gl.MAX);
+					gl.blendFunc(gl.ONE, gl.ONE);
 					break;
 
 				default:

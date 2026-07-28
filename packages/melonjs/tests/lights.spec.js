@@ -1828,7 +1828,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 
 	it("constructor accepts color/intensity options without throwing", async () => {
 		// Sanity: the test only makes sense if WebGL actually came up.
-		expect(video.renderer.WebGLVersion).toBeGreaterThan(0);
+		expect(video.renderer.WebGLVersion).toBe(2);
 		const { default: RadialGradientEffect } = await import(
 			"../src/video/webgl/effects/radialGradient.js"
 		);
@@ -1844,7 +1844,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 	});
 
 	it("constructor with no options uses sensible defaults (white, 1.0)", async () => {
-		expect(video.renderer.WebGLVersion).toBeGreaterThan(0);
+		expect(video.renderer.WebGLVersion).toBe(2);
 		const { default: RadialGradientEffect } = await import(
 			"../src/video/webgl/effects/radialGradient.js"
 		);
@@ -1870,7 +1870,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 		// enforces that ordering by spying on `flush` and capturing the
 		// active shader at flush time.
 		const renderer = video.renderer;
-		expect(renderer.WebGLVersion).toBeGreaterThan(0);
+		expect(renderer.WebGLVersion).toBe(2);
 
 		// warm up the lazy resources so the test only measures the
 		// steady-state path.
@@ -1922,7 +1922,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 		// back lights pile into one shared vertex buffer instead of each
 		// taking its own draw call. This test enforces that contract.
 		const renderer = video.renderer;
-		expect(renderer.WebGLVersion).toBeGreaterThan(0);
+		expect(renderer.WebGLVersion).toBe(2);
 
 		// warm up
 		const warmup = new Light2d(0, 0, 8);
@@ -1981,7 +1981,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 		// `setColor` / `setIntensity` calls on the shared shader (which
 		// would be uniforms — unique per-program-state, killing batching).
 		const renderer = video.renderer;
-		expect(renderer.WebGLVersion).toBeGreaterThan(0);
+		expect(renderer.WebGLVersion).toBe(2);
 
 		const warmup = new Light2d(0, 0, 8);
 		renderer.drawLight(warmup);

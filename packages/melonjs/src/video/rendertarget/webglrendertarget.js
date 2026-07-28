@@ -1,15 +1,5 @@
 import RenderTarget from "./rendertarget.ts";
 
-// `DEPTH_STENCIL` (0x84F9) and `DEPTH_STENCIL_ATTACHMENT` (0x821A) are core
-// WebGL 1.0 constants per the spec — no extension required. They're exposed
-// natively on WebGL2 contexts and on most WebGL1 implementations, but a few
-// browsers/drivers leave one or both as `undefined` on the gl context.
-// Passing `undefined` to `renderbufferStorage` / `framebufferRenderbuffer`
-// silently produces an incomplete framebuffer (no error), so we fall back
-// to the spec-defined numeric values when the context lookup is missing.
-const DEPTH_STENCIL = 0x84f9;
-const DEPTH_STENCIL_ATTACHMENT = 0x821a;
-
 /**
  * Try to attach a depth+stencil (preferred) or depth-only renderbuffer to
  * the currently-bound framebuffer, validating completeness at each step.
@@ -21,9 +11,10 @@ const DEPTH_STENCIL_ATTACHMENT = 0x821a;
  * @ignore
  */
 function attachDepthStencil(gl, framebuffer, renderbuffer, width, height) {
-	const depthStencil = gl.DEPTH_STENCIL ?? DEPTH_STENCIL;
-	const depthStencilAttachment =
-		gl.DEPTH_STENCIL_ATTACHMENT ?? DEPTH_STENCIL_ATTACHMENT;
+	// core WebGL 2 constants — always present on the context (the WebGL 1
+	// driver-gap numeric fallbacks were removed with WebGL 1 support)
+	const depthStencil = gl.DEPTH_STENCIL;
+	const depthStencilAttachment = gl.DEPTH_STENCIL_ATTACHMENT;
 
 	// preferred path: packed depth + stencil so masking works
 	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);

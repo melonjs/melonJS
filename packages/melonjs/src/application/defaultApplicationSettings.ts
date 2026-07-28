@@ -6,7 +6,6 @@ export const defaultApplicationSettings = {
 	renderer: AUTO,
 	scale: 1.0,
 	scaleMethod: ScaleMethods.Manual,
-	preferWebGL1: false,
 	powerPreference: "default",
 	transparent: false,
 	antiAlias: false,

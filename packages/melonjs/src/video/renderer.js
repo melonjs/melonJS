@@ -111,6 +111,17 @@ export default class Renderer {
 		this.type = "Generic";
 
 		/**
+		 * Whether this renderer backend can draw TMX tile layers through a
+		 * GPU shader path (see the `gpuTilemap` application setting).
+		 * `false` here on the base/Canvas renderer; GPU backends flip it.
+		 * A capability flag rather than a version/class check so future
+		 * backends advertise support without consumers growing type checks.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.supportsShaderTileLayers = false;
+
+		/**
 		 * The background color used to clear the main framebuffer.
 		 * Note: alpha value will be set based on the transparent property of the renderer settings.
 		 * @default black

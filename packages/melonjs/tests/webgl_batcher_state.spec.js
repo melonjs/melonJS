@@ -261,5 +261,28 @@ describe("batcher GL state", () => {
 		expect(gl.isBuffer(oldMeshIdx)).toBe(false);
 		expect(mesh.glVertexBuffer).not.toBe(oldMeshVbo);
 		expect(gl.isBuffer(oldMeshVbo)).toBe(false);
+
+		// VAO re-capture (#1509): the vertex states must reference the NEW
+		// buffers — a VAO keeps deleted attachments alive and draws stale
+		// data, so recreation without re-capture is the classic black-frame
+		// bug this pins
+		expect(gl.isVertexArray(quad.vertexState.handle)).toBe(true);
+		expect(gl.isVertexArray(mesh.vertexState.handle)).toBe(true);
+		const previous = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
+		gl.bindVertexArray(quad.vertexState.handle);
+		expect(gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING)).toBe(
+			quad.indexBuffer.buffer,
+		);
+		gl.bindVertexArray(mesh.vertexState.handle);
+		expect(gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING)).toBe(
+			mesh.indexBuffer.buffer,
+		);
+		const meshLoc = mesh.defaultShader.getAttribLocation(
+			mesh.attributes[0].name,
+		);
+		expect(
+			gl.getVertexAttrib(meshLoc, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING),
+		).toBe(mesh.glVertexBuffer);
+		gl.bindVertexArray(previous);
 	});
 });

@@ -655,10 +655,13 @@ export function isWebGLSupported(options?: {
 					failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat,
 				}),
 			};
+			// WebGL 2 only since 20.0 (#1509) — this gate must agree with
+			// the context actually created by the WebGL renderer (which
+			// requests "webgl2"), so AUTO falls back to Canvas exactly when
+			// renderer construction would fail
 			const _supported = !!(
-				globalThis.WebGLRenderingContext &&
-				(canvas.getContext("webgl", ctxOptions) ||
-					canvas.getContext("experimental-webgl", ctxOptions))
+				globalThis.WebGL2RenderingContext &&
+				canvas.getContext("webgl2", ctxOptions)
 			);
 			WebGLSupport = _supported ? 1 : 0;
 		} catch {

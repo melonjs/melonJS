@@ -436,25 +436,13 @@ export default class ShaderEffect {
 
 	/**
 	 * Apply the wrap mode a `: screen_texture(<repeat>)` annotation asked for
-	 * onto the live capture handle. Captures are NPOT (canvas-sized), which
-	 * WebGL 1 cannot repeat — warn once and keep the clamp there. The unit is
-	 * force-activated first: the batcher's bind may have been skipped as
-	 * redundant while the GL active unit points elsewhere.
+	 * onto the live capture handle. The unit is force-activated first: the
+	 * batcher's bind may have been skipped as redundant while the GL active
+	 * unit points elsewhere.
 	 * @ignore
 	 */
 	_applyCaptureWrap(batcher, glTex, entry) {
 		const gl = batcher.gl;
-		if (batcher.renderer.WebGLVersion === 1) {
-			if (this._captureWrapWarned !== true) {
-				this._captureWrapWarned = true;
-				console.warn(
-					"ShaderEffect: screen_texture(" +
-						entry.repeat +
-						") needs WebGL 2 (captures are non-power-of-two) — using clamp-to-edge",
-				);
-			}
-			return;
-		}
 		gl.activeTexture(gl.TEXTURE0 + entry.unit);
 		gl.bindTexture(gl.TEXTURE_2D, glTex);
 		batcher.currentTextureUnit = entry.unit;
@@ -482,7 +470,7 @@ export default class ShaderEffect {
 	 * drawable source. No-op in Canvas mode.
 	 * @param {string} name - the `sampler2D` uniform name declared in the fragment
 	 * @param {Texture2d|HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - the texture: an engine texture asset, or a raw drawable source
-	 * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [repeat="no-repeat"] - wrap mode; use `"repeat"` for a tiled/scrolled texture (power-of-two size under WebGL 1)
+	 * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [repeat="no-repeat"] - wrap mode; use `"repeat"` for a tiled/scrolled texture
 	 * @returns {ShaderEffect} this effect for chaining
 	 * @example
 	 * // "water": distort the sprite by a static noise texture scrolled over time
@@ -630,7 +618,7 @@ export default class ShaderEffect {
 						entry.image.width,
 						entry.image.height,
 						false, // premultipliedAlpha — keep raw texel values
-						false, // mipmap — not needed, and NPOT-unsafe under WebGL 1
+						false, // mipmap — not needed for effect inputs
 						undefined,
 						false, // flush — the following draw flushes with everything bound
 					);

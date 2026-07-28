@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { Application, boot, Camera3d } from "../src/index.js";
+import { Application, boot, Camera3d, device } from "../src/index.js";
 import * as video from "../src/video/video.js";
 
 /**
@@ -58,8 +58,35 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 				ctx.skip("WebGL is available in this environment");
 				return;
 			} catch (err) {
-				expect(err.message).toMatch(/WebGL/);
+				expect(err.message).toMatch(/WebGL 2/);
 				expect(err.message).toMatch(/video\.AUTO/);
+			}
+		});
+
+		it("isWebGLSupported() and WEBGL construction agree (WebGL2-only contract)", () => {
+			// The 20.0 invariant: the support gate probes the same context
+			// ("webgl2") that construction requests, so the two can never
+			// disagree — pre-20.0 the gate probed WebGL 1 while construction
+			// preferred WebGL 2.
+			if (device.isWebGLSupported()) {
+				const app = new Application(64, 64, {
+					parent: "screen",
+					renderer: video.WEBGL,
+					consoleHeader: false,
+				});
+				expect(app.renderer.WebGLVersion).toBe(2);
+				expect(app.renderer.type).toBe("WebGL2");
+				expect(app.renderer.gl).toBeInstanceOf(
+					globalThis.WebGL2RenderingContext,
+				);
+			} else {
+				expect(() => {
+					void new Application(64, 64, {
+						parent: "screen",
+						renderer: video.WEBGL,
+						consoleHeader: false,
+					});
+				}).toThrow(/WebGL 2/);
 			}
 		});
 
@@ -84,7 +111,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 
 		// Other engine paths can emit unrelated warnings during Canvas
 		// Application setup (e.g. `gpuTilemap is enabled but the active
-		// renderer is not WebGL 2`), so each test scans all warn calls
+		// renderer has no GPU tile-layer support`), so each test scans all warn calls
 		// for our specific Camera3d-mismatch message rather than asserting
 		// total call counts.
 		const findCamera3dWarn = () => {

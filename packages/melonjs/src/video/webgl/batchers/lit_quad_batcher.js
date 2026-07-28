@@ -31,7 +31,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 */
 	init(renderer) {
 		// halve the texture cap: each color slot is paired with a normal
-		// slot at offset `+ maxBatchTextures` so the WebGL1 8-unit minimum
+		// slot at offset `+ maxBatchTextures` so the historical 8-unit budget
 		// still affords at least 4 lit sprites per batch.
 		const halved = Math.min(
 			Math.max(1, Math.floor(renderer.maxTextures / 2)),

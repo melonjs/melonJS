@@ -20,12 +20,8 @@ const defaultAttributes = {
 	stencil: true,
 	blendMode: "normal",
 	failIfMajorPerformanceCaveat: true,
-	preferWebGL1: false,
 	powerPreference: "default",
 };
-
-// WebGL version (if a gl context is created)
-let WebGLVersion;
 
 // a helper function to create the 2d/webgl context
 function createContext(canvas, attributes) {
@@ -50,24 +46,13 @@ function createContext(canvas, attributes) {
 			failIfMajorPerformanceCaveat: attributes.failIfMajorPerformanceCaveat,
 		};
 
-		// attempt to create a WebGL2 context unless not requested
-		if (attributes.preferWebGL1 !== true) {
-			context = canvas.getContext("webgl2", attr);
-			if (context) {
-				WebGLVersion = 2;
-			}
-		}
-
-		// fallback to WebGL1
-		if (!context) {
-			WebGLVersion = 1;
-			context =
-				canvas.getContext("webgl", attr) ||
-				canvas.getContext("experimental-webgl", attr);
-		}
+		// WebGL 2 only since 20.0 (#1509) — no WebGL 1 fallback; callers
+		// (autoDetectRenderer / Application) fall back to the Canvas
+		// renderer instead when this throws
+		context = canvas.getContext("webgl2", attr);
 
 		if (!context) {
-			throw new Error("A WebGL context could not be created.");
+			throw new Error("A WebGL 2 context could not be created.");
 		}
 	} else {
 		throw new Error("Invalid context type. Must be one of '2d' or 'webgl'");
@@ -89,8 +74,7 @@ class CanvasRenderTarget extends RenderTarget {
 	 * @param {number} width - the desired width of the canvas
 	 * @param {number} height - the desired height of the canvas
 	 * @param {object} attributes - The attributes to create both the canvas and context
-	 * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
-	 * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
+	 * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl" — a "webgl" request creates a WebGL 2 context)
 	 * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
 	 * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
 	 * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
@@ -120,7 +104,14 @@ class CanvasRenderTarget extends RenderTarget {
 		// create the context
 		this.context = createContext(this.canvas, this.attributes);
 
-		this.WebGLVersion = WebGLVersion;
+		if (this.attributes.context === "webgl") {
+			/**
+			 * The WebGL version of the created context.
+			 * @type {number}
+			 * @deprecated since 20.0.0 — the WebGL renderer is WebGL 2 only, this is always `2`
+			 */
+			this.WebGLVersion = 2;
+		}
 
 		// enable or disable antiAlias if specified
 		this.setAntiAlias(this.attributes.antiAlias);

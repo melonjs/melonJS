@@ -1,5 +1,19 @@
 # Changelog
 
+## [20.0.0] (melonJS 2) - _unreleased_
+
+### Changed (breaking)
+- **The WebGL renderer is now WebGL 2 only** ([#1509](https://github.com/melonjs/melonJS/issues/1509)) — the WebGL 1 fallback path is removed. `renderer: video.AUTO` falls back to the Canvas renderer on WebGL-1-only devices; `renderer: video.WEBGL` throws there. **User shaders need no changes** — `ShaderEffect` bodies and raw `GLShader` sources (GLSL ES 1.00) compile unchanged on WebGL 2 contexts.
+- `preferWebGL1` setting and the `#webgl1` URI flag are removed (`#webgl` / `#webgl2` are synonyms)
+- `device.isWebGLSupported()` now probes for a WebGL **2** context — it finally agrees with what renderer construction actually requests (the gate probed WebGL 1 before, so the two could disagree)
+- `renderer.type` is always `"WebGL2"` for the WebGL renderer; `renderer.WebGLVersion` is deprecated (always `2`)
+- behavior corrections on ex-WebGL-1 configs: `repeat` wrap now genuinely tiles non-power-of-two textures (was clamp + warning), `"darken"` / `"lighten"` blend modes use true MIN/MAX equations (were silently downgraded to `"normal"`), and `createPattern()` accepts non-power-of-two sources (threw before)
+- TMX GPU tilemap eligibility is now advertised through `renderer.supportsShaderTileLayers` (a backend capability flag) instead of a WebGL-version check
+- **each `Batcher` now owns an immutable Vertex Array Object** built at init ([#1509](https://github.com/melonjs/melonJS/issues/1509)): vertex attribute layout is frozen once built, batcher switches cost a single `bindVertexArray` (steady-state frames issue zero attribute-specification calls, measured), and `Batcher.unbind()` no longer disables attribute arrays. Custom batchers inheriting `Batcher.init()`/`bind()` need no changes. Custom shaders hosted by a built-in batcher must declare that batcher's attributes first, in layout order (ShaderEffect-generated vertex shaders already comply) — a console warning fires on mismatch. `GLShader.setVertexAttributes` is no longer called by the engine (still public)
+
+### Performance
+- **Vertex Array Objects for every batcher** ([#1509](https://github.com/melonjs/melonJS/issues/1509)) — vertex attribute layout is specified once at init rather than on every batcher switch and every mesh flush, so steady-state frames issue **zero** attribute-specification calls. How much GL traffic this saves depends on how often a scene alternates batchers: a scene that stays on one batcher saves about 2 calls per frame, one mixing sprites, meshes and primitives about 40 — in both cases well under a millisecond. The structural benefit is the larger one: attribute-state leaks between batchers become impossible by construction.
+
 ## [19.9.1] (melonJS 2) - _2026-07-28_
 
 ### Fixed
