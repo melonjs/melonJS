@@ -1,5 +1,6 @@
 import VertexArrayBuffer from "../../buffer/vertex.js";
 import WebGLIndexBuffer from "../buffer/index.js";
+import WebGLVertexState from "../buffer/vertexstate.js";
 import GLShader from "../glshader.js";
 
 /**
@@ -12,7 +13,8 @@ import GLShader from "../glshader.js";
  * Default maximum number of vertices per batch.
  * At 4096 vertices (1024 quads), the vertex buffer is ~80 KB (5 floats × 4 bytes × 4096),
  * which balances draw call reduction with safe buffer upload sizes on mobile tile-based GPUs.
- * Within the Uint16 index limit (65,535) required for WebGL1 compatibility.
+ * Within the Uint16 index limit (65,535) — a deliberate capacity choice
+ * (smaller index uploads), not an API constraint.
  * @ignore
  */
 const DEFAULT_MAX_VERTICES = 4096;
@@ -75,6 +77,14 @@ export class Batcher {
 		 * @default gl.TRIANGLES
 		 */
 		this.mode = this.gl.TRIANGLES;
+
+		// re-init (context restore runs init() on the existing instance):
+		// drop the previous life's vertex state, which also unfreezes the
+		// layout so the attribute definitions below can be rebuilt
+		if (this.vertexState) {
+			this.vertexState.destroy();
+			this.vertexState = null;
+		}
 
 		/**
 		 * an array of vertex attribute properties
@@ -172,6 +182,81 @@ export class Batcher {
 			// max indices: worst case is 3 indices per vertex (all triangles, no sharing)
 			this.indexBuffer = new WebGLIndexBuffer(gl, maxVertices * 3, false);
 		}
+
+		// build the frozen vertex-state object (VAO) once all buffers exist;
+		// quad-family batchers create their static index buffer AFTER this
+		// (in their own init) and capture it via the wrap in
+		// `createIndexBuffer`
+		this.createVertexState();
+	}
+
+	/**
+	 * The GL buffer this batcher uploads its vertex data into: its own
+	 * buffer for indexed (mesh-family) batchers, otherwise the renderer's
+	 * shared one.
+	 * @type {WebGLBuffer}
+	 * @ignore
+	 */
+	get uploadBuffer() {
+		return this.glVertexBuffer ?? this.renderer.vertexBuffer;
+	}
+
+	/**
+	 * (Re)build this batcher's {@link WebGLVertexState} — the frozen vertex
+	 * buffer layout (`attributes` + `stride`) realized as a GL vertex array
+	 * object bound to this batcher's upload buffer and, for indexed
+	 * batchers, its index buffer.
+	 *
+	 * Every shader hosted by this batcher must declare a prefix of that
+	 * layout, in layout order (see {@link validateShaderLocations}) — the
+	 * locations are frozen here at the default shader's mapping.
+	 * @ignore
+	 */
+	createVertexState() {
+		const descriptor = {
+			attributes: this.attributes,
+			stride: this.stride,
+			buffer: this.uploadBuffer,
+			indexBuffer: this.useIndexBuffer ? this.indexBuffer : undefined,
+			resolveLocation: (name) => {
+				return this.defaultShader.getAttribLocation(name);
+			},
+		};
+		if (this.vertexState) {
+			// keep the object identity across rebuilds; only the GL handle
+			// and the buffers it references change
+			this.vertexState.build(descriptor);
+		} else {
+			this.vertexState = new WebGLVertexState(this.gl, descriptor);
+		}
+	}
+
+	/**
+	 * Release every GL object this batcher owns (vertex state, own vertex
+	 * and index buffers, default shader). Called by
+	 * {@link WebGLRenderer#destroy}; subclasses that override must chain to
+	 * `super.destroy()`.
+	 * @ignore
+	 */
+	destroy() {
+		const gl = this.gl;
+		if (this.vertexState) {
+			this.vertexState.destroy();
+			this.vertexState = null;
+		}
+		if (this.glVertexBuffer) {
+			gl.deleteBuffer(this.glVertexBuffer);
+			this.glVertexBuffer = null;
+		}
+		if (this.indexBuffer) {
+			this.indexBuffer.destroy();
+			this.indexBuffer = null;
+		}
+		if (this.defaultShader) {
+			this.defaultShader.destroy();
+			this.defaultShader = undefined;
+		}
+		this.currentShader = undefined;
 	}
 
 	/**
@@ -197,6 +282,10 @@ export class Batcher {
 			gl.deleteBuffer(this.glVertexBuffer);
 			this.glVertexBuffer = gl.createBuffer();
 			this.indexBuffer.recreate();
+			// the vertex state still references the DELETED buffers — a VAO
+			// keeps deleted attachments alive per the GL spec and draws from
+			// them (stale/dead data). Rebuild against the new buffers.
+			this.createVertexState();
 		}
 	}
 
@@ -204,13 +293,15 @@ export class Batcher {
 	 * called by the WebGL renderer when a batcher becomes the current one
 	 */
 	bind() {
-		if (this.useIndexBuffer) {
-			const gl = this.gl;
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.glVertexBuffer);
-			if (this.indexBuffer) {
-				this.indexBuffer.bind();
-			}
-		}
+		const gl = this.gl;
+		// one bind restores the whole frozen vertex state (attribute
+		// pointers + element buffer) — the WebGL analogue of setPipeline +
+		// setVertexBuffer + setIndexBuffer
+		this.vertexState.bind();
+		// ARRAY_BUFFER binding is NOT VAO state; uploads in flush() need the
+		// batcher's upload target bound (this also preserves the invariant
+		// custom batchers with hand-rolled flush() relied on)
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
 
 		if (this.renderer.currentProgram !== this.defaultShader.program) {
 			this.useShader(this.defaultShader);
@@ -218,22 +309,49 @@ export class Batcher {
 	}
 
 	/**
-	 * called by the WebGL renderer when this batcher is being replaced by another.
-	 * Disables this batcher's vertex attribute locations so they don't leak across
-	 * (otherwise stale stride/offset state can cause INVALID_OPERATION on the next draw).
+	 * called by the WebGL renderer when this batcher is being replaced by
+	 * another. Attribute state no longer needs disabling — it lives in this
+	 * batcher's vertex-state object and the incoming batcher's `bind()`
+	 * replaces the binding wholesale. Kept as a lifecycle hook: subclasses
+	 * override it to restore mode-specific GL state (see MeshBatcher's
+	 * blend/depth restore).
 	 */
-	unbind() {
-		if (this.currentShader === undefined) {
+	unbind() {}
+
+	/**
+	 * Validate (once per shader) that a hosted shader's attribute locations
+	 * match this batcher's frozen vertex state. The engine's analogue of
+	 * WebGPU's pipeline-creation validation: locations are bound in vertex
+	 * source declaration order, so every shader hosted by this batcher must
+	 * declare a prefix of the batcher's attribute layout, in layout order.
+	 * A mismatched shader silently reads wrong vertex data — warn loudly.
+	 * @ignore
+	 */
+	validateShaderLocations(shader) {
+		if (this.validatedShaders === undefined) {
+			this.validatedShaders = new WeakSet();
+		}
+		if (shader === this.defaultShader || this.validatedShaders.has(shader)) {
 			return;
 		}
-		const gl = this.gl;
-		for (let i = 0; i < this.attributes.length; ++i) {
-			const location = this.currentShader.getAttribLocation(
-				this.attributes[i].name,
-			);
-			if (location !== -1) {
-				gl.disableVertexAttribArray(location);
+		this.validatedShaders.add(shader);
+		const mismatches = [];
+		for (const attr of this.attributes) {
+			const expected = this.defaultShader.getAttribLocation(attr.name);
+			const actual = shader.getAttribLocation(attr.name);
+			// -1 = the shader doesn't declare this attribute — allowed (the
+			// enabled array is simply unconsumed); a DIFFERENT location is
+			// the contract violation
+			if (actual !== -1 && actual !== expected) {
+				mismatches.push(`"${attr.name}" at ${actual} (expected ${expected})`);
 			}
+		}
+		if (mismatches.length > 0) {
+			// one consolidated warning per (batcher, shader) pair
+			console.warn(
+				`melonJS: shader attribute location mismatch: ${mismatches.join(", ")} — ` +
+					"custom shaders must declare the batcher's attributes first, in layout order (vertex data will be read incorrectly)",
+			);
 		}
 	}
 
@@ -248,19 +366,12 @@ export class Batcher {
 			this.renderer.currentProgram !== shader.program
 		) {
 			this.flush();
-			// Disable the previous shader's enabled attribute locations
-			// before binding the new one. The two shaders may have linked
-			// the same attribute name to different locations, so the new
-			// shader's `setVertexAttributes` won't necessarily re-point
-			// every old location — leaving stale stride/offset state that
-			// can trigger `INVALID_OPERATION` on the next draw call.
-			if (this.currentShader && this.currentShader !== shader) {
-				this.unbind();
-			}
 			shader.bind();
 			shader.setUniform(this.projectionUniform, this.renderer.projectionMatrix);
 
-			shader.setVertexAttributes(this.gl, this.attributes, this.stride);
+			// attribute pointers live in the frozen vertex state — hosted
+			// shaders must conform to it (checked once per shader)
+			this.validateShaderLocations(shader);
 
 			this.currentShader = shader;
 			this.renderer.currentProgram = shader.program;
@@ -281,6 +392,14 @@ export class Batcher {
 	 * @param {number} offset - offset in bytes of the first component in the vertex attribute array
 	 */
 	addAttribute(name, size, type, normalized, offset) {
+		if (this.vertexState) {
+			// the layout is baked into the vertex-state object at init —
+			// immutable afterwards, exactly like a vertex layout in a
+			// compiled render pipeline
+			throw new Error(
+				"Batcher.addAttribute: the vertex buffer layout is frozen once the vertex state is built (add attributes before/without calling init)",
+			);
+		}
 		this.attributes.push({ name, size, type, normalized, offset });
 
 		switch (type) {
@@ -351,32 +470,21 @@ export class Batcher {
 				vertexCount * vertexSize * Float32Array.BYTES_PER_ELEMENT;
 
 			if (this.useIndexBuffer && this.indexBuffer.length > 0) {
-				// indexed drawing path — bind own buffers
+				// indexed drawing path — attribute pointers live in the
+				// vertex state; only the upload target needs (re)binding
+				// (belt-and-braces: bind() already did this, but a custom
+				// flush caller may not have gone through bind())
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.glVertexBuffer);
 
-				// re-apply vertex attributes
-				this.currentShader.setVertexAttributes(
-					gl,
-					this.attributes,
-					this.stride,
+				// upload vertex data (WebGL 2 srcOffset/length overload — no
+				// subview copy needed)
+				gl.bufferData(
+					gl.ARRAY_BUFFER,
+					vertex.toUint8(),
+					gl.STREAM_DRAW,
+					0,
+					byteLength,
 				);
-
-				// upload vertex data
-				if (this.renderer.WebGLVersion > 1) {
-					gl.bufferData(
-						gl.ARRAY_BUFFER,
-						vertex.toUint8(),
-						gl.STREAM_DRAW,
-						0,
-						byteLength,
-					);
-				} else {
-					gl.bufferData(
-						gl.ARRAY_BUFFER,
-						vertex.toUint8(0, byteLength),
-						gl.STREAM_DRAW,
-					);
-				}
 
 				// upload and draw with index buffer
 				this.indexBuffer.upload();
@@ -391,21 +499,13 @@ export class Batcher {
 				this.indexBuffer.clear();
 			} else {
 				// non-indexed drawing path (original behavior)
-				if (this.renderer.WebGLVersion > 1) {
-					gl.bufferData(
-						gl.ARRAY_BUFFER,
-						vertex.toUint8(),
-						gl.STREAM_DRAW,
-						0,
-						byteLength,
-					);
-				} else {
-					gl.bufferData(
-						gl.ARRAY_BUFFER,
-						vertex.toUint8(0, byteLength),
-						gl.STREAM_DRAW,
-					);
-				}
+				gl.bufferData(
+					gl.ARRAY_BUFFER,
+					vertex.toUint8(),
+					gl.STREAM_DRAW,
+					0,
+					byteLength,
+				);
 
 				gl.drawArrays(mode, 0, vertexCount);
 			}

@@ -5,7 +5,7 @@ export { MAX_LIGHTS };
 
 /**
  * Build the GLSL `if/else` chain that picks among N samplers based on
- * a varying float texture-id. WebGL1 forbids dynamic indexing of
+ * a varying float texture-id. GLSL ES 1.00 forbids dynamic indexing of
  * `sampler2D`, so the standard workaround is an if-ladder using the
  * usual `< i + 0.5` threshold pattern.
  * @ignore

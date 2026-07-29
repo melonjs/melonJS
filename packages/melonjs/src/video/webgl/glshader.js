@@ -270,7 +270,15 @@ export default class GLShader {
 	}
 
 	/**
-	 * activate the given vertex attribute for this shader
+	 * activate the given vertex attribute for this shader.
+	 *
+	 * Note: since 20.0 the engine no longer calls this per frame — each
+	 * {@link Batcher} captures its attribute layout once into an immutable
+	 * vertex-state object (VAO) at init (see `Batcher.createVertexState`).
+	 * Kept public for custom callers managing their own vertex setup.
+	 * Custom shaders hosted by a built-in batcher must declare that
+	 * batcher's attributes first, in layout order — attribute locations
+	 * are bound in declaration order and the vertex state is frozen.
 	 * @param {WebGLRenderingContext} gl - the current WebGL rendering context
 	 * @param {object[]} attributes - an array of vertex attributes
 	 * @param {number} stride - the size of a single vertex in bytes

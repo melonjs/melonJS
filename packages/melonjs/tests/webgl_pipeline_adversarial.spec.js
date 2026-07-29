@@ -931,34 +931,28 @@ describe("WebGL pipeline adversarial integration", () => {
 		expect(true).toBe(true); // reached the end of all seeds without throwing
 	});
 
-	// ---- Per-batcher unbind symmetry ----
+	// ---- Per-batcher vertex-state ownership (VAO era) ----
 
-	it("every registered batcher's unbind disables exactly its own attribute locations", (ctx) => {
-		// Generic invariant on the Batcher contract: unbind must only
-		// touch locations it owns, never leave one of its own enabled,
-		// never disable a location it doesn't own (e.g. one belonging to a
-		// different batcher's currently-active program).
+	it("after every batcher switch the bound vertex state and element buffer are the incoming batcher's own", (ctx) => {
+		// The VAO-era invariant replacing the old unbind-symmetry test:
+		// attribute state is never disabled between batchers — it is
+		// SWAPPED wholesale. After setBatcher, the GL vertex-array binding
+		// must be the incoming batcher's vertexState, and the element
+		// binding captured in it must be its own index buffer (or null for
+		// non-indexed batchers).
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
 		for (const [name, batcher] of renderer.batchers) {
 			renderer.setBatcher(name);
-			batcher.bind();
-
-			const ownLocs = new Set();
-			const shader = batcher.currentShader || batcher.defaultShader;
-			for (const attr of batcher.attributes) {
-				const loc = shader.getAttribLocation(attr.name);
-				if (loc !== -1) {
-					ownLocs.add(loc);
-				}
-			}
-
-			batcher.unbind();
-			for (const loc of ownLocs) {
-				expect(gl.getVertexAttrib(loc, gl.VERTEX_ATTRIB_ARRAY_ENABLED)).toBe(
-					false,
-				);
+			expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(
+				batcher.vertexState.handle,
+			);
+			const boundElement = gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING);
+			if (batcher.indexBuffer) {
+				expect(boundElement).toBe(batcher.indexBuffer.buffer);
+			} else {
+				expect(boundElement).toBe(null);
 			}
 		}
 	});

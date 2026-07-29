@@ -21,7 +21,7 @@ export class CanvasTexture extends CanvasRenderTarget {
 	 * @param {number} width - the desired width of the canvas
 	 * @param {number} height - the desired height of the canvas
 	 * @param {object} attributes - The attributes to create both the canvas and context
-	 * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+	 * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl" — creates a WebGL 2 context)
 	 * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
 	 * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
 	 * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.

@@ -316,16 +316,11 @@ export default class Application {
 		} as ResolvedApplicationSettings;
 
 		// override renderer settings if &webgl or &canvas is defined in the URL
+		// (the WebGL renderer is WebGL 2 only since 20.0 — the legacy
+		// `#webgl1` flag is gone, `#webgl`/`#webgl2` are synonyms)
 		const uriFragment = getUriFragment();
-		if (
-			uriFragment.webgl === true ||
-			uriFragment.webgl1 === true ||
-			uriFragment.webgl2 === true
-		) {
+		if (uriFragment.webgl === true || uriFragment.webgl2 === true) {
 			settings.renderer = WEBGL;
-			if (uriFragment.webgl1 === true) {
-				settings.preferWebGL1 = true;
-			}
 		} else if (uriFragment.canvas === true) {
 			settings.renderer = CANVAS;
 		}
@@ -381,10 +376,11 @@ export default class Application {
 					if (!device.isWebGLSupported(this.settings)) {
 						throw new Error(
 							"Application: `renderer: video.WEBGL` was requested " +
-								"but the WebGL context could not be created in this " +
-								"environment (driver-blocklisted GPU, " +
-								"`failIfMajorPerformanceCaveat: true` on a software " +
-								"renderer, etc.). Use `video.AUTO` if Canvas " +
+								"but a WebGL 2 context could not be created in this " +
+								"environment (WebGL-1-only device, driver-blocklisted " +
+								"GPU, `failIfMajorPerformanceCaveat: true` on a " +
+								"software renderer, etc.). The WebGL renderer is " +
+								"WebGL 2 only since 20.0. Use `video.AUTO` if Canvas " +
 								"fallback is acceptable, or check " +
 								"`device.isWebGLSupported()` before construction.",
 						);

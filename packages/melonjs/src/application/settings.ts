@@ -32,7 +32,7 @@ type PhysicsType =
 	| PhysicsAdapter
 	| { adapter: PhysicsAdapter };
 
-type PowerPreference = "default" | "low-power";
+type PowerPreference = "default" | "low-power" | "high-performance";
 
 export type ApplicationSettings = {
 	/**
@@ -40,12 +40,13 @@ export type ApplicationSettings = {
 	 *
 	 * - {@link CANVAS} — HTML5 Canvas backend. No shader / mesh /
 	 *   Camera3d support.
-	 * - {@link WEBGL} — **requires WebGL**. Throws at `new Application(...)`
-	 *   time if WebGL is unavailable (driver-blocklisted GPU, perf-caveat
-	 *   failure, etc.). Use this when your scene needs Camera3d, Mesh,
-	 *   ShaderEffect, Light2d or GPU tilemap — you'd rather fail fast
-	 *   than render a stuck blank canvas.
-	 * - {@link AUTO} — try WebGL, silently fall back to Canvas if
+	 * - {@link WEBGL} — **requires WebGL 2** (the WebGL renderer is
+	 *   WebGL 2 only since 20.0). Throws at `new Application(...)`
+	 *   time if a WebGL 2 context is unavailable (WebGL-1-only device,
+	 *   driver-blocklisted GPU, perf-caveat failure, etc.). Use this when
+	 *   your scene needs Camera3d, Mesh, ShaderEffect, Light2d or GPU
+	 *   tilemap — you'd rather fail fast than render a stuck blank canvas.
+	 * - {@link AUTO} — try WebGL 2, silently fall back to Canvas if
 	 *   unavailable. Application construction always succeeds. The
 	 *   WebGL-only subsystems (Camera3d, Mesh, ShaderEffect, Light2d,
 	 *   GPU tilemap) silently stop working under the Canvas fallback —
@@ -74,14 +75,20 @@ export type ApplicationSettings = {
 	scaleTarget: HTMLElement;
 
 	/**
-	 * if true the renderer will only use WebGL 1
-	 * @default false
-	 */
-	preferWebGL1: boolean;
-
-	/**
-	 * a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context. To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-	 * @default default
+	 * A hint to the user agent about which GPU to use on multi-GPU systems
+	 * (discrete vs integrated). Browsers generally favour the low-power GPU
+	 * unless asked otherwise, to preserve battery life.
+	 *
+	 * - `"default"` — no hint; let the user agent decide.
+	 * - `"low-power"` — prefer the integrated GPU.
+	 * - `"high-performance"` — prefer the discrete GPU. Note that browsers
+	 *   only honour this for pages that handle context loss, since switching
+	 *   GPU can drop the context; melonJS registers those handlers itself,
+	 *   so the request is respected.
+	 *
+	 * The same hint (and the same values, minus `"default"`) is used by
+	 * WebGPU's adapter request, so this setting is backend-neutral.
+	 * @default "default"
 	 */
 	powerPreference: PowerPreference;
 
@@ -166,7 +173,7 @@ export type ApplicationSettings = {
 	 * When `true` (default), eligible layers render via a single quad per
 	 * tileset + a fragment shader doing per-fragment GID lookup, bypassing
 	 * the per-tile draw loop entirely. Layers that don't qualify
-	 * (Canvas/WebGL1, non-orthogonal, collection-of-image tilesets,
+	 * (Canvas renderer, non-orthogonal, collection-of-image tilesets,
 	 * tilerendersize "grid", non-zero tileoffset, oversampled beyond the
 	 * shader's overflow window) fall back to the legacy path automatically.
 	 * Set to `false` to disable globally.
@@ -174,9 +181,15 @@ export type ApplicationSettings = {
 	 */
 	gpuTilemap: boolean;
 	/**
-	 * if true, the renderer will fail if the browser reports a major performance caveat
-	 * (e.g. software WebGL). Set to false to allow WebGL on machines with
-	 * blocklisted GPU drivers or software renderers.
+	 * If true, treat WebGL as unavailable when the browser warns that a
+	 * context would perform dramatically worse than a native application
+	 * (a software rasterizer, a blocklisted driver). Note this is stricter
+	 * than the WebGL default, which is `false`.
+	 *
+	 * Combined with the WebGL 2 requirement, the effect is: under
+	 * {@link AUTO} such a machine gets the Canvas renderer, and under
+	 * {@link WEBGL} construction throws. Set to `false` to accept a
+	 * software or blocklisted WebGL context instead.
 	 * @default true
 	 */
 	failIfMajorPerformanceCaveat: boolean;

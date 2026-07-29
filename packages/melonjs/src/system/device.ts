@@ -637,10 +637,15 @@ export function getParentBounds(element: string | HTMLElement) {
 }
 
 /**
- * returns true if the device supports WebGL
+ * Returns true if the device supports WebGL 2 — the version the WebGL
+ * renderer requires since 20.0. This probes the same context type that
+ * renderer construction requests, so the two can never disagree.
+ *
+ * When it returns false, `renderer: video.AUTO` falls back to the Canvas
+ * renderer and `renderer: video.WEBGL` throws at construction time.
  * @param [options] - context creation options
- * @param [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
- * @returns true if WebGL is supported
+ * @param [options.failIfMajorPerformanceCaveat=true] - if true, report WebGL as unsupported when the browser warns that a context would perform dramatically worse than a native application (e.g. a software rasterizer). Set false to accept WebGL on blocklisted drivers or software renderers.
+ * @returns true if WebGL 2 is supported
  * @category Application
  */
 export function isWebGLSupported(options?: {
@@ -655,10 +660,13 @@ export function isWebGLSupported(options?: {
 					failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat,
 				}),
 			};
+			// WebGL 2 only since 20.0 (#1509) — this gate must agree with
+			// the context actually created by the WebGL renderer (which
+			// requests "webgl2"), so AUTO falls back to Canvas exactly when
+			// renderer construction would fail
 			const _supported = !!(
-				globalThis.WebGLRenderingContext &&
-				(canvas.getContext("webgl", ctxOptions) ||
-					canvas.getContext("experimental-webgl", ctxOptions))
+				globalThis.WebGL2RenderingContext &&
+				canvas.getContext("webgl2", ctxOptions)
 			);
 			WebGLSupport = _supported ? 1 : 0;
 		} catch {

@@ -22,7 +22,7 @@ const FLIP_AD_BIT = 1 << 2;
 // the fallback so apps without any tilemap stay quiet (the prior heads-up
 // at Application init time fired regardless of whether a TMX layer was
 // ever loaded).
-let _warnedNoWebGL2Once = false;
+let _warnedNoGpuTileSupportOnce = false;
 
 /**
  * extract a 3-bit flip mask from a raw 32-bit GID (Tiled's flip bits live in
@@ -409,11 +409,11 @@ export default class TMXLayer extends Renderable {
 		// — emitted from the first TMX layer that hits it, so apps with
 		// no tilemap loaded stay quiet.
 		if (gpuAllowed) {
-			if (elig.reason === "no-webgl2-renderer") {
-				if (!_warnedNoWebGL2Once) {
-					_warnedNoWebGL2Once = true;
+			if (elig.reason === "no-gpu-renderer") {
+				if (!_warnedNoGpuTileSupportOnce) {
+					_warnedNoGpuTileSupportOnce = true;
 					console.warn(
-						"melonJS: gpuTilemap is enabled but the active renderer is not WebGL 2 — falling back to the legacy tile renderer for every tile layer",
+						"melonJS: gpuTilemap is enabled but the active renderer has no GPU tile-layer support — falling back to the legacy tile renderer for every tile layer",
 					);
 				}
 			} else {
@@ -440,8 +440,8 @@ export default class TMXLayer extends Renderable {
 		if (!gpuAllowed) {
 			return { ok: false, reason: "gpuTilemap disabled" };
 		}
-		if (!renderer || renderer.WebGLVersion !== 2) {
-			return { ok: false, reason: "no-webgl2-renderer" };
+		if (!renderer || renderer.supportsShaderTileLayers !== true) {
+			return { ok: false, reason: "no-gpu-renderer" };
 		}
 		if (this.orientation !== "orthogonal") {
 			return {

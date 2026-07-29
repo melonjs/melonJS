@@ -357,6 +357,19 @@ describe("Texture", () => {
 			expect(pattern.repeat).toEqual("repeat");
 		});
 
+		it("accepts a non-power-of-two source (WebGL2-only contract, 20.0)", (ctx) => {
+			if (typeof video.renderer.gl === "undefined") {
+				ctx.skip("WebGL renderer not available in this environment");
+				return;
+			}
+			// pre-20.0 this threw "not a POT texture" — NPOT REPEAT is core
+			// in WebGL 2, so odd-sized patterns are now first-class
+			const canvas = new CanvasTexture(30, 20);
+			const pattern = video.renderer.createPattern(canvas.canvas, "repeat");
+			expect(pattern).toBeDefined();
+			expect(pattern.repeat).toEqual("repeat");
+		});
+
 		it("allocates a separate texture unit per (image, repeat) pair (#1448)", (ctx) => {
 			if (typeof video.renderer.gl === "undefined") {
 				ctx.skip("WebGL-only — Canvas createPattern doesn't allocate GL units");

@@ -74,7 +74,7 @@ describe("BufferTextureResource — WebGL2 integration", () => {
 			});
 			if (
 				video.renderer instanceof WebGLRenderer &&
-				video.renderer.WebGLVersion === 2
+				typeof video.renderer.gl !== "undefined"
 			) {
 				renderer = video.renderer;
 			}
