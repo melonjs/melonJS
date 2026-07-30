@@ -51,7 +51,8 @@
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
 		"tsx": "^4.23.1",
-		"typescript": "^6.0.2"
+		"typescript": "^6.0.2",
+		"vitest": "^4.1.10"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
@@ -61,6 +62,7 @@
 		"prepublishOnly": "pnpm clean && pnpm build",
 		"clean": "tsx scripts/clean.ts",
 		"types": "tsc --project tsconfig.build.json",
-		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput"
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput",
+		"test": "vitest run"
 	}
 }

@@ -120,7 +120,13 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			// yields a negative or otherwise meaningless duration. The engine
 			// already computes the real elapsed time of a logic step (it needs it
 			// to smooth its own timestep) and exposes it here.
-			this.frameUpdateTime = game.updateAverageDelta;
+			// `lastUpdateDelta` is the 20.0.0 name; melonJS 19.x (which this
+			// plugin still supports) only has `updateAverageDelta`, so prefer the
+			// new one and fall back
+			this.frameUpdateTime =
+				typeof game.lastUpdateDelta !== "undefined"
+					? game.lastUpdateDelta
+					: game.updateAverageDelta;
 		};
 		this._onBeforeDraw = (time) => {
 			this.frameDrawStartTime = time;
