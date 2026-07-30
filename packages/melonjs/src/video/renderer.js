@@ -122,6 +122,15 @@ export default class Renderer {
 		this.supportsShaderTileLayers = false;
 
 		/**
+		 * Whether this renderer backend can keep mesh geometry resident on the
+		 * GPU, letting a mesh supply a model matrix instead of vertices it has
+		 * already positioned itself. `false` here on the base/Canvas renderer.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.supportsRetainedMesh = false;
+
+		/**
 		 * The background color used to clear the main framebuffer.
 		 * Note: alpha value will be set based on the transparent property of the renderer settings.
 		 * @default black

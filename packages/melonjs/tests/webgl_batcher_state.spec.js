@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
+	Matrix3d,
+	Mesh,
 	NoiseTexture2d,
 	ShaderEffect,
 	video,
@@ -284,5 +286,72 @@ describe("batcher GL state", () => {
 			gl.getVertexAttrib(meshLoc, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING),
 		).toBe(mesh.glVertexBuffer);
 		gl.bindVertexArray(previous);
+	});
+
+	describe("retained mesh draws leave the batcher usable (issue #1507)", () => {
+		const makeMesh = () => {
+			const m = new Mesh(0, 0, {
+				vertices: [-24, -24, 0, 24, -24, 0, 24, 24, 0, -24, 24, 0],
+				uvs: [0, 0, 1, 0, 1, 1, 0, 1],
+				indices: [0, 1, 2, 0, 2, 3],
+				width: 48,
+				height: 48,
+			});
+			m.pos.set(64, 64, 0);
+			m._useWorldSpace = true;
+			m.cullBackFaces = false;
+			return m;
+		};
+
+		it("restores the batcher's own vertex state and upload buffer", (ctx) => {
+			requireWebGL(ctx);
+			// a retained draw binds its own vertex array and index buffer; if it
+			// doesn't hand the batcher's back, the next accumulating flush reads
+			// vertex data from the wrong buffer and silently draws garbage
+			const gl = renderer.gl;
+			const batcher = renderer.batchers.get("mesh");
+			const mesh = makeMesh();
+			try {
+				const proj = new Matrix3d();
+				proj.ortho(0, 128, 128, 0, -1000, 1000);
+				renderer.setProjection(proj);
+				batcher.bind();
+				const expectedArrayObject = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
+
+				mesh.draw(renderer);
+				renderer.flush();
+
+				expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(
+					expectedArrayObject,
+				);
+				expect(gl.getParameter(gl.ARRAY_BUFFER_BINDING)).toBe(
+					batcher.uploadBuffer,
+				);
+				expect(gl.getError()).toBe(gl.NO_ERROR);
+			} finally {
+				mesh.destroy();
+			}
+		});
+
+		it("releases retained geometry on renderer reset", (ctx) => {
+			requireWebGL(ctx);
+			const batcher = renderer.batchers.get("mesh");
+			const mesh = makeMesh();
+			try {
+				const proj = new Matrix3d();
+				proj.ortho(0, 128, 128, 0, -1000, 1000);
+				renderer.setProjection(proj);
+				mesh.draw(renderer);
+				renderer.flush();
+				expect(batcher.retained.size).toBeGreaterThan(0);
+				batcher.reset();
+				// GPU buffers must not outlive a reset — they'd be orphaned,
+				// since the map that owned them is the only handle
+				expect(batcher.retained.size).toBe(0);
+				expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
+			} finally {
+				mesh.destroy();
+			}
+		});
 	});
 });

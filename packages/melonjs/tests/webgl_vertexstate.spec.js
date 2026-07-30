@@ -175,6 +175,45 @@ describe("WebGLVertexState", () => {
 			state.destroy();
 		});
 
+		it("stays bound when it rebuilds while it is the current state", (ctx) => {
+			requireWebGL(ctx);
+			// `build()` snapshots the live bindings and restores them afterwards.
+			// When the state rebuilding IS the bound one, that snapshot names a
+			// vertex array `release()` is about to delete — restoring it raised
+			// INVALID_OPERATION and left nothing bound, so the next draw read
+			// its vertex data from no vertex array at all. This is the path a
+			// batcher takes through `reset()` / context restore.
+			const state = makeState();
+			state.bind();
+			expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(state.handle);
+			gl.getError();
+
+			state.build();
+
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(state.handle);
+			gl.bindVertexArray(null);
+			state.destroy();
+		});
+
+		it("leaves an unrelated bound state alone when rebuilding", (ctx) => {
+			requireWebGL(ctx);
+			// the converse: rebuilding a state that is NOT current must not
+			// steal the binding from whichever one is
+			const current = makeState();
+			const other = makeState();
+			current.bind();
+			gl.getError();
+
+			other.build();
+
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(current.handle);
+			gl.bindVertexArray(null);
+			current.destroy();
+			other.destroy();
+		});
+
 		it("re-points the layout at a replaced vertex buffer", (ctx) => {
 			requireWebGL(ctx);
 			const state = makeState();

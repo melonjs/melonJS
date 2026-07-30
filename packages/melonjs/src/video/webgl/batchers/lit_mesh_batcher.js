@@ -69,6 +69,42 @@ export default class LitMeshBatcher extends MeshBatcher {
 	}
 
 	/**
+	 * Same as the base layout plus the model-space normal, so lighting can be
+	 * evaluated after the shader rotates it into world space.
+	 * @param {object} mesh - the mesh to read geometry from
+	 * @param {Float32Array} out - destination scratch
+	 * @returns {number} number of floats written
+	 * @ignore
+	 */
+	buildRetainedVertexData(mesh, out) {
+		const vertices = mesh.originalVertices;
+		const normals = mesh.originalNormals;
+		const uvs = mesh.uvs;
+		const colors = mesh.vertexColors;
+		const count = mesh.vertexCount;
+		let o = 0;
+		for (let i = 0; i < count; i++) {
+			const i3 = i * 3;
+			const i2 = i * 2;
+			const c = colors ? colors[i] : 0xffffffff;
+			out[o] = vertices[i3];
+			out[o + 1] = vertices[i3 + 1];
+			out[o + 2] = vertices[i3 + 2];
+			out[o + 3] = uvs[i2];
+			out[o + 4] = uvs[i2 + 1];
+			out[o + 5] = ((c >> 16) & 0xff) / 255;
+			out[o + 6] = ((c >> 8) & 0xff) / 255;
+			out[o + 7] = (c & 0xff) / 255;
+			out[o + 8] = ((c >>> 24) & 0xff) / 255;
+			out[o + 9] = normals ? normals[i3] : 0;
+			out[o + 10] = normals ? normals[i3 + 1] : 0;
+			out[o + 11] = normals ? normals[i3 + 2] : 0;
+			o += this.vertexSize;
+		}
+		return o;
+	}
+
+	/**
 	 * Enter the mesh-mode pass (depth state via the inherited base) and upload
 	 * the active stage's 3D lights to the lit shader. With NO lights at all
 	 * (no directional and no ambient), a white ambient keeps a `lit` mesh

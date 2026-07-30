@@ -16,12 +16,11 @@ import {
  * depth buffer handles intra-mesh ordering. Cost: N depth clears + N state
  * toggle pairs per frame.
  *
- * The proposed behaviour (matches Three.js): clear depth once per camera
+ * The proposed behaviour: clear depth once per camera
  * draw, keep depth-test on through a run of consecutive mesh draws, restore
  * blend/depth state only when a non-mesh draw call needs it. The GPU's
  * depth test resolves inter-mesh intersection correctly per pixel without
- * any per-mesh clear — same well-proven approach Three.js has shipped for
- * years.
+ * any per-mesh clear — the standard approach for depth-buffered 3D.
  *
  * Two layers of tests guard the refactor:
  *

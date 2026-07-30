@@ -271,9 +271,21 @@ export default class Mesh extends Renderable {
 		// never mutate it in place.
 		this._indicesOriginal = this.indices;
 
-		// working array for projected vertices (updated each frame in draw)
+		// working array for projected vertices (see the note below on when it
+		// is, and is not, refreshed)
 		/**
-		 * the projected vertex positions, updated each draw call
+		 * the projected vertex positions.
+		 *
+		 * **Not refreshed on the WebGL `Camera3d` path.** There, geometry is
+		 * uploaded once in model space and placed by the GPU, so nothing
+		 * projects vertices per frame and this array holds whatever it last
+		 * did. It is still maintained by the Canvas renderer and by the 2D
+		 * camera path. Engine consumers that need current world positions —
+		 * {@link Mesh#getBounds3d}, {@link Mesh#toPolygon} — derive them on
+		 * demand instead of reading this; user code should do the same.
+		 *
+		 * To edit geometry, write to {@link Mesh#originalVertices} and set
+		 * {@link Mesh#needsUpdate}.
 		 * @type {Float32Array}
 		 */
 		this.vertices = new Float32Array(this.vertexCount * 3);
@@ -295,6 +307,10 @@ export default class Mesh extends Renderable {
 		 * world-space normals for the current draw, recomputed from
 		 * {@link Mesh#originalNormals} along the Camera3d path. Empty (zero) when
 		 * the mesh has no source normals — the shader then ignores lighting.
+		 *
+		 * Carries the same caveat as {@link Mesh#vertices}: the WebGL
+		 * `Camera3d` path rotates normals on the GPU and leaves this array
+		 * untouched.
 		 * @type {Float32Array}
 		 */
 		this.normals = new Float32Array(this.vertexCount * 3);
@@ -597,6 +613,12 @@ export default class Mesh extends Renderable {
 		});
 		/** @ignore */
 		this._hullPolygon = null;
+
+		// Bumped whenever the geometry itself changes, so a renderer holding
+		// GPU-resident copies knows when to refresh them. Placement changes
+		// (transform, position, tint) deliberately do NOT bump it.
+		/** @ignore */
+		this._geometryVersion = 0;
 	}
 
 	/**
@@ -621,6 +643,72 @@ export default class Mesh extends Renderable {
 			offsetY,
 			zScale,
 		);
+	}
+
+	/**
+	 * Signal that this mesh's geometry itself has changed — its vertices, UVs,
+	 * indices, normals or per-vertex colours were edited in place.
+	 *
+	 * Placement is *not* geometry: moving, rotating, scaling or re-tinting a
+	 * mesh needs no signal, because those are applied when drawing rather than
+	 * stored in the geometry. Only reach for this after writing into
+	 * {@link Mesh#originalVertices} and friends directly.
+	 * @type {boolean}
+	 * @example
+	 * // deform the mesh, then tell it the shape moved
+	 * mesh.originalVertices[1] += 10;
+	 * mesh.needsUpdate = true;
+	 */
+	// Deliberately write-only: this is a signal, not a state. Whether the GPU
+	// copy is actually behind is known to the renderer that uploaded it, not
+	// to the mesh, so any getter here would have to guess.
+	// eslint-disable-next-line accessor-pairs
+	set needsUpdate(value) {
+		if (value !== false) {
+			this._geometryVersion++;
+		}
+	}
+
+	/**
+	 * Compose this mesh's placement into a single matrix: where its model-space
+	 * geometry sits in the world.
+	 *
+	 * This is the matrix form of {@link Mesh#_projectVerticesWorld} — the same
+	 * transform, scale and axis bridge, expressed once instead of applied to
+	 * every vertex:
+	 *
+	 *   `translate(pos, depth) · scale(s, -s, ±s) · currentTransform`
+	 *
+	 * The Y negation bridges Y-up geometry to the engine's Y-down world; Z is
+	 * negated too for right-handed (glTF) sources, which makes the bridge a
+	 * rotation rather than a reflection and so preserves triangle winding.
+	 * @returns {Matrix3d} the mesh's model matrix (reused instance)
+	 * @ignore
+	 */
+	_composeModelMatrix() {
+		if (this._modelMatrix === undefined) {
+			/** @ignore */
+			this._modelMatrix = new Matrix3d();
+		}
+		const out = this._modelMatrix.val;
+		const c = this.currentTransform.val;
+		const s = this.meshScale;
+		const sy = -s;
+		const sz = this.rightHanded ? -s : s;
+
+		for (let col = 0; col < 4; col++) {
+			const o = col * 4;
+			out[o] = c[o] * s;
+			out[o + 1] = c[o + 1] * sy;
+			out[o + 2] = c[o + 2] * sz;
+			out[o + 3] = c[o + 3];
+		}
+		// the node origin rides in pos/depth, applied after the scale + bridge
+		out[12] += this.pos.x;
+		out[13] += this.pos.y;
+		out[14] += this.depth;
+
+		return this._modelMatrix;
 	}
 
 	/**
@@ -784,16 +872,14 @@ export default class Mesh extends Renderable {
 	}
 
 	/**
-	 * The mesh's world-space 3D axis-aligned bounding box, as projected by the
-	 * most recent draw. This is the 3D analog of {@link Renderable#getBounds}
-	 * (which returns a flat 2D box from `width`/`height` and so cannot describe
-	 * a mesh's real extent).
+	 * The mesh's world-space 3D axis-aligned bounding box. This is the 3D analog
+	 * of {@link Renderable#getBounds} (which returns a flat 2D box from
+	 * `width`/`height` and so cannot describe a mesh's real extent).
 	 *
-	 * Under a `Camera3d` the mesh projects its vertices into world space every
-	 * frame (see {@link Mesh#_projectVerticesWorld}), so the returned box tracks
-	 * the live transform / animation. Under the 2D path the projected vertices
-	 * are screen-space, so the box is only meaningful after a Camera3d draw —
-	 * use {@link Renderable#getBounds} for the 2D case.
+	 * Computed on demand by bounding the model-space geometry through the
+	 * mesh's current placement, so it reflects the live transform and is valid
+	 * before the mesh has ever been drawn. Meaningful for the `Camera3d` path;
+	 * for the 2D path use {@link Renderable#getBounds}.
 	 *
 	 * The same {@link AABB3d} instance is returned each call (recomputed in
 	 * place), so copy it (`.clone()`) if you need to keep it.
@@ -804,10 +890,15 @@ export default class Mesh extends Renderable {
 			/** @ignore */
 			this._bounds3d = new AABB3d();
 		}
-		// `this.vertices` holds the last draw's world-space positions under
-		// Camera3d — bound them directly (identity matrix). Delegates the
-		// min/max sweep to AABB3d.fromVertices → transformedBounds.
-		return this._bounds3d.fromVertices(this.vertices, this.vertexCount);
+		// Bound the model-space geometry through this mesh's placement, rather
+		// than reading whatever the last draw happened to leave in `vertices`.
+		// The result is therefore correct before the first draw, and stays
+		// correct when the mesh is drawn from retained GPU geometry.
+		return this._bounds3d.fromVertices(
+			this.originalVertices,
+			this.vertexCount,
+			this._composeModelMatrix().val,
+		);
 	}
 
 	/**
@@ -876,6 +967,21 @@ export default class Mesh extends Renderable {
 			if (this._worldSpace !== true) {
 				this._setupWorldSpace();
 			}
+			if (renderer.supportsRetainedMesh === true) {
+				// Retained path: the geometry already lives on the GPU in model
+				// space, so nothing is transformed here. Where the mesh sits is
+				// described by a matrix and applied by the shader, which is what
+				// makes moving/rotating/scaling it free.
+				//
+				// The reflection bridge still inverts winding, but the fix is
+				// `frontFace` at draw time rather than a reversed index copy, so
+				// the authored order is what reaches the GPU — keep `indices`
+				// agreeing with that, including when this instance was
+				// previously drawn through the reversing path below.
+				this.indices = this._indicesOriginal;
+				renderer.drawMesh(this, this._composeModelMatrix());
+				return;
+			}
 			// Camera3d path. The reflection bridge (Y-only negate) inverts
 			// winding, so it needs the reversed indices to keep
 			// `cullBackFaces: true` correct. The rotation bridge
@@ -915,6 +1021,11 @@ export default class Mesh extends Renderable {
 	 * @returns {Polygon} a convex hull polygon in local coordinates
 	 */
 	toPolygon() {
+		// Draws no longer refresh `vertices` on the retained path, so project
+		// on demand here — this is a query, not a per-frame cost.
+		if (this._useWorldSpace === true) {
+			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
+		}
 		// update cached points from projected vertices
 		for (let i = 0; i < this.vertexCount; i++) {
 			this._hullPoints[i].set(this.vertices[i * 3], this.vertices[i * 3 + 1]);
@@ -1064,5 +1175,16 @@ export default class Mesh extends Renderable {
 	 */
 	toImageBitmap() {
 		return createImageBitmap(this.toCanvas());
+	}
+
+	/**
+	 * Release this mesh's GPU-resident geometry, if a renderer is holding any,
+	 * then destroy the renderable.
+	 * @ignore
+	 */
+	destroy() {
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		renderer?.deleteMeshGeometry?.(this);
+		super.destroy();
 	}
 }

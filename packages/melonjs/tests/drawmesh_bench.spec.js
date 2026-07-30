@@ -24,10 +24,21 @@ import {
  * A future batching pass (queue multiple meshes between flushes) would
  * amortize (2) across the run. This baseline lets that future change be
  * measured directly against today's numbers.
+ *
+ * Issue #1507 added the second arm of each case: the same draws through the
+ * retained path (geometry resident on the GPU, placement by uniform) against
+ * the immediate one. Read these as **CPU-side** cost — the run happens under
+ * a software rasterizer, and both arms produce the same clip-space geometry,
+ * so rasterization load is equal and the difference is the per-frame vertex
+ * walk and re-upload that the retained path removes. The reported
+ * `drawElements` count is the other half of the story: the immediate path
+ * splits a mesh past the 16-bit index ceiling into several chunks, while the
+ * retained path draws it whole.
  */
 describe("drawMesh benchmark (baseline for #1468)", () => {
 	let renderer;
 	let cube;
+	let denseMesh;
 
 	beforeAll(() => {
 		boot();
@@ -99,9 +110,42 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 			width: 64,
 			height: 64,
 		});
+
+		// The cube is 8 vertices, so it measures per-CALL overhead almost
+		// exclusively. Issue #1507's actual complaint is high vertex counts,
+		// where the immediate path's per-VERTEX CPU walk and re-upload
+		// dominate — this mesh is sized to show that.
+		// Kept modest on purpose: this runs under a software rasterizer
+		// alongside the rest of the suite, and a mesh large enough to stress
+		// the driver slows unrelated specs down rather than measuring anything
+		// extra. 1 250 quads is already two orders of magnitude past the cube
+		// and shows the vertex-bound effect plainly.
+		const DENSE_QUADS = 1250; // 5 000 vertices, 7 500 indices
+		const dv = new Float32Array(DENSE_QUADS * 4 * 3);
+		const du = new Float32Array(DENSE_QUADS * 4 * 2);
+		const di = new Uint32Array(DENSE_QUADS * 6);
+		for (let q = 0; q < DENSE_QUADS; q++) {
+			const base = q * 4;
+			for (let c = 0; c < 4; c++) {
+				const v = (base + c) * 3;
+				dv[v] = (c === 1 || c === 2 ? 1 : -1) * 8;
+				dv[v + 1] = (c >= 2 ? 1 : -1) * 8;
+				dv[v + 2] = q * 0.001;
+			}
+			di.set([base, base + 1, base + 2, base, base + 2, base + 3], q * 6);
+		}
+		denseMesh = new Mesh(0, 0, {
+			vertices: dv,
+			uvs: du,
+			indices: di,
+			texture: atlas,
+			width: 64,
+			height: 64,
+		});
 	});
 
-	const measure = (label, meshCount, framesToTime) => {
+	const measure = (label, meshCount, framesToTime, retained = false, mesh) => {
+		const target = mesh ?? cube;
 		const isWebGL = renderer instanceof WebGLRenderer;
 		if (!isWebGL) {
 			console.log(`[BENCH] ${label} — skipped, Canvas renderer`);
@@ -110,10 +154,23 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 
 		const WARMUP = 10;
 
-		// warm-up — JIT compile, fill GL caches
+		// Passing a model matrix selects the retained path: the geometry is
+		// uploaded once and every later call is uniforms + one drawElements.
+		// Omitting it keeps the immediate path, which re-walks and re-uploads
+		// the mesh on every call — the two arms are what issue #1507 compares.
+		const draw = retained
+			? () => {
+					renderer.drawMesh(target, target._composeModelMatrix());
+				}
+			: () => {
+					renderer.drawMesh(target);
+				};
+
+		// warm-up — JIT compile, fill GL caches, and (retained) prime the
+		// geometry upload so it isn't charged to the timed run
 		for (let f = 0; f < WARMUP; f++) {
 			for (let i = 0; i < meshCount; i++) {
-				renderer.drawMesh(cube);
+				draw();
 			}
 		}
 
@@ -122,10 +179,16 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		}
 
 		// timed run
+		let drawElementsCalls = 0;
+		const origDE = renderer.gl.drawElements.bind(renderer.gl);
+		renderer.gl.drawElements = (...a) => {
+			drawElementsCalls++;
+			return origDE(...a);
+		};
 		const start = performance.now();
 		for (let f = 0; f < framesToTime; f++) {
 			for (let i = 0; i < meshCount; i++) {
-				renderer.drawMesh(cube);
+				draw();
 			}
 		}
 		// gl.finish forces the driver to flush all queued GL work — without
@@ -133,6 +196,7 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		// numbers look better than they really are.
 		renderer.gl.finish();
 		const elapsed = performance.now() - start;
+		renderer.gl.drawElements = origDE;
 
 		const drawCalls = meshCount * framesToTime;
 		const msPerFrame = elapsed / framesToTime;
@@ -140,13 +204,14 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		const budgetAt60 = (msPerFrame / 16.667) * 100;
 
 		console.log(
-			`[BENCH] ${label.padEnd(20)} ` +
+			`[BENCH] ${(retained ? `${label} (retained)` : label).padEnd(32)} ` +
 				`${meshCount.toString().padStart(4)} meshes/frame × ${framesToTime} frames = ` +
 				`${drawCalls.toString().padStart(6)} drawMesh calls; ` +
 				`total ${elapsed.toFixed(1).padStart(7)}ms, ` +
 				`per-frame ${msPerFrame.toFixed(3).padStart(6)}ms ` +
 				`(${budgetAt60.toFixed(1).padStart(5)}% of 60fps budget), ` +
-				`per-mesh ${(msPerMesh * 1000).toFixed(1).padStart(5)}µs`,
+				`per-mesh ${(msPerMesh * 1000).toFixed(1).padStart(5)}µs, ` +
+				`${drawElementsCalls} drawElements`,
 		);
 	};
 
@@ -154,9 +219,18 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		// Frame counts chosen so total drawMesh calls stays in the same
 		// ballpark (~1500-3000), making per-mesh cost the dominant signal
 		// rather than per-frame fixed overhead.
-		measure("AfterBurner-scale", 15, 200);
-		measure("dense scene", 50, 60);
-		measure("stress (small)", 100, 30);
-		measure("stress (large)", 500, 6);
+		const cases = [
+			["AfterBurner-scale", 15, 200],
+			["dense scene", 50, 60],
+			["stress (small)", 100, 30],
+			["stress (large)", 500, 6],
+		];
+		for (const [label, meshCount, frames] of cases) {
+			measure(label, meshCount, frames, false);
+			measure(label, meshCount, frames, true);
+		}
+		// the vertex-bound case issue #1507 was actually filed about
+		measure("5k-vert mesh ×4", 4, 10, false, denseMesh);
+		measure("5k-vert mesh ×4", 4, 10, true, denseMesh);
 	});
 });

@@ -2,6 +2,9 @@
 
 ## [20.0.0] (melonJS 2) - _unreleased_
 
+### Added
+- **`Mesh.needsUpdate`** ([#1507](https://github.com/melonjs/melonJS/issues/1507)) — signal that a mesh's geometry was edited in place (`originalVertices`, `uvs`, `indices`, normals or per-vertex colours), so the GPU copy is refreshed on the next draw. Moving, rotating, scaling, re-tinting or fading a mesh needs no signal — those are applied when drawing, not stored in the geometry
+
 ### Changed (breaking)
 - **The WebGL renderer is now WebGL 2 only** ([#1509](https://github.com/melonjs/melonJS/issues/1509)) — the WebGL 1 fallback path is removed. `renderer: video.AUTO` falls back to the Canvas renderer on WebGL-1-only devices; `renderer: video.WEBGL` throws there. **User shaders need no changes** — `ShaderEffect` bodies and raw `GLShader` sources (GLSL ES 1.00) compile unchanged on WebGL 2 contexts.
 - `preferWebGL1` setting and the `#webgl1` URI flag are removed (`#webgl` / `#webgl2` are synonyms)
@@ -11,9 +14,20 @@
 - TMX GPU tilemap eligibility is now advertised through `renderer.supportsShaderTileLayers` (a backend capability flag) instead of a WebGL-version check
 - the WebGL renderer is now selected only on devices providing a WebGL 2 context **and** passing the `failIfMajorPerformanceCaveat` check (which melonJS leaves enabled by default, unlike the WebGL default of `false`) — a software rasterizer or blocklisted driver therefore gets the Canvas renderer under `video.AUTO`, and throws under `video.WEBGL`. Set `failIfMajorPerformanceCaveat: false` to accept such a context
 - **each `Batcher` now owns an immutable Vertex Array Object** built at init ([#1509](https://github.com/melonjs/melonJS/issues/1509)): vertex attribute layout is frozen once built, batcher switches cost a single `bindVertexArray` (steady-state frames issue zero attribute-specification calls, measured), and `Batcher.unbind()` no longer disables attribute arrays. Custom batchers inheriting `Batcher.init()`/`bind()` need no changes. Custom shaders hosted by a built-in batcher must declare that batcher's attributes first, in layout order (ShaderEffect-generated vertex shaders already comply) — a console warning fires on mismatch. `GLShader.setVertexAttributes` is no longer called by the engine (still public)
+- **mesh geometry is now supplied to shaders in model space** ([#1507](https://github.com/melonjs/melonJS/issues/1507)) — placement moved from the vertex data into the `uModelMatrix` / `uViewMatrix` / `uTint` uniforms. **This affects custom shaders used on a `Mesh` only** (including a `ShaderEffect` applied to a mesh); sprite and camera post-effect shaders are unaffected. Such a shader must position its vertices with `uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aVertex, 1.0)` and tint with `uTint`, instead of `uProjectionMatrix` alone — the engine warns on the console when a mesh shader declares none of them. `Mesh.vertices` / `Mesh.normals` are no longer refreshed by WebGL draws; `getBounds3d()` and `toPolygon()` compute from the model matrix instead and are now correct before the first draw
 
 ### Performance
 - **Vertex Array Objects for every batcher** ([#1509](https://github.com/melonjs/melonJS/issues/1509)) — vertex attribute layout is specified once at init rather than on every batcher switch and every mesh flush, so steady-state frames issue **zero** attribute-specification calls. How much GL traffic this saves depends on how often a scene alternates batchers: a scene that stays on one batcher saves about 2 calls per frame, one mixing sprites, meshes and primitives about 40 — in both cases well under a millisecond. The structural benefit is the larger one: attribute-state leaks between batchers become impossible by construction.
+- **retained-mode mesh rendering** ([#1507](https://github.com/melonjs/melonJS/issues/1507)) — mesh geometry is uploaded to the GPU once and re-drawn from there, instead of being re-transformed on the CPU and re-uploaded every frame. Steady-state frames issue **zero** vertex uploads and run **zero** per-vertex CPU transforms, however much a mesh moves, rotates, scales or changes tint; only an explicit geometry edit re-uploads. A mesh past 65 535 vertices is also drawn in a single call rather than split into chunks. What to expect: the CPU cost of issuing a mesh draw drops by roughly **25–30% for small meshes** (tens of vertices, where only per-call overhead was ever at stake) and by **more than 95% for vertex-heavy ones** (thousands), because the saving is per-vertex work that no longer happens at all — so the bigger the model, the larger the share. Measured in the in-tree mesh benchmark (`drawmesh_bench.spec.js`, which now runs both paths side by side): an 8-vertex cube 1.8µs → 1.2µs per draw, a 5 000-vertex mesh 66µs → under 2.5µs and from 2 draw calls to 1. The change in shape matters more than any single figure. Measured on an Apple M4 Max (ANGLE Metal) over the vertex counts from [#1507](https://github.com/melonjs/melonJS/issues/1507), draw-phase CPU per frame:
+
+| vertices/frame | before | after | draw calls |
+| --- | --- | --- | --- |
+| 158k | 3.6ms | 0.20ms | 47 → 9 |
+| 376k | 6.0ms | 0.20ms | 110 → 14 |
+| 718k | 9.6ms | 0.27ms | 206 → 19 |
+| 1.16M | 13.8ms | 0.29ms | 349 → 23 |
+
+The old path scales linearly with vertex count; the new one is flat, because no per-vertex work happens at all. At 1.16M vertices submitting the scene went from 83% of a 60fps frame budget to under 2%, and the draw-call collapse is the 16-bit chunking disappearing. Note this is the **CPU** cost of submitting the frame — GPU work is not waited on, so rasterization still costs what it costs, and a scene limited by fill rate rather than by geometry submission will see less of this back
 
 ## [19.9.1] (melonJS 2) - _2026-07-28_
 

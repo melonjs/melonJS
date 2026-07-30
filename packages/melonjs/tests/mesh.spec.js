@@ -1348,4 +1348,87 @@ describe("Mesh × Camera3d world-space path", () => {
 		// shared 1×1 white pixel would just burn a texture unit for nothing
 		expect(m.textureRepeat).toBeUndefined();
 	});
+
+	describe("retained-mode geometry contract (issue #1507)", () => {
+		const makeQuad = () => {
+			return new Mesh(0, 0, {
+				vertices: new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]),
+				uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+				indices: [0, 1, 2, 0, 2, 3],
+				width: 2,
+				height: 2,
+				normalize: false,
+			});
+		};
+
+		it("needsUpdate advances the geometry version", () => {
+			const m = makeQuad();
+			const start = m._geometryVersion;
+			m.needsUpdate = true;
+			expect(m._geometryVersion).toBe(start + 1);
+			// repeated signals each invalidate — the batcher compares versions
+			// rather than clearing a flag, so a second edit in the same frame
+			// must not be swallowed
+			m.needsUpdate = true;
+			expect(m._geometryVersion).toBe(start + 2);
+		});
+
+		it("needsUpdate = false is not a signal", () => {
+			const m = makeQuad();
+			const start = m._geometryVersion;
+			m.needsUpdate = false;
+			expect(m._geometryVersion).toBe(start);
+		});
+
+		it("getBounds3d() is correct before the mesh is ever drawn", () => {
+			const m = makeQuad();
+			m.pos.set(10, 20, 5);
+			const bounds = m.getBounds3d();
+			// placement is a matrix now, so bounds no longer depend on a draw
+			// having happened to populate `vertices`
+			expect(bounds.min.x).toBeCloseTo(8, 5);
+			expect(bounds.max.x).toBeCloseTo(12, 5);
+			expect(bounds.min.y).toBeCloseTo(18, 5);
+			expect(bounds.max.y).toBeCloseTo(22, 5);
+			expect(bounds.min.z).toBeCloseTo(5, 5);
+			expect(bounds.max.z).toBeCloseTo(5, 5);
+		});
+
+		it("getBounds3d() tracks a transform change with no redraw", () => {
+			const m = makeQuad();
+			m.pos.set(10, 20, 5);
+			m.getBounds3d();
+			m.pos.set(-10, 0, 0);
+			m.currentTransform.scale(2, 2);
+			const bounds = m.getBounds3d();
+			expect(bounds.min.x).toBeCloseTo(-14, 5);
+			expect(bounds.max.x).toBeCloseTo(-6, 5);
+			expect(bounds.min.y).toBeCloseTo(-4, 5);
+			expect(bounds.max.y).toBeCloseTo(4, 5);
+		});
+
+		it("composes placement as translate x mesh-scale x transform", () => {
+			const m = makeQuad();
+			m.pos.set(3, 4, 5);
+			const val = m._composeModelMatrix().val;
+			// the Y axis is negated by the reflection bridge between the 2D
+			// (Y-down) and 3D (Y-up) conventions; z follows handedness
+			expect(val[0]).toBeCloseTo(2, 5);
+			expect(val[5]).toBeCloseTo(-2, 5);
+			expect(val[10]).toBeCloseTo(2, 5);
+			expect(val[12]).toBeCloseTo(3, 5);
+			expect(val[13]).toBeCloseTo(4, 5);
+			expect(val[14]).toBeCloseTo(5, 5);
+		});
+
+		it("negates z as well for a right-handed mesh", () => {
+			const m = makeQuad();
+			m.rightHanded = true;
+			const val = m._composeModelMatrix().val;
+			// rotation bridge (Y and Z negated) — determinant stays positive,
+			// which is why this case needs no winding correction
+			expect(val[5]).toBeCloseTo(-2, 5);
+			expect(val[10]).toBeCloseTo(-2, 5);
+		});
+	});
 });

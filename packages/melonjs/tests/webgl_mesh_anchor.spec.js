@@ -38,8 +38,8 @@ import {
  * so sprites/2D are unchanged). `Mesh.preDraw` sets it to `false` on the
  * world-space path, so the anchor translate is SUPPRESSED rather than
  * compensated — width never enters the world-space pipeline at all. This
- * mirrors how Three.js/pixi3d keep `anchor`/`center` on the Sprite class
- * only, never on the 3D node. The invariant these tests lock in: **the net
+ * mirrors the usual split in 3D scene graphs, where `anchor`/`center` is a
+ * 2D sprite concern and never a property of a 3D node. The invariant these tests lock in: **the net
  * rendered position of a world-space mesh must not depend on its
  * `width`/`height`**, and **the flag is exactly what gates that.**
  *
@@ -147,8 +147,14 @@ describe("Mesh anchor-point leak under Camera3d (glTF prop-sink bug)", () => {
 		mesh.draw(renderer, cam); // world-space projection emits final world coords
 		const view = renderer.currentTransform; // == identity (no anchor leak)
 		const out = [];
-		for (let i = 0; i < mesh.vertices.length; i += 3) {
-			_v.set(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
+		// Geometry stays in model space and is placed by the shader, so
+		// reproduce what the GPU computes — model, then view — rather than
+		// reading `mesh.vertices`, which a retained draw never refreshes.
+		const model = mesh._composeModelMatrix();
+		const src = mesh.originalVertices;
+		for (let i = 0; i < src.length; i += 3) {
+			_v.set(src[i], src[i + 1], src[i + 2]);
+			model.apply(_v);
 			view.apply(_v);
 			out.push(
 				Math.round(_v.x * 1000) / 1000,
@@ -278,7 +284,10 @@ describe("Mesh anchor-point leak under Camera3d (glTF prop-sink bug)", () => {
 		expect(m.applyAnchorTransform).toBe(anchorOn); // flag wired as intended
 		m.draw(renderer, cam); // Camera3d → world-space projection regardless
 		const view = renderer.currentTransform;
-		_v.set(m.vertices[0], m.vertices[1], m.vertices[2]);
+		// same as renderedVertices: geometry is model-space, placed by the
+		// shader, so apply model then view rather than reading `vertices`
+		_v.set(m.originalVertices[0], m.originalVertices[1], m.originalVertices[2]);
+		m._composeModelMatrix().apply(_v);
 		view.apply(_v);
 		const out = { x: _v.x, y: _v.y };
 		m.postDraw(renderer);

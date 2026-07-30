@@ -193,4 +193,117 @@ describe("Sprite3d — WebGL draw path", () => {
 			drawOnce(s);
 		}).not.toThrow();
 	});
+
+	describe("retained-mode billboards (issue #1507)", () => {
+		const makeBillboard = () => {
+			return new Sprite3d(0, 0, {
+				image: makeTex(32, 32),
+				width: 64,
+				height: 64,
+				z: 0,
+				billboard: "cylindrical",
+			});
+		};
+
+		const countUploads = (gl) => {
+			const calls = { array: 0 };
+			const orig = gl.bufferData.bind(gl);
+			gl.bufferData = (target, ...rest) => {
+				if (target === gl.ARRAY_BUFFER) {
+					calls.array++;
+				}
+				return orig(target, ...rest);
+			};
+			return {
+				calls,
+				restore: () => {
+					gl.bufferData = orig;
+				},
+			};
+		};
+
+		it("the billboard model matrix agrees with the CPU corner projection", (ctx) => {
+			requireWebGL2(ctx);
+			// The billboard basis is now applied twice over: once on the CPU for
+			// renderers without retained geometry, once as a matrix for the GPU.
+			// If those ever disagree the card would face a different way
+			// depending on the backend, so pin them against each other.
+			const s = makeBillboard();
+			const cam = new Camera3d(0, 0, 128, 128);
+			cam.pos.set(120, 60, 400);
+			cam.lookAt(0, 0, 0);
+			s.pos.set(17, -23, 0);
+			s.depth = 9;
+			s._billboardCam = cam;
+			// without this both sides would fall back to the plain mesh
+			// placement and agree for the wrong reason
+			expect(s._billboardBasis()).not.toBe(false);
+
+			const m = s._composeModelMatrix().val;
+			s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+			const cpu = Array.from(s.vertices);
+
+			for (let i = 0; i < 4; i++) {
+				const x = s.originalVertices[i * 3];
+				const y = s.originalVertices[i * 3 + 1];
+				const z = s.originalVertices[i * 3 + 2];
+				// column-major: m[col * 4 + row]
+				expect(m[0] * x + m[4] * y + m[8] * z + m[12]).toBeCloseTo(
+					cpu[i * 3],
+					4,
+				);
+				expect(m[1] * x + m[5] * y + m[9] * z + m[13]).toBeCloseTo(
+					cpu[i * 3 + 1],
+					4,
+				);
+				expect(m[2] * x + m[6] * y + m[10] * z + m[14]).toBeCloseTo(
+					cpu[i * 3 + 2],
+					4,
+				);
+			}
+		});
+
+		it("re-orienting a billboard across frames uploads nothing", (ctx) => {
+			requireWebGL2(ctx);
+			const s = makeBillboard();
+			drawOnce(s);
+			const { calls, restore } = countUploads(renderer.gl);
+			try {
+				const cam = new Camera3d(0, 0, 128, 128);
+				for (let i = 1; i <= 4; i++) {
+					// orbit the camera so the card re-faces it every frame
+					cam.pos.set(i * 40, i * 15, 400);
+					cam.lookAt(0, 0, 0);
+					renderer.clear();
+					s.preDraw(renderer, cam);
+					s.draw(renderer, cam);
+					s.postDraw(renderer, cam);
+					renderer.flush();
+				}
+				// facing the camera is a matrix, not a geometry edit
+				expect(calls.array).toBe(0);
+			} finally {
+				restore();
+			}
+		});
+
+		it("changing animation frame re-uploads exactly once", (ctx) => {
+			requireWebGL2(ctx);
+			// a frame change rewrites the quad's UVs in place, which IS a
+			// geometry edit and must invalidate the retained copy — but only once
+			const s = makeBillboard();
+			drawOnce(s);
+			const { calls, restore } = countUploads(renderer.gl);
+			try {
+				s._applyFrame(s._region);
+				drawOnce(s);
+				expect(calls.array).toBe(1);
+				drawOnce(s);
+				drawOnce(s);
+				expect(calls.array).toBe(1);
+			} finally {
+				restore();
+			}
+		});
+	});
 });

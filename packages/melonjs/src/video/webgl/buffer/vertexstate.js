@@ -74,6 +74,7 @@ export default class WebGLVertexState {
 			this.descriptor;
 
 		const saved = this.#captureBindings();
+		const replaced = this.handle;
 		this.release();
 
 		this.handle = gl.createVertexArray();
@@ -109,6 +110,14 @@ export default class WebGLVertexState {
 			indexBuffer.bind();
 		}
 
+		if (saved.vertexArray === replaced && replaced !== null) {
+			// this state was the bound one when it was asked to rebuild, and
+			// `release()` has since deleted that name. Re-binding a deleted
+			// vertex array raises INVALID_OPERATION and leaves nothing bound,
+			// so hand back the replacement instead — the caller asked for a
+			// rebuild, not for its vertex array to go away.
+			saved.vertexArray = this.handle;
+		}
 		this.#restoreBindings(saved);
 	}
 
