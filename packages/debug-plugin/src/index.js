@@ -6,6 +6,23 @@ import { applyPatches } from "./patches.js";
 import { GRAPH_HEIGHT, GRAPH_SAMPLES, registerStyles } from "./styles.js";
 
 /**
+ * How many frames the displayed update/draw times are averaged over.
+ *
+ * `performance.now()` is deliberately coarse: browsers clamp it to 100µs in a
+ * page that isn't cross-origin isolated (5µs when it is), as a side-channel
+ * mitigation. A single frame's timing therefore quantizes to multiples of the
+ * tick, so a sub-millisecond draw phase reads as an alternating `0.00` / `0.10`
+ * rather than as its real value — and the two decimals this panel prints would
+ * be claiming precision the clock never provided.
+ *
+ * Averaging over N frames pushes the effective resolution well under the tick
+ * (the quantization error is what averages out) and steadies the digits. The
+ * sparkline still plots the raw per-frame values, so spikes stay visible.
+ * @ignore
+ */
+const TIME_SAMPLES = 30;
+
+/**
  * @classdesc
  * a simple debug panel plugin <br>
  * <img src="images/debugPanel.png"/> <br>
@@ -21,8 +38,8 @@ import { GRAPH_HEIGHT, GRAPH_SAMPLES, registerStyles } from "./styles.js";
  * &bull; amount of sprites objects <br>
  * &bull; amount of objects currently inactive in the the object pool <br>
  * &bull; memory usage (Heap Memory information is only available under Chrome) <br>
- * &bull; frame update time (in ms) <br>
- * &bull; frame draw time (in ms) <br>
+ * &bull; frame update time (in ms, averaged over the last 30 frames) <br>
+ * &bull; frame draw time (in ms, averaged over the last 30 frames) <br>
  * &bull; current fps rate vs target fps <br>
  * additionally, using the checkbox in the panel it is also possible to display : <br>
  * &bull; the hitbox or bounding box for all objects <br>
@@ -81,20 +98,29 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		this._buildPanel();
 
 		// frame timing
-		this.frameUpdateStartTime = 0;
 		this.frameDrawStartTime = 0;
 		this.frameUpdateTime = 0;
 		this.frameDrawTime = 0;
+		// rolling per-frame samples behind the averaged readouts
+		this._updateSamples = new Float32Array(TIME_SAMPLES);
+		this._drawSamples = new Float32Array(TIME_SAMPLES);
+		this._timeSampleIndex = 0;
+		this._timeSampleCount = 0;
 
 		// event listener references for cleanup
 		this._onResize = () => {
 			this._syncPosition();
 		};
-		this._onBeforeUpdate = (time) => {
-			this.frameUpdateStartTime = time;
-		};
-		this._onAfterUpdate = (time) => {
-			this.frameUpdateTime = time - this.frameUpdateStartTime;
+		this._onAfterUpdate = () => {
+			// Read the engine's own measurement rather than timing this ourselves.
+			// `GAME_BEFORE_UPDATE` carries the frame timestamp but
+			// `GAME_AFTER_UPDATE` carries `lastUpdate`, which is only assigned
+			// inside the fixed-step loop — on a frame that runs no update step it
+			// still holds a value from an earlier frame, so differencing the two
+			// yields a negative or otherwise meaningless duration. The engine
+			// already computes the real elapsed time of a logic step (it needs it
+			// to smooth its own timestep) and exposes it here.
+			this.frameUpdateTime = game.updateAverageDelta;
 		};
 		this._onBeforeDraw = (time) => {
 			this.frameDrawStartTime = time;
@@ -102,6 +128,14 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		};
 		this._onAfterDraw = (time) => {
 			this.frameDrawTime = time - this.frameDrawStartTime;
+			// collected here rather than in `_updatePanel` so the average is
+			// already warm when the panel is first opened
+			this._updateSamples[this._timeSampleIndex] = this.frameUpdateTime;
+			this._drawSamples[this._timeSampleIndex] = this.frameDrawTime;
+			this._timeSampleIndex = (this._timeSampleIndex + 1) % TIME_SAMPLES;
+			if (this._timeSampleCount < TIME_SAMPLES) {
+				this._timeSampleCount++;
+			}
 			// `_updatePanel()` writes into the HTML overlay — only useful
 			// while the panel is open. `_drawQuadTree()` is a world-space
 			// debug overlay and gates itself on `options.quadtree`, so it
@@ -119,7 +153,6 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		};
 
 		event.on(event.CANVAS_ONRESIZE, this._onResize);
-		event.on(event.GAME_BEFORE_UPDATE, this._onBeforeUpdate);
 		event.on(event.GAME_AFTER_UPDATE, this._onAfterUpdate);
 		event.on(event.GAME_BEFORE_DRAW, this._onBeforeDraw);
 		event.on(event.GAME_AFTER_DRAW, this._onAfterDraw);
@@ -267,12 +300,34 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		s.width = `${rect.width}px`;
 	}
 
+	/**
+	 * Mean of the collected per-frame samples, which is what the panel shows
+	 * instead of the latest frame — see {@link TIME_SAMPLES} for why a single
+	 * frame's reading can't be trusted at this magnitude. Summed fresh each
+	 * call (30 additions) rather than kept as a running total, so no floating
+	 * point drift accumulates over a long session.
+	 * @param {Float32Array} samples - `_updateSamples` or `_drawSamples`
+	 * @returns {number} mean frame time in milliseconds
+	 * @private
+	 */
+	_meanTime(samples) {
+		const count = this._timeSampleCount;
+		if (count === 0) {
+			return 0;
+		}
+		let sum = 0;
+		for (let i = 0; i < count; i++) {
+			sum += samples[i];
+		}
+		return sum / count;
+	}
+
 	/** @private */
 	_updatePanel() {
 		this.stats.objects.textContent = game.world.children.length;
 		this.stats.draws.textContent = this.counters.get("draws");
-		this.stats.update.textContent = `${this.frameUpdateTime.toFixed(2)}ms`;
-		this.stats.draw.textContent = `${this.frameDrawTime.toFixed(2)}ms`;
+		this.stats.update.textContent = `${this._meanTime(this._updateSamples).toFixed(2)}ms`;
+		this.stats.draw.textContent = `${this._meanTime(this._drawSamples).toFixed(2)}ms`;
 		this.stats.fps.textContent = `${timer.fps}/${timer.maxfps} fps`;
 		this.stats.shapes.textContent = this.counters.get("shapes");
 		this.stats.sprites.textContent = this.counters.get("sprites");
@@ -405,7 +460,6 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			this.panelWrap.parentElement.removeChild(this.panelWrap);
 		}
 		event.off(event.CANVAS_ONRESIZE, this._onResize);
-		event.off(event.GAME_BEFORE_UPDATE, this._onBeforeUpdate);
 		event.off(event.GAME_AFTER_UPDATE, this._onAfterUpdate);
 		event.off(event.GAME_BEFORE_DRAW, this._onBeforeDraw);
 		event.off(event.GAME_AFTER_DRAW, this._onAfterDraw);

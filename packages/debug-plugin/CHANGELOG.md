@@ -1,5 +1,11 @@
 # Changelog
 
+## 16.1.1
+
+### Fixed
+- The **update** readout showed a meaningless number — in practice a near-constant that ignored the scene entirely. It was derived by subtracting the `GAME_BEFORE_UPDATE` timestamp from the `GAME_AFTER_UPDATE` one, but those are not a matched pair: the latter carries the engine's `lastUpdate`, which is only assigned inside the fixed-timestep loop, so on any frame that runs no logic step it still holds a value from an earlier frame and the difference comes out negative. The panel now reads `updateAverageDelta`, the elapsed time the engine already measures for its own timestep smoothing. The readout responds to scene load again (measured: ~0.02ms on a four-mesh scene vs ~0.13ms on the sprite benchmark, where it previously reported the same figure for both), and the update trace in the frame-time graph is fixed with it.
+- The **update / draw frame times** now display a mean over the last 30 frames rather than the latest frame alone. Those readouts are `performance.now()` deltas, and browsers clamp that clock to 100µs in a page that isn't cross-origin isolated (5µs when it is) — so a single frame's timing could only land on multiples of 0.1ms, and the two decimals the panel prints were never able to move. A sub-millisecond draw phase read as a value flickering between neighbouring ticks (e.g. `0.00` / `1.00`) instead of the figure in between. Averaging pushes the effective resolution below the tick, so both decimals now carry information and the digits hold still enough to read. The frame-time sparkline still plots raw per-frame values, so spikes remain visible.
+
 ## 16.1.0
 
 ### Requirements
