@@ -96,9 +96,23 @@ export default class LitMeshBatcher extends MeshBatcher {
 			out[o + 6] = ((c >> 8) & 0xff) / 255;
 			out[o + 7] = (c & 0xff) / 255;
 			out[o + 8] = ((c >>> 24) & 0xff) / 255;
-			out[o + 9] = normals ? normals[i3] : 0;
-			out[o + 10] = normals ? normals[i3 + 1] : 0;
-			out[o + 11] = normals ? normals[i3 + 2] : 0;
+			// A zero-length normal must not reach the shader: it does
+			// `normalize(vNormal)`, and normalize(vec3(0)) is NaN — every
+			// fragment touching that vertex goes black or garbage. Degenerate
+			// triangles in OBJ/glTF assets produce these, so substitute a unit
+			// vector, matching what `_projectNormalsWorld` does on the CPU path.
+			const nx = normals ? normals[i3] : 0;
+			const ny = normals ? normals[i3 + 1] : 0;
+			const nz = normals ? normals[i3 + 2] : 0;
+			if (nx * nx + ny * ny + nz * nz > 1e-16) {
+				out[o + 9] = nx;
+				out[o + 10] = ny;
+				out[o + 11] = nz;
+			} else {
+				out[o + 9] = 0;
+				out[o + 10] = 1;
+				out[o + 11] = 0;
+			}
 			o += this.vertexSize;
 		}
 		return o;

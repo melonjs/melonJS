@@ -319,6 +319,11 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 			expect(mesh.vertexCount).toBeGreaterThan(65535);
 			// one call, not one per 16-bit chunk
 			expect(calls.drawElements).toBe(1);
+			// ...and with 32-bit indices. Narrowing them would still be one
+			// call, but every index past 65 535 would wrap and draw a different
+			// triangle, with no GL error to show for it.
+			const geometry = renderer.batchers.get("mesh").retained.get(mesh);
+			expect(geometry.indexType).toBe(renderer.gl.UNSIGNED_INT);
 		} finally {
 			restore();
 			mesh.destroy();
@@ -416,9 +421,28 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 			frame(retained);
 			renderer.clearColor("#000000");
 			dynamic.pos.set(64, 64, 0);
-			frame(dynamic);
-			expect(centrePixel()[3]).toBeGreaterThan(0);
-			expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
+			const gl = renderer.gl;
+			const batcher = renderer.batchers.get("mesh");
+			const { calls, restore } = spy();
+			try {
+				frame(dynamic);
+				// the accumulating draw has to actually reach the GPU
+				expect(calls.drawElements).toBeGreaterThan(0);
+			} finally {
+				restore();
+			}
+			// and it has to have drawn through the batcher's own buffers. This
+			// is asserted on the bindings rather than on pixels: the dynamic
+			// path projects to a fixed z behind the retained mesh, so the depth
+			// test legitimately rejects it and a colour check would fail for a
+			// reason unrelated to state restoration.
+			expect(gl.getParameter(gl.ARRAY_BUFFER_BINDING)).toBe(
+				batcher.uploadBuffer,
+			);
+			expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(
+				batcher.vertexState.handle,
+			);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
 		} finally {
 			retained.destroy();
 			dynamic.destroy();
@@ -505,6 +529,83 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 		}
 	});
 
+	it("substitutes a unit normal for degenerate ones on the lit path", (ctx) => {
+		requireWebGL2(ctx);
+		// `normalize(vec3(0))` is NaN, so a zero-length source normal would turn
+		// every fragment touching that vertex black or garbage. The CPU path
+		// substituted +Y for these; the retained builder has to as well.
+		const mesh = makeMesh();
+		mesh.lit = true;
+		mesh.originalNormals = new Float32Array(mesh.vertexCount * 3); // all zero
+		try {
+			const batcher = renderer.batchers.get("litMesh");
+			const scratch = new Float32Array(mesh.vertexCount * batcher.vertexSize);
+			const floats = batcher.buildRetainedVertexData(mesh, scratch);
+			expect(floats).toBeGreaterThan(0);
+
+			for (let i = 0; i < mesh.vertexCount; i++) {
+				const o = i * batcher.vertexSize;
+				const n = [scratch[o + 9], scratch[o + 10], scratch[o + 11]];
+				const length = Math.hypot(...n);
+				expect(length, `vertex ${i} normal ${n}`).toBeGreaterThan(0.5);
+			}
+		} finally {
+			mesh.destroy();
+		}
+	});
+
+	it("keeps a real normal intact on the lit path", (ctx) => {
+		requireWebGL2(ctx);
+		// guard against the degenerate fallback being applied unconditionally
+		const mesh = makeMesh();
+		mesh.lit = true;
+		const normals = new Float32Array(mesh.vertexCount * 3);
+		for (let i = 0; i < mesh.vertexCount; i++) {
+			normals[i * 3 + 2] = 1; // +Z
+		}
+		mesh.originalNormals = normals;
+		try {
+			const batcher = renderer.batchers.get("litMesh");
+			const scratch = new Float32Array(mesh.vertexCount * batcher.vertexSize);
+			batcher.buildRetainedVertexData(mesh, scratch);
+			expect(scratch[9]).toBeCloseTo(0, 5);
+			expect(scratch[10]).toBeCloseTo(0, 5);
+			expect(scratch[11]).toBeCloseTo(1, 5);
+		} finally {
+			mesh.destroy();
+		}
+	});
+
+	it("releases GPU geometry when the mesh leaves the world", (ctx) => {
+		requireWebGL2(ctx);
+		// `destroy()` is not the only way a mesh goes away: removal with
+		// `keepalive`, or recycling through the pool, skips it entirely — and
+		// the retained map is the only handle on those GL objects
+		const mesh = makeMesh();
+		const batcher = renderer.batchers.get("mesh");
+		try {
+			frame(mesh);
+			expect(batcher.retained.has(mesh)).toBe(true);
+
+			mesh.onDeactivateEvent();
+			expect(batcher.retained.has(mesh)).toBe(false);
+			expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
+
+			// and it rebuilds cleanly if drawn again, rather than reusing a
+			// freed handle — this is what makes a recycled mesh safe
+			const { calls, restore } = spy();
+			try {
+				frame(mesh);
+				expect(calls.arrayUploads).toBe(1);
+				expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
+			} finally {
+				restore();
+			}
+		} finally {
+			mesh.destroy();
+		}
+	});
+
 	// deliberately last: losing the context leaves it unusable for a while
 	// afterwards, so any pixel assertion that followed would read an empty
 	// framebuffer and fail for reasons that have nothing to do with it
@@ -519,6 +620,13 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 		try {
 			frame(mesh);
 			ext.loseContext();
+			// while lost, the mesh's buffers are gone; drawing must neither
+			// throw nor draw through a dangling handle
+			expect(renderer.gl.isContextLost()).toBe(true);
+			expect(() => {
+				return frame(mesh);
+			}).not.toThrow();
+
 			ext.restoreContext();
 			// the restore is asynchronous in some drivers; drawing into a
 			// still-lost context must not throw either way

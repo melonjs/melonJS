@@ -344,10 +344,18 @@ describe("batcher GL state", () => {
 				mesh.draw(renderer);
 				renderer.flush();
 				expect(batcher.retained.size).toBeGreaterThan(0);
+				const geometry = batcher.retained.get(mesh);
+				expect(geometry.vertexBuffer).not.toBeNull();
+
 				batcher.reset();
 				// GPU buffers must not outlive a reset — they'd be orphaned,
-				// since the map that owned them is the only handle
+				// since the map that owned them is the only handle. Clearing the
+				// map alone would satisfy a size check while leaking every VBO,
+				// IBO and VAO, so assert the objects were released too.
 				expect(batcher.retained.size).toBe(0);
+				expect(geometry.vertexBuffer).toBeNull();
+				expect(geometry.glIndexBuffer).toBeNull();
+				expect(geometry.vertexState).toBeNull();
 				expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
 			} finally {
 				mesh.destroy();

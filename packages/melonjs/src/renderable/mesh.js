@@ -826,15 +826,21 @@ export default class Mesh extends Renderable {
 	 * (e.g. a level transition into a 2D minigame) gets its original
 	 * winding back and stays correctly oriented under
 	 * `cullBackFaces: true`.
+	 * @param {boolean} [needsReversedIndices=true] - build the winding-reversed index copy. `false` on the retained path, which corrects winding with `frontFace` and would otherwise duplicate the index array for nothing.
 	 * @ignore
 	 */
-	_setupWorldSpace() {
+	_setupWorldSpace(needsReversedIndices = true) {
 		// Only the reflection bridge (left-handed, Y-only negate) inverts
 		// winding and needs the reversed copy. `rightHanded` meshes (all glTF
 		// scenes) use a rotation bridge that preserves winding, so they keep
 		// `_indicesOriginal` and never read the reversed buffer — skip the
 		// allocation entirely for them.
-		if (this.rightHanded !== true) {
+		//
+		// The retained path also never reads it: it uploads the authored order
+		// and flips `frontFace` instead, so building the copy there would
+		// duplicate the whole index array for nothing (megabytes on a dense
+		// mesh).
+		if (needsReversedIndices === true && this.rightHanded !== true) {
 			const src = this._indicesOriginal;
 			// match the source index type (Uint16Array OR Uint32Array): a copy
 			// into a hard-coded Uint16Array would truncate indices for meshes
@@ -869,6 +875,24 @@ export default class Mesh extends Renderable {
 	onActivateEvent(...args) {
 		super.onActivateEvent(...args);
 		this._useWorldSpace = game.viewport instanceof Camera3d;
+	}
+
+	/**
+	 * Release any GPU geometry when this mesh leaves the world.
+	 *
+	 * `destroy()` is not enough on its own: a child removed with
+	 * `keepalive: true`, or one recycled through {@link pool}, never gets
+	 * destroyed, so its persistent vertex/index buffers would outlive every
+	 * reference to it and only be reclaimed on a renderer reset. Releasing
+	 * here also means a recycled instance starts from a clean slate — it
+	 * rebuilds on its next draw rather than inheriting the previous
+	 * occupant's geometry.
+	 * @ignore
+	 */
+	onDeactivateEvent(...args) {
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		renderer?.deleteMeshGeometry?.(this);
+		super.onDeactivateEvent(...args);
 	}
 
 	/**
@@ -965,7 +989,7 @@ export default class Mesh extends Renderable {
 				: this._useWorldSpace === true;
 		if (useWorldSpace) {
 			if (this._worldSpace !== true) {
-				this._setupWorldSpace();
+				this._setupWorldSpace(renderer.supportsRetainedMesh !== true);
 			}
 			if (renderer.supportsRetainedMesh === true) {
 				// Retained path: the geometry already lives on the GPU in model
@@ -1021,9 +1045,13 @@ export default class Mesh extends Renderable {
 	 * @returns {Polygon} a convex hull polygon in local coordinates
 	 */
 	toPolygon() {
-		// Draws no longer refresh `vertices` on the retained path, so project
-		// on demand here — this is a query, not a per-frame cost.
-		if (this._useWorldSpace === true) {
+		// Draws no longer refresh `vertices` on the retained path, so project on
+		// demand — this is a query, not a per-frame cost. Keyed off
+		// `_worldSpace` (set once `_setupWorldSpace` has run) rather than the
+		// activation-time `_useWorldSpace`: with several cameras on a stage the
+		// two disagree, and reading a never-written `vertices` returns a hull
+		// collapsed onto the origin.
+		if (this._worldSpace === true) {
 			this._projectVerticesWorld(this.pos.x, this.pos.y, this.depth);
 		}
 		// update cached points from projected vertices
@@ -1183,6 +1211,8 @@ export default class Mesh extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
+		// the fallback is load-bearing: a mesh that was never parented has no
+		// `parentApp`, and skipping the release would leak its GPU geometry
 		const renderer = this.parentApp?.renderer ?? game.renderer;
 		renderer?.deleteMeshGeometry?.(this);
 		super.destroy();

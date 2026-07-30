@@ -8,9 +8,11 @@
 //
 // `uModelMatrix` carries the mesh's own transform (including the Y/Z axis
 // bridge and mesh scale); `uViewMatrix` carries the camera view plus any
-// ancestor container transform. Both default to identity, which is what the
-// legacy accumulation path (2D camera, vertices pre-projected on the CPU)
-// relies on.
+// ancestor container transform. Both are always written before a draw — the
+// accumulation path (2D camera, vertices pre-projected on the CPU) pushes
+// identity explicitly. Note GLSL uniforms default to ZERO, not identity, so a
+// path that reached this shader without setting them would collapse every
+// vertex onto the origin rather than drawing untransformed.
 attribute vec3 aVertex;
 attribute vec2 aRegion;
 attribute vec4 aColor;

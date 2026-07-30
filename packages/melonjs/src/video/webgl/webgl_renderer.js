@@ -1644,6 +1644,10 @@ export default class WebGLRenderer extends Renderer {
 
 		if (mesh.cullBackFaces) {
 			gl.disable(gl.CULL_FACE);
+			// restore the default orientation alongside the cull toggle: leaving
+			// it at CW would leak to any later consumer of the context that reads
+			// `gl_FrontFacing` or enables culling itself
+			gl.frontFace(gl.CCW);
 		}
 
 		// revert to default shader if custom was applied

@@ -1407,6 +1407,42 @@ describe("Mesh × Camera3d world-space path", () => {
 			expect(bounds.max.y).toBeCloseTo(4, 5);
 		});
 
+		it("toPolygon() projects on demand once the mesh is world-space", () => {
+			// retained draws never refresh `vertices`, so a hull read straight
+			// out of that array would collapse onto the origin
+			const m = makeQuad();
+			m.pos.set(30, 40, 0);
+			m._setupWorldSpace();
+			const poly = m.toPolygon();
+			const xs = poly.points.map((p) => {
+				return p.x;
+			});
+			const ys = poly.points.map((p) => {
+				return p.y;
+			});
+			expect(Math.max(...xs)).toBeGreaterThan(0);
+			expect(Math.max(...ys)).toBeGreaterThan(0);
+			// a degenerate all-zero hull is the failure mode being guarded
+			expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(0);
+			expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0);
+		});
+
+		it("skips the reversed index copy when the renderer is retained", () => {
+			// the retained path corrects winding with frontFace, so building the
+			// copy duplicates the whole index array for nothing — megabytes on a
+			// dense mesh
+			const m = makeQuad();
+			m._setupWorldSpace(false);
+			expect(m._indicesReversed).toBeUndefined();
+
+			const legacy = makeQuad();
+			legacy._setupWorldSpace(true);
+			expect(legacy._indicesReversed).toBeDefined();
+			expect(legacy._indicesReversed.length).toBe(
+				legacy._indicesOriginal.length,
+			);
+		});
+
 		it("composes placement as translate x mesh-scale x transform", () => {
 			const m = makeQuad();
 			m.pos.set(3, 4, 5);

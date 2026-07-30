@@ -440,7 +440,7 @@ export default class MeshBatcher extends MaterialBatcher {
 
 		const geometry = this.retainedGeometryFor(mesh);
 		geometry.bind();
-		gl.drawElements(gl.TRIANGLES, geometry.indexCount, geometry.indexType, 0);
+		gl.drawElements(this.mode, geometry.indexCount, geometry.indexType, 0);
 
 		// hand the batcher's own vertex state back, so a subsequent
 		// accumulated draw uploads and draws through its buffers, not these

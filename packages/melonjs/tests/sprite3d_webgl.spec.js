@@ -206,18 +206,24 @@ describe("Sprite3d — WebGL draw path", () => {
 		};
 
 		const countUploads = (gl) => {
-			const calls = { array: 0 };
+			const calls = { array: 0, drawElements: 0 };
 			const orig = gl.bufferData.bind(gl);
+			const origDraw = gl.drawElements.bind(gl);
 			gl.bufferData = (target, ...rest) => {
 				if (target === gl.ARRAY_BUFFER) {
 					calls.array++;
 				}
 				return orig(target, ...rest);
 			};
+			gl.drawElements = (...args) => {
+				calls.drawElements++;
+				return origDraw(...args);
+			};
 			return {
 				calls,
 				restore: () => {
 					gl.bufferData = orig;
+					gl.drawElements = origDraw;
 				},
 			};
 		};
@@ -280,7 +286,10 @@ describe("Sprite3d — WebGL draw path", () => {
 					s.postDraw(renderer, cam);
 					renderer.flush();
 				}
-				// facing the camera is a matrix, not a geometry edit
+				// facing the camera is a matrix, not a geometry edit — but only
+				// meaningful if the frames actually drew: zero uploads is also
+				// what "nothing happened at all" looks like
+				expect(calls.drawElements).toBe(4);
 				expect(calls.array).toBe(0);
 			} finally {
 				restore();
