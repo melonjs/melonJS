@@ -32,7 +32,7 @@ The panel displays the following information across three rows:
 * **#objects** — number of objects currently active in the scene
 * **#draws** — number of draw operations per frame
 * **hitbox / velocity / quadtree** — toggle checkboxes for debug overlays
-* **Update / Draw** — frame update and draw time in milliseconds
+* **Update / Draw** — frame update and draw time in milliseconds, averaged over the last 30 frames (`performance.now()` is clamped to 100µs in a page that is not cross-origin isolated, so a single frame's reading cannot resolve the printed decimals)
 * **Heap** — JS heap memory usage (used/total in MB, Chrome only)
 * **Pool** — number of objects currently in the object pool
 * **FPS** — current vs target frame rate

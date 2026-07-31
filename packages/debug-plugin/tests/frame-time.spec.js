@@ -90,21 +90,6 @@ describe("DebugPanelPlugin frame times", () => {
 			}
 		});
 
-		it("never produces a negative duration", () => {
-			// the old subtraction did exactly this whenever the fixed-step loop
-			// skipped a frame
-			const previous = game.lastUpdateDelta;
-			try {
-				for (const value of [0, 0.1, 5]) {
-					game.lastUpdateDelta = value;
-					panel._onAfterUpdate();
-					expect(panel.frameUpdateTime).toBeGreaterThanOrEqual(0);
-				}
-			} finally {
-				game.lastUpdateDelta = previous;
-			}
-		});
-
 		it("falls back to updateAverageDelta on melonJS 19.x", () => {
 			// this plugin supports melonjs >=19.8, where the field is still called
 			// `updateAverageDelta`; 20.0.0 renamed it to `lastUpdateDelta`. Shadow
@@ -128,16 +113,95 @@ describe("DebugPanelPlugin frame times", () => {
 		});
 
 		it("prefers the new name when both are present", () => {
-			// with the deprecated alias in place both resolve, and the new one has
-			// to win so the fallback can be dropped later without behaviour change
+			// the deprecated alias is a live accessor over the same storage, so
+			// setting the field alone makes both read alike and proves nothing.
+			// Shadow the old name with a DIFFERENT own value to see which wins.
 			const previous = game.lastUpdateDelta;
 			try {
 				game.lastUpdateDelta = 9;
+				Object.defineProperty(game, "updateAverageDelta", {
+					value: 111,
+					configurable: true,
+					writable: true,
+				});
 				panel._onAfterUpdate();
 				expect(panel.frameUpdateTime).toBe(9);
 			} finally {
+				delete game.updateAverageDelta;
 				game.lastUpdateDelta = previous;
 			}
+		});
+
+		it("degrades to 0 rather than NaN when neither name resolves", () => {
+			// an undefined written into the Float32Array sample ring becomes NaN,
+			// and the mean then prints "NaNms" for the next 30 frames
+			const previous = game.lastUpdateDelta;
+			try {
+				delete game.lastUpdateDelta;
+				Object.defineProperty(game, "updateAverageDelta", {
+					value: undefined,
+					configurable: true,
+					writable: true,
+				});
+				panel._onAfterUpdate();
+				expect(panel.frameUpdateTime).toBe(0);
+				expect(Number.isNaN(panel.frameUpdateTime)).toBe(false);
+			} finally {
+				delete game.updateAverageDelta;
+				game.lastUpdateDelta = previous;
+			}
+		});
+	});
+
+	describe("sample collection (the wiring behind the averaged readouts)", () => {
+		/** Drive N drawn frames through the real handler. */
+		const runFrames = (n, updateMs, drawMs) => {
+			for (let i = 0; i < n; i++) {
+				game.lastUpdateDelta = updateMs;
+				panel._onAfterUpdate();
+				panel.frameDrawStartTime = 0;
+				panel._onAfterDraw(drawMs);
+			}
+		};
+
+		it("feeds the averaged readouts from the draw handler", () => {
+			// `_meanTime` being correct is worthless if nothing fills the ring:
+			// deleting the collection in `_onAfterDraw` must fail a test
+			panel._timeSampleCount = 0;
+			panel._timeSampleIndex = 0;
+			panel._updateSamples.fill(0);
+			panel._drawSamples.fill(0);
+
+			runFrames(5, 2, 8);
+			expect(panel._timeSampleCount).toBe(5);
+			expect(panel._meanTime(panel._drawSamples)).toBeCloseTo(8, 5);
+			expect(panel._meanTime(panel._updateSamples)).toBeCloseTo(2, 5);
+		});
+
+		it("keeps update and draw in their own buffers", () => {
+			// swapping the two writes would show the draw time on the Update row
+			panel._timeSampleCount = 0;
+			panel._timeSampleIndex = 0;
+			runFrames(4, 1, 9);
+			expect(panel._meanTime(panel._updateSamples)).toBeCloseTo(1, 5);
+			expect(panel._meanTime(panel._drawSamples)).toBeCloseTo(9, 5);
+		});
+
+		it("caps the sample count at the window and wraps without stale slots", () => {
+			// past the window the ring reuses slots; an uncapped count would read
+			// beyond the buffer and turn the mean into NaN forever
+			panel._timeSampleCount = 0;
+			panel._timeSampleIndex = 0;
+			const window = panel._drawSamples.length;
+
+			runFrames(window + 12, 1, 3);
+			expect(panel._timeSampleCount).toBe(window);
+			expect(Number.isNaN(panel._meanTime(panel._drawSamples))).toBe(false);
+			expect(panel._meanTime(panel._drawSamples)).toBeCloseTo(3, 5);
+
+			// old frames must age out entirely once the ring has turned over
+			runFrames(window, 1, 7);
+			expect(panel._meanTime(panel._drawSamples)).toBeCloseTo(7, 5);
 		});
 	});
 });

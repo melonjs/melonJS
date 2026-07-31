@@ -123,10 +123,12 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			// `lastUpdateDelta` is the 20.0.0 name; melonJS 19.x (which this
 			// plugin still supports) only has `updateAverageDelta`, so prefer the
 			// new one and fall back
+			// `??` rather than a `typeof` check so a null/undefined from either
+			// name degrades to 0 instead of poisoning the sample ring: a single
+			// undefined written into a Float32Array is NaN, and the mean then
+			// reads "NaNms" for the next 30 frames
 			this.frameUpdateTime =
-				typeof game.lastUpdateDelta !== "undefined"
-					? game.lastUpdateDelta
-					: game.updateAverageDelta;
+				game.lastUpdateDelta ?? game.updateAverageDelta ?? 0;
 		};
 		this._onBeforeDraw = (time) => {
 			this.frameDrawStartTime = time;
