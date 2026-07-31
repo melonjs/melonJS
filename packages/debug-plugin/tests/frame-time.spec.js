@@ -1,5 +1,6 @@
-import { boot, game, plugin, video } from "melonjs";
+import { Application, boot, game, input, plugin, video } from "melonjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import pkg from "../package.json";
 import { DebugPanelPlugin } from "../src/index.js";
 
 /**
@@ -202,6 +203,59 @@ describe("DebugPanelPlugin frame times", () => {
 			// old frames must age out entirely once the ring has turned over
 			runFrames(window, 1, 7);
 			expect(panel._meanTime(panel._drawSamples)).toBeCloseTo(7, 5);
+		});
+	});
+
+	describe("application binding", () => {
+		it("defaults to the global instance when no app is given", () => {
+			// back-compat: `plugin.register(DebugPanelPlugin, "debugPanel")` is
+			// the documented call and must keep working
+			expect(panel.app).toBe(game);
+		});
+
+		it("reads timings from the app it was bound to, not the global one", () => {
+			// `game` is whichever Application was constructed LAST, while the
+			// frame events are broadcast by every one of them — a panel bound to
+			// app A must not report app B's numbers
+			const original = panel.app;
+			const other = new Application(32, 32, {
+				physics: { adapter: "builtin" },
+			});
+			const bound = new DebugPanelPlugin(input.KEY.S, original);
+			try {
+				// constructing an Application makes it the default, which is
+				// exactly the hazard this guards against
+				expect(game).toBe(other);
+				expect(bound.app).toBe(original);
+
+				original.lastUpdateDelta = 6;
+				other.lastUpdateDelta = 99;
+				bound._onAfterUpdate();
+
+				// the bound app's value, not whichever was built last
+				expect(bound.frameUpdateTime).toBe(6);
+			} finally {
+				bound.destroy?.();
+				other.destroy();
+			}
+		});
+	});
+
+	describe("minimum engine version", () => {
+		it("matches the declared peer range", () => {
+			// these are two statements of the same fact and had already drifted
+			// (gate 19.5.0 vs peer >=19.8.0). Deriving one from the other is only
+			// worth anything if something notices when it stops agreeing.
+			const declared = pkg.peerDependencies.melonjs.match(/(\d+\.\d+\.\d+)/);
+			expect(declared).not.toBeNull();
+			expect(panel.version).toBe(declared[1]);
+		});
+
+		it("is a bare version, not a range", () => {
+			// `plugin.register` feeds this to `checkVersion`, which compares
+			// numeric parts — a leading ">=" would parse as 0 and let every
+			// engine through
+			expect(panel.version).toMatch(/^\d+\.\d+\.\d+$/);
 		});
 	});
 });

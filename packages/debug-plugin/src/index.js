@@ -1,9 +1,25 @@
-import { event, game, input, plugin, pool, timer, utils, video } from "melonjs";
-import { homepage, name, version } from "../package.json";
+import { event, input, plugin, pool, timer, utils, video } from "melonjs";
+import { homepage, name, peerDependencies, version } from "../package.json";
 import Counters from "./counters.js";
 import { drawFrameGraph, drawMemGraph } from "./graphs.js";
 import { applyPatches } from "./patches.js";
 import { GRAPH_HEIGHT, GRAPH_SAMPLES, registerStyles } from "./styles.js";
+
+/**
+ * The lowest melonJS version this plugin supports, derived from the package's
+ * `peerDependencies` range so there is a single source of truth.
+ *
+ * Only the leading comparator is stripped (`>=19.8.0` / `^19.8.0` -> `19.8.0`),
+ * which is all the ranges this package has ever declared; anything more exotic
+ * falls back to the bare string and `checkVersion` treats a non-numeric part as
+ * 0, i.e. it errs toward permitting rather than blocking a valid engine.
+ * @ignore
+ */
+function minimumEngineVersion() {
+	const range = peerDependencies?.melonjs ?? "";
+	const match = range.match(/(\d+\.\d+\.\d+)/);
+	return match ? match[1] : range;
+}
 
 /**
  * How many frames the displayed update/draw times are averaged over.
@@ -52,14 +68,26 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 	 * @param {number} [debugToggle=input.KEY.S] - a default key to toggle the debug panel visibility state
 	 * @see input.KEY for default key options
 	 */
-	constructor(debugToggle = input.KEY.S) {
-		super();
+	constructor(debugToggle = input.KEY.S, app = undefined) {
+		// Forward the owning application to BasePlugin, which stores it as
+		// `this.app` (and falls back to the default instance when omitted).
+		// Every reading below goes through it rather than the `game` singleton:
+		// `game` is whichever Application was constructed last, while the frame
+		// events are broadcast by all of them, so on a multi-application page a
+		// panel bound to one app would report another's numbers.
+		//
+		// `plugin.register(cls, name, ...args)` forwards its extra arguments to
+		// the constructor, so this is additive:
+		//   plugin.register(DebugPanelPlugin, "debugPanel", input.KEY.S, myApp);
+		super(app);
 
-		// Minimum melonJS version — `Renderable.postDraw` now reads the
-		// `PhysicsAdapter.getBodyAABB` / `getBodyShapes` debug API
-		// added in 19.5. Older releases don't expose those methods and
-		// the patch would silently skip drawing physics overlays.
-		this.version = "19.5.0";
+		// Minimum melonJS version, taken from the package's own peer range so
+		// the two can't drift — they already had, the gate sitting at 19.5
+		// while the peer range said 19.8, because raising one didn't raise the
+		// other. This is the gate that actually enforces it: `plugin.register`
+		// throws when the running engine is older, whereas the peer range only
+		// warns at install time and not at all for CDN or pre-bundled use.
+		this.version = minimumEngineVersion();
 
 		console.log(`${name} ${version} | ${homepage}`);
 
@@ -128,7 +156,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			// undefined written into a Float32Array is NaN, and the mean then
 			// reads "NaNms" for the next 30 frames
 			this.frameUpdateTime =
-				game.lastUpdateDelta ?? game.updateAverageDelta ?? 0;
+				this.app.lastUpdateDelta ?? this.app.updateAverageDelta ?? 0;
 		};
 		this._onBeforeDraw = (time) => {
 			this.frameDrawStartTime = time;
@@ -204,7 +232,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			cb.checked = this.options[key];
 			cb.addEventListener("change", () => {
 				this.options[key] = cb.checked;
-				game.repaint();
+				this.app.repaint();
 			});
 			el.appendChild(cb);
 			el.appendChild(document.createTextNode(label));
@@ -332,7 +360,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 
 	/** @private */
 	_updatePanel() {
-		this.stats.objects.textContent = game.world.children.length;
+		this.stats.objects.textContent = this.app.world.children.length;
 		this.stats.draws.textContent = this.counters.get("draws");
 		this.stats.update.textContent = `${this._meanTime(this._updateSamples).toFixed(2)}ms`;
 		this.stats.draw.textContent = `${this._meanTime(this._drawSamples).toFixed(2)}ms`;
@@ -394,7 +422,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			this.panelWrap.style.display = "";
 			this.visible = true;
 			this._syncPosition();
-			game.repaint();
+			this.app.repaint();
 		}
 	}
 
@@ -405,7 +433,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		if (this.visible) {
 			this.panelWrap.style.display = "none";
 			this.visible = false;
-			game.repaint();
+			this.app.repaint();
 		}
 	}
 
@@ -427,9 +455,9 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		}
 		const renderer = video.renderer;
 		renderer.save();
-		const { x, y } = game.viewport.pos;
+		const { x, y } = this.app.viewport.pos;
 		renderer.translate(-x, -y);
-		this._drawQuadTreeNode(renderer, game.world.broadphase);
+		this._drawQuadTreeNode(renderer, this.app.world.broadphase);
 		renderer.restore();
 		// flush is needed because this runs after GAME_AFTER_DRAW,
 		// which is emitted after the main renderer.flush()
