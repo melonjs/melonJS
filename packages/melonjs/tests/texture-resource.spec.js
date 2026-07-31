@@ -1,10 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
 import {
 	BufferTextureResource,
 	TextureResource,
 } from "../src/video/texture/resource.js";
-import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+	requireWebGL,
+} from "./helpers/webgl-context.js";
 
 describe("TextureResource", () => {
 	it("requires subclasses to implement upload()", () => {
@@ -66,39 +69,15 @@ describe("BufferTextureResource — WebGL2 integration", () => {
 	let renderer;
 
 	beforeAll(async () => {
-		await boot();
-		try {
-			video.init(64, 64, {
-				parent: "screen",
-				renderer: video.WEBGL,
-			});
-			if (
-				video.renderer instanceof WebGLRenderer &&
-				typeof video.renderer.gl !== "undefined"
-			) {
-				renderer = video.renderer;
-			}
-		} catch {
-			// CI runners without GL acceleration can't construct a WebGL2
-			// renderer; tests below mark themselves skipped at runtime
-		}
+		renderer = await getWebGLRenderer(64, 64);
 	});
 
 	afterAll(() => {
-		try {
-			video.init(64, 64, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
-		} catch {
-			// nothing to restore if boot/init never succeeded
-		}
+		releaseWebGLRenderer();
 	});
 
 	const requireWebGL2 = (ctx) => {
-		if (renderer === undefined) {
-			ctx.skip("WebGL2 renderer not available in this environment");
-		}
+		requireWebGL(ctx, renderer);
 	};
 
 	/**

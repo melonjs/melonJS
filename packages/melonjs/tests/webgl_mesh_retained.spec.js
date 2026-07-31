@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { boot, Matrix3d, Mesh, video, WebGLRenderer } from "../src/index.js";
+import { event, Matrix3d, Mesh } from "../src/index.js";
 import RetainedGeometry from "../src/video/webgl/buffer/retained_geometry.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+	requireWebGL,
+} from "./helpers/webgl-context.js";
 
 /**
  * Retained-mode mesh rendering (issue #1507).
@@ -27,51 +32,15 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 	let renderer;
 
 	beforeAll(async () => {
-		await boot();
-		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// headless Chromium's software GL backend trips the "major
-				// performance caveat" flag; without this opt-out the renderer
-				// silently falls back to Canvas and every test here skips
-				failIfMajorPerformanceCaveat: false,
-			});
-		} catch {
-			// genuine WebGL absence — tests skip below
-		}
-		if (
-			video.renderer instanceof WebGLRenderer &&
-			typeof video.renderer.gl !== "undefined"
-		) {
-			renderer = video.renderer;
-		}
+		renderer = await getWebGLRenderer(128, 128);
 	});
 
 	afterAll(() => {
-		// Hand the GPU context back before restoring. Browsers cap the number of
-		// live WebGL contexts and force-lose the oldest once past it, at which
-		// point creating another stalls — which is how this surfaces: a
-		// `beforeAll` in some *later* spec times out with nothing wrong in it.
-		// The suite forces a WebGL context in ~34 files and almost none release
-		// it, so this is a small down-payment on a wider cleanup rather than a
-		// complete fix.
-		try {
-			renderer?.gl?.getExtension("WEBGL_lose_context")?.loseContext();
-		} catch {
-			// ignore — the extension is optional and the context may be gone
-		}
-		try {
-			video.init(128, 128, { parent: "screen", renderer: video.AUTO });
-		} catch {
-			// ignore — nothing to restore if init never succeeded
-		}
+		releaseWebGLRenderer();
 	});
 
 	const requireWebGL2 = (ctx) => {
-		if (renderer === undefined) {
-			ctx.skip("WebGL2 renderer not available in this environment");
-		}
+		requireWebGL(ctx, renderer);
 	};
 
 	/**
@@ -191,6 +160,13 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 		setupOrthoProjection();
 		drawOne(mesh);
 		renderer.flush();
+	};
+
+	/** Yield to the browser so queued GL context events get dispatched. */
+	const tick = () => {
+		return new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
 	};
 
 	const centrePixel = () => {
@@ -815,33 +791,57 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 		});
 	});
 
-	// deliberately last: losing the context leaves it unusable for a while
-	// afterwards, so any pixel assertion that followed would read an empty
-	// framebuffer and fail for reasons that have nothing to do with it
-	it("survives a context-loss cycle by rebuilding lazily", (ctx) => {
+	// Deliberately last in the file: a lose/restore cycle briefly takes the
+	// GPU context away from everything sharing it.
+	it("survives a context-loss cycle by rebuilding lazily", async (ctx) => {
 		requireWebGL2(ctx);
 		const gl = renderer.gl;
 		const ext = gl.getExtension("WEBGL_lose_context");
 		if (ext === null) {
-			ctx.skip("WEBGL_lose_context unavailable");
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
 		}
 		const mesh = makeMesh();
 		try {
 			frame(mesh);
-			ext.loseContext();
-			// while lost, the mesh's buffers are gone; drawing must neither
-			// throw nor draw through a dangling handle
-			expect(renderer.gl.isContextLost()).toBe(true);
-			expect(() => {
-				return frame(mesh);
-			}).not.toThrow();
 
+			// Wait for the engine's own restore signal before asserting, and
+			// before letting the file end. Returning while the context is still
+			// coming back leaves it lost for whatever runs next — which on a
+			// slow machine is long enough to stall the next spec's renderer
+			// setup. Same discipline as webgl_vao_recreation.spec.js.
+			const restored = new Promise((resolve) => {
+				event.once(event.ONCONTEXT_RESTORED, resolve);
+			});
+			ext.loseContext();
+			expect(gl.isContextLost()).toBe(true);
+			// yield so the browser dispatches `webglcontextlost` before asking
+			// for the context back — restoring while the loss is still queued
+			// is a no-op, and then `ONCONTEXT_RESTORED` never arrives
+			await tick();
 			ext.restoreContext();
-			// the restore is asynchronous in some drivers; drawing into a
-			// still-lost context must not throw either way
-			expect(() => {
-				return frame(mesh);
-			}).not.toThrow();
+			await restored;
+			await tick();
+
+			// geometry is rebuilt on demand, not resurrected from stale handles
+			expect(gl.isContextLost()).toBe(false);
+			// Drain whatever the engine's own restore sequence left pending
+			// before measuring this path. As of writing that is a real
+			// INVALID_OPERATION raised before any mesh code runs — pre-existing
+			// and unrelated to retained geometry, but it would otherwise be
+			// attributed to the draw below.
+			gl.getError();
+			const { calls, restore } = spy();
+			try {
+				frame(mesh);
+				// the geometry is rebuilt from scratch — exactly one upload, not
+				// a draw through handles belonging to the dead context
+				expect(calls.arrayUploads).toBe(1);
+				expect(calls.drawElements).toBe(1);
+				expect(gl.getError()).toBe(gl.NO_ERROR);
+			} finally {
+				restore();
+			}
 		} finally {
 			mesh.destroy();
 		}
