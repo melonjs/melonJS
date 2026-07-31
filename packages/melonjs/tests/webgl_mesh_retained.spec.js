@@ -49,6 +49,18 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 	});
 
 	afterAll(() => {
+		// Hand the GPU context back before restoring. Browsers cap the number of
+		// live WebGL contexts and force-lose the oldest once past it, at which
+		// point creating another stalls — which is how this surfaces: a
+		// `beforeAll` in some *later* spec times out with nothing wrong in it.
+		// The suite forces a WebGL context in ~34 files and almost none release
+		// it, so this is a small down-payment on a wider cleanup rather than a
+		// complete fix.
+		try {
+			renderer?.gl?.getExtension("WEBGL_lose_context")?.loseContext();
+		} catch {
+			// ignore — the extension is optional and the context may be gone
+		}
 		try {
 			video.init(128, 128, { parent: "screen", renderer: video.AUTO });
 		} catch {
