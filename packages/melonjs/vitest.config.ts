@@ -24,6 +24,12 @@ export default defineConfig(() =>
 	defineConfig({
 		test: {
 			include: ["**/*.{test,spec}.[jt]s?(x)"],
+			// Several specs create a WebGL context in `beforeAll`. On a CI
+			// container with no GPU that runs through a software rasterizer and
+			// can genuinely take tens of seconds under load, so the default hook
+			// timeout fails correct suites. Raised for headroom — this is a slow
+			// hook, not a hanging one.
+			hookTimeout: 90000,
 			browser: {
 				enabled: true,
 				provider: playwright(),
