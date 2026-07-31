@@ -66,6 +66,7 @@ jobs:
       - run: pnpm test
       - run: pnpm -F @melonjs/matter-adapter test
       - run: pnpm -F @melonjs/planck-adapter test
+      - run: pnpm -F @melonjs/debug-plugin test
 
   # Windows build — only on master push, not on PRs
   windows:

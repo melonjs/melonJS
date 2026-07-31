@@ -3,6 +3,7 @@ import { boot, video } from "../src/index.js";
 import CanvasRenderTarget from "../src/video/rendertarget/canvasrendertarget.js";
 import RenderTarget from "../src/video/rendertarget/rendertarget.ts";
 import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
+import { getWebGLRenderer } from "./helpers/webgl-context.js";
 
 describe("RenderTarget", () => {
 	describe("CanvasRenderTarget", () => {
@@ -61,18 +62,14 @@ describe("RenderTarget", () => {
 	describe("WebGLRenderTarget", () => {
 		let gl;
 
-		beforeEach(() => {
+		beforeEach(async () => {
 			boot();
 			// `video.WEBGL` now throws when WebGL is unavailable (was a
 			// silent Canvas fallback pre-#1479). Catch the throw so tests
 			// that gracefully handle `gl === undefined` still skip
 			// cleanly instead of crashing every test in this block.
 			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
+				await getWebGLRenderer(100, 100);
 				gl = video.renderer?.gl;
 			} catch {
 				gl = undefined;

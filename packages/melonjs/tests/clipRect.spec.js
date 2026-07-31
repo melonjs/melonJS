@@ -3,6 +3,10 @@ import { boot, Container, video } from "../src/index.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
 import RenderState from "../src/video/renderstate.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * `clipRect` regression guards for issue #1349. Three classes of bug
@@ -30,14 +34,9 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(800, 600);
 		renderer = video.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
@@ -47,11 +46,7 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 
 	afterAll(() => {
 		// hand the world back to the default renderer for any later test files
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.AUTO,
-		});
+		releaseWebGLRenderer();
 	});
 
 	/**
@@ -594,11 +589,7 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 
 	afterAll(() => {
 		// hand the world back to the default renderer for any later test files
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.AUTO,
-		});
+		releaseWebGLRenderer();
 	});
 
 	/**

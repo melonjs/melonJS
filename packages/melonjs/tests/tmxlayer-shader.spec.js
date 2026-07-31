@@ -3,6 +3,10 @@ import { boot, video } from "../src/index.js";
 import { BufferTextureResource } from "../src/video/texture/resource.js";
 import OrthogonalTMXLayerGPURenderer from "../src/video/webgl/renderers/tmxlayer/orthogonal.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 describe("TMXLayer shader path", () => {
 	let renderer;
@@ -10,10 +14,7 @@ describe("TMXLayer shader path", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(64, 64, {
-				parent: "screen",
-				renderer: video.WEBGL,
-			});
+			await getWebGLRenderer(64, 64);
 			if (
 				video.renderer instanceof WebGLRenderer &&
 				typeof video.renderer.gl !== "undefined"
@@ -28,10 +29,7 @@ describe("TMXLayer shader path", () => {
 
 	afterAll(() => {
 		try {
-			video.init(64, 64, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if boot/init never succeeded
 		}

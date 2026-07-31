@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	GLShader,
@@ -7,6 +7,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * "shader" loader asset type: a GLSL fragment body (the ShaderEffect
@@ -23,14 +27,16 @@ const FLASH =
 describe("shader asset preloading", () => {
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, {
-			parent: "screen",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(64, 64);
 		isWebGL = video.renderer instanceof WebGLRenderer;
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	it("preloads inline GLSL (data field) into a precompiled, shared effect", async (ctx) => {

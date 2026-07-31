@@ -256,6 +256,10 @@ export default class WebGLRenderer extends Renderer {
 		// this backend renders TMX tile layers on the GPU (see TMXLayer)
 		this.supportsShaderTileLayers = true;
 
+		// this backend keeps mesh geometry resident on the GPU, so meshes can
+		// hand it their model matrix instead of pre-transformed vertices
+		this.supportsRetainedMesh = true;
+
 		// to simulate context lost and restore in WebGL:
 		// let ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
 		// ctx.loseContext()
@@ -406,6 +410,17 @@ export default class WebGLRenderer extends Renderer {
 	 * leak across `Application.destroy()` cycles. Safe to call multiple
 	 * times — subsequent calls are no-ops.
 	 */
+	/**
+	 * Release any GPU geometry retained for the given mesh. Called when a mesh
+	 * is destroyed; harmless if it never had any.
+	 * @param {object} mesh - the mesh whose geometry should be freed
+	 */
+	deleteMeshGeometry(mesh) {
+		this.batchers?.forEach((batcher) => {
+			batcher.releaseRetained?.(mesh);
+		});
+	}
+
 	destroy() {
 		if (this.batchers) {
 			this.batchers.forEach((batcher) => {
@@ -946,7 +961,7 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		// Copy the bound framebuffer into the capture texture — the standard
-		// framebuffer→texture path (Three.js copyFramebufferToTexture uses it).
+		// framebuffer→texture path.
 		// An RGB internalformat is a valid subset of BOTH an alpha-less default
 		// framebuffer (melonJS creates the context with `alpha: transparent`,
 		// usually false) AND an RGBA camera FBO, so the copy never trips
@@ -1578,9 +1593,14 @@ export default class WebGLRenderer extends Renderer {
 	 * as single-material. (The chunking-for-buffer-limits behavior
 	 * above still applies to multi-material meshes as well.)
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
+	 * @param {Matrix3d} [modelMatrix] - where the mesh sits in the world. When
+	 * given, the mesh is drawn from persistent model-space geometry and placed
+	 * entirely by uniforms; when omitted, its vertices are taken as already
+	 * positioned and accumulated through the batcher (the 2D-camera path).
 	 */
-	drawMesh(mesh) {
+	drawMesh(mesh, modelMatrix) {
 		const gl = this.gl;
+		const retained = modelMatrix !== undefined;
 
 		// Route to the lit or unlit mesh batcher. `mesh.lit` meshes use the
 		// `LitMeshBatcher` (world-space normals + lighting); everything else
@@ -1606,18 +1626,28 @@ export default class WebGLRenderer extends Renderer {
 		if (mesh.cullBackFaces) {
 			gl.enable(gl.CULL_FACE);
 			gl.cullFace(gl.BACK);
-			gl.frontFace(gl.CCW);
+			// Retained geometry keeps its authored winding, so the axis bridge's
+			// reflection (which mirrors handedness) is undone by flipping which
+			// orientation counts as front-facing — equivalent to reversing every
+			// triangle, without a second copy of the index data. Right-handed
+			// meshes are bridged by a rotation, which preserves winding.
+			gl.frontFace(retained && mesh.rightHanded !== true ? gl.CW : gl.CCW);
 		}
 
-		this.currentBatcher.addMesh(
-			mesh,
-			this.currentTint.toUint32(this.getGlobalAlpha()),
-		);
-
-		this.flush();
+		const tint = this.currentTint.toUint32(this.getGlobalAlpha());
+		if (retained) {
+			this.currentBatcher.drawRetainedMesh(mesh, modelMatrix, tint);
+		} else {
+			this.currentBatcher.addMesh(mesh, tint);
+			this.flush();
+		}
 
 		if (mesh.cullBackFaces) {
 			gl.disable(gl.CULL_FACE);
+			// restore the default orientation alongside the cull toggle: leaving
+			// it at CW would leak to any later consumer of the context that reads
+			// `gl_FrontFacing` or enables culling itself
+			gl.frontFace(gl.CCW);
 		}
 
 		// revert to default shader if custom was applied

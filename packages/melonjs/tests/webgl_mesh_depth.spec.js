@@ -6,6 +6,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Tests for the mesh depth-handling refactor proposed by issue #1468.
@@ -16,12 +20,11 @@ import {
  * depth buffer handles intra-mesh ordering. Cost: N depth clears + N state
  * toggle pairs per frame.
  *
- * The proposed behaviour (matches Three.js): clear depth once per camera
+ * The proposed behaviour: clear depth once per camera
  * draw, keep depth-test on through a run of consecutive mesh draws, restore
  * blend/depth state only when a non-mesh draw call needs it. The GPU's
  * depth test resolves inter-mesh intersection correctly per pixel without
- * any per-mesh clear — same well-proven approach Three.js has shipped for
- * years.
+ * any per-mesh clear — the standard approach for depth-buffered 3D.
  *
  * Two layers of tests guard the refactor:
  *
@@ -46,15 +49,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// Chromium headless uses a software GL backend that trips
-				// the "major performance caveat" flag — without this opt-
-				// out, `isWebGLSupported` returns false and the renderer
-				// falls back to Canvas, skipping every test below.
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// Genuine WebGL absence (no GL of any kind) — tests skip below.
 		}
@@ -73,10 +68,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 		// `tmxlayer-shader.spec.js` / `texture-resource.spec.js` WebGL2
 		// integration specs.
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if init never succeeded
 		}

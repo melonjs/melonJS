@@ -118,7 +118,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * Map from a normal-map source image to its uploaded GL texture and the
 		 * source `version` it was uploaded at. A source that bumps its `version`
 		 * (e.g. an animated {@link NoiseTexture2d}) is re-uploaded on next bind —
-		 * the three.js `Texture.needsUpdate` model, scoped to normal maps which
+		 * explicit, version-based invalidation, scoped to normal maps which
 		 * live outside the color `TextureCache`.
 		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, {tex: WebGLTexture, version: number}>}
 		 * @ignore

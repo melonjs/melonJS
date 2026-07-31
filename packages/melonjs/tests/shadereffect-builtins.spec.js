@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { boot, ShaderEffect, video, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Shader builtins in ShaderEffect:
@@ -21,11 +25,7 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(64, 64, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(64, 64);
 		} catch {
 			// WebGL genuinely unavailable — tests skip below
 		}
@@ -41,7 +41,7 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 
 	afterAll(() => {
 		try {
-			video.init(64, 64, { parent: "screen", renderer: video.AUTO });
+			releaseWebGLRenderer();
 		} catch {
 			// ignore
 		}

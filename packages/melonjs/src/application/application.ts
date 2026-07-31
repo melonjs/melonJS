@@ -224,9 +224,44 @@ export default class Application {
 	private _onResize?: (e: Event) => void;
 	private _onOrientationChange?: (e: Event) => void;
 	private _onScroll?: (e: Event) => void;
+	/**
+	 * Simulated time advanced by one logic step, in ms — what `world.update()`
+	 * receives. Fixed at `1000 / world.fps` unless `timer.interpolation` is on,
+	 * in which case it follows the real frame delta.
+	 *
+	 * Not to be confused with {@link Application#lastUpdateDelta}, which is how
+	 * long that step actually took to compute.
+	 */
 	updateDelta: number;
 	lastUpdateStart: number | null;
-	updateAverageDelta: number;
+
+	/**
+	 * Measured wall-clock cost of the most recent logic step, in ms
+	 * (`performance.now()` taken either side of the world/stage update).
+	 *
+	 * Used by the fixed-timestep loop to avoid a spiral of death: the
+	 * accumulator drains by at least this much, so a scene too heavy to
+	 * simulate in real time slows down instead of locking up.
+	 *
+	 * Only the *last* step of a frame is recorded, so a frame that ran several
+	 * catch-up steps reports less than its total update cost.
+	 * Renamed from `updateAverageDelta` in 20.0.0.
+	 * @since 20.0.0
+	 */
+	lastUpdateDelta: number;
+
+	/**
+	 * @deprecated since 20.0.0 — renamed to {@link Application#lastUpdateDelta}.
+	 * The old name claimed an average that has not existed since 2015, when the
+	 * exponential smoothing behind it was removed a day after being added.
+	 */
+	get updateAverageDelta() {
+		return this.lastUpdateDelta;
+	}
+
+	set updateAverageDelta(value: number) {
+		this.lastUpdateDelta = value;
+	}
 
 	/**
 	 * Create and initialize a new melonJS Application.
@@ -264,7 +299,7 @@ export default class Application {
 		this.stepSize = 1000 / 60;
 		this.updateDelta = 0;
 		this.lastUpdateStart = null;
-		this.updateAverageDelta = 0;
+		this.lastUpdateDelta = 0;
 
 		// when using the default game application, legacy is set to true
 		// and init is called through the legacy video.init() call
@@ -909,7 +944,7 @@ export default class Application {
 			this.updateDelta = timer.interpolation ? timer.getDelta() : this.stepSize;
 			this.accumulatorUpdateDelta = timer.interpolation
 				? this.updateDelta
-				: Math.max(this.updateDelta, this.updateAverageDelta);
+				: Math.max(this.updateDelta, this.lastUpdateDelta);
 
 			while (
 				this.accumulator >= this.accumulatorUpdateDelta ||
@@ -928,7 +963,7 @@ export default class Application {
 					state.current()!.update(this.updateDelta) || this.isDirty;
 
 				this.lastUpdate = globalThis.performance.now();
-				this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
+				this.lastUpdateDelta = this.lastUpdate - this.lastUpdateStart;
 
 				this.accumulator -= this.accumulatorUpdateDelta;
 				if (timer.interpolation) {

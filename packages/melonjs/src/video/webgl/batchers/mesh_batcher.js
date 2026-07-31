@@ -1,14 +1,28 @@
-import { Vector3d } from "../../../math/vector3d.ts";
+import { Matrix3d } from "../../../math/matrix3d.ts";
 import { off, on, RENDER_TARGET_CHANGED } from "../../../system/event.ts";
+import RetainedGeometry from "../buffer/retained_geometry.js";
 import meshFragment from "./../shaders/mesh.frag";
 import meshVertex from "./../shaders/mesh.vert";
 import { MaterialBatcher } from "./material_batcher.js";
 
-// reusable vector for vertex transform
-// Vector3d (not Vector2d) so the mesh's per-vertex z survives the
-// transform under Camera3d — for 2D-only view matrices the z column is
-// identity, so output (x, y) matches the legacy Vector2d path.
-const _v = new Vector3d();
+// Shared identity model matrix for draws whose vertices are already placed
+// (the 2D-camera path pre-projects them on the CPU). Never mutated.
+const _IDENTITY_MATRIX = new Matrix3d();
+
+// Scratch for unpacking a packed ARGB tint into the shader's vec4. Reused —
+// setPlacementUniforms runs synchronously and never re-enters.
+const _TINT_RGBA = new Float32Array(4);
+
+// Growable scratch for assembling a mesh's interleaved vertex data before it
+// is uploaded to its retained buffer. Reused across meshes (building is
+// synchronous and never re-enters) so a rebuild allocates nothing steady-state.
+let _buildScratch = new Float32Array(0);
+function retainedScratch(floatCount) {
+	if (_buildScratch.length < floatCount) {
+		_buildScratch = new Float32Array(floatCount);
+	}
+	return _buildScratch;
+}
 
 // Reused scratch for addMesh's per-chunk vertex dedup and absolute index list
 // (`_chunkIndices`), so a chunk allocates nothing per mesh per frame (GC
@@ -61,33 +75,6 @@ function ensureRemapCapacity(vertexCount) {
 const _ZERO_EMISSIVE = new Float32Array(3);
 
 /**
- * Per-channel multiply two ARGB-packed Uint32 colors. Used by the
- * multi-material mesh path to combine a vertex's baked material color
- * (`mesh.vertexColors[i]`) with the runtime `mesh.tint` before
- * pushing the result as the vertex's `aColor` attribute.
- * Layout (MSB→LSB): A R G B, matching `Color.toUint32`.
- * @param {number} a - first ARGB packed Uint32
- * @param {number} b - second ARGB packed Uint32
- * @returns {number} their per-channel product (normalized in 0..255)
- * @ignore
- */
-function mulPackedARGB(a, b) {
-	const aa = (a >>> 24) & 0xff;
-	const ar = (a >>> 16) & 0xff;
-	const ag = (a >>> 8) & 0xff;
-	const ab = a & 0xff;
-	const ba = (b >>> 24) & 0xff;
-	const br = (b >>> 16) & 0xff;
-	const bg = (b >>> 8) & 0xff;
-	const bb = b & 0xff;
-	const cr = ((ar * br) / 255) | 0;
-	const cg = ((ag * bg) / 255) | 0;
-	const cb = ((ab * bb) / 255) | 0;
-	const ca = ((aa * ba) / 255) | 0;
-	return ((ca << 24) | (cr << 16) | (cg << 8) | cb) >>> 0;
-}
-
-/**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
  *
@@ -134,6 +121,21 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentEmissiveR = -1;
 		this.currentEmissiveG = -1;
 		this.currentEmissiveB = -1;
+
+		// Retained geometry per mesh (model-space buffers uploaded once). A
+		// re-init means a new GL context or a fresh batcher life, so anything
+		// held is stale — release it rather than leak it.
+		if (this.retained !== undefined) {
+			this.releaseAllRetained();
+		}
+		this.retained = new Map();
+
+		// last `uTint` value pushed, same redundant-set guard — but the
+		// sentinel is `undefined`, NOT a number: a packed ARGB tint spans the
+		// whole 32-bit range, and white at full alpha (0xffffffff) reads back
+		// as -1 when signed, so any numeric sentinel can collide with a real
+		// tint and silently suppress the very first set.
+		this.currentTintValue = undefined;
 
 		// arm the (renderer-owned) lazy depth clear for the first mesh pass
 		renderer._meshDepthDirty = true;
@@ -225,6 +227,9 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentEmissiveR = -1;
 			this.currentEmissiveG = -1;
 			this.currentEmissiveB = -1;
+			// the placement uniforms live on the program too — a swapped
+			// shader starts at its own defaults, so re-issue them
+			this.currentTintValue = undefined;
 		}
 		super.useShader(shader);
 	}
@@ -241,7 +246,20 @@ export default class MeshBatcher extends MaterialBatcher {
 			off(RENDER_TARGET_CHANGED, this._onTargetChanged);
 			this._onTargetChanged = null;
 		}
+		this.releaseAllRetained();
 		super.destroy();
+	}
+
+	/**
+	 * Drop every retained geometry alongside the batcher's own buffers: a
+	 * reset means the GL buffers are being recreated, so anything still
+	 * referencing the old ones would draw from freed memory. Meshes rebuild
+	 * lazily on their next draw.
+	 * @ignore
+	 */
+	reset() {
+		this.releaseAllRetained();
+		super.reset();
 	}
 
 	/**
@@ -312,19 +330,211 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * no extra draw calls per material vs single-material (large
 	 * meshes still get chunked across multiple flushes to fit the
 	 * vertex/index buffer limits — same behavior as single-material).
-	 * The shared `tint` is then multiplied into each vertex color
-	 * CPU-side (via `mulPackedARGB`, before `pushMesh`), preserving
-	 * runtime flash / fade / team-color effects — the mesh shader
-	 * itself just does `texture * aColor`, no extra uniform.
+	 * The runtime `tint` is applied by the shader through the `uTint`
+	 * uniform rather than being multiplied into each vertex color, so
+	 * flash / fade / team-color effects never touch vertex data.
 	 * @param {object} mesh - a Mesh object with vertices, uvs, indices, and texture properties
 	 * @param {number} tint - tint color in UINT32 (argb) format
 	 */
-	addMesh(mesh, tint) {
-		const vertices = mesh.vertices;
+	/**
+	 * Issue the per-draw placement uniforms: where the geometry sits
+	 * (`uModelMatrix`), where the camera is (`uViewMatrix`), and the colour
+	 * it is tinted with (`uTint`).
+	 *
+	 * Keeping these as uniforms rather than baking them into vertex data is
+	 * what lets geometry be uploaded once and reused: moving, rotating,
+	 * scaling or re-tinting a mesh changes only these values.
+	 *
+	 * Each set is guarded on the uniform actually being declared, because
+	 * `GLShader.setUniform` throws on an unknown name and a custom mesh
+	 * shader need not declare all of them.
+	 * @param {Matrix3d} modelMatrix - the mesh's own placement, or identity when its vertices are already positioned
+	 * @param {number} tint - tint colour in UINT32 (argb) format
+	 * @ignore
+	 */
+	/**
+	 * Write one mesh's model-space geometry into `out` in this batcher's
+	 * vertex layout, returning how many floats were written.
+	 *
+	 * The data deliberately carries no placement, camera or tint information
+	 * — those are uniforms — so it stays valid for the lifetime of the
+	 * geometry. Subclasses override to append their own per-vertex data.
+	 * @param {object} mesh - the mesh to read geometry from
+	 * @param {Float32Array} out - destination scratch, at least `vertexCount × vertexSize` long
+	 * @returns {number} number of floats written
+	 * @ignore
+	 */
+	buildRetainedVertexData(mesh, out) {
+		const vertices = mesh.originalVertices;
 		const uvs = mesh.uvs;
-		const indices = mesh.indices;
-		const vertexColors = mesh.vertexColors;
+		const colors = mesh.vertexColors;
+		const count = mesh.vertexCount;
+		let o = 0;
+		for (let i = 0; i < count; i++) {
+			const i3 = i * 3;
+			const i2 = i * 2;
+			const c = colors ? colors[i] : 0xffffffff;
+			out[o] = vertices[i3];
+			out[o + 1] = vertices[i3 + 1];
+			out[o + 2] = vertices[i3 + 2];
+			out[o + 3] = uvs[i2];
+			out[o + 4] = uvs[i2 + 1];
+			out[o + 5] = ((c >> 16) & 0xff) / 255;
+			out[o + 6] = ((c >> 8) & 0xff) / 255;
+			out[o + 7] = (c & 0xff) / 255;
+			out[o + 8] = ((c >>> 24) & 0xff) / 255;
+			o += this.vertexSize;
+		}
+		return o;
+	}
 
+	/**
+	 * Get this mesh's retained geometry, building or refreshing it when the
+	 * mesh's geometry version has moved on.
+	 * @param {object} mesh - the mesh whose geometry is wanted
+	 * @returns {RetainedGeometry} up-to-date geometry for the mesh
+	 * @ignore
+	 */
+	retainedGeometryFor(mesh) {
+		let geometry = this.retained.get(mesh);
+		if (geometry === undefined) {
+			geometry = new RetainedGeometry(
+				this.gl,
+				this.attributes,
+				this.stride,
+				(name) => {
+					return this.defaultShader.getAttribLocation(name);
+				},
+			);
+			this.retained.set(mesh, geometry);
+		}
+		const version = mesh._geometryVersion ?? 0;
+		if (geometry.uploadedVersion !== version) {
+			const scratch = retainedScratch(mesh.vertexCount * this.vertexSize);
+			const floats = this.buildRetainedVertexData(mesh, scratch);
+			geometry.upload(scratch, floats, mesh._indicesOriginal, version);
+		}
+		return geometry;
+	}
+
+	/**
+	 * Draw a mesh from its retained geometry: bind the persistent buffers and
+	 * issue one indexed draw, with placement supplied entirely by uniforms.
+	 *
+	 * Unlike {@link addMesh} this accumulates nothing and never chunks — the
+	 * whole mesh is one draw call regardless of size.
+	 * @param {object} mesh - the mesh to draw
+	 * @param {Matrix3d} modelMatrix - where the mesh sits in the world
+	 * @param {number} tint - tint colour in UINT32 (argb) format
+	 * @ignore
+	 */
+	drawRetainedMesh(mesh, modelMatrix, tint) {
+		const gl = this.gl;
+
+		// anything the caller had queued must land first, or this draw would
+		// reorder ahead of it
+		this.flush();
+
+		this.applyMeshMaterial(mesh);
+		this.setPlacementUniforms(modelMatrix, tint);
+
+		const geometry = this.retainedGeometryFor(mesh);
+		geometry.bind();
+		gl.drawElements(this.mode, geometry.indexCount, geometry.indexType, 0);
+
+		// hand the batcher's own vertex state back, so a subsequent
+		// accumulated draw uploads and draws through its buffers, not these
+		this.vertexState.bind();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
+	}
+
+	/**
+	 * Release the retained geometry held for one mesh, if any.
+	 * @param {object} mesh - the mesh whose geometry should be freed
+	 * @ignore
+	 */
+	releaseRetained(mesh) {
+		const geometry = this.retained.get(mesh);
+		if (geometry !== undefined) {
+			geometry.destroy();
+			this.retained.delete(mesh);
+		}
+	}
+
+	/**
+	 * Release every retained geometry this batcher holds.
+	 * @ignore
+	 */
+	releaseAllRetained() {
+		this.retained.forEach((geometry) => {
+			geometry.destroy();
+		});
+		this.retained.clear();
+	}
+
+	/**
+	 * In addition to the attribute-layout check, warn once when a shader
+	 * hosted on this batcher declares none of the placement uniforms.
+	 *
+	 * Mesh geometry is now uploaded in model space, so a shader that only
+	 * declares `uProjectionMatrix` — which is what every mesh shader needed
+	 * before, and what {@link ShaderEffect} still generates — will draw the
+	 * mesh at its untransformed origin with no camera applied. That renders
+	 * as "the model vanished" rather than as an error, so say so explicitly.
+	 * @param {GLShader} shader - the shader about to be hosted
+	 * @ignore
+	 */
+	validateShaderLocations(shader) {
+		const firstTime =
+			this.validatedShaders === undefined || !this.validatedShaders.has(shader);
+		super.validateShaderLocations(shader);
+		if (firstTime === true && shader !== this.defaultShader) {
+			const uniforms = shader.uniforms;
+			if (
+				uniforms.uModelMatrix === undefined &&
+				uniforms.uViewMatrix === undefined
+			) {
+				console.warn(
+					"melonJS: this mesh shader declares neither `uModelMatrix` nor `uViewMatrix` — " +
+						"mesh geometry is supplied in model space, so the mesh will be drawn " +
+						"unplaced and without the camera. Multiply the vertex position by " +
+						"`uProjectionMatrix * uViewMatrix * uModelMatrix`, and tint with `uTint`.",
+				);
+			}
+		}
+	}
+
+	setPlacementUniforms(modelMatrix, tint) {
+		const shader = this.currentShader;
+		const uniforms = shader.uniforms;
+
+		if (uniforms.uViewMatrix !== undefined) {
+			shader.setUniform("uViewMatrix", this.viewMatrix);
+		}
+		if (uniforms.uModelMatrix !== undefined) {
+			shader.setUniform("uModelMatrix", modelMatrix);
+		}
+		if (tint !== this.currentTintValue && uniforms.uTint !== undefined) {
+			_TINT_RGBA[0] = ((tint >>> 16) & 0xff) / 255;
+			_TINT_RGBA[1] = ((tint >>> 8) & 0xff) / 255;
+			_TINT_RGBA[2] = (tint & 0xff) / 255;
+			_TINT_RGBA[3] = ((tint >>> 24) & 0xff) / 255;
+			shader.setUniform("uTint", _TINT_RGBA);
+			this.currentTintValue = tint;
+		}
+	}
+
+	/**
+	 * Bind a mesh's material state: its texture (honouring the mesh's own
+	 * `textureRepeat` wrap override) and the guarded `uAlphaCutoff` /
+	 * `uEmissive` uniforms.
+	 *
+	 * Shared by the accumulated and retained draw paths so material changes
+	 * take effect immediately either way, without touching geometry.
+	 * @param {object} mesh - the mesh whose material should be applied
+	 * @ignore
+	 */
+	applyMeshMaterial(mesh) {
 		// upload and activate the texture. The mesh's own `textureRepeat`
 		// (when set) is threaded through as a per-use wrap override — sampler
 		// state per mesh, never a mutation of the shared per-image atlas
@@ -376,9 +586,23 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentEmissiveG = eg;
 			this.currentEmissiveB = eb;
 		}
+	}
 
-		const m = this.viewMatrix;
-		const isIdentity = m.isIdentity();
+	addMesh(mesh, tint) {
+		const vertices = mesh.vertices;
+		const uvs = mesh.uvs;
+		const indices = mesh.indices;
+		const vertexColors = mesh.vertexColors;
+
+		this.applyMeshMaterial(mesh);
+
+		// Placement uniforms. The view transform and the tint used to be baked
+		// into every vertex on the CPU; they are uniforms now, so the vertex
+		// data depends only on the geometry itself. This path (2D camera /
+		// pre-projected vertices) supplies an identity model matrix — the
+		// vertices already sit where they belong.
+		this.setPlacementUniforms(_IDENTITY_MATRIX, tint);
+
 		const maxVerts = this.vertexData.maxVertex;
 		const maxIndices = this.indexBuffer.data.length;
 
@@ -432,27 +656,15 @@ export default class MeshBatcher extends MaterialBatcher {
 
 					const i3 = origIdx * 3;
 					const i2 = origIdx * 2;
-					let x = vertices[i3];
-					let y = vertices[i3 + 1];
-					let z = vertices[i3 + 2];
-
-					if (!isIdentity) {
-						_v.set(x, y, z);
-						m.apply(_v);
-						x = _v.x;
-						y = _v.y;
-						z = _v.z;
-					}
+					const x = vertices[i3];
+					const y = vertices[i3 + 1];
+					const z = vertices[i3 + 2];
 
 					// per-vertex color when the mesh provides one
-					// (multi-material baked colors), modulated by the
-					// runtime `tint` so flash / fade / team color via
-					// `setTint` still works on top of the baked palette.
-					// Single-material meshes (no `vertexColors`) fall
-					// back to the shared `tint` for every vertex.
-					const vertColor = vertexColors
-						? mulPackedARGB(vertexColors[origIdx], tint)
-						: tint;
+					// (multi-material baked colors). The runtime tint is a
+					// uniform now, so it is NOT folded in here — the shader
+					// multiplies it, which keeps vertex data tint-independent.
+					const vertColor = vertexColors ? vertexColors[origIdx] : 0xffffffff;
 					// delegate the actual write so subclasses can add per-vertex
 					// data (e.g. LitMeshBatcher appends the world-space normal).
 					this._pushVertex(

@@ -1,9 +1,42 @@
-import { event, game, input, plugin, pool, timer, utils, video } from "melonjs";
-import { homepage, name, version } from "../package.json";
+import { event, input, plugin, pool, timer, utils, video } from "melonjs";
+import { homepage, name, peerDependencies, version } from "../package.json";
 import Counters from "./counters.js";
 import { drawFrameGraph, drawMemGraph } from "./graphs.js";
 import { applyPatches } from "./patches.js";
 import { GRAPH_HEIGHT, GRAPH_SAMPLES, registerStyles } from "./styles.js";
+
+/**
+ * The lowest melonJS version this plugin supports, derived from the package's
+ * `peerDependencies` range so there is a single source of truth.
+ *
+ * Only the leading comparator is stripped (`>=19.8.0` / `^19.8.0` -> `19.8.0`),
+ * which is all the ranges this package has ever declared; anything more exotic
+ * falls back to the bare string and `checkVersion` treats a non-numeric part as
+ * 0, i.e. it errs toward permitting rather than blocking a valid engine.
+ * @ignore
+ */
+function minimumEngineVersion() {
+	const range = peerDependencies?.melonjs ?? "";
+	const match = range.match(/(\d+\.\d+\.\d+)/);
+	return match ? match[1] : range;
+}
+
+/**
+ * How many frames the displayed update/draw times are averaged over.
+ *
+ * `performance.now()` is deliberately coarse: browsers clamp it to 100µs in a
+ * page that isn't cross-origin isolated (5µs when it is), as a side-channel
+ * mitigation. A single frame's timing therefore quantizes to multiples of the
+ * tick, so a sub-millisecond draw phase reads as an alternating `0.00` / `0.10`
+ * rather than as its real value — and the two decimals this panel prints would
+ * be claiming precision the clock never provided.
+ *
+ * Averaging over N frames pushes the effective resolution well under the tick
+ * (the quantization error is what averages out) and steadies the digits. The
+ * sparkline still plots the raw per-frame values, so spikes stay visible.
+ * @ignore
+ */
+const TIME_SAMPLES = 30;
 
 /**
  * @classdesc
@@ -21,8 +54,8 @@ import { GRAPH_HEIGHT, GRAPH_SAMPLES, registerStyles } from "./styles.js";
  * &bull; amount of sprites objects <br>
  * &bull; amount of objects currently inactive in the the object pool <br>
  * &bull; memory usage (Heap Memory information is only available under Chrome) <br>
- * &bull; frame update time (in ms) <br>
- * &bull; frame draw time (in ms) <br>
+ * &bull; frame update time (in ms, averaged over the last 30 frames) <br>
+ * &bull; frame draw time (in ms, averaged over the last 30 frames) <br>
  * &bull; current fps rate vs target fps <br>
  * additionally, using the checkbox in the panel it is also possible to display : <br>
  * &bull; the hitbox or bounding box for all objects <br>
@@ -35,14 +68,26 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 	 * @param {number} [debugToggle=input.KEY.S] - a default key to toggle the debug panel visibility state
 	 * @see input.KEY for default key options
 	 */
-	constructor(debugToggle = input.KEY.S) {
-		super();
+	constructor(debugToggle = input.KEY.S, app = undefined) {
+		// Forward the owning application to BasePlugin, which stores it as
+		// `this.app` (and falls back to the default instance when omitted).
+		// Every reading below goes through it rather than the `game` singleton:
+		// `game` is whichever Application was constructed last, while the frame
+		// events are broadcast by all of them, so on a multi-application page a
+		// panel bound to one app would report another's numbers.
+		//
+		// `plugin.register(cls, name, ...args)` forwards its extra arguments to
+		// the constructor, so this is additive:
+		//   plugin.register(DebugPanelPlugin, "debugPanel", input.KEY.S, myApp);
+		super(app);
 
-		// Minimum melonJS version — `Renderable.postDraw` now reads the
-		// `PhysicsAdapter.getBodyAABB` / `getBodyShapes` debug API
-		// added in 19.5. Older releases don't expose those methods and
-		// the patch would silently skip drawing physics overlays.
-		this.version = "19.5.0";
+		// Minimum melonJS version, taken from the package's own peer range so
+		// the two can't drift — they already had, the gate sitting at 19.5
+		// while the peer range said 19.8, because raising one didn't raise the
+		// other. This is the gate that actually enforces it: `plugin.register`
+		// throws when the running engine is older, whereas the peer range only
+		// warns at install time and not at all for CDN or pre-bundled use.
+		this.version = minimumEngineVersion();
 
 		console.log(`${name} ${version} | ${homepage}`);
 
@@ -81,20 +126,37 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		this._buildPanel();
 
 		// frame timing
-		this.frameUpdateStartTime = 0;
 		this.frameDrawStartTime = 0;
 		this.frameUpdateTime = 0;
 		this.frameDrawTime = 0;
+		// rolling per-frame samples behind the averaged readouts
+		this._updateSamples = new Float32Array(TIME_SAMPLES);
+		this._drawSamples = new Float32Array(TIME_SAMPLES);
+		this._timeSampleIndex = 0;
+		this._timeSampleCount = 0;
 
 		// event listener references for cleanup
 		this._onResize = () => {
 			this._syncPosition();
 		};
-		this._onBeforeUpdate = (time) => {
-			this.frameUpdateStartTime = time;
-		};
-		this._onAfterUpdate = (time) => {
-			this.frameUpdateTime = time - this.frameUpdateStartTime;
+		this._onAfterUpdate = () => {
+			// Read the engine's own measurement rather than timing this ourselves.
+			// `GAME_BEFORE_UPDATE` carries the frame timestamp but
+			// `GAME_AFTER_UPDATE` carries `lastUpdate`, which is only assigned
+			// inside the fixed-step loop — on a frame that runs no update step it
+			// still holds a value from an earlier frame, so differencing the two
+			// yields a negative or otherwise meaningless duration. The engine
+			// already computes the real elapsed time of a logic step (it needs it
+			// to smooth its own timestep) and exposes it here.
+			// `lastUpdateDelta` is the 20.0.0 name; melonJS 19.x (which this
+			// plugin still supports) only has `updateAverageDelta`, so prefer the
+			// new one and fall back
+			// `??` rather than a `typeof` check so a null/undefined from either
+			// name degrades to 0 instead of poisoning the sample ring: a single
+			// undefined written into a Float32Array is NaN, and the mean then
+			// reads "NaNms" for the next 30 frames
+			this.frameUpdateTime =
+				this.app.lastUpdateDelta ?? this.app.updateAverageDelta ?? 0;
 		};
 		this._onBeforeDraw = (time) => {
 			this.frameDrawStartTime = time;
@@ -102,6 +164,14 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		};
 		this._onAfterDraw = (time) => {
 			this.frameDrawTime = time - this.frameDrawStartTime;
+			// collected here rather than in `_updatePanel` so the average is
+			// already warm when the panel is first opened
+			this._updateSamples[this._timeSampleIndex] = this.frameUpdateTime;
+			this._drawSamples[this._timeSampleIndex] = this.frameDrawTime;
+			this._timeSampleIndex = (this._timeSampleIndex + 1) % TIME_SAMPLES;
+			if (this._timeSampleCount < TIME_SAMPLES) {
+				this._timeSampleCount++;
+			}
 			// `_updatePanel()` writes into the HTML overlay — only useful
 			// while the panel is open. `_drawQuadTree()` is a world-space
 			// debug overlay and gates itself on `options.quadtree`, so it
@@ -119,7 +189,6 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		};
 
 		event.on(event.CANVAS_ONRESIZE, this._onResize);
-		event.on(event.GAME_BEFORE_UPDATE, this._onBeforeUpdate);
 		event.on(event.GAME_AFTER_UPDATE, this._onAfterUpdate);
 		event.on(event.GAME_BEFORE_DRAW, this._onBeforeDraw);
 		event.on(event.GAME_AFTER_DRAW, this._onAfterDraw);
@@ -163,7 +232,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			cb.checked = this.options[key];
 			cb.addEventListener("change", () => {
 				this.options[key] = cb.checked;
-				game.repaint();
+				this.app.repaint();
 			});
 			el.appendChild(cb);
 			el.appendChild(document.createTextNode(label));
@@ -267,12 +336,34 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		s.width = `${rect.width}px`;
 	}
 
+	/**
+	 * Mean of the collected per-frame samples, which is what the panel shows
+	 * instead of the latest frame — see {@link TIME_SAMPLES} for why a single
+	 * frame's reading can't be trusted at this magnitude. Summed fresh each
+	 * call (30 additions) rather than kept as a running total, so no floating
+	 * point drift accumulates over a long session.
+	 * @param {Float32Array} samples - `_updateSamples` or `_drawSamples`
+	 * @returns {number} mean frame time in milliseconds
+	 * @private
+	 */
+	_meanTime(samples) {
+		const count = this._timeSampleCount;
+		if (count === 0) {
+			return 0;
+		}
+		let sum = 0;
+		for (let i = 0; i < count; i++) {
+			sum += samples[i];
+		}
+		return sum / count;
+	}
+
 	/** @private */
 	_updatePanel() {
-		this.stats.objects.textContent = game.world.children.length;
+		this.stats.objects.textContent = this.app.world.children.length;
 		this.stats.draws.textContent = this.counters.get("draws");
-		this.stats.update.textContent = `${this.frameUpdateTime.toFixed(2)}ms`;
-		this.stats.draw.textContent = `${this.frameDrawTime.toFixed(2)}ms`;
+		this.stats.update.textContent = `${this._meanTime(this._updateSamples).toFixed(2)}ms`;
+		this.stats.draw.textContent = `${this._meanTime(this._drawSamples).toFixed(2)}ms`;
 		this.stats.fps.textContent = `${timer.fps}/${timer.maxfps} fps`;
 		this.stats.shapes.textContent = this.counters.get("shapes");
 		this.stats.sprites.textContent = this.counters.get("sprites");
@@ -331,7 +422,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			this.panelWrap.style.display = "";
 			this.visible = true;
 			this._syncPosition();
-			game.repaint();
+			this.app.repaint();
 		}
 	}
 
@@ -342,7 +433,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		if (this.visible) {
 			this.panelWrap.style.display = "none";
 			this.visible = false;
-			game.repaint();
+			this.app.repaint();
 		}
 	}
 
@@ -364,9 +455,9 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		}
 		const renderer = video.renderer;
 		renderer.save();
-		const { x, y } = game.viewport.pos;
+		const { x, y } = this.app.viewport.pos;
 		renderer.translate(-x, -y);
-		this._drawQuadTreeNode(renderer, game.world.broadphase);
+		this._drawQuadTreeNode(renderer, this.app.world.broadphase);
 		renderer.restore();
 		// flush is needed because this runs after GAME_AFTER_DRAW,
 		// which is emitted after the main renderer.flush()
@@ -405,7 +496,6 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 			this.panelWrap.parentElement.removeChild(this.panelWrap);
 		}
 		event.off(event.CANVAS_ONRESIZE, this._onResize);
-		event.off(event.GAME_BEFORE_UPDATE, this._onBeforeUpdate);
 		event.off(event.GAME_AFTER_UPDATE, this._onAfterUpdate);
 		event.off(event.GAME_BEFORE_DRAW, this._onBeforeDraw);
 		event.off(event.GAME_AFTER_DRAW, this._onAfterDraw);

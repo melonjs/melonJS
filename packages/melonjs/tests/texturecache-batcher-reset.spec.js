@@ -1,5 +1,17 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { boot, event, video, WebGLRenderer } from "../src/index.js";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
+import { event, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Regression tests for the cross-batcher binding-tracker reset
@@ -33,15 +45,12 @@ describe("GPU texture cache reset (cross-batcher binding-tracker regression)", (
 	let meshBatcher;
 	let quadBatcher;
 
-	beforeAll(() => {
-		boot();
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
-		renderer = video.renderer;
+	beforeAll(async () => {
+		renderer = await getWebGLRenderer(800, 600);
+	});
+
+	afterAll(() => {
+		releaseWebGLRenderer();
 	});
 
 	beforeEach(() => {

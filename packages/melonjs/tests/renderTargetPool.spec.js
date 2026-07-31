@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import RenderTargetPool from "../src/video/rendertarget/render_target_pool.js";
 import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 describe("RenderTargetPool", () => {
 	let pool;
@@ -191,26 +194,24 @@ describe("RenderTargetPool", () => {
 	});
 
 	describe("with WebGL context", () => {
-		it("should work with WebGLRenderTarget factory", () => {
-			boot();
-			// `video.WEBGL` now throws when WebGL is unavailable
-			// (#1479) — catch the throw so the existing `gl == undefined`
-			// skip path still runs in non-WebGL environments.
-			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
-			} catch {
+		// Acquired in a hook, not per test: creating the first WebGL context on
+		// a runner without a GPU can take longer than the per-test timeout,
+		// while hooks get a much larger budget.
+		let sharedRenderer;
+
+		beforeAll(async () => {
+			sharedRenderer = await getWebGLRenderer(100, 100);
+		});
+
+		afterAll(() => {
+			releaseWebGLRenderer();
+		});
+
+		it("should work with WebGLRenderTarget factory", async () => {
+			if (sharedRenderer === undefined) {
 				return;
 			}
-
-			if (!video.renderer?.gl) {
-				return;
-			}
-
-			const gl = video.renderer.gl;
+			const gl = sharedRenderer.gl;
 			const glPool = new RenderTargetPool((w, h) => {
 				return new WebGLRenderTarget(gl, w, h);
 			});
@@ -226,26 +227,11 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should reuse target on subsequent get at same index", () => {
-			boot();
-			// `video.WEBGL` now throws when WebGL is unavailable
-			// (#1479) — catch the throw so the existing `gl == undefined`
-			// skip path still runs in non-WebGL environments.
-			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
-			} catch {
+		it("should reuse target on subsequent get at same index", async () => {
+			if (sharedRenderer === undefined) {
 				return;
 			}
-
-			if (!video.renderer?.gl) {
-				return;
-			}
-
-			const gl = video.renderer.gl;
+			const gl = sharedRenderer.gl;
 			const glPool = new RenderTargetPool((w, h) => {
 				return new WebGLRenderTarget(gl, w, h);
 			});
@@ -257,26 +243,11 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should resize target when dimensions change", () => {
-			boot();
-			// `video.WEBGL` now throws when WebGL is unavailable
-			// (#1479) — catch the throw so the existing `gl == undefined`
-			// skip path still runs in non-WebGL environments.
-			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
-			} catch {
+		it("should resize target when dimensions change", async () => {
+			if (sharedRenderer === undefined) {
 				return;
 			}
-
-			if (!video.renderer?.gl) {
-				return;
-			}
-
-			const gl = video.renderer.gl;
+			const gl = sharedRenderer.gl;
 			const glPool = new RenderTargetPool((w, h) => {
 				return new WebGLRenderTarget(gl, w, h);
 			});

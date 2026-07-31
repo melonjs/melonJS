@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, video, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * WebGL upload gating for video texture sources.
@@ -30,15 +34,10 @@ function makeVideoLikeCanvas(w, h) {
 describe("Video texture upload gating (WebGL)", () => {
 	let webglReady = false;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
 		try {
-			video.init(800, 600, {
-				parent: "screen",
-				scale: "auto",
-				renderer: video.WEBGL,
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(800, 600);
 			webglReady = video.renderer instanceof WebGLRenderer;
 		} catch {
 			// CI runners without GL acceleration can't construct a WebGL
@@ -48,11 +47,7 @@ describe("Video texture upload gating (WebGL)", () => {
 
 	afterAll(() => {
 		// hand the world back to the default renderer for any later test files
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.AUTO,
-		});
+		releaseWebGLRenderer();
 	});
 
 	const requireWebGL = (ctx) => {

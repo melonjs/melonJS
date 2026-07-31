@@ -22,8 +22,22 @@ if (!version) {
 
 export default defineConfig(() =>
 	defineConfig({
+		// Anchor to this package. `pnpm test` invokes this config from the repo
+		// root, where an unanchored `include` globs every workspace package —
+		// so the adapters' and debug-plugin's specs were pulled into this run
+		// *as well as* being run by their own `pnpm -F ... test` jobs. Besides
+		// the duplicate work, each extra spec file that calls `video.init`
+		// creates another WebGL context in the one shared browser session, and
+		// past the browser's context cap a later `beforeAll` stalls.
+		root: __dirname,
 		test: {
-			include: ["**/*.{test,spec}.[jt]s?(x)"],
+			include: ["tests/**/*.{test,spec}.[jt]s?(x)"],
+			// Several specs create a WebGL context in `beforeAll`. On a CI
+			// container with no GPU that runs through a software rasterizer and
+			// can genuinely take tens of seconds under load, so the default hook
+			// timeout fails correct suites. Raised for headroom — this is a slow
+			// hook, not a hanging one.
+			hookTimeout: 90000,
 			browser: {
 				enabled: true,
 				provider: playwright(),
@@ -35,6 +49,14 @@ export default defineConfig(() =>
 					},
 				],
 			},
+		},
+		// Surface CI-ness to the browser side. Vitest's `env` does not reach the
+		// page, so the WebGL tripwire (tests/webgl_available.spec.js) reads this
+		// to decide whether a missing WebGL context is a hard failure (CI, where
+		// the image is pinned and WebGL must be present) or a visible skip (a
+		// contributor's machine that genuinely has no GL).
+		define: {
+			"import.meta.env.VITE_CI": JSON.stringify(process.env.CI ?? ""),
 		},
 		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [

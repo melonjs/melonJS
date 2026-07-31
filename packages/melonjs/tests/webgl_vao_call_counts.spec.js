@@ -1,5 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, video, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * The #1509 acceptance criterion, as measured GL call counts: with VAOs,
@@ -33,16 +37,12 @@ describe("WebGL VAO call counts (#1509 acceptance)", () => {
 		}
 	}
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
 		// spy BEFORE video.init so init-time calls are counted — the canvas
 		// context doesn't exist yet, so instead spy right after context
 		// creation by re-initializing the batchers via renderer.reset()
-		video.init(160, 120, {
-			parent: "screen",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(160, 120);
 		renderer = video.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
@@ -56,6 +56,12 @@ describe("WebGL VAO call counts (#1509 acceptance)", () => {
 				spy(name);
 			}
 		}
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	const requireWebGL = (ctx) => {

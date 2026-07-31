@@ -23,13 +23,17 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, CanvasTexture, video } from "../src/index.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 describe("createPattern repeat-mode parity (#1448)", () => {
 	// Restore the file-wide AUTO renderer when these tests finish so the
 	// rest of the suite isn't affected by the explicit-mode init below.
 	afterAll(() => {
 		try {
-			video.init(64, 64, { parent: "screen", renderer: video.AUTO });
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if init never succeeded
 		}
@@ -76,11 +80,7 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 		beforeAll(async () => {
 			await boot();
 			try {
-				video.init(64, 64, {
-					parent: "screen",
-					renderer: video.WEBGL,
-					failIfMajorPerformanceCaveat: false,
-				});
+				await getWebGLRenderer(64, 64);
 				webglReady = video.renderer instanceof WebGLRenderer;
 			} catch {
 				// CI runners without GL acceleration can't construct a WebGL

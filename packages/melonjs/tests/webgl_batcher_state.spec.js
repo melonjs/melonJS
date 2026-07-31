@@ -1,12 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
+	Matrix3d,
+	Mesh,
 	NoiseTexture2d,
 	ShaderEffect,
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
 import { emit, RENDER_TARGET_CHANGED } from "../src/system/event.ts";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Regression tests for the 2026-07 batchers + texture-cache bug hunt,
@@ -22,13 +28,7 @@ describe("batcher GL state", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// headless chromium software GL trips the performance-caveat
-				// check — opt out so the tests run instead of skipping
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// genuine WebGL absence — tests skip below
 		}
@@ -39,10 +39,7 @@ describe("batcher GL state", () => {
 
 	afterAll(() => {
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if init never succeeded
 		}
@@ -284,5 +281,80 @@ describe("batcher GL state", () => {
 			gl.getVertexAttrib(meshLoc, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING),
 		).toBe(mesh.glVertexBuffer);
 		gl.bindVertexArray(previous);
+	});
+
+	describe("retained mesh draws leave the batcher usable (issue #1507)", () => {
+		const makeMesh = () => {
+			const m = new Mesh(0, 0, {
+				vertices: [-24, -24, 0, 24, -24, 0, 24, 24, 0, -24, 24, 0],
+				uvs: [0, 0, 1, 0, 1, 1, 0, 1],
+				indices: [0, 1, 2, 0, 2, 3],
+				width: 48,
+				height: 48,
+			});
+			m.pos.set(64, 64, 0);
+			m._useWorldSpace = true;
+			m.cullBackFaces = false;
+			return m;
+		};
+
+		it("restores the batcher's own vertex state and upload buffer", (ctx) => {
+			requireWebGL(ctx);
+			// a retained draw binds its own vertex array and index buffer; if it
+			// doesn't hand the batcher's back, the next accumulating flush reads
+			// vertex data from the wrong buffer and silently draws garbage
+			const gl = renderer.gl;
+			const batcher = renderer.batchers.get("mesh");
+			const mesh = makeMesh();
+			try {
+				const proj = new Matrix3d();
+				proj.ortho(0, 128, 128, 0, -1000, 1000);
+				renderer.setProjection(proj);
+				batcher.bind();
+				const expectedArrayObject = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
+
+				mesh.draw(renderer);
+				renderer.flush();
+
+				expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(
+					expectedArrayObject,
+				);
+				expect(gl.getParameter(gl.ARRAY_BUFFER_BINDING)).toBe(
+					batcher.uploadBuffer,
+				);
+				expect(gl.getError()).toBe(gl.NO_ERROR);
+			} finally {
+				mesh.destroy();
+			}
+		});
+
+		it("releases retained geometry on renderer reset", (ctx) => {
+			requireWebGL(ctx);
+			const batcher = renderer.batchers.get("mesh");
+			const mesh = makeMesh();
+			try {
+				const proj = new Matrix3d();
+				proj.ortho(0, 128, 128, 0, -1000, 1000);
+				renderer.setProjection(proj);
+				mesh.draw(renderer);
+				renderer.flush();
+				expect(batcher.retained.size).toBeGreaterThan(0);
+				const geometry = batcher.retained.get(mesh);
+				expect(geometry.vertexBuffer).not.toBeNull();
+
+				batcher.reset();
+				// GPU buffers must not outlive a reset — they'd be orphaned,
+				// since the map that owned them is the only handle. Clearing the
+				// map alone would satisfy a size check while leaking every VBO,
+				// IBO and VAO, so assert the objects were released too.
+				expect(batcher.retained.size).toBe(0);
+				expect(geometry.vertexBuffer).toBeNull();
+				expect(geometry.glIndexBuffer).toBeNull();
+				expect(geometry.vertexState).toBeNull();
+				expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
+			} finally {
+				mesh.destroy();
+			}
+		});
 	});
 });

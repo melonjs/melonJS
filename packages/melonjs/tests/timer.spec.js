@@ -33,9 +33,12 @@ describe("Timer", () => {
 
 			expect(fn).not.toHaveBeenCalled();
 
-			await vi.waitFor(() => {
-				expect(fn).toHaveBeenCalledWith(1, 2, 3);
-			});
+			await vi.waitFor(
+				() => {
+					expect(fn).toHaveBeenCalledWith(1, 2, 3);
+				},
+				{ timeout: 8000 },
+			);
 		});
 	});
 
@@ -56,9 +59,16 @@ describe("Timer", () => {
 			// can land past the target N, and the equality condition never
 			// becomes true again. Two calls is enough to prove it's an
 			// interval and not a one-shot.
-			await vi.waitFor(() => {
-				expect(fn.mock.calls.length).toBeGreaterThanOrEqual(2);
-			});
+			await vi.waitFor(
+				() => {
+					expect(fn.mock.calls.length).toBeGreaterThanOrEqual(2);
+				},
+				// engine timers advance with the game loop, so this is bounded by
+				// how promptly the browser schedules it. The default 1s budget is
+				// enough on an idle machine and not enough on a loaded one — the
+				// assertion is unchanged, only the patience.
+				{ timeout: 8000 },
+			);
 		});
 
 		test("calls function with args", async () => {
@@ -70,9 +80,12 @@ describe("Timer", () => {
 
 			expect(fn).not.toHaveBeenCalled();
 
-			await vi.waitFor(() => {
-				expect(fn).toHaveBeenCalledWith(1, 2, 3);
-			});
+			await vi.waitFor(
+				() => {
+					expect(fn).toHaveBeenCalledWith(1, 2, 3);
+				},
+				{ timeout: 8000 },
+			);
 		});
 	});
 

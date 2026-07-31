@@ -32,8 +32,8 @@ const lerp = (a, b, t) => {
  * sampled in 3D (`getNoise3d`) using an internal `time` as the third axis —
  * call {@link NoiseTexture2d#update} from your update loop to evolve it. Each
  * re-bake bumps a `version` the renderer reads, so the GPU texture re-uploads
- * automatically (and only when it actually changed — the three.js
- * `Texture.needsUpdate` model).
+ * automatically (and only when it actually changed — explicit, version-based
+ * invalidation).
  *
  * Note: live re-upload is currently wired through the lit **normal-map**
  * pipeline ({@link Sprite#normalMap} + {@link Light2d}). An `animated` texture

@@ -10,6 +10,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 // `setDepth` only carries depth into the vertex stream under a perspective
 // projection (a depth scene / Camera3d); under ortho it keeps currentDepth at 0
@@ -49,14 +53,9 @@ describe("depth pipeline adversarial integration", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(800, 600);
 		renderer = video.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 		isWebGL = renderer instanceof WebGLRenderer;
@@ -66,11 +65,7 @@ describe("depth pipeline adversarial integration", () => {
 	});
 
 	afterAll(() => {
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.AUTO,
-		});
+		releaseWebGLRenderer();
 	});
 
 	// Internal helpers called from inside it() callbacks. By the time

@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { boot, Mesh, video, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Tests for the decoupled default texture filter (`textureFilter` setting),
@@ -19,13 +23,7 @@ describe("default texture filter (decoupled from antiAlias)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(64, 64, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// software GL in headless chromium trips the "major performance
-				// caveat" flag — opt out so the WebGL renderer is actually created
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(64, 64);
 		} catch {
 			// genuine WebGL absence — tests skip via requireWebGL below
 		}
@@ -36,7 +34,7 @@ describe("default texture filter (decoupled from antiAlias)", () => {
 
 	afterAll(() => {
 		try {
-			video.init(64, 64, { parent: "screen", renderer: video.AUTO });
+			releaseWebGLRenderer();
 		} catch {
 			// ignore
 		}

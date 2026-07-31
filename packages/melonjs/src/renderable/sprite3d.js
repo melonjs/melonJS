@@ -1,5 +1,6 @@
 import Camera3d from "../camera/camera3d.ts";
 import { getImage } from "../loader/loader.js";
+import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import Texture2d from "../video/texture/texture2d.ts";
 import { resolveAnchorPoint } from "./anchorPoint.ts";
@@ -400,6 +401,9 @@ export default class Sprite3d extends Mesh {
 	 * @ignore
 	 */
 	_onAnchorChanged() {
+		// re-bakes the quad's corner positions in place (directly below, or
+		// via `_applyFrame`) — a geometry change either way
+		this._geometryVersion++;
 		const hw = this._halfW;
 		const hh = this._halfH;
 		this._anchorOffsetX = (0.5 - this.anchorPoint.x) * hw * 2;
@@ -665,6 +669,10 @@ export default class Sprite3d extends Mesh {
 	 * @ignore
 	 */
 	_applyFrame(region) {
+		// this rewrites the quad's UVs (and, for a trimmed region, its
+		// vertices) in place — that IS a geometry change, so any GPU-resident
+		// copy has to be refreshed
+		this._geometryVersion++;
 		// remember the region so a later flipX/flipY can re-map immediately
 		this._region = region;
 		// the texture backing this frame (full sheet for a spritesheet, the atlas
@@ -816,11 +824,27 @@ export default class Sprite3d extends Mesh {
 	 * @ignore
 	 */
 	_projectVerticesWorld(offsetX, offsetY, offsetZ) {
+		if (this._billboardBasis() === false) {
+			super._projectVerticesWorld(offsetX, offsetY, offsetZ);
+			return;
+		}
+		this._projectBillboardCorners(offsetX, offsetY, offsetZ);
+	}
+
+	/**
+	 * Resolve the camera-facing basis this billboard should use, leaving it in
+	 * the shared `_right` / `_up` scratch vectors.
+	 *
+	 * Shared by the CPU projection and the model-matrix composition so the two
+	 * can never disagree about which way the card faces.
+	 * @returns {boolean} `false` when this sprite is not billboarding
+	 * @ignore
+	 */
+	_billboardBasis() {
 		const mode = this.billboard;
 		const cam = this._billboardCam;
 		if (mode === false || mode === "none" || cam === null) {
-			super._projectVerticesWorld(offsetX, offsetY, offsetZ);
-			return;
+			return false;
 		}
 
 		// camera basis (world space): right / up / forward. Note `getBasis`
@@ -856,9 +880,54 @@ export default class Sprite3d extends Mesh {
 			}
 		}
 
-		// emit the 4 corners as center ± right·localX ± up·localY (the local
-		// offsets are the baked ±hw / ±hh quad coordinates, already shifted by
-		// the anchor offset)
+		return true;
+	}
+
+	/**
+	 * A billboard's placement is the camera-facing basis itself: the quad's
+	 * local X follows the camera's right axis and its local Y the up axis, so
+	 * the card turns to face the camera without its geometry ever changing.
+	 * Falls back to the standard mesh placement when not billboarding.
+	 * @returns {Matrix3d} the sprite's model matrix (reused instance)
+	 * @ignore
+	 */
+	_composeModelMatrix() {
+		if (this._billboardBasis() === false) {
+			return super._composeModelMatrix();
+		}
+		if (this._modelMatrix === undefined) {
+			/** @ignore */
+			this._modelMatrix = new Matrix3d();
+		}
+		const out = this._modelMatrix.val;
+		// columns: right, up, right×up (unused by a flat quad but kept
+		// well-formed), then the world position
+		out[0] = _right.x;
+		out[1] = _right.y;
+		out[2] = _right.z;
+		out[3] = 0;
+		out[4] = _up.x;
+		out[5] = _up.y;
+		out[6] = _up.z;
+		out[7] = 0;
+		out[8] = _right.y * _up.z - _right.z * _up.y;
+		out[9] = _right.z * _up.x - _right.x * _up.z;
+		out[10] = _right.x * _up.y - _right.y * _up.x;
+		out[11] = 0;
+		out[12] = this.pos.x;
+		out[13] = this.pos.y;
+		out[14] = this.depth;
+		out[15] = 1;
+		return this._modelMatrix;
+	}
+
+	/**
+	 * Emit the 4 corners as center ± right·localX ± up·localY (the local
+	 * offsets are the baked ±hw / ±hh quad coordinates, already shifted by the
+	 * anchor offset). Only used on renderers without retained geometry.
+	 * @ignore
+	 */
+	_projectBillboardCorners(offsetX, offsetY, offsetZ) {
 		const out = this.vertices;
 		const src = this.originalVertices;
 		const rx = _right.x;

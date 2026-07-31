@@ -622,4 +622,119 @@ describe("Application", () => {
 			game.world.removeChild(obj);
 		});
 	});
+
+	describe("lastUpdateDelta (renamed from updateAverageDelta in 20.0.0)", () => {
+		/**
+		 * A bare Application is enough here: the field is written by the
+		 * fixed-timestep loop in `update()`, which needs no renderer.
+		 */
+		const makeApp = () => {
+			const app = new Application(64, 64, { physics: { adapter: "builtin" } });
+			return app;
+		};
+
+		it("starts at zero", () => {
+			const app = makeApp();
+			expect(app.lastUpdateDelta).toBe(0);
+			app.destroy();
+		});
+
+		it("records the measured cost of a logic step, not the simulated delta", () => {
+			const app = makeApp();
+			try {
+				// force a step. `accumulatorMax` is 0 until the app is sized, and
+				// `update()` clamps the accumulator to it — leave it at 0 and the
+				// accumulator is zeroed before the loop is ever tested
+				app.accumulatorMax = app.stepSize * 10;
+				app.accumulator = app.accumulatorUpdateDelta = app.stepSize;
+				app.frameCounter = app.frameRate - 1;
+				app.update(performance.now());
+
+				// prove the step actually ran, or the assertions below hold
+				// vacuously on a `lastUpdateDelta` that never left 0
+				expect(app.lastUpdateStart).not.toBeNull();
+
+				// a real elapsed duration — never negative, which is exactly what
+				// differencing the GAME_BEFORE_UPDATE / GAME_AFTER_UPDATE payloads
+				// used to produce
+				expect(app.lastUpdateDelta).toBeGreaterThanOrEqual(0);
+				// and distinct in kind from `updateDelta`, which is simulated time
+				// fixed at the step size
+				expect(app.updateDelta).toBeCloseTo(app.stepSize, 5);
+				expect(app.lastUpdateDelta).toBeLessThan(app.stepSize);
+			} finally {
+				app.destroy();
+			}
+		});
+
+		it("measures real elapsed time, tracking work done in the update", () => {
+			const app = makeApp();
+			try {
+				// a child that deliberately burns ~3ms inside the update phase, so
+				// the recorded value has to be a genuine measurement — a hardcoded
+				// zero or a simulated delta would both fail this
+				const BURN_MS = 3;
+				const hog = new Renderable(0, 0, 8, 8);
+				hog.update = () => {
+					const t0 = performance.now();
+					while (performance.now() - t0 < BURN_MS) {
+						// spin
+					}
+					return true;
+				};
+				app.world.addChild(hog);
+
+				app.accumulatorMax = app.stepSize * 10;
+				app.accumulator = app.accumulatorUpdateDelta = app.stepSize;
+				app.frameCounter = app.frameRate - 1;
+				app.update(performance.now());
+
+				// generous lower bound so clock granularity and scheduling can't
+				// make this flaky, but far above anything a trivial world costs
+				expect(app.lastUpdateDelta).toBeGreaterThan(BURN_MS * 0.5);
+			} finally {
+				app.destroy();
+			}
+		});
+
+		it("is what the accumulator drains by when it exceeds the step size", () => {
+			const app = makeApp();
+			try {
+				// the spiral-of-death guard: a logic step costing more real time
+				// than it simulates must drain the accumulator by the real cost,
+				// or the accumulator refills faster than it can empty
+				app.lastUpdateDelta = app.stepSize * 3;
+				app.accumulatorMax = app.stepSize * 10;
+				app.accumulator = app.stepSize;
+				app.frameCounter = app.frameRate - 1;
+				app.update(performance.now());
+				expect(app.accumulatorUpdateDelta).toBeCloseTo(app.stepSize * 3, 5);
+			} finally {
+				app.destroy();
+			}
+		});
+
+		describe("deprecated updateAverageDelta alias", () => {
+			it("reads through to lastUpdateDelta", () => {
+				const app = makeApp();
+				app.lastUpdateDelta = 4.25;
+				expect(app.updateAverageDelta).toBe(4.25);
+				app.destroy();
+			});
+
+			it("writes through to lastUpdateDelta", () => {
+				const app = makeApp();
+				app.updateAverageDelta = 7.5;
+				expect(app.lastUpdateDelta).toBe(7.5);
+				app.destroy();
+			});
+
+			it("is present on the default game instance", () => {
+				// the debug plugin resolves the new name first and falls back to
+				// this one on melonJS 19.x, so both must stay reachable here
+				expect(typeof game.lastUpdateDelta).toBe("number");
+				expect(typeof game.updateAverageDelta).toBe("number");
+			});
+		});
+	});
 });

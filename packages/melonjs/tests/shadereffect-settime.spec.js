@@ -1,5 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, ShaderEffect, video, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * `ShaderEffect.setTime(seconds)` is a manual convenience for the `uTime`
@@ -11,15 +15,17 @@ describe("ShaderEffect.setTime (manual uTime helper)", () => {
 	let renderer;
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, {
-			parent: "screen",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(64, 64);
 		renderer = video.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	it("writes uTime on a shader that declares it, and is chainable", (ctx) => {
