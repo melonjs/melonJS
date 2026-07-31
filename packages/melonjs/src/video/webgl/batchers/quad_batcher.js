@@ -155,7 +155,9 @@ export default class QuadBatcher extends MaterialBatcher {
 	flush(mode = this.mode) {
 		// this override has its own drawElements and does not chain to
 		// super.flush, so it must normalize independently
-		mode = resolveTopology(this.gl, mode);
+		if (typeof mode === "string") {
+			mode = resolveTopology(this.gl, mode);
+		}
 		const vertex = this.vertexData;
 		const vertexCount = vertex.vertexCount;
 

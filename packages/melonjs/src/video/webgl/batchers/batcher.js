@@ -684,9 +684,12 @@ export class Batcher {
 	 * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
 	 */
 	flush(mode = this.mode) {
-		// accepts either vocabulary; a raw topology string reaching
-		// drawElements/drawArrays would coerce to 0 and draw points
-		mode = resolveTopology(this.gl, mode);
+		// Accepts either vocabulary. Only strings need resolving: `this.mode`
+		// is already normalized by its setter, and this runs on every flush, so
+		// a table lookup per draw would be pure overhead on the hottest path.
+		if (typeof mode === "string") {
+			mode = resolveTopology(this.gl, mode);
+		}
 		const vertex = this.vertexData;
 		const vertexCount = vertex.vertexCount;
 

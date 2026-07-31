@@ -86,7 +86,9 @@ export default class PrimitiveBatcher extends Batcher {
 		// mode numerically (`=== gl.LINES`, `!== this.mode`, the topology
 		// switch), and a string would fail all of them while coercing to 0 —
 		// i.e. POINTS — at the draw call.
-		mode = resolveTopology(this.gl, mode);
+		if (typeof mode === "string") {
+			mode = resolveTopology(this.gl, mode);
+		}
 		const lineWidth = this.renderer.lineWidth;
 
 		// update uLineWidth uniform if changed

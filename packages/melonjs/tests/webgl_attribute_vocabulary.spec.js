@@ -24,6 +24,12 @@ describe("Batcher attribute vocabulary (issue #1551)", () => {
 		gl = renderer?.gl;
 	});
 
+	beforeAll(() => {
+		if (renderer !== undefined) {
+			scratch = build([{ name: "aVertex", format: "float32x3", offset: 0 }]);
+		}
+	});
+
 	afterAll(() => {
 		releaseWebGLRenderer();
 	});
@@ -42,6 +48,31 @@ describe("Batcher attribute vocabulary (issue #1551)", () => {
 	 */
 	const build = (attributes) => {
 		return new Batcher(renderer, { attributes, shader: SHADER });
+	};
+
+	/**
+	 * A single reusable batcher for the table-driven cases below.
+	 *
+	 * Constructing one compiles a shader program and allocates a vertex array
+	 * and buffers, and nothing frees them — building one per case left ~80
+	 * live programs in the shared context, which is enough to starve a
+	 * software renderer late in a CI run. `addAttribute` only needs a real
+	 * `Batcher` because it calls private methods, so reuse one and reset the
+	 * layout between cases.
+	 * @type {Batcher}
+	 */
+	let scratch;
+
+	/**
+	 * Reset the reusable batcher to an empty, unfrozen layout.
+	 * @returns {Batcher} the scratch batcher
+	 */
+	const blank = () => {
+		scratch.attributes.length = 0;
+		scratch.stride = 0;
+		scratch.vertexSize = 0;
+		scratch.vertexState = null;
+		return scratch;
 	};
 
 	// component type, bytes per component, and the neutral names it maps to
@@ -77,32 +108,14 @@ describe("Batcher attribute vocabulary (issue #1551)", () => {
 				requireWebGL(ctx, renderer);
 				// 32-bit types must land on a 4-byte boundary for the buffer's
 				// float-indexed writes; pad the layout when they would not
-				const pad = (size * perComponent) % 4;
-				const attributes = [
-					{
-						name: "aTest",
-						size,
-						type: gl[typeName],
-						normalized,
-						offset: 0,
-					},
-				];
-				if (pad !== 0) {
-					attributes.push({
-						name: "aPad",
-						format: "unorm8",
-						offset: size * perComponent,
-					});
-					// pad up to the next multiple of 4
-					for (let i = 1; i < 4 - pad; i++) {
-						attributes.push({
-							name: `aPad${i}`,
-							format: "unorm8",
-							offset: size * perComponent + i,
-						});
-					}
-				}
-				const batcher = build(attributes);
+				const batcher = blank();
+				batcher.addAttribute({
+					name: "aTest",
+					size,
+					type: gl[typeName],
+					normalized,
+					offset: 0,
+				});
 
 				const record = batcher.attributes[0];
 				expect(record.size).toBe(size);
@@ -164,12 +177,20 @@ describe("Batcher attribute vocabulary (issue #1551)", () => {
 			"%s produces the same record as its GL spelling",
 			([[format, size, typeName, normalized]], ctx) => {
 				requireWebGL(ctx, renderer);
-				const viaFormat = build([{ name: "a", format, offset: 0 }]);
-				const viaGL = build([
-					{ name: "a", size, type: gl[typeName], normalized, offset: 0 },
-				]);
-				expect(viaFormat.attributes[0]).toEqual(viaGL.attributes[0]);
-				expect(viaFormat.stride).toBe(viaGL.stride);
+				blank().addAttribute({ name: "a", format, offset: 0 });
+				const viaFormat = {
+					record: scratch.attributes[0],
+					stride: scratch.stride,
+				};
+				blank().addAttribute({
+					name: "a",
+					size,
+					type: gl[typeName],
+					normalized,
+					offset: 0,
+				});
+				expect(viaFormat.record).toEqual(scratch.attributes[0]);
+				expect(viaFormat.stride).toBe(scratch.stride);
 			},
 		);
 
