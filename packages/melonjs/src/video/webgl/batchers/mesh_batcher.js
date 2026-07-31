@@ -165,20 +165,16 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * (e.g. {@link LitMeshBatcher}) append their own attributes.
 	 * @ignore
 	 */
-	_attributeLayout(renderer) {
+	_attributeLayout(_renderer) {
 		return [
 			{
 				name: "aVertex",
-				size: 3,
-				type: renderer.gl.FLOAT,
-				normalized: false,
+				format: "float32x3",
 				offset: 0 * Float32Array.BYTES_PER_ELEMENT,
 			},
 			{
 				name: "aRegion",
-				size: 2,
-				type: renderer.gl.FLOAT,
-				normalized: false,
+				format: "float32x2",
 				offset: 3 * Float32Array.BYTES_PER_ELEMENT,
 			},
 			{
@@ -191,9 +187,7 @@ export default class MeshBatcher extends MaterialBatcher {
 				// upload paths, zeroing the bytes the shader reads. The float
 				// path uses values in [0, 1] which never form NaN bit patterns.
 				name: "aColor",
-				size: 4,
-				type: renderer.gl.FLOAT,
-				normalized: false,
+				format: "float32x4",
 				offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 			},
 		];

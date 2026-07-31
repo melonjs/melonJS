@@ -62,6 +62,15 @@ import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import Tween from "./tweens/tween.ts";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import {
+	isPortableTopology,
+	isTopology,
+	PORTABLE_TOPOLOGIES,
+} from "./video/gpu/topology.ts";
+import {
+	isVertexFormat,
+	resolveVertexFormat,
+} from "./video/gpu/vertexformat.ts";
 import { Gradient } from "./video/gradient.js";
 import Renderer from "./video/renderer.js";
 import RenderState from "./video/renderstate.js";
@@ -189,6 +198,9 @@ export {
 	HologramEffect,
 	ImageLayer,
 	InvertEffect,
+	isPortableTopology,
+	isTopology,
+	isVertexFormat,
 	Light2d,
 	MaskEffect,
 	Mesh,
@@ -199,6 +211,7 @@ export {
 	ParticleEmitter,
 	ParticleEmitterSettings,
 	PixelateEffect,
+	PORTABLE_TOPOLOGIES,
 	Pointer,
 	PrimitiveBatcher,
 	plugins,
@@ -208,6 +221,7 @@ export {
 	Renderer,
 	RenderState,
 	RenderTarget,
+	resolveVertexFormat,
 	ScanlineEffect,
 	SepiaEffect,
 	ShaderEffect,
@@ -274,3 +288,6 @@ DOMContentLoaded(() => {
 		boot();
 	}
 });
+
+export type { Topology } from "./video/gpu/topology.ts";
+export type { VertexFormat } from "./video/gpu/vertexformat.ts";

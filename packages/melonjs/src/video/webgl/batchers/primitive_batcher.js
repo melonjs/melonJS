@@ -1,5 +1,6 @@
 import primitiveFragment from "./../shaders/primitive.frag";
 import primitiveVertex from "./../shaders/primitive.vert";
+import { resolveTopology } from "../utils/topology.js";
 import { Batcher } from "./batcher.js";
 
 /**
@@ -24,23 +25,17 @@ export default class PrimitiveBatcher extends Batcher {
 					// vec3: (x, y, z). z carries `renderable.depth` for
 					// perspective projection (Camera3d). Stride = 24 bytes.
 					name: "aVertex",
-					size: 3,
-					type: renderer.gl.FLOAT,
-					normalized: false,
+					format: "float32x3",
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aNormal",
-					size: 2,
-					type: renderer.gl.FLOAT,
-					normalized: false,
+					format: "float32x2",
 					offset: 3 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aColor",
-					size: 4,
-					type: renderer.gl.UNSIGNED_BYTE,
-					normalized: true,
+					format: "unorm8x4",
 					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],
@@ -87,6 +82,11 @@ export default class PrimitiveBatcher extends Batcher {
 	 * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
 	 */
 	drawVertices(mode, verts, vertexCount = verts.length) {
+		// Normalize before anything compares it. Every branch below tests the
+		// mode numerically (`=== gl.LINES`, `!== this.mode`, the topology
+		// switch), and a string would fail all of them while coercing to 0 —
+		// i.e. POINTS — at the draw call.
+		mode = resolveTopology(this.gl, mode);
 		const lineWidth = this.renderer.lineWidth;
 
 		// update uLineWidth uniform if changed

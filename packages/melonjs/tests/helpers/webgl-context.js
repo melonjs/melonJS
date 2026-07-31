@@ -40,6 +40,19 @@ import WebGLRenderer from "../../src/video/webgl/webgl_renderer.js";
  * `getWebGLRenderer` resolves to `undefined` when WebGL genuinely isn't
  * available, which `requireWebGL` turns into a visible `ctx.skip()` rather
  * than a silent pass.
+ *
+ * ## Table-driven tests: use `it.for`, not `it.each`
+ *
+ * `it.each` does **not** pass the test context to its callback, so a
+ * `requireWebGL(ctx, …)` guard written inside one receives `undefined` and
+ * throws a `TypeError` on a machine with no GL instead of skipping. `it.for`
+ * passes the context as its second argument and is otherwise equivalent:
+ *
+ * ```js
+ * it.for([["a", 1], ["b", 2]])("case %s", ([name, n], ctx) => {
+ *   requireWebGL(ctx, renderer);   // works
+ * });
+ * ```
  * @module tests/helpers/webgl-context
  */
 

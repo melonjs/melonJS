@@ -34,14 +34,14 @@ const _WHITE_AMBIENT = new Float32Array([1, 1, 1]);
 export default class LitMeshBatcher extends MeshBatcher {
 	/** add the world-space normal attribute on top of the base layout. @ignore */
 	_attributeLayout(renderer) {
+		// the parameter is kept for the subclass contract even though a
+		// format-declared layout no longer needs a rendering context
 		const attributes = super._attributeLayout(renderer);
 		attributes.push({
 			// aNormal: world-space vertex normal, pushed WITHOUT the view
 			// transform so lighting is evaluated in world space.
 			name: "aNormal",
-			size: 3,
-			type: renderer.gl.FLOAT,
-			normalized: false,
+			format: "float32x3",
 			offset: 9 * Float32Array.BYTES_PER_ELEMENT,
 		});
 		return attributes;

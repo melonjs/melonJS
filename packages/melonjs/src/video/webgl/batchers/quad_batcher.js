@@ -2,6 +2,7 @@ import { Vector3d } from "../../../math/vector3d.ts";
 import IndexBuffer from "../buffer/index.js";
 import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
 import quadMultiVertex from "./../shaders/quad-multi.vert";
+import { resolveTopology } from "../utils/topology.js";
 import { MaterialBatcher } from "./material_batcher.js";
 
 /**
@@ -48,30 +49,22 @@ export default class QuadBatcher extends MaterialBatcher {
 					// vec3: (x, y, z). z carries `renderable.depth` for
 					// perspective projection (Camera3d). Stride = 28 bytes.
 					name: "aVertex",
-					size: 3,
-					type: renderer.gl.FLOAT,
-					normalized: false,
+					format: "float32x3",
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aRegion",
-					size: 2,
-					type: renderer.gl.FLOAT,
-					normalized: false,
+					format: "float32x2",
 					offset: 3 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aColor",
-					size: 4,
-					type: renderer.gl.UNSIGNED_BYTE,
-					normalized: true,
+					format: "unorm8x4",
 					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					name: "aTextureId",
-					size: 1,
-					type: renderer.gl.FLOAT,
-					normalized: false,
+					format: "float32",
 					offset: 6 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],
@@ -160,6 +153,9 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
 	 */
 	flush(mode = this.mode) {
+		// this override has its own drawElements and does not chain to
+		// super.flush, so it must normalize independently
+		mode = resolveTopology(this.gl, mode);
 		const vertex = this.vertexData;
 		const vertexCount = vertex.vertexCount;
 
