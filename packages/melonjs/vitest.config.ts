@@ -50,6 +50,14 @@ export default defineConfig(() =>
 				],
 			},
 		},
+		// Surface CI-ness to the browser side. Vitest's `env` does not reach the
+		// page, so the WebGL tripwire (tests/webgl_available.spec.js) reads this
+		// to decide whether a missing WebGL context is a hard failure (CI, where
+		// the image is pinned and WebGL must be present) or a visible skip (a
+		// contributor's machine that genuinely has no GL).
+		define: {
+			"import.meta.env.VITE_CI": JSON.stringify(process.env.CI ?? ""),
+		},
 		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [
 			glsl(),
