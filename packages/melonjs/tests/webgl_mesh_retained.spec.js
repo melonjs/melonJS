@@ -825,12 +825,11 @@ describe("Retained-mode mesh rendering (issue #1507)", () => {
 
 			// geometry is rebuilt on demand, not resurrected from stale handles
 			expect(gl.isContextLost()).toBe(false);
-			// Drain whatever the engine's own restore sequence left pending
-			// before measuring this path. As of writing that is a real
-			// INVALID_OPERATION raised before any mesh code runs — pre-existing
-			// and unrelated to retained geometry, but it would otherwise be
-			// attributed to the draw below.
-			gl.getError();
+			// Nothing may be pending here. Releasing retained geometry during
+			// the restore used to delete buffers belonging to the dead context,
+			// which raises INVALID_OPERATION — the handles died with it, so
+			// `RetainedGeometry.destroy` now checks `isBuffer` before deleting.
+			expect(gl.getError()).toBe(gl.NO_ERROR);
 			const { calls, restore } = spy();
 			try {
 				frame(mesh);

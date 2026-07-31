@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, Matrix3d, Mesh, video, WebGLRenderer } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Tests for issue #1503 — `Mesh`'s `textureRepeat` setting used to apply the
@@ -29,14 +33,7 @@ describe("Mesh textureRepeat vs shared TextureAtlas (issue #1503)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// Chromium headless uses a software GL backend that trips the
-				// "major performance caveat" flag — opt out so the tests run
-				// on SwiftShader instead of silently falling back to Canvas.
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// Genuine WebGL absence — tests skip below.
 		}
@@ -50,10 +47,7 @@ describe("Mesh textureRepeat vs shared TextureAtlas (issue #1503)", () => {
 		// forced-WebGL renderer into other test files sharing the `video`
 		// global (same cleanup pattern as webgl_mesh_depth.spec.js).
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
+			releaseWebGLRenderer();
 		} catch {
 			// ignore
 		}

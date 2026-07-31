@@ -8,6 +8,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Adversarial integration tests for the WebGL pipeline.
@@ -27,14 +31,9 @@ describe("WebGL pipeline adversarial integration", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(800, 600);
 		renderer = video.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
@@ -47,11 +46,7 @@ describe("WebGL pipeline adversarial integration", () => {
 			renderer.activeLightCount = 0;
 			renderer.currentNormalMap = null;
 		}
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.AUTO,
-		});
+		releaseWebGLRenderer();
 	});
 
 	beforeEach(() => {

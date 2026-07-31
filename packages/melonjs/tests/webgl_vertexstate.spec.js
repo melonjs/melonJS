@@ -1,7 +1,11 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { boot, video, WebGLRenderer } from "../src/index.js";
 import WebGLIndexBuffer from "../src/video/webgl/buffer/index.js";
 import WebGLVertexState from "../src/video/webgl/buffer/vertexstate.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Unit tests for {@link WebGLVertexState} — the GL vertex array object
@@ -22,13 +26,9 @@ describe("WebGLVertexState", () => {
 		{ name: "aColor", size: 4, type: 0, normalized: true, offset: 20 },
 	];
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, {
-			parent: "screen",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(64, 64);
 		isWebGL = video.renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = video.renderer.gl;
@@ -38,6 +38,12 @@ describe("WebGLVertexState", () => {
 			ATTRIBUTES[2].type = gl.UNSIGNED_BYTE;
 			shader = video.renderer.batchers.get("quad").defaultShader;
 		}
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	const requireWebGL = (ctx) => {

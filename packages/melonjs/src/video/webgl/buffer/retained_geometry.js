@@ -149,12 +149,20 @@ export default class RetainedGeometry {
 			this.vertexState.destroy();
 			this.vertexState = null;
 		}
+		// `isBuffer` is false for a handle belonging to a context that has since
+		// been lost, and asking is itself error-free. Deleting such a handle
+		// after the context came back raises INVALID_OPERATION — the objects
+		// died with the old context, so there is nothing left to release.
 		if (this.vertexBuffer !== null) {
-			gl.deleteBuffer(this.vertexBuffer);
+			if (gl.isBuffer(this.vertexBuffer)) {
+				gl.deleteBuffer(this.vertexBuffer);
+			}
 			this.vertexBuffer = null;
 		}
 		if (this.glIndexBuffer !== null) {
-			gl.deleteBuffer(this.glIndexBuffer);
+			if (gl.isBuffer(this.glIndexBuffer)) {
+				gl.deleteBuffer(this.glIndexBuffer);
+			}
 			this.glIndexBuffer = null;
 		}
 		this.indexCount = 0;

@@ -8,6 +8,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Regression tests for the glTF "prop sinks into the platform" bug.
@@ -52,11 +56,7 @@ describe("Mesh anchor-point leak under Camera3d (glTF prop-sink bug)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// genuine WebGL absence — tests skip below
 		}
@@ -70,7 +70,7 @@ describe("Mesh anchor-point leak under Camera3d (glTF prop-sink bug)", () => {
 
 	afterAll(() => {
 		try {
-			video.init(128, 128, { parent: "screen", renderer: video.AUTO });
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if init never succeeded
 		}

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { boot, video } from "../src/index.js";
-
 import RenderTargetPool from "../src/video/rendertarget/render_target_pool.js";
 import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
+import { getWebGLRenderer } from "./helpers/webgl-context.js";
 
 describe("RenderTargetPool", () => {
 	let pool;
@@ -191,17 +191,13 @@ describe("RenderTargetPool", () => {
 	});
 
 	describe("with WebGL context", () => {
-		it("should work with WebGLRenderTarget factory", () => {
+		it("should work with WebGLRenderTarget factory", async () => {
 			boot();
 			// `video.WEBGL` now throws when WebGL is unavailable
 			// (#1479) — catch the throw so the existing `gl == undefined`
 			// skip path still runs in non-WebGL environments.
 			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
+				await getWebGLRenderer(100, 100);
 			} catch {
 				return;
 			}
@@ -226,17 +222,13 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should reuse target on subsequent get at same index", () => {
+		it("should reuse target on subsequent get at same index", async () => {
 			boot();
 			// `video.WEBGL` now throws when WebGL is unavailable
 			// (#1479) — catch the throw so the existing `gl == undefined`
 			// skip path still runs in non-WebGL environments.
 			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
+				await getWebGLRenderer(100, 100);
 			} catch {
 				return;
 			}
@@ -257,17 +249,13 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should resize target when dimensions change", () => {
+		it("should resize target when dimensions change", async () => {
 			boot();
 			// `video.WEBGL` now throws when WebGL is unavailable
 			// (#1479) — catch the throw so the existing `gl == undefined`
 			// skip path still runs in non-WebGL environments.
 			try {
-				video.init(100, 100, {
-					parent: "screen",
-					scale: "auto",
-					renderer: video.WEBGL,
-				});
+				await getWebGLRenderer(100, 100);
 			} catch {
 				return;
 			}

@@ -6,6 +6,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Tests for the mesh depth-handling refactor proposed by issue #1468.
@@ -45,15 +49,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// Chromium headless uses a software GL backend that trips
-				// the "major performance caveat" flag — without this opt-
-				// out, `isWebGLSupported` returns false and the renderer
-				// falls back to Canvas, skipping every test below.
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// Genuine WebGL absence (no GL of any kind) — tests skip below.
 		}
@@ -72,10 +68,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 		// `tmxlayer-shader.spec.js` / `texture-resource.spec.js` WebGL2
 		// integration specs.
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if init never succeeded
 		}

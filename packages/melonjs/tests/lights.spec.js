@@ -16,6 +16,10 @@ import {
 	createLightUniformScratch,
 	packLights,
 } from "../src/video/webgl/lighting/pack.ts";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 // Replaces the old `Stage.collectLightingUniforms` method (removed
 // because it gave Stage a renderer-specific shape; lights/ambient
@@ -39,6 +43,12 @@ describe("Light2d + Stage lighting", () => {
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	afterAll(() => {
@@ -1805,14 +1815,9 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 	// This block runs in its own WebGL-initialized describe so the tests
 	// actually exercise the shader rather than silently no-op'ing on
 	// Canvas. The parent describe uses `video.CANVAS`.
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(800, 600);
 	});
 
 	afterAll(() => {

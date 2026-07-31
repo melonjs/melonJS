@@ -1,4 +1,4 @@
-import { beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
 	boot,
 	Mesh,
@@ -6,6 +6,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Benchmark for `WebGLRenderer.drawMesh` introduced alongside issue #1468.
@@ -40,14 +44,10 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 	let cube;
 	let denseMesh;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
 		try {
-			video.init(800, 600, {
-				parent: "screen",
-				scale: "auto",
-				renderer: video.WEBGL,
-			});
+			await getWebGLRenderer(800, 600);
 		} catch {
 			// Headless chromium without --enable-gpu silently falls back to
 			// Canvas. The measure helper skips when renderer is not WebGL.
@@ -142,6 +142,12 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 			width: 64,
 			height: 64,
 		});
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	const measure = (label, meshCount, framesToTime, retained = false, mesh) => {

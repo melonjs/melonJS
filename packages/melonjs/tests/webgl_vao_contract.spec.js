@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
 	GLShader,
@@ -6,6 +6,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * The attribute-location contract (#1509): locations are bound in vertex
@@ -23,18 +27,20 @@ describe("WebGL vertex-state location contract", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(160, 120, {
-			parent: "screen",
-			renderer: video.WEBGL,
-			failIfMajorPerformanceCaveat: false,
-		});
+		await getWebGLRenderer(160, 120);
 		renderer = video.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
 		}
+	});
+
+	afterAll(() => {
+		// hand the shared context back and reset renderer state so the next
+		// spec file does not inherit ours
+		releaseWebGLRenderer();
 	});
 
 	const requireWebGL = (ctx) => {

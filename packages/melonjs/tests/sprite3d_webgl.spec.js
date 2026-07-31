@@ -6,6 +6,10 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Sprite3d through the real WebGL draw path.
@@ -31,14 +35,7 @@ describe("Sprite3d — WebGL draw path", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// headless chromium uses a software GL backend that trips the
-				// "major performance caveat" flag — opt out so the WebGL renderer
-				// is actually used instead of falling back to Canvas
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// genuine WebGL absence — tests skip below
 		}
@@ -54,7 +51,7 @@ describe("Sprite3d — WebGL draw path", () => {
 		// restore AUTO so this spec doesn't leak a forced-WebGL renderer into
 		// other specs sharing the `video` global
 		try {
-			video.init(128, 128, { parent: "screen", renderer: video.AUTO });
+			releaseWebGLRenderer();
 		} catch {
 			// ignore
 		}

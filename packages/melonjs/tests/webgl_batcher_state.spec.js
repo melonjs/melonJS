@@ -9,6 +9,10 @@ import {
 	WebGLRenderer,
 } from "../src/index.js";
 import { emit, RENDER_TARGET_CHANGED } from "../src/system/event.ts";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+} from "./helpers/webgl-context.js";
 
 /**
  * Regression tests for the 2026-07 batchers + texture-cache bug hunt,
@@ -24,13 +28,7 @@ describe("batcher GL state", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.WEBGL,
-				// headless chromium software GL trips the performance-caveat
-				// check — opt out so the tests run instead of skipping
-				failIfMajorPerformanceCaveat: false,
-			});
+			await getWebGLRenderer(128, 128);
 		} catch {
 			// genuine WebGL absence — tests skip below
 		}
@@ -41,10 +39,7 @@ describe("batcher GL state", () => {
 
 	afterAll(() => {
 		try {
-			video.init(128, 128, {
-				parent: "screen",
-				renderer: video.AUTO,
-			});
+			releaseWebGLRenderer();
 		} catch {
 			// ignore — nothing to restore if init never succeeded
 		}
