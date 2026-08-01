@@ -138,6 +138,16 @@ export default class WebGLRenderer extends Renderer {
 		 * @readonly
 		 */
 		this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+		/**
+		 * Next free indexed `UNIFORM_BUFFER` binding point, handed out by
+		 * {@link WebGLRenderer#reserveUniformBindingPoint}. Binding points are
+		 * a context-wide namespace shared by every uniform block, so they are
+		 * allocated here rather than picked as literals by whoever needs one —
+		 * the same reason texture units go through `TextureCache.reserveUnit`.
+		 * @type {number}
+		 * @ignore
+		 */
+		this._nextUniformBindingPoint = 0;
 
 		/**
 		 * the default shader precision based on application settings
@@ -738,6 +748,32 @@ export default class WebGLRenderer extends Renderer {
 			// bound fed 4-attribute vertex data to a 5-attribute shader.
 			lit.setLightUniforms(u);
 		}
+	}
+
+	/**
+	 * Claim the next indexed `UNIFORM_BUFFER` binding point.
+	 *
+	 * Binding points are context-wide: two uniform blocks sharing one silently
+	 * overwrite each other, and the loser reads the winner's bytes as its own.
+	 * Allocating them from here rather than hard-coding an integer per feature
+	 * makes that collision impossible, and mirrors how texture units are
+	 * claimed through {@link TextureCache#reserveUnit}.
+	 *
+	 * Callers hold their point for the life of the batcher — a context restore
+	 * re-runs `init()`, which must reuse the point it already has rather than
+	 * claim another, or a long-lived session would leak through the budget.
+	 * @returns {number} the claimed binding point
+	 * @throws {Error} when the device's binding points are exhausted
+	 * @ignore
+	 */
+	reserveUniformBindingPoint() {
+		const max = this.gl.getParameter(this.gl.MAX_UNIFORM_BUFFER_BINDINGS);
+		if (this._nextUniformBindingPoint >= max) {
+			throw new Error(
+				`WebGLRenderer: no free uniform buffer binding point (device limit ${max})`,
+			);
+		}
+		return this._nextUniformBindingPoint++;
 	}
 
 	/**

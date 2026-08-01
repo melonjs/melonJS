@@ -1,6 +1,6 @@
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
 import UniformBlock from "../buffer/uniformblock.js";
-import { LIGHT2D_BINDING_POINT, MAX_LIGHTS } from "../lighting/constants.ts";
+import { MAX_LIGHTS } from "../lighting/constants.ts";
 import {
 	BLOCK_FLOATS,
 	HEADER_FLOATS,
@@ -135,10 +135,14 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * @type {UniformBlock}
 		 * @ignore
 		 */
+		// Claim a binding point once and hold it: `init()` re-runs on context
+		// restore, and claiming again each time would walk through the
+		// device's budget over a long session.
+		this._bindingPoint ??= renderer.reserveUniformBindingPoint();
 		this.lightBlock = new UniformBlock(
 			renderer.gl,
 			BLOCK_FLOATS,
-			LIGHT2D_BINDING_POINT,
+			this._bindingPoint,
 		);
 		this._lightBlockProgram = null;
 		// Bind immediately rather than waiting for the first activation. An

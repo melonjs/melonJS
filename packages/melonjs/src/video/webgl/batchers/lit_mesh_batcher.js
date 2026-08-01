@@ -1,6 +1,6 @@
 import state from "../../../state/state.ts";
 import UniformBlock from "../buffer/uniformblock.js";
-import { LIGHT3D_BINDING_POINT, MAX_LIGHTS } from "../lighting/constants.ts";
+import { MAX_LIGHTS } from "../lighting/constants.ts";
 import { packMeshLights } from "../lighting/pack3d.ts";
 import { BLOCK_FLOATS, writeLight3dBlock } from "../lighting/std140.ts";
 import litFragment from "./../shaders/mesh-lit.frag";
@@ -52,10 +52,14 @@ export default class LitMeshBatcher extends MeshBatcher {
 		 * @type {UniformBlock}
 		 * @ignore
 		 */
+		// Claim a binding point once and hold it: `init()` re-runs on context
+		// restore, and claiming again each time would walk through the
+		// device's budget over a long session.
+		this._bindingPoint ??= renderer.reserveUniformBindingPoint();
 		this.lightBlock = new UniformBlock(
 			renderer.gl,
 			BLOCK_FLOATS,
-			LIGHT3D_BINDING_POINT,
+			this._bindingPoint,
 		);
 		this._lightBlockProgram = null;
 		// see the note in LitQuadBatcher.init: an active-but-unbound uniform

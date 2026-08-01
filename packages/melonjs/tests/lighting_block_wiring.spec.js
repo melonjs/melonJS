@@ -116,6 +116,41 @@ describe("lit batchers → light uniform block (issue #1552)", () => {
 			renderer.setBatcher("quad");
 		});
 
+		it("claims its binding point from the renderer's allocator", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// Binding points are a context-wide namespace: two blocks sharing
+			// one silently overwrite each other and the loser reads the
+			// winner's bytes as lights. They are handed out by the renderer
+			// rather than hard-coded per feature, so a third block cannot
+			// collide by picking a literal someone else already took.
+			const block = renderer.batchers.get("litQuad").lightBlock;
+			expect(typeof block.bindingPoint).toBe("number");
+			expect(Number.isInteger(block.bindingPoint)).toBe(true);
+			expect(block.bindingPoint).toBeGreaterThanOrEqual(0);
+			expect(block.bindingPoint).toBeLessThan(
+				gl.getParameter(gl.MAX_UNIFORM_BUFFER_BINDINGS),
+			);
+			// and it is genuinely reserved — the next claim is a different one
+			const next = renderer.reserveUniformBindingPoint();
+			expect(next).not.toBe(block.bindingPoint);
+			expect(next).not.toBe(
+				renderer.batchers.get("litMesh").lightBlock.bindingPoint,
+			);
+		});
+
+		it("holds its binding point when init re-runs", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// `init()` re-runs on every context restore. Claiming a fresh point
+			// each time would walk through the device's budget over a long
+			// session and eventually throw, for a resource the batcher already
+			// owns.
+			const batcher = renderer.batchers.get("litQuad");
+			const before = batcher.lightBlock.bindingPoint;
+			batcher.init(renderer);
+			batcher.init(renderer);
+			expect(batcher.lightBlock.bindingPoint).toBe(before);
+		});
+
 		it("does not share a binding point with the 3D block", (ctx) => {
 			requireWebGL(ctx, renderer);
 			// both can be live in one frame (lit sprites over a lit mesh); the
