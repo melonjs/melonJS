@@ -54,7 +54,7 @@ const _bScratchB = new Vector3d();
  * - **Follow offset (PR B scope).** When a target is set,
  *   `followOffset` is applied in **world space**:
  *   `camera.pos = target.pos + followOffset`. Target-rotation-aware
- *   follow (Cinemachine / Unreal spring-arm style, where the offset
+ *   follow (spring-arm style, where the offset
  *   rotates with the target's orientation) is deferred until a
  *   showcase needs it (e.g. AfterBurner's banking jet).
  *
@@ -123,7 +123,7 @@ export default class Camera3d extends Camera2d {
 	 *
 	 * Treated as world-space in this release — target-rotation-aware
 	 * follow (where the offset rotates with the target's orientation,
-	 * Cinemachine / Unreal spring-arm style) is deferred until a
+	 * spring-arm style) is deferred until a
 	 * showcase needs it (e.g. AfterBurner's banking jet).
 	 * @default (0, 0, 0)
 	 */
@@ -570,7 +570,7 @@ export default class Camera3d extends Camera2d {
 	 *
 	 * **PR B scope:** `followOffset` is treated as **world-space**.
 	 * Target-rotation-aware follow (where the offset rotates with the
-	 * target's orientation, Cinemachine / Unreal-style) lands when a
+	 * target's orientation, spring-arm style) lands when a
 	 * showcase (AfterBurner's banking jet) demands it.
 	 * @param dt - delta time in milliseconds (ignored — no damping)
 	 * @ignore

@@ -585,7 +585,7 @@ const examples: {
 		path: "waterOverworld",
 		sourceDir: "waterOverworld",
 		description:
-			"Side-scroller overworld with a refracting pond — the Godot-style screen_texture / screen_uv / noise_uv shader builtins.",
+			"Side-scroller overworld with a refracting pond — the screen_texture / screen_uv / noise_uv shader builtins.",
 	},
 	{
 		component: <ExampleWhacAMole />,

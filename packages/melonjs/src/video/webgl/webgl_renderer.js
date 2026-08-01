@@ -705,7 +705,7 @@ export default class WebGLRenderer extends Renderer {
 	 * the lit fragment's `lightPos - vWorldPos` math lines up with the
 	 * camera's view.
 	 *
-	 * Lights past `MAX_LIGHTS` (8) are silently dropped. Also caches the
+	 * Lights past `MAX_LIGHTS` are silently dropped. Also caches the
 	 * active light count on the renderer so `drawImage` can dispatch
 	 * normal-mapped sprites to the lit batcher only when there's
 	 * something to light them with.
@@ -731,23 +731,12 @@ export default class WebGLRenderer extends Renderer {
 		this.activeLightCount = u.count;
 		const lit = this.batchers.get("litQuad");
 		if (lit && typeof lit.setLightUniforms === "function") {
+			// A uniform-buffer upload does not touch `useProgram`, so this no
+			// longer disturbs the active shader. It used to: the light data
+			// went through `GLShader.setUniform`, which binds litQuad's program
+			// to write, and litQuad is rarely the *active* batcher — leaving it
+			// bound fed 4-attribute vertex data to a 5-attribute shader.
 			lit.setLightUniforms(u);
-			// `GLShader.setUniform` calls `gl.useProgram` internally to
-			// guarantee the right program is active for the upload. Since
-			// litQuad is rarely the *active* batcher (most frames have no
-			// lights and route through the unlit `quad`), restore the
-			// active batcher's program so the next draw doesn't render
-			// through litQuad's shader by accident — which feeds 4-attribute
-			// vertex data to a 5-attribute shader and produces visible garbage.
-			if (this.currentBatcher && this.currentBatcher !== lit) {
-				const shader =
-					this.currentBatcher.currentShader ||
-					this.currentBatcher.defaultShader;
-				if (shader) {
-					this.gl.useProgram(shader.program);
-					this.currentProgram = shader.program;
-				}
-			}
 		}
 	}
 
@@ -1375,7 +1364,7 @@ export default class WebGLRenderer extends Renderer {
 		this.lineWidth = 1;
 		// Color + stencil are cleared here. Depth (if any batcher cares
 		// — currently only `MeshBatcher`) is cleared lazily on the first
-		// draw of its mode via the `onTargetChanged()` → `bind()` path.
+		// draw of its mode, via `_onTargetChanged` → `updatePassState()`.
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 		emit(RENDER_TARGET_CHANGED, this);
 	}
@@ -1607,9 +1596,11 @@ export default class WebGLRenderer extends Renderer {
 		// uses the lean unlit `MeshBatcher`. Both share the mesh-mode depth
 		// state, so mixing them keeps inter-mesh occlusion correct.
 		//
-		// `setBatcher` delegates all mesh-mode state setup (DEPTH_TEST enable,
-		// LEQUAL, depthMask, one-shot per-target depth clear, BLEND off) to the
-		// batcher's `bind()`. Switching away restores non-mesh defaults via
+		// `setBatcher` delegates mesh-mode state setup (DEPTH_TEST enable,
+		// LEQUAL, depthMask, BLEND off) to the batcher's `bind()`; the one-shot
+		// per-target depth clear and the lit light upload happen per draw in
+		// `updatePassState()`, since `bind()` only fires on a batcher
+		// transition. Switching away restores non-mesh defaults via
 		// `unbind()`. Consecutive same-kind `drawMesh` calls pay zero state cost
 		// between them; the GPU's LEQUAL depth test resolves inter-mesh
 		// occlusion per pixel against the accumulated depth buffer.

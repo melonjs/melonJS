@@ -186,6 +186,14 @@ describe("lit mesh shader — MAX_LIGHTS drift guard", () => {
 		// shader fails to compile ('undeclared identifier').
 		const resolved = litFrag.replaceAll("__MAX_LIGHTS__", String(MAX_LIGHTS));
 		expect(resolved).not.toContain("__MAX_LIGHTS__");
-		expect(resolved).toContain(`uLightDir[${MAX_LIGHTS}]`);
+		expect(resolved).toContain(`Light3dData uLights[${MAX_LIGHTS}];`);
+	});
+
+	it("declares the light array inside a std140 block", () => {
+		// the array size is only half the contract — the transport matters
+		// too. A plain `uniform Light3dData uLights[N];` would still compile
+		// and link, then shade with zeroes: nothing writes those uniforms any
+		// more, the data goes to a buffer bound to `Light3dBlock`.
+		expect(litFrag).toMatch(/layout\(std140\)\s+uniform\s+Light3dBlock\s*\{/);
 	});
 });

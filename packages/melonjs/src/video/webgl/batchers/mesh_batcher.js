@@ -61,13 +61,14 @@ function ensureRemapCapacity(vertexCount) {
 
 // The lazy-depth-clear state for the mesh-mode pass lives on the RENDERER
 // (`renderer._meshDepthDirty`), not per batcher instance: the unlit
-// `MeshBatcher` and the `LitMeshBatcher` — which extends it and inherits
-// `bind()` — must coordinate on a SINGLE depth clear per target (per-instance
+// `MeshBatcher` and the `LitMeshBatcher` — which extends it and overrides
+// `updatePassState()` — must coordinate on a SINGLE depth clear per target
+// (per-instance
 // flags would re-clear the shared depth buffer when switching between the two
 // mid-frame and break inter-mesh occlusion), while two coexisting renderers
 // must NOT share it (a module-level flag let one Application's `clear()`
-// re-arm — or steal — the other's depth clear mid-frame). The first `bind()`
-// of either batcher clears + marks clean; `RENDER_TARGET_CHANGED` from the
+// re-arm — or steal — the other's depth clear mid-frame). The first draw of
+// either batcher clears + marks clean; `RENDER_TARGET_CHANGED` from the
 // owning renderer re-arms it.
 
 // shared zero emissive, passed to the shader when a mesh has no emission so the
@@ -81,10 +82,14 @@ const _ZERO_EMISSIVE = new Float32Array(3);
  * Owns mesh-mode GL state ownership (since 19.7 / #1468):
  *
  * - {@link MeshBatcher#bind} enters mesh mode — enables `DEPTH_TEST` +
- *   `LEQUAL` + `depthMask`, disables `BLEND`, and runs a one-shot
- *   `clearDepth(1.0) + clear(DEPTH_BUFFER_BIT)` if the active target's
- *   depth attachment is still dirty. Subsequent mesh draws against the
- *   same target rely on the accumulated depth buffer.
+ *   `LEQUAL` + `depthMask`, disables `BLEND`.
+ * - {@link MeshBatcher#updatePassState} runs the one-shot
+ *   `clearDepth(1.0) + clear(DEPTH_BUFFER_BIT)` when the active target's
+ *   depth attachment is still dirty, immediately before a draw rather than
+ *   on entry — `bind()` fires on a batcher *transition*, not once a frame,
+ *   so a scene made only of meshes would otherwise never clear again after
+ *   its first frame. Subsequent draws against the same target rely on the
+ *   accumulated depth buffer.
  * - {@link MeshBatcher#unbind} exits mesh mode — restores non-mesh
  *   defaults (`BLEND` on, `DEPTH_TEST` off, `depthMask` false) that the
  *   2D rendering paths assume.
@@ -94,7 +99,8 @@ const _ZERO_EMISSIVE = new Float32Array(3);
  *   framebuffer's attachments change identity.
  *
  * The WebGLRenderer doesn't know any of this — `setBatcher("mesh")` calls
- * `bind()` and the batcher sets up its own pass. Same lifecycle ports
+ * `bind()` and the batcher sets up its own pass, refreshing whatever is
+ * per-draw as it goes. Same lifecycle ports
  * cleanly to a future WebGPU renderer: `bind()` becomes "begin a
  * depth-enabled `RenderPassEncoder`", `unbind()` ends it.
  * @category Rendering
@@ -261,14 +267,16 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * `LESS` so coplanar triangles obey the OBJ's draw order; Kenney
 	 * low-poly assets layer feature primitives like eye sockets / pupils
 	 * coincident with the underlying face, and `LESS` would lose them),
-	 * depth write on, blend off. The depth attachment is cleared lazily
-	 * here so frames with no mesh content pay nothing for a clear they
-	 * wouldn't have used.
+	 * depth write on, blend off.
 	 *
 	 * The renderer doesn't need to know any of this; it just calls
 	 * `bind()` during a `setBatcher` transition and the mesh batcher
 	 * sets up its own pass. The same pattern ports cleanly to WebGPU:
 	 * `bind()` becomes "begin a depth-enabled render pass" there.
+	 *
+	 * State that has to be current for each *draw* rather than for each
+	 * batcher transition lives in {@link MeshBatcher#updatePassState}, not
+	 * here — see the note there.
 	 */
 	bind() {
 		super.bind();
@@ -277,7 +285,35 @@ export default class MeshBatcher extends MaterialBatcher {
 		gl.depthFunc(gl.LEQUAL);
 		gl.depthMask(true);
 		gl.disable(gl.BLEND);
+	}
+
+	/**
+	 * Refresh pass-scoped state, immediately before a draw.
+	 *
+	 * This exists because `bind()` is *not* a per-frame hook. `setBatcher`
+	 * returns early when the requested batcher is already current, so a scene
+	 * that draws nothing but meshes — no sprites, no UI, no unlit geometry to
+	 * force a switch — binds once and never again. Anything set up in `bind()`
+	 * then freezes at its first-frame value.
+	 *
+	 * The depth clear is one such thing. `renderer._meshDepthDirty` is re-armed
+	 * every time the render target changes (frame-start `clear()`, FBO
+	 * bind/unbind), but a flag nobody reads is a flag that does nothing: left in
+	 * `bind()` it would stay armed forever and the depth attachment would carry
+	 * the first frame's values for the life of the scene, occluding geometry as
+	 * the camera moved. Consuming it here runs the clear once per target, which
+	 * is what the flag always meant. {@link LitMeshBatcher} extends this with
+	 * its light data, which had the same problem.
+	 *
+	 * Cheap by construction: one boolean test per draw in the common case.
+	 * `depthMask` is guaranteed true here — `bind()` sets it and only `unbind()`
+	 * clears it, so this batcher being current implies a writable depth buffer,
+	 * without which `gl.clear(DEPTH_BUFFER_BIT)` would silently do nothing.
+	 * @ignore
+	 */
+	updatePassState() {
 		if (this.renderer._meshDepthDirty) {
+			const gl = this.gl;
 			gl.clearDepth(1.0);
 			gl.clear(gl.DEPTH_BUFFER_BIT);
 			this.renderer._meshDepthDirty = false;
@@ -428,6 +464,8 @@ export default class MeshBatcher extends MaterialBatcher {
 		// anything the caller had queued must land first, or this draw would
 		// reorder ahead of it
 		this.flush();
+
+		this.updatePassState();
 
 		this.applyMeshMaterial(mesh);
 		this.setPlacementUniforms(modelMatrix, tint);
@@ -588,6 +626,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		const indices = mesh.indices;
 		const vertexColors = mesh.vertexColors;
 
+		this.updatePassState();
 		this.applyMeshMaterial(mesh);
 
 		// Placement uniforms. The view transform and the tint used to be baked

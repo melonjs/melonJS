@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	Matrix3d,
+	Mesh,
 	TextureAtlas,
 	video,
 	WebGLRenderer,
@@ -564,5 +565,172 @@ describe("Mesh depth handling (issue #1468)", () => {
 			const px = readCenter();
 			expect(px[1]).toBeLessThan(60); // green did NOT leak into mesh 2
 		});
+	});
+});
+
+/**
+ * A scene made only of meshes stopped clearing its depth buffer after the
+ * first frame, and its geometry disappeared.
+ *
+ * `renderer._meshDepthDirty` is re-armed on every render-target change
+ * (frame-start `clear()`, FBO bind/unbind), but it was only ever *consumed*
+ * in `MeshBatcher.bind()` — and `WebGLRenderer.setBatcher` returns early when
+ * the requested batcher is already current. A scene with nothing but meshes
+ * binds once and never again, so from frame two on the flag sat armed while
+ * the depth attachment kept the first frame's values. Anything that moved
+ * away from the camera then failed `LEQUAL` and was not drawn at all.
+ *
+ * Most scenes hid this: a sprite, a UI element or an unlit mesh alongside a
+ * lit one forces a batcher switch, which ran `bind()`, which cleared. The
+ * fix consumes the flag in `updatePassState()` on the draw path instead, so
+ * it no longer depends on a transition happening to occur.
+ */
+describe("mesh depth clear survives frames without a batcher switch", () => {
+	let renderer;
+	let gl;
+	const SIZE = 64;
+
+	beforeAll(async () => {
+		renderer = await getWebGLRenderer(SIZE, SIZE);
+		gl = renderer?.gl;
+	});
+
+	afterAll(() => {
+		releaseWebGLRenderer();
+	});
+
+	it("keeps drawing geometry that recedes from the camera", (ctx) => {
+		if (renderer === undefined) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return;
+		}
+		const canvas = document.createElement("canvas");
+		canvas.width = 4;
+		canvas.height = 4;
+		const c2d = canvas.getContext("2d");
+		c2d.fillStyle = "#ffffff";
+		c2d.fillRect(0, 0, 4, 4);
+		const atlas = renderer.cache.get(canvas);
+
+		const quad = (z) => {
+			return {
+				vertices: new Float32Array([
+					0,
+					0,
+					z,
+					SIZE,
+					0,
+					z,
+					SIZE,
+					SIZE,
+					z,
+					0,
+					SIZE,
+					z,
+				]),
+				uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+				indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+				texture: atlas,
+				cullBackFaces: false,
+				alphaCutoff: 0,
+			};
+		};
+
+		const proj = new Matrix3d();
+		proj.ortho(0, SIZE, SIZE, 0, -1000, 1000);
+		renderer.setProjection(proj);
+		renderer.backgroundColor.setColor(0, 0, 0, 255);
+
+		// one frame of a scene whose ONLY content is a mesh — nothing else to
+		// make `setBatcher` transition, which is the whole point
+		const frame = (z) => {
+			renderer.clear();
+			renderer.drawMesh(quad(z));
+			renderer.flush();
+			gl.finish();
+			const px = new Uint8Array(4);
+			gl.readPixels(SIZE / 2, SIZE / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+			return px[0];
+		};
+
+		const near = frame(100);
+		expect(near).toBeGreaterThan(200);
+
+		// the same quad pushed further from the camera. Against a stale depth
+		// buffer it loses `LEQUAL` to the near frame's values and vanishes —
+		// pre-fix this read 0, a black frame, and stayed black.
+		expect(frame(-100)).toBeGreaterThan(200);
+		expect(frame(-100)).toBeGreaterThan(200);
+	});
+
+	it("keeps drawing a RETAINED mesh that recedes from the camera", (ctx) => {
+		if (renderer === undefined) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return;
+		}
+		// The path above goes through `MeshBatcher.addMesh`. A real `Mesh`
+		// takes the other one: `Mesh.draw` calls `renderer.drawMesh(this,
+		// modelMatrix)` whenever `renderer.supportsRetainedMesh` is set, which
+		// the WebGL renderer sets unconditionally — so `drawRetainedMesh` is
+		// what production actually runs, and it needs its own guard or the fix
+		// is only proven on the path games don't use.
+		const canvas = document.createElement("canvas");
+		canvas.width = 4;
+		canvas.height = 4;
+		const c2d = canvas.getContext("2d");
+		c2d.fillStyle = "#ffffff";
+		c2d.fillRect(0, 0, 4, 4);
+
+		const proj = new Matrix3d();
+		proj.ortho(0, SIZE, SIZE, 0, -1000, 1000);
+		renderer.setProjection(proj);
+		renderer.backgroundColor.setColor(0, 0, 0, 255);
+
+		// a real `Mesh`, so the retained buffers are built exactly as they are
+		// in a game rather than from a hand-rolled duck type
+		const mesh = new Mesh(0, 0, {
+			vertices: [0, 0, 0, SIZE, 0, 0, SIZE, SIZE, 0, 0, SIZE, 0],
+			uvs: [0, 0, 1, 0, 1, 1, 0, 1],
+			indices: [0, 1, 2, 0, 2, 3],
+			texture: canvas,
+			width: SIZE,
+			cullBackFaces: false,
+			alphaCutoff: 0,
+		});
+
+		const frame = (z) => {
+			renderer.clear();
+			const model = new Matrix3d();
+			// Mesh normalises its geometry to a unit quad around the origin,
+			// so placement (centre + size) is entirely the model matrix's job
+			// here — which is the point of the retained path. z is what varies
+			// between frames.
+			model.translate(SIZE / 2, SIZE / 2, z);
+			model.scale(SIZE, SIZE, 1);
+			renderer.drawMesh(mesh, model);
+			renderer.flush();
+			gl.finish();
+			const px = new Uint8Array(4);
+			gl.readPixels(SIZE / 2, SIZE / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+			return px[0];
+		};
+
+		expect(frame(100)).toBeGreaterThan(200);
+		expect(frame(-100)).toBeGreaterThan(200);
+		expect(frame(-100)).toBeGreaterThan(200);
+	});
+
+	it("consumes the re-armed depth flag rather than leaving it set", (ctx) => {
+		if (renderer === undefined) {
+			ctx.skip("WebGL renderer not available in this environment");
+			return;
+		}
+		// the mechanism behind the test above, asserted directly: a flag that
+		// nothing reads stays armed forever, which is what made the clear stop
+		renderer.setBatcher("quad");
+		renderer.clear();
+		expect(renderer._meshDepthDirty).toBe(true);
+		renderer.batchers.get("mesh").updatePassState();
+		expect(renderer._meshDepthDirty).toBe(false);
 	});
 });

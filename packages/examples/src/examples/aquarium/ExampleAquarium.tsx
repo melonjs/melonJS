@@ -11,9 +11,9 @@
  * through a scrolling `NoiseTexture2d` flow map — replacing the original's
  * `readPixels` screen-capture with a zero-stall GPU copy.
  *
- * This is the industry-standard "screen texture" pattern (Godot
- * `hint_screen_texture` / Unity `_CameraOpaqueTexture` / Three.js
- * `copyFramebufferToTexture`). `toFrameTexture()` returns the public
+ * This is the industry-standard "screen texture" pattern — a copy of the
+ * opaque frame taken mid-render and re-sampled by a later draw.
+ * `toFrameTexture()` returns the public
  * `Texture2d`, so it plugs straight into `setTexture()` and is re-captured every
  * frame into the same shared slot — the shader samples the latest frame with no
  * re-bind.

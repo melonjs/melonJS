@@ -12,6 +12,7 @@ import {
 	video,
 } from "../src/index.js";
 import Renderer from "../src/video/renderer.js";
+import { MAX_LIGHTS } from "../src/video/webgl/lighting/constants.ts";
 import {
 	createLightUniformScratch,
 	packLights,
@@ -1021,8 +1022,8 @@ describe("Light2d + Stage lighting", () => {
 			expect(u.count).toBe(0);
 			expect(u.positions).toBeInstanceOf(Float32Array);
 			expect(u.colors).toBeInstanceOf(Float32Array);
-			expect(u.positions.length).toBe(8 * 4); // MAX_LIGHTS * 4
-			expect(u.colors.length).toBe(8 * 3);
+			expect(u.positions.length).toBe(MAX_LIGHTS * 4);
+			expect(u.colors.length).toBe(MAX_LIGHTS * 3);
 			// padded to zeros so stale data can't leak across frames
 			for (let i = 0; i < u.positions.length; i++) {
 				expect(u.positions[i]).toBe(0);
@@ -1102,17 +1103,17 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(c, true);
 		});
 
-		it("silently drops lights past MAX_LIGHTS (8)", () => {
+		it("silently drops lights past MAX_LIGHTS", () => {
 			const stage = freshLitState();
 			const lights = [];
-			for (let i = 0; i < 12; i++) {
+			for (let i = 0; i < MAX_LIGHTS + 4; i++) {
 				const l = new Light2d(i * 10, 0, 5, 5);
 				lights.push(l);
 				game.world.addChild(l);
 			}
 
 			const u = packStage(stage, 0, 0);
-			expect(u.count).toBe(8);
+			expect(u.count).toBe(MAX_LIGHTS);
 
 			for (const l of lights) {
 				game.world.removeChildNow(l, true);
@@ -1156,14 +1157,14 @@ describe("Light2d + Stage lighting", () => {
 
 			const u = packStage(stage, 0, 0);
 			expect(u.heights).toBeInstanceOf(Float32Array);
-			expect(u.heights.length).toBe(8); // MAX_LIGHTS
+			expect(u.heights.length).toBe(MAX_LIGHTS);
 			// default for `a`: max(100, 50) * 0.075 = 7.5
 			expect(u.heights[0]).toBeCloseTo(7.5, 4);
 			// custom override for `b`
 			expect(u.heights[1]).toBe(200);
 			// stale slots zeroed
 			expect(u.heights[2]).toBe(0);
-			expect(u.heights[7]).toBe(0);
+			expect(u.heights[MAX_LIGHTS - 1]).toBe(0);
 
 			game.world.removeChildNow(a, true);
 			game.world.removeChildNow(b, true);
@@ -1229,23 +1230,23 @@ describe("Light2d + Stage lighting", () => {
 			return stage;
 		}
 
-		it("exactly MAX_LIGHTS active lights — all 8 packed; the 9th is dropped", () => {
-			// boundary check around the cap. Going from 8 → 9 lights must
-			// not overflow the Float32Array (length = 8 * 4) or skip
+		it("exactly MAX_LIGHTS active lights — all packed; the next is dropped", () => {
+			// boundary check around the cap. Going one light over must not
+			// overflow the Float32Array (length = MAX_LIGHTS * 4) or skip
 			// existing lights.
 			const stage = freshLitState();
 			const lights = [];
-			for (let i = 0; i < 9; i++) {
+			for (let i = 0; i < MAX_LIGHTS + 1; i++) {
 				const l = new Light2d(i * 10, 0, 5, 5);
 				lights.push(l);
 				game.world.addChild(l);
 			}
 			const u = packStage(stage, 0, 0);
-			expect(u.count).toBe(8);
+			expect(u.count).toBe(MAX_LIGHTS);
 			// every slot in the buffer must be reachable (no out-of-range writes)
-			expect(u.positions.length).toBe(8 * 4);
-			expect(u.colors.length).toBe(8 * 3);
-			expect(u.heights.length).toBe(8);
+			expect(u.positions.length).toBe(MAX_LIGHTS * 4);
+			expect(u.colors.length).toBe(MAX_LIGHTS * 3);
+			expect(u.heights.length).toBe(MAX_LIGHTS);
 			for (const l of lights) {
 				game.world.removeChildNow(l, true);
 			}
