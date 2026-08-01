@@ -23,26 +23,3 @@
  * is free — the loop bound is the live count — but filling it is not.
  */
 export const MAX_LIGHTS = 32;
-
-/**
- * Indexed `UNIFORM_BUFFER` binding point for `Light2dBlock` (the lit quad
- * path). Binding points are a context-wide resource, so the two light
- * blocks take distinct ones — a 2D lit sprite and a 3D lit mesh can both be
- * drawn in the same frame.
- *
- * Point 0 is used, deliberately. It is tempting to leave it free so that a
- * forgotten `bindTo` fails loudly instead of silently reading whatever owns
- * point 0 — but it does not fail loudly: an *active* uniform block with no
- * buffer bound is `INVALID_OPERATION` at draw time, which takes the whole
- * program down rather than just the lighting. Keeping a correctly-sized
- * buffer on 0 means a program that somehow escaped binding still draws.
- * The binding is established eagerly in each batcher's `init()` so nothing
- * relies on that safety net in the first place.
- */
-export const LIGHT2D_BINDING_POINT = 0;
-
-/**
- * Indexed `UNIFORM_BUFFER` binding point for `Light3dBlock` (the lit mesh
- * path). See {@link LIGHT2D_BINDING_POINT}.
- */
-export const LIGHT3D_BINDING_POINT = 1;
