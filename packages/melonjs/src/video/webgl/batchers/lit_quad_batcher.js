@@ -1,5 +1,11 @@
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
-import { MAX_LIGHTS } from "../lighting/constants.ts";
+import UniformBlock from "../buffer/uniformblock.js";
+import { LIGHT2D_BINDING_POINT, MAX_LIGHTS } from "../lighting/constants.ts";
+import {
+	BLOCK_FLOATS,
+	HEADER_FLOATS,
+	writeLight2dBlock,
+} from "../lighting/std140.ts";
 import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
 import QuadBatcher, { V_ARRAY } from "./quad_batcher.js";
@@ -13,9 +19,8 @@ import QuadBatcher, { V_ARRAY } from "./quad_batcher.js";
  * Lit-aware variant of `QuadBatcher` for the SpriteIlluminator workflow.
  *
  * Adds a 5th vertex attribute (`aNormalTextureId`) so each quad knows
- * which paired normal-map sampler to read, and bundles the per-frame
- * light uniforms (`uLightPos`, `uLightColor`, `uLightHeight`, `uAmbient`)
- * that the lit fragment shader iterates.
+ * which paired normal-map sampler to read, and owns the per-frame
+ * `Light2dBlock` uniform buffer that the lit fragment shader iterates.
  *
  * Texture-slot capacity is halved relative to `QuadBatcher` because each
  * sprite may need a paired (color, normal) sampler — color goes to unit
@@ -117,8 +122,30 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		this._lightCount = 0;
 		this._maxLights = MAX_LIGHTS;
-		this.defaultShader.setUniform("uLightCount", 0);
-		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
+
+		// `init` is re-run on context restore (WebGLRenderer.reset), against a
+		// new context and a freshly compiled program — so drop the old block
+		// rather than leaking it, and let `bind` re-establish the binding.
+		this.lightBlock?.destroy();
+
+		/**
+		 * The `Light2dBlock` uniform buffer. Filled by
+		 * {@link LitQuadBatcher#setLightUniforms}, which no longer needs the
+		 * program bound — a buffer upload is independent of `useProgram`.
+		 * @type {UniformBlock}
+		 * @ignore
+		 */
+		this.lightBlock = new UniformBlock(
+			renderer.gl,
+			BLOCK_FLOATS,
+			LIGHT2D_BINDING_POINT,
+		);
+		this._lightBlockProgram = null;
+		// Bind immediately rather than waiting for the first activation. An
+		// active-but-unbound uniform block is INVALID_OPERATION at draw time,
+		// not a read of zeroes — so a renderer that never draws lit content
+		// would otherwise carry a program that cannot legally draw at all.
+		this._bindLightBlock();
 
 		// release the cached GL texture when a Texture2d normal-map source
 		// (e.g. a per-level NoiseTexture2d) is destroyed — `normalMapTextures`
@@ -141,6 +168,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 			off(TEXTURE2D_DESTROYED, this._onTexture2dDestroyed);
 			this._onTexture2dDestroyed = null;
 		}
+		this.lightBlock?.destroy();
+		this.lightBlock = undefined;
+		this._lightBlockProgram = null;
 		super.destroy();
 	}
 
@@ -158,6 +188,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 */
 	bind() {
 		super.bind();
+		this._bindLightBlock();
 		if (this._normalRangeReserved !== true) {
 			this._normalRangeReserved = true;
 			const cache = this.renderer.cache;
@@ -177,6 +208,30 @@ export default class LitQuadBatcher extends QuadBatcher {
 			// before lighting first activated (units are sticky once assigned)
 			cache.resetUnitAssignments();
 		}
+	}
+
+	/**
+	 * Point the active program's `Light2dBlock` at our uniform buffer.
+	 *
+	 * A block binding is *program* state, and the program can change under us
+	 * in three ways: a context restore recompiles it, `setBatcher` can host a
+	 * {@link ShaderEffect} on this batcher, and `init` re-runs on reset. Rather
+	 * than hook each of those, re-bind whenever the program is not the one we
+	 * last bound — a pointer compare per `bind`, and self-healing.
+	 *
+	 * A hosted `ShaderEffect` is a plain unlit ES 1.00 program with no light
+	 * block, so `bindTo` reports failure and we simply record it, leaving the
+	 * next real lit program to bind normally.
+	 * @ignore
+	 */
+	_bindLightBlock() {
+		const shader = this.currentShader || this.defaultShader;
+		const program = shader?.program;
+		if (!program || program === this._lightBlockProgram) {
+			return;
+		}
+		this._lightBlockProgram = program;
+		this.lightBlock.bindTo(program, "Light2dBlock");
 	}
 
 	/**
@@ -231,8 +286,11 @@ export default class LitQuadBatcher extends QuadBatcher {
 		this.boundNormalVersions.fill(-1);
 		this.normalMapTextures.clear();
 		this._lightCount = 0;
-		this.defaultShader.setUniform("uLightCount", 0);
-		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
+		// zero the header (count + ambient) and push it, so a reset mid-scene
+		// leaves the shader reading "no lights" rather than the previous
+		// frame's set — the light array past the count is never read.
+		this.lightBlock.data.fill(0, 0, HEADER_FLOATS);
+		this.lightBlock.upload(HEADER_FLOATS);
 	}
 
 	/**
@@ -273,35 +331,31 @@ export default class LitQuadBatcher extends QuadBatcher {
 	}
 
 	/**
-	 * Upload per-frame Light2d uniforms used by the lit fragment path.
+	 * Upload the per-frame Light2d data used by the lit fragment path.
 	 * Called once per camera per frame (before the world tree walk).
 	 * Lights past `MAX_LIGHTS` are silently ignored.
 	 *
 	 * Coordinates must be supplied in the same space as the renderer's
 	 * pre-projection vertex coords (i.e. camera-local / FBO-local),
 	 * matching `Stage.drawLighting`'s convention.
+	 *
+	 * The data goes into the `Light2dBlock` uniform buffer, which is
+	 * independent of which program is current — so unlike the uniform arrays
+	 * this replaced, calling it does not disturb the active shader. The
+	 * upload is skipped outright when the packed bytes are unchanged, so a
+	 * scene whose lights are static still costs nothing per frame.
 	 * @param {object} uniforms
 	 * @param {Float32Array} uniforms.positions - flat array of `[x, y, radius, intensity]` per light, length = 4 * count
 	 * @param {Float32Array} uniforms.colors - flat array of `[r, g, b]` per light, length = 3 * count
-	 * @param {Float32Array} [uniforms.heights] - flat array of per-light height, length = MAX_LIGHTS
+	 * @param {Float32Array} [uniforms.heights] - flat array of per-light height, length >= count
 	 * @param {number} uniforms.count - number of lights to render (clamped to MAX_LIGHTS)
 	 * @param {number[]} [uniforms.ambient] - `[r, g, b]` ambient floor (0..1 each)
 	 */
 	setLightUniforms(uniforms) {
-		const shader = this.defaultShader;
-		const count = Math.min(uniforms.count | 0, this._maxLights);
-		this._lightCount = count;
-		shader.setUniform("uLightCount", count);
-		if (count > 0) {
-			shader.setUniform("uLightPos", uniforms.positions);
-			shader.setUniform("uLightColor", uniforms.colors);
-			if (uniforms.heights) {
-				shader.setUniform("uLightHeight", uniforms.heights);
-			}
-		}
-		if (uniforms.ambient) {
-			shader.setUniform("uAmbient", uniforms.ambient);
-		}
+		this._lightCount = Math.min(uniforms.count | 0, this._maxLights);
+		// write straight into the block's own staging buffer — that is what
+		// `UniformBlock.data` is for, and `upload` sends exactly it
+		this.lightBlock.upload(writeLight2dBlock(this.lightBlock.data, uniforms));
 	}
 
 	/**

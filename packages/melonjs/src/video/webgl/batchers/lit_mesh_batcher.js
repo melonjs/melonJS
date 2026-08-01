@@ -1,6 +1,8 @@
 import state from "../../../state/state.ts";
-import { MAX_LIGHTS } from "../lighting/constants.ts";
+import UniformBlock from "../buffer/uniformblock.js";
+import { LIGHT3D_BINDING_POINT, MAX_LIGHTS } from "../lighting/constants.ts";
 import { packMeshLights } from "../lighting/pack3d.ts";
+import { BLOCK_FLOATS, writeLight3dBlock } from "../lighting/std140.ts";
 import litFragment from "./../shaders/mesh-lit.frag";
 import litVertex from "./../shaders/mesh-lit.vert";
 import MeshBatcher from "./mesh_batcher.js";
@@ -32,6 +34,64 @@ const _WHITE_AMBIENT = new Float32Array([1, 1, 1]);
  * @category Rendering
  */
 export default class LitMeshBatcher extends MeshBatcher {
+	/**
+	 * Allocate the `Light3dBlock` uniform buffer alongside the base setup.
+	 * Re-run on context restore (`WebGLRenderer.reset` calls `init` rather
+	 * than `reset` while the context is invalid), so the previous block —
+	 * whose GL name belonged to the dead context — is dropped first.
+	 * @ignore
+	 */
+	init(renderer) {
+		super.init(renderer);
+
+		this.lightBlock?.destroy();
+
+		/**
+		 * The `Light3dBlock` uniform buffer, refreshed before each draw in
+		 * {@link LitMeshBatcher#updatePassState}.
+		 * @type {UniformBlock}
+		 * @ignore
+		 */
+		this.lightBlock = new UniformBlock(
+			renderer.gl,
+			BLOCK_FLOATS,
+			LIGHT3D_BINDING_POINT,
+		);
+		this._lightBlockProgram = null;
+		// see the note in LitQuadBatcher.init: an active-but-unbound uniform
+		// block makes the program undrawable, so bind it at birth rather than
+		// on first activation
+		this._bindLightBlock();
+	}
+
+	/**
+	 * Point the active program's `Light3dBlock` at our uniform buffer.
+	 *
+	 * A block binding is program state, so it has to be re-established
+	 * whenever the program changes: a context restore recompiles it, `init`
+	 * re-runs on reset, and `useShader` can swap one in without a batcher
+	 * transition. Comparing against the program we last bound covers all
+	 * three — a pointer compare in the steady state.
+	 * @ignore
+	 */
+	_bindLightBlock() {
+		const shader = this.currentShader || this.defaultShader;
+		const program = shader?.program;
+		if (!program || program === this._lightBlockProgram) {
+			return;
+		}
+		this._lightBlockProgram = program;
+		this.lightBlock.bindTo(program, "Light3dBlock");
+	}
+
+	/** release the light block along with the rest. @ignore */
+	destroy() {
+		this.lightBlock?.destroy();
+		this.lightBlock = undefined;
+		this._lightBlockProgram = null;
+		super.destroy();
+	}
+
 	/** add the world-space normal attribute on top of the base layout. @ignore */
 	_attributeLayout(renderer) {
 		// the parameter is kept for the subclass contract even though a
@@ -119,27 +179,46 @@ export default class LitMeshBatcher extends MeshBatcher {
 	}
 
 	/**
-	 * Enter the mesh-mode pass (depth state via the inherited base) and upload
-	 * the active stage's 3D lights to the lit shader. With NO lights at all
-	 * (no directional and no ambient), a white ambient keeps a `lit` mesh
-	 * fullbright (so it matches the unlit path); an ambient-only scene still
-	 * uses its real ambient.
+	 * Refresh the light block on top of the inherited depth handling.
+	 *
+	 * Deliberately here and not in `bind()`: `setBatcher` returns early when
+	 * this batcher is already current, so a scene made only of lit meshes binds
+	 * once and never again. Uploading in `bind()` meant such a scene shaded
+	 * every frame with the lights it had on the first one — move a `Light3d`
+	 * and nothing happened. Most scenes escape it by accident, because a sprite
+	 * or an unlit mesh forces a switch (`night-city`'s emissive windows are
+	 * `lit: false`, which is what keeps it correct); a purely lit scene does
+	 * not.
+	 *
+	 * Costs nothing when the lights are unchanged: `UniformBlock.upload`
+	 * compares against the previous upload and skips the `bufferSubData`
+	 * outright, so a static light rig is one pack plus one array compare per
+	 * draw and zero GL calls.
+	 *
+	 * With NO lights at all (no directional and no ambient), a white ambient
+	 * keeps a `lit` mesh fullbright — matching the unlit path — while an
+	 * ambient-only scene still uses its real ambient.
+	 * @ignore
 	 */
-	bind() {
-		super.bind();
+	updatePassState() {
+		super.updatePassState();
+
+		this._bindLightBlock();
+
 		const stage = state.current();
 		const lit = packMeshLights(stage ? stage._activeLights3d : null);
-		const shader = this.currentShader;
-		shader.setUniform("uLightCount", lit.count);
-		if (lit.count > 0) {
-			shader.setUniform("uLightDir", lit.directions);
-			shader.setUniform("uLightColor", lit.colors);
-		}
 		// use the packed ambient whenever any light contributed (directional
 		// OR ambient); fall back to fullbright white only when the scene has no
 		// 3D lights at all — otherwise an ambient-only setup would be ignored.
 		const a = lit.ambient;
 		const hasLight = lit.count > 0 || a[0] > 0 || a[1] > 0 || a[2] > 0;
-		shader.setUniform("uAmbient", hasLight ? a : _WHITE_AMBIENT);
+		this.lightBlock.upload(
+			writeLight3dBlock(this.lightBlock.data, {
+				count: lit.count,
+				directions: lit.directions,
+				colors: lit.colors,
+				ambient: hasLight ? a : _WHITE_AMBIENT,
+			}),
+		);
 	}
 }

@@ -1,22 +1,27 @@
+#version 300 es
 // Lit mesh vertex shader (Camera3d + Light3d) — retained-mode.
+//
+// GLSL ES 3.00 because the fragment stage reads light data from a uniform
+// block, which does not exist in ES 1.00. Both stages of a program must share
+// a dialect, so the vertex shader follows.
 //
 // Same placement as mesh.vert (clip = projection × view × model × vertex,
 // vertices in MODEL space) plus a normal carried to the fragment shader in
 // world space for diffuse shading.
-attribute vec3 aVertex;
-attribute vec2 aRegion;
-attribute vec4 aColor;
+in vec3 aVertex;
+in vec2 aRegion;
+in vec4 aColor;
 // Model-space normal, rotated into world space below.
-attribute vec3 aNormal;
+in vec3 aNormal;
 
 uniform mat4 uProjectionMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uModelMatrix;
 uniform vec4 uTint;
 
-varying vec2 vRegion;
-varying vec4 vColor;
-varying vec3 vNormal;
+out vec2 vRegion;
+out vec4 vColor;
+out vec3 vNormal;
 
 void main(void) {
     gl_Position =

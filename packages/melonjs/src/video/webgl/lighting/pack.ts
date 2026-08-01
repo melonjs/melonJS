@@ -68,7 +68,7 @@ interface ColorLike {
  * the lit fragment's `lightPos - vWorldPos` math lines up with the
  * camera's view.
  *
- * Lights past `MAX_LIGHTS` (8) are silently dropped. Unused slots are
+ * Lights past `MAX_LIGHTS` are silently dropped. Unused slots are
  * zero-filled so stale data from a previous frame can't leak into the
  * shader.
  *

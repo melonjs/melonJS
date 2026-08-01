@@ -3,8 +3,11 @@ import {
 	boot,
 	event,
 	GLShader,
+	Light3d,
+	Matrix3d,
 	Renderable,
 	ShaderEffect,
+	state,
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
@@ -1522,6 +1525,80 @@ describe("WebGL pipeline adversarial integration", () => {
 		renderer.currentNormalMap = null;
 		renderer.flush();
 		expectNoGLErrors();
+	});
+
+	it("real context loss: a lit MESH still shades from its light block after the cycle", async (ctx) => {
+		// The lit mesh path carries the most state across a restore: a uniform
+		// buffer (whose GL name belonged to the dead context), a block binding
+		// (which is *program* state, and the program is recompiled), and the
+		// packed light data itself. None of that fails loudly if it is missed —
+		// an unbound block reads as zeroes, so the mesh would render black with
+		// no GL error at all. Hence a pixel assertion rather than just
+		// `expectNoGLErrors`.
+		if (skipIfNoWebGL(ctx)) {
+			return;
+		}
+		const ext = gl.getExtension("WEBGL_lose_context");
+		if (ext === null) {
+			ctx.skip("WEBGL_lose_context extension not available");
+			return;
+		}
+
+		ext.loseContext();
+		await tick();
+		ext.restoreContext();
+		await tick();
+
+		const albedo = video.createCanvas(4, 4);
+		const c2d = albedo.getContext("2d");
+		c2d.fillStyle = "#ffffff";
+		c2d.fillRect(0, 0, 4, 4);
+
+		// travelling along -Z, so surface->light is +Z: head-on to the quad's
+		// normal, making the shaded colour exactly the light colour
+		const light = new Light3d({
+			type: "directional",
+			direction: [0, 0, -1],
+			color: [0, 1, 0],
+			intensity: 1,
+		});
+		const stage = state.current();
+		const previous = stage._activeLights3d;
+		stage._activeLights3d = new Set([light]);
+
+		const proj = new Matrix3d();
+		proj.ortho(0, 800, 600, 0, -1000, 1000);
+		renderer.setProjection(proj);
+		renderer.currentTint.setColor(255, 255, 255, 1);
+		renderer.backgroundColor.setColor(0, 0, 0, 255);
+		renderer.clear();
+
+		try {
+			renderer.setBatcher("quad");
+			renderer.drawMesh({
+				lit: true,
+				vertices: new Float32Array([
+					0, 0, 0, 800, 0, 0, 800, 600, 0, 0, 600, 0,
+				]),
+				normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+				uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+				indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+				texture: renderer.cache.get(albedo),
+				cullBackFaces: false,
+				alphaCutoff: 0,
+			});
+			renderer.flush();
+			gl.finish();
+
+			const px = new Uint8Array(4);
+			gl.readPixels(400, 300, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+			expect(px[1]).toBeGreaterThan(200); // lit green
+			expect(px[0]).toBeLessThan(30); // and only green
+			expectNoGLErrors();
+		} finally {
+			stage._activeLights3d = previous;
+			renderer.setBatcher("quad");
+		}
 	});
 
 	it("real context loss: ShaderEffect + drawImage + flush survive the full cycle without throwing", async (ctx) => {

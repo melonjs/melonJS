@@ -13,7 +13,7 @@ import SpineBatcher from "./SpineBatcher.js";
 import { SpinePlugin } from "./SpinePlugin.js";
 
 // Spine 4.3 ships an official Y-down switch — every Spine integration that
-// targets a Y-down framework (pixi-v8/v7, phaser-v3/v4, canvaskit) does this.
+// targets a Y-down coordinate system does this.
 // melonJS is Y-down, so flip Spine globally once and let the runtime handle
 // gravity inversion, world-transform Y-direction, and scaleY semantics.
 Skeleton.yDown = true;
