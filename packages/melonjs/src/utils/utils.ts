@@ -87,10 +87,11 @@ export function getUriFragment(url?: string) {
 		}
 	}
 
-	// parse the url
+	// parse the url — split on both "&" and "?" so engine flags coexist
+	// with SPA hash routers (e.g. `#/some-route?webgpu` in the examples)
 	url
 		.slice(1)
-		.split("&")
+		.split(/[&?]/)
 		.filter((value) => {
 			return value !== "";
 		})

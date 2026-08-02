@@ -85,9 +85,18 @@ export default class WebGPUTextureStore {
 				: (texture.repeat ?? "no-repeat");
 		const unit = this.renderer.cache.getUnit(texture, wrap);
 		let record = this.records.get(unit);
+		const source = texture.getTexture();
 
-		if (typeof record === "undefined" || options.force === true) {
-			const source = texture.getTexture();
+		// A unit number is not a stable identity: the TextureCache recycles
+		// units when sources are unloaded (stage switches free the loading
+		// screen's assets, for instance), and there is no per-unit release
+		// event — so a resident record must be validated against the SOURCE
+		// it was uploaded from, or a recycled unit serves stale pixels.
+		if (
+			typeof record === "undefined" ||
+			options.force === true ||
+			record.source !== source
+		) {
 			// prefer real pixel dimensions; HTMLVideoElement exposes them
 			// through videoWidth/videoHeight (width/height default to 0)
 			const width = source.width || source.videoWidth || 1;
@@ -114,11 +123,16 @@ export default class WebGPUTextureStore {
 				record = {
 					texture: gpuTexture,
 					view: gpuTexture.createView(),
+					source,
 					width,
 					height,
 					bindGroupBySampler: new Map(),
 				};
 				this.records.set(unit, record);
+			} else {
+				// same-size unit reuse (recycled unit, or a video frame):
+				// keep the resident texture + bind groups, adopt the source
+				record.source = source;
 			}
 
 			// same premultiplication convention as the GL path's
