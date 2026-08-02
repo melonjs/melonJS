@@ -18,6 +18,8 @@ export function createMockWebGPURenderer() {
 		setPipeline: 0,
 		// group-1 (material) bind groups as recorded by the quad batcher
 		materialBinds: [],
+		// every setBindGroup: {index, group, dynamicOffsets}
+		bindGroups: [],
 		pushFrameGlobals: 0,
 	};
 
@@ -25,7 +27,8 @@ export function createMockWebGPURenderer() {
 		setPipeline() {
 			calls.setPipeline++;
 		},
-		setBindGroup(index, group) {
+		setBindGroup(index, group, dynamicOffsets) {
+			calls.bindGroups.push({ index, group, dynamicOffsets });
 			if (index === 1) {
 				calls.materialBinds.push(group);
 			}
@@ -47,17 +50,26 @@ export function createMockWebGPURenderer() {
 		calls,
 		pass,
 		device: {
+			limits: { minUniformBufferOffsetAlignment: 256 },
 			queue: {
 				writeBuffer(buffer, offset, data, dataOffset, size) {
-					// snapshot the bytes like the real queue does
-					const copy = data.slice(dataOffset, dataOffset + size);
+					// snapshot the bytes like the real queue does (data may be
+					// a TypedArray view or a raw ArrayBuffer, per the real
+					// overloads)
+					const bytes =
+						data instanceof ArrayBuffer
+							? new Uint8Array(data)
+							: new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+					const copy = bytes.slice(dataOffset, dataOffset + size);
 					calls.writes.push({
+						buffer,
 						offset,
 						size,
 						floats: new Float32Array(copy.buffer, 0, size >> 2),
 						view: new DataView(copy.buffer),
 					});
 				},
+				copyExternalImageToTexture() {},
 			},
 			createBuffer(descriptor) {
 				return {
@@ -69,9 +81,42 @@ export function createMockWebGPURenderer() {
 					unmap() {},
 				};
 			},
+			createBindGroup(descriptor) {
+				return { layout: descriptor.layout, entries: descriptor.entries };
+			},
+			createTexture(descriptor) {
+				return {
+					size: descriptor.size,
+					destroy() {},
+					createView() {
+						return { texture: this };
+					},
+				};
+			},
 		},
 		pipelineCache: {
+			epoch: 1,
+			emptyBindGroup: { empty: true },
+			registeredModules: new Map(),
+			effectLayouts: new Map(),
 			registerVertexLayout() {},
+			registerShader(code) {
+				let key = this.registeredModules.get(code);
+				if (typeof key === "undefined") {
+					key = `effect:${this.registeredModules.size}`;
+					this.registeredModules.set(code, key);
+				}
+				return key;
+			},
+			getEffectLayout(signature) {
+				if (!this.effectLayouts.has(signature)) {
+					this.effectLayouts.set(signature, { signature });
+				}
+				return this.effectLayouts.get(signature);
+			},
+			frameLayout: {},
+			materialLayout: {},
+			emptyLayout: {},
 			get(shaderKey, topology, blendMode, premultipliedAlpha, stencilMode) {
 				const key = `${shaderKey}|${topology}|${blendMode}|${premultipliedAlpha}|${stencilMode}`;
 				calls.pipelineKeys.push(key);
@@ -86,6 +131,27 @@ export function createMockWebGPURenderer() {
 				return { buffer: {}, offset: 0 };
 			},
 		},
+		// bump allocator over labeled fake pages, alignment-honoring — the
+		// effect-uniform snapshot path exercises this
+		effectUniformArena: {
+			offset: 0,
+			page: { label: "effect page 0" },
+			alloc(byteLength, alignment = 4) {
+				this.offset = (this.offset + alignment - 1) & ~(alignment - 1);
+				const region = { buffer: this.page, offset: this.offset };
+				this.offset += (byteLength + 3) & ~3;
+				return region;
+			},
+			reset() {
+				this.offset = 0;
+			},
+		},
+		captureTexture: undefined,
+		stubView: { stub: true },
+		getStubTextureView() {
+			return this.stubView;
+		},
+		retireTexture() {},
 		textureStore: {
 			// one stable bind-group token per atlas object
 			getBinding(texture) {
@@ -93,6 +159,9 @@ export function createMockWebGPURenderer() {
 					materialBindings.set(texture, { texture });
 				}
 				return materialBindings.get(texture);
+			},
+			getSampler(filter, repeat) {
+				return { filter, repeat };
 			},
 		},
 		ensurePass() {

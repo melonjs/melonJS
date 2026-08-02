@@ -13,6 +13,8 @@ import {
 } from "../../system/event.ts";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
+import RenderTargetPool from "../rendertarget/render_target_pool.js";
+import WebGPURenderTarget from "../rendertarget/webgpurendertarget.js";
 import { createAtlas, TextureAtlas } from "../texture/atlas.js";
 import TextureCache from "../texture/cache.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
@@ -34,6 +36,8 @@ import WebGPUTextureStore from "./texture/store.js";
 
 // scratch matrix for the affine-components form of transform()
 const tempMatrix = new Matrix3d();
+// scratch: the projection saved across a blitEffect quad
+const blitSavedProjection = new Matrix3d();
 
 /**
  * The **experimental** WebGPU renderer.
@@ -173,6 +177,10 @@ export default class WebGPURenderer extends Renderer {
 		// consumed as the next pass's colorLoadOp "clear" (fresh target)
 		/** @ignore */
 		this.pendingColorClear = false;
+		/** @ignore */
+		this.pendingClearValue = null;
+		/** @ignore */
+		this.pendingStencilClear = false;
 		// the canvas GPUTexture handle of the current frame — kept beside its
 		// view because captureFrame copies from the TEXTURE, not the view
 		/** @ignore */
@@ -180,6 +188,18 @@ export default class WebGPURenderer extends Renderer {
 		// the shared frame-capture slot (screen_texture builtin), lazy
 		/** @ignore */
 		this.captureTexture = undefined;
+		// 1×1 transparent stand-in bound where a declared texture has no
+		// source yet (never-captured screen_texture, unset setTexture slot)
+		/** @ignore */
+		this.stubTexture = null;
+		// per-depth projection save slots for nested post-effect passes
+		/** @ignore */
+		this.effectProjectionStack = [];
+		/** @ignore */
+		this.effectPassDepth = 0;
+		// per-bind effect uniform snapshots (created by init)
+		/** @ignore */
+		this.effectUniformArena = null;
 		// monotonically increasing frame id — the texture store uses it to
 		// detect same-frame content changes that need a fresh texture
 		/** @ignore */
@@ -321,6 +341,11 @@ export default class WebGPURenderer extends Renderer {
 		this.vertexArena = new WebGPUBufferArena(this.device, {
 			label: "melonJS vertex arena",
 		});
+		this.effectUniformArena = new WebGPUBufferArena(this.device, {
+			label: "melonJS effect uniform arena",
+			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+			pageSize: 64 << 10,
+		});
 		this.textureStore = new WebGPUTextureStore(this);
 		this.createDepthTexture();
 
@@ -390,6 +415,7 @@ export default class WebGPURenderer extends Renderer {
 
 		this.vertexArena.reset();
 		this.uniformRing.reset();
+		this.effectUniformArena.reset();
 		this.frameId++;
 		// a frame always begins on the canvas
 		this.currentRenderTarget = null;
@@ -443,11 +469,17 @@ export default class WebGPURenderer extends Renderer {
 		// WebGPU analogue of clearRenderTarget, no clearing draw needed
 		let colorLoadOp = opts.colorLoadOp;
 		let clearValue = opts.clearValue;
+		let stencilLoadOp = opts.stencilLoadOp;
 		if (typeof colorLoadOp === "undefined" && this.pendingColorClear) {
 			colorLoadOp = "clear";
-			clearValue = { r: 0, g: 0, b: 0, a: 0 };
+			clearValue = this.pendingClearValue ?? { r: 0, g: 0, b: 0, a: 0 };
+			if (typeof stencilLoadOp === "undefined" && this.pendingStencilClear) {
+				stencilLoadOp = "clear";
+			}
 		}
 		this.pendingColorClear = false;
+		this.pendingClearValue = null;
+		this.pendingStencilClear = false;
 		// every attachment of a pass must have identical dimensions — the
 		// shared depth-stencil tracks the active target's size (targets are
 		// canvas-sized in the 2D flow, so this recreates nothing in practice)
@@ -468,7 +500,7 @@ export default class WebGPURenderer extends Renderer {
 				depthLoadOp: "clear",
 				depthClearValue: 1.0,
 				depthStoreOp: "discard",
-				stencilLoadOp: opts.stencilLoadOp ?? "load",
+				stencilLoadOp: stencilLoadOp ?? "load",
 				stencilClearValue: 0,
 				stencilStoreOp: "store",
 			},
@@ -513,6 +545,8 @@ export default class WebGPURenderer extends Renderer {
 		this.currentRenderTarget = target ?? null;
 		this.pendingColorClear =
 			options.clear === true || (target?.pendingClear ?? false);
+		this.pendingClearValue = options.clearValue ?? null;
+		this.pendingStencilClear = options.clearStencil === true;
 		if (target) {
 			target.pendingClear = false;
 		}
@@ -531,6 +565,44 @@ export default class WebGPURenderer extends Renderer {
 			this.retiredTextures.push(texture);
 		} else {
 			texture.destroy();
+		}
+	}
+
+	/**
+	 * The 1×1 transparent-black stand-in view — bound where a declared
+	 * effect texture has no source yet, so bind groups stay valid.
+	 * @returns {GPUTextureView} the stub view
+	 * @ignore
+	 */
+	getStubTextureView() {
+		if (this.stubTexture === null) {
+			this.stubTexture = this.device.createTexture({
+				label: "melonJS stub texture",
+				size: [1, 1],
+				format: "rgba8unorm",
+				usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+			});
+			this.device.queue.writeTexture(
+				{ texture: this.stubTexture },
+				new Uint8Array(4),
+				{},
+				[1, 1],
+			);
+			this.stubTextureView = this.stubTexture.createView();
+		}
+		return this.stubTextureView;
+	}
+
+	/**
+	 * disable the scissor test — pass-model realization of the GL call
+	 * (pending vertices drain, the open pass widens back to the target)
+	 * @override
+	 */
+	disableScissor() {
+		if (this.scissorActive === true) {
+			this.currentBatcher?.flush();
+			this.scissorActive = false;
+			this.applyScissor();
 		}
 	}
 
@@ -588,6 +660,192 @@ export default class WebGPURenderer extends Renderer {
 			[width, height],
 		);
 		return capture;
+	}
+
+	/**
+	 * Begin a post-effect pass for the given renderable — the WebGPU
+	 * realization of the WebGL FBO path: the renderable's whole content
+	 * renders into a pooled offscreen target, composited by
+	 * {@link WebGPURenderer#endPostEffect}. The single-effect fast path
+	 * (customShader, no offscreen target) mirrors the WebGL split.
+	 * @param {Renderable} renderable - the renderable carrying postEffects
+	 * @returns {boolean} true when an offscreen pass began
+	 * @override
+	 */
+	beginPostEffect(renderable) {
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx.enabled !== false;
+		});
+		if (effects.length === 0) {
+			this.customShader = undefined;
+			return false;
+		}
+		// single effect on a non-managed renderable: fast path (no target)
+		if (effects.length === 1 && !renderable._postEffectManaged) {
+			this.customShader = effects[0];
+			return false;
+		}
+
+		// pooled path: children render with the default pipeline
+		this.customShader = undefined;
+
+		const isCamera = renderable._postEffectManaged;
+		const canvas = this.getCanvas();
+
+		this.save();
+		// save the current projection (not part of the render state stack) —
+		// one preallocated slot per nesting depth
+		let savedProjection = this.effectProjectionStack[this.effectPassDepth];
+		if (typeof savedProjection === "undefined") {
+			savedProjection = this.effectProjectionStack[this.effectPassDepth] =
+				new Matrix3d();
+		}
+		savedProjection.copy(this.projectionMatrix);
+		this.effectPassDepth++;
+
+		this._renderTargetPool ??= new RenderTargetPool((w, h) => {
+			return new WebGPURenderTarget(this, w, h);
+		});
+		const rt = this._renderTargetPool.begin(
+			isCamera,
+			effects.length,
+			canvas.width,
+			canvas.height,
+		);
+		// retarget with the appropriate clear: a camera's offscreen pass
+		// starts like a frame (background color + fresh stencil), a
+		// sprite's starts transparent so unpainted texels stay see-through
+		if (isCamera) {
+			const [r, g, b, a] = this.backgroundColor.toArray();
+			this.setRenderTarget(rt, {
+				clear: true,
+				clearValue: { r, g, b, a },
+				clearStencil: true,
+			});
+		} else {
+			this.setRenderTarget(rt, { clear: true });
+		}
+		this.disableScissor();
+		this.setGlobalAlpha(1.0);
+		this.setBlendMode("normal");
+		return true;
+	}
+
+	/**
+	 * End a post-effect pass: retarget to the parent (or the canvas),
+	 * refresh the shared frame capture for `screen_texture` consumers, and
+	 * composite the offscreen content through the effect chain — one blit
+	 * per effect, ping-ponging between pool targets for chains.
+	 * @param {Renderable} renderable - the renderable passed to beginPostEffect
+	 * @override
+	 */
+	endPostEffect(renderable) {
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx.enabled !== false;
+		});
+		if (effects.length === 0) {
+			return;
+		}
+		// the fast path set customShader — nothing offscreen to composite
+		if (effects.length === 1 && !renderable._postEffectManaged) {
+			return;
+		}
+
+		const isCamera = renderable._postEffectManaged;
+		const pool = this._renderTargetPool;
+		const rt1 = pool.getCaptureTarget();
+		const rt2 = pool.getPingPongTarget();
+		const keepBlend = !isCamera;
+		const canvas = this.getCanvas();
+		const w = canvas.width;
+		const h = canvas.height;
+
+		// `screen_texture` builtin: for a CAMERA the "screen" is the scene
+		// itself — capture the still-active offscreen target; for a sprite
+		// chain it's everything behind it — captured after the retarget
+		const needsScreenTexture = effects.some((fx) => {
+			return fx._screenTextureUniforms?.length > 0;
+		});
+		if (needsScreenTexture && isCamera) {
+			this.captureFrame();
+		}
+
+		const parentRT = pool.end();
+
+		// clip the composite to the camera viewport for non-default cameras
+		// (the offscreen content sits at the camera's screen position)
+		if (isCamera && renderable.isDefault === false) {
+			this.clipRect(
+				renderable.screenX,
+				renderable.screenY,
+				renderable.width,
+				renderable.height,
+			);
+		}
+
+		this.setRenderTarget(parentRT);
+		emit(RENDER_TARGET_CHANGED, this);
+
+		if (needsScreenTexture && !isCamera) {
+			this.captureFrame();
+		}
+
+		if (effects.length === 1) {
+			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend);
+		} else {
+			// multi-pass: ping-pong between the two pool targets
+			let src = rt1;
+			let dst = rt2;
+			for (let i = 0; i < effects.length - 1; i++) {
+				this.setRenderTarget(dst, { clear: true });
+				this.blitEffect(src, 0, 0, w, h, effects[i], false);
+				const tmp = src;
+				src = dst;
+				dst = tmp;
+			}
+			this.setRenderTarget(parentRT);
+			this.blitEffect(src, 0, 0, w, h, effects[effects.length - 1], keepBlend);
+		}
+
+		if (isCamera && renderable.isDefault === false) {
+			this.disableScissor();
+		}
+
+		// restore renderer state and the projection saved in beginPostEffect
+		this.restore();
+		this.effectPassDepth--;
+		this.projectionMatrix.copy(
+			this.effectProjectionStack[this.effectPassDepth],
+		);
+		this.pushFrameGlobals();
+	}
+
+	/**
+	 * Draw a pooled render target through an effect's pipeline as a
+	 * screen-space quad — the compositing primitive of the post-effect
+	 * chain. Blending is disabled for camera blits (the target is fully
+	 * composited) and kept for per-sprite blits (transparent texels must
+	 * not overwrite the scene).
+	 * @param {import("../rendertarget/webgpurendertarget.js").default} source - the target to sample
+	 * @param {number} x - destination x
+	 * @param {number} y - destination y
+	 * @param {number} width - destination width
+	 * @param {number} height - destination height
+	 * @param {ShaderEffect} effect - the effect to composite with
+	 * @param {boolean} [keepBlend=false] - keep the current blend mode
+	 * @override
+	 */
+	blitEffect(source, x, y, width, height, effect, keepBlend = false) {
+		const batcher = this.setBatcher("quad");
+		// screen-space ortho for the blit quad (not the camera's world
+		// projection); restored — with a fresh frame-globals slot each way —
+		// right after
+		blitSavedProjection.copy(this.projectionMatrix);
+		this.projectionMatrix.ortho(0, width, height, 0, -1, 1);
+		this.pushFrameGlobals();
+		batcher.blitTexture(source, x, y, width, height, effect, keepBlend);
+		this.projectionMatrix.copy(blitSavedProjection);
+		this.pushFrameGlobals();
 	}
 
 	/**
@@ -1878,9 +2136,16 @@ export default class WebGPURenderer extends Renderer {
 		this.vertexArena?.destroy();
 		this.uniformRing?.destroy();
 		this.pipelineCache?.clear();
-		// device-scoped post-effect state: the shared capture dies with the
-		// device; effect GPU realizations self-heal via the cache epoch
+		// device-scoped post-effect state: the shared capture, pool targets
+		// and stub die with the device; effect GPU realizations self-heal
+		// via the pipeline-cache epoch
 		this.captureTexture = undefined;
+		this._renderTargetPool?.destroy();
+		this._renderTargetPool = null;
+		this.effectUniformArena?.destroy();
+		this.effectUniformArena = null;
+		this.stubTexture = null;
+		this.stubTextureView = null;
 		this.currentRenderTarget = null;
 		this.depthTexture = null;
 		this.device = undefined;
@@ -1911,6 +2176,9 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	reset() {
 		this.abandonFrame();
+		// a reset can land mid-post-effect-pass — unwind the bracket state
+		this.effectPassDepth = 0;
+		this.customShader = undefined;
 		super.reset();
 		// re-init batchers when recovering from a device loss, plain reset
 		// otherwise — the same split as the WebGL restore path. A reset
@@ -1945,6 +2213,13 @@ export default class WebGPURenderer extends Renderer {
 			this.pipelineCache?.clear();
 			this.captureTexture?.destroy();
 			this.captureTexture = undefined;
+			this._renderTargetPool?.destroy();
+			this._renderTargetPool = null;
+			this.effectUniformArena?.destroy();
+			this.effectUniformArena = null;
+			this.stubTexture?.destroy();
+			this.stubTexture = null;
+			this.stubTextureView = null;
 			this.currentRenderTarget = null;
 			this.depthTexture?.destroy();
 			this.depthTexture = null;

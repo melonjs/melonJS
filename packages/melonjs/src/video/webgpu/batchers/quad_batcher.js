@@ -1,5 +1,6 @@
 import { Vector3d } from "../../../math/vector3d.ts";
 import IndexBuffer from "../../buffer/index.js";
+import { prepareEffectBinding } from "../effect_binding.js";
 import WebGPUBatcher from "./webgpu_batcher.js";
 
 // a pool of reusable vectors used by `addQuad` to transform the four quad
@@ -145,6 +146,77 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, 0);
 		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, 0);
 		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, 0);
+	}
+
+	/**
+	 * Composite a render target through an effect's pipeline as one
+	 * screen-space quad — the WebGPU counterpart of the GL blitTexture.
+	 * The caller ({@link WebGPURenderer#blitEffect}) has already set the
+	 * screen-space projection; this records the draw with the effect's
+	 * shader family and group-3 binding (uniforms snapshot-uploaded per
+	 * bind). An effect without a WGSL realization composites as a plain
+	 * un-effected blit, so the scene content is never lost.
+	 * @param {import("../../rendertarget/webgpurendertarget.js").default} source - the render target to sample
+	 * @param {number} x - destination x
+	 * @param {number} y - destination y
+	 * @param {number} w - destination width
+	 * @param {number} h - destination height
+	 * @param {ShaderEffect} [effect] - the effect to composite with
+	 * @param {boolean} [keepBlend=false] - keep the current blend mode (else replace)
+	 * @ignore
+	 */
+	blitTexture(source, x, y, w, h, effect, keepBlend = false) {
+		// drain pending quads under their own material first
+		this.flush();
+		const renderer = this.renderer;
+
+		// identity noise_uv rect for the fullscreen quad (GL parity), BEFORE
+		// the uniform snapshot below
+		effect?._setNoiseUVRect?.(w, h, w, h, 0, 0);
+		const binding = effect ? prepareEffectBinding(renderer, effect) : null;
+
+		const pass = renderer.ensurePass();
+		const pipeline = renderer.pipelineCache.get(
+			binding?.key ?? "quad",
+			"triangle-list",
+			keepBlend ? renderer.currentBlendMode : "none",
+			renderer.premultipliedAlpha,
+			renderer.stencilMode,
+		);
+		if (pipeline !== renderer.currentPipeline) {
+			pass.setPipeline(pipeline);
+			renderer.currentPipeline = pipeline;
+		}
+		const frame = renderer.currentFrameBinding;
+		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
+		pass.setBindGroup(1, source.getMaterialBindGroup());
+		if (binding?.hasEffectGroup) {
+			// positional through group 3 — the reserved lights slot gets the
+			// shared empty group
+			pass.setBindGroup(2, renderer.pipelineCache.emptyBindGroup);
+			pass.setBindGroup(3, binding.bindGroup, binding.dynamicOffsets);
+		}
+
+		// one quad, UNFLIPPED UVs (WebGPU texture row 0 is the top — the GL
+		// blit flips V because GL FBOs are bottom-up), white tint
+		const vertexData = this.vertexData;
+		vertexData.push(x, y, 0, 0, 0, 0xffffffff, 0);
+		vertexData.push(x + w, y, 0, 1, 0, 0xffffffff, 0);
+		vertexData.push(x, y + h, 0, 0, 1, 0xffffffff, 0);
+		vertexData.push(x + w, y + h, 0, 1, 1, 0xffffffff, 0);
+		const byteLength = 4 * this.stride;
+		const region = renderer.vertexArena.alloc(byteLength);
+		this.device.queue.writeBuffer(
+			region.buffer,
+			region.offset,
+			vertexData.toUint8(),
+			0,
+			byteLength,
+		);
+		pass.setVertexBuffer(0, region.buffer, region.offset, byteLength);
+		pass.setIndexBuffer(this.indexBuffer, "uint32");
+		pass.drawIndexed(6);
+		vertexData.clear();
 	}
 
 	/**
