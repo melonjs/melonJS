@@ -269,8 +269,11 @@ class CanvasRenderTarget extends RenderTarget {
 			);
 			renderer.currentBatcher.unbindTexture2D(null, this.glTextureUnit);
 		} else if (renderer.type === "WebGPU" && renderer.cache.has(this.canvas)) {
-			// drain draws referencing the previous pixels, then re-upload the
-			// canvas into the resident GPUTexture in place (same-size path)
+			// drain pending vertices, then re-upload the canvas. The store
+			// gives the new pixels a fresh GPUTexture when draws recorded
+			// earlier this frame reference the old ones (queue writes execute
+			// before every recorded draw, so an in-place re-upload would
+			// apply retroactively); otherwise it re-uploads in place.
 			renderer.currentBatcher?.flush();
 			renderer.textureStore.getBinding(renderer.cache.get(this.canvas), {
 				force: true,

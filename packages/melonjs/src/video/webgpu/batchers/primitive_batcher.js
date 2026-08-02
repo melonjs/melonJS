@@ -53,20 +53,6 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 				],
 			},
 		);
-
-		/**
-		 * the line width the current frame-globals slot was written with
-		 * @ignore
-		 */
-		this.currentLineWidth = 1;
-	}
-
-	/**
-	 * @override
-	 */
-	reset() {
-		super.reset();
-		this.currentLineWidth = 1;
 	}
 
 	/**
@@ -81,10 +67,12 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 
 		// the line width rides in the frame-globals block — a change means
 		// pending vertices drain under the old slot, then a new slot is
-		// pushed for everything after
-		if (lineWidth !== this.currentLineWidth) {
+		// pushed for everything after. Compared against the value the
+		// CURRENT slot was written with (not a batcher-local cache):
+		// clear() rewrites the slot with lineWidth = 1 every frame, so a
+		// local cache goes stale across frames
+		if (lineWidth !== renderer._currentFrameLineWidth) {
 			this.flush(this.topology);
-			this.currentLineWidth = lineWidth;
 			renderer._pushFrameGlobals();
 		}
 
@@ -215,7 +203,6 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 		const capacity = this.vertexData.maxVertex - 1;
 		let step = capacity;
 		let overlap = 0;
-		let anchor = false;
 		let drawTopology = topology;
 		switch (topology) {
 			case "triangle-list":
@@ -235,13 +222,10 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 			case "triangle-strip":
 				overlap = 2;
 				break;
-			case "triangle-fan":
-				overlap = 1;
-				anchor = true;
-				drawTopology = "triangle-strip";
-				break;
 			default:
-				// point-list: any split works
+				// point-list: any split works. "triangle-fan" never reaches
+				// here — #drawTriangleFan re-expands with per-triangle
+				// capacity checks, so fans self-chunk
 				break;
 		}
 		this.topology = drawTopology;
@@ -250,11 +234,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 		while (start < vertexCount) {
 			// each chunk starts on an empty buffer
 			this.flush(drawTopology);
-			const anchored = anchor && start > 0;
-			if (anchored) {
-				this.#pushRange(verts, 0, 1, colorUint32, z);
-			}
-			const count = Math.min(vertexCount - start, step - (anchored ? 1 : 0));
+			const count = Math.min(vertexCount - start, step);
 			this.#pushRange(verts, start, start + count, colorUint32, z);
 			start += count;
 			if (start < vertexCount) {

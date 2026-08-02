@@ -23,7 +23,7 @@ export default class WebGPUTextureStore {
 	constructor(renderer) {
 		this.renderer = renderer;
 		this.device = renderer.device;
-		/** @type {Map<number, {texture: GPUTexture, view: GPUTextureView, width: number, height: number, bindGroupBySampler: Map<string, GPUBindGroup>}>} */
+		/** @type {Map<number, {texture: GPUTexture, view: GPUTextureView, source: object, width: number, height: number, frameId: number, bindGroupBySampler: Map<string, GPUBindGroup>}>} */
 		this.records = new Map();
 		/** @type {Map<string, GPUSampler>} */
 		this.samplers = new Map();
@@ -102,14 +102,23 @@ export default class WebGPUTextureStore {
 			const width = source.width || source.videoWidth || 1;
 			const height = source.height || source.videoHeight || 1;
 
+			// An in-place re-upload is retroactive: queue writes execute
+			// before EVERY draw recorded this frame, so a record already
+			// sampled this frame must get a fresh texture or earlier draws
+			// would show the new pixels (shared canvases — gradients, Text —
+			// bake different content into the same source mid-frame).
 			if (
 				typeof record === "undefined" ||
 				record.width !== width ||
-				record.height !== height
+				record.height !== height ||
+				record.frameId === this.renderer._frameId
 			) {
-				// (re)create at the source size; a forced same-size upload
-				// (video frames) reuses the resident texture and its views
-				record?.texture.destroy();
+				// (re)create at the source size; the replaced texture retires
+				// at frame end — destroying it now would invalidate draws
+				// already recorded against it (submit rejects the whole frame)
+				if (typeof record !== "undefined") {
+					this._retire(record.texture);
+				}
 				const gpuTexture = this.device.createTexture({
 					label: "melonJS texture",
 					size: [width, height],
@@ -126,12 +135,14 @@ export default class WebGPUTextureStore {
 					source,
 					width,
 					height,
+					frameId: -1,
 					bindGroupBySampler: new Map(),
 				};
 				this.records.set(unit, record);
 			} else {
-				// same-size unit reuse (recycled unit, or a video frame):
-				// keep the resident texture + bind groups, adopt the source
+				// same-size unit reuse, not yet drawn this frame (recycled
+				// unit, or a video frame): keep the resident texture + bind
+				// groups, adopt the source
 				record.source = source;
 			}
 
@@ -147,6 +158,10 @@ export default class WebGPUTextureStore {
 				[record.width, record.height],
 			);
 		}
+
+		// stamp: this record's texture is (about to be) referenced by draws
+		// recorded in the current frame
+		record.frameId = this.renderer._frameId;
 
 		const filter =
 			typeof texture.filter === "string"
@@ -166,6 +181,22 @@ export default class WebGPUTextureStore {
 			record.bindGroupBySampler.set(samplerKey, bindGroup);
 		}
 		return bindGroup;
+	}
+
+	/**
+	 * Dispose of a GPUTexture safely: while a frame is being recorded the
+	 * texture may be referenced by already-recorded draws (destroying it
+	 * would make `queue.submit()` reject the whole command buffer), so it
+	 * parks on the renderer's retired list and is destroyed after submit.
+	 * @param {GPUTexture} gpuTexture - the texture to dispose of
+	 * @ignore
+	 */
+	_retire(gpuTexture) {
+		if (this.renderer._encoder !== null) {
+			this.renderer._retiredTextures.push(gpuTexture);
+		} else {
+			gpuTexture.destroy();
+		}
 	}
 
 	/**
@@ -190,18 +221,18 @@ export default class WebGPUTextureStore {
 		for (const unit of units) {
 			const record = this.records.get(unit);
 			if (record) {
-				record.texture.destroy();
+				this._retire(record.texture);
 				this.records.delete(unit);
 			}
 		}
 	}
 
 	/**
-	 * drop every unit association and destroy the resident textures
+	 * drop every unit association and dispose of the resident textures
 	 */
 	releaseAll() {
 		for (const record of this.records.values()) {
-			record.texture.destroy();
+			this._retire(record.texture);
 		}
 		this.records.clear();
 	}

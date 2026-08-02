@@ -9,6 +9,7 @@ import {
 	ONCONTEXT_RESTORED,
 	off,
 	on,
+	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
@@ -163,6 +164,20 @@ export default class WebGPURenderer extends Renderer {
 		this._encoder = null;
 		/** @ignore */
 		this._pass = null;
+		// monotonically increasing frame id — the texture store uses it to
+		// detect same-frame content changes that need a fresh texture
+		/** @ignore */
+		this._frameId = 0;
+		// GPUTextures replaced mid-frame: destroying them immediately would
+		// invalidate draws already recorded against them (submit rejects the
+		// whole command buffer) — they retire at frame end, after submit
+		/** @ignore */
+		this._retiredTextures = [];
+		// the lineWidth value written into the current frame-globals slot —
+		// the primitive batcher compares against THIS (not its own cache)
+		// because clear() rewrites the slot every frame
+		/** @ignore */
+		this._currentFrameLineWidth = 1;
 		/** @ignore */
 		this._frameView = null;
 		/** @ignore */
@@ -348,6 +363,7 @@ export default class WebGPURenderer extends Renderer {
 
 		this.vertexArena.reset();
 		this.uniformRing.reset();
+		this._frameId++;
 		// clear() also resets the stroke line width, like the GL backend
 		this.lineWidth = 1;
 		this._stencilMode = "none";
@@ -361,10 +377,11 @@ export default class WebGPURenderer extends Renderer {
 		});
 
 		// the frame's first frame-globals slot
-		this._currentFrameBinding = this.uniformRing.pushFrameGlobals(
-			this.projectionMatrix,
-			this.lineWidth,
-		);
+		this._pushFrameGlobals();
+
+		// a new frame is a new render pass on the active target — same
+		// per-frame signal the WebGL backend emits from its clear()
+		emit(RENDER_TARGET_CHANGED, this.renderTarget);
 	}
 
 	/**
@@ -419,6 +436,11 @@ export default class WebGPURenderer extends Renderer {
 	_ensurePass() {
 		if (this._pass === null) {
 			this._beginPass();
+			// out-of-bracket draws can predate the first clear() of the
+			// renderer's life — make sure a frame-globals slot exists
+			if (this._currentFrameBinding === null && this.uniformRing !== null) {
+				this._pushFrameGlobals();
+			}
 		}
 		return this._pass;
 	}
@@ -438,6 +460,7 @@ export default class WebGPURenderer extends Renderer {
 			this._encoder = null;
 			this._frameView = null;
 		}
+		this._destroyRetiredTextures();
 	}
 
 	/**
@@ -458,6 +481,23 @@ export default class WebGPURenderer extends Renderer {
 		}
 		this._frameView = null;
 		this._currentPipeline = null;
+		// the recorded draws are dropped with the command buffer, so any
+		// texture retired during the frame can go now
+		this._destroyRetiredTextures();
+	}
+
+	/**
+	 * destroy GPUTextures replaced mid-frame, now that the command buffer
+	 * referencing them has been submitted (or abandoned)
+	 * @ignore
+	 */
+	_destroyRetiredTextures() {
+		if (this._retiredTextures.length > 0) {
+			for (const texture of this._retiredTextures) {
+				texture.destroy();
+			}
+			this._retiredTextures.length = 0;
+		}
 	}
 
 	/**
@@ -470,8 +510,14 @@ export default class WebGPURenderer extends Renderer {
 		}
 		const canvas = this.getCanvas();
 		if (this._scissorActive === true) {
+			// clamp defensively: an out-of-attachment scissor is a WebGPU
+			// validation error that invalidates the whole pass (GL clamps)
 			const s = this.currentScissor;
-			this._pass.setScissorRect(s[0], s[1], s[2], s[3]);
+			const x = Math.min(Math.max(s[0], 0), canvas.width);
+			const y = Math.min(Math.max(s[1], 0), canvas.height);
+			const w = Math.min(Math.max(s[2], 0), canvas.width - x);
+			const h = Math.min(Math.max(s[3], 0), canvas.height - y);
+			this._pass.setScissorRect(x, y, w, h);
 		} else {
 			this._pass.setScissorRect(0, 0, canvas.width, canvas.height);
 		}
@@ -482,6 +528,11 @@ export default class WebGPURenderer extends Renderer {
 	 * triangle clipped by the active scissor, drawn with blending replaced
 	 * (WebGPU has no scissored clear operation). Used mid-frame by
 	 * ColorLayer and Container backgrounds.
+	 *
+	 * Deliberate divergence from the GL backend: because this is a draw,
+	 * it honors an active stencil mask (GL's `gl.clear` ignores stencil and
+	 * clears the whole scissor region) — under a mask, the clear fills the
+	 * mask window only, which is the behavior masks actually promise.
 	 * @param {Color|string} [color="#000000"] - css color
 	 * @param {boolean} [opaque=false] - allow transparency or not
 	 * @override
@@ -786,16 +837,17 @@ export default class WebGPURenderer extends Renderer {
 	setProjection(matrix) {
 		this.currentBatcher?.flush();
 		super.setProjection(matrix);
-		if (this.uniformRing !== null && this._pass !== null) {
-			this._currentFrameBinding = this.uniformRing.pushFrameGlobals(
-				this.projectionMatrix,
-				this.lineWidth,
-			);
+		// a slot is pushed even when no pass is open (slots are plain
+		// buffer writes; the binding is consumed by the next flush) so the
+		// projection is never stale after an explicit mid-frame flush()
+		if (this.uniformRing !== null) {
+			this._pushFrameGlobals();
 		}
 	}
 
 	/**
-	 * push a fresh frame-globals slot after a lineWidth change
+	 * push a fresh frame-globals slot (projection + lineWidth); records the
+	 * lineWidth written so batchers can detect when the slot goes stale
 	 * @ignore
 	 */
 	_pushFrameGlobals() {
@@ -803,6 +855,7 @@ export default class WebGPURenderer extends Renderer {
 			this.projectionMatrix,
 			this.lineWidth,
 		);
+		this._currentFrameLineWidth = this.lineWidth;
 	}
 
 	/**
@@ -1695,9 +1748,12 @@ export default class WebGPURenderer extends Renderer {
 		this._abandonFrame();
 		super.reset();
 		// re-init batchers when recovering from a device loss, plain reset
-		// otherwise — the same split as the WebGL restore path
+		// otherwise — the same split as the WebGL restore path. A reset
+		// landing INSIDE the device renegotiation window (device gone,
+		// replacement not granted yet) can only reset: init needs a device,
+		// and _restoreDevice re-inits every batcher once one exists
 		for (const batcher of this.batchers.values()) {
-			if (this.isContextValid === false) {
+			if (this.isContextValid === false && typeof this.device !== "undefined") {
 				batcher.init(this);
 			} else {
 				batcher.reset();
