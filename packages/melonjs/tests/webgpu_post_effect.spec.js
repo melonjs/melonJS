@@ -207,6 +207,117 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		expect([quadWrite.floats[17], quadWrite.floats[18]]).toEqual([0, 1]);
 	});
 
+	it("fast path: adopting customShader drains the pending batch, then draws per quad", async () => {
+		const { default: WebGPUQuadBatcherClass } = await import(
+			"../src/video/webgpu/batchers/quad_batcher.js"
+		);
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUQuadBatcherClass(renderer);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const effect = new ShaderEffect({ shaderLanguage: "wgsl" }, { wgsl: BODY });
+		warn.mockRestore();
+		const atlas = {
+			getTexture() {
+				return { width: 64, height: 32 };
+			},
+		};
+
+		// two plain quads batch together...
+		batcher.addQuad(atlas, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlas, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([]);
+
+		// ...the effect sprite adopts: pending batch drains under the DEFAULT
+		// pipeline, then the effect quad draws alone under the effect family
+		renderer.customShader = effect;
+		effect.setUniform("uStrength", 0.5);
+		batcher.addQuad(atlas, 16, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([12, 6]);
+		expect(renderer.calls.pipelineKeys[0]).toContain("quad|");
+		// blending KEPT — live compositing is the fast path's semantic
+		expect(renderer.calls.pipelineKeys[1]).toBe(
+			"effect:0|triangle-list|normal|true|none",
+		);
+
+		// a second effect sprite is its own draw with its own snapshot
+		effect.setUniform("uStrength", 0.9);
+		batcher.addQuad(atlas, 24, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([12, 6, 6]);
+		const snapshots = renderer.calls.writes.filter((write) => {
+			return write.size === 16;
+		});
+		expect(snapshots.map((write) => write.floats[0])).toEqual([
+			0.5,
+			expect.closeTo(0.9),
+		]);
+
+		// clearing customShader returns to plain batching
+		renderer.customShader = undefined;
+		batcher.addQuad(atlas, 32, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.flush();
+		expect(renderer.calls.pipelineKeys.at(-1)).toContain("quad|");
+	});
+
+	it("fast path: screen_texture effects capture the backdrop before each sprite", async () => {
+		const { default: WebGPUQuadBatcherClass } = await import(
+			"../src/video/webgpu/batchers/quad_batcher.js"
+		);
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUQuadBatcherClass(renderer);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const effect = new ShaderEffect(
+			{ shaderLanguage: "wgsl" },
+			{
+				wgsl: `
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return textureSample(screen_texture, screen_sampler, screen_uv);
+}
+`,
+			},
+		);
+		warn.mockRestore();
+		const atlas = {
+			getTexture() {
+				return { width: 8, height: 8 };
+			},
+		};
+
+		renderer.customShader = effect;
+		batcher.addQuad(atlas, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlas, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		// one capture per sprite, each BEFORE its draw
+		expect(renderer.calls.captureFrames).toBe(2);
+		expect(renderer.calls.drawIndexed).toEqual([6, 6]);
+	});
+
+	it("fast path: noise_uv effects get the sprite's frame rect per draw", async () => {
+		const { default: WebGPUQuadBatcherClass } = await import(
+			"../src/video/webgpu/batchers/quad_batcher.js"
+		);
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUQuadBatcherClass(renderer);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const effect = new ShaderEffect(
+			{ shaderLanguage: "wgsl" },
+			{
+				wgsl: "fn apply(color : vec4f, uv : vec2f) -> vec4f { return vec4f(noise_uv, 0.0, color.a); }",
+			},
+		);
+		warn.mockRestore();
+		const atlas = {
+			getTexture() {
+				return { width: 256, height: 128 };
+			},
+		};
+
+		renderer.customShader = effect;
+		batcher.addQuad(atlas, 0, 0, 64, 32, 0.5, 0.25, 0.75, 0.5, 0xffffffff);
+		// ME mirror carries [obj w, obj h, img w, img h, offset x, offset y]
+		expect([...effect.wgslRealization.meMirror.slice(0, 6)]).toEqual([
+			64, 32, 256, 128, 128, 32,
+		]);
+	});
+
 	it("an effect without a WGSL realization composites as a plain blit", async () => {
 		const { default: WebGPUQuadBatcherClass } = await import(
 			"../src/video/webgpu/batchers/quad_batcher.js"

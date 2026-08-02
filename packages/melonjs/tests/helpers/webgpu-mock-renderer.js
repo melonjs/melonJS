@@ -21,6 +21,7 @@ export function createMockWebGPURenderer() {
 		// every setBindGroup: {index, group, dynamicOffsets}
 		bindGroups: [],
 		pushFrameGlobals: 0,
+		captureFrames: 0,
 	};
 
 	const pass = {
@@ -147,6 +148,15 @@ export function createMockWebGPURenderer() {
 			},
 		},
 		captureTexture: undefined,
+		customShader: undefined,
+		captureFrame() {
+			calls.captureFrames++;
+			this.captureTexture = {
+				view: { capture: calls.captureFrames },
+				generation: calls.captureFrames,
+			};
+			return this.captureTexture;
+		},
 		stubView: { stub: true },
 		getStubTextureView() {
 			return this.stubView;

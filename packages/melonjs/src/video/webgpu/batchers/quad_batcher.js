@@ -72,6 +72,12 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// the material bind group the pending vertices were queued under
 		this.currentMaterial = null;
 
+		// the ShaderEffect the pending vertices were queued under — the
+		// single-effect fast path (renderer.customShader): the sprite's own
+		// quad draws through the effect's pipeline, composited live against
+		// the backdrop (no offscreen target)
+		this.currentEffect = null;
+
 		// static index buffer: 6 indices per 4 vertices, filled once by the
 		// renderer-agnostic CPU pattern and uploaded at creation
 		const maxQuads = this.vertexData.maxVertex / 4;
@@ -106,19 +112,52 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 */
 	addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
 		const vertexData = this.vertexData;
+		const renderer = this.renderer;
 
 		if (vertexData.isFull(4)) {
 			this.flush();
 		}
 
+		// single-effect fast path: adopt the active customShader, draining
+		// vertices queued under the previous state first (they must flush
+		// under THEIR pipeline, not the incoming one)
+		const effect = renderer.customShader ?? null;
+		if (effect !== this.currentEffect) {
+			this.flush();
+			this.currentEffect = effect;
+		}
+
+		if (effect !== null) {
+			// `screen_texture`: refresh the shared capture with everything
+			// drawn so far BEFORE this sprite's own quad, so the effect
+			// samples the scene behind it (a pass break + encoder copy)
+			if (effect._screenTextureUniforms?.length > 0) {
+				renderer.captureFrame();
+			}
+		}
+
 		// single-texture batching: adopt the quad's material, flushing the
 		// vertices queued under the previous one
-		const bindGroup = this.renderer.textureStore.getBinding(texture, {
+		const bindGroup = renderer.textureStore.getBinding(texture, {
 			force: reupload,
 		});
 		if (bindGroup !== this.currentMaterial) {
 			this.flush();
 			this.currentMaterial = bindGroup;
+		}
+
+		if (effect !== null) {
+			// feed the effect's `noise_uv` builtin with this quad's frame
+			// rect — min() normalizes flipped (swapped) UVs
+			const source = texture.getTexture();
+			effect._setNoiseUVRect?.(
+				source.width || source.videoWidth || 1,
+				source.height || source.videoHeight || 1,
+				w,
+				h,
+				Math.min(u0, u1),
+				Math.min(v0, v1),
+			);
 		}
 
 		// Transform vertices. Stamp per-sprite depth onto z BEFORE
@@ -146,6 +185,13 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, 0);
 		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, 0);
 		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, 0);
+
+		if (effect !== null) {
+			// per-quad draw under the fast path: each sprite needs its own
+			// capture state, noise rect and uniform snapshot (draw-time
+			// setUniform mutation included)
+			this.flush();
+		}
 	}
 
 	/**
@@ -240,7 +286,72 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			this.vertexData.clear();
 			return;
 		}
+		const effect = this.currentEffect;
+		if (effect !== null && this.vertexData.vertexCount > 0) {
+			// fast-path draw: same recording as the base flush, through the
+			// effect's pipeline family with its group-3 binding. An effect
+			// without a WGSL realization draws plain (graceful, GL-parity
+			// with a disabled effect).
+			const binding = prepareEffectBinding(this.renderer, effect);
+			if (binding !== null) {
+				this.flushWithEffect(binding);
+				return;
+			}
+		}
 		super.flush(topology);
+	}
+
+	/**
+	 * record the pending vertices through an effect's pipeline — blending
+	 * KEPT (the sprite composites live against the backdrop, the defining
+	 * semantic of the fast path vs the pooled blit)
+	 * @param {object} binding - the prepared effect binding
+	 * @ignore
+	 */
+	flushWithEffect(binding) {
+		const renderer = this.renderer;
+		const vertexData = this.vertexData;
+		const vertexCount = vertexData.vertexCount;
+		const pass = renderer.ensurePass();
+		const byteLength = vertexCount * this.stride;
+
+		const region = renderer.vertexArena.alloc(byteLength);
+		this.device.queue.writeBuffer(
+			region.buffer,
+			region.offset,
+			vertexData.toUint8(),
+			0,
+			byteLength,
+		);
+
+		const pipeline = renderer.pipelineCache.get(
+			binding.key,
+			"triangle-list",
+			renderer.currentBlendMode,
+			renderer.premultipliedAlpha,
+			renderer.stencilMode,
+		);
+		if (pipeline !== renderer.currentPipeline) {
+			pass.setPipeline(pipeline);
+			renderer.currentPipeline = pipeline;
+		}
+		const frame = renderer.currentFrameBinding;
+		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
+		if (binding.hasEffectGroup) {
+			pass.setBindGroup(2, renderer.pipelineCache.emptyBindGroup);
+			pass.setBindGroup(3, binding.bindGroup, binding.dynamicOffsets);
+		}
+		pass.setVertexBuffer(0, region.buffer, region.offset, byteLength);
+		this.recordDraw(pass, vertexCount);
+		vertexData.clear();
+	}
+
+	/**
+	 * @override
+	 */
+	reset() {
+		super.reset();
+		this.currentEffect = null;
 	}
 
 	/**
