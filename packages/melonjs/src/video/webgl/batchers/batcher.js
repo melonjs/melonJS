@@ -1,4 +1,5 @@
 import VertexArrayBuffer from "../../buffer/vertex.js";
+import { Batcher, DEFAULT_MAX_VERTICES } from "../../gpu/batcher.js";
 import { resolveVertexFormat } from "../../gpu/vertexformat.ts";
 import WebGLIndexBuffer from "../buffer/index.js";
 import WebGLVertexState from "../buffer/vertexstate.js";
@@ -15,21 +16,14 @@ import { formatFromGL, glTypeForFormat } from "../utils/vertexformat.js";
  */
 
 /**
- * Default maximum number of vertices per batch.
- * At 4096 vertices (1024 quads), the vertex buffer is ~80 KB (5 floats × 4 bytes × 4096),
- * which balances draw call reduction with safe buffer upload sizes on mobile tile-based GPUs.
- * Within the Uint16 index limit (65,535) — a deliberate capacity choice
- * (smaller index uploads), not an API constraint.
- * @ignore
- */
-const DEFAULT_MAX_VERTICES = 4096;
-
-/**
- * A base WebGL Batcher object that manages shader programs, vertex attribute
- * definitions, and vertex buffer batching for efficient GPU draw calls.
+ * The base WebGL Batcher — manages shader programs, vertex attribute
+ * definitions, and vertex buffer batching for efficient GPU draw calls,
+ * realizing the backend-neutral {@link Batcher} lifecycle on GL state.
+ * Custom WebGL batchers extend this class.
+ * @augments Batcher
  * @category Rendering
  */
-export class Batcher {
+export class WebGLBatcher extends Batcher {
 	/**
 	 * Canonical topology; `#mode` is derived from it so the two cannot
 	 * disagree.
@@ -47,6 +41,16 @@ export class Batcher {
 
 	/**
 	 * @param {WebGLRenderer} renderer - the current WebGL renderer session
+	 * @param {object} settings - additional settings to initialize this batcher (see {@link WebGLBatcher#init})
+	 */
+	constructor(renderer, settings) {
+		super();
+		this.init(renderer, settings);
+	}
+
+	/**
+	 * Initialize the batcher (called by the constructor)
+	 * @param {WebGLRenderer} renderer - the current WebGL renderer session
 	 * @param {object} settings - additional settings to initialize this batcher
 	 * @param {object[]} settings.attributes - an array of attributes definition
 	 * @param {string} settings.attributes.name - name of the attribute in the vertex shader
@@ -60,14 +64,6 @@ export class Batcher {
 	 * @param {number} [settings.maxVertices=4096] - the maximum number of vertices this batcher can hold
 	 * @param {boolean} [settings.indexed=false] - whether this batcher uses an index buffer for indexed drawing (drawElements)
 	 * @param {string} [settings.projectionUniform="uProjectionMatrix"] - the name of the projection matrix uniform in the shader
-	 */
-	constructor(renderer, settings) {
-		this.init(renderer, settings);
-	}
-
-	/**
-	 * Initialize the batcher
-	 * @ignore
 	 */
 	init(renderer, settings) {
 		// the associated renderer
@@ -104,7 +100,7 @@ export class Batcher {
 
 		/**
 		 * an array of vertex attribute properties
-		 * @see Batcher.addAttribute
+		 * @see WebGLBatcher.addAttribute
 		 * @type {Array.<Object>}
 		 */
 		this.attributes = [];
@@ -112,7 +108,7 @@ export class Batcher {
 		/**
 		 * the stride of a single vertex in bytes
 		 * (will automatically be calculated as attributes definitions are added)
-		 * @see Batcher.addAttribute
+		 * @see WebGLBatcher.addAttribute
 		 * @type {number}
 		 */
 		this.stride = 0;
@@ -120,7 +116,7 @@ export class Batcher {
 		/**
 		 * the size of a single vertex in floats
 		 * (will automatically be calculated as attributes definitions are added)
-		 * @see Batcher.addAttribute
+		 * @see WebGLBatcher.addAttribute
 		 * @type {number}
 		 */
 		this.vertexSize = 0;
@@ -149,7 +145,7 @@ export class Batcher {
 			// reachable now that sub-4-byte formats can be spelled.
 			if (this.stride % Float32Array.BYTES_PER_ELEMENT !== 0) {
 				throw new Error(
-					`Batcher: vertex stride must be a multiple of ${Float32Array.BYTES_PER_ELEMENT} bytes, got ${this.stride}. ` +
+					`WebGLBatcher: vertex stride must be a multiple of ${Float32Array.BYTES_PER_ELEMENT} bytes, got ${this.stride}. ` +
 						"Pad the layout (a 3-component byte attribute usually wants 4 components).",
 				);
 			}
@@ -433,7 +429,7 @@ export class Batcher {
 	 * Assignable from either vocabulary — `batcher.mode = "line-list"` and
 	 * `batcher.mode = gl.LINES` are equivalent — but always reads back as the
 	 * GL enum, so existing comparisons keep working. Read
-	 * {@link Batcher#topology} for the portable name.
+	 * {@link WebGLBatcher#topology} for the portable name.
 	 * @type {number}
 	 * @default gl.TRIANGLES
 	 */
@@ -497,7 +493,7 @@ export class Batcher {
 			// immutable afterwards, exactly like a vertex layout in a
 			// compiled render pipeline
 			throw new Error(
-				"Batcher.addAttribute: the vertex buffer layout is frozen once the vertex state is built (add attributes before/without calling init)",
+				"WebGLBatcher.addAttribute: the vertex buffer layout is frozen once the vertex state is built (add attributes before/without calling init)",
 			);
 		}
 
@@ -540,14 +536,14 @@ export class Batcher {
 			// `offset` and silently place the attribute at byte 0.
 			if (argCount > 3) {
 				throw new Error(
-					`Batcher.addAttribute("${name}", "${size}", …): the format form takes ` +
+					`WebGLBatcher.addAttribute("${name}", "${size}", …): the format form takes ` +
 						`(name, format, offset) — got ${argCount} arguments. ` +
 						"Drop the size/normalized arguments; the format implies them.",
 				);
 			}
 			if (type !== undefined && typeof type !== "number") {
 				throw new Error(
-					`Batcher.addAttribute("${name}", "${size}", …): offset must be a number, got ${typeof type}`,
+					`WebGLBatcher.addAttribute("${name}", "${size}", …): offset must be a number, got ${typeof type}`,
 				);
 			}
 			return { name, format: size, offset: type };
@@ -579,7 +575,7 @@ export class Batcher {
 				descriptor.size !== info.components
 			) {
 				throw new Error(
-					`Batcher.addAttribute("${name}"): format "${descriptor.format}" has ` +
+					`WebGLBatcher.addAttribute("${name}"): format "${descriptor.format}" has ` +
 						`${info.components} components but size ${descriptor.size} was given`,
 				);
 			}
@@ -588,7 +584,7 @@ export class Batcher {
 				descriptor.normalized !== info.normalized
 			) {
 				throw new Error(
-					`Batcher.addAttribute("${name}"): format "${descriptor.format}" is ` +
+					`WebGLBatcher.addAttribute("${name}"): format "${descriptor.format}" is ` +
 						`${info.normalized ? "" : "not "}normalized but normalized=${descriptor.normalized} was given`,
 				);
 			}
@@ -751,4 +747,4 @@ export class Batcher {
 	}
 }
 
-export default Batcher;
+export default WebGLBatcher;

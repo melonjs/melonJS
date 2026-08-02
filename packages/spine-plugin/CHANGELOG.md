@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.0 - _unreleased_
+
+### Changed
+
+- **requires melonJS 20.0.0** (peer range now `>=20.0.0`) — `SpineBatcher` extends the renamed `WebGLBatcher` base class (melonJS 20 turned `Batcher` into the backend-neutral base shared with the WebGPU renderer)
+
 ## 3.1.0 - _2026-06-14_
 
 ### Added

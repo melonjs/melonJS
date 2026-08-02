@@ -2,7 +2,7 @@ import { game } from "../application/application.ts";
 import { hasFullscreenSupport, isFullscreen } from "../system/fullscreen.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
-import { Batcher } from "../video/webgl/batchers/batcher.js";
+import { WebGLBatcher } from "../video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "../video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "../video/webgl/batchers/quad_batcher.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
@@ -60,12 +60,12 @@ WebGLRenderer.prototype.setLineWidth = function (width) {
 
 /**
  * @deprecated since 18.1.0
- * @see Batcher
+ * @see WebGLBatcher
  */
-export class Compositor extends Batcher {
+export class Compositor extends WebGLBatcher {
 	/** @param {any[]} args */
 	constructor(...args) {
-		warning("Compositor", "Batcher", "18.1.0");
+		warning("Compositor", "WebGLBatcher", "18.1.0");
 		super(...args);
 	}
 }

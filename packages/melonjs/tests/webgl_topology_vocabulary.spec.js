@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { Batcher } from "../src/index.js";
+import { WebGLBatcher } from "../src/index.js";
 import Renderer from "../src/video/renderer.js";
 import { resolveTopology } from "../src/video/webgl/utils/topology.js";
 import {
@@ -44,7 +44,7 @@ describe("Batcher topology vocabulary (issue #1551)", () => {
 	 * @returns {Batcher} the batcher
 	 */
 	const build = () => {
-		return new Batcher(renderer, {
+		return new WebGLBatcher(renderer, {
 			attributes: [{ name: "aVertex", format: "float32x3", offset: 0 }],
 			shader: SHADER,
 		});

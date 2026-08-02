@@ -1,7 +1,7 @@
 import primitiveFragment from "./../shaders/primitive.frag";
 import primitiveVertex from "./../shaders/primitive.vert";
 import { resolveTopology } from "../utils/topology.js";
-import { Batcher } from "./batcher.js";
+import { WebGLBatcher } from "./batcher.js";
 
 /**
  * additional import for TypeScript
@@ -13,7 +13,7 @@ import { Batcher } from "./batcher.js";
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @category Rendering
  */
-export default class PrimitiveBatcher extends Batcher {
+export default class PrimitiveBatcher extends WebGLBatcher {
 	/**
 	 * Initialize the compositor
 	 * @ignore

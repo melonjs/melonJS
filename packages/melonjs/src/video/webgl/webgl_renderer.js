@@ -22,6 +22,7 @@ import {
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
+import { WebGLBatcher } from "./batchers/batcher.js";
 import LitMeshBatcher from "./batchers/lit_mesh_batcher";
 import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
@@ -41,7 +42,6 @@ import { getMaxShaderPrecision } from "./utils/precision.js";
  * @import {Ellipse} from "./../../geometries/ellipse.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
- * @import {Batcher} from "./batchers/batcher.js";
  * @import {default as Texture2d} from "../texture/texture2d.ts";
  */
 
@@ -192,7 +192,7 @@ export default class WebGLRenderer extends Renderer {
 
 		/**
 		 * The current batcher used by the renderer
-		 * @type {Batcher}
+		 * @type {WebGLBatcher}
 		 */
 		this.currentBatcher = undefined;
 
@@ -214,7 +214,7 @@ export default class WebGLRenderer extends Renderer {
 
 		/**
 		 * The list of active batchers
-		 * @type {Map<Batcher>}
+		 * @type {Map<WebGLBatcher>}
 		 */
 		this.batchers = new Map();
 
@@ -593,11 +593,19 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * add a new batcher to this renderer
-	 * @param {Batcher} batcher - a batcher instance
+	 * @param {WebGLBatcher} batcher - a batcher instance (must extend WebGLBatcher)
 	 * @param {string} name - a name uniquely identifying this batcher
 	 * @param {boolean} [activate=false] - true if the given batcher should be set as the active one
 	 */
 	addBatcher(batcher, name = "default", activate = false) {
+		// gate on the BACKEND base, not the neutral one: a neutral or
+		// WebGPU batcher has none of the GL machinery (defaultShader,
+		// setProjection, …) and would fail mid-activation instead
+		if (!(batcher instanceof WebGLBatcher)) {
+			throw new Error(
+				"addBatcher: batcher must be a WebGLBatcher subclass (custom WebGL batchers extend WebGLBatcher)",
+			);
+		}
 		if (typeof this.batchers.get(name) !== "undefined") {
 			throw new Error("Invalid Batcher name");
 		}
@@ -613,7 +621,7 @@ export default class WebGLRenderer extends Renderer {
 	 * set the active batcher for this renderer
 	 * @param {string} name - a batcher name
 	 * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the batcher
-	 * @returns {Batcher} an instance to the current active batcher
+	 * @returns {WebGLBatcher} an instance to the current active batcher
 	 */
 	setBatcher(name = "default", shader) {
 		const batcher = this.batchers.get(name);
@@ -1062,7 +1070,7 @@ export default class WebGLRenderer extends Renderer {
 	 * assume its normal map is still resident there and skip re-binding it,
 	 * sampling the directly-bound texture as a normal map (wrong lighting).
 	 * @param {number} unit - the GL texture unit that was clobbered
-	 * @param {Batcher} [except] - a batcher to skip (the one that just bound the
+	 * @param {WebGLBatcher} [except] - a batcher to skip (the one that just bound the
 	 *   texture — its own cache is already accurate)
 	 * @ignore
 	 */

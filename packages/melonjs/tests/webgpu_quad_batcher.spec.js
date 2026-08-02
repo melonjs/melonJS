@@ -1,0 +1,101 @@
+import "./helpers/webgpu-globals.js";
+import { beforeEach, describe, expect, it } from "vitest";
+import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
+import WebGPUBatcher from "../src/video/webgpu/batchers/webgpu_batcher.js";
+import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
+
+/**
+ * Unit tests for the WebGPU quad batcher (and the base batcher's guard
+ * rails) against the mock renderer: the frozen 28-byte vertex layout,
+ * the CPU corner transform, single-texture material adoption, and the
+ * 6-indices-per-4-vertices draw.
+ */
+describe("WebGPUQuadBatcher", () => {
+	let renderer;
+	let batcher;
+	const atlasA = { name: "A" };
+	const atlasB = { name: "B" };
+
+	beforeEach(() => {
+		renderer = createMockWebGPURenderer();
+		batcher = new WebGPUQuadBatcher(renderer);
+	});
+
+	it("a first init without settings fails loudly (WebGL-base parity)", () => {
+		expect(() => {
+			return new WebGPUBatcher(renderer);
+		}).toThrow(/attributes definition missing/);
+	});
+
+	it("addQuad writes the frozen 28-byte layout: corners, UVs, packed tint, z", () => {
+		renderer.currentDepth = 2;
+		batcher.addQuad(atlasA, 10, 20, 30, 40, 0.1, 0.2, 0.3, 0.4, 0xffaabbcc);
+		batcher.flush();
+
+		expect(renderer.calls.drawIndexed).toEqual([6]);
+		const { size, floats, view } = renderer.calls.writes[0];
+		expect(size).toBe(4 * 28);
+
+		// corner order: (x,y) (x+w,y) (x,y+h) (x+w,y+h); stride = 7 floats
+		expect([floats[0], floats[1]]).toEqual([10, 20]);
+		expect([floats[7], floats[8]]).toEqual([40, 20]);
+		expect([floats[14], floats[15]]).toEqual([10, 60]);
+		expect([floats[21], floats[22]]).toEqual([40, 60]);
+		// per-sprite depth stamped on z (identity transform passes it through)
+		expect(floats[2]).toBe(2);
+		// per-corner UV mapping
+		expect([floats[3], floats[4]]).toEqual([
+			expect.closeTo(0.1),
+			expect.closeTo(0.2),
+		]);
+		expect([floats[10], floats[11]]).toEqual([
+			expect.closeTo(0.3),
+			expect.closeTo(0.2),
+		]);
+		// packed ARGB tint rides as a uint32 at byte 20
+		expect(view.getUint32(20, true)).toBe(0xffaabbcc);
+		// aTextureId is 0 under single-texture batching
+		expect(floats[6]).toBe(0);
+	});
+
+	it("the current transform is applied to all four corners", () => {
+		renderer.currentTransform.translate(100, 1000);
+		batcher.addQuad(atlasA, 10, 20, 30, 40, 0, 0, 1, 1, 0xffffffff);
+		batcher.flush();
+
+		const floats = renderer.calls.writes[0].floats;
+		expect([floats[0], floats[1]]).toEqual([110, 1020]);
+		expect([floats[21], floats[22]]).toEqual([140, 1060]);
+	});
+
+	it("a texture change flushes the quads queued under the previous material", () => {
+		batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlasA, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([]);
+
+		batcher.addQuad(atlasB, 0, 8, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		// the two atlas-A quads drained under A's bind group
+		expect(renderer.calls.drawIndexed).toEqual([12]);
+		expect(renderer.calls.materialBinds).toHaveLength(1);
+		expect(renderer.calls.materialBinds[0].texture).toBe(atlasA);
+
+		batcher.flush();
+		expect(renderer.calls.drawIndexed).toEqual([12, 6]);
+		expect(renderer.calls.materialBinds[1].texture).toBe(atlasB);
+	});
+
+	it("a flush with no material ever adopted records nothing", () => {
+		expect(() => {
+			batcher.flush();
+		}).not.toThrow();
+		expect(renderer.calls.drawIndexed).toEqual([]);
+		expect(renderer.calls.writes).toEqual([]);
+	});
+
+	it("reset drops pending vertices without recording a draw", () => {
+		batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.reset();
+		batcher.flush();
+		expect(renderer.calls.drawIndexed).toEqual([]);
+	});
+});

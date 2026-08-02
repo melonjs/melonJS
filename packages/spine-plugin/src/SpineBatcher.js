@@ -1,5 +1,5 @@
 import { Shader } from "@esotericsoftware/spine-webgl";
-import { Batcher } from "melonjs";
+import { WebGLBatcher } from "melonjs";
 import { getManagedContext } from "./glContext.js";
 
 /**
@@ -15,10 +15,10 @@ const VERTEX_SIZE = 12;
 
 /**
  * A custom melonJS Batcher for rendering Spine skeletons with two-color tinting.
- * Uses Spine's official two-color shader and the base Batcher's indexed drawing support.
+ * Uses Spine's official two-color shader and the base WebGLBatcher's indexed drawing support.
  * @category Rendering
  */
-export default class SpineBatcher extends Batcher {
+export default class SpineBatcher extends WebGLBatcher {
 	/**
 	 * Initialize (or re-initialize) the batcher.
 	 * Settings are built here rather than in the constructor so the

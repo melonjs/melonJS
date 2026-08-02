@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Batcher } from "../src/index.js";
+import { WebGLBatcher } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -47,7 +47,7 @@ describe("Batcher attribute vocabulary (issue #1551)", () => {
 	 * @returns {Batcher} the constructed batcher
 	 */
 	const build = (attributes) => {
-		return new Batcher(renderer, { attributes, shader: SHADER });
+		return new WebGLBatcher(renderer, { attributes, shader: SHADER });
 	};
 
 	/**

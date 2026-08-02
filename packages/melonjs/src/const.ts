@@ -45,14 +45,15 @@ export const WEBGL = 1;
 export const AUTO = 2;
 
 /**
- * Require the **experimental** WebGPU renderer. What exists today is the
- * asynchronous bootstrap — adapter/device negotiation and canvas
- * configuration in `await app.init()` — plus a real per-frame clear pass;
- * every other drawing method is still a no-op, so the application boots,
- * runs its loop and clears to its background color, and renders nothing
- * else. `app.init()` rejects when WebGPU is unavailable in the
- * environment; like {@link WEBGL} it fails loudly rather than falling
- * back, so a missing capability surfaces at startup.
+ * Require the **experimental** WebGPU renderer. It covers the full
+ * non-post-effect 2D contract: sprites, text and particles (the quad
+ * pipeline), filled/stroked shapes and Path2D (the primitive pipeline),
+ * blend modes, clipping and stencil masks. Not yet implemented: post
+ * effects / ShaderEffect (WGSL story pending), lights, meshes/Camera3d,
+ * and GPU tile layers — scenes relying on those need {@link WEBGL}.
+ * `app.init()` rejects when WebGPU is unavailable in the environment;
+ * like {@link WEBGL} it fails loudly rather than falling back, so a
+ * missing capability surfaces at startup.
  *
  * Deliberately excluded from {@link AUTO}: until the WebGPU backend reaches
  * feature parity with WebGL it is opt-in only, so no existing game can be

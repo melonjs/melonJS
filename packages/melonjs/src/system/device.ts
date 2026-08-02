@@ -292,7 +292,6 @@ export let alpha = 0;
  * user code.
  * @default true
  */
-// eslint-disable-next-line prefer-const -- public mutable flag, reassigned by `setAutoFocus()` below
 export let autoFocus = true;
 
 /**

@@ -12,7 +12,7 @@ import type Camera2d from "../camera/camera2d";
 import { RendererType } from "../const";
 import { PhysicsAdapter } from "../physics/adapter";
 import Renderer from "../video/renderer";
-import { Batcher } from "../video/webgl/batchers/batcher";
+import { WebGLBatcher } from "../video/webgl/batchers/batcher.js";
 import { ScaleMethod } from "./scaleMethods";
 
 type BlendMode = "normal" | "multiply" | "lighter" | "additive" | "screen";
@@ -235,12 +235,12 @@ export type ApplicationSettings = {
 	 * a custom batcher class (WebGL only)
 	 * @deprecated since 18.1.0 — use `batcher` instead
 	 */
-	compositor?: (new (renderer: any) => Batcher) | undefined;
+	compositor?: (new (renderer: any) => WebGLBatcher) | undefined;
 
 	/**
 	 * a custom batcher class (WebGL only)
 	 */
-	batcher?: (new (renderer: any) => Batcher) | undefined;
+	batcher?: (new (renderer: any) => WebGLBatcher) | undefined;
 
 	/**
 	 * Default camera class instantiated for any {@link Stage} that does not
