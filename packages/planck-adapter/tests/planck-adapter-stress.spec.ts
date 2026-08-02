@@ -14,7 +14,7 @@
  *  - planck bodies left in the world after the adapter loses track
  */
 
-import { boot, Rect, Renderable, video, World } from "melonjs";
+import { Application, boot, Rect, Renderable, video, World } from "melonjs";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PlanckAdapter } from "../src/index";
 
@@ -54,13 +54,14 @@ describe("PlanckAdapter — lifecycle leak stress", () => {
 	let world: World;
 	let adapter: PlanckAdapter;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {

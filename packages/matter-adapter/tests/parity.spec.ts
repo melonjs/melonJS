@@ -13,6 +13,7 @@
  */
 
 import {
+	Application,
 	Bounds,
 	BuiltinAdapter,
 	boot,
@@ -93,13 +94,14 @@ const factories: AdapterFactory[] = [
 	},
 ];
 
-beforeAll(() => {
+beforeAll(async () => {
 	boot();
-	video.init(800, 600, {
+	const app = new Application(800, 600, {
 		parent: "screen",
 		scale: "auto",
 		renderer: video.CANVAS,
 	});
+	await app.init();
 });
 
 for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
