@@ -1,0 +1,203 @@
+import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../system/event.ts";
+
+/**
+ * Renderer-owned GPU texture store for the WebGPU backend — the counterpart
+ * of `MaterialBatcher`'s createTexture2D/bindTexture2D/deleteTexture2D tier,
+ * kept on the renderer (rather than a batcher) so the quad path and the
+ * future mesh / tile-layer paths share one resident-texture map.
+ *
+ * The engine-side bookkeeping is untouched: `TextureCache` still allocates
+ * the logical "unit" for each `(source, repeat)` pair; here a unit keys a
+ * `{GPUTexture, view, bind groups}` record instead of a GL texture binding.
+ * Bind groups pair the texture view with a cached `GPUSampler` — one bind
+ * group per (texture, sampler) combination, invalidated wholesale when the
+ * filter setting changes (textures stay resident; only the pairing is
+ * rebuilt — the WebGPU analogue of `_reapplyTextureFilter`, without the
+ * re-parameterization).
+ * @ignore
+ */
+export default class WebGPUTextureStore {
+	/**
+	 * @param {import("./webgpu_renderer.js").default} renderer - the owning renderer
+	 */
+	constructor(renderer) {
+		this.renderer = renderer;
+		this.device = renderer.device;
+		/** @type {Map<number, {texture: GPUTexture, view: GPUTextureView, width: number, height: number, bindGroupBySampler: Map<string, GPUBindGroup>}>} */
+		this.records = new Map();
+		/** @type {Map<string, GPUSampler>} */
+		this.samplers = new Map();
+
+		// drop every unit → texture association when the cache resets
+		// (unit numbers get reassigned; resident GPU textures would map to
+		// the wrong sources). Mirrors MaterialBatcher._onTextureCacheReset.
+		this._onCacheReset = () => {
+			this.releaseAll();
+		};
+		on(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
+	}
+
+	/**
+	 * resolve (creating on first use) the sampler for a filter/wrap combo
+	 * @param {string} filter - "nearest" | "linear"
+	 * @param {string} repeat - engine wrap mode string
+	 * @returns {GPUSampler} the sampler
+	 * @ignore
+	 */
+	getSampler(filter, repeat) {
+		// same per-axis mapping as MaterialBatcher.createTexture2D
+		const addressModeU = /^repeat(-x)?$/.test(repeat)
+			? "repeat"
+			: "clamp-to-edge";
+		const addressModeV = /^repeat(-y)?$/.test(repeat)
+			? "repeat"
+			: "clamp-to-edge";
+		const key = `${filter}|${addressModeU}|${addressModeV}`;
+		let sampler = this.samplers.get(key);
+		if (typeof sampler === "undefined") {
+			sampler = this.device.createSampler({
+				label: `melonJS sampler ${key}`,
+				magFilter: filter,
+				minFilter: filter,
+				addressModeU,
+				addressModeV,
+			});
+			this.samplers.set(key, sampler);
+		}
+		return sampler;
+	}
+
+	/**
+	 * The per-draw entry point: resolve the atlas to a bind group pairing
+	 * its resident GPU texture with the currently-applicable sampler,
+	 * uploading the source on first use (or re-uploading when forced — the
+	 * video-frame path).
+	 * @param {object} texture - a TextureAtlas
+	 * @param {object} [options] - resolution options
+	 * @param {boolean} [options.force=false] - re-upload the source pixels
+	 * @param {string} [options.repeat] - per-use wrap override (else texture.repeat)
+	 * @returns {GPUBindGroup} the material bind group for this draw
+	 */
+	getBinding(texture, options = {}) {
+		const wrap =
+			typeof options.repeat === "string"
+				? options.repeat
+				: (texture.repeat ?? "no-repeat");
+		const unit = this.renderer.cache.getUnit(texture, wrap);
+		let record = this.records.get(unit);
+
+		if (typeof record === "undefined" || options.force === true) {
+			const source = texture.getTexture();
+			// prefer real pixel dimensions; HTMLVideoElement exposes them
+			// through videoWidth/videoHeight (width/height default to 0)
+			const width = source.width || source.videoWidth || 1;
+			const height = source.height || source.videoHeight || 1;
+
+			if (
+				typeof record === "undefined" ||
+				record.width !== width ||
+				record.height !== height
+			) {
+				// (re)create at the source size; a forced same-size upload
+				// (video frames) reuses the resident texture and its views
+				record?.texture.destroy();
+				const gpuTexture = this.device.createTexture({
+					label: "melonJS texture",
+					size: [width, height],
+					format: "rgba8unorm",
+					// RENDER_ATTACHMENT is required by copyExternalImageToTexture
+					usage:
+						GPUTextureUsage.TEXTURE_BINDING |
+						GPUTextureUsage.COPY_DST |
+						GPUTextureUsage.RENDER_ATTACHMENT,
+				});
+				record = {
+					texture: gpuTexture,
+					view: gpuTexture.createView(),
+					width,
+					height,
+					bindGroupBySampler: new Map(),
+				};
+				this.records.set(unit, record);
+			}
+
+			// same premultiplication convention as the GL path's
+			// UNPACK_PREMULTIPLY_ALPHA_WEBGL default; no flipY (both APIs
+			// store row 0 = image top)
+			this.device.queue.copyExternalImageToTexture(
+				{ source },
+				{
+					texture: record.texture,
+					premultipliedAlpha: texture.premultipliedAlpha !== false,
+				},
+				[record.width, record.height],
+			);
+		}
+
+		const filter =
+			typeof texture.filter === "string"
+				? texture.filter
+				: this.renderer.getDefaultTextureFilter();
+		const samplerKey = `${filter}|${wrap}`;
+		let bindGroup = record.bindGroupBySampler.get(samplerKey);
+		if (typeof bindGroup === "undefined") {
+			bindGroup = this.device.createBindGroup({
+				label: "melonJS material",
+				layout: this.renderer.pipelineCache.materialLayout,
+				entries: [
+					{ binding: 0, resource: record.view },
+					{ binding: 1, resource: this.getSampler(filter, wrap) },
+				],
+			});
+			record.bindGroupBySampler.set(samplerKey, bindGroup);
+		}
+		return bindGroup;
+	}
+
+	/**
+	 * drop every (texture, sampler) bind-group pairing while keeping the
+	 * textures resident — the filter setting changed and the next draw
+	 * re-pairs each texture with the newly-resolved sampler
+	 */
+	invalidateBindGroups() {
+		for (const record of this.records.values()) {
+			record.bindGroupBySampler.clear();
+		}
+	}
+
+	/**
+	 * Destroy the resident GPU texture(s) associated with an image — every
+	 * `(source, repeat)` unit the cache knows about, mirroring
+	 * `MaterialBatcher.deleteTexture2D`'s multi-repeat sweep.
+	 * @param {object} texture - a TextureAtlas
+	 */
+	destroyTexture(texture) {
+		const units = this.renderer.cache.peekAllUnits?.(texture) ?? [];
+		for (const unit of units) {
+			const record = this.records.get(unit);
+			if (record) {
+				record.texture.destroy();
+				this.records.delete(unit);
+			}
+		}
+	}
+
+	/**
+	 * drop every unit association and destroy the resident textures
+	 */
+	releaseAll() {
+		for (const record of this.records.values()) {
+			record.texture.destroy();
+		}
+		this.records.clear();
+	}
+
+	/**
+	 * full teardown (device loss / renderer destroy)
+	 */
+	destroy() {
+		off(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
+		this.releaseAll();
+		this.samplers.clear();
+	}
+}

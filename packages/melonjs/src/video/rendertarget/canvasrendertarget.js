@@ -268,6 +268,13 @@ class CanvasRenderTarget extends RenderTarget {
 				renderer.cache.get(this.canvas),
 			);
 			renderer.currentBatcher.unbindTexture2D(null, this.glTextureUnit);
+		} else if (renderer.type === "WebGPU" && renderer.cache.has(this.canvas)) {
+			// drain draws referencing the previous pixels, then re-upload the
+			// canvas into the resident GPUTexture in place (same-size path)
+			renderer.currentBatcher?.flush();
+			renderer.textureStore.getBinding(renderer.cache.get(this.canvas), {
+				force: true,
+			});
 		}
 	}
 
@@ -299,6 +306,14 @@ class CanvasRenderTarget extends RenderTarget {
 		) {
 			renderer.setBatcher("quad");
 			renderer.currentBatcher.deleteTexture2D(renderer.cache.get(this.canvas));
+		} else if (
+			renderer &&
+			renderer.type === "WebGPU" &&
+			this.canvas &&
+			renderer.cache.has(this.canvas)
+		) {
+			// destroy the resident GPUTexture(s) for this canvas source
+			renderer.textureStore.destroyTexture(renderer.cache.get(this.canvas));
 		}
 		if (renderer) {
 			renderer.cache.delete(this.canvas);

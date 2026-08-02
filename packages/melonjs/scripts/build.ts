@@ -17,6 +17,7 @@ const buildOptions = {
 		".png": "dataurl",
 		".vert": "text",
 		".frag": "text",
+		".wgsl": "text",
 	},
 	splitting: true,
 	format: "esm",

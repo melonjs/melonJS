@@ -350,7 +350,7 @@ const examples: {
 		path: "webgpu",
 		sourceDir: "webgpu",
 		description:
-			"Experimental WebGPU backend bootstrap: asynchronous device negotiation and a first clear pass.",
+			"Experimental WebGPU backend: sprites, text, blend modes, primitives, clipping and stencil masks.",
 	},
 	{
 		component: <ExampleIsometricRPG />,
