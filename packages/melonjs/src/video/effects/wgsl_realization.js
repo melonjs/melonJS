@@ -109,6 +109,10 @@ export default class WGSLEffectRealization {
 		) {
 			value = value.val;
 		}
+		// GLSL accepts booleans for bool/int uniforms — normalize
+		if (typeof value === "boolean") {
+			value = value ? 1 : 0;
+		}
 		const index = placement.offset >> 2;
 		if (typeof value === "number") {
 			if (placement.type === "i32") {
@@ -119,6 +123,16 @@ export default class WGSLEffectRealization {
 				this.f32[index] = value;
 			}
 			this.values.set(name, value);
+		} else if (placement.type === "mat3x3f" && value.length === 9) {
+			// a 9-float column-major matrix (the uniformMatrix3fv shape):
+			// WGSL mat3x3f columns are vec4-strided — place each column at
+			// float offset c*4, or columns 2-3 read scrambled
+			for (let column = 0; column < 3; column++) {
+				for (let row = 0; row < 3; row++) {
+					this.f32[index + column * 4 + row] = value[column * 3 + row];
+				}
+			}
+			this.values.set(name, Array.from(value));
 		} else {
 			const array = value;
 			const count = Math.min(array.length, placement.size >> 2);

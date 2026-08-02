@@ -54,10 +54,19 @@ function stripComments(source) {
 		} else if (source[i] === "/" && source[i + 1] === "*") {
 			parts.push(source.slice(start, i), " ");
 			i += 2;
-			while (i < length && !(source[i] === "*" && source[i + 1] === "/")) {
-				i++;
+			// WGSL block comments NEST — track depth
+			let depth = 1;
+			while (i < length && depth > 0) {
+				if (source[i] === "/" && source[i + 1] === "*") {
+					depth++;
+					i += 2;
+				} else if (source[i] === "*" && source[i + 1] === "/") {
+					depth--;
+					i += 2;
+				} else {
+					i++;
+				}
 			}
-			i = i < length ? i + 2 : length;
 			start = i;
 		} else {
 			i++;
@@ -65,6 +74,32 @@ function stripComments(source) {
 	}
 	parts.push(source.slice(start));
 	return parts.join("");
+}
+
+/**
+ * split a struct body on top-level commas only — `array<vec4f, 4>`
+ * carries a comma inside its angle brackets and must stay one member
+ * @param {string} body - the text between the struct's braces
+ * @returns {string[]} one entry per member declaration
+ * @ignore
+ */
+function splitMembers(body) {
+	const members = [];
+	let depth = 0;
+	let start = 0;
+	for (let i = 0; i < body.length; i++) {
+		const character = body[i];
+		if (character === "<") {
+			depth++;
+		} else if (character === ">") {
+			depth--;
+		} else if (character === "," && depth === 0) {
+			members.push(body.slice(start, i));
+			start = i + 1;
+		}
+	}
+	members.push(body.slice(start));
+	return members;
 }
 
 /**
@@ -114,7 +149,7 @@ export function parseWGSLBody(body) {
 			};
 		}
 		const members = [];
-		for (const entry of struct[1].split(",")) {
+		for (const entry of splitMembers(struct[1])) {
 			const trimmed = entry.trim();
 			if (trimmed === "") {
 				continue;

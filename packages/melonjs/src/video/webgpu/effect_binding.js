@@ -36,7 +36,7 @@ const ME_SIZE = 32;
  * @param {import("../effects/wgsl_realization.js").default} realization - the effect's WGSL realization
  * @ignore
  */
-function buildEffectGPU(renderer, realization) {
+function buildEffectGPU(renderer, effect, realization) {
 	const cache = renderer.pipelineCache;
 	const bindings = realization.builtinBindings;
 	const builtins = realization.builtins;
@@ -96,6 +96,9 @@ function buildEffectGPU(renderer, realization) {
 				visibility: GPUShaderStage.FRAGMENT,
 				sampler: {},
 			});
+			// every entry variant must contribute a signature token, or two
+			// different shapes share one cached layout and bind groups break
+			signatureParts.push("sc");
 		}
 		if (builtins.screenSamplerRepeat) {
 			entries.push({
@@ -132,6 +135,36 @@ function buildEffectGPU(renderer, realization) {
 		vertexLayoutKey: "quad",
 		label: "melonJS effect shader",
 	});
+
+	// WGSL validation is asynchronous and never throws: a body that parsed
+	// but fails compilation would otherwise invalidate every pass drawing
+	// it, dropping whole frames forever. Surface it and disable the effect
+	// — the same warn-and-disable contract as a missing-language body.
+	// (Fire-and-forget: draws recorded before the result resolve harmlessly
+	// against the invalid pipeline; once disabled, the effect is filtered.)
+	const module = cache.modules?.[key];
+	if (typeof module?.getCompilationInfo === "function") {
+		module
+			.getCompilationInfo()
+			.then((info) => {
+				const errors = info.messages.filter((message) => {
+					return message.type === "error";
+				});
+				if (errors.length > 0) {
+					console.warn(
+						`ShaderEffect: WGSL compilation failed — effect disabled\n${errors
+							.map((message) => {
+								return `  line ${message.lineNum}: ${message.message}`;
+							})
+							.join("\n")}`,
+					);
+					effect.enabled = false;
+					realization.valid = false;
+					realization.releaseGPU();
+				}
+			})
+			.catch(() => {});
+	}
 
 	// the per-bind snapshot: uniform struct + ME block share ONE arena
 	// region (dynamic offsets must each be minUniformBufferOffsetAlignment
@@ -221,7 +254,7 @@ export function prepareEffectBinding(renderer, effect) {
 		realization.gpu === null ||
 		realization.gpu.epoch !== renderer.pipelineCache.epoch
 	) {
-		buildEffectGPU(renderer, realization);
+		buildEffectGPU(renderer, effect, realization);
 	}
 	const gpu = realization.gpu;
 	if (!gpu.hasEffectGroup) {
@@ -267,7 +300,9 @@ export function prepareEffectBinding(renderer, effect) {
 	const capture = renderer.captureTexture;
 	const bindKey = [
 		region === null ? "-" : region.buffer.label,
-		capture?.generation ?? -1,
+		// only screen_texture consumers key on the capture — a capture
+		// reallocation must not rebuild unrelated effects' bind groups
+		realization.builtins.screenTexture ? (capture?.generation ?? -1) : -1,
 		gpu.residentTextures.size,
 	].join("|");
 	let stale = gpu.bindGroup === null || gpu.bindKey !== bindKey;

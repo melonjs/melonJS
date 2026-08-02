@@ -86,6 +86,34 @@ describe("WGSL body parser", () => {
 		expect(own.builtins.screenUV).toBe(false);
 	});
 
+	it("array<vec4f, N> members parse (the comma inside angle brackets is not a separator)", () => {
+		const parsed = parseWGSLBody(`
+			struct Fx {
+				uPalette : array<vec4f, 4>,
+				uStrength : f32,
+			};
+			@group(3) @binding(0) var<uniform> fx : Fx;
+			fn apply(color : vec4f, uv : vec2f) -> vec4f { return color; }
+		`);
+		expect(parsed.ok).toBe(true);
+		expect(parsed.layout.get("uPalette")).toMatchObject({
+			offset: 0,
+			size: 64,
+		});
+		expect(parsed.layout.get("uStrength").offset).toBe(64);
+	});
+
+	it("nested block comments are fully skipped (WGSL comments nest)", () => {
+		const parsed = parseWGSLBody(`
+			/* outer /* inner */ still a comment:
+			@group(3) @binding(0) var<uniform> fake : NotReal;
+			*/
+			fn apply(color : vec4f, uv : vec2f) -> vec4f { return color; }
+		`);
+		expect(parsed.ok).toBe(true);
+		expect(parsed.structSize).toBe(0);
+	});
+
 	it("declarations inside comments are ignored", () => {
 		const parsed = parseWGSLBody(`
 			// @group(3) @binding(0) var<uniform> fake : NotReal;

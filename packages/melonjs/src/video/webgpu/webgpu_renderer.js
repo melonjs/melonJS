@@ -417,9 +417,13 @@ export default class WebGPURenderer extends Renderer {
 		this.uniformRing.reset();
 		this.effectUniformArena.reset();
 		this.frameId++;
-		// a frame always begins on the canvas
+		// a frame always begins on the canvas, outside any effect bracket
+		// (an exception that escaped between begin/endPostEffect last frame
+		// must not leave the projection stack wound up)
 		this.currentRenderTarget = null;
 		this.pendingColorClear = false;
+		this.effectPassDepth = 0;
+		this._renderTargetPool?.reset?.();
 		// clear() also resets the stroke line width, like the GL backend
 		this.lineWidth = 1;
 		this.stencilMode = "none";
@@ -507,6 +511,10 @@ export default class WebGPURenderer extends Renderer {
 		});
 		this.renderPass.setViewport(0, 0, width, height, 0, 1);
 		this.applyScissor();
+		// a new pass resets the stencil reference to 0 — re-apply the mask
+		// reference so content masked ACROSS a pass restart (post-effect
+		// retargets, captures) keeps testing against the right level
+		this.renderPass.setStencilReference(this.maskVisibleRef);
 		// pipeline/bind state does not carry across passes
 		this.currentPipeline = null;
 	}

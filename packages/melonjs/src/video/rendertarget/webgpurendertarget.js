@@ -162,6 +162,12 @@ export default class WebGPURenderTarget extends RenderTarget {
 	async readPixels(x = 0, y = 0, width = this.width, height = this.height) {
 		const renderer = this.renderer;
 		const device = renderer.device;
+		// clamp the read window to the target (an out-of-bounds copy is a
+		// validation error, where a caller passing only x/y expects a crop)
+		x = Math.max(0, x | 0);
+		y = Math.max(0, y | 0);
+		width = Math.max(1, Math.min(width | 0, this.width - x));
+		height = Math.max(1, Math.min(height | 0, this.height - y));
 		// bytesPerRow must be a multiple of 256
 		const bytesPerRow = (width * 4 + 255) & ~255;
 		const buffer = device.createBuffer({
@@ -169,40 +175,45 @@ export default class WebGPURenderTarget extends RenderTarget {
 			size: bytesPerRow * height,
 			usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
 		});
-		// pending draws into this target must land before the copy
-		renderer.flush();
-		const encoder = device.createCommandEncoder({ label: "melonJS readback" });
-		encoder.copyTextureToBuffer(
-			{ texture: this.texture, origin: { x, y } },
-			{ buffer, bytesPerRow },
-			[width, height],
-		);
-		device.queue.submit([encoder.finish()]);
-		await buffer.mapAsync(GPUMapMode.READ);
-		const mapped = new Uint8Array(buffer.getMappedRange());
-		const out = new Uint8ClampedArray(width * height * 4);
-		const bgra = renderer.preferredFormat.startsWith("bgra");
-		for (let row = 0; row < height; row++) {
-			const src = row * bytesPerRow;
-			const dst = row * width * 4;
-			for (let px = 0; px < width; px++) {
-				const s = src + px * 4;
-				const d = dst + px * 4;
-				if (bgra) {
-					out[d] = mapped[s + 2];
-					out[d + 1] = mapped[s + 1];
-					out[d + 2] = mapped[s];
-				} else {
-					out[d] = mapped[s];
-					out[d + 1] = mapped[s + 1];
-					out[d + 2] = mapped[s + 2];
+		try {
+			// pending draws into this target must land before the copy
+			renderer.flush();
+			const encoder = device.createCommandEncoder({
+				label: "melonJS readback",
+			});
+			encoder.copyTextureToBuffer(
+				{ texture: this.texture, origin: { x, y } },
+				{ buffer, bytesPerRow },
+				[width, height],
+			);
+			device.queue.submit([encoder.finish()]);
+			await buffer.mapAsync(GPUMapMode.READ);
+			const mapped = new Uint8Array(buffer.getMappedRange());
+			const out = new Uint8ClampedArray(width * height * 4);
+			const bgra = renderer.preferredFormat.startsWith("bgra");
+			for (let row = 0; row < height; row++) {
+				const src = row * bytesPerRow;
+				const dst = row * width * 4;
+				for (let px = 0; px < width; px++) {
+					const s = src + px * 4;
+					const d = dst + px * 4;
+					if (bgra) {
+						out[d] = mapped[s + 2];
+						out[d + 1] = mapped[s + 1];
+						out[d + 2] = mapped[s];
+					} else {
+						out[d] = mapped[s];
+						out[d + 1] = mapped[s + 1];
+						out[d + 2] = mapped[s + 2];
+					}
+					out[d + 3] = mapped[s + 3];
 				}
-				out[d + 3] = mapped[s + 3];
 			}
+			buffer.unmap();
+			return new ImageData(out, width, height);
+		} finally {
+			buffer.destroy();
 		}
-		buffer.unmap();
-		buffer.destroy();
-		return new ImageData(out, width, height);
 	}
 
 	/**

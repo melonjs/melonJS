@@ -106,9 +106,11 @@ export function createMockWebGPURenderer() {
 				if (typeof key === "undefined") {
 					key = `effect:${this.registeredModules.size}`;
 					this.registeredModules.set(code, key);
+					this.modules[key] = { code };
 				}
 				return key;
 			},
+			modules: {},
 			getEffectLayout(signature) {
 				if (!this.effectLayouts.has(signature)) {
 					this.effectLayouts.set(signature, { signature });

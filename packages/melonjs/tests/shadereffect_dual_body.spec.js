@@ -145,6 +145,32 @@ vec4 apply(vec4 color, vec2 uv) { return color * uStrength; }
 			}).not.toThrow();
 		});
 
+		it("mat3x3f values land on vec4-strided columns (9-float column-major input)", () => {
+			const effect = make(wgslRenderer, {
+				wgsl: `
+struct Fx { uMat : mat3x3f, };
+@group(3) @binding(0) var<uniform> fx : Fx;
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return vec4f(fx.uMat * color.rgb, color.a);
+}
+`,
+			});
+			effect.setUniform("uMat", [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+			const mirror = effect.wgslRealization.f32;
+			// columns at float offsets 0/4/8, each 3 floats + padding
+			expect([...mirror.slice(0, 3)]).toEqual([1, 2, 3]);
+			expect([...mirror.slice(4, 7)]).toEqual([4, 5, 6]);
+			expect([...mirror.slice(8, 11)]).toEqual([7, 8, 9]);
+		});
+
+		it("boolean values normalize to 0/1 like the GLSL path", () => {
+			const effect = make(wgslRenderer, { wgsl: WGSL_BODY });
+			effect.setUniform("uStrength", true);
+			expect(effect.wgslRealization.f32[0]).toBe(1);
+			effect.setUniform("uStrength", false);
+			expect(effect.wgslRealization.f32[0]).toBe(0);
+		});
+
 		it("_setNoiseUVRect feeds the ME mirror when noise_uv is used", () => {
 			const effect = make(wgslRenderer, {
 				wgsl: "fn apply(color : vec4f, uv : vec2f) -> vec4f { return vec4f(noise_uv, 0.0, color.a); }",

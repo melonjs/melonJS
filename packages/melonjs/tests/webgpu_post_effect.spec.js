@@ -137,6 +137,88 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		expect(captureEntry).toBeDefined();
 	});
 
+	it("clamp-only and repeat-only screen-sampler shapes get DIFFERENT layouts", () => {
+		const clampOnly = makeEffect(`
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return textureSample(screen_texture, screen_sampler, screen_uv);
+}
+`);
+		const repeatOnly = makeEffect(`
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return textureSample(screen_texture, screen_sampler_repeat, screen_uv);
+}
+`);
+		prepareEffectBinding(renderer, clampOnly);
+		prepareEffectBinding(renderer, repeatOnly);
+		// a shared cached layout between the two shapes breaks whichever
+		// registers second (bind-group entries mismatch the layout)
+		expect(clampOnly.wgslRealization.gpu.effectLayout).not.toBe(
+			repeatOnly.wgslRealization.gpu.effectLayout,
+		);
+	});
+
+	it("an async WGSL compilation failure disables the effect (never a permanent black screen)", async () => {
+		const effect = makeEffect();
+		// simulate the device reporting errors for this module
+		const key = renderer.pipelineCache.registerShader(
+			effect.wgslRealization.code,
+		);
+		renderer.pipelineCache.modules[key].getCompilationInfo = () => {
+			return Promise.resolve({
+				messages: [{ type: "error", message: "bad expr", lineNum: 3 }],
+			});
+		};
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		prepareEffectBinding(renderer, effect);
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(effect.enabled).toBe(false);
+		expect(effect.wgslRealization.valid).toBe(false);
+		expect(warn).toHaveBeenCalledWith(
+			expect.stringContaining("compilation failed"),
+		);
+		warn.mockRestore();
+	});
+
+	it("a capture reallocation re-keys screen_texture bind groups (unique generations)", async () => {
+		const { WebGPUFrameTexture } = await import(
+			"../src/video/webgpu/texture/frametexture.js"
+		);
+		const stub = {
+			preferredFormat: "bgra8unorm",
+			retiredTextures: [],
+			commandEncoder: null,
+			retireTexture() {},
+			device: {
+				createTexture() {
+					return {
+						destroy() {},
+						createView() {
+							return {};
+						},
+					};
+				},
+			},
+		};
+		const first = new WebGPUFrameTexture(stub, 64, 64);
+		const second = new WebGPUFrameTexture(stub, 128, 128);
+		// each allocation must carry a distinct generation — a static value
+		// left bind groups pointing at a destroyed capture after a resize
+		expect(second.generation).not.toBe(first.generation);
+
+		// and the binding actually rebuilds when the capture changes
+		const effect = makeEffect(`
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return textureSample(screen_texture, screen_sampler, screen_uv);
+}
+`);
+		renderer.captureTexture = first;
+		const before = prepareEffectBinding(renderer, effect);
+		renderer.captureTexture = second;
+		const after = prepareEffectBinding(renderer, effect);
+		expect(after.bindGroup).not.toBe(before.bindGroup);
+	});
+
 	it("setTexture sources upload once and re-key the bind group", () => {
 		const effect = makeEffect(`
 @group(3) @binding(1) var uNoise : texture_2d<f32>;

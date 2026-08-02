@@ -16,6 +16,12 @@ import Texture2d from "../../texture/texture2d.ts";
  */
 export class WebGPUFrameTexture extends Texture2d {
 	/**
+	 * monotonic generation source shared by every capture instance
+	 * @ignore
+	 */
+	static generationCounter = 0;
+
+	/**
 	 * @param {import("../webgpu_renderer.js").default} renderer - the owning renderer
 	 * @param {number} width - capture width in pixels
 	 * @param {number} height - capture height in pixels
@@ -28,11 +34,14 @@ export class WebGPUFrameTexture extends Texture2d {
 		/** @type {number} */
 		this.height = height;
 		/**
-		 * bumped on every (re)allocation — bind groups referencing `view`
-		 * cache against this
+		 * Unique per allocation (module-wide counter): captureFrame replaces
+		 * the shared capture with a NEW instance on size change, and bind
+		 * groups referencing the old view key on this — a non-advancing
+		 * value would leave them pointing at a destroyed texture, failing
+		 * every subsequent submit.
 		 * @type {number}
 		 */
-		this.generation = 0;
+		this.generation = ++WebGPUFrameTexture.generationCounter;
 		/**
 		 * marks this as a live GPU-resident source — see {@link ShaderEffect#setTexture}
 		 * @type {boolean}

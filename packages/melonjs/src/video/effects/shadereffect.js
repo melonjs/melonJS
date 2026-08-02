@@ -832,9 +832,16 @@ export default class ShaderEffect {
 		off(ONCONTEXT_LOST, this._onContextLost, this);
 		off(ONCONTEXT_RESTORED, this._onContextRestored, this);
 
-		// WGSL: drop the lazily-built GPU state; the pipeline cache keeps the
-		// shared module (bounded retention, rebuilt per device epoch)
+		// WGSL: retire the effect-owned resident textures (static setTexture
+		// uploads), then drop the lazily-built GPU state; the pipeline cache
+		// keeps the shared module (bounded retention, rebuilt per epoch)
 		if (this.wgslRealization) {
+			const gpu = this.wgslRealization.gpu;
+			if (gpu?.residentTextures) {
+				for (const resident of gpu.residentTextures.values()) {
+					this._renderer.retireTexture?.(resident.texture);
+				}
+			}
 			this.wgslRealization.releaseGPU();
 			this._extraTextures.clear();
 		}
