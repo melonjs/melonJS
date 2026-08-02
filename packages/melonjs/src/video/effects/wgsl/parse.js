@@ -33,14 +33,38 @@ const GROUP3_ANY = /@group\(\s*3\s*\)\s*@binding\(\s*(\d+)\s*\)/g;
 /**
  * strip `//` line and `/* *\/` block comments so declarations inside
  * comments are never honored (scratch copy — the original compiles).
- * The block-comment pattern is the classic linear-time form — a lazy
- * `[\s\S]*?` backtracks polynomially on pathological inputs (ReDoS).
+ * A plain single-pass scanner rather than a regex: comment-matching
+ * patterns are where polynomial backtracking hides (ReDoS), and a
+ * character scan is provably linear.
  * @ignore
  */
 function stripComments(source) {
-	return source
-		.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, " ")
-		.replace(/\/\/[^\n]*/g, " ");
+	const parts = [];
+	const length = source.length;
+	let start = 0;
+	let i = 0;
+	while (i < length) {
+		if (source[i] === "/" && source[i + 1] === "/") {
+			parts.push(source.slice(start, i), " ");
+			i += 2;
+			while (i < length && source[i] !== "\n") {
+				i++;
+			}
+			start = i;
+		} else if (source[i] === "/" && source[i + 1] === "*") {
+			parts.push(source.slice(start, i), " ");
+			i += 2;
+			while (i < length && !(source[i] === "*" && source[i + 1] === "/")) {
+				i++;
+			}
+			i = i < length ? i + 2 : length;
+			start = i;
+		} else {
+			i++;
+		}
+	}
+	parts.push(source.slice(start));
+	return parts.join("");
 }
 
 /**
