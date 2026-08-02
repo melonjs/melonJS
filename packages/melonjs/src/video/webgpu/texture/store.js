@@ -192,11 +192,7 @@ export default class WebGPUTextureStore {
 	 * @ignore
 	 */
 	retire(gpuTexture) {
-		if (this.renderer.commandEncoder !== null) {
-			this.renderer.retiredTextures.push(gpuTexture);
-		} else {
-			gpuTexture.destroy();
-		}
+		this.renderer.retireTexture(gpuTexture);
 	}
 
 	/**

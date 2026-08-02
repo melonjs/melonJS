@@ -29,6 +29,7 @@ import WebGPUPipelineCache, {
 	DEPTH_STENCIL_FORMAT,
 	normalizeBlendMode,
 } from "./pipeline/cache.js";
+import { WebGPUFrameTexture } from "./texture/frametexture.js";
 import WebGPUTextureStore from "./texture/store.js";
 
 // scratch matrix for the affine-components form of transform()
@@ -165,6 +166,20 @@ export default class WebGPURenderer extends Renderer {
 		this.commandEncoder = null;
 		/** @ignore */
 		this.renderPass = null;
+		// the active offscreen render target (null = the canvas). Retargeting
+		// is a pass break: the next pass opens on the target's color view.
+		/** @ignore */
+		this.currentRenderTarget = null;
+		// consumed as the next pass's colorLoadOp "clear" (fresh target)
+		/** @ignore */
+		this.pendingColorClear = false;
+		// the canvas GPUTexture handle of the current frame — kept beside its
+		// view because captureFrame copies from the TEXTURE, not the view
+		/** @ignore */
+		this.frameTexture = null;
+		// the shared frame-capture slot (screen_texture builtin), lazy
+		/** @ignore */
+		this.captureTexture = undefined;
 		// monotonically increasing frame id — the texture store uses it to
 		// detect same-frame content changes that need a fresh texture
 		/** @ignore */
@@ -288,6 +303,9 @@ export default class WebGPURenderer extends Renderer {
 			device: this.device,
 			format: this.preferredFormat,
 			alphaMode: this.settings.transparent ? "premultiplied" : "opaque",
+			// COPY_SRC on top of the default: captureFrame() copies the
+			// canvas texture into the shared capture (screen_texture builtin)
+			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
 		});
 
 		// GPU-facing infrastructure, in dependency order
@@ -317,13 +335,18 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
-	 * (re)create the depth-stencil attachment at the current canvas size
+	 * (re)create the shared depth-stencil attachment. Defaults to the canvas
+	 * size; `beginPass` passes the active target's size because every
+	 * attachment of a pass must have identical dimensions (in the 2D flow
+	 * all targets are canvas-sized, so this recreates nothing per frame).
+	 * @param {number} [width] - required width (defaults to the canvas)
+	 * @param {number} [height] - required height (defaults to the canvas)
 	 * @ignore
 	 */
-	createDepthTexture() {
+	createDepthTexture(width, height) {
 		const canvas = this.getCanvas();
-		const width = Math.max(1, canvas.width);
-		const height = Math.max(1, canvas.height);
+		width = Math.max(1, width ?? canvas.width);
+		height = Math.max(1, height ?? canvas.height);
 		if (
 			this.depthTexture &&
 			this.depthTexture.width === width &&
@@ -331,7 +354,10 @@ export default class WebGPURenderer extends Renderer {
 		) {
 			return;
 		}
-		this.depthTexture?.destroy();
+		if (this.depthTexture) {
+			// recorded passes may reference the old attachment — retire it
+			this.retireTexture(this.depthTexture);
+		}
 		this.depthTexture = this.device.createTexture({
 			label: "melonJS depth-stencil",
 			size: [width, height],
@@ -365,6 +391,9 @@ export default class WebGPURenderer extends Renderer {
 		this.vertexArena.reset();
 		this.uniformRing.reset();
 		this.frameId++;
+		// a frame always begins on the canvas
+		this.currentRenderTarget = null;
+		this.pendingColorClear = false;
 		// clear() also resets the stroke line width, like the GL backend
 		this.lineWidth = 1;
 		this.stencilMode = "none";
@@ -397,16 +426,40 @@ export default class WebGPURenderer extends Renderer {
 				label: "melonJS frame",
 			});
 		}
-		if (this.frameTextureView === null) {
-			this.frameTextureView = this.context.getCurrentTexture().createView();
+		// the pass's color attachment: the active render target's view, or
+		// the canvas texture (acquired once per frame)
+		let colorView;
+		const target = this.currentRenderTarget;
+		if (target !== null) {
+			colorView = target.colorView;
+		} else {
+			if (this.frameTextureView === null) {
+				this.frameTexture = this.context.getCurrentTexture();
+				this.frameTextureView = this.frameTexture.createView();
+			}
+			colorView = this.frameTextureView;
 		}
+		// a retarget with a pending clear opens with a clearing load — the
+		// WebGPU analogue of clearRenderTarget, no clearing draw needed
+		let colorLoadOp = opts.colorLoadOp;
+		let clearValue = opts.clearValue;
+		if (typeof colorLoadOp === "undefined" && this.pendingColorClear) {
+			colorLoadOp = "clear";
+			clearValue = { r: 0, g: 0, b: 0, a: 0 };
+		}
+		this.pendingColorClear = false;
+		// every attachment of a pass must have identical dimensions — the
+		// shared depth-stencil tracks the active target's size (targets are
+		// canvas-sized in the 2D flow, so this recreates nothing in practice)
+		const [width, height] = this.getTargetSize();
+		this.createDepthTexture(width, height);
 		this.renderPass = this.commandEncoder.beginRenderPass({
 			label: "melonJS pass",
 			colorAttachments: [
 				{
-					view: this.frameTextureView,
-					loadOp: opts.colorLoadOp ?? "load",
-					clearValue: opts.clearValue,
+					view: colorView,
+					loadOp: colorLoadOp ?? "load",
+					clearValue,
 					storeOp: "store",
 				},
 			],
@@ -420,11 +473,121 @@ export default class WebGPURenderer extends Renderer {
 				stencilStoreOp: "store",
 			},
 		});
-		const canvas = this.getCanvas();
-		this.renderPass.setViewport(0, 0, canvas.width, canvas.height, 0, 1);
+		this.renderPass.setViewport(0, 0, width, height, 0, 1);
 		this.applyScissor();
 		// pipeline/bind state does not carry across passes
 		this.currentPipeline = null;
+	}
+
+	/**
+	 * pixel dimensions of the active draw destination — the current render
+	 * target, or the canvas
+	 * @returns {[number, number]} [width, height]
+	 * @ignore
+	 */
+	getTargetSize() {
+		const target = this.currentRenderTarget;
+		if (target !== null) {
+			return [target.width, target.height];
+		}
+		const canvas = this.getCanvas();
+		return [canvas.width, canvas.height];
+	}
+
+	/**
+	 * Switch the active draw destination — a pass break under the recording
+	 * model: pending vertices drain, the open pass ends, and the next pass
+	 * (opened lazily by `ensurePass`) targets the given render target's
+	 * color view, or the canvas when `target` is null.
+	 * @param {import("../rendertarget/webgpurendertarget.js").default|null} target - the render target, or null for the canvas
+	 * @param {object} [options] - retarget options
+	 * @param {boolean} [options.clear=false] - open the next pass with a clearing color load
+	 * @ignore
+	 */
+	setRenderTarget(target, options = {}) {
+		this.currentBatcher?.flush();
+		if (this.renderPass !== null) {
+			this.renderPass.end();
+			this.renderPass = null;
+		}
+		this.currentRenderTarget = target ?? null;
+		this.pendingColorClear =
+			options.clear === true || (target?.pendingClear ?? false);
+		if (target) {
+			target.pendingClear = false;
+		}
+	}
+
+	/**
+	 * Dispose of a GPUTexture safely: while a frame is recording, the
+	 * texture may be referenced by already-recorded draws — destroying it
+	 * would make the whole `queue.submit()` fail validation — so it parks
+	 * on the retired list and is destroyed after submit (or abandon).
+	 * @param {GPUTexture} texture - the texture to dispose of
+	 * @ignore
+	 */
+	retireTexture(texture) {
+		if (this.commandEncoder !== null) {
+			this.retiredTextures.push(texture);
+		} else {
+			texture.destroy();
+		}
+	}
+
+	/**
+	 * Capture everything drawn so far into the shared frame-capture slot —
+	 * the backing of the `screen_texture` effect builtin. A pass break: the
+	 * open pass ends, an encoder-ordered `copyTextureToTexture` snapshots
+	 * the active destination (render target or canvas), and drawing resumes
+	 * lazily with a preserving load. The capture is copy-only (never a
+	 * render attachment), so the very next pass can sample it hazard-free.
+	 * @returns {import("./texture/frametexture.js").WebGPUFrameTexture|null} the shared capture, or null when no device
+	 * @ignore
+	 */
+	captureFrame() {
+		if (typeof this.device === "undefined") {
+			return null;
+		}
+		this.currentBatcher?.flush();
+		if (this.renderPass !== null) {
+			this.renderPass.end();
+			this.renderPass = null;
+		}
+		// resolve the source texture: the active target, or the canvas
+		// (acquired now if nothing drew yet this frame)
+		let source;
+		const [width, height] = this.getTargetSize();
+		if (this.currentRenderTarget !== null) {
+			source = this.currentRenderTarget.texture;
+		} else {
+			if (this.frameTexture === null) {
+				this.frameTexture = this.context.getCurrentTexture();
+				this.frameTextureView = this.frameTexture.createView();
+			}
+			source = this.frameTexture;
+		}
+		// (re)allocate the shared capture at the source size
+		let capture = this.captureTexture;
+		if (
+			typeof capture === "undefined" ||
+			capture.width !== width ||
+			capture.height !== height
+		) {
+			capture?.destroy();
+			capture = new WebGPUFrameTexture(this, width, height);
+			this.captureTexture = capture;
+		}
+		if (this.commandEncoder === null) {
+			this.commandEncoder = this.device.createCommandEncoder({
+				label: "melonJS frame",
+			});
+		}
+		this.commandEncoder.copyTextureToTexture(
+			{ texture: source },
+			{ texture: capture.gpuTexture },
+			[width, height],
+		);
+		return capture;
 	}
 
 	/**
@@ -460,6 +623,7 @@ export default class WebGPURenderer extends Renderer {
 			this.device.queue.submit([this.commandEncoder.finish()]);
 			this.commandEncoder = null;
 			this.frameTextureView = null;
+			this.frameTexture = null;
 		}
 		this.destroyRetiredTextures();
 	}
@@ -481,6 +645,11 @@ export default class WebGPURenderer extends Renderer {
 			this.commandEncoder = null;
 		}
 		this.frameTextureView = null;
+		this.frameTexture = null;
+		// an abandoned frame may have died inside a post-effect bracket —
+		// never leave an offscreen target active for the next frame
+		this.currentRenderTarget = null;
+		this.pendingColorClear = false;
 		this.currentPipeline = null;
 		// the recorded draws are dropped with the command buffer, so any
 		// texture retired during the frame can go now
@@ -509,18 +678,18 @@ export default class WebGPURenderer extends Renderer {
 		if (this.renderPass === null) {
 			return;
 		}
-		const canvas = this.getCanvas();
+		const [width, height] = this.getTargetSize();
 		if (this.scissorActive === true) {
 			// clamp defensively: an out-of-attachment scissor is a WebGPU
 			// validation error that invalidates the whole pass (GL clamps)
 			const s = this.currentScissor;
-			const x = Math.min(Math.max(s[0], 0), canvas.width);
-			const y = Math.min(Math.max(s[1], 0), canvas.height);
-			const w = Math.min(Math.max(s[2], 0), canvas.width - x);
-			const h = Math.min(Math.max(s[3], 0), canvas.height - y);
+			const x = Math.min(Math.max(s[0], 0), width);
+			const y = Math.min(Math.max(s[1], 0), height);
+			const w = Math.min(Math.max(s[2], 0), width - x);
+			const h = Math.min(Math.max(s[3], 0), height - y);
 			this.renderPass.setScissorRect(x, y, w, h);
 		} else {
-			this.renderPass.setScissorRect(0, 0, canvas.width, canvas.height);
+			this.renderPass.setScissorRect(0, 0, width, height);
 		}
 	}
 
@@ -1709,6 +1878,10 @@ export default class WebGPURenderer extends Renderer {
 		this.vertexArena?.destroy();
 		this.uniformRing?.destroy();
 		this.pipelineCache?.clear();
+		// device-scoped post-effect state: the shared capture dies with the
+		// device; effect GPU realizations self-heal via the cache epoch
+		this.captureTexture = undefined;
+		this.currentRenderTarget = null;
 		this.depthTexture = null;
 		this.device = undefined;
 		this.adapter = undefined;
@@ -1770,6 +1943,9 @@ export default class WebGPURenderer extends Renderer {
 			this.vertexArena?.destroy();
 			this.uniformRing?.destroy();
 			this.pipelineCache?.clear();
+			this.captureTexture?.destroy();
+			this.captureTexture = undefined;
+			this.currentRenderTarget = null;
 			this.depthTexture?.destroy();
 			this.depthTexture = null;
 			this.context.unconfigure();
