@@ -7,6 +7,7 @@ import {
 import Texture2d from "../texture/texture2d.ts";
 import GLShader from "../webgl/glshader.js";
 import { buildGLSLProgram } from "./glsl_realization.js";
+import WGSLEffectRealization from "./wgsl_realization.js";
 
 /**
  * A simplified shader class for applying custom fragment effects to renderables.
@@ -86,13 +87,18 @@ export default class ShaderEffect {
 	shared = false;
 
 	/**
-	 * @param {WebGLRenderer|CanvasRenderer} renderer - the current renderer instance
-	 * @param {string} fragmentBody - GLSL code containing a `vec4 apply(vec4 color, vec2 uv)` function
-	 *   that receives the sampled pixel color and UV coordinates, and returns the modified color.
-	 *   You can declare additional `uniform` variables before the `apply()` function.
-	 * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp')
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {string|{glsl?: string, wgsl?: string}} body - the effect body:
+	 *   a GLSL string (containing a `vec4 apply(vec4 color, vec2 uv)` function —
+	 *   unchanged from previous versions), or an object carrying one body per
+	 *   shading language (`glsl` and/or `wgsl`, the WGSL body defining
+	 *   `fn apply(color : vec4f, uv : vec2f) -> vec4f`). The renderer picks the
+	 *   body matching its {@link Renderer#shaderLanguage}; when no matching body
+	 *   exists the effect warns once and stays disabled (`enabled === false`),
+	 *   exactly like the Canvas renderer.
+	 * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp'), GLSL only
 	 */
-	constructor(renderer, fragmentBody, precision) {
+	constructor(renderer, body, precision) {
 		/**
 		 * the renderer this effect was created for — kept so destroy and
 		 * context-loss can release the texture units reserved on its cache
@@ -103,71 +109,108 @@ export default class ShaderEffect {
 		this._renderer = renderer;
 
 		/**
-		 * the construction "recipe" (fragment body + precision), kept so
+		 * the construction "recipe" (body + precision), kept VERBATIM so
 		 * {@link clone} can compile an independent copy. Stored before the
-		 * Canvas-mode early return so cloning behaves consistently there too.
+		 * disabled-stub early return so cloning behaves consistently there too.
 		 * @ignore
 		 */
-		this._fragmentBody = fragmentBody;
+		this._fragmentBody = body;
 		/** @ignore */
 		this._precision = precision;
 
-		// GLSL specifically, not "is there a GPU backend": the body below is
-		// handed to the driver as GLSL source, so a backend speaking another
-		// shading language cannot run it either.
-		if (renderer.shaderLanguage !== "glsl") {
+		// resolve the body matching this renderer's shading language: a bare
+		// string keeps meaning GLSL (the historical signature), an object
+		// carries one body per language
+		const bodies = typeof body === "string" ? { glsl: body } : (body ?? {});
+		const language = renderer.shaderLanguage;
+		const source = language !== null ? bodies[language] : undefined;
+
+		if (typeof source !== "string") {
+			// no body this backend can compile — same inert-stub contract as
+			// the Canvas renderer: warn, stay disabled, every method no-ops
 			console.warn(
-				`ShaderEffect requires a GLSL backend and is disabled on this renderer (shader language: ${
-					renderer.shaderLanguage ?? "none"
-				})`,
+				language === null
+					? "ShaderEffect requires a GPU backend and is disabled on this renderer (no programmable pipeline)"
+					: `ShaderEffect has no ${language} body and is disabled on this renderer (provide a { ${language}: ... } source)`,
 			);
 			return;
 		}
 
-		// assemble the GLSL sources (builtin parsing + boilerplate) — the
-		// pure-assembly half lives in glsl_realization.js, pinned
-		// byte-identical by the generated-GLSL golden spec
-		const program = buildGLSLProgram(fragmentBody);
-
-		/**
-		 * samplers annotated `: screen_texture` — the renderer checks this to
-		 * know when to refresh the shared frame capture before the effect draws
-		 * @type {Array<{name: string, repeat: string}>}
-		 * @ignore
-		 */
-		this._screenTextureUniforms = program.screenTextures;
-		/** @ignore */
-		this._hasNoiseUV = program.noiseUV;
-
-		/** @ignore */
-		this._shader = new GLShader(
-			renderer.gl,
-			program.vertex,
-			program.fragment,
-			precision || renderer.shaderPrecision,
-		);
-		this.enabled = true;
-
 		/**
 		 * extra texture samplers bound via {@link setTexture}, keyed by the
 		 * uniform name → `{ image, repeat, tex }` (`tex` is the uploaded GL
-		 * texture, created lazily on first draw)
+		 * texture, created lazily on first draw; unused on WebGPU, where the
+		 * bind group is built lazily instead)
 		 * @ignore
 		 */
 		this._extraTextures = new Map();
 
-		// wire every annotated screen sampler to the renderer's shared frame
-		// capture — a live GPU-resident entry, re-bound fresh on each draw and
-		// skipped while no capture has been taken yet
-		for (const screenTexture of program.screenTextures) {
-			this.setTexture(
-				screenTexture.name,
-				renderer.getSharedFrameTexture(),
-				screenTexture.repeat,
+		if (language === "glsl") {
+			// assemble the GLSL sources (builtin parsing + boilerplate) — the
+			// pure-assembly half lives in glsl_realization.js, pinned
+			// byte-identical by the generated-GLSL golden spec
+			const program = buildGLSLProgram(source);
+
+			/**
+			 * samplers annotated `: screen_texture` — the renderer checks this to
+			 * know when to refresh the shared frame capture before the effect draws
+			 * @type {Array<{name: string, repeat: string}>}
+			 * @ignore
+			 */
+			this._screenTextureUniforms = program.screenTextures;
+			/** @ignore */
+			this._hasNoiseUV = program.noiseUV;
+
+			/** @ignore */
+			this._shader = new GLShader(
+				renderer.gl,
+				program.vertex,
+				program.fragment,
+				precision || renderer.shaderPrecision,
 			);
+			this.enabled = true;
+
+			// wire every annotated screen sampler to the renderer's shared frame
+			// capture — a live GPU-resident entry, re-bound fresh on each draw and
+			// skipped while no capture has been taken yet
+			for (const screenTexture of program.screenTextures) {
+				this.setTexture(
+					screenTexture.name,
+					renderer.getSharedFrameTexture(),
+					screenTexture.repeat,
+				);
+			}
+		} else {
+			// WGSL: parse the body's declarations (WebGPU has no uniform
+			// reflection — offsets are computed CPU-side) and assemble the
+			// module; GPU objects are built lazily by the renderer's effect
+			// path. A parse failure disables the effect like a missing body.
+			const realization = new WGSLEffectRealization(source);
+			if (!realization.valid) {
+				console.warn(
+					`ShaderEffect: invalid WGSL body — ${realization.error} (effect disabled)`,
+				);
+				return;
+			}
+			/** @ignore */
+			this.wgslRealization = realization;
+			// same renderer-facing capture contract as the GLSL side: a
+			// non-empty list means "refresh the frame capture before I draw"
+			this._screenTextureUniforms = realization.builtins.screenTexture
+				? [
+						{
+							name: "screen_texture",
+							repeat: realization.builtins.screenSamplerRepeat
+								? "repeat"
+								: "no-repeat",
+						},
+					]
+				: [];
+			this._hasNoiseUV = realization.builtins.noiseUV;
+			this.enabled = true;
 		}
 
-		// flip enabled across context loss so beginPostEffect skips us
+		// flip enabled across context/device loss so beginPostEffect skips us
 		on(ONCONTEXT_LOST, this._onContextLost, this);
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
 	}
@@ -216,8 +259,15 @@ export default class ShaderEffect {
 		// a loss window — defeating that replay — or while the user had the
 		// effect disabled. Canvas stubs (no shader) and destroyed effects
 		// (partial-state immunity, see destroy()) keep no-oping.
-		if (typeof this._shader !== "undefined" && this.destroyed !== true) {
+		if (this.destroyed === true) {
+			return;
+		}
+		if (typeof this._shader !== "undefined") {
 			this._shader.setUniform(name, value);
+		} else if (typeof this.wgslRealization !== "undefined") {
+			// WGSL: write the CPU mirror; the value is snapshot-uploaded at
+			// the effect's next bind (survives device loss for free)
+			this.wgslRealization.setUniform(name, value);
 		}
 	}
 
@@ -261,6 +311,14 @@ export default class ShaderEffect {
 			typeof this._shader.uniforms.uTime !== "undefined"
 		) {
 			this._shader.setUniform("uTime", seconds);
+		} else if (
+			typeof this.wgslRealization !== "undefined" &&
+			this.destroyed !== true &&
+			this.wgslRealization.hasUniform("uTime")
+		) {
+			// WGSL twin of the active-uniform check: the parsed struct map is
+			// authoritative (no compiler elimination under WebGPU)
+			this.wgslRealization.setUniform("uTime", seconds);
 		}
 		return this;
 	}
@@ -287,12 +345,23 @@ export default class ShaderEffect {
 		u0,
 		v0,
 	) {
-		if (
-			this._hasNoiseUV !== true ||
-			typeof this._shader === "undefined" ||
-			this.destroyed === true ||
-			this._shader.suspended
-		) {
+		if (this._hasNoiseUV !== true || this.destroyed === true) {
+			return;
+		}
+		if (typeof this.wgslRealization !== "undefined") {
+			// WGSL: write the engine ME struct's CPU mirror (size_obj @0,
+			// size_img @2, offset @4 — the scaffold's MEBuiltins layout);
+			// snapshot-uploaded alongside the uniform block at bind time
+			const me = this.wgslRealization.meMirror;
+			me[0] = Math.max(Math.abs(objectWidth), 1);
+			me[1] = Math.max(Math.abs(objectHeight), 1);
+			me[2] = Math.max(sourceWidth, 1);
+			me[3] = Math.max(sourceHeight, 1);
+			me[4] = u0 * me[2];
+			me[5] = v0 * me[3];
+			return;
+		}
+		if (typeof this._shader === "undefined" || this._shader.suspended) {
 			return;
 		}
 		// guard each set on the ACTIVE uniforms map — the compiler eliminates
@@ -384,8 +453,41 @@ export default class ShaderEffect {
 				"ShaderEffect.setTexture does not support HTMLVideoElement (extra textures upload once and would freeze on the first frame)",
 			);
 		}
-		// Canvas stub (no shader) and destroyed effects: keep the inert no-op
-		if (typeof this._shader === "undefined" || this.destroyed === true) {
+		// Canvas stub (no realization at all) and destroyed effects: keep the
+		// inert no-op
+		if (this.destroyed === true) {
+			return this;
+		}
+		if (typeof this.wgslRealization !== "undefined") {
+			// WGSL: the sampler must be a texture var the body DECLARED (the
+			// bind group is built from the parsed binding table — an
+			// undeclared name has no binding to fill)
+			const declared = this.wgslRealization.textures.some((t) => {
+				return t.name === name;
+			});
+			if (!declared) {
+				console.warn(
+					`ShaderEffect.setTexture: "${name}" is not a texture declared in the WGSL body (expected a \`@group(3) @binding(n) var ${name} : texture_2d<f32>;\` + sampler pair)`,
+				);
+				return this;
+			}
+			const wgslLive =
+				image instanceof Texture2d && image.isGPUResident === true;
+			if (!wgslLive && image instanceof Texture2d) {
+				image = image.getTexture();
+			}
+			this._extraTextures.set(name, {
+				image,
+				repeat,
+				tex: null,
+				live: wgslLive,
+				unit: undefined,
+			});
+			// the cached bind group (if any) referenced the previous texture
+			this.wgslRealization.gpu?.invalidateBindGroup?.();
+			return this;
+		}
+		if (typeof this._shader === "undefined") {
 			return this;
 		}
 		// A GPU-resident LIVE source (a frame capture from
@@ -559,6 +661,17 @@ export default class ShaderEffect {
 			this._fragmentBody,
 			this._precision,
 		);
+		// WGSL: replay the exact user-set values recorded by the realization
+		// (not a mirror read-back), then re-declare the extra textures
+		if (this.wgslRealization && copy.wgslRealization) {
+			for (const [name, value] of this.wgslRealization.values) {
+				copy.setUniform(name, value);
+			}
+			for (const [name, entry] of this._extraTextures) {
+				copy.setTexture(name, entry.image, entry.repeat);
+			}
+			return copy;
+		}
 		// Canvas-mode effects are inert stubs — nothing further to copy
 		if (this._shader && copy._shader) {
 			// replay this effect's cached uniform values onto the clone (same
@@ -586,48 +699,53 @@ export default class ShaderEffect {
 		return copy;
 	}
 
+	// the GL-program pass-throughs below additionally guard on `_shader`:
+	// a WGSL-realized effect is `enabled` without ever owning a GL program
+
 	/** @ignore */
 	bind() {
-		if (this.enabled) {
+		if (this.enabled && this._shader) {
 			this._shader.bind();
 		}
 	}
 
 	/** @ignore */
 	getAttribLocation(name) {
-		return this.enabled ? this._shader.getAttribLocation(name) : -1;
+		return this.enabled && this._shader
+			? this._shader.getAttribLocation(name)
+			: -1;
 	}
 
 	/** @ignore */
 	setVertexAttributes(gl, attributes, stride) {
-		if (this.enabled) {
+		if (this.enabled && this._shader) {
 			this._shader.setVertexAttributes(gl, attributes, stride);
 		}
 	}
 
 	/** @ignore */
 	get program() {
-		return this.enabled ? this._shader.program : null;
+		return this.enabled && this._shader ? this._shader.program : null;
 	}
 
 	/** @ignore */
 	get vertex() {
-		return this.enabled ? this._shader.vertex : null;
+		return this.enabled && this._shader ? this._shader.vertex : null;
 	}
 
 	/** @ignore */
 	get fragment() {
-		return this.enabled ? this._shader.fragment : null;
+		return this.enabled && this._shader ? this._shader.fragment : null;
 	}
 
 	/** @ignore */
 	get attributes() {
-		return this.enabled ? this._shader.attributes : {};
+		return this.enabled && this._shader ? this._shader.attributes : {};
 	}
 
 	/** @ignore */
 	get uniforms() {
-		return this.enabled ? this._shader.uniforms : {};
+		return this.enabled && this._shader ? this._shader.uniforms : {};
 	}
 
 	/**
@@ -648,6 +766,12 @@ export default class ShaderEffect {
 		off(ONCONTEXT_LOST, this._onContextLost, this);
 		off(ONCONTEXT_RESTORED, this._onContextRestored, this);
 
+		// WGSL: drop the lazily-built GPU state; the pipeline cache keeps the
+		// shared module (bounded retention, rebuilt per device epoch)
+		if (this.wgslRealization) {
+			this.wgslRealization.releaseGPU();
+			this._extraTextures.clear();
+		}
 		// _shader is undefined on Canvas-mode effects (early-returned)
 		if (this._shader) {
 			// release any extra textures bound via setTexture — both the GL

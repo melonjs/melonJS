@@ -24,6 +24,9 @@ function createMockDevice() {
 		createBindGroupLayout(descriptor) {
 			return { label: descriptor.label };
 		},
+		createBindGroup(descriptor) {
+			return { label: descriptor.label };
+		},
 		createShaderModule(descriptor) {
 			return { label: descriptor.label };
 		},
@@ -267,6 +270,62 @@ describe("WebGPU pipeline (device-free units)", () => {
 				cache.get("clear", "triangle-list", "additive", true).descriptor
 					.fragment.targets[0].blend,
 			).toBeUndefined();
+		});
+
+		it("registerShader dedupes by module text: same body → same family + module", () => {
+			const { cache } = makeCache();
+			const codeA = "fn a() {}";
+			const keyA = cache.registerShader(codeA);
+			const keyAgain = cache.registerShader(codeA);
+			const keyB = cache.registerShader("fn b() {}");
+			expect(keyAgain).toBe(keyA);
+			expect(keyB).not.toBe(keyA);
+			expect(cache.modules[keyA]).toBeDefined();
+		});
+
+		it("registered families ride an aliased vertex layout through get()", () => {
+			const { cache } = makeCache();
+			const key = cache.registerShader("fn c() {}", {
+				vertexLayoutKey: "quad",
+			});
+			const descriptor = cache.get(
+				key,
+				"triangle-list",
+				"normal",
+				true,
+			).descriptor;
+			// the frozen 28-byte quad layout, without re-registering it
+			expect(descriptor.vertex.buffers[0].arrayStride).toBe(28);
+			// same family + same state tuple → cached pipeline
+			expect(cache.get(key, "triangle-list", "normal", true)).toBe(
+				cache.get(key, "triangle-list", "normal", true),
+			);
+		});
+
+		it("effect layouts are cached by shape signature", () => {
+			const { cache } = makeCache();
+			const entries = [
+				{
+					binding: 0,
+					visibility: GPUShaderStage.FRAGMENT,
+					buffer: { type: "uniform", hasDynamicOffset: true },
+				},
+			];
+			const a = cache.getEffectLayout("u16", entries);
+			const b = cache.getEffectLayout("u16", entries);
+			const c = cache.getEffectLayout("u32", entries);
+			expect(b).toBe(a);
+			expect(c).not.toBe(a);
+		});
+
+		it("exposes the shared empty group (reserved group-2 slot) and an epoch", () => {
+			const first = makeCache().cache;
+			const second = makeCache().cache;
+			expect(first.emptyLayout).toBeDefined();
+			expect(first.emptyBindGroup).toBeDefined();
+			// each construction (device loss) bumps the epoch — consumers
+			// lazily rebuild device-scoped state on mismatch
+			expect(second.epoch).toBeGreaterThan(first.epoch);
 		});
 	});
 });
