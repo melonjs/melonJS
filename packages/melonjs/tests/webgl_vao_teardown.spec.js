@@ -11,14 +11,15 @@ import { Application, boot, video, WebGLRenderer } from "../src/index.js";
 describe("WebGL batcher teardown releases GL objects", () => {
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, {
+		const app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			failIfMajorPerformanceCaveat: false,
 		});
-		isWebGL = video.renderer instanceof WebGLRenderer;
+		await app.init();
+		isWebGL = app.renderer instanceof WebGLRenderer;
 	});
 
 	const requireWebGL = (ctx) => {
@@ -27,7 +28,7 @@ describe("WebGL batcher teardown releases GL objects", () => {
 		}
 	};
 
-	it("Application.destroy() deletes every batcher's vertex state and buffers", (ctx) => {
+	it("Application.destroy() deletes every batcher's vertex state and buffers", async (ctx) => {
 		requireWebGL(ctx);
 		const app = new Application(48, 48, {
 			parent: "screen",
@@ -35,6 +36,7 @@ describe("WebGL batcher teardown releases GL objects", () => {
 			failIfMajorPerformanceCaveat: false,
 			consoleHeader: false,
 		});
+		await app.init();
 		const renderer = app.renderer;
 		const gl = renderer.gl;
 
@@ -70,7 +72,7 @@ describe("WebGL batcher teardown releases GL objects", () => {
 		expect(renderer.vertexBuffer).toBe(null);
 	});
 
-	it("destroy() is idempotent and does not queue GL errors", (ctx) => {
+	it("destroy() is idempotent and does not queue GL errors", async (ctx) => {
 		requireWebGL(ctx);
 		const app = new Application(48, 48, {
 			parent: "screen",
@@ -78,6 +80,7 @@ describe("WebGL batcher teardown releases GL objects", () => {
 			failIfMajorPerformanceCaveat: false,
 			consoleHeader: false,
 		});
+		await app.init();
 		const gl = app.renderer.gl;
 		while (gl.getError() !== gl.NO_ERROR) {
 			/* drain */

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { boot } from "../src/index.js";
 import CanvasRenderTarget from "../src/video/rendertarget/canvasrendertarget.js";
 import RenderTarget from "../src/video/rendertarget/rendertarget.ts";
 import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
@@ -69,8 +69,8 @@ describe("RenderTarget", () => {
 			// that gracefully handle `gl === undefined` still skip
 			// cleanly instead of crashing every test in this block.
 			try {
-				await getWebGLRenderer(100, 100);
-				gl = video.renderer?.gl;
+				const shared = await getWebGLRenderer(100, 100);
+				gl = shared?.gl;
 			} catch {
 				gl = undefined;
 			}

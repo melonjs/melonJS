@@ -6,13 +6,14 @@
 import { Application, Text } from "melonjs";
 import { createExampleComponent } from "../utils";
 
-export const ExampleHelloWorld = createExampleComponent(() => {
+export const ExampleHelloWorld = createExampleComponent(async () => {
 	// create a new Application instance
 	const app = new Application(1218, 562, {
 		parent: "screen",
 		scale: "auto",
 		backgroundColor: "#202020",
 	});
+	await app.init();
 
 	// set a gray background color
 	app.world.backgroundColor.parseCSS("#202020");

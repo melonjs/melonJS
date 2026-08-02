@@ -1,11 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-	boot,
-	Camera3d,
-	Sprite3d,
-	video,
-	WebGLRenderer,
-} from "../src/index.js";
+import { boot, Camera3d, Sprite3d } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -35,15 +29,11 @@ describe("Sprite3d — WebGL draw path", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			await getWebGLRenderer(128, 128);
+			// resolves to the shared WebGLRenderer (gl guaranteed present),
+			// or undefined when WebGL is genuinely absent — tests skip below
+			renderer = await getWebGLRenderer(128, 128);
 		} catch {
 			// genuine WebGL absence — tests skip below
-		}
-		if (
-			video.renderer instanceof WebGLRenderer &&
-			typeof video.renderer.gl !== "undefined"
-		) {
-			renderer = video.renderer;
 		}
 	});
 

@@ -6,12 +6,16 @@
 import { game } from "melonjs";
 import { useEffect } from "react";
 
+// An example's bootstrap: async since the constructor/`init()` split
+// (`await app.init()`), optionally resolving to a teardown callback.
+type CreateGameFn = () => void | (() => void) | Promise<void | (() => void)>;
+
 // Tracks which example currently owns the live engine instance. Lets us
 // distinguish "same example remounting" (React StrictMode dev double-mount,
 // canvas just needs re-parenting) from "switching to a different example"
 // (the previous engine is stale and would draw the wrong scene under a
 // re-parented canvas). `game.isInitialized` alone can't tell those apart.
-let currentInitFn: (() => void | (() => void)) | null = null;
+let currentInitFn: CreateGameFn | null = null;
 // Cleanup callback returned by the current init, if any. Run on
 // unmount so per-example DOM additions / event listeners get torn down
 // even when the engine itself outlives the React component.
@@ -27,16 +31,14 @@ let currentTeardown: (() => void) | null = null;
  * should be undone there. The engine canvas itself is detached
  * automatically; teardown is for example-owned side-effects only.
  */
-export const createExampleComponent = (
-	createGameFn: () => void | (() => void),
-) => {
+export const createExampleComponent = (createGameFn: CreateGameFn) => {
 	return () => {
 		useEffect(() => {
 			if (currentInitFn === createGameFn) {
 				// Same example remounting — engine still alive from the
 				// first mount; the cleanup below detached the canvas, so
 				// re-parent it back into `#screen`.
-				const canvas = game.renderer?.getCanvas();
+				const canvas = game?.renderer?.getCanvas();
 				const screen = document.getElementById("screen");
 				if (canvas && screen && !screen.contains(canvas)) {
 					screen.appendChild(canvas);
@@ -54,10 +56,17 @@ export const createExampleComponent = (
 				globalThis.location.reload();
 				return;
 			} else {
-				// First mount of any example on this page load.
+				// First mount of any example on this page load. Async
+				// bootstraps resolve to their (optional) teardown callback.
 				currentInitFn = createGameFn;
-				const teardown = createGameFn();
-				currentTeardown = typeof teardown === "function" ? teardown : null;
+				const result = createGameFn();
+				if (result instanceof Promise) {
+					void result.then((teardown) => {
+						currentTeardown = typeof teardown === "function" ? teardown : null;
+					});
+				} else {
+					currentTeardown = typeof result === "function" ? result : null;
+				}
 			}
 			// Detach the canvas on unmount so a navigation back to the
 			// index page (via the "← Examples" topbar link, same tab)
@@ -68,7 +77,7 @@ export const createExampleComponent = (
 			// click. Also run the per-example teardown for any DOM /
 			// listener state the example added outside the engine.
 			return () => {
-				const canvas = game.renderer?.getCanvas();
+				const canvas = game?.renderer?.getCanvas();
 				if (canvas?.parentElement) {
 					canvas.parentElement.removeChild(canvas);
 				}

@@ -3,7 +3,16 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { game, input, Light2d, Sprite, Stage, state, video } from "melonjs";
+import {
+	Application,
+	game,
+	input,
+	Light2d,
+	Sprite,
+	Stage,
+	state,
+	video,
+} from "melonjs";
 import { createExampleComponent } from "../utils";
 
 /**
@@ -159,8 +168,8 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	video.init(728, 410, {
+const createGame = async () => {
+	const app = new Application(728, 410, {
 		parent: "screen",
 		scaleMethod: "flex",
 		// Normal-map lighting needs the WebGL renderer's lit pipeline.
@@ -168,6 +177,7 @@ const createGame = () => {
 		// as flat sprites and emit a one-shot console warning.
 		renderer: video.WEBGL,
 	});
+	await app.init();
 
 	state.set(state.PLAY, new PlayScreen());
 	state.change(state.PLAY);

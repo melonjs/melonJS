@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { Application, boot, video, WebGLRenderer } from "../src/index.js";
 
 /**
  * Benchmark for WebGL save/restore — measures performance and GC pressure.
@@ -9,14 +9,15 @@ import { boot, video, WebGLRenderer } from "../src/index.js";
 describe("WebGL save/restore benchmark", () => {
 	let renderer;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 	});
 
 	it("benchmark: 1000 sprites × 60 frames save/restore cycle", () => {

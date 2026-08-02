@@ -238,12 +238,13 @@ class CompressedTextureDisplay extends Renderable {
 	}
 }
 
-const createGame = () => {
+const createGame = async () => {
 	const app = new Application(800, 600, {
 		parent: "screen",
 		scaleMethod: "flex",
 		renderer: video.WEBGL,
 	});
+	await app.init();
 
 	const renderer = app.renderer as WebGLRenderer;
 	const formats = renderer.getSupportedCompressedTextureFormats();

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { boot, WebGLRenderer } from "../src/index.js";
 import WebGLIndexBuffer from "../src/video/webgl/buffer/index.js";
 import WebGLVertexState from "../src/video/webgl/buffer/vertexstate.js";
 import {
@@ -28,15 +28,15 @@ describe("WebGLVertexState", () => {
 
 	beforeAll(async () => {
 		boot();
-		await getWebGLRenderer(64, 64);
-		isWebGL = video.renderer instanceof WebGLRenderer;
+		const renderer = await getWebGLRenderer(64, 64);
+		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
-			gl = video.renderer.gl;
+			gl = renderer.gl;
 			// fill in the GL enums now that a context exists
 			ATTRIBUTES[0].type = gl.FLOAT;
 			ATTRIBUTES[1].type = gl.FLOAT;
 			ATTRIBUTES[2].type = gl.UNSIGNED_BYTE;
-			shader = video.renderer.batchers.get("quad").defaultShader;
+			shader = renderer.batchers.get("quad").defaultShader;
 		}
 	});
 

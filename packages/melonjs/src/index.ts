@@ -1,7 +1,7 @@
 // ES5/ES6 polyfills
 import "./polyfill/index.ts";
 
-import Application, { setDefaultGame } from "./application/application.ts";
+import Application from "./application/application.ts";
 import Camera2d from "./camera/camera2d.ts";
 import Camera3d from "./camera/camera3d.ts";
 import CameraEffect from "./camera/effects/camera_effect.ts";
@@ -103,6 +103,7 @@ import WaveEffect from "./video/webgl/effects/wave.js";
 import GLShader from "./video/webgl/glshader.js";
 import ShaderEffect from "./video/webgl/shadereffect.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
+import WebGPURenderer from "./video/webgpu/webgpu_renderer.js";
 
 export * from "./application/scaleMethods.ts";
 export * from "./application/settings.ts";
@@ -257,6 +258,7 @@ export {
 	VignetteEffect,
 	WaveEffect,
 	WebGLRenderer,
+	WebGPURenderer,
 	World,
 };
 
@@ -267,20 +269,16 @@ export {
 // eslint-disable-next-line prefer-const
 export let skipAutoInit = false;
 
-export { initialized } from "./system/bootstrap.ts";
-
-// create and register the default game application instance
-setDefaultGame(new Application(0, 0, { legacy: true }));
-
+// the default application: whichever `Application` was constructed most
+// recently registers itself here, so `game` is undefined until you make one
 export { game } from "./application/application.ts";
-
 /**
  * initialize the melonJS library.
  * this is automatically called unless skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
  * @see {@link skipAutoInit}
  */
-export { boot } from "./system/bootstrap.ts";
+export { boot, initialized } from "./system/bootstrap.ts";
 
 // call the library init function when ready
 DOMContentLoaded(() => {

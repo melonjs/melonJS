@@ -91,7 +91,7 @@ describe("fetchData file:// XHR fallback", () => {
 		const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			ok: true,
 			status: 200,
-			json: async () => {
+			json: () => {
 				return { ok: 1 };
 			},
 		});

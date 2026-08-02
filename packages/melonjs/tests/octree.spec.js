@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Camera2d,
 	Camera3d,
@@ -46,13 +47,14 @@ describe("Octree", () => {
 	let world;
 	let octree;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {
@@ -1029,13 +1031,14 @@ describe("Octree", () => {
 });
 
 describe("World broadphase dispatch (sortOn setter)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	it("constructs a QuadTree by default (sortOn=z)", () => {
@@ -1113,13 +1116,14 @@ describe("World broadphase dispatch (sortOn setter)", () => {
 });
 
 describe("BuiltinAdapter.raycast3d", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	it("returns null when sortOn is 2D (broadphase is QuadTree)", () => {
@@ -1252,13 +1256,14 @@ describe("BuiltinAdapter.raycast3d", () => {
 });
 
 describe("BuiltinAdapter.querySphere", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	it("returns empty under a 2D camera (sortOn !== 'depth')", () => {
@@ -1357,13 +1362,14 @@ describe("BuiltinAdapter.querySphere", () => {
 });
 
 describe("Camera3d.queryVisible", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	it("returns empty under a 2D broadphase (sortOn !== 'depth')", () => {
@@ -1424,13 +1430,14 @@ describe("Camera3d.queryVisible", () => {
  *   deterministic gameplay-only candidate sets.
  */
 describe("2.5D pattern (Camera3d + Octree + same-Z gameplay)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	it("World swaps to Octree when sortOn flips to 'depth'", () => {

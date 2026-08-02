@@ -11,7 +11,14 @@
  */
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, Rect, Renderable, video, World } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Rect,
+	Renderable,
+	video,
+	World,
+} from "../src/index.js";
 import Detector from "../src/physics/builtin/detector.js";
 
 const makeRenderable = (id) => {
@@ -28,13 +35,14 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 	/** @type {Detector} */
 	let detector;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {

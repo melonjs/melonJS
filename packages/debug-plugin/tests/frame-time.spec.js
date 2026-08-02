@@ -24,7 +24,11 @@ describe("DebugPanelPlugin frame times", () => {
 
 	beforeAll(async () => {
 		await boot();
-		video.init(64, 64, { parent: "screen", renderer: video.AUTO });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.AUTO,
+		});
+		await app.init();
 		plugin.register(DebugPanelPlugin, "debugPanel");
 		panel = plugin.cache.debugPanel;
 	});
@@ -213,17 +217,21 @@ describe("DebugPanelPlugin frame times", () => {
 			expect(panel.app).toBe(game);
 		});
 
-		it("reads timings from the app it was bound to, not the global one", () => {
-			// `game` is whichever Application was constructed LAST, while the
+		it("reads timings from the app it was bound to, not the global one", async () => {
+			// `game` is whichever Application was INITIALIZED last, while the
 			// frame events are broadcast by every one of them — a panel bound to
 			// app A must not report app B's numbers
 			const original = panel.app;
 			const other = new Application(32, 32, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
 				physics: { adapter: "builtin" },
 			});
+			await other.init();
 			const bound = new DebugPanelPlugin(input.KEY.S, original);
 			try {
-				// constructing an Application makes it the default, which is
+				// initializing an Application makes it the default, which is
 				// exactly the hazard this guards against
 				expect(game).toBe(other);
 				expect(bound.app).toBe(original);

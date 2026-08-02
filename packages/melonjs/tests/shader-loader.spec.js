@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	GLShader,
+	game,
 	loader,
 	ShaderEffect,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
 import {
@@ -30,7 +30,7 @@ describe("shader asset preloading", () => {
 	beforeAll(async () => {
 		boot();
 		await getWebGLRenderer(64, 64);
-		isWebGL = video.renderer instanceof WebGLRenderer;
+		isWebGL = game.renderer instanceof WebGLRenderer;
 	});
 
 	afterAll(() => {
@@ -117,7 +117,7 @@ describe("ShaderEffect.clone", () => {
 	beforeAll(() => {
 		// video already initialized by the previous describe's beforeAll (same
 		// page); grab the active renderer
-		renderer = video.renderer;
+		renderer = game.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -230,7 +230,7 @@ describe("GLShader.clone", () => {
 		"uniform float uIntensity;\nvoid main(void) { gl_FragColor = vec4(uIntensity); }";
 
 	beforeAll(() => {
-		renderer = video.renderer;
+		renderer = game.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -305,7 +305,7 @@ describe("shader assets + clone under context loss", () => {
 	};
 
 	beforeAll(() => {
-		renderer = video.renderer;
+		renderer = game.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;

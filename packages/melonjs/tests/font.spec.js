@@ -4,22 +4,23 @@ import {
 	BitmapText,
 	boot,
 	Color,
-	game,
 	loader,
 	Text,
 	video,
 } from "../src/index.js";
 
+let app;
+
 describe("Font : Text", () => {
 	let font;
-
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 
 		font = new Text(0, 0, {
 			font: "Arial",
@@ -29,32 +30,32 @@ describe("Font : Text", () => {
 		});
 	});
 
-	describe("font set Size", async () => {
-		it("default font size is '8'", async () => {
+	describe("font set Size", () => {
+		it("default font size is '8'", () => {
 			expect(font.height).toEqual(8);
 		});
 
-		it("default font size is '10'", async () => {
+		it("default font size is '10'", () => {
 			font.setFont("Arial", "10");
 			expect(font.height).toEqual(10);
 		});
 
-		it("set font size to 12px", async () => {
+		it("set font size to 12px", () => {
 			font.setFont("Arial", "12px");
 			expect(font.height).toEqual(12);
 		});
 
-		it("set font size to 2ex", async () => {
+		it("set font size to 2ex", () => {
 			font.setFont("Arial", "2ex");
 			expect(font.height).toEqual(2 * 12);
 		});
 
-		it("set font size to 1.5em", async () => {
+		it("set font size to 1.5em", () => {
 			font.setFont("Arial", "1.5em");
 			expect(font.height).toEqual(1.5 * 24);
 		});
 
-		it("set font size to 18pt", async () => {
+		it("set font size to 18pt", () => {
 			font.setFont("Arial", "18pt");
 			expect(font.height).toEqual(18 * 0.75);
 		});
@@ -135,7 +136,7 @@ describe("Font : Text", () => {
 	});
 
 	describe("word wrapping", () => {
-		it("word wrap a single string", async () => {
+		it("word wrap a single string", () => {
 			font.wordWrapWidth = 150;
 			font.setText(
 				"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -166,13 +167,13 @@ describe("Font : Text", () => {
 				size: 16,
 				text: "hello",
 			});
-			game.world.addChild(text);
+			app.world.addChild(text);
 
 			expect(text.parentApp).toBeDefined();
 			expect(text.parentApp).toBeInstanceOf(Application);
-			expect(text.parentApp.renderer).toBe(game.renderer);
+			expect(text.parentApp.renderer).toBe(app.renderer);
 
-			game.world.removeChild(text);
+			app.world.removeChild(text);
 		});
 	});
 
@@ -278,11 +279,11 @@ describe("Font : Text", () => {
 				textAlign: "left",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.left).toBeCloseTo(100, 0);
 			expect(bounds.width).toBeGreaterThan(0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("right-aligned bounds should end at pos.x", () => {
@@ -292,11 +293,11 @@ describe("Font : Text", () => {
 				textAlign: "right",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.right).toBeCloseTo(100, 0);
 			expect(bounds.left).toBeLessThan(100);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("center-aligned bounds should center on pos.x", () => {
@@ -306,11 +307,11 @@ describe("Font : Text", () => {
 				textAlign: "center",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			const center = bounds.left + bounds.width / 2;
 			expect(center).toBeCloseTo(100, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 	});
 
@@ -322,10 +323,10 @@ describe("Font : Text", () => {
 				textBaseline: "top",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.top).toBeCloseTo(100, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("bottom baseline bounds should end at pos.y", () => {
@@ -335,11 +336,11 @@ describe("Font : Text", () => {
 				textBaseline: "bottom",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.bottom).toBeCloseTo(100, 0);
 			expect(bounds.top).toBeLessThan(100);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("middle baseline bounds should center on pos.y", () => {
@@ -349,11 +350,11 @@ describe("Font : Text", () => {
 				textBaseline: "middle",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			const center = bounds.top + bounds.height / 2;
 			expect(center).toBeCloseTo(100, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("alphabetic baseline should behave like bottom", () => {
@@ -363,10 +364,10 @@ describe("Font : Text", () => {
 				textBaseline: "alphabetic",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.bottom).toBeCloseTo(100, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 	});
 
@@ -379,11 +380,11 @@ describe("Font : Text", () => {
 				textBaseline: "bottom",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.right).toBeCloseTo(200, 0);
 			expect(bounds.bottom).toBeCloseTo(200, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("center + middle should center bounds on pos", () => {
@@ -394,13 +395,13 @@ describe("Font : Text", () => {
 				textBaseline: "middle",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			const cx = bounds.left + bounds.width / 2;
 			const cy = bounds.top + bounds.height / 2;
 			expect(cx).toBeCloseTo(200, 0);
 			expect(cy).toBeCloseTo(200, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 	});
 
@@ -515,10 +516,10 @@ describe("Font : Text", () => {
 				textBaseline: "hanging",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.top).toBeCloseTo(100, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("ideographic baseline should behave like bottom", () => {
@@ -528,10 +529,10 @@ describe("Font : Text", () => {
 				textBaseline: "ideographic",
 				text: "test",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.bottom).toBeCloseTo(100, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 	});
 
@@ -543,11 +544,11 @@ describe("Font : Text", () => {
 				textAlign: "center",
 				text: "line one\nline two long",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			const cx = bounds.left + bounds.width / 2;
 			expect(cx).toBeCloseTo(200, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("right-aligned multiline bounds should end at pos.x", () => {
@@ -557,10 +558,10 @@ describe("Font : Text", () => {
 				textAlign: "right",
 				text: "line one\nline two long",
 			});
-			game.world.addChild(t);
+			app.world.addChild(t);
 			const bounds = t.getBounds();
 			expect(bounds.right).toBeCloseTo(200, 0);
-			game.world.removeChildNow(t);
+			app.world.removeChildNow(t);
 		});
 
 		it("multiline height should equal numLines * lineHeight", () => {
@@ -590,10 +591,10 @@ describe("Font : Text", () => {
 				size: 16,
 				text: "destroy test",
 			});
-			game.world.addChild(text);
+			app.world.addChild(text);
 
 			// removeChildNow triggers destroy synchronously
-			game.world.removeChildNow(text);
+			app.world.removeChildNow(text);
 
 			expect(text.canvasTexture).toBeUndefined();
 			expect(text.fillStyle).toBeUndefined();
@@ -630,11 +631,11 @@ describe("Font : BitmapText bounds", () => {
 				textAlign: "left",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.left).toBeCloseTo(100, 0);
 			// skip width check — font binary may not load in test environment
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("right-aligned bounds should end at pos.x", () => {
@@ -643,11 +644,11 @@ describe("Font : BitmapText bounds", () => {
 				textAlign: "right",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.right).toBeCloseTo(100, 0);
 			expect(bounds.left).toBeLessThan(100);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("center-aligned bounds should center on pos.x", () => {
@@ -656,11 +657,11 @@ describe("Font : BitmapText bounds", () => {
 				textAlign: "center",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			const center = bounds.left + bounds.width / 2;
 			expect(center).toBeCloseTo(100, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -675,10 +676,10 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "top",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.top).toBeCloseTo(100 + glyphYOff, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("bottom baseline bounds should end at pos.y", () => {
@@ -687,11 +688,11 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "bottom",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.bottom).toBeCloseTo(100, 0);
 			expect(bounds.top).toBeLessThan(100);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("middle baseline bounds should center on pos.y", () => {
@@ -700,11 +701,11 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "middle",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			const center = bounds.top + bounds.height / 2;
 			expect(center).toBeCloseTo(100, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -716,11 +717,11 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "bottom",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.right).toBeCloseTo(200, 0);
 			expect(bounds.bottom).toBeCloseTo(200, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("center + middle should center bounds on pos", () => {
@@ -730,13 +731,13 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "middle",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			const cx = bounds.left + bounds.width / 2;
 			const cy = bounds.top + bounds.height / 2;
 			expect(cx).toBeCloseTo(200, 0);
 			expect(cy).toBeCloseTo(200, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -747,10 +748,10 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "bottom",
 				text: "LINE1\nLINE2\nLINE3",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.bottom).toBeCloseTo(200, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("middle baseline multiline should center on pos.y", () => {
@@ -759,11 +760,11 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "middle",
 				text: "LINE1\nLINE2\nLINE3",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			const cy = bounds.top + bounds.height / 2;
 			expect(cy).toBeCloseTo(200, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("top baseline multiline height should grow with lines", () => {
@@ -775,12 +776,12 @@ describe("Font : BitmapText bounds", () => {
 				font: "xolo12",
 				text: "A\nB\nC",
 			});
-			game.world.addChild(b1);
-			game.world.addChild(b3);
+			app.world.addChild(b1);
+			app.world.addChild(b3);
 			// 3 lines should be roughly 3x the height of 1 line
 			expect(b3.getBounds().height).toBeGreaterThan(b1.getBounds().height * 2);
-			game.world.removeChildNow(b1);
-			game.world.removeChildNow(b3);
+			app.world.removeChildNow(b1);
+			app.world.removeChildNow(b3);
 		});
 	});
 
@@ -796,12 +797,12 @@ describe("Font : BitmapText bounds", () => {
 				size: 2.0,
 				text: "TEST",
 			});
-			game.world.addChild(b1);
-			game.world.addChild(b2);
+			app.world.addChild(b1);
+			app.world.addChild(b2);
 			expect(b2.getBounds().width).toBeGreaterThan(b1.getBounds().width);
 			expect(b2.getBounds().height).toBeGreaterThan(b1.getBounds().height);
-			game.world.removeChildNow(b1);
-			game.world.removeChildNow(b2);
+			app.world.removeChildNow(b1);
+			app.world.removeChildNow(b2);
 		});
 
 		it("resize should update bounds", () => {
@@ -809,11 +810,11 @@ describe("Font : BitmapText bounds", () => {
 				font: "xolo12",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const w1 = b.getBounds().width;
 			b.resize(3.0);
 			expect(b.getBounds().width).toBeGreaterThan(w1);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -829,12 +830,12 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "top",
 				text: "TEST",
 			});
-			game.world.addChild(b);
-			game.world.addChild(bTop);
+			app.world.addChild(b);
+			app.world.addChild(bTop);
 			expect(b.getBounds().top).toBeCloseTo(bTop.getBounds().top, 0);
 			expect(b.getBounds().bottom).toBeCloseTo(bTop.getBounds().bottom, 0);
-			game.world.removeChildNow(b);
-			game.world.removeChildNow(bTop);
+			app.world.removeChildNow(b);
+			app.world.removeChildNow(bTop);
 		});
 
 		it("ideographic baseline should behave like bottom", () => {
@@ -843,11 +844,11 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "ideographic",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.bottom).toBeCloseTo(100, 0);
 			expect(bounds.top).toBeLessThan(100);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("alphabetic baseline should behave like bottom", () => {
@@ -856,10 +857,10 @@ describe("Font : BitmapText bounds", () => {
 				textBaseline: "alphabetic",
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.bottom).toBeCloseTo(100, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -883,11 +884,11 @@ describe("Font : BitmapText bounds", () => {
 
 		it("changing text should update bounds width", () => {
 			const b = new BitmapText(0, 0, { font: "xolo12", text: "A" });
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const w1 = b.getBounds().width;
 			b.setText("ABCDEF");
 			expect(b.getBounds().width).toBeGreaterThan(w1);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -945,13 +946,13 @@ describe("Font : BitmapText bounds", () => {
 				size: 1.0,
 				text: "TEST",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const w1 = b.getBounds().width;
 			const h1 = b.getBounds().height;
 			b.resize(2.0);
 			expect(b.getBounds().width).toBeCloseTo(w1 * 2, 0);
 			expect(b.getBounds().height).toBeCloseTo(h1 * 2, 0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -996,11 +997,11 @@ describe("Font : BitmapText bounds", () => {
 				lineHeight: 2.0,
 				text: "A\nB",
 			});
-			game.world.addChild(b1);
-			game.world.addChild(b2);
+			app.world.addChild(b1);
+			app.world.addChild(b2);
 			expect(b2.getBounds().height).toBeGreaterThan(b1.getBounds().height);
-			game.world.removeChildNow(b1);
-			game.world.removeChildNow(b2);
+			app.world.removeChildNow(b1);
+			app.world.removeChildNow(b2);
 		});
 	});
 
@@ -1036,11 +1037,11 @@ describe("Font : BitmapText bounds", () => {
 				font: "xolo12",
 				text: "",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			const bounds = b.getBounds();
 			expect(bounds.width).toEqual(0);
 			expect(bounds.height).toEqual(0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 
 		it("multiline text bounds should encompass all lines", () => {
@@ -1052,13 +1053,13 @@ describe("Font : BitmapText bounds", () => {
 				font: "xolo12",
 				text: "LINE1\nLINE2\nLINE3",
 			});
-			game.world.addChild(single);
-			game.world.addChild(multi);
+			app.world.addChild(single);
+			app.world.addChild(multi);
 			expect(multi.getBounds().height).toBeGreaterThan(
 				single.getBounds().height,
 			);
-			game.world.removeChildNow(single);
-			game.world.removeChildNow(multi);
+			app.world.removeChildNow(single);
+			app.world.removeChildNow(multi);
 		});
 
 		it("bounds width should grow with text length", () => {
@@ -1078,10 +1079,10 @@ describe("Font : BitmapText bounds", () => {
 				font: "xolo12",
 				text: "X",
 			});
-			game.world.addChild(b);
+			app.world.addChild(b);
 			expect(b.getBounds().width).toBeGreaterThan(0);
 			expect(b.getBounds().height).toBeGreaterThan(0);
-			game.world.removeChildNow(b);
+			app.world.removeChildNow(b);
 		});
 	});
 
@@ -1091,8 +1092,8 @@ describe("Font : BitmapText bounds", () => {
 				font: "xolo12",
 				text: "TEST",
 			});
-			game.world.addChild(b);
-			game.world.removeChildNow(b);
+			app.world.addChild(b);
+			app.world.removeChildNow(b);
 
 			expect(b.fontScale).toBeUndefined();
 			expect(b.fontData).toBeUndefined();

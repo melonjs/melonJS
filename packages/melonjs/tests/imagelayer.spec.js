@@ -1,16 +1,25 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { boot, game, ImageLayer, Matrix2d, Rect, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	ImageLayer,
+	Matrix2d,
+	Rect,
+	video,
+} from "../src/index.js";
 
 describe("ImageLayer", () => {
 	let testImage;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 
 		// create a small canvas to use as the image source
 		testImage = document.createElement("canvas");
@@ -25,9 +34,9 @@ describe("ImageLayer", () => {
 				name: "test",
 				repeat: "repeat",
 			});
-			game.world.addChild(layer);
+			app.world.addChild(layer);
 			expect(layer._pattern).toBeDefined();
-			game.world.removeChildNow(layer);
+			app.world.removeChildNow(layer);
 		});
 	});
 
@@ -38,10 +47,10 @@ describe("ImageLayer", () => {
 				name: "test",
 				repeat: "no-repeat",
 			});
-			game.world.addChild(layer);
+			app.world.addChild(layer);
 			expect(layer.parentApp).toBeDefined();
-			expect(layer.parentApp.viewport).toBe(game.viewport);
-			game.world.removeChildNow(layer);
+			expect(layer.parentApp.viewport).toBe(app.viewport);
+			app.world.removeChildNow(layer);
 		});
 
 		it("should resize to viewport dimensions on activate", () => {
@@ -50,10 +59,10 @@ describe("ImageLayer", () => {
 				name: "test",
 				repeat: "no-repeat",
 			});
-			game.world.addChild(layer);
-			expect(layer.width).toEqual(game.viewport.width);
-			expect(layer.height).toEqual(game.viewport.height);
-			game.world.removeChildNow(layer);
+			app.world.addChild(layer);
+			expect(layer.width).toEqual(app.viewport.width);
+			expect(layer.height).toEqual(app.viewport.height);
+			app.world.removeChildNow(layer);
 		});
 
 		it("repeat-x should set width to Infinity on activate", () => {
@@ -62,10 +71,10 @@ describe("ImageLayer", () => {
 				name: "test",
 				repeat: "repeat-x",
 			});
-			game.world.addChild(layer);
+			app.world.addChild(layer);
 			expect(layer.width).toEqual(Infinity);
-			expect(layer.height).toEqual(game.viewport.height);
-			game.world.removeChildNow(layer);
+			expect(layer.height).toEqual(app.viewport.height);
+			app.world.removeChildNow(layer);
 		});
 
 		it("repeat-y should set height to Infinity on activate", () => {
@@ -74,10 +83,10 @@ describe("ImageLayer", () => {
 				name: "test",
 				repeat: "repeat-y",
 			});
-			game.world.addChild(layer);
-			expect(layer.width).toEqual(game.viewport.width);
+			app.world.addChild(layer);
+			expect(layer.width).toEqual(app.viewport.width);
 			expect(layer.height).toEqual(Infinity);
-			game.world.removeChildNow(layer);
+			app.world.removeChildNow(layer);
 		});
 	});
 

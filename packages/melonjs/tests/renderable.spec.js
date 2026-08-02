@@ -1,5 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, Container, Renderable, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Container,
+	Renderable,
+	video,
+} from "../src/index.js";
 
 describe("Renderable", () => {
 	describe("bounds updates", () => {
@@ -283,18 +289,19 @@ describe("Renderable", () => {
 	});
 
 	describe("postEffect pipeline integration", () => {
-		const setup = () => {
+		let app;
+		beforeAll(async () => {
 			boot();
-			video.init(800, 600, {
+			app = new Application(800, 600, {
 				parent: "screen",
 				scale: "auto",
 				renderer: video.CANVAS,
 			});
-		};
+			await app.init();
+		});
 
 		it("preDraw with single effect should set customShader", () => {
-			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);
 			const effect = { enabled: true };
 			renderable.addPostEffect(effect);
@@ -305,8 +312,7 @@ describe("Renderable", () => {
 		});
 
 		it("preDraw with no effects should not set customShader", () => {
-			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);
 
 			renderable.preDraw(renderer);
@@ -315,8 +321,7 @@ describe("Renderable", () => {
 		});
 
 		it("preDraw/postDraw should not leak customShader state", () => {
-			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);
 			const effect = { enabled: true };
 			renderable.addPostEffect(effect);
@@ -330,8 +335,7 @@ describe("Renderable", () => {
 		});
 
 		it("disabled single effect should not be set as customShader", () => {
-			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);
 			renderable.addPostEffect({ enabled: false });
 
@@ -343,8 +347,7 @@ describe("Renderable", () => {
 		});
 
 		it("_postEffectManaged flag should prevent preDraw from calling beginPostEffect", () => {
-			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);
 			renderable.addPostEffect({ enabled: true });
 			renderable.addPostEffect({ enabled: true });
@@ -361,8 +364,7 @@ describe("Renderable", () => {
 		});
 
 		it("multiple effects on renderable should trigger beginPostEffect", () => {
-			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const renderable = new Renderable(0, 0, 100, 100);
 			renderable.addPostEffect({ enabled: true });
 			renderable.addPostEffect({ enabled: true });
@@ -374,7 +376,6 @@ describe("Renderable", () => {
 		});
 
 		it("clearPostEffects should remove all and destroy", () => {
-			setup();
 			const renderable = new Renderable(0, 0, 100, 100);
 			let count = 0;
 			renderable.addPostEffect({

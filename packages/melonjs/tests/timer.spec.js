@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
-import { timer } from "../src/index.js";
-import { init } from "../src/video/video.js";
+import { Application, timer } from "../src/index.js";
 
 describe("Timer", () => {
-	beforeAll(() => {
-		init(100, 100);
+	beforeAll(async () => {
+		const app = new Application(100, 100);
+		await app.init();
 	});
 
 	describe("setTimeout", () => {

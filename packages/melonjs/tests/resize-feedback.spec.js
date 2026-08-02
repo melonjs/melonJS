@@ -27,7 +27,7 @@ describe("Auto-scale resize feedback (#1231)", () => {
 		outer = undefined;
 	});
 
-	function makeApp() {
+	async function makeApp() {
 		// wrapper with NO fixed dimensions (auto-sizes around its children)
 		// plus padding — the exact layout shape from the issue report
 		outer = document.createElement("div");
@@ -36,16 +36,19 @@ describe("Auto-scale resize feedback (#1231)", () => {
 		outer.appendChild(inner);
 		document.body.appendChild(outer);
 
-		return new Application(100, 30, {
+		const app = new Application(100, 30, {
 			parent: inner,
 			renderer: video.CANVAS,
 			scale: "auto",
 			consoleHeader: false,
 		});
+		// the canvas is created and appended by init(), not the constructor
+		await app.init();
+		return app;
 	}
 
-	it("canvas CSS size reaches a fixed point instead of growing per resize", () => {
-		const app = makeApp();
+	it("canvas CSS size reaches a fixed point instead of growing per resize", async () => {
+		const app = await makeApp();
 		const canvas = app.renderer.getCanvas();
 
 		onresize(app); // settle once
@@ -60,8 +63,8 @@ describe("Auto-scale resize feedback (#1231)", () => {
 		expect(parseFloat(canvas.style.height)).toBeCloseTo(h1, 1);
 	});
 
-	it("the engine-inserted canvas defaults to display:block (no baseline gap)", () => {
-		const app = makeApp();
+	it("the engine-inserted canvas defaults to display:block (no baseline gap)", async () => {
+		const app = await makeApp();
 		expect(app.renderer.getCanvas().style.display).toBe("block");
 	});
 });

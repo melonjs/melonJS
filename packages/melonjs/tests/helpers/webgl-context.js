@@ -1,4 +1,4 @@
-import { boot, event, video } from "../../src/index.js";
+import { Application, boot, event, video } from "../../src/index.js";
 import WebGLRenderer from "../../src/video/webgl/webgl_renderer.js";
 
 /**
@@ -6,8 +6,9 @@ import WebGLRenderer from "../../src/video/webgl/webgl_renderer.js";
  *
  * ## Why this exists
  *
- * Vitest browser mode runs every spec file in one page, and `video.init()`
- * builds a fresh canvas and GL context each time it is called. With a spec
+ * Vitest browser mode runs every spec file in one page, and constructing an
+ * `Application` and awaiting `init()` builds a fresh canvas and GL context
+ * each time. With a spec
  * file per feature that adds up to dozens of live contexts in a single
  * session — and browsers cap how many they will keep, force-losing the oldest
  * once past the limit. Past that point, creating another context stalls.
@@ -63,6 +64,17 @@ let shared = null;
 let unavailable = false;
 
 /**
+ * The renderer most recently announced via VIDEO_INIT — every
+ * `Application.init()` emits it. Used to detect that a spec managing its own
+ * renderer has taken over since we last handed out `shared`, without
+ * reaching for the `game` global.
+ */
+let lastAnnounced = null;
+event.on(event.VIDEO_INIT, (renderer) => {
+	lastAnnounced = renderer;
+});
+
+/**
  * Borrow the shared WebGL renderer, creating it on first use.
  *
  * Resizes to the requested dimensions, since specs assume the canvas is the
@@ -79,8 +91,9 @@ export async function getWebGLRenderer(width = 128, height = 128) {
 	await boot();
 
 	if (shared === null) {
+		let app;
 		try {
-			video.init(width, height, {
+			app = new Application(width, height, {
 				parent: "screen",
 				renderer: video.WEBGL,
 				// headless Chromium's software GL trips the "major performance
@@ -88,26 +101,25 @@ export async function getWebGLRenderer(width = 128, height = 128) {
 				// back to Canvas and every WebGL spec skips
 				failIfMajorPerformanceCaveat: false,
 			});
+			await app.init();
 		} catch {
 			// genuine absence of WebGL — callers skip
 			unavailable = true;
 			return undefined;
 		}
 		if (
-			!(video.renderer instanceof WebGLRenderer) ||
-			typeof video.renderer.gl === "undefined"
+			!(app.renderer instanceof WebGLRenderer) ||
+			typeof app.renderer.gl === "undefined"
 		) {
 			unavailable = true;
 			return undefined;
 		}
-		shared = video.renderer;
-	} else if (video.renderer !== shared) {
+		shared = app.renderer;
+	} else if (lastAnnounced !== shared) {
 		// A spec that manages its own renderer (a few must — the teardown and
-		// required-check specs, for instance) has replaced the global since we
-		// last ran. Re-announce ours so engine paths that still read
-		// `video.renderer` / `game.renderer` see it. The export is a live
-		// binding kept in sync from this event, so it cannot be assigned
-		// directly from here.
+		// required-check specs, for instance) has announced its own since we
+		// last ran. Re-announce ours so engine paths keyed off VIDEO_INIT
+		// (e.g. the shader asset parser's active-renderer tracking) see it.
 		event.emit(event.VIDEO_INIT, shared);
 	}
 

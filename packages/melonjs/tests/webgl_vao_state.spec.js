@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { boot, WebGLRenderer } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -29,8 +29,7 @@ describe("WebGL vertex state (VAO) isolation", () => {
 
 	beforeAll(async () => {
 		boot();
-		await getWebGLRenderer(160, 120);
-		renderer = video.renderer;
+		renderer = await getWebGLRenderer(160, 120);
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;

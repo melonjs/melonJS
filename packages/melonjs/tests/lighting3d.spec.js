@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Color,
-	game,
 	Light3d,
 	Stage,
 	state,
@@ -70,34 +70,37 @@ describe("Light3d", () => {
 });
 
 describe("Light3d ↔ Stage registration", () => {
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		const s = new Stage();
 		state.set(state.DEFAULT, s);
 		state.change(state.DEFAULT, true);
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	it("registers with the active stage when added to the world, deregisters when removed", () => {
 		const stage = state.current();
 		const light = new Light3d({ direction: [0, 1, 0] });
-		game.world.addChild(light);
+		app.world.addChild(light);
 		expect(stage._activeLights3d.has(light)).toBe(true);
 		// removeChildNow (not removeChild, which defers) fires onDeactivateEvent
 		// synchronously so the deregistration is observable in-test
-		game.world.removeChildNow(light);
+		app.world.removeChildNow(light);
 		expect(stage._activeLights3d.has(light)).toBe(false);
 	});
 });

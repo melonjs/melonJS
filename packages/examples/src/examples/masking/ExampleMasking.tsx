@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	Ellipse,
 	event,
 	game,
@@ -18,22 +19,23 @@ import {
 import { createExampleComponent } from "../utils";
 import bgImage from "./assets/psycool.jpg";
 
-const createGame = () => {
-	if (
-		!video.init(1218, 768, {
+const createGame = async () => {
+	try {
+		const app = new Application(1218, 768, {
 			parent: "screen",
 			scaleMethod: "fit",
 			renderer: video.AUTO,
 			preferWebGL1: false,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}
 
 	loader.load({ name: "background", type: "image", src: bgImage }, () => {
 		// apply subtle vignette post-process effect on the camera
-		game.viewport.shader = new VignetteEffect(video.renderer);
+		game.viewport.shader = new VignetteEffect(game.renderer);
 		const bg_sprite1 = new Sprite(
 			game.viewport.width / 2,
 			game.viewport.height / 2,

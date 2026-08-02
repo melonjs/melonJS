@@ -30,6 +30,10 @@ export const WEBGL = 1;
  * Auto-select the renderer: prefer WebGL when available, silently fall
  * back to Canvas otherwise. Application construction always succeeds.
  *
+ * {@link WEBGPU} is **not** a candidate here and will not be selected
+ * automatically, however capable the browser — it stays opt-in until it
+ * reaches parity with WebGL.
+ *
  * Use this when your scene works under both renderers (2D sprites,
  * primitives, basic tile maps) and you want the engine to pick the
  * best available backend. Note: subsystems that require WebGL
@@ -40,4 +44,26 @@ export const WEBGL = 1;
  */
 export const AUTO = 2;
 
-export type RendererType = typeof CANVAS | typeof WEBGL | typeof AUTO;
+/**
+ * Require the **experimental** WebGPU renderer. What exists today is the
+ * asynchronous bootstrap — adapter/device negotiation and canvas
+ * configuration in `await app.init()` — plus a real per-frame clear pass;
+ * every other drawing method is still a no-op, so the application boots,
+ * runs its loop and clears to its background color, and renders nothing
+ * else. `app.init()` rejects when WebGPU is unavailable in the
+ * environment; like {@link WEBGL} it fails loudly rather than falling
+ * back, so a missing capability surfaces at startup.
+ *
+ * Deliberately excluded from {@link AUTO}: until the WebGPU backend reaches
+ * feature parity with WebGL it is opt-in only, so no existing game can be
+ * silently moved onto an incomplete backend by a browser gaining support.
+ * You have to ask for it by name (or with the `#webgpu` URI fragment) to
+ * exercise it.
+ */
+export const WEBGPU = 3;
+
+export type RendererType =
+	| typeof CANVAS
+	| typeof WEBGL
+	| typeof AUTO
+	| typeof WEBGPU;

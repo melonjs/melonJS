@@ -7,6 +7,7 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
+	game,
 	input,
 	level,
 	type PhysicsAdapter,
@@ -14,7 +15,6 @@ import {
 	type Renderable,
 	Sprite,
 	Vector2d,
-	video,
 } from "melonjs";
 import { LAND_TOLERANCE, oneWayPlatforms } from "../createGame";
 import { gameState } from "../gameState";
@@ -284,7 +284,7 @@ export class PlayerEntity extends Sprite {
 		}
 
 		// check if we fell into a hole
-		if (!this.inViewport && this.getBounds().top > video.renderer.height) {
+		if (!this.inViewport && this.getBounds().top > game.renderer.height) {
 			const app = this.parentApp;
 			// if yes reset the game
 			app.world.removeChild(this);

@@ -1,5 +1,12 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { boot, FrameAnimation, Sprite, Sprite3d, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	FrameAnimation,
+	Sprite,
+	Sprite3d,
+	video,
+} from "../src/index.js";
 
 /**
  * FrameAnimation — the shared frame-animation engine behind Sprite (2D) and
@@ -47,9 +54,13 @@ const HOSTS = [
 
 for (const HOST of HOSTS) {
 	describe(`FrameAnimation via ${HOST.name}`, () => {
-		beforeAll(() => {
+		beforeAll(async () => {
 			boot();
-			video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.CANVAS,
+			});
+			await app.init();
 		});
 
 		// a fresh host with two animations defined (4-frame "walk", 2-frame "ab")
@@ -439,9 +450,13 @@ for (const HOST of HOSTS) {
 
 // Sprite3d-only: a frame change must remap the quad's UVs (its `_applyFrame`)
 describe("FrameAnimation → Sprite3d UV remap", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("maps the current frame onto the quad UVs", () => {

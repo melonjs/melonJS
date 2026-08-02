@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Matrix3d, video } from "../src/index.js";
+import { Application, boot, Matrix3d, video } from "../src/index.js";
 
 /**
  * Regression guard: under a 2D ortho camera a sprite's `depth` / `pos.z` is a
@@ -19,10 +19,14 @@ describe("2D sprite depth is sort-only under an ortho projection", () => {
 	const ortho = new Matrix3d().ortho(0, 320, 240, 0, -1e6, 1e6);
 	const perspective = new Matrix3d().perspective(Math.PI / 4, 1.333, 0.1, 2000);
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(320, 240, { parent: "screen", renderer: video.CANVAS });
-		renderer = video.renderer;
+		const app = new Application(320, 240, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+		renderer = app.renderer;
 	});
 
 	it("ortho projection: a large sort key is kept out of clip-space (depth → 0)", () => {

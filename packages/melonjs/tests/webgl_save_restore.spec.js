@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { Application, boot, video, WebGLRenderer } from "../src/index.js";
 
 /**
  * Test suite for the WebGL renderer save()/restore() state stack.
@@ -20,24 +20,26 @@ describe("WebGL Renderer save/restore", () => {
 	let renderer;
 	let isWebGL;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 			failIfMajorPerformanceCaveat: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	const requireWebGL = (ctx) => {

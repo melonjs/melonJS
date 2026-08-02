@@ -1,5 +1,14 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Entity, loader, Rect, Sprite, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Entity,
+	loader,
+	Rect,
+	Sprite,
+	video,
+} from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 describe("Entity", () => {
 	let entity;
@@ -7,11 +16,12 @@ describe("Entity", () => {
 
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 
 		loader.setOptions({ crossOrigin: "anonymous" });
 
@@ -19,7 +29,7 @@ describe("Entity", () => {
 		const entity_sprite = new Sprite(0, 0, {
 			framewidth: 32,
 			frameheight: 64,
-			image: video.createCanvas(32, 64),
+			image: Renderer.createCanvas(32, 64),
 			anchorPoint: { x: 0, y: 0 },
 		});
 
@@ -38,16 +48,16 @@ describe("Entity", () => {
 		defaultRectShape = new Rect(10, 10, 32, 64);
 	});
 
-	it("has an empty set of shapes", async () => {
+	it("has an empty set of shapes", () => {
 		expect(entity.body.shapes.length).toEqual(0);
 	});
 
-	it("has a first shape", async () => {
+	it("has a first shape", () => {
 		entity.body.addShape(defaultRectShape);
 		expect(entity.body.shapes.length).toEqual(1);
 	});
 
-	it("has the correct body bounds: A", async () => {
+	it("has the correct body bounds: A", () => {
 		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === 10 &&
@@ -57,7 +67,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct renderable bounds: A", async () => {
+	it("has the correct renderable bounds: A", () => {
 		const bounds = entity.renderable.getBounds();
 		expect(
 			bounds.x === 0 &&
@@ -67,7 +77,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct entity bounds: A", async () => {
+	it("has the correct entity bounds: A", () => {
 		const bounds = entity.getBounds();
 		expect(
 			bounds.x === 0 &&
@@ -77,12 +87,12 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has a second shape", async () => {
+	it("has a second shape", () => {
 		entity.body.addShape(defaultRectShape.clone().setShape(-10, -10, 32, 64));
 		expect(entity.body.shapes.length).toEqual(2);
 	});
 
-	it("has the correct body bounds: B", async () => {
+	it("has the correct body bounds: B", () => {
 		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === -10 &&
@@ -92,7 +102,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct renderable bounds: B", async () => {
+	it("has the correct renderable bounds: B", () => {
 		const { renderable } = entity;
 		expect(
 			renderable.pos.x === 0 &&
@@ -102,7 +112,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct entity bounds: B", async () => {
+	it("has the correct entity bounds: B", () => {
 		const bounds = entity.getBounds();
 		expect(
 			bounds.x === -10 &&
@@ -112,11 +122,11 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("removes the second shape", async () => {
+	it("removes the second shape", () => {
 		expect(entity.body.removeShapeAt(1)).toEqual(1);
 	});
 
-	it("has the correct body bounds: C", async () => {
+	it("has the correct body bounds: C", () => {
 		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === 10 &&
@@ -126,7 +136,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct renderable bounds: C", async () => {
+	it("has the correct renderable bounds: C", () => {
 		const { renderable } = entity;
 		expect(
 			renderable.pos.x === 0 &&
@@ -136,7 +146,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct entity bounds: C", async () => {
+	it("has the correct entity bounds: C", () => {
 		const bounds = entity.getBounds();
 		expect(
 			bounds.x === 0 &&
@@ -146,7 +156,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct entity geometry: C", async () => {
+	it("has the correct entity geometry: C", () => {
 		expect(
 			entity.pos.x === 0 &&
 				entity.pos.y === 0 &&
@@ -155,12 +165,12 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("moves properly", async () => {
+	it("moves properly", () => {
 		entity.pos.set(120, 150);
 		expect(entity.pos.x === 120 && entity.pos.y === 150).toEqual(true);
 	});
 
-	it("has the correct body bounds: D", async () => {
+	it("has the correct body bounds: D", () => {
 		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === 10 &&
@@ -170,7 +180,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct renderable bounds: D", async () => {
+	it("has the correct renderable bounds: D", () => {
 		const renderable = entity.renderable;
 		expect(
 			renderable.pos.x === 0 &&
@@ -180,7 +190,7 @@ describe("Entity", () => {
 		).toEqual(true);
 	});
 
-	it("has the correct entity bounds: D", async () => {
+	it("has the correct entity bounds: D", () => {
 		const bounds = entity.getBounds();
 		expect(
 			bounds.x === 120 &&

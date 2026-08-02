@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TMXTileMap, video } from "../src/index.js";
 import {
 	TMX_FLIP_AD,
 	TMX_FLIP_H,
@@ -120,13 +120,14 @@ function makeRecordingRenderer() {
 }
 
 describe("Tile rendering raw path (drawTileRaw)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(128, 128, {
+		const app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		paintGradientCanvas("rawtest", 64, 64, [
 			"#ff0000",
 			"#00ff00",

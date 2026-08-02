@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { BitmapText, Container, video } from "melonjs";
+import { BitmapText, Container, game } from "melonjs";
 
 import { data } from "./data";
 
@@ -42,7 +42,7 @@ export class HUDContainer extends Container {
 		this.addChild(this.score);
 
 		// hiscore display
-		this.hiscore = new BitmapText(video.renderer.width, 10, {
+		this.hiscore = new BitmapText(game.renderer.width, 10, {
 			font: "PressStart2P",
 			size: 1.5,
 			textAlign: "right",

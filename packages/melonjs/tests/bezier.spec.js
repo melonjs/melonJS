@@ -5,11 +5,12 @@ import { Application } from "../src/index.js";
 describe("Bezier Curves", () => {
 	let app;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 		});
+		await app.init();
 	});
 
 	describe("quadraticCurveTo", () => {

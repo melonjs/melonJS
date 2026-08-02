@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Renderable, video } from "../src/index.js";
+import { Application, boot, Renderable, video } from "../src/index.js";
 
 /**
  * `ShaderEffect`/`GLShader` carry a `shared` flag. When set, a renderable does
@@ -21,9 +21,13 @@ const makeEffect = (shared = false) => {
 };
 
 describe("shared post-effect (shader) lifecycle", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("removePostEffect destroys an owned effect but keeps a shared one", () => {

@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Gradient,
 	NoiseTexture2d,
@@ -31,9 +32,13 @@ const edgeSeam = (tex) => {
 };
 
 describe("NoiseTexture2d", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(320, 240, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(320, 240, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("is a Texture2d and bakes a canvas of the requested size", () => {

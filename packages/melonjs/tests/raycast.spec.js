@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
+	Application,
 	Body,
 	BuiltinAdapter,
 	boot,
@@ -64,13 +65,15 @@ describe("Raycast", () => {
 	let adapter;
 	let world;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {
@@ -298,11 +301,11 @@ describe("Raycast", () => {
 	describe("collision.rayCast (top-level public API)", () => {
 		it("exposes a `rayCast` function that delegates to the active world's detector", () => {
 			// `collision.rayCast(line, result)` is a one-line delegate:
-			//   `return game.world.detector.rayCast(line, result);`
+			//   `return app.world.detector.rayCast(line, result);`
 			// The actual SAT walk is covered by the `Detector.rayCast`
 			// tests above. Here we pin the public surface — the function
 			// exists, takes a Line, and returns an array (a no-op when
-			// `game.world` is the empty default).
+			// `app.world` is the empty default).
 			expect(typeof collision.rayCast).toEqual("function");
 			const result = collision.rayCast(lineBetween(0, 60, 200, 60));
 			expect(Array.isArray(result)).toEqual(true);

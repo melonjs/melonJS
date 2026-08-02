@@ -5,6 +5,7 @@
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
+	Application,
 	event,
 	game,
 	input,
@@ -177,13 +178,14 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	video.init(1024, 576, {
+const createGame = async () => {
+	const app = new Application(1024, 576, {
 		parent: "screen",
 		scaleMethod: "flex",
 		// per-pixel normal-map lighting needs the WebGL renderer
 		renderer: video.WEBGL,
 	});
+	await app.init();
 
 	// register the debug panel — toggled with the `s` key by default
 	plugin.register(DebugPanelPlugin, "debugPanel");

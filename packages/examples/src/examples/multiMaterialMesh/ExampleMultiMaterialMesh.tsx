@@ -61,7 +61,7 @@ const CRAFTS = [
 
 // ─── entry point ──────────────────────────────────────────────────
 
-const createGame = () => {
+const createGame = async () => {
 	// `renderer: video.WEBGL` throws (post #1479) when the browser/GPU
 	// can't provide a context. Surface a clear browser-level message
 	// instead of letting the React tree render a stuck blank canvas.
@@ -75,6 +75,7 @@ const createGame = () => {
 			renderer: video.WEBGL,
 			scale: "auto",
 		});
+		await app.init();
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(

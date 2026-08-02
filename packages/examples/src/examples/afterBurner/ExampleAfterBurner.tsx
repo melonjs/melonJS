@@ -42,7 +42,7 @@ import {
 import { GameController } from "./GameController";
 import { SkyboxStage } from "./SkyboxStage";
 
-const createGame = () => {
+const createGame = async () => {
 	// NOTE: an `unmounted` guard around the preload callback would in
 	// principle fix the "user navigates away before preload finishes"
 	// race that Copilot flagged. It can't be added cleanly today —
@@ -68,6 +68,7 @@ const createGame = () => {
 			scale: "auto",
 			cameraClass: Camera3d,
 		});
+		await app.init();
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(

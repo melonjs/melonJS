@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
+	game,
 	Matrix3d,
 	Mesh,
 	TextureAtlas,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
 import {
@@ -55,10 +55,10 @@ describe("Mesh depth handling (issue #1468)", () => {
 			// Genuine WebGL absence (no GL of any kind) — tests skip below.
 		}
 		if (
-			video.renderer instanceof WebGLRenderer &&
-			typeof video.renderer.gl !== "undefined"
+			game.renderer instanceof WebGLRenderer &&
+			typeof game.renderer.gl !== "undefined"
 		) {
-			renderer = video.renderer;
+			renderer = game.renderer;
 		}
 	});
 

@@ -73,13 +73,14 @@ const onScroll = (ev: Pointer) => {
 	}
 };
 
-const createGame = () => {
+const createGame = async () => {
 	// create the melonJS Application (replaces the legacy video.init)
-	new Application(1024, 768, {
+	const app = new Application(1024, 768, {
 		parent: "screen",
 		scaleMethod: "fill-max",
 		preferWebGL1: false,
 	});
+	await app.init();
 
 	// register zlib/gzip inflate for compressed Tiled maps
 	plugin.register(TiledInflatePlugin);
@@ -126,8 +127,9 @@ const LevelSelector = () => {
 
 export const ExampleTiledMapLoader = () => {
 	useEffect(() => {
-		if (!game.isInitialized) {
-			createGame();
+		// `game` is undefined until the first Application finishes init()
+		if (!game?.isInitialized) {
+			void createGame();
 		}
 	}, []);
 	return <LevelSelector />;

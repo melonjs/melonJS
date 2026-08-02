@@ -19,7 +19,7 @@
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
-	type Application,
+	Application,
 	Light2d,
 	loader,
 	NoiseTexture2d,
@@ -221,8 +221,8 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	video.init(728, 410, {
+const createGame = async () => {
+	const app = new Application(728, 410, {
 		parent: "screen",
 		scale: "auto",
 		// Light2d normal-map lighting + toFrameTexture are WebGL features
@@ -230,6 +230,7 @@ const createGame = () => {
 		antiAlias: true,
 		subPixel: true,
 	});
+	await app.init();
 
 	// register the debug plugin (hidden by default; press S to toggle)
 	plugin.register(DebugPanelPlugin, "debugPanel");

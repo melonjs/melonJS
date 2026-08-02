@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	Body,
 	Container,
 	collision,
@@ -134,7 +135,10 @@ class EnemyManager extends Container {
 		this.timer = -1;
 
 		this.onChildChange = () => {
-			if (this.children.length === 0) {
+			// guard on PLAY being current — this also fires while the world
+			// tears the manager down during a stage switch, when the current
+			// stage is still the default loading screen
+			if (this.children.length === 0 && state.isCurrent(state.PLAY)) {
 				(state.current() as PlayScreen).reset();
 			}
 		};
@@ -267,15 +271,16 @@ class PlayScreen extends Stage {
 
 // ---- Game entry point ----
 
-const createGame = () => {
-	if (
-		!video.init(800, 600, {
+const createGame = async () => {
+	try {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			scaleMethod: ScaleMethods.FlexWidth,
 			renderer: video.AUTO,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

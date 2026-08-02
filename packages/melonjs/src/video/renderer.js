@@ -131,6 +131,32 @@ export default class Renderer {
 		this.supportsRetainedMesh = false;
 
 		/**
+		 * The source language this backend accepts for user-supplied shaders,
+		 * or `null` when it has no programmable pipeline at all (the Canvas
+		 * backend). `"glsl"` on the WebGL backend; a future WebGPU backend
+		 * reports `"wgsl"`.
+		 *
+		 * Consumers that need a *specific* language — `ShaderEffect` and the
+		 * loader's `{vertex, fragment}` shader assets both hand GLSL source
+		 * straight to the driver — must compare against the language rather
+		 * than test for a GPU backend, or they would accept a backend that
+		 * cannot read what they are about to give it.
+		 * @type {"glsl"|"wgsl"|null}
+		 * @default null
+		 */
+		this.shaderLanguage = null;
+
+		/**
+		 * Whether this backend has a depth buffer, and with it the 3D
+		 * projection and mesh paths a depth-sorted scene needs (`Camera3d`
+		 * and any camera declaring `defaultSortOn = "depth"`). `false` here
+		 * on the base/Canvas renderer.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.supportsDepthBuffer = false;
+
+		/**
 		 * The background color used to clear the main framebuffer.
 		 * Note: alpha value will be set based on the transparent property of the renderer settings.
 		 * @default black
@@ -254,6 +280,19 @@ export default class Renderer {
 	}
 
 	/**
+	 * Acquire whatever the backend cannot acquire synchronously — awaited by
+	 * {@link Application#init} right after the renderer is constructed, and
+	 * the reason `Application#init` is asynchronous at all. The Canvas and
+	 * WebGL backends have their context by the end of the constructor and
+	 * resolve immediately (this default); the WebGPU backend performs its
+	 * adapter/device negotiation here.
+	 * @returns {Promise<void>} resolves once the renderer is ready to draw
+	 */
+	init() {
+		return Promise.resolve();
+	}
+
+	/**
 	 * prepare the framebuffer for drawing a new frame
 	 */
 	clear() {}
@@ -304,6 +343,21 @@ export default class Renderer {
 	}
 
 	/**
+	 * Create and return a new Canvas element, sized as requested.
+	 *
+	 * The instance form of {@link Renderer.createCanvas}. `app.renderer` is
+	 * the renderer entry point, and a static is not reachable through an
+	 * instance — so this is what user code actually calls.
+	 * @param {number} width - width in pixels
+	 * @param {number} height - height in pixels
+	 * @param {boolean} [returnOffscreenCanvas=false] - return an OffscreenCanvas where supported
+	 * @returns {HTMLCanvasElement|OffscreenCanvas} the new canvas
+	 */
+	createCanvas(width, height, returnOffscreenCanvas = false) {
+		return createCanvas(width, height, returnOffscreenCanvas);
+	}
+
+	/**
 	 * Create and return a new Canvas element (or `OffscreenCanvas` when
 	 * supported and `returnOffscreenCanvas` is true). Centralized
 	 * renderer-side allocator so every scratch / fallback / render-
@@ -351,7 +405,7 @@ export default class Renderer {
 
 	/**
 	 * return a reference to the current render target corresponding Context
-	 * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
+	 * @returns {CanvasRenderingContext2D|WebGLRenderingContext|GPUCanvasContext}
 	 */
 	getContext() {
 		return this.renderTarget.context;
@@ -912,6 +966,23 @@ export default class Renderer {
 
 		return canvasTexture.canvas;
 	}
+
+	/**
+	 * Clip the region anything drawn afterwards is confined to.
+	 * Implemented by subclasses.
+	 * @param {number} x - x position of the clipping rectangle
+	 * @param {number} y - y position of the clipping rectangle
+	 * @param {number} width - width of the clipping rectangle
+	 * @param {number} height - height of the clipping rectangle
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	clipRect(x, y, width, height) {}
+
+	/**
+	 * Reset the current transform back to the identity matrix.
+	 * Implemented by subclasses.
+	 */
+	resetTransform() {}
 
 	/**
 	 * Push the current transform / alpha / clip state onto an internal

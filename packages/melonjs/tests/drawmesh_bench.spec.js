@@ -1,11 +1,5 @@
 import { afterAll, beforeAll, describe, it } from "vitest";
-import {
-	boot,
-	Mesh,
-	TextureAtlas,
-	video,
-	WebGLRenderer,
-} from "../src/index.js";
+import { boot, Mesh, TextureAtlas, WebGLRenderer } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -47,12 +41,11 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 	beforeAll(async () => {
 		boot();
 		try {
-			await getWebGLRenderer(800, 600);
+			renderer = await getWebGLRenderer(800, 600);
 		} catch {
 			// Headless chromium without --enable-gpu silently falls back to
 			// Canvas. The measure helper skips when renderer is not WebGL.
 		}
-		renderer = video.renderer;
 
 		// Build a tiny synthetic cube: 8 vertices, 12 triangles. Roughly
 		// matches the per-primitive complexity of Kenney low-poly assets

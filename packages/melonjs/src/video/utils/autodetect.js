@@ -4,8 +4,17 @@ import WebGLRenderer from "../webgl/webgl_renderer";
 
 // Ordered backend candidates, walked front-to-back: the first one whose
 // support probe passes and whose construction succeeds wins. Kept as a
-// list (rather than an if-chain) so a future backend — e.g. WebGPU —
-// prepends a single entry without reshaping the negotiation.
+// list (rather than an if-chain) so a future backend prepends a single
+// entry without reshaping the negotiation.
+//
+// WebGPU is deliberately NOT a candidate here, and should not be added
+// until it reaches feature parity with the WebGL backend. `AUTO` is what
+// existing games use, so listing WebGPU would migrate them onto a partial
+// backend the day their browser gained support — silently, and without
+// anyone asking. It stays opt-in through `renderer: video.WEBGPU` (or the
+// `#webgpu` URI fragment), which is also what makes testing it meaningful:
+// an explicit request either runs on WebGPU or fails, and never quietly
+// falls back to something else.
 const BACKEND_CANDIDATES = [
 	{
 		name: "webgl2",

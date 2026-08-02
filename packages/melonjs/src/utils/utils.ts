@@ -51,6 +51,8 @@ export function checkVersion(v1: string, v2: string) {
  * [velocity=false] draw the entities velocity in the debug panel (if enabled)
  * [quadtree=false] draw the quadtree in the debug panel (if enabled)
  * [webgl=false] force the renderer to WebGL
+ * [canvas=false] force the renderer to Canvas
+ * [webgpu=false] force the renderer to WebGPU (opt-in only; never selected by `video.AUTO`)
  * [debug=false] display the debug panel (if preloaded)
  * [debugToggleKey="s"] show/hide the debug panel (if preloaded)
  * @example

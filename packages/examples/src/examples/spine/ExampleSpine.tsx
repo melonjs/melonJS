@@ -55,7 +55,7 @@ const loadCharacter = (char: (typeof characters)[number]) => {
 	currentSpine = spineObj;
 };
 
-const createGame = () => {
+const createGame = async () => {
 	if (app) {
 		return;
 	}
@@ -72,6 +72,7 @@ const createGame = () => {
 		...(scaleTarget ? { scaleTarget } : {}),
 		antiAlias: true,
 	});
+	await app.init();
 
 	// register plugins against this application instance
 	// (debug panel is hidden by default — press "s" to toggle, or append

@@ -4,11 +4,12 @@ import { Application } from "../src/index.js";
 describe("LineDash", () => {
 	let app;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		app = new Application(64, 64, {
 			parent: "screen",
 			scale: "auto",
 		});
+		await app.init();
 	});
 
 	describe("setLineDash / getLineDash", () => {

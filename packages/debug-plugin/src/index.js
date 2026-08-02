@@ -1,4 +1,4 @@
-import { event, input, plugin, pool, timer, utils, video } from "melonjs";
+import { event, input, plugin, pool, timer, utils } from "melonjs";
 import { homepage, name, peerDependencies, version } from "../package.json";
 import Counters from "./counters.js";
 import { drawFrameGraph, drawMemGraph } from "./graphs.js";
@@ -329,7 +329,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 
 	/** @private */
 	_syncPosition() {
-		const rect = video.renderer.getCanvas().getBoundingClientRect();
+		const rect = this.app.renderer.getCanvas().getBoundingClientRect();
 		const s = this.panelWrap.style;
 		s.top = `${rect.top}px`;
 		s.left = `${rect.left}px`;
@@ -453,7 +453,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 		if (!this.options.quadtree) {
 			return;
 		}
-		const renderer = video.renderer;
+		const renderer = this.app.renderer;
 		renderer.save();
 		const { x, y } = this.app.viewport.pos;
 		renderer.translate(-x, -y);

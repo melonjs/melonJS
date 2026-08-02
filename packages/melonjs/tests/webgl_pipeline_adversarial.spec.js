@@ -3,14 +3,15 @@ import {
 	boot,
 	event,
 	GLShader,
+	game,
 	Light3d,
 	Matrix3d,
 	Renderable,
 	ShaderEffect,
 	state,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -37,7 +38,7 @@ describe("WebGL pipeline adversarial integration", () => {
 	beforeAll(async () => {
 		boot();
 		await getWebGLRenderer(800, 600);
-		renderer = video.renderer;
+		renderer = game.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -78,7 +79,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 		renderer.strokeRect(10, 10, 50, 30);
 		renderer.drawImage(tex, 50, 50, 16, 16, 50, 50, 16, 16);
@@ -93,8 +94,8 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(16, 16);
-		const normal = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
+		const normal = Renderer.createCanvas(16, 16);
 
 		// pretend a Light2d is active so the dispatch sends normal-mapped
 		// sprites through litQuad
@@ -138,7 +139,7 @@ describe("WebGL pipeline adversarial integration", () => {
 
 		renderer.setLightUniforms([], { r: 0, g: 0, b: 0 }, 0, 0);
 
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 		renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
 		renderer.flush();
 
@@ -155,7 +156,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		// activate the mesh batcher briefly (no actual mesh — just want the
 		// state transition); fall through to quad
@@ -180,7 +181,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		const n = quad.maxBatchTextures + 4; // force overflow by 4
 		const textures = [];
 		for (let i = 0; i < n; i++) {
-			const c = video.createCanvas(8, 8);
+			const c = Renderer.createCanvas(8, 8);
 			textures.push(c);
 		}
 		for (let i = 0; i < n; i++) {
@@ -197,8 +198,8 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(16, 16);
-		const normal = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
+		const normal = Renderer.createCanvas(16, 16);
 
 		const oneLight = [
 			{
@@ -230,7 +231,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 
 		renderer.setColor("#ff0000");
 		const beforeColor = renderer.currentColor.toArray().slice();
@@ -309,7 +310,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 		for (let i = 0; i < 100; i++) {
 			renderer.drawImage(tex, 0, 0, 8, 8, i, 0, 8, 8);
 			renderer.strokeRect(i, 10, 4, 4);
@@ -734,7 +735,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 		renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
 		renderer.setBlendMode("multiply");
 		renderer.strokeRect(0, 0, 30, 30);
@@ -787,9 +788,9 @@ describe("WebGL pipeline adversarial integration", () => {
 			// test isn't dominated by canvas creation
 			const textures = [];
 			for (let i = 0; i < 6; i++) {
-				textures.push(video.createCanvas(8, 8));
+				textures.push(Renderer.createCanvas(8, 8));
 			}
-			const normal = video.createCanvas(8, 8);
+			const normal = Renderer.createCanvas(8, 8);
 			const blendModes = ["normal", "multiply", "additive", "screen"];
 
 			// pre-built light arrays (different counts) — one allocation per
@@ -1403,7 +1404,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 		expect.assertions(4);
 
-		const source = video.createCanvas(16, 16);
+		const source = Renderer.createCanvas(16, 16);
 		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
 		renderer.flush();
 
@@ -1452,7 +1453,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		expect(() => {
 			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 			renderer.flush();
@@ -1477,7 +1478,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.setBatcher("mesh");
 		renderer.setBatcher("quad");
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
@@ -1502,8 +1503,8 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		const tex = video.createCanvas(16, 16);
-		const normal = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
+		const normal = Renderer.createCanvas(16, 16);
 		const oneLight = [
 			{
 				getBounds: () => {
@@ -1549,7 +1550,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 
-		const albedo = video.createCanvas(4, 4);
+		const albedo = Renderer.createCanvas(4, 4);
 		const c2d = albedo.getContext("2d");
 		c2d.fillStyle = "#ffffff";
 		c2d.fillRect(0, 0, 4, 4);
@@ -1620,7 +1621,7 @@ describe("WebGL pipeline adversarial integration", () => {
 				"vec4 apply(vec4 c, vec2 u) { return c * uTime; }",
 		);
 		effect.setUniform("uTime", 0.5);
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		// Phase 1: pre-loss draws cleanly
 		expect(() => {
@@ -1663,7 +1664,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 		expect.assertions(3);
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		for (let cycle = 0; cycle < 3; cycle++) {
 			ext.loseContext();
 			await tick();
@@ -1699,7 +1700,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		renderable.addPostEffect(effect);
 		expect(renderable.postEffects.length).toBe(1);
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		// pre-loss dispatch
 		renderer.beginPostEffect(renderable);
@@ -1748,7 +1749,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		effect.setUniform("uTime", 0.5);
 		renderable.addPostEffect(effect);
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.beginPostEffect(renderable);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 		renderer.endPostEffect(renderable);
@@ -1816,7 +1817,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		ext.restoreContext();
 		await tick();
 		renderable.addPostEffect(effect);
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		expect(() => {
 			renderer.beginPostEffect(renderable);
 			renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
@@ -1917,7 +1918,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 		expect.assertions(2);
 
-		const source = video.createCanvas(16, 16);
+		const source = Renderer.createCanvas(16, 16);
 		const tintedCanvas = renderer.cache.tint(source, "#ff0000");
 		// pre-cycle sanity: we got back something canvas-shaped
 		expect(typeof tintedCanvas.getContext).toBe("function");
@@ -1965,7 +1966,7 @@ describe("WebGL pipeline adversarial integration", () => {
 		}).not.toThrow();
 
 		// And drawing post-restore works regardless
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 		renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
 		renderer.flush();
 		expect(gl.getError()).toBe(gl.NO_ERROR);
@@ -2051,7 +2052,7 @@ describe("WebGL pipeline adversarial integration", () => {
 			};
 
 			try {
-				const tex = video.createCanvas(16, 16);
+				const tex = Renderer.createCanvas(16, 16);
 				// drawImage queues a quad through the quad batcher;
 				// flush forces the upload to the GPU.
 				renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
@@ -2093,7 +2094,7 @@ describe("WebGL pipeline adversarial integration", () => {
 			};
 
 			try {
-				const tex = video.createCanvas(16, 16);
+				const tex = Renderer.createCanvas(16, 16);
 				renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 				renderer.flush();
 
@@ -2177,7 +2178,7 @@ describe("WebGL pipeline adversarial integration", () => {
 			};
 
 			try {
-				const tex = video.createCanvas(16, 16);
+				const tex = Renderer.createCanvas(16, 16);
 				renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 				renderer.flush();
 

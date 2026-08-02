@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Camera2d,
 	Camera3d,
@@ -17,16 +18,17 @@ import {
  * pitch/yaw, follow logic) is pure JS.
  */
 describe("Camera3d", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		// some Camera2d subclass paths need a renderer to construct
 		// (e.g. Renderable observableVector callbacks). Boot a Canvas
 		// renderer for those.
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	describe("constructor + defaults", () => {

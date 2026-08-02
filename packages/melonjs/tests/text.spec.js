@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Text, video } from "../src/index.js";
+import { Application, boot, Text, video } from "../src/index.js";
 
 /**
  * Text font-family handling. `setFont` wraps family names in quotes so names
@@ -8,9 +8,13 @@ import { boot, Text, video } from "../src/index.js";
  * and the browser silently falls back to its default serif. These pin that down.
  */
 describe("Text — font family handling", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("quotes a specific family name", () => {

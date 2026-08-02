@@ -224,12 +224,6 @@ export type ApplicationSettings = {
 	verbose: boolean;
 
 	/**
-	 * whether to enable legacy mode (enables deprecated `video.init()` entry point)
-	 * @default false
-	 */
-	legacy: boolean;
-
-	/**
 	 * the CSS background color of the parent element that holds the canvas.
 	 * Applied during initialization to prevent a white flash before the first render.
 	 * Set to `"transparent"` to disable, or any valid CSS color value.

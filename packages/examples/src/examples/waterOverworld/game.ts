@@ -4,7 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import { loader, plugin, state, video } from "melonjs";
+import { Application, loader, plugin, state, video } from "melonjs";
 import { registerEntities } from "./entities";
 import { WaterOverworldStage } from "./play";
 
@@ -29,19 +29,20 @@ const resources = [
 	},
 ];
 
-export const createGame = () => {
+export const createGame = async () => {
 	// the water shader needs WebGL (ShaderEffect is inert under Canvas)
 	try {
-		if (
-			!video.init(960, 640, {
+		try {
+			const app = new Application(960, 640, {
 				parent: "screen",
 				renderer: video.WEBGL,
 				scale: "auto",
 				scaleMethod: "fit",
 				antiAlias: false,
 				subPixel: false,
-			})
-		) {
+			});
+			await app.init();
+		} catch {
 			alert("This example requires WebGL");
 			return;
 		}

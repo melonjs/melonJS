@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, event, video, WebGLRenderer } from "../src/index.js";
+import { boot, event, WebGLRenderer } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -19,8 +19,7 @@ describe("WebGL VAO recreation (buffer churn + context loss)", () => {
 
 	beforeAll(async () => {
 		boot();
-		await getWebGLRenderer(160, 120);
-		renderer = video.renderer;
+		renderer = await getWebGLRenderer(160, 120);
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;

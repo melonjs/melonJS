@@ -11,6 +11,7 @@ import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
 import {
 	Application,
+	game,
 	loader,
 	plugin,
 	ScanlineEffect,
@@ -26,7 +27,7 @@ import {
 import { PlayScreen } from "./play";
 import { resources } from "./resources";
 
-export const createGame = () => {
+export const createGame = async () => {
 	// Scale relative to the `#screen` flex container (which sits
 	// below the 41px example topbar) rather than the default
 	// `window` parent. Without an explicit scaleTarget the engine's
@@ -58,12 +59,13 @@ export const createGame = () => {
 			subSteps: 2,
 		}),
 	});
+	await _app.init();
 
 	// CRT-monitor post-effect on the camera. Scanlines for the
 	// "old arcade screen" vibe; subtle vignette to focus the eye
 	// on the play field. Kept light — anything higher than ~0.1
 	// noticeably dims the neon palette below it.
-	_app.viewport.shader = new ScanlineEffect(video.renderer, {
+	_app.viewport.shader = new ScanlineEffect(game.renderer, {
 		opacity: 0.09,
 		vignetteStrength: 0.18,
 	});

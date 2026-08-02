@@ -207,7 +207,7 @@ describe("RenderTargetPool", () => {
 			releaseWebGLRenderer();
 		});
 
-		it("should work with WebGLRenderTarget factory", async () => {
+		it("should work with WebGLRenderTarget factory", () => {
 			if (sharedRenderer === undefined) {
 				return;
 			}
@@ -227,7 +227,7 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should reuse target on subsequent get at same index", async () => {
+		it("should reuse target on subsequent get at same index", () => {
 			if (sharedRenderer === undefined) {
 				return;
 			}
@@ -243,7 +243,7 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should resize target when dimensions change", async () => {
+		it("should resize target when dimensions change", () => {
 			if (sharedRenderer === undefined) {
 				return;
 			}

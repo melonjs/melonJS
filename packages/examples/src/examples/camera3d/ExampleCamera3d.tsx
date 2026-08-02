@@ -34,7 +34,7 @@ import {
 import monsterImg from "../shaderEffects/assets/monster.png";
 import { createExampleComponent } from "../utils";
 
-const createGame = () => {
+const createGame = async () => {
 	// Stash teardown work assembled inside the loader callback so the
 	// outer `createGame` can return a single cleanup function from the
 	// async preload completion.
@@ -61,6 +61,7 @@ const createGame = () => {
 		scale: "auto",
 		cameraClass: Camera3dClass,
 	});
+	await app.init();
 
 	app.world.backgroundColor.parseCSS("#0a0a14");
 	plugin.register(DebugPanelPlugin, "debugPanel");

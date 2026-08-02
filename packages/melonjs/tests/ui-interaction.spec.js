@@ -1,15 +1,16 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	boot,
 	Draggable,
 	DropTarget,
 	event,
-	game,
 	loader,
 	UISpriteElement,
 	UITextButton,
 	video,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 // Pointer-interaction coverage for the UI / drag-and-drop widgets.
 // Until #1499 nothing in CI ever dispatched a pointer event at a widget —
@@ -19,7 +20,7 @@ import {
 // coordinates via the canvas bounding rect so the test is independent of
 // how `scale: "auto"` sized/positioned the canvas in the runner page
 const dispatchPointer = (type, gameX, gameY) => {
-	const canvas = video.renderer.getCanvas();
+	const canvas = app.renderer.getCanvas();
 	const rect = canvas.getBoundingClientRect();
 	canvas.dispatchEvent(
 		new PointerEvent(type, {
@@ -35,18 +36,21 @@ const dispatchPointer = (type, gameX, gameY) => {
 };
 
 const syncBroadphase = () => {
-	game.world.broadphase.clear();
-	game.world.broadphase.insertContainer(game.world);
+	app.world.broadphase.clear();
+	app.world.broadphase.insertContainer(app.world);
 };
+
+let app;
 
 describe("UI pointer interaction", () => {
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		await new Promise((resolve) => {
 			loader.preload(
 				[
@@ -80,7 +84,7 @@ describe("UI pointer interaction", () => {
 
 		it("pointerdown over the button fires onClick", () => {
 			const btn = makeButton();
-			game.world.addChild(btn);
+			app.world.addChild(btn);
 			syncBroadphase();
 			const clickSpy = vi.spyOn(btn, "onClick");
 
@@ -89,13 +93,13 @@ describe("UI pointer interaction", () => {
 				expect(clickSpy).toHaveBeenCalled();
 			} finally {
 				clickSpy.mockRestore();
-				game.world.removeChildNow(btn);
+				app.world.removeChildNow(btn);
 			}
 		});
 
 		it("pointerup over the button fires onRelease", () => {
 			const btn = makeButton();
-			game.world.addChild(btn);
+			app.world.addChild(btn);
 			syncBroadphase();
 			const releaseSpy = vi.spyOn(btn, "onRelease");
 
@@ -105,13 +109,13 @@ describe("UI pointer interaction", () => {
 				expect(releaseSpy).toHaveBeenCalled();
 			} finally {
 				releaseSpy.mockRestore();
-				game.world.removeChildNow(btn);
+				app.world.removeChildNow(btn);
 			}
 		});
 
 		it("pointerdown outside the button does not fire onClick", () => {
 			const btn = makeButton();
-			game.world.addChild(btn);
+			app.world.addChild(btn);
 			syncBroadphase();
 			const clickSpy = vi.spyOn(btn, "onClick");
 
@@ -120,7 +124,7 @@ describe("UI pointer interaction", () => {
 				expect(clickSpy).not.toHaveBeenCalled();
 			} finally {
 				clickSpy.mockRestore();
-				game.world.removeChildNow(btn);
+				app.world.removeChildNow(btn);
 			}
 		});
 	});
@@ -128,12 +132,12 @@ describe("UI pointer interaction", () => {
 	describe("UISpriteElement", () => {
 		it("pointerdown over the element fires onClick", () => {
 			const el = new UISpriteElement(50, 50, {
-				image: video.createCanvas(32, 32),
+				image: Renderer.createCanvas(32, 32),
 				framewidth: 32,
 				frameheight: 32,
 			});
 			el.anchorPoint.set(0, 0);
-			game.world.addChild(el);
+			app.world.addChild(el);
 			syncBroadphase();
 			const clickSpy = vi.spyOn(el, "onClick");
 
@@ -142,7 +146,7 @@ describe("UI pointer interaction", () => {
 				expect(clickSpy).toHaveBeenCalled();
 			} finally {
 				clickSpy.mockRestore();
-				game.world.removeChildNow(el);
+				app.world.removeChildNow(el);
 			}
 		});
 	});
@@ -151,7 +155,7 @@ describe("UI pointer interaction", () => {
 		it("full drag cycle through real pointer events", () => {
 			const d = new Draggable(50, 50, 32, 32);
 			d.anchorPoint.set(0, 0);
-			game.world.addChild(d);
+			app.world.addChild(d);
 			syncBroadphase();
 
 			try {
@@ -170,7 +174,7 @@ describe("UI pointer interaction", () => {
 				dispatchPointer("pointerup", 100, 90);
 				expect(d.dragging).toBe(false);
 			} finally {
-				game.world.removeChildNow(d);
+				app.world.removeChildNow(d);
 			}
 		});
 	});
@@ -179,10 +183,10 @@ describe("UI pointer interaction", () => {
 		it("drop() fires when a draggable is released overlapping the target", () => {
 			const target = new DropTarget(100, 100, 50, 50);
 			target.anchorPoint.set(0, 0);
-			game.world.addChild(target);
+			app.world.addChild(target);
 			const item = new Draggable(110, 110, 10, 10);
 			item.anchorPoint.set(0, 0);
-			game.world.addChild(item);
+			app.world.addChild(item);
 			const dropSpy = vi.spyOn(target, "drop");
 
 			try {
@@ -190,18 +194,18 @@ describe("UI pointer interaction", () => {
 				expect(dropSpy).toHaveBeenCalledWith(item);
 			} finally {
 				dropSpy.mockRestore();
-				game.world.removeChildNow(item);
-				game.world.removeChildNow(target);
+				app.world.removeChildNow(item);
+				app.world.removeChildNow(target);
 			}
 		});
 
 		it("drop() does not fire for a non-overlapping draggable", () => {
 			const target = new DropTarget(100, 100, 50, 50);
 			target.anchorPoint.set(0, 0);
-			game.world.addChild(target);
+			app.world.addChild(target);
 			const far = new Draggable(500, 500, 8, 8);
 			far.anchorPoint.set(0, 0);
-			game.world.addChild(far);
+			app.world.addChild(far);
 			const dropSpy = vi.spyOn(target, "drop");
 
 			try {
@@ -209,8 +213,8 @@ describe("UI pointer interaction", () => {
 				expect(dropSpy).not.toHaveBeenCalled();
 			} finally {
 				dropSpy.mockRestore();
-				game.world.removeChildNow(far);
-				game.world.removeChildNow(target);
+				app.world.removeChildNow(far);
+				app.world.removeChildNow(target);
 			}
 		});
 	});

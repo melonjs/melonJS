@@ -10,8 +10,9 @@ import { paladin } from "./play";
 
 export const ExampleAseprite = () => {
 	useEffect(() => {
-		if (!me.game.isInitialized) {
-			createGame();
+		// `game` is undefined until the first Application finishes init()
+		if (!me.game?.isInitialized) {
+			void createGame();
 		}
 	}, []);
 

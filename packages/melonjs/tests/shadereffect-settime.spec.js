@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, ShaderEffect, video, WebGLRenderer } from "../src/index.js";
+import { boot, ShaderEffect, WebGLRenderer } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -17,8 +17,7 @@ describe("ShaderEffect.setTime (manual uTime helper)", () => {
 
 	beforeAll(async () => {
 		boot();
-		await getWebGLRenderer(64, 64);
-		renderer = video.renderer;
+		renderer = await getWebGLRenderer(64, 64);
 		isWebGL = renderer instanceof WebGLRenderer;
 	});
 

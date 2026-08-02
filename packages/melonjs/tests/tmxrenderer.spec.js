@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { Application, boot, video } from "../src/index.js";
 import TMXHexagonalRenderer from "../src/level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "../src/level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXObliqueRenderer from "../src/level/tiled/renderer/TMXObliqueRenderer.js";
@@ -19,13 +19,14 @@ function fakeImage(name, w = 64, h = 64) {
 }
 
 describe("TMX Renderers", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(128, 128, {
+		const app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		fakeImage("drawtest", 256, 256);
 	});
 

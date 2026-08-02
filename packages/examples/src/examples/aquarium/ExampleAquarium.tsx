@@ -23,7 +23,7 @@
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
-	type Application,
+	Application,
 	loader,
 	NoiseTexture2d,
 	plugin,
@@ -295,8 +295,8 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	video.init(728, 410, {
+const createGame = async () => {
+	const app = new Application(728, 410, {
 		parent: "screen",
 		// fixed internal resolution scaled to fit (keeps viewport 728×410, so
 		// full-screen renderables cover it regardless of the container size)
@@ -308,6 +308,7 @@ const createGame = () => {
 		// instead of snapping pixel-to-pixel (default floors dx/dy to integers)
 		subPixel: true,
 	});
+	await app.init();
 
 	// register the debug plugin (hidden by default; press S to toggle)
 	plugin.register(DebugPanelPlugin, "debugPanel");

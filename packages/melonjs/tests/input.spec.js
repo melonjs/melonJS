@@ -1,21 +1,23 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { boot, game, input, Renderable, video } from "../src/index.js";
+import { Application, boot, input, Renderable, video } from "../src/index.js";
 
 describe("input", () => {
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	describe("Pointer Event", () => {
 		afterEach(() => {
 			// clean up the game world
-			game.world.reset();
-			game.world.broadphase.clear();
+			app.world.reset();
+			app.world.broadphase.clear();
 		});
 
 		it("should register and trigger a pointerdown event", () => {
@@ -25,9 +27,9 @@ describe("input", () => {
 				renderable.isKinematic = false;
 
 				// add to game world and broadphase
-				game.world.addChild(renderable);
-				game.world.broadphase.clear();
-				game.world.broadphase.insertContainer(game.world);
+				app.world.addChild(renderable);
+				app.world.broadphase.clear();
+				app.world.broadphase.insertContainer(app.world);
 
 				// register the pointer event
 				input.registerPointerEvent("pointerdown", renderable, (e) => {
@@ -37,7 +39,7 @@ describe("input", () => {
 				});
 
 				// dispatch a pointerdown event on the canvas
-				const canvas = video.renderer.getCanvas();
+				const canvas = app.renderer.getCanvas();
 				const event = new PointerEvent("pointerdown", {
 					clientX: 10,
 					clientY: 10,
@@ -56,9 +58,9 @@ describe("input", () => {
 			renderable.anchorPoint.set(0, 0);
 			renderable.isKinematic = false;
 
-			game.world.addChild(renderable);
-			game.world.broadphase.clear();
-			game.world.broadphase.insertContainer(game.world);
+			app.world.addChild(renderable);
+			app.world.broadphase.clear();
+			app.world.broadphase.insertContainer(app.world);
 
 			let triggered = false;
 			input.registerPointerEvent("pointerdown", renderable, () => {
@@ -66,7 +68,7 @@ describe("input", () => {
 			});
 
 			// dispatch event outside the renderable bounds
-			const canvas = video.renderer.getCanvas();
+			const canvas = app.renderer.getCanvas();
 			const event = new PointerEvent("pointerdown", {
 				clientX: 500,
 				clientY: 500,
@@ -87,9 +89,9 @@ describe("input", () => {
 			renderable.anchorPoint.set(0, 0);
 			renderable.isKinematic = false;
 
-			game.world.addChild(renderable);
-			game.world.broadphase.clear();
-			game.world.broadphase.insertContainer(game.world);
+			app.world.addChild(renderable);
+			app.world.broadphase.clear();
+			app.world.broadphase.insertContainer(app.world);
 
 			let count = 0;
 			const callback = () => {
@@ -99,7 +101,7 @@ describe("input", () => {
 			input.registerPointerEvent("pointerdown", renderable, callback);
 			input.releasePointerEvent("pointerdown", renderable);
 
-			const canvas = video.renderer.getCanvas();
+			const canvas = app.renderer.getCanvas();
 			const event = new PointerEvent("pointerdown", {
 				clientX: 10,
 				clientY: 10,

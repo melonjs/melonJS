@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Camera2d,
 	CameraEffect,
 	ColorMatrix,
 	Ellipse,
 	FadeEffect,
-	game,
 	MaskEffect,
 	Polygon,
 	Renderable,
@@ -24,14 +24,18 @@ const advanceTween = (tween, totalMs, steps = 20) => {
 	}
 };
 
-const setup = () => {
-	boot();
-	video.init(800, 600, {
-		parent: "screen",
-		scale: "auto",
-		renderer: video.CANVAS,
-	});
+// one shared Application for the whole spec (top-level await) — mirrors the
+// engine's one-app-per-page reality; each setup() call hands out fresh
+// cameras/vectors against it
+boot();
+const app = new Application(800, 600, {
+	parent: "screen",
+	scale: "auto",
+	renderer: video.CANVAS,
+});
+await app.init();
 
+const setup = () => {
 	// a camera instance
 	const camera = new Camera2d(0, 0, 1000, 1000);
 	// am infinite camera
@@ -45,7 +49,7 @@ const setup = () => {
 };
 
 describe("Camera2d", () => {
-	it("convert between local and World coords without transforms", async () => {
+	it("convert between local and World coords without transforms", () => {
 		const { camera, result } = setup();
 		// reset the camera
 		camera.reset(0, 0);
@@ -60,7 +64,7 @@ describe("Camera2d", () => {
 		expect(result.y).toBeCloseTo(150);
 	});
 
-	it("convert between local and World coords with transforms", async () => {
+	it("convert between local and World coords with transforms", () => {
 		const { camera, result } = setup();
 		// reset the camera
 		camera.reset(0, 0);
@@ -765,7 +769,7 @@ describe("Camera2d", () => {
 
 		it("should preserve rotation after draw", () => {
 			setup();
-			const r = video.renderer;
+			const r = app.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
 			cam.rotate(0.5);
@@ -774,7 +778,7 @@ describe("Camera2d", () => {
 				cam.currentTransform.val[1],
 				cam.currentTransform.val[0],
 			);
-			cam.draw(r, game.world);
+			cam.draw(r, app.world);
 			const angleAfter = Math.atan2(
 				cam.currentTransform.val[1],
 				cam.currentTransform.val[0],
@@ -784,19 +788,19 @@ describe("Camera2d", () => {
 
 		it("should restore renderer stack depth after rotated draw", () => {
 			setup();
-			const r = video.renderer;
+			const r = app.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
 			cam.rotate(0.5);
 
 			const depthBefore = r.renderState._stackDepth;
-			cam.draw(r, game.world);
+			cam.draw(r, app.world);
 			expect(r.renderState._stackDepth).toEqual(depthBefore);
 		});
 
 		it("should work combined with zoom", () => {
 			setup();
-			const r = video.renderer;
+			const r = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -806,7 +810,7 @@ describe("Camera2d", () => {
 			cam.rotate(0.3);
 
 			const depthBefore = r.renderState._stackDepth;
-			cam.draw(r, game.world);
+			cam.draw(r, app.world);
 			expect(r.renderState._stackDepth).toEqual(depthBefore);
 			expect(cam.width).toEqual(180);
 			expect(cam.height).toEqual(100);
@@ -896,7 +900,7 @@ describe("Camera2d", () => {
 
 		it("should be updated after drawing a non-default camera", () => {
 			setup();
-			const r = video.renderer;
+			const r = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -904,7 +908,7 @@ describe("Camera2d", () => {
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
 
-			cam.draw(r, game.world);
+			cam.draw(r, app.world);
 
 			expect(cam.worldProjection.isIdentity()).toEqual(false);
 			expect(cam.screenProjection.isIdentity()).toEqual(false);
@@ -912,11 +916,11 @@ describe("Camera2d", () => {
 
 		it("worldProjection should remain identity after drawing a default camera", () => {
 			setup();
-			const r = video.renderer;
+			const r = app.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
 
-			cam.draw(r, game.world);
+			cam.draw(r, app.world);
 
 			expect(cam.worldProjection.isIdentity()).toEqual(true);
 			// `screenProjection` stays a meaningful ortho (matches
@@ -927,7 +931,7 @@ describe("Camera2d", () => {
 
 		it("worldProjection should be reset to identity after reset()", () => {
 			setup();
-			const r = video.renderer;
+			const r = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -935,7 +939,7 @@ describe("Camera2d", () => {
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
 
-			cam.draw(r, game.world);
+			cam.draw(r, app.world);
 			expect(cam.worldProjection.isIdentity()).toEqual(false);
 
 			cam.reset(0, 0);
@@ -1347,12 +1351,12 @@ describe("Camera2d", () => {
 	describe("draw() state management", () => {
 		it("should restore renderer save/restore stack depth after draw", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
 
 			const depthBefore = renderer.renderState._stackDepth;
-			cam.draw(renderer, game.world);
+			cam.draw(renderer, app.world);
 			const depthAfter = renderer.renderState._stackDepth;
 
 			expect(depthAfter).toEqual(depthBefore);
@@ -1360,14 +1364,14 @@ describe("Camera2d", () => {
 
 		it("should restore renderer stack depth for offset cameras", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
 			cam.reset(0, 0);
 
 			const depthBefore = renderer.renderState._stackDepth;
-			cam.draw(renderer, game.world);
+			cam.draw(renderer, app.world);
 			const depthAfter = renderer.renderState._stackDepth;
 
 			expect(depthAfter).toEqual(depthBefore);
@@ -1375,7 +1379,7 @@ describe("Camera2d", () => {
 
 		it("should restore renderer stack depth for zoomed cameras", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -1384,7 +1388,7 @@ describe("Camera2d", () => {
 			cam.setBounds(0, 0, 2000, 2000);
 
 			const depthBefore = renderer.renderState._stackDepth;
-			cam.draw(renderer, game.world);
+			cam.draw(renderer, app.world);
 			const depthAfter = renderer.renderState._stackDepth;
 
 			expect(depthAfter).toEqual(depthBefore);
@@ -1392,38 +1396,38 @@ describe("Camera2d", () => {
 
 		it("should restore container transform after draw", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
 			cam.moveTo(100, 50);
 
-			const txBefore = game.world.currentTransform.tx;
-			const tyBefore = game.world.currentTransform.ty;
-			cam.draw(renderer, game.world);
+			const txBefore = app.world.currentTransform.tx;
+			const tyBefore = app.world.currentTransform.ty;
+			cam.draw(renderer, app.world);
 
-			expect(game.world.currentTransform.tx).toBeCloseTo(txBefore);
-			expect(game.world.currentTransform.ty).toBeCloseTo(tyBefore);
+			expect(app.world.currentTransform.tx).toBeCloseTo(txBefore);
+			expect(app.world.currentTransform.ty).toBeCloseTo(tyBefore);
 		});
 
 		it("should restore container transform for offset cameras", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
 			cam.reset(0, 0);
 
-			const txBefore = game.world.currentTransform.tx;
-			const tyBefore = game.world.currentTransform.ty;
-			cam.draw(renderer, game.world);
+			const txBefore = app.world.currentTransform.tx;
+			const tyBefore = app.world.currentTransform.ty;
+			cam.draw(renderer, app.world);
 
-			expect(game.world.currentTransform.tx).toBeCloseTo(txBefore);
-			expect(game.world.currentTransform.ty).toBeCloseTo(tyBefore);
+			expect(app.world.currentTransform.tx).toBeCloseTo(txBefore);
+			expect(app.world.currentTransform.ty).toBeCloseTo(tyBefore);
 		});
 
 		it("should restore container transform for zoomed cameras", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -1431,17 +1435,17 @@ describe("Camera2d", () => {
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
 
-			const txBefore = game.world.currentTransform.tx;
-			const tyBefore = game.world.currentTransform.ty;
-			cam.draw(renderer, game.world);
+			const txBefore = app.world.currentTransform.tx;
+			const tyBefore = app.world.currentTransform.ty;
+			cam.draw(renderer, app.world);
 
-			expect(game.world.currentTransform.tx).toBeCloseTo(txBefore);
-			expect(game.world.currentTransform.ty).toBeCloseTo(tyBefore);
+			expect(app.world.currentTransform.tx).toBeCloseTo(txBefore);
+			expect(app.world.currentTransform.ty).toBeCloseTo(tyBefore);
 		});
 
 		it("should restore camera dimensions after zoomed draw", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -1449,7 +1453,7 @@ describe("Camera2d", () => {
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
 
-			cam.draw(renderer, game.world);
+			cam.draw(renderer, app.world);
 
 			expect(cam.width).toEqual(180);
 			expect(cam.height).toEqual(100);
@@ -1457,7 +1461,7 @@ describe("Camera2d", () => {
 
 		it("should not fire resize events during zoomed draw", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
@@ -1468,7 +1472,7 @@ describe("Camera2d", () => {
 			// projectionMatrix should remain based on camera's actual size (180x100),
 			// not the temporarily expanded size
 			const projBefore = cam.projectionMatrix.val.slice();
-			cam.draw(renderer, game.world);
+			cam.draw(renderer, app.world);
 			const projAfter = cam.projectionMatrix.val.slice();
 
 			expect(projAfter).toEqual(projBefore);
@@ -1476,25 +1480,25 @@ describe("Camera2d", () => {
 
 		it("should compensate for container centering offset on non-default cameras", () => {
 			setup();
-			const renderer = video.renderer;
+			const renderer = app.renderer;
 			const cam = new Camera2d(0, 0, 180, 100);
 			cam.screenX = 620;
 			cam.screenY = 10;
 			cam.reset(0, 0);
 
 			// simulate a centered world container (e.g. viewport wider than level)
-			game.world.pos.set(200, 0, 0);
+			app.world.pos.set(200, 0, 0);
 
-			const txBefore = game.world.currentTransform.tx;
-			const tyBefore = game.world.currentTransform.ty;
-			cam.draw(renderer, game.world);
+			const txBefore = app.world.currentTransform.tx;
+			const tyBefore = app.world.currentTransform.ty;
+			cam.draw(renderer, app.world);
 
 			// transform should be fully restored
-			expect(game.world.currentTransform.tx).toBeCloseTo(txBefore);
-			expect(game.world.currentTransform.ty).toBeCloseTo(tyBefore);
+			expect(app.world.currentTransform.tx).toBeCloseTo(txBefore);
+			expect(app.world.currentTransform.ty).toBeCloseTo(tyBefore);
 
 			// restore world pos
-			game.world.pos.set(0, 0, 0);
+			app.world.pos.set(0, 0, 0);
 		});
 	});
 
@@ -1509,7 +1513,7 @@ describe("Camera2d", () => {
 		it("should not add effect to postEffects when identity", () => {
 			setup();
 			const cam = new Camera2d(0, 0, 800, 600);
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			expect(cam.postEffects).toHaveLength(0);
 		});
 
@@ -1518,7 +1522,7 @@ describe("Camera2d", () => {
 			const cam = new Camera2d(0, 0, 800, 600);
 			expect(cam._colorMatrixEffect).toBeNull();
 			cam.colorMatrix.contrast(1.2);
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			// effect created but removed from postEffects after draw (transient)
 			expect(cam._colorMatrixEffect).not.toBeNull();
 		});
@@ -1527,7 +1531,7 @@ describe("Camera2d", () => {
 			setup();
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.colorMatrix.saturate(1.5);
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			// transient — removed after endPostEffect
 			expect(cam.postEffects.indexOf(cam._colorMatrixEffect)).toBe(-1);
 		});
@@ -1538,7 +1542,7 @@ describe("Camera2d", () => {
 			cam.colorMatrix.saturate(1.5);
 			const other = { enabled: true };
 			cam.addPostEffect(other);
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			// user effect persists, colorMatrix effect is transient
 			expect(cam.postEffects.indexOf(other)).not.toBe(-1);
 			expect(cam.postEffects.indexOf(cam._colorMatrixEffect)).toBe(-1);
@@ -1548,10 +1552,10 @@ describe("Camera2d", () => {
 			setup();
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.colorMatrix.contrast(1.2);
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			// reset to identity
 			cam.colorMatrix.identity();
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			// no colorMatrix effect in postEffects
 			expect(cam.postEffects.indexOf(cam._colorMatrixEffect)).toBe(-1);
 		});
@@ -1560,12 +1564,12 @@ describe("Camera2d", () => {
 			setup();
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.colorMatrix.brightness(1.3);
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			// internal effect was created
 			expect(cam._colorMatrixEffect).not.toBeNull();
 			cam.clearPostEffects();
 			// draw again — colorMatrix still works (effect recreated/re-added transiently)
-			cam.draw(video.renderer, game.world);
+			cam.draw(app.renderer, app.world);
 			expect(cam._colorMatrixEffect).not.toBeNull();
 		});
 	});

@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	game,
 	input,
 	Light2d,
@@ -75,7 +76,7 @@ class PlayScreen extends Stage {
 		// the vignette instead of being darkened with everything else.
 		// This is the visual contract `Stage.drawLighting` + the procedural
 		// drawLight pipeline have to honor on both Canvas and WebGL.
-		const renderer = video.renderer as Parameters<typeof VignetteEffect>[0];
+		const renderer = game.renderer as Parameters<typeof VignetteEffect>[0];
 		game.viewport.addPostEffect(new VignetteEffect(renderer));
 		game.viewport.addPostEffect(
 			new ScanlineEffect(renderer, {
@@ -91,12 +92,13 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	video.init(728, 410, {
+const createGame = async () => {
+	const app = new Application(728, 410, {
 		parent: "screen",
 		scaleMethod: "flex",
 		renderer: video.AUTO,
 	});
+	await app.init();
 
 	// set the "Play/Ingame" Screen Object
 	state.set(state.PLAY, new PlayScreen());

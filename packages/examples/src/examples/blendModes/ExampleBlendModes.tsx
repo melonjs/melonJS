@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { game, Renderable, Text, video } from "melonjs";
+import { Application, game, Renderable, Text, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 
 const BLEND_MODES = [
@@ -27,26 +27,27 @@ const CELL_W = 180;
 const CELL_H = 170;
 const CIRCLE_R = 45;
 
-const createGame = () => {
+const createGame = async () => {
 	const rows = Math.ceil(BLEND_MODES.length / COLS);
 	const canvasW = COLS * CELL_W;
 	const HEADER_H = 40;
 	const canvasH = rows * CELL_H + HEADER_H;
 
-	if (
-		!video.init(canvasW, canvasH, {
+	try {
+		const app = new Application(canvasW, canvasH, {
 			parent: "screen",
 			renderer: video.AUTO,
 			preferWebGL1: false,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}
 
 	// detect which modes are actually supported by probing setBlendMode
 	// biome-ignore lint/suspicious/noExplicitAny: renderer type varies between WebGL/Canvas
-	const renderer = video.renderer as any;
+	const renderer = game.renderer as any;
 	const supported: Record<string, boolean> = {};
 	for (const mode of BLEND_MODES) {
 		const applied = renderer.setBlendMode(mode);

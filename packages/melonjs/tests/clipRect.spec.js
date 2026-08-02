@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Container, video } from "../src/index.js";
+import { Application, boot, Container, video } from "../src/index.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
 import RenderState from "../src/video/renderstate.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
@@ -36,8 +36,7 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 
 	beforeAll(async () => {
 		boot();
-		await getWebGLRenderer(800, 600);
-		renderer = video.renderer;
+		renderer = await getWebGLRenderer(800, 600);
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -576,14 +575,15 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 	let renderer;
 	let isCanvas;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		isCanvas = renderer instanceof CanvasRenderer;
 	});
 

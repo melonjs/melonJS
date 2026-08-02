@@ -1,5 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, loader, ShaderEffect, Texture2d, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	loader,
+	ShaderEffect,
+	Texture2d,
+	video,
+} from "../src/index.js";
 
 /**
  * Shader assets under a CANVAS renderer (e.g. a video.AUTO fallback):
@@ -9,9 +16,13 @@ import { boot, loader, ShaderEffect, Texture2d, video } from "../src/index.js";
  * and unload stays safe. The game keeps running, just unshaded.
  */
 describe("shader assets under the Canvas renderer", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("preloads into an inert, disabled stub and stays safe end-to-end", async () => {

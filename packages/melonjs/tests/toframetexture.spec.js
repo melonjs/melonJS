@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	Bounds,
 	boot,
 	CanvasRenderer,
@@ -33,15 +34,17 @@ describe("WebGLRenderer.toFrameTexture", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(SIZE, SIZE, {
+		app = new Application(SIZE, SIZE, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			failIfMajorPerformanceCaveat: false,
 			antiAlias: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -640,10 +643,15 @@ describe("WebGLRenderer.toFrameTexture", () => {
 describe("CanvasRenderer.toFrameTexture", () => {
 	let renderer;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(SIZE, SIZE, { parent: "screen", renderer: video.CANVAS });
-		renderer = video.renderer;
+		app = new Application(SIZE, SIZE, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+		renderer = app.renderer;
 		expect(renderer).toBeInstanceOf(CanvasRenderer);
 	});
 

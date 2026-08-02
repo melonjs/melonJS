@@ -427,7 +427,7 @@ export class WaterTextureObj extends me.Sprite {
 			}
 		`;
 
-		const water = new me.ShaderEffect(me.video.renderer, fragment);
+		const water = new me.ShaderEffect(me.game.renderer, fragment);
 		water.setTexture("uNoise", noise.getTexture(), "repeat");
 		water.setTexture("uNoise2", noise2.getTexture(), "repeat");
 

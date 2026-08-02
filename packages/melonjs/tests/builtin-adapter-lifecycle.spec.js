@@ -11,6 +11,7 @@
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
+	Application,
 	Body,
 	boot,
 	Container,
@@ -27,13 +28,14 @@ describe("Physics : BuiltinAdapter (lifecycle + pool)", () => {
 	/** @type {import("../src/index.js").BuiltinAdapter} */
 	let adapter;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Ellipse,
 	Polygon,
@@ -21,22 +22,25 @@ import {
 describe("Drawing methods should not mutate input shapes", () => {
 	let renderer;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	// ---- Polygon ----

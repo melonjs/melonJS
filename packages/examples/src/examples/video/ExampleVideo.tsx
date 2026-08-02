@@ -3,17 +3,26 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { game, loader, Sprite, state, Text, Vector2d, video } from "melonjs";
+import {
+	Application,
+	game,
+	loader,
+	Sprite,
+	state,
+	Text,
+	Vector2d,
+} from "melonjs";
 import { createExampleComponent } from "../utils";
 import videoSrc from "./assets/mov_bbb.mp4";
 
-const createGame = () => {
-	if (
-		!video.init(1218, 562, {
+const createGame = async () => {
+	try {
+		const app = new Application(1218, 562, {
 			parent: "screen",
 			scaleMethod: "flex",
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

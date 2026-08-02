@@ -49,12 +49,13 @@ const animals = [
 	"animal-caterpillar",
 ];
 
-const createGame = () => {
+const createGame = async () => {
 	const app = new Application(1024, 768, {
 		parent: "screen",
 		renderer: video.AUTO,
 		scale: "auto",
 	});
+	await app.init();
 
 	app.world.backgroundColor.parseCSS("#87CEEB");
 	plugin.register(DebugPanelPlugin, "debugPanel");

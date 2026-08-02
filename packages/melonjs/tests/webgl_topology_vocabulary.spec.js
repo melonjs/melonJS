@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { Batcher, video } from "../src/index.js";
+import { Batcher } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 import { resolveTopology } from "../src/video/webgl/utils/topology.js";
 import {
 	getWebGLRenderer,
@@ -195,7 +196,7 @@ describe("Batcher topology vocabulary (issue #1551)", () => {
 				return orig(mode, ...rest);
 			};
 			try {
-				const tex = video.createCanvas(8, 8);
+				const tex = Renderer.createCanvas(8, 8);
 				renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
 				quad.flush("triangle-list");
 				renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
