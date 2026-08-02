@@ -11,7 +11,6 @@ import {
 	plugin,
 	Stage,
 	VignetteEffect,
-	WebGLRenderer,
 } from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
@@ -52,9 +51,9 @@ export class PlayScreen extends Stage {
 		}
 
 		// vignette post-effect + built-in color grading (always applied last).
-		// VignetteEffect is WebGL-only; on the Canvas renderer just skip it
-		// and let the color grading still apply.
-		if (app.renderer instanceof WebGLRenderer) {
+		// ShaderEffects need a programmable backend (WebGL or WebGPU); on the
+		// Canvas renderer just skip it and let the color grading still apply.
+		if (app.renderer.shaderLanguage !== null) {
 			app.viewport.addPostEffect(new VignetteEffect(app.renderer));
 		}
 		app.viewport.colorMatrix.contrast(1.1).saturate(1.1);
