@@ -1,4 +1,4 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
 
 /**
  * A shader effect that simulates a holographic projection with

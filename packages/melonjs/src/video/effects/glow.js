@@ -1,4 +1,4 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
 
 /**
  * A shader effect that adds a colored glow around the sprite.

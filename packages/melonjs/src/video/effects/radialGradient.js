@@ -1,8 +1,8 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
 
 /**
  * additional import for TypeScript
- * @import { Color } from "../../../math/color.ts";
+ * @import { Color } from "../../math/color.ts";
  * @import { default as WebGLRenderer } from "../webgl_renderer.js";
  */
 

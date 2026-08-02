@@ -20,8 +20,8 @@ import {
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import timer from "../system/timer.ts";
+import ColorMatrixEffect from "./../video/effects/colorMatrix.js";
 import type Renderer from "./../video/renderer.js";
-import ColorMatrixEffect from "./../video/webgl/effects/colorMatrix.js";
 import type CameraEffect from "./effects/camera_effect.ts";
 import FadeEffect from "./effects/fade_effect.ts";
 import ShakeEffect from "./effects/shake_effect.ts";

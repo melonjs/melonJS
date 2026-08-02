@@ -1,5 +1,5 @@
-import { ColorMatrix } from "../../../math/color_matrix.ts";
-import ShaderEffect from "../shadereffect.js";
+import { ColorMatrix } from "../../math/color_matrix.ts";
+import ShaderEffect from "./shadereffect.js";
 
 /**
  * A shader effect that applies a 4x4 color transformation matrix.

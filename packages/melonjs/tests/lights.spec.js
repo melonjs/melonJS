@@ -1840,7 +1840,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 		// Sanity: the test only makes sense if WebGL actually came up.
 		expect(renderer.WebGLVersion).toBe(2);
 		const { default: RadialGradientEffect } = await import(
-			"../src/video/webgl/effects/radialGradient.js"
+			"../src/video/effects/radialGradient.js"
 		);
 		const { Color } = await import("../src/math/color.ts");
 		expect(() => {
@@ -1856,7 +1856,7 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 	it("constructor with no options uses sensible defaults (white, 1.0)", async () => {
 		expect(renderer.WebGLVersion).toBe(2);
 		const { default: RadialGradientEffect } = await import(
-			"../src/video/webgl/effects/radialGradient.js"
+			"../src/video/effects/radialGradient.js"
 		);
 		expect(() => {
 			return new RadialGradientEffect(renderer);

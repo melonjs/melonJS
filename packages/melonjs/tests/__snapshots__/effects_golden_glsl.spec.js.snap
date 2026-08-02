@@ -1,0 +1,99 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShaderEffect generated-GLSL golden > a body using every builtin assembles to the pinned sources > all-builtins fragment 1`] = `
+"uniform sampler2D uSampler;
+varying vec4 vColor;
+varying vec2 vRegion;
+varying vec2 screen_uv;
+varying vec2 noise_uv;
+
+uniform sampler2D uScene;
+uniform float uStrength;
+uniform float uTime;
+vec4 apply(vec4 color, vec2 uv) {
+	vec4 scene = texture2D(uScene, screen_uv);
+	vec2 n = noise_uv;
+	return mix(color, scene, uStrength * n.x + uTime * 0.0);
+}
+
+void main(void) {
+    vec4 texColor = texture2D(uSampler, vRegion) * vColor;
+    gl_FragColor = apply(texColor, vRegion);
+}"
+`;
+
+exports[`ShaderEffect generated-GLSL golden > a body using every builtin assembles to the pinned sources > all-builtins vertex 1`] = `
+"attribute vec3 aVertex;
+attribute vec2 aRegion;
+attribute vec4 aColor;
+uniform mat4 uProjectionMatrix;
+varying vec2 vRegion;
+varying vec4 vColor;
+varying vec2 screen_uv;
+uniform vec2 ME_size_obj;
+uniform vec2 ME_size_img;
+uniform vec2 ME_offset;
+varying vec2 noise_uv;
+void main(void) {
+    vec4 ME_clip = uProjectionMatrix * vec4(aVertex, 1.0);
+    gl_Position = ME_clip;
+    screen_uv = ME_clip.xy / ME_clip.w * 0.5 + 0.5;
+    noise_uv = aRegion * (ME_size_img / ME_size_obj) - ME_offset / ME_size_obj;
+    vColor = vec4(aColor.bgr * aColor.a, aColor.a);
+    vRegion = aRegion;
+}"
+`;
+
+exports[`ShaderEffect generated-GLSL golden > a built-in effect class assembles to its pinned sources > vignette fragment 1`] = `
+"uniform sampler2D uSampler;
+varying vec4 vColor;
+varying vec2 vRegion;
+
+			uniform float uStrength;
+			uniform float uSize;
+			vec4 apply(vec4 color, vec2 uv) {
+				vec2 vig = uv * (1.0 - uv);
+				float v = clamp(pow(vig.x * vig.y * uSize, uStrength), 0.0, 1.0);
+				return vec4(color.rgb * v, color.a);
+			}
+			
+void main(void) {
+    vec4 texColor = texture2D(uSampler, vRegion) * vColor;
+    gl_FragColor = apply(texColor, vRegion);
+}"
+`;
+
+exports[`ShaderEffect generated-GLSL golden > a builtin-free body assembles to the pinned sources (stock vertex) > plain fragment 1`] = `
+"uniform sampler2D uSampler;
+varying vec4 vColor;
+varying vec2 vRegion;
+
+uniform float uStrength;
+vec4 apply(vec4 color, vec2 uv) {
+	return vec4(color.rgb * uStrength, color.a);
+}
+
+void main(void) {
+    vec4 texColor = texture2D(uSampler, vRegion) * vColor;
+    gl_FragColor = apply(texColor, vRegion);
+}"
+`;
+
+exports[`ShaderEffect generated-GLSL golden > a builtin-free body assembles to the pinned sources (stock vertex) > plain vertex 1`] = `
+"attribute vec3 aVertex;
+attribute vec2 aRegion;
+attribute vec4 aColor;
+
+uniform mat4 uProjectionMatrix;
+
+varying vec2 vRegion;
+varying vec4 vColor;
+
+void main(void) {
+    
+    gl_Position = uProjectionMatrix * vec4(aVertex, 1.0);
+    
+    vColor = vec4(aColor.bgr * aColor.a, aColor.a);
+    vRegion = aRegion;
+}"
+`;

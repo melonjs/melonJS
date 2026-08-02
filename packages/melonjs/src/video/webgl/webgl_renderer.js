@@ -10,6 +10,7 @@ import {
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
+import RadialGradientEffect from "../effects/radialGradient.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -28,7 +29,6 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
-import RadialGradientEffect from "./effects/radialGradient.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";

@@ -1,6 +1,6 @@
 import { on, VIDEO_INIT } from "../../system/event.ts";
+import ShaderEffect from "../../video/effects/shadereffect.js";
 import GLShader from "../../video/webgl/glshader.js";
-import ShaderEffect from "../../video/webgl/shadereffect.js";
 import { shaderList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 
