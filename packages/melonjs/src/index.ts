@@ -62,6 +62,7 @@ import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import Tween from "./tweens/tween.ts";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import { Batcher } from "./video/gpu/batcher.js";
 import {
 	isPortableTopology,
 	isTopology,
@@ -79,7 +80,7 @@ import RenderTarget from "./video/rendertarget/rendertarget.ts";
 import { TextureAtlas } from "./video/texture/atlas.js";
 import NoiseTexture2d from "./video/texture/noise_texture2d.js";
 import Texture2d from "./video/texture/texture2d.ts";
-import { Batcher } from "./video/webgl/batchers/batcher.js";
+import { WebGLBatcher } from "./video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "./video/webgl/batchers/quad_batcher.js";
 import BlurEffect from "./video/webgl/effects/blur.js";
@@ -103,6 +104,9 @@ import WaveEffect from "./video/webgl/effects/wave.js";
 import GLShader from "./video/webgl/glshader.js";
 import ShaderEffect from "./video/webgl/shadereffect.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
+import WebGPUPrimitiveBatcher from "./video/webgpu/batchers/primitive_batcher.js";
+import WebGPUQuadBatcher from "./video/webgpu/batchers/quad_batcher.js";
+import WebGPUBatcher from "./video/webgpu/batchers/webgpu_batcher.js";
 import WebGPURenderer from "./video/webgpu/webgpu_renderer.js";
 
 export * from "./application/scaleMethods.ts";
@@ -257,7 +261,11 @@ export {
 	UITextButton,
 	VignetteEffect,
 	WaveEffect,
+	WebGLBatcher,
 	WebGLRenderer,
+	WebGPUBatcher,
+	WebGPUPrimitiveBatcher,
+	WebGPUQuadBatcher,
 	WebGPURenderer,
 	World,
 };

@@ -1,5 +1,5 @@
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
-import { Batcher } from "./batcher.js";
+import { WebGLBatcher } from "./batcher.js";
 
 /**
  * additional import for TypeScript
@@ -11,7 +11,7 @@ import { Batcher } from "./batcher.js";
  * Provides texture creation, binding, uploading, and deletion.
  * @category Rendering
  */
-export class MaterialBatcher extends Batcher {
+export class MaterialBatcher extends WebGLBatcher {
 	/**
 	 * Initialize the textured batcher
 	 * @ignore

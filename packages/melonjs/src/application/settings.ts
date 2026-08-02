@@ -11,8 +11,8 @@
 import type Camera2d from "../camera/camera2d";
 import { RendererType } from "../const";
 import { PhysicsAdapter } from "../physics/adapter";
+import { Batcher } from "../video/gpu/batcher.js";
 import Renderer from "../video/renderer";
-import { Batcher } from "../video/webgl/batchers/batcher";
 import { ScaleMethod } from "./scaleMethods";
 
 type BlendMode = "normal" | "multiply" | "lighter" | "additive" | "screen";

@@ -1,18 +1,13 @@
 import VertexArrayBuffer from "../../buffer/vertex.js";
+import { Batcher, DEFAULT_MAX_VERTICES } from "../../gpu/batcher.js";
 import { resolveVertexFormat } from "../../gpu/vertexformat.ts";
 
 /**
- * the default maximum number of vertices a batcher accumulates before an
- * automatic flush (matches the WebGL batcher default)
- * @ignore
- */
-const DEFAULT_MAX_VERTICES = 4096;
-
-/**
- * Base class for the WebGPU batchers — the same lifecycle contract as the
- * WebGL `Batcher` (`init` / `bind` / `unbind` / `flush` / `reset` /
- * `destroy`, driven by `renderer.addBatcher` / `setBatcher`), realized on
- * a `GPURenderPassEncoder` instead of GL state.
+ * The base WebGPU Batcher — realizes the backend-neutral {@link Batcher}
+ * lifecycle (`init` / `bind` / `unbind` / `flush` / `reset` / `destroy`,
+ * driven by `renderer.addBatcher` / `setBatcher`) on a
+ * `GPURenderPassEncoder` instead of GL state. Custom WebGPU batchers
+ * extend this class.
  *
  * A "flush" here is one `queue.writeBuffer` of the pending vertex bytes
  * into a fresh region of the renderer's per-frame buffer arena, plus one
@@ -20,14 +15,17 @@ const DEFAULT_MAX_VERTICES = 4096;
  * the frame ends. Attribute layouts are declared in the backend-neutral
  * vocabulary of `src/video/gpu/vertexformat.ts` and consumed declaratively
  * into the pipeline's `GPUVertexBufferLayout` (#1492) — no enum bridge.
- * @ignore
+ * @augments Batcher
+ * @category Rendering
  */
-export default class WebGPUBatcher {
+export default class WebGPUBatcher extends Batcher {
 	/**
 	 * @param {import("../webgpu_renderer.js").default} renderer - the owning renderer
+	 * @param {object} [settings] - batcher settings (see {@link WebGPUBatcher#init})
 	 */
-	constructor(renderer) {
-		this.init(renderer);
+	constructor(renderer, settings) {
+		super();
+		this.init(renderer, settings);
 	}
 
 	/**
@@ -116,7 +114,7 @@ export default class WebGPUBatcher {
 			return;
 		}
 		const renderer = this.renderer;
-		const pass = renderer._ensurePass();
+		const pass = renderer.ensurePass();
 		const byteLength = vertexCount * this.stride;
 
 		const region = renderer.vertexArena.alloc(byteLength);
@@ -132,14 +130,14 @@ export default class WebGPUBatcher {
 			this.shaderKey,
 			topology,
 			renderer.currentBlendMode,
-			renderer._premultipliedAlpha,
-			renderer._stencilMode,
+			renderer.premultipliedAlpha,
+			renderer.stencilMode,
 		);
-		if (pipeline !== renderer._currentPipeline) {
+		if (pipeline !== renderer.currentPipeline) {
 			pass.setPipeline(pipeline);
-			renderer._currentPipeline = pipeline;
+			renderer.currentPipeline = pipeline;
 		}
-		const frame = renderer._currentFrameBinding;
+		const frame = renderer.currentFrameBinding;
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
 		pass.setVertexBuffer(0, region.buffer, region.offset, byteLength);
 

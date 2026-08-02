@@ -273,8 +273,8 @@ export default class GLShader {
 	 * activate the given vertex attribute for this shader.
 	 *
 	 * Note: since 20.0 the engine no longer calls this per frame — each
-	 * {@link Batcher} captures its attribute layout once into an immutable
-	 * vertex-state object (VAO) at init (see `Batcher.createVertexState`).
+	 * {@link WebGLBatcher} captures its attribute layout once into an immutable
+	 * vertex-state object (VAO) at init (see `WebGLBatcher.createVertexState`).
 	 * Kept public for custom callers managing their own vertex setup.
 	 * Custom shaders hosted by a built-in batcher must declare that
 	 * batcher's attributes first, in layout order — attribute locations

@@ -19,7 +19,8 @@ import WebGPUBatcher from "./webgpu_batcher.js";
  * an explicit closing vertex, `"triangle-fan"` re-expands on the CPU into
  * a triangle list. No engine path emits either — they only serve direct
  * user calls.
- * @ignore
+ * @augments WebGPUBatcher
+ * @category Rendering
  */
 export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	/**
@@ -71,9 +72,9 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 		// CURRENT slot was written with (not a batcher-local cache):
 		// clear() rewrites the slot with lineWidth = 1 every frame, so a
 		// local cache goes stale across frames
-		if (lineWidth !== renderer._currentFrameLineWidth) {
+		if (lineWidth !== renderer.currentFrameLineWidth) {
 			this.flush(this.topology);
-			renderer._pushFrameGlobals();
+			renderer.pushFrameGlobals();
 		}
 
 		// expand thick lines to triangles with normals for shader-based

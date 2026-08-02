@@ -11,6 +11,7 @@ import {
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
+import { Batcher } from "../gpu/batcher.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
 import { createAtlas, TextureAtlas } from "../texture/atlas.js";
@@ -22,16 +23,16 @@ import {
 } from "../utils/tessellation.js";
 import WebGPUPrimitiveBatcher from "./batchers/primitive_batcher.js";
 import WebGPUQuadBatcher from "./batchers/quad_batcher.js";
-import WebGPUBufferArena from "./buffer_arena.js";
+import WebGPUBufferArena from "./buffer/arena.js";
+import WebGPUUniformRing from "./buffer/uniformring.js";
 import WebGPUPipelineCache, {
 	DEPTH_STENCIL_FORMAT,
 	normalizeBlendMode,
-} from "./pipeline_cache.js";
-import WebGPUTextureStore from "./texture_store.js";
-import WebGPUUniformRing from "./uniform_ring.js";
+} from "./pipeline/cache.js";
+import WebGPUTextureStore from "./texture/store.js";
 
 // scratch matrix for the affine-components form of transform()
-const _tempMatrix = new Matrix3d();
+const tempMatrix = new Matrix3d();
 
 /**
  * The **experimental** WebGPU renderer.
@@ -118,23 +119,23 @@ export default class WebGPURenderer extends Renderer {
 		// active Gradient (setColor(Gradient)); phase 1 only honors it on
 		// fillRect via the Canvas-baked gradient texture
 		/** @ignore */
-		this._currentGradient = null;
+		this.currentGradient = null;
 		/** @ignore */
-		this._gradientShapeWarned = false;
+		this.gradientShapeWarned = false;
 
 		// scratch vertices for fillRect (2 triangles) and fillPolygon
 		/** @ignore */
-		this._rectTriangles = Array.from({ length: 6 }, () => {
+		this.rectTriangles = Array.from({ length: 6 }, () => {
 			return { x: 0, y: 0 };
 		});
 		/** @ignore */
-		this._polyVerts = [];
+		this.polyVerts = [];
 		// scratch bounds for the clipRect screen-space AABB derivation
 		/** @ignore */
-		this._clipAABB = new Bounds();
+		this.clipAABB = new Bounds();
 		// the stencil reference the masked render phase compares against
 		/** @ignore */
-		this._maskVisibleRef = 0;
+		this.maskVisibleRef = 0;
 
 		/**
 		 * the batchers registered with this renderer, by name
@@ -161,57 +162,57 @@ export default class WebGPURenderer extends Renderer {
 
 		// per-frame recording state
 		/** @ignore */
-		this._encoder = null;
+		this.commandEncoder = null;
 		/** @ignore */
-		this._pass = null;
+		this.renderPass = null;
 		// monotonically increasing frame id — the texture store uses it to
 		// detect same-frame content changes that need a fresh texture
 		/** @ignore */
-		this._frameId = 0;
+		this.frameId = 0;
 		// GPUTextures replaced mid-frame: destroying them immediately would
 		// invalidate draws already recorded against them (submit rejects the
 		// whole command buffer) — they retire at frame end, after submit
 		/** @ignore */
-		this._retiredTextures = [];
+		this.retiredTextures = [];
 		// the lineWidth value written into the current frame-globals slot —
 		// the primitive batcher compares against THIS (not its own cache)
 		// because clear() rewrites the slot every frame
 		/** @ignore */
-		this._currentFrameLineWidth = 1;
+		this.currentFrameLineWidth = 1;
 		/** @ignore */
-		this._frameView = null;
+		this.frameTextureView = null;
 		/** @ignore */
-		this._depthTexture = null;
+		this.depthTexture = null;
 		/** @ignore */
-		this._currentPipeline = null;
+		this.currentPipeline = null;
 		/** @ignore */
-		this._currentFrameBinding = null;
+		this.currentFrameBinding = null;
 		/** @ignore */
-		this._scissorActive = false;
+		this.scissorActive = false;
 		// premultiplied-alpha flag mirrored from setBlendMode (pipeline key)
 		/** @ignore */
-		this._premultipliedAlpha = true;
+		this.premultipliedAlpha = true;
 		// stencil mode consulted by the pipeline lookup: "none"|"write"|"test"
 		/** @ignore */
-		this._stencilMode = "none";
+		this.stencilMode = "none";
 
 		// reset the renderer on game reset (stored so destroy() can
 		// unsubscribe — a rejected-then-retried `Application.init()`
 		// constructs a fresh renderer per attempt, and the event bus must
 		// not pin every abandoned one for the page's lifetime)
-		this._onGameReset = () => {
+		this.onGameReset = () => {
 			this.reset();
 		};
-		on(GAME_RESET, this._onGameReset);
+		on(GAME_RESET, this.onGameReset);
 
 		// keep the depth-stencil attachment sized with the canvas
-		this._onCanvasResize = () => {
+		this.onCanvasResize = () => {
 			if (typeof this.device !== "undefined") {
 				this.flush();
-				this._createDepthTexture();
+				this.createDepthTexture();
 			}
 		};
-		on(CANVAS_ONRESIZE, this._onCanvasResize);
+		on(CANVAS_ONRESIZE, this.onCanvasResize);
 	}
 
 	/**
@@ -276,7 +277,7 @@ export default class WebGPURenderer extends Renderer {
 			if (lossInfo.reason !== "destroyed") {
 				this.isContextValid = false;
 				emit(ONCONTEXT_LOST, this);
-				void this._restoreDevice().catch((err) => {
+				void this.restoreDevice().catch((err) => {
 					console.warn("WebGPU device restore failed:", err);
 				});
 			}
@@ -303,7 +304,7 @@ export default class WebGPURenderer extends Renderer {
 			label: "melonJS vertex arena",
 		});
 		this.textureStore = new WebGPUTextureStore(this);
-		this._createDepthTexture();
+		this.createDepthTexture();
 
 		// register the built-in batchers (device-dependent, so here rather
 		// than the constructor — a device-loss restore re-runs this path)
@@ -319,19 +320,19 @@ export default class WebGPURenderer extends Renderer {
 	 * (re)create the depth-stencil attachment at the current canvas size
 	 * @ignore
 	 */
-	_createDepthTexture() {
+	createDepthTexture() {
 		const canvas = this.getCanvas();
 		const width = Math.max(1, canvas.width);
 		const height = Math.max(1, canvas.height);
 		if (
-			this._depthTexture &&
-			this._depthTexture.width === width &&
-			this._depthTexture.height === height
+			this.depthTexture &&
+			this.depthTexture.width === width &&
+			this.depthTexture.height === height
 		) {
 			return;
 		}
-		this._depthTexture?.destroy();
-		this._depthTexture = this.device.createTexture({
+		this.depthTexture?.destroy();
+		this.depthTexture = this.device.createTexture({
 			label: "melonJS depth-stencil",
 			size: [width, height],
 			format: DEPTH_STENCIL_FORMAT,
@@ -357,27 +358,27 @@ export default class WebGPURenderer extends Renderer {
 
 		// a pass still open here means the previous frame aborted between
 		// clear() and flush() (an exception mid-draw) — drop it, un-submitted
-		if (this._pass !== null) {
-			this._abandonFrame();
+		if (this.renderPass !== null) {
+			this.abandonFrame();
 		}
 
 		this.vertexArena.reset();
 		this.uniformRing.reset();
-		this._frameId++;
+		this.frameId++;
 		// clear() also resets the stroke line width, like the GL backend
 		this.lineWidth = 1;
-		this._stencilMode = "none";
+		this.stencilMode = "none";
 		this.maskLevel = 0;
 
 		const [r, g, b, a] = this.backgroundColor.toArray();
-		this._beginPass({
+		this.beginPass({
 			colorLoadOp: "clear",
 			clearValue: { r, g, b, a },
 			stencilLoadOp: "clear",
 		});
 
 		// the frame's first frame-globals slot
-		this._pushFrameGlobals();
+		this.pushFrameGlobals();
 
 		// a new frame is a new render pass on the active target — same
 		// per-frame signal the WebGL backend emits from its clear()
@@ -390,27 +391,27 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {object} [opts] - load operations for the pass
 	 * @ignore
 	 */
-	_beginPass(opts = {}) {
-		if (this._encoder === null) {
-			this._encoder = this.device.createCommandEncoder({
+	beginPass(opts = {}) {
+		if (this.commandEncoder === null) {
+			this.commandEncoder = this.device.createCommandEncoder({
 				label: "melonJS frame",
 			});
 		}
-		if (this._frameView === null) {
-			this._frameView = this.context.getCurrentTexture().createView();
+		if (this.frameTextureView === null) {
+			this.frameTextureView = this.context.getCurrentTexture().createView();
 		}
-		this._pass = this._encoder.beginRenderPass({
+		this.renderPass = this.commandEncoder.beginRenderPass({
 			label: "melonJS pass",
 			colorAttachments: [
 				{
-					view: this._frameView,
+					view: this.frameTextureView,
 					loadOp: opts.colorLoadOp ?? "load",
 					clearValue: opts.clearValue,
 					storeOp: "store",
 				},
 			],
 			depthStencilAttachment: {
-				view: this._depthTexture.createView(),
+				view: this.depthTexture.createView(),
 				depthLoadOp: "clear",
 				depthClearValue: 1.0,
 				depthStoreOp: "discard",
@@ -420,10 +421,10 @@ export default class WebGPURenderer extends Renderer {
 			},
 		});
 		const canvas = this.getCanvas();
-		this._pass.setViewport(0, 0, canvas.width, canvas.height, 0, 1);
-		this._applyScissor();
+		this.renderPass.setViewport(0, 0, canvas.width, canvas.height, 0, 1);
+		this.applyScissor();
 		// pipeline/bind state does not carry across passes
-		this._currentPipeline = null;
+		this.currentPipeline = null;
 	}
 
 	/**
@@ -433,16 +434,16 @@ export default class WebGPURenderer extends Renderer {
 	 * stencil, post effects will break it to retarget.
 	 * @ignore
 	 */
-	_ensurePass() {
-		if (this._pass === null) {
-			this._beginPass();
+	ensurePass() {
+		if (this.renderPass === null) {
+			this.beginPass();
 			// out-of-bracket draws can predate the first clear() of the
 			// renderer's life — make sure a frame-globals slot exists
-			if (this._currentFrameBinding === null && this.uniformRing !== null) {
-				this._pushFrameGlobals();
+			if (this.currentFrameBinding === null && this.uniformRing !== null) {
+				this.pushFrameGlobals();
 			}
 		}
-		return this._pass;
+		return this.renderPass;
 	}
 
 	/**
@@ -451,16 +452,16 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	flush() {
 		this.currentBatcher?.flush();
-		if (this._pass !== null) {
-			this._pass.end();
-			this._pass = null;
+		if (this.renderPass !== null) {
+			this.renderPass.end();
+			this.renderPass = null;
 		}
-		if (this._encoder !== null) {
-			this.device.queue.submit([this._encoder.finish()]);
-			this._encoder = null;
-			this._frameView = null;
+		if (this.commandEncoder !== null) {
+			this.device.queue.submit([this.commandEncoder.finish()]);
+			this.commandEncoder = null;
+			this.frameTextureView = null;
 		}
-		this._destroyRetiredTextures();
+		this.destroyRetiredTextures();
 	}
 
 	/**
@@ -468,22 +469,22 @@ export default class WebGPURenderer extends Renderer {
 	 * exception recovery, reset, destroy)
 	 * @ignore
 	 */
-	_abandonFrame() {
-		if (this._pass !== null) {
-			this._pass.end();
-			this._pass = null;
+	abandonFrame() {
+		if (this.renderPass !== null) {
+			this.renderPass.end();
+			this.renderPass = null;
 		}
 		// an encoder cannot be discarded explicitly — finish it and drop
 		// the command buffer unsubmitted
-		if (this._encoder !== null) {
-			this._encoder.finish();
-			this._encoder = null;
+		if (this.commandEncoder !== null) {
+			this.commandEncoder.finish();
+			this.commandEncoder = null;
 		}
-		this._frameView = null;
-		this._currentPipeline = null;
+		this.frameTextureView = null;
+		this.currentPipeline = null;
 		// the recorded draws are dropped with the command buffer, so any
 		// texture retired during the frame can go now
-		this._destroyRetiredTextures();
+		this.destroyRetiredTextures();
 	}
 
 	/**
@@ -491,12 +492,12 @@ export default class WebGPURenderer extends Renderer {
 	 * referencing them has been submitted (or abandoned)
 	 * @ignore
 	 */
-	_destroyRetiredTextures() {
-		if (this._retiredTextures.length > 0) {
-			for (const texture of this._retiredTextures) {
+	destroyRetiredTextures() {
+		if (this.retiredTextures.length > 0) {
+			for (const texture of this.retiredTextures) {
 				texture.destroy();
 			}
-			this._retiredTextures.length = 0;
+			this.retiredTextures.length = 0;
 		}
 	}
 
@@ -504,12 +505,12 @@ export default class WebGPURenderer extends Renderer {
 	 * re-apply the current scissor state to the open pass
 	 * @ignore
 	 */
-	_applyScissor() {
-		if (this._pass === null) {
+	applyScissor() {
+		if (this.renderPass === null) {
 			return;
 		}
 		const canvas = this.getCanvas();
-		if (this._scissorActive === true) {
+		if (this.scissorActive === true) {
 			// clamp defensively: an out-of-attachment scissor is a WebGPU
 			// validation error that invalidates the whole pass (GL clamps)
 			const s = this.currentScissor;
@@ -517,9 +518,9 @@ export default class WebGPURenderer extends Renderer {
 			const y = Math.min(Math.max(s[1], 0), canvas.height);
 			const w = Math.min(Math.max(s[2], 0), canvas.width - x);
 			const h = Math.min(Math.max(s[3], 0), canvas.height - y);
-			this._pass.setScissorRect(x, y, w, h);
+			this.renderPass.setScissorRect(x, y, w, h);
 		} else {
-			this._pass.setScissorRect(0, 0, canvas.width, canvas.height);
+			this.renderPass.setScissorRect(0, 0, canvas.width, canvas.height);
 		}
 	}
 
@@ -543,7 +544,7 @@ export default class WebGPURenderer extends Renderer {
 		}
 		// pending vertices belong before the clear
 		this.currentBatcher?.flush();
-		const pass = this._ensurePass();
+		const pass = this.ensurePass();
 
 		let rgba;
 		if (color instanceof Color) {
@@ -565,13 +566,13 @@ export default class WebGPURenderer extends Renderer {
 			"none",
 			true,
 			// the clear respects the mask like any other draw
-			this._stencilMode === "test" ? "test" : "none",
+			this.stencilMode === "test" ? "test" : "none",
 		);
 		pass.setPipeline(pipeline);
 		pass.setBindGroup(0, slot.bindGroup, [slot.dynamicOffset]);
 		pass.draw(3);
 		// the clear draw invalidated the tracked pipeline/bindings
-		this._currentPipeline = null;
+		this.currentPipeline = null;
 	}
 
 	/**
@@ -599,6 +600,11 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {boolean} [activate=false] - true to set this batcher as the active one
 	 */
 	addBatcher(batcher, name = "default", activate = false) {
+		if (!(batcher instanceof Batcher)) {
+			throw new Error(
+				"addBatcher: batcher must be a Batcher subclass (custom WebGPU batchers extend WebGPUBatcher)",
+			);
+		}
 		if (typeof this.batchers.get(name) !== "undefined") {
 			throw new Error("Invalid Batcher name");
 		}
@@ -688,24 +694,7 @@ export default class WebGPURenderer extends Renderer {
 		} else {
 			// individual 2D affine components
 			this.currentTransform.multiply(
-				_tempMatrix.setTransform(
-					a,
-					b,
-					0,
-					0,
-					c,
-					d,
-					0,
-					0,
-					0,
-					0,
-					1,
-					0,
-					e,
-					f,
-					0,
-					1,
-				),
+				tempMatrix.setTransform(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, e, f, 0, 1),
 			);
 		}
 		if (this.settings.subPixel === false) {
@@ -735,7 +724,7 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	save() {
 		this.renderState.currentShader = this.customShader;
-		this.renderState.save(this._scissorActive === true);
+		this.renderState.save(this.scissorActive === true);
 	}
 
 	/**
@@ -748,7 +737,7 @@ export default class WebGPURenderer extends Renderer {
 		// otherwise they would flush later and visually escape their clip.
 		const peek = this.renderState.peekScissor();
 		const cur = this.currentScissor;
-		const curActive = this._scissorActive === true;
+		const curActive = this.scissorActive === true;
 		const willBeActive = peek !== null;
 		const scissorChanging =
 			curActive !== willBeActive ||
@@ -764,12 +753,12 @@ export default class WebGPURenderer extends Renderer {
 		if (result !== null) {
 			this.setBlendMode(result.blendMode);
 			if (scissorChanging) {
-				this._scissorActive = result.scissorActive === true;
-				this._applyScissor();
+				this.scissorActive = result.scissorActive === true;
+				this.applyScissor();
 			}
 		}
 		// sync gradient and shader from renderState
-		this._currentGradient = this.renderState.currentGradient;
+		this.currentGradient = this.renderState.currentGradient;
 		this.customShader = this.renderState.currentShader;
 	}
 
@@ -796,10 +785,10 @@ export default class WebGPURenderer extends Renderer {
 	setColor(color) {
 		if (color instanceof Gradient) {
 			this.renderState.currentGradient = color;
-			this._currentGradient = color;
+			this.currentGradient = color;
 		} else {
 			this.renderState.currentGradient = null;
-			this._currentGradient = null;
+			this.currentGradient = null;
 			const alpha = this.currentColor.alpha;
 			this.currentColor.copy(color);
 			this.currentColor.alpha *= alpha;
@@ -819,11 +808,11 @@ export default class WebGPURenderer extends Renderer {
 		const normalized = normalizeBlendMode(mode);
 		if (
 			this.currentBlendMode !== normalized ||
-			this._premultipliedAlpha !== premultipliedAlpha
+			this.premultipliedAlpha !== premultipliedAlpha
 		) {
 			this.currentBatcher?.flush();
 			this.currentBlendMode = normalized;
-			this._premultipliedAlpha = premultipliedAlpha;
+			this.premultipliedAlpha = premultipliedAlpha;
 		}
 		return this.currentBlendMode;
 	}
@@ -841,7 +830,7 @@ export default class WebGPURenderer extends Renderer {
 		// buffer writes; the binding is consumed by the next flush) so the
 		// projection is never stale after an explicit mid-frame flush()
 		if (this.uniformRing !== null) {
-			this._pushFrameGlobals();
+			this.pushFrameGlobals();
 		}
 	}
 
@@ -850,12 +839,12 @@ export default class WebGPURenderer extends Renderer {
 	 * lineWidth written so batchers can detect when the slot goes stale
 	 * @ignore
 	 */
-	_pushFrameGlobals() {
-		this._currentFrameBinding = this.uniformRing.pushFrameGlobals(
+	pushFrameGlobals() {
+		this.currentFrameBinding = this.uniformRing.pushFrameGlobals(
 			this.projectionMatrix,
 			this.lineWidth,
 		);
-		this._currentFrameLineWidth = this.lineWidth;
+		this.currentFrameLineWidth = this.lineWidth;
 	}
 
 	/**
@@ -984,11 +973,11 @@ export default class WebGPURenderer extends Renderer {
 		// treat a non-finite transform as "no clip"
 		const m = this.currentTransform;
 		if (!Number.isFinite(m.tx) || !Number.isFinite(m.ty)) {
-			if (this._scissorActive) {
+			if (this.scissorActive) {
 				// drain pending vertices under the active scissor first
 				this.currentBatcher?.flush();
-				this._scissorActive = false;
-				this._applyScissor();
+				this.scissorActive = false;
+				this.applyScissor();
 			}
 			return;
 		}
@@ -996,7 +985,7 @@ export default class WebGPURenderer extends Renderer {
 		// derive the screen-space AABB by feeding the rect's 4 corners
 		// through `currentTransform` — any rotation collapses to the
 		// rotated-rect AABB on screen, same as the GL scissor (#1349)
-		const aabb = this._clipAABB;
+		const aabb = this.clipAABB;
 		aabb.clear();
 		aabb.addFrame(x, y, x + width, y + height, m);
 		let sx = Math.floor(aabb.min.x);
@@ -1011,10 +1000,10 @@ export default class WebGPURenderer extends Renderer {
 			sx + sw >= canvas.width &&
 			sy + sh >= canvas.height
 		) {
-			if (this._scissorActive) {
+			if (this.scissorActive) {
 				this.currentBatcher?.flush();
-				this._scissorActive = false;
-				this._applyScissor();
+				this.scissorActive = false;
+				this.applyScissor();
 			}
 			return;
 		}
@@ -1035,7 +1024,7 @@ export default class WebGPURenderer extends Renderer {
 
 		const cs = this.currentScissor;
 		if (
-			this._scissorActive &&
+			this.scissorActive &&
 			cs[0] === sx &&
 			cs[1] === sy &&
 			cs[2] === sw &&
@@ -1045,12 +1034,12 @@ export default class WebGPURenderer extends Renderer {
 		}
 		// drain vertices queued under the previous clip state
 		this.currentBatcher?.flush();
-		this._scissorActive = true;
+		this.scissorActive = true;
 		cs[0] = sx;
 		cs[1] = sy;
 		cs[2] = sw;
 		cs[3] = sh;
-		this._applyScissor();
+		this.applyScissor();
 	}
 
 	/**
@@ -1075,11 +1064,11 @@ export default class WebGPURenderer extends Renderer {
 
 		if (this.maskLevel === 0) {
 			// stencil clear = pass break (color survives via loadOp "load")
-			if (this._pass !== null) {
-				this._pass.end();
-				this._pass = null;
+			if (this.renderPass !== null) {
+				this.renderPass.end();
+				this.renderPass = null;
 			}
-			this._beginPass({ stencilLoadOp: "clear" });
+			this.beginPass({ stencilLoadOp: "clear" });
 		}
 
 		this.maskLevel++;
@@ -1095,14 +1084,14 @@ export default class WebGPURenderer extends Renderer {
 
 		// write phase: every fragment of the mask shape increments the
 		// stencil (color writes disabled by the pipeline variant)
-		this._stencilMode = "write";
+		this.stencilMode = "write";
 		this.fill(mask);
 		this.currentBatcher?.flush();
 
 		// render phase: draw only where the stencil matches
-		this._stencilMode = "test";
-		this._maskVisibleRef = invert === true ? 0 : this.maskLevel;
-		this._ensurePass().setStencilReference(this._maskVisibleRef);
+		this.stencilMode = "test";
+		this.maskVisibleRef = invert === true ? 0 : this.maskLevel;
+		this.ensurePass().setStencilReference(this.maskVisibleRef);
 	}
 
 	/**
@@ -1116,8 +1105,8 @@ export default class WebGPURenderer extends Renderer {
 		// drain masked vertices while the stencil test still applies
 		this.currentBatcher?.flush();
 		this.maskLevel = 0;
-		this._stencilMode = "none";
-		this._maskVisibleRef = 0;
+		this.stencilMode = "none";
+		this.maskVisibleRef = 0;
 	}
 
 	/**
@@ -1127,8 +1116,8 @@ export default class WebGPURenderer extends Renderer {
 	 * @ignore
 	 */
 	_warnGradientShape() {
-		if (this._gradientShapeWarned !== true) {
-			this._gradientShapeWarned = true;
+		if (this.gradientShapeWarned !== true) {
+			this.gradientShapeWarned = true;
 			console.warn(
 				"WebGPURenderer: gradient fills of non-rectangular shapes are " +
 					"not supported yet — falling back to a solid fill",
@@ -1167,7 +1156,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
-		if (this._currentGradient) {
+		if (this.currentGradient) {
 			this._warnGradientShape();
 		}
 		this.setBatcher("primitive");
@@ -1221,7 +1210,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} h - vertical radius of the ellipse
 	 */
 	fillEllipse(x, y, w, h) {
-		if (this._currentGradient) {
+		if (this.currentGradient) {
 			this._warnGradientShape();
 		}
 		this.setBatcher("primitive");
@@ -1329,14 +1318,14 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {Polygon} poly - the shape to draw
 	 */
 	fillPolygon(poly) {
-		if (this._currentGradient) {
+		if (this.currentGradient) {
 			this._warnGradientShape();
 		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
 		const indices = poly.getIndices();
 		const points = poly.points;
-		const verts = this._polyVerts;
+		const verts = this.polyVerts;
 		const len = indices.length;
 
 		// grow the scratch array if needed
@@ -1398,10 +1387,10 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} height - the rectangle's height
 	 */
 	fillRect(x, y, width, height) {
-		if (this._currentGradient) {
+		if (this.currentGradient) {
 			// toCanvas() bakes the gradient through the Canvas 2D API and
 			// draws it as a textured quad — same path as the GL backend
-			const canvas = this._currentGradient.toCanvas(this, x, y, width, height);
+			const canvas = this.currentGradient.toCanvas(this, x, y, width, height);
 			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
 			return;
 		}
@@ -1409,7 +1398,7 @@ export default class WebGPURenderer extends Renderer {
 		// 2 triangles directly — avoids path2D + earcut overhead
 		const right = x + width;
 		const bottom = y + height;
-		const pts = this._rectTriangles;
+		const pts = this.rectTriangles;
 		pts[0].x = x;
 		pts[0].y = y;
 		pts[1].x = right;
@@ -1454,7 +1443,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} radius - the rounded corner's radius
 	 */
 	fillRoundRect(x, y, width, height, radius) {
-		if (this._currentGradient) {
+		if (this.currentGradient) {
 			this._warnGradientShape();
 		}
 		this.setBatcher("primitive");
@@ -1710,14 +1699,14 @@ export default class WebGPURenderer extends Renderer {
 	 * analogue of the WebGL context-restore path
 	 * @ignore
 	 */
-	async _restoreDevice() {
+	async restoreDevice() {
 		// tear down everything tied to the dead device
-		this._abandonFrame();
+		this.abandonFrame();
 		this.textureStore?.destroy();
 		this.vertexArena?.destroy();
 		this.uniformRing?.destroy();
 		this.pipelineCache?.clear();
-		this._depthTexture = null;
+		this.depthTexture = null;
 		this.device = undefined;
 		this.adapter = undefined;
 		// renegotiate + rebuild (init also re-registers batcher layouts);
@@ -1745,13 +1734,13 @@ export default class WebGPURenderer extends Renderer {
 	 * @override
 	 */
 	reset() {
-		this._abandonFrame();
+		this.abandonFrame();
 		super.reset();
 		// re-init batchers when recovering from a device loss, plain reset
 		// otherwise — the same split as the WebGL restore path. A reset
 		// landing INSIDE the device renegotiation window (device gone,
 		// replacement not granted yet) can only reset: init needs a device,
-		// and _restoreDevice re-inits every batcher once one exists
+		// and restoreDevice re-inits every batcher once one exists
 		for (const batcher of this.batchers.values()) {
 			if (this.isContextValid === false && typeof this.device !== "undefined") {
 				batcher.init(this);
@@ -1767,9 +1756,9 @@ export default class WebGPURenderer extends Renderer {
 	 * @override
 	 */
 	destroy() {
-		off(GAME_RESET, this._onGameReset);
-		off(CANVAS_ONRESIZE, this._onCanvasResize);
-		this._abandonFrame();
+		off(GAME_RESET, this.onGameReset);
+		off(CANVAS_ONRESIZE, this.onCanvasResize);
+		this.abandonFrame();
 		if (typeof this.device !== "undefined") {
 			for (const batcher of this.batchers.values()) {
 				batcher.destroy();
@@ -1778,8 +1767,8 @@ export default class WebGPURenderer extends Renderer {
 			this.vertexArena?.destroy();
 			this.uniformRing?.destroy();
 			this.pipelineCache?.clear();
-			this._depthTexture?.destroy();
-			this._depthTexture = null;
+			this.depthTexture?.destroy();
+			this.depthTexture = null;
 			this.context.unconfigure();
 			this.device.destroy();
 			this.device = undefined;

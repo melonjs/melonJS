@@ -1,7 +1,7 @@
+import clearWGSL from "../shaders/clear.wgsl";
+import primitiveWGSL from "../shaders/primitive.wgsl";
+import quadWGSL from "../shaders/quad.wgsl";
 import { CLEAR_UNIFORM_SIZE, FRAME_UNIFORM_SIZE } from "./bindgroups.js";
-import clearWGSL from "./shaders/clear.wgsl";
-import primitiveWGSL from "./shaders/primitive.wgsl";
-import quadWGSL from "./shaders/quad.wgsl";
 
 /**
  * The depth-stencil attachment format every pass and every pipeline of this

@@ -27,7 +27,8 @@ const V_ARRAY = [
  * stream. A WebGPU flush is one `writeBuffer` of the pending bytes plus
  * one `drawIndexed`, so the per-change cost is far below the GL
  * full-buffer re-upload this design avoids there.
- * @ignore
+ * @augments WebGPUBatcher
+ * @category Rendering
  */
 export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	/**
@@ -68,7 +69,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		);
 
 		// the material bind group the pending vertices were queued under
-		this._currentMaterial = null;
+		this.currentMaterial = null;
 
 		// static index buffer: 6 indices per 4 vertices, filled once by the
 		// renderer-agnostic CPU pattern and uploaded at creation
@@ -114,9 +115,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		const bindGroup = this.renderer.textureStore.getBinding(texture, {
 			force: reupload,
 		});
-		if (bindGroup !== this._currentMaterial) {
+		if (bindGroup !== this.currentMaterial) {
 			this.flush();
-			this._currentMaterial = bindGroup;
+			this.currentMaterial = bindGroup;
 		}
 
 		// Transform vertices. Stamp per-sprite depth onto z BEFORE
@@ -153,7 +154,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @override
 	 */
 	recordDraw(pass, vertexCount) {
-		pass.setBindGroup(1, this._currentMaterial);
+		pass.setBindGroup(1, this.currentMaterial);
 		pass.setIndexBuffer(this._indexBuffer, "uint32");
 		pass.drawIndexed((vertexCount / 4) * 6);
 	}
@@ -162,7 +163,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @override
 	 */
 	flush(topology) {
-		if (this._currentMaterial === null) {
+		if (this.currentMaterial === null) {
 			// nothing was ever queued under a material this frame
 			this.vertexData.clear();
 			return;
@@ -176,7 +177,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	destroy() {
 		this._indexBuffer?.destroy();
 		this._indexBuffer = null;
-		this._currentMaterial = null;
+		this.currentMaterial = null;
 		super.destroy();
 	}
 }

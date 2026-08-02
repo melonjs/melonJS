@@ -1,4 +1,7 @@
-import { CLEAR_UNIFORM_SIZE, FRAME_UNIFORM_SIZE } from "./bindgroups.js";
+import {
+	CLEAR_UNIFORM_SIZE,
+	FRAME_UNIFORM_SIZE,
+} from "../pipeline/bindgroups.js";
 
 /**
  * Per-frame uniform ring — slot-granular bump allocation over persistent

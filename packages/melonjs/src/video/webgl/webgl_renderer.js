@@ -10,6 +10,7 @@ import {
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
+import { Batcher } from "../gpu/batcher.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -41,7 +42,6 @@ import { getMaxShaderPrecision } from "./utils/precision.js";
  * @import {Ellipse} from "./../../geometries/ellipse.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
- * @import {Batcher} from "./batchers/batcher.js";
  * @import {default as Texture2d} from "../texture/texture2d.ts";
  */
 
@@ -593,11 +593,16 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * add a new batcher to this renderer
-	 * @param {Batcher} batcher - a batcher instance
+	 * @param {Batcher} batcher - a batcher instance (must extend WebGLBatcher)
 	 * @param {string} name - a name uniquely identifying this batcher
 	 * @param {boolean} [activate=false] - true if the given batcher should be set as the active one
 	 */
 	addBatcher(batcher, name = "default", activate = false) {
+		if (!(batcher instanceof Batcher)) {
+			throw new Error(
+				"addBatcher: batcher must be a Batcher subclass (custom WebGL batchers extend WebGLBatcher)",
+			);
+		}
 		if (typeof this.batchers.get(name) !== "undefined") {
 			throw new Error("Invalid Batcher name");
 		}

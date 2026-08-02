@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeBlendMode } from "../src/video/webgpu/pipeline_cache.js";
+import { normalizeBlendMode } from "../src/video/webgpu/pipeline/cache.js";
 
 /**
  * Device-free units of the WebGPU 2D pipeline — the pure CPU pieces

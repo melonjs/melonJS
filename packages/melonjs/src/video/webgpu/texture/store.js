@@ -1,4 +1,4 @@
-import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../system/event.ts";
+import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
 
 /**
  * Renderer-owned GPU texture store for the WebGPU backend — the counterpart
@@ -18,7 +18,7 @@ import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../system/event.ts";
  */
 export default class WebGPUTextureStore {
 	/**
-	 * @param {import("./webgpu_renderer.js").default} renderer - the owning renderer
+	 * @param {import("../webgpu_renderer.js").default} renderer - the owning renderer
 	 */
 	constructor(renderer) {
 		this.renderer = renderer;
@@ -31,10 +31,10 @@ export default class WebGPUTextureStore {
 		// drop every unit → texture association when the cache resets
 		// (unit numbers get reassigned; resident GPU textures would map to
 		// the wrong sources). Mirrors MaterialBatcher._onTextureCacheReset.
-		this._onCacheReset = () => {
+		this.onCacheReset = () => {
 			this.releaseAll();
 		};
-		on(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
+		on(GPU_TEXTURE_CACHE_RESET, this.onCacheReset);
 	}
 
 	/**
@@ -111,13 +111,13 @@ export default class WebGPUTextureStore {
 				typeof record === "undefined" ||
 				record.width !== width ||
 				record.height !== height ||
-				record.frameId === this.renderer._frameId
+				record.frameId === this.renderer.frameId
 			) {
 				// (re)create at the source size; the replaced texture retires
 				// at frame end — destroying it now would invalidate draws
 				// already recorded against it (submit rejects the whole frame)
 				if (typeof record !== "undefined") {
-					this._retire(record.texture);
+					this.retire(record.texture);
 				}
 				const gpuTexture = this.device.createTexture({
 					label: "melonJS texture",
@@ -161,7 +161,7 @@ export default class WebGPUTextureStore {
 
 		// stamp: this record's texture is (about to be) referenced by draws
 		// recorded in the current frame
-		record.frameId = this.renderer._frameId;
+		record.frameId = this.renderer.frameId;
 
 		const filter =
 			typeof texture.filter === "string"
@@ -191,9 +191,9 @@ export default class WebGPUTextureStore {
 	 * @param {GPUTexture} gpuTexture - the texture to dispose of
 	 * @ignore
 	 */
-	_retire(gpuTexture) {
-		if (this.renderer._encoder !== null) {
-			this.renderer._retiredTextures.push(gpuTexture);
+	retire(gpuTexture) {
+		if (this.renderer.commandEncoder !== null) {
+			this.renderer.retiredTextures.push(gpuTexture);
 		} else {
 			gpuTexture.destroy();
 		}
@@ -221,7 +221,7 @@ export default class WebGPUTextureStore {
 		for (const unit of units) {
 			const record = this.records.get(unit);
 			if (record) {
-				this._retire(record.texture);
+				this.retire(record.texture);
 				this.records.delete(unit);
 			}
 		}
@@ -232,7 +232,7 @@ export default class WebGPUTextureStore {
 	 */
 	releaseAll() {
 		for (const record of this.records.values()) {
-			this._retire(record.texture);
+			this.retire(record.texture);
 		}
 		this.records.clear();
 	}
@@ -241,7 +241,7 @@ export default class WebGPUTextureStore {
 	 * full teardown (device loss / renderer destroy)
 	 */
 	destroy() {
-		off(GPU_TEXTURE_CACHE_RESET, this._onCacheReset);
+		off(GPU_TEXTURE_CACHE_RESET, this.onCacheReset);
 		this.releaseAll();
 		this.samplers.clear();
 	}
