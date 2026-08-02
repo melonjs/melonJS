@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Light3d, level, loader, Mesh, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Light3d,
+	level,
+	loader,
+	Mesh,
+	video,
+} from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
 import { gltfList } from "../src/loader/cache.js";
 import {
@@ -702,11 +710,12 @@ describe("parseGLTF() — baseColorFactor & vertex colors", () => {
 	const COLOR_NAME = "__gltf_color_apply";
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		gltfList[NAME] = await parseGLTF(buildFactorGLB([1, 0, 0, 1]));
 		gltfList[COLOR_NAME] = await parseGLTF(
 			buildColorGLB(new Float32Array([1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1]), 4),
@@ -810,11 +819,12 @@ describe("GLTFScene → Mesh instantiation", () => {
 
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		gltfList[NAME] = await parseGLTF(buildSceneGLB());
 	});
 
@@ -981,11 +991,12 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
 		const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
 		const indices = new Uint16Array([0, 1, 2]);

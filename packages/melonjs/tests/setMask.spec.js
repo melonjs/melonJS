@@ -1,16 +1,25 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Color, Ellipse, Rect, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Color,
+	Ellipse,
+	Rect,
+	video,
+} from "../src/index.js";
 
 describe("CanvasRenderer.setMask — invert mode", () => {
 	let renderer;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(100, 100, {
+		app = new Application(100, 100, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 	});
 
 	afterAll(() => {

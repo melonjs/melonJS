@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
 	GLShader,
+	game,
 	ShaderEffect,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
 import {
@@ -30,7 +30,7 @@ describe("WebGL vertex-state location contract", () => {
 	beforeAll(async () => {
 		boot();
 		await getWebGLRenderer(160, 120);
-		renderer = video.renderer;
+		renderer = game.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;

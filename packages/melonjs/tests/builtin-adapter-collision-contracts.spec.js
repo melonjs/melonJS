@@ -21,6 +21,7 @@
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	collision,
 	Rect,
@@ -37,13 +38,14 @@ describe("Physics : onCollision legacy contract (19.4 backward-compat)", () => {
 	let aCalls;
 	let bCalls;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {
@@ -253,13 +255,14 @@ describe("Physics : onCollisionActive new contract (19.5+, receiver-symmetric)",
 	let aCalls;
 	let bCalls;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	beforeEach(() => {

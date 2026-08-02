@@ -1,22 +1,25 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	boot,
 	Container,
-	game,
 	UIBaseElement,
 	UISpriteElement,
 	UITextButton,
 	video,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 describe("UI", () => {
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	// ─── UIBaseElement ───────────────────────────────────────────────────────────
@@ -151,7 +154,7 @@ describe("UI", () => {
 
 			beforeAll(() => {
 				// UISpriteElement requires a valid image — use a canvas as a stand-in
-				const canvas = video.createCanvas(32, 32);
+				const canvas = Renderer.createCanvas(32, 32);
 				el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
@@ -194,7 +197,7 @@ describe("UI", () => {
 
 		describe("hover state management", () => {
 			it("enter() should set hover to true", () => {
-				const canvas = video.createCanvas(32, 32);
+				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
@@ -205,7 +208,7 @@ describe("UI", () => {
 			});
 
 			it("leave() should set hover to false", () => {
-				const canvas = video.createCanvas(32, 32);
+				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
@@ -219,7 +222,7 @@ describe("UI", () => {
 
 		describe("click callbacks", () => {
 			it("onClick() should return false by default", () => {
-				const canvas = video.createCanvas(32, 32);
+				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
@@ -229,7 +232,7 @@ describe("UI", () => {
 			});
 
 			it("onRelease() should return false by default", () => {
-				const canvas = video.createCanvas(32, 32);
+				const canvas = Renderer.createCanvas(32, 32);
 				const el = new UISpriteElement(0, 0, {
 					image: canvas,
 					framewidth: 32,
@@ -400,20 +403,20 @@ describe("UI", () => {
 
 	describe("real draw pass", () => {
 		const drawPass = (widget) => {
-			game.world.addChild(widget);
+			app.world.addChild(widget);
 			widget.inViewport = true;
 			const drawSpy = vi.spyOn(widget, "draw");
 			try {
 				expect(() => {
-					game.viewport.draw(video.renderer, game.world);
+					app.viewport.draw(app.renderer, app.world);
 				}).not.toThrow();
 				// the widget must actually be reached by the draw walk,
 				// and receive the camera as its viewport
 				expect(drawSpy).toHaveBeenCalled();
-				expect(drawSpy.mock.calls[0][1]).toBe(game.viewport);
+				expect(drawSpy.mock.calls[0][1]).toBe(app.viewport);
 			} finally {
 				drawSpy.mockRestore();
-				game.world.removeChildNow(widget);
+				app.world.removeChildNow(widget);
 			}
 		};
 
@@ -424,7 +427,7 @@ describe("UI", () => {
 		it("UISpriteElement draws through the production chain", () => {
 			drawPass(
 				new UISpriteElement(50, 50, {
-					image: video.createCanvas(32, 32),
+					image: Renderer.createCanvas(32, 32),
 					framewidth: 32,
 					frameheight: 32,
 				}),

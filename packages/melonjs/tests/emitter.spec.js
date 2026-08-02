@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	boot,
 	Container,
 	Matrix3d,
@@ -10,13 +11,14 @@ import {
 describe("ParticleEmitter", () => {
 	let emitter;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		emitter = new ParticleEmitter(100, 100, {
 			width: 16,
 			height: 16,

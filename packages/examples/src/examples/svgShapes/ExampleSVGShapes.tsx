@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	type CanvasRenderer,
 	game,
 	Renderable,
@@ -12,16 +13,17 @@ import {
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
-const createGame = () => {
+const createGame = async () => {
 	// Initialize the video.
-	if (
-		!video.init(1024, 840, {
+	try {
+		const app = new Application(1024, 840, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			preferWebGL1: false,
 			blendMode: "normal",
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

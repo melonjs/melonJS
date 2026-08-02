@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { Application, boot, video } from "../src/index.js";
 
 /**
  * Tests for renderer save/restore through the public API.
@@ -9,14 +9,15 @@ import { boot, video } from "../src/index.js";
 describe("Renderer save/restore", () => {
 	let renderer;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 	});
 
 	beforeEach(() => {
@@ -26,12 +27,13 @@ describe("Renderer save/restore", () => {
 		renderer.clearTint();
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	// ---- Color ----

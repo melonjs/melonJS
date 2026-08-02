@@ -41,13 +41,14 @@ class Monster extends Sprite {
 	}
 }
 
-const createGame = () => {
+const createGame = async () => {
 	const app = new Application(1218, 562, {
 		parent: "screen",
 		scale: "auto",
 		renderer: video.AUTO,
 		backgroundColor: "#101020",
 	});
+	await app.init();
 
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
 		app.world.addChild(new ColorLayer("bg", "#101020"), 0);

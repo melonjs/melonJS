@@ -7,12 +7,12 @@ import {
 	audio,
 	Body,
 	collision,
+	game,
 	input,
 	level,
 	Rect,
 	Sprite,
 	timer,
-	video,
 } from "melonjs";
 import { gameState } from "../gameState";
 
@@ -201,7 +201,7 @@ export class PlayerEntity extends Sprite {
 		}
 
 		// check if we fell into a hole
-		if (!this.inViewport && this.getBounds().top > video.renderer.height) {
+		if (!this.inViewport && this.getBounds().top > game.renderer.height) {
 			const app = this.parentApp;
 			// if yes reset the game
 			app.world.removeChild(this);

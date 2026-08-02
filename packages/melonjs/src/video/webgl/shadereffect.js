@@ -218,9 +218,14 @@ export default class ShaderEffect {
 		/** @ignore */
 		this._precision = precision;
 
-		if (typeof renderer.gl === "undefined") {
+		// GLSL specifically, not "is there a GPU backend": the body below is
+		// handed to the driver as GLSL source, so a backend speaking another
+		// shading language cannot run it either.
+		if (renderer.shaderLanguage !== "glsl") {
 			console.warn(
-				"ShaderEffect requires WebGL and is disabled in Canvas mode",
+				`ShaderEffect requires a GLSL backend and is disabled on this renderer (shader language: ${
+					renderer.shaderLanguage ?? "none"
+				})`,
 			);
 			return;
 		}

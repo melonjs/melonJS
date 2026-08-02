@@ -1,5 +1,5 @@
 import type Camera2d from "./../camera/camera2d.ts";
-import { AUTO, CANVAS, WEBGL } from "../const.ts";
+import { AUTO, CANVAS, WEBGL, WEBGPU } from "../const.ts";
 import type { PhysicsAdapter } from "../physics/adapter.ts";
 import World from "../physics/world.js";
 import state from "../state/state.ts";
@@ -34,6 +34,7 @@ import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import type Renderer from "./../video/renderer.js";
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
+import WebGPURenderer from "../video/webgpu/webgpu_renderer.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
 import { consoleHeader } from "./header.ts";
 import { onresize } from "./resize.ts";
@@ -107,11 +108,14 @@ function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
 
 /**
  * The Application class is the main entry point for creating a melonJS game.
- * It initializes the renderer, creates the game world and viewport, registers DOM event
- * listeners (resize, orientation, scroll), and starts the game loop.
+ * The constructor resolves the given settings, creates the game world and
+ * registers DOM event listeners (resize, orientation, scroll); you **MUST**
+ * then call (and await) {@link Application#init init}, which builds the
+ * renderer, appends the canvas to the parent element, and starts the game
+ * loop — without it the application has no renderer and displays nothing.
  *
  * The Application instance provides access to the core game systems:
- * - {@link Application#renderer renderer} — the active Canvas or WebGL renderer
+ * - {@link Application#renderer renderer} — the active Canvas, WebGL or (experimental) WebGPU renderer
  * - {@link Application#world world} — the root container for all game objects
  * - {@link Application#viewport viewport} — the default camera / viewport
  *
@@ -127,6 +131,9 @@ function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
  *     renderer: 2, // AUTO
  * });
  *
+ * // build the renderer (mandatory — only suspends for WebGPU)
+ * await app.init();
+ *
  * // add objects to the world
  * app.world.addChild(new Sprite(0, 0, { image: "player" }));
  *
@@ -137,10 +144,10 @@ export default class Application {
 	/**
 	 * the parent HTML element holding the main canvas of this application
 	 */
-	parentElement!: HTMLElement;
+	parentElement: HTMLElement;
 
 	/**
-	 * a reference to the active Canvas or WebGL renderer
+	 * a reference to the active Canvas, WebGL or (experimental) WebGPU renderer
 	 */
 	renderer!: Renderer;
 
@@ -153,7 +160,7 @@ export default class Application {
 	 * a reference to the game world, <br>
 	 * a world is a virtual environment containing all the game objects
 	 */
-	world!: World;
+	world: World;
 
 	/**
 	 * when true, all objects will be added under the root world container.<br>
@@ -179,7 +186,7 @@ export default class Application {
 	/**
 	 * the given settings used when creating this application
 	 */
-	settings!: ResolvedApplicationSettings;
+	settings: ResolvedApplicationSettings;
 
 	/**
 	 * Specify whether to pause this app when losing focus
@@ -224,6 +231,13 @@ export default class Application {
 	private _onResize?: (e: Event) => void;
 	private _onOrientationChange?: (e: Event) => void;
 	private _onScroll?: (e: Event) => void;
+	// melonJS-event resize subscription (stored for cleanup in destroy)
+	private _doResize?: () => void;
+	// the parent-element observer installed by init() (disconnected in destroy)
+	private _resizeObserver: MutationObserver | undefined;
+	// set by destroy(); a destroyed Application is terminal — init() refuses
+	// to run (or, if already in flight, aborts) instead of resurrecting it
+	private _destroyed = false;
 	/**
 	 * Simulated time advanced by one logic step, in ms — what `world.update()`
 	 * receives. Fixed at `1000 / world.fps` unless `timer.interpolation` is on,
@@ -264,12 +278,14 @@ export default class Application {
 	}
 
 	/**
-	 * Create and initialize a new melonJS Application.
-	 * This is the recommended way to start a melonJS game.
+	 * Create a new melonJS Application.
+	 * Constructing the instance is only the first half of starting a game:
+	 * you **MUST** then call (and await) {@link Application#init init} to
+	 * build the renderer — an Application on which `init()` has not resolved
+	 * has no `renderer`, no canvas, and cannot render anything.
 	 * @param width - The width of the canvas viewport
 	 * @param height - The height of the canvas viewport
 	 * @param options - The optional parameters for the application and default renderer
-	 * @throws {Error} Will throw an exception if it fails to instantiate a renderer
 	 * @example
 	 * const app = new Application(1024, 768, {
 	 *     parent: "game-container",
@@ -277,11 +293,12 @@ export default class Application {
 	 *     scaleMethod: "fit",
 	 *     renderer: 2, // AUTO
 	 * });
+	 * await app.init();
 	 */
 	constructor(
 		width: number,
 		height: number,
-		options: Partial<ApplicationSettings> & { legacy?: boolean } = {},
+		options: Partial<ApplicationSettings> = {},
 	) {
 		this.mergeGroup = true;
 		this.lastUpdate = 0;
@@ -301,24 +318,13 @@ export default class Application {
 		this.lastUpdateStart = null;
 		this.lastUpdateDelta = 0;
 
-		// when using the default game application, legacy is set to true
-		// and init is called through the legacy video.init() call
-		if (options.legacy !== true) {
-			this.init(width, height, options);
-		}
-	}
+		// Everything renderer-independent is built here — resolved settings,
+		// the parent element, the DOM event bridging, the physic world — so a
+		// constructed Application already owns its world and its wiring.
+		// `init()` only adds the renderer and what depends on it (canvas,
+		// resize layout, console banner), which is what allows the renderer
+		// to be acquired asynchronously.
 
-	/**
-	 * init the game instance (create a physic world, update starting time, etc..)
-	 * @param width - The width of the canvas viewport
-	 * @param height - The height of the canvas viewport
-	 * @param options - The optional parameters for the application and default renderer
-	 */
-	init(
-		width: number,
-		height: number,
-		options?: Partial<ApplicationSettings>,
-	): void {
 		// ensure the engine is bootstrapped
 		if (!initialized) {
 			boot();
@@ -358,6 +364,10 @@ export default class Application {
 			settings.renderer = WEBGL;
 		} else if (uriFragment.canvas === true) {
 			settings.renderer = CANVAS;
+		} else if (uriFragment.webgpu === true) {
+			// opt-in only, exactly like passing `renderer: video.WEBGPU` —
+			// `AUTO` never selects it (see the WEBGPU doc block)
+			settings.renderer = WEBGPU;
 		}
 
 		// computed scaled size
@@ -367,15 +377,15 @@ export default class Application {
 		this.settings = settings;
 
 		// identify parent element and/or the html target for resizing
-		this.parentElement = device.getElement(this.settings.parent!);
-		if (typeof this.settings.scaleTarget !== "undefined") {
-			this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
+		this.parentElement = device.getElement(settings.parent!);
+		if (typeof settings.scaleTarget !== "undefined") {
+			settings.scaleTarget = device.getElement(settings.scaleTarget);
 		}
 
 		// set the CSS background color on the parent element to prevent
 		// a white flash before the first render frame
 		if (
-			this.settings.backgroundColor !== "transparent" &&
+			settings.backgroundColor !== "transparent" &&
 			typeof globalThis.getComputedStyle === "function"
 		) {
 			const computedBg = globalThis.getComputedStyle(
@@ -386,10 +396,117 @@ export default class Application {
 				computedBg === "rgba(0, 0, 0, 0)" ||
 				computedBg === "transparent"
 			) {
-				this.parentElement.style.backgroundColor =
-					this.settings.backgroundColor;
+				this.parentElement.style.backgroundColor = settings.backgroundColor;
 			}
 		}
+
+		// bridge DOM events to the melonJS event system
+		this._onResize = (e: Event) => {
+			emit(WINDOW_ONRESIZE, e);
+		};
+		this._onOrientationChange = (e: Event) => {
+			emit(WINDOW_ONORIENTATION_CHANGE, e);
+		};
+		this._onScroll = (e: Event) => {
+			emit(WINDOW_ONSCROLL, e);
+		};
+		globalThis.addEventListener("resize", this._onResize);
+		globalThis.addEventListener("orientationchange", this._onOrientationChange);
+		if (device.screenOrientation) {
+			globalThis.screen.orientation.onchange = this._onOrientationChange;
+		}
+		globalThis.addEventListener("scroll", this._onScroll);
+
+		// react to resize/orientation changes. These subscriptions live from
+		// construction on, but `onresize` lays out the canvas through
+		// `this.renderer`, which does not exist until `init()` resolves —
+		// hence the `isInitialized` guard.
+		this._doResize = () => {
+			if (this.isInitialized) {
+				onresize(this);
+			}
+		};
+		on(WINDOW_ONRESIZE, this._doResize);
+		on(WINDOW_ONORIENTATION_CHANGE, this._doResize);
+
+		// Mobile browser hacks
+		if (device.platform.isMobile) {
+			// Prevent the webview from moving on a swipe
+			device.enableSwipe(false);
+		}
+
+		// resolve the physic setting into (adapter, legacy-string) pair.
+		// Accepts a string ("builtin"/"none" — built-in adapters that ship
+		// in core), a {@link PhysicsAdapter} instance (e.g.
+		// `new BuiltinAdapter({ gravity })` or
+		// `new MatterAdapter()` from `@melonjs/matter-adapter`), or the
+		// explicit form `{ adapter: PhysicsAdapter }`.
+		const { adapter, physicLabel } = resolvePhysicSetting(settings.physic);
+
+		// create a new physic world wired to the resolved adapter
+		this.world = new World(0, 0, settings.width, settings.height, adapter);
+
+		// set the reference to this application instance
+		this.world.app = this;
+		// `world.physic` carries the active adapter's identifier
+		// (`"builtin"`, `"matter"`, third-party label, or the reserved
+		// `"none"` when physics is disabled). User code branches on it;
+		// `World.step` short-circuits the simulation only when the value
+		// is `"none"`.
+		this.world.physic = physicLabel;
+		this.world.gpuTilemap = settings.gpuTilemap;
+
+		// If a custom cameraClass is specified, seed the world's sort
+		// mode from the camera's `defaultSortOn` static. Camera2d
+		// declares `"z"` (today's default — no behavior change for
+		// existing games); Camera3d declares `"depth"`, which switches
+		// the world to the camera-distance painter's sort required by
+		// perspective. User code can still override `world.sortOn` after
+		// this point; we only set the initial value.
+		const cameraClass = settings.cameraClass as
+			| { defaultSortOn?: "x" | "y" | "z" | "depth" }
+			| undefined;
+		if (cameraClass?.defaultSortOn) {
+			this.world.sortOn = cameraClass.defaultSortOn;
+		}
+	}
+
+	/**
+	 * Build the renderer and everything that depends on it — the canvas
+	 * (appended to the parent element), the initial resize layout, and the
+	 * console banner. Reads {@link Application#settings}, resolved by the
+	 * constructor; it takes no arguments of its own.
+	 *
+	 * **Calling and awaiting this is mandatory** — it is the second half of
+	 * every Application's start-up, not an optional step. It resolves
+	 * synchronously for the Canvas and WebGL backends, which acquire their
+	 * context without suspending — but WebGPU cannot, and an application
+	 * whose `init()` has not resolved has no `renderer`.
+	 * @throws {Error} if it fails to instantiate the requested renderer
+	 * (e.g. `renderer: video.WEBGL` on a device with no WebGL 2 support)
+	 * @returns resolves once the application is ready to use
+	 * @example
+	 * const app = new Application(640, 480, { parent: "screen" });
+	 * await app.init();
+	 */
+	async init(): Promise<void> {
+		if (this._destroyed) {
+			throw new Error(
+				"Application: this instance was destroyed — construct a new " +
+					"Application instead of re-initializing it",
+			);
+		}
+		if (this.isInitialized) {
+			// a repeated call would append a second canvas and abandon the
+			// live renderer — refuse it loudly but harmlessly
+			console.warn("Application: init() called twice — ignoring");
+			return;
+		}
+
+		// a previous init() attempt may have constructed a renderer before
+		// rejecting (e.g. the WebGPU device negotiation failed) — release
+		// it before building a new one, so a retry does not leak a backend
+		this.renderer?.destroy();
 
 		if (typeof this.settings.renderer === "number") {
 			switch (this.settings.renderer) {
@@ -422,6 +539,17 @@ export default class Application {
 					}
 					this.renderer = new WebGLRenderer(this.settings as any);
 					break;
+				case WEBGPU:
+					// Experimental, and deliberately excluded from `AUTO` until
+					// it reaches feature parity with the WebGL backend — someone
+					// asking for WebGPU is testing WebGPU, and a quiet
+					// substitution would make the test meaningless. Construction
+					// acquires the GPUCanvasContext (throws when WebGPU is
+					// unavailable, surfacing as a rejection of this method); the
+					// adapter/device negotiation happens in the
+					// `renderer.init()` await below.
+					this.renderer = new WebGPURenderer(this.settings as any);
+					break;
 				default:
 					this.renderer = new CanvasRenderer(this.settings as any);
 					break;
@@ -430,6 +558,26 @@ export default class Application {
 			const CustomRenderer = this.settings.renderer as any;
 			// a renderer class
 			this.renderer = new CustomRenderer(this.settings);
+		}
+
+		// let the backend acquire whatever it cannot acquire synchronously —
+		// an immediate resolve for Canvas and WebGL, the adapter/device
+		// negotiation for WebGPU. This await is why `init()` is asynchronous.
+		// (optional-chained so a duck-typed custom renderer that does not
+		// extend `Renderer` keeps working without the new lifecycle hook)
+		await this.renderer.init?.();
+
+		// destroy() may have run while the backend was negotiating its
+		// context — finishing the bootstrap now would resurrect a torn-down
+		// application (re-registered listeners, an appended canvas, a live
+		// GPU device nothing will ever release, and the `game` global
+		// pointing at a dead app)
+		if (this._destroyed) {
+			this.renderer.destroy();
+			throw new Error(
+				"Application: destroyed while init() was awaiting the renderer — " +
+					"initialization aborted",
+			);
 		}
 
 		// Cross-check the chosen camera class against the renderer the
@@ -455,48 +603,20 @@ export default class Application {
 			| undefined;
 		if (
 			CameraClass?.defaultSortOn === "depth" &&
-			!(this.renderer instanceof WebGLRenderer)
+			!this.renderer.supportsDepthBuffer
 		) {
 			console.warn(
 				`Application: \`cameraClass\` (${
 					CameraClass.name ?? "anonymous"
 				}) declares \`defaultSortOn = "depth"\` (Camera3d or subclass), ` +
-					"which requires the WebGL renderer — the active renderer is " +
-					"the Canvas backend, which has no depth buffer, no 3D " +
-					"projection path, and no `drawMesh`. The scene will not " +
+					"which requires a renderer with a depth buffer — the active " +
+					"renderer has none, and so has no 3D projection path and " +
+					"no `drawMesh`. The scene will not " +
 					"render correctly. Use `{ renderer: video.WEBGL }` (throws " +
 					"if WebGL is unavailable) instead of `video.AUTO` (silently " +
 					"falls back to Canvas).",
 			);
 		}
-
-		// make this the active game instance for modules that reference the global
-		setDefaultGame(this);
-
-		// bridge DOM events to the melonJS event system
-		this._onResize = (e: Event) => {
-			emit(WINDOW_ONRESIZE, e);
-		};
-		this._onOrientationChange = (e: Event) => {
-			emit(WINDOW_ONORIENTATION_CHANGE, e);
-		};
-		this._onScroll = (e: Event) => {
-			emit(WINDOW_ONSCROLL, e);
-		};
-		globalThis.addEventListener("resize", this._onResize);
-		globalThis.addEventListener("orientationchange", this._onOrientationChange);
-		if (device.screenOrientation) {
-			globalThis.screen.orientation.onchange = this._onOrientationChange;
-		}
-		globalThis.addEventListener("scroll", this._onScroll);
-
-		// react to resize/orientation changes
-		on(WINDOW_ONRESIZE, () => {
-			onresize(this);
-		});
-		on(WINDOW_ONORIENTATION_CHANGE, () => {
-			onresize(this);
-		});
 
 		// add our canvas (default to document.body if settings.parent is undefined)
 		const canvas = this.renderer.getCanvas();
@@ -511,24 +631,21 @@ export default class Application {
 		}
 		this.parentElement.appendChild(canvas);
 
-		// Mobile browser hacks
-		if (device.platform.isMobile) {
-			// Prevent the webview from moving on a swipe
-			device.enableSwipe(false);
-		}
-
 		// trigger an initial resize();
 		onresize(this);
 
 		// add an observer to detect when the dom tree is modified
 		if ("MutationObserver" in globalThis) {
 			// Create an observer instance linked to the callback function
-			const observer = new MutationObserver(() => {
+			// (stored so destroy() can disconnect it — otherwise every
+			// discarded Application keeps re-laying-out against a parent
+			// element that outlives it)
+			this._resizeObserver = new MutationObserver(() => {
 				onresize(this);
 			});
 
 			// Start observing the target node for configured mutations
-			observer.observe(this.parentElement, {
+			this._resizeObserver.observe(this.parentElement, {
 				attributes: false,
 				childList: true,
 				subtree: true,
@@ -539,48 +656,7 @@ export default class Application {
 			consoleHeader(this);
 		}
 
-		// resolve the physic setting into (adapter, legacy-string) pair.
-		// Accepts a string ("builtin"/"none" — built-in adapters that ship
-		// in core), a {@link PhysicsAdapter} instance (e.g.
-		// `new BuiltinAdapter({ gravity })` or
-		// `new MatterAdapter()` from `@melonjs/matter-adapter`), or the
-		// explicit form `{ adapter: PhysicsAdapter }`.
-		const { adapter, physicLabel } = resolvePhysicSetting(this.settings.physic);
-
-		// create a new physic world wired to the resolved adapter
-		this.world = new World(
-			0,
-			0,
-			this.settings.width,
-			this.settings.height,
-			adapter,
-		);
-
-		// set the reference to this application instance
-		this.world.app = this;
-		// `world.physic` carries the active adapter's identifier
-		// (`"builtin"`, `"matter"`, third-party label, or the reserved
-		// `"none"` when physics is disabled). User code branches on it;
-		// `World.step` short-circuits the simulation only when the value
-		// is `"none"`.
-		this.world.physic = physicLabel;
-		this.world.gpuTilemap = this.settings.gpuTilemap;
-
-		// If a custom cameraClass is specified, seed the world's sort
-		// mode from the camera's `defaultSortOn` static. Camera2d
-		// declares `"z"` (today's default — no behavior change for
-		// existing games); Camera3d declares `"depth"`, which switches
-		// the world to the camera-distance painter's sort required by
-		// perspective. User code can still override `world.sortOn` after
-		// this point; we only set the initial value.
-		const cameraClass = this.settings.cameraClass as
-			| { defaultSortOn?: "x" | "y" | "z" | "depth" }
-			| undefined;
-		if (cameraClass?.defaultSortOn) {
-			this.world.sortOn = cameraClass.defaultSortOn;
-		}
-
-		// report the active physics adapter once the world is wired —
+		// report the active physics adapter (wired in the constructor) —
 		// useful confirmation when a third-party adapter (e.g.
 		// `@melonjs/matter-adapter`) is plugged in via `settings.physic`.
 		// External adapters that set `name` / `version` / `url` get logged
@@ -636,6 +712,12 @@ export default class Application {
 		}
 
 		this.isInitialized = true;
+
+		// Only publish this instance as the default `game` once it is fully
+		// usable — a constructed-but-not-initialized Application has no
+		// renderer, which is precisely the half-built state this split
+		// removes from the global.
+		setDefaultGame(this);
 
 		emit(GAME_INIT, this);
 		emit(VIDEO_INIT, this.renderer);
@@ -797,6 +879,10 @@ export default class Application {
 	 * Destroy this application instance and release all associated resources.
 	 * Removes the canvas from the DOM, destroys the world, and unregisters
 	 * all event listeners.
+	 *
+	 * **Terminal**: a destroyed Application cannot be re-initialized —
+	 * `init()` rejects afterwards (and an `init()` still in flight aborts).
+	 * Construct a new Application to start again.
 	 * @param removeCanvas - if true, the canvas element is removed from the DOM (default: true)
 	 * @example
 	 * // clean up when done
@@ -813,6 +899,20 @@ export default class Application {
 		off(STATE_RESUME, this.repaint, this);
 		off(STAGE_RESET, this.reset, this);
 		/* eslint-enable @typescript-eslint/unbound-method */
+
+		// remove the melonJS-event resize subscriptions registered by the
+		// constructor — without this every discarded Application instance
+		// keeps fanning out on WINDOW_ONRESIZE for the page's lifetime
+		if (this._doResize) {
+			off(WINDOW_ONRESIZE, this._doResize);
+			off(WINDOW_ONORIENTATION_CHANGE, this._doResize);
+		}
+
+		// stop watching the parent element — the observer would otherwise
+		// keep re-laying-out this dead app on every DOM mutation (including
+		// the canvas removal below)
+		this._resizeObserver?.disconnect();
+		this._resizeObserver = undefined;
 
 		// remove DOM event listeners
 		if (this._onResize) {
@@ -849,6 +949,10 @@ export default class Application {
 		}
 
 		this.isInitialized = false;
+		// terminal: init() refuses to run on this instance from here on,
+		// and an init() currently awaiting its renderer aborts instead of
+		// resurrecting the app
+		this._destroyed = true;
 	}
 
 	/**

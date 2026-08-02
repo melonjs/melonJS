@@ -1,14 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
+	game,
 	Matrix3d,
 	Mesh,
 	NoiseTexture2d,
 	ShaderEffect,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
 import { emit, RENDER_TARGET_CHANGED } from "../src/system/event.ts";
+import Renderer from "../src/video/renderer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -32,8 +33,8 @@ describe("batcher GL state", () => {
 		} catch {
 			// genuine WebGL absence — tests skip below
 		}
-		if (video.renderer instanceof WebGLRenderer) {
-			renderer = video.renderer;
+		if (game.renderer instanceof WebGLRenderer) {
+			renderer = game.renderer;
 		}
 	});
 
@@ -90,7 +91,7 @@ describe("batcher GL state", () => {
 		// the trivial fragment declares no extra sampler — stub the uniform
 		// upload so only the unit-claiming logic under test runs
 		vi.spyOn(fx._shader, "setUniform").mockImplementation(() => {});
-		fx.setTexture("uNoise", video.createCanvas(8, 8));
+		fx.setTexture("uNoise", Renderer.createCanvas(8, 8));
 		fx._prepareTextures(quad);
 
 		const claimed = fx._extraTextures.get("uNoise").unit;
@@ -115,7 +116,7 @@ describe("batcher GL state", () => {
 		requireWebGL(ctx);
 		const gl = renderer.gl;
 		const quad = renderer.batchers.get("quad");
-		const canvas = video.createCanvas(8, 8);
+		const canvas = Renderer.createCanvas(8, 8);
 
 		// upload once at unit 2 — tracking now says "tex bound at 2, unit 2 active"
 		const tex = quad.createTexture2D(

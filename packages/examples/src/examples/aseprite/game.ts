@@ -4,7 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import { loader, plugin, state, video } from "melonjs";
+import { Application, loader, plugin, state } from "melonjs";
 import { PlayScreen } from "./play";
 
 const base = `${import.meta.env.BASE_URL}assets/aseprite/`;
@@ -13,9 +13,10 @@ const resources = [
 	{ name: "paladin", type: "image", src: `${base}paladin.png` },
 ];
 
-export const createGame = () => {
+export const createGame = async () => {
 	// `parent: "screen"` — see ExampleBenchmark for the rationale.
-	video.init(640, 480, { parent: "screen" });
+	const app = new Application(640, 480, { parent: "screen" });
+	await app.init();
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");

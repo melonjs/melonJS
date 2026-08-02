@@ -3,7 +3,15 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { ColorLayer, Draggable, DropTarget, game, Text, video } from "melonjs";
+import {
+	Application,
+	ColorLayer,
+	Draggable,
+	DropTarget,
+	game,
+	Text,
+	video,
+} from "melonjs";
 import { createExampleComponent } from "../utils";
 
 class Square extends Draggable {
@@ -128,16 +136,17 @@ class DropTarget2 extends DropTarget1 {
 	}
 }
 
-const createGame = () => {
+const createGame = async () => {
 	// Initialize the video.
 	// `parent: "screen"` — see ExampleBenchmark for the rationale.
-	if (
-		!video.init(1024, 768, {
+	try {
+		const app = new Application(1024, 768, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

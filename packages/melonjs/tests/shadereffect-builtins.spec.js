@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { boot, ShaderEffect, video, WebGLRenderer } from "../src/index.js";
+import { boot, ShaderEffect } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -25,12 +26,13 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 	beforeAll(async () => {
 		await boot();
 		try {
-			await getWebGLRenderer(64, 64);
+			// resolves to the shared WebGLRenderer, or undefined when WebGL
+			// is genuinely absent — tests skip below either way
+			renderer = await getWebGLRenderer(64, 64);
 		} catch {
 			// WebGL genuinely unavailable — tests skip below
 		}
-		if (video.renderer instanceof WebGLRenderer) {
-			renderer = video.renderer;
+		if (renderer) {
 			// a bare harness never runs a frame, which is what normally
 			// installs the camera's ortho projection — set it up once so
 			// world coordinates land on canvas pixels like in a real game
@@ -185,7 +187,7 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 	};
 
 	const solidCanvas = (r, g, b, w = 64, h = 64) => {
-		const c = video.createCanvas(w, h);
+		const c = Renderer.createCanvas(w, h);
 		const ctx2d = c.getContext("2d");
 		ctx2d.fillStyle = `rgb(${r}, ${g}, ${b})`;
 		ctx2d.fillRect(0, 0, w, h);

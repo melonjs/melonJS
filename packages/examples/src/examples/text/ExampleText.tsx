@@ -10,7 +10,7 @@ import { TextScreen } from "./text.ts";
 
 const base = `${import.meta.env.BASE_URL}assets/text/`;
 
-const createGame = () => {
+const createGame = async () => {
 	// authored at 2× (1280×960) so the canvas renders close to native pixels on
 	// a HiDPI display, minimising the upscale blur of a low-res backing store
 	const _app = new Application(1280, 960, {
@@ -21,6 +21,7 @@ const createGame = () => {
 		// atlas glyph bleeding; at ~native scale the web/system fonts stay sharp too
 		antiAlias: false,
 	});
+	await _app.init();
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");

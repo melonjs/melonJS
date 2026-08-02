@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Container, Sprite, video } from "../src/index.js";
+import { Application, boot, Container, Sprite, video } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 describe("Sprite", () => {
 	let container;
@@ -7,17 +8,18 @@ describe("Sprite", () => {
 
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 
 		container = new Container(50, 50, 150, 150);
 		sprite = new Sprite(0, 0, {
 			framewidth: 32,
 			frameheight: 32,
-			image: video.createCanvas(64, 64),
+			image: Renderer.createCanvas(64, 64),
 			anchorPoint: { x: 0, y: 0 },
 		});
 
@@ -30,7 +32,7 @@ describe("Sprite", () => {
 	});
 
 	describe("isAttachedToRoot", () => {
-		it("Sprite bounds return the visible part of the sprite", async () => {
+		it("Sprite bounds return the visible part of the sprite", () => {
 			const bounds = sprite.getBounds();
 			expect(
 				bounds.x === 50 &&
@@ -40,7 +42,7 @@ describe("Sprite", () => {
 			).toEqual(true);
 		});
 
-		it("Sprite bounds should be updated when the sprite is scaled", async () => {
+		it("Sprite bounds should be updated when the sprite is scaled", () => {
 			let bounds = sprite.getBounds();
 			sprite.scale(2.0);
 			expect(
@@ -63,7 +65,7 @@ describe("Sprite", () => {
 			).toEqual(true);
 		});
 
-		it("Sprite bounds should be updated when the anchor is changed", async () => {
+		it("Sprite bounds should be updated when the anchor is changed", () => {
 			let bounds = sprite.getBounds();
 			sprite.anchorPoint.set(0, 1);
 			expect(
@@ -93,12 +95,12 @@ describe("Sprite", () => {
 			).toEqual(true);
 		});
 
-		it("Sprite addAnimation should return the correct amount of frame", async () => {
+		it("Sprite addAnimation should return the correct amount of frame", () => {
 			expect(sprite.addAnimation("test", [0, 1])).toEqual(2);
 			expect(sprite.addAnimation("test2", [0, 1, 0, 1, 0])).toEqual(5);
 		});
 
-		it("Sprite reverseAnimation should return the correct amount of frame", async () => {
+		it("Sprite reverseAnimation should return the correct amount of frame", () => {
 			sprite.setCurrentAnimation("test");
 			sprite.anchorPoint.set(1, 1);
 			expect(
@@ -124,7 +126,7 @@ describe("Sprite", () => {
 			).toEqual(true);
 		});
 
-		it("Sprite isCurrentAnimation allows to verify which animation is set", async () => {
+		it("Sprite isCurrentAnimation allows to verify which animation is set", () => {
 			expect(sprite.addAnimation("yoyo", [1, 0, 1, 0], 60)).toEqual(4);
 
 			sprite.setCurrentAnimation("test");
@@ -156,17 +158,17 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			expect(s.normalMap).toBeNull();
 		});
 
 		it("accepts an image-like value passed via settings", () => {
-			const normal = video.createCanvas(16, 16);
+			const normal = Renderer.createCanvas(16, 16);
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 				normalMap: normal,
 			});
 			expect(s.normalMap).toBe(normal);
@@ -176,9 +178,9 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
-			const normal = video.createCanvas(32, 32);
+			const normal = Renderer.createCanvas(32, 32);
 			s.normalMap = normal;
 			expect(s.normalMap).toBe(normal);
 		});
@@ -187,8 +189,8 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
-				normalMap: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
+				normalMap: Renderer.createCanvas(16, 16),
 			});
 			expect(s.normalMap).not.toBeNull();
 			s.normalMap = null;
@@ -199,7 +201,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			expect(() => {
 				s.normalMap = 42;
@@ -218,7 +220,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			expect(() => {
 				s.normalMap = { width: "32", height: "32" };
@@ -229,8 +231,8 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
-				normalMap: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
+				normalMap: Renderer.createCanvas(16, 16),
 			});
 			expect(s.normalMap).not.toBeNull();
 			s.normalMap = undefined;
@@ -241,10 +243,10 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
-			const a = video.createCanvas(8, 8);
-			const b = video.createCanvas(16, 16);
+			const a = Renderer.createCanvas(8, 8);
+			const b = Renderer.createCanvas(16, 16);
 			s.normalMap = a;
 			expect(s.normalMap).toBe(a);
 			s.normalMap = b;
@@ -255,9 +257,9 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
-			const valid = video.createCanvas(8, 8);
+			const valid = Renderer.createCanvas(8, 8);
 			s.normalMap = valid;
 			expect(() => {
 				s.normalMap = "broken";
@@ -270,7 +272,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			expect(() => {
 				s.normalMap = true;
@@ -290,7 +292,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 				normalMap: null,
 			});
 			expect(s.normalMap).toBeNull();
@@ -300,7 +302,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 				normalMap: undefined,
 			});
 			expect(s.normalMap).toBeNull();
@@ -310,7 +312,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			expect(s.normalMap).toBeNull();
 		});
@@ -320,7 +322,7 @@ describe("Sprite", () => {
 				return new Sprite(0, 0, {
 					framewidth: 16,
 					frameheight: 16,
-					image: video.createCanvas(16, 16),
+					image: Renderer.createCanvas(16, 16),
 					normalMap: "definitely-not-loaded-anywhere",
 				});
 			}).toThrow(/normal map image not found/);
@@ -334,7 +336,7 @@ describe("Sprite", () => {
 				return new Sprite(0, 0, {
 					framewidth: 16,
 					frameheight: 16,
-					image: video.createCanvas(16, 16),
+					image: Renderer.createCanvas(16, 16),
 					normalMap: true,
 				});
 			}).toThrow(TypeError);
@@ -345,7 +347,7 @@ describe("Sprite", () => {
 				return new Sprite(0, 0, {
 					framewidth: 16,
 					frameheight: 16,
-					image: video.createCanvas(16, 16),
+					image: Renderer.createCanvas(16, 16),
 					normalMap: 42,
 				});
 			}).toThrow(TypeError);
@@ -356,7 +358,7 @@ describe("Sprite", () => {
 				return new Sprite(0, 0, {
 					framewidth: 16,
 					frameheight: 16,
-					image: video.createCanvas(16, 16),
+					image: Renderer.createCanvas(16, 16),
 					normalMap: { foo: 1 },
 				});
 			}).toThrow(TypeError);
@@ -414,7 +416,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			const { stub, calls } = makeStub();
 			fullDraw(s, stub);
@@ -423,11 +425,11 @@ describe("Sprite", () => {
 		});
 
 		it("Sprite with normalMap sets currentNormalMap during drawImage and clears after postDraw", () => {
-			const normal = video.createCanvas(16, 16);
+			const normal = Renderer.createCanvas(16, 16);
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 				normalMap: normal,
 			});
 			const { stub, calls } = makeStub();
@@ -439,17 +441,17 @@ describe("Sprite", () => {
 		});
 
 		it("two Sprites in sequence — first lit, second unlit — state isolated", () => {
-			const normal = video.createCanvas(16, 16);
+			const normal = Renderer.createCanvas(16, 16);
 			const lit = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 				normalMap: normal,
 			});
 			const unlit = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 			});
 			const { stub, calls } = makeStub();
 			fullDraw(lit, stub);
@@ -458,11 +460,11 @@ describe("Sprite", () => {
 		});
 
 		it("destroy() drops the normal-map reference (mirrors how `image` is cleared)", () => {
-			const normal = video.createCanvas(16, 16);
+			const normal = Renderer.createCanvas(16, 16);
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(16, 16),
+				image: Renderer.createCanvas(16, 16),
 				normalMap: normal,
 			});
 			expect(s.normalMap).toBe(normal);
@@ -477,7 +479,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 32,
 				frameheight: 32,
-				image: video.createCanvas(128, 32),
+				image: Renderer.createCanvas(128, 32),
 			});
 			s.addAnimation("walk", [0, 1, 2, 3], 100);
 			s.setCurrentAnimation("walk");
@@ -533,7 +535,7 @@ describe("Sprite", () => {
 			const s = new Sprite(0, 0, {
 				framewidth: 32,
 				frameheight: 32,
-				image: video.createCanvas(64, 64),
+				image: Renderer.createCanvas(64, 64),
 			});
 			s.addAnimation("a", [0, 1, 2, 3], 100); // 4 frames, 100ms each
 			s.addAnimation("b", [0, 1], 100);

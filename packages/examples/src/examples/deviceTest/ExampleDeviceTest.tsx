@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	type CanvasRenderer,
 	ColorLayer,
 	device,
@@ -86,9 +87,9 @@ class DeviceInfo extends Renderable {
 	}
 }
 
-const createGame = () => {
-	if (
-		!video.init(480, 320, {
+const createGame = async () => {
+	try {
+		const app = new Application(480, 320, {
 			// see ExampleBenchmark — without `parent: "screen"` the
 			// engine falls back to `document.body`, whose dev-mode
 			// transient height collapses and shrinks the Flex-scaled
@@ -96,8 +97,9 @@ const createGame = () => {
 			parent: "screen",
 			scaleMethod: "flex",
 			renderer: video.CANVAS,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

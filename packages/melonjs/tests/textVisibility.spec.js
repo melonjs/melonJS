@@ -1,14 +1,22 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { BitmapText, boot, loader, Text, video } from "../src/index.js";
+import {
+	Application,
+	BitmapText,
+	boot,
+	loader,
+	Text,
+	video,
+} from "../src/index.js";
 
 describe("Text visible characters", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(100, 100, {
+		const app = new Application(100, 100, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	describe("Text", () => {

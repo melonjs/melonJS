@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { boot, Stage, state, video } from "../src/index.js";
+import { Application, boot, Stage, state, video } from "../src/index.js";
 
 describe("state", () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	describe("constants", () => {

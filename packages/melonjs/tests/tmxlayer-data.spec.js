@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, TMXTileMap, video } from "../src/index.js";
+import { Application, boot, TMXTileMap, video } from "../src/index.js";
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,
@@ -70,13 +70,14 @@ function makeLayer(data) {
 const ALL_ZERO_4x3 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 describe("TMXLayer.layerData (Uint16Array refactor)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(128, 128, {
+		const app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		fakeImage("testtiles", 64, 64);
 	});
 

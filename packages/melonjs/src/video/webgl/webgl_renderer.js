@@ -270,6 +270,16 @@ export default class WebGLRenderer extends Renderer {
 		// hand it their model matrix instead of pre-transformed vertices
 		this.supportsRetainedMesh = true;
 
+		// GLSL, not "shaders exist" — `ShaderEffect` and the loader's
+		// `{vertex, fragment}` assets hand their source straight to the
+		// driver, so the language is the thing they have to agree on
+		/** @type {"glsl"|"wgsl"|null} */
+		this.shaderLanguage = "glsl";
+
+		// depth buffer + 3D projection + drawMesh, i.e. everything a
+		// depth-sorted Camera3d scene needs
+		this.supportsDepthBuffer = true;
+
 		// to simulate context lost and restore in WebGL:
 		// let ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
 		// ctx.loseContext()

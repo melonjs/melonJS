@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	BitmapText,
 	boot,
 	Camera2d,
@@ -7,7 +8,6 @@ import {
 	DropTarget,
 	Entity,
 	event,
-	game,
 	loader,
 	NineSliceSprite,
 	ParticleEmitter,
@@ -36,13 +36,15 @@ function makeSpriteSheet() {
 }
 
 describe("Bug-hunt: renderables / camera / particles", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		// bitmap font fixture for the BitmapText aliasing test
 		await new Promise((resolve) => {
 			loader.preload(
@@ -70,20 +72,20 @@ describe("Bug-hunt: renderables / camera / particles", () => {
 			obj.onVisibilityChange = (visible) => {
 				calls.push(visible);
 			};
-			game.world.addChild(obj);
+			app.world.addChild(obj);
 
-			game.world.update(16);
+			app.world.update(16);
 			expect(calls).toEqual([true]); // enter once
 
-			game.world.update(16);
-			game.world.update(16);
+			app.world.update(16);
+			app.world.update(16);
 			expect(calls).toEqual([true]); // no churn while visible
 
 			obj.pos.x = -5000; // move far off-screen
-			game.world.update(16);
+			app.world.update(16);
 			expect(calls).toEqual([true, false]); // leave once
 
-			game.world.removeChildNow(obj);
+			app.world.removeChildNow(obj);
 		});
 	});
 
@@ -190,11 +192,11 @@ describe("Bug-hunt: renderables / camera / particles", () => {
 				cameras: [userCam],
 				cameraClass: Camera2d,
 			});
-			stage.reset(game);
+			stage.reset(app);
 			const stageCam = stage.cameras.get("default");
 			expect(stageCam).not.toBe(userCam);
 
-			stage.destroy(game);
+			stage.destroy(app);
 			// the stage-constructed default is destroyed (freed state)...
 			expect(stageCam.pos).toBe(undefined);
 			// ...the user-provided camera is untouched (re-added on next reset)
@@ -256,7 +258,7 @@ describe("Bug-hunt: renderables / camera / particles", () => {
 	describe("dead particles are removed synchronously", () => {
 		it("a particle reaching end-of-life leaves its emitter within the same update", () => {
 			const emitter = new ParticleEmitter(100, 100, { totalParticles: 1 });
-			game.world.addChild(emitter);
+			app.world.addChild(emitter);
 			emitter.burstParticles(1);
 			expect(emitter.getChildren().length).toBe(1);
 
@@ -270,7 +272,7 @@ describe("Bug-hunt: renderables / camera / particles", () => {
 			expect(emitter.getChildren().length).toBe(0);
 			expect(particle.ancestor).toBe(undefined);
 
-			game.world.removeChildNow(emitter);
+			app.world.removeChildNow(emitter);
 		});
 	});
 

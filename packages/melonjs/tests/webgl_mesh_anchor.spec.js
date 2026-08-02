@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	Camera3d,
+	game,
 	Matrix3d,
 	Mesh,
 	Vector3d,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
 import {
@@ -61,10 +61,10 @@ describe("Mesh anchor-point leak under Camera3d (glTF prop-sink bug)", () => {
 			// genuine WebGL absence — tests skip below
 		}
 		if (
-			video.renderer instanceof WebGLRenderer &&
-			typeof video.renderer.gl !== "undefined"
+			game.renderer instanceof WebGLRenderer &&
+			typeof game.renderer.gl !== "undefined"
 		) {
-			renderer = video.renderer;
+			renderer = game.renderer;
 		}
 	});
 

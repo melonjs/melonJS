@@ -5,6 +5,7 @@
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
+	Application,
 	device,
 	event,
 	game,
@@ -29,10 +30,10 @@ function addFruits(numberOfFruits: number, fruitType?: string) {
 	}
 }
 
-const createGame = () => {
+const createGame = async () => {
 	// Initialize the video.
-	if (
-		!video.init(1024, 768, {
+	try {
+		const app = new Application(1024, 768, {
 			// `parent: "screen"` — without this the engine falls back to
 			// `document.body`, and on this page body has no flow content
 			// (#screen is `position: fixed`, so it's pulled out of the
@@ -44,8 +45,9 @@ const createGame = () => {
 			scaleMethod: ScaleMethods.Flex,
 			renderer: video.AUTO,
 			transparent: false,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

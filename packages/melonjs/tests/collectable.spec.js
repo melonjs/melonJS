@@ -1,19 +1,28 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Collectable, collision, Rect, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Collectable,
+	collision,
+	Rect,
+	video,
+} from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 let mockImage;
 
-beforeAll(() => {
+beforeAll(async () => {
 	boot();
-	video.init(800, 600, {
+	const app = new Application(800, 600, {
 		parent: "screen",
 		scale: "auto",
 		renderer: video.CANVAS,
 	});
+	await app.init();
 	// Collectable extends Sprite, which throws when constructed without
 	// a renderable image. A small offscreen canvas is enough to satisfy
 	// the constructor without preloading a real asset.
-	mockImage = video.createCanvas(32, 32);
+	mockImage = Renderer.createCanvas(32, 32);
 });
 
 describe("Collectable", () => {

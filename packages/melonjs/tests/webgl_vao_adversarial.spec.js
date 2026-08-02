@@ -20,15 +20,17 @@ describe("WebGL VAO adversarial", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			failIfMajorPerformanceCaveat: false,
 			antiAlias: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -280,7 +282,7 @@ describe("WebGL VAO adversarial", () => {
 		drawTruthSceneAndAssert();
 	});
 
-	it("multi-renderer isolation: two live WebGL contexts, no crosstalk", (ctx) => {
+	it("multi-renderer isolation: two live WebGL contexts, no crosstalk", async (ctx) => {
 		requireWebGL(ctx);
 		const appB = new Application(48, 48, {
 			parent: "screen",
@@ -288,6 +290,7 @@ describe("WebGL VAO adversarial", () => {
 			failIfMajorPerformanceCaveat: false,
 			consoleHeader: false,
 		});
+		await appB.init();
 		const rendererB = appB.renderer;
 		const glB = rendererB.gl;
 		rendererB.projectionMatrix.ortho(0, 48, 48, 0, -1, 1);
@@ -318,7 +321,7 @@ describe("WebGL VAO adversarial", () => {
 		}
 	});
 
-	it("custom batcher (no overrides) inherits a working vertex state", (ctx) => {
+	it("custom batcher (no overrides) inherits a working vertex state", async (ctx) => {
 		requireWebGL(ctx);
 		class InheritingBatcher extends QuadBatcher {}
 		const appC = new Application(48, 48, {
@@ -328,6 +331,7 @@ describe("WebGL VAO adversarial", () => {
 			consoleHeader: false,
 			batcher: InheritingBatcher,
 		});
+		await appC.init();
 		const rendererC = appC.renderer;
 		const glC = rendererC.gl;
 		rendererC.projectionMatrix.ortho(0, 48, 48, 0, -1, 1);
@@ -360,7 +364,7 @@ describe("WebGL VAO adversarial", () => {
 		}
 	});
 
-	it("custom batcher with a hand-rolled flush (self-bound upload) still renders", (ctx) => {
+	it("custom batcher with a hand-rolled flush (self-bound upload) still renders", async (ctx) => {
 		requireWebGL(ctx);
 		// a legacy-style custom flush that re-binds its upload target itself
 		// — must keep working because bind() preserves the upload-buffer
@@ -381,6 +385,7 @@ describe("WebGL VAO adversarial", () => {
 			consoleHeader: false,
 			batcher: SelfBindingBatcher,
 		});
+		await appD.init();
 		const rendererD = appD.renderer;
 		const glD = rendererD.gl;
 		rendererD.projectionMatrix.ortho(0, 48, 48, 0, -1, 1);

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, Mesh, video, WebGLRenderer } from "../src/index.js";
+import { boot, Mesh } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -23,12 +23,11 @@ describe("default texture filter (decoupled from antiAlias)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			await getWebGLRenderer(64, 64);
+			// resolves to the shared WebGLRenderer, or undefined when WebGL
+			// is genuinely absent — requireWebGL skips below either way
+			renderer = await getWebGLRenderer(64, 64);
 		} catch {
 			// genuine WebGL absence — tests skip via requireWebGL below
-		}
-		if (video.renderer instanceof WebGLRenderer) {
-			renderer = video.renderer;
 		}
 	});
 

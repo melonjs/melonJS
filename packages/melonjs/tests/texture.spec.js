@@ -1,20 +1,24 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	CanvasTexture,
 	Sprite,
 	TextureAtlas,
 	video,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 describe("Texture", () => {
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	it("convertToBlob() should return a Blob when using a regular canvas", async () => {
@@ -31,7 +35,7 @@ describe("Texture", () => {
 		let cache;
 
 		beforeEach(() => {
-			cache = video.renderer.cache;
+			cache = app.renderer.cache;
 			cache.clear();
 		});
 
@@ -259,7 +263,7 @@ describe("Texture", () => {
 
 			// stub the compositor to verify flush is called
 			let flushed = false;
-			const compositor = video.renderer.currentBatcher;
+			const compositor = app.renderer.currentBatcher;
 			let originalFlush;
 			if (compositor) {
 				originalFlush = compositor.flush.bind(compositor);
@@ -347,31 +351,31 @@ describe("Texture", () => {
 
 	describe("createPattern", () => {
 		it("should create a pattern texture", (ctx) => {
-			if (typeof video.renderer.gl === "undefined") {
+			if (typeof app.renderer.gl === "undefined") {
 				ctx.skip("WebGL renderer not available in this environment");
 				return;
 			}
 			const canvas = new CanvasTexture(32, 32);
-			const pattern = video.renderer.createPattern(canvas.canvas, "repeat");
+			const pattern = app.renderer.createPattern(canvas.canvas, "repeat");
 			expect(pattern).toBeDefined();
 			expect(pattern.repeat).toEqual("repeat");
 		});
 
 		it("accepts a non-power-of-two source (WebGL2-only contract, 20.0)", (ctx) => {
-			if (typeof video.renderer.gl === "undefined") {
+			if (typeof app.renderer.gl === "undefined") {
 				ctx.skip("WebGL renderer not available in this environment");
 				return;
 			}
 			// pre-20.0 this threw "not a POT texture" — NPOT REPEAT is core
 			// in WebGL 2, so odd-sized patterns are now first-class
 			const canvas = new CanvasTexture(30, 20);
-			const pattern = video.renderer.createPattern(canvas.canvas, "repeat");
+			const pattern = app.renderer.createPattern(canvas.canvas, "repeat");
 			expect(pattern).toBeDefined();
 			expect(pattern.repeat).toEqual("repeat");
 		});
 
 		it("allocates a separate texture unit per (image, repeat) pair (#1448)", (ctx) => {
-			if (typeof video.renderer.gl === "undefined") {
+			if (typeof app.renderer.gl === "undefined") {
 				ctx.skip("WebGL-only — Canvas createPattern doesn't allocate GL units");
 				return;
 			}
@@ -380,14 +384,14 @@ describe("Texture", () => {
 			// createPattern below would clear `usedUnits` mid-test and break
 			// the +1 arithmetic (engine behavior is by-design; the test must
 			// simply not straddle a reset)
-			video.renderer.cache.resetUnitAssignments();
+			app.renderer.cache.resetUnitAssignments();
 			const canvas = new CanvasTexture(32, 32);
 
 			// create initial pattern
-			const pattern1 = video.renderer.createPattern(canvas.canvas, "repeat");
+			const pattern1 = app.renderer.createPattern(canvas.canvas, "repeat");
 			expect(pattern1.repeat).toEqual("repeat");
 
-			const usedUnitsBefore = video.renderer.cache.usedUnits.size;
+			const usedUnitsBefore = app.renderer.cache.usedUnits.size;
 
 			// Pre-19.7.0 this call deleted pattern1's GL texture and reused
 			// its unit (the `cache.has(image) / deleteTexture2D(...)` band-aid
@@ -395,13 +399,13 @@ describe("Texture", () => {
 			// returned handle silently pointed at the new wrap mode. After
 			// #1448's fix the unit map keys by `(source, repeat)`, so
 			// pattern2 gets its own unit and pattern1's stays live.
-			const pattern2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			const pattern2 = app.renderer.createPattern(canvas.canvas, "repeat-x");
 			expect(pattern2.repeat).toEqual("repeat-x");
 			expect(pattern2).not.toBe(pattern1);
 
 			// Net: one additional bound texture unit, not the same one
 			// reused.
-			expect(video.renderer.cache.usedUnits.size).toEqual(usedUnitsBefore + 1);
+			expect(app.renderer.cache.usedUnits.size).toEqual(usedUnitsBefore + 1);
 		});
 	});
 
@@ -410,7 +414,7 @@ describe("Texture", () => {
 
 		beforeAll(() => {
 			// create a mock texture atlas using TexturePacker JSON format
-			const mockImage = video.createCanvas(256, 256);
+			const mockImage = Renderer.createCanvas(256, 256);
 			const atlasJSON = {
 				meta: {
 					app: "https://www.codeandweb.com/texturepacker",
@@ -564,7 +568,7 @@ describe("Texture", () => {
 
 		it("should strip anchorPoint from atlas regions", () => {
 			// create an atlas with pivot/anchorPoint data (as TexturePacker exports)
-			const mockImage = video.createCanvas(256, 256);
+			const mockImage = Renderer.createCanvas(256, 256);
 			const atlasWithPivot = new TextureAtlas(
 				{
 					meta: {
@@ -623,7 +627,7 @@ describe("Texture", () => {
 
 		it("createAnimationFromName should preserve anchorPoint in regions", () => {
 			// create an atlas with pivot data
-			const mockImage = video.createCanvas(256, 256);
+			const mockImage = Renderer.createCanvas(256, 256);
 			const atlasWithPivot = new TextureAtlas(
 				{
 					meta: {
@@ -714,14 +718,14 @@ describe("Texture", () => {
 		it("getNormalTexture() returns null when no normalMap is provided", () => {
 			const atlas = new TextureAtlas(
 				makeAtlasJSON(),
-				video.createCanvas(64, 64),
+				Renderer.createCanvas(64, 64),
 			);
 			expect(atlas.getNormalTexture()).toBeNull();
 		});
 
 		it("stores a paired normal-map image when passed via options", () => {
-			const color = video.createCanvas(64, 64);
-			const normal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const normal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
 				normalMap: normal,
 			});
@@ -732,7 +736,7 @@ describe("Texture", () => {
 			// Passing `false` should still work as the legacy cache flag.
 			const atlas = new TextureAtlas(
 				makeAtlasJSON(),
-				video.createCanvas(64, 64),
+				Renderer.createCanvas(64, 64),
 				false,
 			);
 			expect(atlas.getNormalTexture()).toBeNull();
@@ -740,8 +744,8 @@ describe("Texture", () => {
 		});
 
 		it("a Sprite built from the atlas inherits the paired normal map", () => {
-			const color = video.createCanvas(64, 64);
-			const normal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const normal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
 				normalMap: normal,
 			});
@@ -754,9 +758,9 @@ describe("Texture", () => {
 
 		it("an explicit settings.normalMap is overridden by the atlas-paired one", () => {
 			// Atlas-paired normal map wins because the atlas drove the layout.
-			const color = video.createCanvas(64, 64);
-			const atlasNormal = video.createCanvas(64, 64);
-			const sidecarNormal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const atlasNormal = Renderer.createCanvas(64, 64);
+			const sidecarNormal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
 				normalMap: atlasNormal,
 			});
@@ -771,8 +775,8 @@ describe("Texture", () => {
 		it("atlas without normal + sidecar settings.normalMap → uses sidecar", () => {
 			// When the atlas has NO paired normal, an explicit
 			// settings.normalMap on the Sprite is the source of truth.
-			const color = video.createCanvas(64, 64);
-			const sidecarNormal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const sidecarNormal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color);
 			const sprite = new Sprite(0, 0, {
 				image: atlas,
@@ -785,7 +789,7 @@ describe("Texture", () => {
 		it("atlas without normal + no sidecar → sprite.normalMap is null", () => {
 			const atlas = new TextureAtlas(
 				makeAtlasJSON(),
-				video.createCanvas(64, 64),
+				Renderer.createCanvas(64, 64),
 			);
 			const sprite = new Sprite(0, 0, {
 				image: atlas,
@@ -795,11 +799,11 @@ describe("Texture", () => {
 		});
 
 		it("raw image (not atlas) + sidecar normalMap → uses sidecar", () => {
-			const sidecarNormal = video.createCanvas(64, 64);
+			const sidecarNormal = Renderer.createCanvas(64, 64);
 			const sprite = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
-				image: video.createCanvas(64, 64),
+				image: Renderer.createCanvas(64, 64),
 				normalMap: sidecarNormal,
 			});
 			expect(sprite.normalMap).toBe(sidecarNormal);
@@ -808,7 +812,7 @@ describe("Texture", () => {
 		it("options.normalMap = null is a no-op (no normal map stored)", () => {
 			const atlas = new TextureAtlas(
 				makeAtlasJSON(),
-				video.createCanvas(64, 64),
+				Renderer.createCanvas(64, 64),
 				{ normalMap: null },
 			);
 			expect(atlas.getNormalTexture()).toBeNull();
@@ -818,7 +822,7 @@ describe("Texture", () => {
 		it("options.normalMap = undefined is a no-op", () => {
 			const atlas = new TextureAtlas(
 				makeAtlasJSON(),
-				video.createCanvas(64, 64),
+				Renderer.createCanvas(64, 64),
 				{ normalMap: undefined },
 			);
 			expect(atlas.getNormalTexture()).toBeNull();
@@ -826,8 +830,8 @@ describe("Texture", () => {
 
 		it("options form with both cache and normalMap honors both", () => {
 			// cache: false skips the TextureCache; normalMap is still wired up.
-			const color = video.createCanvas(64, 64);
-			const normal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const normal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
 				cache: false,
 				normalMap: normal,
@@ -840,33 +844,45 @@ describe("Texture", () => {
 			// check and got stored — a sprite later constructed from the
 			// atlas would try to use the value as an image. Reject loudly.
 			expect(() => {
-				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {
-					normalMap: true,
-				});
+				return new TextureAtlas(
+					makeAtlasJSON(),
+					Renderer.createCanvas(64, 64),
+					{
+						normalMap: true,
+					},
+				);
 			}).toThrow(TypeError);
 		});
 
 		it("options.normalMap = number rejected with TypeError", () => {
 			expect(() => {
-				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {
-					normalMap: 42,
-				});
+				return new TextureAtlas(
+					makeAtlasJSON(),
+					Renderer.createCanvas(64, 64),
+					{
+						normalMap: 42,
+					},
+				);
 			}).toThrow(TypeError);
 		});
 
 		it("options.normalMap as an unknown loader-key string throws", () => {
 			expect(() => {
-				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {
-					normalMap: "definitely-not-loaded",
-				});
+				return new TextureAtlas(
+					makeAtlasJSON(),
+					Renderer.createCanvas(64, 64),
+					{
+						normalMap: "definitely-not-loaded",
+					},
+				);
 			}).toThrow(/normal map image .* not found/);
 		});
 
 		it("getNormalTexture(region) honors the region.texture key", () => {
 			// Region keys map to the same names used in `sources` (atlas.meta.image),
 			// so the parallel `normalSources` is keyed identically.
-			const color = video.createCanvas(64, 64);
-			const normal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const normal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
 				normalMap: normal,
 			});
@@ -875,8 +891,8 @@ describe("Texture", () => {
 		});
 
 		it("getNormalTexture(region) for an unknown region returns null", () => {
-			const color = video.createCanvas(64, 64);
-			const normal = video.createCanvas(64, 64);
+			const color = Renderer.createCanvas(64, 64);
+			const normal = Renderer.createCanvas(64, 64);
 			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
 				normalMap: normal,
 			});

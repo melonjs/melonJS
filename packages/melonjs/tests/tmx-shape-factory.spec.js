@@ -3,17 +3,18 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { Application, boot, video } from "../src/index.js";
 import { createShapeObject } from "../src/level/tiled/factories/shape.js";
 
 describe("createShapeObject — TMX shape factory", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	// Regression: when `getDefaultShape` returns null/undefined (degenerate

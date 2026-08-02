@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { boot, WebGLRenderer } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -42,8 +42,7 @@ describe("WebGL VAO call counts (#1509 acceptance)", () => {
 		// spy BEFORE video.init so init-time calls are counted — the canvas
 		// context doesn't exist yet, so instead spy right after context
 		// creation by re-initializing the batchers via renderer.reset()
-		await getWebGLRenderer(160, 120);
-		renderer = video.renderer;
+		renderer = await getWebGLRenderer(160, 120);
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;

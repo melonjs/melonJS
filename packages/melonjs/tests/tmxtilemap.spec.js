@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Container,
 	collision,
@@ -671,13 +672,14 @@ class PresetBlendEntity extends Renderable {
 }
 
 describe("TMXTileMap", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(128, 128, {
+		const app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		// pre-register fake images for tileset tests
 		fakeImage("testtiles", 64, 64);
 		// register test classes as Tiled object classes

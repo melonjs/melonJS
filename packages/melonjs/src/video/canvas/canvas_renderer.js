@@ -32,8 +32,11 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {ApplicationSettings} [options] - optional parameters for the renderer
 	 */
 	constructor(options) {
-		// parent constructor
-		super(options);
+		// parent constructor. `context` is stamped explicitly (same as the
+		// WebGL/WebGPU backends stamp theirs) so a retried `app.init()` —
+		// e.g. falling back to Canvas after a WebGPU rejection — does not
+		// inherit the failed attempt's context type from the shared settings
+		super(Object.assign(options, { context: "2d" }));
 
 		this.setBlendMode(this.settings.blendMode);
 

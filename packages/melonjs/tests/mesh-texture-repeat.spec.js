@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Matrix3d, Mesh, video, WebGLRenderer } from "../src/index.js";
+import { boot, Matrix3d, Mesh } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -33,12 +33,11 @@ describe("Mesh textureRepeat vs shared TextureAtlas (issue #1503)", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			await getWebGLRenderer(128, 128);
+			// resolves to the shared WebGLRenderer, or undefined when WebGL
+			// is genuinely absent — tests skip below either way
+			renderer = await getWebGLRenderer(128, 128);
 		} catch {
 			// Genuine WebGL absence — tests skip below.
-		}
-		if (video.renderer instanceof WebGLRenderer) {
-			renderer = video.renderer;
 		}
 	});
 

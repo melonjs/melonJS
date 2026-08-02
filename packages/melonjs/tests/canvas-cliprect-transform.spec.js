@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, CanvasRenderer, video } from "../src/index.js";
+import { Application, boot, CanvasRenderer, video } from "../src/index.js";
 
 /**
  * Reproductions for the Canvas clipRect skip-logic findings (2026-07-08
@@ -20,17 +20,26 @@ describe("CanvasRenderer clipRect vs transforms", () => {
 	let renderer;
 	let ctx2d;
 
+	let app;
 	beforeAll(async () => {
 		await boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
-		renderer = video.renderer;
+		app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+		renderer = app.renderer;
 		ctx2d = renderer.getContext();
 		expect(renderer).toBeInstanceOf(CanvasRenderer);
 	});
 
-	afterAll(() => {
+	afterAll(async () => {
 		try {
-			video.init(64, 64, { parent: "screen", renderer: video.AUTO });
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.AUTO,
+			});
+			await app.init();
 		} catch {
 			// ignore
 		}

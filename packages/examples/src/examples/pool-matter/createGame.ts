@@ -11,6 +11,7 @@ import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 import {
 	Application,
+	game,
 	loader,
 	plugin,
 	state,
@@ -21,7 +22,7 @@ import { VIEWPORT_H, VIEWPORT_W } from "./constants";
 import { PlayScreen } from "./play";
 import { resources } from "./resources";
 
-export const createGame = () => {
+export const createGame = async () => {
 	// Pool table is top-down, so we run matter with **zero gravity** —
 	// frictionAir on each ball provides the table-felt drag that brings
 	// balls to rest. No vertical-axis force needed.
@@ -48,6 +49,7 @@ export const createGame = () => {
 		// is unmeasurable.
 		physic: new MatterAdapter({ gravity: { x: 0, y: 0 }, subSteps: 2 }),
 	});
+	await _app.init();
 
 	// Vignette as a camera post-effect — uses the engine's built-in
 	// `VignetteEffect` shader (WebGL fragment pass) which darkens UV
@@ -55,7 +57,7 @@ export const createGame = () => {
 	// renderable and resolution-independent. `strength=0.18` is subtle
 	// enough that the corner pockets stay readable; `size=22` keeps the
 	// dark falloff confined to the outer ~25% of the viewport.
-	_app.viewport.shader = new VignetteEffect(video.renderer, {
+	_app.viewport.shader = new VignetteEffect(game.renderer, {
 		strength: 0.18,
 		size: 22.0,
 	});

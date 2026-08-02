@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { boot, NineSliceSprite, video } from "../src/index.js";
+import { Application, boot, NineSliceSprite, video } from "../src/index.js";
 
 /**
  * NineSliceSprite — 9-slice scaling. The class had ZERO coverage, despite the
@@ -67,9 +67,13 @@ const expectTiles = (a, total) => {
 };
 
 describe("NineSliceSprite", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(256, 256, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(256, 256, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	// ── construction ─────────────────────────────────────────────────────────

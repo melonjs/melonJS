@@ -24,13 +24,13 @@ on(VIDEO_INIT, (renderer) => {
  * unlike ShaderEffect's inert Canvas stub.
  * @param {string|{vertex: string, fragment: string, precision?: string}} source - the fragment body, or a complete program pair
  * @returns {ShaderEffect|GLShader|null} the compiled asset, flagged `shared`
- * @throws if called before `video.init()` (no renderer to compile against)
+ * @throws if called before any `app.init()` resolved (no renderer to compile against)
  * @ignore
  */
 export function compileShaderAsset(source) {
 	if (typeof _renderer === "undefined") {
 		throw new Error(
-			"shader assets require video.init() to be called first (no renderer available to compile against)",
+			"shader assets require an initialized Application — `await app.init()` first (no renderer available to compile against)",
 		);
 	}
 	if (typeof source === "object" && source !== null) {
@@ -42,9 +42,13 @@ export function compileShaderAsset(source) {
 				"a program pair needs both `vertex` and `fragment` GLSL sources",
 			);
 		}
-		if (typeof _renderer.gl === "undefined") {
+		// the pair is GLSL source compiled as-is, so the backend has to speak
+		// GLSL — not merely have a programmable pipeline
+		if (_renderer.shaderLanguage !== "glsl") {
 			console.warn(
-				"shader asset: {vertex, fragment} program pairs require WebGL and are unavailable in Canvas mode",
+				`shader asset: {vertex, fragment} program pairs are GLSL and are unavailable on this renderer (shader language: ${
+					_renderer.shaderLanguage ?? "none"
+				})`,
 			);
 			return null;
 		}
@@ -77,10 +81,11 @@ export function compileShaderAsset(source) {
  *   custom shader, `renderer.customShader`, a custom batcher).
  *
  * Always compiled AT LOAD TIME, so the GLSL compile cost lands in the
- * loading screen and compile errors carry the asset name. `video.init()`
- * is an inherent precondition of the preload flow (the loading screen
- * itself needs the renderer, and a failed init throws and halts) —
- * loading a shader without it fails with a clear error.
+ * loading screen and compile errors carry the asset name. An initialized
+ * Application (`await app.init()`) is an inherent precondition of the
+ * preload flow (the loading screen itself needs the renderer, and a failed
+ * init rejects and halts) — loading a shader without it fails with a clear
+ * error.
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error

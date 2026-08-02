@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, event, Sprite, video } from "../src/index.js";
+import { Application, boot, event, Sprite, video } from "../src/index.js";
 
 /**
  * Video sprite frame sync via requestVideoFrameCallback (rVFC).
@@ -72,13 +72,14 @@ function makeVideoSprite(el) {
 }
 
 describe("Video Sprite (rVFC frame sync)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	it("registers a video-frame callback and stamps version 0 on construction", () => {

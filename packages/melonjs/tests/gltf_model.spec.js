@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, GLTFModel, video } from "../src/index.js";
+import { Application, boot, GLTFModel, video } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 // a small real texture so part meshes resolve a non-white-pixel atlas (lets us
 // assert the glTF wrap mode is forwarded onto the mesh texture)
@@ -105,22 +106,24 @@ const childOf = (model) => {
 };
 
 describe("GLTFModel", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
-		TEX = video.createCanvas(8, 8);
+		await app.init();
+		TEX = Renderer.createCanvas(8, 8);
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	it("instantiates one Mesh per mesh-node primitive, named after the node", () => {

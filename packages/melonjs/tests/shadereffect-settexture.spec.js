@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	NoiseTexture2d,
 	ShaderEffect,
@@ -32,15 +33,17 @@ describe("ShaderEffect.setTexture (extra sampler binding)", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(SIZE, SIZE, {
+		app = new Application(SIZE, SIZE, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			failIfMajorPerformanceCaveat: false,
 			antiAlias: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -290,15 +293,17 @@ describe("ShaderEffect value-setting while disabled (audit fix)", () => {
 	let gl;
 	let isWebGL;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(SIZE, SIZE, {
+		app = new Application(SIZE, SIZE, {
 			parent: "screen",
 			renderer: video.WEBGL,
 			failIfMajorPerformanceCaveat: false,
 			antiAlias: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
 			gl = renderer.gl;
@@ -318,7 +323,7 @@ describe("ShaderEffect value-setting while disabled (audit fix)", () => {
 		// Sprite.normalMap). The guard sits before the Canvas/destroyed
 		// no-op, so no WebGL requirement here: it throws under any renderer.
 		const effect = new ShaderEffect(
-			video.renderer,
+			app.renderer,
 			"uniform sampler2D uVid;\nvec4 apply(vec4 color, vec2 uv) { return color; }",
 		);
 		expect(() => {

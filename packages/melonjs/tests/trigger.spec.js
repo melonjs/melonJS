@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Ellipse,
 	FadeEffect,
-	game,
 	MaskEffect,
 	Polygon,
 	Rect,
@@ -11,19 +11,24 @@ import {
 	video,
 } from "../src/index.js";
 
-const setup = () => {
-	boot();
-	video.init(800, 600, {
-		parent: "screen",
-		scale: "auto",
-		renderer: video.CANVAS,
-	});
-};
-
 describe("Trigger", () => {
+	// one shared Application for the whole spec — the engine's default-stage
+	// wiring (`once(VIDEO_INIT)` → `state.change(DEFAULT)`) only assigns a
+	// viewport to the app live at the FIRST init, so per-test apps would
+	// never get one
+	let app;
+	beforeAll(async () => {
+		boot();
+		app = new Application(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+	});
+
 	describe("constructor", () => {
 		it("should create a trigger with default settings", () => {
-			setup();
 			const trigger = new Trigger(100, 200, {
 				width: 50,
 				height: 100,
@@ -38,7 +43,6 @@ describe("Trigger", () => {
 		});
 
 		it("should default transition to 'fade'", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -48,7 +52,6 @@ describe("Trigger", () => {
 		});
 
 		it("should accept 'mask' transition type", () => {
-			setup();
 			const shape = new Ellipse(0, 0, 1, 1);
 			const trigger = new Trigger(0, 0, {
 				width: 50,
@@ -62,7 +65,6 @@ describe("Trigger", () => {
 		});
 
 		it("should use 'color' property for transition color", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -73,7 +75,6 @@ describe("Trigger", () => {
 		});
 
 		it("should fall back to 'fade' property for backward compatibility", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -84,7 +85,6 @@ describe("Trigger", () => {
 		});
 
 		it("should prefer 'color' over 'fade' when both are set", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -96,7 +96,6 @@ describe("Trigger", () => {
 		});
 
 		it("should store duration", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -107,7 +106,6 @@ describe("Trigger", () => {
 		});
 
 		it("should initialize fading to false", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -117,7 +115,6 @@ describe("Trigger", () => {
 		});
 
 		it("should collect trigger settings", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -132,7 +129,6 @@ describe("Trigger", () => {
 		});
 
 		it("should declare a static body definition for collision", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 100,
@@ -150,7 +146,6 @@ describe("Trigger", () => {
 		// triggers (they don't define `onCollision`), but Matter's solver
 		// resolves every contact unless `isSensor` is set.
 		it("should declare the trigger body as a sensor", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 100,
@@ -160,7 +155,6 @@ describe("Trigger", () => {
 		});
 
 		it("should accept custom shapes for collision", () => {
-			setup();
 			const rect = new Rect(0, 0, 80, 60);
 			const trigger = new Trigger(0, 0, {
 				width: 80,
@@ -175,7 +169,6 @@ describe("Trigger", () => {
 
 	describe("mask transition with polygon", () => {
 		it("should store polygon shape for mask transition", () => {
-			setup();
 			const diamond = new Polygon(0, 0, [
 				{ x: 0, y: -1 },
 				{ x: 1, y: 0 },
@@ -200,7 +193,6 @@ describe("Trigger", () => {
 
 	describe("mask transition with ellipse", () => {
 		it("should store ellipse shape for mask transition", () => {
-			setup();
 			const iris = new Ellipse(0, 0, 1, 1);
 			const trigger = new Trigger(0, 0, {
 				width: 50,
@@ -218,7 +210,6 @@ describe("Trigger", () => {
 
 	describe("triggerEvent", () => {
 		it("should add a FadeEffect when transition is 'fade'", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -226,22 +217,21 @@ describe("Trigger", () => {
 				duration: 250,
 				to: "map2",
 			});
-			game.world.addChild(trigger);
+			app.world.addChild(trigger);
 
 			trigger.triggerEvent();
 
 			expect(trigger.fading).toEqual(true);
-			const effect = game.viewport.getCameraEffect(FadeEffect);
+			const effect = app.viewport.getCameraEffect(FadeEffect);
 			expect(effect).toBeDefined();
 
-			game.world.removeChild(trigger);
-			while (game.viewport.cameraEffects.length > 0) {
-				game.viewport.removeCameraEffect(game.viewport.cameraEffects[0]);
+			app.world.removeChild(trigger);
+			while (app.viewport.cameraEffects.length > 0) {
+				app.viewport.removeCameraEffect(app.viewport.cameraEffects[0]);
 			}
 		});
 
 		it("should add a MaskEffect when transition is 'mask'", () => {
-			setup();
 			const iris = new Ellipse(0, 0, 1, 1);
 			const trigger = new Trigger(0, 0, {
 				width: 50,
@@ -252,22 +242,21 @@ describe("Trigger", () => {
 				duration: 300,
 				to: "map2",
 			});
-			game.world.addChild(trigger);
+			app.world.addChild(trigger);
 
 			trigger.triggerEvent();
 
 			expect(trigger.fading).toEqual(true);
-			const effect = game.viewport.getCameraEffect(MaskEffect);
+			const effect = app.viewport.getCameraEffect(MaskEffect);
 			expect(effect).toBeDefined();
 
-			game.world.removeChild(trigger);
-			while (game.viewport.cameraEffects.length > 0) {
-				game.viewport.removeCameraEffect(game.viewport.cameraEffects[0]);
+			app.world.removeChild(trigger);
+			while (app.viewport.cameraEffects.length > 0) {
+				app.viewport.removeCameraEffect(app.viewport.cameraEffects[0]);
 			}
 		});
 
 		it("should not trigger twice without force", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -275,21 +264,20 @@ describe("Trigger", () => {
 				duration: 250,
 				to: "map2",
 			});
-			game.world.addChild(trigger);
+			app.world.addChild(trigger);
 
 			trigger.triggerEvent();
-			const effectCount = game.viewport.cameraEffects.length;
+			const effectCount = app.viewport.cameraEffects.length;
 			trigger.triggerEvent();
-			expect(game.viewport.cameraEffects.length).toEqual(effectCount);
+			expect(app.viewport.cameraEffects.length).toEqual(effectCount);
 
-			game.world.removeChild(trigger);
-			while (game.viewport.cameraEffects.length > 0) {
-				game.viewport.removeCameraEffect(game.viewport.cameraEffects[0]);
+			app.world.removeChild(trigger);
+			while (app.viewport.cameraEffects.length > 0) {
+				app.viewport.removeCameraEffect(app.viewport.cameraEffects[0]);
 			}
 		});
 
 		it("should default to fade when no transition is specified", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -297,26 +285,25 @@ describe("Trigger", () => {
 				duration: 150,
 				to: "map2",
 			});
-			game.world.addChild(trigger);
+			app.world.addChild(trigger);
 
 			expect(trigger.transition).toEqual("fade");
 			trigger.triggerEvent();
 
-			const fadeEffect = game.viewport.getCameraEffect(FadeEffect);
-			const maskEffect = game.viewport.getCameraEffect(MaskEffect);
+			const fadeEffect = app.viewport.getCameraEffect(FadeEffect);
+			const maskEffect = app.viewport.getCameraEffect(MaskEffect);
 			expect(fadeEffect).toBeDefined();
 			expect(maskEffect).toBeUndefined();
 
-			game.world.removeChild(trigger);
-			while (game.viewport.cameraEffects.length > 0) {
-				game.viewport.removeCameraEffect(game.viewport.cameraEffects[0]);
+			app.world.removeChild(trigger);
+			while (app.viewport.cameraEffects.length > 0) {
+				app.viewport.removeCameraEffect(app.viewport.cameraEffects[0]);
 			}
 		});
 	});
 
 	describe("onCollisionStart", () => {
 		it("should call triggerEvent when name is 'Trigger'", () => {
-			setup();
 			const trigger = new Trigger(0, 0, {
 				width: 50,
 				height: 50,
@@ -324,15 +311,15 @@ describe("Trigger", () => {
 				duration: 250,
 				to: "map2",
 			});
-			game.world.addChild(trigger);
+			app.world.addChild(trigger);
 
 			expect(trigger.fading).toEqual(false);
 			trigger.onCollisionStart();
 			expect(trigger.fading).toEqual(true);
 
-			game.world.removeChild(trigger);
-			while (game.viewport.cameraEffects.length > 0) {
-				game.viewport.removeCameraEffect(game.viewport.cameraEffects[0]);
+			app.world.removeChild(trigger);
+			while (app.viewport.cameraEffects.length > 0) {
+				app.viewport.removeCameraEffect(app.viewport.cameraEffects[0]);
 			}
 		});
 	});

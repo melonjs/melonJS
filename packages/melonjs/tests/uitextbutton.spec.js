@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	boot,
 	Container,
-	game,
 	loader,
 	UITextButton,
 	video,
@@ -88,14 +88,17 @@ function makeButton() {
 	});
 }
 
+let app;
+
 describe("UITextButton", () => {
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		await new Promise((resolve) => {
 			loader.preload(
 				[
@@ -146,13 +149,13 @@ describe("UITextButton", () => {
 
 describe("UITextButton in a real draw pass (#1499 repro)", () => {
 	// The exact scenario from the issue: a UITextButton added to
-	// game.world, drawn by the real default camera through the real
+	// app.world, drawn by the real default camera through the real
 	// renderer — no fakes anywhere. The earlier unit tests pin the
 	// viewport forwarding; this pins the whole production chain
 	// (Camera2d.draw → World.draw → UITextButton.draw → Container.draw).
 	it("draws through Camera2d → world → button without throwing", () => {
 		const button = makeButton();
-		game.world.addChild(button);
+		app.world.addChild(button);
 		// the draw walk skips children that are neither in-viewport nor
 		// floating — force visibility so the button genuinely draws and
 		// this test cannot pass vacuously
@@ -161,16 +164,16 @@ describe("UITextButton in a real draw pass (#1499 repro)", () => {
 
 		try {
 			expect(() => {
-				game.viewport.draw(video.renderer, game.world);
+				app.viewport.draw(app.renderer, app.world);
 			}).not.toThrow();
 
 			// prove the button was actually reached by the draw walk...
 			expect(drawSpy).toHaveBeenCalled();
 			// ...and that the real camera was delivered as its viewport
-			expect(drawSpy.mock.calls[0][1]).toBe(game.viewport);
+			expect(drawSpy.mock.calls[0][1]).toBe(app.viewport);
 		} finally {
 			drawSpy.mockRestore();
-			game.world.removeChildNow(button);
+			app.world.removeChildNow(button);
 		}
 	});
 });

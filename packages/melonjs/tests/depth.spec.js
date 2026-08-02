@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Matrix3d,
 	Renderable,
@@ -7,6 +8,7 @@ import {
 	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 // `setDepth` only feeds depth into the vertex stream under a perspective
 // projection (a depth scene / Camera3d); under the default ortho projection it
@@ -78,25 +80,28 @@ describe("RenderState — currentDepth", () => {
 describe("Renderer.setDepth", () => {
 	let renderer;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 			failIfMajorPerformanceCaveat: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 	});
 
-	afterAll(() => {
+	afterAll(async () => {
 		// hand the world back to the default renderer for any later test files
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	it("should set renderer.currentDepth to the given value", () => {
@@ -129,24 +134,27 @@ describe("Renderer.setDepth", () => {
 describe("Renderable.preDraw forwards depth", () => {
 	let renderer;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 			failIfMajorPerformanceCaveat: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	it("should call renderer.setDepth with renderable.depth during preDraw", () => {
@@ -197,25 +205,28 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 	let renderer;
 	let isWebGL;
 
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.WEBGL,
 			failIfMajorPerformanceCaveat: false,
 		});
-		renderer = video.renderer;
+		await app.init();
+		renderer = app.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 		isWebGL = renderer instanceof WebGLRenderer;
 	});
 
-	afterAll(() => {
-		video.init(800, 600, {
+	afterAll(async () => {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	const skipIfNoWebGL = (ctx) => {
@@ -281,7 +292,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 
 		// install a depth and draw one sprite — should produce 4 vertices,
 		// each carrying z = 42 at float-slot 2 (after x, y).
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.save();
 		renderer.setDepth(42);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
@@ -308,7 +319,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		const batcher = renderer.setBatcher("quad");
 		batcher.vertexData.clear();
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.save();
 		renderer.setDepth(0);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
@@ -361,7 +372,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		const batcher = renderer.setBatcher("quad");
 		batcher.vertexData.clear();
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		// distinctive tint: solid red with full alpha = 0xff0000ff in ABGR
 		// (drawImage's currentTint converts to uint32 via toUint32(alpha))
 		renderer.save();
@@ -407,7 +418,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 			/* drain */
 		}
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.save();
 		renderer.setDepth(25);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);

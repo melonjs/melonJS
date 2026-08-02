@@ -1,18 +1,27 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Entity, Renderable, Sprite, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Entity,
+	Renderable,
+	Sprite,
+	video,
+} from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 describe("Sprite trimming and Entity anchor sync", () => {
 	let mockImage;
 
 	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 		// create a mock image for sprite creation
-		mockImage = video.createCanvas(512, 512);
+		mockImage = Renderer.createCanvas(512, 512);
 	});
 
 	/**

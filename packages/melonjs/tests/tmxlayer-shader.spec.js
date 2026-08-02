@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { boot } from "../src/index.js";
 import { BufferTextureResource } from "../src/video/texture/resource.js";
 import OrthogonalTMXLayerGPURenderer from "../src/video/webgl/renderers/tmxlayer/orthogonal.js";
-import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -14,13 +13,9 @@ describe("TMXLayer shader path", () => {
 	beforeAll(async () => {
 		await boot();
 		try {
-			await getWebGLRenderer(64, 64);
-			if (
-				video.renderer instanceof WebGLRenderer &&
-				typeof video.renderer.gl !== "undefined"
-			) {
-				renderer = video.renderer;
-			}
+			// resolves to the shared WebGLRenderer (gl guaranteed present),
+			// or undefined when WebGL is genuinely absent — tests skip below
+			renderer = await getWebGLRenderer(64, 64);
 		} catch {
 			// CI runners without GL acceleration can't construct a WebGL2
 			// renderer; tests below mark themselves skipped at runtime

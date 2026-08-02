@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Camera3d,
 	Matrix2d,
@@ -18,6 +19,7 @@ import {
 	projectVertices,
 	transformedBounds,
 } from "../src/math/vertex.ts";
+import Renderer from "../src/video/renderer.js";
 
 // ── Vertex Utilities ────────────────────────────────────────────────────────
 
@@ -990,29 +992,32 @@ describe("Matrix3d / Matrix2d round-trip", () => {
  * vertex math itself (offsets, scale, Y-flip).
  */
 describe("Mesh × Camera3d world-space path", () => {
-	beforeAll(() => {
+	let app;
+	beforeAll(async () => {
 		boot();
-		video.init(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 			cameraClass: Camera3d,
 		});
-		// state.change is async; force a stage swap so game.viewport
+		await app.init();
+		// state.change is async; force a stage swap so app.viewport
 		// becomes the Camera3d the test cares about.
 		const s = new Stage({ cameraClass: Camera3d });
 		state.set(state.DEFAULT, s);
 		state.change(state.DEFAULT, true);
 	});
 
-	afterAll(() => {
+	afterAll(async () => {
 		// reset to default Camera2d so later spec files don't inherit
 		// our Camera3d viewport.
-		video.init(800, 600, {
+		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
+		await app.init();
 	});
 
 	// Minimal mesh-shaped object passed to drawMesh — the path we test
@@ -1136,7 +1141,7 @@ describe("Mesh × Camera3d world-space path", () => {
 	});
 
 	it("draw picks the path from the rendering viewport, not the activation viewport (PR #1464 review)", async () => {
-		// Regression: `_useWorldSpace` is captured from `game.viewport`
+		// Regression: `_useWorldSpace` is captured from `app.viewport`
 		// once at `onActivateEvent` and never updated. A stage with
 		// multiple cameras (e.g. Camera3d main + Camera2d minimap) ends
 		// up running the wrong projection for whichever camera doesn't
@@ -1307,7 +1312,7 @@ describe("Mesh × Camera3d world-space path", () => {
 			vertices: new Float32Array(9),
 			uvs: new Float32Array(6),
 			indices: [0, 1, 2],
-			texture: video.createCanvas(8, 8),
+			texture: Renderer.createCanvas(8, 8),
 			width: 10,
 			normalize: false,
 			textureRepeat: "repeat",
@@ -1324,7 +1329,7 @@ describe("Mesh × Camera3d world-space path", () => {
 			vertices: new Float32Array(9),
 			uvs: new Float32Array(6),
 			indices: [0, 1, 2],
-			texture: video.createCanvas(8, 8),
+			texture: Renderer.createCanvas(8, 8),
 			width: 10,
 			normalize: false,
 		});

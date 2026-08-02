@@ -30,31 +30,33 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 		await boot();
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		// Reset the video subsystem so each test starts in a clean state.
 		try {
-			video.init(64, 64, {
+			const app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.CANVAS,
 			});
+			await app.init();
 		} catch {
 			// best-effort reset
 		}
 	});
 
 	describe("renderer: video.WEBGL", () => {
-		it("throws with a useful message when WebGL is unavailable", (ctx) => {
+		it("throws with a useful message when WebGL is unavailable", async (ctx) => {
 			// `failIfMajorPerformanceCaveat: true` makes WebGL context
 			// creation fail in headless chromium without GPU flags. On
 			// environments where WebGL is hardware-backed and works
 			// regardless, the Application succeeds → skip; the throw
 			// path is exercised wherever WebGL genuinely fails.
 			try {
-				void new Application(64, 64, {
+				const app = new Application(64, 64, {
 					parent: "screen",
 					renderer: video.WEBGL,
 					failIfMajorPerformanceCaveat: true,
 				});
+				await app.init();
 				ctx.skip("WebGL is available in this environment");
 				return;
 			} catch (err) {
@@ -63,7 +65,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 			}
 		});
 
-		it("isWebGLSupported() and WEBGL construction agree (WebGL2-only contract)", () => {
+		it("isWebGLSupported() and WEBGL construction agree (WebGL2-only contract)", async () => {
 			// The 20.0 invariant: the support gate probes the same context
 			// ("webgl2") that construction requests, so the two can never
 			// disagree — pre-20.0 the gate probed WebGL 1 while construction
@@ -74,32 +76,33 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 					renderer: video.WEBGL,
 					consoleHeader: false,
 				});
+				await app.init();
 				expect(app.renderer.WebGLVersion).toBe(2);
 				expect(app.renderer.type).toBe("WebGL2");
 				expect(app.renderer.gl).toBeInstanceOf(
 					globalThis.WebGL2RenderingContext,
 				);
 			} else {
-				expect(() => {
-					void new Application(64, 64, {
-						parent: "screen",
-						renderer: video.WEBGL,
-						consoleHeader: false,
-					});
-				}).toThrow(/WebGL 2/);
+				const app = new Application(64, 64, {
+					parent: "screen",
+					renderer: video.WEBGL,
+					consoleHeader: false,
+				});
+				// the throw moved from the constructor into `init()` with the
+				// constructor/init split, so it surfaces as a rejection
+				await expect(app.init()).rejects.toThrow(/WebGL 2/);
 			}
 		});
 
-		it("renderer: video.AUTO falls back to Canvas silently (preserved behaviour)", () => {
+		it("renderer: video.AUTO falls back to Canvas silently (preserved behaviour)", async () => {
 			// AUTO is the documented fallback path. The same conditions
-			// that make `video.WEBGL` throw must NOT cause AUTO to throw.
-			expect(() => {
-				void new Application(64, 64, {
-					parent: "screen",
-					renderer: video.AUTO,
-					failIfMajorPerformanceCaveat: true,
-				});
-			}).not.toThrow();
+			// that make `video.WEBGL` throw must NOT cause AUTO to reject.
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.AUTO,
+				failIfMajorPerformanceCaveat: true,
+			});
+			await expect(app.init()).resolves.toBeUndefined();
 		});
 	});
 
@@ -120,62 +123,71 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 					return String(args[0] ?? "");
 				})
 				.find((msg) => {
-					return /requires the WebGL renderer/.test(msg);
+					// match on the contract (the setting being complained
+					// about), not on the prose — the wording moved once
+					// already when the check switched from an `instanceof`
+					// test to the `supportsDepthBuffer` capability flag
+					return /defaultSortOn/.test(msg);
 				});
 		};
 
-		it("warns when cameraClass is Camera3d but renderer is Canvas", () => {
+		it("warns when cameraClass is Camera3d but renderer is Canvas", async () => {
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			void new Application(64, 64, {
+			const app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: Camera3d,
 			});
+			await app.init();
 			const msg = findCamera3dWarn();
 			expect(msg).toBeDefined();
 			expect(msg).toMatch(/Camera3d|depth/);
 		});
 
-		it("warn message points the user at video.WEBGL", () => {
+		it("warn message points the user at video.WEBGL", async () => {
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			void new Application(64, 64, {
+			const app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: Camera3d,
 			});
+			await app.init();
 			expect(findCamera3dWarn()).toMatch(/video\.WEBGL/);
 		});
 
-		it("subclass of Camera3d (inheriting defaultSortOn='depth') also warns on Canvas", () => {
+		it("subclass of Camera3d (inheriting defaultSortOn='depth') also warns on Canvas", async () => {
 			class MyCamera3d extends Camera3d {}
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			void new Application(64, 64, {
+			const app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: MyCamera3d,
 			});
+			await app.init();
 			expect(findCamera3dWarn()).toBeDefined();
 		});
 
-		it("cameraClass without 'depth' sortOn is silent under Canvas (no false positive)", () => {
+		it("cameraClass without 'depth' sortOn is silent under Canvas (no false positive)", async () => {
 			class MyCam2d {
 				static defaultSortOn = "z";
 			}
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			void new Application(64, 64, {
+			const app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: MyCam2d,
 			});
+			await app.init();
 			expect(findCamera3dWarn()).toBeUndefined();
 		});
 
-		it("no cameraClass setting + Canvas renderer is silent (legacy default)", () => {
+		it("no cameraClass setting + Canvas renderer is silent (legacy default)", async () => {
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			void new Application(64, 64, {
+			const app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.CANVAS,
 			});
+			await app.init();
 			expect(findCamera3dWarn()).toBeUndefined();
 		});
 	});

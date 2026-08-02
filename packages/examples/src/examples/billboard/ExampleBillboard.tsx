@@ -129,7 +129,7 @@ class SkyBackdrop extends Renderable {
 	}
 }
 
-const createGame = () => {
+const createGame = async () => {
 	let app: Application;
 	try {
 		app = new Application(1024, 768, {
@@ -139,6 +139,7 @@ const createGame = () => {
 			cameraClass: Camera3dClass,
 			antiAlias: true,
 		});
+		await app.init();
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(

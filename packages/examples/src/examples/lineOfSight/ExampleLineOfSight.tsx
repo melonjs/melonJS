@@ -422,13 +422,13 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = (): void => {
+const createGame = async (): Promise<void> => {
 	// 19.x bootstrap: `Application` owns the renderer, world, and the
 	// active physics adapter (BuiltinAdapter by default). Replaces the
 	// legacy `video.init` + global `game` singleton pattern.
 	const scaleTarget = document.getElementById("screen");
 	// eslint-disable-next-line no-new
-	new Application(VIEWPORT_W, VIEWPORT_H, {
+	const app = new Application(VIEWPORT_W, VIEWPORT_H, {
 		parent: "screen",
 		scaleMethod: "fit",
 		// Conditionally spread `scaleTarget` only when the element
@@ -438,6 +438,7 @@ const createGame = (): void => {
 		...(scaleTarget ? { scaleTarget } : {}),
 		renderer: video.AUTO,
 	});
+	await app.init();
 
 	// Map the arrow keys to portable action names the Sentry reads via
 	// `input.isKeyPressed("left")` etc. Done once at bootstrap.

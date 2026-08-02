@@ -2,14 +2,15 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	GLShader,
+	game,
 	Matrix3d,
 	NineSliceSprite,
 	RenderState,
 	ShaderEffect,
 	Sprite,
-	video,
 	WebGLRenderer,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -56,7 +57,7 @@ describe("depth pipeline adversarial integration", () => {
 	beforeAll(async () => {
 		boot();
 		await getWebGLRenderer(800, 600);
-		renderer = video.renderer;
+		renderer = game.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 		isWebGL = renderer instanceof WebGLRenderer;
 		if (isWebGL) {
@@ -121,7 +122,7 @@ describe("depth pipeline adversarial integration", () => {
 		}
 		const batcher = renderer.setBatcher("quad");
 		batcher.vertexData.clear();
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		// first sprite at depth 100
 		renderer.save();
@@ -159,7 +160,7 @@ describe("depth pipeline adversarial integration", () => {
 		const batcher = renderer.setBatcher("quad");
 		batcher.vertexData.clear();
 
-		const tex = video.createCanvas(48, 48);
+		const tex = Renderer.createCanvas(48, 48);
 		const nine = new NineSliceSprite(0, 0, {
 			width: 96,
 			height: 96,
@@ -197,7 +198,7 @@ describe("depth pipeline adversarial integration", () => {
 		const batcher = renderer.setBatcher("quad");
 		batcher.vertexData.clear();
 
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		const sprite = new Sprite(0, 0, {
 			framewidth: 16,
 			frameheight: 16,
@@ -334,7 +335,7 @@ describe("depth pipeline adversarial integration", () => {
 			indices: new Uint16Array([0, 1, 2]),
 			vertexCount: 3,
 			cullBackFaces: false,
-			texture: renderer.cache.get(video.createCanvas(8, 8)),
+			texture: renderer.cache.get(Renderer.createCanvas(8, 8)),
 		};
 
 		batcher.addMesh(meshLike, 0xffffffff);
@@ -393,7 +394,7 @@ describe("depth pipeline adversarial integration", () => {
 		const shader = new GLShader(gl, vertexSrc, fragmentSrc, "mediump");
 
 		const batcher = renderer.setBatcher("quad", shader);
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16);
 		batcher.flush();
 
@@ -432,7 +433,7 @@ describe("depth pipeline adversarial integration", () => {
 			return;
 		}
 		drainGLErrors();
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		for (const z of [
 			0,
@@ -459,7 +460,7 @@ describe("depth pipeline adversarial integration", () => {
 			return;
 		}
 		drainGLErrors();
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		// NaN and Infinity propagate to the vertex stream — the GPU's behavior
 		// is undefined visually but WebGL itself does not error on them
@@ -489,7 +490,7 @@ describe("depth pipeline adversarial integration", () => {
 		}
 		const batcher = renderer.setBatcher("quad");
 		batcher.vertexData.clear();
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 
 		renderer.save();
 		renderer.setDepth(7);
@@ -517,7 +518,7 @@ describe("depth pipeline adversarial integration", () => {
 			return;
 		}
 		drainGLErrors();
-		const tex = video.createCanvas(8, 8);
+		const tex = Renderer.createCanvas(8, 8);
 
 		// deterministic LCG for repro
 		let seed = 1234567;
@@ -572,7 +573,7 @@ describe("depth pipeline adversarial integration", () => {
 			return;
 		}
 		drainGLErrors();
-		const tex = video.createCanvas(16, 16);
+		const tex = Renderer.createCanvas(16, 16);
 
 		const sprite = new Sprite(0, 0, {
 			framewidth: 16,
@@ -589,7 +590,7 @@ describe("depth pipeline adversarial integration", () => {
 		renderer.strokeRect(20, 20, 30, 30);
 		renderer.restore();
 
-		const tex48 = video.createCanvas(48, 48);
+		const tex48 = Renderer.createCanvas(48, 48);
 		const nine = new NineSliceSprite(0, 0, {
 			width: 96,
 			height: 96,

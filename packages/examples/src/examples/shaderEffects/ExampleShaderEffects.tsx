@@ -30,12 +30,13 @@ import {
 import { createExampleComponent } from "../utils";
 import monsterImg from "./assets/monster.png";
 
-const createGame = () => {
+const createGame = async () => {
 	const app = new Application(1218, 562, {
 		parent: "screen",
 		scale: "auto",
 		backgroundColor: "#202020",
 	});
+	await app.init();
 
 	// apply subtle vignette post-process effect on the camera
 	app.viewport.shader = new VignetteEffect(app.renderer as WebGLRenderer);

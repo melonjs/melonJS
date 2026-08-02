@@ -235,12 +235,13 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	new App(800, 600, {
+const createGame = async () => {
+	const app = new App(800, 600, {
 		parent: "screen",
 		scale: "auto",
 		scaleMethod: "flex-width",
 	});
+	await app.init();
 
 	const resources = [
 		{ name: "UI_Assets-0", type: "image", src: `${base}img/UI_Assets-0.png` },

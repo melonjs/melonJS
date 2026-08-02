@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { Application, boot, video } from "../src/index.js";
 import Tile from "../src/level/tiled/TMXTile.js";
 import TMXTileset from "../src/level/tiled/TMXTileset.js";
 import { imgList, jsonList } from "../src/loader/cache.js";
@@ -14,13 +14,14 @@ function fakeImage(name, w = 64, h = 64) {
 }
 
 describe("TMXTileset", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(128, 128, {
+		const app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 
 		// pre-register fake images of various sizes
 		fakeImage("ground", 128, 128);

@@ -1,5 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Sprite, Texture2d, TextureAtlas, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Sprite,
+	Texture2d,
+	TextureAtlas,
+	video,
+} from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 
 /**
  * `Texture2d` is the abstract base for user-constructed texture assets: an
@@ -14,7 +22,7 @@ import { boot, Sprite, Texture2d, TextureAtlas, video } from "../src/index.js";
 class StubTexture extends Texture2d {
 	constructor(width, height) {
 		super();
-		this._canvas = video.createCanvas(width, height);
+		this._canvas = Renderer.createCanvas(width, height);
 	}
 	getTexture() {
 		return this._canvas;
@@ -22,9 +30,13 @@ class StubTexture extends Texture2d {
 }
 
 describe("Texture2d", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(320, 240, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(320, 240, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("TextureAtlas extends Texture2d", () => {

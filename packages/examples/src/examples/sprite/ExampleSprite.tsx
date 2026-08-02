@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	ColorLayer,
 	event,
 	game,
@@ -22,15 +23,16 @@ const resources = [
 	{ name: "background", type: "image", src: galaxyImg },
 ];
 
-const createGame = () => {
+const createGame = async () => {
 	// Initialize the video.
-	if (
-		!video.init(1218, 562, {
+	try {
+		const app = new Application(1218, 562, {
 			parent: "screen",
 			scaleMethod: "flex",
 			renderer: video.AUTO,
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

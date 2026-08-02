@@ -18,11 +18,12 @@ import {
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
-const createGame = () => {
+const createGame = async () => {
 	const _app = new Application(1024, 768, {
 		parent: "screen",
 		renderer: video.AUTO,
 	});
+	await _app.init();
 
 	class Graphics extends Renderable {
 		starMask: Polygon;

@@ -10,12 +10,13 @@ import { setupViewportEffects } from "./effects";
 import { PlayScreen } from "./play";
 import { resources } from "./resources";
 
-const createGame = () => {
+const createGame = async () => {
 	// create a new melonJS Application
 	const _app = new Application(1024, 768, {
 		parent: "screen",
 		scale: "auto",
 	});
+	await _app.init();
 
 	// vignette (always on) + dormant chromatic aberration (burst on hit)
 	setupViewportEffects(_app.viewport, _app.renderer);

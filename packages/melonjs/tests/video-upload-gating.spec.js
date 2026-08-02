@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { boot, WebGLRenderer } from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -33,12 +33,13 @@ function makeVideoLikeCanvas(w, h) {
 
 describe("Video texture upload gating (WebGL)", () => {
 	let webglReady = false;
+	let renderer;
 
 	beforeAll(async () => {
 		boot();
 		try {
-			await getWebGLRenderer(800, 600);
-			webglReady = video.renderer instanceof WebGLRenderer;
+			renderer = await getWebGLRenderer(800, 600);
+			webglReady = renderer instanceof WebGLRenderer;
 		} catch {
 			// CI runners without GL acceleration can't construct a WebGL
 			// renderer; the tests below mark themselves skipped at runtime.
@@ -59,7 +60,7 @@ describe("Video texture upload gating (WebGL)", () => {
 	// count createTexture2D calls (actual texImage2D uploads) on the quad
 	// batcher while fn runs; restores the prototype method afterwards
 	function countUploads(fn) {
-		const quad = video.renderer.batchers.get("quad");
+		const quad = renderer.batchers.get("quad");
 		const proto = Object.getPrototypeOf(quad);
 		let uploads = 0;
 		quad.createTexture2D = function (...args) {
@@ -76,7 +77,6 @@ describe("Video texture upload gating (WebGL)", () => {
 
 	it("unversioned video sources keep the legacy per-frame re-upload", (ctx) => {
 		requireWebGL(ctx);
-		const renderer = video.renderer;
 		const src = makeVideoLikeCanvas(32, 32);
 
 		const uploads = countUploads(() => {
@@ -88,7 +88,6 @@ describe("Video texture upload gating (WebGL)", () => {
 
 	it("versioned video sources upload once per presented frame", (ctx) => {
 		requireWebGL(ctx);
-		const renderer = video.renderer;
 		const src = makeVideoLikeCanvas(32, 32);
 		src.version = 0;
 
@@ -107,7 +106,6 @@ describe("Video texture upload gating (WebGL)", () => {
 
 	it("a texture-unit cache reset re-uploads even with an unchanged version", (ctx) => {
 		requireWebGL(ctx);
-		const renderer = video.renderer;
 		const src = makeVideoLikeCanvas(32, 32);
 		src.version = 0;
 

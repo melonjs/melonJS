@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+	Application,
 	boot,
 	Camera3d,
 	Mesh,
@@ -17,9 +18,13 @@ import {
  */
 
 describe("Camera3d.getBasis", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	const r = new Vector3d();
@@ -62,9 +67,13 @@ describe("Camera3d.getBasis", () => {
 });
 
 describe("Sprite3d billboard projection", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	const makeTex = () => {
@@ -316,9 +325,13 @@ describe("Sprite3d billboard projection", () => {
 });
 
 describe("Sprite3d atlas region mapping (trim + rotation)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	// a 200×200 source so logical (untrimmed) frame = 200 → world scale 1 at
@@ -422,9 +435,13 @@ describe("Sprite3d atlas region mapping (trim + rotation)", () => {
 });
 
 describe("Sprite3d flipX / flipY", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	// 64×32 sheet → two 32×32 frames; sprite sized 1:1 (world unit == frame px)
@@ -624,9 +641,13 @@ describe("Sprite3d flipX / flipY", () => {
 });
 
 describe("Sprite3d resource cleanup", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	it("destroy() releases the engine's pooled current.offset", () => {
@@ -644,9 +665,13 @@ describe("Sprite3d resource cleanup", () => {
 });
 
 describe("Sprite3d anchorPoint (vertex-baked anchor)", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	const makeTex = (w = 4, h = 4) => {
@@ -882,9 +907,13 @@ describe("Sprite3d anchorPoint (vertex-baked anchor)", () => {
 });
 
 describe("Sprite3d anchorPoint — adversarial", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	const makeTex = (w = 4, h = 4) => {
@@ -1098,9 +1127,13 @@ describe("Sprite3d anchorPoint — adversarial", () => {
 });
 
 describe("Sprite3d anchorPoint — remaining gap coverage", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+		const app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
 	});
 
 	const makeTex = () => {

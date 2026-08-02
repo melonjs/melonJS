@@ -15,13 +15,14 @@
  *
  * Tests run the same `createPattern(image, "repeat-x") +
  * createPattern(image, "repeat-y")` scenario under each renderer with
- * forced `video.init(..., { renderer: video.<MODE> })`, asserting the
+ * forced `new Application(..., { renderer: video.<MODE> })` +
+ * `await app.init()`, asserting the
  * same user-visible invariants in both blocks. Both blocks pass against
  * the fix; the WebGL block fails (`usedUnits.size` stays flat) against
  * any future regression that re-keys the cache by source alone.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, CanvasTexture, video } from "../src/index.js";
+import { Application, boot, CanvasTexture, video } from "../src/index.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
 import {
 	getWebGLRenderer,
@@ -40,9 +41,14 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 	});
 
 	describe("under Canvas renderer (reference behaviour)", () => {
+		let app;
 		beforeAll(async () => {
 			await boot();
-			video.init(64, 64, { parent: "screen", renderer: video.CANVAS });
+			app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.CANVAS,
+			});
+			await app.init();
 		});
 
 		it("two patterns from one image are distinct, defined handles", () => {
@@ -53,8 +59,8 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// pattern object. That's the user-facing contract we want
 			// WebGL to match.
 			const canvas = new CanvasTexture(32, 32);
-			const horiz = video.renderer.createPattern(canvas.canvas, "repeat-x");
-			const vert = video.renderer.createPattern(canvas.canvas, "repeat-y");
+			const horiz = app.renderer.createPattern(canvas.canvas, "repeat-x");
+			const vert = app.renderer.createPattern(canvas.canvas, "repeat-y");
 
 			expect(horiz).toBeDefined();
 			expect(vert).toBeDefined();
@@ -69,19 +75,20 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// alongside #1448.
 			const canvas = new CanvasTexture(32, 32);
 			expect(() => {
-				video.renderer.createPattern(canvas.canvas);
+				app.renderer.createPattern(canvas.canvas);
 			}).not.toThrow();
 		});
 	});
 
 	describe("under WebGL renderer (#1448 repro)", () => {
 		let webglReady = false;
+		let renderer;
 
 		beforeAll(async () => {
 			await boot();
 			try {
-				await getWebGLRenderer(64, 64);
-				webglReady = video.renderer instanceof WebGLRenderer;
+				renderer = await getWebGLRenderer(64, 64);
+				webglReady = renderer instanceof WebGLRenderer;
 			} catch {
 				// CI runners without GL acceleration can't construct a WebGL
 				// renderer; the test below marks itself skipped at runtime.
@@ -101,14 +108,14 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 
 			// Snapshot the bound-texture-units count BEFORE the first
 			// createPattern call so we can measure the net delta.
-			const unitsBaseline = video.renderer.cache.usedUnits.size;
+			const unitsBaseline = renderer.cache.usedUnits.size;
 
-			const horiz = video.renderer.createPattern(canvas.canvas, "repeat-x");
-			const unitsAfterFirst = video.renderer.cache.usedUnits.size;
+			const horiz = renderer.createPattern(canvas.canvas, "repeat-x");
+			const unitsAfterFirst = renderer.cache.usedUnits.size;
 			expect(unitsAfterFirst).toBe(unitsBaseline + 1);
 
-			const vert = video.renderer.createPattern(canvas.canvas, "repeat-y");
-			const unitsAfterSecond = video.renderer.cache.usedUnits.size;
+			const vert = renderer.createPattern(canvas.canvas, "repeat-y");
+			const unitsAfterSecond = renderer.cache.usedUnits.size;
 
 			// Same invariants as the Canvas block — JS-side handles stay
 			// independent. These hold today (the bug is on the GL side).
@@ -130,7 +137,7 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// Parity with Canvas: both renderers tolerate the no-arg form
 			// and resolve to "no-repeat" implicitly.
 			const canvas = new CanvasTexture(32, 32);
-			const pattern = video.renderer.createPattern(canvas.canvas);
+			const pattern = renderer.createPattern(canvas.canvas);
 			expect(pattern).toBeDefined();
 			expect(pattern.repeat).toEqual("no-repeat");
 		});
@@ -146,12 +153,12 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			const canvas = new CanvasTexture(32, 32);
 
 			// Step 1: a sprite-like atlas allocates a unit for (source, no-repeat)
-			const spriteAtlas = video.renderer.cache.get(canvas.canvas);
-			const spriteUnit = video.renderer.cache.getUnit(spriteAtlas);
+			const spriteAtlas = renderer.cache.get(canvas.canvas);
+			const spriteUnit = renderer.cache.getUnit(spriteAtlas);
 
 			// Step 2: a pattern allocates a separate unit for (source, repeat-x)
-			const pattern = video.renderer.createPattern(canvas.canvas, "repeat-x");
-			const patternUnit = video.renderer.cache.peekUnit(pattern);
+			const pattern = renderer.createPattern(canvas.canvas, "repeat-x");
+			const patternUnit = renderer.cache.peekUnit(pattern);
 
 			// Both must remain valid AND distinct
 			expect(spriteUnit).toBeGreaterThanOrEqual(0);
@@ -160,7 +167,7 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 
 			// The sprite's lookup must still resolve to its original unit
 			// (not the pattern's — that was the pre-fix bug).
-			expect(video.renderer.cache.peekUnit(spriteAtlas)).toEqual(spriteUnit);
+			expect(renderer.cache.peekUnit(spriteAtlas)).toEqual(spriteUnit);
 		});
 
 		it("unit exhaustion mid-multi-repeat allocation: cache recovers cleanly", (ctx) => {
@@ -171,7 +178,7 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// `getUnit` calls must successfully re-allocate; nothing
 			// should be wedged by stale inner-Map state.
 			const canvas = new CanvasTexture(32, 32);
-			const cache = video.renderer.cache;
+			const cache = renderer.cache;
 
 			// Squeeze the cache to a tiny capacity so exhaustion fires
 			// after just a couple of distinct (source, repeat) pairs.
@@ -229,16 +236,16 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 				repeat: "repeat-x",
 			};
 
-			const unitA = video.renderer.cache.getUnit(tex);
+			const unitA = renderer.cache.getUnit(tex);
 			tex.repeat = "repeat-y";
-			const unitB = video.renderer.cache.getUnit(tex);
+			const unitB = renderer.cache.getUnit(tex);
 
 			expect(unitB).not.toEqual(unitA);
-			expect(video.renderer.cache.peekUnit(tex)).toEqual(unitB);
+			expect(renderer.cache.peekUnit(tex)).toEqual(unitB);
 
 			// Revert the repeat and the original unit still resolves.
 			tex.repeat = "repeat-x";
-			expect(video.renderer.cache.peekUnit(tex)).toEqual(unitA);
+			expect(renderer.cache.peekUnit(tex)).toEqual(unitA);
 		});
 
 		it("cache.clear() mid-pattern-lifecycle wipes every (source, repeat) entry", (ctx) => {
@@ -248,18 +255,18 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// the nested structure.
 			const canvas = new CanvasTexture(32, 32);
 
-			video.renderer.createPattern(canvas.canvas, "repeat-x");
-			expect(video.renderer.cache.usedUnits.size).toBeGreaterThan(0);
+			renderer.createPattern(canvas.canvas, "repeat-x");
+			expect(renderer.cache.usedUnits.size).toBeGreaterThan(0);
 
-			video.renderer.cache.clear();
-			expect(video.renderer.cache.usedUnits.size).toEqual(0);
-			expect(video.renderer.cache.units.size).toEqual(0);
+			renderer.cache.clear();
+			expect(renderer.cache.usedUnits.size).toEqual(0);
+			expect(renderer.cache.units.size).toEqual(0);
 
 			// Fresh createPattern after clear() must allocate from a
 			// clean slate (no stale entry confusing the lookup).
-			const fresh = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			const fresh = renderer.createPattern(canvas.canvas, "repeat-x");
 			expect(fresh).toBeDefined();
-			expect(video.renderer.cache.peekUnit(fresh)).toBeGreaterThanOrEqual(0);
+			expect(renderer.cache.peekUnit(fresh)).toBeGreaterThanOrEqual(0);
 		});
 
 		it("freeTextureUnit on a never-allocated texture is a silent no-op", (ctx) => {
@@ -276,19 +283,19 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 				activeAtlas: "d",
 				repeat: "repeat-x",
 			};
-			const before = video.renderer.cache.usedUnits.size;
+			const before = renderer.cache.usedUnits.size;
 			expect(() => {
-				video.renderer.cache.freeTextureUnit(tex);
+				renderer.cache.freeTextureUnit(tex);
 			}).not.toThrow();
-			expect(video.renderer.cache.usedUnits.size).toEqual(before);
+			expect(renderer.cache.usedUnits.size).toEqual(before);
 
 			// Now allocate, free, free-again — the second free must be
 			// a no-op too (the outer Map's source entry was deleted by
 			// the first free's inner-cleanup branch).
-			video.renderer.cache.getUnit(tex);
-			video.renderer.cache.freeTextureUnit(tex);
+			renderer.cache.getUnit(tex);
+			renderer.cache.freeTextureUnit(tex);
 			expect(() => {
-				video.renderer.cache.freeTextureUnit(tex);
+				renderer.cache.freeTextureUnit(tex);
 			}).not.toThrow();
 		});
 
@@ -304,20 +311,20 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// silently changing the sharing semantics.
 			const canvas = new CanvasTexture(32, 32);
 
-			const p1 = video.renderer.createPattern(canvas.canvas, "repeat-x");
-			const p2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			const p1 = renderer.createPattern(canvas.canvas, "repeat-x");
+			const p2 = renderer.createPattern(canvas.canvas, "repeat-x");
 
-			const u1 = video.renderer.cache.peekUnit(p1);
-			const u2 = video.renderer.cache.peekUnit(p2);
+			const u1 = renderer.cache.peekUnit(p1);
+			const u2 = renderer.cache.peekUnit(p2);
 			expect(u1).toEqual(u2);
 			expect(u1).toBeGreaterThanOrEqual(0);
 
-			video.renderer.cache.freeTextureUnit(p1);
+			renderer.cache.freeTextureUnit(p1);
 
 			// p2's handle is technically orphaned now — the shared unit
 			// is gone. Both peekUnit calls return -1.
-			expect(video.renderer.cache.peekUnit(p1)).toEqual(-1);
-			expect(video.renderer.cache.peekUnit(p2)).toEqual(-1);
+			expect(renderer.cache.peekUnit(p1)).toEqual(-1);
+			expect(renderer.cache.peekUnit(p2)).toEqual(-1);
 		});
 
 		it("resetUnitAssignments wipes units, leaves cache intact, re-allocates cleanly", (ctx) => {
@@ -332,21 +339,21 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// still cached), and the next `getUnit` re-allocates from
 			// a clean slate.
 			const canvas = new CanvasTexture(32, 32);
-			const pattern = video.renderer.createPattern(canvas.canvas, "repeat-x");
-			expect(video.renderer.cache.peekUnit(pattern)).toBeGreaterThanOrEqual(0);
-			expect(video.renderer.cache.has(canvas.canvas)).toBe(true);
+			const pattern = renderer.createPattern(canvas.canvas, "repeat-x");
+			expect(renderer.cache.peekUnit(pattern)).toBeGreaterThanOrEqual(0);
+			expect(renderer.cache.has(canvas.canvas)).toBe(true);
 
-			video.renderer.cache.resetUnitAssignments();
+			renderer.cache.resetUnitAssignments();
 
-			expect(video.renderer.cache.peekUnit(pattern)).toEqual(-1);
-			expect(video.renderer.cache.usedUnits.size).toEqual(0);
-			expect(video.renderer.cache.units.size).toEqual(0);
+			expect(renderer.cache.peekUnit(pattern)).toEqual(-1);
+			expect(renderer.cache.usedUnits.size).toEqual(0);
+			expect(renderer.cache.units.size).toEqual(0);
 			// Atlas multimap intact — `cache.has(image)` still true even
 			// though no unit is allocated.
-			expect(video.renderer.cache.has(canvas.canvas)).toBe(true);
+			expect(renderer.cache.has(canvas.canvas)).toBe(true);
 
 			// Re-allocation works without manual intervention.
-			const reAllocatedUnit = video.renderer.cache.getUnit(pattern);
+			const reAllocatedUnit = renderer.cache.getUnit(pattern);
 			expect(reAllocatedUnit).toBeGreaterThanOrEqual(0);
 		});
 
@@ -360,7 +367,7 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// `units` points at a unit that's already been freed.
 			const c1 = new CanvasTexture(32, 32);
 			const c2 = new CanvasTexture(48, 48);
-			const cache = video.renderer.cache;
+			const cache = renderer.cache;
 			const sumInner = () => {
 				let total = 0;
 				for (const inner of cache.units.values()) {
@@ -369,9 +376,9 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 				return total;
 			};
 
-			video.renderer.createPattern(c1.canvas, "repeat-x");
-			video.renderer.createPattern(c1.canvas, "repeat-y");
-			video.renderer.createPattern(c2.canvas, "no-repeat");
+			renderer.createPattern(c1.canvas, "repeat-x");
+			renderer.createPattern(c1.canvas, "repeat-y");
+			renderer.createPattern(c2.canvas, "no-repeat");
 			expect(cache.usedUnits.size).toEqual(sumInner());
 
 			cache.freeTextureUnit({
@@ -399,12 +406,12 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// `cache.get(image)[0]` fallback wins. Either way the
 			// contract is "return a defined entry, don't crash".
 			const canvas = new CanvasTexture(32, 32);
-			video.renderer.createPattern(canvas.canvas, "repeat-x");
-			video.renderer.createPattern(canvas.canvas, "repeat-y");
+			renderer.createPattern(canvas.canvas, "repeat-x");
+			renderer.createPattern(canvas.canvas, "repeat-y");
 
 			let entry;
 			expect(() => {
-				entry = video.renderer.cache.get(canvas.canvas, {
+				entry = renderer.cache.get(canvas.canvas, {
 					framewidth: 32,
 					frameheight: 32,
 				});
@@ -429,15 +436,15 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 				activeAtlas: "missing",
 				repeat: "repeat-x",
 			};
-			const before = video.renderer.cache.usedUnits.size;
+			const before = renderer.cache.usedUnits.size;
 			expect(() => {
-				video.renderer.cache.freeTextureUnit(tex);
+				renderer.cache.freeTextureUnit(tex);
 			}).not.toThrow();
 			expect(() => {
-				video.renderer.cache.peekUnit(tex);
+				renderer.cache.peekUnit(tex);
 			}).not.toThrow();
-			expect(video.renderer.cache.peekUnit(tex)).toEqual(-1);
-			expect(video.renderer.cache.usedUnits.size).toEqual(before);
+			expect(renderer.cache.peekUnit(tex)).toEqual(-1);
+			expect(renderer.cache.usedUnits.size).toEqual(before);
 		});
 
 		it("MaterialBatcher.deleteTexture2D wipes EVERY repeat's bound GL texture, not just the called one", (ctx) => {
@@ -456,14 +463,14 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// Surface: probe `boundTextures` directly to confirm BOTH
 			// units' GL handles got cleaned up.
 			const canvas = new CanvasTexture(32, 32);
-			video.renderer.setBatcher("quad");
-			const batcher = video.renderer.currentBatcher;
+			renderer.setBatcher("quad");
+			const batcher = renderer.currentBatcher;
 
-			const horiz = video.renderer.createPattern(canvas.canvas, "repeat-x");
-			const vert = video.renderer.createPattern(canvas.canvas, "repeat-y");
+			const horiz = renderer.createPattern(canvas.canvas, "repeat-x");
+			const vert = renderer.createPattern(canvas.canvas, "repeat-y");
 
-			const ux = video.renderer.cache.peekUnit(horiz);
-			const uy = video.renderer.cache.peekUnit(vert);
+			const ux = renderer.cache.peekUnit(horiz);
+			const uy = renderer.cache.peekUnit(vert);
 			expect(ux).toBeGreaterThanOrEqual(0);
 			expect(uy).toBeGreaterThanOrEqual(0);
 			expect(batcher.boundTextures[ux]).toBeDefined();
@@ -476,8 +483,8 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			expect(batcher.boundTextures[uy]).toBeUndefined();
 
 			// And both units must be reclaimable.
-			expect(video.renderer.cache.peekUnit(horiz)).toEqual(-1);
-			expect(video.renderer.cache.peekUnit(vert)).toEqual(-1);
+			expect(renderer.cache.peekUnit(horiz)).toEqual(-1);
+			expect(renderer.cache.peekUnit(vert)).toEqual(-1);
 		});
 
 		it("normalizes unknown/typo'd repeat values to `no-repeat` (no unit leak on bad input)", (ctx) => {
@@ -491,7 +498,7 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			const source = document.createElement("canvas");
 			source.width = 32;
 			source.height = 32;
-			const cache = video.renderer.cache;
+			const cache = renderer.cache;
 
 			const noRepeat = {
 				sources: new Map([["d", source]]),
@@ -520,16 +527,16 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			// `freeTextureUnit` ran), so additional units stayed in
 			// `usedUnits` forever.
 			const canvas = new CanvasTexture(32, 32);
-			const baseline = video.renderer.cache.usedUnits.size;
+			const baseline = renderer.cache.usedUnits.size;
 
-			video.renderer.createPattern(canvas.canvas, "repeat-x");
-			video.renderer.createPattern(canvas.canvas, "repeat-y");
-			expect(video.renderer.cache.usedUnits.size).toBe(baseline + 2);
+			renderer.createPattern(canvas.canvas, "repeat-x");
+			renderer.createPattern(canvas.canvas, "repeat-y");
+			expect(renderer.cache.usedUnits.size).toBe(baseline + 2);
 
-			video.renderer.cache.delete(canvas.canvas);
+			renderer.cache.delete(canvas.canvas);
 
 			// Both repeats' units must be reclaimed, not just one.
-			expect(video.renderer.cache.usedUnits.size).toBe(baseline);
+			expect(renderer.cache.usedUnits.size).toBe(baseline);
 		});
 	});
 });

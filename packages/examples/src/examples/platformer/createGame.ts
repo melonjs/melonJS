@@ -7,7 +7,6 @@ import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
 	audio,
-	device,
 	event,
 	input,
 	loader,
@@ -25,7 +24,7 @@ import { gameState } from "./gameState.js";
 import { PlayScreen } from "./play.js";
 import { resources } from "./resources.js";
 
-export const createGame = () => {
+export const createGame = async () => {
 	// create a new melonJS Application
 	const _app = new Application(800, 600, {
 		parent: "screen",
@@ -35,6 +34,7 @@ export const createGame = () => {
 		subPixel: false,
 		highPrecisionShader: false,
 	});
+	await _app.init();
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");

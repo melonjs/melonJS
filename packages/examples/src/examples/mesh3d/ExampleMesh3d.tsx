@@ -21,7 +21,7 @@ import { createExampleComponent } from "../utils";
 
 const base = `${import.meta.env.BASE_URL}assets/mesh3d/`;
 
-const createGame = () => {
+const createGame = async () => {
 	// mesh3d uses `me.Mesh`, which requires WebGL. Switch to
 	// `renderer: video.WEBGL` so the engine throws (post #1479) when the
 	// browser/GPU can't provide a context, instead of silently falling
@@ -33,6 +33,7 @@ const createGame = () => {
 			renderer: video.WEBGL,
 			scale: "auto",
 		});
+		await app.init();
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(

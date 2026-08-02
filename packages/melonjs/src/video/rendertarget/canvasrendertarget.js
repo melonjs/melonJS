@@ -54,8 +54,21 @@ function createContext(canvas, attributes) {
 		if (!context) {
 			throw new Error("A WebGL 2 context could not be created.");
 		}
+	} else if (attributes.context === "webgpu") {
+		// the GPUCanvasContext handle is acquired synchronously; configuring
+		// it against a device happens later, in `WebGPURenderer.init()`, once
+		// the (inherently asynchronous) adapter/device negotiation completed
+		context = canvas.getContext("webgpu");
+
+		if (!context) {
+			throw new Error(
+				"A WebGPU context could not be created (WebGPU is not supported in this environment).",
+			);
+		}
 	} else {
-		throw new Error("Invalid context type. Must be one of '2d' or 'webgl'");
+		throw new Error(
+			"Invalid context type. Must be one of '2d', 'webgl' or 'webgpu'",
+		);
 	}
 
 	// set the context size
@@ -74,7 +87,7 @@ class CanvasRenderTarget extends RenderTarget {
 	 * @param {number} width - the desired width of the canvas
 	 * @param {number} height - the desired height of the canvas
 	 * @param {object} attributes - The attributes to create both the canvas and context
-	 * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl" — a "webgl" request creates a WebGL 2 context)
+	 * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl" — a "webgl" request creates a WebGL 2 context — or "webgpu")
 	 * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
 	 * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
 	 * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned

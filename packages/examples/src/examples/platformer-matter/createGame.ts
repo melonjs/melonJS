@@ -10,7 +10,6 @@ import {
 	audio,
 	type Container,
 	collision,
-	device,
 	event,
 	input,
 	loader,
@@ -63,7 +62,7 @@ export const oneWayPlatforms: Array<{
  */
 export const LAND_TOLERANCE = 4;
 
-export const createGame = () => {
+export const createGame = async () => {
 	// create a new melonJS Application running on the matter-js physics
 	// adapter. Same entity code and Tiled map as the canonical platformer
 	// — the only difference is the `physic` setting below.
@@ -85,6 +84,7 @@ export const createGame = () => {
 		highPrecisionShader: false,
 		physic: new MatterAdapter({ gravity: { x: 0, y: 5 } }),
 	});
+	await _app.init();
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");

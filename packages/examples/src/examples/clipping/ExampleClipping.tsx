@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import {
+	Application,
 	Color,
 	ColorLayer,
 	Container,
@@ -204,12 +205,13 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	video.init(760, 320, {
+const createGame = async () => {
+	const app = new Application(760, 320, {
 		parent: "screen",
 		scaleMethod: "flex",
 		renderer: video.AUTO,
 	});
+	await app.init();
 
 	state.set(state.PLAY, new PlayScreen());
 	state.change(state.PLAY);

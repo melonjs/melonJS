@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	BitmapText,
 	boot,
 	Collectable,
@@ -44,11 +45,12 @@ const freshImage = () => {
 
 beforeAll(async () => {
 	boot();
-	video.init(800, 600, {
+	const app = new Application(800, 600, {
 		parent: "screen",
 		scale: "auto",
 		renderer: video.CANVAS,
 	});
+	await app.init();
 	// BitmapText needs a real bitmap font
 	await new Promise((resolve) => {
 		loader.preload(

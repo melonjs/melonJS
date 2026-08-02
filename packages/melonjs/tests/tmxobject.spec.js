@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, video } from "../src/index.js";
+import { Application, boot, video } from "../src/index.js";
 import TMXObject from "../src/level/tiled/TMXObject.js";
 
 // minimal mock map to satisfy TMXObject constructor
@@ -16,13 +16,14 @@ function mockMap(orientation = "orthogonal") {
 }
 
 describe("TMXObject", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		boot();
-		video.init(128, 128, {
+		const app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
+		await app.init();
 	});
 
 	describe("shape detection", () => {

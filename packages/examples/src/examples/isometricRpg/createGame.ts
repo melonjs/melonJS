@@ -4,16 +4,17 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import { loader, plugin, pool, state, video } from "melonjs";
+import { Application, loader, plugin, pool, state } from "melonjs";
 import { PlayerEntity } from "./PlayerEntity.js";
 import { PlayScreen } from "./play.js";
 import { resources } from "./resources.js";
 
-export const createGame = () => {
-	video.init(800, 600, {
+export const createGame = async () => {
+	const app = new Application(800, 600, {
 		parent: "screen",
 		scale: "auto",
 	});
+	await app.init();
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");

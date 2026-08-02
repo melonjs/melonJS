@@ -78,6 +78,11 @@ const ExampleHelloWorld = lazy(() =>
 		default: m.ExampleHelloWorld,
 	})),
 );
+const ExampleWebGPU = lazy(() =>
+	import("./examples/webgpu/ExampleWebGPU").then((m) => ({
+		default: m.ExampleWebGPU,
+	})),
+);
 const ExampleIsometricRPG = lazy(() =>
 	import("./examples/isometricRpg/ExampleIsometricRPG").then((m) => ({
 		default: m.ExampleIsometricRPG,
@@ -338,6 +343,14 @@ const examples: {
 		sourceDir: "helloWorld",
 		description:
 			"Minimal setup showing engine initialization, viewport configuration, and text rendering.",
+	},
+	{
+		component: <ExampleWebGPU />,
+		label: "Hello WebGPU",
+		path: "webgpu",
+		sourceDir: "webgpu",
+		description:
+			"Experimental WebGPU backend bootstrap: asynchronous device negotiation and a first clear pass.",
 	},
 	{
 		component: <ExampleIsometricRPG />,

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
+	Application,
 	boot,
 	Matrix3d,
 	Rect,
@@ -28,10 +29,11 @@ describe("video/GL core audit reproductions", () => {
 	let renderer;
 	let gl;
 
+	let app;
 	beforeAll(async () => {
 		await boot();
 		try {
-			video.init(64, 64, {
+			app = new Application(64, 64, {
 				parent: "screen",
 				renderer: video.WEBGL,
 				// alpha readback for the clearRect test needs a transparent
@@ -39,18 +41,23 @@ describe("video/GL core audit reproductions", () => {
 				transparent: true,
 				failIfMajorPerformanceCaveat: false,
 			});
+			await app.init();
 		} catch {
 			// no WebGL at all — tests skip below
 		}
-		if (video.renderer instanceof WebGLRenderer) {
-			renderer = video.renderer;
+		if (app.renderer instanceof WebGLRenderer) {
+			renderer = app.renderer;
 			gl = renderer.gl;
 		}
 	});
 
-	afterAll(() => {
+	afterAll(async () => {
 		try {
-			video.init(64, 64, { parent: "screen", renderer: video.AUTO });
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.AUTO,
+			});
+			await app.init();
 		} catch {
 			// ignore
 		}

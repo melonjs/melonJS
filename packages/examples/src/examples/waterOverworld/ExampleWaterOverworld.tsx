@@ -9,8 +9,9 @@ import { createGame } from "./game";
 
 export const ExampleWaterOverworld = () => {
 	useEffect(() => {
-		if (!me.game.isInitialized) {
-			createGame();
+		// `game` is undefined until the first Application finishes init()
+		if (!me.game?.isInitialized) {
+			void createGame();
 		}
 	}, []);
 

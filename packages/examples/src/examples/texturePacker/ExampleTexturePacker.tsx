@@ -5,6 +5,7 @@
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
+	Application,
 	Entity,
 	game,
 	loader,
@@ -13,7 +14,6 @@ import {
 	Stage,
 	state,
 	TextureAtlas,
-	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
@@ -59,13 +59,14 @@ class PlayScreen extends Stage {
 	}
 }
 
-const createGame = () => {
-	if (
-		!video.init(800, 400, {
+const createGame = async () => {
+	try {
+		const app = new Application(800, 400, {
 			parent: "screen",
 			scale: "auto",
-		})
-	) {
+		});
+		await app.init();
+	} catch {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}

@@ -1,7 +1,7 @@
+import { game } from "../application/application.ts";
 import { hasFullscreenSupport, isFullscreen } from "../system/fullscreen.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
-import { getParent } from "../video/video.js";
 import { Batcher } from "../video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "../video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "../video/webgl/batchers/quad_batcher.js";
@@ -167,7 +167,7 @@ export function requestFullscreen(element) {
 	if (!hasFullscreenSupport || isFullscreen()) {
 		return;
 	}
-	const target = element ?? getParent();
+	const target = element ?? game.getParentElement();
 	const request =
 		target.requestFullscreen ||
 		target.webkitRequestFullscreen ||

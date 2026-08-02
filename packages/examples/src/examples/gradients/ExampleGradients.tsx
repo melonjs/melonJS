@@ -221,12 +221,13 @@ class GradientScreen extends Stage {
 	}
 }
 
-const createGame = () => {
+const createGame = async () => {
 	const _app = new App(1024, 768, {
 		parent: "screen",
 		scale: "auto",
 		scaleMethod: "flex-width",
 	});
+	await _app.init();
 
 	state.set(state.PLAY, new GradientScreen());
 	state.change(state.PLAY);
