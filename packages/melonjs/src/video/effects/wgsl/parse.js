@@ -32,11 +32,15 @@ const GROUP3_ANY = /@group\(\s*3\s*\)\s*@binding\(\s*(\d+)\s*\)/g;
 
 /**
  * strip `//` line and `/* *\/` block comments so declarations inside
- * comments are never honored (scratch copy — the original compiles)
+ * comments are never honored (scratch copy — the original compiles).
+ * The block-comment pattern is the classic linear-time form — a lazy
+ * `[\s\S]*?` backtracks polynomially on pathological inputs (ReDoS).
  * @ignore
  */
 function stripComments(source) {
-	return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
+	return source
+		.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, " ")
+		.replace(/\/\/[^\n]*/g, " ");
 }
 
 /**
