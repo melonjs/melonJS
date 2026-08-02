@@ -34,6 +34,15 @@ export function compileShaderAsset(source) {
 		);
 	}
 	if (typeof source === "object" && source !== null) {
+		// dual-language fragment bodies ({glsl, wgsl} — either may be
+		// omitted): the ShaderEffect constructor picks the body matching
+		// the renderer's shading language, and degrades to the inert stub
+		// when none matches — the preload itself always succeeds
+		if (typeof source.glsl === "string" || typeof source.wgsl === "string") {
+			const effect = new ShaderEffect(_renderer, source);
+			effect.shared = true;
+			return effect;
+		}
 		if (
 			typeof source.vertex !== "string" ||
 			typeof source.fragment !== "string"
@@ -70,11 +79,16 @@ export function compileShaderAsset(source) {
 
 /**
  * parse/preload a shader asset, from a `src` URL (or data: URI) or inline
- * GLSL via the `data` field. Two source shapes are accepted:
+ * source via the `data` field. Three source shapes are accepted:
  *
  * - a GLSL **fragment body** following the ShaderEffect convention (uniform
  *   declarations + `vec4 apply(vec4, vec2)`) → compiles into a shared
  *   {@link ShaderEffect};
+ * - a **dual-language body** — `src: {glsl: url, wgsl: url}` or
+ *   `data: {glsl: source, wgsl: source}`, either language omittable — →
+ *   a shared {@link ShaderEffect} carrying one body per shading language;
+ *   the renderer compiles the matching one, and when none matches the
+ *   preload still succeeds with an inert (`enabled === false`) effect;
  * - a complete **program pair** — `src: {vertex: url, fragment: url}` or
  *   `data: {vertex: glsl, fragment: glsl}` — → compiles into a shared raw
  *   {@link GLShader}, for the advanced paths that take one (a `Mesh`
@@ -116,6 +130,43 @@ export function preloadShader(data, onload, onerror, settings) {
 		if (typeof onload === "function") {
 			onload();
 		}
+		return 1;
+	}
+
+	// `src` as {glsl, wgsl} effect-body URLs (either may be omitted) →
+	// fetch what is declared, compile the dual-body ShaderEffect (same
+	// Promise.all pattern as the program pair below)
+	if (
+		typeof data.src === "object" &&
+		data.src !== null &&
+		(typeof data.src.glsl === "string" || typeof data.src.wgsl === "string")
+	) {
+		const languages = ["glsl", "wgsl"].filter((language) => {
+			return typeof data.src[language] === "string";
+		});
+		Promise.all(
+			languages.map((language) => {
+				return fetchData(data.src[language], "text", settings);
+			}),
+		)
+			.then((sources) => {
+				// concurrent-load guard — see the single-source path below
+				if (typeof shaderList[data.name] === "undefined") {
+					const bodies = {};
+					languages.forEach((language, index) => {
+						bodies[language] = sources[index];
+					});
+					shaderList[data.name] = compileShaderAsset(bodies);
+				}
+				if (typeof onload === "function") {
+					onload();
+				}
+			})
+			.catch((error) => {
+				if (typeof onerror === "function") {
+					onerror(new Error(`shader asset "${data.name}": ${error.message}`));
+				}
+			});
 		return 1;
 	}
 

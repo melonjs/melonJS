@@ -13,8 +13,74 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  * A simplified shader class for applying custom fragment effects to renderables.
  * Only requires a fragment `apply()` function — the vertex shader, uniforms, and
  * texture sampling boilerplate are handled automatically.
- * In Canvas mode, the shader is silently disabled (all methods become no-ops).
+ *
+ * ## Dual-language bodies
+ *
+ * An effect body is written in the active renderer's shading language:
+ * GLSL on the WebGL renderer, WGSL on the WebGPU renderer. Pass a plain
+ * string for a GLSL-only effect (the historical form), or one body per
+ * language for an effect that runs on both backends:
+ *
+ * ```js
+ * new ShaderEffect(renderer, { glsl: glslBody, wgsl: wgslBody });
+ * ```
+ *
+ * The renderer compiles the body matching its
+ * {@link Renderer#shaderLanguage}. When no matching body exists — a
+ * GLSL-only effect on the WebGPU renderer, any effect on the Canvas
+ * renderer — the effect warns once and stays **disabled**
+ * (`enabled === false`, every method a safe no-op): the scene renders
+ * without the effect, it never breaks.
+ *
+ * ## The WGSL convention
+ *
+ * A WGSL body mirrors the GLSL one — declarations plus an apply function,
+ * compiled verbatim inside engine boilerplate:
+ *
+ * - `fn apply(color : vec4f, uv : vec2f) -> vec4f` — required; receives
+ *   the sampled, tinted pixel and its UV, returns the modified color.
+ * - Uniforms are the members of ONE struct bound as
+ *   `@group(3) @binding(0) var<uniform> fx : MyUniforms;` — member names
+ *   are the {@link ShaderEffect#setUniform} names, so a dual-language
+ *   effect uses the same uniform names in both bodies and one
+ *   `setUniform` call serves both. Supported member types: `f32`, `i32`,
+ *   `u32`, `vec2f`, `vec3f`, `vec4f`, `mat3x3f`, `mat4x4f`,
+ *   `array<vec4f, N>`.
+ * - Extra {@link ShaderEffect#setTexture} samplers are texture/sampler
+ *   pairs at explicit consecutive group-3 bindings (from 1):
+ *   `@group(3) @binding(1) var uNoise : texture_2d<f32>;`
+ *   `@group(3) @binding(2) var uNoiseSampler : sampler;`
+ * - The source texture is available as `uTexture` with `uSampler`
+ *   (`textureSample(uTexture, uSampler, uv)` — the WGSL spelling of
+ *   GLSL's `texture2D(uSampler, uv)`), and the interpolated tint as
+ *   `vColor`, under the same names as the GLSL side.
+ * - The shader builtins keep their names: `screen_uv`, `noise_uv`, and
+ *   `screen_texture` — sampled through `screen_sampler` (clamped) or
+ *   `screen_sampler_repeat` (wrapping), replacing the GLSL
+ *   `: screen_texture(repeat)` annotation.
+ * - Porting note: a texture sampled after a non-uniform `return` or
+ *   inside a varying branch must use
+ *   `textureSampleLevel(uTexture, uSampler, uv, 0.0)` (a WGSL
+ *   uniform-control-flow rule; identical output for sprite textures).
  * @category Rendering
+ * @example
+ * // one effect, both backends: dual-language body
+ * mySprite.shader = new ShaderEffect(renderer, {
+ *     glsl: `
+ *         uniform float uStrength;
+ *         vec4 apply(vec4 color, vec2 uv) {
+ *             return vec4(color.rgb * uStrength, color.a);
+ *         }
+ *     `,
+ *     wgsl: `
+ *         struct Fx { uStrength : f32, };
+ *         @group(3) @binding(0) var<uniform> fx : Fx;
+ *         fn apply(color : vec4f, uv : vec2f) -> vec4f {
+ *             return vec4f(color.rgb * fx.uStrength, color.a);
+ *         }
+ *     `,
+ * });
+ * mySprite.shader.setUniform("uStrength", 0.5); // sets either backend
  * @example
  * // create a grayscale effect
  * mySprite.shader = new ShaderEffect(renderer, `
