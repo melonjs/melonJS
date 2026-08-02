@@ -11,7 +11,6 @@ import {
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
-import { Batcher } from "../gpu/batcher.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
 import { createAtlas, TextureAtlas } from "../texture/atlas.js";
@@ -23,6 +22,7 @@ import {
 } from "../utils/tessellation.js";
 import WebGPUPrimitiveBatcher from "./batchers/primitive_batcher.js";
 import WebGPUQuadBatcher from "./batchers/quad_batcher.js";
+import WebGPUBatcher from "./batchers/webgpu_batcher.js";
 import WebGPUBufferArena from "./buffer/arena.js";
 import WebGPUUniformRing from "./buffer/uniformring.js";
 import WebGPUPipelineCache, {
@@ -600,9 +600,12 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {boolean} [activate=false] - true to set this batcher as the active one
 	 */
 	addBatcher(batcher, name = "default", activate = false) {
-		if (!(batcher instanceof Batcher)) {
+		// gate on the BACKEND base, not the neutral one: a neutral or
+		// WebGL batcher has none of the pass/pipeline machinery and
+		// would fail mid-activation instead
+		if (!(batcher instanceof WebGPUBatcher)) {
 			throw new Error(
-				"addBatcher: batcher must be a Batcher subclass (custom WebGPU batchers extend WebGPUBatcher)",
+				"addBatcher: batcher must be a WebGPUBatcher subclass (custom WebGPU batchers extend WebGPUBatcher)",
 			);
 		}
 		if (typeof this.batchers.get(name) !== "undefined") {
@@ -1074,8 +1077,8 @@ export default class WebGPURenderer extends Renderer {
 		this.maskLevel++;
 		if (this.maskLevel > 0xff) {
 			this.maskLevel = 0xff;
-			if (this._maskDepthWarned !== true) {
-				this._maskDepthWarned = true;
+			if (this.maskDepthWarned !== true) {
+				this.maskDepthWarned = true;
 				console.warn(
 					"melonJS: setMask nesting deeper than 255 — mask level clamped",
 				);
@@ -1115,7 +1118,7 @@ export default class WebGPURenderer extends Renderer {
 	 * with a one-time console warning
 	 * @ignore
 	 */
-	_warnGradientShape() {
+	warnGradientShape() {
 		if (this.gradientShapeWarned !== true) {
 			this.gradientShapeWarned = true;
 			console.warn(
@@ -1157,7 +1160,7 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
 		if (this.currentGradient) {
-			this._warnGradientShape();
+			this.warnGradientShape();
 		}
 		this.setBatcher("primitive");
 		let diff = Math.abs(end - start);
@@ -1211,7 +1214,7 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillEllipse(x, y, w, h) {
 		if (this.currentGradient) {
-			this._warnGradientShape();
+			this.warnGradientShape();
 		}
 		this.setBatcher("primitive");
 		const segments = Math.max(
@@ -1319,7 +1322,7 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillPolygon(poly) {
 		if (this.currentGradient) {
-			this._warnGradientShape();
+			this.warnGradientShape();
 		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
@@ -1444,7 +1447,7 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillRoundRect(x, y, width, height, radius) {
 		if (this.currentGradient) {
-			this._warnGradientShape();
+			this.warnGradientShape();
 		}
 		this.setBatcher("primitive");
 		const r = Math.min(radius, width / 2, height / 2);

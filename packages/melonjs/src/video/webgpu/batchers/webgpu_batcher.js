@@ -75,7 +75,13 @@ export default class WebGPUBatcher extends Batcher {
 			);
 		} else {
 			// re-init after device loss: keep the frozen layout/staging,
-			// re-register with the freshly-built pipeline cache
+			// re-register with the freshly-built pipeline cache. A FIRST
+			// init without settings has no layout to re-register — fail
+			// with the same message as the WebGL base instead of a
+			// confusing TypeError inside the pipeline cache
+			if (typeof this.shaderKey === "undefined") {
+				throw new Error("attributes definition missing");
+			}
 			this.vertexData?.clear();
 			renderer.pipelineCache.registerVertexLayout(
 				this.shaderKey,

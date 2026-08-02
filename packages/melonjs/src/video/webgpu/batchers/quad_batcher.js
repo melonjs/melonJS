@@ -76,15 +76,15 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		const maxQuads = this.vertexData.maxVertex / 4;
 		const cpuIndices = new IndexBuffer(maxQuads * 6, true);
 		cpuIndices.fillQuadPattern(maxQuads);
-		this._indexBuffer?.destroy();
-		this._indexBuffer = this.device.createBuffer({
+		this.indexBuffer?.destroy();
+		this.indexBuffer = this.device.createBuffer({
 			label: "melonJS quad indices",
 			size: cpuIndices.data.byteLength,
 			usage: GPUBufferUsage.INDEX,
 			mappedAtCreation: true,
 		});
-		new Uint32Array(this._indexBuffer.getMappedRange()).set(cpuIndices.data);
-		this._indexBuffer.unmap();
+		new Uint32Array(this.indexBuffer.getMappedRange()).set(cpuIndices.data);
+		this.indexBuffer.unmap();
 	}
 
 	/**
@@ -155,7 +155,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 */
 	recordDraw(pass, vertexCount) {
 		pass.setBindGroup(1, this.currentMaterial);
-		pass.setIndexBuffer(this._indexBuffer, "uint32");
+		pass.setIndexBuffer(this.indexBuffer, "uint32");
 		pass.drawIndexed((vertexCount / 4) * 6);
 	}
 
@@ -175,8 +175,8 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @override
 	 */
 	destroy() {
-		this._indexBuffer?.destroy();
-		this._indexBuffer = null;
+		this.indexBuffer?.destroy();
+		this.indexBuffer = null;
 		this.currentMaterial = null;
 		super.destroy();
 	}

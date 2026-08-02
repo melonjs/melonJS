@@ -4,9 +4,11 @@ import {
 	PrimitiveBatcher,
 	QuadBatcher,
 	WebGLBatcher,
+	WebGLRenderer,
 	WebGPUBatcher,
 	WebGPUPrimitiveBatcher,
 	WebGPUQuadBatcher,
+	WebGPURenderer,
 } from "../src/index.js";
 
 /**
@@ -38,5 +40,46 @@ describe("Batcher hierarchy", () => {
 		]) {
 			expect(Batcher.prototype[hook]).toBeTypeOf("function");
 		}
+	});
+
+	describe("addBatcher gates on the backend base class", () => {
+		// a bare prototype-chain instance carries the instanceof identity
+		// without needing a GPU/GL context to construct
+		function bareRenderer(RendererClass) {
+			const renderer = Object.create(RendererClass.prototype);
+			renderer.batchers = new Map();
+			return renderer;
+		}
+
+		it("the WebGL renderer rejects non-WebGL batchers up front", () => {
+			const renderer = bareRenderer(WebGLRenderer);
+			expect(() => {
+				renderer.addBatcher({ flush() {} }, "custom");
+			}).toThrow(/WebGLBatcher/);
+			// a WebGPU batcher is a Batcher, but not one THIS backend can host
+			expect(() => {
+				renderer.addBatcher(Object.create(WebGPUBatcher.prototype), "custom");
+			}).toThrow(/WebGLBatcher/);
+		});
+
+		it("the WebGPU renderer rejects non-WebGPU batchers up front", () => {
+			const renderer = bareRenderer(WebGPURenderer);
+			expect(() => {
+				renderer.addBatcher({ flush() {} }, "custom");
+			}).toThrow(/WebGPUBatcher/);
+			expect(() => {
+				renderer.addBatcher(Object.create(WebGLBatcher.prototype), "custom");
+			}).toThrow(/WebGPUBatcher/);
+		});
+
+		it("matching batchers register, duplicate names throw", () => {
+			const renderer = bareRenderer(WebGPURenderer);
+			const batcher = Object.create(WebGPUQuadBatcher.prototype);
+			renderer.addBatcher(batcher, "custom");
+			expect(renderer.batchers.get("custom")).toBe(batcher);
+			expect(() => {
+				renderer.addBatcher(batcher, "custom");
+			}).toThrow(/Invalid Batcher name/);
+		});
 	});
 });
