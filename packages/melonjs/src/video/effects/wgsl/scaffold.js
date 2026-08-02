@@ -73,6 +73,11 @@ export function buildWGSLModule(body, parsed) {
 	if (builtins.screenUV) {
 		scaffold.push("var<private> screen_uv : vec2f;");
 	}
+	if (builtins.vColor) {
+		// the interpolated tint, exposed under its GLSL varying name so
+		// re-sampling bodies port literally
+		scaffold.push("var<private> vColor : vec4f;");
+	}
 	if (builtins.noiseUV) {
 		scaffold.push(
 			"var<private> noise_uv : vec2f;",
@@ -144,6 +149,7 @@ export function buildWGSLModule(body, parsed) {
 		"fn fragment_main(in : VSOut) -> @location(0) vec4f {",
 		...(builtins.screenUV ? ["\tscreen_uv = in.vScreenUV;"] : []),
 		...(builtins.noiseUV ? ["\tnoise_uv = in.vNoiseUV;"] : []),
+		...(builtins.vColor ? ["\tvColor = in.vColor;"] : []),
 		"\tlet texColor = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;",
 		"\treturn apply(texColor, in.vRegion);",
 		"}",

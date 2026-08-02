@@ -1,5 +1,19 @@
 import ShaderEffect from "./shadereffect.js";
 
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct FlashUniforms {
+	uFlashColor : vec3f,
+	uFlashIntensity : f32,
+};
+@group(3) @binding(0) var<uniform> fx : FlashUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return vec4f(mix(color.rgb, fx.uFlashColor * color.a, fx.uFlashIntensity), color.a);
+}
+`;
+
 /**
  * A shader effect that flashes the sprite with a solid color.
  * Commonly used for hit feedback — flash white when the player takes damage.
@@ -29,16 +43,16 @@ export default class FlashEffect extends ShaderEffect {
 	 * @param {number} [options.intensity=0.0] - initial flash intensity (0.0–1.0)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3 uFlashColor;
 			uniform float uFlashIntensity;
 			vec4 apply(vec4 color, vec2 uv) {
 				return vec4(mix(color.rgb, uFlashColor * color.a, uFlashIntensity), color.a);
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		const color = options.color ?? [1.0, 1.0, 1.0];
 		this.intensity = options.intensity ?? 0.0;

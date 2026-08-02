@@ -1,5 +1,24 @@
 import ShaderEffect from "./shadereffect.js";
 
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct AberrationUniforms {
+	uOffset : f32,
+	uTextureSize : vec2f,
+};
+@group(3) @binding(0) var<uniform> fx : AberrationUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let texel = fx.uOffset / fx.uTextureSize;
+	let r = textureSample(uTexture, uSampler, uv + vec2f(texel.x, 0.0)).r;
+	let g = textureSample(uTexture, uSampler, uv).g;
+	let b = textureSample(uTexture, uSampler, uv - vec2f(texel.x, 0.0)).b;
+	let a = textureSample(uTexture, uSampler, uv).a;
+	return vec4f(r, g, b, a) * vColor;
+}
+`;
+
 /**
  * A shader effect that offsets the RGB color channels to create a
  * chromatic aberration (color fringe) effect. Commonly used for
@@ -21,9 +40,8 @@ export default class ChromaticAberrationEffect extends ShaderEffect {
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform float uOffset;
 			uniform vec2 uTextureSize;
 			vec4 apply(vec4 color, vec2 uv) {
@@ -35,7 +53,8 @@ export default class ChromaticAberrationEffect extends ShaderEffect {
 				return vec4(r, g, b, a) * vColor;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		this.offset = options.offset ?? 3.0;
 		const texSize = options.textureSize ?? [256, 256];

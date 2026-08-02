@@ -1,5 +1,35 @@
 import ShaderEffect from "./shadereffect.js";
 
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct GlowUniforms {
+	uGlowColor : vec3f,
+	uGlowWidth : f32,
+	uGlowIntensity : f32,
+	uTextureSize : vec2f,
+};
+@group(3) @binding(0) var<uniform> fx : GlowUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	if (color.a > 0.0) {
+		return color;
+	}
+	// sample in a circle to create a soft glow (level-0: non-uniform flow)
+	var a = 0.0;
+	let texel = fx.uGlowWidth / fx.uTextureSize;
+	for (var angle = 0.0; angle < 6.28; angle += 0.785) {
+		let offset = vec2f(cos(angle), sin(angle)) * texel;
+		a += textureSampleLevel(uTexture, uSampler, uv + offset, 0.0).a;
+	}
+	a = a / 8.0 * fx.uGlowIntensity;
+	if (a > 0.0) {
+		return vec4f(fx.uGlowColor * a, a) * vColor;
+	}
+	return color;
+}
+`;
+
 /**
  * A shader effect that adds a colored glow around the sprite.
  * Similar to OutlineEffect but with a soft, blurred edge instead of a hard line.
@@ -23,9 +53,8 @@ export default class GlowEffect extends ShaderEffect {
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3 uGlowColor;
 			uniform float uGlowWidth;
 			uniform float uGlowIntensity;
@@ -48,7 +77,8 @@ export default class GlowEffect extends ShaderEffect {
 				return color;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		const color = options.color ?? [1.0, 1.0, 1.0];
 		const width = options.width ?? 3.0;

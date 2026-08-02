@@ -194,6 +194,9 @@ export function parseWGSLBody(body) {
 			!hasOwnDeclaration(source, "screen_uv"),
 		noiseUV:
 			/\bnoise_uv\b/.test(source) && !hasOwnDeclaration(source, "noise_uv"),
+		// the interpolated tint (the GLSL `vColor` varying) — bodies that
+		// re-sample the source texture reference it to re-apply the tint
+		vColor: /\bvColor\b/.test(source) && !hasOwnDeclaration(source, "vColor"),
 	};
 	if (
 		builtins.screenTexture &&

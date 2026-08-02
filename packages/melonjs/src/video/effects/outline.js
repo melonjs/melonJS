@@ -1,5 +1,37 @@
 import ShaderEffect from "./shadereffect.js";
 
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct OutlineUniforms {
+	uOutlineColor : vec3f,
+	uOutlineWidth : f32,
+	uTextureSize : vec2f,
+};
+@group(3) @binding(0) var<uniform> fx : OutlineUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	if (color.a > 0.0) {
+		return color;
+	}
+	// sample neighbors to detect edges (level-0: non-uniform flow)
+	let texel = fx.uOutlineWidth / fx.uTextureSize;
+	var a = 0.0;
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, 0.0), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, 0.0), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(0.0, -texel.y), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(0.0, texel.y), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, -texel.y), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, -texel.y), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, texel.y), 0.0).a);
+	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, texel.y), 0.0).a);
+	if (a > 0.0) {
+		return vec4f(fx.uOutlineColor, a) * vColor;
+	}
+	return color;
+}
+`;
+
 /**
  * A shader effect that draws a colored outline around the sprite.
  * Works by sampling neighboring pixels — if any neighbor is opaque but the
@@ -26,9 +58,8 @@ export default class OutlineEffect extends ShaderEffect {
 	 * @param {number[]} [options.textureSize] - texture dimensions [width, height] (defaults to renderer size)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3 uOutlineColor;
 			uniform float uOutlineWidth;
 			uniform vec2 uTextureSize;
@@ -53,7 +84,8 @@ export default class OutlineEffect extends ShaderEffect {
 				return color;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		const color = options.color ?? [1.0, 1.0, 1.0];
 		const width = options.width ?? 1.0;

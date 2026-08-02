@@ -246,10 +246,11 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		const snapshots = renderer.calls.writes.filter((write) => {
 			return write.size === 16;
 		});
-		expect(snapshots.map((write) => write.floats[0])).toEqual([
-			0.5,
-			expect.closeTo(0.9),
-		]);
+		expect(
+			snapshots.map((write) => {
+				return write.floats[0];
+			}),
+		).toEqual([0.5, expect.closeTo(0.9)]);
 
 		// clearing customShader returns to plain batching
 		renderer.customShader = undefined;

@@ -1,5 +1,27 @@
 import ShaderEffect from "./shadereffect.js";
 
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct HologramUniforms {
+	uHoloColor : vec3f,
+	uHoloIntensity : f32,
+	uTime : f32,
+};
+@group(3) @binding(0) var<uniform> fx : HologramUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	// scan line
+	let scan = sin(uv.y * 200.0 + fx.uTime * 5.0) * 0.5 + 0.5;
+	// flicker
+	let flicker = 0.95 + 0.05 * sin(fx.uTime * 30.0);
+	// color shift
+	var holo = mix(color.rgb, fx.uHoloColor * color.a, fx.uHoloIntensity);
+	holo *= (1.0 - scan * 0.15) * flicker;
+	return vec4f(holo, color.a * flicker);
+}
+`;
+
 /**
  * A shader effect that simulates a holographic projection with
  * horizontal scan lines, color shift, and flickering.
@@ -21,9 +43,8 @@ export default class HologramEffect extends ShaderEffect {
 	 * @param {number} [options.intensity=0.5] - effect intensity (0.0–1.0)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3 uHoloColor;
 			uniform float uHoloIntensity;
 			uniform float uTime;
@@ -38,7 +59,8 @@ export default class HologramEffect extends ShaderEffect {
 				return vec4(holo, color.a * flicker);
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		const color = options.color ?? [0.1, 0.7, 1.0];
 		this.setUniform("uHoloColor", new Float32Array(color));
