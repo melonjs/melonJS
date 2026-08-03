@@ -22,6 +22,8 @@ export function createMockWebGPURenderer() {
 		bindGroups: [],
 		pushFrameGlobals: 0,
 		captureFrames: 0,
+		// one entry per queue.writeTexture
+		textureWrites: [],
 	};
 
 	const pass = {
@@ -71,6 +73,13 @@ export function createMockWebGPURenderer() {
 					});
 				},
 				copyExternalImageToTexture() {},
+				writeTexture(destination, data, layout, size) {
+					calls.textureWrites.push({
+						texture: destination.texture,
+						bytes: data.length,
+						size,
+					});
+				},
 			},
 			createBuffer(descriptor) {
 				return {

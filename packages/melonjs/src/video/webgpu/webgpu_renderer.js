@@ -31,6 +31,7 @@ import WebGPUPipelineCache, {
 	DEPTH_STENCIL_FORMAT,
 	normalizeBlendMode,
 } from "./pipeline/cache.js";
+import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { WebGPUFrameTexture } from "./texture/frametexture.js";
 import WebGPUTextureStore from "./texture/store.js";
 
@@ -109,10 +110,16 @@ export default class WebGPURenderer extends Renderer {
 		/** @type {"glsl"|"wgsl"|null} */
 		this.shaderLanguage = "wgsl";
 
-		// capability flags stay at their base-class `false` defaults
-		// (supportsDepthBuffer / supportsShaderTileLayers /
-		// supportsRetainedMesh): they describe what the backend can DO
-		// today, not what it will grow — each flips when its path lands
+		// capability flags describe what the backend can DO today
+		// (supportsDepthBuffer / supportsRetainedMesh stay false until
+		// their paths land)
+
+		// orthogonal TMX layers draw through the WGSL shader tile path
+		this.supportsShaderTileLayers = true;
+		// lazy orientation-specific GPU tilemap renderer (device-scoped:
+		// dropped on device loss, rebuilt on first use)
+		/** @ignore */
+		this.orthogonalTMXRenderer = undefined;
 
 		// create a texture cache
 		this.cache = new TextureCache(this);
@@ -1026,6 +1033,31 @@ export default class WebGPURenderer extends Renderer {
 		// ("#000000") parses with alpha 1 and would paint OPAQUE black
 		this.clearColor("rgba(0,0,0,0)");
 		this.restore();
+	}
+
+	/**
+	 * Draw a TMX tile layer: WGSL-eligible layers (`renderMode ===
+	 * "shader"`) draw through the GPU tile path — one quad per tileset,
+	 * GID lookup in a per-layer index texture; everything else falls
+	 * through to the base per-tile loop.
+	 * @param {object} layer - the TMXLayer to draw
+	 * @param {object} rect - the visible region in world coords
+	 * @override
+	 */
+	drawTileLayer(layer, rect) {
+		if (layer.renderMode === "shader" && layer.orientation === "orthogonal") {
+			// device-scoped, lazily (re)built: a device loss rebuilds the
+			// pipeline cache, detected via the epoch stamp
+			if (
+				this.orthogonalTMXRenderer === undefined ||
+				this.orthogonalTMXRenderer.epoch !== this.pipelineCache.epoch
+			) {
+				this.orthogonalTMXRenderer = new OrthogonalTMXLayerGPURenderer(this);
+			}
+			this.orthogonalTMXRenderer.draw(layer, rect);
+			return;
+		}
+		super.drawTileLayer(layer, rect);
 	}
 
 	/**
@@ -2155,6 +2187,9 @@ export default class WebGPURenderer extends Renderer {
 		this.stubTexture = null;
 		this.stubTextureView = null;
 		this.currentRenderTarget = null;
+		// tile-path lookup textures died with the device; the epoch check
+		// in drawTileLayer rebuilds the renderer lazily
+		this.orthogonalTMXRenderer = undefined;
 		this.depthTexture = null;
 		this.device = undefined;
 		this.adapter = undefined;
@@ -2187,6 +2222,8 @@ export default class WebGPURenderer extends Renderer {
 		// a reset can land mid-post-effect-pass — unwind the bracket state
 		this.effectPassDepth = 0;
 		this.customShader = undefined;
+		// level transition: free the per-layer/per-tileset lookup textures
+		this.orthogonalTMXRenderer?.reset();
 		super.reset();
 		// re-init batchers when recovering from a device loss, plain reset
 		// otherwise — the same split as the WebGL restore path. A reset
@@ -2221,6 +2258,7 @@ export default class WebGPURenderer extends Renderer {
 			this.pipelineCache?.clear();
 			this.captureTexture?.destroy();
 			this.captureTexture = undefined;
+			this.orthogonalTMXRenderer = undefined;
 			this._renderTargetPool?.destroy();
 			this._renderTargetPool = null;
 			this.effectUniformArena?.destroy();
