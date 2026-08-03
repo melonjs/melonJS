@@ -11,6 +11,7 @@ import {
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
+import RadialGradientEffect from "../effects/radialGradient.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -22,6 +23,13 @@ import {
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
+// pure CPU lighting math shared with the GL backend (published std140
+// layout, no GL calls)
+import {
+	createLightUniformScratch,
+	packLights,
+} from "../webgl/lighting/pack.ts";
+import WebGPULitQuadBatcher from "./batchers/lit_quad_batcher.js";
 import WebGPUPrimitiveBatcher from "./batchers/primitive_batcher.js";
 import WebGPUQuadBatcher from "./batchers/quad_batcher.js";
 import WebGPUBatcher from "./batchers/webgpu_batcher.js";
@@ -360,6 +368,7 @@ export default class WebGPURenderer extends Renderer {
 		if (this.batchers.size === 0) {
 			this.addBatcher(new WebGPUQuadBatcher(this), "quad", true);
 			this.addBatcher(new WebGPUPrimitiveBatcher(this), "primitive");
+			this.addBatcher(new WebGPULitQuadBatcher(this), "litQuad");
 		}
 
 		this.isContextValid = true;
@@ -1438,7 +1447,13 @@ export default class WebGPURenderer extends Renderer {
 			dy |= 0;
 		}
 
-		this.setBatcher("quad");
+		// same lit gate as the GL backend: only normal-mapped sprites in a
+		// lit scene pay the lit path; everything else stays on "quad"
+		const useLit =
+			this.batchers.has("litQuad") &&
+			this.activeLightCount > 0 &&
+			this.currentNormalMap !== null;
+		this.setBatcher(useLit ? "litQuad" : "quad");
 
 		const texture = this.cache.get(image);
 		// Video sources need their GPU texture refreshed as the video
@@ -1467,7 +1482,95 @@ export default class WebGPURenderer extends Renderer {
 			uvs[3],
 			this.currentTint.toUint32(this.getGlobalAlpha()),
 			reupload,
+			useLit ? this.currentNormalMap : undefined,
 		);
+	}
+
+	/**
+	 * Pack the active 2D lights and hand the std140 block to the lit
+	 * batcher — the WebGPU realization of the backend-neutral lighting
+	 * contract (Camera2d calls this once per camera per frame).
+	 * @param {Set<Light2d>|Array<Light2d>} lights - active lights
+	 * @param {Color} ambient - the ambient lighting floor
+	 * @param {number} [translateX=0] - camera translate x
+	 * @param {number} [translateY=0] - camera translate y
+	 * @override
+	 */
+	setLightUniforms(lights, ambient, translateX = 0, translateY = 0) {
+		if (this.lightUniformsScratch === undefined) {
+			this.lightUniformsScratch = createLightUniformScratch();
+		}
+		const packed = packLights(
+			lights,
+			ambient,
+			translateX,
+			translateY,
+			this.lightUniformsScratch,
+		);
+		this.activeLightCount = packed.count;
+		const lit = this.batchers.get("litQuad");
+		if (lit && typeof lit.setLightUniforms === "function") {
+			lit.setLightUniforms(packed);
+		}
+	}
+
+	/**
+	 * Draw a Light2d glow quad through the radial-gradient effect's
+	 * single-effect fast path — the light's color and intensity ride the
+	 * per-vertex tint, so back-to-back lights share the same pipeline.
+	 * @param {Light2d} light - the light to draw
+	 * @override
+	 */
+	drawLight(light) {
+		if (this.lightShader === undefined) {
+			this.lightShader = new RadialGradientEffect(this);
+		}
+		const previousShader = this.customShader;
+		this.customShader = this.lightShader;
+		const batcher = this.setBatcher("quad");
+		batcher.addQuad(
+			this.getLightAtlas(),
+			light.pos.x,
+			light.pos.y,
+			light.width,
+			light.height,
+			0,
+			0,
+			1,
+			1,
+			// pack the light's color (RGB) and intensity (A) into the
+			// vertex tint — the effect reads color.rgb / color.a
+			light.color.toUint32(light.intensity),
+		);
+		this.customShader = previousShader;
+	}
+
+	/**
+	 * Lazy-init a shared 1×1 white TextureAtlas used as the source texture
+	 * for drawLight's procedural effect (same rationale as the GL backend)
+	 * @returns {TextureAtlas}
+	 * @ignore
+	 */
+	getLightAtlas() {
+		if (this.lightAtlas === undefined) {
+			const canvas = globalThis.document
+				? globalThis.document.createElement("canvas")
+				: new OffscreenCanvas(1, 1);
+			canvas.width = 1;
+			canvas.height = 1;
+			const ctx = canvas.getContext("2d");
+			ctx.fillStyle = "#fff";
+			ctx.fillRect(0, 0, 1, 1);
+			// cache=false: the atlas is only ever drawn directly through
+			// addQuad, so it needs no global TextureCache registration (and
+			// this renderer method must not reach for the global game)
+			this.lightAtlas = new TextureAtlas(
+				createAtlas(1, 1, "lightWhite", "no-repeat"),
+				canvas,
+				false,
+			);
+		}
+		return this.lightAtlas;
 	}
 
 	/**

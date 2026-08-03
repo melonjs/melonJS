@@ -85,9 +85,8 @@ export default class RadialGradientEffect extends ShaderEffect {
 	 * @param {number} [options.intensity=1] - peak alpha at the center (0..1+)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3 uColor;
 			uniform float uIntensity;
 			vec4 apply(vec4 color, vec2 uv) {
@@ -109,7 +108,25 @@ export default class RadialGradientEffect extends ShaderEffect {
 				return vec4(rgb, a);
 			}
 			`,
-		);
+			// the WGSL twin — same logic and uniform names; `color` arrives
+			// tinted (textureSample * vColor), identical to the GLSL contract
+			wgsl: `
+			struct RadialGradientUniforms {
+				uColor : vec3f,
+				uIntensity : f32,
+			};
+			@group(3) @binding(0) var<uniform> fx : RadialGradientUniforms;
+
+			fn apply(color : vec4f, uv : vec2f) -> vec4f {
+				let c = uv * 2.0 - vec2f(1.0);
+				let d = length(c);
+				let f = clamp(1.0 - d, 0.0, 1.0);
+				let rgb = color.rgb * fx.uColor * fx.uIntensity * f;
+				let a = color.a * fx.uIntensity * f;
+				return vec4f(rgb, a);
+			}
+			`,
+		});
 
 		// reused across `setColor` calls so we don't allocate a fresh
 		// 3-element array every frame on every light.

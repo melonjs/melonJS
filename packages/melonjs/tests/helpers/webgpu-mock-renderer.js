@@ -94,6 +94,9 @@ export function createMockWebGPURenderer() {
 			createBindGroup(descriptor) {
 				return { layout: descriptor.layout, entries: descriptor.entries };
 			},
+			createBindGroupLayout(descriptor) {
+				return { label: descriptor.label, entries: descriptor.entries };
+			},
 			createTexture(descriptor) {
 				return {
 					size: descriptor.size,
@@ -181,9 +184,25 @@ export function createMockWebGPURenderer() {
 				}
 				return materialBindings.get(texture);
 			},
+			// one stable record per atlas object (the lit batcher composes
+			// combined bind groups from the raw view)
+			records: new Map(),
+			getResidentRecord(texture) {
+				if (!this.records.has(texture)) {
+					this.records.set(texture, {
+						view: { texture },
+						width: 64,
+						height: 64,
+					});
+				}
+				return this.records.get(texture);
+			},
 			getSampler(filter, repeat) {
 				return { filter, repeat };
 			},
+		},
+		getDefaultTextureFilter() {
+			return "linear";
 		},
 		ensurePass() {
 			return pass;

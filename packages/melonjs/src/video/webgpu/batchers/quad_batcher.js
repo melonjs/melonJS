@@ -160,10 +160,28 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			);
 		}
 
-		// Transform vertices. Stamp per-sprite depth onto z BEFORE
-		// `m.apply` so Camera3d's view matrix (3D R⁻¹ ∘ T(-pos)) fully
-		// rotates the vertex. For 2D-only matrices the z column is
-		// identity, so output (x, y) is bit-identical and z passes through.
+		this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint);
+
+		if (effect !== null) {
+			// per-quad draw under the fast path: each sprite needs its own
+			// capture state, noise rect and uniform snapshot (draw-time
+			// setUniform mutation included)
+			this.flush();
+		}
+	}
+
+	/**
+	 * Transform and queue the four corners of a quad — shared by the base
+	 * and lit addQuad paths. Stamps per-sprite depth onto z BEFORE
+	 * `m.apply` so Camera3d's view matrix (3D R⁻¹ ∘ T(-pos)) fully rotates
+	 * the vertex; for 2D-only matrices the z column is identity, so the
+	 * output (x, y) is bit-identical and z passes through. textureId is 0
+	 * under single-texture batching (layout kept for the multi-texture
+	 * upgrade).
+	 * @ignore
+	 */
+	pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint) {
+		const vertexData = this.vertexData;
 		const m = this.renderer.currentTransform;
 		const z = this.renderer.currentDepth;
 		const vec0 = V_ARRAY[0].set(x, y, z);
@@ -178,20 +196,11 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			m.apply(vec3);
 		}
 
-		// 4 vertices per quad; the index buffer provides the 6 indices.
-		// textureId is 0 under single-texture batching (layout kept for
-		// the multi-texture upgrade).
+		// 4 vertices per quad; the index buffer provides the 6 indices
 		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, 0);
 		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, 0);
 		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, 0);
 		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, 0);
-
-		if (effect !== null) {
-			// per-quad draw under the fast path: each sprite needs its own
-			// capture state, noise rect and uniform snapshot (draw-time
-			// setUniform mutation included)
-			this.flush();
-		}
 	}
 
 	/**

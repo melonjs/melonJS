@@ -163,6 +163,10 @@ export default class WebGPUTextureStore {
 		// recorded in the current frame
 		record.frameId = this.renderer.frameId;
 
+		// stash for getResidentRecord — composers (the lit batcher) build
+		// combined bind groups from the raw view
+		this.lastRecord = record;
+
 		const filter =
 			typeof texture.filter === "string"
 				? texture.filter
@@ -181,6 +185,20 @@ export default class WebGPUTextureStore {
 			record.bindGroupBySampler.set(samplerKey, bindGroup);
 		}
 		return bindGroup;
+	}
+
+	/**
+	 * Ensure the texture is resident (same upload/validation path as
+	 * getBinding) and return its record — callers composing their own bind
+	 * groups (the lit batcher pairs the color view with a normal map) need
+	 * the raw view rather than the standard material group.
+	 * @param {object} texture - the texture atlas to resolve
+	 * @param {object} [options] - same options as getBinding
+	 * @returns {object} the resident record ({texture, view, width, height, …})
+	 */
+	getResidentRecord(texture, options) {
+		this.getBinding(texture, options);
+		return this.lastRecord;
 	}
 
 	/**
