@@ -94,6 +94,42 @@ vec4 apply(vec4 color, vec2 uv) {
 }
 `;
 
+// the WGSL twin — same logic and uniform names. The WebGPU capture is
+// top-down (row 0 = the top of the frame, matching the quad's UV), so the
+// GLSL body's Y flip for the Y-up framebuffer copy is dropped.
+const WATER_FRAGMENT_WGSL = `
+struct AquariumUniforms {
+	uTime : f32,
+	uStrength : f32,
+};
+@group(3) @binding(0) var<uniform> fx : AquariumUniforms;
+@group(3) @binding(1) var uScene : texture_2d<f32>;
+@group(3) @binding(2) var uSceneSampler : sampler;
+@group(3) @binding(3) var uNoise : texture_2d<f32>;
+@group(3) @binding(4) var uNoiseSampler : sampler;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let s = uv;
+
+	// two noise layers scrolling apart -> a living flow field
+	let f1 = textureSample(uNoise, uNoiseSampler, s * 1.6 + vec2f(fx.uTime * 0.03, fx.uTime * 0.05)).rg;
+	let f2 = textureSample(uNoise, uNoiseSampler, s * 2.7 - vec2f(fx.uTime * 0.04, fx.uTime * 0.02)).rg;
+	let flow = f1 + f2 - vec2f(1.0);
+
+	// refract the captured scene at the displaced screen coord
+	let scene = textureSample(uScene, uSceneSampler, clamp(s + flow * fx.uStrength, vec2f(0.0), vec2f(1.0))).rgb;
+
+	// the water texture (the sprite's own), gently scrolled, as a wet sheen
+	let water = textureSample(uTexture, uSampler, uv * 0.6 + flow * 0.02).rgb;
+	var outc = scene * (vec3f(0.75) + 0.5 * water);
+
+	// caustic sparkle where the flow layers pinch together
+	let caustic = pow(max(f1.r * f2.g, 0.0), 3.0) * 1.2;
+	outc = outc + vec3f(0.10, 0.20, 0.24) * caustic;
+	return vec4f(outc, 1.0);
+}
+`;
+
 // a fish that swims horizontally and turns around at the tank edges
 class Fish extends Sprite {
 	private speed: number;
@@ -318,7 +354,11 @@ const createGame = async () => {
 	loader.preload(
 		[
 			{ name: "aquariumAtlas", type: "image", src: `${base}aquarium.webp` },
-			{ name: "aquariumWater", type: "shader", data: WATER_FRAGMENT },
+			{
+				name: "aquariumWater",
+				type: "shader",
+				data: { glsl: WATER_FRAGMENT, wgsl: WATER_FRAGMENT_WGSL },
+			},
 		],
 		() => {
 			state.change(state.PLAY);

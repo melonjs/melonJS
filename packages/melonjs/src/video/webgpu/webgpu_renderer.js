@@ -631,18 +631,87 @@ export default class WebGPURenderer extends Renderer {
 	 * @ignore
 	 */
 	captureFrame() {
+		return this.toFrameTexture();
+	}
+
+	/**
+	 * Capture the current frame — everything drawn to the active target so
+	 * far — into a {@link Texture2d}, entirely on the GPU (an encoder-ordered
+	 * `copyTextureToTexture`; no readback round-trip). Same contract as the
+	 * WebGL backend's `toFrameTexture`: a shared, renderer-owned slot by
+	 * default, `target: null` for a fresh caller-owned capture, or a prior
+	 * capture as `target` to refresh it in place; `options.region` captures
+	 * a sub-region (framebuffer pixels, bottom-left origin — converted to
+	 * this backend's top-left copy origin internally).
+	 *
+	 * Two documented divergences from the GL capture:
+	 * - alpha is preserved (the GL path captures into an opaque RGB texture)
+	 * - row 0 of the capture is the TOP of the frame (matching `screen_uv`),
+	 *   where the GL capture is bottom-up — GLSL bodies sampling a capture
+	 *   flip with `1.0 - uv.y`; their WGSL twins must not.
+	 * @param {object} [options]
+	 * @param {Texture2d|null} [options.target] - omit for the shared renderer
+	 *   slot; a prior capture to refresh it in place; `null` to mint a fresh,
+	 *   caller-owned capture (`destroy()` it yourself when done)
+	 * @param {Bounds|{x: number, y: number, width: number, height: number}} [options.region] - capture
+	 *   only this sub-region; defaults to the whole frame
+	 * @returns {Texture2d|null} a GPU-resident texture holding the captured
+	 *   frame, or null when no device is available
+	 */
+	toFrameTexture(options = {}) {
 		if (typeof this.device === "undefined") {
 			return null;
 		}
+
+		const [fullWidth, fullHeight] = this.getTargetSize();
+
+		// resolve the capture rect (same clamp rules as the GL backend:
+		// origin clamped into the frame first, then sized to what remains)
+		let x = 0;
+		let y = 0;
+		let w = fullWidth;
+		let h = fullHeight;
+		const region = options.region;
+		if (typeof region !== "undefined") {
+			x = Math.min(Math.max(0, Math.floor(region.x || 0)), fullWidth - 1);
+			y = Math.min(Math.max(0, Math.floor(region.y || 0)), fullHeight - 1);
+			const rw = Number.isFinite(region.width)
+				? Math.ceil(region.width)
+				: fullWidth - x;
+			const rh = Number.isFinite(region.height)
+				? Math.ceil(region.height)
+				: fullHeight - y;
+			w = Math.max(1, Math.min(fullWidth - x, rw));
+			h = Math.max(1, Math.min(fullHeight - y, rh));
+		}
+
+		// a non-null target must be a capture THIS renderer returned — any
+		// other Texture2d has no GPU backing here, and a foreign capture
+		// would retire textures on the wrong device
+		if (typeof options.target !== "undefined" && options.target !== null) {
+			if (!(options.target instanceof WebGPUFrameTexture)) {
+				throw new Error(
+					"WebGPURenderer.toFrameTexture: `target` must be a capture returned by this method",
+				);
+			}
+			if (options.target.renderer !== this) {
+				throw new Error(
+					"WebGPURenderer.toFrameTexture: `target` belongs to a different renderer",
+				);
+			}
+		}
+
+		// drain pending geometry + end the pass: the copy is encoder-ordered,
+		// so it sees exactly the draws recorded before this point
 		this.currentBatcher?.flush();
 		if (this.renderPass !== null) {
 			this.renderPass.end();
 			this.renderPass = null;
 		}
+
 		// resolve the source texture: the active target, or the canvas
 		// (acquired now if nothing drew yet this frame)
 		let source;
-		const [width, height] = this.getTargetSize();
 		if (this.currentRenderTarget !== null) {
 			source = this.currentRenderTarget.texture;
 		} else {
@@ -652,28 +721,44 @@ export default class WebGPURenderer extends Renderer {
 			}
 			source = this.frameTexture;
 		}
-		// (re)allocate the shared capture at the source size
-		let capture = this.captureTexture;
-		if (
-			typeof capture === "undefined" ||
-			capture.width !== width ||
-			capture.height !== height
+
+		// destination: the shared slot, a fresh caller-owned capture, or the
+		// given capture refreshed in place
+		const shared = typeof options.target === "undefined";
+		let frame = shared
+			? this.captureTexture
+			: options.target === null
+				? undefined
+				: options.target;
+
+		if (typeof frame === "undefined") {
+			frame = new WebGPUFrameTexture(this, w, h);
+			if (shared) {
+				this.captureTexture = frame;
+			}
+		} else if (
+			frame.width !== w ||
+			frame.height !== h ||
+			frame.gpuTexture === null
 		) {
-			capture?.destroy();
-			capture = new WebGPUFrameTexture(this, width, height);
-			this.captureTexture = capture;
+			// size change or released backing: reallocate keeping the object
+			// identity — generation advances so stale bind groups re-key
+			frame.realloc(w, h);
 		}
+
 		if (this.commandEncoder === null) {
 			this.commandEncoder = this.device.createCommandEncoder({
 				label: "melonJS frame",
 			});
 		}
+		// convert the public bottom-left region origin to the copy's
+		// top-left one
 		this.commandEncoder.copyTextureToTexture(
-			{ texture: source },
-			{ texture: capture.gpuTexture },
-			[width, height],
+			{ texture: source, origin: [x, fullHeight - y - h] },
+			{ texture: frame.gpuTexture },
+			[w, h],
 		);
-		return capture;
+		return frame;
 	}
 
 	/**

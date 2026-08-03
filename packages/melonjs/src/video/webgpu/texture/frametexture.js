@@ -29,30 +29,43 @@ export class WebGPUFrameTexture extends Texture2d {
 	constructor(renderer, width, height) {
 		super();
 		this.renderer = renderer;
-		/** @type {number} */
-		this.width = width;
-		/** @type {number} */
-		this.height = height;
-		/**
-		 * Unique per allocation (module-wide counter): captureFrame replaces
-		 * the shared capture with a NEW instance on size change, and bind
-		 * groups referencing the old view key on this — a non-advancing
-		 * value would leave them pointing at a destroyed texture, failing
-		 * every subsequent submit.
-		 * @type {number}
-		 */
-		this.generation = ++WebGPUFrameTexture.generationCounter;
 		/**
 		 * marks this as a live GPU-resident source — see {@link ShaderEffect#setTexture}
 		 * @type {boolean}
 		 */
 		this.isGPUResident = true;
-
 		/** @type {GPUTexture} */
-		this.gpuTexture = renderer.device.createTexture({
+		this.gpuTexture = null;
+		this.realloc(width, height);
+	}
+
+	/**
+	 * (Re)allocate the backing texture at the given size, keeping this
+	 * object's identity — the caller-owned-refresh contract of
+	 * `toFrameTexture({target})`. The old texture is retired (draws
+	 * already recorded against it stay valid) and `generation` advances,
+	 * so bind groups referencing the old view re-key instead of pointing
+	 * at a destroyed texture and failing every subsequent submit.
+	 * @param {number} width - capture width in pixels
+	 * @param {number} height - capture height in pixels
+	 */
+	realloc(width, height) {
+		if (this.gpuTexture !== null) {
+			this.renderer.retireTexture(this.gpuTexture);
+		}
+		/** @type {number} */
+		this.width = width;
+		/** @type {number} */
+		this.height = height;
+		/**
+		 * unique per allocation (module-wide counter) — the bind-group key
+		 * @type {number}
+		 */
+		this.generation = ++WebGPUFrameTexture.generationCounter;
+		this.gpuTexture = this.renderer.device.createTexture({
 			label: "melonJS frame capture",
 			size: [width, height],
-			format: renderer.preferredFormat,
+			format: this.renderer.preferredFormat,
 			usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
 		});
 		/** @type {GPUTextureView} */

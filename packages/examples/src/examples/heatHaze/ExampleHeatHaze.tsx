@@ -51,6 +51,31 @@ vec4 apply(vec4 color, vec2 uv) {
 }
 `;
 
+// the WGSL twin — same logic and uniform names. The WebGPU capture is
+// top-down (row 0 = the top of the frame, matching the quad's UV), so the
+// GLSL Y flip is dropped: the floor weight becomes (0.15 + y) and the
+// upward scroll flips sign, everything else carries over.
+const HAZE_FRAGMENT_WGSL = `
+struct HazeUniforms {
+	uTime : f32,
+	uStrength : f32,
+};
+@group(3) @binding(0) var<uniform> fx : HazeUniforms;
+@group(3) @binding(1) var uScene : texture_2d<f32>;
+@group(3) @binding(2) var uSceneSampler : sampler;
+@group(3) @binding(3) var uNoise : texture_2d<f32>;
+@group(3) @binding(4) var uNoiseSampler : sampler;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let s = uv;
+	let n1 = textureSample(uNoise, uNoiseSampler, vec2f(s.x * 2.0, s.y * 1.6 + fx.uTime * 0.18)).r;
+	let n2 = textureSample(uNoise, uNoiseSampler, vec2f(s.x * 3.3 + 0.5, s.y * 2.2 + fx.uTime * 0.11)).r;
+	let wob = (n1 + n2 - 1.0) * fx.uStrength * (0.15 + s.y); // stronger near the floor
+	let d = clamp(s + vec2f(wob, wob * 0.35), vec2f(0.0), vec2f(1.0));
+	return vec4f(textureSample(uScene, uSceneSampler, d).rgb, 1.0);
+}
+`;
+
 // an embossed metal-ish tile: a base colour with a bevel highlight/shadow, so
 // the normal-mapped relief reads clearly under the moving light
 const tileAlbedo = (size: number, hue: number) => {
@@ -238,7 +263,13 @@ const createGame = async () => {
 	state.set(state.PLAY, new PlayScreen());
 
 	loader.preload(
-		[{ name: "heatHaze", type: "shader", data: HAZE_FRAGMENT }],
+		[
+			{
+				name: "heatHaze",
+				type: "shader",
+				data: { glsl: HAZE_FRAGMENT, wgsl: HAZE_FRAGMENT_WGSL },
+			},
+		],
 		() => {
 			state.change(state.PLAY);
 		},
