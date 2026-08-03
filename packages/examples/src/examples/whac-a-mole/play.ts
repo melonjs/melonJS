@@ -43,7 +43,9 @@ export class PlayScreen extends Stage {
 
 		// add our HUD (scores/hiscore)
 		this.HUD = new HUDContainer();
-		app.world.addChild(this.HUD);
+		// z above every grass strip (i * 10 + 10) so the score draws on top —
+		// addChild assigns the z, a depth set in the constructor won't stick
+		app.world.addChild(this.HUD, 100);
 
 		// start the main soundtrack
 		audio.playTrack("whack");
