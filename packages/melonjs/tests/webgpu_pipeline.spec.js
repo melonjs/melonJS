@@ -231,6 +231,33 @@ describe("WebGPU pipeline (device-free units)", () => {
 			expect(none.depthStencil.stencilWriteMask).toBe(0);
 		});
 
+		it("gradient-mask variants: tag replaces unconditionally, mark replaces behind the low-7-bit compare", () => {
+			const { cache } = makeCache();
+			const descriptorFor = (stencilMode) => {
+				return cache.get("quad", "triangle-list", "normal", true, stencilMode)
+					.descriptor;
+			};
+
+			// tag: stamp the shape's pixels with the dynamic reference on a
+			// cleared stencil — replace (not increment) so shape overdraw
+			// (fan/earcut geometry) can never double-count
+			const tag = descriptorFor("tag");
+			expect(tag.fragment.targets[0].writeMask).toBe(0);
+			expect(tag.depthStencil.stencilFront.compare).toBe("always");
+			expect(tag.depthStencil.stencilFront.passOp).toBe("replace");
+			expect(tag.depthStencil.stencilWriteMask).toBe(0xff);
+
+			// mark: only pixels whose low 7 bits equal the reference's get
+			// the full reference written (mask levels never use the high
+			// bit, so the marker cannot collide with one)
+			const mark = descriptorFor("mark");
+			expect(mark.fragment.targets[0].writeMask).toBe(0);
+			expect(mark.depthStencil.stencilFront.compare).toBe("equal");
+			expect(mark.depthStencil.stencilFront.passOp).toBe("replace");
+			expect(mark.depthStencil.stencilReadMask).toBe(0x7f);
+			expect(mark.depthStencil.stencilWriteMask).toBe(0xff);
+		});
+
 		it("registered vertex layouts land in the descriptor with declaration-order locations", () => {
 			const { cache } = makeCache();
 			const descriptor = cache.get(

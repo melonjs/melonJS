@@ -134,6 +134,35 @@ const STENCIL_STATES = {
 		writeMask: 0,
 		colorWriteMask: 0xf,
 	},
+	// gradient-mask phases (the GL #gradientMask parity):
+	// - "tag" stamps the shape's pixels with the dynamic stencil reference
+	//   on a cleared stencil (GL's ALWAYS/REPLACE, color writes off) —
+	//   replace, not increment, so overdrawing shape geometry is harmless
+	// - "mark" writes the reference only where the stencil's low 7 bits
+	//   already equal the reference's low bits — tags/untags the high-bit
+	//   marker inside an active mask without disturbing mask levels
+	tag: {
+		stencil: {
+			compare: "always",
+			failOp: "keep",
+			depthFailOp: "keep",
+			passOp: "replace",
+		},
+		readMask: 0xff,
+		writeMask: 0xff,
+		colorWriteMask: 0,
+	},
+	mark: {
+		stencil: {
+			compare: "equal",
+			failOp: "keep",
+			depthFailOp: "keep",
+			passOp: "replace",
+		},
+		readMask: 0x7f,
+		writeMask: 0xff,
+		colorWriteMask: 0,
+	},
 };
 
 /**
@@ -353,7 +382,7 @@ export default class WebGPUPipelineCache {
 	 * @param {string} topology - portable topology name ("triangle-list", …)
 	 * @param {string} blendMode - blend mode (normalized internally)
 	 * @param {boolean} premultipliedAlpha - source premultiplication flag
-	 * @param {string} [stencilMode="none"] - "none" | "write" | "test"
+	 * @param {string} [stencilMode="none"] - "none" | "write" | "test" | "tag" | "mark"
 	 * @returns {GPURenderPipeline} the pipeline
 	 */
 	get(

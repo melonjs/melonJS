@@ -128,12 +128,11 @@ export default class WebGPURenderer extends Renderer {
 		// aliasing as the WebGL backend
 		this.currentTransform = this.renderState.currentTransform;
 
-		// active Gradient (setColor(Gradient)); phase 1 only honors it on
-		// fillRect via the Canvas-baked gradient texture
+		// active Gradient (setColor(Gradient)) — honored on fillRect via
+		// the Canvas-baked gradient texture, and on arbitrary shapes by
+		// clipping that baked rect through the stencil (gradientMask)
 		/** @ignore */
 		this.currentGradient = null;
-		/** @ignore */
-		this.gradientShapeWarned = false;
 
 		// scratch vertices for fillRect (2 triangles) and fillPolygon
 		/** @ignore */
@@ -1580,19 +1579,72 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
-	 * gradient fills of arbitrary shapes need the stencil gradient-mask
-	 * machinery (deferred with post effects) — fall back to a solid fill
-	 * with a one-time console warning
+	 * Fill an arbitrary shape with the current gradient by clipping the
+	 * baked-gradient rect to the shape through the stencil — the GL
+	 * backend's #gradientMask re-expressed as pipeline stencil variants.
+	 *
+	 * Outside a mask: the stencil is cleared (a pass break), the shape's
+	 * pixels are stamped with reference 1 ("tag": always/replace, color
+	 * writes off), and the gradient rect draws under the "test" mode.
+	 * Inside a mask: the shape's VISIBLE pixels (stencil low 7 bits equal
+	 * to the mask's visible value — mask levels never use the high bit)
+	 * get a high-bit marker via "mark", the gradient clips to the marker,
+	 * then the marker is stripped and the mask's exact render test is
+	 * re-installed.
 	 * @ignore
 	 */
-	warnGradientShape() {
-		if (this.gradientShapeWarned !== true) {
-			this.gradientShapeWarned = true;
-			console.warn(
-				"WebGPURenderer: gradient fills of non-rectangular shapes are " +
-					"not supported yet — falling back to a solid fill",
-			);
+	gradientMask(drawShape, x, y, w, h) {
+		const grad = this.currentGradient;
+		const hasMask = this.maskLevel > 0;
+		// the tag/untag phases re-enter the shape's public fill method —
+		// null the gradient so they take the plain solid path
+		this.currentGradient = null;
+
+		this.currentBatcher?.flush();
+
+		const visibleRef = this.maskVisibleRef;
+		let markRef = 1;
+
+		if (hasMask) {
+			markRef = 0x80 | visibleRef;
+			this.stencilMode = "mark";
+			this.ensurePass().setStencilReference(markRef);
+		} else {
+			// stencil clear = pass break (color survives via loadOp "load")
+			if (this.renderPass !== null) {
+				this.renderPass.end();
+				this.renderPass = null;
+			}
+			this.beginPass({ stencilLoadOp: "clear" });
+			this.stencilMode = "tag";
+			this.ensurePass().setStencilReference(markRef);
 		}
+		drawShape();
+		this.currentBatcher?.flush();
+
+		// clip the gradient fill (a baked-texture quad) to the marked pixels
+		this.stencilMode = "test";
+		this.ensurePass().setStencilReference(markRef);
+		this.currentGradient = grad;
+		this.fillRect(x, y, w, h);
+		this.currentBatcher?.flush();
+
+		if (hasMask) {
+			// clear the marker: replace writes the reference — a no-op on
+			// unmarked visible pixels, and it strips the high bit from the
+			// marked ones
+			this.currentGradient = null;
+			this.stencilMode = "mark";
+			this.ensurePass().setStencilReference(visibleRef);
+			drawShape();
+			this.currentBatcher?.flush();
+			this.currentGradient = grad;
+			// re-install the exact render test setMask had established
+			this.stencilMode = "test";
+		} else {
+			this.stencilMode = "none";
+		}
+		this.ensurePass().setStencilReference(this.maskVisibleRef);
 	}
 
 	/**
@@ -1627,7 +1679,16 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
 		if (this.currentGradient) {
-			this.warnGradientShape();
+			this.gradientMask(
+				() => {
+					this.fillArc(x, y, radius, start, end, antiClockwise);
+				},
+				x - radius,
+				y - radius,
+				radius * 2,
+				radius * 2,
+			);
+			return;
 		}
 		this.setBatcher("primitive");
 		let diff = Math.abs(end - start);
@@ -1681,7 +1742,16 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillEllipse(x, y, w, h) {
 		if (this.currentGradient) {
-			this.warnGradientShape();
+			this.gradientMask(
+				() => {
+					this.fillEllipse(x, y, w, h);
+				},
+				x - w,
+				y - h,
+				w * 2,
+				h * 2,
+			);
+			return;
 		}
 		this.setBatcher("primitive");
 		const segments = Math.max(
@@ -1789,7 +1859,35 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillPolygon(poly) {
 		if (this.currentGradient) {
-			this.warnGradientShape();
+			const bounds = poly.getBounds();
+			// translate to polygon's local space so gradient coords match
+			this.translate(poly.pos.x, poly.pos.y);
+			this.gradientMask(
+				() => {
+					// draw polygon vertices directly (already translated)
+					this.setBatcher("primitive");
+					const indices = poly.getIndices();
+					const points = poly.points;
+					const verts = this.polyVerts;
+					const len = indices.length;
+					while (verts.length < len) {
+						verts.push({ x: 0, y: 0 });
+					}
+					for (let i = 0; i < len; i++) {
+						const src = points[indices[i]];
+						verts[i].x = src.x;
+						verts[i].y = src.y;
+					}
+					this.currentBatcher.drawVertices("triangle-list", verts, len);
+				},
+				// use local bounds (subtract pos since getBounds includes it)
+				bounds.x - poly.pos.x,
+				bounds.y - poly.pos.y,
+				bounds.width,
+				bounds.height,
+			);
+			this.translate(-poly.pos.x, -poly.pos.y);
+			return;
 		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
@@ -1914,7 +2012,16 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	fillRoundRect(x, y, width, height, radius) {
 		if (this.currentGradient) {
-			this.warnGradientShape();
+			this.gradientMask(
+				() => {
+					this.fillRoundRect(x, y, width, height, radius);
+				},
+				x,
+				y,
+				width,
+				height,
+			);
+			return;
 		}
 		this.setBatcher("primitive");
 		const r = Math.min(radius, width / 2, height / 2);
