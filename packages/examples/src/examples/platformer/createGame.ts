@@ -29,7 +29,7 @@ export const createGame = async () => {
 	const _app = new Application(800, 600, {
 		parent: "screen",
 		scaleMethod: "flex-width",
-		renderer: video.WEBGPU,
+		renderer: video.AUTO,
 		subPixel: false,
 		highPrecisionShader: false,
 	});
