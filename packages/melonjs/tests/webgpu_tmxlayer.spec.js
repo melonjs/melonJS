@@ -54,7 +54,7 @@ describe("WebGPU orthogonal TMX layer renderer (mock)", () => {
 
 	beforeEach(() => {
 		renderer = createMockWebGPURenderer();
-		renderer.setBatcher = (name) => {
+		renderer.setBatcher = () => {
 			renderer.currentBatcher ??= new WebGPUQuadBatcher(renderer);
 			return renderer.currentBatcher;
 		};
