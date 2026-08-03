@@ -1,4 +1,21 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct TintPulseUniforms {
+	uPulseColor : vec3f,
+	uPulseSpeed : f32,
+	uPulseIntensity : f32,
+	uTime : f32,
+};
+@group(3) @binding(0) var<uniform> fx : TintPulseUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let pulse = (sin(fx.uTime * fx.uPulseSpeed * 6.2832) * 0.5 + 0.5) * fx.uPulseIntensity;
+	return vec4f(mix(color.rgb, fx.uPulseColor * color.a, pulse), color.a);
+}
+`;
 
 /**
  * A shader effect that pulses a color overlay on the sprite.
@@ -26,9 +43,8 @@ export default class TintPulseEffect extends ShaderEffect {
 	 * @param {number} [options.intensity=0.3] - maximum tint strength (0.0–1.0)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3 uPulseColor;
 			uniform float uPulseSpeed;
 			uniform float uPulseIntensity;
@@ -38,7 +54,8 @@ export default class TintPulseEffect extends ShaderEffect {
 				return vec4(mix(color.rgb, uPulseColor * color.a, pulse), color.a);
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		const color = options.color ?? [1.0, 0.0, 0.0];
 		this.setUniform("uPulseColor", new Float32Array(color));

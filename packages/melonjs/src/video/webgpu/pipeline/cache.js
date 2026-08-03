@@ -134,6 +134,35 @@ const STENCIL_STATES = {
 		writeMask: 0,
 		colorWriteMask: 0xf,
 	},
+	// gradient-mask phases (the GL #gradientMask parity):
+	// - "tag" stamps the shape's pixels with the dynamic stencil reference
+	//   on a cleared stencil (GL's ALWAYS/REPLACE, color writes off) —
+	//   replace, not increment, so overdrawing shape geometry is harmless
+	// - "mark" writes the reference only where the stencil's low 7 bits
+	//   already equal the reference's low bits — tags/untags the high-bit
+	//   marker inside an active mask without disturbing mask levels
+	tag: {
+		stencil: {
+			compare: "always",
+			failOp: "keep",
+			depthFailOp: "keep",
+			passOp: "replace",
+		},
+		readMask: 0xff,
+		writeMask: 0xff,
+		colorWriteMask: 0,
+	},
+	mark: {
+		stencil: {
+			compare: "equal",
+			failOp: "keep",
+			depthFailOp: "keep",
+			passOp: "replace",
+		},
+		readMask: 0x7f,
+		writeMask: 0xff,
+		colorWriteMask: 0,
+	},
 };
 
 /**
@@ -228,6 +257,100 @@ export default class WebGPUPipelineCache {
 				bindGroupLayouts: [this.clearFrameLayout],
 			}),
 		};
+
+		// ---- registered (non-built-in) shader families -------------------
+		// effect modules are deduplicated by their exact module text: clones
+		// and same-shape effects share one module and its pipelines
+		/** @type {Map<string, string>} moduleText → family key */
+		this.registeredModules = new Map();
+		/** @type {Map<string, {stride: number, attributes: object[]}>} family key → vertex-layout alias */
+		this.vertexLayoutAliases = new Map();
+		/** @type {Map<string, GPUBindGroupLayout>} shape signature → group-3 layout */
+		this.effectLayouts = new Map();
+
+		// group 2 (lights) is reserved but unused by the 2D tier: pipeline
+		// layouts are positional, so families binding group 3 interpose a
+		// shared empty layout — and passes set the matching empty bind group,
+		// which some implementations validate even for empty layouts
+		this.emptyLayout = device.createBindGroupLayout({
+			label: "melonJS empty group layout",
+			entries: [],
+		});
+		this.emptyBindGroup = device.createBindGroup({
+			label: "melonJS empty group",
+			layout: this.emptyLayout,
+			entries: [],
+		});
+
+		/**
+		 * Device generation this cache belongs to — bumped once per cache
+		 * construction. Consumers holding device-scoped objects built
+		 * against this cache (effect modules, bind groups) compare their
+		 * recorded epoch and lazily rebuild after a device loss.
+		 * @type {number}
+		 */
+		this.epoch = ++WebGPUPipelineCache.epochCounter;
+	}
+
+	/**
+	 * monotonic construction counter backing {@link WebGPUPipelineCache#epoch}
+	 * @ignore
+	 */
+	static epochCounter = 0;
+
+	/**
+	 * Register a shader family beyond the built-in three, routing it through
+	 * the same keyed {@link WebGPUPipelineCache#get} lookup. Identical module
+	 * text registers once — the returned key is stable per text, so clones
+	 * and same-body effects share the module and every pipeline built on it.
+	 * @param {string} code - the complete WGSL module text
+	 * @param {object} [options] - family options
+	 * @param {GPUBindGroupLayout[]} [options.bindGroupLayouts] - full positional
+	 *   bind-group-layout list (defaults to `[frameLayout, materialLayout]`)
+	 * @param {string} [options.vertexLayoutKey="quad"] - reuse a registered
+	 *   vertex layout under this family (the effect blit rides the quad layout)
+	 * @param {string} [options.label] - debug label for the shader module
+	 * @returns {string} the family key to pass to {@link WebGPUPipelineCache#get}
+	 */
+	registerShader(code, options = {}) {
+		let key = this.registeredModules.get(code);
+		if (typeof key === "undefined") {
+			key = `effect:${this.registeredModules.size}`;
+			this.registeredModules.set(code, key);
+			this.modules[key] = this.device.createShaderModule({
+				label: options.label ?? `melonJS ${key} shader`,
+				code,
+			});
+			this.pipelineLayouts[key] = this.device.createPipelineLayout({
+				bindGroupLayouts: options.bindGroupLayouts ?? [
+					this.frameLayout,
+					this.materialLayout,
+				],
+			});
+			this.vertexLayoutAliases.set(key, options.vertexLayoutKey ?? "quad");
+		}
+		return key;
+	}
+
+	/**
+	 * Fetch (building on first use) the group-3 bind-group layout for an
+	 * effect shape. Effects with the same shape — same uniform block size,
+	 * same texture/sampler bindings, same builtins — share one layout, so
+	 * their pipeline layouts (and pipelines) are shareable too.
+	 * @param {string} signature - the shape signature (caller-composed)
+	 * @param {GPUBindGroupLayoutEntry[]} entries - the layout entries
+	 * @returns {GPUBindGroupLayout} the cached layout
+	 */
+	getEffectLayout(signature, entries) {
+		let layout = this.effectLayouts.get(signature);
+		if (typeof layout === "undefined") {
+			layout = this.device.createBindGroupLayout({
+				label: `melonJS effect layout ${signature}`,
+				entries,
+			});
+			this.effectLayouts.set(signature, layout);
+		}
+		return layout;
 	}
 
 	/**
@@ -259,7 +382,7 @@ export default class WebGPUPipelineCache {
 	 * @param {string} topology - portable topology name ("triangle-list", …)
 	 * @param {string} blendMode - blend mode (normalized internally)
 	 * @param {boolean} premultipliedAlpha - source premultiplication flag
-	 * @param {string} [stencilMode="none"] - "none" | "write" | "test"
+	 * @param {string} [stencilMode="none"] - "none" | "write" | "test" | "tag" | "mark"
 	 * @returns {GPURenderPipeline} the pipeline
 	 */
 	get(
@@ -275,7 +398,11 @@ export default class WebGPUPipelineCache {
 		let pipeline = this.pipelines.get(key);
 		if (typeof pipeline === "undefined") {
 			const stencil = STENCIL_STATES[stencilMode] ?? STENCIL_STATES.none;
-			const vertexLayout = this.vertexLayouts.get(shaderKey);
+			// registered families may alias a built-in vertex layout (effect
+			// blits ride the frozen quad layout)
+			const vertexLayout = this.vertexLayouts.get(
+				this.vertexLayoutAliases.get(shaderKey) ?? shaderKey,
+			);
 			pipeline = this.device.createRenderPipeline({
 				label: `melonJS ${key}`,
 				layout: this.pipelineLayouts[shaderKey],

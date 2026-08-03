@@ -39,7 +39,6 @@ export const createGame = async () => {
 		scaleMethod: "fit",
 		scaleTarget,
 		renderer: video.AUTO,
-		preferWebGL1: false,
 		subPixel: false,
 		highPrecisionShader: false,
 		// Anti-aliasing smooths every procedural draw call — the peg

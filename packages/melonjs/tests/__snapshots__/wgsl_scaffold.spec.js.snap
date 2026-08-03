@@ -1,0 +1,108 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WGSL effect scaffold > all builtins: full module snapshot 1`] = `
+"// ---- melonJS effect scaffold ----
+struct FrameUniforms {
+	projection : mat4x4<f32>,
+	lineWidth : f32,
+};
+@group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
+@group(1) @binding(0) var uTexture : texture_2d<f32>;
+@group(1) @binding(1) var uSampler : sampler;
+var<private> screen_uv : vec2f;
+var<private> noise_uv : vec2f;
+struct MEBuiltins {
+	size_obj : vec2f,
+	size_img : vec2f,
+	offset : vec2f,
+};
+@group(3) @binding(1) var<uniform> ME : MEBuiltins;
+@group(3) @binding(2) var screen_texture : texture_2d<f32>;
+@group(3) @binding(3) var screen_sampler : sampler;
+struct VSOut {
+	@builtin(position) position : vec4f,
+	@location(0) vRegion : vec2f,
+	@location(1) vColor : vec4f,
+	@location(2) vScreenUV : vec2f,
+	@location(3) vNoiseUV : vec2f,
+};
+
+@vertex
+fn vertex_main(
+	@location(0) aVertex : vec3f,
+	@location(1) aRegion : vec2f,
+	@location(2) aColor : vec4f,
+	@location(3) aTextureId : f32,
+) -> VSOut {
+	var out : VSOut;
+	let clip = uFrame.projection * vec4f(aVertex, 1.0);
+	// GL-convention clip z in [-w, w] -> WebGPU [0, w]
+	out.position = vec4f(clip.xy, (clip.z + clip.w) * 0.5, clip.w);
+	out.vColor = vec4f(aColor.bgr * aColor.a, aColor.a);
+	out.vRegion = aRegion;
+	let ndc = clip.xy / clip.w;
+	// y-down: capture row 0 = screen top under WebGPU
+	out.vScreenUV = vec2f(ndc.x * 0.5 + 0.5, 0.5 - ndc.y * 0.5);
+	out.vNoiseUV = aRegion * (ME.size_img / ME.size_obj) - ME.offset / ME.size_obj;
+	return out;
+}
+
+// ---- user body (verbatim) ----
+
+struct Fx { uStrength : f32, };
+@group(3) @binding(0) var<uniform> fx : Fx;
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let scene = textureSample(screen_texture, screen_sampler, screen_uv);
+	return mix(color, scene, fx.uStrength * noise_uv.x);
+}
+
+
+@fragment
+fn fragment_main(in : VSOut) -> @location(0) vec4f {
+	screen_uv = in.vScreenUV;
+	noise_uv = in.vNoiseUV;
+	let texColor = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	return apply(texColor, in.vRegion);
+}"
+`;
+
+exports[`WGSL effect scaffold > plain body: full module snapshot 1`] = `
+"// ---- melonJS effect scaffold ----
+struct FrameUniforms {
+	projection : mat4x4<f32>,
+	lineWidth : f32,
+};
+@group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
+@group(1) @binding(0) var uTexture : texture_2d<f32>;
+@group(1) @binding(1) var uSampler : sampler;
+struct VSOut {
+	@builtin(position) position : vec4f,
+	@location(0) vRegion : vec2f,
+	@location(1) vColor : vec4f,
+};
+
+@vertex
+fn vertex_main(
+	@location(0) aVertex : vec3f,
+	@location(1) aRegion : vec2f,
+	@location(2) aColor : vec4f,
+	@location(3) aTextureId : f32,
+) -> VSOut {
+	var out : VSOut;
+	let clip = uFrame.projection * vec4f(aVertex, 1.0);
+	// GL-convention clip z in [-w, w] -> WebGPU [0, w]
+	out.position = vec4f(clip.xy, (clip.z + clip.w) * 0.5, clip.w);
+	out.vColor = vec4f(aColor.bgr * aColor.a, aColor.a);
+	out.vRegion = aRegion;
+	return out;
+}
+
+// ---- user body (verbatim) ----
+fn apply(color : vec4f, uv : vec2f) -> vec4f { return color; }
+
+@fragment
+fn fragment_main(in : VSOut) -> @location(0) vec4f {
+	let texColor = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	return apply(texColor, in.vRegion);
+}"
+`;

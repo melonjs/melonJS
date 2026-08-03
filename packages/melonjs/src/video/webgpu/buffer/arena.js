@@ -49,11 +49,16 @@ export default class WebGPUBufferArena {
 	 * Reserve `byteLength` bytes and return where they live. The region is
 	 * valid until the next `reset()`.
 	 * @param {number} byteLength - bytes to reserve (must fit in one page)
+	 * @param {number} [alignment=4] - required offset alignment (a power of
+	 *   two; effect uniform snapshots pass the device's
+	 *   `minUniformBufferOffsetAlignment` so the region can serve as a
+	 *   dynamic bind-group offset)
 	 * @returns {{buffer: GPUBuffer, offset: number}} the reserved region
 	 */
-	alloc(byteLength) {
-		// writeBuffer offsets must be 4-byte aligned
+	alloc(byteLength, alignment = 4) {
+		// writeBuffer offsets must be 4-byte aligned (callers may need more)
 		const aligned = (byteLength + 3) & ~3;
+		this.offset = (this.offset + alignment - 1) & ~(alignment - 1);
 		if (aligned > this.pageSize) {
 			throw new Error(
 				`WebGPUBufferArena: allocation of ${byteLength} bytes exceeds the page size (${this.pageSize})`,

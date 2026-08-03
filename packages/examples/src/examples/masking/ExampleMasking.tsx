@@ -25,7 +25,6 @@ const createGame = async () => {
 			parent: "screen",
 			scaleMethod: "fit",
 			renderer: video.AUTO,
-			preferWebGL1: false,
 		});
 		await app.init();
 	} catch {

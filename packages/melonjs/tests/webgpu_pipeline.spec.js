@@ -24,6 +24,9 @@ function createMockDevice() {
 		createBindGroupLayout(descriptor) {
 			return { label: descriptor.label };
 		},
+		createBindGroup(descriptor) {
+			return { label: descriptor.label };
+		},
 		createShaderModule(descriptor) {
 			return { label: descriptor.label };
 		},
@@ -228,6 +231,33 @@ describe("WebGPU pipeline (device-free units)", () => {
 			expect(none.depthStencil.stencilWriteMask).toBe(0);
 		});
 
+		it("gradient-mask variants: tag replaces unconditionally, mark replaces behind the low-7-bit compare", () => {
+			const { cache } = makeCache();
+			const descriptorFor = (stencilMode) => {
+				return cache.get("quad", "triangle-list", "normal", true, stencilMode)
+					.descriptor;
+			};
+
+			// tag: stamp the shape's pixels with the dynamic reference on a
+			// cleared stencil — replace (not increment) so shape overdraw
+			// (fan/earcut geometry) can never double-count
+			const tag = descriptorFor("tag");
+			expect(tag.fragment.targets[0].writeMask).toBe(0);
+			expect(tag.depthStencil.stencilFront.compare).toBe("always");
+			expect(tag.depthStencil.stencilFront.passOp).toBe("replace");
+			expect(tag.depthStencil.stencilWriteMask).toBe(0xff);
+
+			// mark: only pixels whose low 7 bits equal the reference's get
+			// the full reference written (mask levels never use the high
+			// bit, so the marker cannot collide with one)
+			const mark = descriptorFor("mark");
+			expect(mark.fragment.targets[0].writeMask).toBe(0);
+			expect(mark.depthStencil.stencilFront.compare).toBe("equal");
+			expect(mark.depthStencil.stencilFront.passOp).toBe("replace");
+			expect(mark.depthStencil.stencilReadMask).toBe(0x7f);
+			expect(mark.depthStencil.stencilWriteMask).toBe(0xff);
+		});
+
 		it("registered vertex layouts land in the descriptor with declaration-order locations", () => {
 			const { cache } = makeCache();
 			const descriptor = cache.get(
@@ -267,6 +297,62 @@ describe("WebGPU pipeline (device-free units)", () => {
 				cache.get("clear", "triangle-list", "additive", true).descriptor
 					.fragment.targets[0].blend,
 			).toBeUndefined();
+		});
+
+		it("registerShader dedupes by module text: same body → same family + module", () => {
+			const { cache } = makeCache();
+			const codeA = "fn a() {}";
+			const keyA = cache.registerShader(codeA);
+			const keyAgain = cache.registerShader(codeA);
+			const keyB = cache.registerShader("fn b() {}");
+			expect(keyAgain).toBe(keyA);
+			expect(keyB).not.toBe(keyA);
+			expect(cache.modules[keyA]).toBeDefined();
+		});
+
+		it("registered families ride an aliased vertex layout through get()", () => {
+			const { cache } = makeCache();
+			const key = cache.registerShader("fn c() {}", {
+				vertexLayoutKey: "quad",
+			});
+			const descriptor = cache.get(
+				key,
+				"triangle-list",
+				"normal",
+				true,
+			).descriptor;
+			// the frozen 28-byte quad layout, without re-registering it
+			expect(descriptor.vertex.buffers[0].arrayStride).toBe(28);
+			// same family + same state tuple → cached pipeline
+			expect(cache.get(key, "triangle-list", "normal", true)).toBe(
+				cache.get(key, "triangle-list", "normal", true),
+			);
+		});
+
+		it("effect layouts are cached by shape signature", () => {
+			const { cache } = makeCache();
+			const entries = [
+				{
+					binding: 0,
+					visibility: GPUShaderStage.FRAGMENT,
+					buffer: { type: "uniform", hasDynamicOffset: true },
+				},
+			];
+			const a = cache.getEffectLayout("u16", entries);
+			const b = cache.getEffectLayout("u16", entries);
+			const c = cache.getEffectLayout("u32", entries);
+			expect(b).toBe(a);
+			expect(c).not.toBe(a);
+		});
+
+		it("exposes the shared empty group (reserved group-2 slot) and an epoch", () => {
+			const first = makeCache().cache;
+			const second = makeCache().cache;
+			expect(first.emptyLayout).toBeDefined();
+			expect(first.emptyBindGroup).toBeDefined();
+			// each construction (device loss) bumps the epoch — consumers
+			// lazily rebuild device-scoped state on mismatch
+			expect(second.epoch).toBeGreaterThan(first.epoch);
 		});
 	});
 });

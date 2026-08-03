@@ -37,7 +37,6 @@ const createGame = async () => {
 		const app = new Application(canvasW, canvasH, {
 			parent: "screen",
 			renderer: video.AUTO,
-			preferWebGL1: false,
 		});
 		await app.init();
 	} catch {

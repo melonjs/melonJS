@@ -854,8 +854,20 @@ export default class Renderable extends Rect {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
 	 */
 	preDraw(renderer) {
-		const ax = this.width * this.anchorPoint.x;
-		const ay = this.height * this.anchorPoint.y;
+		// The anchor offset of an `Infinity`-sized renderable (a Container's
+		// default size, ColorLayer) is `NaN` (`Infinity * 0`) or `±Infinity` —
+		// one `translate()` by that writes NaN into the transform's z column
+		// (the sub-pixel snap only repairs tx/ty), and every batched vertex
+		// recorded under it inherits z = NaN and is clipped away by the GPU
+		// backends. The 2D canvas context ignores non-finite transforms per
+		// spec; match it by treating the offset as 0 — an anchor point has no
+		// meaningful offset on an infinite size anyway.
+		const ax = Number.isFinite(this.width)
+			? this.width * this.anchorPoint.x
+			: 0;
+		const ay = Number.isFinite(this.height)
+			? this.height * this.anchorPoint.y
+			: 0;
 
 		// save renderer context
 		renderer.save();

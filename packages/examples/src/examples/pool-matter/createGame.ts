@@ -30,7 +30,6 @@ export const createGame = async () => {
 		parent: "screen",
 		scaleMethod: "fit",
 		renderer: video.AUTO,
-		preferWebGL1: false,
 		subPixel: false,
 		highPrecisionShader: false,
 		// Anti-aliasing smooths the painted edges on the table sprite,

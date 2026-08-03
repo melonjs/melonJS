@@ -15,7 +15,7 @@ import {
 	plugin,
 	state,
 } from "melonjs";
-import { useEffect } from "react";
+import { createExampleComponent } from "../utils";
 import { levels, resources } from "./resources";
 
 const loadLevel = (name: string) => {
@@ -78,7 +78,6 @@ const createGame = async () => {
 	const app = new Application(1024, 768, {
 		parent: "screen",
 		scaleMethod: "fill-max",
-		preferWebGL1: false,
 	});
 	await app.init();
 
@@ -125,12 +124,13 @@ const LevelSelector = () => {
 	);
 };
 
+const Game = createExampleComponent(createGame);
+
 export const ExampleTiledMapLoader = () => {
-	useEffect(() => {
-		// `game` is undefined until the first Application finishes init()
-		if (!game?.isInitialized) {
-			void createGame();
-		}
-	}, []);
-	return <LevelSelector />;
+	return (
+		<>
+			<Game />
+			<LevelSelector />
+		</>
+	);
 };

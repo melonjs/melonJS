@@ -1,4 +1,31 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct ShadowUniforms {
+	uShadowOffset : vec2f,
+	uShadowColor : vec3f,
+	uShadowOpacity : f32,
+	uTextureSize : vec2f,
+};
+@group(3) @binding(0) var<uniform> fx : ShadowUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	if (color.a > 0.0) {
+		return color;
+	}
+	// check if the shadow source pixel is opaque. Level-0 sample: past a
+	// non-uniform return implicit derivatives are unavailable (sprites are
+	// single-level textures, so identical output)
+	let offset = fx.uShadowOffset / fx.uTextureSize;
+	let shadowAlpha = textureSampleLevel(uTexture, uSampler, uv - offset, 0.0).a;
+	if (shadowAlpha > 0.0) {
+		return vec4f(fx.uShadowColor, shadowAlpha * fx.uShadowOpacity) * vColor;
+	}
+	return color;
+}
+`;
 
 /**
  * A shader effect that adds a drop shadow beneath the sprite.
@@ -26,9 +53,8 @@ export default class DropShadowEffect extends ShaderEffect {
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec2 uShadowOffset;
 			uniform vec3 uShadowColor;
 			uniform float uShadowOpacity;
@@ -46,7 +72,8 @@ export default class DropShadowEffect extends ShaderEffect {
 				return color;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		const texSize = options.textureSize ?? [256, 256];
 		this.setUniform(

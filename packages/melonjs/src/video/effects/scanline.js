@@ -1,4 +1,44 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct ScanlineUniforms {
+	uScanlineOpacity : f32,
+	uCurvature : f32,
+	uVignetteStrength : f32,
+};
+@group(3) @binding(0) var<uniform> fx : ScanlineUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	var c = color;
+	var coords = uv;
+
+	// barrel distortion (CRT curvature)
+	if (fx.uCurvature > 0.0) {
+		var centered = uv * 2.0 - 1.0;
+		centered *= 1.0 + fx.uCurvature * dot(centered, centered);
+		coords = centered * 0.5 + 0.5;
+		if (coords.x < 0.0 || coords.x > 1.0 || coords.y < 0.0 || coords.y > 1.0) {
+			discard;
+		}
+		c = textureSampleLevel(uTexture, uSampler, coords, 0.0) * vColor;
+	}
+
+	// scanlines
+	let line = sin(coords.y * 800.0) * 0.5 + 0.5;
+	c = vec4f(c.rgb * (1.0 - line * fx.uScanlineOpacity), c.a);
+
+	// vignette
+	if (fx.uVignetteStrength > 0.0) {
+		let vig = coords * (1.0 - coords);
+		let vigFactor = vig.x * vig.y * 15.0;
+		c = vec4f(c.rgb * clamp(pow(vigFactor, fx.uVignetteStrength), 0.0, 1.0), c.a);
+	}
+
+	return c;
+}
+`;
 
 /**
  * A shader effect that overlays horizontal scanlines on the sprite.
@@ -25,9 +65,8 @@ export default class ScanlineEffect extends ShaderEffect {
 	 * @param {number} [options.vignetteStrength=0.0] - edge darkening strength (0.0 = none, 0.3 = subtle)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform float uScanlineOpacity;
 			uniform float uCurvature;
 			uniform float uVignetteStrength;
@@ -59,7 +98,8 @@ export default class ScanlineEffect extends ShaderEffect {
 				return color;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		this.setUniform("uScanlineOpacity", options.opacity ?? 0.25);
 		this.setUniform("uCurvature", options.curvature ?? 0.0);

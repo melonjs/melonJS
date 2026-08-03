@@ -1,4 +1,20 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct PixelateUniforms {
+	uPixelSize : f32,
+	uTextureSize : vec2f,
+};
+@group(3) @binding(0) var<uniform> fx : PixelateUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let texel = fx.uPixelSize / fx.uTextureSize;
+	let snapped = texel * floor(uv / texel) + texel * 0.5;
+	return textureSample(uTexture, uSampler, snapped) * vColor;
+}
+`;
 
 /**
  * A shader effect that pixelates the sprite by snapping UV coordinates
@@ -20,9 +36,8 @@ export default class PixelateEffect extends ShaderEffect {
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform float uPixelSize;
 			uniform vec2 uTextureSize;
 			vec4 apply(vec4 color, vec2 uv) {
@@ -31,7 +46,8 @@ export default class PixelateEffect extends ShaderEffect {
 				return texture2D(uSampler, snapped) * vColor;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		this.size = options.size ?? 4.0;
 		const texSize = options.textureSize ?? [256, 256];

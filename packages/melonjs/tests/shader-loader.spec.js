@@ -565,4 +565,82 @@ describe("shader assets + clone under context loss", () => {
 			expect(loader.getShader("pair-broken")).toBe(null);
 		});
 	});
+
+	describe("dual-language {glsl, wgsl} shader assets", () => {
+		const WGSL_FLASH = `
+struct Fx { uIntensity : f32, };
+@group(3) @binding(0) var<uniform> fx : Fx;
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return mix(color, vec4f(1.0), fx.uIntensity);
+}
+`;
+
+		it("inline {glsl, wgsl} data compiles the language the renderer speaks", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "dual-inline",
+				type: "shader",
+				data: { glsl: FLASH, wgsl: WGSL_FLASH },
+			});
+			const fx = loader.getShader("dual-inline");
+			expect(fx).toBeInstanceOf(ShaderEffect);
+			expect(fx.shared).toBe(true);
+			// on the WebGL renderer the GLSL side compiled...
+			expect(fx.enabled).toBe(true);
+			expect(typeof fx._shader.uniforms.uIntensity).not.toBe("undefined");
+			// ...and the untouched recipe still carries both bodies for clone()
+			expect(fx._fragmentBody.wgsl).toBe(WGSL_FLASH);
+			loader.unload({ name: "dual-inline", type: "shader" });
+		});
+
+		it("src {glsl, wgsl} URLs fetch both and compile the matching one", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "dual-url",
+				type: "shader",
+				src: {
+					glsl: `data:text/plain,${encodeURIComponent(FLASH)}`,
+					wgsl: `data:text/plain,${encodeURIComponent(WGSL_FLASH)}`,
+				},
+			});
+			const fx = loader.getShader("dual-url");
+			expect(fx).toBeInstanceOf(ShaderEffect);
+			expect(fx.enabled).toBe(true);
+			expect(typeof fx._shader.uniforms.uIntensity).not.toBe("undefined");
+			loader.unload({ name: "dual-url", type: "shader" });
+		});
+
+		it("a wgsl-only asset on a GLSL renderer preloads as an inert stub (never fails the load)", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			// the mirror of the GLSL-only-on-WebGPU case: the language does
+			// not match, the preload succeeds, the effect is disabled — a
+			// mixed manifest must never brick a game
+			await loader.load({
+				name: "wgsl-only",
+				type: "shader",
+				data: { wgsl: WGSL_FLASH },
+			});
+			const fx = loader.getShader("wgsl-only");
+			expect(fx).toBeInstanceOf(ShaderEffect);
+			expect(fx.enabled).toBe(false);
+			expect(fx.shared).toBe(true);
+			// the whole inert no-op contract holds, unload included
+			expect(() => {
+				fx.setUniform("uIntensity", 1);
+				fx.setTime(1);
+			}).not.toThrow();
+			expect(loader.unload({ name: "wgsl-only", type: "shader" })).toBe(true);
+			expect(fx.destroyed).toBe(true);
+			expect(loader.getShader("wgsl-only")).toBe(null);
+		});
+	});
 });

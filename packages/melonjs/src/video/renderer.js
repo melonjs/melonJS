@@ -111,6 +111,14 @@ export default class Renderer {
 		this.type = "Generic";
 
 		/**
+		 * The {@link Application} this renderer belongs to, set by
+		 * `Application.init()` — engine code holding a renderer reference
+		 * must use this rather than the global game instance.
+		 * @type {Application|undefined}
+		 */
+		this.parentApplication = undefined;
+
+		/**
 		 * Whether this renderer backend can draw TMX tile layers through a
 		 * GPU shader path (see the `gpuTilemap` application setting).
 		 * `false` here on the base/Canvas renderer; GPU backends flip it.

@@ -1,5 +1,18 @@
-import { ColorMatrix } from "../../../math/color_matrix.ts";
-import ShaderEffect from "../shadereffect.js";
+import { ColorMatrix } from "../../math/color_matrix.ts";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct ColorMatrixUniforms {
+	uColorMatrix : mat4x4f,
+};
+@group(3) @binding(0) var<uniform> fx : ColorMatrixUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return fx.uColorMatrix * color;
+}
+`;
 
 /**
  * A shader effect that applies a 4x4 color transformation matrix.
@@ -23,15 +36,15 @@ export default class ColorMatrixEffect extends ShaderEffect {
 	 * @param {ColorMatrix} [options.matrix] - an initial color matrix. Defaults to identity.
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform mat4 uColorMatrix;
 			vec4 apply(vec4 color, vec2 uv) {
 				return uColorMatrix * color;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		/**
 		 * the internal color matrix

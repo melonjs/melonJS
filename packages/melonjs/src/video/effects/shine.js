@@ -1,4 +1,40 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct ShineUniforms {
+	uShineColor : vec3f,
+	uShineWidth : f32,
+	uShineSpeed : f32,
+	uShineIntensity : f32,
+	uShineAngle : f32,
+	uShineBands : f32,
+	uPulseDepth : f32,
+	uPulseSpeed : f32,
+	uTime : f32,
+};
+@group(3) @binding(0) var<uniform> fx : ShineUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	if (color.a == 0.0) {
+		return color;
+	}
+	// Optional brightness pulse on the base color.
+	let pulse = (1.0 - fx.uPulseDepth) + fx.uPulseDepth * sin(fx.uTime * fx.uPulseSpeed);
+	// Project uv along the sweep axis; tile by uShineBands (wrap-around
+	// distance keeps sweeps gapless — see the GLSL twin's rationale).
+	let pos = uv.x * cos(fx.uShineAngle) + uv.y * sin(fx.uShineAngle);
+	let localX = fract(pos * fx.uShineBands);
+	let sweep = fract(fx.uTime * fx.uShineSpeed);
+	let d = abs(localX - sweep);
+	let dist = min(d, 1.0 - d);
+	let glint = smoothstep(fx.uShineWidth, 0.0, dist) * fx.uShineIntensity;
+	// premultiplied-alpha discipline mirrors the GLSL twin
+	let result = color.rgb * pulse + fx.uShineColor * glint * color.a;
+	return vec4f(result, color.a);
+}
+`;
 
 /**
  * A shader effect that sweeps a bright highlight band across the sprite —
@@ -50,9 +86,8 @@ export default class ShineEffect extends ShaderEffect {
 	 * @param {number} [options.pulseSpeed=3.0] - pulse oscillation rate (radians/second)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform vec3  uShineColor;
 			uniform float uShineWidth;
 			uniform float uShineSpeed;
@@ -89,7 +124,8 @@ export default class ShineEffect extends ShaderEffect {
 				return vec4(result, color.a);
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		this.setUniform(
 			"uShineColor",

@@ -1,4 +1,22 @@
-import ShaderEffect from "../shadereffect.js";
+import ShaderEffect from "./shadereffect.js";
+
+// the WGSL twin of the GLSL body below — same logic, same uniform
+// names, picked by the ShaderEffect base per renderer.shaderLanguage
+const wgslFragment = `
+struct WaveUniforms {
+	uAmplitude : f32,
+	uFrequency : f32,
+	uSpeed : f32,
+	uTime : f32,
+};
+@group(3) @binding(0) var<uniform> fx : WaveUniforms;
+
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	let wave = sin(uv.y * fx.uFrequency + fx.uTime * fx.uSpeed) * fx.uAmplitude;
+	let distorted = vec2f(uv.x + wave, uv.y);
+	return textureSample(uTexture, uSampler, distorted) * vColor;
+}
+`;
 
 /**
  * A shader effect that applies a sine wave distortion to the sprite.
@@ -21,9 +39,8 @@ export default class WaveEffect extends ShaderEffect {
 	 * @param {number} [options.speed=2.0] - wave animation speed
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
+		super(renderer, {
+			glsl: `
 			uniform float uAmplitude;
 			uniform float uFrequency;
 			uniform float uSpeed;
@@ -34,7 +51,8 @@ export default class WaveEffect extends ShaderEffect {
 				return texture2D(uSampler, distorted) * vColor;
 			}
 			`,
-		);
+			wgsl: wgslFragment,
+		});
 
 		this.setUniform("uAmplitude", options.amplitude ?? 0.01);
 		this.setUniform("uFrequency", options.frequency ?? 10.0);

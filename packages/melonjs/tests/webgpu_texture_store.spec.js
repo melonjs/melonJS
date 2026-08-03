@@ -78,6 +78,13 @@ describe("WebGPUTextureStore", () => {
 			frameId: 1,
 			commandEncoder: null,
 			retiredTextures: [],
+			retireTexture(texture) {
+				if (this.commandEncoder !== null) {
+					this.retiredTextures.push(texture);
+				} else {
+					texture.destroy();
+				}
+			},
 			cache: {
 				getUnit(texture) {
 					return texture.__unit;

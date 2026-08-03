@@ -1,12 +1,21 @@
-import { game } from "../../application/application.ts";
 import { getImage } from "./../../loader/loader.js";
 import { Vector2d } from "../../math/vector2d.ts";
 import Sprite from "./../../renderable/sprite.js";
+import { on, VIDEO_INIT } from "../../system/event.ts";
 import pool from "../../system/legacy_pool.js";
 import { parseAseprite } from "./parser/aseprite.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
 import Texture2d from "./texture2d.ts";
+
+// The active renderer, captured at video init — atlas registration goes
+// through the renderer's own cache rather than the global game instance
+// (`on`, not `once`: a re-init — new Application after destroy — must
+// re-capture the new renderer).
+let _renderer;
+on(VIDEO_INIT, (renderer) => {
+	_renderer = renderer;
+});
 
 /**
  * additional import for TypeScript
@@ -258,7 +267,7 @@ export class TextureAtlas extends Texture2d {
 		// Add self to TextureCache if cache !== false
 		if (cache !== false) {
 			this.sources.forEach((source) => {
-				game.renderer.cache.set(source, this);
+				_renderer.cache.set(source, this);
 			});
 		}
 

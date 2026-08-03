@@ -13,7 +13,6 @@ import {
 	type ShaderEffect,
 	Stage,
 	VignetteEffect,
-	WebGLRenderer,
 } from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
@@ -57,17 +56,17 @@ export class PlayScreen extends Stage {
 			app.world.addChild(this.virtualJoypad);
 		}
 
-		// Vignette post-effect (WebGL only). Cache the effect across resets
-		// so we don't stack a new VignetteEffect per restart. Same goes for
+		// Vignette post-effect, cached across resets so we don't stack a
+		// new VignetteEffect per restart. No backend check needed: on a
+		// renderer without a programmable pipeline (Canvas) the effect
+		// self-disables and the scene renders without it. Same goes for
 		// the color grading — set from the identity each time so contrast
 		// and saturation don't compound on each level reload.
-		if (app.renderer instanceof WebGLRenderer) {
-			if (!this.vignette) {
-				this.vignette = new VignetteEffect(app.renderer);
-			}
-			if (!app.viewport.postEffects.includes(this.vignette)) {
-				app.viewport.addPostEffect(this.vignette);
-			}
+		if (!this.vignette) {
+			this.vignette = new VignetteEffect(app.renderer);
+		}
+		if (!app.viewport.postEffects.includes(this.vignette)) {
+			app.viewport.addPostEffect(this.vignette);
 		}
 		app.viewport.colorMatrix
 			.copy(IDENTITY_COLOR_MATRIX)

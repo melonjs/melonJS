@@ -66,10 +66,10 @@ function hasRequiredExtension(imgExt) {
 }
 
 export function parseCompressedImage(arrayBuffer, imgExt) {
-	// check if the current renderer is WebGL
-	if (!_renderer.type.includes("WebGL")) {
+	// compressed textures need a GPU backend (WebGL or WebGPU)
+	if (!_renderer.type.includes("WebGL") && !_renderer.type.includes("WebGPU")) {
 		throw new Error(
-			"unsupported texture format: " + imgExt + " (WebGL renderer required)",
+			"unsupported texture format: " + imgExt + " (a GPU renderer required)",
 		);
 	}
 
