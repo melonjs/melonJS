@@ -427,7 +427,56 @@ export class WaterTextureObj extends me.Sprite {
 			}
 		`;
 
-		const water = new me.ShaderEffect(me.game.renderer, fragment);
+		// the WGSL twin — same logic and uniform names, picked by the
+		// engine when the WebGPU renderer is active
+		const fragmentWGSL = `
+			struct WaterUniforms {
+				rangeWater : f32,
+				uTime : f32,
+				uEdgeAmp : f32,
+				uEdgeFreq : f32,
+				uScreenAmp : f32,
+				uScreenFreq : f32,
+				uFlowAmp : f32,
+				uNoiseAmp : f32,
+			};
+			@group(3) @binding(0) var<uniform> fx : WaterUniforms;
+			@group(3) @binding(1) var uNoise : texture_2d<f32>;
+			@group(3) @binding(2) var uNoiseSampler : sampler;
+			@group(3) @binding(3) var uNoise2 : texture_2d<f32>;
+			@group(3) @binding(4) var uNoise2Sampler : sampler;
+
+			fn apply(color : vec4f, uv : vec2f) -> vec4f {
+				let t = fx.uTime % 6283.18;
+
+				let flow1 = textureSample(uNoise, uNoiseSampler, noise_uv + vec2f(t * 0.05)).rg;
+				let flow2 = textureSample(uNoise, uNoiseSampler, noise_uv * 2.3 - vec2f(t * 0.03)).rg;
+				let flow = (flow1 + flow2 * 0.5) - vec2f(0.75);
+				let noise = 2.0 * textureSample(uNoise2, uNoise2Sampler, noise_uv + vec2f(0.5, 0.2) * t).rg - vec2f(1.0);
+
+				let n = textureSample(uNoise, uNoiseSampler, vec2f(noise_uv.x * 3.0, t * 0.1)).r;
+				let edgeWave = sin(noise_uv.x * fx.uEdgeFreq + t * 1.8) * fx.uEdgeAmp
+								+ sin(noise_uv.x * fx.uEdgeFreq * 2.2 - t * 2.6) * fx.uEdgeAmp * 0.5
+								+ (n - 0.5) * fx.uEdgeAmp * 0.6;
+				let edgeOffset = vec2f(0.0, edgeWave);
+
+				let screenEdgeWave = sin(screen_uv.x * fx.uScreenFreq + t * 1.4) * fx.uScreenAmp
+									+ sin(screen_uv.x * fx.uScreenFreq * 2.2 - t * 2.1) * fx.uScreenAmp * 0.5;
+				let dynamicRange = fx.rangeWater + screenEdgeWave;
+
+				var normalizedUV = screen_uv;
+				normalizedUV.y = dynamicRange - normalizedUV.y;
+
+				var refractedScreen = textureSample(screen_texture, screen_sampler, normalizedUV + flow * fx.uFlowAmp);
+				refractedScreen = refractedScreen * textureSample(uTexture, uSampler, uv + edgeOffset + noise * fx.uNoiseAmp);
+				return refractedScreen;
+			}
+		`;
+
+		const water = new me.ShaderEffect(me.game.renderer, {
+			glsl: fragment,
+			wgsl: fragmentWGSL,
+		});
 		water.setTexture("uNoise", noise.getTexture(), "repeat");
 		water.setTexture("uNoise2", noise2.getTexture(), "repeat");
 
