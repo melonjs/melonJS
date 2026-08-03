@@ -1,4 +1,5 @@
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
+import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
 
 /**
  * Renderer-owned GPU texture store for the WebGPU backend — the counterpart
@@ -97,6 +98,44 @@ export default class WebGPUTextureStore {
 			options.force === true ||
 			record.source !== source
 		) {
+			// compressed sources (parsed dds/ktx/pvr/pkm) carry pre-encoded
+			// block data: a dedicated createTexture + per-mip writeTexture
+			// path, and static content — no same-frame re-upload concerns
+			if (source.compressed === true) {
+				if (typeof record === "undefined" || record.source !== source) {
+					const metrics = COMPRESSED_FORMATS.get(source.format);
+					if (typeof metrics === "undefined") {
+						throw new Error(
+							`WebGPUTextureStore: unsupported compressed texture format 0x${source.format.toString(16)}`,
+						);
+					}
+					if (typeof record !== "undefined") {
+						this.retire(record.texture);
+					}
+					const gpuTexture = this.device.createTexture({
+						label: "melonJS compressed texture",
+						size: [source.width, source.height],
+						format: metrics.format,
+						mipLevelCount: source.mipmaps.length,
+						// compressed formats cannot be render attachments
+						usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+					});
+					uploadCompressedTexture(this.device, gpuTexture, source, metrics);
+					record = {
+						texture: gpuTexture,
+						view: gpuTexture.createView(),
+						source,
+						width: source.width,
+						height: source.height,
+						frameId: -1,
+						bindGroupBySampler: new Map(),
+					};
+					this.records.set(unit, record);
+				}
+				record.frameId = this.renderer.frameId;
+				this.lastRecord = record;
+				return this.bindGroupFor(record, texture, wrap);
+			}
 			// prefer real pixel dimensions; HTMLVideoElement exposes them
 			// through videoWidth/videoHeight (width/height default to 0)
 			const width = source.width || source.videoWidth || 1;
@@ -167,6 +206,15 @@ export default class WebGPUTextureStore {
 		// combined bind groups from the raw view
 		this.lastRecord = record;
 
+		return this.bindGroupFor(record, texture, wrap);
+	}
+
+	/**
+	 * the per-sampler material bind group for a resident record (shared by
+	 * the image and compressed upload paths)
+	 * @ignore
+	 */
+	bindGroupFor(record, texture, wrap) {
 		const filter =
 			typeof texture.filter === "string"
 				? texture.filter

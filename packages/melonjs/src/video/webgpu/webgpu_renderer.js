@@ -40,6 +40,7 @@ import WebGPUPipelineCache, {
 	normalizeBlendMode,
 } from "./pipeline/cache.js";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import { COMPRESSION_FEATURES } from "./texture/compressed.js";
 import { WebGPUFrameTexture } from "./texture/frametexture.js";
 import WebGPUTextureStore from "./texture/store.js";
 
@@ -299,7 +300,13 @@ export default class WebGPURenderer extends Renderer {
 		}
 		this.adapter = adapter;
 
-		this.device = await adapter.requestDevice();
+		// request the compressed-texture families the adapter offers, so
+		// the loader's dds/ktx/pvr/pkm assets can upload natively
+		this.device = await adapter.requestDevice({
+			requiredFeatures: COMPRESSION_FEATURES.filter((feature) => {
+				return adapter.features.has(feature);
+			}),
+		});
 
 		// identify the driver in the console header, same as the WebGL
 		// backend does through its debug-renderer-info strings. The
@@ -1487,6 +1494,81 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * The compressed-texture families this device supports, in the same
+	 * shape as the GL backend (one key per family; supported families hold
+	 * an object of WebGL format constants — the values the loader parsers
+	 * emit — unsupported ones are null, so the shared
+	 * hasSupportedCompressedFormats works unchanged). PVRTC has no WebGPU
+	 * equivalent and stays null.
+	 * @returns {object} one key per extension family
+	 * @override
+	 */
+	getSupportedCompressedTextureFormats() {
+		if (typeof this.supportedCompressedFormats === "undefined") {
+			const features = this.device?.features;
+			const bc = features?.has("texture-compression-bc") === true;
+			const etc2 = features?.has("texture-compression-etc2") === true;
+			const astc = features?.has("texture-compression-astc") === true;
+			this.supportedCompressedFormats = {
+				astc: astc
+					? {
+							COMPRESSED_RGBA_ASTC_4x4_KHR: 0x93b0,
+							COMPRESSED_RGBA_ASTC_5x4_KHR: 0x93b1,
+							COMPRESSED_RGBA_ASTC_5x5_KHR: 0x93b2,
+							COMPRESSED_RGBA_ASTC_6x5_KHR: 0x93b3,
+							COMPRESSED_RGBA_ASTC_6x6_KHR: 0x93b4,
+							COMPRESSED_RGBA_ASTC_8x5_KHR: 0x93b5,
+							COMPRESSED_RGBA_ASTC_8x6_KHR: 0x93b6,
+							COMPRESSED_RGBA_ASTC_8x8_KHR: 0x93b7,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR: 0x93d0,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR: 0x93d1,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR: 0x93d2,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR: 0x93d3,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR: 0x93d4,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR: 0x93d5,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR: 0x93d6,
+							COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR: 0x93d7,
+						}
+					: null,
+				bptc: bc ? { COMPRESSED_RGBA_BPTC_UNORM_EXT: 0x8e8c } : null,
+				s3tc: bc
+					? {
+							COMPRESSED_RGB_S3TC_DXT1_EXT: 0x83f0,
+							COMPRESSED_RGBA_S3TC_DXT3_EXT: 0x83f2,
+							COMPRESSED_RGBA_S3TC_DXT5_EXT: 0x83f3,
+						}
+					: null,
+				s3tc_srgb: bc
+					? {
+							COMPRESSED_SRGB_S3TC_DXT1_EXT: 0x8c4c,
+							COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT: 0x8c4d,
+							COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT: 0x8c4e,
+							COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT: 0x8c4f,
+						}
+					: null,
+				pvrtc: null,
+				// ETC1 payloads upload as ETC2 rgb8 (superset)
+				etc1: etc2 ? { COMPRESSED_RGB_ETC1_WEBGL: 0x8d64 } : null,
+				etc2: etc2
+					? {
+							COMPRESSED_RGB8_ETC2: 0x9274,
+							COMPRESSED_SRGB8_ETC2: 0x9275,
+							COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2: 0x9276,
+							COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2: 0x9277,
+							COMPRESSED_RGBA8_ETC2_EAC: 0x9278,
+							COMPRESSED_SRGB8_ALPHA8_ETC2_EAC: 0x9279,
+							COMPRESSED_R11_EAC: 0x9270,
+							COMPRESSED_SIGNED_R11_EAC: 0x9271,
+							COMPRESSED_RG11_EAC: 0x9272,
+							COMPRESSED_SIGNED_RG11_EAC: 0x9273,
+						}
+					: null,
+			};
+		}
+		return this.supportedCompressedFormats;
+	}
+
+	/**
 	 * Pack the active 2D lights and hand the std140 block to the lit
 	 * batcher — the WebGPU realization of the backend-neutral lighting
 	 * contract (Camera2d calls this once per camera per frame).
@@ -2488,6 +2570,8 @@ export default class WebGPURenderer extends Renderer {
 		this.depthTexture = null;
 		this.device = undefined;
 		this.adapter = undefined;
+		// the replacement device may offer different compression families
+		this.supportedCompressedFormats = undefined;
 		// renegotiate + rebuild (init also re-registers batcher layouts);
 		// resident textures lazily re-upload because the cache still maps
 		// sources to atlases while the unit assignments start fresh
