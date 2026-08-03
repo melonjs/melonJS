@@ -115,6 +115,103 @@ describe("WebGPU 2D lighting", () => {
 			expect(uploads).toHaveLength(2);
 		});
 
+		it("stamps the light binding with the frame it was snapshotted in", () => {
+			expect(lit.hasCurrentLightBinding(renderer.frameId)).toBe(false);
+			lit.setLightUniforms(packed());
+			expect(lit.hasCurrentLightBinding(renderer.frameId)).toBe(true);
+			// the binding points into the per-frame arena — it must read as
+			// absent once the frame advances past it
+			expect(lit.hasCurrentLightBinding(renderer.frameId + 1)).toBe(false);
+		});
+
+		it("a version bump on a map already sampled this frame gets a fresh texture", () => {
+			const retired = [];
+			renderer.retireTexture = (texture) => {
+				retired.push(texture);
+			};
+			const source = { width: 8, height: 8, version: 1 };
+
+			const first = lit.residentNormalMap(source);
+			source.version = 2;
+			// same frame: an in-place re-upload would retroactively repaint
+			// draws already recorded against the old pixels
+			const second = lit.residentNormalMap(source);
+			expect(second.texture).not.toBe(first.texture);
+			expect(retired).toEqual([first.texture]);
+
+			// across a frame boundary the resident texture re-uploads in place
+			renderer.frameId++;
+			source.version = 3;
+			const third = lit.residentNormalMap(source);
+			expect(third.texture).toBe(second.texture);
+			expect(retired).toHaveLength(1);
+		});
+
+		it("reset() retires the resident normal maps and drops every lit cache", () => {
+			const retired = [];
+			renderer.retireTexture = (texture) => {
+				retired.push(texture);
+			};
+			lit.setLightUniforms(packed());
+			lit.addQuad(
+				{ name: "colors" },
+				0,
+				0,
+				32,
+				32,
+				0,
+				0,
+				1,
+				1,
+				0xffffffff,
+				false,
+				{
+					width: 8,
+					height: 8,
+				},
+			);
+			lit.flush();
+			const resident = [...lit.normalTextures.values()][0].texture;
+
+			lit.reset();
+
+			expect(retired).toContain(resident);
+			expect(lit.normalTextures.size).toBe(0);
+			expect(lit.litMaterials.size).toBe(0);
+			expect(lit.lightBindGroups.size).toBe(0);
+			expect(lit.lightBinding).toBeNull();
+			expect(lit.hasCurrentLightBinding(renderer.frameId)).toBe(false);
+		});
+
+		it("clearMaterialCache drops the combined bind groups but keeps the resident maps", () => {
+			lit.setLightUniforms(packed());
+			lit.addQuad(
+				{ name: "colors" },
+				0,
+				0,
+				32,
+				32,
+				0,
+				0,
+				1,
+				1,
+				0xffffffff,
+				false,
+				{
+					width: 8,
+					height: 8,
+				},
+			);
+			lit.flush();
+			expect(lit.litMaterials.size).toBe(1);
+
+			lit.clearMaterialCache();
+
+			expect(lit.litMaterials.size).toBe(0);
+			// textures stay resident — only the sampler pairing is rebuilt
+			expect(lit.normalTextures.size).toBe(1);
+		});
+
 		it("a normal-map change flushes the pending segment", () => {
 			lit.setLightUniforms(packed());
 			const atlas = { name: "colors" };
@@ -129,6 +226,92 @@ describe("WebGPU 2D lighting", () => {
 			lit.flush();
 			// two different normal-map sources → two segments of one quad each
 			expect(renderer.calls.drawIndexed).toEqual([6, 6]);
+		});
+	});
+
+	describe("WebGPURenderer.drawImage (lit-gate dispatch)", () => {
+		const createStub = (overrides = {}) => {
+			const added = [];
+			const batcherNames = [];
+			const litBatcher = {
+				// a current-frame binding by default; tests stale it explicitly
+				binding: { frameId: 1 },
+				hasCurrentLightBinding(frameId) {
+					return this.binding !== null && this.binding.frameId === frameId;
+				},
+			};
+			return {
+				added,
+				batcherNames,
+				litBatcher,
+				settings: { subPixel: false },
+				batchers: new Map([["litQuad", litBatcher]]),
+				customShader: undefined,
+				activeLightCount: 1,
+				currentNormalMap: { width: 8, height: 8 },
+				frameId: 1,
+				setBatcher(name) {
+					batcherNames.push(name);
+					this.currentBatcher = {
+						addQuad(...args) {
+							added.push(args);
+						},
+					};
+					return this.currentBatcher;
+				},
+				cache: {
+					get() {
+						return {
+							getUVs() {
+								return [0, 0, 1, 1];
+							},
+						};
+					},
+				},
+				currentTint: new Color(255, 255, 255, 1),
+				getGlobalAlpha() {
+					return 1;
+				},
+				...overrides,
+			};
+		};
+		const drawImage = WebGPURenderer.prototype.drawImage;
+		const image = { width: 32, height: 32 };
+
+		it("routes a normal-mapped sprite in a lit frame to the lit batcher", () => {
+			const stub = createStub();
+			drawImage.call(stub, image, 0, 0);
+			expect(stub.batcherNames).toEqual(["litQuad"]);
+			// the paired normal map rides along as the last addQuad argument
+			expect(stub.added[0][11]).toBe(stub.currentNormalMap);
+		});
+
+		it("an active customShader wins over the lit gate (fast path, never silently dropped)", () => {
+			const stub = createStub({ customShader: { id: "effect" } });
+			drawImage.call(stub, image, 0, 0);
+			expect(stub.batcherNames).toEqual(["quad"]);
+			expect(stub.added[0][11]).toBeUndefined();
+		});
+
+		it("a stale (previous-frame) light binding disqualifies the lit path", () => {
+			const stub = createStub();
+			stub.litBatcher.binding.frameId = 0;
+			drawImage.call(stub, image, 0, 0);
+			expect(stub.batcherNames).toEqual(["quad"]);
+		});
+
+		it("stays on the quad batcher without lights, a normal map, or a lit tier", () => {
+			const unlit = createStub({ activeLightCount: 0 });
+			drawImage.call(unlit, image, 0, 0);
+			expect(unlit.batcherNames).toEqual(["quad"]);
+
+			const unmapped = createStub({ currentNormalMap: null });
+			drawImage.call(unmapped, image, 0, 0);
+			expect(unmapped.batcherNames).toEqual(["quad"]);
+
+			const bare = createStub({ batchers: new Map() });
+			drawImage.call(bare, image, 0, 0);
+			expect(bare.batcherNames).toEqual(["quad"]);
 		});
 	});
 

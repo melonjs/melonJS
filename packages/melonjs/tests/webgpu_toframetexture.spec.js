@@ -99,6 +99,26 @@ describe("WebGPURenderer.toFrameTexture (contract)", () => {
 		expect(stub.captureTexture).toBeUndefined();
 	});
 
+	it("refreshing a destroyed caller-owned capture reallocates its backing", () => {
+		const stub = createStub();
+		const owned = toFrameTexture.call(stub, { target: null });
+		const oldGeneration = owned.generation;
+		owned.destroy();
+		expect(owned.gpuTexture).toBeNull();
+
+		// a released backing must realloc (same object identity, advanced
+		// generation) — copying into a destroyed texture would reject the
+		// whole frame at submit
+		const refreshed = toFrameTexture.call(stub, { target: owned });
+		expect(refreshed).toBe(owned);
+		expect(refreshed.gpuTexture).not.toBeNull();
+		expect(refreshed.view).not.toBeNull();
+		expect(refreshed.generation).toBeGreaterThan(oldGeneration);
+		// destroy() retired the old backing; the realloc had nothing to retire
+		expect(stub.retired).toHaveLength(1);
+		expect(stub.copies[1].dst.texture).toBe(refreshed.gpuTexture);
+	});
+
 	it("a size change reallocates in place: same object, advanced generation, old texture retired", () => {
 		const stub = createStub();
 		const frame = toFrameTexture.call(stub);

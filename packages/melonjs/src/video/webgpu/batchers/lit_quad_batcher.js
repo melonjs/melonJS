@@ -120,7 +120,22 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 		this.lightBinding = {
 			bindGroup,
 			dynamicOffset: region.offset,
+			// the arena region only holds these bytes until the next frame's
+			// reset — the binding must never outlive the frame it was
+			// snapshotted in
+			frameId: renderer.frameId,
 		};
+	}
+
+	/**
+	 * Whether a light block was snapshotted during the given frame — the
+	 * renderer's lit gate requires this: a previous-frame binding points
+	 * into a reset arena region, so it would sample reused bytes.
+	 * @param {number} frameId - the renderer's current frame stamp
+	 * @returns {boolean} true when lit draws can bind a valid light block
+	 */
+	hasCurrentLightBinding(frameId) {
+		return this.lightBinding !== null && this.lightBinding.frameId === frameId;
 	}
 
 	/**
@@ -132,13 +147,20 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	 */
 	residentNormalMap(source) {
 		const version = source.version ?? 0;
+		const frameId = this.renderer.frameId;
 		let entry = this.normalTextures.get(source);
 		const width = source.width || source.videoWidth || 1;
 		const height = source.height || source.videoHeight || 1;
 		if (
 			typeof entry === "undefined" ||
 			entry.width !== width ||
-			entry.height !== height
+			entry.height !== height ||
+			// An in-place re-upload is retroactive: queue writes execute
+			// before EVERY draw recorded this frame, so a version bump on a
+			// map already sampled this frame must land in a fresh texture or
+			// earlier draws would show the new pixels (same rule as the
+			// texture store's color records)
+			(entry.version !== version && entry.frameId === frameId)
 		) {
 			if (typeof entry !== "undefined") {
 				this.renderer.retireTexture(entry.texture);
@@ -158,6 +180,7 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 				version: undefined,
 				width,
 				height,
+				frameId: -1,
 			};
 			this.normalTextures.set(source, entry);
 		}
@@ -170,6 +193,8 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 			);
 			entry.version = version;
 		}
+		// stamp: draws recorded this frame sample this texture
+		entry.frameId = frameId;
 		return entry;
 	}
 
@@ -244,6 +269,16 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 
 		// transform + push the four corners exactly like the base batcher
 		this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint);
+	}
+
+	/**
+	 * Drop every combined color+normal bind group — each pairing embeds a
+	 * sampler resolved from the default texture filter, so a filter change
+	 * must rebuild them (the lit-tier counterpart of the texture store's
+	 * invalidateBindGroups; the resident textures stay).
+	 */
+	clearMaterialCache() {
+		this.litMaterials.clear();
 	}
 
 	/**

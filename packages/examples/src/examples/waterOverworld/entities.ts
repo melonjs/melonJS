@@ -462,7 +462,11 @@ export class WaterTextureObj extends me.Sprite {
 
 				let screenEdgeWave = sin(screen_uv.x * fx.uScreenFreq + t * 1.4) * fx.uScreenAmp
 									+ sin(screen_uv.x * fx.uScreenFreq * 2.2 - t * 2.1) * fx.uScreenAmp * 0.5;
-				let dynamicRange = fx.rangeWater + screenEdgeWave;
+				// screen_uv is y-down on this backend (the GLSL twin's is
+				// y-up): the reflection is the y-down mirror of GL's
+				// y-up affine (rangeWater + screenEdgeWave - y), so the
+				// waterline sits at the same screen height
+				let dynamicRange = 2.0 - fx.rangeWater + screenEdgeWave;
 
 				var normalizedUV = screen_uv;
 				normalizedUV.y = dynamicRange - normalizedUV.y;

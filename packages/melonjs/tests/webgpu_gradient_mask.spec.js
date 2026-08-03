@@ -126,6 +126,39 @@ describe("WebGPURenderer.gradientMask (state machine)", () => {
 		expect(stub.currentGradient).toEqual({ id: "grad" });
 	});
 
+	it("inside an INVERTED mask (visible ref 0): marks with the bare high bit, untags back to 0", () => {
+		const stub = createStub({ maskLevel: 1, maskVisibleRef: 0 });
+		const shape = () => {
+			stub.log.push(`shape:${stub.stencilMode}`);
+		};
+
+		gradientMask.call(stub, shape, 0, 0, 10, 10);
+
+		// visible pixels of an inverted mask hold stencil 0 — the marker is
+		// the high bit alone, and stripping it must write 0 back (not the
+		// mask level)
+		const markRef = 0x80;
+		expect(stub.log).toEqual([
+			"flush",
+			"mode:mark",
+			`ref:${markRef}`,
+			"shape:mark",
+			"flush",
+			"mode:test",
+			`ref:${markRef}`,
+			"fillRect:0,0,10,10:gradient",
+			"flush",
+			"mode:mark",
+			"ref:0",
+			"shape:mark",
+			"flush",
+			"mode:test",
+			"ref:0",
+		]);
+		expect(stub.stencilMode).toBe("test");
+		expect(stub.currentGradient).toEqual({ id: "grad" });
+	});
+
 	it("never breaks the pass when a mask is active (mask levels live in the stencil)", () => {
 		const stub = createStub({ maskLevel: 1, maskVisibleRef: 1 });
 		gradientMask.call(stub, () => {}, 0, 0, 1, 1);

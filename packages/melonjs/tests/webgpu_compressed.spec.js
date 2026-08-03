@@ -93,6 +93,27 @@ describe("WebGPU compressed textures", () => {
 		expect(formats.s3tc).toBeNull();
 	});
 
+	it("does not memoize the all-null table while the device is renegotiating", () => {
+		const stub = {
+			device: undefined,
+			getSupportedCompressedTextureFormats:
+				WebGPURenderer.prototype.getSupportedCompressedTextureFormats,
+		};
+		const during = stub.getSupportedCompressedTextureFormats();
+		expect(during.s3tc).toBeNull();
+		expect(during.etc2).toBeNull();
+		expect(during.astc).toBeNull();
+		// a query during the renegotiation window must not lock the
+		// replacement device's families to null
+		expect(stub.supportedCompressedFormats).toBeUndefined();
+
+		stub.device = { features: new Set(["texture-compression-bc"]) };
+		const after = stub.getSupportedCompressedTextureFormats();
+		expect(after.s3tc).not.toBeNull();
+		// with a device present the table memoizes as before
+		expect(stub.getSupportedCompressedTextureFormats()).toBe(after);
+	});
+
 	it("the store uploads compressed sources through writeTexture with mip storage", () => {
 		const created = [];
 		const writes = [];
@@ -102,8 +123,8 @@ describe("WebGPU compressed textures", () => {
 					const texture = {
 						descriptor,
 						destroy() {},
-						createView() {
-							return { texture: this };
+						createView(viewDescriptor) {
+							return { texture: this, viewDescriptor };
 						},
 					};
 					created.push(texture);
@@ -162,6 +183,12 @@ describe("WebGPU compressed textures", () => {
 		expect(created).toHaveLength(1);
 		expect(created[0].descriptor.format).toBe("bc3-rgba-unorm");
 		expect(created[0].descriptor.mipLevelCount).toBe(2);
+		// GL parity: the sampled view is restricted to mip 0 (the GL backend
+		// sets plain LINEAR/NEAREST min filters and never samples the chain)
+		expect(bindGroup.descriptor.entries[0].resource.viewDescriptor).toEqual({
+			baseMipLevel: 0,
+			mipLevelCount: 1,
+		});
 		// compressed formats cannot be render attachments
 		expect(
 			created[0].descriptor.usage & GPUTextureUsage.RENDER_ATTACHMENT,
@@ -188,6 +215,35 @@ describe("WebGPU compressed textures", () => {
 		store.getBinding(imageAtlas);
 		expect(created).toHaveLength(2);
 		expect(created[1].descriptor.format).toBe("rgba8unorm");
+		store.destroy();
+	});
+
+	it("the store throws on a compressed format with no WebGPU mapping", () => {
+		const renderer = {
+			device: {
+				createTexture() {
+					throw new Error("must not create a texture for an unmapped format");
+				},
+				queue: {},
+			},
+			frameId: 1,
+			cache: {
+				getUnit() {
+					return 0;
+				},
+			},
+		};
+		const store = new WebGPUTextureStore(renderer);
+		const atlas = {
+			getTexture() {
+				// PVRTC 4bpp RGB — a family with no WebGPU equivalent
+				return { compressed: true, format: 0x8c00, width: 8, height: 8 };
+			},
+			repeat: "no-repeat",
+		};
+		expect(() => {
+			return store.getBinding(atlas);
+		}).toThrow(/unsupported compressed texture format 0x8c00/);
 		store.destroy();
 	});
 });

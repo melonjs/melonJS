@@ -123,7 +123,14 @@ export default class WebGPUTextureStore {
 					uploadCompressedTexture(this.device, gpuTexture, source, metrics);
 					record = {
 						texture: gpuTexture,
-						view: gpuTexture.createView(),
+						// GL parity: the GL backend samples compressed textures
+						// with plain LINEAR/NEAREST min filters and never the
+						// mip chain — restrict the bind-group view to level 0
+						// (the full chain stays uploaded in the texture)
+						view: gpuTexture.createView({
+							baseMipLevel: 0,
+							mipLevelCount: 1,
+						}),
 						source,
 						width: source.width,
 						height: source.height,

@@ -52,6 +52,9 @@ export function createMockWebGPURenderer() {
 	const renderer = {
 		calls,
 		pass,
+		// frame stamp consumed by the same-frame re-upload rules and the
+		// light-binding staleness gate; tests advance it to cross frames
+		frameId: 1,
 		device: {
 			limits: { minUniformBufferOffsetAlignment: 256 },
 			queue: {

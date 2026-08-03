@@ -1455,11 +1455,24 @@ export default class WebGPURenderer extends Renderer {
 		}
 
 		// same lit gate as the GL backend: only normal-mapped sprites in a
-		// lit scene pay the lit path; everything else stays on "quad"
+		// lit scene pay the lit path; everything else stays on "quad".
+		// Two extra conditions this backend needs:
+		// - an active customShader (the single-effect fast path) wins over
+		//   the lit gate — the lit pipeline has no effect stage, so routing
+		//   the quad there would silently drop the effect. A deliberate
+		//   divergence from GL (which runs the effect's shader over its lit
+		//   vertex stream): here the sprite draws effected-but-unlit rather
+		//   than lit-but-uneffected, and never silently loses the effect.
+		// - the light block must have been snapshotted THIS frame: the lit
+		//   batcher's binding points into the per-frame effect-uniform arena,
+		//   so a stale (previous-frame) binding would sample reused bytes.
+		const lit = this.batchers.get("litQuad");
 		const useLit =
-			this.batchers.has("litQuad") &&
+			typeof lit !== "undefined" &&
+			this.customShader == null &&
 			this.activeLightCount > 0 &&
-			this.currentNormalMap !== null;
+			this.currentNormalMap !== null &&
+			lit.hasCurrentLightBinding(this.frameId);
 		this.setBatcher(useLit ? "litQuad" : "quad");
 
 		const texture = this.cache.get(image);
@@ -1509,7 +1522,7 @@ export default class WebGPURenderer extends Renderer {
 			const bc = features?.has("texture-compression-bc") === true;
 			const etc2 = features?.has("texture-compression-etc2") === true;
 			const astc = features?.has("texture-compression-astc") === true;
-			this.supportedCompressedFormats = {
+			const table = {
 				astc: astc
 					? {
 							COMPRESSED_RGBA_ASTC_4x4_KHR: 0x93b0,
@@ -1564,6 +1577,14 @@ export default class WebGPURenderer extends Renderer {
 						}
 					: null,
 			};
+			// no device = the renegotiation window after a device loss: the
+			// all-null table is only valid for this instant and must not be
+			// memoized, or the replacement device's families would stay
+			// locked to null
+			if (typeof this.device === "undefined") {
+				return table;
+			}
+			this.supportedCompressedFormats = table;
 		}
 		return this.supportedCompressedFormats;
 	}
@@ -2528,6 +2549,9 @@ export default class WebGPURenderer extends Renderer {
 		super.setAntiAlias(enable);
 		this.currentBatcher?.flush();
 		this.textureStore?.invalidateBindGroups();
+		// the lit tier caches combined color+normal bind groups outside the
+		// store — each embeds a sampler resolved from the default filter
+		this.batchers.get("litQuad")?.clearMaterialCache();
 	}
 
 	/**
@@ -2539,6 +2563,9 @@ export default class WebGPURenderer extends Renderer {
 		super.setTextureFilter(mode);
 		this.currentBatcher?.flush();
 		this.textureStore?.invalidateBindGroups();
+		// the lit tier caches combined color+normal bind groups outside the
+		// store — each embeds a sampler resolved from the default filter
+		this.batchers.get("litQuad")?.clearMaterialCache();
 	}
 
 	/**
