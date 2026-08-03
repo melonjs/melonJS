@@ -15,7 +15,7 @@ import {
 	plugin,
 	state,
 } from "melonjs";
-import { useEffect } from "react";
+import { createExampleComponent } from "../utils";
 import { levels, resources } from "./resources";
 
 const loadLevel = (name: string) => {
@@ -125,12 +125,13 @@ const LevelSelector = () => {
 	);
 };
 
+const Game = createExampleComponent(createGame);
+
 export const ExampleTiledMapLoader = () => {
-	useEffect(() => {
-		// `game` is undefined until the first Application finishes init()
-		if (!game?.isInitialized) {
-			void createGame();
-		}
-	}, []);
-	return <LevelSelector />;
+	return (
+		<>
+			<Game />
+			<LevelSelector />
+		</>
+	);
 };
