@@ -560,6 +560,10 @@ export default class Application {
 			this.renderer = new CustomRenderer(this.settings);
 		}
 
+		// the renderer carries its owning application — engine code holding
+		// a renderer reference must use this rather than the global game
+		this.renderer.parentApplication = this;
+
 		// let the backend acquire whatever it cannot acquire synchronously —
 		// an immediate resolve for Canvas and WebGL, the adapter/device
 		// negotiation for WebGPU. This await is why `init()` is asynchronous.
