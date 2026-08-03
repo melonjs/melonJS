@@ -79,7 +79,6 @@ export const createGame = async () => {
 		parent: "screen",
 		scaleMethod: "flex-width",
 		renderer: video.AUTO,
-		preferWebGL1: false,
 		subPixel: false,
 		highPrecisionShader: false,
 		physic: new MatterAdapter({ gravity: { x: 0, y: 5 } }),

@@ -40,7 +40,7 @@ class OverflowingRect extends Renderable {
 		renderer.setColor(this.color);
 		renderer.fillRect(0, 0, this.width, this.height);
 		renderer.setColor("#ffffff");
-		renderer.setLineWidth(3);
+		renderer.lineWidth = 3;
 		renderer.strokeRect(0, 0, this.width, this.height);
 	}
 }
@@ -96,7 +96,7 @@ class ClipOutline extends Renderable {
 
 	draw(renderer: Parameters<Renderable["draw"]>[0]) {
 		renderer.setColor(this.color);
-		renderer.setLineWidth(3);
+		renderer.lineWidth = 3;
 		renderer.strokeRect(this.pos.x, this.pos.y, this.width, this.height);
 	}
 }

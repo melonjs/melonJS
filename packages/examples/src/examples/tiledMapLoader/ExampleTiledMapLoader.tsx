@@ -78,7 +78,6 @@ const createGame = async () => {
 	const app = new Application(1024, 768, {
 		parent: "screen",
 		scaleMethod: "fill-max",
-		preferWebGL1: false,
 	});
 	await app.init();
 

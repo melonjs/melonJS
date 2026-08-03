@@ -19,7 +19,6 @@ const createGame = async () => {
 		const app = new Application(1024, 840, {
 			parent: "screen",
 			renderer: video.WEBGL,
-			preferWebGL1: false,
 			blendMode: "normal",
 		});
 		await app.init();
