@@ -128,6 +128,7 @@ export default class WebGPUTextureStore {
 						width: source.width,
 						height: source.height,
 						frameId: -1,
+						compressed: true,
 						bindGroupBySampler: new Map(),
 					};
 					this.records.set(unit, record);
@@ -150,7 +151,12 @@ export default class WebGPUTextureStore {
 				typeof record === "undefined" ||
 				record.width !== width ||
 				record.height !== height ||
-				record.frameId === this.renderer.frameId
+				record.frameId === this.renderer.frameId ||
+				// a recycled unit whose resident texture came from the
+				// compressed path cannot adopt an image source: its format
+				// is non-renderable and copyExternalImageToTexture would
+				// fail validation while the stale pixels kept serving
+				record.compressed === true
 			) {
 				// (re)create at the source size; the replaced texture retires
 				// at frame end — destroying it now would invalidate draws

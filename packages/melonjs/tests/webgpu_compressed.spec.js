@@ -172,6 +172,22 @@ describe("WebGPU compressed textures", () => {
 		// a second bind is fully resident — no re-upload
 		store.getBinding(atlas);
 		expect(writes).toHaveLength(2);
+
+		// a recycled unit must NOT adopt a same-size image source into the
+		// compressed-format texture (non-renderable format — the copy would
+		// fail validation while the stale pixels kept serving): it recreates
+		const imageAtlas = {
+			getTexture() {
+				return { width: 8, height: 8 };
+			},
+			repeat: "no-repeat",
+		};
+		// the recreated rgba8unorm texture legitimately uploads via the
+		// image path again
+		renderer.device.queue.copyExternalImageToTexture = () => {};
+		store.getBinding(imageAtlas);
+		expect(created).toHaveLength(2);
+		expect(created[1].descriptor.format).toBe("rgba8unorm");
 		store.destroy();
 	});
 });
