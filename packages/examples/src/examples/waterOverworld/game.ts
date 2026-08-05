@@ -35,7 +35,7 @@ export const createGame = async () => {
 		try {
 			const app = new Application(960, 640, {
 				parent: "screen",
-				renderer: video.WEBGL,
+				renderer: video.AUTO,
 				scale: "auto",
 				scaleMethod: "fit",
 				antiAlias: false,

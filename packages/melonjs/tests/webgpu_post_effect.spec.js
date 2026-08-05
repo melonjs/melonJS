@@ -236,6 +236,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		expect(samplerEntry.resource).toEqual({
 			filter: "linear",
 			repeat: "repeat",
+			mipmaps: false,
 		});
 	});
 });
@@ -420,9 +421,10 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		};
 
 		batcher.blitTexture(source, 0, 0, 100, 100, glslOnly, true);
-		// plain quad family, current blend kept — scene content is never lost
+		// the single-texture blit family, current blend kept — scene
+		// content is never lost
 		expect(renderer.calls.pipelineKeys.at(-1)).toBe(
-			"quad|triangle-list|normal|true|none",
+			"blit|triangle-list|normal|true|none",
 		);
 		expect(renderer.calls.drawIndexed).toEqual([6]);
 	});

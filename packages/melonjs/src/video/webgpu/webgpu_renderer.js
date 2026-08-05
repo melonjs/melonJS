@@ -29,7 +29,9 @@ import {
 	createLightUniformScratch,
 	packLights,
 } from "../webgl/lighting/pack.ts";
+import WebGPULitMeshBatcher from "./batchers/lit_mesh_batcher.js";
 import WebGPULitQuadBatcher from "./batchers/lit_quad_batcher.js";
+import WebGPUMeshBatcher from "./batchers/mesh_batcher.js";
 import WebGPUPrimitiveBatcher from "./batchers/primitive_batcher.js";
 import WebGPUQuadBatcher from "./batchers/quad_batcher.js";
 import WebGPUBatcher from "./batchers/webgpu_batcher.js";
@@ -48,6 +50,32 @@ import WebGPUTextureStore from "./texture/store.js";
 const tempMatrix = new Matrix3d();
 // scratch: the projection saved across a blitEffect quad
 const blitSavedProjection = new Matrix3d();
+
+/**
+ * Resolve the depth half of a pass's load/store ops — split out pure so the
+ * single-clear-per-target-per-frame policy is unit-testable without a
+ * device. Until the first mesh ever draws, the ops are the original
+ * clear/discard pair: the depth half costs pure-2D applications nothing and
+ * their passes stay byte-identical. Once the mesh path is active, depth
+ * persists across pass restarts (load/store — the GL parity where the depth
+ * buffer survives mid-frame stencil clears and captures) and clears only
+ * where a clear is armed: frame start, render-target change, or a fresh
+ * attachment (whose "load" would read zeros and fail every LEQUAL test).
+ * @param {boolean} meshDepthActive - whether drawMesh has ever run
+ * @param {boolean} pendingDepthClear - whether a depth clear is armed
+ * @returns {{depthLoadOp: string, depthStoreOp: string}} the pass ops
+ * @ignore
+ * @internal
+ */
+export function resolveDepthOps(meshDepthActive, pendingDepthClear) {
+	if (meshDepthActive !== true) {
+		return { depthLoadOp: "clear", depthStoreOp: "discard" };
+	}
+	return {
+		depthLoadOp: pendingDepthClear === true ? "clear" : "load",
+		depthStoreOp: "store",
+	};
+}
 
 /**
  * The **experimental** WebGPU renderer.
@@ -120,14 +148,18 @@ export default class WebGPURenderer extends Renderer {
 		this.shaderLanguage = "wgsl";
 
 		// capability flags describe what the backend can DO today
-		// (supportsDepthBuffer / supportsRetainedMesh stay false until
-		// their paths land)
 
 		// orthogonal TMX layers draw through the WGSL shader tile path
 		this.supportsShaderTileLayers = true;
+		// the mesh tier: depth-tested drawing (the depth half of the shared
+		// attachment) and retained model-space mesh geometry — Camera3d
+		// scenes take the uniforms-only drawMesh(mesh, modelMatrix) path
+		this.supportsDepthBuffer = true;
+		this.supportsRetainedMesh = true;
 		// lazy orientation-specific GPU tilemap renderer (device-scoped:
 		// dropped on device loss, rebuilt on first use)
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.orthogonalTMXRenderer = undefined;
 
 		// create a texture cache
@@ -140,110 +172,187 @@ export default class WebGPURenderer extends Renderer {
 		// active Gradient (setColor(Gradient)) — honored on fillRect via
 		// the Canvas-baked gradient texture, and on arbitrary shapes by
 		// clipping that baked rect through the stencil (gradientMask)
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.currentGradient = null;
 
 		// scratch vertices for fillRect (2 triangles) and fillPolygon
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.rectTriangles = Array.from({ length: 6 }, () => {
 			return { x: 0, y: 0 };
 		});
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.polyVerts = [];
 		// scratch bounds for the clipRect screen-space AABB derivation
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.clipAABB = new Bounds();
 		// the stencil reference the masked render phase compares against
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.maskVisibleRef = 0;
 
 		/**
 		 * the batchers registered with this renderer, by name
 		 * @type {Map<string, object>}
 		 * @ignore
+		 * @internal
 		 */
 		this.batchers = new Map();
 
 		/**
 		 * the currently active batcher
 		 * @ignore
+		 * @internal
 		 */
 		this.currentBatcher = null;
 
 		// GPU-facing infrastructure, created by init() once a device exists
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.pipelineCache = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.vertexArena = null;
-		/** @ignore */
+		// per-frame index regions for the accumulated mesh path
+		/** @ignore
+		 * @internal */
+		this.indexArena = null;
+		/** @ignore
+		 * @internal */
 		this.uniformRing = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.textureStore = null;
 
 		// per-frame recording state
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.commandEncoder = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.renderPass = null;
 		// the active offscreen render target (null = the canvas). Retargeting
 		// is a pass break: the next pass opens on the target's color view.
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.currentRenderTarget = null;
 		// consumed as the next pass's colorLoadOp "clear" (fresh target)
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.pendingColorClear = false;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.pendingClearValue = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.pendingStencilClear = false;
+		// consumed as the next pass's depthLoadOp "clear" once the mesh path
+		// is active — armed at frame start, on render-target changes and on
+		// depth-attachment recreation (single clear per target per frame,
+		// the GL mesh-mode policy)
+		/** @ignore
+		 * @internal */
+		this.pendingDepthClear = false;
+		// sticky: flips true on the first drawMesh ever and stays — before
+		// that, every pass keeps the original clear/discard depth ops and
+		// pure-2D applications see zero change
+		/** @ignore
+		 * @internal */
+		this.meshDepthActive = false;
+		// the split-screen camera viewport (top-left origin, canvas passes
+		// only) — null = full target. Persists across frames like gl.viewport
+		/** @ignore
+		 * @internal */
+		this.viewportRect = null;
+		// one-shot warn: a customShader (ShaderEffect fast path) cannot host
+		// a mesh draw on this backend
+		/** @ignore
+		 * @internal */
+		this.meshEffectWarned = false;
 		// the canvas GPUTexture handle of the current frame — kept beside its
 		// view because captureFrame copies from the TEXTURE, not the view
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.frameTexture = null;
 		// the shared frame-capture slot (screen_texture builtin), lazy
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.captureTexture = undefined;
 		// 1×1 transparent stand-in bound where a declared texture has no
 		// source yet (never-captured screen_texture, unset setTexture slot)
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.stubTexture = null;
 		// per-depth projection save slots for nested post-effect passes
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.effectProjectionStack = [];
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.effectPassDepth = 0;
 		// per-bind effect uniform snapshots (created by init)
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.effectUniformArena = null;
 		// monotonically increasing frame id — the texture store uses it to
 		// detect same-frame content changes that need a fresh texture
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.frameId = 0;
 		// GPUTextures replaced mid-frame: destroying them immediately would
 		// invalidate draws already recorded against them (submit rejects the
 		// whole command buffer) — they retire at frame end, after submit
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.retiredTextures = [];
 		// the lineWidth value written into the current frame-globals slot —
 		// the primitive batcher compares against THIS (not its own cache)
 		// because clear() rewrites the slot every frame
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.currentFrameLineWidth = 1;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.frameTextureView = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.depthTexture = null;
-		/** @ignore */
+		// MSAA state (antiAlias: true): canvas passes render into a shared
+		// multisampled color texture resolving into the canvas view, with a
+		// matching multisampled depth-stencil twin. Offscreen render targets
+		// stay single-sampled — GL parity, where only the default
+		// framebuffer is ever antialiased and pool FBOs are not.
+		/** @ignore
+		 * @internal */
+		this.canvasSampleCount = 1;
+		/** @ignore
+		 * @internal */
+		this.msaaColorTexture = null;
+		/** @ignore
+		 * @internal */
+		this.msaaColorView = null;
+		/** @ignore
+		 * @internal */
+		this.msaaDepthTexture = null;
+		/** @ignore
+		 * @internal */
 		this.currentPipeline = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.currentFrameBinding = null;
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.scissorActive = false;
 		// premultiplied-alpha flag mirrored from setBlendMode (pipeline key)
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.premultipliedAlpha = true;
 		// stencil mode consulted by the pipeline lookup: "none"|"write"|"test"
-		/** @ignore */
+		/** @ignore
+		 * @internal */
 		this.stencilMode = "none";
 
 		// reset the renderer on game reset (stored so destroy() can
@@ -261,6 +370,11 @@ export default class WebGPURenderer extends Renderer {
 				this.flush();
 				this.createDepthTexture();
 			}
+			// a stored split-screen viewport was un-flipped against the OLD
+			// canvas height — drop it, like the GL resize path's
+			// setViewport(0, 0, width, height); cameras re-set theirs next
+			// frame
+			this.viewportRect = null;
 		};
 		on(CANVAS_ONRESIZE, this.onCanvasResize);
 	}
@@ -277,6 +391,14 @@ export default class WebGPURenderer extends Renderer {
 	 * suitable adapter is found
 	 */
 	async init() {
+		// idempotent while the device is live: Application.init()'s AUTO
+		// case awaits a full init during backend negotiation, then its
+		// common path awaits init again on the winner — a second
+		// negotiation would leak the first device. (restoreDevice clears
+		// `device` before re-running, so the restore path passes through.)
+		if (typeof this.device !== "undefined" && this.isContextValid === true) {
+			return;
+		}
 		const gpu = globalThis.navigator?.gpu;
 		if (typeof gpu === "undefined") {
 			throw new Error(
@@ -296,6 +418,18 @@ export default class WebGPURenderer extends Renderer {
 		if (adapter === null) {
 			throw new Error(
 				"WebGPU: no suitable GPUAdapter found (adapter request returned null)",
+			);
+		}
+		// the WebGPU analogue of GL's failIfMajorPerformanceCaveat: a
+		// fallback adapter is software rendering — reject it when the app
+		// asked for hardware-or-nothing (under AUTO this falls through to
+		// the WebGL candidate, which honors the same setting)
+		if (
+			this.settings.failIfMajorPerformanceCaveat === true &&
+			adapter.isFallbackAdapter === true
+		) {
+			throw new Error(
+				"WebGPU: only a fallback (software) adapter is available and failIfMajorPerformanceCaveat is set",
 			);
 		}
 		this.adapter = adapter;
@@ -323,6 +457,8 @@ export default class WebGPURenderer extends Renderer {
 					" ",
 				) ||
 				undefined;
+			// the GL backend's GPUVendor twin (debug-renderer-info UNMASKED_VENDOR)
+			this.GPUVendor = info.vendor || undefined;
 		}
 
 		// a lost device is this backend's context loss. `device.lost`
@@ -367,16 +503,47 @@ export default class WebGPURenderer extends Renderer {
 			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
 			pageSize: 64 << 10,
 		});
+		this.indexArena = new WebGPUBufferArena(this.device, {
+			label: "melonJS index arena",
+			usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+		});
 		this.textureStore = new WebGPUTextureStore(this);
+		// antiAlias maps to 4× MSAA on canvas passes (the GL context's
+		// antialias flag equivalent); 4× is universally supported for the
+		// canvas and depth formats
+		this.canvasSampleCount = this.settings.antiAlias === true ? 4 : 1;
+		this.pipelineCache.sampleCount = this.canvasSampleCount;
 		this.createDepthTexture();
 
 		// register the built-in batchers (device-dependent, so here rather
-		// than the constructor — a device-loss restore re-runs this path)
+		// than the constructor — a device-loss restore re-runs this path).
+		// A custom batcher override rides the quad/primitive slots exactly
+		// like the WebGL renderer's constructor — `addBatcher` rejects a
+		// non-WebGPUBatcher class loudly, so a GL-only custom batcher fails
+		// with a clear message instead of mid-draw
 		if (this.batchers.size === 0) {
-			this.addBatcher(new WebGPUQuadBatcher(this), "quad", true);
-			this.addBatcher(new WebGPUPrimitiveBatcher(this), "primitive");
-			this.addBatcher(new WebGPULitQuadBatcher(this), "litQuad");
+			const CustomBatcher = this.settings.batcher || this.settings.compositor;
+			this.addBatcher(
+				new (CustomBatcher || WebGPUQuadBatcher)(this),
+				"quad",
+				true,
+			);
+			this.addBatcher(
+				new (CustomBatcher || WebGPUPrimitiveBatcher)(this),
+				"primitive",
+			);
+			if (!CustomBatcher) {
+				this.addBatcher(new WebGPULitQuadBatcher(this), "litQuad");
+			}
+			this.addBatcher(new WebGPUMeshBatcher(this), "mesh");
+			this.addBatcher(new WebGPULitMeshBatcher(this), "litMesh");
 		}
+
+		// apply the configured blend mode up front (the GL constructor's
+		// parity): before the first GAME_RESET, out-of-bracket draws (unit
+		// tests, pre-stage drawing) would otherwise run on RenderState's
+		// "none" default with blending disabled
+		this.setBlendMode(this.settings.blendMode);
 
 		this.isContextValid = true;
 	}
@@ -389,28 +556,59 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} [width] - required width (defaults to the canvas)
 	 * @param {number} [height] - required height (defaults to the canvas)
 	 * @ignore
+	 * @internal
 	 */
-	createDepthTexture(width, height) {
+	createDepthTexture(width, height, sampleCount = 1) {
 		const canvas = this.getCanvas();
 		width = Math.max(1, width ?? canvas.width);
 		height = Math.max(1, height ?? canvas.height);
-		if (
-			this.depthTexture &&
-			this.depthTexture.width === width &&
-			this.depthTexture.height === height
-		) {
+		// single-sampled and multisampled passes each keep their own
+		// attachment (a pass's attachments must share one sample count)
+		const slot = sampleCount > 1 ? "msaaDepthTexture" : "depthTexture";
+		const current = this[slot];
+		if (current && current.width === width && current.height === height) {
 			return;
 		}
-		if (this.depthTexture) {
+		if (current) {
 			// recorded passes may reference the old attachment — retire it
-			this.retireTexture(this.depthTexture);
+			this.retireTexture(current);
 		}
-		this.depthTexture = this.device.createTexture({
-			label: "melonJS depth-stencil",
+		this[slot] = this.device.createTexture({
+			label: `melonJS depth-stencil${sampleCount > 1 ? " msaa" : ""}`,
 			size: [width, height],
 			format: DEPTH_STENCIL_FORMAT,
+			sampleCount,
 			usage: GPUTextureUsage.RENDER_ATTACHMENT,
 		});
+		// a fresh attachment read with a "load" op is all zeros — every
+		// LEQUAL test would fail — so recreation always arms a depth clear
+		this.pendingDepthClear = true;
+	}
+
+	/**
+	 * (re)create the shared multisampled color texture canvas passes render
+	 * into (resolved into the canvas view at every pass end).
+	 * @param {number} width - required width in pixels
+	 * @param {number} height - required height in pixels
+	 * @ignore
+	 * @internal
+	 */
+	createMsaaColorTexture(width, height) {
+		const current = this.msaaColorTexture;
+		if (current && current.width === width && current.height === height) {
+			return;
+		}
+		if (current) {
+			this.retireTexture(current);
+		}
+		this.msaaColorTexture = this.device.createTexture({
+			label: "melonJS msaa color",
+			size: [width, height],
+			format: this.preferredFormat,
+			sampleCount: this.canvasSampleCount,
+			usage: GPUTextureUsage.RENDER_ATTACHMENT,
+		});
+		this.msaaColorView = this.msaaColorTexture.createView();
 	}
 
 	/**
@@ -436,6 +634,7 @@ export default class WebGPURenderer extends Renderer {
 		}
 
 		this.vertexArena.reset();
+		this.indexArena.reset();
 		this.uniformRing.reset();
 		this.effectUniformArena.reset();
 		this.frameId++;
@@ -452,6 +651,8 @@ export default class WebGPURenderer extends Renderer {
 		this.maskLevel = 0;
 
 		const [r, g, b, a] = this.backgroundColor.toArray();
+		// frame start clears every attachment half, depth included
+		this.pendingDepthClear = true;
 		this.beginPass({
 			colorLoadOp: "clear",
 			clearValue: { r, g, b, a },
@@ -463,7 +664,9 @@ export default class WebGPURenderer extends Renderer {
 
 		// a new frame is a new render pass on the active target — same
 		// per-frame signal the WebGL backend emits from its clear()
-		emit(RENDER_TARGET_CHANGED, this.renderTarget);
+		// the event payload is the RENDERER on every other emitter (both
+		// backends), and subscribers filter on `emitter === this.renderer`
+		emit(RENDER_TARGET_CHANGED, this);
 	}
 
 	/**
@@ -471,6 +674,7 @@ export default class WebGPURenderer extends Renderer {
 	 * encoder and acquiring the canvas texture on first use this frame)
 	 * @param {object} [opts] - load operations for the pass
 	 * @ignore
+	 * @internal
 	 */
 	beginPass(opts = {}) {
 		if (this.commandEncoder === null) {
@@ -506,32 +710,59 @@ export default class WebGPURenderer extends Renderer {
 		this.pendingColorClear = false;
 		this.pendingClearValue = null;
 		this.pendingStencilClear = false;
-		// every attachment of a pass must have identical dimensions — the
-		// shared depth-stencil tracks the active target's size (targets are
-		// canvas-sized in the 2D flow, so this recreates nothing in practice)
+		// every attachment of a pass must have identical dimensions AND one
+		// sample count — canvas passes are multisampled when antiAlias is
+		// on (resolving into the canvas view), offscreen targets never are
+		// (GL parity: only the default framebuffer is antialiased)
 		const [width, height] = this.getTargetSize();
-		this.createDepthTexture(width, height);
+		const sampleCount = target === null ? this.canvasSampleCount : 1;
+		this.createDepthTexture(width, height, sampleCount);
+		// every pipeline recorded into this pass must declare its count —
+		// the cache keys on it, so both variants coexist compiled
+		this.pipelineCache.sampleCount = sampleCount;
+		let colorAttachment;
+		if (sampleCount > 1) {
+			this.createMsaaColorTexture(width, height);
+			colorAttachment = {
+				view: this.msaaColorView,
+				// resolved into the canvas view at every pass end; samples
+				// are stored so mid-frame restarts can load them back
+				resolveTarget: colorView,
+				loadOp: colorLoadOp ?? "load",
+				clearValue,
+				storeOp: "store",
+			};
+		} else {
+			colorAttachment = {
+				view: colorView,
+				loadOp: colorLoadOp ?? "load",
+				clearValue,
+				storeOp: "store",
+			};
+		}
+		// resolve AFTER createDepthTexture — a recreation arms the clear
+		const { depthLoadOp, depthStoreOp } = resolveDepthOps(
+			this.meshDepthActive,
+			this.pendingDepthClear,
+		);
+		this.pendingDepthClear = false;
 		this.renderPass = this.commandEncoder.beginRenderPass({
 			label: "melonJS pass",
-			colorAttachments: [
-				{
-					view: colorView,
-					loadOp: colorLoadOp ?? "load",
-					clearValue,
-					storeOp: "store",
-				},
-			],
+			colorAttachments: [colorAttachment],
 			depthStencilAttachment: {
-				view: this.depthTexture.createView(),
-				depthLoadOp: "clear",
+				view: (sampleCount > 1
+					? this.msaaDepthTexture
+					: this.depthTexture
+				).createView(),
+				depthLoadOp,
 				depthClearValue: 1.0,
-				depthStoreOp: "discard",
+				depthStoreOp,
 				stencilLoadOp: stencilLoadOp ?? "load",
 				stencilClearValue: 0,
 				stencilStoreOp: "store",
 			},
 		});
-		this.renderPass.setViewport(0, 0, width, height, 0, 1);
+		this.applyViewport();
 		this.applyScissor();
 		// a new pass resets the stencil reference to 0 — re-apply the mask
 		// reference so content masked ACROSS a pass restart (post-effect
@@ -546,6 +777,7 @@ export default class WebGPURenderer extends Renderer {
 	 * target, or the canvas
 	 * @returns {[number, number]} [width, height]
 	 * @ignore
+	 * @internal
 	 */
 	getTargetSize() {
 		const target = this.currentRenderTarget;
@@ -565,6 +797,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {object} [options] - retarget options
 	 * @param {boolean} [options.clear=false] - open the next pass with a clearing color load
 	 * @ignore
+	 * @internal
 	 */
 	setRenderTarget(target, options = {}) {
 		this.currentBatcher?.flush();
@@ -577,6 +810,11 @@ export default class WebGPURenderer extends Renderer {
 			options.clear === true || (target?.pendingClear ?? false);
 		this.pendingClearValue = options.clearValue ?? null;
 		this.pendingStencilClear = options.clearStencil === true;
+		// a target change re-arms the depth clear in BOTH directions — the
+		// GL RENDER_TARGET_CHANGED re-arm: each destination gets one depth
+		// clear per frame (the shared attachment holds the other target's
+		// depth, which is stale data from this destination's point of view)
+		this.pendingDepthClear = true;
 		if (target) {
 			target.pendingClear = false;
 		}
@@ -589,6 +827,7 @@ export default class WebGPURenderer extends Renderer {
 	 * on the retired list and is destroyed after submit (or abandon).
 	 * @param {GPUTexture} texture - the texture to dispose of
 	 * @ignore
+	 * @internal
 	 */
 	retireTexture(texture) {
 		if (this.commandEncoder !== null) {
@@ -599,10 +838,25 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Dispose of a GPUBuffer safely — the buffer twin of
+	 * {@link WebGPURenderer#retireTexture}, and the same reasoning: a buffer
+	 * referenced by already-recorded draws (retained mesh geometry) must
+	 * outlive the frame's submit. GPUBuffer and GPUTexture share the
+	 * `destroy()` contract, so retired buffers ride the same list.
+	 * @param {GPUBuffer} buffer - the buffer to dispose of
+	 * @ignore
+	 * @internal
+	 */
+	retireBuffer(buffer) {
+		this.retireTexture(buffer);
+	}
+
+	/**
 	 * The 1×1 transparent-black stand-in view — bound where a declared
 	 * effect texture has no source yet, so bind groups stay valid.
 	 * @returns {GPUTextureView} the stub view
 	 * @ignore
+	 * @internal
 	 */
 	getStubTextureView() {
 		if (this.stubTexture === null) {
@@ -621,6 +875,68 @@ export default class WebGPURenderer extends Renderer {
 			this.stubTextureView = this.stubTexture.createView();
 		}
 		return this.stubTextureView;
+	}
+
+	/**
+	 * Restrict rendering to a sub-rectangle of the canvas — the split-screen
+	 * camera surface (`Camera2d`/`Camera3d._setupNonDefaultProjection`).
+	 * Callers pass GL-convention rects with a BOTTOM-left origin (the flip is
+	 * baked into the camera code, which the GL backend depends on); WebGPU
+	 * viewports are top-left, so it is un-flipped here. The rect applies to
+	 * canvas passes only — offscreen post-effect targets always render full
+	 * size, like the GL pool path re-viewporting per target.
+	 * @param {number} x - viewport x (pixels)
+	 * @param {number} y - viewport y, bottom-left origin (pixels)
+	 * @param {number} width - viewport width (pixels)
+	 * @param {number} height - viewport height (pixels)
+	 * @override
+	 */
+	setViewport(x, y, width, height) {
+		// dynamic pass state applies to draws recorded after the call —
+		// vertices queued under the previous viewport must land first
+		this.currentBatcher?.flush();
+		const canvas = this.getCanvas();
+		this.viewportRect = {
+			x,
+			y: canvas.height - y - height,
+			width,
+			height,
+		};
+		this.applyViewport();
+	}
+
+	/**
+	 * apply the effective viewport to the open pass (re-run on every pass
+	 * restart — pass state does not carry across passes)
+	 * @ignore
+	 * @internal
+	 */
+	applyViewport() {
+		if (this.renderPass === null) {
+			return;
+		}
+		const [targetWidth, targetHeight] = this.getTargetSize();
+		let x = 0;
+		let y = 0;
+		let width = targetWidth;
+		let height = targetHeight;
+		const rect = this.viewportRect;
+		if (rect != null && this.currentRenderTarget === null) {
+			// clamp — a viewport extending past the attachment is a WebGPU
+			// validation error, not a GL-style silent clip (stale rects
+			// survive canvas resizes)
+			x = Math.min(Math.max(rect.x, 0), targetWidth);
+			y = Math.min(Math.max(rect.y, 0), targetHeight);
+			width = Math.min(rect.width, targetWidth - x);
+			height = Math.min(rect.height, targetHeight - y);
+			if (width <= 0 || height <= 0) {
+				x = 0;
+				y = 0;
+				width = targetWidth;
+				height = targetHeight;
+			}
+		}
+		this.renderPass.setViewport(x, y, width, height, 0, 1);
 	}
 
 	/**
@@ -645,6 +961,7 @@ export default class WebGPURenderer extends Renderer {
 	 * render attachment), so the very next pass can sample it hazard-free.
 	 * @returns {import("./texture/frametexture.js").WebGPUFrameTexture|null} the shared capture, or null when no device
 	 * @ignore
+	 * @internal
 	 */
 	captureFrame() {
 		return this.toFrameTexture();
@@ -786,6 +1103,8 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {Renderable} renderable - the renderable carrying postEffects
 	 * @returns {boolean} true when an offscreen pass began
 	 * @override
+	 * @ignore
+	 * @internal
 	 */
 	beginPostEffect(renderable) {
 		const effects = renderable.postEffects.filter((fx) => {
@@ -853,6 +1172,8 @@ export default class WebGPURenderer extends Renderer {
 	 * per effect, ping-ponging between pool targets for chains.
 	 * @param {Renderable} renderable - the renderable passed to beginPostEffect
 	 * @override
+	 * @ignore
+	 * @internal
 	 */
 	endPostEffect(renderable) {
 		const effects = renderable.postEffects.filter((fx) => {
@@ -969,6 +1290,7 @@ export default class WebGPURenderer extends Renderer {
 	 * Also the pass-restart primitive: masks break the pass to clear the
 	 * stencil, post effects will break it to retarget.
 	 * @ignore
+	 * @internal
 	 */
 	ensurePass() {
 		if (this.renderPass === null) {
@@ -1005,6 +1327,7 @@ export default class WebGPURenderer extends Renderer {
 	 * drop the open pass and encoder without submitting (mid-frame
 	 * exception recovery, reset, destroy)
 	 * @ignore
+	 * @internal
 	 */
 	abandonFrame() {
 		if (this.renderPass !== null) {
@@ -1023,6 +1346,7 @@ export default class WebGPURenderer extends Renderer {
 		// never leave an offscreen target active for the next frame
 		this.currentRenderTarget = null;
 		this.pendingColorClear = false;
+		this.pendingDepthClear = false;
 		this.currentPipeline = null;
 		// the recorded draws are dropped with the command buffer, so any
 		// texture retired during the frame can go now
@@ -1033,6 +1357,7 @@ export default class WebGPURenderer extends Renderer {
 	 * destroy GPUTextures replaced mid-frame, now that the command buffer
 	 * referencing them has been submitted (or abandoned)
 	 * @ignore
+	 * @internal
 	 */
 	destroyRetiredTextures() {
 		if (this.retiredTextures.length > 0) {
@@ -1046,6 +1371,7 @@ export default class WebGPURenderer extends Renderer {
 	/**
 	 * re-apply the current scissor state to the open pass
 	 * @ignore
+	 * @internal
 	 */
 	applyScissor() {
 		if (this.renderPass === null) {
@@ -1206,6 +1532,103 @@ export default class WebGPURenderer extends Renderer {
 			this.currentBatcher.bind();
 		}
 		return this.currentBatcher;
+	}
+
+	/**
+	 * Draw a textured triangle mesh — the mesh-path contract of the base
+	 * renderer, on this backend's pipeline-state model. Unlike GL there is
+	 * no device state to toggle: depth testing (write + LEQUAL) and the
+	 * per-mesh face culling are axes of the pipeline the mesh batcher
+	 * looks up per flush, and the once-per-target depth clear is the
+	 * pass's `depthLoadOp` (armed by `clear()`/`setRenderTarget`).
+	 * @param {object} mesh - a Mesh object with vertices, uvs, indices, and texture properties
+	 * @param {Matrix3d} [modelMatrix] - the mesh's model matrix. When given,
+	 *   the mesh is drawn from persistent model-space geometry and placed
+	 *   entirely by uniforms; when omitted, its vertices are taken as
+	 *   already positioned and accumulated through the batcher (the
+	 *   2D-camera path).
+	 * @override
+	 */
+	drawMesh(mesh, modelMatrix) {
+		const retained = modelMatrix !== undefined;
+
+		if (this.meshDepthActive !== true) {
+			// the depth half of the attachment is live from here on — pass
+			// restarts preserve it and clears follow the armed policy (see
+			// resolveDepthOps). The pass open RIGHT NOW was begun with the
+			// pre-mesh discard ops, so arm a clear as well: a mid-frame
+			// restart on this activation frame (mask, capture) must CLEAR
+			// rather than "load" the discarded — undefined — contents.
+			// Costs one extra depth clear on this frame only.
+			this.meshDepthActive = true;
+			this.pendingDepthClear = true;
+		}
+
+		// a hosted custom shader (mesh.shader): a GLShader carrying a WGSL
+		// module (isWebGPU) is a complete mesh-contract program — route it
+		// to the batcher, which realizes it as its own shader family.
+		// Anything else in the slot cannot host a mesh here — a ShaderEffect
+		// (WGSL effect realizations are bound to the frozen quad vertex
+		// layout) or a GLSL-only shader — so draw the mesh with the built-in
+		// shading rather than dropping it, and say so once.
+		const customShader =
+			this.customShader != null && this.customShader.isWebGPU === true
+				? this.customShader
+				: null;
+		if (
+			this.customShader != null &&
+			customShader === null &&
+			this.meshEffectWarned !== true
+		) {
+			this.meshEffectWarned = true;
+			console.warn(
+				"melonJS: this custom shader cannot be hosted on a Mesh by the WebGPU renderer (it carries no `wgsl` module) — the mesh draws with the built-in shading",
+			);
+		}
+
+		const batcher = this.setBatcher(
+			mesh.lit === true && this.batchers.has("litMesh") ? "litMesh" : "mesh",
+		);
+		batcher.customShader = customShader;
+
+		// per-mesh culling is a pipeline axis here. Retained geometry keeps
+		// its authored winding, so the axis bridge's reflection (which
+		// mirrors handedness) is undone by flipping which orientation counts
+		// as front-facing; right-handed meshes are bridged by a rotation,
+		// which preserves winding. Winding is irrelevant with culling off —
+		// "ccw" there keeps the pipeline permutation count down.
+		const culling = mesh.cullBackFaces === true;
+		const state = batcher.meshState;
+		state.cullMode = culling ? "back" : "none";
+		state.frontFace =
+			culling && retained && mesh.rightHanded !== true ? "cw" : "ccw";
+
+		// finally: the hosted module is per-mesh state — a throw mid-draw
+		// (e.g. an unsupported-format texture upload) must not leak it into
+		// a later mesh (or the frame-end drain) that didn't ask for it
+		try {
+			const tint = this.currentTint.toUint32(this.getGlobalAlpha());
+			if (retained) {
+				batcher.drawRetainedMesh(mesh, modelMatrix, tint);
+			} else {
+				batcher.addMesh(mesh, tint);
+				// drain the batcher only — renderer.flush() submits the frame
+				batcher.flush();
+			}
+		} finally {
+			batcher.customShader = null;
+		}
+	}
+
+	/**
+	 * Release any retained geometry held for the given mesh (called from
+	 * `Mesh.onDeactivateEvent` / `Mesh.destroy`).
+	 * @param {object} mesh - the mesh whose GPU geometry should be freed
+	 */
+	deleteMeshGeometry(mesh) {
+		this.batchers.forEach((batcher) => {
+			batcher.releaseRetained?.(mesh);
+		});
 	}
 
 	/**
@@ -1408,6 +1831,7 @@ export default class WebGPURenderer extends Renderer {
 	 * push a fresh frame-globals slot (projection + lineWidth); records the
 	 * lineWidth written so batchers can detect when the slot goes stale
 	 * @ignore
+	 * @internal
 	 */
 	pushFrameGlobals() {
 		this.currentFrameBinding = this.uniformRing.pushFrameGlobals(
@@ -1653,6 +2077,7 @@ export default class WebGPURenderer extends Renderer {
 	 * for drawLight's procedural effect (same rationale as the GL backend)
 	 * @returns {TextureAtlas}
 	 * @ignore
+	 * @internal
 	 */
 	getLightAtlas() {
 		if (this.lightAtlas === undefined) {
@@ -1768,6 +2193,22 @@ export default class WebGPURenderer extends Renderer {
 			return;
 		}
 
+		this.setScissorRect(sx, sy, sw, sh);
+	}
+
+	/**
+	 * Clamp a screen-space scissor box to the canvas and make it the
+	 * active scissor (shared tail of {@link WebGPURenderer#clipRect} and
+	 * {@link WebGPURenderer#enableScissor}).
+	 * @param {number} sx - screen-space x
+	 * @param {number} sy - screen-space y
+	 * @param {number} sw - width
+	 * @param {number} sh - height
+	 * @ignore
+	 * @internal
+	 */
+	setScissorRect(sx, sy, sw, sh) {
+		const canvas = this.getCanvas();
 		// clamp to the canvas — WebGPU raises a validation error on any
 		// out-of-attachment scissor where GL silently clamps; degenerate
 		// boxes become a 0-sized scissor (nothing draws), not an error
@@ -1800,6 +2241,71 @@ export default class WebGPURenderer extends Renderer {
 		cs[2] = sw;
 		cs[3] = sh;
 		this.applyScissor();
+	}
+
+	/**
+	 * Enable the scissor test with the given rectangle (transformed by the
+	 * current transform, like the WebGL renderer). Unlike
+	 * {@link WebGPURenderer#clipRect} a full-canvas rectangle still
+	 * enables the scissor rather than reading as "no clip".
+	 * @param {number} x - x coordinate of the scissor rectangle
+	 * @param {number} y - y coordinate of the scissor rectangle
+	 * @param {number} width - width of the scissor rectangle
+	 * @param {number} height - height of the scissor rectangle
+	 * @override
+	 */
+	enableScissor(x, y, width, height) {
+		const aabb = this.clipAABB;
+		aabb.clear();
+		aabb.addFrame(x, y, x + width, y + height, this.currentTransform);
+		const sx = Math.floor(aabb.min.x);
+		const sy = Math.floor(aabb.min.y);
+		this.setScissorRect(
+			sx,
+			sy,
+			Math.ceil(aabb.max.x - sx),
+			Math.ceil(aabb.max.y - sy),
+		);
+	}
+
+	/**
+	 * Enable or disable blending — blend state is pipeline state on this
+	 * backend, so this maps onto the blend-mode axis: disabling stashes
+	 * the current mode and switches to "none" (source replaces
+	 * destination), enabling restores the stashed mode.
+	 * @param {boolean} enable - whether blending should be enabled
+	 * @override
+	 */
+	setBlendEnabled(enable) {
+		if (enable === false) {
+			if (this.currentBlendMode !== "none") {
+				this.savedBlendMode = this.currentBlendMode;
+				this.setBlendMode("none", this.premultipliedAlpha);
+			}
+		} else if (typeof this.savedBlendMode === "string") {
+			this.setBlendMode(this.savedBlendMode, this.premultipliedAlpha);
+			this.savedBlendMode = undefined;
+		}
+	}
+
+	/**
+	 * Clear the current render target with transparent black — the
+	 * offscreen-target analogue of a frame clear, realized as this
+	 * backend's pass-level clear (the next pass on the target loads
+	 * cleared content instead of recording a clearing draw).
+	 * @override
+	 */
+	clearRenderTarget() {
+		// anything already recorded against the target must land first —
+		// the pass restart below is what applies the clear ordering
+		this.currentBatcher?.flush();
+		if (this.renderPass !== null) {
+			this.renderPass.end();
+			this.renderPass = null;
+		}
+		this.pendingColorClear = true;
+		this.pendingClearValue = { r: 0, g: 0, b: 0, a: 0 };
+		emit(RENDER_TARGET_CHANGED, this);
 	}
 
 	/**
@@ -1883,6 +2389,7 @@ export default class WebGPURenderer extends Renderer {
 	 * then the marker is stripped and the mask's exact render test is
 	 * re-installed.
 	 * @ignore
+	 * @internal
 	 */
 	gradientMask(drawShape, x, y, w, h) {
 		const grad = this.currentGradient;
@@ -2549,9 +3056,11 @@ export default class WebGPURenderer extends Renderer {
 		super.setAntiAlias(enable);
 		this.currentBatcher?.flush();
 		this.textureStore?.invalidateBindGroups();
-		// the lit tier caches combined color+normal bind groups outside the
-		// store — each embeds a sampler resolved from the default filter
+		// the lit tier caches combined color+normal bind groups and the
+		// quad tier caches composed segment groups outside the store —
+		// each embeds samplers resolved from the default filter
 		this.batchers.get("litQuad")?.clearMaterialCache();
+		this.batchers.get("quad")?.clearMaterialCache();
 	}
 
 	/**
@@ -2563,21 +3072,25 @@ export default class WebGPURenderer extends Renderer {
 		super.setTextureFilter(mode);
 		this.currentBatcher?.flush();
 		this.textureStore?.invalidateBindGroups();
-		// the lit tier caches combined color+normal bind groups outside the
-		// store — each embeds a sampler resolved from the default filter
+		// the lit tier caches combined color+normal bind groups and the
+		// quad tier caches composed segment groups outside the store —
+		// each embeds samplers resolved from the default filter
 		this.batchers.get("litQuad")?.clearMaterialCache();
+		this.batchers.get("quad")?.clearMaterialCache();
 	}
 
 	/**
 	 * rebuild every GPU-facing resource after a device loss — the WebGPU
 	 * analogue of the WebGL context-restore path
 	 * @ignore
+	 * @internal
 	 */
 	async restoreDevice() {
 		// tear down everything tied to the dead device
 		this.abandonFrame();
 		this.textureStore?.destroy();
 		this.vertexArena?.destroy();
+		this.indexArena?.destroy();
 		this.uniformRing?.destroy();
 		this.pipelineCache?.clear();
 		// device-scoped post-effect state: the shared capture, pool targets
@@ -2595,6 +3108,9 @@ export default class WebGPURenderer extends Renderer {
 		// in drawTileLayer rebuilds the renderer lazily
 		this.orthogonalTMXRenderer = undefined;
 		this.depthTexture = null;
+		this.msaaDepthTexture = null;
+		this.msaaColorTexture = null;
+		this.msaaColorView = null;
 		this.device = undefined;
 		this.adapter = undefined;
 		// the replacement device may offer different compression families
@@ -2660,6 +3176,7 @@ export default class WebGPURenderer extends Renderer {
 			}
 			this.textureStore?.destroy();
 			this.vertexArena?.destroy();
+			this.indexArena?.destroy();
 			this.uniformRing?.destroy();
 			this.pipelineCache?.clear();
 			this.captureTexture?.destroy();
@@ -2675,6 +3192,11 @@ export default class WebGPURenderer extends Renderer {
 			this.currentRenderTarget = null;
 			this.depthTexture?.destroy();
 			this.depthTexture = null;
+			this.msaaDepthTexture?.destroy();
+			this.msaaDepthTexture = null;
+			this.msaaColorTexture?.destroy();
+			this.msaaColorTexture = null;
+			this.msaaColorView = null;
 			this.context.unconfigure();
 			this.device.destroy();
 			this.device = undefined;

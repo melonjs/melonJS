@@ -1,5 +1,12 @@
 import { Matrix3d } from "../../../math/matrix3d.ts";
 import { off, on, RENDER_TARGET_CHANGED } from "../../../system/event.ts";
+import {
+	assignIndex,
+	beginChunk,
+	ensureRemapCapacity,
+	remapIndex,
+} from "../../gpu/meshchunk.ts";
+import { buildMeshVertexData, retainedScratch } from "../../gpu/meshvertex.ts";
 import RetainedGeometry from "../buffer/retained_geometry.js";
 import meshFragment from "./../shaders/mesh.frag";
 import meshVertex from "./../shaders/mesh.vert";
@@ -13,51 +20,10 @@ const _IDENTITY_MATRIX = new Matrix3d();
 // setPlacementUniforms runs synchronously and never re-enters.
 const _TINT_RGBA = new Float32Array(4);
 
-// Growable scratch for assembling a mesh's interleaved vertex data before it
-// is uploaded to its retained buffer. Reused across meshes (building is
-// synchronous and never re-enters) so a rebuild allocates nothing steady-state.
-let _buildScratch = new Float32Array(0);
-function retainedScratch(floatCount) {
-	if (_buildScratch.length < floatCount) {
-		_buildScratch = new Float32Array(floatCount);
-	}
-	return _buildScratch;
-}
-
-// Reused scratch for addMesh's per-chunk vertex dedup and absolute index list
-// (`_chunkIndices`), so a chunk allocates nothing per mesh per frame (GC
-// pressure on the draw path). Safe because addMesh runs synchronously and never
-// re-enters (flush() only draws). Shared by MeshBatcher and LitMeshBatcher —
-// only one addMesh runs at a time.
-//
-// Dedup uses a "versioned" typed-array remap rather than a `Map`: a `Map` here
-// churned the GC badly, because V8's `Map.clear()` drops the backing table, so
-// re-filling it each chunk reallocated as it grew — and the cost scaled with
-// vertex count (a dense mesh = MBs/sec of garbage). Instead, `_remapSlot[orig]`
-// holds the local index assigned to original-vertex `orig` THIS chunk, valid
-// only when `_remapStamp[orig] === _stamp`. Bumping `_stamp` per chunk
-// invalidates every entry in O(1) — no clearing, no allocation. The arrays grow
-// lazily (to a power of two ≥ the largest mesh's vertex count) and are reused.
-let _remapSlot = new Int32Array(0);
-let _remapStamp = new Int32Array(0);
-let _stamp = 0;
-const _chunkIndices = [];
-
-/**
- * Ensure the versioned-remap scratch arrays can index every vertex of a mesh
- * with `vertexCount` vertices. Grows to the next power of two and reuses
- * thereafter (one-time cost when a larger mesh first appears).
- * @ignore
- */
-function ensureRemapCapacity(vertexCount) {
-	if (_remapSlot.length >= vertexCount) {
-		return;
-	}
-	// next power of two ≥ vertexCount (Math.clz32 → leading-zero count)
-	const cap = vertexCount <= 1 ? 1 : 1 << (32 - Math.clz32(vertexCount - 1));
-	_remapSlot = new Int32Array(cap);
-	_remapStamp = new Int32Array(cap); // zero-filled; _stamp is always ≥ 1 in use
-}
+// The per-chunk vertex dedup (versioned typed-array remap) lives in the
+// backend-neutral `gpu/meshchunk.ts`, shared with the WebGPU mesh batcher —
+// see the rationale there. Safe because addMesh runs synchronously and never
+// re-enters (flush() only draws); only one addMesh runs at a time.
 
 // The lazy-depth-clear state for the mesh-mode pass lives on the RENDERER
 // (`renderer._meshDepthDirty`), not per batcher instance: the unlit
@@ -142,6 +108,23 @@ export default class MeshBatcher extends MaterialBatcher {
 		// as -1 when signed, so any numeric sentinel can collide with a real
 		// tint and silently suppress the very first set.
 		this.currentTintValue = undefined;
+
+		// GL textures already upgraded to trilinear minification (mesh
+		// textures sample their mip chain — see applyMeshMaterial). WeakSet:
+		// entries die with their GL texture objects.
+		this.trilinearTextures = new WeakSet();
+
+		// 4× anisotropic filtering rides the same upgrade (oblique surfaces
+		// keep detail plain trilinear blurs away). Resolved per init — a
+		// context restore re-runs this against the fresh context.
+		const gl = this.gl;
+		this.anisotropicExt = gl.getExtension("EXT_texture_filter_anisotropic");
+		this.maxAnisotropy = this.anisotropicExt
+			? Math.min(
+					4,
+					gl.getParameter(this.anisotropicExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT),
+				)
+			: 0;
 
 		// arm the (renderer-owned) lazy depth clear for the first mesh pass
 		renderer._meshDepthDirty = true;
@@ -395,27 +378,8 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	buildRetainedVertexData(mesh, out) {
-		const vertices = mesh.originalVertices;
-		const uvs = mesh.uvs;
-		const colors = mesh.vertexColors;
-		const count = mesh.vertexCount;
-		let o = 0;
-		for (let i = 0; i < count; i++) {
-			const i3 = i * 3;
-			const i2 = i * 2;
-			const c = colors ? colors[i] : 0xffffffff;
-			out[o] = vertices[i3];
-			out[o + 1] = vertices[i3 + 1];
-			out[o + 2] = vertices[i3 + 2];
-			out[o + 3] = uvs[i2];
-			out[o + 4] = uvs[i2 + 1];
-			out[o + 5] = ((c >> 16) & 0xff) / 255;
-			out[o + 6] = ((c >> 8) & 0xff) / 255;
-			out[o + 7] = (c & 0xff) / 255;
-			out[o + 8] = ((c >>> 24) & 0xff) / 255;
-			o += this.vertexSize;
-		}
-		return o;
+		// the shared neutral builder — one copy for both backends
+		return buildMeshVertexData(mesh, out, this.vertexSize);
 	}
 
 	/**
@@ -580,9 +544,70 @@ export default class MeshBatcher extends MaterialBatcher {
 			true,
 			mesh.textureRepeat,
 		);
-		if (unit !== this.currentSamplerUnit) {
+		// guarded like every other per-mesh uniform below: a custom mesh
+		// shader that never samples the texture (vertex colors only) does
+		// not declare `uSampler`, and setUniform throws on unknown names
+		if (
+			unit !== this.currentSamplerUnit &&
+			this.currentShader.uniforms?.uSampler !== undefined
+		) {
 			this.currentShader.setUniform("uSampler", unit);
 			this.currentSamplerUnit = unit;
+		}
+
+		// Mesh textures sample their mip chain: `createTexture2D` already
+		// runs `generateMipmap` for every plain image upload, but the min
+		// filter stays LINEAR so the chain went unused — upgrade to
+		// trilinear once per GL texture. `textureFilter: "nearest"` opts
+		// out (crisp pixel-art models keep hard minification), and a sprite
+		// sharing the exact (source, wrap) unit sees the same
+		// last-writer-wins caveat as the `textureFilter` setting.
+		const gl = this.gl;
+		const glFilter =
+			typeof mesh.texture.filter !== "undefined"
+				? mesh.texture.filter
+				: this.renderer._glTextureFilter();
+		// the filter can be a GL enum (this backend's Mesh) or the string
+		// form (an atlas first configured under a non-GL renderer)
+		if (glFilter === gl.LINEAR || glFilter === "linear") {
+			const glTexture = this.boundTextures[unit];
+			const source =
+				typeof mesh.texture.getTexture === "function"
+					? mesh.texture.getTexture()
+					: null;
+			// TextureResource-backed sources own their upload and carry no
+			// generated chain — a mipmap min filter over their single level
+			// is mipmap-incomplete under ES3 (samples opaque black), so they
+			// stay on plain LINEAR. Videos re-upload every frame, which
+			// resets MIN_FILTER back to LINEAR — re-apply the upgrade per
+			// draw for them instead of trusting the once-per-texture set.
+			const resourceOwned =
+				source !== null && typeof source.upload === "function";
+			const isVideo =
+				source !== null && typeof source.videoWidth !== "undefined";
+			if (
+				typeof glTexture !== "undefined" &&
+				!resourceOwned &&
+				(isVideo || !this.trilinearTextures.has(glTexture))
+			) {
+				// uploads/bind tracking can skip real GL calls — force the
+				// binding so the parameter lands on the right texture
+				gl.activeTexture(gl.TEXTURE0 + unit);
+				gl.bindTexture(gl.TEXTURE_2D, glTexture);
+				gl.texParameteri(
+					gl.TEXTURE_2D,
+					gl.TEXTURE_MIN_FILTER,
+					gl.LINEAR_MIPMAP_LINEAR,
+				);
+				if (this.maxAnisotropy > 1) {
+					gl.texParameterf(
+						gl.TEXTURE_2D,
+						this.anisotropicExt.TEXTURE_MAX_ANISOTROPY_EXT,
+						this.maxAnisotropy,
+					);
+				}
+				this.trilinearTextures.add(glTexture);
+			}
 		}
 
 		// alpha cutout (glTF alphaMode MASK): discard fragments whose final alpha
@@ -663,29 +688,19 @@ export default class MeshBatcher extends MaterialBatcher {
 
 			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
 
-			// build a local vertex remap for this chunk (reused scratch).
-			// capture base offset before pushing any vertices. Bump the stamp to
-			// invalidate the whole remap in O(1) (resetting before int32 overflow,
-			// ~weeks of continuous rendering away, keeps the stored stamps valid).
+			// build a local vertex remap for this chunk (shared reused
+			// scratch — see gpu/meshchunk.ts). Capture the base offset
+			// before pushing any vertices.
 			const baseOffset = vertexData.vertexCount;
-			if (_stamp >= 0x7fffffff) {
-				_remapStamp.fill(0);
-				_stamp = 0;
-			}
-			_stamp++;
-			_chunkIndices.length = 0;
+			const chunkIndices = beginChunk();
 			let localCount = 0;
 
 			for (let j = triIdx; j < endIdx; j++) {
 				const origIdx = indices[j];
-				let localIdx;
-				if (_remapStamp[origIdx] === _stamp) {
-					// already emitted this chunk — reuse its local index
-					localIdx = _remapSlot[origIdx];
-				} else {
+				let localIdx = remapIndex(origIdx);
+				if (localIdx === -1) {
 					localIdx = localCount++;
-					_remapStamp[origIdx] = _stamp;
-					_remapSlot[origIdx] = localIdx;
+					assignIndex(origIdx, localIdx);
 
 					const i3 = origIdx * 3;
 					const i2 = origIdx * 2;
@@ -713,12 +728,12 @@ export default class MeshBatcher extends MaterialBatcher {
 					);
 				}
 				// absolute index = baseOffset + localIdx
-				_chunkIndices.push(baseOffset + localIdx);
+				chunkIndices.push(baseOffset + localIdx);
 			}
 
 			// add raw indices (already absolute, bypass rebasing) — addRaw
-			// copies the values, so reusing `_chunkIndices` next chunk is safe
-			this.indexBuffer.addRaw(_chunkIndices);
+			// copies the values, so reusing the shared chunk list is safe
+			this.indexBuffer.addRaw(chunkIndices);
 			triIdx = endIdx;
 		}
 	}

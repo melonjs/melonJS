@@ -202,6 +202,14 @@ export class MaterialBatcher extends WebGLBatcher {
 					mipmaps[i].data,
 				);
 			}
+			// Cap the sampled chain at what the asset actually carries:
+			// compressed sources are excluded from generateMipmap, so under
+			// ES3 completeness rules a mipmap min filter (the mesh path's
+			// trilinear upgrade) over a chain that stops short of 1×1 is
+			// MIPMAP-INCOMPLETE and samples opaque black. With the cap, a
+			// single-level DDS/PKM stays complete at level 0 and an
+			// authored multi-level chain becomes legally trilinear.
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, mipmaps.length - 1);
 		} else if (pixels === null) {
 			// allocation without data — srcOffset overload requires a view
 			gl.texImage2D(
@@ -409,10 +417,20 @@ export class MaterialBatcher extends WebGLBatcher {
 			// `textureFilter`), otherwise fall back to the renderer-wide default
 			// (the `textureFilter` setting, decoupled from MSAA — see
 			// WebGLRenderer#getDefaultTextureFilter)
-			const filter =
+			let filter =
 				typeof texture.filter !== "undefined"
 					? texture.filter
 					: this.renderer._glTextureFilter();
+			// the STRING form ("nearest"/"linear") is what non-GL renderers
+			// store (the WebGPU texture store consumes it directly) — an
+			// atlas that met one of those first must still upload correctly
+			// here, so map it to the GL enum instead of feeding texParameteri
+			// a string
+			if (filter === "nearest") {
+				filter = this.gl.NEAREST;
+			} else if (filter === "linear") {
+				filter = this.gl.LINEAR;
+			}
 			// `w`/`h` historically came from callers (e.g. `addQuad`) that
 			// passed the DESTINATION quad size, not the texture size. That
 			// broke the downstream POT check — a 480×1216 atlas drawn into
@@ -429,9 +447,17 @@ export class MaterialBatcher extends WebGLBatcher {
 			// w/h for sources that have neither.
 			const texW = source.width || source.videoWidth || w;
 			const texH = source.height || source.videoHeight || h;
+			// a video with no decoded frame yet (readyState < HAVE_CURRENT_DATA)
+			// has nothing to upload — texImage2D on it is browser-dependent
+			// (an exception on some engines, an empty upload plus a GL error
+			// on others). Allocate a blank texture instead and skip the copy;
+			// the video path force-re-uploads every frame, so content lands
+			// the moment a frame exists — same contract as the WebGPU store.
+			const frameless =
+				typeof source.videoWidth !== "undefined" && source.readyState < 2;
 			this.createTexture2D(
 				unit,
-				source,
+				frameless ? null : source,
 				filter,
 				wrap,
 				texW,

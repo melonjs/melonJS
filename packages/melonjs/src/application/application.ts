@@ -365,8 +365,8 @@ export default class Application {
 		} else if (uriFragment.canvas === true) {
 			settings.renderer = CANVAS;
 		} else if (uriFragment.webgpu === true) {
-			// opt-in only, exactly like passing `renderer: video.WEBGPU` —
-			// `AUTO` never selects it (see the WEBGPU doc block)
+			// exactly like passing `renderer: video.WEBGPU`: requires the
+			// backend rather than trusting AUTO's ladder to land on it
 			settings.renderer = WEBGPU;
 		}
 
@@ -510,12 +510,34 @@ export default class Application {
 
 		if (typeof this.settings.renderer === "number") {
 			switch (this.settings.renderer) {
-				case AUTO:
-					// "I want WebGL if available, Canvas otherwise" — try
-					// WebGL, silently fall back to Canvas if it isn't
-					// available.
-					this.renderer = autoDetectRenderer(this.settings as any);
+				case AUTO: {
+					// WebGPU first, then WebGL 2, then Canvas. WebGPU support
+					// can only be proven by negotiating an adapter/device, so
+					// the attempt is a full backend init awaited here —
+					// rejection falls through to the synchronous candidates
+					// (autoDetectRenderer) instead of failing the application.
+					let negotiated;
+					if (typeof globalThis.navigator?.gpu !== "undefined") {
+						const attempt = new WebGPURenderer(this.settings as any);
+						attempt.parentApplication = this;
+						try {
+							await attempt.init();
+							negotiated = attempt;
+						} catch (e) {
+							// release the half-built backend (listeners
+							// unhook; no device was retained on rejection)
+							attempt.destroy();
+							console.log(
+								`AUTO: WebGPU unavailable (${
+									e instanceof Error ? e.message : String(e)
+								}) — falling back to WebGL`,
+							);
+						}
+					}
+					this.renderer =
+						negotiated ?? autoDetectRenderer(this.settings as any);
 					break;
+				}
 				case WEBGL:
 					// "I require WebGL" — fail loudly if it isn't
 					// available instead of silently falling back to
@@ -540,14 +562,14 @@ export default class Application {
 					this.renderer = new WebGLRenderer(this.settings as any);
 					break;
 				case WEBGPU:
-					// Experimental, and deliberately excluded from `AUTO` until
-					// it reaches feature parity with the WebGL backend — someone
-					// asking for WebGPU is testing WebGPU, and a quiet
-					// substitution would make the test meaningless. Construction
+					// "I require WebGPU" — like WEBGL, an explicit request
+					// either runs on WebGPU or fails; a quiet substitution
+					// would make the request meaningless. Construction
 					// acquires the GPUCanvasContext (throws when WebGPU is
-					// unavailable, surfacing as a rejection of this method); the
-					// adapter/device negotiation happens in the
-					// `renderer.init()` await below.
+					// unavailable, surfacing as a rejection of this method);
+					// the adapter/device negotiation happens in the
+					// `renderer.init()` await below. Use `video.AUTO` for
+					// the WebGPU → WebGL → Canvas fallback ladder.
 					this.renderer = new WebGPURenderer(this.settings as any);
 					break;
 				default:

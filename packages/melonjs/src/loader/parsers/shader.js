@@ -4,6 +4,20 @@ import GLShader from "../../video/webgl/glshader.js";
 import { shaderList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 
+// a `wgsl` source is either an effect BODY (the apply() convention — the
+// realization generates the vertex stage around it) or a complete MODULE
+// (a custom mesh shader). A module must declare its own `@vertex` entry
+// point named `vertex_main`; a body never legally can — the realization
+// already emits one, so a body containing it would fail compilation
+// anyway. Comments are stripped before sniffing: a body whose comment
+// merely MENTIONS "@vertex" must not be misrouted into a raw program.
+const WGSL_MODULE = /@vertex\b[\s\S]*?\bfn\s+vertex_main\b/;
+const WGSL_COMMENTS = /\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+
+function isWGSLModule(source) {
+	return WGSL_MODULE.test(source.replace(WGSL_COMMENTS, ""));
+}
+
 let _renderer;
 
 // gracefully capture a reference to the active renderer without adding more
@@ -16,14 +30,16 @@ on(VIDEO_INIT, (renderer) => {
 /**
  * compile a shader asset's source into its shared, loader-owned instance:
  * a fragment body (the `apply()` convention) compiles into a
- * {@link ShaderEffect}; a full `{vertex, fragment}` program pair compiles
- * into a raw {@link GLShader} — for the advanced paths that take one (a
- * `Mesh` custom shader, `renderer.customShader`, a custom batcher).
- * Program pairs are WebGL-only: under the Canvas renderer a pair asset
- * stores `null` (with a warning) — a raw GL program has no canvas analog,
- * unlike ShaderEffect's inert Canvas stub.
- * @param {string|{vertex: string, fragment: string, precision?: string}} source - the fragment body, or a complete program pair
- * @returns {ShaderEffect|GLShader|null} the compiled asset, flagged `shared`
+ * {@link ShaderEffect}; a complete program — a `{vertex, fragment}` GLSL
+ * pair and/or a `wgsl` full module, either omittable — compiles into a
+ * {@link GLShader} carrying whichever realizations were declared, for the
+ * hosted paths that take one (a `Mesh` custom shader,
+ * `renderer.customShader`, a custom batcher). The active renderer hosts
+ * the realization it speaks; a shader without one for this backend is
+ * inert — assigning it degrades to built-in shading, never fails.
+ * @param {string|object} source - the fragment body (or `{glsl, wgsl}`
+ * bodies), or a complete program: `{vertex, fragment, wgsl?, precision?}`
+ * @returns {ShaderEffect|GLShader} the compiled asset, flagged `shared`
  * @throws if called before any `app.init()` resolved (no renderer to compile against)
  * @ignore
  */
@@ -34,6 +50,30 @@ export function compileShaderAsset(source) {
 		);
 	}
 	if (typeof source === "object" && source !== null) {
+		const hasPair =
+			typeof source.vertex === "string" && typeof source.fragment === "string";
+		// a wgsl source that declares an @vertex vertex_main is a complete
+		// module (a custom mesh shader), not an effect body — see above
+		const wgslModule =
+			typeof source.wgsl === "string" && isWGSLModule(source.wgsl)
+				? source.wgsl
+				: null;
+
+		// complete-program shapes → one GLShader carrying every declared
+		// realization; `renderer.gl` is undefined on non-WebGL backends,
+		// which simply skips the GLSL compile (isWebGL stays false)
+		if (hasPair || wgslModule !== null) {
+			const shader = new GLShader(_renderer.gl, {
+				vertex: source.vertex,
+				fragment: source.fragment,
+				precision: source.precision,
+				wgsl: wgslModule ?? undefined,
+				label: "melonJS shader asset",
+			});
+			shader.shared = true;
+			return shader;
+		}
+
 		// dual-language fragment bodies ({glsl, wgsl} — either may be
 		// omitted): the ShaderEffect constructor picks the body matching
 		// the renderer's shading language, and degrades to the inert stub
@@ -43,32 +83,9 @@ export function compileShaderAsset(source) {
 			effect.shared = true;
 			return effect;
 		}
-		if (
-			typeof source.vertex !== "string" ||
-			typeof source.fragment !== "string"
-		) {
-			throw new Error(
-				"a program pair needs both `vertex` and `fragment` GLSL sources",
-			);
-		}
-		// the pair is GLSL source compiled as-is, so the backend has to speak
-		// GLSL — not merely have a programmable pipeline
-		if (_renderer.shaderLanguage !== "glsl") {
-			console.warn(
-				`shader asset: {vertex, fragment} program pairs are GLSL and are unavailable on this renderer (shader language: ${
-					_renderer.shaderLanguage ?? "none"
-				})`,
-			);
-			return null;
-		}
-		const shader = new GLShader(
-			_renderer.gl,
-			source.vertex,
-			source.fragment,
-			source.precision,
+		throw new Error(
+			"a program pair needs both `vertex` and `fragment` GLSL sources",
 		);
-		shader.shared = true;
-		return shader;
 	}
 	const effect = new ShaderEffect(_renderer, source);
 	// loader-owned: a renderable's cleanup must never auto-destroy it —
@@ -89,10 +106,14 @@ export function compileShaderAsset(source) {
  *   a shared {@link ShaderEffect} carrying one body per shading language;
  *   the renderer compiles the matching one, and when none matches the
  *   preload still succeeds with an inert (`enabled === false`) effect;
- * - a complete **program pair** — `src: {vertex: url, fragment: url}` or
- *   `data: {vertex: glsl, fragment: glsl}` — → compiles into a shared raw
- *   {@link GLShader}, for the advanced paths that take one (a `Mesh`
- *   custom shader, `renderer.customShader`, a custom batcher).
+ * - a complete **program** — `src: {vertex: url, fragment: url}` (GLSL
+ *   pair), `src: {wgsl: url}` where the WGSL declares its own `@vertex`
+ *   entry point (a complete module), or both together for a dual-backend
+ *   asset — → compiles into a shared raw {@link GLShader} carrying the
+ *   declared realizations (`isWebGL` / `isWebGPU`), for the hosted paths
+ *   that take one (a `Mesh` custom shader, `renderer.customShader`, a
+ *   custom batcher); the active renderer hosts the realization it speaks
+ *   and a missing one degrades to built-in shading.
  *
  * Always compiled AT LOAD TIME, so the GLSL compile cost lands in the
  * loading screen and compile errors carry the asset name. An initialized
@@ -133,71 +154,45 @@ export function preloadShader(data, onload, onerror, settings) {
 		return 1;
 	}
 
-	// `src` as {glsl, wgsl} effect-body URLs (either may be omitted) →
-	// fetch what is declared, compile the dual-body ShaderEffect (same
-	// Promise.all pattern as the program pair below)
-	if (
-		typeof data.src === "object" &&
-		data.src !== null &&
-		(typeof data.src.glsl === "string" || typeof data.src.wgsl === "string")
-	) {
-		const languages = ["glsl", "wgsl"].filter((language) => {
-			return typeof data.src[language] === "string";
-		});
-		Promise.all(
-			languages.map((language) => {
-				return fetchData(data.src[language], "text", settings);
-			}),
-		)
-			.then((sources) => {
-				// concurrent-load guard — see the single-source path below
-				if (typeof shaderList[data.name] === "undefined") {
-					const bodies = {};
-					languages.forEach((language, index) => {
-						bodies[language] = sources[index];
-					});
-					shaderList[data.name] = compileShaderAsset(bodies);
-				}
-				if (typeof onload === "function") {
-					onload();
-				}
-			})
-			.catch((error) => {
-				if (typeof onerror === "function") {
-					onerror(new Error(`shader asset "${data.name}": ${error.message}`));
-				}
-			});
-		return 1;
-	}
-
-	// `src` as a {vertex, fragment} pair of URLs → fetch both, compile a
-	// raw GLShader program
+	// `src` as an object of URLs — {glsl, wgsl} effect bodies, a
+	// {vertex, fragment} GLSL program pair, or a complete dual-backend
+	// program {vertex, fragment, wgsl}: fetch whatever is declared and
+	// let compileShaderAsset dispatch on the assembled shape
 	if (typeof data.src === "object" && data.src !== null) {
-		if (
-			typeof data.src.vertex !== "string" ||
-			typeof data.src.fragment !== "string"
-		) {
+		const fields = ["glsl", "wgsl", "vertex", "fragment"].filter((field) => {
+			return typeof data.src[field] === "string";
+		});
+		const pairComplete =
+			(typeof data.src.vertex === "string") ===
+			(typeof data.src.fragment === "string");
+		if (fields.length === 0 || !pairComplete) {
 			if (typeof onerror === "function") {
 				onerror(
 					new Error(
-						`shader asset "${data.name}": a program pair needs both \`src.vertex\` and \`src.fragment\` URLs`,
+						fields.length === 0
+							? `shader asset "${data.name}": \`src\` needs {glsl, wgsl} body URLs and/or a {vertex, fragment} program pair`
+							: `shader asset "${data.name}": a program pair needs both \`src.vertex\` and \`src.fragment\` URLs`,
 					),
 				);
 			}
 			return 1;
 		}
-		Promise.all([
-			fetchData(data.src.vertex, "text", settings),
-			fetchData(data.src.fragment, "text", settings),
-		])
-			.then(([vertex, fragment]) => {
+		Promise.all(
+			fields.map((field) => {
+				return fetchData(data.src[field], "text", settings);
+			}),
+		)
+			.then((sources) => {
 				// concurrent-load guard — see the single-source path below
 				if (typeof shaderList[data.name] === "undefined") {
-					shaderList[data.name] = compileShaderAsset({
-						vertex,
-						fragment,
-						precision: data.precision,
+					const parts = {};
+					fields.forEach((field, index) => {
+						parts[field] = sources[index];
 					});
+					if (typeof data.precision === "string") {
+						parts.precision = data.precision;
+					}
+					shaderList[data.name] = compileShaderAsset(parts);
 				}
 				if (typeof onload === "function") {
 					onload();

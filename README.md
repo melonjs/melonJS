@@ -17,7 +17,7 @@ A modern & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](https://melonjs.org/img/alex4-github.png)
 
-[melonJS](https://melonjs.org/) is an open-source 2.5D game engine designed for indie developers — perspective and orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance. Runs on WebGL or Canvas2D with automatic fallback, tree-shakeable so you only pay for what you use, and the entire engine fits in ~150 KB minzipped of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
+[melonJS](https://melonjs.org/) is an open-source 2.5D game engine designed for indie developers — perspective and orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance. Runs on WebGPU, WebGL 2 or Canvas2D with automatic fallback, tree-shakeable so you only pay for what you use, and the entire engine fits in ~150 KB minzipped of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
 
 [melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained by the team at AltByte in Singapore.
 
@@ -28,11 +28,11 @@ melonJS is designed so you can **focus on making games, not on graphics plumbing
 
 - **[Canvas2D-inspired rendering API](https://github.com/melonjs/melonJS/wiki/Rendering-API)** — If you've used the HTML5 Canvas, you already know melonJS. The rendering API (`save`, `restore`, `translate`, `rotate`, `setColor`, `fillRect`, ...) follows the same familiar patterns — no render graphs, no shader pipelines, no instruction sets to learn.
 
-- **True renderer abstraction** — Write your game once, run it on WebGL or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API, with automatic fallback when WebGL is not available. Designed to support future backends (WebGPU) without touching game code.
+- **True renderer abstraction** — Write your game once, run it on WebGPU, WebGL 2 or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API: the default `AUTO` mode negotiates the best available backend (WebGPU → WebGL 2 → Canvas) at startup, and the entire feature set renders identically on both GPU backends.
 
 - **Complete engine, minimal footprint** — Physics, tilemaps, audio, input, cameras, tweens, particles, UI — a full game stack in a single tree-shakeable ES module. No dependency sprawl, no library stitching.
 
-- **Scenes, loaded in one call** — `level.load(name)` brings an authored scene straight into your world. [Tiled](https://www.mapeditor.org) is a first-class citizen for **2D** — orthogonal, isometric, hexagonal & staggered maps, animated tilesets, collision shapes, object properties, compressed formats, with GPU-accelerated tile rendering under WebGL 2 — and **glTF / GLB** is the equivalent for **3D scenes**: author in Blender (or any DCC tool), export a `.glb`, and the whole scene — meshes, materials, cameras, lights, and node animation — loads under a `Camera3d`, no per-mesh wiring. Animated models play back through the same animation API as a 2D `Sprite`.
+- **Scenes, loaded in one call** — `level.load(name)` brings an authored scene straight into your world. [Tiled](https://www.mapeditor.org) is a first-class citizen for **2D** — orthogonal, isometric, hexagonal & staggered maps, animated tilesets, collision shapes, object properties, compressed formats, with GPU-accelerated tile rendering on the GPU backends — and **glTF / GLB** is the equivalent for **3D scenes**: author in Blender (or any DCC tool), export a `.glb`, and the whole scene — meshes, materials, cameras, lights, and node animation — loads under a `Camera3d`, no per-mesh wiring. Animated models play back through the same animation API as a 2D `Sprite`.
 
 - **Batteries included, hackable by design** — Get started in minutes with minimal setup. When you need to go deeper: ES6 classes throughout, a plugin system for engine extensions, and a clean architecture that's easy to extend without fighting the framework.
 
@@ -46,7 +46,7 @@ Compatibility
 - Compatible with all major browsers (Chrome, Safari, Firefox, Opera, Edge) and mobile devices
 
 Graphics
-- Fast WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
+- Fast GPU renderers (WebGPU and WebGL 2) for desktop and mobile devices, with fallback to Canvas rendering
 - Extensible batcher system for custom rendering pipelines
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option and frame animation
@@ -57,8 +57,8 @@ Graphics
 - 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d` — ~30% faster mesh rendering with near-zero per-frame allocation (a re-drawn static mesh produces no GC garbage)
 - Lighting, in 2D and 3D:
     - **2D** — `Light2d` as a first-class `Renderable` (multiple dynamic lights, radial-gradient falloff, illumination-only mode, procedural rendering via `drawLight`), plus optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights
-    - **3D** — `Light3d` directional + ambient lights, added to the world like `Light2d` (half-Lambert diffuse + ambient fill, runtime-manipulable for day/night), auto-loaded from a glTF scene's authored sun
-- Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
+    - **3D** — `Light3d` directional, point, spot and ambient lights, added to the world like `Light2d` (half-Lambert diffuse + ambient fill, runtime-manipulable for day/night), auto-loaded from a glTF scene's authored suns and lamps
+- Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support on both GPU backends: `ShaderEffect` for per-sprite fragment effects (GLSL and/or WGSL bodies) and complete custom mesh shader programs via `mesh.shader` (a dual-language `GLShader`: GLSL pair and/or WGSL module)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text with built-in typewriter effect
 - Video sprite playback
@@ -98,7 +98,7 @@ UI
 Scenes
 - Load a scene in one call with `level.load(name)` — 2D Tiled maps and 3D glTF scenes alike, auto-registered on preload
 - [Tiled](https://www.mapeditor.org) map format [up to 1.12](https://doc.mapeditor.org/en/stable/reference/tmx-changelog/) built-in support for easy level design
-    - **GPU-accelerated tile rendering** for orthogonal maps under WebGL 2 — each layer draws as a single quad with no per-tile loop, ~5–8× faster than the legacy CPU renderer on dense maps. Honors animated tiles, flip bits, per-layer opacity/tint/blend, and oversized bottom-aligned tiles; falls back transparently to the CPU renderer on isometric/staggered/hexagonal layers or non-WebGL-2 contexts
+    - **GPU-accelerated tile rendering** for orthogonal maps on the GPU backends (WebGL 2 and WebGPU) — each layer draws as a single quad with no per-tile loop, ~5–8× faster than the legacy CPU renderer on dense maps. Honors animated tiles, flip bits, per-layer opacity/tint/blend, and oversized bottom-aligned tiles; falls back transparently to the CPU renderer on isometric/staggered/hexagonal layers or under the Canvas renderer
     - Uncompressed and [compressed](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric, Hexagonal (both normal and staggered) and Oblique maps
     - Multiple layers with per-layer alpha, tinting and blend modes (multiple background/foreground, collision and Image layers)
@@ -116,7 +116,7 @@ Scenes
     - Shape based Tile collision support
 - glTF / GLB 3D scenes — load an authored 3D scene with `level.load(...)`, the same one call as a Tiled map
     - The whole scene loads at once — meshes, materials, cameras and lights — viewed under a `Camera3d`
-    - Automatically lit by the scene's directional lights (the sun set up in the authoring tool)
+    - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool
     - Textured, solid-colored, and vertex-colored materials
     - Node animation — walk/idle/sprint characters, spinning pickups, doors, lifts — played through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`
     - `.glb` and `.gltf` files, with embedded *or* external buffers & textures
@@ -179,6 +179,7 @@ Examples
 * [SVG Shapes](https://melonjs.github.io/melonJS/examples/#/svg-shapes) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/svgShapes))
 * [Graphics](https://melonjs.github.io/melonJS/examples/#/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))
 * [Hello World](https://melonjs.github.io/melonJS/examples/#/hello-world) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/helloWorld))
+* [Hello WebGPU](https://melonjs.github.io/melonJS/examples/#/webgpu) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/webgpu)) — the WebGPU backend in action, with the renderer negotiation surfaced on screen
 * [Whac-A-Mole](https://melonjs.github.io/melonJS/examples/#/whac-a-mole) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole))
 * [Compressed Textures](https://melonjs.github.io/melonJS/examples/#/compressed-textures) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/compressedTextures))
 * [Aquarium](https://melonjs.github.io/melonJS/examples/#/aquarium) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/aquarium)) — screen-space water refraction with `renderer.toFrameTexture()`: fish swim across a seabed, then a water surface captures the live frame on the GPU and re-samples it through a scrolling `NoiseTexture2d` flow map (the standard screen-texture / opaque-frame-copy pattern)

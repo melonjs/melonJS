@@ -104,8 +104,14 @@ export default class Renderer {
 		this.path2D = new Path2D();
 
 		/**
-		 * The renderer type : Canvas, WebGL, etc...
-		 * (override this property with a specific value when implementing a custom renderer)
+		 * The renderer backend identity — the built-in renderers report
+		 * `"CANVAS"`, `"WebGL2"` and `"WebGPU"`. Use it for identity
+		 * checks (code coupled to one backend's machinery); prefer the
+		 * capability flags (`shaderLanguage`, `supportsDepthBuffer`,
+		 * `supportsRetainedMesh`, `supportsShaderTileLayers`) when the
+		 * requirement is a capability rather than a specific backend.
+		 * (override this property with a specific value when implementing
+		 * a custom renderer)
 		 * @type {string}
 		 */
 		this.type = "Generic";
@@ -141,8 +147,8 @@ export default class Renderer {
 		/**
 		 * The source language this backend accepts for user-supplied shaders,
 		 * or `null` when it has no programmable pipeline at all (the Canvas
-		 * backend). `"glsl"` on the WebGL backend; a future WebGPU backend
-		 * reports `"wgsl"`.
+		 * backend). `"glsl"` on the WebGL backend, `"wgsl"` on the WebGPU
+		 * backend.
 		 *
 		 * Consumers that need a *specific* language — `ShaderEffect` and the
 		 * loader's `{vertex, fragment}` shader assets both hand GLSL source
@@ -246,8 +252,8 @@ export default class Renderer {
 	}
 
 	/**
-	 * Current per-renderable depth value. GPU batchers (WebGL today,
-	 * WebGPU once it lands) push it into the vertex stream as the `z`
+	 * Current per-renderable depth value. The GPU batchers (WebGL and
+	 * WebGPU) push it into the vertex stream as the `z`
 	 * component of each vertex — a no-op under the default orthographic
 	 * projection, used by perspective (Camera3d) to
 	 * scale and parallax sprites by distance. Mirrors `renderable.depth`,
@@ -316,11 +322,20 @@ export default class Renderer {
 	 * `uvs` (Float32Array, u/v pairs), `indices` (Uint16Array, triangle indices),
 	 * `texture` (TextureAtlas), `vertexCount` (number), and optionally
 	 * `cullBackFaces` (boolean, default true).
-	 * WebGL uses hardware depth testing; Canvas uses painter's algorithm (back-to-front sort).
+	 *
+	 * On the GPU backends (WebGL and WebGPU — hardware depth testing),
+	 * passing a `modelMatrix` selects the **retained** path: the mesh's
+	 * model-space geometry stays resident on the GPU and the matrix
+	 * places it, so redrawing never re-uploads vertices (see
+	 * {@link Renderer#supportsRetainedMesh}). Without a matrix the
+	 * vertices are taken as already CPU-projected (the 2D-camera path —
+	 * the only path the Canvas renderer supports, using painter's
+	 * algorithm). `Mesh.draw` selects the right form automatically.
 	 * @param {Mesh} mesh - a Mesh renderable or compatible object
+	 * @param {Matrix3d} [modelMatrix] - the mesh's placement, for the retained path (GPU backends)
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	drawMesh(mesh) {}
+	drawMesh(mesh, modelMatrix) {}
 
 	/**
 	 * Reset context state

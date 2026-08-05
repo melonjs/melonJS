@@ -355,4 +355,84 @@ describe("WebGPU pipeline (device-free units)", () => {
 			expect(second.epoch).toBeGreaterThan(first.epoch);
 		});
 	});
+
+	describe("mesh pipeline axes (the 3D tier)", () => {
+		function makeCache() {
+			const device = createMockDevice();
+			const cache = new WebGPUPipelineCache(device, "bgra8unorm");
+			cache.registerVertexLayout("quad", 28, [
+				{ format: "float32x3", offset: 0 },
+				{ format: "float32x2", offset: 12 },
+				{ format: "unorm8x4", offset: 20 },
+				{ format: "float32", offset: 24 },
+			]);
+			return { device, cache };
+		}
+
+		it("meshState is a key axis: every cull/frontFace pair is its own pipeline, distinct from the 2D one", () => {
+			const { device, cache } = makeCache();
+			const flat = cache.get("quad", "triangle-list", "none", true);
+			const meshOf = (cullMode, frontFace) => {
+				return cache.get("quad", "triangle-list", "none", true, "none", {
+					cullMode,
+					frontFace,
+				});
+			};
+			const backCcw = meshOf("back", "ccw");
+			expect(backCcw).not.toBe(flat);
+			expect(meshOf("back", "ccw")).toBe(backCcw);
+			expect(meshOf("back", "cw")).not.toBe(backCcw);
+			expect(meshOf("none", "ccw")).not.toBe(backCcw);
+			expect(device.pipelines).toHaveLength(4);
+		});
+
+		it("mesh descriptors enable depth write + LEQUAL and carry the culling axes", () => {
+			const { cache } = makeCache();
+			const { descriptor } = cache.get(
+				"quad",
+				"triangle-list",
+				"none",
+				true,
+				"none",
+				{ cullMode: "back", frontFace: "cw" },
+			);
+			// GL mesh-mode parity: LEQUAL (not LESS) keeps coplanar
+			// geometry from z-fighting itself out of existence
+			expect(descriptor.depthStencil.depthWriteEnabled).toBe(true);
+			expect(descriptor.depthStencil.depthCompare).toBe("less-equal");
+			expect(descriptor.primitive.cullMode).toBe("back");
+			expect(descriptor.primitive.frontFace).toBe("cw");
+		});
+
+		it("mesh state merges with the stencil axes — a mesh inside a mask honors both", () => {
+			const { cache } = makeCache();
+			const { descriptor } = cache.get(
+				"quad",
+				"triangle-list",
+				"none",
+				true,
+				"test",
+				{ cullMode: "none", frontFace: "ccw" },
+			);
+			expect(descriptor.depthStencil.depthWriteEnabled).toBe(true);
+			expect(descriptor.depthStencil.depthCompare).toBe("less-equal");
+			expect(descriptor.depthStencil.stencilFront.compare).toBe("equal");
+			expect(descriptor.depthStencil.stencilWriteMask).toBe(0);
+		});
+
+		it("2D descriptors are unchanged with the mesh axes absent (regression pin)", () => {
+			const { cache } = makeCache();
+			const { descriptor } = cache.get("quad", "triangle-list", "normal", true);
+			expect(descriptor.depthStencil.depthWriteEnabled).toBe(false);
+			expect(descriptor.depthStencil.depthCompare).toBe("always");
+			// the culling keys must be ABSENT, not merely defaulted — the
+			// 2D descriptor stays byte-identical to a build with no mesh path
+			expect("cullMode" in descriptor.primitive).toBe(false);
+			expect("frontFace" in descriptor.primitive).toBe(false);
+			expect(descriptor.primitive).toEqual({
+				topology: "triangle-list",
+				stripIndexFormat: undefined,
+			});
+		});
+	});
 });

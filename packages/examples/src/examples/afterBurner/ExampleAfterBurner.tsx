@@ -54,28 +54,31 @@ const createGame = async () => {
 	// StrictMode remount, the preload callback bails for the rest of
 	// the session, and the game never starts. Picks up cleanly once
 	// the utils.tsx remount path is fixed (separate review thread).
-	// AfterBurner requires WebGL — `renderer: video.WEBGL` throws (post
-	// #1479) when the browser/GPU can't provide a context (driver
-	// blocklisted, software fallback failing the perf-caveat check, etc.).
-	// Surface a clear browser-level message to the user instead of
-	// letting the React tree render a stuck blank canvas with an obscure
-	// error buried in the dev console.
+	// AfterBurner needs a GPU backend — `video.AUTO` negotiates WebGPU
+	// first, then WebGL 2, and only lands on Canvas when neither exists
+	// (driver blocklisted, software fallback failing the perf-caveat
+	// check, etc.). Canvas has no Camera3d/mesh path, so surface a clear
+	// browser-level message instead of letting the React tree render a
+	// stuck blank canvas with an obscure error buried in the dev console.
 	let app: Application;
 	try {
 		app = new Application(1024, 576, {
 			parent: "screen",
-			renderer: video.WEBGL,
+			renderer: video.AUTO,
 			scale: "auto",
 			cameraClass: Camera3d,
 		});
 		await app.init();
+		if (!app.renderer.supportsDepthBuffer) {
+			throw new Error("no GPU backend available (Canvas fallback)");
+		}
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(
-			"AfterBurner couldn't start: WebGL isn't available in this browser.\n\n" +
+			"AfterBurner couldn't start: no GPU rendering is available in this browser.\n\n" +
 				"This showcase uses Camera3d + 3D mesh rendering, which require a " +
-				"WebGL-capable browser/GPU. Try enabling hardware acceleration in " +
-				"your browser settings, or open this example in a different browser.\n\n" +
+				"WebGPU- or WebGL-capable browser/GPU. Try enabling hardware acceleration " +
+				"in your browser settings, or open this example in a different browser.\n\n" +
 				`Details: ${reason}`,
 		);
 		// Re-throw so the React example boundary doesn't think we

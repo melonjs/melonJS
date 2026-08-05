@@ -62,6 +62,21 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  *   inside a varying branch must use
  *   `textureSampleLevel(uTexture, uSampler, uv, 0.0)` (a WGSL
  *   uniform-control-flow rule; identical output for sprite textures).
+ *
+ * ## Directional UV arithmetic (`uUVYDir`)
+ *
+ * The vertical orientation of `apply()`'s UV space depends on the draw
+ * path: sampling the sprite directly, `uv.y` grows downward, but the
+ * WebGL multi-effect (pooled) path composites through capture FBOs whose
+ * rows are bottom-up — there `uv.y` grows upward. A body that offsets its
+ * sampling coordinate vertically (a drop shadow, a directional smear)
+ * would render mirrored on that path. Declare a `float uUVYDir` uniform
+ * (WGSL: `uUVYDir : f32` in the uniform struct) and multiply vertical UV
+ * offsets by it: the renderer feeds `+1` where `uv.y` grows downward —
+ * including every WebGPU path — and `-1` on the WebGL pooled path, so
+ * "down" stays down everywhere. Initialize it to `1.0` with `setUniform`;
+ * bodies that don't declare it are unaffected. The built-in
+ * {@link DropShadowEffect} is the reference use.
  * @category Rendering
  * @example
  * // one effect, both backends: dual-language body
@@ -387,6 +402,38 @@ export default class ShaderEffect {
 			this.wgslRealization.setUniform("uTime", seconds);
 		}
 		return this;
+	}
+
+	/**
+	 * Feed the UV y-direction of the space `apply()` is about to run in:
+	 * `+1` where `uv.y` grows downward (direct sprite sampling, and every
+	 * WebGPU path), `-1` on the WebGL pooled-blit path, whose capture FBOs
+	 * are bottom-up — there, y-directional UV arithmetic inside a body
+	 * runs vertically mirrored unless compensated. Directional bodies
+	 * (DropShadow) declare a `uUVYDir` uniform and multiply their y
+	 * offsets with it, so "down" means down on every path of every
+	 * backend. A silent no-op for bodies that don't declare the uniform.
+	 * @param {number} dir - +1 (uv.y grows downward) or -1 (upward)
+	 * @ignore
+	 */
+	_setUVYDir(dir) {
+		if (this._uvYDir === dir || this.destroyed === true) {
+			return;
+		}
+		if (
+			typeof this._shader !== "undefined" &&
+			!this._shader.suspended &&
+			typeof this._shader.uniforms.uUVYDir !== "undefined"
+		) {
+			this._uvYDir = dir;
+			this._shader.setUniform("uUVYDir", dir);
+		} else if (
+			typeof this.wgslRealization !== "undefined" &&
+			this.wgslRealization.hasUniform("uUVYDir")
+		) {
+			this._uvYDir = dir;
+			this.wgslRealization.setUniform("uUVYDir", dir);
+		}
 	}
 
 	/**

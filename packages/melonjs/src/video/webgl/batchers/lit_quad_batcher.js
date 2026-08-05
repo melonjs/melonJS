@@ -1,4 +1,5 @@
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
+import { transformQuadCorners } from "../../gpu/quadcorners.ts";
 import UniformBlock from "../buffer/uniformblock.js";
 import { MAX_LIGHTS } from "../lighting/constants.ts";
 import {
@@ -8,7 +9,7 @@ import {
 } from "../lighting/std140.ts";
 import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
-import QuadBatcher, { V_ARRAY } from "./quad_batcher.js";
+import QuadBatcher from "./quad_batcher.js";
 
 /**
  * additional import for TypeScript
@@ -489,6 +490,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 					Math.min(v0, v1),
 				);
 			}
+			// direct atlas sampling: uv.y grows downward — see
+			// QuadBatcher.addQuad
+			this.currentShader._setUVYDir?.(1);
 		}
 
 		let normalTextureId = -1;
@@ -516,22 +520,16 @@ export default class LitQuadBatcher extends QuadBatcher {
 			normalTextureId = unit;
 		}
 
-		// Stamp per-sprite depth onto z BEFORE `m.apply` — see
-		// `QuadBatcher.addQuad` for the full rationale. V_ARRAY is the
-		// shared Vector3d pool from `QuadBatcher`.
-		const m = this.viewMatrix;
-		const z = this.renderer.currentDepth;
-		const vec0 = V_ARRAY[0].set(x, y, z);
-		const vec1 = V_ARRAY[1].set(x + w, y, z);
-		const vec2 = V_ARRAY[2].set(x, y + h, z);
-		const vec3 = V_ARRAY[3].set(x + w, y + h, z);
-
-		if (!m.isIdentity()) {
-			m.apply(vec0);
-			m.apply(vec1);
-			m.apply(vec2);
-			m.apply(vec3);
-		}
+		// Stamp per-sprite depth onto z BEFORE the transform — see
+		// `QuadBatcher.addQuad` for the full rationale (shared corner pool)
+		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
+			this.viewMatrix,
+			x,
+			y,
+			w,
+			h,
+			this.renderer.currentDepth,
+		);
 
 		const textureId = this.useMultiTexture ? unit : 0;
 		vertexData.push(
@@ -602,22 +600,23 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
 
+		// bottom-up capture FBO: uv.y grows upward inside apply() — see
+		// QuadBatcher.blitTexture
+		shader._setUVYDir?.(-1);
+
 		// transform corners through the renderer transform — see
 		// `QuadBatcher.blitTexture` for the rationale. Only caller today
 		// is `WebGLRenderer.blitEffect`, which resets `currentTransform`
 		// to identity, so the matrix branch is dormant in practice.
-		// Explicit z = 0 because V_ARRAY is Vector3d (shared with addQuad).
-		const m = this.viewMatrix;
-		const vec0 = V_ARRAY[0].set(x, y, 0);
-		const vec1 = V_ARRAY[1].set(x + width, y, 0);
-		const vec2 = V_ARRAY[2].set(x, y + height, 0);
-		const vec3 = V_ARRAY[3].set(x + width, y + height, 0);
-		if (m && !m.isIdentity()) {
-			m.apply(vec0);
-			m.apply(vec1);
-			m.apply(vec2);
-			m.apply(vec3);
-		}
+		// Explicit z = 0: the shared corner pool is Vector3d.
+		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
+			this.viewMatrix,
+			x,
+			y,
+			width,
+			height,
+			0,
+		);
 
 		// blits are always rendered at z = 0 (screen-space, ortho)
 		const tint = 0xffffffff;

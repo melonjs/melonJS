@@ -33,8 +33,33 @@ const makeMelonCanvas = () => {
 	ctx.beginPath();
 	ctx.arc(64, 64, 60, 0, Math.PI * 2);
 	ctx.fill();
+	// watermelon rind stripes — WITHOUT them the melon is a featureless
+	// radial gradient and the spin reads as pointless shimmer instead of
+	// rotation
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(64, 64, 60, 0, Math.PI * 2);
+	ctx.clip();
+	ctx.strokeStyle = "rgba(29, 58, 32, 0.55)";
+	ctx.lineWidth = 9;
+	for (let i = 0; i < 8; i++) {
+		const angle = (i / 8) * Math.PI * 2;
+		ctx.beginPath();
+		ctx.moveTo(64, 64);
+		// wavy rind stripe from the center out
+		ctx.quadraticCurveTo(
+			64 + Math.cos(angle + 0.35) * 34,
+			64 + Math.sin(angle + 0.35) * 34,
+			64 + Math.cos(angle) * 62,
+			64 + Math.sin(angle) * 62,
+		);
+		ctx.stroke();
+	}
+	ctx.restore();
 	ctx.strokeStyle = "#1d3a20";
 	ctx.lineWidth = 5;
+	ctx.beginPath();
+	ctx.arc(64, 64, 60, 0, Math.PI * 2);
 	ctx.stroke();
 	return canvas;
 };
@@ -144,7 +169,7 @@ export const ExampleWebGPU = createExampleComponent(async () => {
 			parent: "screen",
 			scale: "auto",
 			// opt-in only — `video.AUTO` never selects the WebGPU backend
-			renderer: video.WEBGPU,
+			renderer: video.AUTO,
 			backgroundColor: "#10212f",
 		});
 		// a WebGPU device cannot be acquired synchronously — this await is

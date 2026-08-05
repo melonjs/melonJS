@@ -200,6 +200,16 @@ describe("WebGPU compressed textures", () => {
 		store.getBinding(atlas);
 		expect(writes).toHaveLength(2);
 
+		// the mesh path (mipmaps: true) samples the AUTHORED chain through
+		// the full view — no re-upload, no recreate, distinct bind group
+		const meshBind = store.getBinding(atlas, { mipmaps: true });
+		expect(meshBind).not.toBe(bindGroup);
+		expect(
+			meshBind.descriptor.entries[0].resource.viewDescriptor,
+		).toBeUndefined();
+		expect(writes).toHaveLength(2);
+		expect(created).toHaveLength(1);
+
 		// a recycled unit must NOT adopt a same-size image source into the
 		// compressed-format texture (non-renderable format — the copy would
 		// fail validation while the stale pixels kept serving): it recreates

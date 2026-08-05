@@ -52,9 +52,6 @@ const _tempMatrix = new Matrix3d();
 const _savedTransform = new Matrix3d();
 const _savedProjection = new Matrix3d();
 
-// list of supported compressed texture formats
-let supportedCompressedTextureFormats;
-
 /**
  * a WebGL renderer object
  * @category Rendering
@@ -336,6 +333,23 @@ export default class WebGLRenderer extends Renderer {
 			this.reset();
 		});
 
+		// Every live GLShader recompiles on this event, and each recompile
+		// binds its own program to replay its uniform snapshot — so the
+		// REAL current program afterwards is whichever shader recompiled
+		// last, while this cache still names whatever drew before the
+		// event. Invalidate it (order-immune: whatever is really bound,
+		// the next flush's syncProgram re-issues useProgram) instead of
+		// trusting a stale match and drawing with a foreign program.
+		// Latent for years; surfaced when the Light3dBlock outgrew the
+		// Light2dBlock — a foreign mesh-lit program parks its block at
+		// default binding point 0, whose 2D buffer is now too small, and a
+		// plain sprite flush dies with INVALID_OPERATION.
+		on(ONCONTEXT_RESTORED, (renderer) => {
+			if (renderer === this) {
+				this.currentProgram = undefined;
+			}
+		});
+
 		// register to the CANVAS resize channel
 		on(CANVAS_ONRESIZE, (width, height) => {
 			this.flush();
@@ -359,13 +373,17 @@ export default class WebGLRenderer extends Renderer {
 	 * @return {Object}
 	 */
 	getSupportedCompressedTextureFormats() {
-		if (typeof supportedCompressedTextureFormats === "undefined") {
+		// per-instance (the WebGPU backend's convention): a module-level memo
+		// would be shared across coexisting renderer instances and survive a
+		// destroyed context — divergence-by-drift, even if format support
+		// rarely differs in practice
+		if (typeof this._compressedTextureFormats === "undefined") {
 			const gl = this.gl;
 			if (typeof gl === "undefined" || gl === null) {
 				// WebGL context not available
 				return super.getSupportedCompressedTextureFormats();
 			}
-			supportedCompressedTextureFormats = {
+			this._compressedTextureFormats = {
 				astc:
 					gl.getExtension("WEBGL_compressed_texture_astc") ||
 					gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
@@ -392,15 +410,15 @@ export default class WebGLRenderer extends Renderer {
 			// ETC2 is a superset of ETC1 — if we have ETC2 but not ETC1,
 			// synthesize ETC1 support so that PKM/KTX ETC1 textures work
 			if (
-				!supportedCompressedTextureFormats.etc1 &&
-				supportedCompressedTextureFormats.etc2
+				!this._compressedTextureFormats.etc1 &&
+				this._compressedTextureFormats.etc2
 			) {
-				supportedCompressedTextureFormats.etc1 = {
+				this._compressedTextureFormats.etc1 = {
 					COMPRESSED_RGB_ETC1_WEBGL: 0x8d64,
 				};
 			}
 		}
-		return supportedCompressedTextureFormats;
+		return this._compressedTextureFormats;
 	}
 
 	/**
@@ -1660,9 +1678,26 @@ export default class WebGLRenderer extends Renderer {
 		// occlusion per pixel against the accumulated depth buffer.
 		this.setBatcher(mesh.lit === true ? "litMesh" : "mesh");
 
-		// apply custom shader if set on the renderable (via preDraw)
-		if (this.customShader != null) {
+		// apply custom shader if set on the renderable (via preDraw) —
+		// hostable only when it carries a live GL program (a WGSL-only
+		// GLShader has none: keep the built-in shading, and say so once).
+		// The warn keys on the DECLARED realization (isWebGL), not the live
+		// program: a dual shader drawn during a lost-context window merely
+		// lacks its program transiently and must neither warn nor consume
+		// the one-shot for a later genuinely-unhostable shader.
+		const hostedShader =
+			this.customShader != null && this.customShader.program != null;
+		if (hostedShader) {
 			this.currentBatcher.useShader(this.customShader);
+		} else if (
+			this.customShader != null &&
+			this.customShader.isWebGL !== true &&
+			this._meshShaderWarned !== true
+		) {
+			this._meshShaderWarned = true;
+			console.warn(
+				"melonJS: this custom shader cannot be hosted on a Mesh by the WebGL renderer (no compiled GLSL program) — the mesh draws with the built-in shading",
+			);
 		}
 
 		// toggle backface culling per-mesh — varies across meshes in
@@ -1679,25 +1714,30 @@ export default class WebGLRenderer extends Renderer {
 			gl.frontFace(retained && mesh.rightHanded !== true ? gl.CW : gl.CCW);
 		}
 
-		const tint = this.currentTint.toUint32(this.getGlobalAlpha());
-		if (retained) {
-			this.currentBatcher.drawRetainedMesh(mesh, modelMatrix, tint);
-		} else {
-			this.currentBatcher.addMesh(mesh, tint);
-			this.flush();
-		}
+		// finally: a throw mid-draw (e.g. a texture upload failing) must not
+		// leak the cull toggle or leave the custom program bound — the NEXT
+		// unshaded mesh would silently draw with it
+		try {
+			const tint = this.currentTint.toUint32(this.getGlobalAlpha());
+			if (retained) {
+				this.currentBatcher.drawRetainedMesh(mesh, modelMatrix, tint);
+			} else {
+				this.currentBatcher.addMesh(mesh, tint);
+				this.flush();
+			}
+		} finally {
+			if (mesh.cullBackFaces) {
+				gl.disable(gl.CULL_FACE);
+				// restore the default orientation alongside the cull toggle:
+				// leaving it at CW would leak to any later consumer of the
+				// context that reads `gl_FrontFacing` or enables culling itself
+				gl.frontFace(gl.CCW);
+			}
 
-		if (mesh.cullBackFaces) {
-			gl.disable(gl.CULL_FACE);
-			// restore the default orientation alongside the cull toggle: leaving
-			// it at CW would leak to any later consumer of the context that reads
-			// `gl_FrontFacing` or enables culling itself
-			gl.frontFace(gl.CCW);
-		}
-
-		// revert to default shader if custom was applied
-		if (this.customShader != null) {
-			this.currentBatcher.useShader(this.currentBatcher.defaultShader);
+			// revert to default shader if custom was applied
+			if (hostedShader) {
+				this.currentBatcher.useShader(this.currentBatcher.defaultShader);
+			}
 		}
 	}
 
@@ -1871,6 +1911,8 @@ export default class WebGLRenderer extends Renderer {
 	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
 	 * - "lighten" : retains the lightest pixels of both layers <br>
 	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
+	 * - "none" : blending disabled — the source replaces the destination
+	 * outright, alpha included (matches the WebGPU renderer's "none") <br>
 	 * Other CSS blend modes ("overlay", "color-dodge", "color-burn", "hard-light", "soft-light",
 	 * "difference", "exclusion") may be supported by the Canvas renderer (browser-dependent)
 	 * and will always fall back to "normal" in WebGL. <br>
@@ -1919,6 +1961,12 @@ export default class WebGLRenderer extends Renderer {
 				case "lighten":
 					gl.blendEquation(gl.MAX);
 					gl.blendFunc(gl.ONE, gl.ONE);
+					break;
+
+				case "none":
+					// replace: source overwrites destination, alpha included —
+					// the WebGPU backend's "none" pipeline blend state parity
+					gl.disable(gl.BLEND);
 					break;
 
 				default:

@@ -1,65 +1,72 @@
 /**
- * Select the HTML5 Canvas renderer. Lower performance and no shader /
- * mesh / Camera3d support, but supported on every browser including
- * environments where WebGL is unavailable (some embedded webviews,
- * stripped-down kiosk browsers, GPU blocklisted by driver policy).
+ * Select the HTML5 Canvas renderer. Lower performance and no
+ * programmable pipeline, but supported on every browser including
+ * environments where the GPU backends are unavailable (some embedded
+ * webviews, stripped-down kiosk browsers, GPU blocklisted by driver
+ * policy).
  *
  * Use when the example / game uses only 2D sprites + primitives and you
- * want the broadest possible reach. Anything depending on `ShaderEffect`,
- * `Mesh`, `Camera3d`, GPU TMX tile rendering or `Light2d` will silently
- * not work — those subsystems are WebGL-only.
+ * want the broadest possible reach. Anything depending on the GPU
+ * backends degrades or disables here: `ShaderEffect` and `Light2d`
+ * shading stay inert, GPU TMX tile rendering falls back to the per-tile
+ * path, and `Mesh` / `Camera3d` lose the depth-buffer path (meshes only
+ * render CPU-projected under a 2D camera — `supportsDepthBuffer` is
+ * `false`).
  */
 export const CANVAS = 0;
 
 /**
- * Require the WebGL renderer. **Throws at `new Application(...)` time
- * if WebGL is unavailable** (driver-blocklisted GPU, software fallback
- * failing the `failIfMajorPerformanceCaveat` check, no `WebGLRenderingContext`
- * in the environment, etc.) — does NOT silently fall back to Canvas.
+ * Require the WebGL renderer. **`app.init()` rejects if WebGL 2 is
+ * unavailable** (WebGL-1-only device, driver-blocklisted GPU, software
+ * fallback failing the `failIfMajorPerformanceCaveat` check, etc.) —
+ * it does NOT silently fall back to Canvas.
  *
- * Use this when your scene needs WebGL (Camera3d, Mesh, ShaderEffect,
- * Light2d, GPU tilemap) and you'd rather fail fast with a clear error
- * than have the engine render a stuck blank canvas.
+ * Use this when your scene needs a GPU backend (Camera3d, Mesh,
+ * ShaderEffect, Light2d, GPU tilemap) pinned to WebGL specifically and
+ * you'd rather fail fast with a clear error than have the engine render
+ * a stuck blank canvas.
  *
- * If Canvas fallback is acceptable when WebGL isn't there, use
- * {@link AUTO} instead.
+ * If falling back is acceptable, use {@link AUTO} instead (WebGPU →
+ * WebGL 2 → Canvas).
  */
 export const WEBGL = 1;
 
 /**
- * Auto-select the renderer: prefer WebGL when available, silently fall
- * back to Canvas otherwise. Application construction always succeeds.
+ * Auto-select the renderer: try WebGPU first (when the browser exposes it
+ * and an adapter/device negotiates successfully), fall back to WebGL 2,
+ * then to Canvas. `await app.init()` always resolves — a failed candidate
+ * falls through to the next rather than rejecting.
  *
- * {@link WEBGPU} is **not** a candidate here and will not be selected
- * automatically, however capable the browser — it stays opt-in until it
- * reaches parity with WebGL.
+ * The WebGPU attempt is a full backend initialization (support can only be
+ * proven by negotiating a device), so on WebGPU-capable browsers `init()`
+ * settles after the adapter handshake; browsers without `navigator.gpu`
+ * skip straight to the synchronous WebGL probe.
  *
- * Use this when your scene works under both renderers (2D sprites,
- * primitives, basic tile maps) and you want the engine to pick the
- * best available backend. Note: subsystems that require WebGL
- * (Camera3d, Mesh, ShaderEffect, Light2d, GPU tilemap) will silently
- * stop working under the Canvas fallback path — if your scene depends
- * on any of those, use {@link WEBGL} so the failure surfaces at
- * construction time instead of as a black canvas at runtime.
+ * Note: subsystems that require a GPU backend (Camera3d, Mesh,
+ * ShaderEffect, Light2d, GPU tilemap) will silently stop working under
+ * the terminal Canvas fallback — if your scene depends on any of those,
+ * use {@link WEBGL} (or {@link WEBGPU}) so the failure surfaces at
+ * startup instead of as a black canvas at runtime.
+ *
+ * A specific backend can still be forced per-run with the `#webgpu`,
+ * `#webgl` or `#canvas` URI fragments.
  */
 export const AUTO = 2;
 
 /**
- * Require the **experimental** WebGPU renderer. It covers the full
- * non-post-effect 2D contract: sprites, text and particles (the quad
- * pipeline), filled/stroked shapes and Path2D (the primitive pipeline),
- * blend modes, clipping and stencil masks. Not yet implemented: post
- * effects / ShaderEffect (WGSL story pending), lights, meshes/Camera3d,
- * and GPU tile layers — scenes relying on those need {@link WEBGL}.
+ * Require the WebGPU renderer. The backend covers the full rendering
+ * contract of the WebGL renderer — the 2D tier (sprites, text,
+ * primitives, blend modes, masks and clipping, patterns, ShaderEffect /
+ * post effects in WGSL, 2D lights and normal maps, frame captures,
+ * gradient fills, compressed textures, GPU tile layers) and the 3D tier
+ * (retained and accumulated meshes, lit and unlit, Camera3d, Light3d,
+ * glTF scenes and models, Sprite3d billboards).
+ *
  * `app.init()` rejects when WebGPU is unavailable in the environment;
  * like {@link WEBGL} it fails loudly rather than falling back, so a
- * missing capability surfaces at startup.
- *
- * Deliberately excluded from {@link AUTO}: until the WebGPU backend reaches
- * feature parity with WebGL it is opt-in only, so no existing game can be
- * silently moved onto an incomplete backend by a browser gaining support.
- * You have to ask for it by name (or with the `#webgpu` URI fragment) to
- * exercise it.
+ * missing capability surfaces at startup. Use {@link AUTO} if fallback
+ * to WebGL / Canvas is acceptable — AUTO already prefers WebGPU when
+ * the browser can negotiate a device.
  */
 export const WEBGPU = 3;
 

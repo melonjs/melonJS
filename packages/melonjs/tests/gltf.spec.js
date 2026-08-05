@@ -554,6 +554,38 @@ describe("parseGLTF() — KHR_lights_punctual", () => {
 		const scene = await parseGLTF(buildSceneGLB());
 		expect(scene.lights).toEqual([]);
 	});
+
+	it("captures spot cone angles, with the spec defaults when absent (#1536)", async () => {
+		const scene = await parseGLTF(
+			buildLightGLB(
+				{
+					type: "spot",
+					intensity: 2,
+					range: 12,
+					spot: { innerConeAngle: 0.25, outerConeAngle: 0.75 },
+				},
+				{
+					translation: [1, 2, 3],
+					extensions: { KHR_lights_punctual: { light: 0 } },
+				},
+			),
+		);
+		const L = scene.lights[0];
+		expect(L.type).toBe("spot");
+		expect(L.range).toBe(12);
+		expect(L.innerConeAngle).toBeCloseTo(0.25, 5);
+		expect(L.outerConeAngle).toBeCloseTo(0.75, 5);
+
+		// defaults per the KHR spec: inner 0, outer π/4
+		const defaulted = await parseGLTF(
+			buildLightGLB(
+				{ type: "spot", spot: {} },
+				{ extensions: { KHR_lights_punctual: { light: 0 } } },
+			),
+		);
+		expect(defaulted.lights[0].innerConeAngle).toBe(0);
+		expect(defaulted.lights[0].outerConeAngle).toBeCloseTo(Math.PI / 4, 5);
+	});
 });
 
 // ── Materials: baseColorFactor + vertex colors (COLOR_0) ──────────────────────
@@ -1082,6 +1114,141 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 		scene.addTo(container, { scale: 10, lights: false });
 		expect(lightsOf(container)).toHaveLength(0);
 		expect(container.kids[0].lit).toBe(false);
+	});
+
+	it("instantiates point/spot lights with scene-scaled position + range (#1536)", () => {
+		const NAME2 = "__gltf_punctual_scene";
+		// same mesh, but a spot light at (1, 2, 3) with a range + cone
+		const source = gltfList[NAME];
+		gltfList[NAME2] = {
+			...source,
+			lights: [
+				{
+					type: "spot",
+					color: [0, 1, 0],
+					intensity: 800,
+					range: 5,
+					innerConeAngle: 0.2,
+					outerConeAngle: 0.6,
+					direction: [0, 0, -1],
+					position: [1, 2, 3],
+				},
+			],
+		};
+		try {
+			const scene = new GLTFScene(NAME2);
+			const container = fakeContainer();
+			scene.addTo(container, { scale: 10 });
+
+			const lights = lightsOf(container);
+			const spot = lights.find((l) => {
+				return l.type === "spot";
+			});
+			expect(spot).toBeDefined();
+			// glTF (1,2,3) at scale 10, rightHanded default (zSign -1):
+			// [x·s, -y·s, -z·s]
+			expect(spot.position.x).toBeCloseTo(10, 5);
+			expect(spot.position.y).toBeCloseTo(-20, 5);
+			expect(spot.position.z).toBeCloseTo(-30, 5);
+			// range scales like the geometry; cones pass through; intensity
+			// is unit-normalized (candela is meaningless for the stylized tier)
+			expect(spot.range).toBeCloseTo(50, 5);
+			expect(spot.innerConeAngle).toBeCloseTo(0.2, 5);
+			expect(spot.outerConeAngle).toBeCloseTo(0.6, 5);
+			expect(spot.intensity).toBe(1);
+			// a positional light counts as "added", so the ambient fill applies
+			expect(
+				lights.some((l) => {
+					return l.type === "ambient";
+				}),
+			).toBe(true);
+			// and a lamp-only scene flags its meshes lit — otherwise its own
+			// lights would shine on the unlit fast path and change nothing
+			expect(container.kids[0].lit).toBe(true);
+		} finally {
+			delete gltfList[NAME2];
+		}
+	});
+
+	it("options.lightIntensityScale keeps authored intensity ratios", () => {
+		const NAME3 = "__gltf_intensity_scene";
+		const source = gltfList[NAME];
+		// a 1000-lux sun and a half-strength 500-candela point lamp
+		gltfList[NAME3] = {
+			...source,
+			lights: [
+				{
+					type: "directional",
+					color: [1, 1, 1],
+					intensity: 1000,
+					direction: [0, 0, -1],
+					position: [0, 0, 0],
+				},
+				{
+					type: "point",
+					color: [1, 0, 0],
+					intensity: 500,
+					direction: [0, 0, -1],
+					position: [1, 0, 0],
+				},
+			],
+		};
+		try {
+			const scene = new GLTFScene(NAME3);
+			const container = fakeContainer();
+			scene.addTo(container, { scale: 10, lightIntensityScale: 0.001 });
+
+			const lights = lightsOf(container);
+			const directional = lights.find((l) => {
+				return l.type === "directional";
+			});
+			const point = lights.find((l) => {
+				return l.type === "point";
+			});
+			// authored lux/candela × scale — the 2:1 authored ratio survives
+			expect(directional.intensity).toBeCloseTo(1, 5);
+			expect(point.intensity).toBeCloseTo(0.5, 5);
+
+			// without the option, every light is unit-normalized (the default)
+			const plain = fakeContainer();
+			scene.addTo(plain, { scale: 10 });
+			for (const l of lightsOf(plain)) {
+				if (l.type !== "ambient") {
+					expect(l.intensity).toBe(1);
+				}
+			}
+		} finally {
+			delete gltfList[NAME3];
+		}
+	});
+
+	it("carries the authored light name onto the Light3d (getChildByName lookup)", () => {
+		const NAME4 = "__gltf_named_light_scene";
+		const source = gltfList[NAME];
+		gltfList[NAME4] = {
+			...source,
+			lights: [
+				{
+					type: "directional",
+					color: [1, 1, 1],
+					intensity: 1000,
+					direction: [0, 0, -1],
+					position: [0, 0, 0],
+					name: "Sun",
+				},
+			],
+		};
+		try {
+			const scene = new GLTFScene(NAME4);
+			const container = fakeContainer();
+			scene.addTo(container, { scale: 10 });
+			const sun = lightsOf(container).find((l) => {
+				return l.type === "directional";
+			});
+			expect(sun.name).toBe("Sun");
+		} finally {
+			delete gltfList[NAME4];
+		}
 	});
 
 	it("KHR_materials_unlit: an unlit-material mesh stays unlit even in a lit scene", async () => {

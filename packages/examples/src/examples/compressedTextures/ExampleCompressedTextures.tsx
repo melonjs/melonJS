@@ -242,7 +242,7 @@ const createGame = async () => {
 	const app = new Application(800, 600, {
 		parent: "screen",
 		scaleMethod: "flex",
-		renderer: video.WEBGL,
+		renderer: video.AUTO,
 	});
 	await app.init();
 

@@ -8,6 +8,7 @@ struct ShadowUniforms {
 	uShadowColor : vec3f,
 	uShadowOpacity : f32,
 	uTextureSize : vec2f,
+	uUVYDir : f32,
 };
 @group(3) @binding(0) var<uniform> fx : ShadowUniforms;
 
@@ -18,7 +19,11 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// check if the shadow source pixel is opaque. Level-0 sample: past a
 	// non-uniform return implicit derivatives are unavailable (sprites are
 	// single-level textures, so identical output)
-	let offset = fx.uShadowOffset / fx.uTextureSize;
+	var offset = fx.uShadowOffset / fx.uTextureSize;
+	// uUVYDir keeps "down" pointing down whatever the sampled space's
+	// vertical orientation (always +1 under WebGPU; the GL pooled path
+	// sets -1 for its bottom-up captures)
+	offset.y = offset.y * fx.uUVYDir;
 	let shadowAlpha = textureSampleLevel(uTexture, uSampler, uv - offset, 0.0).a;
 	if (shadowAlpha > 0.0) {
 		return vec4f(fx.uShadowColor, shadowAlpha * fx.uShadowOpacity) * vColor;
@@ -59,12 +64,17 @@ export default class DropShadowEffect extends ShaderEffect {
 			uniform vec3 uShadowColor;
 			uniform float uShadowOpacity;
 			uniform vec2 uTextureSize;
+			uniform float uUVYDir;
 			vec4 apply(vec4 color, vec2 uv) {
 				if (color.a > 0.0) {
 					return color;
 				}
-				// check if the shadow source pixel is opaque
+				// check if the shadow source pixel is opaque. uUVYDir keeps
+				// "down" pointing down whatever the sampled space's vertical
+				// orientation (+1 sampling the sprite atlas directly, -1 on
+				// the pooled path's bottom-up capture FBOs)
 				vec2 offset = uShadowOffset / uTextureSize;
+				offset.y *= uUVYDir;
 				float shadowAlpha = texture2D(uSampler, uv - offset).a;
 				if (shadowAlpha > 0.0) {
 					return vec4(uShadowColor, shadowAlpha * uShadowOpacity) * vColor;
@@ -86,6 +96,8 @@ export default class DropShadowEffect extends ShaderEffect {
 		);
 		this.setUniform("uShadowOpacity", options.opacity ?? 0.5);
 		this.setUniform("uTextureSize", new Float32Array(texSize));
+		// uv.y grows downward until a renderer path says otherwise
+		this.setUniform("uUVYDir", 1.0);
 	}
 
 	/**

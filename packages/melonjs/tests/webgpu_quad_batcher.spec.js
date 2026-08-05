@@ -68,20 +68,56 @@ describe("WebGPUQuadBatcher", () => {
 		expect([floats[21], floats[22]]).toEqual([140, 1060]);
 	});
 
-	it("a texture change flushes the quads queued under the previous material", () => {
+	it("a texture change claims a new slot — quads batch across textures in ONE segment", () => {
 		batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
 		batcher.addQuad(atlasA, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlasB, 0, 8, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		// no flush on the texture change: B claimed slot 1
 		expect(renderer.calls.drawIndexed).toEqual([]);
 
-		batcher.addQuad(atlasB, 0, 8, 8, 8, 0, 0, 1, 1, 0xffffffff);
-		// the two atlas-A quads drained under A's bind group
-		expect(renderer.calls.drawIndexed).toEqual([12]);
-		expect(renderer.calls.materialBinds).toHaveLength(1);
-		expect(renderer.calls.materialBinds[0].texture).toBe(atlasA);
-
 		batcher.flush();
-		expect(renderer.calls.drawIndexed).toEqual([12, 6]);
-		expect(renderer.calls.materialBinds[1].texture).toBe(atlasB);
+		// one draw for all three quads, one COMPOSED bind group at group 1
+		expect(renderer.calls.drawIndexed).toEqual([18]);
+		expect(renderer.calls.materialBinds).toHaveLength(1);
+		// aTextureId per vertex: quads 1-2 slot 0, quad 3 slot 1 (float
+		// at offset 6 of each 7-float vertex)
+		const vertexWrite = renderer.calls.writes.find((w) => {
+			return w.buffer === renderer.vertexArena.page;
+		});
+		const slotOf = (vertex) => {
+			return vertexWrite.floats[vertex * 7 + 6];
+		};
+		expect(slotOf(0)).toBe(0);
+		expect(slotOf(4)).toBe(0);
+		expect(slotOf(8)).toBe(1);
+	});
+
+	it("the ninth distinct texture forces the segment flush", () => {
+		const atlases = Array.from({ length: 9 }, (_, i) => {
+			return { name: `atlas${i}` };
+		});
+		for (const atlas of atlases) {
+			batcher.addQuad(atlas, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		}
+		// the first eight batched; the ninth drained them as one draw
+		expect(renderer.calls.drawIndexed).toEqual([8 * 6]);
+		batcher.flush();
+		expect(renderer.calls.drawIndexed).toEqual([8 * 6, 6]);
+		// two composed bind groups, one per segment
+		expect(renderer.calls.materialBinds).toHaveLength(2);
+	});
+
+	it("a steady-state segment re-uses its composed bind group across flushes", () => {
+		batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlasB, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.flush();
+		batcher.addQuad(atlasA, 0, 8, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlasB, 8, 8, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.flush();
+		expect(renderer.calls.materialBinds).toHaveLength(2);
+		expect(renderer.calls.materialBinds[1]).toBe(
+			renderer.calls.materialBinds[0],
+		);
 	});
 
 	it("a flush with no material ever adopted records nothing", () => {

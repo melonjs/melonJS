@@ -175,7 +175,7 @@ const createGame = async () => {
 		// Normal-map lighting needs the WebGL renderer's lit pipeline.
 		// Under `video.AUTO`, a Canvas fallback would render the orbs
 		// as flat sprites and emit a one-shot console warning.
-		renderer: video.WEBGL,
+		renderer: video.AUTO,
 	});
 	await app.init();
 

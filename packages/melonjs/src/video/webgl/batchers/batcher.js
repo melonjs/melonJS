@@ -375,6 +375,33 @@ export class WebGLBatcher extends Batcher {
 	}
 
 	/**
+	 * Ensure the draw about to be recorded runs on THIS batcher's program.
+	 * Normally `bind()` guaranteed that, but an `ONCONTEXT_RESTORED`
+	 * emission recompiles every live GLShader — each replaying its uniform
+	 * snapshot on its OWN program — leaving whichever recompiled last
+	 * really bound while the renderer's cache still named another. The
+	 * renderer invalidates its program cache on that event, so this
+	 * pointer compare re-issues `useProgram` exactly when the drift
+	 * happened and costs two loads otherwise. Called by every flush path
+	 * (the base and the quad override).
+	 * @ignore
+	 */
+	syncProgram() {
+		const shader = this.currentShader;
+		if (
+			typeof shader !== "undefined" &&
+			this.renderer.currentProgram !== shader.program
+		) {
+			// the RAW rebind only — never useShader() from inside a flush
+			// (it drains pending vertices itself: recursion). Attribute
+			// state lives in the batcher's vertex state and uniforms are
+			// per-program, so useProgram is the whole fix.
+			shader.bind();
+			this.renderer.currentProgram = shader.program;
+		}
+	}
+
+	/**
 	 * Select the shader to use for compositing
 	 * @see GLShader
 	 * @param {GLShader} shader - a reference to a GLShader instance
@@ -692,6 +719,8 @@ export class WebGLBatcher extends Batcher {
 		if (vertexCount > 0) {
 			const gl = this.gl;
 			const vertexSize = vertex.vertexSize;
+
+			this.syncProgram();
 
 			// Upload byte length covers exactly the vertices we've pushed.
 			// Use the Uint8 view (NOT Float32) to keep packed-color bytes

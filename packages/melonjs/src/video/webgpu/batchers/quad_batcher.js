@@ -1,19 +1,8 @@
-import { Vector3d } from "../../../math/vector3d.ts";
 import IndexBuffer from "../../buffer/index.js";
+import { transformQuadCorners } from "../../gpu/quadcorners.ts";
 import { prepareEffectBinding } from "../effect_binding.js";
+import { MAX_QUAD_TEXTURES } from "../pipeline/cache.js";
 import WebGPUBatcher from "./webgpu_batcher.js";
-
-// a pool of reusable vectors used by `addQuad` to transform the four quad
-// corners — Vector3d so the per-sprite depth on `z` flows through
-// `Matrix3d.apply` (same rationale as the WebGL QuadBatcher's pool;
-// duplicated rather than imported so the WebGPU tier never pulls the
-// GL batcher chain into its module graph)
-const V_ARRAY = [
-	new Vector3d(),
-	new Vector3d(),
-	new Vector3d(),
-	new Vector3d(),
-];
 
 /**
  * The WebGPU quad batcher — textured-quad accumulation with the same
@@ -69,7 +58,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			},
 		);
 
-		// the material bind group the pending vertices were queued under
+		// the material bind group the pending vertices were queued under —
+		// FAST-PATH state only: effect pipelines bind a single-source
+		// material, while the normal path batches across texture slots
 		this.currentMaterial = null;
 
 		// the ShaderEffect the pending vertices were queued under — the
@@ -77,6 +68,25 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// quad draws through the effect's pipeline, composited live against
 		// the backdrop (no offscreen target)
 		this.currentEffect = null;
+
+		// multi-texture segment state: up to MAX_QUAD_TEXTURES distinct
+		// (texture view, sampler) pairs share one draw segment, selected
+		// per quad by aTextureId — a flush is forced only by the NINTH
+		// distinct texture (or the usual capacity/effect boundaries)
+		/** @type {Map<string, number>} slot key → slot index */
+		this.segmentKeys = new Map();
+		/** @type {{view: GPUTextureView, sampler: GPUSampler}[]} */
+		this.segmentEntries = [];
+		// the composed group-1 bind group for the pending segment (lazy)
+		this.segmentGroup = null;
+		// composed bind groups cached by their slot-resource identity —
+		// steady-state segments re-use instead of re-creating (the
+		// litMaterials precedent; cleared on reset and filter changes)
+		/** @type {Map<string, GPUBindGroup>} */
+		this.composedGroups = new Map();
+		// monotonic ids for views/samplers, for composition cache keys
+		this.resourceIds = new WeakMap();
+		this.nextResourceId = 1;
 
 		// static index buffer: 6 indices per 4 vertices, filled once by the
 		// renderer-agnostic CPU pattern and uploaded at creation
@@ -134,19 +144,18 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			if (effect._screenTextureUniforms?.length > 0) {
 				renderer.captureFrame();
 			}
-		}
 
-		// single-texture batching: adopt the quad's material, flushing the
-		// vertices queued under the previous one
-		const bindGroup = renderer.textureStore.getBinding(texture, {
-			force: reupload,
-		});
-		if (bindGroup !== this.currentMaterial) {
-			this.flush();
-			this.currentMaterial = bindGroup;
-		}
+			// the fast path stays single-texture: effect pipelines bind a
+			// single-source material at group 1, and each quad flushes on
+			// its own anyway
+			const bindGroup = renderer.textureStore.getBinding(texture, {
+				force: reupload,
+			});
+			if (bindGroup !== this.currentMaterial) {
+				this.flush();
+				this.currentMaterial = bindGroup;
+			}
 
-		if (effect !== null) {
 			// feed the effect's `noise_uv` builtin with this quad's frame
 			// rect — min() normalizes flipped (swapped) UVs
 			const source = texture.getTexture();
@@ -158,16 +167,141 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 				Math.min(u0, u1),
 				Math.min(v0, v1),
 			);
-		}
 
-		this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint);
+			this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, 0);
 
-		if (effect !== null) {
 			// per-quad draw under the fast path: each sprite needs its own
 			// capture state, noise rect and uniform snapshot (draw-time
 			// setUniform mutation included)
 			this.flush();
+			return;
 		}
+
+		// multi-texture batching: resolve the quad's texture to a segment
+		// slot, flushing only when an over-capacity NINTH texture appears
+		this.pushQuadVertices(
+			x,
+			y,
+			w,
+			h,
+			u0,
+			v0,
+			u1,
+			v1,
+			tint,
+			this.segmentSlotFor(texture, reupload),
+		);
+	}
+
+	/**
+	 * Resolve a texture to its slot in the pending segment, claiming a new
+	 * slot (and flushing a full segment) when this (view, sampler) pair is
+	 * new. The upload rules — same-frame content changes, recycled units,
+	 * forced video re-uploads — all live in the store's resident-record
+	 * path, exactly as before.
+	 * @param {object} texture - the texture atlas to resolve
+	 * @param {boolean} reupload - force the source pixels to re-upload
+	 * @returns {number} the slot index written to aTextureId
+	 * @ignore
+	 */
+	segmentSlotFor(texture, reupload) {
+		const renderer = this.renderer;
+		const store = renderer.textureStore;
+		const record = store.getResidentRecord(texture, { force: reupload });
+		const wrap = texture.repeat ?? "no-repeat";
+		const filter =
+			typeof texture.filter === "string"
+				? texture.filter
+				: renderer.getDefaultTextureFilter();
+		const slotKey = `${this.resourceId(record.view)}|${filter}|${wrap}`;
+		let slot = this.segmentKeys.get(slotKey);
+		if (typeof slot === "undefined") {
+			if (this.segmentEntries.length >= MAX_QUAD_TEXTURES) {
+				// segment at capacity — the pending quads draw with THEIR
+				// eight textures, and this quad starts the next segment
+				this.flush();
+			}
+			slot = this.segmentEntries.length;
+			this.segmentEntries.push({
+				view: record.view,
+				sampler: store.getSampler(filter, wrap),
+			});
+			this.segmentKeys.set(slotKey, slot);
+			this.segmentGroup = null;
+		}
+		return slot;
+	}
+
+	/**
+	 * a stable id for a GPU resource object (bind-group composition keys)
+	 * @ignore
+	 */
+	resourceId(resource) {
+		let id = this.resourceIds.get(resource);
+		if (typeof id === "undefined") {
+			id = this.nextResourceId++;
+			this.resourceIds.set(resource, id);
+		}
+		return id;
+	}
+
+	/**
+	 * The composed group-1 bind group for the pending segment: the claimed
+	 * slots, with empty slots padded by slot 0 (every declared binding
+	 * needs a resource; the padding is never selected). Cached by the slot
+	 * resources' identity, so steady-state segments re-use one group.
+	 * @returns {GPUBindGroup} the segment's material bind group
+	 * @ignore
+	 */
+	composeSegmentGroup() {
+		if (this.segmentGroup !== null) {
+			return this.segmentGroup;
+		}
+		const entries = this.segmentEntries;
+		const first = entries[0];
+		const groupEntries = [];
+		let key = "";
+		for (let slot = 0; slot < MAX_QUAD_TEXTURES; slot++) {
+			const entry = entries[slot] ?? first;
+			key += `${this.resourceId(entry.view)}.${this.resourceId(entry.sampler)}|`;
+			groupEntries.push({ binding: slot, resource: entry.view });
+			groupEntries.push({
+				binding: MAX_QUAD_TEXTURES + slot,
+				resource: entry.sampler,
+			});
+		}
+		let group = this.composedGroups.get(key);
+		if (typeof group === "undefined") {
+			group = this.device.createBindGroup({
+				label: "melonJS quad materials",
+				layout: this.renderer.pipelineCache.multiMaterialLayout,
+				entries: groupEntries,
+			});
+			this.composedGroups.set(key, group);
+		}
+		this.segmentGroup = group;
+		return group;
+	}
+
+	/**
+	 * start the next segment fresh (the pending one was just recorded)
+	 * @ignore
+	 */
+	resetSegment() {
+		this.segmentKeys.clear();
+		this.segmentEntries.length = 0;
+		this.segmentGroup = null;
+	}
+
+	/**
+	 * Drop every composed segment bind group — each embeds samplers
+	 * resolved from the default texture filter, so a filter change must
+	 * rebuild them (the multi-texture counterpart of the texture store's
+	 * invalidateBindGroups).
+	 */
+	clearMaterialCache() {
+		this.composedGroups.clear();
+		this.resetSegment();
 	}
 
 	/**
@@ -175,32 +309,27 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * and lit addQuad paths. Stamps per-sprite depth onto z BEFORE
 	 * `m.apply` so Camera3d's view matrix (3D R⁻¹ ∘ T(-pos)) fully rotates
 	 * the vertex; for 2D-only matrices the z column is identity, so the
-	 * output (x, y) is bit-identical and z passes through. textureId is 0
-	 * under single-texture batching (layout kept for the multi-texture
-	 * upgrade).
+	 * output (x, y) is bit-identical and z passes through. textureId is the
+	 * quad's segment slot (constant across its four corners); the lit and
+	 * fast paths pass 0 (single-texture bind groups).
 	 * @ignore
 	 */
-	pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint) {
+	pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, textureId = 0) {
 		const vertexData = this.vertexData;
-		const m = this.renderer.currentTransform;
-		const z = this.renderer.currentDepth;
-		const vec0 = V_ARRAY[0].set(x, y, z);
-		const vec1 = V_ARRAY[1].set(x + w, y, z);
-		const vec2 = V_ARRAY[2].set(x, y + h, z);
-		const vec3 = V_ARRAY[3].set(x + w, y + h, z);
-
-		if (!m.isIdentity()) {
-			m.apply(vec0);
-			m.apply(vec1);
-			m.apply(vec2);
-			m.apply(vec3);
-		}
+		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
+			this.renderer.currentTransform,
+			x,
+			y,
+			w,
+			h,
+			this.renderer.currentDepth,
+		);
 
 		// 4 vertices per quad; the index buffer provides the 6 indices
-		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, 0);
-		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, 0);
-		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, 0);
-		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, 0);
+		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, textureId);
+		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, textureId);
+		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, textureId);
+		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, textureId);
 	}
 
 	/**
@@ -232,7 +361,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 
 		const pass = renderer.ensurePass();
 		const pipeline = renderer.pipelineCache.get(
-			binding?.key ?? "quad",
+			// no effect → the single-texture blit family (the quad family's
+			// group 1 is the eight-slot segment layout)
+			binding?.key ?? "blit",
 			"triangle-list",
 			keepBlend ? renderer.currentBlendMode : "none",
 			renderer.premultipliedAlpha,
@@ -275,13 +406,20 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	}
 
 	/**
-	 * indexed draw: 6 indices per 4 queued vertices, region-relative
+	 * indexed draw: 6 indices per 4 queued vertices, region-relative. The
+	 * fast path binds its single-source material; the normal path binds
+	 * the composed segment (up to eight textures).
 	 * @param {GPURenderPassEncoder} pass - the open pass
 	 * @param {number} vertexCount - pending vertex count
 	 * @override
 	 */
 	recordDraw(pass, vertexCount) {
-		pass.setBindGroup(1, this.currentMaterial);
+		pass.setBindGroup(
+			1,
+			this.currentEffect !== null
+				? this.currentMaterial
+				: this.composeSegmentGroup(),
+		);
 		pass.setIndexBuffer(this.indexBuffer, "uint32");
 		pass.drawIndexed((vertexCount / 4) * 6);
 	}
@@ -290,13 +428,13 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @override
 	 */
 	flush(topology) {
-		if (this.currentMaterial === null) {
-			// nothing was ever queued under a material this frame
-			this.vertexData.clear();
-			return;
-		}
 		const effect = this.currentEffect;
 		if (effect !== null && this.vertexData.vertexCount > 0) {
+			if (this.currentMaterial === null) {
+				// defensive: fast-path vertices with no adopted material
+				this.vertexData.clear();
+				return;
+			}
 			// fast-path draw: same recording as the base flush, through the
 			// effect's pipeline family with its group-3 binding. An effect
 			// without a WGSL realization draws plain (graceful, GL-parity
@@ -307,7 +445,27 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 				return;
 			}
 		}
+		if (
+			this.vertexData.vertexCount > 0 &&
+			this.hasPendingMaterial() === false
+		) {
+			// defensive: pending vertices but no material was ever claimed
+			// (out-of-contract pushes) — recording would bind nothing valid
+			this.vertexData.clear();
+			return;
+		}
 		super.flush(topology);
+		this.resetSegment();
+	}
+
+	/**
+	 * whether the pending vertices have a material to draw with — the lit
+	 * subclass overrides (its material model is the combined color+normal
+	 * group, not the segment slots)
+	 * @ignore
+	 */
+	hasPendingMaterial() {
+		return this.segmentEntries.length > 0;
 	}
 
 	/**
@@ -361,6 +519,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	reset() {
 		super.reset();
 		this.currentEffect = null;
+		this.currentMaterial = null;
+		this.resetSegment();
+		this.composedGroups.clear();
 	}
 
 	/**
@@ -370,6 +531,8 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		this.indexBuffer?.destroy();
 		this.indexBuffer = null;
 		this.currentMaterial = null;
+		this.resetSegment();
+		this.composedGroups.clear();
 		super.destroy();
 	}
 }

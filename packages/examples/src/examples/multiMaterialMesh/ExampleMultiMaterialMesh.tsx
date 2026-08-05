@@ -62,27 +62,29 @@ const CRAFTS = [
 // ─── entry point ──────────────────────────────────────────────────
 
 const createGame = async () => {
-	// `renderer: video.WEBGL` throws (post #1479) when the browser/GPU
-	// can't provide a context. Surface a clear browser-level message
-	// instead of letting the React tree render a stuck blank canvas.
+	// Multi-material 3D meshes need a GPU backend for usable frame rates
+	// — Canvas would solid-fill per triangle in JS, correct but 10-50×
+	// slower than the GPU rasterizer. `video.AUTO` negotiates WebGPU
+	// first, then WebGL 2; fail loudly on the Canvas fallback instead of
+	// letting the React tree render a stuck blank canvas.
 	let app: Application;
 	try {
 		app = new Application(CANVAS_W, CANVAS_H, {
 			parent: "screen",
-			// Multi-material 3D meshes need the WebGL renderer for usable
-			// frame rates — Canvas would solid-fill per triangle in JS,
-			// correct but 10-50× slower than the GPU rasterizer.
-			renderer: video.WEBGL,
+			renderer: video.AUTO,
 			scale: "auto",
 		});
 		await app.init();
+		if (!app.renderer.supportsDepthBuffer) {
+			throw new Error("no GPU backend available (Canvas fallback)");
+		}
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(
-			"This example couldn't start: WebGL isn't available in this browser.\n\n" +
-				"The 3D mesh rendering used by this showcase requires a WebGL-capable " +
-				"browser/GPU. Try enabling hardware acceleration in your browser " +
-				"settings, or open this example in a different browser.\n\n" +
+			"This example couldn't start: no GPU rendering is available in this browser.\n\n" +
+				"The 3D mesh rendering used by this showcase requires a WebGPU- or " +
+				"WebGL-capable browser/GPU. Try enabling hardware acceleration in your " +
+				"browser settings, or open this example in a different browser.\n\n" +
 				`Details: ${reason}`,
 		);
 		throw err;

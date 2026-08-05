@@ -251,7 +251,7 @@ const createGame = async () => {
 		parent: "screen",
 		scale: "auto",
 		// Light2d normal-map lighting + toFrameTexture are WebGL features
-		renderer: video.WEBGL,
+		renderer: video.AUTO,
 		antiAlias: true,
 		subPixel: true,
 	});

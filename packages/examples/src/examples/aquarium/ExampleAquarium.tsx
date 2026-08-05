@@ -338,7 +338,7 @@ const createGame = async () => {
 		// full-screen renderables cover it regardless of the container size)
 		scale: "auto",
 		// toFrameTexture + ShaderEffect are WebGL features
-		renderer: video.WEBGL,
+		renderer: video.AUTO,
 		antiAlias: true,
 		// render at sub-pixel positions so the slow-swimming fish glide smoothly
 		// instead of snapping pixel-to-pixel (default floors dx/dy to integers)

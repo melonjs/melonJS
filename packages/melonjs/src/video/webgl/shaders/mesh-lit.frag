@@ -25,13 +25,16 @@ uniform sampler2D uSampler;
 uniform float uAlphaCutoff;               // alpha cutout threshold (0 = disabled)
 uniform vec3 uEmissive;                   // self-illumination color (0 = none)
 
-// One directional light. `direction` is surface→light, normalized, in world
-// space; `color` is premultiplied by intensity. The unused w components are
-// padding a vec3 would have cost anyway — reserved for a point/spot light's
-// range and cone angle rather than tightened away.
+// One light, type inferred from sentinels (see std140.ts):
+// posRange.w < 0 -> directional (dirCone.xyz = surface->light, normalized);
+// otherwise positional at posRange.xyz with quadratic falloff over
+// posRange.w, plus a spot cone when dirCone.w > -1 (dirCone.xyz = the cone
+// axis / travel direction, w = cos(outer), colorInner.w = cos(inner)).
+// colorInner.rgb is premultiplied by intensity.
 struct Light3dData {
-    vec4 direction;
-    vec4 color;
+    vec4 posRange;
+    vec4 dirCone;
+    vec4 colorInner;
 };
 
 layout(std140) uniform Light3dBlock {
@@ -47,6 +50,7 @@ layout(std140) uniform Light3dBlock {
 in vec4 vColor;
 in vec2 vRegion;
 in vec3 vNormal;
+in vec3 vWorldPos;
 
 out vec4 fragColor;
 
@@ -69,11 +73,34 @@ void main(void) {
     // trip count would also index `uLights` out of range
     int count = min(int(uLightCount), __MAX_LIGHTS__);
     for (int i = 0; i < count; i++) {
+        vec4 pr = uLights[i].posRange;
+        vec4 dc = uLights[i].dirCone;
+        vec3 L;
+        float atten = 1.0;
+        if (pr.w < 0.0) {
+            // directional: dirCone.xyz is already the surface->light vector
+            L = dc.xyz;
+        } else {
+            // positional: quadratic falloff over range (the Light2d model —
+            // stylized, not physical inverse-square, which is unusable in
+            // pixel-unit worlds with unit intensities)
+            vec3 toLight = pr.xyz - vWorldPos;
+            float dist = max(length(toLight), 1e-4);
+            L = toLight / dist;
+            float linearAtt = max(0.0, 1.0 - dist / pr.w);
+            atten = linearAtt * linearAtt;
+            if (dc.w > -1.0) {
+                // spot cone: -L is the light->surface direction; fade from
+                // the inner cone cosine to the outer
+                float cd = dot(-L, dc.xyz);
+                atten *= smoothstep(dc.w, uLights[i].colorInner.w, cd);
+            }
+        }
         // Half-Lambert ("wrap") diffuse: dot * 0.5 + 0.5. Softens the
         // terminator and lifts the shadowed side, for a gentler, more
         // diffuse look than hard Lambert (which reads as harsh noon).
-        float ndl = dot(N, uLights[i].direction.xyz) * 0.5 + 0.5;
-        lit += uLights[i].color.rgb * (ndl * ndl);
+        float ndl = dot(N, L) * 0.5 + 0.5;
+        lit += uLights[i].colorInner.rgb * (ndl * ndl * atten);
     }
 
     // emissive self-illuminates: added AFTER lighting so it glows at full

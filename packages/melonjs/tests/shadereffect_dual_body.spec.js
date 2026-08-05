@@ -249,4 +249,32 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 			expect(effect.wgslRealization.gpu).toBeNull();
 		});
 	});
+
+	describe("_setUVYDir (directional-body orientation seam)", () => {
+		it("DropShadow declares uUVYDir, defaults +1, and takes the pooled -1", async () => {
+			const { default: DropShadowEffect } = await import(
+				"../src/video/effects/dropShadow.js"
+			);
+			const effect = new DropShadowEffect(wgslRenderer);
+			expect(effect.wgslRealization.hasUniform("uUVYDir")).toBe(true);
+			// down is down until a renderer path says otherwise
+			expect(effect.wgslRealization.values.get("uUVYDir")).toBe(1);
+			// the GL pooled path flips it (WebGPU never calls with -1)
+			effect._setUVYDir(-1);
+			expect(effect.wgslRealization.values.get("uUVYDir")).toBe(-1);
+			// cached: same direction re-fed per blit costs nothing
+			effect._setUVYDir(-1);
+			effect._setUVYDir(1);
+			expect(effect.wgslRealization.values.get("uUVYDir")).toBe(1);
+		});
+
+		it("a body without the uniform ignores it silently", () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			const effect = make(wgslRenderer, { wgsl: WGSL_BODY });
+			warn.mockClear();
+			effect._setUVYDir(-1);
+			expect(warn).not.toHaveBeenCalled();
+			warn.mockRestore();
+		});
+	});
 });

@@ -159,23 +159,50 @@ export function writeLight2dBlock(
 }
 
 /**
+ * floats occupied by one 3D light: three `vec4`s. The 3D block grew from
+ * two when point/spot shading landed (#1536) — a spot light needs position
+ * + range + direction + both cone cosines + color, which cannot fold into
+ * two vec4s' padding. The 2D block keeps its two-vec4 stride.
+ * @ignore
+ */
+export const LIGHT3D_FLOATS = VEC4 * 3;
+
+/**
+ * total floats in a 3D light block, header included
+ * @ignore
+ */
+export const BLOCK3D_FLOATS = HEADER_FLOATS + MAX_LIGHTS * LIGHT3D_FLOATS;
+
+/**
+ * total bytes in a 3D light block
+ * @ignore
+ */
+export const BLOCK3D_BYTES = BLOCK3D_FLOATS * Float32Array.BYTES_PER_ELEMENT;
+
+/**
  * Lay out 3D (`Light3d`) data.
  *
  * ```glsl
  * struct Light3dData {
- *   vec4 direction;  // x, y, z, unused
- *   vec4 color;      // r, g, b, unused
+ *   vec4 posRange;    // x, y, z = world position · w = range;
+ *                     //   w < 0 marks a DIRECTIONAL light (xyz unused)
+ *   vec4 dirCone;     // x, y, z = direction · w = cos(outerConeAngle);
+ *                     //   w = -1 marks "no cone" (directional dir is the
+ *                     //   pre-negated surface→light vector; a point light
+ *                     //   carries no direction)
+ *   vec4 colorInner;  // r, g, b = color × intensity · w = cos(innerConeAngle)
  * };
  * ```
  *
- * The two unused `w` slots are padding a `vec3` would have cost anyway;
- * they are left for a future point/spot light's range and cone angle
- * (see #1536) rather than tightened away.
- * @param out - staging buffer, at least `BLOCK_FLOATS` long
+ * The type is inferred from the sentinels rather than a tag slot:
+ * `posRange.w < 0` → directional; otherwise positional, with a cone
+ * applied when `dirCone.w > -1`.
+ * @param out - staging buffer, at least `BLOCK3D_FLOATS` long
  * @param packed - what {@link packMeshLights} produced
  * @param packed.count - number of live lights, clamped to `MAX_LIGHTS`
- * @param packed.directions - surface→light unit vector per light
- * @param packed.colors - `[r, g, b]` per light, premultiplied by intensity
+ * @param packed.posRange - `[x, y, z, range]` per light (range -1 for directional)
+ * @param packed.dirCone - `[dx, dy, dz, cosOuter]` per light (cosOuter -1 for none)
+ * @param packed.colorInner - `[r, g, b, cosInner]` per light
  * @param packed.ambient - `[r, g, b]` ambient floor; absent means black
  * @returns how many floats of `out` are live, for a partial upload
  * @ignore
@@ -184,8 +211,9 @@ export function writeLight3dBlock(
 	out: Float32Array,
 	packed: {
 		count: number;
-		directions: Float32Array;
-		colors: Float32Array;
+		posRange: Float32Array;
+		dirCone: Float32Array;
+		colorInner: Float32Array;
 		ambient?: ArrayLike<number>;
 	},
 ): number {
@@ -193,21 +221,27 @@ export function writeLight3dBlock(
 	const count = Math.min(
 		Math.max(packed.count | 0, 0),
 		MAX_LIGHTS,
-		Math.floor(packed.directions.length / 3),
-		Math.floor(packed.colors.length / 3),
+		Math.floor(packed.posRange.length / 4),
+		Math.floor(packed.dirCone.length / 4),
+		Math.floor(packed.colorInner.length / 4),
 	);
 	writeHeader(out, count, packed.ambient);
 
 	for (let i = 0; i < count; i++) {
-		const o = HEADER_FLOATS + i * LIGHT_FLOATS;
-		out[o] = packed.directions[i * 3];
-		out[o + 1] = packed.directions[i * 3 + 1];
-		out[o + 2] = packed.directions[i * 3 + 2];
-		out[o + 3] = 0;
-		out[o + 4] = packed.colors[i * 3];
-		out[o + 5] = packed.colors[i * 3 + 1];
-		out[o + 6] = packed.colors[i * 3 + 2];
-		out[o + 7] = 0;
+		const o = HEADER_FLOATS + i * LIGHT3D_FLOATS;
+		const i4 = i * 4;
+		out[o] = packed.posRange[i4];
+		out[o + 1] = packed.posRange[i4 + 1];
+		out[o + 2] = packed.posRange[i4 + 2];
+		out[o + 3] = packed.posRange[i4 + 3];
+		out[o + 4] = packed.dirCone[i4];
+		out[o + 5] = packed.dirCone[i4 + 1];
+		out[o + 6] = packed.dirCone[i4 + 2];
+		out[o + 7] = packed.dirCone[i4 + 3];
+		out[o + 8] = packed.colorInner[i4];
+		out[o + 9] = packed.colorInner[i4 + 1];
+		out[o + 10] = packed.colorInner[i4 + 2];
+		out[o + 11] = packed.colorInner[i4 + 3];
 	}
-	return HEADER_FLOATS + count * LIGHT_FLOATS;
+	return HEADER_FLOATS + count * LIGHT3D_FLOATS;
 }

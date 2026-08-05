@@ -129,7 +129,7 @@ export function setOptions(options) {
  * @name setBaseURL
  * @memberof loader
  * @public
- * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "aseprite", "shader"
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "aseprite", "shader", "obj", "mtl", "gltf", "glb"
  * @param {string} [url="./"] - default base URL
  * @example
  * // change the base URL relative address for audio assets
@@ -154,6 +154,10 @@ export function setBaseURL(type, url = "./") {
 		baseURL["fontface"] = url;
 		baseURL["aseprite"] = url;
 		baseURL["shader"] = url;
+		// deliberately NOT part of the wildcard: 3D asset types resolve
+		// their internal references (map_Kd textures, glTF buffers) relative
+		// to their own file, so a global prefix would double-prefix them —
+		// set them individually when needed
 	}
 }
 
@@ -293,7 +297,7 @@ function onLoadingError(res) {
  * @typedef {object} Asset
  * @memberof loader
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video"|"aseprite"|"shader")
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video"|"aseprite"|"shader"|"obj"|"mtl"|"gltf"|"glb")
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
  * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
  * The loader will try each source in order and use the first one that loads successfully.
@@ -334,6 +338,14 @@ function onLoadingError(res) {
  *   { name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2" }
  *   // video resources
  *   {name: "intro", type: "video",  src: "data/video/"}
+ *   // 3D assets: Wavefront OBJ model + MTL material library
+ *   {name: "ship",  type: "obj", src: "data/models/ship.obj"}
+ *   {name: "ship",  type: "mtl", src: "data/models/ship.mtl"}
+ *   // glTF / GLB scene (auto-registers with the level director)
+ *   {name: "diorama", type: "glb", src: "data/scenes/diorama.glb"}
+ *   // shader assets: an effect body, or a complete dual-backend program
+ *   {name: "flash", type: "shader", src: "shaders/flash.frag"}
+ *   {name: "toon",  type: "shader", src: {vertex: "shaders/toon.vert", fragment: "shaders/toon.frag", wgsl: "shaders/toon.wgsl"}}
  */
 
 /**
@@ -949,6 +961,7 @@ export function getJSON(elt) {
  *     // data.uvs — Float32Array of u,v texture coordinates
  *     // data.indices — Uint16Array of triangle vertex indices
  *     // data.vertexCount — number of unique vertices
+ *     // data.groups — usemtl material groups ({materialName, start, count} index ranges)
  * });
  */
 export function getOBJ(elt) {
@@ -963,16 +976,18 @@ export function getOBJ(elt) {
 /**
  * a parsed glTF/GLB scene descriptor, as returned by {@link loader.getGLTF}
  * @typedef {object} GLTFData
- * @property {object[]} nodes - one entry per mesh primitive (accumulated `world` transform, `vertices`, `normals`, `uvs`, `indices`, `vertexCount`, decoded baseColor `image`, `doubleSided`)
+ * @property {object[]} nodes - one entry per mesh primitive: accumulated `world` transform, `vertices`, `normals`, `uvs`, `indices`, `vertexCount`, decoded baseColor `image` (or `null`), `baseColorFactor`, per-vertex `colors`, sampler-derived `textureRepeat`/`textureFilter`, `alphaCutoff`, `emissive`, `unlit` (KHR_materials_unlit), `doubleSided`, and the source node `name`
  * @property {Array<{world: number[], type?: string, perspective?: {yfov?: number, aspectRatio?: number, znear?: number, zfar?: number}, orthographic?: object}>} cameras - glTF cameras, each with its `world` transform + the glTF camera parameters (`perspective` for perspective cameras, `orthographic` otherwise)
- * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, world-space `direction`/`position`, `name`)
+ * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, `innerConeAngle`/`outerConeAngle` for spots, world-space `direction`/`position`, `name`)
  * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
+ * @property {object[]} graph - the full node graph (every node's TRS/matrix + children), for custom traversal
+ * @property {object[]} animations - parsed node animations (consumed by `GLTFModel` playback)
  */
 
 /**
  * return the parsed glTF/GLB scene descriptor for the given asset name.
  *
- * The descriptor is `{ nodes, cameras, lights, bounds }`:
+ * The descriptor is `{ nodes, cameras, lights, bounds, graph, animations }`:
  * - `nodes` — one entry per mesh primitive, each carrying its accumulated
  *   `world` transform (16 floats, column-major), `vertices`, `normals`,
  *   `uvs`, `indices`, `vertexCount`, a decoded baseColor `image` (or `null`),
@@ -980,8 +995,10 @@ export function getOBJ(elt) {
  * - `cameras` — glTF cameras, each with its `world` transform + perspective
  *   parameters.
  * - `lights` — parsed `KHR_lights_punctual` lights (`type`, `color`,
- *   `intensity`, world-space `direction`/`position`); empty without the
- *   extension. The level director instantiates directional ones automatically.
+ *   `intensity`, `range`, spot cone angles, world-space
+ *   `direction`/`position`, `name`); empty without the extension. The
+ *   level director instantiates directional, point and spot lights
+ *   automatically (see {@link level.load} options).
  * - `bounds` — world-space `{ min, max }` (glTF units), handy for framing.
  *
  * Most code never needs this: a preloaded glTF/GLB auto-registers with the
@@ -1032,18 +1049,21 @@ export function getGLTF(elt) {
  * is reset to `false`, so it is auto-destroyed with the renderable it is
  * assigned to, like any hand-constructed effect.
  *
- * A shader asset declared as a **`{vertex, fragment}` program pair** (see
- * the example) compiles into a raw {@link GLShader} instead — the type the
- * advanced paths take directly (a `Mesh` custom shader,
+ * A shader asset declared as a **complete program** — a
+ * `{vertex, fragment}` GLSL pair and/or a full `wgsl` module (see the
+ * example) — compiles into a raw {@link GLShader} instead, carrying one
+ * realization per GPU backend (`isWebGL` / `isWebGPU`): the type the
+ * hosted paths take directly (a `Mesh` custom shader,
  * `renderer.customShader`, a custom batcher). Same shared-instance
  * semantics, and `GLShader.clone()` likewise yields a caller-owned copy.
  *
- * Shader assets are WebGL-only: under the Canvas renderer a fragment-body
- * asset returns an inert `ShaderEffect` stub (same behavior as constructing
- * one directly), and a program-pair asset returns `null` (a raw GL program
- * has no canvas analog). Note that shader assets require `video.init()` to
- * have been called — an inherent precondition of the preload flow, since
- * the loading screen itself needs the renderer.
+ * Degradation is never fatal: a fragment-body asset without a body in the
+ * active renderer's language (or on Canvas) is an inert `ShaderEffect`
+ * stub, and a complete-program asset without a realization for the active
+ * backend is an inert `GLShader` — assigning either just keeps the
+ * built-in rendering. Note that shader assets require an initialized
+ * Application (`await app.init()`) — an inherent precondition of the
+ * preload flow, since the loading screen itself needs the renderer.
  * @memberof loader
  * @param {string} elt - name of the shader asset (as specified in the preload list)
  * @returns {ShaderEffect|GLShader|null} the shared, precompiled shader, or `null` if not found
@@ -1057,18 +1077,21 @@ export function getGLTF(elt) {
  *         uniform float uIntensity;
  *         vec4 apply(vec4 color, vec2 uv) { return mix(color, vec4(1.0), uIntensity); }
  *     ` },
- *     // or a complete {vertex, fragment} program pair → a raw GLShader
+ *     // or a complete program — a {vertex, fragment} GLSL pair and/or a
+ *     // full WGSL module → one GLShader carrying both realizations; the
+ *     // active renderer hosts the one it speaks
  *     { name: "toonMesh", type: "shader", src: {
  *         vertex: "shaders/toon.vert",
  *         fragment: "shaders/toon.frag",
+ *         wgsl: "shaders/toon.wgsl",
  *     } },
  * ], () => {
  *     // one shared program — same uniform state for every user
  *     mySprite.shader = me.loader.getShader("waterRipple");
  *     // private copy with its own uniforms (caller-owned, shared = false)
  *     boss.shader = me.loader.getShader("flash").clone();
- *     // a program pair comes back as a GLShader, e.g. for a custom Mesh shader
- *     renderer.drawMesh(myMesh, { shader: me.loader.getShader("toonMesh") });
+ *     // a complete program hosts on a mesh, replacing the built-in shading
+ *     myMesh.shader = me.loader.getShader("toonMesh");
  * });
  */
 export function getShader(elt) {
@@ -1105,6 +1128,7 @@ export function getShader(elt) {
  *     const materials = me.loader.getMTL("fox");
  *     // materials["colormap"].Kd — [r, g, b] diffuse color (0-1 range)
  *     // materials["colormap"].d — opacity (0-1)
+ *     // materials["colormap"].Ke — [r, g, b] emissive color (glow, applied as Mesh.emissive)
  *     // materials["colormap"].map_Kd — resolved texture URL
  * });
  */

@@ -13,6 +13,7 @@ struct ShineUniforms {
 	uPulseDepth : f32,
 	uPulseSpeed : f32,
 	uTime : f32,
+	uUVYDir : f32,
 };
 @group(3) @binding(0) var<uniform> fx : ShineUniforms;
 
@@ -22,9 +23,13 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	}
 	// Optional brightness pulse on the base color.
 	let pulse = (1.0 - fx.uPulseDepth) + fx.uPulseDepth * sin(fx.uTime * fx.uPulseSpeed);
+	// Directional UV arithmetic — an ABSOLUTE coordinate, so a flipped
+	// space mirrors the position (1 - uv.y), not merely the sign (see the
+	// ShaderEffect uUVYDir docs; the renderer feeds the space's direction)
+	let y = select(uv.y, 1.0 - uv.y, fx.uUVYDir < 0.0);
 	// Project uv along the sweep axis; tile by uShineBands (wrap-around
 	// distance keeps sweeps gapless — see the GLSL twin's rationale).
-	let pos = uv.x * cos(fx.uShineAngle) + uv.y * sin(fx.uShineAngle);
+	let pos = uv.x * cos(fx.uShineAngle) + y * sin(fx.uShineAngle);
 	let localX = fract(pos * fx.uShineBands);
 	let sweep = fract(fx.uTime * fx.uShineSpeed);
 	let d = abs(localX - sweep);
@@ -97,12 +102,18 @@ export default class ShineEffect extends ShaderEffect {
 			uniform float uPulseDepth;
 			uniform float uPulseSpeed;
 			uniform float uTime;
+			uniform float uUVYDir;
 			vec4 apply(vec4 color, vec2 uv) {
 				if (color.a == 0.0) return color;
 				// Optional brightness pulse on the base color.
 				float pulse = (1.0 - uPulseDepth) + uPulseDepth * sin(uTime * uPulseSpeed);
+				// Directional UV arithmetic — an ABSOLUTE coordinate, so a
+				// flipped space mirrors the position (1.0 - uv.y), not just
+				// the sign (see the ShaderEffect uUVYDir docs); without it,
+				// a vertical sweep runs backwards on bottom-up captures
+				float y = uUVYDir < 0.0 ? 1.0 - uv.y : uv.y;
 				// Project uv along the sweep axis (uShineAngle).
-				float pos = uv.x * cos(uShineAngle) + uv.y * sin(uShineAngle);
+				float pos = uv.x * cos(uShineAngle) + y * sin(uShineAngle);
 				// Tile by uShineBands so we get N parallel glints in unison.
 				// localX and sweep both live in [0,1] tile-space; the
 				// wrap-around distance (min(d, 1-d)) lets the glint exit
@@ -139,6 +150,9 @@ export default class ShineEffect extends ShaderEffect {
 		this.setUniform("uPulseDepth", options.pulseDepth ?? 0.0);
 		this.setUniform("uPulseSpeed", options.pulseSpeed ?? 3.0);
 		this.setUniform("uTime", 0.0);
+		// top-down default; the batchers feed the actual space direction
+		// per draw through _setUVYDir (bottom-up pooled captures on GL)
+		this.setUniform("uUVYDir", 1.0);
 	}
 
 	/**
