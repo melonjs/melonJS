@@ -1,4 +1,4 @@
-import { Vector3d } from "../../../math/vector3d.ts";
+import { transformQuadCorners } from "../../gpu/quadcorners.ts";
 import IndexBuffer from "../buffer/index.js";
 import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
 import quadMultiVertex from "./../shaders/quad-multi.vert";
@@ -9,21 +9,6 @@ import { MaterialBatcher } from "./material_batcher.js";
  * additional import for TypeScript
  * @import {TextureAtlas} from "./../../texture/atlas.js";
  */
-
-// a pool of reusable vectors used by `addQuad` to transform the four
-// quad corners. Vector3d (not Vector2d) so the per-sprite depth set on
-// `z` flows through `Matrix3d.apply` — required for Camera3d's view
-// matrix (Y/X-axis rotation) to actually rotate the vertex in 3D space.
-// For 2D-only matrices the z column is identity, so `(x, y)` output is
-// bit-identical to the Vector2d path. Exported so `LitQuadBatcher`
-// reuses the same pool — JS is single-threaded and `addQuad` is
-// synchronous, so concurrent access can't happen.
-export const V_ARRAY = [
-	new Vector3d(),
-	new Vector3d(),
-	new Vector3d(),
-	new Vector3d(),
-];
 
 /**
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
@@ -165,6 +150,8 @@ export default class QuadBatcher extends MaterialBatcher {
 			const gl = this.gl;
 			const vertexSize = vertex.vertexSize;
 
+			this.syncProgram();
+
 			// (index buffer binding is captured in the vertex state — no
 			// per-flush rebind)
 
@@ -218,6 +205,11 @@ export default class QuadBatcher extends MaterialBatcher {
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
 
+		// the blit samples a bottom-up capture FBO (the Y-flipped UVs
+		// below): uv.y grows UPWARD inside apply(), so directional bodies
+		// (DropShadow) flip their y arithmetic to keep "down" down
+		shader._setUVYDir?.(-1);
+
 		// (re)bind any extra textures a ShaderEffect declared via setTexture,
 		// to their reserved high units — after the source claims unit 0
 		shader._prepareTextures?.(this);
@@ -228,20 +220,17 @@ export default class QuadBatcher extends MaterialBatcher {
 		// calling so FBO blits land in screen space; the matrix path is
 		// kept for any future world-space caller that wants its preDraw
 		// translate/scale honored.
-		const m = this.viewMatrix;
-		// blits are always at z = 0 (screen-space). Setting z explicitly
-		// matters because V_ARRAY is Vector3d — any leftover z from a
-		// prior addQuad would otherwise leak into the transform.
-		const vec0 = V_ARRAY[0].set(x, y, 0);
-		const vec1 = V_ARRAY[1].set(x + width, y, 0);
-		const vec2 = V_ARRAY[2].set(x, y + height, 0);
-		const vec3 = V_ARRAY[3].set(x + width, y + height, 0);
-		if (m && !m.isIdentity()) {
-			m.apply(vec0);
-			m.apply(vec1);
-			m.apply(vec2);
-			m.apply(vec3);
-		}
+		// blits are always at z = 0 (screen-space) — the shared corner
+		// pool is Vector3d, so the explicit z stops leftover depth from a
+		// prior addQuad leaking into the transform
+		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
+			this.viewMatrix,
+			x,
+			y,
+			width,
+			height,
+			0,
+		);
 
 		// blits stay at z = 0 (screen-space, ortho); pre-PR behavior
 		// preserved unchanged
@@ -321,6 +310,9 @@ export default class QuadBatcher extends MaterialBatcher {
 					Math.min(v0, v1),
 				);
 			}
+			// direct atlas sampling: uv.y grows downward (directional bodies
+			// compensate on the pooled path, where captures are bottom-up)
+			this.currentShader._setUVYDir?.(1);
 		}
 
 		// Transform vertices. Stamp per-sprite depth onto z BEFORE
@@ -328,19 +320,14 @@ export default class QuadBatcher extends MaterialBatcher {
 		// rotates the vertex. For 2D-only matrices the z column is
 		// identity, so output (x, y) is bit-identical to the legacy
 		// Vector2d path and z passes through unchanged.
-		const m = this.viewMatrix;
-		const z = this.renderer.currentDepth;
-		const vec0 = V_ARRAY[0].set(x, y, z);
-		const vec1 = V_ARRAY[1].set(x + w, y, z);
-		const vec2 = V_ARRAY[2].set(x, y + h, z);
-		const vec3 = V_ARRAY[3].set(x + w, y + h, z);
-
-		if (!m.isIdentity()) {
-			m.apply(vec0);
-			m.apply(vec1);
-			m.apply(vec2);
-			m.apply(vec3);
-		}
+		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
+			this.viewMatrix,
+			x,
+			y,
+			w,
+			h,
+			this.renderer.currentDepth,
+		);
 
 		// 4 vertices per quad; the index buffer provides the 6 indices.
 		// textureId is the unit index for multi-texture, or 0 for

@@ -2,9 +2,18 @@
 
 ## 4.0.0 - _unreleased_
 
+### Added
+
+- **WebGPU renderer support, with full two-color tinting** — on the melonJS WebGPU backend, skeletons now render through the new `WebGPUSpineBatcher`: spine-core's backend-neutral `SkeletonRendererCore` geometry pass (world vertices, clipping, draw-order batching) feeds a WGSL port of Spine's official two-colored-textured shader, one indexed draw per texture/blend batch — the same rendering model as the WebGL path, replacing the previous canvas-renderer fallback (which drew one image per triangle and silently dropped the dark-tint channel). Atlas pages stay image-backed (the canvas asset classes) and upload through the engine's texture store honoring each page's `pma` flag. Debug rendering is not yet available on this backend
+- backend dispatch now keys on `renderer.type` (`"WebGL2"` → spine-webgl runtime + `WebGLSpineBatcher`, `"WebGPU"` → `WebGPUSpineBatcher`, otherwise the canvas skeleton renderer) instead of the deprecated `WebGLVersion` sniff — each branch consumes that backend's concrete machinery, so renderer identity is the true requirement
+
+### Chore
+
+- bundled Spine runtimes bumped `^4.3.7` → `^4.3.13` — picks up upstream fixes to `SkeletonRendererCore`, which the new WebGPU batcher renders through (missing `clipEnd` calls on skipped slots, draw-order iteration); upstream spine-canvas PR #3125 remains pending
+
 ### Changed
 
-- **requires melonJS 20.0.0** (peer range now `>=20.0.0`) — `SpineBatcher` extends the renamed `WebGLBatcher` base class (melonJS 20 turned `Batcher` into the backend-neutral base shared with the WebGPU renderer)
+- **requires melonJS 20.0.0** (peer range now `>=20.0.0`) — the spine batcher extends the renamed `WebGLBatcher` base class (melonJS 20 turned `Batcher` into the backend-neutral base shared with the WebGPU renderer), and is itself renamed **`SpineBatcher` → `WebGLSpineBatcher`** for symmetry with its new WebGPU sibling (internal class — not part of the public export surface)
 
 ## 3.1.0 - _2026-06-14_
 

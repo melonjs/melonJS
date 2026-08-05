@@ -33,14 +33,16 @@ const _bScratchB = new Vector3d();
  * replacement for `Camera2d` — inherits the post-effect FBO bracket,
  * color-matrix, fade / shake / follow plumbing, and screen viewport.
  *
- * **WebGL required.** Camera3d's perspective projection, depth-buffer
- * painter sort and mesh draw path all live in the WebGL renderer; the
- * Canvas backend has none of these and would render a stuck blank scene.
- * Construct the Application with `renderer: video.WEBGL` to get a hard
- * throw at construction time if WebGL is unavailable. Pairing
- * `cameraClass: Camera3d` with `video.AUTO` will emit a `console.warn`
- * at construction (and silently misrender) when AUTO falls back to
- * Canvas — see {@link ApplicationSettings.renderer} for the contract.
+ * **GPU backend required.** Camera3d's perspective projection,
+ * depth-buffer painter sort and retained mesh draw path need a renderer
+ * with a depth buffer (`renderer.supportsDepthBuffer` — WebGL 2 or
+ * WebGPU); the Canvas backend has none of these and would render a
+ * stuck blank scene. Construct the Application with
+ * `renderer: video.WEBGL` or `video.WEBGPU` to make `app.init()` reject
+ * when that backend is unavailable. Pairing `cameraClass: Camera3d`
+ * with `video.AUTO` will emit a `console.warn` (and silently misrender)
+ * when AUTO falls back to Canvas — see
+ * {@link ApplicationSettings.renderer} for the contract.
  *
  * Conventions:
  * - **Y-down + +Z forward.** Sprite at higher `pos.y` appears lower

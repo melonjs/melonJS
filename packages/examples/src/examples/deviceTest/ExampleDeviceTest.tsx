@@ -96,7 +96,7 @@ const createGame = async () => {
 			// canvas down to a horizontal banner.
 			parent: "screen",
 			scaleMethod: "flex",
-			renderer: video.CANVAS,
+			renderer: video.AUTO,
 		});
 		await app.init();
 	} catch {

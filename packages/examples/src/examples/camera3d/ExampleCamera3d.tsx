@@ -57,7 +57,7 @@ const createGame = async () => {
 	// to Camera2d via its own constructor regardless).
 	const app = new Application(1024, 768, {
 		parent: "screen",
-		renderer: video.WEBGL,
+		renderer: video.AUTO,
 		scale: "auto",
 		cameraClass: Camera3dClass,
 	});

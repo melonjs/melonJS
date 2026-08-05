@@ -1,3 +1,7 @@
+import {
+	expandLinesToTriangles,
+	pushPrimitiveRange,
+} from "../../gpu/primitives.ts";
 import primitiveFragment from "./../shaders/primitive.frag";
 import primitiveVertex from "./../shaders/primitive.vert";
 import { resolveTopology } from "../utils/topology.js";
@@ -146,34 +150,17 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	 * @ignore
 	 */
 	#pushRange(verts, start, end, colorUint32, z) {
-		const viewMatrix = this.viewMatrix;
-		const vertexData = this.vertexData;
-		if (!viewMatrix.isIdentity()) {
-			// Full 3D transform including the z column (m[8] / m[9] /
-			// m[10] / m[14]) so Camera3d's view matrix (X/Y-axis
-			// rotation) actually rotates the primitive in 3D. For 2D
-			// matrices those slots are identity, so output (x, y, z)
-			// is bit-identical to the legacy 2D-only multiply.
-			const m = viewMatrix.val;
-			for (let i = start; i < end; i++) {
-				const vert = verts[i];
-				const x = vert.x;
-				const y = vert.y;
-				vertexData.push(
-					x * m[0] + y * m[4] + z * m[8] + m[12],
-					x * m[1] + y * m[5] + z * m[9] + m[13],
-					x * m[2] + y * m[6] + z * m[10] + m[14],
-					0,
-					0,
-					colorUint32,
-				);
-			}
-		} else {
-			for (let i = start; i < end; i++) {
-				const vert = verts[i];
-				vertexData.push(vert.x, vert.y, z, 0, 0, colorUint32);
-			}
-		}
+		// the shared neutral range push (z-column-aware transform) — one
+		// copy for both backends, see `gpu/primitives.ts`
+		pushPrimitiveRange(
+			this.vertexData,
+			this.viewMatrix,
+			verts,
+			start,
+			end,
+			colorUint32,
+			z,
+		);
 	}
 
 	/**
@@ -261,82 +248,24 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	 * @ignore
 	 */
 	#expandLinesToTriangles(verts, vertexCount) {
-		const viewMatrix = this.viewMatrix;
-		const vertexData = this.vertexData;
-		const alpha = this.renderer.getGlobalAlpha();
-		const colorUint32 = this.renderer.currentColor.toUint32(alpha);
-		const hasTransform = !viewMatrix.isIdentity();
-		// z = current renderer depth (Renderable.preDraw); a no-op under ortho,
-		// consumed by perspective (Camera3d).
-		const z = this.renderer.currentDepth;
-
-		// switch to TRIANGLES mode
+		// switch to TRIANGLES mode, then delegate the expansion to the
+		// shared neutral helper — see `gpu/primitives.ts`
 		if (this.mode !== this.gl.TRIANGLES) {
 			this.flush(this.mode);
 			this.mode = this.gl.TRIANGLES;
 		}
-
-		const m = hasTransform ? viewMatrix.val : null;
-
-		for (let i = 0; i < vertexCount; i += 2) {
-			const from = verts[i];
-			const to = verts[i + 1];
-
-			// each line pair expands to 2 triangles (6 vertices) — check
-			// capacity per pair, so a dashed/long thick-line path larger than
-			// the whole buffer flushes mid-shape instead of silently dropping
-			// the out-of-range writes (pairs are independent quads, so a
-			// mid-shape flush is invisible)
-			if (vertexData.isFull(6)) {
+		expandLinesToTriangles(
+			this.vertexData,
+			this.viewMatrix,
+			verts,
+			vertexCount,
+			this.renderer.currentColor.toUint32(this.renderer.getGlobalAlpha()),
+			// z = current renderer depth (Renderable.preDraw); a no-op under
+			// ortho, consumed by perspective (Camera3d)
+			this.renderer.currentDepth,
+			() => {
 				this.flush();
-			}
-
-			// apply view matrix to base positions without mutating
-			// inputs. Includes the z column for parity with the simple-
-			// line path and Vector3d quad batcher — Camera3d's view
-			// matrix needs depth-aware rotation. Note: the perpendicular
-			// normal is still computed in pre-projection world space,
-			// which appears non-perpendicular under perspective — known
-			// limitation, separate from the Vector3d migration.
-			let fromX, fromY, fromZ, toX, toY, toZ;
-			if (hasTransform) {
-				fromX = from.x * m[0] + from.y * m[4] + z * m[8] + m[12];
-				fromY = from.x * m[1] + from.y * m[5] + z * m[9] + m[13];
-				fromZ = from.x * m[2] + from.y * m[6] + z * m[10] + m[14];
-				toX = to.x * m[0] + to.y * m[4] + z * m[8] + m[12];
-				toY = to.x * m[1] + to.y * m[5] + z * m[9] + m[13];
-				toZ = to.x * m[2] + to.y * m[6] + z * m[10] + m[14];
-			} else {
-				fromX = from.x;
-				fromY = from.y;
-				fromZ = z;
-				toX = to.x;
-				toY = to.y;
-				toZ = z;
-			}
-
-			// compute perpendicular unit normal
-			const dx = toX - fromX;
-			const dy = toY - fromY;
-			const len = Math.sqrt(dx * dx + dy * dy);
-
-			if (len === 0) {
-				continue;
-			}
-
-			const nx = -dy / len;
-			const ny = dx / len;
-
-			// two triangles forming a quad around the line segment
-			// triangle 1: from+n, from-n, to-n
-			vertexData.push(fromX, fromY, fromZ, nx, ny, colorUint32);
-			vertexData.push(fromX, fromY, fromZ, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, toZ, -nx, -ny, colorUint32);
-
-			// triangle 2: from+n, to-n, to+n
-			vertexData.push(fromX, fromY, fromZ, nx, ny, colorUint32);
-			vertexData.push(toX, toY, toZ, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, toZ, nx, ny, colorUint32);
-		}
+			},
+		);
 	}
 }

@@ -70,11 +70,11 @@ describe("WebGPURenderer (experimental bootstrap)", () => {
 		// (ShaderEffect, {vertex, fragment} shader assets) key off this
 		// to refuse handing it GLSL source
 		expect(app.renderer.shaderLanguage).toBe("wgsl");
-		// mock stage: these flags describe what works TODAY, and none of
-		// those paths exist yet — each flips when its implementation lands
-		expect(app.renderer.supportsDepthBuffer).toBe(false);
-		expect(app.renderer.supportsShaderTileLayers).toBe(false);
-		expect(app.renderer.supportsRetainedMesh).toBe(false);
+		// these flags describe what works TODAY: the shader tile path, the
+		// depth-tested mesh tier and retained mesh geometry all exist
+		expect(app.renderer.supportsDepthBuffer).toBe(true);
+		expect(app.renderer.supportsShaderTileLayers).toBe(true);
+		expect(app.renderer.supportsRetainedMesh).toBe(true);
 	});
 
 	it("holds a configured device, context and preferred format after init()", (ctx) => {

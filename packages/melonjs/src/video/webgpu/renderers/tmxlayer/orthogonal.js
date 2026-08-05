@@ -1,4 +1,4 @@
-import { Vector3d } from "../../../../math/vector3d.ts";
+import { transformQuadCorners } from "../../../gpu/quadcorners.ts";
 import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
 
 /**
@@ -14,15 +14,6 @@ import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
  * @ignore
  */
 const TMX_UNIFORM_SIZE = 112;
-
-// scratch vectors for the CPU corner transform (same rationale as the
-// quad batcher's pool: per-sprite depth flows through Matrix3d.apply)
-const V_ARRAY = [
-	new Vector3d(),
-	new Vector3d(),
-	new Vector3d(),
-	new Vector3d(),
-];
 
 /**
  * GPU-accelerated renderer for orthogonal TMX tile layers on the WebGPU
@@ -264,20 +255,14 @@ export default class OrthogonalTMXLayerGPURenderer {
 
 		// the transformed quad, shared by every tileset pass (28-byte
 		// stride: x,y,z, u,v, packed tint, textureId)
-		const m = renderer.currentTransform;
-		const z = renderer.currentDepth;
-		const identity = m.isIdentity();
-		const corners = [
-			V_ARRAY[0].set(worldX, worldY, z),
-			V_ARRAY[1].set(worldX + worldW, worldY, z),
-			V_ARRAY[2].set(worldX, worldY + worldH, z),
-			V_ARRAY[3].set(worldX + worldW, worldY + worldH, z),
-		];
-		if (!identity) {
-			for (const corner of corners) {
-				m.apply(corner);
-			}
-		}
+		const corners = transformQuadCorners(
+			renderer.currentTransform,
+			worldX,
+			worldY,
+			worldW,
+			worldH,
+			renderer.currentDepth,
+		);
 		const f32 = this.vertexF32;
 		const u32 = this.vertexU32;
 		const uvs = [0, 0, 1, 0, 0, 1, 1, 1];

@@ -3,8 +3,10 @@ import { MAX_LIGHTS } from "../src/video/webgl/lighting/constants.ts";
 import {
 	BLOCK_BYTES,
 	BLOCK_FLOATS,
+	BLOCK3D_FLOATS,
 	HEADER_FLOATS,
 	LIGHT_FLOATS,
+	LIGHT3D_FLOATS,
 	writeLight2dBlock,
 	writeLight3dBlock,
 } from "../src/video/webgl/lighting/std140.ts";
@@ -53,13 +55,16 @@ describe("std140 light block layout (issue #1552)", () => {
 	//   float 7     padding
 	//   float 8     first light, component 0
 	//
-	// per light, 8 floats:
-	//   2D:  [x, y, radius, intensity]  [r, g, b, height]
-	//   3D:  [dx, dy, dz, 0]            [r, g, b, 0]
+	// per light:
+	//   2D, 8 floats:  [x, y, radius, intensity]  [r, g, b, height]
+	//   3D, 12 floats: [px, py, pz, range]  [dx, dy, dz, cosOuter]
+	//                  [r, g, b, cosInner]  (range -1 = directional,
+	//                  cosOuter -1 = no cone)
 	const COUNT = 0;
 	const AMBIENT = 4;
 	const FIRST_LIGHT = 8;
 	const PER_LIGHT = 8;
+	const PER_LIGHT3D = 12;
 
 	describe("the constants themselves", () => {
 		it("puts the first light at float 8, not float 4", () => {
@@ -228,33 +233,41 @@ describe("std140 light block layout (issue #1552)", () => {
 	});
 
 	describe("3D light block", () => {
+		const scratch3d = () => {
+			return new Float32Array(BLOCK3D_FLOATS);
+		};
+
 		/**
 		 * @param {number} n - how many lights
-		 * @returns {object} packed mesh light data
+		 * @returns {object} packed mesh light data (writer shape)
 		 */
 		const packed3d = (n) => {
-			const directions = new Float32Array(MAX_LIGHTS * 3);
-			const colors = new Float32Array(MAX_LIGHTS * 3);
+			const posRange = new Float32Array(MAX_LIGHTS * 4);
+			const dirCone = new Float32Array(MAX_LIGHTS * 4);
+			const colorInner = new Float32Array(MAX_LIGHTS * 4);
 			for (let i = 0; i < n; i++) {
-				directions[i * 3] = 10 + i;
-				directions[i * 3 + 1] = 20 + i;
-				directions[i * 3 + 2] = 30 + i;
-				colors[i * 3] = 40 + i;
-				colors[i * 3 + 1] = 50 + i;
-				colors[i * 3 + 2] = 60 + i;
+				posRange.set([10 + i, 20 + i, 30 + i, 100 + i], i * 4);
+				dirCone.set([40 + i, 50 + i, 60 + i, 0.5], i * 4);
+				colorInner.set([70 + i, 80 + i, 90 + i, 0.9], i * 4);
 			}
 			return {
 				count: n,
-				directions,
-				colors,
+				posRange,
+				dirCone,
+				colorInner,
 				ambient: new Float32Array([7, 8, 9]),
 			};
 		};
 
+		it("spends 12 floats per 3D light and sizes the block for the cap", () => {
+			expect(LIGHT3D_FLOATS).toBe(12);
+			expect(BLOCK3D_FLOATS).toBe(HEADER_FLOATS + MAX_LIGHTS * 12);
+		});
+
 		it("shares the header layout with the 2D block", () => {
 			// both blocks are read by the same helper on the JS side, so a
 			// divergence here would only show up in one of the two shaders
-			const out = createLightBlockScratch();
+			const out = scratch3d();
 			writeLight3dBlock(out, packed3d(2));
 			expect(out[COUNT]).toBe(2);
 			expect(out[AMBIENT]).toBe(7);
@@ -263,48 +276,43 @@ describe("std140 light block layout (issue #1552)", () => {
 			expect(out[7]).toBe(0);
 		});
 
-		it("places direction and colour at hand-computed offsets", () => {
-			const out = createLightBlockScratch();
+		it("places every field of the first light at hand-computed offsets", () => {
+			const out = scratch3d();
 			writeLight3dBlock(out, packed3d(1));
+			// posRange
 			expect(out[FIRST_LIGHT]).toBe(10);
 			expect(out[FIRST_LIGHT + 1]).toBe(20);
 			expect(out[FIRST_LIGHT + 2]).toBe(30);
+			expect(out[FIRST_LIGHT + 3]).toBe(100);
+			// dirCone
 			expect(out[FIRST_LIGHT + 4]).toBe(40);
 			expect(out[FIRST_LIGHT + 5]).toBe(50);
 			expect(out[FIRST_LIGHT + 6]).toBe(60);
+			expect(out[FIRST_LIGHT + 7]).toBeCloseTo(0.5);
+			// colorInner
+			expect(out[FIRST_LIGHT + 8]).toBe(70);
+			expect(out[FIRST_LIGHT + 9]).toBe(80);
+			expect(out[FIRST_LIGHT + 10]).toBe(90);
+			expect(out[FIRST_LIGHT + 11]).toBeCloseTo(0.9);
 		});
 
-		it("zeroes the two reserved w components", () => {
-			// reserved for a future point/spot light's range and cone angle
-			// (#1536); garbage there would become data the moment they are used
-			const out = createLightBlockScratch();
-			out.fill(999);
+		it("strides by 12 floats for every slot", () => {
+			const out = scratch3d();
 			writeLight3dBlock(out, packed3d(MAX_LIGHTS));
 			for (let i = 0; i < MAX_LIGHTS; i++) {
-				const o = FIRST_LIGHT + i * PER_LIGHT;
-				expect(out[o + 3], `light ${i} direction w`).toBe(0);
-				expect(out[o + 7], `light ${i} colour w`).toBe(0);
-			}
-		});
-
-		it("strides by 8 floats even though the source strides by 3", () => {
-			// the source arrays are vec3-packed and the destination is
-			// vec4-padded; conflating the two is the single most likely bug
-			const out = createLightBlockScratch();
-			writeLight3dBlock(out, packed3d(MAX_LIGHTS));
-			for (let i = 0; i < MAX_LIGHTS; i++) {
-				const o = FIRST_LIGHT + i * PER_LIGHT;
-				expect(out[o], `light ${i} dx`).toBe(10 + i);
-				expect(out[o + 4], `light ${i} r`).toBe(40 + i);
+				const o = FIRST_LIGHT + i * PER_LIGHT3D;
+				expect(out[o], `light ${i} px`).toBe(10 + i);
+				expect(out[o + 4], `light ${i} dx`).toBe(40 + i);
+				expect(out[o + 8], `light ${i} r`).toBe(70 + i);
 			}
 		});
 
 		it("returns the live prefix and writes no further", () => {
-			const out = createLightBlockScratch();
+			const out = scratch3d();
 			out.fill(-1);
 			const used = writeLight3dBlock(out, packed3d(3));
-			expect(used).toBe(FIRST_LIGHT + 24);
-			for (let i = used; i < BLOCK_FLOATS; i++) {
+			expect(used).toBe(FIRST_LIGHT + 3 * PER_LIGHT3D);
+			for (let i = used; i < BLOCK3D_FLOATS; i++) {
 				expect(out[i], `float ${i}`).toBe(-1);
 			}
 		});
@@ -428,13 +436,14 @@ describe("std140 light block — driver-reported layout (issue #1552)", () => {
 			[
 				"uLightCount",
 				"uAmbient",
-				"uLights[0].direction",
-				"uLights[0].color",
-				"uLights[1].direction",
+				"uLights[0].posRange",
+				"uLights[0].dirCone",
+				"uLights[0].colorInner",
+				"uLights[1].posRange",
 			],
 		);
-		expect(size).toBe(BLOCK_BYTES);
-		expect(offsets).toEqual([0, 16, 32, 48, 64]);
+		expect(size).toBe(BLOCK3D_FLOATS * Float32Array.BYTES_PER_ELEMENT);
+		expect(offsets).toEqual([0, 16, 32, 48, 64, 80]);
 	});
 
 	it("the last light fits inside the block the driver reserved", (ctx) => {

@@ -79,7 +79,7 @@ const createGame = async () => {
 	try {
 		app = new Application(1024, 768, {
 			parent: "screen",
-			renderer: video.WEBGL, // Mesh rendering requires WebGL
+			renderer: video.AUTO,
 			scale: "auto",
 			cameraClass: Camera3dClass,
 			antiAlias: true,

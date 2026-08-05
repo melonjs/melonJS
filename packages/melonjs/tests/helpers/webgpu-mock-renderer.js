@@ -24,6 +24,15 @@ export function createMockWebGPURenderer() {
 		captureFrames: 0,
 		// one entry per queue.writeTexture
 		textureWrites: [],
+		// one entry per textureStore.getBinding: {texture, options}
+		textureBindings: [],
+		// one entry per device.createBuffer: the descriptor
+		createdBuffers: [],
+		// buffers handed to renderer.retireBuffer, in order
+		retiredBuffers: [],
+		// pass.setVertexBuffer / setIndexBuffer arguments, in order
+		vertexBufferBinds: [],
+		indexBufferBinds: [],
 	};
 
 	const pass = {
@@ -36,8 +45,12 @@ export function createMockWebGPURenderer() {
 				calls.materialBinds.push(group);
 			}
 		},
-		setVertexBuffer() {},
-		setIndexBuffer() {},
+		setVertexBuffer(slot, buffer, offset, size) {
+			calls.vertexBufferBinds.push({ slot, buffer, offset, size });
+		},
+		setIndexBuffer(buffer, format, offset, size) {
+			calls.indexBufferBinds.push({ buffer, format, offset, size });
+		},
 		draw(count) {
 			calls.draws.push(count);
 		},
@@ -85,8 +98,10 @@ export function createMockWebGPURenderer() {
 				},
 			},
 			createBuffer(descriptor) {
+				calls.createdBuffers.push(descriptor);
 				return {
 					size: descriptor.size,
+					label: descriptor.label,
 					destroy() {},
 					getMappedRange() {
 						return new ArrayBuffer(descriptor.size);
@@ -134,9 +149,22 @@ export function createMockWebGPURenderer() {
 			},
 			frameLayout: {},
 			materialLayout: {},
+			multiMaterialLayout: {},
 			emptyLayout: {},
-			get(shaderKey, topology, blendMode, premultipliedAlpha, stencilMode) {
-				const key = `${shaderKey}|${topology}|${blendMode}|${premultipliedAlpha}|${stencilMode}`;
+			get(
+				shaderKey,
+				topology,
+				blendMode,
+				premultipliedAlpha,
+				stencilMode,
+				meshState,
+			) {
+				// the mesh-axes suffix appends ONLY when the axis is present —
+				// existing 2D key assertions stay byte-identical
+				let key = `${shaderKey}|${topology}|${blendMode}|${premultipliedAlpha}|${stencilMode}`;
+				if (meshState) {
+					key += `|mesh:${meshState.cullMode}:${meshState.frontFace}`;
+				}
 				calls.pipelineKeys.push(key);
 				if (!pipelines.has(key)) {
 					pipelines.set(key, { key });
@@ -145,8 +173,23 @@ export function createMockWebGPURenderer() {
 			},
 		},
 		vertexArena: {
+			page: { label: "vertex page 0" },
 			alloc() {
-				return { buffer: {}, offset: 0 };
+				return { buffer: this.page, offset: 0 };
+			},
+		},
+		// per-frame index regions for the accumulated mesh path — bump
+		// allocator so consecutive flushes get distinct offsets
+		indexArena: {
+			offset: 0,
+			page: { label: "index page 0" },
+			alloc(byteLength) {
+				const region = { buffer: this.page, offset: this.offset };
+				this.offset += (byteLength + 3) & ~3;
+				return region;
+			},
+			reset() {
+				this.offset = 0;
 			},
 		},
 		// bump allocator over labeled fake pages, alignment-honoring — the
@@ -179,9 +222,13 @@ export function createMockWebGPURenderer() {
 			return this.stubView;
 		},
 		retireTexture() {},
+		retireBuffer(buffer) {
+			calls.retiredBuffers.push(buffer);
+		},
 		textureStore: {
 			// one stable bind-group token per atlas object
-			getBinding(texture) {
+			getBinding(texture, options) {
+				calls.textureBindings.push({ texture, options });
 				if (!materialBindings.has(texture)) {
 					materialBindings.set(texture, { texture });
 				}
@@ -200,8 +247,15 @@ export function createMockWebGPURenderer() {
 				}
 				return this.records.get(texture);
 			},
-			getSampler(filter, repeat) {
-				return { filter, repeat };
+			samplers: new Map(),
+			getSampler(filter, repeat, mipmaps = false) {
+				// cached per combo like the real store — composition caches
+				// key on sampler identity
+				const key = `${filter}|${repeat}|${mipmaps}`;
+				if (!this.samplers.has(key)) {
+					this.samplers.set(key, { filter, repeat, mipmaps });
+				}
+				return this.samplers.get(key);
 			},
 		},
 		getDefaultTextureFilter() {

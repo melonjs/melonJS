@@ -119,7 +119,21 @@ function resolveGroupMaterial(group, materials) {
  * or from raw geometry data (vertices, uvs, indices).
  * Includes a built-in perspective projection and supports 3D transforms
  * through the standard Renderable API (`rotate`, `scale`, `translate`).
- * Works on both WebGL (hardware depth testing) and Canvas (painter's algorithm) renderers.
+ * Works on both GPU backends — WebGL 2 and WebGPU, with hardware depth
+ * testing — and on the Canvas renderer via the CPU-projected 2D-camera
+ * path (painter's algorithm, no depth buffer).
+ *
+ * **Retained rendering** — under a {@link Camera3d} on a GPU backend
+ * (`renderer.supportsRetainedMesh`), the mesh's model-space geometry is
+ * uploaded to GPU buffers **once** and every frame just draws it by
+ * reference: placement, camera, tint, alpha and emissive all ride
+ * per-draw uniforms, so moving, rotating, scaling or re-tinting a mesh
+ * never re-uploads geometry (near-zero per-frame allocation). Editing
+ * the geometry itself in place is still possible — signal it with
+ * {@link Mesh#needsUpdate} and the GPU copy refreshes on the next draw.
+ * Under a 2D camera (or on Canvas) the mesh instead re-projects its
+ * vertices on the CPU each frame — same API, the camera and backend
+ * decide the path.
  *
  * **Pivot — transforms are applied about the mesh's local origin `(0, 0, 0)`,
  * NOT a normalized anchor point.** Unlike a {@link Sprite} (whose
@@ -154,9 +168,9 @@ export default class Mesh extends Renderable {
 	 * @param {number} [settings.scale] - world-space scale (pixels per source unit) for the Camera3d path; defaults to `width`. Set this when `width`/`height` describe the renderable's world bounds (frustum culling) rather than the geometry scale — see {@link Mesh#meshScale}.
 	 * @param {boolean} [settings.rightHanded=false] - treat the source as right-handed (Y-up, e.g. glTF) under the `Camera3d` world path. The default Y-up→Y-down bridge negates Y only (a reflection, which mirrors the scene left/right); `true` negates Y **and** Z (a rotation) so chirality is preserved and the result matches the authoring tool. See {@link Mesh#rightHanded}.
 	 * @param {string} [settings.textureRepeat] - texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"` / `"no-repeat"`) this mesh samples its texture with (per-mesh — it does not modify the shared texture, so other meshes/sprites using the same image are unaffected). Use `"repeat"` when the geometry's UVs fall outside the `[0, 1]` range and rely on the texture tiling (e.g. glTF assets, whose default sampler wrap is REPEAT) — otherwise the texture clamps to its edge texels and looks flat. Ignored for the white-pixel fallback. Note: REPEAT on a non-power-of-two texture requires WebGL 2.
-	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. WebGL only (ignored by the Canvas renderer).
-	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. WebGL mesh path only.
-	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). WebGL mesh path only.
+	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. On the mesh path, linear filtering also samples a generated mip chain with trilinear minification and 4× anisotropy (distant geometry stops shimmering) — `"nearest"` opts out, keeping crisp pixel-art models on hard level-0 sampling. GPU backends only (ignored by the Canvas renderer).
+	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
+	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -276,7 +290,7 @@ export default class Mesh extends Renderable {
 		/**
 		 * the projected vertex positions.
 		 *
-		 * **Not refreshed on the WebGL `Camera3d` path.** There, geometry is
+		 * **Not refreshed on the retained `Camera3d` path.** There, geometry is
 		 * uploaded once in model space and placed by the GPU, so nothing
 		 * projects vertices per frame and this array holds whatever it last
 		 * did. It is still maintained by the Canvas renderer and by the 2D
@@ -321,7 +335,7 @@ export default class Mesh extends Renderable {
 		 * from the scene's lights, using {@link Mesh#originalNormals}); when
 		 * `false` (the default) it uses the lean unlit path and pays no lighting
 		 * cost. The glTF loader sets this on scene meshes when the scene has
-		 * lights. Only meaningful under a `Camera3d` + WebGL.
+		 * lights. Only meaningful under a `Camera3d` on a GPU backend.
 		 * @type {boolean}
 		 * @default false
 		 */
@@ -333,7 +347,7 @@ export default class Mesh extends Renderable {
 		 * decals) that needs no blending or back-to-front sorting. `0` (the
 		 * default) disables the cutout and the mesh renders fully opaque. Set by
 		 * the glTF loader from a material's `alphaMode: "MASK"` / `alphaCutoff`.
-		 * WebGL mesh path only (the Canvas renderer ignores it).
+		 * GPU mesh path only (the Canvas renderer ignores it).
 		 * @type {number}
 		 * @default 0
 		 */
@@ -347,7 +361,7 @@ export default class Mesh extends Renderable {
 		 * screens, glowing eyes). `undefined` (the default) means no emission and
 		 * keeps the mesh on the lean path. Set by the glTF loader from a material's
 		 * `emissiveFactor` (× `KHR_materials_emissive_strength`) and by the OBJ
-		 * loader from an MTL's `Ke`. WebGL mesh path only.
+		 * loader from an MTL's `Ke`. GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
 		 * @type {Float32Array|undefined}
 		 */
 		this.emissive = toEmissive(settings.emissive);
@@ -553,22 +567,23 @@ export default class Mesh extends Renderable {
 
 		// Optional texture magnification filter (`"nearest"` for crisp pixel-art
 		// upscaling, `"linear"` for smooth). When omitted the texture keeps the
-		// renderer's global `antiAlias` default. WebGL only — the Canvas renderer
-		// ignores it.
+		// renderer's global `antiAlias` default. GPU backends only — the Canvas
+		// renderer ignores it. WebGL stores its GL enum; other backends (the
+		// WebGPU texture store) consume the string form directly.
 		//
 		// NOTE: unlike `textureRepeat` above, this still mutates the shared
 		// per-image atlas — the texture-unit cache doesn't discriminate by
 		// filter, so a true per-mesh filter needs the unit-key change planned
 		// with the #1410 TextureCache refactor. Two consumers of one image
 		// wanting different filters is last-writer-wins until then.
-		if (
-			hasRealTexture &&
-			typeof settings.textureFilter === "string" &&
-			game.renderer.gl
-		) {
-			const gl = game.renderer.gl;
-			this.texture.filter =
-				settings.textureFilter === "nearest" ? gl.NEAREST : gl.LINEAR;
+		if (hasRealTexture && typeof settings.textureFilter === "string") {
+			const gl = game.renderer?.gl;
+			if (gl) {
+				this.texture.filter =
+					settings.textureFilter === "nearest" ? gl.NEAREST : gl.LINEAR;
+			} else {
+				this.texture.filter = settings.textureFilter;
+			}
 		}
 
 		/**
@@ -667,6 +682,35 @@ export default class Mesh extends Renderable {
 		if (value !== false) {
 			this._geometryVersion++;
 		}
+	}
+
+	/**
+	 * A custom shader hosted on this mesh's draw, replacing the built-in
+	 * mesh shading: a {@link GLShader} carrying a `{vertex, fragment}`
+	 * GLSL program (hosted by the WebGL renderer) and/or a complete
+	 * `wgsl` module (hosted by the WebGPU renderer — see the GLShader
+	 * class docs for the module contract). One object serves both
+	 * backends; a shader without a realization for the active backend
+	 * (or `null`) degrades to the built-in shading. The tint, texture,
+	 * placement and (for `lit` meshes) light data keep flowing through
+	 * their usual uniforms — the custom shader decides what to do with
+	 * them.
+	 * @type {GLShader|undefined}
+	 * @example
+	 * me.loader.preload([{ name: "toon", type: "shader", src: {
+	 *     vertex: "shaders/toon.vert",     // GLSL pair for WebGL
+	 *     fragment: "shaders/toon.frag",
+	 *     wgsl: "shaders/toon.wgsl",       // complete module for WebGPU
+	 * }}], () => {
+	 *     myMesh.shader = me.loader.getShader("toon");
+	 * });
+	 */
+	get shader() {
+		return super.shader;
+	}
+
+	set shader(value) {
+		super.shader = value;
 	}
 
 	/**
@@ -964,8 +1008,8 @@ export default class Mesh extends Renderable {
 	 * Multi-material meshes need no extra `drawMesh` calls per material vs
 	 * single-material — each material's diffuse color is baked into
 	 * `vertexColors` at construction time and pushed through the renderer's
-	 * per-vertex `aColor` (WebGL) or per-triangle solid-fill (Canvas) path.
-	 * The WebGL batcher may still chunk very large meshes across multiple
+	 * per-vertex `aColor` (GPU backends) or per-triangle solid-fill (Canvas)
+	 * path. The GPU batchers may still chunk very large meshes across multiple
 	 * `drawElements` calls to fit its vertex/index buffer limits.
 	 *
 	 * The active path is picked from the `viewport` passed in by

@@ -266,4 +266,20 @@ describe("WebGPUTextureStore", () => {
 			emit(GPU_TEXTURE_CACHE_RESET);
 		}).not.toThrow();
 	});
+
+	it("a video element without a decoded frame skips the upload instead of throwing", () => {
+		// a real <video> with no source: readyState 0 (HAVE_NOTHING) — a
+		// copyExternalImageToTexture against it would throw "no back
+		// resource" mid-frame where GL's texImage2D silently no-ops
+		const video = document.createElement("video");
+		Object.defineProperty(video, "videoWidth", { value: 64 });
+		Object.defineProperty(video, "videoHeight", { value: 32 });
+		const atlas = makeAtlas(video);
+
+		const binding = store.getBinding(atlas, { force: true });
+		// resident texture allocated, binding served — but no copy queued
+		expect(binding).toBeDefined();
+		expect(createdTextures).toHaveLength(1);
+		expect(uploads).toHaveLength(0);
+	});
 });

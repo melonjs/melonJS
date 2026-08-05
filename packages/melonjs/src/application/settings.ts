@@ -36,21 +36,28 @@ type PowerPreference = "default" | "low-power" | "high-performance";
 
 export type ApplicationSettings = {
 	/**
-	 * Renderer to use. Three built-in modes (constants from `me.video`):
+	 * Renderer to use. Four built-in modes (constants from `me.video`):
 	 *
-	 * - {@link CANVAS} — HTML5 Canvas backend. No shader / mesh /
-	 *   Camera3d support.
+	 * - {@link AUTO} — negotiate the best available backend:
+	 *   **WebGPU → WebGL 2 → Canvas**. `await app.init()` always
+	 *   resolves under AUTO; the WebGPU attempt is a full adapter/device
+	 *   negotiation awaited inside `init()`, falling through to the
+	 *   synchronous candidates when it rejects. Under the Canvas tail the
+	 *   GPU-only subsystems (Camera3d, retained meshes, ShaderEffect,
+	 *   Light2d/Light3d shading, GPU tilemap) degrade or disable — gate on
+	 *   the renderer capability flags (`supportsDepthBuffer`,
+	 *   `shaderLanguage`, …) if your scene depends on them.
+	 * - {@link WEBGPU} — require the WebGPU backend. `app.init()`
+	 *   **rejects** when no adapter/device can be acquired — it never
+	 *   substitutes another backend.
 	 * - {@link WEBGL} — **requires WebGL 2** (the WebGL renderer is
-	 *   WebGL 2 only since 20.0). Throws at `new Application(...)`
-	 *   time if a WebGL 2 context is unavailable (WebGL-1-only device,
-	 *   driver-blocklisted GPU, perf-caveat failure, etc.). Use this when
-	 *   your scene needs Camera3d, Mesh, ShaderEffect, Light2d or GPU
-	 *   tilemap — you'd rather fail fast than render a stuck blank canvas.
-	 * - {@link AUTO} — try WebGL 2, silently fall back to Canvas if
-	 *   unavailable. Application construction always succeeds. The
-	 *   WebGL-only subsystems (Camera3d, Mesh, ShaderEffect, Light2d,
-	 *   GPU tilemap) silently stop working under the Canvas fallback —
-	 *   if your scene depends on any of those, use `WEBGL` instead.
+	 *   WebGL 2 only since 20.0). `app.init()` **rejects** if a WebGL 2
+	 *   context is unavailable (WebGL-1-only device, driver-blocklisted
+	 *   GPU, perf-caveat failure, etc.) — fail fast rather than render a
+	 *   stuck blank canvas.
+	 * - {@link CANVAS} — the HTML5 Canvas backend. No programmable
+	 *   pipeline: no shaders/lighting, no Camera3d/depth path (meshes
+	 *   only render on the CPU-projected 2D-camera path).
 	 *
 	 * Or pass a custom `Renderer` subclass instance for full control.
 	 * @default AUTO
@@ -99,15 +106,19 @@ export type ApplicationSettings = {
 	transparent: boolean;
 
 	/**
-	 * whether to enable or not video scaling interpolation
+	 * whether to enable or not video scaling interpolation.
+	 * On the GPU backends this drives polygon-edge antialiasing —
+	 * **4× MSAA on WebGPU**, the context `antialias` flag on WebGL —
+	 * while texture sampling smoothness is controlled separately by
+	 * `textureFilter`.
 	 * @default false
 	 */
 	antiAlias: boolean;
 
 	/**
 	 * Default texture magnification/minification filter, **decoupled from
-	 * `antiAlias`** (WebGL only — the 2D Canvas renderer has no per-texture
-	 * filtering and ignores this).
+	 * `antiAlias`** (GPU backends — WebGL and WebGPU; the 2D Canvas
+	 * renderer has no per-texture filtering and ignores this).
 	 *
 	 * `antiAlias` conflates two separate concerns: polygon-edge antialiasing
 	 * (MSAA) *and* texture sampling smoothness. This setting separates the
@@ -169,13 +180,15 @@ export type ApplicationSettings = {
 	physic: PhysicsType;
 
 	/**
-	 * Enable the WebGL2 procedural shader path for orthogonal tile layers.
-	 * When `true` (default), eligible layers render via a single quad per
-	 * tileset + a fragment shader doing per-fragment GID lookup, bypassing
-	 * the per-tile draw loop entirely. Layers that don't qualify
-	 * (Canvas renderer, non-orthogonal, collection-of-image tilesets,
-	 * tilerendersize "grid", non-zero tileoffset, oversampled beyond the
-	 * shader's overflow window) fall back to the legacy path automatically.
+	 * Enable the GPU procedural shader path for orthogonal tile layers
+	 * (backends advertising `renderer.supportsShaderTileLayers` — WebGL 2
+	 * and WebGPU). When `true` (default), eligible layers render via a
+	 * single quad per tileset + a fragment shader doing per-fragment GID
+	 * lookup, bypassing the per-tile draw loop entirely. Layers that
+	 * don't qualify (Canvas renderer, non-orthogonal,
+	 * collection-of-image tilesets, tilerendersize "grid", non-zero
+	 * tileoffset, oversampled beyond the shader's overflow window) fall
+	 * back to the legacy path automatically.
 	 * Set to `false` to disable globally.
 	 * @default true
 	 */
@@ -186,10 +199,11 @@ export type ApplicationSettings = {
 	 * (a software rasterizer, a blocklisted driver). Note this is stricter
 	 * than the WebGL default, which is `false`.
 	 *
-	 * Combined with the WebGL 2 requirement, the effect is: under
-	 * {@link AUTO} such a machine gets the Canvas renderer, and under
-	 * {@link WEBGL} construction throws. Set to `false` to accept a
-	 * software or blocklisted WebGL context instead.
+	 * The WebGPU backend honors it too, by rejecting a fallback
+	 * (software) adapter. The effect: under {@link AUTO} such a machine
+	 * gets the Canvas renderer, and under {@link WEBGL} / {@link WEBGPU}
+	 * `app.init()` rejects. Set to `false` to accept a software or
+	 * blocklisted context instead.
 	 * @default true
 	 */
 	failIfMajorPerformanceCaveat: boolean;
@@ -232,13 +246,16 @@ export type ApplicationSettings = {
 	backgroundColor: string;
 
 	/**
-	 * a custom batcher class (WebGL only)
+	 * a custom batcher class (extend the active backend's base:
+	 * `WebGLBatcher` / `WebGPUBatcher`)
 	 * @deprecated since 18.1.0 — use `batcher` instead
 	 */
 	compositor?: (new (renderer: any) => WebGLBatcher) | undefined;
 
 	/**
-	 * a custom batcher class (WebGL only)
+	 * a custom batcher class, riding the quad/primitive slots on either
+	 * GPU backend — extend `WebGLBatcher` under WebGL, `WebGPUBatcher`
+	 * under WebGPU (`addBatcher` rejects a wrong-backend class loudly)
 	 */
 	batcher?: (new (renderer: any) => WebGLBatcher) | undefined;
 
@@ -251,14 +268,14 @@ export type ApplicationSettings = {
 	 * (e.g. the loader screen) explicitly use {@link Camera2d} regardless
 	 * of this setting.
 	 *
-	 * **WebGL requirement.** Camera classes whose
+	 * **GPU-backend requirement.** Camera classes whose
 	 * `static defaultSortOn === "depth"` (Camera3d and any subclass) need
-	 * the WebGL renderer — perspective projection, depth attachment and
-	 * mesh draw all live in the WebGL backend. Pairing such a
-	 * `cameraClass` with `renderer: video.AUTO` on a system where AUTO
-	 * falls back to Canvas emits a `console.warn` at construction time
-	 * and produces a non-functional render. Use `renderer: video.WEBGL`
-	 * to get a hard throw instead.
+	 * a renderer with a depth buffer (`renderer.supportsDepthBuffer` —
+	 * WebGL 2 or WebGPU). Pairing such a `cameraClass` with
+	 * `renderer: video.AUTO` on a system where AUTO falls back to Canvas
+	 * emits a `console.warn` and produces a non-functional render. Pin
+	 * `renderer: video.WEBGL` (or `WEBGPU`) to make `app.init()` reject
+	 * instead.
 	 * @default Camera2d
 	 */
 	cameraClass?: new (

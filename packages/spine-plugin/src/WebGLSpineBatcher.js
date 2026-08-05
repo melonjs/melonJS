@@ -14,11 +14,11 @@ const SPINE_BLEND_MODES = ["normal", "additive", "multiply", "screen"];
 const VERTEX_SIZE = 12;
 
 /**
- * A custom melonJS Batcher for rendering Spine skeletons with two-color tinting.
+ * A custom melonJS WebGL batcher for rendering Spine skeletons with two-color tinting.
  * Uses Spine's official two-color shader and the base WebGLBatcher's indexed drawing support.
  * @category Rendering
  */
-export default class SpineBatcher extends WebGLBatcher {
+export default class WebGLSpineBatcher extends WebGLBatcher {
 	/**
 	 * Initialize (or re-initialize) the batcher.
 	 * Settings are built here rather than in the constructor so the

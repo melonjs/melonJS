@@ -757,6 +757,9 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 				color: def.color ?? [1, 1, 1],
 				intensity: def.intensity ?? 1,
 				range: def.range,
+				// spot cone angles (radians) — the spec defaults
+				innerConeAngle: def.spot?.innerConeAngle ?? 0,
+				outerConeAngle: def.spot?.outerConeAngle ?? Math.PI / 4,
 				// world -Z axis of the node (third basis column negated), normalized
 				direction: normalize3([-world[8], -world[9], -world[10]]),
 				// world translation

@@ -1,3 +1,7 @@
+import {
+	expandLinesToTriangles,
+	pushPrimitiveRange,
+} from "../../gpu/primitives.ts";
 import WebGPUBatcher from "./webgpu_batcher.js";
 
 /**
@@ -166,31 +170,17 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	#pushRange(verts, start, end, colorUint32, z) {
-		const viewMatrix = this.renderer.currentTransform;
-		const vertexData = this.vertexData;
-		if (!viewMatrix.isIdentity()) {
-			// full 3D transform including the z column so Camera3d's view
-			// matrix (X/Y-axis rotation) actually rotates the primitive
-			const m = viewMatrix.val;
-			for (let i = start; i < end; i++) {
-				const vert = verts[i];
-				const x = vert.x;
-				const y = vert.y;
-				vertexData.push(
-					x * m[0] + y * m[4] + z * m[8] + m[12],
-					x * m[1] + y * m[5] + z * m[9] + m[13],
-					x * m[2] + y * m[6] + z * m[10] + m[14],
-					0,
-					0,
-					colorUint32,
-				);
-			}
-		} else {
-			for (let i = start; i < end; i++) {
-				const vert = verts[i];
-				vertexData.push(vert.x, vert.y, z, 0, 0, colorUint32);
-			}
-		}
+		// the shared neutral range push (z-column-aware transform) — one
+		// copy for both backends, see `gpu/primitives.ts`
+		pushPrimitiveRange(
+			this.vertexData,
+			this.renderer.currentTransform,
+			verts,
+			start,
+			end,
+			colorUint32,
+			z,
+		);
 	}
 
 	/**
@@ -262,74 +252,23 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	#expandLinesToTriangles(verts, vertexCount) {
-		const renderer = this.renderer;
-		const viewMatrix = renderer.currentTransform;
-		const vertexData = this.vertexData;
-		const colorUint32 = renderer.currentColor.toUint32(
-			renderer.getGlobalAlpha(),
-		);
-		const hasTransform = !viewMatrix.isIdentity();
-		const z = renderer.currentDepth;
-
-		// switch to triangle-list topology
+		// switch to triangle-list topology, then delegate the expansion to
+		// the shared neutral helper — see `gpu/primitives.ts`
 		if (this.topology !== "triangle-list") {
 			this.flush(this.topology);
 			this.topology = "triangle-list";
 		}
-
-		const m = hasTransform ? viewMatrix.val : null;
-
-		for (let i = 0; i < vertexCount; i += 2) {
-			const from = verts[i];
-			const to = verts[i + 1];
-
-			// each line pair expands to 2 triangles (6 vertices) — check
-			// capacity per pair so an over-capacity path flushes mid-shape
-			// instead of silently dropping writes
-			if (vertexData.isFull(6)) {
+		const renderer = this.renderer;
+		expandLinesToTriangles(
+			this.vertexData,
+			renderer.currentTransform,
+			verts,
+			vertexCount,
+			renderer.currentColor.toUint32(renderer.getGlobalAlpha()),
+			renderer.currentDepth,
+			() => {
 				this.flush();
-			}
-
-			// apply the view matrix (z column included) without mutating
-			// the inputs. The perpendicular normal stays in pre-projection
-			// space — same known limitation as the GL backend.
-			let fromX, fromY, fromZ, toX, toY, toZ;
-			if (hasTransform) {
-				fromX = from.x * m[0] + from.y * m[4] + z * m[8] + m[12];
-				fromY = from.x * m[1] + from.y * m[5] + z * m[9] + m[13];
-				fromZ = from.x * m[2] + from.y * m[6] + z * m[10] + m[14];
-				toX = to.x * m[0] + to.y * m[4] + z * m[8] + m[12];
-				toY = to.x * m[1] + to.y * m[5] + z * m[9] + m[13];
-				toZ = to.x * m[2] + to.y * m[6] + z * m[10] + m[14];
-			} else {
-				fromX = from.x;
-				fromY = from.y;
-				fromZ = z;
-				toX = to.x;
-				toY = to.y;
-				toZ = z;
-			}
-
-			// compute perpendicular unit normal
-			const dx = toX - fromX;
-			const dy = toY - fromY;
-			const len = Math.sqrt(dx * dx + dy * dy);
-
-			if (len === 0) {
-				continue;
-			}
-
-			const nx = -dy / len;
-			const ny = dx / len;
-
-			// two triangles forming a quad around the line segment
-			vertexData.push(fromX, fromY, fromZ, nx, ny, colorUint32);
-			vertexData.push(fromX, fromY, fromZ, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, toZ, -nx, -ny, colorUint32);
-
-			vertexData.push(fromX, fromY, fromZ, nx, ny, colorUint32);
-			vertexData.push(toX, toY, toZ, -nx, -ny, colorUint32);
-			vertexData.push(toX, toY, toZ, nx, ny, colorUint32);
-		}
+			},
+		);
 	}
 }

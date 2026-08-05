@@ -1,8 +1,9 @@
 import state from "../../../state/state.ts";
+import { buildLitMeshVertexData } from "../../gpu/meshvertex.ts";
 import UniformBlock from "../buffer/uniformblock.js";
 import { MAX_LIGHTS } from "../lighting/constants.ts";
 import { packMeshLights } from "../lighting/pack3d.ts";
-import { BLOCK_FLOATS, writeLight3dBlock } from "../lighting/std140.ts";
+import { BLOCK3D_FLOATS, writeLight3dBlock } from "../lighting/std140.ts";
 import litFragment from "./../shaders/mesh-lit.frag";
 import litVertex from "./../shaders/mesh-lit.vert";
 import MeshBatcher from "./mesh_batcher.js";
@@ -58,7 +59,7 @@ export default class LitMeshBatcher extends MeshBatcher {
 		this._bindingPoint ??= renderer.reserveUniformBindingPoint();
 		this.lightBlock = new UniformBlock(
 			renderer.gl,
-			BLOCK_FLOATS,
+			BLOCK3D_FLOATS,
 			this._bindingPoint,
 		);
 		this._lightBlockProgram = null;
@@ -141,45 +142,9 @@ export default class LitMeshBatcher extends MeshBatcher {
 	 * @ignore
 	 */
 	buildRetainedVertexData(mesh, out) {
-		const vertices = mesh.originalVertices;
-		const normals = mesh.originalNormals;
-		const uvs = mesh.uvs;
-		const colors = mesh.vertexColors;
-		const count = mesh.vertexCount;
-		let o = 0;
-		for (let i = 0; i < count; i++) {
-			const i3 = i * 3;
-			const i2 = i * 2;
-			const c = colors ? colors[i] : 0xffffffff;
-			out[o] = vertices[i3];
-			out[o + 1] = vertices[i3 + 1];
-			out[o + 2] = vertices[i3 + 2];
-			out[o + 3] = uvs[i2];
-			out[o + 4] = uvs[i2 + 1];
-			out[o + 5] = ((c >> 16) & 0xff) / 255;
-			out[o + 6] = ((c >> 8) & 0xff) / 255;
-			out[o + 7] = (c & 0xff) / 255;
-			out[o + 8] = ((c >>> 24) & 0xff) / 255;
-			// A zero-length normal must not reach the shader: it does
-			// `normalize(vNormal)`, and normalize(vec3(0)) is NaN — every
-			// fragment touching that vertex goes black or garbage. Degenerate
-			// triangles in OBJ/glTF assets produce these, so substitute a unit
-			// vector, matching what `_projectNormalsWorld` does on the CPU path.
-			const nx = normals ? normals[i3] : 0;
-			const ny = normals ? normals[i3 + 1] : 0;
-			const nz = normals ? normals[i3 + 2] : 0;
-			if (nx * nx + ny * ny + nz * nz > 1e-16) {
-				out[o + 9] = nx;
-				out[o + 10] = ny;
-				out[o + 11] = nz;
-			} else {
-				out[o + 9] = 0;
-				out[o + 10] = 1;
-				out[o + 11] = 0;
-			}
-			o += this.vertexSize;
-		}
-		return o;
+		// the shared neutral builder (zero-normal guard included) — one
+		// copy for both backends, see `gpu/meshvertex.ts`
+		return buildLitMeshVertexData(mesh, out, this.vertexSize);
 	}
 
 	/**
@@ -219,8 +184,9 @@ export default class LitMeshBatcher extends MeshBatcher {
 		this.lightBlock.upload(
 			writeLight3dBlock(this.lightBlock.data, {
 				count: lit.count,
-				directions: lit.directions,
-				colors: lit.colors,
+				posRange: lit.posRange,
+				dirCone: lit.dirCone,
+				colorInner: lit.colorInner,
 				ambient: hasLight ? a : _WHITE_AMBIENT,
 			}),
 		);

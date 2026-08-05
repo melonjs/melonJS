@@ -276,9 +276,21 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	 * sampler resolved from the default texture filter, so a filter change
 	 * must rebuild them (the lit-tier counterpart of the texture store's
 	 * invalidateBindGroups; the resident textures stay).
+	 * @override
 	 */
 	clearMaterialCache() {
+		super.clearMaterialCache();
 		this.litMaterials.clear();
+	}
+
+	/**
+	 * the lit material model is the combined color+normal bind group, not
+	 * the base segment slots
+	 * @override
+	 * @ignore
+	 */
+	hasPendingMaterial() {
+		return this.currentMaterial !== null;
 	}
 
 	/**

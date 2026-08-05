@@ -64,10 +64,21 @@ export default class GLTFScene {
 	 * @param {boolean} [options.rightHanded=true] - convert glTF Y-up right-handed
 	 * geometry to the engine's Y-down via a rotation (no mirror). See the wiki.
 	 * @param {boolean} [options.lights=true] - add the scene's authored
-	 * `KHR_lights_punctual` directional lights (plus a soft ambient fill) to the
-	 * world as {@link Light3d} renderables, so the meshes are lit by the sun set
-	 * up in the authoring tool. Set false to keep the meshes unlit / manage
-	 * lighting yourself with `world.addChild(new Light3d(...))`.
+	 * `KHR_lights_punctual` lights — directional suns, point and spot lamps
+	 * (plus a soft ambient fill) — to the world as {@link Light3d}
+	 * renderables, so the meshes are lit as set up in the authoring tool.
+	 * Set false to keep the meshes unlit / manage lighting yourself with
+	 * `world.addChild(new Light3d(...))`. Each instantiated light carries
+	 * its authored name, so `world.getChildByName("Sun")` finds it for
+	 * runtime tuning (day/night cycles, flicker).
+	 * @param {number} [options.lightIntensityScale] - multiply each light's
+	 * AUTHORED intensity by this factor instead of normalizing it to 1.
+	 * glTF stores physical units — lux for suns (a Blender daylight sun is
+	 * ~1000+), candela for lamps — which blow out the engine's stylized
+	 * half-Lambert shading when used raw, so the default keeps every light
+	 * at unit intensity and lets the app tune. With this option the
+	 * authored ratios survive: e.g. `0.001` maps a 1000-lux sun to 1 while
+	 * a half-strength 500-lux fill lands at 0.5.
 	 */
 	addTo(container, options = {}) {
 		if (!this.data) {
@@ -77,12 +88,16 @@ export default class GLTFScene {
 		const rightHanded = options.rightHanded !== false;
 		const zSign = rightHanded ? -1 : 1;
 
-		// the scene is lit when it carries authored directional lights and the
-		// caller didn't opt out — meshes then render through the lit batcher.
+		// the scene is lit when it carries ANY shading-capable authored light
+		// (directional sun, point or spot lamp) and the caller didn't opt out
+		// — meshes then render through the lit batcher. A lamp-only scene must
+		// count too, or its instantiated lights would shine on unlit meshes.
 		const lit =
 			options.lights !== false &&
 			(this.data.lights ?? []).some((l) => {
-				return l.type === "directional";
+				return (
+					l.type === "directional" || l.type === "point" || l.type === "spot"
+				);
 			});
 
 		// scene meshes carry their own world transform — keep the container
@@ -99,7 +114,7 @@ export default class GLTFScene {
 			const model = new GLTFModel(this.data, { scale, rightHanded, lit });
 			model.name = this.name;
 			container.addChild(model);
-			this._addLights(container, zSign, options);
+			this._addLights(container, zSign, scale, options);
 			return;
 		}
 
@@ -191,11 +206,11 @@ export default class GLTFScene {
 			container.addChild(mesh);
 		}
 
-		this._addLights(container, zSign, options);
+		this._addLights(container, zSign, scale, options);
 	}
 
 	/**
-	 * Add the scene's authored directional lights (plus a soft ambient fill) to
+	 * Add the scene's authored lights — directional, point and spot — (plus a soft ambient fill) to
 	 * the world as {@link Light3d} renderables, so the meshes are lit by the
 	 * same sun set up in the authoring tool (Blender etc.). Shared by the static
 	 * and animated paths. The lights are ordinary world children — the level
@@ -203,33 +218,65 @@ export default class GLTFScene {
 	 * {@link Light2d}, so there's nothing to track or tear down here.
 	 * @param {Container} container - the target container the lights are added to
 	 * @param {number} zSign - the Y-up→Y-down Z bridge sign (rightHanded → -1)
+	 * @param {number} scale - the scene's world scale (positions/ranges follow it)
 	 * @param {object} options - the `addTo` options (`lights` toggle)
 	 * @ignore
 	 */
-	_addLights(container, zSign, options) {
+	_addLights(container, zSign, scale, options) {
 		if (options.lights === false) {
 			return;
 		}
+		// glTF intensities are physical units (lux for directional, candela for
+		// point/spot — often in the thousands), which blow out the stylized
+		// half-Lambert shading when used raw. Default: normalize every light to
+		// unit intensity and let the app tune. With `lightIntensityScale` the
+		// authored values are kept, multiplied by the given factor, so relative
+		// light strengths from the authoring tool survive.
+		const intensityScale =
+			typeof options.lightIntensityScale === "number"
+				? options.lightIntensityScale
+				: null;
 		let added = 0;
 		for (const light of this.data.lights ?? []) {
-			if (light.type !== "directional") {
-				// point / spot lights are parsed but not yet shaded
+			const d = light.direction;
+			// glTF-space → render space: the same Y-down / rightHanded Y/Z
+			// bridge the geometry uses, for directions AND positions
+			const direction = [d[0], -d[1], zSign * d[2]];
+			const intensity =
+				intensityScale !== null ? light.intensity * intensityScale : 1;
+			let light3d;
+			if (light.type === "directional") {
+				light3d = new Light3d({
+					type: "directional",
+					direction,
+					color: [light.color[0], light.color[1], light.color[2]],
+					intensity,
+				});
+			} else if (light.type === "point" || light.type === "spot") {
+				const p = light.position;
+				light3d = new Light3d({
+					type: light.type,
+					position: [p[0] * scale, -p[1] * scale, zSign * p[2] * scale],
+					direction,
+					color: [light.color[0], light.color[1], light.color[2]],
+					intensity,
+					// glTF range is in source units — scale like the geometry.
+					// Absent means unbounded in the spec; the engine's quadratic
+					// falloff needs a scale, so fall back to the Light3d default
+					range:
+						typeof light.range === "number" ? light.range * scale : undefined,
+					innerConeAngle: light.innerConeAngle,
+					outerConeAngle: light.outerConeAngle,
+				});
+			} else {
 				continue;
 			}
-			const d = light.direction;
-			container.addChild(
-				new Light3d({
-					type: "directional",
-					// bring the glTF-space direction into render space (same
-					// Y-down / rightHanded Y/Z bridge the geometry uses)
-					direction: [d[0], -d[1], zSign * d[2]],
-					color: [light.color[0], light.color[1], light.color[2]],
-					// glTF directional intensity is in lux (often thousands) —
-					// not meaningful for a stylized Lambert shader, so use a unit
-					// intensity and let the app tune `light.intensity` if needed.
-					intensity: 1,
-				}),
-			);
+			// carry the authored name so the app can look the light up for
+			// runtime tuning (e.g. `world.getChildByName("Sun")`)
+			if (light.name) {
+				light3d.name = light.name;
+			}
+			container.addChild(light3d);
 			added++;
 		}
 		// a soft ambient fill so the shadow side of lit meshes isn't pure black.

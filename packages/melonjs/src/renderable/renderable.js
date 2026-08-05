@@ -292,10 +292,12 @@ export default class Renderable extends Rect {
 		this.mask = undefined;
 
 		/**
-		 * the list of post-processing shader effects applied to this renderable (WebGL only).
-		 * Effects are applied in order. Use {@link addPostEffect}, {@link getPostEffect},
-		 * and {@link removePostEffect} to manage effects, or assign directly.
-		 * In Canvas mode, this property is ignored.
+		 * the list of post-processing shader effects applied to this renderable
+		 * (GPU backends — WebGL and WebGPU). Effects are applied in order. Use
+		 * {@link addPostEffect}, {@link getPostEffect}, and
+		 * {@link removePostEffect} to manage effects, or assign directly.
+		 * On the Canvas renderer effects stay inert (the scene keeps rendering
+		 * un-effected).
 		 * @type {Array<GLShader|ShaderEffect>}
 		 * @default []
 		 * @example
@@ -475,7 +477,11 @@ export default class Renderable extends Rect {
 				effect.destroy();
 			}
 		}
-		if (typeof value === "undefined") {
+		// null clears like undefined: loader.getShader stores null for a
+		// shader asset the active backend cannot compile (e.g. a GLSL-only
+		// program pair under WebGPU) — assigning that must degrade to "no
+		// shader", not enqueue a null the effect filter would trip over
+		if (value == null) {
 			this.postEffects.length = 0;
 		} else {
 			this.postEffects = [value];

@@ -22,10 +22,14 @@ uniform vec4 uTint;
 out vec2 vRegion;
 out vec4 vColor;
 out vec3 vNormal;
+// world-space fragment position — positional lights (point / spot) fall
+// off with distance, so the fragment stage needs where the surface IS
+out vec3 vWorldPos;
 
 void main(void) {
-    gl_Position =
-        uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aVertex, 1.0);
+    vec4 worldPos = uModelMatrix * vec4(aVertex, 1.0);
+    gl_Position = uProjectionMatrix * uViewMatrix * worldPos;
+    vWorldPos = worldPos.xyz;
     vec4 tinted = aColor * uTint;
     vColor = vec4(tinted.rgb * tinted.a, tinted.a);
     vRegion = aRegion;

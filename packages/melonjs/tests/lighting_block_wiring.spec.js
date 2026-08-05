@@ -204,16 +204,19 @@ describe("lit batchers → light uniform block (issue #1552)", () => {
 				// runs, since the light upload moved out of `bind()`
 				batcher.bind();
 				batcher.updatePassState();
-				const gpu = readback(batcher.lightBlock, HEADER_FLOATS + 8);
+				const gpu = readback(batcher.lightBlock, HEADER_FLOATS + 12);
 				expect(gpu[0]).toBe(1); // one directional light
-				// surface→light is the negated travel direction, normalized
-				expect(gpu[8]).toBeCloseTo(0, 5);
-				expect(gpu[9]).toBeCloseTo(-1, 5);
-				expect(gpu[10]).toBeCloseTo(0, 5);
-				// colour premultiplied by intensity, w padding left at zero
-				expect(gpu[12]).toBeCloseTo(1, 5);
-				expect(gpu[13]).toBeCloseTo(0, 5);
-				expect(gpu[15]).toBe(0);
+				// 12-float stride: posRange (directional sentinel range -1),
+				// then dirCone with surface→light = negated travel direction
+				expect(gpu[11]).toBe(-1);
+				expect(gpu[12]).toBeCloseTo(0, 5);
+				expect(gpu[13]).toBeCloseTo(-1, 5);
+				expect(gpu[14]).toBeCloseTo(0, 5);
+				// no cone on a directional light
+				expect(gpu[15]).toBe(-1);
+				// colour premultiplied by intensity
+				expect(gpu[16]).toBeCloseTo(1, 5);
+				expect(gpu[17]).toBeCloseTo(0, 5);
 				expect(gl.getError()).toBe(gl.NO_ERROR);
 			} finally {
 				stage._activeLights3d = previous;

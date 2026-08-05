@@ -22,25 +22,28 @@ import { createExampleComponent } from "../utils";
 const base = `${import.meta.env.BASE_URL}assets/mesh3d/`;
 
 const createGame = async () => {
-	// mesh3d uses `me.Mesh`, which requires WebGL. Switch to
-	// `renderer: video.WEBGL` so the engine throws (post #1479) when the
-	// browser/GPU can't provide a context, instead of silently falling
-	// back to Canvas and producing a broken scene with no signal.
+	// mesh3d uses `me.Mesh`, which needs a GPU backend. `video.AUTO`
+	// negotiates WebGPU first, then WebGL 2; only a browser with neither
+	// lands on Canvas — fail loudly there instead of rendering a broken
+	// scene with no signal.
 	let app: Application;
 	try {
 		app = new Application(1024, 768, {
 			parent: "screen",
-			renderer: video.WEBGL,
+			renderer: video.AUTO,
 			scale: "auto",
 		});
 		await app.init();
+		if (!app.renderer.supportsDepthBuffer) {
+			throw new Error("no GPU backend available (Canvas fallback)");
+		}
 	} catch (err) {
 		const reason = err instanceof Error ? err.message : String(err);
 		globalThis.alert(
-			"This example couldn't start: WebGL isn't available in this browser.\n\n" +
-				"The 3D mesh rendering used by this showcase requires a WebGL-capable " +
-				"browser/GPU. Try enabling hardware acceleration in your browser " +
-				"settings, or open this example in a different browser.\n\n" +
+			"This example couldn't start: no GPU rendering is available in this browser.\n\n" +
+				"The 3D mesh rendering used by this showcase requires a WebGPU- or " +
+				"WebGL-capable browser/GPU. Try enabling hardware acceleration in your " +
+				"browser settings, or open this example in a different browser.\n\n" +
 				`Details: ${reason}`,
 		);
 		throw err;

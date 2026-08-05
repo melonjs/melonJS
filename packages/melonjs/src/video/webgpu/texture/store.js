@@ -1,4 +1,5 @@
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
+import mipblitWGSL from "../shaders/mipblit.wgsl";
 import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
 
 /**
@@ -45,7 +46,7 @@ export default class WebGPUTextureStore {
 	 * @returns {GPUSampler} the sampler
 	 * @ignore
 	 */
-	getSampler(filter, repeat) {
+	getSampler(filter, repeat, mipmaps = false) {
 		// same per-axis mapping as MaterialBatcher.createTexture2D
 		const addressModeU = /^repeat(-x)?$/.test(repeat)
 			? "repeat"
@@ -53,7 +54,7 @@ export default class WebGPUTextureStore {
 		const addressModeV = /^repeat(-y)?$/.test(repeat)
 			? "repeat"
 			: "clamp-to-edge";
-		const key = `${filter}|${addressModeU}|${addressModeV}`;
+		const key = `${filter}|${addressModeU}|${addressModeV}|${mipmaps ? "mip" : "flat"}`;
 		let sampler = this.samplers.get(key);
 		if (typeof sampler === "undefined") {
 			sampler = this.device.createSampler({
@@ -62,6 +63,16 @@ export default class WebGPUTextureStore {
 				minFilter: filter,
 				addressModeU,
 				addressModeV,
+				// mip: trilinear minification over the generated chain (the
+				// mesh path), with 4× anisotropy — oblique surfaces (ground
+				// planes, walls at grazing angles) keep detail that plain
+				// trilinear blurs away. Valid because the mip variant is
+				// only built fully linear. flat: clamp every consumer to
+				// level 0, so a texture UPGRADED to a mip chain by a mesh
+				// keeps rendering byte-identically for the sprites sharing it
+				...(mipmaps
+					? { mipmapFilter: "linear", maxAnisotropy: 4 }
+					: { lodMinClamp: 0, lodMaxClamp: 0 }),
 			});
 			this.samplers.set(key, sampler);
 		}
@@ -96,7 +107,12 @@ export default class WebGPUTextureStore {
 		if (
 			typeof record === "undefined" ||
 			options.force === true ||
-			record.source !== source
+			record.source !== source ||
+			// a mip-wanting consumer over a resident level-0-only record —
+			// same source, but the texture must be rebuilt with a chain
+			(options.mipmaps === true &&
+				record.compressed !== true &&
+				(record.mipLevelCount ?? 1) === 1)
 		) {
 			// compressed sources (parsed dds/ktx/pvr/pkm) carry pre-encoded
 			// block data: a dedicated createTexture + per-mip writeTexture
@@ -123,14 +139,19 @@ export default class WebGPUTextureStore {
 					uploadCompressedTexture(this.device, gpuTexture, source, metrics);
 					record = {
 						texture: gpuTexture,
-						// GL parity: the GL backend samples compressed textures
-						// with plain LINEAR/NEAREST min filters and never the
-						// mip chain — restrict the bind-group view to level 0
-						// (the full chain stays uploaded in the texture)
+						// 2D consumers stay lod-clamped to level 0 (sprites
+						// sharing the asset render byte-identically) …
 						view: gpuTexture.createView({
 							baseMipLevel: 0,
 							mipLevelCount: 1,
 						}),
+						// … while a mip-wanting consumer (the mesh path) can
+						// sample the AUTHORED chain — compressed assets ship
+						// their mips pre-encoded, no generation needed (the GL
+						// twin: TEXTURE_MAX_LEVEL caps the chain to what the
+						// asset carries)
+						fullView: gpuTexture.createView(),
+						mipLevelCount: source.mipmaps.length,
 						source,
 						width: source.width,
 						height: source.height,
@@ -142,7 +163,12 @@ export default class WebGPUTextureStore {
 				}
 				record.frameId = this.renderer.frameId;
 				this.lastRecord = record;
-				return this.bindGroupFor(record, texture, wrap);
+				return this.bindGroupFor(
+					record,
+					texture,
+					wrap,
+					options.mipmaps === true,
+				);
 			}
 			// prefer real pixel dimensions; HTMLVideoElement exposes them
 			// through videoWidth/videoHeight (width/height default to 0)
@@ -159,6 +185,11 @@ export default class WebGPUTextureStore {
 				record.width !== width ||
 				record.height !== height ||
 				record.frameId === this.renderer.frameId ||
+				// a mip-wanting consumer (the mesh path) upgrades a resident
+				// level-0-only texture to a full chain — never the reverse:
+				// flat consumers of a mipped record sample level 0 via their
+				// lod-clamped sampler
+				(options.mipmaps === true && (record.mipLevelCount ?? 1) === 1) ||
 				// a recycled unit whose resident texture came from the
 				// compressed path cannot adopt an image source: its format
 				// is non-renderable and copyExternalImageToTexture would
@@ -171,11 +202,18 @@ export default class WebGPUTextureStore {
 				if (typeof record !== "undefined") {
 					this.retire(record.texture);
 				}
+				// full chain down to 1×1 when the mesh path asks for mips
+				const mipLevelCount =
+					options.mipmaps === true
+						? Math.floor(Math.log2(Math.max(width, height))) + 1
+						: 1;
 				const gpuTexture = this.device.createTexture({
 					label: "melonJS texture",
 					size: [width, height],
 					format: "rgba8unorm",
+					mipLevelCount,
 					// RENDER_ATTACHMENT is required by copyExternalImageToTexture
+					// (and by the mip-chain blit passes)
 					usage:
 						GPUTextureUsage.TEXTURE_BINDING |
 						GPUTextureUsage.COPY_DST |
@@ -188,6 +226,7 @@ export default class WebGPUTextureStore {
 					width,
 					height,
 					frameId: -1,
+					mipLevelCount,
 					bindGroupBySampler: new Map(),
 				};
 				this.records.set(unit, record);
@@ -198,17 +237,32 @@ export default class WebGPUTextureStore {
 				record.source = source;
 			}
 
-			// same premultiplication convention as the GL path's
-			// UNPACK_PREMULTIPLY_ALPHA_WEBGL default; no flipY (both APIs
-			// store row 0 = image top)
-			this.device.queue.copyExternalImageToTexture(
-				{ source },
-				{
-					texture: record.texture,
-					premultipliedAlpha: texture.premultipliedAlpha !== false,
-				},
-				[record.width, record.height],
-			);
+			// An HTMLVideoElement without a current frame has no backing
+			// resource and copyExternalImageToTexture THROWS (autoplay
+			// blocked, first frame not yet decoded) — where GL's texImage2D
+			// silently uploads nothing. Skip the copy; the video path
+			// re-uploads with force every frame, so the content lands the
+			// moment a frame exists.
+			const frameless =
+				typeof HTMLVideoElement !== "undefined" &&
+				source instanceof HTMLVideoElement &&
+				source.readyState < 2;
+			if (frameless === false) {
+				// same premultiplication convention as the GL path's
+				// UNPACK_PREMULTIPLY_ALPHA_WEBGL default; no flipY (both APIs
+				// store row 0 = image top)
+				this.device.queue.copyExternalImageToTexture(
+					{ source },
+					{
+						texture: record.texture,
+						premultipliedAlpha: texture.premultipliedAlpha !== false,
+					},
+					[record.width, record.height],
+				);
+				if ((record.mipLevelCount ?? 1) > 1) {
+					this.generateMipmaps(record);
+				}
+			}
 		}
 
 		// stamp: this record's texture is (about to be) referenced by draws
@@ -219,7 +273,88 @@ export default class WebGPUTextureStore {
 		// combined bind groups from the raw view
 		this.lastRecord = record;
 
-		return this.bindGroupFor(record, texture, wrap);
+		return this.bindGroupFor(record, texture, wrap, options.mipmaps === true);
+	}
+
+	/**
+	 * Build the full mip chain of a freshly-uploaded record: one blit pass
+	 * per level, each rendering the previous level with linear filtering.
+	 * Runs in its own encoder submitted immediately — queue ordering places
+	 * it after the level-0 copy (a queue operation) and before the frame's
+	 * own command buffer, so the frame's draws sample a complete chain.
+	 * @param {object} record - the resident record (mipLevelCount > 1)
+	 * @ignore
+	 */
+	generateMipmaps(record) {
+		const device = this.device;
+		if (typeof this.mipPipeline === "undefined") {
+			const module = device.createShaderModule({
+				label: "melonJS mip blit",
+				code: mipblitWGSL,
+			});
+			this.mipLayout = device.createBindGroupLayout({
+				label: "melonJS mip blit layout",
+				entries: [
+					{ binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+					{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
+				],
+			});
+			// deliberately NOT a pipeline-cache family: mip passes have no
+			// depth-stencil attachment and target the texture format, both
+			// of which every cached pipeline hard-declares otherwise
+			this.mipPipeline = device.createRenderPipeline({
+				label: "melonJS mip blit",
+				layout: device.createPipelineLayout({
+					bindGroupLayouts: [this.mipLayout],
+				}),
+				vertex: { module, entryPoint: "vertex_main" },
+				fragment: {
+					module,
+					entryPoint: "fragment_main",
+					targets: [{ format: "rgba8unorm" }],
+				},
+				primitive: { topology: "triangle-list" },
+			});
+			this.mipSampler = device.createSampler({
+				label: "melonJS mip blit sampler",
+				magFilter: "linear",
+				minFilter: "linear",
+			});
+		}
+		const encoder = device.createCommandEncoder({ label: "melonJS mipgen" });
+		for (let level = 1; level < record.mipLevelCount; level++) {
+			const bindGroup = device.createBindGroup({
+				label: "melonJS mip blit binding",
+				layout: this.mipLayout,
+				entries: [
+					{
+						binding: 0,
+						resource: record.texture.createView({
+							baseMipLevel: level - 1,
+							mipLevelCount: 1,
+						}),
+					},
+					{ binding: 1, resource: this.mipSampler },
+				],
+			});
+			const pass = encoder.beginRenderPass({
+				colorAttachments: [
+					{
+						view: record.texture.createView({
+							baseMipLevel: level,
+							mipLevelCount: 1,
+						}),
+						loadOp: "clear",
+						storeOp: "store",
+					},
+				],
+			});
+			pass.setPipeline(this.mipPipeline);
+			pass.setBindGroup(0, bindGroup);
+			pass.draw(3);
+			pass.end();
+		}
+		device.queue.submit([encoder.finish()]);
 	}
 
 	/**
@@ -227,20 +362,35 @@ export default class WebGPUTextureStore {
 	 * the image and compressed upload paths)
 	 * @ignore
 	 */
-	bindGroupFor(record, texture, wrap) {
+	bindGroupFor(record, texture, wrap, wantMips = false) {
 		const filter =
 			typeof texture.filter === "string"
 				? texture.filter
 				: this.renderer.getDefaultTextureFilter();
-		const samplerKey = `${filter}|${wrap}`;
+		// trilinear only for the consumer that asked for mips, over a record
+		// that has them, with linear filtering ("nearest" opts out — crisp
+		// pixel-art models); everyone else stays lod-clamped to level 0
+		const mip =
+			wantMips === true &&
+			(record.mipLevelCount ?? 1) > 1 &&
+			filter === "linear";
+		const samplerKey = `${filter}|${wrap}|${mip ? "mip" : "flat"}`;
 		let bindGroup = record.bindGroupBySampler.get(samplerKey);
 		if (typeof bindGroup === "undefined") {
 			bindGroup = this.device.createBindGroup({
 				label: "melonJS material",
 				layout: this.renderer.pipelineCache.materialLayout,
 				entries: [
-					{ binding: 0, resource: record.view },
-					{ binding: 1, resource: this.getSampler(filter, wrap) },
+					{
+						binding: 0,
+						// compressed records keep a level-0 `view` for 2D
+						// consumers and a `fullView` over the authored chain
+						// for mip sampling; generated-chain records have one
+						// full view serving both (the sampler's lod clamp
+						// does the 2D restriction there)
+						resource: mip ? (record.fullView ?? record.view) : record.view,
+					},
+					{ binding: 1, resource: this.getSampler(filter, wrap, mip) },
 				],
 			});
 			record.bindGroupBySampler.set(samplerKey, bindGroup);

@@ -1,9 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	boot,
 	GLShader,
 	game,
 	loader,
+	Renderable,
 	ShaderEffect,
 	WebGLRenderer,
 } from "../src/index.js";
@@ -641,6 +642,112 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 			expect(loader.unload({ name: "wgsl-only", type: "shader" })).toBe(true);
 			expect(fx.destroyed).toBe(true);
 			expect(loader.getShader("wgsl-only")).toBe(null);
+		});
+	});
+
+	describe("complete programs with a WGSL module ({vertex, fragment, wgsl})", () => {
+		const PAIR_VERTEX = [
+			"attribute vec3 aVertex;",
+			"uniform mat4 uProjectionMatrix;",
+			"void main(void) {",
+			"    gl_Position = uProjectionMatrix * vec4(aVertex, 1.0);",
+			"}",
+		].join("\n");
+		const PAIR_FRAGMENT = [
+			"void main(void) {",
+			"    gl_FragColor = vec4(1.0);",
+			"}",
+		].join("\n");
+		// a complete module — the `@vertex` entry point is what routes a
+		// `wgsl` source to the program path instead of the effect-body path
+		const WGSL_MODULE = [
+			"@vertex",
+			"fn vertex_main(@location(0) aVertex : vec3f) -> @builtin(position) vec4f {",
+			"    return vec4f(aVertex, 1.0);",
+			"}",
+			"@fragment",
+			"fn fragment_main() -> @location(0) vec4f {",
+			"    return vec4f(1.0);",
+			"}",
+		].join("\n");
+
+		it("a dual-backend program compiles the GLSL pair on WebGL and carries the wgsl module", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "dual-program",
+				type: "shader",
+				data: {
+					vertex: PAIR_VERTEX,
+					fragment: PAIR_FRAGMENT,
+					wgsl: WGSL_MODULE,
+				},
+			});
+			const shader = loader.getShader("dual-program");
+			expect(shader).toBeInstanceOf(GLShader);
+			expect(shader.shared).toBe(true);
+			// both realizations present: the GL program is live, the module rides along
+			expect(shader.isWebGL).toBe(true);
+			expect(shader.isWebGPU).toBe(true);
+			expect(shader.wgsl).toBe(WGSL_MODULE);
+			expect(shader.program).not.toBe(null);
+			loader.unload({ name: "dual-program", type: "shader" });
+		});
+
+		it("src URLs: all three sources fetch, the GLSL pair compiles on WebGL", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			await loader.load({
+				name: "dual-program-src",
+				type: "shader",
+				src: {
+					vertex: `data:text/plain,${encodeURIComponent(PAIR_VERTEX)}`,
+					fragment: `data:text/plain,${encodeURIComponent(PAIR_FRAGMENT)}`,
+					wgsl: `data:text/plain,${encodeURIComponent(WGSL_MODULE)}`,
+				},
+			});
+			expect(loader.getShader("dual-program-src")).toBeInstanceOf(GLShader);
+			loader.unload({ name: "dual-program-src", type: "shader" });
+		});
+
+		it("a wgsl-module-only program on a GLSL renderer loads as a WebGPU-only shader (inert here, no warning)", async (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			await loader.load({
+				name: "module-only",
+				type: "shader",
+				data: { wgsl: WGSL_MODULE },
+			});
+			const shader = loader.getShader("module-only");
+			expect(shader).toBeInstanceOf(GLShader);
+			// it HAS a realization (WebGPU) — just not one this backend hosts
+			expect(shader.isWebGPU).toBe(true);
+			expect(shader.isWebGL).toBe(false);
+			expect(shader.program).toBe(null);
+			expect(warn).not.toHaveBeenCalled();
+			warn.mockRestore();
+			loader.unload({ name: "module-only", type: "shader" });
+		});
+
+		it("assigning a null shader (unknown asset) clears rather than crashes", (ctx) => {
+			if (!isWebGL) {
+				ctx.skip();
+				return;
+			}
+			const target = new Renderable(0, 0, 10, 10);
+			target.shader = loader.getShader("no-such-asset");
+			expect(target.postEffects).toHaveLength(0);
+			// the renderer's effect filter never sees a null entry
+			expect(() => {
+				game.renderer.beginPostEffect(target);
+			}).not.toThrow();
 		});
 	});
 });

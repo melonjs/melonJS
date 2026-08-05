@@ -86,7 +86,7 @@
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist:publish",
 		"clean": "tsx scripts/clean.ts",
-		"types": "tsc --project tsconfig.build.json",
+		"types": "tsc --project tsconfig.build.json && tsx scripts/strip-internal.ts",
 		"test:types": "tsc"
 	}
 }

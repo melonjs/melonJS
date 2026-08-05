@@ -148,6 +148,8 @@ export const level = {
 	 * @param {boolean} [options.setViewportBounds=true] - (TMX only) if true, set the viewport bounds to the map size
 	 * @param {number} [options.scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
 	 * @param {boolean} [options.rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
+	 * @param {boolean} [options.lights=true] - (glTF/GLB only) add the scene's authored `KHR_lights_punctual` lights (plus a soft ambient fill) as {@link Light3d} world children; each carries its authored name for `getChildByName` lookups
+	 * @param {number} [options.lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity (lux/candela) by this factor instead of normalizing it to 1 — see {@link GLTFScene#addTo}
 	 * @returns {boolean} true if the level was successfully loaded
 	 * @example
 	 * // the game assets to be be preloaded
@@ -174,6 +176,13 @@ export const level = {
 	 * levelContainer.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
 	 * // add it to the game world
 	 * app.world.addChild(levelContainer);
+	 *
+	 * // load a glTF/GLB scene (preloaded with type "glb") under a Camera3d:
+	 * // 50 pixels per glTF unit, authored lux/candela intensities kept at
+	 * // a 1/1000 scale instead of being normalized to 1
+	 * me.level.load("diorama", { scale: 50, lightIntensityScale: 0.001 });
+	 * // the authored lights are world children — grab the sun for a day/night cycle
+	 * const sun = app.world.getChildByName("Sun")[0];
 	 */
 	load(levelId, options) {
 		options = Object.assign(
@@ -226,7 +235,7 @@ export const level = {
 	 * @name getCurrentLevel
 	 * @memberof level
 	 * @public
-	 * @returns {TMXTileMap}
+	 * @returns {TMXTileMap|GLTFScene} the current level object (a TMXTileMap for Tiled maps, a GLTFScene for glTF/GLB scenes)
 	 */
 	getCurrentLevel() {
 		return levels[this.getCurrentLevelId()];

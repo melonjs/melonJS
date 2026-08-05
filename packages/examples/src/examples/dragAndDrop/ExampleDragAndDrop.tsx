@@ -143,7 +143,7 @@ const createGame = async () => {
 		const app = new Application(1024, 768, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.CANVAS,
+			renderer: video.AUTO,
 		});
 		await app.init();
 	} catch {

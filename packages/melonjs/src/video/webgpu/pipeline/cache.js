@@ -1,7 +1,18 @@
+import blitWGSL from "../shaders/blit.wgsl";
 import clearWGSL from "../shaders/clear.wgsl";
 import primitiveWGSL from "../shaders/primitive.wgsl";
 import quadWGSL from "../shaders/quad.wgsl";
 import { CLEAR_UNIFORM_SIZE, FRAME_UNIFORM_SIZE } from "./bindgroups.js";
+
+/**
+ * Texture slots per quad draw segment — the quad family batches quads
+ * across up to this many distinct textures before a flush is forced (the
+ * GL sampler-ladder equivalent). 8 texture + 8 sampler bindings stays
+ * comfortably inside WebGPU's base limits (16 sampled textures / 16
+ * samplers per stage) with headroom for the effect families' samplers.
+ * @ignore
+ */
+export const MAX_QUAD_TEXTURES = 8;
 
 /**
  * The depth-stencil attachment format every pass and every pipeline of this
@@ -228,12 +239,38 @@ export default class WebGPUPipelineCache {
 				{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
 			],
 		});
+		// the quad family's group 1: eight texture slots (bindings 0-7) and
+		// their samplers (8-15) — one draw segment spans up to eight
+		// distinct textures, selected per quad by aTextureId
+		const multiEntries = [];
+		for (let slot = 0; slot < MAX_QUAD_TEXTURES; slot++) {
+			multiEntries.push({
+				binding: slot,
+				visibility: GPUShaderStage.FRAGMENT,
+				texture: {},
+			});
+			multiEntries.push({
+				binding: MAX_QUAD_TEXTURES + slot,
+				visibility: GPUShaderStage.FRAGMENT,
+				sampler: {},
+			});
+		}
+		this.multiMaterialLayout = device.createBindGroupLayout({
+			label: "melonJS quad materials layout",
+			entries: multiEntries,
+		});
 
 		// ---- shader modules ----------------------------------------------
 		this.modules = {
 			quad: device.createShaderModule({
 				label: "melonJS quad shader",
 				code: quadWGSL,
+			}),
+			// the single-texture compositing family (render-target blits) —
+			// same group-1 shape as the effect scaffold
+			blit: device.createShaderModule({
+				label: "melonJS blit shader",
+				code: blitWGSL,
 			}),
 			primitive: device.createShaderModule({
 				label: "melonJS primitive shader",
@@ -248,6 +285,9 @@ export default class WebGPUPipelineCache {
 		// ---- pipeline layouts --------------------------------------------
 		this.pipelineLayouts = {
 			quad: device.createPipelineLayout({
+				bindGroupLayouts: [this.frameLayout, this.multiMaterialLayout],
+			}),
+			blit: device.createPipelineLayout({
 				bindGroupLayouts: [this.frameLayout, this.materialLayout],
 			}),
 			primitive: device.createPipelineLayout({
@@ -265,6 +305,8 @@ export default class WebGPUPipelineCache {
 		this.registeredModules = new Map();
 		/** @type {Map<string, {stride: number, attributes: object[]}>} family key → vertex-layout alias */
 		this.vertexLayoutAliases = new Map();
+		// the blit family rides the frozen quad vertex layout
+		this.vertexLayoutAliases.set("blit", "quad");
 		/** @type {Map<string, GPUBindGroupLayout>} shape signature → group-3 layout */
 		this.effectLayouts = new Map();
 
@@ -383,6 +425,12 @@ export default class WebGPUPipelineCache {
 	 * @param {string} blendMode - blend mode (normalized internally)
 	 * @param {boolean} premultipliedAlpha - source premultiplication flag
 	 * @param {string} [stencilMode="none"] - "none" | "write" | "test" | "tag" | "mark"
+	 * @param {{cullMode: string, frontFace: string}} [meshState] - mesh pass
+	 *   state: its presence switches the depth half of the attachment on —
+	 *   depth writes enabled, "less-equal" testing (the GL mesh mode's
+	 *   LEQUAL, keeping coplanar geometry stable) — and sets the per-mesh
+	 *   face-culling axes. Omitted by the whole 2D tier, whose keys and
+	 *   descriptors stay byte-identical to a build without a mesh path.
 	 * @returns {GPURenderPipeline} the pipeline
 	 */
 	get(
@@ -391,10 +439,14 @@ export default class WebGPUPipelineCache {
 		blendMode,
 		premultipliedAlpha,
 		stencilMode = "none",
+		meshState,
 	) {
 		const blend = normalizeBlendMode(blendMode);
 		const pma = premultipliedAlpha !== false;
-		const key = `${shaderKey}|${topology}|${blend}|${pma ? 1 : 0}|${stencilMode}|${this.format}|${this.sampleCount}`;
+		let key = `${shaderKey}|${topology}|${blend}|${pma ? 1 : 0}|${stencilMode}|${this.format}|${this.sampleCount}`;
+		if (meshState) {
+			key += `|mesh:${meshState.cullMode}:${meshState.frontFace}`;
+		}
 		let pipeline = this.pipelines.get(key);
 		if (typeof pipeline === "undefined") {
 			const stencil = STENCIL_STATES[stencilMode] ?? STENCIL_STATES.none;
@@ -403,6 +455,14 @@ export default class WebGPUPipelineCache {
 			const vertexLayout = this.vertexLayouts.get(
 				this.vertexLayoutAliases.get(shaderKey) ?? shaderKey,
 			);
+			const primitive = {
+				topology,
+				stripIndexFormat: topology.endsWith("-strip") ? "uint32" : undefined,
+			};
+			if (meshState) {
+				primitive.cullMode = meshState.cullMode;
+				primitive.frontFace = meshState.frontFace;
+			}
 			pipeline = this.device.createRenderPipeline({
 				label: `melonJS ${key}`,
 				layout: this.pipelineLayouts[shaderKey],
@@ -423,14 +483,11 @@ export default class WebGPUPipelineCache {
 						},
 					],
 				},
-				primitive: {
-					topology,
-					stripIndexFormat: topology.endsWith("-strip") ? "uint32" : undefined,
-				},
+				primitive,
 				depthStencil: {
 					format: DEPTH_STENCIL_FORMAT,
-					depthWriteEnabled: false,
-					depthCompare: "always",
+					depthWriteEnabled: !!meshState,
+					depthCompare: meshState ? "less-equal" : "always",
 					stencilFront: stencil.stencil,
 					stencilBack: stencil.stencil,
 					stencilReadMask: stencil.readMask,

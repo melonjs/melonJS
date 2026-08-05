@@ -183,7 +183,7 @@ const createGame = async () => {
 		parent: "screen",
 		scaleMethod: "flex",
 		// per-pixel normal-map lighting needs the WebGL renderer
-		renderer: video.WEBGL,
+		renderer: video.AUTO,
 	});
 	await app.init();
 

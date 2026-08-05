@@ -296,14 +296,14 @@ importers:
   packages/spine-plugin:
     dependencies:
       '@esotericsoftware/spine-canvas':
-        specifier: ^4.3.7
-        version: 4.3.7
+        specifier: ^4.3.13
+        version: 4.3.13
       '@esotericsoftware/spine-core':
-        specifier: ^4.3.7
-        version: 4.3.7
+        specifier: ^4.3.13
+        version: 4.3.13
       '@esotericsoftware/spine-webgl':
-        specifier: ^4.3.7
-        version: 4.3.7
+        specifier: ^4.3.13
+        version: 4.3.13
     devDependencies:
       concurrently:
         specifier: ^9.2.1
@@ -646,14 +646,14 @@ packages:
     resolution: {integrity: sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@esotericsoftware/spine-canvas@4.3.7':
-    resolution: {integrity: sha512-pH5wrfbF3YbwmDKUDNTfMQpc4YEY3DKw4ne0nXCd/sdiPQSVzK/tOS5t3hgkC6mBk7sEeutt/8kG1gAbytQTWw==}
+  '@esotericsoftware/spine-canvas@4.3.13':
+    resolution: {integrity: sha512-L4iIkYUAYJxnzBfNqZTs5Be2HifgvaN2f/KM3aopIG0tbQYQQdAcgbjf5HsvwKgM65studN+/9gGIX3QoRLDIA==}
 
-  '@esotericsoftware/spine-core@4.3.7':
-    resolution: {integrity: sha512-adB/LcFivaAk3C03iBXXcXmpo7INZ6orWWhXnM5j0wOBHUhAGhDWJyBGuVcZzZXcvjJSKCh1SJ7BhmQH5AIDcw==}
+  '@esotericsoftware/spine-core@4.3.13':
+    resolution: {integrity: sha512-iGs/40qOWSQYicABebDzFSwFOS1Nsm0dCCS8sGqbpVuThRKdLYeI1cVJpmATSpEmtcetEABTmh97NoBnt7XLDw==}
 
-  '@esotericsoftware/spine-webgl@4.3.7':
-    resolution: {integrity: sha512-zBPtuK/4qrPISQQGnlF5qb+TyuX4xaY7s2Rd2nnVhf/Ox36vnGTAxFrO6gYbHvvAkggQcyulLKxL83i7Wm3zMQ==}
+  '@esotericsoftware/spine-webgl@4.3.13':
+    resolution: {integrity: sha512-VdMtDU03HcoUfLlt0FXBzSvh53nLS7Hej0ibJ3kCuDf5hftAsDAiwZhhS6Ze+5nDCGrkNzPmssZcT+96FoOjIQ==}
 
   '@gerrit0/mini-shiki@3.23.0':
     resolution: {integrity: sha512-bEMORlG0cqdjVyCEuU0cDQbORWX+kYCeo0kV1lbxF5bt4r7SID2l9bqsxJEM0zndaxpOUT7riCyIVEuqq/Ynxg==}
@@ -2461,15 +2461,15 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@esotericsoftware/spine-canvas@4.3.7':
+  '@esotericsoftware/spine-canvas@4.3.13':
     dependencies:
-      '@esotericsoftware/spine-core': 4.3.7
+      '@esotericsoftware/spine-core': 4.3.13
 
-  '@esotericsoftware/spine-core@4.3.7': {}
+  '@esotericsoftware/spine-core@4.3.13': {}
 
-  '@esotericsoftware/spine-webgl@4.3.7':
+  '@esotericsoftware/spine-webgl@4.3.13':
     dependencies:
-      '@esotericsoftware/spine-core': 4.3.7
+      '@esotericsoftware/spine-core': 4.3.13
 
   '@gerrit0/mini-shiki@3.23.0':
     dependencies:

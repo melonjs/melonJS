@@ -11,14 +11,42 @@ import { minify } from "./utils/string.js";
 import { captureValue, extractUniforms } from "./utils/uniforms.js";
 
 /**
- * a base GL Shader object
+ * a complete custom shader program. Historically a WebGL-only GLSL
+ * program (the class keeps its name for compatibility), since 20.0 it can
+ * carry one realization per GPU backend — a `{vertex, fragment}` GLSL
+ * pair for the WebGL renderer and/or a complete `wgsl` module for the
+ * WebGPU renderer — mirroring how {@link ShaderEffect} carries one body
+ * per shading language. The {@link GLShader#isWebGL} / {@link GLShader#isWebGPU}
+ * flags report which realizations exist; a renderer hosts the one it
+ * speaks and anything else degrades to the built-in shading (never fatal).
+ *
+ * ### The WGSL module contract (custom `Mesh` shaders)
+ *
+ * The `wgsl` source is a complete module hosted by the mesh batchers:
+ * entry points must be named **`vertex_main`** (`@vertex`) and
+ * **`fragment_main`** (`@fragment`), over the frozen mesh vertex layout —
+ * `@location(0) aVertex : vec3f`, `@location(1) aRegion : vec2f`,
+ * `@location(2) aColor : vec4f`, plus `@location(3) aNormal : vec3f` on
+ * the 48-byte `lit` layout. Bind groups (declare only what is read):
+ * group 0 `FrameUniforms {projection : mat4x4<f32>, lineWidth : f32}`,
+ * group 1 the mesh texture + sampler, group 2 the `Light3dBlock` (lit
+ * host only), group 3 `MeshUniforms {model, view : mat4x4<f32>,
+ * tint, params, emissive : vec4f}` (`params.x` = alpha cutout). The
+ * vertex stage owns the projection (`projection * view * model`) and must
+ * remap the GL-convention clip z: `(clip.z + clip.w) * 0.5`. WGSL
+ * validation is asynchronous and never throws — a failing module logs its
+ * errors once and the mesh falls back to the built-in shading.
  * @category Rendering
  */
 export default class GLShader {
 	/**
-	 * @param {WebGLRenderingContext} gl - the current WebGL rendering context
-	 * @param {string} vertex - a string containing the GLSL source code to set
-	 * @param {string} fragment - a string containing the GLSL source code to set
+	 * @param {WebGLRenderingContext} [gl] - the current WebGL rendering
+	 * context (`renderer.gl` — undefined on non-WebGL renderers, which
+	 * simply skips the GLSL realization)
+	 * @param {string|object} vertex - a string containing the GLSL vertex
+	 * source, OR a sources object `{vertex, fragment, wgsl, precision,
+	 * label}` carrying one realization per backend (any omittable)
+	 * @param {string} [fragment] - a string containing the GLSL fragment source
 	 * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
 	 * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
 	 * @example
@@ -41,13 +69,81 @@ export default class GLShader {
 	 *  )
 	 * // use the shader
 	 * myShader.bind();
+	 * @example
+	 * // a dual-backend custom mesh shader: the same object hosts on
+	 * // whichever GPU renderer is active (gl is undefined on WebGPU)
+	 * myMesh.shader = new me.GLShader(app.renderer.gl, {
+	 *     vertex: toonVertexGLSL,
+	 *     fragment: toonFragmentGLSL,
+	 *     wgsl: toonModuleWGSL,
+	 * });
 	 */
 	constructor(gl, vertex, fragment, precision) {
+		// object sources form: {vertex, fragment, wgsl, precision, label}
+		let wgsl;
+		let label;
+		if (typeof vertex === "object" && vertex !== null) {
+			const sources = vertex;
+			vertex = sources.vertex;
+			fragment = sources.fragment;
+			precision = sources.precision ?? precision;
+			wgsl = sources.wgsl;
+			label = sources.label;
+		}
+
 		/**
 		 * the active gl rendering context
 		 * @type {WebGLRenderingContext}
 		 */
 		this.gl = gl;
+
+		/**
+		 * `true` when this shader carries a WebGL realization: a
+		 * `{vertex, fragment}` GLSL pair compiled against a live context.
+		 * @type {boolean}
+		 * @readonly
+		 */
+		this.isWebGL =
+			gl != null && typeof vertex === "string" && typeof fragment === "string";
+
+		/**
+		 * `true` when this shader carries a WebGPU realization: a complete
+		 * `wgsl` module (see the class docs for the module contract).
+		 * @type {boolean}
+		 * @readonly
+		 */
+		this.isWebGPU = typeof wgsl === "string";
+
+		/**
+		 * the complete WGSL module source, when {@link GLShader#isWebGPU}
+		 * @type {string|undefined}
+		 */
+		this.wgsl = wgsl;
+
+		/**
+		 * optional debug label, carried onto the GPU shader module (shows
+		 * up in browser GPU error messages and profilers)
+		 * @type {string|undefined}
+		 */
+		this.label = label;
+
+		// flipped false when asynchronous WGSL validation reports errors —
+		// the mesh batchers then fall back to their built-in shading
+		this.wgslValid = true;
+
+		// per-host WGSL family registrations for the current device
+		// generation: {epoch, keys: Map<host key, family key>} — compared
+		// against the pipeline cache's epoch so a device loss re-registers
+		this._wgslRegistrations = { epoch: -1, keys: new Map() };
+
+		if (!this.isWebGL && !this.isWebGPU) {
+			// no realization at all (e.g. a GLSL-only asset loaded under a
+			// non-WebGL renderer): warn and stay inert — assigning the
+			// shader is harmless, hosts skip it and keep built-in shading
+			console.warn(
+				"GLShader: no usable realization — provide {vertex, fragment} GLSL sources with a WebGL context, and/or a complete `wgsl` module for the WebGPU renderer",
+			);
+		}
 
 		/**
 		 * `true` once {@link destroy} has been called. After this flag is
@@ -92,18 +188,26 @@ export default class GLShader {
 		// uniform writes are cached + replayed across a context cycle
 		this._uniformCache = Object.create(null);
 
-		// defer compile if constructed mid-suspended-window; replay handles it
-		if (gl.isContextLost()) {
-			this.suspended = true;
+		if (this.isWebGL) {
+			// defer compile if constructed mid-suspended-window; replay handles it
+			if (gl.isContextLost()) {
+				this.suspended = true;
+				this.program = null;
+				this.uniforms = null;
+				this.attributes = null;
+			} else {
+				this._compile();
+			}
+
+			// context lifecycle only concerns the GL program — a WGSL-only
+			// shader has nothing to tear down or rebuild
+			on(ONCONTEXT_LOST, this._onContextLost, this);
+			on(ONCONTEXT_RESTORED, this._onContextRestored, this);
+		} else {
 			this.program = null;
 			this.uniforms = null;
 			this.attributes = null;
-		} else {
-			this._compile();
 		}
-
-		on(ONCONTEXT_LOST, this._onContextLost, this);
-		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
 	}
 
 	/**
@@ -199,7 +303,8 @@ export default class GLShader {
 	 * Installs this shader program as part of current rendering state
 	 */
 	bind() {
-		if (this.destroyed || this.suspended) {
+		// program === null also covers shaders with no WebGL realization
+		if (this.destroyed || this.suspended || this.program === null) {
 			return;
 		}
 		this.gl.useProgram(this.program);
@@ -211,7 +316,9 @@ export default class GLShader {
 	 * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
 	 */
 	getAttribLocation(name) {
-		if (this.destroyed || this.suspended) {
+		// attributes === null also covers shaders with no WebGL realization
+		// — the same silent-no-op contract as bind()/setUniform()
+		if (this.destroyed || this.suspended || this.attributes === null) {
 			return -1;
 		}
 		const attr = this.attributes[name];
@@ -255,8 +362,10 @@ export default class GLShader {
 		}
 		this._uniformCache[name] = cached;
 
-		if (this.suspended) {
-			// deferred: replay handles the live write on restore
+		if (this.suspended || this.uniforms === null) {
+			// deferred: the restore replay handles the live write. A shader
+			// with no WebGL realization only caches — its WGSL side has no
+			// custom uniforms to receive the value (see the module contract)
 			return;
 		}
 
@@ -323,12 +432,13 @@ export default class GLShader {
 		if (this.destroyed) {
 			throw new Error("GLShader.clone: shader has been destroyed");
 		}
-		const copy = new GLShader(
-			this.gl,
-			this._sourceVertex,
-			this._sourceFragment,
-			this._precision,
-		);
+		const copy = new GLShader(this.gl, {
+			vertex: this._sourceVertex,
+			fragment: this._sourceFragment,
+			precision: this._precision,
+			wgsl: this.wgsl,
+			label: this.label,
+		});
 		// replay this shader's cached uniform values onto the clone (the same
 		// snapshot store the context-loss recovery replays from). When the
 		// clone is constructed mid-context-loss its program compiles deferred
@@ -337,11 +447,110 @@ export default class GLShader {
 		// uniforms (same guard the restore replay uses) so a name cached
 		// during an earlier suspended window can't make setUniform throw.
 		for (const name of Object.keys(this._uniformCache)) {
-			if (copy.suspended || typeof copy.uniforms[name] !== "undefined") {
+			if (
+				copy.suspended ||
+				copy.uniforms === null ||
+				typeof copy.uniforms[name] !== "undefined"
+			) {
 				copy.setUniform(name, this._uniformCache[name]);
 			}
 		}
 		return copy;
+	}
+
+	/**
+	 * Register this shader's WGSL module as a pipeline family for one
+	 * hosting mesh batcher, against that host's positional group-layout
+	 * list and frozen vertex layout. Registered once per host per device
+	 * generation; the module text is namespaced by the host key so the
+	 * same shader yields distinct families (distinct pipeline layouts) on
+	 * the unlit and lit hosts. Asynchronous WGSL validation errors flip
+	 * {@link GLShader#wgslValid} and the host falls back to its built-in
+	 * shading (warn-and-degrade, never fatal).
+	 * @param {object} cache - the WebGPU renderer's pipeline cache
+	 * @param {string} host - the hosting family's vertex-layout key
+	 * @param {GPUBindGroupLayout[]} bindGroupLayouts - the host's group list
+	 * @param {string} vertexLayoutKey - the host's registered vertex layout
+	 * @returns {string|null} the family key to pass to the pipeline cache's
+	 *   `get`, or null when the module failed validation on this device
+	 *   generation (the host then uses its built-in family)
+	 * @ignore
+	 */
+	registerWGSL(cache, host, bindGroupLayouts, vertexLayoutKey) {
+		// epoch first, invalid-gate second: a device loss replaces the cache
+		// (new epoch), and the fresh device gets a fresh validation verdict
+		// even for a shader that failed on the previous one
+		if (this._wgslRegistrations.epoch !== cache.epoch) {
+			this._wgslRegistrations = { epoch: cache.epoch, keys: new Map() };
+			this.wgslValid = true;
+		}
+		if (this.wgslValid === false) {
+			return null;
+		}
+		let key = this._wgslRegistrations.keys.get(host);
+		if (typeof key === "undefined") {
+			// namespace suffix LAST so compilation-error line numbers still
+			// match the authored module text
+			key = cache.registerShader(`${this.wgsl}\n// melonJS host: ${host}`, {
+				bindGroupLayouts,
+				vertexLayoutKey,
+				label: this.label ?? "melonJS custom mesh shader",
+			});
+			this._wgslRegistrations.keys.set(host, key);
+
+			const module = cache.modules?.[key];
+			if (typeof module?.getCompilationInfo === "function") {
+				module
+					.getCompilationInfo()
+					.then((info) => {
+						const errors = info.messages.filter((message) => {
+							return message.type === "error";
+						});
+						if (errors.length > 0) {
+							this.wgslValid = false;
+							console.warn(
+								`GLShader${this.label ? ` (${this.label})` : ""}: WGSL compilation failed — falling back to the built-in mesh shading\n${errors
+									.map((message) => {
+										return `  line ${message.lineNum}: ${message.message}`;
+									})
+									.join("\n")}`,
+							);
+						}
+					})
+					.catch(() => {});
+			}
+
+			// Pipeline-level containment: a module can compile CLEAN yet
+			// declare a binding absent from this host's pipeline layout —
+			// that error only surfaces at pipeline creation, and an invalid
+			// pipeline poisons every frame that records it (the whole
+			// submit fails). Build one representative pipeline inside an
+			// error scope; any validation error flips the same fallback.
+			const device = cache.device;
+			if (typeof device?.pushErrorScope === "function") {
+				device.pushErrorScope("validation");
+				try {
+					cache.get(key, "triangle-list", "none", true, "none", {
+						cullMode: "none",
+						frontFace: "ccw",
+					});
+				} catch {
+					/* surfaced through the scope below */
+				}
+				device
+					.popErrorScope()
+					.then((error) => {
+						if (error) {
+							this.wgslValid = false;
+							console.warn(
+								`GLShader${this.label ? ` (${this.label})` : ""}: WGSL module is incompatible with the mesh pipeline layout — falling back to the built-in mesh shading\n  ${error.message}`,
+							);
+						}
+					})
+					.catch(() => {});
+			}
+		}
+		return key;
 	}
 
 	/**
@@ -377,5 +586,12 @@ export default class GLShader {
 		this._sourceVertex = null;
 		this._sourceFragment = null;
 		this._uniformCache = null;
+
+		// WGSL side: the GPU shader modules are owned by the pipeline cache
+		// (shared with any other shader of the same text) — only drop the
+		// registrations and the module source
+		this.wgsl = undefined;
+		this.isWebGPU = false;
+		this._wgslRegistrations = { epoch: -1, keys: new Map() };
 	}
 }
