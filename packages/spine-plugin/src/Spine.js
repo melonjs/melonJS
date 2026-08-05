@@ -9,8 +9,9 @@ import * as spineWebGL from "@esotericsoftware/spine-webgl";
 import { Math, plugin, Renderable } from "melonjs";
 import { getManagedContext } from "./glContext.js";
 import SkeletonRenderer from "./SkeletonRenderer.js";
-import SpineBatcher from "./SpineBatcher.js";
 import { SpinePlugin } from "./SpinePlugin.js";
+import WebGLSpineBatcher from "./WebGLSpineBatcher.js";
+import WebGPUSpineBatcher from "./WebGPUSpineBatcher.js";
 
 // Spine 4.3 ships an official Y-down switch — every Spine integration that
 // targets a Y-down coordinate system does this.
@@ -123,8 +124,16 @@ export default class Spine extends Renderable {
 		}
 		const renderer = this.plugin.app.renderer;
 
+		// Branch on the renderer IDENTITY (`renderer.type`), not a capability
+		// flag: each branch consumes that backend's concrete machinery — the
+		// WebGL one compiles through `renderer.gl` and a managed context on
+		// the canvas, the WebGPU one records through the device and texture
+		// store — so "which backend is this" is the true requirement, and
+		// what the engine's own backend-detection convention (#1491) names.
 		/** @ignore */
-		this.isWebGL = renderer.WebGLVersion >= 1;
+		this.isWebGL = renderer.type === "WebGL2";
+		/** @ignore */
+		this.isWebGPU = renderer.type === "WebGPU";
 
 		if (this.isWebGL) {
 			this.runtime = spineWebGL;
@@ -133,7 +142,7 @@ export default class Spine extends Renderable {
 			const glContext = getManagedContext(renderer.getCanvas());
 			// register the Spine batcher with the melonJS renderer (once)
 			if (!renderer.batchers.has("spine")) {
-				renderer.addBatcher(new SpineBatcher(renderer), "spine");
+				renderer.addBatcher(new WebGLSpineBatcher(renderer), "spine");
 			}
 			this.spineBatcher = renderer.batchers.get("spine");
 
@@ -149,6 +158,16 @@ export default class Spine extends Renderable {
 			this.skeletonDebugRenderer = new this.runtime.SkeletonDebugRenderer(
 				glContext,
 			);
+		} else if (this.isWebGPU) {
+			// the canvas runtime supplies the image-backed asset classes
+			// (same identity the AssetManager loads with on this backend);
+			// rendering goes through the two-color WebGPU batcher instead
+			// of a skeleton renderer
+			this.runtime = spineCanvas;
+			if (!renderer.batchers.has("spine")) {
+				renderer.addBatcher(new WebGPUSpineBatcher(renderer), "spine");
+			}
+			this.spineBatcher = renderer.batchers.get("spine");
 		} else {
 			this.runtime = spineCanvas;
 			this.skeletonRenderer = new SkeletonRenderer(this.runtime);
@@ -182,11 +201,14 @@ export default class Spine extends Renderable {
 	 * @type {boolean}
 	 */
 	get debugRendering() {
-		return this.skeletonRenderer.debugRendering;
+		// no debug pipeline on the WebGPU path (yet) — reads as disabled
+		return this.skeletonRenderer?.debugRendering ?? false;
 	}
 
 	set debugRendering(value) {
-		this.skeletonRenderer.debugRendering = value;
+		if (typeof this.skeletonRenderer !== "undefined") {
+			this.skeletonRenderer.debugRendering = value;
+		}
 	}
 
 	/**
@@ -226,13 +248,16 @@ export default class Spine extends Renderable {
 		this.premultipliedAlpha = atlas.pages.some((page) => {
 			return page.pma;
 		});
-		this.skeletonRenderer.premultipliedAlpha = this.premultipliedAlpha;
+		if (typeof this.skeletonRenderer !== "undefined") {
+			this.skeletonRenderer.premultipliedAlpha = this.premultipliedAlpha;
+		}
 
 		// Instantiate a new skeleton based on the atlas and skeleton data.
 		this.skeleton = new this.runtime.Skeleton(skeletonData);
 
 		// auto-detect if the skeleton uses mesh attachments for canvas renderer
-		if (!this.isWebGL) {
+		// (the batched WebGL/WebGPU paths always render triangles)
+		if (!this.isWebGL && !this.isWebGPU) {
 			this.skeletonRenderer.triangleRendering = skeletonData.skins.some(
 				(skin) => {
 					return skin.getAttachments().some((entry) => {
@@ -302,8 +327,8 @@ export default class Spine extends Renderable {
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	scale(x, y = x) {
-		if (this.isWebGL) {
-			// WebGL: SpineBatcher ignores currentTransform, scale through root bone
+		if (this.isWebGL || this.isWebGPU) {
+			// batched paths ignore currentTransform — scale through root bone
 			this.root.pose.scaleX *= x;
 			this.root.pose.scaleY *= y;
 		}
@@ -395,8 +420,9 @@ export default class Spine extends Renderable {
 
 	/**
 	 * Draw this Spine object using the appropriate renderer.
-	 * If WebGL, it uses the melonJS SpineBatcher for two-color tinted rendering.
-	 * Otherwise, it falls back to the canvas skeleton renderer.
+	 * On the GPU backends it uses the melonJS spine batcher for two-color
+	 * tinted rendering (`WebGLSpineBatcher` / `WebGPUSpineBatcher`);
+	 * otherwise it falls back to the canvas skeleton renderer.
 	 *
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - A renderer instance.
 	 */
@@ -408,6 +434,17 @@ export default class Spine extends Renderable {
 		// apply melonJS tint to Spine skeleton color
 		const t = this.tint.toArray();
 		this.skeleton.color.set(t[0], t[1], t[2], this.skeleton.color.a);
+
+		if (this.isWebGPU) {
+			// switch to the Spine batcher via melonJS batcher system, then
+			// run spine-core's neutral geometry pass straight into it —
+			// full two-color tinting, one indexed draw per batch. (Debug
+			// rendering is not available on this backend yet.)
+			renderer.setBatcher("spine");
+			this.spineBatcher.drawSkeleton(this.skeleton, this.premultipliedAlpha);
+			this.spineBatcher.flush();
+			return;
+		}
 
 		if (this.isWebGL) {
 			// switch to the Spine batcher via melonJS batcher system

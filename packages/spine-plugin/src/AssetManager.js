@@ -19,8 +19,11 @@ export default class AssetManager {
 		 * the underlying Spine asset manager
 		 * @ignore
 		 */
+		// same renderer-identity dispatch as the Spine renderable: the WebGL
+		// backend → GL-texture-backed assets; anything else (WebGPU, Canvas)
+		// → the image-backed canvas asset classes
 		this.spineAssetManager =
-			renderer.WebGLVersion >= 1
+			renderer.type === "WebGL2"
 				? new spineWebGL.AssetManager(
 						// the shared canvas-backed managed context, so loaded
 						// GLTextures survive a WebGL context loss
