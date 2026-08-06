@@ -1,5 +1,10 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, Text, video } from "../src/index.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { Text } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+	requireWebGL,
+} from "./helpers/webgl-context.js";
 
 /**
  * Adversarial coverage of the 32-pixel text-canvas buckets (#1554):
@@ -10,15 +15,17 @@ import { Application, boot, Text, video } from "../src/index.js";
  * whose waste was multiplicative instead of ≤31px per axis.
  */
 describe("Text — 32px canvas buckets", () => {
-	let app;
+	// borrow the session's single shared renderer — specs must never boot
+	// their own Application into the shared page (context-budget hazard,
+	// see helpers/webgl-context.js)
+	let renderer;
 
 	beforeAll(async () => {
-		boot();
-		app = new Application(320, 240, {
-			parent: "screen",
-			renderer: video.CANVAS,
-		});
-		await app.init();
+		renderer = await getWebGLRenderer(320, 240);
+	});
+
+	afterAll(() => {
+		releaseWebGLRenderer();
 	});
 
 	const makeText = (str, size = 16) => {
@@ -34,7 +41,8 @@ describe("Text — 32px canvas buckets", () => {
 		return Math.ceil(n / 32) * 32;
 	};
 
-	it("the canvas lands exactly on the metric's 32px bucket (no power-of-two jumps)", () => {
+	it("the canvas lands exactly on the metric's 32px bucket (no power-of-two jumps)", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("Hello World");
 		const c = t.canvasTexture;
 		expect(c.width % 32).toBe(0);
@@ -46,7 +54,8 @@ describe("Text — 32px canvas buckets", () => {
 		expect(c.height - t.metrics.height).toBeLessThan(32);
 	});
 
-	it("property sweep: every string's canvas is bucket-exact and minimal", () => {
+	it("property sweep: every string's canvas is bucket-exact and minimal", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const strings = [
 			"a",
 			"ab",
@@ -73,7 +82,8 @@ describe("Text — 32px canvas buckets", () => {
 		}
 	});
 
-	it("a ticking counter stays in the SAME bucket: same dimensions, same canvas element", () => {
+	it("a ticking counter stays in the SAME bucket: same dimensions, same canvas element", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("Score: 10");
 		const c = t.canvasTexture;
 		const canvasEl = c.canvas;
@@ -89,7 +99,8 @@ describe("Text — 32px canvas buckets", () => {
 		}
 	});
 
-	it("crossing a bucket boundary grows to the NEXT bucket, not a power of two", () => {
+	it("crossing a bucket boundary grows to the NEXT bucket, not a power of two", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("x");
 		const first = t.canvasTexture.width;
 		// grow the string until the canvas is forced past 128px — under
@@ -107,7 +118,8 @@ describe("Text — 32px canvas buckets", () => {
 		expect(grown - t.metrics.width).toBeLessThan(32);
 	});
 
-	it("the canvas NEVER shrinks (grow-only hysteresis preserved)", () => {
+	it("the canvas NEVER shrinks (grow-only hysteresis preserved)", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("a much much longer string of text here");
 		const grownW = t.canvasTexture.width;
 		const grownH = t.canvasTexture.height;
@@ -118,7 +130,8 @@ describe("Text — 32px canvas buckets", () => {
 		expect(t.isDirty).toBe(true);
 	});
 
-	it("empty text never crashes and never resizes to zero", () => {
+	it("empty text never crashes and never resizes to zero", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("something");
 		const w = t.canvasTexture.width;
 		t.setText("");
@@ -128,7 +141,8 @@ describe("Text — 32px canvas buckets", () => {
 		expect(t.canvasTexture.width).toBeGreaterThan(0);
 	});
 
-	it("multiline growth buckets the HEIGHT independently of the width", () => {
+	it("multiline growth buckets the HEIGHT independently of the width", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("line");
 		const w = t.canvasTexture.width;
 		const h = t.canvasTexture.height;
@@ -139,7 +153,8 @@ describe("Text — 32px canvas buckets", () => {
 		expect(t.canvasTexture.height - t.metrics.height).toBeLessThan(32);
 	});
 
-	it("a huge font size still buckets tightly (no multiplicative blow-up)", () => {
+	it("a huge font size still buckets tightly (no multiplicative blow-up)", (ctx) => {
+		requireWebGL(ctx, renderer);
 		const t = makeText("BIG", 180);
 		const c = t.canvasTexture;
 		expect(c.width % 32).toBe(0);
