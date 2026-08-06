@@ -3,11 +3,23 @@ import { colorPool } from "../math/color.ts";
 /**
  * @import {Color} from "../math/color.ts";
  */
-import { nextPowerOfTwo } from "../math/math.ts";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
- * Shared render target for WebGL gradient textures.
+ * The gradient bake resolution: gradients are rasterized into a FIXED
+ * 256×256 shared target regardless of on-screen size and stretched by the
+ * destination quad — a gradient is piecewise-linear between its stops and
+ * the GPU interpolates linearly between texels, so a capped bake is
+ * visually equivalent to a full-size one. The fixed size means the shared
+ * target is allocated exactly once and never resized: every re-bake is a
+ * same-size texture update (the cheap path on every backend), and memory
+ * is capped at 256 KB instead of growing with the largest gradient drawn.
+ * @ignore
+ */
+const GRADIENT_BAKE_SIZE = 256;
+
+/**
+ * Shared render target for GPU gradient textures.
  * Reused across all Gradient instances to avoid GPU memory leaks.
  * @ignore
  */
@@ -15,6 +27,8 @@ let sharedRenderTarget = null;
 let sharedLastId = -1;
 let sharedLastX = NaN;
 let sharedLastY = NaN;
+let sharedLastW = NaN;
+let sharedLastH = NaN;
 let nextGradientId = 0;
 
 /**
@@ -151,49 +165,63 @@ export class Gradient {
 	}
 
 	/**
-	 * Render the gradient onto a canvas matching the given draw rect.
-	 * Uses the original gradient coordinates so the result matches Canvas 2D behavior.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - the active renderer (used to invalidate GPU texture)
+	 * Render the gradient into the fixed-resolution shared bake target for
+	 * the given draw rect. Uses the original gradient coordinates so the
+	 * result matches Canvas 2D behavior. Rects larger than the bake target
+	 * are rasterized scaled-down; the destination quad stretches them back,
+	 * which is visually equivalent (linear stop interpolation × linear
+	 * texture filtering). The returned `width`/`height` describe the region
+	 * of the canvas the caller must use as the drawImage SOURCE rect.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - the active renderer (used to invalidate the GPU texture)
 	 * @param {number} x - draw rect x
 	 * @param {number} y - draw rect y
 	 * @param {number} width - draw rect width
 	 * @param {number} height - draw rect height
-	 * @returns {HTMLCanvasElement|OffscreenCanvas} the rendered gradient canvas
+	 * @returns {{canvas: HTMLCanvasElement|OffscreenCanvas, width: number, height: number}} the shared gradient canvas + the used source-rect size
 	 * @ignore
 	 */
 	toCanvas(renderer, x, y, width, height) {
-		// use power-of-two dimensions for WebGL texture compatibility
-		const tw = nextPowerOfTwo(Math.max(1, Math.ceil(width)));
-		const th = nextPowerOfTwo(Math.max(1, Math.ceil(height)));
+		const w = Math.max(1, width);
+		const h = Math.max(1, height);
+		// bake 1:1 up to the target size, scaled-down beyond it
+		const sx = w > GRADIENT_BAKE_SIZE ? GRADIENT_BAKE_SIZE / w : 1;
+		const sy = h > GRADIENT_BAKE_SIZE ? GRADIENT_BAKE_SIZE / h : 1;
+		const sw = w * sx;
+		const sh = h * sy;
 
-		// skip if this gradient already rendered to the shared target at these coords
+		// skip if this gradient already rendered to the shared target for
+		// this exact rect (the target is fixed-size, so the RECT — not the
+		// canvas dimensions — is the identity of the last bake)
 		if (
 			sharedRenderTarget &&
 			sharedLastId === this._id &&
 			!this._dirty &&
 			sharedLastX === x &&
 			sharedLastY === y &&
-			sharedRenderTarget.width === tw &&
-			sharedRenderTarget.height === th
+			sharedLastW === w &&
+			sharedLastH === h
 		) {
 			this._renderTarget = sharedRenderTarget;
-			return this._renderTarget.canvas;
+			return { canvas: this._renderTarget.canvas, width: sw, height: sh };
 		}
 
-		// reuse the shared render target to avoid GPU memory leaks
+		// the shared target is allocated once and never resized — every
+		// bake is a same-size update, the cheap path on every backend
 		if (!sharedRenderTarget) {
-			sharedRenderTarget = new CanvasRenderTarget(tw, th);
-		} else if (
-			sharedRenderTarget.width !== tw ||
-			sharedRenderTarget.height !== th
-		) {
-			sharedRenderTarget.canvas.width = tw;
-			sharedRenderTarget.canvas.height = th;
+			sharedRenderTarget = new CanvasRenderTarget(
+				GRADIENT_BAKE_SIZE,
+				GRADIENT_BAKE_SIZE,
+			);
 		}
 		this._renderTarget = sharedRenderTarget;
 
 		const ctx = this._renderTarget.context;
-		ctx.clearRect(0, 0, tw, th);
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.clearRect(0, 0, GRADIENT_BAKE_SIZE, GRADIENT_BAKE_SIZE);
+
+		// bake through the scale so gradient coordinates stay in draw-rect
+		// (logical) space; the destination quad's stretch inverts it exactly
+		ctx.setTransform(sx, 0, 0, sy, 0, 0);
 
 		// create gradient with coordinates offset to the draw rect origin
 		const c = this.coords;
@@ -222,14 +250,21 @@ export class Gradient {
 		}
 
 		ctx.fillStyle = gradient;
-		ctx.fillRect(0, 0, tw, th);
+		// fill the WHOLE canvas (in logical units) so the padding beyond the
+		// used region carries the extended gradient — linear filtering at the
+		// source-rect edge then samples gradient-colored texels, not
+		// transparent ones (same edge behavior as the old full-canvas bake)
+		ctx.fillRect(0, 0, GRADIENT_BAKE_SIZE / sx, GRADIENT_BAKE_SIZE / sy);
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
 
 		this._dirty = false;
 		sharedLastId = this._id;
 		sharedLastX = x;
 		sharedLastY = y;
+		sharedLastW = w;
+		sharedLastH = h;
 		this._renderTarget.invalidate(renderer);
-		return this._renderTarget.canvas;
+		return { canvas: this._renderTarget.canvas, width: sw, height: sh };
 	}
 
 	/**

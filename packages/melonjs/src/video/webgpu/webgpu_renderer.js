@@ -2755,9 +2755,21 @@ export default class WebGPURenderer extends Renderer {
 	fillRect(x, y, width, height) {
 		if (this.currentGradient) {
 			// toCanvas() bakes the gradient through the Canvas 2D API and
-			// draws it as a textured quad — same path as the GL backend
-			const canvas = this.currentGradient.toCanvas(this, x, y, width, height);
-			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
+			// draws it as a textured quad — same path as the GL backend.
+			// The bake is fixed-resolution: the returned width/height are
+			// the SOURCE rect inside the shared canvas.
+			const baked = this.currentGradient.toCanvas(this, x, y, width, height);
+			this.drawImage(
+				baked.canvas,
+				0,
+				0,
+				baked.width,
+				baked.height,
+				x,
+				y,
+				width,
+				height,
+			);
 			return;
 		}
 		this.setBatcher("primitive");
