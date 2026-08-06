@@ -1,5 +1,5 @@
 /**
- * melonJS — WebGPU hello world (experimental backend) example.
+ * melonJS — WebGPU hello world example.
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */

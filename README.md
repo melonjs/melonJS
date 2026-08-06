@@ -47,18 +47,21 @@ Compatibility
 
 Graphics
 - Fast GPU renderers (WebGPU and WebGL 2) for desktop and mobile devices, with fallback to Canvas rendering
-- Extensible batcher system for custom rendering pipelines
+- Extensible batcher system for custom rendering pipelines, with backend-neutral vertex formats and draw topologies (declare a layout once, describe it to either GPU backend)
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option and frame animation
-- Built-in effects such as tinting, masking, and CSS-style blend modes (normal, additive, multiply, screen, darken, lighten)
+- Built-in effects such as tinting, masking, and CSS-style blend modes (normal, none, additive, multiply, screen, darken, lighten)
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
+- Hardware antialiasing (`antiAlias: true`) on both GPU backends — and it survives post-processing, since the offscreen targets a post-effect chain renders into are multisampled to match
 - Procedural noise textures: `Noise` (simplex/perlin/value/cellular, fBm / ridged / ping-pong fractal, domain warp; renderer-free and CPU-samplable for heightmaps, terrain, and spawn jitter) and `NoiseTexture2d` — bake a noise field into a sprite image, a `Gradient` color ramp, or a live-animated tangent-space normal map for lit water and surfaces; unified under a new `Texture2d` base alongside `TextureAtlas`
-- 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d` — ~30% faster mesh rendering with near-zero per-frame allocation (a re-drawn static mesh produces no GC garbage)
+- 3D mesh rendering with OBJ/MTL model loading, multi-material support, hardware depth testing, and perspective projection via `Camera3d` — retained-mode geometry, uploaded to the GPU once and re-drawn from there, so moving, rotating, scaling or re-tinting a mesh costs no vertex upload and no per-vertex CPU work at all
+- Mipmapped and anisotropically-filtered mesh textures on both GPU backends, so distant and grazing-angle geometry stops shimmering (opt out per mesh with `textureFilter: "nearest"` for crisp pixel-art models)
 - Lighting, in 2D and 3D:
     - **2D** — `Light2d` as a first-class `Renderable` (multiple dynamic lights, radial-gradient falloff, illumination-only mode, procedural rendering via `drawLight`), plus optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights
-    - **3D** — `Light3d` directional, point, spot and ambient lights, added to the world like `Light2d` (half-Lambert diffuse + ambient fill, runtime-manipulable for day/night), auto-loaded from a glTF scene's authored suns and lamps
-- Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support on both GPU backends: `ShaderEffect` for per-sprite fragment effects (GLSL and/or WGSL bodies) and complete custom mesh shader programs via `mesh.shader` (a dual-language `GLShader`: GLSL pair and/or WGSL module)
+    - **3D** — `Light3d` directional, point, spot and ambient lights, added to the world like `Light2d` (half-Lambert diffuse + ambient fill, quadratic falloff and cone angles on the punctual types, runtime-manipulable for day/night), auto-loaded from a glTF scene's authored suns and lamps
+    - up to **32 simultaneous lights** on either path, with light data travelling in a uniform buffer — a static light rig costs zero GPU state changes per frame
+- Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `addPostEffect()`, plus custom shader support on both GPU backends: `ShaderEffect` for per-sprite fragment effects (GLSL and/or WGSL bodies) and complete custom mesh shader programs via `mesh.shader` (a dual-language `GLShader`: GLSL pair and/or WGSL module)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text with built-in typewriter effect
 - Video sprite playback
@@ -116,7 +119,7 @@ Scenes
     - Shape based Tile collision support
 - glTF / GLB 3D scenes — load an authored 3D scene with `level.load(...)`, the same one call as a Tiled map
     - The whole scene loads at once — meshes, materials, cameras and lights — viewed under a `Camera3d`
-    - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool
+    - Automatically lit by the scene's authored lights — the sun plus any point/spot lamps set up in the authoring tool, each keeping its authored name so `getChildByName("Sun")` finds it for runtime tuning
     - Textured, solid-colored, and vertex-colored materials
     - Node animation — walk/idle/sprint characters, spinning pickups, doors, lifts — played through the same `setCurrentAnimation` / `play` / `pause` / `stop` API as a 2D `Sprite`
     - `.glb` and `.gltf` files, with embedded *or* external buffers & textures
@@ -128,7 +131,7 @@ Assets
 - Support for images, JSON, TMX/TSX, glTF / GLB 3D scenes, `.aseprite` / `.ase` binary, audio, video, binary and fonts
 
 Core
-- `Application` class as the modern entry point with built-in pause, resume, and `freeze()` (hit-stop) primitives
+- `Application` class as the modern entry point — construct it, then `await app.init()` (asynchronous since 20.0, so the WebGPU device can be acquired) — with built-in pause, resume, and `freeze()` (hit-stop) primitives
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tween effects with multiple easing functions (Quadratic, Cubic, Elastic, Bounce, etc.) and Bezier/Catmull-Rom interpolation
 - Transition effects
@@ -209,6 +212,9 @@ const app = new Application(1218, 562, {
     backgroundColor: "#202020",
 });
 
+// initialize it (builds the renderer and appends the canvas)
+await app.init();
+
 // set a gray background color
 app.world.backgroundColor.parseCSS("#202020");
 
@@ -224,6 +230,8 @@ app.world.addChild(new Text(609, 281, {
 ```
 > Simple hello world using melonJS
 
+> **Note:** since version 20.0, `await app.init()` is **required** after constructing the `Application`. The WebGPU backend — the default on WebGPU-capable browsers — acquires its GPU device asynchronously, so initialization had to become an async step; it resolves without suspending on the WebGL and Canvas backends. On 19.x the call is optional and this example works without it.
+
 Documentation
 -------------------------------------------------------------------------------
 
@@ -236,7 +244,7 @@ melonJS provides a plugin system allowing to extend the engine capabilities.
 Here is the list of official plugins maintained by the melonJS team:
 - [debug-plugin](https://github.com/melonjs/melonJS/tree/master/packages/debug-plugin) - a debug panel for inspecting game objects
 - [tiled-inflate-plugin](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) - enable loading and parsing of zlib, gzip and zstd compressed [Tiled](https://www.mapeditor.org/) maps
-- [spine-plugin](https://github.com/melonjs/melonJS/tree/master/packages/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations
+- [spine-plugin](https://github.com/melonjs/melonJS/tree/master/packages/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations, with a dedicated batcher on each renderer (WebGPU, WebGL and Canvas)
 - [capacitor-plugin](https://github.com/melonjs/melonJS/tree/master/packages/capacitor-plugin) - bridges [Capacitor](https://capacitorjs.com/)'s native lifecycle (pause/resume, hardware back-button, orientation lock, splash) for melonJS games wrapped as iOS / Android apps
 
 If you wish to develop your own plugin, we also provide a [plugin template](https://github.com/melonjs/plugin-template) to help you get started.

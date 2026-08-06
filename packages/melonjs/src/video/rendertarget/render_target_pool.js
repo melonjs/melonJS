@@ -17,7 +17,7 @@
  */
 export default class RenderTargetPool {
 	/**
-	 * @param {function(number, number): RenderTarget} factory - creates a RenderTarget with the given width and height
+	 * @param {function(number, number, boolean=): RenderTarget} factory - creates a RenderTarget with the given width and height; the third argument is `true` for CAPTURE slots (scene rasterization — may be multisampled) and `false` for ping-pong intermediates
 	 */
 	constructor(factory) {
 		/** @type {function(number, number): RenderTarget} */
@@ -52,7 +52,11 @@ export default class RenderTargetPool {
 	 */
 	get(index, width, height) {
 		if (!this._pool[index]) {
-			this._pool[index] = this._factory(width, height);
+			// even indices are CAPTURE targets (the scene rasterizes into
+			// them — factories may give those MSAA); odd indices are
+			// ping-pong intermediates (screen-aligned effect quads only,
+			// nothing to antialias — always single-sampled)
+			this._pool[index] = this._factory(width, height, index % 2 === 0);
 		} else {
 			this._pool[index].resize(width, height);
 		}

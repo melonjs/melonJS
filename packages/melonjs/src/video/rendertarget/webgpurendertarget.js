@@ -28,15 +28,28 @@ export default class WebGPURenderTarget extends RenderTarget {
 	 * @param {number} width - width in pixels
 	 * @param {number} height - height in pixels
 	 */
-	constructor(renderer, width, height) {
+	constructor(renderer, width, height, options = {}) {
 		super();
 		this.renderer = renderer;
 		this.width = 0;
 		this.height = 0;
+		/**
+		 * MSAA sample count for scene rasterization into this target
+		 * (1 = single-sampled). When > 1 the target owns a multisampled
+		 * color texture that passes rasterize into and resolve into
+		 * `texture` at every pass end — so anything sampling the target
+		 * always sees resolved pixels.
+		 * @type {number}
+		 */
+		this.sampleCount = options.sampleCount ?? 1;
 		/** @type {GPUTexture|null} */
 		this.texture = null;
 		/** @type {GPUTextureView|null} */
 		this.colorView = null;
+		/** the multisampled render half, when sampleCount > 1 @type {GPUTexture|null} */
+		this.msaaTexture = null;
+		/** @type {GPUTextureView|null} */
+		this.msaaView = null;
 		/**
 		 * bumped whenever the backing texture is reallocated — cached bind
 		 * groups referencing the old view key on this
@@ -81,6 +94,23 @@ export default class WebGPURenderTarget extends RenderTarget {
 				GPUTextureUsage.COPY_SRC,
 		});
 		this.colorView = this.texture.createView();
+		if (this.sampleCount > 1) {
+			if (this.msaaTexture !== null) {
+				this.renderer.retireTexture(this.msaaTexture);
+			}
+			// per-target (not the renderer's shared canvas MSAA texture):
+			// nested effect brackets interleave passes on DIFFERENT targets,
+			// and a mid-frame pass restart loads the stored samples back —
+			// sharing one multisampled texture would load another target's
+			this.msaaTexture = this.renderer.device.createTexture({
+				label: "melonJS render target msaa",
+				size: [width, height],
+				sampleCount: this.sampleCount,
+				format: this.renderer.preferredFormat,
+				usage: GPUTextureUsage.RENDER_ATTACHMENT,
+			});
+			this.msaaView = this.msaaTexture.createView();
+		}
 		this.generation++;
 	}
 
@@ -225,6 +255,11 @@ export default class WebGPURenderTarget extends RenderTarget {
 			this.renderer.retireTexture(this.texture);
 			this.texture = null;
 			this.colorView = null;
+		}
+		if (this.msaaTexture !== null) {
+			this.renderer.retireTexture(this.msaaTexture);
+			this.msaaTexture = null;
+			this.msaaView = null;
 		}
 		this.materialBindGroup = null;
 		this.width = 0;

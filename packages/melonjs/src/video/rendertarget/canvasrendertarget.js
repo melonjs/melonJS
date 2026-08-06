@@ -263,11 +263,13 @@ class CanvasRenderTarget extends RenderTarget {
 			// flush pending draws referencing the current texture data
 			renderer.flush();
 			renderer.setBatcher("quad");
-			// invalidate the previous corresponding texture so that it can reuploaded once changed
+			// mark the content stale so the next upload refreshes the pixels
+			// IN PLACE (same texture object — with immutable storage a
+			// same-shape re-upload is a pure texSubImage2D, no reallocation)
 			this.glTextureUnit = renderer.cache.getUnit(
 				renderer.cache.get(this.canvas),
 			);
-			renderer.currentBatcher.unbindTexture2D(null, this.glTextureUnit);
+			renderer.currentBatcher.markTextureDirty(this.glTextureUnit);
 		} else if (renderer.type === "WebGPU" && renderer.cache.has(this.canvas)) {
 			// drain pending vertices, then re-upload the canvas. The store
 			// gives the new pixels a fresh GPUTexture when draws recorded
