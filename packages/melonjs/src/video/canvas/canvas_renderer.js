@@ -449,18 +449,18 @@ export default class CanvasRenderer extends Renderer {
 			this._lightCache.set(light, entry);
 		}
 		const r2 = entry.radius * 2;
-		// `Gradient.toCanvas` renders into a shared `CanvasRenderTarget`
-		// (one per engine, reused across all gradients) and returns its
-		// canvas. `drawImage` with explicit src/dst rects crops the POT
-		// padding and stretches the circular gradient into the
-		// elliptical bounding box `(light.width × light.height)`.
-		const canvas = entry.gradient.toCanvas(this, 0, 0, r2, r2);
+		// `Gradient.toCanvas` renders into the fixed-resolution shared
+		// `CanvasRenderTarget` (one per engine, reused across all
+		// gradients). `drawImage` with the returned source rect crops the
+		// padding and stretches the circular gradient into the elliptical
+		// bounding box `(light.width × light.height)`.
+		const baked = entry.gradient.toCanvas(this, 0, 0, r2, r2);
 		this.drawImage(
-			canvas,
+			baked.canvas,
 			0,
 			0,
-			r2,
-			r2,
+			baked.width,
+			baked.height,
 			light.pos.x,
 			light.pos.y,
 			light.width,

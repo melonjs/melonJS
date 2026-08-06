@@ -1,6 +1,6 @@
 import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
-import { nextPowerOfTwo } from "../../math/math.ts";
+
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 import { resolveAnchorPoint } from "../anchorPoint.ts";
 import Renderable from "../renderable.js";
@@ -361,10 +361,16 @@ export default class Text extends Renderable {
 			true,
 		);
 
-		// round the offscreen canvas size to the next power of two
-		// (required for WebGL1, harmless for WebGL2/Canvas)
-		const width = nextPowerOfTwo(this.metrics.width);
-		const height = nextPowerOfTwo(this.metrics.height);
+		// Quantize the offscreen canvas size to 32-pixel buckets: small
+		// metric changes (a score ticking, typewriter text) land on the
+		// SAME canvas dimensions, so the re-bake stays a same-size texture
+		// update — the cheap path on every backend (a size change means
+		// respecifying GL storage / retiring the WebGPU texture). Coarser
+		// than exact sizing on purpose (hysteresis), far tighter than the
+		// old power-of-two rounding (waste is bounded at 31px per axis
+		// instead of up to 2× each).
+		const width = Math.ceil(this.metrics.width / 32) * 32;
+		const height = Math.ceil(this.metrics.height / 32) * 32;
 
 		// invalidate the texture
 		const renderer = this.parentApp?.renderer ?? game.renderer;

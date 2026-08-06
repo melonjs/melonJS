@@ -2498,9 +2498,22 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	fillRect(x, y, width, height) {
 		if (this._currentGradient) {
-			// toCanvas() calls invalidate() which flushes pending draws
-			const canvas = this._currentGradient.toCanvas(this, x, y, width, height);
-			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
+			// toCanvas() calls invalidate() which flushes pending draws.
+			// The bake is fixed-resolution: the returned width/height are the
+			// SOURCE rect inside the shared canvas (scaled-down for large
+			// rects), stretched back by the destination quad.
+			const baked = this._currentGradient.toCanvas(this, x, y, width, height);
+			this.drawImage(
+				baked.canvas,
+				0,
+				0,
+				baked.width,
+				baked.height,
+				x,
+				y,
+				width,
+				height,
+			);
 			return;
 		}
 		this.setBatcher("primitive");
