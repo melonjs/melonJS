@@ -712,21 +712,33 @@ export default class WebGPURenderer extends Renderer {
 		this.pendingStencilClear = false;
 		// every attachment of a pass must have identical dimensions AND one
 		// sample count — canvas passes are multisampled when antiAlias is
-		// on (resolving into the canvas view), offscreen targets never are
-		// (GL parity: only the default framebuffer is antialiased)
+		// on (resolving into the canvas view), and post-effect CAPTURE
+		// targets carry their own sample count (resolving into their
+		// sampleable texture) so MSAA survives the offscreen detour;
+		// ping-pong intermediates stay single-sampled
 		const [width, height] = this.getTargetSize();
-		const sampleCount = target === null ? this.canvasSampleCount : 1;
+		const sampleCount =
+			target === null ? this.canvasSampleCount : (target.sampleCount ?? 1);
 		this.createDepthTexture(width, height, sampleCount);
 		// every pipeline recorded into this pass must declare its count —
 		// the cache keys on it, so both variants coexist compiled
 		this.pipelineCache.sampleCount = sampleCount;
 		let colorAttachment;
 		if (sampleCount > 1) {
-			this.createMsaaColorTexture(width, height);
+			let msaaView;
+			if (target === null) {
+				this.createMsaaColorTexture(width, height);
+				msaaView = this.msaaColorView;
+			} else {
+				// the target owns its multisampled half (a shared one would
+				// hand another target's stored samples to a load-back when
+				// nested effect brackets interleave passes)
+				msaaView = target.msaaView;
+			}
 			colorAttachment = {
-				view: this.msaaColorView,
-				// resolved into the canvas view at every pass end; samples
-				// are stored so mid-frame restarts can load them back
+				view: msaaView,
+				// resolved into the sampleable view at every pass end;
+				// samples are stored so mid-frame restarts can load them back
 				resolveTarget: colorView,
 				loadOp: colorLoadOp ?? "load",
 				clearValue,
@@ -1137,8 +1149,14 @@ export default class WebGPURenderer extends Renderer {
 		savedProjection.copy(this.projectionMatrix);
 		this.effectPassDepth++;
 
-		this._renderTargetPool ??= new RenderTargetPool((w, h) => {
-			return new WebGPURenderTarget(this, w, h);
+		// capture targets rasterize the scene — under antiAlias they carry
+		// the pass sample count so MSAA composes with post-effects (the GL
+		// twin resolves via blitFramebuffer). Ping-pong intermediates draw
+		// screen-aligned effect quads only and stay single-sampled.
+		this._renderTargetPool ??= new RenderTargetPool((w, h, isCapture) => {
+			return new WebGPURenderTarget(this, w, h, {
+				sampleCount: isCapture === true ? this.canvasSampleCount : 1,
+			});
 		});
 		const rt = this._renderTargetPool.begin(
 			isCamera,

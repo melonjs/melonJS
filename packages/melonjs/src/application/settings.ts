@@ -107,10 +107,14 @@ export type ApplicationSettings = {
 
 	/**
 	 * whether to enable or not video scaling interpolation.
-	 * On the GPU backends this drives polygon-edge antialiasing —
-	 * **4× MSAA on WebGPU**, the context `antialias` flag on WebGL —
-	 * while texture sampling smoothness is controlled separately by
-	 * `textureFilter`.
+	 * On the GPU backends this drives polygon-edge antialiasing (up to
+	 * 4× MSAA) — on the canvas itself, and equally through post-effect
+	 * chains, whose scene capture targets are multisampled to match, so
+	 * adding a camera effect never switches edge smoothing off. Texture
+	 * sampling smoothness is controlled separately by `textureFilter`.
+	 * Multisampled capture targets cost GPU memory (roughly 30 bytes per
+	 * pixel at 4×, ~55 MB at 1080p on WebGL) — with `antiAlias: false`
+	 * no multisampled storage is ever allocated.
 	 * @default false
 	 */
 	antiAlias: boolean;

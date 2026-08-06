@@ -93,8 +93,18 @@ export default class WebGLRenderer extends Renderer {
 		 * @ignore
 		 */
 		// initialize the render target pool with a WebGL factory
-		this._renderTargetPool = new RenderTargetPool((w, h) => {
-			return new WebGLRenderTarget(this.gl, w, h);
+		// capture targets rasterize the scene — under antiAlias they get a
+		// multisampled render half resolved via blitFramebuffer, so MSAA
+		// composes with post-effects instead of silently turning off the
+		// moment a camera has one. Ping-pong intermediates stay 1×.
+		const msaaSamples =
+			this.settings.antiAlias === true
+				? Math.min(4, this.gl.getParameter(this.gl.MAX_SAMPLES))
+				: 0;
+		this._renderTargetPool = new RenderTargetPool((w, h, isCapture) => {
+			return new WebGLRenderTarget(this.gl, w, h, {
+				samples: isCapture === true ? msaaSamples : 0,
+			});
 		});
 
 		/**
@@ -1032,6 +1042,21 @@ export default class WebGLRenderer extends Renderer {
 		// copied this way samples reliably everywhere.
 		const batcher = this.setBatcher("quad");
 		const unit = batcher.maxBatchTextures - 1;
+
+		// a multisampled post-effect capture cannot be read directly
+		// (copyTex*Image2D from an MSAA framebuffer is INVALID_OPERATION) —
+		// resolve it and point the READ binding at the single-sampled half
+		// for the copy, then rebind the render half for continued drawing
+		const activeTarget =
+			this._effectPassDepth > 0
+				? this._renderTargetPool.getCaptureTarget()
+				: null;
+		const msaaActive = activeTarget?.renderFramebuffer ? activeTarget : null;
+		if (msaaActive) {
+			msaaActive.resolve();
+			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, msaaActive.framebuffer);
+		}
+
 		if (frame.glTexture === null) {
 			// first capture into this slot: copyTexImage2D allocates the RGB
 			// storage AND copies in one call
@@ -1049,6 +1074,11 @@ export default class WebGLRenderer extends Renderer {
 			// is valid and copies RGB from either an RGB or RGBA source.
 			batcher.bindTexture2D(frame.glTexture, unit, false);
 			gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, x, y, w, h);
+		}
+
+		if (msaaActive) {
+			// back to rasterizing into the multisampled half
+			msaaActive.bind();
 		}
 
 		// the scratch bind clobbered GL `unit` OUTSIDE the shared texture-cache

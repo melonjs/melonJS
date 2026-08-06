@@ -11,6 +11,25 @@ import { WebGLBatcher } from "./batcher.js";
  * Provides texture creation, binding, uploading, and deletion.
  * @category Rendering
  */
+/**
+ * Immutable-storage bookkeeping: `texStorage2D` allocations can never be
+ * respecified, so each GL texture's allocated shape is recorded here and a
+ * mismatching re-upload replaces the texture object outright. WeakMap so
+ * deleted textures drop their records with them.
+ * @type {WeakMap<WebGLTexture, {width: number, height: number, levels: number, format: number}>}
+ * @ignore
+ */
+const immutableStorage = new WeakMap();
+
+/**
+ * full mip chain length for a base size (immutable storage allocates the
+ * whole pyramid up front)
+ * @ignore
+ */
+function mipLevels(w, h) {
+	return Math.floor(Math.log2(Math.max(w, h))) + 1;
+}
+
 export class MaterialBatcher extends WebGLBatcher {
 	/**
 	 * Initialize the textured batcher
@@ -28,6 +47,18 @@ export class MaterialBatcher extends WebGLBatcher {
 		 * @ignore
 		 */
 		this.boundTextures = [];
+
+		/**
+		 * Units whose texture CONTENT changed since the last upload (a
+		 * canvas re-bake announced via `CanvasRenderTarget.invalidate`).
+		 * Consumed by {@link MaterialBatcher#uploadTexture}, which then
+		 * re-uploads INTO the existing texture — with immutable storage a
+		 * same-shape re-upload is a pure `texSubImage2D`, so a ticking
+		 * Text / gradient re-bake never re-allocates.
+		 * @type {Set<number>}
+		 * @ignore
+		 */
+		this.dirtyUnits = new Set();
 
 		/**
 		 * track the current sampler unit to avoid redundant gl.uniform1i calls
@@ -68,6 +99,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	 */
 	_onTextureCacheReset() {
 		this.boundTextures.length = 0;
+		this.dirtyUnits.clear();
 		this.currentTextureUnit = -1;
 		this.currentSamplerUnit = -1;
 	}
@@ -164,13 +196,61 @@ export class MaterialBatcher extends WebGLBatcher {
 		this.bindTexture2D(currentTexture, unit, flush);
 
 		// `bindTexture2D` skips the GL calls entirely when its bookkeeping says
-		// the texture is already bound and active — but the `texImage2D` below
-		// writes through whatever unit/binding is REALLY active in GL. Force
+		// the texture is already bound and active — but the uploads below
+		// write through whatever unit/binding is REALLY active in GL. Force
 		// both (uploads are a cold path) so a re-upload can never land on a
 		// foreign texture even if the tracked state went stale.
 		gl.activeTexture(gl.TEXTURE0 + unit);
 		gl.bindTexture(gl.TEXTURE_2D, currentTexture);
 		this.currentTextureUnit = unit;
+
+		// Immutable storage (`texStorage2D` + sized formats): allocate the
+		// complete texture — every mip level, explicit RGBA8 layout — once,
+		// and update contents with `texSubImage2D` thereafter. The driver
+		// then skips per-draw completeness validation (the texture is
+		// known-complete forever) and same-size re-uploads (video frames,
+		// Text/gradient re-bakes) are pure data copies — the same model as
+		// the WebGPU texture store. `TextureResource` sources own their
+		// upload call and keep classic mutable storage.
+		const resourceOwned =
+			pixels !== null && typeof pixels.upload === "function";
+		const compressed = pixels !== null && pixels.compressed === true;
+		if (!resourceOwned) {
+			const storageW = Math.max(1, w | 0);
+			const storageH = Math.max(1, h | 0);
+			const levels = compressed
+				? pixels.mipmaps.length
+				: mipmap === true
+					? mipLevels(storageW, storageH)
+					: 1;
+			const format = compressed ? pixels.format : gl.RGBA8;
+			let storage = immutableStorage.get(currentTexture);
+			if (
+				storage &&
+				(storage.width !== storageW ||
+					storage.height !== storageH ||
+					storage.levels !== levels ||
+					storage.format !== format)
+			) {
+				// immutable storage can never be respecified — a shape change
+				// replaces the texture object outright (the engine's stores
+				// already treat size changes as recreation on every backend)
+				gl.deleteTexture(currentTexture);
+				currentTexture = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, currentTexture);
+				this.boundTextures[unit] = currentTexture;
+				storage = undefined;
+			}
+			if (!storage) {
+				gl.texStorage2D(gl.TEXTURE_2D, levels, format, storageW, storageH);
+				immutableStorage.set(currentTexture, {
+					width: storageW,
+					height: storageH,
+					levels,
+					format,
+				});
+			}
+		}
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
@@ -179,7 +259,7 @@ export class MaterialBatcher extends WebGLBatcher {
 
 		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
 
-		if (pixels !== null && typeof pixels.upload === "function") {
+		if (resourceOwned) {
 			// `TextureResource` path: the resource owns its upload (raw
 			// buffer, future synthesized sources, etc.). Keeps every
 			// backend-specific upload call in one place per source type.
@@ -189,91 +269,62 @@ export class MaterialBatcher extends WebGLBatcher {
 			// `renderer.getContext()` result and the resource subclass
 			// implementing that backend would handle it.
 			pixels.upload(gl, gl.TEXTURE_2D);
-		} else if (pixels !== null && pixels.compressed === true) {
+		} else if (compressed) {
+			// immutable storage was allocated with exactly the authored
+			// levels, so the chain is inherently complete — the old
+			// TEXTURE_MAX_LEVEL cap is subsumed by the `levels` parameter
 			const mipmaps = pixels.mipmaps;
 			for (let i = 0; i < mipmaps.length; i++) {
-				gl.compressedTexImage2D(
+				gl.compressedTexSubImage2D(
 					gl.TEXTURE_2D,
 					i,
-					pixels.format,
+					0,
+					0,
 					mipmaps[i].width,
 					mipmaps[i].height,
-					0,
+					pixels.format,
 					mipmaps[i].data,
 				);
 			}
-			// Cap the sampled chain at what the asset actually carries:
-			// compressed sources are excluded from generateMipmap, so under
-			// ES3 completeness rules a mipmap min filter (the mesh path's
-			// trilinear upgrade) over a chain that stops short of 1×1 is
-			// MIPMAP-INCOMPLETE and samples opaque black. With the cap, a
-			// single-level DDS/PKM stays complete at level 0 and an
-			// authored multi-level chain becomes legally trilinear.
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, mipmaps.length - 1);
 		} else if (pixels === null) {
-			// allocation without data — srcOffset overload requires a view
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				w,
-				h,
-				0,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				null,
-			);
+			// allocation without data — WebGL guarantees zero-initialized
+			// storage, so texStorage2D alone is the blank texture
 		} else if (typeof pixels.byteLength !== "undefined") {
-			gl.texImage2D(
+			gl.texSubImage2D(
 				gl.TEXTURE_2D,
 				0,
-				gl.RGBA,
+				0,
+				0,
 				w,
 				h,
-				0,
 				gl.RGBA,
 				gl.UNSIGNED_BYTE,
 				pixels,
 				0,
-			);
-		} else if (
-			typeof globalThis.OffscreenCanvas !== "undefined" &&
-			pixels instanceof globalThis.OffscreenCanvas
-		) {
-			// WebGL2 accepts an
-			// OffscreenCanvas directly as a TexImageSource. The
-			// previous path went through `transferToImageBitmap()`,
-			// which is DESTRUCTIVE — it moves the bitmap out of the
-			// OffscreenCanvas and leaves the source blank, so any
-			// later re-upload (context loss, cache eviction, or
-			// simply a second emitter whose default particle texture
-			// happened to land at the same cache key) uploaded an
-			// empty texture. Reproduced as "ParticleEmitter sparks
-			// don't render under WebGL2" in the plinko-planck demo.
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				pixels,
 			);
 		} else {
-			gl.texImage2D(
+			// any TexImageSource (image, canvas, OffscreenCanvas, video,
+			// ImageBitmap): WebGL2's DOM overload of texSubImage2D uploads
+			// the source at its natural size into the allocated storage.
+			// (OffscreenCanvas deliberately NOT routed through
+			// transferToImageBitmap — that call is destructive and blanked
+			// re-uploads; see the plinko-planck particle regression.)
+			gl.texSubImage2D(
 				gl.TEXTURE_2D,
 				0,
-				gl.RGBA,
+				0,
+				0,
 				gl.RGBA,
 				gl.UNSIGNED_BYTE,
 				pixels,
 			);
 		}
 
-		// WebGL 2 mipmaps NPOT textures fine — no POT gate
+		// WebGL 2 mipmaps NPOT textures fine — no POT gate. generateMipmap
+		// fills the pre-allocated immutable chain in place.
 		if (
 			mipmap === true &&
-			(pixels === null ||
-				(pixels.compressed !== true && typeof pixels.upload !== "function"))
+			(pixels === null || (!compressed && !resourceOwned))
 		) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
@@ -359,6 +410,19 @@ export class MaterialBatcher extends WebGLBatcher {
 	 * @param {number} [unit] - Texture unit to unbind from
 	 * @returns {number} unit the unit number that was associated with the given texture
 	 */
+	/**
+	 * Announce that the SOURCE content behind `unit` changed (same object,
+	 * new pixels — a canvas re-bake): the next {@link MaterialBatcher#uploadTexture}
+	 * for it re-uploads into the existing texture in place instead of
+	 * discarding it. The allocation-preserving counterpart of
+	 * {@link MaterialBatcher#unbindTexture2D}.
+	 * @param {number} unit - the texture unit whose content is stale
+	 * @ignore
+	 */
+	markTextureDirty(unit) {
+		this.dirtyUnits.add(unit);
+	}
+
 	unbindTexture2D(texture, unit) {
 		if (typeof unit === "undefined") {
 			unit = this.boundTextures.indexOf(texture);
@@ -411,7 +475,11 @@ export class MaterialBatcher extends WebGLBatcher {
 		const unit = this.renderer.cache.getUnit(texture, wrap);
 		const texture2D = this.boundTextures[unit];
 
-		if (typeof texture2D === "undefined" || force) {
+		if (
+			typeof texture2D === "undefined" ||
+			force ||
+			this.dirtyUnits.delete(unit)
+		) {
 			// honor a resource-specified filter (e.g. tilemap index textures
 			// need NEAREST regardless of the global setting, or a Mesh's own
 			// `textureFilter`), otherwise fall back to the renderer-wide default
