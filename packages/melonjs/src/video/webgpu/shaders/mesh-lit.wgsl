@@ -25,10 +25,16 @@ struct MeshUniforms {
 	model : mat4x4<f32>,
 	view : mat4x4<f32>,
 	tint : vec4f,
-	// x = alpha cutout threshold (0 = disabled); y, z, w reserved
+	// x = alpha cutout threshold (0 = disabled), y = 1 when an opacity map
+	// is bound (0 = the second sampler is filler); z, w reserved
 	params : vec4f,
 	// self-illumination added AFTER lighting (r, g, b; w reserved)
 	emissive : vec4f,
+	// specular color (rgb) and exponent (w); w = 0 means no highlight
+	specular : vec4f,
+	// the camera's world position (xyz; w reserved), for the specular
+	// half-vector — nothing else in this shader needs it
+	eye : vec4f,
 };
 
 // One light, type inferred from sentinels (see std140.ts):
@@ -54,6 +60,11 @@ struct Light3dBlock {
 @group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
 @group(1) @binding(0) var uTexture : texture_2d<f32>;
 @group(1) @binding(1) var uSampler : sampler;
+// per-texel opacity (MTL map_d). When no map is bound this pair is filler —
+// the diffuse texture again — and `params.y` is 0, so its sample is weighted
+// away rather than branched around.
+@group(1) @binding(2) var uAlphaMap : texture_2d<f32>;
+@group(1) @binding(3) var uAlphaSampler : sampler;
 @group(2) @binding(0) var<uniform> uLights : Light3dBlock;
 @group(3) @binding(0) var<uniform> uMesh : MeshUniforms;
 
@@ -97,7 +108,13 @@ fn vertex_main(
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// sampled unconditionally, before the discard (uniform control flow)
-	let base = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	var base = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	// Per-texel opacity (MTL map_d), applied BEFORE the cutout so one
+	// material can cut out to the shape of a leaf rather than at a single
+	// threshold across the whole surface. Sampled unconditionally and
+	// WEIGHTED: with no map bound the second pair is filler, and this keeps
+	// the sample in uniform control flow (and identical to the GLSL twin).
+	base.a = base.a * mix(1.0, textureSample(uAlphaMap, uAlphaSampler, in.vRegion).r, uMesh.params.y);
 	// hard alpha cutout (glTF alphaMode MASK) — discard before any shading
 	// so cut-away texels cost nothing and never write depth
 	if (base.a < uMesh.params.x) {
@@ -112,6 +129,16 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	}
 	let n = in.vNormal / nLength;
 	var lit = uLights.ambient.rgb;
+	// Blinn-Phong specular, accumulated alongside the diffuse term. Gated on
+	// the exponent rather than the colour: `Ns` of 0 is the MTL format's "no
+	// highlight", and exporters happily write a non-black `Ks` next to it.
+	var specular = vec3f(0.0);
+	let shininess = uMesh.specular.w;
+	let hasSpecular = shininess > 0.0;
+	var viewDir = vec3f(0.0);
+	if (hasSpecular) {
+		viewDir = normalize(uMesh.eye.xyz - in.vWorldPos);
+	}
 	// clamped to the array size, not just taken on trust: if the block
 	// ever read as something other than what the writer put there, an
 	// unbounded trip count would also index out of range
@@ -145,9 +172,22 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 		// Lambert, which reads as harsh noon.
 		let ndl = dot(n, lightDir) * 0.5 + 0.5;
 		lit = lit + uLights.lights[i].colorInner.rgb * (ndl * ndl * atten);
+		if (hasSpecular) {
+			// masked by the UNWRAPPED Lambert term: half-Lambert lifts the
+			// shadowed side, and a highlight on a surface facing away from
+			// the light reads as a rendering error
+			let facing = max(dot(n, lightDir), 0.0);
+			let h = normalize(lightDir + viewDir);
+			let spec = pow(max(dot(n, h), 0.0), shininess);
+			specular = specular
+				+ uLights.lights[i].colorInner.rgb * (spec * facing * atten);
+		}
 	}
 
 	// emissive self-illuminates: added AFTER lighting so it glows at full
 	// strength regardless of the scene lights (neon, lava, glowing eyes)
-	return vec4f(base.rgb * lit + uMesh.emissive.rgb, base.a);
+	return vec4f(
+		base.rgb * lit + specular * uMesh.specular.rgb + uMesh.emissive.rgb,
+		base.a
+	);
 }

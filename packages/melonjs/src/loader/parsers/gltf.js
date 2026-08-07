@@ -2,6 +2,7 @@ import { level } from "../../level/level.js";
 import { transformedBounds } from "../../math/vertex.ts";
 import { gltfList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
+import { specularFromMetallicRoughness } from "./pbr.ts";
 
 /**
  * glTF 2.0 (.gltf / .glb) scene loader — Tier 1.
@@ -703,6 +704,24 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return undefined;
 	};
 
+	// Resolve material index -> `{ specular, shininess }` from the material's
+	// metallic/roughness factors (#1575). The mapping itself lives in
+	// `pbr.ts` because MTL's `Pr`/`Pm` extension describes the same concept
+	// and must not approximate it differently.
+	const materialSpecular = (materialIndex) => {
+		const pbr =
+			materialIndex !== undefined
+				? json.materials?.[materialIndex]?.pbrMetallicRoughness
+				: undefined;
+		// both factors default to 1 per the glTF spec — fully rough, which
+		// yields no highlight, so an asset declaring neither is untouched
+		return specularFromMetallicRoughness(
+			pbr?.roughnessFactor,
+			pbr?.metallicFactor,
+			pbr?.baseColorFactor ?? [1, 1, 1, 1],
+		);
+	};
+
 	// resolve material index -> alpha cutout threshold. glTF `alphaMode:
 	// "MASK"` is a hard cutout: a fragment is fully opaque where its alpha is
 	// >= `alphaCutoff` and fully discarded below it (foliage, fences,
@@ -830,6 +849,9 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 			// emissive color [r,g,b] (glTF emissiveFactor × emissive_strength), or
 			// undefined when the material doesn't self-illuminate
 			emissive: materialEmissive(prim.material),
+			// specular highlight approximated from metallic/roughness (#1575);
+			// a fully-rough material yields shininess 0 and no highlight
+			...materialSpecular(prim.material),
 		};
 	};
 

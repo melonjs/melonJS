@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Camera3d, InstancedMesh, loader, Mesh } from "../src/index.js";
-import { GPU_TEXTURE_CACHE_RESET, off, on } from "../src/system/event.ts";
+import { emit, GPU_TEXTURE_CACHE_RESET, off, on } from "../src/system/event.ts";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -282,21 +282,26 @@ describe("Mesh per-material textures (#1573)", () => {
 			const mesh = makeMesh();
 			drawOnce(mesh);
 
+			// Recorded at the DRAW, not at the bind: how many times the sampler
+			// uniform is touched per range is an implementation detail, but
+			// what it points at when each range is issued is the contract.
 			const batcher = renderer.currentBatcher;
-			const units = [];
-			const original = batcher.bindSamplerUnit;
-			batcher.bindSamplerUnit = function (unit) {
-				units.push(unit);
-				return original.call(this, unit);
+			const gl = renderer.gl;
+			const inLoop = [];
+			const original = gl.drawElements;
+			gl.drawElements = function (...args) {
+				inLoop.push(batcher.currentSamplerUnit);
+				return original.apply(this, args);
 			};
-			drawOnce(mesh);
-			delete batcher.bindSamplerUnit;
+			try {
+				drawOnce(mesh);
+			} finally {
+				gl.drawElements = original;
+			}
 
-			// three ranges' worth of sampler binds happen inside the draw loop,
-			// after the pre-pass that resolved them: the middle one must differ
-			// from its neighbours, and the third must return to the first's unit
-			const inLoop = units.slice(-3);
+			expect(inLoop).toHaveLength(3);
 			expect(inLoop[0]).not.toBe(inLoop[1]);
+			// the third range shares the first's map, so it returns to its unit
 			expect(inLoop[2]).toBe(inLoop[0]);
 			mesh.destroy();
 		});
@@ -473,8 +478,15 @@ describe("Mesh per-material textures (#1573)", () => {
 				off(GPU_TEXTURE_CACHE_RESET, countReset);
 				batcher.gl.drawElements = original;
 				cache.max_size = budget;
+				// This renderer is shared with every other spec in the session,
+				// so put its unit bookkeeping back the way the engine does:
+				// clearing the assignments without announcing it leaves each
+				// batcher's `boundTextures` claiming units the cache no longer
+				// considers assigned, and the next `getUnit` then hands one of
+				// them out to a different texture that never gets bound.
 				cache.units.clear();
 				cache.usedUnits.clear();
+				emit(GPU_TEXTURE_CACHE_RESET);
 			}
 
 			// the test is only meaningful if the budget actually ran out —

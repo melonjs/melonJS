@@ -239,6 +239,26 @@ export default class WebGPUPipelineCache {
 				{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
 			],
 		});
+		// The MESH family's group 1: the diffuse pair plus a second pair for
+		// the per-texel opacity map (MTL `map_d`, #1575). Always four
+		// bindings, even for a mesh with no alpha map — the batcher points
+		// the second pair at the shared white pixel then, which costs one
+		// extra bind-group entry and keeps every mesh pipeline on one
+		// layout instead of splitting the family in two.
+		//
+		// Widening the layout does not break the documented custom-WGSL mesh
+		// contract: a module may declare a SUBSET of its layout's bindings,
+		// so a custom mesh shader declaring only texture+sampler still
+		// validates against this.
+		this.meshMaterialLayout = device.createBindGroupLayout({
+			label: "melonJS mesh material layout",
+			entries: [
+				{ binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+				{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
+				{ binding: 2, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+				{ binding: 3, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
+			],
+		});
 		// the quad family's group 1: eight texture slots (bindings 0-7) and
 		// their samplers (8-15) — one draw segment spans up to eight
 		// distinct textures, selected per quad by aTextureId

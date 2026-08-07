@@ -496,7 +496,7 @@ const examples: {
 		path: "material-textures",
 		sourceDir: "materialTextures",
 		description:
-			"A crate whose wood, steel and label materials each carry their own diffuse map from the .mtl — resolved into one indexed draw range per texture.",
+			"Three props, three MTL material features: per-material diffuse maps on a crate, a Ks/Ns specular highlight on a chrome ball, and a map_d per-texel cutout on a perforated panel.",
 	},
 	{
 		component: <ExamplePlatformer />,

@@ -65,6 +65,7 @@ export function createMockWebGPURenderer() {
 
 	const pipelines = new Map();
 	const materialBindings = new Map();
+	const meshBindings = new Map();
 
 	const renderer = {
 		calls,
@@ -153,6 +154,7 @@ export function createMockWebGPURenderer() {
 			},
 			frameLayout: {},
 			materialLayout: {},
+			meshMaterialLayout: {},
 			multiMaterialLayout: {},
 			emptyLayout: {},
 			get(
@@ -237,6 +239,21 @@ export function createMockWebGPURenderer() {
 					materialBindings.set(texture, { texture });
 				}
 				return materialBindings.get(texture);
+			},
+			// the mesh family's four-binding group: one stable token per
+			// (diffuse, alpha) PAIR, so a test can tell "same diffuse, new
+			// opacity map" from "same material" the way the real store does
+			getMeshBinding(texture, alphaTexture, options) {
+				calls.textureBindings.push({ texture, alphaTexture, options });
+				let byAlpha = meshBindings.get(texture);
+				if (byAlpha === undefined) {
+					byAlpha = new Map();
+					meshBindings.set(texture, byAlpha);
+				}
+				if (!byAlpha.has(alphaTexture)) {
+					byAlpha.set(alphaTexture, { texture, alphaTexture });
+				}
+				return byAlpha.get(alphaTexture);
 			},
 			// one stable record per atlas object (the lit batcher composes
 			// combined bind groups from the raw view)

@@ -144,6 +144,13 @@ describe("WebGL VAO adversarial", () => {
 		expect(gl.getError()).toBe(gl.NO_ERROR);
 	}
 
+	// An explicit timeout, for the same reason the config raises
+	// `hookTimeout`: this file runs in well under a second on its own, but
+	// the shared browser session gets slower as specs accumulate, and a
+	// software rasterizer under load stretches several hundred GL ops by more
+	// than an order of magnitude. It is a slow test, not a hanging one — and
+	// cutting the iteration count to fit would trade real fuzz coverage for a
+	// round number.
 	it("fuzz: several hundred random ops leave every frozen layout byte-identical", (ctx) => {
 		requireWebGL(ctx);
 		const before = snapshotAll();
@@ -218,7 +225,7 @@ describe("WebGL VAO adversarial", () => {
 		expect(firstError).toBe("none");
 		expect(snapshotAll()).toEqual(before);
 		drawTruthSceneAndAssert();
-	});
+	}, 60000);
 
 	it("enabled-but-unconsumed attribute: 3-of-4 shader roundtrip stays pixel-correct", (ctx) => {
 		requireWebGL(ctx);

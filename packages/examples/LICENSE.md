@@ -51,18 +51,28 @@ courtesy to the original creator.
 
 Spacecraft 3D models (`craft_speederA`, `craft_speederB`, `craft_racer`,
 `craft_miner`) in `public/assets/multiMaterialMesh/` are taken from
-The Water Overworld example (`waterOverworld/`) uses the
-**"Free Pixel Art Side Scroller Asset Pack (32x32) Overworld"** published by
-**GandalfHardcore**, free to use:
-
-<https://gandalfhardcore.itch.io/free-pixel-art-sidescroller-asset-pack-32x32-overworld>
-
 **"Space Kit (2.0)"** published by Kenney:
 
 <https://www.kenney.nl/assets/space-kit>
 
 Released under **CC0 1.0 Universal (Public Domain Dedication)** — no
 attribution legally required, credited here as a courtesy.
+
+### `waterOverworld` example
+
+The Water Overworld example (`waterOverworld/`) uses the
+**"Free Pixel Art Side Scroller Asset Pack (32x32) Overworld"** published by
+**GandalfHardcore**, free to use:
+
+<https://gandalfhardcore.itch.io/free-pixel-art-sidescroller-asset-pack-32x32-overworld>
+
+### `materialTextures` example
+
+The models (`crate.obj`, `panel.obj`), their material files and every
+texture in `public/assets/materialTextures/` were authored for this
+repository — hand-written geometry and procedurally generated maps. No
+third-party assets, no attribution required. The ball re-uses the shared
+`assets/mesh3d/sphere.obj` primitive from the mesh3d example.
 
 ### `gltf` examples
 

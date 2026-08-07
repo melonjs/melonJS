@@ -1,0 +1,23 @@
+# A double-sided plate for the per-texel opacity demo (#1575). Two quads
+# back to back so the cut-outs read from either side without relying on
+# back-face culling being off.
+mtllib props.mtl
+
+v -1 -1  0
+v  1 -1  0
+v  1  1  0
+v -1  1  0
+
+vt 0 0
+vt 1 0
+vt 1 1
+vt 0 1
+
+vn 0 0  1
+vn 0 0 -1
+
+usemtl vent
+f 1/1/1 2/2/1 3/3/1
+f 1/1/1 3/3/1 4/4/1
+f 1/1/2 3/3/2 2/2/2
+f 1/1/2 4/4/2 3/3/2

@@ -31,15 +31,26 @@ struct MeshUniforms {
 	// per-draw tint × global alpha (r, g, b, a) — kept out of the vertex
 	// data so re-tinting never invalidates retained geometry
 	tint : vec4f,
-	// x = alpha cutout threshold (0 = disabled); y, z, w reserved
+	// x = alpha cutout threshold (0 = disabled), y = 1 when an opacity map
+	// is bound (0 = the second sampler is filler); z, w reserved
 	params : vec4f,
 	// self-illumination added on top (r, g, b; w reserved)
 	emissive : vec4f,
+	// specular color (rgb) and exponent (w); w = 0 means no highlight.
+	// Unused by the unlit tier, present so both tiers share one block size.
+	specular : vec4f,
+	// the camera's world position (xyz; w reserved)
+	eye : vec4f,
 };
 
 @group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
 @group(1) @binding(0) var uTexture : texture_2d<f32>;
 @group(1) @binding(1) var uSampler : sampler;
+// per-texel opacity (MTL map_d). When no map is bound this pair is filler —
+// the diffuse texture again — and `params.y` is 0, so its sample is weighted
+// away rather than branched around.
+@group(1) @binding(2) var uAlphaMap : texture_2d<f32>;
+@group(1) @binding(3) var uAlphaSampler : sampler;
 @group(3) @binding(0) var<uniform> uMesh : MeshUniforms;
 
 struct VSOut {
@@ -69,7 +80,13 @@ fn vertex_main(
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// sampled unconditionally, before the discard (uniform control flow)
-	let color = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	var color = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	// Per-texel opacity (MTL map_d), applied BEFORE the cutout so one
+	// material can cut out to the shape of a leaf rather than at a single
+	// threshold across the whole surface. Sampled unconditionally and
+	// WEIGHTED: with no map bound the second pair is filler, and this keeps
+	// the sample in uniform control flow (and identical to the GLSL twin).
+	color.a = color.a * mix(1.0, textureSample(uAlphaMap, uAlphaSampler, in.vRegion).r, uMesh.params.y);
 	// hard alpha cutout (glTF alphaMode MASK): drop cut texels so foliage /
 	// fences / decals read crisp without blending or sorting
 	if (color.a < uMesh.params.x) {

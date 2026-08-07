@@ -133,7 +133,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	bindGroupLayoutList(cache) {
 		return [
 			cache.frameLayout,
-			cache.materialLayout,
+			cache.meshMaterialLayout,
 			this.ensureLightsLayout(),
 			this.meshLayout,
 		];

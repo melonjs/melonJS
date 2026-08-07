@@ -47,6 +47,9 @@ const _TINT_RGBA = new Float32Array(4);
 // `uEmissive` add is a no-op. Never mutated.
 const _ZERO_EMISSIVE = new Float32Array(3);
 
+// scratch for the camera's world position, recomputed per draw that needs it
+const _EYE_POSITION = new Float32Array(3);
+
 /**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
@@ -99,6 +102,24 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentEmissiveR = -1;
 		this.currentEmissiveG = -1;
 		this.currentEmissiveB = -1;
+
+		// last `uShininess` / `uSpecular` pushed — -1 is impossible (valid
+		// range 0..inf), forcing the first set of a pass
+		this.currentShininess = -1;
+		this.currentSpecularR = -1;
+		this.currentSpecularG = -1;
+		this.currentSpecularB = -1;
+
+		// last `uAlphaMap` unit and `uHasAlphaMap` flag pushed; -1 is not a
+		// valid unit or flag, so the first mesh of a pass always sets both
+		this.currentAlphaMapUnit = -1;
+		this.currentHasAlphaMap = -1;
+
+		// last `uEyePosition` pushed. NaN never equals itself, so the first
+		// camera position of a pass always sets it whatever it is
+		this.currentEyeX = Number.NaN;
+		this.currentEyeY = Number.NaN;
+		this.currentEyeZ = Number.NaN;
 
 		// Retained geometry per mesh (model-space buffers uploaded once). A
 		// re-init means a new GL context or a fresh batcher life, so anything
@@ -843,6 +864,33 @@ export default class MeshBatcher extends MaterialBatcher {
 		if (uniforms.uViewMatrix !== undefined) {
 			shader.setUniform("uViewMatrix", this.viewMatrix);
 		}
+		if (uniforms.uEyePosition !== undefined) {
+			// The camera's world position, which the specular half-vector
+			// needs and nothing else in this shader does. Derived from the
+			// view matrix rather than plumbed from the camera so it stays
+			// correct for any caller that sets a view directly: a view is
+			// rigid, so its inverse translation is -Rᵀ·t — twelve
+			// multiply-adds against a full 4×4 inversion.
+			const v = this.viewMatrix.val;
+			const ex = -(v[0] * v[12] + v[1] * v[13] + v[2] * v[14]);
+			const ey = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
+			const ez = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
+			// the camera moves once a frame at most, while this runs once per
+			// lit mesh — compare before paying for the GL call
+			if (
+				ex !== this.currentEyeX ||
+				ey !== this.currentEyeY ||
+				ez !== this.currentEyeZ
+			) {
+				_EYE_POSITION[0] = ex;
+				_EYE_POSITION[1] = ey;
+				_EYE_POSITION[2] = ez;
+				shader.setUniform("uEyePosition", _EYE_POSITION);
+				this.currentEyeX = ex;
+				this.currentEyeY = ey;
+				this.currentEyeZ = ez;
+			}
+		}
 		if (uniforms.uModelMatrix !== undefined) {
 			shader.setUniform("uModelMatrix", modelMatrix);
 		}
@@ -937,6 +985,69 @@ export default class MeshBatcher extends MaterialBatcher {
 					);
 				}
 				this.trilinearTextures.add(glTexture);
+			}
+		}
+
+		// Per-texel opacity map (MTL `map_d`), on its own texture unit. Bound
+		// before the cutout uniform below because it feeds it: the map scales
+		// alpha, the cutout thresholds the result.
+		if (this.currentShader.uniforms.uHasAlphaMap !== undefined) {
+			const alphaMap = mesh.alphaMap;
+			// with no map the sampler points at the diffuse unit as filler and
+			// the weight is 0, so nothing samples an unbound texture unit
+			const alphaUnit =
+				alphaMap !== undefined
+					? this.uploadTexture(
+							alphaMap,
+							undefined,
+							undefined,
+							false,
+							true,
+							mesh.textureRepeat,
+						)
+					: unit;
+			// change-guarded like every other per-mesh uniform here: an
+			// unguarded pair costs two GL uniform calls on EVERY mesh draw,
+			// and the overwhelmingly common case is "no alpha map, again"
+			const hasAlphaMap = alphaMap !== undefined ? 1 : 0;
+			if (
+				alphaUnit !== this.currentAlphaMapUnit ||
+				hasAlphaMap !== this.currentHasAlphaMap
+			) {
+				this.currentShader.setUniform("uAlphaMap", alphaUnit);
+				this.currentShader.setUniform("uHasAlphaMap", hasAlphaMap);
+				this.currentAlphaMapUnit = alphaUnit;
+				this.currentHasAlphaMap = hasAlphaMap;
+			}
+			if (alphaMap !== undefined) {
+				// uploading the alpha map moved the active sampler — put the
+				// diffuse binding back before the draw reads it. Skipped when
+				// there is no map: nothing moved, and re-setting `uSampler`
+				// would double the sampler traffic of every ordinary mesh.
+				this.bindSamplerUnit(unit);
+			}
+		}
+
+		// Specular (MTL Ks + Ns). Guarded by the exponent, not the colour:
+		// `Ns` of 0 is the format's "no highlight" however bright `Ks` is.
+		if (this.currentShader.uniforms.uShininess !== undefined) {
+			const shininess = mesh.shininess || 0;
+			if (shininess !== this.currentShininess) {
+				this.currentShader.setUniform("uShininess", shininess);
+				this.currentShininess = shininess;
+			}
+			if (shininess > 0) {
+				const ks = mesh.specular ?? _ZERO_EMISSIVE;
+				if (
+					ks[0] !== this.currentSpecularR ||
+					ks[1] !== this.currentSpecularG ||
+					ks[2] !== this.currentSpecularB
+				) {
+					this.currentShader.setUniform("uSpecular", ks);
+					this.currentSpecularR = ks[0];
+					this.currentSpecularG = ks[1];
+					this.currentSpecularB = ks[2];
+				}
 			}
 		}
 
