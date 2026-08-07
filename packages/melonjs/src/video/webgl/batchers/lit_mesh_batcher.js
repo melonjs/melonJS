@@ -6,6 +6,7 @@ import { packMeshLights } from "../lighting/pack3d.ts";
 import { BLOCK3D_FLOATS, writeLight3dBlock } from "../lighting/std140.ts";
 import litFragment from "./../shaders/mesh-lit.frag";
 import litVertex from "./../shaders/mesh-lit.vert";
+import litInstancedVertex from "./../shaders/mesh-lit-instanced.vert";
 import MeshBatcher from "./mesh_batcher.js";
 
 // resolve the lit fragment shader's light-array size from the single source of
@@ -115,6 +116,17 @@ export default class LitMeshBatcher extends MeshBatcher {
 	/** use the lit (half-Lambert) shader. @ignore */
 	_shaderSources() {
 		return { vertex: litVertex, fragment: litFragmentResolved };
+	}
+
+	/**
+	 * The instanced lit pair. The fragment stage is the SAME shader the
+	 * non-instanced path uses — the per-instance emissive term inside it is
+	 * `#ifdef`-guarded, so the two programs differ only by the defines the
+	 * variant is compiled with, and the lighting loop exists in one place.
+	 * @ignore
+	 */
+	_instancedShaderSources() {
+		return { vertex: litInstancedVertex, fragment: litFragmentResolved };
 	}
 
 	/** push the 12-float lit vertex, appending the mesh's world-space normal. @ignore */

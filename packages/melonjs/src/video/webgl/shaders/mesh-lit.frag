@@ -51,6 +51,10 @@ in vec4 vColor;
 in vec2 vRegion;
 in vec3 vNormal;
 in vec3 vWorldPos;
+#ifdef INSTANCE_DATA
+// per-instance custom slot — read as emissive by this built-in shading
+in vec4 vInstanceData;
+#endif
 
 out vec4 fragColor;
 
@@ -105,5 +109,9 @@ void main(void) {
 
     // emissive self-illuminates: added AFTER lighting so it glows at full
     // strength regardless of the scene lights (neon, lava, glowing eyes).
-    fragColor = vec4(base.rgb * lit + uEmissive, base.a);
+    vec3 emissive = uEmissive;
+#ifdef INSTANCE_DATA
+    emissive += vInstanceData.rgb;
+#endif
+    fragColor = vec4(base.rgb * lit + emissive, base.a);
 }

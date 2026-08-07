@@ -40,6 +40,7 @@ import { DropTarget } from "./renderable/dragndrop.js";
 import Entity from "./renderable/entity/entity.js";
 import FrameAnimation from "./renderable/frameAnimation.js";
 import ImageLayer from "./renderable/imagelayer.js";
+import InstancedMesh from "./renderable/instanced_mesh.js";
 import Mesh from "./renderable/mesh.js";
 import NineSliceSprite from "./renderable/nineslicesprite.js";
 import Renderable from "./renderable/renderable.js";
@@ -202,6 +203,7 @@ export {
 	Gradient,
 	HologramEffect,
 	ImageLayer,
+	InstancedMesh,
 	InvertEffect,
 	isPortableTopology,
 	isTopology,
