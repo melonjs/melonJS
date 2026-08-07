@@ -2,6 +2,7 @@ import { game } from "../application/application.ts";
 import Camera3d from "../camera/camera3d.ts";
 import { Polygon } from "../geometries/polygon.ts";
 import { getImage, getMTL, getOBJ } from "./../loader/loader.js";
+import { specularFromMetallicRoughness } from "./../loader/parsers/pbr.ts";
 import { Color } from "../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -689,6 +690,24 @@ export default class Mesh extends Renderable {
 				if (ks !== undefined && mat.Ns > 0) {
 					this.specular = ks;
 					this.shininess = mat.Ns;
+				} else if (mat.Pr !== null && mat.Pr !== undefined) {
+					// The PBR extension (`Pr` / `Pm`), approximated onto the
+					// same terms — the shared mapping the glTF loader uses, so
+					// one material described in two formats shades the same.
+					//
+					// Only when `Ks`/`Ns` said nothing: an explicit specular
+					// states exactly what the artist wanted, where
+					// roughness/metalness merely implies it. Blender writes
+					// both blocks, so this precedence decides most real files.
+					const derived = specularFromMetallicRoughness(
+						mat.Pr,
+						mat.Pm ?? 0,
+						mat.Kd,
+					);
+					if (derived.specular !== undefined) {
+						this.specular = new Float32Array(derived.specular);
+						this.shininess = derived.shininess;
+					}
 				}
 				// MTL alpha map (map_d) — per-texel opacity
 				if (mat.map_d) {

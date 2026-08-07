@@ -14,6 +14,8 @@ const SUPPORTED_PROPS = new Set([
 	"Ks",
 	"Ns",
 	"map_d",
+	"Pr",
+	"Pm",
 	// ignored but harmless
 	"Ka",
 	"Ni",
@@ -36,8 +38,10 @@ const UNSUPPORTED_MAPS = new Set([
 /**
  * Parse a Wavefront MTL file into material data.
  * Supports: `newmtl`, `Kd` (diffuse color), `Ke` (emissive color), `Ks`/`Ns`
- * (specular color and exponent), `map_Kd` (diffuse texture), `map_d` (alpha
- * map), `d`/`Tr` (opacity/transparency).
+ * (specular color and exponent), `Pr`/`Pm` (the PBR roughness/metalness
+ * extension, approximated onto the specular terms when `Ks`/`Ns` are absent),
+ * `map_Kd` (diffuse texture), `map_d` (alpha map), `d`/`Tr`
+ * (opacity/transparency).
  *
  * Limitations:
  * - Ambient (`Ka`), optical density (`Ni`) and illumination model (`illum`) are parsed but ignored
@@ -90,6 +94,11 @@ export function parseMTL(text, basePath) {
 					// shade exactly as it did before specular existed
 					Ks: [0, 0, 0],
 					Ns: 0,
+					// the PBR extension. `null` rather than a default value:
+					// absent must be distinguishable from an authored 0, which
+					// means "mirror-smooth" for Pr and "non-metal" for Pm
+					Pr: null,
+					Pm: null,
 					d: 1.0,
 					map_Kd: null,
 					map_d: null,
@@ -136,6 +145,22 @@ export function parseMTL(text, basePath) {
 				// enough to turn specular on
 				if (current) {
 					current.Ns = parseFloat(parts[1]);
+				}
+				break;
+
+			case "Pr":
+				// PBR extension: roughness. Blender's OBJ exporter writes it
+				// (and `Pm`) for every material, so these are already in the
+				// assets people bring to the engine
+				if (current) {
+					current.Pr = parseFloat(parts[1]);
+				}
+				break;
+
+			case "Pm":
+				// PBR extension: metalness
+				if (current) {
+					current.Pm = parseFloat(parts[1]);
 				}
 				break;
 

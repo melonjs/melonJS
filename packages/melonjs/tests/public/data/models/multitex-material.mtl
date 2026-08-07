@@ -21,3 +21,19 @@ Ns 200
 
 newmtl plain
 Kd 0.9 0.9 0.9
+
+# `pbr` declares only the roughness/metalness extension — no Ks, no Ns — so
+# the specular terms have to be derived from it
+newmtl pbr
+Kd 0.85 0.55 0.25
+Pr 0.25
+Pm 1.0
+
+# `both` declares an explicit specular AND the extension. The explicit one
+# must win: it says what the artist wanted, the extension only implies it.
+newmtl both
+Kd 0.2 0.2 0.2
+Ks 0.1 0.9 0.1
+Ns 12
+Pr 0.1
+Pm 1.0

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { loader, Mesh } from "../src/index.js";
 import { parseMTL } from "../src/loader/parsers/mtl.js";
+import { specularFromMetallicRoughness } from "../src/loader/parsers/pbr.ts";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -31,7 +32,7 @@ describe("MTL specular and alpha maps (#1575)", () => {
 			type: "mtl",
 			src: "/data/models/multitex-material.mtl",
 		});
-		for (const name of ["alpha", "beta", "gamma", "plain"]) {
+		for (const name of ["alpha", "beta", "gamma", "plain", "pbr", "both"]) {
 			await loader.load({
 				name: `mat_${name}`,
 				type: "obj",
@@ -224,6 +225,61 @@ describe("MTL specular and alpha maps (#1575)", () => {
 			expect(glsl.default).toContain("mix(1.0,");
 			expect(wgsl.default).toContain("mix(1.0,");
 			expect(glsl.default).not.toContain("if (uHasAlphaMap)");
+		});
+	});
+	// ── the PBR extension (Pr / Pm) ─────────────────────────────────────
+
+	describe("Pr / Pm", () => {
+		it("parses the roughness/metalness extension", () => {
+			const materials = parseMTL("newmtl m\nPr 0.3\nPm 0.8", "");
+			expect(materials.m.Pr).toBe(0.3);
+			expect(materials.m.Pm).toBe(0.8);
+		});
+
+		it("ADVERSARIAL: absent reads as null, not as 0", () => {
+			// 0 is meaningful for both — mirror-smooth, and non-metal — so
+			// defaulting them to a number would make "declared nothing"
+			// indistinguishable from "declared a mirror"
+			const materials = parseMTL("newmtl m\nKd 1 1 1", "");
+			expect(materials.m.Pr).toBe(null);
+			expect(materials.m.Pm).toBe(null);
+		});
+
+		it("derives a highlight when Ks/Ns are absent", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = makeMesh("pbr");
+			expect(mesh.shininess).toBeGreaterThan(0);
+			// fully metallic, so it glints in its own base colour
+			expect(mesh.specular[0]).toBeCloseTo(0.85, 5);
+			expect(mesh.specular[1]).toBeCloseTo(0.55, 5);
+			mesh.destroy();
+		});
+
+		it("ADVERSARIAL: an explicit Ks/Ns WINS over the extension", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// Blender writes both blocks, so this precedence decides most real
+			// files. The explicit specular states what the artist wanted; the
+			// extension only implies it.
+			const mesh = makeMesh("both");
+			expect(mesh.shininess).toBe(12);
+			expect(mesh.specular[1]).toBeCloseTo(0.9, 5);
+			mesh.destroy();
+		});
+
+		it("ADVERSARIAL: a fully-rough Pr yields no highlight", () => {
+			// the same inert gate the glTF default relies on
+			const terms = specularFromMetallicRoughness(1, 1, [1, 1, 1, 1]);
+			expect(terms.shininess).toBe(0);
+			expect(terms.specular).toBeUndefined();
+		});
+
+		it("ADVERSARIAL: MTL and glTF derive the SAME terms from one pair", () => {
+			// the two formats describe one concept; approximating it twice is
+			// how they drift. Both call this helper — pinning it here means a
+			// second copy appearing anywhere would have to disagree with it.
+			const a = specularFromMetallicRoughness(0.25, 1, [0.85, 0.55, 0.25]);
+			const b = specularFromMetallicRoughness(0.25, 1, [0.85, 0.55, 0.25, 1]);
+			expect(a).toEqual(b);
 		});
 	});
 });

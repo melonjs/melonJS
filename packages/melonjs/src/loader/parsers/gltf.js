@@ -2,6 +2,7 @@ import { level } from "../../level/level.js";
 import { transformedBounds } from "../../math/vertex.ts";
 import { gltfList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
+import { specularFromMetallicRoughness } from "./pbr.ts";
 
 /**
  * glTF 2.0 (.gltf / .glb) scene loader — Tier 1.
@@ -703,54 +704,22 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		return undefined;
 	};
 
-	// Resolve material index -> `{ specular, shininess }`, approximating glTF's
-	// metallic/roughness onto the lit mesh path's Blinn-Phong term (#1575).
-	//
-	// This is a deliberate APPROXIMATION, not a PBR implementation: the lit
-	// path is stylized half-Lambert diffuse, not a microfacet BRDF, so the
-	// point is to recover the "is this surface glossy, and what colour does it
-	// glint" information every glTF asset already carries — Blender writes
-	// both factors by default — rather than to be energy-correct.
-	//
-	// - roughness -> exponent through the usual Blinn-Phong/GGX bridge,
-	//   `2 / a^4 - 2` for `a = roughness^2`. The glTF DEFAULT roughness of 1
-	//   lands on exactly 0, which is the "no highlight" gate: a material that
-	//   declares nothing, or declares itself fully rough, shades exactly as it
-	//   did before this existed. Clamped at the top because the exponent runs
-	//   away as roughness approaches 0, and a highlight narrower than a pixel
-	//   only aliases.
-	// - metallic -> tint. A dielectric reflects white-ish at 4% (the standard
-	//   F0), a metal reflects its own base colour: `mix(0.04, baseColor,
-	//   metallic)`. So chrome glints in its own hue while plaster gets a faint
-	//   sheen, which is the visible half of the distinction.
-	const MAX_SHININESS = 256;
-	const DIELECTRIC_F0 = 0.04;
+	// Resolve material index -> `{ specular, shininess }` from the material's
+	// metallic/roughness factors (#1575). The mapping itself lives in
+	// `pbr.ts` because MTL's `Pr`/`Pm` extension describes the same concept
+	// and must not approximate it differently.
 	const materialSpecular = (materialIndex) => {
 		const pbr =
 			materialIndex !== undefined
 				? json.materials?.[materialIndex]?.pbrMetallicRoughness
 				: undefined;
-		// Both factors default to 1 per the spec — fully rough, which yields
-		// no highlight, so an asset that declares neither is untouched. A
-		// malformed factor takes the same default rather than propagating:
-		// `NaN` would otherwise fail the `a > 0` test and land in the
-		// mirror-smooth branch below, turning a broken file into a chrome one.
-		const declared = (value) => {
-			return typeof value === "number" && Number.isFinite(value) ? value : 1;
-		};
-		const roughness = declared(pbr?.roughnessFactor);
-		const metallic = declared(pbr?.metallicFactor);
-		const a = roughness * roughness;
-		const shininess =
-			a > 0 ? Math.min(MAX_SHININESS, 2 / (a * a) - 2) : MAX_SHININESS;
-		if (!(shininess > 0)) {
-			return { specular: undefined, shininess: 0 };
-		}
-		const base = pbr?.baseColorFactor ?? [1, 1, 1, 1];
-		const mix = (channel) => {
-			return DIELECTRIC_F0 + ((base[channel] || 0) - DIELECTRIC_F0) * metallic;
-		};
-		return { specular: [mix(0), mix(1), mix(2)], shininess };
+		// both factors default to 1 per the glTF spec — fully rough, which
+		// yields no highlight, so an asset declaring neither is untouched
+		return specularFromMetallicRoughness(
+			pbr?.roughnessFactor,
+			pbr?.metallicFactor,
+			pbr?.baseColorFactor ?? [1, 1, 1, 1],
+		);
 	};
 
 	// resolve material index -> alpha cutout threshold. glTF `alphaMode:
