@@ -163,6 +163,11 @@ const ExampleMultiMaterialMesh = lazy(() =>
 		default: m.ExampleMultiMaterialMesh,
 	})),
 );
+const ExampleMaterialTextures = lazy(() =>
+	import("./examples/materialTextures/ExampleMaterialTextures").then((m) => ({
+		default: m.ExampleMaterialTextures,
+	})),
+);
 const ExamplePlatformer = lazy(() =>
 	import("./examples/platformer/ExamplePlatformer").then((m) => ({
 		default: m.ExamplePlatformer,
@@ -484,6 +489,14 @@ const examples: {
 		sourceDir: "multiMaterialMesh",
 		description:
 			"Rotating 3D models with multiple materials and per-mesh tinting — each material region picks up its diffuse color from the .mtl file, multiplied by a runtime tint.",
+	},
+	{
+		component: <ExampleMaterialTextures />,
+		label: "Per-material Textures",
+		path: "material-textures",
+		sourceDir: "materialTextures",
+		description:
+			"A crate whose wood, steel and label materials each carry their own diffuse map from the .mtl — resolved into one indexed draw range per texture.",
 	},
 	{
 		component: <ExamplePlatformer />,

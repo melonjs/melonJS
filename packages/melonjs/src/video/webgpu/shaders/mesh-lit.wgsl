@@ -104,7 +104,13 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 		discard;
 	}
 
-	let n = normalize(in.vNormal);
+	// see mesh-lit.frag: a `lit` mesh with no usable normals must degrade to
+	// unlit rather than normalize a zero vector to NaN and render black
+	let nLength = length(in.vNormal);
+	if (nLength < 1e-6) {
+		return vec4f(base.rgb + uMesh.emissive.rgb, base.a);
+	}
+	let n = in.vNormal / nLength;
 	var lit = uLights.ambient.rgb;
 	// clamped to the array size, not just taken on trust: if the block
 	// ever read as something other than what the writer put there, an

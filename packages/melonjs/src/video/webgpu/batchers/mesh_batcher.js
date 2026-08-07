@@ -271,7 +271,6 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		}
 		const frame = renderer.currentFrameBinding;
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
-		pass.setBindGroup(1, this.currentMaterial);
 		this.bindLights(pass);
 		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
 			this.uniformBinding.dynamicOffset,
@@ -279,7 +278,19 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		pass.setVertexBuffer(0, geometry.vertexBuffer);
 		pass.setVertexBuffer(1, instances.buffer);
 		pass.setIndexBuffer(geometry.indexBuffer, geometry.indexFormat);
-		pass.drawIndexed(geometry.indexCount, count);
+		const slices = mesh.textureGroups;
+		if (slices === undefined) {
+			pass.setBindGroup(1, this.currentMaterial);
+			pass.drawIndexed(geometry.indexCount, count);
+		} else {
+			// a multi-material prototype: every instance draws the same split
+			// (#1573), so each range is one instanced draw over the whole set
+			for (let i = 0; i < slices.length; i++) {
+				this.applyMeshMaterial(mesh, slices[i].texture);
+				pass.setBindGroup(1, this.currentMaterial);
+				pass.drawIndexed(slices[i].count, count, slices[i].start);
+			}
+		}
 
 		// stamp both halves: an edit later this frame must go to fresh buffers
 		geometry.lastDrawnFrameId = renderer.frameId;
@@ -416,15 +427,19 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * per-image atlas). A material change with vertices pending flushes
 	 * them under the previous binding.
 	 * @param {object} mesh - the mesh whose material should be applied
+	 * @param {TextureAtlas} [texture] - bind this texture instead of the mesh's
+	 * own — how a multi-material model's per-material `map_Kd` reaches the
+	 * sampler, one draw range at a time (#1573). The wrap override stays a
+	 * property of the mesh, not of the material group.
 	 * @ignore
 	 */
-	applyMeshMaterial(mesh) {
+	applyMeshMaterial(mesh, texture = mesh.texture) {
 		const renderer = this.renderer;
 		const filter =
-			typeof mesh.texture.filter === "string"
-				? mesh.texture.filter
+			typeof texture.filter === "string"
+				? texture.filter
 				: renderer.getDefaultTextureFilter();
-		const material = renderer.textureStore.getBinding(mesh.texture, {
+		const material = renderer.textureStore.getBinding(texture, {
 			repeat: mesh.textureRepeat,
 			// mesh textures sample a generated mip chain — trilinear
 			// minification keeps distant geometry from shimmering, while
@@ -517,22 +532,49 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {number} tint - tint color in UINT32 (argb) format
 	 */
 	addMesh(mesh, tint) {
+		this.updatePassState();
+
+		const slices = mesh.textureGroups;
+		if (slices === undefined) {
+			this.applyMeshMaterial(mesh);
+			this.setPlacementUniforms(IDENTITY_MATRIX, tint, mesh);
+			this.accumulateRange(mesh, 0, mesh.indices.length);
+			return;
+		}
+		// Multi-material with per-material textures (#1573): one accumulation
+		// pass per range. `applyMeshMaterial` flushes on a material change, so
+		// the previous range's vertices are recorded under the binding they
+		// were accumulated for — and the uniforms are re-armed after that
+		// flush, never before it.
+		for (let i = 0; i < slices.length; i++) {
+			this.applyMeshMaterial(mesh, slices[i].texture);
+			this.setPlacementUniforms(IDENTITY_MATRIX, tint, mesh);
+			this.accumulateRange(mesh, slices[i].start, slices[i].count);
+		}
+	}
+
+	/**
+	 * Accumulate one index range of a mesh into the batch, chunking triangles
+	 * across flushes as the vertex / index staging arrays fill.
+	 * @param {object} mesh - a Mesh with vertices, uvs, indices, texture
+	 * @param {number} from - first index to accumulate
+	 * @param {number} length - how many indices to accumulate
+	 * @ignore
+	 */
+	accumulateRange(mesh, from, length) {
 		const vertices = mesh.vertices;
 		const uvs = mesh.uvs;
 		const indices = mesh.indices;
 		const vertexColors = mesh.vertexColors;
-
-		this.updatePassState();
-		this.applyMeshMaterial(mesh);
-		this.setPlacementUniforms(IDENTITY_MATRIX, tint, mesh);
+		const until = from + length;
 
 		const maxVerts = this.vertexData.maxVertex;
 		const maxIndices = this.indexData.length;
 
 		ensureRemapCapacity(mesh.vertexCount);
 
-		let triIdx = 0;
-		while (triIdx < indices.length) {
+		let triIdx = from;
+		while (triIdx < until) {
 			const vertexData = this.vertexData;
 			const availVerts = maxVerts - vertexData.vertexCount;
 			const availIndices = maxIndices - this.indexCount;
@@ -547,7 +589,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 				continue;
 			}
 
-			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
+			const endIdx = Math.min(triIdx + maxTris * 3, until);
 
 			const baseOffset = vertexData.vertexCount;
 			const chunkIndices = beginChunk();
@@ -713,7 +755,10 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * and record one indexed draw, with placement supplied entirely by the
 	 * per-draw uniform snapshot. Unlike {@link WebGPUMeshBatcher#addMesh}
 	 * this accumulates nothing and never chunks — the whole mesh is one
-	 * draw regardless of size.
+	 * draw regardless of size, except for a multi-material model whose
+	 * materials carry different diffuse textures: that records one indexed
+	 * range per entry in {@link Mesh#textureGroups} (#1573), over the same
+	 * buffers, with only the group-1 material binding moving between them.
 	 * @param {object} mesh - the mesh to draw
 	 * @param {Matrix3d} modelMatrix - where the mesh sits in the world
 	 * @param {number} tint - tint colour in UINT32 (argb) format
@@ -746,14 +791,25 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		}
 		const frame = renderer.currentFrameBinding;
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
-		pass.setBindGroup(1, this.currentMaterial);
 		this.bindLights(pass);
 		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
 			this.uniformBinding.dynamicOffset,
 		]);
 		pass.setVertexBuffer(0, geometry.vertexBuffer);
 		pass.setIndexBuffer(geometry.indexBuffer, geometry.indexFormat);
-		pass.drawIndexed(geometry.indexCount);
+		const slices = mesh.textureGroups;
+		if (slices === undefined) {
+			pass.setBindGroup(1, this.currentMaterial);
+			pass.drawIndexed(geometry.indexCount);
+		} else {
+			for (let i = 0; i < slices.length; i++) {
+				// nothing is queued at this point, so the flush this may run is
+				// a no-op — it is here for the material tracking, not the flush
+				this.applyMeshMaterial(mesh, slices[i].texture);
+				pass.setBindGroup(1, this.currentMaterial);
+				pass.drawIndexed(slices[i].count, 1, slices[i].start);
+			}
+		}
 
 		// stamp: a version bump later this frame must go to fresh buffers
 		geometry.lastDrawnFrameId = renderer.frameId;

@@ -34,6 +34,11 @@ export class Plane extends Mesh {
 			width: settings.size,
 			height: settings.size,
 			cullBackFaces: true,
+			// OBJ models carry vertex normals since #1572 — authored `vn`
+			// where the file has them, generated from face geometry where it
+			// does not — so they shade against the modelled surface instead
+			// of reading flat under the scene lights.
+			lit: true,
 		});
 		// Mesh defaults anchor to (0.5, 0.5), but Renderable.preDraw
 		// applies `translate(-anchorPoint * width)` on top of the

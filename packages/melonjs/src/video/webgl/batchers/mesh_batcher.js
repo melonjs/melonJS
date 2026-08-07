@@ -47,6 +47,10 @@ const _TINT_RGBA = new Float32Array(4);
 // `uEmissive` add is a no-op. Never mutated.
 const _ZERO_EMISSIVE = new Float32Array(3);
 
+// scratch for the texture units a multi-material mesh's draw ranges resolved to
+// (#1573) — refilled per split draw, never held across one
+const _SLICE_UNITS = [];
+
 /**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
@@ -446,7 +450,11 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * issue one indexed draw, with placement supplied entirely by uniforms.
 	 *
 	 * Unlike {@link addMesh} this accumulates nothing and never chunks — the
-	 * whole mesh is one draw call regardless of size.
+	 * whole mesh is one draw call regardless of size, except for a
+	 * multi-material model whose materials carry different diffuse textures:
+	 * that draws one indexed range per entry in {@link Mesh#textureGroups}
+	 * (#1573), over the same buffers, with only the sampler moving between
+	 * them.
 	 * @param {object} mesh - the mesh to draw
 	 * @param {Matrix3d} modelMatrix - where the mesh sits in the world
 	 * @param {number} tint - tint colour in UINT32 (argb) format
@@ -461,12 +469,30 @@ export default class MeshBatcher extends MaterialBatcher {
 
 		this.updatePassState();
 
-		this.applyMeshMaterial(mesh);
+		const slices = mesh.textureGroups;
+		const units =
+			slices === undefined ? null : this.bindSliceTextures(mesh, slices);
+		if (slices === undefined) {
+			this.applyMeshMaterial(mesh);
+		}
 		this.setPlacementUniforms(modelMatrix, tint);
 
 		const geometry = this.retainedGeometryFor(mesh);
 		geometry.bind();
-		gl.drawElements(this.mode, geometry.indexCount, geometry.indexType, 0);
+		if (slices === undefined) {
+			gl.drawElements(this.mode, geometry.indexCount, geometry.indexType, 0);
+		} else {
+			const indexBytes = geometry.indexType === gl.UNSIGNED_INT ? 4 : 2;
+			for (let i = 0; i < slices.length; i++) {
+				this.bindSamplerUnit(units[i]);
+				gl.drawElements(
+					this.mode,
+					slices[i].count,
+					geometry.indexType,
+					slices[i].start * indexBytes,
+				);
+			}
+		}
 
 		// hand the batcher's own vertex state back, so a subsequent
 		// accumulated draw uploads and draws through its buffers, not these
@@ -676,18 +702,39 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.useShader(this.instancedShaderFor(mesh.instanceLayout));
 
 		this.updatePassState();
-		this.applyMeshMaterial(mesh);
+		const slices = mesh.textureGroups;
+		const units =
+			slices === undefined ? null : this.bindSliceTextures(mesh, slices);
+		if (slices === undefined) {
+			this.applyMeshMaterial(mesh);
+		}
 		this.setPlacementUniforms(modelMatrix, tint);
 
 		const { geometry, state } = this.instancedStateFor(mesh);
 		state.vertexState.bind();
-		gl.drawElementsInstanced(
-			this.mode,
-			geometry.indexCount,
-			geometry.indexType,
-			0,
-			count,
-		);
+		if (slices === undefined) {
+			gl.drawElementsInstanced(
+				this.mode,
+				geometry.indexCount,
+				geometry.indexType,
+				0,
+				count,
+			);
+		} else {
+			// a multi-material prototype: every instance draws the same split
+			// (#1573), so each range is one instanced draw over the whole set
+			const indexBytes = geometry.indexType === gl.UNSIGNED_INT ? 4 : 2;
+			for (let i = 0; i < slices.length; i++) {
+				this.bindSamplerUnit(units[i]);
+				gl.drawElementsInstanced(
+					this.mode,
+					slices[i].count,
+					geometry.indexType,
+					slices[i].start * indexBytes,
+					count,
+				);
+			}
+		}
 
 		// Hand the default shader and this batcher's own vertex state back.
 		// Both matter: `bind()` only restores the default program when the
@@ -812,32 +859,28 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * Shared by the accumulated and retained draw paths so material changes
 	 * take effect immediately either way, without touching geometry.
 	 * @param {object} mesh - the mesh whose material should be applied
+	 * @param {TextureAtlas} [texture] - bind this texture instead of the mesh's
+	 * own — how a multi-material model's per-material `map_Kd` reaches the
+	 * sampler, one draw range at a time (#1573). Everything else here is a
+	 * property of the mesh, not of the material group.
+	 * @returns {number} the texture unit the material landed on
 	 * @ignore
 	 */
-	applyMeshMaterial(mesh) {
+	applyMeshMaterial(mesh, texture = mesh.texture) {
 		// upload and activate the texture. The mesh's own `textureRepeat`
 		// (when set) is threaded through as a per-use wrap override — sampler
 		// state per mesh, never a mutation of the shared per-image atlas
 		// (#1503). The unit cache keys by `(source, repeat)`, so meshes with
 		// different wraps over one image coexist on distinct GL textures.
 		const unit = this.uploadTexture(
-			mesh.texture,
+			texture,
 			undefined,
 			undefined,
 			false,
 			true,
 			mesh.textureRepeat,
 		);
-		// guarded like every other per-mesh uniform below: a custom mesh
-		// shader that never samples the texture (vertex colors only) does
-		// not declare `uSampler`, and setUniform throws on unknown names
-		if (
-			unit !== this.currentSamplerUnit &&
-			this.currentShader.uniforms?.uSampler !== undefined
-		) {
-			this.currentShader.setUniform("uSampler", unit);
-			this.currentSamplerUnit = unit;
-		}
+		this.bindSamplerUnit(unit);
 
 		// Mesh textures sample their mip chain: `createTexture2D` already
 		// runs `generateMipmap` for every plain image upload, but the min
@@ -927,23 +970,91 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentEmissiveG = eg;
 			this.currentEmissiveB = eb;
 		}
+		return unit;
+	}
+
+	/**
+	 * Point `uSampler` at a texture unit, if it moved and if the current
+	 * shader has a sampler at all — a custom mesh shader that never samples
+	 * (vertex colours only) declares none, and `setUniform` throws on an
+	 * unknown name.
+	 * @param {number} unit - the texture unit to sample from
+	 * @ignore
+	 */
+	bindSamplerUnit(unit) {
+		if (
+			unit !== this.currentSamplerUnit &&
+			this.currentShader.uniforms?.uSampler !== undefined
+		) {
+			this.currentShader.setUniform("uSampler", unit);
+			this.currentSamplerUnit = unit;
+		}
+	}
+
+	/**
+	 * Bind the texture of every entry in a mesh's {@link Mesh#textureGroups}
+	 * and collect the units they landed on, so a split draw has nothing left
+	 * to change between ranges but the sampler uniform.
+	 *
+	 * This runs *before* the geometry is bound on purpose: uploading a
+	 * texture can flush the batcher and rebind `ARRAY_BUFFER`, neither of
+	 * which is safe between binding a retained vertex array and the draws
+	 * that read from it.
+	 * @param {object} mesh - the mesh being drawn
+	 * @param {Array<object>} slices - its `textureGroups`
+	 * @returns {number[]} one texture unit per slice (a shared scratch array — read it before the next call)
+	 * @ignore
+	 */
+	bindSliceTextures(mesh, slices) {
+		const units = _SLICE_UNITS;
+		units.length = 0;
+		for (let i = 0; i < slices.length; i++) {
+			units.push(this.applyMeshMaterial(mesh, slices[i].texture));
+		}
+		return units;
 	}
 
 	addMesh(mesh, tint) {
+		this.updatePassState();
+
+		const slices = mesh.textureGroups;
+		if (slices === undefined) {
+			this.applyMeshMaterial(mesh);
+			// Placement uniforms. The view transform and the tint used to be
+			// baked into every vertex on the CPU; they are uniforms now, so the
+			// vertex data depends only on the geometry itself. This path (2D
+			// camera / pre-projected vertices) supplies an identity model
+			// matrix — the vertices already sit where they belong.
+			this.setPlacementUniforms(_IDENTITY_MATRIX, tint);
+			this.accumulateRange(mesh, 0, mesh.indices.length);
+			return;
+		}
+		// Multi-material with per-material textures (#1573): one accumulation
+		// pass per range. `applyMeshMaterial` flushes on a texture change, so
+		// the previous range's vertices land under the texture they were
+		// accumulated for — and the uniforms are re-armed after that flush,
+		// never before it.
+		for (let i = 0; i < slices.length; i++) {
+			this.applyMeshMaterial(mesh, slices[i].texture);
+			this.setPlacementUniforms(_IDENTITY_MATRIX, tint);
+			this.accumulateRange(mesh, slices[i].start, slices[i].count);
+		}
+	}
+
+	/**
+	 * Accumulate one index range of a mesh into the batch, chunking triangles
+	 * across flushes as the vertex / index buffers fill.
+	 * @param {object} mesh - a Mesh with vertices, uvs, indices, texture
+	 * @param {number} from - first index to accumulate
+	 * @param {number} length - how many indices to accumulate
+	 * @ignore
+	 */
+	accumulateRange(mesh, from, length) {
 		const vertices = mesh.vertices;
 		const uvs = mesh.uvs;
 		const indices = mesh.indices;
 		const vertexColors = mesh.vertexColors;
-
-		this.updatePassState();
-		this.applyMeshMaterial(mesh);
-
-		// Placement uniforms. The view transform and the tint used to be baked
-		// into every vertex on the CPU; they are uniforms now, so the vertex
-		// data depends only on the geometry itself. This path (2D camera /
-		// pre-projected vertices) supplies an identity model matrix — the
-		// vertices already sit where they belong.
-		this.setPlacementUniforms(_IDENTITY_MATRIX, tint);
+		const until = from + length;
 
 		const maxVerts = this.vertexData.maxVertex;
 		const maxIndices = this.indexBuffer.data.length;
@@ -953,8 +1064,8 @@ export default class MeshBatcher extends MaterialBatcher {
 		ensureRemapCapacity(mesh.vertexCount);
 
 		// process triangles in chunks that fit the buffer
-		let triIdx = 0;
-		while (triIdx < indices.length) {
+		let triIdx = from;
+		while (triIdx < until) {
 			// figure out how many triangles fit in the current batch
 			const vertexData = this.vertexData;
 			const availVerts = maxVerts - vertexData.vertexCount;
@@ -970,7 +1081,7 @@ export default class MeshBatcher extends MaterialBatcher {
 				continue;
 			}
 
-			const endIdx = Math.min(triIdx + maxTris * 3, indices.length);
+			const endIdx = Math.min(triIdx + maxTris * 3, until);
 
 			// build a local vertex remap for this chunk (shared reused
 			// scratch — see gpu/meshchunk.ts). Capture the base offset

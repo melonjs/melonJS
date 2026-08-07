@@ -1,0 +1,11 @@
+newmtl alpha
+Kd 1.0 0.2 0.2
+
+newmtl beta
+Kd 0.2 1.0 0.2
+
+newmtl gamma
+Kd 0.2 0.2 1.0
+
+newmtl plain
+Kd 0.9 0.9 0.9

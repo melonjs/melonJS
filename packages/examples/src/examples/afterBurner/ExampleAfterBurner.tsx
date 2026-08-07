@@ -26,10 +26,13 @@ import {
 	Application,
 	audio,
 	Camera3d,
+	Color,
 	event,
 	input,
+	Light3d,
 	loader,
 	state,
+	Vector3d,
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
@@ -130,6 +133,27 @@ const createGame = async () => {
 
 			const controller = new GameController(app);
 			app.world.addChild(controller);
+
+			// Lights for the OBJ craft. They shade against the vertex normals
+			// the OBJ loader now supplies (#1572) — without them a `lit` mesh
+			// has no surface to shade and reads flat whatever the lighting.
+			// A key light plus an ambient fill so the shadowed side stays
+			// readable rather than black.
+			app.world.addChild(
+				new Light3d(0, 0, 0, {
+					type: "directional",
+					direction: new Vector3d(-0.35, -0.7, -0.6),
+					color: new Color(255, 244, 226),
+					intensity: 1.2,
+				}),
+			);
+			app.world.addChild(
+				new Light3d(0, 0, 0, {
+					type: "ambient",
+					color: new Color(128, 146, 178),
+					intensity: 0.6,
+				}),
+			);
 
 			// Start the music loop via `playTrack` (not `play`) — that
 			// registers BGM_NAME as the engine's currentTrack, which

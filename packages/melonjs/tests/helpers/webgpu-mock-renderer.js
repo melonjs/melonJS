@@ -13,6 +13,9 @@ export function createMockWebGPURenderer() {
 		// draw / drawIndexed vertex counts, in recording order
 		draws: [],
 		drawIndexed: [],
+		// the same drawIndexed calls with every argument, for the paths that
+		// record a sub-range (per-material texture splits, #1573)
+		drawIndexedArgs: [],
 		// pipeline-cache lookups (full key) and actual setPipeline count
 		pipelineKeys: [],
 		setPipeline: 0,
@@ -54,8 +57,9 @@ export function createMockWebGPURenderer() {
 		draw(count) {
 			calls.draws.push(count);
 		},
-		drawIndexed(count) {
+		drawIndexed(count, instanceCount, firstIndex) {
 			calls.drawIndexed.push(count);
+			calls.drawIndexedArgs.push({ count, instanceCount, firstIndex });
 		},
 	};
 

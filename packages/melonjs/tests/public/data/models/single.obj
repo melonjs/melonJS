@@ -1,0 +1,13 @@
+# single-material control for the per-material texture specs (#1573)
+mtllib cube.mtl
+v 0 0 0
+v 1 0 0
+v 0 1 0
+v 1 1 0
+vt 0 0
+vt 1 0
+vt 0 1
+vt 1 1
+usemtl cube
+f 1/1 2/2 3/3
+f 2/2 4/4 3/3

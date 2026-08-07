@@ -1,0 +1,14 @@
+newmtl alpha
+Kd 1.0 0.2 0.2
+map_Kd multitex-a.png
+
+newmtl beta
+Kd 0.2 1.0 0.2
+map_Kd multitex-a.png
+
+newmtl gamma
+Kd 0.2 0.2 1.0
+map_Kd multitex-nowhere.png
+
+newmtl plain
+Kd 0.9 0.9 0.9

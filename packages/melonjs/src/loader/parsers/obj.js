@@ -18,6 +18,8 @@ const UV_STRIDE = 2;
 
 // sentinel for missing UV index
 const NO_UV = -1;
+// OBJ vertex-normal line prefix
+const NORMAL_PREFIX = "vn";
 
 // OBJ indices are 1-based
 const OBJ_INDEX_OFFSET = 1;
@@ -40,7 +42,17 @@ const OBJ_INDEX_OFFSET = 1;
  *   touching the geometry. A model with no `usemtl` directives produces
  *   a single group with `materialName: null`.
  *
- * Parsed but ignored: `vn` (normals), `g` (groups), `s` (smooth shading),
+ * `vn` (vertex normals) are consumed: a face referencing them
+ * (`v//vn` or `v/vt/vn`) produces unified vertices carrying the authored
+ * normal, so an OBJ model lights under `Light3d` exactly as the same model
+ * imported from glTF does. A file with no `vn` gets normals GENERATED from
+ * face geometry (accumulated and normalized, i.e. smooth) after the winding
+ * correction below, so the result is consistent with the final triangle
+ * orientation rather than the authored one.
+ *
+ * Parsed but ignored: `g` (groups), `s` (smooth shading — generated normals
+ * are smooth across the whole mesh, so a model relying on hard edges from
+ * smoothing groups will read softer than authored),
  * `o` (object name).
  *
  * @param {string} text - raw OBJ file contents
@@ -55,13 +67,15 @@ const OBJ_INDEX_OFFSET = 1;
  *   special case.
  * @ignore
  */
-function parseOBJ(text) {
+export function parseOBJ(text) {
 	const positions = [];
 	const texcoords = [];
+	const sourceNormals = [];
 
 	// unified output arrays (built in a single pass)
 	const vertices = [];
 	const uvs = [];
+	const normals = [];
 	const indices = [];
 	let vertexCount = 0;
 
@@ -78,8 +92,17 @@ function parseOBJ(text) {
 
 	// helper: look up or create a unified vertex for a v/vt pair in the
 	// current material's dedup scope
-	function addVertex(v, vt) {
-		const key = v * VT_KEY_MULTIPLIER + (vt + OBJ_INDEX_OFFSET);
+	function addVertex(v, vt, vn) {
+		// The dedup key gains the normal index only when the file supplies
+		// normals: two faces sharing a position/UV but referencing DIFFERENT
+		// normals (a hard edge) must become separate vertices, or the edge
+		// smooths itself away. A string key is used in that case rather than
+		// packing a third component into the numeric one — `v * M²` overflows
+		// Number.MAX_SAFE_INTEGER well before the position count does.
+		const key =
+			vn >= 0
+				? `${v}|${vt}|${vn}`
+				: v * VT_KEY_MULTIPLIER + (vt + OBJ_INDEX_OFFSET);
 		let index = vertexMap.get(key);
 		if (index === undefined) {
 			index = vertexCount++;
@@ -92,6 +115,17 @@ function parseOBJ(text) {
 			} else {
 				uvs.push(0, 0);
 			}
+			if (vn >= 0) {
+				const vn3 = vn * POS_STRIDE;
+				normals.push(
+					sourceNormals[vn3],
+					sourceNormals[vn3 + 1],
+					sourceNormals[vn3 + 2],
+				);
+			} else {
+				// filled in by the generation pass when the file had none
+				normals.push(0, 0, 0);
+			}
 		}
 		return index;
 	}
@@ -100,6 +134,24 @@ function parseOBJ(text) {
 	 * parse a face vertex component (e.g. "1/2/3" or "1//3" or "1")
 	 * and return the UV index, or NO_UV if not present
 	 * @param {string} part - face vertex string
+	 * @returns {number} UV index (0-based) or NO_UV
+	 * @ignore
+	 */
+	function parseNormalIndex(part, slashIdx) {
+		if (slashIdx === -1) {
+			return NO_UV;
+		}
+		const second = part.indexOf(SLASH_CHAR, slashIdx + 1);
+		if (second === -1) {
+			return NO_UV;
+		}
+		return parseInt(part.substring(second + 1), 10) - OBJ_INDEX_OFFSET;
+	}
+
+	/**
+	 * parse a face vertex component and return the UV index, or NO_UV
+	 * @param {string} part - face vertex string
+	 * @param {number} slashIdx - index of the first slash
 	 * @returns {number} UV index (0-based) or NO_UV
 	 * @ignore
 	 */
@@ -184,6 +236,15 @@ function parseOBJ(text) {
 				);
 			} else if (parts[0] === TEXCOORD_PREFIX) {
 				texcoords.push(parseFloat(parts[1]), 1.0 - parseFloat(parts[2]));
+			} else if (parts[0] === NORMAL_PREFIX) {
+				// stored raw: the Y/Z axis bridge is applied at draw through
+				// the model matrix (`mat3(uModelMatrix) * aNormal`), exactly
+				// as it is for glTF normals — flipping here would double it
+				sourceNormals.push(
+					parseFloat(parts[1]),
+					parseFloat(parts[2]),
+					parseFloat(parts[3]),
+				);
 			}
 		} else if (first === FACE_PREFIX) {
 			const parts = line.split(/\s+/);
@@ -192,14 +253,16 @@ function parseOBJ(text) {
 			let slashIdx = parts[1].indexOf(SLASH_CHAR);
 			const v0 = parseInt(parts[1], 10) - OBJ_INDEX_OFFSET;
 			const vt0 = parseUVIndex(parts[1], slashIdx);
-			const idx0 = addVertex(v0, vt0);
+			const vn0 = parseNormalIndex(parts[1], slashIdx);
+			const idx0 = addVertex(v0, vt0, vn0);
 
 			let prevIdx = -1;
 			for (let j = 2; j < parts.length; j++) {
 				slashIdx = parts[j].indexOf(SLASH_CHAR);
 				const v = parseInt(parts[j], 10) - OBJ_INDEX_OFFSET;
 				const vt = parseUVIndex(parts[j], slashIdx);
-				const idx = addVertex(v, vt);
+				const vn = parseNormalIndex(parts[j], slashIdx);
+				const idx = addVertex(v, vt, vn);
 
 				if (prevIdx !== -1) {
 					indices.push(idx0, prevIdx, idx);
@@ -236,6 +299,47 @@ function parseOBJ(text) {
 		}
 	}
 
+	// Generate normals when the file supplied none. Deliberately AFTER the
+	// winding correction above: face normals follow triangle orientation, so
+	// generating first would point them inward on a CW-wound model — the
+	// exact case that correction exists to fix.
+	if (sourceNormals.length === 0 && vertexCount > 0) {
+		for (let i = 0; i < indices.length; i += 3) {
+			const a = indices[i] * 3;
+			const b = indices[i + 1] * 3;
+			const c = indices[i + 2] * 3;
+			const ux = vertices[b] - vertices[a];
+			const uy = vertices[b + 1] - vertices[a + 1];
+			const uz = vertices[b + 2] - vertices[a + 2];
+			const wx = vertices[c] - vertices[a];
+			const wy = vertices[c + 1] - vertices[a + 1];
+			const wz = vertices[c + 2] - vertices[a + 2];
+			// unnormalized cross product — its length is twice the triangle
+			// area, which area-weights the accumulation for free
+			const nx = uy * wz - uz * wy;
+			const ny = uz * wx - ux * wz;
+			const nz = ux * wy - uy * wx;
+			for (const at of [a, b, c]) {
+				normals[at] += nx;
+				normals[at + 1] += ny;
+				normals[at + 2] += nz;
+			}
+		}
+		for (let i = 0; i < normals.length; i += 3) {
+			const length = Math.hypot(normals[i], normals[i + 1], normals[i + 2]);
+			if (length > 0) {
+				normals[i] /= length;
+				normals[i + 1] /= length;
+				normals[i + 2] /= length;
+			} else {
+				// a vertex referenced by no triangle (or by degenerate ones):
+				// leave a valid unit normal rather than a zero vector, which
+				// would normalize to NaN in the shader
+				normals[i + 1] = 1;
+			}
+		}
+	}
+
 	// finalize the last open group (or, if no `usemtl` was ever seen,
 	// emit a single material-less group covering all indices so the
 	// `groups[]` contract is always non-empty for non-empty OBJs)
@@ -251,6 +355,7 @@ function parseOBJ(text) {
 	return {
 		vertices: new Float32Array(vertices),
 		uvs: new Float32Array(uvs),
+		normals: new Float32Array(normals),
 		indices: new Uint16Array(indices),
 		vertexCount,
 		mtllib,
