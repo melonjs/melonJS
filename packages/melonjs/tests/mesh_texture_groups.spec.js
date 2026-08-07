@@ -520,6 +520,42 @@ describe("Mesh per-material textures (#1573)", () => {
 			mesh.destroy();
 		});
 
+		it("offsets by 4 bytes per index on a WIDE (Uint32) index buffer", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// Newly reachable: the OBJ parser widens past 65 536 vertices, so a
+			// large multi-material model takes this branch. A hard-coded stride
+			// of 2 would draw the wrong triangles with no GL error.
+			const gl = renderer.gl;
+			const mesh = makeMesh();
+			const wide = new Mesh(0, 0, {
+				vertices: mesh.originalVertices,
+				uvs: mesh.uvs,
+				indices: new Uint32Array(mesh._indicesOriginal),
+				texture: "multitex-a.png",
+				width: 32,
+				normalize: false,
+			});
+			// borrow the resolved plan from the multi-material mesh
+			wide.textureGroups = mesh.textureGroups;
+			drawOnce(wide);
+
+			const spy = vi.spyOn(gl, "drawElements");
+			drawOnce(wide);
+			expect(
+				spy.mock.calls.map((c) => {
+					return [c[1], c[2], c[3]];
+				}),
+			).toEqual([
+				[6, gl.UNSIGNED_INT, 0],
+				[3, gl.UNSIGNED_INT, 24],
+				[3, gl.UNSIGNED_INT, 36],
+			]);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			spy.mockRestore();
+			wide.destroy();
+			mesh.destroy();
+		});
+
 		it("does not mutate the settings object it was given", (ctx) => {
 			requireWebGL(ctx, renderer);
 			// the OBJ's normals used to be written back onto `settings`, which
