@@ -78,11 +78,10 @@ function toEmissive(src) {
 /**
  * Resolve an OBJ material group into a draw descriptor. Builds the
  * group's tint from the MTL's `Kd` (defaults to white if missing) and
- * its opacity from `d`. Returns a self-contained record carrying just
- * the index slice + color state — per-material textures (`map_Kd`)
- * are NOT modeled because the mesh shader uses a single `uSampler`
- * binding shared across the whole mesh; only colors are baked
- * per-vertex.
+ * its opacity from `d`. Returns a self-contained record carrying the
+ * index slice + color state; the group's own diffuse texture is filled
+ * in afterwards by {@link buildTextureGroups}, once the mesh-level
+ * fallback texture is known.
  * @param {{materialName: string|null, start: number, count: number}} group
  * @param {object} materials - MTL material table keyed by material name
  * @returns {{materialName: string|null, start: number, count: number, tint: Color, opacity: number}} draw descriptor for this group
@@ -110,7 +109,98 @@ function resolveGroupMaterial(group, materials) {
 		count: group.count,
 		tint,
 		opacity,
+		texture: undefined,
 	};
+}
+
+/**
+ * Resolve each material group's own diffuse texture (`map_Kd`) and reduce
+ * the result to the shortest list of index ranges that have to be drawn
+ * with distinct textures (#1573).
+ *
+ * A group whose material declares no `map_Kd` keeps the mesh-level texture,
+ * so a model mixing textured and `Kd`-only materials still draws in one
+ * binding wherever it can. Adjacent ranges resolving to the same
+ * `TextureAtlas` are merged — the atlas cache is keyed by image, so two
+ * materials pointing at one file coalesce by identity rather than by
+ * comparing names — and a model that ends up with a single texture returns
+ * `undefined`, which keeps the common single-material case on exactly the
+ * draw-call count it had before.
+ *
+ * A `map_Kd` naming an image that was never preloaded warns and falls back
+ * to the mesh texture rather than throwing: only the first material's
+ * `map_Kd` used to be resolved at all, so a partially-preloaded model that
+ * rendered before must keep rendering.
+ * @param {Array<object>} groups - the material groups, mutated in place to carry their resolved `texture`
+ * @param {object} materials - MTL material table keyed by material name
+ * @param {TextureAtlas} shared - the mesh-level texture, used by groups with no `map_Kd` of their own
+ * @param {number} [framewidth] - spritesheet cell width, as passed to the Mesh
+ * @param {number} [frameheight] - spritesheet cell height, as passed to the Mesh
+ * @returns {Array<{texture: TextureAtlas, start: number, count: number}>|undefined} the per-texture draw ranges, or `undefined` when one binding covers the whole mesh
+ * @ignore
+ */
+function buildTextureGroups(
+	groups,
+	materials,
+	shared,
+	framewidth,
+	frameheight,
+) {
+	let distinct = false;
+	for (const group of groups) {
+		const mat = group.materialName ? materials[group.materialName] : null;
+		let texture = shared;
+		if (mat?.map_Kd) {
+			try {
+				texture = resolveTextureAtlas(mat.map_Kd, framewidth, frameheight);
+			} catch {
+				console.warn(
+					`melonJS: Mesh material "${group.materialName}" references the texture "${mat.map_Kd}", which is not loaded — that material falls back to the mesh texture`,
+				);
+			}
+		}
+		group.texture = texture;
+		// only geometry that actually draws can make a split necessary
+		if (texture !== shared && group.count > 0) {
+			distinct = true;
+		}
+	}
+	if (distinct === false) {
+		return undefined;
+	}
+
+	const slices = [];
+	for (const group of groups) {
+		// an empty group (two `usemtl` directives in a row) would emit a
+		// zero-index draw and, worse, break the adjacency test below
+		if (group.count === 0) {
+			continue;
+		}
+		const previous = slices[slices.length - 1];
+		if (
+			previous !== undefined &&
+			previous.texture === group.texture &&
+			previous.start + previous.count === group.start
+		) {
+			previous.count += group.count;
+		} else {
+			slices.push({
+				texture: group.texture,
+				start: group.start,
+				count: group.count,
+			});
+		}
+	}
+	// A single surviving range still needs the plan when its texture is not
+	// the mesh-level one — the whole model draws with that material, and
+	// returning `undefined` here would hand it back to `mesh.texture`.
+	// Reachable when an empty group precedes the only drawing one.
+	if (slices.length > 1) {
+		return slices;
+	}
+	return slices.length === 1 && slices[0].texture !== shared
+		? slices
+		: undefined;
 }
 
 /**
@@ -155,12 +245,12 @@ export default class Mesh extends Renderable {
 	 * @param {number} x - the x screen position of the mesh object
 	 * @param {number} y - the y screen position of the mesh object
 	 * @param {object} settings - Configuration parameters for the Mesh object
-	 * @param {string} [settings.model] - name of a preloaded OBJ model (via loader.preload with type "obj")
+	 * @param {string} [settings.model] - name of a preloaded OBJ model (via loader.preload with type "obj"). Vertex normals come with it — authored `vn` when the file has them, generated from face geometry when it does not — so an OBJ model can be `lit`.
 	 * @param {Float32Array|number[]} [settings.vertices] - vertex positions as x,y,z triplets (alternative to settings.model)
 	 * @param {Float32Array|number[]} [settings.uvs] - texture coordinates as u,v pairs (alternative to settings.model)
 	 * @param {Uint16Array|number[]} [settings.indices] - triangle vertex indices (alternative to settings.model)
-	 * @param {HTMLImageElement|TextureAtlas|string} [settings.texture] - the texture to apply (image name, HTMLImageElement, or TextureAtlas). If omitted and settings.material is provided, the texture is resolved from the MTL material's map_Kd.
-	 * @param {string} [settings.material] - name of a preloaded MTL material (via loader.preload with type "mtl"). When provided, the diffuse texture (map_Kd), tint color (Kd), and opacity (d) are automatically applied.
+	 * @param {HTMLImageElement|TextureAtlas|string} [settings.texture] - the texture to apply (image name, HTMLImageElement, or TextureAtlas). If omitted and settings.material is provided, the texture is resolved from the MTL material's map_Kd. Passing this pins ONE binding over the whole model, which on a multi-material model suppresses the per-material texture split — see {@link Mesh#textureGroups}.
+	 * @param {string} [settings.material] - name of a preloaded MTL material (via loader.preload with type "mtl"). When provided, the diffuse texture (map_Kd), tint color (Kd), and opacity (d) are automatically applied. On a multi-material model each material's own `map_Kd` is bound for its own slice of the geometry (#1573) and each `Kd` is baked per-vertex, so one `Mesh` renders the whole model.
 	 * @param {number} settings.width - display width in pixels. With normalization on (the default) the model is scaled to fit this size; with `normalize: false` this is the uniform pixels-per-unit scale applied to the raw geometry.
 	 * @param {number} [settings.height] - display height in pixels (normalized models only; ignored when `normalize: false`)
 	 * @param {boolean} [settings.cullBackFaces=true] - enable backface culling
@@ -221,6 +311,9 @@ export default class Mesh extends Renderable {
 
 		// load geometry from OBJ model or raw data
 		let objGroups = null;
+		// the normal source that wins: an explicit `settings.normals`, else
+		// whatever the OBJ supplied
+		let sourceNormals = settings.normals;
 		if (typeof settings.model === "string") {
 			const objData = getOBJ(settings.model);
 			if (!objData) {
@@ -237,6 +330,19 @@ export default class Mesh extends Renderable {
 			 * @type {Float32Array}
 			 */
 			this.uvs = objData.uvs;
+
+			// Authored (or generated) vertex normals from the OBJ, so `lit`
+			// models shade against the surface the artist modelled rather
+			// than a fallback — the same data a glTF import supplies through
+			// its NORMAL accessor. An explicit `settings.normals` still wins.
+			//
+			// Held locally rather than written back onto `settings`: the
+			// caller's object is not ours to mutate. A frozen settings
+			// literal would throw, and one reused for two different `model`
+			// names would hand the second mesh the first model's normals.
+			if (sourceNormals === undefined && objData.normals !== undefined) {
+				sourceNormals = objData.normals;
+			}
 
 			/**
 			 * triangle indices
@@ -311,10 +417,10 @@ export default class Mesh extends Renderable {
 		 * @type {Float32Array|undefined}
 		 */
 		this.originalNormals =
-			settings.normals !== undefined
-				? settings.normals instanceof Float32Array
-					? settings.normals
-					: new Float32Array(settings.normals)
+			sourceNormals !== undefined
+				? sourceNormals instanceof Float32Array
+					? sourceNormals
+					: new Float32Array(sourceNormals)
 				: undefined;
 
 		/**
@@ -436,7 +542,8 @@ export default class Mesh extends Renderable {
 			 * runtime color multiplication, or rebuild the Mesh with
 			 * new material settings.
 			 * @type {Array<{materialName: string|null, start: number,
-			 *   count: number, tint: Color, opacity: number}>}
+			 *   count: number, tint: Color, opacity: number,
+			 *   texture: TextureAtlas|undefined}>}
 			 */
 			this.groups = objGroups.map((g) => {
 				return resolveGroupMaterial(g, materials);
@@ -447,13 +554,22 @@ export default class Mesh extends Renderable {
 			// multiply it onto every vertex at render time. The
 			// renderer-level `setTint` path on top of the baked colors
 			// is still available for runtime flash / fade / team color.
-			// Per-material `map_Kd` textures are not switched at draw
-			// time (mesh shader has a single `uSampler`); pick up the
-			// first material's `map_Kd` for the shared texture binding
-			// if any group has one, else fall through to the white-
-			// pixel fallback further down.
+			// The first `map_Kd` in the model becomes the mesh-level
+			// texture — what groups whose material declares none draw
+			// with, and the single binding a consumer that ignores
+			// `textureGroups` (the Canvas renderer) sees. Groups with
+			// their own `map_Kd` get it bound per draw range further
+			// down (#1573). With no `map_Kd` anywhere this falls
+			// through to the white-pixel fallback.
 			if (!textureSource) {
 				for (const g of objGroups) {
+					// a zero-index group (two `usemtl` in a row) draws nothing,
+					// so letting its material name the mesh-level texture would
+					// pick a map no geometry uses — and leave `mesh.texture`
+					// outside the split plan entirely
+					if (g.count === 0) {
+						continue;
+					}
 					const mat = g.materialName ? materials[g.materialName] : null;
 					if (mat && mat.map_Kd) {
 						textureSource = mat.map_Kd;
@@ -543,6 +659,34 @@ export default class Mesh extends Renderable {
 		);
 
 		/**
+		 * Index ranges that each need their own diffuse texture bound, for a
+		 * multi-material model whose materials carry different `map_Kd` maps
+		 * (#1573) — `undefined` whenever one binding covers the whole mesh,
+		 * which is every single-material model and every `Kd`-only one.
+		 *
+		 * The GPU backends draw one indexed range per entry instead of one
+		 * range for the whole mesh; adjacent materials sharing a texture are
+		 * already merged here, so the list is the minimum number of draws the
+		 * model needs. An explicit `settings.texture` suppresses the split
+		 * entirely — asking for one texture is asking for one texture.
+		 *
+		 * The Canvas renderer ignores this: a multi-material mesh takes its
+		 * per-triangle solid-fill path there and never samples a texture at
+		 * all.
+		 * @type {Array<{texture: TextureAtlas, start: number, count: number}>|undefined}
+		 */
+		this.textureGroups =
+			isMultiMaterial === true && !settings.texture
+				? buildTextureGroups(
+						this.groups,
+						materials,
+						this.texture,
+						settings.framewidth,
+						settings.frameheight,
+					)
+				: undefined;
+
+		/**
 		 * Per-mesh texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"`
 		 * / `"no-repeat"`), or `undefined` to sample with the texture's own
 		 * wrap. Some assets author UVs outside the `[0, 1]` range and rely on
@@ -578,11 +722,20 @@ export default class Mesh extends Renderable {
 		// wanting different filters is last-writer-wins until then.
 		if (hasRealTexture && typeof settings.textureFilter === "string") {
 			const gl = game.renderer?.gl;
-			if (gl) {
-				this.texture.filter =
-					settings.textureFilter === "nearest" ? gl.NEAREST : gl.LINEAR;
-			} else {
-				this.texture.filter = settings.textureFilter;
+			const filter = gl
+				? settings.textureFilter === "nearest"
+					? gl.NEAREST
+					: gl.LINEAR
+				: settings.textureFilter;
+			this.texture.filter = filter;
+			// every texture the model draws with, not just the mesh-level one:
+			// a per-material split would otherwise leave the other materials on
+			// the renderer default, rendering one material crisp and the rest
+			// smooth (#1573)
+			if (this.textureGroups !== undefined) {
+				for (const group of this.textureGroups) {
+					group.texture.filter = filter;
+				}
 			}
 		}
 
@@ -1010,7 +1163,9 @@ export default class Mesh extends Renderable {
 	 * `vertexColors` at construction time and pushed through the renderer's
 	 * per-vertex `aColor` (GPU backends) or per-triangle solid-fill (Canvas)
 	 * path. The GPU batchers may still chunk very large meshes across multiple
-	 * `drawElements` calls to fit its vertex/index buffer limits.
+	 * `drawElements` calls to fit its vertex/index buffer limits, and split the
+	 * draw once per entry in {@link Mesh#textureGroups} when the materials
+	 * carry different diffuse textures (#1573).
 	 *
 	 * The active path is picked from the `viewport` passed in by
 	 * `Container.draw`, NOT from the activation-time `_useWorldSpace`

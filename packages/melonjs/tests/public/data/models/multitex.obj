@@ -1,0 +1,28 @@
+# fixture for the per-material texture specs (#1573)
+# four single-triangle material groups, laid out so the resolved draw
+# ranges exercise merging (alpha + beta share a map), switching (gamma),
+# and the mesh-texture fallback (plain declares no map_Kd)
+mtllib multitex.mtl
+v 0 0 0
+v 1 0 0
+v 0 1 0
+v 2 0 0
+v 3 0 0
+v 2 1 0
+v 4 0 0
+v 5 0 0
+v 4 1 0
+v 6 0 0
+v 7 0 0
+v 6 1 0
+vt 0 0
+vt 1 0
+vt 0 1
+usemtl alpha
+f 1/1 2/2 3/3
+usemtl beta
+f 4/1 5/2 6/3
+usemtl gamma
+f 7/1 8/2 9/3
+usemtl plain
+f 10/1 11/2 12/3

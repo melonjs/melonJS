@@ -1,0 +1,14 @@
+# Three materials, three diffuse maps. `Kd` stays near-white on each so the
+# textures speak for themselves — the per-material tint path is already shown
+# by the multiMaterialMesh example.
+newmtl wood
+Kd 1.0 0.95 0.9
+map_Kd crate-wood.png
+
+newmtl metal
+Kd 0.95 0.97 1.0
+map_Kd crate-metal.png
+
+newmtl label
+Kd 1.0 1.0 1.0
+map_Kd crate-label.png
