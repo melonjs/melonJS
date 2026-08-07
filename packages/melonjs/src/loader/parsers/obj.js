@@ -24,6 +24,49 @@ const NORMAL_PREFIX = "vn";
 // OBJ indices are 1-based
 const OBJ_INDEX_OFFSET = 1;
 
+// largest unified vertex count a Uint16 index buffer can address
+const UINT16_VERTEX_LIMIT = 65536;
+
+/**
+ * The unsigned angle between two vectors, in radians. `0` when either is
+ * degenerate, so a zero-length edge contributes no weight instead of NaN.
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} z1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number} z2
+ * @returns {number} the angle in radians
+ * @ignore
+ */
+function angleBetween(x1, y1, z1, x2, y2, z2) {
+	const l1 = Math.hypot(x1, y1, z1);
+	const l2 = Math.hypot(x2, y2, z2);
+	if (l1 === 0 || l2 === 0) {
+		return 0;
+	}
+	// clamped: rounding can push the quotient a hair outside [-1, 1], where
+	// acos is NaN
+	const cosine = (x1 * x2 + y1 * y2 + z1 * z2) / (l1 * l2);
+	return Math.acos(cosine < -1 ? -1 : cosine > 1 ? 1 : cosine);
+}
+
+/**
+ * Add `weight × (nx, ny, nz)` into an accumulator at a float offset.
+ * @param {Float64Array} target - the accumulator
+ * @param {number} at - float offset of the entry
+ * @param {number} nx
+ * @param {number} ny
+ * @param {number} nz
+ * @param {number} weight
+ * @ignore
+ */
+function addWeighted(target, at, nx, ny, nz, weight) {
+	target[at] += nx * weight;
+	target[at + 1] += ny * weight;
+	target[at + 2] += nz * weight;
+}
+
 /**
  * Parse a Wavefront OBJ file into geometry data.
  * Supports: `v` (vertex positions), `vt` (texture coordinates),
@@ -45,10 +88,13 @@ const OBJ_INDEX_OFFSET = 1;
  * `vn` (vertex normals) are consumed: a face referencing them
  * (`v//vn` or `v/vt/vn`) produces unified vertices carrying the authored
  * normal, so an OBJ model lights under `Light3d` exactly as the same model
- * imported from glTF does. A file with no `vn` gets normals GENERATED from
- * face geometry (accumulated and normalized, i.e. smooth) after the winding
- * correction below, so the result is consistent with the final triangle
- * orientation rather than the authored one.
+ * imported from glTF does. Every vertex WITHOUT a usable authored normal
+ * gets one GENERATED from face geometry — angle-weighted, accumulated per
+ * source position and normalized, i.e. smooth across UV and material seams
+ * — after the winding correction below, so the result follows the final
+ * triangle orientation rather than the authored one. That rule is
+ * per-vertex, so a file mixing normalled and un-normalled faces, or one
+ * carrying an out-of-range `vn`, still comes out fully normalled.
  *
  * Parsed but ignored: `g` (groups), `s` (smooth shading — generated normals
  * are smooth across the whole mesh, so a model relying on hard edges from
@@ -57,7 +103,9 @@ const OBJ_INDEX_OFFSET = 1;
  *
  * @param {string} text - raw OBJ file contents
  * @returns {object} parsed geometry with `vertices` (Float32Array),
- *   `uvs` (Float32Array), `indices` (Uint16Array), `vertexCount` (number),
+ *   `uvs` (Float32Array), `normals` (Float32Array), `indices`
+ *   (Uint16Array, widening to Uint32Array past 65 536 vertices),
+ *   `vertexCount` (number),
  *   `mtllib` (string|null), and `groups`
  *   (Array<{materialName: string|null, start: number, count: number}>).
  *   `groups` follows the glTF convention — each entry is a
@@ -75,9 +123,14 @@ export function parseOBJ(text) {
 	// unified output arrays (built in a single pass)
 	const vertices = [];
 	const uvs = [];
-	const normals = [];
 	const indices = [];
 	let vertexCount = 0;
+
+	// per-unified-vertex provenance, consumed by the normal resolution pass
+	// once the whole file has been read: the `vn` this vertex asked for (or
+	// NO_NORMAL), and the source position index it was built from
+	const vertexNormalIndex = [];
+	const vertexPosition = [];
 
 	// Per-material vertex dedup: each material name owns its own
 	// `vertexMap`, so the same (v, vt) reused across different
@@ -115,17 +168,15 @@ export function parseOBJ(text) {
 			} else {
 				uvs.push(0, 0);
 			}
-			if (vn >= 0) {
-				const vn3 = vn * POS_STRIDE;
-				normals.push(
-					sourceNormals[vn3],
-					sourceNormals[vn3 + 1],
-					sourceNormals[vn3 + 2],
-				);
-			} else {
-				// filled in by the generation pass when the file had none
-				normals.push(0, 0, 0);
-			}
+			// Normal VALUES are resolved after the whole file is parsed (see
+			// the resolution pass below), not here: `vn` may legally be
+			// declared after the face referencing it, and an out-of-range
+			// index must degrade to "no authored normal" rather than reading
+			// past `sourceNormals` and writing NaN. Only the provenance is
+			// recorded now — which normal this vertex asked for, and which
+			// source POSITION it came from.
+			vertexNormalIndex.push(vn);
+			vertexPosition.push(v);
 		}
 		return index;
 	}
@@ -299,43 +350,127 @@ export function parseOBJ(text) {
 		}
 	}
 
-	// Generate normals when the file supplied none. Deliberately AFTER the
-	// winding correction above: face normals follow triangle orientation, so
-	// generating first would point them inward on a CW-wound model — the
-	// exact case that correction exists to fix.
-	if (sourceNormals.length === 0 && vertexCount > 0) {
-		for (let i = 0; i < indices.length; i += 3) {
-			const a = indices[i] * 3;
-			const b = indices[i + 1] * 3;
-			const c = indices[i + 2] * 3;
-			const ux = vertices[b] - vertices[a];
-			const uy = vertices[b + 1] - vertices[a + 1];
-			const uz = vertices[b + 2] - vertices[a + 2];
-			const wx = vertices[c] - vertices[a];
-			const wy = vertices[c + 1] - vertices[a + 1];
-			const wz = vertices[c + 2] - vertices[a + 2];
-			// unnormalized cross product — its length is twice the triangle
-			// area, which area-weights the accumulation for free
-			const nx = uy * wz - uz * wy;
-			const ny = uz * wx - ux * wz;
-			const nz = ux * wy - uy * wx;
-			for (const at of [a, b, c]) {
-				normals[at] += nx;
-				normals[at + 1] += ny;
-				normals[at + 2] += nz;
-			}
+	// ── normal resolution ────────────────────────────────────────────────
+	//
+	// Authored `vn` wins wherever one is available; every vertex left over
+	// is GENERATED from face geometry. Running per-vertex rather than
+	// per-file is what makes a partially-normalled model coherent: a file
+	// mixing `f v//vn` and `f v` faces, one that declares `vn` its faces
+	// never reference, or one carrying an out-of-range index all end up
+	// fully normalled instead of half zero-filled.
+	//
+	// Deliberately AFTER the winding correction above: generated normals
+	// follow triangle orientation, so generating first would point them
+	// inward on a CW-wound model — the exact case that correction exists
+	// to fix.
+	const normals = new Array(vertexCount * POS_STRIDE).fill(0);
+	const authored = new Array(vertexCount).fill(false);
+	let needsGenerated = false;
+	for (let i = 0; i < vertexCount; i++) {
+		const vn = vertexNormalIndex[i];
+		const vn3 = vn * POS_STRIDE;
+		// an index past the end is a malformed file, or a `vn` line that
+		// never arrived — treated as "no authored normal" so the generation
+		// pass below covers it
+		if (vn >= 0 && vn3 + POS_STRIDE <= sourceNormals.length) {
+			const at = i * POS_STRIDE;
+			normals[at] = sourceNormals[vn3];
+			normals[at + 1] = sourceNormals[vn3 + 1];
+			normals[at + 2] = sourceNormals[vn3 + 2];
+			authored[i] = true;
+		} else {
+			needsGenerated = true;
 		}
-		for (let i = 0; i < normals.length; i += 3) {
-			const length = Math.hypot(normals[i], normals[i + 1], normals[i + 2]);
+	}
+
+	if (needsGenerated === true && vertexCount > 0) {
+		// Accumulated per SOURCE POSITION rather than per unified vertex. A
+		// position split by a UV seam or a `usemtl` boundary is still one
+		// point on the surface, and a generated normal is smooth by
+		// definition — accumulating per unified vertex would crease the
+		// model along every seam, most visibly at material boundaries.
+		//
+		// Weighted by the INTERIOR ANGLE at each corner. Area weighting is
+		// tempting because the unnormalized cross product already carries
+		// twice the area, but it is wrong here: an n-gon arrives
+		// fan-triangulated, which hands the fan's pivot corners two
+		// triangles' worth of one face and the others only one. A cube built
+		// from quads then accumulates (1, 0.5, 0.5) at a corner instead of
+		// (1, 1, 1) — 19.5° off, and asymmetric on a symmetric model. Angle
+		// weighting is independent of how the polygon happened to be
+		// triangulated.
+		const accumulated = new Float64Array(positions.length);
+		for (let i = 0; i < indices.length; i += 3) {
+			const a = vertexPosition[indices[i]] * POS_STRIDE;
+			const b = vertexPosition[indices[i + 1]] * POS_STRIDE;
+			const c = vertexPosition[indices[i + 2]] * POS_STRIDE;
+			const abx = positions[b] - positions[a];
+			const aby = positions[b + 1] - positions[a + 1];
+			const abz = positions[b + 2] - positions[a + 2];
+			const acx = positions[c] - positions[a];
+			const acy = positions[c + 1] - positions[a + 1];
+			const acz = positions[c + 2] - positions[a + 2];
+			let nx = aby * acz - abz * acy;
+			let ny = abz * acx - abx * acz;
+			let nz = abx * acy - aby * acx;
+			const faceLength = Math.hypot(nx, ny, nz);
+			if (faceLength === 0) {
+				// degenerate (zero-area or collinear) — contributes no
+				// direction, and normalizing it would be a division by zero
+				continue;
+			}
+			nx /= faceLength;
+			ny /= faceLength;
+			nz /= faceLength;
+			const bcx = positions[c] - positions[b];
+			const bcy = positions[c + 1] - positions[b + 1];
+			const bcz = positions[c + 2] - positions[b + 2];
+			addWeighted(
+				accumulated,
+				a,
+				nx,
+				ny,
+				nz,
+				angleBetween(abx, aby, abz, acx, acy, acz),
+			);
+			addWeighted(
+				accumulated,
+				b,
+				nx,
+				ny,
+				nz,
+				angleBetween(-abx, -aby, -abz, bcx, bcy, bcz),
+			);
+			addWeighted(
+				accumulated,
+				c,
+				nx,
+				ny,
+				nz,
+				angleBetween(-acx, -acy, -acz, -bcx, -bcy, -bcz),
+			);
+		}
+		for (let i = 0; i < vertexCount; i++) {
+			if (authored[i] === true) {
+				continue;
+			}
+			const from = vertexPosition[i] * POS_STRIDE;
+			const at = i * POS_STRIDE;
+			const length = Math.hypot(
+				accumulated[from],
+				accumulated[from + 1],
+				accumulated[from + 2],
+			);
 			if (length > 0) {
-				normals[i] /= length;
-				normals[i + 1] /= length;
-				normals[i + 2] /= length;
+				normals[at] = accumulated[from] / length;
+				normals[at + 1] = accumulated[from + 1] / length;
+				normals[at + 2] = accumulated[from + 2] / length;
 			} else {
-				// a vertex referenced by no triangle (or by degenerate ones):
-				// leave a valid unit normal rather than a zero vector, which
-				// would normalize to NaN in the shader
-				normals[i + 1] = 1;
+				// a position referenced by no triangle, or by ones whose
+				// contributions cancel exactly: leave a valid unit normal
+				// rather than a zero vector, which would be NaN once
+				// normalized
+				normals[at + 1] = 1;
 			}
 		}
 	}
@@ -356,7 +491,15 @@ export function parseOBJ(text) {
 		vertices: new Float32Array(vertices),
 		uvs: new Float32Array(uvs),
 		normals: new Float32Array(normals),
-		indices: new Uint16Array(indices),
+		// Uint16 holds indices up to 65 535, so it covers a vertex count of
+		// 65 536 exactly. Past that the array must widen or every index
+		// wraps mod 65 536 in silence — reachable on ordinary models now
+		// that a position referencing several normals is split per normal,
+		// which can treble the unified vertex count of a flat-shaded mesh.
+		indices:
+			vertexCount > UINT16_VERTEX_LIMIT
+				? new Uint32Array(indices)
+				: new Uint16Array(indices),
 		vertexCount,
 		mtllib,
 		groups,

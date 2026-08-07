@@ -73,7 +73,14 @@ void main(void) {
     // unlit instead: wrong, but recognisably the model rather than a hole.
     float nLength = length(vNormal);
     if (nLength < 1e-6) {
-        fragColor = vec4(base.rgb + uEmissive, base.a);
+        // the emissive term is built exactly as the lit path below builds
+        // it, per-instance slot included — degrading to unlit must not also
+        // drop an instance's glow
+        vec3 unlitEmissive = uEmissive;
+#ifdef INSTANCE_DATA
+        unlitEmissive += vInstanceData.rgb;
+#endif
+        fragColor = vec4(base.rgb + unlitEmissive, base.a);
         return;
     }
     vec3 N = vNormal / nLength;

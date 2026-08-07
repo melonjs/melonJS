@@ -1,0 +1,14 @@
+# fixture for the empty-material-group case (#1573)
+# `gamma` is declared and then immediately superseded, so it owns zero
+# indices — its map_Kd must not be allowed to name the mesh-level texture,
+# since nothing it covers is ever drawn
+mtllib multitex.mtl
+v 0 0 0
+v 1 0 0
+v 0 1 0
+vt 0 0
+vt 1 0
+vt 0 1
+usemtl gamma
+usemtl alpha
+f 1/1 2/2 3/3

@@ -160,7 +160,8 @@ function buildTextureGroups(
 			}
 		}
 		group.texture = texture;
-		if (texture !== shared) {
+		// only geometry that actually draws can make a split necessary
+		if (texture !== shared && group.count > 0) {
 			distinct = true;
 		}
 	}
@@ -190,7 +191,16 @@ function buildTextureGroups(
 			});
 		}
 	}
-	return slices.length > 1 ? slices : undefined;
+	// A single surviving range still needs the plan when its texture is not
+	// the mesh-level one — the whole model draws with that material, and
+	// returning `undefined` here would hand it back to `mesh.texture`.
+	// Reachable when an empty group precedes the only drawing one.
+	if (slices.length > 1) {
+		return slices;
+	}
+	return slices.length === 1 && slices[0].texture !== shared
+		? slices
+		: undefined;
 }
 
 /**
@@ -301,6 +311,9 @@ export default class Mesh extends Renderable {
 
 		// load geometry from OBJ model or raw data
 		let objGroups = null;
+		// the normal source that wins: an explicit `settings.normals`, else
+		// whatever the OBJ supplied
+		let sourceNormals = settings.normals;
 		if (typeof settings.model === "string") {
 			const objData = getOBJ(settings.model);
 			if (!objData) {
@@ -322,8 +335,13 @@ export default class Mesh extends Renderable {
 			// models shade against the surface the artist modelled rather
 			// than a fallback — the same data a glTF import supplies through
 			// its NORMAL accessor. An explicit `settings.normals` still wins.
-			if (settings.normals === undefined && objData.normals !== undefined) {
-				settings.normals = objData.normals;
+			//
+			// Held locally rather than written back onto `settings`: the
+			// caller's object is not ours to mutate. A frozen settings
+			// literal would throw, and one reused for two different `model`
+			// names would hand the second mesh the first model's normals.
+			if (sourceNormals === undefined && objData.normals !== undefined) {
+				sourceNormals = objData.normals;
 			}
 
 			/**
@@ -399,10 +417,10 @@ export default class Mesh extends Renderable {
 		 * @type {Float32Array|undefined}
 		 */
 		this.originalNormals =
-			settings.normals !== undefined
-				? settings.normals instanceof Float32Array
-					? settings.normals
-					: new Float32Array(settings.normals)
+			sourceNormals !== undefined
+				? sourceNormals instanceof Float32Array
+					? sourceNormals
+					: new Float32Array(sourceNormals)
 				: undefined;
 
 		/**
@@ -545,6 +563,13 @@ export default class Mesh extends Renderable {
 			// through to the white-pixel fallback.
 			if (!textureSource) {
 				for (const g of objGroups) {
+					// a zero-index group (two `usemtl` in a row) draws nothing,
+					// so letting its material name the mesh-level texture would
+					// pick a map no geometry uses — and leave `mesh.texture`
+					// outside the split plan entirely
+					if (g.count === 0) {
+						continue;
+					}
 					const mat = g.materialName ? materials[g.materialName] : null;
 					if (mat && mat.map_Kd) {
 						textureSource = mat.map_Kd;
@@ -697,11 +722,20 @@ export default class Mesh extends Renderable {
 		// wanting different filters is last-writer-wins until then.
 		if (hasRealTexture && typeof settings.textureFilter === "string") {
 			const gl = game.renderer?.gl;
-			if (gl) {
-				this.texture.filter =
-					settings.textureFilter === "nearest" ? gl.NEAREST : gl.LINEAR;
-			} else {
-				this.texture.filter = settings.textureFilter;
+			const filter = gl
+				? settings.textureFilter === "nearest"
+					? gl.NEAREST
+					: gl.LINEAR
+				: settings.textureFilter;
+			this.texture.filter = filter;
+			// every texture the model draws with, not just the mesh-level one:
+			// a per-material split would otherwise leave the other materials on
+			// the renderer default, rendering one material crisp and the rest
+			// smooth (#1573)
+			if (this.textureGroups !== undefined) {
+				for (const group of this.textureGroups) {
+					group.texture.filter = filter;
+				}
 			}
 		}
 

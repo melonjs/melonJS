@@ -47,10 +47,6 @@ const _TINT_RGBA = new Float32Array(4);
 // `uEmissive` add is a no-op. Never mutated.
 const _ZERO_EMISSIVE = new Float32Array(3);
 
-// scratch for the texture units a multi-material mesh's draw ranges resolved to
-// (#1573) — refilled per split draw, never held across one
-const _SLICE_UNITS = [];
-
 /**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
@@ -470,8 +466,6 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.updatePassState();
 
 		const slices = mesh.textureGroups;
-		const units =
-			slices === undefined ? null : this.bindSliceTextures(mesh, slices);
 		if (slices === undefined) {
 			this.applyMeshMaterial(mesh);
 		}
@@ -484,7 +478,19 @@ export default class MeshBatcher extends MaterialBatcher {
 		} else {
 			const indexBytes = geometry.indexType === gl.UNSIGNED_INT ? 4 : 2;
 			for (let i = 0; i < slices.length; i++) {
-				this.bindSamplerUnit(units[i]);
+				// Bound one range at a time, immediately before its own draw.
+				// Resolving every range's texture up front would be faster
+				// but is wrong: exhausting the unit budget makes the texture
+				// cache recycle units from unit 0, which silently invalidates
+				// the units already handed out. Binding per range means a
+				// later range recycling an earlier one's unit is harmless —
+				// that range has already drawn.
+				//
+				// Safe between `geometry.bind()` and these draws because
+				// nothing is accumulated on this path: the flush a texture
+				// upload may trigger returns immediately at zero vertices,
+				// touching neither the vertex array nor ARRAY_BUFFER.
+				this.applyMeshMaterial(mesh, slices[i].texture);
 				gl.drawElements(
 					this.mode,
 					slices[i].count,
@@ -703,8 +709,6 @@ export default class MeshBatcher extends MaterialBatcher {
 
 		this.updatePassState();
 		const slices = mesh.textureGroups;
-		const units =
-			slices === undefined ? null : this.bindSliceTextures(mesh, slices);
 		if (slices === undefined) {
 			this.applyMeshMaterial(mesh);
 		}
@@ -723,9 +727,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		} else {
 			// a multi-material prototype: every instance draws the same split
 			// (#1573), so each range is one instanced draw over the whole set
+			// — bound per range for the reason spelled out in drawRetainedMesh
 			const indexBytes = geometry.indexType === gl.UNSIGNED_INT ? 4 : 2;
 			for (let i = 0; i < slices.length; i++) {
-				this.bindSamplerUnit(units[i]);
+				this.applyMeshMaterial(mesh, slices[i].texture);
 				gl.drawElementsInstanced(
 					this.mode,
 					slices[i].count,
@@ -891,17 +896,15 @@ export default class MeshBatcher extends MaterialBatcher {
 		// last-writer-wins caveat as the `textureFilter` setting.
 		const gl = this.gl;
 		const glFilter =
-			typeof mesh.texture.filter !== "undefined"
-				? mesh.texture.filter
+			typeof texture.filter !== "undefined"
+				? texture.filter
 				: this.renderer._glTextureFilter();
 		// the filter can be a GL enum (this backend's Mesh) or the string
 		// form (an atlas first configured under a non-GL renderer)
 		if (glFilter === gl.LINEAR || glFilter === "linear") {
 			const glTexture = this.boundTextures[unit];
 			const source =
-				typeof mesh.texture.getTexture === "function"
-					? mesh.texture.getTexture()
-					: null;
+				typeof texture.getTexture === "function" ? texture.getTexture() : null;
 			// TextureResource-backed sources own their upload and carry no
 			// generated chain — a mipmap min filter over their single level
 			// is mipmap-incomplete under ES3 (samples opaque black), so they
@@ -989,29 +992,6 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentShader.setUniform("uSampler", unit);
 			this.currentSamplerUnit = unit;
 		}
-	}
-
-	/**
-	 * Bind the texture of every entry in a mesh's {@link Mesh#textureGroups}
-	 * and collect the units they landed on, so a split draw has nothing left
-	 * to change between ranges but the sampler uniform.
-	 *
-	 * This runs *before* the geometry is bound on purpose: uploading a
-	 * texture can flush the batcher and rebind `ARRAY_BUFFER`, neither of
-	 * which is safe between binding a retained vertex array and the draws
-	 * that read from it.
-	 * @param {object} mesh - the mesh being drawn
-	 * @param {Array<object>} slices - its `textureGroups`
-	 * @returns {number[]} one texture unit per slice (a shared scratch array — read it before the next call)
-	 * @ignore
-	 */
-	bindSliceTextures(mesh, slices) {
-		const units = _SLICE_UNITS;
-		units.length = 0;
-		for (let i = 0; i < slices.length; i++) {
-			units.push(this.applyMeshMaterial(mesh, slices[i].texture));
-		}
-		return units;
 	}
 
 	addMesh(mesh, tint) {

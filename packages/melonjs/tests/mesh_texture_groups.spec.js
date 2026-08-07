@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { Camera3d, loader, Mesh } from "../src/index.js";
+import { Camera3d, InstancedMesh, loader, Mesh } from "../src/index.js";
+import { GPU_TEXTURE_CACHE_RESET, off, on } from "../src/system/event.ts";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -67,6 +68,11 @@ describe("Mesh per-material textures (#1573)", () => {
 			name: "single",
 			type: "mtl",
 			src: "/data/models/cube.mtl",
+		});
+		await loader.load({
+			name: "multitex_empty",
+			type: "obj",
+			src: "/data/models/multitex-empty.obj",
 		});
 	});
 
@@ -369,6 +375,173 @@ describe("Mesh per-material textures (#1573)", () => {
 			expect(spy.mock.calls[0][1]).toBe(mesh.indices.length);
 			spy.mockRestore();
 			mesh.destroy();
+		});
+	});
+	// ── review-hardening: cases the first cut got wrong (#1573) ─────────
+
+	describe("hardening", () => {
+		const drawOnce = (mesh) => {
+			mesh.preDraw(renderer);
+			mesh.draw(renderer, camera);
+			mesh.postDraw(renderer);
+			renderer.flush();
+		};
+
+		it("a zero-index group never names the mesh-level texture", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// `gamma` (multitex-b) is declared and immediately superseded by
+			// `alpha` (multitex-a), so it draws nothing. Letting it supply
+			// `mesh.texture` painted the whole model in a map no geometry uses
+			// — and, with more groups, left `mesh.texture` outside the plan.
+			const mesh = new Mesh(0, 0, {
+				model: "multitex_empty",
+				material: "multitex",
+				width: 32,
+			});
+			const alpha = new Mesh(0, 0, {
+				model: "multitex",
+				material: "multitex",
+				width: 32,
+			}).textureGroups[0].texture;
+			expect(mesh.texture).toBe(alpha);
+			// one drawing group, one texture — nothing to switch
+			expect(mesh.textureGroups).toBeUndefined();
+			mesh.destroy();
+		});
+
+		it("`textureFilter` reaches EVERY slice texture, not just the first", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const gl = renderer.gl;
+			// the filter used to be written onto `mesh.texture` alone, so a
+			// pixel-art model rendered one material crisp and the rest through
+			// the renderer default — and slice B ended up with the incoherent
+			// pair mag=NEAREST / min=LINEAR_MIPMAP_LINEAR
+			const mesh = makeMesh({ textureFilter: "nearest" });
+			for (const group of mesh.textureGroups) {
+				expect(group.texture.filter).toBe(gl.NEAREST);
+			}
+			drawOnce(mesh);
+
+			// and it survives to the GL texture object each slice binds
+			for (const group of mesh.textureGroups) {
+				const unit = renderer.cache.getUnit(group.texture, undefined);
+				gl.activeTexture(gl.TEXTURE0 + unit);
+				const glTexture = renderer.currentBatcher.boundTextures[unit];
+				gl.bindTexture(gl.TEXTURE_2D, glTexture);
+				expect(gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER)).toBe(
+					gl.NEAREST,
+				);
+			}
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			mesh.destroy();
+		});
+
+		it("each range still samples its OWN texture when units are exhausted", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const gl = renderer.gl;
+			const mesh = makeMesh();
+			drawOnce(mesh);
+
+			// Resolving every range's unit up front and only then drawing is
+			// wrong: the texture cache recycles from unit 0 once the budget is
+			// spent, invalidating units already handed out, and the earlier
+			// ranges then sample whatever landed last. Standing in for a real
+			// 16-unit budget already mostly consumed.
+			const cache = renderer.cache;
+			const budget = cache.max_size;
+			const seen = [];
+			let resets = 0;
+			const countReset = () => {
+				resets++;
+			};
+			const batcher = renderer.currentBatcher;
+			const original = batcher.gl.drawElements;
+			batcher.gl.drawElements = function (...args) {
+				gl.activeTexture(gl.TEXTURE0 + batcher.currentSamplerUnit);
+				seen.push(gl.getParameter(gl.TEXTURE_BINDING_2D));
+				return original.apply(this, args);
+			};
+			on(GPU_TEXTURE_CACHE_RESET, countReset);
+			try {
+				// drop the standing assignments too, or `getUnit` answers from
+				// the cache and never reaches the allocator this test is about
+				cache.units.clear();
+				cache.usedUnits.clear();
+				cache.max_size = 1;
+				drawOnce(mesh);
+			} finally {
+				off(GPU_TEXTURE_CACHE_RESET, countReset);
+				batcher.gl.drawElements = original;
+				cache.max_size = budget;
+				cache.units.clear();
+				cache.usedUnits.clear();
+			}
+
+			// the test is only meaningful if the budget actually ran out —
+			// assert the recycling happened rather than trusting it did
+			expect(resets).toBeGreaterThan(0);
+			expect(seen).toHaveLength(mesh.textureGroups.length);
+			// ranges 0 and 2 share a map, range 1 does not: whatever units the
+			// recycling handed out, the middle range must sample something
+			// different from its neighbours
+			expect(seen[0]).not.toBe(seen[1]);
+			expect(seen[1]).not.toBe(seen[2]);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			mesh.destroy();
+		});
+
+		it("an instanced multi-material prototype splits per range too", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const gl = renderer.gl;
+			const mesh = new InstancedMesh(0, 0, {
+				model: "multitex",
+				material: "multitex",
+				width: 32,
+				instanceCount: 4,
+			});
+			expect(mesh.textureGroups).toHaveLength(3);
+			drawOnce(mesh);
+
+			const spy = vi.spyOn(gl, "drawElementsInstanced");
+			drawOnce(mesh);
+			expect(spy).toHaveBeenCalledTimes(3);
+			// (mode, count, type, byteOffset, instanceCount)
+			expect(
+				spy.mock.calls.map((c) => {
+					return [c[1], c[3], c[4]];
+				}),
+			).toEqual([
+				[6, 0, 4],
+				[3, 12, 4],
+				[3, 18, 4],
+			]);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			spy.mockRestore();
+			mesh.destroy();
+		});
+
+		it("does not mutate the settings object it was given", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the OBJ's normals used to be written back onto `settings`, which
+			// throws on a frozen literal and leaks one model's normals into the
+			// next mesh built from a reused object
+			const frozen = Object.freeze({
+				model: "multitex",
+				material: "multitex",
+				width: 32,
+			});
+			const first = new Mesh(0, 0, frozen);
+			expect(first.originalNormals).toBeDefined();
+			expect(Object.hasOwn(frozen, "normals")).toBe(false);
+
+			const shared = { model: "multitex", material: "multitex", width: 32 };
+			const a = new Mesh(0, 0, shared);
+			const b = new Mesh(0, 0, { ...shared, model: "single" });
+			expect(a.originalNormals.length).toBe(a.vertexCount * 3);
+			expect(b.originalNormals.length).toBe(b.vertexCount * 3);
+			first.destroy();
+			a.destroy();
+			b.destroy();
 		});
 	});
 });

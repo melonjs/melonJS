@@ -154,4 +154,220 @@ describe("OBJ vertex normals", () => {
 		]);
 		expect(Array.from(data.normals.slice(0, 3))).toEqual([0, -1, 0]);
 	});
+	// ── review-hardening: cases the first cut got wrong (#1572) ─────────
+
+	describe("normal resolution is per-vertex, never per-file", () => {
+		const unitLength = (normals) => {
+			const lengths = [];
+			for (let i = 0; i < normals.length; i += 3) {
+				lengths.push(Math.hypot(normals[i], normals[i + 1], normals[i + 2]));
+			}
+			return lengths;
+		};
+
+		it("generates for faces that omit `vn` in a file where others carry it", () => {
+			// mixed authoring: the un-normalled face used to come out (0,0,0)
+			// because generation was gated on "the file declared any vn"
+			const data = parse([
+				...QUAD,
+				"v 3 -1 0",
+				"v 5 -1 0",
+				"v 3 1 0",
+				"vn 0 0 1",
+				"f 1/1/1 2/2/1 3/3/1",
+				"f 5 6 7",
+			]);
+			expect(
+				unitLength(data.normals).every((l) => {
+					return Math.abs(l - 1) < 1e-5;
+				}),
+			).toBe(true);
+		});
+
+		it("generates when `vn` is declared but no face references it", () => {
+			const data = parse([...QUAD, "vn 0 0 1", "f 1/1 2/2 3/3"]);
+			expect(
+				unitLength(data.normals).every((l) => {
+					return Math.abs(l - 1) < 1e-5;
+				}),
+			).toBe(true);
+		});
+
+		it("an out-of-range `vn` index degrades to a generated normal, never NaN", () => {
+			// `sourceNormals[vn3]` is undefined past the end; writing it
+			// straight through produced NaN, which no downstream guard catches
+			const data = parse([...QUAD, "vn 0 0 1", "f 1//9 2//9 3//9"]);
+			expect(Array.from(data.normals).some(Number.isNaN)).toBe(false);
+			expect(
+				unitLength(data.normals).every((l) => {
+					return Math.abs(l - 1) < 1e-5;
+				}),
+			).toBe(true);
+		});
+
+		it("resolves a `vn` declared AFTER the face that references it", () => {
+			// legal enough to appear in the wild, and single-pass resolution
+			// read it before it existed
+			const data = parse([...QUAD, "f 1//1 2//1 3//1", "vn 0 0 1"]);
+			expect(Array.from(data.normals.slice(0, 3))).toEqual([0, 0, 1]);
+		});
+
+		it("an empty normal field (`v/vt/`) is treated as absent", () => {
+			const data = parse([...QUAD, "vn 0 0 1", "f 1/1/ 2/2/ 3/3/"]);
+			expect(Array.from(data.normals).some(Number.isNaN)).toBe(false);
+			expect(
+				unitLength(data.normals).every((l) => {
+					return Math.abs(l - 1) < 1e-5;
+				}),
+			).toBe(true);
+		});
+	});
+
+	describe("generated normals are angle-weighted", () => {
+		// a unit cube as six QUADS — the shape that exposes fan bias, since
+		// fan-triangulating a quad hands its pivot corners two triangles'
+		// worth of one face and the others only one
+		const CUBE = [
+			"v -1 -1 -1",
+			"v 1 -1 -1",
+			"v 1 1 -1",
+			"v -1 1 -1",
+			"v -1 -1 1",
+			"v 1 -1 1",
+			"v 1 1 1",
+			"v -1 1 1",
+			"f 1 4 3 2",
+			"f 5 6 7 8",
+			"f 1 2 6 5",
+			"f 2 3 7 6",
+			"f 3 4 8 7",
+			"f 4 1 5 8",
+		];
+
+		it("every corner of a quad-built cube points along its own diagonal", () => {
+			// area weighting gives (1, 0.5, 0.5) at a corner instead of
+			// (1, 1, 1) — 19.5 degrees off, and asymmetric on a symmetric model
+			const data = parse(CUBE);
+			const inv = 1 / Math.sqrt(3);
+			for (let i = 0; i < data.vertexCount; i++) {
+				const at = i * 3;
+				const expected = [
+					Math.sign(data.vertices[at]) * inv,
+					Math.sign(data.vertices[at + 1]) * inv,
+					Math.sign(data.vertices[at + 2]) * inv,
+				];
+				const dot =
+					data.normals[at] * expected[0] +
+					data.normals[at + 1] * expected[1] +
+					data.normals[at + 2] * expected[2];
+				// within a degree of the exact diagonal
+				expect(Math.acos(Math.min(1, dot)) * (180 / Math.PI)).toBeLessThan(1);
+			}
+		});
+
+		it("is unaffected by how the polygon was triangulated", () => {
+			// the same cube authored as triangles must shade identically
+			const quads = parse(CUBE);
+			const tris = parse([
+				...CUBE.slice(0, 8),
+				"f 1 4 3",
+				"f 1 3 2",
+				"f 5 6 7",
+				"f 5 7 8",
+				"f 1 2 6",
+				"f 1 6 5",
+				"f 2 3 7",
+				"f 2 7 6",
+				"f 3 4 8",
+				"f 3 8 7",
+				"f 4 1 5",
+				"f 4 5 8",
+			]);
+			for (let i = 0; i < quads.normals.length; i++) {
+				expect(tris.normals[i]).toBeCloseTo(quads.normals[i], 5);
+			}
+		});
+
+		it("stay smooth across a `usemtl` boundary", () => {
+			// generation accumulates per SOURCE POSITION: the per-material
+			// dedup scope splits one corner into several unified vertices, and
+			// accumulating per unified vertex creased the model at every
+			// material seam
+			const data = parse([
+				...CUBE.slice(0, 8),
+				"usemtl a",
+				"f 1 4 3 2",
+				"f 5 6 7 8",
+				"f 1 2 6 5",
+				"usemtl b",
+				"f 2 3 7 6",
+				"f 3 4 8 7",
+				"f 4 1 5 8",
+			]);
+			// find the unified vertices sharing one corner position
+			const seen = new Map();
+			for (let i = 0; i < data.vertexCount; i++) {
+				const at = i * 3;
+				const key = `${data.vertices[at]}|${data.vertices[at + 1]}|${data.vertices[at + 2]}`;
+				const previous = seen.get(key);
+				if (previous !== undefined) {
+					expect(data.normals[at]).toBeCloseTo(data.normals[previous], 5);
+					expect(data.normals[at + 1]).toBeCloseTo(
+						data.normals[previous + 1],
+						5,
+					);
+					expect(data.normals[at + 2]).toBeCloseTo(
+						data.normals[previous + 2],
+						5,
+					);
+				} else {
+					seen.set(key, at);
+				}
+			}
+			// the fixture must actually produce the duplicates it is testing
+			expect(seen.size).toBeLessThan(data.vertexCount);
+		});
+	});
+
+	describe("index buffer width", () => {
+		it("widens to Uint32 when normal splitting pushes past 65 536 vertices", () => {
+			// REGRESSION: splitting a position per distinct normal can treble
+			// a flat-shaded model's unified vertex count. A hard-coded Uint16
+			// index buffer then wraps mod 65 536 in silence, stitching the tail
+			// of the model to its head.
+			const lines = [];
+			const side = 150;
+			for (let y = 0; y <= side; y++) {
+				for (let x = 0; x <= side; x++) {
+					lines.push(`v ${x} ${y} 0`);
+				}
+			}
+			// one distinct normal per quad, so every corner splits
+			const stride = side + 1;
+			const faces = [];
+			for (let y = 0; y < side; y++) {
+				for (let x = 0; x < side; x++) {
+					const n = y * side + x + 1;
+					lines.push(`vn 0 0 ${1 + n * 1e-6}`);
+					const a = y * stride + x + 1;
+					faces.push(`f ${a}//${n} ${a + 1}//${n} ${a + stride}//${n}`);
+				}
+			}
+			const data = parse([...lines, ...faces]);
+
+			expect(data.vertexCount).toBeGreaterThan(65536);
+			expect(data.indices).toBeInstanceOf(Uint32Array);
+			let max = 0;
+			for (let i = 0; i < data.indices.length; i++) {
+				max = Math.max(max, data.indices[i]);
+			}
+			// every index still addresses a real vertex
+			expect(max).toBe(data.vertexCount - 1);
+		});
+
+		it("stays Uint16 for an ordinary model", () => {
+			const data = parse([...QUAD, "vn 0 0 1", "f 1/1/1 2/2/1 3/3/1"]);
+			expect(data.indices).toBeInstanceOf(Uint16Array);
+		});
+	});
 });

@@ -238,7 +238,13 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		this.flush();
 
 		this.updatePassState();
-		this.applyMeshMaterial(mesh);
+		// on the split path every range resolves its own binding below, so
+		// resolving the mesh-level one here would reserve a texture unit (and
+		// possibly run a first-use upload plus mip generation) for a binding
+		// that is immediately overwritten
+		if (mesh.textureGroups === undefined) {
+			this.applyMeshMaterial(mesh);
+		}
 		this.setPlacementUniforms(modelMatrix, tint, mesh);
 
 		const renderer = this.renderer;
@@ -770,7 +776,13 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		this.flush();
 
 		this.updatePassState();
-		this.applyMeshMaterial(mesh);
+		// on the split path every range resolves its own binding below, so
+		// resolving the mesh-level one here would reserve a texture unit (and
+		// possibly run a first-use upload plus mip generation) for a binding
+		// that is immediately overwritten
+		if (mesh.textureGroups === undefined) {
+			this.applyMeshMaterial(mesh);
+		}
 		this.setPlacementUniforms(modelMatrix, tint, mesh);
 
 		const renderer = this.renderer;
