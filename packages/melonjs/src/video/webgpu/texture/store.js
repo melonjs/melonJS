@@ -358,11 +358,13 @@ export default class WebGPUTextureStore {
 	}
 
 	/**
-	 * the per-sampler material bind group for a resident record (shared by
-	 * the image and compressed upload paths)
+	 * Resolve the view + sampler a resident record should be bound with,
+	 * plus the cache key identifying that pair. Shared by the one-texture
+	 * material path and the mesh path, so the two cannot drift on which
+	 * view a mip-wanting consumer gets.
 	 * @ignore
 	 */
-	bindGroupFor(record, texture, wrap, wantMips = false) {
+	viewAndSampler(record, texture, wrap, wantMips) {
 		const filter =
 			typeof texture.filter === "string"
 				? texture.filter
@@ -374,26 +376,117 @@ export default class WebGPUTextureStore {
 			wantMips === true &&
 			(record.mipLevelCount ?? 1) > 1 &&
 			filter === "linear";
-		const samplerKey = `${filter}|${wrap}|${mip ? "mip" : "flat"}`;
-		let bindGroup = record.bindGroupBySampler.get(samplerKey);
+		return {
+			// compressed records keep a level-0 `view` for 2D consumers and a
+			// `fullView` over the authored chain for mip sampling;
+			// generated-chain records have one full view serving both (the
+			// sampler's lod clamp does the 2D restriction there)
+			view: mip ? (record.fullView ?? record.view) : record.view,
+			sampler: this.getSampler(filter, wrap, mip),
+			key: `${filter}|${wrap}|${mip ? "mip" : "flat"}`,
+		};
+	}
+
+	/**
+	 * The group-1 material for a MESH: the diffuse texture/sampler pair plus
+	 * the per-texel opacity pair (MTL `map_d`, #1575).
+	 *
+	 * Always four bindings. A mesh with no alpha map passes the shared white
+	 * pixel, whose red channel is 1 — so the shader's multiply is a no-op and
+	 * the same pipeline layout serves both cases rather than splitting the
+	 * mesh family in two.
+	 * @param {TextureAtlas} texture - the diffuse texture
+	 * @param {TextureAtlas} alphaTexture - the opacity map, or the white pixel
+	 * @param {object} [options] - wrap / mipmap options, as `getBinding` takes
+	 * @returns {GPUBindGroup} the group-1 bind group
+	 * @ignore
+	 */
+	getMeshBinding(texture, alphaTexture, options = {}) {
+		// residency first: this is the call that uploads either source, so it
+		// must happen before the records are read back
+		this.getBinding(texture, options);
+		this.getBinding(alphaTexture, options);
+
+		const wrapFor = (t) => {
+			return typeof options.repeat === "string"
+				? options.repeat
+				: (t.repeat ?? "no-repeat");
+		};
+		const wrap = wrapFor(texture);
+		const alphaWrap = wrapFor(alphaTexture);
+		const record = this.records.get(this.renderer.cache.getUnit(texture, wrap));
+		const alphaRecord = this.records.get(
+			this.renderer.cache.getUnit(alphaTexture, alphaWrap),
+		);
+		if (record === undefined || alphaRecord === undefined) {
+			// a source that failed to become resident — the caller keeps its
+			// previous binding rather than recording a draw against nothing
+			return null;
+		}
+
+		const diffuse = this.viewAndSampler(
+			record,
+			texture,
+			wrap,
+			options.mipmaps === true,
+		);
+		const alpha = this.viewAndSampler(
+			alphaRecord,
+			alphaTexture,
+			alphaWrap,
+			false,
+		);
+		// Cached on the diffuse record, keyed FIRST by the alpha record object
+		// and then by the two sampler keys. One diffuse texture is often drawn
+		// by several meshes with different opacity maps, and keying on the
+		// diffuse sampler alone would hand the second mesh the first mesh's
+		// cut-outs. Keying on the record OBJECT (not its unit) also retires
+		// the entry naturally: a re-upload builds a new record, which simply
+		// misses rather than serving a bind group over a destroyed view.
+		if (record.meshBindGroups === undefined) {
+			record.meshBindGroups = new Map();
+		}
+		let byAlpha = record.meshBindGroups.get(alphaRecord);
+		if (byAlpha === undefined) {
+			byAlpha = new Map();
+			record.meshBindGroups.set(alphaRecord, byAlpha);
+		}
+		const key = `${diffuse.key}|${alpha.key}`;
+		let bindGroup = byAlpha.get(key);
+		if (bindGroup === undefined) {
+			bindGroup = this.device.createBindGroup({
+				label: "melonJS mesh material",
+				layout: this.renderer.pipelineCache.meshMaterialLayout,
+				entries: [
+					{ binding: 0, resource: diffuse.view },
+					{ binding: 1, resource: diffuse.sampler },
+					{ binding: 2, resource: alpha.view },
+					{ binding: 3, resource: alpha.sampler },
+				],
+			});
+			byAlpha.set(key, bindGroup);
+		}
+		return bindGroup;
+	}
+
+	/**
+	 * the per-sampler material bind group for a resident record (shared by
+	 * the image and compressed upload paths)
+	 * @ignore
+	 */
+	bindGroupFor(record, texture, wrap, wantMips = false) {
+		const resolved = this.viewAndSampler(record, texture, wrap, wantMips);
+		let bindGroup = record.bindGroupBySampler.get(resolved.key);
 		if (typeof bindGroup === "undefined") {
 			bindGroup = this.device.createBindGroup({
 				label: "melonJS material",
 				layout: this.renderer.pipelineCache.materialLayout,
 				entries: [
-					{
-						binding: 0,
-						// compressed records keep a level-0 `view` for 2D
-						// consumers and a `fullView` over the authored chain
-						// for mip sampling; generated-chain records have one
-						// full view serving both (the sampler's lod clamp
-						// does the 2D restriction there)
-						resource: mip ? (record.fullView ?? record.view) : record.view,
-					},
-					{ binding: 1, resource: this.getSampler(filter, wrap, mip) },
+					{ binding: 0, resource: resolved.view },
+					{ binding: 1, resource: resolved.sampler },
 				],
 			});
-			record.bindGroupBySampler.set(samplerKey, bindGroup);
+			record.bindGroupBySampler.set(resolved.key, bindGroup);
 		}
 		return bindGroup;
 	}

@@ -1,0 +1,20 @@
+# Two materials exercising the MTL properties added in #1575.
+#
+# `chrome` is the specular case: a dark base so the highlight is the only
+# bright thing on it, a near-white `Ks` and a tight `Ns`. Note `Ks` alone
+# does nothing — `Ns` of 0 is the format's "no highlight", which is why a
+# matte material can safely carry a bright specular colour.
+newmtl chrome
+Kd 0.10 0.11 0.14
+Ks 1.0 0.97 0.90
+Ns 180
+
+# `vent` is the per-texel opacity case: a solid steel diffuse punched
+# through by `map_d`, so one material cuts to the shape of the holes rather
+# than at a single threshold across the whole surface.
+newmtl vent
+Kd 1.0 1.0 1.0
+Ks 0.4 0.45 0.5
+Ns 40
+map_Kd crate-metal.png
+map_d vent-mask.png

@@ -473,6 +473,46 @@ export default class Mesh extends Renderable {
 		this.emissive = toEmissive(settings.emissive);
 
 		/**
+		 * Specular (highlight) color as an `[r, g, b]` `Float32Array`, or
+		 * `undefined` for a purely diffuse surface — which is the default, and
+		 * what every mesh rendered as before this existed.
+		 *
+		 * Drives a Blinn-Phong highlight on the **lit** mesh path, so it needs
+		 * `lit: true`, a `Light3d`, and normals. Set by the OBJ loader from an
+		 * MTL's `Ks`; paired with {@link Mesh#shininess}, which decides how
+		 * tight the highlight is. A `Ks` with no `Ns` produces nothing — the
+		 * exponent is what turns the term on.
+		 * @type {Float32Array|undefined}
+		 * @see Mesh#shininess
+		 */
+		this.specular = toEmissive(settings.specular);
+
+		/**
+		 * Specular exponent — how tight the highlight is. The MTL `Ns` range
+		 * is 0..1000; higher is a smaller, harder highlight (polished metal),
+		 * lower is a broad sheen (satin). `0` (the default) disables the
+		 * specular term outright however bright {@link Mesh#specular} is, which
+		 * is what keeps a material declaring neither on the diffuse-only path.
+		 * @type {number}
+		 * @default 0
+		 */
+		this.shininess =
+			typeof settings.shininess === "number" ? settings.shininess : 0;
+
+		/**
+		 * Per-texel opacity map (MTL `map_d`), or `undefined`. Its red channel
+		 * multiplies the fragment's alpha before {@link Mesh#alphaCutoff} is
+		 * applied, so a single material can cut out per pixel — the shape of
+		 * a leaf, the holes in a chain-link fence — where `alphaCutoff` alone
+		 * can only threshold uniformly across the whole material.
+		 *
+		 * Only meaningful alongside a non-zero `alphaCutoff`: without one there
+		 * is nothing to discard against. GPU mesh path only.
+		 * @type {TextureAtlas|undefined}
+		 */
+		this.alphaMap = undefined;
+
+		/**
 		 * whether to cull back-facing triangles
 		 * @type {boolean}
 		 * @default true
@@ -515,6 +555,8 @@ export default class Mesh extends Renderable {
 		//   entry. `draw()` later iterates the groups and swaps state
 		//   per draw.
 		let textureSource = settings.texture;
+		// per-texel opacity map, resolved after the diffuse texture below
+		let alphaMapSource = settings.alphaMap;
 		const materials =
 			typeof settings.material === "string" ? getMTL(settings.material) : null;
 		const isMultiMaterial =
@@ -639,6 +681,19 @@ export default class Mesh extends Renderable {
 				if (ke !== undefined) {
 					this.emissive = ke;
 				}
+				// MTL specular (Ks + Ns). Both are needed: `Ns` of 0 is "no
+				// highlight" however bright `Ks` is, and exporters write a
+				// black `Ks` for matte materials, so either one alone leaves
+				// the mesh on the diffuse-only path.
+				const ks = toEmissive(mat.Ks);
+				if (ks !== undefined && mat.Ns > 0) {
+					this.specular = ks;
+					this.shininess = mat.Ns;
+				}
+				// MTL alpha map (map_d) — per-texel opacity
+				if (mat.map_d) {
+					alphaMapSource = mat.map_d;
+				}
 			}
 		}
 
@@ -657,6 +712,24 @@ export default class Mesh extends Renderable {
 			settings.framewidth,
 			settings.frameheight,
 		);
+
+		// Per-texel opacity map (MTL `map_d`). A map that failed to preload
+		// warns and leaves the mesh on the uniform cutout rather than throwing
+		// — the model still renders, just without its cut-outs, which is far
+		// easier to diagnose than a mesh that never appeared.
+		if (alphaMapSource) {
+			try {
+				this.alphaMap = resolveTextureAtlas(
+					alphaMapSource,
+					settings.framewidth,
+					settings.frameheight,
+				);
+			} catch {
+				console.warn(
+					`melonJS: Mesh alpha map "${alphaMapSource}" is not loaded — the mesh keeps its uniform alpha cutout`,
+				);
+			}
+		}
 
 		/**
 		 * Index ranges that each need their own diffuse texture bound, for a

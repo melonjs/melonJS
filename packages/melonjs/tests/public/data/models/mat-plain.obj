@@ -1,0 +1,10 @@
+# single-material fixture for the MTL material-fidelity specs (#1575)
+mtllib multitex-material.mtl
+v 0 0 0
+v 1 0 0
+v 0 1 0
+vt 0 0
+vt 1 0
+vt 0 1
+usemtl plain
+f 1/1 2/2 3/3

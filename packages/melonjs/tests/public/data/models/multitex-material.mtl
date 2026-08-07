@@ -1,0 +1,23 @@
+# fixture for MTL material fidelity (#1575)
+# `alpha` carries specular AND an opacity map; `beta` carries a specular
+# colour with a ZERO exponent (what an exporter writes for a matte surface,
+# and the case that must NOT turn the highlight on); `gamma` carries an
+# exponent with no colour; `plain` carries neither.
+newmtl alpha
+Kd 1.0 0.2 0.2
+Ks 0.8 0.9 1.0
+Ns 64
+map_Kd multitex-a.png
+map_d multitex-alpha.png
+
+newmtl beta
+Kd 0.2 1.0 0.2
+Ks 1.0 1.0 1.0
+Ns 0
+
+newmtl gamma
+Kd 0.2 0.2 1.0
+Ns 200
+
+newmtl plain
+Kd 0.9 0.9 0.9

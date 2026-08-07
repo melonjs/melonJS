@@ -1732,7 +1732,7 @@ const PNG_1x1 =
 
 // Build a single textured triangle whose material's sampler uses the given
 // wrap modes. `sampler` may be omitted entirely to exercise the glTF default.
-function buildWrapGLB(sampler) {
+function buildWrapGLB(sampler, pbr) {
 	const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
 	const uvs = new Float32Array([0, 0, 1, 0, 0, 1]);
 	const indices = new Uint16Array([0, 1, 2]);
@@ -1753,7 +1753,16 @@ function buildWrapGLB(sampler) {
 				],
 			},
 		],
-		materials: [{ pbrMetallicRoughness: { baseColorTexture: { index: 0 } } }],
+		materials: [
+			pbr === null
+				? {}
+				: {
+						pbrMetallicRoughness: {
+							baseColorTexture: { index: 0 },
+							...pbr,
+						},
+					},
+		],
 		textures: [
 			sampler === undefined ? { source: 0 } : { source: 0, sampler: 0 },
 		],
@@ -2001,5 +2010,72 @@ describe("parseGLTF() — emissive", () => {
 				return Number.isNaN(c);
 			}),
 		).toBe(false);
+	});
+});
+
+describe("parseGLTF() — metallic/roughness → specular (#1575)", () => {
+	// the same minimal scene as the wrap tests, with the PBR block swapped
+	const build = (pbr) => {
+		return buildWrapGLB(undefined, pbr);
+	};
+
+	it("ADVERSARIAL: the glTF DEFAULTS produce no highlight at all", async () => {
+		// metallicFactor and roughnessFactor both default to 1 — fully rough.
+		// Every existing scene relies on that: if the defaults produced a
+		// highlight, this change would visibly alter every shipped asset.
+		const scene = await parseGLTF(build({}));
+		expect(scene.nodes[0].shininess).toBe(0);
+		expect(scene.nodes[0].specular).toBeUndefined();
+	});
+
+	it("ADVERSARIAL: a material with no pbrMetallicRoughness block is untouched", async () => {
+		const scene = await parseGLTF(build(null));
+		expect(scene.nodes[0].shininess).toBe(0);
+		expect(scene.nodes[0].specular).toBeUndefined();
+	});
+
+	it("roughness below 1 produces an exponent that rises as it falls", async () => {
+		const rough = await parseGLTF(build({ roughnessFactor: 0.8 }));
+		const glossy = await parseGLTF(build({ roughnessFactor: 0.3 }));
+		expect(rough.nodes[0].shininess).toBeGreaterThan(0);
+		expect(glossy.nodes[0].shininess).toBeGreaterThan(rough.nodes[0].shininess);
+	});
+
+	it("ADVERSARIAL: a mirror-smooth material is clamped, not infinite", async () => {
+		// the exponent runs away as roughness approaches 0, and a highlight
+		// narrower than a pixel only aliases
+		const scene = await parseGLTF(build({ roughnessFactor: 0 }));
+		expect(Number.isFinite(scene.nodes[0].shininess)).toBe(true);
+		expect(scene.nodes[0].shininess).toBeLessThanOrEqual(256);
+	});
+
+	it("a metal glints in its own base colour; a dielectric stays neutral", async () => {
+		const metal = await parseGLTF(
+			build({
+				roughnessFactor: 0.2,
+				metallicFactor: 1,
+				baseColorFactor: [0.9, 0.6, 0.2, 1],
+			}),
+		);
+		expect(metal.nodes[0].specular[0]).toBeCloseTo(0.9, 5);
+		expect(metal.nodes[0].specular[2]).toBeCloseTo(0.2, 5);
+
+		const plaster = await parseGLTF(
+			build({
+				roughnessFactor: 0.2,
+				metallicFactor: 0,
+				baseColorFactor: [0.9, 0.6, 0.2, 1],
+			}),
+		);
+		// the standard dielectric F0, independent of the base colour
+		for (const channel of plaster.nodes[0].specular) {
+			expect(channel).toBeCloseTo(0.04, 5);
+		}
+	});
+
+	it("ADVERSARIAL: a malformed roughness does not reach the shader as NaN", async () => {
+		const scene = await parseGLTF(build({ roughnessFactor: "shiny" }));
+		expect(scene.nodes[0].shininess).toBe(0);
+		expect(scene.nodes[0].specular).toBeUndefined();
 	});
 });

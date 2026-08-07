@@ -19,10 +19,12 @@ import WebGPUBatcher from "./webgpu_batcher.js";
 /**
  * Byte size of the per-draw mesh uniform block:
  * mat4x4 model (64) + mat4x4 view (64) + vec4 tint (16) + vec4 params
- * (alphaCutoff, reserved ×3) (16) + vec4 emissive (16) → 176.
+ * (alphaCutoff, hasAlphaMap, reserved ×2) (16) + vec4 emissive (16) +
+ * vec4 specular (rgb + shininess) (16) + vec4 eye (camera world position;
+ * w reserved) (16) → 208.
  * @ignore
  */
-export const MESH_UNIFORM_SIZE = 176;
+export const MESH_UNIFORM_SIZE = 208;
 
 // Shared identity model matrix for draws whose vertices are already placed
 // (the 2D-camera path pre-projects them on the CPU). Never mutated.
@@ -420,7 +422,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	bindGroupLayoutList(cache) {
 		return [
 			cache.frameLayout,
-			cache.materialLayout,
+			cache.meshMaterialLayout,
 			cache.emptyLayout,
 			this.meshLayout,
 		];
@@ -445,15 +447,25 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			typeof texture.filter === "string"
 				? texture.filter
 				: renderer.getDefaultTextureFilter();
-		const material = renderer.textureStore.getBinding(texture, {
-			repeat: mesh.textureRepeat,
-			// mesh textures sample a generated mip chain — trilinear
-			// minification keeps distant geometry from shimmering, while
-			// "nearest" opts out (crisp pixel-art models) and 2D consumers
-			// of the same image stay lod-clamped to level 0
-			mipmaps: filter === "linear",
-		});
-		if (material !== this.currentMaterial) {
+		// Four bindings always. A mesh with no `map_d` binds its own diffuse
+		// texture into the second pair as filler: the shader weights that
+		// sample by `hasAlphaMap`, so the value is discarded, and reusing a
+		// texture already resident costs no extra unit and no extra upload.
+		const material = renderer.textureStore.getMeshBinding(
+			texture,
+			mesh.alphaMap ?? texture,
+			{
+				repeat: mesh.textureRepeat,
+				// mesh textures sample a generated mip chain — trilinear
+				// minification keeps distant geometry from shimmering, while
+				// "nearest" opts out (crisp pixel-art models) and 2D consumers
+				// of the same image stay lod-clamped to level 0
+				mipmaps: filter === "linear",
+			},
+		);
+		// a source that never became resident returns null — keep the previous
+		// binding rather than recording a draw against nothing
+		if (material !== null && material !== this.currentMaterial) {
 			this.flush();
 			this.currentMaterial = material;
 		}
@@ -484,11 +496,27 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		scratch[37] = 0;
 		scratch[38] = 0;
 		scratch[39] = 0;
+		scratch[37] = mesh.alphaMap !== undefined ? 1 : 0;
 		const em = mesh.emissive;
 		scratch[40] = em ? em[0] : 0;
 		scratch[41] = em ? em[1] : 0;
 		scratch[42] = em ? em[2] : 0;
 		scratch[43] = 0;
+		// specular: rgb = Ks, w = Ns. Gated on the exponent, not the colour —
+		// `Ns` of 0 is the format's "no highlight" however bright `Ks` is.
+		const shininess = mesh.shininess || 0;
+		const ks = shininess > 0 ? mesh.specular : undefined;
+		scratch[44] = ks ? ks[0] : 0;
+		scratch[45] = ks ? ks[1] : 0;
+		scratch[46] = ks ? ks[2] : 0;
+		scratch[47] = shininess;
+		// the camera's world position, which the specular half-vector needs.
+		// A view matrix is rigid, so its inverse translation is -Rᵀ·t.
+		const v = renderer.currentTransform.val;
+		scratch[48] = -(v[0] * v[12] + v[1] * v[13] + v[2] * v[14]);
+		scratch[49] = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
+		scratch[50] = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
+		scratch[51] = 0;
 
 		const region = renderer.effectUniformArena.alloc(
 			MESH_UNIFORM_SIZE,

@@ -178,6 +178,10 @@ export default class GLTFScene {
 				// emissive color (glTF emissiveFactor) — self-illumination so neon /
 				// lava / screens glow regardless of scene lighting
 				emissive: node.emissive,
+				// specular highlight approximated from the material's
+				// metallic/roughness factors (#1575)
+				specular: node.specular,
+				shininess: node.shininess,
 				// light this mesh (via the lit batcher) when the scene has lights —
 				// unless the material is KHR_materials_unlit (baked lighting, must
 				// not be shaded again)

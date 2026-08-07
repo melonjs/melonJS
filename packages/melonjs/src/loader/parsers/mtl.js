@@ -11,9 +11,11 @@ const SUPPORTED_PROPS = new Set([
 	"d",
 	"Tr",
 	"map_Kd",
+	"Ks",
+	"Ns",
+	"map_d",
 	// ignored but harmless
 	"Ka",
-	"Ns",
 	"Ni",
 	"illum",
 ]);
@@ -24,7 +26,6 @@ const UNSUPPORTED_MAPS = new Set([
 	"map_Ke",
 	"map_Ks",
 	"map_Ns",
-	"map_d",
 	"map_bump",
 	"bump",
 	"map_refl",
@@ -34,12 +35,12 @@ const UNSUPPORTED_MAPS = new Set([
 
 /**
  * Parse a Wavefront MTL file into material data.
- * Supports: `newmtl`, `Kd` (diffuse color), `Ke` (emissive color), `map_Kd`
- * (diffuse texture), `d`/`Tr` (opacity/transparency).
+ * Supports: `newmtl`, `Kd` (diffuse color), `Ke` (emissive color), `Ks`/`Ns`
+ * (specular color and exponent), `map_Kd` (diffuse texture), `map_d` (alpha
+ * map), `d`/`Tr` (opacity/transparency).
  *
  * Limitations:
- * - Only one `map_Kd` texture per material is supported
- * - Specular (`Ks`, `Ns`), ambient (`Ka`), and illumination model (`illum`) are parsed but ignored
+ * - Ambient (`Ka`), optical density (`Ni`) and illumination model (`illum`) are parsed but ignored
  * - Normal maps (`map_bump`, `bump`), specular maps (`map_Ks`), and other texture maps are not supported
  *
  * @param {string} text - raw MTL file contents
@@ -47,7 +48,7 @@ const UNSUPPORTED_MAPS = new Set([
  * @returns {object} map of material names to their properties
  * @ignore
  */
-function parseMTL(text, basePath) {
+export function parseMTL(text, basePath) {
 	const materials = {};
 	let current = null;
 
@@ -70,11 +71,7 @@ function parseMTL(text, basePath) {
 		}
 
 		// warn on completely unknown properties
-		if (
-			!SUPPORTED_PROPS.has(keyword) &&
-			!UNSUPPORTED_MAPS.has(keyword) &&
-			keyword !== "Ks"
-		) {
+		if (!SUPPORTED_PROPS.has(keyword) && !UNSUPPORTED_MAPS.has(keyword)) {
 			console.warn("MTL: unknown property '" + keyword + "' will be ignored");
 			continue;
 		}
@@ -89,8 +86,13 @@ function parseMTL(text, basePath) {
 					name: parts[1],
 					Kd: [1, 1, 1],
 					Ke: [0, 0, 0],
+					// no specular by default: an MTL that declares none must
+					// shade exactly as it did before specular existed
+					Ks: [0, 0, 0],
+					Ns: 0,
 					d: 1.0,
 					map_Kd: null,
+					map_d: null,
 				};
 				materials[parts[1]] = current;
 				break;
@@ -117,6 +119,26 @@ function parseMTL(text, basePath) {
 				}
 				break;
 
+			case "Ks":
+				// specular color — the highlight's tint and strength
+				if (current) {
+					current.Ks = [
+						parseFloat(parts[1]),
+						parseFloat(parts[2]),
+						parseFloat(parts[3]),
+					];
+				}
+				break;
+
+			case "Ns":
+				// specular exponent (0..1000 in the format): how tight the
+				// highlight is. 0 means none, which is why Ks alone is not
+				// enough to turn specular on
+				if (current) {
+					current.Ns = parseFloat(parts[1]);
+				}
+				break;
+
 			case "d":
 				if (current) {
 					current.d = parseFloat(parts[1]);
@@ -134,6 +156,14 @@ function parseMTL(text, basePath) {
 				if (current) {
 					// resolve texture path relative to MTL file location
 					current.map_Kd = basePath + parts.slice(1).join(" ");
+				}
+				break;
+
+			case "map_d":
+				// per-texel opacity, driving the mesh alpha cutout per pixel
+				// rather than per material
+				if (current) {
+					current.map_d = basePath + parts.slice(1).join(" ");
 				}
 				break;
 		}
@@ -170,12 +200,13 @@ export function preloadMTL(data, onload, onerror, settings) {
 			// each texture separately (parity with the glTF loader, which fetches
 			// a scene's external textures automatically). A texture that fails to
 			// load is warned and skipped (the mesh falls back to the white pixel),
-			// so one missing map_Kd doesn't abort the whole load.
+			// so one missing map_Kd doesn't abort the whole load. `map_d`
+			// (per-texel opacity) rides the same fetch for the same reason.
 			const texturePaths = [
 				...new Set(
 					Object.values(materials)
-						.map((material) => {
-							return material.map_Kd;
+						.flatMap((material) => {
+							return [material.map_Kd, material.map_d];
 						})
 						.filter(Boolean),
 				),

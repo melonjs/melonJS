@@ -24,6 +24,11 @@
 uniform sampler2D uSampler;
 uniform float uAlphaCutoff;               // alpha cutout threshold (0 = disabled)
 uniform vec3 uEmissive;                   // self-illumination color (0 = none)
+uniform vec3 uSpecular;                   // specular color (0 = purely diffuse)
+uniform float uShininess;                 // specular exponent (0 = no highlight)
+uniform vec3 uEyePosition;                // camera position, world space
+uniform sampler2D uAlphaMap;              // per-texel opacity (MTL map_d)
+uniform float uHasAlphaMap;               // 0 = uAlphaMap is filler, ignore it
 
 // One light, type inferred from sentinels (see std140.ts):
 // posRange.w < 0 -> directional (dirCone.xyz = surface->light, normalized);
@@ -61,6 +66,16 @@ out vec4 fragColor;
 void main(void) {
     vec4 base = texture(uSampler, vRegion) * vColor;
 
+    // per-texel opacity (MTL map_d) multiplies in BEFORE the cutout, so one
+    // material can cut out to the shape of a leaf rather than at a single
+    // threshold across the whole surface. Red channel: the format stores a
+    // greyscale map, and every channel carries the same value.
+    // Sampled unconditionally and WEIGHTED rather than branched: when no map
+    // is bound the second sampler is filler (the diffuse texture), so the
+    // value is thrown away — and both backends run the identical expression
+    // instead of one branching and the other not.
+    base.a *= mix(1.0, texture(uAlphaMap, vRegion).r, uHasAlphaMap);
+
     // hard alpha cutout (glTF alphaMode MASK) — discard before any shading
     // so cut-away texels cost nothing and never write depth.
     if (base.a < uAlphaCutoff) {
@@ -85,6 +100,14 @@ void main(void) {
     }
     vec3 N = vNormal / nLength;
     vec3 lit = uAmbient;
+    // Blinn-Phong specular, accumulated alongside the diffuse term. Gated on
+    // the exponent rather than the colour: `Ns` of 0 is the format's "no
+    // highlight", and exporters happily write a non-black `Ks` next to it.
+    // The half-vector form (rather than reflect()) is the cheaper of the two
+    // and is what the fixed-function pipeline this format predates used.
+    vec3 specular = vec3(0.0);
+    bool hasSpecular = uShininess > 0.0;
+    vec3 V = hasSpecular ? normalize(uEyePosition - vWorldPos) : vec3(0.0);
     // ES 3.00 allows a non-constant loop bound, so this runs exactly as many
     // iterations as there are live lights — unused capacity costs nothing,
     // which is what makes a larger cap safe.
@@ -121,6 +144,15 @@ void main(void) {
         // diffuse look than hard Lambert (which reads as harsh noon).
         float ndl = dot(N, L) * 0.5 + 0.5;
         lit += uLights[i].colorInner.rgb * (ndl * ndl * atten);
+        if (hasSpecular) {
+            // masked by the UNWRAPPED Lambert term: half-Lambert lifts the
+            // shadowed side, and a highlight on a surface facing away from
+            // the light reads as a rendering error
+            float facing = max(dot(N, L), 0.0);
+            vec3 H = normalize(L + V);
+            float spec = pow(max(dot(N, H), 0.0), uShininess);
+            specular += uLights[i].colorInner.rgb * (spec * facing * atten);
+        }
     }
 
     // emissive self-illuminates: added AFTER lighting so it glows at full
@@ -129,5 +161,5 @@ void main(void) {
 #ifdef INSTANCE_DATA
     emissive += vInstanceData.rgb;
 #endif
-    fragColor = vec4(base.rgb * lit + emissive, base.a);
+    fragColor = vec4(base.rgb * lit + specular * uSpecular + emissive, base.a);
 }

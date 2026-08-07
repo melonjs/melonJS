@@ -150,6 +150,10 @@ export default class GLTFModel extends Container {
 					alphaCutoff: prim.alphaCutoff,
 					// emissive color (glTF emissiveFactor) — self-illumination
 					emissive: prim.emissive,
+					// specular highlight approximated from the material's
+					// metallic/roughness factors (#1575)
+					specular: prim.specular,
+					shininess: prim.shininess,
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
 				});
