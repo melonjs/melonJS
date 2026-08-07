@@ -183,6 +183,139 @@ export function readAccessor(json, buffers, accessorIndex) {
 }
 
 /**
+ * Read an `EXT_mesh_gpu_instancing` node's per-instance TRS accessors.
+ *
+ * The extension stores up to three parallel accessors — `TRANSLATION`
+ * (VEC3), `ROTATION` (VEC4 quaternion) and `SCALE` (VEC3) — each with one
+ * element per instance. Any of them may be absent, in which case that
+ * component takes its glTF default (no translation, identity rotation, unit
+ * scale).
+ *
+ * `ROTATION` may be stored as normalized `BYTE` or `SHORT` as well as float
+ * (the spec allows it, and exporters use it to shrink large scatters).
+ * `readAccessor` returns raw component values, so those encodings are scaled
+ * back to [-1, 1] here — read raw, a byte-encoded quaternion would arrive as
+ * values up to 127 and every instance would be flung out of the scene.
+ * @param {object} json - the glTF document
+ * @param {ArrayBuffer[]} buffers - the resolved binary buffers
+ * @param {object} attributes - the extension's `attributes` map
+ * @returns {object|undefined} `{count, translation, rotation, scale}`, or undefined when empty
+ * @ignore
+ */
+/**
+ * Scale a normalized-integer quaternion accessor back to [-1, 1].
+ * @param {ArrayLike<number>} raw - the raw component values
+ * @param {number} componentType - the accessor's glTF componentType
+ * @returns {ArrayLike<number>} the de-normalized quaternion components
+ * @ignore
+ */
+function normalizeQuaternions(raw, componentType) {
+	// float components are already in range
+	if (componentType === 5126) {
+		return raw;
+	}
+	// signed normalized: c / MAX, clamped at -1 (the spec's rule for the
+	// extra negative value two's complement allows)
+	const max = componentType === 5120 ? 127 : componentType === 5122 ? 32767 : 0;
+	if (max === 0) {
+		// An unsigned encoding cannot represent a quaternion's negative
+		// components. Passing it through raw is not "looking wrong" — a
+		// component of 255 makes the basis blow up by ~1e5 and destroys the
+		// scene — so fail loudly, as readAccessor does for a bad componentType.
+		throw new Error(
+			`glTF: EXT_mesh_gpu_instancing ROTATION must be float or normalized signed byte/short (componentType ${componentType})`,
+		);
+	}
+	const out = new Float32Array(raw.length);
+	for (let i = 0; i < raw.length; i++) {
+		out[i] = Math.max(raw[i] / max, -1);
+	}
+	return out;
+}
+
+/**
+ * @param {object} json - the glTF document
+ * @param {ArrayBuffer[]} buffers - the resolved binary buffers
+ * @param {object} attributes - the extension's `attributes` map
+ * @returns {object|undefined} `{count, translation, rotation, scale}`, or undefined when empty
+ * @ignore
+ */
+function readInstanceAttributes(json, buffers, attributes) {
+	if (!attributes) {
+		return undefined;
+	}
+	// The extension pins the accessor types; a mismatch would divide by the
+	// wrong component count and yield a fractional instance count, which
+	// truncates one way when allocating and another when filling.
+	const expect = (name, type) => {
+		const index = attributes[name];
+		if (index === undefined) {
+			return;
+		}
+		const accessor = json.accessors[index];
+		if (accessor.type !== type) {
+			throw new Error(
+				`glTF: EXT_mesh_gpu_instancing ${name} must be ${type} (accessor ${index} is ${accessor.type})`,
+			);
+		}
+		if (accessor.sparse !== undefined) {
+			// readAccessor ignores sparse overrides, so the instances would
+			// silently land at their base-buffer positions
+			throw new Error(
+				`glTF: EXT_mesh_gpu_instancing ${name} uses a sparse accessor, which is not supported`,
+			);
+		}
+	};
+	expect("TRANSLATION", "VEC3");
+	expect("ROTATION", "VEC4");
+	expect("SCALE", "VEC3");
+
+	const translation =
+		attributes.TRANSLATION !== undefined
+			? readAccessor(json, buffers, attributes.TRANSLATION)
+			: undefined;
+	const rotation =
+		attributes.ROTATION !== undefined
+			? normalizeQuaternions(
+					readAccessor(json, buffers, attributes.ROTATION),
+					json.accessors[attributes.ROTATION].componentType,
+				)
+			: undefined;
+	const scale =
+		attributes.SCALE !== undefined
+			? readAccessor(json, buffers, attributes.SCALE)
+			: undefined;
+
+	// The spec requires every supplied accessor to have the same count. Take
+	// the MINIMUM rather than the first present one: a truncated export would
+	// otherwise read past the end of the short accessor, and `undefined`
+	// arithmetic writes NaN records — instances that silently vanish on the
+	// GPU while the rest render.
+	const counts = [];
+	if (translation !== undefined) {
+		counts.push(translation.length / 3);
+	}
+	if (rotation !== undefined) {
+		counts.push(rotation.length / 4);
+	}
+	if (scale !== undefined) {
+		counts.push(scale.length / 3);
+	}
+	const count = counts.length > 0 ? Math.floor(Math.min(...counts)) : 0;
+	if (counts.length > 1 && Math.min(...counts) !== Math.max(...counts)) {
+		console.warn(
+			`glTF: EXT_mesh_gpu_instancing attributes disagree on count (${counts.join(", ")}) — using ${count}`,
+		);
+	}
+	if (counts.length === 0) {
+		// the extension is declared with no attributes at all — nothing to
+		// instance, so the node stays an ordinary single mesh
+		return undefined;
+	}
+	return { count, translation, rotation, scale };
+}
+
+/**
  * Read a `COLOR_0` accessor into a packed ARGB Uint32 per vertex (the format
  * {@link Mesh}'s `vertexColors` consumes). Handles `VEC3` (alpha defaults to 1)
  * and `VEC4`, and the three glTF color encodings: float `0..1`, and normalized
@@ -721,12 +854,26 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 		const nodeName = node.name || `node_${nodeIndex}`;
 		const primitives = [];
 		if (node.mesh !== undefined) {
+			// EXT_mesh_gpu_instancing: the node carries per-instance TRS
+			// accessors, i.e. one geometry stamped out many times. This is what
+			// an exporter writes for linked duplicates (a scattered forest, a
+			// crowd), and it maps straight onto an InstancedMesh — so read it
+			// here rather than making every consumer discover it.
+			const instancing = node.extensions?.EXT_mesh_gpu_instancing;
+			const instances = instancing
+				? readInstanceAttributes(json, buffers, instancing.attributes)
+				: undefined;
 			for (const prim of json.meshes[node.mesh].primitives) {
 				const geo = readPrimitiveGeometry(prim);
 				primitives.push(geo);
 				// flat static entry — same shape (+ world + name) as before so the
 				// static path and bounds computation are unchanged
-				meshNodes.push({ name: nodeName, world, ...geo });
+				meshNodes.push({ name: nodeName, world, ...geo, instances });
+				// the animated path builds from `graphNodes[].primitives`, so
+				// the records have to ride along there as well — otherwise a
+				// single animation clip anywhere in the asset silently drops
+				// instancing for the whole scene
+				primitives[primitives.length - 1].instances = instances;
 			}
 		}
 		// graph node: rest TRS (glTF defaults when a field is absent), an explicit

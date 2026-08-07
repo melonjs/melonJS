@@ -145,6 +145,16 @@ export default class Renderer {
 		this.supportsRetainedMesh = false;
 
 		/**
+		 * Whether this renderer backend can draw one geometry many times in a
+		 * single call from per-instance data — what {@link InstancedMesh}
+		 * needs. `false` here on the base/Canvas renderer, which falls back to
+		 * drawing each instance individually.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.supportsInstancing = false;
+
+		/**
 		 * The source language this backend accepts for user-supplied shaders,
 		 * or `null` when it has no programmable pipeline at all (the Canvas
 		 * backend). `"glsl"` on the WebGL backend, `"wgsl"` on the WebGPU

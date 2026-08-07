@@ -1,7 +1,9 @@
 import { Light3d } from "../../lighting/light3d.ts";
 import { getGLTF } from "../../loader/loader.js";
 import { boundingRadius } from "../../math/vertex.ts";
+import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
+import { writeInstanceTRS } from "../../video/gpu/instancerecord.ts";
 import GLTFModel from "./GLTFModel.js";
 
 /**
@@ -145,7 +147,16 @@ export default class GLTFScene {
 			// exactly `radius`. Guard against a zero-size (point) box.
 			const boxSize = Math.max(radius, 1) * Math.SQRT2;
 
-			const mesh = new Mesh(0, 0, {
+			// EXT_mesh_gpu_instancing: the node is one geometry stamped out
+			// many times (a scattered forest, a crowd). One InstancedMesh
+			// draws the lot in a single call instead of N separate meshes,
+			// each with its own GPU copy of identical geometry.
+			const instances = node.instances;
+			// `count: 0` is an authored EMPTY scatter (everything culled at
+			// author time) — it must draw zero copies, not one stray prototype
+			// at the node origin, so it still becomes an InstancedMesh
+			const MeshClass = instances ? InstancedMesh : Mesh;
+			const mesh = new MeshClass(0, 0, {
 				vertices: node.vertices,
 				uvs: node.uvs,
 				indices: node.indices,
@@ -176,6 +187,9 @@ export default class GLTFScene {
 				// back-face culled, or half their faces vanish
 				cullBackFaces: node.doubleSided !== true,
 			});
+			if (instances) {
+				fillInstances(mesh, instances);
+			}
 			// material baseColorFactor → mesh tint, so an untextured solid-color
 			// material renders its color instead of the white-pixel fallback.
 			// (RGB only; alpha/transparency is a separate feature — the mesh
@@ -297,4 +311,64 @@ export default class GLTFScene {
 	 * @ignore
 	 */
 	destroy() {}
+}
+
+/**
+ * Fill an {@link InstancedMesh}'s records from an
+ * `EXT_mesh_gpu_instancing` node's per-instance TRS arrays.
+ *
+ * The records are written in the node's own (glTF, Y-up, right-handed)
+ * space, **verbatim** — no scene scale, no axis bridge. That is not a
+ * simplification but the consequence of where the instance transform sits
+ * in the chain the shader evaluates:
+ *
+ *     clip = projection × view × model(group) × instance × vertex
+ *
+ * The group's model matrix already carries the scene scale and the Y/Z
+ * bridge, and it is applied AFTER the instance transform — so an instance
+ * expressed in the same space as the vertices comes out placed correctly.
+ * Pre-scaling or pre-bridging the records here applies both twice (which
+ * put the first version of this forest 26× too far out, and well outside
+ * the far plane).
+ * @param {InstancedMesh} mesh - the mesh to fill
+ * @param {object} instances - `{count, translation, rotation, scale}`
+ * @ignore
+ */
+export function fillInstances(mesh, instances) {
+	const { count, translation, rotation, scale } = instances;
+	// A negative per-instance scale mirrors the geometry, which inverts its
+	// winding — but face culling is decided once per mesh, so those instances
+	// would render inside-out. Blender mirrors on linked duplicates produce
+	// exactly this, so say so rather than let it look like a modelling error.
+	if (scale !== undefined && mesh.cullBackFaces === true) {
+		for (let i = 0; i < scale.length; i++) {
+			if (scale[i] < 0) {
+				console.warn(
+					"glTF: EXT_mesh_gpu_instancing has mirrored (negative-scale) instances — face culling is per-mesh, so those instances render inside-out; set `doubleSided` on the material to avoid it",
+				);
+				break;
+			}
+		}
+	}
+	mesh.instanceCount = count;
+	const floats = mesh.instanceLayout.floats;
+	for (let i = 0; i < count; i++) {
+		const t3 = i * 3;
+		const r4 = i * 4;
+		writeInstanceTRS(
+			mesh.instanceBuffer,
+			i * floats,
+			translation ? translation[t3] : 0,
+			translation ? translation[t3 + 1] : 0,
+			translation ? translation[t3 + 2] : 0,
+			rotation ? rotation[r4] : 0,
+			rotation ? rotation[r4 + 1] : 0,
+			rotation ? rotation[r4 + 2] : 0,
+			rotation ? rotation[r4 + 3] : 1,
+			scale ? scale[t3] : 1,
+			scale ? scale[t3 + 1] : 1,
+			scale ? scale[t3 + 2] : 1,
+		);
+	}
+	mesh.markInstancesDirty(0, count);
 }

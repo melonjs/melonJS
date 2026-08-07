@@ -359,4 +359,305 @@ describe("WebGLVertexState", () => {
 		gl.bindVertexArray(null);
 		state.destroy();
 	});
+
+	/**
+	 * Multi-buffer layouts and per-instance step mode (#1508). A vertex state
+	 * may now describe several buffer groups, each with its own buffer,
+	 * stride and `stepMode` — the `GPUVertexBufferLayout[]` shape. These pin
+	 * the new axis AND that the single-buffer path is untouched by it, which
+	 * matters because every GL batcher depends on this class.
+	 */
+	describe("multi-buffer layouts and instance step mode", () => {
+		// a per-instance record: a row-major 3x4 transform (3 x vec4)
+		const INSTANCE_STRIDE = 48;
+		const INSTANCE_ATTRIBUTES = [
+			{ name: "aInstanceRow0", size: 4, type: 0, normalized: false, offset: 0 },
+			{
+				name: "aInstanceRow1",
+				size: 4,
+				type: 0,
+				normalized: false,
+				offset: 16,
+			},
+			{
+				name: "aInstanceRow2",
+				size: 4,
+				type: 0,
+				normalized: false,
+				offset: 32,
+			},
+		];
+
+		const allLocations = (name) => {
+			return (
+				{
+					aVertex: 0,
+					aRegion: 1,
+					aColor: 2,
+					aInstanceRow0: 3,
+					aInstanceRow1: 4,
+					aInstanceRow2: 5,
+				}[name] ?? -1
+			);
+		};
+
+		const makeBuffer = () => {
+			const previous = gl.getParameter(gl.ARRAY_BUFFER_BINDING);
+			const buffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(600), gl.STREAM_DRAW);
+			gl.bindBuffer(gl.ARRAY_BUFFER, previous);
+			return buffer;
+		};
+
+		// geometry group + instance group, the InstancedMesh shape
+		const makeInstanced = (overrides = {}) => {
+			for (const attr of INSTANCE_ATTRIBUTES) {
+				attr.type = gl.FLOAT;
+			}
+			const geometryBuffer = makeBuffer();
+			const instanceBuffer = makeBuffer();
+			const state = new WebGLVertexState(gl, {
+				buffers: [
+					{
+						buffer: geometryBuffer,
+						stride: STRIDE,
+						attributes: ATTRIBUTES,
+					},
+					{
+						buffer: instanceBuffer,
+						stride: INSTANCE_STRIDE,
+						stepMode: "instance",
+						attributes: INSTANCE_ATTRIBUTES,
+					},
+				],
+				resolveLocation: allLocations,
+				...overrides,
+			});
+			return { state, geometryBuffer, instanceBuffer };
+		};
+
+		it("the single-buffer shape issues NO vertexAttribDivisor at all", (ctx) => {
+			requireWebGL(ctx);
+			// the regression pin: the ordinary path must be byte-identical to
+			// what it was before instancing existed. A fresh vertex array
+			// already has every divisor at 0, so the calls are not merely
+			// redundant — issuing them would be a behaviour change.
+			const spy = vi.spyOn(gl, "vertexAttribDivisor");
+			try {
+				const state = makeState();
+				expect(spy).not.toHaveBeenCalled();
+				state.bind();
+				for (const attr of ATTRIBUTES) {
+					expect(
+						gl.getVertexAttrib(
+							fixedLocations(attr.name),
+							gl.VERTEX_ATTRIB_ARRAY_DIVISOR,
+						),
+						attr.name,
+					).toBe(0);
+				}
+				gl.bindVertexArray(null);
+				state.destroy();
+			} finally {
+				spy.mockRestore();
+			}
+		});
+
+		it("applies the divisor to instance-step attributes only", (ctx) => {
+			requireWebGL(ctx);
+			const { state, geometryBuffer, instanceBuffer } = makeInstanced();
+			state.bind();
+			// geometry group advances per vertex
+			for (const attr of ATTRIBUTES) {
+				expect(
+					gl.getVertexAttrib(
+						allLocations(attr.name),
+						gl.VERTEX_ATTRIB_ARRAY_DIVISOR,
+					),
+					attr.name,
+				).toBe(0);
+			}
+			// instance group advances per instance
+			for (const attr of INSTANCE_ATTRIBUTES) {
+				const loc = allLocations(attr.name);
+				expect(
+					gl.getVertexAttrib(loc, gl.VERTEX_ATTRIB_ARRAY_DIVISOR),
+					attr.name,
+				).toBe(1);
+				expect(
+					gl.getVertexAttrib(loc, gl.VERTEX_ATTRIB_ARRAY_ENABLED),
+					attr.name,
+				).toBe(true);
+			}
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			gl.bindVertexArray(null);
+			state.destroy();
+			gl.deleteBuffer(geometryBuffer);
+			gl.deleteBuffer(instanceBuffer);
+		});
+
+		it("each group's attributes read from that group's own buffer and stride", (ctx) => {
+			requireWebGL(ctx);
+			// adversarial: both groups declare an attribute at offset 0, so a
+			// build that bound only one buffer would silently cross-read
+			const { state, geometryBuffer, instanceBuffer } = makeInstanced();
+			state.bind();
+			expect(gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)).toBe(
+				geometryBuffer,
+			);
+			expect(gl.getVertexAttrib(3, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)).toBe(
+				instanceBuffer,
+			);
+			// and each carries its own stride, not the other's
+			expect(gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_STRIDE)).toBe(STRIDE);
+			expect(gl.getVertexAttrib(3, gl.VERTEX_ATTRIB_ARRAY_STRIDE)).toBe(
+				INSTANCE_STRIDE,
+			);
+			// interleaved instance record: offsets within the group resolve
+			// against the group's own base
+			expect(gl.getVertexAttribOffset(4, gl.VERTEX_ATTRIB_ARRAY_POINTER)).toBe(
+				16,
+			);
+			expect(gl.getVertexAttribOffset(5, gl.VERTEX_ATTRIB_ARRAY_POINTER)).toBe(
+				32,
+			);
+			gl.bindVertexArray(null);
+			state.destroy();
+			gl.deleteBuffer(geometryBuffer);
+			gl.deleteBuffer(instanceBuffer);
+		});
+
+		it("divisors never leak into an unrelated vertex state", (ctx) => {
+			requireWebGL(ctx);
+			// the classic instancing bug. Divisor is vertex-array state and
+			// every build creates a fresh array, so this holds by
+			// construction — pin it so a future "optimization" that reuses a
+			// handle cannot silently reintroduce it.
+			const {
+				state: instanced,
+				geometryBuffer,
+				instanceBuffer,
+			} = makeInstanced();
+			instanced.bind();
+			const plain = makeState({ resolveLocation: allLocations });
+			plain.bind();
+			for (let loc = 0; loc <= 5; loc++) {
+				expect(gl.getVertexAttrib(loc, gl.VERTEX_ATTRIB_ARRAY_DIVISOR)).toBe(0);
+			}
+			gl.bindVertexArray(null);
+			plain.destroy();
+			instanced.destroy();
+			gl.deleteBuffer(geometryBuffer);
+			gl.deleteBuffer(instanceBuffer);
+		});
+
+		it("a rebuild re-declares the divisors on the replacement array", (ctx) => {
+			requireWebGL(ctx);
+			// build() discards the old vertex array; the new one starts with
+			// every divisor at 0, so they must be re-issued or the mesh would
+			// draw one instance N times on top of itself
+			const { state, geometryBuffer, instanceBuffer } = makeInstanced();
+			const replacement = makeBuffer();
+			state.build({
+				buffers: [
+					{ buffer: geometryBuffer, stride: STRIDE, attributes: ATTRIBUTES },
+					{
+						buffer: replacement,
+						stride: INSTANCE_STRIDE,
+						stepMode: "instance",
+						attributes: INSTANCE_ATTRIBUTES,
+					},
+				],
+			});
+			state.bind();
+			expect(gl.getVertexAttrib(3, gl.VERTEX_ATTRIB_ARRAY_DIVISOR)).toBe(1);
+			// only the replaced group was re-pointed
+			expect(gl.getVertexAttrib(3, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)).toBe(
+				replacement,
+			);
+			expect(gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)).toBe(
+				geometryBuffer,
+			);
+			gl.bindVertexArray(null);
+			state.destroy();
+			gl.deleteBuffer(geometryBuffer);
+			gl.deleteBuffer(instanceBuffer);
+			gl.deleteBuffer(replacement);
+		});
+
+		it("building a multi-buffer layout leaks none of the bindings it used", (ctx) => {
+			requireWebGL(ctx);
+			// the existing single-buffer hygiene test, generalized: several
+			// buffers are bound during the build now
+			const other = makeState();
+			const otherBuffer = gl.createBuffer();
+			other.bind();
+			gl.bindBuffer(gl.ARRAY_BUFFER, otherBuffer);
+
+			const { state, geometryBuffer, instanceBuffer } = makeInstanced();
+
+			expect(gl.getParameter(gl.VERTEX_ARRAY_BINDING)).toBe(other.handle);
+			expect(gl.getParameter(gl.ARRAY_BUFFER_BINDING)).toBe(otherBuffer);
+
+			gl.bindVertexArray(null);
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+			state.destroy();
+			other.destroy();
+			gl.deleteBuffer(otherBuffer);
+			gl.deleteBuffer(geometryBuffer);
+			gl.deleteBuffer(instanceBuffer);
+		});
+
+		it("an undeclared instance attribute is skipped without a bad divisor call", (ctx) => {
+			requireWebGL(ctx);
+			// vertexAttribDivisor(-1, 1) is INVALID_VALUE — the skip must
+			// happen before the divisor, not after
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+			const divisorSpy = vi.spyOn(gl, "vertexAttribDivisor");
+			try {
+				const { state, geometryBuffer, instanceBuffer } = makeInstanced({
+					resolveLocation: (name) => {
+						return name === "aInstanceRow2" ? -1 : allLocations(name);
+					},
+				});
+				for (const call of divisorSpy.mock.calls) {
+					expect(call[0]).not.toBe(-1);
+				}
+				expect(divisorSpy).toHaveBeenCalledTimes(2);
+				expect(gl.getError()).toBe(gl.NO_ERROR);
+				state.destroy();
+				gl.deleteBuffer(geometryBuffer);
+				gl.deleteBuffer(instanceBuffer);
+			} finally {
+				divisorSpy.mockRestore();
+				warnSpy.mockRestore();
+			}
+		});
+
+		it("issues no divisor calls on a lost context", (ctx) => {
+			requireWebGL(ctx);
+			// every location resolves -1 while the context is lost; the build
+			// must stay silent and issue nothing rather than erroring
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+			const divisorSpy = vi.spyOn(gl, "vertexAttribDivisor");
+			const lostSpy = vi.spyOn(gl, "isContextLost").mockReturnValue(true);
+			try {
+				const { state, geometryBuffer, instanceBuffer } = makeInstanced({
+					resolveLocation: () => {
+						return -1;
+					},
+				});
+				expect(divisorSpy).not.toHaveBeenCalled();
+				expect(warnSpy).not.toHaveBeenCalled();
+				state.destroy();
+				gl.deleteBuffer(geometryBuffer);
+				gl.deleteBuffer(instanceBuffer);
+			} finally {
+				lostSpy.mockRestore();
+				divisorSpy.mockRestore();
+				warnSpy.mockRestore();
+			}
+		});
+	});
 });

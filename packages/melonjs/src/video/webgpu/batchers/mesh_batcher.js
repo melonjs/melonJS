@@ -1,4 +1,5 @@
 import { Matrix3d } from "../../../math/matrix3d.ts";
+import { instanceAttributes } from "../../gpu/instancerecord.ts";
 import {
 	assignIndex,
 	beginChunk,
@@ -6,8 +7,13 @@ import {
 	remapIndex,
 } from "../../gpu/meshchunk.ts";
 import { buildMeshVertexData, retainedScratch } from "../../gpu/meshvertex.ts";
+import WebGPUInstanceBuffer from "../buffer/instance_buffer.js";
 import WebGPURetainedGeometry from "../buffer/retained_geometry.js";
 import meshWGSL from "../shaders/mesh.wgsl";
+import {
+	buildInstancedMeshWGSL,
+	UNLIT_INSTANCED,
+} from "../shaders/mesh-instanced.js";
 import WebGPUBatcher from "./webgpu_batcher.js";
 
 /**
@@ -120,6 +126,188 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			this.releaseAllRetained();
 		}
 		this.retained = new Map();
+
+		// Per-mesh instance record buffers, and the pipeline-cache family key
+		// per declared slot combination. Same lifetime rule as `retained`: a
+		// re-init means a new device, so drop what is held.
+		if (this.instanced !== undefined) {
+			this.releaseAllInstanced();
+		}
+		this.instanced = new Map();
+		this.instancedKeys = new Map();
+	}
+
+	/**
+	 * The instanced variant options for this tier (unlit by default) — where
+	 * its instance attributes start and how its vertex stage places them.
+	 * @ignore
+	 */
+	instancedVariant() {
+		return UNLIT_INSTANCED;
+	}
+
+	/**
+	 * The pipeline-cache family for a given record layout, registered on
+	 * first use.
+	 *
+	 * WGSL has no preprocessor, so the variant is a module DERIVED from this
+	 * tier's ordinary source (see `buildInstancedMeshWGSL`) rather than the
+	 * same text compiled with different defines. Its vertex layout is two
+	 * groups: this batcher's geometry layout, plus the instance records
+	 * stepping once per instance.
+	 * @param {object} layout - the instance record layout
+	 * @returns {string} the family key
+	 * @ignore
+	 */
+	instancedFamilyFor(layout) {
+		const key = (layout.hasColor ? 1 : 0) | (layout.hasData ? 2 : 0);
+		let familyKey = this.instancedKeys.get(key);
+		if (familyKey !== undefined) {
+			return familyKey;
+		}
+		const cache = this.renderer.pipelineCache;
+		const variant = this.instancedVariant();
+		const source = buildInstancedMeshWGSL(this.shaderSource(), {
+			...variant,
+			hasColor: layout.hasColor,
+			hasData: layout.hasData,
+		});
+		const layoutKey = `${this.vertexLayoutKey}Instanced${key}`;
+		cache.registerVertexLayout(layoutKey, [
+			{
+				stride: this.stride,
+				attributes: this.attributes,
+			},
+			{
+				stride: layout.stride,
+				stepMode: "instance",
+				attributes: instanceAttributes(layout, variant.baseLocation),
+			},
+		]);
+		familyKey = cache.registerShader(source, {
+			bindGroupLayouts: this.bindGroupLayoutList(cache),
+			vertexLayoutKey: layoutKey,
+			label: `melonJS ${layoutKey} shader`,
+		});
+		this.instancedKeys.set(key, familyKey);
+		return familyKey;
+	}
+
+	/**
+	 * Get (creating on first use) the GPU instance buffer for one mesh, with
+	 * its dirty span already uploaded.
+	 * @param {InstancedMesh} mesh - the mesh being drawn
+	 * @returns {WebGPUInstanceBuffer} the up-to-date buffer
+	 * @ignore
+	 */
+	instanceBufferFor(mesh) {
+		let buffer = this.instanced.get(mesh);
+		if (buffer === undefined) {
+			buffer = new WebGPUInstanceBuffer(this.renderer);
+			this.instanced.set(mesh, buffer);
+		}
+		const plan = mesh.instanceUpload(buffer.uploadedRevision ?? -1);
+		if (plan.full) {
+			// this buffer missed edits the span no longer describes
+			buffer.capacity = 0;
+		}
+		buffer.upload(
+			mesh.instanceBuffer,
+			plan.first,
+			plan.count,
+			mesh.instanceCount * mesh.instanceLayout.stride,
+		);
+		buffer.uploadedRevision = plan.revision;
+		mesh.clearInstanceDirty();
+		return buffer;
+	}
+
+	/**
+	 * Draw every visible instance of a mesh in one recorded call.
+	 * @param {InstancedMesh} mesh - the mesh to draw
+	 * @param {Matrix3d} modelMatrix - where the group sits in the world
+	 * @param {number} tint - tint colour in UINT32 (argb) format
+	 * @ignore
+	 */
+	drawInstancedMesh(mesh, modelMatrix, tint) {
+		const count = mesh.visibleInstanceCount;
+		if (count === 0) {
+			return;
+		}
+		// anything queued must land first, or this draw would reorder ahead
+		this.flush();
+
+		this.updatePassState();
+		this.applyMeshMaterial(mesh);
+		this.setPlacementUniforms(modelMatrix, tint, mesh);
+
+		const renderer = this.renderer;
+		// A custom mesh shader is not hosted on the instanced path: the
+		// instanced families own their vertex layout (geometry group +
+		// per-instance group at pinned locations), which a custom module does
+		// not declare. Same limitation as the WebGL backend, warned the same
+		// way, so the two agree rather than one silently ignoring it.
+		if (this.customShader != null && this.instancedShaderWarned !== true) {
+			this.instancedShaderWarned = true;
+			console.warn(
+				"melonJS: a custom shader cannot be hosted on an InstancedMesh — the mesh draws with the built-in instanced shading",
+			);
+		}
+		const pass = renderer.ensurePass();
+		const geometry = this.retainedGeometryFor(mesh);
+		const instances = this.instanceBufferFor(mesh);
+
+		const pipeline = renderer.pipelineCache.get(
+			this.instancedFamilyFor(mesh.instanceLayout),
+			"triangle-list",
+			"none",
+			renderer.premultipliedAlpha,
+			renderer.stencilMode,
+			this.meshState,
+		);
+		if (pipeline !== renderer.currentPipeline) {
+			pass.setPipeline(pipeline);
+			renderer.currentPipeline = pipeline;
+		}
+		const frame = renderer.currentFrameBinding;
+		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
+		pass.setBindGroup(1, this.currentMaterial);
+		this.bindLights(pass);
+		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
+			this.uniformBinding.dynamicOffset,
+		]);
+		pass.setVertexBuffer(0, geometry.vertexBuffer);
+		pass.setVertexBuffer(1, instances.buffer);
+		pass.setIndexBuffer(geometry.indexBuffer, geometry.indexFormat);
+		pass.drawIndexed(geometry.indexCount, count);
+
+		// stamp both halves: an edit later this frame must go to fresh buffers
+		geometry.lastDrawnFrameId = renderer.frameId;
+		instances.lastDrawnFrameId = renderer.frameId;
+	}
+
+	/**
+	 * Release the instance buffer held for one mesh, if any.
+	 * @param {object} mesh - the mesh whose instance records should be freed
+	 * @ignore
+	 */
+	releaseInstanced(mesh) {
+		const buffer = this.instanced?.get(mesh);
+		if (buffer !== undefined) {
+			buffer.destroy();
+			this.instanced.delete(mesh);
+		}
+	}
+
+	/**
+	 * Release every instance buffer this batcher holds.
+	 * @ignore
+	 */
+	releaseAllInstanced() {
+		this.instanced?.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.instanced?.clear();
 	}
 
 	/**
@@ -577,6 +765,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	releaseRetained(mesh) {
+		this.releaseInstanced(mesh);
 		const geometry = this.retained.get(mesh);
 		if (geometry !== undefined) {
 			geometry.destroy();
@@ -589,6 +778,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	releaseAllRetained() {
+		this.releaseAllInstanced();
 		this.retained.forEach((geometry) => {
 			geometry.destroy();
 		});

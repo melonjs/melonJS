@@ -8,6 +8,7 @@ import {
 	BLOCK3D_FLOATS,
 	writeLight3dBlock,
 } from "../../webgl/lighting/std140.ts";
+import { LIT_INSTANCED } from "../shaders/mesh-instanced.js";
 import litMeshWGSL from "../shaders/mesh-lit.wgsl";
 import WebGPUMeshBatcher from "./mesh_batcher.js";
 
@@ -73,6 +74,15 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	 * @override
 	 * @ignore
 	 */
+	/**
+	 * the lit tier's instanced variant: its geometry attributes run to
+	 * location 3 (the normal), so the instance slots start at 4
+	 * @ignore
+	 */
+	instancedVariant() {
+		return LIT_INSTANCED;
+	}
+
 	shaderSource() {
 		return litMeshWGSL;
 	}

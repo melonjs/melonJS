@@ -1,5 +1,6 @@
 import { Matrix3d } from "../../../math/matrix3d.ts";
 import { off, on, RENDER_TARGET_CHANGED } from "../../../system/event.ts";
+import { instanceAttributes } from "../../gpu/instancerecord.ts";
 import {
 	assignIndex,
 	beginChunk,
@@ -7,9 +8,14 @@ import {
 	remapIndex,
 } from "../../gpu/meshchunk.ts";
 import { buildMeshVertexData, retainedScratch } from "../../gpu/meshvertex.ts";
+import WebGLInstanceBuffer from "../buffer/instance_buffer.js";
 import RetainedGeometry from "../buffer/retained_geometry.js";
+import WebGLVertexState from "../buffer/vertexstate.js";
+import GLShader from "../glshader.js";
 import meshFragment from "./../shaders/mesh.frag";
 import meshVertex from "./../shaders/mesh.vert";
+import meshInstancedVertex from "./../shaders/mesh-instanced.vert";
+import { injectDefines } from "../utils/string.js";
 import { MaterialBatcher } from "./material_batcher.js";
 
 // Shared identity model matrix for draws whose vertices are already placed
@@ -101,6 +107,23 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.releaseAllRetained();
 		}
 		this.retained = new Map();
+
+		// Per-mesh instance buffers, and the vertex states pairing a mesh's
+		// retained geometry with its instance records. Same lifetime rule as
+		// `retained`: a re-init means a new context, so drop what is held.
+		if (this.instanced !== undefined) {
+			this.releaseAllInstanced();
+		}
+		this.instanced = new Map();
+
+		// Instanced shader variants, keyed on the opt-in slots a mesh
+		// declares. Compiled on first use rather than up front: most scenes
+		// use one combination, and a scene with no instanced mesh at all
+		// compiles none. Dropped on re-init with everything else GL-owned.
+		this.instancedShaders?.forEach((shader) => {
+			shader.destroy();
+		});
+		this.instancedShaders = new Map();
 
 		// last `uTint` value pushed, same redundant-set guard — but the
 		// sentinel is `undefined`, NOT a number: a packed ARGB tint spans the
@@ -225,6 +248,13 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	destroy() {
+		// variants hold GL programs AND stay subscribed to the context-loss
+		// events until destroyed — an orphan would try to recompile against a
+		// dead context on the next restore
+		this.instancedShaders?.forEach((shader) => {
+			shader.destroy();
+		});
+		this.instancedShaders?.clear();
 		if (this._onTargetChanged) {
 			off(RENDER_TARGET_CHANGED, this._onTargetChanged);
 			this._onTargetChanged = null;
@@ -445,11 +475,264 @@ export default class MeshBatcher extends MaterialBatcher {
 	}
 
 	/**
+	 * Get (building or refreshing as needed) the GPU state one instanced mesh
+	 * draws from: its retained prototype geometry, its instance buffer, and
+	 * the vertex state binding the two together.
+	 *
+	 * The vertex state is rebuilt only when a buffer object it references is
+	 * replaced — a growing instance set reallocates, a merely-edited one does
+	 * not — because a vertex array holding a deleted buffer keeps it alive per
+	 * the GL spec and silently draws stale data.
+	 * @param {InstancedMesh} mesh - the mesh to draw
+	 * @returns {object} `{geometry, instances, vertexState}`
+	 * @ignore
+	 */
+	instancedStateFor(mesh) {
+		const gl = this.gl;
+		const geometry = this.retainedGeometryFor(mesh);
+		let state = this.instanced.get(mesh);
+		if (state === undefined) {
+			state = {
+				instances: new WebGLInstanceBuffer(gl),
+				vertexState: null,
+				builtVersion: -1,
+				builtGeometry: null,
+				builtShader: null,
+				uploadedRevision: -1,
+			};
+			this.instanced.set(mesh, state);
+		}
+
+		// push whatever the CPU side changed before the layout is described,
+		// so a first upload has allocated the buffer by the time the vertex
+		// state points attribute records at it
+		// what THIS buffer must upload to catch up — a shared "clear the dirty
+		// flag" step would let the unlit batcher drain the span before the lit
+		// one had seen it
+		const plan = mesh.instanceUpload(state.uploadedRevision);
+		const usedBytes = mesh.instanceCount * mesh.instanceLayout.stride;
+		if (plan.full) {
+			state.instances.upload(mesh.instanceBuffer, 0, 0, Infinity);
+		} else {
+			state.instances.upload(
+				mesh.instanceBuffer,
+				plan.first,
+				plan.count,
+				usedBytes,
+			);
+		}
+		state.uploadedRevision = plan.revision;
+		mesh.clearInstanceDirty();
+
+		const stale =
+			state.vertexState === null ||
+			state.builtVersion !== mesh._instanceVersion ||
+			state.builtGeometry !== geometry.vertexBuffer ||
+			// the layout is frozen against the CURRENT program's attribute
+			// locations, so a different program needs a different vertex state
+			// — otherwise the rows stay wired to the old locations and the
+			// mesh silently reads zeros (a singular matrix collapses it)
+			state.builtShader !== this.currentShader;
+		if (stale) {
+			// geometry group (per vertex) + instance group (per instance) —
+			// one vertex array describing both buffers
+			const descriptor = {
+				buffers: [
+					{
+						buffer: geometry.vertexBuffer,
+						stride: this.stride,
+						attributes: this.attributes,
+					},
+					{
+						buffer: state.instances.buffer,
+						stride: mesh.instanceLayout.stride,
+						stepMode: "instance",
+						attributes: this._instanceAttributeRecords(mesh.instanceLayout),
+					},
+				],
+				indexBuffer: {
+					bind: () => {
+						gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.glIndexBuffer);
+					},
+				},
+				resolveLocation: (name) => {
+					return this.currentShader.getAttribLocation(name);
+				},
+			};
+			if (state.vertexState === null) {
+				state.vertexState = new WebGLVertexState(gl, descriptor);
+			} else {
+				state.vertexState.build(descriptor);
+			}
+			state.builtVersion = mesh._instanceVersion;
+			state.builtGeometry = geometry.vertexBuffer;
+			state.builtShader = this.currentShader;
+		}
+		return { geometry, state };
+	}
+
+	/**
+	 * The instanced shader for a given record layout, compiled on first use.
+	 *
+	 * Variants are source permutations rather than runtime branches: the
+	 * optional slots are `#ifdef`-guarded, so a mesh that declares neither
+	 * costs no unused attributes and no dead code. `minify` deliberately
+	 * preserves newlines so the directives survive it.
+	 * @param {object} layout - the instance record layout
+	 * @returns {GLShader} the shader for that combination
+	 * @ignore
+	 */
+	instancedShaderFor(layout) {
+		const key = (layout.hasColor ? 1 : 0) | (layout.hasData ? 2 : 0);
+		let shader = this.instancedShaders.get(key);
+		if (shader === undefined) {
+			const defines =
+				(layout.hasColor ? "#define INSTANCE_COLORS\n" : "") +
+				(layout.hasData ? "#define INSTANCE_DATA\n" : "");
+			const sources = this._instancedShaderSources();
+			// only INSTANCE_DATA reaches the fragment stage (as the
+			// per-instance emissive term); injecting the colour flag there too
+			// would compile four distinct fragment texts where two suffice
+			const fragmentDefines = layout.hasData ? "#define INSTANCE_DATA\n" : "";
+			shader = new GLShader(this.gl, {
+				vertex: injectDefines(sources.vertex, defines),
+				fragment: injectDefines(sources.fragment, fragmentDefines),
+				label: `melonJS instanced mesh ${key}`,
+			});
+			this.instancedShaders.set(key, shader);
+		}
+		return shader;
+	}
+
+	/**
+	 * The instanced shader sources for this batcher (unlit by default).
+	 * Subclasses override to supply the lit pair.
+	 * @ignore
+	 */
+	_instancedShaderSources() {
+		return { vertex: meshInstancedVertex, fragment: meshFragment };
+	}
+
+	/**
+	 * Resolve an instance record layout into GL attribute records, in the
+	 * `{name, size, type, normalized, offset}` shape the vertex state wants.
+	 * Every slot is a `float32x4`.
+	 * @param {object} layout - the instance record layout
+	 * @returns {object[]} attribute records
+	 * @ignore
+	 */
+	_instanceAttributeRecords(layout) {
+		const gl = this.gl;
+		return instanceAttributes(layout).map((attr) => {
+			return {
+				name: attr.name,
+				size: 4,
+				type: gl.FLOAT,
+				normalized: false,
+				offset: attr.offset,
+			};
+		});
+	}
+
+	/**
+	 * Draw every visible instance of a mesh in one call.
+	 *
+	 * The geometry is bound once and the GPU walks the instance buffer,
+	 * advancing the per-instance attributes one record per copy. Placement of
+	 * the *group* still rides the ordinary uniforms, so moving the whole set
+	 * costs one matrix and re-uploads nothing.
+	 * @param {InstancedMesh} mesh - the mesh to draw
+	 * @param {Matrix3d} modelMatrix - where the group sits in the world
+	 * @param {number} tint - tint colour in UINT32 (argb) format
+	 * @ignore
+	 */
+	drawInstancedMesh(mesh, modelMatrix, tint) {
+		const gl = this.gl;
+		const count = mesh.visibleInstanceCount;
+		if (count === 0) {
+			return;
+		}
+
+		// anything queued must land first, or this draw reorders ahead of it
+		this.flush();
+
+		// the instanced variant must be current BEFORE the vertex state is
+		// built: its attribute locations are what the layout is frozen against
+		// A custom mesh shader is NOT hosted on the instanced path: its
+		// attribute declarations decide the vertex-state layout, so a shader
+		// that omits (or reorders) the instance slots wires them to the wrong
+		// locations — or leaves them disabled, which makes the instance matrix
+		// singular and collapses the mesh to a point. The WebGPU backend has
+		// the same limitation, so both warn and fall back identically.
+		if (
+			this.renderer.customShader != null &&
+			this._instancedShaderWarned !== true
+		) {
+			this._instancedShaderWarned = true;
+			console.warn(
+				"melonJS: a custom shader cannot be hosted on an InstancedMesh — the mesh draws with the built-in instanced shading",
+			);
+		}
+		this.useShader(this.instancedShaderFor(mesh.instanceLayout));
+
+		this.updatePassState();
+		this.applyMeshMaterial(mesh);
+		this.setPlacementUniforms(modelMatrix, tint);
+
+		const { geometry, state } = this.instancedStateFor(mesh);
+		state.vertexState.bind();
+		gl.drawElementsInstanced(
+			this.mode,
+			geometry.indexCount,
+			geometry.indexType,
+			0,
+			count,
+		);
+
+		// Hand the default shader and this batcher's own vertex state back.
+		// Both matter: `bind()` only restores the default program when the
+		// batcher is re-entered, and `setBatcher` returns early when it is
+		// already current — so a following non-instanced mesh would otherwise
+		// draw through the instanced program, reading per-instance attributes
+		// that no longer have a buffer behind them.
+		this.useShader(this.defaultShader);
+		this.vertexState.bind();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
+	}
+
+	/**
+	 * Release the instance buffer and vertex state held for one mesh, if any.
+	 * @param {object} mesh - the mesh whose instance state should be freed
+	 * @ignore
+	 */
+	releaseInstanced(mesh) {
+		const state = this.instanced?.get(mesh);
+		if (state !== undefined) {
+			state.vertexState?.destroy();
+			state.instances.destroy();
+			this.instanced.delete(mesh);
+		}
+	}
+
+	/**
+	 * Release every instance buffer this batcher holds.
+	 * @ignore
+	 */
+	releaseAllInstanced() {
+		this.instanced?.forEach((state) => {
+			state.vertexState?.destroy();
+			state.instances.destroy();
+		});
+		this.instanced?.clear();
+	}
+
+	/**
 	 * Release the retained geometry held for one mesh, if any.
 	 * @param {object} mesh - the mesh whose geometry should be freed
 	 * @ignore
 	 */
 	releaseRetained(mesh) {
+		this.releaseInstanced(mesh);
 		const geometry = this.retained.get(mesh);
 		if (geometry !== undefined) {
 			geometry.destroy();
@@ -462,6 +745,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	releaseAllRetained() {
+		this.releaseAllInstanced();
 		this.retained.forEach((geometry) => {
 			geometry.destroy();
 		});

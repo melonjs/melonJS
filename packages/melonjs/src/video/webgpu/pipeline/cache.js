@@ -401,21 +401,51 @@ export default class WebGPUPipelineCache {
 	 * backend-neutral vertex formats (#1492): the records already carry
 	 * `format` and `offset` in WebGPU vocabulary, shader locations are
 	 * declaration order.
+	 * Accepts either the single-buffer form `(key, stride, attributes)` or a
+	 * list of buffer groups `(key, [{stride, stepMode, attributes}, …])` —
+	 * the latter is what an instanced family registers, with the geometry
+	 * group at index 0 and a `stepMode: "instance"` group after it. Shader
+	 * locations are assigned in declaration order and continue **across**
+	 * groups, since WGSL locations are a single namespace.
 	 * @param {string} shaderKey - "quad" | "primitive"
-	 * @param {number} stride - vertex byte stride
-	 * @param {{format: string, offset: number}[]} attributes - frozen records
+	 * @param {number|object[]} stride - vertex byte stride, or the buffer-group list
+	 * @param {{format: string, offset: number}[]} [attributes] - frozen records (single-buffer form)
 	 */
 	registerVertexLayout(shaderKey, stride, attributes) {
-		this.vertexLayouts.set(shaderKey, {
-			arrayStride: stride,
-			attributes: attributes.map((a, i) => {
-				return {
-					format: a.format,
-					offset: a.offset,
-					shaderLocation: i,
+		const groups = Array.isArray(stride)
+			? stride
+			: [{ stride, attributes, stepMode: "vertex" }];
+		let location = 0;
+		this.vertexLayouts.set(
+			shaderKey,
+			groups.map((group) => {
+				const layout = {
+					arrayStride: group.stride,
+					attributes: group.attributes.map((a) => {
+						// an attribute may pin its own location. Instanced
+						// families do: their optional slots come and go per
+						// variant, and sequential numbering would shift the
+						// remaining ones, so every WGSL variant would need
+						// renumbering. Pinned locations keep the module text
+						// identical whichever slots are present.
+						const shaderLocation = a.shaderLocation ?? location;
+						location = shaderLocation + 1;
+						return {
+							format: a.format,
+							offset: a.offset,
+							shaderLocation,
+						};
+					}),
 				};
+				// omitted entirely for per-vertex groups: "vertex" is the
+				// WebGPU default, and emitting it would change the descriptor
+				// every existing pipeline is built from
+				if (group.stepMode === "instance") {
+					layout.stepMode = "instance";
+				}
+				return layout;
 			}),
-		});
+		);
 	}
 
 	/**
@@ -469,7 +499,7 @@ export default class WebGPUPipelineCache {
 				vertex: {
 					module: this.modules[shaderKey],
 					entryPoint: "vertex_main",
-					buffers: vertexLayout ? [vertexLayout] : [],
+					buffers: vertexLayout ?? [],
 				},
 				fragment: {
 					module: this.modules[shaderKey],

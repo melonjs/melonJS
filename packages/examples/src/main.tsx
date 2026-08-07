@@ -128,6 +128,11 @@ const ExampleGltf = lazy(() =>
 		default: m.ExampleGltf,
 	})),
 );
+const ExampleForest = lazy(() =>
+	import("./examples/forest/ExampleForest").then((m) => ({
+		default: m.ExampleForest,
+	})),
+);
 const ExampleGltfCharacter = lazy(() =>
 	import("./examples/gltf/ExampleGltfCharacter").then((m) => ({
 		default: m.ExampleGltfCharacter,
@@ -439,6 +444,14 @@ const examples: {
 		sourceDir: "gltf",
 		description:
 			"A rigged blocky character (Kenney, CC0) loaded from GLB, using node-TRS animation over a rigid hierarchy.",
+	},
+	{
+		component: <ExampleForest />,
+		label: "Instanced Forest",
+		path: "forest",
+		sourceDir: "forest",
+		description:
+			"100 000 trees drawn from one geometry in a single call, scattered by the glTF asset itself.",
 	},
 	{
 		component: <ExampleNightCity />,

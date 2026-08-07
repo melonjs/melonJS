@@ -156,6 +156,7 @@ export default class WebGPURenderer extends Renderer {
 		// scenes take the uniforms-only drawMesh(mesh, modelMatrix) path
 		this.supportsDepthBuffer = true;
 		this.supportsRetainedMesh = true;
+		this.supportsInstancing = true;
 		// lazy orientation-specific GPU tilemap renderer (device-scoped:
 		// dropped on device loss, rebuilt on first use)
 		/** @ignore
@@ -1626,7 +1627,16 @@ export default class WebGPURenderer extends Renderer {
 		// a later mesh (or the frame-end drain) that didn't ask for it
 		try {
 			const tint = this.currentTint.toUint32(this.getGlobalAlpha());
-			if (retained) {
+			if (
+				mesh.instanceLayout !== undefined &&
+				retained &&
+				this.supportsInstancing === true
+			) {
+				// one geometry, N copies, one recorded draw — the per-instance
+				// records carry what each copy differs by, while `modelMatrix`
+				// places the group as a whole
+				batcher.drawInstancedMesh(mesh, modelMatrix, tint);
+			} else if (retained) {
 				batcher.drawRetainedMesh(mesh, modelMatrix, tint);
 			} else {
 				batcher.addMesh(mesh, tint);

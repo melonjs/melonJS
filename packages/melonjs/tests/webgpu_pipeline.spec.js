@@ -157,6 +157,70 @@ describe("WebGPU pipeline (device-free units)", () => {
 			return { device, cache };
 		}
 
+		it("a single-buffer registration emits exactly one layout, with no stepMode (#1508 pin)", () => {
+			// the multi-buffer generalization must leave every existing
+			// pipeline descriptor byte-identical: one entry in `buffers`,
+			// sequential shader locations, and NO `stepMode` key at all —
+			// "vertex" is the WebGPU default, so emitting it explicitly would
+			// change every descriptor the 2D tier is built from
+			const { device, cache } = makeCache();
+			cache.get("quad", "triangle-list", "normal", true);
+			const { buffers } = device.pipelines[0].descriptor.vertex;
+			expect(buffers).toHaveLength(1);
+			expect("stepMode" in buffers[0]).toBe(false);
+			expect(buffers[0]).toEqual({
+				arrayStride: 28,
+				attributes: [
+					{ format: "float32x3", offset: 0, shaderLocation: 0 },
+					{ format: "float32x2", offset: 12, shaderLocation: 1 },
+					{ format: "unorm8x4", offset: 20, shaderLocation: 2 },
+					{ format: "float32", offset: 24, shaderLocation: 3 },
+				],
+			});
+		});
+
+		it("a two-group registration puts the instance layout second, locations continuing across groups", () => {
+			const device = createMockDevice();
+			const cache = new WebGPUPipelineCache(device, "bgra8unorm");
+			cache.registerVertexLayout("instancedMesh", [
+				{
+					stride: 36,
+					attributes: [
+						{ format: "float32x3", offset: 0 },
+						{ format: "float32x2", offset: 12 },
+						{ format: "float32x4", offset: 20 },
+					],
+				},
+				{
+					stride: 48,
+					stepMode: "instance",
+					attributes: [
+						{ format: "float32x4", offset: 0 },
+						{ format: "float32x4", offset: 16 },
+						{ format: "float32x4", offset: 32 },
+					],
+				},
+			]);
+			cache.get("instancedMesh", "triangle-list", "none", true);
+			const { buffers } = device.pipelines[0].descriptor.vertex;
+			expect(buffers).toHaveLength(2);
+			expect("stepMode" in buffers[0]).toBe(false);
+			expect(buffers[1].stepMode).toBe("instance");
+			expect(buffers[1].arrayStride).toBe(48);
+			// WGSL locations are one namespace: the instance group continues
+			// from where the geometry group stopped, it does not restart at 0
+			expect(
+				buffers[0].attributes.map((a) => {
+					return a.shaderLocation;
+				}),
+			).toEqual([0, 1, 2]);
+			expect(
+				buffers[1].attributes.map((a) => {
+					return a.shaderLocation;
+				}),
+			).toEqual([3, 4, 5]);
+		});
+
 		it("the same state tuple returns the same pipeline object", () => {
 			const { device, cache } = makeCache();
 			const a = cache.get("quad", "triangle-list", "normal", true);

@@ -277,6 +277,9 @@ export default class WebGLRenderer extends Renderer {
 		// hand it their model matrix instead of pre-transformed vertices
 		this.supportsRetainedMesh = true;
 
+		// drawElementsInstanced is WebGL 2 core
+		this.supportsInstancing = true;
+
 		// GLSL, not "shaders exist" — `ShaderEffect` and the loader's
 		// `{vertex, fragment}` assets hand their source straight to the
 		// driver, so the language is the thing they have to agree on
@@ -1749,7 +1752,16 @@ export default class WebGLRenderer extends Renderer {
 		// unshaded mesh would silently draw with it
 		try {
 			const tint = this.currentTint.toUint32(this.getGlobalAlpha());
-			if (retained) {
+			if (
+				mesh.instanceLayout !== undefined &&
+				retained &&
+				this.supportsInstancing === true
+			) {
+				// one geometry, N copies, one call — the per-instance records
+				// carry the placement each copy differs by, while `modelMatrix`
+				// places the group as a whole
+				this.currentBatcher.drawInstancedMesh(mesh, modelMatrix, tint);
+			} else if (retained) {
 				this.currentBatcher.drawRetainedMesh(mesh, modelMatrix, tint);
 			} else {
 				this.currentBatcher.addMesh(mesh, tint);

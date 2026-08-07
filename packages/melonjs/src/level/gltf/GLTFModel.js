@@ -5,7 +5,9 @@ import {
 } from "../../loader/parsers/gltf.js";
 import { parseAnimationOptions } from "../../renderable/animation.ts";
 import Container from "../../renderable/container.js";
+import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
+import { fillInstances } from "./GLTFScene.js";
 import { sampleChannel } from "./gltf_sampler.js";
 
 /**
@@ -122,7 +124,11 @@ export default class GLTFModel extends Container {
 			this._world[idx] = new Array(16);
 
 			for (const prim of node.primitives) {
-				const mesh = new Mesh(0, 0, {
+				// an instanced node inside an ANIMATED asset still instances:
+				// the node's own TRS is animated, the records place the copies
+				// within it
+				const MeshClass = prim.instances ? InstancedMesh : Mesh;
+				const mesh = new MeshClass(0, 0, {
 					vertices: prim.vertices,
 					uvs: prim.uvs,
 					indices: prim.indices,
@@ -147,6 +153,9 @@ export default class GLTFModel extends Container {
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
 				});
+				if (prim.instances) {
+					fillInstances(mesh, prim.instances);
+				}
 				const f = prim.baseColorFactor;
 				if (f) {
 					mesh.tint.setColor(
