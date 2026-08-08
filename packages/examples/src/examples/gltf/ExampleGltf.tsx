@@ -14,6 +14,7 @@ import {
 	input,
 	level,
 	loader,
+	Mesh,
 	type Pointer,
 	plugin,
 	Renderable,
@@ -120,9 +121,13 @@ const createGame = async () => {
 		// y: the right surface is the smallest platform top still greater than
 		// the prop's base. Setting it is also what switches on the shrink-and-
 		// fade with height, which is what makes a floating coin read as floating.
+		// `instanceof`, not a cast: `world.children` is typed as the BASE class,
+		// so `castGroundShadow` / `getBounds3d()` — which live on `Mesh` — are
+		// not visible on it. Narrowing proves they are there instead of
+		// silencing the compiler, which keeps every member access below checked.
 		const meshes = app.world.children.filter(
-			(c) => (c as any).castGroundShadow !== undefined,
-		) as any[];
+			(c): c is Mesh => c instanceof Mesh,
+		);
 		const platformTops = meshes
 			.filter((m) => /^block/.test(m.name ?? ""))
 			.map((m) => m.getBounds3d().top);

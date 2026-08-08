@@ -317,3 +317,70 @@ describe("GLTFModel", () => {
 		expect(v[5]).toBeCloseTo(-1, 4);
 	});
 });
+
+/**
+ * Ground shadows through the animated glTF path (#1515).
+ *
+ * The opt-in is TRI-STATE — `undefined` means "follow the application
+ * setting" — so what the loader must NOT do is flatten it. Forwarding an
+ * omitted option as an explicit `false` would silently opt every animated
+ * glTF scene out of an application-wide default, and nothing about that is
+ * visible from a draw count or a screenshot.
+ */
+describe("GLTFModel ground shadows (#1515)", () => {
+	const partsOf = (options) => {
+		const model = new GLTFModel(makeData(), {
+			scale: 1,
+			rightHanded: false,
+			...options,
+		});
+		return model.children;
+	};
+
+	// a prim lying flat in the ground plane — every y identical
+	const FLAT = () => {
+		return {
+			...PRIM(),
+			vertices: new Float32Array([0, 0, 0, 1, 0, 0, 0, 0, 1]),
+		};
+	};
+
+	it("leaves the flag UNSET when the caller says nothing", () => {
+		// the application setting must still be able to reach these meshes
+		for (const part of partsOf({})) {
+			expect(part.castGroundShadow).toBeUndefined();
+		}
+	});
+
+	it("opts the scene in, and forwards the ground height", () => {
+		const parts = partsOf({ castGroundShadow: true, shadowGroundY: 7 });
+		expect(parts.length).toBeGreaterThan(0);
+		for (const part of parts) {
+			// PRIM() spans y 0..1, so it has height to cast from
+			expect(part.castGroundShadow).toBe(true);
+			expect(part.shadowGroundY).toBe(7);
+		}
+	});
+
+	it("opts the scene OUT explicitly, overriding an application default", () => {
+		for (const part of partsOf({ castGroundShadow: false })) {
+			expect(part.castGroundShadow).toBe(false);
+		}
+	});
+
+	it("a scene-wide opt-in SKIPS a part with no vertical extent", () => {
+		// a flat plane lying in the floor IS the floor; shadowing it with
+		// itself smears a blob across the whole ground
+		const data = makeData();
+		data.graph.nodes[1].primitives = [FLAT()];
+		const model = new GLTFModel(data, {
+			scale: 1,
+			rightHanded: false,
+			castGroundShadow: true,
+		});
+		expect(model.children.length).toBeGreaterThan(0);
+		for (const part of model.children) {
+			expect(part.castGroundShadow).toBe(false);
+		}
+	});
+});
