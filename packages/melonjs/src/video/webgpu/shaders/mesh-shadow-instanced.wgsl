@@ -1,0 +1,92 @@
+// Instanced ground-shadow module (#1515) — the WGSL twin of
+// `webgl/shaders/mesh-shadow-instanced.vert`.
+//
+// One flat blob per instance, drawn from the SAME instance buffer the mesh
+// itself uses, so a forest of a hundred thousand trees costs one extra draw
+// rather than a hundred thousand.
+//
+// Hand-written and STANDALONE, rather than derived from the mesh module by
+// `buildInstancedMeshWGSL`. Deriving it would inherit three things it must
+// not have: the `hasColor`/`hasData` variant matrix (this reads neither slot,
+// so one module serves every record layout), the per-instance tint multiply
+// and emissive substitution (which would give a forest coloured, glowing
+// shadows), and the VSOut member-written guard, which on the lit tier
+// requires a body that writes `vWorldPos` and `vNormal` — neither of which a
+// flat unlit blob has any use for.
+//
+// The instance's rotation and vertical scale are DISCARDED: a blob lies flat
+// however its tree is turned, and only the horizontal footprint sets its
+// width. Translation and horizontal scale come straight out of the record's
+// three rows with no matrix built. Flattening onto the ground is
+// `uMesh.model`'s job — the caller passes the group matrix with its Y basis
+// column zeroed and its translation Y set to the ground height.
+
+struct FrameUniforms {
+	projection : mat4x4<f32>,
+	// unused by this shader; part of the shared frame-globals block. Its size
+	// has to match the block the layout declares EXACTLY — a struct that reads
+	// past `minBindingSize` is a pipeline-creation error, not a silent
+	// over-read, and takes the whole frame's command buffer down with it.
+	lineWidth : f32,
+};
+
+struct MeshUniforms {
+	model : mat4x4<f32>,
+	view : mat4x4<f32>,
+	tint : vec4f,
+	params : vec4f,
+	emissive : vec4f,
+	specular : vec4f,
+	eye : vec4f,
+};
+
+@group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
+@group(1) @binding(0) var uTexture : texture_2d<f32>;
+@group(1) @binding(1) var uSampler : sampler;
+@group(1) @binding(2) var uAlphaMap : texture_2d<f32>;
+@group(1) @binding(3) var uAlphaSampler : sampler;
+@group(3) @binding(0) var<uniform> uMesh : MeshUniforms;
+
+struct VSOut {
+	@builtin(position) position : vec4f,
+	@location(0) vRegion : vec2f,
+	@location(1) vColor : vec4f,
+};
+
+@vertex
+fn vertex_main(
+	@location(0) aVertex : vec3f,
+	@location(1) aRegion : vec2f,
+	@location(2) aColor : vec4f,
+	@location(3) aInstanceRow0 : vec4f,
+	@location(4) aInstanceRow1 : vec4f,
+	@location(5) aInstanceRow2 : vec4f,
+) -> VSOut {
+	var out : VSOut;
+
+	let instancePos = vec3f(aInstanceRow0.w, aInstanceRow1.w, aInstanceRow2.w);
+	// column 0 of the instance basis is the X axis times its scale; a scatter
+	// is rotated about the vertical axis, so its length is the horizontal
+	// footprint whatever the rotation
+	let footprint = length(
+		vec3f(aInstanceRow0.x, aInstanceRow1.x, aInstanceRow2.x));
+
+	// the quad is a unit square in the ground plane (XZ); its own Y is
+	// irrelevant, because uMesh.model flattens it onto the floor
+	let local = instancePos + vec3f(aVertex.x, 0.0, aVertex.z) * footprint;
+
+	let clip = uFrame.projection * uMesh.view * uMesh.model * vec4f(local, 1.0);
+	// WebGPU clip space is [0, w] in Z where GL is [-w, w]
+	out.position = vec4f(clip.xy, (clip.z + clip.w) * 0.5, clip.w);
+
+	let tinted = aColor * uMesh.tint;
+	out.vColor = vec4f(tinted.rgb * tinted.a, tinted.a);
+	out.vRegion = aRegion;
+	return out;
+}
+
+@fragment
+fn fragment_main(in : VSOut) -> @location(0) vec4f {
+	let texel = textureSample(uTexture, uSampler, in.vRegion);
+	return texel * in.vColor;
+}

@@ -14,6 +14,7 @@ import {
 	buildInstancedMeshWGSL,
 	UNLIT_INSTANCED,
 } from "../shaders/mesh-instanced.js";
+import meshShadowInstancedWGSL from "../shaders/mesh-shadow-instanced.wgsl";
 import WebGPUBatcher from "./webgpu_batcher.js";
 
 /**
@@ -137,6 +138,9 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		}
 		this.instanced = new Map();
 		this.instancedKeys = new Map();
+		// ground-shadow families, keyed by record shape like `instancedKeys`
+		// — the module is shared, the instance buffer's stride is not
+		this.shadowFamilyKeys = new Map();
 	}
 
 	/**
@@ -265,6 +269,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const geometry = this.retainedGeometryFor(mesh);
 		const instances = this.instanceBufferFor(mesh);
 
+		this.meshState.depthWrite = undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.instancedFamilyFor(mesh.instanceLayout),
 			"triangle-list",
@@ -302,6 +307,126 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 
 		// stamp both halves: an edit later this frame must go to fresh buffers
 		geometry.lastDrawnFrameId = renderer.frameId;
+		instances.lastDrawnFrameId = renderer.frameId;
+	}
+
+	/**
+	 * The instanced ground-shadow family (#1515), registered on first use.
+	 *
+	 * ONE family, not one per record layout: the module reads only the three
+	 * transform rows, so `hasColor` / `hasData` make no difference — and the
+	 * vertex layout declares only those rows, leaving the instance buffer's
+	 * stride and offsets exactly as the mesh pass uses them.
+	 * @param {object} layout - the mesh's instance record layout
+	 * @returns {string} the pipeline family key
+	 * @ignore
+	 */
+	instancedShadowFamily(layout) {
+		// Keyed by the record shape, exactly as `instancedFamilyFor` is, and
+		// for a sharper reason: the shadow reads only the three transform
+		// rows, so ONE module serves every layout — but the instance buffer's
+		// `arrayStride` is baked into the vertex layout, and it is 48 / 64 / 80
+		// bytes depending on which optional slots the records carry. Caching a
+		// single family would hand the second scatter the first one's stride
+		// and its blobs would land at garbage positions.
+		const key = (layout.hasColor ? 1 : 0) | (layout.hasData ? 2 : 0);
+		let familyKey = this.shadowFamilyKeys.get(key);
+		if (familyKey !== undefined) {
+			return familyKey;
+		}
+		const cache = this.renderer.pipelineCache;
+		const layoutKey = `${this.vertexLayoutKey}InstancedShadow${key}`;
+		cache.registerVertexLayout(layoutKey, [
+			{
+				stride: this.stride,
+				// TRIMMED to position / region / colour, at the original stride
+				// so the offsets still land. The lit tier carries `aNormal` at
+				// location 3, which is where the instance rows start — declaring
+				// the full layout collides with them and the pipeline is
+				// rejected outright ("shader location used more than once"). A
+				// flat blob has no use for a normal, so dropping it is also what
+				// lets ONE module serve both tiers.
+				attributes: this.attributes.slice(0, 3),
+			},
+			{
+				stride: layout.stride,
+				stepMode: "instance",
+				// the three rows only — the shadow reads no colour, no data
+				attributes: instanceAttributes(layout, 3).slice(0, 3),
+			},
+		]);
+		familyKey = cache.registerShader(meshShadowInstancedWGSL, {
+			bindGroupLayouts: this.bindGroupLayoutList(cache),
+			vertexLayoutKey: layoutKey,
+			label: `melonJS instanced mesh shadow ${key}`,
+		});
+		this.shadowFamilyKeys.set(key, familyKey);
+		return familyKey;
+	}
+
+	/**
+	 * Record one flat blob per instance, in a single call, over the same
+	 * instance buffer the mesh itself drew from (#1515).
+	 * @param {InstancedMesh} mesh - the mesh casting the shadows
+	 * @param {Matrix3d} shadowMatrix - the group matrix flattened onto the ground
+	 * @param {number} tint - tint colour in UINT32 (argb) format
+	 * @param {object} quad - the shared shadow quad
+	 * @ignore
+	 */
+	drawInstancedShadow(mesh, shadowMatrix, tint, quad) {
+		const count = mesh.visibleInstanceCount;
+		if (count === 0) {
+			return;
+		}
+		this.flush();
+		this.updatePassState();
+		this.applyMeshMaterial(quad);
+		this.setPlacementUniforms(shadowMatrix, tint, quad);
+
+		// Cull state is a PIPELINE axis here, and `meshState.cullMode` /
+		// `frontFace` are written only by `WebGPURenderer.drawMesh` — which this
+		// path bypasses. Left alone the blob inherits whatever the last ordinary
+		// mesh set, and since the shadow matrix's horizontal block has negative
+		// determinant under the glTF bridge, an inherited `"back"` can cull the
+		// blobs outright. A ground quad is seen from above and, on a mirrored
+		// bridge, from whichever side the winding lands on — never cull it.
+		this.meshState.cullMode = "none";
+		this.meshState.frontFace = "ccw";
+
+		const renderer = this.renderer;
+		const pass = renderer.ensurePass();
+		const quadGeometry = this.retainedGeometryFor(quad);
+		const instances = this.instanceBufferFor(mesh);
+
+		// blended, and no depth write: overlapping blobs blend rather than
+		// fight under LEQUAL
+		this.meshState.depthWrite = false;
+		const pipeline = renderer.pipelineCache.get(
+			this.instancedShadowFamily(mesh.instanceLayout),
+			"triangle-list",
+			"normal",
+			renderer.premultipliedAlpha,
+			renderer.stencilMode,
+			this.meshState,
+		);
+		this.meshState.depthWrite = undefined;
+		if (pipeline !== renderer.currentPipeline) {
+			pass.setPipeline(pipeline);
+			renderer.currentPipeline = pipeline;
+		}
+		const frame = renderer.currentFrameBinding;
+		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
+		pass.setBindGroup(1, this.currentMaterial);
+		this.bindLights(pass);
+		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
+			this.uniformBinding.dynamicOffset,
+		]);
+		pass.setVertexBuffer(0, quadGeometry.vertexBuffer);
+		pass.setVertexBuffer(1, instances.buffer);
+		pass.setIndexBuffer(quadGeometry.indexBuffer, quadGeometry.indexFormat);
+		pass.drawIndexed(quadGeometry.indexCount, count);
+
+		quadGeometry.lastDrawnFrameId = renderer.frameId;
 		instances.lastDrawnFrameId = renderer.frameId;
 	}
 
@@ -702,6 +827,9 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			indexBytes,
 		);
 
+		// the accumulated path is opaque; a blended draw only reaches the
+		// retained path, so this must never inherit a stale flag
+		this.meshState.depthWrite = undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),
 			"triangle-list",
@@ -817,10 +945,19 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const pass = renderer.ensurePass();
 		const geometry = this.retainedGeometryFor(mesh);
 
+		// A blended mesh (the ground shadow, #1515) keeps the depth TEST but
+		// stops writing depth, so overlapping shadows blend instead of
+		// fighting. Set per draw, never left behind: an ordinary mesh must
+		// resolve to exactly the pipeline it always did.
+		const blended = mesh._blendedDraw === true;
+		// `undefined` rather than `true` for the ordinary case: the axis reads
+		// `!== false`, so leaving it unset keeps `meshState` byte-for-byte what
+		// it was before this existed, and the pipeline key gains nothing
+		this.meshState.depthWrite = blended ? false : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),
 			"triangle-list",
-			"none",
+			blended ? "normal" : "none",
 			renderer.premultipliedAlpha,
 			renderer.stencilMode,
 			this.meshState,

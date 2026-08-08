@@ -1124,6 +1124,11 @@ export default class Application {
 			// set back to flag
 			this.isDirty = false;
 
+			// ground shadows are held back until every opaque mesh is down
+			// (#1515); a scene that is nothing but meshes never switches away
+			// from mesh mode, so the pass is closed here
+			this.renderer.flushGroundShadows();
+
 			// flush/render our frame
 			this.renderer.flush();
 

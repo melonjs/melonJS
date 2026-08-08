@@ -327,6 +327,110 @@ export default class Renderer {
 	flush() {}
 
 	/**
+	 * Hold one ground shadow ({@link Mesh#castGroundShadow}) back until the end
+	 * of the mesh pass (#1515).
+	 *
+	 * A blob shadow deliberately writes no depth, so that two overlapping at
+	 * one ground height blend instead of fighting. The price of that choice is
+	 * that it leaves nothing in the depth buffer to defend itself with: any
+	 * opaque mesh drawn afterwards simply paints over it. The ground plane is
+	 * exactly that mesh whenever it sorts after the props standing on it — the
+	 * common case, because a large plane's single sort key says nothing useful
+	 * about where it sits relative to what stands on it.
+	 *
+	 * So shadows are collected here and drawn once the opaque meshes are down.
+	 * Depth *testing* stays on throughout, so a shadow is still correctly
+	 * hidden behind geometry genuinely in front of it: deferring changes only
+	 * who paints over whom among draws that write no depth.
+	 * @param {object} quad - the shared shadow quad
+	 * @param {Matrix3d} modelMatrix - where the blob sits (copied, not retained)
+	 * @param {number} tint - packed ARGB tint for the draw
+	 * @param {object} [instanced] - the `InstancedMesh` whose instance buffer
+	 * supplies one blob per instance, for the instanced tier
+	 * @ignore
+	 */
+	queueGroundShadow(quad, modelMatrix, tint, instanced) {
+		const pool = (this._shadowPool ??= []);
+		const at = this._shadowCount ?? 0;
+		// The matrix is COPIED, not referenced: every shadow in a scene shares
+		// one quad, so `quad._modelMatrix` is rewritten by the next caster long
+		// before this entry is drawn. Slots are reused frame to frame, so a
+		// steady scene allocates nothing after its first.
+		let entry = pool[at];
+		if (entry === undefined) {
+			entry = { quad: null, matrix: new Matrix3d(), tint: 0, instanced: null };
+			pool[at] = entry;
+		}
+		entry.quad = quad;
+		entry.matrix.copy(modelMatrix);
+		entry.tint = tint;
+		entry.instanced = instanced ?? null;
+		this._shadowCount = at + 1;
+	}
+
+	/**
+	 * Draw every ground shadow queued since the last drain, then empty the
+	 * queue (#1515). Called when the renderer leaves mesh mode, and once more
+	 * at end of frame for a scene made only of meshes, which never switches
+	 * away from mesh mode on its own.
+	 *
+	 * Inert on a backend that never queues — the Canvas renderer has no depth
+	 * buffer and so no ground shadows at all.
+	 */
+	flushGroundShadows() {
+		const count = this._shadowCount ?? 0;
+		if (count === 0 || this._shadowFlushing === true) {
+			return;
+		}
+		const pool = this._shadowPool;
+		// emptied BEFORE the replay, not after: the draws below re-enter
+		// `setBatcher`, which calls back in here, and a queue still holding
+		// entries would recurse. `_shadowFlushing` guards the same door from
+		// the other side, and covers the re-entry into `drawMesh`.
+		this._shadowCount = 0;
+		this._shadowFlushing = true;
+		try {
+			// The colour the shadow was queued WITH has to be put back, because
+			// both backends rebuild the draw tint from `currentTint` +
+			// `getGlobalAlpha()` — long since restored to the scene's values by
+			// the time this replay runs.
+			const tint = this.currentTint;
+			const savedR = tint.r;
+			const savedG = tint.g;
+			const savedB = tint.b;
+			// the colour's OWN alpha, which `setColor(r, g, b)` resets to 1
+			const savedTintAlpha = tint.alpha;
+			const savedAlpha = this.getGlobalAlpha();
+			try {
+				for (let i = 0; i < count; i++) {
+					const entry = pool[i];
+					const packed = entry.tint;
+					tint.setColor(
+						(packed >>> 16) & 0xff,
+						(packed >>> 8) & 0xff,
+						packed & 0xff,
+					);
+					this.setGlobalAlpha(((packed >>> 24) & 0xff) / 255);
+					if (entry.instanced !== null) {
+						this.drawInstancedShadow(entry.instanced, entry.matrix, entry.quad);
+					} else {
+						this.drawMesh(entry.quad, entry.matrix);
+					}
+					// drop the references, so a destroyed mesh is not held alive by
+					// a pooled slot until that slot is next reused
+					entry.quad = null;
+					entry.instanced = null;
+				}
+			} finally {
+				tint.setColor(savedR, savedG, savedB, savedTintAlpha);
+				this.setGlobalAlpha(savedAlpha);
+			}
+		} finally {
+			this._shadowFlushing = false;
+		}
+	}
+
+	/**
 	 * Draw a textured triangle mesh.
 	 * The mesh object must provide: `vertices` (Float32Array, x/y/z triplets),
 	 * `uvs` (Float32Array, u/v pairs), `indices` (Uint16Array, triangle indices),
@@ -351,6 +455,13 @@ export default class Renderer {
 	 * Reset context state
 	 */
 	reset() {
+		// Drop any ground shadows still queued (#1515) BEFORE anything below
+		// can trip a drain. A reset re-inits every batcher and then switches
+		// batcher, which is itself a drain point — replaying entries from the
+		// frame we are abandoning would paint them after `clear()`, and on the
+		// context-lost branch would draw geometry belonging to the dead
+		// context. The frame is being thrown away; its shadows go with it.
+		this._shadowCount = 0;
 		this.renderState.reset(this.width, this.height);
 		this.resetTransform();
 		this.setBlendMode(this.settings.blendMode);

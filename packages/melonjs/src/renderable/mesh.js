@@ -15,6 +15,7 @@ import { AABB3d } from "../physics/broadphase/aabb3d.ts";
 import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
+import { getShadowQuad, hasVerticalExtent } from "./groundshadow.js";
 import Renderable from "./renderable.js";
 
 /**
@@ -22,6 +23,33 @@ import Renderable from "./renderable.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
+
+// How far above the ground an object rises before its shadow is gone, as a
+// multiple of the object's own horizontal extent. Tuned by eye: a character
+// roughly two of its own widths up has clearly left the floor.
+const SHADOW_FADE_SPAN = 6;
+
+// How far the blob is lifted off the ground plane, as a fraction of its own
+// radius. A shadow drawn EXACTLY coplanar with the floor it sits on is
+// order-dependent: both survive the LEQUAL depth test at equal depth, so
+// whichever draws last wins, and the sort between two objects at one depth is
+// arbitrary. Lifting it a hair toward the sky makes it win by depth instead of
+// by luck. Proportional to the radius so it holds at any scale — a fixed
+// epsilon would z-fight on a large shadow and float visibly on a small one.
+const SHADOW_LIFT = 0.01;
+
+// How thin a blob is allowed to get on its minor axis, as a fraction of its
+// major. A paper-thin caster — a `Sprite3d` billboard, a flat plate — projects
+// honestly to a hairline, which reads as a rendering fault rather than a
+// shadow; this keeps it an ellipse that is still clearly elongated along the
+// object.
+const SHADOW_MIN_AXIS_RATIO = 0.5;
+
+// How far the blob spreads past the caster's own footprint. A shadow sized to
+// exactly the footprint is invisible under anything with vertical sides — a
+// crate sitting flat on the floor covers its own shadow completely — and real
+// contact shadows spread a little anyway, because no light source is a point.
+const SHADOW_SPREAD = 1.2;
 
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
@@ -512,6 +540,82 @@ export default class Mesh extends Renderable {
 		 * @type {TextureAtlas|undefined}
 		 */
 		this.alphaMap = undefined;
+
+		/**
+		 * Cast a soft dark ellipse — a "blob" shadow — on the ground beneath
+		 * this mesh (#1515).
+		 *
+		 * Not a simulated shadow, deliberately: what a 2.5D scene needs from
+		 * one is *contact* — where the object is standing, and how far off the
+		 * ground it is mid-jump. It costs one extra draw per shadowed object,
+		 * shares one geometry and one texture with every other shadow in the
+		 * scene, and is inert while `false`.
+		 *
+		 * Requires a GPU backend and a {@link Camera3d}: the shadow rides the
+		 * retained world-space path, so the Canvas renderer and the 2D-camera
+		 * path draw none.
+		 *
+		 * Left **unset** (`undefined`, the default) this follows the
+		 * application's `castGroundShadow` setting — with one safeguard: a
+		 * scene-wide opt-in skips meshes with no vertical extent, because a
+		 * flat plane lying on the floor is the floor, and shadowing it with
+		 * itself smears the whole ground. Setting the property here is an
+		 * explicit instruction and always obeyed, safeguard included.
+		 * @type {boolean|undefined}
+		 * @default undefined
+		 * @see Mesh#shadowGroundY
+		 */
+		this.castGroundShadow =
+			typeof settings.castGroundShadow === "boolean"
+				? settings.castGroundShadow
+				: undefined;
+
+		/**
+		 * World Y of the floor the shadow lands on, or `undefined` (the
+		 * default) to mean "this object is standing on the ground" — the
+		 * shadow sits at the object's own base, at full strength, and does not
+		 * shrink or fade.
+		 *
+		 * Set it, and the shadow shrinks and fades as the object rises above
+		 * it: the readable part of a jump. The game already knows this value
+		 * from collision, which is why it is not derived — deriving it from the
+		 * object's live bounds would make the "ground" jump with the jumper,
+		 * so the height could never be anything but zero.
+		 *
+		 * Render space is Y-DOWN, so the floor is a **greater** Y than the
+		 * object above it.
+		 * @type {number|undefined}
+		 * @default undefined
+		 */
+		this.shadowGroundY = settings.shadowGroundY;
+
+		/**
+		 * Opacity of the shadow directly beneath the object, before any
+		 * height fade.
+		 * @type {number}
+		 * @default 0.45
+		 */
+		this.shadowOpacity =
+			typeof settings.shadowOpacity === "number"
+				? settings.shadowOpacity
+				: 0.45;
+
+		/**
+		 * Cached horizontal half-extent used to size the shadow, resolved on
+		 * first shadowed draw. Cached because the alternative is a
+		 * `getBounds3d()` per frame per shadow, which re-bounds every source
+		 * vertex through the model matrix.
+		 * @ignore
+		 */
+		this._shadowHalfX = -1;
+		this._shadowHalfZ = -1;
+		// the geometry version the two above (and `_shadowHasHeight`) were
+		// measured at; -1 means "never". Recomputed when the mesh signals a
+		// geometry change, so a deforming mesh — or a `Sprite3d` whose frame
+		// bake rewrites `originalVertices` every animation step — does not keep
+		// a blob frozen at whatever its first shadowed draw happened to see.
+		this._shadowGeomVersion = -1;
+		this._shadowHasHeight = false;
 
 		/**
 		 * whether to cull back-facing triangles
@@ -1236,6 +1340,224 @@ export default class Mesh extends Renderable {
 	}
 
 	/**
+	 * Whether this mesh casts a ground shadow on this draw (#1515).
+	 *
+	 * Precedence, most specific first: the mesh's own `castGroundShadow`, then
+	 * the application's `castGroundShadow` setting. A per-mesh value is an
+	 * explicit instruction and is obeyed as given; the application default is a
+	 * blanket one, so it skips meshes with no vertical extent — which is what a
+	 * ground plane is, and a flat plane lying on the floor has nothing to cast.
+	 * Read off the renderer rather than the global application instance, the
+	 * same way the `textureFilter` default is.
+	 * @param {WebGLRenderer|WebGPURenderer} renderer - the active renderer
+	 * @returns {boolean} true if a shadow should be drawn
+	 * @ignore
+	 */
+	_castsGroundShadow(renderer) {
+		if (typeof this.castGroundShadow === "boolean") {
+			return this.castGroundShadow;
+		}
+		if (renderer.settings?.castGroundShadow !== true) {
+			return false;
+		}
+		// Measured with the footprint and cached against the geometry version.
+		// This runs per mesh per FRAME on the application-default path — which
+		// is now the default — and `hasVerticalExtent` walks every vertex
+		// twice, so an uncached call makes a 100k-vertex ground plane pay 200k
+		// iterations a frame purely to answer "no".
+		this._measureShadowFootprint();
+		return this._shadowHasHeight;
+	}
+
+	/**
+	 * Measure the model-space footprint the blob is built from, and whether the
+	 * geometry has any height at all — once per geometry version.
+	 * @ignore
+	 */
+	_measureShadowFootprint() {
+		const version = this._geometryVersion ?? 0;
+		if (this._shadowGeomVersion === version) {
+			return;
+		}
+		const src = this.originalVertices;
+		let hx = 0;
+		let hz = 0;
+		for (let i = 0; i < this.vertexCount; i++) {
+			const i3 = i * 3;
+			const x = Math.abs(src[i3]);
+			const z = Math.abs(src[i3 + 2]);
+			if (x > hx) {
+				hx = x;
+			}
+			if (z > hz) {
+				hz = z;
+			}
+		}
+		// about the model ORIGIN, not the bounding box centre: the shadow is
+		// centred on where the object is placed, so an off-centre model needs
+		// the blob wide enough to still cover it
+		this._shadowHalfX = hx;
+		this._shadowHalfZ = hz;
+		this._shadowHasHeight = hasVerticalExtent(src, this.vertexCount);
+		this._shadowGeomVersion = version;
+	}
+
+	/**
+	 * Draw this mesh's ground shadow: the shared blob quad, flattened onto the
+	 * ground plane beneath the object (#1515).
+	 *
+	 * The quad is shared by every shadow in the scene and its geometry is
+	 * uploaded once, so this is one draw and no allocation.
+	 * @param {WebGLRenderer} renderer - the active renderer
+	 * @ignore
+	 */
+	_drawGroundShadow(renderer) {
+		const quad = getShadowQuad(renderer, this.lit === true, Mesh);
+		const model = this._modelMatrix.val;
+		const originX = model[12];
+		const originY = model[13];
+		const originZ = model[14];
+
+		this._measureShadowFootprint();
+
+		// The footprint axes: the model-space half-extents carried through the
+		// object's own rotation and scale, then flattened onto the ground.
+		//
+		// Taken from `currentTransform` + `meshScale` rather than from the model
+		// matrix, and that distinction matters: a billboarded `Sprite3d` builds
+		// its model matrix from a CAMERA-FACING basis, so reading that would
+		// make its blob spin as the camera orbits. `currentTransform` carries
+		// only what the object itself was turned by.
+		//
+		// Doing it as two axes rather than one radius is what gives a shadow
+		// that matches the object: a thin upright panel gets a thin ellipse
+		// lying along the panel — turning as the panel turns — instead of a disc
+		// that reads as perpendicular to it.
+		const c = this.currentTransform.val;
+		const s = this.meshScale;
+		const zSign = this.rightHanded ? -1 : 1;
+		const hx = this._shadowHalfX * s;
+		const hz = this._shadowHalfZ * s;
+		// Columns 0 and 2 of the horizontal basis, Y dropped. `_composeModelMatrix`
+		// applies the axis bridge as a ROW scale — `diag(s, -s, ±s) · transform` —
+		// so it is the world **Z component of both columns** that carries `zSign`,
+		// not one whole column. Folding it into `hz` instead mirrors the basis
+		// about world X, and a right-handed (glTF) caster's blob then turns the
+		// WRONG WAY: an elongated prop rotated θ gets an ellipse at −θ.
+		let axX = c[0] * hx;
+		let axZ = c[2] * hx * zSign;
+		let azX = c[8] * hz;
+		let azZ = c[10] * hz * zSign;
+		let axLen = Math.hypot(axX, axZ);
+		let azLen = Math.hypot(azX, azZ);
+
+		// A paper-thin caster — a `Sprite3d` billboard, a flat plate — has no
+		// depth at all on one axis, and an honest projection of it is a
+		// hairline, which reads as a rendering fault rather than a shadow. Give
+		// the minor axis a floor relative to the major, so the blob stays a
+		// blob: still clearly elongated along the object, never degenerate.
+		const minor = axLen > azLen ? azLen : axLen;
+		const major = axLen > azLen ? axLen : azLen;
+		const least = major * SHADOW_MIN_AXIS_RATIO;
+		if (minor < least && major > 1e-6) {
+			if (axLen < least) {
+				if (axLen > 1e-6) {
+					const k = least / axLen;
+					axX *= k;
+					axZ *= k;
+				} else {
+					// nothing to scale up — grow along the perpendicular of the
+					// axis that DOES have length, in the ground plane
+					axX = (-azZ / azLen) * least;
+					axZ = (azX / azLen) * least;
+				}
+				axLen = least;
+			}
+			if (azLen < least) {
+				if (azLen > 1e-6) {
+					const k = least / azLen;
+					azX *= k;
+					azZ *= k;
+				} else {
+					azX = (-axZ / axLen) * least;
+					azZ = (axX / axLen) * least;
+				}
+				azLen = least;
+			}
+		}
+
+		// one scalar for the height fade and the lift — the blob's own size
+		const extent = (axLen + azLen) * 0.5;
+
+		// Render space is Y-DOWN, so the floor sits at a GREATER Y than the
+		// object standing on it. `bottom` is `max.y` for the same reason.
+		let groundY = this.shadowGroundY;
+		let strength = 1;
+		if (groundY === undefined) {
+			groundY = this.getBounds3d().bottom;
+		} else {
+			// how far the object floats above that floor, as a fraction of its
+			// own size — a blob that shrinks and fades is what reads as height
+			const height = groundY - originY;
+			const fade = 1 - height / (extent * SHADOW_FADE_SPAN);
+			strength = fade > 0 ? (fade < 1 ? fade : 1) : 0;
+			if (strength === 0) {
+				return;
+			}
+		}
+
+		// the quad is a unit square, so a half-extent of `k · axis` needs the
+		// basis column to be twice that
+		const k = (0.5 + strength * 0.5) * 2 * SHADOW_SPREAD;
+		// written into the quad's OWN model matrix rather than a module scratch:
+		// it is the quad's placement, the renderer copies it when queueing the
+		// deferred draw, and it keeps the placement inspectable from the outside
+		if (quad._modelMatrix === undefined) {
+			quad._modelMatrix = new Matrix3d();
+		}
+		const out = quad._modelMatrix.val;
+		out[0] = axX * k;
+		out[1] = 0;
+		out[2] = axZ * k;
+		out[3] = 0;
+		out[4] = 0;
+		out[5] = 1;
+		out[6] = 0;
+		out[7] = 0;
+		out[8] = azX * k;
+		out[9] = 0;
+		out[10] = azZ * k;
+		out[11] = 0;
+		out[12] = originX;
+		// render space is Y-DOWN, so lifting off the floor is a SMALLER y
+		out[13] = groundY - extent * SHADOW_LIFT;
+		out[14] = originZ;
+		out[15] = 1;
+
+		// Stash and restore by hand rather than save()/restore(): restore()
+		// runs setBlendMode, which would re-enable GL_BLEND for the rest of an
+		// otherwise opaque mesh pass — MeshBatcher.bind() turned it off behind
+		// that cache's back. Opacity must go through the global alpha too:
+		// drawMesh builds its tint as currentTint.toUint32(getGlobalAlpha()),
+		// and toUint32 ignores the colour's own alpha.
+		const tint = renderer.currentTint;
+		const savedR = tint.r;
+		const savedG = tint.g;
+		const savedB = tint.b;
+		// the colour's OWN alpha, which `setColor(r, g, b)` resets to 1
+		const savedTintAlpha = tint.alpha;
+		const savedAlpha = renderer.getGlobalAlpha();
+		tint.setColor(0, 0, 0);
+		renderer.setGlobalAlpha(this.shadowOpacity * strength * savedAlpha);
+		try {
+			renderer.drawMesh(quad, quad._modelMatrix);
+		} finally {
+			tint.setColor(savedR, savedG, savedB, savedTintAlpha);
+			renderer.setGlobalAlpha(savedAlpha);
+		}
+	}
+
+	/**
 	 * Draw the mesh (automatically called by melonJS). Picks between two
 	 * projection paths based on the camera that was active when this mesh
 	 * was added to the world (captured in {@link Mesh#onActivateEvent}):
@@ -1295,6 +1617,15 @@ export default class Mesh extends Renderable {
 				// previously drawn through the reversing path below.
 				this.indices = this._indicesOriginal;
 				renderer.drawMesh(this, this._composeModelMatrix());
+				if (
+					this._castsGroundShadow(renderer) === true &&
+					this.instanceLayout === undefined
+				) {
+					// after the object, so the shadow blends over whatever the
+					// object did not cover. An InstancedMesh takes its own path
+					// — one shadow draw for the whole set, not one per instance.
+					this._drawGroundShadow(renderer);
+				}
 				return;
 			}
 			// Camera3d path. The reflection bridge (Y-only negate) inverts

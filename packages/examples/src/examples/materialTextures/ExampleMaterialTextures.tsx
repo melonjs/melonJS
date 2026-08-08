@@ -46,6 +46,12 @@ const MESH_BASE = `${import.meta.env.BASE_URL}assets/mesh3d/`;
 
 // the three props, left to right along X at a common depth
 const PROP_Y = 0;
+// Where the floor sits, and so where every blob lands. Render space is Y-DOWN,
+// so this is BELOW the props at PROP_Y. Chosen to meet their bases (the widest
+// prop is 170 across, i.e. 85 below its own origin) — a floor further down
+// would be correct but would read as three floating objects, because the
+// shadow shrinks and fades with height exactly as it should.
+const GROUND_Y = 85;
 const PROP_Z = 520;
 const SPACING = 210;
 
@@ -129,6 +135,30 @@ function buildScene(app: Application) {
 	world.addChild(key);
 	world.addChild(new Light3d(0, 0, { type: "ambient", color: "#3b4870" }));
 
+	// a floor for the shadows to land on
+	const F = 900;
+	const floor = new Mesh(0, GROUND_Y, {
+		vertices: new Float32Array([-F, 0, -F, F, 0, -F, F, 0, F, -F, 0, F]),
+		uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+		indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+		normals: new Float32Array([0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]),
+		width: F * 2 * Math.SQRT2,
+		height: F * 2 * Math.SQRT2,
+		scale: 1,
+		normalize: false,
+		cullBackFaces: false,
+		// unlit on purpose: the key light points UP in this Y-down scene, so a
+		// lit ground plane would only ever receive ambient
+		lit: false,
+	});
+	// farther than the props, so the world's depth sort draws it FIRST. A
+	// shadow does not write depth (that is what lets two overlap), so anything
+	// drawn after it simply paints over it — a floor sharing the props' depth
+	// sorts arbitrarily against them and wins half the time.
+	floor.depth = PROP_Z - 300;
+	floor.tint.setColor(150, 152, 160);
+	world.addChild(floor);
+
 	const props: Mesh[] = [];
 
 	// ── crate: three diffuse maps, one per material ──────────────
@@ -137,7 +167,12 @@ function buildScene(app: Application) {
 		material: "crate",
 		width: 150,
 		lit: true,
+		castGroundShadow: true,
+		shadowGroundY: GROUND_Y,
 	});
+	// a quarter turn, so the shipping label faces the camera rather than
+	// sitting edge-on
+	crate.rotate(Math.PI / 2, AXIS_Y);
 	crate.depth = PROP_Z;
 	props.push(crate);
 
@@ -148,6 +183,8 @@ function buildScene(app: Application) {
 		material: "props",
 		width: 170,
 		lit: true,
+		castGroundShadow: true,
+		shadowGroundY: GROUND_Y,
 	});
 	ball.depth = PROP_Z;
 	props.push(ball);
@@ -163,6 +200,8 @@ function buildScene(app: Application) {
 		// nothing — the two are a pair.
 		alphaCutoff: 0.5,
 		cullBackFaces: false,
+		castGroundShadow: true,
+		shadowGroundY: GROUND_Y,
 	});
 	panel.depth = PROP_Z;
 	props.push(panel);

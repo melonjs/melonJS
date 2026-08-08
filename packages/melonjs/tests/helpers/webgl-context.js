@@ -100,6 +100,13 @@ export async function getWebGLRenderer(width = 128, height = 128) {
 				// caveat" flag; without opting out the renderer silently falls
 				// back to Canvas and every WebGL spec skips
 				failIfMajorPerformanceCaveat: false,
+				// Ground shadows (#1515) ship ON, which means a second draw for
+				// every 3D mesh. The suites that are not testing them should not
+				// pay for them: on CI's software renderer that extra GPU work is
+				// enough to push unrelated suites past their timeout. The shadow
+				// spec opts itself in per test, and asserts the shipped default
+				// separately against `defaultApplicationSettings`.
+				castGroundShadow: false,
 			});
 			await app.init();
 		} catch {

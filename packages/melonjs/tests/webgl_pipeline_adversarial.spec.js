@@ -928,7 +928,11 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 
 		expect(true).toBe(true); // reached the end of all seeds without throwing
-	});
+		// 60s, matching the sibling fuzz in webgl_vao_adversarial: 1000 random
+		// ops each issue their own draws, and a mesh op now issues a second one
+		// for its ground shadow (on by default since #1515), so the default 15s
+		// budget no longer fits on a loaded machine.
+	}, 60000);
 
 	// ---- Per-batcher vertex-state ownership (VAO era) ----
 

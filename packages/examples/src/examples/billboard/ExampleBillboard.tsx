@@ -83,9 +83,12 @@ function bakeGrid() {
 	c.height = 64;
 	const ctx = c.getContext("2d");
 	if (ctx) {
-		ctx.fillStyle = "#161a24";
+		// light enough for a ground shadow to have something to darken: a blob
+		// is a subtraction, and on the near-black this used to be there was
+		// nothing to subtract from
+		ctx.fillStyle = "#4a5372";
 		ctx.fillRect(0, 0, 64, 64);
-		ctx.strokeStyle = "#2c3550";
+		ctx.strokeStyle = "#6f7ba3";
 		ctx.lineWidth = 2;
 		ctx.strokeRect(0, 0, 64, 64);
 	}
@@ -212,6 +215,11 @@ const createGame = async () => {
 					z: 0,
 					billboard: mode,
 					anchorPoint: "bottom", // feet at pos — character only
+					castGroundShadow: true,
+					// the floor plane, which the game knows and the engine does
+					// not: left unset the blob falls back to the sprite's own
+					// base, and a billboard's base moves with the camera
+					shadowGroundY: GY,
 				});
 				guy.addAnimation("walk", WALK_FRAMES, 90);
 				guy.setCurrentAnimation("walk");
@@ -228,6 +236,12 @@ const createGame = async () => {
 					z: 0,
 					billboard: "spherical",
 					// no anchorPoint — the default center is correct here
+					// a floating label has no ground beneath it to make contact
+					// with, so it opts out of the application-wide default. Its
+					// blob happens to be edge-on and invisible at this camera
+					// height — saying so explicitly keeps that from depending on
+					// where the camera happens to sit
+					castGroundShadow: false,
 				});
 				app.world.addChild(tag);
 			}

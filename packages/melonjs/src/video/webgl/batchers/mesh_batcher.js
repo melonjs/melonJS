@@ -15,6 +15,7 @@ import GLShader from "../glshader.js";
 import meshFragment from "./../shaders/mesh.frag";
 import meshVertex from "./../shaders/mesh.vert";
 import meshInstancedVertex from "./../shaders/mesh-instanced.vert";
+import meshShadowInstancedVertex from "./../shaders/mesh-shadow-instanced.vert";
 import { injectDefines } from "../utils/string.js";
 import { MaterialBatcher } from "./material_batcher.js";
 
@@ -146,6 +147,14 @@ export default class MeshBatcher extends MaterialBatcher {
 		});
 		this.instancedShaders = new Map();
 
+		// the standalone ground-shadow program (#1515) is GL-owned too. An
+		// orphan keeps its program AND its context-lost/restored subscriptions
+		// alive, and would try to recompile against a dead context on the next
+		// restore — the same hazard the instanced variants above are dropped
+		// for.
+		this.shadowShader?.destroy();
+		this.shadowShader = undefined;
+
 		// last `uTint` value pushed, same redundant-set guard — but the
 		// sentinel is `undefined`, NOT a number: a packed ARGB tint spans the
 		// whole 32-bit range, and white at full alpha (0xffffffff) reads back
@@ -275,6 +284,8 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.instancedShaders?.forEach((shader) => {
 			shader.destroy();
 		});
+		this.shadowShader?.destroy();
+		this.shadowShader = undefined;
 		this.instancedShaders?.clear();
 		if (this._onTargetChanged) {
 			off(RENDER_TARGET_CHANGED, this._onTargetChanged);
@@ -480,11 +491,36 @@ export default class MeshBatcher extends MaterialBatcher {
 	drawRetainedMesh(mesh, modelMatrix, tint) {
 		const gl = this.gl;
 
+		// A ground shadow is deferred to the end of the mesh pass rather than
+		// drawn here (#1515). It writes no depth, so it has nothing to defend
+		// itself with: every opaque mesh still to come would paint straight
+		// over it — the ground plane above all, which routinely sorts after the
+		// props standing on it. The renderer replays the queue once the opaque
+		// meshes are down, and calls back in with `_shadowFlushing` set.
+		if (
+			mesh._blendedDraw === true &&
+			this.renderer._shadowFlushing !== true &&
+			this.renderer.queueGroundShadow !== undefined
+		) {
+			this.renderer.queueGroundShadow(mesh, modelMatrix, tint);
+			return;
+		}
+
 		// anything the caller had queued must land first, or this draw would
 		// reorder ahead of it
 		this.flush();
 
+		// Strictly BEFORE the blended-draw toggle below: `updatePassState`
+		// runs the one-shot depth clear, and `gl.clear(DEPTH_BUFFER_BIT)`
+		// silently does nothing with `depthMask` off. A blended mesh drawn
+		// first in a frame would otherwise swallow the clear and leave the
+		// whole frame rendering against stale depth.
 		this.updatePassState();
+
+		const blended = mesh._blendedDraw === true;
+		if (blended === true) {
+			this.beginBlendedDraw();
+		}
 
 		const slices = mesh.textureGroups;
 		if (slices === undefined) {
@@ -521,10 +557,67 @@ export default class MeshBatcher extends MaterialBatcher {
 			}
 		}
 
+		if (blended === true) {
+			this.endBlendedDraw();
+		}
+
 		// hand the batcher's own vertex state back, so a subsequent
 		// accumulated draw uploads and draws through its buffers, not these
 		this.vertexState.bind();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
+	}
+
+	/**
+	 * Enter the blended mesh draw state: alpha blending on, depth test still
+	 * on, depth WRITES off (#1515).
+	 *
+	 * The blend function is set explicitly rather than through
+	 * `renderer.setBlendMode`. That method short-circuits when the mode is
+	 * unchanged, and `MeshBatcher.bind()` has already disabled `GL_BLEND`
+	 * behind that cache's back — so asking for the mode the cache already
+	 * claims would leave blending off and the draw opaque. Merely calling
+	 * `setBlendEnabled(true)` is no better: it inherits whatever function the
+	 * last 2D draw left, and under `"additive"` a dark shadow would *brighten*
+	 * the ground.
+	 * @ignore
+	 */
+	beginBlendedDraw() {
+		const gl = this.gl;
+		gl.enable(gl.BLEND);
+		gl.blendEquation(gl.FUNC_ADD);
+		gl.blendFunc(
+			this.renderer.premultipliedAlpha ? gl.ONE : gl.SRC_ALPHA,
+			gl.ONE_MINUS_SRC_ALPHA,
+		);
+		// depth TEST stays on — the shadow must still be occluded by geometry
+		// in front of it — but writes are off, so overlapping shadows at one
+		// ground height blend instead of fighting under LEQUAL
+		gl.depthMask(false);
+	}
+
+	/**
+	 * Leave the blended draw state, restoring mesh mode exactly as
+	 * {@link MeshBatcher#bind} left it.
+	 *
+	 * The blend FUNCTION is put back too, not just the enable bit. This draw
+	 * overwrote it without touching `renderer.currentBlendMode`, so a later 2D
+	 * draw asking for the mode the cache already claims would short-circuit
+	 * and silently inherit this one's function. Re-issuing through
+	 * `setBlendMode` with the cache invalidated restores both, and leaves the
+	 * cache reading exactly what it read before.
+	 * @ignore
+	 */
+	endBlendedDraw() {
+		const gl = this.gl;
+		gl.depthMask(true);
+		const renderer = this.renderer;
+		const mode = renderer.currentBlendMode;
+		if (typeof mode === "string") {
+			renderer.currentBlendMode = null;
+			renderer.setBlendMode(mode, renderer.currentPremultipliedAlpha);
+		}
+		// back to mesh mode, which is opaque
+		gl.disable(gl.BLEND);
 	}
 
 	/**
@@ -774,6 +867,157 @@ export default class MeshBatcher extends MaterialBatcher {
 	}
 
 	/**
+	 * The instanced ground-shadow program (#1515), compiled on first use.
+	 *
+	 * ONE shader, not a variant per record layout: it reads only the three
+	 * transform rows, so `hasColor` / `hasData` make no difference to it —
+	 * which is also what stops a forest with per-instance colour and emissive
+	 * from getting coloured, glowing shadows.
+	 * @returns {GLShader} the shadow program
+	 * @ignore
+	 */
+	instancedShadowShader() {
+		if (this.shadowShader === undefined) {
+			this.shadowShader = new GLShader(this.gl, {
+				vertex: meshShadowInstancedVertex,
+				// the UNLIT fragment stage, on both tiers, not
+				// `_instancedShaderSources().fragment`. A blob needs nothing
+				// from lighting — it samples the falloff and multiplies by the
+				// tint — and borrowing the lit tier's pairs a GLSL ES 3.00
+				// fragment shader with this ES 1.00 vertex shader, which does
+				// not link ("Fragment shader version does not match other
+				// shader versions") and takes the whole lit instanced tier
+				// down with it. It would also read `vNormal` / `vWorldPos`,
+				// which a flat blob never writes.
+				fragment: meshFragment,
+				label: "melonJS instanced mesh shadow",
+			});
+		}
+		return this.shadowShader;
+	}
+
+	/**
+	 * The vertex state pairing the SHARED shadow quad's geometry with this
+	 * mesh's own instance records.
+	 *
+	 * Kept in its own slot with its own staleness fields rather than reusing
+	 * the main pass's: that one keys on `builtGeometry` and `builtShader`, and
+	 * the shadow pass differs in both, so sharing a slot would make the two
+	 * passes rebuild each other's vertex array on every single draw.
+	 *
+	 * The instance buffer itself IS shared — the main pass already uploaded
+	 * it this frame, so this adds no upload.
+	 * @param {InstancedMesh} mesh - the mesh casting the shadows
+	 * @param {object} quadGeometry - the shared shadow quad's retained geometry
+	 * @returns {object} the per-mesh instanced state, with `shadowVertexState` built
+	 * @ignore
+	 */
+	instancedShadowStateFor(mesh, quadGeometry) {
+		// Deliberately NOT `instancedStateFor`. That one keys its staleness on
+		// the CURRENTLY BOUND shader, and by here we are bound to the standalone
+		// shadow program — so it would judge the MAIN vertex state stale, tear
+		// it down and rebuild it against a program that has none of the mesh's
+		// attributes (warning about each), and the next frame's main draw would
+		// rebuild it straight back: two VAO teardowns per instanced mesh per
+		// frame, forever.
+		//
+		// The main pass has already run — the shadow queue drains after every
+		// opaque mesh — so the state and its uploaded instance buffer exist.
+		// The fallback covers a caller that somehow arrives first.
+		const state =
+			this.instanced.get(mesh) ?? this.instancedStateFor(mesh).state;
+		const stale =
+			state.shadowVertexState === undefined ||
+			state.shadowBuiltVersion !== mesh._instanceVersion ||
+			state.shadowBuiltGeometry !== quadGeometry.vertexBuffer ||
+			state.shadowBuiltShader !== this.currentShader;
+		if (stale === true) {
+			const gl = this.gl;
+			const descriptor = {
+				buffers: [
+					{
+						buffer: quadGeometry.vertexBuffer,
+						stride: this.stride,
+						// TRIMMED to position / region / colour at the original
+						// stride, so the offsets still land. The lit tier carries
+						// `aNormal`, which the standalone shadow program does not
+						// declare — leaving it in warns on every build. A flat
+						// blob has no use for a normal.
+						attributes: this.attributes.slice(0, 3),
+					},
+					{
+						// only the three rows: the shadow reads no colour and no
+						// custom data, so declaring them would make the vertex
+						// state warn about attributes its program does not have
+						buffer: state.instances.buffer,
+						stride: mesh.instanceLayout.stride,
+						stepMode: "instance",
+						attributes: this._instanceAttributeRecords(
+							mesh.instanceLayout,
+						).slice(0, 3),
+					},
+				],
+				indexBuffer: {
+					bind: () => {
+						gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadGeometry.glIndexBuffer);
+					},
+				},
+				resolveLocation: (name) => {
+					return this.currentShader.getAttribLocation(name);
+				},
+			};
+			if (state.shadowVertexState === undefined) {
+				state.shadowVertexState = new WebGLVertexState(gl, descriptor);
+			} else {
+				state.shadowVertexState.build(descriptor);
+			}
+			state.shadowBuiltVersion = mesh._instanceVersion;
+			state.shadowBuiltGeometry = quadGeometry.vertexBuffer;
+			state.shadowBuiltShader = this.currentShader;
+		}
+		return state;
+	}
+
+	/**
+	 * Draw one flat blob per instance, in a single call, from the same
+	 * instance buffer the mesh itself drew from (#1515).
+	 * @param {InstancedMesh} mesh - the mesh casting the shadows
+	 * @param {Matrix3d} shadowMatrix - the group matrix, flattened onto the ground
+	 * @param {number} tint - tint colour in UINT32 (argb) format
+	 * @param {object} quad - the shared shadow quad mesh
+	 * @ignore
+	 */
+	drawInstancedShadow(mesh, shadowMatrix, tint, quad) {
+		const gl = this.gl;
+		const count = mesh.visibleInstanceCount;
+		if (count === 0) {
+			return;
+		}
+		this.flush();
+		this.useShader(this.instancedShadowShader());
+		this.updatePassState();
+		this.applyMeshMaterial(quad);
+		this.setPlacementUniforms(shadowMatrix, tint);
+
+		const quadGeometry = this.retainedGeometryFor(quad);
+		const state = this.instancedShadowStateFor(mesh, quadGeometry);
+		this.beginBlendedDraw();
+		state.shadowVertexState.bind();
+		gl.drawElementsInstanced(
+			this.mode,
+			quadGeometry.indexCount,
+			quadGeometry.indexType,
+			0,
+			count,
+		);
+		this.endBlendedDraw();
+
+		this.useShader(this.defaultShader);
+		this.vertexState.bind();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
+	}
+
+	/**
 	 * Release the instance buffer and vertex state held for one mesh, if any.
 	 * @param {object} mesh - the mesh whose instance state should be freed
 	 * @ignore
@@ -781,6 +1025,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	releaseInstanced(mesh) {
 		const state = this.instanced?.get(mesh);
 		if (state !== undefined) {
+			state.shadowVertexState?.destroy();
 			state.vertexState?.destroy();
 			state.instances.destroy();
 			this.instanced.delete(mesh);
@@ -793,6 +1038,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 */
 	releaseAllInstanced() {
 		this.instanced?.forEach((state) => {
+			state.shadowVertexState?.destroy();
 			state.vertexState?.destroy();
 			state.instances.destroy();
 		});

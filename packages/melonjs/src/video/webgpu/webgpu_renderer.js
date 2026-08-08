@@ -1,6 +1,7 @@
 import { Color, colorPool } from "../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
 import { Bounds } from "../../physics/bounds.ts";
+import { releaseShadowQuads } from "../../renderable/groundshadow.js";
 import {
 	CANVAS_ONRESIZE,
 	emit,
@@ -1543,6 +1544,23 @@ export default class WebGPURenderer extends Renderer {
 			throw new Error("Invalid Batcher");
 		}
 		if (this.currentBatcher !== batcher) {
+			// Leaving mesh mode drains the deferred ground-shadow queue first,
+			// so the blobs land on top of every opaque mesh in the pass (#1515).
+			// Switching *within* mesh mode (lit ↔ unlit) must NOT drain it — the
+			// meshes still to come are exactly what the shadows have to beat.
+			if (
+				name !== "mesh" &&
+				name !== "litMesh" &&
+				// see WebGLRenderer#_canDrainShadows: a transition raised while
+				// a mask is being stencilled in (colour writes off) or inside a
+				// post-effect bracket is not the end of the mesh pass, and
+				// draining there loses the blobs. The camera drain still gets
+				// them.
+				this.maskLevel === 0 &&
+				this.stencilMode !== "write"
+			) {
+				this.flushGroundShadows();
+			}
 			if (this.currentBatcher !== null) {
 				this.currentBatcher.flush();
 				this.currentBatcher.unbind();
@@ -1568,8 +1586,45 @@ export default class WebGPURenderer extends Renderer {
 	 *   2D-camera path).
 	 * @override
 	 */
+	/**
+	 * Draw one ground shadow per instance of an `InstancedMesh` (#1515), in a
+	 * single recorded call over the mesh's own instance buffer.
+	 * @param {InstancedMesh} mesh - the mesh casting the shadows
+	 * @param {Matrix3d} shadowMatrix - the group matrix flattened onto the ground
+	 * @param {object} quad - the shared shadow quad
+	 * @ignore
+	 */
+	drawInstancedShadow(mesh, shadowMatrix, quad) {
+		const tint = this.currentTint.toUint32(this.getGlobalAlpha());
+		// deferred to the end of the mesh pass for the same reason a per-object
+		// shadow is — see `Renderer#queueGroundShadow`
+		if (this._shadowFlushing !== true) {
+			this.queueGroundShadow(quad, shadowMatrix, tint, mesh);
+			return;
+		}
+		this.setBatcher(quad.lit === true ? "litMesh" : "mesh");
+		this.currentBatcher.drawInstancedShadow(mesh, shadowMatrix, tint, quad);
+	}
+
 	drawMesh(mesh, modelMatrix) {
 		const retained = modelMatrix !== undefined;
+
+		// A ground shadow waits for the end of the mesh pass rather than
+		// drawing here: it writes no depth, so every opaque mesh still to come
+		// would paint over it (#1515). `flushGroundShadows` calls back in with
+		// `_shadowFlushing` set, and that pass takes the branch below.
+		if (
+			mesh._blendedDraw === true &&
+			retained &&
+			this._shadowFlushing !== true
+		) {
+			this.queueGroundShadow(
+				mesh,
+				modelMatrix,
+				this.currentTint.toUint32(this.getGlobalAlpha()),
+			);
+			return;
+		}
 
 		if (this.meshDepthActive !== true) {
 			// the depth half of the attachment is live from here on — pass
@@ -3207,6 +3262,9 @@ export default class WebGPURenderer extends Renderer {
 	 * @override
 	 */
 	destroy() {
+		// the shared ground-shadow quads (#1515) hold retained GPU geometry
+		// keyed off this renderer's batchers — released before those go
+		releaseShadowQuads(this);
 		off(GAME_RESET, this.onGameReset);
 		off(CANVAS_ONRESIZE, this.onCanvasResize);
 		this.abandonFrame();

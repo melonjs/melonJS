@@ -374,6 +374,24 @@ describe("WebGPU pipeline (device-free units)", () => {
 			expect(cache.modules[keyA]).toBeDefined();
 		});
 
+		it("…but a same-body module under a DIFFERENT vertex layout is its own family", () => {
+			const { cache } = makeCache();
+			// One module can legitimately serve several vertex layouts — the
+			// instanced ground shadow (#1515) reads only the transform rows, so
+			// one body covers every record shape while the instance buffer's
+			// `arrayStride` still differs per shape. Keying on the body alone
+			// handed the second caller the FIRST one's layout, i.e. the wrong
+			// stride, with nothing failing.
+			const body = "fn shared() {}";
+			const a = cache.registerShader(body, { vertexLayoutKey: "rowsA" });
+			const b = cache.registerShader(body, { vertexLayoutKey: "rowsB" });
+			expect(b).not.toBe(a);
+			expect(cache.vertexLayoutAliases.get(a)).toBe("rowsA");
+			expect(cache.vertexLayoutAliases.get(b)).toBe("rowsB");
+			// the compiled module itself is still shared — one body, one compile
+			expect(cache.modules[a]).toBe(cache.modules[b]);
+		});
+
 		it("registered families ride an aliased vertex layout through get()", () => {
 			const { cache } = makeCache();
 			const key = cache.registerShader("fn c() {}", {
