@@ -150,6 +150,8 @@ export const level = {
 	 * @param {boolean} [options.rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
 	 * @param {boolean} [options.lights=true] - (glTF/GLB only) add the scene's authored `KHR_lights_punctual` lights (plus a soft ambient fill) as {@link Light3d} world children; each carries its authored name for `getChildByName` lookups
 	 * @param {number} [options.lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity (lux/candela) by this factor instead of normalizing it to 1 — see {@link GLTFScene#addTo}
+	 * @param {boolean} [options.castGroundShadow] - (glTF/GLB only) give this scene's meshes a ground shadow ({@link Mesh#castGroundShadow}). Overrides the application's `castGroundShadow` setting for this scene, in both directions; omit it to inherit. As a scene-wide opt-in it skips nodes with no vertical extent — a scene's ground plane is exactly that, and shadowing it with itself smears a blob across the whole floor
+	 * @param {number} [options.shadowGroundY] - (glTF/GLB only) world Y of the floor those shadows land on ({@link Mesh#shadowGroundY}); omit it and each blob sits at its own object's base at full strength, which is right for a scene whose props already rest on the ground
 	 * @returns {boolean} true if the level was successfully loaded
 	 * @example
 	 * // the game assets to be be preloaded
@@ -181,6 +183,9 @@ export const level = {
 	 * // 50 pixels per glTF unit, authored lux/candela intensities kept at
 	 * // a 1/1000 scale instead of being normalized to 1
 	 * me.level.load("diorama", { scale: 50, lightIntensityScale: 0.001 });
+	 * // …and give every prop in it a ground shadow landing on the floor at y = 0
+	 * // (the scene's own ground plane is skipped — it has no height to cast)
+	 * me.level.load("diorama", { scale: 50, castGroundShadow: true, shadowGroundY: 0 });
 	 * // the authored lights are world children — grab the sun for a day/night cycle
 	 * const sun = app.world.getChildByName("Sun")[0];
 	 */

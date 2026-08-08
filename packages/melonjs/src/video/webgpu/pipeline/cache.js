@@ -323,6 +323,9 @@ export default class WebGPUPipelineCache {
 		// and same-shape effects share one module and its pipelines
 		/** @type {Map<string, string>} moduleText → family key */
 		this.registeredModules = new Map();
+		// compiled GPUShaderModule per source text, shared across the families
+		// that source serves (one module, several vertex layouts)
+		this.modulesBySource = new Map();
 		/** @type {Map<string, {stride: number, attributes: object[]}>} family key → vertex-layout alias */
 		this.vertexLayoutAliases = new Map();
 		// the blit family rides the frozen quad vertex layout
@@ -375,21 +378,39 @@ export default class WebGPUPipelineCache {
 	 * @returns {string} the family key to pass to {@link WebGPUPipelineCache#get}
 	 */
 	registerShader(code, options = {}) {
-		let key = this.registeredModules.get(code);
+		const alias = options.vertexLayoutKey ?? "quad";
+		// Keyed by (source, vertex layout), not by source alone. One module can
+		// legitimately serve several vertex layouts — the instanced ground
+		// shadow (#1515) reads only the transform rows, so one module covers
+		// every record shape while the instance buffer's `arrayStride` still
+		// differs per shape. Keying on the source alone silently handed every
+		// later caller the FIRST registration's layout, which reads the records
+		// at the wrong stride. Callers registering one layout per module (all
+		// of them, until now) are unaffected: same source + same alias still
+		// dedupes to the same family.
+		const cacheKey = `${alias}\u0000${code}`;
+		let key = this.registeredModules.get(cacheKey);
 		if (typeof key === "undefined") {
 			key = `effect:${this.registeredModules.size}`;
-			this.registeredModules.set(code, key);
-			this.modules[key] = this.device.createShaderModule({
-				label: options.label ?? `melonJS ${key} shader`,
-				code,
-			});
+			this.registeredModules.set(cacheKey, key);
+			// the compiled module IS shared across layouts — only the pipeline
+			// layout and vertex-layout alias below are per-family
+			let module = this.modulesBySource.get(code);
+			if (module === undefined) {
+				module = this.device.createShaderModule({
+					label: options.label ?? `melonJS ${key} shader`,
+					code,
+				});
+				this.modulesBySource.set(code, module);
+			}
+			this.modules[key] = module;
 			this.pipelineLayouts[key] = this.device.createPipelineLayout({
 				bindGroupLayouts: options.bindGroupLayouts ?? [
 					this.frameLayout,
 					this.materialLayout,
 				],
 			});
-			this.vertexLayoutAliases.set(key, options.vertexLayoutKey ?? "quad");
+			this.vertexLayoutAliases.set(key, alias);
 		}
 		return key;
 	}
@@ -496,6 +517,12 @@ export default class WebGPUPipelineCache {
 		let key = `${shaderKey}|${topology}|${blend}|${pma ? 1 : 0}|${stencilMode}|${this.format}|${this.sampleCount}`;
 		if (meshState) {
 			key += `|mesh:${meshState.cullMode}:${meshState.frontFace}`;
+			// Appended ONLY when it differs from the default. Adding it
+			// unconditionally would remint every existing mesh pipeline for a
+			// value none of them changed.
+			if (meshState.depthWrite === false) {
+				key += "|dw0";
+			}
 		}
 		let pipeline = this.pipelines.get(key);
 		if (typeof pipeline === "undefined") {
@@ -536,7 +563,10 @@ export default class WebGPUPipelineCache {
 				primitive,
 				depthStencil: {
 					format: DEPTH_STENCIL_FORMAT,
-					depthWriteEnabled: !!meshState,
+					// `!== false`, not `!!`: mesh draws that never set the field (and
+					// every bare `{cullMode, frontFace}` literal) must keep writing
+					// depth exactly as they did before the axis existed
+					depthWriteEnabled: meshState ? meshState.depthWrite !== false : false,
 					depthCompare: meshState ? "less-equal" : "always",
 					stencilFront: stencil.stencil,
 					stencilBack: stencil.stencil,

@@ -1,6 +1,7 @@
 import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
 import { Bounds } from "../../physics/bounds.ts";
+import { releaseShadowQuads } from "../../renderable/groundshadow.js";
 import {
 	CANVAS_ONRESIZE,
 	emit,
@@ -473,6 +474,9 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	destroy() {
+		// the shared ground-shadow quads (#1515) hold retained GPU geometry
+		// keyed off this renderer's batchers — released before those go
+		releaseShadowQuads(this);
 		if (this.batchers) {
 			this.batchers.forEach((batcher) => {
 				batcher.destroy?.();
@@ -679,6 +683,14 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		if (this.currentBatcher !== batcher) {
+			// Leaving mesh mode drains the deferred ground-shadow queue first,
+			// so the blobs land on top of every opaque mesh in the pass (#1515).
+			// Switching *within* mesh mode (lit ↔ unlit) must NOT drain it —
+			// the meshes still to come are exactly what the shadows have to
+			// beat.
+			if (name !== "mesh" && name !== "litMesh" && this._canDrainShadows()) {
+				this.flushGroundShadows();
+			}
 			if (this.currentBatcher !== undefined) {
 				// flush the current batcher, then let it tear down any
 				// state it set up at `bind()` time (Mesh batcher restores
@@ -702,6 +714,26 @@ export default class WebGLRenderer extends Renderer {
 		this.currentBatcher.useShader(targetShader);
 
 		return this.currentBatcher;
+	}
+
+	/**
+	 * Whether the device state right now is the scene's, so a deferred
+	 * ground-shadow drain (#1515) would actually land where it is meant to.
+	 *
+	 * A batcher transition is normally the end of the mesh pass — but not
+	 * every one is. `setMask` fills its shape through the primitive batcher
+	 * with **colour writes off and `stencilOp(…, INCR)` armed**, so draining
+	 * there both discards every blob and stamps their footprints into the mask
+	 * being built. A transition inside a post-effect bracket is bound to the
+	 * child's FBO, so the blobs would be captured into that effect chain and
+	 * lost from the world. In either case the queue simply waits: the camera
+	 * drains it at the end of the world walk, which is the point that is always
+	 * correct.
+	 * @returns {boolean} true when a drain is safe here
+	 * @ignore
+	 */
+	_canDrainShadows() {
+		return this.maskLevel === 0 && this._effectPassDepth === 0;
 	}
 
 	/**
@@ -1692,6 +1724,26 @@ export default class WebGLRenderer extends Renderer {
 	 * entirely by uniforms; when omitted, its vertices are taken as already
 	 * positioned and accumulated through the batcher (the 2D-camera path).
 	 */
+	/**
+	 * Draw one ground shadow per instance of an `InstancedMesh` (#1515), in a
+	 * single call over the same instance buffer the mesh drew from.
+	 * @param {InstancedMesh} mesh - the mesh casting the shadows
+	 * @param {Matrix3d} shadowMatrix - the group matrix flattened onto the ground
+	 * @param {object} quad - the shared shadow quad
+	 * @ignore
+	 */
+	drawInstancedShadow(mesh, shadowMatrix, quad) {
+		const tint = this.currentTint.toUint32(this.getGlobalAlpha());
+		// deferred to the end of the mesh pass for the same reason a per-object
+		// shadow is — see `queueGroundShadow`
+		if (this._shadowFlushing !== true) {
+			this.queueGroundShadow(quad, shadowMatrix, tint, mesh);
+			return;
+		}
+		this.setBatcher(quad.lit === true ? "litMesh" : "mesh");
+		this.currentBatcher.drawInstancedShadow(mesh, shadowMatrix, tint, quad);
+	}
+
 	drawMesh(mesh, modelMatrix) {
 		const gl = this.gl;
 		const retained = modelMatrix !== undefined;

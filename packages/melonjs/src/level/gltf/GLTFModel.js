@@ -5,6 +5,7 @@ import {
 } from "../../loader/parsers/gltf.js";
 import { parseAnimationOptions } from "../../renderable/animation.ts";
 import Container from "../../renderable/container.js";
+import { hasVerticalExtent } from "../../renderable/groundshadow.js";
 import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
 import { fillInstances } from "./GLTFScene.js";
@@ -56,6 +57,8 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.scale=1] - pixels per glTF unit (uniform scene scale)
 	 * @param {boolean} [options.rightHanded=true] - glTF Y-up → engine Y-down via a rotation (no mirror)
 	 * @param {boolean} [options.lit=false] - render the part meshes through the lit batcher
+	 * @param {boolean} [options.castGroundShadow] - give the parts a ground shadow; omit to inherit the application setting
+	 * @param {number} [options.shadowGroundY] - world Y of the floor those shadows land on
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);
@@ -113,6 +116,11 @@ export default class GLTFModel extends Container {
 
 		const lit = options.lit === true;
 		const rightHanded = options.rightHanded !== false;
+		// tri-state: `undefined` falls through to the application setting
+		const castGroundShadow =
+			typeof options.castGroundShadow === "boolean"
+				? options.castGroundShadow
+				: undefined;
 
 		// build the rest matrices + instantiate a Mesh per mesh-node primitive
 		for (const idx in this._nodes) {
@@ -156,6 +164,13 @@ export default class GLTFModel extends Container {
 					shininess: prim.shininess,
 					// thin/flat double-sided parts must not be back-face culled
 					cullBackFaces: prim.doubleSided !== true,
+					// ground shadows (#1515), same scene-wide rule as the static
+					// path: a blanket opt-in skips parts with no vertical extent
+					castGroundShadow:
+						castGroundShadow === true
+							? hasVerticalExtent(prim.vertices, prim.vertexCount)
+							: castGroundShadow,
+					shadowGroundY: options.shadowGroundY,
 				});
 				if (prim.instances) {
 					fillInstances(mesh, prim.instances);

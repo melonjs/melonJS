@@ -155,6 +155,42 @@ export type ApplicationSettings = {
 	textureFilter: "auto" | "nearest" | "linear";
 
 	/**
+	 * whether 3D objects cast a soft "blob" shadow on the ground by default
+	 * ([#1515](https://github.com/melonjs/melonJS/issues/1515)).
+	 *
+	 * A ground shadow is what stops a character or prop reading as *floating*
+	 * in a 2.5D scene — it answers "where is this standing", not "where is the
+	 * light". It is deliberately not a simulated shadow; see
+	 * {@link Mesh#castGroundShadow}.
+	 *
+	 * This is the **default** for every {@link Mesh}, {@link Sprite3d} and
+	 * {@link InstancedMesh}; each can override it with its own
+	 * `castGroundShadow` (which wins), and {@link level.load} takes the same
+	 * option for one glTF scene (which wins over this).
+	 *
+	 * Because it is a blanket opt-in, it skips meshes with **no vertical
+	 * extent** — a flat plane lying on the floor *is* the floor, and shadowing
+	 * it with itself would smear a blob across the whole ground. A per-object
+	 * `castGroundShadow: true` bypasses that safeguard, being an explicit
+	 * instruction.
+	 *
+	 * **On by default.** Requires a GPU backend *and* a {@link Camera3d}, so a
+	 * 2D game is untouched whatever this says — the Canvas renderer has no
+	 * depth buffer and the 2D-camera path draws none. Set it `false` to opt a
+	 * 3D game out wholesale (a scene with baked lighting, or one bringing its
+	 * own shadows, would otherwise get two).
+	 * @default true
+	 * @example
+	 * // opt a 3D game out — e.g. its lighting is already baked into the models
+	 * const app = new Application(1024, 768, {
+	 *     cameraClass: Camera3d,
+	 *     castGroundShadow: false,
+	 * });
+	 * await app.init();
+	 */
+	castGroundShadow: boolean;
+
+	/**
 	 * whether to display melonJS version and basic device information in the console
 	 * @default true
 	 */

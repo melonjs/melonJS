@@ -7,10 +7,15 @@ import {
 	writeIdentityTransform,
 	writeInstanceTransform,
 } from "../video/gpu/instancerecord.ts";
+import { getInstancedShadowQuad } from "./groundshadow.js";
 import Mesh from "./mesh.js";
 
 // scratch reused by getBounds3d(); never handed out
 const _instanceMatrix = new Matrix3d();
+
+// scratch for the flattened group matrix a shadow pass draws with —
+// synchronous, single-use per draw, never held
+const _SHADOW_MATRIX = new Matrix3d();
 const _instanceBounds = new AABB3d();
 // scratch for dirtyRange() — read synchronously and never retained
 const _dirtySpan = [0, 0];
@@ -574,6 +579,9 @@ export default class InstancedMesh extends Mesh {
 		}
 		this.indices = this._indicesOriginal;
 		renderer.drawMesh(this, this._composeModelMatrix());
+		if (this._castsGroundShadow(renderer) === true) {
+			this._drawInstancedGroundShadow(renderer);
+		}
 	}
 
 	/**
@@ -618,6 +626,89 @@ export default class InstancedMesh extends Mesh {
 	 * Release the instance records along with the mesh.
 	 * @ignore
 	 */
+	/**
+	 * Draw a ground shadow for every visible instance — one call for the whole
+	 * set, over the instance buffer the mesh itself just drew from (#1515).
+	 *
+	 * The group matrix is passed with its Y basis column zeroed and its
+	 * translation Y set to the ground, so whatever Y the shadow vertex stage
+	 * produces is flattened onto the floor. That is what lets the ground
+	 * height reach the shader without a new uniform.
+	 *
+	 * One ground height serves the whole set — flat terrain. Per-instance
+	 * ground height would have to ride the `instanceData` slot, which the
+	 * built-in shading already reads as emissive.
+	 * @param {WebGLRenderer} renderer - the active renderer
+	 * @ignore
+	 */
+	_drawInstancedGroundShadow(renderer) {
+		if (typeof renderer.drawInstancedShadow !== "function") {
+			return;
+		}
+		// Sized from the PROTOTYPE's own footprint, with the same contact
+		// spread and minor-axis floor the per-object tier applies — otherwise
+		// the identical asset draws a different shadow instanced than it does
+		// standalone. The instanced vertex stage multiplies these by each
+		// record's horizontal scale.
+		this._measureShadowFootprint();
+		const spread = 1.2;
+		let hx = this._shadowHalfX * spread;
+		let hz = this._shadowHalfZ * spread;
+		const major = hx > hz ? hx : hz;
+		const least = major * 0.5;
+		if (major > 1e-6) {
+			hx = hx < least ? least : hx;
+			hz = hz < least ? least : hz;
+		}
+		const quad = getInstancedShadowQuad(
+			this,
+			Mesh,
+			hx,
+			hz,
+			this._geometryVersion ?? 0,
+		);
+		const group = this._modelMatrix.val;
+		const out = _SHADOW_MATRIX.val;
+		for (let i = 0; i < 16; i++) {
+			out[i] = group[i];
+		}
+		// Zero the Y ROW — `out[1]`, `out[5]`, `out[9]`, the Y components of all
+		// three basis columns — not the Y column. Clearing the column alone
+		// kills only the instance's own height; the X and Z columns keep their
+		// Y components, so a group rotated about X or Z would tilt the blobs
+		// onto a slanted plane and sink half of them below the floor. Zeroing
+		// the row makes every output Y the translation, whatever the rotation.
+		out[1] = 0;
+		out[5] = 0;
+		out[9] = 0;
+		// ...and put that plane at the ground. Render space is Y-DOWN, so the
+		// floor is a GREATER Y than the objects standing on it.
+		// lifted a hair off the floor, for the reason spelled out at
+		// `SHADOW_LIFT` in mesh.js: a coplanar blob is order-dependent. Y is
+		// DOWN, so off the floor is a smaller y.
+		const ground =
+			this.shadowGroundY !== undefined
+				? this.shadowGroundY
+				: this.getBounds3d().bottom;
+		out[13] = ground - this.meshScale * 0.01;
+
+		const tint = renderer.currentTint;
+		const savedR = tint.r;
+		const savedG = tint.g;
+		const savedB = tint.b;
+		// the colour's OWN alpha, which `setColor(r, g, b)` resets to 1
+		const savedTintAlpha = tint.alpha;
+		const savedAlpha = renderer.getGlobalAlpha();
+		tint.setColor(0, 0, 0);
+		renderer.setGlobalAlpha(this.shadowOpacity * savedAlpha);
+		try {
+			renderer.drawInstancedShadow(this, _SHADOW_MATRIX, quad);
+		} finally {
+			tint.setColor(savedR, savedG, savedB, savedTintAlpha);
+			renderer.setGlobalAlpha(savedAlpha);
+		}
+	}
+
 	destroy() {
 		this.instanceBuffer = new Float32Array(0);
 		this._instanceCount = 0;

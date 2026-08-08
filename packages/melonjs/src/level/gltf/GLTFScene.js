@@ -1,6 +1,7 @@
 import { Light3d } from "../../lighting/light3d.ts";
 import { getGLTF } from "../../loader/loader.js";
 import { boundingRadius } from "../../math/vertex.ts";
+import { hasVerticalExtent } from "../../renderable/groundshadow.js";
 import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
 import { writeInstanceTRS } from "../../video/gpu/instancerecord.ts";
@@ -88,6 +89,12 @@ export default class GLTFScene {
 		}
 		const scale = options.scale ?? 1;
 		const rightHanded = options.rightHanded !== false;
+		// tri-state on purpose: `undefined` means "the caller said nothing",
+		// which falls through to the application setting at draw time
+		const castGroundShadow =
+			typeof options.castGroundShadow === "boolean"
+				? options.castGroundShadow
+				: undefined;
 		const zSign = rightHanded ? -1 : 1;
 
 		// the scene is lit when it carries ANY shading-capable authored light
@@ -113,7 +120,13 @@ export default class GLTFScene {
 		// be retrieved from the world (`world.getChildByName(name)[0]`) to drive
 		// playback. Lights are still instantiated (shared block at the end).
 		if ((this.data.animations ?? []).length > 0) {
-			const model = new GLTFModel(this.data, { scale, rightHanded, lit });
+			const model = new GLTFModel(this.data, {
+				scale,
+				rightHanded,
+				lit,
+				castGroundShadow,
+				shadowGroundY: options.shadowGroundY,
+			});
 			model.name = this.name;
 			container.addChild(model);
 			this._addLights(container, zSign, scale, options);
@@ -190,6 +203,18 @@ export default class GLTFScene {
 				// (coins, fences, foliage) are double-sided and must NOT be
 				// back-face culled, or half their faces vanish
 				cullBackFaces: node.doubleSided !== true,
+				// Ground shadows (#1515). A scene-wide opt-in skips nodes with
+				// no vertical extent: a glTF scene ships its ground as a flat
+				// plane, and shadowing that with itself smears a blob across
+				// the whole floor. Left unset by the caller this stays
+				// `undefined`, which is what lets the application-level
+				// setting through — passing `false` explicitly opts the scene
+				// out of that default.
+				castGroundShadow:
+					castGroundShadow === true
+						? hasVerticalExtent(node.vertices, node.vertexCount)
+						: castGroundShadow,
+				shadowGroundY: options.shadowGroundY,
 			});
 			if (instances) {
 				fillInstances(mesh, instances);

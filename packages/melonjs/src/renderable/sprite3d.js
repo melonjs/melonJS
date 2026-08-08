@@ -254,6 +254,16 @@ export default class Sprite3d extends Mesh {
 			// disable (fully opaque), or tune the threshold.
 			alphaCutoff:
 				typeof settings.alphaCutoff === "number" ? settings.alphaCutoff : 0.5,
+			// ground shadow (#1515) — forwarded explicitly, like everything
+			// else here: this constructor hands `Mesh` a built settings object
+			// rather than the caller's, so anything not named is dropped
+			// passed through RAW, not coerced: `undefined` is meaningful here —
+			// it means "follow the application setting" — and `=== true` would
+			// flatten it to an explicit false, silently opting every sprite out
+			// of a scene-wide default
+			castGroundShadow: settings.castGroundShadow,
+			shadowGroundY: settings.shadowGroundY,
+			shadowOpacity: settings.shadowOpacity,
 		});
 
 		/**

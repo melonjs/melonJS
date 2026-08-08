@@ -1030,6 +1030,12 @@ export default class Camera2d extends Renderable {
 			container.draw(r, this);
 		}
 
+		// Ground shadows (#1515) are held back until every opaque mesh in the
+		// world is down, and this is where that is true — still inside the
+		// camera's FBO/post-effect bracket, so they land in the frame the
+		// camera is about to resolve rather than after it has been composited.
+		renderer.flushGroundShadows();
+
 		// draw the viewport/camera effects
 		this.drawFX(renderer);
 

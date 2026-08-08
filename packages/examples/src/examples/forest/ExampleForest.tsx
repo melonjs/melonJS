@@ -36,6 +36,10 @@ const base = `${import.meta.env.BASE_URL}assets/gltf/`;
 // pixels per glTF unit
 const SCALE = 26;
 
+// The forest floor: the glb's ground plane sits at y = 0, and the trees stand
+// on it, so every blob in the scene lands here.
+const GROUND_Y = 0;
+
 /** A dusk sky, drawn screen-fixed behind the scene. */
 function bakeSky() {
 	const c = document.createElement("canvas");
@@ -234,7 +238,17 @@ const createGame = async () => {
 			state.change(state.DEFAULT, true);
 			// one call — the instanced node becomes an InstancedMesh, the
 			// ground stays an ordinary Mesh, and the authored sun lights both
-			level.load("forest", { scale: SCALE, onLoaded: setupScene });
+			// Instanced ground shadows (#1515) come from the load option: ONE
+			// extra draw for the whole scatter, however many trees are visible,
+			// read from the same instance buffer the trees draw from. The
+			// scene's ground plane is skipped automatically — it has no height
+			// to cast, and shadowing it with itself would smear the floor.
+			level.load("forest", {
+				scale: SCALE,
+				castGroundShadow: true,
+				shadowGroundY: GROUND_Y,
+				onLoaded: setupScene,
+			});
 		},
 	);
 

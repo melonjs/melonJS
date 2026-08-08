@@ -1,6 +1,7 @@
 import "./helpers/webgpu-globals.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Color, WebGPURenderer } from "../src/index.js";
+import { instanceRecordLayout } from "../src/video/gpu/instancerecord.ts";
 import WebGPULitMeshBatcher from "../src/video/webgpu/batchers/lit_mesh_batcher.js";
 import WebGPUMeshBatcher, {
 	MESH_UNIFORM_SIZE,
@@ -371,5 +372,64 @@ describe("WebGPURenderer.drawMesh (real prototype over a stub)", () => {
 			return a + b;
 		}, 0);
 		expect(total).toBe(triCount * 3);
+	});
+});
+
+/**
+ * Ground shadows on the instanced tier (#1515) — WebGPU only.
+ *
+ * The shadow module reads nothing but the three transform rows, so ONE module
+ * serves every record shape. The vertex LAYOUT does not: the instance buffer's
+ * `arrayStride` is baked into it, and that is 48 / 64 / 80 bytes depending on
+ * which optional slots the records carry. Nothing about a wrong stride is
+ * visible from a draw count — the blobs simply land at garbage positions.
+ */
+describe("instanced ground-shadow families (#1515)", () => {
+	const layoutFor = (hasColor, hasData) => {
+		return instanceRecordLayout(hasColor, hasData);
+	};
+
+	it("mints a distinct family per instance-record shape", () => {
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUMeshBatcher(renderer);
+		const plain = batcher.instancedShadowFamily(layoutFor(false, false));
+		const coloured = batcher.instancedShadowFamily(layoutFor(true, false));
+		const both = batcher.instancedShadowFamily(layoutFor(true, true));
+		// a single cached family would hand the second scatter the first
+		// one's stride
+		expect(new Set([plain, coloured, both]).size).toBe(3);
+	});
+
+	it("reuses the family for a repeat of the same shape", () => {
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUMeshBatcher(renderer);
+		const a = batcher.instancedShadowFamily(layoutFor(true, false));
+		const b = batcher.instancedShadowFamily(layoutFor(true, false));
+		expect(a).toBe(b);
+	});
+
+	it("each family's instance buffer carries ITS OWN stride", () => {
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUMeshBatcher(renderer);
+		const seen = new Map();
+		const spy = vi
+			.spyOn(renderer.pipelineCache, "registerVertexLayout")
+			.mockImplementation((key, buffers) => {
+				seen.set(key, buffers[1].stride);
+			});
+		for (const [c, d] of [
+			[false, false],
+			[true, false],
+			[true, true],
+		]) {
+			const layout = layoutFor(c, d);
+			batcher.instancedShadowFamily(layout);
+			// whichever key this shape registered under must carry its stride
+			expect([...seen.values()]).toContain(layout.stride);
+		}
+		// three shapes, three strides, three layout keys
+		expect(seen.size).toBe(3);
+		expect(new Set(seen.values()).size).toBe(3);
+		spy.mockRestore();
 	});
 });

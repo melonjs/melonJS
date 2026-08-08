@@ -136,11 +136,16 @@ export function createMockWebGPURenderer() {
 			registeredModules: new Map(),
 			effectLayouts: new Map(),
 			registerVertexLayout() {},
-			registerShader(code) {
-				let key = this.registeredModules.get(code);
+			registerShader(code, options = {}) {
+				// keyed by (source, vertex layout) exactly as the real cache is:
+				// one module may serve several vertex layouts, and keying on the
+				// source alone hands every later caller the first layout
+				const alias = options.vertexLayoutKey ?? "quad";
+				const cacheKey = `${alias}\u0000${code}`;
+				let key = this.registeredModules.get(cacheKey);
 				if (typeof key === "undefined") {
 					key = `effect:${this.registeredModules.size}`;
-					this.registeredModules.set(code, key);
+					this.registeredModules.set(cacheKey, key);
 					this.modules[key] = { code };
 				}
 				return key;

@@ -112,6 +112,41 @@ const createGame = async () => {
 		if (!scene) {
 			return;
 		}
+		// Give each prop the surface it actually stands over (#1515). The scene
+		// has platforms at three heights, so there is no single floor to pass as
+		// `shadowGroundY` — and left unset, a blob sits at the object's OWN
+		// base, which for a hovering pickup is mid-air directly beneath it,
+		// hidden by the pickup. Render space is Y-DOWN, so "below" is a GREATER
+		// y: the right surface is the smallest platform top still greater than
+		// the prop's base. Setting it is also what switches on the shrink-and-
+		// fade with height, which is what makes a floating coin read as floating.
+		const meshes = app.world.children.filter(
+			(c) => (c as any).castGroundShadow !== undefined,
+		) as any[];
+		const platformTops = meshes
+			.filter((m) => /^block/.test(m.name ?? ""))
+			.map((m) => m.getBounds3d().top);
+		for (const prop of meshes) {
+			if (/^block/.test(prop.name ?? "")) {
+				continue;
+			}
+			const base = prop.getBounds3d().bottom;
+			let ground: number | undefined;
+			for (const top of platformTops) {
+				// A tolerance, not a strict compare: a prop resting on a platform
+				// has a base that IS that platform's top, but only to within
+				// float error — and an exact test skips the very surface it
+				// stands on, dropping its shadow a tier down where the upper
+				// platform hides it. Half a pixel at this scene's scale.
+				if (top >= base - 0.5 && (ground === undefined || top < ground)) {
+					ground = top;
+				}
+			}
+			if (ground !== undefined) {
+				prop.shadowGroundY = ground;
+			}
+		}
+
 		const { min, max } = scene.bounds;
 		// render space: glTF (x,y,z) → (x, -y, -z) * SCALE (rightHanded rotation)
 		const cx = ((min[0] + max[0]) / 2) * SCALE;
@@ -283,7 +318,17 @@ const createGame = async () => {
 			// load the whole glTF scene into the world in one call — the glb
 			// auto-registered with the level director on preload, exactly like
 			// a Tiled map. `rightHanded` defaults to true for glTF scenes.
-			level.load("diorama", { scale: SCALE, onLoaded: setupScene });
+			// Ground shadows (#1515) for the whole scene in one option: every
+			// prop gets a blob at its own base — no `shadowGroundY` here,
+			// because a diorama's props rest on platforms at several different
+			// heights rather than on one floor. The scene's ground/platform
+			// meshes are skipped automatically: they have no height to cast
+			// from, and shadowing them with themselves would smear the terrain.
+			level.load("diorama", {
+				scale: SCALE,
+				castGroundShadow: true,
+				onLoaded: setupScene,
+			});
 		},
 	);
 
