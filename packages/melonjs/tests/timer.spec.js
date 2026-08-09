@@ -1,10 +1,29 @@
-import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
-import { Application, timer } from "../src/index.js";
+import {
+	afterAll,
+	beforeAll,
+	describe,
+	expect,
+	onTestFinished,
+	test,
+	vi,
+} from "vitest";
+import { Application, timer, video } from "../src/index.js";
 
 describe("Timer", () => {
+	let app;
+
 	beforeAll(async () => {
-		const app = new Application(100, 100);
+		// Canvas: this suite only drives the timer; an unspecified renderer
+		// resolved to WebGL and held a context for the whole session.
+		app = new Application(100, 100, { renderer: video.CANVAS });
 		await app.init();
+	});
+
+	afterAll(() => {
+		// tear the application down rather than leaving its canvas,
+		// listeners and timers live in the shared browser session for
+		// the rest of the run
+		app?.destroy();
 	});
 
 	describe("setTimeout", () => {

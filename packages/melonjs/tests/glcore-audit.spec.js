@@ -55,7 +55,10 @@ describe("video/GL core audit reproductions", () => {
 		try {
 			const app = new Application(64, 64, {
 				parent: "screen",
-				renderer: video.AUTO,
+				// Canvas: reset-only app — it exists to restore global defaults
+				// for later spec files, not to render. Under AUTO it took a
+				// WebGL context and was never destroyed.
+				renderer: video.CANVAS,
 			});
 			await app.init();
 		} catch {

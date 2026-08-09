@@ -1015,7 +1015,10 @@ describe("Mesh × Camera3d world-space path", () => {
 		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			// Canvas: this app exists only to reset global state for later
+			// spec files. Under AUTO it took a WebGL context and was never
+			// destroyed — see webgl_vao_teardown.spec.js.
+			renderer: video.CANVAS,
 		});
 		await app.init();
 	});

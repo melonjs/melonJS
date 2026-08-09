@@ -1,6 +1,6 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import Path2D from "../src/geometries/path2d.ts";
-import { Application } from "../src/index.js";
+import { Application, video } from "../src/index.js";
 
 describe("Bezier Curves", () => {
 	let app;
@@ -9,8 +9,19 @@ describe("Bezier Curves", () => {
 		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
+			// Canvas: this suite exercises path geometry, not GL. Defaulting to
+			// AUTO took a WebGL context and never released it, and the browser
+			// caps how many it keeps — see webgl_vao_teardown.spec.js.
+			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// tear the application down rather than leaving its canvas,
+		// listeners and timers live in the shared browser session for
+		// the rest of the run
+		app?.destroy();
 	});
 
 	describe("quadraticCurveTo", () => {

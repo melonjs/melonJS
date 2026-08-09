@@ -37,7 +37,10 @@ describe("WebGL Renderer save/restore", () => {
 		const app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			// Canvas: reset-only app — it exists to restore global defaults
+			// for later spec files, not to render. Under AUTO it took a
+			// WebGL context and was never destroyed.
+			renderer: video.CANVAS,
 		});
 		await app.init();
 	});
