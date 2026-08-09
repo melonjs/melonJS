@@ -241,6 +241,70 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * @returns octant index (0-7) or -1
 	 */
 	getIndex(item: OctreeItem): number {
+		const quadrant = this._quadrantXY(item);
+		if (quadrant === -1) {
+			return -1;
+		}
+		// items are point-z in the broadphase — bounds is 2D, so the
+		// item occupies a single z plane in 3D space. This matches
+		// how the renderer sorts (depth comes from pos.z, not from a
+		// 3D AABB on the renderable). A point cannot STRADDLE the depth
+		// midpoint the way an extended item straddles a vertical one, so
+		// the tie goes to the far child rather than to this level.
+		const rz = itemZ(item);
+		const nodeFront = this.bounds.front;
+		const nodeBack = nodeFront + this.bounds.depth;
+		if (rz < nodeFront || rz > nodeBack) {
+			return -1;
+		}
+		const depthMidpoint = nodeFront + this.bounds.depth / 2;
+		if (rz < depthMidpoint) {
+			return quadrant;
+		}
+		if (rz >= depthMidpoint) {
+			return quadrant + 4;
+		}
+		// unreachable for any real `rz` — catches NaN, which stays at
+		// this level rather than vanishing into an octant no query
+		// will look in.
+		return -1;
+	}
+
+	/**
+	 * Classify an item into one of this node's four x/y quadrants,
+	 * **ignoring z entirely**. Returns the near-half octant index
+	 * (0-3, so `+ 4` gives the far-half sibling), or -1 when the item
+	 * straddles a midpoint or lies outside this node in x/y.
+	 *
+	 * Split out of {@link Octree.getIndex} for {@link Octree.retrieve},
+	 * whose consumers all decide overlap in the XY plane and therefore
+	 * need x/y pruning WITHOUT a depth opinion. Routing that through
+	 * `getIndex` instead would reject the item from its own z-sibling
+	 * on the depth out-of-bounds guard, collapsing that entire subtree
+	 * into an unpruned walk — measured at ~10× the nodes visited on a
+	 * depth-spread scene.
+	 *
+	 * Boundary convention: a midpoint belongs to the RIGHT / BOTTOM
+	 * child, and an item whose far edge merely touches a midpoint still
+	 * counts as wholly inside the near side — `<=` / `>=` rather than
+	 * strict, because an item sitting exactly ON a midpoint lies wholly
+	 * within one child and must descend. Only a genuine STRADDLE
+	 * belongs at this level.
+	 *
+	 * This matters more than it looks: the root box is origin-centred,
+	 * so its midpoints are (0, 0, 0) — the default `pos` of every
+	 * renderable. Under strict comparisons an entire gameplay plane
+	 * classified as -1 and sat unpartitioned at the root.
+	 *
+	 * Safety: two items separated by a midpoint cannot overlap. If A
+	 * lies left (`A.right <= mid`) and B lies right (`B.left >= mid`)
+	 * then `A.right <= B.left`, and touching edges are not an overlap
+	 * under the engine's strict bounds test.
+	 * @param item - the object to classify
+	 * @returns near-half octant index (0-3) or -1
+	 * @ignore
+	 */
+	_quadrantXY(item: OctreeItem): number {
 		const bounds = item.getBounds();
 		let rx: number;
 		let ry: number;
@@ -264,17 +328,10 @@ export default class Octree implements Broadphase<OctreeItem> {
 		}
 		const rw = bounds.width;
 		const rh = bounds.height;
-		const rz = itemZ(item);
-		// items are point-z in the broadphase — bounds is 2D, so the
-		// item occupies a single z plane in 3D space. This matches
-		// how the renderer sorts (depth comes from pos.z, not from a
-		// 3D AABB on the renderable).
 		const nodeLeft = this.bounds.left;
 		const nodeTop = this.bounds.top;
-		const nodeFront = this.bounds.front;
 		const nodeRight = nodeLeft + this.bounds.width;
 		const nodeBottom = nodeTop + this.bounds.height;
-		const nodeBack = nodeFront + this.bounds.depth;
 
 		// Out-of-bounds guard — keep at parent's `objects` so the
 		// spatial pruning in `querySphere` / `queryAABB` stays
@@ -283,34 +340,26 @@ export default class Octree implements Broadphase<OctreeItem> {
 			rx < nodeLeft ||
 			rx + rw > nodeRight ||
 			ry < nodeTop ||
-			ry + rh > nodeBottom ||
-			rz < nodeFront ||
-			rz > nodeBack
+			ry + rh > nodeBottom
 		) {
 			return -1;
 		}
 
 		const verticalMidpoint = nodeLeft + this.bounds.width / 2;
 		const horizontalMidpoint = nodeTop + this.bounds.height / 2;
-		const depthMidpoint = nodeFront + this.bounds.depth / 2;
 
-		const nearOctant = rz < depthMidpoint;
-		const farOctant = rz > depthMidpoint;
-		const topQuadrant = ry < horizontalMidpoint && ry + rh < horizontalMidpoint;
-		const bottomQuadrant = ry > horizontalMidpoint;
-		const leftQuadrant = rx < verticalMidpoint && rx + rw < verticalMidpoint;
-		const rightQuadrant = rx > verticalMidpoint;
+		const topQuadrant =
+			ry < horizontalMidpoint && ry + rh <= horizontalMidpoint;
+		const bottomQuadrant = ry >= horizontalMidpoint;
+		const leftQuadrant = rx < verticalMidpoint && rx + rw <= verticalMidpoint;
+		const rightQuadrant = rx >= verticalMidpoint;
 
-		if (!(nearOctant || farOctant)) {
-			return -1;
-		}
-		const farOffset = farOctant ? 4 : 0;
 		if (leftQuadrant) {
-			if (topQuadrant) return 1 + farOffset;
-			if (bottomQuadrant) return 2 + farOffset;
+			if (topQuadrant) return 1;
+			if (bottomQuadrant) return 2;
 		} else if (rightQuadrant) {
-			if (topQuadrant) return 0 + farOffset;
-			if (bottomQuadrant) return 3 + farOffset;
+			if (topQuadrant) return 0;
+			if (bottomQuadrant) return 3;
 		}
 		return -1;
 	}
@@ -442,9 +491,32 @@ export default class Octree implements Broadphase<OctreeItem> {
 		}
 
 		if (this.nodes.length > 0) {
-			const index = this.getIndex(item);
-			if (index !== -1) {
-				this.nodes[index].retrieve(item, undefined, out);
+			// `retrieve` feeds 2D consumers ONLY — the SAT detector
+			// (`Detector.collisions`), pointer picking, the 2D raycast and
+			// `adapter.queryAABB`. Every one of them decides overlap in the
+			// XY plane, so pruning on z here silently drops real collisions:
+			// two bodies at different depths that overlap in XY do collide
+			// under 2D SAT, but would never be offered to each other as
+			// candidates.
+			//
+			// So classify on x/y ONLY and walk both depth halves of that
+			// quadrant. Going through `getIndex` and walking `index ^ 4`
+			// instead would work, but the sibling would then reject the item
+			// on its depth out-of-bounds guard and fall back to an unpruned
+			// 8-way walk of that whole subtree.
+			//
+			// x/y pruning is preserved at every level and in both halves: an
+			// item lying wholly inside a DIFFERENT x/y quadrant cannot
+			// overlap, and midpoint-straddlers live in `objects` at this
+			// level and were already folded in above.
+			//
+			// Queries that genuinely want depth pruning have their own entry
+			// points (`queryAABB`, `querySphere`, `queryRay`, `queryFrustum`)
+			// and are unaffected.
+			const quadrant = this._quadrantXY(item);
+			if (quadrant !== -1) {
+				this.nodes[quadrant].retrieve(item, undefined, out);
+				this.nodes[quadrant + 4].retrieve(item, undefined, out);
 			} else {
 				for (let i = 0; i < this.nodes.length; i++) {
 					this.nodes[i].retrieve(item, undefined, out);

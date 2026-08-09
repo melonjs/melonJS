@@ -244,10 +244,21 @@ describe("Octree", () => {
 			const item = makeItem({ x: 100, y: 295, z: 0, w: 10, h: 20 });
 			expect(octree.getIndex(item)).toBe(-1);
 		});
-		it("returns -1 for items sitting on the depth midpoint (z=0)", () => {
+		it("classifies items sitting exactly ON the depth midpoint (z=0)", () => {
+			// BEHAVIOUR CHANGE: this used to assert -1. Items are point-z in
+			// the broadphase, so an item can never STRADDLE the depth
+			// midpoint the way it straddles a vertical/horizontal one — it
+			// lies wholly within one half, and must descend. The midpoint
+			// belongs to the far child by convention.
+			//
+			// The old behaviour was costly rather than merely academic: the
+			// real root box is origin-centred, so its depth midpoint is 0 —
+			// the default `pos.z` of every renderable, and the shared
+			// gameplay z the 2.5D recipe prescribes. An entire gameplay
+			// plane therefore stayed at the root, unpartitioned, and every
+			// query degraded to a linear scan over it.
 			const item = makeItem({ x: 100, y: 100, z: 0 });
-			// not strictly < or > midpoint
-			expect(octree.getIndex(item)).toBe(-1);
+			expect(octree.getIndex(item)).toBe(5); // top-left-far
 		});
 		it("classifies top-left-near as octant 1", () => {
 			const item = makeItem({ x: 50, y: 50, z: -50 });
