@@ -95,6 +95,32 @@ describe("Application lifecycle: renderer event handlers are unregisterable", ()
 		app.destroy();
 	});
 
+	it("the root Container's CANVAS_ONRESIZE handler is retrievable and cleared", async () => {
+		const app = await mk(video.CANVAS);
+		const world = app.world;
+		// only ROOT containers subscribe (`if (this.root === true)`), so this
+		// is one per world rather than one per node in the scene graph
+		expect(world.root).toBe(true);
+		expect(typeof world.onCanvasResize).toBe("function");
+
+		app.destroy();
+		// cleared on teardown, which is also what makes a second destroy a
+		// no-op rather than a double `off`
+		expect(world.onCanvasResize).toBeUndefined();
+	});
+
+	it("World unregisters both of its subscriptions on destroy", async () => {
+		const app = await mk(video.CANVAS);
+		const world = app.world;
+		// GAME_RESET is registered with (handler, context) and LEVEL_LOADED
+		// was an inline arrow — the latter was unremovable
+		expect(typeof world.onLevelLoaded).toBe("function");
+		expect(typeof world.reset).toBe("function");
+
+		app.destroy();
+		expect(world.onLevelLoaded).toBeUndefined();
+	});
+
 	it("handlers are per-instance, so each teardown removes its own", async (ctx) => {
 		if (!hasWebGL) {
 			ctx.skip("WebGL renderer not available in this environment");

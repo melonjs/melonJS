@@ -1,7 +1,7 @@
 import { colorPool } from "../math/color.ts";
 import Body from "../physics/builtin/body.js";
 import state from "../state/state.ts";
-import { CANVAS_ONRESIZE, on } from "../system/event.ts";
+import { CANVAS_ONRESIZE, off, on } from "../system/event.ts";
 import pool from "../system/legacy_pool.js";
 import { defer } from "../utils/function";
 import { createGUID } from "../utils/utils";
@@ -244,14 +244,19 @@ export default class Container extends Renderable {
 
 		// subscribe on the canvas resize event
 		if (this.root === true) {
+			// Held as a field, not an inline arrow, so `destroy()` can pass it
+			// to `off()` — an anonymous handler is unremovable, and its closure
+			// would keep this container (and its whole child tree) reachable
+			// from the event bus for the life of the page.
 			// Workaround for not updating container child-bounds automatically (it's expensive!)
-			on(CANVAS_ONRESIZE, () => {
+			this.onCanvasResize = () => {
 				// temporarly enable the enableChildBoundsUpdate flag
 				// this.enableChildBoundsUpdate === true;
 				// update bounds
 				this.updateBounds();
 				// this.enableChildBoundsUpdate === false;
-			});
+			};
+			on(CANVAS_ONRESIZE, this.onCanvasResize);
 		}
 	}
 
@@ -1098,6 +1103,16 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
+		// drop the root container's resize subscription before anything else —
+		// the handler closes over `this`, so leaving it registered keeps the
+		// container and its entire child tree reachable from the event bus,
+		// and a destroyed container would still try to update its bounds on
+		// every canvas resize. Only root containers ever subscribe.
+		if (this.onCanvasResize) {
+			off(CANVAS_ONRESIZE, this.onCanvasResize);
+			this.onCanvasResize = undefined;
+		}
+
 		// empty the container
 		this.reset();
 		// call the parent destroy method, spreading the actual arguments —
