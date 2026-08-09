@@ -8,6 +8,7 @@ import {
 	GAME_RESET,
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
+	off,
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
@@ -342,10 +343,28 @@ export default class WebGLRenderer extends Renderer {
 			false,
 		);
 
-		// reset the renderer on game reset
-		on(GAME_RESET, () => {
+		// Held as bound fields rather than inline arrows so `destroy()` can
+		// actually unregister them. An anonymous handler cannot be passed to
+		// `off()`, so every torn-down renderer used to leave its listeners on
+		// the bus forever — and each closure pins the renderer, its batchers
+		// and its GL objects against garbage collection, so releasing the GL
+		// context alone was not enough to let the canvas go.
+		this.onGameReset = () => {
 			this.reset();
-		});
+		};
+		this.onContextRestoredInvalidate = (renderer) => {
+			if (renderer === this) {
+				this.currentProgram = undefined;
+			}
+		};
+		this.onCanvasResize = (width, height) => {
+			this.flush();
+			this.setViewport(0, 0, width, height);
+			// FBOs are lazily resized in beginPostEffect via get() → resize()
+		};
+
+		// reset the renderer on game reset
+		on(GAME_RESET, this.onGameReset);
 
 		// Every live GLShader recompiles on this event, and each recompile
 		// binds its own program to replay its uniform snapshot — so the
@@ -358,18 +377,10 @@ export default class WebGLRenderer extends Renderer {
 		// Light2dBlock — a foreign mesh-lit program parks its block at
 		// default binding point 0, whose 2D buffer is now too small, and a
 		// plain sprite flush dies with INVALID_OPERATION.
-		on(ONCONTEXT_RESTORED, (renderer) => {
-			if (renderer === this) {
-				this.currentProgram = undefined;
-			}
-		});
+		on(ONCONTEXT_RESTORED, this.onContextRestoredInvalidate);
 
 		// register to the CANVAS resize channel
-		on(CANVAS_ONRESIZE, (width, height) => {
-			this.flush();
-			this.setViewport(0, 0, width, height);
-			// FBOs are lazily resized in beginPostEffect via get() → resize()
-		});
+		on(CANVAS_ONRESIZE, this.onCanvasResize);
 	}
 
 	/**
@@ -474,6 +485,15 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	destroy() {
+		// Unregister first: every handler closes over `this`, so leaving them
+		// on the bus keeps the renderer (and transitively its batchers and GL
+		// objects) reachable forever — a destroyed renderer would also still
+		// react to GAME_RESET and CANVAS_ONRESIZE. Matches what the WebGPU
+		// backend already does.
+		off(GAME_RESET, this.onGameReset);
+		off(ONCONTEXT_RESTORED, this.onContextRestoredInvalidate);
+		off(CANVAS_ONRESIZE, this.onCanvasResize);
+
 		// the shared ground-shadow quads (#1515) hold retained GPU geometry
 		// keyed off this renderer's batchers — released before those go
 		releaseShadowQuads(this);
@@ -488,6 +508,24 @@ export default class WebGLRenderer extends Renderer {
 		if (this.vertexBuffer) {
 			this.gl.deleteBuffer(this.vertexBuffer);
 			this.vertexBuffer = null;
+		}
+
+		// Release the GL context itself. Dropping every GL object above and
+		// removing the canvas from the DOM does NOT do this: a canvas keeps
+		// its context until the canvas is garbage-collected, which is
+		// non-deterministic and routinely delayed. Browsers cap how many live
+		// contexts they keep (Chromium ~16) and force-lose the oldest past
+		// that, so a long-lived page that creates and tears down several
+		// applications — an SPA moving between scenes, or a test session
+		// sharing one page across spec files — accumulates dead-but-unfreed
+		// contexts until an unrelated later `getContext` stalls or fails.
+		//
+		// `WEBGL_lose_context` is the only way to hand a context back
+		// deterministically. `destroy()` is terminal (`Application.destroy`
+		// refuses a subsequent `init`), so losing it here forecloses nothing.
+		// The extension is absent on some drivers, hence the optional call.
+		if (this.isContextValid !== false) {
+			this.gl.getExtension("WEBGL_lose_context")?.loseContext();
 		}
 	}
 

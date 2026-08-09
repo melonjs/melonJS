@@ -72,7 +72,7 @@ describe("WebGL batcher teardown releases GL objects", () => {
 		expect(renderer.vertexBuffer).toBe(null);
 	});
 
-	it("destroy() is idempotent and does not queue GL errors", async (ctx) => {
+	it("destroy() releases the GL context, and is idempotent", async (ctx) => {
 		requireWebGL(ctx);
 		const app = new Application(48, 48, {
 			parent: "screen",
@@ -85,8 +85,33 @@ describe("WebGL batcher teardown releases GL objects", () => {
 		while (gl.getError() !== gl.NO_ERROR) {
 			/* drain */
 		}
+
 		app.destroy();
-		app.renderer.destroy();
-		expect(gl.getError()).toBe(gl.NO_ERROR);
+
+		// `destroy()` now hands the context back via `WEBGL_lose_context`.
+		// Dropping the GL objects and removing the canvas from the DOM does
+		// NOT do this on its own — the context survives until the canvas is
+		// garbage-collected, and browsers force-lose the oldest once past
+		// their live-context cap (~16 on Chromium). A page that builds and
+		// tears down several applications therefore used to accumulate
+		// dead-but-unfreed contexts until an unrelated later `getContext`
+		// stalled. This assertion is what keeps that from regressing.
+		expect(gl.isContextLost()).toBe(true);
+
+		// still idempotent: a second teardown on the now-lost context must
+		// not throw. GL calls on a lost context are no-ops by spec.
+		expect(() => {
+			app.renderer.destroy();
+		}).not.toThrow();
 	});
 });
+
+// NOTE — a "create/destroy N applications past the browser's context cap"
+// test was written here and REMOVED, because it passed identically with and
+// without the fix. On a machine with a real GPU the cap is never reached at
+// any N a unit test can afford, and eviction does not surface as a
+// newly-created context reporting `isContextLost()` — it surfaces as the
+// OLDEST context dying, and as `getContext` getting slower, neither of which
+// is assertable cheaply or deterministically. The `isContextLost()` check
+// above is the honest regression guard: it fails without the fix and passes
+// with it. Left as a comment so nobody re-derives the dead end.

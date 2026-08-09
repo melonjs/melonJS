@@ -4,6 +4,7 @@ import {
 	GAME_RESET,
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
+	off,
 	on,
 } from "../../system/event.ts";
 import { Gradient } from "./../gradient.js";
@@ -74,10 +75,26 @@ export default class CanvasRenderer extends Renderer {
 			false,
 		);
 
-		// reset the renderer on game reset
-		on(GAME_RESET, () => {
+		// Held as a bound field, not an inline arrow, so `destroy()` can
+		// unregister it — an anonymous handler cannot be passed to `off()`,
+		// and the closure would otherwise pin this renderer forever.
+		this.onGameReset = () => {
 			this.reset();
-		});
+		};
+
+		// reset the renderer on game reset
+		on(GAME_RESET, this.onGameReset);
+	}
+
+	/**
+	 * Release the resources held by this renderer. The Canvas backend owns
+	 * no GPU objects, but it does hold an event subscription whose closure
+	 * keeps the renderer (and its canvas) reachable — so a torn-down
+	 * application would otherwise leak one listener per teardown and keep
+	 * reacting to `GAME_RESET` after it was destroyed.
+	 */
+	destroy() {
+		off(GAME_RESET, this.onGameReset);
 	}
 
 	/**

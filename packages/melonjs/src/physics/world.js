@@ -4,6 +4,7 @@ import {
 	emit,
 	GAME_RESET,
 	LEVEL_LOADED,
+	off,
 	on,
 	WORLD_STEP,
 } from "../system/event.ts";
@@ -160,13 +161,33 @@ export default class World extends Container {
 		// clears contents because the Octree root is a fixed
 		// origin-centred box that doesn't depend on the level's 2D
 		// extent.
-		on(LEVEL_LOADED, () => {
+		// Held as a field, not an inline arrow, so `destroy()` can pass it to
+		// `off()` — an anonymous handler is unremovable, and its closure keeps
+		// this world (and its whole child tree and broadphase) reachable from
+		// the event bus for the life of the page.
+		this.onLevelLoaded = () => {
 			if (this._sortOn === "depth") {
 				this.broadphase.clear();
 			} else {
 				this.broadphase.clear(this.getBounds().clone());
 			}
-		});
+		};
+		on(LEVEL_LOADED, this.onLevelLoaded);
+	}
+
+	/**
+	 * Release this world's global event subscriptions before handing off to
+	 * the container teardown. Without this a destroyed world stays on the
+	 * bus: it keeps resetting itself on `GAME_RESET` and clearing a
+	 * broadphase nobody reads on `LEVEL_LOADED`, and it cannot be garbage
+	 * collected because both handlers close over it.
+	 * @ignore
+	 */
+	destroy() {
+		off(GAME_RESET, this.reset, this);
+		off(LEVEL_LOADED, this.onLevelLoaded);
+		this.onLevelLoaded = undefined;
+		super.destroy(...arguments);
 	}
 
 	/**

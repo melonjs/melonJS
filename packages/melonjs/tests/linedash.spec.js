@@ -1,5 +1,5 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import { Application } from "../src/index.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { Application, video } from "../src/index.js";
 
 describe("LineDash", () => {
 	let app;
@@ -8,8 +8,17 @@ describe("LineDash", () => {
 		app = new Application(64, 64, {
 			parent: "screen",
 			scale: "auto",
+			// Canvas: dash state is a 2D-context concern; no GL needed here.
+			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// tear the application down rather than leaving its canvas,
+		// listeners and timers live in the shared browser session for
+		// the rest of the run
+		app?.destroy();
 	});
 
 	describe("setLineDash / getLineDash", () => {
