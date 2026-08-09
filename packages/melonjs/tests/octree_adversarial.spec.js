@@ -11,8 +11,7 @@
  * one that genuinely overlaps. A false negative is a silently missed
  * collision, which is the failure mode that does not announce itself.
  */
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Application, boot, video, World } from "../src/index.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { AABB3d } from "../src/physics/broadphase/aabb3d.ts";
 import Octree from "../src/physics/broadphase/octree.ts";
 
@@ -58,23 +57,27 @@ function overlaps2d(a, b) {
 	);
 }
 
+/**
+ * The Octree only ever touches `world` to reach
+ * `world.app.viewport.localToWorld` on the `isFloating` branch, and nothing
+ * here is floating. So this stays a pure unit test: no `boot()`, no
+ * `Application`, no canvas.
+ *
+ * That is deliberate rather than incidental. Every spec that stands up an
+ * Application leaves a live canvas/context in the shared browser session for
+ * the rest of the run, and `helpers/webgl-context.js` documents the
+ * consequence — some unrelated spec's `beforeAll` times out later, blaming
+ * whichever file happened to run late. A test that does not need one should
+ * not create one.
+ */
+const stubWorld = {};
+
 describe("Octree — adversarial", () => {
-	let world;
 	/** the ±10000 origin-centred root that `createBroadphase()` actually builds */
 	let octree;
 
-	beforeAll(async () => {
-		boot();
-		const app = new Application(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.CANVAS,
-		});
-		await app.init();
-	});
-
 	beforeEach(() => {
-		world = new World(0, 0, 800, 600);
+		const world = stubWorld;
 		const bounds = new AABB3d();
 		bounds.setMinMax(-10000, -10000, -10000, 10000, 10000, 10000);
 		octree = new Octree(world, bounds, 4, 4, 0);

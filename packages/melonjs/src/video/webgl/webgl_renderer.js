@@ -489,6 +489,24 @@ export default class WebGLRenderer extends Renderer {
 			this.gl.deleteBuffer(this.vertexBuffer);
 			this.vertexBuffer = null;
 		}
+
+		// Release the GL context itself. Dropping every GL object above and
+		// removing the canvas from the DOM does NOT do this: a canvas keeps
+		// its context until the canvas is garbage-collected, which is
+		// non-deterministic and routinely delayed. Browsers cap how many live
+		// contexts they keep (Chromium ~16) and force-lose the oldest past
+		// that, so a long-lived page that creates and tears down several
+		// applications — an SPA moving between scenes, or a test session
+		// sharing one page across spec files — accumulates dead-but-unfreed
+		// contexts until an unrelated later `getContext` stalls or fails.
+		//
+		// `WEBGL_lose_context` is the only way to hand a context back
+		// deterministically. `destroy()` is terminal (`Application.destroy`
+		// refuses a subsequent `init`), so losing it here forecloses nothing.
+		// The extension is absent on some drivers, hence the optional call.
+		if (this.isContextValid !== false) {
+			this.gl.getExtension("WEBGL_lose_context")?.loseContext();
+		}
 	}
 
 	reset() {
