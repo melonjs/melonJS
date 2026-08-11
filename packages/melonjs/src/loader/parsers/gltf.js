@@ -509,10 +509,21 @@ export function multiplyMatrix(a, b) {
 }
 
 /**
- * Decode a glTF image into an HTMLImageElement. Handles the three sources:
- * an embedded `bufferView`, an inline `data:` URI, and an external image file
- * referenced by relative `uri` (resolved against the asset URL `baseURI`).
- * @returns {Promise<HTMLImageElement>}
+ * Decode a glTF image. Handles the three sources: an embedded `bufferView`,
+ * an inline `data:` URI, and an external image file referenced by relative
+ * `uri` (resolved against the asset URL `baseURI`).
+ *
+ * Resolves an `ImageBitmap` wherever the platform provides one — matching
+ * what the ordinary image loader (`parsers/image.js`) produces, so every
+ * texture in the engine reaches the GPU as the same, fully-decoded kind of
+ * source. That consistency is load-bearing rather than cosmetic: an
+ * `HTMLImageElement` decoded from an INDEXED (PNG `colorType` 3) file is
+ * uploaded by WebKit's `copyExternalImageToTexture` as raw palette indices,
+ * so the texture arrives greyscale. An `ImageBitmap` is RGBA by definition
+ * and has no such ambiguity. Nothing in the WebGPU API can correct this at
+ * upload time — `flipY` / `premultipliedAlpha` / `colorSpace` are the only
+ * knobs, and palette expansion belongs to the decoder.
+ * @returns {Promise<ImageBitmap|HTMLImageElement>}
  * @ignore
  */
 function decodeImage(json, buffers, imageIndex, baseURI, settings) {
@@ -527,6 +538,16 @@ function decodeImage(json, buffers, imageIndex, baseURI, settings) {
 		);
 		blob = new Blob([slice], { type: image.mimeType || "image/png" });
 	} else if (image.uri && image.uri.startsWith("data:")) {
+		if (typeof globalThis.createImageBitmap === "function") {
+			return fetch(image.uri)
+				.then((r) => {
+					return r.blob();
+				})
+				.then(decodeBlob)
+				.catch(() => {
+					return loadImageFromUrl(image.uri);
+				});
+		}
 		return loadImageFromUrl(image.uri);
 	} else if (image.uri) {
 		// external image file — resolve relative to the asset URL and let the
@@ -542,14 +563,48 @@ function decodeImage(json, buffers, imageIndex, baseURI, settings) {
 				),
 			);
 		}
+		if (
+			typeof globalThis.createImageBitmap === "function" &&
+			typeof settings?.crossOrigin !== "string"
+		) {
+			return fetch(url)
+				.then((r) => {
+					if (!r.ok) {
+						throw new Error(`glTF: failed to fetch image (${r.status})`);
+					}
+					return r.blob();
+				})
+				.then(decodeBlob)
+				.catch(() => {
+					return loadImageFromUrl(url, false, settings?.crossOrigin);
+				});
+		}
 		return loadImageFromUrl(url, false, settings?.crossOrigin);
 	} else {
 		return Promise.reject(new Error("glTF: unsupported image source"));
 	}
-	// `revoke: true` — the blob URL is a transient handle, only needed until
-	// the image has decoded; release it on load/error to avoid leaking it for
-	// the lifetime of the document.
-	return loadImageFromUrl(URL.createObjectURL(blob), true);
+	return decodeBlob(blob);
+}
+
+/**
+ * Decode a Blob to an ImageBitmap, falling back to the element path on a
+ * platform without `createImageBitmap`.
+ * @ignore
+ */
+function decodeBlob(blob) {
+	const viaElement = () => {
+		// `revoke: true` — the blob URL is a transient handle, only needed
+		// until the image has decoded
+		return loadImageFromUrl(URL.createObjectURL(blob), true);
+	};
+	if (typeof globalThis.createImageBitmap !== "function") {
+		return viaElement();
+	}
+	// Fall back rather than fail: `createImageBitmap` is STRICTER than the
+	// element path (it rejects sources the element decodes leniently), and a
+	// stricter loader would be a regression. This can only ever upgrade a
+	// decode, never break one.
+	return globalThis.createImageBitmap(blob).catch(viaElement);
 }
 
 /** @ignore */
