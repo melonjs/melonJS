@@ -7,6 +7,13 @@ import {
 	testPolygonEllipse,
 	testPolygonPolygon,
 } from "./sat.js";
+import {
+	testBox3dBox3d,
+	testBox3dEllipse,
+	testBox3dPolygon,
+	testEllipseBox3d,
+	testPolygonBox3d,
+} from "./sat3d.js";
 
 // pre-built lookup table for SAT collision tests to avoid string concatenation
 // Rect and RoundRect extend Polygon, so they reuse the Polygon SAT tests
@@ -27,7 +34,29 @@ const SAT_LOOKUP = {
 	EllipseRectangle: testEllipsePolygon,
 	RectangleRoundRect: testPolygonPolygon,
 	RoundRectRectangle: testPolygonPolygon,
+	// Box3d is the only shape with a depth extent, so Box3d-vs-Box3d is the
+	// only pair resolved by the 3D narrowphase. Every mixed pair degrades to
+	// the 2D test against the box's XY footprint, treating the planar shape
+	// as unbounded along Z — see `sat3d.js` / `Box3d` for why. EVERY mixed
+	// combination has to be listed: this table is looked up by string concat
+	// and a missing entry is a hard crash, not a missed collision.
+	Box3dBox3d: testBox3dBox3d,
+	Box3dPolygon: testBox3dPolygon,
+	PolygonBox3d: testPolygonBox3d,
+	Box3dRectangle: testBox3dPolygon,
+	RectangleBox3d: testPolygonBox3d,
+	Box3dRoundRect: testBox3dPolygon,
+	RoundRectBox3d: testPolygonBox3d,
+	Box3dEllipse: testBox3dEllipse,
+	EllipseBox3d: testEllipseBox3d,
 };
+
+/**
+ * Shape-type pairs already reported as unsupported, so a mismatched pair
+ * warns once instead of once per frame per pair.
+ * @ignore
+ */
+const reportedMissingPairs = new Set();
 
 /**
  * @import Entity from "../../renderable/entity/entity.js";
@@ -97,6 +126,12 @@ class Detector {
 				overlapV: { x: 0, y: 0 },
 				normal: { x: 0, y: 0 },
 				depth: 0,
+				// Z half of the same three vectors, as scalars — see
+				// `ResponseObject.overlapNZ`. Always 0 unless both shapes
+				// are a Box3d and the contact resolved along Z.
+				overlapNZ: 0,
+				overlapZ: 0,
+				normalZ: 0,
 			},
 			{
 				a: null,
@@ -106,6 +141,9 @@ class Detector {
 				overlapV: { x: 0, y: 0 },
 				normal: { x: 0, y: 0 },
 				depth: 0,
+				overlapNZ: 0,
+				overlapZ: 0,
+				normalZ: 0,
 			},
 		];
 	}
@@ -123,6 +161,8 @@ class Detector {
 		const view = this._symViews[slot];
 		const oN = satResponse.overlapN;
 		const oV = satResponse.overlapV;
+		const oNZ = satResponse.overlapNZ;
+		const oZ = satResponse.overlapZ;
 		if (flip) {
 			view.a = satResponse.b;
 			view.b = satResponse.a;
@@ -130,9 +170,12 @@ class Detector {
 			view.overlapN.y = -oN.y;
 			view.overlapV.x = -oV.x;
 			view.overlapV.y = -oV.y;
+			view.overlapNZ = -oNZ;
+			view.overlapZ = -oZ;
 			// MTV of original b = +overlapN (b moves along "from a to b" to escape)
 			view.normal.x = oN.x;
 			view.normal.y = oN.y;
+			view.normalZ = oNZ;
 		} else {
 			view.a = satResponse.a;
 			view.b = satResponse.b;
@@ -140,9 +183,12 @@ class Detector {
 			view.overlapN.y = oN.y;
 			view.overlapV.x = oV.x;
 			view.overlapV.y = oV.y;
+			view.overlapNZ = oNZ;
+			view.overlapZ = oZ;
 			// MTV of original a = -overlapN (a moves opposite of "from a to b" to escape)
 			view.normal.x = -oN.x;
 			view.normal.y = -oN.y;
+			view.normalZ = -oNZ;
 		}
 		view.overlap = satResponse.overlap;
 		view.depth = satResponse.overlap;
@@ -253,9 +299,27 @@ class Detector {
 				let indexB = bodyB.shapes.length, shapeB;
 				indexB--, (shapeB = bodyB.shapes[indexB]);
 			) {
+				// Resolve the narrowphase for this shape pair. An unlisted
+				// combination used to index straight into `.call(...)` and
+				// throw a TypeError mid-step, taking the whole world update
+				// with it — reachable today with any user-defined shape type,
+				// and newly reachable via `Box3d`. Warn once per pair and
+				// treat it as "no collision" instead: a missed contact is
+				// recoverable, a thrown physics step is not.
+				const test = SAT_LOOKUP[shapeA.type + shapeB.type];
+				if (test === undefined) {
+					const pair = `${shapeA.type} / ${shapeB.type}`;
+					if (!reportedMissingPairs.has(pair)) {
+						reportedMissingPairs.add(pair);
+						console.warn(
+							`melonJS: no collision test for shape pair ${pair}; treating as no collision`,
+						);
+					}
+					continue;
+				}
 				// full SAT collision check
 				if (
-					SAT_LOOKUP[shapeA.type + shapeB.type].call(
+					test.call(
 						this,
 						bodyA.ancestor, // a reference to the object A
 						shapeA,
@@ -405,6 +469,12 @@ class Detector {
 							while (extraPasses-- > 0 && this.collides(objA.body, objB.body)) {
 								const overlap = this.response.overlapV;
 								const overlapN = this.response.overlapN;
+								// Z half of the same two vectors. Both are 0 for
+								// every planar shape pair, so the arithmetic below
+								// is bit-for-bit inert for a 2D body — no branch
+								// needed to keep the legacy path unchanged.
+								const overlapZ = this.response.overlapZ;
+								const overlapNZ = this.response.overlapNZ;
 
 								// mass ratio for proportional response
 								const bothDynamic = !objA.body.isStatic && !objB.body.isStatic;
@@ -427,27 +497,33 @@ class Detector {
 									objA.body.ancestor.pos.set(
 										objA.body.ancestor.pos.x - overlap.x * ratioA,
 										objA.body.ancestor.pos.y - overlap.y * ratioA,
-										objA.body.ancestor.pos.z,
+										objA.body.ancestor.pos.z - overlapZ * ratioA,
 									);
 									// cancel velocity into this surface (no bounce)
 									const projVel =
-										objA.body.vel.x * overlapN.x + objA.body.vel.y * overlapN.y;
+										objA.body.vel.x * overlapN.x +
+										objA.body.vel.y * overlapN.y +
+										objA.body.velZ * overlapNZ;
 									if (projVel > 0) {
 										objA.body.vel.x -= projVel * ratioA * overlapN.x;
 										objA.body.vel.y -= projVel * ratioA * overlapN.y;
+										objA.body.velZ -= projVel * ratioA * overlapNZ;
 									}
 								}
 								if (objB.body.isStatic === false) {
 									objB.body.ancestor.pos.set(
 										objB.body.ancestor.pos.x + overlap.x * ratioB,
 										objB.body.ancestor.pos.y + overlap.y * ratioB,
-										objB.body.ancestor.pos.z,
+										objB.body.ancestor.pos.z + overlapZ * ratioB,
 									);
 									const projVel =
-										objB.body.vel.x * overlapN.x + objB.body.vel.y * overlapN.y;
+										objB.body.vel.x * overlapN.x +
+										objB.body.vel.y * overlapN.y +
+										objB.body.velZ * overlapNZ;
 									if (projVel > 0) {
 										objB.body.vel.x -= projVel * ratioB * overlapN.x;
 										objB.body.vel.y -= projVel * ratioB * overlapN.y;
+										objB.body.velZ -= projVel * ratioB * overlapNZ;
 									}
 								}
 								// update bounds after position changed

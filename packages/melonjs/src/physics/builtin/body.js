@@ -1,3 +1,4 @@
+import { Box3d, box3dPool } from "../../geometries/box3d.ts";
 import { Ellipse } from "../../geometries/ellipse.ts";
 import { Line, linePool } from "../../geometries/line.ts";
 import { Point, pointPool } from "../../geometries/point.ts";
@@ -230,6 +231,70 @@ export default class Body {
 		}
 		// cap by default to half the default gravity force
 		this.maxVel.set(490, 490);
+
+		/**
+		 * The current velocity of the body along the depth axis.
+		 *
+		 * Z arrives as **scalars beside** `vel` / `force` / `friction` /
+		 * `maxVel` rather than by widening them to {@link Vector3d}, because
+		 * `Vector3d` is not a subclass of {@link Vector2d}: retyping them —
+		 * or the {@link Body#getVelocity} vector they hand back — would break
+		 * every existing 2D consumer. They stay exactly as they were.
+		 *
+		 * All four default to the inert value, so a body that never touches
+		 * them integrates z by `+= 0` and behaves identically to 19.x. Only a
+		 * body carrying a {@link Box3d} shape can be pushed back along z by
+		 * the solver.
+		 * @public
+		 * @type {number}
+		 * @default 0
+		 * @see Body#forceZ
+		 * @see Box3d
+		 */
+		this.velZ = 0;
+
+		/**
+		 * body force to apply along the depth axis in the current step.
+		 * @public
+		 * @type {number}
+		 * @default 0
+		 * @see Body#velZ
+		 */
+		this.forceZ = 0;
+
+		/**
+		 * body friction along the depth axis.
+		 * @public
+		 * @type {number}
+		 * @default 0
+		 * @see Body#setFriction
+		 */
+		this.frictionZ = 0;
+
+		/**
+		 * max velocity along the depth axis (to limit body velocity).
+		 * @public
+		 * @type {number}
+		 * @default 490
+		 * @see Body#setMaxVelocity
+		 */
+		this.maxVelZ = 490;
+
+		/**
+		 * `true` when at least one of this body's shapes is a {@link Box3d},
+		 * i.e. this body has a depth extent and can be resolved along z.
+		 * Maintained by {@link Body#addShape} / {@link Body#removeShape}.
+		 * @readonly
+		 * @public
+		 * @type {boolean}
+		 * @default false
+		 */
+		// derived rather than reset to `false`: `this.shapes` is only
+		// allocated when undefined, so a pooled body handed back for reuse
+		// still carries its previous shapes at this point.
+		this.hasDepth = this.shapes.some((shape) => {
+			return shape.type === "Box3d";
+		});
 
 		/**
 		 * Either this body is a static body or not.
@@ -637,6 +702,17 @@ export default class Body {
 				this.shapes.push(shape);
 			}
 			this.bounds.addPoint(shape);
+		} else if (shape instanceof Box3d) {
+			if (!this.shapes.includes(shape)) {
+				// see removeShape
+				this.shapes.push(shape);
+			}
+			// Only the XY footprint goes into `this.bounds`. That bounds is a
+			// 2D `Bounds` and feeds the broadphase pre-gate, debug draw and
+			// `containsPoint` — all of which stay 2D. The depth extent lives
+			// on the shape and is read by the narrowphase directly.
+			this.bounds.addBounds(shape.getBounds());
+			this.hasDepth = true;
 		} else {
 			// JSON object
 			this.fromJSON(shape);
@@ -764,12 +840,17 @@ export default class Body {
 
 	/**
 	 * remove the specified shape from the body shape list
-	 * @param {Polygon|Line|Ellipse} shape - a shape object
+	 * @param {Polygon|Line|Ellipse|Box3d} shape - a shape object
 	 * @returns {number} the shape array length
 	 */
 	removeShape(shape) {
 		// clear the current bounds
 		this.bounds.clear();
+		// `addShape` only ever raises `hasDepth`, so clear it here and let the
+		// re-add below raise it again if a Box3d is still in the list —
+		// otherwise removing the last Box3d would leave the body claiming a
+		// depth extent it no longer has.
+		this.hasDepth = false;
 		// remove the shape from shape list
 		remove(this.shapes, shape);
 		// add everything left back
@@ -849,24 +930,41 @@ export default class Body {
 			ratio = totalMass > 0 ? other.body.mass / totalMass : 0.5;
 		}
 
+		// Z half of the minimum translation vector. Both are 0 for every
+		// planar shape pair (see ResponseObject#overlapZ), so everything below
+		// stays bit-for-bit identical for a 2D body — no branch required.
+		//
+		// Defaulted with `??` because this method is DUCK-TYPED, not typed:
+		// it is public and callers legitimately hand it a plain object
+		// literal carrying only `overlapV` / `overlapN`. Reading the new
+		// fields off one of those yields `undefined`, and a single
+		// `vel * undefined` poisons `projVel` to NaN — which fails the
+		// `projVel > 0` gate and silently stops cancelling velocity into the
+		// surface, while the position write turns z into NaN.
+		const overlapZ = response.overlapZ ?? 0;
+		const overlapNZ = response.overlapNZ ?? 0;
+
 		// Move out of the other object shape
 		this.ancestor.pos.set(
 			this.ancestor.pos.x - overlap.x * ratio,
 			this.ancestor.pos.y - overlap.y * ratio,
-			this.ancestor.pos.z,
+			this.ancestor.pos.z - overlapZ * ratio,
 		);
 
 		// cancel the velocity component along the collision normal
-		const projVel = this.vel.x * overlapN.x + this.vel.y * overlapN.y;
+		const projVel =
+			this.vel.x * overlapN.x + this.vel.y * overlapN.y + this.velZ * overlapNZ;
 		if (projVel > 0) {
 			if (this.bounce > 0) {
 				// reflect velocity along normal with bounce damping
 				this.vel.x -= (1 + this.bounce) * projVel * ratio * overlapN.x;
 				this.vel.y -= (1 + this.bounce) * projVel * ratio * overlapN.y;
+				this.velZ -= (1 + this.bounce) * projVel * ratio * overlapNZ;
 			} else {
 				// remove the velocity component along the collision normal
 				this.vel.x -= projVel * ratio * overlapN.x;
 				this.vel.y -= projVel * ratio * overlapN.y;
+				this.velZ -= projVel * ratio * overlapNZ;
 			}
 		}
 
@@ -986,20 +1084,28 @@ export default class Body {
 	 * cap the body velocity (body.maxVel property) to the specified value<br>
 	 * @param {number} x - max velocity on x axis
 	 * @param {number} y - max velocity on y axis
+	 * @param {number} [z] - max velocity on the depth axis; left unchanged when omitted, so existing two-argument calls keep their behaviour
 	 */
-	setMaxVelocity(x, y) {
+	setMaxVelocity(x, y, z) {
 		this.maxVel.x = x;
 		this.maxVel.y = y;
+		if (typeof z !== "undefined") {
+			this.maxVelZ = z;
+		}
 	}
 
 	/**
 	 * set the body default friction
 	 * @param {number} x - horizontal friction
 	 * @param {number} y - vertical friction
+	 * @param {number} [z] - depth friction; left unchanged when omitted, so existing two-argument calls keep their behaviour
 	 */
-	setFriction(x = 0, y = 0) {
+	setFriction(x = 0, y = 0, z) {
 		this.friction.x = x;
 		this.friction.y = y;
+		if (typeof z !== "undefined") {
+			this.frictionZ = z;
+		}
 	}
 
 	/**
@@ -1027,6 +1133,9 @@ export default class Body {
 		if (this.force.y !== 0) {
 			this.vel.y += this.force.y * deltaTime;
 		}
+		if (this.forceZ !== 0) {
+			this.velZ += this.forceZ * deltaTime;
+		}
 
 		// apply friction if defined
 		if (this.friction.x > 0) {
@@ -1043,6 +1152,13 @@ export default class Body {
 
 			this.vel.y = ny < 0 ? ny : y > 0 ? y : 0;
 		}
+		if (this.frictionZ > 0) {
+			const fz = this.frictionZ * deltaTime;
+			const nz = this.velZ + fz;
+			const z = this.velZ - fz;
+
+			this.velZ = nz < 0 ? nz : z > 0 ? z : 0;
+		}
 
 		// cap velocity
 		if (this.vel.y !== 0) {
@@ -1051,13 +1167,27 @@ export default class Body {
 		if (this.vel.x !== 0) {
 			this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
 		}
+		if (this.velZ !== 0) {
+			this.velZ = clamp(this.velZ, -this.maxVelZ, this.maxVelZ);
+		}
 
 		// check if falling / jumping
 		this.falling = this.vel.y * Math.sign(this.force.y) > 0;
 		this.jumping = this.falling ? false : this.jumping;
 
-		// update the body ancestor position
-		this.ancestor.pos.add(this.vel);
+		// update the body ancestor position.
+		//
+		// Folded into a single `set` rather than `add(this.vel)` followed by a
+		// separate z write: `pos` may be an ObservableVector3d, and a second
+		// write would fire a second change notification every frame for every
+		// body in the world. With `velZ` at its default 0 this computes
+		// exactly what `add(this.vel)` did — `add` already resolves the
+		// missing z of a Vector2d to 0.
+		this.ancestor.pos.set(
+			this.ancestor.pos.x + this.vel.x,
+			this.ancestor.pos.y + this.vel.y,
+			this.ancestor.pos.z + this.velZ,
+		);
 
 		// Angular integration — gated so bodies that never touch the
 		// rotation API pay zero cost. The instant either `angle` or
@@ -1101,6 +1231,15 @@ export default class Body {
 				linePool.release(shape);
 			} else if (shape instanceof Polygon) {
 				polygonPool.release(shape);
+			} else if (shape instanceof Box3d) {
+				// Box3d has its own pool. Without this branch it falls through
+				// to the legacy `pool.push`, which THROWS for any class that
+				// was never `pool.register`ed — and because `boundsPool.release`
+				// above has already run, the throw aborts `destroy` partway and
+				// leaves the body holding a recycled Bounds. The next
+				// broadphase insert then reads `bounds.min.x` off it and dies
+				// somewhere completely unrelated.
+				box3dPool.release(shape);
 			} else {
 				pool.push(shape);
 			}

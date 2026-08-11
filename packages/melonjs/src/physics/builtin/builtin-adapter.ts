@@ -20,6 +20,187 @@ import Body from "./body.js";
 import Detector from "./detector.js";
 import { raycastQuery } from "./raycast.ts";
 
+/** world-space AABB scratch for `raycast3d`; never escapes the call */
+const _rayBox = {
+	minX: 0,
+	minY: 0,
+	minZ: 0,
+	maxX: 0,
+	maxY: 0,
+	maxZ: 0,
+};
+
+/** reusable hit record for `rayAABB3d`; never escapes `raycast3d` */
+const _rayHit = { t: 0, nx: 0, ny: 0, nz: 0 };
+
+/**
+ * Fill `out` with the world-space AABB of a renderable's {@link Box3d}
+ * shapes, unioned. Returns `false` when the renderable has no body, or a
+ * body with no `Box3d` in it — those keep the bounding-sphere path, so no
+ * existing `raycast3d` result changes.
+ *
+ * A shape's world position follows the same convention the SAT narrowphase
+ * uses: the renderable's absolute position plus the shape's local offset.
+ * @param renderable - the candidate to measure
+ * @param cx - the renderable's absolute x
+ * @param cy - the renderable's absolute y
+ * @param cz - the renderable's absolute z
+ * @param out - scratch AABB to fill; only written when this returns `true`
+ */
+function worldBox3d(
+	renderable: Renderable,
+	cx: number,
+	cy: number,
+	cz: number,
+	out: typeof _rayBox,
+): boolean {
+	const body = (renderable as { body?: Body }).body;
+	if (body === undefined || !body.hasDepth) {
+		return false;
+	}
+	let found = false;
+	const shapes = body.shapes as unknown as {
+		type: string;
+		pos: { x: number; y: number; z: number };
+		halfExtents: { x: number; y: number; z: number };
+	}[];
+	for (let i = 0, len = shapes.length; i < len; i++) {
+		const shape = shapes[i];
+		if (shape.type !== "Box3d") continue;
+		const minX = cx + shape.pos.x - shape.halfExtents.x;
+		const minY = cy + shape.pos.y - shape.halfExtents.y;
+		const minZ = cz + shape.pos.z - shape.halfExtents.z;
+		const maxX = cx + shape.pos.x + shape.halfExtents.x;
+		const maxY = cy + shape.pos.y + shape.halfExtents.y;
+		const maxZ = cz + shape.pos.z + shape.halfExtents.z;
+		if (!found) {
+			found = true;
+			out.minX = minX;
+			out.minY = minY;
+			out.minZ = minZ;
+			out.maxX = maxX;
+			out.maxY = maxY;
+			out.maxZ = maxZ;
+		} else {
+			if (minX < out.minX) out.minX = minX;
+			if (minY < out.minY) out.minY = minY;
+			if (minZ < out.minZ) out.minZ = minZ;
+			if (maxX > out.maxX) out.maxX = maxX;
+			if (maxY > out.maxY) out.maxY = maxY;
+			if (maxZ > out.maxZ) out.maxZ = maxZ;
+		}
+	}
+	return found;
+}
+
+/**
+ * Ray-vs-AABB via the slab method, for `t ∈ [0, 1]` along the segment
+ * `from → from + d`. Returns the entry fraction and the face normal of the
+ * slab that was entered last (which is the face actually hit), or `null` on
+ * a miss.
+ *
+ * A ray starting inside the box reports `t = 0`, matching the
+ * bounding-sphere path's "origin inside → t = 0" convention. Its normal is
+ * taken from the axis whose entry plane is nearest behind the origin, which
+ * keeps the value well-defined rather than zero.
+ * @param from - segment start
+ * @param dx - segment delta on x (`to.x - from.x`)
+ * @param dy - segment delta on y
+ * @param dz - segment delta on z
+ * @param box - the world-space AABB to test against
+ */
+function rayAABB3d(
+	from: Vector3d,
+	dx: number,
+	dy: number,
+	dz: number,
+	box: typeof _rayBox,
+): typeof _rayHit | null {
+	let tMin = Number.NEGATIVE_INFINITY;
+	let tMax = Number.POSITIVE_INFINITY;
+	// axis that produced tMin, and the sign of the face entered
+	let axis = 0;
+	let sign = -1;
+
+	// x slab
+	if (dx === 0) {
+		if (from.x < box.minX || from.x > box.maxX) return null;
+	} else {
+		const inv = 1 / dx;
+		let t1 = (box.minX - from.x) * inv;
+		let t2 = (box.maxX - from.x) * inv;
+		let s = -1;
+		if (t1 > t2) {
+			const tmp = t1;
+			t1 = t2;
+			t2 = tmp;
+			s = 1;
+		}
+		if (t1 > tMin) {
+			tMin = t1;
+			axis = 0;
+			sign = s;
+		}
+		if (t2 < tMax) tMax = t2;
+		if (tMin > tMax) return null;
+	}
+
+	// y slab
+	if (dy === 0) {
+		if (from.y < box.minY || from.y > box.maxY) return null;
+	} else {
+		const inv = 1 / dy;
+		let t1 = (box.minY - from.y) * inv;
+		let t2 = (box.maxY - from.y) * inv;
+		let s = -1;
+		if (t1 > t2) {
+			const tmp = t1;
+			t1 = t2;
+			t2 = tmp;
+			s = 1;
+		}
+		if (t1 > tMin) {
+			tMin = t1;
+			axis = 1;
+			sign = s;
+		}
+		if (t2 < tMax) tMax = t2;
+		if (tMin > tMax) return null;
+	}
+
+	// z slab
+	if (dz === 0) {
+		if (from.z < box.minZ || from.z > box.maxZ) return null;
+	} else {
+		const inv = 1 / dz;
+		let t1 = (box.minZ - from.z) * inv;
+		let t2 = (box.maxZ - from.z) * inv;
+		let s = -1;
+		if (t1 > t2) {
+			const tmp = t1;
+			t1 = t2;
+			t2 = tmp;
+			s = 1;
+		}
+		if (t1 > tMin) {
+			tMin = t1;
+			axis = 2;
+			sign = s;
+		}
+		if (t2 < tMax) tMax = t2;
+		if (tMin > tMax) return null;
+	}
+
+	// entirely behind the origin, or entirely past the segment end
+	if (tMax < 0 || tMin > 1) return null;
+
+	_rayHit.t = tMin < 0 ? 0 : tMin;
+	_rayHit.nx = axis === 0 ? sign : 0;
+	_rayHit.ny = axis === 1 ? sign : 0;
+	_rayHit.nz = axis === 2 ? sign : 0;
+	return _rayHit;
+}
+
 /**
  * Default {@link PhysicsAdapter} that wraps melonJS's native SAT-based
  * physics. Owns the active body set, the {@link Detector}, gravity, and
@@ -119,7 +300,13 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			// bodies, out-of-viewport bodies, and paused bodies. Otherwise a
 			// stray applyForce call would leak indefinitely and fire as a
 			// surprise impulse when the body becomes simulatable again.
+			//
+			// `forceZ` is part of that accumulator and MUST be cleared with it:
+			// left out, a single frame of input keeps accelerating the body
+			// along z forever, because callers set the force per-frame while a
+			// key is held and rely on this reset to stop.
 			body.force.set(0, 0);
+			body.forceZ = 0;
 		}
 		// fire onCollisionEnd for pairs that separated this step
 		this.detector.endFrame();
@@ -424,9 +611,10 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		let bestFraction = Number.POSITIVE_INFINITY;
 		let bestRenderable: Renderable | null = null;
 		let bestEntryT = 0;
-		let bestCx = 0;
-		let bestCy = 0;
-		let bestCz = 0;
+
+		let bestNx = 0;
+		let bestNy = 0;
+		let bestNz = 0;
 
 		for (let i = 0, len = candidates.length; i < len; i++) {
 			const r = candidates[i];
@@ -439,6 +627,25 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			// so `.z` may not be visible to TS even though it's
 			// always present at runtime.
 			const cz = (center as { z?: number }).z ?? 0;
+
+			// Exact ray-vs-AABB when this renderable carries a Box3d body,
+			// which is the case that matters: probing floor height under a
+			// character. Everything else keeps the bounding-sphere path
+			// below, so no existing raycast3d result changes.
+			if (worldBox3d(r, cx, cy, cz, _rayBox)) {
+				const hit = rayAABB3d(from, dx, dy, dz, _rayBox);
+				if (hit === null) continue;
+				if (hit.t < bestFraction) {
+					bestFraction = hit.t;
+					bestRenderable = r;
+					bestEntryT = hit.t;
+					bestNx = hit.nx;
+					bestNy = hit.ny;
+					bestNz = hit.nz;
+				}
+				continue;
+			}
+
 			// bounding-sphere radius = bounds half-diagonal (matches
 			// `Camera3d.isVisible`'s circumradius convention).
 			const bounds = r.getBounds();
@@ -482,9 +689,17 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 				bestFraction = t;
 				bestRenderable = r;
 				bestEntryT = t;
-				bestCx = cx;
-				bestCy = cy;
-				bestCz = cz;
+				// sphere normal, resolved at the entry point
+				const px = from.x + dx * t;
+				const py = from.y + dy * t;
+				const pz = from.z + dz * t;
+				const ux = px - cx;
+				const uy = py - cy;
+				const uz = pz - cz;
+				const uLen = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1;
+				bestNx = ux / uLen;
+				bestNy = uy / uLen;
+				bestNz = uz / uLen;
 			}
 		}
 
@@ -492,18 +707,14 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			return null;
 		}
 
-		const pointX = from.x + dx * bestEntryT;
-		const pointY = from.y + dy * bestEntryT;
-		const pointZ = from.z + dz * bestEntryT;
-		const nx = pointX - bestCx;
-		const ny = pointY - bestCy;
-		const nz = pointZ - bestCz;
-		const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-
 		return {
 			renderable: bestRenderable,
-			point: new Vector3d(pointX, pointY, pointZ),
-			normal: new Vector3d(nx / nLen, ny / nLen, nz / nLen),
+			point: new Vector3d(
+				from.x + dx * bestEntryT,
+				from.y + dy * bestEntryT,
+				from.z + dz * bestEntryT,
+			),
+			normal: new Vector3d(bestNx, bestNy, bestNz),
 			fraction: bestFraction,
 		};
 	}
