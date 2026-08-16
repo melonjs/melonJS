@@ -1,4 +1,5 @@
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
+import { TextureStore } from "../../gpu/texturestore.js";
 import mipblitWGSL from "../shaders/mipblit.wgsl";
 import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
 
@@ -18,15 +19,14 @@ import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
  * re-parameterization).
  * @ignore
  */
-export default class WebGPUTextureStore {
+export default class WebGPUTextureStore extends TextureStore {
 	/**
 	 * @param {import("../webgpu_renderer.js").default} renderer - the owning renderer
 	 */
 	constructor(renderer) {
+		super();
 		this.renderer = renderer;
 		this.device = renderer.device;
-		/** @type {Map<number, {texture: GPUTexture, view: GPUTextureView, source: object, width: number, height: number, frameId: number, bindGroupBySampler: Map<string, GPUBindGroup>}>} */
-		this.records = new Map();
 		/** @type {Map<string, GPUSampler>} */
 		this.samplers = new Map();
 
@@ -34,7 +34,11 @@ export default class WebGPUTextureStore {
 		// (unit numbers get reassigned; resident GPU textures would map to
 		// the wrong sources). Mirrors MaterialBatcher._onTextureCacheReset.
 		this.onCacheReset = () => {
-			this.releaseAll();
+			// `true`: the device is alive here, so the textures are real and
+			// must actually be retired. The base defaults to NOT destroying,
+			// which is the right choice for a LOST context — there the GPU
+			// objects died with it and asking to free them is meaningless.
+			this.releaseAll(true);
 		};
 		on(GPU_TEXTURE_CACHE_RESET, this.onCacheReset);
 	}
@@ -143,6 +147,12 @@ export default class WebGPUTextureStore {
 					});
 					uploadCompressedTexture(this.device, gpuTexture, source, metrics);
 					record = {
+						// `handle` and `generation` are the base class's fields —
+						// it walks them for lifetime, and a record missing the
+						// generation silently never gets released. `texture` is
+						// kept because this backend's own paths read it.
+						handle: gpuTexture,
+						generation: this.generation,
 						texture: gpuTexture,
 						// 2D consumers stay lod-clamped to level 0 (sprites
 						// sharing the asset render byte-identically) …
@@ -225,6 +235,8 @@ export default class WebGPUTextureStore {
 						GPUTextureUsage.RENDER_ATTACHMENT,
 				});
 				record = {
+					handle: gpuTexture,
+					generation: this.generation,
 					texture: gpuTexture,
 					view: gpuTexture.createView(),
 					source,
@@ -554,11 +566,14 @@ export default class WebGPUTextureStore {
 	/**
 	 * drop every unit association and dispose of the resident textures
 	 */
-	releaseAll() {
-		for (const record of this.records.values()) {
-			this.retire(record.texture);
-		}
-		this.records.clear();
+	/**
+	 * Release the GPU texture behind a record. The base calls this; the device
+	 * defers the actual destroy until the frame that referenced it has retired.
+	 * @param {GPUTexture} handle - the texture to release
+	 * @ignore
+	 */
+	onDestroy(handle) {
+		this.retire(handle);
 	}
 
 	/**

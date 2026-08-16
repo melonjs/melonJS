@@ -9,6 +9,7 @@ import {
 } from "../lighting/std140.ts";
 import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
+import { WebGLTextureStore } from "../texture/store.js";
 import QuadBatcher from "./quad_batcher.js";
 
 /**
@@ -113,15 +114,23 @@ export default class LitQuadBatcher extends QuadBatcher {
 		this.boundNormalVersions = new Array(pool).fill(-1);
 
 		/**
-		 * Map from a normal-map source image to its uploaded GL texture and the
-		 * source `version` it was uploaded at. A source that bumps its `version`
-		 * (e.g. an animated {@link NoiseTexture2d}) is re-uploaded on next bind —
-		 * explicit, version-based invalidation, scoped to normal maps which
-		 * live outside the color `TextureCache`.
-		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, {tex: WebGLTexture, version: number}>}
+		 * Residency for normal-map sources — the same shared policy the colour
+		 * path uses, just a separate instance: normal maps live outside the
+		 * colour `TextureCache`, so their handles are this batcher's to own.
+		 *
+		 * This used to be a hand-rolled `Map<source, {tex, version}>`. It was
+		 * the correct DESIGN before the colour path had one (which is why the
+		 * normal path never suffered the re-upload storm), but keeping a third
+		 * copy of the logic is how the two drifted in the first place.
+		 *
+		 * Re-created rather than cleared here on purpose: `init()` re-runs on
+		 * context restore, where the old handles died with the context — and
+		 * `destroy()` releases the previous instance first, so nothing leaks.
+		 * @type {TextureStore}
 		 * @ignore
 		 */
-		this.normalMapTextures = new Map();
+		this.normalStore?.releaseAll();
+		this.normalStore = new WebGLTextureStore(this.gl);
 
 		/**
 		 * Which slot in the shared pool each normal-map source currently holds.
@@ -238,10 +247,8 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
 	 */
 	evictNormalMap(image) {
-		const cached = this.normalMapTextures.get(image);
-		if (typeof cached !== "undefined") {
-			this.gl.deleteTexture(cached.tex);
-			this.normalMapTextures.delete(image);
+		if (this.normalStore.peek(image) !== undefined) {
+			this.normalStore.destroyTexture(image);
 			this.releaseNormalUnit(image);
 			for (let i = 0; i < this.boundNormalMaps.length; i++) {
 				if (this.boundNormalMaps[i] === image) {
@@ -269,12 +276,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// are ours to delete. Before #1585 they were freed incidentally, by
 		// `reset` walking `boundTextures` — which stopped being the sole
 		// reference to a handle, so freeing has to be explicit now.
-		for (const cached of this.normalMapTextures.values()) {
-			this.gl.deleteTexture(cached.tex);
-		}
+		this.normalStore.releaseAll(true);
 		this.boundNormalMaps.fill(null);
 		this.boundNormalVersions.fill(-1);
-		this.normalMapTextures.clear();
 		this.normalUnits.clear();
 		this._lightCount = 0;
 		// zero the header (count + ambient) and push it, so a reset mid-scene
@@ -370,56 +374,40 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {number} unit - GL texture unit the normal map is resolved to
 	 */
 	bindNormalMap(image, unit) {
-		const cached = this.normalMapTextures.get(image);
-		// `image.version` (the dynamic-texture revision; absent ⇒ 0/static) lets
-		// an animated source force a re-upload by bumping it — only when it
-		// actually changed, not every frame.
-		const version = image.version ?? 0;
-		if (typeof cached !== "undefined" && cached.version === version) {
-			// `bindTexture2D` updates `boundTextures[unit]` and
-			// `currentTextureUnit` so subsequent color-texture binds don't
-			// land on the wrong unit thinking it's still free. `flush=false`
-			// so we don't disturb the in-progress lit batch.
-			this.bindTexture2D(cached.tex, unit, false);
-			return;
-		}
-		this.uploadNormalMap(image, unit, version);
-	}
-
-	/**
-	 * Upload a normal-map image to GL and cache the resulting `WebGLTexture`
-	 * for future `bindNormalMap` calls. Not meant to be called directly —
-	 * `bindNormalMap` invokes this on the first use of a given image.
-	 *
-	 * `premultipliedAlpha = false` — normal maps store linear-encoded
-	 * surface normals; multiplying through alpha would corrupt the
-	 * encoding for any non-opaque texel.
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
-	 * @param {number} unit - GL texture unit the normal map is resolved to
-	 * @param {number} [version=0] - the source revision being uploaded
-	 */
-	uploadNormalMap(image, unit, version = 0) {
-		// Reuse the existing GL texture handle when re-uploading a changed source
-		// (an animated NoiseTexture2d): `createTexture2D` re-`texImage2D`s into the
-		// passed handle instead of churning a new texture object every frame. The
-		// source dimensions are stable, so the same handle stays valid.
-		const prev = this.normalMapTextures.get(image);
-		this.createTexture2D(
-			unit,
-			image,
-			this.renderer._glTextureFilter(),
-			"no-repeat",
-			image.width,
-			image.height,
-			false,
-			undefined,
-			prev?.tex,
-			false,
-		);
-		this.normalMapTextures.set(image, {
-			tex: this.boundTextures[unit],
-			version,
+		// `image.version` (the dynamic-texture revision; absent => 0/static)
+		// lets an animated source force a re-upload by bumping it — only when
+		// it actually changed, not every frame. The store compares it and
+		// re-uploads into the SAME handle, so an animated source does not churn
+		// a new texture object per frame.
+		const record = this.normalStore.getResidentRecord(image, {
+			version: image.version ?? 0,
+			upload: (handle) => {
+				return this.createTexture2D(
+					unit,
+					image,
+					this.renderer._glTextureFilter(),
+					"no-repeat",
+					image.width,
+					image.height,
+					// normal maps store linear-encoded surface normals;
+					// multiplying through alpha would corrupt the encoding
+					false,
+					undefined,
+					handle,
+					false,
+				);
+			},
 		});
+		// `bindTexture2D` updates `boundTextures[unit]` and `currentTextureUnit`
+		// so subsequent colour binds don't land on the wrong unit thinking it is
+		// still free. `flush=false` so the in-progress lit batch is undisturbed.
+		this.bindTexture2D(record.handle, unit, false);
+		// the variant is fixed for normal maps, but the sampler still has to be
+		// bound or the unit keeps whatever the previous texture left there
+		this.renderer.samplerCache.bind(
+			unit,
+			this.renderer.samplerCache.get(this.renderer._glTextureFilter()),
+		);
 	}
 
 	/**

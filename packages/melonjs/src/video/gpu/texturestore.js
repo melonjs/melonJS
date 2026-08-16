@@ -37,15 +37,66 @@ export class TextureStore {
 	constructor({ onCreate, onUpload, onDestroy } = {}) {
 		/** @type {Map<object, {handle: *, version: number, generation: number}>} */
 		this.records = new Map();
-		this.onCreate = onCreate;
-		this.onUpload = onUpload;
-		this.onDestroy = onDestroy;
+		// The three hooks are prototype METHODS, so a backend subclass overrides
+		// them; passing them to the constructor installs per-instance overrides
+		// instead, which is how a test drives the policy with no GPU at all.
+		if (onCreate !== undefined) {
+			this.onCreate = onCreate;
+		}
+		if (onUpload !== undefined) {
+			this.onUpload = onUpload;
+		}
+		if (onDestroy !== undefined) {
+			this.onDestroy = onDestroy;
+		}
 		// Bumped whenever the underlying context or device dies. A record from
 		// an older generation is never handed back: a handle minted under a
 		// dead context is not merely stale, binding it is undefined behaviour,
 		// and the failure is silent. Comparing generations turns that into an
 		// ordinary miss followed by a re-upload.
 		this.generation = 0;
+	}
+
+	/**
+	 * Allocate the backing GPU texture for a source seen for the first time.
+	 * @param {object} source - the image/canvas/resource
+	 * @param {object} options - the resolve options
+	 * @returns {*} the new handle
+	 * @ignore
+	 */
+	onCreate(source, options) {
+		void source;
+		void options;
+		return undefined;
+	}
+
+	/**
+	 * Push the source's current content. May return a REPLACEMENT handle when
+	 * the shape changed and the old one cannot be respecified.
+	 * @param {*} handle - the existing handle
+	 * @param {object} source - the image/canvas/resource
+	 * @param {object} record - the resident record
+	 * @param {object} options - the resolve options
+	 * @returns {*} a replacement handle, or nothing to keep the existing one
+	 * @ignore
+	 */
+	onUpload(handle, source, record, options) {
+		void handle;
+		void source;
+		void record;
+		void options;
+		return undefined;
+	}
+
+	/**
+	 * Release a GPU texture. Called exactly once per handle.
+	 * @param {*} handle - the handle to release
+	 * @param {object} source - the source it belonged to
+	 * @ignore
+	 */
+	onDestroy(handle, source) {
+		void handle;
+		void source;
 	}
 
 	/**
@@ -79,7 +130,7 @@ export class TextureStore {
 
 		if (record === undefined) {
 			record = {
-				handle: this.onCreate?.(source, options),
+				handle: this.onCreate(source, options),
 				// deliberately unmatchable, so a freshly created record always
 				// takes the upload path once — a record that exists but was
 				// never filled is the failure this rules out
@@ -134,7 +185,7 @@ export class TextureStore {
 		}
 		this.records.delete(source);
 		if (record.generation === this.generation) {
-			this.onDestroy?.(record.handle, source);
+			this.onDestroy(record.handle, source);
 		}
 		return true;
 	}
@@ -154,7 +205,7 @@ export class TextureStore {
 	 * @ignore
 	 */
 	releaseAll(destroy = false) {
-		if (destroy === true && this.onDestroy !== undefined) {
+		if (destroy === true) {
 			for (const [source, record] of this.records) {
 				if (record.generation === this.generation) {
 					this.onDestroy(record.handle, source);

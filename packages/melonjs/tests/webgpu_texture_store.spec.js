@@ -1,6 +1,7 @@
 import "./helpers/webgpu-globals.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { emit, GPU_TEXTURE_CACHE_RESET } from "../src/system/event.ts";
+import { TextureStore } from "../src/video/gpu/texturestore.js";
 import WebGPUTextureStore from "../src/video/webgpu/texture/store.js";
 
 /**
@@ -254,6 +255,28 @@ describe("WebGPUTextureStore", () => {
 		// gone: next lookup re-creates
 		store.getBinding(atlas);
 		expect(createdTextures).toHaveLength(2);
+	});
+
+	it("is a TextureStore, so both backends share the lifetime policy", () => {
+		// #1585: the WebGPU store predates the shared base and used to carry its
+		// own records map, generation and release code. Subclassing removes that
+		// duplication — the reuse-vs-upload DECISION stays backend-specific for
+		// a documented reason (queue writes execute before recorded draws, so a
+		// same-frame content change needs a fresh texture here and does not on
+		// WebGL), but everything around it is now one implementation.
+		expect(store).toBeInstanceOf(TextureStore);
+	});
+
+	it("records carry the fields the base walks", () => {
+		// a record missing `handle` or `generation` is silently never released —
+		// the base skips it, and nothing errors. Cheap to assert, invisible
+		// otherwise.
+		const atlas = makeAtlas(makeSource(8, 8));
+		store.getBinding(atlas);
+		const record = store.peek(atlas.getTexture());
+		expect(record).toBeDefined();
+		expect(record.handle).toBe(record.texture);
+		expect(record.generation).toBe(store.generation);
 	});
 
 	it("GPU_TEXTURE_CACHE_RESET releases every record", () => {

@@ -13,7 +13,6 @@ import {
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
 import RadialGradientEffect from "../effects/radialGradient.js";
-import { TextureStore } from "./../gpu/texturestore.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -34,6 +33,7 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import { WebGLTextureStore } from "./texture/store.js";
 import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 import { GLSamplerCache } from "./utils/samplercache.js";
@@ -173,21 +173,7 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {TextureStore}
 		 * @ignore
 		 */
-		this.textureStore = new TextureStore({
-			onCreate: () => {
-				return this.gl.createTexture();
-			},
-			// the caller owns the upload — it is the only place the unit,
-			// filter, wrap and dimensions are all known. It returns the handle,
-			// which may DIFFER from the one passed in: immutable storage cannot
-			// be respecified, so a shape change swaps the object outright.
-			onUpload: (handle, source, record, options) => {
-				return options.upload(handle);
-			},
-			onDestroy: (handle) => {
-				this.gl.deleteTexture(handle);
-			},
-		});
+		this.textureStore = new WebGLTextureStore(this.gl);
 
 		this.maxTextures = resolveMaxTextures(
 			this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),

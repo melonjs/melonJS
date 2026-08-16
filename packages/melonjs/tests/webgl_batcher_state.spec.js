@@ -159,7 +159,7 @@ describe("batcher GL state", () => {
 		const source = Renderer.createCanvas(8, 8);
 
 		const unit = lit.resolveNormalUnit(source);
-		const tex = lit.normalMapTextures.get(source)?.tex;
+		const tex = lit.normalStore.peek(source)?.handle;
 		expect(tex).toBeDefined();
 		expect(gl.isTexture(tex)).toBe(true);
 		// the handle must be reachable from the array reset() walks
@@ -324,11 +324,11 @@ describe("batcher GL state", () => {
 		const source = nm.getTexture();
 
 		lit.bindNormalMap(source, lit.maxBatchTextures);
-		expect(lit.normalMapTextures.has(source)).toBe(true);
-		const tex = lit.normalMapTextures.get(source).tex;
+		expect(lit.normalStore.peek(source)).toBeDefined();
+		const tex = lit.normalStore.peek(source).handle;
 
 		nm.destroy();
-		expect(lit.normalMapTextures.has(source)).toBe(false);
+		expect(lit.normalStore.peek(source)).toBeUndefined();
 		expect(renderer.gl.isTexture(tex)).toBe(false);
 	});
 
