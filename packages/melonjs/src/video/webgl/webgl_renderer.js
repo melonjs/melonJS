@@ -35,6 +35,7 @@ import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
+import { GLSamplerCache } from "./utils/samplercache.js";
 
 /**
  * additional import for TypeScript
@@ -147,6 +148,16 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {number}
 		 * @readonly
 		 */
+		/**
+		 * Sampler objects, deduplicated by state. GL bakes wrap/filter into the
+		 * texture object; a bound sampler overrides that, so one texture can
+		 * serve several variants at once — which is what lets residency be
+		 * keyed by source alone. Renderer-owned so every batcher shares it.
+		 * @type {GLSamplerCache}
+		 * @ignore
+		 */
+		this.samplerCache = new GLSamplerCache(this.gl);
+
 		this.maxTextures = resolveMaxTextures(
 			this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),
 			this.settings.maxTextures,
@@ -336,6 +347,9 @@ export default class WebGLRenderer extends Renderer {
 				// stale per-source unit assignments — force re-upload on next draw
 				this.cache.units.clear();
 				this.cache.usedUnits.clear();
+				// the samplers died with the context; drop our side so the next
+				// `get` mints fresh ones against the restored context
+				this.samplerCache.releaseAll();
 
 				// the restored context is back at TEXTURE0 — invalidate the
 				// shared active-unit tracking so the next bind re-issues it

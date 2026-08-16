@@ -475,30 +475,32 @@ export class MaterialBatcher extends WebGLBatcher {
 		const unit = this.renderer.cache.getUnit(texture, wrap);
 		const texture2D = this.boundTextures[unit];
 
+		// honor a resource-specified filter (e.g. tilemap index textures need
+		// NEAREST regardless of the global setting, or a Mesh's own
+		// `textureFilter`), otherwise fall back to the renderer-wide default
+		// (the `textureFilter` setting, decoupled from MSAA — see
+		// WebGLRenderer#getDefaultTextureFilter). Resolved before the branch
+		// because the sampler binding below needs it whether or not this call
+		// uploads.
+		let filter =
+			typeof texture.filter !== "undefined"
+				? texture.filter
+				: this.renderer._glTextureFilter();
+		// the STRING form ("nearest"/"linear") is what non-GL renderers store
+		// (the WebGPU texture store consumes it directly) — an atlas that met
+		// one of those first must still upload correctly here, so map it to the
+		// GL enum instead of feeding texParameteri a string
+		if (filter === "nearest") {
+			filter = this.gl.NEAREST;
+		} else if (filter === "linear") {
+			filter = this.gl.LINEAR;
+		}
+
 		if (
 			typeof texture2D === "undefined" ||
 			force ||
 			this.dirtyUnits.delete(unit)
 		) {
-			// honor a resource-specified filter (e.g. tilemap index textures
-			// need NEAREST regardless of the global setting, or a Mesh's own
-			// `textureFilter`), otherwise fall back to the renderer-wide default
-			// (the `textureFilter` setting, decoupled from MSAA — see
-			// WebGLRenderer#getDefaultTextureFilter)
-			let filter =
-				typeof texture.filter !== "undefined"
-					? texture.filter
-					: this.renderer._glTextureFilter();
-			// the STRING form ("nearest"/"linear") is what non-GL renderers
-			// store (the WebGPU texture store consumes it directly) — an
-			// atlas that met one of those first must still upload correctly
-			// here, so map it to the GL enum instead of feeding texParameteri
-			// a string
-			if (filter === "nearest") {
-				filter = this.gl.NEAREST;
-			} else if (filter === "linear") {
-				filter = this.gl.LINEAR;
-			}
 			// `w`/`h` historically came from callers (e.g. `addQuad`) that
 			// passed the DESTINATION quad size, not the texture size. That
 			// broke the downstream POT check — a 480×1216 atlas drawn into
@@ -538,6 +540,16 @@ export class MaterialBatcher extends WebGLBatcher {
 		} else {
 			this.bindTexture2D(texture2D, unit, flush);
 		}
+
+		// The variant (wrap + filter) rides a sampler object rather than the
+		// texture's own parameters, so one upload can serve a source drawn at
+		// several repeat modes. `createTexture2D` still sets the texture
+		// parameters too, which keeps any path that binds no sampler working
+		// exactly as before.
+		this.renderer.samplerCache.bind(
+			unit,
+			this.renderer.samplerCache.get(filter, wrap, false),
+		);
 
 		return flush ? this.currentTextureUnit : unit;
 	}
