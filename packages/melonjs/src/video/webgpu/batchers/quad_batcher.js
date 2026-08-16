@@ -1,5 +1,6 @@
 import IndexBuffer from "../../buffer/index.js";
 import { transformQuadCorners } from "../../gpu/quadcorners.ts";
+import { TextureSlotTable } from "../../gpu/textureslots.js";
 import { prepareEffectBinding } from "../effect_binding.js";
 import { MAX_QUAD_TEXTURES } from "../pipeline/cache.js";
 import WebGPUBatcher from "./webgpu_batcher.js";
@@ -73,9 +74,20 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// (texture view, sampler) pairs share one draw segment, selected
 		// per quad by aTextureId — a flush is forced only by the NINTH
 		// distinct texture (or the usual capacity/effect boundaries)
-		/** @type {Map<string, number>} slot key → slot index */
-		this.segmentKeys = new Map();
-		/** @type {{view: GPUTextureView, sampler: GPUSampler}[]} */
+		// slot assignment is the shared backend-neutral policy (#1585) — the
+		// same table the WebGL texture cache allocates units from, so the two
+		// backends cannot drift on when a texture set overflows
+		this.slotTable = new TextureSlotTable({
+			capacity: MAX_QUAD_TEXTURES,
+			// draw the pending quads with THEIR slots before any reassignment
+			onOverflow: () => {
+				this.flush();
+			},
+			onEvict: (slot) => {
+				this.segmentEntries[slot] = undefined;
+			},
+		});
+		/** @type {{view: GPUTextureView, sampler: GPUSampler}[]} indexed by slot */
 		this.segmentEntries = [];
 		// the composed group-1 bind group for the pending segment (lazy)
 		this.segmentGroup = null;
@@ -214,22 +226,18 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 				? texture.filter
 				: renderer.getDefaultTextureFilter();
 		const slotKey = `${this.resourceId(record.view)}|${filter}|${wrap}`;
-		let slot = this.segmentKeys.get(slotKey);
-		if (typeof slot === "undefined") {
-			if (this.segmentEntries.length >= MAX_QUAD_TEXTURES) {
-				// segment at capacity — the pending quads draw with THEIR
-				// eight textures, and this quad starts the next segment
-				this.flush();
-			}
-			slot = this.segmentEntries.length;
-			this.segmentEntries.push({
+		// a hit returns the live slot; a miss claims one, flushing the pending
+		// segment first when the table is full (the `onOverflow` above)
+		if (this.slotTable.peek(slotKey) === undefined) {
+			const slot = this.slotTable.slotFor(slotKey);
+			this.segmentEntries[slot] = {
 				view: record.view,
 				sampler: store.getSampler(filter, wrap),
-			});
-			this.segmentKeys.set(slotKey, slot);
+			};
 			this.segmentGroup = null;
+			return slot;
 		}
-		return slot;
+		return this.slotTable.peek(slotKey);
 	}
 
 	/**
@@ -288,7 +296,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	resetSegment() {
-		this.segmentKeys.clear();
+		// the table clears each live slot's entry through `onEvict`; truncating
+		// afterwards drops any stale tail a shrunk capacity left behind
+		this.slotTable.reset();
 		this.segmentEntries.length = 0;
 		this.segmentGroup = null;
 	}
@@ -465,7 +475,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	hasPendingMaterial() {
-		return this.segmentEntries.length > 0;
+		return this.slotTable.size > 0;
 	}
 
 	/**

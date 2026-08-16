@@ -1,6 +1,7 @@
 import { emit, GPU_TEXTURE_CACHE_RESET } from "../../system/event.ts";
 import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
+import { TextureSlotTable } from "../gpu/textureslots.js";
 import { createAtlas, TextureAtlas } from "./atlas.js";
 
 // Canonical repeat values accepted by `CanvasRenderingContext2D.createPattern`
@@ -40,15 +41,62 @@ class TextureCache {
 		// whole map); `Map` keys are strong references, so the entries
 		// don't drop when the source goes out of scope user-side.
 		this.units = new Map();
-		this.usedUnits = new Set();
+		// Slot assignment is the shared, backend-neutral policy (#1585): which
+		// slot is free, what reservations are skipped, and what happens on
+		// exhaustion. The WebGPU quad batcher runs the same table, so the two
+		// backends cannot drift on when a texture set overflows. What stays
+		// here is residency — the source-keyed index above, tinted variants,
+		// the atlas cache — and the reservations below.
+		this.slotTable = new TextureSlotTable({
+			capacity: max_size,
+			isReserved: (unit) => {
+				return this.reservedUnits.has(unit);
+			},
+			onOverflow: () => {
+				// draw what is pending with THEIR units before any reassignment
+				// see https://github.com/melonjs/melonJS/issues/1280
+				if (this.renderer.currentBatcher) {
+					this.renderer.currentBatcher.flush();
+				}
+				// the source-keyed index is about to be invalidated wholesale
+				this.units.clear();
+				emit(GPU_TEXTURE_CACHE_RESET);
+			},
+		});
 		// units held out of `allocateTextureUnit` for shader extra-samplers
 		// (`ShaderEffect.setTexture`). Reference-counted (unit → count) so a
 		// unit shared by several effects stays reserved until the last one
 		// releases it. Not touched by `clear()` — reservations are owned by the
 		// effects, and released on their destroy / context-loss.
 		this.reservedUnits = new Map();
-		this.max_size = max_size;
 		this.clear();
+	}
+
+	/**
+	 * Which texture units are currently taken. This is the slot table's own
+	 * occupancy set, exposed under the name it has always had — seeding or
+	 * clearing it drives the allocator directly.
+	 * @returns {Set<number>} the occupied units
+	 * @ignore
+	 */
+	get usedUnits() {
+		return this.slotTable.used;
+	}
+
+	/**
+	 * How many texture units this cache may hand out. Backed by the slot
+	 * table's capacity, so assigning it (tests narrow it to force exhaustion,
+	 * and a context restore can resolve a different device limit) re-sizes the
+	 * allocator rather than leaving the two disagreeing.
+	 * @returns {number} the unit count
+	 * @ignore
+	 */
+	get max_size() {
+		return this.slotTable.capacity;
+	}
+
+	set max_size(size) {
+		this.slotTable.setCapacity(size);
 	}
 
 	/**
@@ -58,40 +106,16 @@ class TextureCache {
 		this.cache.clear();
 		this.tinted.clear();
 		this.units.clear();
-		this.usedUnits.clear();
+		this.slotTable.reset();
 	}
 
 	/**
 	 * @ignore
 	 */
 	allocateTextureUnit() {
-		// find the first unit available among the max_size (skip units held
-		// for shader extra-samplers via `reserveUnit`)
-		for (let unit = 0; unit < this.max_size; unit++) {
-			// Check if unit is available
-			if (!this.usedUnits.has(unit) && !this.reservedUnits.has(unit)) {
-				// Add to used set
-				this.usedUnits.add(unit);
-				// return the new unit
-				return unit;
-			}
-		}
-
-		// No units available — flush the current batch and reset assignments
-		// see https://github.com/melonjs/melonJS/issues/1280
-		if (this.renderer.currentBatcher) {
-			this.renderer.currentBatcher.flush();
-		}
-		this.units.clear();
-		this.usedUnits.clear();
-		// return the first non-reserved unit (reservations survive the reset)
-		let unit = 0;
-		while (this.reservedUnits.has(unit)) {
-			unit++;
-		}
-		this.usedUnits.add(unit);
-		emit(GPU_TEXTURE_CACHE_RESET);
-		return unit;
+		// the policy — free-slot search skipping reservations, and flush +
+		// evict-everything on exhaustion — lives in the shared table
+		return this.slotTable.claim();
 	}
 
 	/**
@@ -128,7 +152,7 @@ class TextureCache {
 	 */
 	resetUnitAssignments() {
 		this.units.clear();
-		this.usedUnits.clear();
+		this.slotTable.reset();
 		emit(GPU_TEXTURE_CACHE_RESET);
 	}
 
