@@ -13,6 +13,7 @@ import {
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
 import RadialGradientEffect from "../effects/radialGradient.js";
+import { TextureStore } from "./../gpu/texturestore.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -157,6 +158,36 @@ export default class WebGLRenderer extends Renderer {
 		 * @ignore
 		 */
 		this.samplerCache = new GLSamplerCache(this.gl);
+
+		/**
+		 * Texture residency, keyed by SOURCE. The GL handle used to be
+		 * reachable only through a batcher's per-unit array, so dropping a unit
+		 * assignment destroyed the texture and the next draw rebuilt it from
+		 * scratch — a full re-upload and mip regeneration per quad once past
+		 * the batching limit. Owning it here, per renderer, means a texture
+		 * that merely moves units costs a bind.
+		 *
+		 * Renderer-owned rather than batcher-owned on purpose: `init()` re-runs
+		 * on context restore, so a batcher-owned store would be REPLACED there,
+		 * orphaning every handle it tracked and leaking them on the next loss.
+		 * @type {TextureStore}
+		 * @ignore
+		 */
+		this.textureStore = new TextureStore({
+			onCreate: () => {
+				return this.gl.createTexture();
+			},
+			// the caller owns the upload — it is the only place the unit,
+			// filter, wrap and dimensions are all known. It returns the handle,
+			// which may DIFFER from the one passed in: immutable storage cannot
+			// be respecified, so a shape change swaps the object outright.
+			onUpload: (handle, source, record, options) => {
+				return options.upload(handle);
+			},
+			onDestroy: (handle) => {
+				this.gl.deleteTexture(handle);
+			},
+		});
 
 		this.maxTextures = resolveMaxTextures(
 			this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),
@@ -347,9 +378,12 @@ export default class WebGLRenderer extends Renderer {
 				// stale per-source unit assignments — force re-upload on next draw
 				this.cache.units.clear();
 				this.cache.usedUnits.clear();
-				// the samplers died with the context; drop our side so the next
-				// `get` mints fresh ones against the restored context
+				// the samplers and textures died with the context; drop our side
+				// so the next resolve mints fresh ones against the restored one.
+				// CLEARED, never replaced: rebuilding these would orphan every
+				// handle they tracked and leak it all on the next loss.
 				this.samplerCache.releaseAll();
+				this.textureStore.releaseAll();
 
 				// the restored context is back at TEXTURE0 — invalidate the
 				// shared active-unit tracking so the next bind re-issues it

@@ -146,12 +146,12 @@ export class MaterialBatcher extends WebGLBatcher {
 	reset() {
 		super.reset();
 
-		for (let i = 0; i < this.renderer.maxTextures; i++) {
-			const texture2D = this.getTexture2D(i);
-			if (typeof texture2D !== "undefined") {
-				this.deleteTexture2D(texture2D);
-			}
-		}
+		// The store owns every colour-texture handle since #1585, so releasing
+		// them means asking it — walking `boundTextures` would miss any texture
+		// not currently assigned a unit, and would double-free the ones that are.
+		this.renderer.textureStore?.releaseAll(true);
+		this.boundTextures.length = 0;
+		this.dirtyUnits.clear();
 		this.currentTextureUnit = -1;
 		this.currentSamplerUnit = -1;
 	}
@@ -473,8 +473,6 @@ export class MaterialBatcher extends WebGLBatcher {
 	uploadTexture(texture, w, h, force = false, flush = true, repeat) {
 		const wrap = typeof repeat === "string" ? repeat : texture.repeat;
 		const unit = this.renderer.cache.getUnit(texture, wrap);
-		const texture2D = this.boundTextures[unit];
-
 		// honor a resource-specified filter (e.g. tilemap index textures need
 		// NEAREST regardless of the global setting, or a Mesh's own
 		// `textureFilter`), otherwise fall back to the renderer-wide default
@@ -496,50 +494,55 @@ export class MaterialBatcher extends WebGLBatcher {
 			filter = this.gl.LINEAR;
 		}
 
-		if (
-			typeof texture2D === "undefined" ||
-			force ||
-			this.dirtyUnits.delete(unit)
-		) {
-			// `w`/`h` historically came from callers (e.g. `addQuad`) that
-			// passed the DESTINATION quad size, not the texture size. That
-			// broke the downstream POT check — a 480×1216 atlas drawn into
-			// a 256×256 quad reported `isPOT=true` and tripped
-			// `gl.generateMipmap` POT checks historically. Always derive the actual
-			// texture dimensions from the source, falling back to the
-			// passed-in values only when the source has none.
-			const source = texture.getTexture();
-			// `HTMLVideoElement` exposes its real pixel dimensions through
-			// `videoWidth`/`videoHeight`; `width`/`height` default to 0
-			// until the element is explicitly sized. Prefer the regular
-			// width/height when non-zero, otherwise fall back to the
-			// video-specific properties, and finally to the caller-supplied
-			// w/h for sources that have neither.
-			const texW = source.width || source.videoWidth || w;
-			const texH = source.height || source.videoHeight || h;
-			// a video with no decoded frame yet (readyState < HAVE_CURRENT_DATA)
-			// has nothing to upload — texImage2D on it is browser-dependent
-			// (an exception on some engines, an empty upload plus a GL error
-			// on others). Allocate a blank texture instead and skip the copy;
-			// the video path force-re-uploads every frame, so content lands
-			// the moment a frame exists — same contract as the WebGPU store.
-			const frameless =
-				typeof source.videoWidth !== "undefined" && source.readyState < 2;
-			this.createTexture2D(
-				unit,
-				frameless ? null : source,
-				filter,
-				wrap,
-				texW,
-				texH,
-				texture.premultipliedAlpha,
-				undefined,
-				texture2D,
-				flush,
-			);
-		} else {
-			this.bindTexture2D(texture2D, unit, flush);
-		}
+		// TWO independent decisions, not one (#1585). Whether this unit already
+		// holds the texture decides a BIND; whether the source's content is
+		// current decides an UPLOAD. Conflating them — which is what reading
+		// `boundTextures[unit]` alone did — meant a texture that merely moved
+		// units was rebuilt from scratch, because the handle was reachable only
+		// through that array and a cache reset cleared it.
+		const source = texture.getTexture();
+		// `HTMLVideoElement` exposes its real pixel dimensions through
+		// `videoWidth`/`videoHeight`; `width`/`height` default to 0 until the
+		// element is explicitly sized. Prefer the regular width/height when
+		// non-zero, otherwise fall back to the video-specific properties, and
+		// finally to the caller-supplied w/h for sources that have neither.
+		const texW = source.width || source.videoWidth || w;
+		const texH = source.height || source.videoHeight || h;
+		// a video with no decoded frame yet (readyState < HAVE_CURRENT_DATA)
+		// has nothing to upload — texImage2D on it is browser-dependent (an
+		// exception on some engines, an empty upload plus a GL error on
+		// others). Allocate a blank texture instead and skip the copy; the
+		// video path force-re-uploads every frame, so content lands the moment
+		// a frame exists — same contract as the WebGPU store.
+		const frameless =
+			typeof source.videoWidth !== "undefined" && source.readyState < 2;
+
+		// `dirtyUnits` is a per-unit invalidation (something bound over this
+		// unit behind our back), so it forces a re-upload for this call only
+		const dirty = this.dirtyUnits.delete(unit);
+		const record = this.renderer.textureStore.getResidentRecord(source, {
+			version: source.version ?? 0,
+			force: force === true || dirty === true,
+			upload: (handle) => {
+				return this.createTexture2D(
+					unit,
+					frameless ? null : source,
+					filter,
+					wrap,
+					texW,
+					texH,
+					texture.premultipliedAlpha,
+					undefined,
+					handle,
+					flush,
+				);
+			},
+		});
+
+		// bind unconditionally — cheap, and the only thing that guarantees this
+		// unit really holds this texture. `bindTexture2D` no-ops when its
+		// bookkeeping already agrees.
+		this.bindTexture2D(record.handle, unit, flush);
 
 		// The variant (wrap + filter) rides a sampler object rather than the
 		// texture's own parameters, so one upload can serve a source drawn at

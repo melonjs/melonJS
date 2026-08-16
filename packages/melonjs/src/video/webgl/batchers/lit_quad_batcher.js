@@ -264,9 +264,18 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// already disposed by the time we get here. We just need to
 		// drop the JS references and re-bind the per-frame uniforms.
 		super.reset();
+		// `MaterialBatcher.reset` releases the renderer's colour store; normal
+		// maps live outside it, in this batcher's own map, so their GL textures
+		// are ours to delete. Before #1585 they were freed incidentally, by
+		// `reset` walking `boundTextures` — which stopped being the sole
+		// reference to a handle, so freeing has to be explicit now.
+		for (const cached of this.normalMapTextures.values()) {
+			this.gl.deleteTexture(cached.tex);
+		}
 		this.boundNormalMaps.fill(null);
 		this.boundNormalVersions.fill(-1);
 		this.normalMapTextures.clear();
+		this.normalUnits.clear();
 		this._lightCount = 0;
 		// zero the header (count + ambient) and push it, so a reset mid-scene
 		// leaves the shader reading "no lights" rather than the previous

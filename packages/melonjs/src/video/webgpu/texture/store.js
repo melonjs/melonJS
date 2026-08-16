@@ -95,9 +95,14 @@ export default class WebGPUTextureStore {
 			typeof options.repeat === "string"
 				? options.repeat
 				: (texture.repeat ?? "no-repeat");
-		const unit = this.renderer.cache.getUnit(texture, wrap);
-		let record = this.records.get(unit);
 		const source = texture.getTexture();
+		// Keyed by SOURCE, not by texture unit (#1585). Unit-keying worked here
+		// only because this backend builds its TextureCache with no capacity,
+		// so units are never recycled — the same coupling that made the WebGL
+		// path destroy a texture whenever its unit was reassigned. Keying by
+		// source removes the dependence entirely, and with it the need to
+		// listen for a unit-assignment reset.
+		let record = this.records.get(source);
 
 		// A unit number is not a stable identity: the TextureCache recycles
 		// units when sources are unloaded (stage switches free the loading
@@ -159,7 +164,7 @@ export default class WebGPUTextureStore {
 						compressed: true,
 						bindGroupBySampler: new Map(),
 					};
-					this.records.set(unit, record);
+					this.records.set(source, record);
 				}
 				record.frameId = this.renderer.frameId;
 				this.lastRecord = record;
@@ -229,7 +234,7 @@ export default class WebGPUTextureStore {
 					mipLevelCount,
 					bindGroupBySampler: new Map(),
 				};
-				this.records.set(unit, record);
+				this.records.set(source, record);
 			} else {
 				// same-size unit reuse, not yet drawn this frame (recycled
 				// unit, or a video frame): keep the resident texture + bind
@@ -414,10 +419,8 @@ export default class WebGPUTextureStore {
 		};
 		const wrap = wrapFor(texture);
 		const alphaWrap = wrapFor(alphaTexture);
-		const record = this.records.get(this.renderer.cache.getUnit(texture, wrap));
-		const alphaRecord = this.records.get(
-			this.renderer.cache.getUnit(alphaTexture, alphaWrap),
-		);
+		const record = this.records.get(texture.getTexture());
+		const alphaRecord = this.records.get(alphaTexture.getTexture());
 		if (record === undefined || alphaRecord === undefined) {
 			// a source that failed to become resident — the caller keeps its
 			// previous binding rather than recording a draw against nothing
@@ -535,13 +538,16 @@ export default class WebGPUTextureStore {
 	 * @param {object} texture - a TextureAtlas
 	 */
 	destroyTexture(texture) {
-		const units = this.renderer.cache.peekAllUnits?.(texture) ?? [];
-		for (const unit of units) {
-			const record = this.records.get(unit);
-			if (record) {
-				this.retire(record.texture);
-				this.records.delete(unit);
-			}
+		// one record per source now, whatever wrap modes it was sampled at —
+		// the per-unit sweep this used to do exists only in the unit-keyed world
+		const source =
+			typeof texture?.getTexture === "function"
+				? texture.getTexture()
+				: texture;
+		const record = this.records.get(source);
+		if (record !== undefined) {
+			this.retire(record.texture);
+			this.records.delete(source);
 		}
 	}
 

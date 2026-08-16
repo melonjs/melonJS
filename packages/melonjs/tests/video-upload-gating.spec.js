@@ -104,19 +104,22 @@ describe("Video texture upload gating (WebGL)", () => {
 		expect(uploads).toBe(2);
 	});
 
-	it("a texture-unit cache reset re-uploads even with an unchanged version", (ctx) => {
+	it("a texture-unit cache reset does NOT re-upload an unchanged source", (ctx) => {
 		requireWebGL(ctx);
 		const src = makeVideoLikeCanvas(32, 32);
 		src.version = 0;
 
 		const uploads = countUploads(() => {
 			renderer.drawImage(src, 0, 0, 32, 32, 0, 0, 32, 32);
-			// eviction safety: the version gate must not survive a unit
-			// reassignment — the batcher's per-unit bookkeeping was cleared,
-			// so the (recreated) GL texture needs actual pixels again
+			// Inverted by #1585, and this is the whole point: a unit
+			// reassignment used to destroy the texture handle (it was reachable
+			// only through the batcher's per-unit array), so the next draw had
+			// to re-upload real pixels. Residency is keyed by source now and
+			// survives the reset, so the content is still on the GPU and still
+			// current — the reset costs a re-BIND, not a re-upload.
 			renderer.cache.resetUnitAssignments();
 			renderer.drawImage(src, 0, 0, 32, 32, 0, 0, 32, 32);
 		});
-		expect(uploads).toBe(2);
+		expect(uploads).toBe(1);
 	});
 });

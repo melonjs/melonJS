@@ -24,9 +24,9 @@
 export class TextureStore {
 	/**
 	 * @param {object} [options] - store configuration
-	 * @param {Function} [options.onCreate] - `(source) => handle`, allocate the
-	 * backing GPU texture for a source seen for the first time
-	 * @param {Function} [options.onUpload] - `(handle, source, record) => handle`,
+	 * @param {Function} [options.onCreate] - `(source, options) => handle`, allocate
+	 * the backing GPU texture for a source seen for the first time
+	 * @param {Function} [options.onUpload] - `(handle, source, record, options) => handle`,
 	 * push the source's current content. May return a *replacement* handle when
 	 * the shape changed and the old one cannot be respecified (immutable
 	 * storage); returning nothing keeps the existing handle.
@@ -73,12 +73,13 @@ export class TextureStore {
 	 * the record, with `uploaded` reporting whether this call did GPU work
 	 * @ignore
 	 */
-	getResidentRecord(source, { version = 0, force = false } = {}) {
+	getResidentRecord(source, options = {}) {
+		const { version = 0, force = false } = options;
 		let record = this.records.get(source);
 
 		if (record === undefined) {
 			record = {
-				handle: this.onCreate?.(source),
+				handle: this.onCreate?.(source, options),
 				// deliberately unmatchable, so a freshly created record always
 				// takes the upload path once — a record that exists but was
 				// never filled is the failure this rules out
@@ -89,7 +90,12 @@ export class TextureStore {
 		}
 
 		if (force || record.version !== version) {
-			const replacement = this.onUpload?.(record.handle, source, record);
+			const replacement = this.onUpload?.(
+				record.handle,
+				source,
+				record,
+				options,
+			);
 			if (replacement !== undefined && replacement !== null) {
 				// the backend could not respecify in place and swapped handles
 				record.handle = replacement;
