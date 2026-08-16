@@ -13,7 +13,7 @@
  * These assertions count GL calls, which is exact — no timing, so nothing here
  * is flaky. Frame time was the symptom; call counts are the mechanism.
  */
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, video } from "../src/index.js";
 
 const SIZE = 128;
@@ -44,6 +44,14 @@ describe("texture re-upload on overflow", () => {
 			x.fillRect(0, 0, 16, 16);
 			return c;
 		});
+	});
+
+	afterAll(() => {
+		// this spec owns its Application, so it owns the WebGL context too.
+		// Browsers cap live contexts, and a suite that leaks one per spec
+		// eventually fails to create any — which surfaces as unrelated specs
+		// failing, not as this one.
+		app?.destroy();
 	});
 
 	const requireWebGL = (ctx) => {

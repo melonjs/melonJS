@@ -21,7 +21,7 @@
  * That gap is exactly what a lit scene used to pay before #1585, since
  * `LitQuadBatcher` halved the pool and reserved the upper half for normal maps.
  */
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, video } from "../src/index.js";
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../src/system/event.ts";
 
@@ -56,6 +56,14 @@ describe("texture-count cliff", () => {
 		});
 		await app.init();
 		renderer = app.renderer;
+	});
+
+	afterAll(() => {
+		// this spec owns its Application, so it owns the WebGL context too.
+		// Browsers cap live contexts, and a suite that leaks one per spec
+		// eventually fails to create any — which surfaces as unrelated specs
+		// failing, not as this one.
+		app?.destroy();
 	});
 
 	const requireWebGL = (ctx) => {
