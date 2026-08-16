@@ -84,6 +84,81 @@ describe("GLSamplerCache", () => {
 		cache.releaseAll(true);
 	});
 
+	it("sets every parameter it promises, both filters", (ctx) => {
+		requireWebGL(ctx);
+		// MAG was the gap: nothing asserted it, so "never set it" and
+		// "hardcode it to NEAREST" both passed — a bug that would render every
+		// sprite nearest-neighbour with no test to catch it
+		const cache = new GLSamplerCache(gl);
+		const linear = cache.get(gl.LINEAR, "no-repeat", false);
+		expect(gl.getSamplerParameter(linear, gl.TEXTURE_MAG_FILTER)).toBe(
+			gl.LINEAR,
+		);
+		expect(gl.getSamplerParameter(linear, gl.TEXTURE_MIN_FILTER)).toBe(
+			gl.LINEAR,
+		);
+
+		const nearest = cache.get(gl.NEAREST, "no-repeat", false);
+		expect(gl.getSamplerParameter(nearest, gl.TEXTURE_MAG_FILTER)).toBe(
+			gl.NEAREST,
+		);
+		expect(gl.getSamplerParameter(nearest, gl.TEXTURE_MIN_FILTER)).toBe(
+			gl.NEAREST,
+		);
+		cache.releaseAll(true);
+	});
+
+	it("mip filtering never changes magnification", (ctx) => {
+		requireWebGL(ctx);
+		// asking for mips affects MINification only — a chain has nothing to
+		// say about drawing a texture larger than itself
+		const cache = new GLSamplerCache(gl);
+		const mipped = cache.get(gl.LINEAR, "no-repeat", true);
+		expect(gl.getSamplerParameter(mipped, gl.TEXTURE_MAG_FILTER)).toBe(
+			gl.LINEAR,
+		);
+		expect(gl.getSamplerParameter(mipped, gl.TEXTURE_MIN_FILTER)).toBe(
+			gl.LINEAR_MIPMAP_LINEAR,
+		);
+		cache.releaseAll(true);
+	});
+
+	it("defaults to clamped, unmipped, and agrees with the explicit form", (ctx) => {
+		requireWebGL(ctx);
+		// `get(filter)` is the common call; its defaults must match the spelled
+		// out version or the memo would treat them as different states
+		const cache = new GLSamplerCache(gl);
+		const implicit = cache.get(gl.LINEAR);
+		const explicit = cache.get(gl.LINEAR, "no-repeat", false);
+		expect(implicit).toBe(explicit);
+		expect(gl.getSamplerParameter(implicit, gl.TEXTURE_WRAP_S)).toBe(
+			gl.CLAMP_TO_EDGE,
+		);
+		expect(gl.getSamplerParameter(implicit, gl.TEXTURE_WRAP_T)).toBe(
+			gl.CLAMP_TO_EDGE,
+		);
+		expect(gl.getSamplerParameter(implicit, gl.TEXTURE_MIN_FILTER)).toBe(
+			gl.LINEAR,
+		);
+		expect(cache.samplers.size).toBe(1);
+		cache.releaseAll(true);
+	});
+
+	it("an unrecognized repeat string clamps rather than tiling", (ctx) => {
+		requireWebGL(ctx);
+		// a typo'd repeat must not silently produce a tiling sampler — the
+		// engine's own cache normalizes unknown values to "no-repeat"
+		const cache = new GLSamplerCache(gl);
+		const bogus = cache.get(gl.LINEAR, "repat-x");
+		expect(gl.getSamplerParameter(bogus, gl.TEXTURE_WRAP_S)).toBe(
+			gl.CLAMP_TO_EDGE,
+		);
+		expect(gl.getSamplerParameter(bogus, gl.TEXTURE_WRAP_T)).toBe(
+			gl.CLAMP_TO_EDGE,
+		);
+		cache.releaseAll(true);
+	});
+
 	it("only goes trilinear over a linear chain", (ctx) => {
 		requireWebGL(ctx);
 		// "nearest" opts out of mip filtering so crisp pixel-art keeps hard
