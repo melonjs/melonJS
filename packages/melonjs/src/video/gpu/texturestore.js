@@ -120,36 +120,6 @@ export class TextureStore {
 	}
 
 	/**
-	 * Whether a record is still valid for the live context.
-	 *
-	 * `releaseAll` drops every record, so the store itself can never hand back
-	 * a stale one — but a CALLER that cached a handle of its own (a batcher's
-	 * per-unit array, say) has no such protection, and binding a handle minted
-	 * under a dead context is undefined behaviour that fails silently. This is
-	 * how such a caller checks, rather than assuming its own invalidation ran.
-	 * @param {object} [record] - a record obtained earlier
-	 * @returns {boolean} whether it belongs to the current context
-	 * @ignore
-	 */
-	isCurrent(record) {
-		return record !== undefined && record.generation === this.generation;
-	}
-
-	/**
-	 * Mark a source's content stale, so the next resolve re-uploads it. Cheaper
-	 * and safer than destroying it: the handle and its storage survive, only the
-	 * contents are re-pushed.
-	 * @param {object} source - the source whose content changed
-	 * @ignore
-	 */
-	invalidate(source) {
-		const record = this.records.get(source);
-		if (record !== undefined) {
-			record.version = -1;
-		}
-	}
-
-	/**
 	 * Release the GPU texture for one source. Driven by the source going away
 	 * — never by a slot being reassigned, which is exactly the coupling this
 	 * class exists to break.

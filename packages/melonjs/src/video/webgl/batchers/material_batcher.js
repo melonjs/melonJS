@@ -350,14 +350,21 @@ export class MaterialBatcher extends WebGLBatcher {
 			// same unit look "already uploaded" and bind a stale texture.
 			const image = texture.getTexture();
 			const cache = this.renderer.cache;
+			// The store owns the handle since #1585, so it has to do the
+			// freeing: deleting it here left the store holding a record whose
+			// texture no longer existed, and the next resolve for this source
+			// would hand that dead handle straight back to a draw.
+			const record = this.renderer.textureStore?.peek(image);
+			if (record !== undefined) {
+				this.unbindTexture2D(record.handle);
+			}
+			this.renderer.textureStore?.destroyTexture(image);
 			if (cache.has(image)) {
 				for (const atlas of cache.cache.get(image)) {
 					for (const unit of cache.peekAllUnits(atlas)) {
-						const texture2D = this.boundTextures[unit];
-						if (typeof texture2D !== "undefined") {
-							this.gl.deleteTexture(texture2D);
-							this.unbindTexture2D(texture2D);
-						}
+						// drop the per-unit belief too, or a later allocation of
+						// the same unit looks "already bound" and samples nothing
+						this.invalidateUnit(unit);
 					}
 				}
 			}
@@ -517,8 +524,10 @@ export class MaterialBatcher extends WebGLBatcher {
 		const frameless =
 			typeof source.videoWidth !== "undefined" && source.readyState < 2;
 
-		// `dirtyUnits` is a per-unit invalidation (something bound over this
-		// unit behind our back), so it forces a re-upload for this call only
+		// `markTextureDirty` announces that the SOURCE behind a unit changed
+		// (same object, new pixels — a canvas re-bake), so it forces a
+		// re-upload. It is a CONTENT signal, not a binding one: a merely stale
+		// binding is handled by the unconditional bind below.
 		const dirty = this.dirtyUnits.delete(unit);
 		const record = this.renderer.textureStore.getResidentRecord(source, {
 			version: source.version ?? 0,

@@ -103,17 +103,6 @@ describe("TextureStore", () => {
 	});
 
 	describe("invalidate / destroy", () => {
-		it("invalidate re-uploads but keeps the handle", () => {
-			const { store, spies } = makeStore();
-			const src = { name: "a" };
-			const first = store.getResidentRecord(src);
-			store.invalidate(src);
-			const second = store.getResidentRecord(src);
-			expect(second.handle).toBe(first.handle);
-			expect(spies.onCreate).toHaveBeenCalledTimes(1);
-			expect(spies.onUpload).toHaveBeenCalledTimes(2);
-		});
-
 		it("destroyTexture releases exactly once", () => {
 			const { store, spies } = makeStore();
 			const src = { name: "a" };
@@ -154,21 +143,6 @@ describe("TextureStore", () => {
 			expect(after).not.toBe(before);
 			expect(spies.onCreate).toHaveBeenCalledTimes(2);
 			expect(store.peek(src).generation).toBe(store.generation);
-		});
-
-		it("isCurrent rejects a record a caller cached across a loss", () => {
-			// the store drops its own records, but a caller holding a handle in
-			// its own array has no such protection, and binding a handle from a
-			// dead context fails silently rather than erroring
-			const { store } = makeStore();
-			const stale = store.getResidentRecord({ name: "a" });
-			expect(store.isCurrent(stale)).toBe(true);
-			store.releaseAll();
-			expect(store.isCurrent(stale)).toBe(false);
-			expect(store.isCurrent(undefined)).toBe(false);
-			expect(store.isCurrent(store.getResidentRecord({ name: "b" }))).toBe(
-				true,
-			);
 		});
 
 		it("does not try to free handles whose context already died", () => {

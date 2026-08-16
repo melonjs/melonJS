@@ -126,6 +126,123 @@ describe("texture re-upload on overflow", () => {
 		expect(over.deleteTexture).toBe(0);
 	});
 
+	// ADVERSARIAL — the failure mode the store's ownership newly makes possible:
+	// something frees a GL texture the store still has a record for, and the
+	// next resolve hands the DEAD handle to a draw. Silent: GL does not error on
+	// a deleted texture, it samples black.
+	it("deleting a source's texture does not leave a dead handle resident", (ctx) => {
+		requireWebGL(ctx);
+		const source = images[1];
+		const quad = renderer.batchers.get("quad");
+		renderer.cache.resetUnitAssignments();
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+
+		const atlas = renderer.cache.get(source);
+		const dead = renderer.textureStore.peek(atlas.getTexture()).handle;
+		expect(gl.isTexture(dead)).toBe(true);
+
+		quad.deleteTexture2D(atlas);
+		// the record must go WITH the texture, not outlive it
+		expect(renderer.textureStore.peek(atlas.getTexture())).toBeUndefined();
+		expect(gl.isTexture(dead)).toBe(false);
+
+		// and drawing it again rebuilds rather than binding the corpse
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		const revived = renderer.textureStore.peek(
+			renderer.cache.get(source).getTexture(),
+		);
+		expect(revived).toBeDefined();
+		expect(revived.handle).not.toBe(dead);
+		expect(gl.isTexture(revived.handle)).toBe(true);
+	});
+
+	// ADVERSARIAL — a content change must still re-upload. The whole change is
+	// about NOT re-uploading, so the obvious way to get it wrong is to skip an
+	// upload that was genuinely needed and render a stale frame forever.
+	it("a content change still re-uploads, into the same handle", (ctx) => {
+		requireWebGL(ctx);
+		const source = images[2];
+		renderer.cache.resetUnitAssignments();
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+		const before = renderer.textureStore.peek(
+			renderer.cache.get(source).getTexture(),
+		);
+
+		let uploads = 0;
+		const real = gl.texSubImage2D.bind(gl);
+		gl.texSubImage2D = (...a) => {
+			uploads++;
+			return real(...a);
+		};
+		try {
+			// a canvas re-bake: same object, new pixels, bumped revision
+			source.version = (source.version ?? 0) + 1;
+			renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		} finally {
+			gl.texSubImage2D = real;
+		}
+
+		expect(uploads).toBeGreaterThan(0);
+		// re-uploaded IN PLACE — a new handle would mean the storage was
+		// thrown away, which is the churn this all exists to stop
+		const after = renderer.textureStore.peek(
+			renderer.cache.get(source).getTexture(),
+		);
+		expect(after.handle).toBe(before.handle);
+	});
+
+	// ADVERSARIAL — `markTextureDirty` is how a re-baked canvas (Text, a
+	// gradient, any dynamic surface) announces new pixels behind an UNCHANGED
+	// source object. It is live in production, from `CanvasRenderTarget`, and
+	// nothing covered it: skipping this upload renders the previous text
+	// forever, which is exactly the failure a re-upload-avoiding change invites.
+	it("markTextureDirty forces a re-upload in place", (ctx) => {
+		requireWebGL(ctx);
+		const source = images[3];
+		const quad = renderer.setBatcher("quad");
+		renderer.cache.resetUnitAssignments();
+		renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+		renderer.flush();
+
+		const atlas = renderer.cache.get(source);
+		const before = renderer.textureStore.peek(atlas.getTexture());
+		const unit = renderer.cache.getUnit(atlas);
+
+		let uploads = 0;
+		let creates = 0;
+		const realSub = gl.texSubImage2D.bind(gl);
+		const realCreate = gl.createTexture.bind(gl);
+		gl.texSubImage2D = (...a) => {
+			uploads++;
+			return realSub(...a);
+		};
+		gl.createTexture = (...a) => {
+			creates++;
+			return realCreate(...a);
+		};
+		try {
+			// the canvas re-baked: same object, same version, new pixels
+			quad.markTextureDirty(unit);
+			renderer.drawImage(source, 0, 0, 16, 16, 0, 0, 16, 16);
+			renderer.flush();
+		} finally {
+			gl.texSubImage2D = realSub;
+			gl.createTexture = realCreate;
+		}
+
+		expect(uploads).toBeGreaterThan(0);
+		// in place: immutable storage makes a same-shape re-upload a pure
+		// texSubImage2D, so no new texture object should appear
+		expect(creates).toBe(0);
+		expect(renderer.textureStore.peek(atlas.getTexture()).handle).toBe(
+			before.handle,
+		);
+	});
+
 	it("a source keeps ONE handle across a unit reassignment", (ctx) => {
 		requireWebGL(ctx);
 		const source = images[0];
