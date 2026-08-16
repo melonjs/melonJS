@@ -666,13 +666,17 @@ export default class ShaderEffect {
 		// rotating color-texture units. Each unit is reserved in the cache the
 		// first time it's claimed, so `allocateTextureUnit` can't hand the same
 		// unit to a sprite's own texture in the single-effect customShader path.
-		let nextUnit = batcher.maxBatchTextures - 1;
+		// count down from the RENDERER's top unit rather than the batcher's:
+		// which batcher happens to be active must not decide where an effect's
+		// extra samplers live (#1585)
+		let nextUnit =
+			(batcher.renderer?.maxTextures ?? batcher.maxBatchTextures) - 1;
 		for (const [name, entry] of this._extraTextures) {
 			if (entry.unit === undefined) {
 				// skip units other holders already reserved — another effect's
-				// extra samplers, or the lit batcher's paired normal-map range
-				// (its color-slot pairing is fixed arithmetic, so squatting on
-				// one of its units would corrupt lit sampling)
+				// extra samplers, say. The lit batcher no longer reserves a
+				// fixed normal-map range (#1585), so this is the only claimant
+				// class left to step over.
 				while (nextUnit >= 1 && cache.reservedUnits.has(nextUnit)) {
 					nextUnit--;
 				}

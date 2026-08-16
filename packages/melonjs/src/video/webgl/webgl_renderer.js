@@ -33,6 +33,7 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
 /**
@@ -146,7 +147,10 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {number}
 		 * @readonly
 		 */
-		this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+		this.maxTextures = resolveMaxTextures(
+			this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),
+			this.settings.maxTextures,
+		);
 		/**
 		 * Next free indexed `UNIFORM_BUFFER` binding point, handed out by
 		 * {@link WebGLRenderer#reserveUniformBindingPoint}. Binding points are
@@ -1114,7 +1118,9 @@ export default class WebGLRenderer extends Renderer {
 		// which some drivers won't sample in the same frame — an RGB texture
 		// copied this way samples reliably everywhere.
 		const batcher = this.setBatcher("quad");
-		const unit = batcher.maxBatchTextures - 1;
+		// the renderer's top unit, not the batcher's — a scratch bind is GL
+		// state, so it must not move when a batcher resolves a smaller cap
+		const unit = this.maxTextures - 1;
 
 		// a multisampled post-effect capture cannot be read directly
 		// (copyTex*Image2D from an MSAA framebuffer is INVALID_OPERATION) —

@@ -155,6 +155,39 @@ export type ApplicationSettings = {
 	textureFilter: "auto" | "nearest" | "linear";
 
 	/**
+	 * How many texture units the WebGL multi-texture batchers may use
+	 * ([#1585](https://github.com/melonjs/melonJS/issues/1585)).
+	 *
+	 * A batch can draw sprites from this many distinct textures before it has
+	 * to flush and start over, so a scene with more textures in flight than
+	 * this loses batching sharply. The pool used to be hardcoded to 16 — the
+	 * WebGL 2 spec *floor* for `MAX_TEXTURE_IMAGE_UNITS`, and roughly half
+	 * what current desktop and mobile hardware reports.
+	 *
+	 * - `"auto"` (default) — the device's reported limit, capped at 32.
+	 * - a number — that many units, clamped to what the device actually has
+	 *   (asking for more than exists would fail to link the shader).
+	 *
+	 * Raising it costs fragment-shader compile time and register pressure,
+	 * because the batcher's shader unrolls one sampler and one branch per
+	 * unit. Lowering it is the escape hatch if a driver misbehaves on wide
+	 * sampler ladders.
+	 *
+	 * **Read at initialization only** — the batchers compile their shaders
+	 * against this value, so unlike `textureFilter` there is no runtime setter.
+	 * WebGL only; the WebGPU backend sizes its own slot budget from its
+	 * per-stage binding limits, and the Canvas renderer has no batching.
+	 * @default "auto"
+	 * @example
+	 * // cap the pool on a device with a known-bad wide sampler ladder
+	 * const app = new Application(1024, 768, {
+	 *     renderer: video.WEBGL,
+	 *     maxTextures: 16,
+	 * });
+	 */
+	maxTextures: "auto" | number;
+
+	/**
 	 * whether 3D objects cast a soft "blob" shadow on the ground by default
 	 * ([#1515](https://github.com/melonjs/melonJS/issues/1515)).
 	 *
