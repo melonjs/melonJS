@@ -7,7 +7,7 @@
  * `GPUTexture` and `GPUSampler` — which is what allows texture residency to be
  * keyed by source alone.
  */
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { boot, game, WebGLRenderer } from "../src/index.js";
 import { GLSamplerCache } from "../src/video/webgl/utils/samplercache.js";
 import {
@@ -124,6 +124,101 @@ describe("GLSamplerCache", () => {
 		expect(gl.getParameter(gl.SAMPLER_BINDING)).toBeNull();
 		gl.deleteTexture(tex);
 		cache.releaseAll(true);
+	});
+
+	// `get` runs once per QUAD, so it memoizes its last answer behind a
+	// three-value guard, and `bind` skips a redundant bind per unit. Both are
+	// caches over GL objects, which is exactly where a stale entry becomes a
+	// silently-wrong render rather than an error.
+	describe("hot-path memoization", () => {
+		it("returns the cached sampler for a repeated lookup", (ctx) => {
+			requireWebGL(ctx);
+			const cache = new GLSamplerCache(gl);
+			const spy = vi.spyOn(gl, "createSampler");
+			const a = cache.get(gl.LINEAR, "repeat", false);
+			const b = cache.get(gl.LINEAR, "repeat", false);
+			expect(b).toBe(a);
+			expect(spy).toHaveBeenCalledTimes(1);
+			spy.mockRestore();
+			cache.releaseAll(true);
+		});
+
+		it("the memo never answers for DIFFERENT arguments", (ctx) => {
+			requireWebGL(ctx);
+			// the regression a last-value memo invites: returning the previous
+			// sampler because only the guard was checked, not the arguments
+			const cache = new GLSamplerCache(gl);
+			const base = cache.get(gl.LINEAR, "no-repeat", false);
+			// change exactly one axis at a time, each straight after a hit
+			cache.get(gl.LINEAR, "no-repeat", false);
+			expect(cache.get(gl.NEAREST, "no-repeat", false)).not.toBe(base);
+			cache.get(gl.LINEAR, "no-repeat", false);
+			expect(cache.get(gl.LINEAR, "repeat", false)).not.toBe(base);
+			cache.get(gl.LINEAR, "no-repeat", false);
+			expect(cache.get(gl.LINEAR, "no-repeat", true)).not.toBe(base);
+			// and coming back still gives the original
+			expect(cache.get(gl.LINEAR, "no-repeat", false)).toBe(base);
+			cache.releaseAll(true);
+		});
+
+		it("the memo is dropped on release, so no deleted sampler is reused", (ctx) => {
+			requireWebGL(ctx);
+			// the dangerous one: releaseAll deletes the GL objects, and a live
+			// memo would hand a deleted sampler to the very next draw
+			const cache = new GLSamplerCache(gl);
+			const before = cache.get(gl.LINEAR, "repeat", false);
+			cache.releaseAll(true);
+			expect(gl.isSampler(before)).toBe(false);
+			const after = cache.get(gl.LINEAR, "repeat", false);
+			expect(after).not.toBe(before);
+			expect(gl.isSampler(after)).toBe(true);
+			cache.releaseAll(true);
+		});
+
+		it("skips a redundant bind, but never a needed one", (ctx) => {
+			requireWebGL(ctx);
+			const cache = new GLSamplerCache(gl);
+			const a = cache.get(gl.LINEAR, "no-repeat");
+			const b = cache.get(gl.NEAREST, "repeat");
+			const spy = vi.spyOn(gl, "bindSampler");
+
+			cache.bind(0, a);
+			cache.bind(0, a);
+			cache.bind(0, a);
+			expect(spy).toHaveBeenCalledTimes(1);
+
+			// a different sampler on the same unit must go through
+			cache.bind(0, b);
+			expect(spy).toHaveBeenCalledTimes(2);
+			// and the same sampler on a DIFFERENT unit must too — the tracking
+			// is per unit, not global
+			cache.bind(1, b);
+			expect(spy).toHaveBeenCalledTimes(3);
+			// unbinding is a real transition
+			cache.bind(0, null);
+			expect(spy).toHaveBeenCalledTimes(4);
+
+			spy.mockRestore();
+			cache.releaseAll(true);
+		});
+
+		it("forgets its bindings on release, so the next bind re-issues", (ctx) => {
+			requireWebGL(ctx);
+			// GL drops sampler bindings when the objects die; believing a unit
+			// still holds one would leave it sampling with the texture's own
+			// parameters and no call to fix it
+			const cache = new GLSamplerCache(gl);
+			const a = cache.get(gl.LINEAR, "no-repeat");
+			cache.bind(2, a);
+			cache.releaseAll(true);
+
+			const fresh = cache.get(gl.LINEAR, "no-repeat");
+			const spy = vi.spyOn(gl, "bindSampler");
+			cache.bind(2, fresh);
+			expect(spy).toHaveBeenCalledTimes(1);
+			spy.mockRestore();
+			cache.releaseAll(true);
+		});
 	});
 
 	it("the renderer owns one, and drops it on context loss", (ctx) => {

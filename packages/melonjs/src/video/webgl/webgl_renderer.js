@@ -145,11 +145,6 @@ export default class WebGLRenderer extends Renderer {
 		this.vertexBuffer = this.gl.createBuffer();
 
 		/**
-		 * Maximum number of texture unit supported under the current context
-		 * @type {number}
-		 * @readonly
-		 */
-		/**
 		 * Sampler objects, deduplicated by state. GL bakes wrap/filter into the
 		 * texture object; a bound sampler overrides that, so one texture can
 		 * serve several variants at once — which is what lets residency be
@@ -175,6 +170,11 @@ export default class WebGLRenderer extends Renderer {
 		 */
 		this.textureStore = new WebGLTextureStore(this.gl);
 
+		/**
+		 * Maximum number of texture unit supported under the current context
+		 * @type {number}
+		 * @readonly
+		 */
 		this.maxTextures = resolveMaxTextures(
 			this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),
 			this.settings.maxTextures,
