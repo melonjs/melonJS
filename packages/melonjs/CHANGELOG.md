@@ -55,12 +55,12 @@
 
 | N textures | 19.9.1 draws / uploads / ms | now draws / uploads / ms |
 | --- | --- | --- |
-| 16 | 1 / 0 / 0.045 | 1 / 0 / 0.100 |
-| 17 | 33 / 542 / 3.27 | 1 / 0 / 0.097 |
-| 32 | 32 / 544 / 4.17 | 1 / 0 / 0.100 |
-| 64 | 32 / 544 / 3.25 | 16 / 0 / 0.210 |
+| 16 | 1 / 0 / 0.045 | 1 / 0 / 0.055 |
+| 17 | 33 / 542 / 3.27 | 1 / 0 / 0.055 |
+| 32 | 32 / 544 / 4.17 | 1 / 0 / 0.058 |
+| 64 | 32 / 544 / 3.25 | 16 / 0 / 0.163 |
 
-  "uploads" counts `createTexture` + `texSubImage2D` + `generateMipmap`; it is **zero at every N** now. Note the old cost did not scale with how far past the limit a scene went — one texture over cost the same as four times over. Two honest caveats: below the limit the new path is slower (0.045 → 0.100 ms at 512 quads, ~0.3% of a 60 fps budget), most likely the added sampler bind per texture and a wider generated shader; and call counts are exact while the millisecond figures are medians that still vary by ~25%
+  "uploads" counts `createTexture` + `texSubImage2D` + `generateMipmap`; it is **zero at every N** now. Note the old cost did not scale with how far past the limit a scene went — one texture over cost the same as four times over. Two caveats: below the limit the new path is still slightly slower (0.045 → 0.055 ms at 512 quads, ~0.06% of a 60 fps budget) — the residual is the per-source residency lookup, which is what buys the rest of the table; and call counts are exact while the millisecond figures are medians that still vary by ~25%
 - **Vertex Array Objects for every batcher** ([#1509](https://github.com/melonjs/melonJS/issues/1509)) — vertex attribute layout is specified once at init rather than on every batcher switch and every mesh flush, so steady-state frames issue **zero** attribute-specification calls. How much GL traffic this saves depends on how often a scene alternates batchers: a scene that stays on one batcher saves about 2 calls per frame, one mixing sprites, meshes and primitives about 40 — in both cases well under a millisecond. The structural benefit is the larger one: attribute-state leaks between batchers become impossible by construction.
 - **retained-mode mesh rendering** ([#1507](https://github.com/melonjs/melonJS/issues/1507)) — mesh geometry is uploaded to the GPU once and re-drawn from there, instead of being re-transformed on the CPU and re-uploaded every frame. Steady-state frames issue **zero** vertex uploads and run **zero** per-vertex CPU transforms, however much a mesh moves, rotates, scales or changes tint; only an explicit geometry edit re-uploads. A mesh past 65 535 vertices is also drawn in a single call rather than split into chunks. What to expect: the CPU cost of issuing a mesh draw drops by roughly **25–30% for small meshes** (tens of vertices, where only per-call overhead was ever at stake) and by **more than 95% for vertex-heavy ones** (thousands), because the saving is per-vertex work that no longer happens at all — so the bigger the model, the larger the share. Measured in the in-tree mesh benchmark (`drawmesh_bench.spec.js`, which now runs both paths side by side): an 8-vertex cube 1.8µs → 1.2µs per draw, a 5 000-vertex mesh 66µs → under 2.5µs and from 2 draw calls to 1. The change in shape matters more than any single figure. Measured on an Apple M4 Max (ANGLE Metal) over the vertex counts from [#1507](https://github.com/melonjs/melonJS/issues/1507), draw-phase CPU per frame:
 

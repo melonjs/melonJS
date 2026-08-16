@@ -529,24 +529,38 @@ export class MaterialBatcher extends WebGLBatcher {
 		// re-upload. It is a CONTENT signal, not a binding one: a merely stale
 		// binding is handled by the unconditional bind below.
 		const dirty = this.dirtyUnits.delete(unit);
-		const record = this.renderer.textureStore.getResidentRecord(source, {
-			version: source.version ?? 0,
-			force: force === true || dirty === true,
-			upload: (handle) => {
-				return this.createTexture2D(
-					unit,
-					frameless ? null : source,
-					filter,
-					wrap,
-					texW,
-					texH,
-					texture.premultipliedAlpha,
-					undefined,
-					handle,
-					flush,
-				);
-			},
-		});
+		const version = source.version ?? 0;
+
+		// Fast path: already resident and current. Taken for all but a handful
+		// of the hundreds of quads in a frame, so it must allocate NOTHING —
+		// the options object and the upload closure below are per-call garbage
+		// that the steady state has no use for.
+		let record = this.renderer.textureStore.peek(source);
+		if (
+			record === undefined ||
+			force === true ||
+			dirty === true ||
+			record.version !== version
+		) {
+			record = this.renderer.textureStore.getResidentRecord(source, {
+				version,
+				force: force === true || dirty === true,
+				upload: (handle) => {
+					return this.createTexture2D(
+						unit,
+						frameless ? null : source,
+						filter,
+						wrap,
+						texW,
+						texH,
+						texture.premultipliedAlpha,
+						undefined,
+						handle,
+						flush,
+					);
+				},
+			});
+		}
 
 		// bind unconditionally — cheap, and the only thing that guarantees this
 		// unit really holds this texture. `bindTexture2D` no-ops when its

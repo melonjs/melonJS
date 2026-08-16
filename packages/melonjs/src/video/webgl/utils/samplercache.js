@@ -26,6 +26,18 @@ export class GLSamplerCache {
 		this.gl = gl;
 		/** @type {Map<string, WebGLSampler>} */
 		this.samplers = new Map();
+		// `get` runs once per QUAD — hundreds of times a frame, almost always
+		// with the arguments it was just called with. Building a string key and
+		// running two regexes each time is pure waste in the hottest path, so
+		// the last answer is memoized behind a three-value guard.
+		this.lastFilter = -1;
+		this.lastRepeat = null;
+		this.lastMipmap = null;
+		this.lastSampler = null;
+		// which sampler each unit currently holds, so a redundant bind is
+		// skipped rather than issued
+		/** @type {Array<WebGLSampler|null>} */
+		this.bound = [];
 	}
 
 	/**
@@ -41,6 +53,13 @@ export class GLSamplerCache {
 	 * @ignore
 	 */
 	get(filter, repeat = "no-repeat", mipmap = false) {
+		if (
+			filter === this.lastFilter &&
+			repeat === this.lastRepeat &&
+			mipmap === this.lastMipmap
+		) {
+			return this.lastSampler;
+		}
 		const gl = this.gl;
 		// same per-axis mapping as `createTexture2D`
 		const wrapS = /^repeat(-x)?$/.test(repeat) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
@@ -63,6 +82,10 @@ export class GLSamplerCache {
 			);
 			this.samplers.set(key, sampler);
 		}
+		this.lastFilter = filter;
+		this.lastRepeat = repeat;
+		this.lastMipmap = mipmap;
+		this.lastSampler = sampler;
 		return sampler;
 	}
 
@@ -77,6 +100,10 @@ export class GLSamplerCache {
 	 * @ignore
 	 */
 	bind(unit, sampler) {
+		if (this.bound[unit] === sampler) {
+			return;
+		}
+		this.bound[unit] = sampler;
 		this.gl.bindSampler(unit, sampler);
 	}
 
@@ -95,5 +122,11 @@ export class GLSamplerCache {
 			}
 		}
 		this.samplers.clear();
+		// every memo now points at a deleted or dead-context object
+		this.lastFilter = -1;
+		this.lastRepeat = null;
+		this.lastMipmap = null;
+		this.lastSampler = null;
+		this.bound.length = 0;
 	}
 }
