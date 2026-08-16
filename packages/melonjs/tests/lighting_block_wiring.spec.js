@@ -346,6 +346,103 @@ describe("light cap above 8 (issue #1552)", () => {
 		expect(px[0]).toBeLessThan(20); // and only green
 	});
 
+	// #1585 collapsed the lit shader from TWO sampler sets (uSampler* plus
+	// uNormalSampler*) to ONE addressed by two per-quad ids. A colour/normal slot
+	// collision used to be structurally impossible; now it is prevented only by
+	// an invariant in `resolveNormalUnit`, so it needs a test that can SEE one.
+	//
+	// The scaffold's normal map is flat +Z under a light directly overhead, so
+	// NdotL is 1 and the centre pixel reads green 141. Driving the normal ladder
+	// from the COLOUR id instead — the collision — makes the normal decode from
+	// the WHITE albedo, normalize(1,1,1), NdotL 0.577, and the pixel reads 81.
+	// Both numbers are measured, not derived. Every other lit assertion in this
+	// file is `> 40` and cannot tell them apart.
+	it("the colour id and the normal id select DIFFERENT samplers", (ctx) => {
+		requireWebGL(ctx, renderer);
+		const px = drawLitBy(0, 1);
+		expect(px[1]).toBeGreaterThan(120);
+	});
+
+	// The `_cacheEpoch` re-resolution path: claiming the normal map's slot can
+	// exhaust the pool and wipe every assignment — including the colour unit
+	// resolved moments earlier AND the normal's own, since the wipe frees
+	// occupancy while the texture stays bound in GL. Both must be re-resolved or
+	// the vertex stream carries a stale unit.
+	it("exhausting the pool on the normal map re-resolves both ids", (ctx) => {
+		requireWebGL(ctx, renderer);
+		const lit = renderer.batchers.get("litQuad");
+		const cache = renderer.cache;
+		const original = cache.max_size;
+		const albedo = solid("#ffffff");
+
+		cache.resetUnitAssignments();
+		// exactly two usable units: one albedo + one normal fills the pool, so a
+		// second distinct normal map cannot fit and must force the wipe
+		cache.max_size = 2;
+		const before = lit._cacheEpoch;
+
+		renderer.clearColor("#000000", true);
+		renderer.setLightUniforms(undefined, undefined, 0, 0);
+		lit.setLightUniforms({
+			count: 1,
+			positions: new Float32Array([SIZE / 2, SIZE / 2, SIZE * 4, 1]),
+			colors: new Float32Array([0, 1, 0]),
+			heights: new Float32Array([SIZE]),
+			ambient: [0, 0, 0],
+		});
+		renderer.activeLightCount = 1;
+
+		renderer.currentNormalMap = solid("rgb(128,128,255)");
+		renderer.drawImage(albedo, 0, 0, 16, 16, 0, 0, SIZE, SIZE);
+		// same albedo (a cache hit, allocating nothing), a DIFFERENT normal —
+		// that claim is what runs the pool dry mid-quad
+		renderer.currentNormalMap = solid("rgb(129,128,255)");
+		renderer.drawImage(albedo, 0, 0, 16, 16, 0, 0, SIZE, SIZE);
+		renderer.flush();
+		renderer.currentNormalMap = null;
+		renderer.activeLightCount = 0;
+
+		// the wipe really happened, or this test proves nothing
+		expect(lit._cacheEpoch).toBeGreaterThan(before);
+
+		const px = new Uint8Array(4);
+		gl.readPixels(SIZE / 2, SIZE / 2, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+		// a stale or collided id would sample the white albedo as a normal (81)
+		expect(px[1]).toBeGreaterThan(120);
+
+		cache.max_size = original;
+		cache.resetUnitAssignments();
+	});
+
+	// The collision guard. Reservations can leave a single assignable slot, and
+	// then the normal claims it and the color's re-resolve wipes and takes the
+	// same one. Rather than sample the sprite's own albedo as a normal map — 81
+	// instead of 141, wrong lighting with no error — the quad takes the unlit
+	// path, which the shader signals with `vNormalTextureId < -0.5`.
+	//
+	// Unlit is `albedo * vertexColor`, so the WHITE albedo comes back white:
+	// red 255. Both lit readings have red 0 (the light is pure green), which is
+	// what makes the red channel an unambiguous discriminator here.
+	it("falls back to unlit rather than let the two ids collide", (ctx) => {
+		requireWebGL(ctx, renderer);
+		const cache = renderer.cache;
+		const original = cache.max_size;
+		try {
+			cache.resetUnitAssignments();
+			cache.max_size = 2;
+			cache.reserveUnit(1); // exactly one assignable slot left
+			const px = drawLitBy(0, 1);
+			expect(px[0]).toBeGreaterThan(200); // unlit: albedo passed through
+			expect(px[1]).not.toBe(81); // and NOT the collided lit reading
+		} finally {
+			// restore in `finally`, or a failure here silently shrinks the pool
+			// for every test that follows
+			cache.releaseUnit(1);
+			cache.max_size = original;
+			cache.resetUnitAssignments();
+		}
+	});
+
 	it("shades from a light at index 20 — past the old cap of 8", (ctx) => {
 		requireWebGL(ctx, renderer);
 		// under the previous `uniform vec4 uLightPos[8]` transport this slot
