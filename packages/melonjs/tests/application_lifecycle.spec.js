@@ -128,16 +128,27 @@ describe("Application lifecycle: renderer event handlers are unregisterable", ()
 		// Guards the drift case: were the handler shared on the prototype,
 		// cycle N would unregister cycle 0's closure and leave every later
 		// renderer on the bus.
+		// Three cycles prove the property (a prototype-shared handler collides
+		// on the second); six only tripled the WebGL contexts this one test
+		// builds and tore down, which is the most context churn in the suite.
+		const CYCLES = 3;
 		const seen = new Set();
-		for (let i = 0; i < 6; i++) {
+		for (let i = 0; i < CYCLES; i++) {
 			const app = await mk(video.WEBGL);
 			const handler = app.renderer.onGameReset;
+			// Check this FIRST. A cycle that failed to obtain a real WebGL
+			// renderer yields no handler, and two `undefined`s land in the set
+			// as a duplicate — reporting "reused a previous handler" for what is
+			// actually a context-acquisition failure. This test has failed
+			// intermittently in CI and that message sent the investigation the
+			// wrong way; it should say what really happened.
+			expect(typeof handler, `cycle ${i} produced no handler`).toBe("function");
 			expect(seen.has(handler), `cycle ${i} reused a previous handler`).toBe(
 				false,
 			);
 			seen.add(handler);
 			app.destroy();
 		}
-		expect(seen.size).toBe(6);
+		expect(seen.size).toBe(CYCLES);
 	});
 });
