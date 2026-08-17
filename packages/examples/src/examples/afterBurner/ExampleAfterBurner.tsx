@@ -70,6 +70,21 @@ const createGame = async () => {
 			renderer: video.AUTO,
 			scale: "auto",
 			cameraClass: Camera3d,
+			// This scene has no ground GEOMETRY to receive a blob: the
+			// "ground" is a screen-space stroked line grid (see
+			// `backdrop/GroundGrid.ts`), drawn in pixel coords at a computed
+			// horizon. A world-space ground shadow therefore has nothing
+			// correct to land on and drifts against the grid as the camera
+			// pitches, so this example opts out of the application default
+			// (which ships `true`).
+			castGroundShadow: false,
+			// 4x MSAA. The jet, enemies and terrain props are low-poly models
+			// with long straight edges, which alias badly as they recede — and
+			// this scene composites through post effects, so it relies on
+			// capture targets being multisampled too (#1556); without that the
+			// scene would rasterize into a single-sampled capture and the
+			// smoothing would be thrown away before it reached the canvas.
+			antiAlias: true,
 		});
 		await app.init();
 		if (!app.renderer.supportsDepthBuffer) {

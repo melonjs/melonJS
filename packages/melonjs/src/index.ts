@@ -116,6 +116,7 @@ export * from "./application/settings.ts";
 export * as audio from "./audio/audio.ts";
 // export all public constants
 export * from "./const.ts";
+export { Box3d } from "./geometries/box3d.ts";
 export { Ellipse } from "./geometries/ellipse.ts";
 export { Line } from "./geometries/line.ts";
 export { ObservablePoint } from "./geometries/observablePoint.ts";
