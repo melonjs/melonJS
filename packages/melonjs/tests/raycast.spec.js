@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Application,
 	Body,
@@ -74,6 +74,12 @@ describe("Raycast", () => {
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	beforeEach(() => {

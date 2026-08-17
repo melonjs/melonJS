@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -47,14 +47,21 @@ describe("Octree", () => {
 	let world;
 	let octree;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	beforeEach(() => {
@@ -1042,14 +1049,21 @@ describe("Octree", () => {
 });
 
 describe("World broadphase dispatch (sortOn setter)", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("constructs a QuadTree by default (sortOn=z)", () => {
@@ -1127,14 +1141,21 @@ describe("World broadphase dispatch (sortOn setter)", () => {
 });
 
 describe("BuiltinAdapter.raycast3d", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("returns null when sortOn is 2D (broadphase is QuadTree)", () => {
@@ -1267,14 +1288,21 @@ describe("BuiltinAdapter.raycast3d", () => {
 });
 
 describe("BuiltinAdapter.querySphere", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("returns empty under a 2D camera (sortOn !== 'depth')", () => {
@@ -1373,14 +1401,21 @@ describe("BuiltinAdapter.querySphere", () => {
 });
 
 describe("Camera3d.queryVisible", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("returns empty under a 2D broadphase (sortOn !== 'depth')", () => {
@@ -1441,14 +1476,21 @@ describe("Camera3d.queryVisible", () => {
  *   deterministic gameplay-only candidate sets.
  */
 describe("2.5D pattern (Camera3d + Octree + same-Z gameplay)", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("World swaps to Octree when sortOn flips to 'depth'", () => {

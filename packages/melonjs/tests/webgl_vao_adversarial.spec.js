@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -39,6 +39,12 @@ describe("WebGL VAO adversarial", () => {
 			// quad lands outside clip space
 			renderer.projectionMatrix.ortho(0, 64, 64, 0, -1, 1);
 		}
+	});
+
+	afterAll(() => {
+		// release the app this describe owns — browsers cap live WebGL
+		// contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	const requireWebGL = (ctx) => {

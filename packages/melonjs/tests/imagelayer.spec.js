@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -25,6 +25,12 @@ describe("ImageLayer", () => {
 		testImage = document.createElement("canvas");
 		testImage.width = 64;
 		testImage.height = 64;
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	describe("createPattern", () => {

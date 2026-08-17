@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, video, WebGLRenderer } from "../src/index.js";
 
 /**
@@ -9,15 +9,22 @@ import { Application, boot, video, WebGLRenderer } from "../src/index.js";
 describe("WebGL save/restore benchmark", () => {
 	let renderer;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
 		});
 		await app.init();
 		renderer = app.renderer;
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("benchmark: 1000 sprites × 60 frames save/restore cycle", () => {

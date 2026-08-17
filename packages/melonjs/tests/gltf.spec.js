@@ -740,9 +740,10 @@ describe("parseGLTF() — baseColorFactor & vertex colors", () => {
 	// GLTFScene application
 	const NAME = "__gltf_mat_apply";
 	const COLOR_NAME = "__gltf_color_apply";
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -752,6 +753,12 @@ describe("parseGLTF() — baseColorFactor & vertex colors", () => {
 		gltfList[COLOR_NAME] = await parseGLTF(
 			buildColorGLB(new Float32Array([1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1]), 4),
 		);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 	afterAll(() => {
 		delete gltfList[NAME];
@@ -849,15 +856,22 @@ describe("GLTFScene", () => {
 describe("GLTFScene → Mesh instantiation", () => {
 	const NAME = "__gltf_addto_scene";
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
 		gltfList[NAME] = await parseGLTF(buildSceneGLB());
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterAll(() => {
@@ -1021,9 +1035,10 @@ describe("GLTFScene → Mesh instantiation", () => {
 describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 	const NAME = "__gltf_lit_scene";
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -1065,6 +1080,12 @@ describe("GLTFScene → lighting (KHR_lights_punctual)", () => {
 			buffers: [{ byteLength: bin.length }],
 		};
 		gltfList[NAME] = await parseGLTF(packGLB(json, bin));
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterAll(() => {

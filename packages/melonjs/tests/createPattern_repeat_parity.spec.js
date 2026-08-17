@@ -51,6 +51,12 @@ describe("createPattern repeat-mode parity (#1448)", () => {
 			await app.init();
 		});
 
+		afterAll(() => {
+			// release the WebGL context this describe owns — browsers cap
+			// live contexts, and a leak surfaces as UNRELATED specs failing
+			app?.destroy();
+		});
+
 		it("two patterns from one image are distinct, defined handles", () => {
 			// Canvas mode returns a raw `CanvasPattern` per call (an opaque
 			// DOM type — no `.repeat` field exposed in JS), but the calls

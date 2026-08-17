@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	Bounds,
@@ -665,6 +665,12 @@ describe("CanvasRenderer.toFrameTexture", () => {
 		await app.init();
 		renderer = app.renderer;
 		expect(renderer).toBeInstanceOf(CanvasRenderer);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("returns a Texture2d backed by a canvas copy of the frame", () => {

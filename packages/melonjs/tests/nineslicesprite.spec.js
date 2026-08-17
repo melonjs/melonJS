@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Application, boot, NineSliceSprite, video } from "../src/index.js";
 
 /**
@@ -67,13 +67,20 @@ const expectTiles = (a, total) => {
 };
 
 describe("NineSliceSprite", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(256, 256, {
+		app = new Application(256, 256, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	// ── construction ─────────────────────────────────────────────────────────
