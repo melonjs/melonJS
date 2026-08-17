@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -18,13 +18,20 @@ import {
  */
 
 describe("Camera3d.getBasis", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	const r = new Vector3d();
@@ -67,13 +74,20 @@ describe("Camera3d.getBasis", () => {
 });
 
 describe("Sprite3d billboard projection", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	const makeTex = () => {
@@ -325,13 +339,20 @@ describe("Sprite3d billboard projection", () => {
 });
 
 describe("Sprite3d atlas region mapping (trim + rotation)", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	// a 200×200 source so logical (untrimmed) frame = 200 → world scale 1 at
@@ -435,13 +456,20 @@ describe("Sprite3d atlas region mapping (trim + rotation)", () => {
 });
 
 describe("Sprite3d flipX / flipY", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	// 64×32 sheet → two 32×32 frames; sprite sized 1:1 (world unit == frame px)
@@ -665,13 +693,20 @@ describe("Sprite3d resource cleanup", () => {
 });
 
 describe("Sprite3d anchorPoint (vertex-baked anchor)", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	const makeTex = (w = 4, h = 4) => {
@@ -907,13 +942,20 @@ describe("Sprite3d anchorPoint (vertex-baked anchor)", () => {
 });
 
 describe("Sprite3d anchorPoint — adversarial", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	const makeTex = (w = 4, h = 4) => {
@@ -1127,13 +1169,20 @@ describe("Sprite3d anchorPoint — adversarial", () => {
 });
 
 describe("Sprite3d anchorPoint — remaining gap coverage", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	const makeTex = () => {

@@ -120,6 +120,51 @@ describe("WebGPUQuadBatcher", () => {
 		);
 	});
 
+	// #1585 moved slot assignment onto the shared `TextureSlotTable` and made
+	// `segmentEntries` indexed by slot rather than pushed. Two invariants that
+	// used to be structural now rest on the table handing out slots lowest-first,
+	// so they need pinning.
+	it("the composed material group is dense: views 0-7, samplers 8-15", () => {
+		// `composeSegmentGroup` pads unclaimed slots from `entries[0]`, so a hole
+		// at slot 0 would make the padding source undefined and throw. Every
+		// declared binding must be present whatever the segment holds.
+		batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.addQuad(atlasB, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		batcher.flush();
+
+		const group = renderer.calls.materialBinds[0];
+		// entries are emitted interleaved (texture then sampler per slot), which
+		// WebGPU permits — what matters is that all 16 declared bindings are
+		// present and resourced, not the order they appear in
+		const bindings = group.entries.map((e) => {
+			return e.binding;
+		});
+		expect(
+			[...bindings].sort((a, b) => {
+				return a - b;
+			}),
+		).toEqual(
+			Array.from({ length: 16 }, (_, i) => {
+				return i;
+			}),
+		);
+		for (const e of group.entries) {
+			expect(e.resource).toBeDefined();
+		}
+	});
+
+	it("hasPendingMaterial tracks the slot table, not the entry array", () => {
+		// the predicate #1585 rewrote from `segmentEntries.length > 0`. It gates
+		// whether a flush draws at all, so a stale `true` records a draw with no
+		// material and a stale `false` silently drops queued quads.
+		expect(batcher.hasPendingMaterial()).toBe(false);
+		batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(batcher.hasPendingMaterial()).toBe(true);
+		batcher.flush();
+		// resetSegment must clear it, or the next empty flush draws garbage
+		expect(batcher.hasPendingMaterial()).toBe(false);
+	});
+
 	it("a flush with no material ever adopted records nothing", () => {
 		expect(() => {
 			batcher.flush();

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, TMXTileMap, video } from "../src/index.js";
 import {
 	TMX_FLIP_AD,
@@ -120,9 +120,10 @@ function makeRecordingRenderer() {
 }
 
 describe("Tile rendering raw path (drawTileRaw)", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(128, 128, {
+		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -134,6 +135,12 @@ describe("Tile rendering raw path (drawTileRaw)", () => {
 			"#0000ff",
 			"#ffff00",
 		]);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	describe("buildFlipTransform helper", () => {

@@ -52,6 +52,9 @@ describe("video/GL core audit reproductions", () => {
 	});
 
 	afterAll(async () => {
+		// release the app this describe owns — browsers cap live WebGL
+		// contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 		try {
 			const app = new Application(64, 64, {
 				parent: "screen",

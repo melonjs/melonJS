@@ -121,20 +121,25 @@ describe("Mesh textureRepeat vs shared TextureAtlas (issue #1503)", () => {
 		const meshRepeat = new Mesh(0, 0, quadSettings(image, "repeat"));
 		const meshClamp = new Mesh(0, 0, quadSettings(image, "no-repeat"));
 
-		// capture the TEXTURE_WRAP_S values actually sent to the GPU
+		// capture the TEXTURE_WRAP_S values actually sent to the GPU. Since
+		// #1585 wrap lives on SAMPLER objects rather than the texture, so watch
+		// samplerParameteri — one shared texture now serves both variants, and
+		// asserting on texParameteri would only ever see whichever wrap
+		// happened to upload first.
 		const wrapS = [];
-		const origTexParameteri = gl.texParameteri.bind(gl);
-		gl.texParameteri = (target, pname, value) => {
+		const origSamplerParameteri = gl.samplerParameteri.bind(gl);
+		gl.samplerParameteri = (sampler, pname, value) => {
 			if (pname === gl.TEXTURE_WRAP_S) {
 				wrapS.push(value);
 			}
-			return origTexParameteri(target, pname, value);
+			return origSamplerParameteri(sampler, pname, value);
 		};
 		try {
+			renderer.samplerCache.releaseAll(true);
 			renderer.drawMesh(meshRepeat);
 			renderer.drawMesh(meshClamp);
 		} finally {
-			gl.texParameteri = origTexParameteri;
+			gl.samplerParameteri = origSamplerParameteri;
 		}
 
 		// each wrap mode got its own (source, repeat) texture unit …
@@ -148,6 +153,9 @@ describe("Mesh textureRepeat vs shared TextureAtlas (issue #1503)", () => {
 		// was ever uploaded)
 		expect(wrapS).toContain(gl.REPEAT);
 		expect(wrapS).toContain(gl.CLAMP_TO_EDGE);
+		// the two variants share ONE texture now — the upload is paid once and
+		// the variant rides the sampler, which is the point of the split
+		expect(renderer.textureStore.size).toBe(1);
 	});
 
 	it("pixel readback: repeat tiles and no-repeat clamps on the same source image", (ctx) => {

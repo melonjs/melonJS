@@ -6,20 +6,29 @@ import WebGLRenderer from "../../src/video/webgl/webgl_renderer.js";
  *
  * ## Why this exists
  *
- * Vitest browser mode runs every spec file in one page, and constructing an
- * `Application` and awaiting `init()` builds a fresh canvas and GL context
- * each time. With a spec
- * file per feature that adds up to dozens of live contexts in a single
- * session — and browsers cap how many they will keep, force-losing the oldest
- * once past the limit. Past that point, creating another context stalls.
+ * Constructing an `Application` and awaiting `init()` builds a fresh canvas
+ * and GL context each time, and on a CI container with no GPU that runs
+ * through a software rasterizer — slow enough that `vitest.config.ts` raises
+ * `hookTimeout` to 90s for it. Creating FEWER contexts is therefore worth
+ * real time, which is what this helper is for.
  *
- * The failure that produces is badly misleading: some *unrelated* spec's
- * `beforeAll` times out, the suite blames whichever file happened to be late
- * in the run, and adding or reordering files moves the casualty around. It
- * looks like flakiness in the victim, but it is a resource limit set by
- * everything before it.
+ * ## What this is NOT for
  *
- * So: create one context, keep it for the session, and let specs borrow it.
+ * This used to claim that vitest runs every spec file in one page, so contexts
+ * accumulated across files until the browser's cap force-lost the oldest and a
+ * later `beforeAll` stalled. That is measurably false: vitest isolates each
+ * spec FILE. A probe confirmed it — a global set in one file is `undefined` in
+ * the next, and a context opened in one is already lost by the next. Contexts
+ * accumulate only WITHIN a file, across its describe blocks.
+ *
+ * The belief was load-bearing for a while: an intermittent CI failure (an
+ * unrelated spec's `beforeAll` timing out in `getWebGLRenderer`) was blamed on
+ * cross-file starvation. It is not that. The cause is still unknown, and the
+ * `hookTimeout` note above — that acquisition is genuinely slow under load —
+ * is the better lead. Do not rebuild the starvation theory from this file.
+ *
+ * So: create one context per file, keep it for that file, and let its specs
+ * borrow it.
  *
  * ## Using it
  *

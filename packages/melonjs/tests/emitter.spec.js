@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -11,9 +11,10 @@ import {
 describe("ParticleEmitter", () => {
 	let emitter;
 
+	let app;
 	beforeEach(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -24,6 +25,12 @@ describe("ParticleEmitter", () => {
 			height: 16,
 			totalParticles: 10,
 		});
+	});
+
+	afterEach(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("should be created at the specified position", () => {

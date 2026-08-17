@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, video } from "../src/index.js";
 import Tile from "../src/level/tiled/TMXTile.js";
 import TMXTileset from "../src/level/tiled/TMXTileset.js";
@@ -14,9 +14,10 @@ function fakeImage(name, w = 64, h = 64) {
 }
 
 describe("TMXTileset", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(128, 128, {
+		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -35,6 +36,12 @@ describe("TMXTileset", () => {
 		fakeImage("animated", 128, 64);
 		fakeImage("offset", 64, 64);
 		fakeImage("single", 32, 32);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	// ==============================================================

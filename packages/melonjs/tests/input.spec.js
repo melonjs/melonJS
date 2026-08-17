@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, input, Renderable, video } from "../src/index.js";
 
 describe("input", () => {
@@ -11,6 +11,12 @@ describe("input", () => {
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	describe("Pointer Event", () => {

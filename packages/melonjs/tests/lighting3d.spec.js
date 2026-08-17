@@ -84,6 +84,12 @@ describe("Light3d ↔ Stage registration", () => {
 		state.change(state.DEFAULT, true);
 	});
 
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
+	});
+
 	afterAll(async () => {
 		const app = new Application(800, 600, {
 			parent: "screen",

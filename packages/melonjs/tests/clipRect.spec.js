@@ -575,9 +575,10 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 	let renderer;
 	let isCanvas;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -585,6 +586,12 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 		await app.init();
 		renderer = app.renderer;
 		isCanvas = renderer instanceof CanvasRenderer;
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterAll(() => {

@@ -33,6 +33,12 @@ describe("CanvasRenderer clipRect vs transforms", () => {
 		expect(renderer).toBeInstanceOf(CanvasRenderer);
 	});
 
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
+	});
+
 	afterAll(async () => {
 		try {
 			const app = new Application(64, 64, {

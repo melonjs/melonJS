@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Application, Color, Gradient } from "../src/index.js";
 
 describe("Gradient", () => {
@@ -10,6 +10,12 @@ describe("Gradient", () => {
 			scale: "auto",
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the app this describe owns — browsers cap live WebGL
+		// contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	describe("createLinearGradient", () => {

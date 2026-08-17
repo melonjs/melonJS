@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -16,13 +16,20 @@ import {
  * and unload stays safe. The game keeps running, just unshaded.
  */
 describe("shader assets under the Canvas renderer", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("preloads into an inert, disabled stub and stays safe end-to-end", async () => {

@@ -1,4 +1,5 @@
 import { GPU_TEXTURE_CACHE_RESET, off, on } from "../../../system/event.ts";
+import { TextureStore } from "../../gpu/texturestore.js";
 import mipblitWGSL from "../shaders/mipblit.wgsl";
 import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
 
@@ -18,15 +19,14 @@ import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
  * re-parameterization).
  * @ignore
  */
-export default class WebGPUTextureStore {
+export default class WebGPUTextureStore extends TextureStore {
 	/**
 	 * @param {import("../webgpu_renderer.js").default} renderer - the owning renderer
 	 */
 	constructor(renderer) {
+		super();
 		this.renderer = renderer;
 		this.device = renderer.device;
-		/** @type {Map<number, {texture: GPUTexture, view: GPUTextureView, source: object, width: number, height: number, frameId: number, bindGroupBySampler: Map<string, GPUBindGroup>}>} */
-		this.records = new Map();
 		/** @type {Map<string, GPUSampler>} */
 		this.samplers = new Map();
 
@@ -34,7 +34,11 @@ export default class WebGPUTextureStore {
 		// (unit numbers get reassigned; resident GPU textures would map to
 		// the wrong sources). Mirrors MaterialBatcher._onTextureCacheReset.
 		this.onCacheReset = () => {
-			this.releaseAll();
+			// `true`: the device is alive here, so the textures are real and
+			// must actually be retired. The base defaults to NOT destroying,
+			// which is the right choice for a LOST context — there the GPU
+			// objects died with it and asking to free them is meaningless.
+			this.releaseAll(true);
 		};
 		on(GPU_TEXTURE_CACHE_RESET, this.onCacheReset);
 	}
@@ -95,9 +99,14 @@ export default class WebGPUTextureStore {
 			typeof options.repeat === "string"
 				? options.repeat
 				: (texture.repeat ?? "no-repeat");
-		const unit = this.renderer.cache.getUnit(texture, wrap);
-		let record = this.records.get(unit);
 		const source = texture.getTexture();
+		// Keyed by SOURCE, not by texture unit (#1585). Unit-keying worked here
+		// only because this backend builds its TextureCache with no capacity,
+		// so units are never recycled — the same coupling that made the WebGL
+		// path destroy a texture whenever its unit was reassigned. Keying by
+		// source removes the dependence entirely, and with it the need to
+		// listen for a unit-assignment reset.
+		let record = this.records.get(source);
 
 		// A unit number is not a stable identity: the TextureCache recycles
 		// units when sources are unloaded (stage switches free the loading
@@ -138,6 +147,12 @@ export default class WebGPUTextureStore {
 					});
 					uploadCompressedTexture(this.device, gpuTexture, source, metrics);
 					record = {
+						// `handle` and `generation` are the base class's fields —
+						// it walks them for lifetime, and a record missing the
+						// generation silently never gets released. `texture` is
+						// kept because this backend's own paths read it.
+						handle: gpuTexture,
+						generation: this.generation,
 						texture: gpuTexture,
 						// 2D consumers stay lod-clamped to level 0 (sprites
 						// sharing the asset render byte-identically) …
@@ -159,7 +174,7 @@ export default class WebGPUTextureStore {
 						compressed: true,
 						bindGroupBySampler: new Map(),
 					};
-					this.records.set(unit, record);
+					this.records.set(source, record);
 				}
 				record.frameId = this.renderer.frameId;
 				this.lastRecord = record;
@@ -220,6 +235,8 @@ export default class WebGPUTextureStore {
 						GPUTextureUsage.RENDER_ATTACHMENT,
 				});
 				record = {
+					handle: gpuTexture,
+					generation: this.generation,
 					texture: gpuTexture,
 					view: gpuTexture.createView(),
 					source,
@@ -229,7 +246,7 @@ export default class WebGPUTextureStore {
 					mipLevelCount,
 					bindGroupBySampler: new Map(),
 				};
-				this.records.set(unit, record);
+				this.records.set(source, record);
 			} else {
 				// same-size unit reuse, not yet drawn this frame (recycled
 				// unit, or a video frame): keep the resident texture + bind
@@ -414,10 +431,8 @@ export default class WebGPUTextureStore {
 		};
 		const wrap = wrapFor(texture);
 		const alphaWrap = wrapFor(alphaTexture);
-		const record = this.records.get(this.renderer.cache.getUnit(texture, wrap));
-		const alphaRecord = this.records.get(
-			this.renderer.cache.getUnit(alphaTexture, alphaWrap),
-		);
+		const record = this.records.get(texture.getTexture());
+		const alphaRecord = this.records.get(alphaTexture.getTexture());
 		if (record === undefined || alphaRecord === undefined) {
 			// a source that failed to become resident — the caller keeps its
 			// previous binding rather than recording a draw against nothing
@@ -535,24 +550,30 @@ export default class WebGPUTextureStore {
 	 * @param {object} texture - a TextureAtlas
 	 */
 	destroyTexture(texture) {
-		const units = this.renderer.cache.peekAllUnits?.(texture) ?? [];
-		for (const unit of units) {
-			const record = this.records.get(unit);
-			if (record) {
-				this.retire(record.texture);
-				this.records.delete(unit);
-			}
+		// one record per source now, whatever wrap modes it was sampled at —
+		// the per-unit sweep this used to do exists only in the unit-keyed world
+		const source =
+			typeof texture?.getTexture === "function"
+				? texture.getTexture()
+				: texture;
+		const record = this.records.get(source);
+		if (record !== undefined) {
+			this.retire(record.texture);
+			this.records.delete(source);
 		}
 	}
 
 	/**
 	 * drop every unit association and dispose of the resident textures
 	 */
-	releaseAll() {
-		for (const record of this.records.values()) {
-			this.retire(record.texture);
-		}
-		this.records.clear();
+	/**
+	 * Release the GPU texture behind a record. The base calls this; the device
+	 * defers the actual destroy until the frame that referenced it has retired.
+	 * @param {GPUTexture} handle - the texture to release
+	 * @ignore
+	 */
+	onDestroy(handle) {
+		this.retire(handle);
 	}
 
 	/**

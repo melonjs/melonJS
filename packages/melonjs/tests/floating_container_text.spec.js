@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -71,6 +71,12 @@ describe("floating Container children (WebGL)", () => {
 		if (renderer instanceof WebGLRenderer) {
 			gl = renderer.gl;
 		}
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterEach(() => {

@@ -313,43 +313,9 @@ export function setAutoFocus(enable: boolean): void {
  * specify a function to execute when the Device is fully loaded and ready
  * @param fn - the function to be executed
  * @example
- * // small game skeleton
- * let game = {
- *    // called by the me.device.onReady function
- *    onload = function () {
- *       // init video
- *       if (!me.video.init('screen', 640, 480, true)) {
- *          alert("Sorry but your browser does not support html 5 canvas.");
- *          return;
- *       }
- *
- *       // initialize the "audio"
- *       me.audio.init("mp3,ogg");
- *
- *       // set callback for resources loaded event
- *       me.loader.onload = this.loaded.bind(this);
- *
- *       // set all resources to be loaded
- *       me.loader.preload(game.assets);
- *
- *       // load everything & display a loading screen
- *       me.state.change(me.state.LOADING);
- *    };
- *
- *    // callback when everything is loaded
- *    loaded = function () {
- *       // define stuff
- *       // ....
- *
- *       // change to the menu screen
- *       me.state.change(me.state.PLAY);
- *    }
- * }; // game
- *
- * // "bootstrap"
- * me.device.onReady(function () {
- *    game.onload();
- * });
+ * // the modern equivalent is simply to await the Application
+ * const app = new Application(640, 480, { parent: "screen" });
+ * await app.init();
  * @deprecated since 18.3.0 — no longer needed when using {@link Application} as entry point.
  * @category Application
  */

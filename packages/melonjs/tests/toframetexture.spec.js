@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	Bounds,
@@ -406,9 +406,12 @@ describe("WebGLRenderer.toFrameTexture", () => {
 		expect(gl.isTexture(frame.glTexture)).toBe(true);
 	});
 
-	// adversarial: invalidateUnit must ONLY touch the normal slot for GL units in
-	// the normal range (top half), never for a low colour/albedo unit
-	it("invalidateUnit only drops the normal pairing for units in the normal range", (ctx) => {
+	// adversarial: invalidateUnit must drop the normal map bound to THAT unit and
+	// no other. Since #1585 there is no positional `+ maxBatchTextures` pairing —
+	// a normal map holds a slot in the shared pool like any other texture, so the
+	// unit index is the key, and over-clearing would silently re-upload every
+	// frame while under-clearing samples a clobbered texture as a normal.
+	it("invalidateUnit drops the normal map on that unit only", (ctx) => {
 		if (!isWebGL) {
 			ctx.skip();
 			return;
@@ -418,17 +421,25 @@ describe("WebGLRenderer.toFrameTexture", () => {
 			ctx.skip();
 			return;
 		}
-		// a LOW unit (0) is a colour/albedo unit — its clobber must NOT drop the
-		// normal at index 0 (which lives at GL unit maxBatchTextures + 0)
+		const other = { keep: true };
 		lit.boundTextures[0] = { fake: true };
-		lit.boundNormalMaps[0] = { keep: true };
+		lit.boundNormalMaps[0] = { fake: "normal" };
+		lit.boundNormalVersions[0] = 4;
+		lit.boundNormalMaps[3] = other;
+		lit.normalUnits.set(other, 3);
+
 		lit.invalidateUnit(0);
 		expect(lit.boundTextures[0]).toBeUndefined(); // colour cleared
-		expect(lit.boundNormalMaps[0]).toEqual({ keep: true }); // normal untouched
+		expect(lit.boundNormalMaps[0]).toBe(null); // normal on THIS unit dropped
+		expect(lit.boundNormalVersions[0]).toBe(-1);
+		// a normal parked on a different unit is untouched
+		expect(lit.boundNormalMaps[3]).toBe(other);
+		expect(lit.normalUnits.get(other)).toBe(3);
 
-		// the GL unit that DOES pair to normal index 0 must drop it
-		lit.invalidateUnit(lit.maxBatchTextures + 0);
-		expect(lit.boundNormalMaps[0]).toBe(null);
+		// and the source→unit map must not keep a dangling entry for the dropped
+		// slot, or resolveNormalUnit would trust a binding that no longer exists
+		lit.invalidateUnit(3);
+		expect(lit.normalUnits.has(other)).toBe(false);
 	});
 
 	// the latent gap this surfaced: a full texture-cache reset (unit-pool wrap)
@@ -467,13 +478,14 @@ describe("WebGLRenderer.toFrameTexture", () => {
 			ctx.skip();
 			return;
 		}
-		const glUnit = lit.maxBatchTextures + 1; // a real lit normal-map GL unit
-		lit.boundNormalMaps[1] = { fake: "normal" };
+		// any unit can hold a normal map since #1585 — pick one inside the pool
+		const glUnit = 1;
+		lit.boundNormalMaps[glUnit] = { fake: "normal" };
 		quad.boundTextures[glUnit] = { fake: "color" };
 
 		// exclude the quad batcher → its binding is kept, the lit one is dropped
 		renderer.invalidateTextureUnit(glUnit, quad);
-		expect(lit.boundNormalMaps[1]).toBe(null); // lit invalidated
+		expect(lit.boundNormalMaps[glUnit]).toBe(null); // lit invalidated
 		expect(quad.boundTextures[glUnit]).toEqual({ fake: "color" }); // quad kept
 	});
 
@@ -653,6 +665,12 @@ describe("CanvasRenderer.toFrameTexture", () => {
 		await app.init();
 		renderer = app.renderer;
 		expect(renderer).toBeInstanceOf(CanvasRenderer);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("returns a Texture2d backed by a canvas copy of the frame", () => {

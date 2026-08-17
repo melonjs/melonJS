@@ -19,7 +19,7 @@
  * These tests pin both contracts so neither side regresses.
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -38,14 +38,21 @@ describe("Physics : onCollision legacy contract (19.4 backward-compat)", () => {
 	let aCalls;
 	let bCalls;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	beforeEach(() => {
@@ -255,14 +262,21 @@ describe("Physics : onCollisionActive new contract (19.5+, receiver-symmetric)",
 	let aCalls;
 	let bCalls;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	beforeEach(() => {

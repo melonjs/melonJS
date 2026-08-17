@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -12,9 +12,10 @@ import Renderer from "../src/video/renderer.js";
 describe("Sprite trimming and Entity anchor sync", () => {
 	let mockImage;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -22,6 +23,12 @@ describe("Sprite trimming and Entity anchor sync", () => {
 		await app.init();
 		// create a mock image for sprite creation
 		mockImage = Renderer.createCanvas(512, 512);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	/**

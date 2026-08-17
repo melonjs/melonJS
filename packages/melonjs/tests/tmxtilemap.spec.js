@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -672,9 +672,10 @@ class PresetBlendEntity extends Renderable {
 }
 
 describe("TMXTileMap", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(128, 128, {
+		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
@@ -686,6 +687,12 @@ describe("TMXTileMap", () => {
 		registerTiledObjectClass("TestEntity", TestEntity);
 		registerTiledObjectClass("EntityWithRenderable", EntityWithRenderable);
 		registerTiledObjectClass("PresetBlendEntity", PresetBlendEntity);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	// ---------------------------------------------------------------
