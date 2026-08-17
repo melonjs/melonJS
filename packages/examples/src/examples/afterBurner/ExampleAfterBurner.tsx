@@ -78,13 +78,19 @@ const createGame = async () => {
 			// pitches, so this example opts out of the application default
 			// (which ships `true`).
 			castGroundShadow: false,
-			// 4x MSAA. The jet, enemies and terrain props are low-poly models
-			// with long straight edges, which alias badly as they recede — and
-			// this scene composites through post effects, so it relies on
-			// capture targets being multisampled too (#1556); without that the
-			// scene would rasterize into a single-sampled capture and the
-			// smoothing would be thrown away before it reached the canvas.
-			antiAlias: true,
+			// OFF, deliberately. The low-poly models do alias as they recede,
+			// and `antiAlias: true` would smooth them (4x MSAA, and #1556 keeps
+			// it alive through this scene's post-effect chain) — but the flag
+			// drives two other things as well: the default texture filter goes
+			// linear, and the canvas gets `image-rendering: auto`, so under
+			// `scale: "auto"` the whole 1024x576 frame is bilinear-filtered on
+			// the way to the screen. That trades this example's crisp, blocky
+			// look for smoother model edges, which is the wrong trade here.
+			//
+			// `textureFilter` already separates the texture half. The
+			// presentation half is not separable today, so there is no way to
+			// get MSAA'd silhouettes AND a hard-edged upscale — hence off.
+			antiAlias: false,
 		});
 		await app.init();
 		if (!app.renderer.supportsDepthBuffer) {
