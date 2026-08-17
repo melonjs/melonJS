@@ -33,7 +33,10 @@ import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
+import { WebGLTextureStore } from "./texture/store.js";
+import { resolveMaxTextures } from "./utils/maxtextures.js";
 import { getMaxShaderPrecision } from "./utils/precision.js";
+import { GLSamplerCache } from "./utils/samplercache.js";
 
 /**
  * additional import for TypeScript
@@ -142,11 +145,40 @@ export default class WebGLRenderer extends Renderer {
 		this.vertexBuffer = this.gl.createBuffer();
 
 		/**
+		 * Sampler objects, deduplicated by state. GL bakes wrap/filter into the
+		 * texture object; a bound sampler overrides that, so one texture can
+		 * serve several variants at once — which is what lets residency be
+		 * keyed by source alone. Renderer-owned so every batcher shares it.
+		 * @type {GLSamplerCache}
+		 * @ignore
+		 */
+		this.samplerCache = new GLSamplerCache(this.gl);
+
+		/**
+		 * Texture residency, keyed by SOURCE. The GL handle used to be
+		 * reachable only through a batcher's per-unit array, so dropping a unit
+		 * assignment destroyed the texture and the next draw rebuilt it from
+		 * scratch — a full re-upload and mip regeneration per quad once past
+		 * the batching limit. Owning it here, per renderer, means a texture
+		 * that merely moves units costs a bind.
+		 *
+		 * Renderer-owned rather than batcher-owned on purpose: `init()` re-runs
+		 * on context restore, so a batcher-owned store would be REPLACED there,
+		 * orphaning every handle it tracked and leaking them on the next loss.
+		 * @type {TextureStore}
+		 * @ignore
+		 */
+		this.textureStore = new WebGLTextureStore(this.gl);
+
+		/**
 		 * Maximum number of texture unit supported under the current context
 		 * @type {number}
 		 * @readonly
 		 */
-		this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+		this.maxTextures = resolveMaxTextures(
+			this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),
+			this.settings.maxTextures,
+		);
 		/**
 		 * Next free indexed `UNIFORM_BUFFER` binding point, handed out by
 		 * {@link WebGLRenderer#reserveUniformBindingPoint}. Binding points are
@@ -332,6 +364,12 @@ export default class WebGLRenderer extends Renderer {
 				// stale per-source unit assignments — force re-upload on next draw
 				this.cache.units.clear();
 				this.cache.usedUnits.clear();
+				// the samplers and textures died with the context; drop our side
+				// so the next resolve mints fresh ones against the restored one.
+				// CLEARED, never replaced: rebuilding these would orphan every
+				// handle they tracked and leak it all on the next loss.
+				this.samplerCache.releaseAll();
+				this.textureStore.releaseAll();
 
 				// the restored context is back at TEXTURE0 — invalidate the
 				// shared active-unit tracking so the next bind re-issues it
@@ -1114,7 +1152,9 @@ export default class WebGLRenderer extends Renderer {
 		// which some drivers won't sample in the same frame — an RGB texture
 		// copied this way samples reliably everywhere.
 		const batcher = this.setBatcher("quad");
-		const unit = batcher.maxBatchTextures - 1;
+		// the renderer's top unit, not the batcher's — a scratch bind is GL
+		// state, so it must not move when a batcher resolves a smaller cap
+		const unit = this.maxTextures - 1;
 
 		// a multisampled post-effect capture cannot be read directly
 		// (copyTex*Image2D from an MSAA framebuffer is INVALID_OPERATION) —

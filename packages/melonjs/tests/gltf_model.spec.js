@@ -106,15 +106,22 @@ const childOf = (model) => {
 };
 
 describe("GLTFModel", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
 		TEX = Renderer.createCanvas(8, 8);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterAll(async () => {

@@ -1009,6 +1009,12 @@ describe("Mesh × Camera3d world-space path", () => {
 		state.change(state.DEFAULT, true);
 	});
 
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
+	});
+
 	afterAll(async () => {
 		// reset to default Camera2d so later spec files don't inherit
 		// our Camera3d viewport.

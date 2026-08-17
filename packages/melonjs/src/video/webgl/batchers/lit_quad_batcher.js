@@ -9,6 +9,7 @@ import {
 } from "../lighting/std140.ts";
 import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
+import { WebGLTextureStore } from "../texture/store.js";
 import QuadBatcher from "./quad_batcher.js";
 
 /**
@@ -20,12 +21,12 @@ import QuadBatcher from "./quad_batcher.js";
  * Lit-aware variant of `QuadBatcher` for the SpriteIlluminator workflow.
  *
  * Adds a 5th vertex attribute (`aNormalTextureId`) so each quad knows
- * which paired normal-map sampler to read, and owns the per-frame
+ * which slot its normal map occupies, and owns the per-frame
  * `Light2dBlock` uniform buffer that the lit fragment shader iterates.
  *
- * Texture-slot capacity is halved relative to `QuadBatcher` because each
- * sprite may need a paired (color, normal) sampler — color goes to unit
- * `n`, normal to unit `maxBatchTextures + n`. The `WebGLRenderer` only
+ * Colors and normal maps share ONE slot pool the same size as `QuadBatcher`'s
+ * (#1585) — a normal map is allocated a unit like any other texture, and
+ * `aNormalTextureId` records which one. The `WebGLRenderer` only
  * dispatches sprites here when the scene actually needs lighting (active
  * `Light2d` AND the sprite has a `normalMap`); unlit sprites stay on
  * `QuadBatcher` and pay nothing.
@@ -36,14 +37,17 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @ignore
 	 */
 	init(renderer) {
-		// halve the texture cap: each color slot is paired with a normal
-		// slot at offset `+ maxBatchTextures` so the historical 8-unit budget
-		// still affords at least 4 lit sprites per batch.
-		const halved = Math.min(
-			Math.max(1, Math.floor(renderer.maxTextures / 2)),
-			16,
-		);
-		this.maxBatchTextures = halved;
+		// One shared pool, same size as the unlit batcher's (#1585). This used
+		// to be HALVED, because the fragment shader declared a second
+		// `uNormalSampler0..n-1` set and 2n samplers had to fit the device — and
+		// the upper half was then reserved permanently, so a lit scene could
+		// never allocate more than half the units the device reported. The
+		// shader now addresses ONE sampler set with two per-quad ids, so a
+		// normal map is just another texture competing for the same slots. The
+		// split became dynamic: sprites sharing a normal map cost one slot
+		// between them, rather than every scene paying half its budget upfront.
+		const pool = renderer.maxTextures;
+		this.maxBatchTextures = pool;
 
 		// Skip QuadBatcher.init (its attribute layout / shader differ) and
 		// invoke MaterialBatcher.init directly with the lit configuration.
@@ -79,14 +83,13 @@ export default class LitQuadBatcher extends QuadBatcher {
 			],
 			shader: {
 				vertex: quadMultiLitVertex,
-				fragment: buildLitMultiTextureFragment(halved),
+				fragment: buildLitMultiTextureFragment(pool),
 			},
 		});
 
 		// Reuse the parent's setup helpers — they're agnostic to the
 		// shader/attribute layout, just iterate `this.maxBatchTextures`.
 		this.bindColorSamplers();
-		this.bindNormalSamplers();
 		this.createIndexBuffer();
 
 		this.useMultiTexture = true;
@@ -98,7 +101,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * @type {Array<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null>}
 		 * @ignore
 		 */
-		this.boundNormalMaps = new Array(halved).fill(null);
+		this.boundNormalMaps = new Array(pool).fill(null);
 
 		/**
 		 * Per-slot content `version` of the normal map currently bound there. An
@@ -108,18 +111,37 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * @type {number[]}
 		 * @ignore
 		 */
-		this.boundNormalVersions = new Array(halved).fill(-1);
+		this.boundNormalVersions = new Array(pool).fill(-1);
 
 		/**
-		 * Map from a normal-map source image to its uploaded GL texture and the
-		 * source `version` it was uploaded at. A source that bumps its `version`
-		 * (e.g. an animated {@link NoiseTexture2d}) is re-uploaded on next bind —
-		 * explicit, version-based invalidation, scoped to normal maps which
-		 * live outside the color `TextureCache`.
-		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, {tex: WebGLTexture, version: number}>}
+		 * Residency for normal-map sources — the same shared policy the colour
+		 * path uses, just a separate instance: normal maps live outside the
+		 * colour `TextureCache`, so their handles are this batcher's to own.
+		 *
+		 * This used to be a hand-rolled `Map<source, {tex, version}>`. It was
+		 * the correct DESIGN before the colour path had one (which is why the
+		 * normal path never suffered the re-upload storm), but keeping a third
+		 * copy of the logic is how the two drifted in the first place.
+		 *
+		 * Re-created rather than cleared here on purpose: `init()` re-runs on
+		 * context restore, where the old handles died with the context — and
+		 * `destroy()` releases the previous instance first, so nothing leaks.
+		 * @type {TextureStore}
 		 * @ignore
 		 */
-		this.normalMapTextures = new Map();
+		this.normalStore?.releaseAll();
+		this.normalStore = new WebGLTextureStore(this.gl);
+
+		/**
+		 * Which slot in the shared pool each normal-map source currently holds.
+		 * Normal maps are not in the color `TextureCache` (they are raw sources
+		 * with their own GL textures), so their unit assignment is tracked here
+		 * while the unit itself comes from the same allocator the colors use.
+		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, number>}
+		 * @ignore
+		 */
+		this.normalUnits = new Map();
+		this._cacheEpoch = 0;
 
 		this._lightCount = 0;
 		this._maxLights = MAX_LIGHTS;
@@ -180,39 +202,18 @@ export default class LitQuadBatcher extends QuadBatcher {
 	}
 
 	/**
-	 * Activating the lit batcher claims the paired normal-map unit range
-	 * `[maxBatchTextures, 2*maxBatchTextures)` for good: the pairing is baked
-	 * into the lit shader's sampler bindings, while the renderer-wide unit
-	 * allocator would otherwise happily assign those same units to color
-	 * textures (an unlit sprite's, a mesh's, a pattern's) — each batcher
-	 * tracks its bindings per-instance, so whichever bound second silently
-	 * clobbered the other's texture. Reserving through the cache keeps the
-	 * allocator away; done lazily on first bind so unlit games keep their
-	 * full unit pool, and left reserved thereafter (a lit game stays lit).
+	 * No unit reservation any more (#1585). This used to claim
+	 * `[maxBatchTextures, 2*maxBatchTextures)` permanently on first bind,
+	 * because the lit shader's normal samplers were bound to those fixed
+	 * units — which took half the pool away from every allocator for the rest
+	 * of the session, and collided with the top units `ShaderEffect` and
+	 * `toFrameTexture` claim. Normal maps now go through the shared allocator
+	 * like everything else, so there is nothing to hold back.
 	 * @ignore
 	 */
 	bind() {
 		super.bind();
 		this._bindLightBlock();
-		if (this._normalRangeReserved !== true) {
-			this._normalRangeReserved = true;
-			const cache = this.renderer.cache;
-			for (let i = 0; i < this.maxBatchTextures; i++) {
-				const unit = this.maxBatchTextures + i;
-				if (cache.reservedUnits.has(unit)) {
-					// a ShaderEffect extra sampler claimed a unit in our fixed
-					// range before lighting first activated — its texture and
-					// the paired normal map for color slot `i` now collide
-					console.warn(
-						`LitQuadBatcher: texture unit ${unit} is already reserved (ShaderEffect.setTexture?) and overlaps the paired normal-map range — expect sampling conflicts`,
-					);
-				}
-				cache.reserveUnit(unit);
-			}
-			// evict any color texture the allocator parked in the normal range
-			// before lighting first activated (units are sticky once assigned)
-			cache.resetUnitAssignments();
-		}
 	}
 
 	/**
@@ -246,31 +247,15 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
 	 */
 	evictNormalMap(image) {
-		const cached = this.normalMapTextures.get(image);
-		if (typeof cached !== "undefined") {
-			this.gl.deleteTexture(cached.tex);
-			this.normalMapTextures.delete(image);
+		if (this.normalStore.peek(image) !== undefined) {
+			this.normalStore.destroyTexture(image);
+			this.releaseNormalUnit(image);
 			for (let i = 0; i < this.boundNormalMaps.length; i++) {
 				if (this.boundNormalMaps[i] === image) {
 					this.boundNormalMaps[i] = null;
 					this.boundNormalVersions[i] = -1;
 				}
 			}
-		}
-	}
-
-	/**
-	 * Bind the paired normal sampler uniforms (`uNormalSampler0..N-1`)
-	 * to texture units `maxBatchTextures..2*maxBatchTextures-1`. Called
-	 * from `init` and `reset`.
-	 * @ignore
-	 */
-	bindNormalSamplers() {
-		for (let i = 0; i < this.maxBatchTextures; i++) {
-			this.defaultShader.setUniform(
-				"uNormalSampler" + i,
-				this.maxBatchTextures + i,
-			);
 		}
 	}
 
@@ -286,10 +271,15 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// already disposed by the time we get here. We just need to
 		// drop the JS references and re-bind the per-frame uniforms.
 		super.reset();
-		this.bindNormalSamplers();
+		// `MaterialBatcher.reset` releases the renderer's colour store; normal
+		// maps live outside it, in this batcher's own map, so their GL textures
+		// are ours to delete. Before #1585 they were freed incidentally, by
+		// `reset` walking `boundTextures` — which stopped being the sole
+		// reference to a handle, so freeing has to be explicit now.
+		this.normalStore.releaseAll(true);
 		this.boundNormalMaps.fill(null);
 		this.boundNormalVersions.fill(-1);
-		this.normalMapTextures.clear();
+		this.normalUnits.clear();
 		this._lightCount = 0;
 		// zero the header (count + ambient) and push it, so a reset mid-scene
 		// leaves the shader reading "no lights" rather than the previous
@@ -299,24 +289,28 @@ export default class LitQuadBatcher extends QuadBatcher {
 	}
 
 	/**
-	 * Also drop the normal-map pairing when its paired unit is invalidated.
-	 * Normal maps live at units `maxBatchTextures..2*maxBatchTextures-1`
-	 * (indexed by the paired albedo unit), which overlap the top units that
-	 * {@link WebGLRenderer#toFrameTexture} (its scratch unit) and
-	 * {@link ShaderEffect#_prepareTextures} (its reserved extra samplers,
-	 * counting DOWN from the top) bind directly. When one of those GL units is
-	 * clobbered we must forget the pairing, or the next lit draw would assume
-	 * the normal is still resident and skip re-binding it, sampling the
-	 * clobbering texture as a normal map.
+	 * Also drop the normal-map binding when its unit is invalidated. A normal
+	 * map occupies a unit in the shared pool, so anything that binds a GL unit
+	 * directly — {@link WebGLRenderer#toFrameTexture}'s scratch unit,
+	 * {@link ShaderEffect#_prepareTextures}'s extra samplers — can clobber one.
+	 * Forget it here, or the next lit draw assumes the normal is still resident,
+	 * skips re-binding, and samples the clobbering texture as a normal map.
 	 * @param {number} unit - the GL texture unit to invalidate
 	 * @ignore
 	 */
 	invalidateUnit(unit) {
 		super.invalidateUnit(unit);
-		const n = unit - this.maxBatchTextures;
-		if (n >= 0 && n < this.maxBatchTextures) {
-			this.boundNormalMaps[n] = null;
-			this.boundNormalVersions[n] = -1;
+		const stale = this.boundNormalMaps?.[unit];
+		if (stale != null) {
+			// unit-driven, not source-driven: whatever clobbered this GL unit
+			// bound directly, so drop our belief about it. The allocator claim
+			// is deliberately NOT released — the clobberer (a toFrameTexture
+			// scratch bind, a ShaderEffect sampler) is squatting there outside
+			// the allocator's accounting, and handing the unit to a colour
+			// texture now would put two textures on it.
+			this.normalUnits?.delete(stale);
+			this.boundNormalMaps[unit] = null;
+			this.boundNormalVersions[unit] = -1;
 		}
 	}
 
@@ -333,6 +327,12 @@ export default class LitQuadBatcher extends QuadBatcher {
 		super._onTextureCacheReset();
 		this.boundNormalMaps?.fill(null);
 		this.boundNormalVersions?.fill(-1);
+		this.normalUnits?.clear();
+		// `addQuad` resolves a color unit and a normal unit in sequence; the
+		// second allocation can exhaust the pool and wipe the first. Bumping a
+		// counter here is how it notices and re-resolves, rather than stamping
+		// a stale unit into the vertex stream.
+		this._cacheEpoch = (this._cacheEpoch ?? 0) + 1;
 	}
 
 	/**
@@ -371,59 +371,116 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * but for normal-map textures which live outside the color
 	 * `TextureCache` (cached per-image in `normalMapTextures`).
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
-	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
+	 * @param {number} unit - GL texture unit the normal map is resolved to
 	 */
 	bindNormalMap(image, unit) {
-		const cached = this.normalMapTextures.get(image);
-		// `image.version` (the dynamic-texture revision; absent ⇒ 0/static) lets
-		// an animated source force a re-upload by bumping it — only when it
-		// actually changed, not every frame.
-		const version = image.version ?? 0;
-		if (typeof cached !== "undefined" && cached.version === version) {
-			// `bindTexture2D` updates `boundTextures[unit]` and
-			// `currentTextureUnit` so subsequent color-texture binds don't
-			// land on the wrong unit thinking it's still free. `flush=false`
-			// so we don't disturb the in-progress lit batch.
-			this.bindTexture2D(cached.tex, unit, false);
-			return;
-		}
-		this.uploadNormalMap(image, unit, version);
+		// `image.version` (the dynamic-texture revision; absent => 0/static)
+		// lets an animated source force a re-upload by bumping it — only when
+		// it actually changed, not every frame. The store compares it and
+		// re-uploads into the SAME handle, so an animated source does not churn
+		// a new texture object per frame.
+		const record = this.normalStore.getResidentRecord(image, {
+			version: image.version ?? 0,
+			upload: (handle) => {
+				return this.createTexture2D(
+					unit,
+					image,
+					this.renderer._glTextureFilter(),
+					"no-repeat",
+					image.width,
+					image.height,
+					// normal maps store linear-encoded surface normals;
+					// multiplying through alpha would corrupt the encoding
+					false,
+					undefined,
+					handle,
+					false,
+				);
+			},
+		});
+		// `bindTexture2D` updates `boundTextures[unit]` and `currentTextureUnit`
+		// so subsequent colour binds don't land on the wrong unit thinking it is
+		// still free. `flush=false` so the in-progress lit batch is undisturbed.
+		this.bindTexture2D(record.handle, unit, false);
+		// the variant is fixed for normal maps, but the sampler still has to be
+		// bound or the unit keeps whatever the previous texture left there
+		this.renderer.samplerCache.bind(
+			unit,
+			this.renderer.samplerCache.get(this.renderer._glTextureFilter()),
+		);
 	}
 
 	/**
-	 * Upload a normal-map image to GL and cache the resulting `WebGLTexture`
-	 * for future `bindNormalMap` calls. Not meant to be called directly —
-	 * `bindNormalMap` invokes this on the first use of a given image.
+	 * Drop a normal map's slot claim and hand the unit back to the allocator.
 	 *
-	 * `premultipliedAlpha = false` — normal maps store linear-encoded
-	 * surface normals; multiplying through alpha would corrupt the
-	 * encoding for any non-opaque texel.
+	 * A normal map claims its unit through `allocateTextureUnit()`, which has no
+	 * key to release against — so without this the unit stayed marked used for
+	 * the rest of the session and the pool drained monotonically as normal maps
+	 * came and went, until something forced a full reset.
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
-	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
-	 * @param {number} [version=0] - the source revision being uploaded
+	 * @ignore
 	 */
-	uploadNormalMap(image, unit, version = 0) {
-		// Reuse the existing GL texture handle when re-uploading a changed source
-		// (an animated NoiseTexture2d): `createTexture2D` re-`texImage2D`s into the
-		// passed handle instead of churning a new texture object every frame. The
-		// source dimensions are stable, so the same handle stays valid.
-		const prev = this.normalMapTextures.get(image);
-		this.createTexture2D(
-			unit,
-			image,
-			this.renderer._glTextureFilter(),
-			"no-repeat",
-			image.width,
-			image.height,
-			false,
-			undefined,
-			prev?.tex,
-			false,
-		);
-		this.normalMapTextures.set(image, {
-			tex: this.boundTextures[unit],
-			version,
-		});
+	releaseNormalUnit(image) {
+		const unit = this.normalUnits?.get(image);
+		if (unit === undefined) {
+			return;
+		}
+		this.normalUnits.delete(image);
+		this.boundNormalMaps[unit] = null;
+		this.boundNormalVersions[unit] = -1;
+		// the slot was claimed keylessly, so occupancy is the only record of it
+		this.renderer.cache.usedUnits.delete(unit);
+	}
+
+	/**
+	 * Resolve a normal-map source to its slot in the shared pool, uploading and
+	 * binding it if it is not already resident.
+	 *
+	 * A version-only bump (an animated source re-baking into the same canvas
+	 * reference) re-uploads into the same GL handle and needs no flush —
+	 * `version` only changes between frames, and the batch is flushed at every
+	 * frame/camera boundary, so no in-flight vertex references stale content.
+	 * A DIFFERENT source landing on a live slot does need the pending vertices
+	 * drawn first.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} normalMap - the source
+	 * @returns {number} the slot to write into `aNormalTextureId`
+	 * @ignore
+	 */
+	resolveNormalUnit(normalMap) {
+		const version = normalMap.version ?? 0;
+		const held = this.normalUnits.get(normalMap);
+
+		if (held !== undefined && this.boundNormalMaps[held] === normalMap) {
+			if (this.boundNormalVersions[held] !== version) {
+				this.bindNormalMap(normalMap, held);
+				this.boundNormalVersions[held] = version;
+			}
+			return held;
+		}
+
+		// may flush and wipe every assignment when the pool is exhausted —
+		// `addQuad` re-checks `_cacheEpoch` for exactly that reason
+		// A freshly claimed slot is always vacant: `freeSlot()` only returns
+		// units absent from occupancy, and a normal map's claim is held until it
+		// is explicitly released or the pool is wiped (which clears these arrays
+		// too). So there is never a live normal map to displace here.
+		const unit = this.renderer.cache.allocateTextureUnit();
+		this.bindNormalMap(normalMap, unit);
+		// Colors and normal maps share one pool since #1585, so a unit this
+		// batcher binds a normal map onto may be one ANOTHER batcher still
+		// believes holds its color texture — it would then skip re-binding and
+		// sample the normal map. Under the old fixed reservation that was
+		// impossible; now it has to be announced. `except` is `this`, whose own
+		// bookkeeping `bindNormalMap` just updated correctly.
+		this.renderer.invalidateTextureUnit(unit, this);
+		// `boundTextures[unit]` deliberately keeps pointing at the normal map's
+		// GL texture: `uploadNormalMap` reads it back to cache the handle, and
+		// `MaterialBatcher.reset()` walks that array to DELETE every texture it
+		// owns. Clearing it here leaked one GL texture per normal map per reset.
+		this.normalUnits.set(normalMap, unit);
+		this.boundNormalMaps[unit] = normalMap;
+		this.boundNormalVersions[unit] = version;
+		return unit;
 	}
 
 	/**
@@ -465,6 +522,10 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		if (this.useMultiTexture) {
 			unit = this.uploadTexture(texture, w, h, reupload, false);
+			// Desync guard, not the normal path: the cache and this batcher are
+			// both sized from `renderer.maxTextures`, so the allocator cannot
+			// return an out-of-range unit unless something reassigns one of them
+			// at runtime. Cheap enough to keep as a net.
 			if (unit >= this.maxBatchTextures) {
 				this.flush();
 				this.renderer.cache.resetUnitAssignments();
@@ -497,27 +558,24 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		let normalTextureId = -1;
 		if (normalMap !== null && this.useMultiTexture) {
-			const normalUnit = this.maxBatchTextures + unit;
-			const prev = this.boundNormalMaps[unit];
-			const version = normalMap.version ?? 0;
-			// Re-bind when the source changed OR an animated source bumped its
-			// content `version`. A reference-only check would freeze animated
-			// textures, whose canvas reference is stable across re-bakes.
-			if (prev !== normalMap || this.boundNormalVersions[unit] !== version) {
-				// Only a DIFFERENT source needs the pending vertices flushed before
-				// rebinding over its slot. A version-only bump (same reference, an
-				// animated re-bake) re-uploads into the same GL handle WITHOUT a
-				// flush — `version` only changes between frames (via `update()`) and
-				// the batch is flushed at each frame/camera boundary, so no in-flight
-				// vertices ever reference stale content.
-				if (prev !== null && prev !== normalMap) {
-					this.flush();
-				}
-				this.bindNormalMap(normalMap, normalUnit);
-				this.boundNormalMaps[unit] = normalMap;
-				this.boundNormalVersions[unit] = version;
+			const epoch = this._cacheEpoch;
+			normalTextureId = this.resolveNormalUnit(normalMap);
+			if (this._cacheEpoch !== epoch) {
+				// Claiming the normal's slot exhausted the pool and wiped every
+				// assignment, so the color unit resolved above is stale. Only the
+				// color: the normal claimed AFTER the wipe, so its slot is live.
+				// Re-resolving cannot wipe again either — the normal is the sole
+				// occupant and the pool never resolves below two slots.
+				unit = this.uploadTexture(texture, w, h, reupload, false);
 			}
-			normalTextureId = unit;
+			if (normalTextureId === unit) {
+				// Reachable when reservations leave only ONE assignable slot: the
+				// normal claims it, the color's re-resolve wipes and claims the
+				// same one. Sampling the sprite's own albedo as its normal map
+				// wrecks the lighting silently, so take the unlit path instead —
+				// flat shading is wrong, but visibly and recoverably so.
+				normalTextureId = -1;
+			}
 		}
 
 		// Stamp per-sprite depth onto z BEFORE the transform — see

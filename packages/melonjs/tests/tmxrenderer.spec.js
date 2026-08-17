@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, video } from "../src/index.js";
 import TMXHexagonalRenderer from "../src/level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "../src/level/tiled/renderer/TMXIsometricRenderer.js";
@@ -19,15 +19,22 @@ function fakeImage(name, w = 64, h = 64) {
 }
 
 describe("TMX Renderers", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(128, 128, {
+		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
 		fakeImage("drawtest", 256, 256);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	// mock map object for constructors

@@ -23,6 +23,12 @@ describe("CanvasRenderer.setMask — invert mode", () => {
 	});
 
 	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
+	});
+
+	afterAll(() => {
 		// reset to a clean state
 		const ctx = renderer.getContext();
 		ctx.setTransform(1, 0, 0, 1, 0, 0);

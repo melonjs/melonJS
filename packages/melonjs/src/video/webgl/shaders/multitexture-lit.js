@@ -58,11 +58,15 @@ export function buildLitMultiTextureFragment(maxTextures) {
 	// utils/precision.js, so it is deliberately not written here
 	const lines = ["#version 300 es"];
 
+	// ONE sampler set, addressed by two independent per-quad ids (#1585).
+	// A separate `uNormalSampler0..n-1` set doubles the declaration count, and
+	// needing 2n samplers is what forced this batcher to halve its unit budget
+	// and permanently reserve the upper half for normal maps — so a lit scene
+	// could never use more than half the units the device reported, however
+	// many that was. A normal map is now just another texture in the shared
+	// pool, and `vNormalTextureId` says which slot it landed in.
 	for (let i = 0; i < count; i++) {
 		lines.push("uniform sampler2D uSampler" + i + ";");
-	}
-	for (let i = 0; i < count; i++) {
-		lines.push("uniform sampler2D uNormalSampler" + i + ";");
 	}
 
 	// Light data arrives in a std140 uniform block rather than uniform
@@ -108,7 +112,7 @@ export function buildLitMultiTextureFragment(maxTextures) {
 	lines.push(
 		...buildSamplerSelect(
 			"vNormalTextureId",
-			"uNormalSampler",
+			"uSampler",
 			count,
 			"normalSample",
 		),

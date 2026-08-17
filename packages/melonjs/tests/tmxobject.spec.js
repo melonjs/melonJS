@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, video } from "../src/index.js";
 import TMXObject from "../src/level/tiled/TMXObject.js";
 
@@ -16,14 +16,21 @@ function mockMap(orientation = "orthogonal") {
 }
 
 describe("TMXObject", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(128, 128, {
+		app = new Application(128, 128, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	describe("shape detection", () => {

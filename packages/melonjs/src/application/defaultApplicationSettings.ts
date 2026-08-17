@@ -10,6 +10,7 @@ export const defaultApplicationSettings = {
 	transparent: false,
 	antiAlias: false,
 	textureFilter: "auto",
+	maxTextures: "auto",
 	castGroundShadow: true,
 	consoleHeader: true,
 	blendMode: "normal",

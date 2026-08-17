@@ -26,7 +26,12 @@ export default class QuadBatcher extends MaterialBatcher {
 		 * @type {number}
 		 * @ignore
 		 */
-		this.maxBatchTextures = Math.min(renderer.maxTextures, 16);
+		// the full pool the renderer resolved (#1585). The 16 that used to cap
+		// this was the WebGL 2 spec FLOOR for MAX_TEXTURE_IMAGE_UNITS — safe
+		// everywhere, and half of what current desktop and mobile hardware
+		// actually reports. `renderer.maxTextures` is already clamped there,
+		// including by the `maxTextures` application setting.
+		this.maxBatchTextures = renderer.maxTextures;
 
 		super.init(renderer, {
 			attributes: [
@@ -284,6 +289,7 @@ export default class QuadBatcher extends MaterialBatcher {
 			unit = this.uploadTexture(texture, w, h, reupload, false);
 			// shader only supports maxBatchTextures samplers — flush and
 			// reset if the cache assigned a unit beyond the shader's range
+			// Desync guard, not the normal path — see LitQuadBatcher.addQuad.
 			if (unit >= this.maxBatchTextures) {
 				this.flush();
 				this.renderer.cache.resetUnitAssignments();

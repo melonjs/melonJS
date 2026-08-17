@@ -52,26 +52,31 @@ describe("batcher GL state", () => {
 		}
 	};
 
-	it("activating the lit batcher reserves the paired normal-map unit range", (ctx) => {
+	// #1585 inverted this: the lit batcher used to permanently reserve
+	// `[n, 2n)` for normal maps on first bind, which cost every allocator half
+	// the device's units for the rest of the session and collided with the top
+	// units ShaderEffect and toFrameTexture claim. Normal maps now take slots
+	// from the shared pool, so activating lighting must reserve NOTHING.
+	it("activating the lit batcher reserves no units", (ctx) => {
 		requireWebGL(ctx);
 		const lit = renderer.batchers.get("litQuad");
 		renderer.setBatcher("litQuad");
 		renderer.setBatcher("quad");
 
-		const half = lit.maxBatchTextures;
-		for (let i = half; i < half * 2; i++) {
-			expect(renderer.cache.reservedUnits.has(i)).toBe(true);
-		}
+		expect(renderer.cache.reservedUnits.size).toBe(0);
+		// and the lit batcher gets the FULL pool, not half of it
+		expect(lit.maxBatchTextures).toBe(renderer.maxTextures);
 
-		// the allocator must never hand a reserved (normal-map) unit to a
-		// color texture — drain it past exhaustion to cover the reset path too
+		// every unit stays allocatable — drain past exhaustion to cover the
+		// reset path too, and assert the whole range is reachable
 		renderer.cache.resetUnitAssignments();
 		const handed = new Set();
 		for (let i = 0; i < renderer.maxTextures * 2; i++) {
 			handed.add(renderer.cache.allocateTextureUnit());
 		}
+		expect(handed.size).toBe(renderer.maxTextures);
 		for (const unit of handed) {
-			expect(unit < half || unit >= half * 2).toBe(true);
+			expect(unit).toBeLessThan(renderer.maxTextures);
 		}
 		renderer.cache.resetUnitAssignments();
 	});
@@ -79,10 +84,13 @@ describe("batcher GL state", () => {
 	it("ShaderEffect extra samplers skip units reserved by others", (ctx) => {
 		requireWebGL(ctx);
 		const quad = renderer.batchers.get("quad");
-		const lit = renderer.batchers.get("litQuad");
-		// make sure the lit batcher's reservation is in place (idempotent)
 		renderer.setBatcher("litQuad");
 		renderer.setBatcher("quad");
+
+		// a unit reserved by someone else must still be skipped — the lit
+		// batcher no longer reserves any (#1585), so stand one in explicitly
+		const held = renderer.maxTextures - 1;
+		renderer.cache.reserveUnit(held);
 
 		const fx = new ShaderEffect(
 			renderer,
@@ -95,10 +103,112 @@ describe("batcher GL state", () => {
 		fx._prepareTextures(quad);
 
 		const claimed = fx._extraTextures.get("uNoise").unit;
-		// claiming counts down from the batcher's top unit — it must walk
-		// PAST the lit batcher's reserved normal range, not land inside it
-		expect(claimed).toBeLessThan(lit.maxBatchTextures);
+		// claiming counts down from the top unit — it must step OVER the
+		// reserved one rather than aliasing onto it
+		expect(claimed).not.toBe(held);
+		expect(renderer.cache.reservedUnits.has(claimed)).toBe(true);
 		fx.destroy();
+		renderer.cache.releaseUnit(held);
+	});
+
+	// The collision #1585 removed: ShaderEffect claims extra samplers counting
+	// DOWN from the top unit, and the lit batcher used to own a FIXED upper
+	// range for normal maps. An effect that claimed before lighting first
+	// activated landed inside that range, and the two aliased silently — wrong
+	// lighting, no error. Normal maps now allocate from the shared pool, which
+	// respects reservations, so the overlap is structurally impossible.
+	it("a normal map never lands on a unit reserved by a ShaderEffect", (ctx) => {
+		requireWebGL(ctx);
+		const quad = renderer.batchers.get("quad");
+		const lit = renderer.batchers.get("litQuad");
+
+		// claim first, exactly the ordering that used to break
+		const fx = new ShaderEffect(
+			renderer,
+			"vec4 apply(vec4 color, vec2 uv) { return color; }",
+		);
+		vi.spyOn(fx._shader, "setUniform").mockImplementation(() => {});
+		fx.setTexture("uNoise", Renderer.createCanvas(8, 8));
+		fx._prepareTextures(quad);
+		const claimed = fx._extraTextures.get("uNoise").unit;
+		expect(renderer.cache.reservedUnits.has(claimed)).toBe(true);
+
+		// then drive enough distinct normal maps to walk the whole pool
+		const landed = new Set();
+		for (let i = 0; i < renderer.maxTextures + 2; i++) {
+			landed.add(lit.resolveNormalUnit(Renderer.createCanvas(4, 4)));
+		}
+		// every unit except the reserved one — proves the normal maps walk the
+		// WHOLE pool while stepping over the reservation, not just two of them
+		expect(landed.size).toBe(renderer.maxTextures - 1);
+		expect(landed.has(claimed)).toBe(false);
+
+		fx.destroy();
+		renderer.cache.resetUnitAssignments();
+	});
+
+	// Regression: `resolveNormalUnit` briefly cleared `boundTextures[unit]` to
+	// stop the colour tracker claiming that slot. But that array is exactly what
+	// `MaterialBatcher.reset()` walks to DELETE the GL textures it owns, and a
+	// normal map's texture lives there — so every reset leaked one GL texture
+	// per normal map, unreachable and undeletable.
+	it("normal-map GL textures are deleted on reset, not leaked", (ctx) => {
+		requireWebGL(ctx);
+		const gl = renderer.gl;
+		const lit = renderer.batchers.get("litQuad");
+		const source = Renderer.createCanvas(8, 8);
+
+		const unit = lit.resolveNormalUnit(source);
+		const tex = lit.normalStore.peek(source)?.handle;
+		expect(tex).toBeDefined();
+		expect(gl.isTexture(tex)).toBe(true);
+		// the handle must be reachable from the array reset() walks
+		expect(lit.boundTextures[unit]).toBe(tex);
+
+		lit.reset();
+		expect(gl.isTexture(tex)).toBe(false);
+		renderer.cache.resetUnitAssignments();
+	});
+
+	// Regression: a normal map claims its unit through `allocateTextureUnit()`,
+	// which is keyless — so nothing released it. Distinct normal maps drained
+	// the pool monotonically until something forced a full reset.
+	it("evicting a normal map returns its unit to the allocator", (ctx) => {
+		requireWebGL(ctx);
+		const lit = renderer.batchers.get("litQuad");
+		renderer.cache.resetUnitAssignments();
+		const source = Renderer.createCanvas(8, 8);
+
+		const unit = lit.resolveNormalUnit(source);
+		expect(renderer.cache.usedUnits.has(unit)).toBe(true);
+
+		lit.evictNormalMap(source);
+		expect(renderer.cache.usedUnits.has(unit)).toBe(false);
+		expect(lit.normalUnits.has(source)).toBe(false);
+		// and the freed unit is genuinely handed out again
+		expect(renderer.cache.allocateTextureUnit()).toBe(unit);
+		renderer.cache.resetUnitAssignments();
+	});
+
+	// Colors and normal maps share one pool since #1585. Binding a normal map
+	// onto a unit another batcher believes holds its color texture would make
+	// that batcher skip the re-bind and sample the normal map instead — the old
+	// fixed normal-map reservation made this impossible, so it is a new class.
+	it("binding a normal map invalidates that unit on other batchers", (ctx) => {
+		requireWebGL(ctx);
+		const lit = renderer.batchers.get("litQuad");
+		renderer.cache.resetUnitAssignments();
+
+		const spy = vi.spyOn(renderer, "invalidateTextureUnit");
+		const unit = lit.resolveNormalUnit(Renderer.createCanvas(8, 8));
+
+		// announced renderer-wide, excluding the batcher that just bound it —
+		// its own bookkeeping is already correct and clearing it would force a
+		// redundant re-bind on the very next quad
+		expect(spy).toHaveBeenCalledWith(unit, lit);
+
+		spy.mockRestore();
+		renderer.cache.resetUnitAssignments();
 	});
 
 	it("tracks the active texture unit renderer-wide, not per batcher", (ctx) => {
@@ -214,11 +324,11 @@ describe("batcher GL state", () => {
 		const source = nm.getTexture();
 
 		lit.bindNormalMap(source, lit.maxBatchTextures);
-		expect(lit.normalMapTextures.has(source)).toBe(true);
-		const tex = lit.normalMapTextures.get(source).tex;
+		expect(lit.normalStore.peek(source)).toBeDefined();
+		const tex = lit.normalStore.peek(source).handle;
 
 		nm.destroy();
-		expect(lit.normalMapTextures.has(source)).toBe(false);
+		expect(lit.normalStore.peek(source)).toBeUndefined();
 		expect(renderer.gl.isTexture(tex)).toBe(false);
 	});
 

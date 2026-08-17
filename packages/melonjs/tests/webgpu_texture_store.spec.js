@@ -1,6 +1,7 @@
 import "./helpers/webgpu-globals.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { emit, GPU_TEXTURE_CACHE_RESET } from "../src/system/event.ts";
+import { TextureStore } from "../src/video/gpu/texturestore.js";
 import WebGPUTextureStore from "../src/video/webgpu/texture/store.js";
 
 /**
@@ -138,19 +139,27 @@ describe("WebGPUTextureStore", () => {
 		expect(createdTextures[0].size).toEqual([320, 240]);
 	});
 
-	it("a recycled unit serving a same-size NEW source re-uploads in place (next frame)", () => {
+	it("two same-size sources on one unit stay independent", () => {
+		// Inverted by #1585. Records are keyed by SOURCE now, not by texture
+		// unit, so a recycled unit cannot make two sources share a GPU texture.
+		// That sharing was the clobber-then-re-upload mechanism in disguise:
+		// the second source overwrote the first's pixels in place, and drawing
+		// the first again had to upload it all over. On this backend it was
+		// unreachable anyway — the cache is built with no capacity here, so
+		// units are never recycled.
 		const first = makeAtlas(makeSource(32, 32), { unit: 3 });
 		store.getBinding(first);
 
-		// stage switch: unit 3 recycled for a different same-size source
 		renderer.frameId = 2;
 		const second = makeAtlas(makeSource(32, 32), { unit: 3 });
 		store.getBinding(second);
 
-		// resident texture reused, but the new pixels were uploaded
-		expect(createdTextures).toHaveLength(1);
+		expect(createdTextures).toHaveLength(2);
 		expect(uploads).toHaveLength(2);
 		expect(uploads[1].source).toBe(second.getTexture());
+		// and the first is untouched — re-resolving it uploads nothing
+		store.getBinding(first);
+		expect(uploads).toHaveLength(2);
 	});
 
 	it("a recycled unit with a DIFFERENT-size source gets a fresh texture", () => {
@@ -246,6 +255,28 @@ describe("WebGPUTextureStore", () => {
 		// gone: next lookup re-creates
 		store.getBinding(atlas);
 		expect(createdTextures).toHaveLength(2);
+	});
+
+	it("is a TextureStore, so both backends share the lifetime policy", () => {
+		// #1585: the WebGPU store predates the shared base and used to carry its
+		// own records map, generation and release code. Subclassing removes that
+		// duplication — the reuse-vs-upload DECISION stays backend-specific for
+		// a documented reason (queue writes execute before recorded draws, so a
+		// same-frame content change needs a fresh texture here and does not on
+		// WebGL), but everything around it is now one implementation.
+		expect(store).toBeInstanceOf(TextureStore);
+	});
+
+	it("records carry the fields the base walks", () => {
+		// a record missing `handle` or `generation` is silently never released —
+		// the base skips it, and nothing errors. Cheap to assert, invisible
+		// otherwise.
+		const atlas = makeAtlas(makeSource(8, 8));
+		store.getBinding(atlas);
+		const record = store.peek(atlas.getTexture());
+		expect(record).toBeDefined();
+		expect(record.handle).toBe(record.texture);
+		expect(record.generation).toBe(store.generation);
 	});
 
 	it("GPU_TEXTURE_CACHE_RESET releases every record", () => {

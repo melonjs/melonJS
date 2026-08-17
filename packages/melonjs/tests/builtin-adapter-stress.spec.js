@@ -9,7 +9,7 @@
  * or collision-pair record, the size mismatch surfaces here.
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Application,
 	Body,
@@ -37,14 +37,21 @@ describe("Physics : BuiltinAdapter (lifecycle leak stress)", () => {
 	/** @type {import("../src/index.js").BuiltinAdapter} */
 	let adapter;
 
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(800, 600, {
+		app = new Application(800, 600, {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	beforeEach(() => {

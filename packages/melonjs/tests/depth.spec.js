@@ -94,6 +94,12 @@ describe("Renderer.setDepth", () => {
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 	});
 
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
+	});
+
 	afterAll(async () => {
 		// hand the world back to the default renderer for any later test files
 		const app = new Application(800, 600, {
@@ -149,6 +155,12 @@ describe("Renderable.preDraw forwards depth", () => {
 		await app.init();
 		renderer = app.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterAll(async () => {
@@ -224,6 +236,12 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		renderer = app.renderer;
 		renderer.setProjection(PERSPECTIVE); // depth-carry path
 		isWebGL = renderer instanceof WebGLRenderer;
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	afterAll(async () => {

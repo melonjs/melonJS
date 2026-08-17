@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, Text, video } from "../src/index.js";
 
 /**
@@ -8,13 +8,20 @@ import { Application, boot, Text, video } from "../src/index.js";
  * and the browser silently falls back to its default serif. These pin that down.
  */
 describe("Text — font family handling", () => {
+	let app;
 	beforeAll(async () => {
 		boot();
-		const app = new Application(64, 64, {
+		app = new Application(64, 64, {
 			parent: "screen",
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
 	});
 
 	it("quotes a specific family name", () => {
