@@ -1,5 +1,5 @@
 import { Box3d, box3dPool } from "../../geometries/box3d.ts";
-import { Ellipse } from "../../geometries/ellipse.ts";
+import { Ellipse, ellipsePool } from "../../geometries/ellipse.ts";
 import { Line, linePool } from "../../geometries/line.ts";
 import { Point, pointPool } from "../../geometries/point.ts";
 import { Polygon, polygonPool } from "../../geometries/polygon.ts";
@@ -1321,12 +1321,29 @@ export default class Body {
 	 * @ignore
 	 */
 	destroy() {
-		// push back instance into object pool
-		boundsPool.release(this.bounds);
-		vector2dPool.release(this.vel);
-		vector2dPool.release(this.force);
-		vector2dPool.release(this.friction);
-		vector2dPool.release(this.maxVel);
+		// push back instance into object pool.
+		//
+		// Guarded because `destroy` is reachable twice — a game calling it
+		// explicitly and then the container teardown calling it again, for
+		// instance. `this.shapes.length = 0` at the end already makes the shape
+		// loop below a no-op on the second pass, but these fields are set to
+		// `undefined` rather than emptied, so re-releasing them threw
+		// "Instance is already in pool" and aborted the teardown partway.
+		if (this.bounds !== undefined) {
+			boundsPool.release(this.bounds);
+		}
+		if (this.vel !== undefined) {
+			vector2dPool.release(this.vel);
+		}
+		if (this.force !== undefined) {
+			vector2dPool.release(this.force);
+		}
+		if (this.friction !== undefined) {
+			vector2dPool.release(this.friction);
+		}
+		if (this.maxVel !== undefined) {
+			vector2dPool.release(this.maxVel);
+		}
 		this.shapes.forEach((shape) => {
 			// Scrub the per-shape collision settings before the instance goes
 			// back to a pool (#1590). The pools' reset restores only geometry,
@@ -1345,6 +1362,16 @@ export default class Body {
 				linePool.release(shape);
 			} else if (shape instanceof Polygon) {
 				polygonPool.release(shape);
+			} else if (shape instanceof Ellipse) {
+				// Same trap the Box3d branch below documents: `addShape`
+				// accepts an Ellipse, but without a branch here it reaches the
+				// legacy `pool.push`, which THROWS for any class never
+				// `pool.register`ed. `boundsPool.release` has already run by
+				// then, so the throw aborts `destroy` partway and leaves the
+				// body holding a recycled Bounds — which dies later somewhere
+				// unrelated. Destroying a body with an ellipse collider threw
+				// on every version that had one.
+				ellipsePool.release(shape);
 			} else if (shape instanceof Box3d) {
 				// Box3d has its own pool. Without this branch it falls through
 				// to the legacy `pool.push`, which THROWS for any class that
