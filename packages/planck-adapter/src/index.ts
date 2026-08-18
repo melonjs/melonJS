@@ -364,19 +364,42 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// meters (renderable-space shape position minus centroid, divided
 		// by pixelsPerMeter).
 		for (const shape of def.shapes) {
+			// `isActive === false` keeps a shape out of the simulation without
+			// removing it from the body — no fixture, so Box2D never sees it
+			if ((shape as { isActive?: boolean }).isActive === false) {
+				continue;
+			}
 			const planckShape = this._shapeToPlanck(shape, centroid);
 			if (!planckShape) continue;
+			// Per-shape collision settings (melonJS #1590) override the
+			// body-level ones. This backend needs no special handling for them:
+			// it already builds one fixture per shape, and Box2D filters and
+			// flags sensors per FIXTURE — so the shape-level values simply feed
+			// the fields that were previously fed from the body.
+			const shapeType = (shape as { collisionType?: number }).collisionType;
+			const shapeMask = (shape as { collisionMask?: number }).collisionMask;
+			const shapeTrigger = (shape as { isTrigger?: boolean }).isTrigger;
 			const fixtureDef: planck.FixtureOpt = {
 				density: def.density ?? (def.type === "static" ? 0 : 1),
 				friction: def.friction ?? 0.2,
 				restitution: def.restitution ?? 0,
-				isSensor: def.isSensor === true,
+				// a trigger shape is a sensor fixture: it reports contacts and
+				// contributes nothing to the solver
+				isSensor: def.isSensor === true || shapeTrigger === true,
 				// Bit 0 reserved by Box2D for "no filter set"; melonJS
 				// collisionType/Mask map directly onto categoryBits/maskBits.
 				filterCategoryBits:
-					typeof def.collisionType === "number" ? def.collisionType : 0x0001,
+					typeof shapeType === "number"
+						? shapeType
+						: typeof def.collisionType === "number"
+							? def.collisionType
+							: 0x0001,
 				filterMaskBits:
-					typeof def.collisionMask === "number" ? def.collisionMask : 0xffff,
+					typeof shapeMask === "number"
+						? shapeMask
+						: typeof def.collisionMask === "number"
+							? def.collisionMask
+							: 0xffff,
 			};
 			body.createFixture(planckShape, fixtureDef);
 		}

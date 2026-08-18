@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 - _unreleased_
+
+### Changed
+- **Minimum melonJS bumped to 20.0.0** — tracks the engine's physics contract in 20.0.0
+- **Per-shape collision settings are not supported** ([melonjs#1590](https://github.com/melonjs/melonJS/issues/1590)) — a shape's own `collisionType` / `collisionMask` / `isTrigger` / `isActive` are ignored under this adapter. Matter's `collisionFilter` and `isSensor` are properties of a *body*, not of the parts it is built from, so there is nothing to map them onto. Body-level filtering is unaffected; use the builtin or planck adapter if you need per-shape control
+
+
 ## 1.1.0 - _2026-06-06_
 
 ### Changed

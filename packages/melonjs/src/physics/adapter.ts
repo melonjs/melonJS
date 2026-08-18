@@ -16,7 +16,18 @@ import type World from "./world.js";
  */
 export type BodyType = "static" | "dynamic" | "kinematic";
 
-/** Collision shape that a physics body may be composed of. */
+/**
+ * Collision shape that a physics body may be composed of.
+ *
+ * A shape may also carry its own optional collision settings, which refine the
+ * body's rather than replacing them — `collisionType`, `collisionMask`,
+ * `isTrigger` and `isActive`. See {@link Body#addShape} for the semantics.
+ *
+ * Adapter support: the builtin and planck adapters honour them (planck maps
+ * them onto per-fixture filters, which Box2D provides natively). The matter
+ * adapter does NOT — its `collisionFilter` and `isSensor` belong to a body, not
+ * to the parts it is built from, so per-shape values are ignored there.
+ */
 export type BodyShape = Rect | Ellipse | Polygon;
 
 /**

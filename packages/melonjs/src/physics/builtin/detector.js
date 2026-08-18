@@ -299,6 +299,28 @@ class Detector {
 				let indexB = bodyB.shapes.length, shapeB;
 				indexB--, (shapeB = bodyB.shapes[indexB]);
 			) {
+				// Per-shape gate (#1590), before any geometry work. A body's
+				// `collisionType`/`collisionMask` still decide whether the pair
+				// reaches this loop at all; these refine it per shape, so a
+				// shape can narrow what its body allows but never widen it.
+				//
+				// `isActive === false` removes a shape from the simulation
+				// entirely — no test, no contact, no events — without the cost
+				// of removing and re-adding it.
+				if (shapeA.isActive === false || shapeB.isActive === false) {
+					continue;
+				}
+				// `??` and not `||`: 0 is a legitimate collision type, so an
+				// unset field must fall through to the body while a deliberate
+				// zero must not.
+				const typeA = shapeA.collisionType ?? bodyA.collisionType;
+				const maskA = shapeA.collisionMask ?? bodyA.collisionMask;
+				const typeB = shapeB.collisionType ?? bodyB.collisionType;
+				const maskB = shapeB.collisionMask ?? bodyB.collisionMask;
+				if ((maskA & typeB) === 0 || (typeA & maskB) === 0) {
+					continue;
+				}
+
 				// Resolve the narrowphase for this shape pair. An unlisted
 				// combination used to index straight into `.call(...)` and
 				// throw a TypeError mid-step, taking the whole world update
@@ -436,8 +458,18 @@ class Detector {
 						// Sensor (`body.isSensor === true`) and static
 						// (`body.isStatic === true`) bodies skip push-out
 						// in both contracts, matching matter.
+						// A trigger shape collides and reports normally; only the
+						// position correction is skipped. Resolved through the
+						// indices the narrowphase already recorded on the
+						// response, so no extra plumbing is needed — guarded
+						// because they stay -1 until a test sets them.
+						const hitShapeA = objA.body.shapes[this.response.indexShapeA];
+						const hitShapeB = objB.body.shapes[this.response.indexShapeB];
 						const eitherSensor =
-							objA.body.isSensor === true || objB.body.isSensor === true;
+							objA.body.isSensor === true ||
+							objB.body.isSensor === true ||
+							hitShapeA?.isTrigger === true ||
+							hitShapeB?.isTrigger === true;
 						// "supersedes" rule: if a renderable defines the
 						// modern `onCollisionActive`, suppress its legacy
 						// `onCollision` dispatch entirely. They are the
@@ -478,6 +510,23 @@ class Detector {
 						) {
 							let extraPasses = 3;
 							while (extraPasses-- > 0 && this.collides(objA.body, objB.body)) {
+								// Defence in depth. The `!eitherSensor` gate on this
+								// loop already covers the common case, since it is
+								// computed from the first reported pair. But
+								// `collides` runs again each iteration and may report
+								// a DIFFERENT pair — one involving a trigger — after
+								// an earlier pass moved things. Cheap to re-check,
+								// and the alternative is a trigger being repositioned
+								// by a later pass having been correctly skipped by
+								// the first.
+								const passShapeA = objA.body.shapes[this.response.indexShapeA];
+								const passShapeB = objB.body.shapes[this.response.indexShapeB];
+								if (
+									passShapeA?.isTrigger === true ||
+									passShapeB?.isTrigger === true
+								) {
+									break;
+								}
 								const overlap = this.response.overlapV;
 								const overlapN = this.response.overlapN;
 								// Z half of the same two vectors. Both are 0 for

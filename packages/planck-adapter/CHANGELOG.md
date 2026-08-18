@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 - _unreleased_
+
+### Added
+- **Per-shape collision settings** ([melonjs#1590](https://github.com/melonjs/melonJS/issues/1590)) — a shape may now carry its own `collisionType` / `collisionMask` / `isTrigger` / `isActive`, overriding the body-level values. This backend needed no structural change: it already builds one fixture per shape, and Box2D filters and flags sensors per *fixture*, so the shape values simply feed the fields previously fed from the body. `isTrigger` maps to a sensor fixture; `isActive: false` skips fixture creation entirely, keeping the shape out of the simulation without removing it from the body. A shape that sets nothing behaves exactly as before
+
+### Changed
+- **Minimum melonJS bumped to 20.0.0** — per-shape collision settings are defined by the engine's `Body`/`Detector` contract added in 20.0.0
+
+
 ## 1.1.0 - _2026-06-06_
 
 ### Changed
