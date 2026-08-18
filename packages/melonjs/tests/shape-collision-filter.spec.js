@@ -386,6 +386,62 @@ describe("Physics : per-shape collision settings", () => {
 
 	// ── adversarial ─────────────────────────────────────────────────────
 
+	describe("the modern collision handlers", () => {
+		it("report which shape was hit, from the receiver's own point of view", () => {
+			// For a per-shape feature this is the other half of the API: without
+			// it a handler knows a contact happened but not which of its shapes
+			// caused it. `indexShapeA` is always the RECEIVER's shape, mirroring
+			// how `response.a` is always the receiver.
+			const a = add(100, [new Rect(0, 0, 16, 32), new Rect(16, 0, 16, 32)]);
+			const b = add(116, [new Rect(0, 0, 32, 32)], {
+				collisionType: T.ENEMY_OBJECT,
+			});
+			let seenByA = null;
+			let seenByB = null;
+			a.onCollisionActive = (response) => {
+				seenByA = {
+					self: response.a === a,
+					own: response.indexShapeA,
+					other: response.indexShapeB,
+				};
+			};
+			b.onCollisionActive = (response) => {
+				seenByB = {
+					self: response.a === b,
+					own: response.indexShapeA,
+					other: response.indexShapeB,
+				};
+			};
+			step();
+
+			expect(seenByA).not.toBeNull();
+			expect(seenByB).not.toBeNull();
+			// each side sees itself as `a`
+			expect(seenByA.self).toBe(true);
+			expect(seenByB.self).toBe(true);
+			// b has a single shape, so from A's view the OTHER index is 0
+			expect(seenByA.other).toBe(0);
+			expect(seenByB.own).toBe(0);
+			// and the indices are mirrored between the two views
+			expect(seenByA.own).toBe(seenByB.other);
+		});
+
+		it("expose isTriggerContact to the modern handlers too", () => {
+			const s1 = new Rect(0, 0, 16, 32);
+			const s2 = new Rect(16, 0, 16, 32);
+			s1.isTrigger = true;
+			s2.isTrigger = true;
+			const a = add(100, [s1, s2]);
+			let flagged = null;
+			a.onCollisionActive = (response) => {
+				flagged = response.isTriggerContact;
+			};
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			step();
+			expect(flagged).toBe(true);
+		});
+	});
+
 	describe("adversarial", () => {
 		it("a recycled pooled shape does not inherit the previous settings", () => {
 			// `body.destroy()` is what actually returns shapes to their pools —

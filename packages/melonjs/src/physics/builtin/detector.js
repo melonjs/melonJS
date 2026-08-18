@@ -132,6 +132,13 @@ class Detector {
 				overlapNZ: 0,
 				overlapZ: 0,
 				normalZ: 0,
+				// which shape of `a` / `b` produced this contact (#1590), and
+				// whether the contact exists only through trigger shapes.
+				// Swapped alongside `a`/`b` so a receiver always reads its OWN
+				// shape as `indexShapeA`.
+				indexShapeA: -1,
+				indexShapeB: -1,
+				isTriggerContact: false,
 			},
 			{
 				a: null,
@@ -144,6 +151,9 @@ class Detector {
 				overlapNZ: 0,
 				overlapZ: 0,
 				normalZ: 0,
+				indexShapeA: -1,
+				indexShapeB: -1,
+				isTriggerContact: false,
 			},
 		];
 	}
@@ -176,6 +186,9 @@ class Detector {
 			view.normal.x = oN.x;
 			view.normal.y = oN.y;
 			view.normalZ = oNZ;
+			// the receiver is original `b`, so ITS shape is `indexShapeA`
+			view.indexShapeA = satResponse.indexShapeB;
+			view.indexShapeB = satResponse.indexShapeA;
 		} else {
 			view.a = satResponse.a;
 			view.b = satResponse.b;
@@ -189,9 +202,12 @@ class Detector {
 			view.normal.x = -oN.x;
 			view.normal.y = -oN.y;
 			view.normalZ = -oNZ;
+			view.indexShapeA = satResponse.indexShapeA;
+			view.indexShapeB = satResponse.indexShapeB;
 		}
 		view.overlap = satResponse.overlap;
 		view.depth = satResponse.overlap;
+		view.isTriggerContact = satResponse.isTriggerContact === true;
 		return view;
 	}
 
