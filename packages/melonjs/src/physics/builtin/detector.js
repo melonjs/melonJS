@@ -463,8 +463,19 @@ class Detector {
 						}
 
 						// for multi-shape bodies (e.g. polylines), resolve remaining
-						// overlaps at segment junctions
-						if (objA.body.shapes.length > 1 || objB.body.shapes.length > 1) {
+						// overlaps at segment junctions.
+						//
+						// `!eitherSensor` matters as much here as it does above: this
+						// loop writes positions DIRECTLY (`ancestor.pos.set(...)`)
+						// rather than going through `respondToCollision`, and it used
+						// to gate only on `isStatic`. A sensor with a single shape was
+						// therefore held in place correctly, and the same sensor with
+						// a second shape was pushed out anyway — the flag silently
+						// stopped working the moment a body became compound.
+						if (
+							!eitherSensor &&
+							(objA.body.shapes.length > 1 || objB.body.shapes.length > 1)
+						) {
 							let extraPasses = 3;
 							while (extraPasses-- > 0 && this.collides(objA.body, objB.body)) {
 								const overlap = this.response.overlapV;
