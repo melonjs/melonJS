@@ -1890,7 +1890,16 @@ export default class WebGPURenderer extends Renderer {
 			this.currentBlendMode = normalized;
 			this.premultipliedAlpha = premultipliedAlpha;
 		}
-		return this.currentBlendMode;
+		// Report what the CALLER asked for when it was honoured, not the
+		// canonical name it collapsed to. `add` / `lighter` / `additive` are
+		// three spellings of one pipeline state, and returning `"additive"` for
+		// all three made the first two look UNSUPPORTED to anything comparing
+		// the result against its request — which is exactly how the engine's
+		// own capability probe works, so the Blend Modes example painted `add`
+		// red under WebGPU while WebGL showed it green. Same rendering, wrong
+		// report. `"normal"` still means "asked for something unsupported,
+		// fell back", which is what the contract is actually for.
+		return normalized === "normal" && mode !== "normal" ? "normal" : mode;
 	}
 
 	/**
