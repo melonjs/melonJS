@@ -241,6 +241,12 @@ export function raycastQuery(
 		let bestNormalY = 0;
 		for (let j = 0; j < shapeCount; j++) {
 			const shapeB = bodyB.getShape(j);
+			// `isActive === false` takes a shape out of collision entirely, and
+			// a ray IS a collision query — a body whose only shape is inactive
+			// must not be hit (#1590)
+			if ((shapeB as { isActive?: boolean }).isActive === false) {
+				continue;
+			}
 			_computeShapeAbsPos(objB, shapeB, _shapeAbs);
 			const hit =
 				shapeB.type === "Ellipse"

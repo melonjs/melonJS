@@ -132,6 +132,13 @@ class Detector {
 				overlapNZ: 0,
 				overlapZ: 0,
 				normalZ: 0,
+				// which shape of `a` / `b` produced this contact (#1590), and
+				// whether the contact exists only through trigger shapes.
+				// Swapped alongside `a`/`b` so a receiver always reads its OWN
+				// shape as `indexShapeA`.
+				indexShapeA: -1,
+				indexShapeB: -1,
+				isTriggerContact: false,
 			},
 			{
 				a: null,
@@ -144,6 +151,9 @@ class Detector {
 				overlapNZ: 0,
 				overlapZ: 0,
 				normalZ: 0,
+				indexShapeA: -1,
+				indexShapeB: -1,
+				isTriggerContact: false,
 			},
 		];
 	}
@@ -176,6 +186,9 @@ class Detector {
 			view.normal.x = oN.x;
 			view.normal.y = oN.y;
 			view.normalZ = oNZ;
+			// the receiver is original `b`, so ITS shape is `indexShapeA`
+			view.indexShapeA = satResponse.indexShapeB;
+			view.indexShapeB = satResponse.indexShapeA;
 		} else {
 			view.a = satResponse.a;
 			view.b = satResponse.b;
@@ -189,9 +202,12 @@ class Detector {
 			view.normal.x = -oN.x;
 			view.normal.y = -oN.y;
 			view.normalZ = -oNZ;
+			view.indexShapeA = satResponse.indexShapeA;
+			view.indexShapeB = satResponse.indexShapeB;
 		}
 		view.overlap = satResponse.overlap;
 		view.depth = satResponse.overlap;
+		view.isTriggerContact = satResponse.isTriggerContact === true;
 		return view;
 	}
 
@@ -289,6 +305,9 @@ class Detector {
 	 * @returns {boolean} true if colliding
 	 */
 	collides(bodyA, bodyB, response = this.response) {
+		// first trigger-only contact seen, used only when NO solid pair overlaps
+		let triggerIndexA = -1;
+		let triggerIndexB = -1;
 		// for each shape in body A
 		for (
 			let indexA = bodyA.shapes.length, shapeA;
@@ -299,6 +318,28 @@ class Detector {
 				let indexB = bodyB.shapes.length, shapeB;
 				indexB--, (shapeB = bodyB.shapes[indexB]);
 			) {
+				// Per-shape gate (#1590), before any geometry work. A body's
+				// `collisionType`/`collisionMask` still decide whether the pair
+				// reaches this loop at all; these refine it per shape, so a
+				// shape can narrow what its body allows but never widen it.
+				//
+				// `isActive === false` removes a shape from the simulation
+				// entirely — no test, no contact, no events — without the cost
+				// of removing and re-adding it.
+				if (shapeA.isActive === false || shapeB.isActive === false) {
+					continue;
+				}
+				// `??` and not `||`: 0 is a legitimate collision type, so an
+				// unset field must fall through to the body while a deliberate
+				// zero must not.
+				const typeA = shapeA.collisionType ?? bodyA.collisionType;
+				const maskA = shapeA.collisionMask ?? bodyA.collisionMask;
+				const typeB = shapeB.collisionType ?? bodyB.collisionType;
+				const maskB = shapeB.collisionMask ?? bodyB.collisionMask;
+				if ((maskA & typeB) === 0 || (typeA & maskB) === 0) {
+					continue;
+				}
+
 				// Resolve the narrowphase for this shape pair. An unlisted
 				// combination used to index straight into `.call(...)` and
 				// throw a TypeError mid-step, taking the whole world update
@@ -330,12 +371,49 @@ class Detector {
 					) === true
 				) {
 					// set the shape index
+					// A TRIGGER pair must not end the search. `collides` reports
+					// one contact per body pair, and push-out is decided from
+					// it — so returning here would let a trigger shape suppress
+					// a solid sibling's push-out, and which one won would come
+					// down to `shapes` array order. Remember the first trigger
+					// contact and keep scanning for a solid pair, which wins if
+					// one exists (#1590).
+					if (shapeA.isTrigger === true || shapeB.isTrigger === true) {
+						if (triggerIndexA < 0) {
+							triggerIndexA = indexA;
+							triggerIndexB = indexB;
+						}
+						continue;
+					}
 					response.indexShapeA = indexA;
 					response.indexShapeB = indexB;
 
 					return true;
 				}
 			}
+		}
+
+		if (triggerIndexA >= 0) {
+			// No solid pair overlaps, so the contact is real but non-solid.
+			// Re-run the remembered pair to repopulate the response: the loop
+			// above cleared it on every subsequent test, and the handlers still
+			// need a truthful overlap to read.
+			const shapeA = bodyA.shapes[triggerIndexA];
+			const shapeB = bodyB.shapes[triggerIndexB];
+			SAT_LOOKUP[shapeA.type + shapeB.type].call(
+				this,
+				bodyA.ancestor,
+				shapeA,
+				bodyB.ancestor,
+				shapeB,
+				response.clear(),
+			);
+			response.indexShapeA = triggerIndexA;
+			response.indexShapeB = triggerIndexB;
+			// consumed at the push-out sites — the contact reports normally and
+			// simply contributes no position correction
+			response.isTriggerContact = true;
+			return true;
 		}
 		return false;
 	}
@@ -436,8 +514,16 @@ class Detector {
 						// Sensor (`body.isSensor === true`) and static
 						// (`body.isStatic === true`) bodies skip push-out
 						// in both contracts, matching matter.
+						// A trigger shape collides and reports normally; only the
+						// position correction is skipped. `isTriggerContact` is
+						// set by `collides` and means "this contact exists ONLY
+						// through trigger shapes" — it is false whenever any
+						// solid pair overlaps, so a trigger can never suppress
+						// a solid sibling's push-out.
 						const eitherSensor =
-							objA.body.isSensor === true || objB.body.isSensor === true;
+							objA.body.isSensor === true ||
+							objB.body.isSensor === true ||
+							this.response.isTriggerContact === true;
 						// "supersedes" rule: if a renderable defines the
 						// modern `onCollisionActive`, suppress its legacy
 						// `onCollision` dispatch entirely. They are the
@@ -463,10 +549,38 @@ class Detector {
 						}
 
 						// for multi-shape bodies (e.g. polylines), resolve remaining
-						// overlaps at segment junctions
-						if (objA.body.shapes.length > 1 || objB.body.shapes.length > 1) {
+						// overlaps at segment junctions.
+						//
+						// `!eitherSensor` matters as much here as it does above: this
+						// loop writes positions DIRECTLY (`ancestor.pos.set(...)`)
+						// rather than going through `respondToCollision`, and it used
+						// to gate only on `isStatic`. A sensor with a single shape was
+						// therefore held in place correctly, and the same sensor with
+						// a second shape was pushed out anyway — the flag silently
+						// stopped working the moment a body became compound.
+						if (
+							!eitherSensor &&
+							(objA.body.shapes.length > 1 || objB.body.shapes.length > 1)
+						) {
 							let extraPasses = 3;
 							while (extraPasses-- > 0 && this.collides(objA.body, objB.body)) {
+								// Defence in depth. The `!eitherSensor` gate on this
+								// loop already covers the common case, since it is
+								// computed from the first reported pair. But
+								// `collides` runs again each iteration and may report
+								// a DIFFERENT pair — one involving a trigger — after
+								// an earlier pass moved things. Cheap to re-check,
+								// and the alternative is a trigger being repositioned
+								// by a later pass having been correctly skipped by
+								// the first.
+								const passShapeA = objA.body.shapes[this.response.indexShapeA];
+								const passShapeB = objB.body.shapes[this.response.indexShapeB];
+								if (
+									passShapeA?.isTrigger === true ||
+									passShapeB?.isTrigger === true
+								) {
+									break;
+								}
 								const overlap = this.response.overlapV;
 								const overlapN = this.response.overlapN;
 								// Z half of the same two vectors. Both are 0 for
