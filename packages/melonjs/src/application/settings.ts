@@ -15,7 +15,16 @@ import Renderer from "../video/renderer";
 import { WebGLBatcher } from "../video/webgl/batchers/batcher.js";
 import { ScaleMethod } from "./scaleMethods";
 
-type BlendMode = "normal" | "multiply" | "lighter" | "additive" | "screen";
+type BlendMode =
+	| "normal"
+	| "multiply"
+	| "lighter"
+	| "additive"
+	| "screen"
+	| "darken"
+	| "lighten"
+	| "exclusion"
+	| "none";
 
 /**
  * How the application's physics is configured.

@@ -50,6 +50,16 @@ function blendStateFor(mode, premultipliedAlpha) {
 				dstFactor: "one-minus-src-alpha",
 			};
 			break;
+		case "exclusion":
+			// exclusion(a, b) = a + b - 2ab, expressed as
+			// s*(1-d) + d*(1-s) — no shader needed. See the WebGL twin.
+			component = {
+				operation: "add",
+				srcFactor: "one-minus-dst",
+				dstFactor: "one-minus-src",
+			};
+			break;
+
 		case "screen":
 			component = {
 				operation: "add",
@@ -90,6 +100,7 @@ export function normalizeBlendMode(mode) {
 		case "screen":
 		case "darken":
 		case "lighten":
+		case "exclusion":
 		case "normal":
 			return mode;
 		case "additive":

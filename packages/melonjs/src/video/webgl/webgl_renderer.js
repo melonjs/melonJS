@@ -2113,6 +2113,18 @@ export default class WebGLRenderer extends Renderer {
 					gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
 					break;
 
+				// exclusion(a, b) = a + b - 2ab. Unlike the other CSS advanced
+				// modes this needs no per-pixel branch — it falls straight out
+				// of `src * sfactor + dst * dfactor`:
+				//   s*(1-d) + d*(1-s) = s + d - 2sd
+				// Same caveat as `screen` above: the identity is exact for an
+				// opaque source and approximate for a translucent one, because
+				// the factors act on the premultiplied colour.
+				case "exclusion":
+					gl.blendEquation(gl.FUNC_ADD);
+					gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ONE_MINUS_SRC_COLOR);
+					break;
+
 				case "lighter":
 				case "additive":
 				case "add":
