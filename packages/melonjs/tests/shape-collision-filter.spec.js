@@ -33,6 +33,7 @@ import {
 	video,
 	World,
 } from "../src/index.js";
+import { raycastQuery } from "../src/physics/builtin/raycast.js";
 
 const T = collision.types;
 
@@ -307,6 +308,67 @@ describe("Physics : per-shape collision settings", () => {
 			expect(a.pos.x).toBe(before); // and was NOT moved
 		});
 
+		it("does NOT suppress a solid sibling shape (either order)", () => {
+			// The bug an adversarial review caught: `collides` returned on the
+			// first colliding pair, so a trigger shape ended the search and the
+			// whole body pair skipped push-out — the solid shape tunnelled, and
+			// which shape won came down to `shapes` array order. A trigger must
+			// only ever remove ITSELF from the solver.
+			const run = (shapes) => {
+				world = new World(0, 0, 800, 600);
+				const a = add(100, shapes);
+				add(108, [new Rect(0, 0, 32, 32)], {
+					collisionType: T.ENEMY_OBJECT,
+				});
+				const x0 = a.pos.x;
+				step();
+				return a.pos.x - x0;
+			};
+			const solidFirst = run([
+				new Rect(0, 0, 16, 32),
+				Object.assign(new Rect(16, 0, 16, 32), { isTrigger: true }),
+			]);
+			const triggerFirst = run([
+				Object.assign(new Rect(0, 0, 16, 32), { isTrigger: true }),
+				new Rect(16, 0, 16, 32),
+			]);
+			// the solid shape resolves in BOTH arrangements
+			expect(solidFirst).not.toBe(0);
+			expect(triggerFirst).not.toBe(0);
+		});
+
+		it("reports a trigger-only contact through the response flag", () => {
+			const s1 = new Rect(0, 0, 16, 32);
+			const s2 = new Rect(16, 0, 16, 32);
+			s1.isTrigger = true;
+			s2.isTrigger = true;
+			const a = add(100, [s1, s2]);
+			let flagged = null;
+			a.onCollision = (response) => {
+				flagged = response.isTriggerContact;
+				return false;
+			};
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			step();
+			expect(flagged).toBe(true);
+		});
+
+		it("clears the trigger flag when a solid pair also overlaps", () => {
+			const solid = new Rect(0, 0, 16, 32);
+			const trig = new Rect(16, 0, 16, 32);
+			trig.isTrigger = true;
+			const a = add(100, [solid, trig]);
+			let flagged = null;
+			a.onCollision = (response) => {
+				flagged = response.isTriggerContact;
+				return false;
+			};
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			step();
+			// a solid contact exists, so this is not a trigger-only contact
+			expect(flagged).toBe(false);
+		});
+
 		it("holds a multi-shape body in place (the extra-pass path)", () => {
 			// the per-shape twin of the body-level sensor bug: the junction
 			// resolve pass writes positions directly and must honour triggers
@@ -326,28 +388,53 @@ describe("Physics : per-shape collision settings", () => {
 
 	describe("adversarial", () => {
 		it("a recycled pooled shape does not inherit the previous settings", () => {
-			// `addShape` converts a Rect into a POOLED Polygon. If the settings
-			// are not written explicitly, the next body to claim that instance
-			// gets whatever the last one left behind — a contamination bug that
-			// would surface as an unrelated object silently not colliding.
+			// `body.destroy()` is what actually returns shapes to their pools —
+			// `removeShape` and `removeChild` do not, so a test built on those
+			// proves nothing about recycling. Destroy the first body, then take
+			// an instance straight from the pool and hand it to a new body.
 			const tainted = new Rect(0, 0, 32, 32);
 			tainted.collisionMask = T.WORLD_SHAPE; // excludes enemies
 			tainted.isTrigger = true;
 			const first = add(100, [tainted]);
-			first.body.removeShape(first.body.shapes[0]);
-			world.removeChild(first);
+			const recycled = first.body.shapes[0];
+			first.body.destroy();
 
-			// a fresh body with a PLAIN rect — likely to reuse the pooled polygon
+			// the instance is back in the pool carrying nothing
+			expect(recycled.isTrigger).toBe(false);
+			expect(recycled.collisionMask).toBeUndefined();
+			expect(recycled.collisionType).toBeUndefined();
+
+			// and a body built from a pooled polygon collides normally
 			world = new World(0, 0, 800, 600);
 			const clean = add(100, [new Rect(0, 0, 32, 32)]);
 			const hits = watch(clean);
 			add(116, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
 			step();
-
-			// if the mask leaked, this would be 0
 			expect(hits.length).toBeGreaterThan(0);
-			expect(clean.body.shapes[0].isTrigger).toBe(false);
-			expect(clean.body.shapes[0].collisionMask).toBeUndefined();
+		});
+
+		it("normalizes shapes built through fromJSON / addVertices", () => {
+			// `fromJSON` reaches `this.shapes` via `setVertices`, NOT `addShape`,
+			// so it needs its own normalization — otherwise a pooled polygon
+			// arrives with the previous owner's mask and the body silently
+			// collides with nothing.
+			//
+			// Defence in depth, and honestly so: `body.destroy()` scrubs shapes
+			// on release, so the engine's own paths keep the pool clean and this
+			// normalization cannot be shown to change an outcome through the
+			// public API. It guards any OTHER route into `polygonPool` — user
+			// code, or a future caller that releases without going through
+			// `destroy`. What is pinned here is the invariant it maintains.
+			const a = add(100, [new Rect(0, 0, 32, 32)]);
+			a.body.addVertices([
+				new Vector2d(0, 0),
+				new Vector2d(32, 0),
+				new Vector2d(32, 32),
+			]);
+			const built = a.body.shapes[a.body.shapes.length - 1];
+			expect(built.isTrigger).toBe(false);
+			expect(built.isActive).toBe(true);
+			expect(built.collisionMask).toBeUndefined();
 		});
 
 		it("removeShape preserves the settings of the surviving shapes", () => {
@@ -398,6 +485,38 @@ describe("Physics : per-shape collision settings", () => {
 			// and the defaults landed on both
 			expect(a.body.shapes[0].isActive).toBe(true);
 			expect(a.body.shapes[1].isTrigger).toBe(false);
+		});
+
+		it("an inactive shape is not hit by a raycast", () => {
+			// `isActive: false` is documented as removing a shape from collision
+			// ENTIRELY, and a ray is a collision query — a body whose only shape
+			// is inactive must be invisible to it
+			const shape = new Rect(0, 0, 32, 32);
+			const a = add(100, [shape]);
+			const cast = () => {
+				world.broadphase.clear();
+				world.broadphase.insertContainer(world);
+				return raycastQuery(world, 0, 116, 400, 116).length;
+			};
+
+			expect(cast()).toBeGreaterThan(0); // control: it IS hittable
+			a.body.shapes[0].isActive = false;
+			expect(cast()).toBe(0);
+		});
+
+		it("filters against a STATIC body too", () => {
+			// every other case here is dynamic-vs-dynamic; static bodies take a
+			// different branch at the push-out site
+			const shape = new Rect(0, 0, 32, 32);
+			shape.collisionMask = T.WORLD_SHAPE;
+			const a = add(100, [shape]);
+			const hits = watch(a);
+			add(116, [new Rect(0, 0, 32, 32)], {
+				type: "static",
+				collisionType: T.ENEMY_OBJECT,
+			});
+			step();
+			expect(hits).toHaveLength(0);
 		});
 
 		it("both shapes filtered out is a clean no-collision", () => {

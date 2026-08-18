@@ -61,12 +61,16 @@ function worldBox3d(
 	let found = false;
 	const shapes = body.shapes as unknown as {
 		type: string;
+		isActive?: boolean;
 		pos: { x: number; y: number; z: number };
 		halfExtents: { x: number; y: number; z: number };
 	}[];
 	for (let i = 0, len = shapes.length; i < len; i++) {
 		const shape = shapes[i];
 		if (shape.type !== "Box3d") continue;
+		// an inactive shape is out of collision, and raycast3d is a collision
+		// query — skip it rather than let it contribute a depth extent (#1590)
+		if (shape.isActive === false) continue;
 		const minX = cx + shape.pos.x - shape.halfExtents.x;
 		const minY = cy + shape.pos.y - shape.halfExtents.y;
 		const minZ = cz + shape.pos.z - shape.halfExtents.z;

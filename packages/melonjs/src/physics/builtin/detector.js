@@ -289,6 +289,9 @@ class Detector {
 	 * @returns {boolean} true if colliding
 	 */
 	collides(bodyA, bodyB, response = this.response) {
+		// first trigger-only contact seen, used only when NO solid pair overlaps
+		let triggerIndexA = -1;
+		let triggerIndexB = -1;
 		// for each shape in body A
 		for (
 			let indexA = bodyA.shapes.length, shapeA;
@@ -352,12 +355,49 @@ class Detector {
 					) === true
 				) {
 					// set the shape index
+					// A TRIGGER pair must not end the search. `collides` reports
+					// one contact per body pair, and push-out is decided from
+					// it — so returning here would let a trigger shape suppress
+					// a solid sibling's push-out, and which one won would come
+					// down to `shapes` array order. Remember the first trigger
+					// contact and keep scanning for a solid pair, which wins if
+					// one exists (#1590).
+					if (shapeA.isTrigger === true || shapeB.isTrigger === true) {
+						if (triggerIndexA < 0) {
+							triggerIndexA = indexA;
+							triggerIndexB = indexB;
+						}
+						continue;
+					}
 					response.indexShapeA = indexA;
 					response.indexShapeB = indexB;
 
 					return true;
 				}
 			}
+		}
+
+		if (triggerIndexA >= 0) {
+			// No solid pair overlaps, so the contact is real but non-solid.
+			// Re-run the remembered pair to repopulate the response: the loop
+			// above cleared it on every subsequent test, and the handlers still
+			// need a truthful overlap to read.
+			const shapeA = bodyA.shapes[triggerIndexA];
+			const shapeB = bodyB.shapes[triggerIndexB];
+			SAT_LOOKUP[shapeA.type + shapeB.type].call(
+				this,
+				bodyA.ancestor,
+				shapeA,
+				bodyB.ancestor,
+				shapeB,
+				response.clear(),
+			);
+			response.indexShapeA = triggerIndexA;
+			response.indexShapeB = triggerIndexB;
+			// consumed at the push-out sites — the contact reports normally and
+			// simply contributes no position correction
+			response.isTriggerContact = true;
+			return true;
 		}
 		return false;
 	}
@@ -459,17 +499,15 @@ class Detector {
 						// (`body.isStatic === true`) bodies skip push-out
 						// in both contracts, matching matter.
 						// A trigger shape collides and reports normally; only the
-						// position correction is skipped. Resolved through the
-						// indices the narrowphase already recorded on the
-						// response, so no extra plumbing is needed — guarded
-						// because they stay -1 until a test sets them.
-						const hitShapeA = objA.body.shapes[this.response.indexShapeA];
-						const hitShapeB = objB.body.shapes[this.response.indexShapeB];
+						// position correction is skipped. `isTriggerContact` is
+						// set by `collides` and means "this contact exists ONLY
+						// through trigger shapes" — it is false whenever any
+						// solid pair overlaps, so a trigger can never suppress
+						// a solid sibling's push-out.
 						const eitherSensor =
 							objA.body.isSensor === true ||
 							objB.body.isSensor === true ||
-							hitShapeA?.isTrigger === true ||
-							hitShapeB?.isTrigger === true;
+							this.response.isTriggerContact === true;
 						// "supersedes" rule: if a renderable defines the
 						// modern `onCollisionActive`, suppress its legacy
 						// `onCollision` dispatch entirely. They are the

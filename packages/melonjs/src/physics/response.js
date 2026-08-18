@@ -46,6 +46,7 @@ class ResponseObject {
 		this.bInA = true;
 		this.indexShapeA = -1;
 		this.indexShapeB = -1;
+		this.isTriggerContact = false;
 		this.overlap = Number.MAX_VALUE;
 	}
 
@@ -64,6 +65,7 @@ class ResponseObject {
 		this.overlap = Number.MAX_VALUE;
 		this.indexShapeA = -1;
 		this.indexShapeB = -1;
+		this.isTriggerContact = false;
 		// Reset alongside `overlap`, so a Box3d pair resolved along Z cannot
 		// leak its Z push into the next test — which, for a planar pair, would
 		// be a Z push that no shape in the test has any depth to justify.

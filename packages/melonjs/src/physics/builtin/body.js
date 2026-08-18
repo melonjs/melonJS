@@ -665,8 +665,21 @@ export default class Body {
 	 * type/mask are still checked first, so a permissive shape on a restrictive
 	 * body collides with nothing.
 	 *
+	 * A trigger removes only ITSELF from the solver. If a solid shape on the
+	 * same body also overlaps, that contact still pushes out — the narrowphase
+	 * prefers a solid pair over a trigger pair, so the outcome does not depend
+	 * on the order shapes were added. `response.isTriggerContact` reports
+	 * whether a given contact exists only through trigger shapes.
+	 *
+	 * `isActive: false` removes the shape from the narrowphase AND from
+	 * raycasts. It does not shrink the body's `bounds` — those stay
+	 * conservative, so toggling a shape never resizes the body in the
+	 * broadphase — nor does it clear `hasDepth` for a `Box3d`.
+	 *
 	 * Supported by the builtin and planck adapters. The matter adapter filters
-	 * per body only and ignores these.
+	 * per body only and ignores these. Note that under planck, the body-wide
+	 * setters (`setCollisionType`, `setCollisionMask`, `setSensor`) write every
+	 * fixture and so overwrite per-shape values.
 	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
 	 * @returns {number} the shape array length
 	 * @example
@@ -699,10 +712,20 @@ export default class Body {
 	 * Idempotent, because `removeShape` re-adds every surviving shape through
 	 * `addShape` and must not disturb their settings.
 	 * @param {object} stored - the shape as held in `this.shapes`
-	 * @param {object} source - the object passed to `addShape`
+	 * @param {object} [source] - the object passed to `addShape`; omitted when
+	 * the shape was built here from a pool and has no user-supplied original
 	 * @private
 	 */
 	_initShapeCollision(stored, source) {
+		if (source === undefined) {
+			// no source at all: the shape was built here, straight from a pool,
+			// so every field is reset to its default rather than inherited
+			stored.collisionType = undefined;
+			stored.collisionMask = undefined;
+			stored.isTrigger = false;
+			stored.isActive = true;
+			return;
+		}
 		if (stored !== source) {
 			// CONVERTED (Rect / Bounds -> pooled Polygon). Assign the source's
 			// values verbatim rather than falling back to what is on `stored`:
@@ -835,6 +858,10 @@ export default class Body {
 		} else {
 			// this will replace any other non polygon shape type if defined
 			this.shapes[index] = polygonPool.get(0, 0, vertices);
+			// `fromJSON` / `addVertices` reach `this.shapes` through here rather
+			// than `addShape`, so the pooled instance needs the same
+			// normalization or it keeps its previous owner's settings (#1590)
+			this._initShapeCollision(this.shapes[index], undefined);
 		}
 
 		// update the body bounds to take in account the new vertices
@@ -1301,6 +1328,17 @@ export default class Body {
 		vector2dPool.release(this.friction);
 		vector2dPool.release(this.maxVel);
 		this.shapes.forEach((shape) => {
+			// Scrub the per-shape collision settings before the instance goes
+			// back to a pool (#1590). The pools' reset restores only geometry,
+			// so a recycled shape would otherwise arrive at its next owner
+			// still carrying this body's mask or `isTrigger` — and for a shape
+			// handed straight to `addShape` there is no separate source object
+			// to correct it from. Cleaning up on release is the only point
+			// where the engine still knows the values are stale.
+			shape.collisionType = undefined;
+			shape.collisionMask = undefined;
+			shape.isTrigger = false;
+			shape.isActive = true;
 			if (shape instanceof Point) {
 				pointPool.release(shape);
 			} else if (shape instanceof Line) {
