@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       # must match the workspace's playwright version (root devDependencies)
-      image: mcr.microsoft.com/playwright:v1.62.0-noble
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
       - uses: actions/checkout@v5
       - name: Setup node
