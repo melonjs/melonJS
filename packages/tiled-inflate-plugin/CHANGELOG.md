@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 - _2026-08-21_
+
+### Changed
+- The plugin now logs its name, version and homepage on registration, matching the startup banner the other melonJS plugins print.
+
 ## 1.2.0
 
 ### New Features

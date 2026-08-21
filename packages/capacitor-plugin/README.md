@@ -33,13 +33,15 @@ import {
 
 await lockOrientation("landscape");
 
-// `new Application(...)` boots the engine and creates the renderer
-// in a single call — replaces the legacy `boot()` + `video.init(...)`
-// pair.
+// `new Application(...)` replaces the legacy `boot()` + `video.init(...)`
+// pair. Since melonJS 20.0 construction alone does NOT build the renderer:
+// `await app.init()` is required, and is what acquires the WebGPU device.
 const app = new Application(1024, 768, {
     parent: "screen",
     scaleMethod: "flex",
 });
+
+await app.init();
 
 // One register call wires lifecycle (appStateChange → state.pause/resume)
 // and forwards hardware back-button presses into the engine event bus.

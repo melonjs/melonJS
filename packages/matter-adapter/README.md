@@ -32,6 +32,9 @@ const app = new Application(800, 600, {
         gravity: { x: 0, y: 5 },
     }),
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 ```
 
 That's it — every renderable that declares a `bodyDef` gets registered with matter automatically on `Container.addChild`, and the rest of your game code (collision handlers, velocity reads, gravity tweaks, etc.) talks to the shared [`PhysicsAdapter`](https://melonjs.github.io/melonJS/) interface so it works with either adapter.
@@ -443,11 +446,14 @@ A minimal player entity. The same class on the built-in adapter, then ported her
 ```ts
 import { Application, collision, input, Rect, Sprite, video } from "melonjs";
 
-new Application(800, 600, {
+const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
     // physic: defaults to BuiltinAdapter
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 
 const MAX_VEL_X = 3;
 const MAX_VEL_Y = 15;
@@ -505,12 +511,15 @@ class Player extends Sprite {
 import { Application, collision, input, Rect, Sprite, video } from "melonjs";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 
-new Application(800, 600, {
+const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
     // (1) Swap the adapter. Pick a gravity that suits your sprite scale.
     physic: new MatterAdapter({ gravity: { x: 0, y: 5 } }),
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 
 const MAX_VEL_X = 3;
 const MAX_VEL_Y = 15;

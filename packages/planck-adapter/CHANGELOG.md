@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 - _unreleased_
+## 1.2.0 - _2026-08-21_
 
 ### Added
 - **Tests for per-shape collision settings** — seven cases pinning per-fixture filters, `isTrigger` as a sensor fixture, `isActive` skipping fixture creation, a zero-fixture body still stepping, and the body-wide-setter limitation below
