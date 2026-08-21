@@ -46,7 +46,12 @@ describe("GPU texture cache reset (cross-batcher binding-tracker regression)", (
 	let quadBatcher;
 
 	beforeAll(async () => {
-		renderer = await getWebGLRenderer(800, 600);
+		// The default 128x128 canvas, deliberately: this suite issues ZERO draw
+		// calls and never reads the canvas dimensions. It inspects `renderer.cache`,
+		// the batcher registry and `currentBatcher`. Asking for 800x600 allocated a
+		// 480 000-pixel framebuffer for nothing, which on CI's software rasterizer
+		// is real time and memory, in the hook that was timing out.
+		renderer = await getWebGLRenderer();
 	});
 
 	afterAll(() => {
