@@ -638,8 +638,9 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 		};
 	}
 
-	it("clipRect under identity transform: clip path matches the input rect", () => {
+	it("clipRect under identity transform: clip path matches the input rect", (ctx) => {
 		if (!isCanvas) {
+			ctx.skip("Canvas renderer not active in this environment");
 			return;
 		}
 		// reset the scissor cache so the call doesn't get short-circuited
@@ -656,8 +657,9 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 		expect(screen.y).toBe(100);
 	});
 
-	it("clipRect under a translated transform: clip lands at translated screen rect", () => {
+	it("clipRect under a translated transform: clip lands at translated screen rect", (ctx) => {
 		if (!isCanvas) {
+			ctx.skip("Canvas renderer not active in this environment");
 			return;
 		}
 		renderer.save();
@@ -682,8 +684,9 @@ describe("CanvasRenderer.clipRect (#1349)", () => {
 		expect(screen.y).toBe(230);
 	});
 
-	it("Bug #1349 (fixed): Container nested in a translated wrapper produces a correctly-placed clip path", () => {
+	it("Bug #1349 (fixed): Container nested in a translated wrapper produces a correctly-placed clip path", (ctx) => {
 		if (!isCanvas) {
+			ctx.skip("Canvas renderer not active in this environment");
 			return;
 		}
 		// reproducer mirrors the WebGL Bug #1 test above, and the visual

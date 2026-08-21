@@ -218,11 +218,14 @@ describe("audio", () => {
 			}).not.toThrow();
 		});
 
-		it("tone schedules nodes on the shared context (when available)", () => {
+		it("tone schedules nodes on the shared context (when available)", (t) => {
 			const ctx = audio.getAudioContext();
 			if (!ctx) {
+				// headless env has no WebAudio: skip VISIBLY, a bare return
+				// reports as a pass and hides the assertions below
+				t.skip("WebAudio not available in this environment");
 				return;
-			} // headless env — skip the WebAudio assertions
+			}
 			const before = ctx.currentTime;
 			audio.tone({ freq: 880, duration: 0.05 });
 			// Time should keep advancing — sanity check we didn't blow
@@ -291,9 +294,12 @@ describe("audio", () => {
 			}).not.toThrow();
 		});
 
-		it("noise schedules nodes on the shared context (when available)", () => {
+		it("noise schedules nodes on the shared context (when available)", (t) => {
 			const ctx = audio.getAudioContext();
 			if (!ctx) {
+				// headless env has no WebAudio: skip VISIBLY, a bare return
+				// reports as a pass and hides the assertions below
+				t.skip("WebAudio not available in this environment");
 				return;
 			}
 			const before = ctx.currentTime;
@@ -302,9 +308,12 @@ describe("audio", () => {
 			expect(ctx.currentTime).toBeGreaterThanOrEqual(before);
 		});
 
-		it("noise respects muteAll / unmuteAll (routes through master gain)", () => {
+		it("noise respects muteAll / unmuteAll (routes through master gain)", (t) => {
 			const ctx = audio.getAudioContext();
 			if (!ctx) {
+				// headless env has no WebAudio: skip VISIBLY, a bare return
+				// reports as a pass and hides the assertions below
+				t.skip("WebAudio not available in this environment");
 				return;
 			}
 			audio.muteAll();

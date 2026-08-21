@@ -27,10 +27,12 @@ describe("WebGL save/restore benchmark", () => {
 		app?.destroy();
 	});
 
-	it("benchmark: 1000 sprites × 60 frames save/restore cycle", () => {
+	it("benchmark: 1000 sprites × 60 frames save/restore cycle", (ctx) => {
 		const isWebGL = renderer instanceof WebGLRenderer;
 		if (!isWebGL) {
-			console.log("[BENCH] Skipped — Canvas renderer (WebGL not available)");
+			// a console.log and a bare return reports as a PASS, so a benchmark
+			// that never ran looks identical to one that did
+			ctx.skip("Canvas renderer — WebGL benchmark not applicable");
 			return;
 		}
 

@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Application, boot, video } from "../src/index.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+	requireWebGL,
+} from "./helpers/webgl-context.js";
 
 /**
  * Tests for renderer save/restore through the public API.
@@ -32,15 +37,6 @@ describe("Renderer save/restore", () => {
 		renderer.setGlobalAlpha(1.0);
 		renderer.setBlendMode("normal");
 		renderer.clearTint();
-	});
-
-	afterAll(async () => {
-		const app = new Application(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			renderer: video.CANVAS,
-		});
-		await app.init();
 	});
 
 	// ---- Color ----
@@ -212,52 +208,65 @@ describe("Renderer save/restore", () => {
 	// save/restore natively; currentScissor is just a dedup cache there.
 	// These tests only apply to WebGL where we manage scissor state ourselves.
 
-	it("should preserve scissor state across save/restore (WebGL only)", () => {
-		if (renderer.type !== "WebGL") {
-			return;
-		}
+	describe("scissor state (WebGL)", () => {
+		// These two used to live in the outer describe behind
+		// `if (renderer.type !== "WebGL") return;`. That describe only ever
+		// builds a CANVAS renderer, so the guard was always true and both tests
+		// returned immediately — reported as passing, never once executed. They
+		// now get a real WebGL renderer, and skip VISIBLY when there is none.
+		let glRenderer;
 
-		renderer.clipRect(50, 60, 200, 150);
-		const scissorBefore = Array.from(renderer.currentScissor);
+		beforeAll(async () => {
+			glRenderer = await getWebGLRenderer();
+		});
 
-		renderer.save();
-		renderer.clipRect(10, 20, 100, 80);
-		expect(renderer.currentScissor[0]).toBe(10);
-		expect(renderer.currentScissor[1]).toBe(20);
-		renderer.restore();
+		afterAll(() => {
+			releaseWebGLRenderer();
+		});
 
-		expect(renderer.currentScissor[0]).toBe(scissorBefore[0]);
-		expect(renderer.currentScissor[1]).toBe(scissorBefore[1]);
-		expect(renderer.currentScissor[2]).toBe(scissorBefore[2]);
-		expect(renderer.currentScissor[3]).toBe(scissorBefore[3]);
-	});
+		it("preserves scissor state across save/restore", (ctx) => {
+			requireWebGL(ctx, glRenderer);
 
-	it("should preserve scissor through nested save/restore (WebGL only)", () => {
-		if (renderer.type !== "WebGL") {
-			return;
-		}
+			glRenderer.clipRect(50, 60, 200, 150);
+			const scissorBefore = Array.from(glRenderer.currentScissor);
 
-		renderer.clipRect(10, 20, 300, 250);
-		const scissor0 = Array.from(renderer.currentScissor);
+			glRenderer.save();
+			glRenderer.clipRect(10, 20, 100, 80);
+			expect(glRenderer.currentScissor[0]).toBe(10);
+			expect(glRenderer.currentScissor[1]).toBe(20);
+			glRenderer.restore();
 
-		renderer.save();
-		renderer.clipRect(50, 60, 100, 80);
-		const scissor1 = Array.from(renderer.currentScissor);
+			expect(glRenderer.currentScissor[0]).toBe(scissorBefore[0]);
+			expect(glRenderer.currentScissor[1]).toBe(scissorBefore[1]);
+			expect(glRenderer.currentScissor[2]).toBe(scissorBefore[2]);
+			expect(glRenderer.currentScissor[3]).toBe(scissorBefore[3]);
+		});
 
-		renderer.save();
-		renderer.clipRect(70, 80, 50, 40);
+		it("preserves scissor through nested save/restore", (ctx) => {
+			requireWebGL(ctx, glRenderer);
 
-		renderer.restore();
-		expect(renderer.currentScissor[0]).toBe(scissor1[0]);
-		expect(renderer.currentScissor[1]).toBe(scissor1[1]);
-		expect(renderer.currentScissor[2]).toBe(scissor1[2]);
-		expect(renderer.currentScissor[3]).toBe(scissor1[3]);
+			glRenderer.clipRect(10, 20, 300, 250);
+			const scissor0 = Array.from(glRenderer.currentScissor);
 
-		renderer.restore();
-		expect(renderer.currentScissor[0]).toBe(scissor0[0]);
-		expect(renderer.currentScissor[1]).toBe(scissor0[1]);
-		expect(renderer.currentScissor[2]).toBe(scissor0[2]);
-		expect(renderer.currentScissor[3]).toBe(scissor0[3]);
+			glRenderer.save();
+			glRenderer.clipRect(50, 60, 100, 80);
+			const scissor1 = Array.from(glRenderer.currentScissor);
+
+			glRenderer.save();
+			glRenderer.clipRect(70, 80, 50, 40);
+
+			glRenderer.restore();
+			expect(glRenderer.currentScissor[0]).toBe(scissor1[0]);
+			expect(glRenderer.currentScissor[1]).toBe(scissor1[1]);
+			expect(glRenderer.currentScissor[2]).toBe(scissor1[2]);
+			expect(glRenderer.currentScissor[3]).toBe(scissor1[3]);
+
+			glRenderer.restore();
+			expect(glRenderer.currentScissor[0]).toBe(scissor0[0]);
+			expect(glRenderer.currentScissor[1]).toBe(scissor0[1]);
+			expect(glRenderer.currentScissor[2]).toBe(scissor0[2]);
+			expect(glRenderer.currentScissor[3]).toBe(scissor0[3]);
+		});
 	});
 
 	// ---- Color alpha channel ----

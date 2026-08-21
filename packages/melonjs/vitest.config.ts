@@ -60,7 +60,10 @@ export default defineConfig(() =>
 			//
 			// Dropping 3 -> 2 on CI trades a little wall-clock for hooks that finish.
 			// Local runs (more cores, a real GPU) keep the default.
-			maxWorkers: process.env.CI ? 2 : undefined,
+			// spread rather than `maxWorkers: CI ? 2 : undefined` — the config type
+			// is built with `exactOptionalPropertyTypes`, so an explicit `undefined`
+			// is a type error where an absent key is fine
+			...(process.env.CI ? { maxWorkers: 2 } : {}),
 			browser: {
 				enabled: true,
 				provider: playwright(),
