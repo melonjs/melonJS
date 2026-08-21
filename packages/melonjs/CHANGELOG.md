@@ -1,5 +1,11 @@
 # Changelog
 
+## [20.0.1] (melonJS 2) - _unreleased_
+
+### Fixed
+- `FadeEffect.destroy()` and `MaskEffect.destroy()` threw "Instance is already in pool" when called twice. Neither guarded its pooled `tween`, `color` or mask shape before releasing them, so a second call re-released the same instances. This is reachable without doing anything unusual: `removePostEffect()` destroys the effect it removes, so a caller that also destroys it explicitly gets a throw from the pool rather than from anything in their own code. Both are now guarded and cleared, matching the `Body.destroy()` fix in 20.0.0
+
+
 ## [20.0.0] (melonJS 2) - _2026-08-21_
 
 **Highlights:** version 20.0 introduces a new **WebGPU backend** and retires the aging WebGL 1 path, making **WebGL 2** the baseline and putting melonJS on a modern, top-of-the-line rendering stack. `video.AUTO` now tries WebGPU first, falls back to WebGL 2 if that is unavailable, and ultimately to Canvas. The new backend covers the entire engine feature set, 2D and 3D, verified example-for-example against WebGL, and the WebGL 2 baseline lets that backend modernize throughout: immutable texture storage, vertex array objects, uniform-buffer lighting (up to **32 lights**), and a multi-texture limit that follows the device instead of a hardcoded 16. 3D gains real depth: **mesh instancing** (a 100 000-tree forest in one draw call), **ground shadows**, **point and spot lights**, **`Box3d` collision** that resolves along Z, and retained meshes that upload once and never re-transform on the CPU. Custom shaders and post effects are **dual-language**: one asset carries GLSL and WGSL and runs on either backend. Measured against 19.9.1 on the same machine, the two paths 20.0 reworked come out **up to 75× faster once a scene uses more distinct textures than the batch limit** (4.71 → 0.06 ms/frame, and 1 626 texture uploads per frame → none) and **up to 95× faster at submitting vertex-heavy meshes** (3.80 → 0.04 ms/frame).

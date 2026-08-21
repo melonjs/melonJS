@@ -181,13 +181,24 @@ export default class MaskEffect extends CameraEffect {
 	}
 
 	override destroy(): void {
-		this.tween.stop();
-		tweenPool.release(this.tween);
-		colorPool.release(this.color);
-		if (this._maskShape.type === "Ellipse") {
-			ellipsePool.release(this._maskShape as Ellipse);
-		} else {
-			polygonPool.release(this._maskShape as Polygon);
+		// see FadeEffect.destroy(): guarded so a second call is a no-op instead
+		// of throwing "Instance is already in pool" out of the pool
+		if (this.tween !== undefined) {
+			this.tween.stop();
+			tweenPool.release(this.tween);
+			this.tween = undefined as unknown as typeof this.tween;
+		}
+		if (this.color !== undefined) {
+			colorPool.release(this.color);
+			this.color = undefined as unknown as typeof this.color;
+		}
+		if (this._maskShape !== undefined) {
+			if (this._maskShape.type === "Ellipse") {
+				ellipsePool.release(this._maskShape as Ellipse);
+			} else {
+				polygonPool.release(this._maskShape as Polygon);
+			}
+			this._maskShape = undefined as unknown as typeof this._maskShape;
 		}
 	}
 }

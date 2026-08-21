@@ -111,8 +111,20 @@ export default class FadeEffect extends CameraEffect {
 	}
 
 	override destroy(): void {
-		this.tween.stop();
-		tweenPool.release(this.tween);
-		colorPool.release(this.color);
+		// Guarded and cleared so a second destroy() is a no-op rather than a
+		// throw. `removePostEffect()` destroys the effect it removes, so a
+		// caller that also destroys it explicitly hits this path, and an
+		// unguarded re-release throws "Instance is already in pool" from the
+		// pool rather than from anything the caller can see. Same defect and
+		// same fix as `Body.destroy()` in 20.0.0.
+		if (this.tween !== undefined) {
+			this.tween.stop();
+			tweenPool.release(this.tween);
+			this.tween = undefined as unknown as typeof this.tween;
+		}
+		if (this.color !== undefined) {
+			colorPool.release(this.color);
+			this.color = undefined as unknown as typeof this.color;
+		}
 	}
 }
