@@ -1,9 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot } from "../src/index.js";
 import CanvasRenderTarget from "../src/video/rendertarget/canvasrendertarget.js";
 import RenderTarget from "../src/video/rendertarget/rendertarget.ts";
 import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
-import { getWebGLRenderer } from "./helpers/webgl-context.js";
+import {
+	getWebGLRenderer,
+	releaseWebGLRenderer,
+	requireWebGL,
+} from "./helpers/webgl-context.js";
 
 describe("RenderTarget", () => {
 	describe("CanvasRenderTarget", () => {
@@ -62,12 +66,16 @@ describe("RenderTarget", () => {
 	describe("WebGLRenderTarget", () => {
 		let gl;
 
-		beforeEach(async () => {
+		beforeAll(async () => {
 			boot();
-			// `video.WEBGL` now throws when WebGL is unavailable (was a
-			// silent Canvas fallback pre-#1479). Catch the throw so tests
-			// that gracefully handle `gl === undefined` still skip
-			// cleanly instead of crashing every test in this block.
+			// `video.WEBGL` throws when WebGL is unavailable (was a silent
+			// Canvas fallback pre-#1479). Catch the throw so `gl` stays
+			// undefined and every test below skips VISIBLY via requireWebGL,
+			// rather than crashing the block.
+			//
+			// beforeAll, not beforeEach: the helper hands out one context per
+			// file, so re-acquiring per test bought nothing and put context
+			// acquisition on the critical path of all nine.
 			try {
 				const shared = await getWebGLRenderer(100, 100);
 				gl = shared?.gl;
@@ -76,30 +84,30 @@ describe("RenderTarget", () => {
 			}
 		});
 
-		it("should extend RenderTarget", () => {
-			if (!gl) {
-				return;
-			}
+		afterAll(() => {
+			// this file borrowed the shared renderer and never handed it back,
+			// so the next spec in the page inherited its state
+			releaseWebGLRenderer();
+		});
+
+		it("should extend RenderTarget", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			expect(rt).toBeInstanceOf(RenderTarget);
 			expect(rt).toBeInstanceOf(WebGLRenderTarget);
 			rt.destroy();
 		});
 
-		it("should have correct width and height", () => {
-			if (!gl) {
-				return;
-			}
+		it("should have correct width and height", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 200, 150);
 			expect(rt.width).toEqual(200);
 			expect(rt.height).toEqual(150);
 			rt.destroy();
 		});
 
-		it("should create valid framebuffer and texture", () => {
-			if (!gl) {
-				return;
-			}
+		it("should create valid framebuffer and texture", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			expect(rt.framebuffer).toBeDefined();
 			expect(rt.texture).toBeDefined();
@@ -107,10 +115,8 @@ describe("RenderTarget", () => {
 			rt.destroy();
 		});
 
-		it("should bind and unbind", () => {
-			if (!gl) {
-				return;
-			}
+		it("should bind and unbind", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			rt.bind();
 			expect(gl.getParameter(gl.FRAMEBUFFER_BINDING)).toBe(rt.framebuffer);
@@ -119,10 +125,8 @@ describe("RenderTarget", () => {
 			rt.destroy();
 		});
 
-		it("should resize", () => {
-			if (!gl) {
-				return;
-			}
+		it("should resize", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			rt.resize(200, 200);
 			expect(rt.width).toEqual(200);
@@ -130,10 +134,8 @@ describe("RenderTarget", () => {
 			rt.destroy();
 		});
 
-		it("should skip resize when dimensions unchanged", () => {
-			if (!gl) {
-				return;
-			}
+		it("should skip resize when dimensions unchanged", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			const texture = rt.texture;
 			rt.resize(100, 100);
@@ -142,10 +144,8 @@ describe("RenderTarget", () => {
 			rt.destroy();
 		});
 
-		it("should clear without error", () => {
-			if (!gl) {
-				return;
-			}
+		it("should clear without error", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			expect(() => {
 				rt.clear();
@@ -153,10 +153,8 @@ describe("RenderTarget", () => {
 			rt.destroy();
 		});
 
-		it("should return valid ImageData from getImageData", () => {
-			if (!gl) {
-				return;
-			}
+		it("should return valid ImageData from getImageData", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 50, 50);
 			const data = rt.getImageData(0, 0, 50, 50);
 			expect(data).toBeInstanceOf(ImageData);
@@ -165,10 +163,8 @@ describe("RenderTarget", () => {
 			rt.destroy();
 		});
 
-		it("should destroy and null out resources", () => {
-			if (!gl) {
-				return;
-			}
+		it("should destroy and null out resources", (ctx) => {
+			requireWebGL(ctx, gl);
 			const rt = new WebGLRenderTarget(gl, 100, 100);
 			rt.destroy();
 			expect(rt.framebuffer).toBeNull();
