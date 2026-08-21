@@ -45,6 +45,22 @@ export default defineConfig(() =>
 			// hook, not a hanging one. (`video.init` no longer exists; a context
 			// comes from `new Application(...)` + `await app.init()`.)
 			hookTimeout: 90000,
+			// CI is a 4-core runner with no GPU, so every browser page rasterizes
+			// through SwiftShader on the same cores vitest schedules files on. At the
+			// default worker count (roughly one per core) four pages compete for four
+			// cores while also driving software GL, and a `beforeAll` whose only job
+			// is to create a context can sit past the timeout above.
+			//
+			// The cost is contention, not the specs. Measured in isolation, the two
+			// that time out in CI are among the FASTEST in the suite
+			// (texturecache-batcher-reset 0.9s, renderTargetPool 1.2s), while
+			// webgl_pipeline_adversarial takes 7s and passes in the same run. File
+			// ordering is deterministic, which is why it is reproducibly those two:
+			// they are the ones that land in the congested window.
+			//
+			// Halving the workers on CI trades a little wall-clock for hooks that
+			// finish. Local runs (more cores, a real GPU) keep the default.
+			maxWorkers: process.env.CI ? 2 : undefined,
 			browser: {
 				enabled: true,
 				provider: playwright(),
