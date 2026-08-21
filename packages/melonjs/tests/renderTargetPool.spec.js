@@ -5,6 +5,7 @@ import WebGLRenderTarget from "../src/video/rendertarget/webglrendertarget.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
+	requireWebGL,
 } from "./helpers/webgl-context.js";
 
 describe("RenderTargetPool", () => {
@@ -207,10 +208,8 @@ describe("RenderTargetPool", () => {
 			releaseWebGLRenderer();
 		});
 
-		it("should work with WebGLRenderTarget factory", () => {
-			if (sharedRenderer === undefined) {
-				return;
-			}
+		it("should work with WebGLRenderTarget factory", (ctx) => {
+			requireWebGL(ctx, sharedRenderer);
 			const gl = sharedRenderer.gl;
 			const glPool = new RenderTargetPool((w, h) => {
 				return new WebGLRenderTarget(gl, w, h);
@@ -227,10 +226,8 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should reuse target on subsequent get at same index", () => {
-			if (sharedRenderer === undefined) {
-				return;
-			}
+		it("should reuse target on subsequent get at same index", (ctx) => {
+			requireWebGL(ctx, sharedRenderer);
 			const gl = sharedRenderer.gl;
 			const glPool = new RenderTargetPool((w, h) => {
 				return new WebGLRenderTarget(gl, w, h);
@@ -243,10 +240,8 @@ describe("RenderTargetPool", () => {
 			glPool.destroy();
 		});
 
-		it("should resize target when dimensions change", () => {
-			if (sharedRenderer === undefined) {
-				return;
-			}
+		it("should resize target when dimensions change", (ctx) => {
+			requireWebGL(ctx, sharedRenderer);
 			const gl = sharedRenderer.gl;
 			const glPool = new RenderTargetPool((w, h) => {
 				return new WebGLRenderTarget(gl, w, h);

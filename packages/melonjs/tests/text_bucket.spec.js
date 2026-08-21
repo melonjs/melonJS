@@ -21,7 +21,9 @@ describe("Text — 32px canvas buckets", () => {
 	let renderer;
 
 	beforeAll(async () => {
-		renderer = await getWebGLRenderer(320, 240);
+		// default 128x128: this suite issues no renderer draws at all (Text bakes
+		// into its own offscreen canvases) and never reads the dimensions
+		renderer = await getWebGLRenderer();
 	});
 
 	afterAll(() => {

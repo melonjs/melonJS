@@ -214,7 +214,14 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		);
 	};
 
-	it("baseline cost across mesh counts", () => {
+	it("baseline cost across mesh counts", (ctx) => {
+		// `measure()` below logs and returns when there is no WebGL, which
+		// reports as a PASS — a benchmark that never ran then looks exactly
+		// like one that did. Decide it once, visibly, up front.
+		if (!(renderer instanceof WebGLRenderer)) {
+			ctx.skip("Canvas renderer — drawMesh benchmark not applicable");
+			return;
+		}
 		// Frame counts chosen so total drawMesh calls stays in the same
 		// ballpark (~1500-3000), making per-mesh cost the dominant signal
 		// rather than per-frame fixed overhead.

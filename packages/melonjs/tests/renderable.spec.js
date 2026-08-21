@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -369,10 +369,16 @@ describe("Renderable", () => {
 			renderable.addPostEffect({ enabled: true });
 			renderable.addPostEffect({ enabled: true });
 
-			// on Canvas renderer, beginPostEffect returns false (no-op)
-			// but the code path should be exercised without error
+			// On the Canvas renderer beginPostEffect returns false (no-op), so the
+			// only thing observable here is that it was REACHED. The test is named
+			// for that, so assert it: previously the body just called preDraw and
+			// postDraw and asserted nothing, passing whether or not the effect
+			// path ran at all.
+			const beginSpy = vi.spyOn(renderer, "beginPostEffect");
 			renderable.preDraw(renderer);
 			renderable.postDraw(renderer);
+			expect(beginSpy).toHaveBeenCalled();
+			beginSpy.mockRestore();
 		});
 
 		it("clearPostEffects should remove all and destroy", () => {

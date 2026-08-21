@@ -38,7 +38,10 @@ describe("Video texture upload gating (WebGL)", () => {
 	beforeAll(async () => {
 		boot();
 		try {
-			renderer = await getWebGLRenderer(800, 600);
+			// default 128x128: every draw here is a 32x32 quad and the canvas
+			// dimensions are never referenced, so 800x600 allocated a 480 000-pixel
+			// software framebuffer for nothing
+			renderer = await getWebGLRenderer();
 			webglReady = renderer instanceof WebGLRenderer;
 		} catch {
 			// CI runners without GL acceleration can't construct a WebGL

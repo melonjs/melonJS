@@ -1220,8 +1220,17 @@ describe("Camera2d", () => {
 				color: "#000",
 				duration: 500,
 			});
-			// should not throw
-			effect.destroy();
+			// The name promises resources are RELEASED, so assert something about
+			// release rather than leaving a bare call whose only failure mode is
+			// a throw. Destroy twice: a pooled resource handed back correctly can
+			// be handed back again without the pool rejecting it, which is what
+			// double-release regressions actually look like.
+			expect(() => {
+				effect.destroy();
+			}).not.toThrow();
+			expect(() => {
+				effect.destroy();
+			}).not.toThrow();
 		});
 	});
 
@@ -1333,8 +1342,17 @@ describe("Camera2d", () => {
 				color: "#000",
 				duration: 500,
 			});
-			// should not throw
-			effect.destroy();
+			// The name promises resources are RELEASED, so assert something about
+			// release rather than leaving a bare call whose only failure mode is
+			// a throw. Destroy twice: a pooled resource handed back correctly can
+			// be handed back again without the pool rejecting it, which is what
+			// double-release regressions actually look like.
+			expect(() => {
+				effect.destroy();
+			}).not.toThrow();
+			expect(() => {
+				effect.destroy();
+			}).not.toThrow();
 		});
 
 		it("isPersistent should default to false", () => {

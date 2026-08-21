@@ -26,20 +26,46 @@ import * as video from "../src/video/video.js";
  *   Application doesn't need to import the concrete `Camera3d` class.
  */
 describe("Application: WebGL requirements fail loudly (#1479)", () => {
+	/** every Application a test builds, torn down in afterEach */
+	const built = [];
+
+	/**
+	 * Construct an Application and register it for teardown.
+	 * @param {object} settings - Application settings
+	 * @returns {Application} the tracked instance
+	 */
+	const make = (settings) => {
+		const app = new Application(64, 64, settings);
+		built.push(app);
+		return app;
+	};
+
 	beforeAll(async () => {
 		await boot();
 	});
 
-	afterEach(async () => {
-		// Reset the video subsystem so each test starts in a clean state.
-		try {
-			const app = new Application(64, 64, {
-				parent: "screen",
-				renderer: video.CANVAS,
-			});
-			await app.init();
-		} catch {
-			// best-effort reset
+	afterEach(() => {
+		// Tear down every Application a test built.
+		//
+		// This used to "reset the video subsystem" by constructing YET ANOTHER
+		// Application per test and leaving it live, so a file with 8 tests ended
+		// up holding ~18 applications, each with its own canvas and (for the
+		// WebGL ones) its own GL context, none of them released. Spec files are
+		// page-isolated so it could not leak into other files, but it was real
+		// pressure inside this one, on a CI runner whose GL is a software
+		// rasterizer.
+		//
+		// Since 20.0 `destroy()` is the honest reset: it releases the GL context
+		// through WEBGL_lose_context and unregisters the renderer's event
+		// handlers. A destroyed Application is terminal, which is fine here
+		// because every test constructs its own.
+		for (const app of built.splice(0)) {
+			try {
+				app.destroy();
+			} catch {
+				// a test may have left it half-built on purpose (the throwing
+				// and rejecting paths below); nothing to release in that case
+			}
 		}
 	});
 
@@ -51,7 +77,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 			// regardless, the Application succeeds → skip; the throw
 			// path is exercised wherever WebGL genuinely fails.
 			try {
-				const app = new Application(64, 64, {
+				const app = make({
 					parent: "screen",
 					renderer: video.WEBGL,
 					failIfMajorPerformanceCaveat: true,
@@ -71,7 +97,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 			// disagree — pre-20.0 the gate probed WebGL 1 while construction
 			// preferred WebGL 2.
 			if (device.isWebGLSupported()) {
-				const app = new Application(64, 64, {
+				const app = make({
 					parent: "screen",
 					renderer: video.WEBGL,
 					consoleHeader: false,
@@ -83,7 +109,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 					globalThis.WebGL2RenderingContext,
 				);
 			} else {
-				const app = new Application(64, 64, {
+				const app = make({
 					parent: "screen",
 					renderer: video.WEBGL,
 					consoleHeader: false,
@@ -97,7 +123,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 		it("renderer: video.AUTO falls back to Canvas silently (preserved behaviour)", async () => {
 			// AUTO is the documented fallback path. The same conditions
 			// that make `video.WEBGL` throw must NOT cause AUTO to reject.
-			const app = new Application(64, 64, {
+			const app = make({
 				parent: "screen",
 				renderer: video.AUTO,
 				failIfMajorPerformanceCaveat: true,
@@ -133,7 +159,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 
 		it("warns when cameraClass is Camera3d but renderer is Canvas", async () => {
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const app = new Application(64, 64, {
+			const app = make({
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: Camera3d,
@@ -146,7 +172,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 
 		it("warn message points the user at video.WEBGL", async () => {
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const app = new Application(64, 64, {
+			const app = make({
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: Camera3d,
@@ -158,7 +184,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 		it("subclass of Camera3d (inheriting defaultSortOn='depth') also warns on Canvas", async () => {
 			class MyCamera3d extends Camera3d {}
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const app = new Application(64, 64, {
+			const app = make({
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: MyCamera3d,
@@ -172,7 +198,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 				static defaultSortOn = "z";
 			}
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const app = new Application(64, 64, {
+			const app = make({
 				parent: "screen",
 				renderer: video.CANVAS,
 				cameraClass: MyCam2d,
@@ -183,7 +209,7 @@ describe("Application: WebGL requirements fail loudly (#1479)", () => {
 
 		it("no cameraClass setting + Canvas renderer is silent (legacy default)", async () => {
 			warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const app = new Application(64, 64, {
+			const app = make({
 				parent: "screen",
 				renderer: video.CANVAS,
 			});
