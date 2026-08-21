@@ -36,6 +36,9 @@ const app = new Application(800, 600, {
         gravity: { x: 0, y: 320 },
     }),
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 ```
 
 That's it — every renderable that declares a `bodyDef` gets registered with planck automatically on `Container.addChild`, and the rest of your game code (collision handlers, velocity reads, gravity tweaks, etc.) talks to the shared `PhysicsAdapter` interface so it works with either adapter.
@@ -282,11 +285,14 @@ The same player class on the matter adapter, then ported here:
 import { Application, collision, input, Rect, Sprite, video } from "melonjs";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 
-new Application(800, 600, {
+const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
     physic: new MatterAdapter({ gravity: { x: 0, y: 5 } }),
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 ```
 
 **After — `@melonjs/planck-adapter`:**
@@ -295,13 +301,16 @@ new Application(800, 600, {
 import { Application, collision, input, Rect, Sprite, video } from "melonjs";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
 
-new Application(800, 600, {
+const app = new Application(800, 600, {
     parent: "screen",
     renderer: video.AUTO,
     // (1) Swap the adapter. Gravity is in px/s² now — pick a value that feels
     //     right for your sprite scale (32 px/m default ⇒ 320 ≈ Earth gravity).
     physic: new PlanckAdapter({ gravity: { x: 0, y: 320 } }),
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 ```
 
 The rest of the player class — `bodyDef`, `applyForce` magnitudes, `setVelocity`, collision hooks — typically ports unchanged. Tune `WALK_FORCE` upward if motion feels sluggish (Box2D's force-mass-dt² integration is similar to matter's but the unit scale through `pixelsPerMeter` shifts the numbers).

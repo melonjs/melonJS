@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0] - _unreleased_
+## [1.0.0] - _2026-05-10_
 
 ### Added
 - Initial release. `CapacitorPlugin` (`BasePlugin` subclass) bridges Capacitor's `appStateChange` → `state.pause` / `state.resume`, and forwards `backButton` events into the melonJS event bus as a `CapacitorBackEvent` with a `preventDefault()` API. Defaults: pause/resume on background, also pause/resume audio, exit the app when no handler intercepts the back press.

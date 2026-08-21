@@ -28,7 +28,7 @@ melonJS is designed so you can **focus on making games, not on graphics plumbing
 
 - **[Canvas2D-inspired rendering API](https://github.com/melonjs/melonJS/wiki/Rendering-API)** — If you've used the HTML5 Canvas, you already know melonJS. The rendering API (`save`, `restore`, `translate`, `rotate`, `setColor`, `fillRect`, ...) follows the same familiar patterns — no render graphs, no shader pipelines, no instruction sets to learn.
 
-- **True renderer abstraction** — Write your game once, run it on WebGPU, WebGL 2 or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API: the default `AUTO` mode negotiates the best available backend (WebGPU → WebGL 2 → Canvas) at startup, and the entire feature set renders identically on both GPU backends.
+- **True renderer abstraction** — Write your game once, run it on WebGPU, WebGL 2 or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API: the default `AUTO` mode tries WebGPU first at startup, falls back to WebGL 2 if that is unavailable, and ultimately to Canvas, and the entire feature set renders identically on both GPU backends.
 
 - **Complete engine, minimal footprint** — Physics, tilemaps, audio, input, cameras, tweens, particles, UI — a full game stack in a single tree-shakeable ES module. No dependency sprawl, no library stitching.
 
@@ -47,6 +47,7 @@ Compatibility
 
 Graphics
 - Fast GPU renderers (WebGPU and WebGL 2) for desktop and mobile devices, with fallback to Canvas rendering
+- Since 20.0 the aging WebGL 1 path is retired and WebGL 2 is the baseline; devices offering only WebGL 1 fall back to the Canvas renderer under `AUTO`
 - Extensible batcher system for custom rendering pipelines, with backend-neutral vertex formats and draw topologies (declare a layout once, describe it to either GPU backend)
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option and frame animation
@@ -231,7 +232,7 @@ app.world.addChild(new Text(609, 281, {
 ```
 > Simple hello world using melonJS
 
-> **Note:** since version 20.0, `await app.init()` is **required** after constructing the `Application`. The WebGPU backend — the default on WebGPU-capable browsers — acquires its GPU device asynchronously, so initialization had to become an async step; it resolves without suspending on the WebGL and Canvas backends. On 19.x the call is optional and this example works without it.
+> **Note:** since version 20.0, `await app.init()` is **required** after constructing the `Application`. The WebGPU backend, which `AUTO` tries first on browsers that support it, acquires its GPU device asynchronously, so initialization had to become an async step; it resolves without suspending on the WebGL and Canvas backends. On 19.x the call is optional and this example works without it.
 
 Documentation
 -------------------------------------------------------------------------------

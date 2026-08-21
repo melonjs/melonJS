@@ -26,25 +26,25 @@
 	},
 	"packageManager": "pnpm@10.32.1",
 	"dependencies": {
-		"@biomejs/biome": "2.5.5",
+		"@biomejs/biome": "2.5.9",
 		"@eslint/js": "^10.0.1",
 		"@types/node": "^25.6.0",
-		"@vitest/browser": "^4.1.10",
-		"@vitest/browser-playwright": "^4.1.10",
-		"eslint": "^10.8.0",
+		"@vitest/browser": "^4.1.11",
+		"@vitest/browser-playwright": "^4.1.11",
+		"eslint": "^10.8.1",
 		"eslint-plugin-jsdoc": "^63.2.2",
-		"globals": "^17.7.0",
+		"globals": "^17.11.0",
 		"lefthook": "^2.1.10",
 		"tsconfig": "workspace:^",
-		"tsx": "^4.23.1",
-		"turbo": "^2.10.7",
+		"tsx": "^4.23.12",
+		"turbo": "^2.10.11",
 		"typescript": "^6.0.2",
-		"typescript-eslint": "^8.65.0",
-		"vitest": "^4.1.10"
+		"typescript-eslint": "^8.67.0",
+		"vitest": "^4.1.11"
 	},
 	"devDependencies": {
-		"eslint-plugin-react-refresh": "^0.5.3",
-		"playwright": "^1.62.0"
+		"eslint-plugin-react-refresh": "^0.5.4",
+		"playwright": "^1.62.1"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -63,9 +63,9 @@
 			"shell-quote": "^1.9.0",
 			"markdown-it": "^14.2.0",
 			"react-router": "^7.15.1",
-			"vitest": "^4.1.10",
-			"@vitest/browser": "^4.1.10",
-			"@vitest/browser-playwright": "^4.1.10"
+			"vitest": "^4.1.11",
+			"@vitest/browser": "^4.1.11",
+			"@vitest/browser-playwright": "^4.1.11"
 		}
 	}
 }

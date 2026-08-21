@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1 - _unreleased_
+## 1.1.1 - _2026-08-21_
 
 ### Changed
 - **Minimum melonJS bumped to 20.0.0** — tracks the engine's physics contract in 20.0.0

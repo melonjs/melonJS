@@ -31,7 +31,7 @@ A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.x runtime integration
 ## Installation
 -------------------------------------------------------------------------------
 This plugin is already bundled with the required Spine [4.x runtime](package.json#dependencies), so there is no need to install it separately.
->Note: this plugin requires melonJS version 19.7.1 or higher.
+>Note: this plugin requires melonJS version 20.0.0 or higher.
 
 To install the plugin using npm:
 
@@ -64,6 +64,9 @@ const app = new me.Application(800, 600, {
     parent: "screen",
     renderer: me.video.AUTO,
 });
+
+// mandatory since melonJS 20.0: the renderer is built here
+await app.init();
 
 // preload assets
 me.loader.preload(DataManifest, function() {
@@ -162,7 +165,7 @@ See the [diamond example](https://melonjs.github.io/melonJS/examples/#/spine) fo
 | v2.0.0 | v18.2.0 (or higher) | v4.2.x |
 | v1.5.x | v15.12.0 (or higher)| v4.1, v4.2-beta |
 
-> **Note:** skeleton data is editor-version locked — plugin 3.x requires assets exported from a Spine **4.3** editor; 4.2 exports will not load (and vice-versa on plugin 2.x).
+> **Note:** skeleton data is editor-version locked — plugin 3.x and 4.x require assets exported from a Spine **4.3** editor; 4.2 exports will not load (and vice-versa on plugin 2.x).
 
 ## Questions, need help ?
 -------------------------------------------------------------------------------
