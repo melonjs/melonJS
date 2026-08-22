@@ -59,7 +59,11 @@ describe("Renderable GUID uniqueness and collision pair identity", () => {
 		expect(new Set(made).size).toBe(made.length);
 		// the old bug produced "-1" for EVERY renderable; the first one is
 		// still legitimately "-1", so what matters is that they diverge
-		expect(made.filter((g) => g === made[0])).toHaveLength(1);
+		expect(
+			made.filter((g) => {
+				return g === made[0];
+			}),
+		).toHaveLength(1);
 	});
 
 	it("keeps them distinct when the renderables share an id", () => {
@@ -98,10 +102,18 @@ describe("Renderable GUID uniqueness and collision pair identity", () => {
 
 		const started = [];
 		const active = [];
-		a1.onCollisionStart = () => started.push("pair1");
-		a2.onCollisionStart = () => started.push("pair2");
-		a1.onCollisionActive = () => active.push("pair1");
-		a2.onCollisionActive = () => active.push("pair2");
+		a1.onCollisionStart = () => {
+			return started.push("pair1");
+		};
+		a2.onCollisionStart = () => {
+			return started.push("pair2");
+		};
+		a1.onCollisionActive = () => {
+			return active.push("pair1");
+		};
+		a2.onCollisionActive = () => {
+			return active.push("pair2");
+		};
 
 		world.update(16);
 
@@ -130,8 +142,12 @@ describe("Renderable GUID uniqueness and collision pair identity", () => {
 		const a2 = mk(100, 400, T.PLAYER_OBJECT);
 		mk(108, 400, T.ENEMY_OBJECT);
 		const ended = [];
-		a1.onCollisionEnd = () => ended.push("pair1");
-		a2.onCollisionEnd = () => ended.push("pair2");
+		a1.onCollisionEnd = () => {
+			return ended.push("pair1");
+		};
+		a2.onCollisionEnd = () => {
+			return ended.push("pair2");
+		};
 
 		world.update(16);
 		// pull both apart

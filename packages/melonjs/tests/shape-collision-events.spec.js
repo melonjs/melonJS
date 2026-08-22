@@ -152,7 +152,11 @@ describe("Physics : shape-level collision events", () => {
 
 			// both of A's shapes overlap the single wide shape of B
 			expect(contacts.length).toBeGreaterThan(1);
-			const own = contacts.map((c) => c[0]).sort();
+			const own = contacts
+				.map((c) => {
+					return c[0];
+				})
+				.sort();
 			expect(own).toEqual([0, 1]);
 		});
 
@@ -175,8 +179,16 @@ describe("Physics : shape-level collision events", () => {
 			world.update(16);
 
 			// BOTH contacts surface
-			expect(seen.find((s) => s.trigger === true)).toBeDefined();
-			expect(seen.find((s) => s.trigger === false)).toBeDefined();
+			expect(
+				seen.find((s) => {
+					return s.trigger === true;
+				}),
+			).toBeDefined();
+			expect(
+				seen.find((s) => {
+					return s.trigger === false;
+				}),
+			).toBeDefined();
 			// and the SOLID one is still what resolves
 			expect(resolved).toBe(0);
 		});
@@ -233,17 +245,29 @@ describe("Physics : shape-level collision events", () => {
 		it("fires Start once, Active every step, End on separation", () => {
 			const log = [];
 			const a = add(100, [new Rect(0, 0, 32, 32)]);
-			a.onShapeCollisionStart = () => log.push("start");
-			a.onShapeCollisionActive = () => log.push("active");
-			a.onShapeCollisionEnd = () => log.push("end");
+			a.onShapeCollisionStart = () => {
+				return log.push("start");
+			};
+			a.onShapeCollisionActive = () => {
+				return log.push("active");
+			};
+			a.onShapeCollisionEnd = () => {
+				return log.push("end");
+			};
 			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
 
 			world.update(16);
 			world.update(16);
-			expect(log.filter((e) => e === "start")).toHaveLength(1);
-			expect(log.filter((e) => e === "active").length).toBeGreaterThanOrEqual(
-				2,
-			);
+			expect(
+				log.filter((e) => {
+					return e === "start";
+				}),
+			).toHaveLength(1);
+			expect(
+				log.filter((e) => {
+					return e === "active";
+				}).length,
+			).toBeGreaterThanOrEqual(2);
 			expect(log).not.toContain("end");
 
 			// separate them
@@ -292,8 +316,12 @@ describe("Physics : shape-level collision events", () => {
 		const a = add(100, [first, second]);
 		const ends = [];
 		const starts = [];
-		a.onShapeCollisionStart = (contact) => starts.push(contact.shapeA);
-		a.onShapeCollisionEnd = (contact) => ends.push(contact.shapeA);
+		a.onShapeCollisionStart = (contact) => {
+			return starts.push(contact.shapeA);
+		};
+		a.onShapeCollisionEnd = (contact) => {
+			return ends.push(contact.shapeA);
+		};
 		add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
 
 		world.update(16);
@@ -305,8 +333,14 @@ describe("Physics : shape-level collision events", () => {
 		world.update(16);
 
 		// the surviving shape's contact must not have restarted
-		const restarted = starts.slice(startsBefore).filter((s) => s === second);
+		const restarted = starts.slice(startsBefore).filter((s) => {
+			return s === second;
+		});
 		expect(restarted).toHaveLength(0);
-		expect(ends.filter((s) => s === second)).toHaveLength(0);
+		expect(
+			ends.filter((s) => {
+				return s === second;
+			}),
+		).toHaveLength(0);
 	});
 });

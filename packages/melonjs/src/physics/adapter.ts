@@ -72,7 +72,6 @@ export type BodyShape = Rect | Ellipse | Polygon;
  *
  * **Do not retain it.** The object is pooled and reused across pairs and
  * frames. Copy anything needed beyond the handler call.
- *
  * @example
  *   onShapeCollisionStart(contact, other) {
  *       // which of MY shapes was hit
