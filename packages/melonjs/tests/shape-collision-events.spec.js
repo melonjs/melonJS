@@ -307,40 +307,143 @@ describe("Physics : shape-level collision events", () => {
 
 	// ── the identity hazard the ticket called out ───────────────────────
 
-	it("removing an unrelated shape does not end surviving contacts", () => {
-		// `removeShape()` re-indexes every surviving shape, so an identity built
-		// on array position would fire a spurious End/Start pair here. Contact
-		// identity is a stamped id precisely to avoid that.
-		const first = new Rect(0, 0, 8, 32);
-		const second = new Rect(16, 0, 16, 32);
-		const a = add(100, [first, second]);
-		const ends = [];
-		const starts = [];
-		a.onShapeCollisionStart = (contact) => {
-			return starts.push(contact.shapeA);
-		};
-		a.onShapeCollisionEnd = (contact) => {
-			return ends.push(contact.shapeA);
-		};
-		add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+	describe("identity survives body mutation", () => {
+		it("re-indexing does not end a surviving contact", () => {
+			// `removeShapeAt(0)` splices, so the survivor moves from index 1 to
+			// index 0. An identity built on array position would End and Start
+			// it here; a stamped id must not.
+			//
+			// NOTE the shapes are read back from `body.shapes`: `addShape`
+			// converts a Rect into a pooled Polygon, so the instance passed in
+			// is NOT the one stored, and removing by the original reference is
+			// a silent no-op.
+			const a = add(100, [new Rect(0, 0, 8, 32), new Rect(8, 0, 24, 32)]);
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			const survivor = a.body.shapes[1];
+			const starts = [];
+			const ends = [];
+			a.onShapeCollisionStart = (contact) => {
+				starts.push(contact.shapeA);
+			};
+			a.onShapeCollisionEnd = (contact) => {
+				ends.push(contact.shapeA);
+			};
 
-		world.update(16);
-		const startsBefore = starts.length;
-		expect(startsBefore).toBeGreaterThan(0);
+			world.update(16);
+			expect(starts).toContain(survivor);
+			const before = starts.length;
+			expect(a.body.shapes).toHaveLength(2);
 
-		// drop the FIRST shape: `second` shifts from index 1 to index 0
-		a.body.removeShape(first);
-		world.update(16);
+			a.body.removeShapeAt(0);
+			expect(a.body.shapes).toHaveLength(1);
+			expect(a.body.shapes[0]).toBe(survivor); // it really did re-index
+			world.update(16);
 
-		// the surviving shape's contact must not have restarted
-		const restarted = starts.slice(startsBefore).filter((s) => {
-			return s === second;
+			// the survivor's contact must be continuous across the re-index
+			expect(starts.slice(before)).not.toContain(survivor);
+			expect(ends).not.toContain(survivor);
 		});
-		expect(restarted).toHaveLength(0);
-		expect(
-			ends.filter((s) => {
-				return s === second;
-			}),
-		).toHaveLength(0);
+
+		it("a handler removing a shape mid-dispatch does not throw", () => {
+			// Enumeration runs user code INSIDE the narrowphase scan, so a
+			// handler can mutate either body before the winning pair is
+			// re-measured. Capturing indices during the scan made that a
+			// TypeError on `undefined.type` and took the whole world step down.
+			const a = add(100, [new Rect(0, 0, 16, 32), new Rect(16, 0, 16, 32)]);
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			a.onShapeCollisionStart = () => {
+				if (a.body.shapes.length > 1) {
+					a.body.removeShapeAt(0);
+				}
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+			// and the world keeps stepping afterwards
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("a handler removing the PARTNER's shape does not throw", () => {
+			const a = add(100, [new Rect(0, 0, 32, 32)]);
+			const b = add(108, [new Rect(0, 0, 16, 32), new Rect(16, 0, 16, 32)], {
+				collisionType: T.ENEMY_OBJECT,
+			});
+			a.onShapeCollisionStart = () => {
+				if (b.body.shapes.length > 1) {
+					b.body.removeShapeAt(0);
+				}
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+	});
+
+	it("delivers events to a subscriber on a STATIC body", () => {
+		// a static body's own `collisions()` never runs, so its events can only
+		// arrive through the dynamic partner's visit. The `_wantsShapeContacts`
+		// gate checks BOTH objects for exactly this reason.
+		const wall = add(108, [new Rect(0, 0, 32, 32)], {
+			type: "static",
+			collisionType: T.WORLD_SHAPE,
+		});
+		add(100, [new Rect(0, 0, 32, 32)]);
+		const seen = [];
+		wall.onShapeCollisionActive = (contact, other) => {
+			seen.push({ own: contact.shapeA, partner: other });
+		};
+		world.update(16);
+
+		expect(seen.length).toBeGreaterThan(0);
+		expect(seen[0].own).toBe(wall.body.shapes[0]);
+	});
+
+	it("keeps Z data sign-symmetric between the two receivers", () => {
+		// `_fillShapeView` negates the Z triple on the flipped side, exactly as
+		// `_fillSymView` does. A sign error there would ship silently because
+		// planar pairs leave every Z field at 0.
+		const a = add(100, [new Rect(0, 0, 32, 32)]);
+		const b = add(108, [new Rect(0, 0, 32, 32)], {
+			collisionType: T.ENEMY_OBJECT,
+		});
+		let fromA = null;
+		let fromB = null;
+		a.onShapeCollisionActive = (contact) => {
+			fromA = { nx: contact.normal.x, ovx: contact.overlapV.x };
+		};
+		b.onShapeCollisionActive = (contact) => {
+			fromB = { nx: contact.normal.x, ovx: contact.overlapV.x };
+		};
+		world.update(16);
+
+		// the two receivers must see opposing vectors for the same overlap
+		expect(fromA).not.toBeNull();
+		expect(fromB).not.toBeNull();
+		expect(fromA.ovx).toBeCloseTo(-fromB.ovx, 6);
+		expect(fromA.nx).toBeCloseTo(-fromB.nx, 6);
+	});
+
+	it("reports one contact per partner when three bodies overlap", () => {
+		// the pooled 2-slot view is reused across pairs in sequence, which is
+		// the classic place for a stale-field bug to hide
+		const a = add(100, [new Rect(0, 0, 40, 32)]);
+		const b = add(108, [new Rect(0, 0, 32, 32)], {
+			collisionType: T.ENEMY_OBJECT,
+		});
+		const c = add(120, [new Rect(0, 0, 32, 32)], {
+			collisionType: T.ENEMY_OBJECT,
+		});
+		const partners = [];
+		a.onShapeCollisionActive = (contact, other) => {
+			partners.push(other);
+			// the view must describe THIS pair, not the previous one
+			expect(contact.b).toBe(other);
+		};
+		world.update(16);
+
+		expect(partners).toContain(b);
+		expect(partners).toContain(c);
 	});
 });

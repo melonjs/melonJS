@@ -31,28 +31,6 @@ export type BodyType = "static" | "dynamic" | "kinematic";
 export type BodyShape = Rect | Ellipse | Polygon;
 
 /**
- * Collision response passed to the modern collision lifecycle hooks
- * (`onCollisionStart`, `onCollisionActive`, `onCollisionEnd`) on every
- * adapter.
- *
- * **Receiver-symmetric:** `a` is always the renderable whose handler is
- * firing (`response.a === this`), `b` is always the partner (`response.b
- * === other`). The same overlap is dispatched once to each side as a
- * separate response with `a`/`b` swapped accordingly.
- *
- * **NOT the same contract as the legacy `onCollision`.** The legacy
- * handler receives a different response shape (fixed `a`/`b` per pair,
- * `overlapV` sign convention from b → a, fires 2× per frame for
- * dynamic-dynamic pairs). See `Renderable.onCollision` JSDoc for that
- * one.
- * @example
- *   onCollisionActive(response, other) {
- *       if (response.normal.y < -0.7) {
- *           // push-me-up direction ⇒ I'm on top of `other` (stomp)
- *       }
- *   }
- */
-/**
  * One overlapping SHAPE pair, passed to the shape-level collision lifecycle
  * hooks (`onShapeCollisionStart`, `onShapeCollisionActive`,
  * `onShapeCollisionEnd`).
@@ -111,6 +89,28 @@ export interface ShapeCollisionContact {
 	normalZ: number;
 }
 
+/**
+ * Collision response passed to the modern collision lifecycle hooks
+ * (`onCollisionStart`, `onCollisionActive`, `onCollisionEnd`) on every
+ * adapter.
+ *
+ * **Receiver-symmetric:** `a` is always the renderable whose handler is
+ * firing (`response.a === this`), `b` is always the partner (`response.b
+ * === other`). The same overlap is dispatched once to each side as a
+ * separate response with `a`/`b` swapped accordingly.
+ *
+ * **NOT the same contract as the legacy `onCollision`.** The legacy
+ * handler receives a different response shape (fixed `a`/`b` per pair,
+ * `overlapV` sign convention from b → a, fires 2× per frame for
+ * dynamic-dynamic pairs). See `Renderable.onCollision` JSDoc for that
+ * one.
+ * @example
+ *   onCollisionActive(response, other) {
+ *       if (response.normal.y < -0.7) {
+ *           // push-me-up direction ⇒ I'm on top of `other` (stomp)
+ *       }
+ *   }
+ */
 export interface CollisionResponse {
 	/** the renderable whose handler is firing — always `=== this`. */
 	a: Renderable;

@@ -157,6 +157,7 @@ export type {
 	PhysicsBody,
 	RaycastHit,
 	RaycastHit3d,
+	ShapeCollisionContact,
 } from "./physics/adapter.ts";
 export { Bounds } from "./physics/bounds.ts";
 export { AABB3d } from "./physics/broadphase/aabb3d.ts";
