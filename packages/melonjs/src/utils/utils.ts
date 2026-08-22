@@ -123,9 +123,22 @@ export function resetGUID(base: string, index = 0) {
  * @ignore
  */
 export function createGUID(index = 1) {
-	// to cover the case of undefined id for groups
-	GUID_index += index;
-	return `${GUID_base}-${index || GUID_index}`;
+	// `index` is a STRIDE for the counter, not the value to emit.
+	//
+	// This used to return `index || GUID_index`, which meant it returned
+	// `index` whenever that was truthy — and since `index` defaults to 1,
+	// `createGUID()` produced the string "-1" on every call. Every renderable
+	// added to a container therefore shared one GUID, and the only consumer of
+	// GUID is collision pair identity, so `Detector._pairKey` collapsed every
+	// pair in the world onto a single key: with two pairs colliding at once,
+	// the second was treated as already-seen and its `onCollisionStart` /
+	// `onCollisionActive` / `onCollisionEnd` never fired.
+	//
+	// Advance by at least 1 whatever arrives: `Container.addChild` passes
+	// `child.id`, which is `null` by default and 0 for a legitimately
+	// zero-id object, and neither must leave the counter standing still.
+	GUID_index += Number.isFinite(index) && index > 0 ? index : 1;
+	return `${GUID_base}-${GUID_index}`;
 }
 
 export const isStringArray = (value: unknown): value is string[] => {

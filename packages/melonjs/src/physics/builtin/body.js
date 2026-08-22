@@ -23,6 +23,13 @@ import { collision } from "../collision.js";
  **/
 
 /**
+ * Monotonic source of stable per-shape contact ids (#1596).
+ * Never reset: ids only have to be unique among LIVE shapes, and wrapping
+ * would be reachable only after 2^53 shapes.
+ */
+let shapeContactIdCounter = 0;
+
+/**
  * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
  * @category Physics
  * @see Renderable.body
@@ -717,6 +724,17 @@ export default class Body {
 	 * @private
 	 */
 	_initShapeCollision(stored, source) {
+		// Stable identity for shape-level contact tracking (#1596).
+		//
+		// Stamped ONCE and never re-stamped: `removeShape()` splices the array
+		// and re-adds every remaining shape through `addShape`, so an id derived
+		// from array position (or re-generated here) would change under a caller
+		// who removed an unrelated sibling, and the contact lifecycle would see
+		// spurious End/Start pairs. `destroy()` clears it when the instance goes
+		// back to a pool, so a recycled shape gets a fresh one.
+		if (stored._contactId === undefined) {
+			stored._contactId = ++shapeContactIdCounter;
+		}
 		if (source === undefined) {
 			// no source at all: the shape was built here, straight from a pool,
 			// so every field is reset to its default rather than inherited
@@ -1356,6 +1374,9 @@ export default class Body {
 			shape.collisionMask = undefined;
 			shape.isTrigger = false;
 			shape.isActive = true;
+			// cleared too, so the next owner gets a fresh contact identity rather
+			// than inheriting one that a live contact may still be keyed on (#1596)
+			shape._contactId = undefined;
 			if (shape instanceof Point) {
 				pointPool.release(shape);
 			} else if (shape instanceof Line) {

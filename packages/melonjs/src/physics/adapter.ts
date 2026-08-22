@@ -52,6 +52,66 @@ export type BodyShape = Rect | Ellipse | Polygon;
  *       }
  *   }
  */
+/**
+ * One overlapping SHAPE pair, passed to the shape-level collision lifecycle
+ * hooks (`onShapeCollisionStart`, `onShapeCollisionActive`,
+ * `onShapeCollisionEnd`).
+ *
+ * **Why this exists alongside `CollisionResponse`.** A body may collide with
+ * another through several shapes at once. `onCollision` and the
+ * `onCollision*` lifecycle report ONE contact per body pair — the one chosen
+ * for physical resolution — so a footprint contact can mask a simultaneous
+ * hurtbox contact. These hooks report every overlapping pair, without changing
+ * which one resolves.
+ *
+ * **Opt-in.** The detector only enumerates shape pairs when an object declares
+ * at least one of these handlers. Declaring none costs nothing.
+ *
+ * **Receiver-symmetric**, exactly like `CollisionResponse`: `a` and `shapeA`
+ * are always the side whose handler is firing, `b` and `shapeB` the partner.
+ *
+ * **Do not retain it.** The object is pooled and reused across pairs and
+ * frames. Copy anything needed beyond the handler call.
+ *
+ * @example
+ *   onShapeCollisionStart(contact, other) {
+ *       // which of MY shapes was hit
+ *       if (contact.indexShapeA === HURTBOX && contact.isTrigger) {
+ *           this.takeHit(other, contact.normal);
+ *       }
+ *   }
+ */
+export interface ShapeCollisionContact {
+	/** the renderable whose handler is firing — always `=== this`. */
+	a: Renderable;
+	/** the partner renderable — always `=== other`. */
+	b: Renderable;
+	/** the receiver's own shape in this contact. */
+	shapeA: BodyShape;
+	/** the partner's shape in this contact. */
+	shapeB: BodyShape;
+	/** index of `shapeA` in the receiver's `body.shapes`. */
+	indexShapeA: number;
+	/** index of `shapeB` in the partner's `body.shapes`. */
+	indexShapeB: number;
+	/** true when either shape is a trigger, so the pair contributes no push-out. */
+	isTrigger: boolean;
+	/** penetration depth. Zero in `onShapeCollisionEnd`, where the shapes have separated. */
+	overlap: number;
+	/** alias of `overlap`. */
+	depth: number;
+	/** minimum translation vector for the receiver. */
+	overlapV: { x: number; y: number };
+	/** contact normal in the legacy `overlapN` convention. */
+	overlapN: { x: number; y: number };
+	/** contact normal oriented for the receiver. */
+	normal: { x: number; y: number };
+	/** Z components, non-zero only for a `Box3d` pair that resolved along Z. */
+	overlapZ: number;
+	overlapNZ: number;
+	normalZ: number;
+}
+
 export interface CollisionResponse {
 	/** the renderable whose handler is firing — always `=== this`. */
 	a: Renderable;
