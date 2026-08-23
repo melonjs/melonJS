@@ -122,23 +122,29 @@ export function resetGUID(base: string, index = 0) {
  * Game Unique ID
  * @ignore
  */
-export function createGUID(index = 1) {
-	// `index` is a STRIDE for the counter, not the value to emit.
+export function createGUID(index?: number) {
+	// `index` is the caller's own id where it has one (a Tiled object passes
+	// its map id, so its GUID stays readable as `<levelBase>-<tiledId>`);
+	// everything else falls through to the running counter, which
+	// `resetGUID(levelId, nextobjectid)` seeds past every id in the map so the
+	// two can never meet.
 	//
-	// This used to return `index || GUID_index`, which meant it returned
-	// `index` whenever that was truthy — and since `index` defaults to 1,
-	// `createGUID()` produced the string "-1" on every call. Every renderable
-	// added to a container therefore shared one GUID, and the only consumer of
+	// The bug: the counter was advanced by `index` and then DISCARDED whenever
+	// `index` was truthy, and `index` defaulted to 1 — so `createGUID()` with
+	// no argument returned the literal string "-1" on every call. Every
+	// renderable added to a container shared one GUID. The only consumer of
 	// GUID is collision pair identity, so `Detector._pairKey` collapsed every
-	// pair in the world onto a single key: with two pairs colliding at once,
-	// the second was treated as already-seen and its `onCollisionStart` /
-	// `onCollisionActive` / `onCollisionEnd` never fired.
+	// pair in the world onto a single key and the second simultaneous
+	// collision had its `onCollisionStart` / `onCollisionActive` /
+	// `onCollisionEnd` silently dropped.
 	//
-	// Advance by at least 1 whatever arrives: `Container.addChild` passes
-	// `child.id`, which is `null` by default and 0 for a legitimately
-	// zero-id object, and neither must leave the counter standing still.
-	GUID_index += Number.isFinite(index) && index > 0 ? index : 1;
-	return `${GUID_base}-${GUID_index}`;
+	// Advance by one and stop defaulting `index`, so an absent id genuinely
+	// reaches the counter. Note this deliberately does NOT deduplicate ids the
+	// caller supplies: two renderables sharing an explicit `id` still share a
+	// GUID, exactly as before, since embedding the id is the point of that
+	// branch.
+	GUID_index++;
+	return `${GUID_base}-${index || GUID_index}`;
 }
 
 export const isStringArray = (value: unknown): value is string[] => {
