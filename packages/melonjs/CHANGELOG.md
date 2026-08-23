@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.0.1] (melonJS 2) - _unreleased_
+## [20.1.0] (melonJS 2) - _unreleased_
 
 ### Added
 - **Shape-level collision events** ([#1596](https://github.com/melonjs/melonJS/issues/1596)): `onShapeCollisionStart`, `onShapeCollisionActive` and `onShapeCollisionEnd` report **every** overlapping shape pair between two bodies, where `onCollision` and the `onCollision*` lifecycle report only the single contact chosen for physical resolution. A body colliding through several shapes at once could previously surface just one of them, and a solid contact masked a simultaneous trigger contact entirely. Each contact carries both shapes, both indices into `body.shapes`, the trigger status and the SAT data, receiver-symmetric so `shapeA` / `indexShapeA` are always your own. **Physical resolution is untouched**: the same pair is chosen for push-out, with the same solid-over-trigger preference from #1590. **Opt-in**: the detector enumerates shape pairs only when an object declares one of these handlers, so an application that declares none performs exactly the narrowphase work it did before, which is asserted directly rather than assumed. Contact identity is a stable id stamped on the shape, not its array position, because `removeShape()` re-indexes every surviving shape and a position-based identity would end and restart unrelated contacts. Builtin adapter only for now; `@melonjs/planck-adapter` and `@melonjs/matter-adapter` do not yet emit these
