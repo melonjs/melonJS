@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 - _unreleased_
+## 1.2.0 - _2026-08-23_
 
 ### Fixed
 - **A body with more than one shape received NO collision events at all.** matter reports collisions between compound **parts**, but only the parent body was registered against its renderable, so every dispatch failed its lookup and returned early. That silently dropped `onCollision`, `onCollisionStart`, `onCollisionActive` and `onCollisionEnd` for any multi-shape body, while single-shape bodies worked normally. Parts now resolve through `body.parent`, which matter sets to the body itself for a simple body, so both cases take one path
