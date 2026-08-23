@@ -155,6 +155,15 @@ export class PlanckAdapter implements PhysicsAdapter {
 
 	private readonly bodyMap = new Map<Renderable, planck.Body>();
 	private readonly renderableMap = new Map<planck.Body, Renderable>();
+	/**
+	 * planck fixture -> the melonJS shape it was built from, and that shape's
+	 * index in the body definition. Box2D contacts are per fixture pair, so this
+	 * is what lets a contact name the shapes rather than only the bodies.
+	 */
+	private readonly fixtureShapeMap = new Map<
+		planck.Fixture,
+		{ shape: BodyShape; index: number }
+	>();
 	private readonly velocityLimits = new Map<
 		Renderable,
 		{ x: number; y: number }
@@ -261,6 +270,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		}
 		this.bodyMap.clear();
 		this.renderableMap.clear();
+		this.fixtureShapeMap.clear();
 		this.velocityLimits.clear();
 		this.defMap.clear();
 		this.posOffsets.clear();
@@ -363,7 +373,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// Attach each shape as a fixture, with vertices in body-local
 		// meters (renderable-space shape position minus centroid, divided
 		// by pixelsPerMeter).
-		for (const shape of def.shapes) {
+		for (const [shapeIndex, shape] of def.shapes.entries()) {
 			// `isActive === false` keeps a shape out of the simulation without
 			// removing it from the body — no fixture, so Box2D never sees it
 			if ((shape as { isActive?: boolean }).isActive === false) {
@@ -401,7 +411,14 @@ export class PlanckAdapter implements PhysicsAdapter {
 							? def.collisionMask
 							: 0xffff,
 			};
-			body.createFixture(planckShape, fixtureDef);
+			const fixture = body.createFixture(planckShape, fixtureDef);
+			// Box2D reports contacts per FIXTURE pair, and this backend already
+			// builds one fixture per shape, so remembering the origin shape here is
+			// all that shape-level collision events need (melonjs#1596). Note the
+			// index is the position in `def.shapes`, which includes shapes skipped
+			// for `isActive === false` above, so it stays aligned with
+			// `body.shapes` on the melonJS side.
+			this.fixtureShapeMap.set(fixture, { shape, index: shapeIndex });
 		}
 
 		// Box2D recomputes mass from fixtures when fixtures are added; for
@@ -602,6 +619,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 			this.world.destroyBody(body);
 			this.bodyMap.delete(renderable);
 			this.renderableMap.delete(body);
+			for (let f = body.getFixtureList(); f; f = f.getNext()) {
+				this.fixtureShapeMap.delete(f);
+			}
 			this.velocityLimits.delete(renderable);
 			this.defMap.delete(renderable);
 			this.posOffsets.delete(renderable);
@@ -1044,6 +1064,18 @@ export class PlanckAdapter implements PhysicsAdapter {
 				: "onCollision";
 		};
 
+		this._dispatchShapeContact(
+			contact,
+			rA,
+			rB,
+			nx,
+			ny,
+			depth,
+			phase,
+			aDetached,
+			bDetached,
+		);
+
 		const responseAB = {
 			a: rA,
 			b: rB,
@@ -1080,6 +1112,89 @@ export class PlanckAdapter implements PhysicsAdapter {
 					rA,
 				);
 			}
+		}
+	}
+
+	/**
+	 * Fire the shape-level collision hooks for one Box2D contact.
+	 *
+	 * Box2D creates one contact per FIXTURE pair and this backend builds one
+	 * fixture per shape, so the enumeration melonjs#1596 asks for is what the
+	 * engine already reports: a compound body overlapping through several
+	 * shapes produces several contacts, and each names its own pair. Fixtures
+	 * not built from a melonJS shape are skipped.
+	 * @param contact the Box2D contact being reported
+	 * @param rA renderable owning fixture A
+	 * @param rB renderable owning fixture B
+	 * @param nx contact normal x, in A -> B orientation
+	 * @param ny contact normal y, in A -> B orientation
+	 * @param depth penetration depth
+	 * @param phase which lifecycle hook to fire
+	 * @param aDetached true when A has left the world
+	 * @param bDetached true when B has left the world
+	 */
+	private _dispatchShapeContact(
+		contact: planck.Contact,
+		rA: Renderable,
+		rB: Renderable,
+		nx: number,
+		ny: number,
+		depth: number,
+		phase: "start" | "active" | "end",
+		aDetached: boolean,
+		bDetached: boolean,
+	): void {
+		const entryA = this.fixtureShapeMap.get(contact.getFixtureA());
+		const entryB = this.fixtureShapeMap.get(contact.getFixtureB());
+		if (entryA === undefined || entryB === undefined) {
+			return;
+		}
+		const method =
+			phase === "start"
+				? "onShapeCollisionStart"
+				: phase === "end"
+					? "onShapeCollisionEnd"
+					: "onShapeCollisionActive";
+		const isTrigger =
+			(entryA.shape as { isTrigger?: boolean }).isTrigger === true ||
+			(entryB.shape as { isTrigger?: boolean }).isTrigger === true;
+		const emit = (
+			receiver: Renderable,
+			partner: Renderable,
+			own: { shape: BodyShape; index: number },
+			other: { shape: BodyShape; index: number },
+			ownNx: number,
+			ownNy: number,
+		): void => {
+			const fn = (receiver as Renderable & Record<string, unknown>)[method];
+			if (typeof fn !== "function") {
+				return;
+			}
+			(fn as (contact: unknown, other: Renderable) => unknown).call(
+				receiver,
+				{
+					a: receiver,
+					b: partner,
+					shapeA: own.shape,
+					shapeB: other.shape,
+					indexShapeA: own.index,
+					indexShapeB: other.index,
+					isTrigger,
+					// a separated contact carries identity only, matching the
+					// builtin adapter and `onCollisionEnd`
+					depth: phase === "end" ? 0 : depth,
+					overlap: phase === "end" ? 0 : depth,
+					normal: { x: ownNx, y: ownNy },
+					pair: contact,
+				},
+				partner,
+			);
+		};
+		if (!aDetached) {
+			emit(rA, rB, entryA, entryB, -nx, -ny);
+		}
+		if (!bDetached) {
+			emit(rB, rA, entryB, entryA, nx, ny);
 		}
 	}
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 - _unreleased_
+
+### Added
+- **Shape-level collision events** ([melonjs#1596](https://github.com/melonjs/melonJS/issues/1596)): `onShapeCollisionStart`, `onShapeCollisionActive` and `onShapeCollisionEnd` now fire on this backend, reporting every overlapping shape pair rather than one contact per body pair. Box2D creates one contact per FIXTURE pair and this adapter already builds one fixture per shape, so the enumeration is what the engine reports natively rather than something layered on top: a compound body overlapping through several shapes produces several contacts, and each names its own pair. Each contact carries both shapes, both indices into the body definition, the trigger status and the contact normal and depth, receiver-symmetric so `shapeA` / `indexShapeA` are always your own
+
+### Notes
+- The peer range stays `>=20.0.0`. These hooks are dispatched by the adapter itself and are ordinary methods on your renderable, so nothing here needs the engine release that introduced them: the events work on any melonJS 20.x. The builtin detector's own implementation arrived in 20.1.0
+
+
 ## 1.2.0 - _2026-08-21_
 
 ### Added

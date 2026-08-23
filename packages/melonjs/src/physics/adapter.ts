@@ -45,6 +45,13 @@ export type BodyShape = Rect | Ellipse | Polygon;
  * **Opt-in.** The detector only enumerates shape pairs when an object declares
  * at least one of these handlers. Declaring none costs nothing.
  *
+ * **Supported on every backend.** The builtin detector enumerates shape pairs
+ * directly; `@melonjs/planck-adapter` and `@melonjs/matter-adapter` map one
+ * melonJS shape onto one native collider and their engines already report
+ * contacts per collider pair, so both dispatch these natively. The adapters
+ * supply `normal` and `depth` rather than the full SAT vector set, matching
+ * what they already provide to `onCollision`.
+ *
  * **Receiver-symmetric**, exactly like `CollisionResponse`: `a` and `shapeA`
  * are always the side whose handler is firing, `b` and `shapeB` the partner.
  *

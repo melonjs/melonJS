@@ -136,6 +136,18 @@ export class MatterAdapter implements PhysicsAdapter {
 	private readonly bodyMap = new Map<Renderable, Matter.Body>();
 	/** matter-js body → its renderable (for collision / sync) */
 	private readonly renderableMap = new Map<Matter.Body, Renderable>();
+	/**
+	 * matter part -> the melonJS shape it was built from, plus that shape's
+	 * index in the body definition.
+	 *
+	 * matter reports collisions between PARTS, so this is what lets a contact
+	 * name the shapes involved rather than only the bodies (melonjs#1596). A
+	 * single-shape body IS its own part, so both cases are covered uniformly.
+	 */
+	private readonly partShapeMap = new Map<
+		Matter.Body,
+		{ shape: BodyShape; index: number }
+	>();
 	/** per-body velocity cap (Matter has no native equivalent) */
 	private readonly velocityLimits = new Map<
 		Renderable,
@@ -268,6 +280,7 @@ export class MatterAdapter implements PhysicsAdapter {
 		Matter.Engine.clear(this.engine);
 		this.bodyMap.clear();
 		this.renderableMap.clear();
+		this.partShapeMap.clear();
 		this.velocityLimits.clear();
 		this.defMap.clear();
 		this.bodyGravityScale.clear();
@@ -356,7 +369,11 @@ export class MatterAdapter implements PhysicsAdapter {
 		// matter compound body (Matter.Body.create with parts).
 		const baseX = renderable.pos.x;
 		const baseY = renderable.pos.y;
-		const parts = def.shapes.map((s) => this._shapeToMatter(s, baseX, baseY));
+		const parts = def.shapes.map((s, i) => {
+			const part = this._shapeToMatter(s, baseX, baseY);
+			this.partShapeMap.set(part, { shape: s, index: i });
+			return part;
+		});
 		let body: Matter.Body;
 		if (parts.length === 1) {
 			body = parts[0];
@@ -997,8 +1014,17 @@ export class MatterAdapter implements PhysicsAdapter {
 				: "onCollision";
 		};
 		for (const pair of pairs) {
-			const rA = this.renderableMap.get(pair.bodyA);
-			const rB = this.renderableMap.get(pair.bodyB);
+			// matter reports collisions between PARTS. A compound body's parts
+			// are not in `renderableMap` (only the parent is), so looking the
+			// pair bodies up directly meant every multi-shape body silently
+			// received NO collision events at all — not the new shape-level
+			// ones, and not `onCollision` / `onCollisionStart` either. Resolve
+			// through `.parent`, which matter sets to the body itself for a
+			// simple body, so both cases take one path.
+			const partA = pair.bodyA;
+			const partB = pair.bodyB;
+			const rA = this._renderableForPart(partA);
+			const rB = this._renderableForPart(partB);
 			if (!rA || !rB) continue;
 			// Detachment handling. `ancestor === null` means the renderable
 			// was attached to a container and later detached (removeChild,
@@ -1076,6 +1102,119 @@ export class MatterAdapter implements PhysicsAdapter {
 					);
 				}
 			}
+
+			// shape-level hooks, after the pair-level ones so ordering matches
+			// the builtin adapter (melonjs#1596)
+			this._dispatchShapeContacts(
+				rA,
+				rB,
+				partA,
+				partB,
+				normal,
+				depth,
+				phase,
+				aDetached,
+				bDetached,
+			);
+		}
+	}
+
+	/**
+	 * Resolve the renderable owning a matter body or one of its parts.
+	 *
+	 * matter sets `parent` to the body itself on a simple body, so a compound
+	 * part and a standalone body take the same path.
+	 * @param part the matter body or compound part to resolve
+	 * @returns the owning renderable, or undefined when unregistered
+	 */
+	private _renderableForPart(part: Matter.Body): Renderable | undefined {
+		return (
+			this.renderableMap.get(part) ??
+			(part.parent && part.parent !== part
+				? this.renderableMap.get(part.parent)
+				: undefined)
+		);
+	}
+
+	/**
+	 * Fire the shape-level collision hooks for one matter pair.
+	 *
+	 * matter's pairs are already per-PART, so a compound body overlapping
+	 * through several parts produces several pairs and every one of them is
+	 * reported — which is exactly the enumeration melonjs#1596 asks for.
+	 * Bodies whose parts were not built from a melonJS shape are skipped.
+	 * @param rA renderable owning part A
+	 * @param rB renderable owning part B
+	 * @param partA the matter part on A's side
+	 * @param partB the matter part on B's side
+	 * @param normal contact normal, in A -> B orientation
+	 * @param normal.x normal x component
+	 * @param normal.y normal y component
+	 * @param depth penetration depth
+	 * @param phase which lifecycle hook to fire
+	 * @param aDetached true when A has left the world
+	 * @param bDetached true when B has left the world
+	 */
+	private _dispatchShapeContacts(
+		rA: Renderable,
+		rB: Renderable,
+		partA: Matter.Body,
+		partB: Matter.Body,
+		normal: { x: number; y: number },
+		depth: number,
+		phase: "start" | "active" | "end",
+		aDetached: boolean,
+		bDetached: boolean,
+	): void {
+		const entryA = this.partShapeMap.get(partA);
+		const entryB = this.partShapeMap.get(partB);
+		if (entryA === undefined || entryB === undefined) {
+			return;
+		}
+		const method =
+			phase === "start"
+				? "onShapeCollisionStart"
+				: phase === "end"
+					? "onShapeCollisionEnd"
+					: "onShapeCollisionActive";
+		const isTrigger =
+			(entryA.shape as { isTrigger?: boolean }).isTrigger === true ||
+			(entryB.shape as { isTrigger?: boolean }).isTrigger === true;
+		const emit = (
+			receiver: Renderable,
+			partner: Renderable,
+			own: { shape: BodyShape; index: number },
+			other: { shape: BodyShape; index: number },
+			nx: number,
+			ny: number,
+		): void => {
+			const fn = (receiver as Renderable & Record<string, unknown>)[method];
+			if (typeof fn !== "function") {
+				return;
+			}
+			(fn as (contact: unknown, other: Renderable) => unknown).call(
+				receiver,
+				{
+					a: receiver,
+					b: partner,
+					shapeA: own.shape,
+					shapeB: other.shape,
+					indexShapeA: own.index,
+					indexShapeB: other.index,
+					isTrigger,
+					// separated contacts carry identity only, matching the builtin
+					depth: phase === "end" ? 0 : depth,
+					overlap: phase === "end" ? 0 : depth,
+					normal: { x: nx, y: ny },
+				},
+				partner,
+			);
+		};
+		if (!aDetached) {
+			emit(rA, rB, entryA, entryB, -normal.x, -normal.y);
+		}
+		if (!bDetached) {
+			emit(rB, rA, entryB, entryA, normal.x, normal.y);
 		}
 	}
 
