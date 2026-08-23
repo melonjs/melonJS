@@ -48,7 +48,10 @@ describe("MatterAdapter — shape-level collision events", () => {
 		new World(0, 0, 800, 600, adapter);
 	});
 
-	/** settle the simulation for a while */
+	/**
+	 * Settle the simulation for a while.
+	 * @param steps how many fixed steps to advance
+	 */
 	const run = (steps = 120) => {
 		for (let i = 0; i < steps; i++) {
 			adapter.step(16.6667);
@@ -146,7 +149,7 @@ describe("MatterAdapter — shape-level collision events", () => {
 		run();
 
 		expect(seen.length).toBeGreaterThan(0);
-		expect(seen.every((t) => t === true)).toBe(true);
+		expect(seen.every((t) => t)).toBe(true);
 	});
 
 	it("costs nothing when nobody subscribes", () => {
