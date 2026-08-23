@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 - _2026-08-23_
+
+### Fixed
+- **A body with more than one shape received NO collision events at all.** matter reports collisions between compound **parts**, but only the parent body was registered against its renderable, so every dispatch failed its lookup and returned early. That silently dropped `onCollision`, `onCollisionStart`, `onCollisionActive` and `onCollisionEnd` for any multi-shape body, while single-shape bodies worked normally. Parts now resolve through `body.parent`, which matter sets to the body itself for a simple body, so both cases take one path
+
+### Added
+- **Shape-level collision events** ([melonjs#1596](https://github.com/melonjs/melonJS/issues/1596)): `onShapeCollisionStart`, `onShapeCollisionActive` and `onShapeCollisionEnd` now fire on this backend, reporting every overlapping shape pair rather than one contact per body pair. Each melonJS shape becomes one matter part and matter's pairs are already per-part, so a compound body overlapping through several shapes produces several pairs and every one is reported. Each contact carries both shapes, both indices into the body definition, the trigger status and the contact normal and depth, receiver-symmetric so `shapeA` / `indexShapeA` are always your own
+
+### Notes
+- The peer range stays `>=20.0.0`. These hooks are dispatched by the adapter itself and are ordinary methods on your renderable, so nothing here needs the engine release that introduced them: the events work on any melonJS 20.x. The builtin detector's own implementation arrived in 20.1.0
+
+
 ## 1.1.1 - _2026-08-21_
 
 ### Changed
