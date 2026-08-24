@@ -278,7 +278,21 @@ class Timer {
 	 * @ignore
 	 */
 	updateTimers() {
-		for (const timer of this.timers) {
+		// Iterate a SNAPSHOT. The non-repeating branch below calls
+		// `clearTimer()`, which splices `this.timers` synchronously, and a
+		// callback is free to add or remove timers too. Splicing during a
+		// `for...of` over the live array shifts every later element down one,
+		// so the entry after a fired one-shot was skipped for that tick: two
+		// timers due on the same frame, only one fired, the other a frame late.
+		// Silent, which is why it survived. The public `clearTimeout` already
+		// defers removal for exactly this reason.
+		//
+		// A timer cleared by an earlier callback in the same tick must still
+		// not fire, hence the membership check before dispatch.
+		for (const timer of [...this.timers]) {
+			if (!this.timers.includes(timer)) {
+				continue;
+			}
 			if (!(timer.pauseable && state.isPaused())) {
 				timer.elapsed += this.delta;
 			}
