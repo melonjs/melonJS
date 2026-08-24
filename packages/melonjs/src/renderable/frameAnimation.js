@@ -208,6 +208,16 @@ export default class FrameAnimation {
 					this.resetAnim = () => {
 						if (typeof onComplete === "function") {
 							onComplete();
+							// The guard in `update()` runs after `resetAnim`
+							// RETURNS, which is too late for this wrapper: it
+							// re-enters the engine below, still inside the
+							// call. A callback that destroyed the host has
+							// already emptied `anim`, so chaining would throw
+							// "animation id not defined" from inside what looks
+							// to the caller like their own completion handler.
+							if (!this._isCurrentAnimationLive()) {
+								return false;
+							}
 						}
 						this.setCurrentAnimation(next, null, true);
 					};
@@ -217,6 +227,12 @@ export default class FrameAnimation {
 					this.resetAnim = () => {
 						if (typeof onComplete === "function") {
 							onComplete();
+							// see the chain wrapper above. Writing `_animDone`
+							// on a destroyed engine is harmless, but bailing
+							// here keeps the two wrappers reading the same way
+							if (!this._isCurrentAnimationLive()) {
+								return false;
+							}
 						}
 						this._animDone = true;
 						return false;

@@ -951,6 +951,65 @@ describe("Sprite", () => {
 			expect(calls).toBeGreaterThan(1);
 		});
 
+		it("the {next, onComplete} chain form removing the sprite does not throw", () => {
+			// The chain wrapper calls `onComplete()` and then, still INSIDE
+			// `resetAnim`, calls `setCurrentAnimation(next)`. A guard placed
+			// after `resetAnim()` returns is therefore too late: the engine
+			// re-enters itself on a host the callback just destroyed, and
+			// `setCurrentAnimation` throws "animation id not defined" because
+			// `destroy()` emptied `anim`.
+			const { parent, s } = scene();
+			s.addAnimation("idle", [0, 1], 50);
+			s.addAnimation("attack", [0, 1], 50);
+			// NOT "run": re-selecting the already-current animation is a
+			// documented no-op, so asking for it again would install no
+			// callback at all and the test would pass vacuously
+			s.setCurrentAnimation("attack", {
+				next: "idle",
+				onComplete: () => {
+					parent.removeChildNow(s);
+				},
+			});
+			expect(() => {
+				drive(() => {
+					s.update(60);
+				});
+			}).not.toThrow();
+		});
+
+		it("the {loop:false, onComplete} play-once form removing the sprite does not throw", () => {
+			const { parent, s } = scene();
+			s.addAnimation("attack", [0, 1], 50);
+			s.setCurrentAnimation("attack", {
+				loop: false,
+				onComplete: () => {
+					parent.removeChildNow(s);
+				},
+			});
+			expect(() => {
+				drive(() => {
+					s.update(60);
+				});
+			}).not.toThrow();
+		});
+
+		it("the legacy string-chain form removing the sprite does not throw", () => {
+			// pinned because the chain wrapper is the fragile spot; this form
+			// reaches it through `onended` rather than `onComplete`
+			const { parent, s } = scene();
+			s.addAnimation("idle", [0, 1], 50);
+			s.addAnimation("attack", [0, 1], 50);
+			s.setCurrentAnimation("attack", "idle");
+			s.onended = () => {
+				parent.removeChildNow(s);
+			};
+			expect(() => {
+				drive(() => {
+					s.update(60);
+				});
+			}).not.toThrow();
+		});
+
 		it("still advances frames normally", () => {
 			// the guard runs on every update, so the ordinary path has to be
 			// unaffected. Asserted on the observable frame index rather than
