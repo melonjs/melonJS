@@ -18,15 +18,30 @@ export function preloadFontFace(data, onload, onerror) {
 			? globalThis.document.fonts
 			: undefined;
 
-	// FontFace constructor expects src in `url(...)` or `local()` format
-	// only wrap plain paths in url(); leave url(), local(), and data URIs as-is
-	if (!data.src.startsWith("url(") && !data.src.startsWith("local(")) {
-		data.src = "url(" + data.src + ")";
+	// The FontFace constructor takes a CSS source descriptor: `url(...)` or
+	// `local(...)`. Wrap a bare path, and leave anything already in either form
+	// (including data URIs someone has wrapped themselves) untouched.
+	//
+	// QUOTED, because an unquoted CSS `url()` token may not contain whitespace.
+	// A font whose filename has a space — "Super Bouncer.ttf", an entirely
+	// ordinary thing to ship — produced a descriptor the browser refuses to
+	// parse, so `load()` rejected with a SyntaxError before any request was
+	// made and the loader reported it as a failed resource. Quoting also covers
+	// parentheses and commas, which are equally illegal bare.
+	//
+	// Built into a LOCAL, not written back onto `data`: the descriptor belongs
+	// to the caller's manifest, which is routinely a module-level constant
+	// reused across scenes and retries.
+	let src = data.src;
+	if (!src.startsWith("url(") && !src.startsWith("local(")) {
+		// escape what a CSS single-quoted string cannot carry literally
+		const escaped = src.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+		src = `url('${escaped}')`;
 	}
 
 	if (typeof fontFaceSet !== "undefined") {
 		// create a new font face
-		const font = new FontFace(data.name, data.src);
+		const font = new FontFace(data.name, src);
 		// loading promise
 		font.load().then(
 			() => {
