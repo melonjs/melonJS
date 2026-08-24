@@ -309,8 +309,16 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			// left out, a single frame of input keeps accelerating the body
 			// along z forever, because callers set the force per-frame while a
 			// key is held and rely on this reset to stop.
-			body.force.set(0, 0);
-			body.forceZ = 0;
+			//
+			// Guarded because `detector.collisions()` above dispatches user
+			// collision handlers, and one of those may have destroyed this very
+			// body (`Renderable.destroy()` releases `force` to the pool and
+			// leaves it undefined). A body torn down mid-step has no
+			// accumulator left to clear.
+			if (body.force !== undefined) {
+				body.force.set(0, 0);
+				body.forceZ = 0;
+			}
 		}
 		// fire onCollisionEnd for pairs that separated this step
 		this.detector.endFrame();
