@@ -395,8 +395,15 @@ export default class Renderable extends Rect {
 	 */
 	get parentApp() {
 		if (!this._parentApp && this.ancestor) {
-			// the `app` property is only defined in the world "root" container
-			this._parentApp = this.ancestor.getRootAncestor().app;
+			// the `app` property is only defined in the world "root" container.
+			//
+			// `?.` because `getRootAncestor()` returns undefined for a tree that
+			// was never attached to a world — an off-world scratch container —
+			// and this getter documents itself as returning undefined in
+			// exactly that case rather than throwing. `Mesh.onDeactivateEvent`
+			// reads it during `removeChildNow`, so removing a mesh from a
+			// detached container threw instead.
+			this._parentApp = this.ancestor.getRootAncestor()?.app;
 		}
 		return this._parentApp;
 	}
