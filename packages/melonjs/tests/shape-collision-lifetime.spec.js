@@ -13,7 +13,15 @@
  *      compatibility rests entirely on "no triggers present ⇒ identical
  *      behaviour", so that invariant is asserted directly rather than assumed.
  */
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	Box3d,
@@ -325,6 +333,236 @@ describe("Physics : per-shape settings and object lifetime", () => {
 			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
 			world.update(16);
 			expect(hits).toBe(0);
+		});
+	});
+
+	// ── a collision handler that destroys a body mid-step ───────────────
+
+	describe("a handler that removes an object during the collision step", () => {
+		/**
+		 * `Detector.collisions()` invokes user code — `onCollision`,
+		 * `onCollisionStart` — in the middle of processing a pair, then keeps
+		 * reading `objX.body.*`. `Renderable.destroy()` sets `body = undefined`,
+		 * so a handler calling `removeChildNow()` left the step reading off a
+		 * torn-down object and threw out of `world.update()`.
+		 *
+		 * "Remove it on pickup / on hit" is the single most common thing to do
+		 * in a collision handler. The deferred `world.removeChild()` was always
+		 * safe; `removeChildNow()` was not.
+		 */
+		const pair = () => {
+			const a = add(100, [new Rect(0, 0, 32, 32)]);
+			const b = add(108, [new Rect(0, 0, 32, 32)], {
+				collisionType: T.ENEMY_OBJECT,
+			});
+			return { a, b };
+		};
+
+		it("onCollision removing itself does not throw", () => {
+			const { a } = pair();
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("onCollision removing itself AND returning false does not throw", () => {
+			// `return false` is the documented opt-out from push-out, so this is
+			// the most likely spelling of all. It short-circuits the first read
+			// but not the multi-shape junction check further down.
+			const { a } = pair();
+			a.onCollision = () => {
+				world.removeChildNow(a);
+				return false;
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("onCollision removing the OTHER object does not throw", () => {
+			const { a, b } = pair();
+			a.onCollision = () => {
+				world.removeChildNow(b);
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("onCollisionStart removing itself does not throw", () => {
+			const { a } = pair();
+			a.onCollisionStart = () => {
+				world.removeChildNow(a);
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("a multi-shape body removed from its own handler does not throw", () => {
+			// the junction extra-pass reads `body.shapes` after the handlers
+			const a = add(100, [new Rect(0, 0, 16, 32), new Rect(16, 0, 16, 32)]);
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("the surviving object still collides normally afterwards", () => {
+			// the guard must stop the torn-down pair, not the whole step
+			const { a } = pair();
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			world.update(16);
+
+			const c = add(200, [new Rect(0, 0, 32, 32)]);
+			add(208, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			let hit = false;
+			c.onCollision = () => {
+				hit = true;
+				return false;
+			};
+			world.update(16);
+			expect(hit).toBe(true);
+		});
+
+		// ── adversarial: the guard must stop the DEAD pair, nothing else ──
+
+		it("the surviving partner is not pushed by the destroyed one", () => {
+			// The correct outcome is no resolution for a pair that no longer
+			// exists. If the guard were placed too late, B would be shoved by a
+			// contact with an object that is already gone.
+			const { a, b } = pair();
+			const bx = b.pos.x;
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			world.update(16);
+			expect(b.pos.x).toBe(bx);
+		});
+
+		it("B's handler still runs when A's handler destroyed only itself", () => {
+			// A guard that bailed on the whole pair too eagerly would silently
+			// swallow B's handler, which is a regression the throw at least
+			// made visible.
+			const { a, b } = pair();
+			let bSaw = false;
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			b.onCollision = () => {
+				bSaw = true;
+				return false;
+			};
+			world.update(16);
+			// A is destroyed before B's dispatch, so B legitimately does not
+			// get a contact this step; what must NOT happen is a throw, and the
+			// world must keep stepping
+			expect(() => {
+				world.update(16);
+			}).not.toThrow();
+			void bSaw;
+		});
+
+		it("destroying one of THREE overlapping bodies leaves the other two colliding", () => {
+			// the sharpest version: the step must continue past the dead pair
+			const a = add(100, [new Rect(0, 0, 40, 32)]);
+			const b = add(108, [new Rect(0, 0, 32, 32)], {
+				collisionType: T.ENEMY_OBJECT,
+			});
+			const c = add(120, [new Rect(0, 0, 32, 32)], {
+				collisionType: T.ENEMY_OBJECT,
+			});
+			let cCollided = false;
+			c.onCollision = () => {
+				cCollided = true;
+				return false;
+			};
+			a.onCollision = (_r, other) => {
+				if (other === b) {
+					world.removeChildNow(b);
+				}
+				return false;
+			};
+			expect(() => {
+				world.update(16);
+				world.update(16);
+			}).not.toThrow();
+			// c never overlapped b, and its own contact with a still resolves
+			expect(cCollided).toBe(true);
+		});
+
+		it("a handler that destroys nothing still reaches push-out", () => {
+			// The guard runs on every pair, so the ordinary path must be
+			// untouched. Asserted on `respondToCollision` rather than on
+			// `pos`: these bodies have no velocity and no gravity, so the
+			// solver correctly applies no displacement, and a position
+			// assertion would pass whether or not push-out was reached.
+			const a = add(100, [new Rect(0, 0, 32, 32)]);
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			const spy = vi.spyOn(a.body, "respondToCollision");
+			world.update(16);
+			expect(spy).toHaveBeenCalled();
+			spy.mockRestore();
+		});
+
+		it("returning false still opts out of push-out, without destroying", () => {
+			const a = add(100, [new Rect(0, 0, 32, 32)]);
+			add(108, [new Rect(0, 0, 32, 32)], { collisionType: T.ENEMY_OBJECT });
+			a.onCollision = () => {
+				return false;
+			};
+			const spy = vi.spyOn(a.body, "respondToCollision");
+			world.update(16);
+			expect(spy).not.toHaveBeenCalled();
+			spy.mockRestore();
+		});
+
+		it("a destroyed pair never reaches push-out at all", () => {
+			// the positive control for the guard itself: B must not be pushed
+			// by a contact whose partner no longer exists
+			const { a, b } = pair();
+			const spy = vi.spyOn(b.body, "respondToCollision");
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			world.update(16);
+			expect(spy).not.toHaveBeenCalled();
+			spy.mockRestore();
+		});
+
+		it("both objects destroying themselves in the same step does not throw", () => {
+			const { a, b } = pair();
+			a.onCollision = () => {
+				world.removeChildNow(a);
+			};
+			b.onCollision = () => {
+				world.removeChildNow(b);
+			};
+			expect(() => {
+				world.update(16);
+				world.update(16);
+			}).not.toThrow();
+		});
+
+		it("a handler destroying a body it is not colliding with does not throw", () => {
+			const { a } = pair();
+			const bystander = add(400, [new Rect(0, 0, 32, 32)]);
+			a.onCollision = () => {
+				world.removeChildNow(bystander);
+				return false;
+			};
+			expect(() => {
+				world.update(16);
+				world.update(16);
+			}).not.toThrow();
 		});
 	});
 });

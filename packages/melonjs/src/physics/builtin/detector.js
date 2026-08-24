@@ -919,6 +919,11 @@ class Detector {
 						// through trigger shapes" — it is false whenever any
 						// solid pair overlaps, so a trigger can never suppress
 						// a solid sibling's push-out.
+						// The Start / Active dispatch above is user code too, and may
+						// have destroyed either object before the solver reads `body`.
+						if (objA.body === undefined || objB.body === undefined) {
+							continue;
+						}
 						const eitherSensor =
 							objA.body.isSensor === true ||
 							objB.body.isSensor === true ||
@@ -936,6 +941,16 @@ class Detector {
 							!aHasModern &&
 							typeof objA.onCollision === "function" &&
 							objA.onCollision(this.response, objB) === false;
+						// `onCollision` is user code and may have torn either object
+						// down: "remove it on pickup" is the commonest reaction there
+						// is, and `Renderable.destroy()` sets `body = undefined`.
+						// Everything below reads `body`, so a destroyed pair has no
+						// collision left to resolve and the step moves on rather than
+						// throwing out of `world.update()`. The deferred
+						// `removeChild()` was always safe; `removeChildNow()` was not.
+						if (objA.body === undefined || objB.body === undefined) {
+							continue;
+						}
 						if (!aOptsOut && objA.body.isStatic === false && !eitherSensor) {
 							objA.body.respondToCollision.call(objA.body, this.response);
 						}
@@ -943,6 +958,10 @@ class Detector {
 							!bHasModern &&
 							typeof objB.onCollision === "function" &&
 							objB.onCollision(this.response, objA) === false;
+						// B's handler carries the same exposure as A's above
+						if (objA.body === undefined || objB.body === undefined) {
+							continue;
+						}
 						if (!bOptsOut && objB.body.isStatic === false && !eitherSensor) {
 							objB.body.respondToCollision.call(objB.body, this.response);
 						}

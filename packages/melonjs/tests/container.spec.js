@@ -1,5 +1,14 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { Body, Container, Rect, Renderable, World } from "../src/index.js";
+import {
+	Application,
+	Body,
+	boot,
+	Container,
+	Rect,
+	Renderable,
+	video,
+	World,
+} from "../src/index.js";
 
 describe("Container", () => {
 	let container;
@@ -1790,6 +1799,115 @@ describe("Container", () => {
 			const finite = new Container(0, 0, 200, 100);
 			expect(finite.anchorPoint.x).toEqual(0);
 			expect(finite.anchorPoint.y).toEqual(0);
+		});
+	});
+
+	describe("a child that removes a sibling during update", () => {
+		// `Container.update()` reads `state.current().cameras`, so unlike the
+		// rest of this file these need a real application behind them
+		beforeAll(async () => {
+			boot();
+			const app = new Application(400, 300, {
+				parent: "screen",
+				scale: "auto",
+				renderer: video.CANVAS,
+			});
+			await app.init();
+		});
+
+		/**
+		 * `Container.update()` walks its children in REVERSE over the live
+		 * array. That makes SELF-removal safe (the shifted entries are all
+		 * behind us, and `Particle` relies on it), but removing a child at a
+		 * LOWER index shifts the current child down into the slot the loop is
+		 * about to visit, so it is updated twice in one frame.
+		 *
+		 * Silent, and it double-steps whatever that child's update does:
+		 * animation frames, physics integration, timers.
+		 */
+		const scene = () => {
+			const parent = new Container(0, 0, 400, 300);
+			const counts = new Map();
+			const mk = (name) => {
+				const r = new Renderable(0, 0, 8, 8);
+				r.alwaysUpdate = true;
+				counts.set(name, 0);
+				r.update = () => {
+					counts.set(name, counts.get(name) + 1);
+					return false;
+				};
+				parent.addChild(r);
+				return r;
+			};
+			return { parent, mk, counts };
+		};
+
+		it("updates each remaining child exactly once", () => {
+			const { parent, mk, counts } = scene();
+			const a = mk("a");
+			const b = mk("b");
+			// b is visited first (reverse order) and removes the lower-index a
+			b.update = () => {
+				counts.set("b", counts.get("b") + 1);
+				parent.removeChildNow(a);
+				return false;
+			};
+			parent.update(16);
+			expect(counts.get("b")).toBe(1);
+		});
+
+		it("does not update the removed sibling", () => {
+			const { parent, mk, counts } = scene();
+			const a = mk("a");
+			const b = mk("b");
+			b.update = () => {
+				parent.removeChildNow(a);
+				return false;
+			};
+			parent.update(16);
+			expect(counts.get("a")).toBe(0);
+		});
+
+		it("self-removal still works and does not double-update", () => {
+			// the case `Particle` depends on — must not regress
+			const { parent, mk, counts } = scene();
+			mk("keeper");
+			const doomed = mk("doomed");
+			doomed.update = () => {
+				counts.set("doomed", counts.get("doomed") + 1);
+				parent.removeChildNow(doomed);
+				return false;
+			};
+			parent.update(16);
+			expect(counts.get("doomed")).toBe(1);
+			expect(counts.get("keeper")).toBe(1);
+		});
+
+		it("removing several siblings at once leaves the rest updated once", () => {
+			const { parent, mk, counts } = scene();
+			const a = mk("a");
+			const b = mk("b");
+			const c = mk("c");
+			c.update = () => {
+				counts.set("c", counts.get("c") + 1);
+				parent.removeChildNow(a);
+				parent.removeChildNow(b);
+				return false;
+			};
+			parent.update(16);
+			expect(counts.get("c")).toBe(1);
+			expect(counts.get("a")).toBe(0);
+			expect(counts.get("b")).toBe(0);
+		});
+
+		it("an ordinary frame still updates every child exactly once", () => {
+			// the control: no removal at all
+			const { parent, mk, counts } = scene();
+			mk("a");
+			mk("b");
+			mk("c");
+			parent.update(16);
+			expect([...counts.values()]).toEqual([1, 1, 1]);
 		});
 	});
 });

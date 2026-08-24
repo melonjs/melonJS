@@ -305,6 +305,12 @@ export default class GLTFModel extends Container {
 			this.resetAnim = () => {
 				if (typeof onComplete === "function") {
 					onComplete();
+					// re-entering the engine below, still inside this call, so
+					// the guard in `update()` (which runs after `resetAnim`
+					// RETURNS) would be too late for a destroyed host
+					if (!this._isLive()) {
+						return false;
+					}
 				}
 				this.setCurrentAnimation(next);
 			};
@@ -313,6 +319,10 @@ export default class GLTFModel extends Container {
 			this.resetAnim = () => {
 				if (typeof onComplete === "function") {
 					onComplete();
+					// see the chain wrapper above
+					if (!this._isLive()) {
+						return false;
+					}
 				}
 				this._animDone = true;
 				return false;
@@ -403,6 +413,10 @@ export default class GLTFModel extends Container {
 			if (this.current.time >= duration) {
 				if (typeof this.onended === "function") {
 					this.onended();
+					// the handler may have removed this model
+					if (!this._isLive()) {
+						return super.update(dt);
+					}
 				}
 				if (typeof this.resetAnim === "function") {
 					if (this.resetAnim() === false) {
@@ -417,6 +431,11 @@ export default class GLTFModel extends Container {
 					this.current.time %= duration;
 				}
 			}
+			// `resetAnim` above is user code too, and `_pose()` writes into the
+			// part meshes it may have destroyed
+			if (!this._isLive()) {
+				return super.update(dt);
+			}
 			this._pose();
 			this.isDirty = true;
 		}
@@ -429,6 +448,25 @@ export default class GLTFModel extends Container {
 	 * not animate use their cached rest matrix.
 	 * @ignore
 	 */
+	/**
+	 * Whether this model is still alive.
+	 *
+	 * `update()` hands control to user code — `onended`, and the completion
+	 * callback behind `resetAnim` — and then poses the hierarchy. A callback
+	 * that removed the model (a death animation removing its own model is the
+	 * obvious case) has had `Renderable.destroy()` run, which releases `pos` to
+	 * the pool and leaves it undefined on every part. `_pose()` writes
+	 * `mesh.pos`, so it must not run on a torn-down model.
+	 *
+	 * `pos` and not `ancestor`: a model that was never added to a container is
+	 * perfectly poseable, and several callers do exactly that.
+	 * @ignore
+	 * @returns {boolean} true while the model can still be posed
+	 */
+	_isLive() {
+		return this.pos !== undefined;
+	}
+
 	_pose() {
 		const clip = this.current.name ? this.anim[this.current.name] : null;
 		const t = this.current.time;

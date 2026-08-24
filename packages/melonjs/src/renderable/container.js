@@ -1134,10 +1134,27 @@ export default class Container extends Renderable {
 		let isFloating = false;
 		const isPaused = state.isPaused();
 		const children = this.getChildren();
-		const childrenLength = children.length;
 		const cameras = state.current().cameras;
 
-		for (let i = childrenLength, obj; i--, (obj = children[i]); ) {
+		// A child's `update()` is user code and may remove siblings. Walking the
+		// LIVE array in reverse makes SELF-removal safe — the shifted entries
+		// are all behind us, which `Particle` relies on — but removing a child
+		// at a LOWER index shifts the current one down into the slot the loop is
+		// about to read, so it was updated TWICE in one frame, double-stepping
+		// its animation, physics and timers.
+		//
+		// Iterating a snapshot fixes that at the cost of one array copy per
+		// container per frame, which is nothing beside the per-child closure
+		// the camera-visibility loop below already allocates. Children added
+		// during the pass are still not visited until the next frame, matching
+		// the previous behaviour (the loop started from a captured length).
+		const pass = children.slice();
+		for (let i = pass.length, obj; i--, (obj = pass[i]); ) {
+			// removed by an earlier sibling's update: it is still in the
+			// snapshot but no longer ours to step
+			if (obj.ancestor !== this) {
+				continue;
+			}
 			if (isPaused && !obj.updateWhenPaused) {
 				// skip this object
 				continue;

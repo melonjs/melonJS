@@ -1,5 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Application, boot, GLTFModel, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Container,
+	GLTFModel,
+	video,
+} from "../src/index.js";
 import Renderer from "../src/video/renderer.js";
 
 // a small real texture so part meshes resolve a non-white-pixel atlas (lets us
@@ -392,5 +398,102 @@ describe("GLTFModel ground shadows (#1515)", () => {
 		for (const part of model.children) {
 			expect(part.castGroundShadow).toBe(false);
 		}
+	});
+
+	describe("an animation callback that destroys its host", () => {
+		/**
+		 * `GLTFModel.update()` fires `onended` and the completion callback
+		 * behind `resetAnim`, then calls `_pose()` unconditionally. `_pose()`
+		 * walks the part meshes, so a callback that removed the model left it
+		 * posing a torn-down hierarchy and threw out of the frame:
+		 *
+		 *     TypeError: Cannot read properties of undefined (reading 'set')
+		 *         at GLTFModel._applyWorldToMesh   (mesh.pos.set)
+		 *         at GLTFModel._pose  <- GLTFModel.update
+		 *
+		 * The exact 3D sibling of the 2D `FrameAnimation` crash: a death
+		 * animation that removes its own model. GLTFModel re-implements the
+		 * whole `resetAnim` contract, chain wrappers included, so it needed the
+		 * same guards rather than inheriting them.
+		 */
+		const hosted = () => {
+			const parent = new Container(0, 0, 400, 300);
+			const model = makeModel();
+			parent.addChild(model);
+			return { parent, model };
+		};
+
+		it("onended removing the model does not throw", () => {
+			const { parent, model } = hosted();
+			model.onended = () => {
+				parent.removeChildNow(model);
+			};
+			expect(() => {
+				model.setCurrentAnimation("move", { loop: false });
+				for (let i = 0; i < 5; i++) {
+					model.update(500);
+				}
+			}).not.toThrow();
+		});
+
+		it("the {loop:false, onComplete} form removing the model does not throw", () => {
+			const { parent, model } = hosted();
+			expect(() => {
+				model.setCurrentAnimation("move", {
+					loop: false,
+					onComplete: () => {
+						parent.removeChildNow(model);
+					},
+				});
+				for (let i = 0; i < 5; i++) {
+					model.update(500);
+				}
+			}).not.toThrow();
+		});
+
+		it("the {next, onComplete} chain form removing the model does not throw", () => {
+			// the wrapper re-enters `setCurrentAnimation` after the user
+			// callback, still inside `resetAnim` — the same hole that had to be
+			// closed separately for Sprite
+			const { parent, model } = hosted();
+			expect(() => {
+				model.setCurrentAnimation("move", {
+					next: "spin",
+					onComplete: () => {
+						parent.removeChildNow(model);
+					},
+				});
+				for (let i = 0; i < 5; i++) {
+					model.update(500);
+				}
+			}).not.toThrow();
+		});
+
+		it("updating an already-destroyed model is a no-op, not a throw", () => {
+			const { parent, model } = hosted();
+			model.setCurrentAnimation("move", { loop: false });
+			parent.removeChildNow(model);
+			expect(() => {
+				model.update(500);
+				model.update(500);
+			}).not.toThrow();
+		});
+
+		it("a callback that only switches animation keeps posing", () => {
+			// the guard must not stop a live model that merely changed clip
+			const { model } = hosted();
+			let switched = 0;
+			model.onended = () => {
+				if (switched === 0) {
+					switched++;
+					model.setCurrentAnimation("spin", { loop: false });
+				}
+			};
+			model.setCurrentAnimation("move", { loop: false });
+			for (let i = 0; i < 5; i++) {
+				model.update(500);
+			}
+			expect(switched).toBe(1);
+		});
 	});
 });
