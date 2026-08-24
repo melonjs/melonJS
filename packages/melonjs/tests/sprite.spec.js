@@ -826,4 +826,144 @@ describe("Sprite", () => {
 			expect(s.getCurrentAnimationFrame()).toBe(1);
 		});
 	});
+
+	describe("a frame-animation callback that destroys its host", () => {
+		/**
+		 * `FrameAnimation.update()` hands control to user code in the middle of
+		 * its frame loop — `onended`, and the completion callback behind
+		 * `resetAnim` — and then keeps stepping. "Remove me once the animation
+		 * finishes" is an entirely reasonable reaction, but `removeChildNow()`
+		 * destroys the sprite and `FrameAnimation.destroy()` empties `anim`, so
+		 * the loop resumed into a map the callback had just cleared:
+		 *
+		 *     TypeError: Cannot read properties of undefined (reading 'frames')
+		 *         at FrameAnimation.getAnimationFrameObjectByIndex
+		 *         at FrameAnimation.update
+		 *
+		 * Reported from a game doing exactly that. It took the whole frame down,
+		 * so a death animation that removed its own sprite crashed the run.
+		 */
+
+		/**
+		 * A two-frame sprite already playing, in its own container.
+		 * @returns {object} `{ container, sprite }`
+		 */
+		const scene = () => {
+			const parent = new Container(0, 0, 400, 300);
+			const s = new Sprite(0, 0, {
+				framewidth: 32,
+				frameheight: 32,
+				image: Renderer.createCanvas(64, 64),
+				anchorPoint: { x: 0, y: 0 },
+			});
+			s.addAnimation("run", [0, 1], 50);
+			s.setCurrentAnimation("run");
+			s.alwaysUpdate = true;
+			parent.addChild(s);
+			return { parent, s };
+		};
+
+		/** step well past the end of the strip */
+		const drive = (fn) => {
+			for (let i = 0; i < 10; i++) {
+				fn();
+			}
+		};
+
+		it("onended removing the sprite does not throw", () => {
+			const { parent, s } = scene();
+			s.onended = () => {
+				parent.removeChildNow(s);
+			};
+			expect(() => {
+				drive(() => {
+					s.update(60);
+				});
+			}).not.toThrow();
+		});
+
+		it("the completion callback removing the sprite does not throw", () => {
+			// the other user-code window in the same loop: `resetAnim`. Its
+			// RETURN VALUE drives a frame change, so it has to be checked before
+			// being acted on, not merely before the next read.
+			const { parent, s } = scene();
+			s.setCurrentAnimation("run", () => {
+				parent.removeChildNow(s);
+				return false;
+			});
+			expect(() => {
+				drive(() => {
+					s.update(60);
+				});
+			}).not.toThrow();
+		});
+
+		it("survives when driven through the container update loop", () => {
+			// proves this is not an artefact of calling `sprite.update()` directly
+			const { parent, s } = scene();
+			s.onended = () => {
+				parent.removeChildNow(s);
+			};
+			expect(() => {
+				drive(() => {
+					parent.update(60);
+				});
+			}).not.toThrow();
+		});
+
+		it("updating an already-destroyed sprite is a no-op, not a throw", () => {
+			const { parent, s } = scene();
+			parent.removeChildNow(s);
+			expect(() => {
+				s.update(60);
+				s.update(60);
+			}).not.toThrow();
+		});
+
+		it("a callback that only switches animation keeps playing", () => {
+			// the guard asks "is the current animation still resolvable", so a
+			// handler that swaps to another animation must be unaffected
+			const { s } = scene();
+			s.addAnimation("idle", [0, 1], 50);
+			let switched = 0;
+			s.onended = () => {
+				if (switched === 0) {
+					switched++;
+					s.setCurrentAnimation("idle");
+				}
+			};
+			drive(() => {
+				s.update(60);
+			});
+			expect(switched).toBe(1);
+			expect(s.isCurrentAnimation("idle")).toBe(true);
+		});
+
+		it("a non-destructive onended still fires on every loop", () => {
+			const { s } = scene();
+			let calls = 0;
+			s.onended = () => {
+				calls++;
+			};
+			drive(() => {
+				s.update(60);
+			});
+			expect(calls).toBeGreaterThan(1);
+		});
+
+		it("still advances frames normally", () => {
+			// the guard runs on every update, so the ordinary path has to be
+			// unaffected. Asserted on the observable frame index rather than
+			// `update()`'s return, which is the host's `isDirty` and reflects
+			// far more than a frame change.
+			const { s } = scene();
+			const before = s.getCurrentAnimationFrame();
+			s.update(60); // 60ms against a 50ms frame delay
+			expect(s.getCurrentAnimationFrame()).not.toBe(before);
+
+			const held = s.getCurrentAnimationFrame();
+			s.update(1); // too small to consume the delay
+			expect(s.getCurrentAnimationFrame()).toBe(held);
+		});
+	});
 });

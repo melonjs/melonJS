@@ -318,6 +318,31 @@ export default class FrameAnimation {
 	 * @param {number} id - the frame id
 	 * @returns {object} the frame data
 	 */
+	/**
+	 * Whether the current animation is still resolvable.
+	 *
+	 * `update()` hands control to user code in the middle of its frame loop:
+	 * `onended`, and the completion callback behind `resetAnim`. That code is
+	 * free to tear the host down — "remove me once the animation finishes" is
+	 * an entirely reasonable reaction, and `removeChildNow()` destroys the
+	 * sprite, whose `destroy()` empties `anim`. Everything after the callback
+	 * reads out of `anim`, so the loop has to check it is still there rather
+	 * than resume into a map the callback just cleared.
+	 *
+	 * A callback that switches animations with `setCurrentAnimation()` leaves
+	 * this true, which is the point: only a genuinely torn-down host stops the
+	 * loop.
+	 * @ignore
+	 * @returns {boolean} true while the current animation can still be read
+	 */
+	_isCurrentAnimationLive() {
+		return (
+			this.current !== undefined &&
+			this.current !== null &&
+			this.anim[this.current.name] !== undefined
+		);
+	}
+
 	getAnimationFrameObjectByIndex(id) {
 		return this.anim[this.current.name].frames[id];
 	}
@@ -354,6 +379,12 @@ export default class FrameAnimation {
 	 */
 	update(dt) {
 		let changed = false;
+		// a host torn down on an earlier tick whose `update()` is still being
+		// called (a caller holding its own reference) has no animation left to
+		// step; report "nothing changed" rather than throwing out of the frame
+		if (!this._isCurrentAnimationLive()) {
+			return changed;
+		}
 		if (!this.animationpause && !this._animDone && this.current.length > 1) {
 			let duration = this.getAnimationFrameObjectByIndex(
 				this.current.idx,
@@ -373,10 +404,22 @@ export default class FrameAnimation {
 				if (this.current.idx === 0) {
 					if (typeof this.host.onended === "function") {
 						this.host.onended();
+						// the handler may have destroyed the host
+						if (!this._isCurrentAnimationLive()) {
+							break;
+						}
 					}
 					if (typeof this.resetAnim === "function") {
 						// Otherwise is must be callable
-						if (this.resetAnim() === false) {
+						const keepPlaying = this.resetAnim();
+						// resolved BEFORE acting on the result: this is the
+						// user's completion callback and carries the same
+						// exposure as `onended` above, so its return value must
+						// not be used to drive a frame change on a dead host
+						if (!this._isCurrentAnimationLive()) {
+							break;
+						}
+						if (keepPlaying === false) {
 							// Reset to last frame
 							this.setAnimationFrame(this.current.length - 1);
 

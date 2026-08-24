@@ -1,5 +1,11 @@
 # Changelog
 
+## [20.1.1] (melonJS 2) - _unreleased_
+
+### Fixed
+- **An animation callback that removed its own sprite crashed the frame.** `FrameAnimation.update()` hands control to user code in the middle of its frame loop, at `onended` and at the completion callback behind `resetAnim`, and then keeps stepping. `removeChildNow()` destroys the sprite and `FrameAnimation.destroy()` empties `anim`, so the loop resumed into a map the callback had just cleared and threw `Cannot read properties of undefined (reading 'frames')` out of `getAnimationFrameObjectByIndex`. A death animation that removed its own sprite therefore took the whole frame down. Both callback windows now check the animation is still resolvable before continuing, and the `resetAnim` return value is resolved before it is acted on rather than only before the next read. Updating an already-destroyed sprite is a no-op instead of a throw. A callback that merely switches animation with `setCurrentAnimation()` is unaffected, which is the point of the check
+
+
 ## [20.1.0] (melonJS 2) - _2026-08-24_
 
 ### Added
