@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.1.1] (melonJS 2) - _unreleased_
+## [20.1.1] (melonJS 2) - _2026-08-25_
 
 ### Fixed
 - **A font whose filename contained a space failed to preload.** The `fontface` parser wrapped a bare path as `url(<path>)` with no quotes, and an unquoted CSS `url()` token may not contain whitespace, so `data/fnt/Super Bouncer.ttf` produced a descriptor the browser refuses to parse: `font.load()` rejected with a `SyntaxError` before any request was made, surfacing as `Failed loading resource`. The descriptor is now quoted, which also covers parentheses and commas. Only `fontface` was affected: every other asset type hands its path to the browser, which percent-encodes it and issues a real request. The parser also no longer writes its wrapped value back onto the caller's asset descriptor, which is routinely a module-level manifest reused across scenes
