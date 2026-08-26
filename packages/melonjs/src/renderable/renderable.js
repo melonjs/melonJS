@@ -317,7 +317,9 @@ export default class Renderable extends Rect {
 		this._postEffectManaged = false;
 
 		/**
-		 * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
+		 * the blend mode to be applied to this renderable — any of the modes
+		 * listed on {@link CanvasRenderer#setBlendMode}, honoured identically by
+		 * every renderer
 		 * @type {string}
 		 * @default "normal"
 		 * @see CanvasRenderer#setBlendMode

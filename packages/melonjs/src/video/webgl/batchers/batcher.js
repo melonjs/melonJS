@@ -322,7 +322,16 @@ export class WebGLBatcher extends Batcher {
 		// custom batchers with hand-rolled flush() relied on)
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
 
-		if (this.renderer.currentProgram !== this.defaultShader.program) {
+		// `currentProgram` answers "what does GL have bound", which is not the
+		// same question as "has this batcher adopted its shader yet" —
+		// `useShader` is also what sets `currentShader`, which `setProjection`
+		// and the uniform paths dereference. The two used to coincide because
+		// the cache started out `undefined`; it now reports the program that
+		// linking left bound, which can already match. Ask both.
+		if (
+			this.currentShader !== this.defaultShader ||
+			this.renderer.currentProgram !== this.defaultShader.program
+		) {
 			this.useShader(this.defaultShader);
 		}
 	}

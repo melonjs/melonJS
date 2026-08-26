@@ -12,6 +12,13 @@ import {
 	on,
 	RENDER_TARGET_CHANGED,
 } from "../../system/event.ts";
+import {
+	blendStateFor,
+	isAdvancedBlendMode,
+	isSupportedBlendMode,
+	normalizeBlendMode,
+} from "../blendmodes.js";
+import BlendEffect from "../effects/blendEffect.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
@@ -56,6 +63,44 @@ const _tempMatrix = new Matrix3d();
 // pre-allocated matrices for blitEffect (avoids per-frame allocation)
 const _savedTransform = new Matrix3d();
 const _savedProjection = new Matrix3d();
+
+/**
+ * Backend-neutral blend tokens (see `video/blendmodes.js`, which holds the
+ * one table both GPU backends share) translated to `gl.*` enums. Filled
+ * lazily from a live context on the first `setBlendMode`, because the enum
+ * values are properties of the context object rather than module constants.
+ * @ignore
+ */
+let GL_BLEND_OP;
+/** @ignore */
+let GL_BLEND_FACTOR;
+
+/**
+ * Build the neutral-token → `gl.*` enum lookups for this context.
+ * @param {WebGL2RenderingContext} gl - a live context
+ * @ignore
+ */
+function initBlendEnums(gl) {
+	GL_BLEND_OP = {
+		add: gl.FUNC_ADD,
+		subtract: gl.FUNC_SUBTRACT,
+		"reverse-subtract": gl.FUNC_REVERSE_SUBTRACT,
+		min: gl.MIN,
+		max: gl.MAX,
+	};
+	GL_BLEND_FACTOR = {
+		zero: gl.ZERO,
+		one: gl.ONE,
+		src: gl.SRC_COLOR,
+		"one-minus-src": gl.ONE_MINUS_SRC_COLOR,
+		"src-alpha": gl.SRC_ALPHA,
+		"one-minus-src-alpha": gl.ONE_MINUS_SRC_ALPHA,
+		dst: gl.DST_COLOR,
+		"one-minus-dst": gl.ONE_MINUS_DST_COLOR,
+		"dst-alpha": gl.DST_ALPHA,
+		"one-minus-dst-alpha": gl.ONE_MINUS_DST_ALPHA,
+	};
+}
 
 /**
  * a WebGL renderer object
@@ -122,6 +167,35 @@ export default class WebGLRenderer extends Renderer {
 		// steady state), matching RenderTargetPool's base stack
 		this._effectProjectionStack = [];
 		this._effectPassDepth = 0;
+
+		/**
+		 * Advanced-blend state. The six CSS modes fixed-function cannot
+		 * express are composited by capturing the destination, rendering the
+		 * draw to an offscreen target, and blitting that through
+		 * {@link BlendEffect}. All of it is created lazily — a game that
+		 * never asks for an advanced mode pays nothing.
+		 *
+		 * `_advancedBlendBusy` is a DEPTH, not a flag: the bracket nests
+		 * inside itself (the composite blit re-enters `setBatcher`, and
+		 * `toFrameTexture` does too), so a boolean would be cleared by the
+		 * inner scope while the outer one is still running.
+		 * @ignore
+		 */
+		this._advancedBlendEffect = undefined;
+		/** @ignore */
+		this._advancedBlendCapture = undefined;
+		/** @ignore */
+		this._advancedBlendTarget = undefined;
+		/** @ignore */
+		this._advancedBlendOpen = false;
+		/** @ignore */
+		this._advancedBlendBusy = 0;
+		/** @ignore */
+		this._advancedBlendParent = null;
+		/** @ignore */
+		this._advancedBlendStencil = false;
+		/** @ignore */
+		this._advancedBlendWarned = new Set();
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -237,10 +311,9 @@ export default class WebGLRenderer extends Renderer {
 		 */
 		this.currentBatcher = undefined;
 
-		/**
-		 * a reference to the current shader program used by the renderer
-		 * @type {WebGLProgram}
-		 */
+		// `currentProgram` is an accessor over the context (see the getter
+		// below), so there is no field to initialise here — clearing it via
+		// the setter keeps the record defined from the start.
 		this.currentProgram = undefined;
 
 		/**
@@ -532,6 +605,17 @@ export default class WebGLRenderer extends Renderer {
 		off(ONCONTEXT_RESTORED, this.onContextRestoredInvalidate);
 		off(CANVAS_ONRESIZE, this.onCanvasResize);
 
+		// advanced-blend resources, all lazily created: a game that never used
+		// one of the six modes has nothing here to release
+		this._advancedBlendEffect?.destroy();
+		this._advancedBlendEffect = undefined;
+		this._advancedBlendCapture?.destroy();
+		this._advancedBlendCapture = undefined;
+		this._advancedBlendTarget?.destroy?.();
+		this._advancedBlendTarget = undefined;
+		this._advancedBlendOpen = false;
+		this._advancedBlendBusy = 0;
+
 		// the shared ground-shadow quads (#1515) hold retained GPU geometry
 		// keyed off this renderer's batchers — released before those go
 		releaseShadowQuads(this);
@@ -741,6 +825,27 @@ export default class WebGLRenderer extends Renderer {
 			throw new Error("Invalid Batcher");
 		}
 
+		// Advanced blend modes bracket EACH draw. Every draw entry point on
+		// this renderer calls setBatcher, which makes this the one place that
+		// sees them all — but it must sit ABOVE the same-batcher/same-shader
+		// fast path below, or the bracket would follow batcher SWITCHES
+		// rather than draws and the per-draw semantics would collapse.
+		if (this._advancedBlendBusy === 0) {
+			if (this._advancedBlendOpen === true) {
+				this._closeAdvancedBlend();
+			}
+			if (isAdvancedBlendMode(this.currentBlendMode) === true) {
+				if (name === "mesh" || name === "litMesh") {
+					// the offscreen gets a fresh depth buffer and the composite
+					// is a screen-space quad writing no depth, so later meshes
+					// would not test against it
+					this._warnAdvancedBlendFallback("3D meshes");
+				} else {
+					this._openAdvancedBlend();
+				}
+			}
+		}
+
 		// resolve the target shader — the explicitly-passed one if any,
 		// otherwise the batcher's default. We always reconcile the
 		// currentShader to this target so a custom shader left bound by a
@@ -858,6 +963,15 @@ export default class WebGLRenderer extends Renderer {
 	 * Flush the batcher to the frame buffer
 	 */
 	flush() {
+		// A flush while an advanced-blend bracket is open means "put this on
+		// screen now" — which for a bracketed draw means closing it, since
+		// its geometry is sitting in an offscreen target that has not been
+		// composited yet. This is what makes the LAST draw of a frame land:
+		// nothing calls setBatcher after it.
+		if (this._advancedBlendOpen === true && this._advancedBlendBusy === 0) {
+			this._closeAdvancedBlend();
+			return;
+		}
 		this.currentBatcher.flush();
 	}
 
@@ -1059,6 +1173,28 @@ export default class WebGLRenderer extends Renderer {
 	 * }
 	 */
 	toFrameTexture(options = {}) {
+		// Capturing is machinery, not a scene draw. It flushes and re-enters
+		// `setBatcher("quad")` below, and an unguarded hook there would open an
+		// advanced-blend bracket MID-CAPTURE — binding the freshly-cleared
+		// offscreen right before the copy reads the framebuffer, so the capture
+		// would hold nothing. Reachable from user code: `drawImage` refreshes
+		// the shared capture for any custom shader that samples the screen,
+		// before its own setBatcher, so a renderable with an advanced mode and
+		// such an effect hits this path every draw.
+		// Resolved off the PROTOTYPE and restored by value, not by decrement —
+		// see the WebGPU twin: specs borrow this method onto a recording stub
+		// that has neither the counter nor the implementation half.
+		const busy = this._advancedBlendBusy;
+		this._advancedBlendBusy = (busy ?? 0) + 1;
+		try {
+			return WebGLRenderer.prototype._toFrameTexture.call(this, options);
+		} finally {
+			this._advancedBlendBusy = busy;
+		}
+	}
+
+	/** @ignore */
+	_toFrameTexture(options = {}) {
 		const gl = this.gl;
 		const canvas = this.getCanvas();
 
@@ -1425,6 +1561,168 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
+	 * Say once, per excluded path and mode, that an advanced blend mode is
+	 * falling back to `"normal"`. A silent data-dependent fallback is exactly
+	 * what the advanced-blend work exists to remove, so the exclusions are
+	 * loud.
+	 * @param {string} what - the excluded path, named for the message
+	 * @ignore
+	 */
+	_warnAdvancedBlendFallback(what) {
+		const key = `${what}:${this.currentBlendMode}`;
+		if (this._advancedBlendWarned.has(key)) {
+			return;
+		}
+		this._advancedBlendWarned.add(key);
+		console.warn(
+			`WebGLRenderer: blend mode "${this.currentBlendMode}" is not supported for ${what} and falls back to "normal"`,
+		);
+	}
+
+	/**
+	 * Close a pending advanced-blend bracket, if one is open and we are not
+	 * already inside the bracket machinery. The safe form to call from any
+	 * path that is about to disturb the destination.
+	 * @ignore
+	 */
+	_drainAdvancedBlend() {
+		if (this._advancedBlendOpen === true && this._advancedBlendBusy === 0) {
+			this._closeAdvancedBlend();
+		}
+	}
+
+	/**
+	 * Open an advanced-blend bracket: capture the destination, then redirect
+	 * this draw into an offscreen target. Closed by {@link _closeAdvancedBlend}
+	 * at the next draw, flush or clear.
+	 * @returns {boolean} false when the effect could not be realized, in which
+	 * case the draw proceeds unbracketed (plain source-over)
+	 * @ignore
+	 */
+	_openAdvancedBlend() {
+		const gl = this.gl;
+		const canvas = this.getCanvas();
+		const w = canvas.width;
+		const h = canvas.height;
+
+		this._advancedBlendBusy++;
+
+		if (typeof this._advancedBlendEffect === "undefined") {
+			this._advancedBlendEffect = new BlendEffect(this);
+		}
+		if (this._advancedBlendEffect.enabled !== true) {
+			// the shader did not compile on this device — degrade to plain
+			// source-over rather than dropping the draw entirely
+			this._advancedBlendBusy--;
+			this._warnAdvancedBlendFallback("this device");
+			return false;
+		}
+		this._advancedBlendEffect.setBlendMode(this.currentBlendMode);
+
+		// drain everything queued before this draw, so the capture below
+		// holds the true destination this draw blends against
+		this.currentBatcher.flush();
+
+		// a RENDERER-OWNED capture, not the shared `screen_texture` slot:
+		// drawImage already refreshes that one for any custom shader that
+		// samples the screen, and a renderable carrying both an advanced
+		// mode and such an effect would otherwise have the two fighting
+		// over a single texture
+		this._advancedBlendCapture = this.toFrameTexture({
+			target: this._advancedBlendCapture ?? null,
+		});
+		this._advancedBlendEffect.setTexture(
+			"backdrop",
+			this._advancedBlendCapture,
+		);
+
+		// remember where this draw was headed before redirecting it
+		this._advancedBlendParent =
+			this._effectPassDepth > 0
+				? this._renderTargetPool.getCaptureTarget()
+				: null;
+
+		if (typeof this._advancedBlendTarget === "undefined") {
+			this._advancedBlendTarget = new WebGLRenderTarget(gl, w, h, {
+				samples: 0,
+			});
+		} else {
+			this._advancedBlendTarget.resize(w, h);
+		}
+		// FBO creation/resize binds (then nulls) TEXTURE0 — invalidate every
+		// batcher's cache for that unit, as beginPostEffect does
+		this.invalidateTextureUnit(0);
+		this._advancedBlendTarget.bind();
+		this.setViewport(0, 0, w, h);
+		this.clearRenderTarget();
+
+		// the offscreen carries its own, zeroed stencil: an armed mask tests
+		// EQUAL against a non-zero reference and would reject every fragment,
+		// so the draw would silently vanish. The COMPOSITE is clipped instead,
+		// which is where the mask belongs.
+		this._advancedBlendStencil = gl.isEnabled(gl.STENCIL_TEST);
+		if (this._advancedBlendStencil === true) {
+			gl.disable(gl.STENCIL_TEST);
+		}
+
+		this._advancedBlendOpen = true;
+		this._advancedBlendBusy--;
+		return true;
+	}
+
+	/**
+	 * Close an advanced-blend bracket: drain the offscreen, return to the
+	 * parent target, and composite through {@link BlendEffect}.
+	 * @ignore
+	 */
+	_closeAdvancedBlend() {
+		const gl = this.gl;
+		const canvas = this.getCanvas();
+		const w = canvas.width;
+		const h = canvas.height;
+
+		this._advancedBlendBusy++;
+		this._advancedBlendOpen = false;
+
+		// drain the bracketed draw into the offscreen
+		this.currentBatcher.flush();
+
+		this._advancedBlendTarget.unbind();
+		if (this._advancedBlendParent !== null) {
+			this._advancedBlendParent.bind();
+		}
+		this._advancedBlendParent = null;
+		this.invalidateTextureUnit(0);
+		this.setViewport(0, 0, w, h);
+		emit(RENDER_TARGET_CHANGED, this);
+
+		if (this._advancedBlendStencil === true) {
+			gl.enable(gl.STENCIL_TEST);
+		}
+
+		// The effect emits PREMULTIPLIED colour, so ordinary source-over
+		// finishes the composite and yields a correct output alpha for free.
+		// Restore the token afterwards without re-touching GL state: the
+		// next bracket's offscreen draw wants exactly this source-over, and
+		// a genuinely different next mode will miss the cache and re-apply.
+		const mode = this.currentBlendMode;
+		this.setBlendMode("normal", true);
+		this.blitEffect(
+			this._advancedBlendTarget.texture,
+			0,
+			0,
+			w,
+			h,
+			this._advancedBlendEffect,
+			true,
+		);
+		this.currentBatcher.flush();
+		this.currentBlendMode = mode;
+
+		this._advancedBlendBusy--;
+	}
+
+	/**
 	 * Blit a texture to the screen through a shader effect.
 	 * Draws a screen-aligned quad using the given texture as source
 	 * and the given shader for post-processing (e.g. scanlines, desaturation).
@@ -1437,6 +1735,11 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
 	 */
 	blitEffect(source, x, y, width, height, shader, keepBlend = false) {
+		// A blit is compositing machinery, not a scene draw: it must never
+		// open an advanced-blend bracket of its own. That covers both the
+		// post-effect chain's ping-pong blits (which run under the
+		// renderable's live blend mode) and this bracket's own composite.
+		this._advancedBlendBusy++;
 		// flush any pending draws
 		this.flush();
 
@@ -1464,6 +1767,7 @@ export default class WebGLRenderer extends Renderer {
 		this.currentTransform.copy(_savedTransform);
 		this.projectionMatrix.copy(_savedProjection);
 		batcher.setProjection(this.projectionMatrix);
+		this._advancedBlendBusy--;
 	}
 
 	/**
@@ -1573,6 +1877,10 @@ export default class WebGLRenderer extends Renderer {
 	 * Clear the frame buffer
 	 */
 	clear() {
+		// a clear wipes the destination, so any bracketed draw still waiting
+		// to be composited has to land first or it would appear ON TOP of the
+		// clear instead of under it
+		this._drainAdvancedBlend();
 		const gl = this.gl;
 		const clearColor = this.backgroundColor.toArray();
 		gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
@@ -1590,6 +1898,8 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
 	 */
 	clearColor(color = "#000000", opaque = false) {
+		// see clear() — also covers clearRect, which routes through here
+		this._drainAdvancedBlend();
 		let glArray;
 		const gl = this.gl;
 
@@ -2063,13 +2373,34 @@ export default class WebGLRenderer extends Renderer {
 	 * return a reference to the system 2d Context
 	 * @returns {WebGLRenderingContext} the current WebGL context
 	 */
+	/**
+	 * The shader program the GL context actually has bound.
+	 *
+	 * Backed by the CONTEXT rather than by a field on this renderer, because
+	 * `GLShader` binds programs too — writing a uniform calls `useProgram`,
+	 * and a freshly linked program is left bound — and it is constructed with
+	 * a bare `gl`, so it cannot reach a renderer-owned cache. A field here
+	 * would silently drift out of step with GL, and every batcher that
+	 * compares against it (`syncProgram`, the mesh and primitive paths) would
+	 * skip a rebind it actually needed, drawing a pending batch through the
+	 * wrong program.
+	 * @type {WebGLProgram|undefined}
+	 */
+	get currentProgram() {
+		return this.gl.__meCurrentProgram;
+	}
+
+	set currentProgram(value) {
+		this.gl.__meCurrentProgram = value;
+	}
+
 	getContext() {
 		return this.gl;
 	}
 
 	/**
 	 * set the current blend mode for this renderer. <br>
-	 * All renderers support: <br>
+	 * Every renderer supports the full set: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
 	 * - "add", "additive", or "lighter" : color values are added together <br>
@@ -2078,19 +2409,33 @@ export default class WebGLRenderer extends Renderer {
 	 * <img src="../images/multiply-blendmode.png" width="180"/> <br>
 	 * - "screen" : pixels are inverted, multiplied, and inverted again (opposite of multiply) <br>
 	 * <img src="../images/screen-blendmode.png" width="180"/> <br>
-	 * WebGL2 additionally supports: <br>
 	 * - "darken" : retains the darkest pixels of both layers <br>
 	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
 	 * - "lighten" : retains the lightest pixels of both layers <br>
 	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
+	 * - "overlay" : multiplies or screens, depending on the backdrop <br>
+	 * <img src="../images/overlay-blendmode.png" width="180"/> <br>
+	 * - "hard-light" : overlay with the layers swapped — a harsh spotlight <br>
+	 * <img src="../images/hard-light-blendmode.png" width="180"/> <br>
+	 * - "soft-light" : a diffused spotlight, gentler than hard-light <br>
+	 * <img src="../images/soft-light-blendmode.png" width="180"/> <br>
+	 * - "color-dodge" : brightens the backdrop to reflect the source <br>
+	 * <img src="../images/color-dodge-blendmode.png" width="180"/> <br>
+	 * - "color-burn" : darkens the backdrop to reflect the source <br>
+	 * <img src="../images/color-burn-blendmode.png" width="180"/> <br>
+	 * - "difference" : the absolute difference of the two layers <br>
+	 * <img src="../images/difference-blendmode.png" width="180"/> <br>
+	 * - "exclusion" : like difference, but lower in contrast <br>
+	 * <img src="../images/exclusion-blendmode.png" width="180"/> <br>
 	 * - "none" : blending disabled — the source replaces the destination
-	 * outright, alpha included (matches the WebGPU renderer's "none") <br>
-	 * Other CSS blend modes ("overlay", "color-dodge", "color-burn", "hard-light", "soft-light",
-	 * "difference", "exclusion") may be supported by the Canvas renderer (browser-dependent)
-	 * and will always fall back to "normal" in WebGL. <br>
+	 * outright, alpha included <br>
+	 * A few draw types cannot honour every mode — 3D meshes, and fills using
+	 * a {@link Gradient} — and fall back to "normal" with a one-time console
+	 * warning. `setBlendMode` returns what it actually applied, so comparing
+	 * the result against your request detects that case.
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (affects source blend factor)
+	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (affects the source blend factor)
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
 	setBlendMode(mode = "normal", premultipliedAlpha = true) {
@@ -2099,65 +2444,41 @@ export default class WebGLRenderer extends Renderer {
 			this.currentPremultipliedAlpha !== premultipliedAlpha
 		) {
 			const gl = this.gl;
+			// geometry already bracketed belongs to the OUTGOING mode —
+			// composite it before the mode changes underneath it
+			this._drainAdvancedBlend();
 			this.flush();
-			gl.enable(gl.BLEND);
 			this.currentBlendMode = mode;
 			this.currentPremultipliedAlpha = premultipliedAlpha;
 
-			// source factor depends on whether textures use premultiplied alpha
-			const srcAlpha = premultipliedAlpha ? gl.ONE : gl.SRC_ALPHA;
+			// One table, shared with the WebGPU backend (`blendStateFor`), so a
+			// mode cannot be defined differently on the two GPU paths and make the
+			// same scene render differently depending on which one `video.AUTO`
+			// picked. Only the translation to `gl.*` enums lives here.
+			if (typeof GL_BLEND_OP === "undefined") {
+				initBlendEnums(gl);
+			}
+			const state = blendStateFor(normalizeBlendMode(mode), premultipliedAlpha);
+			if (typeof state === "undefined") {
+				// "none" — replace: the source overwrites the destination, alpha
+				// included, matching the WebGPU backend's absent blend state
+				gl.disable(gl.BLEND);
+			} else {
+				gl.enable(gl.BLEND);
+				gl.blendEquation(GL_BLEND_OP[state.operation]);
+				gl.blendFunc(
+					GL_BLEND_FACTOR[state.srcFactor],
+					GL_BLEND_FACTOR[state.dstFactor],
+				);
+			}
 
-			switch (mode) {
-				case "screen":
-					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
-					break;
-
-				// exclusion(a, b) = a + b - 2ab. Unlike the other CSS advanced
-				// modes this needs no per-pixel branch — it falls straight out
-				// of `src * sfactor + dst * dfactor`:
-				//   s*(1-d) + d*(1-s) = s + d - 2sd
-				// Same caveat as `screen` above: the identity is exact for an
-				// opaque source and approximate for a translucent one, because
-				// the factors act on the premultiplied colour.
-				case "exclusion":
-					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ONE_MINUS_SRC_COLOR);
-					break;
-
-				case "lighter":
-				case "additive":
-				case "add":
-					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(srcAlpha, gl.ONE);
-					break;
-
-				case "multiply":
-					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
-					break;
-
-				case "darken":
-					gl.blendEquation(gl.MIN);
-					gl.blendFunc(gl.ONE, gl.ONE);
-					break;
-
-				case "lighten":
-					gl.blendEquation(gl.MAX);
-					gl.blendFunc(gl.ONE, gl.ONE);
-					break;
-
-				case "none":
-					// replace: source overwrites destination, alpha included —
-					// the WebGPU backend's "none" pipeline blend state parity
-					gl.disable(gl.BLEND);
-					break;
-
-				default:
-					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(srcAlpha, gl.ONE_MINUS_SRC_ALPHA);
-					this.currentBlendMode = "normal";
-					break;
+			// An unimplemented mode reports — and remembers — "normal". The six
+			// advanced modes are NOT unimplemented: their geometry rasterizes
+			// under the source-over just installed, and the token has to survive
+			// because `setBatcher` reads it back to open the compositing bracket
+			// and `BlendEffect` reads it to pick the formula.
+			if (isSupportedBlendMode(mode) === false) {
+				this.currentBlendMode = "normal";
 			}
 		}
 		return this.currentBlendMode;
@@ -2874,6 +3195,19 @@ export default class WebGLRenderer extends Renderer {
 		const hasMask = this.maskLevel > 0;
 		this._currentGradient = null;
 
+		// A gradient fill drives the stencil itself — marking, clipping, then
+		// clearing its marker — and re-enters the fill methods twice to do it.
+		// Bracketing any of that for an advanced blend mode would corrupt the
+		// mask level, so the whole span is locked out of the bracket and the
+		// fill falls back to source-over. Loudly: a silent, data-dependent
+		// fallback is precisely what advanced blend support exists to remove.
+		const bracketed = isAdvancedBlendMode(this.currentBlendMode);
+		if (bracketed === true) {
+			this._warnAdvancedBlendFallback("gradient fills");
+			this._drainAdvancedBlend();
+		}
+		this._advancedBlendBusy++;
+
 		this.flush();
 
 		gl.enable(gl.STENCIL_TEST);
@@ -2930,6 +3264,7 @@ export default class WebGLRenderer extends Renderer {
 		} else {
 			gl.disable(gl.STENCIL_TEST);
 		}
+		this._advancedBlendBusy--;
 	}
 
 	/**

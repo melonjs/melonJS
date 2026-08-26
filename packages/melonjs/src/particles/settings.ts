@@ -152,9 +152,13 @@ export interface ParticleEmitterSettings {
 	/**
 	 * Blend mode applied when rendering particles. If different than "normal",
 	 * supersedes the `textureAdditive` setting.
+	 *
+	 * Each particle copies this when it is BORN, so changing it here affects
+	 * particles emitted from that point on. To change the mode of particles
+	 * already alive as well, assign {@link ParticleEmitter#blendMode} instead —
+	 * it updates this setting and every live particle together.
 	 * @default "normal"
-	 * @see {@link CanvasRenderer#setBlendMode}
-	 * @see {@link WebGLRenderer#setBlendMode}
+	 * @see {@link CanvasRenderer#setBlendMode} for the full list of modes
 	 */
 	blendMode: string;
 

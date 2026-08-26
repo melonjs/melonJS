@@ -259,6 +259,29 @@ class CanvasRenderTarget extends RenderTarget {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
 	 */
 	invalidate(renderer) {
+		// Refreshing a texture is engine plumbing, not a scene draw, and the
+		// GPU backends must not mistake it for one: `setBatcher` is where an
+		// advanced blend mode opens its per-draw compositing bracket, so an
+		// unguarded call here brackets the INVALIDATION — capturing the
+		// destination and redirecting to an offscreen before the real draw
+		// has even started, which then composites a second time and blends
+		// the scene against itself. Reached from every gradient fill, since
+		// baking the gradient invalidates its shared canvas.
+		const busy = renderer._advancedBlendBusy;
+		if (typeof busy === "number") {
+			renderer._advancedBlendBusy = busy + 1;
+		}
+		try {
+			this.#invalidate(renderer);
+		} finally {
+			if (typeof busy === "number") {
+				renderer._advancedBlendBusy = busy;
+			}
+		}
+	}
+
+	/** @ignore */
+	#invalidate(renderer) {
 		if (renderer.type.startsWith("WebGL")) {
 			// flush pending draws referencing the current texture data
 			renderer.flush();

@@ -1,5 +1,6 @@
 import "./helpers/webgpu-globals.js";
 import { describe, expect, it } from "vitest";
+import { normalizeBlendMode } from "../src/video/blendmodes.js";
 import {
 	CLEAR_UNIFORM_SIZE,
 	FRAME_UNIFORM_SIZE,
@@ -8,9 +9,7 @@ import {
 	GROUP_LIGHTS,
 	GROUP_MATERIAL,
 } from "../src/video/webgpu/pipeline/bindgroups.js";
-import WebGPUPipelineCache, {
-	normalizeBlendMode,
-} from "../src/video/webgpu/pipeline/cache.js";
+import WebGPUPipelineCache, {} from "../src/video/webgpu/pipeline/cache.js";
 
 /**
  * A mock GPUDevice capturing createRenderPipeline descriptors, so the
@@ -57,14 +56,7 @@ describe("WebGPU pipeline (device-free units)", () => {
 		});
 
 		it("passes the supported modes through", () => {
-			for (const mode of [
-				"normal",
-				"multiply",
-				"screen",
-				"darken",
-				"lighten",
-				"none",
-			]) {
+			for (const mode of ["normal", "multiply", "screen", "none"]) {
 				expect(normalizeBlendMode(mode)).toBe(mode);
 			}
 		});
@@ -266,9 +258,11 @@ describe("WebGPU pipeline (device-free units)", () => {
 				srcFactor: "one",
 				dstFactor: "one-minus-src",
 			});
-			// min/max equations for darken/lighten (WebGL 2 parity)
-			expect(blend("darken").color.operation).toBe("min");
-			expect(blend("lighten").color.operation).toBe("max");
+			// darken/lighten moved to the shader path in 20.2 — fixed-function
+			// min/max cannot express the source-over term, so they rasterize
+			// under ordinary source-over like the other shader-composited modes
+			expect(blend("darken").color).toEqual(blend("normal").color);
+			expect(blend("lighten").color).toEqual(blend("normal").color);
 			// "none" = replace: no blend state at all
 			expect(blend("none")).toBeUndefined();
 		});

@@ -84,6 +84,30 @@ event.on(event.VIDEO_INIT, (renderer) => {
 });
 
 /**
+ * The error that stopped the renderer from being built, when it was NOT the
+ * environment's fault. `null` means "no WebGL here", which is a legitimate
+ * reason to skip.
+ * @ignore
+ */
+let acquisitionError = null;
+
+/**
+ * Whether a failure is the environment genuinely lacking WebGL 2, rather than
+ * the engine throwing on its way up. Deliberately narrow: anything this does
+ * not recognise is treated as a bug, because a skip that should have been a
+ * failure is far more expensive than a failure that should have been a skip.
+ * @param {unknown} e - the caught failure
+ * @returns {boolean}
+ * @ignore
+ */
+function isMissingContext(e) {
+	const message = String(e?.message ?? e);
+	return /context could not be created|webgl.*(not supported|unavailable)|no webgl/i.test(
+		message,
+	);
+}
+
+/**
  * Borrow the shared WebGL renderer, creating it on first use.
  *
  * Resizes to the requested dimensions, since specs assume the canvas is the
@@ -118,9 +142,18 @@ export async function getWebGLRenderer(width = 128, height = 128) {
 				castGroundShadow: false,
 			});
 			await app.init();
-		} catch {
-			// genuine absence of WebGL — callers skip
+		} catch (e) {
+			// Two very different things land here and they must NOT be
+			// conflated: a machine with no WebGL 2 stack (skip — nothing is
+			// wrong with the code), and the renderer THROWING while it builds
+			// (a bug — the suite must go red). Swallowing both turned engine
+			// breakage into a silent green run of skips, which is exactly the
+			// failure mode `webgl_available.spec.js` exists to catch — except
+			// that tripwire only runs when the whole suite does, so anyone
+			// running a subset lost the signal. Classify here instead, so the
+			// distinction survives however the tests are invoked.
 			unavailable = true;
+			acquisitionError = isMissingContext(e) ? null : e;
 			return undefined;
 		}
 		if (
@@ -176,6 +209,15 @@ export function releaseWebGLRenderer() {
  */
 export function requireWebGL(ctx, renderer) {
 	if (renderer === undefined || renderer === null) {
+		if (acquisitionError !== null) {
+			// the renderer threw on construction — a bug, not a bare machine.
+			// Fail loudly and carry the original error, rather than skipping
+			// and reporting green.
+			throw new Error(
+				`WebGL renderer construction FAILED — this is a bug, not a missing GL stack: ${acquisitionError.message ?? acquisitionError}`,
+				{ cause: acquisitionError },
+			);
+		}
 		ctx.skip("WebGL2 renderer not available in this environment");
 	}
 }
