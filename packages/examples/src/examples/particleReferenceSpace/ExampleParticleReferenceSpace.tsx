@@ -206,18 +206,34 @@ const createGame = async () => {
 
 	const onUpdate = () => {
 		t += 1 / 60;
-		const x = start.x + ((t * 150) % TRAVEL);
+
+		// A triangle wave, so the ships turn around at each end instead of
+		// snapping back to the left. The turn is the most legible moment in
+		// the whole example: a "local" cloud simply reverses along with its
+		// emitter, while a "world" ship drives back THROUGH the trail it just
+		// laid down — which is only possible if those particles really did
+		// stay where they were emitted.
+		const sweep = (t * 150) % (TRAVEL * 2);
+		const outbound = sweep <= TRAVEL;
+		const x = start.x + (outbound ? sweep : TRAVEL * 2 - sweep);
+
 		// a rotation on the emitters, so the correction is exercised under a
 		// rotated frame rather than only in the unit tests
 		const spin = Math.sin(t * 2) * 0.25;
+		// exhaust always trails the direction of travel
+		const exhaust = outbound ? Math.PI : 0;
 
 		localShip.pos.x = x;
+		localShip.flipX(!outbound);
 		localEmitter.pos.x = x;
+		localEmitter.settings.angle = exhaust;
 		localEmitter.currentTransform.identity();
 		localEmitter.rotate(spin);
 
 		worldShip.pos.x = x;
+		worldShip.flipX(!outbound);
 		worldEmitter.pos.x = x;
+		worldEmitter.settings.angle = exhaust;
 		worldEmitter.currentTransform.identity();
 		worldEmitter.rotate(spin);
 
@@ -232,8 +248,10 @@ const createGame = async () => {
 		const bob = Math.sin(t * 4) * 26;
 		customShip.pos.x = x;
 		customShip.pos.y = customY + 40 + bob;
+		customShip.flipX(!outbound);
 		customEmitter.pos.x = x;
 		customEmitter.pos.y = customY + 50 + bob;
+		customEmitter.settings.angle = exhaust;
 	};
 
 	event.on(event.GAME_UPDATE, onUpdate);
