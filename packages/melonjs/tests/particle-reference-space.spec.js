@@ -622,6 +622,24 @@ describe("particle referenceSpace", () => {
 			expect(absOf(particle).x).toBeCloseTo(origin.x);
 		});
 
+		it("re-bases through reset() too, not just the accessor", () => {
+			// `reset()` assigns `settings` wholesale, so without routing it
+			// through the same re-basing the live particles would be left
+			// holding coordinates measured against a frame no longer theirs
+			const emitter = pointEmitter(150, 120);
+			app.world.addChild(emitter);
+			emitter.burstParticles();
+			const particle = emitter.getChildren()[0];
+			const before = absOf(particle);
+
+			emitter.reset({ referenceSpace: "world" });
+
+			const after = absOf(particle);
+			expect(after.x, "particle teleported on reset()").toBeCloseTo(before.x);
+			expect(after.y).toBeCloseTo(before.y);
+			expect(emitter.referenceSpace).toBe("world");
+		});
+
 		it("is a no-op when assigned the value it already has", () => {
 			const emitter = pointEmitter(150, 120, { referenceSpace: "world" });
 			app.world.addChild(emitter);

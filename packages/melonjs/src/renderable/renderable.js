@@ -855,13 +855,33 @@ export default class Renderable extends Rect {
 	}
 
 	/**
-	 * return the renderable absolute position in the game world. The
-	 * returned vector is a {@link Vector3d} so the z component is summed
-	 * across the ancestor chain too — important for {@link Camera3d}'s
-	 * frustum culling, which previously read `obj.depth` (local
-	 * `pos.z`) and mis-culled children nested under a container with
-	 * its own non-zero depth.
-	 * @returns {Vector3d}
+	 * Where this renderable IS in the game world — its own `pos` plus every
+	 * ancestor's, as a {@link Vector3d} so the z component is summed across
+	 * the chain too (important for {@link Camera3d}'s frustum culling, which
+	 * previously read `obj.depth` — local `pos.z` — and mis-culled children
+	 * nested under a container with its own non-zero depth).
+	 *
+	 * **Reach for this** for anything positional: culling, distance checks,
+	 * hit tests, placing one renderable relative to another. It is cheap, and
+	 * it is what the engine's own culling uses.
+	 *
+	 * **Reach for {@link Renderable#getWorldTransform} instead** when a
+	 * position is not enough — when rotation, scale or flip along the ancestor
+	 * chain matters, or when you need to map an arbitrary point rather than
+	 * just the origin. This method sums translations only, so under a rotated
+	 * or scaled ancestor it reports where the renderable's *pivot* is and
+	 * nothing about how its content is oriented.
+	 *
+	 * Note the two also frame the question differently. This one is "where am
+	 * I"; `getWorldTransform()` is "what space is my content drawn in". For a
+	 * {@link Container} those coincide, because a container offsets its
+	 * children by its own position. For a leaf they differ by exactly that
+	 * position, which a leaf applies inside its own `draw()`.
+	 *
+	 * The returned vector is pooled and reused — copy it if you need to hold
+	 * onto the value across another call.
+	 * @returns {Vector3d} this renderable's absolute position
+	 * @see Renderable#getWorldTransform
 	 */
 	getAbsolutePosition() {
 		if (typeof this._absPos === "undefined") {
@@ -935,18 +955,31 @@ export default class Renderable extends Rect {
 	}
 
 	/**
-	 * The transform mapping a point in this renderable's local space into
-	 * world space — the matrix analogue of {@link Renderable#getAbsolutePosition},
-	 * which sums positions up the ancestor chain but cannot represent the
-	 * rotation, scale or flip accumulated along the way.
+	 * The space this renderable's content is drawn IN, as a matrix — the full
+	 * form of {@link Renderable#getAbsolutePosition}, which sums positions up
+	 * the ancestor chain and therefore cannot represent the rotation, scale or
+	 * flip accumulated along the way.
 	 *
-	 * The two answer subtly different questions, and the difference shows on a
-	 * leaf. This returns the frame a renderable's content is drawn IN, which
-	 * for a {@link Container} has its own position folded in (it offsets its
-	 * children) and for a leaf does not — a leaf places itself from `pos`
-	 * inside its own `draw()`. So with no rotation, scale or flip present, a
-	 * container's translation column equals its `getAbsolutePosition()`, while
-	 * a leaf's equals its PARENT's.
+	 * **Reach for `getAbsolutePosition()` instead** for ordinary positional
+	 * work — culling, distance checks, hit tests. It is cheaper and it is what
+	 * the engine culls with. **Use this** when a position is not enough:
+	 *
+	 * - an ancestor is rotated or scaled, so a translation cannot describe the
+	 *   result
+	 * - you need to map an arbitrary point, not just the origin — a corner, a
+	 *   click position, one renderable's coordinates into another's space
+	 * - you need to compose or invert the transform (`inv(A) · B` converts
+	 *   between two frames, which is how `ParticleEmitter.referenceSpace`
+	 *   measures particles against a container that is not their parent)
+	 *
+	 * The two also frame the question differently, and it shows on a leaf.
+	 * `getAbsolutePosition()` is "where am I"; this is "what space is my
+	 * content drawn in". For a {@link Container} those coincide, because a
+	 * container offsets its children by its own position. For a leaf they
+	 * differ by exactly that position, which a leaf applies inside its own
+	 * `draw()`. So with no rotation, scale or flip anywhere, a container's
+	 * translation column equals its `getAbsolutePosition()` while a leaf's
+	 * equals its PARENT's.
 	 *
 	 * The walk stops at a `floating` ancestor, because a floating renderable
 	 * draws in screen space: {@link Container#draw} resets the transform
@@ -961,8 +994,15 @@ export default class Renderable extends Rect {
 	 * @returns {Matrix3d} `out`, for chaining
 	 * @see Renderable#getAbsolutePosition
 	 * @example
-	 * // where does this renderable actually place its content?
-	 * const m = renderable.getWorldTransform(new Matrix3d());
+	 * // map a point from one renderable's space into another's
+	 * const from = a.getWorldTransform(new Matrix3d());
+	 * const into = b.getWorldTransform(new Matrix3d()).invert();
+	 * const point = new Vector2d(10, 20);       // in a's space
+	 * from.apply(point);                        // -> world
+	 * into.apply(point);                        // -> b's space
+	 * @example
+	 * // just need to know where something is? use the cheaper call
+	 * const where = renderable.getAbsolutePosition();
 	 */
 	getWorldTransform(out) {
 		// Collect the chain upward, then compose downward. Iterative rather

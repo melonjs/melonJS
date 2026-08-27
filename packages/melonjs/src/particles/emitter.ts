@@ -233,6 +233,12 @@ export default class ParticleEmitter extends Container {
 	}
 
 	override reset(settings: Partial<ParticleEmitterSettings> = {}): void {
+		// captured before the wholesale assign below, so a reference space
+		// arriving through `reset()` re-bases live particles exactly as the
+		// accessor does rather than teleporting them. `#frameOf` needs the
+		// settings intact, hence reading it here.
+		const previousFrame = this.#frameOf(this.settings?.referenceSpace);
+
 		Object.assign(this.settings, defaultEmitterSettings, settings);
 
 		// Clamp range-style settings: if `min > max`, lower `min` to `max`.
@@ -271,6 +277,10 @@ export default class ParticleEmitter extends Container {
 		this.blendMode = this.settings.blendMode;
 		this.#appliedBlendMode = this.settings.blendMode;
 
+		// no-op from the constructor (no children yet) and whenever the
+		// reference space is unchanged
+		this.#rebase(previousFrame);
+
 		this.isDirty = true;
 	}
 
@@ -294,11 +304,26 @@ export default class ParticleEmitter extends Container {
 			return;
 		}
 
-		// map live particles from the old frame into the new one BEFORE
-		// switching, so the change is invisible at the instant it happens
 		const previous = this.#frameOf(this.settings.referenceSpace);
 		this.settings.referenceSpace = space;
-		const next = this.#frameOf(space);
+		this.#rebase(previous);
+	}
+
+	/**
+	 * Map the particles already alive out of the frame they were simulating
+	 * in and into the current one, so a change of reference space is
+	 * invisible at the instant it happens: the cloud stays exactly where it
+	 * is on screen and only its subsequent motion differs.
+	 *
+	 * Called from the accessor and from {@link ParticleEmitter#reset} alike —
+	 * `reset()` assigns `settings` wholesale and would otherwise leave live
+	 * particles holding coordinates measured against a frame that is no
+	 * longer theirs, teleporting the lot.
+	 * @ignore
+	 * @param previous - the frame the live particles are currently in
+	 */
+	#rebase(previous: Container): void {
+		const next = this.#frameOf(this.settings.referenceSpace);
 
 		if (previous !== next) {
 			// p_new = inv(W_next) · W_previous · p_old
