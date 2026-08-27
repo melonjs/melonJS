@@ -313,6 +313,10 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 			lastTimeStamp = pointer.event!.timeStamp;
 		}
 
+		const worldOffset = _app.world.pos;
+		const absoluteWorldX = pointer.gameWorldX + worldOffset.x;
+		const absoluteWorldY = pointer.gameWorldY + worldOffset.y;
+
 		currentPointer.pos.set(pointer.gameWorldX, pointer.gameWorldY);
 		currentPointer.setSize(pointer.width, pointer.height);
 
@@ -323,12 +327,37 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 			emit(POINTERMOVE, pointer);
 		}
 
-		// fetch valid candiates from the game world container
+		// Fetch candidates in level-local coordinates. Floating regions are indexed
+		// in this coordinate space because Camera2d.localToWorld removes the root
+		// world offset.
 		let candidates = _app.world.broadphase.retrieve(
 			currentPointer,
 			(a: any, b: any) => _app.world._sortReverseZ(a, b),
 			undefined,
 		);
+
+		// Non-floating renderable bounds include the root world offset. This offset
+		// is introduced when a level is centered by flex-height or flex-width, so a
+		// second query is required to find their absolute broadphase entries.
+		if (worldOffset.x !== 0 || worldOffset.y !== 0) {
+			currentPointer.pos.set(absoluteWorldX, absoluteWorldY);
+			const absoluteCandidates = _app.world.broadphase.retrieve(
+				currentPointer,
+				(a: any, b: any) => _app.world._sortReverseZ(a, b),
+				undefined,
+			);
+			for (const candidate of candidates) {
+				if (
+					candidate.isFloating === true &&
+					!absoluteCandidates.includes(candidate)
+				) {
+					absoluteCandidates.push(candidate);
+				}
+			}
+			candidates = absoluteCandidates.sort((a, b) =>
+				_app.world._sortReverseZ(a, b),
+			);
+		}
 
 		// add the main game viewport to the list of candidates
 		candidates = candidates.concat([_app.viewport]);
@@ -355,11 +384,19 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 				// within the region ancestor container
 				if (typeof ancestor !== "undefined") {
 					const parentBounds = ancestor.getBounds();
-					pointer.gameLocalX = pointer.gameX - parentBounds.x;
-					pointer.gameLocalY = pointer.gameY - parentBounds.y;
+					if (region.isFloating === true) {
+						pointer.gameLocalX = pointer.gameX - parentBounds.x;
+						pointer.gameLocalY = pointer.gameY - parentBounds.y;
+					} else {
+						pointer.gameLocalX = absoluteWorldX - parentBounds.x;
+						pointer.gameLocalY = absoluteWorldY - parentBounds.y;
+					}
 				}
 
-				const eventInBounds = bounds.contains(pointer.gameX, pointer.gameY);
+				const eventInBounds =
+					region.isFloating === true
+						? bounds.contains(pointer.gameX, pointer.gameY)
+						: bounds.contains(absoluteWorldX, absoluteWorldY);
 
 				switch (pointer.type) {
 					case POINTER_MOVE[0]:
