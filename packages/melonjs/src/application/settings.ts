@@ -24,7 +24,13 @@ type BlendMode =
 	| "darken"
 	| "lighten"
 	| "exclusion"
-	| "none";
+	| "none"
+	| "overlay"
+	| "hard-light"
+	| "color-dodge"
+	| "color-burn"
+	| "soft-light"
+	| "difference";
 
 /**
  * How the application's physics is configured.
@@ -239,7 +245,8 @@ export type ApplicationSettings = {
 	consoleHeader: boolean;
 
 	/**
-	 * the default blend mode to use ("normal", "multiply", "lighter", "additive", "screen")
+	 * the default blend mode to use. Every renderer supports the full set —
+	 * see {@link CanvasRenderer#setBlendMode} for the list.
 	 * @default "normal"
 	 */
 	blendMode: BlendMode;

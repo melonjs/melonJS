@@ -43,6 +43,17 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
 /**
  * Particle Emitter Object.
  * @category Particles
+ *
+ * ### Blend modes
+ *
+ * An emitter draws no pixels of its own: every {@link Particle} is a
+ * renderable in its own right and carries its own blend mode. Assigning
+ * `emitter.blendMode` applies the mode to the particles — both the ones
+ * already alive and, through {@link ParticleEmitterSettings.blendMode}, the
+ * ones emitted afterwards. The change is picked up on the emitter's next
+ * `update`, so within the same frame.
+ * @example
+ * emitter.blendMode = "overlay";   // live particles AND future ones
  */
 export default class ParticleEmitter extends Container {
 	/**
@@ -70,6 +81,13 @@ export default class ParticleEmitter extends Container {
 
 	/** @ignore */
 	_defaultParticle: CanvasRenderTarget | undefined;
+
+	/**
+	 * The blend mode last fanned out to the particles, so a change to
+	 * {@link ParticleEmitter#blendMode} can be detected per frame.
+	 * @ignore
+	 */
+	#appliedBlendMode: string = "normal";
 
 	/**
 	 * whether at least one particle has been spawned by this emitter — used as
@@ -155,10 +173,6 @@ export default class ParticleEmitter extends Container {
 		this.reset(settings);
 	}
 
-	/**
-	 * Reset the emitter with particle emitter settings.
-	 * @param settings - object with emitter settings. See {@link ParticleEmitterSettings}
-	 */
 	override reset(settings: Partial<ParticleEmitterSettings> = {}): void {
 		Object.assign(this.settings, defaultEmitterSettings, settings);
 
@@ -192,6 +206,11 @@ export default class ParticleEmitter extends Container {
 		}
 
 		this.floating = this.settings.floating;
+		// keep the property in step with the setting, so constructing (or
+		// resetting) with `{ blendMode }` leaves `emitter.blendMode` reporting
+		// it rather than the "normal" the Renderable constructor assigned
+		this.blendMode = this.settings.blendMode;
+		this.#appliedBlendMode = this.settings.blendMode;
 
 		this.isDirty = true;
 	}
@@ -276,6 +295,28 @@ export default class ParticleEmitter extends Container {
 	 * @ignore
 	 */
 	override update(dt: number): boolean {
+		// Fan a changed blend mode out to the particles.
+		//
+		// An emitter draws no pixels of its own — each Particle is a
+		// renderable that carries its own blend mode, copied from
+		// `settings.blendMode` when it is BORN. So assigning
+		// `emitter.blendMode` (the plain `Renderable` field) reaches nothing
+		// on its own, which reads as "particles do not support blend modes".
+		// Detect the change here instead: one string compare per emitter per
+		// frame, rather than an accessor on `Renderable` that every renderable
+		// in the scene would pay for on every `preDraw`.
+		if (this.blendMode !== this.#appliedBlendMode) {
+			this.#appliedBlendMode = this.blendMode;
+			// future particles inherit it at birth...
+			this.settings.blendMode = this.blendMode;
+			// ...and the ones already alive switch now, rather than the mode
+			// fading in over a particle lifetime
+			for (const particle of this.children ?? []) {
+				particle.blendMode = this.blendMode;
+			}
+			this.isDirty = true;
+		}
+
 		// frame-skip: only do the bookkeeping when actually configured.
 		// Defaults to 0 (every frame), and that path is the hot one.
 		if (this.settings.framesToSkip > 0) {

@@ -433,4 +433,86 @@ describe("ParticleEmitter", () => {
 			});
 		}
 	});
+	describe("blendMode", () => {
+		// An emitter draws no pixels of its own — each particle is a separate
+		// renderable carrying its own blend mode, copied from
+		// `settings.blendMode` when it is BORN. So `emitter.blendMode = x`,
+		// which is the obvious thing to write and matches every other
+		// renderable, used to reach nothing at all: the particles kept
+		// rendering "normal" and it looked like they did not support blend
+		// modes. Found while building the blend-modes-by-renderable example.
+		it("reaches particles that are ALREADY alive", () => {
+			emitter.burstParticles(6);
+			expect(emitter.children.length).toBeGreaterThan(0);
+			for (const particle of emitter.children) {
+				expect(particle.blendMode).toBe("normal");
+			}
+
+			emitter.blendMode = "overlay";
+			emitter.update(16);
+
+			for (const particle of emitter.children) {
+				expect(particle.blendMode, "a live particle kept the old mode").toBe(
+					"overlay",
+				);
+			}
+		});
+
+		it("reaches particles emitted AFTERWARDS", () => {
+			emitter.blendMode = "difference";
+			emitter.update(16);
+			emitter.burstParticles(4);
+
+			expect(emitter.children.length).toBeGreaterThan(0);
+			for (const particle of emitter.children) {
+				expect(particle.blendMode, "a new particle missed the mode").toBe(
+					"difference",
+				);
+			}
+		});
+
+		it("keeps the setting and the property in step", () => {
+			emitter.blendMode = "color-dodge";
+			emitter.update(16);
+			// the setting is what newly born particles read, so the two must
+			// not drift apart
+			expect(emitter.settings.blendMode).toBe("color-dodge");
+			expect(emitter.blendMode).toBe("color-dodge");
+		});
+
+		it("reports a mode supplied through the constructor", () => {
+			const configured = new ParticleEmitter(0, 0, { blendMode: "screen" });
+			// `Renderable`'s constructor assigns "normal" before this class
+			// has its settings, so reset() has to sync the two back up
+			expect(configured.blendMode).toBe("screen");
+			expect(configured.settings.blendMode).toBe("screen");
+			configured.burstParticles(3);
+			for (const particle of configured.children) {
+				expect(particle.blendMode).toBe("screen");
+			}
+		});
+
+		it("picks a mode up through reset()", () => {
+			emitter.reset({ blendMode: "hard-light" });
+			expect(emitter.blendMode).toBe("hard-light");
+			expect(emitter.settings.blendMode).toBe("hard-light");
+		});
+
+		it("does not re-walk the children when nothing changed", () => {
+			// the propagation is a per-frame check on the emitter, so it must
+			// cost a single string compare in the steady state rather than a
+			// pass over every particle
+			emitter.blendMode = "soft-light";
+			emitter.update(16);
+			const particle = emitter.children[0] ?? null;
+			emitter.burstParticles(3);
+			emitter.update(16);
+			if (particle !== null) {
+				const spy = vi.spyOn(particle, "blendMode", "set");
+				emitter.update(16);
+				expect(spy).not.toHaveBeenCalled();
+				spy.mockRestore();
+			}
+		});
+	});
 });

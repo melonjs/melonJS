@@ -229,7 +229,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * set the current blend mode for this renderer. <br>
-	 * All renderers support: <br>
+	 * Every renderer supports the full set: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
 	 * - "add", "additive", or "lighter" : color values are added together <br>
@@ -238,26 +238,30 @@ export default class CanvasRenderer extends Renderer {
 	 * <img src="../images/multiply-blendmode.png" width="180"/> <br>
 	 * - "screen" : pixels are inverted, multiplied, and inverted again (opposite of multiply) <br>
 	 * <img src="../images/screen-blendmode.png" width="180"/> <br>
-	 * Canvas (browser-dependent) and WebGL2: <br>
 	 * - "darken" : retains the darkest pixels of both layers <br>
 	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
 	 * - "lighten" : retains the lightest pixels of both layers <br>
 	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
-	 * Canvas only, browser-dependent (falls back to "normal" if unsupported or in WebGL): <br>
-	 * - "overlay" <br>
+	 * - "overlay" : multiplies or screens, depending on the backdrop <br>
 	 * <img src="../images/overlay-blendmode.png" width="180"/> <br>
-	 * - "color-dodge" <br>
-	 * <img src="../images/color-dodge-blendmode.png" width="180"/> <br>
-	 * - "color-burn" <br>
-	 * <img src="../images/color-burn-blendmode.png" width="180"/> <br>
-	 * - "hard-light" <br>
+	 * - "hard-light" : overlay with the layers swapped — a harsh spotlight <br>
 	 * <img src="../images/hard-light-blendmode.png" width="180"/> <br>
-	 * - "soft-light" <br>
+	 * - "soft-light" : a diffused spotlight, gentler than hard-light <br>
 	 * <img src="../images/soft-light-blendmode.png" width="180"/> <br>
-	 * - "difference" <br>
+	 * - "color-dodge" : brightens the backdrop to reflect the source <br>
+	 * <img src="../images/color-dodge-blendmode.png" width="180"/> <br>
+	 * - "color-burn" : darkens the backdrop to reflect the source <br>
+	 * <img src="../images/color-burn-blendmode.png" width="180"/> <br>
+	 * - "difference" : the absolute difference of the two layers <br>
 	 * <img src="../images/difference-blendmode.png" width="180"/> <br>
-	 * - "exclusion" <br>
+	 * - "exclusion" : like difference, but lower in contrast <br>
 	 * <img src="../images/exclusion-blendmode.png" width="180"/> <br>
+	 * - "none" : blending disabled — the source replaces the destination
+	 * outright, alpha included <br>
+	 * A few draw types cannot honour every mode — 3D meshes, and fills using
+	 * a {@link Gradient} — and fall back to "normal" with a one-time console
+	 * warning. `setBlendMode` returns what it actually applied, so comparing
+	 * the result against your request detects that case.
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
