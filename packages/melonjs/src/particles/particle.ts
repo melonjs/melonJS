@@ -1,5 +1,8 @@
 import { randomFloat } from "../math/math.ts";
+import type { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { type Vector3d, vector3dPool } from "../math/vector3d.ts";
+import type { Bounds } from "../physics/bounds.ts";
 
 import type Container from "../renderable/container.js";
 import Renderable from "../renderable/renderable.js";
@@ -7,6 +10,13 @@ import { createPool, registerPool } from "../system/pool.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import ParticleEmitter from "./emitter.ts";
+
+/**
+ * Scratch for mapping a spawn point into the emitter's reference frame.
+ * Consumed immediately, so one shared instance is enough.
+ * @ignore
+ */
+const _spawn = new Vector2d();
 
 /**
  * Single Particle Object.
@@ -58,8 +68,24 @@ export default class Particle extends Renderable {
 		const image = emitter.settings.image as
 			| HTMLCanvasElement
 			| HTMLImageElement;
-		if (!newInstance) {
+		// Where the particle is BORN. `getRandomPointX/Y` stay emitter-local
+		// (they are public API), so under a non-local reference space the
+		// point is mapped into that frame here — the particle then simulates
+		// in the frame it will be measured against, which is what leaves a
+		// trail behind a moving emitter instead of dragging it along.
+		//
+		// Assigned on every reset, new instance included: the constructor
+		// seeded `pos` before the emitter's spawn mapping was consulted.
+		const map = emitter._spawnMap;
+		if (typeof map !== "undefined") {
+			_spawn.set(emitter.getRandomPointX(), emitter.getRandomPointY());
+			map.apply(_spawn);
+			this.pos.set(_spawn.x, _spawn.y);
+		} else {
 			this.pos.set(emitter.getRandomPointX(), emitter.getRandomPointY());
+		}
+
+		if (!newInstance) {
 			this.resize(image.width, image.height);
 			this.currentTransform.identity();
 		}
@@ -78,6 +104,12 @@ export default class Particle extends Renderable {
 		// renderable anchor to (0,0) — otherwise updateBounds() would apply
 		// the default 0.5/0.5 offset on top of the already-anchored matrix.
 		this.anchorPoint.set(0, 0);
+
+		// `currentTransform` holds the COMPLETE placement, position included,
+		// so the conjugation `preDraw` would otherwise apply around `pos`
+		// must not run. `preDraw`/`updateBounds` are overridden below to
+		// consume the matrix directly instead.
+		this.autoTransform = false;
 
 		if (typeof emitter.settings.tint === "string") {
 			this.tint.parseCSS(emitter.settings.tint);
@@ -199,11 +231,29 @@ export default class Particle extends Renderable {
 		this.pos.x += this.vel.x * skew;
 		this.pos.y += this.vel.y * skew;
 
-		// Update particle transform — closed-form of the 4-step builder
-		//   ScaleAndTranslate · T(half) · R(θ) · T(−half)
-		// folded into a single setTransform() to skip 3 matrix multiplies per
-		// particle per frame. See `closed-form equivalence` tests in
-		// tests/emitter.spec.js for derivation + regression coverage.
+		// Update particle transform — the COMPLETE placement, in one
+		// setTransform(), landing the particle's centre exactly on `pos`.
+		//
+		// The formula itself is unchanged, but it used to be wrapped: `pos`
+		// was already baked in here while `autoTransform` was left at its
+		// default `true`, so `preDraw` conjugated it as `T(p)·C·T(−p)`.
+		// Conjugating a matrix that already contains its own pivot is not the
+		// no-op it is for a pure translation — the net translation came out as
+		// `t + (I − L)p`, so the drawn centre was really `(2 − s)·p`.
+		//
+		// With the linear part at identity that extra term vanishes, which is
+		// why it survived so long: `p` is a particle's offset from its own
+		// emitter, usually a few pixels, and `minEndScale` defaults to 0 so
+		// `s` fades 1 → 0 and the particle merely appeared to travel further
+		// than it simulated. What made it untenable is that `p` is measured
+		// from whatever frame the particle lives in — with
+		// {@link ParticleEmitterSettings.referenceSpace} that can be the level
+		// itself, where `p` is hundreds of pixels and a motionless particle
+		// visibly flies across the screen as it fades.
+		//
+		// `autoTransform` is off (see `onResetEvent`) so nothing conjugates
+		// this behind our back, and the position it names is the position it
+		// gets.
 		const halfW = this._halfW;
 		const halfH = this._halfH;
 		const cos = Math.cos(angle);
@@ -240,6 +290,104 @@ export default class Particle extends Renderable {
 		this.isDirty = this.inViewport || !this.onlyInViewport;
 
 		return super.update(dt);
+	}
+
+	/**
+	 * `autoTransform` is off (see `onResetEvent`), so the base `preDraw` will
+	 * not apply the matrix — append it here instead, unconjugated. Appending
+	 * after `super` rather than splicing into it is order-equivalent for a
+	 * particle specifically: no flip, no mask, and the anchor is zeroed, so
+	 * nothing the base method emits interacts with this.
+	 * @ignore
+	 */
+	override preDraw(renderer: CanvasRenderer | WebGLRenderer) {
+		super.preDraw(renderer);
+		if (!this.currentTransform.isIdentity()) {
+			renderer.transform(this.currentTransform);
+		}
+	}
+
+	/**
+	 * `currentTransform` already places the particle, so the frame it
+	 * produces is positioned — only the ancestors' contribution is still
+	 * missing. The base implementation would add this particle's own `pos` on
+	 * top of a matrix that already contains it, counting it twice.
+	 * @ignore
+	 */
+	override updateBounds(absolute = true) {
+		if (!this.isRenderable) {
+			return super.updateBounds(absolute);
+		}
+
+		const bounds: Bounds = this.getBounds();
+
+		bounds.clear();
+		// anchorPoint is (0,0) for a particle, so no anchor fixup is needed
+		bounds.addFrame(0, 0, this.width, this.height, this.currentTransform);
+
+		if (absolute && this.ancestor) {
+			// ancestors only — this particle's own position is in the matrix,
+			// and measured from the reference frame rather than the emitter
+			// whenever those differ
+			const absPos: Vector3d = this.#frameOrigin().getAbsolutePosition();
+			bounds.centerOn(
+				absPos.x + bounds.x + bounds.width / 2,
+				absPos.y + bounds.y + bounds.height / 2,
+			);
+		}
+
+		return bounds;
+	}
+
+	/**
+	 * The container this particle's position is measured from — its emitter
+	 * under the default local reference space, something else otherwise.
+	 * @ignore
+	 */
+	#frameOrigin(): Renderable {
+		const emitter = this.ancestor as ParticleEmitter;
+		const space = emitter?.settings?.referenceSpace;
+		if (typeof space === "undefined" || space === "local") {
+			return emitter;
+		}
+		if (space === "world") {
+			return (emitter.ancestor as Renderable) ?? emitter;
+		}
+		// a destroyed container has no `pos` left to measure against
+		const target = space as unknown as Renderable;
+		return target && typeof target.pos !== "undefined" ? target : emitter;
+	}
+
+	/**
+	 * A particle is positioned within its reference frame, which is not
+	 * necessarily its parent — so summing up the ancestor chain, as the base
+	 * implementation does, would measure from the wrong place.
+	 * @ignore
+	 */
+	override getAbsolutePosition() {
+		const origin = this.#frameOrigin();
+		if (origin === this.ancestor) {
+			return super.getAbsolutePosition();
+		}
+		if (typeof this._absPos === "undefined") {
+			this._absPos = vector3dPool.get();
+		}
+		// `depth` proxies to `pos.z` — the statically-declared `pos` is a
+		// Vector2d even though a Renderable holds an ObservableVector3d
+		this._absPos.set(this.pos.x, this.pos.y, this.depth);
+		if (!this.floating) {
+			this._absPos.add(origin.getAbsolutePosition());
+		}
+		return this._absPos;
+	}
+
+	/**
+	 * With the placement in `currentTransform` and `autoTransform` off, the
+	 * base composition would describe a transform this class never applies.
+	 * @ignore
+	 */
+	override getLocalTransform(out: Matrix3d) {
+		return out.copy(this.currentTransform);
 	}
 
 	/**

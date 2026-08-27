@@ -359,6 +359,31 @@ export default class Entity extends Renderable {
 	}
 
 	/**
+	 * An entity replaces {@link Renderable#preDraw} wholesale — no flip, no
+	 * conjugation, no anchor offset, just its position biased by the body
+	 * bounds — so the inherited composition would describe a transform this
+	 * class never applies. Mirrors the `preDraw` above instead.
+	 * @protected
+	 * @param {Matrix3d} out - matrix to write into
+	 * @returns {Matrix3d} `out`, for chaining
+	 */
+	getLocalTransform(out) {
+		const bounds = this.body.getBounds();
+
+		out.identity();
+		out.translate(this.pos.x + bounds.x, this.pos.y + bounds.y);
+
+		if (this.renderable instanceof Renderable) {
+			out.translate(
+				this.anchorPoint.x * bounds.width,
+				this.anchorPoint.y * bounds.height,
+			);
+		}
+
+		return out;
+	}
+
+	/**
 	 * draw this entity (automatically called by melonJS)
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
