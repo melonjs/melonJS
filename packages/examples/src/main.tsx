@@ -33,6 +33,11 @@ const ExampleBlendModes = lazy(() =>
 		default: m.ExampleBlendModes,
 	})),
 );
+const ExampleBlendModeRenderables = lazy(() =>
+	import("./examples/blendModeRenderables/ExampleBlendModeRenderables").then(
+		(m) => ({ default: m.ExampleBlendModeRenderables }),
+	),
+);
 const ExampleAfterBurner = lazy(() =>
 	import("./examples/afterBurner/ExampleAfterBurner").then((m) => ({
 		default: m.ExampleAfterBurner,
@@ -282,6 +287,14 @@ const examples: {
 		sourceDir: "blendModes",
 		description:
 			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
+	},
+	{
+		component: <ExampleBlendModeRenderables />,
+		label: "Blend Modes by Renderable",
+		path: "blend-mode-renderables",
+		sourceDir: "blendModeRenderables",
+		description:
+			"The same blend mode applied to a sprite, text, a shape fill, particles and an image layer.",
 	},
 	{
 		component: <ExampleAfterBurner />,

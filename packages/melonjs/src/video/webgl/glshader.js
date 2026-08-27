@@ -308,6 +308,14 @@ export default class GLShader {
 			return;
 		}
 		this.gl.useProgram(this.program);
+		// Record it on the CONTEXT, which is the only object this class and
+		// the renderer both hold: `GLShader` is constructed with a bare `gl`
+		// (public API — `new GLShader(app.renderer.gl, …)`) and has no way to
+		// reach the renderer's program cache. Without this, writing a uniform
+		// binds this program behind that cache's back, and the next batcher
+		// flush skips its own rebind as redundant and draws the pending batch
+		// through THIS program instead.
+		this.gl.__meCurrentProgram = this.program;
 	}
 
 	/**

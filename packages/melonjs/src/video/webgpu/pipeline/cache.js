@@ -1,8 +1,31 @@
+import { blendStateFor, normalizeBlendMode } from "../../blendmodes.js";
 import blitWGSL from "../shaders/blit.wgsl";
+
 import clearWGSL from "../shaders/clear.wgsl";
 import primitiveWGSL from "../shaders/primitive.wgsl";
 import quadWGSL from "../shaders/quad.wgsl";
 import { CLEAR_UNIFORM_SIZE, FRAME_UNIFORM_SIZE } from "./bindgroups.js";
+
+/**
+ * A `GPUBlendState` for a mode — the shared, backend-neutral blend table
+ * (`video/blendmodes.js`) in the shape WebGPU's pipeline descriptor wants.
+ *
+ * The neutral table describes ONE component, because every mode the engine
+ * defines blends colour and alpha identically. Duplicating it across the two
+ * channels is a WebGPU API detail, so it lives here rather than in the shared
+ * table, which the WebGL backend also reads.
+ * @param {string} mode - a canonical mode from `normalizeBlendMode`
+ * @param {boolean} premultipliedAlpha - whether sources are premultiplied
+ * @returns {GPUBlendState|undefined} the blend state, or `undefined` for
+ * `"none"`, which means replace (no blending)
+ * @ignore
+ */
+function gpuBlendState(mode, premultipliedAlpha) {
+	const component = blendStateFor(mode, premultipliedAlpha);
+	return typeof component === "undefined"
+		? undefined
+		: { color: component, alpha: component };
+}
 
 /**
  * Texture slots per quad draw segment — the quad family batches quads
@@ -23,94 +46,6 @@ export const MAX_QUAD_TEXTURES = 8;
  * @ignore
  */
 export const DEPTH_STENCIL_FORMAT = "depth24plus-stencil8";
-
-/**
- * Blend-mode → GPUBlendState mapping, the pipeline-state port of the GL
- * blendEquation/blendFunc table in `WebGLRenderer.setBlendMode`. Factors
- * are ignored by the min/max operations per spec, matching the GL
- * `MIN`/`MAX` + `(ONE, ONE)` setup for darken/lighten.
- * @param {string} mode - normalized blend mode
- * @param {boolean} premultipliedAlpha - whether sources are premultiplied
- * @returns {GPUBlendState|undefined} the blend state, or undefined for "none" (replace)
- * @ignore
- */
-function blendStateFor(mode, premultipliedAlpha) {
-	const src = premultipliedAlpha ? "one" : "src-alpha";
-	let component;
-	switch (mode) {
-		case "none":
-			return undefined;
-		case "additive":
-			component = { operation: "add", srcFactor: src, dstFactor: "one" };
-			break;
-		case "multiply":
-			component = {
-				operation: "add",
-				srcFactor: "dst",
-				dstFactor: "one-minus-src-alpha",
-			};
-			break;
-		case "exclusion":
-			// exclusion(a, b) = a + b - 2ab, expressed as
-			// s*(1-d) + d*(1-s) — no shader needed. See the WebGL twin.
-			component = {
-				operation: "add",
-				srcFactor: "one-minus-dst",
-				dstFactor: "one-minus-src",
-			};
-			break;
-
-		case "screen":
-			component = {
-				operation: "add",
-				srcFactor: "one",
-				dstFactor: "one-minus-src",
-			};
-			break;
-		case "darken":
-			component = { operation: "min", srcFactor: "one", dstFactor: "one" };
-			break;
-		case "lighten":
-			component = { operation: "max", srcFactor: "one", dstFactor: "one" };
-			break;
-		default:
-			// "normal" — (premultiplied) source-over
-			component = {
-				operation: "add",
-				srcFactor: src,
-				dstFactor: "one-minus-src-alpha",
-			};
-			break;
-	}
-	return { color: component, alpha: component };
-}
-
-/**
- * Normalize a user-facing blend-mode string to a cache-key token — the
- * same collapsing the WebGL backend applies ("add"/"lighter" → additive,
- * unknown → normal).
- * @param {string} mode - blend mode as set through `setBlendMode`
- * @returns {string} normalized token
- * @ignore
- */
-export function normalizeBlendMode(mode) {
-	switch (mode) {
-		case "none":
-		case "multiply":
-		case "screen":
-		case "darken":
-		case "lighten":
-		case "exclusion":
-		case "normal":
-			return mode;
-		case "additive":
-		case "add":
-		case "lighter":
-			return "additive";
-		default:
-			return "normal";
-	}
-}
 
 /**
  * Stencil-mode → depthStencil/colorWriteMask pipeline states, realizing the
@@ -566,7 +501,7 @@ export default class WebGPUPipelineCache {
 						{
 							format: this.format,
 							blend:
-								shaderKey === "clear" ? undefined : blendStateFor(blend, pma),
+								shaderKey === "clear" ? undefined : gpuBlendState(blend, pma),
 							writeMask: stencil.colorWriteMask,
 						},
 					],

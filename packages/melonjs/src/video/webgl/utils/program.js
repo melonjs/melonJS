@@ -54,6 +54,9 @@ export function compileProgram(gl, vertex, fragment, attributes) {
 	}
 
 	gl.useProgram(program);
+	// linking leaves the new program bound — keep the shared record honest
+	// (see GLShader#bind)
+	gl.__meCurrentProgram = program;
 
 	// clean-up
 	gl.deleteShader(vertShader);

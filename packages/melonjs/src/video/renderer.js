@@ -696,11 +696,10 @@ export default class Renderer {
 	}
 
 	/**
-	 * set the current blend mode.
-	 * Subclasses (CanvasRenderer, WebGLRenderer, WebGPURenderer once it
-	 * lands) implement the actual backend logic.
+	 * set the current blend mode. Every renderer supports the same set —
+	 * see {@link CanvasRenderer#setBlendMode} for the list and what each does.
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (GPU renderers only)
+	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha
 	 */
 	setBlendMode(mode = "normal") {
 		this.currentBlendMode = mode;
