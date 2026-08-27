@@ -86,8 +86,9 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
  * particles behind; that is a trail. Pass a {@link Container} to measure from
  * something else entirely.
  *
- * Assigning it at runtime re-bases the particles already alive, so the cloud
- * does not jump — only its subsequent motion changes.
+ * Changing it at runtime — by assigning the property or through
+ * {@link ParticleEmitter#reset} — re-bases the particles already alive, so the
+ * cloud does not jump; only its subsequent motion changes.
  *
  * Two things are worth knowing before reaching for a non-local space. The
  * emitter is treated as always visible while it has live particles, because
@@ -290,7 +291,8 @@ export default class ParticleEmitter extends Container {
 	 *
 	 * Assigning this re-bases every particle already alive into the new frame,
 	 * so nothing jumps: the cloud stays exactly where it is on screen and only
-	 * its subsequent motion differs.
+	 * its subsequent motion differs. Passing it through
+	 * {@link ParticleEmitter#reset} does the same.
 	 * @default "local"
 	 * @example
 	 * emitter.referenceSpace = "world";   // start leaving a trail
