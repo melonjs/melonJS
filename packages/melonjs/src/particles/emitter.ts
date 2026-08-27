@@ -481,9 +481,18 @@ export default class ParticleEmitter extends Container {
 			this._spawnMap = undefined;
 		} else {
 			const map = this._spawnMap ?? (this._spawnMap = new Matrix3d());
-			map.identity();
-			map.multiply(target.getWorldTransform(_m1).invert());
-			map.multiply(this.getWorldTransform(_m2));
+			if (target === this.ancestor) {
+				// `"world"`: the ancestor chain cancels outright, since
+				// `W_emitter = W_ancestor · L_emitter` leaves
+				// `S = inv(W_ancestor) · W_ancestor · L_emitter = L_emitter`.
+				// Worth the branch — a streaming emitter runs this every few
+				// frames, and the general form walks the chain twice.
+				map.copy(this.getLocalTransform(_m1));
+			} else {
+				map.identity();
+				map.multiply(target.getWorldTransform(_m1).invert());
+				map.multiply(this.getWorldTransform(_m2));
+			}
 		}
 
 		for (let i = 0; i < count; i++) {

@@ -716,6 +716,49 @@ describe("particle referenceSpace", () => {
 	});
 
 	// ------------------------------------------------------------------
+	// depth — Camera3d culls on the z summed across the chain
+	// ------------------------------------------------------------------
+
+	describe("depth", () => {
+		it("sums z across the chain, measured from the reference frame", () => {
+			// `Camera3d.isVisible` frustum-culls on `getAbsolutePosition()`,
+			// z included, so the override has to keep the depth summation the
+			// base implementation does — just rooted at the reference frame
+			// rather than the emitter
+			const level = new Container(0, 0, 800, 600);
+			level.anchorPoint.set(0, 0);
+			// passed through addChild — assigning pos.z afterwards would be
+			// overwritten by the auto-depth addChild applies
+			app.world.addChild(level, 40);
+
+			const emitter = pointEmitter(100, 100, { referenceSpace: "world" });
+			level.addChild(emitter, 7);
+			emitter.burstParticles();
+			const particle = emitter.getChildren()[0];
+
+			// the particle carries the emitter's depth (addParticles passes it
+			// as the child z), and the frame it is measured from contributes
+			// the rest of the chain
+			expect(particle.depth).toBe(7);
+			expect(particle.getAbsolutePosition().z).toBeCloseTo(47);
+		});
+
+		it("matches the base implementation in local mode", () => {
+			const level = new Container(0, 0, 800, 600);
+			level.anchorPoint.set(0, 0);
+			app.world.addChild(level, 40);
+
+			const emitter = pointEmitter(100, 100);
+			level.addChild(emitter, 7);
+			emitter.burstParticles();
+			const particle = emitter.getChildren()[0];
+
+			// emitter's own 7 + the emitter's absolute z (40 + 7)
+			expect(particle.getAbsolutePosition().z).toBeCloseTo(54);
+		});
+	});
+
+	// ------------------------------------------------------------------
 	// pooling
 	// ------------------------------------------------------------------
 
