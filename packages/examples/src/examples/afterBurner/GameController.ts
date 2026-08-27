@@ -359,8 +359,9 @@ export class GameController extends Renderable {
 			angleVariation: Math.PI * 2,
 			minLife: 50,
 			maxLife: 110,
-			speed: 3,
-			speedVariation: 2,
+			// raised from 3 with the 20.2 particle transform fix
+			speed: 4.5,
+			speedVariation: 3,
 			minStartScale: 0.8,
 			maxStartScale: 1.4,
 			minEndScale: 0.05,
@@ -543,8 +544,10 @@ export class GameController extends Renderable {
 			angleVariation: Math.PI * 2,
 			minLife: 320,
 			maxLife: 720,
-			speed: 7,
-			speedVariation: 4,
+			// raised from 7 with the 20.2 particle transform fix — see the
+			// CHANGELOG; bursts no longer gain radius as they fade
+			speed: 10,
+			speedVariation: 5.5,
 			minStartScale: 0.6,
 			maxStartScale: 1.4,
 			minEndScale: 0.05,

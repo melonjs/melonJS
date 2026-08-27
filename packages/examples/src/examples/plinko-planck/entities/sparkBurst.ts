@@ -30,7 +30,12 @@ export const spawnSparkBurst = (
 	y: number,
 	count: number,
 	tint: string,
-	speed = 4,
+	// Raised from 4 alongside the particle transform fix in 20.2. Particles
+	// used to be drawn at up to twice the displacement they had actually
+	// simulated, which inflated a burst's radius as it faded; now that they
+	// land where they simulate, the speed has to be what it always looked
+	// like rather than what it was set to.
+	speed = 6,
 ): void => {
 	const emitter = new ParticleEmitter(x, y, {
 		width: 4,

@@ -132,7 +132,9 @@ class PathEnemyEntity extends Sprite {
 				angleVariation: 6.283185307179586,
 				minLife: 400,
 				maxLife: 800,
-				speed: 3,
+				// raised from 3 with the 20.2 particle transform fix — see
+				// the CHANGELOG; bursts no longer gain radius as they fade
+				speed: 4.5,
 				autoDestroyOnComplete: true,
 			});
 
