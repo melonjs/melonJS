@@ -42,62 +42,65 @@ describe("input", () => {
 				screenPosition: [240, 70],
 				expectedWorldPosition: [120, 70],
 			},
-		])("should trigger pointerdown with a $name", ({
-			worldOffset,
-			renderablePosition,
-			screenPosition,
-			expectedWorldPosition,
-		}) => {
-			const renderable = new Renderable(
-				renderablePosition[0],
-				renderablePosition[1],
-				40,
-				40,
-			);
-			renderable.anchorPoint.set(0, 0);
-			renderable.isKinematic = false;
-
-			app.world.addChild(renderable);
-			app.world.pos.set(worldOffset[0], worldOffset[1], 0);
-			renderable.updateBounds(true);
-			app.world.broadphase.clear();
-			app.world.broadphase.insertContainer(app.world);
-
-			let receivedPointer;
-			input.registerPointerEvent("pointerdown", renderable, (pointer) => {
-				receivedPointer = pointer;
-			});
-
-			try {
-				const canvas = app.renderer.getCanvas();
-				const canvasBounds = canvas.getBoundingClientRect();
-				canvas.dispatchEvent(
-					new PointerEvent("pointerdown", {
-						clientX:
-							canvasBounds.left +
-							(screenPosition[0] * canvasBounds.width) / canvas.width,
-						clientY:
-							canvasBounds.top +
-							(screenPosition[1] * canvasBounds.height) / canvas.height,
-						pointerId: 1,
-						width: 1,
-						height: 1,
-						isPrimary: true,
-						bubbles: true,
-					}),
+		])(
+			"should trigger pointerdown with a $name",
+			({
+				worldOffset,
+				renderablePosition,
+				screenPosition,
+				expectedWorldPosition,
+			}) => {
+				const renderable = new Renderable(
+					renderablePosition[0],
+					renderablePosition[1],
+					40,
+					40,
 				);
+				renderable.anchorPoint.set(0, 0);
+				renderable.isKinematic = false;
 
-				expect(receivedPointer).toBeDefined();
-				expect(receivedPointer.gameWorldX).toBeCloseTo(
-					expectedWorldPosition[0],
-				);
-				expect(receivedPointer.gameWorldY).toBeCloseTo(
-					expectedWorldPosition[1],
-				);
-			} finally {
-				input.releasePointerEvent("pointerdown", renderable);
-			}
-		});
+				app.world.addChild(renderable);
+				app.world.pos.set(worldOffset[0], worldOffset[1], 0);
+				renderable.updateBounds(true);
+				app.world.broadphase.clear();
+				app.world.broadphase.insertContainer(app.world);
+
+				let receivedPointer;
+				input.registerPointerEvent("pointerdown", renderable, (pointer) => {
+					receivedPointer = pointer;
+				});
+
+				try {
+					const canvas = app.renderer.getCanvas();
+					const canvasBounds = canvas.getBoundingClientRect();
+					canvas.dispatchEvent(
+						new PointerEvent("pointerdown", {
+							clientX:
+								canvasBounds.left +
+								(screenPosition[0] * canvasBounds.width) / canvas.width,
+							clientY:
+								canvasBounds.top +
+								(screenPosition[1] * canvasBounds.height) / canvas.height,
+							pointerId: 1,
+							width: 1,
+							height: 1,
+							isPrimary: true,
+							bubbles: true,
+						}),
+					);
+
+					expect(receivedPointer).toBeDefined();
+					expect(receivedPointer.gameWorldX).toBeCloseTo(
+						expectedWorldPosition[0],
+					);
+					expect(receivedPointer.gameWorldY).toBeCloseTo(
+						expectedWorldPosition[1],
+					);
+				} finally {
+					input.releasePointerEvent("pointerdown", renderable);
+				}
+			},
+		);
 
 		it("should register and trigger a pointerdown event", () => {
 			return new Promise((resolve) => {
