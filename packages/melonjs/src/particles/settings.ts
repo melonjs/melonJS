@@ -1,3 +1,4 @@
+import type Container from "../renderable/container.js";
 import type ParticleEmitter from "./emitter.ts";
 
 /**
@@ -177,6 +178,41 @@ export interface ParticleEmitterSettings {
 	floating: boolean;
 
 	/**
+	 * What a particle's position is measured against.
+	 *
+	 * A particle stores a position, and this decides what that position is
+	 * relative to. The difference is whether an effect is *attached* to the
+	 * emitter or *emitted and abandoned* by it.
+	 *
+	 * | value | measured from | use |
+	 * | --- | --- | --- |
+	 * | `"local"` | the emitter | a flame, an aura, anything welded on |
+	 * | `"world"` | the container the emitter sits in | trails, smoke, exhaust, dust |
+	 * | a {@link Container} | that container | a moving frame of reference |
+	 *
+	 * With `"local"` a moving emitter drags its whole cloud along, because a
+	 * particle's stored position never named a place in the level — it meant
+	 * "this far from my emitter". With `"world"` the position is a place, so
+	 * the emitter moves away and leaves the particles behind; only newly
+	 * emitted ones appear at the new location. Passing a `Container` measures
+	 * from that instead, for the case where the right frame is neither: snow
+	 * drifting inside a moving carriage travels with the carriage without
+	 * being welded to the vent that emits it.
+	 *
+	 * `"world"` resolves to the emitter's parent container rather than the
+	 * root, so a level that moves carries its own trails with it. Pass the
+	 * container explicitly if you want a different one.
+	 *
+	 * Changing this at runtime re-bases the particles already alive, so
+	 * nothing jumps — only their subsequent motion differs.
+	 * @default "local"
+	 * @example
+	 * // exhaust that stays where it was emitted
+	 * const emitter = new ParticleEmitter(x, y, { referenceSpace: "world" });
+	 */
+	referenceSpace: "local" | "world" | Container;
+
+	/**
 	 * Maximum number of particles launched each tick (stream mode only).
 	 * @default 10
 	 */
@@ -262,6 +298,7 @@ const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	blendMode: "normal",
 	onlyInViewport: true,
 	floating: false,
+	referenceSpace: "local",
 	maxParticles: 10,
 	frequency: 100,
 	duration: Infinity,

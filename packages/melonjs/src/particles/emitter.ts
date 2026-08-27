@@ -1,11 +1,31 @@
 import { randomFloat } from "./../math/math.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
+import { Vector2d } from "../math/vector2d.ts";
 import Container from "./../renderable/container.js";
 import timer from "../system/timer.ts";
+import type CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
+import type WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import { particlePool } from "./particle.ts";
 import defaultEmitterSettings, {
 	type ParticleEmitterSettings,
 } from "./settings.ts";
+
+/**
+ * Scratch matrices for the reference-space correction. Shared across every
+ * emitter rather than held per instance: the values are consumed within the
+ * call that produces them, and a `Matrix3d` is a `Float32Array(16)`. Two
+ * distinct ones because a single scratch reused twice would clobber the first
+ * operand mid-computation.
+ * @ignore
+ */
+const _m1 = new Matrix3d();
+/** @ignore */
+const _m2 = new Matrix3d();
+/** @ignore */
+const _correction = new Matrix3d();
+/** @ignore */
+const _rebase = new Vector2d();
 
 /**
  * @ignore
@@ -54,6 +74,31 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
  * `update`, so within the same frame.
  * @example
  * emitter.blendMode = "overlay";   // live particles AND future ones
+ *
+ * ### Reference space
+ *
+ * A particle stores a position, and
+ * {@link ParticleEmitterSettings.referenceSpace} decides what that position is
+ * measured against. By default it is the emitter, so a moving emitter carries
+ * its whole cloud along — right for a flame or an aura, wrong for anything
+ * emitted and then abandoned. Set it to `"world"` and the position names a
+ * place in the level instead, so the emitter moves away and leaves the
+ * particles behind; that is a trail. Pass a {@link Container} to measure from
+ * something else entirely.
+ *
+ * Assigning it at runtime re-bases the particles already alive, so the cloud
+ * does not jump — only its subsequent motion changes.
+ *
+ * Two things are worth knowing before reaching for a non-local space. The
+ * emitter is treated as always visible while it has live particles, because
+ * otherwise a trail would vanish the moment the emitter that made it scrolled
+ * off-screen (the particles themselves are still culled individually). And
+ * `clipping` or a `backgroundColor` on the emitter would be applied in the
+ * emitter's own frame rather than the particles', so neither composes with
+ * this.
+ * @example
+ * // exhaust that stays where it was emitted
+ * const emitter = new ParticleEmitter(x, y, { referenceSpace: "world" });
  */
 export default class ParticleEmitter extends Container {
 	/**
@@ -103,6 +148,20 @@ export default class ParticleEmitter extends Container {
 	 * @ignore
 	 */
 	_deltaInv: number;
+
+	/**
+	 * Maps an emitter-local spawn point into the reference frame the particles
+	 * live in, so a particle is BORN where the emitter is even though its
+	 * position is thereafter measured from somewhere else. `undefined` in
+	 * local mode, where the two frames coincide and no mapping is needed.
+	 *
+	 * Held per emitter (not a module scratch) because particles read it during
+	 * their own reset, after `addParticles` has computed it. One matrix per
+	 * emitter that actually uses a non-local space — emitters are few, unlike
+	 * particles, which allocate nothing.
+	 * @ignore
+	 */
+	_spawnMap: Matrix3d | undefined;
 
 	/**
 	 * @param x - x position of the particle emitter
@@ -216,6 +275,131 @@ export default class ParticleEmitter extends Container {
 	}
 
 	/**
+	 * What a particle's position is measured against — see
+	 * {@link ParticleEmitterSettings.referenceSpace}.
+	 *
+	 * Assigning this re-bases every particle already alive into the new frame,
+	 * so nothing jumps: the cloud stays exactly where it is on screen and only
+	 * its subsequent motion differs.
+	 * @default "local"
+	 * @example
+	 * emitter.referenceSpace = "world";   // start leaving a trail
+	 */
+	get referenceSpace(): "local" | "world" | Container {
+		return this.settings.referenceSpace;
+	}
+
+	set referenceSpace(space: "local" | "world" | Container) {
+		if (space === this.settings.referenceSpace) {
+			return;
+		}
+
+		// map live particles from the old frame into the new one BEFORE
+		// switching, so the change is invisible at the instant it happens
+		const previous = this.#frameOf(this.settings.referenceSpace);
+		this.settings.referenceSpace = space;
+		const next = this.#frameOf(space);
+
+		if (previous !== next) {
+			// p_new = inv(W_next) · W_previous · p_old
+			_m1.identity();
+			_m1.multiply(this.#worldFrame(next, _m2).invert());
+			_m1.multiply(this.#worldFrame(previous, _m2));
+			for (const particle of this.getChildren()) {
+				_rebase.set(particle.pos.x, particle.pos.y);
+				_m1.apply(_rebase);
+				// assigned component-wise rather than through `set()`, which
+				// would default the z component to 0 and flatten the depth
+				// `addParticles` gave this particle
+				particle.pos.x = _rebase.x;
+				particle.pos.y = _rebase.y;
+			}
+		}
+
+		this._spawnMap = undefined;
+		this.isDirty = true;
+	}
+
+	/**
+	 * Resolve a reference-space value to the container whose frame the
+	 * particles live in. Returns `this` whenever the answer is "the emitter
+	 * itself" — including the degenerate cases (`"world"` on an emitter with no
+	 * parent, or a custom target that IS the emitter), which then take the
+	 * local fast path with no correction at all.
+	 * @ignore
+	 */
+	#frameOf(space: "local" | "world" | Container): Container {
+		if (space === "local") {
+			return this;
+		}
+		if (space === "world") {
+			return (this.ancestor as Container) ?? this;
+		}
+		// A destroyed container has had its `pos` cleared, so measuring
+		// against it would throw from inside the render loop. Nothing can be
+		// salvaged from a frame that no longer exists, but falling back to
+		// local keeps the particles on screen instead of taking the frame
+		// down with them.
+		if (!space || typeof space.pos === "undefined") {
+			return this;
+		}
+		return space;
+	}
+
+	/**
+	 * The world transform of a reference frame — i.e. of the space that
+	 * container's children are drawn in.
+	 * @ignore
+	 */
+	#worldFrame(frame: Container, out: Matrix3d): Matrix3d {
+		return frame.getWorldTransform(out);
+	}
+
+	/**
+	 * The transform to insert before walking the children so they are drawn in
+	 * the reference frame instead of the emitter's own.
+	 *
+	 * At the insertion point the renderer holds `W_ancestor · preContrib`, and
+	 * `Container.draw` appends `T(pos)` afterwards, so what we need is
+	 *
+	 * ```
+	 * K = inv(preContrib) · inv(W_ancestor) · W_target · T(−pos)
+	 * ```
+	 *
+	 * expressed below via `inv(preContrib) = T(pos) · inv(L)`. Note this is
+	 * NOT `inv(W_emitter) · W_target` — matrices do not commute, and that form
+	 * only coincides with this one when both chains share the same linear
+	 * part, which hides the difference until something upstream is rotated.
+	 *
+	 * When the target is the emitter's own parent — the `"world"` case — the
+	 * whole ancestor chain cancels and no walk happens at all.
+	 * @ignore
+	 * @returns the correction, or `undefined` in local mode
+	 */
+	#correctionMatrix(): Matrix3d | undefined {
+		const target = this.#frameOf(this.settings.referenceSpace);
+		if (target === this) {
+			return undefined;
+		}
+
+		_correction.identity();
+		_correction.translate(this.pos.x, this.pos.y);
+		_correction.multiply(this.getLocalTransform(_m1).invert());
+
+		if (target !== this.ancestor) {
+			if (this.ancestor) {
+				_correction.multiply(
+					(this.ancestor as Container).getWorldTransform(_m1).invert(),
+				);
+			}
+			_correction.multiply(target.getWorldTransform(_m2));
+		}
+
+		_correction.translate(-this.pos.x, -this.pos.y);
+		return _correction;
+	}
+
+	/**
 	 * returns a random point on the x axis within the bounds of this emitter
 	 * @returns a random x position within the emitter bounds
 	 */
@@ -231,6 +415,26 @@ export default class ParticleEmitter extends Container {
 		return randomFloat(0, this.getBounds().height);
 	}
 
+	/**
+	 * Draw the particles in their reference frame rather than the emitter's.
+	 *
+	 * The correction goes in before `super.draw()` because that is where the
+	 * child walk happens; translations and the correction compose, and in
+	 * local mode there is no correction and this is the inherited path
+	 * untouched.
+	 * @ignore
+	 */
+	override draw(
+		renderer: CanvasRenderer | WebGLRenderer,
+		viewport?: Parameters<Container["draw"]>[1],
+	): void {
+		const correction = this.#correctionMatrix();
+		if (correction !== undefined) {
+			renderer.transform(correction);
+		}
+		super.draw(renderer, viewport);
+	}
+
 	// Add count particles in the game world
 	/** @ignore */
 	addParticles(count: number): void {
@@ -241,6 +445,22 @@ export default class ParticleEmitter extends Container {
 		// exhaust trails attached to a moving Mesh).
 		// `Renderable.depth` proxies to `pos.z` — same value, no cast.
 		const z = this.depth;
+
+		// Refresh the spawn mapping once for the whole batch, not per
+		// particle: every particle in this call is born in the same frame.
+		// `S = inv(W_target) · W_emitter` takes an emitter-local point to the
+		// place in the reference frame where the emitter currently is, which
+		// is what freezes a trail behind a moving emitter.
+		const target = this.#frameOf(this.settings.referenceSpace);
+		if (target === this) {
+			this._spawnMap = undefined;
+		} else {
+			const map = this._spawnMap ?? (this._spawnMap = new Matrix3d());
+			map.identity();
+			map.multiply(target.getWorldTransform(_m1).invert());
+			map.multiply(this.getWorldTransform(_m2));
+		}
+
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
 			this.addChild(particlePool.get(this), z);
@@ -342,6 +562,21 @@ export default class ParticleEmitter extends Container {
 		const childrenDirty = super.update(dt);
 		this.isDirty = this.isDirty || childrenDirty;
 
+		// Particles left behind in another frame outlive the emitter's own
+		// position, but `Container.draw` gates every child on the PARENT's
+		// `inViewport` and an emitter's bounds do not cover its children. So
+		// a trail would vanish the instant the emitter it came from scrolled
+		// off-screen. Re-assert visibility here — the parent assigns
+		// `inViewport` just before calling this, and draw happens after, so
+		// this is the last word for the frame. Particles are still culled
+		// individually inside our own child walk, so nothing extra rasterizes.
+		if (
+			this.#frameOf(this.settings.referenceSpace) !== this &&
+			this.getChildren().length > 0
+		) {
+			this.inViewport = true;
+		}
+
 		// Launch new particles, if emitter is Stream
 		if (this._enabled && this._stream) {
 			// Check if the emitter has duration set
@@ -409,5 +644,10 @@ export default class ParticleEmitter extends Container {
 		// and it required a `as unknown as ParticleEmitterSettings` cast
 		// that lied about the field type. Dropped.
 		this.settings.image = undefined;
+		// a custom reference space holds a reference to a whole container —
+		// release it for the same reason, so a discarded emitter cannot pin
+		// an entire subtree alive
+		this.settings.referenceSpace = "local";
+		this._spawnMap = undefined;
 	}
 }

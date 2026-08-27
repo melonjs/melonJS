@@ -3271,11 +3271,11 @@ export default class WebGLRenderer extends Renderer {
 	 * Reset (overrides) the renderer transformation matrix to the
 	 * identity one, and then apply the given transformation matrix.
 	 * @param {Matrix2d|Matrix3d|number} a - a matrix to transform by, or the a component to multiply the current matrix by
-	 * @param {number} b - the b component to multiply the current matrix by
-	 * @param {number} c - the c component to multiply the current matrix by
-	 * @param {number} d - the d component to multiply the current matrix by
-	 * @param {number} e - the e component to multiply the current matrix by
-	 * @param {number} f - the f component to multiply the current matrix by
+	 * @param {number} [b] - the b component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [c] - the c component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [d] - the d component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [e] - the e component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [f] - the f component to multiply the current matrix by; omitted when `a` is a matrix
 	 */
 	setTransform(a, b, c, d, e, f) {
 		this.resetTransform();
@@ -3286,11 +3286,11 @@ export default class WebGLRenderer extends Renderer {
 	 * Multiply given matrix into the renderer tranformation matrix
 	 * @see {@link WebGLRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
 	 * @param {Matrix2d|Matrix3d|number} a - a matrix to transform by, or the a component to multiply the current matrix by
-	 * @param {number} b - the b component to multiply the current matrix by
-	 * @param {number} c - the c component to multiply the current matrix by
-	 * @param {number} d - the d component to multiply the current matrix by
-	 * @param {number} e - the e component to multiply the current matrix by
-	 * @param {number} f - the f component to multiply the current matrix by
+	 * @param {number} [b] - the b component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [c] - the c component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [d] - the d component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [e] - the e component to multiply the current matrix by; omitted when `a` is a matrix
+	 * @param {number} [f] - the f component to multiply the current matrix by; omitted when `a` is a matrix
 	 */
 	transform(a, b, c, d, e, f) {
 		if (typeof a === "object") {

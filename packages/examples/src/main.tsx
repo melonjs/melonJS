@@ -38,6 +38,11 @@ const ExampleBlendModeRenderables = lazy(() =>
 		(m) => ({ default: m.ExampleBlendModeRenderables }),
 	),
 );
+const ExampleParticleReferenceSpace = lazy(() =>
+	import(
+		"./examples/particleReferenceSpace/ExampleParticleReferenceSpace"
+	).then((m) => ({ default: m.ExampleParticleReferenceSpace })),
+);
 const ExampleAfterBurner = lazy(() =>
 	import("./examples/afterBurner/ExampleAfterBurner").then((m) => ({
 		default: m.ExampleAfterBurner,
@@ -295,6 +300,14 @@ const examples: {
 		sourceDir: "blendModeRenderables",
 		description:
 			"The same blend mode applied to a sprite, text, a shape fill, particles and an image layer.",
+	},
+	{
+		component: <ExampleParticleReferenceSpace />,
+		label: "Particle Reference Space",
+		path: "particle-reference-space",
+		sourceDir: "particleReferenceSpace",
+		description:
+			"Particles measured from the emitter, from the world, or from another container.",
 	},
 	{
 		component: <ExampleAfterBurner />,

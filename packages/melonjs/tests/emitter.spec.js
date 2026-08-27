@@ -333,86 +333,69 @@ describe("ParticleEmitter", () => {
 		});
 	});
 
-	describe("particle transform (closed-form equivalence)", () => {
-		// Reference implementation: the original 4-step builder.
-		function buildReference(scale, angle, posX, posY, halfW, halfH) {
-			const m = new Matrix3d();
-			m.setTransform(
-				scale,
-				0,
-				0,
-				0,
-				0,
-				scale,
-				0,
-				0,
-				0,
-				0,
-				1,
-				0,
-				posX - halfW * scale,
-				posY - halfH * scale,
-				0,
-				1,
-			);
-			m.translate(halfW, halfH);
-			m.rotate(angle);
-			m.translate(-halfW, -halfH);
-			return m;
-		}
-
-		// Optimized implementation: same matrix in a single setTransform call.
-		// Derivation: T(p − halfSize·s)·S(s) · T(half) · R(θ) · T(−half)
-		//   m00 = s·cos      m01 = −s·sin
-		//   m10 = s·sin      m11 = s·cos
-		//   m03 = pos.x − s·(halfW·cos − halfH·sin)
-		//   m13 = pos.y − s·(halfW·sin + halfH·cos)
-		function buildClosedForm(scale, angle, posX, posY, halfW, halfH) {
+	describe("particle transform", () => {
+		// The matrix a particle is expected to hold: the complete placement,
+		// landing the particle's centre exactly on `pos`.
+		//
+		// The formula is the long-standing one. What changed is that it is no
+		// longer conjugated: `pos` was already baked in here while
+		// `autoTransform` stayed at its default `true`, so preDraw wrapped it
+		// as `T(p)·C·T(-p)` and the drawn centre came out at `(2 - s)·p`.
+		// Harmless while `p` was a few pixels from the emitter, fatal once
+		// `referenceSpace` lets `p` be a position in the level.
+		function expectedTransform(scale, angle, posX, posY, halfW, halfH) {
 			const cos = Math.cos(angle);
 			const sin = Math.sin(angle);
-			const sCos = scale * cos;
-			const sSin = scale * sin;
-			const tx = posX - scale * (halfW * cos - halfH * sin);
-			const ty = posY - scale * (halfW * sin + halfH * cos);
 			const m = new Matrix3d();
 			m.setTransform(
-				sCos,
-				sSin,
+				scale * cos,
+				scale * sin,
 				0,
 				0,
-				-sSin,
-				sCos,
+				-scale * sin,
+				scale * cos,
 				0,
 				0,
 				0,
 				0,
 				1,
 				0,
-				tx,
-				ty,
+				posX - scale * (halfW * cos - halfH * sin),
+				posY - scale * (halfW * sin + halfH * cos),
 				0,
 				1,
 			);
 			return m;
 		}
 
-		// Compare two matrices element-wise via apply() on probe points — works
-		// regardless of internal storage order/conventions.
-		function expectEquivalent(ref, opt) {
-			const probes = [
+		// What the conjugation used to produce. Kept as an explicit statement
+		// of the OLD behaviour so the difference is recorded rather than
+		// quietly re-baselined: these two agree only when the linear part is
+		// the identity, which is exactly why the drift went unnoticed.
+		function conjugated(scale, angle, posX, posY, halfW, halfH) {
+			const m = new Matrix3d();
+			m.identity();
+			m.translate(posX, posY);
+			m.multiply(expectedTransform(scale, angle, posX, posY, halfW, halfH));
+			m.translate(-posX, -posY);
+			return m;
+		}
+
+		// Compare via apply() on probe points — independent of storage order.
+		function expectEquivalent(ref, opt, label = "") {
+			for (const [x, y] of [
 				[0, 0],
 				[1, 0],
 				[0, 1],
 				[10, 7],
 				[-3, 4],
-			];
-			for (const [x, y] of probes) {
+			]) {
 				const a = { x, y };
 				const b = { x, y };
 				ref.apply(a);
 				opt.apply(b);
-				expect(b.x).toBeCloseTo(a.x, 5);
-				expect(b.y).toBeCloseTo(a.y, 5);
+				expect(b.x, `${label}x at (${x},${y})`).toBeCloseTo(a.x, 3);
+				expect(b.y, `${label}y at (${x},${y})`).toBeCloseTo(a.y, 3);
 			}
 		}
 
@@ -423,16 +406,89 @@ describe("ParticleEmitter", () => {
 			{ s: 0.5, a: Math.PI, px: -42, py: 17, hw: 16, hh: 8 },
 			{ s: 1.5, a: Math.PI / 3, px: 7, py: -3, hw: 12, hh: 6 },
 			{ s: 1, a: -Math.PI / 4, px: 0, py: 0, hw: 4, hh: 4 },
+			{ s: 0, a: 2.399, px: -1234.5, py: -2.75, hw: 4, hh: 4 },
 		];
 
 		for (const c of cases) {
-			it(`matches reference for s=${c.s} a=${c.a.toFixed(2)} pos=(${c.px},${c.py}) half=(${c.hw},${c.hh})`, () => {
-				const ref = buildReference(c.s, c.a, c.px, c.py, c.hw, c.hh);
-				const opt = buildClosedForm(c.s, c.a, c.px, c.py, c.hw, c.hh);
-				expectEquivalent(ref, opt);
+			it(`places the centre on pos for s=${c.s} a=${c.a.toFixed(2)}`, () => {
+				// the property that matters: whatever the scale and rotation,
+				// the particle's centre lands exactly on its position
+				const m = expectedTransform(c.s, c.a, c.px, c.py, c.hw, c.hh);
+				const centre = { x: c.hw, y: c.hh };
+				m.apply(centre);
+				expect(centre.x).toBeCloseTo(c.px, 3);
+				expect(centre.y).toBeCloseTo(c.py, 3);
 			});
 		}
+
+		it("no longer drifts the way the conjugation did", () => {
+			// pins the removed artifact: with a shrinking particle the old
+			// path put the centre at (2 - s)*p, which is invisible a few
+			// pixels from an emitter and catastrophic in level coordinates
+			const s = 0.25;
+			const p = { x: 400, y: 300 };
+			const old = conjugated(s, 0, p.x, p.y, 4, 4);
+			const centre = { x: 4, y: 4 };
+			old.apply(centre);
+			expect(centre.x, "old path did not drift").toBeCloseTo((2 - s) * p.x, 3);
+
+			const now = expectedTransform(s, 0, p.x, p.y, 4, 4);
+			const fixed = { x: 4, y: 4 };
+			now.apply(fixed);
+			expect(fixed.x).toBeCloseTo(p.x, 3);
+		});
+
+		it("is what a real particle actually holds", () => {
+			// The block this replaces compared two local helper functions and
+			// never touched a Particle, so it would have kept passing against
+			// a formula the engine no longer used. Read the instance.
+			const em = new ParticleEmitter(120, 90, {
+				width: 0,
+				height: 0,
+				totalParticles: 1,
+				maxParticles: 1,
+				minLife: 100000,
+				maxLife: 100000,
+				speed: 0,
+				speedVariation: 0,
+				gravity: 0,
+				wind: 0,
+				minRotation: 0.35,
+				maxRotation: 0.35,
+				minStartScale: 1.75,
+				maxStartScale: 1.75,
+				minEndScale: 1.75,
+				maxEndScale: 1.75,
+			});
+			app.world.addChild(em);
+			em.burstParticles();
+			em.update(16);
+
+			const particle = em.getChildren()[0];
+			expectEquivalent(
+				expectedTransform(
+					1.75,
+					0.35,
+					particle.pos.x,
+					particle.pos.y,
+					particle.width / 2,
+					particle.height / 2,
+				),
+				particle.currentTransform,
+				"instance matrix: ",
+			);
+		});
+
+		it("leaves autoTransform off so nothing conjugates it again", () => {
+			// the flag and the matrix are one decision: with `autoTransform`
+			// back on, preDraw would conjugate an already-complete placement
+			const em = new ParticleEmitter(50, 50, { totalParticles: 1 });
+			app.world.addChild(em);
+			em.burstParticles();
+			expect(em.getChildren()[0].autoTransform).toBe(false);
+		});
 	});
+
 	describe("blendMode", () => {
 		// An emitter draws no pixels of its own — each particle is a separate
 		// renderable carrying its own blend mode, copied from

@@ -1191,6 +1191,21 @@ export default class Container extends Renderable {
 	}
 
 	/**
+	 * A container additionally offsets its children by its own position — the
+	 * `translate()` at the top of {@link Container#draw} — which is what makes
+	 * a child's coordinates mean "relative to my parent" rather than naming a
+	 * place in the world. A leaf renderable has no such term.
+	 * @protected
+	 * @param {Matrix3d} out - matrix to write into
+	 * @returns {Matrix3d} `out`, for chaining
+	 */
+	getLocalTransform(out) {
+		super.getLocalTransform(out);
+		out.translate(this.pos.x, this.pos.y);
+		return out;
+	}
+
+	/**
 	 * draw this renderable (automatically called by melonJS)
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw

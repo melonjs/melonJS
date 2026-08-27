@@ -26,6 +26,20 @@ import pool from "../system/legacy_pool.js";
  **/
 
 /**
+ * Scratch state for {@link Renderable#getWorldTransform}, shared across every
+ * renderable rather than cached per instance — a `Matrix3d` is a
+ * `Float32Array(16)` and one per renderable would be a real cost in a scene
+ * holding thousands of them. Same rationale as the renderer's own
+ * `_tempMatrix` / `_savedTransform`. Safe because the walk is synchronous and
+ * never re-enters: `getLocalTransform` composes into `_level`, which is
+ * consumed immediately.
+ * @ignore
+ */
+const _chain = [];
+/** @ignore */
+const _level = new Matrix3d();
+
+/**
  * A base class for renderable objects.
  * @category Game Objects
  */
@@ -859,6 +873,122 @@ export default class Renderable extends Rect {
 			this._absPos.add(this.ancestor.getAbsolutePosition());
 		}
 		return this._absPos;
+	}
+
+	/**
+	 * The transform this renderable interposes between its ancestor's frame
+	 * and the frame its own content is drawn in — a mirror of what
+	 * {@link Renderable#preDraw} applies to the renderer, as a matrix.
+	 *
+	 * **This is not {@link Renderable#currentTransform}.** A renderable's
+	 * placement is split across two members: `pos` holds where it is, and
+	 * `currentTransform` holds only what `rotate()` / `scale()` / `translate()`
+	 * accumulate — it never contains the position. `preDraw` composes the two
+	 * by conjugation, so a rotation pivots about the renderable's position
+	 * rather than the origin. On a renderable you never rotated,
+	 * `currentTransform` is therefore the *identity* and says nothing about
+	 * where its content lands, while this method returns the translation that
+	 * actually places it.
+	 *
+	 * {@link Container} extends this with the offset it applies to its
+	 * children, which a leaf renderable does not have: a leaf's own `draw()`
+	 * places itself from `pos`.
+	 * @protected
+	 * @param {Matrix3d} out - matrix to write into; nothing is stored on the
+	 * renderable itself, so callers own the lifetime
+	 * @returns {Matrix3d} `out`, for chaining
+	 * @see Renderable#getWorldTransform
+	 */
+	getLocalTransform(out) {
+		// `Infinity`-sized renderables anchor at 0 — same guard, and for the
+		// same reason, as preDraw: `Infinity * 0` is `NaN` and would poison
+		// every matrix composed from it.
+		const ax = Number.isFinite(this.width)
+			? this.width * this.anchorPoint.x
+			: 0;
+		const ay = Number.isFinite(this.height)
+			? this.height * this.anchorPoint.y
+			: 0;
+
+		out.identity();
+
+		if (this._flip.x || this._flip.y) {
+			const dx = this._flip.x ? this.centerX - ax : 0;
+			const dy = this._flip.y ? this.centerY - ay : 0;
+
+			out.translate(dx, dy);
+			out.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);
+			out.translate(-dx, -dy);
+		}
+
+		if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
+			out.translate(this.pos.x, this.pos.y);
+			out.multiply(this.currentTransform);
+			out.translate(-this.pos.x, -this.pos.y);
+		}
+
+		if (this.applyAnchorTransform !== false) {
+			out.translate(-ax, -ay);
+		}
+
+		return out;
+	}
+
+	/**
+	 * The transform mapping a point in this renderable's local space into
+	 * world space — the matrix analogue of {@link Renderable#getAbsolutePosition},
+	 * which sums positions up the ancestor chain but cannot represent the
+	 * rotation, scale or flip accumulated along the way.
+	 *
+	 * The two answer subtly different questions, and the difference shows on a
+	 * leaf. This returns the frame a renderable's content is drawn IN, which
+	 * for a {@link Container} has its own position folded in (it offsets its
+	 * children) and for a leaf does not — a leaf places itself from `pos`
+	 * inside its own `draw()`. So with no rotation, scale or flip present, a
+	 * container's translation column equals its `getAbsolutePosition()`, while
+	 * a leaf's equals its PARENT's.
+	 *
+	 * The walk stops at a `floating` ancestor, because a floating renderable
+	 * draws in screen space: {@link Container#draw} resets the transform
+	 * outright for those, so the chain genuinely ends there rather than
+	 * continuing to the root.
+	 *
+	 * The camera needs no special handling — {@link Camera2d} folds its view
+	 * transform into the root container's `currentTransform`, so it is picked
+	 * up like any other level.
+	 * @param {Matrix3d} out - matrix to write into; nothing is stored on the
+	 * renderable itself, so callers own the lifetime
+	 * @returns {Matrix3d} `out`, for chaining
+	 * @see Renderable#getAbsolutePosition
+	 * @example
+	 * // where does this renderable actually place its content?
+	 * const m = renderable.getWorldTransform(new Matrix3d());
+	 */
+	getWorldTransform(out) {
+		// Collect the chain upward, then compose downward. Iterative rather
+		// than recursive so no per-level temporary is needed — one shared
+		// scratch suffices, and the chain array is reused across calls.
+		_chain.length = 0;
+		_chain.push(this);
+		if (this.floating !== true) {
+			let node = this.ancestor;
+			while (typeof node !== "undefined" && node !== null) {
+				_chain.push(node);
+				if (node.floating === true) {
+					break;
+				}
+				node = node.ancestor;
+			}
+		}
+
+		out.identity();
+		for (let i = _chain.length; i-- > 0; ) {
+			out.multiply(_chain[i].getLocalTransform(_level));
+		}
+		// drop the references rather than pinning a whole subtree alive
+		_chain.length = 0;
+
+		return out;
 	}
 
 	/**
