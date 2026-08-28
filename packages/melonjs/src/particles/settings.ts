@@ -239,12 +239,16 @@ export interface ParticleEmitterSettings {
 	framesToSkip: number;
 
 	/**
-	 * When `true`, each particle refreshes its bounding box every frame so the
-	 * hitbox tracks the visual exactly (useful for debug visualization or
-	 * collision queries). When `false` (default), bounds reflect the previous
-	 * frame's transform — sufficient for viewport culling and significantly
-	 * cheaper at high particle counts.
+	 * No longer has any effect, and kept only so existing configurations keep
+	 * working.
+	 *
+	 * It used to trade hitbox accuracy for speed, because bounds were
+	 * recomputed eagerly on every position write — twice per particle per
+	 * frame, from a transform that had not been rebuilt yet. Particles now
+	 * invalidate on write and recompute once on read, so the bounds a reader
+	 * gets are always current.
 	 * @default false
+	 * @deprecated since 20.2.0 — bounds are always up to date; remove it
 	 */
 	accurateBounds: boolean;
 
