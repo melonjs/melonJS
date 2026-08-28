@@ -85,10 +85,19 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			},
 			onEvict: (slot) => {
 				this.segmentEntries[slot] = undefined;
+				// a remembered slot may be the one just freed, and it would
+				// hand out an index now owned by a different texture
+				if (this._memoSlot === slot) {
+					this._memoTexture = null;
+				}
 			},
 		});
 		/** @type {{view: GPUTextureView, sampler: GPUSampler}[]} indexed by slot */
 		this.segmentEntries = [];
+		/** last texture resolved to a segment slot, and its slot @ignore */
+		this._memoTexture = null;
+		/** @ignore */
+		this._memoSlot = 0;
 		// the composed group-1 bind group for the pending segment (lazy)
 		this.segmentGroup = null;
 		// composed bind groups cached by their slot-resource identity —
@@ -217,6 +226,20 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	segmentSlotFor(texture, reupload) {
+		// Consecutive quads in a batch almost always share a texture — a
+		// sprite sheet, a font atlas, an emitter's particle image — so the
+		// answer below is the same for long runs. Without this memo every
+		// quad builds a template-literal key and hashes it into the slot
+		// table: at 20k particles that is 20k string allocations and 20k
+		// string-keyed lookups per frame. Measured as the bulk of the gap
+		// between this backend's quad submission and WebGL's.
+		//
+		// `reupload` bypasses it: the caller is telling us the texture
+		// contents changed, so the resident record must be re-resolved.
+		if (!reupload && texture === this._memoTexture) {
+			return this._memoSlot;
+		}
+
 		const renderer = this.renderer;
 		const store = renderer.textureStore;
 		const record = store.getResidentRecord(texture, { force: reupload });
@@ -228,16 +251,19 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		const slotKey = `${this.resourceId(record.view)}|${filter}|${wrap}`;
 		// a hit returns the live slot; a miss claims one, flushing the pending
 		// segment first when the table is full (the `onOverflow` above)
-		if (this.slotTable.peek(slotKey) === undefined) {
-			const slot = this.slotTable.slotFor(slotKey);
-			this.segmentEntries[slot] = {
+		let resolved = this.slotTable.peek(slotKey);
+		if (resolved === undefined) {
+			resolved = this.slotTable.slotFor(slotKey);
+			this.segmentEntries[resolved] = {
 				view: record.view,
 				sampler: store.getSampler(filter, wrap),
 			};
 			this.segmentGroup = null;
-			return slot;
 		}
-		return this.slotTable.peek(slotKey);
+
+		this._memoTexture = texture;
+		this._memoSlot = resolved;
+		return resolved;
 	}
 
 	/**
@@ -301,6 +327,8 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		this.slotTable.reset();
 		this.segmentEntries.length = 0;
 		this.segmentGroup = null;
+		// the memo needs no explicit clearing here: `reset()` evicts every
+		// live slot, and the eviction callback above drops it
 	}
 
 	/**
