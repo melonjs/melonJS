@@ -190,9 +190,18 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 				draw();
 			}
 		}
-		// gl.finish forces the driver to flush all queued GL work — without
-		// it, drawElements latency hides under the rAF cadence and the
-		// numbers look better than they really are.
+		// NOTE: `gl.finish()` does NOT synchronise in this environment, so
+		// what follows is CPU-side submission cost, not end-to-end frame time.
+		// Verified by A/B: 4000 alpha-blended 512x512 quads — over a gigapixel
+		// of overdraw — measure 0.7ms with the call and 0.7ms without, which
+		// is not a rate any GPU achieves. Headless Chromium simply does not
+		// wait.
+		//
+		// That is the right measure for what this benchmark compares: the
+		// retained-mesh path wins by not re-uploading vertices and not
+		// re-transforming them on the CPU, and both are counted here. It just
+		// must not be read as a frame-time figure, and adding this call back
+		// does not make it one.
 		renderer.gl.finish();
 		const elapsed = performance.now() - start;
 		renderer.gl.drawElements = origDE;
