@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
 	Application,
 	boot,
@@ -27,7 +27,7 @@ import {
 describe("particle referenceSpace", () => {
 	let app;
 
-	beforeEach(async () => {
+	beforeAll(async () => {
 		boot();
 		app = new Application(800, 600, {
 			parent: "screen",
@@ -45,6 +45,18 @@ describe("particle referenceSpace", () => {
 	});
 
 	afterEach(() => {
+		// One Application per FILE, not per test: each `init()` opens a real
+		// browser rendering context, and CI runs on a GPU-less container where
+		// those are scarce and slow. Reset the scene between tests instead —
+		// the same trade `input.spec.js` makes.
+		app.world.reset();
+		app.world.pos.set(0, 0, 0);
+		app.world.broadphase.clear();
+		app.viewport.moveTo(0, 0);
+		app.viewport.setBounds(0, 0, app.viewport.width, app.viewport.height);
+	});
+
+	afterAll(() => {
 		// browsers cap live contexts — a leak surfaces as UNRELATED specs failing
 		app?.destroy();
 	});

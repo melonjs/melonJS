@@ -190,10 +190,29 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 				draw();
 			}
 		}
-		// gl.finish forces the driver to flush all queued GL work — without
-		// it, drawElements latency hides under the rAF cadence and the
-		// numbers look better than they really are.
-		renderer.gl.finish();
+		// A real barrier. `gl.finish()` was here, and it does NOT wait under
+		// ANGLE/SwiftShader — verified: a thousand draws queue in 0.3ms and
+		// `finish()` returns in 0.3ms, while the rasterization is still to
+		// come. So the timings it produced were fiction, AND the work escaped
+		// the test: it drained afterwards in Chromium's single shared GPU
+		// process, wedging every page for minutes. On CI that stall is
+		// visible as ~190 seconds of silence in the middle of a passing run,
+		// and it is what killed the browser in the failing ones — the spec
+		// named in "Browser connection was closed" was always this file's
+		// neighbour in execution order, never this file.
+		//
+		// A 1x1 readPixels genuinely blocks until the pipeline drains, so the
+		// cost lands inside the measurement where it belongs.
+		const drain = new Uint8Array(4);
+		renderer.gl.readPixels(
+			0,
+			0,
+			1,
+			1,
+			renderer.gl.RGBA,
+			renderer.gl.UNSIGNED_BYTE,
+			drain,
+		);
 		const elapsed = performance.now() - start;
 		renderer.gl.drawElements = origDE;
 
@@ -220,6 +239,16 @@ describe("drawMesh benchmark (baseline for #1468)", () => {
 		// like one that did. Decide it once, visibly, up front.
 		if (!(renderer instanceof WebGLRenderer)) {
 			ctx.skip("Canvas renderer — drawMesh benchmark not applicable");
+			return;
+		}
+		// Skipped on CI, visibly rather than by quietly measuring nothing.
+		// The runner is a GPU-less container rasterizing through SwiftShader's
+		// Subzero JIT on four shared vCPUs, so these figures describe that
+		// environment and not the engine. The work is also heavy enough to
+		// starve the shared GPU process for minutes, which is what made the
+		// suite flaky. Run it locally to compare against #1507's numbers.
+		if (import.meta.env.VITE_CI !== "") {
+			ctx.skip("CI — a software-rasterized benchmark measures the runner");
 			return;
 		}
 		// Frame counts chosen so total drawMesh calls stays in the same
