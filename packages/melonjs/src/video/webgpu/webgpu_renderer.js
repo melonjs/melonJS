@@ -1559,6 +1559,20 @@ export default class WebGPURenderer extends Renderer {
 		this.pendingColorClear = false;
 		this.pendingDepthClear = false;
 		this.currentPipeline = null;
+
+		// Every batcher's pending state belongs to the frame being thrown
+		// away — queued vertices, the current effect and material, segment
+		// entries, composed bind groups. Carrying it into the next frame is
+		// not merely stale, it is unsafe: a segment entry holds a
+		// `GPUTextureView` into a texture that `destroyRetiredTextures()`
+		// below is about to free, so the next `composeSegmentGroup` would
+		// build a bind group over destroyed resources. The recorded draws
+		// that referenced them died with the command buffer, so there is
+		// nothing to preserve.
+		for (const batcher of this.batchers.values()) {
+			batcher.reset();
+		}
+
 		// the recorded draws are dropped with the command buffer, so any
 		// texture retired during the frame can go now
 		this.destroyRetiredTextures();
