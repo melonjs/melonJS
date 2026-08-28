@@ -45,6 +45,11 @@ jobs:
   test:
     needs: lint
     runs-on: ubuntu-latest
+    strategy:
+      # a shard failing should not cancel the other — we want to see both
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     container:
       # must match the workspace's playwright version (root devDependencies)
       image: mcr.microsoft.com/playwright:v1.62.1-noble
@@ -71,7 +76,14 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm i
-      - run: pnpm test
+      # Sharded because the browser accumulates across a run: the page died
+      # reproducibly around file ~125 of 263 regardless of WHICH files, naming
+      # whichever spec was executing ("Browser connection was closed while
+      # running tests"). A count-based failure is accumulation, not a bad spec
+      # — and neither raising /dev/shm nor cutting per-test contexts moved it.
+      # Each shard gets its own container and browser, halving what any one
+      # instance has to survive.
+      - run: pnpm test -- --shard=${{ matrix.shard }}/2
       - run: pnpm -F @melonjs/matter-adapter test
       - run: pnpm -F @melonjs/planck-adapter test
       - run: pnpm -F @melonjs/debug-plugin test
