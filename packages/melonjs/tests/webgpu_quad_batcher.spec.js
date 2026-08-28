@@ -272,20 +272,72 @@ describe("WebGPUQuadBatcher", () => {
 			expect(forced, "reupload did not reach the store").toEqual([false, true]);
 		});
 
-		it("forgets a slot that gets evicted under it", () => {
-			// Eviction hands the index to a different texture. Driven through
-			// the real table by overflowing it rather than by invoking the
-			// callback by hand — a test that reimplements the logic it checks
-			// proves nothing.
+		it("does not hand a returning texture a slot it no longer owns", () => {
+			// The shape that matters, and which comparing slot NUMBERS cannot
+			// see: a memo hit must return a slot whose entry holds the
+			// CALLER's view. Deleting the memo write leaves the previous
+			// texture's slot in place, which is wrong only for slot >= 1 —
+			// every earlier test here happened to sit on slot 0.
 			batcher.segmentSlotFor(atlasA, false);
-			const view = batcher._memoView;
-			expect(view).not.toBeNull();
+			const b = batcher.segmentSlotFor(atlasB, false);
+			const again = batcher.segmentSlotFor(atlasB, false);
 
-			for (let i = 0; i < 32; i++) {
-				batcher.segmentSlotFor({ name: `overflow-${i}` }, false);
-			}
+			expect(again).toBe(b);
+			expect(
+				batcher.segmentEntries[again].view,
+				"memo hit returned a slot belonging to another texture",
+			).toBe(renderer.textureStore.getResidentRecord(atlasB).view);
+		});
 
-			expect(batcher._memoView, "evicted slot stayed memoized").not.toBe(view);
+		it("clears a slot >= 1 across a flush, not just slot 0", () => {
+			// `flush()` resets the segment, and the memo must go with it for
+			// EVERY slot. Weakening the eviction clear to slot 0 survives all
+			// the other tests, because their memo always sits on slot 0 when
+			// the reset fires — so drive it from slot 1.
+			const quad = [0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff];
+			batcher.addQuad(atlasA, ...quad); // slot 0
+			batcher.addQuad(atlasB, ...quad); // slot 1, memo -> 1
+			batcher.flush();
+
+			const slot = batcher.segmentSlotFor(atlasB, false);
+			expect(
+				batcher.segmentEntries[slot],
+				"stale memo returned an unclaimed slot",
+			).toBeDefined();
+			expect(batcher.segmentEntries[slot].view).toBe(
+				renderer.textureStore.getResidentRecord(atlasB).view,
+			);
+		});
+
+		it("rebinds the slot when a forced reupload mints a new view", () => {
+			// `force: true` does not always produce a new view — an in-place
+			// re-upload keeps it, and the memoized slot stays correct then.
+			// When it DOES mint one, the slot must follow it rather than
+			// keeping the retired view.
+			const store = renderer.textureStore;
+			const original = store.getResidentRecord.bind(store);
+			store.getResidentRecord = (texture, options) => {
+				const record = original(texture, options);
+				if (options?.force === true) {
+					const next = {
+						...record,
+						view: { texture, generation: (record.view.generation ?? 0) + 1 },
+					};
+					store.records.set(texture, next);
+					return next;
+				}
+				return record;
+			};
+
+			batcher.segmentSlotFor(atlasA, false);
+			const reuploaded = batcher.segmentSlotFor(atlasA, true);
+			const view = store.records.get(atlasA).view;
+			expect(batcher.segmentEntries[reuploaded].view).toBe(view);
+
+			// and the following hit must carry the NEW view, not the retired one
+			const hit = batcher.segmentSlotFor(atlasA, false);
+			expect(hit).toBe(reuploaded);
+			expect(batcher.segmentEntries[hit].view).toBe(view);
 		});
 
 		it("clears after a segment reset", () => {
