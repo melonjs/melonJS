@@ -77,13 +77,19 @@ jobs:
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm i
       # Sharded because the browser accumulates across a run: the page died
-      # reproducibly around file ~125 of 263 regardless of WHICH files, naming
+      # reproducibly at file 125 of 263 regardless of WHICH files, naming
       # whichever spec was executing ("Browser connection was closed while
       # running tests"). A count-based failure is accumulation, not a bad spec
-      # — and neither raising /dev/shm nor cutting per-test contexts moved it.
-      # Each shard gets its own container and browser, halving what any one
-      # instance has to survive.
-      - run: pnpm test -- --shard=${{ matrix.shard }}/2
+      # — every named victim passes alone in under a second — and neither
+      # raising /dev/shm nor cutting per-test contexts moved it. Each shard
+      # gets its own container and browser, halving what one instance has to
+      # survive.
+      #
+      # Invoked directly rather than through `pnpm test -- --shard=...`: that
+      # form silently does not reach vitest (both shards ran all 263 files and
+      # failed identically), so the build and the run are separate steps here.
+      - run: pnpm turbo build
+      - run: pnpm exec vitest run --config packages/melonjs/vitest.config.ts --shard=${{ matrix.shard }}/2
       - run: pnpm -F @melonjs/matter-adapter test
       - run: pnpm -F @melonjs/planck-adapter test
       - run: pnpm -F @melonjs/debug-plugin test
