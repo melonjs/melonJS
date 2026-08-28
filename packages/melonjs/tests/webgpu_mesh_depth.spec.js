@@ -114,11 +114,78 @@ describe("WebGPU mesh depth policy", () => {
 				pendingColorClear: true,
 				pendingDepthClear: true,
 				currentPipeline: null,
+				batchers: new Map(),
 				destroyRetiredTextures() {},
 			};
 			WebGPURenderer.prototype.abandonFrame.call(stub);
 			expect(stub.pendingDepthClear).toBe(false);
 			expect(stub.pendingColorClear).toBe(false);
+		});
+
+		it("abandonFrame drops batcher state BEFORE retired textures die", () => {
+			// A batcher's segment entries hold `GPUTextureView`s into textures
+			// that `destroyRetiredTextures()` is about to free. Carrying them
+			// into the next frame would compose a bind group over destroyed
+			// resources — so the reset has to happen, and has to happen first.
+			const order = [];
+			const batcher = {
+				reset() {
+					order.push("reset");
+				},
+			};
+			const stub = {
+				renderPass: null,
+				commandEncoder: null,
+				frameTextureView: null,
+				frameTexture: null,
+				currentRenderTarget: null,
+				pendingColorClear: false,
+				pendingDepthClear: false,
+				currentPipeline: null,
+				batchers: new Map([["quad", batcher]]),
+				destroyRetiredTextures() {
+					order.push("destroy");
+				},
+			};
+
+			WebGPURenderer.prototype.abandonFrame.call(stub);
+
+			expect(
+				order,
+				"batcher state outlived the textures it referenced",
+			).toEqual(["reset", "destroy"]);
+		});
+
+		it("abandonFrame resets EVERY registered batcher", () => {
+			// quad, primitive, mesh and their lit variants all hold pending
+			// vertices; leaving any of them armed replays a dead frame's work
+			const reset = [];
+			const make = (name) => {
+				return [
+					name,
+					{
+						reset() {
+							reset.push(name);
+						},
+					},
+				];
+			};
+			const stub = {
+				renderPass: null,
+				commandEncoder: null,
+				frameTextureView: null,
+				frameTexture: null,
+				currentRenderTarget: null,
+				pendingColorClear: false,
+				pendingDepthClear: false,
+				currentPipeline: null,
+				batchers: new Map([make("quad"), make("primitive"), make("mesh")]),
+				destroyRetiredTextures() {},
+			};
+
+			WebGPURenderer.prototype.abandonFrame.call(stub);
+
+			expect(reset.sort()).toEqual(["mesh", "primitive", "quad"]);
 		});
 
 		it("beginPass realizes the policy table end to end (real prototype)", () => {
