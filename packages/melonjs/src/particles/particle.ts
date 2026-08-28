@@ -33,7 +33,6 @@ export default class Particle extends Renderable {
 	wind: number;
 	followTrajectory: boolean;
 	onlyInViewport: boolean;
-	accurateBounds: boolean;
 	_deltaInv: number;
 	_halfW: number;
 	_halfH: number;
@@ -59,6 +58,27 @@ export default class Particle extends Renderable {
 		this.vel = vector2dPool.get();
 		this.onResetEvent(emitter, true);
 	}
+
+	/**
+	 * Whether the bounds need recomputing before anyone reads them.
+	 *
+	 * A `Renderable` refreshes its bounds eagerly, from a callback fired on
+	 * every `pos` assignment. That is the right trade for a scene object, and
+	 * the wrong one for a particle: `update()` writes `pos.x` and `pos.y`
+	 * separately, so the callback fires TWICE per particle per frame, and both
+	 * runs happen before `currentTransform` is rebuilt — deriving bounds from
+	 * the previous frame's matrix and then throwing that away. Measured, the
+	 * redundant pass was about two thirds of the whole particle update loop.
+	 *
+	 * So a particle invalidates instead of recomputing, and pays once, on
+	 * read, for particles something actually looks at.
+	 *
+	 * Deliberately not a `#private` field: `updateBounds()` is reached from the
+	 * base constructor chain (`Polygon.setVertices`) before a subclass's field
+	 * initializers have run, and writing an undeclared private field throws.
+	 * @ignore
+	 */
+	_boundsDirty = true;
 
 	/**
 	 * @ignore
@@ -99,6 +119,22 @@ export default class Particle extends Renderable {
 
 		// Particle will always update
 		this.alwaysUpdate = true;
+
+		// Swap the position callback `Renderable` installs — which recomputes
+		// bounds on every single assignment — for one that just marks them
+		// stale. See `_boundsDirty`. Re-installed on every reset because a
+		// pooled instance may have been handed back with the default.
+		//
+		// The cast is the `pos` type mismatch tracked in melonjs/melonJS#817:
+		// `pos` is declared `Vector2d` up the shape chain but is really an
+		// `ObservableVector3d`, so `setCallback` is invisible from TypeScript.
+		(
+			this.pos as unknown as { setCallback: (cb: () => void) => void }
+		).setCallback(() => {
+			this._boundsDirty = true;
+			this.isDirty = true;
+		});
+		this._boundsDirty = true;
 
 		// Anchor is baked into currentTransform (see update()), so reset the
 		// renderable anchor to (0,0) — otherwise updateBounds() would apply
@@ -154,9 +190,6 @@ export default class Particle extends Renderable {
 
 		// Set if the particle update only in Viewport
 		this.onlyInViewport = emitter.settings.onlyInViewport;
-
-		// whether to refresh bounds every frame (debug-grade hitbox accuracy)
-		this.accurateBounds = emitter.settings.accurateBounds;
 
 		// read the cached delta inverse from the emitter (constant after boot)
 		this._deltaInv = emitter._deltaInv;
@@ -279,13 +312,6 @@ export default class Particle extends Renderable {
 			1,
 		);
 
-		// Refresh bounds only when the user opted in to per-frame accuracy.
-		// Without this, the hitbox lags one frame behind the visual — fine for
-		// viewport culling, visible only if you draw debug bounds.
-		if (this.accurateBounds) {
-			this.updateBounds();
-		}
-
 		// mark as dirty if the particle is not dead yet
 		this.isDirty = this.inViewport || !this.onlyInViewport;
 
@@ -314,7 +340,30 @@ export default class Particle extends Renderable {
 	 * top of a matrix that already contains it, counting it twice.
 	 * @ignore
 	 */
+	/**
+	 * Bounds are recomputed here rather than when `pos` moves, so a particle
+	 * nothing looks at this frame pays nothing at all.
+	 *
+	 * `updateBounds()` deliberately keeps its eager contract — a caller that
+	 * asks for a recompute, such as {@link Container} aggregating child bounds
+	 * under `enableChildBoundsUpdate`, still gets fresh values back.
+	 * @ignore
+	 */
+	override getBounds() {
+		const bounds = super.getBounds();
+		if (this._boundsDirty) {
+			this.updateBounds();
+		}
+		return bounds;
+	}
+
 	override updateBounds(absolute = true) {
+		// this IS the recompute, so whatever invalidated the bounds is now
+		// satisfied. Clearing here (rather than only in `getBounds`) keeps an
+		// explicit caller — `accurateBounds`, or a container aggregating child
+		// bounds — from leaving the flag set and paying for a second pass.
+		this._boundsDirty = false;
+
 		if (!this.isRenderable) {
 			return super.updateBounds(absolute);
 		}
