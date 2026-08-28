@@ -48,6 +48,14 @@ jobs:
     container:
       # must match the workspace's playwright version (root devDependencies)
       image: mcr.microsoft.com/playwright:v1.62.1-noble
+      # Docker gives a container 64MB of /dev/shm, and Chromium uses it for
+      # shared memory between its processes. Software-rasterized WebGL across
+      # two pages exhausts that partway through a 263-file run, and the
+      # renderer dies with "Browser connection was closed while running tests.
+      # Was the page closed unexpectedly?" — naming whichever spec happened to
+      # be running, which is why the victim was different every time and never
+      # reproduced locally.
+      options: --shm-size=2gb
     steps:
       - uses: actions/checkout@v5
       - name: Setup node
