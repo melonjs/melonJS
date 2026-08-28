@@ -1,4 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	boot,
@@ -12,7 +21,11 @@ describe("ParticleEmitter", () => {
 	let emitter;
 
 	let app;
-	beforeEach(async () => {
+	beforeAll(async () => {
+		// One Application per FILE, not per test: each `init()` opens a real
+		// browser rendering context, and CI runs on a GPU-less container where
+		// those are scarce and slow enough that a hook creating one can miss
+		// its timeout. The emitter is still fresh per test below.
 		boot();
 		app = new Application(800, 600, {
 			parent: "screen",
@@ -20,6 +33,9 @@ describe("ParticleEmitter", () => {
 			renderer: video.CANVAS,
 		});
 		await app.init();
+	});
+
+	beforeEach(() => {
 		emitter = new ParticleEmitter(100, 100, {
 			width: 16,
 			height: 16,
@@ -28,8 +44,13 @@ describe("ParticleEmitter", () => {
 	});
 
 	afterEach(() => {
-		// release the WebGL context this describe owns — browsers cap
-		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app.world.reset();
+		app.world.pos.set(0, 0, 0);
+		app.world.broadphase.clear();
+	});
+
+	afterAll(() => {
+		// browsers cap live contexts — a leak surfaces as UNRELATED specs failing
 		app?.destroy();
 	});
 
