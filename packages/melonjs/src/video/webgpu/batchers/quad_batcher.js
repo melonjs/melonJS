@@ -88,14 +88,18 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 				// a remembered slot may be the one just freed, and it would
 				// hand out an index now owned by a different texture
 				if (this._memoSlot === slot) {
-					this._memoTexture = null;
+					this._memoView = null;
 				}
 			},
 		});
 		/** @type {{view: GPUTextureView, sampler: GPUSampler}[]} indexed by slot */
 		this.segmentEntries = [];
-		/** last texture resolved to a segment slot, and its slot @ignore */
-		this._memoTexture = null;
+		/** last (view, filter, wrap) resolved to a segment slot @ignore */
+		this._memoView = null;
+		/** @ignore */
+		this._memoFilter = null;
+		/** @ignore */
+		this._memoWrap = null;
 		/** @ignore */
 		this._memoSlot = 0;
 		// the composed group-1 bind group for the pending segment (lazy)
@@ -226,28 +230,39 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @ignore
 	 */
 	segmentSlotFor(texture, reupload) {
-		// Consecutive quads in a batch almost always share a texture — a
-		// sprite sheet, a font atlas, an emitter's particle image — so the
-		// answer below is the same for long runs. Without this memo every
-		// quad builds a template-literal key and hashes it into the slot
-		// table: at 20k particles that is 20k string allocations and 20k
-		// string-keyed lookups per frame. Measured as the bulk of the gap
-		// between this backend's quad submission and WebGL's.
-		//
-		// `reupload` bypasses it: the caller is telling us the texture
-		// contents changed, so the resident record must be re-resolved.
-		if (!reupload && texture === this._memoTexture) {
-			return this._memoSlot;
-		}
-
 		const renderer = this.renderer;
 		const store = renderer.textureStore;
+
+		// The residency check stays on every quad: it revalidates the record
+		// against `texture.getTexture()` and re-uploads when the source has
+		// changed underneath (a video frame, an animated canvas, a swapped
+		// atlas). Memoizing past it would serve stale pixels.
 		const record = store.getResidentRecord(texture, { force: reupload });
 		const wrap = texture.repeat ?? "no-repeat";
 		const filter =
 			typeof texture.filter === "string"
 				? texture.filter
 				: renderer.getDefaultTextureFilter();
+
+		// What IS memoized is the key construction and the table lookup below.
+		// Consecutive quads in a batch almost always share a texture — a
+		// sprite sheet, a font atlas, an emitter's particle image — so the
+		// slot is the same for long runs, while building a template-literal
+		// key and hashing it into the table is not free: at 20k quads that was
+		// 20k string allocations and 20k string-keyed lookups per frame, and
+		// measured as the whole gap against WebGL's quad submission.
+		//
+		// Keyed on the resolved VIEW rather than the texture object, so a
+		// re-upload that produces a new view misses, plus filter and wrap —
+		// the same three components the string key is built from.
+		if (
+			record.view === this._memoView &&
+			filter === this._memoFilter &&
+			wrap === this._memoWrap
+		) {
+			return this._memoSlot;
+		}
+
 		const slotKey = `${this.resourceId(record.view)}|${filter}|${wrap}`;
 		// a hit returns the live slot; a miss claims one, flushing the pending
 		// segment first when the table is full (the `onOverflow` above)
@@ -261,7 +276,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			this.segmentGroup = null;
 		}
 
-		this._memoTexture = texture;
+		this._memoView = record.view;
+		this._memoFilter = filter;
+		this._memoWrap = wrap;
 		this._memoSlot = resolved;
 		return resolved;
 	}

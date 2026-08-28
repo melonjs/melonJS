@@ -181,81 +181,135 @@ describe("WebGPUQuadBatcher", () => {
 	});
 
 	describe("segment slot memo", () => {
-		// `segmentSlotFor` ran per quad and built a template-literal key each
-		// time, then hashed it into the slot table. Consecutive quads in a
-		// batch almost always share a texture, so at 20k particles that was
-		// 20k string allocations and 20k string-keyed lookups per frame —
-		// measured as the entire gap between this backend's quad submission
-		// and WebGL's (10.15ms -> 5.71ms at 20k once memoized).
+		// `segmentSlotFor` runs per quad and built a template-literal key each
+		// time, then hashed it into the slot table — 20k string allocations
+		// and 20k string-keyed lookups per frame at 20k quads, measured as the
+		// entire gap against WebGL's quad submission. The memo skips that for
+		// runs of same-texture quads.
+		//
+		// Everything below is about the ways a memo can hand back a slot that
+		// is no longer correct, because that batches a quad against the wrong
+		// texture or sampler — a silent rendering bug, not a crash.
 
 		it("resolves a repeated texture to the same slot", () => {
 			const first = batcher.segmentSlotFor(atlasA, false);
-			const again = batcher.segmentSlotFor(atlasA, false);
-			expect(again).toBe(first);
+			expect(batcher.segmentSlotFor(atlasA, false)).toBe(first);
 		});
 
 		it("does not collapse distinct textures onto one slot", () => {
 			const a = batcher.segmentSlotFor(atlasA, false);
 			const b = batcher.segmentSlotFor(atlasB, false);
 			expect(b).not.toBe(a);
-			// and going back to the first still returns the first slot
 			expect(batcher.segmentSlotFor(atlasA, false)).toBe(a);
 		});
 
-		it("is bypassed when the caller forces a reupload", () => {
-			// `reupload` means the texture contents changed, so the resident
-			// record has to be re-resolved rather than answered from memory
-			batcher.segmentSlotFor(atlasA, false);
-			batcher._memoSlot = 99;
-			expect(batcher.segmentSlotFor(atlasA, true)).not.toBe(99);
+		it("gives each texture its own slot when they interleave", () => {
+			// A,B,A,B thrashes the memo — every call is a miss, and each must
+			// still resolve to that texture's own slot
+			const a1 = batcher.segmentSlotFor(atlasA, false);
+			const b1 = batcher.segmentSlotFor(atlasB, false);
+			expect(batcher.segmentSlotFor(atlasA, false)).toBe(a1);
+			expect(batcher.segmentSlotFor(atlasB, false)).toBe(b1);
+			expect(a1).not.toBe(b1);
 		});
 
-		it("forgets the slot when the segment table resets", () => {
+		it("re-resolves when the FILTER changes on the same texture", () => {
+			// the slot key is (view, filter, wrap). A memo keyed on the
+			// texture object alone returns the stale slot here, and the quad
+			// batches against a sampler with the wrong filtering.
+			const tex = { name: "T", filter: "nearest" };
+			const nearest = batcher.segmentSlotFor(tex, false);
+			tex.filter = "linear";
+			expect(
+				batcher.segmentSlotFor(tex, false),
+				"filter change reused the old slot",
+			).not.toBe(nearest);
+		});
+
+		it("re-resolves when the WRAP changes on the same texture", () => {
+			const tex = { name: "T", repeat: "no-repeat" };
+			const clamped = batcher.segmentSlotFor(tex, false);
+			tex.repeat = "repeat";
+			expect(
+				batcher.segmentSlotFor(tex, false),
+				"wrap change reused the old slot",
+			).not.toBe(clamped);
+		});
+
+		it("still revalidates residency on every quad", () => {
+			// `getResidentRecord` re-checks the record against
+			// `texture.getTexture()` and re-uploads when the source changed
+			// underneath — a video frame, an animated canvas, a swapped
+			// atlas. Memoizing past it would serve stale pixels, so the memo
+			// must sit AFTER that call, not before it.
+			let residencyChecks = 0;
+			const store = renderer.textureStore;
+			const original = store.getResidentRecord.bind(store);
+			store.getResidentRecord = (...args) => {
+				residencyChecks++;
+				return original(...args);
+			};
+
 			batcher.segmentSlotFor(atlasA, false);
-			expect(batcher._memoTexture).toBe(atlasA);
+			batcher.segmentSlotFor(atlasA, false);
+			batcher.segmentSlotFor(atlasA, false);
 
-			batcher.resetSegment();
+			expect(residencyChecks, "memo skipped the residency check").toBe(3);
+		});
 
-			expect(batcher._memoTexture, "stale slot survived a reset").toBeNull();
-			// and the next resolve genuinely re-enters the table
-			expect(batcher.segmentSlotFor(atlasA, false)).toBe(0);
+		it("is bypassed when the caller forces a reupload", () => {
+			const store = renderer.textureStore;
+			const forced = [];
+			const original = store.getResidentRecord.bind(store);
+			store.getResidentRecord = (texture, options) => {
+				forced.push(options?.force === true);
+				return original(texture, options);
+			};
+
+			batcher.segmentSlotFor(atlasA, false);
+			batcher.segmentSlotFor(atlasA, true);
+
+			expect(forced, "reupload did not reach the store").toEqual([false, true]);
 		});
 
 		it("forgets a slot that gets evicted under it", () => {
-			// Eviction hands the index to a different texture, so answering
-			// from memory afterwards would batch a quad against the wrong one.
-			// Driven through the real table by overflowing it rather than by
-			// calling the callback by hand — a test that reimplements the
-			// logic it is checking proves nothing.
+			// Eviction hands the index to a different texture. Driven through
+			// the real table by overflowing it rather than by invoking the
+			// callback by hand — a test that reimplements the logic it checks
+			// proves nothing.
 			batcher.segmentSlotFor(atlasA, false);
-			expect(batcher._memoTexture).toBe(atlasA);
+			const view = batcher._memoView;
+			expect(view).not.toBeNull();
 
-			// push distinct textures until the table has to recycle slots
 			for (let i = 0; i < 32; i++) {
 				batcher.segmentSlotFor({ name: `overflow-${i}` }, false);
 			}
 
-			// whatever the capacity, atlasA cannot still be the memoized
-			// texture holding a slot the table has since reassigned
-			if (batcher._memoTexture === atlasA) {
-				expect(
-					batcher.segmentSlotFor(atlasA, false),
-					"memo returned a slot the table no longer maps to atlasA",
-				).toBe(batcher._memoSlot);
-			} else {
-				expect(batcher._memoTexture).not.toBe(atlasA);
-			}
+			expect(batcher._memoView, "evicted slot stayed memoized").not.toBe(view);
 		});
 
-		it("still routes quads to the right slot through addQuad", () => {
-			// the memo is on the hot path, so the observable behaviour it
-			// feeds — which texture a quad is batched against — must not move
-			batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
-			batcher.addQuad(atlasA, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
-			batcher.addQuad(atlasB, 16, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
-			batcher.flush();
+		it("clears after a segment reset", () => {
+			batcher.segmentSlotFor(atlasA, false);
+			batcher.resetSegment();
+			expect(batcher._memoView).toBeNull();
+			expect(batcher.segmentSlotFor(atlasA, false)).toBe(0);
+		});
 
-			// three quads, one flush, 18 indices
+		it("routes interleaved quads to the right slots through addQuad", () => {
+			// the observable end of all of the above
+			batcher.addQuad(atlasA, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+			batcher.addQuad(atlasB, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+			batcher.addQuad(atlasA, 16, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+
+			// inspected BEFORE the flush, which resets the segment: two
+			// distinct textures must occupy two distinct slots, and the
+			// repeat of atlasA must not have claimed a third
+			const live = batcher.segmentEntries.filter((e) => {
+				return e !== undefined;
+			});
+			expect(live.length, "interleaved quads did not share slots").toBe(2);
+
+			batcher.flush();
 			expect(renderer.calls.drawIndexed).toEqual([18]);
 		});
 	});
