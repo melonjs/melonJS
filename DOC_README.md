@@ -3,12 +3,12 @@
 </p>
 
 <p align="center">
-  <em>A lightweight, plugin-free HTML5 game engine</em>
+  <em>A modern, plugin-free HTML5 game engine</em>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/melonjs"><img src="https://img.shields.io/npm/v/melonjs.svg" alt="npm"></a>
-  <a href="https://github.com/nicedoc/bundlephobia/blob/master/LICENSE"><img src="https://img.shields.io/bundlephobia/min/melonjs" alt="size"></a>
+  <a href="https://bundlejs.com/?q=melonjs"><img src="https://img.shields.io/bundlejs/size/melonjs?label=minzip" alt="size"></a>
   <a href="https://discord.gg/aur7JMk"><img src="https://img.shields.io/discord/608636676461428758?color=7289da&label=discord" alt="discord"></a>
 </p>
 
