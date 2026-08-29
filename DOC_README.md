@@ -30,24 +30,31 @@ const app = new Application(1218, 562, {
     backgroundColor: "#202020",
 });
 
+// initialize it (builds the renderer and appends the canvas)
+await app.init();
+
 // load and add a sprite
 loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
     app.world.addChild(new Sprite(609, 281, { image: "player" }));
 });
 ```
 
+> **Note:** since version 20.0, `await app.init()` is **required** after constructing the `Application`. The WebGPU backend, which `AUTO` tries first where available, acquires its GPU device asynchronously; the call resolves without suspending on the WebGL and Canvas backends.
+
 ## Features
 
 | Feature | Description |
 |---------|-------------|
-| **Rendering** | WebGL & Canvas 2D with automatic fallback, 3D mesh rendering with OBJ/MTL support |
-| **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON) |
+| **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on every backend |
+| **3D** | Perspective [Camera3d](classes/Camera3d.html), mesh instancing, ground shadows, point and spot lights, glTF/GLB and OBJ/MTL loading |
+| **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON), with GPU-accelerated tile rendering for orthogonal maps |
 | **Sprites** | Texture atlas, animation, TexturePacker & Aseprite support |
-| **Physics** | Built-in collision detection (SAT), gravity, friction |
-| **Audio** | Web Audio API with format fallback |
+| **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a [PhysicsAdapter](interfaces/PhysicsAdapter.html) interface for Box2D (planck) or Matter.js |
+| **Audio** | Web Audio API with format fallback, plus procedural tone and noise generation |
 | **Input** | Keyboard, mouse, touch, gamepad |
-| **Particles** | Configurable particle emitter system |
-| **Custom Shaders** | Per-sprite [ShaderEffect](classes/ShaderEffect.html) for WebGL fragment effects |
+| **Particles** | Configurable [ParticleEmitter](classes/ParticleEmitter.html), with a reference space so particles can be measured from the emitter, the world, or any container |
+| **Effects** | All thirteen CSS blend modes on every renderer, tinting, masking, and camera post-processing chains |
+| **Custom Shaders** | Per-sprite [ShaderEffect](classes/ShaderEffect.html) carrying both GLSL and WGSL, so one effect runs on either GPU backend |
 | **UI** | Built-in UI components (buttons, text input, containers) |
 
 ## Common Tasks
@@ -110,19 +117,19 @@ this.body.setFriction(0.4, 0);
 See: [`Body`](classes/Body.html), [`collision`](modules/collision.html)
 
 #### Apply a custom shader effect to a sprite
-Apply a per-sprite fragment shader using `ShaderEffect`. You only need to write the color transformation — the vertex shader and texture sampling are handled automatically. Works with WebGL, silently ignored in Canvas mode.
+Apply a per-sprite fragment shader using `ShaderEffect`. You only need to write the color transformation — the vertex shader and texture sampling are handled automatically. Runs on both GPU backends — write the body once and it is realized as GLSL or WGSL for the active renderer — and is silently ignored in Canvas mode.
 ```javascript
 import { ShaderEffect } from "melonjs";
 
 // apply a grayscale effect to a sprite
-mySprite.shader = new ShaderEffect(renderer, `
+mySprite.addPostEffect(new ShaderEffect(renderer, `
     vec4 apply(vec4 color, vec2 uv) {
         float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
         return vec4(vec3(gray), color.a);
     }
-`);
+`));
 ```
-See: [`ShaderEffect`](classes/ShaderEffect.html), [`GLShader`](classes/GLShader.html)
+See: [`ShaderEffect`](classes/ShaderEffect.html), [`addPostEffect`](classes/Renderable.html#addposteffect)
 
 ## Links
 

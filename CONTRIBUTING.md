@@ -116,6 +116,41 @@ melonJS uses [ESLint](https://eslint.org) and [Biome](https://biomejs.dev) to en
 - Follow the existing patterns in the codebase
 - If you fix a bug, consider adding a test to prevent it from recurring
 
+## Changelog entries
+
+User-facing changes go in `packages/melonjs/CHANGELOG.md`, under the current
+`_unreleased_` heading. Entries read `Subsystem: what changed`, in one or two
+sentences:
+
+```markdown
+- Renderer: `setLineDash()` and `getLineDash()` — set dash patterns for stroke
+  operations, matching the Canvas 2D API. Works on both Canvas and WebGL.
+- Path2D: fix `quadraticCurveTo()` using a reference to `startPoint` instead of
+  capturing coordinates — `lineTo()` mutates it on each call, deforming the
+  curve as it was tessellated.
+```
+
+Say what changed and what it means for someone using the engine. A bug entry
+needs the mechanism and the symptom; it does not need how it was found, why it
+went unnoticed, or what else was tried.
+
+**Only write down what affects a released version.** A bug introduced and fixed
+within the same unreleased cycle never reached anyone, so it does not belong in
+the changelog — nor do changes to the test suite or other internals.
+
+Some other rules worth knowing:
+
+- The sections are `Added`, `Performance`, `Fixed`, `Changed` and
+  `Deprecated`. `Changed` is for **user-facing API changes only** — a game
+  looking different because of something under `Added` is not a change.
+- Anything that alters existing behaviour must say so plainly, with what to do
+  about it.
+- A feature release opens with a short `**Highlights:**` paragraph.
+- Quote measurements only as precisely as they were measured, and say what
+  hardware produced them.
+- Credit external contributors with a bare handle at the end: `(thanks @user)`.
+- Examples are not part of the engine and do not appear here.
+
 ## Submitting changes
 
 1. Fork the repository and create a new branch from `master`
