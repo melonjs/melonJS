@@ -63,7 +63,44 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm i
-      - run: pnpm test
+      # Vitest 4.1.11 runs each worker as one long-lived orchestrator page and
+      # dispatches every spec file over a single websocket. Its ws close handler
+      # destroys the session and rejects the pending `createTesters`, so if that
+      # socket drops the whole run dies — the in-page client does try to
+      # reconnect, but the session is already gone. Underneath, the browser
+      # intermittently severs a renderer's network-service channels: every
+      # websocket for that page dies at once, the server sees a graceful 1001
+      # while the page sees 1006, and no process crashes.
+      #
+      # Measured at 4 deaths in 21 local runs, and it cost three attempts to
+      # land a PR that changed nothing but Markdown. Not our code: no test ever
+      # fails, and the spec it names is just whichever was in flight. Launching
+      # the full Chromium build fixes it locally (20 runs clean) but does
+      # nothing here (0 of 4), so this retries instead.
+      #
+      # The condition is deliberately narrow — the page must have been lost AND
+      # no test may have failed. A real failure prints "N failed" in the summary
+      # and exits without a retry.
+      - name: Test (retries once if vitest loses its browser page)
+        # the container has no default bash, so GitHub would run this under
+        # dash, which has no `pipefail` — and without it the exit status of
+        # `pnpm test` is masked by `tee`
+        shell: bash
+        run: |
+          set -o pipefail
+          for attempt in 1 2; do
+            if pnpm test 2>&1 | tee "test-$attempt.log"; then
+              exit 0
+            fi
+            if ! grep -q "Browser connection was closed" "test-$attempt.log" \
+              || grep -qE "Test Files.*[0-9]+ failed" "test-$attempt.log"; then
+              echo "::error::test failed for a real reason, not the known browser flake"
+              exit 1
+            fi
+            echo "::warning::vitest lost its browser page (upstream flake) — attempt $attempt"
+          done
+          echo "::error::vitest lost its browser page on both attempts"
+          exit 1
       - run: pnpm -F @melonjs/matter-adapter test
       - run: pnpm -F @melonjs/planck-adapter test
       - run: pnpm -F @melonjs/debug-plugin test
