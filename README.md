@@ -51,7 +51,7 @@ Graphics
 - Extensible batcher system for custom rendering pipelines, with backend-neutral vertex formats and draw topologies (declare a layout once, describe it to either GPU backend)
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option and frame animation
-- Built-in effects such as tinting, masking, and CSS-style blend modes (normal, none, additive, multiply, screen, darken, lighten)
+- Built-in effects such as tinting, masking, and the full set of CSS-style blend modes (normal, none, additive, multiply, screen, exclusion, darken, lighten, overlay, hard-light, color-dodge, color-burn, soft-light, difference) — all of them supported identically on WebGPU, WebGL 2 and Canvas since 20.2
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
 - Hardware antialiasing (`antiAlias: true`) on both GPU backends — and it survives post-processing, since the offscreen targets a post-effect chain renders into are multisampled to match
@@ -138,7 +138,7 @@ Core
 - Tween effects with multiple easing functions (Quadratic, Cubic, Elastic, Bounce, etc.) and Bezier/Catmull-Rom interpolation
 - Transition effects
 - Pooling support for object recycling
-- Particle system with `ParticleEmitter` (emission rate, lifetime, velocity, gravity, blend modes)
+- Particle system with `ParticleEmitter` (emission rate, lifetime, velocity, gravity, blend modes), and a reference space so particles can be measured from the emitter, from the world, or from any container — a moving emitter leaves a trail instead of dragging its cloud along
 - EventEmitter based event system
 - Persistent data storage (save/load via localStorage)
 - Plugin system for extending engine capabilities
