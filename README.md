@@ -5,19 +5,18 @@ melonJS 2
 [![Build Status](https://github.com/melonjs/melonJS/actions/workflows/main.yml/badge.svg)](https://github.com/melonjs/melonJS/actions/workflows/main.yml)
 [![NPM Package](https://img.shields.io/npm/v/melonjs)](https://www.npmjs.com/package/melonjs)
 [![NPM Downloads](https://img.shields.io/npm/dm/melonjs)](https://www.npmjs.com/package/melonjs)
-[![Build Size](https://badgen.net/bundlephobia/minzip/melonjs)](https://bundlephobia.com/result?p=melonjs)
-[![Tree-shaking](https://badgen.net/bundlephobia/tree-shaking/melonjs)](https://bundlephobia.com/result?p=melonjs)
+[![Build Size](https://img.shields.io/bundlejs/size/melonjs?label=minzip)](https://bundlejs.com/?q=melonjs)
 [![jsDelivr](https://data.jsdelivr.com/v1/package/npm/melonjs/badge?style=rounded)](https://www.jsdelivr.com/package/npm/melonjs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 [![Discord](https://img.shields.io/discord/608636676461428758?color=7289da&label=discord)](https://discord.gg/aur7JMk)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 
-A modern & lightweight HTML5 game engine
+A modern & fully featured HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](https://melonjs.org/img/alex4-github.png)
 
-[melonJS](https://melonjs.org/) is an open-source 2.5D game engine designed for indie developers — perspective and orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance. Runs on WebGPU, WebGL 2 or Canvas2D with automatic fallback, tree-shakeable so you only pay for what you use, and the entire engine fits in ~150 KB minzipped of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
+[melonJS](https://melonjs.org/) is an open-source 2.5D game engine designed for indie developers — perspective and orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance. Runs on WebGPU, WebGL 2 or Canvas2D with automatic fallback. The whole engine is ~250 KB minzipped of vanilla JS/TS, with no dependencies and no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
 
 [melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained by the team at AltByte in Singapore.
 
