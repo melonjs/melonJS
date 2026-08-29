@@ -6,6 +6,7 @@ import {
 	Sprite,
 	TextureAtlas,
 	video,
+	WebGLRenderer,
 } from "../src/index.js";
 import Renderer from "../src/video/renderer.js";
 
@@ -287,8 +288,18 @@ describe("Texture", () => {
 
 			if (compositor) {
 				expect(flushed).toBe(true);
-				expect(compositor.boundTextures.length).toEqual(0);
-				expect(compositor.currentTextureUnit).toEqual(-1);
+				// `boundTextures` / `currentTextureUnit` are WebGL texture-unit
+				// bookkeeping and exist on no WebGPU batcher, which binds per
+				// draw instead. The app is built with `video.AUTO`, so which
+				// backend answers depends on the machine — headless SwiftShader
+				// lands on WebGL, a real GPU on WebGPU. The cache assertions
+				// above are backend-agnostic and run either way; only these two
+				// are gated, and on the renderer rather than on the field being
+				// present, so a WebGL regression that drops them still fails.
+				if (app.renderer instanceof WebGLRenderer) {
+					expect(compositor.boundTextures.length).toEqual(0);
+					expect(compositor.currentTextureUnit).toEqual(-1);
+				}
 				// restore original
 				compositor.flush = originalFlush;
 			}
