@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.2.0] (melonJS 2) - _unreleased_
+## [20.2.0] (melonJS 2) - _2026-08-29_
 
 **Highlights:** all thirteen blend modes the engine names now work on all three renderers, closing the last gap where the Canvas fallback was the most capable backend for blending. Particles gain a reference space, so an emitter can leave a trail instead of dragging its cloud along. Two measured wins: the particle update loop drops ~37%, and WebGPU quad submission ~42%, taking that backend from slower than WebGL 2 to marginally faster.
 
