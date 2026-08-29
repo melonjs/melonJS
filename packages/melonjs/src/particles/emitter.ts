@@ -62,7 +62,6 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
 
 /**
  * Particle Emitter Object.
- * @category Particles
  *
  * ### Blend modes
  *
@@ -72,8 +71,10 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
  * already alive and, through {@link ParticleEmitterSettings.blendMode}, the
  * ones emitted afterwards. The change is picked up on the emitter's next
  * `update`, so within the same frame.
- * @example
+ *
+ * ```js
  * emitter.blendMode = "overlay";   // live particles AND future ones
+ * ```
  *
  * ### Reference space
  *
@@ -97,9 +98,12 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
  * `clipping` or a `backgroundColor` on the emitter would be applied in the
  * emitter's own frame rather than the particles', so neither composes with
  * this.
- * @example
+ *
+ * ```js
  * // exhaust that stays where it was emitted
  * const emitter = new ParticleEmitter(x, y, { referenceSpace: "world" });
+ * ```
+ * @category Particles
  */
 export default class ParticleEmitter extends Container {
 	/**
