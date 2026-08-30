@@ -24,13 +24,12 @@ interface Commit {
 }
 
 /**
- * Resolve a git author email to a GitHub login via the commit search API.
- * Falls back to the git author name if the lookup fails.
- * @param email - the git author email
+ * Resolve a commit's author to a GitHub login via the commits API. Falls back
+ * to the git author name if the lookup fails.
  * @param sampleHash - a commit hash from this author to look up
  * @returns the GitHub login or git author name
  */
-function resolveGitHubLogin(email: string, sampleHash: string): string {
+function resolveGitHubLogin(sampleHash: string): string {
 	try {
 		const login = run(
 			`gh api repos/${REPO}/commits/${sampleHash} --jq '.author.login // empty'`,
@@ -75,7 +74,7 @@ function buildCategorizedNotes(
 	);
 	const emailToLogin = new Map<string, string>();
 	for (const [email, authorCommits] of emailToCommits) {
-		const login = resolveGitHubLogin(email, authorCommits[0].hash);
+		const login = resolveGitHubLogin(authorCommits[0].hash);
 		emailToLogin.set(email, login);
 	}
 
@@ -149,6 +148,35 @@ function buildCategorizedNotes(
 	return notes;
 }
 
+/**
+ * The Claude plugin manifest carries its own version and is consumed from the
+ * repository rather than the npm tarball (`files` does not include it), so the
+ * version that matters is the one on the tagged commit. Nothing else keeps it
+ * in step with the engine — `release.ts` only reads versions, it never writes
+ * them — so check it here, before a tag is minted and pushed, rather than
+ * discovering the drift a release later.
+ * @param version - the melonjs package version about to be tagged
+ */
+function assertPluginManifestVersion(version: string) {
+	const manifestPath = resolve(".claude-plugin/plugin.json");
+	let manifestVersion: string | undefined;
+	try {
+		manifestVersion = JSON.parse(readFileSync(manifestPath, "utf-8")).version;
+	} catch {
+		console.error(`Error: cannot read ${manifestPath}`);
+		process.exit(1);
+	}
+	if (manifestVersion !== version) {
+		console.error(
+			`Error: .claude-plugin/plugin.json is ${manifestVersion}, but melonjs is ${version}.`,
+		);
+		console.error(
+			"The agent skills ship with the engine and are versioned with it — bump both, commit, then release.",
+		);
+		process.exit(1);
+	}
+}
+
 function main() {
 	const name = process.argv[2];
 	if (!name || !PACKAGES[name]) {
@@ -164,6 +192,10 @@ function main() {
 	const tag = `${pkg.tagPrefix}${version}`;
 
 	console.log(`Creating release for ${name} ${version} (tag: ${tag})`);
+
+	if (name === "melonjs") {
+		assertPluginManifestVersion(version);
+	}
 
 	// Check gh CLI is available and authenticated
 	try {

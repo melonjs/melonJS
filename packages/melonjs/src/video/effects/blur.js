@@ -31,14 +31,14 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Commonly used for background defocus, depth-of-field simulation,
  * or UI backdrop blur.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // moderate blur
- * mySprite.shader = new BlurEffect(renderer, { strength: 2.0 });
+ * mySprite.addPostEffect(new BlurEffect(renderer, { strength: 2.0 }));
  */
 export default class BlurEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.strength=1.0] - blur strength in texels
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]

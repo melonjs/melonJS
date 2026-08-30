@@ -22,21 +22,21 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Commonly used for status effects — poison green, freeze blue, fire red.
  * The `time` uniform should be updated each frame for the pulse animation.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // poison pulse
  * const poison = new TintPulseEffect(renderer, {
  *     color: [0.0, 1.0, 0.0],
  *     speed: 3.0,
  * });
- * mySprite.shader = poison;
+ * mySprite.addPostEffect(poison);
  *
  * // update each frame
  * poison.setTime(timer.getTime() / 1000);
  */
 export default class TintPulseEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 0.0, 0.0]] - pulse color as [r, g, b] (0.0–1.0)
 	 * @param {number} [options.speed=2.0] - pulse speed (oscillations per second)

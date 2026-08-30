@@ -331,7 +331,7 @@ export const ONCONTEXT_LOST = "renderer.contextlost";
 
 /**
  * Event for when the current context is restored <br>
- * Data passed : {me.Renderer} the current renderer instance`
+ * Data passed : {me.Renderer} the current renderer instance
  * @see event.on
  */
 export const ONCONTEXT_RESTORED = "renderer.contextrestored";

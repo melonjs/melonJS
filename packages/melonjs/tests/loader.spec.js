@@ -636,6 +636,58 @@ describe("loader", () => {
 			expect(rejected).toBe(true);
 		});
 
+		it("ADVERSARIAL: a detached preload() still reports the load failure", async () => {
+			// `onLoadingError` read `this.onError`. Called through the
+			// namespace (`loader.preload(...)`) `this` is the namespace and the
+			// read yields undefined; destructured, `this` is undefined in a
+			// module and the read THROWS, masking the real failure with
+			// "Cannot read properties of undefined (reading 'onError')".
+			const { preload } = loader;
+			await expect(
+				preload(
+					[
+						{
+							name: "detached_bad",
+							type: "image",
+							src: "data:image/png;base64,Zm9v",
+						},
+					],
+					undefined,
+					false,
+				),
+			).rejects.toThrow(/Failed loading resource/);
+		});
+
+		it("ADVERSARIAL: the deprecated callback properties are not settable", () => {
+			// They were documented as assignable callbacks (`@type {function}`)
+			// but are `export let` bindings reachable only through the module
+			// namespace, whose properties are read-only — so the documented
+			// migration path could never have worked for anyone.
+			for (const name of ["onload", "onProgress", "onError"]) {
+				expect(() => {
+					loader[name] = () => {};
+				}).toThrow(TypeError);
+			}
+		});
+
+		it("reports progress through LOADER_PROGRESS, the supported path", async () => {
+			const seen = [];
+			const onProgress = (progress) => {
+				return seen.push(progress);
+			};
+			event.on(event.LOADER_PROGRESS, onProgress);
+			try {
+				await loader.preload(
+					[{ name: "progress_ok", type: "image", src: imgURI }],
+					undefined,
+					false,
+				);
+			} finally {
+				event.off(event.LOADER_PROGRESS, onProgress);
+			}
+			expect(seen.length).toBeGreaterThan(0);
+		});
+
 		it("ADVERSARIAL: preload() (promise form) rejects when an asset fails", async () => {
 			let rejected = false;
 			await loader

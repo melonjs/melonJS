@@ -329,7 +329,7 @@ export class TextureAtlas extends Texture2d {
 
 	/**
 	 * return the format of the atlas dictionnary
-	 * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
+	 * @returns {string} will return "texturepacker", "shoebox", "aseprite", "melonJS", or "Spritesheet (fixed cell size)"
 	 */
 	getFormat() {
 		return this.format;

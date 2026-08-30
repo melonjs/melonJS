@@ -958,3 +958,58 @@ describe("advanced blend modes: WebGL vs the Canvas renderer", () => {
 		},
 	);
 });
+describe('the Canvas renderer and "none"', () => {
+	// "none" means "blending disabled — the source replaces the destination".
+	// There is no `globalCompositeOperation` that does that for the drawn area
+	// alone (`"copy"` clears the rest of the surface), so on Canvas it resolves
+	// to "normal" — the default all three backends share — and `setBlendMode`
+	// reports that back, the same capability-probe contract the GPU backends
+	// follow for anything they cannot honour.
+	let app;
+	let renderer;
+
+	beforeAll(async () => {
+		app = new Application(SIZE, SIZE, {
+			parent: "screen",
+			renderer: video.CANVAS,
+			antiAlias: false,
+		});
+		await app.init();
+		renderer = app.renderer;
+	});
+
+	afterAll(() => {
+		app?.destroy();
+	});
+
+	it('resolves "none" to "normal"', () => {
+		expect(renderer.setBlendMode("none")).toBe("normal");
+		expect(renderer.currentBlendMode).toBe("normal");
+		expect(renderer.getContext().globalCompositeOperation).toBe("source-over");
+		renderer.setBlendMode("normal");
+	});
+
+	it("resolves it quietly — no console noise on a mode it simply defaults", () => {
+		const original = console.warn;
+		const warnings = [];
+		console.warn = (...args) => {
+			return warnings.push(args.join(" "));
+		};
+		try {
+			renderer.setBlendMode("none");
+			renderer.setBlendMode("normal");
+			renderer.setBlendMode("none");
+		} finally {
+			console.warn = original;
+			renderer.setBlendMode("normal");
+		}
+
+		expect(warnings).toHaveLength(0);
+	});
+
+	it("still honours the modes it does support", () => {
+		expect(renderer.setBlendMode("multiply")).toBe("multiply");
+		expect(renderer.setBlendMode("additive")).toBe("additive");
+		renderer.setBlendMode("normal");
+	});
+});

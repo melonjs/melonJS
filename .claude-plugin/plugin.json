@@ -1,0 +1,38 @@
+{
+	"name": "melonjs",
+	"version": "20.3.0",
+	"description": "Build games with melonJS \u2014 engine conventions, API usage, and the pitfalls that make generated code fail silently.",
+	"author": {
+		"name": "melonJS",
+		"url": "https://melonjs.org"
+	},
+	"homepage": "https://melonjs.org",
+	"repository": "https://github.com/melonjs/melonJS",
+	"license": "MIT",
+	"keywords": ["melonjs", "game-engine", "html5", "webgpu", "webgl", "gamedev"],
+	"skills": [
+		"./packages/melonjs/skills/melonjs",
+		"./packages/melonjs/skills/melonjs-getting-started",
+		"./packages/melonjs/skills/melonjs-20-migration",
+		"./packages/melonjs/skills/melonjs-renderables",
+		"./packages/melonjs/skills/melonjs-3d",
+		"./packages/melonjs/skills/melonjs-3d-assets",
+		"./packages/melonjs/skills/melonjs-physics",
+		"./packages/melonjs/skills/melonjs-sprites-and-animation",
+		"./packages/melonjs/skills/melonjs-input",
+		"./packages/melonjs/skills/melonjs-effects-and-shaders",
+		"./packages/melonjs/skills/melonjs-tilemaps",
+		"./packages/melonjs/skills/melonjs-audio",
+		"./packages/melonjs/skills/melonjs-scenes-and-state",
+		"./packages/melonjs/skills/melonjs-ui-and-text",
+		"./packages/melonjs/skills/melonjs-particles-and-trails",
+		"./packages/melonjs/skills/melonjs-camera-and-drawing",
+		"./packages/melonjs/skills/melonjs-lighting",
+		"./packages/melonjs/skills/melonjs-deployment",
+		"./packages/melonjs/skills/melonjs-loading-assets",
+		"./packages/melonjs/skills/melonjs-renderer-backends",
+		"./packages/melonjs/skills/melonjs-performance",
+		"./packages/melonjs/skills/melonjs-events",
+		"./packages/melonjs/skills/melonjs-plugins"
+	]
+}

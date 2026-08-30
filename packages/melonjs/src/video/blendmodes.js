@@ -73,7 +73,7 @@ export function advancedBlendModeIndex(mode) {
  * `lighter` are spellings of `additive`, and anything unrecognized collapses
  * to `normal`.
  *
- * The six advanced modes normalize to `"normal"` on purpose — that is their
+ * The advanced modes normalize to `"normal"` on purpose — that is their
  * PIPELINE state, since the geometry really does rasterize under ordinary
  * source-over before the shader composites it. Use {@link isAdvancedBlendMode}
  * to ask the other question, and {@link reportedBlendMode} for what
@@ -176,7 +176,7 @@ export function blendStateFor(mode, premultipliedAlpha) {
 				dstFactor: "one-minus-src",
 			};
 		default:
-			// "normal", and the six advanced modes, whose GEOMETRY rasterizes
+			// "normal", and the advanced modes, whose GEOMETRY rasterizes
 			// under ordinary source-over before `BlendEffect` composites it
 			return {
 				operation: "add",

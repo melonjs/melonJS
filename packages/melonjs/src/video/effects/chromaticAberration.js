@@ -24,17 +24,17 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * chromatic aberration (color fringe) effect. Commonly used for
  * impact feedback, glitch effects, or damage indicators.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // subtle chromatic aberration
- * mySprite.shader = new ChromaticAberrationEffect(renderer, { offset: 2.0 });
+ * mySprite.addPostEffect(new ChromaticAberrationEffect(renderer, { offset: 2.0 }));
  * @example
  * // strong glitch effect
- * mySprite.shader = new ChromaticAberrationEffect(renderer, { offset: 5.0 });
+ * mySprite.addPostEffect(new ChromaticAberrationEffect(renderer, { offset: 5.0 }));
  */
 export default class ChromaticAberrationEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.offset=3.0] - channel offset in texels
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]

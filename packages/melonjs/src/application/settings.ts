@@ -245,8 +245,9 @@ export type ApplicationSettings = {
 	consoleHeader: boolean;
 
 	/**
-	 * the default blend mode to use. Every renderer supports the full set —
-	 * see {@link CanvasRenderer#setBlendMode} for the list.
+	 * the default blend mode to use. Both GPU renderers support the full set;
+	 * the Canvas fallback supports every mode except `"none"` — see
+	 * {@link CanvasRenderer#setBlendMode} for the list.
 	 * @default "normal"
 	 */
 	blendMode: BlendMode;

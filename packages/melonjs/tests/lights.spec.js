@@ -1618,8 +1618,11 @@ describe("Light2d + Stage lighting", () => {
 
 			// only the first non-empty call warns
 			expect(warnings.length).toBe(1);
+			// the message names a GPU *backend*, not WebGL specifically —
+			// WebGPU implements the lit pipeline too, so naming one renderer
+			// sent WebGPU users chasing a fallback they were not on
 			expect(warnings[0]).toMatch(
-				/normal-map lighting requires the WebGL renderer/,
+				/normal-map lighting requires a GPU backend \(WebGL 2 or WebGPU\)/,
 			);
 		});
 

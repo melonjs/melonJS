@@ -281,8 +281,9 @@ export {
 // eslint-disable-next-line prefer-const
 export let skipAutoInit = false;
 
-// the default application: whichever `Application` was constructed most
-// recently registers itself here, so `game` is undefined until you make one
+// the default application: the most recently *initialized* `Application`
+// registers itself here at the end of `init()`, so `game` is undefined
+// until the first `init()` resolves
 export { game } from "./application/application.ts";
 /**
  * initialize the melonJS library.

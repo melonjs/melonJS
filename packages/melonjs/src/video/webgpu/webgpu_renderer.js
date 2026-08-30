@@ -2105,7 +2105,8 @@ export default class WebGPURenderer extends Renderer {
 
 	/**
 	 * set the current blend mode for this renderer. <br>
-	 * Every renderer supports the full set: <br>
+	 * Both GPU renderers support the full set — the Canvas fallback supports
+	 * every mode below except `"none"`: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
 	 * - "add", "additive", or "lighter" : color values are added together <br>

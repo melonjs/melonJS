@@ -23,16 +23,16 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Commonly used for underwater, heat haze, or dream sequence effects.
  * The `time` uniform should be updated each frame for animation.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * const wave = new WaveEffect(renderer, { amplitude: 0.01, frequency: 10.0 });
- * mySprite.shader = wave;
+ * mySprite.addPostEffect(wave);
  * // update each frame
  * wave.setTime(performance.now() / 1000);
  */
 export default class WaveEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.amplitude=0.01] - wave displacement strength (in UV space, 0.01 = subtle)
 	 * @param {number} [options.frequency=10.0] - number of waves across the sprite

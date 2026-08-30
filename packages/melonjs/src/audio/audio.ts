@@ -286,7 +286,7 @@ export function unload(sound_name: string): boolean {
 		audioState.currentTrackId = null;
 	}
 
-	// destroy the Howl object
+	// destroy the backend Sound object
 	sound.unload();
 	delete audioState.tracks[sound_name];
 	return true;

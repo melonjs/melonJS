@@ -229,7 +229,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * set the current blend mode for this renderer. <br>
-	 * Every renderer supports the full set: <br>
+	 * This renderer supports every mode below except `"none"`: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
 	 * - "add", "additive", or "lighter" : color values are added together <br>
@@ -257,7 +257,10 @@ export default class CanvasRenderer extends Renderer {
 	 * - "exclusion" : like difference, but lower in contrast <br>
 	 * <img src="../images/exclusion-blendmode.png" width="180"/> <br>
 	 * - "none" : blending disabled — the source replaces the destination
-	 * outright, alpha included <br>
+	 * outright, alpha included. **GPU backends only**: there is no
+	 * `globalCompositeOperation` that disables blending for the drawn area
+	 * alone (`"copy"` clears the rest of the surface), so this renderer falls
+	 * back to "normal" and reports it <br>
 	 * A few draw types cannot honour every mode — 3D meshes, and fills using
 	 * a {@link Gradient} — and fall back to "normal" with a one-time console
 	 * warning. `setBlendMode` returns what it actually applied, so comparing
@@ -295,6 +298,12 @@ export default class CanvasRenderer extends Renderer {
 				}
 				break;
 
+			// "none" means "replace, alpha included", which needs blending
+			// disabled for the drawn area alone — there is no
+			// `globalCompositeOperation` that does that ("copy" clears the rest
+			// of the surface). It resolves to "normal", the default every
+			// backend shares, and `setBlendMode` reports that back.
+			case "none":
 			default: // normal
 				context.globalCompositeOperation = "source-over";
 				this.currentBlendMode = "normal";

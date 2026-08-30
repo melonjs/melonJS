@@ -20,11 +20,11 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * The `intensity` uniform controls how much of the flash color is mixed in
  * (0.0 = original sprite, 1.0 = fully colored).
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // create a white flash effect
  * const flash = new FlashEffect(renderer);
- * mySprite.shader = flash;
+ * mySprite.addPostEffect(flash);
  *
  * // trigger the flash (e.g. on hit)
  * flash.setIntensity(1.0);
@@ -37,7 +37,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  */
 export default class FlashEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - flash color as [r, g, b] (0.0–1.0)
 	 * @param {number} [options.intensity=0.0] - initial flash intensity (0.0–1.0)

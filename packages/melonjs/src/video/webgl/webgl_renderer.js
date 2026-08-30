@@ -606,7 +606,7 @@ export default class WebGLRenderer extends Renderer {
 		off(CANVAS_ONRESIZE, this.onCanvasResize);
 
 		// advanced-blend resources, all lazily created: a game that never used
-		// one of the six modes has nothing here to release
+		// one of the advanced modes has nothing here to release
 		this._advancedBlendEffect?.destroy();
 		this._advancedBlendEffect = undefined;
 		this._advancedBlendCapture?.destroy();
@@ -2400,7 +2400,8 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * set the current blend mode for this renderer. <br>
-	 * Every renderer supports the full set: <br>
+	 * Both GPU renderers support the full set — the Canvas fallback supports
+	 * every mode below except `"none"`: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
 	 * - "add", "additive", or "lighter" : color values are added together <br>

@@ -290,6 +290,14 @@ export default class Mesh extends Renderable {
 	 * @param {string} [settings.textureFilter] - texture magnification filter (`"nearest"` for crisp pixel-art upscaling, `"linear"` for smooth) applied to the resolved texture. Omit to keep the renderer's global `antiAlias` default. On the mesh path, linear filtering also samples a generated mip chain with trilinear minification and 4× anisotropy (distant geometry stops shimmering) — `"nearest"` opts out, keeping crisp pixel-art models on hard level-0 sampling. GPU backends only (ignored by the Canvas renderer).
 	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
+	 * @param {boolean} [settings.lit=false] - shade this mesh with the scene's {@link Light3d} lights (the lit mesh pipeline) instead of rendering fullbright. Set automatically by the glTF importer when the scene carries a directional, point or spot light. With `lit` on and no lights present the batcher uploads a white ambient, so the result is indistinguishable from unlit.
+	 * @param {number[]|Float32Array} [settings.normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model (or generated).
+	 * @param {number[]|Float32Array} [settings.specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
+	 * @param {number} [settings.shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
+	 * @param {string|TextureAtlas|HTMLImageElement} [settings.alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
+	 * @param {boolean} [settings.castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
+	 * @param {number} [settings.shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
+	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
 	 * @example
 	 * // create from OBJ + MTL (texture auto-resolved from material)
 	 * let mesh = new me.Mesh(0, 0, {
@@ -1051,7 +1059,7 @@ export default class Mesh extends Renderable {
 	 *     fragment: "shaders/toon.frag",
 	 *     wgsl: "shaders/toon.wgsl",       // complete module for WebGPU
 	 * }}], () => {
-	 *     myMesh.shader = me.loader.getShader("toon");
+	 *     myMesh.addPostEffect(me.loader.getShader("toon"));
 	 * });
 	 */
 	get shader() {

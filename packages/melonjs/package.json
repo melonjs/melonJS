@@ -1,6 +1,6 @@
 {
 	"name": "melonjs",
-	"version": "20.2.0",
+	"version": "20.3.0",
 	"description": "melonJS Game Engine",
 	"homepage": "http://www.melonjs.org/",
 	"type": "module",
@@ -50,9 +50,10 @@
 	},
 	"files": [
 		"build",
-		"package.json",
+		"skills",
 		"README.md",
-		"CHANGELOG"
+		"CHANGELOG",
+		"package.json"
 	],
 	"devDependencies": {
 		"@types/node": "^25.6.0",
@@ -76,7 +77,7 @@
 		"build": "pnpm lint && tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
 		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md .",
-		"doc": "tsx scripts/check-doc-readme.ts && typedoc src/index.ts --tsconfig tsconfig.build.json --readme ../../DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false",
+		"doc": "tsx scripts/check-doc-readme.ts && typedoc src/index.ts --tsconfig tsconfig.build.json --readme ../../DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false && tsx scripts/generate-llms-txt.ts",
 		"doc:watch": "typedoc src/index.ts --tsconfig tsconfig.build.json --readme ../../DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist:publish",

@@ -21,7 +21,8 @@ export class CanvasTexture extends CanvasRenderTarget {
 	 * @param {number} width - the desired width of the canvas
 	 * @param {number} height - the desired height of the canvas
 	 * @param {object} attributes - The attributes to create both the canvas and context
-	 * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl" — creates a WebGL 2 context)
+	 * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl" — creates a WebGL 2 context, or "webgpu")
+	 * @param {boolean} [attributes.transparent=false] - whether to enable transparency on the canvas
 	 * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
 	 * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
 	 * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
@@ -33,10 +34,11 @@ export class CanvasTexture extends CanvasRenderTarget {
 }
 
 /**
- * return the height of the system Canvas
+ * set the line width used when stroking shapes
  * @public
  * @name setLineWidth
  * @memberof CanvasRenderer#
+ * @param {number} width - the line width in pixels
  * @deprecated since 17.3.0
  * @see lineWidth
  */
@@ -46,10 +48,11 @@ CanvasRenderer.prototype.setLineWidth = function (width) {
 };
 
 /**
- * return the height of the system Canvas
+ * set the line width used when stroking shapes
  * @public
  * @name setLineWidth
  * @memberof WebGLRenderer#
+ * @param {number} width - the line width in pixels
  * @deprecated since 17.3.0
  * @see lineWidth
  */

@@ -42,8 +42,8 @@ export const WEBGL = 1;
  * settles after the adapter handshake; browsers without `navigator.gpu`
  * skip straight to the synchronous WebGL probe.
  *
- * Note: subsystems that require a GPU backend (Camera3d, Mesh,
- * ShaderEffect, Light2d, GPU tilemap) will silently stop working under
+ * Note: subsystems that require a GPU backend (Camera3d, ShaderEffect,
+ * Light2d normal-map shading, GPU tilemap) will silently stop working under
  * the terminal Canvas fallback — if your scene depends on any of those,
  * use {@link WEBGL} (or {@link WEBGPU}) so the failure surfaces at
  * startup instead of as a black canvas at runtime.

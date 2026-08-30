@@ -1,0 +1,12 @@
+{
+	"name": "melonjs",
+	"description": "Skills for building games with melonJS, the open source 2.5D HTML5 game engine.",
+	"owner": { "name": "melonJS", "url": "https://melonjs.org" },
+	"plugins": [
+		{
+			"name": "melonjs",
+			"source": "./",
+			"description": "Build games with melonJS — engine conventions, API usage, and the pitfalls that make generated code fail silently."
+		}
+	]
+}
