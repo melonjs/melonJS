@@ -1,8 +1,8 @@
 import { on, VIDEO_INIT } from "../../system/event.ts";
+import { fetchData } from "../../utils/fetchdata.js";
 import ShaderEffect from "../../video/effects/shadereffect.js";
 import GLShader from "../../video/webgl/glshader.js";
 import { shaderList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 
 // a `wgsl` source is either an effect BODY (the apply() convention — the
 // realization generates the vertex stage around it) or a complete MODULE

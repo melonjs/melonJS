@@ -1,7 +1,7 @@
+import { fetchData } from "../../utils/fetchdata.js";
 import { getExtension } from "../../utils/file.ts";
 import { imgList } from "../cache.js";
 import { parseCompressedImage } from "./compressed_textures/compressed_image.js";
-import { fetchData } from "./fetchdata.js";
 
 /**
  * try to load a single image source

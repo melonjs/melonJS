@@ -8,6 +8,7 @@
  * android2 `true` if the device is an Android 2.x platform (deprecated)
  * linux `true` if the device is a Linux platform
  * chromeOS `true` if the device is running on ChromeOS.
+ * appleVendor `true` if the browser reports an Apple vendor (Safari)
  * wp `true` if the device is a Windows Phone platform (deprecated)
  * BlackBerry `true` if the device is a BlackBerry platform (deprecated)
  * Kindle `true` if the device is a Kindle platform (deprecated)
@@ -60,7 +61,33 @@ const _nav =
 		? globalThis.navigator
 		: undefined;
 
+/**
+ * Apple-vendor predicate. Exported as a test seam, like
+ * {@link isIPadOnMacUA} — `@internal`, not stable public API.
+ *
+ * `navigator.vendor` is the most reliable signal for "this is Apple's
+ * WebKit": it reads `Apple Computer, Inc.` in Safari on macOS and iOS,
+ * and is empty or another vendor in Chrome and Firefox. The audio
+ * backend needs it to decide whether a buffer has to be detached
+ * through a scratch buffer, which is a WebKit-specific requirement.
+ * @param nav - a `navigator`-shaped object (or `undefined` for Node/SSR)
+ * @returns `true` when the browser reports an Apple vendor string
+ * @internal
+ */
+export function isAppleVendorNav(
+	nav: Partial<Pick<Navigator, "vendor">> | undefined,
+): boolean {
+	return (nav?.vendor ?? "").indexOf("Apple") >= 0;
+}
+
 export const iOS = /iPhone|iPad|iPod/i.test(ua) || isIPadOnMacUA(_nav);
+/**
+ * `true` when the browser reports an Apple vendor string — Safari on
+ * macOS or iOS. Distinct from {@link iOS}: a Mac running Safari is
+ * `appleVendor` but not `iOS`, and Chrome on iOS is `iOS` but not
+ * `appleVendor`.
+ */
+export const appleVendor = isAppleVendorNav(_nav);
 export const android = /Android/i.test(ua);
 /**
  * @deprecated since 19.7.0 — Android 2.x predates 2012. Will be removed in 20.x.
@@ -77,9 +104,21 @@ export const wp = /Windows Phone/i.test(ua);
  */
 export const BlackBerry = /BlackBerry/i.test(ua);
 /**
- * @deprecated since 19.7.0 — Kindle has a negligible market share and behaves like Android. Will be removed in 20.x.
+ * `true` on Amazon devices — Fire tablets (which report the Silk browser) and
+ * legacy Kindle e-readers.
+ *
+ * The previous pattern required `Silk` followed by `Mobile Safari`, which no
+ * current Fire tablet sends: Chromium-based Silk ends its user agent with
+ * `Safari/537.36`, so every modern Fire tablet went undetected. Silk is
+ * Amazon-only, so matching the `Silk/` token directly is both narrower and
+ * correct.
+ *
+ * Note these devices are ordinary Android: {@link android} is `true` for all of
+ * them, and nothing in the engine branches on this constant.
+ * @deprecated since 19.7.0 — Kindle behaves like Android and {@link android}
+ *   already covers it. Will be removed in a future release.
  */
-export const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
+export const Kindle = /Kindle|Silk\//i.test(ua);
 export const ejecta = "ejecta" in globalThis;
 export const isWeixin = /MicroMessenger/i.test(ua);
 // Node.js detection — `process.release.name === "node"` is the

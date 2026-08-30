@@ -1,5 +1,5 @@
+import { fetchData } from "../../utils/fetchdata.js";
 import { binList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 
 /**
  * parse/preload a Binary file

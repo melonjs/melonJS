@@ -229,4 +229,21 @@ export default tseslint.config(
 			"@typescript-eslint/unbound-method": "off",
 		},
 	},
+	{
+		// Vendored audio backend overrides. This code runs in environments the
+		// DOM lib types insist cannot exist: server-side rendering (no `window`
+		// or `navigator`), older browsers where `play()` returns `undefined`
+		// instead of a promise, and iOS/Safari paths where nodes the types
+		// declare non-nullable genuinely come back null. TypeScript therefore
+		// reports the runtime guards as impossible and the assertions as
+		// unnecessary. Deleting them would remove real protection — SSR support
+		// is an upstream fix we deliberately carry — so the two rules that would
+		// demand it are scoped off here rather than the guards being removed.
+		name: "eslint/audio-backend",
+		files: ["**/src/audio/backend/**/*.{ts,tsx,mts,cts}"],
+		rules: {
+			"@typescript-eslint/no-unnecessary-condition": "off",
+			"@typescript-eslint/no-non-null-assertion": "off",
+		},
+	},
 );

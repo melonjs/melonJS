@@ -1,8 +1,10 @@
 /**
- * Audio backend — the shared internal surface every other audio module
- * (procedural, playback) builds on. Keeps the Howler reference and the
- * cross-module mutable state in one place so the public surface modules
- * stay backend-agnostic.
+ * Shared audio state — the internal surface every other audio module
+ * (procedural, playback) builds on. Holds the cross-module mutable state
+ * and the thin wrappers over the backend's global surface, so the public
+ * modules stay backend-agnostic.
+ *
+ * The backend implementation itself lives in `./backend/`.
  *
  * Not part of the public `me.audio.*` API — the two getters
  * `getAudioContext` / `getMasterGain` are re-exported from `audio.ts`
@@ -10,7 +12,8 @@
  * is internal.
  */
 
-import { Howl, Howler } from "howler";
+import { audioEngine } from "./backend/core.ts";
+import type { SpatialSound } from "./backend/spatial.ts";
 
 /**
  * Whether to stop on an audio loading error.
@@ -47,8 +50,8 @@ export function setStopOnAudioError(value: boolean): void {
  * don't share writes across modules" footgun.
  *
  * Fields:
- * - `tracks` — loaded Howl instances keyed by logical sound name.
- *   `Howl | undefined` because missing keys return undefined at runtime
+ * - `tracks` — loaded Sound instances keyed by logical sound name.
+ *   `Sound | undefined` because missing keys return undefined at runtime
  *   even though the type signature wouldn't normally admit it.
  * - `currentTrackId` — the name of the currently-playing track managed
  *   by the `playTrack` / `stopTrack` helpers.
@@ -59,20 +62,20 @@ export function setStopOnAudioError(value: boolean): void {
  * @ignore
  */
 export const state = {
-	tracks: {} as Record<string, Howl | undefined>,
+	tracks: {} as Record<string, SpatialSound | undefined>,
 	currentTrackId: null as string | null,
 	retryCounters: {} as Record<string, number>,
 	audioExts: [] as string[],
 };
 
 /**
- * Look up a loaded `Howl` instance by logical name, or throw a
+ * Look up a loaded `Sound` instance by logical name, or throw a
  * uniform "audio clip X does not exist" error if it isn't loaded.
  * Used by every per-clip helper across `playback.ts` / `audio.ts` so
  * the error contract stays identical across the whole surface.
  * @ignore
  */
-export function getSoundOrThrow(sound_name: string): Howl {
+export function getSoundOrThrow(sound_name: string): SpatialSound {
 	const sound = state.tracks[sound_name];
 	if (!sound) {
 		throw new Error(`audio clip ${sound_name} does not exist`);
@@ -100,7 +103,7 @@ export const soundLoadError = function (
 		const errmsg = `melonJS: failed loading ${sound_name}`;
 		if (!stopOnError) {
 			// disable audio
-			Howler.mute(true);
+			audioEngine.mute(true);
 			onerror_cb?.();
 			console.warn(`${errmsg}, disabling audio`);
 		} else {
@@ -130,24 +133,12 @@ export const soundLoadError = function (
  * @category Audio
  */
 export function getAudioContext(): AudioContext | null {
-	if (Howler.noAudio) return null;
-	// Howler only creates its `AudioContext` lazily — on the first Howl
-	// constructor, the first volume/mute call, etc. Procedural-only
-	// users (calling `tone` without ever loading a sound file) never
-	// hit any of those code paths, leaving `Howler.ctx` null. Nudging
-	// `Howler.volume()` triggers Howler's internal `setupAudioContext`
-	// without changing the master volume.
-	//
-	// Gate the nudge on `usingWebAudio` so we don't fire it on every
-	// call in HTML5-only mode — `Howler.ctx` is permanently null there
-	// and the nudge can't help (the runtime check would just re-decide
-	// "no WebAudio" and return immediately).
-	if (Howler.usingWebAudio && !Howler.ctx) {
-		Howler.volume(Howler.volume());
-	}
-	// `ctx` is declared non-nullable in @types/howler but can still be
-	// null when WebAudio is unavailable (HTML5-only mode).
-	return Howler.ctx ?? null;
+	if (audioEngine.noAudio) return null;
+	// Creates the context on first access. This used to nudge
+	// `audioEngine.volume()` to trigger the backend's internal setup, because
+	// that setup was private to a third-party dependency; the backend is now
+	// maintained in-tree, so the real function is called directly.
+	return audioEngine.ensureContext();
 }
 
 /**
@@ -164,19 +155,19 @@ export function getAudioContext(): AudioContext | null {
 export function getMasterGain(): GainNode | null {
 	// Chains through `getAudioContext` so the same lazy-init nudge
 	// covers both — when audio runs on HTML5 Audio instead of WebAudio,
-	// `Howler.ctx` is null and we short-circuit here. The remaining
+	// `audioEngine.ctx` is null and we short-circuit here. The remaining
 	// `?? null` defends against the narrow iOS-8-webview edge case where
-	// ctx is created but `masterGain` isn't (Howler flips
+	// ctx is created but `masterGain` isn't (audioEngine flips
 	// `usingWebAudio` to false between the two steps).
 	if (!getAudioContext()) return null;
-	return Howler.masterGain ?? null;
+	return audioEngine.masterGain ?? null;
 }
 
 // ---------------------------------------------------------------------
-// Thin wrappers over Howler's global surface. Kept internal (not
+// Thin wrappers over audioEngine's global surface. Kept internal (not
 // re-exported from `audio.ts`) so users still go through the public
 // `setVolume` / `muteAll` / `hasFormat` / etc. helpers. Their job is
-// to isolate the Howler reference to this file — when the backend
+// to isolate the audioEngine reference to this file — when the backend
 // gets swapped, only these wrappers change.
 // ---------------------------------------------------------------------
 
@@ -185,7 +176,7 @@ export function getMasterGain(): GainNode | null {
  * @ignore
  */
 export function getGlobalVolume(): number {
-	return Howler.volume();
+	return audioEngine.volume() as number;
 }
 
 /**
@@ -193,7 +184,7 @@ export function getGlobalVolume(): number {
  * @ignore
  */
 export function setGlobalVolume(v: number): void {
-	Howler.volume(v);
+	audioEngine.volume(v);
 }
 
 /**
@@ -201,7 +192,7 @@ export function setGlobalVolume(v: number): void {
  * @ignore
  */
 export function setGlobalMuted(muted: boolean): void {
-	Howler.mute(muted);
+	audioEngine.mute(muted);
 }
 
 /**
@@ -209,10 +200,10 @@ export function setGlobalMuted(muted: boolean): void {
  * @ignore
  */
 export function isGlobalMuted(): boolean {
-	// Howler doesn't expose a public muted getter — peek at the private
-	// flag that `Howler.mute(true/false)` sets internally. Narrow cast
+	// audioEngine doesn't expose a public muted getter — peek at the private
+	// flag that `audioEngine.mute(true/false)` sets internally. Narrow cast
 	// (vs. `as any`) documents the single field we're reaching for.
-	return (Howler as unknown as { _muted: boolean })._muted;
+	return (audioEngine as unknown as { _muted: boolean })._muted;
 }
 
 /**
@@ -220,7 +211,7 @@ export function isGlobalMuted(): boolean {
  * @ignore
  */
 export function stopAllPlayback(): void {
-	Howler.stop();
+	audioEngine.stop();
 }
 
 /**
@@ -229,11 +220,11 @@ export function stopAllPlayback(): void {
  */
 export function hasCodec(codec: string): boolean {
 	if (!isAudioAvailable()) return false;
-	// `Howler.codecs(...)` is declared `boolean` in @types/howler but at
+	// `audioEngine.codecs(...)` is declared `boolean` by the backend but at
 	// runtime returns `undefined` for unrecognised codecs (lookup in a
 	// dict). Widen the cast so a strict comparison yields a clean
 	// boolean for the public surface (`audio.hasFormat`).
-	return (Howler.codecs(codec) as boolean | undefined) === true;
+	return (audioEngine.codecs(codec) as boolean | undefined) === true;
 }
 
 /**
@@ -241,5 +232,5 @@ export function hasCodec(codec: string): boolean {
  * @ignore
  */
 export function isAudioAvailable(): boolean {
-	return !Howler.noAudio;
+	return !audioEngine.noAudio;
 }

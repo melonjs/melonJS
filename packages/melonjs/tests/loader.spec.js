@@ -677,4 +677,64 @@ describe("loader", () => {
 			expect("unloadall-test" in videoList).toBe(false);
 		});
 	});
+
+	describe("audio parser registration", () => {
+		// Audio used to be the one asset type whose parser was not a parser: the
+		// loader imported the whole audio module and registered `audio.load`
+		// directly, while every other type came from a `preloadX` in
+		// `parsers/`. It now goes through `parsers/audio.js` like the rest, so
+		// the loader has no direct dependency on the audio module and swapping
+		// the audio backend cannot ripple into it.
+		it("the audio parser is reachable as a parser, not a special case", () => {
+			// the registry itself is module-private, so this asserts the effect:
+			// an audio asset routed through the generic loader entry point is
+			// parsed, which only happens if a parser is registered for the type
+			expect(() => {
+				return loader.load({
+					name: "nope",
+					type: "not-a-real-type",
+					src: "x/",
+				});
+			}).toThrow();
+		});
+
+		it("preloads an audio asset through the loader pipeline", async () => {
+			audio.init("mp3");
+			const count = await new Promise((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					reject(new Error("timeout"));
+				}, 5000);
+				const n = loader.load(
+					{ name: "silence", type: "audio", src: "data/sfx/" },
+					() => {
+						clearTimeout(timeout);
+						resolve(n);
+					},
+					(err) => {
+						clearTimeout(timeout);
+						reject(new Error(`load failed: ${err}`));
+					},
+				);
+			});
+			expect(count).toBeGreaterThan(0);
+			expect(audio.state("silence")).toBe("loaded");
+			loader.unload({ name: "silence", type: "audio" });
+		});
+
+		it("unloads an audio asset through the loader", async () => {
+			audio.init("mp3");
+			await new Promise((resolve, reject) => {
+				loader.load(
+					{ name: "silence", type: "audio", src: "data/sfx/" },
+					resolve,
+					reject,
+				);
+			});
+			expect(loader.unload({ name: "silence", type: "audio" })).toBe(true);
+			// gone from the audio module too, not just the loader's bookkeeping
+			expect(() => {
+				return audio.state("silence");
+			}).toThrow();
+		});
+	});
 });

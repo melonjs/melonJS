@@ -1,8 +1,8 @@
 import { hasVideoFormat } from "../../system/device.js";
+import { fetchData } from "../../utils/fetchdata.js";
 import * as fileUtil from "../../utils/file.ts";
 import { isDataUrl } from "../../utils/string.ts";
 import { videoList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 
 /**
  * parse/preload a Video file

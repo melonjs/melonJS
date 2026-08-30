@@ -20,6 +20,49 @@ export interface SoundAsset {
 	 * + extension construction.
 	 */
 	src: string;
+	/**
+	 * Named regions within a single file, each `[start, duration]` in
+	 * milliseconds, with an optional third element marking the region as
+	 * looping. Lets one download carry many effects.
+	 * @example
+	 * ```js
+	 * loader.preload([{
+	 *   type: "audio", name: "sfx", src: "data/sfx/",
+	 *   sprite: { jump: [0, 450], hit: [2000, 250], music: [4000, 12000, true] },
+	 * }]);
+	 * // then
+	 * audio.play("sfx", { sprite: "jump" });
+	 * ```
+	 */
+	sprite?: Record<string, [number, number] | [number, number, boolean]>;
+	/**
+	 * How many finished instances of this clip are kept around for reuse before
+	 * being discarded. Defaults to `5`.
+	 *
+	 * This does not limit how many instances can play at once — it trades
+	 * memory against the cost of recreating an instance for a clip that is
+	 * triggered rapidly.
+	 */
+	pool?: number;
+	/** Initial playback rate, `0.5..4.0`. Defaults to `1.0`. */
+	rate?: number;
+	/** Start muted. Defaults to `false`. */
+	mute?: boolean;
+	/**
+	 * Whether to begin downloading on load. `"metadata"` fetches only enough to
+	 * report duration. Defaults to `true`.
+	 */
+	preload?: boolean | "metadata";
+	/**
+	 * Explicit format hint, for sources whose extension cannot be read from the
+	 * URL (a blob, or a URL without one).
+	 */
+	format?: string | string[];
+	/**
+	 * Lifecycle callbacks for this clip. Each is optional and fires for every
+	 * instance of the clip.
+	 */
+	on?: SoundEvents;
 	/** Begin playback immediately on load. Defaults to `false`. */
 	autoplay?: boolean;
 	/** Loop playback when the clip ends. Defaults to `false`. */
@@ -38,7 +81,7 @@ export interface SoundAsset {
 
 /**
  * Optional settings applied to the audio resource load. The loader
- * uses an XHR under the hood (via Howler), so the available knobs
+ * uses an XHR under the hood, so the available knobs
  * mirror what an XHR can be told to do.
  * @category Audio
  */
@@ -207,4 +250,55 @@ export interface ToneOptions {
 	 * value < 1) or rising stings (value > 1).
 	 */
 	pitchSlide?: number;
+}
+
+/**
+ * Options accepted by {@link play} in place of the positional `loop` argument.
+ *
+ * Every field is optional, and the positional form
+ * `play(name, loop, onend, volume)` continues to work unchanged.
+ * @category Audio
+ */
+export interface PlayOptions {
+	/**
+	 * Name of a region declared in the clip's `sprite` map. Omit to play the
+	 * whole clip.
+	 */
+	sprite?: string | undefined;
+	/** Loop playback when the region ends. Defaults to `false`. */
+	loop?: boolean | undefined;
+	/** Called when this instance finishes playing. */
+	onend?: (() => void) | undefined;
+	/** Playback volume, `0.0..1.0`. Defaults to the current global volume. */
+	volume?: number | undefined;
+}
+
+/**
+ * Lifecycle callbacks accepted by a {@link SoundAsset} under `on`.
+ *
+ * These fire for the clip as a whole. To react to a single instance, keep the
+ * id returned by {@link play}.
+ * @category Audio
+ */
+export interface SoundEvents {
+	/** The clip started playing. */
+	play?: (() => void) | undefined;
+	/** The clip was paused. */
+	pause?: (() => void) | undefined;
+	/** The clip was stopped. */
+	stop?: (() => void) | undefined;
+	/** An instance reached its end. */
+	end?: (() => void) | undefined;
+	/** A fade finished. */
+	fade?: (() => void) | undefined;
+	/** The playback position was changed. */
+	seek?: (() => void) | undefined;
+	/** The playback rate was changed. */
+	rate?: (() => void) | undefined;
+	/** The volume was changed. */
+	volume?: (() => void) | undefined;
+	/** The mute state was changed. */
+	mute?: (() => void) | undefined;
+	/** Audio was unlocked by a user gesture. */
+	unlock?: (() => void) | undefined;
 }

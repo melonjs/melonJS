@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { soundLoadError, state } from "../src/audio/backend.ts";
+import { soundLoadError, state } from "../src/audio/state.ts";
 import { audio } from "../src/index.js";
 
 // Build a valid silent WAV in-memory and serve it as a data URL (same

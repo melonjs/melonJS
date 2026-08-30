@@ -1,8 +1,8 @@
 import { level } from "../../level/level.js";
 import * as TMXUtils from "../../level/tiled/TMXUtils.js";
+import { fetchData } from "../../utils/fetchdata.js";
 import { getExtension } from "../../utils/file.ts";
 import { tmxList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 
 /**
  * parse/preload a TMX file
