@@ -89,6 +89,19 @@ Omit `target` and feed it yourself with `trail.addPoint(x, y)` — the mode for 
 sword slash, where the ribbon follows a weapon tip rather than an object. Points
 closer together than `minDistance` (default 4 px) are dropped.
 
+**`Trail` is 2D.** `addPoint` takes `(x, y)`, points are stored without a `z`,
+and the ribbon is drawn as connected screen-space quads. Under a `Camera3d` it
+draws a flat ribbon that does not recede with perspective — so it is the wrong
+tool for a trail behind an object moving *into* the scene. For that:
+
+- **`ParticleEmitter` with `referenceSpace: "world"`** — particles stay where
+  they were dropped while the emitter moves on, and the emitter propagates its
+  depth to each particle so `Camera3d` projects them correctly. This is the
+  built-in answer for exhaust, ski tracks and speed trails in 3D.
+- **A procedural `Mesh`** built from the object's recent path, with
+  `mesh.vertexColors` for a per-vertex gradient — more work, but a continuous
+  ribbon rather than discrete puffs.
+
 ## Performance
 
 - Particles come from a shared pool, so a steady-state emitter allocates
@@ -110,6 +123,7 @@ closer together than `minDistance` (default 4 px) are dropped.
 
 | symptom | cause |
 |---|---|
+| trail looks flat under a `Camera3d` | `Trail` is 2D — use a world-space emitter or a ribbon mesh |
 | emitter added but nothing appears | `streamParticles()` / `burstParticles()` never called |
 | the cloud follows a moving emitter | default `referenceSpace: "local"` — use `"world"` for trails |
 | particles do not travel far enough | settings tuned pre-20.2, when drawn travel was doubled |
