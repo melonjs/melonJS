@@ -217,10 +217,6 @@ importers:
         version: 4.1.11(@types/node@25.6.2)(@vitest/browser-playwright@4.1.11)(vite@8.1.5(@types/node@25.6.2)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
 
   packages/melonjs:
-    dependencies:
-      core-js:
-        specifier: ^3.48.0
-        version: 3.49.0
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -1164,9 +1160,6 @@ packages:
   cookie@1.1.1:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
-
-  core-js@3.49.0:
-    resolution: {integrity: sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -3008,8 +3001,6 @@ snapshots:
   convert-source-map@2.0.0: {}
 
   cookie@1.1.1: {}
-
-  core-js@3.49.0: {}
 
   cross-spawn@7.0.6:
     dependencies:

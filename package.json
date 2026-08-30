@@ -48,7 +48,6 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
-			"core-js",
 			"esbuild",
 			"lefthook",
 			"playwright"

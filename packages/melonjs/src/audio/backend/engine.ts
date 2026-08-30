@@ -40,10 +40,7 @@ export class AudioEngine {
 		this._muted = false;
 		this._volume = 1;
 		this._canPlayEvent = "canplaythrough";
-		this._navigator =
-			typeof window !== "undefined" && window.navigator
-				? window.navigator
-				: null;
+		this._navigator = globalThis.navigator ?? null;
 		this.masterGain = null;
 		this.noAudio = false;
 		this.usingWebAudio = true;
@@ -175,8 +172,8 @@ export class AudioEngine {
 		}
 
 		try {
-			if (typeof window.AudioContext !== "undefined") {
-				this.ctx = new window.AudioContext();
+			if (typeof globalThis.AudioContext !== "undefined") {
+				this.ctx = new globalThis.AudioContext();
 			} else {
 				this.usingWebAudio = false;
 			}
@@ -206,9 +203,9 @@ export class AudioEngine {
 		this._autoSuspend();
 
 		if (!this.usingWebAudio) {
-			if (typeof window.Audio !== "undefined") {
+			if (typeof globalThis.Audio !== "undefined") {
 				try {
-					const test = new window.Audio();
+					const test = new globalThis.Audio();
 					if (typeof test.oncanplaythrough === "undefined") {
 						this._canPlayEvent = "canplay";
 					}
@@ -221,7 +218,7 @@ export class AudioEngine {
 		}
 
 		try {
-			const test = new window.Audio();
+			const test = new globalThis.Audio();
 			if (test.muted) {
 				this.noAudio = true;
 			}
@@ -241,7 +238,7 @@ export class AudioEngine {
 
 		try {
 			audioTest =
-				typeof window.Audio !== "undefined" ? new window.Audio() : null;
+				typeof globalThis.Audio !== "undefined" ? new globalThis.Audio() : null;
 		} catch {
 			return this;
 		}
@@ -330,7 +327,7 @@ export class AudioEngine {
 			while (this._html5AudioPool.length < this.html5PoolSize) {
 				try {
 					const audioNode = new (
-						window as WindowWithAudio
+						globalThis as unknown as WindowWithAudio
 					).Audio() as HTMLAudioElementWithUnlocked;
 					audioNode._unlocked = true;
 					this._releaseHtml5Audio(audioNode);
@@ -410,9 +407,9 @@ export class AudioEngine {
 		// `play()` is typed as always returning a promise, but browsers before
 		// the promise-returning spec return undefined — hence the guard, and the
 		// cast that lets the compiler accept a check it thinks is impossible
-		const testPlay = new (window as WindowWithAudio).Audio().play() as
-			| Promise<void>
-			| undefined;
+		const testPlay = new (
+			globalThis as unknown as WindowWithAudio
+		).Audio().play() as Promise<void> | undefined;
 		if (testPlay && typeof Promise !== "undefined") {
 			if (testPlay instanceof Promise) {
 				testPlay.catch(() => {
@@ -435,7 +432,7 @@ export class AudioEngine {
 			}
 		}
 
-		return new (window as WindowWithAudio).Audio();
+		return new (globalThis as unknown as WindowWithAudio).Audio();
 	}
 
 	_releaseHtml5Audio(audio: HTMLAudioElementWithUnlocked): this {
