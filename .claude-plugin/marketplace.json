@@ -6,7 +6,7 @@
 		{
 			"name": "melonjs",
 			"source": "./",
-			"description": "Build games with melonJS — engine conventions, API usage, and the pitfalls that make generated code fail silently."
+			"description": "Build games with melonJS — 23 guides to the 2.5D HTML5 engine's conventions, APIs and idioms, so generated code runs the first time."
 		}
 	]
 }
