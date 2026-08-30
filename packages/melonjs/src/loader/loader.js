@@ -1,4 +1,3 @@
-import * as audio from "./../audio/audio.ts";
 import { warning } from "../lang/console.js";
 import state from "./../state/state.ts";
 import {
@@ -21,6 +20,7 @@ import {
 	videoList,
 } from "./cache.js";
 import { preloadAseprite } from "./parsers/aseprite.js";
+import { preloadAudio, unloadAllAudio, unloadAudio } from "./parsers/audio.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadGLTF } from "./parsers/gltf.js";
@@ -230,7 +230,7 @@ function initParsers() {
 	setParser("js", preloadJavascript);
 	setParser("tmx", preloadTMX);
 	setParser("tsx", preloadTMX);
-	setParser("audio", audio.load);
+	setParser("audio", preloadAudio);
 	setParser("fontface", preloadFontFace);
 	setParser("video", preloadVideo);
 	setParser("obj", preloadOBJ);
@@ -688,7 +688,7 @@ export function unload(asset) {
 			return true;
 
 		case "audio":
-			return audio.unload(asset.name);
+			return unloadAudio(asset.name);
 
 		case "video":
 			if (!(asset.name in videoList)) {
@@ -866,7 +866,7 @@ export function unloadAll() {
 	}
 
 	// unload all audio resources
-	audio.unloadAll();
+	unloadAllAudio();
 }
 
 /**

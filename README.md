@@ -33,7 +33,7 @@ melonJS is designed so you can **focus on making games, not on graphics plumbing
 
 - **Scenes, loaded in one call** — `level.load(name)` brings an authored scene straight into your world. [Tiled](https://www.mapeditor.org) is a first-class citizen for **2D** — orthogonal, isometric, hexagonal & staggered maps, animated tilesets, collision shapes, object properties, compressed formats, with GPU-accelerated tile rendering on the GPU backends — and **glTF / GLB** is the equivalent for **3D scenes**: author in Blender (or any DCC tool), export a `.glb`, and the whole scene — meshes, materials, cameras, lights, and node animation — loads under a `Camera3d`, no per-mesh wiring. Animated models play back through the same animation API as a 2D `Sprite`.
 
-- **Batteries included, hackable by design** — Get started in minutes with minimal setup. When you need to go deeper: ES6 classes throughout, a plugin system for engine extensions, and a clean architecture that's easy to extend without fighting the framework.
+- **Batteries included, hackable by design** — Get started in minutes with minimal setup. When you need to go deeper: modern class-based architecture, a plugin system for engine extensions, and a clean architecture that's easy to extend without fighting the framework.
 
 About melonJS
 -------------------------------------------------------------------------------
@@ -262,7 +262,8 @@ See the [Migrating to the Physics Adapter API](https://github.com/melonjs/melonJ
 Installation
 -------------------------------------------------------------------------------
 
-melonJS is distributed as a tree-shakeable ES6 module with TypeScript declarations included.
+melonJS is distributed as a tree-shakeable ES module with TypeScript declarations included.
+The published bundle targets **ES2022** — transpile it if you need to support older browsers.
 
 Install via [npm](https://www.npmjs.com/package/melonjs) :
 
@@ -277,13 +278,51 @@ import { Application, Sprite, loader } from 'melonjs';
 Or use it directly via [jsDelivr](https://www.jsdelivr.com/package/npm/melonjs) CDN :
 
 ```html
-<!-- load the ES6 module bundle of melonJS v19.x -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs@19/+esm"></script>
+<!-- load the ES module bundle of melonJS v20.x -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs@20/+esm"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
 <script type="module" src="https://cdn.jsdelivr.net/npm/melonjs/+esm"></script>
 ```
 > Note: the debug plugin is available separately as [`@melonjs/debug-plugin`](https://www.npmjs.com/package/@melonjs/debug-plugin)
+
+### Supporting older browsers
+
+The published bundle targets ES2022, so it uses private class members and other
+modern syntax. A browser that predates those cannot parse the file at all — this
+fails at load, not at the point a feature is used.
+
+To support older browsers, transpile melonJS **together with your own code**.
+The usual trap is that build setups skip `node_modules` by default, which leaves
+melonJS untouched no matter how low you set your target.
+
+With [Vite](https://vite.dev) :
+
+```javascript
+// vite.config.js
+export default {
+    build: {
+        // esbuild downlevels dependencies too, melonjs included
+        target: "es2020",
+    },
+};
+```
+
+With Babel, make sure melonJS is not excluded :
+
+```javascript
+// webpack.config.js
+{
+    test: /\.js$/,
+    // the default `exclude: /node_modules/` would skip melonjs
+    exclude: /node_modules\/(?!melonjs)/,
+    use: "babel-loader",
+}
+```
+
+Transpiling costs some size and speed: private class members become `WeakMap`
+lookups, which are on hot paths in the renderer. Only reach for it if you have
+users on browsers that need it.
 
 Community
 -------------------------------------------------------------------------------

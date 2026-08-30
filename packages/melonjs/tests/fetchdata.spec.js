@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchData, isFileProtocol } from "../src/loader/parsers/fetchdata.js";
+import { fetchData, isFileProtocol } from "../src/utils/fetchdata.js";
 
 /**
  * `fetch()` cannot load `file:` URLs in several WebView contexts — notably a

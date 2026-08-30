@@ -15,7 +15,9 @@
  * helpers, plus the barrel re-exports that compose the namespace.
  */
 
+import { play } from "./playback.ts";
 import {
+	state as audioState,
 	getGlobalVolume,
 	getSoundOrThrow,
 	hasCodec,
@@ -23,32 +25,33 @@ import {
 	isGlobalMuted,
 	setGlobalMuted,
 	setGlobalVolume,
-	state,
-} from "./backend.ts";
-import { play } from "./playback.ts";
+} from "./state.ts";
 
-// Public re-exports from the split modules.
 export {
-	getAudioContext,
-	getMasterGain,
-	setStopOnAudioError,
-	stopOnAudioError,
-} from "./backend.ts";
-export {
+	duration,
 	fade,
 	load,
 	orientation,
 	panner,
 	pause,
 	play,
+	playing,
 	position,
 	rate,
 	resume,
 	seek,
+	state,
 	stereo,
 	stop,
 } from "./playback.ts";
 export { noise, tone } from "./procedural.ts";
+// Public re-exports from the split modules.
+export {
+	getAudioContext,
+	getMasterGain,
+	setStopOnAudioError,
+	stopOnAudioError,
+} from "./state.ts";
 // Public type surface.
 export type {
 	LoadSettings,
@@ -81,7 +84,7 @@ export type {
  * @category Audio
  */
 export function init(format: string = "mp3"): boolean {
-	state.audioExts = format.split(",");
+	audioState.audioExts = format.split(",");
 	return isAudioAvailable();
 }
 
@@ -134,8 +137,8 @@ export function disable(): void {
  * @category Audio
  */
 export function playTrack(sound_name: string, volume?: number): number {
-	state.currentTrackId = sound_name;
-	return play(state.currentTrackId, true, null, volume);
+	audioState.currentTrackId = sound_name;
+	return play(audioState.currentTrackId, true, null, volume);
 }
 
 /**
@@ -147,9 +150,9 @@ export function playTrack(sound_name: string, volume?: number): number {
  * @category Audio
  */
 export function stopTrack(): void {
-	if (state.currentTrackId !== null) {
-		state.tracks[state.currentTrackId]?.stop();
-		state.currentTrackId = null;
+	if (audioState.currentTrackId !== null) {
+		audioState.tracks[audioState.currentTrackId]?.stop();
+		audioState.currentTrackId = null;
 	}
 }
 
@@ -160,8 +163,8 @@ export function stopTrack(): void {
  * @category Audio
  */
 export function pauseTrack(): void {
-	if (state.currentTrackId !== null) {
-		state.tracks[state.currentTrackId]?.pause();
+	if (audioState.currentTrackId !== null) {
+		audioState.tracks[audioState.currentTrackId]?.pause();
 	}
 }
 
@@ -174,8 +177,8 @@ export function pauseTrack(): void {
  * @category Audio
  */
 export function resumeTrack(): void {
-	if (state.currentTrackId !== null) {
-		state.tracks[state.currentTrackId]?.play();
+	if (audioState.currentTrackId !== null) {
+		audioState.tracks[audioState.currentTrackId]?.play();
 	}
 }
 
@@ -185,7 +188,7 @@ export function resumeTrack(): void {
  * @category Audio
  */
 export function getCurrentTrack(): string | null {
-	return state.currentTrackId;
+	return audioState.currentTrackId;
 }
 
 /**
@@ -272,20 +275,20 @@ export function muted(): boolean {
  * @category Audio
  */
 export function unload(sound_name: string): boolean {
-	const sound = state.tracks[sound_name];
+	const sound = audioState.tracks[sound_name];
 	if (!sound) {
 		return false;
 	}
 
 	// forget the current-track pointer if it referenced this sound, so
 	// getCurrentTrack() / pauseTrack() / resumeTrack() don't act on a ghost
-	if (state.currentTrackId === sound_name) {
-		state.currentTrackId = null;
+	if (audioState.currentTrackId === sound_name) {
+		audioState.currentTrackId = null;
 	}
 
 	// destroy the Howl object
 	sound.unload();
-	delete state.tracks[sound_name];
+	delete audioState.tracks[sound_name];
 	return true;
 }
 
@@ -296,8 +299,8 @@ export function unload(sound_name: string): boolean {
  * @category Audio
  */
 export function unloadAll(): void {
-	for (const sound_name in state.tracks) {
-		if (Object.prototype.hasOwnProperty.call(state.tracks, sound_name)) {
+	for (const sound_name in audioState.tracks) {
+		if (Object.prototype.hasOwnProperty.call(audioState.tracks, sound_name)) {
 			unload(sound_name);
 		}
 	}

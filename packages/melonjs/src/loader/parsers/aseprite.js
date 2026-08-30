@@ -1,5 +1,5 @@
+import { fetchData } from "../../utils/fetchdata.js";
 import { imgList, jsonList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 
 // Aseprite file format spec: https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md
 const ASE_MAGIC_FILE = 0xa5e0;

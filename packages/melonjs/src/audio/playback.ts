@@ -1,23 +1,29 @@
 /**
  * File-based playback — load audio assets, then play / pause / fade /
  * seek / etc. Every function in this module operates on the shared
- * `state.tracks` map exposed from `backend.ts`, so the audio module's
+ * `audioState.tracks` map exposed from `backend.ts`, so the audio module's
  * other surfaces (track helpers, mix, unload) can see the same set of
  * loaded sounds.
  */
 
-import { Howl } from "howler";
 import { clamp } from "../math/math.ts";
 import { isDataUrl } from "../utils/string.ts";
+import { Sound } from "./backend/core.ts";
+import type { SpatialSound } from "./backend/spatial.ts";
 import {
+	state as audioState,
 	getGlobalVolume,
 	getSoundOrThrow,
 	soundLoadError,
-	state,
 	stopAllPlayback,
 	stopOnAudioError,
-} from "./backend.ts";
-import type { LoadSettings, PannerAttributes, SoundAsset } from "./types.ts";
+} from "./state.ts";
+import type {
+	LoadSettings,
+	PannerAttributes,
+	PlayOptions,
+	SoundAsset,
+} from "./types.ts";
 
 /**
  * Load an audio file.
@@ -45,13 +51,13 @@ export function load(
 ): number {
 	// already loaded? Return 0 ("cached", like every other asset parser) —
 	// re-preloading a manifest (e.g. re-entering a stage that preloads) used
-	// to silently replace the Howl and leak the old instance's decoded
+	// to silently replace the Sound and leak the old instance's decoded
 	// buffers / HTML5 nodes. Unload first to genuinely reload a clip.
-	if (typeof state.tracks[sound.name] !== "undefined") {
+	if (typeof audioState.tracks[sound.name] !== "undefined") {
 		return 0;
 	}
 	const urls: string[] = [];
-	if (state.audioExts.length === 0) {
+	if (audioState.audioExts.length === 0) {
 		throw new Error(
 			"target audio extension(s) should be set through me.audio.init() before calling the preloader.",
 		);
@@ -59,31 +65,50 @@ export function load(
 	if (isDataUrl(sound.src)) {
 		urls.push(sound.src);
 	} else {
-		for (let i = 0; i < state.audioExts.length; i++) {
+		for (let i = 0; i < audioState.audioExts.length; i++) {
 			urls.push(
-				`${sound.src + sound.name}.${state.audioExts[i]}${settings.nocache ?? ""}`,
+				`${sound.src + sound.name}.${audioState.audioExts[i]}${settings.nocache ?? ""}`,
 			);
 		}
 	}
 
-	state.tracks[sound.name] = new Howl({
+	// the spatial plugin augments every instance via its onSoundCreate hook
+	audioState.tracks[sound.name] = new Sound({
 		src: urls,
 		volume: getGlobalVolume(),
 		autoplay: sound.autoplay === true,
 		loop: sound.loop === true,
+		// forwarded only when set, so the backend keeps its own defaults
+		...(sound.sprite !== undefined ? { sprite: sound.sprite } : {}),
+		...(sound.pool !== undefined ? { pool: sound.pool } : {}),
+		...(sound.rate !== undefined ? { rate: sound.rate } : {}),
+		...(sound.mute !== undefined ? { mute: sound.mute } : {}),
+		...(sound.preload !== undefined ? { preload: sound.preload } : {}),
+		...(sound.format !== undefined ? { format: sound.format } : {}),
+		// `on` is a melonJS-side grouping; the backend takes flat `onplay` etc.
+		...(sound.on?.play !== undefined ? { onplay: sound.on.play } : {}),
+		...(sound.on?.pause !== undefined ? { onpause: sound.on.pause } : {}),
+		...(sound.on?.stop !== undefined ? { onstop: sound.on.stop } : {}),
+		...(sound.on?.end !== undefined ? { onend: sound.on.end } : {}),
+		...(sound.on?.fade !== undefined ? { onfade: sound.on.fade } : {}),
+		...(sound.on?.seek !== undefined ? { onseek: sound.on.seek } : {}),
+		...(sound.on?.rate !== undefined ? { onrate: sound.on.rate } : {}),
+		...(sound.on?.volume !== undefined ? { onvolume: sound.on.volume } : {}),
+		...(sound.on?.mute !== undefined ? { onmute: sound.on.mute } : {}),
+		...(sound.on?.unlock !== undefined ? { onunlock: sound.on.unlock } : {}),
 		html5: sound.stream === true || sound.html5 === true,
-		// @ts-expect-error xhrWithCredentials is a valid Howl option but not in the type definitions
+		// @ts-expect-error xhrWithCredentials is a valid Sound option but not in the type definitions
 		xhrWithCredentials: settings.withCredentials,
 		onloaderror() {
 			soundLoadError.call(this, sound.name, onerrorcb, stopOnAudioError);
 		},
 		onload() {
-			delete state.retryCounters[sound.name];
+			delete audioState.retryCounters[sound.name];
 			if (typeof onloadcb === "function") {
 				onloadcb();
 			}
 		},
-	});
+	}) as SpatialSound;
 
 	return 1;
 }
@@ -91,7 +116,9 @@ export function load(
 /**
  * Play the specified sound.
  * @param sound_name - Audio clip name (case-sensitive).
- * @param loop - Whether to loop the clip. Defaults to `false`.
+ * @param loopOrOptions - Whether to loop the clip (defaults to `false`), or a
+ *   {@link PlayOptions} object. The object form is the only way to name a
+ *   sprite region; the boolean form is unchanged.
  * @param onend - Called when the sound instance ends playing.
  * @param volume - Playback volume, `0.0..1.0`. Defaults to the current
  *   global volume.
@@ -105,26 +132,49 @@ export function load(
  * me.audio.play("gameover_sfx", false, myFunc);
  * // play the "gameover_sfx" audio clip at half volume
  * me.audio.play("gameover_sfx", false, null, 0.5);
+ * // play a named region of a sprite sheet, at half volume
+ * me.audio.play("sfx", { sprite: "jump", volume: 0.5 });
  * @category Audio
  */
 export function play(
 	sound_name: string,
-	loop: boolean = false,
+	loopOrOptions: boolean | PlayOptions = false,
 	onend?: (() => void) | null,
 	volume?: number,
 ): number {
+	// The second parameter used to be `loop` only. An options object is accepted
+	// in its place so sprites (and anything added later) do not have to be
+	// appended after `volume` positionally. The positional form is unchanged.
+	const options: PlayOptions =
+		typeof loopOrOptions === "object" && loopOrOptions !== null
+			? loopOrOptions
+			: { loop: loopOrOptions };
+	const loop = options.loop === true;
+	const endCallback = options.onend ?? onend;
+	const level = options.volume ?? volume;
+
 	const sound = getSoundOrThrow(sound_name);
-	const id = sound.play();
+	// `play()` returns null when the named sprite is missing or no instance is
+	// free. The clip is loaded (getSoundOrThrow), so the only reachable null is
+	// an unknown sprite name — reported rather than passed on as a bad id.
+	const id = sound.play(options.sprite);
+	if (id === null) {
+		throw new Error(
+			options.sprite !== undefined
+				? `melonJS: audio clip "${sound_name}" has no sprite named "${options.sprite}"`
+				: `melonJS: audio clip "${sound_name}" could not be played`,
+		);
+	}
 	sound.loop(loop, id);
 	sound.volume(
-		typeof volume === "number" ? clamp(volume, 0.0, 1.0) : getGlobalVolume(),
+		typeof level === "number" ? clamp(level, 0.0, 1.0) : getGlobalVolume(),
 		id,
 	);
-	if (typeof onend === "function") {
+	if (typeof endCallback === "function") {
 		if (loop) {
-			sound.on("end", onend, id);
+			sound.on("end", endCallback, id);
 		} else {
-			sound.once("end", onend, id);
+			sound.once("end", endCallback, id);
 		}
 	}
 	return id;
@@ -161,7 +211,7 @@ export function seek(sound_name: string, seek: number, id?: number): void;
  * @param id - Sound instance ID. When omitted, all sounds in the group
  *   are affected.
  * @returns The current seek position when called as a getter; nothing
- *   when called as a setter (the Howl object Howler returns from the
+ *   when called as a setter (the Sound object Howler returns from the
  *   setter form is an internal, not part of this API).
  * @example
  * // read the current position of the background music
@@ -200,7 +250,7 @@ export function rate(sound_name: string, rate: number, id?: number): void;
  * @param id - Sound instance ID. When omitted, all sounds in the group
  *   are affected.
  * @returns The current playback rate when called as a getter; nothing
- *   when called as a setter (the Howl object Howler returns from the
+ *   when called as a setter (the Sound object Howler returns from the
  *   setter form is an internal, not part of this API).
  * @example
  * // read the current playback rate
@@ -257,7 +307,7 @@ export function stereo(
 	if (pan === undefined) {
 		// Howler keeps the group pan at null until it's first set — the
 		// documented return type is a number, so map that to centered
-		return sound.stereo() ?? 0;
+		return (sound.stereo() as number | null) ?? 0;
 	}
 	sound.stereo(pan, id);
 }
@@ -299,7 +349,7 @@ export function position(
 	if (x === undefined) {
 		// Howler keeps the group position at null until it's first set — the
 		// documented return type is a tuple, so map that to the origin
-		return sound.pos() ?? [0, 0, 0];
+		return (sound.pos() as [number, number, number] | null) ?? [0, 0, 0];
 	}
 	sound.pos(x, y, z, id);
 }
@@ -341,7 +391,7 @@ export function orientation(
 ): [number, number, number] | void {
 	const sound = getSoundOrThrow(sound_name);
 	if (x === undefined) {
-		return sound.orientation();
+		return sound.orientation() as [number, number, number];
 	}
 	sound.orientation(x, y, z, id);
 }
@@ -371,18 +421,20 @@ export function panner(
 ): PannerAttributes {
 	const sound = getSoundOrThrow(sound_name);
 	if (attributes !== undefined) {
-		// "set" overload returns the Howl for chaining; we still want
+		// "set" overload returns the Sound for chaining; we still want
 		// to hand the caller the current attribute snapshot back. Our
 		// `distanceModel` covers the full WebAudio union (including
 		// `"exponential"`) while Howler's declared parameter type only
 		// lists `"linear" | "inverse"` — its runtime accepts all three.
 		// Cast at the boundary so the type check passes; the upstream
-		// `@types/howler` declaration is incomplete here.
-		const attrs = attributes as Parameters<Howl["pannerAttr"]>[0];
+		// the backend's declaration is incomplete here.
+		const attrs = attributes as Parameters<SpatialSound["pannerAttr"]>[0];
 		if (id !== undefined) sound.pannerAttr(attrs, id);
 		else sound.pannerAttr(attrs);
 	}
-	return id !== undefined ? sound.pannerAttr(id) : sound.pannerAttr();
+	return (
+		id !== undefined ? sound.pannerAttr(id) : sound.pannerAttr()
+	) as PannerAttributes;
 }
 
 /**
@@ -464,4 +516,57 @@ export function resume(sound_name: string, id?: number): void {
 	for (const s of paused) {
 		sound.play(s._id);
 	}
+}
+
+/**
+ * Get the duration of an audio clip, in seconds.
+ *
+ * With no `id`, returns the duration of the whole clip; with one, the duration
+ * of the region that instance is playing, which differs when the instance was
+ * started from a sprite.
+ * @param sound_name - Audio clip name (case-sensitive).
+ * @param id - Sound instance ID. Omit for the whole clip.
+ * @returns Duration in seconds, or `0` while the clip is still loading.
+ * @example
+ * const total = me.audio.duration("theme");
+ * @category Audio
+ */
+export function duration(sound_name: string, id?: number): number {
+	return getSoundOrThrow(sound_name).duration(id);
+}
+
+/**
+ * Check whether an audio clip is currently playing.
+ *
+ * With no `id`, reports whether *any* instance of the clip is playing; with
+ * one, only that instance.
+ * @param sound_name - Audio clip name (case-sensitive).
+ * @param id - Sound instance ID. Omit to ask about the whole group.
+ * @returns `true` when playing.
+ * @example
+ * if (!me.audio.playing("theme")) {
+ *     me.audio.play("theme", true);
+ * }
+ * @category Audio
+ */
+export function playing(sound_name: string, id?: number): boolean {
+	return getSoundOrThrow(sound_name).playing(id);
+}
+
+/**
+ * Get the load state of an audio clip.
+ *
+ * Useful when a clip was declared with `preload: false`, or to tell "still
+ * loading" apart from "loaded but silent".
+ * @param sound_name - Audio clip name (case-sensitive).
+ * @returns `"unloaded"`, `"loading"` or `"loaded"`.
+ * @example
+ * if (me.audio.state("theme") === "loaded") { ... }
+ * @category Audio
+ */
+export function state(sound_name: string): "unloaded" | "loading" | "loaded" {
+	return getSoundOrThrow(sound_name).state() as
+		| "unloaded"
+		| "loading"
+		| "loaded";
 }

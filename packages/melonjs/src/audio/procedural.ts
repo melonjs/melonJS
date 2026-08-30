@@ -13,7 +13,7 @@
  * primitives can be added with zero copy-paste.
  */
 
-import { getAudioContext, getMasterGain } from "./backend.ts";
+import { getAudioContext, getMasterGain } from "./state.ts";
 import type { NoiseOptions, ToneOptions } from "./types.ts";
 
 // ---------------------------------------------------------------------

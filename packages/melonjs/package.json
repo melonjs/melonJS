@@ -55,11 +55,9 @@
 		"CHANGELOG"
 	],
 	"dependencies": {
-		"core-js": "^3.48.0",
-		"howler": "2.2.4"
+		"core-js": "^3.48.0"
 	},
 	"devDependencies": {
-		"@types/howler": "^2.2.13",
 		"@types/node": "^25.6.0",
 		"concurrently": "^9.2.1",
 		"del-cli": "^7.0.0",

@@ -1,5 +1,24 @@
 # Changelog
 
+## [20.3.0] (melonJS 2) - _unreleased_
+
+### Added
+- Audio: sprite support — a clip can declare named regions of one file (`sprite: { jump: [0, 450] }`) and `audio.play("sfx", { sprite: "jump" })` plays one, so a single download can carry many effects. `play()`'s second argument now takes either the original `loop` boolean or an options object (`sprite`, `loop`, `onend`, `volume`); every existing call form is unchanged
+- Audio: `duration()`, `playing()` and `state()` report a clip's length, whether it is playing, and its load state
+- Audio: `pool`, `rate`, `mute`, `preload` and `format` can be set when loading a clip, along with an `on` map of lifecycle callbacks (`play`, `pause`, `stop`, `end`, `fade`, `seek`, `rate`, `volume`, `mute`, `unlock`). Each is forwarded only when set, so existing declarations are unaffected
+- Device: `platform.appleVendor` reports whether the browser is Apple's WebKit, which `platform.iOS` does not answer — a Mac running Safari is one but not the other
+
+### Changed
+- Loader: the shared fetch helper moved from `loader/parsers/` to `utils/`. It is engine transport rather than loader policy, and every asset type — including audio, which needs it for the `file:` fallback — is a peer consumer of it. Internal module, no public API change
+- Loader: audio is registered like every other asset type, through a parser in `loader/parsers/`. The loader previously imported the whole audio module to register its load function directly, so it was the one type whose parser was not a parser. It now has no direct dependency on the audio module, which keeps a future backend change from rippling into the loader
+- Audio: the engine no longer depends on a third-party audio library. The backend is now maintained in-tree, which removes melonJS's last runtime dependency besides core-js and fixes a long-standing packaging wart: the emitted type declarations referenced the library, so consumers type-checking with `skipLibCheck: false` had to install it themselves
+
+### Fixed
+- Docs: the README gained a short guide on transpiling for older browsers, including the trap that catches people — build setups skip `node_modules` by default, so melonJS is left untouched however low the target is set
+- Docs: the README described the engine as ES6 and gave no target for the published bundle, which reads as a compatibility claim it does not meet — the bundle uses private class members and ~700 ES2020 constructs, so an ES6-era browser cannot parse it at all. It now states the ES2022 target once, where someone deciding whether to adopt will look. The CDN example also still referenced v19
+- Audio: sound files failed to load when the game is served from `file://` — a Cordova or Capacitor APK on Android, most commonly. `fetch()` cannot read that scheme in those WebViews, and audio was the only asset type still calling it directly instead of going through the engine's loader, which falls back to XHR
+- Device: `platform.Kindle` missed every current Fire tablet. It required `Silk` followed by `Mobile Safari`, but Chromium-based Silk ends its user agent with `Safari/537.36`; it now matches the `Silk/` token directly
+
 ## [20.2.0] (melonJS 2) - _2026-08-29_
 
 **Highlights:** all thirteen blend modes the engine names now work on all three renderers, closing the last gap where the Canvas fallback was the most capable backend for blending. Particles gain a reference space, so an emitter can leave a trail instead of dragging its cloud along. Two measured wins: the particle update loop drops ~37%, and WebGPU quad submission ~42%, taking that backend from slower than WebGL 2 to marginally faster.

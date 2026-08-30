@@ -1,7 +1,7 @@
 import { level } from "../../level/level.js";
 import { transformedBounds } from "../../math/vertex.ts";
+import { fetchData } from "../../utils/fetchdata.js";
 import { gltfList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 import { specularFromMetallicRoughness } from "./pbr.ts";
 
 /**

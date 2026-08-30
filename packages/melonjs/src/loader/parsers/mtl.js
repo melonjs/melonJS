@@ -1,6 +1,6 @@
+import { fetchData } from "../../utils/fetchdata.js";
 import { getBasename } from "../../utils/file.ts";
 import { mtlList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 import { preloadImage } from "./image.js";
 
 // supported MTL properties

@@ -1,5 +1,5 @@
+import { fetchData } from "../../utils/fetchdata.js";
 import { objList } from "../cache.js";
-import { fetchData } from "./fetchdata.js";
 
 // OBJ line type identifiers
 const VERTEX_PREFIX = "v";
