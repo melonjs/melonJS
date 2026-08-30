@@ -229,8 +229,7 @@ class Sound {
 		this._state = "loading";
 
 		if (
-			typeof window !== "undefined" &&
-			window.location.protocol === "https:" &&
+			globalThis.location?.protocol === "https:" &&
 			url.slice(0, 5) === "http:"
 		) {
 			this._html5 = true;

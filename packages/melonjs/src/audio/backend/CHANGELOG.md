@@ -115,6 +115,10 @@ Upstream's last release was 2.2.4 in September 2023; these sat open against it.
   a decode failure, which reports `loaderror`
 - Renamed `loader.ts` to `buffer.ts`. It sat next to the engine's own `loader/`
   under a name that described neither what it did nor which layer it belonged to
+- Uses `globalThis` rather than `window`, matching the rest of the engine. Several
+  of these were unguarded — `window.AudioContext` raises a `ReferenceError` where
+  `window` does not exist rather than evaluating to undefined, so the backend
+  would have thrown in Node the moment audio was touched
 - Renamed to melonJS conventions: `Howl` → `Sound`, the per-instance `Sound` →
   `Voice`, `HowlerGlobal` → `AudioEngine`, `SpatialHowl` → `SpatialSound`
 - The spatial plugin is registered on construction and the singleton is typed

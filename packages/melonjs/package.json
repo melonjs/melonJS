@@ -54,9 +54,6 @@
 		"README.md",
 		"CHANGELOG"
 	],
-	"dependencies": {
-		"core-js": "^3.48.0"
-	},
 	"devDependencies": {
 		"@types/node": "^25.6.0",
 		"concurrently": "^9.2.1",
