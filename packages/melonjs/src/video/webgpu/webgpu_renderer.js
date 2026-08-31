@@ -1776,23 +1776,6 @@ export default class WebGPURenderer extends Renderer {
 		}
 
 		if (this.currentBatcher !== batcher) {
-			// Leaving mesh mode drains the deferred ground-shadow queue first,
-			// so the blobs land on top of every opaque mesh in the pass (#1515).
-			// Switching *within* mesh mode (lit ↔ unlit) must NOT drain it — the
-			// meshes still to come are exactly what the shadows have to beat.
-			if (
-				name !== "mesh" &&
-				name !== "litMesh" &&
-				// see WebGLRenderer#_canDrainShadows: a transition raised while
-				// a mask is being stencilled in (colour writes off) or inside a
-				// post-effect bracket is not the end of the mesh pass, and
-				// draining there loses the blobs. The camera drain still gets
-				// them.
-				this.maskLevel === 0 &&
-				this.stencilMode !== "write"
-			) {
-				this.flushGroundShadows();
-			}
 			if (this.currentBatcher !== null) {
 				this.currentBatcher.flush();
 				this.currentBatcher.unbind();

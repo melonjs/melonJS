@@ -349,6 +349,25 @@ export default class Renderer {
 	 * supplies one blob per instance, for the instanced tier
 	 * @ignore
 	 */
+	/**
+	 * Mark the start of a screen-space (`floating`) draw, during which the
+	 * camera's screen projection is installed and world-space geometry cannot
+	 * be replayed. Balanced by {@link Renderer#endScreenSpace}.
+	 * @ignore
+	 */
+	beginScreenSpace() {
+		this._screenSpaceDepth = (this._screenSpaceDepth ?? 0) + 1;
+	}
+
+	/**
+	 * Mark the end of a screen-space draw.
+	 * @ignore
+	 */
+	endScreenSpace() {
+		const depth = (this._screenSpaceDepth ?? 0) - 1;
+		this._screenSpaceDepth = depth > 0 ? depth : 0;
+	}
+
 	queueGroundShadow(quad, modelMatrix, tint, instanced) {
 		const pool = (this._shadowPool ??= []);
 		const at = this._shadowCount ?? 0;
@@ -379,7 +398,20 @@ export default class Renderer {
 	 */
 	flushGroundShadows() {
 		const count = this._shadowCount ?? 0;
-		if (count === 0 || this._shadowFlushing === true) {
+		if (
+			count === 0 ||
+			this._shadowFlushing === true ||
+			// A queued blob is WORLD-space geometry, and replaying it needs the
+			// world projection. `Container.draw` installs the camera's screen
+			// projection around a `floating` child, so a drain triggered from
+			// inside that window feeds every blob screen-space clip coordinates
+			// and lands it off-screen — one HUD silently deleted every ground
+			// shadow in the scene. Skipping is safe rather than lossy: the
+			// queue survives, and `Container.draw` drains it just BEFORE
+			// opening the window, which is also where the blobs belong —
+			// under the overlay, over the world.
+			(this._screenSpaceDepth ?? 0) > 0
+		) {
 			return;
 		}
 		const pool = this._shadowPool;

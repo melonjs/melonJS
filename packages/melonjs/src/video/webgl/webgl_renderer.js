@@ -869,9 +869,6 @@ export default class WebGLRenderer extends Renderer {
 			// Switching *within* mesh mode (lit ↔ unlit) must NOT drain it —
 			// the meshes still to come are exactly what the shadows have to
 			// beat.
-			if (name !== "mesh" && name !== "litMesh" && this._canDrainShadows()) {
-				this.flushGroundShadows();
-			}
 			if (this.currentBatcher !== undefined) {
 				// flush the current batcher, then let it tear down any
 				// state it set up at `bind()` time (Mesh batcher restores
@@ -913,9 +910,6 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {boolean} true when a drain is safe here
 	 * @ignore
 	 */
-	_canDrainShadows() {
-		return this.maskLevel === 0 && this._effectPassDepth === 0;
-	}
 
 	/**
 	 * Reset the gl transform to identity

@@ -1292,6 +1292,13 @@ export default class Container extends Renderable {
 				}
 
 				if (isFloating) {
+					// Put any deferred ground shadows down BEFORE the screen
+					// projection goes in (#1515). They are world-space geometry,
+					// so they cannot be replayed once it is installed, and this
+					// is where they belong in the order anyway: over the world,
+					// under the overlay about to be drawn.
+					renderer.flushGroundShadows?.();
+					renderer.beginScreenSpace?.();
 					renderer.save();
 					renderer.resetTransform();
 					// Floating renderables draw in screen space — swap to
@@ -1324,6 +1331,7 @@ export default class Container extends Renderable {
 						);
 					}
 					renderer.restore();
+					renderer.endScreenSpace?.();
 				}
 			}
 		}
