@@ -628,6 +628,12 @@ export default class Mesh extends Renderable {
 		 * readable at any distance, such as an objective marker or a waypoint.
 		 * `true` is accepted for symmetry and behaves as the default.
 		 *
+		 * It exempts the **mesh**, not the ground shadow it casts. A blob is a
+		 * mark on the floor and fogs with the floor it lies on — one staying
+		 * crisp under an object whose surroundings had dissolved would read as
+		 * a fault rather than as emphasis. The blob quad is also shared by
+		 * every caster in the scene, so it carries no per-object state to read.
+		 *
 		 * Emissive surfaces fog too — light travelling through fog is
 		 * attenuated like anything else — so a neon sign that should punch
 		 * through wants `fog: false` rather than a brighter emissive.

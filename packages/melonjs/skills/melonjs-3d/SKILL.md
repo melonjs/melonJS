@@ -144,7 +144,9 @@ It lives on the camera, so a split-screen or minimap view fogs independently —
 and a `Camera2d` never fogs at all.
 
 **Per object:** `fog: false` exempts a mesh however far away it is — for a
-waypoint or objective marker that has to stay readable. Emissive surfaces fog
+waypoint or objective marker that has to stay readable. It exempts the mesh and
+not the ground shadow it casts: a blob is a mark on the floor and fogs with the
+floor. Emissive surfaces fog
 like everything else (light travelling through fog is attenuated too), so a
 neon sign that should punch through wants `fog: false`, not a brighter
 emissive.
