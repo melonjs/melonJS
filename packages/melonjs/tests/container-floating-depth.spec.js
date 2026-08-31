@@ -1,0 +1,115 @@
+/**
+ * A floating child must draw on top under a `Camera3d`.
+ *
+ * `floating` opts a renderable out of the perspective projection — it is drawn
+ * in screen space — but it was still taking part in the depth sort, which
+ * orders children by distance from the camera. A HUD's `pos` is not a place in
+ * the world, so that distance is meaningless: parked at a large z to mean
+ * "in front", a score sorted to the FAR end of the scene and every tree in the
+ * level drew over it. There is no error; the HUD is simply behind the game.
+ */
+import { describe, expect, it } from "vitest";
+import { Container, Renderable } from "../src/index.js";
+
+/**
+ * Children are drawn back to front by walking the array in reverse, so index 0
+ * is drawn LAST — that is what "on top" means here.
+ * @param container - the container to inspect
+ * @returns child names in draw order, first drawn first
+ */
+const drawOrder = (container) => {
+	return container
+		.getChildren()
+		.map((child) => {
+			return child.name;
+		})
+		.reverse();
+};
+
+const child = (name, z, floating = false) => {
+	const renderable = new Renderable(0, 0, 10, 10);
+	renderable.name = name;
+	renderable.pos.z = z;
+	renderable.floating = floating;
+	return renderable;
+};
+
+describe("depth sort with floating children", () => {
+	const build = () => {
+		const world = new Container(0, 0, 800, 600);
+		world.autoDepth = false;
+		world.sortOn = "depth";
+		return world;
+	};
+
+	it("draws a floating child last however far away its z puts it", () => {
+		const world = build();
+		world.addChild(child("hud", 10000, true));
+		world.addChild(child("tree", 400));
+		world.addChild(child("rock", 80));
+		world.sort();
+
+		// the HUD's z would otherwise sort it to the far end of the valley,
+		// behind everything
+		expect(drawOrder(world).at(-1)).toBe("hud");
+	});
+
+	it("draws it last even when its z is nearer than everything", () => {
+		const world = build();
+		world.addChild(child("hud", -50, true));
+		world.addChild(child("tree", 400));
+		world.sort();
+		expect(drawOrder(world).at(-1)).toBe("hud");
+	});
+
+	it("keeps every floating child above every world child", () => {
+		const world = build();
+		world.addChild(child("hud", 10000, true));
+		world.addChild(child("banner", 5, true));
+		world.addChild(child("tree", 400));
+		world.addChild(child("rock", 80));
+		world.sort();
+
+		const order = drawOrder(world);
+		const lastWorld = Math.max(order.indexOf("tree"), order.indexOf("rock"));
+		const firstFloating = Math.min(
+			order.indexOf("hud"),
+			order.indexOf("banner"),
+		);
+		expect(firstFloating).toBeGreaterThan(lastWorld);
+	});
+
+	it("leaves the order of non-floating children untouched", () => {
+		// asserted as an invariant rather than an absolute order: the depth
+		// comparator measures distance from a module-level camera cache, so
+		// the concrete sequence depends on engine state a bare harness does
+		// not control. What must hold is that adding a floating sibling does
+		// not reshuffle the world.
+		const withoutHud = build();
+		for (const [name, z] of [
+			["far", 900],
+			["near", 100],
+			["mid", 500],
+		]) {
+			withoutHud.addChild(child(name, z));
+		}
+		withoutHud.sort();
+		const before = drawOrder(withoutHud);
+
+		const withHud = build();
+		for (const [name, z] of [
+			["far", 900],
+			["near", 100],
+			["mid", 500],
+		]) {
+			withHud.addChild(child(name, z));
+		}
+		withHud.addChild(child("hud", 10000, true));
+		withHud.sort();
+		const after = drawOrder(withHud).filter((name) => {
+			return name !== "hud";
+		});
+
+		expect(after).toEqual(before);
+	});
+});

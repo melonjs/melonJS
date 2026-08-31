@@ -1064,6 +1064,27 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortDepth(a, b) {
+		// A floating child is drawn in SCREEN space, so its `pos` is not a
+		// place in the world and its distance from the camera is meaningless.
+		// Sorted on that distance a HUD lands wherever its z happens to put it
+		// — typically behind the scenery, since anything the player can see is
+		// nearer than a score parked at z = 10000. Floating always sorts
+		// nearest, which under `draw`'s reverse walk means drawn last, on top.
+		//
+		// That last step follows the same convention as the distance math
+		// below rather than adding a new one: the whole comparator is written
+		// for a reverse walk, so if the draw loop is ever flipped to iterate
+		// forwards this function is negated as a unit and the clause below
+		// flips with it.
+		//
+		// Ordering AMONG floating siblings is left to the distance math,
+		// unchanged.
+		const aFloating = a.floating === true;
+		const bFloating = b.floating === true;
+		if (aFloating !== bFloating) {
+			return aFloating ? -1 : 1;
+		}
+
 		// Translate each child's LOCAL `pos` into world space via the
 		// parent container's offset (captured once per sort by
 		// `captureDepthOffset`). For the world container itself the

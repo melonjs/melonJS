@@ -144,6 +144,26 @@ would be nothing to read them.
 lighting is broken rather than absent. If an older scene suddenly picks up
 shading, that is why.
 
+## HUDs and other floating renderables
+
+`floating = true` draws a renderable in **screen space**, opting it out of the
+perspective projection — which is what you want for a score, a banner or a
+crosshair under a `Camera3d`:
+
+```js
+const score = new Text(20, 16, { font: "monospace", size: 26, text: "" });
+score.floating = true;
+world.addChild(score, 0);
+```
+
+Floating children are always drawn **on top**, whatever their `z`. Their `pos`
+is a screen position, not a place in the world, so it does not compete with the
+scene for depth.
+
+Do not try to control that with `z`. Giving a HUD a large depth to mean
+"in front" is the intuitive move and it used to do the opposite — a large z read
+as *far away*, and the level drew over the score.
+
 ## Colouring a mesh
 
 There are four levels, and picking the wrong one is the usual reason a colour
@@ -286,6 +306,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 
 | symptom | cause |
 |---|---|
+| a HUD draws behind the scenery | before 20.4 floating joined the depth sort; give it `floating = true` and no z games |
 | a `lit` mesh renders fullbright | it had no normals — supply them, or let the engine generate them |
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
 | a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |
