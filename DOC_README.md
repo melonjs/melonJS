@@ -46,7 +46,7 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 | Feature | Description |
 |---------|-------------|
 | **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on every backend |
-| **3D** | Perspective [Camera3d](classes/Camera3d.html), mesh instancing, ground shadows, point and spot lights, glTF/GLB and OBJ/MTL loading |
+| **3D** | Perspective [Camera3d](classes/Camera3d.html), mesh instancing, ground shadows, distance fog, point and spot lights, glTF/GLB and OBJ/MTL loading |
 | **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON), with GPU-accelerated tile rendering for orthogonal maps |
 | **Sprites** | Texture atlas, animation, TexturePacker & Aseprite support |
 | **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a [PhysicsAdapter](interfaces/PhysicsAdapter.html) interface for Box2D (planck) or Matter.js |

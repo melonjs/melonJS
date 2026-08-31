@@ -634,6 +634,17 @@ export default class Mesh extends Renderable {
 		 * @type {boolean|undefined}
 		 * @default undefined
 		 * @see Camera3d#setFog
+		 * @example
+		 * // the world fogs; this waypoint stays readable at any distance
+		 * camera.setFog({ near: 1200, far: 7000 });
+		 *
+		 * const marker = new Mesh(0, 0, {
+		 *   ...beaconGeometry,
+		 *   emissive: [1, 0.6, 0],
+		 *   fog: false,
+		 * });
+		 * // or afterwards, on anything already built
+		 * marker.fog = false;
 		 */
 		this.fog = typeof settings.fog === "boolean" ? settings.fog : undefined;
 

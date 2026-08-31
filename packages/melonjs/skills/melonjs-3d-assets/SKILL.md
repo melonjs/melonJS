@@ -240,7 +240,9 @@ need a prefix.
 
 ## Related skills
 
-- `melonjs-3d` — conventions, `Camera3d`, meshes, `Light3d`, instancing
+- `melonjs-3d` — conventions, `Camera3d`, meshes, `Light3d`, instancing, and
+  `camera.setFog` (an outdoor scene almost always wants it; it is set on the
+  camera, so a loaded scene needs no per-node work)
 - `melonjs-lighting` — how `Light3d` behaves once imported
 - `melonjs-loading-assets` — the loader, asset types and base URLs
 - `melonjs-plugins` — the Spine plugin, for skeletal characters

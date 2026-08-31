@@ -308,13 +308,35 @@ export default class Camera3d extends Camera2d {
 	 * @throws {Error} on an unknown `mode`, a non-finite or negative distance,
 	 * `far` at or below `near`, or a density at or below zero
 	 * @example
-	 * // dissolve into whatever backdrop the renderer is already clearing to
-	 * camera.setFog({ near: 2000, far: 7000 });
-	 * // a single density instead of two distances
+	 * // A typical outdoor scene: set the sky, size the frustum to the level,
+	 * // then let fog take its distances and its colour from both.
+	 * class GameStage extends Stage {
+	 *   onResetEvent(app) {
+	 *     app.renderer.backgroundColor.parseCSS("#cfe6f7");
+	 *
+	 *     const camera = app.viewport; // a Camera3d
+	 *     camera.setClipPlanes(1, 9000);
+	 *     // no colour passed: it tracks `backgroundColor`, so the terrain
+	 *     // dissolves into the sky and props arrive without a hard edge
+	 *     camera.setFog({ near: 1200, far: 7000 });
+	 *   }
+	 * }
+	 * @example
+	 * // A single density instead of two distances. Omit it and it resolves to
+	 * // `2 / far`, which reads the same at any world scale.
 	 * camera.setFog({ mode: "exp2", density: 0.0004 });
-	 * // fog that is deliberately not the sky colour
-	 * camera.setFog({ far: 5000, color: "#8899aa" });
-	 * camera.setFog(null); // off
+	 * @example
+	 * // Fog that is deliberately NOT the sky — a green murk under a blue sky.
+	 * // Passing a `Color` keeps it by reference, so this fog can be animated
+	 * // by mutating the colour, without calling `setFog` again.
+	 * const murk = new Color(90, 120, 80);
+	 * camera.setFog({ far: 5000, color: murk });
+	 * murk.setColor(60, 90, 55); // thickens over the next frame
+	 * @example
+	 * // Everything is optional: with nothing at all, fog spans the camera's
+	 * // own clip planes in the backdrop's colour.
+	 * camera.setFog({});
+	 * camera.setFog(null); // and off again
 	 * @see Camera3d#setClipPlanes
 	 * @see Mesh#fog
 	 */
