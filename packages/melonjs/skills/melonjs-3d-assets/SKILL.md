@@ -166,6 +166,12 @@ Omit `shadowGroundY` and each blob sits at its own object's base at full
 strength, which is right for props already resting on the ground. Set it when
 things jump or fly, so the shadow stays on the floor and shrinks with height.
 
+A blob is centred on its caster's x/z and is never offset by light direction, so
+a wide flat-bottomed prop hides its own shadow under itself. Raising
+`shadowGroundY` to force one into view floats the blob up over the object as a
+dark ring rather than sliding it clear — the setting is for things that leave
+the ground, not a visibility knob.
+
 ## OBJ/MTL
 
 A different shape entirely: OBJ produces raw geometry you hand to a `Mesh`,
@@ -227,6 +233,7 @@ need a prefix.
 | a character does not deform | vertex skinning is out of scope; rig hierarchically or billboard |
 | animation names come back empty | the asset has no node-TRS channels (skin-only rig) |
 | a hundred copies tank the frame rate | exported without `EXT_mesh_gpu_instancing` |
+| a prop casts no visible shadow | wide and flat-bottomed — the blob is under it; `shadowGroundY` haloes it rather than revealing it |
 | a shadow smeared across the whole floor | a ground plane cast its own blob — use the scene-wide opt-in |
 | `onLoaded` gets a string, not the scene | it is called with the level id; load into your own container instead |
 | scene renders flat and unlit | no `Camera3d` — the 2D-camera path is CPU-projected and unlit (with a `Camera3d` on Canvas you get a black canvas instead) |

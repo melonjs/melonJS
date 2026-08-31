@@ -256,6 +256,18 @@ skip geometry with no vertical extent — a ground plane. Per object,
 `castGroundShadow: true`/`false` overrides the app setting and is obeyed as
 given, safeguard included; `shadowGroundY` names the floor the blob lands on.
 
+The blob is an ellipse sized to the caster's own footprint and placed at the
+caster's x/z — it is **never offset by light direction**. So a tall or narrow
+object (a character, a tree, a pickup) shows its shadow clearly, while a wide,
+flat-bottomed one resting on the floor covers its own completely from a camera
+looking down at it. That is the shadow behaving correctly, not a bug.
+
+**Do not chase it by raising `shadowGroundY`.** Lifting the plane does not slide
+the blob out from under the object, it floats the blob *up* — and past a few
+units it projects over the top of the caster as a dark halo ringing it. If an
+object needs a visible shadow, give it a smaller footprint relative to its
+height, or accept that a boulder bedded in the ground has none.
+
 ## glTF / GLB scenes
 
 Loaded through the same level director as everything else:
@@ -312,6 +324,8 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
 | a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
+| an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raising `shadowGroundY` haloes it instead of revealing it |
+| a dark ring around the top of an object | `shadowGroundY` lifted too far, floating the blob up into the caster |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |
 | a mesh sits half its size off | `anchorPoint` — only on the 2D-camera path; a `Camera3d` mesh pivots on its model origin |
 | a billboard tips over when the camera looks down | `"spherical"`, or a mistyped mode string falling through to it — use `true` / `"cylindrical"` |
