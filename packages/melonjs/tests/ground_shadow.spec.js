@@ -745,20 +745,72 @@ describe("Ground shadows (#1515)", () => {
 			mesh.destroy();
 		});
 
-		it("leaving mesh mode drains the queue without being asked", (ctx) => {
+		it("does NOT drain on a batcher switch, so later meshes cannot overpaint", (ctx) => {
 			requireWebGL(ctx, renderer);
-			// the real drain site — every other test here calls
-			// flushGroundShadows() by hand, which would keep passing if this
-			// site were deleted
+			// This used to drain here, on the assumption that leaving mesh mode
+			// meant the mesh pass was over. It does not: anything non-mesh that
+			// sorts into the MIDDLE of a scene — a particle emitter, a sprite —
+			// raises the same transition, and every mesh still to come then
+			// paints straight over the blobs just put down. A scene with a
+			// particle trail lost its ground shadows to exactly this.
+			//
+			// The queue now survives to a site that really is the end of the
+			// world draw: `Container.draw` before a floating child, and
+			// `Camera2d.draw` once the whole container is down.
 			const mesh = makeMesh({ castGroundShadow: true });
 			mesh.preDraw(renderer);
 			mesh.draw(renderer, camera);
 			mesh.postDraw(renderer);
-			expect(renderer._shadowCount).toBeGreaterThan(0);
+			const queued = renderer._shadowCount;
+			expect(queued).toBeGreaterThan(0);
 
 			renderer.setBatcher("quad");
+			expect(renderer._shadowCount).toBe(queued);
+
+			renderer.flushGroundShadows();
 			expect(renderer._shadowCount).toBe(0);
 			mesh.destroy();
+		});
+
+		it("refuses to drain while a screen projection is installed", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// A queued blob is WORLD-space geometry. `Container.draw` installs
+			// the camera's screen projection around a `floating` child, and a
+			// drain raised in that window replays every blob with screen-space
+			// clip coordinates — off-screen, gone. One HUD anywhere in a scene
+			// silently deleted every ground shadow in it.
+			const mesh = makeMesh({ castGroundShadow: true });
+			mesh.preDraw(renderer);
+			mesh.draw(renderer, camera);
+			mesh.postDraw(renderer);
+			const queued = renderer._shadowCount;
+			expect(queued).toBeGreaterThan(0);
+
+			renderer.beginScreenSpace();
+			try {
+				renderer.flushGroundShadows();
+				// held, not lost
+				expect(renderer._shadowCount).toBe(queued);
+			} finally {
+				renderer.endScreenSpace();
+			}
+			// and released the moment the window closes
+			renderer.flushGroundShadows();
+			expect(renderer._shadowCount).toBe(0);
+			mesh.destroy();
+		});
+
+		it("balances nested screen-space brackets", (ctx) => {
+			requireWebGL(ctx, renderer);
+			renderer.beginScreenSpace();
+			renderer.beginScreenSpace();
+			renderer.endScreenSpace();
+			expect(renderer._screenSpaceDepth).toBe(1);
+			renderer.endScreenSpace();
+			expect(renderer._screenSpaceDepth).toBe(0);
+			// never goes negative, so an unbalanced end cannot wedge the queue
+			renderer.endScreenSpace();
+			expect(renderer._screenSpaceDepth).toBe(0);
 		});
 
 		it("switching WITHIN mesh mode does not drain early", (ctx) => {
