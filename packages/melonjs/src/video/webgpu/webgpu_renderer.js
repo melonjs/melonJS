@@ -1839,6 +1839,15 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	drawMesh(mesh, modelMatrix) {
+		// A fully transparent mesh must not draw. The mesh pipeline renders
+		// opaque, so the alpha never reaches a blend stage: the colour is
+		// multiplied by zero and written as opaque black, and `alpha = 0`
+		// paints a black silhouette instead of hiding the mesh.
+		// `CanvasRenderer.drawMesh` has always skipped at this threshold.
+		if (this.getGlobalAlpha() < 1 / 255) {
+			return;
+		}
+
 		const retained = modelMatrix !== undefined;
 
 		// A ground shadow waits for the end of the mesh pass rather than

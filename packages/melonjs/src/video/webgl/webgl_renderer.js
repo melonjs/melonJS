@@ -2133,6 +2133,17 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	drawMesh(mesh, modelMatrix) {
+		// A fully transparent mesh must not draw — and here that is not merely
+		// a saving. The mesh path disables `GL_BLEND` (see `MeshBatcher.bind`),
+		// so the alpha never reaches the blend stage: the shader multiplies the
+		// colour by zero and the result is written OPAQUE BLACK. Setting
+		// `alpha = 0` to hide a mesh painted a black silhouette of it.
+		// `CanvasRenderer.drawMesh` has always skipped at this threshold, as do
+		// eight other draw methods there; this is the same guard.
+		if (this.getGlobalAlpha() < 1 / 255) {
+			return;
+		}
+
 		const gl = this.gl;
 		const retained = modelMatrix !== undefined;
 

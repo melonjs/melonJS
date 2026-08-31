@@ -166,6 +166,11 @@ On a lit mesh the colour multiplies the **lit** result, so it behaves as albedo
 rather than as an emissive override — a vertex colour will not make an unlit
 face bright.
 
+`alpha` hides a mesh as it hides anything else: at 0 the draw is skipped. There
+is no *partial* mesh transparency though — the mesh path renders opaque, so a
+mesh at `alpha = 0.5` draws fully opaque rather than half see-through. Fade a
+mesh out and it will stay solid until it vanishes.
+
 ## Sprite3d and billboards
 
 `Sprite3d` is the 2.5D workhorse: a flat sprite living at a real depth, with
@@ -257,6 +262,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | symptom | cause |
 |---|---|
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
+| a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |
 | vertex colour applies under a 2D camera but not `Camera3d` | wrote the array directly without setting `needsUpdate` |
 | `Mesh: vertexColors has N entries, expected M` | one colour per *vertex*, not per triangle or per index |
 | nothing renders, or a backdrop covers everything | wrong depth sign — "far" is *larger* z when looking along +Z |
