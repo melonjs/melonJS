@@ -156,13 +156,30 @@ score.floating = true;
 world.addChild(score, 0);
 ```
 
-Floating children are always drawn **on top**, whatever their `z`. Their `pos`
-is a screen position, not a place in the world, so it does not compete with the
-scene for depth.
+Floating children are always drawn **on top of the world**, whatever their `z`.
+Their `pos` is a screen position, not a place in the world, so it does not
+compete with the scene for depth — you cannot put a HUD *behind* the level by
+giving it a small z, and you do not need a large one to put it in front.
 
-Do not try to control that with `z`. Giving a HUD a large depth to mean
-"in front" is the intuitive move and it used to do the opposite — a large z read
-as *far away*, and the level drew over the score.
+Among **themselves** they layer by `z`, higher on top, exactly as in a 2D
+scene:
+
+```js
+world.addChild(score, 10);
+world.addChild(pauseOverlay, 20);   // covers the score
+```
+
+Two things about this changed in 20.4, so older advice and older code may
+disagree with what you see:
+
+- a large `z` used to read as *far away*, so a HUD parked at `z = 10000` sorted
+  to the far end of the level and every prop drew over it
+- floating siblings used to order by how near the camera their screen position
+  happened to fall, which put **lower** z on top — the inverse of every other
+  sort in the engine
+
+If you find a scene re-parking its HUD in front of the camera every frame, that
+was the workaround; it can go.
 
 ## Colouring a mesh
 

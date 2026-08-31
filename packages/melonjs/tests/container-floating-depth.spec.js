@@ -79,6 +79,32 @@ describe("depth sort with floating children", () => {
 		expect(firstFloating).toBeGreaterThan(lastWorld);
 	});
 
+	it("orders floating siblings by z, higher on top", () => {
+		// the 2D convention. Left to the distance math these ordered by how
+		// near the camera their screen position fell, which put LOWER z on
+		// top — the inverse of every other sort in the engine
+		const world = build();
+		world.addChild(child("banner", 1, true));
+		world.addChild(child("score", 100, true));
+		world.sortNow();
+		expect(drawOrder(world)).toEqual(["banner", "score"]);
+	});
+
+	it("orders them by z regardless of screen position", () => {
+		const world = build();
+		const banner = child("banner", 100, true);
+		banner.pos.x = 512;
+		banner.pos.y = 300;
+		const score = child("score", 1, true);
+		score.pos.x = 20;
+		score.pos.y = 16;
+		world.addChild(banner);
+		world.addChild(score);
+		world.sortNow();
+		// banner has the higher z, so it wins wherever the two sit on screen
+		expect(drawOrder(world).at(-1)).toBe("banner");
+	});
+
 	it("leaves the order of non-floating children untouched", () => {
 		// asserted as an invariant rather than an absolute order: the depth
 		// comparator measures distance from a module-level camera cache, so

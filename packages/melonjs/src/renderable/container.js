@@ -1084,6 +1084,14 @@ export default class Container extends Renderable {
 		if (aFloating !== bFloating) {
 			return aFloating ? -1 : 1;
 		}
+		if (aFloating === true) {
+			// Two floating siblings order by z, exactly as they would in a 2D
+			// layout — higher z on top. Left to the distance math below they
+			// ordered by how near the camera their SCREEN position happened to
+			// fall, which put LOWER z on top: the inverse of every other sort
+			// in the engine, and stable enough to look deliberate.
+			return b.pos.z - a.pos.z;
+		}
 
 		// Translate each child's LOCAL `pos` into world space via the
 		// parent container's offset (captured once per sort by
