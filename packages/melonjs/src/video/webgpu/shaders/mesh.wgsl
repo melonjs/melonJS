@@ -41,6 +41,11 @@ struct MeshUniforms {
 	specular : vec4f,
 	// the camera's world position (xyz; w reserved)
 	eye : vec4f,
+	// straight (unpremultiplied) fog colour (rgb; w reserved)
+	fogColor : vec4f,
+	// x = mode (0 off / 1 linear / 2 exp2), y = near, z = 1/(far - near),
+	// w = density
+	fogParams : vec4f,
 };
 
 @group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
@@ -57,7 +62,37 @@ struct VSOut {
 	@builtin(position) position : vec4f,
 	@location(0) vRegion : vec2f,
 	@location(1) vColor : vec4f,
+	@location(2) vFogDepth : f32,
 };
+
+// Fold distance fog into a PREMULTIPLIED colour. Twin of `applyFog` in the
+// GLSL mesh shaders — keep the two in step. They are duplicated rather than
+// shared because WGSL has no preprocessor and the production build loads each
+// shader as raw text.
+//
+// `rgb` is already multiplied by `a`, so the fog colour must be scaled by the
+// fragment's own coverage: a plain mix toward the fog colour would paint
+// full-strength fog onto near-transparent fragments — grey halos around every
+// alpha-cutout leaf.
+//
+// Mode 0 returns the input untouched, so a scene with no fog is bit-identical
+// to one built before fog existed.
+fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
+	let mode = uMesh.fogParams.x;
+	if (mode < 0.5) {
+		return rgb;
+	}
+	var f : f32;
+	if (mode < 1.5) {
+		// linear: 1 at `near`, reaching 0 at `far`
+		f = 1.0 - clamp((fogDepth - uMesh.fogParams.y) * uMesh.fogParams.z, 0.0, 1.0);
+	} else {
+		// exponential squared: survival = exp(-(density * d)^2)
+		let dd = fogDepth * uMesh.fogParams.w;
+		f = exp(-dd * dd);
+	}
+	return mix(uMesh.fogColor.rgb * a, rgb, f);
+}
 
 @vertex
 fn vertex_main(
@@ -73,6 +108,12 @@ fn vertex_main(
 	// tint first, then premultiply — matches the fragment's expectation
 	let tinted = aColor * uMesh.tint;
 	out.vColor = vec4f(tinted.rgb * tinted.a, tinted.a);
+	// Radial view-space distance for distance fog. Radial rather than view-space
+	// z, so fog holds steady as the camera turns. The clip position above keeps
+	// its own product: re-associating it could shift vertices by an ulp, and
+	// fog-off output must stay bit-identical.
+	let viewPos = uMesh.view * uMesh.model * vec4f(aVertex, 1.0);
+	out.vFogDepth = length(viewPos.xyz);
 	out.vRegion = aRegion;
 	return out;
 }
@@ -94,5 +135,8 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	}
 	// emissive adds a self-lit color on top (neon, lava, screens); the
 	// unlit path has no lighting, so it is simply added to the base color
-	return vec4f(color.rgb + uMesh.emissive.rgb, color.a);
+	return vec4f(
+		apply_fog(color.rgb + uMesh.emissive.rgb, color.a, in.vFogDepth),
+		color.a
+	);
 }

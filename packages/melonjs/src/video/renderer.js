@@ -225,6 +225,15 @@ export default class Renderer {
 		// the projectionMatrix (set through setProjection)
 		this.projectionMatrix = new Matrix3d();
 
+		/**
+		 * The distance fog installed by the camera currently drawing, or
+		 * `null` for none. Written once per camera by `Camera2d.draw`; read
+		 * per draw by the mesh batchers. Null for every camera that is not a
+		 * `Camera3d` with fog enabled, which is the default.
+		 * @ignore
+		 */
+		this._fog3d = null;
+
 		// default uvOffset
 		this.uvOffset = 0;
 
@@ -757,6 +766,25 @@ export default class Renderer {
 	 * @param {number} [translateX=0] - world-to-screen X translate (matches `Camera2d.draw()`)
 	 * @param {number} [translateY=0] - world-to-screen Y translate
 	 */
+	/**
+	 * Install the distance fog for the camera about to draw, or clear it with
+	 * `null`.
+	 *
+	 * Called once per camera from `Camera2d.draw`, so fog is per view: a
+	 * split-screen or minimap camera fogs independently, and a `Camera2d`
+	 * clears whatever the previous camera installed. Only the mesh batchers
+	 * read it — 2D content, HUDs and `floating` renderables never reach those
+	 * shaders and so are never fogged.
+	 *
+	 * Backends without a mesh path (Canvas) inherit this and simply never read
+	 * the value.
+	 * @param {object|null} [fog] - resolved fog state, or null/undefined for none
+	 * @ignore
+	 */
+	setFog(fog) {
+		this._fog3d = fog ?? null;
+	}
+
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 	setLightUniforms(lights, ambient, translateX, translateY) {
 		if (this._litPipelineWarned || !lights) {

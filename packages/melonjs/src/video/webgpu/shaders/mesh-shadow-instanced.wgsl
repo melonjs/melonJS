@@ -38,6 +38,11 @@ struct MeshUniforms {
 	emissive : vec4f,
 	specular : vec4f,
 	eye : vec4f,
+	// straight (unpremultiplied) fog colour (rgb; w reserved)
+	fogColor : vec4f,
+	// x = mode (0 off / 1 linear / 2 exp2), y = near, z = 1/(far - near),
+	// w = density
+	fogParams : vec4f,
 };
 
 @group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
@@ -51,6 +56,8 @@ struct VSOut {
 	@builtin(position) position : vec4f,
 	@location(0) vRegion : vec2f,
 	@location(1) vColor : vec4f,
+	// radial view-space distance for distance fog
+	@location(2) vFogDepth : f32,
 };
 
 @vertex
@@ -81,12 +88,36 @@ fn vertex_main(
 
 	let tinted = aColor * uMesh.tint;
 	out.vColor = vec4f(tinted.rgb * tinted.a, tinted.a);
+	// a blob fades with distance like the ground it lies on
+	let viewPos = uMesh.view * uMesh.model * vec4f(local, 1.0);
+	out.vFogDepth = length(viewPos.xyz);
 	out.vRegion = aRegion;
 	return out;
+}
+
+// Fold distance fog into a PREMULTIPLIED colour. Twin of `apply_fog` in
+// mesh.wgsl — kept in step by hand (WGSL has no preprocessor, and the build
+// loads shaders as raw text). Present here because on WebGL this vertex
+// shader pairs with mesh.frag, which fogs; without this the two backends would
+// disagree on whether distant shadows fade.
+fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
+	let mode = uMesh.fogParams.x;
+	if (mode < 0.5) {
+		return rgb;
+	}
+	var f : f32;
+	if (mode < 1.5) {
+		f = 1.0 - clamp((fogDepth - uMesh.fogParams.y) * uMesh.fogParams.z, 0.0, 1.0);
+	} else {
+		let dd = fogDepth * uMesh.fogParams.w;
+		f = exp(-dd * dd);
+	}
+	return mix(uMesh.fogColor.rgb * a, rgb, f);
 }
 
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	let texel = textureSample(uTexture, uSampler, in.vRegion);
-	return texel * in.vColor;
+	let color = texel * in.vColor;
+	return vec4f(apply_fog(color.rgb, color.a, in.vFogDepth), color.a);
 }

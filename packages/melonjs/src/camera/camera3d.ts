@@ -1,3 +1,4 @@
+import { Color } from "../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import type { ObservableVector3d } from "../math/observableVector3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -6,7 +7,10 @@ import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
 import type Renderer from "./../video/renderer.js";
 import Camera2d from "./camera2d.ts";
+import type { Fog3dState, FogOptions } from "./fog.ts";
 import Frustum, { type FrustumOptions } from "./frustum.ts";
+
+export type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
 
 // reusable unit-axis vectors for rotation calls. Pure constants so
 // allocation only happens once per module load, not per frame.
@@ -102,6 +106,35 @@ export default class Camera3d extends Camera2d {
 	 * that automatically.
 	 */
 	frustum: Frustum;
+
+	/**
+	 * the fog options as given to {@link Camera3d#setFog}, or `null` when fog
+	 * is off. Read through the {@link Camera3d#fog} accessor.
+	 * @ignore
+	 */
+	private _fogOptions: FogOptions | null = null;
+
+	/**
+	 * Owned colour, used only when the caller passed a CSS string or an array.
+	 * A caller-supplied `Color` is referenced rather than copied, and the
+	 * default tracks `renderer.backgroundColor`, so in both of those cases
+	 * this stays `null`.
+	 * @ignore
+	 */
+	private _fogOwnColor: Color | null = null;
+
+	/**
+	 * Resolved fog handed to the renderer. Allocated once and rewritten in
+	 * place each frame — fog costs no per-frame allocation.
+	 * @ignore
+	 */
+	private _fogState: Fog3dState = {
+		mode: 0,
+		near: 0,
+		invRange: 0,
+		density: 0,
+		color: new Float32Array(3),
+	};
 
 	/**
 	 * X-axis rotation in radians (look up/down). Positive values
@@ -243,6 +276,166 @@ export default class Camera3d extends Camera2d {
 		this.frustum.update();
 		this.projectionMatrix.copy(this.frustum.projectionMatrix);
 		return this;
+	}
+
+	/**
+	 * Enable, reconfigure, or switch off distance fog for this camera.
+	 *
+	 * Fog fades mesh geometry toward a colour with distance, which is what
+	 * stops a 3D scene reading as flat cut-outs and lets props appear at the
+	 * far plane without a visible edge. It is **off until you call this**, and
+	 * a scene that never does renders exactly as it did before.
+	 *
+	 * Two curves, chosen with `mode`:
+	 *
+	 * | mode | parameters | character |
+	 * | --- | --- | --- |
+	 * | `"linear"` (default) | `near`, `far` | you name the two distances |
+	 * | `"exp2"` | `density` | clear up close, closes fast at range |
+	 *
+	 * Every parameter is optional, and an omitted one is **resolved live each
+	 * frame** rather than captured here: distances track the camera's own clip
+	 * planes and the colour tracks `renderer.backgroundColor`. That is
+	 * deliberate — fog distances that silently disagreed with the clip planes
+	 * after a later {@link Camera3d#setClipPlanes} call would clip geometry
+	 * before it finished fading, and a fog colour that did not follow a
+	 * day/night background fade would leave a band at the horizon.
+	 *
+	 * Fog is per camera, so a split-screen or minimap view fogs independently
+	 * — and a `Camera2d` never fogs at all.
+	 * @param options - fog settings, or `null` to switch fog off
+	 * @returns this camera (chainable)
+	 * @throws {Error} on an unknown `mode`, a non-finite or negative distance,
+	 * `far` at or below `near`, or a density at or below zero
+	 * @example
+	 * // dissolve into whatever backdrop the renderer is already clearing to
+	 * camera.setFog({ near: 2000, far: 7000 });
+	 * // a single density instead of two distances
+	 * camera.setFog({ mode: "exp2", density: 0.0004 });
+	 * // fog that is deliberately not the sky colour
+	 * camera.setFog({ far: 5000, color: "#8899aa" });
+	 * camera.setFog(null); // off
+	 * @see Camera3d#setClipPlanes
+	 * @see Mesh#fog
+	 */
+	setFog(options: FogOptions | null): this {
+		if (options === null || options === undefined) {
+			this._fogOptions = null;
+			this._fogOwnColor = null;
+			return this;
+		}
+
+		const mode = options.mode ?? "linear";
+		if (mode !== "linear" && mode !== "exp2") {
+			throw new Error(
+				`Camera3d.setFog: unknown mode "${String(options.mode)}" (expected "linear" or "exp2")`,
+			);
+		}
+		// Only EXPLICIT values are validated here. A default that later goes
+		// degenerate — `setClipPlanes(5, 5)` after `setFog({})` — cannot throw
+		// retroactively from inside a draw, so the resolver drops fog for that
+		// frame instead.
+		for (const [name, value] of [
+			["near", options.near],
+			["far", options.far],
+			["density", options.density],
+		] as const) {
+			if (value !== undefined && !Number.isFinite(value)) {
+				throw new Error(`Camera3d.setFog: ${name} must be a finite number`);
+			}
+		}
+		if (options.near !== undefined && options.near < 0) {
+			throw new Error("Camera3d.setFog: near must not be negative");
+		}
+		if (
+			options.near !== undefined &&
+			options.far !== undefined &&
+			options.far <= options.near
+		) {
+			throw new Error("Camera3d.setFog: far must be greater than near");
+		}
+		if (options.density !== undefined && options.density <= 0) {
+			throw new Error("Camera3d.setFog: density must be greater than zero");
+		}
+
+		this._fogOptions = options;
+		// A `Color` is referenced so mutating it animates the fog; anything
+		// else is parsed once into a colour this camera owns.
+		if (options.color === undefined || options.color instanceof Color) {
+			this._fogOwnColor = null;
+		} else if (Array.isArray(options.color)) {
+			// glTF convention: [r, g, b] in 0..1
+			this._fogOwnColor = new Color(
+				options.color[0] * 255,
+				options.color[1] * 255,
+				options.color[2] * 255,
+				1,
+			);
+		} else {
+			this._fogOwnColor = new Color().parseCSS(options.color);
+		}
+		return this;
+	}
+
+	/**
+	 * The fog settings as given to {@link Camera3d#setFog}, or `null` when fog
+	 * is off. The omitted fields are not filled in here — they are resolved
+	 * per frame against the clip planes and the renderer's background colour.
+	 */
+	get fog(): FogOptions | null {
+		return this._fogOptions;
+	}
+
+	/**
+	 * Resolve this camera's fog for one frame, or `null` for no fog.
+	 *
+	 * Overrides the `Camera2d` hook, which returns `null` — that is what makes
+	 * a 2D camera clear fog rather than inherit whatever the previous camera
+	 * left behind.
+	 * @ignore
+	 */
+	override _fog3dState(renderer: Renderer): Fog3dState | null {
+		const options = this._fogOptions;
+		if (options === null) {
+			return null;
+		}
+
+		const state = this._fogState;
+		const far = options.far ?? this.far;
+
+		if ((options.mode ?? "linear") === "exp2") {
+			const density = options.density ?? (far > 0 ? 2 / far : 0);
+			if (!(density > 0) || !Number.isFinite(density)) {
+				return null;
+			}
+			state.mode = 2;
+			state.density = density;
+			state.near = 0;
+			state.invRange = 0;
+		} else {
+			const near = options.near ?? this.near;
+			// a range that collapsed after a later setClipPlanes call: drop fog
+			// for this frame rather than dividing by zero into the shader
+			if (!(far > near) || !Number.isFinite(near) || !Number.isFinite(far)) {
+				return null;
+			}
+			state.mode = 1;
+			state.near = near;
+			state.invRange = 1 / (far - near);
+			state.density = 0;
+		}
+
+		// `Color` stores 0..255 components; the shaders want 0..1, matching how
+		// light colours are packed
+		const color =
+			this._fogOwnColor ??
+			(options.color instanceof Color
+				? options.color
+				: renderer.backgroundColor);
+		state.color[0] = color.r / 255;
+		state.color[1] = color.g / 255;
+		state.color[2] = color.b / 255;
+		return state;
 	}
 
 	/**

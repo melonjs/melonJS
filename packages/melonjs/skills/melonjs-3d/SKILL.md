@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, castGroundShadow, lit."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, castGroundShadow, lit."
 license: MIT
 ---
 
@@ -111,6 +111,46 @@ world.addChild(skybox, 100000);  // equally far: sign does not matter
 Both hold at any camera position. A HUD given the huge z that would put it on
 top in 2D lands at the far end of the level instead, with the scenery drawing
 over it.
+
+## Distance fog
+
+Off until you ask for it, and one call on the camera:
+
+```js
+camera.setFog({ near: 2000, far: 7000 });   // linear: name the two distances
+camera.setFog({ mode: "exp2", density: 4e-4 }); // or one density
+camera.setFog(null);                         // off
+```
+
+It is the cheapest thing that stops a 3D scene reading as flat cut-outs, and it
+lets props arrive at the far plane without a visible edge.
+
+**Every parameter is optional, and the omitted ones track live.** Distances
+default to the camera's own clip planes, so fog cannot silently disagree with
+them after a later `setClipPlanes`. The colour defaults to
+`renderer.backgroundColor` and follows it, so geometry dissolves into whatever
+sky you already set — including through a day/night fade. Pass `color` only
+when the fog should deliberately differ from the backdrop:
+
+```js
+camera.setFog({ far: 5000, color: "#8899aa" });
+```
+
+A `Color` is held by reference, so mutating it animates the fog.
+
+Fog is measured **radially** from the camera and applied **per fragment**, so
+it does not slide as the camera turns and does not band across large triangles.
+It lives on the camera, so a split-screen or minimap view fogs independently —
+and a `Camera2d` never fogs at all.
+
+**Per object:** `fog: false` exempts a mesh however far away it is — for a
+waypoint or objective marker that has to stay readable. Emissive surfaces fog
+like everything else (light travelling through fog is attenuated too), so a
+neon sign that should punch through wants `fog: false`, not a brighter
+emissive.
+
+Only meshes fog. 2D content, HUDs and `floating` renderables never reach the
+mesh shaders, so a screen-space overlay stays clean with no work.
 
 ## Meshes
 
@@ -324,6 +364,10 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
 | a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
+| distant geometry pops in against the sky | no fog — `camera.setFog({})` picks up the clip planes and background colour |
+| fog does not match the sky after a background fade | an explicit `color` was passed; omit it to track `renderer.backgroundColor` |
+| geometry clips before it has finished fading | fog `far` beyond the clip far — omit the distances and they default to the clip planes |
+| one marker must stay readable in fog | `fog: false` on that mesh |
 | an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raising `shadowGroundY` haloes it instead of revealing it |
 | a dark ring around the top of an object | `shadowGroundY` lifted too far, floating the blob up into the caster |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |

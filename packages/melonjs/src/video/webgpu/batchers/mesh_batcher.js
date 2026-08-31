@@ -22,16 +22,17 @@ import WebGPUBatcher from "./webgpu_batcher.js";
  * mat4x4 model (64) + mat4x4 view (64) + vec4 tint (16) + vec4 params
  * (alphaCutoff, hasAlphaMap, reserved ×2) (16) + vec4 emissive (16) +
  * vec4 specular (rgb + shininess) (16) + vec4 eye (camera world position;
- * w reserved) (16) → 208.
+ * w reserved) (16) + vec4 fogColor (16) + vec4 fogParams (16) → 240.
  * @ignore
  */
-export const MESH_UNIFORM_SIZE = 208;
+export const MESH_UNIFORM_SIZE = 240;
 
 // Shared identity model matrix for draws whose vertices are already placed
 // (the 2D-camera path pre-projects them on the CPU). Never mutated.
 const IDENTITY_MATRIX = new Matrix3d();
 
-// Scratch for assembling one MeshUniforms snapshot (44 floats = 176 bytes).
+// Scratch for assembling one MeshUniforms snapshot; sized from the block
+// above, so growing the block grows this with it.
 // Reused — setPlacementUniforms runs synchronously and never re-enters.
 const UNIFORM_SCRATCH = new Float32Array(MESH_UNIFORM_SIZE / 4);
 
@@ -642,6 +643,31 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		scratch[49] = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
 		scratch[50] = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
 		scratch[51] = 0;
+
+		// Distance fog, resolved by the camera drawing this frame.
+		// `mesh.fog === false` exempts this object; with no fog installed every
+		// float below stays zero, which is mode 0 — the shader returns the
+		// colour untouched, so a scene without fog is unchanged.
+		const fog = mesh?.fog === false ? null : renderer._fog3d;
+		if (fog !== null && fog !== undefined) {
+			scratch[52] = fog.color[0];
+			scratch[53] = fog.color[1];
+			scratch[54] = fog.color[2];
+			scratch[55] = 0;
+			scratch[56] = fog.mode;
+			scratch[57] = fog.near;
+			scratch[58] = fog.invRange;
+			scratch[59] = fog.density;
+		} else {
+			scratch[52] = 0;
+			scratch[53] = 0;
+			scratch[54] = 0;
+			scratch[55] = 0;
+			scratch[56] = 0;
+			scratch[57] = 0;
+			scratch[58] = 0;
+			scratch[59] = 0;
+		}
 
 		const region = renderer.effectUniformArena.alloc(
 			MESH_UNIFORM_SIZE,

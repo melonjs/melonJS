@@ -87,6 +87,10 @@ and an overridden `postDraw`:
 this.cameras.set("minimap", new MinimapCamera());
 ```
 
+View state is per camera, not per scene: a `Camera3d` carries its own distance
+fog (`setFog`), so a minimap or split-screen view fogs independently of the main
+one — and a `Camera2d` never fogs. See `melonjs-3d`.
+
 ## Immediate-mode drawing
 
 Inside a custom `draw(renderer)` you can draw shapes directly. Remember the two

@@ -170,7 +170,8 @@ export function buildInstancedMeshWGSL(source, options) {
 /** the unlit tier's geometry inputs and placement body @ignore */
 export const UNLIT_INSTANCED = {
 	baseLocation: 3,
-	varyingLocation: 2,
+	// 2 is vFogDepth in the base module now; the instance slot follows it
+	varyingLocation: 3,
 	geometryInputs: [
 		"\t@location(0) aVertex : vec3f,",
 		"\t@location(1) aRegion : vec2f,",
@@ -179,13 +180,17 @@ export const UNLIT_INSTANCED = {
 	body: [
 		"\tlet clip = uFrame.projection * uMesh.view * uMesh.model * instance",
 		"\t\t* vec4f(aVertex, 1.0);",
+		"\t// radial view-space distance for distance fog",
+		"\tlet viewPos = uMesh.view * uMesh.model * instance * vec4f(aVertex, 1.0);",
+		"\tout.vFogDepth = length(viewPos.xyz);",
 	].join("\n"),
 };
 
 /** the lit tier's geometry inputs, placement body and normal handling @ignore */
 export const LIT_INSTANCED = {
 	baseLocation: 4,
-	varyingLocation: 4,
+	// 4 is vFogDepth in the base module now; the instance slot follows it
+	varyingLocation: 5,
 	geometryInputs: [
 		"\t@location(0) aVertex : vec3f,",
 		"\t@location(1) aRegion : vec2f,",
@@ -196,6 +201,8 @@ export const LIT_INSTANCED = {
 		"\tlet worldPos = uMesh.model * instance * vec4f(aVertex, 1.0);",
 		"\tlet clip = uFrame.projection * uMesh.view * worldPos;",
 		"\tout.vWorldPos = worldPos.xyz;",
+		"\t// radial view-space distance for distance fog",
+		"\tout.vFogDepth = length((uMesh.view * worldPos).xyz);",
 		"\t// Rotate the normal through BOTH transforms, in the order the",
 		"\t// position takes them. Non-uniform scale is approximated exactly as",
 		"\t// the uninstanced path approximates it, so an instanced mesh shades",

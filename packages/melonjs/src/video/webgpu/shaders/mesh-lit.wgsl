@@ -35,6 +35,11 @@ struct MeshUniforms {
 	// the camera's world position (xyz; w reserved), for the specular
 	// half-vector — nothing else in this shader needs it
 	eye : vec4f,
+	// straight (unpremultiplied) fog colour (rgb; w reserved)
+	fogColor : vec4f,
+	// x = mode (0 off / 1 linear / 2 exp2), y = near, z = 1/(far - near),
+	// w = density
+	fogParams : vec4f,
 };
 
 // One light, type inferred from sentinels (see std140.ts):
@@ -77,7 +82,33 @@ struct VSOut {
 	// fall off with distance, so the fragment stage needs where the
 	// surface IS
 	@location(3) vWorldPos : vec3f,
+	// radial view-space distance for distance fog
+	@location(4) vFogDepth : f32,
 };
+
+// Fold distance fog into a PREMULTIPLIED colour. Twin of `apply_fog` in
+// mesh.wgsl and `applyFog` in the GLSL mesh shaders — keep them in step. WGSL
+// has no preprocessor and the build loads shaders as raw text, so the block is
+// duplicated rather than shared.
+//
+// `rgb` is already multiplied by `a`, so the fog colour must be scaled by the
+// fragment's own coverage — a plain mix would paint fog onto near-transparent
+// fragments and halo every alpha-cutout leaf. Mode 0 returns the input
+// untouched, so a scene with no fog is bit-identical.
+fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
+	let mode = uMesh.fogParams.x;
+	if (mode < 0.5) {
+		return rgb;
+	}
+	var f : f32;
+	if (mode < 1.5) {
+		f = 1.0 - clamp((fogDepth - uMesh.fogParams.y) * uMesh.fogParams.z, 0.0, 1.0);
+	} else {
+		let dd = fogDepth * uMesh.fogParams.w;
+		f = exp(-dd * dd);
+	}
+	return mix(uMesh.fogColor.rgb * a, rgb, f);
+}
 
 @vertex
 fn vertex_main(
@@ -95,6 +126,7 @@ fn vertex_main(
 	out.vColor = vec4f(tinted.rgb * tinted.a, tinted.a);
 	out.vRegion = aRegion;
 	out.vWorldPos = worldPos.xyz;
+	out.vFogDepth = length((uMesh.view * worldPos).xyz);
 	// Rotate the normal into world space with the model matrix's upper
 	// 3×3. Lighting is evaluated in world space, so the view transform is
 	// deliberately excluded. Uniform scale cancels when the fragment
@@ -125,7 +157,10 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// unlit rather than normalize a zero vector to NaN and render black
 	let nLength = length(in.vNormal);
 	if (nLength < 1e-6) {
-		return vec4f(base.rgb + uMesh.emissive.rgb, base.a);
+		return vec4f(
+			apply_fog(base.rgb + uMesh.emissive.rgb, base.a, in.vFogDepth),
+			base.a
+		);
 	}
 	let n = in.vNormal / nLength;
 	var lit = uLights.ambient.rgb;
@@ -187,7 +222,11 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// emissive self-illuminates: added AFTER lighting so it glows at full
 	// strength regardless of the scene lights (neon, lava, glowing eyes)
 	return vec4f(
-		base.rgb * lit + specular * uMesh.specular.rgb + uMesh.emissive.rgb,
+		apply_fog(
+			base.rgb * lit + specular * uMesh.specular.rgb + uMesh.emissive.rgb,
+			base.a,
+			in.vFogDepth
+		),
 		base.a
 	);
 }
