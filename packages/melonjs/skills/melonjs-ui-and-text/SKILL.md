@@ -39,137 +39,27 @@ Three things matter here:
   real accessor is `depth` (an alias for `pos.z`); `addChild(child, z)` sets it
   for you.
 
-Relayout on resize by listening for `event.CANVAS_ONRESIZE`.
+### In a 3D scene, a HUD needs a SMALL depth
 
-## Buttons and interactive elements
+`floating` opts a renderable out of the camera transform. It does **not** opt it
+out of the depth sort, and the two sorts read z differently:
 
-Use the built-ins rather than hand-rolling — they set `isKinematic = false` for
-you, which is the trap that stops hand-rolled buttons receiving clicks at all.
+| container `sortOn` | ordered by | on top |
+| --- | --- | --- |
+| `"z"` (default, 2D) | `pos.z` | **highest** z |
+| `"depth"` (what `Camera3d` sets) | distance from the camera | **nearest** the camera |
 
-```js
-class PlayButton extends UISpriteElement {
-    constructor(x, y) {
-        super(x, y, { image: atlas, region: "play.png" });
-    }
-    onClick()   { state.change(state.PLAY); return false; }
-    onOver()    { this.setOpacity(1.0); }
-    onOut()     { this.setOpacity(0.8); }
-    onRelease() { return false; }
-}
-```
-
-| class | for |
-|---|---|
-| `UIBaseElement` | a `Container` base — clickable, optionally draggable and holdable |
-| `UISpriteElement` | a `Sprite`-backed button with hover/press callbacks |
-| `UITextButton` | a `BitmapText` label on a `RoundRect` background — it needs a **bitmap** font, not a `fontface` |
-| `Draggable` / `DropTarget` | drag-and-drop; `dropTarget.setCheckMethod(dropTarget.CHECKMETHOD_CONTAINS)` to require containment instead of overlap |
-
-The callbacks to override are `onClick`, `onOver`, `onOut`, `onRelease` and
-`onHold`; `UIBaseElement` adds `onMove` while dragging. Returning `false` from
-`onClick` / `onRelease` stops the event propagating further.
-
-## Text
+Under `"depth"` a floating child is ordered by `|pos.z|` alone — its `pos.x/y`
+are screen pixels, not a place in the world, and the camera does not move
+relative to it. So the *magnitude* is the distance, and the sign is ignored:
 
 ```js
-new Text(x, y, {
-    font: "Arial",
-    size: 32,
-    fillStyle: "#FFFFFF",
-    textAlign: "center",
-    textBaseline: "middle",
-    text: "Score: 0",
-    wordWrapWidth: 400,        // enables wrapping
-});
+world.addChild(hud, -150);        // small -> in front of the whole scene
+world.addChild(backdrop, -10000); // large -> behind the whole scene
+world.addChild(backdrop, 100000); // equally far: sign does not matter
 ```
 
-`text` accepts a string or an array of lines. Update with `setText()`.
-
-**Custom web fonts must be preloaded** with the `"fontface"` asset type:
-
-```js
-{ name: "PressStart2P", type: "fontface", src: "data/font/PressStart2P.ttf" }
-```
-
-Drawing before the font has loaded silently renders in a fallback font — the
-layout looks subtly wrong rather than failing.
-
-## `BitmapText`
-
-For pixel-perfect text that scales without antialiasing, and for text drawn in
-volume: every `BitmapText` sharing a font draws glyph quads from that one page
-image, so they batch together. Each `Text` instead owns a private canvas
-texture (re-rasterised whenever it changes), so a screenful of them is a
-screenful of distinct textures.
-
-```js
-await loader.preload([
-    { name: "PressStart2P", type: "image",  src: "data/font/font.png" },
-    { name: "PressStart2P", type: "binary", src: "data/font/font.fnt" },
-]);
-
-new BitmapText(x, y, {
-    font: "PressStart2P",
-    size: 2,                  // a scale ratio, not a pixel size
-    text: "GAME OVER",
-});
-```
-
-It needs **both** assets, and by default they must share the **same asset
-name** — `settings.font` resolves the image *and*, unless you pass
-`settings.fontData`, the descriptor. Registering the descriptor under a
-different name (`"…-fnt"`) is the usual mistake; either use one name for both,
-or pass `fontData: "PressStart2P-fnt"` explicitly.
-
-The descriptor is AngelCode BMFont in either flavour — the text `.fnt` form or
-the XML form — auto-detected, so an `.xml` export loads as-is.
-
-## Never draw text through the raw context
-
-```js
-// ✗ works on Canvas only — getContext() returns the GL/GPU context on the
-//   GPU backends, and neither has fillText
-app.renderer.getContext().fillText("hi", 10, 10);
-
-// ✓
-world.addChild(new Text(10, 10, { text: "hi", /* … */ }));
-```
-
-`getContext()` hands back the *backend's* context — a
-`CanvasRenderingContext2D` only under the Canvas renderer. On WebGL or WebGPU
-the call throws `TypeError: … .fillText is not a function`, so this fails loudly
-— but only on the machines that picked a GPU backend, which under `video.AUTO`
-is most of them and probably not yours.
-
-## Panels
-
-`NineSliceSprite` stretches a panel without distorting its corners — the right
-tool for dialogue boxes and windows:
-
-```js
-new NineSliceSprite(x, y, {
-    image: "panel", width: 300, height: 120, insetx: 12, insety: 12,
-});
-```
-
-The inset keys are lowercase `insetx` / `insety`; `insetX` is silently ignored
-and the corners fall back to a quarter of the frame. `width` and `height` are
-mandatory — the constructor throws without them.
-
-## Symptom → cause
-
-| symptom | cause |
-|---|---|
-| HUD scrolls away with the camera | missing `floating = true` on the container |
-| HUD drawn under the game | `this.z = …` instead of `addChild(hud, z)` |
-| hand-rolled button never responds | `isKinematic` left `true` — use `UISpriteElement` |
-| text renders in the wrong font | web font not preloaded as `"fontface"` |
-| `BitmapText` renders nothing | the `.fnt` / image pair was loaded under two different asset names |
-| `TypeError: … .fillText is not a function` | drawn via `getContext()` under a GPU backend |
-| `UIContainer is not defined` | no such class — use `Container` or `UIBaseElement` |
-| UI misplaced after a window resize | no `CANVAS_ONRESIZE` relayout |
-
-## Related skills
-
-- `melonjs-input` — the `isKinematic` requirement in full
-- `melonjs-renderables` — `floating`, draw order, containers
+Give a HUD the huge z that would put it on top in 2D and it lands at the far end
+of the level instead, with the scenery drawing over it. Both shipped idioms are
+the same rule: afterBurner's HUD sits at `-150`, and the glTF, Billboard, Night
+City and Instanced Forest examples park a floating sky at `-10000` or `100000`.

@@ -97,6 +97,21 @@ index** — a real world depth in a 3D scene, and never the one you wanted. Pass
 it (`world.addChild(mesh, z)`), or set `mesh.depth` afterwards. The glTF
 importer turns `autoDepth` off on the container it loads into for this reason.
 
+**`floating` does not opt out of this sort.** It skips the camera *transform*,
+not the depth *order*. A floating child is ordered by `|pos.z|` alone — its
+`pos.x/y` are screen pixels, and the camera does not move relative to it — so
+the magnitude is the distance and the sign is ignored:
+
+```js
+world.addChild(hud, -150);       // small -> nearer than anything -> on top
+world.addChild(skybox, -10000);  // large -> farther -> behind everything
+world.addChild(skybox, 100000);  // equally far: sign does not matter
+```
+
+Both hold at any camera position. A HUD given the huge z that would put it on
+top in 2D lands at the far end of the level instead, with the scenery drawing
+over it.
+
 ## Meshes
 
 ```js
@@ -296,6 +311,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | distant surfaces z-fight | `near` too small for the scene scale |
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
+| a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |
 | a mesh sits half its size off | `anchorPoint` — only on the 2D-camera path; a `Camera3d` mesh pivots on its model origin |
 | a billboard tips over when the camera looks down | `"spherical"`, or a mistyped mode string falling through to it — use `true` / `"cylindrical"` |
