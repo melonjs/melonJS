@@ -86,6 +86,14 @@ struct VSOut {
 	@location(4) vFogDepth : f32,
 };
 
+// Distance fog is behind a PIPELINE-OVERRIDABLE CONSTANT rather than a plain
+// runtime test. `enable_fog` is fixed when the pipeline is created, so the
+// implementation can fold the branch and drop the dead side — the same result
+// the WebGL backend gets from `#define FOG`, without WGSL needing a
+// preprocessor or the engine deriving a second module. A scene that never
+// enables fog pays for none of the work below.
+override enable_fog : bool = false;
+
 // Fold distance fog into a PREMULTIPLIED colour. Twin of `apply_fog` in
 // mesh.wgsl and `applyFog` in the GLSL mesh shaders — keep them in step. WGSL
 // has no preprocessor and the build loads shaders as raw text, so the block is
@@ -96,6 +104,9 @@ struct VSOut {
 // fragments and halo every alpha-cutout leaf. Mode 0 returns the input
 // untouched, so a scene with no fog is bit-identical.
 fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
+	if (!enable_fog) {
+		return rgb;
+	}
 	let mode = uMesh.fogParams.x;
 	if (mode < 0.5) {
 		return rgb;
@@ -126,7 +137,11 @@ fn vertex_main(
 	out.vColor = vec4f(tinted.rgb * tinted.a, tinted.a);
 	out.vRegion = aRegion;
 	out.vWorldPos = worldPos.xyz;
-	out.vFogDepth = length((uMesh.view * worldPos).xyz);
+	if (enable_fog) {
+		out.vFogDepth = length((uMesh.view * worldPos).xyz);
+	} else {
+		out.vFogDepth = 0.0;
+	}
 	// Rotate the normal into world space with the model matrix's upper
 	// 3×3. Lighting is evaluated in world space, so the view transform is
 	// deliberately excluded. Uniform scale cancels when the fragment

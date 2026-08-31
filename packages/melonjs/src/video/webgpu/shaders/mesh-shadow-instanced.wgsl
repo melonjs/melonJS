@@ -52,6 +52,14 @@ struct MeshUniforms {
 @group(1) @binding(3) var uAlphaSampler : sampler;
 @group(3) @binding(0) var<uniform> uMesh : MeshUniforms;
 
+// Distance fog is behind a PIPELINE-OVERRIDABLE CONSTANT rather than a plain
+// runtime test. `enable_fog` is fixed when the pipeline is created, so the
+// implementation can fold the branch and drop the dead side — the same result
+// the WebGL backend gets from `#define FOG`, without WGSL needing a
+// preprocessor or the engine deriving a second module. A scene that never
+// enables fog pays for none of the work below.
+override enable_fog : bool = false;
+
 struct VSOut {
 	@builtin(position) position : vec4f,
 	@location(0) vRegion : vec2f,
@@ -89,8 +97,12 @@ fn vertex_main(
 	let tinted = aColor * uMesh.tint;
 	out.vColor = vec4f(tinted.rgb * tinted.a, tinted.a);
 	// a blob fades with distance like the ground it lies on
-	let viewPos = uMesh.view * uMesh.model * vec4f(local, 1.0);
-	out.vFogDepth = length(viewPos.xyz);
+	if (enable_fog) {
+		let viewPos = uMesh.view * uMesh.model * vec4f(local, 1.0);
+		out.vFogDepth = length(viewPos.xyz);
+	} else {
+		out.vFogDepth = 0.0;
+	}
 	out.vRegion = aRegion;
 	return out;
 }
@@ -101,6 +113,9 @@ fn vertex_main(
 // shader pairs with mesh.frag, which fogs; without this the two backends would
 // disagree on whether distant shadows fade.
 fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
+	if (!enable_fog) {
+		return rgb;
+	}
 	let mode = uMesh.fogParams.x;
 	if (mode < 0.5) {
 		return rgb;

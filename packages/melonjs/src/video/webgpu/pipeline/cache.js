@@ -442,7 +442,7 @@ export default class WebGPUPipelineCache {
 	 * @param {string} blendMode - blend mode (normalized internally)
 	 * @param {boolean} premultipliedAlpha - source premultiplication flag
 	 * @param {string} [stencilMode="none"] - "none" | "write" | "test" | "tag" | "mark"
-	 * @param {{cullMode: string, frontFace: string}} [meshState] - mesh pass
+	 * @param {{cullMode: string, frontFace: string, depthWrite?: boolean, fog?: boolean}} [meshState] - mesh pass
 	 *   state: its presence switches the depth half of the attachment on —
 	 *   depth writes enabled, "less-equal" testing (the GL mesh mode's
 	 *   LEQUAL, keeping coplanar geometry stable) — and sets the per-mesh
@@ -469,7 +469,18 @@ export default class WebGPUPipelineCache {
 			if (meshState.depthWrite === false) {
 				key += "|dw0";
 			}
+			// Fog is a PIPELINE axis, not a uniform test: the mesh modules
+			// declare an `enable_fog` overridable constant, and specializing it
+			// here lets the implementation fold the branch and drop the dead
+			// side. Appended only when set, so no existing pipeline is
+			// reminted for a value none of them changed.
+			if (meshState.fog === true) {
+				key += "|fog";
+			}
 		}
+		// booleans are not valid override values in the WebGPU API — the
+		// constants record takes numbers, and 0/1 specialize a `bool` override
+		const fogFlag = meshState?.fog === true ? 1 : 0;
 		let pipeline = this.pipelines.get(key);
 		if (typeof pipeline === "undefined") {
 			const stencil = STENCIL_STATES[stencilMode] ?? STENCIL_STATES.none;
@@ -493,10 +504,12 @@ export default class WebGPUPipelineCache {
 					module: this.modules[shaderKey],
 					entryPoint: "vertex_main",
 					buffers: vertexLayout ?? [],
+					...(meshState ? { constants: { enable_fog: fogFlag } } : {}),
 				},
 				fragment: {
 					module: this.modules[shaderKey],
 					entryPoint: "fragment_main",
+					...(meshState ? { constants: { enable_fog: fogFlag } } : {}),
 					targets: [
 						{
 							format: this.format,

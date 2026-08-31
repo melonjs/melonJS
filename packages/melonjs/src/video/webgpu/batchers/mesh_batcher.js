@@ -271,6 +271,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const instances = this.instanceBufferFor(mesh);
 
 		this.meshState.depthWrite = undefined;
+		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.instancedFamilyFor(mesh.instanceLayout),
 			"triangle-list",
@@ -402,6 +403,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// blended, and no depth write: overlapping blobs blend rather than
 		// fight under LEQUAL
 		this.meshState.depthWrite = false;
+		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.instancedShadowFamily(mesh.instanceLayout),
 			"triangle-list",
@@ -856,6 +858,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// the accumulated path is opaque; a blended draw only reaches the
 		// retained path, so this must never inherit a stale flag
 		this.meshState.depthWrite = undefined;
+		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),
 			"triangle-list",
@@ -980,6 +983,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// `!== false`, so leaving it unset keeps `meshState` byte-for-byte what
 		// it was before this existed, and the pipeline key gains nothing
 		this.meshState.depthWrite = blended ? false : undefined;
+		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),
 			"triangle-list",

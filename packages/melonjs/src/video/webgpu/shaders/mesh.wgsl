@@ -65,6 +65,14 @@ struct VSOut {
 	@location(2) vFogDepth : f32,
 };
 
+// Distance fog is behind a PIPELINE-OVERRIDABLE CONSTANT rather than a plain
+// runtime test. `enable_fog` is fixed when the pipeline is created, so the
+// implementation can fold the branch and drop the dead side — the same result
+// the WebGL backend gets from `#define FOG`, without WGSL needing a
+// preprocessor or the engine deriving a second module. A scene that never
+// enables fog pays for none of the work below.
+override enable_fog : bool = false;
+
 // Fold distance fog into a PREMULTIPLIED colour. Twin of `applyFog` in the
 // GLSL mesh shaders — keep the two in step. They are duplicated rather than
 // shared because WGSL has no preprocessor and the production build loads each
@@ -78,6 +86,9 @@ struct VSOut {
 // Mode 0 returns the input untouched, so a scene with no fog is bit-identical
 // to one built before fog existed.
 fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
+	if (!enable_fog) {
+		return rgb;
+	}
 	let mode = uMesh.fogParams.x;
 	if (mode < 0.5) {
 		return rgb;
@@ -112,8 +123,14 @@ fn vertex_main(
 	// z, so fog holds steady as the camera turns. The clip position above keeps
 	// its own product: re-associating it could shift vertices by an ulp, and
 	// fog-off output must stay bit-identical.
-	let viewPos = uMesh.view * uMesh.model * vec4f(aVertex, 1.0);
-	out.vFogDepth = length(viewPos.xyz);
+	// the slot is always declared — an override cannot remove an inter-stage
+	// variable — but the work behind it folds away with the constant
+	if (enable_fog) {
+		let viewPos = uMesh.view * uMesh.model * vec4f(aVertex, 1.0);
+		out.vFogDepth = length(viewPos.xyz);
+	} else {
+		out.vFogDepth = 0.0;
+	}
 	out.vRegion = aRegion;
 	return out;
 }
