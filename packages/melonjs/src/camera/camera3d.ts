@@ -7,7 +7,7 @@ import type Container from "./../renderable/container.js";
 import type Renderable from "./../renderable/renderable.js";
 import type Renderer from "./../video/renderer.js";
 import Camera2d from "./camera2d.ts";
-import type { Fog3dState, FogOptions } from "./fog.ts";
+import type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
 import Frustum, { type FrustumOptions } from "./frustum.ts";
 
 export type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
@@ -113,6 +113,22 @@ export default class Camera3d extends Camera2d {
 	 * @ignore
 	 */
 	private _fogOptions: FogOptions | null = null;
+
+	/**
+	 * The scalars, COPIED at `setFog` time rather than read back out of the
+	 * caller's object.
+	 *
+	 * Retaining the object made four of the five fields live and the fifth
+	 * not: mutating `mode` or `far` afterwards changed the fog and bypassed
+	 * every check `setFog` performs, while mutating `color` did nothing. The
+	 * documented model — a `Color` is live, everything else is settled at the
+	 * call — is now the real one.
+	 * @ignore
+	 */
+	private _fogMode: FogMode = "linear";
+	/** @ignore */ private _fogNear: number | undefined = undefined;
+	/** @ignore */ private _fogFar: number | undefined = undefined;
+	/** @ignore */ private _fogDensity: number | undefined = undefined;
 
 	/**
 	 * Owned colour, used only when the caller passed a CSS string or an array.
@@ -381,6 +397,10 @@ export default class Camera3d extends Camera2d {
 		}
 
 		this._fogOptions = options;
+		this._fogMode = mode;
+		this._fogNear = options.near;
+		this._fogFar = options.far;
+		this._fogDensity = options.density;
 		// A `Color` is referenced so mutating it animates the fog; anything
 		// else is parsed once into a colour this camera owns.
 		if (options.color === undefined || options.color instanceof Color) {
@@ -405,7 +425,27 @@ export default class Camera3d extends Camera2d {
 	 * per frame against the clip planes and the renderer's background colour.
 	 */
 	get fog(): FogOptions | null {
-		return this._fogOptions;
+		if (this._fogOptions === null) {
+			return null;
+		}
+		// A fresh object, not the one that was passed in: the scalars are
+		// copied at `setFog` time, so handing back a live handle would look
+		// mutable while changing nothing. Call `setFog` again to change them.
+		const out: FogOptions = { mode: this._fogMode };
+		if (this._fogNear !== undefined) {
+			out.near = this._fogNear;
+		}
+		if (this._fogFar !== undefined) {
+			out.far = this._fogFar;
+		}
+		if (this._fogDensity !== undefined) {
+			out.density = this._fogDensity;
+		}
+		const colour = this._fogOwnColor ?? this._fogOptions.color;
+		if (colour !== undefined) {
+			out.color = colour;
+		}
+		return out;
 	}
 
 	/**
@@ -423,10 +463,10 @@ export default class Camera3d extends Camera2d {
 		}
 
 		const state = this._fogState;
-		const far = options.far ?? this.far;
+		const far = this._fogFar ?? this.far;
 
-		if ((options.mode ?? "linear") === "exp2") {
-			const density = options.density ?? (far > 0 ? 2 / far : 0);
+		if (this._fogMode === "exp2") {
+			const density = this._fogDensity ?? (far > 0 ? 2 / far : 0);
 			if (!(density > 0) || !Number.isFinite(density)) {
 				return null;
 			}
@@ -435,7 +475,7 @@ export default class Camera3d extends Camera2d {
 			state.near = 0;
 			state.invRange = 0;
 		} else {
-			const near = options.near ?? this.near;
+			const near = this._fogNear ?? this.near;
 			// a range that collapsed after a later setClipPlanes call: drop fog
 			// for this frame rather than dividing by zero into the shader
 			if (!(far > near) || !Number.isFinite(near) || !Number.isFinite(far)) {

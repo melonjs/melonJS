@@ -140,6 +140,42 @@ describe("Camera3d distance fog", () => {
 		});
 	});
 
+	describe("the options object is not retained", () => {
+		it("settles the scalars at the call, so a later mutation cannot bypass validation", () => {
+			// Retaining the caller's object made `mode`, `near`, `far` and
+			// `density` live — mutating them after the fact changed the fog AND
+			// skipped every check `setFog` performs, while mutating `color` did
+			// nothing at all. Four fields live, one not, and neither documented.
+			const options = { near: 100, far: 200 };
+			camera.setFog(options);
+			const before = { ...resolve() };
+			options.mode = "exp2";
+			options.far = 999999;
+			options.near = -5;
+			const after = resolve();
+			expect(after.mode).toBe(before.mode);
+			expect(after.near).toBe(before.near);
+			expect(after.invRange).toBe(before.invRange);
+			camera.setFog(null);
+		});
+
+		it("hands back a copy, not a live handle", () => {
+			const options = { near: 10, far: 400 };
+			camera.setFog(options);
+			expect(camera.fog).not.toBe(options);
+			expect(camera.fog?.far).toBe(400);
+			camera.setFog(null);
+		});
+
+		it("still tracks a Color by reference, which IS documented as live", () => {
+			const colour = new Color(255, 0, 0);
+			camera.setFog({ far: 100, color: colour });
+			colour.setColor(0, 255, 0);
+			expect(resolve().color[1]).toBeCloseTo(1, 5);
+			camera.setFog(null);
+		});
+	});
+
 	describe("bad input is refused at the call, not at the draw", () => {
 		it("rejects an unknown mode", () => {
 			expect(() => {
