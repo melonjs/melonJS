@@ -224,7 +224,7 @@ const describe = (html: string): { summary: string; deprecated: boolean } => {
 const lines: string[] = [
 	"# melonJS",
 	"",
-	"> melonJS is an open source 2.5D HTML5 game engine, rendering on WebGPU, WebGL 2 or Canvas with automatic fallback and no runtime dependencies. This file indexes the complete generated API reference.",
+	"> melonJS is an open source HTML5 game engine covering 2D, 2.5D and 3D, rendering on WebGPU, WebGL 2 or Canvas with automatic fallback and no runtime dependencies. This file indexes the complete generated API reference.",
 	"",
 	"Three rules produce code that runs and is wrong, so they are worth stating up front:",
 	"",
