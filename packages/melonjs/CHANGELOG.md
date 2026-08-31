@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.3.0] (melonJS 2) - _unreleased_
+## [20.3.0] (melonJS 2) - _2026-08-31_
 
 ### Added
 - Skills for AI coding assistants, shipped in the package at `skills/` and versioned with the engine. Twenty-three topic guides — bootstrap, scenes, renderables, sprites, input, physics, tilemaps, audio, UI and text, shaders, particles, lighting, the 3D tier and its asset formats, loading, backends, events, performance, plugins and the 20.x migration — each ending with a symptom-to-cause table for the failures that are silent rather than fatal: a custom `draw()` that ignores `this.pos`, `isKinematic` blocking pointer events, `.z` set after `addChild`, `removePostEffect()` destroying the effect. Installable in Claude Code via `/plugin marketplace add melonjs/melonJS`; for agents following the `AGENTS.md` convention (Codex, Cursor, Gemini CLI) a ready-made `skills/AGENTS.md` ships alongside them, to copy into a game's project root
