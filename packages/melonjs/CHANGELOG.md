@@ -12,7 +12,7 @@
 - Input: added `input.setPreventDefault(value)`. `input.preventDefault` is documented as a global option but is a read-only module binding, so assigning to it silently had no effect; the setter is the working form, and `bindKey`'s fourth argument still overrides it per binding
 
 ### Changed
-- Audio: the engine no longer depends on Howler, the third-party audio library. The backend is now maintained in-tree, which removes melonJS's last runtime dependency and fixes a long-standing packaging wart: the emitted type declarations referenced the library, so consumers type-checking with `skipLibCheck: false` had to install it themselves
+- Audio: the engine no longer depends on Howler, the third-party audio library — the backend is now maintained in-tree. This also fixes a long-standing packaging wart: the emitted type declarations referenced the library, so consumers type-checking with `skipLibCheck: false` had to install it themselves
 - Loader: the `onload`, `onProgress` and `onError` properties are removed. Deprecated since 18.2.0, they were `let` bindings on an ES module namespace — `loader.onProgress = fn` threw a `TypeError`, so the documented callback API could never be used by anyone. Use the `LOADER_COMPLETE` / `LOADER_PROGRESS` / `LOADER_ERROR` events, or `preload(assets, onloadcb)`
 
 ### Fixed
