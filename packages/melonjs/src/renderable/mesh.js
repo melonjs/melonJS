@@ -57,6 +57,35 @@ const _combinedMatrix = new Matrix3d();
 // Resolve any acceptable texture input (TextureAtlas, image / canvas
 // object, or asset name) to a cached `TextureAtlas`. Throws if nothing
 // resolves — Mesh requires a texture binding for its GL pipeline.
+/**
+ * Normalize a `vertexColors` setting to the packed form both batchers read.
+ *
+ * A length mismatch throws rather than being padded or truncated: a short
+ * array leaves the tail of the mesh reading whatever the buffer held, which
+ * shows up as a handful of oddly-lit faces and gets debugged as a lighting
+ * problem rather than a length one.
+ * @param {Uint32Array|Color[]|number[]} source - packed colours, or one Color per vertex
+ * @param {number} vertexCount - how many vertices the mesh has
+ * @returns {Uint32Array} one packed RGBA8 colour per vertex
+ * @ignore
+ */
+function packVertexColors(source, vertexCount) {
+	if (source.length !== vertexCount) {
+		throw new Error(
+			`Mesh: vertexColors has ${source.length} entries, expected ${vertexCount} (one per vertex)`,
+		);
+	}
+	if (source instanceof Uint32Array) {
+		return source;
+	}
+	const packed = new Uint32Array(vertexCount);
+	for (let i = 0; i < vertexCount; i++) {
+		const entry = source[i];
+		packed[i] = typeof entry === "number" ? entry : entry.toUint32(entry.alpha);
+	}
+	return packed;
+}
+
 // `framewidth`/`frameheight` define the spritesheet cell size (defaulting
 // to the whole image); a subclass like Sprite3d passes them so the atlas
 // carries an animation frame grid.
@@ -291,6 +320,7 @@ export default class Mesh extends Renderable {
 	 * @param {number} [settings.alphaCutoff=0] - alpha cutout threshold. Fragments whose final alpha is below this value are discarded (hard-edged cutout — foliage, fences, decals — with no blending or sorting). `0` disables the cutout. Set automatically by the glTF loader from a material's `alphaMode: "MASK"`. GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
 	 * @param {boolean} [settings.lit=false] - shade this mesh with the scene's {@link Light3d} lights (the lit mesh pipeline) instead of rendering fullbright. Set automatically by the glTF importer when the scene carries a directional, point or spot light. With `lit` on and no lights present the batcher uploads a white ambient, so the result is indistinguishable from unlit.
+	 * @param {Uint32Array|Color[]|number[]} [settings.vertexColors] - per-vertex colour, one entry per vertex, multiplied into {@link Mesh#tint}. Either packed RGBA8 (`Uint32Array`, the form the batchers read — no conversion) or one {@link Color} per vertex. Omit for plain white. Lets a single mesh carry a gradient — fading a terrain toward the sky with distance, darkening a crease — which a per-object `tint` cannot express. An explicit value wins over the colours a multi-material OBJ bakes from its MTL.
 	 * @param {number[]|Float32Array} [settings.normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model (or generated).
 	 * @param {number[]|Float32Array} [settings.specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
 	 * @param {number} [settings.shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
@@ -750,7 +780,13 @@ export default class Mesh extends Renderable {
 			 * material has its own dedup scope in the OBJ parser), so
 			 * every vertex belongs to exactly one material group and
 			 * carries that group's color unambiguously.
-			 * @type {Uint32Array}
+			 *
+			 * This is also what `settings.vertexColors` and
+			 * {@link Mesh#setVertexColor} populate, so procedural geometry
+			 * can carry a gradient a per-object `tint` cannot express.
+			 * `undefined` when every vertex is plain white.
+			 * @type {Uint32Array|undefined}
+			 * @see Mesh#setVertexColor
 			 */
 			this.vertexColors = new Uint32Array(this.vertexCount);
 			for (const g of this.groups) {
@@ -889,6 +925,16 @@ export default class Mesh extends Renderable {
 						settings.frameheight,
 					)
 				: undefined;
+
+		// An explicit `settings.vertexColors` wins over the colours the
+		// multi-material branch above bakes from an MTL — the same precedence
+		// `settings.normals` has over an OBJ's own normals.
+		if (settings.vertexColors !== undefined) {
+			this.vertexColors = packVertexColors(
+				settings.vertexColors,
+				this.vertexCount,
+			);
+		}
 
 		/**
 		 * Per-mesh texture wrap mode (`"repeat"` / `"repeat-x"` / `"repeat-y"`
@@ -1039,6 +1085,40 @@ export default class Mesh extends Renderable {
 		if (value !== false) {
 			this._geometryVersion++;
 		}
+	}
+
+	/**
+	 * Set one vertex's colour, multiplied into {@link Mesh#tint}.
+	 *
+	 * The mesh starts carrying per-vertex colour on the first call — every
+	 * other vertex is white until coloured, so a mesh built without
+	 * `settings.vertexColors` looks unchanged until you touch it.
+	 *
+	 * Out-of-range indices are ignored rather than throwing, matching
+	 * {@link InstancedMesh#setInstanceColor}.
+	 *
+	 * Bumps {@link Mesh#needsUpdate} for you: the retained `Camera3d` path
+	 * uploads geometry once and compares the version, so a colour written
+	 * without it would apply on the immediate path and silently not on the
+	 * retained one.
+	 * @param {number} index - the vertex to colour
+	 * @param {Color} color - the vertex colour
+	 * @example
+	 * // fade a procedural terrain toward the sky with distance
+	 * for (let i = 0; i < mesh.vertexCount; i++) {
+	 *     const t = Math.min(1, mesh.originalVertices[i * 3 + 2] / 6000);
+	 *     mesh.setVertexColor(i, haze.copy(ground).lerp(sky, t));
+	 * }
+	 */
+	setVertexColor(index, color) {
+		if (index < 0 || index >= this.vertexCount) {
+			return;
+		}
+		if (this.vertexColors === undefined) {
+			this.vertexColors = new Uint32Array(this.vertexCount).fill(0xffffffff);
+		}
+		this.vertexColors[index] = color.toUint32(color.alpha);
+		this.needsUpdate = true;
 	}
 
 	/**

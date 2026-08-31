@@ -119,6 +119,53 @@ mesh under a transformed parent. The anchor is only honoured on the legacy
 difference between a hundred trees and a hundred thousand. glTF scenes using
 `EXT_mesh_gpu_instancing` load as an `InstancedMesh` automatically.
 
+## Colouring a mesh
+
+There are four levels, and picking the wrong one is the usual reason a colour
+"does not apply". They all multiply together.
+
+| level | how | use for |
+|---|---|---|
+| whole object | `mesh.tint.setColor(r, g, b)` | flash on hit, team colour, fading one object |
+| per vertex | `settings.vertexColors`, or `mesh.setVertexColor(i, color)` | a gradient *within* one mesh — distance haze, a darker crease |
+| per material | `textureGroups`, from a multi-material OBJ + MTL | a model whose parts differ, in one draw call |
+| per instance | `new InstancedMesh(…, { instanceColors: true })` then `setInstanceColor(i, color)` | a thousand copies that differ |
+
+**`tint` is per object.** That is the trap: build a terrain as one big mesh and
+you can tint the whole valley or none of it. Anything that varies *across* a
+single mesh is per-vertex.
+
+```js
+// fade a procedural terrain toward the sky the further out it goes
+const ground = new Color(217, 230, 244);
+const sky = new Color(207, 230, 247);
+const haze = new Color();
+for (let i = 0; i < mesh.vertexCount; i++) {
+    const t = Math.min(1, mesh.originalVertices[i * 3 + 2] / 6000);
+    mesh.setVertexColor(i, haze.copy(ground).lerp(sky, t));
+}
+```
+
+Supply the whole array at construction when you already have it —
+`vertexColors` takes a packed `Uint32Array` (the form the batchers read, so no
+conversion) or one `Color` per vertex. A length that does not match
+`vertexCount` **throws**; it is not padded, because a short array would leave
+the tail of the mesh mis-coloured and that reads as a lighting bug.
+
+Mutating the array directly is fine, but say so afterwards:
+
+```js
+mesh.vertexColors[i] = color.toUint32(color.alpha);
+mesh.needsUpdate = true;   // the retained Camera3d path uploads once
+```
+
+`setVertexColor` does that for you. Skip it and the colour applies under a 2D
+camera and silently does not under `Camera3d`.
+
+On a lit mesh the colour multiplies the **lit** result, so it behaves as albedo
+rather than as an emissive override — a vertex colour will not make an unlit
+face bright.
+
 ## Sprite3d and billboards
 
 `Sprite3d` is the 2.5D workhorse: a flat sprite living at a real depth, with
@@ -209,6 +256,9 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 
 | symptom | cause |
 |---|---|
+| a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
+| vertex colour applies under a 2D camera but not `Camera3d` | wrote the array directly without setting `needsUpdate` |
+| `Mesh: vertexColors has N entries, expected M` | one colour per *vertex*, not per triangle or per index |
 | nothing renders, or a backdrop covers everything | wrong depth sign — "far" is *larger* z when looking along +Z |
 | distant objects vanish or warp | scene exceeds the default far plane; `setClipPlanes` |
 | distant surfaces z-fight | `near` too small for the scene scale |

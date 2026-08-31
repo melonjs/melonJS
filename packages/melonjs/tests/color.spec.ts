@@ -588,49 +588,37 @@ describe("Color", () => {
 		it("should return an unsigned 32-bit ARGB value", () => {
 			const color = new Color(255, 0, 0);
 			const uint32 = color.toUint32(1.0);
-			//expect(uint32).toEqual(0xFFFF0000);
-			// jasmine test the value as signed int32
-			expect(uint32).toEqual(-65536);
+			expect(uint32).toEqual(0xffff0000);
 		});
 
 		it("should handle alpha values", () => {
 			const color = new Color(255, 0, 0);
 			const uint32 = color.toUint32(0.5);
-			//expect(color.toUint32()).toEqual(0x7FFF0000);
-			// jasmine test the value as signed int32
-			expect(uint32).toEqual(2147418112);
+			expect(uint32).toEqual(0x7fff0000);
 		});
 
 		it("should shift the alpha value to the first byte", () => {
 			const color = new Color(0, 0, 0);
 			const uint32 = color.toUint32(0.25);
-			//expect(uint32).toEqual(0x3F000000);
-			// jasmine test the value as signed int32
-			expect(uint32).toEqual(1056964608);
+			expect(uint32).toEqual(0x3f000000);
 		});
 
 		it("should shift the red value to the second byte", () => {
 			const color = new Color(255, 0, 0);
 			const uint32 = color.toUint32(1.0);
-			//expect(uint32).toEqual(0xFFFF0000);
-			// jasmine test the value as signed int32
-			expect(uint32).toEqual(-65536);
+			expect(uint32).toEqual(0xffff0000);
 		});
 
 		it("should shift the green value to the third byte", () => {
 			const color = new Color(0, 255, 0);
 			const uint32 = color.toUint32(1.0);
-			//expect(uint32).toEqual(0xFF00FF00);
-			// jasmine test the value as signed int32
-			expect(uint32).toEqual(-16711936);
+			expect(uint32).toEqual(0xff00ff00);
 		});
 
 		it("should leave the blue value in the fourth byte", () => {
 			const color = new Color(0, 0, 255);
 			const uint32 = color.toUint32(1.0);
-			//expect(uint32).toEqual(0xFF0000FF);
-			// jasmine test the value as signed int32
-			expect(uint32).toEqual(-16776961);
+			expect(uint32).toEqual(0xff0000ff);
 		});
 	});
 
@@ -649,6 +637,25 @@ describe("Color", () => {
 			const _color = new Color().parseHex("#8040FF");
 			const copy = new Color().copy(_color);
 			expect(copy.toHex()).toEqual("#8040FF");
+		});
+	});
+	describe("toUint32 signedness", () => {
+		it("round-trips through a Uint32Array unchanged", () => {
+			// the comparison a caller actually makes, e.g. against Mesh#vertexColors
+			const packed = new Uint32Array(1);
+			const color = new Color(12, 34, 56, 0.75);
+			packed[0] = color.toUint32(0.75);
+			expect(packed[0]).toBe(color.toUint32(0.75));
+		});
+
+		it("is never negative, whatever the alpha", () => {
+			// `|` yields a signed int32, so every colour with alpha >= 0.5 set
+			// bit 31 and came back negative from a method named toUint32
+			for (const alpha of [0, 0.25, 0.5, 0.75, 1]) {
+				expect(new Color(200, 100, 50).toUint32(alpha)).toBeGreaterThanOrEqual(
+					0,
+				);
+			}
 		});
 	});
 });
