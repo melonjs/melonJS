@@ -32,20 +32,20 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * to the center. Commonly used for atmosphere, cinematic feel, or to
  * naturally frame a camera viewport (e.g. minimap).
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // subtle vignette on the main camera
- * app.viewport.shader = new VignetteEffect(renderer);
+ * app.viewport.addPostEffect(new VignetteEffect(renderer));
  * @example
  * // stronger cinematic vignette
- * app.viewport.shader = new VignetteEffect(renderer, {
+ * app.viewport.addPostEffect(new VignetteEffect(renderer, {
  *     strength: 0.3,
  *     size: 20.0,
- * });
+ * }));
  */
 export default class VignetteEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.strength=0.15] - edge darkening power (lower = stronger darkening, higher = softer falloff)
 	 * @param {number} [options.size=25.0] - vignette spread multiplier (higher = smaller dark area)

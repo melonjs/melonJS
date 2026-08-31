@@ -324,6 +324,46 @@ Transpiling costs some size and speed: private class members become `WeakMap`
 lookups, which are on hot paths in the renderer. Only reach for it if you have
 users on browsers that need it.
 
+Building with AI agents
+-------------------------------------------------------------------------------
+
+melonJS ships **skills** — guidance files that teach AI coding assistants the
+engine's conventions and, more usefully, the mistakes that fail silently rather
+than raising an error.
+
+They are installed with the package, at `node_modules/melonjs/skills/`, and are
+versioned with the engine — so the guidance always matches the release you have.
+
+**Claude Code** — install as a plugin :
+
+```
+/plugin marketplace add melonjs/melonJS
+```
+
+or copy the skills into a project :
+
+```bash
+mkdir -p .claude/skills && cp -r node_modules/melonjs/skills/melonjs* .claude/skills/
+```
+
+**Other agents** (Codex, Cursor, Gemini CLI, …) read an `AGENTS.md` from your own
+project root. One ships ready to use — copy it across :
+
+```bash
+cp node_modules/melonjs/skills/AGENTS.md ./AGENTS.md
+```
+
+It points at the shipped skills, names the three rules that produce code which
+runs and is wrong, and links the API index below. If you already have an
+`AGENTS.md`, paste its sections into yours.
+
+The skills are plain markdown and can be read by any agent, or by a human.
+
+For anything the skills do not cover, the complete API is indexed for agents at
+[llms.txt](https://melonjs.github.io/melonJS/llms.txt) — every exported class,
+function and type with a one-line summary and a link to its reference page,
+regenerated on every docs build.
+
 Community
 -------------------------------------------------------------------------------
 Join us and get help or share your projects :

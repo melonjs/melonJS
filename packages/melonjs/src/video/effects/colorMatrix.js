@@ -18,20 +18,20 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * A shader effect that applies a 4x4 color transformation matrix.
  * Provides chainable color adjustment methods that automatically update the GPU uniform.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // desaturate a sprite
- * mySprite.shader = new ColorMatrixEffect(renderer).saturate(0.0);
+ * mySprite.addPostEffect(new ColorMatrixEffect(renderer).saturate(0.0));
  * @example
  * // combine brightness + contrast on a camera
- * camera.shader = new ColorMatrixEffect(renderer).brightness(1.3).contrast(1.5);
+ * camera.addPostEffect(new ColorMatrixEffect(renderer).brightness(1.3).contrast(1.5));
  * @example
  * // update dynamically
  * effect.reset().brightness(1.5).saturate(0.5);
  */
 export default class ColorMatrixEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {ColorMatrix} [options.matrix] - an initial color matrix. Defaults to identity.
 	 */

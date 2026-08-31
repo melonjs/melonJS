@@ -72,11 +72,11 @@ export default class GLShader {
 	 * @example
 	 * // a dual-backend custom mesh shader: the same object hosts on
 	 * // whichever GPU renderer is active (gl is undefined on WebGPU)
-	 * myMesh.shader = new me.GLShader(app.renderer.gl, {
+	 * myMesh.addPostEffect(new me.GLShader(app.renderer.gl, {
 	 *     vertex: toonVertexGLSL,
 	 *     fragment: toonFragmentGLSL,
 	 *     wgsl: toonModuleWGSL,
-	 * });
+	 * }));
 	 */
 	constructor(gl, vertex, fragment, precision) {
 		// object sources form: {vertex, fragment, wgsl, precision, label}

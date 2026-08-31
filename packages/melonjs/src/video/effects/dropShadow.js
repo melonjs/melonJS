@@ -37,19 +37,19 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Works by sampling the texture at an offset — if the offset position
  * has an opaque pixel but the current position doesn't, the shadow is drawn.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // dark shadow offset to the bottom-right
- * mySprite.shader = new DropShadowEffect(renderer, {
+ * mySprite.addPostEffect(new DropShadowEffect(renderer, {
  *     offsetX: 3.0,
  *     offsetY: 3.0,
  *     color: [0.0, 0.0, 0.0],
  *     opacity: 0.5,
- * });
+ * }));
  */
 export default class DropShadowEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.offsetX=2.0] - shadow x offset in texels
 	 * @param {number} [options.offsetY=2.0] - shadow y offset in texels

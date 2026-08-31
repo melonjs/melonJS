@@ -80,7 +80,7 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  * @category Rendering
  * @example
  * // one effect, both backends: dual-language body
- * mySprite.shader = new ShaderEffect(renderer, {
+ * const fx = new ShaderEffect(renderer, {
  *     glsl: `
  *         uniform float uStrength;
  *         vec4 apply(vec4 color, vec2 uv) {
@@ -95,15 +95,16 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  *         }
  *     `,
  * });
- * mySprite.shader.setUniform("uStrength", 0.5); // sets either backend
+ * mySprite.addPostEffect(fx);
+ * fx.setUniform("uStrength", 0.5); // sets either backend
  * @example
  * // create a grayscale effect
- * mySprite.shader = new ShaderEffect(renderer, `
+ * mySprite.addPostEffect(new ShaderEffect(renderer, `
  *     vec4 apply(vec4 color, vec2 uv) {
  *         float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
  *         return vec4(vec3(gray), color.a);
  *     }
- * `);
+ * `));
  * @example
  * // create an effect with a custom uniform
  * const pulse = new ShaderEffect(renderer, `
@@ -113,7 +114,7 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  *         return vec4(color.rgb * brightness, color.a);
  *     }
  * `);
- * mySprite.shader = pulse;
+ * mySprite.addPostEffect(pulse);
  * // update the uniform each frame
  * pulse.setUniform("uTime", time);
  * @example
@@ -371,7 +372,7 @@ export default class ShaderEffect {
 	 *     vec4 apply(vec4 color, vec2 uv) {
 	 *         return texture2D(uSampler, uv + vec2(uTime * 0.05, 0.0));
 	 *     }`);
-	 * mySprite.shader = flow;
+	 * mySprite.addPostEffect(flow);
 	 * // then in your Stage's update(dt):
 	 * flow.setTime(me.timer.getTime() / 1000);
 	 */
@@ -550,7 +551,7 @@ export default class ShaderEffect {
 	 *         return texture2D(uSampler, uv + flow * 0.02);
 	 *     }`);
 	 * water.setTexture("uNoise", noise, "repeat");
-	 * waterSprite.shader = water;
+	 * waterSprite.addPostEffect(water);
 	 * // each frame, in your Stage's update(dt):
 	 * water.setTime(me.timer.getTime() / 1000);
 	 */
@@ -764,10 +765,11 @@ export default class ShaderEffect {
 	 * @returns {ShaderEffect} a new, caller-owned effect (`shared === false`)
 	 * @example
 	 * // the loader's shader is ONE shared program — one uniform state for all
-	 * sprite.shader = loader.getShader("flash");
+	 * sprite.addPostEffect(loader.getShader("flash"));
 	 * // the boss needs its own intensity — clone a private, caller-owned copy
-	 * boss.shader = loader.getShader("flash").clone();
-	 * boss.shader.setUniform("uIntensity", 0.9);
+	 * const bossFlash = loader.getShader("flash").clone();
+	 * boss.addPostEffect(bossFlash);
+	 * bossFlash.setUniform("uIntensity", 0.9);
 	 */
 	clone() {
 		if (this.destroyed) {

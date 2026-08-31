@@ -55,10 +55,10 @@ import ShaderEffect from "./shadereffect.js";
  * // Pickup highlight — attach to any Renderable so it renders inside
  * // the renderable's bounding rect (anchorPoint applies). Combine with
  * // `blendMode = "lighter"` for the additive glow look.
- * pickup.shader = new RadialGradientEffect(renderer, {
+ * pickup.addPostEffect(new RadialGradientEffect(renderer, {
  *     color: new Color(120, 255, 200), // mint green
  *     intensity: 0.8,
- * });
+ * }));
  * pickup.blendMode = "lighter";
  * @example
  * // Damage / impact indicator — short-lived elliptical flash on hit.

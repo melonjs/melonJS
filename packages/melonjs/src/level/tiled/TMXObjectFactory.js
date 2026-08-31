@@ -36,10 +36,14 @@ export function getDefaultShape(settings) {
 	if (typeof settings.shapes !== "undefined") {
 		return settings.shapes;
 	}
+	// four vertices, not three: a Tiled object with no explicit geometry is a
+	// rectangle, and omitting (0, height) leaves the upper-right triangle —
+	// the lower-left half of every such object was not solid.
 	return polygonPool.get(0, 0, [
 		vector2dPool.get(0, 0),
 		vector2dPool.get(settings.width, 0),
 		vector2dPool.get(settings.width, settings.height),
+		vector2dPool.get(0, settings.height),
 	]);
 }
 

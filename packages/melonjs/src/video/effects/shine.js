@@ -52,7 +52,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  *
  * The `time` uniform must be updated each frame for the animation.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // single diagonal sweep — classic "button shine"
  * const shine = new ShineEffect(renderer, {
@@ -79,7 +79,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  */
 export default class ShineEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - shine color as [r, g, b] (0.0–1.0)
 	 * @param {number} [options.speed=0.5] - sweeps per second

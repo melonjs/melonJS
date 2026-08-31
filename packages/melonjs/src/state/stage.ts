@@ -90,8 +90,10 @@ export default class Stage {
 	_activeLights3d: Set<Light3d>;
 
 	/**
-	 * an ambient light that will be added to the stage rendering
-	 * @default "#000000"
+	 * an ambient light that will be added to the stage rendering. Its alpha
+	 * is what gates the lighting pass: at alpha 0 (the default) `drawLighting`
+	 * returns early and the lights still draw as additive glows.
+	 * @default rgba(0,0,0,0)
 	 * @see Light2d
 	 */
 	ambientLight: Color;

@@ -132,7 +132,7 @@ export default class Renderable extends Rect {
 		 *          this.isKinematic = false;
 		 *
 		 *          // set the display to follow our position on both axis
-		 *          app.viewport.follow(this.pos, app.viewport.AXIS.BOTH);
+		 *          app.viewport.follow(this, app.viewport.AXIS.BOTH);
 		 *      }
 		 *
 		 *      ...
@@ -1119,8 +1119,11 @@ export default class Renderable extends Rect {
 	 * to the position or transforms set or applied by the preDraw method.
 	 * The main draw loop will first call preDraw() to prepare the context for drawing the renderable,
 	 * then draw() to draw the renderable, and finally postDraw() to clear the context.
-	 * If you override this method, be mindful about the drawing logic; for example if you draw a shape
-	 * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
+	 * If you override this method, be mindful about the drawing logic: `preDraw`
+	 * applies this renderable's transforms, tint and anchor offset, but does
+	 * **not** translate to `this.pos`. The renderer arrives positioned at the
+	 * parent container's origin, so draw relative to `this.pos` — drawing at
+	 * `(0, 0)` places the shape at the container's origin instead.
 	 * @see Renderable#preDraw
 	 * @see Renderable#postDraw
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
@@ -1180,7 +1183,7 @@ export default class Renderable extends Rect {
 	 * `onCollision` only when its every-frame, return-false, fixed-`a`/`b`
 	 * semantics are what you want.
 	 *
-	 * @param {import("../physics/adapter.ts").CollisionResponse} response - the collision response object
+	 * @param {import("../physics/response.js").default} response - the SAT response object; the legacy handler receives this, not the adapter's `CollisionResponse`, which is why `normal` and `depth` are absent from the table above
 	 * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
 	 * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected); the return value is only honored by the builtin SAT adapter.
 	 * @example
@@ -1305,10 +1308,11 @@ export default class Renderable extends Rect {
 
 	/**
 	 * OnDestroy Notification function<br>
-	 * Called by engine before deleting the object. `Stage.destroy(app)`
-	 * forwards the active Application, so subclasses that wire teardown
-	 * against the app object can override as `onDestroyEvent(app)`.
-	 * @param {...*} _args - forwarded by `destroy(...args)`; Stage passes the Application instance
+	 * Called by engine before deleting the object. Receives whatever
+	 * `destroy(...args)` was called with — the production path
+	 * (`Container.removeChildNow`) passes nothing. {@link Stage} has its own
+	 * `onDestroyEvent`, which does forward the active Application.
+	 * @param {...*} _args - forwarded by `destroy(...args)`; normally empty
 	 */
 	onDestroyEvent(..._args) {
 		// to be extended !
@@ -1320,7 +1324,8 @@ export default class Renderable extends Rect {
 	 * Override to wire up input handlers, register external listeners,
 	 * or grab adapter references — `this.parentApp` is guaranteed to be
 	 * available here. Pair with {@link Renderable#onDeactivateEvent}.
-	 * @param {...*} _args - forwarded by `Container.addChild`
+	 * @param {...*} _args - the rest parameter exists for subclass-signature
+	 * compatibility; `Container.addChild` currently forwards nothing
 	 */
 	onActivateEvent(..._args) {
 		// to be extended !
@@ -1331,7 +1336,8 @@ export default class Renderable extends Rect {
 	 * removed from its container or its container is itself removed.
 	 * Override to release input handlers, unsubscribe from events, or
 	 * drop adapter references. Pair with {@link Renderable#onActivateEvent}.
-	 * @param {...*} _args - forwarded by `Container.removeChildNow`
+	 * @param {...*} _args - the rest parameter exists for subclass-signature
+	 * compatibility; `Container.removeChildNow` currently forwards nothing
 	 */
 	onDeactivateEvent(..._args) {
 		// to be extended !

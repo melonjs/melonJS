@@ -28,16 +28,16 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Commonly used for sci-fi UI, ghost/spirit characters, or tech displays.
  * The `time` uniform should be updated each frame for animation.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * const holo = new HologramEffect(renderer);
- * mySprite.shader = holo;
+ * mySprite.addPostEffect(holo);
  * // update each frame
  * holo.setTime(performance.now() / 1000);
  */
 export default class HologramEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[0.1, 0.7, 1.0]] - hologram tint color [r, g, b]
 	 * @param {number} [options.intensity=0.5] - effect intensity (0.0–1.0)

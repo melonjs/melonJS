@@ -80,8 +80,16 @@ export function patch(
 
 /**
  * Register a plugin.
+ *
+ * The registry is module-global, not per-application: a name can only be
+ * registered once for the lifetime of the page.
+ *
+ * Note the ordering — the instance is constructed *before* the base-class and
+ * version checks can run, because both read the instance. A plugin whose
+ * constructor has side effects (event subscriptions, engine patches) will have
+ * applied them by the time `Plugin version mismatch` throws.
  * @param pluginClass - Plugin class to instantiate and register
- * @param name - a unique name for this plugin
+ * @param name - a unique name for this plugin; defaults to the class name
  * @param args - all extra parameters will be passed to the plugin constructor
  * @example
  * // register a new plugin

@@ -177,7 +177,7 @@ class Timer {
 			elapsed: 0,
 			repeat: true,
 			timerId: ++this.timerId,
-			pauseable: pauseable === true || true,
+			pauseable: pauseable ?? true,
 			args: args,
 		});
 		return this.timerId;

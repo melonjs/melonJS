@@ -83,6 +83,16 @@ export default class GLTFScene {
 	 * at unit intensity and lets the app tune. With this option the
 	 * authored ratios survive: e.g. `0.001` maps a 1000-lux sun to 1 while
 	 * a half-strength 500-lux fill lands at 0.5.
+	 * @param {boolean} [options.castGroundShadow] - give this scene's meshes a
+	 * ground shadow ({@link Mesh#castGroundShadow}), overriding the
+	 * application's setting for this scene in both directions; omit it to
+	 * inherit. As a scene-wide opt-in it skips nodes with no vertical extent —
+	 * a scene's ground plane is exactly that, and shadowing it with itself
+	 * smears a blob across the whole floor.
+	 * @param {number} [options.shadowGroundY] - world Y of the floor those
+	 * shadows land on ({@link Mesh#shadowGroundY}); omit it and each blob sits
+	 * at its own object's base at full strength, which is right for a scene
+	 * whose props already rest on the ground.
 	 */
 	addTo(container, options = {}) {
 		if (!this.data) {

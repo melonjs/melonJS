@@ -29,7 +29,7 @@ const _bScratchB = new Vector3d();
 /**
  * A perspective camera that extends {@link Camera2d} with a view
  * {@link Frustum} (fov / aspect / near / far) and orientation
- * (pitch / yaw / roll). Slots into `Stage.cameras` as a drop-in
+ * (pitch / yaw). Slots into `Stage.cameras` as a drop-in
  * replacement for `Camera2d` — inherits the post-effect FBO bracket,
  * color-matrix, fade / shake / follow plumbing, and screen viewport.
  *
@@ -49,10 +49,10 @@ const _bScratchB = new Vector3d();
  *   on screen (same as Camera2d). Sprite at higher `pos.z` is
  *   farther from the camera and renders smaller. Matches melonJS's
  *   2D conventions so existing Camera2d code translates directly.
- * - **Rotations are extrinsic XYZ.** `pitch` (X axis, look up/down),
- *   `yaw` (Y axis, look left/right), `roll` (Z axis, screen-plane
- *   bank — also exposed as `Camera2d.rotation` via Renderable
- *   inheritance for backward compatibility).
+ * - **Rotations are extrinsic XY.** `pitch` (X axis, look up/down) and
+ *   `yaw` (Y axis, look left/right). There is no roll: the inherited
+ *   `Camera2d.rotation` is not read by the view transform or the frustum
+ *   rebuild, so a screen-plane bank has no effect on a 3D camera.
  * - **Follow offset (PR B scope).** When a target is set,
  *   `followOffset` is applied in **world space**:
  *   `camera.pos = target.pos + followOffset`. Target-rotation-aware

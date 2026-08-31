@@ -211,7 +211,7 @@ export function seek(sound_name: string, seek: number, id?: number): void;
  * @param id - Sound instance ID. When omitted, all sounds in the group
  *   are affected.
  * @returns The current seek position when called as a getter; nothing
- *   when called as a setter (the Sound object Howler returns from the
+ *   when called as a setter (the Sound object the backend returns from the
  *   setter form is an internal, not part of this API).
  * @example
  * // read the current position of the background music
@@ -229,7 +229,7 @@ export function seek(
 	if (pos === undefined) {
 		return sound.seek();
 	}
-	// forward the exact arity — Howler's core methods dispatch on argument
+	// forward the exact arity — the backend's core methods dispatch on argument
 	// count, so an explicit trailing undefined would be parsed as an id
 	if (id === undefined) {
 		sound.seek(pos);
@@ -250,7 +250,7 @@ export function rate(sound_name: string, rate: number, id?: number): void;
  * @param id - Sound instance ID. When omitted, all sounds in the group
  *   are affected.
  * @returns The current playback rate when called as a getter; nothing
- *   when called as a setter (the Sound object Howler returns from the
+ *   when called as a setter (the Sound object the backend returns from the
  *   setter form is an internal, not part of this API).
  * @example
  * // read the current playback rate
@@ -268,7 +268,7 @@ export function rate(
 	if (rate === undefined) {
 		return sound.rate();
 	}
-	// forward the exact arity — Howler's core methods dispatch on argument
+	// forward the exact arity — the backend's core methods dispatch on argument
 	// count, so an explicit trailing undefined would be parsed as an id
 	if (id === undefined) {
 		sound.rate(rate);
@@ -305,7 +305,7 @@ export function stereo(
 ): number | void {
 	const sound = getSoundOrThrow(sound_name);
 	if (pan === undefined) {
-		// Howler keeps the group pan at null until it's first set — the
+		// the backend keeps the group pan at null until it's first set — the
 		// documented return type is a number, so map that to centered
 		return (sound.stereo() as number | null) ?? 0;
 	}
@@ -347,7 +347,7 @@ export function position(
 ): [number, number, number] | void {
 	const sound = getSoundOrThrow(sound_name);
 	if (x === undefined) {
-		// Howler keeps the group position at null until it's first set — the
+		// the backend keeps the group position at null until it's first set — the
 		// documented return type is a tuple, so map that to the origin
 		return (sound.pos() as [number, number, number] | null) ?? [0, 0, 0];
 	}
@@ -424,10 +424,10 @@ export function panner(
 		// "set" overload returns the Sound for chaining; we still want
 		// to hand the caller the current attribute snapshot back. Our
 		// `distanceModel` covers the full WebAudio union (including
-		// `"exponential"`) while Howler's declared parameter type only
+		// `"exponential"`) while the backend's declared parameter type only
 		// lists `"linear" | "inverse"` — its runtime accepts all three.
-		// Cast at the boundary so the type check passes; the upstream
-		// the backend's declaration is incomplete here.
+		// Cast at the boundary so the type check passes; the backend's
+		// declaration is incomplete here.
 		const attrs = attributes as Parameters<SpatialSound["pannerAttr"]>[0];
 		if (id !== undefined) sound.pannerAttr(attrs, id);
 		else sound.pannerAttr(attrs);
@@ -494,12 +494,12 @@ export function resume(sound_name: string, id?: number): void {
 		sound.play(id);
 		return;
 	}
-	// "all sounds in the group are resumed" (see JSDoc above): Howler's bare
+	// "all sounds in the group are resumed" (see JSDoc above): the backend's bare
 	// play() only auto-resumes when EXACTLY ONE instance is paused — with two
 	// or more (e.g. pause() without id pauses the whole group) it spawns a
-	// brand-new instance from 0 and leaves the paused ones stuck. Howler has
+	// brand-new instance from 0 and leaves the paused ones stuck. The backend has
 	// no public instance list, so read _sounds directly (same justified
-	// private access as the Howler `_muted` read in audio.ts).
+	// private access as the `_muted` read in audio.ts).
 	const sounds = (
 		sound as unknown as {
 			_sounds: { _paused: boolean; _ended: boolean; _id: number }[];

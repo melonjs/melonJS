@@ -739,9 +739,9 @@ export default class Renderer {
 		if (hasAny) {
 			this._litPipelineWarned = true;
 			console.warn(
-				"melonJS: Light2d normal-map lighting requires the WebGL renderer; " +
-					"the Canvas fallback renders sprites without per-pixel lighting. " +
-					"Switch to `video.WEBGL` or `video.AUTO` to enable the lit pipeline.",
+				"melonJS: Light2d normal-map lighting requires a GPU backend " +
+					"(WebGL 2 or WebGPU); the Canvas fallback renders sprites without " +
+					"per-pixel lighting. Light2d glow and stage lighting still draw.",
 			);
 		}
 	}

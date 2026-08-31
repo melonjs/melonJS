@@ -35,17 +35,17 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Similar to OutlineEffect but with a soft, blurred edge instead of a hard line.
  * Commonly used for power-ups, magic items, or selection highlights.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // blue glow for a magic item
- * mySprite.shader = new GlowEffect(renderer, {
+ * mySprite.addPostEffect(new GlowEffect(renderer, {
  *     color: [0.2, 0.5, 1.0],
  *     intensity: 1.5,
- * });
+ * }));
  */
 export default class GlowEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - glow color as [r, g, b] (0.0–1.0)
 	 * @param {number} [options.width=3.0] - glow spread in pixels

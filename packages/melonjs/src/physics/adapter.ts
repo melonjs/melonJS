@@ -150,19 +150,19 @@ export interface CollisionResponse {
 	 */
 	pair?: unknown;
 	/**
-	 * @deprecated Use `depth`. Built-in SAT legacy field; kept on modern
+	 * @deprecated since 19.5.0 - Use `depth`. Built-in SAT legacy field; kept on modern
 	 * handler dispatches for migration. `undefined` under
 	 * `@melonjs/matter-adapter`.
 	 */
 	overlap?: number;
 	/**
-	 * @deprecated Use `normal`. Built-in SAT legacy field; flipped per
+	 * @deprecated since 19.5.0 - Use `normal`. Built-in SAT legacy field; flipped per
 	 * receiver so the sign convention aligns with `normal` on the modern
 	 * dispatch. `undefined` under `@melonjs/matter-adapter`.
 	 */
 	overlapN?: { x: number; y: number };
 	/**
-	 * @deprecated Built-in SAT legacy field, equal to `normal × depth`.
+	 * @deprecated since 19.5.0 - Built-in SAT legacy field, equal to `normal × depth`.
 	 * Flipped per receiver. `undefined` under `@melonjs/matter-adapter`.
 	 */
 	overlapV?: { x: number; y: number };

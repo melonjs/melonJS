@@ -1,5 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Application, boot, input, Renderable, video } from "../src/index.js";
+// the live module binding the engine's own readers (pointerevent, keyboard)
+// close over — the point of the setter is that they observe the change
+import { preventDefault as liveBinding } from "../src/input/input.ts";
 
 describe("input", () => {
 	let app;
@@ -209,6 +212,39 @@ describe("input", () => {
 			expect(() => {
 				input.registerPointerEvent("pointerdown", undefined, () => {});
 			}).toThrow("region");
+		});
+	});
+	describe("preventDefault", () => {
+		afterEach(() => {
+			input.setPreventDefault(true);
+		});
+
+		it("cannot be set by assigning through the namespace", () => {
+			// `export let preventDefault` is reachable only through the module
+			// namespace object, whose properties are not writable — so the
+			// documented "option" could never actually be changed.
+			expect(() => {
+				input.preventDefault = false;
+			}).toThrow(TypeError);
+			expect(input.preventDefault).toBe(true);
+		});
+
+		it("is changed by setPreventDefault", () => {
+			input.setPreventDefault(false);
+			expect(input.preventDefault).toBe(false);
+
+			input.setPreventDefault(true);
+			expect(input.preventDefault).toBe(true);
+		});
+
+		it("propagates to the engine's internal readers", async () => {
+			input.setPreventDefault(false);
+			const { preventDefault } = await import("../src/input/input.ts");
+			expect(preventDefault).toBe(false);
+		});
+
+		it("defaults to true", () => {
+			expect(liveBinding).toBe(true);
 		});
 	});
 });

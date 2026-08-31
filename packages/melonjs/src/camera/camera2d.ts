@@ -488,7 +488,7 @@ export default class Camera2d extends Renderable {
 			return this;
 		}
 
-		// parent consctructor, resize camera rect
+		// parent constructor, resize camera rect
 		super.resize(w, h);
 
 		// disable damping while resizing

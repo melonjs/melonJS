@@ -7,7 +7,7 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { Application, timer, video } from "../src/index.js";
+import { Application, state, timer, video } from "../src/index.js";
 
 describe("Timer", () => {
 	let app;
@@ -216,6 +216,76 @@ describe("Timer", () => {
 
 			tick(150);
 			expect(order).toEqual(["once", "every"]);
+		});
+	});
+	describe("pauseable", () => {
+		// deterministic: drive updateTimers directly rather than waiting on
+		// the run loop, same as the ordering block above
+		const tick = (dt) => {
+			timer.delta = dt;
+			timer.updateTimers();
+		};
+
+		test("setTimeout honours pauseable: false while the engine is paused", () => {
+			const fn = vi.fn();
+			const id = timer.setTimeout(fn, 100, false);
+			onTestFinished(() => {
+				timer.clearTimer(id);
+				state.resume();
+			});
+
+			expect(
+				timer.timers.find((t) => {
+					return t.timerId === id;
+				}).pauseable,
+			).toBe(false);
+
+			state.pause();
+			tick(150);
+			expect(fn).toHaveBeenCalled();
+		});
+
+		test("setInterval honours pauseable: false while the engine is paused", () => {
+			const fn = vi.fn();
+			const id = timer.setInterval(fn, 100, false);
+			onTestFinished(() => {
+				timer.clearTimer(id);
+				state.resume();
+			});
+
+			// the stored flag is the defect's fingerprint: `pauseable === true || true`
+			// discarded the argument, so every interval was pauseable regardless
+			expect(
+				timer.timers.find((t) => {
+					return t.timerId === id;
+				}).pauseable,
+			).toBe(false);
+
+			state.pause();
+			tick(150);
+			expect(fn).toHaveBeenCalled();
+		});
+
+		test("both default to pauseable and stall while paused", () => {
+			const once = vi.fn();
+			const every = vi.fn();
+			const a = timer.setTimeout(once, 100);
+			const b = timer.setInterval(every, 100);
+			onTestFinished(() => {
+				timer.clearTimer(a);
+				timer.clearTimer(b);
+				state.resume();
+			});
+
+			state.pause();
+			tick(150);
+			expect(once).not.toHaveBeenCalled();
+			expect(every).not.toHaveBeenCalled();
+
+			state.resume();
+			tick(150);
+			expect(once).toHaveBeenCalled();
+			expect(every).toHaveBeenCalled();
 		});
 	});
 });

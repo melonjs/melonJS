@@ -256,7 +256,7 @@ export default class Sprite extends Renderable {
 		}
 
 		// resolve the optional normal-map paired with this sprite (used by
-		// the WebGL renderer's lit pipeline; silently ignored by Canvas).
+		// the GPU backends' lit pipeline; silently ignored by Canvas).
 		// When the source is a TextureAtlas, prefer its paired normal-map
 		// over an explicit `settings.normalMap` (the atlas drove the layout).
 		if (
@@ -407,9 +407,9 @@ export default class Sprite extends Renderable {
 
 	/**
 	 * The optional normal-map image paired with this sprite's color
-	 * texture (SpriteIlluminator workflow). When set, the WebGL
-	 * renderer's lit pipeline samples this texture for per-pixel
-	 * lighting using `Stage._activeLights`. `null` when unlit.
+	 * texture (SpriteIlluminator workflow). When set, the GPU backends'
+	 * lit pipeline samples this texture for per-pixel lighting using
+	 * `Stage._activeLights`. `null` when unlit.
 	 * Setting any non-image value (or anything without numeric
 	 * `width`/`height`) throws — assign `null` to clear.
 	 *
@@ -575,10 +575,10 @@ export default class Sprite extends Renderable {
 	}
 
 	/**
-	 * set the current animation
-	 * this will always change the animation & set the frame to zero
+	 * set the current animation, and reset the frame to zero. Selecting the
+	 * animation that is already current is a no-op unless it had completed.
 	 * @param {string} name - animation id
-	 * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
+	 * @param {string|Function|object} [resetAnim] - animation id to switch to when complete, a callback, or an options object (`{ loop, next, speed, onComplete }`)
 	 * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
 	 * @returns {Sprite} Reference to this object for method chaining
 	 * @example

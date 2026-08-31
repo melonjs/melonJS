@@ -44,21 +44,21 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * A shader effect that overlays horizontal scanlines on the sprite.
  * Can optionally add barrel distortion and vignette for a full CRT monitor look.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // simple scanlines
- * mySprite.shader = new ScanlineEffect(renderer, { opacity: 0.3 });
+ * mySprite.addPostEffect(new ScanlineEffect(renderer, { opacity: 0.3 }));
  * @example
  * // full CRT look with curvature and vignette
- * mySprite.shader = new ScanlineEffect(renderer, {
+ * mySprite.addPostEffect(new ScanlineEffect(renderer, {
  *     opacity: 0.3,
  *     curvature: 0.02,
  *     vignetteStrength: 0.3,
- * });
+ * }));
  */
 export default class ScanlineEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.opacity=0.25] - scanline darkness (0.0 = invisible, 1.0 = fully black lines)
 	 * @param {number} [options.curvature=0.0] - barrel distortion strength (0.0 = flat, 0.02 = subtle CRT curve)

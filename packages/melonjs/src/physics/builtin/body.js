@@ -654,57 +654,6 @@ export default class Body {
 	}
 
 	/**
-	 * add a collision shape to this body <br>
-	 * (note: me.Rect objects will be converted to me.Polygon before being added)
-	 *
-	 * A shape may carry its own collision settings, which refine the body's
-	 * (see {@link Body#collisionType} / {@link Body#collisionMask}). All are
-	 * optional, and their defaults are the behaviour a shape has always had:
-	 *
-	 * | property | default | effect |
-	 * |---|---|---|
-	 * | `collisionType` | inherit body | this shape's own category |
-	 * | `collisionMask` | inherit body | what this shape collides with |
-	 * | `isActive` | `true` | `false` removes the shape from collision entirely — no test, no contact, no events — without removing it from the body |
-	 * | `isTrigger` | `false` | `true` still collides and still fires events, but skips the position correction (per-shape {@link Body#isSensor}) |
-	 *
-	 * A shape can only NARROW what its body allows, never widen it: the body's
-	 * type/mask are still checked first, so a permissive shape on a restrictive
-	 * body collides with nothing.
-	 *
-	 * A trigger removes only ITSELF from the solver. If a solid shape on the
-	 * same body also overlaps, that contact still pushes out — the narrowphase
-	 * prefers a solid pair over a trigger pair, so the outcome does not depend
-	 * on the order shapes were added. `response.isTriggerContact` reports
-	 * whether a given contact exists only through trigger shapes.
-	 *
-	 * `isActive: false` removes the shape from the narrowphase AND from
-	 * raycasts. It does not shrink the body's `bounds` — those stay
-	 * conservative, so toggling a shape never resizes the body in the
-	 * broadphase — nor does it clear `hasDepth` for a `Box3d`.
-	 *
-	 * Supported by the builtin and planck adapters. The matter adapter filters
-	 * per body only and ignores these. Note that under planck, the body-wide
-	 * setters (`setCollisionType`, `setCollisionMask`, `setSensor`) write every
-	 * fixture and so overwrite per-shape values.
-	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
-	 * @returns {number} the shape array length
-	 * @example
-	 * // add a rectangle shape
-	 * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
-	 * @example
-	 * // a character whose feet collide with terrain and whose torso is a hurtbox
-	 * const feet = new me.Rect(0, 24, 32, 8);
-	 * feet.collisionMask = me.collision.types.WORLD_SHAPE;
-	 * const torso = new me.Rect(0, 0, 32, 24);
-	 * torso.collisionMask = me.collision.types.ENEMY_OBJECT;
-	 * torso.isTrigger = true;      // detect hits, never get pushed by them
-	 * this.body.addShape(feet);
-	 * this.body.addShape(torso);
-	 * // add a shape from a JSON object
-	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
-	 */
-	/**
 	 * Give a stored shape its per-shape collision settings, carrying them over
 	 * from the source object when `addShape` converted it (a `Rect` and a
 	 * `Bounds` both become a `Polygon`, so anything set on the original would
@@ -761,6 +710,57 @@ export default class Body {
 		stored.isActive = source.isActive !== false;
 	}
 
+	/**
+	 * add a collision shape to this body <br>
+	 * (note: me.Rect objects will be converted to me.Polygon before being added)
+	 *
+	 * A shape may carry its own collision settings, which refine the body's
+	 * (see {@link Body#collisionType} / {@link Body#collisionMask}). All are
+	 * optional, and their defaults are the behaviour a shape has always had:
+	 *
+	 * | property | default | effect |
+	 * |---|---|---|
+	 * | `collisionType` | inherit body | this shape's own category |
+	 * | `collisionMask` | inherit body | what this shape collides with |
+	 * | `isActive` | `true` | `false` removes the shape from collision entirely — no test, no contact, no events — without removing it from the body |
+	 * | `isTrigger` | `false` | `true` still collides and still fires events, but skips the position correction (per-shape {@link Body#isSensor}) |
+	 *
+	 * A shape can only NARROW what its body allows, never widen it: the body's
+	 * type/mask are still checked first, so a permissive shape on a restrictive
+	 * body collides with nothing.
+	 *
+	 * A trigger removes only ITSELF from the solver. If a solid shape on the
+	 * same body also overlaps, that contact still pushes out — the narrowphase
+	 * prefers a solid pair over a trigger pair, so the outcome does not depend
+	 * on the order shapes were added. `response.isTriggerContact` reports
+	 * whether a given contact exists only through trigger shapes.
+	 *
+	 * `isActive: false` removes the shape from the narrowphase AND from
+	 * raycasts. It does not shrink the body's `bounds` — those stay
+	 * conservative, so toggling a shape never resizes the body in the
+	 * broadphase — nor does it clear `hasDepth` for a `Box3d`.
+	 *
+	 * Supported by the builtin and planck adapters. The matter adapter filters
+	 * per body only and ignores these. Note that under planck, the body-wide
+	 * setters (`setCollisionType`, `setCollisionMask`, `setSensor`) write every
+	 * fixture and so overwrite per-shape values.
+	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
+	 * @returns {number} the shape array length
+	 * @example
+	 * // add a rectangle shape
+	 * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
+	 * @example
+	 * // a character whose feet collide with terrain and whose torso is a hurtbox
+	 * const feet = new me.Rect(0, 24, 32, 8);
+	 * feet.collisionMask = me.collision.types.WORLD_SHAPE;
+	 * const torso = new me.Rect(0, 0, 32, 24);
+	 * torso.collisionMask = me.collision.types.ENEMY_OBJECT;
+	 * torso.isTrigger = true;      // detect hits, never get pushed by them
+	 * this.body.addShape(feet);
+	 * this.body.addShape(torso);
+	 * // add a shape from a JSON object
+	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
+	 */
 	addShape(shape) {
 		// The object that ends up in `this.shapes` is not always the one passed
 		// in — a Rect and a Bounds are converted to a Polygon. Track it so the
@@ -1236,10 +1236,9 @@ export default class Body {
 	 * parent renderable is to compute new values of the Body.vel property then add them to
 	 * the parent.pos value thus changing the position by the amount of Body.vel each time the
 	 * update call is made. <br>
-	 * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+	 * Updates to Body.vel are bounded by {@link Body#maxVel}, which defaults to `<490,490>` <br>
 	 * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
 	 * @protected
-	 * @param {number} dt - time since the last update in milliseconds.
 	 * @returns {boolean} true if resulting velocity is different than 0
 	 */
 	update() {

@@ -20,17 +20,17 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * A shader effect that pixelates the sprite by snapping UV coordinates
  * to a grid. Commonly used for teleport effects, transitions, or retro styling.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // moderate pixelation
- * mySprite.shader = new PixelateEffect(renderer, { size: 8.0 });
+ * mySprite.addPostEffect(new PixelateEffect(renderer, { size: 8.0 }));
  * @example
  * // animate the pixelation (e.g. for teleport)
  * pixelate.setSize(pixelate.size + dt / 50);
  */
 export default class PixelateEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.size=4.0] - pixel size in texels (higher = more pixelated)
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]

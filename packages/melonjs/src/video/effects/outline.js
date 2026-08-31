@@ -38,20 +38,20 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * current pixel is transparent, it draws the outline color.
  * Commonly used for selection highlights, hover states, or collectible glow.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // yellow outline for selection
- * mySprite.shader = new OutlineEffect(renderer, {
+ * mySprite.addPostEffect(new OutlineEffect(renderer, {
  *     color: [1.0, 1.0, 0.0],
  *     width: 2.0,
- * });
+ * }));
  * @example
  * // remove the effect
- * mySprite.shader = undefined;
+ * mySprite.removePostEffect(outline);
  */
 export default class OutlineEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - outline color as [r, g, b] (0.0–1.0)
 	 * @param {number} [options.width=1.0] - outline width in pixels

@@ -66,18 +66,18 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * `progress` value increases from 0 to 1.
  * Commonly used for death, spawn, or teleport effects.
  * @category Effects
- * @see {@link Renderable.shader} for usage
+ * @see {@link Renderable#addPostEffect} for usage
  * @example
  * // create a dissolve effect
  * const dissolve = new DissolveEffect(renderer);
- * mySprite.shader = dissolve;
+ * mySprite.addPostEffect(dissolve);
  *
  * // animate the dissolve (0 = fully visible, 1 = fully dissolved)
  * dissolve.setProgress(0.5);
  */
 export default class DissolveEffect extends ShaderEffect {
 	/**
-	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
+	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.progress=0.0] - dissolve progress (0.0 = visible, 1.0 = dissolved)
 	 * @param {number[]} [options.edgeColor=[1.0, 0.5, 0.0]] - color of the dissolve edge

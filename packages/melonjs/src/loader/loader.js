@@ -162,43 +162,16 @@ export function setBaseURL(type, url = "./") {
 }
 
 /**
- * onload callback
- * @default undefined
- * @memberof loader
- * @type {function}
- * @deprecated since 18.2.0 - Use the {@link event.LOADER_COMPLETE} event or the `onloadcb` parameter of {@link loader.preload} instead.
- * @example
- * // use the LOADER_COMPLETE event instead
- * me.event.on(me.event.LOADER_COMPLETE, this.loaded.bind(this));
+ * the completion callback most recently handed to {@link loader.preload}, so a
+ * later {@link loader.load} still reports completion to it.
+ *
+ * Module-private on purpose: this was an exported `let`, which a module
+ * namespace makes read-only — `loader.onload = fn` throws, so it never worked
+ * as the settable option it was documented to be. Use the `onloadcb` parameter
+ * of {@link loader.preload}, or the {@link event.LOADER_COMPLETE} event.
+ * @ignore
  */
-export let onload;
-
-/**
- * onProgress callback<br>
- * each time a resource is loaded, the loader will fire the specified function,
- * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
- * @default undefined
- * @memberof loader
- * @type {function}
- * @deprecated since 18.2.0 - Use the {@link event.LOADER_PROGRESS} event instead.
- * @example
- * // use the LOADER_PROGRESS event instead
- * me.event.on(me.event.LOADER_PROGRESS, (progress, resource) => this.updateProgress(progress, resource));
- */
-export let onProgress; // eslint-disable-line no-unassigned-vars
-
-/**
- * onError callback<br>
- * each time a resource loading is failed, the loader will fire the specified function giving the actual asset as argument.
- * @default undefined
- * @memberof loader
- * @type {function}
- * @deprecated since 18.2.0 - Use the {@link event.LOADER_ERROR} event instead.
- * @example
- * // use the LOADER_ERROR event instead
- * me.event.on(me.event.LOADER_ERROR, (resource) => this.loaderError(resource));
- */
-export let onError;
+let onload;
 
 /**
  * list of parser function for supported format type
@@ -270,11 +243,6 @@ function onResourceLoaded(res) {
 	// currrent progress
 	const progress = loadCount / resourceCount;
 
-	// call callback if defined
-	if (typeof onProgress === "function") {
-		// pass the load progress in percent, as parameter
-		onProgress(progress, res);
-	}
 	emit(LOADER_PROGRESS, progress, res);
 }
 
@@ -285,9 +253,6 @@ function onResourceLoaded(res) {
  */
 function onLoadingError(res) {
 	failureLoadedAssets[res.src] = res;
-	if (this.onError) {
-		this.onError(res);
-	}
 	emit(LOADER_ERROR, res);
 	throw new Error("Failed loading resource " + res.src);
 }
@@ -297,7 +262,7 @@ function onLoadingError(res) {
  * @typedef {object} Asset
  * @memberof loader
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video"|"aseprite"|"shader"|"obj"|"mtl"|"gltf"|"glb")
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tsx"|"fontface"|"video"|"aseprite"|"shader"|"obj"|"mtl"|"gltf"|"glb"). JSON-serialised Tiled maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"` — those are file extensions, not asset types.
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
  * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
  * The loader will try each source in order and use the first one that loads successfully.
@@ -456,7 +421,7 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 				// re-rejects → Promise.all (and the returned promise) reject and
 				// `await loader.preload(...)` surfaces the failure. The trailing
 				// throw keeps the rejection meaningful should it ever stop throwing.
-				onLoadingError.call(this, asset);
+				onLoadingError(asset);
 				throw err;
 			});
 	});
@@ -503,7 +468,7 @@ export function reload(src) {
 				resolve();
 			},
 			(err) => {
-				onLoadingError.call(this, assetToReload);
+				onLoadingError(assetToReload);
 				reject(err);
 			},
 		);
@@ -1087,11 +1052,11 @@ export function getGLTF(elt) {
  *     } },
  * ], () => {
  *     // one shared program — same uniform state for every user
- *     mySprite.shader = me.loader.getShader("waterRipple");
+ *     mySprite.addPostEffect(me.loader.getShader("waterRipple"));
  *     // private copy with its own uniforms (caller-owned, shared = false)
- *     boss.shader = me.loader.getShader("flash").clone();
+ *     boss.addPostEffect(me.loader.getShader("flash").clone());
  *     // a complete program hosts on a mesh, replacing the built-in shading
- *     myMesh.shader = me.loader.getShader("toonMesh");
+ *     myMesh.addPostEffect(me.loader.getShader("toonMesh"));
  * });
  */
 export function getShader(elt) {
