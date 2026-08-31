@@ -47,7 +47,7 @@ describe("depth sort with floating children", () => {
 		world.addChild(child("hud", 10000, true));
 		world.addChild(child("tree", 400));
 		world.addChild(child("rock", 80));
-		world.sort();
+		world.sortNow();
 
 		// the HUD's z would otherwise sort it to the far end of the valley,
 		// behind everything
@@ -58,7 +58,7 @@ describe("depth sort with floating children", () => {
 		const world = build();
 		world.addChild(child("hud", -50, true));
 		world.addChild(child("tree", 400));
-		world.sort();
+		world.sortNow();
 		expect(drawOrder(world).at(-1)).toBe("hud");
 	});
 
@@ -68,7 +68,7 @@ describe("depth sort with floating children", () => {
 		world.addChild(child("banner", 5, true));
 		world.addChild(child("tree", 400));
 		world.addChild(child("rock", 80));
-		world.sort();
+		world.sortNow();
 
 		const order = drawOrder(world);
 		const lastWorld = Math.max(order.indexOf("tree"), order.indexOf("rock"));
@@ -93,7 +93,7 @@ describe("depth sort with floating children", () => {
 		]) {
 			withoutHud.addChild(child(name, z));
 		}
-		withoutHud.sort();
+		withoutHud.sortNow();
 		const before = drawOrder(withoutHud);
 
 		const withHud = build();
@@ -105,11 +105,55 @@ describe("depth sort with floating children", () => {
 			withHud.addChild(child(name, z));
 		}
 		withHud.addChild(child("hud", 10000, true));
-		withHud.sort();
+		withHud.sortNow();
 		const after = drawOrder(withHud).filter((name) => {
 			return name !== "hud";
 		});
 
 		expect(after).toEqual(before);
+	});
+});
+
+describe("the 2D sorts are unaffected", () => {
+	// Only `_sortDepth` changed. The z/x/y comparators are what a 2D game
+	// uses, and there a floating child is ordered by z like anything else — a
+	// floating backdrop at a low z belongs BEHIND the sprites. Forcing
+	// floating on top in 2D would be a silent regression for every HUD-behind
+	// -something layout that works today.
+	const build = (sortOn) => {
+		const world = new Container(0, 0, 800, 600);
+		world.autoDepth = false;
+		world.sortOn = sortOn;
+		return world;
+	};
+
+	it("still orders a floating child by z under sortOn: z", () => {
+		const world = build("z");
+		world.addChild(child("backdrop", 0, true));
+		world.addChild(child("sprite", 10));
+		world.sortNow();
+
+		// higher z draws later, floating or not
+		expect(drawOrder(world)).toEqual(["backdrop", "sprite"]);
+	});
+
+	it("puts a high-z floating child on top under sortOn: z", () => {
+		const world = build("z");
+		world.addChild(child("hud", 100, true));
+		world.addChild(child("sprite", 10));
+		world.sortNow();
+		expect(drawOrder(world)).toEqual(["sprite", "hud"]);
+	});
+
+	it("leaves sortOn: y ordering alone", () => {
+		const world = build("y");
+		const near = child("near", 0, true);
+		near.pos.y = 500;
+		const far = child("far", 0);
+		far.pos.y = 100;
+		world.addChild(near);
+		world.addChild(far);
+		world.sortNow();
+		expect(drawOrder(world)).toEqual(["far", "near"]);
 	});
 });
