@@ -42,9 +42,41 @@ const entities: Record<string, string> = {
 	"&nbsp;": " ",
 };
 
+/**
+ * Drop every tag from a fragment of HTML.
+ *
+ * Deliberately not `replace(/<[^>]+>/g, "")`: a single regex pass over a tag
+ * shape is an incomplete sanitizer — an unterminated `<script` never matches
+ * and survives into the output. Scanning `<` to the next `>` cannot leave a
+ * tag behind, and an unterminated one takes the rest of the fragment with it.
+ *
+ * A bare `<` in rendered HTML is always a tag start; typedoc encodes literal
+ * ones as `&lt;`, which is still encoded at this point since entities are
+ * decoded afterwards.
+ * @param html - a fragment of TypeDoc HTML
+ * @returns the fragment with all markup removed
+ */
+const stripTags = (html: string): string => {
+	let text = "";
+	let at = 0;
+	while (at < html.length) {
+		const open = html.indexOf("<", at);
+		if (open === -1) {
+			text += html.slice(at);
+			break;
+		}
+		text += html.slice(at, open);
+		const close = html.indexOf(">", open);
+		if (close === -1) {
+			break;
+		}
+		at = close + 1;
+	}
+	return text;
+};
+
 const toText = (html: string): string => {
-	return html
-		.replace(/<[^>]+>/g, "")
+	return stripTags(html)
 		.replace(/&[a-z#0-9]+;/g, (match) => {
 			return entities[match] ?? " ";
 		})
