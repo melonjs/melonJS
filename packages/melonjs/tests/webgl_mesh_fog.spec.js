@@ -164,6 +164,58 @@ describe("mesh distance fog (#1622)", () => {
 		});
 	});
 
+	describe("a custom mesh shader survives the fog variant swap", () => {
+		it("does not swap away from a program the batcher does not own", (ctx) => {
+			requireWebGL(ctx);
+			// Fog is a COMPILED VARIANT, so the retained draw picks its program
+			// per draw. That swap must only ever replace the batcher's OWN
+			// program: `WebGLRenderer.drawMesh` binds a renderable's custom
+			// shader immediately before calling in here, and re-binding
+			// unconditionally threw it away — the mesh drew with built-in
+			// shading, silently, in every scene whether or not fog was on.
+			//
+			// Asserted on the bound program rather than on pixels: what broke
+			// was which program the draw ran, and `drawMesh` restores the
+			// default afterwards, so a pixel read cannot see it.
+			renderer.setFog(null);
+			setup();
+			const batcher = renderer.setBatcher("mesh");
+			const own = batcher.defaultShader;
+			// stand in for a renderable's hosted shader: any GLShader that is
+			// not one of the batcher's own
+			const foreign = renderer.setBatcher("quad").defaultShader;
+			renderer.setBatcher("mesh");
+			batcher.useShader(foreign);
+			expect(batcher.currentShader).toBe(foreign);
+
+			const mesh = quad();
+			mesh.pos.set(0, 0, 0);
+			mesh.depth = 500;
+			batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
+
+			expect(batcher.currentShader).toBe(foreign);
+			batcher.useShader(own);
+		});
+
+		it("still swaps its own program when fog turns on", (ctx) => {
+			requireWebGL(ctx);
+			setup();
+			const batcher = renderer.setBatcher("mesh");
+			batcher.useShader(batcher.defaultShader);
+			renderer.setFog(fog());
+			const mesh = quad();
+			mesh.depth = 500;
+			batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
+			const fogged = batcher.currentShader;
+			expect(fogged).not.toBe(batcher.defaultShader);
+			expect(fogged).toBe(batcher.fogShader);
+
+			renderer.setFog(null);
+			batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
+			expect(batcher.currentShader).toBe(batcher.defaultShader);
+		});
+	});
+
 	describe("the curves", () => {
 		it("linear reaches the halfway mix at the halfway distance", (ctx) => {
 			requireWebGL(ctx);

@@ -539,9 +539,21 @@ export default class MeshBatcher extends MaterialBatcher {
 		// anything the caller had queued must land first, or this draw would
 		// reorder ahead of it
 		this.flush();
-		// fog is a compiled variant, so the program depends on the camera's
-		// fog state rather than only on the batcher
-		this.useShader(this.meshShader());
+		// Fog is a compiled variant, so the program depends on the camera's fog
+		// state and not only on the batcher.
+		//
+		// Only ever swap the batcher's OWN program. `WebGLRenderer.drawMesh`
+		// binds a renderable's custom shader immediately before calling in
+		// here, and re-binding unconditionally threw that away silently: the
+		// mesh drew with built-in shading, no error, in every scene — fog
+		// enabled or not. A custom mesh shader is the author's, and it has no
+		// fog variant to switch to.
+		if (
+			this.currentShader === this.defaultShader ||
+			this.currentShader === this.fogShader
+		) {
+			this.useShader(this.meshShader());
+		}
 
 		// Strictly BEFORE the blended-draw toggle below: `updatePassState`
 		// runs the one-shot depth clear, and `gl.clear(DEPTH_BUFFER_BIT)`
@@ -1239,10 +1251,15 @@ export default class MeshBatcher extends MaterialBatcher {
 			shader.setUniform("uTint", _TINT_RGBA);
 			this.currentTintValue = tint;
 		}
-		if (uniforms.uFogParams !== undefined) {
+		// `!= null`, not `!== undefined`: `extractUniforms` scans the raw shader
+		// text without running the preprocessor, so the names inside the
+		// `#ifdef FOG` block are registered even in the program compiled
+		// WITHOUT fog — with a null GL location. Testing for undefined let the
+		// whole block run, and issue two writes to a null location, on every
+		// unfogged mesh draw.
+		if (uniforms.uFogParams != null) {
 			// `mesh.fog === false` exempts this object; anything else follows
-			// the camera. A custom shader that declares neither uniform is
-			// skipped entirely by the guard above.
+			// the camera.
 			const fog = mesh?.fog === false ? null : this.renderer._fog3d;
 			const mode = fog !== null && fog !== undefined ? fog.mode : 0;
 			const near = mode !== 0 ? fog.near : 0;
@@ -1268,7 +1285,7 @@ export default class MeshBatcher extends MaterialBatcher {
 				this.currentFogDensity = density;
 			}
 			if (
-				uniforms.uFogColor !== undefined &&
+				uniforms.uFogColor != null &&
 				(r !== this.currentFogR ||
 					g !== this.currentFogG ||
 					b !== this.currentFogB)
