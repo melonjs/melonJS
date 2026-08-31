@@ -170,9 +170,50 @@ there — place the origin where you want the pivot at authoring time, or nest t
 mesh under a transformed parent. The anchor is only honoured on the legacy
 2D-camera path.
 
+### InstancedMesh, and when it is the wrong tool
+
 **`InstancedMesh`** draws one mesh many times in a single draw call — the
 difference between a hundred trees and a hundred thousand. glTF scenes using
-`EXT_mesh_gpu_instancing` load as an `InstancedMesh` automatically.
+`EXT_mesh_gpu_instancing` load as one automatically; by hand it is a `Mesh`
+with a count:
+
+```js
+const trees = new InstancedMesh(0, 0, { ...treeGeometry, instanceCount: 400 });
+const at = new Matrix3d();               // one scratch, reused
+for (let i = 0; i < trees.instanceCount; i++) {
+    at.identity().translate(x, y, z);
+    trees.setInstance(i, at);
+}
+world.addChild(trees, 0);
+
+trees.visibleInstanceCount = 120;        // draw fewer, without re-uploading
+```
+
+It is not a free upgrade. One `InstancedMesh` is **one geometry and one
+material**, and four things move from per-object to per-group:
+
+| | with `Mesh` | with `InstancedMesh` |
+| --- | --- | --- |
+| depth sort | each object sorts on its own `pos` | the whole set has **one** sort key |
+| ground shadow | one blob per object | one instanced draw for the set |
+| removal | `removeChild`, indices unaffected | `removeInstance(i)` swaps the **last** instance into the hole, so any index you were holding is now wrong |
+| colour | `tint` per object | needs `instanceColors: true` and `setInstanceColor(i, …)` |
+
+So the question is not "how many are there" but **"does the game address them
+individually"**:
+
+- **Scenery — instance it.** Trees, rocks, grass, debris: the game never asks
+  about one of them.
+- **Collision-tested props — still fine.** You test against positions you
+  already own; instancing only changes how they are *drawn*.
+- **Collectibles and enemies — usually not.** Anything removed one at a time
+  makes `removeInstance`'s swap your problem: you have to keep an index↔object
+  map and repair it on every removal. At small counts a pooled `Mesh` each is
+  less code and no slower.
+
+Under a few hundred objects the draw-call saving is not what limits you
+anyway — reach for it when the count is in the thousands, or when the objects
+are pure scenery and it costs nothing to.
 
 ## Normals are generated for you
 

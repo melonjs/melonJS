@@ -126,6 +126,11 @@ collapse to one.
 between a hundred trees and a hundred thousand. glTF scenes using
 `EXT_mesh_gpu_instancing` load as an `InstancedMesh` automatically.
 
+It trades per-object control for the draw call: the set gets ONE depth sort key
+and ONE ground shadow, and `removeInstance` swaps the last instance into the
+hole so held indices go stale. Scenery yes; anything the game removes or
+queries one at a time, usually not. See `melonjs-3d` for the decision table.
+
 ## Update loops
 
 - `update(dt)` should **return `true` only when something changed**. Returning
