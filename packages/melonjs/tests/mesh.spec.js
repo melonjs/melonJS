@@ -1610,4 +1610,46 @@ describe("Mesh × Camera3d world-space path", () => {
 			});
 		});
 	});
+
+	/** unit-length check, plus the direction */
+	const expectNormal = (out, index, [x, y, z]) => {
+		const at = index * 3;
+		expect(out[at]).toBeCloseTo(x, 5);
+		expect(out[at + 1]).toBeCloseTo(y, 5);
+		expect(out[at + 2]).toBeCloseTo(z, 5);
+	};
+
+	describe("generated normals", () => {
+		const geometry = (extra) => {
+			return {
+				vertices: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+				uvs: new Float32Array([0, 0, 1, 0, 0, 1]),
+				indices: new Uint16Array([0, 1, 2]),
+				normalize: false,
+				scale: 1,
+				width: 1,
+				height: 1,
+				...extra,
+			};
+		};
+
+		it("generates them for a lit mesh built without any", () => {
+			const mesh = new Mesh(0, 0, geometry({ lit: true }));
+			expect(mesh.originalNormals).toBeInstanceOf(Float32Array);
+			expect(mesh.originalNormals).toHaveLength(9);
+			expectNormal(mesh.originalNormals, 0, [0, 0, 1]);
+		});
+
+		it("leaves an unlit mesh without them", () => {
+			// nothing would read them, so the work and the memory are skipped
+			const mesh = new Mesh(0, 0, geometry());
+			expect(mesh.originalNormals).toBeUndefined();
+		});
+
+		it("does not overwrite normals that were supplied", () => {
+			const supplied = new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0]);
+			const mesh = new Mesh(0, 0, geometry({ lit: true, normals: supplied }));
+			expect(mesh.originalNormals).toBe(supplied);
+		});
+	});
 });

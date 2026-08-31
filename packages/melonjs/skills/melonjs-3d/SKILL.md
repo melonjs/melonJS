@@ -119,6 +119,31 @@ mesh under a transformed parent. The anchor is only honoured on the legacy
 difference between a hundred trees and a hundred thousand. glTF scenes using
 `EXT_mesh_gpu_instancing` load as an `InstancedMesh` automatically.
 
+## Normals are generated for you
+
+A `lit` mesh needs per-vertex normals for the shader to light with. Supply them
+if you have them; **omit them and the engine computes them from the geometry**:
+
+```js
+const mesh = new Mesh(x, y, { vertices, uvs, indices, lit: true });
+// normals derived from the triangles — nothing else to do
+```
+
+You do not choose flat or smooth, because the geometry already decides. Face
+normals accumulate into their vertices weighted by area, so where faces **share**
+a vertex they average and the surface shades smoothly, and where every triangle
+carries its **own** three vertices — a triangle soup, which is how most
+hand-built geometry comes out — each vertex belongs to one face and the result
+is that face's normal, so it shades flat. Want faceted edges: duplicate the
+vertices. Want smooth: share them.
+
+An explicit `settings.normals` always wins, and an unlit mesh gets none — there
+would be nothing to read them.
+
+**A lit mesh with no normals used to render fullbright**, which looks like the
+lighting is broken rather than absent. If an older scene suddenly picks up
+shading, that is why.
+
 ## Colouring a mesh
 
 There are four levels, and picking the wrong one is the usual reason a colour
@@ -261,6 +286,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 
 | symptom | cause |
 |---|---|
+| a `lit` mesh renders fullbright | it had no normals — supply them, or let the engine generate them |
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
 | a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |
 | vertex colour applies under a 2D camera but not `Camera3d` | wrote the array directly without setting `needsUpdate` |
