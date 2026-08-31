@@ -208,11 +208,43 @@ describe("mesh distance fog (#1622)", () => {
 			batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
 			const fogged = batcher.currentShader;
 			expect(fogged).not.toBe(batcher.defaultShader);
-			expect(fogged).toBe(batcher.fogShader);
+			// every compiled variant lives in one keyed cache, so there is a
+			// single place to release them however many axes are added
+			expect(fogged).toBe(batcher.shaderVariants.get("mesh|fog"));
 
 			renderer.setFog(null);
 			batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
 			expect(batcher.currentShader).toBe(batcher.defaultShader);
+		});
+	});
+
+	describe("the variant cache", () => {
+		it("keeps every compiled variant in one map, so there is one release site", (ctx) => {
+			requireWebGL(ctx);
+			// Each optional feature used to own a field — `fogShader`,
+			// `shadowFogShader`, a numeric map for the instanced tiers — and
+			// each had to be released in BOTH `init()` (context loss) and
+			// `destroy()`. Six sites for two axes. A missed one leaks a program
+			// that later tries to recompile against a dead context.
+			setup();
+			const batcher = renderer.setBatcher("mesh");
+			batcher.shaderVariants.forEach((shader) => {
+				shader.destroy();
+			});
+			batcher.shaderVariants.clear();
+
+			renderer.setFog(fog());
+			const mesh = quad();
+			mesh.depth = 500;
+			batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
+			renderer.setFog(null);
+
+			expect(batcher.shaderVariants.has("mesh|fog")).toBe(true);
+			// namespaced, so the instanced and shadow families cannot collide
+			// with it or with each other
+			for (const key of batcher.shaderVariants.keys()) {
+				expect(key).toMatch(/^(mesh|instanced|shadow)\|?/);
+			}
 		});
 	});
 

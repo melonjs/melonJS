@@ -417,31 +417,47 @@ describe("Mesh instancing (#1508)", () => {
 		it("compiles one program per declared slot combination, and only on demand", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const batcher = renderer.batchers.get("mesh");
-			batcher.instancedShaders.forEach((shader) => {
+			batcher.shaderVariants.forEach((shader) => {
 				shader.destroy();
 			});
-			batcher.instancedShaders.clear();
+			batcher.shaderVariants.clear();
 
 			const bare = makeInstanced(2);
 			drawOnce(bare);
-			expect(batcher.instancedShaders.size).toBe(1);
+			expect(
+				[...batcher.shaderVariants.keys()].filter((k) => {
+					return k.startsWith("instanced|");
+				}).length,
+			).toBe(1);
 
 			// the same combination reuses its program
 			const alsoBare = makeInstanced(2);
 			drawOnce(alsoBare);
-			expect(batcher.instancedShaders.size).toBe(1);
+			expect(
+				[...batcher.shaderVariants.keys()].filter((k) => {
+					return k.startsWith("instanced|");
+				}).length,
+			).toBe(1);
 
 			// a different combination compiles its own
 			const colored = makeInstanced(2, { instanceColors: true });
 			drawOnce(colored);
-			expect(batcher.instancedShaders.size).toBe(2);
+			expect(
+				[...batcher.shaderVariants.keys()].filter((k) => {
+					return k.startsWith("instanced|");
+				}).length,
+			).toBe(2);
 
 			const both = makeInstanced(2, {
 				instanceColors: true,
 				instanceData: true,
 			});
 			drawOnce(both);
-			expect(batcher.instancedShaders.size).toBe(3);
+			expect(
+				[...batcher.shaderVariants.keys()].filter((k) => {
+					return k.startsWith("instanced|");
+				}).length,
+			).toBe(3);
 			expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);
 			bare.destroy();
 			alsoBare.destroy();
@@ -465,7 +481,7 @@ describe("Mesh instancing (#1508)", () => {
 						drawOnce(mesh);
 						const batcher = renderer.batchers.get(lit ? "litMesh" : "mesh");
 						const key = (instanceColors ? 1 : 0) | (instanceData ? 2 : 0);
-						const shader = batcher.instancedShaders.get(key);
+						const shader = batcher.shaderVariants.get(`instanced|${key}`);
 						const label = `lit=${lit} colors=${instanceColors} data=${instanceData}`;
 						expect(shader, label).toBeDefined();
 						expect(gl.isProgram(shader.program), label).toBe(true);
@@ -489,7 +505,9 @@ describe("Mesh instancing (#1508)", () => {
 				instanceData: true,
 			});
 			drawOnce(mesh);
-			const shader = renderer.batchers.get("litMesh").instancedShaders.get(3);
+			const shader = renderer.batchers
+				.get("litMesh")
+				.shaderVariants.get("instanced|3");
 			// asked of the LINKED PROGRAM, not the engine's parsed attribute
 			// map: `extractAttributes` regex-scans the source and so counts
 			// `#ifdef`-guarded declarations too, which would make this pass
@@ -519,7 +537,9 @@ describe("Mesh instancing (#1508)", () => {
 			const gl = renderer.gl;
 			const mesh = makeInstanced(4, { lit: true });
 			drawOnce(mesh);
-			const shader = renderer.batchers.get("litMesh").instancedShaders.get(0);
+			const shader = renderer.batchers
+				.get("litMesh")
+				.shaderVariants.get("instanced|0");
 			expect(
 				gl.getAttribLocation(shader.program, "aInstanceRow0"),
 			).toBeGreaterThanOrEqual(0);
@@ -548,7 +568,7 @@ describe("Mesh instancing (#1508)", () => {
 						drawOnce(mesh);
 						const batcher = renderer.batchers.get(lit ? "litMesh" : "mesh");
 						const key = (instanceColors ? 1 : 0) | (instanceData ? 2 : 0);
-						const shader = batcher.instancedShaders.get(key);
+						const shader = batcher.shaderVariants.get(`instanced|${key}`);
 
 						const declared = [
 							"aInstanceRow0",
@@ -586,7 +606,7 @@ describe("Mesh instancing (#1508)", () => {
 			drawOnce(mesh);
 
 			const batcher = renderer.batchers.get("litMesh");
-			const shader = batcher.instancedShaders.get(3);
+			const shader = batcher.shaderVariants.get("instanced|3");
 			const state = batcher.instanced.get(mesh);
 			expect(state).toBeDefined();
 			state.vertexState.bind();
@@ -635,7 +655,7 @@ describe("Mesh instancing (#1508)", () => {
 			const mesh = makeInstanced(4, { lit: true }); // no optional slots
 			drawOnce(mesh);
 			const batcher = renderer.batchers.get("litMesh");
-			const shader = batcher.instancedShaders.get(0);
+			const shader = batcher.shaderVariants.get("instanced|0");
 			const stale = shader.getAttribLocation("aInstanceColor");
 			expect(gl.getAttribLocation(shader.program, "aInstanceColor")).toBe(-1);
 
@@ -907,15 +927,15 @@ describe("Mesh instancing — reviewed regressions", () => {
 		const mesh = make(4, { instanceColors: true });
 		drawOnce(mesh);
 		const batcher = renderer.batchers.get("mesh");
-		const shader = batcher.instancedShaders.get(1);
+		const shader = batcher.shaderVariants.get("instanced|1");
 		expect(shader).toBeDefined();
 		mesh.destroy();
 		// destroy() is exercised on a throwaway batcher so the shared renderer
 		// keeps working for later specs
-		batcher.instancedShaders.forEach((s) => {
+		batcher.shaderVariants.forEach((s) => {
 			s.destroy();
 		});
 		expect(shader.destroyed).toBe(true);
-		batcher.instancedShaders.clear();
+		batcher.shaderVariants.clear();
 	});
 });

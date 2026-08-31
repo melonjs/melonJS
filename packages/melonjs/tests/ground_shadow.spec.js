@@ -492,7 +492,8 @@ describe("Ground shadows (#1515)", () => {
 				mesh.setInstanceData(i, 1, 0, 0, 1);
 			}
 			drawOnce(mesh);
-			const shader = renderer.currentBatcher.shadowShader;
+			// the shadow program lives in the batcher's one variant cache
+			const shader = renderer.currentBatcher.shaderVariants.get("shadow");
 			expect(shader).toBeDefined();
 			expect(shader.getAttribLocation("aInstanceColor")).toBe(-1);
 			expect(shader.getAttribLocation("aInstanceData")).toBe(-1);
@@ -511,7 +512,8 @@ describe("Ground shadows (#1515)", () => {
 			expect(() => {
 				drawOnce(mesh);
 			}).not.toThrow();
-			const shader = renderer.currentBatcher.shadowShader;
+			// the shadow program lives in the batcher's one variant cache
+			const shader = renderer.currentBatcher.shaderVariants.get("shadow");
 			expect(shader).toBeDefined();
 			expect(shader.program).not.toBeNull();
 			expect(renderer.gl.getError()).toBe(renderer.gl.NO_ERROR);

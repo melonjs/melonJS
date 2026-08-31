@@ -156,23 +156,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		// declares. Compiled on first use rather than up front: most scenes
 		// use one combination, and a scene with no instanced mesh at all
 		// compiles none. Dropped on re-init with everything else GL-owned.
-		this.instancedShaders?.forEach((shader) => {
+		this.shaderVariants?.forEach((shader) => {
 			shader.destroy();
 		});
-		this.instancedShaders = new Map();
-
-		// the standalone ground-shadow program (#1515) is GL-owned too. An
-		// orphan keeps its program AND its context-lost/restored subscriptions
-		// alive, and would try to recompile against a dead context on the next
-		// restore — the same hazard the instanced variants above are dropped
-		// for.
-		this.shadowShader?.destroy();
-		this.shadowShader = undefined;
-		// the fog variants are GL-owned on exactly the same terms
-		this.fogShader?.destroy();
-		this.fogShader = undefined;
-		this.shadowFogShader?.destroy();
-		this.shadowFogShader = undefined;
+		this.shaderVariants = new Map();
 
 		// last `uTint` value pushed, same redundant-set guard — but the
 		// sentinel is `undefined`, NOT a number: a packed ARGB tint spans the
@@ -307,16 +294,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		// variants hold GL programs AND stay subscribed to the context-loss
 		// events until destroyed — an orphan would try to recompile against a
 		// dead context on the next restore
-		this.instancedShaders?.forEach((shader) => {
+		this.shaderVariants?.forEach((shader) => {
 			shader.destroy();
 		});
-		this.shadowShader?.destroy();
-		this.shadowShader = undefined;
-		this.fogShader?.destroy();
-		this.fogShader = undefined;
-		this.shadowFogShader?.destroy();
-		this.shadowFogShader = undefined;
-		this.instancedShaders?.clear();
+		this.shaderVariants?.clear();
 		if (this._onTargetChanged) {
 			off(RENDER_TARGET_CHANGED, this._onTargetChanged);
 			this._onTargetChanged = null;
@@ -548,10 +529,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		// mesh drew with built-in shading, no error, in every scene — fog
 		// enabled or not. A custom mesh shader is the author's, and it has no
 		// fog variant to switch to.
-		if (
-			this.currentShader === this.defaultShader ||
-			this.currentShader === this.fogShader
-		) {
+		if (this._ownsCurrentShader()) {
 			this.useShader(this.meshShader());
 		}
 
@@ -781,26 +759,21 @@ export default class MeshBatcher extends MaterialBatcher {
 			(layout.hasColor ? 1 : 0) |
 			(layout.hasData ? 2 : 0) |
 			(fogDefine !== "" ? 4 : 0);
-		let shader = this.instancedShaders.get(key);
-		if (shader === undefined) {
-			const defines =
-				(layout.hasColor ? "#define INSTANCE_COLORS\n" : "") +
-				(layout.hasData ? "#define INSTANCE_DATA\n" : "") +
-				fogDefine;
-			const sources = this._instancedShaderSources();
-			// only INSTANCE_DATA reaches the fragment stage (as the
-			// per-instance emissive term); injecting the colour flag there too
-			// would compile four distinct fragment texts where two suffice
-			const fragmentDefines =
-				(layout.hasData ? "#define INSTANCE_DATA\n" : "") + fogDefine;
-			shader = new GLShader(this.gl, {
-				vertex: injectDefines(sources.vertex, defines),
-				fragment: injectDefines(sources.fragment, fragmentDefines),
-				label: `melonJS instanced mesh ${key}`,
-			});
-			this.instancedShaders.set(key, shader);
-		}
-		return shader;
+		const defines =
+			(layout.hasColor ? "#define INSTANCE_COLORS\n" : "") +
+			(layout.hasData ? "#define INSTANCE_DATA\n" : "") +
+			fogDefine;
+		// only INSTANCE_DATA reaches the fragment stage (as the per-instance
+		// emissive term); injecting the colour flag there too would compile
+		// four distinct fragment texts where two suffice
+		const fragmentDefines =
+			(layout.hasData ? "#define INSTANCE_DATA\n" : "") + fogDefine;
+		return this.shaderVariant(
+			`instanced|${key}`,
+			this._instancedShaderSources(),
+			defines,
+			fragmentDefines,
+		);
 	}
 
 	/**
@@ -821,23 +794,69 @@ export default class MeshBatcher extends MaterialBatcher {
 	}
 
 	/**
+	 * One compiled shader per set of defines, built on first use.
+	 *
+	 * Every optional feature this batcher compiles in or out — instance
+	 * colours, instance data, fog — is a key in here rather than a field of
+	 * its own. That matters for LIFETIME more than for tidiness: each program
+	 * has to be released both on re-init (context loss) and on destroy, and a
+	 * missed one leaks a program that later tries to recompile against a dead
+	 * context. One map is one release site, however many axes are added.
+	 * @param {string} key - identifies the combination
+	 * @param {object} sources - `{vertex, fragment}` shader text
+	 * @param {string} vertexDefines - injected into the vertex stage
+	 * @param {string} fragmentDefines - injected into the fragment stage; not
+	 * always the same set, since some flags never reach the fragment stage
+	 * @returns {GLShader} the program for that combination
+	 * @ignore
+	 */
+	shaderVariant(key, sources, vertexDefines, fragmentDefines) {
+		let shader = this.shaderVariants.get(key);
+		if (shader === undefined) {
+			shader = new GLShader(this.gl, {
+				vertex: injectDefines(sources.vertex, vertexDefines),
+				fragment: injectDefines(sources.fragment, fragmentDefines),
+				label: `melonJS mesh ${key}`,
+			});
+			this.shaderVariants.set(key, shader);
+		}
+		return shader;
+	}
+
+	/**
+	 * Whether the bound program is one this batcher would pick for a plain
+	 * mesh — its own, or the fog variant of its own.
+	 *
+	 * `drawRetainedMesh` swaps programs per draw because fog is compiled in,
+	 * and it must only ever replace one of these. `WebGLRenderer.drawMesh`
+	 * binds a renderable's custom shader immediately before calling in, and
+	 * swapping unconditionally threw that away silently.
+	 * @returns {boolean} true when the swap is safe
+	 * @ignore
+	 */
+	_ownsCurrentShader() {
+		return (
+			this.currentShader === this.defaultShader ||
+			this.currentShader === this.shaderVariants.get("mesh|fog")
+		);
+	}
+
+	/**
 	 * The non-instanced mesh shader for the current fog state: the batcher's
-	 * own program while fog is off, a lazily-built fog variant while it is on.
+	 * own program while fog is off, a fog variant while it is on.
 	 * @ignore
 	 */
 	meshShader() {
-		if (this._fogDefine() === "") {
+		const fogDefine = this._fogDefine();
+		if (fogDefine === "") {
 			return this.defaultShader;
 		}
-		if (this.fogShader === undefined) {
-			const sources = this._shaderSources();
-			this.fogShader = new GLShader(this.gl, {
-				vertex: injectDefines(sources.vertex, "#define FOG\n"),
-				fragment: injectDefines(sources.fragment, "#define FOG\n"),
-				label: "melonJS mesh (fog)",
-			});
-		}
-		return this.fogShader;
+		return this.shaderVariant(
+			"mesh|fog",
+			this._shaderSources(),
+			fogDefine,
+			fogDefine,
+		);
 	}
 
 	/**
@@ -968,35 +987,20 @@ export default class MeshBatcher extends MaterialBatcher {
 	 */
 	instancedShadowShader() {
 		const fogDefine = this._fogDefine();
-		// a blob fades with distance like the ground it lies on, so it needs
-		// the fogged pair too — kept in its own slot, same reason as above
-		if (fogDefine !== "") {
-			if (this.shadowFogShader === undefined) {
-				this.shadowFogShader = new GLShader(this.gl, {
-					vertex: injectDefines(meshShadowInstancedVertex, fogDefine),
-					fragment: injectDefines(meshFragment, fogDefine),
-					label: "melonJS instanced mesh shadow (fog)",
-				});
-			}
-			return this.shadowFogShader;
-		}
-		if (this.shadowShader === undefined) {
-			this.shadowShader = new GLShader(this.gl, {
-				vertex: meshShadowInstancedVertex,
-				// the UNLIT fragment stage, on both tiers, not
-				// `_instancedShaderSources().fragment`. A blob needs nothing
-				// from lighting — it samples the falloff and multiplies by the
-				// tint — and borrowing the lit tier's pairs a GLSL ES 3.00
-				// fragment shader with this ES 1.00 vertex shader, which does
-				// not link ("Fragment shader version does not match other
-				// shader versions") and takes the whole lit instanced tier
-				// down with it. It would also read `vNormal` / `vWorldPos`,
-				// which a flat blob never writes.
-				fragment: meshFragment,
-				label: "melonJS instanced mesh shadow",
-			});
-		}
-		return this.shadowShader;
+		// The UNLIT fragment stage, on both tiers, not
+		// `_instancedShaderSources().fragment`. A blob needs nothing from
+		// lighting — it samples the falloff and multiplies by the tint — and
+		// borrowing the lit tier's pairs a GLSL ES 3.00 fragment shader with
+		// this ES 1.00 vertex shader, which does not link ("Fragment shader
+		// version does not match other shader versions") and takes the whole
+		// lit instanced tier down with it. It would also read `vNormal` /
+		// `vWorldPos`, which a flat blob never writes.
+		return this.shaderVariant(
+			fogDefine === "" ? "shadow" : "shadow|fog",
+			{ vertex: meshShadowInstancedVertex, fragment: meshFragment },
+			fogDefine,
+			fogDefine,
+		);
 	}
 
 	/**
