@@ -67,6 +67,42 @@ function captureDepthCamera() {
 }
 
 /**
+ * Painter-sort key: squared distance from the camera, so a smaller key
+ * is nearer. `draw` walks children backwards, so index 0 is drawn last
+ * and the nearest child lands on top.
+ *
+ * A `floating` child is measured differently, because its `pos` is not
+ * a world position: `draw` resets the transform and swaps in the
+ * camera's screen projection for it, making `pos.x/y` pixels on the
+ * canvas. Feeding those to a world-space distance makes a HUD's
+ * layering depend on where it sits on the screen — a centred banner
+ * scores `512² + 200²` against the scene and sinks behind it while the
+ * same text in a corner floats on top — and subtracting the camera
+ * position makes it drift as the camera travels. Neither is meaningful
+ * for something pinned to the screen, so only `pos.z` orders it.
+ *
+ * What remains is the magnitude: `|pos.z|` is how far in front of the
+ * scene the overlay sits, so a small depth draws on top of the world and
+ * a large one draws behind it. That is the convention the screen-space
+ * idioms already use — a HUD at -150, a sky backdrop at -10000 or
+ * 100000 — and dropping the screen coordinates and the camera position
+ * makes it hold at any camera position instead of by luck of the
+ * numbers. The sign is not meaningful here and is ignored: a backdrop
+ * parked at a large negative depth is as far away as one parked at the
+ * same positive depth.
+ * @ignore
+ */
+function depthKey(r) {
+	if (r.floating === true) {
+		return r.pos.z * r.pos.z;
+	}
+	const x = r.pos.x + _depthOffsetX - _depthCamX;
+	const y = r.pos.y + _depthOffsetY - _depthCamY;
+	const z = r.pos.z + _depthOffsetZ - _depthCamZ;
+	return x * x + y * y + z * z;
+}
+
+/**
  * Capture the world-space position of the given container into the
  * module-level `_depthOffset*` triple. Called once per sort by `sort` /
  * `sortNow` before walking the children, so `_sortDepth` can translate
@@ -1073,13 +1109,7 @@ export default class Container extends Renderable {
 		// between "particles all sort identically because their
 		// local d²=0" and "particles sort by their actual world
 		// distance from the camera".
-		const ax = a.pos.x + _depthOffsetX - _depthCamX;
-		const ay = a.pos.y + _depthOffsetY - _depthCamY;
-		const az = a.pos.z + _depthOffsetZ - _depthCamZ;
-		const bx = b.pos.x + _depthOffsetX - _depthCamX;
-		const by = b.pos.y + _depthOffsetY - _depthCamY;
-		const bz = b.pos.z + _depthOffsetZ - _depthCamZ;
-		return ax * ax + ay * ay + az * az - (bx * bx + by * by + bz * bz);
+		return depthKey(a) - depthKey(b);
 	}
 
 	/**
