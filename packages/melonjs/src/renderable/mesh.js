@@ -8,6 +8,7 @@ import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import {
 	convexHull,
+	generateNormals,
 	normalizeVertices,
 	projectVertices,
 } from "../math/vertex.ts";
@@ -321,7 +322,7 @@ export default class Mesh extends Renderable {
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive (self-illumination) color `[r, g, b]` (0..1, may exceed 1 for HDR glow) added on top of the lit/unlit color so the surface glows regardless of scene lights (neon, lava, screens). Omit / all-zero for no emission. Set automatically by the glTF loader (`emissiveFactor`) and OBJ loader (MTL `Ke`). GPU mesh path only (WebGL and WebGPU; the Canvas renderer ignores it).
 	 * @param {boolean} [settings.lit=false] - shade this mesh with the scene's {@link Light3d} lights (the lit mesh pipeline) instead of rendering fullbright. Set automatically by the glTF importer when the scene carries a directional, point or spot light. With `lit` on and no lights present the batcher uploads a white ambient, so the result is indistinguishable from unlit.
 	 * @param {Uint32Array|Color[]|number[]} [settings.vertexColors] - per-vertex colour, one entry per vertex, multiplied into {@link Mesh#tint}. Either packed RGBA8 (`Uint32Array`, the form the batchers read — no conversion) or one {@link Color} per vertex. Omit for plain white. Lets a single mesh carry a gradient — fading a terrain toward the sky with distance, darkening a crease — which a per-object `tint` cannot express. An explicit value wins over the colours a multi-material OBJ bakes from its MTL.
-	 * @param {number[]|Float32Array} [settings.normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model (or generated).
+	 * @param {number[]|Float32Array} [settings.normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model, or generated from the geometry when the mesh is `lit`. Generated normals average per vertex where faces share vertices (smooth shading) and equal the face normal where they do not (flat shading) — the geometry decides, not a flag.
 	 * @param {number[]|Float32Array} [settings.specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
 	 * @param {number} [settings.shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
 	 * @param {string|TextureAtlas|HTMLImageElement} [settings.alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
@@ -488,7 +489,14 @@ export default class Mesh extends Renderable {
 				? sourceNormals instanceof Float32Array
 					? sourceNormals
 					: new Float32Array(sourceNormals)
-				: undefined;
+				: settings.lit === true
+					? // A lit mesh with no normals has nothing for the shader to
+						// light with, so it renders fullbright — asking for `lit`
+						// and getting flat colour, with nothing said. Hand-built
+						// geometry almost never carries normals, so generate them
+						// rather than make every caller write the same loop.
+						generateNormals(this.originalVertices, this.indices)
+					: undefined;
 
 		/**
 		 * world-space normals for the current draw, recomputed from

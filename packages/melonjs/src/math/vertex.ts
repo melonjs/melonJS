@@ -392,3 +392,70 @@ export function convexHull(points: Vector2d[]): Vector2d[] {
 
 	return hull;
 }
+
+/**
+ * Compute per-vertex surface normals for indexed triangle geometry.
+ *
+ * Each triangle's normal is accumulated into its three vertices weighted by
+ * the triangle's area — that falls out of using the raw cross product rather
+ * than a normalized one — and the result is normalized at the end. Area
+ * weighting keeps a large face from being outvoted by a fan of slivers meeting
+ * at the same vertex.
+ *
+ * One algorithm covers both shading styles, because the answer depends on the
+ * geometry rather than on a flag: where vertices are shared between faces the
+ * accumulation averages them and the surface shades smoothly, and where every
+ * triangle carries its own three vertices (a triangle soup, which is how most
+ * hand-built geometry comes out) each vertex belongs to exactly one face, so
+ * the average IS that face's normal and the surface shades flat.
+ *
+ * Degenerate triangles contribute a zero-length cross product and so drop out
+ * on their own; a vertex touched only by degenerate faces is left at zero
+ * rather than becoming NaN.
+ * @param vertices - vertex positions as x,y,z triplets
+ * @param indices - triangle vertex indices
+ * @param out - optional destination, sized `vertices.length`
+ * @returns unit normals as x,y,z triplets, one per vertex
+ */
+export function generateNormals(
+	vertices: Float32Array,
+	indices: Uint16Array | Uint32Array | number[],
+	out: Float32Array = new Float32Array(vertices.length),
+): Float32Array {
+	out.fill(0);
+
+	for (let i = 0; i + 2 < indices.length; i += 3) {
+		const ia = indices[i] * 3;
+		const ib = indices[i + 1] * 3;
+		const ic = indices[i + 2] * 3;
+
+		const ux = vertices[ib] - vertices[ia];
+		const uy = vertices[ib + 1] - vertices[ia + 1];
+		const uz = vertices[ib + 2] - vertices[ia + 2];
+		const wx = vertices[ic] - vertices[ia];
+		const wy = vertices[ic + 1] - vertices[ia + 1];
+		const wz = vertices[ic + 2] - vertices[ia + 2];
+
+		// left un-normalized on purpose: its length is twice the triangle's
+		// area, which is the weight we want
+		const nx = uy * wz - uz * wy;
+		const ny = uz * wx - ux * wz;
+		const nz = ux * wy - uy * wx;
+
+		for (const at of [ia, ib, ic]) {
+			out[at] += nx;
+			out[at + 1] += ny;
+			out[at + 2] += nz;
+		}
+	}
+
+	for (let at = 0; at + 2 < out.length; at += 3) {
+		const len = Math.hypot(out[at], out[at + 1], out[at + 2]);
+		if (len > 0) {
+			out[at] /= len;
+			out[at + 1] /= len;
+			out[at + 2] /= len;
+		}
+	}
+	return out;
+}
