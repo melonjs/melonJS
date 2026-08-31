@@ -1,7 +1,7 @@
 {
 	"name": "melonjs",
 	"version": "20.3.0",
-	"description": "Build games with melonJS — 23 guides to the 2.5D HTML5 engine's conventions, APIs and idioms, so generated code runs the first time.",
+	"description": "Build games with melonJS — 23 guides to the 2D, 2.5D and 3D HTML5 game engine, its conventions and idioms, so generated code runs the first time.",
 	"author": {
 		"name": "melonJS",
 		"url": "https://melonjs.org"

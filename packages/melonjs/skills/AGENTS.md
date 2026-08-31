@@ -13,8 +13,8 @@
 > `/plugin marketplace add melonjs/melonJS` — which registers the same guidance
 > as 23 routed skills.
 
-This project uses **melonJS 20.x**, an open-source 2.5D HTML5 game engine
-running on WebGPU, WebGL 2 or Canvas with automatic fallback.
+This project uses **melonJS 20.x**, an open-source HTML5 game engine covering
+2D, 2.5D and 3D, running on WebGPU, WebGL 2 or Canvas with automatic fallback.
 
 ## Read these before writing engine code
 

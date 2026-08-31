@@ -1,16 +1,17 @@
 ---
 name: melonjs
-description: "Use this skill FIRST for any melonJS task; it routes to the right specialised skill and lists the companion packages. melonJS is an open-source 2.5D HTML5 game engine running on WebGPU, WebGL 2 or Canvas. Covers Application setup, the scene graph, renderables, sprites, tilemaps, physics, audio, particles, shaders, and the 3D tier. Triggers on: melonjs, melonJS, me.game, Application, app.init, app.world, Renderable, Sprite, Stage, state.change, Camera2d, Camera3d, Mesh, tilemap, Tiled, TMX, ParticleEmitter, ShaderEffect, how do I make a game, HTML5 game engine."
+description: "Use this skill FIRST for any melonJS task; it routes to the right specialised skill and lists the companion packages. melonJS is an open-source 2D, 2.5D and 3D HTML5 game engine running on WebGPU, WebGL 2 or Canvas. Covers Application setup, the scene graph, renderables, sprites, tilemaps, physics, audio, particles, shaders, and the 3D tier — perspective cameras, meshes and glTF scenes. Triggers on: melonjs, melonJS, me.game, Application, app.init, app.world, Renderable, Sprite, Stage, state.change, Camera2d, Camera3d, Mesh, tilemap, Tiled, TMX, ParticleEmitter, ShaderEffect, how do I make a game, HTML5 game engine."
 license: MIT
 ---
 
 # melonJS
 
-Entry point for the melonJS skill collection. melonJS is an open-source 2.5D
-HTML5 game engine for indie developers — perspective and orthogonal cameras,
-GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D
-meshes, polygon-accurate physics and modern Tiled workflows. It runs on WebGPU,
-WebGL 2 or Canvas with automatic fallback, and has no runtime dependencies.
+Entry point for the melonJS skill collection. melonJS is an open-source HTML5
+game engine for indie developers, covering 2D, 2.5D and 3D — perspective and
+orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects,
+custom shaders, 3D meshes, polygon-accurate physics and modern Tiled workflows.
+It runs on WebGPU, WebGL 2 or Canvas with automatic fallback, and has no runtime
+dependencies.
 
 ## How to use this skill
 
