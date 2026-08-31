@@ -3,6 +3,7 @@ import {
 	Application,
 	boot,
 	Camera3d,
+	Color,
 	Matrix2d,
 	Matrix3d,
 	Mesh,
@@ -1479,6 +1480,134 @@ describe("Mesh × Camera3d world-space path", () => {
 			// which is why this case needs no winding correction
 			expect(val[5]).toBeCloseTo(-2, 5);
 			expect(val[10]).toBeCloseTo(-2, 5);
+		});
+	});
+	describe("vertexColors", () => {
+		// a 5-vertex pyramid, so a length mismatch is unambiguous
+		const geometry = () => {
+			return {
+				vertices: new Float32Array([
+					0, 1, 0, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1,
+				]),
+				uvs: new Float32Array([0.5, 0, 0, 1, 1, 1, 1, 1, 0, 1]),
+				indices: new Uint16Array([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]),
+				normalize: false,
+				scale: 1,
+				width: 2,
+				height: 2,
+			};
+		};
+
+		it("is undefined when nothing supplies it", () => {
+			// the batchers fall back to opaque white in this case, so a mesh
+			// that never asked for vertex colour costs nothing
+			const mesh = new Mesh(0, 0, geometry());
+			expect(mesh.vertexColors).toBeUndefined();
+		});
+
+		it("takes a packed Uint32Array as-is", () => {
+			const packed = new Uint32Array([1, 2, 3, 4, 5]);
+			const mesh = new Mesh(0, 0, { ...geometry(), vertexColors: packed });
+			// no copy: this is exactly the form the batchers read
+			expect(mesh.vertexColors).toBe(packed);
+		});
+
+		it("packs a Color per vertex", () => {
+			const colors = [
+				new Color(255, 0, 0),
+				new Color(0, 255, 0),
+				new Color(0, 0, 255),
+				new Color(255, 255, 255),
+				new Color(0, 0, 0),
+			];
+			const mesh = new Mesh(0, 0, { ...geometry(), vertexColors: colors });
+
+			expect(mesh.vertexColors).toBeInstanceOf(Uint32Array);
+			expect(mesh.vertexColors).toHaveLength(5);
+			for (let i = 0; i < colors.length; i++) {
+				expect(mesh.vertexColors[i]).toBe(colors[i].toUint32(colors[i].alpha));
+			}
+		});
+
+		it("packs a plain array of already-packed numbers", () => {
+			const mesh = new Mesh(0, 0, {
+				...geometry(),
+				vertexColors: [1, 2, 3, 4, 5],
+			});
+			expect(mesh.vertexColors).toEqual(new Uint32Array([1, 2, 3, 4, 5]));
+		});
+
+		it("throws when the length does not match the vertex count", () => {
+			// silently padding would leave the tail of the mesh reading whatever
+			// the buffer held, which gets debugged as a lighting bug
+			expect(() => {
+				return new Mesh(0, 0, {
+					...geometry(),
+					vertexColors: new Uint32Array([1, 2, 3]),
+				});
+			}).toThrow(/vertexColors has 3 entries, expected 5/);
+		});
+
+		it("names both counts in the error", () => {
+			expect(() => {
+				return new Mesh(0, 0, {
+					...geometry(),
+					vertexColors: [new Color(255, 0, 0)],
+				});
+			}).toThrow(
+				/Mesh: vertexColors has 1 entries, expected 5 \(one per vertex\)/,
+			);
+		});
+
+		describe("setVertexColor", () => {
+			it("starts the array on first use, leaving the rest white", () => {
+				const mesh = new Mesh(0, 0, geometry());
+				mesh.setVertexColor(2, new Color(255, 0, 0));
+
+				expect(mesh.vertexColors).toBeInstanceOf(Uint32Array);
+				expect(mesh.vertexColors).toHaveLength(5);
+				expect(mesh.vertexColors[2]).toBe(new Color(255, 0, 0).toUint32(1));
+				// untouched vertices stay opaque white rather than transparent
+				expect(mesh.vertexColors[0]).toBe(0xffffffff);
+				expect(mesh.vertexColors[4]).toBe(0xffffffff);
+			});
+
+			it("overwrites a colour supplied at construction", () => {
+				const mesh = new Mesh(0, 0, {
+					...geometry(),
+					vertexColors: new Uint32Array([1, 2, 3, 4, 5]),
+				});
+				mesh.setVertexColor(1, new Color(0, 255, 0));
+				expect(mesh.vertexColors[1]).toBe(new Color(0, 255, 0).toUint32(1));
+				expect(mesh.vertexColors[0]).toBe(1);
+			});
+
+			it("bumps the geometry version so the retained path re-uploads", () => {
+				// without this the colour applies on the immediate path and
+				// silently does not on the retained Camera3d one
+				const mesh = new Mesh(0, 0, geometry());
+				const before = mesh._geometryVersion;
+				mesh.setVertexColor(0, new Color(255, 0, 0));
+				expect(mesh._geometryVersion).toBeGreaterThan(before);
+			});
+
+			it("ignores an out-of-range index instead of throwing", () => {
+				const mesh = new Mesh(0, 0, geometry());
+				expect(() => {
+					mesh.setVertexColor(99, new Color(255, 0, 0));
+					mesh.setVertexColor(-1, new Color(255, 0, 0));
+				}).not.toThrow();
+				// and does not allocate the array for a write that never lands
+				expect(mesh.vertexColors).toBeUndefined();
+			});
+
+			it("carries the colour's alpha", () => {
+				const mesh = new Mesh(0, 0, geometry());
+				const half = new Color(255, 255, 255, 0.5);
+				mesh.setVertexColor(0, half);
+				expect(mesh.vertexColors[0]).toBe(half.toUint32(0.5));
+				expect(mesh.vertexColors[0]).not.toBe(0xffffffff);
+			});
 		});
 	});
 });

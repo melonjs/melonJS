@@ -703,7 +703,13 @@ export class Color {
 		const ug = (a[1] * 255) >> 0;
 		const ub = (a[2] * 255) >> 0;
 
-		return (((alpha * 255) >> 0) << 24) | (ur << 16) | (ug << 8) | ub;
+		// `>>> 0` and not `| 0`: any alpha at or above 0.5 sets bit 31, and the
+		// bitwise operators above yield a SIGNED int32 — so a method named
+		// `toUint32` was handing back a negative number for most colors. Every
+		// consumer writes it into a `Uint32Array` or a shader attribute, where
+		// the bit pattern is identical either way; what broke was reading it
+		// back, comparing it, or printing it.
+		return ((((alpha * 255) >> 0) << 24) | (ur << 16) | (ug << 8) | ub) >>> 0;
 	}
 
 	/**
