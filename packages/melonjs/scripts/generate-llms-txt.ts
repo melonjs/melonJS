@@ -224,7 +224,7 @@ const describe = (html: string): { summary: string; deprecated: boolean } => {
 const lines: string[] = [
 	"# melonJS",
 	"",
-	"> melonJS is an open source 2.5D HTML5 game engine, rendering on WebGPU, WebGL 2 or Canvas with automatic fallback and no runtime dependencies. This file indexes the complete generated API reference.",
+	"> melonJS is an open source HTML5 game engine covering 2D, 2.5D and 3D, rendering on WebGPU, WebGL 2 or Canvas with automatic fallback and no runtime dependencies. This file indexes the complete generated API reference.",
 	"",
 	"Three rules produce code that runs and is wrong, so they are worth stating up front:",
 	"",
@@ -236,7 +236,7 @@ const lines: string[] = [
 	"",
 	"## Guides",
 	"",
-	"- [Agent skills](https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills): task-oriented guides shipped in the npm package under `melonjs/skills/`, one per subsystem. Start with `melonjs/SKILL.md`.",
+	"- [Agent skills](https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills): task-oriented guides shipped in the npm package under `melonjs/skills/`, one per subsystem. Start with `melonjs/SKILL.md`; `melonjs/skills/AGENTS.md` is a ready-made project-root instruction file if you follow that convention.",
 	"- [Wiki](https://github.com/melonjs/melonJS/wiki): hand-written guides — rendering API, Tiled workflows, 3D, upgrade notes.",
 	"- [Examples](https://melonjs.github.io/melonJS/examples/): runnable demos; sources under `packages/examples/src/examples/`.",
 	"- [Changelog](https://github.com/melonjs/melonJS/blob/master/packages/melonjs/CHANGELOG.md): what changed and when, including breaking changes.",
