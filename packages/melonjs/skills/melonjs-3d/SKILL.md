@@ -154,6 +154,18 @@ emissive.
 Only meshes fog. 2D content, HUDs and `floating` renderables never reach the
 mesh shaders, so a screen-space overlay stays clean with no work.
 
+**A custom mesh shader is not fogged.** Fog is compiled into the engine's own
+mesh programs — `#define FOG` on WebGL, an `enable_fog` overridable constant on
+WebGPU — and a shader you supply is yours: the engine binds it as written and
+never substitutes a fogged variant. A mesh carrying a `ShaderEffect` therefore
+stays at full contrast while the scene around it recedes, which is usually
+surprising rather than wanted. Either fold the fog term into your own shader, or
+leave that mesh on the built-in shading.
+
+The flip side is the reason fog costs nothing when unused: with no camera fog,
+the mesh programs are compiled without any of it, on both backends. It is not a
+branch that is skipped at runtime — the code is not there.
+
 ## Meshes
 
 ```js
