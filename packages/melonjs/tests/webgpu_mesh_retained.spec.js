@@ -167,7 +167,12 @@ describe("WebGPU retained mesh geometry (mock device)", () => {
 		const geometry = batcher.retained.get(mesh);
 		const buffers = [geometry.vertexBuffer, geometry.indexBuffer];
 
-		const stub = { batchers: new Map([["mesh", batcher]]) };
+		// `deleteMeshGeometry` also purges the transparent queue, so the stub
+		// needs that method — the real one lives on the base `Renderer`
+		const stub = {
+			batchers: new Map([["mesh", batcher]]),
+			removeQueuedTransparent: () => {},
+		};
 		WebGPURenderer.prototype.deleteMeshGeometry.call(stub, mesh);
 		expect(batcher.retained.has(mesh)).toBe(false);
 		expect(renderer.calls.retiredBuffers).toEqual(buffers);

@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, castGroundShadow, lit."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit."
 license: MIT
 ---
 
@@ -111,6 +111,50 @@ world.addChild(skybox, 100000);  // equally far: sign does not matter
 Both hold at any camera position. A HUD given the huge z that would put it on
 top in 2D lands at the far end of the level instead, with the scenery drawing
 over it.
+
+## Transparency
+
+A mesh fades by setting its opacity — there is nothing else to switch on:
+
+```js
+ghost.setOpacity(0.4);
+```
+
+Meshes render in two phases. The **opaque pass** writes depth in sort order; the
+**transparent pass** replays afterwards, back-to-front, blending and writing no
+depth. A draw lands in the second whenever its alpha is fractional.
+
+That default matters because the opaque path writes premultiplied colour with
+blending off, so before this a faded mesh came out **darkened toward black**
+rather than see-through — the background contributed nothing.
+
+**`transparent: true`** when the transparency is in the TEXTURE rather than the
+opacity — a soft-edged glow, smoke, a glTF material with `alphaMode: "BLEND"`.
+The automatic check reads the draw's alpha and cannot see into a texture. Watch
+`alphaCutoff` here: it discards texels *before* blending sees them, so a soft
+edge needs a low cutoff (`Sprite3d` drops its own default to `1/255` when you
+set `transparent: true`).
+
+**`transparent: false`** pins a mesh to the opaque pass however it is faded.
+
+Blending uses the renderable's existing `blendMode`, so a glow is one property:
+
+```js
+const glow = new Mesh(0, 0, {
+    ...quad, texture: glowTexture,
+    transparent: true, blendMode: "additive", alphaCutoff: 0,
+});
+```
+
+| | |
+| --- | --- |
+| sorting | **per object**, by distance from the camera |
+| intersecting transparent meshes | may pop as the camera moves — split them, or accept it |
+| `InstancedMesh` | sorts as **one** object; instances draw in buffer order |
+| needs | a GPU backend and a `Camera3d` |
+
+Ground shadows ride the same pass — a blob is a decal, and decals are its first
+client rather than a feature of their own.
 
 ## Distance fog
 
@@ -448,6 +492,9 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | distant surfaces z-fight | `near` too small for the scene scale |
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
+| a faded mesh goes dark instead of see-through | `transparent: false` on it, or a 2D camera — the transparent pass needs a `Camera3d` |
+| a soft-edged glow has hard edges | `alphaCutoff` discarded the soft texels; lower it |
+| two transparent objects pop as the camera moves | per-object sorting cannot order intersecting geometry |
 | a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
 | fog hangs in the sky as thickly as in the valley | uniform fog — add `heightFalloff` so it pools low |
 | mist sits on the ridges instead of the valley floor | the `fogHeight` sign — Y is DOWN here, density rises below it |

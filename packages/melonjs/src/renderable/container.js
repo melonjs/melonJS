@@ -1297,7 +1297,7 @@ export default class Container extends Renderable {
 					// so they cannot be replayed once it is installed, and this
 					// is where they belong in the order anyway: over the world,
 					// under the overlay about to be drawn.
-					renderer.flushGroundShadows?.();
+					renderer.flushTransparent?.();
 					renderer.beginScreenSpace?.();
 					renderer.save();
 					renderer.resetTransform();

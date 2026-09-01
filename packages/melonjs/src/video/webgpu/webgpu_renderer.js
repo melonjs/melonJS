@@ -1811,10 +1811,10 @@ export default class WebGPURenderer extends Renderer {
 	 */
 	drawInstancedShadow(mesh, shadowMatrix, quad) {
 		const tint = this.currentTint.toUint32(this.getGlobalAlpha());
-		// deferred to the end of the mesh pass for the same reason a per-object
-		// shadow is — see `Renderer#queueGroundShadow`
-		if (this._shadowFlushing !== true) {
-			this.queueGroundShadow(quad, shadowMatrix, tint, mesh);
+		// held back for the transparent pass for the same reason a per-object
+		// decal is — see `Renderer#queueTransparent`
+		if (this._transparentFlushing !== true) {
+			this.queueTransparent(quad, shadowMatrix, tint, "normal", mesh);
 			return;
 		}
 		this.setBatcher(quad.lit === true ? "litMesh" : "mesh");
@@ -1833,19 +1833,30 @@ export default class WebGPURenderer extends Renderer {
 
 		const retained = modelMatrix !== undefined;
 
-		// A ground shadow waits for the end of the mesh pass rather than
-		// drawing here: it writes no depth, so every opaque mesh still to come
-		// would paint over it (#1515). `flushGroundShadows` calls back in with
-		// `_shadowFlushing` set, and that pass takes the branch below.
+		// Route a transparent draw into the transparent pass rather than
+		// drawing it here. It writes no depth, so every opaque mesh still to
+		// come would paint over it, and blending needs back-to-front order.
+		//
+		// `mesh.transparent` is tri-state: `true` always (a soft-alpha TEXTURE
+		// is invisible to the check below), `false` never, and unset means
+		// "whenever this draw resolves to fractional alpha" — the opaque
+		// pipeline writes premultiplied colour with blend `"none"`, so a faded
+		// mesh darkens toward black instead of fading. `_blendedDraw` marks the
+		// internal decal quads. Kept in step with the WebGL twin.
+		const packedTint = this.currentTint.toUint32(this.getGlobalAlpha());
 		if (
-			mesh._blendedDraw === true &&
 			retained &&
-			this._shadowFlushing !== true
+			this._transparentFlushing !== true &&
+			(mesh._blendedDraw === true ||
+				mesh.transparent === true ||
+				(mesh.transparent !== false && packedTint >>> 24 !== 0xff))
 		) {
-			this.queueGroundShadow(
+			this.queueTransparent(
 				mesh,
 				modelMatrix,
-				this.currentTint.toUint32(this.getGlobalAlpha()),
+				packedTint,
+				mesh._blendedDraw === true ? "normal" : mesh.blendMode,
+				undefined,
 			);
 			return;
 		}
@@ -1933,6 +1944,10 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {object} mesh - the mesh whose GPU geometry should be freed
 	 */
 	deleteMeshGeometry(mesh) {
+		// a mesh torn down between being queued and the transparent pass
+		// running must not be replayed — the replay would re-upload geometry
+		// for something the caller has finished with
+		this.removeQueuedTransparent(mesh);
 		this.batchers.forEach((batcher) => {
 			batcher.releaseRetained?.(mesh);
 		});

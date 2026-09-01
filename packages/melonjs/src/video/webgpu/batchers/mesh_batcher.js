@@ -989,7 +989,8 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// stops writing depth, so overlapping shadows blend instead of
 		// fighting. Set per draw, never left behind: an ordinary mesh must
 		// resolve to exactly the pipeline it always did.
-		const blended = mesh._blendedDraw === true;
+		const blend = renderer._replayBlend ?? null;
+		const blended = blend !== null;
 		// `undefined` rather than `true` for the ordinary case: the axis reads
 		// `!== false`, so leaving it unset keeps `meshState` byte-for-byte what
 		// it was before this existed, and the pipeline key gains nothing
@@ -998,7 +999,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),
 			"triangle-list",
-			blended ? "normal" : "none",
+			blend ?? "none",
 			renderer.premultipliedAlpha,
 			renderer.stencilMode,
 			this.meshState,

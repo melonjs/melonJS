@@ -590,6 +590,10 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {object} mesh - the mesh whose geometry should be freed
 	 */
 	deleteMeshGeometry(mesh) {
+		// a mesh torn down between being queued and the transparent pass
+		// running must not be replayed — the replay would re-upload geometry
+		// for something the caller has finished with
+		this.removeQueuedTransparent(mesh);
 		this.batchers?.forEach((batcher) => {
 			batcher.releaseRetained?.(mesh);
 		});
@@ -864,11 +868,6 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		if (this.currentBatcher !== batcher) {
-			// Leaving mesh mode drains the deferred ground-shadow queue first,
-			// so the blobs land on top of every opaque mesh in the pass (#1515).
-			// Switching *within* mesh mode (lit ↔ unlit) must NOT drain it —
-			// the meshes still to come are exactly what the shadows have to
-			// beat.
 			if (this.currentBatcher !== undefined) {
 				// flush the current batcher, then let it tear down any
 				// state it set up at `bind()` time (Mesh batcher restores
@@ -893,23 +892,6 @@ export default class WebGLRenderer extends Renderer {
 
 		return this.currentBatcher;
 	}
-
-	/**
-	 * Whether the device state right now is the scene's, so a deferred
-	 * ground-shadow drain (#1515) would actually land where it is meant to.
-	 *
-	 * A batcher transition is normally the end of the mesh pass — but not
-	 * every one is. `setMask` fills its shape through the primitive batcher
-	 * with **colour writes off and `stencilOp(…, INCR)` armed**, so draining
-	 * there both discards every blob and stamps their footprints into the mask
-	 * being built. A transition inside a post-effect bracket is bound to the
-	 * child's FBO, so the blobs would be captured into that effect chain and
-	 * lost from the world. In either case the queue simply waits: the camera
-	 * drains it at the end of the world walk, which is the point that is always
-	 * correct.
-	 * @returns {boolean} true when a drain is safe here
-	 * @ignore
-	 */
 
 	/**
 	 * Reset the gl transform to identity
@@ -2114,12 +2096,42 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {object} quad - the shared shadow quad
 	 * @ignore
 	 */
+	/**
+	 * Install a blend function for one draw WITHOUT touching
+	 * `currentBlendMode`.
+	 *
+	 * The transparent pass sets state per entry and restores mesh-mode defaults
+	 * afterwards, so the 2D blend cache must not learn about it — the next
+	 * ordinary draw would then skip a `setBlendMode` it genuinely needs. Same
+	 * deliberate cache bypass `MeshBatcher.beginBlendedDraw` documents.
+	 * @param {string} mode - a blend mode token
+	 * @ignore
+	 */
+	applyBlendFunction(mode) {
+		const gl = this.gl;
+		// ALWAYS premultiplied, whatever `this.premultipliedAlpha` says — that
+		// flag describes source TEXTURES, while every mesh vertex shader
+		// premultiplies its own output unconditionally
+		// (`vColor = vec4(tinted.rgb * tinted.a, tinted.a)`). Passing the flag
+		// here selects SRC_ALPHA and multiplies by alpha a second time: a
+		// half-faded white mesh over blue comes out at three-quarter blue
+		// instead of full. It went unnoticed while decals were the only client,
+		// because their source colour is black and 0 × anything is 0.
+		const state = blendStateFor(normalizeBlendMode(mode), true);
+		gl.enable(gl.BLEND);
+		gl.blendEquation(GL_BLEND_OP[state.operation]);
+		gl.blendFunc(
+			GL_BLEND_FACTOR[state.srcFactor],
+			GL_BLEND_FACTOR[state.dstFactor],
+		);
+	}
+
 	drawInstancedShadow(mesh, shadowMatrix, quad) {
 		const tint = this.currentTint.toUint32(this.getGlobalAlpha());
-		// deferred to the end of the mesh pass for the same reason a per-object
-		// shadow is — see `queueGroundShadow`
-		if (this._shadowFlushing !== true) {
-			this.queueGroundShadow(quad, shadowMatrix, tint, mesh);
+		// held back for the transparent pass for the same reason a per-object
+		// decal is — see `queueTransparent`
+		if (this._transparentFlushing !== true) {
+			this.queueTransparent(quad, shadowMatrix, tint, "normal", mesh);
 			return;
 		}
 		this.setBatcher(quad.lit === true ? "litMesh" : "mesh");
@@ -2140,6 +2152,35 @@ export default class WebGLRenderer extends Renderer {
 
 		const gl = this.gl;
 		const retained = modelMatrix !== undefined;
+
+		// Route a transparent draw into the transparent pass rather than
+		// drawing it here. Hoisted above the batcher selection so an opaque
+		// scene pays two property reads and one compare against a value this
+		// method already computes further down for the draw itself.
+		//
+		// `mesh.transparent` is tri-state: `true` always (a soft-alpha TEXTURE
+		// is invisible to the check below), `false` never, and unset means
+		// "whenever this draw resolves to fractional alpha" — the opaque path
+		// writes premultiplied colour with blending off, so a faded mesh
+		// darkens toward black instead of fading, which is a bug rather than a
+		// contract. `_blendedDraw` marks the internal decal quads.
+		const packedTint = this.currentTint.toUint32(this.getGlobalAlpha());
+		if (
+			retained &&
+			this._transparentFlushing !== true &&
+			(mesh._blendedDraw === true ||
+				mesh.transparent === true ||
+				(mesh.transparent !== false && packedTint >>> 24 !== 0xff))
+		) {
+			this.queueTransparent(
+				mesh,
+				modelMatrix,
+				packedTint,
+				mesh._blendedDraw === true ? "normal" : mesh.blendMode,
+				undefined,
+			);
+			return;
+		}
 
 		// Route to the lit or unlit mesh batcher. `mesh.lit` meshes use the
 		// `LitMeshBatcher` (world-space normals + lighting); everything else
@@ -2196,7 +2237,7 @@ export default class WebGLRenderer extends Renderer {
 		// leak the cull toggle or leave the custom program bound — the NEXT
 		// unshaded mesh would silently draw with it
 		try {
-			const tint = this.currentTint.toUint32(this.getGlobalAlpha());
+			const tint = packedTint;
 			if (
 				mesh.instanceLayout !== undefined &&
 				retained &&

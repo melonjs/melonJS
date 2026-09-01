@@ -461,7 +461,14 @@ describe("mesh distance fog (#1622)", () => {
 			// alpha-cutout mesh is the grey halo around every cut edge. The
 			// upper bound below is what excludes it.
 			renderer.setFog(fog({ near: 0, invRange: 1 / 100 }));
-			const px = drawRed(quad(), 500, 0.5);
+			// pinned to the OPAQUE pass: this is about the fog blend maths, and
+			// a fractional alpha would otherwise route the draw into the
+			// transparent pass (#1516), where the pixel is composited rather
+			// than replaced and the assertion below would measure something
+			// else entirely
+			const opaque = quad();
+			opaque.transparent = false;
+			const px = drawRed(opaque, 500, 0.5);
 			renderer.setFog(null);
 			// Only the colour channels are read: the drawing buffer reports an
 			// opaque alpha on readback whatever the fragment wrote, so px[3]

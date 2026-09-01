@@ -336,29 +336,6 @@ export default class Renderer {
 	flush() {}
 
 	/**
-	 * Hold one ground shadow ({@link Mesh#castGroundShadow}) back until the end
-	 * of the mesh pass (#1515).
-	 *
-	 * A blob shadow deliberately writes no depth, so that two overlapping at
-	 * one ground height blend instead of fighting. The price of that choice is
-	 * that it leaves nothing in the depth buffer to defend itself with: any
-	 * opaque mesh drawn afterwards simply paints over it. The ground plane is
-	 * exactly that mesh whenever it sorts after the props standing on it — the
-	 * common case, because a large plane's single sort key says nothing useful
-	 * about where it sits relative to what stands on it.
-	 *
-	 * So shadows are collected here and drawn once the opaque meshes are down.
-	 * Depth *testing* stays on throughout, so a shadow is still correctly
-	 * hidden behind geometry genuinely in front of it: deferring changes only
-	 * who paints over whom among draws that write no depth.
-	 * @param {object} quad - the shared shadow quad
-	 * @param {Matrix3d} modelMatrix - where the blob sits (copied, not retained)
-	 * @param {number} tint - packed ARGB tint for the draw
-	 * @param {object} [instanced] - the `InstancedMesh` whose instance buffer
-	 * supplies one blob per instance, for the instanced tier
-	 * @ignore
-	 */
-	/**
 	 * Mark the start of a screen-space (`floating`) draw, during which the
 	 * camera's screen projection is installed and world-space geometry cannot
 	 * be replayed. Balanced by {@link Renderer#endScreenSpace}.
@@ -377,61 +354,152 @@ export default class Renderer {
 		this._screenSpaceDepth = depth > 0 ? depth : 0;
 	}
 
-	queueGroundShadow(quad, modelMatrix, tint, instanced) {
-		const pool = (this._shadowPool ??= []);
-		const at = this._shadowCount ?? 0;
-		// The matrix is COPIED, not referenced: every shadow in a scene shares
-		// one quad, so `quad._modelMatrix` is rewritten by the next caster long
-		// before this entry is drawn. Slots are reused frame to frame, so a
-		// steady scene allocates nothing after its first.
+	/**
+	 * Hold one draw back for the transparent pass.
+	 *
+	 * The mesh tier renders in two phases. The **opaque pass** writes depth and
+	 * runs in whatever order the container sorted; the **transparent pass**
+	 * replays this queue afterwards, back-to-front, with blending on and depth
+	 * writes off. Depth *testing* stays on throughout, so a transparent object
+	 * is still correctly hidden behind opaque geometry in front of it.
+	 *
+	 * Both halves are necessary. Blending needs back-to-front order to
+	 * composite correctly, and a draw that writes no depth has nothing to
+	 * defend itself with — any opaque mesh drawn afterwards simply paints over
+	 * it. A ground plane does exactly that whenever it sorts after the props
+	 * standing on it, which is the common case, because a large plane's single
+	 * sort key says nothing about where it sits relative to what stands on it.
+	 * @param {object} mesh - the renderable to replay
+	 * @param {Matrix3d} modelMatrix - where it sits (COPIED, not retained: the
+	 * decal clients share one quad whose matrix the next caster overwrites long
+	 * before this entry is drawn)
+	 * @param {number} tint - packed ARGB tint for the draw
+	 * @param {string} [blend] - blend mode for this entry alone
+	 * @param {object} [instanced] - the `InstancedMesh` whose instance buffer
+	 * supplies one draw per instance, for the instanced tier
+	 * @ignore
+	 */
+	queueTransparent(mesh, modelMatrix, tint, blend, instanced) {
+		const pool = (this._transparentPool ??= []);
+		const at = this._transparentCount ?? 0;
+		// Slots are reused frame to frame, so a steady scene allocates nothing
+		// after its first.
 		let entry = pool[at];
 		if (entry === undefined) {
-			entry = { quad: null, matrix: new Matrix3d(), tint: 0, instanced: null };
+			entry = {
+				mesh: null,
+				matrix: new Matrix3d(),
+				tint: 0,
+				blend: "normal",
+				key: 0,
+				instanced: null,
+			};
 			pool[at] = entry;
 		}
-		entry.quad = quad;
+		entry.mesh = mesh;
 		entry.matrix.copy(modelMatrix);
 		entry.tint = tint;
+		entry.blend = blend ?? "normal";
 		entry.instanced = instanced ?? null;
-		this._shadowCount = at + 1;
+		// Squared radial distance from the eye, taken once here rather than per
+		// comparison. Radial rather than view-space z for the same reason the
+		// fog distance is: no sign-convention trap, and stable as the camera
+		// turns. The view is rigid, so its inverse translation is -Rᵀ·t.
+		const v = this.currentTransform.val;
+		const m = modelMatrix.val;
+		const ex = -(v[0] * v[12] + v[1] * v[13] + v[2] * v[14]);
+		const ey = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
+		const ez = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
+		const dx = m[12] - ex;
+		const dy = m[13] - ey;
+		const dz = m[14] - ez;
+		entry.key = dx * dx + dy * dy + dz * dz;
+		this._transparentCount = at + 1;
 	}
 
 	/**
-	 * Draw every ground shadow queued since the last drain, then empty the
-	 * queue (#1515). Called when the renderer leaves mesh mode, and once more
-	 * at end of frame for a scene made only of meshes, which never switches
-	 * away from mesh mode on its own.
+	 * Queue one ground-shadow decal.
+	 *
+	 * A blob shadow is a decal, and decals are the transparent pass's first
+	 * client rather than a feature of their own.
+	 * @param {object} quad - the shared shadow quad
+	 * @param {Matrix3d} modelMatrix - where the blob sits
+	 * @param {number} tint - packed ARGB tint for the draw
+	 * @param {object} [instanced] - the instanced tier's source mesh
+	 * @deprecated since 20.4.0, use {@link Renderer#queueTransparent}
+	 * @ignore
+	 */
+	queueGroundShadow(quad, modelMatrix, tint, instanced) {
+		this.queueTransparent(quad, modelMatrix, tint, "normal", instanced);
+	}
+
+	/**
+	 * Run the transparent pass: draw everything queued since the last drain,
+	 * back-to-front, then empty the queue.
+	 *
+	 * Called at the three points where the world draw is genuinely finished —
+	 * `Container.draw` just before a floating child, `Camera2d.draw` once the
+	 * container is down, and `Application.draw` at end of frame. Deliberately
+	 * NOT on a batcher transition: anything non-mesh sorting mid-scene raises
+	 * one, and every mesh still to come would then paint over what was just
+	 * replayed.
 	 *
 	 * Inert on a backend that never queues — the Canvas renderer has no depth
-	 * buffer and so no ground shadows at all.
+	 * buffer, and composites through the 2D context instead.
 	 */
-	flushGroundShadows() {
-		const count = this._shadowCount ?? 0;
+	flushTransparent() {
+		const count = this._transparentCount ?? 0;
 		if (
 			count === 0 ||
-			this._shadowFlushing === true ||
-			// A queued blob is WORLD-space geometry, and replaying it needs the
+			this._transparentFlushing === true ||
+			// A queued entry is WORLD-space geometry, and replaying it needs the
 			// world projection. `Container.draw` installs the camera's screen
 			// projection around a `floating` child, so a drain triggered from
-			// inside that window feeds every blob screen-space clip coordinates
+			// inside that window feeds every entry screen-space clip coordinates
 			// and lands it off-screen — one HUD silently deleted every ground
 			// shadow in the scene. Skipping is safe rather than lossy: the
 			// queue survives, and `Container.draw` drains it just BEFORE
-			// opening the window, which is also where the blobs belong —
-			// under the overlay, over the world.
+			// opening the window, which is also where these belong — over the
+			// world, under the overlay.
 			(this._screenSpaceDepth ?? 0) > 0
 		) {
 			return;
 		}
-		const pool = this._shadowPool;
+		const pool = this._transparentPool;
+		// Back-to-front, because blending is order-dependent. Sorted over the
+		// LIVE range only — pooled slots past `count` hold stale entries that
+		// must not be dragged into it. Binary insertion: stable, allocation
+		// free, and near-linear on the nearly-sorted input a depth-sorted
+		// container already produces. If a scene ever proves that wrong, sort
+		// an index scratch with typed keys rather than reaching for
+		// `Array.prototype.sort` over the pool.
+		for (let i = 1; i < count; i++) {
+			const entry = pool[i];
+			const key = entry.key;
+			let lo = 0;
+			let hi = i;
+			while (lo < hi) {
+				const mid = (lo + hi) >> 1;
+				// descending: farthest first
+				if (pool[mid].key < key) {
+					hi = mid;
+				} else {
+					lo = mid + 1;
+				}
+			}
+			for (let j = i; j > lo; j--) {
+				pool[j] = pool[j - 1];
+			}
+			pool[lo] = entry;
+		}
 		// emptied BEFORE the replay, not after: the draws below re-enter
 		// `setBatcher`, which calls back in here, and a queue still holding
-		// entries would recurse. `_shadowFlushing` guards the same door from
-		// the other side, and covers the re-entry into `drawMesh`.
-		this._shadowCount = 0;
-		this._shadowFlushing = true;
+		// entries would recurse. `_transparentFlushing` guards the same door
+		// from the other side, and covers the re-entry into `drawMesh`.
+		this._transparentCount = 0;
+		this._transparentFlushing = true;
 		try {
-			// The colour the shadow was queued WITH has to be put back, because
+			// The colour the entry was queued WITH has to be put back, because
 			// both backends rebuild the draw tint from `currentTint` +
 			// `getGlobalAlpha()` — long since restored to the scene's values by
 			// the time this replay runs.
@@ -452,23 +520,68 @@ export default class Renderer {
 						packed & 0xff,
 					);
 					this.setGlobalAlpha(((packed >>> 24) & 0xff) / 255);
+					// read by the batchers instead of a per-mesh flag: the same
+					// mesh can be queued twice under different modes, and the
+					// entry is the only thing that knows which is which
+					this._replayBlend = entry.blend;
 					if (entry.instanced !== null) {
-						this.drawInstancedShadow(entry.instanced, entry.matrix, entry.quad);
+						this.drawInstancedShadow(entry.instanced, entry.matrix, entry.mesh);
 					} else {
-						this.drawMesh(entry.quad, entry.matrix);
+						this.drawMesh(entry.mesh, entry.matrix);
 					}
 					// drop the references, so a destroyed mesh is not held alive by
 					// a pooled slot until that slot is next reused
-					entry.quad = null;
+					entry.mesh = null;
 					entry.instanced = null;
 				}
 			} finally {
+				this._replayBlend = null;
 				tint.setColor(savedR, savedG, savedB, savedTintAlpha);
 				this.setGlobalAlpha(savedAlpha);
 			}
 		} finally {
-			this._shadowFlushing = false;
+			this._transparentFlushing = false;
 		}
+	}
+
+	/**
+	 * Run the transparent pass.
+	 * @deprecated since 20.4.0, use {@link Renderer#flushTransparent}
+	 */
+	flushGroundShadows() {
+		this.flushTransparent();
+	}
+
+	/**
+	 * Drop any queued entry belonging to this mesh, so a destroyed renderable
+	 * is never replayed — which would re-upload geometry for something the
+	 * caller has finished with.
+	 * @param {object} mesh - the renderable being torn down
+	 * @ignore
+	 */
+	removeQueuedTransparent(mesh) {
+		const count = this._transparentCount ?? 0;
+		if (count === 0) {
+			return;
+		}
+		const pool = this._transparentPool;
+		let write = 0;
+		for (let read = 0; read < count; read++) {
+			const entry = pool[read];
+			if (entry.mesh === mesh || entry.instanced === mesh) {
+				entry.mesh = null;
+				entry.instanced = null;
+				continue;
+			}
+			if (write !== read) {
+				// order-preserving compaction: swap so no live entry is lost
+				// and the emptied slot stays in the pool for reuse
+				pool[read] = pool[write];
+				pool[write] = entry;
+			}
+			write++;
+		}
+		this._transparentCount = write;
 	}
 
 	/**
@@ -502,7 +615,16 @@ export default class Renderer {
 		// frame we are abandoning would paint them after `clear()`, and on the
 		// context-lost branch would draw geometry belonging to the dead
 		// context. The frame is being thrown away; its shadows go with it.
-		this._shadowCount = 0;
+		// null the references as well as the count: a discarded queue would
+		// otherwise keep every queued renderable reachable until its pooled
+		// slot happened to be reused
+		const queued = this._transparentCount ?? 0;
+		for (let i = 0; i < queued; i++) {
+			const entry = this._transparentPool[i];
+			entry.mesh = null;
+			entry.instanced = null;
+		}
+		this._transparentCount = 0;
 		this.renderState.reset(this.width, this.height);
 		this.resetTransform();
 		this.setBlendMode(this.settings.blendMode);
