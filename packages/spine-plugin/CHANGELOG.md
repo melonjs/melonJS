@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.1.0 - _unreleased_
+
+### Changed
+
+- **the canvas skeleton renderer now draws through spine-core's `SkeletonRendererCore`** — the renderer-agnostic geometry pass (mesh deformation, `SkeletonClipping`, per-slot draw-order batching) that spine-canvaskit, spine-construct3 and this plugin's own WebGPU batcher already build on. The plugin keeps only the melonJS-specific replay: one `save()`/`setTint()`/`setGlobalAlpha()`/`setBlendMode()` per emitted command, then an affine `drawImage` per triangle. Blend modes, tinting and clipping behave as before; what changes is who owns the geometry, so upstream fixes to clipping and draw order now arrive with a runtime bump instead of being re-derived here. This is the shape Esoteric Software asked for in [spine-runtimes#3125](https://github.com/EsotericSoftware/spine-runtimes/pull/3125), where the canvas fixes this renderer was built on were closed in favour of the `SkeletonRendererCore` API
+- clipping under the canvas backend is now Spine's own polygon clipping (arbitrary, per slot-range, concave included) instead of an approximation that pushed the clipping attachment through melonJS's `setMask()` as a single polygon
+- the canvas triangle path is auto-enabled for **clipping** attachments as well as meshes: clipping is resolved against triangles, so a region-only skeleton that clips no longer silently ignores its clipping attachments. Skeletons with neither keep the faster one-`drawImage`-per-slot path, which — matching upstream spine-canvas — draws regions only
+
 ## 4.0.0 - _2026-08-21_
 
 ### Added

@@ -1,5 +1,6 @@
 import * as spineCanvas from "@esotericsoftware/spine-canvas";
 import {
+	ClippingAttachment,
 	MeshAttachment,
 	Physics,
 	Skeleton,
@@ -255,13 +256,19 @@ export default class Spine extends Renderable {
 		// Instantiate a new skeleton based on the atlas and skeleton data.
 		this.skeleton = new this.runtime.Skeleton(skeletonData);
 
-		// auto-detect if the skeleton uses mesh attachments for canvas renderer
+		// auto-detect whether the canvas renderer needs its triangle path:
+		// mesh attachments have no quad to blit, and clipping is resolved by
+		// spine-core's `SkeletonClipping` against triangles. Region-only,
+		// clip-free skeletons keep the faster one-drawImage-per-slot path.
 		// (the batched WebGL/WebGPU paths always render triangles)
 		if (!this.isWebGL && !this.isWebGPU) {
 			this.skeletonRenderer.triangleRendering = skeletonData.skins.some(
 				(skin) => {
 					return skin.getAttachments().some((entry) => {
-						return entry.attachment instanceof MeshAttachment;
+						return (
+							entry.attachment instanceof MeshAttachment ||
+							entry.attachment instanceof ClippingAttachment
+						);
 					});
 				},
 			);

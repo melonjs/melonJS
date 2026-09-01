@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/spine-plugin",
-	"version": "4.0.0",
+	"version": "4.1.0",
 	"description": "melonJS Spine plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/spine-plugin",
 	"type": "module",

@@ -1,16 +1,22 @@
 import {
 	ClippingAttachment,
-	MeshAttachment,
 	RegionAttachment,
-	SkeletonClipping,
+	SkeletonRendererCore,
 } from "@esotericsoftware/spine-core";
 import { Color as MColor, Math as MMath, Polygon } from "melonjs";
 
-// World vertices are stored positions-only (stride 2). UVs come straight
-// from the spine sequence (`sequence.getUVs(index)`), passed to drawMesh
-// alongside the position buffer — no interleave step, no copy.
-// Per-vertex color isn't needed either: canvas tinting is applied per slot
-// through renderer.setTint() / setGlobalAlpha() before the mesh is drawn.
+// Geometry (mesh vertices, clipping, batching) comes from spine-core's
+// renderer-agnostic `SkeletonRendererCore` — the same pass spine-canvaskit
+// and spine-construct3 build on. It hands back a linked list of batched
+// render commands (positions, UVs, packed colors, indices, blend mode,
+// texture); all this class does is replay them through melonJS's canvas
+// renderer API (transform, drawImage, setTint, setGlobalAlpha, setMask).
+//
+// Vertices are requested positions-only (stride 2): UVs arrive in their own
+// buffer, and per-vertex color is uniform across a command — the core only
+// batches slots that share a color — so canvas tinting is applied once per
+// command through setTint() / setGlobalAlpha() instead of per vertex.
+const VERTEX_SIZE = 2;
 
 /**
  * Spine blend mode enum to melonJS blend mode string mapping
@@ -22,9 +28,6 @@ const DEBUG_REGION_COLOR = "green";
 const DEBUG_MESH_COLOR = "yellow";
 const DEBUG_CLIP_COLOR = "blue";
 
-// shared vertex buffer (positions only, stride 2), grown as needed
-let worldVertices = new Float32Array(2 * 1024);
-
 /**
  * @classdesc
  * A Canvas-based Spine skeleton renderer that draws through melonJS's
@@ -34,10 +37,11 @@ let worldVertices = new Float32Array(2 * 1024);
  */
 export default class SkeletonRenderer {
 	/**
-	 * Whether to enable triangle rendering for mesh attachments.
-	 * When false, only region (image) attachments are rendered using the
-	 * fast bone-transform path. Automatically enabled by Spine when the
-	 * skeleton contains mesh attachments.
+	 * Whether to render the skeleton as triangles through
+	 * `SkeletonRendererCore`. Required for mesh attachments and for
+	 * clipping; region-only skeletons without clipping are drawn through
+	 * the faster one-drawImage-per-slot path instead. Set automatically by
+	 * {@link Spine} from the skeleton content.
 	 * @type {boolean}
 	 * @default false
 	 */
@@ -60,10 +64,12 @@ export default class SkeletonRenderer {
 	// reusable color instance to avoid allocations
 	tintColor = new MColor();
 
-	// clipping state
-	clipper = new SkeletonClipping();
+	// spine-core's renderer-agnostic geometry pass
+	core = new SkeletonRendererCore();
+
+	// scratch state for the debug clipping outlines only
 	clippingVertices = [];
-	clippingMask = new Polygon(0, 0, [
+	clippingShape = new Polygon(0, 0, [
 		{ x: 0, y: 0 },
 		{ x: 1, y: 0 },
 		{ x: 1, y: 1 },
@@ -75,126 +81,135 @@ export default class SkeletonRenderer {
 	 * @param {Skeleton} skeleton - the Spine skeleton to draw
 	 */
 	draw(renderer, skeleton) {
-		const clipper = this.clipper;
+		if (this.triangleRendering) {
+			this.drawTriangles(renderer, skeleton);
+		} else {
+			this.drawImages(renderer, skeleton);
+		}
+	}
+
+	/**
+	 * Fast path: one transformed `drawImage` per region attachment.
+	 * Mesh attachments and clipping are not supported here — skeletons
+	 * using either are rendered through {@link SkeletonRenderer#drawTriangles}.
+	 * @param {CanvasRenderer} renderer - the melonJS canvas renderer
+	 * @param {Skeleton} skeleton - the Spine skeleton to draw
+	 * @ignore
+	 */
+	drawImages(renderer, skeleton) {
 		const drawOrder = skeleton.drawOrder.appliedPose;
 		const skeletonColor = skeleton.color;
-		const clippingMask = this.clippingMask;
-		const debugRendering = this.debugRendering;
+		const color = this.tintColor;
 
 		for (let i = 0, n = drawOrder.length; i < n; i++) {
 			const slot = drawOrder[i];
 			const bone = slot.bone;
-			let image;
-			let region;
-			let triangles;
-			let meshUVs;
 
 			if (!bone.active) {
-				clipper.clipEnd(slot);
-				renderer.clearMask();
 				continue;
 			}
 
 			const slotPose = slot.appliedPose;
 			const attachment = slotPose.attachment;
 
-			if (attachment instanceof RegionAttachment) {
-				const sequence = attachment.sequence;
-				region = sequence.regions[sequence.resolveIndex(slotPose)];
-				image = region.texture.getImage();
-			} else if (
-				this.triangleRendering &&
-				attachment instanceof MeshAttachment
-			) {
-				const sequence = attachment.sequence;
-				const sequenceIndex = sequence.resolveIndex(slotPose);
-				if (worldVertices.length < attachment.worldVerticesLength) {
-					worldVertices = new Float32Array(attachment.worldVerticesLength);
-				}
-				// stride 2 — positions only; UVs come from sequence.getUVs()
-				attachment.computeWorldVertices(
-					skeleton,
-					slot,
-					0,
-					attachment.worldVerticesLength,
-					worldVertices,
-					0,
-					2,
-				);
-				meshUVs = sequence.getUVs(sequenceIndex);
-				triangles = attachment.triangles;
-				region = sequence.regions[sequenceIndex];
-				image = region.texture.getImage();
-			} else if (attachment instanceof ClippingAttachment) {
-				const vertices = this.clippingVertices;
-				clipper.clipStart(skeleton, slot, attachment);
-				attachment.computeWorldVertices(
-					skeleton,
-					slot,
-					0,
-					attachment.worldVerticesLength,
-					vertices,
-					0,
-					2,
-				);
-				clippingMask.setVertices(vertices, attachment.worldVerticesLength);
-				if (debugRendering) {
-					renderer.setColor(DEBUG_CLIP_COLOR);
-					renderer.stroke(clippingMask);
-				}
-				continue;
-			} else {
-				clipper.clipEnd(slot);
-				renderer.clearMask();
+			if (!(attachment instanceof RegionAttachment)) {
 				continue;
 			}
 
-			if (image) {
-				const slotColor = slotPose.color;
-				const regionColor = attachment.color;
-				const color = this.tintColor;
+			const sequence = attachment.sequence;
+			const region = sequence.regions[sequence.resolveIndex(slotPose)];
+			const image = region?.texture.getImage();
 
-				renderer.save();
-
-				color.setFloat(
-					skeletonColor.r * slotColor.r * regionColor.r,
-					skeletonColor.g * slotColor.g * regionColor.g,
-					skeletonColor.b * slotColor.b * regionColor.b,
-					skeletonColor.a * slotColor.a * regionColor.a,
-				);
-
-				// melonJS Color exposes alpha as `.alpha`, NOT `.a` — reading
-				// `color.a` is undefined and the canvas spec silently ignores
-				// an undefined globalAlpha assignment, so slot-alpha animation
-				// would never fade attachments under Canvas
-				renderer.setGlobalAlpha(color.alpha);
-				renderer.setTint(color);
-				renderer.setBlendMode(
-					BLEND_MODES[slot.data.blendMode],
-					this.premultipliedAlpha,
-				);
-
-				if (triangles) {
-					this.drawMesh(renderer, image, worldVertices, meshUVs, triangles);
-				} else {
-					this.drawRegion(
-						renderer,
-						image,
-						bone,
-						attachment,
-						slotPose,
-						region,
-						clipper.isClipping() ? clippingMask : null,
-						debugRendering,
-					);
-				}
-
-				renderer.restore();
+			if (!image) {
+				continue;
 			}
-			clipper.clipEnd(slot);
-			renderer.clearMask();
+
+			const slotColor = slotPose.color;
+			const regionColor = attachment.color;
+
+			color.setFloat(
+				skeletonColor.r * slotColor.r * regionColor.r,
+				skeletonColor.g * slotColor.g * regionColor.g,
+				skeletonColor.b * slotColor.b * regionColor.b,
+				skeletonColor.a * slotColor.a * regionColor.a,
+			);
+
+			renderer.save();
+
+			// melonJS Color exposes alpha as `.alpha`, NOT `.a` — reading
+			// `color.a` is undefined and the canvas spec silently ignores
+			// an undefined globalAlpha assignment, so slot-alpha animation
+			// would never fade attachments under Canvas
+			renderer.setGlobalAlpha(color.alpha);
+			renderer.setTint(color);
+			renderer.setBlendMode(BLEND_MODES[slot.data.blendMode]);
+
+			this.drawRegion(renderer, image, bone, attachment, slotPose, region);
+
+			renderer.restore();
 		}
-		clipper.clipEnd();
+	}
+
+	/**
+	 * Triangle path: runs spine-core's `SkeletonRendererCore` pass (mesh
+	 * deformation, clipping through `SkeletonClipping`, per-slot batching)
+	 * and replays the resulting commands through the melonJS canvas renderer.
+	 * @param {CanvasRenderer} renderer - the melonJS canvas renderer
+	 * @param {Skeleton} skeleton - the Spine skeleton to draw
+	 * @ignore
+	 */
+	drawTriangles(renderer, skeleton) {
+		const color = this.tintColor;
+
+		// `pma` is left false on purpose: the packed colors are consumed as
+		// a canvas tint plus a globalAlpha, both of which expect straight
+		// (non-premultiplied) components, whatever the atlas pages store.
+		let command = this.core.render(skeleton, false, undefined, VERTEX_SIZE);
+
+		for (; command; command = command.next) {
+			if (command.numVertices === 0 || command.numIndices === 0) {
+				continue;
+			}
+
+			const image = command.texture?.getImage();
+
+			if (!image) {
+				continue;
+			}
+
+			// the core packs one ARGB color per vertex and only batches
+			// slots that share it, so vertex 0 carries the whole command's
+			// tint — canvas has no per-vertex color anyway
+			const packed = command.colors[0];
+			const alpha = ((packed >>> 24) & 0xff) / 255;
+
+			color.setFloat(
+				((packed >>> 16) & 0xff) / 255,
+				((packed >>> 8) & 0xff) / 255,
+				(packed & 0xff) / 255,
+				alpha,
+			);
+
+			renderer.save();
+
+			renderer.setGlobalAlpha(alpha);
+			renderer.setTint(color);
+			renderer.setBlendMode(BLEND_MODES[command.blendMode]);
+
+			this.drawTriangleList(
+				renderer,
+				image,
+				command.positions,
+				command.uvs,
+				command.indices,
+			);
+
+			renderer.restore();
+		}
+
+		if (this.debugRendering) {
+			this.drawClippingDebug(renderer, skeleton);
+		}
 	}
 
 	/**
@@ -205,11 +220,9 @@ export default class SkeletonRenderer {
 	 * @param {RegionAttachment} attachment
 	 * @param {SlotPose} slotPose - the slot's applied pose (resolves sequence offsets)
 	 * @param {TextureRegion} region
-	 * @param {Polygon|null} mask - clipping mask if active
-	 * @param {boolean} debug - whether to draw debug outline
 	 * @ignore
 	 */
-	drawRegion(renderer, image, bone, attachment, slotPose, region, mask, debug) {
+	drawRegion(renderer, image, bone, attachment, slotPose, region) {
 		const atlasScale = attachment.width / region.originalWidth;
 		const bonePose = bone.appliedPose;
 		const offsets = attachment.getOffsets(slotPose);
@@ -252,9 +265,6 @@ export default class SkeletonRenderer {
 		renderer.scale(1, -1);
 		renderer.translate(-w / 2, -h / 2);
 
-		if (mask) {
-			renderer.setMask(mask);
-		}
 		renderer.drawImage(
 			image,
 			image.width * region.u,
@@ -267,30 +277,30 @@ export default class SkeletonRenderer {
 			h,
 		);
 
-		if (debug) {
+		if (this.debugRendering) {
 			renderer.setColor(DEBUG_REGION_COLOR);
 			renderer.strokeRect(0, 0, w, h);
 		}
 	}
 
 	/**
-	 * Draw a mesh attachment as a series of textured triangles.
+	 * Draw one render command's triangles.
 	 * @param {CanvasRenderer} renderer
 	 * @param {HTMLImageElement} image
 	 * @param {Float32Array} vertices - world positions, stride 2 (x, y per vertex)
-	 * @param {NumberArrayLike} uvs - atlas UVs from `sequence.getUVs(index)`, stride 2
-	 * @param {number[]} triangles - triangle indices
+	 * @param {Float32Array} uvs - normalized atlas UVs, stride 2
+	 * @param {Uint16Array} indices - triangle indices
 	 * @ignore
 	 */
-	drawMesh(renderer, image, vertices, uvs, triangles) {
+	drawTriangleList(renderer, image, vertices, uvs, indices) {
 		// subtract 1 pixel to avoid edge bleeding (matches official spine-canvas)
 		const imgW = image.width - 1;
 		const imgH = image.height - 1;
 
-		for (let j = 0; j < triangles.length; j += 3) {
-			const t1 = triangles[j] * 2;
-			const t2 = triangles[j + 1] * 2;
-			const t3 = triangles[j + 2] * 2;
+		for (let j = 0; j < indices.length; j += 3) {
+			const t1 = indices[j] * VERTEX_SIZE;
+			const t2 = indices[j + 1] * VERTEX_SIZE;
+			const t3 = indices[j + 2] * VERTEX_SIZE;
 
 			this.drawTriangle(
 				renderer,
@@ -357,6 +367,51 @@ export default class SkeletonRenderer {
 		if (this.debugRendering) {
 			renderer.setColor(DEBUG_MESH_COLOR);
 			renderer.stroke();
+		}
+	}
+
+	/**
+	 * Stroke the outline of every active clipping attachment. The core
+	 * consumes clipping attachments internally, so the outlines are
+	 * recomputed here for debug rendering only.
+	 * @param {CanvasRenderer} renderer
+	 * @param {Skeleton} skeleton
+	 * @ignore
+	 */
+	drawClippingDebug(renderer, skeleton) {
+		const drawOrder = skeleton.drawOrder.appliedPose;
+		const vertices = this.clippingVertices;
+		const shape = this.clippingShape;
+
+		for (let i = 0, n = drawOrder.length; i < n; i++) {
+			const slot = drawOrder[i];
+
+			if (!slot.bone.active) {
+				continue;
+			}
+
+			const attachment = slot.appliedPose.attachment;
+
+			if (!(attachment instanceof ClippingAttachment)) {
+				continue;
+			}
+
+			attachment.computeWorldVertices(
+				skeleton,
+				slot,
+				0,
+				attachment.worldVerticesLength,
+				vertices,
+				0,
+				2,
+			);
+			// `setVertices` consumes the whole array, so trim the scratch
+			// buffer to this attachment's vertex count — a previous, larger
+			// clipping attachment would otherwise leave stale points behind
+			vertices.length = attachment.worldVerticesLength;
+			shape.setVertices(vertices);
+			renderer.setColor(DEBUG_CLIP_COLOR);
+			renderer.stroke(shape);
 		}
 	}
 }

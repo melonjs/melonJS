@@ -17,14 +17,14 @@ A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.x runtime integration
 - **Spine physics** support — native Y-down handling via the official `Skeleton.yDown` runtime switch, including physics force direction vectors (`windX/Y`, `gravityX/Y`)
 - **Two-color tinting** (dark/light color) using Spine's official shader
 - **Blend modes** (Normal, Additive, Multiply, Screen) with premultiplied alpha support
-- **Clipping attachments** via melonJS masking (canvas) and Spine's SkeletonClipping (WebGL)
+- **Clipping attachments** via Spine's `SkeletonClipping` on every backend — canvas included, through spine-core's renderer-agnostic `SkeletonRendererCore` geometry pass
 - **Skin support** including mix-and-match skin combining via `setCombinedSkin()`
 - **Animation state events** (start, end, complete, event, interrupt, dispose)
 - **Skeleton introspection** — `findBone()`, `findSlot()`, `findConstraint()`, `getAnimationNames()`, `getSkinNames()`
 - **Spine 4.3 Slider constraints** — full runtime support; all constraint classes (`Slider`/`SliderData`/`SliderTimeline`/`SliderMixTimeline`, plus `IkConstraint`, `TransformConstraint`, `PathConstraint`, `PhysicsConstraint`) re-exported for one-import `instanceof` narrowing of `findConstraint()` results
 - **Animation queuing** — `setAnimation()`, `addAnimation()`, `setEmptyAnimation()`
 - **Debug rendering** for bones, regions, meshes, and clipping areas
-- **Auto-detection** of mesh attachments for optimized canvas rendering (fast path for region-only skeletons)
+- **Auto-detection** of mesh and clipping attachments for optimized canvas rendering (one-drawImage-per-slot fast path for skeletons that use neither)
 - **Binary skeleton** (.skel) and JSON skeleton loading via melonJS preloader
 - **Integrated** with melonJS batcher system — no manual GL state management
 
