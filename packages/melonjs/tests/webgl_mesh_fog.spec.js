@@ -136,6 +136,10 @@ describe("mesh distance fog (#1622)", () => {
 			invRange: 1 / 1000,
 			density: 0,
 			color: new Float32Array([1, 1, 1]),
+			// uniform fog: a zero falloff collapses the height integral to 1
+			heightFalloff: 0,
+			fogHeight: 0,
+			cameraY: 0,
 			...over,
 		};
 	};
@@ -328,6 +332,99 @@ describe("mesh distance fog (#1622)", () => {
 			const squared = (1 - Math.exp(-0.16)) * 255; // ≈ 37.7
 			const single = (1 - Math.exp(-0.4)) * 255; // ≈ 84.2
 			expect(Math.abs(px[1] - squared)).toBeLessThan(Math.abs(px[1] - single));
+		});
+	});
+
+	describe("height falloff", () => {
+		it("is uniform at falloff 0, matching the fog that shipped without it", (ctx) => {
+			requireWebGL(ctx);
+			// the whole design rests on this: zero is not a special case, it is
+			// the integral with the dial at zero, and it must be EXACT
+			renderer.setFog(fog());
+			const plain = drawRed(quad(), 500);
+			renderer.setFog(fog({ heightFalloff: 0, fogHeight: 400, cameraY: 90 }));
+			const withZero = drawRed(quad(), 500);
+			renderer.setFog(null);
+			expect(Array.from(withZero)).toEqual(Array.from(plain));
+		});
+
+		it("fogs low ground MORE than high ground — Y is down", (ctx) => {
+			requireWebGL(ctx);
+			// The sign trap. Render space is Y-down, so a GREATER y is LOWER in
+			// the world and must fog harder. Every published form of this
+			// formula assumes Y-up, and flipping it silently inverts the
+			// effect: mist would sit on the peaks instead of in the valley.
+			//
+			// Both quads stay inside the ortho and are read at their own screen
+			// positions — placing them far apart in Y would put them off-screen
+			// and read the cleared background instead, which looks like "no fog"
+			// and proves nothing.
+			const common = {
+				near: 0,
+				invRange: 1 / 1000,
+				heightFalloff: 0.02,
+				fogHeight: 0,
+				cameraY: 0,
+			};
+			const sample = (worldY, glY) => {
+				setup();
+				renderer.setFog(fog(common));
+				const mesh = quad();
+				mesh.pos.set(0, worldY, 0);
+				mesh.depth = 500;
+				mesh.preDraw(renderer);
+				mesh.draw(renderer);
+				mesh.postDraw(renderer);
+				const px = readPixel(SIZE / 2, glY);
+				renderer.setFog(null);
+				return px;
+			};
+			// ortho maps world y=-64 to the top of the drawing buffer and
+			// y=+64 to the bottom; readPixels counts from the bottom
+			const low = sample(40, 24); // greater y = lower in the world
+			const high = sample(-40, 104);
+
+			// both actually drew: a background read would be pure black
+			expect(low[0]).toBeGreaterThan(200);
+			expect(high[0]).toBeGreaterThan(200);
+			// more fog = more white mixed into the red
+			expect(low[1]).toBeGreaterThan(high[1] + 20);
+		});
+
+		it("survives a horizontal ray, where the integral is 0/0", (ctx) => {
+			requireWebGL(ctx);
+			// looking straight across a valley is exactly dy = 0; a guard that
+			// returned something else here would step visibly as the ray
+			// flattened out
+			renderer.setFog(fog({ heightFalloff: 0.004, fogHeight: 0, cameraY: 0 }));
+			const level = quad();
+			level.pos.set(0, 0, 0); // same Y as the camera
+			const px = drawRed(level, 500);
+			renderer.setFog(null);
+			for (const channel of [0, 1, 2]) {
+				expect(Number.isFinite(px[channel])).toBe(true);
+			}
+			// and it is fogged, not blanked or left untouched
+			expect(px[1]).toBeGreaterThan(0);
+			expect(px[1]).toBeLessThan(255);
+		});
+
+		it("does not blow up with the camera far below the reference height", (ctx) => {
+			requireWebGL(ctx);
+			// The extreme end of the range must produce a usable frame rather
+			// than NaN. Note this does NOT prove the clamp inside
+			// `fogHeightFactor`: with or without it the result saturates to
+			// fully-fogged, because an infinite distance is clamped by the fog
+			// curve anyway. The clamp is insurance against a driver carrying
+			// `Inf` into an interpolated varying, which this cannot observe.
+			renderer.setFog(
+				fog({ heightFalloff: 0.05, fogHeight: -5000, cameraY: 20000 }),
+			);
+			const px = drawRed(quad(), 500);
+			renderer.setFog(null);
+			for (const channel of [0, 1, 2]) {
+				expect(Number.isNaN(px[channel])).toBe(false);
+			}
 		});
 	});
 

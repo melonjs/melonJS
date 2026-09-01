@@ -83,15 +83,19 @@ describe("WebGPU mesh distance fog (#1622)", () => {
 			invRange: 0.25,
 			density: 0,
 			color: new Float32Array([0.25, 0.5, 0.75]),
+			// uniform fog: a zero falloff collapses the height integral to 1
+			heightFalloff: 0,
+			fogHeight: 0,
+			cameraY: 0,
 			...over,
 		};
 	};
 
 	describe("the uniform block", () => {
-		it("grew to 240 bytes, and the layout key moved with it", () => {
-			// 176 before #1575, 208 before fog
-			expect(MESH_UNIFORM_SIZE).toBe(240);
-			expect(renderer.pipelineCache.effectLayouts.has("mesh:u240")).toBe(true);
+		it("grew to 256 bytes, and the layout key moved with it", () => {
+			// 176 before #1575, 208 before fog, 240 before its height falloff
+			expect(MESH_UNIFORM_SIZE).toBe(256);
+			expect(renderer.pipelineCache.effectLayouts.has("mesh:u256")).toBe(true);
 		});
 
 		it("writes the fog colour at 52-54 and the params at 56-59", () => {

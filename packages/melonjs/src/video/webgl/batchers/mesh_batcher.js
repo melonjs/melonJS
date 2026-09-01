@@ -54,6 +54,7 @@ const _EYE_POSITION = new Float32Array(3);
 // scratches for the per-camera distance fog, unpacked per draw that needs it
 const _FOG_COLOR = new Float32Array(3);
 const _FOG_PARAMS = new Float32Array(4);
+const _FOG_HEIGHT = new Float32Array(4);
 
 /**
  * A WebGL Batcher for rendering textured triangle meshes.
@@ -135,6 +136,9 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentFogR = Number.NaN;
 		this.currentFogG = Number.NaN;
 		this.currentFogB = Number.NaN;
+		this.currentFogFalloff = Number.NaN;
+		this.currentFogHeight = Number.NaN;
+		this.currentFogCamY = Number.NaN;
 
 		// Retained geometry per mesh (model-space buffers uploaded once). A
 		// re-init means a new GL context or a fresh batcher life, so anything
@@ -1287,6 +1291,25 @@ export default class MeshBatcher extends MaterialBatcher {
 				this.currentFogNear = near;
 				this.currentFogInvRange = invRange;
 				this.currentFogDensity = density;
+			}
+			if (uniforms.uFogHeight != null) {
+				const falloff = mode !== 0 ? fog.heightFalloff : 0;
+				const height = mode !== 0 ? fog.fogHeight : 0;
+				const camY = mode !== 0 ? fog.cameraY : 0;
+				if (
+					falloff !== this.currentFogFalloff ||
+					height !== this.currentFogHeight ||
+					camY !== this.currentFogCamY
+				) {
+					_FOG_HEIGHT[0] = falloff;
+					_FOG_HEIGHT[1] = height;
+					_FOG_HEIGHT[2] = camY;
+					_FOG_HEIGHT[3] = 0;
+					shader.setUniform("uFogHeight", _FOG_HEIGHT);
+					this.currentFogFalloff = falloff;
+					this.currentFogHeight = height;
+					this.currentFogCamY = camY;
+				}
 			}
 			if (
 				uniforms.uFogColor != null &&

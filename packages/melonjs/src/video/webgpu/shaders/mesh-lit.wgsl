@@ -40,6 +40,9 @@ struct MeshUniforms {
 	// x = mode (0 off / 1 linear / 2 exp2), y = near, z = 1/(far - near),
 	// w = density
 	fogParams : vec4f,
+	// x = height falloff (0 = uniform), y = reference world Y,
+	// z = the camera's world Y, w unused
+	fogHeight : vec4f,
 };
 
 // One light, type inferred from sentinels (see std140.ts):
@@ -94,6 +97,34 @@ struct VSOut {
 // enables fog pays for none of the work below.
 override enable_fog : bool = false;
 
+// How much the height falloff scales the fog along this view ray. Twin of
+// `fogHeightFactor` in the GLSL mesh shaders — keep them in step.
+//
+// Density falls off exponentially with altitude, and an exponential integrates
+// analytically along a straight segment, so the ray costs one `exp` and no
+// marching. The result multiplies the distance, leaving both curves untouched.
+//
+// Render space is Y-DOWN: density rises as `y` INCREASES, the opposite sign to
+// every published form of this.
+//
+// A falloff of 0 gives exactly 1, so uniform fog is this with the dial at zero
+// rather than a special case.
+fn fog_height_factor(worldY : f32) -> f32 {
+	let k = uMesh.fogHeight.x;
+	let dy = worldY - uMesh.fogHeight.z;
+	let kdy = k * dy;
+	// (exp(x) - 1) / x is 0/0 at x = 0, which is a horizontal view ray — take
+	// the limit rather than guarding, or the fog steps as the ray flattens
+	var t = 1.0;
+	if (abs(kdy) >= 1e-4) {
+		t = (exp(kdy) - 1.0) / kdy;
+	}
+	// clamped: a camera far below the reference height would otherwise
+	// overflow the exponential and whiten the frame
+	return exp(clamp(k * (uMesh.fogHeight.z - uMesh.fogHeight.y), -30.0, 30.0)) * t;
+}
+
+
 // Fold distance fog into a PREMULTIPLIED colour. Twin of `apply_fog` in
 // mesh.wgsl and `applyFog` in the GLSL mesh shaders — keep them in step. WGSL
 // has no preprocessor and the build loads shaders as raw text, so the block is
@@ -138,7 +169,8 @@ fn vertex_main(
 	out.vRegion = aRegion;
 	out.vWorldPos = worldPos.xyz;
 	if (enable_fog) {
-		out.vFogDepth = length((uMesh.view * worldPos).xyz);
+		out.vFogDepth = length((uMesh.view * worldPos).xyz)
+			* fog_height_factor(worldPos.y);
 	} else {
 		out.vFogDepth = 0.0;
 	}

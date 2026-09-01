@@ -55,6 +55,26 @@ export interface FogOptions {
 	 * parsed into a colour this camera owns.
 	 */
 	color?: Color | string | [number, number, number];
+	/**
+	 * World Y at which the fog is at its reference density. Only meaningful
+	 * alongside a non-zero {@link FogOptions.heightFalloff}.
+	 * @default 0
+	 */
+	fogHeight?: number;
+	/**
+	 * How fast fog density drops with altitude, so mist pools in low ground
+	 * instead of filling the sky as readily as the valley floor.
+	 *
+	 * **Zero — the default — is uniform fog**, which is the fog that shipped
+	 * without this: `exp(0)` is 1, density is the same at every altitude, and
+	 * the maths collapses exactly. Raise it and density falls off above
+	 * `fogHeight`, leaving ridges and sky clear while the hollows stay thick.
+	 *
+	 * Render space is **Y-down**, so density rises as `y` INCREASES — the
+	 * opposite sign to every published height-fog formula, which assume Y-up.
+	 * @default 0
+	 */
+	heightFalloff?: number;
 }
 
 /**
@@ -73,4 +93,10 @@ export interface Fog3dState {
 	density: number;
 	/** straight (unpremultiplied) fog colour, 3 components in 0..1 */
 	color: Float32Array;
+	/** height falloff; 0 is uniform fog */
+	heightFalloff: number;
+	/** world Y the falloff is measured from */
+	fogHeight: number;
+	/** the camera's own world Y, which the height integral starts from */
+	cameraY: number;
 }
