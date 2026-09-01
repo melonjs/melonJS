@@ -197,6 +197,34 @@ describe("mesh distance fog (#1622)", () => {
 			batcher.useShader(own);
 		});
 
+		it("leaves a foreign program bound with fog ENABLED, and does not throw", (ctx) => {
+			requireWebGL(ctx);
+			// The question this answers: is it safe to put a `ShaderEffect` on a
+			// mesh while the camera has fog? The custom program has no fog
+			// uniforms and no fog variant, so the batcher must neither swap it
+			// out nor try to push fog into it. It renders unfogged — surprising
+			// perhaps, but defined, and it must not fail.
+			setup();
+			const batcher = renderer.setBatcher("mesh");
+			const own = batcher.defaultShader;
+			const foreign = renderer.setBatcher("quad").defaultShader;
+			renderer.setBatcher("mesh");
+			batcher.useShader(foreign);
+			renderer.setFog(fog());
+
+			const mesh = quad();
+			mesh.depth = 500;
+			expect(() => {
+				batcher.drawRetainedMesh(mesh, mesh._composeModelMatrix(), 0xffffffff);
+			}).not.toThrow();
+			expect(batcher.currentShader).toBe(foreign);
+			// and no fog program was minted on its behalf
+			expect(batcher.shaderVariants.has("mesh|fog")).toBe(false);
+
+			renderer.setFog(null);
+			batcher.useShader(own);
+		});
+
 		it("still swaps its own program when fog turns on", (ctx) => {
 			requireWebGL(ctx);
 			setup();

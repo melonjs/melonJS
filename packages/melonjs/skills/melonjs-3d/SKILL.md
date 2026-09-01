@@ -154,13 +154,29 @@ emissive.
 Only meshes fog. 2D content, HUDs and `floating` renderables never reach the
 mesh shaders, so a screen-space overlay stays clean with no work.
 
-**A custom mesh shader is not fogged.** Fog is compiled into the engine's own
-mesh programs — `#define FOG` on WebGL, an `enable_fog` overridable constant on
-WebGPU — and a shader you supply is yours: the engine binds it as written and
-never substitutes a fogged variant. A mesh carrying a `ShaderEffect` therefore
-stays at full contrast while the scene around it recedes, which is usually
-surprising rather than wanted. Either fold the fog term into your own shader, or
-leave that mesh on the built-in shading.
+**A custom mesh shader is not fogged unless it asks to be.** Fog is compiled
+into the engine's own mesh programs — `#define FOG` on WebGL, an `enable_fog`
+overridable constant on WebGPU — and a shader you supply is yours: the engine
+binds it as written and never substitutes a fogged variant. So a mesh carrying a
+`ShaderEffect` keeps full contrast while the scene around it recedes. It is safe
+— nothing throws, and the camera's fog is simply not applied — but it is usually
+surprising.
+
+To opt in, declare the same uniforms and the engine will feed them, because the
+fog values are pushed to any mesh program that declares them rather than only to
+the built-in ones:
+
+```glsl
+uniform vec3 uFogColor;   // straight (unpremultiplied) fog colour
+uniform vec4 uFogParams;  // x = mode (0 off / 1 linear / 2 exp2),
+                          // y = near, z = 1/(far - near), w = density
+```
+
+Your vertex stage computes the distance itself — `length((uViewMatrix *
+uModelMatrix * vec4(aVertex, 1.0)).xyz)`, radially so it does not swim as the
+camera turns — and the blend must scale the fog colour by the fragment's own
+alpha, `mix(uFogColor * a, rgb, f)`, because `vColor` arrives premultiplied.
+Mixing toward the unscaled colour haloes every alpha-cutout edge.
 
 The flip side is the reason fog costs nothing when unused: with no camera fog,
 the mesh programs are compiled without any of it, on both backends. It is not a
