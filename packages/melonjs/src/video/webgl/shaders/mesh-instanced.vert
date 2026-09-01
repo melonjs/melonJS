@@ -37,6 +37,9 @@ uniform vec4 uTint;
 
 varying vec2 vRegion;
 varying vec4 vColor;
+#ifdef FOG
+varying float vFogDepth;
+#endif
 #ifdef INSTANCE_DATA
 varying vec4 vInstanceData;
 #endif
@@ -53,6 +56,14 @@ void main(void) {
     mat4 instance = instanceMatrix();
     gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * instance
         * vec4(aVertex, 1.0);
+#ifdef FOG
+    // Radial view-space distance for distance fog. Radial rather than view-space
+    // z, so fog holds steady as the camera turns instead of sliding across the
+    // scene. The clip position above keeps its own product: re-associating it
+    // could shift vertices by an ulp, and a scene without fog must be unchanged.
+    vec4 viewPos = uViewMatrix * uModelMatrix * instance * vec4(aVertex, 1.0);
+    vFogDepth = length(viewPos.xyz);
+#endif
 
     vec4 tinted = aColor * uTint;
 #ifdef INSTANCE_COLORS

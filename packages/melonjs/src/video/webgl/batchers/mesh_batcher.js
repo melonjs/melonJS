@@ -51,6 +51,10 @@ const _ZERO_EMISSIVE = new Float32Array(3);
 // scratch for the camera's world position, recomputed per draw that needs it
 const _EYE_POSITION = new Float32Array(3);
 
+// scratches for the per-camera distance fog, unpacked per draw that needs it
+const _FOG_COLOR = new Float32Array(3);
+const _FOG_PARAMS = new Float32Array(4);
+
 /**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
@@ -122,6 +126,16 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentEyeY = Number.NaN;
 		this.currentEyeZ = Number.NaN;
 
+		// last fog pushed, same NaN-sentinel trick. Fog changes once per
+		// camera at most, while this runs once per mesh.
+		this.currentFogMode = Number.NaN;
+		this.currentFogNear = Number.NaN;
+		this.currentFogInvRange = Number.NaN;
+		this.currentFogDensity = Number.NaN;
+		this.currentFogR = Number.NaN;
+		this.currentFogG = Number.NaN;
+		this.currentFogB = Number.NaN;
+
 		// Retained geometry per mesh (model-space buffers uploaded once). A
 		// re-init means a new GL context or a fresh batcher life, so anything
 		// held is stale — release it rather than leak it.
@@ -142,18 +156,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		// declares. Compiled on first use rather than up front: most scenes
 		// use one combination, and a scene with no instanced mesh at all
 		// compiles none. Dropped on re-init with everything else GL-owned.
-		this.instancedShaders?.forEach((shader) => {
+		this.shaderVariants?.forEach((shader) => {
 			shader.destroy();
 		});
-		this.instancedShaders = new Map();
-
-		// the standalone ground-shadow program (#1515) is GL-owned too. An
-		// orphan keeps its program AND its context-lost/restored subscriptions
-		// alive, and would try to recompile against a dead context on the next
-		// restore — the same hazard the instanced variants above are dropped
-		// for.
-		this.shadowShader?.destroy();
-		this.shadowShader = undefined;
+		this.shaderVariants = new Map();
 
 		// last `uTint` value pushed, same redundant-set guard — but the
 		// sentinel is `undefined`, NOT a number: a packed ARGB tint spans the
@@ -266,6 +272,13 @@ export default class MeshBatcher extends MaterialBatcher {
 			// the placement uniforms live on the program too — a swapped
 			// shader starts at its own defaults, so re-issue them
 			this.currentTintValue = undefined;
+			this.currentFogMode = Number.NaN;
+			this.currentFogNear = Number.NaN;
+			this.currentFogInvRange = Number.NaN;
+			this.currentFogDensity = Number.NaN;
+			this.currentFogR = Number.NaN;
+			this.currentFogG = Number.NaN;
+			this.currentFogB = Number.NaN;
 		}
 		super.useShader(shader);
 	}
@@ -281,12 +294,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		// variants hold GL programs AND stay subscribed to the context-loss
 		// events until destroyed — an orphan would try to recompile against a
 		// dead context on the next restore
-		this.instancedShaders?.forEach((shader) => {
+		this.shaderVariants?.forEach((shader) => {
 			shader.destroy();
 		});
-		this.shadowShader?.destroy();
-		this.shadowShader = undefined;
-		this.instancedShaders?.clear();
+		this.shaderVariants?.clear();
 		if (this._onTargetChanged) {
 			off(RENDER_TARGET_CHANGED, this._onTargetChanged);
 			this._onTargetChanged = null;
@@ -509,6 +520,18 @@ export default class MeshBatcher extends MaterialBatcher {
 		// anything the caller had queued must land first, or this draw would
 		// reorder ahead of it
 		this.flush();
+		// Fog is a compiled variant, so the program depends on the camera's fog
+		// state and not only on the batcher.
+		//
+		// Only ever swap the batcher's OWN program. `WebGLRenderer.drawMesh`
+		// binds a renderable's custom shader immediately before calling in
+		// here, and re-binding unconditionally threw that away silently: the
+		// mesh drew with built-in shading, no error, in every scene — fog
+		// enabled or not. A custom mesh shader is the author's, and it has no
+		// fog variant to switch to.
+		if (this._ownsCurrentShader()) {
+			this.useShader(this.meshShader());
+		}
 
 		// Strictly BEFORE the blended-draw toggle below: `updatePassState`
 		// runs the one-shot depth clear, and `gl.clear(DEPTH_BUFFER_BIT)`
@@ -526,7 +549,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		if (slices === undefined) {
 			this.applyMeshMaterial(mesh);
 		}
-		this.setPlacementUniforms(modelMatrix, tint);
+		this.setPlacementUniforms(modelMatrix, tint, mesh);
 
 		const geometry = this.retainedGeometryFor(mesh);
 		geometry.bind();
@@ -729,25 +752,111 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	instancedShaderFor(layout) {
-		const key = (layout.hasColor ? 1 : 0) | (layout.hasData ? 2 : 0);
-		let shader = this.instancedShaders.get(key);
+		const fogDefine = this._fogDefine();
+		// fog joins the key: the fogged and unfogged forms are different
+		// programs, and one must not be served for the other
+		const key =
+			(layout.hasColor ? 1 : 0) |
+			(layout.hasData ? 2 : 0) |
+			(fogDefine !== "" ? 4 : 0);
+		const defines =
+			(layout.hasColor ? "#define INSTANCE_COLORS\n" : "") +
+			(layout.hasData ? "#define INSTANCE_DATA\n" : "") +
+			fogDefine;
+		// only INSTANCE_DATA reaches the fragment stage (as the per-instance
+		// emissive term); injecting the colour flag there too would compile
+		// four distinct fragment texts where two suffice
+		const fragmentDefines =
+			(layout.hasData ? "#define INSTANCE_DATA\n" : "") + fogDefine;
+		return this.shaderVariant(
+			`instanced|${key}`,
+			this._instancedShaderSources(),
+			defines,
+			fragmentDefines,
+		);
+	}
+
+	/**
+	 * `"#define FOG\n"` while the camera drawing has fog, `""` otherwise.
+	 *
+	 * Fog is a compiled variant rather than a runtime `if`, and the reason is
+	 * measured rather than theoretical: a software rasterizer predicates both
+	 * sides of a branch, so an `exp()` behind a runtime test still costs every
+	 * fragment of every scene — the mesh benchmark blew its budget outright.
+	 * Compiling it out means a scene that never enables fog runs the shader it
+	 * ran before fog existed, instruction for instruction.
+	 * @ignore
+	 */
+	_fogDefine() {
+		return this.renderer._fog3d !== null && this.renderer._fog3d !== undefined
+			? "#define FOG\n"
+			: "";
+	}
+
+	/**
+	 * One compiled shader per set of defines, built on first use.
+	 *
+	 * Every optional feature this batcher compiles in or out — instance
+	 * colours, instance data, fog — is a key in here rather than a field of
+	 * its own. That matters for LIFETIME more than for tidiness: each program
+	 * has to be released both on re-init (context loss) and on destroy, and a
+	 * missed one leaks a program that later tries to recompile against a dead
+	 * context. One map is one release site, however many axes are added.
+	 * @param {string} key - identifies the combination
+	 * @param {object} sources - `{vertex, fragment}` shader text
+	 * @param {string} vertexDefines - injected into the vertex stage
+	 * @param {string} fragmentDefines - injected into the fragment stage; not
+	 * always the same set, since some flags never reach the fragment stage
+	 * @returns {GLShader} the program for that combination
+	 * @ignore
+	 */
+	shaderVariant(key, sources, vertexDefines, fragmentDefines) {
+		let shader = this.shaderVariants.get(key);
 		if (shader === undefined) {
-			const defines =
-				(layout.hasColor ? "#define INSTANCE_COLORS\n" : "") +
-				(layout.hasData ? "#define INSTANCE_DATA\n" : "");
-			const sources = this._instancedShaderSources();
-			// only INSTANCE_DATA reaches the fragment stage (as the
-			// per-instance emissive term); injecting the colour flag there too
-			// would compile four distinct fragment texts where two suffice
-			const fragmentDefines = layout.hasData ? "#define INSTANCE_DATA\n" : "";
 			shader = new GLShader(this.gl, {
-				vertex: injectDefines(sources.vertex, defines),
+				vertex: injectDefines(sources.vertex, vertexDefines),
 				fragment: injectDefines(sources.fragment, fragmentDefines),
-				label: `melonJS instanced mesh ${key}`,
+				label: `melonJS mesh ${key}`,
 			});
-			this.instancedShaders.set(key, shader);
+			this.shaderVariants.set(key, shader);
 		}
 		return shader;
+	}
+
+	/**
+	 * Whether the bound program is one this batcher would pick for a plain
+	 * mesh — its own, or the fog variant of its own.
+	 *
+	 * `drawRetainedMesh` swaps programs per draw because fog is compiled in,
+	 * and it must only ever replace one of these. `WebGLRenderer.drawMesh`
+	 * binds a renderable's custom shader immediately before calling in, and
+	 * swapping unconditionally threw that away silently.
+	 * @returns {boolean} true when the swap is safe
+	 * @ignore
+	 */
+	_ownsCurrentShader() {
+		return (
+			this.currentShader === this.defaultShader ||
+			this.currentShader === this.shaderVariants.get("mesh|fog")
+		);
+	}
+
+	/**
+	 * The non-instanced mesh shader for the current fog state: the batcher's
+	 * own program while fog is off, a fog variant while it is on.
+	 * @ignore
+	 */
+	meshShader() {
+		const fogDefine = this._fogDefine();
+		if (fogDefine === "") {
+			return this.defaultShader;
+		}
+		return this.shaderVariant(
+			"mesh|fog",
+			this._shaderSources(),
+			fogDefine,
+			fogDefine,
+		);
 	}
 
 	/**
@@ -826,7 +935,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		if (slices === undefined) {
 			this.applyMeshMaterial(mesh);
 		}
-		this.setPlacementUniforms(modelMatrix, tint);
+		this.setPlacementUniforms(modelMatrix, tint, mesh);
 
 		const { geometry, state } = this.instancedStateFor(mesh);
 		state.vertexState.bind();
@@ -861,7 +970,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		// already current — so a following non-instanced mesh would otherwise
 		// draw through the instanced program, reading per-instance attributes
 		// that no longer have a buffer behind them.
-		this.useShader(this.defaultShader);
+		this.useShader(this.meshShader());
 		this.vertexState.bind();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
 	}
@@ -877,23 +986,21 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 */
 	instancedShadowShader() {
-		if (this.shadowShader === undefined) {
-			this.shadowShader = new GLShader(this.gl, {
-				vertex: meshShadowInstancedVertex,
-				// the UNLIT fragment stage, on both tiers, not
-				// `_instancedShaderSources().fragment`. A blob needs nothing
-				// from lighting — it samples the falloff and multiplies by the
-				// tint — and borrowing the lit tier's pairs a GLSL ES 3.00
-				// fragment shader with this ES 1.00 vertex shader, which does
-				// not link ("Fragment shader version does not match other
-				// shader versions") and takes the whole lit instanced tier
-				// down with it. It would also read `vNormal` / `vWorldPos`,
-				// which a flat blob never writes.
-				fragment: meshFragment,
-				label: "melonJS instanced mesh shadow",
-			});
-		}
-		return this.shadowShader;
+		const fogDefine = this._fogDefine();
+		// The UNLIT fragment stage, on both tiers, not
+		// `_instancedShaderSources().fragment`. A blob needs nothing from
+		// lighting — it samples the falloff and multiplies by the tint — and
+		// borrowing the lit tier's pairs a GLSL ES 3.00 fragment shader with
+		// this ES 1.00 vertex shader, which does not link ("Fragment shader
+		// version does not match other shader versions") and takes the whole
+		// lit instanced tier down with it. It would also read `vNormal` /
+		// `vWorldPos`, which a flat blob never writes.
+		return this.shaderVariant(
+			fogDefine === "" ? "shadow" : "shadow|fog",
+			{ vertex: meshShadowInstancedVertex, fragment: meshFragment },
+			fogDefine,
+			fogDefine,
+		);
 	}
 
 	/**
@@ -997,7 +1104,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.useShader(this.instancedShadowShader());
 		this.updatePassState();
 		this.applyMeshMaterial(quad);
-		this.setPlacementUniforms(shadowMatrix, tint);
+		this.setPlacementUniforms(shadowMatrix, tint, quad);
 
 		const quadGeometry = this.retainedGeometryFor(quad);
 		const state = this.instancedShadowStateFor(mesh, quadGeometry);
@@ -1012,7 +1119,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		);
 		this.endBlendedDraw();
 
-		this.useShader(this.defaultShader);
+		this.useShader(this.meshShader());
 		this.vertexState.bind();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uploadBuffer);
 	}
@@ -1103,7 +1210,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		}
 	}
 
-	setPlacementUniforms(modelMatrix, tint) {
+	setPlacementUniforms(modelMatrix, tint, mesh) {
 		const shader = this.currentShader;
 		const uniforms = shader.uniforms;
 
@@ -1147,6 +1254,54 @@ export default class MeshBatcher extends MaterialBatcher {
 			_TINT_RGBA[3] = ((tint >>> 24) & 0xff) / 255;
 			shader.setUniform("uTint", _TINT_RGBA);
 			this.currentTintValue = tint;
+		}
+		// `!= null`, not `!== undefined`: `extractUniforms` scans the raw shader
+		// text without running the preprocessor, so the names inside the
+		// `#ifdef FOG` block are registered even in the program compiled
+		// WITHOUT fog — with a null GL location. Testing for undefined let the
+		// whole block run, and issue two writes to a null location, on every
+		// unfogged mesh draw.
+		if (uniforms.uFogParams != null) {
+			// `mesh.fog === false` exempts this object; anything else follows
+			// the camera.
+			const fog = mesh?.fog === false ? null : this.renderer._fog3d;
+			const mode = fog !== null && fog !== undefined ? fog.mode : 0;
+			const near = mode !== 0 ? fog.near : 0;
+			const invRange = mode !== 0 ? fog.invRange : 0;
+			const density = mode !== 0 ? fog.density : 0;
+			const r = mode !== 0 ? fog.color[0] : 0;
+			const g = mode !== 0 ? fog.color[1] : 0;
+			const b = mode !== 0 ? fog.color[2] : 0;
+			if (
+				mode !== this.currentFogMode ||
+				near !== this.currentFogNear ||
+				invRange !== this.currentFogInvRange ||
+				density !== this.currentFogDensity
+			) {
+				_FOG_PARAMS[0] = mode;
+				_FOG_PARAMS[1] = near;
+				_FOG_PARAMS[2] = invRange;
+				_FOG_PARAMS[3] = density;
+				shader.setUniform("uFogParams", _FOG_PARAMS);
+				this.currentFogMode = mode;
+				this.currentFogNear = near;
+				this.currentFogInvRange = invRange;
+				this.currentFogDensity = density;
+			}
+			if (
+				uniforms.uFogColor != null &&
+				(r !== this.currentFogR ||
+					g !== this.currentFogG ||
+					b !== this.currentFogB)
+			) {
+				_FOG_COLOR[0] = r;
+				_FOG_COLOR[1] = g;
+				_FOG_COLOR[2] = b;
+				shader.setUniform("uFogColor", _FOG_COLOR);
+				this.currentFogR = r;
+				this.currentFogG = g;
+				this.currentFogB = b;
+			}
 		}
 	}
 
@@ -1361,8 +1516,9 @@ export default class MeshBatcher extends MaterialBatcher {
 			// baked into every vertex on the CPU; they are uniforms now, so the
 			// vertex data depends only on the geometry itself. This path (2D
 			// camera / pre-projected vertices) supplies an identity model
-			// matrix — the vertices already sit where they belong.
-			this.setPlacementUniforms(_IDENTITY_MATRIX, tint);
+			// matrix — the vertices already sit where they belong. A 2D camera
+			// clears fog, so this resolves to the plain program.
+			this.setPlacementUniforms(_IDENTITY_MATRIX, tint, mesh);
 			this.accumulateRange(mesh, 0, mesh.indices.length);
 			return;
 		}
@@ -1373,7 +1529,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		// never before it.
 		for (let i = 0; i < slices.length; i++) {
 			this.applyMeshMaterial(mesh, slices[i].texture);
-			this.setPlacementUniforms(_IDENTITY_MATRIX, tint);
+			this.setPlacementUniforms(_IDENTITY_MATRIX, tint, mesh);
 			this.accumulateRange(mesh, slices[i].start, slices[i].count);
 		}
 	}

@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, castGroundShadow, lit."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, castGroundShadow, lit."
 license: MIT
 ---
 
@@ -112,6 +112,76 @@ Both hold at any camera position. A HUD given the huge z that would put it on
 top in 2D lands at the far end of the level instead, with the scenery drawing
 over it.
 
+## Distance fog
+
+Off until you ask for it, and one call on the camera:
+
+```js
+camera.setFog({ near: 2000, far: 7000 });   // linear: name the two distances
+camera.setFog({ mode: "exp2", density: 4e-4 }); // or one density
+camera.setFog(null);                         // off
+```
+
+It is the cheapest thing that stops a 3D scene reading as flat cut-outs, and it
+lets props arrive at the far plane without a visible edge.
+
+**Every parameter is optional, and the omitted ones track live.** Distances
+default to the camera's own clip planes, so fog cannot silently disagree with
+them after a later `setClipPlanes`. The colour defaults to
+`renderer.backgroundColor` and follows it, so geometry dissolves into whatever
+sky you already set — including through a day/night fade. Pass `color` only
+when the fog should deliberately differ from the backdrop:
+
+```js
+camera.setFog({ far: 5000, color: "#8899aa" });
+```
+
+A `Color` is held by reference, so mutating it animates the fog.
+
+Fog is measured **radially** from the camera and applied **per fragment**, so
+it does not slide as the camera turns and does not band across large triangles.
+It lives on the camera, so a split-screen or minimap view fogs independently —
+and a `Camera2d` never fogs at all.
+
+**Per object:** `fog: false` exempts a mesh however far away it is — for a
+waypoint or objective marker that has to stay readable. It exempts the mesh and
+not the ground shadow it casts: a blob is a mark on the floor and fogs with the
+floor. Emissive surfaces fog
+like everything else (light travelling through fog is attenuated too), so a
+neon sign that should punch through wants `fog: false`, not a brighter
+emissive.
+
+Only meshes fog. 2D content, HUDs and `floating` renderables never reach the
+mesh shaders, so a screen-space overlay stays clean with no work.
+
+**A custom mesh shader is not fogged unless it asks to be.** Fog is compiled
+into the engine's own mesh programs — `#define FOG` on WebGL, an `enable_fog`
+overridable constant on WebGPU — and a shader you supply is yours: the engine
+binds it as written and never substitutes a fogged variant. So a mesh carrying a
+`ShaderEffect` keeps full contrast while the scene around it recedes. It is safe
+— nothing throws, and the camera's fog is simply not applied — but it is usually
+surprising.
+
+To opt in, declare the same uniforms and the engine will feed them, because the
+fog values are pushed to any mesh program that declares them rather than only to
+the built-in ones:
+
+```glsl
+uniform vec3 uFogColor;   // straight (unpremultiplied) fog colour
+uniform vec4 uFogParams;  // x = mode (0 off / 1 linear / 2 exp2),
+                          // y = near, z = 1/(far - near), w = density
+```
+
+Your vertex stage computes the distance itself — `length((uViewMatrix *
+uModelMatrix * vec4(aVertex, 1.0)).xyz)`, radially so it does not swim as the
+camera turns — and the blend must scale the fog colour by the fragment's own
+alpha, `mix(uFogColor * a, rgb, f)`, because `vColor` arrives premultiplied.
+Mixing toward the unscaled colour haloes every alpha-cutout edge.
+
+The flip side is the reason fog costs nothing when unused: with no camera fog,
+the mesh programs are compiled without any of it, on both backends. It is not a
+branch that is skipped at runtime — the code is not there.
+
 ## Meshes
 
 ```js
@@ -130,9 +200,50 @@ there — place the origin where you want the pivot at authoring time, or nest t
 mesh under a transformed parent. The anchor is only honoured on the legacy
 2D-camera path.
 
+### InstancedMesh, and when it is the wrong tool
+
 **`InstancedMesh`** draws one mesh many times in a single draw call — the
 difference between a hundred trees and a hundred thousand. glTF scenes using
-`EXT_mesh_gpu_instancing` load as an `InstancedMesh` automatically.
+`EXT_mesh_gpu_instancing` load as one automatically; by hand it is a `Mesh`
+with a count:
+
+```js
+const trees = new InstancedMesh(0, 0, { ...treeGeometry, instanceCount: 400 });
+const at = new Matrix3d();               // one scratch, reused
+for (let i = 0; i < trees.instanceCount; i++) {
+    at.identity().translate(x, y, z);
+    trees.setInstance(i, at);
+}
+world.addChild(trees, 0);
+
+trees.visibleInstanceCount = 120;        // draw fewer, without re-uploading
+```
+
+It is not a free upgrade. One `InstancedMesh` is **one geometry and one
+material**, and four things move from per-object to per-group:
+
+| | with `Mesh` | with `InstancedMesh` |
+| --- | --- | --- |
+| depth sort | each object sorts on its own `pos` | the whole set has **one** sort key |
+| ground shadow | one blob per object | one instanced draw for the set |
+| removal | `removeChild`, indices unaffected | `removeInstance(i)` swaps the **last** instance into the hole, so any index you were holding is now wrong |
+| colour | `tint` per object | needs `instanceColors: true` and `setInstanceColor(i, …)` |
+
+So the question is not "how many are there" but **"does the game address them
+individually"**:
+
+- **Scenery — instance it.** Trees, rocks, grass, debris: the game never asks
+  about one of them.
+- **Collision-tested props — still fine.** You test against positions you
+  already own; instancing only changes how they are *drawn*.
+- **Collectibles and enemies — usually not.** Anything removed one at a time
+  makes `removeInstance`'s swap your problem: you have to keep an index↔object
+  map and repair it on every removal. At small counts a pooled `Mesh` each is
+  less code and no slower.
+
+Under a few hundred objects the draw-call saving is not what limits you
+anyway — reach for it when the count is in the thousands, or when the objects
+are pure scenery and it costs nothing to.
 
 ## Normals are generated for you
 
@@ -324,6 +435,10 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
 | a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
+| distant geometry pops in against the sky | no fog — `camera.setFog({})` picks up the clip planes and background colour |
+| fog does not match the sky after a background fade | an explicit `color` was passed; omit it to track `renderer.backgroundColor` |
+| geometry clips before it has finished fading | fog `far` beyond the clip far — omit the distances and they default to the clip planes |
+| one marker must stay readable in fog | `fog: false` on that mesh |
 | an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raising `shadowGroundY` haloes it instead of revealing it |
 | a dark ring around the top of an object | `shadowGroundY` lifted too far, floating the blob up into the caster |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |

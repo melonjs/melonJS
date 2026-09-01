@@ -25,6 +25,7 @@ import type Renderer from "./../video/renderer.js";
 import type CameraEffect from "./effects/camera_effect.ts";
 import FadeEffect from "./effects/fade_effect.ts";
 import ShakeEffect from "./effects/shake_effect.ts";
+import type { Fog3dState } from "./fog.ts";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -904,6 +905,20 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * Resolve this camera's distance fog for one frame.
+	 *
+	 * A 2D camera has none, so this returns `null` and `draw` uses that to
+	 * CLEAR any fog a previously drawn camera installed. {@link Camera3d}
+	 * overrides it.
+	 * @param _renderer - the renderer about to draw with this camera
+	 * @returns fog state, or null for no fog
+	 * @ignore
+	 */
+	_fog3dState(_renderer: Renderer): Fog3dState | null {
+		return null;
+	}
+
+	/**
 	 * Build and install the world + screen projections used when this
 	 * camera is non-default (split-screen, picture-in-picture, etc.).
 	 * Default behavior is a shifted ortho that places the camera's
@@ -995,6 +1010,13 @@ export default class Camera2d extends Renderable {
 		} else {
 			renderer.setProjection(this.projectionMatrix);
 		}
+
+		// Distance fog, per camera. Pushed alongside the projection because it
+		// is a property of THIS view: a `Camera3d` resolves its own settings
+		// here, and every other camera resolves `null` — so a 2D minimap
+		// sharing a stage with a fogged 3D camera renders clean instead of
+		// inheriting whatever the previous camera left installed.
+		renderer.setFog(this._fog3dState(renderer));
 
 		// Upload active Light2d instances for the lit sprite pipeline.
 		// Done here — after `setProjection()` (which can flush the

@@ -63,6 +63,47 @@ in vec4 vInstanceData;
 
 out vec4 fragColor;
 
+// Distance fog is a COMPILED VARIANT, not a runtime branch: the batcher
+// injects `#define FOG` only while a camera has fog enabled. A software
+// rasterizer predicates both sides of a branch, so an `exp()` guarded at
+// runtime still costs every fragment of every scene — including the scenes
+// that never asked for fog.
+#ifdef FOG
+uniform vec3 uFogColor;   // straight (unpremultiplied) fog colour
+uniform vec4 uFogParams;  // x = mode (0 off / 1 linear / 2 exp2),
+                          // y = near, z = 1/(far - near), w = density
+in float vFogDepth;       // radial view-space distance, interpolated
+
+// Fold distance fog into a PREMULTIPLIED colour. Twin of the block in
+// mesh.frag — keep the two in step; they are duplicated rather than shared
+// because the production build loads each shader as raw text (no preprocessor
+// include), and this shader is ES 3.00 while its twin is ES 1.00.
+//
+// `rgb` is already multiplied by `a`, so the fog colour has to be scaled by
+// the fragment's own coverage. A plain mix toward uFogColor would paint
+// full-strength fog onto near-transparent fragments — grey halos around every
+// alpha-cutout leaf.
+//
+// Mode 0 returns the input untouched, so a scene with no fog is bit-identical
+// to one built before fog existed.
+vec3 applyFog(vec3 rgb, float a) {
+    float mode = uFogParams.x;
+    if (mode < 0.5) {
+        return rgb;
+    }
+    float f; // fraction of the scene colour that survives
+    if (mode < 1.5) {
+        f = 1.0 - clamp((vFogDepth - uFogParams.y) * uFogParams.z, 0.0, 1.0);
+    } else {
+        float dd = vFogDepth * uFogParams.w;
+        f = exp(-dd * dd);
+    }
+    return mix(uFogColor * a, rgb, f);
+}
+#endif
+
+
+
 void main(void) {
     vec4 base = texture(uSampler, vRegion) * vColor;
 
@@ -95,7 +136,11 @@ void main(void) {
 #ifdef INSTANCE_DATA
         unlitEmissive += vInstanceData.rgb;
 #endif
+#ifdef FOG
+        fragColor = vec4(applyFog(base.rgb + unlitEmissive, base.a), base.a);
+#else
         fragColor = vec4(base.rgb + unlitEmissive, base.a);
+#endif
         return;
     }
     vec3 N = vNormal / nLength;
@@ -161,5 +206,12 @@ void main(void) {
 #ifdef INSTANCE_DATA
     emissive += vInstanceData.rgb;
 #endif
+#ifdef FOG
+    fragColor = vec4(
+        applyFog(base.rgb * lit + specular * uSpecular + emissive, base.a),
+        base.a
+    );
+#else
     fragColor = vec4(base.rgb * lit + specular * uSpecular + emissive, base.a);
+#endif
 }

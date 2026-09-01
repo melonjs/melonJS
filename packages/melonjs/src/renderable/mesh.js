@@ -327,6 +327,7 @@ export default class Mesh extends Renderable {
 	 * @param {number} [settings.shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
 	 * @param {string|TextureAtlas|HTMLImageElement} [settings.alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
 	 * @param {boolean} [settings.castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
+	 * @param {boolean} [settings.fog] - set `false` to exempt this mesh from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does
 	 * @param {number} [settings.shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
 	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
 	 * @example
@@ -615,6 +616,43 @@ export default class Mesh extends Renderable {
 			typeof settings.castGroundShadow === "boolean"
 				? settings.castGroundShadow
 				: undefined;
+
+		/**
+		 * Whether this mesh is affected by the camera's distance fog
+		 * ({@link Camera3d#setFog}).
+		 *
+		 * Left **unset** (`undefined`, the default) the mesh fogs whenever the
+		 * camera drawing it has fog — which for a scene that never enables fog
+		 * means never. Set it to `false` and this mesh is never fogged, however
+		 * far away it is: the escape hatch for something that has to stay
+		 * readable at any distance, such as an objective marker or a waypoint.
+		 * `true` is accepted for symmetry and behaves as the default.
+		 *
+		 * It exempts the **mesh**, not the ground shadow it casts. A blob is a
+		 * mark on the floor and fogs with the floor it lies on — one staying
+		 * crisp under an object whose surroundings had dissolved would read as
+		 * a fault rather than as emphasis. The blob quad is also shared by
+		 * every caster in the scene, so it carries no per-object state to read.
+		 *
+		 * Emissive surfaces fog too — light travelling through fog is
+		 * attenuated like anything else — so a neon sign that should punch
+		 * through wants `fog: false` rather than a brighter emissive.
+		 * @type {boolean|undefined}
+		 * @default undefined
+		 * @see Camera3d#setFog
+		 * @example
+		 * // the world fogs; this waypoint stays readable at any distance
+		 * camera.setFog({ near: 1200, far: 7000 });
+		 *
+		 * const marker = new Mesh(0, 0, {
+		 *   ...beaconGeometry,
+		 *   emissive: [1, 0.6, 0],
+		 *   fog: false,
+		 * });
+		 * // or afterwards, on anything already built
+		 * marker.fog = false;
+		 */
+		this.fog = typeof settings.fog === "boolean" ? settings.fog : undefined;
 
 		/**
 		 * World Y of the floor the shadow lands on, or `undefined` (the

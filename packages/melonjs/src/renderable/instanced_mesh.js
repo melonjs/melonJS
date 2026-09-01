@@ -50,6 +50,32 @@ const _dirtySpan = [0, 0];
  * Requires a GPU backend (`renderer.supportsInstancing`). Under the Canvas
  * renderer the instances are drawn one at a time through the ordinary CPU
  * mesh path — correct, but without any of the benefit.
+ *
+ * ### When a plain {@link Mesh} each is the better answer
+ *
+ * One `InstancedMesh` is **one geometry and one material**, and four things
+ * move from per-object to per-group:
+ *
+ * - **Depth sorting.** The set has a single sort key — its own `pos` — so it
+ *   orders against the rest of the scene as one object. Opaque instances still
+ *   resolve against each other per pixel through the depth buffer; blended
+ *   ones cannot be sorted among themselves at all.
+ * - **Ground shadows.** {@link Mesh#castGroundShadow} becomes one instanced
+ *   shadow draw covering the whole set, not a blob computed per object.
+ * - **Removal.** {@link InstancedMesh#removeInstance} swaps the last instance
+ *   into the hole, so any index a caller was holding now refers to a different
+ *   object.
+ * - **Colour.** {@link Mesh#tint} applies to the set; per-instance colour has
+ *   to be declared up front with `instanceColors` and set through
+ *   {@link InstancedMesh#setInstanceColor}.
+ *
+ * So the question is not how many there are, but whether the game addresses
+ * them **individually**. Scenery — trees, rocks, grass, debris — instances
+ * cleanly, because nothing ever asks about one of them. Collision-tested props
+ * are fine too: the positions are yours either way and instancing only changes
+ * how they are drawn. Collectibles and enemies usually are not, because
+ * removing them one at a time makes the index swap the caller's problem, and
+ * at small counts a pooled `Mesh` each is less code and no slower.
  * @augments Mesh
  * @category Rendering
  * @example

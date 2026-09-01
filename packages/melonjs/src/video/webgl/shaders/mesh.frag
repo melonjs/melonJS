@@ -5,6 +5,46 @@ uniform sampler2D uAlphaMap;  // per-texel opacity (MTL map_d)
 uniform float uHasAlphaMap;   // 0 = uAlphaMap is filler, ignore it
 varying vec4 vColor;
 varying vec2 vRegion;
+// Distance fog is a COMPILED VARIANT, not a runtime branch: the batcher
+// injects `#define FOG` only while a camera has fog enabled. A software
+// rasterizer predicates both sides of a branch, so an `exp()` guarded at
+// runtime still costs every fragment of every scene — including the scenes
+// that never asked for fog.
+#ifdef FOG
+uniform vec3 uFogColor;   // straight (unpremultiplied) fog colour
+uniform vec4 uFogParams;  // x = mode (0 off / 1 linear / 2 exp2),
+                          // y = near, z = 1/(far - near), w = density
+varying float vFogDepth;  // radial view-space distance, interpolated
+
+// Fold distance fog into a PREMULTIPLIED colour.
+//
+// `rgb` here is already multiplied by `a` (the vertex stage premultiplies
+// vColor), so the fog colour has to be scaled by the fragment's own coverage.
+// A plain mix toward uFogColor would paint full-strength fog onto
+// near-transparent fragments — grey halos around every alpha-cutout leaf, and
+// unattenuated fog added on the blended shadow pass.
+//
+// Mode 0 returns the input untouched, so a scene with no fog is bit-identical
+// to one built before fog existed.
+vec3 applyFog(vec3 rgb, float a) {
+    float mode = uFogParams.x;
+    if (mode < 0.5) {
+        return rgb;
+    }
+    float f; // fraction of the scene colour that survives
+    if (mode < 1.5) {
+        // linear: 1 at `near`, reaching 0 at `far`
+        f = 1.0 - clamp((vFogDepth - uFogParams.y) * uFogParams.z, 0.0, 1.0);
+    } else {
+        // exponential squared: survival = exp(-(density * d)^2)
+        float dd = vFogDepth * uFogParams.w;
+        f = exp(-dd * dd);
+    }
+    return mix(uFogColor * a, rgb, f);
+}
+#endif
+
+
 #ifdef INSTANCE_DATA
 // per-instance custom slot. The built-in shading reads its rgb as emissive,
 // so a forest can glow per tree without a uniform per instance; a CUSTOM mesh
@@ -34,5 +74,9 @@ void main(void) {
 #ifdef INSTANCE_DATA
     emissive += vInstanceData.rgb;
 #endif
+#ifdef FOG
+    gl_FragColor = vec4(applyFog(color.rgb + emissive, color.a), color.a);
+#else
     gl_FragColor = vec4(color.rgb + emissive, color.a);
+#endif
 }

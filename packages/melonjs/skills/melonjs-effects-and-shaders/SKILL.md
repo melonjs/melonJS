@@ -174,4 +174,5 @@ same question after construction.
 ## Related skills
 
 - `melonjs-renderables` — where post effects attach, and the destroy trap
-- `melonjs-3d` — custom mesh shaders and the GPU-backend requirement
+- `melonjs-3d` — the GPU-backend requirement, and why a custom mesh shader is
+  not affected by the camera's distance fog

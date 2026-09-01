@@ -72,8 +72,8 @@ describe("WebGPU MTL specular and alpha maps (#1575)", () => {
 	};
 
 	describe("the uniform block", () => {
-		it("grew to 208 bytes: specular at float 44, eye at 48", () => {
-			expect(MESH_UNIFORM_SIZE).toBe(208);
+		it("grew to 240 bytes: specular at float 44, eye at 48, fog at 52", () => {
+			expect(MESH_UNIFORM_SIZE).toBe(240);
 			const mesh = makeMesh({
 				specular: new Float32Array([0.25, 0.5, 0.75]),
 				shininess: 64,

@@ -59,9 +59,10 @@ describe("WebGPUMeshBatcher (mock device)", () => {
 		// dedup by module text: a second batcher re-registers the same key
 		const again = new WebGPUMeshBatcher(renderer);
 		expect(again.shaderKey).toBe(batcher.shaderKey);
-		expect(renderer.pipelineCache.effectLayouts.has("mesh:u208")).toBe(true);
-		// 176 before #1575 — grown by the specular vec4 and the eye position
-		expect(MESH_UNIFORM_SIZE).toBe(208);
+		expect(renderer.pipelineCache.effectLayouts.has("mesh:u240")).toBe(true);
+		// 176 before #1575, 208 before fog — grown by the specular vec4 and the
+		// eye position, then by the fog colour and fog params
+		expect(MESH_UNIFORM_SIZE).toBe(240);
 	});
 
 	it("addMesh dedups indexed vertices: 6 indices land as 4 vertices + drawIndexed(6)", () => {
