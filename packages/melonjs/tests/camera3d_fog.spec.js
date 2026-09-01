@@ -252,6 +252,27 @@ describe("Camera3d distance fog", () => {
 		});
 	});
 
+	describe("fog does not survive the frame that installed it", () => {
+		it("starts each frame with none, so nothing inherits the last camera's", () => {
+			// `_fog3d` is written once per camera and never reset, so without
+			// this a mesh drawn outside a camera bracket would inherit whatever
+			// the previously drawn camera left installed — across frames too,
+			// which is the hardest version to notice.
+			camera.setFog({ near: 1, far: 100 });
+			app.renderer.setFog(camera._fog3dState(app.renderer));
+			expect(app.renderer._fog3d).not.toBe(null);
+
+			app.draw();
+			// the frame reset runs before the stage draws; by the time the
+			// frame is over the camera has re-installed its own
+			expect(app.renderer._fog3d).not.toBe(undefined);
+
+			app.renderer.setFog(null);
+			expect(app.renderer._fog3d).toBe(null);
+			camera.setFog(null);
+		});
+	});
+
 	describe("no per-frame allocation", () => {
 		it("rewrites one state object rather than making a new one", () => {
 			camera.setFog({ near: 1, far: 100 });

@@ -1118,6 +1118,14 @@ export default class Application {
 			// prepare renderer to draw a new frame
 			this.renderer.clear();
 
+			// Distance fog belongs to the camera that installed it, and is
+			// installed once per camera in `Camera2d.draw`. Clearing it here
+			// means a frame starts with none, so anything drawn before a camera
+			// gets to it cannot inherit the fog of whichever camera happened to
+			// draw last — including across frames, which is where it would be
+			// hardest to see.
+			this.renderer.setFog(null);
+
 			// render the stage
 			state.current()!.draw(this.renderer, this.world);
 
