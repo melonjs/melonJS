@@ -18,6 +18,11 @@ export type FogMode = "linear" | "exp2";
  * {@link Camera3d#setFog} options. Every field is optional: the defaults are
  * resolved live each frame, so fog stays consistent with the camera and the
  * backdrop instead of drifting out of step with them.
+ *
+ * The values you DO pass are read once, at the call. Mutating this object
+ * afterwards has no effect — and would have skipped `setFog`'s validation if it
+ * did. The one live handle is a {@link Color} passed as `color`, which is kept
+ * by reference so it can be animated; see that field.
  */
 export interface FogOptions {
 	/**
