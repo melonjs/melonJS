@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, castGroundShadow, lit."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, castGroundShadow, lit."
 license: MIT
 ---
 
@@ -137,6 +137,20 @@ camera.setFog({ far: 5000, color: "#8899aa" });
 ```
 
 A `Color` is held by reference, so mutating it animates the fog.
+
+**Height falloff** makes mist pool in low ground instead of hanging at every
+altitude equally — the difference between fog reading as weather and as a global
+desaturation:
+
+```js
+camera.setFog({ near: 1200, far: 7000, fogHeight: 0, heightFalloff: 0.0015 });
+```
+
+`heightFalloff` defaults to **0**, which is uniform fog — not a special case,
+the same integral with the dial at zero, so leaving it out changes nothing.
+Render space is **Y-down**, so `fogHeight` is the floor and density rises
+*below* it; every published form of this formula assumes Y-up and has the
+opposite sign.
 
 Fog is measured **radially** from the camera and applied **per fragment**, so
 it does not slide as the camera turns and does not band across large triangles.
@@ -435,6 +449,8 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | black canvas under `Camera3d` | Canvas renderer (no depth buffer) — check the `console.warn` |
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
 | a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
+| fog hangs in the sky as thickly as in the valley | uniform fog — add `heightFalloff` so it pools low |
+| mist sits on the ridges instead of the valley floor | the `fogHeight` sign — Y is DOWN here, density rises below it |
 | distant geometry pops in against the sky | no fog — `camera.setFog({})` picks up the clip planes and background colour |
 | fog does not match the sky after a background fade | an explicit `color` was passed; omit it to track `renderer.backgroundColor` |
 | geometry clips before it has finished fading | fog `far` beyond the clip far — omit the distances and they default to the clip planes |

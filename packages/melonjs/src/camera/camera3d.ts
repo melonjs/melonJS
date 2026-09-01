@@ -129,6 +129,8 @@ export default class Camera3d extends Camera2d {
 	/** @ignore */ private _fogNear: number | undefined = undefined;
 	/** @ignore */ private _fogFar: number | undefined = undefined;
 	/** @ignore */ private _fogDensity: number | undefined = undefined;
+	/** @ignore */ private _fogHeight = 0;
+	/** @ignore */ private _fogHeightFalloff = 0;
 
 	/**
 	 * Owned colour, used only when the caller passed a CSS string or an array.
@@ -150,6 +152,9 @@ export default class Camera3d extends Camera2d {
 		invRange: 0,
 		density: 0,
 		color: new Float32Array(3),
+		heightFalloff: 0,
+		fogHeight: 0,
+		cameraY: 0,
 	};
 
 	/**
@@ -319,6 +324,11 @@ export default class Camera3d extends Camera2d {
 	 *
 	 * Fog is per camera, so a split-screen or minimap view fogs independently
 	 * — and a `Camera2d` never fogs at all.
+	 *
+	 * `heightFalloff` adds a second falloff with altitude, so mist pools in low
+	 * ground instead of hanging at every height equally. It defaults to 0,
+	 * which is uniform fog — not a special case, the same integral with the
+	 * dial at zero.
 	 * @param options - fog settings, or `null` to switch fog off
 	 * @returns this camera (chainable)
 	 * @throws {Error} on an unknown `mode`, a non-finite or negative distance,
@@ -348,6 +358,16 @@ export default class Camera3d extends Camera2d {
 	 * const murk = new Color(90, 120, 80);
 	 * camera.setFog({ far: 5000, color: murk });
 	 * murk.setColor(60, 90, 55); // thickens over the next frame
+	 * @example
+	 * // Mist pooling in a valley: dense along the floor, thinning up the
+	 * // walls so the tree line stays crisp. Render space is Y-down, so
+	 * // `fogHeight` is the floor and density rises BELOW it.
+	 * camera.setFog({
+	 *   near: 1200,
+	 *   far: 7000,
+	 *   fogHeight: 0,
+	 *   heightFalloff: 0.0015,
+	 * });
 	 * @example
 	 * // Everything is optional: with nothing at all, fog spans the camera's
 	 * // own clip planes in the backdrop's colour.
@@ -395,12 +415,27 @@ export default class Camera3d extends Camera2d {
 		if (options.density !== undefined && options.density <= 0) {
 			throw new Error("Camera3d.setFog: density must be greater than zero");
 		}
+		for (const [name, value] of [
+			["fogHeight", options.fogHeight],
+			["heightFalloff", options.heightFalloff],
+		] as const) {
+			if (value !== undefined && !Number.isFinite(value)) {
+				throw new Error(`Camera3d.setFog: ${name} must be a finite number`);
+			}
+		}
+		if (options.heightFalloff !== undefined && options.heightFalloff < 0) {
+			throw new Error("Camera3d.setFog: heightFalloff must not be negative");
+		}
 
 		this._fogOptions = options;
 		this._fogMode = mode;
 		this._fogNear = options.near;
 		this._fogFar = options.far;
 		this._fogDensity = options.density;
+		this._fogHeight = options.fogHeight ?? 0;
+		// zero is uniform fog — the maths below collapses to the distance-only
+		// form exactly, so the default changes nothing
+		this._fogHeightFalloff = options.heightFalloff ?? 0;
 		// A `Color` is referenced so mutating it animates the fog; anything
 		// else is parsed once into a colour this camera owns.
 		if (options.color === undefined || options.color instanceof Color) {
@@ -440,6 +475,12 @@ export default class Camera3d extends Camera2d {
 		}
 		if (this._fogDensity !== undefined) {
 			out.density = this._fogDensity;
+		}
+		if (this._fogHeight !== 0) {
+			out.fogHeight = this._fogHeight;
+		}
+		if (this._fogHeightFalloff !== 0) {
+			out.heightFalloff = this._fogHeightFalloff;
 		}
 		const colour = this._fogOwnColor ?? this._fogOptions.color;
 		if (colour !== undefined) {
@@ -494,6 +535,11 @@ export default class Camera3d extends Camera2d {
 			(options.color instanceof Color
 				? options.color
 				: renderer.backgroundColor);
+		state.heightFalloff = this._fogHeightFalloff;
+		state.fogHeight = this._fogHeight;
+		// the height integral runs from the camera to the fragment, so the
+		// shaders need where the camera is on that axis
+		state.cameraY = this.pos.y;
 		state.color[0] = color.r / 255;
 		state.color[1] = color.g / 255;
 		state.color[2] = color.b / 255;

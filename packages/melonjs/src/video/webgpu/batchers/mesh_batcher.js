@@ -22,10 +22,11 @@ import WebGPUBatcher from "./webgpu_batcher.js";
  * mat4x4 model (64) + mat4x4 view (64) + vec4 tint (16) + vec4 params
  * (alphaCutoff, hasAlphaMap, reserved ×2) (16) + vec4 emissive (16) +
  * vec4 specular (rgb + shininess) (16) + vec4 eye (camera world position;
- * w reserved) (16) + vec4 fogColor (16) + vec4 fogParams (16) → 240.
+ * w reserved) (16) + vec4 fogColor (16) + vec4 fogParams (16)
+ * + vec4 fogHeight (16) → 256.
  * @ignore
  */
-export const MESH_UNIFORM_SIZE = 240;
+export const MESH_UNIFORM_SIZE = 256;
 
 // Shared identity model matrix for draws whose vertices are already placed
 // (the 2D-camera path pre-projects them on the CPU). Never mutated.
@@ -660,6 +661,12 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			scratch[57] = fog.near;
 			scratch[58] = fog.invRange;
 			scratch[59] = fog.density;
+			// x = height falloff (0 = uniform), y = reference world Y,
+			// z = the camera's world Y
+			scratch[60] = fog.heightFalloff;
+			scratch[61] = fog.fogHeight;
+			scratch[62] = fog.cameraY;
+			scratch[63] = 0;
 		} else {
 			scratch[52] = 0;
 			scratch[53] = 0;
@@ -669,6 +676,10 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			scratch[57] = 0;
 			scratch[58] = 0;
 			scratch[59] = 0;
+			scratch[60] = 0;
+			scratch[61] = 0;
+			scratch[62] = 0;
+			scratch[63] = 0;
 		}
 
 		const region = renderer.effectUniformArena.alloc(
