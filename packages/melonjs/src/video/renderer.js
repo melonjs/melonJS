@@ -434,18 +434,27 @@ export default class Renderer {
 		entry.tint = tint;
 		entry.blend = blend ?? "normal";
 		entry.instanced = instanced ?? null;
-		// Squared radial distance from the eye, taken once here rather than per
+		// Squared distance from the camera, taken once here rather than per
 		// comparison. Radial rather than view-space z for the same reason the
 		// fog distance is: no sign-convention trap, and stable as the camera
-		// turns. The view is rigid, so its inverse translation is -Rᵀ·t.
+		// turns.
+		//
+		// Measured by pushing the position THROUGH the view, not by extracting
+		// the eye from it. The eye is recoverable as -Rᵀ·t only when the upper
+		// 3×3 is orthonormal, and the accumulated transform here is not just
+		// the camera's: `Container.draw` folds every ancestor into it, so one
+		// scaled container makes that extraction wrong and silently mis-orders
+		// the pass. The length of the view-space position needs no such
+		// assumption, and agrees exactly with the old form whenever the view
+		// really is rigid — a rotation preserves length.
 		const v = this.currentTransform.val;
 		const m = modelMatrix.val;
-		const ex = -(v[0] * v[12] + v[1] * v[13] + v[2] * v[14]);
-		const ey = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
-		const ez = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
-		const dx = m[12] - ex;
-		const dy = m[13] - ey;
-		const dz = m[14] - ez;
+		const mx = m[12];
+		const my = m[13];
+		const mz = m[14];
+		const dx = v[0] * mx + v[4] * my + v[8] * mz + v[12];
+		const dy = v[1] * mx + v[5] * my + v[9] * mz + v[13];
+		const dz = v[2] * mx + v[6] * my + v[10] * mz + v[14];
 		entry.key = dx * dx + dy * dy + dz * dz;
 		queue.count = at + 1;
 	}

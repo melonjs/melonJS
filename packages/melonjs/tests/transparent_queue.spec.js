@@ -231,6 +231,44 @@ describe("the transparent pass (#1516)", () => {
 		});
 	});
 
+	describe("the sort key survives a scaled ancestor", () => {
+		it("orders by true view distance, not by an extracted eye", (ctx) => {
+			requireWebGL(ctx);
+			// `Container.draw` folds every ancestor transform into
+			// `currentTransform`, so what the queue sees is not just the
+			// camera's view — one scaled container makes the upper 3x3
+			// non-orthonormal. Recovering the eye as -Rᵀ·t is invalid there,
+			// and the two formulas disagree about which object is farther.
+			//
+			// View: scale (3, 1, 1) then translate (0, 0, -1000).
+			//   A at (300, 0,    0) -> view ( 900, 0, -1000), d² = 1_810_000
+			//   B at (  0, 0, -200) -> view (   0, 0, -1200), d² = 1_440_000
+			// so A is farther. The eye extraction gives eye = (0, 0, 1000):
+			//   A -> (300, 0, -1000), d² = 1_090_000
+			//   B -> (  0, 0, -1200), d² = 1_440_000
+			// which ranks B farther — the opposite order, and B would then be
+			// composited on top of something actually in front of it.
+			setup();
+			const v = renderer.currentTransform;
+			v.identity();
+			v.val[0] = 3; // non-uniform scale, as a scaled container leaves
+			v.val[14] = -1000;
+
+			const near = quad();
+			near.transparent = true;
+			draw(near, -200);
+			const far = quad();
+			far.transparent = true;
+			far.pos.set(300, 0, 0);
+			draw(far, 0);
+
+			const [b, a] = renderer._transparentPool;
+			expect(Math.round(b.key)).toBe(1_440_000);
+			expect(Math.round(a.key)).toBe(1_810_000);
+			expect(a.key).toBeGreaterThan(b.key); // fails under -Rᵀ·t
+		});
+	});
+
 	describe("ordering", () => {
 		/** near red over far blue, both half alpha, over white */
 		const composite = (nearFirst) => {
