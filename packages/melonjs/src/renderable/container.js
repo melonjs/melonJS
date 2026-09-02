@@ -1319,6 +1319,17 @@ export default class Container extends Renderable {
 				obj.postDraw(renderer);
 
 				if (isFloating) {
+					// Put down anything the overlay itself queued, while its
+					// SCREEN projection is still installed. A floating child
+					// shares the render target with the world, so its
+					// transparent meshes land in the same queue — but not the
+					// same projection, and replaying them after the restore
+					// below sends world-space geometry through the camera's
+					// perspective. Their vertices sit at view-space z = 0,
+					// which is the camera itself, and the perspective divide
+					// deletes them: a faded HUD mesh silently disappeared
+					// while the same mesh drew correctly at full opacity.
+					renderer.flushTransparentPass?.();
 					// Restore the projection the camera had installed for
 					// this draw pass — non-default cameras use a separate
 					// `worldProjection`; the default camera just uses

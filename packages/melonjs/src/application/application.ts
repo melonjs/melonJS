@@ -1118,6 +1118,14 @@ export default class Application {
 			// prepare renderer to draw a new frame
 			this.renderer.clear();
 
+			// The screen-space bracket `Container.draw` opens around a
+			// floating child is not exception-safe: a child that throws
+			// leaves the depth raised, and every later drain of the
+			// transparent queue then silently skips — for the rest of the
+			// session, since `reset()` only runs on a stage change. A frame is
+			// the natural boundary, and by here the previous one is over.
+			this.renderer.resetScreenSpace?.();
+
 			// Distance fog belongs to the camera that installed it, and is
 			// installed once per camera in `Camera2d.draw`. Clearing it here
 			// means a frame starts with none, so anything drawn before a camera

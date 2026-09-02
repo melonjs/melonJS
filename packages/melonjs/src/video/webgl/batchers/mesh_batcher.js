@@ -917,6 +917,17 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.useShader(this.instancedShaderFor(mesh.instanceLayout));
 
 		this.updatePassState();
+
+		// An instanced mesh routes into the transparent pass on exactly the
+		// same terms as a retained one — the predicate in `drawMesh` reads
+		// nothing about instancing — so it must replay on the same terms too.
+		// Without this the whole set is deferred to end-of-frame and then
+		// drawn opaque anyway, which is strictly worse than not deferring it.
+		const blend = this.renderer._replayBlend ?? null;
+		if (blend !== null) {
+			this.beginBlendedDraw(blend);
+		}
+
 		const slices = mesh.textureGroups;
 		if (slices === undefined) {
 			this.applyMeshMaterial(mesh);
@@ -948,6 +959,10 @@ export default class MeshBatcher extends MaterialBatcher {
 					count,
 				);
 			}
+		}
+
+		if (blend !== null) {
+			this.endBlendedDraw();
 		}
 
 		// Hand the default shader and this batcher's own vertex state back.

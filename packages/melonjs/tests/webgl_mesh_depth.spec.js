@@ -431,13 +431,20 @@ describe("Mesh depth handling (issue #1468)", () => {
 	// Layer 2 — alpha cutout (glTF alphaMode MASK)
 	// ──────────────────────────────────────────────────────────────────────
 	//
-	// The mesh shaders `discard` a fragment whose final alpha is below
-	// `uAlphaCutoff`. With no blending (mesh mode disables BLEND), a discarded
-	// fragment leaves the background untouched. These drive the fragment alpha
-	// via the global alpha (which becomes `vColor.a` through the batcher) and
-	// read back the centre pixel: below the cutoff → background survives; at /
-	// above → the mesh paints. Doubles as a smoke test that both shaders still
-	// COMPILE with the new uniform and the batcher's `setUniform` path runs.
+	// The mesh shaders `discard` a fragment whose MATERIAL alpha — the texel,
+	// times the opacity map — is below `uAlphaCutoff`. With no blending (mesh
+	// mode disables BLEND), a discarded fragment leaves the background
+	// untouched. These drive the texel alpha and read back the centre pixel:
+	// below the cutoff → background survives; at / above → the mesh paints.
+	// Doubles as a smoke test that both shaders still COMPILE with the new
+	// uniform and the batcher's `setUniform` path runs.
+	//
+	// The threshold is deliberately NOT applied to the drawn alpha. `vColor.a`
+	// carries the renderable's opacity, and a cutout mesh must keep its shape
+	// as it fades rather than pop out of existence the moment its opacity
+	// crosses its own threshold — `Sprite3d` defaults that threshold to 0.5,
+	// so half a fade-out used to be a hard cut to nothing. The last test here
+	// pins that.
 
 	describe("alpha cutout (Layer 2)", () => {
 		const readCenter = () => {
@@ -461,11 +468,38 @@ describe("Mesh depth handling (issue #1468)", () => {
 			renderer.fillRect(0, 0, 1, 1); // force a non-mesh batcher state
 		};
 
-		const drawCutoutMesh = (alpha) => {
+		// a 1x1 atlas at a chosen alpha, which is what the cutout thresholds
+		const _fadedAtlas = new Map();
+		const getFadedAtlas = (alpha) => {
+			let atlas = _fadedAtlas.get(alpha);
+			if (atlas === undefined) {
+				const tex = document.createElement("canvas");
+				tex.width = 1;
+				tex.height = 1;
+				const ctx = tex.getContext("2d");
+				ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+				ctx.fillRect(0, 0, 1, 1);
+				atlas = new TextureAtlas(
+					{
+						framewidth: 1,
+						frameheight: 1,
+						image: tex,
+						name: `white_1x1_a${alpha}`,
+					},
+					tex,
+					false,
+				);
+				_fadedAtlas.set(alpha, atlas);
+			}
+			return atlas;
+		};
+
+		const drawCutoutMesh = (texelAlpha, opacity = 1) => {
 			const mesh = makeQuadMesh(64, 64, 0, [220, 20, 20, 255]);
 			mesh.alphaCutoff = 0.5;
+			mesh.texture = getFadedAtlas(texelAlpha);
 			renderer.currentTint.setColor(...mesh.tintRGBA);
-			renderer.setGlobalAlpha(alpha); // becomes vColor.a in the shader
+			renderer.setGlobalAlpha(opacity);
 			renderer.drawMesh(mesh);
 			renderer.setGlobalAlpha(1); // restore for sibling tests
 		};
@@ -474,7 +508,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 			requireWebGL2(ctx);
 			setupOrtho();
 			freshFrame();
-			drawCutoutMesh(0.3); // 0.3 < 0.5 → discard every fragment
+			drawCutoutMesh(0.3); // texel 0.3 < 0.5 → discard every fragment
 			const px = readCenter();
 			expect(px[0]).toBeLessThan(60); // red dropped → black background
 		});
@@ -483,7 +517,7 @@ describe("Mesh depth handling (issue #1468)", () => {
 			requireWebGL2(ctx);
 			setupOrtho();
 			freshFrame();
-			drawCutoutMesh(0.9); // 0.9 >= 0.5 → fragment kept
+			drawCutoutMesh(0.9); // texel 0.9 >= 0.5 → fragment kept
 			const px = readCenter();
 			expect(px[0]).toBeGreaterThan(150); // red paints through
 		});
@@ -492,17 +526,65 @@ describe("Mesh depth handling (issue #1468)", () => {
 			requireWebGL2(ctx);
 			setupOrtho();
 			freshFrame();
-			// At alpha 0.45 the cutout=0.5 case (test above) discards to black.
-			// With alphaCutoff at its 0 default, `a < 0` is never true → the same
-			// fragment survives. Output RGB is premultiplied (≈ 220·0.45 ≈ 99),
-			// so a kept fragment reads clearly above the discarded-to-black floor.
+			// At texel alpha 0.45 the cutout=0.5 case (test above) discards to
+			// black. With alphaCutoff at its 0 default, `a < 0` is never true →
+			// the same fragment survives. Output RGB is premultiplied
+			// (≈ 220·0.45 ≈ 99), so a kept fragment reads clearly above the
+			// discarded-to-black floor.
 			const mesh = makeQuadMesh(64, 64, 0, [220, 20, 20, 255]);
+			mesh.texture = getFadedAtlas(0.45);
 			renderer.currentTint.setColor(...mesh.tintRGBA);
-			renderer.setGlobalAlpha(0.45);
 			renderer.drawMesh(mesh);
-			renderer.setGlobalAlpha(1);
 			const px = readCenter();
 			expect(px[0]).toBeGreaterThan(50); // kept (≈99), not discarded (≈0)
+		});
+
+		it("a fading cutout mesh keeps its shape instead of vanishing", (ctx) => {
+			requireWebGL2(ctx);
+			setupOrtho();
+			freshFrame();
+			// An opaque texel under a 0.5 cutoff, faded to 30% opacity. The
+			// cutout must not see the fade: this is a `Sprite3d` at its default
+			// cutoff being faded out, which used to hard-cut to nothing at 49%.
+			// Premultiplied output ≈ 220·0.3 ≈ 66, well clear of black.
+			drawCutoutMesh(1, 0.3);
+			const px = readCenter();
+			expect(px[0]).toBeGreaterThan(40);
+		});
+
+		it("...and so does a LIT one", (ctx) => {
+			requireWebGL2(ctx);
+			// The lit tier is a separate shader with its own copy of the
+			// cutout, and the unlit test above cannot see it: reverting
+			// `mesh-lit.frag` alone left every other test in this file and in
+			// the transparent-pass spec passing. A mesh with no normals
+			// degrades to unlit shading by design, which is why the same
+			// threshold assertion works here.
+			setupOrtho();
+			freshFrame();
+			const mesh = makeQuadMesh(64, 64, 0, [220, 20, 20, 255]);
+			mesh.alphaCutoff = 0.5;
+			mesh.lit = true;
+			mesh.texture = getFadedAtlas(1);
+			renderer.currentTint.setColor(...mesh.tintRGBA);
+			renderer.setGlobalAlpha(0.3);
+			renderer.drawMesh(mesh);
+			renderer.setGlobalAlpha(1);
+			expect(readCenter()[0]).toBeGreaterThan(40);
+		});
+
+		it("a LIT cutout still discards below the threshold", (ctx) => {
+			requireWebGL2(ctx);
+			// the other half: moving the test must not disable the cutout
+			setupOrtho();
+			freshFrame();
+			const mesh = makeQuadMesh(64, 64, 0, [220, 20, 20, 255]);
+			mesh.alphaCutoff = 0.5;
+			mesh.lit = true;
+			mesh.texture = getFadedAtlas(0.3);
+			renderer.currentTint.setColor(...mesh.tintRGBA);
+			renderer.drawMesh(mesh);
+			expect(readCenter()[0]).toBeLessThan(60);
 		});
 	});
 

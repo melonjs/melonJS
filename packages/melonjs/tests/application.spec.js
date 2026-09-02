@@ -105,6 +105,33 @@ describe("Application", () => {
 		});
 	});
 
+	describe("the frame boundary resets the screen-space bracket", () => {
+		it("clears it every draw, so an unbalanced overlay cannot wedge the transparent pass", async () => {
+			// `Container.draw` opens the screen-space bracket around a floating
+			// child with no `finally`, so a child that throws leaves it open —
+			// and while it is open every drain of the transparent queue is
+			// skipped. Without this the pass stays dead until the next STAGE
+			// CHANGE (the only thing that calls `renderer.reset()`), silently,
+			// with the queue growing every frame.
+			boot();
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			await app.init();
+			try {
+				app.renderer.beginScreenSpace(); // ...and never closed
+				expect(app.renderer._screenSpaceDepth).toBe(1);
+				app.isDirty = true;
+				app.draw();
+				expect(app.renderer._screenSpaceDepth).toBe(0);
+			} finally {
+				app.destroy();
+			}
+		});
+	});
+
 	describe("physics startup banner", () => {
 		it("reports the built-in adapter via its stable physicLabel, not a class name", async () => {
 			boot();

@@ -133,11 +133,19 @@ opacity — a soft-edged glow, smoke, a glTF material with `alphaMode: "BLEND"`.
 The automatic check reads the draw's alpha and cannot see into a texture. Watch
 `alphaCutoff` here: it discards texels *before* blending sees them, so a soft
 edge needs a low cutoff (`Sprite3d` drops its own default to `1/255` when you
-set `transparent: true`).
+set `transparent: true`). The cutoff thresholds the MATERIAL's alpha, not the
+drawn alpha, so a fading cutout mesh keeps its shape instead of disappearing at
+its own threshold.
+
+The glTF loader does **not** set this for you: one loaded mesh can merge several
+materials and the flag routes the whole mesh, so a `"BLEND"` material sharing
+geometry with an opaque one would drag the opaque half into the transparent pass.
 
 **`transparent: false`** pins a mesh to the opaque pass however it is faded.
 
-Blending uses the renderable's existing `blendMode`, so a glow is one property:
+Blending uses the renderable's existing `blendMode`, so a glow is one property.
+The advanced modes (`"overlay"`, `"difference"`, and the rest that need a
+compositing pass) fall back to `"normal"` here, on both backends:
 
 ```js
 const glow = new Mesh(0, 0, {
@@ -494,6 +502,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | everything flat and unlit | `lit: true` with no `Light3d` in the world (falls back to fullbright), or a mesh under a 2D camera |
 | a faded mesh goes dark instead of see-through | `transparent: false` on it, or a 2D camera — the transparent pass needs a `Camera3d` |
 | a soft-edged glow has hard edges | `alphaCutoff` discarded the soft texels; lower it |
+| a glTF `alphaMode: "BLEND"` material draws opaque | the loader does not set `transparent` — one mesh can merge several materials, so set it yourself |
 | two transparent objects pop as the camera moves | per-object sorting cannot order intersecting geometry |
 | a `floating` HUD draws behind the scenery | a large \|z\| is *far* under `Camera3d` — use a small depth |
 | fog hangs in the sky as thickly as in the valley | uniform fog — add `heightFalloff` so it pools low |

@@ -1262,6 +1262,12 @@ export default class WebGPURenderer extends Renderer {
 			return;
 		}
 
+		// Replay anything this pass queued while its own target is still bound.
+		// The entries were recorded for THIS target under THIS projection, and
+		// the key is about to be handed back to the pool — so this is the only
+		// moment they can be drawn where they belong.
+		this.flushTransparentPass();
+
 		const isCamera = renderable._postEffectManaged;
 		const pool = this._renderTargetPool;
 		const rt1 = pool.getCaptureTarget();

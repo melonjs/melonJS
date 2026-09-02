@@ -670,9 +670,25 @@ export default class Mesh extends Renderable {
 		 * Set it **`true`** when the transparency lives in the TEXTURE rather
 		 * than in the opacity — a soft-edged glow, smoke, a glTF material with
 		 * `alphaMode: "BLEND"`. The automatic check reads the draw's alpha and
-		 * cannot see into the texture. Note that `alphaCutoff` discards texels
-		 * before blending sees them, so a soft edge needs a low cutoff (see
-		 * {@link Sprite3d}, which lowers its default for exactly this).
+		 * cannot see into the texture. The glTF loader does not set this for
+		 * you: one loaded mesh can merge several materials, and this flag
+		 * routes the whole mesh, so a `"BLEND"` material sharing geometry with
+		 * an opaque one would drag the opaque half into the transparent pass.
+		 * Note that `alphaCutoff` discards texels before blending sees them, so
+		 * a soft edge needs a low cutoff (see {@link Sprite3d}, which lowers
+		 * its default for exactly this). The cutoff thresholds the MATERIAL's
+		 * alpha, not the drawn alpha, so a fading cutout mesh keeps its shape
+		 * rather than disappearing at its own threshold.
+		 *
+		 * The pass composites premultiplied, which is what the mesh vertex
+		 * stage always emits. A texture uploaded with straight alpha and drawn
+		 * with `transparent: true` therefore reads slightly bright at its soft
+		 * texels; upload it premultiplied (the default) and it is exact.
+		 *
+		 * {@link Renderable#blendMode} is honoured per entry, with one limit:
+		 * the advanced modes (`"overlay"`, `"difference"`, and the rest that
+		 * need a compositing pass) fall back to `"normal"` here on both
+		 * backends, since the pass rasterizes directly into the target.
 		 *
 		 * Set it **`false`** to keep a mesh in the opaque pass however it is
 		 * faded — it will darken rather than fade, and it will keep writing

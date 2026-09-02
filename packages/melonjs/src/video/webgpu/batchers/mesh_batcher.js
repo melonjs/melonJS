@@ -271,13 +271,18 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const geometry = this.retainedGeometryFor(mesh);
 		const instances = this.instanceBufferFor(mesh);
 
-		this.meshState.depthWrite = undefined;
+		// see the WebGL batcher: an instanced mesh is routed into the
+		// transparent pass by the same predicate, so it replays by the same
+		// rules — its own blend mode, depth test on, depth writes off
+		const blend = renderer._replayBlend ?? null;
+		const blended = blend !== null;
+		this.meshState.depthWrite = blended ? false : undefined;
 		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.instancedFamilyFor(mesh.instanceLayout),
 			"triangle-list",
-			"none",
-			renderer.premultipliedAlpha,
+			blend ?? "none",
+			blended ? true : renderer.premultipliedAlpha,
 			renderer.stencilMode,
 			this.meshState,
 		);
@@ -1000,7 +1005,13 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			this.activeShaderKey(),
 			"triangle-list",
 			blend ?? "none",
-			renderer.premultipliedAlpha,
+			// A replayed entry is ALWAYS premultiplied — the mesh vertex
+			// stage premultiplies its own output unconditionally, whatever
+			// `premultipliedAlpha` (which describes source TEXTURES) happens
+			// to hold. It is not constant: anything drawing straight-alpha
+			// content earlier in the frame leaves it `false`, which would
+			// select `src-alpha` here and apply alpha a second time.
+			blended ? true : renderer.premultipliedAlpha,
 			renderer.stencilMode,
 			this.meshState,
 		);

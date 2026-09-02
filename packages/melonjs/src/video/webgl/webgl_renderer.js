@@ -1434,6 +1434,12 @@ export default class WebGLRenderer extends Renderer {
 			return;
 		}
 
+		// Replay anything this pass queued while its own target is still bound.
+		// The entries were recorded for THIS target under THIS projection, and
+		// the key is about to be handed back to the pool — so this is the only
+		// moment they can be drawn where they belong.
+		this.flushTransparentPass();
+
 		const isCamera = renderable._postEffectManaged;
 		const rt1 = this._renderTargetPool.getCaptureTarget();
 		const rt2 = this._renderTargetPool.getPingPongTarget();
@@ -2118,6 +2124,17 @@ export default class WebGLRenderer extends Renderer {
 		// instead of full. It went unnoticed while decals were the only client,
 		// because their source colour is black and 0 × anything is 0.
 		const state = blendStateFor(normalizeBlendMode(mode), true);
+		if (state === undefined) {
+			// `"none"` is replace — the source overwrites the destination,
+			// alpha included — and blending switched off is exactly that.
+			// It reaches here because `blendMode` is an unvalidated property
+			// and `"none"` is a supported token, so a faded mesh may legally
+			// carry it; without this the `state.operation` read below throws
+			// mid-frame. Matches the WebGPU pipeline cache, which builds a
+			// replace pipeline from the same absent blend state.
+			gl.disable(gl.BLEND);
+			return;
+		}
 		gl.enable(gl.BLEND);
 		gl.blendEquation(GL_BLEND_OP[state.operation]);
 		gl.blendFunc(

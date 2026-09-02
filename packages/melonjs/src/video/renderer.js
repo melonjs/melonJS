@@ -23,6 +23,14 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  */
 
 /**
+ * The drain site's own view, held while the transparent pass installs each
+ * entry's. One for the whole engine — the pass is never re-entered, which
+ * `_transparentFlushing` enforces.
+ * @ignore
+ */
+const _savedView = new Matrix3d();
+
+/**
  * a base renderer object
  * @category Rendering
  */
@@ -346,6 +354,21 @@ export default class Renderer {
 	}
 
 	/**
+	 * Force the screen-space bracket back to zero at a frame boundary.
+	 *
+	 * `Container.draw` opens the bracket around a floating child without a
+	 * `finally`, so a child that throws never closes it — and while it stays
+	 * open every drain of the transparent queue is skipped, which would
+	 * silently disable the pass for the rest of the session and grow the queue
+	 * a frame at a time. Called once per frame, where the count is always zero
+	 * in normal operation.
+	 * @ignore
+	 */
+	resetScreenSpace() {
+		this._screenSpaceDepth = 0;
+	}
+
+	/**
 	 * Mark the end of a screen-space draw.
 	 * @ignore
 	 */
@@ -380,8 +403,9 @@ export default class Renderer {
 	 * @ignore
 	 */
 	queueTransparent(mesh, modelMatrix, tint, blend, instanced) {
-		const pool = (this._transparentPool ??= []);
-		const at = this._transparentCount ?? 0;
+		const queue = this.transparentQueue();
+		const pool = queue.pool;
+		const at = queue.count;
 		// Slots are reused frame to frame, so a steady scene allocates nothing
 		// after its first.
 		let entry = pool[at];
@@ -389,6 +413,7 @@ export default class Renderer {
 			entry = {
 				mesh: null,
 				matrix: new Matrix3d(),
+				view: new Matrix3d(),
 				tint: 0,
 				blend: "normal",
 				key: 0,
@@ -398,6 +423,14 @@ export default class Renderer {
 		}
 		entry.mesh = mesh;
 		entry.matrix.copy(modelMatrix);
+		// The view the entry was queued UNDER, captured because the replay
+		// happens somewhere else entirely. Both backends read the view live off
+		// `currentTransform` at draw time, and `Container.draw` translates by
+		// its own position before walking its children — so a mesh queued
+		// inside a positioned container and replayed after that bracket closed
+		// would draw at the container's offset from where it belongs. Visible
+		// as a jump the instant a mesh starts fading.
+		entry.view.copy(this.currentTransform);
 		entry.tint = tint;
 		entry.blend = blend ?? "normal";
 		entry.instanced = instanced ?? null;
@@ -414,7 +447,70 @@ export default class Renderer {
 		const dy = m[13] - ey;
 		const dz = m[14] - ez;
 		entry.key = dx * dx + dy * dy + dz * dz;
-		this._transparentCount = at + 1;
+		queue.count = at + 1;
+	}
+
+	/**
+	 * The render target a queued entry belongs to, as a stable small integer
+	 * (`-1` for the screen).
+	 *
+	 * Both GPU backends run their post-effect passes through the shared
+	 * {@link RenderTargetPool}, whose `activeBase` names the innermost active
+	 * pass — so this is one number that means the same thing on both, and on
+	 * the Canvas renderer (which has no pool, and never queues) it is
+	 * constant.
+	 * @returns {number} the current target's key
+	 * @ignore
+	 */
+	transparentTarget() {
+		return this._renderTargetPool?.activeBase ?? -1;
+	}
+
+	/**
+	 * The transparent queue belonging to one render target, created on first
+	 * use.
+	 *
+	 * There is one queue **per target**, not one per renderer, and that is the
+	 * whole point: a queue can only ever be replayed into the target its
+	 * entries were recorded for. A post effect binds its own target part-way
+	 * through a scene, and a drain that fires inside that bracket used to
+	 * replay the *world's* queued geometry into the effect's offscreen buffer
+	 * — baking the scene's transparent objects into one renderable's texture.
+	 * Keyed this way the two never meet: the effect's drain sees only what was
+	 * queued inside the effect, and the world's queue waits for the camera.
+	 * @param {number} [key] - the target, defaulting to the current one
+	 * @returns {{pool: object[], count: number}} that target's queue
+	 * @ignore
+	 */
+	transparentQueue(key = this.transparentTarget()) {
+		const queues = (this._transparentQueues ??= []);
+		// `-1` is the screen, so shift into a dense array rather than a Map:
+		// the key is a small integer and this runs per queued draw
+		const at = key + 1;
+		let queue = queues[at];
+		if (queue === undefined) {
+			queue = { pool: [], count: 0 };
+			queues[at] = queue;
+		}
+		return queue;
+	}
+
+	/**
+	 * The pooled entries of the current target's queue.
+	 * @type {object[]}
+	 * @ignore
+	 */
+	get _transparentPool() {
+		return this.transparentQueue().pool;
+	}
+
+	/**
+	 * How many entries the current target has queued.
+	 * @type {number}
+	 * @ignore
+	 */
+	get _transparentCount() {
+		return this.transparentQueue().count;
 	}
 
 	/**
@@ -434,8 +530,8 @@ export default class Renderer {
 	}
 
 	/**
-	 * Run the transparent pass: draw everything queued since the last drain,
-	 * back-to-front, then empty the queue.
+	 * Run the transparent pass: draw everything the CURRENT render target has
+	 * queued since its last drain, back-to-front, then empty that queue.
 	 *
 	 * Called at the three points where the world draw is genuinely finished —
 	 * `Container.draw` just before a floating child, `Camera2d.draw` once the
@@ -444,13 +540,17 @@ export default class Renderer {
 	 * one, and every mesh still to come would then paint over what was just
 	 * replayed.
 	 *
+	 * Only the current target's queue is touched — see
+	 * {@link Renderer#transparentQueue}. A post effect binds an offscreen
+	 * target part-way through a scene, and a drain fired in there must not
+	 * reach the world's queued geometry; each pass drains its own on the way
+	 * out.
+	 *
 	 * Inert on a backend that never queues — the Canvas renderer has no depth
 	 * buffer, and composites through the 2D context instead.
 	 */
 	flushTransparent() {
-		const count = this._transparentCount ?? 0;
 		if (
-			count === 0 ||
 			this._transparentFlushing === true ||
 			// A queued entry is WORLD-space geometry, and replaying it needs the
 			// world projection. `Container.draw` installs the camera's screen
@@ -465,7 +565,27 @@ export default class Renderer {
 		) {
 			return;
 		}
-		const pool = this._transparentPool;
+		this.flushTransparentPass();
+	}
+
+	/**
+	 * Replay one target's queue, without the screen-projection guard above.
+	 *
+	 * Called directly when a render pass is ending: the pass owns both its
+	 * target and the projection its entries were recorded under, so replaying
+	 * them right there is correct whether that projection is the world's or a
+	 * floating child's screen space. Left queued they would be stranded — the
+	 * target is about to be unbound and its key reused by a later pass, which
+	 * would then replay them somewhere they never belonged.
+	 * @ignore
+	 */
+	flushTransparentPass() {
+		const queue = this.transparentQueue();
+		const count = queue.count;
+		if (count === 0 || this._transparentFlushing === true) {
+			return;
+		}
+		const pool = queue.pool;
 		// Back-to-front, because blending is order-dependent. Sorted over the
 		// LIVE range only — pooled slots past `count` hold stale entries that
 		// must not be dragged into it. Binary insertion: stable, allocation
@@ -492,11 +612,11 @@ export default class Renderer {
 			}
 			pool[lo] = entry;
 		}
-		// emptied BEFORE the replay, not after: the draws below re-enter
-		// `setBatcher`, which calls back in here, and a queue still holding
-		// entries would recurse. `_transparentFlushing` guards the same door
-		// from the other side, and covers the re-entry into `drawMesh`.
-		this._transparentCount = 0;
+		// emptied BEFORE the replay, not after: a queue still holding entries
+		// when the draws below run would recurse if anything on that path
+		// drained again. `_transparentFlushing` guards the same door from the
+		// other side, and covers the re-entry into `drawMesh`.
+		queue.count = 0;
 		this._transparentFlushing = true;
 		try {
 			// The colour the entry was queued WITH has to be put back, because
@@ -510,6 +630,11 @@ export default class Renderer {
 			// the colour's OWN alpha, which `setColor(r, g, b)` resets to 1
 			const savedTintAlpha = tint.alpha;
 			const savedAlpha = this.getGlobalAlpha();
+			// `currentTransform` is one object for the frame — `save()`/
+			// `restore()` push copies onto a stack rather than swapping it —
+			// so each entry's view can be installed in place and the drain
+			// site's own transform put back at the end.
+			_savedView.copy(this.currentTransform);
 			try {
 				for (let i = 0; i < count; i++) {
 					const entry = pool[i];
@@ -524,6 +649,7 @@ export default class Renderer {
 					// mesh can be queued twice under different modes, and the
 					// entry is the only thing that knows which is which
 					this._replayBlend = entry.blend;
+					this.currentTransform.copy(entry.view);
 					if (entry.instanced !== null) {
 						this.drawInstancedShadow(entry.instanced, entry.matrix, entry.mesh);
 					} else {
@@ -536,6 +662,7 @@ export default class Renderer {
 				}
 			} finally {
 				this._replayBlend = null;
+				this.currentTransform.copy(_savedView);
 				tint.setColor(savedR, savedG, savedB, savedTintAlpha);
 				this.setGlobalAlpha(savedAlpha);
 			}
@@ -560,11 +687,24 @@ export default class Renderer {
 	 * @ignore
 	 */
 	removeQueuedTransparent(mesh) {
-		const count = this._transparentCount ?? 0;
-		if (count === 0) {
-			return;
+		// every target, not just the current one: a mesh destroyed during a
+		// post-effect pass can still be queued in the world's queue outside it
+		for (const queue of this._transparentQueues ?? []) {
+			if (queue !== undefined && queue.count > 0) {
+				this._removeQueuedFrom(queue, mesh);
+			}
 		}
-		const pool = this._transparentPool;
+	}
+
+	/**
+	 * Drop one mesh's entries from a single target's queue.
+	 * @param {{pool: object[], count: number}} queue - the queue to compact
+	 * @param {object} mesh - the renderable being torn down
+	 * @ignore
+	 */
+	_removeQueuedFrom(queue, mesh) {
+		const count = queue.count;
+		const pool = queue.pool;
 		let write = 0;
 		for (let read = 0; read < count; read++) {
 			const entry = pool[read];
@@ -581,7 +721,7 @@ export default class Renderer {
 			}
 			write++;
 		}
-		this._transparentCount = write;
+		queue.count = write;
 	}
 
 	/**
@@ -618,13 +758,21 @@ export default class Renderer {
 		// null the references as well as the count: a discarded queue would
 		// otherwise keep every queued renderable reachable until its pooled
 		// slot happened to be reused
-		const queued = this._transparentCount ?? 0;
-		for (let i = 0; i < queued; i++) {
-			const entry = this._transparentPool[i];
-			entry.mesh = null;
-			entry.instanced = null;
+		for (const queue of this._transparentQueues ?? []) {
+			if (queue === undefined) {
+				continue;
+			}
+			for (let i = 0; i < queue.count; i++) {
+				const entry = queue.pool[i];
+				entry.mesh = null;
+				entry.instanced = null;
+			}
+			queue.count = 0;
 		}
-		this._transparentCount = 0;
+		// belt and braces with `resetScreenSpace`, which is what actually
+		// bounds an unbalanced bracket — `reset()` runs on a stage change and
+		// on context restore, NOT once per frame
+		this._screenSpaceDepth = 0;
 		this.renderState.reset(this.width, this.height);
 		this.resetTransform();
 		this.setBlendMode(this.settings.blendMode);
