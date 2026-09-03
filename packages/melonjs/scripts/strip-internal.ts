@@ -51,13 +51,15 @@ const UNDERSCORE_HINT = /^\s*(readonly\s+)?_[A-Za-z0-9_]+\s*[?:(<]/m;
  * @returns true when the member is private by naming convention
  */
 function isUnderscoreMember(node: ts.Node): boolean {
+	// Class members only. NOT interface members: an exported interface's
+	// `_field` is part of a contract someone may implement, so removing it
+	// changes that contract rather than hiding an implementation detail.
+	// `SpatialSoundState._pos` and its siblings are real cases here.
 	if (
 		!ts.isPropertyDeclaration(node) &&
 		!ts.isMethodDeclaration(node) &&
 		!ts.isGetAccessorDeclaration(node) &&
-		!ts.isSetAccessorDeclaration(node) &&
-		!ts.isPropertySignature(node) &&
-		!ts.isMethodSignature(node)
+		!ts.isSetAccessorDeclaration(node)
 	) {
 		return false;
 	}
