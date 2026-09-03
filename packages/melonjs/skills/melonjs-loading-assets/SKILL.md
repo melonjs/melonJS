@@ -1,6 +1,6 @@
 ---
 name: melonjs-loading-assets
-description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, asset, preload, LOADER_COMPLETE, loading screen, unload."
+description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload."
 license: MIT
 ---
 
@@ -138,6 +138,32 @@ If you preload without a loading stage and then change state immediately, pass
 state.change(state.PLAY, true);
 ```
 
+## Cross-origin and authenticated assets
+
+Two settings, both global and both applying to **every** asset type — there is
+no per-asset or per-type spelling to remember:
+
+```js
+loader.setOptions({
+    crossOrigin: "anonymous",   // CORS mode for remote assets
+    withCredentials: true,      // send cookies / auth with the request
+});
+```
+
+`withCredentials` is what an asset behind a session cookie or an
+`Authorization`-style login needs. Every fetched asset — image, json, binary,
+tmx, tsx, shader, gltf/glb, obj, mtl, aseprite, video — carries it, and so does
+buffered audio.
+
+**Set them through `setOptions`.** `loader.crossOrigin` and
+`loader.withCredentials` are read-only module bindings; assigning to them
+throws, the same trap as the removed `loader.onload` / `onProgress`.
+
+| | |
+| --- | --- |
+| one streamed clip (`stream: true` / `html5: true`) ignores `withCredentials` | it plays through an `<audio>` element, which needs a `crossorigin` attribute rather than fetch credentials. Preload it buffered if it is behind auth |
+| credentials silently dropped for audio before 20.4 | the loader forwarded them under a pre-20.3 name the backend never read — a hung preload rather than an error |
+
 ## Symptom → cause
 
 | symptom | cause |
@@ -146,6 +172,9 @@ state.change(state.PLAY, true);
 | audio fails, `preload()` rejects with "Failed loading resource" | `audio.init()` not called before preloading — the real message is replaced by the loader's |
 | blank level, missing tiles | `.tsx` or tileset image not listed in the resources |
 | cross-origin textures fail | missing `loader.setOptions({ crossOrigin: "anonymous" })` |
+| assets behind a login 401 / audio preload hangs | missing `loader.setOptions({ withCredentials: true })` — one switch, all asset types |
+| `TypeError` assigning `loader.withCredentials` / `crossOrigin` | read-only module bindings; use `loader.setOptions({ … })` |
+| preload never finishes, blank screen, no error | a failing sound with `audio.setStopOnAudioError(false)` before 20.4 — it disabled audio *and* failed the preload |
 | text renders in a fallback font | web font not preloaded as `"fontface"` |
 | `BitmapText` renders nothing | the `.fnt` (as `"binary"`) or its image is missing |
 | `TypeError` assigning `loader.onProgress` / `onload` | removed in 20.3; they were never writable — use the `LOADER_*` events |

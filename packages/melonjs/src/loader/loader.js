@@ -57,9 +57,12 @@ export const baseURL = {};
  * @default undefined
  * @see {@link setOptions}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes}
+ * @deprecated since 20.4.0, read-only — set it with
+ * {@link setOptions}. This is a module binding, so assigning to it throws a
+ * `TypeError`; the example below never worked.
  * @example
  *  // allow for cross-origin texture loading
- * me.loader.crossOrigin = "anonymous";
+ * me.loader.setOptions({ crossOrigin: "anonymous" });
  *
  * // set all resources to be loaded
  * me.loader.preload(game.resources, () => this.loaded());
@@ -76,9 +79,12 @@ export let crossOrigin;
  * @default false
  * @memberof loader
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials}
+ * @deprecated since 20.4.0, read-only — set it with
+ * {@link setOptions}. This is a module binding, so assigning to it throws a
+ * `TypeError`; the example below never worked.
  * @example
- *  // enable withCredentials
- * me.loader.withCredentials = true;
+ *  // enable withCredentials, for assets behind a session cookie or login
+ * me.loader.setOptions({ withCredentials: true });
  *
  * // set all resources to be loaded
  * me.loader.preload(game.resources, () => this.loaded());

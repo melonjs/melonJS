@@ -83,8 +83,17 @@ class Sound {
 		this._xhr = {
 			method: o.xhr && o.xhr.method ? o.xhr.method : "GET",
 			headers: o.xhr && o.xhr.headers ? o.xhr.headers : undefined,
+			// Both spellings. `xhr.withCredentials` is the real option; the
+			// flat `xhrWithCredentials` is what the pre-20.3 audio backend
+			// took, and games still pass it straight through to a `Sound`.
+			// Dropping it silently sent authenticated requests without their
+			// cookie, which fails as a hung preload rather than a visible
+			// error. The nested form wins when both are given.
 			withCredentials:
-				o.xhr && o.xhr.withCredentials ? o.xhr.withCredentials : false,
+				o.xhr?.withCredentials ??
+				// eslint-disable-next-line @typescript-eslint/no-deprecated -- reading the deprecated spelling IS the compatibility
+				o.xhrWithCredentials ??
+				false,
 		};
 
 		this._duration = 0;
@@ -101,9 +110,17 @@ class Sound {
 			? [
 					{
 						fn: (...args: unknown[]) => {
+							// The id is `null` for a failure that belongs to the CLIP
+							// rather than to one playing voice — decode failed, no codec
+							// for any source, no audio support at all. Those are exactly
+							// the failures a preload has to hear about, and insisting on
+							// a numeric voice id swallowed every one of them: the
+							// listener never fired, so there was no retry, no give-up
+							// and no callback either way, and a preload waiting on the
+							// clip simply never settled.
 							if (
 								o.onloaderror &&
-								typeof args[0] === "number" &&
+								(args[0] === null || typeof args[0] === "number") &&
 								typeof args[1] === "string"
 							) {
 								o.onloaderror(args[0], args[1]);

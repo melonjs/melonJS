@@ -97,10 +97,20 @@ export function load(
 		...(sound.on?.mute !== undefined ? { onmute: sound.on.mute } : {}),
 		...(sound.on?.unlock !== undefined ? { onunlock: sound.on.unlock } : {}),
 		html5: sound.stream === true || sound.html5 === true,
-		// @ts-expect-error xhrWithCredentials is a valid Sound option but not in the type definitions
-		xhrWithCredentials: settings.withCredentials,
+		// the nested form the backend actually reads — the flat
+		// `xhrWithCredentials` this used to pass is a pre-20.3 spelling that
+		// the in-tree backend never looked at, so credentials were dropped
+		...(settings.withCredentials !== undefined
+			? { xhr: { withCredentials: settings.withCredentials } }
+			: {}),
 		onloaderror() {
-			soundLoadError.call(this, sound.name, onerrorcb, stopOnAudioError);
+			soundLoadError.call(
+				this,
+				sound.name,
+				onerrorcb,
+				stopOnAudioError,
+				onloadcb,
+			);
 		},
 		onload() {
 			delete audioState.retryCounters[sound.name];
@@ -109,6 +119,14 @@ export function load(
 			}
 		},
 	}) as SpatialSound;
+
+	// `preload: false` asks the backend NOT to fetch anything now, so neither
+	// `onload` nor `onloaderror` will ever fire — a preload manifest waiting on
+	// this asset would never settle. The clip exists and is playable on demand,
+	// which is what the caller asked for, so report it as done.
+	if (sound.preload === false) {
+		onloadcb?.();
+	}
 
 	return 1;
 }
