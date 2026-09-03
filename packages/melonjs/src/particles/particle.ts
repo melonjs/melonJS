@@ -15,6 +15,7 @@ import ParticleEmitter from "./emitter.ts";
  * Scratch for mapping a spawn point into the emitter's reference frame.
  * Consumed immediately, so one shared instance is enough.
  * @ignore
+ * @internal
  */
 const _spawn = new Vector2d();
 
@@ -77,11 +78,13 @@ export default class Particle extends Renderable {
 	 * base constructor chain (`Polygon.setVertices`) before a subclass's field
 	 * initializers have run, and writing an undeclared private field throws.
 	 * @ignore
+	 * @internal
 	 */
 	_boundsDirty = true;
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	onResetEvent(emitter: ParticleEmitter, newInstance: boolean = false) {
 		// reset() guarantees `settings.image` is populated before particles spawn.
@@ -210,6 +213,7 @@ export default class Particle extends Renderable {
 	 * Update the Particle <br>
 	 * This is automatically called by the game manager {@link game}
 	 * @ignore
+	 * @internal
 	 * @param dt - time since the last update in milliseconds
 	 */
 	override update(dt: number) {
@@ -325,6 +329,7 @@ export default class Particle extends Renderable {
 	 * particle specifically: no flip, no mask, and the anchor is zeroed, so
 	 * nothing the base method emits interacts with this.
 	 * @ignore
+	 * @internal
 	 */
 	override preDraw(renderer: CanvasRenderer | WebGLRenderer) {
 		super.preDraw(renderer);
@@ -339,6 +344,7 @@ export default class Particle extends Renderable {
 	 * missing. The base implementation would add this particle's own `pos` on
 	 * top of a matrix that already contains it, counting it twice.
 	 * @ignore
+	 * @internal
 	 */
 	/**
 	 * Bounds are recomputed here rather than when `pos` moves, so a particle
@@ -348,6 +354,7 @@ export default class Particle extends Renderable {
 	 * asks for a recompute, such as {@link Container} aggregating child bounds
 	 * under `enableChildBoundsUpdate`, still gets fresh values back.
 	 * @ignore
+	 * @internal
 	 */
 	override getBounds() {
 		const bounds = super.getBounds();
@@ -392,6 +399,7 @@ export default class Particle extends Renderable {
 	 * The container this particle's position is measured from — its emitter
 	 * under the default local reference space, something else otherwise.
 	 * @ignore
+	 * @internal
 	 */
 	#frameOrigin(): Renderable {
 		const emitter = this.ancestor as ParticleEmitter;
@@ -412,6 +420,7 @@ export default class Particle extends Renderable {
 	 * necessarily its parent — so summing up the ancestor chain, as the base
 	 * implementation does, would measure from the wrong place.
 	 * @ignore
+	 * @internal
 	 */
 	override getAbsolutePosition() {
 		const origin = this.#frameOrigin();
@@ -434,6 +443,7 @@ export default class Particle extends Renderable {
 	 * With the placement in `currentTransform` and `autoTransform` off, the
 	 * base composition would describe a transform this class never applies.
 	 * @ignore
+	 * @internal
 	 */
 	override getLocalTransform(out: Matrix3d) {
 		return out.copy(this.currentTransform);
@@ -441,6 +451,7 @@ export default class Particle extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	override draw(renderer: CanvasRenderer | WebGLRenderer) {
 		const w = this.width;

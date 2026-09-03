@@ -8,6 +8,7 @@
  * 4 for a rotation quaternion) and `interpolation` is `"LINEAR"` | `"STEP"` |
  * `"CUBICSPLINE"`.
  * @ignore
+ * @internal
  */
 
 // reused result for findKeyframe — the value is consumed immediately by the
@@ -26,6 +27,7 @@ const _kf = { i0: 0, i1: 0, alpha: 0 };
  * @param {number} t - sample time (same units as `times`, i.e. seconds)
  * @returns {{ i0: number, i1: number, alpha: number }} reused result object
  * @ignore
+ * @internal
  */
 export function findKeyframe(times, t) {
 	const n = times.length;
@@ -71,6 +73,7 @@ export function findKeyframe(times, t) {
  * @param {number} t - blend factor 0..1
  * @param {number[]} out - 4-element [x,y,z,w] result
  * @ignore
+ * @internal
  */
 export function slerpQuat(values, o0, o1, t, out) {
 	const ax = values[o0];
@@ -129,6 +132,7 @@ export function slerpQuat(values, o0, o1, t, out) {
  * @param {number[]} out - destination, at least `channel.stride` long
  * @returns {number[]} `out`
  * @ignore
+ * @internal
  */
 export function sampleChannel(channel, t, out) {
 	const { times, values, stride, interpolation } = channel;

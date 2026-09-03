@@ -29,6 +29,7 @@ export class WebGLBatcher extends Batcher {
 	 * disagree.
 	 * @type {Topology}
 	 * @ignore
+	 * @internal
 	 */
 	#topology = "triangle-list";
 
@@ -36,6 +37,7 @@ export class WebGLBatcher extends Batcher {
 	 * The GL enum for `#topology`, precomputed so reads stay cheap.
 	 * @type {number}
 	 * @ignore
+	 * @internal
 	 */
 	#mode = 4;
 
@@ -185,6 +187,7 @@ export class WebGLBatcher extends Batcher {
 		 * the GL vertex buffer object (own buffer for indexed batchers, null for shared)
 		 * @type {WebGLBuffer|null}
 		 * @ignore
+		 * @internal
 		 */
 		this.glVertexBuffer = null;
 
@@ -192,6 +195,7 @@ export class WebGLBatcher extends Batcher {
 		 * the dynamic index buffer (only for indexed batchers)
 		 * @type {WebGLIndexBuffer|null}
 		 * @ignore
+		 * @internal
 		 */
 		this.indexBuffer = null;
 
@@ -215,6 +219,7 @@ export class WebGLBatcher extends Batcher {
 	 * shared one.
 	 * @type {WebGLBuffer}
 	 * @ignore
+	 * @internal
 	 */
 	get uploadBuffer() {
 		return this.glVertexBuffer ?? this.renderer.vertexBuffer;
@@ -230,6 +235,7 @@ export class WebGLBatcher extends Batcher {
 	 * layout, in layout order (see {@link validateShaderLocations}) — the
 	 * locations are frozen here at the default shader's mapping.
 	 * @ignore
+	 * @internal
 	 */
 	createVertexState() {
 		const descriptor = {
@@ -256,6 +262,7 @@ export class WebGLBatcher extends Batcher {
 	 * {@link WebGLRenderer#destroy}; subclasses that override must chain to
 	 * `super.destroy()`.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		const gl = this.gl;
@@ -281,6 +288,7 @@ export class WebGLBatcher extends Batcher {
 	/**
 	 * Reset batcher internal state
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		// WebGL context
@@ -354,6 +362,7 @@ export class WebGLBatcher extends Batcher {
 	 * declare a prefix of the batcher's attribute layout, in layout order.
 	 * A mismatched shader silently reads wrong vertex data — warn loudly.
 	 * @ignore
+	 * @internal
 	 */
 	validateShaderLocations(shader) {
 		if (this.validatedShaders === undefined) {
@@ -394,6 +403,7 @@ export class WebGLBatcher extends Batcher {
 	 * happened and costs two loads otherwise. Called by every flush path
 	 * (the base and the quad override).
 	 * @ignore
+	 * @internal
 	 */
 	syncProgram() {
 		const shader = this.currentShader;
@@ -561,6 +571,7 @@ export class WebGLBatcher extends Batcher {
 	 * @param {number} argCount - how many arguments the caller actually passed
 	 * @returns {object} a `{name, format?, size?, type?, normalized?, offset?}` descriptor
 	 * @ignore
+	 * @internal
 	 */
 	#toAttributeDescriptor(name, size, type, normalized, offset, argCount) {
 		if (typeof name === "object" && name !== null) {
@@ -593,6 +604,7 @@ export class WebGLBatcher extends Batcher {
 	 * @param {object} descriptor - the normalized descriptor
 	 * @returns {object} `{name, format, size, type, normalized, offset, bytes}`
 	 * @ignore
+	 * @internal
 	 */
 	#resolveAttribute(descriptor) {
 		const { name } = descriptor;
@@ -669,6 +681,7 @@ export class WebGLBatcher extends Batcher {
 	 * @param {GLenum} type - component type
 	 * @returns {number} bytes occupied
 	 * @ignore
+	 * @internal
 	 */
 	#byteSizeOf(size, type) {
 		switch (type) {

@@ -37,6 +37,7 @@ const DEFAULT_TINT = new Float32Array([1, 1, 1, 1]);
  * triggers).
  *
  * @ignore
+ * @internal
  */
 export default class OrthogonalTMXLayerGPURenderer {
 	/**
@@ -81,6 +82,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * resource map. Called from `WebGLRenderer.reset()` (which
 	 * `GAME_RESET` triggers) so each level transition starts clean.
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		// Uploads happen via the quad batcher (see `_drawLayer`), so pin

@@ -35,6 +35,7 @@ const BACKEND_CANDIDATES = [
 /**
  * Auto-detect the best renderer to use
  * @ignore
+ * @internal
  */
 export function autoDetectRenderer(options) {
 	let lastError;

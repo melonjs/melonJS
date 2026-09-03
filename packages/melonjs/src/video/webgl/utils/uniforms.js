@@ -1,6 +1,7 @@
 /**
  * Hash map of GLSL data types to WebGL Uniform methods
  * @ignore
+ * @internal
  */
 const fnHash = {
 	bool: "1i",
@@ -36,6 +37,7 @@ const fnHash = {
  * element-wise (callers commonly reuse a scratch `Float32Array`, so
  * reference equality would miss every change).
  * @ignore
+ * @internal
  */
 function valuesMatch(cached, val) {
 	if (cached === undefined) {
@@ -65,6 +67,7 @@ function valuesMatch(cached, val) {
  * when the length matches — only a length change or a first capture
  * allocates a fresh array.
  * @ignore
+ * @internal
  */
 export function captureValue(prev, val) {
 	if (
@@ -103,6 +106,7 @@ export function captureValue(prev, val) {
  * and gets its own closure-captured `cache` map, so caches don't leak
  * across programs.
  * @ignore
+ * @internal
  */
 export function extractUniforms(gl, shader) {
 	const uniforms = {};

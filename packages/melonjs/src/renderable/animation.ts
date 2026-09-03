@@ -18,6 +18,7 @@ export interface AnimationOptions {
 	 * `false` return holds the last frame. Carried so callers can preserve that
 	 * exact contract; not part of the public options shape.
 	 * @ignore
+	 * @internal
 	 */
 	legacyFn?: boolean;
 }

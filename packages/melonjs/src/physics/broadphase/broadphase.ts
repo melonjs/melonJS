@@ -38,6 +38,7 @@ export interface Broadphase<TItem = unknown> {
 	 * Maintained by `insert` / `remove` so {@link Broadphase.isPrunable}
 	 * and {@link Broadphase.hasChildren} are O(1) reads.
 	 * @ignore
+	 * @internal
 	 */
 	_subtreeCount: number;
 

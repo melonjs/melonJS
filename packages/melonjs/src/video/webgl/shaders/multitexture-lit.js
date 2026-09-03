@@ -6,6 +6,7 @@ import { MAX_LIGHTS } from "../lighting/constants.ts";
  * array is forbidden in GLSL ES 3.00 exactly as it was in 1.00, so this
  * stays an if-ladder using the usual `< i + 0.5` threshold pattern.
  * @ignore
+ * @internal
  */
 function buildSamplerSelect(varName, samplerPrefix, count, target) {
 	const lines = [];
@@ -51,6 +52,7 @@ function buildSamplerSelect(varName, samplerPrefix, count, target) {
  * @param {number} maxTextures - the number of color/normal texture units to support
  * @returns {string} GLSL fragment shader source
  * @ignore
+ * @internal
  */
 export function buildLitMultiTextureFragment(maxTextures) {
 	const count = Math.max(maxTextures, 1);

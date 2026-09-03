@@ -94,6 +94,7 @@ export let withCredentials = false;
 /**
  * enable the nocache mechanism
  * @ignore
+ * @internal
  */
 export function setNocache(enable = false) {
 	nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
@@ -176,6 +177,7 @@ export function setBaseURL(type, url = "./") {
  * as the settable option it was documented to be. Use the `onloadcb` parameter
  * of {@link loader.preload}, or the {@link event.LOADER_COMPLETE} event.
  * @ignore
+ * @internal
  */
 let onload;
 
@@ -201,6 +203,7 @@ const failureLoadedAssets = {};
 /**
  * init all supported parsers
  * @ignore
+ * @internal
  */
 function initParsers() {
 	setParser("binary", preloadBinary);
@@ -225,6 +228,7 @@ function initParsers() {
  * Complete loading: invoke the callback and emit the LOADER_COMPLETE event.
  * @param {Function} onloadcb - the completion callback
  * @ignore
+ * @internal
  */
 function completeLoading(onloadcb) {
 	const callback = onloadcb || onload;
@@ -240,6 +244,7 @@ function completeLoading(onloadcb) {
 /**
  * just increment the number of already loaded resources
  * @ignore
+ * @internal
  */
 function onResourceLoaded(res) {
 	delete failureLoadedAssets[res.src];
@@ -256,6 +261,7 @@ function onResourceLoaded(res) {
  * on error callback for image loading
  * @param {Asset} asset - asset that loaded with failure
  * @ignore
+ * @internal
  */
 function onLoadingError(res) {
 	failureLoadedAssets[res.src] = res;

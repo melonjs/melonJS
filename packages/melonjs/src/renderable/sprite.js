@@ -120,12 +120,14 @@ export default class Sprite extends Renderable {
 		 * backing field for the `normalMap` accessor — see the getter/setter
 		 * defined on the class for the public API and validation rules.
 		 * @ignore
+		 * @internal
 		 */
 		this._normalMap = null;
 
 		/**
 		 * flicker settings
 		 * @ignore
+		 * @internal
 		 */
 		this._flicker = {
 			isFlickering: false,
@@ -193,6 +195,7 @@ export default class Sprite extends Renderable {
 				/**
 				 * pause the video when losing focus
 				 * @ignore
+				 * @internal
 				 */
 				this.removeStatePauseListener = on(STATE_PAUSE, () => {
 					this.image.pause();
@@ -676,6 +679,7 @@ export default class Sprite extends Renderable {
 	 * Invoked by the shared {@link FrameAnimation} engine via `setRegion`.
 	 * @param {object} region - the texture region object
 	 * @ignore
+	 * @internal
 	 */
 	_applyFrame(region) {
 		// set the source texture for the given region
@@ -742,6 +746,7 @@ export default class Sprite extends Renderable {
 	/**
 	 * Returns the frame object by the index.
 	 * @ignore
+	 * @internal
 	 * @param {number} id - the frame id
 	 * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
 	 */
@@ -893,6 +898,7 @@ export default class Sprite extends Renderable {
 	/**
 	 * Destroy function<br>
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// release the engine's pooled `current.offset`

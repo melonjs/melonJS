@@ -20,6 +20,7 @@
  * takes its binding through callbacks. That keeps the decision logic identical
  * on both backends and testable without a device.
  * @ignore
+ * @internal
  */
 export class TextureStore {
 	/**
@@ -33,6 +34,7 @@ export class TextureStore {
 	 * @param {Function} [options.onDestroy] - `(handle, source)`, release the
 	 * GPU texture. Called exactly once per handle.
 	 * @ignore
+	 * @internal
 	 */
 	constructor({ onCreate, onUpload, onDestroy } = {}) {
 		/** @type {Map<object, {handle: *, version: number, generation: number}>} */
@@ -63,6 +65,7 @@ export class TextureStore {
 	 * @param {object} options - the resolve options
 	 * @returns {*} the new handle
 	 * @ignore
+	 * @internal
 	 */
 	onCreate(source, options) {
 		void source;
@@ -79,6 +82,7 @@ export class TextureStore {
 	 * @param {object} options - the resolve options
 	 * @returns {*} a replacement handle, or nothing to keep the existing one
 	 * @ignore
+	 * @internal
 	 */
 	onUpload(handle, source, record, options) {
 		void handle;
@@ -93,6 +97,7 @@ export class TextureStore {
 	 * @param {*} handle - the handle to release
 	 * @param {object} source - the source it belonged to
 	 * @ignore
+	 * @internal
 	 */
 	onDestroy(handle, source) {
 		void handle;
@@ -103,6 +108,7 @@ export class TextureStore {
 	 * how many sources are currently resident
 	 * @returns {number} the record count
 	 * @ignore
+	 * @internal
 	 */
 	get size() {
 		return this.records.size;
@@ -123,6 +129,7 @@ export class TextureStore {
 	 * @returns {{handle: *, version: number, generation: number, uploaded: boolean}}
 	 * the record, with `uploaded` reporting whether this call did GPU work
 	 * @ignore
+	 * @internal
 	 */
 	getResidentRecord(source, options = {}) {
 		const { version = 0, force = false } = options;
@@ -165,6 +172,7 @@ export class TextureStore {
 	 * @param {object} source - the source to look up
 	 * @returns {object|undefined} the record, or `undefined`
 	 * @ignore
+	 * @internal
 	 */
 	peek(source) {
 		return this.records.get(source);
@@ -177,6 +185,7 @@ export class TextureStore {
 	 * @param {object} source - the disposed source
 	 * @returns {boolean} whether a record was held
 	 * @ignore
+	 * @internal
 	 */
 	destroyTexture(source) {
 		const record = this.records.get(source);
@@ -203,6 +212,7 @@ export class TextureStore {
 	 * Leave `false` for a lost context (the GPU objects are already gone);
 	 * pass `true` for an orderly teardown.
 	 * @ignore
+	 * @internal
 	 */
 	releaseAll(destroy = false) {
 		if (destroy === true) {

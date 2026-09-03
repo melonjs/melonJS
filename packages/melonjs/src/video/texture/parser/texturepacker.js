@@ -7,6 +7,7 @@ import { Vector2d } from "../../../math/vector2d.ts";
  * @param {TextureAtlas} textureAtlas - the texture atlas class calling the parser
  * @returns {Object} the corresponding Atlas
  * @ignore
+ * @internal
  */
 export function parseTexturePacker(data, textureAtlas) {
 	const atlas = {};

@@ -19,6 +19,7 @@
  * (or coexisting renderer) drives it, and no remap state persists across
  * chunks.
  * @ignore
+ * @internal
  */
 
 let remapSlot = new Int32Array(0);
@@ -31,6 +32,7 @@ const chunkIndices: number[] = [];
  * mesh with `vertexCount` vertices. Grows to the next power of two and
  * reuses thereafter (one-time cost when a larger mesh first appears).
  * @ignore
+ * @internal
  */
 export function ensureRemapCapacity(vertexCount: number): void {
 	if (remapSlot.length >= vertexCount) {
@@ -48,6 +50,7 @@ export function ensureRemapCapacity(vertexCount: number): void {
  * (~weeks of continuous rendering away), keeping stored stamps valid.
  * @returns the shared chunk-index array, emptied
  * @ignore
+ * @internal
  */
 export function beginChunk(): number[] {
 	if (stamp >= 0x7fffffff) {
@@ -63,6 +66,7 @@ export function beginChunk(): number[] {
  * The local index assigned to `origIdx` this chunk, or -1 when the vertex
  * has not been emitted yet.
  * @ignore
+ * @internal
  */
 export function remapIndex(origIdx: number): number {
 	return remapStamp[origIdx] === stamp ? remapSlot[origIdx] : -1;
@@ -71,6 +75,7 @@ export function remapIndex(origIdx: number): number {
 /**
  * Record the local index assigned to `origIdx` for the rest of this chunk.
  * @ignore
+ * @internal
  */
 export function assignIndex(origIdx: number, localIdx: number): void {
 	remapStamp[origIdx] = stamp;

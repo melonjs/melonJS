@@ -6,6 +6,7 @@
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadJavascript(data, onload, onerror, settings) {
 	const script = globalThis.document.createElement("script");

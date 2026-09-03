@@ -119,6 +119,7 @@ export default class InstancedMesh extends Mesh {
 		 * the instance vertex buffer.
 		 * @type {object}
 		 * @ignore
+		 * @internal
 		 */
 		this.instanceLayout = instanceRecordLayout(
 			settings.instanceColors === true,
@@ -140,6 +141,7 @@ export default class InstancedMesh extends Mesh {
 		 * GPU copy knows its capacity assumption is stale
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this._instanceVersion = 0;
 
@@ -151,24 +153,45 @@ export default class InstancedMesh extends Mesh {
 		// first consumer to drain the span would leave the second stuck on
 		// stale records forever. Each buffer records the revision it reached,
 		// so a consumer that missed an edit re-uploads in full.
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._instanceRevision = 0;
 		// the revision the CURRENT span started from — a consumer at exactly
 		// this revision can take the cheap partial upload
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._spanFromRevision = 0;
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._dirtyFirst = Infinity;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._dirtyLast = 0;
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._instanceCount = 0;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._visibleInstanceCount = -1;
 		// revision the cull box was last sized for
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._cullRevision = -1;
 
 		if (settings.instanceCount > 0) {
@@ -440,6 +463,7 @@ export default class InstancedMesh extends Mesh {
 	 * nothing changed since the last upload.
 	 * @returns {number[]} the span
 	 * @ignore
+	 * @internal
 	 */
 	dirtyRange() {
 		// reuses one array: this is read once per instanced mesh per frame,
@@ -459,6 +483,7 @@ export default class InstancedMesh extends Mesh {
 	 * @param {number} uploadedRevision - the revision that buffer holds
 	 * @returns {object} `{first, count, full, revision}` — float span, or `full`
 	 * @ignore
+	 * @internal
 	 */
 	instanceUpload(uploadedRevision) {
 		const revision = this._instanceRevision;
@@ -476,6 +501,7 @@ export default class InstancedMesh extends Mesh {
 	/**
 	 * Called by the batcher once the dirty span has been uploaded.
 	 * @ignore
+	 * @internal
 	 */
 	clearInstanceDirty() {
 		this._dirtyFirst = Infinity;
@@ -503,6 +529,7 @@ export default class InstancedMesh extends Mesh {
 	 * pixels across at the group origin: pan the camera just past that origin
 	 * and every instance disappears at once, while still on screen.
 	 * @ignore
+	 * @internal
 	 */
 	_refreshCullVolume() {
 		if (this._instanceCount === 0) {
@@ -550,7 +577,10 @@ export default class InstancedMesh extends Mesh {
 
 	getBounds3d() {
 		if (this._bounds3d === undefined) {
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._bounds3d = new AABB3d();
 		}
 		const count = this._instanceCount;
@@ -619,6 +649,7 @@ export default class InstancedMesh extends Mesh {
 	 * @param {CanvasRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the camera rendering this frame
 	 * @ignore
+	 * @internal
 	 */
 	_drawInstancesIndividually(renderer, viewport) {
 		const count = this.visibleInstanceCount;
@@ -651,6 +682,7 @@ export default class InstancedMesh extends Mesh {
 	/**
 	 * Release the instance records along with the mesh.
 	 * @ignore
+	 * @internal
 	 */
 	/**
 	 * Draw a ground shadow for every visible instance — one call for the whole
@@ -666,6 +698,7 @@ export default class InstancedMesh extends Mesh {
 	 * built-in shading already reads as emissive.
 	 * @param {WebGLRenderer} renderer - the active renderer
 	 * @ignore
+	 * @internal
 	 */
 	_drawInstancedGroundShadow(renderer) {
 		if (typeof renderer.drawInstancedShadow !== "function") {
@@ -750,6 +783,7 @@ const _composed = new Matrix3d();
  * @param {Matrix3d} instance - the instance transform (written into)
  * @returns {Matrix3d} `instance`, now holding the product
  * @ignore
+ * @internal
  */
 function multiplyInto(group, instance) {
 	_composed.copy(group);

@@ -1279,6 +1279,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	set lineWidth(value) {
 		this.getContext().lineWidth = value;
@@ -1296,6 +1297,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	set lineJoin(value) {
 		const context = this.getContext();

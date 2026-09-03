@@ -9,6 +9,7 @@ import type { Broadphase } from "./broadphase.ts";
  * floating items without allocating. Mirrors QuadTree's `QT_VECTOR`
  * — only one query runs at a time, single-instance is safe.
  * @ignore
+ * @internal
  */
 const OT_VECTOR = new Vector2d();
 
@@ -88,6 +89,7 @@ export interface FrustumPlane {
  * from this, clear/collapse returns to it. Keeps steady-state
  * allocations at zero across the per-frame world rebuild.
  * @ignore
+ * @internal
  */
 const OT_ARRAY: Octree[] = [];
 
@@ -121,6 +123,7 @@ function OT_ARRAY_PUSH(ot: Octree) {
  * `pos.z` if the item doesn't expose `getAbsolutePosition` (test
  * doubles do this), and finally `0` for items with no pos at all.
  * @ignore
+ * @internal
  */
 function itemZ(item: OctreeItem): number {
 	if (typeof item.getAbsolutePosition === "function") {
@@ -147,12 +150,14 @@ export default class Octree implements Broadphase<OctreeItem> {
 	/**
 	 * see {@link QuadTree._subtreeCount} — same invariant.
 	 * @ignore
+	 * @internal
 	 */
 	_subtreeCount: number;
 
 	/**
 	 * see {@link QuadTree._retrieveScratch} — same contract.
 	 * @ignore
+	 * @internal
 	 */
 	_retrieveScratch: OctreeItem[] | null;
 
@@ -303,6 +308,7 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * @param item - the object to classify
 	 * @returns near-half octant index (0-3) or -1
 	 * @ignore
+	 * @internal
 	 */
 	_quadrantXY(item: OctreeItem): number {
 		const bounds = item.getBounds();
@@ -631,6 +637,7 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * Loose-floats implementation. Recursive subnode walks call this
 	 * directly to bypass the Sphere/floats dispatch on every node.
 	 * @ignore
+	 * @internal
 	 */
 	_querySphereInternal(
 		cx: number,
@@ -889,6 +896,7 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * provably outside ANY one plane, i.e. wholly outside the
 	 * frustum.
 	 * @ignore
+	 * @internal
 	 */
 	_outsideFrustum(planes: FrustumPlane[]): boolean {
 		const b = this.bounds;
@@ -920,6 +928,7 @@ export default class Octree implements Broadphase<OctreeItem> {
 	 * node's octant. dir components may be zero; the axis with zero
 	 * direction degenerates to a point-in-slab test.
 	 * @ignore
+	 * @internal
 	 */
 	_overlapsRay(
 		fromX: number,
@@ -986,7 +995,10 @@ export default class Octree implements Broadphase<OctreeItem> {
 		return true;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_overlapsAABB(aabb: AABB3d): boolean {
 		const b = this.bounds;
 		const right = b.left + b.width;
@@ -1002,7 +1014,10 @@ export default class Octree implements Broadphase<OctreeItem> {
 		);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_overlapsSphere(cx: number, cy: number, cz: number, r: number): boolean {
 		const b = this.bounds;
 		const minX = b.left;
@@ -1024,15 +1039,22 @@ export default class Octree implements Broadphase<OctreeItem> {
  * QuadTree. `getChildren` is optional because leaf renderables don't
  * have it; the recursive walk narrows via {@link hasGetChildren}.
  * @ignore
+ * @internal
  */
 interface ContainerOrChild extends OctreeItem {
 	addChild?: (...args: unknown[]) => unknown;
 	getChildren?: () => ContainerOrChild[];
 }
 
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 type ContainerLike = { getChildren(): ContainerOrChild[] };
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
 
 /**

@@ -14,6 +14,7 @@ import Texture2d from "./texture2d.ts";
  * static copy.
  * @augments Texture2d
  * @ignore
+ * @internal
  */
 export class FrameTexture extends Texture2d {
 	/**
@@ -71,6 +72,7 @@ export class FrameTexture extends Texture2d {
  * CPU-side reuse (e.g. drawing the captured frame back onto the scene).
  * @augments Texture2d
  * @ignore
+ * @internal
  */
 export class CanvasFrameTexture extends Texture2d {
 	/**

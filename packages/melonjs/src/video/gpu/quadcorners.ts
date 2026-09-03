@@ -16,6 +16,7 @@ import { Vector3d } from "../../math/vector3d.ts";
  * corners are consumed before the next call, whichever backend (or
  * coexisting renderer) drives it.
  * @ignore
+ * @internal
  */
 const corners = [
 	new Vector3d(),
@@ -30,6 +31,7 @@ const corners = [
  * Returns the shared corner pool, valid until the next call:
  * `[topLeft, topRight, bottomLeft, bottomRight]`.
  * @ignore
+ * @internal
  */
 export function transformQuadCorners(
 	m: Matrix3d | null | undefined,

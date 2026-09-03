@@ -6,6 +6,7 @@ import Text from "../../../renderable/text/text.js";
  * @param {object} settings - TMX object settings
  * @returns {Renderable} the created text object
  * @ignore
+ * @internal
  */
 export function createTextObject(settings) {
 	if (typeof settings.text.anchorPoint === "undefined") {

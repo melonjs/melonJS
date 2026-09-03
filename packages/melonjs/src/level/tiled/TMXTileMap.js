@@ -24,6 +24,7 @@ import {
 /**
  * read the layer Data
  * @ignore
+ * @internal
  */
 function readLayer(map, data, z) {
 	return new TMXLayer(
@@ -40,6 +41,7 @@ function readLayer(map, data, z) {
 /**
  * read the Image Layer Data
  * @ignore
+ * @internal
  */
 function readImageLayer(map, data, z) {
 	// resolve embedded JSON image data if present
@@ -102,6 +104,7 @@ function readImageLayer(map, data, z) {
 /**
  * read the tileset Data
  * @ignore
+ * @internal
  */
 function readTileset(data, mapTilewidth, mapTileheight) {
 	return new TMXTileset(data, mapTilewidth, mapTileheight);
@@ -110,6 +113,7 @@ function readTileset(data, mapTilewidth, mapTileheight) {
 /**
  * read the object group Data
  * @ignore
+ * @internal
  */
 function readObjectGroup(map, data, z) {
 	return new TMXGroup(map, data, z);
@@ -122,6 +126,7 @@ function readObjectGroup(map, data, z) {
  * those caches are stale until each child happens to call updateBounds on
  * its own (which only happens organically when its own pos changes).
  * @ignore
+ * @internal
  */
 function refreshAbsoluteBounds(container) {
 	container.forEach((child) => {
@@ -151,6 +156,7 @@ export default class TMXTileMap {
 		/**
 		 * the level data (JSON)
 		 * @ignore
+		 * @internal
 		 */
 		this.data = data;
 
@@ -328,6 +334,7 @@ export default class TMXTileMap {
 	/**
 	 * parse the map
 	 * @ignore
+	 * @internal
 	 */
 	readMapObjects(data) {
 		if (this.initialized === true) {
@@ -435,6 +442,7 @@ export default class TMXTileMap {
 		/**
 		 * callback funtion for the viewport resize event
 		 * @ignore
+		 * @internal
 		 */
 		if (setViewportBounds === true) {
 			const app = container.getRootAncestor().app;

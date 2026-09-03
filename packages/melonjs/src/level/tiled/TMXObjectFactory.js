@@ -9,6 +9,7 @@ import TMXLayer from "./TMXLayer.js";
 /**
  * registry of Tiled object factory functions
  * @ignore
+ * @internal
  */
 const factories = new Map();
 
@@ -16,12 +17,14 @@ const factories = new Map();
  * tracks class constructors registered via registerTiledObjectClass
  * (used to detect duplicate registrations with different constructors)
  * @ignore
+ * @internal
  */
 const registeredClasses = new Map();
 
 /**
  * whether built-in factories have been registered
  * @ignore
+ * @internal
  */
 let factoriesInitialized = false;
 
@@ -31,6 +34,7 @@ let factoriesInitialized = false;
  * @param {object} settings - TMX object settings
  * @returns {Polygon|object[]} shape(s) for the object body
  * @ignore
+ * @internal
  */
 export function getDefaultShape(settings) {
 	if (typeof settings.shapes !== "undefined") {
@@ -59,6 +63,7 @@ export function getDefaultShape(settings) {
  * @param {object} settings - TMX object settings
  * @returns {string} the factory type key
  * @ignore
+ * @internal
  */
 export function detectObjectType(settings) {
 	if (settings instanceof TMXLayer) {
@@ -172,6 +177,7 @@ export function registerTiledObjectClass(name, Constructor) {
 /**
  * pending class registrations queued before initFactories runs
  * @ignore
+ * @internal
  */
 const pendingClasses = [];
 
@@ -182,6 +188,7 @@ const pendingClasses = [];
  * @param {string} name - the Tiled class or name to match
  * @param {Function} Constructor - class constructor with signature (x, y, settings)
  * @ignore
+ * @internal
  */
 export function registerBuiltinTiledClass(name, Constructor) {
 	if (factoriesInitialized) {
@@ -196,6 +203,7 @@ export function registerBuiltinTiledClass(name, Constructor) {
  * Register built-in factories and apply pending class registrations.
  * Called lazily on first createTMXObject call, after all modules are fully loaded.
  * @ignore
+ * @internal
  */
 function initFactories() {
 	// only register built-in structural factories if not already overridden
@@ -233,6 +241,7 @@ function initFactories() {
  * @param {TMXTileMap} map - the parent tile map
  * @returns {Renderable} the instantiated object
  * @ignore
+ * @internal
  */
 export function createTMXObject(settings, map) {
 	if (!factoriesInitialized) {

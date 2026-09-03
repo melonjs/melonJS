@@ -18,6 +18,7 @@ import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
  * rebuilt — the WebGPU analogue of `_reapplyTextureFilter`, without the
  * re-parameterization).
  * @ignore
+ * @internal
  */
 export default class WebGPUTextureStore extends TextureStore {
 	/**
@@ -49,6 +50,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * @param {string} repeat - engine wrap mode string
 	 * @returns {GPUSampler} the sampler
 	 * @ignore
+	 * @internal
 	 */
 	getSampler(filter, repeat, mipmaps = false) {
 		// same per-axis mapping as MaterialBatcher.createTexture2D
@@ -301,6 +303,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * own command buffer, so the frame's draws sample a complete chain.
 	 * @param {object} record - the resident record (mipLevelCount > 1)
 	 * @ignore
+	 * @internal
 	 */
 	generateMipmaps(record) {
 		const device = this.device;
@@ -380,6 +383,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * material path and the mesh path, so the two cannot drift on which
 	 * view a mip-wanting consumer gets.
 	 * @ignore
+	 * @internal
 	 */
 	viewAndSampler(record, texture, wrap, wantMips) {
 		const filter =
@@ -417,6 +421,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * @param {object} [options] - wrap / mipmap options, as `getBinding` takes
 	 * @returns {GPUBindGroup} the group-1 bind group
 	 * @ignore
+	 * @internal
 	 */
 	getMeshBinding(texture, alphaTexture, options = {}) {
 		// residency first: this is the call that uploads either source, so it
@@ -488,6 +493,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * the per-sampler material bind group for a resident record (shared by
 	 * the image and compressed upload paths)
 	 * @ignore
+	 * @internal
 	 */
 	bindGroupFor(record, texture, wrap, wantMips = false) {
 		const resolved = this.viewAndSampler(record, texture, wrap, wantMips);
@@ -527,6 +533,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * parks on the renderer's retired list and is destroyed after submit.
 	 * @param {GPUTexture} gpuTexture - the texture to dispose of
 	 * @ignore
+	 * @internal
 	 */
 	retire(gpuTexture) {
 		this.renderer.retireTexture(gpuTexture);
@@ -571,6 +578,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * defers the actual destroy until the frame that referenced it has retired.
 	 * @param {GPUTexture} handle - the texture to release
 	 * @ignore
+	 * @internal
 	 */
 	onDestroy(handle) {
 		this.retire(handle);

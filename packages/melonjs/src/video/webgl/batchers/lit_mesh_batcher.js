@@ -42,6 +42,7 @@ export default class LitMeshBatcher extends MeshBatcher {
 	 * than `reset` while the context is invalid), so the previous block —
 	 * whose GL name belonged to the dead context — is dropped first.
 	 * @ignore
+	 * @internal
 	 */
 	init(renderer) {
 		super.init(renderer);
@@ -53,6 +54,7 @@ export default class LitMeshBatcher extends MeshBatcher {
 		 * {@link LitMeshBatcher#updatePassState}.
 		 * @type {UniformBlock}
 		 * @ignore
+		 * @internal
 		 */
 		// Claim a binding point once and hold it: `init()` re-runs on context
 		// restore, and claiming again each time would walk through the
@@ -79,6 +81,7 @@ export default class LitMeshBatcher extends MeshBatcher {
 	 * transition. Comparing against the program we last bound covers all
 	 * three — a pointer compare in the steady state.
 	 * @ignore
+	 * @internal
 	 */
 	_bindLightBlock() {
 		const shader = this.currentShader || this.defaultShader;
@@ -90,7 +93,11 @@ export default class LitMeshBatcher extends MeshBatcher {
 		this.lightBlock.bindTo(program, "Light3dBlock");
 	}
 
-	/** release the light block along with the rest. @ignore */
+	/**
+	 * release the light block along with the rest.
+	 * @ignore
+	 * @internal
+	 */
 	destroy() {
 		this.lightBlock?.destroy();
 		this.lightBlock = undefined;
@@ -98,7 +105,11 @@ export default class LitMeshBatcher extends MeshBatcher {
 		super.destroy();
 	}
 
-	/** add the world-space normal attribute on top of the base layout. @ignore */
+	/**
+	 * add the world-space normal attribute on top of the base layout.
+	 * @ignore
+	 * @internal
+	 */
 	_attributeLayout(renderer) {
 		// the parameter is kept for the subclass contract even though a
 		// format-declared layout no longer needs a rendering context
@@ -113,7 +124,11 @@ export default class LitMeshBatcher extends MeshBatcher {
 		return attributes;
 	}
 
-	/** use the lit (half-Lambert) shader. @ignore */
+	/**
+	 * use the lit (half-Lambert) shader.
+	 * @ignore
+	 * @internal
+	 */
 	_shaderSources() {
 		return { vertex: litVertex, fragment: litFragmentResolved };
 	}
@@ -124,12 +139,17 @@ export default class LitMeshBatcher extends MeshBatcher {
 	 * `#ifdef`-guarded, so the two programs differ only by the defines the
 	 * variant is compiled with, and the lighting loop exists in one place.
 	 * @ignore
+	 * @internal
 	 */
 	_instancedShaderSources() {
 		return { vertex: litInstancedVertex, fragment: litFragmentResolved };
 	}
 
-	/** push the 12-float lit vertex, appending the mesh's world-space normal. @ignore */
+	/**
+	 * push the 12-float lit vertex, appending the mesh's world-space normal.
+	 * @ignore
+	 * @internal
+	 */
 	_pushVertex(vertexData, x, y, z, u, v, color, mesh, i3) {
 		const n = mesh.normals;
 		vertexData.pushMeshLit(
@@ -152,6 +172,7 @@ export default class LitMeshBatcher extends MeshBatcher {
 	 * @param {Float32Array} out - destination scratch
 	 * @returns {number} number of floats written
 	 * @ignore
+	 * @internal
 	 */
 	buildRetainedVertexData(mesh, out) {
 		// the shared neutral builder (zero-normal guard included) — one
@@ -180,6 +201,7 @@ export default class LitMeshBatcher extends MeshBatcher {
 	 * keeps a `lit` mesh fullbright — matching the unlit path — while an
 	 * ambient-only scene still uses its real ambient.
 	 * @ignore
+	 * @internal
 	 */
 	updatePassState() {
 		super.updatePassState();

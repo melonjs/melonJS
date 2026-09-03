@@ -19,6 +19,7 @@
  * `writeBuffer` covering only the dirty span — moving one tree in a forest
  * of five thousand writes 48 bytes.
  * @ignore
+ * @internal
  */
 export default class WebGPUInstanceBuffer {
 	/**
@@ -98,6 +99,7 @@ export default class WebGPUInstanceBuffer {
 	 * @param {number} byteLength - bytes to copy
 	 * @param {Float32Array} data - the CPU-side instance records
 	 * @ignore
+	 * @internal
 	 */
 	write(bufferOffset, byteOffset, byteLength, data) {
 		this.renderer.device.queue.writeBuffer(

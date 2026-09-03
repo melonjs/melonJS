@@ -73,6 +73,7 @@ const VKFORMAT_TO_WEBGL = {
  * @param {ArrayBuffer} data - the KTX2 file data
  * @returns {CompressedImage} a compressed texture object with mipmaps, width, height, format
  * @ignore
+ * @internal
  */
 export function parseKTX2(data) {
 	const idView = new Uint8Array(data, 0, 12);

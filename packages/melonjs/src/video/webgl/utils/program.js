@@ -1,5 +1,6 @@
 /**
  * @ignore
+ * @internal
  */
 function compileShader(gl, type, source) {
 	const shader = gl.createShader(type);
@@ -16,6 +17,7 @@ function compileShader(gl, type, source) {
 /**
  * Compile GLSL into a shader object
  * @ignore
+ * @internal
  */
 export function compileProgram(gl, vertex, fragment, attributes) {
 	const vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);

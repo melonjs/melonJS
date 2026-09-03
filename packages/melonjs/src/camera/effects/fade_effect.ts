@@ -43,6 +43,7 @@ export default class FadeEffect extends CameraEffect {
 	/**
 	 * target alpha value for completion check
 	 * @ignore
+	 * @internal
 	 */
 	_targetAlpha: number;
 

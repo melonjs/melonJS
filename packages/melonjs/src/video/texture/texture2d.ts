@@ -3,6 +3,7 @@ import { emit, TEXTURE2D_DESTROYED } from "../../system/event.ts";
 /**
  * Compile-time-only brand key; no runtime value can hold it.
  * @ignore
+ * @internal
  */
 declare const gpuResidentBrand: unique symbol;
 
@@ -23,6 +24,7 @@ export interface GPUResidentTexture {
 	/**
 	 * Phantom nominal brand — never present at runtime.
 	 * @ignore
+	 * @internal
 	 */
 	readonly [gpuResidentBrand]: true;
 }

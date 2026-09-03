@@ -132,6 +132,7 @@ class CanvasRenderTarget extends RenderTarget {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	onResetEvent(width, height) {
 		this.clear();
@@ -280,7 +281,10 @@ class CanvasRenderTarget extends RenderTarget {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	#invalidate(renderer) {
 		if (renderer.type.startsWith("WebGL")) {
 			// flush pending draws referencing the current texture data
@@ -310,6 +314,7 @@ class CanvasRenderTarget extends RenderTarget {
 	 * Destroy this canvas render target and release associated GPU resources.
 	 * @param {CanvasRenderer|WebGLRenderer} [renderer] - the renderer to clean up WebGL resources from
 	 * @ignore
+	 * @internal
 	 */
 	destroy(renderer) {
 		// Look up the cached texture by SOURCE identity (the `canvas`

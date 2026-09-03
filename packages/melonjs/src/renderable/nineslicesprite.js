@@ -105,6 +105,7 @@ export default class NineSliceSprite extends Sprite {
 	 * let the per-frame source size shrink the panel to a single frame.)
 	 * @param {object} region - the texture region object
 	 * @ignore
+	 * @internal
 	 */
 	_applyFrame(region) {
 		// capture the expanded size BEFORE super runs: its `this.width =` writes
@@ -122,6 +123,7 @@ export default class NineSliceSprite extends Sprite {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	draw(renderer) {
 		// the frame to draw

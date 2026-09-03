@@ -174,6 +174,7 @@ export default class ImageLayer extends Sprite {
 	/**
 	 * createPattern function
 	 * @ignore
+	 * @internal
 	 */
 	createPattern() {
 		this._pattern = this.parentApp.renderer.createPattern(
@@ -185,6 +186,7 @@ export default class ImageLayer extends Sprite {
 	/**
 	 * updateLayer function
 	 * @ignore
+	 * @internal
 	 */
 	updateLayer() {
 		const rx = this.ratio.x;
@@ -250,6 +252,7 @@ export default class ImageLayer extends Sprite {
 	 * `Renderable.postDraw` cleans up symmetrically (`clearTint` /
 	 * `clearMask` / `endPostEffect` / `restore`).
 	 * @ignore
+	 * @internal
 	 */
 	preDraw(renderer) {
 		// save the context
@@ -363,6 +366,7 @@ export default class ImageLayer extends Sprite {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		vector2dPool.release(this.ratio);

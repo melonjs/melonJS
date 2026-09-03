@@ -85,6 +85,7 @@ type DocumentWithLegacyExitFullscreen = Document & {
  * `physics/collision.js`, which imports the `game` reference back from
  * this module.
  * @ignore
+ * @internal
  */
 function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
 	adapter: PhysicsAdapter | undefined;
@@ -1030,13 +1031,19 @@ export default class Application {
 		return state.freeze(duration, music);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_tick(time: number): void {
 		this.update(time);
 		this.draw();
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onBlur(): void {
 		if (this.stopOnBlur) {
 			state.stop(true);
@@ -1046,7 +1053,10 @@ export default class Application {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onFocus(): void {
 		if (this.stopOnBlur) {
 			state.restart(true);
@@ -1165,6 +1175,7 @@ export let game: Application;
 /**
  * Set the default game application instance.
  * @ignore
+ * @internal
  */
 export function setDefaultGame(app: Application) {
 	game = app;

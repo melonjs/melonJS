@@ -149,6 +149,7 @@ export default class BitmapText extends Renderable {
 
 		/**
 		 * @ignore
+		 * @internal
 		 */
 		this._visibleCharacters = -1;
 
@@ -466,6 +467,7 @@ export default class BitmapText extends Renderable {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		vector2dPool.release(this.fontScale);

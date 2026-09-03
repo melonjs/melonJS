@@ -56,6 +56,7 @@ export default class ColorLayer extends Renderable {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		colorPool.release(this.color);

@@ -192,6 +192,7 @@ export default class Entity extends Renderable {
 		/**
 		 * The array of renderable children of this entity.
 		 * @ignore
+		 * @internal
 		 */
 		this.children = [];
 
@@ -292,7 +293,10 @@ export default class Entity extends Renderable {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	update(dt) {
 		if (this.renderable) {
 			this.isDirty |= this.renderable.update(dt);
@@ -405,6 +409,7 @@ export default class Entity extends Renderable {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// free some property objects

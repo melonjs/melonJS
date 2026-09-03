@@ -38,6 +38,7 @@ const UINT16_VERTEX_LIMIT = 65536;
  * @param {number} z2
  * @returns {number} the angle in radians
  * @ignore
+ * @internal
  */
 function angleBetween(x1, y1, z1, x2, y2, z2) {
 	const l1 = Math.hypot(x1, y1, z1);
@@ -60,6 +61,7 @@ function angleBetween(x1, y1, z1, x2, y2, z2) {
  * @param {number} nz
  * @param {number} weight
  * @ignore
+ * @internal
  */
 function addWeighted(target, at, nx, ny, nz, weight) {
 	target[at] += nx * weight;
@@ -114,6 +116,7 @@ function addWeighted(target, at, nx, ny, nz, weight) {
  *   produce a `groups` array of length 1, so consumers don't need a
  *   special case.
  * @ignore
+ * @internal
  */
 export function parseOBJ(text) {
 	const positions = [];
@@ -187,6 +190,7 @@ export function parseOBJ(text) {
 	 * @param {string} part - face vertex string
 	 * @returns {number} UV index (0-based) or NO_UV
 	 * @ignore
+	 * @internal
 	 */
 	function parseNormalIndex(part, slashIdx) {
 		if (slashIdx === -1) {
@@ -205,6 +209,7 @@ export function parseOBJ(text) {
 	 * @param {number} slashIdx - index of the first slash
 	 * @returns {number} UV index (0-based) or NO_UV
 	 * @ignore
+	 * @internal
 	 */
 	function parseUVIndex(part, slashIdx) {
 		if (slashIdx !== -1 && part[slashIdx + 1] !== SLASH_CHAR) {
@@ -514,6 +519,7 @@ export function parseOBJ(text) {
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadOBJ(data, onload, onerror, settings) {
 	if (typeof objList[data.name] !== "undefined") {

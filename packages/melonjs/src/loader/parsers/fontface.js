@@ -7,6 +7,7 @@ import { fontList } from "../cache.js";
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  * @example
  * preloadFontFace([
  *     { name: "'kenpixel'", type: "fontface", src: "data/font/kenvector_future.woff2" }

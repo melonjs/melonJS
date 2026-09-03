@@ -18,17 +18,28 @@ import defaultEmitterSettings, {
  * distinct ones because a single scratch reused twice would clobber the first
  * operand mid-computation.
  * @ignore
+ * @internal
  */
 const _m1 = new Matrix3d();
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 const _m2 = new Matrix3d();
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 const _correction = new Matrix3d();
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 const _rebase = new Vector2d();
 
 /**
  * @ignore
+ * @internal
  */
 function createDefaultParticleTexture(
 	w: number = 8,
@@ -49,6 +60,7 @@ function createDefaultParticleTexture(
  * Guards against the partial-override footgun where a user sets only the
  * `max` half of a range-style setting and the default of `min` ends up larger.
  * @ignore
+ * @internal
  */
 function clampMinToMax<K extends keyof ParticleEmitterSettings>(
 	settings: ParticleEmitterSettings,
@@ -111,31 +123,53 @@ export default class ParticleEmitter extends Container {
 	 */
 	settings: ParticleEmitterSettings;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_stream: boolean;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_frequencyTimer: number;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_durationTimer: number;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_enabled: boolean;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_updateCount: number;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_dt: number;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_defaultParticle: CanvasRenderTarget | undefined;
 
 	/**
 	 * The blend mode last fanned out to the particles, so a change to
 	 * {@link ParticleEmitter#blendMode} can be detected per frame.
 	 * @ignore
+	 * @internal
 	 */
 	#appliedBlendMode: string = "normal";
 
@@ -144,6 +178,7 @@ export default class ParticleEmitter extends Container {
 	 * the precondition for completion detection (a brand-new emitter with zero
 	 * children must not count as "complete")
 	 * @ignore
+	 * @internal
 	 */
 	_hasSpawned: boolean;
 
@@ -151,6 +186,7 @@ export default class ParticleEmitter extends Container {
 	 * cached `timer.maxfps / 1000` — particles read this directly instead of
 	 * recomputing it on every spawn.
 	 * @ignore
+	 * @internal
 	 */
 	_deltaInv: number;
 
@@ -165,6 +201,7 @@ export default class ParticleEmitter extends Container {
 	 * emitter that actually uses a non-local space — emitters are few, unlike
 	 * particles, which allocate nothing.
 	 * @ignore
+	 * @internal
 	 */
 	_spawnMap: Matrix3d | undefined;
 
@@ -326,6 +363,7 @@ export default class ParticleEmitter extends Container {
 	 * particles holding coordinates measured against a frame that is no
 	 * longer theirs, teleporting the lot.
 	 * @ignore
+	 * @internal
 	 * @param previous - the frame the live particles are currently in
 	 */
 	#rebase(previous: Container): void {
@@ -358,6 +396,7 @@ export default class ParticleEmitter extends Container {
 	 * parent, or a custom target that IS the emitter), which then take the
 	 * local fast path with no correction at all.
 	 * @ignore
+	 * @internal
 	 */
 	#frameOf(space: "local" | "world" | Container): Container {
 		if (space === "local") {
@@ -381,6 +420,7 @@ export default class ParticleEmitter extends Container {
 	 * The world transform of a reference frame — i.e. of the space that
 	 * container's children are drawn in.
 	 * @ignore
+	 * @internal
 	 */
 	#worldFrame(frame: Container, out: Matrix3d): Matrix3d {
 		return frame.getWorldTransform(out);
@@ -405,6 +445,7 @@ export default class ParticleEmitter extends Container {
 	 * When the target is the emitter's own parent — the `"world"` case — the
 	 * whole ancestor chain cancels and no walk happens at all.
 	 * @ignore
+	 * @internal
 	 * @returns the correction, or `undefined` in local mode
 	 */
 	#correctionMatrix(): Matrix3d | undefined {
@@ -454,6 +495,7 @@ export default class ParticleEmitter extends Container {
 	 * local mode there is no correction and this is the inherited path
 	 * untouched.
 	 * @ignore
+	 * @internal
 	 */
 	override draw(
 		renderer: CanvasRenderer | WebGLRenderer,
@@ -467,7 +509,10 @@ export default class ParticleEmitter extends Container {
 	}
 
 	// Add count particles in the game world
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	addParticles(count: number): void {
 		// Propagate the emitter's depth onto each new particle via
 		// `Container.addChild(child, z)` so Camera3d projects them at
@@ -553,6 +598,7 @@ export default class ParticleEmitter extends Container {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	override update(dt: number): boolean {
 		// Fan a changed blend mode out to the particles.
@@ -670,6 +716,7 @@ export default class ParticleEmitter extends Container {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	override destroy(): void {
 		super.destroy();

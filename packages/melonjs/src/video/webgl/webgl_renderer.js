@@ -70,15 +70,20 @@ const _savedProjection = new Matrix3d();
  * lazily from a live context on the first `setBlendMode`, because the enum
  * values are properties of the context object rather than module constants.
  * @ignore
+ * @internal
  */
 let GL_BLEND_OP;
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 let GL_BLEND_FACTOR;
 
 /**
  * Build the neutral-token → `gl.*` enum lookups for this context.
  * @param {WebGL2RenderingContext} gl - a live context
  * @ignore
+ * @internal
  */
 function initBlendEnums(gl) {
 	GL_BLEND_OP = {
@@ -141,6 +146,7 @@ export default class WebGLRenderer extends Renderer {
 		 * cached FBO for post-effect processing (lazily created on first use)
 		 * @type {WebGLRenderTarget|null}
 		 * @ignore
+		 * @internal
 		 */
 		// initialize the render target pool with a WebGL factory
 		// capture targets rasterize the scene — under antiAlias they get a
@@ -161,6 +167,7 @@ export default class WebGLRenderer extends Renderer {
 		 * Saved projection matrix for begin/endPostEffect.
 		 * @type {Matrix3d}
 		 * @ignore
+		 * @internal
 		 */
 		// projections saved by beginPostEffect, one per (possibly nested)
 		// active pass — preallocated slots + a depth counter (zero-alloc
@@ -180,21 +187,43 @@ export default class WebGLRenderer extends Renderer {
 		 * `toFrameTexture` does too), so a boolean would be cleared by the
 		 * inner scope while the outer one is still running.
 		 * @ignore
+		 * @internal
 		 */
 		this._advancedBlendEffect = undefined;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendCapture = undefined;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendTarget = undefined;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendOpen = false;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendBusy = 0;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendParent = null;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendStencil = false;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendWarned = new Set();
 
 		/**
@@ -225,6 +254,7 @@ export default class WebGLRenderer extends Renderer {
 		 * keyed by source alone. Renderer-owned so every batcher shares it.
 		 * @type {GLSamplerCache}
 		 * @ignore
+		 * @internal
 		 */
 		this.samplerCache = new GLSamplerCache(this.gl);
 
@@ -241,6 +271,7 @@ export default class WebGLRenderer extends Renderer {
 		 * orphaning every handle it tracked and leaking them on the next loss.
 		 * @type {TextureStore}
 		 * @ignore
+		 * @internal
 		 */
 		this.textureStore = new WebGLTextureStore(this.gl);
 
@@ -261,6 +292,7 @@ export default class WebGLRenderer extends Renderer {
 		 * the same reason texture units go through `TextureCache.reserveUnit`.
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this._nextUniformBindingPoint = 0;
 
@@ -268,6 +300,7 @@ export default class WebGLRenderer extends Renderer {
 		 * the default shader precision based on application settings
 		 * @type {string}
 		 * @ignore
+		 * @internal
 		 */
 		this.shaderPrecision = getMaxShaderPrecision(
 			this.gl,
@@ -277,6 +310,7 @@ export default class WebGLRenderer extends Renderer {
 		/**
 		 * reusable scratch array for fillRect (2 triangles = 6 vertices)
 		 * @ignore
+		 * @internal
 		 */
 		this._rectTriangles = Array.from({ length: 6 }, () => {
 			return { x: 0, y: 0 };
@@ -323,6 +357,7 @@ export default class WebGLRenderer extends Renderer {
 		 * forces the next bind to re-issue `gl.activeTexture`.
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this._activeTextureUnit = -1;
 
@@ -762,6 +797,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {string} orientation
 	 * @returns {object|undefined}
 	 * @ignore
+	 * @internal
 	 */
 	_getTMXGPURendererFor(orientation) {
 		if (orientation === "orthogonal") {
@@ -1012,6 +1048,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {number} the claimed binding point
 	 * @throws {Error} when the device's binding points are exhausted
 	 * @ignore
+	 * @internal
 	 */
 	reserveUniformBindingPoint() {
 		const max = this.gl.getParameter(this.gl.MAX_UNIFORM_BUFFER_BINDINGS);
@@ -1076,6 +1113,7 @@ export default class WebGLRenderer extends Renderer {
 	 * (no flush on light switch).
 	 * @returns {TextureAtlas}
 	 * @ignore
+	 * @internal
 	 */
 	_getLightAtlas() {
 		if (this._lightAtlas === undefined) {
@@ -1169,7 +1207,10 @@ export default class WebGLRenderer extends Renderer {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_toFrameTexture(options = {}) {
 		const gl = this.gl;
 		const canvas = this.getCanvas();
@@ -1323,6 +1364,7 @@ export default class WebGLRenderer extends Renderer {
 	 * wires `: screen_texture` annotated samplers to this object.
 	 * @returns {FrameTexture} the shared capture slot
 	 * @ignore
+	 * @internal
 	 */
 	getSharedFrameTexture() {
 		if (typeof this._frameTexture === "undefined") {
@@ -1346,6 +1388,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {WebGLBatcher} [except] - a batcher to skip (the one that just bound the
 	 *   texture — its own cache is already accurate)
 	 * @ignore
+	 * @internal
 	 */
 	invalidateTextureUnit(unit, except) {
 		for (const b of this.batchers.values()) {
@@ -1360,6 +1403,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Renderable} renderable - the renderable requesting post-effect processing
 	 * @returns {boolean} true if FBO capture started, false if skipped
 	 * @ignore
+	 * @internal
 	 */
 	beginPostEffect(renderable) {
 		// filter to only enabled effects
@@ -1420,7 +1464,10 @@ export default class WebGLRenderer extends Renderer {
 		return true;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	endPostEffect(renderable) {
 		// filter to only enabled effects
 		const effects = renderable.postEffects.filter((fx) => {
@@ -1549,6 +1596,7 @@ export default class WebGLRenderer extends Renderer {
 	 * loud.
 	 * @param {string} what - the excluded path, named for the message
 	 * @ignore
+	 * @internal
 	 */
 	_warnAdvancedBlendFallback(what) {
 		const key = `${what}:${this.currentBlendMode}`;
@@ -1566,6 +1614,7 @@ export default class WebGLRenderer extends Renderer {
 	 * already inside the bracket machinery. The safe form to call from any
 	 * path that is about to disturb the destination.
 	 * @ignore
+	 * @internal
 	 */
 	_drainAdvancedBlend() {
 		if (this._advancedBlendOpen === true && this._advancedBlendBusy === 0) {
@@ -1580,6 +1629,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {boolean} false when the effect could not be realized, in which
 	 * case the draw proceeds unbracketed (plain source-over)
 	 * @ignore
+	 * @internal
 	 */
 	_openAdvancedBlend() {
 		const gl = this.gl;
@@ -1656,6 +1706,7 @@ export default class WebGLRenderer extends Renderer {
 	 * Close an advanced-blend bracket: drain the offscreen, return to the
 	 * parent target, and composite through {@link BlendEffect}.
 	 * @ignore
+	 * @internal
 	 */
 	_closeAdvancedBlend() {
 		const gl = this.gl;
@@ -2101,6 +2152,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Matrix3d} shadowMatrix - the group matrix flattened onto the ground
 	 * @param {object} quad - the shared shadow quad
 	 * @ignore
+	 * @internal
 	 */
 	/**
 	 * Install a blend function for one draw WITHOUT touching
@@ -2666,6 +2718,7 @@ export default class WebGLRenderer extends Renderer {
 	 * future WebGPU backend reuses it and maps to `GPUFilterMode` instead.
 	 * @returns {number} `gl.LINEAR` or `gl.NEAREST`
 	 * @ignore
+	 * @internal
 	 */
 	_glTextureFilter() {
 		return this.getDefaultTextureFilter() === "linear"
@@ -2679,6 +2732,7 @@ export default class WebGLRenderer extends Renderer {
 	 * {@link WebGLRenderer#setAntiAlias} and {@link WebGLRenderer#setTextureFilter}.
 	 * @param {number} filter - `gl.LINEAR` or `gl.NEAREST`
 	 * @ignore
+	 * @internal
 	 */
 	_reapplyTextureFilter(filter) {
 		const gl = this.gl;
@@ -3253,6 +3307,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} w - bounding rect width
 	 * @param {number} h - bounding rect height
 	 * @ignore
+	 * @internal
 	 */
 	#gradientMask(drawShape, x, y, w, h) {
 		const gl = this.gl;

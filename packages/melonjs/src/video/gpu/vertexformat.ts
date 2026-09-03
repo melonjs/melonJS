@@ -22,6 +22,7 @@
 /**
  * The scalar component type underlying a {@link VertexFormat}.
  * @ignore
+ * @internal
  */
 export type VertexScalar =
 	| "float32"
@@ -92,6 +93,7 @@ export type VertexFormat =
 /**
  * What a {@link VertexFormat} resolves to.
  * @ignore
+ * @internal
  */
 export interface VertexFormatInfo {
 	/** number of components (1, 2, 3 or 4) */
@@ -107,6 +109,7 @@ export interface VertexFormatInfo {
 /**
  * Bytes occupied by one component of each scalar type.
  * @ignore
+ * @internal
  */
 const SCALAR_BYTES: Record<VertexScalar, number> = {
 	float32: 4,
@@ -125,6 +128,7 @@ const SCALAR_BYTES: Record<VertexScalar, number> = {
 /**
  * Whether a scalar type is read as a normalized fraction.
  * @ignore
+ * @internal
  */
 const SCALAR_NORMALIZED: Record<VertexScalar, boolean> = {
 	float32: false,
@@ -147,6 +151,7 @@ const SCALAR_NORMALIZED: Record<VertexScalar, boolean> = {
  * @param components - how many components the attribute has
  * @returns the resolved format description
  * @ignore
+ * @internal
  */
 function entry(
 	scalar: VertexScalar,
@@ -167,6 +172,7 @@ function entry(
  * arithmetic the GL-enum path has always used — so a layout expressed either
  * way produces an identical stride.
  * @ignore
+ * @internal
  */
 export const VERTEX_FORMATS: Record<VertexFormat, VertexFormatInfo> = {
 	float32: entry("float32", 1),

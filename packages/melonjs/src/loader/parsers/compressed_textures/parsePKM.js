@@ -45,6 +45,7 @@ const PKM_FORMAT_TO_WEBGL = {
  * @param {ArrayBuffer} data - the raw PKM file data
  * @returns {CompressedImage} a compressed texture object
  * @ignore
+ * @internal
  */
 export function parsePKM(data) {
 	const header = new DataView(data, 0, PKM_HEADER_SIZE);

@@ -32,6 +32,7 @@ export class Sphere {
 	 * {@link Sphere.getBounds} call so a sphere used only for inline
 	 * `overlaps` checks doesn't pay for the AABB.
 	 * @ignore
+	 * @internal
 	 */
 	_bounds?: AABB3d;
 
@@ -142,7 +143,10 @@ export class Sphere {
 		return this._bounds;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_updateBounds() {
 		const r = Math.abs(this.radius);
 		this._bounds!.setMinMax(

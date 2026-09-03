@@ -19,12 +19,14 @@ export default class QuadBatcher extends MaterialBatcher {
 	/**
 	 * Initialize the compositor
 	 * @ignore
+	 * @internal
 	 */
 	init(renderer) {
 		/**
 		 * the maximum number of texture units used for multi-texture batching
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		// the full pool the renderer resolved (#1585). The 16 that used to cap
 		// this was the WebGL 2 spec FLOOR for MAX_TEXTURE_IMAGE_UNITS — safe
@@ -71,6 +73,7 @@ export default class QuadBatcher extends MaterialBatcher {
 		 * (disabled when a custom ShaderEffect is applied)
 		 * @type {boolean}
 		 * @ignore
+		 * @internal
 		 */
 		this.useMultiTexture = true;
 
@@ -81,6 +84,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * (Re-)create the index buffer for quad batching (4 verts + 6 indices per quad).
 	 * Called from `init` and `reset` (after context loss).
 	 * @ignore
+	 * @internal
 	 */
 	createIndexBuffer() {
 		// The ELEMENT_ARRAY_BUFFER binding is vertex-state state, so the
@@ -107,6 +111,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * Bind the color sampler uniforms (`uSampler0..uSamplerN-1`) to their
 	 * respective texture units. Called from `init` and `reset`.
 	 * @ignore
+	 * @internal
 	 */
 	bindColorSamplers() {
 		for (let i = 0; i < this.maxBatchTextures; i++) {
@@ -130,6 +135,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	/**
 	 * Reset compositor internal state
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		super.reset();

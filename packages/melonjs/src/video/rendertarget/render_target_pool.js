@@ -14,6 +14,7 @@
  * pairs compose like save/restore.
  * Render targets are lazily created and resized to match the required dimensions.
  * @ignore
+ * @internal
  */
 export default class RenderTargetPool {
 	/**

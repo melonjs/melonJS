@@ -13,11 +13,13 @@ import Texture2d from "../../texture/texture2d.ts";
  * `setTexture` discriminant contract of the WebGL twin.
  * @augments Texture2d
  * @ignore
+ * @internal
  */
 export class WebGPUFrameTexture extends Texture2d {
 	/**
 	 * monotonic generation source shared by every capture instance
 	 * @ignore
+	 * @internal
 	 */
 	static generationCounter = 0;
 

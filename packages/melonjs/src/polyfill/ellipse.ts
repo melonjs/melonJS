@@ -3,7 +3,10 @@
  * Uses cubic bezier curves to approximate the ellipse when native support is unavailable.
  */
 
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 function ellipse(
 	this: CanvasRenderingContext2D | Path2D,
 	x: number,

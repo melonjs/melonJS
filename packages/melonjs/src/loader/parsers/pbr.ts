@@ -14,6 +14,7 @@
  * says exactly what the artist wanted, where metallic/roughness only implies
  * it.
  * @ignore
+ * @internal
  */
 
 /**
@@ -21,6 +22,7 @@
  * exponent runs away as roughness approaches 0, and a highlight narrower
  * than a pixel only aliases.
  * @ignore
+ * @internal
  */
 export const MAX_SHININESS = 256;
 
@@ -28,6 +30,7 @@ export const MAX_SHININESS = 256;
  * The specular reflectance of a non-metal, the standard value used by every
  * metallic/roughness workflow. Metals reflect their own base colour instead.
  * @ignore
+ * @internal
  */
 export const DIELECTRIC_F0 = 0.04;
 
@@ -36,6 +39,7 @@ export const DIELECTRIC_F0 = 0.04;
  * a {@link Mesh}, or `undefined` / `0` when the material implies no
  * highlight at all.
  * @ignore
+ * @internal
  */
 export interface SpecularTerms {
 	/** specular colour `[r, g, b]`, or `undefined` for none */
@@ -53,6 +57,7 @@ export interface SpecularTerms {
  * @param value - the authored factor
  * @returns the factor, or 1
  * @ignore
+ * @internal
  */
 function factor(value: unknown): number {
 	return typeof value === "number" && Number.isFinite(value) ? value : 1;
@@ -76,6 +81,7 @@ function factor(value: unknown): number {
  * @param baseColor - the material's base colour, `[r, g, b, a?]`
  * @returns the specular terms, inert when the material implies no highlight
  * @ignore
+ * @internal
  */
 export function specularFromMetallicRoughness(
 	roughness: unknown,

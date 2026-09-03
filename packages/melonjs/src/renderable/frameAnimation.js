@@ -49,6 +49,7 @@ export default class FrameAnimation {
 		 * the host renderable this engine draws through.
 		 * @type {object}
 		 * @ignore
+		 * @internal
 		 */
 		this.host = host;
 
@@ -56,13 +57,18 @@ export default class FrameAnimation {
 		 * geometry hook invoked on every frame change (see constructor).
 		 * @type {(region: object) => void}
 		 * @ignore
+		 * @internal
 		 */
 		this._applyFrame = applyFrame;
 
 		/** defined animations, keyed by id @type {object} */
 		this.anim = {};
 
-		/** animation to chain to / completion callback on cycle end @ignore */
+		/**
+		 * animation to chain to / completion callback on cycle end
+		 * @ignore
+		 * @internal
+		 */
 		this.resetAnim = undefined;
 
 		/** current frame info @type {object} */
@@ -93,10 +99,18 @@ export default class FrameAnimation {
 		/** pause flag — freezes the current frame @type {boolean} */
 		this.animationpause = false;
 
-		/** per-play speed multiplier (1 = authored speed) @ignore */
+		/**
+		 * per-play speed multiplier (1 = authored speed)
+		 * @ignore
+		 * @internal
+		 */
 		this._animSpeed = 1;
 
-		/** set once a `loop:false` animation has finished its single cycle @ignore */
+		/**
+		 * set once a `loop:false` animation has finished its single cycle
+		 * @ignore
+		 * @internal
+		 */
 		this._animDone = false;
 	}
 
@@ -349,6 +363,7 @@ export default class FrameAnimation {
 	 * this true, which is the point: only a genuinely torn-down host stops the
 	 * loop.
 	 * @ignore
+	 * @internal
 	 * @returns {boolean} true while the current animation can still be read
 	 */
 	_isCurrentAnimationLive() {

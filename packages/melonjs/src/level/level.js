@@ -15,6 +15,7 @@ let currentLevelIdx = 0;
 
 /**
  * @ignore
+ * @internal
  */
 function safeLoadLevel(levelId, options, restart) {
 	// clean the destination container
@@ -70,6 +71,7 @@ function safeLoadLevel(levelId, options, restart) {
  * @param {boolean} [flatten=true] - if true, flatten all objects into the given container
  * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
  * @ignore
+ * @internal
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 	const level = levels[levelId];

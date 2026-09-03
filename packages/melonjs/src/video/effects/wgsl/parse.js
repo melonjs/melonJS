@@ -21,6 +21,7 @@ import { computeUniformLayout } from "./layout.js";
  * and disables (the generalized missing-language behavior), it never
  * throws and never guesses at offsets.
  * @ignore
+ * @internal
  */
 
 const APPLY_FN = /\bfn\s+apply\s*\(/;
@@ -37,6 +38,7 @@ const GROUP3_ANY = /@group\(\s*3\s*\)\s*@binding\(\s*(\d+)\s*\)/g;
  * patterns are where polynomial backtracking hides (ReDoS), and a
  * character scan is provably linear.
  * @ignore
+ * @internal
  */
 function stripComments(source) {
 	const parts = [];
@@ -82,6 +84,7 @@ function stripComments(source) {
  * @param {string} body - the text between the struct's braces
  * @returns {string[]} one entry per member declaration
  * @ignore
+ * @internal
  */
 function splitMembers(body) {
 	const members = [];
@@ -107,6 +110,7 @@ function splitMembers(body) {
  * or struct member of that name) — the builtin then stays user-managed,
  * same contract as the GLSL side
  * @ignore
+ * @internal
  */
 function hasOwnDeclaration(source, name) {
 	return new RegExp(
@@ -120,6 +124,7 @@ function hasOwnDeclaration(source, name) {
  * @returns {object} `{ok: true, layout, structSize, uniformVar, textures, builtins, maxUserBinding}`
  *   or `{ok: false, error}`
  * @ignore
+ * @internal
  */
 export function parseWGSLBody(body) {
 	const source = stripComments(body);

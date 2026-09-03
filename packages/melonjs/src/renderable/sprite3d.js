@@ -283,16 +283,26 @@ export default class Sprite3d extends Mesh {
 		 * the quad's half-width in world units (see {@link Sprite3d#billboard}).
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this._halfW = hw;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._halfH = hh;
 		// local-space offset pinning `anchorPoint` to `pos` (0,0 = centered,
 		// the default). Applied in `_applyFrame` after the flip, so mirroring
 		// happens around the art's own center while the anchor stays fixed.
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._anchorOffsetX = anchorOffsetX;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._anchorOffsetY = anchorOffsetY;
 		// the anchor lives in the vertex data — tell Mesh.preDraw to suppress
 		// the base transform-level anchor on BOTH camera paths (single
@@ -309,20 +319,35 @@ export default class Sprite3d extends Mesh {
 		// reference logical (untrimmed) frame size the world quad maps to,
 		// captured from the first applied frame so trimmed frames can be scaled
 		// into the same world footprint (0 = not captured yet)
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._refLw = 0;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._refLh = 0;
 		// horizontal / vertical mirror flags. Applied by mirroring the local quad
 		// in `_applyFrame` (uniform for the billboard + fixed paths, and agnostic
 		// to atlas rotation/trim) rather than via the inherited transform flip,
 		// which the billboard projection doesn't use.
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._flipX = false;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._flipY = false;
 		// the last region handed to `_applyFrame`, so a flip can re-map immediately
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._region = null;
 
 		// ── frame-animation: texture refs the engine reads + the engine itself ──
@@ -333,18 +358,34 @@ export default class Sprite3d extends Mesh {
 		 * @type {Function}
 		 */
 		this.onended = undefined;
-		/** the frame-aware atlas (== this.texture) @ignore */
+		/**
+		 * the frame-aware atlas (== this.texture)
+		 * @ignore
+		 * @internal
+		 */
 		this.source = this.texture;
 		// region dictionary + name→index map. `settings.atlas` / `atlasIndices`
 		// (as produced by `TextureAtlas.getAnimationSettings` /
 		// `createAnimationFromName`) take precedence so atlas-by-name animation
 		// works exactly as it does for a 2D Sprite; otherwise fall back to the
 		// resolved atlas's own dictionary.
-		/** the atlas region dictionary @ignore */
+		/**
+		 * the atlas region dictionary
+		 * @ignore
+		 * @internal
+		 */
 		this.textureAtlas = settings.atlas ?? this.texture.getAtlas();
-		/** name→index map for named-region atlases @ignore */
+		/**
+		 * name→index map for named-region atlases
+		 * @ignore
+		 * @internal
+		 */
 		this.atlasIndices = settings.atlasIndices;
-		/** the shared frame-animation engine @ignore */
+		/**
+		 * the shared frame-animation engine
+		 * @ignore
+		 * @internal
+		 */
 		this._frameAnim = new FrameAnimation(this, (region) => {
 			this._applyFrame(region);
 		});
@@ -373,7 +414,11 @@ export default class Sprite3d extends Mesh {
 		 */
 		this.billboard = settings.billboard ?? false;
 
-		/** the camera captured at draw time for the billboard projection @ignore */
+		/**
+		 * the camera captured at draw time for the billboard projection
+		 * @ignore
+		 * @internal
+		 */
 		this._billboardCam = null;
 
 		// select an initial frame: an explicit atlas region, then any predefined
@@ -422,6 +467,7 @@ export default class Sprite3d extends Mesh {
 	 * bounds. Preserves the base ObservablePoint contract (updateBounds +
 	 * isDirty, see Renderable's anchorPoint callback).
 	 * @ignore
+	 * @internal
 	 */
 	_onAnchorChanged() {
 		// re-bakes the quad's corner positions in place (directly below, or
@@ -674,6 +720,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} id - the frame id
 	 * @returns {object} the frame data
 	 * @ignore
+	 * @internal
 	 */
 	getAnimationFrameObjectByIndex(id) {
 		return this._frameAnim.getAnimationFrameObjectByIndex(id);
@@ -690,6 +737,7 @@ export default class Sprite3d extends Mesh {
 	 * full parity with the 2D `Sprite`.
 	 * @param {object} region - the texture region object
 	 * @ignore
+	 * @internal
 	 */
 	_applyFrame(region) {
 		// this rewrites the quad's UVs (and, for a trimmed region, its
@@ -806,6 +854,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} dt - time since the last update in milliseconds
 	 * @returns {boolean} true if the sprite changed and needs a redraw
 	 * @ignore
+	 * @internal
 	 */
 	update(dt) {
 		// advance the engine first (a frame change marks this sprite dirty via
@@ -819,6 +868,7 @@ export default class Sprite3d extends Mesh {
 	 * Release resources (returns the engine's pooled `current.offset` to the
 	 * pool), then defer to the standard mesh/renderable teardown.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		this._frameAnim.destroy();
@@ -835,6 +885,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer
 	 * @param {Camera2d} [viewport]
 	 * @ignore
+	 * @internal
 	 */
 	draw(renderer, viewport) {
 		this._billboardCam = viewport instanceof Camera3d ? viewport : null;
@@ -845,6 +896,7 @@ export default class Sprite3d extends Mesh {
 	 * Orient the quad toward the camera when billboarding; otherwise defer to the
 	 * standard {@link Mesh} world projection (a fixed-orientation quad).
 	 * @ignore
+	 * @internal
 	 */
 	_projectVerticesWorld(offsetX, offsetY, offsetZ) {
 		if (this._billboardBasis() === false) {
@@ -862,6 +914,7 @@ export default class Sprite3d extends Mesh {
 	 * can never disagree about which way the card faces.
 	 * @returns {boolean} `false` when this sprite is not billboarding
 	 * @ignore
+	 * @internal
 	 */
 	_billboardBasis() {
 		const mode = this.billboard;
@@ -913,13 +966,17 @@ export default class Sprite3d extends Mesh {
 	 * Falls back to the standard mesh placement when not billboarding.
 	 * @returns {Matrix3d} the sprite's model matrix (reused instance)
 	 * @ignore
+	 * @internal
 	 */
 	_composeModelMatrix() {
 		if (this._billboardBasis() === false) {
 			return super._composeModelMatrix();
 		}
 		if (this._modelMatrix === undefined) {
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._modelMatrix = new Matrix3d();
 		}
 		const out = this._modelMatrix.val;
@@ -949,6 +1006,7 @@ export default class Sprite3d extends Mesh {
 	 * offsets are the baked ±hw / ±hh quad coordinates, already shifted by the
 	 * anchor offset). Only used on renderers without retained geometry.
 	 * @ignore
+	 * @internal
 	 */
 	_projectBillboardCorners(offsetX, offsetY, offsetZ) {
 		const out = this.vertices;

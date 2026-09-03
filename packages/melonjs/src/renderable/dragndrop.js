@@ -86,6 +86,7 @@ export class DropTarget extends Renderable {
 	/**
 	 * Destructor
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		this.removeDragEndListener();

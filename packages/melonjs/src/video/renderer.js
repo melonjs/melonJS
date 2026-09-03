@@ -27,6 +27,7 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  * entry's. One for the whole engine — the pass is never re-entered, which
  * `_transparentFlushing` enforces.
  * @ignore
+ * @internal
  */
 const _savedView = new Matrix3d();
 
@@ -94,6 +95,7 @@ export default class Renderer {
 		 * (GPU renderers only; ignored by Canvas renderer)
 		 * @type {GLShader|ShaderEffect|undefined}
 		 * @ignore
+		 * @internal
 		 */
 		this.customShader = undefined;
 
@@ -102,6 +104,7 @@ export default class Renderer {
 		 * Initialized by GPU renderers (WebGL, WebGPU). Null on Canvas renderer.
 		 * @type {RenderTargetPool|null}
 		 * @ignore
+		 * @internal
 		 */
 		this._renderTargetPool = null;
 
@@ -227,6 +230,7 @@ export default class Renderer {
 
 		/**
 		 * @ignore
+		 * @internal
 		 */
 		this.maskLevel = 0;
 
@@ -239,6 +243,7 @@ export default class Renderer {
 		 * per draw by the mesh batchers. Null for every camera that is not a
 		 * `Camera3d` with fog enabled, which is the default.
 		 * @ignore
+		 * @internal
 		 */
 		this._fog3d = null;
 
@@ -971,6 +976,7 @@ export default class Renderer {
 	 * @param {Renderable} renderable - the renderable with postEffects to apply
 	 * @returns {boolean} false (Canvas renderer does not support post-effect processing)
 	 * @ignore
+	 * @internal
 	 */
 	beginPostEffect(renderable) {
 		// on Canvas, only set customShader for single-effect fast path
@@ -991,6 +997,7 @@ export default class Renderer {
 	 * No-op on Canvas renderer.
 	 * @param {Renderable} renderable - the renderable with postEffects to apply
 	 * @ignore
+	 * @internal
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 	endPostEffect(renderable) {}
@@ -1107,6 +1114,7 @@ export default class Renderer {
 	 * the value.
 	 * @param {object|null} [fog] - resolved fog state, or null/undefined for none
 	 * @ignore
+	 * @internal
 	 */
 	setFog(fog) {
 		this._fog3d = fog ?? null;

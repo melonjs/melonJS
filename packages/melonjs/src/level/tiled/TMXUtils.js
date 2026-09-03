@@ -11,6 +11,7 @@ let embeddedImageId = 0;
  * a generated filename (with extension) suitable for getImage().
  * Works for both XML-parsed data (base64 string) and JSON data.
  * @ignore
+ * @internal
  * @param {string} base64 - raw base64-encoded image data
  * @param {string} [format="png"] - image format
  * @param {number} [width] - image width hint
@@ -27,6 +28,7 @@ export function cacheEmbeddedImage(base64, format = "png", width, height) {
  * If the given data object has an embedded base64 image (JSON `imagedata`
  * property), decode it, cache it, and replace with a generated filename.
  * @ignore
+ * @internal
  * @param {object} data - tileset, tile, or layer data
  */
 export function resolveEmbeddedImage(data) {
@@ -64,6 +66,7 @@ export function tiledBlendMode(mode) {
 /**
  * Apply an opacity multiplier to a renderable and its child renderable (if any).
  * @ignore
+ * @internal
  * @param {Renderable} obj - the renderable to apply to
  * @param {number} opacity - the opacity multiplier
  */
@@ -81,6 +84,7 @@ export function applyObjectOpacity(obj, opacity) {
  * Propagate a blend mode to a renderable and its child renderable (if any).
  * Only applies when the object still has the default "normal" blend mode.
  * @ignore
+ * @internal
  * @param {Renderable} obj - the renderable to apply to
  * @param {string} blendMode - the blend mode to propagate
  */
@@ -104,6 +108,7 @@ export function propagateBlendMode(obj, blendMode) {
 /**
  * Parse a Tiled tint color hex string into a melonJS Color object.
  * @ignore
+ * @internal
  * @param {string} tintcolor - hex color string from Tiled (e.g. "#ff0000")
  * @returns {Color|undefined} parsed Color, or undefined if no tint
  */
@@ -124,6 +129,7 @@ const LONG_ARGB = /^#([\da-fA-F]{2})([\da-fA-F]{6})$/;
  * Handles int, float, bool, json:, eval:, #ARGB colors,
  * and auto-detection for untyped properties.
  * @ignore
+ * @internal
  * @param {string} name - property name (used for ratio/anchorPoint normalization)
  * @param {string} type - declared Tiled type ("int","float","bool","string", etc.)
  * @param {*} raw - raw value (string from XML, or already-typed from JSON)
@@ -231,6 +237,7 @@ function coerceTMXValue(name, type, raw) {
  * Moves source → image, width → imagewidth, height → imageheight.
  * For embedded images (no source, has data), decodes and caches the image.
  * @ignore
+ * @internal
  */
 function flattenImage(obj) {
 	if (obj.image) {
@@ -257,6 +264,7 @@ function flattenImage(obj) {
 /**
  * Normalizer callback for xmlToObject — converts TMX XML into Tiled JSON format.
  * @ignore
+ * @internal
  */
 function normalizeTMX(obj, item, parse) {
 	const nodeName = item.nodeName;

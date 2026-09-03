@@ -16,11 +16,13 @@
  * Deliberately mirrors `WebGPUTextureStore.getSampler(filter, repeat, mipmaps)`
  * — same key, same dedup, so the two backends stay legible side by side.
  * @ignore
+ * @internal
  */
 export class GLSamplerCache {
 	/**
 	 * @param {WebGL2RenderingContext} gl - the owning context
 	 * @ignore
+	 * @internal
 	 */
 	constructor(gl) {
 		this.gl = gl;
@@ -51,6 +53,7 @@ export class GLSamplerCache {
 	 * @param {boolean} [mipmap=false] - sample the mip chain (trilinear)
 	 * @returns {WebGLSampler} the shared sampler
 	 * @ignore
+	 * @internal
 	 */
 	get(filter, repeat = "no-repeat", mipmap = false) {
 		if (
@@ -98,6 +101,7 @@ export class GLSamplerCache {
 	 * @param {WebGLSampler|null} sampler - the sampler, or `null` to fall back
 	 * to the texture's own state
 	 * @ignore
+	 * @internal
 	 */
 	bind(unit, sampler) {
 		if (this.bound[unit] === sampler) {
@@ -114,6 +118,7 @@ export class GLSamplerCache {
 	 * @param {boolean} [destroy=false] - whether to `deleteSampler` first
 	 * (orderly teardown; skip it for a lost context)
 	 * @ignore
+	 * @internal
 	 */
 	releaseAll(destroy = false) {
 		if (destroy === true) {

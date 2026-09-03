@@ -17,10 +17,12 @@ function normalizeRepeat(repeat) {
 /**
  * a basic texture cache object
  * @ignore
+ * @internal
  */
 class TextureCache {
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	constructor(renderer, max_size = Infinity) {
 		// reference to the renderer that owns this cache
@@ -78,6 +80,7 @@ class TextureCache {
 	 * clearing it drives the allocator directly.
 	 * @returns {Set<number>} the occupied units
 	 * @ignore
+	 * @internal
 	 */
 	get usedUnits() {
 		return this.slotTable.used;
@@ -90,6 +93,7 @@ class TextureCache {
 	 * allocator rather than leaving the two disagreeing.
 	 * @returns {number} the unit count
 	 * @ignore
+	 * @internal
 	 */
 	get max_size() {
 		return this.slotTable.capacity;
@@ -101,6 +105,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	clear() {
 		this.cache.clear();
@@ -111,6 +116,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	allocateTextureUnit() {
 		// the policy — free-slot search skipping reservations, and flush +
@@ -125,6 +131,7 @@ class TextureCache {
 	 * stays reserved until the last one releases it.
 	 * @param {number} unit - the texture unit to reserve
 	 * @ignore
+	 * @internal
 	 */
 	reserveUnit(unit) {
 		this.reservedUnits.set(unit, (this.reservedUnits.get(unit) || 0) + 1);
@@ -135,6 +142,7 @@ class TextureCache {
 	 * allocatable again once its last holder releases it.
 	 * @param {number} unit - the texture unit to release
 	 * @ignore
+	 * @internal
 	 */
 	releaseUnit(unit) {
 		const count = this.reservedUnits.get(unit);
@@ -149,6 +157,7 @@ class TextureCache {
 	 * Reset all texture unit assignments without clearing the texture cache.
 	 * Used by multi-texture batching when the shader's sampler range is exceeded.
 	 * @ignore
+	 * @internal
 	 */
 	resetUnitAssignments() {
 		this.units.clear();
@@ -158,6 +167,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 *
 	 * Frees the single `(source, repeat)` unit matching the texture's
 	 * current `repeat` field — deliberately granular, so freeing one live
@@ -184,6 +194,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 *
 	 * Free every texture unit allocated for the texture's source, across
 	 * ALL repeat modes. A single source can hold several `(source, repeat)`
@@ -204,6 +215,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * @param {string} [repeat] - overrides the texture's own `repeat` for the
 	 * unit lookup — sampler state per use (a mesh's `textureRepeat`), so one
 	 * source can be sampled with several wrap modes without mutating the
@@ -231,6 +243,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * return every texture unit allocated for the given texture's source,
 	 * across ALL repeat modes — the unload-time counterpart of the per-use
 	 * `getUnit(texture, repeat)` override (#1503): a single source can hold
@@ -246,6 +259,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * return the texture unit for the given texture, or -1 if not allocated
 	 * @param {string} [repeat] - same per-use wrap override as {@link getUnit}
 	 */
@@ -260,6 +274,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * cache the textureAltas for the given image
 	 */
 	set(image, textureAtlas) {
@@ -268,6 +283,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	has(image) {
 		return this.cache.has(image);
@@ -275,6 +291,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * return the textureAltas for the given image
 	 */
 	get(image, atlas) {
@@ -316,6 +333,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	delete(image) {
 		if (this.cache.has(image)) {
@@ -339,6 +357,7 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	tint(src, color) {
 		// make sure the src is in the cache

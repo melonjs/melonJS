@@ -7,6 +7,7 @@
  * form leaves the shader with no bound vertex data and the rasterizer
  * silently degenerates every triangle.
  * @ignore
+ * @internal
  */
 export function extractAttributes(gl, shader) {
 	const attributes = {};

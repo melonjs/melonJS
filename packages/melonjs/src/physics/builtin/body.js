@@ -67,6 +67,7 @@ export default class Body {
 			 * mis-doc and broke downstream `shapes.length` reads in
 			 * TypeScript.
 			 * @ignore
+			 * @internal
 			 * @type {(Polygon|Line|Ellipse|Point)[]}
 			 */
 			this.shapes = [];
@@ -76,6 +77,7 @@ export default class Body {
 		 * The body collision mask, that defines what should collide with what.<br>
 		 * (by default will collide with all entities)
 		 * @ignore
+		 * @internal
 		 * @type {number}
 		 * @default collision.types.ALL_OBJECT
 		 * @see collision.types
@@ -562,6 +564,7 @@ export default class Body {
 	 * pivot — see `MatterAdapter.syncFromPhysics`). Internal helper used
 	 * by both the per-step integrator and {@link Body#setAngle}.
 	 * @ignore
+	 * @internal
 	 */
 	_syncAngleTransform() {
 		const t = this.ancestor?.currentTransform;
@@ -856,6 +859,7 @@ export default class Body {
 	 * large body more. Clamped to a minimum of 1 to keep divisions
 	 * well-defined even on degenerate 0-size bodies.
 	 * @ignore
+	 * @internal
 	 */
 	_recomputePseudoInertia() {
 		const w = this.bounds.width;
@@ -1336,6 +1340,7 @@ export default class Body {
 	/**
 	 * Destroy function<br>
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// push back instance into object pool.

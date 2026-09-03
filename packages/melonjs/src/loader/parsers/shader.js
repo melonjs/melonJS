@@ -42,6 +42,7 @@ on(VIDEO_INIT, (renderer) => {
  * @returns {ShaderEffect|GLShader} the compiled asset, flagged `shared`
  * @throws if called before any `app.init()` resolved (no renderer to compile against)
  * @ignore
+ * @internal
  */
 export function compileShaderAsset(source) {
 	if (typeof _renderer === "undefined") {
@@ -127,6 +128,7 @@ export function compileShaderAsset(source) {
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadShader(data, onload, onerror, settings) {
 	if (typeof shaderList[data.name] !== "undefined") {

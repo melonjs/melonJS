@@ -18,6 +18,7 @@ import { WebGLBatcher } from "./batcher.js";
  * deleted textures drop their records with them.
  * @type {WeakMap<WebGLTexture, {width: number, height: number, levels: number, format: number}>}
  * @ignore
+ * @internal
  */
 const immutableStorage = new WeakMap();
 
@@ -25,6 +26,7 @@ const immutableStorage = new WeakMap();
  * full mip chain length for a base size (immutable storage allocates the
  * whole pyramid up front)
  * @ignore
+ * @internal
  */
 function mipLevels(w, h) {
 	return Math.floor(Math.log2(Math.max(w, h))) + 1;
@@ -34,6 +36,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	/**
 	 * Initialize the textured batcher
 	 * @ignore
+	 * @internal
 	 */
 	init(renderer, settings) {
 		super.init(renderer, settings);
@@ -45,6 +48,7 @@ export class MaterialBatcher extends WebGLBatcher {
 		/**
 		 * bound textures by unit
 		 * @ignore
+		 * @internal
 		 */
 		this.boundTextures = [];
 
@@ -57,12 +61,14 @@ export class MaterialBatcher extends WebGLBatcher {
 		 * Text / gradient re-bake never re-allocates.
 		 * @type {Set<number>}
 		 * @ignore
+		 * @internal
 		 */
 		this.dirtyUnits = new Set();
 
 		/**
 		 * track the current sampler unit to avoid redundant gl.uniform1i calls
 		 * @ignore
+		 * @internal
 		 */
 		this.currentSamplerUnit = -1;
 
@@ -96,6 +102,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	 * forget those too; without that they'd assume the extra texture is still
 	 * resident and skip re-binding it after the reset.
 	 * @ignore
+	 * @internal
 	 */
 	_onTextureCacheReset() {
 		this.boundTextures.length = 0;
@@ -115,6 +122,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	 * video frames after a mesh pass.
 	 * @type {number}
 	 * @ignore
+	 * @internal
 	 */
 	get currentTextureUnit() {
 		return this.renderer._activeTextureUnit;
@@ -130,6 +138,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	 * accumulating handlers (relevant on context loss / renderer
 	 * teardown).
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		if (this._onCacheReset) {
@@ -142,6 +151,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	/**
 	 * Reset batcher internal state
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		super.reset();
@@ -425,6 +435,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	 * {@link MaterialBatcher#unbindTexture2D}.
 	 * @param {number} unit - the texture unit whose content is stale
 	 * @ignore
+	 * @internal
 	 */
 	markTextureDirty(unit) {
 		this.dirtyUnits.add(unit);
@@ -454,6 +465,7 @@ export class MaterialBatcher extends WebGLBatcher {
 	 * too.
 	 * @param {number} unit - the GL texture unit to invalidate
 	 * @ignore
+	 * @internal
 	 */
 	invalidateUnit(unit) {
 		delete this.boundTextures[unit];
@@ -464,6 +476,7 @@ export class MaterialBatcher extends WebGLBatcher {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * @param {TextureAtlas|TextureResource} texture
 	 * @param {number} [w] - ignored when the source has its own `width` (the
 	 *   common case); kept for the legacy signature where callers passed a

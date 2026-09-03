@@ -172,6 +172,7 @@ export class Light3d extends Renderable {
 	 * Register with the active stage's 3D-light set on activation (when added to
 	 * a rooted container), mirroring {@link Light2d}.
 	 * @ignore
+	 * @internal
 	 */
 	override onActivateEvent() {
 		state.current()?._registerLight3d(this);
@@ -180,6 +181,7 @@ export class Light3d extends Renderable {
 	/**
 	 * Deregister from the active stage when removed from the world.
 	 * @ignore
+	 * @internal
 	 */
 	override onDeactivateEvent() {
 		state.current()?._unregisterLight3d(this);
@@ -188,6 +190,7 @@ export class Light3d extends Renderable {
 	/**
 	 * A light has no visual representation.
 	 * @ignore
+	 * @internal
 	 */
 	override draw() {}
 }

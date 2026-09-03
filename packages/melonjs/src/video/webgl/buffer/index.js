@@ -3,6 +3,7 @@ import IndexBuffer from "../../buffer/index.js";
 /**
  * A WebGL Index Buffer — extends {@link IndexBuffer} with GL buffer binding and upload.
  * @ignore
+ * @internal
  */
 
 export default class WebGLIndexBuffer extends IndexBuffer {

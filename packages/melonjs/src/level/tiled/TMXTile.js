@@ -30,6 +30,7 @@ const FLIP_AD_BIT = 1 << 2;
  * @param {number} height - tile height in pixels
  * @returns {Matrix2d} the same matrix, for chaining
  * @ignore
+ * @internal
  */
 export function buildFlipTransform(transform, flipMask, width, height) {
 	const halfW = width / 2;
@@ -92,6 +93,7 @@ export default class Tile extends Bounds {
 		 * the tile transformation matrix (if flipped)
 		 * @type {Matrix2d|null}
 		 * @ignore
+		 * @internal
 		 */
 		this.currentTransform = null;
 
@@ -151,6 +153,7 @@ export default class Tile extends Bounds {
 	 * set the transformation matrix for this tile
 	 * @param {Matrix2d} transform - the transformation matrix to apply
 	 * @ignore
+	 * @internal
 	 */
 	setTileTransform(transform) {
 		const halfW = this.width / 2;

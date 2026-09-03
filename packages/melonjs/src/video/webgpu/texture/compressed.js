@@ -6,6 +6,7 @@
  * "texture-compression-bc", "texture-compression-etc2",
  * "texture-compression-astc" (PVRTC has no WebGPU equivalent).
  * @ignore
+ * @internal
  */
 export const COMPRESSED_FORMATS = new Map([
 	// S3TC / BC (texture-compression-bc)
@@ -54,6 +55,7 @@ export const COMPRESSED_FORMATS = new Map([
  * the optional device features the renderer requests when the adapter
  * offers them
  * @ignore
+ * @internal
  */
 export const COMPRESSION_FEATURES = [
 	"texture-compression-bc",
@@ -70,6 +72,7 @@ export const COMPRESSION_FEATURES = [
  * @param {object} image - the parsed CompressedImage ({mipmaps, format})
  * @param {object} metrics - the COMPRESSED_FORMATS entry for image.format
  * @ignore
+ * @internal
  */
 export function uploadCompressedTexture(device, texture, image, metrics) {
 	const mipmaps = image.mipmaps;

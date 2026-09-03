@@ -55,6 +55,7 @@ const SAT_LOOKUP = {
  * Shape-type pairs already reported as unsupported, so a mismatched pair
  * warns once instead of once per frame per pair.
  * @ignore
+ * @internal
  */
 const reportedMissingPairs = new Set();
 
@@ -94,12 +95,14 @@ class Detector {
 		 * the previous step. Diffed against `_frameSeen` at end of step
 		 * to fire `onCollisionEnd` for pairs that just separated.
 		 * @ignore
+		 * @internal
 		 */
 		this._activePairs = new Map();
 		/**
 		 * Pairs seen during the current step. Built up as the per-object
 		 * `collisions()` calls run; consumed by `endFrame()`.
 		 * @ignore
+		 * @internal
 		 */
 		this._frameSeen = new Map();
 		/**
@@ -116,6 +119,7 @@ class Detector {
 		 * world mutation). Slot 0 is used for the original-a-side
 		 * dispatch, slot 1 for the original-b-side.
 		 * @ignore
+		 * @internal
 		 */
 		this._symViews = [
 			{
@@ -163,9 +167,13 @@ class Detector {
 		 * `endFrame()` to fire `onShapeCollisionEnd`. Populated only when someone
 		 * subscribes, so a game that does not use the feature keeps these empty.
 		 * @ignore
+		 * @internal
 		 */
 		this._activeShapePairs = new Map();
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._frameShapeSeen = new Map();
 
 		/**
@@ -174,6 +182,7 @@ class Detector {
 		 * `indexShapeA` are always the RECEIVER's shape. Two slots because both
 		 * sides may be live at once when a handler mutates the world.
 		 * @ignore
+		 * @internal
 		 */
 		this._shapeViews = [
 			{
@@ -217,10 +226,14 @@ class Detector {
 		 * single pre-bound function rather than a closure allocated per body pair
 		 * per frame.
 		 * @ignore
+		 * @internal
 		 */
 		this._contactObjA = null;
 		this._contactObjB = null;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._onShapeContact = (shapeA, indexA, shapeB, indexB, isTrigger, res) => {
 			this._dispatchShapeContact(
 				shapeA,
@@ -241,6 +254,7 @@ class Detector {
 	 * `overlapN` / `overlapV` negated, `normal = +overlapN` (the MTV
 	 * of original b).
 	 * @ignore
+	 * @internal
 	 */
 	_fillSymView(slot, satResponse, flip) {
 		const view = this._symViews[slot];
@@ -291,6 +305,7 @@ class Detector {
 	 * "seen this frame" set so the end-of-step diff can fire
 	 * `onCollisionEnd` for pairs that no longer overlap.
 	 * @ignore
+	 * @internal
 	 */
 	beginFrame() {
 		this._frameSeen.clear();
@@ -303,6 +318,7 @@ class Detector {
 	 *   - pairs in active but not seen → fire onCollisionEnd
 	 *   - swap active ← seen for the next step's diff
 	 * @ignore
+	 * @internal
 	 */
 	endFrame() {
 		for (const [key, pair] of this._activePairs) {
@@ -369,6 +385,7 @@ class Detector {
 	 * have separated, so every geometric field is zeroed rather than left
 	 * holding the last overlap, which would read as a live contact.
 	 * @ignore
+	 * @internal
 	 */
 	_fillEndedView(slot, receiver, partner, ownShape, otherShape) {
 		const view = this._shapeViews[slot];
@@ -399,6 +416,7 @@ class Detector {
 	 * using their GUID. Returns undefined if either lacks a GUID (defensive
 	 * — detached or pool-recycled objects mid-step).
 	 * @ignore
+	 * @internal
 	 */
 	_pairKey(a, b) {
 		const ga = a.GUID;
@@ -421,6 +439,7 @@ class Detector {
 	 * body has no contact left to resolve, so this reports failure and the
 	 * caller falls through instead of throwing.
 	 * @ignore
+	 * @internal
 	 * @returns {boolean} true when the pair was re-measured
 	 */
 	_retest(bodyA, bodyB, shapeA, shapeB, response) {
@@ -459,6 +478,7 @@ class Detector {
 	 * derived from array position, because `removeShape()` re-indexes every
 	 * surviving shape.
 	 * @ignore
+	 * @internal
 	 */
 	_shapePairKey(a, b, shapeA, shapeB) {
 		const ga = a.GUID;
@@ -491,6 +511,7 @@ class Detector {
 	 * never declares these handlers performs exactly the narrowphase work it
 	 * did before the feature existed.
 	 * @ignore
+	 * @internal
 	 */
 	_wantsShapeContacts(obj) {
 		return (
@@ -505,6 +526,7 @@ class Detector {
 	 * `_fillSymView`: `flip=false` builds the view for `response.a`'s side,
 	 * `flip=true` for `response.b`'s, so `shapeA` is always the receiver's.
 	 * @ignore
+	 * @internal
 	 */
 	_fillShapeView(slot, satResponse, flip, shapeA, shapeB, isTrigger) {
 		const view = this._shapeViews[slot];
@@ -555,6 +577,7 @@ class Detector {
 	 * Fire Start / Active for one overlapping shape pair. Called back from
 	 * `collides()` once per pair, in scan order.
 	 * @ignore
+	 * @internal
 	 */
 	_dispatchShapeContact(shapeA, shapeB, isTrigger, response) {
 		const objA = this._contactObjA;
@@ -607,6 +630,7 @@ class Detector {
 	 * would hold two renderables (and everything they reach) against garbage
 	 * collection until the next subscribed pair happened to overwrite them.
 	 * @ignore
+	 * @internal
 	 */
 	_clearContactPair() {
 		this._contactObjA = null;
@@ -799,6 +823,7 @@ class Detector {
 	/**
 	 * find all the collisions for the specified object using a broadphase algorithm
 	 * @ignore
+	 * @internal
 	 * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} objA - object to be tested for collision
 	 * @returns {boolean} in case of collision, false otherwise
 	 */
@@ -1074,6 +1099,7 @@ class Detector {
 	/**
 	 * Checks for object colliding with the given line
 	 * @ignore
+	 * @internal
 	 * @param {Line} line - line to be tested for collision
 	 * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
 	 * @returns {Array.<Renderable>} an array of intersecting physic objects

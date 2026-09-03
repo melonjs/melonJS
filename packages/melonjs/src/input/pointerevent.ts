@@ -26,6 +26,7 @@ interface PointerHandler {
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
  * @ignore
+ * @internal
  */
 const T_POINTERS: Pointer[] = [];
 
@@ -38,6 +39,7 @@ let currentPointer: Rect;
 /**
  * reference to the active application instance
  * @ignore
+ * @internal
  */
 export let _app: Application;
 on(GAME_INIT, (app: Application) => {
@@ -112,12 +114,14 @@ const pointerEventMap: Record<string, string[]> = {
 /**
  * Array of normalized events (mouse, touch, pointer)
  * @ignore
+ * @internal
  */
 const normalizedEvents: Pointer[] = [];
 
 /**
  * addEventListerner for the specified event list and callback
  * @ignore
+ * @internal
  */
 function registerEventListener(
 	eventList: string[],
@@ -135,6 +139,7 @@ function registerEventListener(
 /**
  * enable pointer event (Pointer/Mouse/Touch)
  * @ignore
+ * @internal
  */
 function enablePointerEvent(): void {
 	if (!pointerInitialized) {
@@ -232,6 +237,7 @@ function enablePointerEvent(): void {
 
 /**
  * @ignore
+ * @internal
  */
 function findActiveEvent(
 	activeEventList: string[],
@@ -247,6 +253,7 @@ function findActiveEvent(
 
 /**
  * @ignore
+ * @internal
  */
 function findAllActiveEvents(
 	activeEventList: string[],
@@ -265,6 +272,7 @@ function findAllActiveEvents(
 
 /**
  * @ignore
+ * @internal
  */
 function triggerEvent(
 	handlers: PointerHandler,
@@ -292,6 +300,7 @@ function triggerEvent(
 /**
  * propagate events to registered objects
  * @ignore
+ * @internal
  */
 function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 	let handled = false;
@@ -501,6 +510,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 /**
  * translate event coordinates
  * @ignore
+ * @internal
  */
 function normalizeEvent(originalEvent: any): Pointer[] {
 	let _pointer: Pointer;
@@ -550,6 +560,7 @@ function normalizeEvent(originalEvent: any): Pointer[] {
 /**
  * mouse/touch/pointer event management (move)
  * @ignore
+ * @internal
  */
 function onMoveEvent(e: Event): void {
 	// dispatch mouse event to registered object
@@ -560,6 +571,7 @@ function onMoveEvent(e: Event): void {
 /**
  * mouse/touch/pointer event management (start/down, end/up)
  * @ignore
+ * @internal
  */
 function onPointerEvent(e: Event): void {
 	// normalize eventTypes

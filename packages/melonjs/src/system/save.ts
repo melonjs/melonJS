@@ -51,6 +51,7 @@ try {
 /**
  * a function to check if the given key is a reserved word
  * @ignore
+ * @internal
  */
 function isReserved(key: string) {
 	return key === "add" || key === "remove";

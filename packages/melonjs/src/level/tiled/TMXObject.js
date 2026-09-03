@@ -14,6 +14,7 @@ import { applyTMXProperties } from "./TMXUtils.js";
  * @param {object} settings - TMX object settings
  * @returns {string} one of "ellipse", "capsule", "point", "polygon", "polyline", "rectangle"
  * @ignore
+ * @internal
  */
 function detectShape(settings) {
 	if (typeof settings.ellipse !== "undefined") {
@@ -38,6 +39,7 @@ function detectShape(settings) {
  * a TMX Object defintion, as defined in Tiled
  * (Object definition is translated into the virtual `app.world` using `me.Renderable`)
  * @ignore
+ * @internal
  */
 export default class TMXObject {
 	constructor(map, settings, z) {
@@ -208,6 +210,7 @@ export default class TMXObject {
 	/**
 	 * set the object image (for Tiled Object)
 	 * @ignore
+	 * @internal
 	 */
 	setTile(tilesets) {
 		const tileset = tilesets.getTilesetByGid(this.gid);
@@ -333,6 +336,7 @@ export default class TMXObject {
 	/**
 	 * getObjectPropertyByName
 	 * @ignore
+	 * @internal
 	 */
 	getObjectPropertyByName(name) {
 		return this[name];

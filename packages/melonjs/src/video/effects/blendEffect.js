@@ -111,6 +111,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * activates that varying on its own.
  * @see {@link https://www.w3.org/TR/compositing-1/#blending}
  * @ignore
+ * @internal
  */
 export default class BlendEffect extends ShaderEffect {
 	/**
@@ -182,6 +183,7 @@ export default class BlendEffect extends ShaderEffect {
 	 * @returns {boolean} false when the mode is not an advanced blend mode, in
 	 * which case the uniform is left untouched
 	 * @ignore
+	 * @internal
 	 */
 	setBlendMode(mode) {
 		const index = advancedBlendModeIndex(mode);

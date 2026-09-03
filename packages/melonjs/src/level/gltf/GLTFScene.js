@@ -279,6 +279,7 @@ export default class GLTFScene {
 	 * @param {number} scale - the scene's world scale (positions/ranges follow it)
 	 * @param {object} options - the `addTo` options (`lights` toggle)
 	 * @ignore
+	 * @internal
 	 */
 	_addLights(container, zSign, scale, options) {
 		if (options.lights === false) {
@@ -353,6 +354,7 @@ export default class GLTFScene {
 	 * the meshes and lights are ordinary world children, removed by the
 	 * director's `container.reset()` on the next load.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {}
 }
@@ -377,6 +379,7 @@ export default class GLTFScene {
  * @param {InstancedMesh} mesh - the mesh to fill
  * @param {object} instances - `{count, translation, rotation, scale}`
  * @ignore
+ * @internal
  */
 export function fillInstances(mesh, instances) {
 	const { count, translation, rotation, scale } = instances;

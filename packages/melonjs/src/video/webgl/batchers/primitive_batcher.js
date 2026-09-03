@@ -21,6 +21,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	/**
 	 * Initialize the compositor
 	 * @ignore
+	 * @internal
 	 */
 	init(renderer) {
 		super.init(renderer, {
@@ -52,6 +53,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 		/**
 		 * the current line width applied to the shader uniform
 		 * @ignore
+		 * @internal
 		 */
 		this.currentLineWidth = 1;
 	}
@@ -73,6 +75,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	/**
 	 * Reset compositor internal state
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		super.reset();
@@ -148,6 +151,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	 * Push `verts[start..end)` into the vertex buffer, transformed by the
 	 * current view matrix. The caller guarantees the range fits.
 	 * @ignore
+	 * @internal
 	 */
 	#pushRange(verts, start, end, colorUint32, z) {
 		// the shared neutral range push (z-column-aware transform) — one
@@ -176,6 +180,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	 *   flip triangle winding at a boundary — irrelevant here, the primitive
 	 *   pipeline never enables face culling.)
 	 * @ignore
+	 * @internal
 	 */
 	#drawVerticesChunked(mode, verts, vertexCount, colorUint32, z) {
 		const gl = this.gl;
@@ -246,6 +251,7 @@ export default class PrimitiveBatcher extends WebGLBatcher {
 	 * @param {Point[]} verts - line vertices in pairs [from, to, from, to, ...]
 	 * @param {number} vertexCount - number of vertices
 	 * @ignore
+	 * @internal
 	 */
 	#expandLinesToTriangles(verts, vertexCount) {
 		// switch to TRIANGLES mode, then delegate the expansion to the

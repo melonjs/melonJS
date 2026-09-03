@@ -46,6 +46,7 @@ const EXT_REQUIREMENTS = {
  * @param {string} imgExt - file extension
  * @returns {boolean}
  * @ignore
+ * @internal
  */
 function hasRequiredExtension(imgExt) {
 	const requirements = EXT_REQUIREMENTS[imgExt];

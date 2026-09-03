@@ -135,6 +135,7 @@ export default class Trigger extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	getTriggerSettings() {
 		const world = this.ancestor.getRootAncestor();

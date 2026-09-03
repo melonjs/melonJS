@@ -22,6 +22,7 @@ import * as device from "../system/device.js";
  *   `OffscreenCanvas` if the platform supports it
  * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas of the given size
  * @ignore
+ * @internal
  */
 export function createCanvas(width, height, returnOffscreenCanvas = false) {
 	if (width === 0 || height === 0) {

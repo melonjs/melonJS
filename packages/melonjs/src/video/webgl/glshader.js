@@ -483,6 +483,7 @@ export default class GLShader {
 	 *   `get`, or null when the module failed validation on this device
 	 *   generation (the host then uses its built-in family)
 	 * @ignore
+	 * @internal
 	 */
 	registerWGSL(cache, host, bindGroupLayouts, vertexLayoutKey) {
 		// epoch first, invalid-gate second: a device loss replaces the cache

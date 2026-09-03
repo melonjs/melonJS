@@ -90,6 +90,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	/**
 	 * Initialize the mesh batcher
 	 * @ignore
+	 * @internal
 	 */
 	init(renderer) {
 		super.init(renderer, {
@@ -216,6 +217,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * `aVertex` (3) + `aRegion` (2) + `aColor` (4) = 9 floats. Subclasses
 	 * (e.g. {@link LitMeshBatcher}) append their own attributes.
 	 * @ignore
+	 * @internal
 	 */
 	_attributeLayout(_renderer) {
 		return [
@@ -249,6 +251,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * The shader sources for this batcher (unlit by default). Subclasses
 	 * override to supply a lit shader.
 	 * @ignore
+	 * @internal
 	 */
 	_shaderSources() {
 		return { vertex: meshVertex, fragment: meshFragment };
@@ -263,6 +266,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * with the built-in one on this batcher (e.g. `drawMesh` swapping a custom
 	 * shader in and back out).
 	 * @ignore
+	 * @internal
 	 */
 	useShader(shader) {
 		if (
@@ -293,6 +297,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * renderer teardown). Delegates to `MaterialBatcher.destroy()` for
 	 * the texture-cache-reset listener.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// variants hold GL programs AND stay subscribed to the context-loss
@@ -316,6 +321,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * referencing the old ones would draw from freed memory. Meshes rebuild
 	 * lazily on their next draw.
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		this.releaseAllRetained();
@@ -370,6 +376,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * clears it, so this batcher being current implies a writable depth buffer,
 	 * without which `gl.clear(DEPTH_BUFFER_BIT)` would silently do nothing.
 	 * @ignore
+	 * @internal
 	 */
 	updatePassState() {
 		if (this.renderer._meshDepthDirty) {
@@ -407,6 +414,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {object} _mesh - the source mesh (unused here; for subclasses)
 	 * @param {number} _i3 - the source vertex's `index * 3` (for subclasses)
 	 * @ignore
+	 * @internal
 	 */
 	_pushVertex(vertexData, x, y, z, u, v, color, _mesh, _i3) {
 		vertexData.pushMesh(x, y, z, u, v, color);
@@ -441,6 +449,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {Matrix3d} modelMatrix - the mesh's own placement, or identity when its vertices are already positioned
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @ignore
+	 * @internal
 	 */
 	/**
 	 * Write one mesh's model-space geometry into `out` in this batcher's
@@ -453,6 +462,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {Float32Array} out - destination scratch, at least `vertexCount × vertexSize` long
 	 * @returns {number} number of floats written
 	 * @ignore
+	 * @internal
 	 */
 	buildRetainedVertexData(mesh, out) {
 		// the shared neutral builder — one copy for both backends
@@ -465,6 +475,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {object} mesh - the mesh whose geometry is wanted
 	 * @returns {RetainedGeometry} up-to-date geometry for the mesh
 	 * @ignore
+	 * @internal
 	 */
 	retainedGeometryFor(mesh) {
 		let geometry = this.retained.get(mesh);
@@ -502,6 +513,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {Matrix3d} modelMatrix - where the mesh sits in the world
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @ignore
+	 * @internal
 	 */
 	drawRetainedMesh(mesh, modelMatrix, tint) {
 		const gl = this.gl;
@@ -592,6 +604,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * last 2D draw left, and under `"additive"` a dark shadow would *brighten*
 	 * the ground.
 	 * @ignore
+	 * @internal
 	 */
 	beginBlendedDraw(mode = "normal") {
 		// straight through the renderer's tables rather than the cached
@@ -615,6 +628,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * `setBlendMode` with the cache invalidated restores both, and leaves the
 	 * cache reading exactly what it read before.
 	 * @ignore
+	 * @internal
 	 */
 	endBlendedDraw() {
 		const gl = this.gl;
@@ -641,6 +655,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {InstancedMesh} mesh - the mesh to draw
 	 * @returns {object} `{geometry, instances, vertexState}`
 	 * @ignore
+	 * @internal
 	 */
 	instancedStateFor(mesh) {
 		const gl = this.gl;
@@ -736,6 +751,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {object} layout - the instance record layout
 	 * @returns {GLShader} the shader for that combination
 	 * @ignore
+	 * @internal
 	 */
 	instancedShaderFor(layout) {
 		const fogDefine = this._fogDefine();
@@ -772,6 +788,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * Compiling it out means a scene that never enables fog runs the shader it
 	 * ran before fog existed, instruction for instruction.
 	 * @ignore
+	 * @internal
 	 */
 	_fogDefine() {
 		return this.renderer._fog3d !== null && this.renderer._fog3d !== undefined
@@ -795,6 +812,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * always the same set, since some flags never reach the fragment stage
 	 * @returns {GLShader} the program for that combination
 	 * @ignore
+	 * @internal
 	 */
 	shaderVariant(key, sources, vertexDefines, fragmentDefines) {
 		let shader = this.shaderVariants.get(key);
@@ -819,6 +837,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * swapping unconditionally threw that away silently.
 	 * @returns {boolean} true when the swap is safe
 	 * @ignore
+	 * @internal
 	 */
 	_ownsCurrentShader() {
 		return (
@@ -831,6 +850,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * The non-instanced mesh shader for the current fog state: the batcher's
 	 * own program while fog is off, a fog variant while it is on.
 	 * @ignore
+	 * @internal
 	 */
 	meshShader() {
 		const fogDefine = this._fogDefine();
@@ -849,6 +869,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * The instanced shader sources for this batcher (unlit by default).
 	 * Subclasses override to supply the lit pair.
 	 * @ignore
+	 * @internal
 	 */
 	_instancedShaderSources() {
 		return { vertex: meshInstancedVertex, fragment: meshFragment };
@@ -861,6 +882,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {object} layout - the instance record layout
 	 * @returns {object[]} attribute records
 	 * @ignore
+	 * @internal
 	 */
 	_instanceAttributeRecords(layout) {
 		const gl = this.gl;
@@ -886,6 +908,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {Matrix3d} modelMatrix - where the group sits in the world
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @ignore
+	 * @internal
 	 */
 	drawInstancedMesh(mesh, modelMatrix, tint) {
 		const gl = this.gl;
@@ -985,6 +1008,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * from getting coloured, glowing shadows.
 	 * @returns {GLShader} the shadow program
 	 * @ignore
+	 * @internal
 	 */
 	instancedShadowShader() {
 		const fogDefine = this._fogDefine();
@@ -1019,6 +1043,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {object} quadGeometry - the shared shadow quad's retained geometry
 	 * @returns {object} the per-mesh instanced state, with `shadowVertexState` built
 	 * @ignore
+	 * @internal
 	 */
 	instancedShadowStateFor(mesh, quadGeometry) {
 		// Deliberately NOT `instancedStateFor`. That one keys its staleness on
@@ -1094,6 +1119,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @param {object} quad - the shared shadow quad mesh
 	 * @ignore
+	 * @internal
 	 */
 	drawInstancedShadow(mesh, shadowMatrix, tint, quad) {
 		const gl = this.gl;
@@ -1129,6 +1155,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * Release the instance buffer and vertex state held for one mesh, if any.
 	 * @param {object} mesh - the mesh whose instance state should be freed
 	 * @ignore
+	 * @internal
 	 */
 	releaseInstanced(mesh) {
 		const state = this.instanced?.get(mesh);
@@ -1143,6 +1170,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	/**
 	 * Release every instance buffer this batcher holds.
 	 * @ignore
+	 * @internal
 	 */
 	releaseAllInstanced() {
 		this.instanced?.forEach((state) => {
@@ -1157,6 +1185,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * Release the retained geometry held for one mesh, if any.
 	 * @param {object} mesh - the mesh whose geometry should be freed
 	 * @ignore
+	 * @internal
 	 */
 	releaseRetained(mesh) {
 		this.releaseInstanced(mesh);
@@ -1170,6 +1199,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	/**
 	 * Release every retained geometry this batcher holds.
 	 * @ignore
+	 * @internal
 	 */
 	releaseAllRetained() {
 		this.releaseAllInstanced();
@@ -1190,6 +1220,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * as "the model vanished" rather than as an error, so say so explicitly.
 	 * @param {GLShader} shader - the shader about to be hosted
 	 * @ignore
+	 * @internal
 	 */
 	validateShaderLocations(shader) {
 		const firstTime =
@@ -1339,6 +1370,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * property of the mesh, not of the material group.
 	 * @returns {number} the texture unit the material landed on
 	 * @ignore
+	 * @internal
 	 */
 	applyMeshMaterial(mesh, texture = mesh.texture) {
 		// upload and activate the texture. The mesh's own `textureRepeat`
@@ -1515,6 +1547,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * unknown name.
 	 * @param {number} unit - the texture unit to sample from
 	 * @ignore
+	 * @internal
 	 */
 	bindSamplerUnit(unit) {
 		if (
@@ -1561,6 +1594,7 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {number} from - first index to accumulate
 	 * @param {number} length - how many indices to accumulate
 	 * @ignore
+	 * @internal
 	 */
 	accumulateRange(mesh, from, length) {
 		const vertices = mesh.vertices;

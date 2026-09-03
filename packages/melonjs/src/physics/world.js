@@ -25,6 +25,7 @@ import BuiltinAdapter from "./builtin/builtin-adapter.ts";
  * their own body storage). Frozen so `world.bodies.add(x)` throws
  * `TypeError` instead of silently mutating a throwaway.
  * @ignore
+ * @internal
  */
 const EMPTY_BODIES = Object.freeze(new Set());
 
@@ -182,6 +183,7 @@ export default class World extends Container {
 	 * broadphase nobody reads on `LEVEL_LOADED`, and it cannot be garbage
 	 * collected because both handlers close over it.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		off(GAME_RESET, this.reset, this);

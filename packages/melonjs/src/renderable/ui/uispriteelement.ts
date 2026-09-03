@@ -98,6 +98,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function callback for the pointerdown event
 	 * @ignore
+	 * @internal
 	 */
 	clicked(event: Pointer): boolean | void {
 		// Check if left mouse button is pressed
@@ -132,6 +133,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function callback for the pointerEnter event
 	 * @ignore
+	 * @internal
 	 */
 	enter(event: Pointer): void {
 		this.hover = true;
@@ -151,6 +153,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function callback for the pointerLeave event
 	 * @ignore
+	 * @internal
 	 */
 	leave(event: Pointer): void {
 		this.hover = false;
@@ -171,6 +174,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function callback for the pointerup event
 	 * @ignore
+	 * @internal
 	 */
 	release(event: Pointer): boolean | void {
 		if (!this.released) {
@@ -195,6 +199,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function callback for the tap and hold timer event
 	 * @ignore
+	 * @internal
 	 */
 	hold(): void {
 		timer.clearTimer(this.holdTimeout);
@@ -214,6 +219,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function called when added to the game world or a container
 	 * @ignore
+	 * @internal
 	 */
 	override onActivateEvent(): void {
 		// register pointer events
@@ -237,6 +243,7 @@ export default class UISpriteElement extends Sprite {
 	/**
 	 * function called when removed from the game world or a container
 	 * @ignore
+	 * @internal
 	 */
 	override onDeactivateEvent(): void {
 		// release pointer events

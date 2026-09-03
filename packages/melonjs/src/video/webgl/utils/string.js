@@ -1,6 +1,7 @@
 /**
  * clean the given source from space, comments, etc...
  * @ignore
+ * @internal
  */
 export function minify(src) {
 	// remove comments
@@ -29,6 +30,7 @@ export function minify(src) {
  * @param {string} defines - `#define` lines, each newline-terminated
  * @returns {string} the source with the defines injected
  * @ignore
+ * @internal
  */
 export function injectDefines(source, defines) {
 	if (!defines) {

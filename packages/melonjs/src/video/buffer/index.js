@@ -3,6 +3,7 @@
  * Manages a typed array of vertex indices for indexed drawing.
  * {@link WebGLIndexBuffer} extends this with GL-specific bind/upload operations.
  * @ignore
+ * @internal
  */
 
 export default class IndexBuffer {

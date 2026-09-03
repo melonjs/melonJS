@@ -22,6 +22,7 @@
  * buffer itself needs no recovery hook — the renderer re-runs each batcher's
  * `init()` on restore, which releases this block and builds a new one.
  * @ignore
+ * @internal
  */
 export default class UniformBlock {
 	/**
@@ -120,6 +121,7 @@ export default class UniformBlock {
 	 * @param {number} floats - length of the live prefix
 	 * @returns {boolean} true when an upload would be a no-op
 	 * @ignore
+	 * @internal
 	 */
 	#matches(floats) {
 		if (this._uploadedLength !== floats) {

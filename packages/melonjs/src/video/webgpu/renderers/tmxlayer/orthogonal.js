@@ -12,6 +12,7 @@ import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
  * interleaved with one vec4f at a 16-aligned offset, two f32 and the
  * trailing vec4f tint → 112 bytes
  * @ignore
+ * @internal
  */
 const TMX_UNIFORM_SIZE = 112;
 
@@ -33,6 +34,7 @@ const TMX_UNIFORM_SIZE = 112;
  * - pipelines flow through the registered `tmxlayer.wgsl` family, keyed
  *   on the frame's blend/stencil state like every other draw
  * @ignore
+ * @internal
  */
 export default class OrthogonalTMXLayerGPURenderer {
 	/**
@@ -98,6 +100,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * Retire every lookup texture and empty the local maps — called from
 	 * `WebGPURenderer.reset()` (GAME_RESET) so each level starts clean.
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		for (const resource of this.resources.values()) {
@@ -117,6 +120,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * @param {TMXLayer} layer - the layer
 	 * @returns {{texture: GPUTexture, view: GPUTextureView, version: number}}
 	 * @ignore
+	 * @internal
 	 */
 	getResource(layer) {
 		const device = this.renderer.device;
@@ -153,6 +157,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * @param {number} tileCount - atlas grid tile count
 	 * @returns {object|undefined} the lookup entry
 	 * @ignore
+	 * @internal
 	 */
 	getOrUpdateAnimLookup(tileset, tileCount) {
 		if (!tileset.isAnimated || tileset.animations.size === 0) {

@@ -85,6 +85,7 @@ function hasOffscreenCanvas() {
 /**
  * used by [un]watchAccelerometer()
  * @ignore
+ * @internal
  */
 function onDeviceMotion(e: DeviceMotionEvent) {
 	const accel = e.accelerationIncludingGravity;
@@ -99,6 +100,7 @@ function onDeviceMotion(e: DeviceMotionEvent) {
 /**
  * used by [un]watchDeviceOrientation()
  * @ignore
+ * @internal
  */
 export function onDeviceRotate(e: DeviceOrientationEvent) {
 	gamma = e.gamma ?? 0;
@@ -328,6 +330,7 @@ export function onReady(fn: () => void) {
  * Called once during boot to emit BLUR/FOCUS events when the
  * window or tab gains/loses focus.
  * @ignore
+ * @internal
  */
 export function initVisibilityEvents() {
 	if (typeof globalThis.addEventListener === "function") {

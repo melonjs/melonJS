@@ -53,12 +53,14 @@ export class Polygon {
 	 * to the position of the `n`th point. If you want to draw an edge normal, you must first
 	 * translate to the position of the starting point.
 	 * @ignore
+	 * @internal
 	 */
 	normals: Vector2d[];
 
 	/**
 	 * The bounding rectangle for this shape
 	 * @ignore
+	 * @internal
 	 */
 	private _bounds: Bounds;
 

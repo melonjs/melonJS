@@ -17,11 +17,20 @@ import { Interpolation, InterpolationFunction } from "./interpolation.js";
  * https://github.com/tweenjs/tween.js
  */
 
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 type OnStartCallback<T> = (this: T) => void;
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 type OnUpdateCallback<T> = (this: T, value: number) => void;
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 type OnCompleteCallback<T> = (this: T) => void;
 
 /**
@@ -97,6 +106,7 @@ export default class Tween {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	onResetEvent(object: object) {
 		this.setProperties(object);
@@ -104,6 +114,7 @@ export default class Tween {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	setProperties(object: object) {
 		// ensure any running tween is stopped before resetting (e.g., pool reuse)
@@ -139,6 +150,7 @@ export default class Tween {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	_resumeCallback(elapsed: number) {
 		this._isPaused = false;
@@ -147,12 +159,18 @@ export default class Tween {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onAfterUpdate(lastUpdate: number) {
 		this._lastUpdate = lastUpdate;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onTick(timestamp: number) {
 		if (!this._isPaused || this.updateWhenPaused) {
 			// compute delta from the raw RAF timestamp
@@ -164,12 +182,18 @@ export default class Tween {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onPause() {
 		this._isPaused = true;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onReset() {
 		if (!this.isPersistent) {
 			this.stop();
@@ -179,6 +203,7 @@ export default class Tween {
 	/**
 	 * Subscribe to the game loop events
 	 * @ignore
+	 * @internal
 	 */
 	_subscribe() {
 		if (!this._isRunning) {
@@ -199,6 +224,7 @@ export default class Tween {
 	/**
 	 * Unsubscribe from the game loop events
 	 * @ignore
+	 * @internal
 	 */
 	_unsubscribe() {
 		if (this._isRunning) {
@@ -435,7 +461,10 @@ export default class Tween {
 		return this;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	update(dt: number) {
 		// the original Tween implementation expect
 		// a timestamp and not a time delta

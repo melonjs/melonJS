@@ -12,6 +12,7 @@
  * - `screen_uv` is y-down (`0.5 - ndc.y * 0.5`): WebGPU texture row 0 is
  *   the top, so the capture is sampled without any flip
  * @ignore
+ * @internal
  */
 
 /**
@@ -22,6 +23,7 @@
  * @returns {{me: number, screenTexture: number, screenSamplerClamp: number, screenSamplerRepeat: number}}
  *   assigned binding indices (-1 when the builtin is unused)
  * @ignore
+ * @internal
  */
 export function assignBuiltinBindings(parsed) {
 	let next =
@@ -54,6 +56,7 @@ export function assignBuiltinBindings(parsed) {
  * @returns {{code: string, bindings: object}} the module text and the
  *   builtin binding assignment (consumed when building the bind group)
  * @ignore
+ * @internal
  */
 export function buildWGSLModule(body, parsed) {
 	const builtins = parsed.builtins;

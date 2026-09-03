@@ -17,6 +17,7 @@ import Renderer from "./../video/renderer.js";
  * in the scene shares one geometry and one texture, so a scene full of them
  * costs one draw each and no extra memory.
  * @ignore
+ * @internal
  */
 
 /**
@@ -24,6 +25,7 @@ import Renderer from "./../video/renderer.js";
  * smooth when a shadow fills a good part of the screen, small enough that the
  * whole thing is a rounding error against any real texture.
  * @ignore
+ * @internal
  */
 const FALLOFF_SIZE = 128;
 
@@ -36,6 +38,7 @@ const FALLOFF_SIZE = 128;
  * source on the CPU means the shadow survives a lost context for free. It is
  * also why this can be module-level while the quad below cannot.
  * @ignore
+ * @internal
  */
 let falloffCanvas = null;
 
@@ -48,6 +51,7 @@ let falloffCanvas = null;
  * of light, and nothing has to be re-baked to change it.
  * @returns {HTMLCanvasElement|OffscreenCanvas} the shared falloff canvas
  * @ignore
+ * @internal
  */
 export function getShadowFalloff() {
 	if (falloffCanvas !== null) {
@@ -90,6 +94,7 @@ export function getShadowFalloff() {
  * Drop the shared bake. Only the tests need this — the canvas is CPU-side and
  * costs 64 KB, so an application never has a reason to release it.
  * @ignore
+ * @internal
  */
 export function resetShadowFalloff() {
 	falloffCanvas = null;
@@ -111,6 +116,7 @@ export function resetShadowFalloff() {
  * @param {number} vertexCount - how many vertices to read
  * @returns {boolean} true when the geometry is not flat in Y
  * @ignore
+ * @internal
  */
 export function hasVerticalExtent(vertices, vertexCount) {
 	if (vertices === undefined || vertexCount === 0) {
@@ -148,6 +154,7 @@ export function hasVerticalExtent(vertices, vertexCount) {
  * Render space is Y-DOWN, so the ground plane is XZ and "up" is `-Y` — the
  * same convention `Sprite3d.WORLD_UP` states.
  * @ignore
+ * @internal
  */
 const QUAD_VERTICES = new Float32Array([
 	-0.5, 0, -0.5, 0.5, 0, -0.5, 0.5, 0, 0.5, -0.5, 0, 0.5,
@@ -179,6 +186,7 @@ const QUAD_NORMALS = new Float32Array([0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]);
  * circular import: `Mesh` owns the shadow, not the other way round)
  * @returns {object} the shared shadow quad for that tier
  * @ignore
+ * @internal
  */
 export function getShadowQuad(renderer, lit, MeshClass) {
 	let quads = renderer._shadowQuads;
@@ -234,6 +242,7 @@ export function getShadowQuad(renderer, lit, MeshClass) {
  * @param {number} version - the prototype's geometry version
  * @returns {object} the quad to draw this scatter's blobs from
  * @ignore
+ * @internal
  */
 export function getInstancedShadowQuad(mesh, MeshClass, halfX, halfZ, version) {
 	const key = `${mesh.lit === true}:${version}:${halfX}:${halfZ}`;
@@ -277,6 +286,7 @@ export function getInstancedShadowQuad(mesh, MeshClass, halfX, halfZ, version) {
  * teardown so the retained GPU geometry goes with it.
  * @param {object} renderer - the renderer being torn down
  * @ignore
+ * @internal
  */
 export function releaseShadowQuads(renderer) {
 	const quads = renderer._shadowQuads;

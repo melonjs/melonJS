@@ -41,6 +41,7 @@ function blockSize(format) {
  * @param {ArrayBuffer} data - the DDS file data
  * @returns {CompressedImage} a compressed texture object with mipmaps, width, height, format
  * @ignore
+ * @internal
  */
 export function parseDDS(data) {
 	// validate magic number

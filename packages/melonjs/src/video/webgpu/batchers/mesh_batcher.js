@@ -25,6 +25,7 @@ import WebGPUBatcher from "./webgpu_batcher.js";
  * w reserved) (16) + vec4 fogColor (16) + vec4 fogParams (16)
  * + vec4 fogHeight (16) → 256.
  * @ignore
+ * @internal
  */
 export const MESH_UNIFORM_SIZE = 256;
 
@@ -149,6 +150,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * The instanced variant options for this tier (unlit by default) — where
 	 * its instance attributes start and how its vertex stage places them.
 	 * @ignore
+	 * @internal
 	 */
 	instancedVariant() {
 		return UNLIT_INSTANCED;
@@ -166,6 +168,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {object} layout - the instance record layout
 	 * @returns {string} the family key
 	 * @ignore
+	 * @internal
 	 */
 	instancedFamilyFor(layout) {
 		const key = (layout.hasColor ? 1 : 0) | (layout.hasData ? 2 : 0);
@@ -207,6 +210,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {InstancedMesh} mesh - the mesh being drawn
 	 * @returns {WebGPUInstanceBuffer} the up-to-date buffer
 	 * @ignore
+	 * @internal
 	 */
 	instanceBufferFor(mesh) {
 		let buffer = this.instanced.get(mesh);
@@ -236,6 +240,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {Matrix3d} modelMatrix - where the group sits in the world
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @ignore
+	 * @internal
 	 */
 	drawInstancedMesh(mesh, modelMatrix, tint) {
 		const count = mesh.visibleInstanceCount;
@@ -328,6 +333,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {object} layout - the mesh's instance record layout
 	 * @returns {string} the pipeline family key
 	 * @ignore
+	 * @internal
 	 */
 	instancedShadowFamily(layout) {
 		// Keyed by the record shape, exactly as `instancedFamilyFor` is, and
@@ -380,6 +386,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @param {object} quad - the shared shadow quad
 	 * @ignore
+	 * @internal
 	 */
 	drawInstancedShadow(mesh, shadowMatrix, tint, quad) {
 		const count = mesh.visibleInstanceCount;
@@ -443,6 +450,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * Release the instance buffer held for one mesh, if any.
 	 * @param {object} mesh - the mesh whose instance records should be freed
 	 * @ignore
+	 * @internal
 	 */
 	releaseInstanced(mesh) {
 		const buffer = this.instanced?.get(mesh);
@@ -455,6 +463,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	/**
 	 * Release every instance buffer this batcher holds.
 	 * @ignore
+	 * @internal
 	 */
 	releaseAllInstanced() {
 		this.instanced?.forEach((buffer) => {
@@ -467,6 +476,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * the first-init settings — the lit subclass overrides the key and
 	 * appends its normal attribute
 	 * @ignore
+	 * @internal
 	 */
 	defaultSettings() {
 		return {
@@ -479,6 +489,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	/**
 	 * the WGSL module text of this family
 	 * @ignore
+	 * @internal
 	 */
 	shaderSource() {
 		return meshWGSL;
@@ -490,6 +501,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * unorm8x4 — the layout is shared with GL, where float colors dodge
 	 * NaN-pattern canonicalization on Metal-backed drivers) = 9 floats.
 	 * @ignore
+	 * @internal
 	 */
 	attributeLayout() {
 		return [
@@ -514,6 +526,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	/**
 	 * the shape signature keying the group-3 layout in the pipeline cache
 	 * @ignore
+	 * @internal
 	 */
 	uniformSignature() {
 		return `mesh:u${MESH_UNIFORM_SIZE}`;
@@ -530,6 +543,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * warn-and-degrade contract.
 	 * @returns {string} the pipeline-cache family key
 	 * @ignore
+	 * @internal
 	 */
 	activeShaderKey() {
 		const custom = this.customShader;
@@ -552,6 +566,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * the positional bind-group-layout list for this family — the lit
 	 * subclass swaps the group-2 filler for its light-block layout
 	 * @ignore
+	 * @internal
 	 */
 	bindGroupLayoutList(cache) {
 		return [
@@ -574,6 +589,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * sampler, one draw range at a time (#1573). The wrap override stays a
 	 * property of the mesh, not of the material group.
 	 * @ignore
+	 * @internal
 	 */
 	applyMeshMaterial(mesh, texture = mesh.texture) {
 		const renderer = this.renderer;
@@ -615,6 +631,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @param {object} mesh - the mesh (alphaCutoff / emissive source)
 	 * @ignore
+	 * @internal
 	 */
 	setPlacementUniforms(modelMatrix, tint, mesh) {
 		const renderer = this.renderer;
@@ -720,6 +737,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * `x, y, z, u, v, color` — subclasses override to append per-vertex
 	 * data matching their attribute layout.
 	 * @ignore
+	 * @internal
 	 */
 	pushVertex(vertexData, x, y, z, u, v, color, _mesh, _i3) {
 		vertexData.pushMesh(x, y, z, u, v, color);
@@ -763,6 +781,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {number} from - first index to accumulate
 	 * @param {number} length - how many indices to accumulate
 	 * @ignore
+	 * @internal
 	 */
 	accumulateRange(mesh, from, length) {
 		const vertices = mesh.vertices;
@@ -917,6 +936,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * bind group 2 — the unlit family interposes the shared empty group;
 	 * the lit subclass overrides with its light block
 	 * @ignore
+	 * @internal
 	 */
 	bindLights(pass) {
 		pass.setBindGroup(2, this.renderer.pipelineCache.emptyBindGroup);
@@ -930,6 +950,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {Float32Array} out - destination scratch
 	 * @returns {number} number of floats written
 	 * @ignore
+	 * @internal
 	 */
 	buildRetainedVertexData(mesh, out) {
 		return buildMeshVertexData(mesh, out, this.vertexSize);
@@ -941,6 +962,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {object} mesh - the mesh whose geometry is wanted
 	 * @returns {WebGPURetainedGeometry} up-to-date geometry for the mesh
 	 * @ignore
+	 * @internal
 	 */
 	retainedGeometryFor(mesh) {
 		let geometry = this.retained.get(mesh);
@@ -970,6 +992,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {Matrix3d} modelMatrix - where the mesh sits in the world
 	 * @param {number} tint - tint colour in UINT32 (argb) format
 	 * @ignore
+	 * @internal
 	 */
 	drawRetainedMesh(mesh, modelMatrix, tint) {
 		// anything queued must land first, or this draw would reorder
@@ -1049,6 +1072,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * Release the retained geometry held for one mesh, if any.
 	 * @param {object} mesh - the mesh whose geometry should be freed
 	 * @ignore
+	 * @internal
 	 */
 	releaseRetained(mesh) {
 		this.releaseInstanced(mesh);
@@ -1062,6 +1086,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	/**
 	 * Release every retained geometry this batcher holds.
 	 * @ignore
+	 * @internal
 	 */
 	releaseAllRetained() {
 		this.releaseAllInstanced();

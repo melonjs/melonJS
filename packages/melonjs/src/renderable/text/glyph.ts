@@ -4,10 +4,12 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
 /**
  * a glyph representing a single character in a font
  * @ignore
+ * @internal
  */
 export default class Glyph {
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	id: number;
 	x: number;
@@ -26,6 +28,7 @@ export default class Glyph {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	constructor() {
 		this.id = 0;
@@ -45,6 +48,7 @@ export default class Glyph {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	getKerning(ch: number): number {
 		if (this.kerning) {
@@ -58,6 +62,7 @@ export default class Glyph {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	setKerning(ch: number, value: number): void {
 		if (!this.kerning) {

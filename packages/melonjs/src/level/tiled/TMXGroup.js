@@ -7,6 +7,7 @@ import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
  * object group definition as defined in Tiled.
  * (group definition is translated into the virtual `app.world` using `me.Container`)
  * @ignore
+ * @internal
  */
 export default class TMXGroup {
 	constructor(map, data, z) {
@@ -100,6 +101,7 @@ export default class TMXGroup {
 	/**
 	 * reset function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// clear all allocated objects
@@ -109,6 +111,7 @@ export default class TMXGroup {
 	/**
 	 * return the object count
 	 * @ignore
+	 * @internal
 	 */
 	getObjectCount() {
 		return this.objects.length;
@@ -117,6 +120,7 @@ export default class TMXGroup {
 	/**
 	 * returns the object at the specified index
 	 * @ignore
+	 * @internal
 	 */
 	getObjectByIndex(idx) {
 		return this.objects[idx];

@@ -70,6 +70,7 @@ function levelBufferSize(format, width, height) {
  * @param {ArrayBuffer} data - the PVR file data
  * @returns {CompressedImage} a compressed texture object with mipmaps, width, height, format
  * @ignore
+ * @internal
  */
 export function parsePVR(data) {
 	const header = new Uint32Array(data, 0, PVR_HEADER_LENGTH);

@@ -9,6 +9,7 @@ import RenderTarget from "./rendertarget.ts";
  * - `isComplete = false` means even depth-only failed → callers should not
  *   render into the FBO (post-effects, blits, etc. will fail)
  * @ignore
+ * @internal
  */
 function attachDepthStencil(
 	gl,
@@ -79,6 +80,7 @@ function attachDepthStencil(
  * which can then be drawn to the screen through a post-process shader.
  * @augments RenderTarget
  * @ignore
+ * @internal
  */
 export default class WebGLRenderTarget extends RenderTarget {
 	/**
@@ -169,6 +171,7 @@ export default class WebGLRenderTarget extends RenderTarget {
 	 * Immutable storage can never be respecified, so a resize replaces the
 	 * texture object. Caller manages ACTIVE_TEXTURE save/restore.
 	 * @ignore
+	 * @internal
 	 */
 	_allocateColorTexture(width, height) {
 		const gl = this.gl;
@@ -199,6 +202,7 @@ export default class WebGLRenderTarget extends RenderTarget {
 	 * Falls back to depth-only when packed depth+stencil fails; warns
 	 * once if even depth-only is incomplete.
 	 * @ignore
+	 * @internal
 	 */
 	_applyDepthStencil(width, height) {
 		const result = attachDepthStencil(

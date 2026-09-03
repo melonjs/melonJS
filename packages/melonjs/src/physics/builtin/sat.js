@@ -18,18 +18,21 @@ import { Vector2d } from "../../math/vector2d.ts";
 /**
  * Constants for Vornoi regions
  * @ignore
+ * @internal
  */
 const LEFT_VORNOI_REGION = -1;
 
 /**
  * Constants for Vornoi regions
  * @ignore
+ * @internal
  */
 const MIDDLE_VORNOI_REGION = 0;
 
 /**
  * Constants for Vornoi regions
  * @ignore
+ * @internal
  */
 const RIGHT_VORNOI_REGION = 1;
 
@@ -37,6 +40,7 @@ const RIGHT_VORNOI_REGION = 1;
  * A pool of `Vector` objects that are used in calculations to avoid allocating memory.
  * @type {Array.<Vector2d>}
  * @ignore
+ * @internal
  */
 const T_VECTORS = [];
 for (let v = 0; v < 10; v++) {
@@ -45,6 +49,7 @@ for (let v = 0; v < 10; v++) {
 /**
  * Stack index for the T_VECTORS pool. Points to the next available slot.
  * @ignore
+ * @internal
  */
 let T_VECTORS_IDX = 10;
 
@@ -52,6 +57,7 @@ let T_VECTORS_IDX = 10;
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
  * @type {Array.<Array.<number>>}
  * @ignore
+ * @internal
  */
 const T_ARRAYS = [];
 for (let a = 0; a < 5; a++) {
@@ -60,6 +66,7 @@ for (let a = 0; a < 5; a++) {
 /**
  * Stack index for the T_ARRAYS pool. Points to the next available slot.
  * @ignore
+ * @internal
  */
 let T_ARRAYS_IDX = 5;
 
@@ -68,6 +75,7 @@ let T_ARRAYS_IDX = 5;
  * resulting in a one dimensional range of the minimum and
  * maximum value on that axis.
  * @ignore
+ * @internal
  * @param {Array.<Vector2d>} points - The points to flatten.
  * @param {Vector2d} normal - The unit vector axis to flatten on.
  * @param {Array.<number>} result - An array.  After calling this function,
@@ -96,6 +104,7 @@ function flattenPointsOn(points, normal, result) {
  * Check whether two convex polygons are separated by the specified
  * axis (must be a unit vector).
  * @ignore
+ * @internal
  * @param {Vector2d} aPos - The position of the first polygon.
  * @param {Vector2d} bPos - The position of the second polygon.
  * @param {Array.<Vector2d>} aPoints - The points in the first polygon.
@@ -184,6 +193,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  * </pre>
  *
  * @ignore
+ * @internal
  * @param {Vector2d} line - The line segment.
  * @param {Vector2d} point - The point.
  * @returns  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
@@ -210,6 +220,7 @@ function vornoiRegion(line, point) {
 /**
  * Checks whether polygons collide.
  * @ignore
+ * @internal
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Polygon} polyA - a reference to the object A Polygon to be tested
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
@@ -266,6 +277,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 /**
  * Check if two Ellipse collide.
  * @ignore
+ * @internal
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
@@ -342,6 +354,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 /**
  * Check if a polygon and an ellipse collide.
  * @ignore
+ * @internal
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Polygon} polyA - a reference to the object A Polygon to be tested
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
@@ -520,6 +533,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
  * runs testPolygonEllipse and reverses the response at the end.
  * @ignore
+ * @internal
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
  * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.

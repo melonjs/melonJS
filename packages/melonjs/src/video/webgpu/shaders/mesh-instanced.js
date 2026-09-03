@@ -37,6 +37,7 @@ import {
  * @param {string} options.body - the tier's placement body, which reads the `instance` matrix the generated preamble declares and must leave a `clip` value for the shared tail
  * @returns {string} the instanced module text
  * @ignore
+ * @internal
  */
 export function buildInstancedMeshWGSL(source, options) {
 	const {
@@ -167,7 +168,11 @@ export function buildInstancedMeshWGSL(source, options) {
 	return module;
 }
 
-/** the unlit tier's geometry inputs and placement body @ignore */
+/**
+ * the unlit tier's geometry inputs and placement body
+ * @ignore
+ * @internal
+ */
 export const UNLIT_INSTANCED = {
 	baseLocation: 3,
 	// 2 is vFogDepth in the base module now; the instance slot follows it
@@ -192,7 +197,11 @@ export const UNLIT_INSTANCED = {
 	].join("\n"),
 };
 
-/** the lit tier's geometry inputs, placement body and normal handling @ignore */
+/**
+ * the lit tier's geometry inputs, placement body and normal handling
+ * @ignore
+ * @internal
+ */
 export const LIT_INSTANCED = {
 	baseLocation: 4,
 	// 4 is vFogDepth in the base module now; the instance slot follows it

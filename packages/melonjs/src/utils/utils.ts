@@ -110,6 +110,7 @@ export function getUriFragment(url?: string) {
  * the idea here being to have a unique ID
  * per level / object
  * @ignore
+ * @internal
  */
 export function resetGUID(base: string, index = 0) {
 	// also ensure it's only 8bit ASCII characters
@@ -121,6 +122,7 @@ export function resetGUID(base: string, index = 0) {
  * create and return a very simple GUID
  * Game Unique ID
  * @ignore
+ * @internal
  */
 export function createGUID(index?: number) {
 	// `index` is the caller's own id where it has one (a Tiled object passes

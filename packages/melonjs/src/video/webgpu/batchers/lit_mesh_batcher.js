@@ -63,6 +63,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	/**
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	defaultSettings() {
 		const settings = super.defaultSettings();
@@ -73,11 +74,13 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	/**
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	/**
 	 * the lit tier's instanced variant: its geometry attributes run to
 	 * location 3 (the normal), so the instance slots start at 4
 	 * @ignore
+	 * @internal
 	 */
 	instancedVariant() {
 		return LIT_INSTANCED;
@@ -87,7 +90,11 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 		return litMeshWGSL;
 	}
 
-	/** add the normal attribute on top of the base layout. @ignore */
+	/**
+	 * add the normal attribute on top of the base layout.
+	 * @ignore
+	 * @internal
+	 */
 	attributeLayout() {
 		const attributes = super.attributeLayout();
 		attributes.push({
@@ -104,6 +111,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	 * build the light-block layout once per device (init drops it when the
 	 * device changes)
 	 * @ignore
+	 * @internal
 	 */
 	ensureLightsLayout() {
 		if (typeof this.lightsLayout === "undefined") {
@@ -129,6 +137,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	 * the lit family swaps the group-2 filler for the light-block layout
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	bindGroupLayoutList(cache) {
 		return [
@@ -139,7 +148,11 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 		];
 	}
 
-	/** push the 12-float lit vertex, appending the world-space normal. @ignore */
+	/**
+	 * push the 12-float lit vertex, appending the world-space normal.
+	 * @ignore
+	 * @internal
+	 */
 	pushVertex(vertexData, x, y, z, u, v, color, mesh, i3) {
 		const n = mesh.normals;
 		vertexData.pushMeshLit(
@@ -163,6 +176,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	 * @returns {number} number of floats written
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	buildRetainedVertexData(mesh, out) {
 		return buildLitMeshVertexData(mesh, out, this.vertexSize);
@@ -181,6 +195,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	 * ambient.
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	updatePassState() {
 		const renderer = this.renderer;
@@ -255,6 +270,7 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 	 * lit draws bind the light block at group 2
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	bindLights(pass) {
 		// a stale or missing snapshot (a flush outside the drawMesh bracket,
