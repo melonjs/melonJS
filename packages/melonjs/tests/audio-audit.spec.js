@@ -91,34 +91,27 @@ describe("audio audit fixes", () => {
 		// three failures of sound A pushed sound B's FIRST failure straight
 		// over the give-up threshold (a spurious fatal error under the
 		// default stopOnAudioError)
+		//
+		// The give-up signal here is the CONTINUE callback, not the error one:
+		// with `stopOnError = false` the loader is told to carry on (the error
+		// callback is the preload promise's reject, and firing it stalled the
+		// whole preload). The retry-budget contract under test is unchanged.
 		let aGaveUp = false;
 		let bGaveUp = false;
 		for (let i = 0; i < 3; i++) {
-			soundLoadError(
-				"audit-flaky-a",
-				() => {
-					aGaveUp = true;
-				},
-				false,
-			);
+			soundLoadError("audit-flaky-a", undefined, false, () => {
+				aGaveUp = true;
+			});
 		}
 		expect(aGaveUp).toBe(false); // still within its own 3-retry budget
-		soundLoadError(
-			"audit-flaky-b",
-			() => {
-				bGaveUp = true;
-			},
-			false,
-		);
+		soundLoadError("audit-flaky-b", undefined, false, () => {
+			bGaveUp = true;
+		});
 		expect(bGaveUp).toBe(false); // b's FIRST failure must only start ITS budget
 		// a's 4th failure exhausts a's own budget
-		soundLoadError(
-			"audit-flaky-a",
-			() => {
-				aGaveUp = true;
-			},
-			false,
-		);
+		soundLoadError("audit-flaky-a", undefined, false, () => {
+			aGaveUp = true;
+		});
 		expect(aGaveUp).toBe(true);
 		// the give-up path (stopOnError=false) mutes audio globally — restore
 		audio.unmuteAll();

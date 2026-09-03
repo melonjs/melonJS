@@ -30,11 +30,12 @@ export let stopOnAudioError: boolean = true;
 
 /**
  * Set the {@link stopOnAudioError} flag — whether an audio clip that still
- * fails after its retries throws (aborting loading) or just disables sound
- * with a console warning. This setter is the supported way to change the
- * flag: assigning `me.audio.stopOnAudioError = false` directly throws a
- * TypeError, because module namespace properties are read-only.
- * @param value - `true` to throw on a failed load, `false` to disable sound instead
+ * fails after its retries aborts loading (reporting the error to the loader,
+ * which rejects the preload) or just disables sound with a console warning.
+ * This setter is the supported way to change the flag: assigning
+ * `me.audio.stopOnAudioError = false` directly throws a TypeError, because
+ * module namespace properties are read-only.
+ * @param value - `true` to fail the load on error, `false` to disable sound instead
  * @example
  * // don't abort the whole game when audio fails to load
  * me.audio.setStopOnAudioError(false);
@@ -85,14 +86,17 @@ export function getSoundOrThrow(sound_name: string): SpatialSound {
 
 /**
  * Event listener callback on load error. Retries the load up to 3
- * times, then either throws or disables audio (depending on the
- * `stopOnAudioError` flag re-exported from `audio.ts`).
+ * times, then either fails the load or disables audio (depending on the
+ * `stopOnAudioError` flag re-exported from `audio.ts`). Either way the outcome
+ * is reported through a callback — nothing is thrown, because this runs from a
+ * timer callback where a throw could not be caught by anyone.
  * @ignore
  */
 export const soundLoadError = function (
 	sound_name: string,
 	onerror_cb?: () => void,
 	stopOnError: boolean = true,
+	oncontinue_cb?: () => void,
 ): void {
 	// per-sound retry budget — a single shared counter let parallel loads
 	// steal each other's retries: three failures of one flaky file pushed
@@ -104,11 +108,23 @@ export const soundLoadError = function (
 		if (!stopOnError) {
 			// disable audio
 			audioEngine.mute(true);
-			onerror_cb?.();
 			console.warn(`${errmsg}, disabling audio`);
+			// Carry on rather than fail the load. The error callback a parser
+			// is handed IS the preload promise's `reject`, so calling it here
+			// aborted the whole preload — `Promise.all` rejected,
+			// `completeLoading()` never ran, and the game sat on a blank
+			// screen. "Ignore audio errors" has to mean the loader proceeds.
+			oncontinue_cb?.();
 		} else {
+			// Reported, not thrown. The listener this runs from is invoked out
+			// of a `setTimeout`, so a throw here lands on an empty stack and
+			// becomes an uncaught global error — no caller's `try/catch` could
+			// ever see it, and the documented "throws" was unreachable in
+			// practice. The load-bearing signal is the error callback below,
+			// which for a promise-based preload is the reject: that is what a
+			// caller actually catches, and it is unchanged.
+			console.error(errmsg);
 			onerror_cb?.();
-			throw new Error(errmsg);
 		}
 	} else {
 		state.retryCounters[sound_name] = retries + 1;

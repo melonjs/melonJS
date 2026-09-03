@@ -289,6 +289,10 @@ export function unload(sound_name: string): boolean {
 	// destroy the backend Sound object
 	sound.unload();
 	delete audioState.tracks[sound_name];
+	// ...and its retry budget. Unloading a clip part-way through its retries
+	// otherwise left the counter behind, so reloading the same name inherited
+	// a used-up budget and gave up on its FIRST failure.
+	delete audioState.retryCounters[sound_name];
 	return true;
 }
 

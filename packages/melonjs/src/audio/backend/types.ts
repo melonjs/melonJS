@@ -33,6 +33,11 @@ export interface SoundOptions {
 	sprite?: Record<string, [number, number, boolean?]>;
 	/** The volume of the sound, from 0.0 to 1.0. Default: `1.0` */
 	volume?: number;
+	/**
+	 * Send credentials (cookies, TLS client certificates) with the request.
+	 * @deprecated since 20.4.0, use `xhr: { withCredentials }`
+	 */
+	xhrWithCredentials?: boolean;
 	/** Configure fetch options for loading audio files (when using Web Audio). */
 	xhr?: {
 		/** The HTTP method to use. Default: `'GET'` */
@@ -49,7 +54,12 @@ export interface SoundOptions {
 	/** Fires when the sound has been loaded. */
 	onload?: () => void;
 	/** Fires when the sound is unable to load. */
-	onloaderror?: (id: number, msg: string) => void;
+	/**
+	 * Called when the clip fails to load. `id` is the voice that failed, or
+	 * `null` when the failure belongs to the clip as a whole (decode failure,
+	 * no codec, no audio support).
+	 */
+	onloaderror?: (id: number | null, msg: string) => void;
 	/** Fires when the sound is unable to play. */
 	onplayerror?: (id: number, msg: string) => void;
 	/** Fires when the sound has been paused. */
