@@ -132,6 +132,58 @@ describe("Application", () => {
 		});
 	});
 
+	describe("the frame closes the transparent pass", () => {
+		it("drains at end of frame, before the renderer flush", async () => {
+			// A scene that is nothing but meshes never switches batcher, so
+			// this is the only drain that runs — and nothing pinned it: every
+			// pixel test drains by hand, so deleting the call site was silent.
+			boot();
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			await app.init();
+			// The camera drains too, so counting drains proves nothing — what
+			// this pins is that one happens after the STAGE is fully drawn and
+			// before the renderer flush.
+			const order = [];
+			const stage = state.current();
+			const stageDraw = stage.draw.bind(stage);
+			const drain = app.renderer.flushTransparent.bind(app.renderer);
+			const flush = app.renderer.flush.bind(app.renderer);
+			stage.draw = (...a) => {
+				const r = stageDraw(...a);
+				order.push("stage-done");
+				return r;
+			};
+			app.renderer.flushTransparent = (...a) => {
+				order.push("drain");
+				return drain(...a);
+			};
+			app.renderer.flush = (...a) => {
+				order.push("flush");
+				return flush(...a);
+			};
+			try {
+				app.isDirty = true;
+				app.draw();
+			} finally {
+				stage.draw = stageDraw;
+				app.renderer.flushTransparent = drain;
+				app.renderer.flush = flush;
+				app.destroy();
+			}
+			const done = order.indexOf("stage-done");
+			const last = order.lastIndexOf("drain");
+			expect(done).toBeGreaterThanOrEqual(0);
+			expect(order).toContain("flush");
+			// a drain AFTER the whole stage is down, and before the flush
+			expect(last).toBeGreaterThan(done);
+			expect(last).toBeLessThan(order.indexOf("flush"));
+		});
+	});
+
 	describe("physics startup banner", () => {
 		it("reports the built-in adapter via its stable physicLabel, not a class name", async () => {
 			boot();

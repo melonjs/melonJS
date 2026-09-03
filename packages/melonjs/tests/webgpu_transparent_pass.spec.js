@@ -5,6 +5,8 @@ import { instanceRecordLayout } from "../src/video/gpu/instancerecord.ts";
 import Renderer from "../src/video/renderer.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
 import WebGPUMeshBatcher from "../src/video/webgpu/batchers/mesh_batcher.js";
+import meshWGSL from "../src/video/webgpu/shaders/mesh.wgsl";
+import meshLitWGSL from "../src/video/webgpu/shaders/mesh-lit.wgsl";
 import WebGPURenderer from "../src/video/webgpu/webgpu_renderer.js";
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
 
@@ -278,6 +280,73 @@ describe("the replay installs its blend state (mock device)", () => {
 				drawIt(make());
 				expect(lastKey().premultiplied).toBe("true");
 			});
+		});
+	}
+});
+
+describe("the instanced ground-shadow decal defers exactly once", () => {
+	// The guard is what stops the replay re-queueing what it is replaying. On
+	// WebGL an inversion fails 7 tests; on WebGPU it failed none — the mock
+	// suite never runs the replay -> drawInstancedShadow path, so the same
+	// mutation left every instanced shadow queued forever and never drawn.
+	for (const [name, RendererClass] of BACKENDS) {
+		it(`${name} queues outside a drain and draws inside one`, () => {
+			const queued = [];
+			const drawn = [];
+			const probe = Object.create(RendererClass.prototype);
+			Object.assign(probe, {
+				currentTint: new Color(255, 255, 255, 1),
+				getGlobalAlpha: () => {
+					return 1;
+				},
+				queueTransparent: (...args) => {
+					return queued.push(args);
+				},
+				setBatcher: () => {},
+				currentBatcher: {
+					drawInstancedShadow: (...a) => {
+						return drawn.push(a);
+					},
+				},
+				_transparentFlushing: false,
+			});
+			const mesh = { instanceLayout: {} };
+			const quad = { lit: false };
+
+			probe.drawInstancedShadow(mesh, new Matrix3d(), quad);
+			expect(queued, `${name} defers outside a drain`).toHaveLength(1);
+			expect(drawn, `${name} does not draw it yet`).toHaveLength(0);
+			// the instanced mesh rides along so the replay can find its buffer
+			expect(queued[0][4]).toBe(mesh);
+
+			probe._transparentFlushing = true;
+			probe.drawInstancedShadow(mesh, new Matrix3d(), quad);
+			expect(queued, `${name} does not re-queue during a drain`).toHaveLength(
+				1,
+			);
+			expect(drawn, `${name} draws it during a drain`).toHaveLength(1);
+		});
+	}
+});
+
+describe("the WGSL shaders keep the cutout before the tint", () => {
+	// Both WGSL twins were completely unpinned: reverting the discard to
+	// post-tint alpha — the fade-pop bug — survived the whole suite, because
+	// there is no adapter in CI and nothing else reads the source. Order in
+	// the text is a crude pin, but it catches exactly that revert.
+	for (const [name, source] of [
+		["mesh.wgsl", meshWGSL],
+		["mesh-lit.wgsl", meshLitWGSL],
+	]) {
+		it(`${name} discards on material alpha, before the tint multiply`, () => {
+			const fragment = source.slice(source.indexOf("@fragment"));
+			const discard = fragment.indexOf("uMesh.params.x");
+			const tint = fragment.indexOf("in.vColor");
+			expect(discard, `${name}: no cutout found`).toBeGreaterThan(-1);
+			expect(tint, `${name}: no tint multiply found`).toBeGreaterThan(-1);
+			// the tint must be applied AFTER the discard, or a fading cutout
+			// mesh vanishes at its own threshold
+			expect(discard).toBeLessThan(tint);
 		});
 	}
 });

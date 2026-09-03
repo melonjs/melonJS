@@ -1124,7 +1124,7 @@ export default class Application {
 			// transparent queue then silently skips — for the rest of the
 			// session, since `reset()` only runs on a stage change. A frame is
 			// the natural boundary, and by here the previous one is over.
-			this.renderer.resetScreenSpace?.();
+			this.renderer.resetFrameState?.();
 
 			// Distance fog belongs to the camera that installed it, and is
 			// installed once per camera in `Camera2d.draw`. Clearing it here

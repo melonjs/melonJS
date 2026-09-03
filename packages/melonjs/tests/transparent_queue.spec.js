@@ -290,6 +290,29 @@ describe("the transparent pass (#1516)", () => {
 			return readPixel();
 		};
 
+		it("keeps submission order for entries at the same distance", (ctx) => {
+			requireWebGL(ctx);
+			// Coplanar decals and a mesh queued twice land on identical keys,
+			// and blending is order-dependent — so the binary insertion has to
+			// be stable, which the strict `<` gives it. With `<=` the pair
+			// silently swaps and the wrong one wins the pixel.
+			setup([255, 255, 255]);
+			const first = quad();
+			first.transparent = true;
+			first.tint.setColor(255, 0, 0);
+			const second = quad();
+			second.transparent = true;
+			second.tint.setColor(0, 0, 255);
+			draw(first, 0);
+			draw(second, 0); // same depth => same key
+			expect(renderer._transparentPool[0].key).toBe(
+				renderer._transparentPool[1].key,
+			);
+			renderer.flushTransparent();
+			const px = readPixel();
+			expect(px[2]).toBeGreaterThan(px[0]); // the LATER submission on top
+		});
+
 		it("composites identically whichever order the two were submitted", (ctx) => {
 			requireWebGL(ctx);
 			// the sort is the whole point: submission order must not matter
@@ -406,7 +429,10 @@ describe("the transparent pass (#1516)", () => {
 			mesh.setOpacity(0.5);
 			draw(mesh);
 			expect(renderer._transparentCount).toBe(1);
-			renderer.removeQueuedTransparent(mesh);
+			// through the production call site, not the internal method: a
+			// destroyed mesh reaches the queue via `deleteMeshGeometry`, and
+			// severing that link left both of these tests passing
+			renderer.deleteMeshGeometry(mesh);
 			expect(renderer._transparentCount).toBe(0);
 			const spy = vi.spyOn(renderer, "drawMesh");
 			renderer.flushTransparent();
@@ -555,6 +581,23 @@ describe("the transparent pass (#1516)", () => {
 			mesh.destroy();
 		});
 
+		it("leaves mesh-mode state clean after an INSTANCED replay", (ctx) => {
+			requireWebGL(ctx);
+			// The retained path's teardown is pinned; the instanced one was
+			// not, and it is the same hazard: `depthMask(false)` left on makes
+			// the next frame's one-shot depth clear a no-op, so the whole frame
+			// renders against stale depth.
+			const gl = renderer.gl;
+			setup();
+			const mesh = instancedQuad();
+			mesh.setOpacity(0.5);
+			draw(mesh);
+			renderer.flushTransparent();
+			expect(gl.getParameter(gl.DEPTH_WRITEMASK)).toBe(true);
+			expect(gl.isEnabled(gl.BLEND)).toBe(false);
+			mesh.destroy();
+		});
+
 		it('replays a `blendMode` of "none" without throwing', (ctx) => {
 			requireWebGL(ctx);
 			// `blendMode` is a plain property and `"none"` is a supported
@@ -617,6 +660,79 @@ describe("the transparent pass (#1516)", () => {
 		});
 	});
 
+	describe("a replayed draw keeps the shader it was queued with", () => {
+		it("carries the mesh's custom shader into the replay", (ctx) => {
+			requireWebGL(ctx);
+			// Both backends read `customShader` LIVE at draw time, and by the
+			// time the pass replays, the renderable's `postDraw` has restored
+			// it to whatever was current before. A mesh hosting a custom
+			// shader therefore lost it the instant it faded, silently falling
+			// back to the built-in shading — and at FULL opacity too under
+			// `transparent: true`, which is not a pre-existing defect but a
+			// regression the pass would have introduced.
+			setup();
+			const fx = new ShaderEffect(
+				renderer,
+				`
+				vec4 apply(vec4 color, vec2 uv) {
+					return color;
+				}
+			`,
+			);
+			try {
+				const mesh = quad();
+				mesh.setOpacity(0.5);
+				// the production path: one effect on a non-managed renderable
+				// takes `beginPostEffect`'s fast path, which installs it as
+				// `customShader` — and `postDraw` -> `restore()` takes it away
+				// again, before the drain
+				mesh.addPostEffect(fx);
+				draw(mesh);
+				expect(renderer._transparentCount).toBe(1);
+				expect(renderer.customShader).toBeUndefined();
+
+				const seen = [];
+				const drawMesh = renderer.drawMesh.bind(renderer);
+				renderer.drawMesh = (...args) => {
+					seen.push(renderer.customShader);
+					return drawMesh(...args);
+				};
+				try {
+					renderer.flushTransparent();
+				} finally {
+					renderer.drawMesh = drawMesh;
+				}
+				expect(seen).toHaveLength(1);
+				expect(seen[0]).toBe(fx);
+				// and it must not leak out of the pass
+				expect(renderer.customShader).toBeUndefined();
+			} finally {
+				fx.destroy();
+			}
+		});
+
+		it("replays an ordinary mesh with no shader at all", (ctx) => {
+			requireWebGL(ctx);
+			// the restore has to put back what was there, including nothing
+			setup();
+			const mesh = quad();
+			mesh.setOpacity(0.5);
+			draw(mesh);
+			const seen = [];
+			const drawMesh = renderer.drawMesh.bind(renderer);
+			renderer.drawMesh = (...args) => {
+				seen.push(renderer.customShader);
+				return drawMesh(...args);
+			};
+			try {
+				renderer.flushTransparent();
+			} finally {
+				renderer.drawMesh = drawMesh;
+			}
+			expect(seen[0]).toBeUndefined();
+		});
+	});
+
 	describe("the blend state actually reaches the GPU", () => {
 		it("an additive entry really adds", (ctx) => {
 			requireWebGL(ctx);
@@ -649,6 +765,19 @@ describe("the transparent pass (#1516)", () => {
 			draw(mesh);
 			renderer.flushTransparent();
 			expect(gl.getParameter(gl.BLEND_DST_RGB)).toBe(gl.ONE_MINUS_SRC_ALPHA);
+		});
+	});
+
+	describe("the deprecated aliases still work", () => {
+		it("`queueGroundShadow` routes into the transparent queue", (ctx) => {
+			requireWebGL(ctx);
+			// no caller left in src, so nothing exercised it — but it ships as
+			// a documented deprecation and has to keep working
+			setup();
+			renderer.queueGroundShadow(quad(), new Matrix3d(), 0x80ffffff);
+			expect(renderer._transparentCount).toBe(1);
+			renderer.flushGroundShadows();
+			expect(renderer._transparentCount).toBe(0);
 		});
 	});
 
@@ -742,6 +871,58 @@ describe("the transparent pass (#1516)", () => {
 			expect(px[0]).toBeLessThan(155);
 		});
 
+		it("puts world transparency DOWN before opening the overlay bracket", (ctx) => {
+			requireWebGL(ctx);
+			// `Container.draw` drains just before the screen-space bracket
+			// opens, and that ordering is the whole point of the comment
+			// there: over the world, under the overlay. The contract is that
+			// the queue is EMPTY by the time the bracket opens — asserted at
+			// that instant, because asserting on the final pixel is defeated
+			// by the child walk order.
+			const viewport = camera3d();
+			const flat = new Matrix3d();
+			flat.ortho(0, SIZE, SIZE, 0, -1e6, 1e6);
+			viewport.projectionMatrix.copy(flat);
+			viewport.worldProjection.copy(flat);
+			renderer.setProjection(flat);
+			renderer.currentTransform.identity();
+			renderer.clear();
+
+			const world = new Container(0, 0, SIZE, SIZE);
+			world.autoSort = false; // keep the draw order predictable
+			// children are walked BACKWARDS, so the overlay goes in first to
+			// be drawn last
+			const overlay = hudQuad();
+			world.addChild(overlay);
+			const faded = quad();
+			faded.pos.set(SIZE / 2, SIZE / 2, 0);
+			faded.setOpacity(0.5);
+			// a NON-floating child is gated on `inViewport`, which nothing sets
+			// in this bare harness — without it the child is skipped and the
+			// test proves nothing
+			faded.inViewport = true;
+			world.addChild(faded);
+
+			const atBracket = [];
+			const begin = renderer.beginScreenSpace.bind(renderer);
+			renderer.beginScreenSpace = (...a) => {
+				atBracket.push(renderer._transparentCount);
+				return begin(...a);
+			};
+			try {
+				world.preDraw(renderer);
+				world.draw(renderer, viewport);
+				world.postDraw(renderer);
+			} finally {
+				renderer.beginScreenSpace = begin;
+			}
+			renderer.flushTransparent();
+
+			expect(atBracket).toHaveLength(1);
+			// the world's transparency is already down
+			expect(atBracket[0]).toBe(0);
+		});
+
 		it("drains before restoring the world projection, not after", (ctx) => {
 			requireWebGL(ctx);
 			// order is the whole fix: after the restore the entry replays
@@ -802,9 +983,58 @@ describe("the transparent pass (#1516)", () => {
 			renderer.flushTransparent();
 			expect(renderer._transparentCount).toBe(1); // blocked, as designed
 
-			renderer.resetScreenSpace(); // what `Application.draw` does per frame
+			renderer.resetFrameState(); // what `Application.draw` does per frame
 			renderer.flushTransparent();
 			expect(renderer._transparentCount).toBe(0);
+		});
+
+		it("purges a queue an abandoned frame left behind", (ctx) => {
+			requireWebGL(ctx);
+			// A frame that dies between `beginPostEffect` and `endPostEffect`
+			// never drains that pass's queue, and the pool hands its key to a
+			// LATER pass — which would then replay a dead frame's geometry into
+			// its own target. Only `reset()` cleared this, and that runs on a
+			// stage change, not per frame.
+			setup();
+			renderer._renderTargetPool.begin(false, 2, SIZE, SIZE);
+			const stranded = renderer.transparentTarget();
+			const mesh = quad();
+			mesh.transparent = true;
+			draw(mesh);
+			expect(renderer.transparentQueue(stranded).count).toBe(1);
+			renderer._renderTargetPool.end(); // pass unwinds without draining
+
+			renderer.resetFrameState();
+			expect(renderer.transparentQueue(stranded).count).toBe(0);
+			expect(renderer.transparentQueue(stranded).pool[0].mesh).toBe(null);
+		});
+	});
+
+	describe("the camera closes the pass before its own effects", () => {
+		it("drains before drawFX, so a flash covers the transparency too", (ctx) => {
+			requireWebGL(ctx);
+			// The camera's flash/fade is painted over the finished world. Drain
+			// after it and transparent geometry lands ON TOP of the flash —
+			// the one thing it must never do. Nothing pinned the ordering.
+			const camera = new Camera3d(0, 0, SIZE, SIZE);
+			const order = [];
+			const drain = renderer.flushTransparent.bind(renderer);
+			renderer.flushTransparent = (...a) => {
+				order.push("drain");
+				return drain(...a);
+			};
+			const fx = camera.drawFX.bind(camera);
+			camera.drawFX = (...a) => {
+				order.push("drawFX");
+				return fx(...a);
+			};
+			try {
+				camera.draw(renderer, new Container(0, 0, SIZE, SIZE));
+			} finally {
+				renderer.flushTransparent = drain;
+				camera.drawFX = fx;
+			}
+			expect(order).toEqual(["drain", "drawFX"]);
 		});
 	});
 
@@ -911,7 +1141,7 @@ describe("the transparent pass (#1516)", () => {
 			const pass = effectPass();
 			renderer.beginPostEffect(pass);
 			// destroyed from inside a pass, while queued OUTSIDE it
-			renderer.removeQueuedTransparent(doomed);
+			renderer.deleteMeshGeometry(doomed);
 			renderer.endPostEffect(pass);
 			renderer.flush();
 			expect(renderer._transparentCount).toBe(0);
@@ -936,6 +1166,39 @@ describe("the transparent pass (#1516)", () => {
 	});
 });
 
+describe("Mesh reads `transparent` from its settings", () => {
+	// Every routing test assigns the property after construction, so the
+	// documented constructor path — the one the JSDoc example itself uses —
+	// was never exercised: a glTF BLEND glow built with `transparent: true`
+	// could silently draw opaque.
+	beforeAll(async () => {
+		await boot();
+	});
+
+	const build = (settings) => {
+		return new Mesh(0, 0, {
+			vertices: [0, 0, 0, 1, 0, 0, 1, 1, 0],
+			uvs: [0, 0, 1, 0, 1, 1],
+			indices: [0, 1, 2],
+			width: 1,
+			height: 1,
+			...settings,
+		});
+	};
+
+	it("keeps `true`", () => {
+		expect(build({ transparent: true }).transparent).toBe(true);
+	});
+
+	it("keeps `false`", () => {
+		expect(build({ transparent: false }).transparent).toBe(false);
+	});
+
+	it("leaves it unset when omitted, for the automatic check", () => {
+		expect(build({}).transparent).toBeUndefined();
+	});
+});
+
 /**
  * `Sprite3d` picks the cutout threshold that decides whether a fading sprite
  * survives, so the two interact and the choice is pinned here.
@@ -957,6 +1220,18 @@ describe("Sprite3d and the alpha cutout", () => {
 	it("keeps the 0.5 default otherwise", () => {
 		const sprite = new Sprite3d(0, 0, { width: 16, height: 16 });
 		expect(sprite.alphaCutoff).toBe(0.5);
+	});
+
+	it("forwards the transparent flag, not just the cutoff", () => {
+		// the cutoff drop was pinned, the flag it depends on was not — so the
+		// sprite could get the 1/255 cutoff for being transparent and then
+		// draw opaque anyway, which is the exact artefact the flag prevents
+		const sprite = new Sprite3d(0, 0, {
+			width: 16,
+			height: 16,
+			transparent: true,
+		});
+		expect(sprite.transparent).toBe(true);
 	});
 
 	it("an explicit cutoff always wins", () => {

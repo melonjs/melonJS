@@ -2112,6 +2112,7 @@ export default class WebGLRenderer extends Renderer {
 	 * deliberate cache bypass `MeshBatcher.beginBlendedDraw` documents.
 	 * @param {string} mode - a blend mode token
 	 * @ignore
+	 * @internal
 	 */
 	applyBlendFunction(mode) {
 		const gl = this.gl;

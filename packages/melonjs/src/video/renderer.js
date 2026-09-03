@@ -348,13 +348,16 @@ export default class Renderer {
 	 * camera's screen projection is installed and world-space geometry cannot
 	 * be replayed. Balanced by {@link Renderer#endScreenSpace}.
 	 * @ignore
+	 * @internal
 	 */
 	beginScreenSpace() {
+		/** @ignore @internal */
 		this._screenSpaceDepth = (this._screenSpaceDepth ?? 0) + 1;
 	}
 
 	/**
-	 * Force the screen-space bracket back to zero at a frame boundary.
+	 * Put per-frame renderer state back to a known-good baseline.
+	 *
 	 *
 	 * `Container.draw` opens the bracket around a floating child without a
 	 * `finally`, so a child that throws never closes it — and while it stays
@@ -363,14 +366,33 @@ export default class Renderer {
 	 * a frame at a time. Called once per frame, where the count is always zero
 	 * in normal operation.
 	 * @ignore
+	 * @internal
 	 */
-	resetScreenSpace() {
+	resetFrameState() {
 		this._screenSpaceDepth = 0;
+		// Purge anything a previous frame left queued. Only `reset()` did this,
+		// and that runs on a stage change, not per frame — so a frame abandoned
+		// between `beginPostEffect` and `endPostEffect` left entries keyed to a
+		// render target whose key the pool then hands to a LATER pass, which
+		// would replay a dead frame's geometry into its own buffer. Empty in
+		// normal operation: every queue is drained by the frame that filled it.
+		for (const queue of this._transparentQueues ?? []) {
+			if (queue === undefined || queue.count === 0) {
+				continue;
+			}
+			for (let i = 0; i < queue.count; i++) {
+				queue.pool[i].mesh = null;
+				queue.pool[i].instanced = null;
+				queue.pool[i].shader = null;
+			}
+			queue.count = 0;
+		}
 	}
 
 	/**
 	 * Mark the end of a screen-space draw.
 	 * @ignore
+	 * @internal
 	 */
 	endScreenSpace() {
 		const depth = (this._screenSpaceDepth ?? 0) - 1;
@@ -401,6 +423,7 @@ export default class Renderer {
 	 * @param {object} [instanced] - the `InstancedMesh` whose instance buffer
 	 * supplies one draw per instance, for the instanced tier
 	 * @ignore
+	 * @internal
 	 */
 	queueTransparent(mesh, modelMatrix, tint, blend, instanced) {
 		const queue = this.transparentQueue();
@@ -418,6 +441,7 @@ export default class Renderer {
 				blend: "normal",
 				key: 0,
 				instanced: null,
+				shader: null,
 			};
 			pool[at] = entry;
 		}
@@ -434,6 +458,13 @@ export default class Renderer {
 		entry.tint = tint;
 		entry.blend = blend ?? "normal";
 		entry.instanced = instanced ?? null;
+		// The custom shader hosted on this draw, for the same reason the blend
+		// mode is held here: both backends read it LIVE off the renderer, and
+		// by the time the replay runs the renderable's `postDraw` has restored
+		// it to whatever was current before. A mesh with a custom shader was
+		// silently losing it the moment it faded — drawn with the built-in
+		// shading instead, at full opacity too under `transparent: true`.
+		entry.shader = this.customShader ?? null;
 		// Squared distance from the camera, taken once here rather than per
 		// comparison. Radial rather than view-space z for the same reason the
 		// fog distance is: no sign-convention trap, and stable as the camera
@@ -470,6 +501,7 @@ export default class Renderer {
 	 * constant.
 	 * @returns {number} the current target's key
 	 * @ignore
+	 * @internal
 	 */
 	transparentTarget() {
 		return this._renderTargetPool?.activeBase ?? -1;
@@ -490,8 +522,10 @@ export default class Renderer {
 	 * @param {number} [key] - the target, defaulting to the current one
 	 * @returns {{pool: object[], count: number}} that target's queue
 	 * @ignore
+	 * @internal
 	 */
 	transparentQueue(key = this.transparentTarget()) {
+		/** @ignore @internal */
 		const queues = (this._transparentQueues ??= []);
 		// `-1` is the screen, so shift into a dense array rather than a Map:
 		// the key is a small integer and this runs per queued draw
@@ -508,6 +542,7 @@ export default class Renderer {
 	 * The pooled entries of the current target's queue.
 	 * @type {object[]}
 	 * @ignore
+	 * @internal
 	 */
 	get _transparentPool() {
 		return this.transparentQueue().pool;
@@ -517,6 +552,7 @@ export default class Renderer {
 	 * How many entries the current target has queued.
 	 * @type {number}
 	 * @ignore
+	 * @internal
 	 */
 	get _transparentCount() {
 		return this.transparentQueue().count;
@@ -533,6 +569,7 @@ export default class Renderer {
 	 * @param {object} [instanced] - the instanced tier's source mesh
 	 * @deprecated since 20.4.0, use {@link Renderer#queueTransparent}
 	 * @ignore
+	 * @internal
 	 */
 	queueGroundShadow(quad, modelMatrix, tint, instanced) {
 		this.queueTransparent(quad, modelMatrix, tint, "normal", instanced);
@@ -587,6 +624,7 @@ export default class Renderer {
 	 * target is about to be unbound and its key reused by a later pass, which
 	 * would then replay them somewhere they never belonged.
 	 * @ignore
+	 * @internal
 	 */
 	flushTransparentPass() {
 		const queue = this.transparentQueue();
@@ -626,6 +664,7 @@ export default class Renderer {
 		// drained again. `_transparentFlushing` guards the same door from the
 		// other side, and covers the re-entry into `drawMesh`.
 		queue.count = 0;
+		/** @ignore @internal */
 		this._transparentFlushing = true;
 		try {
 			// The colour the entry was queued WITH has to be put back, because
@@ -639,6 +678,7 @@ export default class Renderer {
 			// the colour's OWN alpha, which `setColor(r, g, b)` resets to 1
 			const savedTintAlpha = tint.alpha;
 			const savedAlpha = this.getGlobalAlpha();
+			const savedShader = this.customShader;
 			// `currentTransform` is one object for the frame — `save()`/
 			// `restore()` push copies onto a stack rather than swapping it —
 			// so each entry's view can be installed in place and the drain
@@ -657,7 +697,9 @@ export default class Renderer {
 					// read by the batchers instead of a per-mesh flag: the same
 					// mesh can be queued twice under different modes, and the
 					// entry is the only thing that knows which is which
+					/** @ignore @internal */
 					this._replayBlend = entry.blend;
+					this.customShader = entry.shader ?? undefined;
 					this.currentTransform.copy(entry.view);
 					if (entry.instanced !== null) {
 						this.drawInstancedShadow(entry.instanced, entry.matrix, entry.mesh);
@@ -668,9 +710,11 @@ export default class Renderer {
 					// a pooled slot until that slot is next reused
 					entry.mesh = null;
 					entry.instanced = null;
+					entry.shader = null;
 				}
 			} finally {
 				this._replayBlend = null;
+				this.customShader = savedShader;
 				this.currentTransform.copy(_savedView);
 				tint.setColor(savedR, savedG, savedB, savedTintAlpha);
 				this.setGlobalAlpha(savedAlpha);
@@ -694,6 +738,7 @@ export default class Renderer {
 	 * caller has finished with.
 	 * @param {object} mesh - the renderable being torn down
 	 * @ignore
+	 * @internal
 	 */
 	removeQueuedTransparent(mesh) {
 		// every target, not just the current one: a mesh destroyed during a
@@ -710,6 +755,7 @@ export default class Renderer {
 	 * @param {{pool: object[], count: number}} queue - the queue to compact
 	 * @param {object} mesh - the renderable being torn down
 	 * @ignore
+	 * @internal
 	 */
 	_removeQueuedFrom(queue, mesh) {
 		const count = queue.count;
@@ -720,6 +766,7 @@ export default class Renderer {
 			if (entry.mesh === mesh || entry.instanced === mesh) {
 				entry.mesh = null;
 				entry.instanced = null;
+				entry.shader = null;
 				continue;
 			}
 			if (write !== read) {
@@ -775,10 +822,11 @@ export default class Renderer {
 				const entry = queue.pool[i];
 				entry.mesh = null;
 				entry.instanced = null;
+				entry.shader = null;
 			}
 			queue.count = 0;
 		}
-		// belt and braces with `resetScreenSpace`, which is what actually
+		// belt and braces with `resetFrameState`, which is what actually
 		// bounds an unbalanced bracket — `reset()` runs on a stage change and
 		// on context restore, NOT once per frame
 		this._screenSpaceDepth = 0;
