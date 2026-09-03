@@ -271,13 +271,18 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const geometry = this.retainedGeometryFor(mesh);
 		const instances = this.instanceBufferFor(mesh);
 
-		this.meshState.depthWrite = undefined;
+		// see the WebGL batcher: an instanced mesh is routed into the
+		// transparent pass by the same predicate, so it replays by the same
+		// rules — its own blend mode, depth test on, depth writes off
+		const blend = renderer._replayBlend ?? null;
+		const blended = blend !== null;
+		this.meshState.depthWrite = blended ? false : undefined;
 		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.instancedFamilyFor(mesh.instanceLayout),
 			"triangle-list",
-			"none",
-			renderer.premultipliedAlpha,
+			blend ?? "none",
+			blended ? true : renderer.premultipliedAlpha,
 			renderer.stencilMode,
 			this.meshState,
 		);
@@ -989,7 +994,8 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// stops writing depth, so overlapping shadows blend instead of
 		// fighting. Set per draw, never left behind: an ordinary mesh must
 		// resolve to exactly the pipeline it always did.
-		const blended = mesh._blendedDraw === true;
+		const blend = renderer._replayBlend ?? null;
+		const blended = blend !== null;
 		// `undefined` rather than `true` for the ordinary case: the axis reads
 		// `!== false`, so leaving it unset keeps `meshState` byte-for-byte what
 		// it was before this existed, and the pipeline key gains nothing
@@ -998,8 +1004,14 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),
 			"triangle-list",
-			blended ? "normal" : "none",
-			renderer.premultipliedAlpha,
+			blend ?? "none",
+			// A replayed entry is ALWAYS premultiplied — the mesh vertex
+			// stage premultiplies its own output unconditionally, whatever
+			// `premultipliedAlpha` (which describes source TEXTURES) happens
+			// to hold. It is not constant: anything drawing straight-alpha
+			// content earlier in the frame leaves it `false`, which would
+			// select `src-alpha` here and apply alpha a second time.
+			blended ? true : renderer.premultipliedAlpha,
 			renderer.stencilMode,
 			this.meshState,
 		);

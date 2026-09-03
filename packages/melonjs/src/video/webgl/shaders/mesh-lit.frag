@@ -105,7 +105,7 @@ vec3 applyFog(vec3 rgb, float a) {
 
 
 void main(void) {
-    vec4 base = texture(uSampler, vRegion) * vColor;
+    vec4 base = texture(uSampler, vRegion);
 
     // per-texel opacity (MTL map_d) multiplies in BEFORE the cutout, so one
     // material can cut out to the shape of a leaf rather than at a single
@@ -119,9 +119,16 @@ void main(void) {
 
     // hard alpha cutout (glTF alphaMode MASK) — discard before any shading
     // so cut-away texels cost nothing and never write depth.
+    // Thresholded on the MATERIAL's own alpha, deliberately BEFORE the tint
+    // multiply. The cutout describes the shape of the surface, and that shape
+    // does not change when the object fades: testing the drawn alpha instead
+    // makes a cutout mesh vanish completely the moment its opacity crosses its
+    // own threshold — and `Sprite3d` defaults that threshold to 0.5, so half a
+    // fade-out was a hard pop.
     if (base.a < uAlphaCutoff) {
         discard;
     }
+    base *= vColor;
 
     // A mesh marked `lit` with no usable normals — the 2D-camera path,
     // which leaves world normals unwritten, or geometry that supplied none —

@@ -252,8 +252,18 @@ export default class Sprite3d extends Mesh {
 			// discarded, giving a clean transparent silhouette with correct depth
 			// testing and no back-to-front sorting. Pass `alphaCutoff: 0` to
 			// disable (fully opaque), or tune the threshold.
+			// The 0.5 default cuts a clean silhouette out of a sprite's
+			// transparent frame background. It would also DEFEAT a soft-alpha
+			// sprite: every texel below half opacity is discarded before
+			// blending can see it, which is exactly the case `transparent: true`
+			// exists for. So an explicitly transparent sprite drops to the
+			// invisible-texel threshold unless the caller named a cutoff.
 			alphaCutoff:
-				typeof settings.alphaCutoff === "number" ? settings.alphaCutoff : 0.5,
+				typeof settings.alphaCutoff === "number"
+					? settings.alphaCutoff
+					: settings.transparent === true
+						? 1 / 255
+						: 0.5,
 			// ground shadow (#1515) — forwarded explicitly, like everything
 			// else here: this constructor hands `Mesh` a built settings object
 			// rather than the caller's, so anything not named is dropped
@@ -262,6 +272,9 @@ export default class Sprite3d extends Mesh {
 			// flatten it to an explicit false, silently opting every sprite out
 			// of a scene-wide default
 			castGroundShadow: settings.castGroundShadow,
+			// raw for the same reason as above: `undefined` means "decide from
+			// the draw's alpha", and coercing it would pin every sprite opaque
+			transparent: settings.transparent,
 			shadowGroundY: settings.shadowGroundY,
 			shadowOpacity: settings.shadowOpacity,
 		});

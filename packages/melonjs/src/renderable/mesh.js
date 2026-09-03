@@ -327,6 +327,7 @@ export default class Mesh extends Renderable {
 	 * @param {number} [settings.shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
 	 * @param {string|TextureAtlas|HTMLImageElement} [settings.alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
 	 * @param {boolean} [settings.castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
+	 * @param {boolean} [settings.transparent] - draw in the transparent pass (blended, back-to-front, no depth write). Omit and a mesh goes transparent whenever its draw alpha is fractional; `true` for soft-alpha textures; `false` to stay opaque however faded
 	 * @param {boolean} [settings.fog] - set `false` to exempt this mesh from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does
 	 * @param {number} [settings.shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
 	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
@@ -653,6 +654,70 @@ export default class Mesh extends Renderable {
 		 * marker.fog = false;
 		 */
 		this.fog = typeof settings.fog === "boolean" ? settings.fog : undefined;
+
+		/**
+		 * Whether this mesh draws in the **transparent pass** — blended,
+		 * back-to-front, writing no depth — instead of the opaque one.
+		 *
+		 * Left **unset** (`undefined`, the default) the mesh goes transparent
+		 * whenever the draw resolves to fractional alpha, so `setOpacity(0.5)`
+		 * simply fades it. That is the useful default because the opaque path
+		 * writes premultiplied colour with blending off: a faded mesh comes out
+		 * *darkened toward black* rather than see-through, which is a defect
+		 * rather than a contract — the fully transparent end of the same range
+		 * used to paint an opaque black silhouette until it was fixed.
+		 *
+		 * Set it **`true`** when the transparency lives in the TEXTURE rather
+		 * than in the opacity — a soft-edged glow, smoke, a glTF material with
+		 * `alphaMode: "BLEND"`. The automatic check reads the draw's alpha and
+		 * cannot see into the texture. The glTF loader does not set this for
+		 * you: one loaded mesh can merge several materials, and this flag
+		 * routes the whole mesh, so a `"BLEND"` material sharing geometry with
+		 * an opaque one would drag the opaque half into the transparent pass.
+		 * Note that `alphaCutoff` discards texels before blending sees them, so
+		 * a soft edge needs a low cutoff (see {@link Sprite3d}, which lowers
+		 * its default for exactly this). The cutoff thresholds the MATERIAL's
+		 * alpha, not the drawn alpha, so a fading cutout mesh keeps its shape
+		 * rather than disappearing at its own threshold.
+		 *
+		 * The pass composites premultiplied, which is what the mesh vertex
+		 * stage always emits. A texture uploaded with straight alpha and drawn
+		 * with `transparent: true` therefore reads slightly bright at its soft
+		 * texels; upload it premultiplied (the default) and it is exact.
+		 *
+		 * {@link Renderable#blendMode} is honoured per entry, with one limit:
+		 * the advanced modes (`"overlay"`, `"difference"`, and the rest that
+		 * need a compositing pass) fall back to `"normal"` here on both
+		 * backends, since the pass rasterizes directly into the target.
+		 *
+		 * Set it **`false`** to keep a mesh in the opaque pass however it is
+		 * faded — it will darken rather than fade, and it will keep writing
+		 * depth.
+		 *
+		 * Sorting is **per object**, by distance from the camera, so two
+		 * intersecting or mutually enclosing transparent meshes may pop as the
+		 * camera moves; split them, or accept it. Needs a GPU backend and a
+		 * {@link Camera3d} — the 2D-camera path is unaffected.
+		 * @type {boolean|undefined}
+		 * @default undefined
+		 * @see Renderable#blendMode
+		 * @example
+		 * // a ghost that fades in — nothing else needed
+		 * ghost.setOpacity(0.4);
+		 *
+		 * // a glow that blends at full opacity, and additively
+		 * const glow = new Mesh(0, 0, {
+		 *   ...quad,
+		 *   texture: glowTexture,
+		 *   transparent: true,
+		 *   blendMode: "additive",
+		 *   alphaCutoff: 0,
+		 * });
+		 */
+		this.transparent =
+			typeof settings.transparent === "boolean"
+				? settings.transparent
+				: undefined;
 
 		/**
 		 * World Y of the floor the shadow lands on, or `undefined` (the

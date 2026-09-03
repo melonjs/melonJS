@@ -506,21 +506,6 @@ export default class MeshBatcher extends MaterialBatcher {
 	drawRetainedMesh(mesh, modelMatrix, tint) {
 		const gl = this.gl;
 
-		// A ground shadow is deferred to the end of the mesh pass rather than
-		// drawn here (#1515). It writes no depth, so it has nothing to defend
-		// itself with: every opaque mesh still to come would paint straight
-		// over it — the ground plane above all, which routinely sorts after the
-		// props standing on it. The renderer replays the queue once the opaque
-		// meshes are down, and calls back in with `_shadowFlushing` set.
-		if (
-			mesh._blendedDraw === true &&
-			this.renderer._shadowFlushing !== true &&
-			this.renderer.queueGroundShadow !== undefined
-		) {
-			this.renderer.queueGroundShadow(mesh, modelMatrix, tint);
-			return;
-		}
-
 		// anything the caller had queued must land first, or this draw would
 		// reorder ahead of it
 		this.flush();
@@ -544,9 +529,9 @@ export default class MeshBatcher extends MaterialBatcher {
 		// whole frame rendering against stale depth.
 		this.updatePassState();
 
-		const blended = mesh._blendedDraw === true;
-		if (blended === true) {
-			this.beginBlendedDraw();
+		const blend = this.renderer._replayBlend ?? null;
+		if (blend !== null) {
+			this.beginBlendedDraw(blend);
 		}
 
 		const slices = mesh.textureGroups;
@@ -584,7 +569,7 @@ export default class MeshBatcher extends MaterialBatcher {
 			}
 		}
 
-		if (blended === true) {
+		if (blend !== null) {
 			this.endBlendedDraw();
 		}
 
@@ -608,18 +593,15 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * the ground.
 	 * @ignore
 	 */
-	beginBlendedDraw() {
-		const gl = this.gl;
-		gl.enable(gl.BLEND);
-		gl.blendEquation(gl.FUNC_ADD);
-		gl.blendFunc(
-			this.renderer.premultipliedAlpha ? gl.ONE : gl.SRC_ALPHA,
-			gl.ONE_MINUS_SRC_ALPHA,
-		);
-		// depth TEST stays on — the shadow must still be occluded by geometry
-		// in front of it — but writes are off, so overlapping shadows at one
-		// ground height blend instead of fighting under LEQUAL
-		gl.depthMask(false);
+	beginBlendedDraw(mode = "normal") {
+		// straight through the renderer's tables rather than the cached
+		// `setBlendMode`: this state belongs to one entry of the transparent
+		// pass and is torn down after it, so the 2D cache must not learn it
+		this.renderer.applyBlendFunction(mode);
+		// depth TEST stays on — a transparent object must still be occluded by
+		// geometry in front of it — but writes are off, so overlapping
+		// transparent draws blend instead of fighting under LEQUAL
+		this.gl.depthMask(false);
 	}
 
 	/**
@@ -935,6 +917,17 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.useShader(this.instancedShaderFor(mesh.instanceLayout));
 
 		this.updatePassState();
+
+		// An instanced mesh routes into the transparent pass on exactly the
+		// same terms as a retained one — the predicate in `drawMesh` reads
+		// nothing about instancing — so it must replay on the same terms too.
+		// Without this the whole set is deferred to end-of-frame and then
+		// drawn opaque anyway, which is strictly worse than not deferring it.
+		const blend = this.renderer._replayBlend ?? null;
+		if (blend !== null) {
+			this.beginBlendedDraw(blend);
+		}
+
 		const slices = mesh.textureGroups;
 		if (slices === undefined) {
 			this.applyMeshMaterial(mesh);
@@ -966,6 +959,10 @@ export default class MeshBatcher extends MaterialBatcher {
 					count,
 				);
 			}
+		}
+
+		if (blend !== null) {
+			this.endBlendedDraw();
 		}
 
 		// Hand the default shader and this batcher's own vertex state back.

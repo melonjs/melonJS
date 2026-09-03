@@ -737,11 +737,11 @@ describe("Ground shadows (#1515)", () => {
 			mesh.preDraw(renderer);
 			mesh.draw(renderer, camera);
 			mesh.postDraw(renderer);
-			expect(renderer._shadowCount).toBeGreaterThan(0);
+			expect(renderer._transparentCount).toBeGreaterThan(0);
 
 			const spy = vi.spyOn(renderer.gl, "drawElements");
 			renderer.reset();
-			expect(renderer._shadowCount).toBe(0);
+			expect(renderer._transparentCount).toBe(0);
 			expect(spy).not.toHaveBeenCalled();
 			spy.mockRestore();
 			mesh.destroy();
@@ -763,14 +763,14 @@ describe("Ground shadows (#1515)", () => {
 			mesh.preDraw(renderer);
 			mesh.draw(renderer, camera);
 			mesh.postDraw(renderer);
-			const queued = renderer._shadowCount;
+			const queued = renderer._transparentCount;
 			expect(queued).toBeGreaterThan(0);
 
 			renderer.setBatcher("quad");
-			expect(renderer._shadowCount).toBe(queued);
+			expect(renderer._transparentCount).toBe(queued);
 
 			renderer.flushGroundShadows();
-			expect(renderer._shadowCount).toBe(0);
+			expect(renderer._transparentCount).toBe(0);
 			mesh.destroy();
 		});
 
@@ -785,20 +785,20 @@ describe("Ground shadows (#1515)", () => {
 			mesh.preDraw(renderer);
 			mesh.draw(renderer, camera);
 			mesh.postDraw(renderer);
-			const queued = renderer._shadowCount;
+			const queued = renderer._transparentCount;
 			expect(queued).toBeGreaterThan(0);
 
 			renderer.beginScreenSpace();
 			try {
 				renderer.flushGroundShadows();
 				// held, not lost
-				expect(renderer._shadowCount).toBe(queued);
+				expect(renderer._transparentCount).toBe(queued);
 			} finally {
 				renderer.endScreenSpace();
 			}
 			// and released the moment the window closes
 			renderer.flushGroundShadows();
-			expect(renderer._shadowCount).toBe(0);
+			expect(renderer._transparentCount).toBe(0);
 			mesh.destroy();
 		});
 
@@ -823,11 +823,11 @@ describe("Ground shadows (#1515)", () => {
 			mesh.preDraw(renderer);
 			mesh.draw(renderer, camera);
 			mesh.postDraw(renderer);
-			const queued = renderer._shadowCount;
+			const queued = renderer._transparentCount;
 			expect(queued).toBeGreaterThan(0);
 
 			renderer.setBatcher("litMesh");
-			expect(renderer._shadowCount).toBe(queued);
+			expect(renderer._transparentCount).toBe(queued);
 			renderer.setBatcher("quad");
 			mesh.destroy();
 		});
@@ -844,16 +844,16 @@ describe("Ground shadows (#1515)", () => {
 			mesh.preDraw(renderer);
 			mesh.draw(renderer, camera);
 			mesh.postDraw(renderer);
-			const queued = renderer._shadowCount;
+			const queued = renderer._transparentCount;
 			expect(queued).toBeGreaterThan(0);
 
 			renderer.setMask(new Rect(0, 0, 32, 32));
-			expect(renderer._shadowCount).toBe(queued);
+			expect(renderer._transparentCount).toBe(queued);
 			renderer.clearMask();
 
 			// and once the mask is done, the queue is still there to be drawn
 			renderer.flushGroundShadows();
-			expect(renderer._shadowCount).toBe(0);
+			expect(renderer._transparentCount).toBe(0);
 			mesh.destroy();
 		});
 
@@ -871,8 +871,8 @@ describe("Ground shadows (#1515)", () => {
 				m.draw(renderer, camera);
 				m.postDraw(renderer);
 			}
-			expect(renderer._shadowCount).toBe(2);
-			const [first, second] = renderer._shadowPool;
+			expect(renderer._transparentCount).toBe(2);
+			const [first, second] = renderer._transparentPool;
 			expect(first.matrix).not.toBe(second.matrix);
 			expect(first.matrix.val[12]).not.toBe(second.matrix.val[12]);
 			// alpha rides the packed ARGB tint, per entry

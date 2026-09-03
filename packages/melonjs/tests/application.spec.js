@@ -105,6 +105,85 @@ describe("Application", () => {
 		});
 	});
 
+	describe("the frame boundary resets the screen-space bracket", () => {
+		it("clears it every draw, so an unbalanced overlay cannot wedge the transparent pass", async () => {
+			// `Container.draw` opens the screen-space bracket around a floating
+			// child with no `finally`, so a child that throws leaves it open —
+			// and while it is open every drain of the transparent queue is
+			// skipped. Without this the pass stays dead until the next STAGE
+			// CHANGE (the only thing that calls `renderer.reset()`), silently,
+			// with the queue growing every frame.
+			boot();
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			await app.init();
+			try {
+				app.renderer.beginScreenSpace(); // ...and never closed
+				expect(app.renderer._screenSpaceDepth).toBe(1);
+				app.isDirty = true;
+				app.draw();
+				expect(app.renderer._screenSpaceDepth).toBe(0);
+			} finally {
+				app.destroy();
+			}
+		});
+	});
+
+	describe("the frame closes the transparent pass", () => {
+		it("drains at end of frame, before the renderer flush", async () => {
+			// A scene that is nothing but meshes never switches batcher, so
+			// this is the only drain that runs — and nothing pinned it: every
+			// pixel test drains by hand, so deleting the call site was silent.
+			boot();
+			const app = new Application(64, 64, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			await app.init();
+			// The camera drains too, so counting drains proves nothing — what
+			// this pins is that one happens after the STAGE is fully drawn and
+			// before the renderer flush.
+			const order = [];
+			const stage = state.current();
+			const stageDraw = stage.draw.bind(stage);
+			const drain = app.renderer.flushTransparent.bind(app.renderer);
+			const flush = app.renderer.flush.bind(app.renderer);
+			stage.draw = (...a) => {
+				const r = stageDraw(...a);
+				order.push("stage-done");
+				return r;
+			};
+			app.renderer.flushTransparent = (...a) => {
+				order.push("drain");
+				return drain(...a);
+			};
+			app.renderer.flush = (...a) => {
+				order.push("flush");
+				return flush(...a);
+			};
+			try {
+				app.isDirty = true;
+				app.draw();
+			} finally {
+				stage.draw = stageDraw;
+				app.renderer.flushTransparent = drain;
+				app.renderer.flush = flush;
+				app.destroy();
+			}
+			const done = order.indexOf("stage-done");
+			const last = order.lastIndexOf("drain");
+			expect(done).toBeGreaterThanOrEqual(0);
+			expect(order).toContain("flush");
+			// a drain AFTER the whole stage is down, and before the flush
+			expect(last).toBeGreaterThan(done);
+			expect(last).toBeLessThan(order.indexOf("flush"));
+		});
+	});
+
 	describe("physics startup banner", () => {
 		it("reports the built-in adapter via its stable physicLabel, not a class name", async () => {
 			boot();

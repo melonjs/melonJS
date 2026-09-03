@@ -187,7 +187,7 @@ fn vertex_main(
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// sampled unconditionally, before the discard (uniform control flow)
-	var base = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;
+	var base = textureSample(uTexture, uSampler, in.vRegion);
 	// Per-texel opacity (MTL map_d), applied BEFORE the cutout so one
 	// material can cut out to the shape of a leaf rather than at a single
 	// threshold across the whole surface. Sampled unconditionally and
@@ -196,9 +196,13 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	base.a = base.a * mix(1.0, textureSample(uAlphaMap, uAlphaSampler, in.vRegion).r, uMesh.params.y);
 	// hard alpha cutout (glTF alphaMode MASK) — discard before any shading
 	// so cut-away texels cost nothing and never write depth
+	// Thresholded on the MATERIAL's own alpha, deliberately BEFORE the tint
+	// multiply — see mesh.frag: the cutout is the surface's shape, and a
+	// fading object must keep it rather than pop out at its own threshold.
 	if (base.a < uMesh.params.x) {
 		discard;
 	}
+	base = base * in.vColor;
 
 	// see mesh-lit.frag: a `lit` mesh with no usable normals must degrade to
 	// unlit rather than normalize a zero vector to NaN and render black

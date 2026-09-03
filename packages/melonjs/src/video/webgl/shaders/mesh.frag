@@ -53,7 +53,7 @@ varying vec4 vInstanceData;
 #endif
 
 void main(void) {
-    vec4 color = texture2D(uSampler, vRegion) * vColor;
+    vec4 texel = texture2D(uSampler, vRegion);
     // per-texel opacity (MTL map_d) multiplies in BEFORE the cutout, so one
     // material can cut out to the shape of a leaf rather than at a single
     // threshold across the whole surface. Red channel: the format stores a
@@ -62,12 +62,19 @@ void main(void) {
     // is bound the second sampler is filler (the diffuse texture), so the
     // value is thrown away — and both backends run the identical expression
     // instead of one branching and the other not.
-    color.a *= mix(1.0, texture2D(uAlphaMap, vRegion).r, uHasAlphaMap);
+    texel.a *= mix(1.0, texture2D(uAlphaMap, vRegion).r, uHasAlphaMap);
     // hard alpha cutout (glTF alphaMode MASK): drop fully-transparent texels
     // so foliage / fences / decals read crisp without blending or sorting.
-    if (color.a < uAlphaCutoff) {
+    // Thresholded on the MATERIAL's own alpha, deliberately BEFORE the tint
+    // multiply. The cutout describes the shape of the surface, and that shape
+    // does not change when the object fades: testing the drawn alpha instead
+    // makes a cutout mesh vanish completely the moment its opacity crosses its
+    // own threshold — and `Sprite3d` defaults that threshold to 0.5, so half a
+    // fade-out was a hard pop.
+    if (texel.a < uAlphaCutoff) {
         discard;
     }
+    vec4 color = texel * vColor;
     // emissive adds a self-lit color on top (neon, lava, screens); the unlit
     // path has no lighting, so it's simply added to the base color.
     vec3 emissive = uEmissive;

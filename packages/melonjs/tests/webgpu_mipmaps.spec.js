@@ -6,7 +6,7 @@ import WebGPUTextureStore from "../src/video/webgpu/texture/store.js";
  * Mesh-texture mipmaps on the WebGPU backend: a mip-wanting consumer (the
  * mesh path) gets a full generated chain and a trilinear sampler, while
  * every 2D consumer of the same image stays lod-clamped to level 0 — the
- * Godot-style split where minification quality is a 3D concern and sprite
+ * conventional split, where minification quality is a 3D concern and sprite
  * output never changes.
  */
 describe("WebGPUTextureStore mipmaps", () => {
