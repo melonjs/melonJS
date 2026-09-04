@@ -77,7 +77,7 @@
 		"build": "pnpm lint && tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
 		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md .",
-		"doc": "tsx scripts/check-doc-readme.ts && npm run doc:css && typedoc && tsx scripts/generate-llms-txt.ts",
+		"doc": "tsx scripts/check-doc-readme.ts && pnpm doc:css && typedoc && tsx scripts/generate-llms-txt.ts",
 		"doc:watch": "typedoc --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist:publish",
