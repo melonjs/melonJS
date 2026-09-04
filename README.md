@@ -341,10 +341,11 @@ Install them into whatever assistant you use, with one command :
 npx skills add https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills
 ```
 
-It detects the assistants in your project and writes each one's own convention
-— `.claude/skills/`, `.agents/skills/`, `.windsurf/skills/` and around seventy
-others — so there is nothing to place by hand. Add `-a claude-code -a cursor`
-to target specific ones.
+It detects the assistants in your project, installs the skills once into
+`.agents/skills/` — the shared location it reports as covering 77 agents — and
+symlinks them into each assistant's own directory, so `.claude/skills/melonjs`
+points back at the one copy and there is nothing to place by hand. Add
+`-a claude-code -a cursor` to target specific ones.
 
 The set includes an `AGENTS.md` for anything following that convention (Codex,
 Cursor, Gemini CLI); GitHub Copilot reads the same content from
