@@ -18,5 +18,6 @@ node_modules/
 dist/*
 !.placeholder
 package-lock.json
-docs/
+# the generated API reference, not every directory named `docs`
+/packages/melonjs/docs/
 .turbo
