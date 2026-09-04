@@ -19,6 +19,17 @@ import meshShadowInstancedVertex from "./../shaders/mesh-shadow-instanced.vert";
 import { injectDefines } from "../utils/string.js";
 import { MaterialBatcher } from "./material_batcher.js";
 
+/**
+ * Scratch for inverting the view when the eye position is needed.
+ *
+ * One for the whole backend: `setPlacementUniforms` is not re-entrant, and the
+ * value is consumed before the next call. Never invert the view in place — the
+ * batcher holds a live reference to `renderer.currentTransform`.
+ * @ignore
+ * @internal
+ */
+const _INVERSE_VIEW = new Matrix3d();
+
 // Shared identity model matrix for draws whose vertices are already placed
 // (the 2D-camera path pre-projects them on the CPU). Never mutated.
 const _IDENTITY_MATRIX = new Matrix3d();
@@ -1250,16 +1261,27 @@ export default class MeshBatcher extends MaterialBatcher {
 			shader.setUniform("uViewMatrix", this.viewMatrix);
 		}
 		if (uniforms.uEyePosition !== undefined) {
-			// The camera's world position, which the specular half-vector
-			// needs and nothing else in this shader does. Derived from the
-			// view matrix rather than plumbed from the camera so it stays
-			// correct for any caller that sets a view directly: a view is
-			// rigid, so its inverse translation is -Rᵀ·t — twelve
-			// multiply-adds against a full 4×4 inversion.
-			const v = this.viewMatrix.val;
-			const ex = -(v[0] * v[12] + v[1] * v[13] + v[2] * v[14]);
-			const ey = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
-			const ez = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
+			// The camera's world position, which the specular half-vector needs
+			// and nothing else in this shader does.
+			//
+			// `vWorldPos` is pre-view (`uModelMatrix * position`), so the eye
+			// this shader wants is by definition the point the view maps to the
+			// view-space origin — the translation column of its INVERSE. It was
+			// derived as -Rᵀ·t instead, which is that column only when the
+			// upper 3×3 is orthonormal. This matrix is not the camera's view
+			// alone: `Container.draw` folds every ancestor into it, so one
+			// scaled container put the eye somewhere else entirely and the
+			// specular highlight with it. A uniform scale is the worst case,
+			// not the benign one — the extraction yields s·e where the truth is
+			// e/s, an error of s².
+			//
+			// Inverted into a SCRATCH matrix: `viewMatrix` is a live reference
+			// to `renderer.currentTransform`, and `invert()` mutates its
+			// receiver.
+			const v = _INVERSE_VIEW.copy(this.viewMatrix).invert().val;
+			const ex = v[12];
+			const ey = v[13];
+			const ez = v[14];
 			// the camera moves once a frame at most, while this runs once per
 			// lit mesh — compare before paying for the GL call
 			if (
