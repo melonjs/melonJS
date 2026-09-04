@@ -158,9 +158,11 @@ Install them into whatever assistant you use, with one command:
 npx skills add https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills
 ```
 
-That writes each agent's own convention — `.claude/skills/`, `.agents/skills/`,
-`.windsurf/skills/` and around seventy others — so there is nothing to place by
-hand. It installs from `master`; swap that for a release tag in the URL to pin.
+It installs one copy of each skill under `.agents/skills/<skill-name>`, then
+symlinks that copy into every assistant's own directory, so
+`.claude/skills/melonjs` points back at `.agents/skills/melonjs` and there is
+nothing to place by hand. The installer reports coverage of 77 agents. It
+installs from `master`; swap that for a release tag in the URL to pin.
 
 They are plain Markdown — readable by any agent, or by you.
 
