@@ -18,6 +18,17 @@ import meshShadowInstancedWGSL from "../shaders/mesh-shadow-instanced.wgsl";
 import WebGPUBatcher from "./webgpu_batcher.js";
 
 /**
+ * Scratch for inverting the view when the eye position is needed.
+ *
+ * One for the whole backend: `setPlacementUniforms` is not re-entrant, and the
+ * value is consumed before the next call. Never invert the view in place — the
+ * batcher holds a live reference to `renderer.currentTransform`.
+ * @ignore
+ * @internal
+ */
+const _INVERSE_VIEW = new Matrix3d();
+
+/**
  * Byte size of the per-draw mesh uniform block:
  * mat4x4 model (64) + mat4x4 view (64) + vec4 tint (16) + vec4 params
  * (alphaCutoff, hasAlphaMap, reserved ×2) (16) + vec4 emissive (16) +
@@ -661,12 +672,14 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		scratch[45] = ks ? ks[1] : 0;
 		scratch[46] = ks ? ks[2] : 0;
 		scratch[47] = shininess;
-		// the camera's world position, which the specular half-vector needs.
-		// A view matrix is rigid, so its inverse translation is -Rᵀ·t.
-		const v = renderer.currentTransform.val;
-		scratch[48] = -(v[0] * v[12] + v[1] * v[13] + v[2] * v[14]);
-		scratch[49] = -(v[4] * v[12] + v[5] * v[13] + v[6] * v[14]);
-		scratch[50] = -(v[8] * v[12] + v[9] * v[13] + v[10] * v[14]);
+		// The camera's world position, which the specular half-vector needs.
+		// The translation column of the view's INVERSE — see the WebGL twin for
+		// why -Rᵀ·t was wrong once an ancestor carried a scale, and why this
+		// inverts into a scratch rather than in place.
+		const v = _INVERSE_VIEW.copy(renderer.currentTransform).invert().val;
+		scratch[48] = v[12];
+		scratch[49] = v[13];
+		scratch[50] = v[14];
 		scratch[51] = 0;
 
 		// Distance fog, resolved by the camera drawing this frame.
