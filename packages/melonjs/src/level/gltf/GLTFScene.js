@@ -9,7 +9,6 @@ import GLTFModel from "./GLTFModel.js";
 import { linearToSrgb8 } from "./srgb.js";
 
 /**
- * @classdesc
  * A loadable 3D scene parsed from a glTF / GLB asset. Instances are created
  * and registered with the {@link level} director (usually automatically by
  * the preloader), so a glTF scene loads with the same one-call ergonomics as

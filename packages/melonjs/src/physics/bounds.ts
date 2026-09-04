@@ -17,6 +17,10 @@ const _addFrameScratch = new Point();
  * @category Geometry
  */
 export class Bounds {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_center: Vector2d;
 	type: string;
 	min: XYPoint;

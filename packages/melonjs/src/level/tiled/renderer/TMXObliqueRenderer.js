@@ -43,6 +43,8 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 		/**
 		 * determinant of the shear matrix (for inverse transform)
 		 * @type {number}
+		 * @ignore
+		 * @internal
 		 */
 		this._det = 1 - this.shearX * this.shearY;
 	}

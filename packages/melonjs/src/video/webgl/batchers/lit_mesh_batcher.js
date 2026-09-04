@@ -59,12 +59,20 @@ export default class LitMeshBatcher extends MeshBatcher {
 		// Claim a binding point once and hold it: `init()` re-runs on context
 		// restore, and claiming again each time would walk through the
 		// device's budget over a long session.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._bindingPoint ??= renderer.reserveUniformBindingPoint();
 		this.lightBlock = new UniformBlock(
 			renderer.gl,
 			BLOCK3D_FLOATS,
 			this._bindingPoint,
 		);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lightBlockProgram = null;
 		// see the note in LitQuadBatcher.init: an active-but-unbound uniform
 		// block makes the program undrawable, so bind it at birth rather than

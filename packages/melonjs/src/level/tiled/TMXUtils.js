@@ -435,7 +435,6 @@ export { decode, setInflateFunction } from "../../utils/decode.ts";
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
- * @memberof TMXUtils
  * @param {Document} xml - XML TMX object
  * @returns {object} Javascript object
  */
@@ -445,7 +444,6 @@ export function parse(xml) {
 
 /**
  * Apply TMX Properties to the given object
- * @memberof TMXUtils
  * @param {object} obj - object to apply the properties to
  * @param {object} data - TMX data object
  */

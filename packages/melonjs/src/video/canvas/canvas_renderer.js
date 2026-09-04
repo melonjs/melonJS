@@ -105,6 +105,10 @@ export default class CanvasRenderer extends Renderer {
 		this.clearColor(this.currentColor, this.settings.transparent !== true);
 		// drop the per-light gradient cache; entries will lazily re-bake on
 		// the next `drawLight()` call.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lightCache = undefined;
 	}
 
@@ -178,6 +182,10 @@ export default class CanvasRenderer extends Renderer {
 			// OffscreenCanvas capability gating as everything else.
 			frame = new CanvasFrameTexture(Renderer.createCanvas(w, h));
 			if (shared) {
+				/**
+				 * @ignore
+				 * @internal
+				 */
 				this._frameTexture = frame;
 			}
 		} else if (frame.width !== w || frame.height !== h) {
@@ -587,7 +595,15 @@ export default class CanvasRenderer extends Renderer {
 			// `Renderer.createCanvas` for `OffscreenCanvas` / worker
 			// safety.
 			if (!this._meshColorCanvas) {
+				/**
+				 * @ignore
+				 * @internal
+				 */
 				this._meshColorCanvas = Renderer.createCanvas(1, 1, true);
+				/**
+				 * @ignore
+				 * @internal
+				 */
 				this._meshColorCtx = this._meshColorCanvas.getContext("2d");
 			}
 			this._meshColorCtx.clearRect(0, 0, 1, 1);
@@ -601,6 +617,10 @@ export default class CanvasRenderer extends Renderer {
 		// pre-allocate flat sort array (reuse across frames via closure)
 		// each entry stores: [sortKey, originalIndex]
 		if (!this._meshSortBuf || this._meshSortBuf.length < triCount * 2) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._meshSortBuf = new Float64Array(triCount * 2);
 		}
 		const sortBuf = this._meshSortBuf;
@@ -852,7 +872,7 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} y - The y axis of the coordinate for the rectangle starting point.
 	 * @param {number} width - The rectangle's width.
 	 * @param {number} height - The rectangle's height.
-	 * @param {number} radius - The corner radius.
+	 * @param {number} radii - The corner radius.
 	 */
 	roundRect(x, y, width, height, radii) {
 		this.getContext().roundRect(x, y, width, height, radii);
@@ -1144,8 +1164,6 @@ export default class CanvasRenderer extends Renderer {
 	 * Draw a point at the specified coordinates
 	 * @param {number} x
 	 * @param {number} y
-	 * @param {number} width
-	 * @param {number} height
 	 */
 	fillPoint(x, y) {
 		this.strokePoint(x, y);
@@ -1468,6 +1486,10 @@ export default class CanvasRenderer extends Renderer {
 				context.beginPath();
 			}
 			// else use the current path
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._maskInvertOuterAdded = false;
 		}
 

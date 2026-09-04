@@ -105,6 +105,10 @@ function _resumeRunLoop(): void {
  */
 function _pauseRunLoop(): void {
 	// Set the paused boolean to stop updates on (most) entities
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_isPaused = true;
 }
 
@@ -115,6 +119,10 @@ function _pauseRunLoop(): void {
  */
 function _resolveFreezeWaiters(): void {
 	const resolvers = _freezeResolvers;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeResolvers = [];
 	for (const resolve of resolvers) {
 		resolve();
@@ -128,9 +136,21 @@ function _resolveFreezeWaiters(): void {
  * @internal
  */
 function _endFreeze(): void {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeTimer = null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeEndsAt = 0;
 	const wasOwnedPause = _freezeStartedPause;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeStartedPause = false;
 	if (wasOwnedPause) {
 		state.resume(_freezeMusic);
@@ -176,6 +196,10 @@ function _renderFrame(time: number): void {
 function _stopRunLoop(): void {
 	// cancel any previous animationRequestFrame
 	globalThis.cancelAnimationFrame(_animFrameId);
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_animFrameId = -1;
 }
 

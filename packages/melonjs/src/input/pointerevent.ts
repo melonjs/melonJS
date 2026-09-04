@@ -43,6 +43,10 @@ let currentPointer: Rect;
  */
 export let _app: Application;
 on(GAME_INIT, (app: Application) => {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_app = app;
 });
 

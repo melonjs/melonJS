@@ -24,6 +24,10 @@ let _renderer;
 // cyclic redundancy (same pattern as the compressed-textures parser). `on`
 // rather than `once` so a re-init (renderer switch, tests) stays current.
 on(VIDEO_INIT, (renderer) => {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_renderer = renderer;
 });
 

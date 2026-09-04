@@ -43,13 +43,23 @@ export default class UniformBlock {
 		 * mirror of what was last uploaded, so an unchanged frame can skip the
 		 * `bufferSubData` entirely
 		 * @type {Float32Array}
+		 * @ignore
+		 * @internal
 		 */
 		this._uploaded = new Float32Array(floats);
 
-		/** nothing has been uploaded yet, so the mirror is not yet valid */
+		/**
+		 * nothing has been uploaded yet, so the mirror is not yet valid
+		 * @ignore
+		 * @internal
+		 */
 		this._everUploaded = false;
 
-		/** live length of the last upload; -1 until there has been one */
+		/**
+		 * live length of the last upload; -1 until there has been one
+		 * @ignore
+		 * @internal
+		 */
 		this._uploadedLength = -1;
 
 		/** @type {number} */

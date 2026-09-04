@@ -105,16 +105,22 @@ function updateRoundRectVertices(
 export class RoundRect extends Polygon {
 	/**
 	 * Corner radius.
+	 * @ignore
+	 * @internal
 	 */
 	_radius: number;
 
 	/**
 	 * stored width
+	 * @ignore
+	 * @internal
 	 */
 	_width: number;
 
 	/**
 	 * stored height
+	 * @ignore
+	 * @internal
 	 */
 	_height: number;
 

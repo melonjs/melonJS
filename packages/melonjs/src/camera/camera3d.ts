@@ -448,12 +448,32 @@ export default class Camera3d extends Camera2d {
 
 		this._fogOptions = options;
 		this._fogMode = mode;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogNear = options.near;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogFar = options.far;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogDensity = options.density;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogHeight = options.fogHeight ?? 0;
 		// zero is uniform fog — the maths below collapses to the distance-only
 		// form exactly, so the default changes nothing
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogHeightFalloff = options.heightFalloff ?? 0;
 		// A `Color` is referenced so mutating it animates the fog; anything
 		// else is parsed once into a colour this camera owns.

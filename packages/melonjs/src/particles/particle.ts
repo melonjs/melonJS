@@ -34,9 +34,25 @@ export default class Particle extends Renderable {
 	wind: number;
 	followTrajectory: boolean;
 	onlyInViewport: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_deltaInv: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_halfW: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_halfH: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_angle: number;
 	alive: boolean;
 

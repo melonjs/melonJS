@@ -24,25 +24,19 @@ export class DropTarget extends Renderable {
 
 		/**
 		 * constant for the overlaps method
-		 * @constant
 		 * @type {string}
-		 * @name CHECKMETHOD_OVERLAP
 		 */
 		this.CHECKMETHOD_OVERLAP = "overlaps";
 
 		/**
 		 * constant for the contains method
-		 * @constant
 		 * @type {string}
-		 * @name CHECKMETHOD_CONTAINS
 		 */
 		this.CHECKMETHOD_CONTAINS = "contains";
 
 		/**
 		 * the checkmethod we want to use
-		 * @constant
 		 * @type {string}
-		 * @name checkMethod
 		 * @default "CHECKMETHOD_OVERLAP"
 		 */
 		this.checkMethod = this.CHECKMETHOD_OVERLAP;
@@ -81,7 +75,8 @@ export class DropTarget extends Renderable {
 	 * Gets called when a draggable entity is dropped on the current entity
 	 * @param {Draggable} draggable - the draggable object that is dropped
 	 */
-	drop() {}
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	drop(draggable) {}
 
 	/**
 	 * Destructor

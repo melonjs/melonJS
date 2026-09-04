@@ -285,6 +285,10 @@ export default class Camera2d extends Renderable {
 		this.isKinematic = false;
 
 		// camera manages its own FBO lifecycle in draw()
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._postEffectManaged = true;
 
 		this.colorMatrix = new ColorMatrix();

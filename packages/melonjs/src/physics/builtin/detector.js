@@ -229,6 +229,10 @@ class Detector {
 		 * @internal
 		 */
 		this._contactObjA = null;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._contactObjB = null;
 		/**
 		 * @ignore

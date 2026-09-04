@@ -88,6 +88,10 @@ export class MaterialBatcher extends WebGLBatcher {
 		if (!this._onCacheReset) {
 			// delegate to an overridable method so subclasses that track extra
 			// per-unit bindings (lit normal maps) can drop those on a reset too
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._onCacheReset = () => {
 				this._onTextureCacheReset();
 			};

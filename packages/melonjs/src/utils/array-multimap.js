@@ -5,6 +5,10 @@
  */
 class ArrayMultimap {
 	constructor() {
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._map = new Map();
 	}
 	put(key, value) {

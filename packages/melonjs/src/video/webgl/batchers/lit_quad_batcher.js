@@ -146,9 +146,21 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * @internal
 		 */
 		this.normalUnits = new Map();
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._cacheEpoch = 0;
 
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lightCount = 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._maxLights = MAX_LIGHTS;
 
 		// `init` is re-run on context restore (WebGLRenderer.reset), against a
@@ -167,12 +179,20 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// Claim a binding point once and hold it: `init()` re-runs on context
 		// restore, and claiming again each time would walk through the
 		// device's budget over a long session.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._bindingPoint ??= renderer.reserveUniformBindingPoint();
 		this.lightBlock = new UniformBlock(
 			renderer.gl,
 			BLOCK_FLOATS,
 			this._bindingPoint,
 		);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lightBlockProgram = null;
 		// Bind immediately rather than waiting for the first activation. An
 		// active-but-unbound uniform block is INVALID_OPERATION at draw time,

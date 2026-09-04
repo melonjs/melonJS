@@ -73,7 +73,15 @@ export default class OrthogonalTMXLayerGPURenderer {
 		this.animLookups = new Map();
 		// pre-allocated scratch for uniform uploads — avoids per-frame
 		// allocation in the hot path
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._v2 = new Float32Array(2);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._v4 = new Float32Array(4);
 	}
 
@@ -128,6 +136,8 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * @param {number} x
 	 * @param {number} y
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_setV2(name, x, y) {
 		this._v2[0] = x;
@@ -143,6 +153,8 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * @param {number} z
 	 * @param {number} w
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_setV4(name, x, y, z, w) {
 		this._v4[0] = x;
@@ -170,6 +182,8 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 *   (`atlasCols * atlasRows`)
 	 * @returns {{resource: BufferTextureResource, data: Uint8Array,
 	 *   tileCount: number, dirty: boolean}|undefined}
+	 * @ignore
+	 * @internal
 	 */
 	_getOrUpdateAnimLookup(tileset, tileCount) {
 		if (!tileset.isAnimated || tileset.animations.size === 0) {
@@ -222,6 +236,8 @@ export default class OrthogonalTMXLayerGPURenderer {
 	 * Get-or-create the per-layer index `BufferTextureResource`.
 	 * @param {TMXLayer} layer
 	 * @returns {BufferTextureResource}
+	 * @ignore
+	 * @internal
 	 */
 	_getResource(layer) {
 		let resource = this.resources.get(layer);

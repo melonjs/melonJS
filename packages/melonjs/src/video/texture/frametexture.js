@@ -24,6 +24,10 @@ export class FrameTexture extends Texture2d {
 	 */
 	constructor(renderer, width, height) {
 		super();
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderer = renderer;
 		/** @type {number} */
 		this.width = width;

@@ -52,8 +52,6 @@ export const baseURL = {};
  * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
  * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
  * @type {string}
- * @name crossOrigin
- * @memberof loader
  * @default undefined
  * @see {@link setOptions}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes}
@@ -74,10 +72,8 @@ export let crossOrigin;
  * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
  * @public
  * @type {boolean}
- * @name withCredentials
  * @see {@link setOptions}
  * @default false
- * @memberof loader
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials}
  * @deprecated since 20.4.0, read-only — set it with
  * {@link setOptions}. This is a module binding, so assigning to it throws a
@@ -102,7 +98,6 @@ export function setNocache(enable = false) {
 
 /**
  * Sets the options for the loader.
- * @memberof loader
  * @param {Object} options - The options to set.
  * @param {string} [options.crossOrigin] - The crossOrigin attribute to configure the CORS requests for Image and Video data element.
  * @param {boolean} [options.nocache] - Enable or disable the nocache mechanism.
@@ -133,8 +128,6 @@ export function setOptions(options) {
 /**
  * change the default baseURL for the given asset type.<br>
  * (this will prepend the asset URL and must finish with a '/')
- * @name setBaseURL
- * @memberof loader
  * @public
  * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface", "aseprite", "shader", "obj", "mtl", "gltf", "glb"
  * @param {string} [url="./"] - default base URL
@@ -272,7 +265,6 @@ function onLoadingError(res) {
 /**
  * an asset definition to be used with the loader
  * @typedef {object} Asset
- * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tsx"|"fontface"|"video"|"aseprite"|"shader"|"obj"|"mtl"|"gltf"|"glb"). JSON-serialised Tiled maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"` — those are file extensions, not asset types.
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
@@ -327,7 +319,6 @@ function onLoadingError(res) {
 
 /**
  * specify a parser/preload function for the given asset type
- * @memberof loader
  * @param {string} type - asset type
  * @param {function} parserFn - parser function
  * @see {@link Asset.type}
@@ -361,7 +352,6 @@ export function setParser(type, parserFn) {
 
 /**
  * set all the specified game assets to be preloaded.
- * @memberof loader
  * @param {Asset[]} assets - list of assets to load
  * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
@@ -453,7 +443,6 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 
 /**
  * retry loading assets after a loading failure
- * @memberof loader
  * @param {string} src - src of asset to reload
  * @example
  *  event.on(
@@ -495,7 +484,6 @@ export function reload(src) {
 
 /**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
- * @memberof loader
  * @param {Asset} asset
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
@@ -604,7 +592,6 @@ export function load(asset, onload, onerror) {
 
 /**
  * unload the specified asset to free memory
- * @memberof loader
  * @param {Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
@@ -735,7 +722,6 @@ export function unload(asset) {
 
 /**
  * unload all resources to free memory
- * @memberof loader
  * @example me.loader.unloadAll();
  * @category Assets
  */
@@ -848,7 +834,6 @@ export function unloadAll() {
 
 /**
  * return the specified TMX/TSX object
- * @memberof loader
  * @param {string} elt - name of the tmx/tsx element ("map1");
  * @returns {object} requested element or null if not found
  * @category Assets
@@ -864,7 +849,6 @@ export function getTMX(elt) {
 
 /**
  * return the specified Binary object
- * @memberof loader
  * @param {string} elt - name of the binary object ("ymTrack");
  * @returns {object} requested element or null if not found
  * @category Assets
@@ -880,7 +864,6 @@ export function getBinary(elt) {
 
 /**
  * return the specified Image Object
- * @memberof loader
  * @param {string} image - name of the Image element ("tileset-platformer");
  * @returns {HTMLImageElement|CompressedImage|null} requested element or null if not found
  * @category Assets
@@ -897,7 +880,6 @@ export function getImage(image) {
 
 /**
  * return the specified JSON Object
- * @memberof loader
  * @param {string} elt - name of the json file
  * @returns {JSON}
  * @category Assets
@@ -913,7 +895,6 @@ export function getJSON(elt) {
 
 /**
  * return the specified OBJ model data
- * @memberof loader
  * @param {string} elt - name of the OBJ file (as specified in the preload list)
  * @returns {object} parsed OBJ data with `vertices` (Float32Array), `uvs` (Float32Array), `indices` (Uint16Array), and `vertexCount` (number), or null if not found
  * @category Assets
@@ -983,7 +964,6 @@ export function getOBJ(elt) {
  * call via `me.level.load(name)` — exactly like a Tiled map. Reach for
  * `getGLTF` only when you want to inspect the raw descriptor (e.g. to frame
  * a `Camera3d` from the embedded camera).
- * @memberof loader
  * @param {string} elt - name of the glTF/GLB file (as specified in the preload list)
  * @returns {GLTFData|null} the parsed scene descriptor, or `null` if not found
  * @category Assets
@@ -1041,7 +1021,6 @@ export function getGLTF(elt) {
  * built-in rendering. Note that shader assets require an initialized
  * Application (`await app.init()`) — an inherent precondition of the
  * preload flow, since the loading screen itself needs the renderer.
- * @memberof loader
  * @param {string} elt - name of the shader asset (as specified in the preload list)
  * @returns {ShaderEffect|GLShader|null} the shared, precompiled shader, or `null` if not found
  * @category Assets
@@ -1081,7 +1060,6 @@ export function getShader(elt) {
 
 /**
  * return the specified MTL material data
- * @memberof loader
  * @param {string} elt - name of the MTL file (as specified in the preload list)
  * @returns {object} map of material names to properties (`Kd`, `d`, `map_Kd`), or null if not found
  * @category Assets
@@ -1119,7 +1097,6 @@ export function getMTL(elt) {
 
 /**
  * return the specified Video Object
- * @memberof loader
  * @param {string} elt - name of the video file
  * @returns {HTMLVideoElement}
  * @category Assets
@@ -1135,7 +1112,6 @@ export function getVideo(elt) {
 
 /**
  * return the specified FontFace Object
- * @memberof loader
  * @param {string} elt - name of the font file
  * @returns {FontFace}
  * @category Assets

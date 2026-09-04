@@ -55,7 +55,6 @@ class ResponseObject {
 	 * Call this between tests if you are going to reuse a single <br>
 	 * Response object for multiple intersection tests <br>
 	 * (recommended as it will avoid allocating extra memory) <br>
-	 * @name clear
 	 * @public
 	 * @returns {object} this object for chaining
 	 */

@@ -153,13 +153,39 @@ export default class TMXTileset {
 		/**
 		 * precomputed render scale for tilerendersize="grid" (spritesheet only)
 		 * @private
+		 * @ignore
+		 * @internal
 		 */
 		this._renderScaleX = 1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderScaleY = 1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDw = this.tilewidth;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDh = this.tileheight;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDyOffset = 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDxCenter = 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDyCenter = 0;
 
 		if (this.tilerendersize === "grid") {
@@ -200,6 +226,8 @@ export default class TMXTileset {
 		/**
 		 * Remember the last update timestamp to prevent too many animation updates
 		 * @private
+		 * @ignore
+		 * @internal
 		 */
 		this._lastUpdate = 0;
 

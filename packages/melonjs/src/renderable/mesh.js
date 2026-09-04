@@ -463,6 +463,10 @@ export default class Mesh extends Renderable {
 		// losing the ability to restore the original (see
 		// `_setupWorldSpace` for the rationale). Same reference — we
 		// never mutate it in place.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._indicesOriginal = this.indices;
 
 		// working array for projected vertices (see the note below on when it
@@ -762,13 +766,25 @@ export default class Mesh extends Renderable {
 		 * @internal
 		 */
 		this._shadowHalfX = -1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shadowHalfZ = -1;
 		// the geometry version the two above (and `_shadowHasHeight`) were
 		// measured at; -1 means "never". Recomputed when the mesh signals a
 		// geometry change, so a deforming mesh — or a `Sprite3d` whose frame
 		// bake rewrites `originalVertices` every animation step — does not keep
 		// a blob frozen at whatever its first shadowed draw happened to see.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shadowGeomVersion = -1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shadowHasHeight = false;
 
 		/**
@@ -1469,8 +1485,16 @@ export default class Mesh extends Renderable {
 				dst[i + 1] = src[i + 2];
 				dst[i + 2] = src[i + 1];
 			}
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._indicesReversed = dst;
 		}
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._worldSpace = true;
 	}
 
@@ -1492,6 +1516,10 @@ export default class Mesh extends Renderable {
 	 */
 	onActivateEvent(...args) {
 		super.onActivateEvent(...args);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._useWorldSpace = game.viewport instanceof Camera3d;
 	}
 

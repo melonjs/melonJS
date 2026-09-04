@@ -551,6 +551,10 @@ export default class InstancedMesh extends Mesh {
 					}
 				}
 			}
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._cullRadius = Math.max(radius, 1);
 		}
 		// Widen the box rather than resizing the renderable: `width`/`height`

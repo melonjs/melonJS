@@ -674,6 +674,8 @@ export default class Body {
 	 * @param {object} [source] - the object passed to `addShape`; omitted when
 	 * the shape was built here from a pool and has no user-supplied original
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_initShapeCollision(stored, source) {
 		// Stable identity for shape-level contact tracking (#1596).
@@ -1141,8 +1143,7 @@ export default class Body {
 
 	/**
 	 * Returns true if the any of the shape composing the body contains the given point.
-	 * @param {number|Vector2d} x -  x coordinate or a vector point to check
-	 * @param {number} [y] -  y coordinate
+	 * @param {...(number|Vector2d)} args - either `x, y` coordinates, or a single {@link Vector2d}
 	 * @returns {boolean} true if contains
 	 * @example
 	 * if (mySprite.body.contains(10, 10)) {

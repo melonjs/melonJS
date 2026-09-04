@@ -159,6 +159,10 @@ import Sprite from "../sprite.js";
  * @category Game Objects
  */
 export default class Entity extends Renderable {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	static _deprecationWarned = false;
 
 	/**

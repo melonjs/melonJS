@@ -162,6 +162,8 @@ export default class Text extends Renderable {
 		/**
 		 * the text to be displayed
 		 * @private
+		 * @ignore
+		 * @internal
 		 */
 		this._text = [];
 

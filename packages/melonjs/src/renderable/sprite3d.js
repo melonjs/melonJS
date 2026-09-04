@@ -307,6 +307,10 @@ export default class Sprite3d extends Mesh {
 		// the anchor lives in the vertex data — tell Mesh.preDraw to suppress
 		// the base transform-level anchor on BOTH camera paths (single
 		// anchoring mechanism; see Mesh#_anchorBaked)
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._anchorBaked = true;
 		// Repurpose the inherited anchorPoint as the LIVE anchor API (unlike
 		// Mesh, where it stays inert on the world path): setMuted first — the

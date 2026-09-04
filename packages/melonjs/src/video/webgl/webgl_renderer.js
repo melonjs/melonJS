@@ -137,7 +137,6 @@ export default class WebGLRenderer extends Renderer {
 
 		/**
 		 * The WebGL context
-		 * @name gl
 		 * @type {WebGLRenderingContext}
 		 */
 		this.gl = this.renderTarget.context;
@@ -157,6 +156,10 @@ export default class WebGLRenderer extends Renderer {
 			this.settings.antiAlias === true
 				? Math.min(4, this.gl.getParameter(this.gl.MAX_SAMPLES))
 				: 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderTargetPool = new RenderTargetPool((w, h, isCapture) => {
 			return new WebGLRenderTarget(this.gl, w, h, {
 				samples: isCapture === true ? msaaSamples : 0,
@@ -172,7 +175,15 @@ export default class WebGLRenderer extends Renderer {
 		// projections saved by beginPostEffect, one per (possibly nested)
 		// active pass — preallocated slots + a depth counter (zero-alloc
 		// steady state), matching RenderTargetPool's base stack
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._effectProjectionStack = [];
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._effectPassDepth = 0;
 
 		/**
@@ -318,18 +329,34 @@ export default class WebGLRenderer extends Renderer {
 
 		// scratch AABB reused by `clipRect` for screen-space corner
 		// transforms, kept on the instance so the call doesn't allocate.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._clipAABB = new Bounds();
 
 		// scratch array for fillPolygon to avoid mutating polygon points
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._polyVerts = [];
 
 		// current gradient state (null when using solid color)
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._currentGradient = null;
 
 		// the stencil value of currently-VISIBLE pixels under the innermost
 		// active mask, as installed by setMask (0 for an inverted mask,
 		// maskLevel otherwise) — the single source #gradientMask gates and
 		// restores against
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._maskVisibleRef = 0;
 
 		/**
@@ -389,6 +416,10 @@ export default class WebGLRenderer extends Renderer {
 		this.gl.depthMask(false);
 
 		this.gl.disable(this.gl.SCISSOR_TEST);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._scissorActive = false;
 		this.gl.enable(this.gl.BLEND);
 
@@ -554,6 +585,10 @@ export default class WebGLRenderer extends Renderer {
 				// WebGL context not available
 				return super.getSupportedCompressedTextureFormats();
 			}
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._compressedTextureFormats = {
 				astc:
 					gl.getExtension("WEBGL_compressed_texture_astc") ||
@@ -737,6 +772,10 @@ export default class WebGLRenderer extends Renderer {
 		// Lazy re-init happens on the next drawLight call.
 		if (this._lightShader !== undefined) {
 			this._lightShader.destroy?.();
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._lightShader = undefined;
 		}
 		if (this._lightAtlas !== undefined) {
@@ -749,6 +788,10 @@ export default class WebGLRenderer extends Renderer {
 			this._lightAtlas.sources.forEach((source) => {
 				this.cache.delete?.(source);
 			});
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._lightAtlas = undefined;
 		}
 
@@ -757,6 +800,10 @@ export default class WebGLRenderer extends Renderer {
 		// on a still-valid context too (a resize/reset just re-creates it).
 		if (typeof this._frameTexture !== "undefined") {
 			this._frameTexture.destroy();
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._frameTexture = undefined;
 		}
 
@@ -768,6 +815,10 @@ export default class WebGLRenderer extends Renderer {
 		// program survives across level transitions instead of leaking a
 		// `WebGLProgram` per reset and re-paying the compile cost.
 		if (this.isContextValid === false) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._orthogonalTMXGPURenderer = undefined;
 		}
 	}
@@ -1011,6 +1062,10 @@ export default class WebGLRenderer extends Renderer {
 		// scratch is allocated lazily on first call so non-lit scenes
 		// don't pay for it
 		if (this._lightUniformsScratch === undefined) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._lightUniformsScratch = createLightUniformScratch();
 		}
 		const u = packLights(
@@ -2283,6 +2338,10 @@ export default class WebGLRenderer extends Renderer {
 			this.customShader.isWebGL !== true &&
 			this._meshShaderWarned !== true
 		) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._meshShaderWarned = true;
 			console.warn(
 				"melonJS: this custom shader cannot be hosted on a Mesh by the WebGL renderer (no compiled GLSL program) — the mesh draws with the built-in shading",
@@ -2431,7 +2490,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} y - The y axis of the coordinate for the rectangle starting point.
 	 * @param {number} width - The rectangle's width.
 	 * @param {number} height - The rectangle's height.
-	 * @param {number} radius - The corner radius.
+	 * @param {number} radii - The corner radius.
 	 */
 	roundRect(x, y, width, height, radii) {
 		this.path2D.roundRect(x, y, width, height, radii);
@@ -3579,6 +3638,10 @@ export default class WebGLRenderer extends Renderer {
 			// stencil couldn't represent deeper nesting anyway
 			this.maskLevel = 0x7f;
 			if (this._maskDepthWarned !== true) {
+				/**
+				 * @ignore
+				 * @internal
+				 */
 				this._maskDepthWarned = true;
 				console.warn(
 					"melonJS: setMask nesting deeper than 127 — mask level clamped",

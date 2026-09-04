@@ -113,6 +113,10 @@ export default class ImageLayer extends Sprite {
 	}
 
 	set repeat(value) {
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._repeat = value;
 		switch (this._repeat) {
 			case "no-repeat":
@@ -177,6 +181,10 @@ export default class ImageLayer extends Sprite {
 	 * @internal
 	 */
 	createPattern() {
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._pattern = this.parentApp.renderer.createPattern(
 			this.image,
 			this._repeat,

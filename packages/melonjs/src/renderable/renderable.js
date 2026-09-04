@@ -1208,7 +1208,8 @@ export default class Renderable extends Rect {
 	 *     return true;
 	 * }
 	 */
-	onCollision(_response, _other) {
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	onCollision(response, other) {
 		// Default returns `undefined` so that bodies without a user-defined
 		// `onCollision` get push-out by default (matches matter's "solver
 		// resolves contacts unless `isSensor`" model). A user-defined

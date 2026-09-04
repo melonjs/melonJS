@@ -27,6 +27,10 @@ let _renderer;
 
 // gracefully capture a reference to the active renderer without adding more cyclic redundancy
 once(VIDEO_INIT, (renderer) => {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_renderer = renderer;
 });
 

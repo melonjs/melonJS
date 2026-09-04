@@ -112,6 +112,10 @@ export default class WebGLRenderTarget extends RenderTarget {
 		this.samples = options.samples ?? 0;
 
 		// the render half needs a resolve before the texture is sampled
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._needsResolve = false;
 
 		// create the (resolve) framebuffer — the one whose color TEXTURE
@@ -213,6 +217,10 @@ export default class WebGLRenderTarget extends RenderTarget {
 			height,
 			this.samples,
 		);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._hasStencil = result.hasStencil;
 		if (!result.isComplete) {
 			console.warn(

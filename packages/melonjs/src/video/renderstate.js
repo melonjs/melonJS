@@ -267,7 +267,11 @@ export default class RenderState {
 		this.currentDepth = 0;
 	}
 
-	/** @private — doubles stack capacity when exceeded */
+	/**
+	 * @private — doubles stack capacity when exceeded
+	 * @ignore
+	 * @internal
+	 */
 	_growStacks() {
 		const oldCap = this._stackCapacity;
 		const newCap = oldCap * 2;

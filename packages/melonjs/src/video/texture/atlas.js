@@ -14,6 +14,10 @@ import Texture2d from "./texture2d.ts";
 // re-capture the new renderer).
 let _renderer;
 on(VIDEO_INIT, (renderer) => {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_renderer = renderer;
 });
 

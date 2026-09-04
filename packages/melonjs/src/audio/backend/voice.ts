@@ -8,26 +8,110 @@ import {
 } from "./types.ts";
 
 export class Voice {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_parent: Sound;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_muted: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_loop: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_volume: number = 1;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_rate: number = 1;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_seek: number = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_paused: boolean = true;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_ended: boolean = true;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_sprite: string = "__default";
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_id: number = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_node: HTMLAudioElementWithUnlocked | GainNodeWithBufferSource | null = null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_playStart: number = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_rateSeek: number = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_errorFn?: (event: Event) => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_loadFn?: (event: Event) => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_endFn?: (event: Event) => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_start?: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_stop?: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_panner?: PannerNode | StereoPannerNode;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_fadeTo?: number | undefined;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_interval?: ReturnType<typeof setInterval> | undefined;
 
 	constructor(sound: Sound) {

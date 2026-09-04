@@ -39,6 +39,10 @@ let deadzone = 0.1;
 function wiredXbox360NormalizeFn(
 	this: any,
 	value: number,
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_axis: number,
 	button: number,
 ): number {

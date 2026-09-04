@@ -130,6 +130,10 @@ export default class RadialGradientEffect extends ShaderEffect {
 
 		// reused across `setColor` calls so we don't allocate a fresh
 		// 3-element array every frame on every light.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._colorBuf = new Float32Array(3);
 
 		const color = options.color;

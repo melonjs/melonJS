@@ -134,6 +134,10 @@ export default class GLShader {
 		// per-host WGSL family registrations for the current device
 		// generation: {epoch, keys: Map<host key, family key>} — compared
 		// against the pipeline cache's epoch so a device loss re-registers
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._wgslRegistrations = { epoch: -1, keys: new Map() };
 
 		if (!this.isWebGL && !this.isWebGPU) {
@@ -181,11 +185,27 @@ export default class GLShader {
 		this.suspended = false;
 
 		// raw source kept so we can recompile against a restored context
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._sourceVertex = vertex;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._sourceFragment = fragment;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._precision = precision;
 
 		// uniform writes are cached + replayed across a context cycle
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._uniformCache = Object.create(null);
 
 		if (this.isWebGL) {
@@ -216,6 +236,8 @@ export default class GLShader {
 	 * {@link _onContextRestored}. Replays any cached uniform values
 	 * against the freshly-extracted uniforms proxy.
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_compile() {
 		this.vertex = setPrecision(
@@ -266,6 +288,8 @@ export default class GLShader {
 	 * but preserves the shader source + cached uniform values so the
 	 * shader can be transparently rebuilt on context restore.
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_onContextLost() {
 		if (this.destroyed || this.suspended) {
@@ -290,6 +314,8 @@ export default class GLShader {
 	 * re-links the shader against the new GL context, then replays
 	 * any cached uniform values via {@link _compile}.
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_onContextRestored() {
 		if (this.destroyed) {

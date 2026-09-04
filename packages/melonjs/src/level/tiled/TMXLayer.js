@@ -575,6 +575,10 @@ export default class TMXLayer extends Renderable {
 		// 0xFFFF. Warn once per layer so a runtime `setTile` with a
 		// GID >= 65536 doesn't corrupt the cell undetected.
 		if (cleanGid > 0xffff && !this._truncationWarned) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._truncationWarned = true;
 			console.warn(
 				"melonJS: setTile received GID " +

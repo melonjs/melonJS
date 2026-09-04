@@ -97,7 +97,8 @@ export default class TMXRenderer {
 	 * @param {number} y - Y coordinate where to draw the tile
 	 * @param {Tile} tile - the tile object to draw
 	 */
-	drawTile() {}
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	drawTile(renderer, x, y, tile) {}
 
 	/**
 	 * draw the given TMX Layer for the given area
@@ -105,5 +106,6 @@ export default class TMXRenderer {
 	 * @param {TMXLayer} layer - a TMX Layer object
 	 * @param {Rect} rect - the area of the layer to draw
 	 */
-	drawTileLayer() {}
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	drawTileLayer(renderer, layer, rect) {}
 }

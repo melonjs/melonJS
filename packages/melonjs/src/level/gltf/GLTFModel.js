@@ -31,7 +31,6 @@ const _val = [0, 0, 0, 0];
 const _localScratch = new Array(16);
 
 /**
- * @classdesc
  * A rig-driven 3D model loaded from an animated glTF/GLB asset. Unlike a static
  * {@link GLTFScene} (which flattens each node into an independent {@link Mesh}),
  * a `GLTFModel` keeps the node **hierarchy** intact so a parent transform
@@ -73,6 +72,10 @@ export default class GLTFModel extends Container {
 		this.scale = options.scale ?? 1;
 		// right-handed (glTF) → negate Z as well as Y so the Y-up→Y-down bridge
 		// is a rotation, matching Mesh#rightHanded / GLTFScene
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._zSign = options.rightHanded !== false ? -1 : 1;
 
 		// scene meshes carry their own world transform; the GPU depth test
@@ -502,6 +505,10 @@ export default class GLTFModel extends Container {
 		return this.pos !== undefined;
 	}
 
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_pose() {
 		const clip = this.current.name ? this.anim[this.current.name] : null;
 		const t = this.current.time;

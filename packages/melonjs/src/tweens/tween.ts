@@ -61,28 +61,120 @@ type OnCompleteCallback<T> = (this: T) => void;
  * @category Tweens
  */
 export default class Tween {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_object: object;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_valuesStart: Record<string, unknown>;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_valuesEnd: Record<string, unknown>;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_valuesStartRepeat: Record<string, unknown>;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_duration: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_repeat: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_yoyo: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_reversed: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_delayTime: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_repeatDelayTime: number | undefined;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_startTime: number | null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_easingFunction: EasingFunction;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_interpolationFunction: InterpolationFunction;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_chainedTweens: Array<Tween>;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onStartCallback: OnStartCallback<object> | null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onStartCallbackFired: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onUpdateCallback: OnUpdateCallback<object> | null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onCompleteCallback: OnCompleteCallback<object> | null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_tweenTimeTracker: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_lastUpdate: number;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_isRunning: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_isPaused: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_lastTick: number;
 
 	/**

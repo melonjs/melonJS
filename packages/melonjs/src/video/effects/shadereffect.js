@@ -313,12 +313,20 @@ export default class ShaderEffect {
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
 	}
 
-	/** @private */
+	/**
+	 * @private
+	 * @ignore
+	 * @internal
+	 */
 	_onContextLost() {
 		if (this.destroyed) {
 			return;
 		}
 		// remember user-set state so restore doesn't override it
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._enabledBeforeSuspend = this.enabled;
 		this.enabled = false;
 		// GL texture handles + unit reservations are invalid after a context
@@ -334,7 +342,11 @@ export default class ShaderEffect {
 		}
 	}
 
-	/** @private */
+	/**
+	 * @private
+	 * @ignore
+	 * @internal
+	 */
 	_onContextRestored() {
 		if (this.destroyed) {
 			return;
@@ -443,6 +455,10 @@ export default class ShaderEffect {
 			!this._shader.suspended &&
 			typeof this._shader.uniforms.uUVYDir !== "undefined"
 		) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._uvYDir = dir;
 			this._shader.setUniform("uUVYDir", dir);
 		} else if (
@@ -705,6 +721,10 @@ export default class ShaderEffect {
 					// more extra textures than the batcher can hold beside
 					// uSampler — bind what fits, warn once, skip the rest
 					if (!this._textureOverflowWarned) {
+						/**
+						 * @ignore
+						 * @internal
+						 */
 						this._textureOverflowWarned = true;
 						console.warn(
 							`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,

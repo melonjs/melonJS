@@ -118,7 +118,6 @@ export default class WebGPURenderer extends Renderer {
 
 		/**
 		 * The WebGPU device, set once {@link WebGPURenderer#init} resolves.
-		 * @name device
 		 * @type {GPUDevice|undefined}
 		 * @readonly
 		 */
@@ -126,7 +125,6 @@ export default class WebGPURenderer extends Renderer {
 
 		/**
 		 * The WebGPU canvas context
-		 * @name context
 		 * @type {GPUCanvasContext}
 		 */
 		this.context = this.renderTarget.context;
@@ -1232,6 +1230,10 @@ export default class WebGPURenderer extends Renderer {
 		// the pass sample count so MSAA composes with post-effects (the GL
 		// twin resolves via blitFramebuffer). Ping-pong intermediates draw
 		// screen-aligned effect quads only and stay single-sampled.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderTargetPool ??= new RenderTargetPool((w, h, isCapture) => {
 			return new WebGPURenderTarget(this, w, h, {
 				sampleCount: isCapture === true ? this.canvasSampleCount : 1,

@@ -85,6 +85,10 @@ export default class Sprite extends Renderable {
 		// accessors below) and calls back into `_applyFrame` on each frame change.
 		// Created up front, before the texture is resolved, so the setup code can
 		// use the accessors.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._frameAnim = new FrameAnimation(this, (region) => {
 			this._applyFrame(region);
 		});
@@ -211,6 +215,10 @@ export default class Sprite extends Renderable {
 				// update()/drawImage only repaint/re-upload when a frame
 				// actually arrived. Browsers without rVFC never get the
 				// stamp and stay on the legacy repaint-while-playing path.
+				/**
+				 * @ignore
+				 * @internal
+				 */
 				this._lastVideoFrameVersion = -1;
 				if (typeof this.image.requestVideoFrameCallback === "function") {
 					this.image.version ??= 0;
@@ -220,6 +228,10 @@ export default class Sprite extends Renderable {
 						// `undefined++` would poison the counter with NaN
 						// (NaN !== NaN → permanently dirty + re-uploading)
 						this.image.version = (this.image.version ?? -1) + 1;
+						/**
+						 * @ignore
+						 * @internal
+						 */
 						this._videoFrameHandle = this.image.requestVideoFrameCallback(tick);
 					};
 					this._videoFrameHandle = this.image.requestVideoFrameCallback(tick);
@@ -839,7 +851,6 @@ export default class Sprite extends Renderable {
 	/**
 	 * draw this sprite (automatically called by melonJS)
 	 * @param {Renderer} renderer - a renderer instance
-	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
 		// do nothing if we are flickering (time-based, frame-rate independent)

@@ -117,8 +117,20 @@ function depthKey(r) {
  */
 function captureDepthOffset(container) {
 	const abs = container.getAbsolutePosition();
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_depthOffsetX = abs.x;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_depthOffsetY = abs.y;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_depthOffsetZ = abs.z;
 }
 
@@ -222,8 +234,14 @@ export default class Container extends Renderable {
 		 * value : "x", "y", "z"
 		 * @type {string}
 		 * @default "z"
+		 * @ignore
+		 * @internal
 		 */
 		this._sortOn = "z";
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._comparator = this._sortZ;
 
 		/**
