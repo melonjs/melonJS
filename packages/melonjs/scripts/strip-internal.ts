@@ -32,8 +32,16 @@ function isInternal(node: ts.Node): boolean {
 		.some((tag) => tag.tagName.getText() === "internal");
 }
 
-/** cheap pre-filter for the underscore rule below */
-const UNDERSCORE_HINT = /^\s*(readonly\s+)?_[A-Za-z0-9_]+\s*[?:(<]/m;
+/**
+ * Cheap pre-filter for the underscore rule below.
+ *
+ * It has to admit every modifier a member can carry, or a file whose only
+ * underscore members are written `private _foo` is skipped outright and they
+ * survive into the published types — a silent hole, since the file simply is
+ * not parsed. Erring wide costs one AST walk on a file with nothing to strip.
+ */
+const UNDERSCORE_HINT =
+	/^\s*(?:private |protected |public |static |declare |readonly |abstract |override |get |set )*_[A-Za-z0-9_]+\s*[?:(<]/m;
 
 /**
  * A class member whose name starts with `_`.
