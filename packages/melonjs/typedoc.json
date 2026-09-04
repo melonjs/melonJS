@@ -1,0 +1,21 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": ["src/index.ts"],
+	"tsconfig": "tsconfig.build.json",
+	"readme": "../../DOC_README.md",
+	"name": "melonJS",
+	"hideGenerator": true,
+	"categorizeByGroup": false,
+	"navigation": {
+		"includeCategories": true
+	},
+	"navigationLinks": {
+		"Website": "https://melonjs.org/",
+		"Wiki": "https://github.com/melonjs/melonJS/wiki",
+		"GitHub": "https://github.com/melonjs/melonJS",
+		"Discord": "https://discord.gg/aur7JMk"
+	},
+	"customJs": "scripts/docs/copy-page.js",
+	"customCss": "scripts/docs/.docs.css",
+	"favicon": "../../media/Favicon/Favicon Transparent.png"
+}

@@ -77,12 +77,13 @@
 		"build": "pnpm lint && tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
 		"dist:publish": "pnpm clean && pnpm lint && pnpm build && pnpm doc && cp ../../README.md .",
-		"doc": "tsx scripts/check-doc-readme.ts && typedoc src/index.ts --tsconfig tsconfig.build.json --readme ../../DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false && tsx scripts/generate-llms-txt.ts",
-		"doc:watch": "typedoc src/index.ts --tsconfig tsconfig.build.json --readme ../../DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
+		"doc": "tsx scripts/check-doc-readme.ts && npm run doc:css && typedoc && tsx scripts/generate-llms-txt.ts",
+		"doc:watch": "typedoc --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist:publish",
 		"clean": "tsx scripts/clean.ts",
 		"types": "tsc --project tsconfig.build.json && tsx scripts/strip-internal.ts",
-		"test:types": "tsc"
+		"test:types": "tsc",
+		"doc:css": "cat scripts/docs/brand.css scripts/docs/copy-page.css > scripts/docs/.docs.css"
 	}
 }
