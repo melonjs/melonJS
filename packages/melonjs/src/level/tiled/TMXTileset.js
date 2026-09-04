@@ -27,6 +27,7 @@ export default class TMXTileset {
 		 * per-tile properties indexed by gid
 		 * @type {Map<number, object>}
 		 * @ignore
+		 * @internal
 		 */
 		this.tileProperties = new Map();
 
@@ -34,6 +35,7 @@ export default class TMXTileset {
 		 * per-tile images for "Collection of Image" tilesets, indexed by gid
 		 * @type {Map<number, HTMLImageElement|HTMLCanvasElement>}
 		 * @ignore
+		 * @internal
 		 */
 		this.imageCollection = new Map();
 
@@ -136,6 +138,7 @@ export default class TMXTileset {
 		 * the map's tile grid width (used for tilerendersize="grid")
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this.mapTilewidth = mapTilewidth ?? this.tilewidth;
 
@@ -143,19 +146,46 @@ export default class TMXTileset {
 		 * the map's tile grid height (used for tilerendersize="grid")
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this.mapTileheight = mapTileheight ?? this.tileheight;
 
 		/**
 		 * precomputed render scale for tilerendersize="grid" (spritesheet only)
 		 * @private
+		 * @ignore
+		 * @internal
 		 */
 		this._renderScaleX = 1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderScaleY = 1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDw = this.tilewidth;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDh = this.tileheight;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDyOffset = 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDxCenter = 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderDyCenter = 0;
 
 		if (this.tilerendersize === "grid") {
@@ -182,6 +212,7 @@ export default class TMXTileset {
 		 * per-tile sub-rectangles (Tiled 1.9+), indexed by local tile id
 		 * @type {Map<number, {x: number, y: number, width: number, height: number}>}
 		 * @ignore
+		 * @internal
 		 */
 		this.tileSubRects = new Map();
 
@@ -195,6 +226,8 @@ export default class TMXTileset {
 		/**
 		 * Remember the last update timestamp to prevent too many animation updates
 		 * @private
+		 * @ignore
+		 * @internal
 		 */
 		this._lastUpdate = 0;
 
@@ -244,6 +277,7 @@ export default class TMXTileset {
 	 * non-forward direction (Tiled animations are forward-only) and non-zero
 	 * repeat counts (Tiled animations loop forever).
 	 * @ignore
+	 * @internal
 	 */
 	_applyAsepriteFrameTags(tileset) {
 		// getJSON is a direct key lookup (no basename normalization, unlike
@@ -315,6 +349,7 @@ export default class TMXTileset {
 	 * Parse individual tile entries for animations, properties, and images.
 	 * @param {object[]|object} [tiles] - tile entries (array in JSON, object in XML)
 	 * @ignore
+	 * @internal
 	 */
 	_parseTiles(tiles) {
 		if (!tiles) {
@@ -426,6 +461,7 @@ export default class TMXTileset {
 	 * Initialize the texture atlas for a spritesheet tileset.
 	 * @param {object} tileset - tileset data
 	 * @ignore
+	 * @internal
 	 */
 	_initAtlas(tileset) {
 		// get the global tileset texture
@@ -482,6 +518,7 @@ export default class TMXTileset {
 	 * @param {number} gid - global tile ID
 	 * @param {object} prop - property object
 	 * @ignore
+	 * @internal
 	 */
 	setTileProperty(gid, prop) {
 		this.tileProperties.set(gid, prop);
@@ -527,6 +564,7 @@ export default class TMXTileset {
 	 * @param {number} dt - time delta in milliseconds
 	 * @returns {boolean} true if any animation frame changed
 	 * @ignore
+	 * @internal
 	 */
 	update(dt) {
 		const now = timer.getTime();
@@ -558,6 +596,7 @@ export default class TMXTileset {
 	 * @param {number} dy - destination y position
 	 * @param {Tile} tmxTile - the tile object to draw
 	 * @ignore
+	 * @internal
 	 */
 	drawTile(renderer, dx, dy, tmxTile) {
 		let dw, dh;
@@ -656,6 +695,7 @@ export default class TMXTileset {
 	 * @param {number} gid - the tile's global id (with flip bits already stripped)
 	 * @param {number} flipMask - 3-bit packed flip mask (H=1, V=2, AD=4)
 	 * @ignore
+	 * @internal
 	 */
 	drawTileRaw(renderer, dx, dy, gid, flipMask) {
 		let dw, dh;

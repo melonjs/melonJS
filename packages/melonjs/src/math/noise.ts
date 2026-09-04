@@ -129,7 +129,10 @@ export class Noise {
 	offsetZ: number;
 
 	// doubled permutation table (512 entries), seeded from `seed`
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _perm: Uint8Array;
 
 	constructor(settings: NoiseSettings = {}) {
@@ -270,7 +273,10 @@ export class Noise {
 	}
 
 	// per-octave fractal shaping: fbm (passthrough), ridged, or ping-pong
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _applyFractalShape(n: number) {
 		if (this.fractalType === "ridged") {
 			const r = 1 - Math.abs(n);
@@ -283,7 +289,10 @@ export class Noise {
 	}
 
 	// single-octave 2D sample dispatched on `type`
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _single2d(x: number, y: number) {
 		if (this.type === "value") {
 			return this._value2d(x, y);
@@ -301,7 +310,10 @@ export class Noise {
 	}
 
 	// single-octave 3D sample dispatched on `type`
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _single3d(x: number, y: number, z: number) {
 		if (this.type === "value") {
 			return this._value3d(x, y, z);
@@ -321,13 +333,19 @@ export class Noise {
 	// ── value noise ──────────────────────────────────────────────────────
 
 	// hashed lattice value in [-1,1]
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _hash2d(ix: number, iy: number) {
 		const perm = this._perm;
 		return perm[(perm[ix & 255] + iy) & 255] / 127.5 - 1;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _value2d(x: number, y: number) {
 		const ix = Math.floor(x);
 		const iy = Math.floor(y);
@@ -341,13 +359,19 @@ export class Noise {
 	}
 
 	// hashed lattice value in [-1,1]
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _hash3d(ix: number, iy: number, iz: number) {
 		const perm = this._perm;
 		return perm[(perm[(perm[ix & 255] + iy) & 255] + iz) & 255] / 127.5 - 1;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _value3d(x: number, y: number, z: number) {
 		const ix = Math.floor(x);
 		const iy = Math.floor(y);
@@ -373,7 +397,10 @@ export class Noise {
 	// ── value-cubic noise (Catmull-Rom interpolated lattice) ─────────────
 
 	// cubic-interpolated row of 4 lattice values at row `cy`
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _cubicRow2d(xi: number, cy: number, fx: number) {
 		return cubic(
 			this._hash2d(xi - 1, cy),
@@ -384,7 +411,10 @@ export class Noise {
 		);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _valueCubic2d(x: number, y: number) {
 		const xi = Math.floor(x);
 		const yi = Math.floor(y);
@@ -399,7 +429,10 @@ export class Noise {
 	}
 
 	// cubic-interpolated plane of 4×4 lattice values at depth `cz`
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _cubicPlane3d(
 		xi: number,
 		yi: number,
@@ -438,7 +471,10 @@ export class Noise {
 		return cubic(r0, r1, r2, r3, fy);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _valueCubic3d(x: number, y: number, z: number) {
 		const xi = Math.floor(x);
 		const yi = Math.floor(y);
@@ -456,7 +492,10 @@ export class Noise {
 
 	// ── cellular (Worley F1) noise ───────────────────────────────────────
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _cellular2d(x: number, y: number) {
 		const perm = this._perm;
 		const jitter = this.cellularJitter;
@@ -483,7 +522,10 @@ export class Noise {
 		return Math.min(1, Math.sqrt(minDist)) * 2 - 1;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _cellular3d(x: number, y: number, z: number) {
 		const perm = this._perm;
 		const jitter = this.cellularJitter;
@@ -519,13 +561,19 @@ export class Noise {
 
 	// ── perlin (improved) noise ──────────────────────────────────────────
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _grad2(hash: number, x: number, y: number) {
 		const h = (hash & 7) * 3;
 		return GRAD3[h] * x + GRAD3[h + 1] * y;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _perlin2d(x: number, y: number) {
 		const perm = this._perm;
 		const xi = Math.floor(x) & 255;
@@ -548,13 +596,19 @@ export class Noise {
 		return lerp(x1, x2, v) * 1.4;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _grad3(hash: number, x: number, y: number, z: number) {
 		const h = (hash % 12) * 3;
 		return GRAD3[h] * x + GRAD3[h + 1] * y + GRAD3[h + 2] * z;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _perlin3d(x: number, y: number, z: number) {
 		const perm = this._perm;
 		const xi = Math.floor(x) & 255;
@@ -601,7 +655,10 @@ export class Noise {
 
 	// ── simplex noise (Gustavson) ────────────────────────────────────────
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _simplex2d(xin: number, yin: number) {
 		const perm = this._perm;
 		let n0 = 0;
@@ -649,7 +706,10 @@ export class Noise {
 		return 70 * (n0 + n1 + n2);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _simplex3d(xin: number, yin: number, zin: number) {
 		const perm = this._perm;
 		let n0 = 0;

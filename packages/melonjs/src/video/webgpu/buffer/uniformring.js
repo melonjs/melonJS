@@ -16,6 +16,7 @@ import {
  * were queued. The mid-frame `clearColor` pipeline shares the same pages
  * through its own layout/bind-group pair.
  * @ignore
+ * @internal
  */
 export default class WebGPUUniformRing {
 	/**
@@ -47,7 +48,10 @@ export default class WebGPUUniformRing {
 		this.slot = 0;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	#allocSlot() {
 		const pageIndex = (this.slot / this.slotsPerPage) | 0;
 		if (pageIndex >= this.pages.length) {

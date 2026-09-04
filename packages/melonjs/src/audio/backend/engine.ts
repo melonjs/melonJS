@@ -8,14 +8,42 @@ import {
 } from "./types.ts";
 
 export class AudioEngine {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_counter: number = 1000;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_html5AudioPool: HTMLAudioElement[] = [];
 	html5PoolSize: number = 10;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_codecs: Record<string, boolean> = {};
 	sounds: Sound[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_muted: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_volume: number = 1;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_canPlayEvent: string = "canplaythrough";
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_navigator: Navigator | null = null;
 	masterGain: GainNode | null = null;
 	noAudio: boolean = false;
@@ -24,10 +52,30 @@ export class AudioEngine {
 	ctx: AudioContext | null = null;
 	autoUnlock: boolean = true;
 	state: string = "suspended";
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_audioUnlocked: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_scratchBuffer: AudioBuffer | null = null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_suspendTimer: ReturnType<typeof setTimeout> | null = null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_resumeAfterSuspend?: boolean;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_mobileUnloaded?: boolean;
 
 	constructor() {

@@ -27,6 +27,7 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  * entry's. One for the whole engine — the pass is never re-entered, which
  * `_transparentFlushing` enforces.
  * @ignore
+ * @internal
  */
 const _savedView = new Matrix3d();
 
@@ -41,7 +42,6 @@ export default class Renderer {
 	constructor(options) {
 		/**
 		 * The renderer renderTarget
-		 * @name renderTarget
 		 * @type {CanvasRenderTarget}
 		 */
 		this.renderTarget = new CanvasRenderTarget(
@@ -94,6 +94,7 @@ export default class Renderer {
 		 * (GPU renderers only; ignored by Canvas renderer)
 		 * @type {GLShader|ShaderEffect|undefined}
 		 * @ignore
+		 * @internal
 		 */
 		this.customShader = undefined;
 
@@ -102,6 +103,7 @@ export default class Renderer {
 		 * Initialized by GPU renderers (WebGL, WebGPU). Null on Canvas renderer.
 		 * @type {RenderTargetPool|null}
 		 * @ignore
+		 * @internal
 		 */
 		this._renderTargetPool = null;
 
@@ -227,6 +229,7 @@ export default class Renderer {
 
 		/**
 		 * @ignore
+		 * @internal
 		 */
 		this.maskLevel = 0;
 
@@ -239,6 +242,7 @@ export default class Renderer {
 		 * per draw by the mesh batchers. Null for every camera that is not a
 		 * `Camera3d` with fog enabled, which is the default.
 		 * @ignore
+		 * @internal
 		 */
 		this._fog3d = null;
 
@@ -971,6 +975,7 @@ export default class Renderer {
 	 * @param {Renderable} renderable - the renderable with postEffects to apply
 	 * @returns {boolean} false (Canvas renderer does not support post-effect processing)
 	 * @ignore
+	 * @internal
 	 */
 	beginPostEffect(renderable) {
 		// on Canvas, only set customShader for single-effect fast path
@@ -991,6 +996,7 @@ export default class Renderer {
 	 * No-op on Canvas renderer.
 	 * @param {Renderable} renderable - the renderable with postEffects to apply
 	 * @ignore
+	 * @internal
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 	endPostEffect(renderable) {}
@@ -1067,7 +1073,6 @@ export default class Renderer {
 	 * set the current blend mode. Every renderer supports the same set —
 	 * see {@link CanvasRenderer#setBlendMode} for the list and what each does.
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha
 	 */
 	setBlendMode(mode = "normal") {
 		this.currentBlendMode = mode;
@@ -1107,6 +1112,7 @@ export default class Renderer {
 	 * the value.
 	 * @param {object|null} [fog] - resolved fog state, or null/undefined for none
 	 * @ignore
+	 * @internal
 	 */
 	setFog(fog) {
 		this._fog3d = fog ?? null;
@@ -1124,6 +1130,10 @@ export default class Renderer {
 			(typeof lights[Symbol.iterator] === "function" &&
 				!lights[Symbol.iterator]().next().done);
 		if (hasAny) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._litPipelineWarned = true;
 			console.warn(
 				"melonJS: Light2d normal-map lighting requires a GPU backend " +
@@ -1644,7 +1654,8 @@ export default class Renderer {
 	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
 	 * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
 	 */
-	setMask() {}
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setMask(mask, invert) {}
 
 	/**
 	 * disable (remove) the rendering mask set through setMask.
@@ -1778,4 +1789,8 @@ export default class Renderer {
 // Backing field for `Renderer.getWhitePixel()` — declared outside the
 // class body so it's initialized to null at module load (static class
 // fields aren't universally supported in our transpile target).
+/**
+ * @ignore
+ * @internal
+ */
 Renderer._whitePixel = null;

@@ -109,7 +109,11 @@ export interface QueueItem {
  * @internal
  */
 export interface HTMLAudioElementWithUnlocked extends HTMLAudioElement {
-	/** Internal flag indicating if the audio element has been unlocked for playback. */
+	/**
+	 * Internal flag indicating if the audio element has been unlocked for playback.
+	 * @ignore
+	 * @internal
+	 */
 	_unlocked?: boolean;
 }
 

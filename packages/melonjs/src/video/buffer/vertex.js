@@ -3,6 +3,7 @@
  * Renderer-agnostic — stores vertex data in typed arrays (Float32/Uint32).
  * Batchers must check isFull() and flush before the buffer overflows.
  * @ignore
+ * @internal
  */
 
 export default class VertexArrayBuffer {
@@ -36,6 +37,7 @@ export default class VertexArrayBuffer {
 	/**
 	 * clear the vertex array buffer
 	 * @ignore
+	 * @internal
 	 */
 	clear() {
 		this.vertexCount = 0;
@@ -44,6 +46,7 @@ export default class VertexArrayBuffer {
 	/**
 	 * return true if full
 	 * @ignore
+	 * @internal
 	 */
 	isFull(vertex) {
 		return this.vertexCount + vertex >= this.maxVertex;
@@ -60,6 +63,7 @@ export default class VertexArrayBuffer {
 	 * @param {number} [textureId] - texture unit index for multi-texture batching
 	 * @param {number} [normalTextureId] - paired normal-map texture unit index, or `-1` for unlit quads
 	 * @ignore
+	 * @internal
 	 */
 	push(x, y, z, u, v, tint, textureId, normalTextureId) {
 		const offset = this.vertexCount * this.vertexSize;
@@ -95,6 +99,7 @@ export default class VertexArrayBuffer {
 	 * @param {number} srcOffset - start index in the source data
 	 * @param {number} count - number of floats to copy (should equal vertexSize)
 	 * @ignore
+	 * @internal
 	 */
 	pushFloats(data, srcOffset, count) {
 		const offset = this.vertexCount * this.vertexSize;
@@ -116,6 +121,7 @@ export default class VertexArrayBuffer {
 	 * bit values getting canonicalized on Metal-backed WebGL drivers.
 	 * See `mesh_batcher.init` for the rationale.
 	 * @ignore
+	 * @internal
 	 */
 	pushMesh(x, y, z, u, v, tint) {
 		const offset = this.vertexCount * this.vertexSize;
@@ -140,6 +146,7 @@ export default class VertexArrayBuffer {
 	 * x, y, z, u, v, tint, nx, ny, nz. Used by the lit mesh batcher, whose
 	 * vertex layout is 12 floats (the 9 of {@link pushMesh} plus `aNormal`).
 	 * @ignore
+	 * @internal
 	 */
 	pushMeshLit(x, y, z, u, v, tint, nx, ny, nz) {
 		const offset = this.vertexCount * this.vertexSize;
@@ -166,6 +173,7 @@ export default class VertexArrayBuffer {
 	/**
 	 * return a reference to the data in Float32 format
 	 * @ignore
+	 * @internal
 	 */
 	toFloat32(begin, end) {
 		if (typeof end !== "undefined") {
@@ -178,6 +186,7 @@ export default class VertexArrayBuffer {
 	/**
 	 * return a reference to the data in Uint32 format
 	 * @ignore
+	 * @internal
 	 */
 	toUint32(begin, end) {
 		if (typeof end !== "undefined") {
@@ -193,6 +202,7 @@ export default class VertexArrayBuffer {
 	 * on Float32 uploads of the same backing buffer (see the constructor's
 	 * `bufferU8` comment).
 	 * @ignore
+	 * @internal
 	 */
 	toUint8(byteBegin, byteEnd) {
 		if (typeof byteEnd !== "undefined") {

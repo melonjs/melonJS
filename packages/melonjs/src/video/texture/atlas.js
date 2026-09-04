@@ -14,6 +14,10 @@ import Texture2d from "./texture2d.ts";
 // re-capture the new renderer).
 let _renderer;
 on(VIDEO_INIT, (renderer) => {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_renderer = renderer;
 });
 
@@ -25,6 +29,7 @@ on(VIDEO_INIT, (renderer) => {
 /**
  * create a simple 1 frame texture atlas based on the given parameters
  * @ignore
+ * @internal
  */
 export function createAtlas(
 	width,
@@ -51,6 +56,7 @@ export function createAtlas(
 /**
  * return a string that identifies the texture atlas type
  * @ignore
+ * @internal
  */
 export function identifyFormat(app) {
 	if (app.includes("texturepacker") || app.includes("free-tex-packer")) {
@@ -122,6 +128,7 @@ export class TextureAtlas extends Texture2d {
 		/**
 		 * to identify the atlas format (e.g. texture packer)
 		 * @ignore
+		 * @internal
 		 */
 		this.format = null;
 
@@ -129,6 +136,7 @@ export class TextureAtlas extends Texture2d {
 		 * the texture source(s) itself
 		 * @type {Map}
 		 * @ignore
+		 * @internal
 		 */
 		this.sources = new Map();
 
@@ -138,6 +146,7 @@ export class TextureAtlas extends Texture2d {
 		 * the WebGL renderer's lit pipeline for per-pixel lighting.
 		 * @type {Map}
 		 * @ignore
+		 * @internal
 		 */
 		this.normalSources = new Map();
 
@@ -145,6 +154,7 @@ export class TextureAtlas extends Texture2d {
 		 * the atlas dictionnaries
 		 * @type {Map}
 		 * @ignore
+		 * @internal
 		 */
 		this.atlases = new Map();
 
@@ -152,12 +162,14 @@ export class TextureAtlas extends Texture2d {
 		 * the default "active" atlas (used for multiAtlas)
 		 * @type {Map}
 		 * @ignore
+		 * @internal
 		 */
 		this.activeAtlas = undefined;
 
 		/**
 		 * UV lookup cache to avoid per-frame string allocation in drawImage
 		 * @ignore
+		 * @internal
 		 */
 		this._uvCache = { sx: -1, sy: -1, sw: -1, sh: -1, uvs: null };
 

@@ -27,6 +27,10 @@ let _renderer;
 
 // gracefully capture a reference to the active renderer without adding more cyclic redundancy
 once(VIDEO_INIT, (renderer) => {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_renderer = renderer;
 });
 
@@ -46,6 +50,7 @@ const EXT_REQUIREMENTS = {
  * @param {string} imgExt - file extension
  * @returns {boolean}
  * @ignore
+ * @internal
  */
 function hasRequiredExtension(imgExt) {
 	const requirements = EXT_REQUIREMENTS[imgExt];

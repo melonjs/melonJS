@@ -9,6 +9,7 @@
  * The data deliberately carries no placement, camera or tint information —
  * those are uniforms — so it stays valid for the lifetime of the geometry.
  * @ignore
+ * @internal
  */
 
 /** the minimal mesh surface this module reads — `@ignore` */
@@ -30,6 +31,7 @@ let buildScratch = new Float32Array(0);
 /**
  * a reusable Float32Array of at least `floatCount` floats
  * @ignore
+ * @internal
  */
 export function retainedScratch(floatCount: number): Float32Array {
 	if (buildScratch.length < floatCount) {
@@ -46,6 +48,7 @@ export function retainedScratch(floatCount: number): Float32Array {
  * @param vertexSize - floats per vertex in the hosting batcher's layout
  * @returns number of floats written
  * @ignore
+ * @internal
  */
 export function buildMeshVertexData(
 	mesh: RetainedMeshSource,
@@ -90,6 +93,7 @@ export function buildMeshVertexData(
  * @param vertexSize - floats per vertex in the hosting batcher's layout
  * @returns number of floats written
  * @ignore
+ * @internal
  */
 export function buildLitMeshVertexData(
 	mesh: RetainedMeshSource,

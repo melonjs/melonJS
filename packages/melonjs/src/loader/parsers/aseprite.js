@@ -91,6 +91,7 @@ class Reader {
  * Decompress a zlib-compressed Uint8Array via the DecompressionStream API
  * (zlib format = "deflate" stream type per the WHATWG Compression Streams spec).
  * @ignore
+ * @internal
  */
 async function inflate(bytes) {
 	const stream = new Response(bytes).body.pipeThrough(
@@ -103,6 +104,7 @@ async function inflate(bytes) {
  * Decode a cel's pixel buffer (per the file's color depth) into a flat
  * RGBA Uint8ClampedArray sized for ImageData.
  * @ignore
+ * @internal
  */
 function decodeCelPixels(raw, w, h, depth, palette, transparentIndex) {
 	const out = new Uint8ClampedArray(w * h * 4);
@@ -152,6 +154,7 @@ function decodeCelPixels(raw, w, h, depth, palette, transparentIndex) {
  * Cel image data is already decompressed at this stage but still per-cel —
  * compositing happens in a second pass so linked cels can resolve.
  * @ignore
+ * @internal
  */
 async function parseAsepriteFile(buffer) {
 	const r = new Reader(buffer);
@@ -394,6 +397,7 @@ async function parseAsepriteFile(buffer) {
  * each visible cel onto its frame at (cel.x, cel.y). Returns the composited
  * canvas (HTMLCanvasElement or OffscreenCanvas).
  * @ignore
+ * @internal
  */
 function composite(parsed) {
 	const { width, height, depth, frames, layers, palette, transparentIndex } =
@@ -479,6 +483,7 @@ function composite(parsed) {
  * in src/video/texture/parser/aseprite.js — meta.app must include
  * "aseprite" so identifyFormat() picks the right route.
  * @ignore
+ * @internal
  */
 function buildAtlasJSON(parsed, imageName) {
 	const { width, height, frames, tags } = parsed;
@@ -511,6 +516,7 @@ function buildAtlasJSON(parsed, imageName) {
  * Convert a canvas to an ImageBitmap when possible (matches the regular image
  * parser's cache shape so the renderer's texture cache treats it identically).
  * @ignore
+ * @internal
  */
 async function canvasToBitmap(canvas) {
 	if (
@@ -549,6 +555,7 @@ export async function parseAseprite(buffer, imageName = "default") {
  * @param {Object} [settings]
  * @returns {number}
  * @ignore
+ * @internal
  */
 export function preloadAseprite(data, onload, onerror, settings) {
 	fetchData(data.src, "arrayBuffer", settings)

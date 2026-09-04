@@ -78,51 +78,83 @@ export default class RenderState {
 
 		/**
 		 * @ignore
+		 * @internal
 		 */
 		this._stackCapacity = 32;
 
 		/**
 		 * current stack depth
 		 * @ignore
+		 * @internal
 		 */
 		this._stackDepth = 0;
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._colorStack = Array.from({ length: this._stackCapacity }, () => {
 			return new Color();
 		});
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._tintStack = Array.from({ length: this._stackCapacity }, () => {
 			return new Color();
 		});
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._matrixStack = Array.from({ length: this._stackCapacity }, () => {
 			return new Matrix3d();
 		});
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._scissorStack = Array.from({ length: this._stackCapacity }, () => {
 			return new Int32Array(4);
 		});
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lineDashStack = new Array(this._stackCapacity);
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._scissorActive = new Uint8Array(this._stackCapacity);
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._gradientStack = new Array(this._stackCapacity);
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._blendStack = new Array(this._stackCapacity);
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shaderStack = new Array(this._stackCapacity);
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._depthStack = new Float32Array(this._stackCapacity);
 	}
 
@@ -173,6 +205,7 @@ export default class RenderState {
 	 * stack** — zero allocation on a hot path. Callers MUST treat it
 	 * as read-only; mutating it corrupts subsequent `restore()` calls.
 	 * @ignore
+	 * @internal
 	 * @returns {Int32Array | null}
 	 */
 	peekScissor() {
@@ -234,7 +267,11 @@ export default class RenderState {
 		this.currentDepth = 0;
 	}
 
-	/** @private — doubles stack capacity when exceeded */
+	/**
+	 * @private — doubles stack capacity when exceeded
+	 * @ignore
+	 * @internal
+	 */
 	_growStacks() {
 		const oldCap = this._stackCapacity;
 		const newCap = oldCap * 2;

@@ -70,6 +70,7 @@ export default class MaskEffect extends CameraEffect {
 	/**
 	 * pooled shape used for rendering (avoids per-frame allocation)
 	 * @ignore
+	 * @internal
 	 */
 	_maskShape: MaskShape;
 

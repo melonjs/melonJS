@@ -23,6 +23,7 @@ export class Vector2d {
 	 * @param [x] - x value of the vector
 	 * @param [y] - y value of the vector
 	 * @ignore
+	 * @internal
 	 */
 	onResetEvent(x = 0, y = 0) {
 		/**

@@ -105,16 +105,22 @@ function updateRoundRectVertices(
 export class RoundRect extends Polygon {
 	/**
 	 * Corner radius.
+	 * @ignore
+	 * @internal
 	 */
 	_radius: number;
 
 	/**
 	 * stored width
+	 * @ignore
+	 * @internal
 	 */
 	_width: number;
 
 	/**
 	 * stored height
+	 * @ignore
+	 * @internal
 	 */
 	_height: number;
 
@@ -240,6 +246,7 @@ export class RoundRect extends Polygon {
 	 * Rebuild polygon vertices to approximate the rounded corners.
 	 * Reuses existing Vector2d instances when the vertex count matches.
 	 * @ignore
+	 * @internal
 	 */
 	_updateVertices() {
 		const updated = updateRoundRectVertices(

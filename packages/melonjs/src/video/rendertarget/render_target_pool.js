@@ -14,21 +14,32 @@
  * pairs compose like save/restore.
  * Render targets are lazily created and resized to match the required dimensions.
  * @ignore
+ * @internal
  */
 export default class RenderTargetPool {
 	/**
 	 * @param {function(number, number, boolean=): RenderTarget} factory - creates a RenderTarget with the given width and height; the third argument is `true` for CAPTURE slots (scene rasterization — may be multisampled) and `false` for ping-pong intermediates
 	 */
 	constructor(factory) {
-		/** @type {function(number, number): RenderTarget} */
+		/**
+		 * @type {function(number, number): RenderTarget}
+		 * @ignore
+		 * @internal
+		 */
 		this._factory = factory;
-		/** @type {RenderTarget[]} */
+		/**
+		 * @type {RenderTarget[]}
+		 * @ignore
+		 * @internal
+		 */
 		this._pool = [];
 		/**
 		 * active pass bases, innermost last — a STACK, so nested begin/end
 		 * pairs unwind correctly (two scalars silently corrupted the pool on
 		 * nested passes: the inner end() popped the outer pass's slot)
 		 * @type {number[]}
+		 * @ignore
+		 * @internal
 		 */
 		this._baseStack = [];
 	}

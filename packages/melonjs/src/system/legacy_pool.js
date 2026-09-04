@@ -3,6 +3,7 @@ import { getTotalPoolSize } from "../pool";
 /**
  * callback invoked when a class is registered, used by the Tiled object factory
  * @ignore
+ * @internal
  */
 let onRegisterCallback = null;
 
@@ -10,6 +11,7 @@ let onRegisterCallback = null;
  * Set a callback to be invoked whenever pool.register() is called.
  * @param {Function} callback - function(className, classObj, poolInstance) called on each registration
  * @ignore
+ * @internal
  */
 export function setPoolRegisterCallback(callback) {
 	onRegisterCallback = callback;

@@ -9,6 +9,7 @@ import { Polygon } from "./polygon.ts";
  * Smallest XY footprint edge handed to {@link Polygon#recalc}. See
  * {@link Box3d#_syncFootprint} for why a zero-length edge is unsafe.
  * @ignore
+ * @internal
  */
 const MIN_FOOTPRINT = 1e-6;
 
@@ -73,6 +74,7 @@ export class Box3d {
 	 * ({@link Body#bounds}, the broadphase pre-gate, debug draw) sees a
 	 * plain rectangle and needs no 3D awareness.
 	 * @ignore
+	 * @internal
 	 */
 	_bounds: Bounds;
 
@@ -82,6 +84,7 @@ export class Box3d {
 	 * hand this to the existing polygon SAT, so no polygon is allocated
 	 * per collision test.
 	 * @ignore
+	 * @internal
 	 */
 	_footprint: Polygon;
 
@@ -144,6 +147,7 @@ export class Box3d {
 	 * `renderable.pos + ancestor.getAbsolutePosition() + shape.pos` and
 	 * then treats `points` as offsets from it.
 	 * @ignore
+	 * @internal
 	 */
 	_syncFootprint() {
 		const hx = this.halfExtents.x;

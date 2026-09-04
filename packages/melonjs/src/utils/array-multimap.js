@@ -1,9 +1,14 @@
 /**
  * A simple multimap that stores multiple values per key using arrays.
  * @ignore
+ * @internal
  */
 class ArrayMultimap {
 	constructor() {
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._map = new Map();
 	}
 	put(key, value) {

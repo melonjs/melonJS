@@ -15,6 +15,7 @@ import { buildWGSLModule } from "./wgsl/scaffold.js";
  * shared effect bound twice in a frame with different values stays
  * correct under WebGPU's queue-write-before-draws ordering.
  * @ignore
+ * @internal
  */
 export default class WGSLEffectRealization {
 	/**

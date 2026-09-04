@@ -15,6 +15,7 @@ const KTX_HEADER_SIZE = 64;
  * @param {ArrayBuffer} data - the KTX file data
  * @returns {CompressedImage} a compressed texture object with mipmaps, width, height, format
  * @ignore
+ * @internal
  */
 export function parseKTX(data) {
 	const idView = new Uint8Array(data, 0, 12);

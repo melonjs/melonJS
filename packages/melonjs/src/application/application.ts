@@ -85,6 +85,7 @@ type DocumentWithLegacyExitFullscreen = Document & {
  * `physics/collision.js`, which imports the `game` reference back from
  * this module.
  * @ignore
+ * @internal
  */
 function resolvePhysicSetting(physic: ApplicationSettings["physic"]): {
 	adapter: PhysicsAdapter | undefined;
@@ -228,15 +229,39 @@ export default class Application {
 	stepSize: number;
 
 	// DOM event handlers (stored for cleanup in destroy)
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _onResize?: (e: Event) => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _onOrientationChange?: (e: Event) => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _onScroll?: (e: Event) => void;
 	// melonJS-event resize subscription (stored for cleanup in destroy)
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _doResize?: () => void;
 	// the parent-element observer installed by init() (disconnected in destroy)
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _resizeObserver: MutationObserver | undefined;
 	// set by destroy(); a destroyed Application is terminal — init() refuses
 	// to run (or, if already in flight, aborts) instead of resurrecting it
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _destroyed = false;
 	/**
 	 * Simulated time advanced by one logic step, in ms — what `world.update()`
@@ -1030,13 +1055,19 @@ export default class Application {
 		return state.freeze(duration, music);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_tick(time: number): void {
 		this.update(time);
 		this.draw();
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onBlur(): void {
 		if (this.stopOnBlur) {
 			state.stop(true);
@@ -1046,7 +1077,10 @@ export default class Application {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onFocus(): void {
 		if (this.stopOnBlur) {
 			state.restart(true);
@@ -1165,6 +1199,7 @@ export let game: Application;
 /**
  * Set the default game application instance.
  * @ignore
+ * @internal
  */
 export function setDefaultGame(app: Application) {
 	game = app;

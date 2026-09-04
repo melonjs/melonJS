@@ -47,6 +47,7 @@ export const PORTABLE_TOPOLOGIES = [
 /**
  * Every accepted topology name.
  * @ignore
+ * @internal
  */
 const TOPOLOGIES: readonly Topology[] = [
 	"point-list",

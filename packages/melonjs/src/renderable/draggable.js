@@ -110,6 +110,7 @@ export class Draggable extends Renderable {
 	/**
 	 * Destructor
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		off(POINTERMOVE, this.handlePointerMove);

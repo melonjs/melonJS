@@ -142,6 +142,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	/**
 	 * CPU re-expansion of a triangle fan into a triangle list
 	 * @ignore
+	 * @internal
 	 */
 	#drawTriangleFan(verts, vertexCount) {
 		const renderer = this.renderer;
@@ -168,6 +169,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	 * Push `verts[start..end)` into the vertex buffer, transformed by the
 	 * current view matrix. The caller guarantees the range fits.
 	 * @ignore
+	 * @internal
 	 */
 	#pushRange(verts, start, end, colorUint32, z) {
 		// the shared neutral range push (z-column-aware transform) — one
@@ -188,6 +190,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	 * chunks, split on primitive boundaries so every triangle/line stays
 	 * whole (same boundary rules as the WebGL batcher).
 	 * @ignore
+	 * @internal
 	 */
 	#drawVerticesChunked(topology, verts, vertexCount, colorUint32, z) {
 		// stay one below maxVertex to match isFull()'s `>=` convention
@@ -250,6 +253,7 @@ export default class WebGPUPrimitiveBatcher extends WebGPUBatcher {
 	 * @param {Point[]} verts - line vertices in pairs [from, to, from, to, ...]
 	 * @param {number} vertexCount - number of vertices
 	 * @ignore
+	 * @internal
 	 */
 	#expandLinesToTriangles(verts, vertexCount) {
 		// switch to triangle-list topology, then delegate the expansion to

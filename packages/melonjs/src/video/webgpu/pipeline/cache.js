@@ -19,6 +19,7 @@ import { CLEAR_UNIFORM_SIZE, FRAME_UNIFORM_SIZE } from "./bindgroups.js";
  * @returns {GPUBlendState|undefined} the blend state, or `undefined` for
  * `"none"`, which means replace (no blending)
  * @ignore
+ * @internal
  */
 function gpuBlendState(mode, premultipliedAlpha) {
 	const component = blendStateFor(mode, premultipliedAlpha);
@@ -34,6 +35,7 @@ function gpuBlendState(mode, premultipliedAlpha) {
  * comfortably inside WebGPU's base limits (16 sampled textures / 16
  * samplers per stage) with headroom for the effect families' samplers.
  * @ignore
+ * @internal
  */
 export const MAX_QUAD_TEXTURES = 8;
 
@@ -44,6 +46,7 @@ export const MAX_QUAD_TEXTURES = 8;
  * must match the pass attachment, and adding it later would invalidate
  * every cached pipeline.
  * @ignore
+ * @internal
  */
 export const DEPTH_STENCIL_FORMAT = "depth24plus-stencil8";
 
@@ -56,6 +59,7 @@ export const DEPTH_STENCIL_FORMAT = "depth24plus-stencil8";
  * - "test"  — the masked render phase: fragments pass only where stencil
  *   equals the dynamic `setStencilReference` (GL's `stencilFunc(EQUAL, ref)`)
  * @ignore
+ * @internal
  */
 const STENCIL_STATES = {
 	none: {
@@ -134,6 +138,7 @@ const STENCIL_STATES = {
  * the objects every pipeline shares and the uniform ring / texture store
  * build their bind groups against.
  * @ignore
+ * @internal
  */
 export default class WebGPUPipelineCache {
 	/**
@@ -306,6 +311,7 @@ export default class WebGPUPipelineCache {
 	/**
 	 * monotonic construction counter backing {@link WebGPUPipelineCache#epoch}
 	 * @ignore
+	 * @internal
 	 */
 	static epochCounter = 0;
 

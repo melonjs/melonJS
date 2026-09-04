@@ -6,6 +6,7 @@ import { nodeJS } from "./platform.ts";
  * the callback is deferred to the next microtask.
  * @param fn - callback to execute when the DOM is ready
  * @ignore
+ * @internal
  */
 export const DOMContentLoaded = (fn: () => void) => {
 	if (

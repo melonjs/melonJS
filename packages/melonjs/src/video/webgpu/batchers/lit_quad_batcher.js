@@ -144,6 +144,7 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} source - the normal-map image
 	 * @returns {object} {texture, view, version, width, height}
 	 * @ignore
+	 * @internal
 	 */
 	residentNormalMap(source) {
 		const version = source.version ?? 0;
@@ -288,6 +289,7 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	 * the base segment slots
 	 * @override
 	 * @ignore
+	 * @internal
 	 */
 	hasPendingMaterial() {
 		return this.currentMaterial !== null;

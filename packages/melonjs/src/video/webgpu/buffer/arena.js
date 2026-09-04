@@ -16,6 +16,7 @@
  * mid-frame would invalidate them. Pages persist across frames; `reset()`
  * just rewinds the bump pointer.
  * @ignore
+ * @internal
  */
 export default class WebGPUBufferArena {
 	/**

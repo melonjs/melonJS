@@ -14,42 +14,174 @@ import {
 import { Voice } from "./voice.ts";
 
 class Sound {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_autoplay: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_format: string[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_html5: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_muted: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_loop: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_pool: number = 5;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_preload: boolean | "metadata" = true;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_rate: number = 1;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_sprite: Record<string, [number, number, boolean?]> = {};
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_src: string | string[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_volume: number = 1;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_xhr: {
 		method: string;
 		headers?: HeadersInit | undefined;
 		withCredentials: boolean;
 	} = { method: "GET", withCredentials: false };
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_duration: number = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_state: string = "unloaded";
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_sounds: Voice[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_endTimers: Record<number, ReturnType<typeof setTimeout>> = {};
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_queue: QueueItem[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_playLock: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_webAudio: boolean = false;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onend: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onfade: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onload: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onloaderror: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onplayerror: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onpause: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onplay: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onstop: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onmute: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onvolume: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onrate: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onseek: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onunlock: EventListener[] = [];
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_onresume: EventListener[] = [];
 
 	constructor(o: SoundOptions) {

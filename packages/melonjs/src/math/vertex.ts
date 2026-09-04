@@ -318,6 +318,7 @@ export function computeVertexNormal(
  * 2D cross product of vectors (p1-p0) and (p2-p0).
  * Positive = CCW, negative = CW, zero = collinear.
  * @ignore
+ * @internal
  */
 function cross2d(p0: XYPoint, p1: XYPoint, p2: XYPoint): number {
 	return (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
@@ -326,6 +327,7 @@ function cross2d(p0: XYPoint, p1: XYPoint, p2: XYPoint): number {
 /**
  * Squared distance between two 2D points.
  * @ignore
+ * @internal
  */
 function dist2(a: XYPoint, b: XYPoint): number {
 	const dx = a.x - b.x;

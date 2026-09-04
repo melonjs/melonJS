@@ -17,6 +17,7 @@ import logo_url from "./melonjs_logo.png";
 class ProgressBar extends Renderable {
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	constructor(x, y, w, h) {
 		super(x, y, w, h);
@@ -36,6 +37,7 @@ class ProgressBar extends Renderable {
 	/**
 	 * make sure the screen is refreshed every frame
 	 * @ignore
+	 * @internal
 	 */
 	onProgressUpdate(progress) {
 		this.progress = ~~(progress * this.width);
@@ -45,6 +47,7 @@ class ProgressBar extends Renderable {
 	/**
 	 * draw function
 	 * @ignore
+	 * @internal
 	 */
 	draw(renderer, viewport) {
 		// draw the progress bar
@@ -68,6 +71,7 @@ class ProgressBar extends Renderable {
 	/**
 	 * Called by engine before deleting the object
 	 * @ignore
+	 * @internal
 	 */
 	onDestroyEvent() {
 		off(LOADER_PROGRESS, this.onProgressUpdate, this);
@@ -78,27 +82,32 @@ class ProgressBar extends Renderable {
 /**
  * a default loading screen
  * @ignore
+ * @internal
  */
 class DefaultLoadingScreen extends Stage {
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	progressBar = null;
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	logoSprite = null;
 
 	/**
 	 * reference to the application instance
 	 * @ignore
+	 * @internal
 	 */
 	#app = null;
 
 	/**
 	 * whether the cleanup has already run
 	 * @ignore
+	 * @internal
 	 */
 	#cleanedUp = false;
 
@@ -116,6 +125,7 @@ class DefaultLoadingScreen extends Stage {
 	/**
 	 * call when the loader is resetted
 	 * @ignore
+	 * @internal
 	 */
 	onResetEvent(app) {
 		const barHeight = 8;
@@ -155,6 +165,7 @@ class DefaultLoadingScreen extends Stage {
 	/**
 	 * Remove loading screen children and unload the logo
 	 * @ignore
+	 * @internal
 	 */
 	#cleanup() {
 		this.#cleanedUp = true;
@@ -186,6 +197,7 @@ class DefaultLoadingScreen extends Stage {
 	/**
 	 * Called by engine before deleting the object
 	 * @ignore
+	 * @internal
 	 */
 	onDestroyEvent() {
 		// remove the listener in case state.change() is called

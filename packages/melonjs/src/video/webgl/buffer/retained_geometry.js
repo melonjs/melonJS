@@ -16,6 +16,7 @@ import WebGLVertexState from "./vertexstate.js";
  * `Float32Array` itself: some drivers canonicalize NaN bit patterns on a
  * float upload, which would corrupt packed values. See `VertexArrayBuffer`.
  * @ignore
+ * @internal
  */
 export default class RetainedGeometry {
 	/**
@@ -173,6 +174,7 @@ export default class RetainedGeometry {
 /**
  * Whether a plain index array needs 32-bit indices.
  * @ignore
+ * @internal
  */
 function vertexDataExceedsUint16(indices) {
 	for (let i = 0; i < indices.length; i++) {

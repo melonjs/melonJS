@@ -60,6 +60,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**
 	 * return true if the renderer can render the specified layer
 	 * @ignore
+	 * @internal
 	 */
 	canRender(layer) {
 		return layer.orientation === "hexagonal" && super.canRender(layer);
@@ -68,6 +69,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**
 	 * return the bounding rect for this map renderer
 	 * @ignore
+	 * @internal
 	 */
 	getBounds(layer) {
 		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
@@ -99,6 +101,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	doStaggerX(x) {
 		return this.staggerX && (x & 1) ^ this.staggerEven;
@@ -106,6 +109,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	doStaggerY(y) {
 		return !this.staggerX && (y & 1) ^ this.staggerEven;
@@ -113,6 +117,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	topLeft(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -135,6 +140,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	topRight(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -157,6 +163,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	bottomLeft(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -179,6 +186,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	bottomRight(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -202,6 +210,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**
 	 * return the tile position corresponding to the specified pixel
 	 * @ignore
+	 * @internal
 	 */
 	pixelToTileCoords(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -293,6 +302,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**
 	 * return the pixel position corresponding of the specified tile
 	 * @ignore
+	 * @internal
 	 */
 	tileToPixelCoords(x, y, v) {
 		const tileX = Math.floor(x);
@@ -319,6 +329,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**
 	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
+	 * @internal
 	 */
 	drawTile(renderer, x, y, tmxTile) {
 		const tileset = tmxTile.tileset;
@@ -339,6 +350,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
 	 * rendering loop to bypass Tile construction
 	 * @ignore
+	 * @internal
 	 */
 	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
 		const point = this.tileToPixelCoords(x, y, vector2dPool.get());
@@ -357,6 +369,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**
 	 * draw the tile map
 	 * @ignore
+	 * @internal
 	 */
 	drawTileLayer(renderer, layer, rect) {
 		// get top-left and bottom-right tile position

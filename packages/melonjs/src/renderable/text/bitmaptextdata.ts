@@ -34,6 +34,7 @@ const capChars: string[] = [
 /**
  * Gets the value from a string of pairs.
  * @ignore
+ * @internal
  */
 function getValueFromPair(string: string, pattern: RegExp): string {
 	const value = string.match(pattern);
@@ -47,6 +48,7 @@ function getValueFromPair(string: string, pattern: RegExp): string {
 /**
  * Gets the first glyph in the map that is not a space character
  * @ignore
+ * @internal
  * @param glyphs - the map of glyphs, each key is a char code
  * @returns the first glyph that is not a space character
  */
@@ -63,6 +65,7 @@ function getFirstGlyph(glyphs: any): Glyph | null {
 /**
  * Creates a glyph to use for the space character
  * @ignore
+ * @internal
  * @param glyphs - the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs: any) {
@@ -154,6 +157,7 @@ export default class BitmapTextData {
 	/**
 	 * Record a parsed glyph and fold it into the font's vertical metrics.
 	 * @ignore
+	 * @internal
 	 */
 	recordGlyph(glyph: Glyph, baseLine: number) {
 		if (glyph.width > 0 && glyph.height > 0) {
@@ -171,6 +175,7 @@ export default class BitmapTextData {
 	 * Look up a glyph by char code, honestly typed as possibly missing (the
 	 * glyph map's index signature otherwise hides that a lookup can be absent).
 	 * @ignore
+	 * @internal
 	 */
 	glyphFor(id: number): Glyph | undefined {
 		return this.glyphs[id];
@@ -179,6 +184,7 @@ export default class BitmapTextData {
 	/**
 	 * Parse the AngelCode BMFont text (.fnt) format.
 	 * @ignore
+	 * @internal
 	 */
 	parseText(fontData: string) {
 		const lines = fontData.split(/\r\n|\n/);
@@ -230,6 +236,7 @@ export default class BitmapTextData {
 	 * Parse the AngelCode BMFont XML format (same data as the .fnt text form).
 	 * Padding is optional in XML exports (e.g. frostyfreeze) and defaults to 0.
 	 * @ignore
+	 * @internal
 	 */
 	parseXML(fontData: string) {
 		// Parsed with simple regex rather than DOMParser, so it also works where

@@ -10,6 +10,7 @@
  * @param {string} [protocol] - the hosting document's protocol
  * @returns {boolean}
  * @ignore
+ * @internal
  */
 export function isFileProtocol(url, protocol = globalThis.location?.protocol) {
 	return url.startsWith("file://") || protocol === "file:";
@@ -27,6 +28,7 @@ export function isFileProtocol(url, protocol = globalThis.location?.protocol) {
  * @param {object} settings
  * @returns {Promise} resolves with a `Response`-like object
  * @ignore
+ * @internal
  */
 function fetchDataXHR(url, responseType, settings) {
 	return new Promise((resolve, reject) => {
@@ -79,6 +81,7 @@ function fetchDataXHR(url, responseType, settings) {
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {Promise} A promise that resolves with the fetched data or rejects with an error.
  * @ignore
+ * @internal
  * @example
  * fetchData('https://api.example.com/data', 'json')
  *     .then(data => {

@@ -5,6 +5,7 @@
  * @param {number} maxTextures - the number of texture units to support
  * @returns {string} GLSL fragment shader source
  * @ignore
+ * @internal
  */
 export function buildMultiTextureFragment(maxTextures) {
 	const count = Math.max(maxTextures, 1);

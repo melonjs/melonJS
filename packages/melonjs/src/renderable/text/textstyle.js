@@ -1,6 +1,7 @@
 /**
  * apply the current text style to the given context
  * @ignore
+ * @internal
  */
 export default function setContextStyle(context, style) {
 	context.font = style.font;

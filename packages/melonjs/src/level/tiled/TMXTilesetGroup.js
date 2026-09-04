@@ -8,6 +8,10 @@ export default class TMXTilesetGroup {
 		this.tilesets = [];
 		this.length = 0;
 		// cache last matched tileset — consecutive tiles usually share the same tileset
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lastTileset = null;
 	}
 

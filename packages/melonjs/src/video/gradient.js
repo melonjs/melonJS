@@ -15,6 +15,7 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  * same-size texture update (the cheap path on every backend), and memory
  * is capped at 256 KB instead of growing with the largest gradient drawn.
  * @ignore
+ * @internal
  */
 const GRADIENT_BAKE_SIZE = 256;
 
@@ -22,6 +23,7 @@ const GRADIENT_BAKE_SIZE = 256;
  * Shared render target for GPU gradient textures.
  * Reused across all Gradient instances to avoid GPU memory leaks.
  * @ignore
+ * @internal
  */
 let sharedRenderTarget = null;
 let sharedLastId = -1;
@@ -46,7 +48,10 @@ export class Gradient {
 		 * gradient type
 		 * @type {"linear"|"radial"}
 		 */
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._id = nextGradientId++;
 
 		this.type = type;
@@ -55,6 +60,7 @@ export class Gradient {
 		 * gradient coordinates
 		 * @type {number[]}
 		 * @ignore
+		 * @internal
 		 */
 		this.coords = coords;
 
@@ -62,6 +68,7 @@ export class Gradient {
 		 * color stops
 		 * @type {Array<{offset: number, color: string}>}
 		 * @ignore
+		 * @internal
 		 */
 		this.colorStops = [];
 
@@ -69,6 +76,7 @@ export class Gradient {
 		 * cached canvas gradient (for Canvas renderer)
 		 * @type {CanvasGradient|undefined}
 		 * @ignore
+		 * @internal
 		 */
 		this._canvasGradient = undefined;
 
@@ -76,6 +84,7 @@ export class Gradient {
 		 * cached gradient render target (for WebGL renderer)
 		 * @type {CanvasRenderTarget|undefined}
 		 * @ignore
+		 * @internal
 		 */
 		this._renderTarget = undefined;
 
@@ -83,6 +92,7 @@ export class Gradient {
 		 * whether the gradient needs to be regenerated
 		 * @type {boolean}
 		 * @ignore
+		 * @internal
 		 */
 		this._dirty = true;
 
@@ -90,6 +100,7 @@ export class Gradient {
 		 * cached parsed Color objects for sampling (lazily built)
 		 * @type {{offset: number, color: Color}[]|null}
 		 * @ignore
+		 * @internal
 		 */
 		this._parsedStops = null;
 	}
@@ -131,6 +142,7 @@ export class Gradient {
 	 * @param {CanvasRenderingContext2D} context - the 2D context to create the gradient on
 	 * @returns {CanvasGradient}
 	 * @ignore
+	 * @internal
 	 */
 	toCanvasGradient(context) {
 		if (this._canvasGradient && !this._dirty) {
@@ -179,6 +191,7 @@ export class Gradient {
 	 * @param {number} height - draw rect height
 	 * @returns {{canvas: HTMLCanvasElement|OffscreenCanvas, width: number, height: number}} the shared gradient canvas + the used source-rect size
 	 * @ignore
+	 * @internal
 	 */
 	toCanvas(renderer, x, y, width, height) {
 		const w = Math.max(1, width);
@@ -324,6 +337,7 @@ export class Gradient {
 	/**
 	 * Build the parsed Color cache from colorStops strings.
 	 * @ignore
+	 * @internal
 	 */
 	_buildParsedStops() {
 		this._parsedStops = this.colorStops

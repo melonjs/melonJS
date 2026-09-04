@@ -140,6 +140,7 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	_zoom: number;
 
@@ -167,6 +168,7 @@ export default class Camera2d extends Renderable {
 	/**
 	 * cached world view bounds
 	 * @ignore
+	 * @internal
 	 */
 	_worldView: Bounds;
 
@@ -179,6 +181,7 @@ export default class Camera2d extends Renderable {
 	/**
 	 * the invert camera transform used to unproject points
 	 * @ignore
+	 * @internal
 	 */
 	invCurrentTransform: Matrix3d;
 
@@ -209,7 +212,10 @@ export default class Camera2d extends Renderable {
 	 */
 	colorMatrix: ColorMatrix;
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_colorMatrixEffect: ColorMatrixEffect | null;
 
 	/** the camera deadzone */
@@ -279,6 +285,10 @@ export default class Camera2d extends Renderable {
 		this.isKinematic = false;
 
 		// camera manages its own FBO lifecycle in draw()
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._postEffectManaged = true;
 
 		this.colorMatrix = new ColorMatrix();
@@ -299,7 +309,10 @@ export default class Camera2d extends Renderable {
 
 	// -- some private function ---
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	// update the projection matrix based on the projection frame (a rectangle)
 	_updateProjectionMatrix(): void {
 		this.projectionMatrix.ortho(
@@ -320,7 +333,10 @@ export default class Camera2d extends Renderable {
 		this.screenProjection.copy(this.projectionMatrix);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_followH(target: Vector2d | Vector3d): number {
 		let targetX = this.pos.x;
 		if (target.x - this.pos.x > this.deadzone.right) {
@@ -337,7 +353,10 @@ export default class Camera2d extends Renderable {
 		return targetX;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_followV(target: Vector2d | Vector3d): number {
 		let targetY = this.pos.y;
 		if (target.y - this.pos.y > this.deadzone.bottom) {
@@ -607,7 +626,10 @@ export default class Camera2d extends Renderable {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 
 	updateTarget(dt?: number): void {
 		if (this.target) {
@@ -660,7 +682,10 @@ export default class Camera2d extends Renderable {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	override update(dt?: number): boolean {
 		// update the camera position
 		this.updateTarget(dt);
@@ -913,6 +938,7 @@ export default class Camera2d extends Renderable {
 	 * @param _renderer - the renderer about to draw with this camera
 	 * @returns fog state, or null for no fog
 	 * @ignore
+	 * @internal
 	 */
 	_fog3dState(_renderer: Renderer): Fog3dState | null {
 		return null;
@@ -926,6 +952,7 @@ export default class Camera2d extends Renderable {
 	 * viewport. Subclasses (e.g. Camera3d) override this to install a
 	 * perspective `worldProjection` instead.
 	 * @ignore
+	 * @internal
 	 */
 	_setupNonDefaultProjection(renderer: Renderer): void {
 		const left = -this.screenX / this.zoom;
@@ -956,6 +983,7 @@ export default class Camera2d extends Renderable {
 	/**
 	 * render the camera effects
 	 * @ignore
+	 * @internal
 	 */
 	drawFX(renderer: Renderer): void {
 		for (const fx of this.cameraEffects) {
@@ -966,6 +994,7 @@ export default class Camera2d extends Renderable {
 	/**
 	 * draw all objects visible in this viewport
 	 * @ignore
+	 * @internal
 	 */
 	override draw(renderer: Renderer, container: Container): void {
 		// cast to any to access canvas/webgl renderer-specific methods not on base Renderer
@@ -1113,6 +1142,7 @@ export default class Camera2d extends Renderable {
 	 * offset); Camera3d overrides this to additionally rotate by
 	 * `-camera.pitch` / `-camera.yaw` in the correct order.
 	 * @ignore
+	 * @internal
 	 */
 	_applyContainerViewTransform(
 		container: Container,
@@ -1127,6 +1157,7 @@ export default class Camera2d extends Renderable {
 	 * Must undo each mutation in reverse order. Subclasses overriding
 	 * `_applyContainerViewTransform` should override this too.
 	 * @ignore
+	 * @internal
 	 */
 	_revertContainerViewTransform(
 		container: Container,
@@ -1138,6 +1169,7 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	override destroy(): void {
 		// unsubscribe the constructor-registered global listeners — without

@@ -6,6 +6,7 @@ import { _app, locked } from "./pointerevent.ts";
 /**
  * a temporary vector object
  * @ignore
+ * @internal
  */
 const tmpVec = new Vector2d();
 
@@ -177,6 +178,7 @@ class Pointer extends Bounds {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	constructor(x: number = 0, y: number = 0, w: number = 1, h: number = 1) {
 		// parent constructor

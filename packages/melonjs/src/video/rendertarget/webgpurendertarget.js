@@ -146,6 +146,7 @@ export default class WebGPURenderTarget extends RenderTarget {
 	 * lazily when the backing texture was reallocated.
 	 * @returns {GPUBindGroup} the bind group
 	 * @ignore
+	 * @internal
 	 */
 	getMaterialBindGroup() {
 		if (

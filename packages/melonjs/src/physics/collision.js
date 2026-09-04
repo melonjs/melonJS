@@ -14,8 +14,6 @@ import { game } from "../application/application.ts";
 export const collision = {
 	/**
 	 * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
-	 * @name maxChildren
-	 * @memberof collision
 	 * @public
 	 * @type {number}
 	 * @default 8
@@ -25,8 +23,6 @@ export const collision = {
 
 	/**
 	 * The maximum number of levels that the quadtree will create.
-	 * @name maxDepth
-	 * @memberof collision
 	 * @public
 	 * @type {number}
 	 * @default 4
@@ -48,8 +44,6 @@ export const collision = {
 	 * @property {number} ALL_OBJECT all of the above (including user-defined types)
 	 * @readonly
 	 * @enum {number}
-	 * @name types
-	 * @memberof collision
 	 * @see Body.setCollisionMask
 	 * @see Body.collisionType
 	 * @example
@@ -97,8 +91,6 @@ export const collision = {
 
 	/**
 	 * Checks for object colliding with the given line
-	 * @name rayCast
-	 * @memberof collision
 	 * @public
 	 * @param {Line} line - line to be tested for collision
 	 * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.

@@ -10,6 +10,7 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	/**
 	 * return true if the renderer can render the specified layer
 	 * @ignore
+	 * @internal
 	 */
 	canRender(layer) {
 		return layer.orientation === "staggered" && super.canRender(layer);
@@ -18,6 +19,7 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	/**
 	 * return the tile position corresponding to the specified pixel
 	 * @ignore
+	 * @internal
 	 */
 	pixelToTileCoords(x, y, v) {
 		let ret = v || vector2dPool.get();

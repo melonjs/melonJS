@@ -34,10 +34,15 @@ let deadzone = 0.1;
 /**
  * Normalize axis values for wired Xbox 360
  * @ignore
+ * @internal
  */
 function wiredXbox360NormalizeFn(
 	this: any,
 	value: number,
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_axis: number,
 	button: number,
 ): number {
@@ -53,6 +58,7 @@ function wiredXbox360NormalizeFn(
 /**
  * Normalize axis values for OUYA
  * @ignore
+ * @internal
  */
 function ouyaNormalizeFn(
 	this: any,
@@ -90,6 +96,7 @@ const leadingZeroRE = /^0+/;
  *
  * This function normalizes the id to support both formats
  * @ignore
+ * @internal
  */
 function addMapping(id: string, mapping: Partial<GamepadMapping>): void {
 	const expanded_id = id.replace(
@@ -188,6 +195,7 @@ const remap: Map<string, GamepadMapping> = new Map();
 /**
  * Update gamepad status
  * @ignore
+ * @internal
  */
 const updateGamepads = function (): void {
 	const gamepads = navigator.getGamepads();

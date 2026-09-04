@@ -13,12 +13,14 @@
  * an unsupported type is a parse failure upstream (effect disables), never
  * a silently-wrong offset.
  * @ignore
+ * @internal
  */
 
 /**
  * `{align, size}` per supported member type, keyed by the canonical
  * spelling. Aliases (`vec2<f32>` form) are normalized before lookup.
  * @ignore
+ * @internal
  */
 const TYPE_LAYOUT = {
 	f32: { align: 4, size: 4 },
@@ -41,6 +43,7 @@ const ARRAY_TYPE = /^array<\s*vec4f\s*,\s*(\d+)\s*>$/;
  * @param {string} type - a WGSL type token
  * @returns {string} the canonical spelling
  * @ignore
+ * @internal
  */
 export function normalizeWGSLType(type) {
 	return type
@@ -52,6 +55,7 @@ export function normalizeWGSLType(type) {
 /**
  * round `value` up to the next multiple of `alignment` (a power of two)
  * @ignore
+ * @internal
  */
 function roundUp(alignment, value) {
 	return (value + alignment - 1) & ~(alignment - 1);
@@ -64,6 +68,7 @@ function roundUp(alignment, value) {
  *   the name → placement map and the total (16-byte-rounded) struct size,
  *   or `null` when a member type is unsupported
  * @ignore
+ * @internal
  */
 export function computeUniformLayout(members) {
 	const map = new Map();

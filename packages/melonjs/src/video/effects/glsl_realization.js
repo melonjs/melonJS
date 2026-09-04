@@ -35,6 +35,7 @@ const NOISE_UV_IDENTIFIER = /\bnoise_uv\b/;
  * whether the body declares `name` itself (as a varying/uniform/attribute) —
  * the engine then leaves that identifier fully user-managed
  * @ignore
+ * @internal
  */
 function hasOwnDeclaration(source, name) {
 	return new RegExp(
@@ -47,6 +48,7 @@ function hasOwnDeclaration(source, name) {
  * `: screen_texture` annotations, and detect the `screen_uv` / `noise_uv`
  * varyings. Bodies without builtins pass through byte-identical.
  * @ignore
+ * @internal
  */
 function parseShaderBuiltins(fragmentBody) {
 	const screenTextures = [];
@@ -73,6 +75,7 @@ function parseShaderBuiltins(fragmentBody) {
  * `_setNoiseUVRect` through the `ME_*` uniforms). Built deterministically
  * from a template; user source is never rewritten.
  * @ignore
+ * @internal
  */
 function buildEffectVertex(builtins) {
 	if (!builtins.screenUV && !builtins.noiseUV) {
@@ -118,6 +121,7 @@ function buildEffectVertex(builtins) {
  * @param {string} fragmentBody - the user body (GLSL, `vec4 apply(vec4, vec2)` convention)
  * @returns {{vertex: string, fragment: string, screenTextures: Array<{name: string, repeat: string}>, noiseUV: boolean}} the assembled sources + builtin usage
  * @ignore
+ * @internal
  */
 export function buildGLSLProgram(fragmentBody) {
 	// Shader builtins: parse & strip `: screen_texture` annotations,

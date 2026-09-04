@@ -4,6 +4,7 @@ import { MAX_LIGHTS } from "./constants.ts";
 /**
  * Uniform-ready packing of the active 3D lights for the mesh-lit shader.
  * @ignore
+ * @internal
  */
 export interface PackedMeshLighting {
 	/** number of active shaded lights, clamped to `MAX_LIGHTS`. */
@@ -60,6 +61,7 @@ const _result: PackedMeshLighting = {
  * @param lights - iterable of lights, or `null`/`undefined` (treated as empty)
  * @returns the packed lighting (reused instance)
  * @ignore
+ * @internal
  */
 export function packMeshLights(
 	lights: Iterable<Light3d> | null | undefined,

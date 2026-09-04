@@ -13,6 +13,7 @@
  * bind group; the caller supplies the binding through the callbacks. That keeps
  * it pure, so the same test suite proves both backends behave alike.
  * @ignore
+ * @internal
  */
 export class TextureSlotTable {
 	/**
@@ -27,6 +28,7 @@ export class TextureSlotTable {
 	 * approves is held out of assignment entirely (WebGL parks `ShaderEffect`
 	 * extra samplers on high units this way). Reservations survive a reset.
 	 * @ignore
+	 * @internal
 	 */
 	constructor({ capacity, onOverflow, onEvict, isReserved } = {}) {
 		/** @type {Map<string, number>} key → slot */
@@ -47,6 +49,7 @@ export class TextureSlotTable {
 	 * report an empty table while every unit was in use.
 	 * @returns {number} the number of occupied slots
 	 * @ignore
+	 * @internal
 	 */
 	get size() {
 		return this.used.size;
@@ -58,6 +61,7 @@ export class TextureSlotTable {
 	 * change, where the resolved limit can differ from the previous one.
 	 * @param {number} capacity - the new slot count
 	 * @ignore
+	 * @internal
 	 */
 	setCapacity(capacity) {
 		this.capacity = capacity;
@@ -84,6 +88,7 @@ export class TextureSlotTable {
 	 * @param {string} key - the slot key
 	 * @returns {number|undefined} the assigned slot, or `undefined`
 	 * @ignore
+	 * @internal
 	 */
 	peek(key) {
 		return this.slots.get(key);
@@ -95,6 +100,7 @@ export class TextureSlotTable {
 	 * get an answer rather than an infinite scan.
 	 * @returns {number} a free slot index, or -1
 	 * @ignore
+	 * @internal
 	 */
 	freeSlot() {
 		for (let slot = 0; slot < this.capacity; slot++) {
@@ -118,6 +124,7 @@ export class TextureSlotTable {
 	 * cannot share a slot
 	 * @returns {number} the slot to write into the vertex stream
 	 * @ignore
+	 * @internal
 	 */
 	slotFor(key) {
 		const existing = this.slots.get(key);
@@ -140,6 +147,7 @@ export class TextureSlotTable {
 	 * the mapping. Both therefore overflow on the same rule.
 	 * @returns {number} the claimed slot
 	 * @ignore
+	 * @internal
 	 */
 	claim() {
 		let slot = this.freeSlot();
@@ -168,6 +176,7 @@ export class TextureSlotTable {
 	 * @param {string} key - the slot key to release
 	 * @returns {boolean} whether the key held a slot
 	 * @ignore
+	 * @internal
 	 */
 	release(key) {
 		const slot = this.slots.get(key);
@@ -184,6 +193,7 @@ export class TextureSlotTable {
 	 * Drop every assignment. `onEvict` fires once per slot that was live, so a
 	 * caller tracking bindings per slot can forget exactly those.
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		if (this.onEvict !== undefined) {

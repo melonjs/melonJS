@@ -4,6 +4,7 @@
  * precedent). The vertex layout is the primitive tier's 6-float
  * `x, y, z, nx, ny, packed-color` stream on both backends.
  * @ignore
+ * @internal
  */
 
 /** the minimal vertex-buffer surface this module writes — `@ignore` */
@@ -39,6 +40,7 @@ interface PointLike {
  * primitive in 3D. For 2D matrices those slots are identity, so output
  * (x, y, z) is bit-identical to the legacy 2D-only multiply.
  * @ignore
+ * @internal
  */
 export function pushPrimitiveRange(
 	vertexData: PrimitiveVertexData,
@@ -96,6 +98,7 @@ export function pushPrimitiveRange(
  * @param z - the current renderer depth
  * @param flush - drains the vertex buffer when a pair no longer fits
  * @ignore
+ * @internal
  */
 export function expandLinesToTriangles(
 	vertexData: PrimitiveVertexData,

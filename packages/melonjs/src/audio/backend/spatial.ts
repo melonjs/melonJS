@@ -77,9 +77,17 @@ export interface SpatialSoundOptions extends SoundOptions {
  * @internal
  */
 export interface SpatialAudioState {
-	/** Listener's 3D position [x, y, z]. */
+	/**
+	 * Listener's 3D position [x, y, z].
+	 * @ignore
+	 * @internal
+	 */
 	_pos: [number, number, number];
-	/** Listener's orientation [forwardX, forwardY, forwardZ, upX, upY, upZ]. */
+	/**
+	 * Listener's orientation [forwardX, forwardY, forwardZ, upX, upY, upZ].
+	 * @ignore
+	 * @internal
+	 */
 	_orientation: [number, number, number, number, number, number];
 }
 
@@ -93,15 +101,35 @@ export interface SpatialSoundState {
 	_pos: [number, number, number] | null;
 	/** Voice source's orientation vector [x, y, z]. */
 	_orientation: [number, number, number];
-	/** Stereo panning value from -1.0 to 1.0, or null if not set. */
+	/**
+	 * Stereo panning value from -1.0 to 1.0, or null if not set.
+	 * @ignore
+	 * @internal
+	 */
 	_stereo: number | null;
-	/** Panner node attributes for 3D audio processing. */
+	/**
+	 * Panner node attributes for 3D audio processing.
+	 * @ignore
+	 * @internal
+	 */
 	_pannerAttr: PannerAttrOptions;
-	/** Event listeners for stereo panning changes. */
+	/**
+	 * Event listeners for stereo panning changes.
+	 * @ignore
+	 * @internal
+	 */
 	_onstereo: Array<{ fn: () => void }>;
-	/** Event listeners for position changes. */
+	/**
+	 * Event listeners for position changes.
+	 * @ignore
+	 * @internal
+	 */
 	_onpos: Array<{ fn: () => void }>;
-	/** Event listeners for orientation changes. */
+	/**
+	 * Event listeners for orientation changes.
+	 * @ignore
+	 * @internal
+	 */
 	_onorientation: Array<{ fn: () => void }>;
 }
 

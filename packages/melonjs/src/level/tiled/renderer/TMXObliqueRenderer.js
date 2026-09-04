@@ -43,6 +43,8 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 		/**
 		 * determinant of the shear matrix (for inverse transform)
 		 * @type {number}
+		 * @ignore
+		 * @internal
 		 */
 		this._det = 1 - this.shearX * this.shearY;
 	}
@@ -50,6 +52,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	/**
 	 * return true if the renderer can render the specified layer
 	 * @ignore
+	 * @internal
 	 */
 	canRender(layer) {
 		return (
@@ -88,6 +91,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	/**
 	 * return the tile position corresponding to the specified pixel
 	 * @ignore
+	 * @internal
 	 */
 	pixelToTileCoords(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -100,6 +104,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	/**
 	 * return the pixel position corresponding of the specified tile
 	 * @ignore
+	 * @internal
 	 */
 	tileToPixelCoords(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -112,6 +117,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	/**
 	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
+	 * @internal
 	 */
 	drawTile(renderer, x, y, tmxTile) {
 		const tileset = tmxTile.tileset;
@@ -129,6 +135,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
 	 * rendering loop to bypass Tile construction
 	 * @ignore
+	 * @internal
 	 */
 	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
 		const dx = tileset.tileoffset.x + x * this.tilewidth + this.skewX * y;
@@ -143,6 +150,7 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 	/**
 	 * draw the given TMX Layer for the given area
 	 * @ignore
+	 * @internal
 	 */
 	drawTileLayer(renderer, layer, rect) {
 		let incX = 1;

@@ -17,6 +17,7 @@
  * - group 2 — reserved: lights (the std140 light block ports here).
  * - group 3 — reserved: per-effect extras (ShaderEffect-WGSL, post FX).
  * @ignore
+ * @internal
  */
 export const GROUP_FRAME = 0;
 export const GROUP_MATERIAL = 1;
@@ -27,11 +28,13 @@ export const GROUP_EFFECT = 3;
  * Byte size of the frame-globals uniform block:
  * mat4x4<f32> projection (64) + f32 lineWidth (4) + pad to 16 → 80.
  * @ignore
+ * @internal
  */
 export const FRAME_UNIFORM_SIZE = 80;
 
 /**
  * Byte size of the clear-color uniform block: vec4<f32> → 16.
  * @ignore
+ * @internal
  */
 export const CLEAR_UNIFORM_SIZE = 16;

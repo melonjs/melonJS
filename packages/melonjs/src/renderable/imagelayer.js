@@ -113,6 +113,10 @@ export default class ImageLayer extends Sprite {
 	}
 
 	set repeat(value) {
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._repeat = value;
 		switch (this._repeat) {
 			case "no-repeat":
@@ -174,8 +178,13 @@ export default class ImageLayer extends Sprite {
 	/**
 	 * createPattern function
 	 * @ignore
+	 * @internal
 	 */
 	createPattern() {
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._pattern = this.parentApp.renderer.createPattern(
 			this.image,
 			this._repeat,
@@ -185,6 +194,7 @@ export default class ImageLayer extends Sprite {
 	/**
 	 * updateLayer function
 	 * @ignore
+	 * @internal
 	 */
 	updateLayer() {
 		const rx = this.ratio.x;
@@ -250,6 +260,7 @@ export default class ImageLayer extends Sprite {
 	 * `Renderable.postDraw` cleans up symmetrically (`clearTint` /
 	 * `clearMask` / `endPostEffect` / `restore`).
 	 * @ignore
+	 * @internal
 	 */
 	preDraw(renderer) {
 		// save the context
@@ -363,6 +374,7 @@ export default class ImageLayer extends Sprite {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		vector2dPool.release(this.ratio);

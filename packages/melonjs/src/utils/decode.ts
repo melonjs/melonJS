@@ -1,6 +1,7 @@
 /**
  * the function used to decompress zlib/gzip data
  * @ignore
+ * @internal
  */
 let inflateFunction:
 	| ((data: string, format: string) => Uint32Array)

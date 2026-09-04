@@ -331,31 +331,29 @@ melonJS ships **skills** — guidance files that teach AI coding assistants the
 engine's conventions and, more usefully, the mistakes that fail silently rather
 than raising an error.
 
-They are installed with the package, at `node_modules/melonjs/skills/`, and are
-versioned with the engine — so the guidance always matches the release you have.
+They are versioned with the engine and ship inside the package, at
+`node_modules/melonjs/skills/` — so a copy matching the exact release you are
+running is always on disk.
 
-**Claude Code** — install as a plugin :
-
-```
-/plugin marketplace add melonjs/melonJS
-```
-
-or copy the skills into a project :
+Install them into whatever assistant you use, with one command :
 
 ```bash
-mkdir -p .claude/skills && cp -r node_modules/melonjs/skills/melonjs* .claude/skills/
+npx skills add https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills
 ```
 
-**Other agents** (Codex, Cursor, Gemini CLI, …) read an `AGENTS.md` from your own
-project root. One ships ready to use — copy it across :
+It detects the assistants in your project and writes each one's own convention
+— `.claude/skills/`, `.agents/skills/`, `.windsurf/skills/` and around seventy
+others — so there is nothing to place by hand. Add `-a claude-code -a cursor`
+to target specific ones.
 
-```bash
-cp node_modules/melonjs/skills/AGENTS.md ./AGENTS.md
-```
-
-It points at the shipped skills, names the three rules that produce code which
-runs and is wrong, and links the API index below. If you already have an
+The set includes an `AGENTS.md` for anything following that convention (Codex,
+Cursor, Gemini CLI); GitHub Copilot reads the same content from
+`.github/copilot-instructions.md`. It names the three rules that produce code
+which runs and is wrong, and links the API index below — if you already keep an
 `AGENTS.md`, paste its sections into yours.
+
+The command installs from `master`. To pin to the release you are running,
+point it at that tag instead of `master` in the URL above.
 
 The skills are plain markdown and can be read by any agent, or by a human.
 

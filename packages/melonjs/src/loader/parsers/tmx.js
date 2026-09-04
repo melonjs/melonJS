@@ -12,6 +12,7 @@ import { tmxList } from "../cache.js";
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadTMX(tmxData, onload, onerror, settings) {
 	if (typeof tmxList[tmxData.name] !== "undefined") {
@@ -21,6 +22,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	function addToTMXList(data) {
 		// set the TMX content

@@ -3,7 +3,10 @@
  * @version 0.0.1
  */
 
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 function roundRect(
 	this: CanvasRenderingContext2D,
 	x: number,
@@ -239,7 +242,10 @@ function roundRect(
 	this.closePath();
 	this.moveTo(x, y);
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	function toDOMPointInit(value: {
 		x: number;
 		y: number;
@@ -250,7 +256,10 @@ function roundRect(
 		return { x, y, z, w };
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	function parseRadiiArgument(
 		value: any,
 	):
@@ -295,12 +304,18 @@ function roundRect(
 		return [toUnrestrictedNumber(value)];
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	function toUnrestrictedNumber(value: any) {
 		return +value;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	function toCornerPoint(value: any) {
 		const asNumber = toUnrestrictedNumber(value);
 		if (Number.isFinite(asNumber)) {
@@ -322,7 +337,10 @@ function roundRect(
 		};
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	function fixOverlappingCorners(corners: any) {
 		const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
 		const factors = [

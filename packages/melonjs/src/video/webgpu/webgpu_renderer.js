@@ -118,7 +118,6 @@ export default class WebGPURenderer extends Renderer {
 
 		/**
 		 * The WebGPU device, set once {@link WebGPURenderer#init} resolves.
-		 * @name device
 		 * @type {GPUDevice|undefined}
 		 * @readonly
 		 */
@@ -126,7 +125,6 @@ export default class WebGPURenderer extends Renderer {
 
 		/**
 		 * The WebGPU canvas context
-		 * @name context
 		 * @type {GPUCanvasContext}
 		 */
 		this.context = this.renderTarget.context;
@@ -262,19 +260,38 @@ export default class WebGPURenderer extends Renderer {
 		 * offscreen FBO owns a separate, zeroed stencil) and let the
 		 * composite carry the clip instead. Same result, different route.
 		 * @ignore
+		 * @internal
 		 */
 		this._advancedBlendEffect = undefined;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendCapture = undefined;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendTarget = undefined;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendOpen = false;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendBusy = 0;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendParent = null;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._advancedBlendWarned = new Set();
 
 		// consumed as the next pass's colorLoadOp "clear" (fresh target)
@@ -1059,7 +1076,10 @@ export default class WebGPURenderer extends Renderer {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_toFrameTexture(options = {}) {
 		if (typeof this.device === "undefined") {
 			return null;
@@ -1210,6 +1230,10 @@ export default class WebGPURenderer extends Renderer {
 		// the pass sample count so MSAA composes with post-effects (the GL
 		// twin resolves via blitFramebuffer). Ping-pong intermediates draw
 		// screen-aligned effect quads only and stay single-sampled.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._renderTargetPool ??= new RenderTargetPool((w, h, isCapture) => {
 			return new WebGPURenderTarget(this, w, h, {
 				sampleCount: isCapture === true ? this.canvasSampleCount : 1,
@@ -1378,6 +1402,7 @@ export default class WebGPURenderer extends Renderer {
 	 * loud.
 	 * @param {string} what - the excluded path, named for the message
 	 * @ignore
+	 * @internal
 	 */
 	_warnAdvancedBlendFallback(what) {
 		const key = `${what}:${this.currentBlendMode}`;
@@ -1394,6 +1419,7 @@ export default class WebGPURenderer extends Renderer {
 	 * Close a pending advanced-blend bracket, if one is open and we are not
 	 * already inside the bracket machinery.
 	 * @ignore
+	 * @internal
 	 */
 	_drainAdvancedBlend() {
 		if (this._advancedBlendOpen === true && this._advancedBlendBusy === 0) {
@@ -1407,6 +1433,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @returns {boolean} false when the effect could not be realized, in which
 	 * case the draw proceeds unbracketed (plain source-over)
 	 * @ignore
+	 * @internal
 	 */
 	_openAdvancedBlend() {
 		const canvas = this.getCanvas();
@@ -1459,6 +1486,7 @@ export default class WebGPURenderer extends Renderer {
 	 * Close an advanced-blend bracket: drain the offscreen, retarget to the
 	 * parent, and composite through {@link BlendEffect}.
 	 * @ignore
+	 * @internal
 	 */
 	_closeAdvancedBlend() {
 		const canvas = this.getCanvas();
@@ -1814,6 +1842,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {Matrix3d} shadowMatrix - the group matrix flattened onto the ground
 	 * @param {object} quad - the shared shadow quad
 	 * @ignore
+	 * @internal
 	 */
 	drawInstancedShadow(mesh, shadowMatrix, quad) {
 		const tint = this.currentTint.toUint32(this.getGlobalAlpha());

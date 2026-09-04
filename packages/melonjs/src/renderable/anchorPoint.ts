@@ -9,6 +9,7 @@
  * Named anchor-point presets accepted anywhere `settings.anchorPoint` is —
  * self-documenting shorthands for the common `{x, y}` pairs.
  * @ignore
+ * @internal
  */
 export const ANCHOR_POINT_PRESETS = Object.freeze({
 	center: Object.freeze({ x: 0.5, y: 0.5 }),
@@ -26,6 +27,7 @@ export const ANCHOR_POINT_PRESETS = Object.freeze({
  * An anchor value as accepted by `settings.anchorPoint`: a preset name or
  * any object with numeric `x`/`y` (plain object, Vector2d, ObservablePoint).
  * @ignore
+ * @internal
  */
 export type AnchorPointValue =
 	| keyof typeof ANCHOR_POINT_PRESETS
@@ -57,6 +59,7 @@ const isAnchorPair = (value: unknown): value is { x: number; y: number } => {
  *   constructed before can start throwing;
  * - without (new surfaces, e.g. Sprite3d): throws.
  * @ignore
+ * @internal
  */
 export function resolveAnchorPoint(
 	value: unknown,

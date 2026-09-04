@@ -61,6 +61,7 @@ export function setStopOnAudioError(value: boolean): void {
  *   loads steal each other's retry budget).
  * - `audioExts` — the active list of audio formats set by `init`.
  * @ignore
+ * @internal
  */
 export const state = {
 	tracks: {} as Record<string, SpatialSound | undefined>,
@@ -75,6 +76,7 @@ export const state = {
  * Used by every per-clip helper across `playback.ts` / `audio.ts` so
  * the error contract stays identical across the whole surface.
  * @ignore
+ * @internal
  */
 export function getSoundOrThrow(sound_name: string): SpatialSound {
 	const sound = state.tracks[sound_name];
@@ -91,6 +93,7 @@ export function getSoundOrThrow(sound_name: string): SpatialSound {
  * is reported through a callback — nothing is thrown, because this runs from a
  * timer callback where a throw could not be caught by anyone.
  * @ignore
+ * @internal
  */
 export const soundLoadError = function (
 	sound_name: string,
@@ -190,6 +193,7 @@ export function getMasterGain(): GainNode | null {
 /**
  * Get the audio module's global volume.
  * @ignore
+ * @internal
  */
 export function getGlobalVolume(): number {
 	return audioEngine.volume() as number;
@@ -198,6 +202,7 @@ export function getGlobalVolume(): number {
 /**
  * Set the audio module's global volume.
  * @ignore
+ * @internal
  */
 export function setGlobalVolume(v: number): void {
 	audioEngine.volume(v);
@@ -206,6 +211,7 @@ export function setGlobalVolume(v: number): void {
 /**
  * Mute or unmute the audio module globally.
  * @ignore
+ * @internal
  */
 export function setGlobalMuted(muted: boolean): void {
 	audioEngine.mute(muted);
@@ -214,6 +220,7 @@ export function setGlobalMuted(muted: boolean): void {
 /**
  * Whether the audio module is currently muted globally.
  * @ignore
+ * @internal
  */
 export function isGlobalMuted(): boolean {
 	// audioEngine doesn't expose a public muted getter — peek at the private
@@ -225,6 +232,7 @@ export function isGlobalMuted(): boolean {
 /**
  * Stop every playing sound on every channel.
  * @ignore
+ * @internal
  */
 export function stopAllPlayback(): void {
 	audioEngine.stop();
@@ -233,6 +241,7 @@ export function stopAllPlayback(): void {
 /**
  * Whether the given audio codec is supported by the backend / browser.
  * @ignore
+ * @internal
  */
 export function hasCodec(codec: string): boolean {
 	if (!isAudioAvailable()) return false;
@@ -246,6 +255,7 @@ export function hasCodec(codec: string): boolean {
 /**
  * Whether at least one audio backend (HTML5 or WebAudio) is available.
  * @ignore
+ * @internal
  */
 export function isAudioAvailable(): boolean {
 	return !audioEngine.noAudio;

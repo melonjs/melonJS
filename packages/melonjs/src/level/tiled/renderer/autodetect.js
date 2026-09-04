@@ -8,6 +8,7 @@ import TMXStaggeredRenderer from "./TMXStaggeredRenderer.js";
  * return a compatible renderer object for the given map
  * @param {TMXTileMap} map
  * @ignore
+ * @internal
  */
 export function getNewTMXRenderer(map) {
 	switch (map.orientation) {

@@ -4,12 +4,14 @@ import { isTopology } from "../../gpu/topology.ts";
  * Translate between the backend-neutral topology vocabulary and WebGL's
  * primitive-mode enums.
  * @ignore
+ * @internal
  */
 
 /**
  * GL enum name for each topology. Indirection through the name keeps this
  * table context-free; the value is read off `gl` at call time.
  * @ignore
+ * @internal
  */
 const TOPOLOGY_TO_GL_NAME = {
 	"point-list": "POINTS",
@@ -25,6 +27,7 @@ const TOPOLOGY_TO_GL_NAME = {
  * Reverse lookup, built once per context.
  * @type {WeakMap<WebGL2RenderingContext, Map<GLenum, string>>}
  * @ignore
+ * @internal
  */
 const reverseCache = new WeakMap();
 
@@ -41,6 +44,7 @@ const reverseCache = new WeakMap();
  * @returns {GLenum} the GL primitive mode
  * @throws {Error} when `value` is neither a known topology nor a number
  * @ignore
+ * @internal
  */
 export function resolveTopology(gl, value) {
 	if (typeof value === "number") {
@@ -72,6 +76,7 @@ export function resolveTopology(gl, value) {
  * @param {GLenum} mode - a GL primitive mode
  * @returns {string|undefined} the topology name, or `undefined` for an unknown mode
  * @ignore
+ * @internal
  */
 export function topologyFromGL(gl, mode) {
 	let reverse = reverseCache.get(gl);

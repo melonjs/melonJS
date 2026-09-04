@@ -8,6 +8,7 @@
  * @param {object} descriptor - the descriptor to read
  * @returns {object[]} buffer layout groups
  * @ignore
+ * @internal
  */
 function bufferGroups(descriptor) {
 	if (Array.isArray(descriptor.buffers)) {
@@ -48,6 +49,7 @@ function bufferGroups(descriptor) {
  * disturb whichever one is mid-frame. Callers never touch
  * `bindVertexArray` directly.
  * @ignore
+ * @internal
  */
 export default class WebGLVertexState {
 	/**
@@ -79,6 +81,7 @@ export default class WebGLVertexState {
 	 * bookkeeping — a WebGPU backend builds immutable descriptors and has
 	 * no global binding points to disturb.
 	 * @ignore
+	 * @internal
 	 */
 	#captureBindings() {
 		const gl = this.gl;
@@ -88,7 +91,10 @@ export default class WebGLVertexState {
 		};
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	#restoreBindings(saved) {
 		const gl = this.gl;
 		gl.bindVertexArray(saved.vertexArray);

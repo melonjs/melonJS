@@ -14,6 +14,7 @@
  * count, so growing by one instance does not reallocate on the GPU until the
  * CPU-side array itself grows.
  * @ignore
+ * @internal
  */
 export default class WebGLInstanceBuffer {
 	/**

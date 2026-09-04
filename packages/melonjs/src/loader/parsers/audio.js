@@ -17,6 +17,7 @@ import { load } from "../../audio/playback.ts";
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadAudio(data, onload, onerror, settings) {
 	return load(data, onload, onerror, settings);
@@ -27,6 +28,7 @@ export function preloadAudio(data, onload, onerror, settings) {
  * @param {string} name - asset name
  * @returns {boolean} true if unloaded
  * @ignore
+ * @internal
  */
 export function unloadAudio(name) {
 	return unload(name);
@@ -35,6 +37,7 @@ export function unloadAudio(name) {
 /**
  * unload all audio assets
  * @ignore
+ * @internal
  */
 export function unloadAllAudio() {
 	unloadAll();

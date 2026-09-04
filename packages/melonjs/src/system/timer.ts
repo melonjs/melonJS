@@ -109,6 +109,7 @@ class Timer {
 	/**
 	 * reset time (e.g. usefull in case of pause)
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		// set to "now"
@@ -227,6 +228,7 @@ class Timer {
 	/**
 	 * update
 	 * @ignore
+	 * @internal
 	 */
 	update(time: number) {
 		this.last = this.now;
@@ -263,6 +265,7 @@ class Timer {
 	/**
 	 * clear Timers
 	 * @ignore
+	 * @internal
 	 */
 	clearTimer(timerId: number) {
 		for (let i = 0; i < this.timers.length; i++) {
@@ -276,6 +279,7 @@ class Timer {
 	/**
 	 * update timers
 	 * @ignore
+	 * @internal
 	 */
 	updateTimers() {
 		// Iterate a SNAPSHOT. The non-repeating branch below calls

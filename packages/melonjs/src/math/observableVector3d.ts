@@ -23,8 +23,20 @@ const isObservableProperty = (
  * @category Math
  */
 export class ObservableVector3d {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _callback: () => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _vector3d: Vector3d;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _revoke: () => void;
 
 	private callBackEnabled: boolean = true;

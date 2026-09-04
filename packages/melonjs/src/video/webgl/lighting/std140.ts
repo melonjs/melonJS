@@ -33,6 +33,7 @@ import { MAX_LIGHTS } from "./constants.ts";
 /**
  * floats per `vec4`, the block's fundamental unit
  * @ignore
+ * @internal
  */
 const VEC4 = 4;
 
@@ -49,24 +50,28 @@ const VEC4 = 4;
  * and float members means the staging buffer can no longer be a single
  * `Float32Array` view, and the cast is free on every GPU that matters.
  * @ignore
+ * @internal
  */
 export const HEADER_FLOATS = VEC4 * 2;
 
 /**
  * floats occupied by one light: two `vec4`s
  * @ignore
+ * @internal
  */
 export const LIGHT_FLOATS = VEC4 * 2;
 
 /**
  * total floats in a light block, header included
  * @ignore
+ * @internal
  */
 export const BLOCK_FLOATS = HEADER_FLOATS + MAX_LIGHTS * LIGHT_FLOATS;
 
 /**
  * total bytes in a light block
  * @ignore
+ * @internal
  */
 export const BLOCK_BYTES = BLOCK_FLOATS * Float32Array.BYTES_PER_ELEMENT;
 
@@ -76,6 +81,7 @@ export const BLOCK_BYTES = BLOCK_FLOATS * Float32Array.BYTES_PER_ELEMENT;
  * @param count - number of live lights
  * @param ambient - ambient colour, 0..1 per channel
  * @ignore
+ * @internal
  */
 function writeHeader(
 	out: Float32Array,
@@ -112,6 +118,7 @@ function writeHeader(
  * @param packed.ambient - `[r, g, b]` ambient floor; absent means black
  * @returns how many floats of `out` are live, for a partial upload
  * @ignore
+ * @internal
  */
 export function writeLight2dBlock(
 	out: Float32Array,
@@ -164,18 +171,21 @@ export function writeLight2dBlock(
  * + range + direction + both cone cosines + color, which cannot fold into
  * two vec4s' padding. The 2D block keeps its two-vec4 stride.
  * @ignore
+ * @internal
  */
 export const LIGHT3D_FLOATS = VEC4 * 3;
 
 /**
  * total floats in a 3D light block, header included
  * @ignore
+ * @internal
  */
 export const BLOCK3D_FLOATS = HEADER_FLOATS + MAX_LIGHTS * LIGHT3D_FLOATS;
 
 /**
  * total bytes in a 3D light block
  * @ignore
+ * @internal
  */
 export const BLOCK3D_BYTES = BLOCK3D_FLOATS * Float32Array.BYTES_PER_ELEMENT;
 
@@ -206,6 +216,7 @@ export const BLOCK3D_BYTES = BLOCK3D_FLOATS * Float32Array.BYTES_PER_ELEMENT;
  * @param packed.ambient - `[r, g, b]` ambient floor; absent means black
  * @returns how many floats of `out` are live, for a partial upload
  * @ignore
+ * @internal
  */
 export function writeLight3dBlock(
 	out: Float32Array,

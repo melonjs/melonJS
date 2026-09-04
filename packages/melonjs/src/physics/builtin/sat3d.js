@@ -19,6 +19,7 @@ import {
  * except that all three terms are read in 3D. `getAbsolutePosition()` already
  * sums z across the whole ancestor chain.
  * @ignore
+ * @internal
  */
 function absCenter(renderable, box, out) {
 	const anc = renderable.ancestor.getAbsolutePosition();
@@ -48,6 +49,7 @@ const _centerB = [0, 0, 0];
  * `onCollision` handler safely inert on a depth-only contact rather than
  * wrong.
  * @ignore
+ * @internal
  * @param {Renderable} a - a reference to the object A.
  * @param {Box3d} boxA - a reference to the object A Box3d to be tested
  * @param {Renderable} b - a reference to the object B.
@@ -145,6 +147,7 @@ export function testBox3dBox3d(a, boxA, b, boxB, response) {
  * `overlapZ` is left at `0` by construction, since neither participant has a
  * finite depth to resolve against.
  * @ignore
+ * @internal
  */
 export function testBox3dPolygon(a, boxA, b, polyB, response) {
 	return testPolygonPolygon(a, boxA._footprint, b, polyB, response);
@@ -153,6 +156,7 @@ export function testBox3dPolygon(a, boxA, b, polyB, response) {
 /**
  * Planar-shape-first form of {@link testBox3dPolygon}.
  * @ignore
+ * @internal
  */
 export function testPolygonBox3d(a, polyA, b, boxB, response) {
 	return testPolygonPolygon(a, polyA, b, boxB._footprint, response);
@@ -162,6 +166,7 @@ export function testPolygonBox3d(a, polyA, b, boxB, response) {
  * {@link Box3d} against an {@link Ellipse}, with the ellipse unbounded along
  * Z. See {@link testBox3dPolygon}.
  * @ignore
+ * @internal
  */
 export function testBox3dEllipse(a, boxA, b, ellipseB, response) {
 	return testPolygonEllipse(a, boxA._footprint, b, ellipseB, response);
@@ -171,6 +176,7 @@ export function testBox3dEllipse(a, boxA, b, ellipseB, response) {
  * {@link Ellipse} against a {@link Box3d}, with the ellipse unbounded along
  * Z. See {@link testBox3dPolygon}.
  * @ignore
+ * @internal
  */
 export function testEllipseBox3d(a, ellipseA, b, boxB, response) {
 	return testEllipsePolygon(a, ellipseA, b, boxB._footprint, response);

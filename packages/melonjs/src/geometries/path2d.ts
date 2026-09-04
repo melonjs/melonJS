@@ -66,6 +66,7 @@ class Path2D {
 	 * whether to start fresh or connect from the current point (the native
 	 * Path2D behavior).
 	 * @ignore
+	 * @internal
 	 */
 	private penMoved = false;
 
@@ -407,6 +408,7 @@ class Path2D {
 	 * silently start a new sub-path, which fill() treats as a HOLE cut out
 	 * of the shape.
 	 * @ignore
+	 * @internal
 	 */
 	private connectTo(x: number, y: number) {
 		if (this.points.length === 0 && !this.penMoved) {

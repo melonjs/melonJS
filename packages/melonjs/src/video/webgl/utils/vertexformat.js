@@ -8,6 +8,7 @@ import { isVertexFormat, resolveVertexFormat } from "../../gpu/vertexformat.ts";
  * rather than from hard-coded constants — which keeps the neutral tier free
  * of GL references and matches how the rest of the WebGL layer is written.
  * @ignore
+ * @internal
  */
 
 /**
@@ -15,6 +16,7 @@ import { isVertexFormat, resolveVertexFormat } from "../../gpu/vertexformat.ts";
  * name (rather than the value) is what lets this table exist without a
  * context: the value is looked up on `gl` at call time.
  * @ignore
+ * @internal
  */
 const SCALAR_TO_GL_NAME = {
 	float32: "FLOAT",
@@ -37,6 +39,7 @@ const SCALAR_TO_GL_NAME = {
  * @returns {GLenum} the matching component type
  * @throws {Error} when `format` is not a supported format name
  * @ignore
+ * @internal
  */
 export function glTypeForFormat(gl, format) {
 	const { scalar } = resolveVertexFormat(format);
@@ -58,6 +61,7 @@ export function glTypeForFormat(gl, format) {
  * @param {boolean} normalized - whether integers are scaled into `[0, 1]` / `[-1, 1]`
  * @returns {string|undefined} the format name, or `undefined` when none exists
  * @ignore
+ * @internal
  */
 export function formatFromGL(gl, size, type, normalized) {
 	// `FLOAT` has no normalized spelling: WebGL accepts `normalized: true`

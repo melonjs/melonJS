@@ -12,11 +12,13 @@
  * give each bind its own bytes — exactly the vertex arena's rationale,
  * applied to uniforms.
  * @ignore
+ * @internal
  */
 
 /**
  * round up to a power-of-two alignment
  * @ignore
+ * @internal
  */
 function alignUp(value, alignment) {
 	return (value + alignment - 1) & ~(alignment - 1);
@@ -25,6 +27,7 @@ function alignUp(value, alignment) {
 /**
  * byte size of the engine MEBuiltins struct (3×vec2f, 16-byte rounded)
  * @ignore
+ * @internal
  */
 const ME_SIZE = 32;
 
@@ -35,6 +38,7 @@ const ME_SIZE = 32;
  * @param {import("./webgpu_renderer.js").default} renderer - the renderer
  * @param {import("../effects/wgsl_realization.js").default} realization - the effect's WGSL realization
  * @ignore
+ * @internal
  */
 function buildEffectGPU(renderer, effect, realization) {
 	const cache = renderer.pipelineCache;
@@ -204,6 +208,7 @@ function buildEffectGPU(renderer, effect, realization) {
 /**
  * upload a static setTexture source into a resident effect-owned texture
  * @ignore
+ * @internal
  */
 function residentTexture(renderer, gpu, name, entry) {
 	let resident = gpu.residentTextures.get(name);
@@ -244,6 +249,7 @@ function residentTexture(renderer, gpu, name, entry) {
  * @returns {{key: string, hasEffectGroup: boolean, bindGroup: GPUBindGroup|null, dynamicOffsets: number[]}|null}
  *   the binding, or null when the effect has no WGSL realization
  * @ignore
+ * @internal
  */
 export function prepareEffectBinding(renderer, effect) {
 	const realization = effect.wgslRealization;

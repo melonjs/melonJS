@@ -54,6 +54,7 @@ export type QuadTreeSortFn = (a: QuadTreeItem, b: QuadTreeItem) => number;
 /**
  * a pool of `QuadTree` objects
  * @ignore
+ * @internal
  */
 const QT_ARRAY: QuadTree[] = [];
 
@@ -61,6 +62,7 @@ const QT_ARRAY: QuadTree[] = [];
  * will pop a quadtree object from the array
  * or create a new one if the array is empty
  * @ignore
+ * @internal
  */
 function QT_ARRAY_POP(
 	world: World,
@@ -85,6 +87,7 @@ function QT_ARRAY_POP(
 /**
  * Push back a quadtree back into the array
  * @ignore
+ * @internal
  */
 function QT_ARRAY_PUSH(qt: QuadTree) {
 	QT_ARRAY.push(qt);
@@ -93,6 +96,7 @@ function QT_ARRAY_PUSH(qt: QuadTree) {
 /**
  * a temporary vector object to be reused
  * @ignore
+ * @internal
  */
 const QT_VECTOR = new Vector2d();
 
@@ -116,6 +120,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 	 * and `remove` so `isPrunable` / `hasChildren` are O(1) reads
 	 * instead of O(tree-size) walks. Reset to 0 in `clear`.
 	 * @ignore
+	 * @internal
 	 */
 	_subtreeCount: number;
 
@@ -125,6 +130,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
 	 * narrow-phase query. Only the root allocates one; recursive
 	 * subnode calls receive the array via the `result` arg.
 	 * @ignore
+	 * @internal
 	 */
 	_retrieveScratch: QuadTreeItem[] | null;
 
@@ -615,6 +621,7 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
  * `getChildren` is optional because leaf renderables don't have it;
  * the recursive `insertContainer` narrows via {@link hasGetChildren}.
  * @ignore
+ * @internal
  */
 interface ContainerOrChild extends QuadTreeItem {
 	addChild?: (...args: unknown[]) => unknown;
@@ -629,9 +636,13 @@ interface ContainerOrChild extends QuadTreeItem {
  * shape; the optional variant covers the case where the World's lazy
  * `children` accessor returns `undefined`.
  * @ignore
+ * @internal
  */
 type ContainerLike = { getChildren(): ContainerOrChild[] };
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
 
 /**

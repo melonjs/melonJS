@@ -187,6 +187,7 @@ export default class ShaderEffect {
 		 * for extra samplers ({@link setTexture}), and so {@link clone} can
 		 * compile an independent copy
 		 * @ignore
+		 * @internal
 		 */
 		this._renderer = renderer;
 
@@ -195,9 +196,13 @@ export default class ShaderEffect {
 		 * {@link clone} can compile an independent copy. Stored before the
 		 * disabled-stub early return so cloning behaves consistently there too.
 		 * @ignore
+		 * @internal
 		 */
 		this._fragmentBody = body;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._precision = precision;
 
 		// resolve the body matching this renderer's shading language: a bare
@@ -224,6 +229,7 @@ export default class ShaderEffect {
 		 * texture, created lazily on first draw; unused on WebGPU, where the
 		 * bind group is built lazily instead)
 		 * @ignore
+		 * @internal
 		 */
 		this._extraTextures = new Map();
 
@@ -238,12 +244,19 @@ export default class ShaderEffect {
 			 * know when to refresh the shared frame capture before the effect draws
 			 * @type {Array<{name: string, repeat: string}>}
 			 * @ignore
+			 * @internal
 			 */
 			this._screenTextureUniforms = program.screenTextures;
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._hasNoiseUV = program.noiseUV;
 
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._shader = new GLShader(
 				renderer.gl,
 				program.vertex,
@@ -274,7 +287,10 @@ export default class ShaderEffect {
 				);
 				return;
 			}
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this.wgslRealization = realization;
 			// same renderer-facing capture contract as the GLSL side: a
 			// non-empty list means "refresh the frame capture before I draw"
@@ -297,12 +313,20 @@ export default class ShaderEffect {
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
 	}
 
-	/** @private */
+	/**
+	 * @private
+	 * @ignore
+	 * @internal
+	 */
 	_onContextLost() {
 		if (this.destroyed) {
 			return;
 		}
 		// remember user-set state so restore doesn't override it
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._enabledBeforeSuspend = this.enabled;
 		this.enabled = false;
 		// GL texture handles + unit reservations are invalid after a context
@@ -318,7 +342,11 @@ export default class ShaderEffect {
 		}
 	}
 
-	/** @private */
+	/**
+	 * @private
+	 * @ignore
+	 * @internal
+	 */
 	_onContextRestored() {
 		if (this.destroyed) {
 			return;
@@ -416,6 +444,7 @@ export default class ShaderEffect {
 	 * backend. A silent no-op for bodies that don't declare the uniform.
 	 * @param {number} dir - +1 (uv.y grows downward) or -1 (upward)
 	 * @ignore
+	 * @internal
 	 */
 	_setUVYDir(dir) {
 		if (this._uvYDir === dir || this.destroyed === true) {
@@ -426,6 +455,10 @@ export default class ShaderEffect {
 			!this._shader.suspended &&
 			typeof this._shader.uniforms.uUVYDir !== "undefined"
 		) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._uvYDir = dir;
 			this._shader.setUniform("uUVYDir", dir);
 		} else if (
@@ -450,6 +483,7 @@ export default class ShaderEffect {
 	 * @param {number} u0 - the frame's left UV coordinate (flip-normalized)
 	 * @param {number} v0 - the frame's top UV coordinate (flip-normalized)
 	 * @ignore
+	 * @internal
 	 */
 	_setNoiseUVRect(
 		sourceWidth,
@@ -508,6 +542,7 @@ export default class ShaderEffect {
 	 * batcher's bind may have been skipped as redundant while the GL active
 	 * unit points elsewhere.
 	 * @ignore
+	 * @internal
 	 */
 	_applyCaptureWrap(batcher, glTex, entry) {
 		const gl = batcher.gl;
@@ -655,6 +690,7 @@ export default class ShaderEffect {
 	 * bindings survive the batcher's rotating color-texture pool.
 	 * @param {object} batcher - the active batcher (owns the GL texture units)
 	 * @ignore
+	 * @internal
 	 */
 	_prepareTextures(batcher) {
 		if (!this.enabled || this._extraTextures.size === 0) {
@@ -685,6 +721,10 @@ export default class ShaderEffect {
 					// more extra textures than the batcher can hold beside
 					// uSampler — bind what fits, warn once, skip the rest
 					if (!this._textureOverflowWarned) {
+						/**
+						 * @ignore
+						 * @internal
+						 */
 						this._textureOverflowWarned = true;
 						console.warn(
 							`ShaderEffect.setTexture: too many extra textures for ${batcher.maxBatchTextures} texture units — "${name}" and any later ones were not bound`,
@@ -821,48 +861,72 @@ export default class ShaderEffect {
 	// the GL-program pass-throughs below additionally guard on `_shader`:
 	// a WGSL-realized effect is `enabled` without ever owning a GL program
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	bind() {
 		if (this.enabled && this._shader) {
 			this._shader.bind();
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	getAttribLocation(name) {
 		return this.enabled && this._shader
 			? this._shader.getAttribLocation(name)
 			: -1;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	setVertexAttributes(gl, attributes, stride) {
 		if (this.enabled && this._shader) {
 			this._shader.setVertexAttributes(gl, attributes, stride);
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	get program() {
 		return this.enabled && this._shader ? this._shader.program : null;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	get vertex() {
 		return this.enabled && this._shader ? this._shader.vertex : null;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	get fragment() {
 		return this.enabled && this._shader ? this._shader.fragment : null;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	get attributes() {
 		return this.enabled && this._shader ? this._shader.attributes : {};
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	get uniforms() {
 		return this.enabled && this._shader ? this._shader.uniforms : {};
 	}

@@ -80,6 +80,9 @@ export interface FogOptions {
 /**
  * The resolved per-frame fog values handed to the renderer. Distances are
  * pre-baked into the form the shaders want so neither backend divides.
+ * Hidden from the docs but deliberately kept in the emitted `.d.ts`:
+ * `camera3d.d.ts` imports this type, so removing it would leave a dangling
+ * import in the published types.
  * @ignore
  */
 export interface Fog3dState {

@@ -94,13 +94,26 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		});
 		/** @type {{view: GPUTextureView, sampler: GPUSampler}[]} indexed by slot */
 		this.segmentEntries = [];
-		/** last (view, filter, wrap) resolved to a segment slot @ignore */
+		/**
+		 * last (view, filter, wrap) resolved to a segment slot
+		 * @ignore
+		 * @internal
+		 */
 		this._memoView = null;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._memoFilter = null;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._memoWrap = null;
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._memoSlot = 0;
 		// the composed group-1 bind group for the pending segment (lazy)
 		this.segmentGroup = null;
@@ -228,6 +241,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @param {boolean} reupload - force the source pixels to re-upload
 	 * @returns {number} the slot index written to aTextureId
 	 * @ignore
+	 * @internal
 	 */
 	segmentSlotFor(texture, reupload) {
 		const renderer = this.renderer;
@@ -286,6 +300,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	/**
 	 * a stable id for a GPU resource object (bind-group composition keys)
 	 * @ignore
+	 * @internal
 	 */
 	resourceId(resource) {
 		let id = this.resourceIds.get(resource);
@@ -303,6 +318,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * resources' identity, so steady-state segments re-use one group.
 	 * @returns {GPUBindGroup} the segment's material bind group
 	 * @ignore
+	 * @internal
 	 */
 	composeSegmentGroup() {
 		if (this.segmentGroup !== null) {
@@ -337,6 +353,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	/**
 	 * start the next segment fresh (the pending one was just recorded)
 	 * @ignore
+	 * @internal
 	 */
 	resetSegment() {
 		// the table clears each live slot's entry through `onEvict`; truncating
@@ -368,6 +385,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * quad's segment slot (constant across its four corners); the lit and
 	 * fast paths pass 0 (single-texture bind groups).
 	 * @ignore
+	 * @internal
 	 */
 	pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, textureId = 0) {
 		const vertexData = this.vertexData;
@@ -403,6 +421,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * @param {ShaderEffect} [effect] - the effect to composite with
 	 * @param {boolean} [keepBlend=false] - keep the current blend mode (else replace)
 	 * @ignore
+	 * @internal
 	 */
 	blitTexture(source, x, y, w, h, effect, keepBlend = false) {
 		// drain pending quads under their own material first
@@ -518,6 +537,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * subclass overrides (its material model is the combined color+normal
 	 * group, not the segment slots)
 	 * @ignore
+	 * @internal
 	 */
 	hasPendingMaterial() {
 		return this.slotTable.size > 0;
@@ -529,6 +549,7 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 	 * semantic of the fast path vs the pooled blit)
 	 * @param {object} binding - the prepared effect binding
 	 * @ignore
+	 * @internal
 	 */
 	flushWithEffect(binding) {
 		const renderer = this.renderer;

@@ -54,7 +54,10 @@ const _transitionConfig: {
 };
 
 // callback when state switch is done
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 let _onSwitchComplete: (() => void) | null = null;
 
 // just to keep track of possible extra arguments
@@ -73,6 +76,7 @@ let _freezeResolvers: Array<() => void> = [];
 
 /**
  * @ignore
+ * @internal
  */
 function _startRunLoop(): void {
 	// ensure nothing is running first and in valid state
@@ -85,6 +89,7 @@ function _startRunLoop(): void {
 /**
  * Resume the game loop after a pause.
  * @ignore
+ * @internal
  */
 function _resumeRunLoop(): void {
 	// ensure game is actually paused and in valid state
@@ -96,18 +101,28 @@ function _resumeRunLoop(): void {
 /**
  * Pause the loop for most stage objects.
  * @ignore
+ * @internal
  */
 function _pauseRunLoop(): void {
 	// Set the paused boolean to stop updates on (most) entities
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_isPaused = true;
 }
 
 /**
  * Drain and resolve any pending freeze() promises.
  * @ignore
+ * @internal
  */
 function _resolveFreezeWaiters(): void {
 	const resolvers = _freezeResolvers;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeResolvers = [];
 	for (const resolve of resolvers) {
 		resolve();
@@ -118,11 +133,24 @@ function _resolveFreezeWaiters(): void {
  * End an active freeze on timer expiry: optionally resume the run loop
  * (only if freeze itself performed the pause), then resolve waiters.
  * @ignore
+ * @internal
  */
 function _endFreeze(): void {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeTimer = null;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeEndsAt = 0;
 	const wasOwnedPause = _freezeStartedPause;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_freezeStartedPause = false;
 	if (wasOwnedPause) {
 		state.resume(_freezeMusic);
@@ -134,6 +162,7 @@ function _endFreeze(): void {
  * Cancel any active freeze without auto-resuming (the caller is taking over
  * pause/resume control). Clears the timer and resolves pending waiters.
  * @ignore
+ * @internal
  */
 function _cancelFreeze(): void {
 	if (_freezeTimer !== null) {
@@ -149,6 +178,7 @@ function _cancelFreeze(): void {
  * this is only called when using requestAnimFrame stuff
  * @param time - current timestamp in milliseconds
  * @ignore
+ * @internal
  */
 function _renderFrame(time: number): void {
 	emit(TICK, time);
@@ -161,16 +191,22 @@ function _renderFrame(time: number): void {
 /**
  * stop the SO main loop
  * @ignore
+ * @internal
  */
 function _stopRunLoop(): void {
 	// cancel any previous animationRequestFrame
 	globalThis.cancelAnimationFrame(_animFrameId);
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_animFrameId = -1;
 }
 
 /**
  * start the SO main loop
  * @ignore
+ * @internal
  */
 function _switchState(stateId: number): void {
 	// clear previous interval if any

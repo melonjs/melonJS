@@ -50,6 +50,7 @@ export default class Light2d extends Renderable {
 	 * the world-space geometry of the light's visible area, rewritten each
 	 * frame by {@link Light2d#getVisibleArea} from transform-aware bounds.
 	 * @ignore
+	 * @internal
 	 */
 	visibleArea: Ellipse;
 
@@ -260,6 +261,7 @@ export default class Light2d extends Renderable {
 	 * overlay cutouts; rendering the light itself is handled normally as
 	 * part of the world tree walk.
 	 * @ignore
+	 * @internal
 	 */
 	override onActivateEvent() {
 		state.current()?._registerLight(this);
@@ -269,6 +271,7 @@ export default class Light2d extends Renderable {
 	 * Auto-deregister this light from the active Stage's lighting set when
 	 * removed from a container.
 	 * @ignore
+	 * @internal
 	 */
 	override onDeactivateEvent() {
 		state.current()?._unregisterLight(this);
@@ -277,6 +280,7 @@ export default class Light2d extends Renderable {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	override destroy() {
 		colorPool.release(this.color);

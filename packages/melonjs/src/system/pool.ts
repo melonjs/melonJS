@@ -28,6 +28,7 @@ const pools: Record<string, Pool<any, any[]>> = {};
 /**
  * Register a pool instance to the pool registry.
  * @ignore
+ * @internal
  */
 export const registerPool = (key: string, pool: Pool<any, any[]>) => {
 	pools[key] = pool;
@@ -35,6 +36,7 @@ export const registerPool = (key: string, pool: Pool<any, any[]>) => {
 
 /**
  * @ignore
+ * @internal
  */
 export const getRegisteredPools = () => pools;
 

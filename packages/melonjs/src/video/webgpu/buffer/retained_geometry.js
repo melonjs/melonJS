@@ -19,6 +19,7 @@ let indexPadScratch = new Uint16Array(0);
  *    submit — replaced buffers retire through `renderer.retireBuffer` and
  *    die after the frame's submit.
  * @ignore
+ * @internal
  */
 export default class WebGPURetainedGeometry {
 	/**
@@ -117,6 +118,7 @@ export default class WebGPURetainedGeometry {
 	 * retire both buffers (frame-safe) without resetting the version — the
 	 * shared tail of re-allocation and destruction
 	 * @ignore
+	 * @internal
 	 */
 	releaseBuffers() {
 		if (this.vertexBuffer !== null) {

@@ -46,15 +46,15 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 | Feature | Description |
 |---------|-------------|
 | **Rendering** | WebGPU, WebGL 2 and Canvas 2D with automatic fallback — the same feature set on every backend |
-| **3D** | Perspective [Camera3d](classes/Camera3d.html), mesh instancing, ground shadows, distance fog, point and spot lights, glTF/GLB and OBJ/MTL loading |
+| **3D** | Perspective {@link Camera3d | Camera3d}, mesh instancing, ground shadows, distance fog, point and spot lights, glTF/GLB and OBJ/MTL loading |
 | **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON), with GPU-accelerated tile rendering for orthogonal maps |
 | **Sprites** | Texture atlas, animation, TexturePacker & Aseprite support |
-| **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a [PhysicsAdapter](interfaces/PhysicsAdapter.html) interface for Box2D (planck) or Matter.js |
+| **Physics** | Built-in SAT collision with gravity and friction, shape-level collision events, and a {@link PhysicsAdapter | PhysicsAdapter} interface for Box2D (planck) or Matter.js |
 | **Audio** | Web Audio API with format fallback, plus procedural tone and noise generation |
 | **Input** | Keyboard, mouse, touch, gamepad |
-| **Particles** | Configurable [ParticleEmitter](classes/ParticleEmitter.html), with a reference space so particles can be measured from the emitter, the world, or any container |
+| **Particles** | Configurable {@link ParticleEmitter | ParticleEmitter}, with a reference space so particles can be measured from the emitter, the world, or any container |
 | **Effects** | All thirteen CSS blend modes on every renderer, tinting, masking, and camera post-processing chains |
-| **Custom Shaders** | Per-sprite [ShaderEffect](classes/ShaderEffect.html) carrying both GLSL and WGSL, so one effect runs on either GPU backend |
+| **Custom Shaders** | Per-sprite {@link ShaderEffect | ShaderEffect} carrying both GLSL and WGSL, so one effect runs on either GPU backend |
 | **UI** | Built-in UI components (buttons, text input, containers) |
 
 ## Common Tasks
@@ -67,7 +67,7 @@ import { level } from "melonjs";
 // load a level by name (must be preloaded first)
 level.load("myLevel");
 ```
-See: [`level`](functions/level.load.html), [`TMXTileMap`](classes/TMXTileMap.html)
+See: {@link level.load | level}, {@link TMXTileMap | TMXTileMap}
 
 #### Create a sprite with animations
 Create a sprite from a texture atlas (e.g. exported from TexturePacker or Aseprite) and define animation sequences from named frames.
@@ -82,7 +82,7 @@ const player = new Sprite(100, 100,
     atlas.getAnimationSettings(["walk01.png", "walk02.png", "walk03.png"])
 );
 ```
-See: [`Sprite`](classes/Sprite.html), [`TextureAtlas`](classes/TextureAtlas.html)
+See: {@link Sprite | Sprite}, {@link TextureAtlas | TextureAtlas}
 
 #### Handle keyboard and gamepad input
 Bind physical keys or gamepad buttons to named actions, then check those actions in your game logic.
@@ -97,7 +97,7 @@ if (input.isKeyPressed("jump")) {
     // make the player jump
 }
 ```
-See: [`input`](modules/input.html)
+See: {@link input | input}
 
 #### Add physics and collision to a game object
 Attach a physics body with a collision shape to any renderable. The engine handles gravity, velocity, friction, and collision detection automatically.
@@ -114,7 +114,7 @@ this.body.collisionType = collision.types.PLAYER_OBJECT;
 this.body.setMaxVelocity(3, 15);
 this.body.setFriction(0.4, 0);
 ```
-See: [`Body`](classes/Body.html), [`collision`](modules/collision.html)
+See: {@link Body | Body}, {@link collision | collision}
 
 #### Apply a custom shader effect to a sprite
 Apply a per-sprite fragment shader using `ShaderEffect`. You only need to write the color transformation — the vertex shader and texture sampling are handled automatically. Runs on both GPU backends — write the body once and it is realized as GLSL or WGSL for the active renderer — and is silently ignored in Canvas mode.
@@ -129,7 +129,40 @@ mySprite.addPostEffect(new ShaderEffect(renderer, `
     }
 `));
 ```
-See: [`ShaderEffect`](classes/ShaderEffect.html), [`addPostEffect`](classes/Renderable.html#addposteffect)
+See: {@link ShaderEffect | ShaderEffect}, {@link Renderable.addPostEffect | addPostEffect}
+
+## Using this reference with an AI assistant
+
+Three things here are meant for assistants as much as for people.
+
+**`llms.txt`** — [melonjs.github.io/melonJS/llms.txt](https://melonjs.github.io/melonJS/llms.txt)
+indexes every exported class, function, interface and type with a one-line
+summary and a link to its page, and marks the deprecated ones. It is
+regenerated on every docs build, so it never drifts from the release. Point an
+assistant at that single URL rather than asking it to guess an API name.
+
+**Copy page** — the button in the header above copies the page you are reading
+as Markdown, with its canonical URL attached, or hands it straight to an
+assistant. Useful when you want to ask about one class without the model
+fetching half the reference.
+
+**Skills** — the engine ships guidance files that teach an assistant its
+conventions, and more usefully the mistakes that fail *silently* rather than
+raising an error: a custom `draw()` that ignores `this.pos`, `isKinematic`
+blocking pointer events, `.z` set after `addChild`. They are versioned with the
+engine, so a copy matching your exact release always ships inside the package.
+
+Install them into whatever assistant you use, with one command:
+
+```bash
+npx skills add https://github.com/melonjs/melonJS/tree/master/packages/melonjs/skills
+```
+
+That writes each agent's own convention — `.claude/skills/`, `.agents/skills/`,
+`.windsurf/skills/` and around seventy others — so there is nothing to place by
+hand. It installs from `master`; swap that for a release tag in the URL to pin.
+
+They are plain Markdown — readable by any agent, or by you.
 
 ## Links
 

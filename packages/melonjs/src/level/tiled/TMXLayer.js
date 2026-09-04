@@ -28,6 +28,7 @@ let _warnedNoGpuTileSupportOnce = false;
  * extract a 3-bit flip mask from a raw 32-bit GID (Tiled's flip bits live in
  * the upper 3 bits)
  * @ignore
+ * @internal
  */
 function flipMaskFromGid(gid) {
 	return (
@@ -40,6 +41,7 @@ function flipMaskFromGid(gid) {
 /**
  * extract a 3-bit flip mask from a Tile object's boolean flip flags
  * @ignore
+ * @internal
  */
 function flipMaskFromTile(tile) {
 	return (
@@ -53,6 +55,7 @@ function flipMaskFromTile(tile) {
  * reconstruct a legacy 32-bit GID (with Tiled's high flip bits set) from the
  * cleaned GID and a 3-bit flip mask, for passing to the Tile constructor
  * @ignore
+ * @internal
  */
 function gidWithFlips(gid, flipMask) {
 	return (
@@ -66,6 +69,7 @@ function gidWithFlips(gid, flipMask) {
 /**
  * Decode a tiled layer's data blob directly into the typed-array layerData
  * @ignore
+ * @internal
  */
 function setLayerData(layer, bounds, data) {
 	let idx = 0;
@@ -267,6 +271,7 @@ export default class TMXLayer extends Renderable {
 		 * repeated user-facing reads.
 		 * @type {Array<Tile|null>|null}
 		 * @ignore
+		 * @internal
 		 */
 		this.cachedTile = null;
 
@@ -360,6 +365,7 @@ export default class TMXLayer extends Renderable {
 	 * when an auto-eligible mode falls back due to a layer feature the GPU
 	 * path doesn't support (orientation, collection-of-image tileset, etc.).
 	 * @ignore
+	 * @internal
 	 */
 	_resolveRenderMode() {
 		const root = this.ancestor?.getRootAncestor?.();
@@ -435,6 +441,7 @@ export default class TMXLayer extends Renderable {
 	 * @param {boolean} gpuAllowed - whether `gpuTilemap` is enabled at the world level
 	 * @returns {{ok: boolean, reason?: string}}
 	 * @ignore
+	 * @internal
 	 */
 	_checkShaderEligibility(renderer, gpuAllowed) {
 		if (!gpuAllowed) {
@@ -568,6 +575,10 @@ export default class TMXLayer extends Renderable {
 		// 0xFFFF. Warn once per layer so a runtime `setTile` with a
 		// GID >= 65536 doesn't corrupt the cell undetected.
 		if (cleanGid > 0xffff && !this._truncationWarned) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._truncationWarned = true;
 			console.warn(
 				"melonJS: setTile received GID " +
@@ -690,6 +701,7 @@ export default class TMXLayer extends Renderable {
 	/**
 	 * update animations in a tileset layer
 	 * @ignore
+	 * @internal
 	 */
 	update(dt) {
 		let result = this.isDirty;
@@ -704,6 +716,7 @@ export default class TMXLayer extends Renderable {
 	/**
 	 * draw a tileset layer
 	 * @ignore
+	 * @internal
 	 */
 	draw(renderer, rect) {
 		// dispatch to the active renderer — picks shader / preRender / perTile

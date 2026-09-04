@@ -35,6 +35,7 @@ import QuadBatcher from "./quad_batcher.js";
 export default class LitQuadBatcher extends QuadBatcher {
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	init(renderer) {
 		// One shared pool, same size as the unlit batcher's (#1585). This used
@@ -100,6 +101,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * needs (re-)uploading, mirroring the color-texture cache.
 		 * @type {Array<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null>}
 		 * @ignore
+		 * @internal
 		 */
 		this.boundNormalMaps = new Array(pool).fill(null);
 
@@ -110,6 +112,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * to know when to re-bind/re-upload. `-1` = nothing bound.
 		 * @type {number[]}
 		 * @ignore
+		 * @internal
 		 */
 		this.boundNormalVersions = new Array(pool).fill(-1);
 
@@ -128,6 +131,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * `destroy()` releases the previous instance first, so nothing leaks.
 		 * @type {TextureStore}
 		 * @ignore
+		 * @internal
 		 */
 		this.normalStore?.releaseAll();
 		this.normalStore = new WebGLTextureStore(this.gl);
@@ -139,11 +143,24 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * while the unit itself comes from the same allocator the colors use.
 		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, number>}
 		 * @ignore
+		 * @internal
 		 */
 		this.normalUnits = new Map();
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._cacheEpoch = 0;
 
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lightCount = 0;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._maxLights = MAX_LIGHTS;
 
 		// `init` is re-run on context restore (WebGLRenderer.reset), against a
@@ -157,16 +174,25 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * program bound — a buffer upload is independent of `useProgram`.
 		 * @type {UniformBlock}
 		 * @ignore
+		 * @internal
 		 */
 		// Claim a binding point once and hold it: `init()` re-runs on context
 		// restore, and claiming again each time would walk through the
 		// device's budget over a long session.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._bindingPoint ??= renderer.reserveUniformBindingPoint();
 		this.lightBlock = new UniformBlock(
 			renderer.gl,
 			BLOCK_FLOATS,
 			this._bindingPoint,
 		);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._lightBlockProgram = null;
 		// Bind immediately rather than waiting for the first activation. An
 		// active-but-unbound uniform block is INVALID_OPERATION at draw time,
@@ -189,6 +215,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * Unsubscribe the `TEXTURE2D_DESTROYED` listener; delegates to
 	 * `MaterialBatcher.destroy()` for the texture-cache-reset one.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		if (this._onTexture2dDestroyed) {
@@ -210,6 +237,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * `toFrameTexture` claim. Normal maps now go through the shared allocator
 	 * like everything else, so there is nothing to hold back.
 	 * @ignore
+	 * @internal
 	 */
 	bind() {
 		super.bind();
@@ -229,6 +257,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * block, so `bindTo` reports failure and we simply record it, leaving the
 	 * next real lit program to bind normally.
 	 * @ignore
+	 * @internal
 	 */
 	_bindLightBlock() {
 		const shader = this.currentShader || this.defaultShader;
@@ -261,6 +290,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	reset() {
 		// QuadBatcher.reset rebuilds the index buffer, rebinds color
@@ -297,6 +327,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * skips re-binding, and samples the clobbering texture as a normal map.
 	 * @param {number} unit - the GL texture unit to invalidate
 	 * @ignore
+	 * @internal
 	 */
 	invalidateUnit(unit) {
 		super.invalidateUnit(unit);
@@ -322,6 +353,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * color texture. The `?.` guards a reset firing before `init` allocates the
 	 * arrays (none does today; hardens against future init reordering).
 	 * @ignore
+	 * @internal
 	 */
 	_onTextureCacheReset() {
 		super._onTextureCacheReset();
@@ -419,6 +451,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * came and went, until something forced a full reset.
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
 	 * @ignore
+	 * @internal
 	 */
 	releaseNormalUnit(image) {
 		const unit = this.normalUnits?.get(image);
@@ -445,6 +478,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} normalMap - the source
 	 * @returns {number} the slot to write into `aNormalTextureId`
 	 * @ignore
+	 * @internal
 	 */
 	resolveNormalUnit(normalMap) {
 		const version = normalMap.version ?? 0;

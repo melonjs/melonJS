@@ -5,6 +5,7 @@ import { getDefaultShape } from "../TMXObjectFactory.js";
  * @param {object} settings - TMX object settings
  * @returns {Renderable} the created tile object
  * @ignore
+ * @internal
  */
 export function createTileObject(settings) {
 	const shape = getDefaultShape(settings);

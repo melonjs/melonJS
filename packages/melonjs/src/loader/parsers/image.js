@@ -10,6 +10,7 @@ import { parseCompressedImage } from "./compressed_textures/compressed_image.js"
  * @param {Object} settings - fetch settings
  * @returns {Promise} resolves on success, rejects on failure (so the next source can be tried)
  * @ignore
+ * @internal
  */
 function tryLoadSource(imgPath, imgName, settings) {
 	const imgExt = getExtension(imgPath);
@@ -61,6 +62,7 @@ function tryLoadSource(imgPath, imgName, settings) {
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  * @example
  * preloadImages([
  *     { name : 'image1', src : 'images/image1.png'},

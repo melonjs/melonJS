@@ -36,8 +36,6 @@ export class CanvasTexture extends CanvasRenderTarget {
 /**
  * set the line width used when stroking shapes
  * @public
- * @name setLineWidth
- * @memberof CanvasRenderer#
  * @param {number} width - the line width in pixels
  * @deprecated since 17.3.0
  * @see lineWidth
@@ -50,8 +48,6 @@ CanvasRenderer.prototype.setLineWidth = function (width) {
 /**
  * set the line width used when stroking shapes
  * @public
- * @name setLineWidth
- * @memberof WebGLRenderer#
  * @param {number} width - the line width in pixels
  * @deprecated since 17.3.0
  * @see lineWidth

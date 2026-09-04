@@ -7,6 +7,7 @@ import { getDefaultShape } from "../TMXObjectFactory.js";
  * @param {object} settings - TMX object settings
  * @returns {Renderable} the created shape object
  * @ignore
+ * @internal
  */
 export function createShapeObject(settings) {
 	const obj = new Renderable(

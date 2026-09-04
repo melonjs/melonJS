@@ -61,6 +61,7 @@ export class TextureResource {
 	 * For a resource this is the resource itself — `createTexture2D`
 	 * dispatches to `resource.upload(context, target)`.
 	 * @ignore
+	 * @internal
 	 */
 	getTexture() {
 		return this;
@@ -122,7 +123,10 @@ export class BufferTextureResource extends TextureResource {
 		this.format = options.format || "rgba8";
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	upload(context, target) {
 		if (this.format === "rgba8ui") {
 			// `RGBA8UI` / `RGBA_INTEGER` are WebGL 2-only enums. On a

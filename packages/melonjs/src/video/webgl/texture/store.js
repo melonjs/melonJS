@@ -14,11 +14,13 @@ import { TextureStore } from "./../../gpu/texturestore.js";
  * their handles are that batcher's to own, but the policy is identical.
  * @augments TextureStore
  * @ignore
+ * @internal
  */
 export class WebGLTextureStore extends TextureStore {
 	/**
 	 * @param {WebGL2RenderingContext} gl - the owning context
 	 * @ignore
+	 * @internal
 	 */
 	constructor(gl) {
 		super();
@@ -28,6 +30,7 @@ export class WebGLTextureStore extends TextureStore {
 	/**
 	 * @returns {WebGLTexture} a fresh texture object
 	 * @ignore
+	 * @internal
 	 */
 	onCreate() {
 		return this.gl.createTexture();
@@ -48,6 +51,7 @@ export class WebGLTextureStore extends TextureStore {
 	 * @returns {WebGLTexture} the handle actually used, which may be a
 	 * replacement when immutable storage had to be respecified
 	 * @ignore
+	 * @internal
 	 */
 	onUpload(handle, source, record, options) {
 		return options.upload(handle);
@@ -56,6 +60,7 @@ export class WebGLTextureStore extends TextureStore {
 	/**
 	 * @param {WebGLTexture} handle - the texture object to release
 	 * @ignore
+	 * @internal
 	 */
 	onDestroy(handle) {
 		this.gl.deleteTexture(handle);

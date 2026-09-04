@@ -162,6 +162,8 @@ export default class Text extends Renderable {
 		/**
 		 * the text to be displayed
 		 * @private
+		 * @ignore
+		 * @internal
 		 */
 		this._text = [];
 
@@ -169,7 +171,10 @@ export default class Text extends Renderable {
 		this.onResetEvent(x, y, settings);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	onResetEvent(x, y, settings) {
 		if (typeof this.fillStyle === "undefined") {
 			this.fillStyle = colorPool.get(0, 0, 0);
@@ -240,6 +245,7 @@ export default class Text extends Renderable {
 
 		/**
 		 * @ignore
+		 * @internal
 		 */
 		this._visibleCharacters = -1;
 
@@ -541,6 +547,7 @@ export default class Text extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 */
 	_drawFont(context, text, x, y) {
 		setContextStyle(context, this);
@@ -576,6 +583,7 @@ export default class Text extends Renderable {
 	/**
 	 * Destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		const renderer = this.parentApp?.renderer ?? game.renderer;

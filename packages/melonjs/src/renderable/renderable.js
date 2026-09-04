@@ -34,9 +34,13 @@ import pool from "../system/legacy_pool.js";
  * never re-enters: `getLocalTransform` composes into `_level`, which is
  * consumed immediately.
  * @ignore
+ * @internal
  */
 const _chain = [];
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 const _level = new Matrix3d();
 
 /**
@@ -327,6 +331,7 @@ export default class Renderable extends Rect {
 		/**
 		 * whether this renderable manages its own FBO lifecycle (e.g. Camera2d)
 		 * @ignore
+		 * @internal
 		 */
 		this._postEffectManaged = false;
 
@@ -351,6 +356,7 @@ export default class Renderable extends Rect {
 		/**
 		 * to identify the object as a renderable object
 		 * @ignore
+		 * @internal
 		 */
 		this.isRenderable = true;
 
@@ -371,12 +377,14 @@ export default class Renderable extends Rect {
 		/**
 		 * cache the absolute position of the renderable
 		 * @ignore
+		 * @internal
 		 */
 		this._absPos = undefined;
 
 		/**
 		 * keep track of when we flip
 		 * @ignore
+		 * @internal
 		 */
 		this._flip = {
 			x: false,
@@ -386,18 +394,21 @@ export default class Renderable extends Rect {
 		/**
 		 * viewport flag
 		 * @ignore
+		 * @internal
 		 */
 		this._inViewport = false;
 
 		/**
 		 * cache value for the parentApp
 		 * @ignore
+		 * @internal
 		 */
 		this._parentApp = undefined;
 
 		/**
 		 * renderable cache tint value used by the getter/setter
 		 * @ignore
+		 * @internal
 		 */
 		this._tint = colorPool.get(255, 255, 255, 1.0);
 
@@ -1197,7 +1208,8 @@ export default class Renderable extends Rect {
 	 *     return true;
 	 * }
 	 */
-	onCollision(_response, _other) {
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	onCollision(response, other) {
 		// Default returns `undefined` so that bodies without a user-defined
 		// `onCollision` get push-out by default (matches matter's "solver
 		// resolves contacts unless `isSensor`" model). A user-defined
@@ -1242,6 +1254,7 @@ export default class Renderable extends Rect {
 	/**
 	 * Destroy function<br>
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// allow recycling object properties

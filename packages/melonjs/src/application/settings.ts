@@ -395,6 +395,9 @@ export type ApplicationSettings = {
 /**
  * Resolved application settings after init() has processed the input.
  * Includes computed properties not present in the user-facing settings.
+ * Hidden from the docs but deliberately kept in the emitted `.d.ts`: another
+ * emitted declaration imports this type, so removing it would leave a dangling
+ * import in the published types.
  * @ignore
  */
 export type ResolvedApplicationSettings = ApplicationSettings & {

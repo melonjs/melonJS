@@ -10,6 +10,7 @@
  * Within the Uint16 index limit (65,535) — a deliberate capacity choice
  * (smaller index uploads), not an API constraint.
  * @ignore
+ * @internal
  */
 export const DEFAULT_MAX_VERTICES = 4096;
 

@@ -2,6 +2,7 @@
  * set precision for the given shader source
  * won't do anything if the precision is already specified
  * @ignore
+ * @internal
  */
 export function setPrecision(src, precision) {
 	// Skip injection when the shader already declares precision near the
@@ -39,6 +40,7 @@ export function setPrecision(src, precision) {
 /**
  * return the best shader precision for this device, up to the requested cap.
  * @ignore
+ * @internal
  * @param {WebGLRenderingContext} gl - the current WebGL context
  * @param {boolean} [highPrecision=true] - if false, cap at "mediump" even when "highp" is available
  * @returns {string} "lowp", "mediump", or "highp"

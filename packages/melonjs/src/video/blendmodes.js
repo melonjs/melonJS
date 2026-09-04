@@ -30,6 +30,7 @@
  * The array ORDER is the wire format: the index is the `uBlendMode` uniform
  * value the shader branches on, so reordering it silently remaps every mode.
  * @ignore
+ * @internal
  */
 export const ADVANCED_BLEND_MODES = [
 	"difference",
@@ -53,6 +54,7 @@ export const ADVANCED_BLEND_MODES = [
  * @param {string} mode - the blend mode to test
  * @returns {boolean} true when the mode needs the shader path
  * @ignore
+ * @internal
  */
 export function isAdvancedBlendMode(mode) {
 	return ADVANCED_BLEND_MODES.indexOf(mode) !== -1;
@@ -63,6 +65,7 @@ export function isAdvancedBlendMode(mode) {
  * @param {string} mode - the blend mode
  * @returns {number} the shader's mode index, or -1 when not an advanced mode
  * @ignore
+ * @internal
  */
 export function advancedBlendModeIndex(mode) {
 	return ADVANCED_BLEND_MODES.indexOf(mode);
@@ -81,6 +84,7 @@ export function advancedBlendModeIndex(mode) {
  * @param {string} mode - blend mode as set through `setBlendMode`
  * @returns {string} the canonical token
  * @ignore
+ * @internal
  */
 export function normalizeBlendMode(mode) {
 	switch (mode) {
@@ -104,6 +108,7 @@ export function normalizeBlendMode(mode) {
  * @param {string} mode - the blend mode to test
  * @returns {boolean} false only for a mode no backend implements
  * @ignore
+ * @internal
  */
 export function isSupportedBlendMode(mode) {
 	return (
@@ -124,6 +129,7 @@ export function isSupportedBlendMode(mode) {
  * @param {string} mode - the requested blend mode
  * @returns {string} the mode actually applied
  * @ignore
+ * @internal
  */
 export function reportedBlendMode(mode) {
 	return isSupportedBlendMode(mode) ? mode : "normal";
@@ -147,6 +153,7 @@ export function reportedBlendMode(mode) {
  * @returns {{operation: string, srcFactor: string, dstFactor: string}|undefined} the
  * blend state, or `undefined` for `"none"`, which means replace (no blending)
  * @ignore
+ * @internal
  */
 export function blendStateFor(mode, premultipliedAlpha) {
 	const src = premultipliedAlpha ? "one" : "src-alpha";

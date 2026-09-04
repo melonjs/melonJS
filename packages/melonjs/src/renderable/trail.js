@@ -76,15 +76,30 @@ export default class Trail extends Renderable {
 				? options.widthCurve
 				: [1, 0];
 
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._gradient = this._buildGradient(options);
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._points = [];
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._segmentColor = colorPool.get();
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._n0 = { x: 0, y: 0 };
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._n1 = { x: 0, y: 0 };
 
 		this.alwaysUpdate = true;
@@ -118,7 +133,10 @@ export default class Trail extends Renderable {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	update(dt) {
 		if (this.target) {
 			const pos = this.target.pos ?? this.target;
@@ -143,7 +161,10 @@ export default class Trail extends Renderable {
 		return super.update(dt);
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	draw(renderer) {
 		const points = this._points;
 		const count = points.length;
@@ -205,6 +226,7 @@ export default class Trail extends Renderable {
 	 * @param {object} options - trail constructor options
 	 * @returns {Gradient}
 	 * @ignore
+	 * @internal
 	 */
 	_buildGradient(options) {
 		const gradient = new Gradient("linear", [0, 0, 1, 0]);
@@ -237,7 +259,10 @@ export default class Trail extends Renderable {
 		return gradient;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	destroy() {
 		this._gradient.destroy();
 		colorPool.release(this._segmentColor);

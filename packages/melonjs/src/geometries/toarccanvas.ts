@@ -2,6 +2,7 @@ import { degToRad, pow } from "../math/math.ts";
 
 /**
  * @ignore
+ * @internal
  */
 function correctRadii(
 	signedRx: number,
@@ -22,6 +23,7 @@ function correctRadii(
 
 /**
  * @ignore
+ * @internal
  */
 function mat2DotVec2(
 	[m00, m01, m10, m11]: [number, number, number, number],
@@ -32,6 +34,7 @@ function mat2DotVec2(
 
 /**
  * @ignore
+ * @internal
  */
 function vec2Add([ux, uy]: [number, number], [vx, vy]: [number, number]) {
 	return [ux + vx, uy + vy];
@@ -39,6 +42,7 @@ function vec2Add([ux, uy]: [number, number], [vx, vy]: [number, number]) {
 
 /**
  * @ignore
+ * @internal
  */
 function vec2Scale([a0, a1]: [number, number], scalar: number) {
 	return [a0 * scalar, a1 * scalar];
@@ -46,6 +50,7 @@ function vec2Scale([a0, a1]: [number, number], scalar: number) {
 
 /**
  * @ignore
+ * @internal
  */
 function vec2Dot([ux, uy]: [number, number], [vx, vy]: [number, number]) {
 	return ux * vx + uy * vy;
@@ -53,6 +58,7 @@ function vec2Dot([ux, uy]: [number, number], [vx, vy]: [number, number]) {
 
 /**
  * @ignore
+ * @internal
  */
 function vec2Mag([ux, uy]: [number, number]) {
 	return Math.sqrt(ux ** 2 + uy ** 2);
@@ -60,6 +66,7 @@ function vec2Mag([ux, uy]: [number, number]) {
 
 /**
  * @ignore
+ * @internal
  */
 function vec2Angle(u: [number, number], v: [number, number]) {
 	const [ux, uy] = u;

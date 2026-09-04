@@ -67,6 +67,7 @@ export default class Body {
 			 * mis-doc and broke downstream `shapes.length` reads in
 			 * TypeScript.
 			 * @ignore
+			 * @internal
 			 * @type {(Polygon|Line|Ellipse|Point)[]}
 			 */
 			this.shapes = [];
@@ -76,6 +77,7 @@ export default class Body {
 		 * The body collision mask, that defines what should collide with what.<br>
 		 * (by default will collide with all entities)
 		 * @ignore
+		 * @internal
 		 * @type {number}
 		 * @default collision.types.ALL_OBJECT
 		 * @see collision.types
@@ -562,6 +564,7 @@ export default class Body {
 	 * pivot — see `MatterAdapter.syncFromPhysics`). Internal helper used
 	 * by both the per-step integrator and {@link Body#setAngle}.
 	 * @ignore
+	 * @internal
 	 */
 	_syncAngleTransform() {
 		const t = this.ancestor?.currentTransform;
@@ -671,6 +674,8 @@ export default class Body {
 	 * @param {object} [source] - the object passed to `addShape`; omitted when
 	 * the shape was built here from a pool and has no user-supplied original
 	 * @private
+	 * @ignore
+	 * @internal
 	 */
 	_initShapeCollision(stored, source) {
 		// Stable identity for shape-level contact tracking (#1596).
@@ -856,6 +861,7 @@ export default class Body {
 	 * large body more. Clamped to a minimum of 1 to keep divisions
 	 * well-defined even on degenerate 0-size bodies.
 	 * @ignore
+	 * @internal
 	 */
 	_recomputePseudoInertia() {
 		const w = this.bounds.width;
@@ -1137,8 +1143,7 @@ export default class Body {
 
 	/**
 	 * Returns true if the any of the shape composing the body contains the given point.
-	 * @param {number|Vector2d} x -  x coordinate or a vector point to check
-	 * @param {number} [y] -  y coordinate
+	 * @param {...(number|Vector2d)} args - either `x, y` coordinates, or a single {@link Vector2d}
 	 * @returns {boolean} true if contains
 	 * @example
 	 * if (mySprite.body.contains(10, 10)) {
@@ -1336,6 +1341,7 @@ export default class Body {
 	/**
 	 * Destroy function<br>
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// push back instance into object pool.

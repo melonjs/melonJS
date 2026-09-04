@@ -78,6 +78,7 @@ export default class Stage {
 	 * `onActivateEvent` / `onDeactivateEvent` hooks. Used by Camera2d's
 	 * ambient-overlay pass to compute the cutouts.
 	 * @ignore
+	 * @internal
 	 */
 	_activeLights: Set<Light2d>;
 
@@ -86,6 +87,7 @@ export default class Stage {
 	 * `onActivateEvent` / `onDeactivateEvent` hooks. Read by the lit mesh
 	 * batcher each frame to shade `lit` meshes under a `Camera3d`.
 	 * @ignore
+	 * @internal
 	 */
 	_activeLights3d: Set<Light3d>;
 
@@ -134,6 +136,7 @@ export default class Stage {
 	 * Called by `Light2d.onActivateEvent` to register the light with the
 	 * stage's ambient-overlay cutout list. Users normally don't call this.
 	 * @ignore
+	 * @internal
 	 */
 	_registerLight(light: Light2d): void {
 		this._activeLights.add(light);
@@ -142,6 +145,7 @@ export default class Stage {
 	/**
 	 * Called by `Light2d.onDeactivateEvent` to deregister the light.
 	 * @ignore
+	 * @internal
 	 */
 	_unregisterLight(light: Light2d): void {
 		this._activeLights.delete(light);
@@ -151,6 +155,7 @@ export default class Stage {
 	 * Called by `Light3d.onActivateEvent` to register a 3D light with the stage.
 	 * Read by the lit mesh batcher. Users normally don't call this.
 	 * @ignore
+	 * @internal
 	 */
 	_registerLight3d(light: Light3d): void {
 		this._activeLights3d.add(light);
@@ -159,6 +164,7 @@ export default class Stage {
 	/**
 	 * Called by `Light3d.onDeactivateEvent` to deregister a 3D light.
 	 * @ignore
+	 * @internal
 	 */
 	_unregisterLight3d(light: Light3d): void {
 		this._activeLights3d.delete(light);
@@ -167,6 +173,7 @@ export default class Stage {
 	/**
 	 * Object reset function
 	 * @ignore
+	 * @internal
 	 */
 	reset(app: Application, ...extraArgs: unknown[]): void {
 		// Snapshot whether this is the first reset of this stage instance
@@ -289,6 +296,7 @@ export default class Stage {
 	/**
 	 * update function
 	 * @ignore
+	 * @internal
 	 * @param dt - time since the last update in milliseconds.
 	 * @returns true if the stage needs to be redrawn
 	 */
@@ -315,6 +323,7 @@ export default class Stage {
 	 * Renderables) and the ambient overlay pass runs inside each Camera's
 	 * post-effect FBO bracket via {@link Stage#drawLighting}.
 	 * @ignore
+	 * @internal
 	 * @param renderer - the renderer object to draw with
 	 * @param world - the world object to draw
 	 */
@@ -383,6 +392,7 @@ export default class Stage {
 	/**
 	 * destroy function
 	 * @ignore
+	 * @internal
 	 */
 	destroy(app: Application): void {
 		// destroy the cameras this stage constructed (the fresh per-stage

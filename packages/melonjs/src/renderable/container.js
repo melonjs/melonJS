@@ -10,6 +10,7 @@ import Renderable from "./renderable.js";
 /**
  * Private function to re-use for object removal in a defer
  * @ignore
+ * @internal
  */
 function deferredRemove(child, keepalive) {
 	this.removeChildNow(child, keepalive);
@@ -22,6 +23,7 @@ function deferredRemove(child, keepalive) {
  * per comparison. Safe to be module-scoped: JS is single-threaded and
  * sort is synchronous within each container.
  * @ignore
+ * @internal
  */
 let _depthCamX = 0;
 let _depthCamY = 0;
@@ -51,6 +53,7 @@ let _depthOffsetZ = 0;
  * camera sees slightly-imperfect order which is the standard
  * compromise for split-screen rendering.
  * @ignore
+ * @internal
  */
 function captureDepthCamera() {
 	const stage = state.current();
@@ -91,6 +94,7 @@ function captureDepthCamera() {
  * parked at a large negative depth is as far away as one parked at the
  * same positive depth.
  * @ignore
+ * @internal
  */
 function depthKey(r) {
 	if (r.floating === true) {
@@ -109,11 +113,24 @@ function depthKey(r) {
  * each child's LOCAL `pos.x/y/z` into world space without paying for
  * an `ancestor.getAbsolutePosition()` walk per comparator call.
  * @ignore
+ * @internal
  */
 function captureDepthOffset(container) {
 	const abs = container.getAbsolutePosition();
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_depthOffsetX = abs.x;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_depthOffsetY = abs.y;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_depthOffsetZ = abs.z;
 }
 
@@ -130,6 +147,7 @@ function captureDepthOffset(container) {
  *    with no `bodyDef`, routed through `world.addBody(child.body)`.
  *    BuiltinAdapter-only.
  * @ignore
+ * @internal
  */
 function registerChildBody(child, worldContainer) {
 	if (child.bodyDef) {
@@ -193,6 +211,7 @@ export default class Container extends Renderable {
 		/**
 		 * keep track of pending sort
 		 * @ignore
+		 * @internal
 		 */
 		this.pendingSort = null;
 
@@ -206,6 +225,7 @@ export default class Container extends Renderable {
 		/**
 		 * The array of children of this container.
 		 * @ignore
+		 * @internal
 		 */
 		this.children = undefined;
 
@@ -214,8 +234,14 @@ export default class Container extends Renderable {
 		 * value : "x", "y", "z"
 		 * @type {string}
 		 * @default "z"
+		 * @ignore
+		 * @internal
 		 */
 		this._sortOn = "z";
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._comparator = this._sortZ;
 
 		/**
@@ -798,6 +824,7 @@ export default class Container extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * @param {...*} _args - reserved; widens the signature so subclass
 	 *   overrides like `onActivateEvent(app)` remain structurally
 	 *   assignable to the base Container/Renderable type.
@@ -1055,6 +1082,7 @@ export default class Container extends Renderable {
 
 	/**
 	 * @ignore
+	 * @internal
 	 * @param {...*} _args - reserved; widens the signature so subclass
 	 *   overrides like `onDeactivateEvent(app)` remain structurally
 	 *   assignable to the base Container/Renderable type.
@@ -1070,6 +1098,7 @@ export default class Container extends Renderable {
 	/**
 	 * Z Sorting function
 	 * @ignore
+	 * @internal
 	 */
 	_sortZ(a, b) {
 		return b.pos.z - a.pos.z;
@@ -1078,6 +1107,7 @@ export default class Container extends Renderable {
 	/**
 	 * Reverse Z Sorting function
 	 * @ignore
+	 * @internal
 	 */
 	_sortReverseZ(a, b) {
 		return a.pos.z - b.pos.z;
@@ -1098,6 +1128,7 @@ export default class Container extends Renderable {
 	 * `ObservableVector3d` pos — `pos.z` is always defined, no guard
 	 * needed here.
 	 * @ignore
+	 * @internal
 	 */
 	_sortDepth(a, b) {
 		// Translate each child's LOCAL `pos` into world space via the
@@ -1115,6 +1146,7 @@ export default class Container extends Renderable {
 	/**
 	 * X Sorting function
 	 * @ignore
+	 * @internal
 	 */
 	_sortX(a, b) {
 		return b.pos.z - a.pos.z || b.pos.x - a.pos.x;
@@ -1123,6 +1155,7 @@ export default class Container extends Renderable {
 	/**
 	 * Y Sorting function
 	 * @ignore
+	 * @internal
 	 */
 	_sortY(a, b) {
 		return b.pos.z - a.pos.z || b.pos.y - a.pos.y;
@@ -1131,6 +1164,7 @@ export default class Container extends Renderable {
 	/**
 	 * Destroy function<br>
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// drop the root container's resize subscription before anything else —

@@ -6,6 +6,7 @@ import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
  * @param {TextureAtlas} textureAtlas - the texture atlas class calling the parser
  * @returns {Object} the corresponding Atlas
  * @ignore
+ * @internal
  */
 export function parseSpriteSheet(data, textureAtlas) {
 	const atlas = {};

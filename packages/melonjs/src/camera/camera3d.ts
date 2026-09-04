@@ -111,6 +111,7 @@ export default class Camera3d extends Camera2d {
 	 * the fog options as given to {@link Camera3d#setFog}, or `null` when fog
 	 * is off. Read through the {@link Camera3d#fog} accessor.
 	 * @ignore
+	 * @internal
 	 */
 	private _fogOptions: FogOptions | null = null;
 
@@ -124,13 +125,29 @@ export default class Camera3d extends Camera2d {
 	 * documented model — a `Color` is live, everything else is settled at the
 	 * call — is now the real one.
 	 * @ignore
+	 * @internal
 	 */
 	private _fogMode: FogMode = "linear";
-	/** @ignore */ private _fogNear: number | undefined = undefined;
-	/** @ignore */ private _fogFar: number | undefined = undefined;
-	/** @ignore */ private _fogDensity: number | undefined = undefined;
-	/** @ignore */ private _fogHeight = 0;
-	/** @ignore */ private _fogHeightFalloff = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */ private _fogNear: number | undefined = undefined;
+	/**
+	 * @ignore
+	 * @internal
+	 */ private _fogFar: number | undefined = undefined;
+	/**
+	 * @ignore
+	 * @internal
+	 */ private _fogDensity: number | undefined = undefined;
+	/**
+	 * @ignore
+	 * @internal
+	 */ private _fogHeight = 0;
+	/**
+	 * @ignore
+	 * @internal
+	 */ private _fogHeightFalloff = 0;
 
 	/**
 	 * Owned colour, used only when the caller passed a CSS string or an array.
@@ -138,6 +155,7 @@ export default class Camera3d extends Camera2d {
 	 * default tracks `renderer.backgroundColor`, so in both of those cases
 	 * this stays `null`.
 	 * @ignore
+	 * @internal
 	 */
 	private _fogOwnColor: Color | null = null;
 
@@ -145,6 +163,7 @@ export default class Camera3d extends Camera2d {
 	 * Resolved fog handed to the renderer. Allocated once and rewritten in
 	 * place each frame — fog costs no per-frame allocation.
 	 * @ignore
+	 * @internal
 	 */
 	private _fogState: Fog3dState = {
 		mode: 0,
@@ -429,12 +448,32 @@ export default class Camera3d extends Camera2d {
 
 		this._fogOptions = options;
 		this._fogMode = mode;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogNear = options.near;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogFar = options.far;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogDensity = options.density;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogHeight = options.fogHeight ?? 0;
 		// zero is uniform fog — the maths below collapses to the distance-only
 		// form exactly, so the default changes nothing
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._fogHeightFalloff = options.heightFalloff ?? 0;
 		// A `Color` is referenced so mutating it animates the fog; anything
 		// else is parsed once into a colour this camera owns.
@@ -496,6 +535,7 @@ export default class Camera3d extends Camera2d {
 	 * a 2D camera clear fog rather than inherit whatever the previous camera
 	 * left behind.
 	 * @ignore
+	 * @internal
 	 */
 	override _fog3dState(renderer: Renderer): Fog3dState | null {
 		const options = this._fogOptions;
@@ -608,6 +648,7 @@ export default class Camera3d extends Camera2d {
 	 * base `Camera2d` constructor and by `resize()`. Camera3d's
 	 * version replaces the ortho matrix with the frustum's perspective.
 	 * @ignore
+	 * @internal
 	 */
 	override _updateProjectionMatrix(): void {
 		// guard: this is called from the Camera2d super-constructor
@@ -659,6 +700,7 @@ export default class Camera3d extends Camera2d {
 	 * because it was already set up correctly in
 	 * {@link Camera3d#_updateProjectionMatrix}.
 	 * @ignore
+	 * @internal
 	 */
 	override _setupNonDefaultProjection(renderer: Renderer): void {
 		this.worldProjection.copy(this.projectionMatrix);
@@ -701,6 +743,7 @@ export default class Camera3d extends Camera2d {
 	 * this subtracts the camera position then rotates by the camera's
 	 * inverse orientation, which is the standard view transform.
 	 * @ignore
+	 * @internal
 	 */
 	override _applyContainerViewTransform(
 		container: Container,
@@ -752,6 +795,7 @@ export default class Camera3d extends Camera2d {
 	 * order to restore the container's `currentTransform` to its
 	 * pre-camera state.
 	 * @ignore
+	 * @internal
 	 */
 	override _revertContainerViewTransform(
 		container: Container,
@@ -877,6 +921,7 @@ export default class Camera3d extends Camera2d {
 	 * showcase (AfterBurner's banking jet) demands it.
 	 * @param dt - delta time in milliseconds (ignored — no damping)
 	 * @ignore
+	 * @internal
 	 */
 	override updateTarget(dt?: number): void {
 		const target = this.target;
@@ -1022,6 +1067,7 @@ export default class Camera3d extends Camera2d {
 	 * @param dt - delta time in milliseconds
 	 * @returns true if the camera's state changed
 	 * @ignore
+	 * @internal
 	 */
 	override update(dt?: number): boolean {
 		const dirty = super.update(dt);
@@ -1091,6 +1137,7 @@ export default class Camera3d extends Camera2d {
 	 * Called from {@link Camera3d#update} each frame; `isVisible`
 	 * then tests against the cached planes.
 	 * @ignore
+	 * @internal
 	 */
 	_rebuildFrustumPlanes(): void {
 		// build the view matrix R⁻¹ ∘ T(-pos) the same way

@@ -26,6 +26,7 @@ import type { NoiseOptions, ToneOptions } from "./types.ts";
  * unawaited because we want the same call site to work in both gesture
  * and non-gesture contexts.
  * @ignore
+ * @internal
  */
 function _resumeIfSuspended(ctx: AudioContext): void {
 	if (ctx.state === "suspended") {
@@ -46,6 +47,7 @@ function _resumeIfSuspended(ctx: AudioContext): void {
  * `InvalidStateError`) AND tiny positive gains where a target of
  * `0.0001` would ramp UP and produce an audible click.
  * @ignore
+ * @internal
  */
 function _buildGainEnvelope(
 	ctx: AudioContext,
@@ -79,6 +81,7 @@ function _buildGainEnvelope(
  * Returns the `StereoPannerNode` it created (or `null` if `pan === 0`)
  * so the caller can disconnect it once playback ends.
  * @ignore
+ * @internal
  */
 function _connectToOutput(
 	ctx: AudioContext,
@@ -193,6 +196,7 @@ export function tone(opts: ToneOptions): void {
  * brown is a leaky integrator over white. Output is roughly normalised
  * to `[-1, 1]` for both coloured variants.
  * @ignore
+ * @internal
  */
 function fillNoiseBuffer(
 	data: Float32Array,

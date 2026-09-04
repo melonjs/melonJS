@@ -9,6 +9,7 @@ import { jsonList } from "../cache.js";
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadJSON(data, onload, onerror, settings) {
 	if (typeof jsonList[data.name] !== "undefined") {

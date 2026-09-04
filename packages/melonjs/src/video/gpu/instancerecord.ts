@@ -22,17 +22,20 @@ import type { Matrix3d } from "../../math/matrix3d.ts";
  * its `rgb` as emissive, while a custom mesh shader is free to read it as a
  * wind phase, an atlas offset or a random seed.
  * @ignore
+ * @internal
  */
 
 /**
  * floats occupied by the 3×4 transform
  * @ignore
+ * @internal
  */
 export const TRANSFORM_FLOATS = 12;
 
 /**
  * floats occupied by an optional `vec4` slot
  * @ignore
+ * @internal
  */
 export const SLOT_FLOATS = 4;
 
@@ -40,6 +43,7 @@ export const SLOT_FLOATS = 4;
  * Describes one instanced mesh's record: how wide it is and where each
  * optional slot begins. Offsets are in floats; multiply by 4 for bytes.
  * @ignore
+ * @internal
  */
 export interface InstanceRecordLayout {
 	/** floats per instance */
@@ -62,6 +66,7 @@ export interface InstanceRecordLayout {
  * @param hasData - whether a per-instance custom `vec4` slot is present
  * @returns the resolved layout
  * @ignore
+ * @internal
  */
 export function instanceRecordLayout(
 	hasColor: boolean,
@@ -96,6 +101,7 @@ export function instanceRecordLayout(
  * @param offset - float offset of this instance's record
  * @param matrix - the transform to write
  * @ignore
+ * @internal
  */
 export function writeInstanceTransform(
 	target: Float32Array,
@@ -146,6 +152,7 @@ export function writeInstanceTransform(
  * @param sy - scale y
  * @param sz - scale z
  * @ignore
+ * @internal
  */
 export function writeInstanceTRS(
 	target: Float32Array,
@@ -199,6 +206,7 @@ export function writeInstanceTRS(
  * @param target - the CPU-side instance buffer
  * @param offset - float offset of this instance's record
  * @ignore
+ * @internal
  */
 export function writeIdentityTransform(
 	target: Float32Array,
@@ -226,6 +234,7 @@ export function writeIdentityTransform(
  * @param out - the matrix to write into
  * @returns `out`
  * @ignore
+ * @internal
  */
 export function readInstanceTransform(
 	source: Float32Array,
@@ -258,6 +267,7 @@ export function readInstanceTransform(
  * by both backends so the GL attribute records and the WGSL vertex layout
  * describe the same thing.
  * @ignore
+ * @internal
  */
 export const INSTANCE_ATTRIBUTE_NAMES = {
 	rows: ["aInstanceRow0", "aInstanceRow1", "aInstanceRow2"],
@@ -275,6 +285,7 @@ export const INSTANCE_ATTRIBUTE_NAMES = {
  * preprocessor to renumber `@location` with — and on WebGL it keeps the two
  * backends describing the same thing.
  * @ignore
+ * @internal
  */
 export const INSTANCE_SLOT_OFFSETS = {
 	rows: [0, 1, 2],
@@ -291,6 +302,7 @@ export const INSTANCE_SLOT_OFFSETS = {
  * locations come from the shader's own declaration order.
  * @returns attribute descriptors covering the whole record
  * @ignore
+ * @internal
  */
 export function instanceAttributes(
 	layout: InstanceRecordLayout,

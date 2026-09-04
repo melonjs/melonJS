@@ -10,6 +10,7 @@
  * ladders. 32 covers current desktop and mobile hardware while staying a
  * conservative default; raise or lower it with the `maxTextures` setting.
  * @ignore
+ * @internal
  */
 export const AUTO_MAX_TEXTURES = 32;
 
@@ -18,6 +19,7 @@ export const AUTO_MAX_TEXTURES = 32;
  * and a normal-map slot simultaneously, so anything narrower makes the two ids
  * collide and the sprite samples its own albedo as a normal map.
  * @ignore
+ * @internal
  */
 export const MIN_MAX_TEXTURES = 2;
 
@@ -34,6 +36,7 @@ export const MIN_MAX_TEXTURES = 2;
  * @param {"auto"|number} [setting="auto"] - the `maxTextures` application setting
  * @returns {number} the pool size, at least 1 and never above `deviceMax`
  * @ignore
+ * @internal
  */
 export function resolveMaxTextures(deviceMax, setting = "auto") {
 	// a device that reports nothing usable still has to render something

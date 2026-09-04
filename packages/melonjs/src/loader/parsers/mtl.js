@@ -51,6 +51,7 @@ const UNSUPPORTED_MAPS = new Set([
  * @param {string} basePath - base URL path for resolving texture references
  * @returns {object} map of material names to their properties
  * @ignore
+ * @internal
  */
 export function parseMTL(text, basePath) {
 	const materials = {};
@@ -205,6 +206,7 @@ export function parseMTL(text, basePath) {
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadMTL(data, onload, onerror, settings) {
 	if (typeof mtlList[data.name] !== "undefined") {

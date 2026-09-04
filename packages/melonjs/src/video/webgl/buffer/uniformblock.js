@@ -22,6 +22,7 @@
  * buffer itself needs no recovery hook — the renderer re-runs each batcher's
  * `init()` on restore, which releases this block and builds a new one.
  * @ignore
+ * @internal
  */
 export default class UniformBlock {
 	/**
@@ -42,13 +43,23 @@ export default class UniformBlock {
 		 * mirror of what was last uploaded, so an unchanged frame can skip the
 		 * `bufferSubData` entirely
 		 * @type {Float32Array}
+		 * @ignore
+		 * @internal
 		 */
 		this._uploaded = new Float32Array(floats);
 
-		/** nothing has been uploaded yet, so the mirror is not yet valid */
+		/**
+		 * nothing has been uploaded yet, so the mirror is not yet valid
+		 * @ignore
+		 * @internal
+		 */
 		this._everUploaded = false;
 
-		/** live length of the last upload; -1 until there has been one */
+		/**
+		 * live length of the last upload; -1 until there has been one
+		 * @ignore
+		 * @internal
+		 */
 		this._uploadedLength = -1;
 
 		/** @type {number} */
@@ -120,6 +131,7 @@ export default class UniformBlock {
 	 * @param {number} floats - length of the live prefix
 	 * @returns {boolean} true when an upload would be a no-op
 	 * @ignore
+	 * @internal
 	 */
 	#matches(floats) {
 		if (this._uploadedLength !== floats) {

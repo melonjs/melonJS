@@ -15,6 +15,7 @@ let currentLevelIdx = 0;
 
 /**
  * @ignore
+ * @internal
  */
 function safeLoadLevel(levelId, options, restart) {
 	// clean the destination container
@@ -62,14 +63,13 @@ function safeLoadLevel(levelId, options, restart) {
 
 /**
  * Load a TMX level
- * @name loadTMXLevel
- * @memberof level
  * @private
  * @param {string} levelId - level id
  * @param {Container} container - target container
  * @param {boolean} [flatten=true] - if true, flatten all objects into the given container
  * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
  * @ignore
+ * @internal
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 	const level = levels[levelId];
@@ -92,8 +92,6 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 export const level = {
 	/**
 	 * add a level into the game manager (usually called by the preloader)
-	 * @name add
-	 * @memberof level
 	 * @public
 	 * @param {string} format - level format ("tmx" for Tiled maps, "gltf" / "glb" for 3D scenes)
 	 * @param {string} levelId - the level id (or name)
@@ -137,8 +135,6 @@ export const level = {
 	/**
 	 * load a level into the game manager<br>
 	 * (will also create all level defined entities, etc..)
-	 * @name load
-	 * @memberof level
 	 * @public
 	 * @param {string} levelId - level id
 	 * @param {object} [options] - additional optional parameters
@@ -224,8 +220,6 @@ export const level = {
 
 	/**
 	 * return the current level id<br>
-	 * @name getCurrentLevelId
-	 * @memberof level
 	 * @public
 	 * @returns {string}
 	 */
@@ -237,8 +231,6 @@ export const level = {
 	 * return the current level definition.
 	 * for a reference to the live instantiated level,
 	 * rather use the container in which it was loaded (e.g. app.world)
-	 * @name getCurrentLevel
-	 * @memberof level
 	 * @public
 	 * @returns {TMXTileMap|GLTFScene} the current level object (a TMXTileMap for Tiled maps, a GLTFScene for glTF/GLB scenes)
 	 */
@@ -248,8 +240,6 @@ export const level = {
 
 	/**
 	 * reload the current level
-	 * @name reload
-	 * @memberof level
 	 * @public
 	 * @param {object} [options] - additional optional parameters
 	 * @param {Container} [options.container=game.world] - container in which to load the specified level
@@ -265,8 +255,6 @@ export const level = {
 
 	/**
 	 * load the next level
-	 * @name next
-	 * @memberof level
 	 * @public
 	 * @param {object} [options] - additional optional parameters
 	 * @param {Container} [options.container=game.world] - container in which to load the specified level
@@ -285,8 +273,6 @@ export const level = {
 
 	/**
 	 * load the previous level<br>
-	 * @name previous
-	 * @memberof level
 	 * @public
 	 * @param {object} [options] - additional optional parameters
 	 * @param {Container} [options.container=game.world] - container in which to load the specified level
@@ -305,8 +291,6 @@ export const level = {
 
 	/**
 	 * return the amount of level preloaded
-	 * @name levelCount
-	 * @memberof level
 	 * @public
 	 * @returns {number} the amount of level preloaded
 	 */

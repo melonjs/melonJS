@@ -7,8 +7,20 @@ import { Point } from "./point.ts";
  * Represents an observable point in 2D space.
  */
 export class ObservablePoint {
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _callback: () => void;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _point: Point;
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	private _revoke: () => void;
 
 	private callBackEnabled: boolean = true;

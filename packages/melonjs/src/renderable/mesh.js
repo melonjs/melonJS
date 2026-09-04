@@ -69,6 +69,7 @@ const _combinedMatrix = new Matrix3d();
  * @param {number} vertexCount - how many vertices the mesh has
  * @returns {Uint32Array} one packed RGBA8 colour per vertex
  * @ignore
+ * @internal
  */
 function packVertexColors(source, vertexCount) {
 	if (source.length !== vertexCount) {
@@ -120,6 +121,7 @@ function resolveTextureAtlas(src, framewidth, frameheight) {
  * @param {number[]|Float32Array|undefined|null} src
  * @returns {Float32Array|undefined}
  * @ignore
+ * @internal
  */
 function toEmissive(src) {
 	if (src === undefined || src === null) {
@@ -145,6 +147,7 @@ function toEmissive(src) {
  * @param {object} materials - MTL material table keyed by material name
  * @returns {{materialName: string|null, start: number, count: number, tint: Color, opacity: number}} draw descriptor for this group
  * @ignore
+ * @internal
  */
 function resolveGroupMaterial(group, materials) {
 	const mat = group.materialName ? materials[group.materialName] : null;
@@ -197,6 +200,7 @@ function resolveGroupMaterial(group, materials) {
  * @param {number} [frameheight] - spritesheet cell height, as passed to the Mesh
  * @returns {Array<{texture: TextureAtlas, start: number, count: number}>|undefined} the per-texture draw ranges, or `undefined` when one binding covers the whole mesh
  * @ignore
+ * @internal
  */
 function buildTextureGroups(
 	groups,
@@ -459,6 +463,10 @@ export default class Mesh extends Renderable {
 		// losing the ability to restore the original (see
 		// `_setupWorldSpace` for the rationale). Same reference — we
 		// never mutate it in place.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._indicesOriginal = this.indices;
 
 		// working array for projected vertices (see the note below on when it
@@ -755,15 +763,28 @@ export default class Mesh extends Renderable {
 		 * `getBounds3d()` per frame per shadow, which re-bounds every source
 		 * vertex through the model matrix.
 		 * @ignore
+		 * @internal
 		 */
 		this._shadowHalfX = -1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shadowHalfZ = -1;
 		// the geometry version the two above (and `_shadowHasHeight`) were
 		// measured at; -1 means "never". Recomputed when the mesh signals a
 		// geometry change, so a deforming mesh — or a `Sprite3d` whose frame
 		// bake rewrites `originalVertices` every animation step — does not keep
 		// a blob frozen at whatever its first shadowed draw happened to see.
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shadowGeomVersion = -1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._shadowHasHeight = false;
 
 		/**
@@ -1128,7 +1149,10 @@ export default class Mesh extends Renderable {
 		// single anchoring mechanism (the Camera2d fallback loses its exact
 		// pixel-shift anchor for such subclasses; that path is documented as
 		// degraded for them anyway). Plain meshes keep the legacy 2D anchor.
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._anchorBaked = false;
 
 		// skip applying the 3D transform to the 2D renderer context in preDraw
@@ -1136,17 +1160,26 @@ export default class Mesh extends Renderable {
 		this.autoTransform = false;
 
 		// pre-allocate points array and polygon for toPolygon() (avoids per-call allocation)
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._hullPoints = Array.from({ length: this.vertexCount }, () => {
 			return new Vector2d();
 		});
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._hullPolygon = null;
 
 		// Bumped whenever the geometry itself changes, so a renderer holding
 		// GPU-resident copies knows when to refresh them. Placement changes
 		// (transform, position, tint) deliberately do NOT bump it.
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._geometryVersion = 0;
 	}
 
@@ -1157,6 +1190,7 @@ export default class Mesh extends Renderable {
 	 * @param {number} [offsetY=0] - y offset added to each projected vertex
 	 * @param {number} [zScale=0] - scale factor for Z output (0 = skip Z, 1000 = depth buffer range)
 	 * @ignore
+	 * @internal
 	 */
 	_projectVertices(offsetX = 0, offsetY = 0, zScale = 0) {
 		_combinedMatrix.copy(this.projectionMatrix);
@@ -1276,10 +1310,14 @@ export default class Mesh extends Renderable {
 	 * rotation rather than a reflection and so preserves triangle winding.
 	 * @returns {Matrix3d} the mesh's model matrix (reused instance)
 	 * @ignore
+	 * @internal
 	 */
 	_composeModelMatrix() {
 		if (this._modelMatrix === undefined) {
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._modelMatrix = new Matrix3d();
 		}
 		const out = this._modelMatrix.val;
@@ -1319,6 +1357,7 @@ export default class Mesh extends Renderable {
 	 * @param {number} offsetY - world Y to place the mesh center at
 	 * @param {number} offsetZ - world Z to place the mesh center at
 	 * @ignore
+	 * @internal
 	 */
 	_projectVerticesWorld(offsetX, offsetY, offsetZ) {
 		const out = this.vertices;
@@ -1368,6 +1407,7 @@ export default class Mesh extends Renderable {
 	 * scale (the common case); a strongly non-uniform scale would skew them
 	 * slightly — acceptable for the diffuse lighting path.
 	 * @ignore
+	 * @internal
 	 */
 	_projectNormalsWorld() {
 		const src = this.originalNormals;
@@ -1420,6 +1460,7 @@ export default class Mesh extends Renderable {
 	 * `cullBackFaces: true`.
 	 * @param {boolean} [needsReversedIndices=true] - build the winding-reversed index copy. `false` on the retained path, which corrects winding with `frontFace` and would otherwise duplicate the index array for nothing.
 	 * @ignore
+	 * @internal
 	 */
 	_setupWorldSpace(needsReversedIndices = true) {
 		// Only the reflection bridge (left-handed, Y-only negate) inverts
@@ -1444,8 +1485,16 @@ export default class Mesh extends Renderable {
 				dst[i + 1] = src[i + 2];
 				dst[i + 2] = src[i + 1];
 			}
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._indicesReversed = dst;
 		}
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._worldSpace = true;
 	}
 
@@ -1463,9 +1512,14 @@ export default class Mesh extends Renderable {
 	 * to use as the source of truth, captured here ONCE rather than per
 	 * frame.
 	 * @ignore
+	 * @internal
 	 */
 	onActivateEvent(...args) {
 		super.onActivateEvent(...args);
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._useWorldSpace = game.viewport instanceof Camera3d;
 	}
 
@@ -1480,6 +1534,7 @@ export default class Mesh extends Renderable {
 	 * rebuilds on its next draw rather than inheriting the previous
 	 * occupant's geometry.
 	 * @ignore
+	 * @internal
 	 */
 	onDeactivateEvent(...args) {
 		const renderer = this.parentApp?.renderer ?? game.renderer;
@@ -1503,7 +1558,10 @@ export default class Mesh extends Renderable {
 	 */
 	getBounds3d() {
 		if (this._bounds3d === undefined) {
-			/** @ignore */
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this._bounds3d = new AABB3d();
 		}
 		// Bound the model-space geometry through this mesh's placement, rather
@@ -1551,6 +1609,7 @@ export default class Mesh extends Renderable {
 	 * @param {WebGLRenderer|WebGPURenderer} renderer - the active renderer
 	 * @returns {boolean} true if a shadow should be drawn
 	 * @ignore
+	 * @internal
 	 */
 	_castsGroundShadow(renderer) {
 		if (typeof this.castGroundShadow === "boolean") {
@@ -1572,6 +1631,7 @@ export default class Mesh extends Renderable {
 	 * Measure the model-space footprint the blob is built from, and whether the
 	 * geometry has any height at all — once per geometry version.
 	 * @ignore
+	 * @internal
 	 */
 	_measureShadowFootprint() {
 		const version = this._geometryVersion ?? 0;
@@ -1609,6 +1669,7 @@ export default class Mesh extends Renderable {
 	 * uploaded once, so this is one draw and no allocation.
 	 * @param {WebGLRenderer} renderer - the active renderer
 	 * @ignore
+	 * @internal
 	 */
 	_drawGroundShadow(renderer) {
 		const quad = getShadowQuad(renderer, this.lit === true, Mesh);
@@ -2030,6 +2091,7 @@ export default class Mesh extends Renderable {
 	 * Release this mesh's GPU-resident geometry, if a renderer is holding any,
 	 * then destroy the renderable.
 	 * @ignore
+	 * @internal
 	 */
 	destroy() {
 		// the fallback is load-bearing: a mesh that was never parented has no

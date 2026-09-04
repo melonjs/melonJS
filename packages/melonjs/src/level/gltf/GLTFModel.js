@@ -31,7 +31,6 @@ const _val = [0, 0, 0, 0];
 const _localScratch = new Array(16);
 
 /**
- * @classdesc
  * A rig-driven 3D model loaded from an animated glTF/GLB asset. Unlike a static
  * {@link GLTFScene} (which flattens each node into an independent {@link Mesh}),
  * a `GLTFModel` keeps the node **hierarchy** intact so a parent transform
@@ -68,10 +67,15 @@ export default class GLTFModel extends Container {
 		 * pixels per glTF unit (uniform scene scale)
 		 * @type {number}
 		 * @ignore
+		 * @internal
 		 */
 		this.scale = options.scale ?? 1;
 		// right-handed (glTF) → negate Z as well as Y so the Y-up→Y-down bridge
 		// is a rotation, matching Mesh#rightHanded / GLTFScene
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this._zSign = options.rightHanded !== false ? -1 : 1;
 
 		// scene meshes carry their own world transform; the GPU depth test
@@ -87,13 +91,29 @@ export default class GLTFModel extends Container {
 		// entirely (same mechanism Mesh uses on the Camera3d world path).
 		this.applyAnchorTransform = false;
 
-		/** the node hierarchy keyed by glTF node index @ignore */
+		/**
+		 * the node hierarchy keyed by glTF node index
+		 * @ignore
+		 * @internal
+		 */
 		this._nodes = data.graph.nodes;
-		/** root node indices @ignore */
+		/**
+		 * root node indices
+		 * @ignore
+		 * @internal
+		 */
 		this._roots = data.graph.roots;
-		/** glTF node index → its part Mesh instances (one per primitive) @ignore */
+		/**
+		 * glTF node index → its part Mesh instances (one per primitive)
+		 * @ignore
+		 * @internal
+		 */
 		this._meshByNode = {};
-		/** glTF node index → cached rest (bind-pose) local matrix @ignore */
+		/**
+		 * glTF node index → cached rest (bind-pose) local matrix
+		 * @ignore
+		 * @internal
+		 */
 		this._restMatrix = {};
 		/**
 		 * glTF node index → its world matrix, a persistent 16-element buffer
@@ -101,6 +121,7 @@ export default class GLTFModel extends Container {
 		 * during the DFS, so each node needs its own). Preallocated here so the
 		 * per-frame pose path allocates nothing.
 		 * @ignore
+		 * @internal
 		 */
 		this._world = {};
 
@@ -197,7 +218,11 @@ export default class GLTFModel extends Container {
 
 		// index the animation clips, pre-grouping each clip's channels by the
 		// node they target (so sampling a node is a single map lookup)
-		/** name → clip `{ name, duration, channelsByNode, animatedNodes }` @ignore */
+		/**
+		 * name → clip `{ name, duration, channelsByNode, animatedNodes }`
+		 * @ignore
+		 * @internal
+		 */
 		this.anim = {};
 		for (const clip of data.animations ?? []) {
 			const channelsByNode = new Map();
@@ -237,11 +262,22 @@ export default class GLTFModel extends Container {
 		// this.onended;
 
 		// current animation state
-		/** @ignore */
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this.current = { name: undefined, time: 0, length: 0 };
-		/** loop-completion callback (built from the options) @ignore */
+		/**
+		 * loop-completion callback (built from the options)
+		 * @ignore
+		 * @internal
+		 */
 		this.resetAnim = undefined;
-		/** set when a `loop:false` clip has finished its single cycle @ignore */
+		/**
+		 * set when a `loop:false` clip has finished its single cycle
+		 * @ignore
+		 * @internal
+		 */
 		this._animDone = false;
 
 		// pose to the bind/rest pose so the model is correctly assembled even
@@ -447,6 +483,7 @@ export default class GLTFModel extends Container {
 	 * node tree, writing each part mesh's placement. Nodes the current clip does
 	 * not animate use their cached rest matrix.
 	 * @ignore
+	 * @internal
 	 */
 	/**
 	 * Whether this model is still alive.
@@ -461,12 +498,17 @@ export default class GLTFModel extends Container {
 	 * `pos` and not `ancestor`: a model that was never added to a container is
 	 * perfectly poseable, and several callers do exactly that.
 	 * @ignore
+	 * @internal
 	 * @returns {boolean} true while the model can still be posed
 	 */
 	_isLive() {
 		return this.pos !== undefined;
 	}
 
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_pose() {
 		const clip = this.current.name ? this.anim[this.current.name] : null;
 		const t = this.current.time;
@@ -479,6 +521,7 @@ export default class GLTFModel extends Container {
 	 * DFS one node: compose its local matrix, multiply by the parent world,
 	 * apply to its meshes, recurse into children.
 	 * @ignore
+	 * @internal
 	 */
 	_visit(idx, parentWorld, clip, t) {
 		const node = this._nodes[idx];
@@ -509,6 +552,7 @@ export default class GLTFModel extends Container {
 	 * otherwise the cached rest matrix.
 	 * @returns {number[]} 16-element column-major matrix
 	 * @ignore
+	 * @internal
 	 */
 	_localMatrix(idx, clip, t) {
 		const node = this._nodes[idx];
@@ -556,6 +600,7 @@ export default class GLTFModel extends Container {
 	 * zeroed). Mirrors the static {@link GLTFScene} center-split, recomputed per
 	 * frame.
 	 * @ignore
+	 * @internal
 	 */
 	_applyWorldToMesh(mesh, world) {
 		mesh.pos.set(world[12] * this.scale, -world[13] * this.scale);

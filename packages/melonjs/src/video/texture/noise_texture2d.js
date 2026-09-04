@@ -106,11 +106,23 @@ class NoiseTexture2d extends Texture2d {
 		/** the current animation time (third sampling axis) @type {number} */
 		this.time = 0;
 
-		/** the baked output canvas (reused across re-bakes) @type {HTMLCanvasElement|null} @ignore */
+		/**
+		 * the baked output canvas (reused across re-bakes) @type {HTMLCanvasElement|null}
+		 * @ignore
+		 * @internal
+		 */
 		this._canvas = null;
-		/** reused ImageData scratch (avoids a per-bake allocation) @type {ImageData|null} @ignore */
+		/**
+		 * reused ImageData scratch (avoids a per-bake allocation) @type {ImageData|null}
+		 * @ignore
+		 * @internal
+		 */
 		this._imageData = null;
-		/** reused height-field scratch (avoids a per-bake allocation) @type {Float32Array|null} @ignore */
+		/**
+		 * reused height-field scratch (avoids a per-bake allocation) @type {Float32Array|null}
+		 * @ignore
+		 * @internal
+		 */
 		this._heights = null;
 		/** content revision, bumped on every bake and stamped on the canvas so
 		 * the renderer re-uploads the GPU texture when it changes @type {number} @ignore */
@@ -193,6 +205,7 @@ class NoiseTexture2d extends Texture2d {
 	 * decoupled from the spatial frequency (otherwise low-frequency textures
 	 * would animate imperceptibly slowly).
 	 * @ignore
+	 * @internal
 	 */
 	_rawNoise(x, y) {
 		if (!this.animated) {
@@ -206,6 +219,7 @@ class NoiseTexture2d extends Texture2d {
 	 * x-axis seamless blend: in the right skirt band, cross-fade toward the
 	 * wrapped (period-shifted) sample so the left and right edges meet.
 	 * @ignore
+	 * @internal
 	 */
 	_blendX(x, y, w, sk) {
 		const base = this._rawNoise(x, y);
@@ -222,6 +236,7 @@ class NoiseTexture2d extends Texture2d {
 	 * with a much-reduced seam.
 	 * @returns {Float32Array} the per-pixel height field (length `width*height`)
 	 * @ignore
+	 * @internal
 	 */
 	_buildHeightField() {
 		const w = this.width;
@@ -265,7 +280,10 @@ class NoiseTexture2d extends Texture2d {
 		return heights;
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_writeGrayscale(data, heights) {
 		for (let i = 0; i < heights.length; i++) {
 			const c = Math.round(heights[i] * 255);
@@ -277,7 +295,10 @@ class NoiseTexture2d extends Texture2d {
 		}
 	}
 
-	/** @ignore */
+	/**
+	 * @ignore
+	 * @internal
+	 */
 	_writeColorRamp(data, heights) {
 		const ramp = this.colorRamp;
 		const color = new Color();
@@ -296,6 +317,7 @@ class NoiseTexture2d extends Texture2d {
 	 * flipped to normal-map Y-up so it round-trips through the lit shader's
 	 * `rgb * 2 - 1` decode. Neighbor samples wrap when `seamless`.
 	 * @ignore
+	 * @internal
 	 */
 	_writeNormalMap(data, heights) {
 		const w = this.width;

@@ -16,6 +16,8 @@ export class Ellipse {
 
 	/**
 	 * The bounding rectangle for this shape
+	 * @ignore
+	 * @internal
 	 */
 	_bounds: Bounds;
 
@@ -41,21 +43,29 @@ export class Ellipse {
 
 	/**
 	 * the internal rotation angle of the ellipse in radians
+	 * @ignore
+	 * @internal
 	 */
 	private _angle: number;
 
 	/**
 	 * cached cosine of the current angle
+	 * @ignore
+	 * @internal
 	 */
 	private _cos: number;
 
 	/**
 	 * cached sine of the current angle
+	 * @ignore
+	 * @internal
 	 */
 	private _sin: number;
 
 	/**
 	 * cached polygon approximation, invalidated when shape changes
+	 * @ignore
+	 * @internal
 	 */
 	private _polygon: Polygon | null = null;
 

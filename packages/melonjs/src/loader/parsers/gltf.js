@@ -18,6 +18,7 @@ import { specularFromMetallicRoughness } from "./pbr.ts";
  * Out of scope: skinning (vertex skinning / JOINTS_0 / WEIGHTS_0), morph
  * targets, full PBR maps, KHR extensions, Draco compression.
  * @ignore
+ * @internal
  */
 
 // glTF componentType -> TypedArray + DataView reader
@@ -45,6 +46,7 @@ const TYPE_COUNT = {
  * @param {ArrayBuffer} arrayBuffer
  * @returns {{ json: object, bin: Uint8Array | null }}
  * @ignore
+ * @internal
  */
 export function parseGLB(arrayBuffer) {
 	const dv = new DataView(arrayBuffer);
@@ -86,6 +88,7 @@ export function parseGLB(arrayBuffer) {
  * (e.g. a GLB parsed straight from an ArrayBuffer in a test) — the caller then
  * fails with a clear "external resource" message instead of fetching garbage.
  * @ignore
+ * @internal
  */
 function resolveURI(uri, baseURI) {
 	if (baseURI === undefined || baseURI === null) {
@@ -104,6 +107,7 @@ function resolveURI(uri, baseURI) {
 /**
  * Decode a single base64 `data:` URI payload into a Uint8Array.
  * @ignore
+ * @internal
  */
 function decodeDataURI(uri) {
 	const base64 = uri.slice(uri.indexOf(",") + 1);
@@ -120,6 +124,7 @@ function decodeDataURI(uri) {
  * (no uri), embedded `data:` URIs, and external `.bin` files fetched relative
  * to the asset URL (`baseURI`). Async because external buffers are fetched.
  * @ignore
+ * @internal
  */
 function resolveBuffers(json, bin, baseURI, settings) {
 	return Promise.all(
@@ -148,6 +153,7 @@ function resolveBuffers(json, bin, baseURI, settings) {
  * Read an accessor into a flat TypedArray (stride-aware, non-interleaved
  * fast-path covered as a subset).
  * @ignore
+ * @internal
  */
 export function readAccessor(json, buffers, accessorIndex) {
 	const accessor = json.accessors[accessorIndex];
@@ -202,6 +208,7 @@ export function readAccessor(json, buffers, accessorIndex) {
  * @param {object} attributes - the extension's `attributes` map
  * @returns {object|undefined} `{count, translation, rotation, scale}`, or undefined when empty
  * @ignore
+ * @internal
  */
 /**
  * Scale a normalized-integer quaternion accessor back to [-1, 1].
@@ -209,6 +216,7 @@ export function readAccessor(json, buffers, accessorIndex) {
  * @param {number} componentType - the accessor's glTF componentType
  * @returns {ArrayLike<number>} the de-normalized quaternion components
  * @ignore
+ * @internal
  */
 function normalizeQuaternions(raw, componentType) {
 	// float components are already in range
@@ -240,6 +248,7 @@ function normalizeQuaternions(raw, componentType) {
  * @param {object} attributes - the extension's `attributes` map
  * @returns {object|undefined} `{count, translation, rotation, scale}`, or undefined when empty
  * @ignore
+ * @internal
  */
 function readInstanceAttributes(json, buffers, attributes) {
 	if (!attributes) {
@@ -322,6 +331,7 @@ function readInstanceAttributes(json, buffers, attributes) {
  * and `VEC4`, and the three glTF color encodings: float `0..1`, and normalized
  * `UNSIGNED_BYTE` / `UNSIGNED_SHORT`.
  * @ignore
+ * @internal
  */
 function readVertexColors(json, buffers, accessorIndex) {
 	const accessor = json.accessors[accessorIndex];
@@ -361,6 +371,7 @@ const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
  * @param {number[]} scale - [sx, sy, sz]
  * @returns {number[]} `out`
  * @ignore
+ * @internal
  */
 export function composeTRSInto(out, translation, rotation, scale) {
 	const [tx, ty, tz] = translation;
@@ -404,12 +415,17 @@ export function composeTRSInto(out, translation, rotation, scale) {
  * @param {number[]} scale - [sx, sy, sz]
  * @returns {number[]} 16-element column-major matrix
  * @ignore
+ * @internal
  */
 export function composeTRS(translation, rotation, scale) {
 	return composeTRSInto(new Array(16), translation, rotation, scale);
 }
 
-/** Compose a node's local matrix from its `matrix` or TRS fields. @ignore */
+/**
+ * Compose a node's local matrix from its `matrix` or TRS fields.
+ * @ignore
+ * @internal
+ */
 export function nodeLocalMatrix(node) {
 	if (node.matrix) {
 		return node.matrix.slice();
@@ -431,6 +447,7 @@ export function nodeLocalMatrix(node) {
  * @param {number} vertexCount
  * @returns {Float32Array} x,y,z normals, one per vertex
  * @ignore
+ * @internal
  */
 function computeFlatNormals(positions, indices, vertexCount) {
 	const normals = new Float32Array(vertexCount * 3);
@@ -478,7 +495,11 @@ function computeFlatNormals(positions, indices, vertexCount) {
 	return normals;
 }
 
-/** Normalize a 3-component vector (returns +Y on a zero-length input). @ignore */
+/**
+ * Normalize a 3-component vector (returns +Y on a zero-length input).
+ * @ignore
+ * @internal
+ */
 function normalize3(v) {
 	const len = Math.hypot(v[0], v[1], v[2]);
 	return len > 1e-8 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 1, 0];
@@ -489,6 +510,7 @@ function normalize3(v) {
  * `a` or `b` (results are written as they're computed). In-place so the
  * per-frame pose path allocates nothing.
  * @ignore
+ * @internal
  */
 export function multiplyMatrixInto(out, a, b) {
 	for (let col = 0; col < 4; col++) {
@@ -503,7 +525,11 @@ export function multiplyMatrixInto(out, a, b) {
 	return out;
 }
 
-/** Allocating form of {@link multiplyMatrixInto}: `a * b` → fresh array. @ignore */
+/**
+ * Allocating form of {@link multiplyMatrixInto}: `a * b` → fresh array.
+ * @ignore
+ * @internal
+ */
 export function multiplyMatrix(a, b) {
 	return multiplyMatrixInto(new Array(16), a, b);
 }
@@ -525,6 +551,7 @@ export function multiplyMatrix(a, b) {
  * knobs, and palette expansion belongs to the decoder.
  * @returns {Promise<ImageBitmap|HTMLImageElement>}
  * @ignore
+ * @internal
  */
 function decodeImage(json, buffers, imageIndex, baseURI, settings) {
 	const image = json.images[imageIndex];
@@ -590,6 +617,7 @@ function decodeImage(json, buffers, imageIndex, baseURI, settings) {
  * Decode a Blob to an ImageBitmap, falling back to the element path on a
  * platform without `createImageBitmap`.
  * @ignore
+ * @internal
  */
 function decodeBlob(blob) {
 	const viaElement = () => {
@@ -607,7 +635,10 @@ function decodeBlob(blob) {
 	return globalThis.createImageBitmap(blob).catch(viaElement);
 }
 
-/** @ignore */
+/**
+ * @ignore
+ * @internal
+ */
 function loadImageFromUrl(url, revoke = false, crossOrigin) {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
@@ -642,6 +673,7 @@ function loadImageFromUrl(url, revoke = false, crossOrigin) {
  * external resources (crossOrigin / withCredentials / nocache).
  * @returns {Promise<object>} `{ nodes, cameras, lights, bounds, graph, animations }`
  * @ignore
+ * @internal
  */
 export async function parseGLTF(arrayBuffer, baseURI, settings) {
 	const { json, bin } = parseGLB(arrayBuffer);
@@ -1071,6 +1103,7 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
+ * @internal
  */
 export function preloadGLTF(data, onload, onerror, settings) {
 	if (typeof gltfList[data.name] !== "undefined") {

@@ -16,6 +16,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**
 	 * return true if the renderer can render the specified layer
 	 * @ignore
+	 * @internal
 	 */
 	canRender(layer) {
 		return layer.orientation === "orthogonal" && super.canRender(layer);
@@ -24,6 +25,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**
 	 * return the tile position corresponding to the specified pixel
 	 * @ignore
+	 * @internal
 	 */
 	pixelToTileCoords(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -33,6 +35,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**
 	 * return the pixel position corresponding of the specified tile
 	 * @ignore
+	 * @internal
 	 */
 	tileToPixelCoords(x, y, v) {
 		const ret = v || vector2dPool.get();
@@ -42,6 +45,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**
 	 * draw the tile map (legacy entry point — accepts a fully-constructed Tile)
 	 * @ignore
+	 * @internal
 	 */
 	drawTile(renderer, x, y, tmxTile) {
 		const tileset = tmxTile.tileset;
@@ -58,6 +62,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	 * draw a tile from raw (gid, flipMask, tileset) data — used by the hot
 	 * rendering loop to bypass Tile construction
 	 * @ignore
+	 * @internal
 	 */
 	drawTileRaw(renderer, x, y, gid, flipMask, tileset) {
 		tileset.drawTileRaw(
@@ -72,6 +77,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**
 	 * draw the tile map
 	 * @ignore
+	 * @internal
 	 */
 	drawTileLayer(renderer, layer, rect) {
 		let incX = 1;

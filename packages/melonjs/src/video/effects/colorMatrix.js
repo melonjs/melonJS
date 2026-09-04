@@ -49,6 +49,7 @@ export default class ColorMatrixEffect extends ShaderEffect {
 		/**
 		 * the internal color matrix
 		 * @ignore
+		 * @internal
 		 */
 		this._matrix = options.matrix || new ColorMatrix();
 		this._syncUniform();
@@ -57,6 +58,7 @@ export default class ColorMatrixEffect extends ShaderEffect {
 	/**
 	 * Push the current matrix values to the GPU.
 	 * @ignore
+	 * @internal
 	 */
 	_syncUniform() {
 		this.setUniform("uColorMatrix", this._matrix.val);

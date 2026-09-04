@@ -1,0 +1,93 @@
+/*
+ * melonJS branding for the generated reference.
+ *
+ * The palette is sampled from the logo itself rather than invented: #6ba831 is
+ * the ring, #d1655b the dot, #202020 the ink (the same value the README and
+ * the engine's own default background use).
+ */
+:root {
+	--mjs-green: #6ba831;
+	--mjs-green-bright: #86c94a;
+	--mjs-melon: #d1655b;
+	--mjs-ink: #202020;
+}
+
+/* light */
+:root {
+	--color-link: #4f7f22;
+	--color-accent: #e7ecdf;
+	--color-active-menu-item: #e7ecdf;
+	--color-focus-outline: var(--mjs-green);
+	--color-ts-class: #4f7f22;
+	--color-ts-interface: #b1473c;
+}
+
+/* dark */
+:root[data-theme="dark"],
+body.dark {
+	--color-background: var(--mjs-ink);
+	--color-background-secondary: #2a2a2a;
+	--color-link: var(--mjs-green-bright);
+	--color-accent: #3a4032;
+	--color-active-menu-item: #39412e;
+	--color-ts-class: var(--mjs-green-bright);
+	--color-ts-interface: #e08c84;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--color-background: var(--mjs-ink);
+		--color-background-secondary: #2a2a2a;
+		--color-link: var(--mjs-green-bright);
+		--color-accent: #3a4032;
+		--color-active-menu-item: #39412e;
+		--color-ts-class: var(--mjs-green-bright);
+		--color-ts-interface: #e08c84;
+	}
+}
+
+/* the logo, beside the wordmark in the toolbar */
+.tsd-toolbar-contents .title {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.tsd-toolbar-contents .title::before {
+	content: "";
+	width: 1.6em;
+	height: 1.6em;
+	flex: none;
+	background: url("data:image/svg+xml,%3Csvg%20width%3D%221475%22%20height%3D%221475%22%20viewBox%3D%220%200%201475%201475%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Crect%20width%3D%221475%22%20height%3D%221475%22%20fill%3D%22%23202020%22%2F%3E%20%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M523.521%20226.514C403.301%20277.234%20304.823%20368.927%20245.482%20485.398C186.141%20601.869%20169.756%20735.622%20199.22%20863.033C228.684%20990.444%20302.102%201103.31%20406.506%201181.71C510.909%201260.1%20639.58%201298.97%20769.791%201291.45C900.002%201283.93%201023.37%201230.51%201118.12%201140.62C1212.86%201050.73%201272.87%20930.156%201287.56%20800.195C1302.25%20670.235%201270.66%20539.251%201198.38%20430.38C1187.99%20414.724%201192.22%20393.582%201207.83%20383.159C1223.44%20372.736%201244.53%20376.978%201254.92%20392.634C1336.08%20514.876%201371.54%20661.945%201355.05%20807.866C1338.56%20953.786%201271.17%201089.17%201164.8%201190.1C1058.42%201291.02%20919.897%201351.01%20773.695%201359.45C627.494%201367.89%20483.021%201324.25%20365.796%201236.23C248.571%201148.21%20166.137%201021.48%20133.054%20878.42C99.9717%20735.362%20118.369%20585.183%20184.998%20454.409C251.626%20323.634%20362.197%20220.68%20497.181%20163.731C632.166%20106.783%20782.877%2099.5035%20922.694%20143.18C940.601%20148.774%20950.596%20167.866%20945.017%20185.824C939.439%20203.781%20920.4%20213.804%20902.493%20208.21C777.968%20169.311%20643.741%20175.793%20523.521%20226.514Z%22%20fill%3D%22%236BA831%22%2F%3E%20%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M1099.7%20309.488C1119.94%20309.488%201136.34%20293.208%201136.34%20273.126C1136.34%20253.044%201119.94%20236.764%201099.7%20236.764C1079.47%20236.764%201063.06%20253.044%201063.06%20273.126C1063.06%20293.208%201079.47%20309.488%201099.7%20309.488ZM752.797%20623.683C784.728%20591.995%20823.368%20576.144%20868.705%20576.144C914.042%20576.144%20952.669%20591.995%20984.6%20623.683C1016.53%20655.372%201032.5%20693.705%201032.5%20738.698V867.804C1032.5%20886.267%201017.42%20901.251%20998.801%20901.251C978.634%20901.251%20962.296%20885.038%20962.296%20865.038V740.262C962.296%20716.965%20954.311%20694.016%20938.495%20676.795C920.465%20657.156%20898.551%20646.852%20872.743%20645.882C844.499%20644.822%20816.881%20656.652%20798.134%20677.661C782.774%20694.856%20775.1%20715.206%20775.1%20738.698V866.68C775.1%20885.762%20759.493%20901.251%20740.251%20901.251C720.722%20901.251%20704.893%20885.556%20704.893%20866.175V738.698C704.893%20715.206%20697.233%20694.869%20681.873%20677.661C663.126%20656.652%20635.508%20644.822%20607.263%20645.882C581.468%20646.852%20559.569%20657.143%20541.525%20676.756C525.696%20693.977%20517.697%20716.939%20517.697%20740.236V866.641C517.697%20885.749%20502.09%20901.251%20482.835%20901.251C463.32%20901.251%20447.504%20885.568%20447.504%20866.188V738.698C447.504%20693.705%20463.463%20655.372%20495.407%20623.683C527.325%20591.995%20565.965%20576.144%20611.302%20576.144C656.639%20576.144%20695.266%20591.995%20727.197%20623.683C731.835%20628.273%20736.095%20632.979%20739.99%20637.828C743.898%20632.979%20748.159%20628.273%20752.797%20623.683Z%22%20fill%3D%22%23D1655B%22%2F%3E%20%3C%2Fsvg%3E") center / contain no-repeat;
+}
+
+/* a brand rule under the toolbar, instead of the default flat border */
+.tsd-page-toolbar {
+	border-bottom: 2px solid var(--mjs-green);
+}
+
+/* headings carry the brand rather than the theme default */
+.tsd-page-title h1,
+.col-content h2 {
+	letter-spacing: -0.01em;
+}
+
+.col-content h2 {
+	border-bottom: 1px solid var(--color-accent);
+	padding-bottom: 0.25em;
+}
+
+/* signatures read as code, so give them a surface of their own */
+.tsd-signature {
+	border-left: 3px solid var(--mjs-green);
+	border-radius: 0 4px 4px 0;
+}
+
+/* the melon dot for the "defined in" source links */
+.tsd-anchor-icon svg,
+a.tsd-index-link svg {
+	color: var(--mjs-melon);
+}
+
