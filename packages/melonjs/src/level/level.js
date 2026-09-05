@@ -106,9 +106,13 @@ function levelIdAt(offset) {
  * promise that settles once the level is actually in the world. Everything else
  * behaves identically either way, `onLoaded` included.
  *
- * Note that awaiting a call WITHOUT `async: true` is not an error — `await true`
- * is valid and resolves immediately — so the level will not be loaded yet. Pass
- * the flag whenever you intend to await.
+ * Awaiting a call WITHOUT `async: true` is not an error, but it is not a wait
+ * either: the call hands back a boolean, and `await true` resolves immediately,
+ * so there is no completion point to await. Whether the load has finished by
+ * then is incidental — it has when there is no loop running, and it currently
+ * does when there is, because the deferral is a single microtask queued ahead
+ * of the await's continuation. Do not rely on either. Pass the flag when you
+ * mean to await.
  * @typedef {object} LevelLoadOptions
  * @property {Container} [container=game.world] - container in which to load the specified level
  * @property {Function} [onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded, called in both forms

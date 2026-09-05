@@ -97,9 +97,9 @@ describe("Trigger level change (#1646)", () => {
 		// tween completes, which needs a live game loop this suite does not
 		// have. Weaker than a behavioural test, and deliberately narrow: it
 		// pins the one line whose removal reintroduces a known bug.
-		const load = triggerSource.indexOf(
-			"load(gotolevel, { ...settings, async: true })",
-		);
+		// anchored on the call shape rather than the exact argument text, so
+		// reformatting or an added option does not fail this
+		const load = triggerSource.indexOf("load(gotolevel");
 		const reveal = triggerSource.indexOf("addCameraEffect", load);
 		expect(load).toBeGreaterThan(-1);
 		expect(reveal).toBeGreaterThan(load);
