@@ -5,7 +5,7 @@ import triggerSource from "../src/renderable/trigger.js?raw";
 import state from "../src/state/state.ts";
 
 /**
- * `Trigger` level changes, across the `loadAsync` refactor (#1646).
+ * `Trigger` level changes, across the awaitable-load refactor (#1646).
  *
  * The fade/mask path used to sequence "hide → load → reveal" by REWRITING the
  * caller's own `settings.onLoaded`: it saved the user's callback, replaced the
