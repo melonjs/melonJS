@@ -129,6 +129,30 @@ describe("level.loadAsync (#1646)", () => {
 			expect(calledWith).toBe("unit-test-level");
 		});
 
+		it("REJECTS when the load itself fails, whether or not the loop runs", async () => {
+			// The failure surface must not depend on `state.isRunning()`. The
+			// deferred branch naturally produces a rejection; the synchronous
+			// one would let the exception escape the call, where a
+			// `loadAsync(...).catch()` could never see it — the throw beats the
+			// handler being attached.
+			const boom = new Error("addTo exploded");
+			GLTFScene.prototype.addTo = () => {
+				throw boom;
+			};
+
+			state.stop();
+			expect(state.isRunning()).toBe(false);
+			await expect(
+				level.loadAsync("unit-test-level", { container: container() }),
+			).rejects.toBe(boom);
+
+			state.restart();
+			expect(state.isRunning()).toBe(true);
+			await expect(
+				level.loadAsync("unit-test-level", { container: container() }),
+			).rejects.toBe(boom);
+		});
+
 		it("throws SYNCHRONOUSLY on an unknown level id, rather than rejecting", () => {
 			// if this rejected instead, a caller that forgot `await` would get an
 			// unhandled rejection in place of a stack pointing at their typo

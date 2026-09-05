@@ -268,7 +268,17 @@ export const level = {
 		// No loop means no frame to unwind, so this stays SYNCHRONOUS exactly as
 		// before — deferring it would change when the level exists for anyone
 		// loading one before the game starts.
-		safeLoadLevel(levelId, options);
+		//
+		// Wrapped so a failure arrives the same way it does from the deferred
+		// branch above: as a REJECTION. Letting it escape as an exception would
+		// make the error surface depend on whether the loop happened to be
+		// running, and `loadAsync(...).catch()` could not see it at all, since
+		// the throw would beat the handler being attached.
+		try {
+			safeLoadLevel(levelId, options);
+		} catch (error) {
+			return Promise.reject(error);
+		}
 		return Promise.resolve(true);
 	},
 
