@@ -172,38 +172,41 @@ export const level = {
 	},
 
 	/**
+	 * load a level into the game manager, and return a promise that settles once
+	 * it is actually in the world<br>
+	 * (will also create all level defined entities, etc..)
+	 *
+	 * `options.onLoaded` still fires, so the two forms mix freely. An unknown
+	 * `levelId` throws SYNCHRONOUSLY rather than rejecting — that is a typo, not
+	 * a load failure, and it should not need `await` to surface.
 	 * @overload
-	 * @param {string} levelId
-	 * @param {LevelLoadOptions & { async: true }} options
-	 * @returns {Promise<boolean>}
-	 */
-	/**
-	 * @overload
-	 * @param {string} levelId
-	 * @param {LevelLoadOptions & { async?: false }} [options]
-	 * @returns {boolean}
+	 * @param {string} levelId - level id
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true` once the level is in the world
+	 * @example
+	 * await me.loader.preload(game.assets);
+	 * await me.level.load("a4_level1", { async: true });
+	 * // the world is populated here
+	 * @category Level
 	 */
 	/**
 	 * load a level into the game manager<br>
 	 * (will also create all level defined entities, etc..)
 	 *
-	 * Pass `async: true` to get a promise that settles once the level is in the
-	 * world, instead of the boolean. `options.onLoaded` still fires either way,
-	 * so the two forms mix freely.
+	 * While the game loop is running the load is DEFERRED to a microtask, so
+	 * this returns before anything is in the world. Sequence follow-up work from
+	 * `options.onLoaded`, from an `event.LEVEL_LOADED` listener, or by passing
+	 * `async: true` and awaiting the promise that overload returns.
 	 *
-	 * An unknown `levelId` throws SYNCHRONOUSLY in both forms — that is a typo
-	 * rather than a load failure, and it should not need `await` to surface.
-	 * @public
+	 * Note that `await me.level.load(id)` without `async: true` does not await
+	 * the load: the call returns a boolean, and `await true` resolves at once.
+	 * @overload
 	 * @param {string} levelId - level id
-	 * @param {LevelLoadOptions} [options] - additional optional parameters
-	 * @returns {boolean|Promise<boolean>} `true`, or a promise resolving `true` when `async` is set
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true`
 	 * @example
-	 * // load a level, the way it has always worked
+	 * // load a level
 	 * me.level.load("a4_level1");
-	 *
-	 * // ...or wait for it
-	 * await me.loader.preload(game.assets);
-	 * await me.level.load("a4_level1", { async: true });
 	 *
 	 * // load into a specific container
 	 * me.level.load("a4_level2", { container: levelContainer });
@@ -212,6 +215,12 @@ export const level = {
 	 * // 50 pixels per glTF unit, authored intensities kept at a 1/1000 scale
 	 * me.level.load("diorama", { scale: 50, lightIntensityScale: 0.001 });
 	 * @category Level
+	 */
+	/**
+	 * @param {string} levelId - level id
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} `true`, or a promise when `async` is set
+	 * @ignore
 	 */
 	load(levelId, options) {
 		options = Object.assign(
@@ -304,21 +313,29 @@ export const level = {
 	},
 
 	/**
+	 * reload the current level, and return a promise that settles once the level is in the world.
+	 *
 	 * @overload
-	 * @param {LevelLoadOptions & { async: true }} options
-	 * @returns {Promise<boolean>}
-	 */
-	/**
-	 * @overload
-	 * @param {LevelLoadOptions & { async?: false }} [options]
-	 * @returns {boolean}
-	 */
-	/**
-	 * reload the current level. Pass `async: true` for a promise — see {@link level.load}.
-	 * @public
-	 * @param {LevelLoadOptions} [options] - additional optional parameters
-	 * @returns {boolean|Promise<boolean>} `true`, or a promise resolving `true` when `async` is set
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true` once the level is back in the world
+	 * @example
+	 * await me.level.reload({ async: true });
 	 * @category Level
+	 */
+	/**
+	 * reload the current level.
+	 *
+	 * While the game loop is running the load is deferred to a microtask, so this
+	 * returns before anything is in the world — see {@link level.load}.
+	 * @overload
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true`
+	 * @category Level
+	 */
+	/**
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} see the overloads
+	 * @ignore
 	 */
 	reload(options) {
 		// reset the level to initial state
@@ -327,25 +344,37 @@ export const level = {
 	},
 
 	/**
-	 * @overload
-	 * @param {LevelLoadOptions & { async: true }} options
-	 * @returns {Promise<boolean>}
-	 */
-	/**
-	 * @overload
-	 * @param {LevelLoadOptions & { async?: false }} [options]
-	 * @returns {boolean}
-	 */
-	/**
-	 * load the next level. Pass `async: true` for a promise — see {@link level.load}.
+	 * load the next level, and return a promise that settles once the level is in the world.
 	 *
-	 * With no next level this reports `false` WITHOUT loading anything, and the
-	 * promise form resolves `false` rather than rejecting: reaching the end of a
-	 * game is an ordinary outcome, not an error.
-	 * @public
-	 * @param {LevelLoadOptions} [options] - additional optional parameters
-	 * @returns {boolean|Promise<boolean>} `true` if the next level was loaded, `false` if there is none
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * @overload
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true`, or `false` if there is no next level
+	 * @example
+	 * await me.level.next({ async: true });
 	 * @category Level
+	 */
+	/**
+	 * load the next level.
+	 *
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * While the game loop is running the load is deferred to a microtask, so this
+	 * returns before anything is in the world — see {@link level.load}.
+	 * @overload
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true` if the next level was loaded, `false` if there is none
+	 * @category Level
+	 */
+	/**
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} see the overloads
+	 * @ignore
 	 */
 	next(options) {
 		const levelId = levelIdAt(1);
@@ -356,24 +385,37 @@ export const level = {
 	},
 
 	/**
-	 * @overload
-	 * @param {LevelLoadOptions & { async: true }} options
-	 * @returns {Promise<boolean>}
-	 */
-	/**
-	 * @overload
-	 * @param {LevelLoadOptions & { async?: false }} [options]
-	 * @returns {boolean}
-	 */
-	/**
-	 * load the previous level. Pass `async: true` for a promise — see {@link level.load}.
+	 * load the previous level, and return a promise that settles once the level is in the world.
 	 *
-	 * With no previous level this reports `false` without loading anything; see
-	 * {@link level.next}.
-	 * @public
-	 * @param {LevelLoadOptions} [options] - additional optional parameters
-	 * @returns {boolean|Promise<boolean>} `true` if the previous level was loaded, `false` if there is none
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * @overload
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true`, or `false` if there is no previous level
+	 * @example
+	 * await me.level.previous({ async: true });
 	 * @category Level
+	 */
+	/**
+	 * load the previous level.
+	 *
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * While the game loop is running the load is deferred to a microtask, so this
+	 * returns before anything is in the world — see {@link level.load}.
+	 * @overload
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true` if the previous level was loaded, `false` if there is none
+	 * @category Level
+	 */
+	/**
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} see the overloads
+	 * @ignore
 	 */
 	previous(options) {
 		const levelId = levelIdAt(-1);

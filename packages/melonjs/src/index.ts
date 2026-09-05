@@ -128,6 +128,7 @@ export { Sphere } from "./geometries/sphere.ts";
 export * as input from "./input/input.ts";
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";
+export type { LevelLoadOptions } from "./level/level.js";
 export { level } from "./level/level.js";
 export {
 	registerTiledObjectClass,
