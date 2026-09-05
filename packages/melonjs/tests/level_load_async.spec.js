@@ -5,6 +5,7 @@ import {
 	Container,
 	event,
 	level,
+	loader,
 	video,
 } from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
@@ -290,6 +291,192 @@ describe("level.load({ async }) (#1646)", () => {
 			expect(value).not.toBeInstanceOf(Promise);
 			await value;
 			expect(seen).toHaveLength(1);
+		});
+	});
+
+	describe("a real TMX map, not just a stubbed scene", () => {
+		// Every other test here stubs `GLTFScene.addTo`, which exercises the
+		// non-TMX arm of `safeLoadLevel`'s format branch. Tiled maps are the
+		// main use of `level.load` and go down the other arm — `loadTMXLevel`,
+		// with GUID reset, object flattening and viewport bounds — so the flag
+		// has to work there too. The map is passed inline via the loader's
+		// `data` field, so this needs no fixture file.
+		const MAP = {
+			type: "map",
+			version: "1.10",
+			orientation: "orthogonal",
+			renderorder: "right-down",
+			infinite: false,
+			width: 4,
+			height: 4,
+			tilewidth: 16,
+			tileheight: 16,
+			nextlayerid: 2,
+			nextobjectid: 1,
+			layers: [
+				{
+					id: 1,
+					name: "ground",
+					type: "tilelayer",
+					visible: true,
+					opacity: 1,
+					x: 0,
+					y: 0,
+					width: 4,
+					height: 4,
+					data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				},
+				{
+					id: 2,
+					name: "entities",
+					type: "objectgroup",
+					visible: true,
+					opacity: 1,
+					x: 0,
+					y: 0,
+					objects: [
+						{
+							id: 1,
+							name: "spawn",
+							type: "",
+							x: 8,
+							y: 8,
+							width: 8,
+							height: 8,
+							rotation: 0,
+							visible: true,
+						},
+					],
+				},
+			],
+			tilesets: [],
+		};
+
+		beforeAll(async () => {
+			// `switchToLoadState` false: this spec is not driving the state
+			// machine, and the LOADING state would fight the tests below
+			await loader.preload(
+				[{ name: "unit-test-map", type: "tmx", data: MAP }],
+				undefined,
+				false,
+			);
+		});
+
+		it("loads a TMX map in the boolean form", () => {
+			state.stop();
+			const target = container();
+			expect(
+				level.load("unit-test-map", {
+					container: target,
+					setViewportBounds: false,
+				}),
+			).toBe(true);
+			expect(target.children.length).toBeGreaterThan(0);
+		});
+
+		it("loads a TMX map in the async form, resolving once it is in the world", async () => {
+			state.restart();
+			const target = container();
+			const promise = level.load("unit-test-map", {
+				container: target,
+				setViewportBounds: false,
+				async: true,
+			});
+			// deferred: nothing yet (`children` is undefined until the first add)
+			expect(target.children ?? []).toHaveLength(0);
+			await expect(promise).resolves.toBe(true);
+			expect(target.children.length).toBeGreaterThan(0);
+		});
+
+		it("still honours flatten on the TMX arm in the async form", async () => {
+			// `flatten: false` wraps each Tiled group in its own Container named
+			// after it — behaviour only `loadTMXLevel` produces, so this also
+			// pins that a TMX map goes down the TMX arm rather than the generic
+			// `addTo` one, which would silently load it with the wrong arguments
+			state.restart();
+			const target = container();
+			await level.load("unit-test-map", {
+				container: target,
+				setViewportBounds: false,
+				flatten: false,
+				async: true,
+			});
+			expect(target.children.length).toBeGreaterThan(0);
+			// only `loadTMXLevel` wraps an object group in a Container named
+			// after it. The generic `addTo` arm takes (container, flatten,
+			// setViewportBounds) positionally, so routing a map through it
+			// passes the whole options object as `flatten` and flattens
+			// everything — no wrapper, and this assertion catches it.
+			expect(target.getChildByName("entities")).toHaveLength(1);
+		});
+	});
+
+	describe("ordering and failure surfaces", () => {
+		it("emits LEVEL_LOADED before the promise resolves", async () => {
+			// what a caller awaiting the load then reading world state depends
+			// on: the event must not arrive after the await has resumed
+			track();
+			state.restart();
+			const order = [];
+			const handler = () => {
+				order.push("event");
+			};
+			event.on(event.LEVEL_LOADED, handler);
+			await level.load("unit-test-level", {
+				container: container(),
+				async: true,
+			});
+			order.push("resolved");
+			event.off(event.LEVEL_LOADED, handler);
+			expect(order).toEqual(["event", "resolved"]);
+		});
+
+		it("calls onLoaded before the promise resolves", async () => {
+			track();
+			state.restart();
+			const order = [];
+			await level.load("unit-test-level", {
+				container: container(),
+				async: true,
+				onLoaded: () => {
+					order.push("onLoaded");
+				},
+			});
+			order.push("resolved");
+			expect(order).toEqual(["onLoaded", "resolved"]);
+		});
+
+		it("REJECTS when onLoaded throws, in the async form", async () => {
+			// the callback runs inside the load, so its failure belongs to the
+			// same surface as any other load failure
+			track();
+			state.restart();
+			const boom = new Error("onLoaded exploded");
+			await expect(
+				level.load("unit-test-level", {
+					container: container(),
+					async: true,
+					onLoaded: () => {
+						throw boom;
+					},
+				}),
+			).rejects.toBe(boom);
+		});
+
+		it("THROWS when onLoaded throws with no loop running, in the boolean form", () => {
+			// the synchronous path stays synchronous, errors included, so a
+			// caller can still `try { level.load(id) } catch`
+			track();
+			state.stop();
+			const boom = new Error("onLoaded exploded");
+			expect(() => {
+				return level.load("unit-test-level", {
+					container: container(),
+					onLoaded: () => {
+						throw boom;
+					},
+				});
+			}).toThrow(boom);
 		});
 	});
 

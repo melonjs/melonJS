@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Application, boot, level, Trigger, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Camera2d,
+	level,
+	Trigger,
+	video,
+} from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
 import triggerSource from "../src/renderable/trigger.js?raw";
 import state from "../src/state/state.ts";
@@ -85,6 +92,69 @@ describe("Trigger level change (#1646)", () => {
 		t.triggerEvent();
 		expect(loaded).toHaveLength(0);
 		app.world.removeChildNow(t);
+	});
+
+	it("reveals only after the load, on the CURRENT viewport", async () => {
+		// The reveal used to be injected by rewriting `settings.onLoaded`; it is
+		// now chained off the awaited load. Driving the hide tween by hand lets
+		// this run without a live loop, so the sequencing is asserted for real
+		// rather than by reading the source.
+		//
+		// `Application.reset()` reassigns `app.viewport`, and `safeLoadLevel`
+		// calls it — so a viewport captured before the load is stale by the time
+		// the reveal runs. The swap below stands in for that.
+		const original = app.viewport;
+		const swapped = new Camera2d(0, 0, 320, 240);
+		const seen = [];
+		const record = (who) => {
+			return (effect) => {
+				seen.push({ who, effect, loadedSoFar: loaded.length });
+				return effect;
+			};
+		};
+		original.addCameraEffect = record("original");
+		swapped.addCameraEffect = record("swapped");
+
+		// with the loop RUNNING, so the load genuinely defers — with it stopped
+		// the load is synchronous and the ordering below proves nothing
+		state.restart();
+		const t = trigger({ color: "#000000", duration: 10 });
+		t.triggerEvent();
+
+		// the hide effect, captured rather than added
+		expect(seen).toHaveLength(1);
+		expect(seen[0].loadedSoFar).toBe(0);
+
+		// swap the viewport while the load runs, as `game.reset()` would
+		const previousAddTo = GLTFScene.prototype.addTo;
+		GLTFScene.prototype.addTo = function (container) {
+			app.viewport = swapped;
+			loaded.push(container);
+		};
+
+		// Drive the hide tween to completion -> onComplete -> the load. Stop
+		// ticking the moment the load starts: further ticks re-fire onComplete
+		// and would queue a second load.
+		const tween = seen[0].effect.tween;
+		for (let i = 1; i <= 20 && loaded.length === 0; i++) {
+			tween._onTick(i * 5);
+			await Promise.resolve();
+		}
+		// let the load's microtask and the reveal chained after it settle
+		for (let i = 0; i < 4; i++) {
+			await Promise.resolve();
+		}
+
+		GLTFScene.prototype.addTo = previousAddTo;
+		app.viewport = original;
+		app.world.removeChildNow(t);
+
+		// the load happened, then the reveal — and on the viewport that existed
+		// AFTER the load, not the one captured before it
+		expect(loaded).toHaveLength(1);
+		expect(seen).toHaveLength(2);
+		expect(seen[1].loadedSoFar).toBe(1);
+		expect(seen[1].who).toBe("swapped");
 	});
 
 	it("re-reads the viewport AFTER the load, not before it", () => {
