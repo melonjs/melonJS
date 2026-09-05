@@ -299,7 +299,7 @@ export const level = {
 	 * @param {Container} [options.container=game.world] - container in which to load the specified level
 	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
 	 * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-	 * @returns {object} the current level
+	 * @returns {boolean} true if the level was reloaded
 	 */
 	reload(options) {
 		// reset the level to initial state
