@@ -38,6 +38,7 @@ describe("level.loadAsync (#1646)", () => {
 		await app.init();
 		originalAddTo = GLTFScene.prototype.addTo;
 		level.add("gltf", "unit-test-level");
+		level.add("gltf", "unit-test-level-2");
 	});
 
 	afterAll(() => {
@@ -109,7 +110,8 @@ describe("level.loadAsync (#1646)", () => {
 			const target = container();
 			const promise = level.loadAsync("unit-test-level", { container: target });
 			expect(promise).toBeInstanceOf(Promise);
-			await promise;
+			// resolves with what `load()` returns, so a port is mechanical
+			await expect(promise).resolves.toBe(true);
 			expect(seen).toHaveLength(1);
 			expect(seen[0]).toBe(target);
 		});
@@ -133,6 +135,86 @@ describe("level.loadAsync (#1646)", () => {
 			expect(() => {
 				return level.loadAsync("no-such-level");
 			}).toThrow(/not found/);
+		});
+	});
+
+	describe("the reload / next / previous twins", () => {
+		it("reloadAsync resolves once the current level is back in the world", async () => {
+			const seen = track();
+			state.stop();
+			await level.loadAsync("unit-test-level", { container: container() });
+			seen.length = 0;
+			state.restart();
+			await expect(level.reloadAsync({ container: container() })).resolves.toBe(
+				true,
+			);
+			expect(seen).toHaveLength(1);
+		});
+
+		it("nextAsync loads the next level and resolves true", async () => {
+			const seen = track();
+			state.stop();
+			await level.loadAsync("unit-test-level", { container: container() });
+			seen.length = 0;
+			state.restart();
+			await expect(level.nextAsync({ container: container() })).resolves.toBe(
+				true,
+			);
+			expect(seen).toHaveLength(1);
+			expect(level.getCurrentLevelId()).toBe("unit-test-level-2");
+		});
+
+		it("nextAsync resolves FALSE without loading when there is no next", async () => {
+			// `next()` returns false here rather than throwing, so the twin must
+			// resolve false rather than reject — running out of levels is an
+			// ordinary outcome, not an error
+			const seen = track();
+			state.stop();
+			await level.loadAsync("unit-test-level-2", { container: container() });
+			seen.length = 0;
+			state.restart();
+			await expect(level.nextAsync({ container: container() })).resolves.toBe(
+				false,
+			);
+			expect(seen).toHaveLength(0);
+		});
+
+		it("previousAsync loads the previous level and resolves true", async () => {
+			const seen = track();
+			state.stop();
+			await level.loadAsync("unit-test-level-2", { container: container() });
+			seen.length = 0;
+			state.restart();
+			await expect(
+				level.previousAsync({ container: container() }),
+			).resolves.toBe(true);
+			expect(seen).toHaveLength(1);
+			expect(level.getCurrentLevelId()).toBe("unit-test-level");
+		});
+
+		it("previousAsync resolves FALSE without loading when there is no previous", async () => {
+			const seen = track();
+			state.stop();
+			await level.loadAsync("unit-test-level", { container: container() });
+			seen.length = 0;
+			state.restart();
+			await expect(
+				level.previousAsync({ container: container() }),
+			).resolves.toBe(false);
+			expect(seen).toHaveLength(0);
+		});
+
+		it("each sync twin still returns the same value, unchanged", () => {
+			track();
+			state.stop();
+			level.load("unit-test-level", { container: container() });
+			expect(level.reload({ container: container() })).toBe(true);
+			expect(level.next({ container: container() })).toBe(true);
+			// now on the last level: no next
+			expect(level.next({ container: container() })).toBe(false);
+			expect(level.previous({ container: container() })).toBe(true);
+			// back on the first: no previous
+			expect(level.previous({ container: container() })).toBe(false);
 		});
 	});
 

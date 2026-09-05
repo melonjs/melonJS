@@ -222,7 +222,7 @@ export const level = {
 	 * @param {number} [options.lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity by this factor
 	 * @param {boolean} [options.castGroundShadow=false] - (glTF/GLB only) give every mesh in the scene a ground shadow
 	 * @param {number} [options.shadowGroundY] - (glTF/GLB only) world Y the ground shadows land on
-	 * @returns {Promise<void>} resolves once the level is in the world
+	 * @returns {Promise<boolean>} resolves `true` once the level is in the world
 	 * @example
 	 * // await it, then start play
 	 * await me.loader.preload(game.assets);
@@ -262,13 +262,14 @@ export const level = {
 			state.stop();
 			return Promise.resolve().then(() => {
 				safeLoadLevel(levelId, options, true);
+				return true;
 			});
 		}
 		// No loop means no frame to unwind, so this stays SYNCHRONOUS exactly as
 		// before — deferring it would change when the level exists for anyone
 		// loading one before the game starts.
 		safeLoadLevel(levelId, options);
-		return Promise.resolve();
+		return Promise.resolve(true);
 	},
 
 	/**
@@ -307,6 +308,19 @@ export const level = {
 	},
 
 	/**
+	 * Reload the current level, and resolve once it is in the world.
+	 *
+	 * The awaitable twin of {@link level.reload} — see {@link level.loadAsync}.
+	 * @public
+	 * @param {object} [options] - additional optional parameters, as accepted by {@link level.load}
+	 * @returns {Promise<boolean>} resolves `true` once the level is in the world
+	 * @category Level
+	 */
+	reloadAsync(options) {
+		return this.loadAsync(this.getCurrentLevelId(), options);
+	},
+
+	/**
 	 * load the next level
 	 * @public
 	 * @param {object} [options] - additional optional parameters
@@ -325,6 +339,25 @@ export const level = {
 	},
 
 	/**
+	 * Load the next level, and resolve once it is in the world.
+	 *
+	 * The awaitable twin of {@link level.next}: it resolves with the same value
+	 * that one returns, so `if (level.next())` ports to
+	 * `if (await level.nextAsync())`. With no next level it resolves `false`
+	 * **without loading anything** — that is not an error, so it does not reject.
+	 * @public
+	 * @param {object} [options] - additional optional parameters, as accepted by {@link level.load}
+	 * @returns {Promise<boolean>} resolves `true` once the next level is in the world, or `false` if there is none
+	 * @category Level
+	 */
+	nextAsync(options) {
+		if (currentLevelIdx + 1 < levelIdx.length) {
+			return this.loadAsync(levelIdx[currentLevelIdx + 1], options);
+		}
+		return Promise.resolve(false);
+	},
+
+	/**
 	 * load the previous level<br>
 	 * @public
 	 * @param {object} [options] - additional optional parameters
@@ -340,6 +373,23 @@ export const level = {
 		} else {
 			return false;
 		}
+	},
+
+	/**
+	 * Load the previous level, and resolve once it is in the world.
+	 *
+	 * The awaitable twin of {@link level.previous} — resolves `false` without
+	 * loading anything when there is no previous level. See {@link level.nextAsync}.
+	 * @public
+	 * @param {object} [options] - additional optional parameters, as accepted by {@link level.load}
+	 * @returns {Promise<boolean>} resolves `true` once the previous level is in the world, or `false` if there is none
+	 * @category Level
+	 */
+	previousAsync(options) {
+		if (currentLevelIdx - 1 >= 0) {
+			return this.loadAsync(levelIdx[currentLevelIdx - 1], options);
+		}
+		return Promise.resolve(false);
 	},
 
 	/**
