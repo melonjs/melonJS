@@ -186,6 +186,50 @@ export const level = {
 	 * const sun = app.world.getChildByName("Sun")[0];
 	 */
 	load(levelId, options) {
+		// Fire-and-forget by contract: this returns `true`, not the promise, so
+		// existing (including typed) callers are unaffected. Use `loadAsync()`
+		// to await the load. The rejection is rethrown on a clean stack so a
+		// failure still surfaces as an uncaught error the way it did when the
+		// deferral was a timer, rather than as a silent unhandled rejection.
+		this.loadAsync(levelId, options).catch((error) => {
+			queueMicrotask(() => {
+				throw error;
+			});
+		});
+		return true;
+	},
+
+	/**
+	 * Load a level, and resolve once it is in the world.
+	 *
+	 * Same as {@link level.load} in every respect except that it hands back the
+	 * completion of the load instead of discarding it. `options.onLoaded` still
+	 * fires, so the two forms can be mixed.
+	 *
+	 * An unknown `levelId` throws SYNCHRONOUSLY rather than rejecting — that is
+	 * a programmer error, not a load failure, and it should not need `await` to
+	 * surface.
+	 * @public
+	 * @param {string} levelId - level id
+	 * @param {object} [options] - additional options, as accepted by {@link level.load}
+	 * @param {Container} [options.container=game.world] - container in which to load the specified level
+	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+	 * @param {boolean} [options.flatten=game.mergeGroup] - (TMX only) if true, flatten all objects into the given container
+	 * @param {boolean} [options.setViewportBounds=true] - (TMX only) if true, set the viewport bounds to the map size
+	 * @param {number} [options.scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
+	 * @param {boolean} [options.rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
+	 * @param {boolean} [options.lights=true] - (glTF/GLB only) add the scene's authored lights as {@link Light3d} world children
+	 * @param {number} [options.lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity by this factor
+	 * @param {boolean} [options.castGroundShadow=false] - (glTF/GLB only) give every mesh in the scene a ground shadow
+	 * @param {number} [options.shadowGroundY] - (glTF/GLB only) world Y the ground shadows land on
+	 * @returns {Promise<void>} resolves once the level is in the world
+	 * @example
+	 * // await it, then start play
+	 * await me.loader.preload(game.assets);
+	 * await me.level.loadAsync("map1");
+	 * @category Level
+	 */
+	loadAsync(levelId, options) {
 		options = Object.assign(
 			{
 				container: game.world,
@@ -201,21 +245,30 @@ export const level = {
 			throw new Error("level " + levelId + " not found");
 		}
 
-		// check the status of the state mngr
-		const wasRunning = state.isRunning();
-
-		if (wasRunning) {
-			// stop the game loop to avoid
-			// some silly side effects
+		// Deferred so the current frame can unwind first. `level.load()` is
+		// routinely called from inside the loop — a trigger handler, an update
+		// step — and `safeLoadLevel` resets and destroys the very container the
+		// loop may be iterating. `state.stop()` sets a flag; it does not unwind
+		// the frame already on the stack.
+		//
+		// A microtask rather than a timer. Both unwind the stack — a microtask
+		// drains when the JS stack empties, i.e. at the end of the rAF callback
+		// holding update AND draw — but `setTimeout` is clamped to >= 1s in a
+		// background tab, which would strand a load queued as the tab hides.
+		// The timer this replaced dated to 2011, before promises existed; there
+		// was never a macrotask semantic to preserve.
+		if (state.isRunning()) {
+			// stop the game loop to avoid some silly side effects
 			state.stop();
-
-			setTimeout(() => {
+			return Promise.resolve().then(() => {
 				safeLoadLevel(levelId, options, true);
 			});
-		} else {
-			safeLoadLevel(levelId, options);
 		}
-		return true;
+		// No loop means no frame to unwind, so this stays SYNCHRONOUS exactly as
+		// before — deferring it would change when the level exists for anyone
+		// loading one before the game starts.
+		safeLoadLevel(levelId, options);
+		return Promise.resolve();
 	},
 
 	/**
