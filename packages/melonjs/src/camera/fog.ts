@@ -96,10 +96,25 @@ export interface Fog3dState {
 	density: number;
 	/** straight (unpremultiplied) fog colour, 3 components in 0..1 */
 	color: Float32Array;
-	/** height falloff; 0 is uniform fog */
-	heightFalloff: number;
-	/** world Y the falloff is measured from */
-	fogHeight: number;
-	/** the camera's own world Y, which the height integral starts from */
-	cameraY: number;
+	/**
+	 * The height falloff folded into the world-up axis, expressed in VIEW
+	 * space — 3 components. The shaders need the fragment's height above the
+	 * camera, and the matrix they have is not the camera's view alone:
+	 * `Container.draw` folds every ancestor into it, so the position the
+	 * vertex stage computes is the mesh's parent space rather than the world.
+	 * Dotting this against the view-space position recovers the world height
+	 * difference whatever those ancestors do — scale, rotation or both — and
+	 * carries the falloff with it, so the shader's exponent is one dot
+	 * product. All zero when the falloff is 0, which is what makes uniform
+	 * fog fall out of the same expression rather than needing a branch.
+	 */
+	heightAxis: Float32Array;
+	/**
+	 * The altitude term of the height integral, `exp(k * (cameraY -
+	 * fogHeight))`, evaluated once per frame here rather than per vertex in
+	 * the shader — both operands are camera-global. Clamped before the
+	 * exponential: a camera far below the reference height would otherwise
+	 * overflow it and whiten the frame. Exactly 1 when the falloff is 0.
+	 */
+	heightBase: number;
 }

@@ -1,4 +1,5 @@
 import { Color } from "../math/color.ts";
+import { clamp } from "../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import type { ObservableVector3d } from "../math/observableVector3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -171,9 +172,8 @@ export default class Camera3d extends Camera2d {
 		invRange: 0,
 		density: 0,
 		color: new Float32Array(3),
-		heightFalloff: 0,
-		fogHeight: 0,
-		cameraY: 0,
+		heightAxis: new Float32Array(3),
+		heightBase: 1,
 	};
 
 	/**
@@ -534,10 +534,18 @@ export default class Camera3d extends Camera2d {
 	 * Overrides the `Camera2d` hook, which returns `null` — that is what makes
 	 * a 2D camera clear fog rather than inherit whatever the previous camera
 	 * left behind.
+	 * @param renderer - the renderer about to draw with this camera
+	 * @param translateY - the world Y the view maps to its origin. Defaults to
+	 * this camera's own position plus its offset, which is what the default
+	 * camera's view uses; `draw` passes the exact value so a non-default
+	 * camera's container offset is included too.
 	 * @ignore
 	 * @internal
 	 */
-	override _fog3dState(renderer: Renderer): Fog3dState | null {
+	override _fog3dState(
+		renderer: Renderer,
+		translateY: number = this.pos.y + this.offset.y,
+	): Fog3dState | null {
 		const options = this._fogOptions;
 		if (options === null) {
 			return null;
@@ -575,11 +583,40 @@ export default class Camera3d extends Camera2d {
 			(options.color instanceof Color
 				? options.color
 				: renderer.backgroundColor);
-		state.heightFalloff = this._fogHeightFalloff;
-		state.fogHeight = this._fogHeight;
-		// the height integral runs from the camera to the fragment, so the
-		// shaders need where the camera is on that axis
-		state.cameraY = this.pos.y;
+		// Bake the height integral into the two operands the shaders can use
+		// directly. It runs from the camera to the fragment, and the only
+		// position a vertex stage has is PRE-VIEW — `uModelMatrix * position`,
+		// which is the mesh's parent space, not the world, because
+		// `Container.draw` folds every ancestor into the view matrix. Reading
+		// a height off that put the fog floor at the wrong altitude for
+		// anything under a scaled container.
+		//
+		// So the height difference is taken in view space instead. The camera
+		// orientation's columns are its right / up / forward axes in world
+		// space (see getBasis), so the matching ROW is the Y component of each
+		// — the world-up axis expressed in view space. Dotting it against a
+		// view-space position gives that point's height above the camera
+		// whatever the ancestors did, since they are inside the view matrix
+		// that produced it. The falloff `k` multiplies in here rather than in
+		// the shader, so the exponent is a single dot product.
+		const k = this._fogHeightFalloff;
+		_basis.identity();
+		_basis.rotate(this.yaw, AXIS_Y);
+		_basis.rotate(this.pitch, AXIS_X);
+		const b = _basis.val;
+		state.heightAxis[0] = k * b[1];
+		state.heightAxis[1] = k * b[5];
+		state.heightAxis[2] = k * b[9];
+		// clamped before the exponential, not after: a camera far below the
+		// reference height overflows it otherwise and whitens the frame
+		// `translateY`, not `pos.y`: the other end of this integral is a
+		// view-space position, so both ends have to be anchored at the world Y
+		// the view maps to its origin. That includes `offset` — otherwise a
+		// `camera.shake()` walks the two ends apart and modulates the whole
+		// scene's fog thickness for the duration of the shake.
+		state.heightBase = Math.exp(
+			clamp(k * (translateY - this._fogHeight), -30, 30),
+		);
 		state.color[0] = color.r / 255;
 		state.color[1] = color.g / 255;
 		state.color[2] = color.b / 255;

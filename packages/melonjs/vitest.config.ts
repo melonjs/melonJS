@@ -45,6 +45,15 @@ export default defineConfig(() =>
 			// hook, not a hanging one. (`video.init` no longer exists; a context
 			// comes from `new Application(...)` + `await app.init()`.)
 			hookTimeout: 90000,
+			// The same contention, one level down. The hook timeout above covers
+			// CONTEXT CREATION; a test BODY that drives software GL is just as
+			// CPU-bound, and the default 15s is not enough headroom when the cores
+			// vitest schedules pages on are busy. Measured: with 15 of 16 cores
+			// saturated, eight specs across the suite blow 15s — every one of them
+			// a `Test timed out`, not an assertion, and every one passing with
+			// seconds to spare on an idle machine. Raised for the same reason and
+			// with the same trade: a genuinely hung test still fails, just later.
+			testTimeout: 45000,
 			// CI is a 4-core runner with no GPU, so every browser page rasterizes
 			// through SwiftShader on the same cores vitest schedules files on. The
 			// default is `min(12, availableParallelism - 1)`, i.e. 3 pages there, each

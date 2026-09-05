@@ -56,8 +56,8 @@ mat4 instanceMatrix() {
 }
 
 #ifdef FOG
-uniform vec4 uFogHeight;  // x = falloff (0 = uniform), y = reference world Y,
-                          // z = the camera's world Y, w unused
+uniform vec4 uFogHeight;  // xyz = falloff x world-up axis, in VIEW space;
+                          // w = exp(k * (cameraY - fogHeight)), pre-baked
 
 // How much the height falloff scales the fog along this view ray.
 //
@@ -66,24 +66,30 @@ uniform vec4 uFogHeight;  // x = falloff (0 = uniform), y = reference world Y,
 // no marching. The result multiplies the distance, which leaves both fog
 // curves exactly as they are.
 //
-// Render space is Y-DOWN: density rises as `y` INCREASES, the opposite sign to
-// every published form of this. The `- uFogHeight.y` below is measured that
-// way round, and there is a test that catches it being flipped.
+// Takes the VIEW-space position, not a height. The only position this stage
+// has is pre-view — `uModelMatrix * position` — and that is the mesh's parent
+// space rather than the world, because `Container.draw` folds every ancestor
+// into the view matrix. Reading a height straight off it put the fog floor at
+// the wrong altitude for anything under a scaled container. Dotting the
+// view-space position against the world-up axis expressed in view space gives
+// the height above the camera whatever those ancestors did, since they are
+// inside the very matrix that produced this position. `uFogHeight.xyz`
+// carries the falloff too, so the exponent is one dot product.
 //
-// A falloff of 0 gives exactly 1: `kdy` is 0, the series limit is taken, and
-// `exp(0)` is 1 — so uniform fog is not a special case, it is this with the
-// dial at zero.
-float fogHeightFactor(float worldY) {
-    float k = uFogHeight.x;
-    float dy = worldY - uFogHeight.z;
-    float kdy = k * dy;
+// Render space is Y-DOWN: density rises as height INCREASES, the opposite
+// sign to every published form of this. The axis is signed that way round,
+// and there is a test that catches it being flipped.
+//
+// A falloff of 0 gives exactly 1: the axis is all zero, so `kdy` is 0, the
+// series limit is taken, and the pre-baked term is exp(0) — uniform fog is
+// not a special case, it is this with the dial at zero.
+float fogHeightFactor(vec3 viewPos) {
+    float kdy = dot(uFogHeight.xyz, viewPos);
     // (exp(x) - 1) / x is 0/0 at x = 0, and a horizontal view ray — looking
     // straight across a valley — is exactly that case. Take the limit rather
     // than guarding, or the fog steps as the ray approaches horizontal.
     float t = abs(kdy) < 1e-4 ? 1.0 : (exp(kdy) - 1.0) / kdy;
-    // clamped: a camera far below the reference height would otherwise
-    // overflow the exponential and whiten the frame
-    return exp(clamp(k * (uFogHeight.z - uFogHeight.y), -30.0, 30.0)) * t;
+    return uFogHeight.w * t;
 }
 #endif
 
@@ -97,8 +103,8 @@ void main(void) {
     // z, so fog holds steady as the camera turns instead of sliding across the
     // scene. The clip position above keeps its own product: re-associating it
     // could shift vertices by an ulp, and a scene without fog must be unchanged.
-    vFogDepth = length((uViewMatrix * worldPos).xyz)
-        * fogHeightFactor(worldPos.y);
+    vec3 viewPos = (uViewMatrix * worldPos).xyz;
+    vFogDepth = length(viewPos) * fogHeightFactor(viewPos);
 #endif
 
     vec4 tinted = aColor * uTint;

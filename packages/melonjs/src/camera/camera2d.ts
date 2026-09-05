@@ -936,11 +936,12 @@ export default class Camera2d extends Renderable {
 	 * CLEAR any fog a previously drawn camera installed. {@link Camera3d}
 	 * overrides it.
 	 * @param _renderer - the renderer about to draw with this camera
+	 * @param _translateY - the world Y the view maps to its origin
 	 * @returns fog state, or null for no fog
 	 * @ignore
 	 * @internal
 	 */
-	_fog3dState(_renderer: Renderer): Fog3dState | null {
+	_fog3dState(_renderer: Renderer, _translateY?: number): Fog3dState | null {
 		return null;
 	}
 
@@ -1045,7 +1046,12 @@ export default class Camera2d extends Renderable {
 		// here, and every other camera resolves `null` — so a 2D minimap
 		// sharing a stage with a fogged 3D camera renders clean instead of
 		// inheriting whatever the previous camera left installed.
-		renderer.setFog(this._fog3dState(renderer));
+		// `translateY` and not `pos.y`: the height integral is measured from
+		// wherever the view puts its origin, and that includes `offset` (a
+		// camera shake) and a non-default camera's container offset. Anchoring
+		// the two ends of the integral differently makes a shake modulate the
+		// whole scene's fog thickness.
+		renderer.setFog(this._fog3dState(renderer, translateY));
 
 		// Upload active Light2d instances for the lit sprite pipeline.
 		// Done here — after `setProjection()` (which can flush the
