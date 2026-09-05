@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d-assets
-description: "Use this skill when loading 3D models into melonJS — glTF and GLB scenes, OBJ/MTL models, materials, imported lights, node animation, ground shadows and GPU instancing. Covers level.load options, the rightHanded conversion, and exactly what the loader does and does not support. Triggers on: glTF, gltf, glb, OBJ, MTL, 3D model, getGLTF, getOBJ, getMTL, GLTFModel, GLTFScene, level.load glb, rightHanded, lightIntensityScale, castGroundShadow, shadowGroundY, EXT_mesh_gpu_instancing, KHR_lights_punctual, skinning, Blender export, 3D asset."
+description: "Use this skill when loading 3D models into melonJS — glTF and GLB scenes, OBJ/MTL models, materials, imported lights, node animation, ground shadows and GPU instancing. Covers level.load options including the async flag, the rightHanded conversion, and exactly what the loader does and does not support. Triggers on: glTF, gltf, glb, OBJ, MTL, 3D model, getGLTF, getOBJ, getMTL, GLTFModel, GLTFScene, level.load glb, rightHanded, lightIntensityScale, castGroundShadow, shadowGroundY, EXT_mesh_gpu_instancing, KHR_lights_punctual, skinning, Blender export, 3D asset."
 license: MIT
 ---
 
@@ -34,6 +34,7 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `scale` | `1` | pixels per glTF unit, applied to the whole scene. Blender's metre-scale export usually needs 20–100. |
 | `container` | `game.world` | where the nodes are added |
 | `onLoaded` | `app.onLevelLoaded` | called with the **level id**, not the scene |
+| `async` | `false` | return a promise that settles once the scene is in the world, instead of a boolean |
 | `rightHanded` | `true` | see below |
 | `lights` | `true` | instantiate authored `KHR_lights_punctual` lights as `Light3d` world children |
 | `lightIntensityScale` | — | keep authored intensity ratios instead of normalising every light to 1 |
@@ -41,10 +42,19 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `shadowGroundY` | each object's own base | world Y of the floor the blobs land on |
 
 `onLoaded` receives the level id — it is a "done" signal, not a handle on the
-scene. You need it: with the game loop running, `level.load` stops the loop and
-defers the actual load to the next tick, so it returns *before* anything is in
-the world. To get at what was loaded, load into a container you own, or look the
-nodes up by their authored names:
+scene. You need it, or `async`: with the game loop running, `level.load` stops
+the loop and defers the actual load to a microtask, so by default it returns
+*before* anything is in the world.
+
+```js
+await level.load("diorama", { scale: 50, async: true });
+// the scene is in the world here
+```
+
+Note `await level.load("diorama")` without the flag does not await the load — the
+call returns a boolean, and `await true` resolves immediately. To get at what was
+loaded,
+load into a container you own, or look the nodes up by their authored names:
 
 ```js
 level.load("diorama", { scale: 50, onLoaded: () => {

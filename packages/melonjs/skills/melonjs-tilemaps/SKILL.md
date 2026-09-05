@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax."
+description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax."
 license: MIT
 ---
 
@@ -33,18 +33,38 @@ also skip `src` and pass the map inline via `data` (with `format: "json"` or
 `"xml"`).
 
 `level.load(levelId, options)` accepts `container` (default `game.world`),
-`onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`)
-and `setViewportBounds` (default **`true`**). It throws `level <id> not found`
-for an unknown id.
+`onLoaded` (default `game.onLevelLoaded`), `flatten` (default `game.mergeGroup`),
+`setViewportBounds` (default **`true`**) and `async` (default `false`). It throws
+`level <id> not found` for an unknown id — synchronously, in both forms, because
+that is a typo rather than a load failure.
 
 **`level.load` is deferred while the game loop is running.** It calls
-`state.stop()` and finishes the load in a `setTimeout`, so it returns `true`
-before anything is in the world. Do follow-up work from the `onLoaded` callback
-or an `event.LEVEL_LOADED` listener, not on the next line.
+`state.stop()` and finishes the load in a microtask, so by default it returns
+`true` before anything is in the world. Two ways to sequence work after it:
 
-`level.reload()`, `level.next()`, `level.previous()`, `level.getCurrentLevelId()`
-and `level.levelCount()` round out the namespace. `flatten: false` wraps each
-Tiled object group in its own `Container` named after the group.
+```js
+// await it
+await level.load("map1", { async: true });
+// the world is populated here
+
+// ...or use the callback / event, which fire in both forms
+level.load("map1", { onLoaded: () => this.spawnPlayer() });
+```
+
+`async: true` is the only thing that changes the return value — everything else
+behaves identically, `onLoaded` included. Without it the call returns a boolean,
+so `await level.load("map1")` is not an error and does not await the load:
+`await true` resolves immediately. (The load does finish first today, because the
+deferral is a single microtask queued ahead of the await's continuation — but
+that is incidental ordering, not a contract.) Pass the flag when you mean to
+await.
+
+`level.reload()`, `level.next()` and `level.previous()` take the same `async`
+option and resolve the same value they return — so `if (level.next())` becomes
+`if (await level.next({ async: true }))`. Running out of levels reports `false`
+either way rather than throwing. `level.getCurrentLevelId()` and
+`level.levelCount()` round out the namespace. `flatten: false` wraps each Tiled
+object group in its own `Container` named after the group.
 
 ## Spawning entities from Tiled objects
 
@@ -177,7 +197,8 @@ unanimated layer into the offscreen-bake path instead.
 | symptom | cause |
 |---|---|
 | a Tiled object becomes a plain shape with no behaviour | its class/name does not match any registered factory, or it was registered after `level.load` |
-| the world is still empty right after `level.load` | the load is deferred via `setTimeout` while the loop runs — use `onLoaded` / `LEVEL_LOADED` |
+| the world is still empty right after `level.load` | the load is deferred to a microtask while the loop runs — `await level.load(id, { async: true })`, or use `onLoaded` / `LEVEL_LOADED` |
+| `await level.load(id)` returned `true` rather than a promise | without `async: true` the call returns a boolean; `await true` resolves immediately. The load happens to finish first today by microtask ordering, but that is incidental — pass the flag when you mean to await |
 | `level <id> not found` | the map was never preloaded, or the asset `name` differs from the id passed to `load` |
 | `unknown or invalid resource type` | asset `type` set to `"tmj"` / `"tsj"` — use `"tmx"` / `"tsx"` with the `.tmj` / `.tsj` file |
 | camera will not scroll | `setViewportBounds: false`, or the map was added with `addTo()` (which defaults to `false`) |

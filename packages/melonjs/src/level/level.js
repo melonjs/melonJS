@@ -85,6 +85,49 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 }
 
 /**
+ * The id of the level `offset` steps from the current one, or `null` when that
+ * lands outside the set. Shared so the bounds check lives in exactly one place
+ * — it used to be spelled out in `next` and `previous` separately.
+ * @param {number} offset - steps from the current level (1 = next, -1 = previous)
+ * @returns {string|null} the level id, or null when there is none
+ * @ignore
+ * @internal
+ */
+function levelIdAt(offset) {
+	const index = currentLevelIdx + offset;
+	return index >= 0 && index < levelIdx.length ? levelIdx[index] : null;
+}
+
+/**
+ * Options accepted by every level-loading call.
+ *
+ * `async` is the switch that decides what the call HANDS BACK: leave it out and
+ * you get the boolean these calls have always returned, set it and you get a
+ * promise that settles once the level is actually in the world. Everything else
+ * behaves identically either way, `onLoaded` included.
+ *
+ * Awaiting a call WITHOUT `async: true` is not an error, but it is not a wait
+ * either: the call hands back a boolean, and `await true` resolves immediately,
+ * so there is no completion point to await. Whether the load has finished by
+ * then is incidental — it has when there is no loop running, and it currently
+ * does when there is, because the deferral is a single microtask queued ahead
+ * of the await's continuation. Do not rely on either. Pass the flag when you
+ * mean to await.
+ * @typedef {object} LevelLoadOptions
+ * @property {Container} [container=game.world] - container in which to load the specified level
+ * @property {Function} [onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded, called in both forms
+ * @property {boolean} [async=false] - return a promise that settles once the level is in the world, instead of a boolean
+ * @property {boolean} [flatten=game.mergeGroup] - (TMX only) if true, flatten all objects into the given container
+ * @property {boolean} [setViewportBounds=true] - (TMX only) if true, set the viewport bounds to the map size
+ * @property {number} [scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
+ * @property {boolean} [rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
+ * @property {boolean} [lights=true] - (glTF/GLB only) add the scene's authored `KHR_lights_punctual` lights (plus a soft ambient fill) as {@link Light3d} world children
+ * @property {number} [lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity by this factor instead of normalizing it to 1
+ * @property {boolean} [castGroundShadow=false] - (glTF/GLB only) give every mesh in the scene a ground shadow
+ * @property {number} [shadowGroundY] - (glTF/GLB only) world Y the ground shadows land on
+ */
+
+/**
  * a level manager. once resources loaded, the level manager contains all references of defined levels.
  * @namespace level
  */
@@ -133,57 +176,55 @@ export const level = {
 	},
 
 	/**
+	 * load a level into the game manager, and return a promise that settles once
+	 * it is actually in the world<br>
+	 * (will also create all level defined entities, etc..)
+	 *
+	 * `options.onLoaded` still fires, so the two forms mix freely. An unknown
+	 * `levelId` throws SYNCHRONOUSLY rather than rejecting — that is a typo, not
+	 * a load failure, and it should not need `await` to surface.
+	 * @overload
+	 * @param {string} levelId - level id
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true` once the level is in the world
+	 * @example
+	 * await me.loader.preload(game.assets);
+	 * await me.level.load("a4_level1", { async: true });
+	 * // the world is populated here
+	 * @category Level
+	 */
+	/**
 	 * load a level into the game manager<br>
 	 * (will also create all level defined entities, etc..)
-	 * @public
+	 *
+	 * While the game loop is running the load is DEFERRED to a microtask, so
+	 * this returns before anything is in the world. Sequence follow-up work from
+	 * `options.onLoaded`, from an `event.LEVEL_LOADED` listener, or by passing
+	 * `async: true` and awaiting the promise that overload returns.
+	 *
+	 * Note that `await me.level.load(id)` without `async: true` does not await
+	 * the load: the call returns a boolean, and `await true` resolves at once.
+	 * @overload
 	 * @param {string} levelId - level id
-	 * @param {object} [options] - additional optional parameters
-	 * @param {Container} [options.container=game.world] - container in which to load the specified level
-	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-	 * @param {boolean} [options.flatten=game.mergeGroup] - (TMX only) if true, flatten all objects into the given container
-	 * @param {boolean} [options.setViewportBounds=true] - (TMX only) if true, set the viewport bounds to the map size
-	 * @param {number} [options.scale=1] - (glTF/GLB only) pixels per glTF unit applied to the whole scene
-	 * @param {boolean} [options.rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
-	 * @param {boolean} [options.lights=true] - (glTF/GLB only) add the scene's authored `KHR_lights_punctual` lights (plus a soft ambient fill) as {@link Light3d} world children; each carries its authored name for `getChildByName` lookups
-	 * @param {number} [options.lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity (lux/candela) by this factor instead of normalizing it to 1 — see {@link GLTFScene#addTo}
-	 * @param {boolean} [options.castGroundShadow] - (glTF/GLB only) give this scene's meshes a ground shadow ({@link Mesh#castGroundShadow}). Overrides the application's `castGroundShadow` setting for this scene, in both directions; omit it to inherit. As a scene-wide opt-in it skips nodes with no vertical extent — a scene's ground plane is exactly that, and shadowing it with itself smears a blob across the whole floor
-	 * @param {number} [options.shadowGroundY] - (glTF/GLB only) world Y of the floor those shadows land on ({@link Mesh#shadowGroundY}); omit it and each blob sits at its own object's base at full strength, which is right for a scene whose props already rest on the ground
-	 * @returns {boolean} true if the level was successfully loaded
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true`
 	 * @example
-	 * // the game assets to be be preloaded
-	 * // TMX maps
-	 * let resources = [
-	 *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
-	 *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
-	 *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
-	 *     // ...
-	 * ];
-	 *
-	 * // ...
-	 *
-	 * // load a level into the game world
+	 * // load a level
 	 * me.level.load("a4_level1");
-	 * ...
-	 * ...
-	 * // load a level into a specific container
-	 * let levelContainer = new me.Container();
-	 * me.level.load("a4_level2", {container:levelContainer});
-	 * // add a simple transformation
-	 * levelContainer.translate(levelContainer.width / 2, levelContainer.height / 2 );
-	 * levelContainer.rotate(0.05);
-	 * levelContainer.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
-	 * // add it to the game world
-	 * app.world.addChild(levelContainer);
 	 *
-	 * // load a glTF/GLB scene (preloaded with type "glb") under a Camera3d:
-	 * // 50 pixels per glTF unit, authored lux/candela intensities kept at
-	 * // a 1/1000 scale instead of being normalized to 1
+	 * // load into a specific container
+	 * me.level.load("a4_level2", { container: levelContainer });
+	 *
+	 * // a glTF/GLB scene (preloaded with type "glb") under a Camera3d:
+	 * // 50 pixels per glTF unit, authored intensities kept at a 1/1000 scale
 	 * me.level.load("diorama", { scale: 50, lightIntensityScale: 0.001 });
-	 * // …and give every prop in it a ground shadow landing on the floor at y = 0
-	 * // (the scene's own ground plane is skipped — it has no height to cast)
-	 * me.level.load("diorama", { scale: 50, castGroundShadow: true, shadowGroundY: 0 });
-	 * // the authored lights are world children — grab the sun for a day/night cycle
-	 * const sun = app.world.getChildByName("Sun")[0];
+	 * @category Level
+	 */
+	/**
+	 * @param {string} levelId - level id
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} `true`, or a promise when `async` is set
+	 * @ignore
 	 */
 	load(levelId, options) {
 		options = Object.assign(
@@ -201,20 +242,57 @@ export const level = {
 			throw new Error("level " + levelId + " not found");
 		}
 
-		// check the status of the state mngr
-		const wasRunning = state.isRunning();
+		const wantsPromise = options.async === true;
 
-		if (wasRunning) {
-			// stop the game loop to avoid
-			// some silly side effects
+		// Deferred so the current frame can unwind first. `level.load()` is
+		// routinely called from inside the loop — a trigger handler, an update
+		// step — and `safeLoadLevel` resets and destroys the very container the
+		// loop may be iterating. `state.stop()` sets a flag; it does not unwind
+		// the frame already on the stack.
+		//
+		// A microtask rather than a timer. Both unwind the stack — a microtask
+		// drains when the JS stack empties, i.e. at the end of the rAF callback
+		// holding update AND draw — but `setTimeout` is clamped to >= 1s in a
+		// background tab, which would strand a load queued as the tab hides.
+		// The timer this replaced dated to 2011, before promises existed; there
+		// was never a macrotask semantic to preserve.
+		if (state.isRunning()) {
+			// stop the game loop to avoid some silly side effects
 			state.stop();
-
-			setTimeout(() => {
+			const deferred = Promise.resolve().then(() => {
 				safeLoadLevel(levelId, options, true);
+				return true;
 			});
-		} else {
-			safeLoadLevel(levelId, options);
+			if (wantsPromise) {
+				return deferred;
+			}
+			// Fire-and-forget: rethrow on a clean stack so a failure still
+			// surfaces as an uncaught error the way it did when the deferral was
+			// a timer, rather than as a silent unhandled rejection.
+			deferred.catch((error) => {
+				queueMicrotask(() => {
+					throw error;
+				});
+			});
+			return true;
 		}
+
+		// No loop means no frame to unwind, so this stays SYNCHRONOUS exactly as
+		// before — deferring it would change when the level exists for anyone
+		// loading one before the game starts.
+		if (wantsPromise) {
+			// wrapped so a failure arrives as a REJECTION here too: letting it
+			// escape as an exception would make the error surface depend on
+			// whether the loop happened to be running, and `.catch()` could not
+			// see it, since the throw beats the handler being attached
+			try {
+				safeLoadLevel(levelId, options);
+			} catch (error) {
+				return Promise.reject(error);
+			}
+			return Promise.resolve(true);
+		}
+		safeLoadLevel(levelId, options);
 		return true;
 	},
 
@@ -239,13 +317,29 @@ export const level = {
 	},
 
 	/**
-	 * reload the current level
-	 * @public
-	 * @param {object} [options] - additional optional parameters
-	 * @param {Container} [options.container=game.world] - container in which to load the specified level
-	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-	 * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-	 * @returns {object} the current level
+	 * reload the current level, and return a promise that settles once the level is in the world.
+	 *
+	 * @overload
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true` once the level is back in the world
+	 * @example
+	 * await me.level.reload({ async: true });
+	 * @category Level
+	 */
+	/**
+	 * reload the current level.
+	 *
+	 * While the game loop is running the load is deferred to a microtask, so this
+	 * returns before anything is in the world — see {@link level.load}.
+	 * @overload
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true`
+	 * @category Level
+	 */
+	/**
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} see the overloads
+	 * @ignore
 	 */
 	reload(options) {
 		// reset the level to initial state
@@ -254,39 +348,85 @@ export const level = {
 	},
 
 	/**
-	 * load the next level
-	 * @public
-	 * @param {object} [options] - additional optional parameters
-	 * @param {Container} [options.container=game.world] - container in which to load the specified level
-	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-	 * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-	 * @returns {boolean} true if the next level was successfully loaded
+	 * load the next level, and return a promise that settles once the level is in the world.
+	 *
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * @overload
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true`, or `false` if there is no next level
+	 * @example
+	 * await me.level.next({ async: true });
+	 * @category Level
+	 */
+	/**
+	 * load the next level.
+	 *
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * While the game loop is running the load is deferred to a microtask, so this
+	 * returns before anything is in the world — see {@link level.load}.
+	 * @overload
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true` if the next level was loaded, `false` if there is none
+	 * @category Level
+	 */
+	/**
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} see the overloads
+	 * @ignore
 	 */
 	next(options) {
-		//go to the next level
-		if (currentLevelIdx + 1 < levelIdx.length) {
-			return this.load(levelIdx[currentLevelIdx + 1], options);
-		} else {
-			return false;
+		const levelId = levelIdAt(1);
+		if (levelId !== null) {
+			return this.load(levelId, options);
 		}
+		return options?.async === true ? Promise.resolve(false) : false;
 	},
 
 	/**
-	 * load the previous level<br>
-	 * @public
-	 * @param {object} [options] - additional optional parameters
-	 * @param {Container} [options.container=game.world] - container in which to load the specified level
-	 * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-	 * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-	 * @returns {boolean} true if the previous level was successfully loaded
+	 * load the previous level, and return a promise that settles once the level is in the world.
+	 *
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * @overload
+	 * @param {LevelLoadOptions & { async: true }} options - load options, with `async` set
+	 * @returns {Promise<boolean>} resolves `true`, or `false` if there is no previous level
+	 * @example
+	 * await me.level.previous({ async: true });
+	 * @category Level
+	 */
+	/**
+	 * load the previous level.
+	 *
+	 * With no level to go to this reports `false` WITHOUT loading anything, and
+	 * the promise form resolves `false` rather than rejecting: running out of
+	 * levels is an ordinary outcome, not an error.
+	 *
+	 * While the game loop is running the load is deferred to a microtask, so this
+	 * returns before anything is in the world — see {@link level.load}.
+	 * @overload
+	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
+	 * @returns {boolean} `true` if the previous level was loaded, `false` if there is none
+	 * @category Level
+	 */
+	/**
+	 * @param {LevelLoadOptions} [options] - additional optional parameters
+	 * @returns {boolean|Promise<boolean>} see the overloads
+	 * @ignore
 	 */
 	previous(options) {
-		// go to previous level
-		if (currentLevelIdx - 1 >= 0) {
-			return this.load(levelIdx[currentLevelIdx - 1], options);
-		} else {
-			return false;
+		const levelId = levelIdAt(-1);
+		if (levelId !== null) {
+			return this.load(levelId, options);
 		}
+		return options?.async === true ? Promise.resolve(false) : false;
 	},
 
 	/**
