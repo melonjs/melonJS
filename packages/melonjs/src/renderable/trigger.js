@@ -175,7 +175,7 @@ export default class Trigger extends Renderable {
 					// which meant rewriting an option the caller passed in.
 					const onComplete = () => {
 						level
-							.loadAsync(gotolevel, settings)
+							.load(gotolevel, { ...settings, async: true })
 							.then(() => {
 								// re-read AFTER the load: `game.reset()` reassigns
 								// `app.viewport`, so a viewport captured before it

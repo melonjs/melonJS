@@ -11,19 +11,19 @@ import GLTFScene from "../src/level/gltf/GLTFScene.js";
 import state from "../src/state/state.ts";
 
 /**
- * `level.loadAsync()` and the scheduling behind `level.load()` (#1646).
+ * `level.load({ async: true })` and the scheduling behind it (#1646).
  *
  * The deferral in `level.load()` dates to 2011 and used a timer because that
  * was the only way to defer at the time. It is still needed — `level.load()` is
  * routinely called from inside the loop, and `safeLoadLevel` resets and
  * destroys the very container the loop may be iterating — but it is now a
- * microtask, and the completion it produces is what `loadAsync()` hands back.
+ * microtask, and `async: true` hands that completion back instead of a boolean.
  *
  * The level content is irrelevant here: `GLTFScene.addTo` is stubbed so these
  * tests pin the SCHEDULING, which is what changed. `getGLTF` returns null for
  * an unregistered asset, so a scene registers without one.
  */
-describe("level.loadAsync (#1646)", () => {
+describe("level.load({ async }) (#1646)", () => {
 	let app;
 	let calls;
 	let originalAddTo;
@@ -103,12 +103,15 @@ describe("level.loadAsync (#1646)", () => {
 		});
 	});
 
-	describe("loadAsync", () => {
+	describe("the async form", () => {
 		it("resolves only once the level is in the world", async () => {
 			const seen = track();
 			state.restart();
 			const target = container();
-			const promise = level.loadAsync("unit-test-level", { container: target });
+			const promise = level.load("unit-test-level", {
+				container: target,
+				async: true,
+			});
 			expect(promise).toBeInstanceOf(Promise);
 			// resolves with what `load()` returns, so a port is mechanical
 			await expect(promise).resolves.toBe(true);
@@ -120,8 +123,9 @@ describe("level.loadAsync (#1646)", () => {
 			track();
 			state.restart();
 			let calledWith = null;
-			await level.loadAsync("unit-test-level", {
+			await level.load("unit-test-level", {
 				container: container(),
+				async: true,
 				onLoaded: (id) => {
 					calledWith = id;
 				},
@@ -133,7 +137,7 @@ describe("level.loadAsync (#1646)", () => {
 			// The failure surface must not depend on `state.isRunning()`. The
 			// deferred branch naturally produces a rejection; the synchronous
 			// one would let the exception escape the call, where a
-			// `loadAsync(...).catch()` could never see it — the throw beats the
+			// `load(...).catch()` could never see it — the throw beats the
 			// handler being attached.
 			const boom = new Error("addTo exploded");
 			GLTFScene.prototype.addTo = () => {
@@ -143,13 +147,13 @@ describe("level.loadAsync (#1646)", () => {
 			state.stop();
 			expect(state.isRunning()).toBe(false);
 			await expect(
-				level.loadAsync("unit-test-level", { container: container() }),
+				level.load("unit-test-level", { container: container(), async: true }),
 			).rejects.toBe(boom);
 
 			state.restart();
 			expect(state.isRunning()).toBe(true);
 			await expect(
-				level.loadAsync("unit-test-level", { container: container() }),
+				level.load("unit-test-level", { container: container(), async: true }),
 			).rejects.toBe(boom);
 		});
 
@@ -157,73 +161,88 @@ describe("level.loadAsync (#1646)", () => {
 			// if this rejected instead, a caller that forgot `await` would get an
 			// unhandled rejection in place of a stack pointing at their typo
 			expect(() => {
-				return level.loadAsync("no-such-level");
+				return level.load("no-such-level", { async: true });
 			}).toThrow(/not found/);
 		});
 	});
 
-	describe("the reload / next / previous twins", () => {
-		it("reloadAsync resolves once the current level is back in the world", async () => {
+	describe("reload / next / previous take the same flag", () => {
+		it("reload({ async }) resolves once the current level is back in the world", async () => {
 			const seen = track();
 			state.stop();
-			await level.loadAsync("unit-test-level", { container: container() });
+			await level.load("unit-test-level", {
+				container: container(),
+				async: true,
+			});
 			seen.length = 0;
 			state.restart();
-			await expect(level.reloadAsync({ container: container() })).resolves.toBe(
-				true,
-			);
+			await expect(
+				level.reload({ container: container(), async: true }),
+			).resolves.toBe(true);
 			expect(seen).toHaveLength(1);
 		});
 
-		it("nextAsync loads the next level and resolves true", async () => {
+		it("next({ async }) loads the next level and resolves true", async () => {
 			const seen = track();
 			state.stop();
-			await level.loadAsync("unit-test-level", { container: container() });
+			await level.load("unit-test-level", {
+				container: container(),
+				async: true,
+			});
 			seen.length = 0;
 			state.restart();
-			await expect(level.nextAsync({ container: container() })).resolves.toBe(
-				true,
-			);
+			await expect(
+				level.next({ container: container(), async: true }),
+			).resolves.toBe(true);
 			expect(seen).toHaveLength(1);
 			expect(level.getCurrentLevelId()).toBe("unit-test-level-2");
 		});
 
-		it("nextAsync resolves FALSE without loading when there is no next", async () => {
+		it("next({ async }) resolves FALSE without loading when there is no next", async () => {
 			// `next()` returns false here rather than throwing, so the twin must
 			// resolve false rather than reject — running out of levels is an
 			// ordinary outcome, not an error
 			const seen = track();
 			state.stop();
-			await level.loadAsync("unit-test-level-2", { container: container() });
-			seen.length = 0;
-			state.restart();
-			await expect(level.nextAsync({ container: container() })).resolves.toBe(
-				false,
-			);
-			expect(seen).toHaveLength(0);
-		});
-
-		it("previousAsync loads the previous level and resolves true", async () => {
-			const seen = track();
-			state.stop();
-			await level.loadAsync("unit-test-level-2", { container: container() });
+			await level.load("unit-test-level-2", {
+				container: container(),
+				async: true,
+			});
 			seen.length = 0;
 			state.restart();
 			await expect(
-				level.previousAsync({ container: container() }),
+				level.next({ container: container(), async: true }),
+			).resolves.toBe(false);
+			expect(seen).toHaveLength(0);
+		});
+
+		it("previous({ async }) loads the previous level and resolves true", async () => {
+			const seen = track();
+			state.stop();
+			await level.load("unit-test-level-2", {
+				container: container(),
+				async: true,
+			});
+			seen.length = 0;
+			state.restart();
+			await expect(
+				level.previous({ container: container(), async: true }),
 			).resolves.toBe(true);
 			expect(seen).toHaveLength(1);
 			expect(level.getCurrentLevelId()).toBe("unit-test-level");
 		});
 
-		it("previousAsync resolves FALSE without loading when there is no previous", async () => {
+		it("previous({ async }) resolves FALSE without loading when there is no previous", async () => {
 			const seen = track();
 			state.stop();
-			await level.loadAsync("unit-test-level", { container: container() });
+			await level.load("unit-test-level", {
+				container: container(),
+				async: true,
+			});
 			seen.length = 0;
 			state.restart();
 			await expect(
-				level.previousAsync({ container: container() }),
+				level.previous({ container: container(), async: true }),
 			).resolves.toBe(false);
 			expect(seen).toHaveLength(0);
 		});
@@ -242,6 +261,38 @@ describe("level.loadAsync (#1646)", () => {
 		});
 	});
 
+	describe("the flag is what decides the return", () => {
+		it("returns a boolean without it, and a promise with it", () => {
+			track();
+			state.stop();
+			expect(level.load("unit-test-level", { container: container() })).toBe(
+				true,
+			);
+			const promise = level.load("unit-test-level", {
+				container: container(),
+				async: true,
+			});
+			expect(promise).toBeInstanceOf(Promise);
+			return promise;
+		});
+
+		it("awaiting WITHOUT the flag still yields to the deferred load", async () => {
+			// `await true` is valid JavaScript, so forgetting the flag is silent.
+			// It happens to be harmless TODAY: the deferral is a single
+			// microtask queued before the await's continuation, so the load runs
+			// first either way. That is incidental ordering, not a contract —
+			// hence the flag exists — so this pins the observable part (no
+			// promise is returned) and merely records the rest.
+			const seen = track();
+			state.restart();
+			const value = level.load("unit-test-level", { container: container() });
+			expect(value).toBe(true);
+			expect(value).not.toBeInstanceOf(Promise);
+			await value;
+			expect(seen).toHaveLength(1);
+		});
+	});
+
 	describe("the deferral it schedules", () => {
 		it("does NOT mutate the world synchronously while the loop runs", () => {
 			// the whole reason the deferral exists: `level.load` is called from
@@ -250,14 +301,14 @@ describe("level.loadAsync (#1646)", () => {
 			const seen = track();
 			state.restart();
 			expect(state.isRunning()).toBe(true);
-			level.loadAsync("unit-test-level", { container: container() });
+			level.load("unit-test-level", { container: container(), async: true });
 			expect(seen).toHaveLength(0);
 		});
 
 		it("stops the loop when it was running", () => {
 			track();
 			state.restart();
-			level.loadAsync("unit-test-level", { container: container() });
+			level.load("unit-test-level", { container: container(), async: true });
 			expect(state.isRunning()).toBe(false);
 		});
 
@@ -267,7 +318,7 @@ describe("level.loadAsync (#1646)", () => {
 			// loading one before the game starts
 			const seen = track();
 			state.stop();
-			level.loadAsync("unit-test-level", { container: container() });
+			level.load("unit-test-level", { container: container(), async: true });
 			expect(seen).toHaveLength(1);
 		});
 
@@ -281,8 +332,9 @@ describe("level.loadAsync (#1646)", () => {
 				order.push("load");
 			};
 			state.restart();
-			const promise = level.loadAsync("unit-test-level", {
+			const promise = level.load("unit-test-level", {
 				container: container(),
+				async: true,
 			});
 			const timer = new Promise((resolve) => {
 				setTimeout(() => {
