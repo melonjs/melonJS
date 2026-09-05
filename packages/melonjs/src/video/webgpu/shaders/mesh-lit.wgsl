@@ -40,8 +40,8 @@ struct MeshUniforms {
 	// x = mode (0 off / 1 linear / 2 exp2), y = near, z = 1/(far - near),
 	// w = density
 	fogParams : vec4f,
-	// x = height falloff (0 = uniform), y = reference world Y,
-	// z = the camera's world Y, w unused
+	// xyz = height falloff x the world-up axis, in VIEW space;
+	// w = exp(k * (cameraY - fogHeight)), pre-baked on the CPU
 	fogHeight : vec4f,
 };
 
@@ -104,24 +104,30 @@ override enable_fog : bool = false;
 // analytically along a straight segment, so the ray costs one `exp` and no
 // marching. The result multiplies the distance, leaving both curves untouched.
 //
-// Render space is Y-DOWN: density rises as `y` INCREASES, the opposite sign to
-// every published form of this.
+// Takes the VIEW-space position, not a height. The only position this stage
+// has is pre-view — `model * position` — and that is the mesh's parent space
+// rather than the world, because `Container.draw` folds every ancestor into
+// the view matrix. Reading a height straight off it put the fog floor at the
+// wrong altitude for anything under a scaled container. Dotting the view-space
+// position against the world-up axis expressed in view space gives the height
+// above the camera whatever those ancestors did, since they are inside the
+// very matrix that produced this position. `fogHeight.xyz` carries the falloff
+// too, so the exponent is one dot product.
+//
+// Render space is Y-DOWN: density rises as height INCREASES, the opposite sign
+// to every published form of this.
 //
 // A falloff of 0 gives exactly 1, so uniform fog is this with the dial at zero
 // rather than a special case.
-fn fog_height_factor(worldY : f32) -> f32 {
-	let k = uMesh.fogHeight.x;
-	let dy = worldY - uMesh.fogHeight.z;
-	let kdy = k * dy;
+fn fog_height_factor(viewPos : vec3f) -> f32 {
+	let kdy = dot(uMesh.fogHeight.xyz, viewPos);
 	// (exp(x) - 1) / x is 0/0 at x = 0, which is a horizontal view ray — take
 	// the limit rather than guarding, or the fog steps as the ray flattens
 	var t = 1.0;
 	if (abs(kdy) >= 1e-4) {
 		t = (exp(kdy) - 1.0) / kdy;
 	}
-	// clamped: a camera far below the reference height would otherwise
-	// overflow the exponential and whiten the frame
-	return exp(clamp(k * (uMesh.fogHeight.z - uMesh.fogHeight.y), -30.0, 30.0)) * t;
+	return uMesh.fogHeight.w * t;
 }
 
 
@@ -169,8 +175,8 @@ fn vertex_main(
 	out.vRegion = aRegion;
 	out.vWorldPos = worldPos.xyz;
 	if (enable_fog) {
-		out.vFogDepth = length((uMesh.view * worldPos).xyz)
-			* fog_height_factor(worldPos.y);
+		let viewPos = (uMesh.view * worldPos).xyz;
+		out.vFogDepth = length(viewPos) * fog_height_factor(viewPos);
 	} else {
 		out.vFogDepth = 0.0;
 	}

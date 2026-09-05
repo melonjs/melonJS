@@ -696,12 +696,14 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			scratch[57] = fog.near;
 			scratch[58] = fog.invRange;
 			scratch[59] = fog.density;
-			// x = height falloff (0 = uniform), y = reference world Y,
-			// z = the camera's world Y
-			scratch[60] = fog.heightFalloff;
-			scratch[61] = fog.fogHeight;
-			scratch[62] = fog.cameraY;
-			scratch[63] = 0;
+			// xyz = the falloff folded into the world-up axis in VIEW space,
+			// w = the pre-baked altitude term. Resolved on the camera, so the
+			// height integral needs no world position — which the vertex stage
+			// does not have once an ancestor container is folded into `view`.
+			scratch[60] = fog.heightAxis[0];
+			scratch[61] = fog.heightAxis[1];
+			scratch[62] = fog.heightAxis[2];
+			scratch[63] = fog.heightBase;
 		} else {
 			scratch[52] = 0;
 			scratch[53] = 0;
@@ -714,7 +716,8 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			scratch[60] = 0;
 			scratch[61] = 0;
 			scratch[62] = 0;
-			scratch[63] = 0;
+			// neutral, not 0: this is a multiplier on the whole height factor
+			scratch[63] = 1;
 		}
 
 		const region = renderer.effectUniformArena.alloc(

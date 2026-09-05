@@ -1,8 +1,16 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Matrix3d, Mesh, TextureAtlas, Vector3d } from "../src/index.js";
+import {
+	boot,
+	InstancedMesh,
+	Matrix3d,
+	Mesh,
+	TextureAtlas,
+	Vector3d,
+} from "../src/index.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
+	requireWebGL as requireWebGLShared,
 } from "./helpers/webgl-context.js";
 
 /**
@@ -284,6 +292,139 @@ describe("the eye position the batcher actually uploads", () => {
 		const eye = eyeAfterDraw(view);
 		for (const c of eye) {
 			expect(Number.isFinite(c)).toBe(true);
+		}
+	});
+});
+
+describe("every lit program gets the uniforms, not just the first", () => {
+	// The instanced and non-instanced lit tiers are two PROGRAMS on one
+	// batcher, and a uniform lives on its program. The batcher skips a
+	// redundant upload by comparing against the last value it pushed, but that
+	// cache was not dropped when the program changed underneath it — so
+	// whichever tier drew second in a frame was never sent those values at all
+	// and ran on whatever its program happened to hold.
+	//
+	// Two consequences, both shipped since 20.0.0: the eye defaults to the
+	// origin, so a scene mixing an instanced forest with a non-instanced prop
+	// had the specular highlight in the wrong place on one of them and it
+	// moved as the camera did; and `uShininess` / `uSpecular` default to 0,
+	// which reads as "no highlight at all", so the second tier lost its
+	// specular outright rather than misplacing it.
+	const SIZE = 64;
+	let renderer;
+
+	beforeAll(async () => {
+		await boot();
+		// no try/catch: `requireWebGLShared` fails loudly on a CONSTRUCTION
+		// error and skips only on a genuinely absent GL stack. Swallowing it
+		// here would turn a real regression into a green skip.
+		renderer = await getWebGLRenderer(SIZE, SIZE);
+	});
+
+	afterAll(() => {
+		try {
+			releaseWebGLRenderer();
+		} catch {
+			// ignore
+		}
+	});
+
+	it("uploads them to the instanced program too", (ctx) => {
+		requireWebGLShared(ctx, renderer);
+		const canvas = document.createElement("canvas");
+		canvas.width = 1;
+		canvas.height = 1;
+		const c2d = canvas.getContext("2d");
+		c2d.fillStyle = "#ffffff";
+		c2d.fillRect(0, 0, 1, 1);
+		const atlas = new TextureAtlas(
+			{ framewidth: 1, frameheight: 1, image: canvas },
+			canvas,
+		);
+		const h = 8;
+		const geometry = {
+			vertices: [-h, -h, 0, h, -h, 0, h, h, 0, -h, h, 0],
+			uvs: [0, 0, 1, 0, 1, 1, 0, 1],
+			indices: [0, 1, 2, 0, 2, 3],
+			normals: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+			texture: atlas,
+			width: h * 2,
+			height: h * 2,
+			cullBackFaces: false,
+			lit: true,
+			specular: [1, 1, 1],
+			shininess: 64,
+		};
+		const proj = new Matrix3d();
+		proj.ortho(-SIZE / 2, SIZE / 2, SIZE / 2, -SIZE / 2, -1000, 1000);
+		renderer.setProjection(proj);
+		renderer.clear();
+		renderer.save();
+		// a view with a real translation, so the true eye is NOT the origin
+		// and an untouched uniform is distinguishable from a written one
+		renderer.currentTransform.translate(0, 0, -400);
+
+		const draw = (mesh) => {
+			mesh._useWorldSpace = true;
+			mesh.pos.set(0, 0, 0);
+			mesh.depth = 200;
+			mesh.preDraw(renderer);
+			mesh.draw(renderer);
+			mesh.postDraw(renderer);
+			return renderer.currentBatcher;
+		};
+		const plainBatcher = draw(new Mesh(0, 0, { ...geometry }));
+		const instanced = new InstancedMesh(0, 0, {
+			...geometry,
+			normalize: false,
+			instanceCount: 2,
+		});
+		const placement = new Matrix3d();
+		for (let i = 0; i < 2; i++) {
+			placement.identity().translate(i * 8, 0, 0);
+			instanced.setInstance(i, placement);
+		}
+		const instancedBatcher = draw(instanced);
+		renderer.flush();
+		renderer.restore();
+
+		// the premise: one batcher, so one cache serving both programs
+		expect(instancedBatcher).toBe(plainBatcher);
+
+		const gl = renderer.gl;
+		const seen = [];
+		for (const shader of [
+			...instancedBatcher.shaderVariants.values(),
+			instancedBatcher.defaultShader,
+		]) {
+			const loc = shader?.uniforms?.uEyePosition;
+			if (loc != null) {
+				seen.push(Array.from(gl.getUniform(shader.program, loc)));
+			}
+		}
+		// both lit programs were reached, and both hold the real eye rather
+		// than the origin an untouched uniform would report
+		expect(seen.length).toBeGreaterThanOrEqual(2);
+		for (const eye of seen) {
+			expect(eye[2]).toBeCloseTo(400, 1);
+		}
+
+		// The eye is not the only program-scoped value the batcher caches.
+		// `uShininess` and `uSpecular` default to 0 on an untouched program —
+		// which reads as "no highlight", so a stale cache dropped the
+		// instanced tier's specular entirely rather than misplacing it.
+		for (const shader of [
+			...instancedBatcher.shaderVariants.values(),
+			instancedBatcher.defaultShader,
+		]) {
+			const shininess = shader?.uniforms?.uShininess;
+			if (shininess != null) {
+				expect(gl.getUniform(shader.program, shininess)).toBeCloseTo(64, 3);
+				const spec = Array.from(
+					gl.getUniform(shader.program, shader.uniforms.uSpecular),
+				);
+				expect(spec[0]).toBeCloseTo(1, 3);
+			}
 		}
 	});
 });

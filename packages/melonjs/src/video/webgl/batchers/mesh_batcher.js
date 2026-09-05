@@ -148,9 +148,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentFogR = Number.NaN;
 		this.currentFogG = Number.NaN;
 		this.currentFogB = Number.NaN;
-		this.currentFogFalloff = Number.NaN;
-		this.currentFogHeight = Number.NaN;
-		this.currentFogCamY = Number.NaN;
+		this.currentFogAxisX = Number.NaN;
+		this.currentFogAxisY = Number.NaN;
+		this.currentFogAxisZ = Number.NaN;
+		this.currentFogBase = Number.NaN;
 
 		// Retained geometry per mesh (model-space buffers uploaded once). A
 		// re-init means a new GL context or a fresh batcher life, so anything
@@ -298,6 +299,28 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentFogR = Number.NaN;
 			this.currentFogG = Number.NaN;
 			this.currentFogB = Number.NaN;
+			// Everything else `applyMeshMaterial` and the placement path push
+			// is program state too, and none of it was being dropped here.
+			// The omission hid behind the sentinels: a cache holding the same
+			// value a fresh program already defaults to agrees with it by
+			// accident. `uShininess` and `uSpecular` default to 0, which is
+			// exactly "no highlight", so a lit prop followed by an instanced
+			// set at the SAME shininess left the instanced program at 0 and
+			// dropped its specular silently. The height block's neutral now
+			// carries a 1, so it cannot hide that way at all.
+			this.currentFogAxisX = Number.NaN;
+			this.currentFogAxisY = Number.NaN;
+			this.currentFogAxisZ = Number.NaN;
+			this.currentFogBase = Number.NaN;
+			this.currentEyeX = Number.NaN;
+			this.currentEyeY = Number.NaN;
+			this.currentEyeZ = Number.NaN;
+			this.currentShininess = -1;
+			this.currentSpecularR = -1;
+			this.currentSpecularG = -1;
+			this.currentSpecularB = -1;
+			this.currentAlphaMapUnit = -1;
+			this.currentHasAlphaMap = -1;
 		}
 		super.useShader(shader);
 	}
@@ -1343,22 +1366,30 @@ export default class MeshBatcher extends MaterialBatcher {
 				this.currentFogDensity = density;
 			}
 			if (uniforms.uFogHeight != null) {
-				const falloff = mode !== 0 ? fog.heightFalloff : 0;
-				const height = mode !== 0 ? fog.fogHeight : 0;
-				const camY = mode !== 0 ? fog.cameraY : 0;
+				// xyz = the falloff folded into the world-up axis in VIEW
+				// space, w = the pre-baked altitude term. Both come from the
+				// camera already resolved, so the height integral needs no
+				// world position — which the vertex stage does not have once
+				// an ancestor container is folded into the view matrix.
+				const ax = mode !== 0 ? fog.heightAxis[0] : 0;
+				const ay = mode !== 0 ? fog.heightAxis[1] : 0;
+				const az = mode !== 0 ? fog.heightAxis[2] : 0;
+				const base = mode !== 0 ? fog.heightBase : 1;
 				if (
-					falloff !== this.currentFogFalloff ||
-					height !== this.currentFogHeight ||
-					camY !== this.currentFogCamY
+					ax !== this.currentFogAxisX ||
+					ay !== this.currentFogAxisY ||
+					az !== this.currentFogAxisZ ||
+					base !== this.currentFogBase
 				) {
-					_FOG_HEIGHT[0] = falloff;
-					_FOG_HEIGHT[1] = height;
-					_FOG_HEIGHT[2] = camY;
-					_FOG_HEIGHT[3] = 0;
+					_FOG_HEIGHT[0] = ax;
+					_FOG_HEIGHT[1] = ay;
+					_FOG_HEIGHT[2] = az;
+					_FOG_HEIGHT[3] = base;
 					shader.setUniform("uFogHeight", _FOG_HEIGHT);
-					this.currentFogFalloff = falloff;
-					this.currentFogHeight = height;
-					this.currentFogCamY = camY;
+					this.currentFogAxisX = ax;
+					this.currentFogAxisY = ay;
+					this.currentFogAxisZ = az;
+					this.currentFogBase = base;
 				}
 			}
 			if (

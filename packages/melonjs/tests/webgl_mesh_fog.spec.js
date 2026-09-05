@@ -1,5 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { boot, Matrix3d, Mesh, TextureAtlas } from "../src/index.js";
+import {
+	boot,
+	Camera3d,
+	Color,
+	Container,
+	InstancedMesh,
+	Matrix3d,
+	Mesh,
+	TextureAtlas,
+	Vector3d,
+} from "../src/index.js";
+import meshVert from "../src/video/webgl/shaders/mesh.vert";
+import meshInstancedVert from "../src/video/webgl/shaders/mesh-instanced.vert";
+import meshLitVert from "../src/video/webgl/shaders/mesh-lit.vert";
+import meshLitInstancedVert from "../src/video/webgl/shaders/mesh-lit-instanced.vert";
+import meshShadowInstancedVert from "../src/video/webgl/shaders/mesh-shadow-instanced.vert";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -19,6 +34,8 @@ import {
  * camera: these draws never go through a camera's `draw()`, and the resolved
  * state is exactly what a camera would have installed.
  */
+const Z_AXIS = new Vector3d(0, 0, 1);
+
 describe("mesh distance fog (#1622)", () => {
 	const SIZE = 128;
 	let renderer;
@@ -69,7 +86,7 @@ describe("mesh distance fog (#1622)", () => {
 	 * distance is interpolated from the corners, so a tiny quad's centre
 	 * pixel reads essentially the quad's own distance.
 	 */
-	const quad = (x = 0, half = 4) => {
+	const quad = (x = 0, half = 4, lit = false) => {
 		const mesh = new Mesh(0, 0, {
 			vertices: [
 				-half,
@@ -92,7 +109,7 @@ describe("mesh distance fog (#1622)", () => {
 			width: half * 2,
 			height: half * 2,
 			cullBackFaces: false,
-			lit: false,
+			lit,
 		});
 		// the world-space (Camera3d) branch, without needing a live stage
 		mesh._useWorldSpace = true;
@@ -129,7 +146,12 @@ describe("mesh distance fog (#1622)", () => {
 	};
 
 	/** fog state in the shape a camera resolves */
-	const fog = (over) => {
+	const fog = (over = {}) => {
+		// The camera bakes the height integral into two operands before it
+		// reaches a batcher. With no camera rotation the world-up axis in view
+		// space is (0, 1, 0), so the falloff lands entirely in y — these tests
+		// keep expressing the fog in the world terms an author uses.
+		const { heightFalloff: k = 0, fogHeight = 0, cameraY = 0, ...rest } = over;
 		return {
 			mode: 1,
 			near: 0,
@@ -137,10 +159,11 @@ describe("mesh distance fog (#1622)", () => {
 			density: 0,
 			color: new Float32Array([1, 1, 1]),
 			// uniform fog: a zero falloff collapses the height integral to 1
-			heightFalloff: 0,
-			fogHeight: 0,
-			cameraY: 0,
-			...over,
+			heightAxis: new Float32Array([0, k, 0]),
+			heightBase: Math.exp(
+				Math.min(30, Math.max(-30, k * (cameraY - fogHeight))),
+			),
+			...rest,
 		};
 	};
 
@@ -424,6 +447,577 @@ describe("mesh distance fog (#1622)", () => {
 			renderer.setFog(null);
 			for (const channel of [0, 1, 2]) {
 				expect(Number.isNaN(px[channel])).toBe(false);
+			}
+		});
+	});
+
+	describe("under a transformed ancestor (#1641)", () => {
+		// `Container.draw` folds every ancestor transform into the view matrix,
+		// so the position a vertex stage computes — `uModelMatrix * position` —
+		// is the mesh's PARENT space, not the world. The height integral used
+		// to read its altitude straight off that, which put the fog floor at
+		// the wrong height for anything under a scaled container: a diorama, a
+		// model scaled to fit a panel, a grow animation.
+		//
+		// Each pair below places the quad at the SAME point in view space and
+		// differs only in how the transform is split between the ancestor and
+		// the mesh. Same distance, same world height — so the fog must come
+		// out the same however the split is made.
+		const common = {
+			near: 0,
+			invRange: 1 / 1000,
+			heightFalloff: 0.02,
+			fogHeight: 0,
+			cameraY: 0,
+		};
+		// ortho maps world y=-64 to the top and y=+64 to the bottom;
+		// readPixels counts from the bottom, so world y=40 is row 24
+		const WORLD_Y = 40;
+		const ROW = 24;
+
+		/**
+		 * Draw one quad whose view-space centre is always (0, WORLD_Y, 500).
+		 * `ancestor` installs the container transform; `place` returns where
+		 * the mesh has to sit in the parent space that transform creates.
+		 */
+		const sample = ({ ancestor, place, half = 3, lit = false, over = {} }) => {
+			setup();
+			renderer.setFog(fog({ ...common, ...over }));
+			renderer.save();
+			ancestor?.(renderer.currentTransform);
+			const mesh = quad(0, half, lit);
+			const [px, py] = place ?? [0, WORLD_Y];
+			mesh.pos.set(px, py, 0);
+			drawAt(mesh, 500);
+			renderer.restore();
+			const read = readPixel(SIZE / 2, ROW);
+			renderer.setFog(null);
+			return read;
+		};
+
+		const REFERENCE = { ancestor: undefined, place: [0, WORLD_Y] };
+
+		for (const lit of [false, true]) {
+			const tier = lit ? "lit" : "unlit";
+
+			it(`fogs by the mesh's WORLD height under a uniform scale (${tier})`, (ctx) => {
+				requireWebGL(ctx);
+				const plain = sample({ ...REFERENCE, lit });
+				const scaled = sample({
+					ancestor: (m) => {
+						return m.scale(2, 2, 1);
+					},
+					place: [0, WORLD_Y / 2],
+					half: 1.5,
+					lit,
+				});
+				// both actually drew: a background read would be pure black
+				expect(plain[0]).toBeGreaterThan(100);
+				expect(scaled[0]).toBeGreaterThan(100);
+				// and they agree. Reading the height pre-view instead halves
+				// it under this ancestor, well past this bound.
+				expect(Math.abs(scaled[1] - plain[1])).toBeLessThan(6);
+			});
+
+			it(`fogs by the mesh's WORLD height under a NON-uniform scale (${tier})`, (ctx) => {
+				requireWebGL(ctx);
+				const plain = sample({ ...REFERENCE, lit });
+				const scaled = sample({
+					ancestor: (m) => {
+						return m.scale(2, 4, 1);
+					},
+					place: [0, WORLD_Y / 4],
+					half: 1.5,
+					lit,
+				});
+				expect(scaled[0]).toBeGreaterThan(100);
+				expect(Math.abs(scaled[1] - plain[1])).toBeLessThan(8);
+			});
+
+			it(`fogs by the mesh's WORLD height under a ROTATED ancestor (${tier})`, (ctx) => {
+				requireWebGL(ctx);
+				// the case the old design could not express at all: a height
+				// read pre-view has no way to know the ancestor turned. The
+				// mesh sits at the pre-image of (0, WORLD_Y) under R(theta).
+				const theta = 0.4;
+				const plain = sample({ ...REFERENCE, lit });
+				const rotated = sample({
+					ancestor: (m) => {
+						return m.rotate(theta, Z_AXIS);
+					},
+					place: [WORLD_Y * Math.sin(theta), WORLD_Y * Math.cos(theta)],
+					lit,
+				});
+				expect(rotated[0]).toBeGreaterThan(100);
+				expect(Math.abs(rotated[1] - plain[1])).toBeLessThan(8);
+			});
+		}
+
+		it("is not merely self-consistent — the height term does something", (ctx) => {
+			requireWebGL(ctx);
+			// The agreement tests above compare two draws against each other,
+			// so a height factor stuck at 1.0 would satisfy them both. Pin
+			// that the falloff actually moves the result.
+			const withFalloff = sample(REFERENCE);
+			const without = sample({ ...REFERENCE, over: { heightFalloff: 0 } });
+			expect(withFalloff[0]).toBeGreaterThan(100);
+			expect(Math.abs(withFalloff[1] - without[1])).toBeGreaterThan(20);
+		});
+
+		it("still fogs low ground harder than high ground under that ancestor", (ctx) => {
+			requireWebGL(ctx);
+			// the Y-down sign has to survive the change of space too
+			const at = (worldY, row) => {
+				setup();
+				renderer.setFog(fog(common));
+				renderer.save();
+				renderer.currentTransform.scale(2, 2, 1);
+				const mesh = quad(0, 2);
+				mesh.pos.set(0, worldY / 2, 0);
+				drawAt(mesh, 500);
+				renderer.restore();
+				const px = readPixel(SIZE / 2, row);
+				renderer.setFog(null);
+				return px;
+			};
+			const low = at(40, 24); // greater y = lower in the world
+			const high = at(-40, 104);
+			expect(low[0]).toBeGreaterThan(200);
+			expect(high[0]).toBeGreaterThan(200);
+			expect(low[1]).toBeGreaterThan(high[1] + 20);
+		});
+	});
+
+	describe("the baked altitude term reaches the shader", () => {
+		it("fogs more from a camera lower than the fog floor", (ctx) => {
+			requireWebGL(ctx);
+			// `heightBase` is the only operand the camera's own altitude feeds
+			// now — the fragment's height comes from the view-space position
+			// instead, so this varies heightBase and NOTHING else. Every other
+			// height test here sits at cameraY 0, where heightBase is exactly
+			// 1 and a shader ignoring it entirely would pass.
+			const common = {
+				near: 0,
+				invRange: 1 / 1000,
+				heightFalloff: 0.002,
+				fogHeight: 0,
+			};
+			const at = (cameraY) => {
+				setup();
+				renderer.setFog(fog({ ...common, cameraY }));
+				const mesh = quad(0, 3);
+				mesh.pos.set(0, 40, 0);
+				drawAt(mesh, 500);
+				const px = readPixel(SIZE / 2, 24);
+				renderer.setFog(null);
+				return px;
+			};
+			// Y-down: a GREATER cameraY is LOWER, so it sits in denser air.
+			// exp(0.002 * 300) = 1.82 against exp(0) = 1.
+			const level = at(0);
+			const below = at(300);
+			expect(level[0]).toBeGreaterThan(200);
+			expect(below[0]).toBeGreaterThan(200);
+			expect(below[1]).toBeGreaterThan(level[1] + 20);
+		});
+	});
+
+	describe("the axis is a direction, not a scalar height", () => {
+		it("reads all three components, not just y", (ctx) => {
+			requireWebGL(ctx);
+			// The whole point of the fix is that the height is a DOT PRODUCT
+			// against a view-space axis: once the camera turns, the world-up
+			// axis is no longer (0, 1, 0). Every other test here uses an
+			// unturned camera, where a shader reading `uFogHeight.y *
+			// viewPos.y` and ignoring x and z is indistinguishable.
+			//
+			// These two quads sit at the same view-space Y and differ only in
+			// X, so an axis-aligned reading fogs them identically.
+			const k = 0.01;
+			const axis = new Float32Array([k * 0.6, k * 0.8, 0]);
+			const at = (worldX, column) => {
+				setup();
+				renderer.setFog(fog({ near: 0, invRange: 1 / 1000, heightAxis: axis }));
+				const mesh = quad(worldX, 3);
+				mesh.pos.set(worldX, 0, 0);
+				drawAt(mesh, 500);
+				const px = readPixel(column, SIZE / 2);
+				renderer.setFog(null);
+				return px;
+			};
+			const left = at(-30, SIZE / 2 - 30);
+			const right = at(30, SIZE / 2 + 30);
+			expect(left[0]).toBeGreaterThan(200);
+			expect(right[0]).toBeGreaterThan(200);
+			// +x is further along the axis, so it sits deeper in the fog
+			expect(right[1]).toBeGreaterThan(left[1] + 10);
+		});
+	});
+
+	describe("a mesh that opted out leaves the height block neutral", () => {
+		it("uploads the neutral, and does not poison the next fogged draw", (ctx) => {
+			requireWebGL(ctx);
+			// `w` multiplies the WHOLE height factor, so a 0 written for an
+			// opted-out mesh would cancel the fog rather than leave it
+			// uniform — and the redundant-upload cache would carry that 0
+			// into the next mesh that did want fog.
+			const common = {
+				near: 0,
+				invRange: 1 / 1000,
+				heightFalloff: 0.002,
+				fogHeight: 0,
+				cameraY: 300,
+			};
+			setup();
+			renderer.setFog(fog(common));
+			const optedOut = quad(0, 3);
+			optedOut.fog = false;
+			optedOut.pos.set(0, 40, 0);
+			drawAt(optedOut, 500);
+			const batcher = renderer.currentBatcher;
+			expect(batcher.currentFogBase).toBe(1);
+
+			const fogged = quad(0, 3);
+			fogged.pos.set(0, 40, 0);
+			drawAt(fogged, 500);
+			const px = readPixel(SIZE / 2, 24);
+			renderer.setFog(null);
+			expect(px[0]).toBeGreaterThan(200);
+			expect(px[1]).toBeGreaterThan(100); // still fogged
+			expect(batcher.currentFogBase).toBeCloseTo(Math.exp(0.6), 4);
+		});
+	});
+
+	describe("end to end, through a real Camera3d", () => {
+		// Every other pixel test in this file installs a hand-built fog state
+		// through `renderer.setFog`, which pins the SHADER's convention;
+		// `camera3d_fog.spec.js` pins the CAMERA's. Nothing checked the two
+		// against EACH OTHER, so a sign flipped in both — or a `heightBase`
+		// anchored at a different origin than the axis expects — would pass
+		// every one of them. This drives the real path end to end:
+		// `camera.setFog` → `camera.draw` → a pixel.
+		const EYE_Z = 600;
+
+		// ONE camera for the whole block, destroyed after. A `Camera2d`
+		// subscribes to engine events in its constructor, and this spec shares
+		// its WebGL context with every other spec in the run — a camera per
+		// draw leaks those subscriptions into unrelated files.
+		let camera = null;
+
+		beforeAll(() => {
+			if (renderer === undefined) {
+				return;
+			}
+			camera = new Camera3d(0, 0, SIZE, SIZE);
+			Object.defineProperty(camera, "isDefault", {
+				get: () => {
+					return true;
+				},
+			});
+			camera.pos.set(0, 0, -EYE_Z);
+			camera.screenProjection.ortho(0, SIZE, SIZE, 0, -1e6, 1e6);
+		});
+
+		afterAll(() => {
+			// `camera.draw` installs fog and a projection ON THE RENDERER, and
+			// clearing the camera's own options does not undo either. Left
+			// behind, they fog and mis-project every spec that runs after this
+			// one on the same shared context.
+			try {
+				renderer?.setFog(null);
+				renderer?.currentTransform.identity();
+				camera?.destroy();
+			} catch {
+				// the renderer may already be released
+			}
+			camera = null;
+		});
+
+		/**
+		 * Mean green over the pixels the mesh actually covered. Fog mixes
+		 * white INTO the red quad, so more fog reads as more green — and
+		 * scanning rather than predicting a pixel keeps this honest under a
+		 * perspective projection, where the landing spot is not obvious.
+		 */
+		const meanFogOverDrawn = () => {
+			const gl = renderer.gl;
+			const buf = new Uint8Array(SIZE * SIZE * 4);
+			gl.finish();
+			gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+			let n = 0;
+			let sum = 0;
+			for (let i = 0; i < SIZE * SIZE; i++) {
+				if (buf[i * 4] > 100) {
+					n++;
+					sum += buf[i * 4 + 1];
+				}
+			}
+			return { covered: n, green: n === 0 ? -1 : sum / n };
+		};
+
+		const drawThroughCamera = (worldY, fogOptions, ancestorScale = 1) => {
+			renderer.backgroundColor.setColor(0, 0, 0, 255);
+			renderer.clear();
+			camera.setFog(fogOptions);
+			const world = new Container(0, 0, SIZE, SIZE);
+			const mesh = quad(0, 40 / ancestorScale);
+			mesh.pos.set(0, worldY / ancestorScale, 0);
+			// `Container.draw` skips a child the culling pass has not marked,
+			// and nothing runs that pass without a live game loop
+			mesh.inViewport = true;
+			// z is NOT scaled by a 2D container scale, so the depth stays put
+			// and only the height is split between the two
+			mesh.depth = EYE_Z;
+			if (ancestorScale !== 1) {
+				const inner = new Container(0, 0, SIZE, SIZE);
+				inner.inViewport = true;
+				// the real property a game would set, not a hand-written
+				// matrix — `Container` rebuilds `currentTransform` each frame
+				inner.scale(ancestorScale, ancestorScale);
+				inner.addChild(mesh);
+				world.addChild(inner);
+			} else {
+				world.addChild(mesh);
+			}
+			camera.draw(renderer, world);
+			renderer.flush();
+			const out = meanFogOverDrawn();
+			// clear on BOTH sides: the camera's options and the renderer's
+			// installed state are separate, and only the second one leaks
+			camera.setFog(null);
+			renderer.setFog(null);
+			world.destroy();
+			return out;
+		};
+
+		const FOG = {
+			mode: "linear",
+			near: 0,
+			far: 1400,
+			heightFalloff: 0.02,
+			fogHeight: 0,
+			color: new Color(255, 255, 255),
+		};
+
+		it("fogs at all, through the camera's own resolved state", (ctx) => {
+			requireWebGL(ctx);
+			const fogged = drawThroughCamera(0, FOG);
+			const clear = drawThroughCamera(0, null);
+			expect(clear.covered).toBeGreaterThan(20);
+			expect(fogged.covered).toBeGreaterThan(20);
+			expect(fogged.green).toBeGreaterThan(clear.green + 20);
+		});
+
+		it("fogs low ground harder than high ground — the sign, end to end", (ctx) => {
+			requireWebGL(ctx);
+			// Render space is Y-DOWN, so a GREATER y is LOWER in the world and
+			// must sit in denser air. This is the assertion that ties the
+			// camera's convention to the shader's: both specs agreeing on a
+			// flipped sign would pass everything except this.
+			const low = drawThroughCamera(40, FOG);
+			const high = drawThroughCamera(-40, FOG);
+			expect(low.covered).toBeGreaterThan(20);
+			expect(high.covered).toBeGreaterThan(20);
+			expect(low.green).toBeGreaterThan(high.green + 10);
+		});
+
+		it("fogs by WORLD height under a scaled container, end to end", (ctx) => {
+			requireWebGL(ctx);
+			// #1641 on the real path: a genuine child Container carrying the
+			// scale, folded into the view by `Container.draw` exactly as a
+			// game's would be.
+			const plain = drawThroughCamera(40, FOG);
+			const scaled = drawThroughCamera(40, FOG, 2);
+			expect(plain.covered).toBeGreaterThan(20);
+			expect(scaled.covered).toBeGreaterThan(20);
+			expect(Math.abs(scaled.green - plain.green)).toBeLessThan(10);
+		});
+	});
+
+	describe("every mesh vertex shader takes the height in view space", () => {
+		// The ground-shadow tier has no pixel coverage here — its fog could be
+		// deleted outright and the whole suite stayed green. These are source
+		// contracts rather than behaviour, which is a weaker guarantee, but
+		// they do pin the one thing #1641 got wrong: the height must come from
+		// a VIEW-space position, never from `uModelMatrix * position`, which
+		// is the mesh's parent space once an ancestor is folded into the view.
+		const SHADERS = [
+			["mesh.vert", meshVert],
+			["mesh-lit.vert", meshLitVert],
+			["mesh-instanced.vert", meshInstancedVert],
+			["mesh-lit-instanced.vert", meshLitInstancedVert],
+			["mesh-shadow-instanced.vert", meshShadowInstancedVert],
+		];
+
+		it("declares the view-space signature", () => {
+			for (const [name, src] of SHADERS) {
+				expect(src, name).toContain("float fogHeightFactor(vec3 viewPos)");
+				expect(src, name).toContain("dot(uFogHeight.xyz, viewPos)");
+				expect(src, name).toContain("return uFogHeight.w * t;");
+			}
+		});
+
+		it("feeds it the view-space position, and still writes vFogDepth", () => {
+			for (const [name, src] of SHADERS) {
+				// the #1641 bug in the shape it had
+				expect(src, name).not.toMatch(/fogHeightFactor\([^)]*\.y\)/);
+				expect(src, name).not.toMatch(/fogHeightFactor\(\s*worldPos\./);
+				// and the depth is a real length, not stubbed out
+				expect(src, name).toMatch(
+					/vFogDepth = length\(viewPos(\.xyz)?\)\s*\*\s*fogHeightFactor\(\s*viewPos(\.xyz)?\s*\)/,
+				);
+			}
+		});
+	});
+
+	describe("the instanced tiers fog too", () => {
+		// Fog could be deleted outright from `mesh-instanced.vert` and
+		// `mesh-lit-instanced.vert` and the whole suite stayed green: nothing
+		// here ever built an `InstancedMesh`. A forest, a crowd, a particle
+		// scatter — the tier most likely to BE the distant geometry fog exists
+		// for — was riding entirely on inspection.
+		const common = {
+			near: 0,
+			invRange: 1 / 1000,
+			fogHeight: 0,
+			cameraY: 0,
+		};
+
+		const instanced = (worldY, lit, half = 2) => {
+			const h = half;
+			const mesh = new InstancedMesh(0, 0, {
+				vertices: [-h, -h, 0, h, -h, 0, h, h, 0, -h, h, 0],
+				uvs: [0, 0, 1, 0, 1, 1, 0, 1],
+				indices: [0, 1, 2, 0, 2, 3],
+				normals: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+				texture: whiteAtlas(),
+				width: h * 2,
+				height: h * 2,
+				cullBackFaces: false,
+				normalize: false,
+				instanceCount: 1,
+				lit,
+			});
+			// placed through `pos`, with the instance record at identity: the
+			// point here is the instanced VERTEX SHADER's fog path, and an
+			// instance-local offset is not carried into the mesh's bounds, so
+			// it culls before it can be read
+			const placement = new Matrix3d();
+			placement.identity();
+			mesh.setInstance(0, placement);
+			mesh._useWorldSpace = true;
+			mesh.pos.set(0, worldY, 0);
+			mesh.tint.setColor(255, 0, 0);
+			return mesh;
+		};
+
+		for (const lit of [false, true]) {
+			const tier = lit ? "lit" : "unlit";
+
+			it(`fogs an instanced mesh at all (${tier})`, (ctx) => {
+				requireWebGL(ctx);
+				setup();
+				renderer.setFog(fog({ ...common, heightFalloff: 0 }));
+				drawAt(instanced(0, lit), 500);
+				const fogged = readPixel(SIZE / 2, SIZE / 2);
+				renderer.setFog(null);
+
+				setup();
+				drawAt(instanced(0, lit), 500);
+				const clear = readPixel(SIZE / 2, SIZE / 2);
+
+				expect(clear[0]).toBeGreaterThan(100); // it drew
+				// uniform fog at half the range mixes the fog colour in;
+				// `vFogDepth = 0` would leave it identical to the clear draw
+				expect(fogged[1]).toBeGreaterThan(clear[1] + 40);
+			});
+
+			it(`applies the height falloff on the instanced tier (${tier})`, (ctx) => {
+				requireWebGL(ctx);
+				// and it is the HEIGHT term, not just distance: same distance,
+				// different altitude
+				const at = (worldY, row) => {
+					setup();
+					renderer.setFog(fog({ ...common, heightFalloff: 0.02 }));
+					drawAt(instanced(worldY, lit), 500);
+					const px = readPixel(SIZE / 2, row);
+					renderer.setFog(null);
+					return px;
+				};
+				const low = at(40, 24); // greater y = lower in the world
+				const high = at(-40, 104);
+				expect(low[0]).toBeGreaterThan(100);
+				expect(high[0]).toBeGreaterThan(100);
+				expect(low[1]).toBeGreaterThan(high[1] + 20);
+			});
+
+			it(`fogs an instanced mesh by its WORLD height under a scaled ancestor (${tier})`, (ctx) => {
+				requireWebGL(ctx);
+				const sample = (scale) => {
+					setup();
+					renderer.setFog(fog({ ...common, heightFalloff: 0.02 }));
+					renderer.save();
+					if (scale !== 1) {
+						renderer.currentTransform.scale(scale, scale, 1);
+					}
+					drawAt(instanced(40 / scale, lit, 2 / scale), 500);
+					renderer.restore();
+					const px = readPixel(SIZE / 2, 24);
+					renderer.setFog(null);
+					return px;
+				};
+				const plain = sample(1);
+				const scaled = sample(2);
+				expect(plain[0]).toBeGreaterThan(100);
+				expect(scaled[0]).toBeGreaterThan(100);
+				expect(Math.abs(scaled[1] - plain[1])).toBeLessThan(8);
+			});
+		}
+	});
+
+	describe("the height uniforms survive a program switch", () => {
+		it("drops the height and eye caches when the program changes under it", (ctx) => {
+			requireWebGL(ctx);
+			// The placement uniforms live on the PROGRAM, so a swapped shader
+			// starts at its own defaults and the batcher's redundant-set cache
+			// has to be dropped with it. The height block was missing from
+			// that list, and the omission hid behind its old neutral being all
+			// zeros — which is also GL's default for an untouched uniform, so
+			// a stale cache and a fresh program happened to agree. They no
+			// longer do: the neutral carries a 1.
+			//
+			// Reachable within one batcher because fog is compiled in and the
+			// instanced tier is its own variant: a fogged instanced draw and a
+			// fogged plain one, same frame and same fog values, are two
+			// programs and one cache. The second would silently keep whatever
+			// its uniform happened to hold — for the height block, a `w` of 0,
+			// which multiplies the entire height factor away.
+			setup();
+			renderer.setFog(fog({ heightFalloff: 0.02 }));
+			// lit: it is the tier that carries BOTH blocks — the eye position
+			// only exists on the lit program
+			const mesh = quad(0, 4, true);
+			mesh.pos.set(0, 40, 0);
+			drawAt(mesh, 500);
+			const batcher = renderer.currentBatcher;
+			renderer.setFog(null);
+
+			// primed by the draw above, so the reset below is observable
+			expect(batcher.currentFogAxisY).not.toBeNaN();
+			expect(batcher.currentEyeX).not.toBeNaN();
+
+			batcher.useShader(batcher.defaultShader);
+
+			for (const field of [
+				"currentFogAxisX",
+				"currentFogAxisY",
+				"currentFogAxisZ",
+				"currentFogBase",
+				"currentEyeX",
+				"currentEyeY",
+				"currentEyeZ",
+			]) {
+				expect(batcher[field]).toBeNaN();
 			}
 		});
 	});
