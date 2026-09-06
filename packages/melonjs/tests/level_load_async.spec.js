@@ -47,9 +47,14 @@ describe("level.load({ async }) (#1646)", () => {
 		app?.destroy();
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		// leave the loop stopped between tests; each one sets what it needs
 		state.stop();
+		// and flush any timer-deferred load still pending, so it cannot land in
+		// the middle of the next test
+		await new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
 	});
 
 	/** record every time the level director actually puts a scene in the world */
@@ -277,20 +282,18 @@ describe("level.load({ async }) (#1646)", () => {
 			return promise;
 		});
 
-		it("awaiting WITHOUT the flag still yields to the deferred load", async () => {
-			// `await true` is valid JavaScript, so forgetting the flag is silent.
-			// It happens to be harmless TODAY: the deferral is a single
-			// microtask queued before the await's continuation, so the load runs
-			// first either way. That is incidental ordering, not a contract —
-			// hence the flag exists — so this pins the observable part (no
-			// promise is returned) and merely records the rest.
+		it("awaiting WITHOUT the flag does NOT wait for the load", async () => {
+			// The cost of putting the switch in the options: `await true` is
+			// valid JavaScript, so forgetting the flag is silent. The deferral
+			// is a timer, and awaiting a boolean yields only one microtask —
+			// nowhere near it. This is the whole reason the flag exists.
 			const seen = track();
 			state.restart();
 			const value = level.load("unit-test-level", { container: container() });
 			expect(value).toBe(true);
 			expect(value).not.toBeInstanceOf(Promise);
 			await value;
-			expect(seen).toHaveLength(1);
+			expect(seen).toHaveLength(0);
 		});
 	});
 
@@ -509,28 +512,27 @@ describe("level.load({ async }) (#1646)", () => {
 			expect(seen).toHaveLength(1);
 		});
 
-		it("defers by a MICROTASK, not a timer", async () => {
-			// A timer is clamped to >= 1s in a background tab, which would strand
-			// a level load queued as the tab hides. A microtask drains when the
-			// stack empties, so it lands before any macrotask queued alongside it.
-			const order = [];
-			track();
-			GLTFScene.prototype.addTo = () => {
-				order.push("load");
-			};
+		it("defers past every microtask, onto a macrotask", async () => {
+			// A macrotask cannot run inside another, so the load lands after the
+			// current frame whatever that frame does. A microtask would only
+			// land there while the whole update-and-draw path stays synchronous
+			// — true today, but it would start running mid-frame the day
+			// anything in that path awaits.
+			const seen = track();
 			state.restart();
-			const promise = level.load("unit-test-level", {
-				container: container(),
-				async: true,
+			level.load("unit-test-level", { container: container() });
+
+			// drain the microtask queue: a microtask-deferred load runs here
+			for (let i = 0; i < 10; i++) {
+				await Promise.resolve();
+			}
+			expect(seen).toHaveLength(0);
+
+			// ...this one lands on the next macrotask
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
 			});
-			const timer = new Promise((resolve) => {
-				setTimeout(() => {
-					order.push("timer");
-					resolve();
-				}, 0);
-			});
-			await Promise.all([promise, timer]);
-			expect(order).toEqual(["load", "timer"]);
+			expect(seen).toHaveLength(1);
 		});
 	});
 });

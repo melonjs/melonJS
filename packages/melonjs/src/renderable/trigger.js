@@ -5,6 +5,7 @@ import { level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
 import { boundsPool } from "./../physics/bounds.ts";
 import { collision } from "./../physics/collision.js";
+import { defer } from "./../utils/function.ts";
 import Renderable from "./renderable.js";
 
 /**
@@ -202,10 +203,12 @@ export default class Trigger extends Renderable {
 								}
 							})
 							.catch((error) => {
-								// same loudness as the fire-and-forget form
-								queueMicrotask(() => {
+								// rethrow on an empty stack, so a failed transition
+								// surfaces as an uncaught error rather than a silent
+								// unhandled rejection
+								defer(() => {
 									throw error;
-								});
+								}, null);
 							});
 					};
 

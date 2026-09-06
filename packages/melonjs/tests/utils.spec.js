@@ -39,6 +39,94 @@ describe("utils", () => {
 		});
 	});
 
+	describe("Function", () => {
+		// `defer` is public API and load-bearing: `state`, `Container`, `timer`,
+		// `level.load` and `Trigger` all schedule through it. Nothing pinned its
+		// contract before.
+
+		it("does not run the callback synchronously", () => {
+			let ran = false;
+			utils.function.defer(() => {
+				ran = true;
+			}, null);
+			expect(ran).toBe(false);
+		});
+
+		it("defers past the microtask queue, onto a macrotask", async () => {
+			// the property `level.load` depends on: a macrotask cannot run
+			// inside another, so the callback lands after the current frame
+			// whatever that frame does
+			let ran = false;
+			utils.function.defer(() => {
+				ran = true;
+			}, null);
+			for (let i = 0; i < 10; i++) {
+				await Promise.resolve();
+			}
+			expect(ran).toBe(false);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+			expect(ran).toBe(true);
+		});
+
+		it("binds thisArg and forwards the extra arguments", async () => {
+			const context = { tag: "ctx" };
+			let seen = null;
+			utils.function.defer(
+				function (a, b) {
+					seen = { tag: this.tag, a, b };
+				},
+				context,
+				1,
+				2,
+			);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+			expect(seen).toEqual({ tag: "ctx", a: 1, b: 2 });
+		});
+
+		it("returns a handle that cancels the call", async () => {
+			// `Container.pendingSort` keeps the handle for exactly this
+			let ran = false;
+			const handle = utils.function.defer(() => {
+				ran = true;
+			}, null);
+			clearTimeout(handle);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+			expect(ran).toBe(false);
+		});
+
+		it("surfaces a throw as an uncaught error, not a rejection", async () => {
+			// This is why the fire-and-forget level load schedules through
+			// `defer` rather than a promise: a failure has to stay reachable
+			// from `window.onerror`, which never sees an unhandled rejection.
+			const seen = [];
+			const onError = (e) => {
+				seen.push("uncaught-error");
+				e.preventDefault();
+			};
+			const onRejection = (e) => {
+				seen.push("unhandled-rejection");
+				e.preventDefault();
+			};
+			window.addEventListener("error", onError);
+			window.addEventListener("unhandledrejection", onRejection);
+			utils.function.defer(() => {
+				throw new Error("deferred boom");
+			}, null);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 60);
+			});
+			window.removeEventListener("error", onError);
+			window.removeEventListener("unhandledrejection", onRejection);
+			expect(seen).toEqual(["uncaught-error"]);
+		});
+	});
+
 	describe("File", () => {
 		const filename = "/src/bar/foo.bar-test.bar.baz";
 

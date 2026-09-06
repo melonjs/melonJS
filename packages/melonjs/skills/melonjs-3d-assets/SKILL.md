@@ -43,7 +43,7 @@ or it renders flat. See `melonjs-3d` for the camera.
 
 `onLoaded` receives the level id — it is a "done" signal, not a handle on the
 scene. You need it, or `async`: with the game loop running, `level.load` stops
-the loop and defers the actual load to a microtask, so by default it returns
+the loop and defers the actual load to a timer, so by default it returns
 *before* anything is in the world.
 
 ```js

@@ -39,8 +39,9 @@ also skip `src` and pass the map inline via `data` (with `format: "json"` or
 that is a typo rather than a load failure.
 
 **`level.load` is deferred while the game loop is running.** It calls
-`state.stop()` and finishes the load in a microtask, so by default it returns
-`true` before anything is in the world. Two ways to sequence work after it:
+`state.stop()` and finishes the load on a timer, after the current frame, so by
+default it returns `true` before anything is in the world. Two ways to sequence
+work after it:
 
 ```js
 // await it
@@ -54,10 +55,8 @@ level.load("map1", { onLoaded: () => this.spawnPlayer() });
 `async: true` is the only thing that changes the return value — everything else
 behaves identically, `onLoaded` included. Without it the call returns a boolean,
 so `await level.load("map1")` is not an error and does not await the load:
-`await true` resolves immediately. (The load does finish first today, because the
-deferral is a single microtask queued ahead of the await's continuation — but
-that is incidental ordering, not a contract.) Pass the flag when you mean to
-await.
+`await true` resolves immediately, while the load is still sitting on a timer.
+Pass the flag when you mean to await.
 
 `level.reload()`, `level.next()` and `level.previous()` take the same `async`
 option and resolve the same value they return — so `if (level.next())` becomes
@@ -197,8 +196,8 @@ unanimated layer into the offscreen-bake path instead.
 | symptom | cause |
 |---|---|
 | a Tiled object becomes a plain shape with no behaviour | its class/name does not match any registered factory, or it was registered after `level.load` |
-| the world is still empty right after `level.load` | the load is deferred to a microtask while the loop runs — `await level.load(id, { async: true })`, or use `onLoaded` / `LEVEL_LOADED` |
-| `await level.load(id)` returned `true` rather than a promise | without `async: true` the call returns a boolean; `await true` resolves immediately. The load happens to finish first today by microtask ordering, but that is incidental — pass the flag when you mean to await |
+| the world is still empty right after `level.load` | the load is deferred to a timer while the loop runs — `await level.load(id, { async: true })`, or use `onLoaded` / `LEVEL_LOADED` |
+| `await level.load(id)` returned `true` rather than a promise | without `async: true` the call returns a boolean; `await true` resolves immediately and the load has not run yet — pass the flag when you mean to await |
 | `level <id> not found` | the map was never preloaded, or the asset `name` differs from the id passed to `load` |
 | `unknown or invalid resource type` | asset `type` set to `"tmj"` / `"tsj"` — use `"tmx"` / `"tsx"` with the `.tmj` / `.tsj` file |
 | camera will not scroll | `setViewportBounds: false`, or the map was added with `addTo()` (which defaults to `false`) |

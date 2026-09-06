@@ -2,6 +2,7 @@ import { game } from "../application/application.ts";
 import { getTMX } from "./../loader/loader.js";
 import state from "./../state/state.ts";
 import { emit, LEVEL_LOADED } from "../system/event.ts";
+import { defer } from "../utils/function.ts";
 import { resetGUID } from "./../utils/utils.ts";
 import GLTFScene from "./gltf/GLTFScene.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
@@ -107,12 +108,10 @@ function levelIdAt(offset) {
  * behaves identically either way, `onLoaded` included.
  *
  * Awaiting a call WITHOUT `async: true` is not an error, but it is not a wait
- * either: the call hands back a boolean, and `await true` resolves immediately,
- * so there is no completion point to await. Whether the load has finished by
- * then is incidental — it has when there is no loop running, and it currently
- * does when there is, because the deferral is a single microtask queued ahead
- * of the await's continuation. Do not rely on either. Pass the flag when you
- * mean to await.
+ * either: the call hands back a boolean, and `await true` resolves immediately.
+ * While the loop is running the load is deferred onto a timer, so it has NOT
+ * happened by the time such an `await` resumes. Pass the flag when you mean to
+ * await.
  * @typedef {object} LevelLoadOptions
  * @property {Container} [container=game.world] - container in which to load the specified level
  * @property {Function} [onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded, called in both forms
@@ -244,36 +243,40 @@ export const level = {
 
 		const wantsPromise = options.async === true;
 
-		// Deferred so the current frame can unwind first. `level.load()` is
+		// Deferred so the current frame can finish first. `level.load()` is
 		// routinely called from inside the loop — a trigger handler, an update
 		// step — and `safeLoadLevel` resets and destroys the very container the
 		// loop may be iterating. `state.stop()` sets a flag; it does not unwind
 		// the frame already on the stack.
 		//
-		// A microtask rather than a timer. Both unwind the stack — a microtask
-		// drains when the JS stack empties, i.e. at the end of the rAF callback
-		// holding update AND draw — but `setTimeout` is clamped to >= 1s in a
-		// background tab, which would strand a load queued as the tab hides.
-		// The timer this replaced dated to 2011, before promises existed; there
-		// was never a macrotask semantic to preserve.
+		// A TIMER, through the engine's own `defer`, and deliberately not a
+		// microtask. A macrotask cannot run inside another, so the load lands
+		// after the current frame whatever the frame does. A microtask only
+		// lands there while the whole update-and-draw path stays synchronous —
+		// true today, but it would start running mid-frame the day anything in
+		// that path awaits, silently and with nothing to catch it.
 		if (state.isRunning()) {
 			// stop the game loop to avoid some silly side effects
 			state.stop();
-			const deferred = Promise.resolve().then(() => {
-				safeLoadLevel(levelId, options, true);
-				return true;
-			});
 			if (wantsPromise) {
-				return deferred;
-			}
-			// Fire-and-forget: rethrow on a clean stack so a failure still
-			// surfaces as an uncaught error the way it did when the deferral was
-			// a timer, rather than as a silent unhandled rejection.
-			deferred.catch((error) => {
-				queueMicrotask(() => {
-					throw error;
+				return new Promise((resolve, reject) => {
+					defer(() => {
+						try {
+							safeLoadLevel(levelId, options, true);
+							resolve(true);
+						} catch (error) {
+							reject(error);
+						}
+					}, null);
 				});
-			});
+			}
+			// Fire-and-forget: no promise is created, so there is nothing to
+			// swallow a failure — a throw inside the timer lands on an empty
+			// stack as an uncaught error, which is the surface this has always
+			// had.
+			defer(() => {
+				safeLoadLevel(levelId, options, true);
+			}, null);
 			return true;
 		}
 
