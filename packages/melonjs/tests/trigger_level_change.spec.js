@@ -154,14 +154,21 @@ describe("Trigger level change (#1646)", () => {
 		// ticking the moment the load starts: further ticks re-fire onComplete
 		// and would queue a second load.
 		const tween = seen[0].effect.tween;
+		// Yield to a MACROTASK between ticks, not a microtask: with the loop
+		// running the load is deferred through `defer`, i.e. a timer, so a
+		// microtask-only yield never lets it run and the assertions below would
+		// be measuring whatever the scheduler happened to do.
+		const nextTask = () => {
+			return new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+		};
 		for (let i = 1; i <= 20 && loaded.length === 0; i++) {
 			tween._onTick(i * 5);
-			await Promise.resolve();
+			await nextTask();
 		}
-		// let the load's microtask and the reveal chained after it settle
-		for (let i = 0; i < 4; i++) {
-			await Promise.resolve();
-		}
+		// and let the reveal chained after the load settle
+		await nextTask();
 
 		GLTFScene.prototype.addTo = previousAddTo;
 		app.viewport = original;

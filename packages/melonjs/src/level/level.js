@@ -196,8 +196,8 @@ export const level = {
 	 * load a level into the game manager<br>
 	 * (will also create all level defined entities, etc..)
 	 *
-	 * While the game loop is running the load is DEFERRED to a microtask, so
-	 * this returns before anything is in the world. Sequence follow-up work from
+	 * While the game loop is running the load is DEFERRED to a timer, so this
+	 * returns before anything is in the world. Sequence follow-up work from
 	 * `options.onLoaded`, from an `event.LEVEL_LOADED` listener, or by passing
 	 * `async: true` and awaiting the promise that overload returns.
 	 *
@@ -332,7 +332,7 @@ export const level = {
 	/**
 	 * reload the current level.
 	 *
-	 * While the game loop is running the load is deferred to a microtask, so this
+	 * While the game loop is running the load is deferred to a timer, so this
 	 * returns before anything is in the world — see {@link level.load}.
 	 * @overload
 	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
@@ -371,7 +371,7 @@ export const level = {
 	 * the promise form resolves `false` rather than rejecting: running out of
 	 * levels is an ordinary outcome, not an error.
 	 *
-	 * While the game loop is running the load is deferred to a microtask, so this
+	 * While the game loop is running the load is deferred to a timer, so this
 	 * returns before anything is in the world — see {@link level.load}.
 	 * @overload
 	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters
@@ -412,7 +412,7 @@ export const level = {
 	 * the promise form resolves `false` rather than rejecting: running out of
 	 * levels is an ordinary outcome, not an error.
 	 *
-	 * While the game loop is running the load is deferred to a microtask, so this
+	 * While the game loop is running the load is deferred to a timer, so this
 	 * returns before anything is in the world — see {@link level.load}.
 	 * @overload
 	 * @param {LevelLoadOptions & { async?: false }} [options] - additional optional parameters

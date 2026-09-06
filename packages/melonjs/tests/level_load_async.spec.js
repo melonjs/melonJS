@@ -18,7 +18,7 @@ import state from "../src/state/state.ts";
  * was the only way to defer at the time. It is still needed — `level.load()` is
  * routinely called from inside the loop, and `safeLoadLevel` resets and
  * destroys the very container the loop may be iterating — but it is now a
- * microtask, and `async: true` hands that completion back instead of a boolean.
+ * timer, and `async: true` hands that completion back instead of a boolean.
  *
  * The level content is irrelevant here: `GLTFScene.addTo` is stubbed so these
  * tests pin the SCHEDULING, which is what changed. `getGLTF` returns null for
