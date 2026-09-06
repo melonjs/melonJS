@@ -318,7 +318,7 @@ const createGame = async () => {
 
 	loader.preload(
 		[{ name: "diorama", type: "glb", src: `${base}platformer-diorama.glb` }],
-		() => {
+		async () => {
 			state.change(state.DEFAULT, true);
 			// load the whole glTF scene into the world in one call — the glb
 			// auto-registered with the level director on preload, exactly like
@@ -329,11 +329,15 @@ const createGame = async () => {
 			// heights rather than on one floor. The scene's ground/platform
 			// meshes are skipped automatically: they have no height to cast
 			// from, and shadowing them with themselves would smear the terrain.
-			level.load("diorama", {
+			// `async: true` hands back a promise that settles once the scene is
+			// actually in the world, so the setup below reads as ordinary
+			// sequential code rather than a callback
+			await level.load("diorama", {
 				scale: SCALE,
 				castGroundShadow: true,
-				onLoaded: setupScene,
+				async: true,
 			});
+			setupScene();
 		},
 	);
 

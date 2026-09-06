@@ -265,9 +265,13 @@ const createGame = async () => {
 		// the GLB references an external texture (Textures/texture-a.png),
 		// resolved relative to the asset URL by the loader — no repackaging.
 		[{ name: "character", type: "glb", src: `${base}character.glb` }],
-		() => {
+		async () => {
 			state.change(state.DEFAULT, true);
-			level.load("character", { scale: SCALE, onLoaded: setupScene });
+			// `async: true` hands back a promise that settles once the scene is
+			// actually in the world, so the setup below reads as ordinary
+			// sequential code rather than a callback
+			await level.load("character", { scale: SCALE, async: true });
+			setupScene();
 		},
 	);
 

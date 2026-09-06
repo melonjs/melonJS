@@ -122,7 +122,7 @@ function levelIdAt(offset) {
  * @property {boolean} [rightHanded=true] - (glTF/GLB only) convert the right-handed (Y-up) source to the engine's Y-down via a rotation rather than a mirror
  * @property {boolean} [lights=true] - (glTF/GLB only) add the scene's authored `KHR_lights_punctual` lights (plus a soft ambient fill) as {@link Light3d} world children
  * @property {number} [lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity by this factor instead of normalizing it to 1
- * @property {boolean} [castGroundShadow=false] - (glTF/GLB only) give every mesh in the scene a ground shadow
+ * @property {boolean} [castGroundShadow] - (glTF/GLB only) give every mesh in the scene a ground shadow; omit to inherit the application's `castGroundShadow` setting (on by default)
  * @property {number} [shadowGroundY] - (glTF/GLB only) world Y the ground shadows land on
  */
 

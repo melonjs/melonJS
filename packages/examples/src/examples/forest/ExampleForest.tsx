@@ -234,7 +234,7 @@ const createGame = async () => {
 
 	loader.preload(
 		[{ name: "forest", type: "glb", src: `${base}forest.glb` }],
-		() => {
+		async () => {
 			state.change(state.DEFAULT, true);
 			// one call — the instanced node becomes an InstancedMesh, the
 			// ground stays an ordinary Mesh, and the authored sun lights both
@@ -243,12 +243,16 @@ const createGame = async () => {
 			// read from the same instance buffer the trees draw from. The
 			// scene's ground plane is skipped automatically — it has no height
 			// to cast, and shadowing it with itself would smear the floor.
-			level.load("forest", {
+			// `async: true` hands back a promise that settles once the scene is
+			// actually in the world, so the setup below reads as ordinary
+			// sequential code rather than a callback
+			await level.load("forest", {
 				scale: SCALE,
 				castGroundShadow: true,
 				shadowGroundY: GROUND_Y,
-				onLoaded: setupScene,
+				async: true,
 			});
+			setupScene();
 		},
 	);
 
