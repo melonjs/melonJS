@@ -53,8 +53,8 @@ await level.load("diorama", { scale: 50, async: true });
 
 Note `await level.load("diorama")` without the flag does not await the load — the
 call returns a boolean, and `await true` resolves immediately. To get at what was
-loaded,
-load into a container you own, or look the nodes up by their authored names:
+loaded, load into a container you own, or look the nodes up by their authored
+names:
 
 ```js
 level.load("diorama", { scale: 50, onLoaded: () => {
