@@ -512,6 +512,24 @@ describe("level.load({ async }) (#1646)", () => {
 			expect(seen).toHaveLength(1);
 		});
 
+		it("defers the ASYNC form past every microtask too", async () => {
+			// the promise branch schedules through its own helper, so the
+			// fire-and-forget test above does not cover it: without this, that
+			// branch could quietly revert to a microtask
+			const seen = track();
+			state.restart();
+			const promise = level.load("unit-test-level", {
+				container: container(),
+				async: true,
+			});
+			for (let i = 0; i < 10; i++) {
+				await Promise.resolve();
+			}
+			expect(seen).toHaveLength(0);
+			await expect(promise).resolves.toBe(true);
+			expect(seen).toHaveLength(1);
+		});
+
 		it("defers past every microtask, onto a macrotask", async () => {
 			// A macrotask cannot run inside another, so the load lands after the
 			// current frame whatever that frame does. A microtask would only
