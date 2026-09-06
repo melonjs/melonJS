@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+} from "vitest";
 import {
 	Application,
 	boot,
@@ -47,6 +55,16 @@ describe("Trigger level change (#1646)", () => {
 	beforeEach(() => {
 		loaded = [];
 		state.stop();
+	});
+
+	afterEach(async () => {
+		// Flush any timer-deferred load still pending. `triggerEvent` schedules
+		// through `defer`, so without this the callback fires after `afterAll`
+		// has destroyed the app and `World.reset` throws on a torn-down world —
+		// a fatal unhandled error, with every test still reporting green.
+		await new Promise((resolve) => {
+			setTimeout(resolve, 0);
+		});
 	});
 
 	/** a Trigger attached to the world, so `getRootAncestor().app` resolves */
