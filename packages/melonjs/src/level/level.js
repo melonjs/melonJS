@@ -63,19 +63,6 @@ function safeLoadLevel(levelId, options, restart) {
 }
 
 /**
- * A promise that settles on the next task, scheduled through the engine's own
- * deferral so it lands in the same place `defer` does.
- * @returns {Promise<void>} resolves after the current frame
- * @ignore
- * @internal
- */
-function nextTask() {
-	return new Promise((resolve) => {
-		defer(resolve, null);
-	});
-}
-
-/**
  * Load a TMX level
  * @private
  * @param {string} levelId - level id
@@ -272,9 +259,13 @@ export const level = {
 			// stop the game loop to avoid some silly side effects
 			state.stop();
 			if (wantsPromise) {
-				// `.then` turns a throw into a rejection on its own, so this
-				// needs no executor and no try/catch
-				return nextTask().then(() => {
+				// The load runs in `.then`, not in the executor: a throw from
+				// inside `defer`'s callback would escape the executor entirely,
+				// leaving the promise pending forever. Raised one level up it
+				// rejects, which is why this needs no try/catch.
+				return new Promise((resolve) => {
+					defer(resolve, null);
+				}).then(() => {
 					safeLoadLevel(levelId, options, true);
 					return true;
 				});
