@@ -24,6 +24,57 @@ import state from "../src/state/state.ts";
  * tests pin the SCHEDULING, which is what changed. `getGLTF` returns null for
  * an unregistered asset, so a scene registers without one.
  */
+const MAP = {
+	type: "map",
+	version: "1.10",
+	orientation: "orthogonal",
+	renderorder: "right-down",
+	infinite: false,
+	width: 4,
+	height: 4,
+	tilewidth: 16,
+	tileheight: 16,
+	nextlayerid: 2,
+	nextobjectid: 1,
+	layers: [
+		{
+			id: 1,
+			name: "ground",
+			type: "tilelayer",
+			visible: true,
+			opacity: 1,
+			x: 0,
+			y: 0,
+			width: 4,
+			height: 4,
+			data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		},
+		{
+			id: 2,
+			name: "entities",
+			type: "objectgroup",
+			visible: true,
+			opacity: 1,
+			x: 0,
+			y: 0,
+			objects: [
+				{
+					id: 1,
+					name: "spawn",
+					type: "",
+					x: 8,
+					y: 8,
+					width: 8,
+					height: 8,
+					rotation: 0,
+					visible: true,
+				},
+			],
+		},
+	],
+	tilesets: [],
+};
+
 describe("level.load({ async }) (#1646)", () => {
 	let app;
 	let calls;
@@ -40,6 +91,15 @@ describe("level.load({ async }) (#1646)", () => {
 		originalAddTo = GLTFScene.prototype.addTo;
 		level.add("gltf", "unit-test-level");
 		level.add("gltf", "unit-test-level-2");
+		// registered up here rather than inside the TMX describe: "the option
+		// defaults" needs the map too, and a sibling describe's `beforeAll`
+		// only runs for that describe — the tests passed purely on declaration
+		// order, which is not a thing to rely on
+		await loader.preload(
+			[{ name: "unit-test-map", type: "tmx", data: MAP }],
+			undefined,
+			false,
+		);
 	});
 
 	afterAll(() => {
@@ -210,8 +270,10 @@ describe("level.load({ async }) (#1646)", () => {
 			// ordinary outcome, not an error
 			const seen = track();
 			state.stop();
-			await level.load("unit-test-level-2", {
+			// the LAST registered level — see the top-level beforeAll
+			await level.load("unit-test-map", {
 				container: container(),
+				setViewportBounds: false,
 				async: true,
 			});
 			seen.length = 0;
@@ -256,11 +318,17 @@ describe("level.load({ async }) (#1646)", () => {
 		it("each sync twin still returns the same value, unchanged", () => {
 			track();
 			state.stop();
+			// three levels are registered: unit-test-level, unit-test-level-2,
+			// then the TMX map — so walking forward twice reaches the end
 			level.load("unit-test-level", { container: container() });
 			expect(level.reload({ container: container() })).toBe(true);
 			expect(level.next({ container: container() })).toBe(true);
+			expect(
+				level.next({ container: container(), setViewportBounds: false }),
+			).toBe(true);
 			// now on the last level: no next
 			expect(level.next({ container: container() })).toBe(false);
+			expect(level.previous({ container: container() })).toBe(true);
 			expect(level.previous({ container: container() })).toBe(true);
 			// back on the first: no previous
 			expect(level.previous({ container: container() })).toBe(false);
@@ -304,67 +372,6 @@ describe("level.load({ async }) (#1646)", () => {
 		// with GUID reset, object flattening and viewport bounds — so the flag
 		// has to work there too. The map is passed inline via the loader's
 		// `data` field, so this needs no fixture file.
-		const MAP = {
-			type: "map",
-			version: "1.10",
-			orientation: "orthogonal",
-			renderorder: "right-down",
-			infinite: false,
-			width: 4,
-			height: 4,
-			tilewidth: 16,
-			tileheight: 16,
-			nextlayerid: 2,
-			nextobjectid: 1,
-			layers: [
-				{
-					id: 1,
-					name: "ground",
-					type: "tilelayer",
-					visible: true,
-					opacity: 1,
-					x: 0,
-					y: 0,
-					width: 4,
-					height: 4,
-					data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				},
-				{
-					id: 2,
-					name: "entities",
-					type: "objectgroup",
-					visible: true,
-					opacity: 1,
-					x: 0,
-					y: 0,
-					objects: [
-						{
-							id: 1,
-							name: "spawn",
-							type: "",
-							x: 8,
-							y: 8,
-							width: 8,
-							height: 8,
-							rotation: 0,
-							visible: true,
-						},
-					],
-				},
-			],
-			tilesets: [],
-		};
-
-		beforeAll(async () => {
-			// `switchToLoadState` false: this spec is not driving the state
-			// machine, and the LOADING state would fight the tests below
-			await loader.preload(
-				[{ name: "unit-test-map", type: "tmx", data: MAP }],
-				undefined,
-				false,
-			);
-		});
-
 		it("loads a TMX map in the boolean form", () => {
 			state.stop();
 			const target = container();
@@ -411,6 +418,64 @@ describe("level.load({ async }) (#1646)", () => {
 			// passes the whole options object as `flatten` and flattens
 			// everything — no wrapper, and this assertion catches it.
 			expect(target.getChildByName("entities")).toHaveLength(1);
+		});
+	});
+
+	describe("the option defaults", () => {
+		// These are pre-existing defaults rather than anything this change
+		// introduced, but nothing called `level.load` before, so nothing pinned
+		// them either. They are the contract a game gets when it passes no
+		// options at all, which is the common case.
+
+		it("defaults the container to the app's world", () => {
+			const seen = track();
+			state.stop();
+			level.load("unit-test-level");
+			expect(seen).toHaveLength(1);
+			expect(seen[0]).toBe(app.world);
+		});
+
+		it("defaults setViewportBounds to TRUE on the TMX arm", async () => {
+			// the TMX arm reads `container.getRootAncestor().app`, so this has
+			// to go through the attached default container
+			const calls = [];
+			const original = app.viewport.setBounds.bind(app.viewport);
+			app.viewport.setBounds = (...args) => {
+				calls.push(args);
+				return original(...args);
+			};
+			state.stop();
+			level.load("unit-test-map");
+			const withDefault = calls.length;
+
+			calls.length = 0;
+			level.load("unit-test-map", { setViewportBounds: false });
+			const withFalse = calls.length;
+			app.viewport.setBounds = original;
+
+			expect(withDefault).toBeGreaterThan(0);
+			expect(withFalse).toBe(0);
+		});
+
+		it("defaults flatten to the app's mergeGroup", () => {
+			// `flatten` decides whether a Tiled object group keeps its own
+			// Container. The default is not `true` or `false` but whatever the
+			// application says, which is the part worth pinning.
+			const previous = app.mergeGroup;
+			state.stop();
+
+			app.mergeGroup = false;
+			level.load("unit-test-map", { setViewportBounds: false });
+			const wrappedWhenFalse = app.world.getChildByName("entities").length;
+
+			app.mergeGroup = true;
+			level.load("unit-test-map", { setViewportBounds: false });
+			const wrappedWhenTrue = app.world.getChildByName("entities").length;
+
+			app.mergeGroup = previous;
+
+			expect(wrappedWhenFalse).toBe(1);
+			expect(wrappedWhenTrue).toBe(0);
 		});
 	});
 
