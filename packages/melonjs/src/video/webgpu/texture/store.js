@@ -4,6 +4,25 @@ import mipblitWGSL from "../shaders/mipblit.wgsl";
 import { COMPRESSED_FORMATS, uploadCompressedTexture } from "./compressed.js";
 
 /**
+ * How many mip levels a full chain for this size has.
+ *
+ * The reason this is a function rather than an inline expression: a source
+ * whose largest dimension is 1 has a COMPLETE chain at one level. Testing
+ * "does this record have mips" as `mipLevelCount === 1` therefore never comes
+ * true for it — the texture is rebuilt with one level, the next draw asks the
+ * same question, and a 1x1 filler (every mesh without an alpha map binds one)
+ * is re-created and retired several times a frame for the life of the scene.
+ * @param {number} width - source width in pixels
+ * @param {number} height - source height in pixels
+ * @returns {number} levels in a full chain, at least 1
+ * @ignore
+ * @internal
+ */
+function fullMipLevelCount(width, height) {
+	return Math.floor(Math.log2(Math.max(width, height, 1))) + 1;
+}
+
+/**
  * Renderer-owned GPU texture store for the WebGPU backend — the counterpart
  * of `MaterialBatcher`'s createTexture2D/bindTexture2D/deleteTexture2D tier,
  * kept on the renderer (rather than a batcher) so the quad path and the
@@ -123,7 +142,8 @@ export default class WebGPUTextureStore extends TextureStore {
 			// same source, but the texture must be rebuilt with a chain
 			(options.mipmaps === true &&
 				record.compressed !== true &&
-				(record.mipLevelCount ?? 1) === 1)
+				(record.mipLevelCount ?? 1) <
+					fullMipLevelCount(record.width ?? 1, record.height ?? 1))
 		) {
 			// compressed sources (parsed dds/ktx/pvr/pkm) carry pre-encoded
 			// block data: a dedicated createTexture + per-mip writeTexture
@@ -206,7 +226,8 @@ export default class WebGPUTextureStore extends TextureStore {
 				// level-0-only texture to a full chain — never the reverse:
 				// flat consumers of a mipped record sample level 0 via their
 				// lod-clamped sampler
-				(options.mipmaps === true && (record.mipLevelCount ?? 1) === 1) ||
+				(options.mipmaps === true &&
+					(record.mipLevelCount ?? 1) < fullMipLevelCount(width, height)) ||
 				// a recycled unit whose resident texture came from the
 				// compressed path cannot adopt an image source: its format
 				// is non-renderable and copyExternalImageToTexture would
@@ -221,9 +242,7 @@ export default class WebGPUTextureStore extends TextureStore {
 				}
 				// full chain down to 1×1 when the mesh path asks for mips
 				const mipLevelCount =
-					options.mipmaps === true
-						? Math.floor(Math.log2(Math.max(width, height))) + 1
-						: 1;
+					options.mipmaps === true ? fullMipLevelCount(width, height) : 1;
 				const gpuTexture = this.device.createTexture({
 					label: "melonJS texture",
 					size: [width, height],
