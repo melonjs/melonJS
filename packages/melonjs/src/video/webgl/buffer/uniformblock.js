@@ -65,6 +65,25 @@ export default class UniformBlock {
 		/** @type {number} */
 		this.bindingPoint = bindingPoint;
 
+		/**
+		 * `getUniformBlockIndex` answers for programs already asked about.
+		 *
+		 * The index is a static property of a linked program, but the query is
+		 * a driver round-trip, and `bindTo` is reached per draw — whenever the
+		 * current program changes. A scene alternating between two shader
+		 * variants therefore re-asks the driver the same question several times
+		 * a frame, forever.
+		 *
+		 * A WeakMap keyed on the program is exactly right for the context-loss
+		 * story above: a restored context brings NEW program objects, absent
+		 * from the map and so re-queried, while the old ones become unreachable
+		 * and collectable. There is still nothing to ask the driver.
+		 * @type {WeakMap<WebGLProgram, Map<string, number>>}
+		 * @ignore
+		 * @internal
+		 */
+		this._blockIndices = new WeakMap();
+
 		/** @type {WebGLBuffer|null} */
 		this.buffer = gl.createBuffer();
 
@@ -77,16 +96,30 @@ export default class UniformBlock {
 	/**
 	 * Point a program's named block at this buffer's binding point.
 	 *
-	 * Safe to call repeatedly — after a context restore the program is a new
-	 * object and must be re-bound, and there is no way to ask whether it
-	 * already was.
+	 * Safe to call repeatedly, and cheap to: the block index is memoized per
+	 * program, so a repeat call costs a map lookup rather than a driver
+	 * round-trip. After a context restore the program is a new object and must
+	 * be re-bound — there is no way to ask whether it already was — and that
+	 * new object misses the cache, so it is re-queried.
 	 * @param {WebGLProgram} program - the linked program
 	 * @param {string} blockName - the block's name in GLSL
 	 * @returns {boolean} `false` when the program does not declare the block
 	 */
 	bindTo(program, blockName) {
 		const gl = this.gl;
-		const index = gl.getUniformBlockIndex(program, blockName);
+		let byName = this._blockIndices.get(program);
+		if (byName === undefined) {
+			byName = new Map();
+			this._blockIndices.set(program, byName);
+		}
+		let index = byName.get(blockName);
+		if (index === undefined) {
+			index = gl.getUniformBlockIndex(program, blockName);
+			// INVALID_INDEX is cached too: a program that does not declare the
+			// block will never grow one, and re-asking every draw is the same
+			// round-trip for the same answer
+			byName.set(blockName, index);
+		}
 		if (index === gl.INVALID_INDEX) {
 			// the shader compiled without the block — either it does not use
 			// lighting, or the declaration was optimised out because nothing

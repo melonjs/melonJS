@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { event } from "../src/index.js";
 import UniformBlock from "../src/video/webgl/buffer/uniformblock.js";
+import { compileProgram } from "../src/video/webgl/utils/program.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
@@ -140,6 +141,168 @@ void main(void) { fragColor = first + second; }`;
 				expect(gl.getError()).toBe(gl.NO_ERROR);
 			} finally {
 				gl.deleteProgram(program);
+				block.destroy();
+			}
+		});
+
+		/** count driver queries while `fn` runs */
+		const countQueries = (fn) => {
+			const original = gl.getUniformBlockIndex.bind(gl);
+			let calls = 0;
+			gl.getUniformBlockIndex = (...args) => {
+				calls += 1;
+				return original(...args);
+			};
+			try {
+				fn();
+			} finally {
+				gl.getUniformBlockIndex = original;
+			}
+			return calls;
+		};
+
+		it("asks the driver once per program, however often it is called", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// `bindTo` is reached per draw — whenever the current program
+			// changes — so a scene alternating between two shader variants
+			// re-asks several times a frame. The index is a static property of
+			// a linked program, but the query is a driver round-trip, and on
+			// a real scene those round-trips measured 1358 calls for 4 answers.
+			const block = new UniformBlock(gl, 8, 2);
+			const program = buildProgram();
+			try {
+				const queries = countQueries(() => {
+					for (let i = 0; i < 50; i++) {
+						expect(block.bindTo(program, "TestBlock")).toBe(true);
+					}
+				});
+				expect(queries).toBe(1);
+				// and the binding is still actually established
+				const index = gl.getUniformBlockIndex(program, "TestBlock");
+				expect(
+					gl.getActiveUniformBlockParameter(
+						program,
+						index,
+						gl.UNIFORM_BLOCK_BINDING,
+					),
+				).toBe(2);
+				expect(gl.getError()).toBe(gl.NO_ERROR);
+			} finally {
+				gl.deleteProgram(program);
+				block.destroy();
+			}
+		});
+
+		it("caches the miss as well as the hit", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// a program that does not declare the block will never grow one,
+			// so re-asking is the same round-trip for the same answer
+			const block = new UniformBlock(gl, 8, 2);
+			const program = buildProgram();
+			try {
+				const queries = countQueries(() => {
+					for (let i = 0; i < 10; i++) {
+						expect(block.bindTo(program, "NoSuchBlock")).toBe(false);
+					}
+				});
+				expect(queries).toBe(1);
+			} finally {
+				gl.deleteProgram(program);
+				block.destroy();
+			}
+		});
+
+		it("keeps a separate answer per block name on the same program", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// The cache is keyed by (program, name) because the index belongs to
+			// the pair. Keyed on the program alone, the second name would be
+			// handed the first one's index — a bind pointing at the wrong block,
+			// or a `true` for a block the shader never declared.
+			const block = new UniformBlock(gl, 8, 2);
+			const program = buildProgram();
+			try {
+				const queries = countQueries(() => {
+					for (let i = 0; i < 10; i++) {
+						expect(block.bindTo(program, "TestBlock")).toBe(true);
+						expect(block.bindTo(program, "NoSuchBlock")).toBe(false);
+					}
+				});
+				expect(queries).toBe(2);
+			} finally {
+				gl.deleteProgram(program);
+				block.destroy();
+			}
+		});
+
+		it("the engine never re-links a program in place, which is what makes the cache safe", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// A block index belongs to a LINKED program: re-linking the same
+			// object changes it while the object identity stays put, which no
+			// cache keyed on identity can notice. That is safe here only
+			// because `compileProgram` is the single link site in the backend
+			// and it creates the program it links — so every link yields a
+			// fresh object, which misses the cache by construction.
+			//
+			// This is NOT a private assumption of this cache: `extractUniforms`
+			// resolves `getUniformLocation` once per shader, so an in-place
+			// re-link would already send every uniform to a stale location. If
+			// this test ever fails, both caches need revisiting, not just this
+			// one.
+			const first = compileProgram(gl, VERT, FRAG, {});
+			const second = compileProgram(gl, VERT, FRAG, {});
+			try {
+				expect(second).not.toBe(first);
+
+				const block = new UniformBlock(gl, 8, 2);
+				try {
+					const queries = countQueries(() => {
+						block.bindTo(first, "TestBlock");
+						block.bindTo(first, "TestBlock");
+						block.bindTo(second, "TestBlock");
+					});
+					// one per program, and the second was never served the
+					// first's answer
+					expect(queries).toBe(2);
+				} finally {
+					block.destroy();
+				}
+			} finally {
+				gl.deleteProgram(first);
+				gl.deleteProgram(second);
+			}
+		});
+
+		it("re-queries a program it has not seen — which is what a context restore brings", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// The cache is keyed on the program OBJECT, which is what makes it
+			// safe across a lost context: every program is recompiled on
+			// restore, so the new one misses the cache and is re-queried, while
+			// the dead one becomes unreachable. A cache keyed on anything
+			// weaker would hand back an index for a program that no longer
+			// exists, and the shader would read an unbound block — black, with
+			// no GL error.
+			const block = new UniformBlock(gl, 8, 2);
+			const first = buildProgram();
+			const restored = buildProgram();
+			try {
+				const queries = countQueries(() => {
+					block.bindTo(first, "TestBlock");
+					block.bindTo(first, "TestBlock");
+					block.bindTo(restored, "TestBlock");
+					block.bindTo(restored, "TestBlock");
+				});
+				expect(queries).toBe(2);
+				const index = gl.getUniformBlockIndex(restored, "TestBlock");
+				expect(
+					gl.getActiveUniformBlockParameter(
+						restored,
+						index,
+						gl.UNIFORM_BLOCK_BINDING,
+					),
+				).toBe(2);
+			} finally {
+				gl.deleteProgram(first);
+				gl.deleteProgram(restored);
 				block.destroy();
 			}
 		});

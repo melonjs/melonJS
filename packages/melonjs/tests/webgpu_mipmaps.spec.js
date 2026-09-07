@@ -34,7 +34,7 @@ describe("WebGPUTextureStore mipmaps", () => {
 	beforeEach(() => {
 		createdTextures = [];
 		samplers = [];
-		mipgen = { submits: 0, passes: [], draws: 0 };
+		mipgen = { submits: 0, passes: [], draws: 0, copies: 0 };
 		const device = {
 			createTexture(descriptor) {
 				const texture = {
@@ -90,7 +90,12 @@ describe("WebGPUTextureStore mipmaps", () => {
 				};
 			},
 			queue: {
-				copyExternalImageToTexture() {},
+				copyExternalImageToTexture() {
+					// counted: a texture that is not re-CREATED can still be
+					// re-UPLOADED every frame through the adoption path, which
+					// is the same pathology one layer down
+					mipgen.copies++;
+				},
 				submit() {
 					mipgen.submits++;
 				},
@@ -198,6 +203,88 @@ describe("WebGPUTextureStore mipmaps", () => {
 		store.getBinding(makeAtlas(makeSource(1, 1)), { mipmaps: true });
 		expect(createdTextures[0].mipLevelCount).toBe(1);
 		expect(mipgen.submits).toBe(0);
+	});
+
+	it("a 1×1 source is uploaded ONCE, not re-created every frame", () => {
+		// A full chain for 1×1 is one level, so a record holding one level is
+		// already complete. Testing "has it got mips?" as `mipLevelCount === 1`
+		// can never come true here: the texture was rebuilt with one level, the
+		// next frame asked again, and the answer never changed. Every mesh
+		// without an alpha map binds a 1×1 filler through this path, so this
+		// churned ~4 GPU textures per frame for the life of the scene.
+		const source = makeSource(1, 1);
+		for (let frame = 0; frame < 5; frame++) {
+			renderer.frameId = frame + 1;
+			store.getBinding(makeAtlas(source), { mipmaps: true });
+		}
+		expect(createdTextures).toHaveLength(1);
+		expect(createdTextures[0].destroyed).toBe(false);
+		expect(mipgen.submits).toBe(0);
+		// Uploaded once, too. Without this the outer guard can be reverted on
+		// its own and every test still passes: the record stops being
+		// re-created but starts being re-adopted, one image copy per frame.
+		expect(mipgen.copies).toBe(1);
+	});
+
+	it("a mipped record is not re-created every frame either", () => {
+		// the same guard, read the other way: once a record holds the full
+		// chain its size allows, nothing further is owed
+		const source = makeSource(32, 32);
+		renderer.frameId = 1;
+		store.getBinding(makeAtlas(source), { mipmaps: true });
+		expect(createdTextures).toHaveLength(1);
+		expect(createdTextures[0].mipLevelCount).toBe(6);
+
+		for (let frame = 2; frame <= 5; frame++) {
+			renderer.frameId = frame;
+			store.getBinding(makeAtlas(source), { mipmaps: true });
+		}
+		expect(createdTextures).toHaveLength(1);
+		// and the chain was generated once, not once per frame
+		expect(mipgen.submits).toBe(1);
+	});
+
+	it("upgrades a flat record to a chain across frames, then settles", () => {
+		// The in-place upgrade test above runs both binds in ONE frame, where
+		// `record.frameId === renderer.frameId` decides the rebuild before the
+		// mip clause is even evaluated. Crossing a frame boundary is what makes
+		// the mip comparison itself the deciding term.
+		const source = makeSource(32, 32);
+		renderer.frameId = 1;
+		store.getBinding(makeAtlas(source));
+		expect(createdTextures).toHaveLength(1);
+		expect(createdTextures[0].mipLevelCount).toBe(1);
+
+		renderer.frameId = 2;
+		store.getBinding(makeAtlas(source), { mipmaps: true });
+		expect(createdTextures).toHaveLength(2);
+		expect(createdTextures[1].mipLevelCount).toBe(6);
+
+		// and then stops: the chain is as long as the size allows
+		for (let frame = 3; frame <= 6; frame++) {
+			renderer.frameId = frame;
+			store.getBinding(makeAtlas(source), { mipmaps: true });
+		}
+		expect(createdTextures).toHaveLength(2);
+		expect(mipgen.submits).toBe(1);
+	});
+
+	it("a non-power-of-two source settles after one upload", () => {
+		// the chain length is floor(log2(max)) + 1, so 100×100 gets 7 levels —
+		// the guard has to compare against THAT, not against a power-of-two
+		// assumption, or the record never looks complete
+		const source = makeSource(100, 100);
+		renderer.frameId = 1;
+		store.getBinding(makeAtlas(source), { mipmaps: true });
+		expect(createdTextures).toHaveLength(1);
+		expect(createdTextures[0].mipLevelCount).toBe(7);
+
+		for (let frame = 2; frame <= 5; frame++) {
+			renderer.frameId = frame;
+			store.getBinding(makeAtlas(source), { mipmaps: true });
+		}
+		expect(createdTextures).toHaveLength(1);
+		expect(mipgen.submits).toBe(1);
 	});
 
 	it("plain 2D uploads are unchanged (no chain, no submits — regression pin)", () => {

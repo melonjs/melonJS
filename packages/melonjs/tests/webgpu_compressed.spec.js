@@ -210,6 +210,17 @@ describe("WebGPU compressed textures", () => {
 		expect(writes).toHaveLength(2);
 		expect(created).toHaveLength(1);
 
+		// and it STAYS at one across frames. The authored chain is SHORTER
+		// than a full one (2 levels for 8×8, which would be 4), so a
+		// "does this already have its mips?" test that compares against a
+		// full chain wants to rebuild it — every frame, forever.
+		for (let frame = 2; frame <= 5; frame++) {
+			renderer.frameId = frame;
+			store.getBinding(atlas, { mipmaps: true });
+		}
+		expect(created).toHaveLength(1);
+		expect(writes).toHaveLength(2);
+
 		// a recycled unit must NOT adopt a same-size image source into the
 		// compressed-format texture (non-renderable format — the copy would
 		// fail validation while the stale pixels kept serving): it recreates
