@@ -70,3 +70,26 @@ export function preloadFontFace(data, onload, onerror) {
 
 	return 1;
 }
+
+/**
+ * Unwrap a CSS URL before the loader prefixes the font's base URL.
+ * @param {string} src - font source descriptor
+ * @returns {string} source path or unchanged descriptor
+ * @ignore
+ * @internal
+ */
+preloadFontFace.resolveSrc = (src) => {
+	const urlMatch = src.match(/^url\(\s*['"]?(.*?)['"]?\s*\)$/);
+	return urlMatch ? urlMatch[1] : src;
+};
+
+/**
+ * Installed font names are not paths relative to the asset base URL.
+ * @param {string} src - font source descriptor
+ * @returns {boolean} whether the base URL should be skipped
+ * @ignore
+ * @internal
+ */
+preloadFontFace.skipBaseURL = (src) => {
+	return src.startsWith("local(");
+};
