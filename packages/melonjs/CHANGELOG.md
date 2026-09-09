@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.4.0] (melonJS 2) - _unreleased_
+## [20.4.0] (melonJS 2) - _2026-09-09_
 
 ### Added
 - `level.load()`, `reload()`, `next()` and `previous()` take an `async` option: set it and the call hands back a promise that settles once the level is actually in the world, instead of the boolean it has always returned. `options.onLoaded` still fires either way, so the two forms mix freely, and omitting the flag changes nothing — the existing signatures are preserved as TypeScript overloads, so `const ok: boolean = level.load("map1")` still compiles. Running out of levels still reports `false` rather than rejecting, and an unknown level id throws synchronously in both forms: that is a typo, not a load failure, and it should not need `await` to surface ([#1646](https://github.com/melonjs/melonJS/issues/1646))
