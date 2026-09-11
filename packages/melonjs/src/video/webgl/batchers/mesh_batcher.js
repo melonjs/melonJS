@@ -1,5 +1,10 @@
 import { Matrix3d } from "../../../math/matrix3d.ts";
 import { off, on, RENDER_TARGET_CHANGED } from "../../../system/event.ts";
+import {
+	hasSpliceMarkers,
+	meshHostingBlocker,
+	spliceEffect,
+} from "../../effects/mesh_splice.js";
 import { instanceAttributes } from "../../gpu/instancerecord.ts";
 import {
 	assignIndex,
@@ -810,6 +815,120 @@ export default class MeshBatcher extends MaterialBatcher {
 			defines,
 			fragmentDefines,
 		);
+	}
+
+	/**
+	 * The program that hosts a `ShaderEffect` on a mesh (#1658).
+	 *
+	 * A ShaderEffect is realized against the QUAD contract — its vertex stage
+	 * projects straight from `uProjectionMatrix` and declares neither
+	 * `uModelMatrix` nor `uViewMatrix` — so it cannot be bound to a mesh as-is:
+	 * the geometry arrives in model space and would draw unplaced and without
+	 * the camera (the very case `validateShaderLocations` warns about). Instead
+	 * the body is spliced into THIS batcher's own mesh shader, so the mesh keeps
+	 * its placement, alpha cutout, lighting and fog and the effect becomes a
+	 * colour hook over the result.
+	 *
+	 * Keyed through the same variant map as every other permutation, so it is
+	 * released on context loss and destroy along with the rest — and keyed on
+	 * fog too, since the spliced source inherits the fog `#define`.
+	 * @param {object} effect - the hosted ShaderEffect
+	 * @returns {GLShader} the spliced program
+	 * @ignore
+	 * @internal
+	 */
+	effectShaderFor(effect) {
+		const fog = this._fogDefine();
+		const sources = this._shaderSources();
+		const fragment = spliceEffect(sources.fragment, effect._meshBody);
+		if (fragment === null) {
+			return null;
+		}
+		// The two mesh hosts are different GLSL dialects: the unlit shader is
+		// ES 1.00, the lit one `#version 300 es`. Every documented effect body
+		// — including the `@example` blocks on `ShaderEffect` itself — samples
+		// with `texture2D`, which ES 3.00 removed. Without this a body that
+		// works on a sprite and on an unlit mesh fails to compile the moment
+		// it lands on a LIT one. The alias is inert on the 1.00 host, so it is
+		// only injected where it is needed.
+		const compat = /^\s*#version\s+300\s+es/m.test(sources.fragment)
+			? "#define texture2D texture\n"
+			: "";
+		try {
+			return this.shaderVariant(
+				`effect|${effect._effectId}|${fog !== "" ? 1 : 0}`,
+				{ vertex: sources.vertex, fragment },
+				fog,
+				fog + compat,
+			);
+		} catch (error) {
+			// Compiling a user body must not take the frame down with it. The
+			// effect contract is warn-and-degrade, and this runs inside
+			// `drawMesh` — an exception here escapes mid-frame, every frame.
+			if (this._meshEffectCompileWarned !== true) {
+				this._meshEffectCompileWarned = true;
+				console.warn(
+					`melonJS: this ShaderEffect failed to compile against the mesh shader — ${error instanceof Error ? error.message : String(error)}. The mesh draws with the built-in shading.`,
+				);
+			}
+			return null;
+		}
+	}
+
+	/**
+	 * Bring a spliced program up to date with the effect's uniforms.
+	 *
+	 * `ShaderEffect.setUniform` writes into the effect's OWN quad program;
+	 * this one is a different program, so every value the effect has ever been
+	 * given is replayed onto it. Unknown names are skipped rather than passed
+	 * on: `GLShader.setUniform` throws on one, and a body is free to declare
+	 * uniforms the spliced mesh source optimised away.
+	 * @param {object} effect - the hosted ShaderEffect
+	 * @param {GLShader} shader - the spliced program
+	 * @ignore
+	 * @internal
+	 */
+	replayEffectUniforms(effect, shader) {
+		for (const [name, value] of effect._uniformValues) {
+			if (shader.uniforms[name] !== undefined) {
+				shader.setUniform(name, value);
+			}
+		}
+	}
+
+	/**
+	 * Whether this batcher can host `effect`, warning once when it cannot.
+	 * @param {object} effect - the candidate ShaderEffect
+	 * @returns {boolean} true when the effect can be spliced in
+	 * @ignore
+	 * @internal
+	 */
+	canHostEffect(effect) {
+		if (typeof effect._meshBody !== "string") {
+			return false;
+		}
+		// the family this batcher would compile has to carry the markers — a
+		// substituted source (a test stub, a family that predates them) simply
+		// does not host effects
+		if (!hasSpliceMarkers(this._shaderSources().fragment)) {
+			return false;
+		}
+		// `_extraTextures` rather than anything in the body: on GLSL an extra
+		// sampler is an ordinary uniform the parser never sees, and only
+		// `setTexture` reveals it
+		const blocker = meshHostingBlocker(effect._meshBuiltins, [
+			...(effect._extraTextures?.keys() ?? []),
+		]);
+		if (blocker === null) {
+			return true;
+		}
+		if (this._meshEffectBlockedWarned !== true) {
+			this._meshEffectBlockedWarned = true;
+			console.warn(
+				`melonJS: this ShaderEffect cannot be hosted on a Mesh — ${blocker}. The mesh draws with the built-in shading.`,
+			);
+		}
+		return false;
 	}
 
 	/**

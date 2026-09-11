@@ -1,3 +1,4 @@
+import { shiftGroup3, spliceEffect } from "./mesh_splice.js";
 import { parseWGSLBody } from "./wgsl/parse.js";
 import { buildWGSLModule } from "./wgsl/scaffold.js";
 
@@ -38,6 +39,14 @@ export default class WGSLEffectRealization {
 			return;
 		}
 
+		/**
+		 * the user body, kept so a mesh-hosted realization can be assembled
+		 * from it later (#1658) — the quad `code` below is unaffected
+		 * @type {string}
+		 */
+		this.body = body;
+		/** the parse result, reused when realizing against the mesh contract */
+		this.parsed = parsed;
 		/** name → {offset, size, type} placement in the uniform block */
 		this.layout = parsed.layout;
 		/** total uniform block byte size (0 = no uniform struct) */
@@ -52,6 +61,14 @@ export default class WGSLEffectRealization {
 		this.code = module.code;
 		/** builtin binding assignment (ME / capture texture / samplers) */
 		this.builtinBindings = module.bindings;
+
+		/**
+		 * mesh-contract modules, keyed by the host mesh shader text — built
+		 * lazily, since most effects never land on a mesh (#1658)
+		 * @ignore
+		 * @internal
+		 */
+		this.meshModules = new Map();
 
 		// CPU mirror of the uniform block; snapshot-uploaded per bind
 		this.cpu = new ArrayBuffer(Math.max(this.structSize, 0));
@@ -161,5 +178,26 @@ export default class WGSLEffectRealization {
 	 */
 	releaseGPU() {
 		this.gpu = null;
+	}
+
+	/**
+	 * This effect realized against the MESH contract: the engine's own mesh
+	 * module with the body spliced in at its `ME_effect` hook, and the
+	 * body's group-3 bindings shifted up one so `uMesh` keeps binding 0.
+	 *
+	 * The quad module (`this.code`) is untouched — a `Sprite` still gets the
+	 * exact text it always did.
+	 * @param {string} meshSource - the host mesh shader's WGSL text
+	 * @returns {string} the spliced module
+	 * @ignore
+	 * @internal
+	 */
+	meshModule(meshSource) {
+		let code = this.meshModules.get(meshSource);
+		if (typeof code === "undefined") {
+			code = spliceEffect(meshSource, shiftGroup3(this.body, 1));
+			this.meshModules.set(meshSource, code);
+		}
+		return code;
 	}
 }

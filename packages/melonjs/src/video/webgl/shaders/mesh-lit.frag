@@ -104,6 +104,15 @@ vec3 applyFog(vec3 rgb, float a) {
 
 
 
+// The mesh-hosted ShaderEffect hook (#1658). Identity by default — every
+// compiler inlines it away, so an un-effected mesh pays nothing. When an
+// effect is hosted, `spliceEffect` replaces this definition with one that
+// calls the effect's `apply()`, and pastes the effect body above it.
+//
+// Deliberately a FUNCTION and not a marker comment: the shader pipeline
+// strips comments, so a comment cannot be relied on to reach the splicer.
+vec4 ME_effect(vec4 c, vec2 uv) { return c; }
+
 void main(void) {
     vec4 base = texture(uSampler, vRegion);
 
@@ -129,6 +138,7 @@ void main(void) {
         discard;
     }
     base *= vColor;
+    base = ME_effect(base, vRegion);
 
     // A mesh marked `lit` with no usable normals — the 2D-camera path,
     // which leaves world normals unwritten, or geometry that supplied none —

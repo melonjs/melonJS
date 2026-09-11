@@ -18,6 +18,7 @@ import {
 	reportedBlendMode,
 } from "../blendmodes.js";
 import BlendEffect from "../effects/blendEffect.js";
+import { meshHostingBlocker } from "../effects/mesh_splice.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
@@ -1919,14 +1920,56 @@ export default class WebGPURenderer extends Renderer {
 			this.customShader != null && this.customShader.isWebGPU === true
 				? this.customShader
 				: null;
+		// A ShaderEffect is realized against the mesh contract instead of
+		// being refused: its body is spliced into the engine's own mesh
+		// module and its uniform block moves to group 3 binding 1, since
+		// `uMesh` holds binding 0 (#1658).
+		const hostedEffect =
+			customShader === null &&
+			this.customShader != null &&
+			typeof this.customShader.wgslRealization !== "undefined" &&
+			meshHostingBlocker(
+				this.customShader.wgslRealization.builtins,
+				this.customShader.wgslRealization.textures,
+				"wgsl",
+			) === null &&
+			this.customShader.wgslRealization.meshModule(
+				this.batchers
+					.get(
+						mesh.lit === true && this.batchers.has("litMesh")
+							? "litMesh"
+							: "mesh",
+					)
+					?.shaderSource?.() ?? "",
+			) !== null
+				? this.customShader
+				: null;
 		if (
 			this.customShader != null &&
 			customShader === null &&
+			hostedEffect === null &&
 			this.meshEffectWarned !== true
 		) {
 			this.meshEffectWarned = true;
+			// Two genuinely different reasons, and saying the wrong one costs
+			// hours: a ShaderEffect IS dual-language, so telling its author it
+			// "carries no wgsl module" sends them looking for a body that is
+			// already there. What actually disqualifies it is the vertex
+			// contract — an effect realization is assembled against the frozen
+			// QUAD layout, which a mesh does not use.
+			const realization = this.customShader.wgslRealization;
+			const blocker =
+				typeof realization !== "undefined"
+					? meshHostingBlocker(
+							realization.builtins,
+							realization.textures,
+							"wgsl",
+						)
+					: null;
 			console.warn(
-				"melonJS: this custom shader cannot be hosted on a Mesh by the WebGPU renderer (it carries no `wgsl` module) — the mesh draws with the built-in shading",
+				blocker !== null
+					? `melonJS: this ShaderEffect cannot be hosted on a Mesh — ${blocker}. The mesh draws with the built-in shading.`
+					: "melonJS: this custom shader cannot be hosted on a Mesh by the WebGPU renderer (it carries no `wgsl` module) — the mesh draws with the built-in shading",
 			);
 		}
 
@@ -1934,6 +1977,27 @@ export default class WebGPURenderer extends Renderer {
 			mesh.lit === true && this.batchers.has("litMesh") ? "litMesh" : "mesh",
 		);
 		batcher.customShader = customShader;
+		// An INSTANCED draw does not host an effect. Its module and pipeline
+		// layout come from the instanced family, which knows nothing about the
+		// effect's group-3 block, so binding the combined group against it
+		// fails draw-time validation and the whole command buffer is dropped —
+		// a flickering scene rather than an unshaded mesh. WebGL warns once and
+		// falls back here; do the same rather than break frames.
+		const instanced =
+			mesh.instanceLayout !== undefined &&
+			retained &&
+			this.supportsInstancing === true;
+		if (
+			instanced &&
+			hostedEffect !== null &&
+			this.instancedEffectWarned !== true
+		) {
+			this.instancedEffectWarned = true;
+			console.warn(
+				"melonJS: a ShaderEffect cannot be hosted on an InstancedMesh — the instanced shading is a separate shader family. The mesh draws with the built-in shading.",
+			);
+		}
+		batcher.hostedEffect = instanced ? null : hostedEffect;
 
 		// per-mesh culling is a pipeline axis here. Retained geometry keeps
 		// its authored winding, so the axis bridge's reflection (which
@@ -1952,11 +2016,7 @@ export default class WebGPURenderer extends Renderer {
 		// a later mesh (or the frame-end drain) that didn't ask for it
 		try {
 			const tint = this.currentTint.toUint32(this.getGlobalAlpha());
-			if (
-				mesh.instanceLayout !== undefined &&
-				retained &&
-				this.supportsInstancing === true
-			) {
+			if (instanced) {
 				// one geometry, N copies, one recorded draw — the per-instance
 				// records carry what each copy differs by, while `modelMatrix`
 				// places the group as a whole
@@ -1970,6 +2030,12 @@ export default class WebGPURenderer extends Renderer {
 			}
 		} finally {
 			batcher.customShader = null;
+			// ...and the hosted effect with it. Left set, it reaches the one
+			// batcher entry point that does NOT come through here — the
+			// instanced ground-shadow pass — which would then build the
+			// combined group-3 binding against a shadow pipeline whose layout
+			// was frozen without it, and drop the frame.
+			batcher.hostedEffect = null;
 		}
 	}
 

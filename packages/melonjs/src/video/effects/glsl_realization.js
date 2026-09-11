@@ -146,6 +146,12 @@ export function buildGLSLProgram(fragmentBody) {
 	return {
 		vertex: buildEffectVertex(builtins),
 		fragment,
+		// the annotation-stripped body, so a mesh-hosted effect can be
+		// spliced into the engine's own mesh shader (#1658) without
+		// re-parsing. Additive: the quad `vertex`/`fragment` above are
+		// byte-identical to what they always were.
+		body: builtins.body,
+		builtins,
 		screenTextures: builtins.screenTextures,
 		noiseUV: builtins.noiseUV,
 	};

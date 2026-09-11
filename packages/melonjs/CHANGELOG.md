@@ -3,7 +3,11 @@
 ## [20.5.0] (melonJS 2) - _unreleased_
 
 ### Added
+- Mesh: a `ShaderEffect` can be hosted on a mesh — `addPostEffect` shades it on both backends. The body runs as a colour hook, so the mesh keeps its own placement, alpha cutout, lighting and fog and `apply()` transforms the result; `setUniform` and `setTime` reach it. `screen_uv`, `noise_uv`, `screen_texture`, a body's own samplers, WGSL `vColor` and `InstancedMesh` are unsupported and warn once ([#1658](https://github.com/melonjs/melonJS/issues/1658))
 - `GLTFModel` can be placed and moved: `pos`, `depth` and the transform helpers (`rotate`, `scale`) now drive the whole rig, as they do for any other renderable. Every root node used to hang from the identity, so a loaded character posed at the world origin and stayed there — the only way to frame it was to move the camera. The placement composes with the animated pose rather than replacing it, so a walk cycle plays wherever the model stands. It reaches the parts by being baked into each one's world position, so the container no longer translates the renderer for its children or folds its own `currentTransform` in: doing both would apply every move and every turn twice, drawing a model at x = -400 as though it were at -800 while its reported position stayed correct. A model left at the origin with no transform poses exactly as before
+
+### Fixed
+- Mesh: a `ShaderEffect` attached to a mesh drew the geometry unplaced and without the camera on WebGL, and was refused on WebGPU with a message naming the wrong reason. An effect is realized against the quad vertex contract, which declares neither `uModelMatrix` nor `uViewMatrix` ([#1658](https://github.com/melonjs/melonJS/issues/1658))
 
 ## [20.4.0] (melonJS 2) - _2026-09-09_
 

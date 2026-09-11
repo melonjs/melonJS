@@ -144,7 +144,9 @@ export default class WebGPULitMeshBatcher extends WebGPUMeshBatcher {
 			cache.frameLayout,
 			cache.meshMaterialLayout,
 			this.ensureLightsLayout(),
-			this.meshLayout,
+			// NOT `this.meshLayout`: a hosted effect extends group 3, and the
+			// base decides that for every tier (see `perDrawLayout`)
+			this.perDrawLayout(),
 		];
 	}
 

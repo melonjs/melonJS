@@ -135,6 +135,14 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  * `);
  * water.setTexture("uNoise", noiseTexture.getTexture(), "repeat");
  */
+/**
+ * monotonic id, so a mesh batcher can key its spliced program on the effect
+ * that produced it without holding a reference in the cache key (#1658)
+ * @ignore
+ * @internal
+ */
+let _nextEffectId = 0;
+
 export default class ShaderEffect {
 	/**
 	 * whether this effect is active (false in Canvas mode, false after
@@ -233,6 +241,21 @@ export default class ShaderEffect {
 		 */
 		this._extraTextures = new Map();
 
+		/**
+		 * every value ever passed to {@link ShaderEffect#setUniform}, so a
+		 * mesh-hosted splice of this effect can be replayed up to date
+		 * @ignore
+		 * @internal
+		 */
+		this._uniformValues = new Map();
+
+		/**
+		 * identifies this effect in a mesh batcher's shader-variant cache
+		 * @ignore
+		 * @internal
+		 */
+		this._effectId = _nextEffectId++;
+
 		if (language === "glsl") {
 			// assemble the GLSL sources (builtin parsing + boilerplate) — the
 			// pure-assembly half lives in glsl_realization.js, pinned
@@ -252,6 +275,19 @@ export default class ShaderEffect {
 			 * @internal
 			 */
 			this._hasNoiseUV = program.noiseUV;
+			/**
+			 * the annotation-stripped body and its builtin usage, kept so the
+			 * mesh batchers can splice this effect into the engine's own mesh
+			 * shader (#1658). The quad program above is untouched.
+			 * @ignore
+			 * @internal
+			 */
+			this._meshBody = program.body;
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._meshBuiltins = program.builtins;
 
 			/**
 			 * @ignore
@@ -372,6 +408,15 @@ export default class ShaderEffect {
 		if (this.destroyed === true) {
 			return;
 		}
+		// Recorded as well as applied. The GLSL branch writes straight into
+		// its own compiled program, which is all a quad ever needs — but a
+		// mesh hosts this effect as a DIFFERENT, spliced program, and that one
+		// has to be brought up to date when it is bound. Without the record
+		// there is nothing to replay onto it and `setUniform` / `setTime`
+		// would reach the quad program only (#1658).
+		// optional: a disabled effect (no body for this backend) returns from
+		// the constructor before this map exists, and must keep no-oping
+		this._uniformValues?.set(name, value);
 		if (typeof this._shader !== "undefined") {
 			this._shader.setUniform(name, value);
 		} else if (typeof this.wgslRealization !== "undefined") {
@@ -405,6 +450,17 @@ export default class ShaderEffect {
 	 * flow.setTime(me.timer.getTime() / 1000);
 	 */
 	setTime(seconds) {
+		// Recorded before either branch, and NOT via `setUniform`: this method
+		// writes straight into the realization it finds, so the value would
+		// otherwise never reach a mesh-hosted splice — a different program,
+		// brought up to date from this map when it binds. Missing it left
+		// `uTime` frozen at its initial value on the WebGL mesh path while the
+		// WGSL path worked, because that one goes through the CPU mirror the
+		// snapshot uploads (#1658). Optional: a disabled effect returns from
+		// the constructor before the map exists and must keep no-oping.
+		if (this.destroyed !== true) {
+			this._uniformValues?.set("uTime", seconds);
+		}
 		// detect `uTime` from the compiled program's ACTIVE uniforms at call
 		// time — not a substring scan of the source (which false-positives on
 		// `uTimeScale`, comments, or a `uTime` the compiler optimised out and
@@ -418,7 +474,9 @@ export default class ShaderEffect {
 			typeof this._shader !== "undefined" &&
 			this.destroyed !== true &&
 			!this._shader.suspended &&
-			typeof this._shader.uniforms.uTime !== "undefined"
+			// optional: the map is null on a shader with no live context
+			// behind it, which `suspended` alone does not cover
+			typeof this._shader.uniforms?.uTime !== "undefined"
 		) {
 			this._shader.setUniform("uTime", seconds);
 		} else if (
