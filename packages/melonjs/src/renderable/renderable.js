@@ -272,10 +272,24 @@ export default class Renderable extends Rect {
 		/**
 		 * Define the renderable opacity<br>
 		 * Set to zero if you do not wish an object to be drawn
+		 *
+		 * Opacity **cascades**: it is multiplied with the alpha already on the
+		 * renderer, so fading a {@link Container} fades everything inside it,
+		 * and a child at `alpha` 0.5 inside a parent at 0.5 draws at 0.25.
+		 * Each renderable keeps its own value — the composition happens at
+		 * draw time, and is undone when the renderable is done.
+		 *
+		 * That is different from {@link Container#setChildsProperty}, which
+		 * assigns a value onto the children themselves. Use `alpha` to fade a
+		 * subtree, and `setChildsProperty` to change what the children are.
 		 * @see Renderable#setOpacity
 		 * @see Renderable#getOpacity
+		 * @see Container#setChildsProperty
 		 * @type {number}
 		 * @default 1.0
+		 * @example
+		 * // fades the whole rig, parts included
+		 * myModel.alpha = 0.3;
 		 */
 		this.alpha = 1.0;
 
@@ -626,6 +640,9 @@ export default class Renderable extends Rect {
 
 	/**
 	 * get the renderable alpha channel value<br>
+	 *
+	 * This is the renderable's OWN value. What it finally draws at is this
+	 * multiplied by every ancestor's — see {@link Renderable#alpha}.
 	 * @returns {number} current opacity value between 0 and 1
 	 */
 	getOpacity() {
@@ -1109,8 +1126,28 @@ export default class Renderable extends Rect {
 			renderer.translate(-ax, -ay);
 		}
 
-		// apply the current tint and opacity
-		renderer.setTint(this.tint, this.getOpacity());
+		// Apply the current tint and opacity.
+		//
+		// Multiplied by the alpha already on the renderer, so opacity
+		// CASCADES: fading a container fades everything under it, which is
+		// what `alpha` is for and what `save()`/`restore()` already preserve
+		// (`RenderState` stacks `currentTint`, and every renderable is wrapped
+		// by `preDraw`/`postDraw`). Assigning it outright made a child
+		// overwrite its parent's value, so a half-faded container still drew
+		// a fully opaque subtree — and `Container.setChildsProperty` was the
+		// only way to fade a tree, which is a bulk value setter, not the same
+		// thing at all.
+		//
+		// Read BEFORE the call: `setTint` copies the tint over `currentTint`,
+		// alpha included, so the inherited value has to be captured first.
+		// `?? 1` for a renderer that carries no tint state of its own: the
+		// stock ones always do (`Renderer` takes it from its `RenderState`),
+		// but a stub or a custom backend need not, and a missing cascade must
+		// degrade to "no inherited fade" rather than throw mid-frame.
+		renderer.setTint(
+			this.tint,
+			this.getOpacity() * (renderer.currentTint?.alpha ?? 1),
+		);
 
 		// forward depth to the renderer — pushed into the WebGL vertex
 		// stream as the `z` component by the batchers. No visible effect

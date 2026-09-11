@@ -938,9 +938,15 @@ export default class Container extends Renderable {
 
 	/**
 	 * Automatically set the specified property of all childs to the given value
+	 *
+	 * This ASSIGNS to the children — after it, their own property carries the
+	 * value. To fade a subtree without touching what the children are, set
+	 * {@link Renderable#alpha} on the container instead: opacity cascades at
+	 * draw time and leaves every child's own value alone.
 	 * @param {string} prop - property name
 	 * @param {object} value - property value
 	 * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
+	 * @see Renderable#alpha
 	 */
 	setChildsProperty(prop, value, recursive) {
 		this.forEach((child) => {
