@@ -227,6 +227,51 @@ Two prerequisites that produce empty results rather than errors:
 - On the **built-in** adapter, the broadphase is cleared and rebuilt inside
   `world.update()`, so querying before the first update returns nothing.
 
+## 3D collision: `Box3d` and the Z pushback
+
+The narrowphase is not 2D-only. `Box3d` is the one shape with a depth extent,
+and a `Box3d`-vs-`Box3d` contact is resolved in three dimensions — it is the
+only pair in the engine that can push back along **Z**.
+
+```js
+import { Box3d } from "melonjs";
+
+// centre offset from the body, then half-extents on each axis
+rock.body.addShape(new Box3d(0, 0, 0, 40, 60, 40));
+boat.body.addShape(new Box3d(0, 0, 0, 30, 40, 60));
+```
+
+Reach for this for anything moving in the XZ plane under a `Camera3d` — a
+runner dodging obstacles, a 2.5D platformer, pickups on a course. Hand-rolling
+a distance check there is the usual mistake, and it throws away the
+penetration vector the response already carries.
+
+**Read the Z axis off the response, not `overlapN`.** The MTV is a single
+axis, so exactly one of `overlapN.x`, `overlapN.y` and `overlapNZ` is
+non-zero:
+
+```js
+onCollision(response, other) {
+    if (response.overlapNZ !== 0) {
+        // a depth-only contact: overlapN / overlapV are BOTH zero here
+        this.pos.z -= response.overlapZ;
+    }
+    return true;
+}
+```
+
+That is deliberate: a collision resolved along Z leaves the 2D fields at zero,
+so an existing 2D `onCollision` applies no push rather than a wrong one.
+
+**Mixed pairs degrade to 2D.** `Box3d` against a `Polygon`, `Rectangle`,
+`RoundRect` or `Ellipse` tests the box's XY footprint and treats the planar
+shape as unbounded along Z. Only `Box3d`-vs-`Box3d` gives a depth result, so
+give BOTH sides a `Box3d` when you want one.
+
+This is the narrowphase and is independent of the 3D broadphase queries above
+— `querySphere` / `raycast3d` need `world.sortOn === "depth"`; `Box3d` shapes
+do not.
+
 ## Built-in world quirks
 
 These are specific to the default world and surprise people arriving from a
@@ -308,6 +353,8 @@ use them. `adapter.capabilities` (`constraints`,
 | crash or a null body when spawning from `onCollisionStart` | world mutated during contact dispatch (locked world under planck) |
 | `raycast` / `queryAABB` finds nothing | `isKinematic` still `true`, or no `world.update` yet (built-in) |
 | `querySphere` / `raycast3d` is not a function | 2D adapter, or built-in without a 3D broadphase (`sortOn !== "depth"`) |
+| a 3D contact reports no overlap to push against | read `overlapNZ` / `overlapZ` — a Z-axis MTV leaves `overlapN` / `overlapV` at zero |
+| two 3D objects never separate in depth | one of them carries a planar shape; a mixed pair is tested as the box's XY footprint, unbounded along Z |
 | `response.depth` / `response.normal` are `undefined` | reading a legacy `onCollision` response — it carries `overlap` / `overlapN` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |

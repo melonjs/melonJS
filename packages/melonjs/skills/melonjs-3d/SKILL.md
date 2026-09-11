@@ -530,6 +530,13 @@ shadows" — which looks like culling, an LOD stage or a fog problem, none of
 which it is. Before chasing any of those, dump `shadowGroundY` against the
 caster's own y and check which one is larger.
 
+## Collision in 3D
+
+Use `Box3d` bodies, not a hand-rolled distance check. `Box3d`-vs-`Box3d` is
+the engine's 3D narrowphase and the only contact that pushes back along Z; the
+response carries `overlapNZ` / `overlapZ` for the depth axis. See the physics
+skill for the contract and the mixed-pair caveat.
+
 ## glTF / GLB scenes
 
 Loaded through the same level director as everything else:
