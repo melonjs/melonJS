@@ -522,6 +522,12 @@ export function load(asset, onload, onerror) {
 		initParsers();
 	}
 
+	const parser = parsers.get(asset.type);
+
+	if (typeof parser === "undefined") {
+		throw new Error("load : unknown or invalid resource type : " + asset.type);
+	}
+
 	// Resolve the effective src WITHOUT mutating the caller's asset
 	// descriptor: load() used to write the transformed url back into
 	// asset.src, so retrying the same object — loader.reload() after a
@@ -531,32 +537,23 @@ export function load(asset, onload, onerror) {
 	// caller's original src; only the parser sees the resolved one.
 	let src = asset.src;
 
-	// strip url() wrapper for fontface assets so baseURL can be prepended to the raw path
-	if (asset.type === "fontface" && typeof src === "string") {
-		const urlMatch = src.match(/^url\(\s*['"]?(.*?)['"]?\s*\)$/);
-		if (urlMatch) {
-			src = urlMatch[1];
-		}
+	// Let the parser normalize its source before applying the shared base URL.
+	if (typeof src === "string") {
+		src = parser.resolveSrc?.(src) ?? src;
 	}
 
-	// transform the url if necessary (skip for local() font sources and data URIs)
+	// Data URIs and parser-specific sources do not need a base URL.
 	if (
 		typeof baseURL[asset.type] !== "undefined" &&
 		typeof src === "string" &&
-		!src.startsWith("local(") &&
-		!src.startsWith("data:")
+		!src.startsWith("data:") &&
+		!parser.skipBaseURL?.(src)
 	) {
 		src = baseURL[asset.type] + src;
 	}
 
 	const resource =
 		src === asset.src ? asset : Object.assign({}, asset, { src });
-
-	const parser = parsers.get(asset.type);
-
-	if (typeof parser === "undefined") {
-		throw new Error("load : unknown or invalid resource type : " + asset.type);
-	}
 
 	const settings = {
 		nocache: nocache,
