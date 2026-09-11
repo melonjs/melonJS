@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.5.0] (melonJS 2) - _unreleased_
+
+### Added
+- `GLTFModel` can be placed and moved: `pos`, `depth` and the transform helpers (`rotate`, `scale`) now drive the whole rig, as they do for any other renderable. Every root node used to hang from the identity, so a loaded character posed at the world origin and stayed there — the only way to frame it was to move the camera. The placement composes with the animated pose rather than replacing it, so a walk cycle plays wherever the model stands. It reaches the parts by being baked into each one's world position, so the container no longer translates the renderer for its children or folds its own `currentTransform` in: doing both would apply every move and every turn twice, drawing a model at x = -400 as though it were at -800 while its reported position stayed correct. A model left at the origin with no transform poses exactly as before
+
 ## [20.4.0] (melonJS 2) - _2026-09-09_
 
 ### Added
