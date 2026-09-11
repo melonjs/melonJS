@@ -162,10 +162,11 @@ changes what the children *are*, so their own `alpha` now reads `0.3` and
 stays that way after the container goes back to full. Reach for it when you
 mean to change the children, and for `alpha` when you mean to fade a subtree.
 
-**Do not use the recursive form to fade a nested tree.** It assigns the value
-at every level, and because alpha composes those multiply — in a rig nested
-three deep, parts land on `0.3`, `0.09` and `0.027` depending where they sit.
-The symptom is a model whose parts hold *different* opacities, and which
+Do not assign alpha down a hierarchy by hand. The renderer composes it as it
+walks the tree, so setting it at more than one level multiplies: in a rig
+nested three deep, `0.3` applied at every level lands parts on `0.3`, `0.09`
+and `0.027` depending where they sit. The symptom does not look like an
+opacity problem — a model whose parts hold *different* opacities, and which
 appears to change opacity as it turns, because turning changes which parts
 face the camera.
 
