@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { Color, Container, Renderable } from "../src/index.js";
+import { beforeAll, describe, expect, it } from "vitest";
+import { boot, Color, Container, Renderable } from "../src/index.js";
+import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
+import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
 
 /**
  * Opacity cascades down the container tree.
@@ -207,5 +209,204 @@ describe("opacity cascades through a container tree", () => {
 		});
 
 		expect(renderer.seen).toEqual([0.5, 0.25]);
+	});
+});
+
+/**
+ * The same contract, against a REAL renderer.
+ *
+ * The suite above drives a stub whose `setTint` / `save` / `restore` mirror
+ * the engine's. That proves `preDraw` computes the right argument, but only
+ * against a reimplementation — if the stub drifted from
+ * `Renderer.setTint`, every test could pass while the engine misbehaved.
+ *
+ * These run the real `CanvasRenderer`, so the real `setTint` (which copies
+ * the tint over `currentTint`, alpha included), the real `RenderState` tint
+ * stack, and the real `Color.copy` are all in the loop. `copy()` overwriting
+ * alpha is the exact reason the cascade did not work before, so it is the one
+ * thing worth exercising for real.
+ */
+describe("opacity cascades — against a real CanvasRenderer", () => {
+	beforeAll(async () => {
+		await boot();
+	});
+
+	/**
+	 * @returns {object} a real renderer, 8x8, off-screen
+	 */
+	function realRenderer() {
+		return new CanvasRenderer({ width: 8, height: 8 });
+	}
+
+	it("a child inherits its parent's fade", () => {
+		const renderer = realRenderer();
+		const parent = new Container(0, 0, 100, 100);
+		parent.alpha = 0.5;
+		const child = new Renderable(0, 0, 10, 10);
+		parent.addChild(child);
+
+		parent.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.5, 5);
+		child.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.5, 5);
+		child.postDraw(renderer);
+		parent.postDraw(renderer);
+
+		renderer.destroy?.();
+	});
+
+	it("nested fades multiply", () => {
+		const renderer = realRenderer();
+		const outer = new Container(0, 0, 100, 100);
+		outer.alpha = 0.5;
+		const inner = new Container(0, 0, 50, 50);
+		inner.alpha = 0.5;
+		const leaf = new Renderable(0, 0, 10, 10);
+		leaf.alpha = 0.5;
+		outer.addChild(inner);
+		inner.addChild(leaf);
+
+		outer.preDraw(renderer);
+		inner.preDraw(renderer);
+		leaf.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.125, 5);
+		leaf.postDraw(renderer);
+		inner.postDraw(renderer);
+		outer.postDraw(renderer);
+
+		renderer.destroy?.();
+	});
+
+	it("the parent's fade is restored for the next sibling", () => {
+		const renderer = realRenderer();
+		const parent = new Container(0, 0, 100, 100);
+		parent.alpha = 0.5;
+		const first = new Renderable(0, 0, 10, 10);
+		first.alpha = 0.2;
+		const second = new Renderable(0, 0, 10, 10);
+		parent.addChild(first);
+		parent.addChild(second);
+
+		parent.preDraw(renderer);
+		first.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.1, 5);
+		first.postDraw(renderer);
+		// the real RenderState stack has to have put the parent's value back
+		second.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.5, 5);
+		second.postDraw(renderer);
+		parent.postDraw(renderer);
+
+		renderer.destroy?.();
+	});
+
+	it("an opaque tree still draws at full alpha", () => {
+		const renderer = realRenderer();
+		const parent = new Container(0, 0, 100, 100);
+		const child = new Renderable(0, 0, 10, 10);
+		parent.addChild(child);
+
+		parent.preDraw(renderer);
+		child.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(1, 5);
+		child.postDraw(renderer);
+		parent.postDraw(renderer);
+
+		renderer.destroy?.();
+	});
+});
+
+/**
+ * And on the backend games actually ship on.
+ *
+ * WebGL keeps its own render state and its own `setGlobalAlpha`, so the
+ * cascade is worth walking there rather than inferring it from the Canvas
+ * result. This descends a three-deep tree and reads the accumulated alpha at
+ * every level, then unwinds it.
+ */
+describe("opacity cascades — walking the tree on a WebGL renderer", () => {
+	beforeAll(async () => {
+		await boot();
+	});
+
+	it("accumulates going down and unwinds coming back up", (ctx) => {
+		let renderer;
+		try {
+			renderer = new WebGLRenderer({
+				width: 8,
+				height: 8,
+				failIfMajorPerformanceCaveat: false,
+			});
+		} catch {
+			ctx.skip("WebGL unavailable in this environment");
+			return;
+		}
+
+		// root 0.8 → mid 0.5 → leaf 0.5, so the leaf lands on 0.2
+		const root = new Container(0, 0, 100, 100);
+		root.alpha = 0.8;
+		const mid = new Container(0, 0, 50, 50);
+		mid.alpha = 0.5;
+		const leaf = new Renderable(0, 0, 10, 10);
+		leaf.alpha = 0.5;
+		root.addChild(mid);
+		mid.addChild(leaf);
+
+		const alpha = () => {
+			return renderer.currentTint.alpha;
+		};
+
+		expect(alpha()).toBeCloseTo(1, 5);
+		root.preDraw(renderer);
+		expect(alpha()).toBeCloseTo(0.8, 5);
+		mid.preDraw(renderer);
+		expect(alpha()).toBeCloseTo(0.4, 5);
+		leaf.preDraw(renderer);
+		expect(alpha()).toBeCloseTo(0.2, 5);
+
+		// and back up: each postDraw restores what its parent had
+		leaf.postDraw(renderer);
+		expect(alpha()).toBeCloseTo(0.4, 5);
+		mid.postDraw(renderer);
+		expect(alpha()).toBeCloseTo(0.8, 5);
+		root.postDraw(renderer);
+		expect(alpha()).toBeCloseTo(1, 5);
+
+		renderer.destroy?.();
+	});
+
+	it("a second child of the same parent starts from the parent's alpha", (ctx) => {
+		let renderer;
+		try {
+			renderer = new WebGLRenderer({
+				width: 8,
+				height: 8,
+				failIfMajorPerformanceCaveat: false,
+			});
+		} catch {
+			ctx.skip("WebGL unavailable in this environment");
+			return;
+		}
+
+		const parent = new Container(0, 0, 100, 100);
+		parent.alpha = 0.5;
+		const first = new Renderable(0, 0, 10, 10);
+		first.alpha = 0.25;
+		const second = new Renderable(0, 0, 10, 10);
+		second.alpha = 0.25;
+		parent.addChild(first);
+		parent.addChild(second);
+
+		parent.preDraw(renderer);
+		first.preDraw(renderer);
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.125, 5);
+		first.postDraw(renderer);
+		second.preDraw(renderer);
+		// 0.125 again, NOT 0.125 × 0.25 — the first child's fade was unwound
+		expect(renderer.currentTint.alpha).toBeCloseTo(0.125, 5);
+		second.postDraw(renderer);
+		parent.postDraw(renderer);
+
+		renderer.destroy?.();
 	});
 });
