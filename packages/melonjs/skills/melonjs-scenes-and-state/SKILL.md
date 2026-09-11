@@ -74,6 +74,45 @@ app.freeze(150);                             // brief hit-stop (proxies state.fr
 `state.change`. The `"mask"` form needs its fourth argument, an `Ellipse` or
 `Polygon`; without one it warns and falls back to a direct switch.
 
+### A Stage's own `update()` is NOT paused
+
+This one is easy to get wrong and hard to see. `Application.update` calls both
+of these **unconditionally**:
+
+```js
+this.isDirty = this.world.update(this.updateDelta);
+this.isDirty = state.current().update(this.updateDelta) || this.isDirty;
+```
+
+Only `Container.update` consults the pause — it reads `state.isPaused()` and
+skips every child that is not `updateWhenPaused`. So world children (entities,
+sprites, meshes, a `GLTFModel`) freeze correctly, while **the Stage subclass's
+own `update()` keeps running**.
+
+A game that keeps its logic in entities pauses for free and never notices. A
+game that drives the simulation from `Stage.update` — common for an endless
+runner, where one object moves and the world scrolls past it — keeps simulating
+through `pauseOnBlur` with its world frozen. The signature is bizarre and very
+misleading: the scenery scrolls on, the player character stands still in world
+space and slides off the screen, and it all snaps back on focus. It reads as a
+culling or animation bug, not a pause bug.
+
+Guard it explicitly:
+
+```js
+update(dt) {
+    super.update(dt);
+    if (state.isPaused()) {
+        return true;        // world children are already frozen for you
+    }
+    // …simulation…
+}
+```
+
+Worth knowing that `pauseOnBlur` (default `true`) fires on a window `blur`, not
+only on tab `visibilitychange` — so clicking another window on the same screen
+triggers it while the canvas is still fully visible.
+
 ## The update loop
 
 There is no loop you own. Logic goes in `update(dt)` overrides, or a
@@ -169,6 +208,8 @@ save.hiscore = 1200;           // plain assignment writes to localStorage
 | a tween finishes in 1000 ms whatever you pass | `to()` takes `{ duration }`, not a number |
 | object frozen while its state updates | `update()` not returning `true` |
 | timers fire behind a pause menu | `window.setTimeout` instead of `timer.setTimeout` |
+| the world freezes on blur but the game keeps advancing | simulation lives in `Stage.update`, which the pause does not gate — only `Container.update` checks `state.isPaused()` |
+| the player character is left behind and scrolls off after a lost window | same cause: the stage advanced the camera while its world children were paused |
 | a tween does nothing | `.start()` never called |
 | effect stops during a hit-stop | tween needs `updateWhenPaused = true` |
 | crash after a stage switch | callback ran during teardown — guard with `state.isCurrent` |

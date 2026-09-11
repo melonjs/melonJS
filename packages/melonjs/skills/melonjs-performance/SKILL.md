@@ -151,6 +151,49 @@ queries one at a time, usually not. See `melonjs-3d` for the decision table.
   GPU release. Images, by contrast, only lose their loader-side reference; the
   renderer's texture cache is not purged by unloading.
 
+## The first frame of a scene is not like the others
+
+A freeze the first time a level appears, and never again, is almost always
+**shader linking**, not your scene build. Measure before assuming: procedural
+geometry is usually trivial next to it.
+
+Programs are created lazily. The mesh batcher keys a variant on the feature
+combination it is asked for (lit, instanced, instance colours, instance data,
+fog) and links it on the first draw that needs it — and `compileProgram` calls
+`getProgramParameter(LINK_STATUS)` right after `linkProgram`, which blocks until
+the driver finishes. That whole cost lands inside one frame.
+
+How to tell them apart, all from the page:
+
+```js
+// 1. is it the build, or the draw?  time your own setup
+const t0 = performance.now(); buildLevel(); console.log(performance.now() - t0);
+
+// 2. how long is the bad frame?  rAF deltas, not averages
+let last = performance.now();
+const tick = () => { const n = performance.now();
+  if (n - last > 40) console.log("long frame", (n - last).toFixed(0));
+  last = n; requestAnimationFrame(tick); };
+
+// 3. is it programs?  count them, and when
+const gl = WebGL2RenderingContext.prototype, link = gl.linkProgram;
+gl.linkProgram = function (p) { console.count("linkProgram"); return link.call(this, p); };
+```
+
+The tell is that the second entry into the same scene is cheap: one measured
+case went 852ms of stall (worst frame 479ms) on first entry to 277ms (worst
+102ms) on the second, because the programs were already cached.
+
+Two things follow. Cut the number of programs — identical `ShaderEffect`s each
+link their own, so preload one as a `"shader"` asset and share it. And pay what
+remains behind the loading screen by drawing the scene once there and discarding
+it (see `melonjs-loading-assets`).
+
+Do not profile this on a software rasterizer — headless Chromium falls back to
+SwiftShader, where the absolute numbers are wildly pessimistic and the JS
+profile shows the time as `(program)`, outside JS entirely. Ratios transfer;
+milliseconds do not.
+
 ## Where the costs actually are
 
 In rough order for a typical 2D game:
@@ -175,6 +218,8 @@ In rough order for a typical 2D game:
 | everything updates even when idle | `update()` returning `true` unconditionally |
 | memory grows with long music | missing `stream: true` |
 | slow only on some machines | Canvas fallback — no GPU tilemap path |
+| a freeze the first time a level shows, never again | shader variants linking on first draw — warm them behind the loading screen |
+| the same scene stutters once per entry | a derived texture rebuilt per stage: the texture cache keys on the image object, so each rebuild is a new upload |
 
 ## Related skills
 
