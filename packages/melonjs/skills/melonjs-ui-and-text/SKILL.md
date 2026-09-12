@@ -29,10 +29,32 @@ If you have a label carrying a leading `\n` to buy headroom, that workaround is
 now dead weight — drop it, and take the line height back off the position you
 shifted it by.
 
-`fillStyle` is a `Color`, so there is **no gradient fill**. For the arcade
-look — light at the top running into a deeper tone — apply a small
-`ShaderEffect` to the `Text` renderable; text is 2D, so the effect path works
-on both backends.
+## Gradient text
+
+`fillStyle` takes a `Gradient` as well as a colour — the same object
+`Renderer#setColor` accepts, built the way the canvas API builds one:
+
+```js
+const ramp = renderer.createLinearGradient(0, 0, 0, 24);  // top to bottom
+ramp.addColorStop(0, "#fffdf0");
+ramp.addColorStop(1, "#f0a020");
+
+new Text(x, y, { font: "Display", size: 24, fillStyle: ramp });
+```
+
+Coordinates are the label's own bake: `(0, 0)` is the top-left of the render
+box. **Span the whole block, not one line** — a ramp authored down a single
+line box leaves every line after the first past its last stop, and flat:
+
+```js
+const lines = 3;                         // "LIVES 2\nCARROTS 18\n240M"
+renderer.createLinearGradient(0, 0, 0, size * lineHeight * lines);
+```
+
+The ramp colours the **fill only** — `Text` strokes in a separate pass, so
+an outline keeps its own colour without any luminance trickery — and it works on
+Canvas2D, which a post effect does not. `fillStyle.alpha` still gates the fill,
+and the property still reads back as a `Color`.
 
 ## The HUD pattern
 

@@ -5,7 +5,12 @@
  */
 export default function setContextStyle(context, style) {
 	context.font = style.font;
-	context.fillStyle = style.fillStyle.toRGBA();
+	// a Gradient fills the glyphs in place of the flat colour — the same choice
+	// `Renderer#setColor` makes, resolved here against the bake's own context
+	context.fillStyle =
+		style.fillGradient !== undefined
+			? style.fillGradient.toCanvasGradient(context)
+			: style.fillStyle.toRGBA();
 	context.strokeStyle = style.strokeStyle.toRGBA();
 	context.lineWidth = style.lineWidth;
 	context.textAlign = style.textAlign;
