@@ -350,3 +350,77 @@ describe("BitmapTextData — XML-specific parsing", () => {
 		}).toThrow();
 	});
 });
+
+/**
+ * Audit: a bitmap font measures REAL glyph ink, unlike the canvas `Text` path.
+ *
+ * `TextMetrics` sizes a canvas `Text` from the nominal line box
+ * (`fontSize × lineHeight`) and knows nothing about where the ink lands, so a
+ * glyph rising above the em box is clipped by the offscreen canvas — see
+ * `text-ink-clipping.spec.js`. A bitmap font has no such blind spot: every
+ * glyph's box is recorded as it is parsed, and `TextMetrics` uses those extents
+ * plus a `glyphYOffset` that shifts the draw to match.
+ *
+ * These pin the invariant that makes it safe, so the canvas path can be fixed
+ * to match rather than the two drifting apart.
+ */
+describe("BitmapTextData — vertical ink extents", () => {
+	const font = (chars) => {
+		return new BitmapTextData(buildFont("xml", { chars }));
+	};
+	const glyph = (id, yoffset, height) => {
+		return {
+			id,
+			x: 0,
+			y: 0,
+			width: 8,
+			height,
+			xoffset: 0,
+			yoffset,
+			xadvance: 8,
+		};
+	};
+
+	it("records the topmost ink across the whole font", () => {
+		// the second glyph rises higher than the first
+		const data = font([glyph(65, 4, 10), glyph(66, 1, 10)]);
+
+		expect(data.glyphMinTop).toBe(1);
+	});
+
+	it("records the lowest ink, descenders included", () => {
+		// a descender: it starts low AND runs long
+		const data = font([glyph(65, 2, 10), glyph(103, 6, 14)]);
+
+		expect(data.glyphMaxBottom).toBe(20);
+	});
+
+	it("ignores zero-area glyphs like the space", () => {
+		// a space carries an advance but no ink, and must not drag the extents
+		const data = font([
+			glyph(65, 3, 10),
+			{
+				id: 32,
+				x: 0,
+				y: 0,
+				width: 0,
+				height: 0,
+				xoffset: 0,
+				yoffset: 0,
+				xadvance: 8,
+			},
+		]);
+
+		expect(data.glyphMinTop).toBe(3);
+		expect(data.glyphMaxBottom).toBe(13);
+	});
+
+	it("falls back to zero when the font has no drawable glyph", () => {
+		// `glyphMinTop` seeds at Infinity; left there it would poison every
+		// offset computed from it
+		const data = font([]);
+
+		expect(data.glyphMinTop).toBe(0);
+		expect(data.glyphMaxBottom).toBe(0);
+	});
+});

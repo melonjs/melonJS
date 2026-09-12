@@ -120,6 +120,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// GLShader routed by `renderer.drawMesh`, cleared after each mesh),
 		// or null
 		this.customShader = null;
+		this.hostedEffect = null;
 
 		// CPU index staging for the accumulated path (uint32 — matches the
 		// backend's index convention and keeps writeBuffer 4-byte aligned)
@@ -132,6 +133,11 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		this.uniformBinding = null;
 		// uniform bind group per arena page (pages persist across frames)
 		this.uniformBindGroups = new Map();
+		// the same, for a draw that hosts an effect — keyed by mesh page, then
+		// effect page, then effect. Three keys because the two uniform regions
+		// are separate arena allocations and can land on different pages, and
+		// because two effects differ in both layout and contents.
+		this.effectBindGroups = new Map();
 		// the mesh pass axes for the NEXT flush — mutated in place by
 		// `renderer.drawMesh` per mesh (read synchronously at pipeline lookup)
 		this.meshState = { cullMode: "back", frontFace: "ccw" };
@@ -309,9 +315,11 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const frame = renderer.currentFrameBinding;
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
 		this.bindLights(pass);
-		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
-			this.uniformBinding.dynamicOffset,
-		]);
+		pass.setBindGroup(
+			3,
+			this.uniformBinding.bindGroup,
+			this.uniformBinding.offsets,
+		);
 		pass.setVertexBuffer(0, geometry.vertexBuffer);
 		pass.setVertexBuffer(1, instances.buffer);
 		pass.setIndexBuffer(geometry.indexBuffer, geometry.indexFormat);
@@ -445,9 +453,11 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
 		pass.setBindGroup(1, this.currentMaterial);
 		this.bindLights(pass);
-		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
-			this.uniformBinding.dynamicOffset,
-		]);
+		pass.setBindGroup(
+			3,
+			this.uniformBinding.bindGroup,
+			this.uniformBinding.offsets,
+		);
 		pass.setVertexBuffer(0, quadGeometry.vertexBuffer);
 		pass.setVertexBuffer(1, instances.buffer);
 		pass.setIndexBuffer(quadGeometry.indexBuffer, quadGeometry.indexFormat);
@@ -544,6 +554,118 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	}
 
 	/**
+	 * The group-3 layout when a `ShaderEffect` is hosted on the mesh (#1658).
+	 *
+	 * `uMesh` keeps binding 0 — the spliced module is the engine's own mesh
+	 * shader and still declares it there — and the effect's own uniform block
+	 * takes binding 1, its texture/sampler pairs following at their declared
+	 * bindings shifted by the same one. That shift is why the body is rewritten
+	 * rather than pasted: a quad effect declares its block at
+	 * `@group(3) @binding(0)`, which is exactly where `uMesh` lives.
+	 * @param {object} effect - the hosted effect
+	 * @returns {GPUBindGroupLayout} the combined layout
+	 * @ignore
+	 * @internal
+	 */
+	hostedEffectLayout(effect) {
+		const realization = effect.wgslRealization;
+		const entries = [
+			{
+				binding: 0,
+				visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+				buffer: {
+					type: "uniform",
+					hasDynamicOffset: true,
+					minBindingSize: MESH_UNIFORM_SIZE,
+				},
+			},
+		];
+		let signature = `${this.uniformSignature()}|fx${realization.structSize}`;
+		if (realization.structSize > 0) {
+			entries.push({
+				binding: 1,
+				visibility: GPUShaderStage.FRAGMENT,
+				buffer: {
+					type: "uniform",
+					hasDynamicOffset: true,
+					minBindingSize: realization.structSize,
+				},
+			});
+		}
+		// no texture entries: a body declaring its own samplers is refused
+		// before it ever gets here (see `meshHostingBlocker`)
+		return this.renderer.pipelineCache.getEffectLayout(signature, entries);
+	}
+
+	/**
+	 * Build the group-3 binding for a draw that hosts an effect: `uMesh`
+	 * plus a fresh snapshot of the effect's uniform mirror, plus its
+	 * textures.
+	 * @param {GPUDevice} device - the device
+	 * @param {object} renderer - the owning renderer
+	 * @param {object} effect - the hosted effect
+	 * @param {object} meshRegion - the arena region already holding `uMesh`
+	 * @returns {{bindGroup: GPUBindGroup, offsets: number[]}} the binding
+	 * @ignore
+	 * @internal
+	 */
+	bindHostedEffect(device, renderer, effect, meshRegion) {
+		const realization = effect.wgslRealization;
+		const entries = [
+			{
+				binding: 0,
+				resource: { buffer: meshRegion.buffer, size: MESH_UNIFORM_SIZE },
+			},
+		];
+		const offsets = [meshRegion.offset];
+		if (realization.structSize > 0) {
+			const region = renderer.effectUniformArena.alloc(
+				realization.structSize,
+				device.limits.minUniformBufferOffsetAlignment,
+			);
+			device.queue.writeBuffer(
+				region.buffer,
+				region.offset,
+				realization.cpu,
+				0,
+				realization.structSize,
+			);
+			entries.push({
+				binding: 1,
+				resource: { buffer: region.buffer, size: realization.structSize },
+			});
+			offsets.push(region.offset);
+		}
+		// Cached exactly like the plain path, and for the same reason: both
+		// bindings are `hasDynamicOffset`, so the group names the BUFFERS and
+		// the per-draw byte offsets ride along at bind time. One group
+		// therefore serves every draw from the same pair of arena pages, and
+		// rebuilding it per draw was one driver allocation per hosted mesh per
+		// frame for no difference in what was drawn.
+		const effectBuffer = offsets.length > 1 ? entries[1].resource.buffer : null;
+		let byEffectPage = this.effectBindGroups.get(meshRegion.buffer);
+		if (byEffectPage === undefined) {
+			byEffectPage = new Map();
+			this.effectBindGroups.set(meshRegion.buffer, byEffectPage);
+		}
+		let byEffect = byEffectPage.get(effectBuffer);
+		if (byEffect === undefined) {
+			byEffect = new Map();
+			byEffectPage.set(effectBuffer, byEffect);
+		}
+		let bindGroup = byEffect.get(effect._effectId);
+		if (bindGroup === undefined) {
+			bindGroup = device.createBindGroup({
+				label: "melonJS mesh uniforms + hosted effect",
+				layout: this.hostedEffectLayout(effect),
+				entries,
+			});
+			byEffect.set(effect._effectId, bindGroup);
+		}
+		return { bindGroup, offsets };
+	}
+
+	/**
 	 * The shader family for the next recorded draw: the built-in family,
 	 * or the hosted custom module when `renderer.drawMesh` routed a
 	 * WGSL-carrying {@link GLShader} here — registered lazily against
@@ -557,6 +679,29 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @internal
 	 */
 	activeShaderKey() {
+		const effect = this.hostedEffect;
+		if (effect != null) {
+			// a hosted ShaderEffect: register the spliced mesh module under
+			// this host's vertex layout and (effect-extended) group list
+			const cache = this.renderer.pipelineCache;
+			if (this._effectKeys?.epoch !== cache.epoch) {
+				this._effectKeys = { epoch: cache.epoch, keys: new Map() };
+			}
+			const host = `${this.vertexLayoutKey}|fx${effect._effectId}`;
+			let key = this._effectKeys.keys.get(host);
+			if (typeof key === "undefined") {
+				key = cache.registerShader(
+					effect.wgslRealization.meshModule(this.shaderSource()),
+					{
+						bindGroupLayouts: this.bindGroupLayoutList(cache),
+						vertexLayoutKey: this.vertexLayoutKey,
+						label: `melonJS ${this.vertexLayoutKey} + hosted effect`,
+					},
+				);
+				this._effectKeys.keys.set(host, key);
+			}
+			return key;
+		}
 		const custom = this.customShader;
 		if (custom === null) {
 			return this.shaderKey;
@@ -584,8 +729,29 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			cache.frameLayout,
 			cache.meshMaterialLayout,
 			cache.emptyLayout,
-			this.meshLayout,
+			this.perDrawLayout(),
 		];
+	}
+
+	/**
+	 * The group-3 layout for the draw being recorded: `uMesh` alone, or
+	 * `uMesh` plus a hosted effect's own block.
+	 *
+	 * A single accessor on purpose. Every subclass builds its own positional
+	 * layout list — the lit tier swaps group 2 for its light block — and when
+	 * this choice was inlined into the base list only, the lit subclass kept
+	 * handing over the plain layout while the module declared the effect's
+	 * binding. The pipeline then failed to validate with "Binding doesn't
+	 * exist", every frame drawing that mesh was dropped, and the scene
+	 * flickered. Subclasses override the list; they must not re-decide this.
+	 * @returns {GPUBindGroupLayout} the group-3 layout
+	 * @ignore
+	 * @internal
+	 */
+	perDrawLayout() {
+		return this.hostedEffect != null
+			? this.hostedEffectLayout(this.hostedEffect)
+			: this.meshLayout;
 	}
 
 	/**
@@ -731,6 +897,25 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			0,
 			MESH_UNIFORM_SIZE,
 		);
+		const effect = this.hostedEffect;
+		if (effect !== null && effect !== undefined) {
+			// A hosted ShaderEffect rides the SAME group as `uMesh`: WebGPU
+			// caps a pipeline at four bind groups and all four are already
+			// spoken for (frame / material / lights / per-draw), so the
+			// effect's own block takes binding 1 here and its textures follow.
+			//
+			// Snapshotted per bind for the same reason `uMesh` is:
+			// `queue.writeBuffer` data lands before EVERY draw recorded in the
+			// frame, so two meshes sharing one effect with different uniform
+			// values must each get their own bytes.
+			this.uniformBinding = this.bindHostedEffect(
+				device,
+				renderer,
+				effect,
+				region,
+			);
+			return;
+		}
 		let bindGroup = this.uniformBindGroups.get(region.buffer);
 		if (typeof bindGroup === "undefined") {
 			bindGroup = device.createBindGroup({
@@ -745,7 +930,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			});
 			this.uniformBindGroups.set(region.buffer, bindGroup);
 		}
-		this.uniformBinding = { bindGroup, dynamicOffset: region.offset };
+		this.uniformBinding = { bindGroup, offsets: [region.offset] };
 	}
 
 	/**
@@ -927,9 +1112,11 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
 		pass.setBindGroup(1, this.currentMaterial);
 		this.bindLights(pass);
-		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
-			this.uniformBinding.dynamicOffset,
-		]);
+		pass.setBindGroup(
+			3,
+			this.uniformBinding.bindGroup,
+			this.uniformBinding.offsets,
+		);
 		pass.setVertexBuffer(
 			0,
 			vertexRegion.buffer,
@@ -1061,9 +1248,11 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const frame = renderer.currentFrameBinding;
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
 		this.bindLights(pass);
-		pass.setBindGroup(3, this.uniformBinding.bindGroup, [
-			this.uniformBinding.dynamicOffset,
-		]);
+		pass.setBindGroup(
+			3,
+			this.uniformBinding.bindGroup,
+			this.uniformBinding.offsets,
+		);
 		pass.setVertexBuffer(0, geometry.vertexBuffer);
 		pass.setIndexBuffer(geometry.indexBuffer, geometry.indexFormat);
 		const slices = mesh.textureGroups;
@@ -1120,8 +1309,10 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		this.indexCount = 0;
 		this.currentMaterial = null;
 		this.customShader = null;
+		this.hostedEffect = null;
 		this.uniformBinding = null;
 		this.uniformBindGroups.clear();
+		this.effectBindGroups.clear();
 		this.releaseAllRetained();
 	}
 

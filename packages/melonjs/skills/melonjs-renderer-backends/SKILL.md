@@ -132,6 +132,14 @@ event.on(event.ONCONTEXT_RESTORED, (renderer) => {
 });
 ```
 
+## Test on the backend your users get, not the one your harness picks
+
+`video.AUTO` prefers WebGPU where it exists. Headless Chromium usually has no
+GPU adapter and falls back to WebGL, so an automated suite can pass every run
+while the WebGPU path is broken — the two differ in real, throwing ways (see
+below). Pin the backend explicitly when it matters: `renderer: video.WEBGPU`,
+or the `#webgpu` / `#webgl` URI fragment on a page you can open by hand.
+
 ## Practical differences
 
 - **Frame capture orientation differs**: row 0 of a `toFrameTexture()` capture is
@@ -147,6 +155,15 @@ event.on(event.ONCONTEXT_RESTORED, (renderer) => {
   accents, ruinous for hundreds of objects. `normal`, `additive`, `multiply`,
   `screen` and `exclusion` are ordinary fixed-function state and cost nothing
   extra.
+- **WebGPU rejects a zero-sized image source; WebGL shrugs at it.** Uploading a
+  0-width or 0-height canvas throws
+  `OperationError: GPUQueue.copyExternalImageToTexture: External image state is
+  not valid`, from a stack that reads `drawImage → addQuad → getBinding`. WebGL
+  uploads the same source without complaint, so this is a class of bug that
+  cannot appear on one backend and stops the game dead on the other. The usual
+  source is a `Text` whose string is empty or whitespace-only — it measures to
+  nothing, so its glyph canvas has no width. Give a placeholder label a real
+  glyph and hide it with `alpha`/position instead of blanking its text.
 - **3D meshes do not honour blend modes.** The mesh pass draws with its own
   depth/blend state; asking for one of the advanced modes logs a one-time
   `blend mode "…" is not supported for 3D meshes` warning and falls back to
@@ -163,6 +180,8 @@ event.on(event.ONCONTEXT_RESTORED, (renderer) => {
 | a solid box where an effect should be | carrier drawn while the effect is disabled |
 | nothing renders at all on an old device | `video.WEBGL` pinned; WebGL 1 is rejected, not downgraded |
 | ported shader is vertically flipped | the WebGL capture is bottom-up, the WebGPU one top-down |
+| `copyExternalImageToTexture: External image state is not valid` | a zero-sized upload source — most often a `Text` with an empty or whitespace-only string |
+| runs on the test machine, dies on the dev's | the harness fell back to WebGL and never exercised WebGPU |
 | a blended mode is ignored on a mesh | meshes fall back to `"normal"`; look for the one-time warning |
 | textures vanish after the tab is restored | cached raw GPU handles not re-acquired on context restore |
 

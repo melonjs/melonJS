@@ -1652,4 +1652,135 @@ describe("Mesh × Camera3d world-space path", () => {
 			expect(mesh.originalNormals).toBe(supplied);
 		});
 	});
+
+	describe("resizing (the Polygon slots it inherits)", () => {
+		const tri = () => {
+			return new Float32Array([-2, -1, 0, 2, -1, 0, 0, 3, 0]);
+		};
+
+		// A `Mesh` is a `Polygon` by inheritance, and it repurposes two of the
+		// slots the polygon keeps its 2D collision geometry in: `normals` (per
+		// EDGE, `Vector2d[]`) and `indices` (the cached triangulation). A mesh
+		// holds per-VERTEX normals and a GPU index buffer under those names,
+		// both typed arrays — so `Polygon#recalc` walked them expecting
+		// something else and threw, taking `resize` and the `width`/`height`
+		// setters down with it on every mesh.
+
+		it("takes a width without throwing", () => {
+			const mesh = new Mesh(0, 0, { vertices: tri(), width: 64, height: 64 });
+			mesh.width = 20;
+			expect(mesh.width).toBe(20);
+		});
+
+		it("resizes without throwing", () => {
+			const mesh = new Mesh(0, 0, { vertices: tri(), width: 64, height: 64 });
+			mesh.resize(10, 30);
+			expect([mesh.width, mesh.height]).toEqual([10, 30]);
+		});
+
+		it("keeps its own normals and indices through a recalc", () => {
+			const mesh = new Mesh(0, 0, {
+				vertices: tri(),
+				width: 64,
+				height: 64,
+				lit: true,
+				indices: new Uint16Array([0, 1, 2]),
+			});
+
+			mesh.recalc();
+
+			expect(mesh.normals).toBeInstanceOf(Float32Array);
+			expect(mesh.normals).toHaveLength(9);
+			expect(Array.from(mesh.indices)).toEqual([0, 1, 2]);
+		});
+	});
+
+	describe("sizing itself from its geometry", () => {
+		// a 4 x 4 triangle in the XY plane, in real-world coordinates
+		const tri = () => {
+			return new Float32Array([-2, -1, 0, 2, -1, 0, 0, 3, 0]);
+		};
+
+		it("takes its extent from the vertices when no size is declared", () => {
+			// `normalize: false` keeps real-world coordinates and `scale` is
+			// pixels-per-unit, so the size is knowable exactly — it simply was
+			// not being asked for, and the mesh reported a ZERO-size box at its
+			// position while drawing at full size. Everything reading
+			// `getBounds()` was then wrong about it: culling, pointer picking,
+			// and the physics broadphase, which cannot place an item that
+			// claims no extent
+			const mesh = new Mesh(100, 100, {
+				vertices: tri(),
+				normalize: false,
+				scale: 10,
+			});
+
+			expect(mesh.width).toBe(40);
+			expect(mesh.height).toBe(40);
+
+			const bounds = mesh.updateBounds(true);
+			expect(bounds.isFinite()).toBe(true);
+			expect(bounds.centerX).toBe(100);
+			expect(bounds.centerY).toBe(100);
+		});
+
+		it("keeps a declared size, and does not touch meshScale", () => {
+			const mesh = new Mesh(0, 0, {
+				vertices: tri(),
+				normalize: false,
+				scale: 10,
+				width: 64,
+				height: 48,
+			});
+
+			expect(mesh.width).toBe(64);
+			expect(mesh.height).toBe(48);
+			// the scale the GEOMETRY is drawn at is a separate concern from the
+			// extent the renderable reports, and is left exactly as given
+			expect(mesh.meshScale).toBe(10);
+		});
+
+		it("fills in only the dimension that was left out", () => {
+			const mesh = new Mesh(0, 0, {
+				vertices: tri(),
+				normalize: false,
+				scale: 10,
+				width: 64,
+			});
+
+			expect(mesh.width).toBe(64);
+			expect(mesh.height).toBe(40);
+		});
+
+		it("leaves a NORMALIZED mesh alone", () => {
+			// deliberately out of scope: a normalized mesh is fitted INTO the
+			// width it is given, and `height` feeds the projection as well as
+			// the bounds — inferring one would change what is drawn, not just
+			// what is reported. `width` is documented as required there
+			const mesh = new Mesh(0, 0, { vertices: tri(), width: 64 });
+
+			expect(mesh.width).toBe(64);
+			expect(mesh.height).toBe(0);
+		});
+
+		it("leaves a mesh with no explicit scale alone", () => {
+			// `meshScale` falls back to `this.width`, so inventing a width here
+			// would silently change the scale the geometry is DRAWN at
+			const mesh = new Mesh(0, 0, { vertices: tri(), normalize: false });
+
+			expect(mesh.width).toBe(0);
+			expect(mesh.meshScale).toBe(0);
+		});
+
+		it("survives a geometry with no extent", () => {
+			const mesh = new Mesh(0, 0, {
+				vertices: new Float32Array([1, 1, 1]),
+				normalize: false,
+				scale: 4,
+			});
+
+			expect(Number.isFinite(mesh.width)).toBe(true);
+			expect(Number.isFinite(mesh.height)).toBe(true);
+		});
+	});
 });

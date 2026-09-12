@@ -2329,9 +2329,32 @@ export default class WebGLRenderer extends Renderer {
 		// program: a dual shader drawn during a lost-context window merely
 		// lacks its program transiently and must neither warn nor consume
 		// the one-shot for a later genuinely-unhostable shader.
-		const hostedShader =
-			this.customShader != null && this.customShader.program != null;
+		// A ShaderEffect is tried FIRST, and the order is the whole point:
+		// `ShaderEffect.program` is a getter onto its own compiled program,
+		// and that program is the QUAD realization — its vertex stage projects
+		// straight from `uProjectionMatrix` and declares neither
+		// `uModelMatrix` nor `uViewMatrix`. Binding it to a mesh passes the
+		// `program != null` test below and then draws the geometry unplaced
+		// and without the camera. So an effect is spliced into the mesh
+		// shader instead, and only a shader that is NOT an effect may be
+		// hosted as-is (#1658).
+		const effectHosted =
+			this.customShader != null &&
+			this.currentBatcher.canHostEffect?.(this.customShader) === true;
+		// set by EITHER hosting path, so the `finally` below restores the
+		// default shader whichever one bound
+		// null when the body could not be spliced or compiled against this
+		// mesh family — the batcher has already said so, and the mesh falls
+		// through to the built-in shading rather than drawing with nothing
+		const spliced = effectHosted
+			? this.currentBatcher.effectShaderFor(this.customShader)
+			: null;
+		let hostedShader = spliced !== null && spliced !== undefined;
 		if (hostedShader) {
+			this.currentBatcher.useShader(spliced);
+			this.currentBatcher.replayEffectUniforms(this.customShader, spliced);
+		} else if (this.customShader != null && this.customShader.program != null) {
+			hostedShader = true;
 			this.currentBatcher.useShader(this.customShader);
 		} else if (
 			this.customShader != null &&

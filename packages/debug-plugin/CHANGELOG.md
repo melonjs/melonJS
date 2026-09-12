@@ -1,5 +1,11 @@
 # Changelog
 
+## 16.1.2
+
+### Fixed
+- A `Box3d` body no longer throws `Invalid geometry` from the hitbox overlay on melonJS 20.0–20.4. `Renderer#stroke` only learned that shape in 20.5, so the overlay draws its XY footprint itself rather than depending on which engine is underneath
+- The hitbox overlay now draws **collision shapes in a 3D scene**, for models as well as meshes. Under a `Camera3d` the renderer is mid-perspective-projection, so the flat 2D overlay draws nothing viewable — only the mesh geometry box was projecting. A mesh returned before drawing what it collides as, and a `GLTFModel` (a `Container`, not a `Mesh`) drew nothing at all. Body shapes now stroke as red wireframes beside the green geometry box
+
 ## 16.1.1
 
 ### Fixed

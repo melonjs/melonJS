@@ -142,6 +142,21 @@ fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
 	return mix(uMesh.fogColor.rgb * a, rgb, f);
 }
 
+// The mesh-hosted ShaderEffect hook (#1658). Identity by default — every
+// compiler inlines it away, so an un-effected mesh pays nothing. When an
+// effect is hosted, `spliceEffect` replaces this definition with one that
+// calls the effect's `apply()`, and pastes the effect body above it.
+//
+// Deliberately a FUNCTION and not a marker comment: the shader pipeline
+// strips comments, so a comment cannot be relied on to reach the splicer.
+//
+// Declared ABOVE `@vertex` on purpose: `buildInstancedMeshWGSL` assembles the
+// instanced variant as `source.slice(0, vertexAt)` + a generated vertex stage
+// + `source.slice(fragmentAt)`, so anything BETWEEN the two stages is dropped.
+// Defined there, the instanced module kept the call and lost the definition,
+// and every frame drawing an instanced lit mesh failed to compile.
+fn ME_effect(c : vec4f, uv : vec2f) -> vec4f { return c; }
+
 @vertex
 fn vertex_main(
 	@location(0) aVertex : vec3f,
@@ -173,6 +188,7 @@ fn vertex_main(
 	return out;
 }
 
+
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// sampled unconditionally, before the discard (uniform control flow)
@@ -192,6 +208,7 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 		discard;
 	}
 	color = color * in.vColor;
+	color = ME_effect(color, in.vRegion);
 	// emissive adds a self-lit color on top (neon, lava, screens); the
 	// unlit path has no lighting, so it is simply added to the base color
 	return vec4f(

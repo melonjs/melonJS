@@ -6,6 +6,54 @@ license: MIT
 
 # UI, HUD and text
 
+## Outlined text: the stroke eats into the glyph
+
+`Text` draws `fillText` and then `strokeText`, so the outline lands **on top of
+the fill** and is centred on the glyph edge — half of it inward. On a small or
+chunky face a `lineWidth` of 3 leaves the letters solid black. Keep it to 1,
+and raise the font size rather than the stroke.
+
+The stroke used to cost you the top row of pixels as well, and a display face
+whose glyphs overshoot the nominal ascent did the same on its own: the render
+box was sized from the line height alone, with no allowance for either. **That
+is fixed** — the bake is padded by the ink's real extent and the blit shifts
+back by the same amount, so nothing is clipped and the reported bounds are
+unchanged. Write the string you mean:
+
+```js
+new Text(x, y, { font: "Display", lineWidth: 1, lineHeight: 1.45, text: "" });
+hud.setText("SCORE 100");
+```
+
+If you have a label carrying a leading `\n` to buy headroom, that workaround is
+now dead weight — drop it, and take the line height back off the position you
+shifted it by.
+
+## Gradient text
+
+`fillStyle` takes a `Gradient` as well as a colour — the same object
+`Renderer#setColor` accepts, built the way the canvas API builds one:
+
+```js
+const ramp = renderer.createLinearGradient(0, 0, 0, 24);  // top to bottom
+ramp.addColorStop(0, "#fffdf0");
+ramp.addColorStop(1, "#f0a020");
+
+new Text(x, y, { font: "Display", size: 24, fillStyle: ramp });
+```
+
+Coordinates are the label's own bake: `(0, 0)` is the top-left of the render
+box, so the ramp above runs down one line. A multi-line label **restarts it on
+every line**, reading like one `Text` per line — you do not have to author the
+gradient over the block height. Pass `gradientPerLine: false` for a single ramp
+spanning the whole block, which is what a plain canvas does and what a
+deliberate fade across a two-line title wants.
+
+The ramp colours the **fill only** — `Text` strokes in a separate pass, so
+an outline keeps its own colour without any luminance trickery — and it works on
+Canvas2D, which a post effect does not. `fillStyle.alpha` still gates the fill,
+and the property still reads back as a `Color`.
+
 ## The HUD pattern
 
 A HUD is a `floating` container at a high z, built once and re-added:

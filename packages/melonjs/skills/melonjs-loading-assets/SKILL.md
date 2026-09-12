@@ -46,10 +46,106 @@ The type strings are melonJS-specific — this is not a generic loader:
 | `"binary"` | raw data, bitmap font `.fnt` descriptors |
 | `"fontface"` | web fonts (`.ttf`, `.woff`) |
 | `"aseprite"` | Aseprite JSON + image |
-| `"shader"` | GLSL/WGSL shader sources |
+| `"shader"` | GLSL/WGSL shader sources — `src` **or** inline via `data` |
 | `"obj"` / `"mtl"` | Wavefront models and materials |
 | `"gltf"` / `"glb"` | glTF scenes |
 | `"js"` | scripts |
+
+## What belongs in the manifest — and what cannot
+
+Preloading is not only for things with a URL. Three tiers, and the middle one
+is the one people miss.
+
+**1. Assets with a source.** Everything in the type table above. Note `"shader"`
+takes **inline source** as well as a `src`, via the `data` field:
+
+```js
+import { myRamp } from "./myRamp";   // a GLSL fragment body, in your own module
+
+loader.preload([
+    { name: "ramp", type: "shader", data: myRamp },
+]);
+const fx = loader.getShader("ramp");   // shared, already compiled
+```
+
+This matters more than it looks. A `ShaderEffect` compiles its program in its
+**constructor**, and `compileProgram` calls `getProgramParameter(LINK_STATUS)`
+immediately after `linkProgram` — a blocking call that forces the driver to
+finish. So building one during a scene costs that link on the frame it appears,
+and building three identical ones costs it three times. Preloaded as an asset it
+is compiled at load time, behind the loading screen, and the loader hands out a
+**shared** instance (`effect.shared === true`), which is what stops one
+renderable's teardown freeing it out from under the others. `clone()` does NOT
+help here — it constructs a new effect, and therefore links a new program.
+
+**2. Derived assets — build once, after the preload.** Canvases you bake,
+`NoiseTexture2d`, `TextureAtlas`: the loader cannot carry these, but they must
+not be rebuilt per scene either. The renderer's texture cache is keyed by the
+**image object**, so a freshly baked canvas is a brand new GPU texture with a
+new mip chain — rebuild one per stage and a title → play → game-over cycle
+uploads four copies of the same pixels. Build them once after `preload`
+resolves and share them, the way the platformer example builds its
+`TextureAtlas` into a module the scenes read from.
+
+**3. The engine's own shader variants — not preloadable at all.** The mesh
+batcher compiles a program per *feature combination* (lit, instanced, instance
+colours, instance data, fog — fog joins the key), lazily, on the first draw that
+needs it. There is no loader type for these and no API to warm the cache: the
+only lever is to **draw** that combination once while the loading screen is
+still up, then throw the scene away — the compiled programs stay in the
+renderer. Worth doing for a heavy 3D scene, where first-draw linking is easily a
+few hundred ms and lands as a freeze on the first frame of the first level.
+
+```js
+await loader.preload(resources);
+buildScene(app);                       // same geometry the level uses
+await twoFrames();                     // event.GAME_AFTER_DRAW
+removeOnlyWhatYouAdded(app);           // keep the programs, drop the scene
+state.change(state.PLAY);
+```
+
+**It borrows the LOADING stage's world, and that has three teeth**, all learned
+the hard way:
+
+- **Never tear down with `app.world.reset()`.** It clears *every* child of that
+  world, the loading screen's own included, and the screen goes blank for the
+  rest of the load. Snapshot `app.world.children` first and remove only what
+  you added.
+- **Restore anything the warm-up changes that the loading screen shows** — the
+  renderer's `backgroundColor` above all, or the warm-up flashes its own empty
+  first frame.
+- **Under a `Camera3d` it will hide the built-in loading screen, and there is no
+  clean way around it** — see below.
+
+### `DefaultLoadingScreen` lives in the WORLD, not on the screen
+
+The built-in loading screen is written for a `Camera2d`. Its progress bar and
+logo are added with `app.world.addChild(bar, 1)` / `addChild(logo, 2)` and are
+**`floating === false`** — ordinary world-space renderables. They read as an
+overlay only because that stage's world is otherwise empty.
+
+So with `cameraClass: Camera3d`, anything you add to that world is in the scene
+*with* them, and a 3D scene simply swallows them: the depth buffer puts terrain
+in front of a bar sitting at z = 1. What does NOT rescue it, all tried:
+
+- **Raising their `z`** — for a mesh on the `Camera3d` path `pos.z` IS world
+  depth, so the scene's own z values are geometry, not layering, and the bar
+  still loses to the depth test.
+- **`moveToTop()`** — it early-returns for a child already at index 0, which the
+  loading screen's children always are, having been added before anything else.
+  It silently does nothing.
+- **Flipping them to `floating = true`** for the duration — the scene still
+  covers them.
+
+If you want a warm-up (or any 3D behind a loading screen), write your own
+loading stage and draw its progress UI as **floating** renderables over the
+scene. That is also the nicer result: the player watches the level assemble
+instead of a logo. Budget it as real work, not a one-liner — and weigh it
+against what the warm-up actually saves.
+
+One more limit: a warm-up only covers the combinations it actually draws.
+Renderables the real level has and the warm-up does not will still link on
+entry.
 
 ## Two conventions that produce 404s
 

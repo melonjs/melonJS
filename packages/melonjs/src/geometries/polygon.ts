@@ -44,18 +44,34 @@ export class Polygon {
 	edges: Vector2d[];
 
 	/**
-	 * a list of indices for all vertices composing this polygon
+	 * a list of indices for all vertices composing this polygon, filled in by
+	 * {@link Polygon#getIndices} and invalidated by {@link Polygon#recalc}.
+	 *
+	 * A subclass may repurpose this name for geometry of its own: a
+	 * {@link Mesh} holds a GPU index buffer here, a typed array rather than a
+	 * plain one. `recalc` therefore only clears the slot when it owns it —
+	 * anything else reading it should check what it got.
 	 */
 	indices: number[];
 
 	/**
-	 * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-	 * to the position of the `n`th point. If you want to draw an edge normal, you must first
-	 * translate to the position of the starting point.
+	 * The normals here are the direction of the normal for the `n`th EDGE of the
+	 * polygon, relative to the position of the `n`th point. If you want to draw
+	 * an edge normal, you must first translate to the position of the starting
+	 * point.
+	 *
+	 * Named for the edges rather than just `normals` because a subclass may
+	 * carry normals of its own with a different meaning and a different type:
+	 * a {@link Mesh} holds per-VERTEX normals as a `Float32Array`, and when
+	 * that shadowed this one, {@link Polygon#recalc} walked it expecting
+	 * `Vector2d`s. It allocates only into empty slots, and a typed array's
+	 * slots are `0` rather than `undefined` — so it took the reuse branch and
+	 * threw `Cannot create property 'x' on number '0'`, breaking `recalc`,
+	 * `resize` and the `width`/`height` setters on every mesh.
 	 * @ignore
 	 * @internal
 	 */
-	normals: Vector2d[];
+	edgeNormals: Vector2d[];
 
 	/**
 	 * The bounding rectangle for this shape
@@ -79,7 +95,7 @@ export class Polygon {
 		this.points = [];
 		this.edges = [];
 		this.indices = [];
-		this.normals = [];
+		this.edgeNormals = [];
 		this._bounds = boundsPool.get();
 		this.setVertices(vertices);
 	}
@@ -235,7 +251,7 @@ export class Polygon {
 	 */
 	recalc() {
 		const edges = this.edges;
-		const normals = this.normals;
+		const normals = this.edgeNormals;
 		const indices = this.indices;
 
 		// Copy the original points array and apply the offset/angle
@@ -280,9 +296,17 @@ export class Polygon {
 		edges.length = len;
 		normals.length = len;
 
-		// do not do anything here, indices will be computed by
-		// getIndices if array is empty upon function call
-		indices.length = 0;
+		// Invalidate the cached triangulation — `getIndices` recomputes it
+		// when the array is empty. Guarded because this slot is not always
+		// ours: `Mesh` is a `Polygon` by inheritance and repurposes `indices`
+		// for its GPU index buffer, a typed array whose `length` is a getter.
+		// Assigning to it threw `Cannot set property length`, which took
+		// `recalc` — and with it `resize` and the `width`/`height` setters —
+		// down on every mesh. Both properties are public, so neither can be
+		// renamed away; a polygon simply leaves alone what it does not own.
+		if (Array.isArray(indices)) {
+			indices.length = 0;
+		}
 
 		return this;
 	}

@@ -20,6 +20,7 @@ import {
 	Polygon,
 	Rect,
 	Renderable,
+	Renderer,
 	RoundRect,
 	Vector2d,
 } from "../src/index.js";
@@ -133,7 +134,7 @@ describe("Box3d — shape", () => {
 			new Box3d(0, 0, 0, 0, 10, 10),
 			new Box3d(0, 0, 0, 10, 0, 10),
 		]) {
-			for (const normal of box._footprint.normals) {
+			for (const normal of box._footprint.edgeNormals) {
 				expect(Number.isFinite(normal.x)).toBe(true);
 				expect(Number.isFinite(normal.y)).toBe(true);
 			}
@@ -776,5 +777,57 @@ describe("Box3d — 2D backward compatibility", () => {
 		const flatB = new Body(makeRenderable(4, 0, 0), new Rect(0, 0, 16, 16));
 		expect(detector.collides(flatA, flatB)).toBe(true);
 		expect(detector.response.overlapZ).toEqual(0);
+	});
+});
+
+describe("Box3d — debug draw", () => {
+	/**
+	 * A renderer double that records what it was asked to draw, so the test
+	 * pins the SHAPE that reaches the canvas rather than any pixels.
+	 */
+	const recorder = () => {
+		const calls = [];
+		const r = Object.create(Renderer.prototype);
+		r.strokeRect = (x, y, w, h) => {
+			calls.push(["stroke", x, y, w, h]);
+		};
+		r.fillRect = (x, y, w, h) => {
+			calls.push(["fill", x, y, w, h]);
+		};
+		return { r, calls };
+	};
+
+	it("strokes a Box3d as its XY footprint", () => {
+		// A 3D box has no 2D outline, and the fill/stroke dispatcher switches
+		// on `shape.type` — so "Box3d" fell through to `default:` and THREW.
+		// Switching on the debug panel's hitbox overlay was enough to hit it
+		// on any body carrying one
+		const { r, calls } = recorder();
+		const box = new Box3d(10, 20, 30, 40, 60, 80);
+
+		expect(() => {
+			return r.stroke(box);
+		}).not.toThrow();
+		expect(calls).toEqual([["stroke", -10, -10, 40, 60]]);
+	});
+
+	it("fills a Box3d as its XY footprint", () => {
+		const { r, calls } = recorder();
+		const box = new Box3d(0, 0, 0, 12, 8, 99);
+
+		r.stroke(box, true);
+
+		// the depth is not drawable in 2D and is deliberately not guessed at
+		expect(calls).toEqual([["fill", -6, -4, 12, 8]]);
+	});
+
+	it("tracks the footprint after a reshape", () => {
+		const { r, calls } = recorder();
+		const box = new Box3d(0, 0, 0, 10, 10, 10);
+		box.setShape(100, 200, 0, 20, 40, 60);
+
+		r.stroke(box);
+
+		expect(calls).toEqual([["stroke", 90, 180, 20, 40]]);
 	});
 });

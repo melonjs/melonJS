@@ -1,5 +1,6 @@
 import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
+import { Gradient } from "../../video/gradient.js";
 
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 import { resolveAnchorPoint } from "../anchorPoint.ts";
@@ -59,7 +60,8 @@ export default class Text extends Renderable {
 	 * @param {object} settings - the text configuration
 	 * @param {string} settings.font - a CSS font family: a specific name (`"Arial"`), a generic keyword (`"sans-serif"`, `"monospace"`, …), or a web font loaded via the `fontface` loader (referenced by its family name)
 	 * @param {number|string} settings.size - the font size: a number in pixels, or a CSS size string with a unit (`"24px"` / `"1.5em"` / `"18pt"`)
-	 * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value used to fill the glyphs
+	 * @param {Color|Gradient|string} [settings.fillStyle="#000000"] - a CSS color value used to fill the glyphs, or a {@link Gradient} to ramp them
+	 * @param {boolean} [settings.gradientPerLine=true] - restart a gradient fill on every line; `false` spans one ramp across the whole block, as a plain canvas does
 	 * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value used for the glyph outline (drawn when `lineWidth` > 0)
 	 * @param {number} [settings.lineWidth=0] - outline width in pixels (0 = no stroke)
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
@@ -180,12 +182,57 @@ export default class Text extends Renderable {
 			this.fillStyle = colorPool.get(0, 0, 0);
 		}
 
+		/**
+		 * The gradient to fill the glyphs with, when one was given instead of a
+		 * colour. Built by {@link Renderer#createLinearGradient} /
+		 * {@link Renderer#createRadialGradient}, and its coordinates are this
+		 * label's own bake — `(0, 0)` is the top-left of the render box.
+		 *
+		 * Set it through `fillStyle`, the way `Renderer#setColor` takes one;
+		 * this field is where it lands so the pooled `fillStyle` `Color` keeps
+		 * its type, its alpha and its pooling.
+		 * @type {Gradient|undefined}
+		 * @default undefined
+		 * @example
+		 * const ramp = renderer.createLinearGradient(0, 0, 0, 24);
+		 * ramp.addColorStop(0, "#fffdf0");
+		 * ramp.addColorStop(1, "#f0a020");
+		 * const label = new Text(x, y, { font: "Arial", size: 24, fillStyle: ramp });
+		 */
+		this.fillGradient = undefined;
+
+		/**
+		 * Whether a gradient fill restarts on every line.
+		 *
+		 * `true` (the default) re-anchors the ramp to each line, so a
+		 * multi-line label reads like one `Text` per line — which is how a HUD
+		 * is usually built, and means the ramp does not have to be authored
+		 * over the block height to look right.
+		 *
+		 * `false` spans one ramp across the whole block, which is what a plain
+		 * canvas does: a `CanvasGradient` lives in the current transform's
+		 * space, so lines further down sample further along it. Use it for a
+		 * deliberate fade across a multi-line title.
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.gradientPerLine = true;
+
 		if (typeof this.strokeStyle === "undefined") {
 			this.strokeStyle = colorPool.get(0, 0, 0);
 		}
 
+		// A `Gradient` is a fill style like any other — `Renderer#setColor`
+		// already takes one, and this is the same branch one level down: the
+		// gradient goes in its own field and the pooled `Color` is left alone,
+		// still holding the alpha that gates the fill and still owned by the
+		// pool. Widening what the setting ACCEPTS is not widening what
+		// `fillStyle` HOLDS.
+		this.fillGradient = undefined;
 		if (typeof settings.fillStyle !== "undefined") {
-			if (settings.fillStyle instanceof Color) {
+			if (settings.fillStyle instanceof Gradient) {
+				this.fillGradient = settings.fillStyle;
+			} else if (settings.fillStyle instanceof Color) {
 				this.fillStyle.copy(settings.fillStyle);
 			} else {
 				// string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -200,6 +247,10 @@ export default class Text extends Renderable {
 				// string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
 				this.strokeStyle.parseCSS(settings.strokeStyle);
 			}
+		}
+
+		if (typeof settings.gradientPerLine === "boolean") {
+			this.gradientPerLine = settings.gradientPerLine;
 		}
 
 		this.lineWidth = settings.lineWidth || 0;
@@ -375,8 +426,17 @@ export default class Text extends Renderable {
 		// than exact sizing on purpose (hysteresis), far tighter than the
 		// old power-of-two rounding (waste is bounded at 31px per axis
 		// instead of up to 2× each).
+		// The canvas is the layout box PLUS whatever the ink escapes it by. The
+		// padding never reaches `metrics`, so the reported bounds are unmoved —
+		// see `TextMetrics#inkPadTop`.
 		const width = Math.ceil(this.metrics.width / 32) * 32;
-		const height = Math.ceil(this.metrics.height / 32) * 32;
+		const height =
+			Math.ceil(
+				(this.metrics.height +
+					this.metrics.inkPadTop +
+					this.metrics.inkPadBottom) /
+					32,
+			) * 32;
 
 		// invalidate the texture
 		const renderer = this.parentApp?.renderer ?? game.renderer;
@@ -395,7 +455,7 @@ export default class Text extends Renderable {
 			this.canvasTexture.context,
 			this._text,
 			this.pos.x - this.metrics.x,
-			this.pos.y - this.metrics.y,
+			this.pos.y - this.metrics.y + this.metrics.inkPadTop,
 		);
 
 		this.isDirty = true;
@@ -527,13 +587,15 @@ export default class Text extends Renderable {
 				this.canvasTexture.context,
 				this._text,
 				this.pos.x - this.metrics.x,
-				this.pos.y - this.metrics.y,
+				this.pos.y - this.metrics.y + this.metrics.inkPadTop,
 			);
 		}
 
-		// adjust x,y position based on the bounding box
+		// adjust x,y position based on the bounding box. The blit rises by the
+		// same padding the glyphs were drawn down by, so they land in exactly
+		// the pixels they always did and only the clipped ink is recovered.
 		let x = this.metrics.x;
-		let y = this.metrics.y;
+		let y = this.metrics.y - this.metrics.inkPadTop;
 
 		// clamp to pixel grid if required
 		if (renderer.settings.subPixel === false) {
@@ -554,6 +616,25 @@ export default class Text extends Renderable {
 
 		let remaining = this.visibleCharacters;
 
+		// A gradient is re-anchored to EACH LINE, so every line of a multi-line
+		// label carries the same ramp — what you would get from one `Text` per
+		// line, which is how a HUD is usually built.
+		//
+		// The canvas would otherwise spread one ramp across the whole block:
+		// a `CanvasGradient` lives in the current transform's space, so lines
+		// drawn further down sample further along it, and every line after the
+		// first comes out flat unless the caller happens to have authored the
+		// ramp over the exact block height. That is silent and easy to get
+		// wrong. Translating per line instead keeps the gradient with the text.
+		//
+		// The trade is that a ramp spanning a whole two-line title is no longer
+		// expressible; compose that from one `Text` per line.
+		const perLine =
+			this.gradientPerLine === true &&
+			this.fillGradient !== undefined &&
+			text.length > 1;
+		const firstY = y;
+
 		for (let i = 0; i < text.length; i++) {
 			let string = text[i].trimEnd();
 
@@ -566,13 +647,26 @@ export default class Text extends Renderable {
 				remaining -= string.length;
 			}
 
+			// Shift the whole space down to this line rather than the draw
+			// position, so the gradient travels with it and each line is
+			// painted from the ramp's start.
+			if (perLine) {
+				context.save();
+				context.translate(0, y - firstY);
+			}
+			const lineY = perLine ? firstY : y;
+
 			// draw the string
 			if (this.fillStyle.alpha > 0) {
-				context.fillText(string, x, y);
+				context.fillText(string, x, lineY);
 			}
 			// stroke the text
 			if (this.lineWidth > 0 && this.strokeStyle.alpha > 0) {
-				context.strokeText(string, x, y);
+				context.strokeText(string, x, lineY);
+			}
+
+			if (perLine) {
+				context.restore();
 			}
 			// add leading space
 			y += this.metrics.lineHeight();
@@ -589,6 +683,7 @@ export default class Text extends Renderable {
 		const renderer = this.parentApp?.renderer ?? game.renderer;
 		this.canvasTexture.destroy(renderer);
 		this.canvasTexture = undefined;
+		this.fillGradient = undefined;
 		colorPool.release(this.fillStyle);
 		colorPool.release(this.strokeStyle);
 		this.fillStyle = this.strokeStyle = undefined;

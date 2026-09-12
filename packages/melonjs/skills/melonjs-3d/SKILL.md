@@ -388,6 +388,67 @@ is no *partial* mesh transparency though — the mesh path renders opaque, so a
 mesh at `alpha = 0.5` draws fully opaque rather than half see-through. Fade a
 mesh out and it will stay solid until it vanishes.
 
+## Moving a mesh in 3D
+
+`Mesh` and `Sprite3d` inherit the ordinary `Renderable` transform helpers, and
+both are already 3D:
+
+```js
+mesh.rotate(Math.PI / 2, new Vector3d(1, 0, 0));   // axis overload
+mesh.scale(2, 1, 0.5);                             // z is a real argument
+```
+
+`rotate(angle)` alone is the 2D case (about Z); pass a `Vector3d` and it
+rotates about that axis. Both write to `currentTransform`, a **`Matrix3d`**,
+which `Mesh` folds into its model matrix — so orienting a mesh costs a matrix
+update, not new geometry.
+
+This matters most for the case it is least obvious for: a horizontal plane.
+`Sprite3d` with `billboard: false` is a quad in the sprite plane — upright —
+and the way to lay one flat (water, a road, a shadow decal) is to rotate it a
+quarter turn about X, **not** to hand-build vertices. The one reason to build
+geometry instead is tiling: a `Sprite3d` bakes its UVs 0..1 from its atlas
+frame, so a surface that needs `textureRepeat` across many world units still
+wants an explicit `vertices`/`uvs` mesh.
+
+## The mesh pass is opaque
+
+Worth stating plainly, because the symptom does not look like a blending
+problem: **the mesh pass disables blending**. A soft-edged texture — a glow, a
+sun, a halo, anything with a gradient alpha — composites as a hard-edged disc
+with a grey rim, which reads as a broken texture rather than as a missing
+feature.
+
+`transparent: true` routes it through the transparent pass, and `blendMode:
+"additive"` on top of that makes a light source add to the sky instead of
+sitting on it. This is the same feature a translucent water surface needs.
+
+## Textures under a perspective camera
+
+A tiling texture on a large ground plane is seen at a grazing angle, and that
+changes which detail survives:
+
+- **Nothing straight and parallel to the direction of travel.** Every such run
+  converges on the vanishing point, so a few current bands on a river become a
+  fan of rays radiating out of the horizon. Narrowing them and tiling more
+  often only multiplies the rays. Short, scattered, direction-free detail
+  minifies into an even shimmer instead.
+- **`textureFilter: "linear"`** for a floor — `"nearest"` opts out of mipmaps
+  and anisotropy, and detail aliases into a wash exactly where the camera looks
+  most.
+
+## Ground must outlast the props standing on it
+
+Scenery scattered up a slope is placed by its own rule, and terrain is built by
+another. When the planting reaches further than the mesh does, a low camera
+sees trees standing over open sky at the corners of the frame. Build the ground
+wider than the widest thing planted on it — past the profile's clamp it is a
+flat plateau, so the extra columns cost two triangles and no silhouette.
+
+Recycling has the same trap in Z: an endless runner that recycles tiles a fixed
+distance behind the *player* forgets that the camera trails further back still,
+and the bottom of the frame falls off the world.
+
 ## Sprite3d and billboards
 
 `Sprite3d` is the 2.5D workhorse: a flat sprite living at a real depth, with
@@ -445,6 +506,37 @@ units it projects over the top of the caster as a dark halo ringing it. If an
 object needs a visible shadow, give it a smaller footprint relative to its
 height, or accept that a boulder bedded in the ground has none.
 
+### Get the sign right: the floor is a GREATER y
+
+Render space is **Y-down**, so the floor an object stands on is a *larger* y
+than the object itself. Nudging a shadow plane below a surface is therefore a
+**plus**:
+
+```js
+mesh.shadowGroundY = WATER_LEVEL + 8;   // just under the surface — correct
+mesh.shadowGroundY = mesh.pos.y - 8;    // eight units ABOVE its own base — wrong
+```
+
+Get it backwards and the blob becomes a horizontal quad slicing through the
+caster's own body. It is still drawn at full strength — the height fade sees a
+*negative* height and clamps to 1, so nothing warns you — but the depth test
+hides every part of it that falls inside the caster's silhouette. What survives
+is a thin ring, only as wide as the blob overhangs the object.
+
+The symptom is distinctive and easy to misread: **shadows appear to switch on as
+casters approach the camera.** That ring is a few pixels on the nearest object
+and sub-pixel further out, so a scene reads as "only nearby things have
+shadows" — which looks like culling, an LOD stage or a fog problem, none of
+which it is. Before chasing any of those, dump `shadowGroundY` against the
+caster's own y and check which one is larger.
+
+## Collision in 3D
+
+Use `Box3d` bodies, not a hand-rolled distance check. `Box3d`-vs-`Box3d` is
+the engine's 3D narrowphase and the only contact that pushes back along Z; the
+response carries `overlapNZ` / `overlapZ` for the depth axis. See the physics
+skill for the contract and the mixed-pair caveat.
+
 ## glTF / GLB scenes
 
 Loaded through the same level director as everything else:
@@ -455,6 +547,23 @@ level.load("diorama", { scale, castGroundShadow, shadowGroundY, onLoaded });
 ```
 
 `.obj` / `.mtl` are also supported loader types.
+
+An **animated** asset instantiates as a `GLTFModel`, which is a game object as
+much as a scene: construct it straight from the parsed descriptor, and place it
+with `pos` / `depth` / `rotate` / `scale` like any other renderable — the
+placement drives the whole rig and composes with the playing clip.
+
+```js
+const model = new GLTFModel(loader.getGLTF("boat"), { scale: 40, lit: false });
+model.setCurrentAnimation("paddle", { loop: true });
+model.pos.set(x, y);
+model.depth = z;
+```
+
+To scatter an authored mesh yourself, read the geometry off the descriptor and
+hand it to an `InstancedMesh` — `loader.getGLTF(name).nodes[0]` carries
+`vertices` / `uvs` / `normals` / `indices`. That wants a single merged
+primitive exported at the origin; see `melonjs-3d-assets`.
 
 `melonjs-3d-assets` covers the rest: every `level.load` option, which material
 features are imported, imported lights and their intensity units, node-TRS

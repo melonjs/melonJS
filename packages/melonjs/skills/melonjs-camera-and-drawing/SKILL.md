@@ -118,6 +118,27 @@ of them and throw `Invalid geometry for fill/stroke` for anything else.
 noise — including seamless tiling and `asNormalMap` — so you rarely need to ship
 noise PNGs.
 
+Two things to get right when one is animated:
+
+- **Drive it yourself.** `update(dt)` advances the time axis and re-bakes; the
+  engine never calls it. An `animated: true` texture nobody updates is a still
+  image, with no error to say so.
+- **Hand consumers the texture, not its canvas.** Re-baking bumps the
+  `Texture2d`'s `version`, and that bump is what tells the renderer to
+  re-upload. `getTexture()` returns the baked canvas, which carries no version
+  — so a mesh given the canvas shows frame one forever.
+
+Set `seamless: true` for anything tiled by UVs past 1, or every repeat carries a
+visible seam.
+
+**And it still will not animate on a `Mesh`.** Driving `update(dt)` genuinely
+re-bakes the field — the pixels change, the version increments — but the mesh
+path does not pick the new copy up, so a 3D surface textured with an animated
+noise renders frozen while every counter reports success. Verify with a
+checksum of `getTexture()` before concluding the animation is broken; it is the
+upload that is missing, not the bake. For a moving 3D surface, scroll the UVs
+or move the geometry instead.
+
 ## Clipping and masking
 
 ```js

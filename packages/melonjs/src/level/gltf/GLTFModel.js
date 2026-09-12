@@ -3,6 +3,7 @@ import {
 	composeTRSInto,
 	multiplyMatrixInto,
 } from "../../loader/parsers/gltf.js";
+import { vector3dPool } from "../../math/vector3d.ts";
 import { parseAnimationOptions } from "../../renderable/animation.ts";
 import Container from "../../renderable/container.js";
 import { hasVerticalExtent } from "../../renderable/groundshadow.js";
@@ -17,8 +18,33 @@ import { linearToSrgb8 } from "./srgb.js";
  * @import { AnimationOptions } from "../../renderable/animation.ts";
  */
 
-// column-major identity, the root's parent transform
+// column-major identity, the root's parent transform when the model sits
+// unplaced at the world origin
 const IDENTITY16 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
+// the model's own placement, expressed in glTF space, reused every frame
+const _rootScratch = new Array(16);
+
+/**
+ * A part mesh's world position — its own `pos`, full stop.
+ *
+ * `_applyWorldToMesh` writes each part's FINAL world coordinates, so the
+ * inherited implementation (which sums the ancestor chain) would add the
+ * model's own placement a second time. That mis-measures nothing while the rig
+ * sits at the origin, but as soon as it moves the frustum-culling sphere drifts
+ * to twice the offset and the whole rig blinks out while still drawing in the
+ * right place. Same reason {@link Particle} overrides this: a renderable
+ * positioned in a frame other than its parent's cannot sum up the chain.
+ * @returns {Vector3d} this part's absolute position
+ * @ignore
+ * @internal
+ */
+function partAbsolutePosition() {
+	if (this._absPos === undefined) {
+		this._absPos = vector3dPool.get();
+	}
+	return this._absPos.set(this.pos.x, this.pos.y, this.depth);
+}
 
 // per-frame scratch reused while composing one node's local matrix (DFS visits
 // a node fully before recursing, and the local matrix is consumed by the
@@ -45,10 +71,24 @@ const _localScratch = new Array(16);
  * loop, speed, onComplete, next })`. Here `animationspeed` is a **playback
  * multiplier** (1 = authored speed), not a per-frame delay.
  *
+ * The model is placed like any other renderable: `pos`, `depth` and the
+ * transform helpers (`rotate`, `scale`) move the **whole rig**, and compose
+ * with whatever the active clip is doing — so a walk cycle plays wherever the
+ * character happens to stand.
+ *
  * Instances are created automatically by {@link GLTFScene} when the asset
  * defines animation channels; you usually obtain one via `level.load(...)`
  * rather than constructing it directly.
  * @augments Container
+ * @example
+ * const boat = new me.GLTFModel(me.loader.getGLTF("boat"), { scale: 30, lit: true });
+ * boat.setCurrentAnimation("paddle", { loop: true });
+ * app.world.addChild(boat);
+ *
+ * // ...then drive it like anything else
+ * boat.pos.set(steerX, waterLevel);
+ * boat.depth = travelled;
+ * boat.rotate(lean - lastLean, AXIS_Z);
  */
 export default class GLTFModel extends Container {
 	/**
@@ -82,6 +122,16 @@ export default class GLTFModel extends Container {
 		// resolves occlusion, so don't let the container reassign child depth
 		this.autoDepth = false;
 
+		// The rig's placement reaches the part meshes through `_rootMatrix`,
+		// which bakes it into each part's own world position. The renderer must
+		// therefore NOT apply it a second time: `Container.draw` translates by
+		// `pos`, and `preDraw` folds `currentTransform` in, both of which land
+		// on top of geometry that already carries the placement. Left alone
+		// that doubles every move and every turn — a boat steering to x = -400
+		// draws as though it were at -800, off the side of the view, while its
+		// reported position stays perfectly correct.
+		this.autoTransform = false;
+
 		// This container is a logical group sitting at the world origin — its
 		// child meshes carry absolute world placement themselves. It has no
 		// meaningful anchor box, and its width/height are Infinity (the Container
@@ -90,6 +140,23 @@ export default class GLTFModel extends Container {
 		// silently dropping every child mesh. Opt out of the anchor offset
 		// entirely (same mechanism Mesh uses on the Camera3d world path).
 		this.applyAnchorTransform = false;
+
+		// ...but a model still has to report WHERE IT IS. Those Infinity
+		// dimensions also mean `Container#updateBounds` takes neither of its
+		// branches, so `getBounds()` returns the EMPTY bounds it was
+		// initialised with (min `+Infinity`, max `-Infinity`) — a model that
+		// claims to be nowhere. Anything reading bounds is then wrong about it,
+		// and the physics broadphase, which files every item by `getBounds()`,
+		// could not place one: a model carrying a `Body` was sorted by that
+		// infinite rect into a node unrelated to where it stood and silently
+		// collided with nothing.
+		//
+		// A model's size is known at load — the glTF scene AABB — so it is
+		// measured once here and placed by `updateBounds`, costing nothing per
+		// frame. Aggregating the parts instead (`enableChildBoundsUpdate`)
+		// would walk the whole rig on every bounds update; that flag is for a
+		// group whose extent genuinely IS its members' union and changes as
+		// they move, like a flock or a squad, which a rig is not.
 
 		/**
 		 * the node hierarchy keyed by glTF node index
@@ -135,6 +202,32 @@ export default class GLTFModel extends Container {
 		const dz = b.max[2] - b.min[2];
 		const radius = (Math.hypot(dx, dy, dz) / 2) * this.scale;
 		const boxSize = Math.max(radius, 1) * Math.SQRT2;
+
+		/**
+		 * The rig's own 2D extent, as a half-size and a centre offset from
+		 * `pos`, in RENDER space — so `updateBounds` is a placement rather than
+		 * a measurement. A sphere's square rather than the AABB's XY face, so
+		 * that a turned model still reports a box that contains it: bounds may
+		 * be generous without harm (it costs broadphase pruning), but must
+		 * never be tight enough to miss.
+		 *
+		 * The centre is the AABB's, NOT the origin: a model authored standing
+		 * on the ground has its origin at the feet.
+		 * @ignore
+		 * @internal
+		 */
+		this._extent = Math.max(radius, 1);
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._extentX = ((b.min[0] + b.max[0]) / 2) * this.scale;
+		// render space is Y-DOWN and the model is bridged from glTF's Y-up
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._extentY = -((b.min[1] + b.max[1]) / 2) * this.scale;
 
 		const lit = options.lit === true;
 		const rightHanded = options.rightHanded !== false;
@@ -211,6 +304,7 @@ export default class GLTFModel extends Container {
 					mesh.vertexColors = prim.colors;
 				}
 				mesh.name = node.name;
+				mesh.getAbsolutePosition = partAbsolutePosition;
 				(this._meshByNode[idx] ??= []).push(mesh);
 				this.addChild(mesh);
 			}
@@ -506,15 +600,105 @@ export default class GLTFModel extends Container {
 	}
 
 	/**
+	 * {@link Container#draw} translates the renderer by `pos` so children draw
+	 * in container-local space. This rig's children are already in world space,
+	 * so that translation is undone here rather than doubling the placement.
+	 * Paired with `autoTransform = false`, which suppresses the matching
+	 * rotation fold.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Camera2d} [viewport] - the camera rendering this frame
+	 */
+	draw(renderer, viewport) {
+		renderer.translate(-this.pos.x, -this.pos.y);
+		super.draw(renderer, viewport);
+	}
+
+	/**
+	 * Where this model is, as a 2D box — what culling, picking and the physics
+	 * broadphase all read.
+	 *
+	 * A `Container` has no dimensions of its own, and one left that way reports
+	 * an EMPTY bounds: a model claiming to be nowhere, which the broadphase
+	 * cannot place. A rig's size is known at load from the glTF scene AABB, so
+	 * this is a placement of a measurement taken once in the constructor rather
+	 * than a walk of the parts — `Container#updateBounds` with
+	 * `enableChildBoundsUpdate` would re-measure the whole rig on every call,
+	 * and that flag is for a group whose extent really is its members' union.
+	 *
+	 * The box is the model's bounding SPHERE squared off, so a turned model
+	 * still reports something that contains it. Generous bounds only cost
+	 * broadphase pruning; tight ones lose contacts.
+	 * @param {boolean} [absolute=true] - in world rather than local coordinates
+	 * @returns {Bounds} this model's bounding box
+	 */
+	updateBounds(absolute = true) {
+		const bounds = this.getBounds();
+		const e = this._extent;
+		bounds.setMinMax(
+			this._extentX - e,
+			this._extentY - e,
+			this._extentX + e,
+			this._extentY + e,
+		);
+		if (absolute === true) {
+			const absPos = this.getAbsolutePosition();
+			bounds.translate(absPos.x, absPos.y);
+		}
+		return bounds;
+	}
+
+	/**
 	 * @ignore
 	 * @internal
 	 */
 	_pose() {
 		const clip = this.current.name ? this.anim[this.current.name] : null;
 		const t = this.current.time;
+		const parent = this._rootMatrix();
 		for (const root of this._roots) {
-			this._visit(root, IDENTITY16, clip, t);
+			this._visit(root, parent, clip, t);
 		}
+	}
+
+	/**
+	 * The model's own placement, as the parent transform every root node hangs
+	 * from — so `pos`, `depth` and `currentTransform` move, turn and scale the
+	 * whole rig the way they do for any other renderable.
+	 *
+	 * It has to be handed to the DFS in **glTF space**, because that is where
+	 * the node matrices live and `_applyWorldToMesh` only bridges to engine
+	 * space afterwards. The bridge is `D = diag(1, -1, zSign)` and a uniform
+	 * `scale`, so the inverse trip is a division by `scale` for the translation
+	 * and a conjugation `D · R · D` for the rotation/scale — `D` is its own
+	 * inverse, which is what makes the conjugation this cheap.
+	 * @returns {number[]} 16-element column-major matrix
+	 * @ignore
+	 * @internal
+	 */
+	_rootMatrix() {
+		const { x, y, z } = this.pos;
+		const t = this.currentTransform.val;
+		const s = this.scale;
+		// An unplaced, unrotated model must pose exactly as it did before this
+		// existed, so take the identity straight out rather than composing one.
+		if (x === 0 && y === 0 && z === 0 && this.currentTransform.isIdentity()) {
+			return IDENTITY16;
+		}
+		const out = _rootScratch;
+		const zs = this._zSign;
+		// D · R · D, one entry at a time: out[col][row] = d[row] · R · d[col]
+		for (let col = 0; col < 3; col++) {
+			const dc = col === 0 ? 1 : col === 1 ? -1 : zs;
+			out[col * 4] = t[col * 4] * dc;
+			out[col * 4 + 1] = -t[col * 4 + 1] * dc;
+			out[col * 4 + 2] = zs * t[col * 4 + 2] * dc;
+			out[col * 4 + 3] = 0;
+		}
+		out[12] = x / s;
+		out[13] = -y / s;
+		out[14] = (zs * z) / s;
+		out[15] = 1;
+		return out;
 	}
 
 	/**

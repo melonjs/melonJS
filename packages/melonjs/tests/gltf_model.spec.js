@@ -4,6 +4,7 @@ import {
 	boot,
 	Container,
 	GLTFModel,
+	Vector3d,
 	video,
 } from "../src/index.js";
 import Renderer from "../src/video/renderer.js";
@@ -194,6 +195,157 @@ describe("GLTFModel", () => {
 		// child local (1,0,0) rotated 180°Z → (-1,0,0)
 		expect(childOf(model).pos.x).toBeCloseTo(-1, 4);
 		expect(childOf(model).pos.y).toBeCloseTo(0, 4);
+	});
+
+	describe("bounds", () => {
+		// A `GLTFModel` is a `Container`, and a container with no dimensions of
+		// its own takes NEITHER branch of `Container#updateBounds` — so it used
+		// to return the empty bounds it was initialised with (min `+Infinity`,
+		// max `-Infinity`): a model claiming to be nowhere. Everything reading
+		// bounds was then wrong about it, and the physics broadphase, which
+		// files every item by `getBounds()`, could not place one at all.
+		//
+		// The size comes from the glTF scene AABB, measured once at load, so
+		// this costs nothing per frame — unlike aggregating the parts, which
+		// is what `enableChildBoundsUpdate` is for and is priced accordingly.
+
+		it("reports a finite extent instead of nothing", () => {
+			const model = makeModel();
+
+			const bounds = model.updateBounds(true);
+
+			expect(bounds.isFinite()).toBe(true);
+			expect(bounds.width).toBeGreaterThan(0);
+			expect(bounds.height).toBeGreaterThan(0);
+		});
+
+		it("tracks the model as it moves", () => {
+			const model = makeModel();
+			const before = model.updateBounds(true);
+			const startX = before.centerX;
+			const startY = before.centerY;
+
+			model.pos.set(300, 200, 0);
+			// no re-pose needed: the extent was measured once from the glTF
+			// scene AABB, and `updateBounds` only places it
+			const after = model.updateBounds(true);
+
+			expect(after.isFinite()).toBe(true);
+			expect(after.centerX - startX).toBeCloseTo(300, 5);
+			expect(after.centerY - startY).toBeCloseTo(200, 5);
+		});
+
+		it("keeps reporting a finite extent at a large depth", () => {
+			// an endless runner drives thousands of units down +Z; the extent
+			// has to survive the trip, since a broadphase that cannot place the
+			// model silently stops colliding it
+			const model = makeModel();
+			model.pos.set(0, 0, 40000);
+
+			expect(model.updateBounds(true).isFinite()).toBe(true);
+		});
+	});
+
+	describe("placement", () => {
+		// The model's own transform is the parent every root node hangs from,
+		// so a rig can be moved and turned like any other renderable. Before
+		// this the DFS started at the identity and the container's `pos` was
+		// simply ignored.
+		it("leaves an unplaced model exactly where the rest pose puts it", () => {
+			const model = makeModel();
+			expect(childOf(model).pos.x).toBeCloseTo(1, 5);
+			expect(childOf(model).pos.y).toBeCloseTo(0, 5);
+			expect(childOf(model).depth).toBeCloseTo(0, 5);
+		});
+
+		it("translates every part by the model's pos and depth", () => {
+			const model = makeModel();
+			model.pos.set(10, 4);
+			model.depth = 7;
+			model._pose();
+			// rest child sits at (1, 0, 0), so each axis shifts by the model's own
+			expect(childOf(model).pos.x).toBeCloseTo(11, 4);
+			expect(childOf(model).pos.y).toBeCloseTo(4, 4);
+			expect(childOf(model).depth).toBeCloseTo(7, 4);
+		});
+
+		it("turns the whole rig about the model's origin", () => {
+			const model = makeModel();
+			model.rotate(Math.PI, new Vector3d(0, 0, 1));
+			model._pose();
+			// child local (1,0,0) swung half a turn about Z → (-1,0,0)
+			expect(childOf(model).pos.x).toBeCloseTo(-1, 4);
+			expect(childOf(model).pos.y).toBeCloseTo(0, 4);
+		});
+
+		it("composes the model's placement with the animated pose", () => {
+			const model = makeModel();
+			model.pos.set(100, 0);
+			model.setCurrentAnimation("move", { loop: false });
+			model.update(500); // parent tx = 2.5 → child at 3.5, plus the model's 100
+			expect(childOf(model).pos.x).toBeCloseTo(103.5, 4);
+		});
+
+		it("keeps pos in world units when the model carries a scene scale", () => {
+			// pos is engine-space, the node graph is glTF-space: the root
+			// translation divides by `scale` so the two agree after the bridge
+			const model = new GLTFModel(makeData(), { scale: 4, rightHanded: false });
+			model.pos.set(40, 0);
+			model._pose();
+			// child local x=1 → 4 world units, plus the model's own 40
+			expect(model.getChildByName("child")[0].pos.x).toBeCloseTo(44, 4);
+		});
+
+		it("does not let the renderer apply the placement a second time", () => {
+			// The placement is baked into each part's own world position, so
+			// the container must not ALSO translate/rotate the renderer for
+			// its children — `Container.draw` translates by `pos` and
+			// `preDraw` folds `currentTransform` in. Left on, both land on top
+			// of geometry that already carries the placement, and every move
+			// and turn is doubled: a model at x = -400 draws as if at -800,
+			// off the side of the view, while its reported position stays
+			// perfectly correct — which is what makes it so hard to spot.
+			const model = makeModel();
+			expect(model.autoTransform).toBe(false);
+
+			const calls = [];
+			const fakeRenderer = {
+				translate: (x, y) => {
+					return calls.push([x, y]);
+				},
+				save() {},
+				restore() {},
+				setGlobalAlpha() {},
+				globalAlpha: () => {
+					return 1;
+				},
+				getOpacity: () => {
+					return 1;
+				},
+				setTint() {},
+				beginPostEffect() {},
+				endPostEffect() {},
+				setDepth() {},
+			};
+			model.pos.set(120, 45);
+			// the container's own translate must be cancelled, not added to
+			model.draw(fakeRenderer, undefined);
+			const net = calls.reduce(
+				(acc, [x, y]) => {
+					return [acc[0] + x, acc[1] + y];
+				},
+				[0, 0],
+			);
+			expect(net[0]).toBeCloseTo(0, 5);
+			expect(net[1]).toBeCloseTo(0, 5);
+		});
+
+		it("bridges depth for a right-handed model", () => {
+			const model = new GLTFModel(makeData(), { scale: 1, rightHanded: true });
+			model.depth = 9;
+			model._pose();
+			expect(model.getChildByName("child")[0].depth).toBeCloseTo(9, 4);
+		});
 	});
 
 	it("loops by default (wraps past duration)", () => {

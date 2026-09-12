@@ -57,7 +57,7 @@ export class Line extends Polygon {
 	 */
 	override recalc() {
 		const edges = this.edges;
-		const normals = this.normals;
+		const normals = this.edgeNormals;
 		const indices = this.indices;
 
 		// Copy the original points array and apply the offset/angle

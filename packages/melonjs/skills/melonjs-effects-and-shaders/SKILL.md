@@ -80,7 +80,34 @@ one `@group(3) @binding(0) var<uniform>` struct — so a single `setUniform` cal
 feeds whichever backend is live. `setTime` is a convenience for a `uTime`
 uniform and silently does nothing if the shader does not declare one.
 
-Shaders can also be preloaded as assets with loader type `"shader"`.
+### One effect is one program — prefer preloading, and share
+
+A `ShaderEffect` compiles and links in its **constructor**, and the link is
+checked with `getProgramParameter(LINK_STATUS)` straight after `linkProgram` —
+a blocking call. So the cost is paid on whatever frame the effect is
+constructed, and *n* identical effects cost it *n* times. `clone()` does not
+avoid it: it constructs a new effect and links a new program.
+
+Preload it instead. Loader type `"shader"` takes a `src` **or inline source via
+`data`**, compiles at load time (inside the loading screen), and hands back a
+**shared** instance:
+
+```js
+loader.preload([{ name: "ramp", type: "shader", data: myFragmentBody }]);
+// …then, for every label that wants it:
+label.addPostEffect(loader.getShader("ramp"));
+```
+
+Sharing one instance across renderables is safe *because* the loader sets
+`effect.shared`. Without that flag a renderable's teardown destroys its post
+effects, which would free the program out from under everything else still
+using it. Uniforms live on the effect, so a shared instance means one set of
+uniform values — fine when the look is uniform, and the reason to clone (and
+pay a link) when it is not.
+
+Note this covers **your** effects only. The engine's own mesh/quad shader
+variants are compiled lazily per feature combination on first draw and cannot be
+preloaded — see `melonjs-loading-assets` for the warm-up that covers those.
 
 ### Screen-reading builtins
 
@@ -108,6 +135,43 @@ Two places where a straight port really does differ:
   multi-effect path composites through bottom-up FBOs, so declare a `uUVYDir`
   uniform (initialise it to `1.0`) and multiply vertical offsets by it; the
   renderer feeds `-1` on that path and `+1` everywhere else.
+
+## A ShaderEffect cannot shade a mesh on WebGPU
+
+The single-effect fast path swaps the renderable's program outright instead of
+rendering through an offscreen target. On WebGL that works for a `Mesh` too, so
+a custom mesh shader is a `ShaderEffect` away. **On WebGPU it does not** — the
+renderer says so in its own source, warns once, and then keeps the built-in
+mesh shading.
+
+Nothing throws. The mesh simply draws with its plain texture, which looks like
+a broken shader, a bad binding, or a texture that failed to load — and since
+`video.AUTO` prefers WebGPU where it is available, this is the default outcome
+on most desktops. It cost several hours here: the symptom was a water surface
+rendering flat white, and alpha, bindings, transparency and lighting were all
+eliminated before the backend was.
+
+2D renderables are unaffected: `Sprite`, `Text` and the rest go through the
+quad path, which hosts effects on both backends. So a gradient fill for text,
+or a refraction over a sprite, is fine — it is specifically the mesh path.
+
+If you need a genuinely custom mesh shader that runs everywhere, supply a full
+dual-language `GLShader` rather than a fragment body, and declare the fog
+uniforms yourself (see `melonjs-3d`).
+
+## Extra textures bind in setTexture order
+
+`setTexture("uFoo", …)` assigns bindings **1 and 2** to the first extra
+texture, **3 and 4** to the second, and so on. The WGSL must match:
+
+```wgsl
+@group(3) @binding(1) var uFoo : texture_2d<f32>;
+@group(3) @binding(2) var uFooSampler : sampler;
+```
+
+Copying a two-texture effect and deleting one leaves the survivor declared at
+3/4 while it is bound at 1/2 — the program fails to build and the effect is
+silently dropped.
 
 ## Blend modes
 

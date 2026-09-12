@@ -144,6 +144,27 @@ model.pause();
 an explicit `loop: false` stops looping. `setCurrentAnimation` **throws** on a
 clip name the asset does not define — check `getAnimationNames()` first.
 
+### Placing and moving a model
+
+A `GLTFModel` is placed like any other renderable — `pos`, `depth`, `rotate`
+and `scale` move the **whole rig**, and compose with whatever the active clip
+is doing, so a walk cycle plays wherever the character stands:
+
+```js
+const boat = new me.GLTFModel(me.loader.getGLTF("boat"), { scale: 40, lit: false });
+boat.setCurrentAnimation("paddle", { loop: true });
+app.world.addChild(boat);
+
+boat.pos.set(steerX, waterLevel);
+boat.depth = travelled;
+boat.rotate(lean - lastLean, AXIS_Z);   // `rotate` is RELATIVE — feed it the delta
+boat.animationspeed = 0.85 + 0.9 * pace; // one authored tempo, many run speeds
+```
+
+Constructing one directly from `loader.getGLTF(name)` is fine and is the way to
+go when the model is a game object rather than a scene — `level.load` is for
+loading a whole scene into the world.
+
 **Vertex skinning is out of scope** — `JOINTS_0` / `WEIGHTS_0` are not read, and
 neither are morph targets. A smoothly-deforming character will not deform. The
 options are: rig it hierarchically instead (separate meshes parented into a
@@ -219,6 +240,117 @@ MTL contributes `Kd` (diffuse tint), `d` / `Tr` (opacity), `Ke` (emissive),
 want it directly. OBJ has no scene graph, no lights, no animation — use glTF for
 anything beyond a single static model.
 
+## Authoring assets for the engine
+
+Notes from modelling props and a rigged character against this loader. They are
+Blender-specific in the API details, general in the traps.
+
+### One clip means one action
+
+glTF names an animation after the **action** it came from, so three objects
+each carrying their own action export as three separate clips — and a game can
+only play one clip at a time, so the other two never move. Put every animated
+object in **one action**, using slots (Blender 4.4+):
+
+```python
+shared = bpy.data.actions.new("paddle")
+for ob in (pivot, shoulder_l, shoulder_r, body):
+    ad = ob.animation_data_create()
+    ad.action = shared
+    ad.action_slot = shared.slots.new('OBJECT', ob.name)
+```
+
+Exporting with the scene/whole-timeline mode does **not** merge per-object
+actions into one clip — it still emits one per action. Slots are the fix.
+
+In Blender 5.x, `action.fcurves` no longer exists; curves live under
+`action.layers[].strips[].channelbags[].fcurves`, and a channelbag identifies
+its slot as `cb.slot.identifier` (there is no `slot_identifier`).
+
+### Never re-parent or join a rig that is mid-pose
+
+Both parenting and joining bake the objects' **current world transforms**.
+Parenting a child while the parent sits in an animated pose writes the inverse
+of that pose into `matrix_parent_inverse`, which silently cancels the animation
+— the part renders rigid while the curves still exist. Detach the action, zero
+the rig, do the surgery, then reattach:
+
+```python
+saved = [(o, o.animation_data.action_slot) for o in animated]
+for ob, _ in saved:
+    ob.animation_data.action = None
+    ob.rotation_euler = (0, 0, 0)
+# ...re-parent / join here...
+for ob, slot in saved:
+    ob.animation_data.action = act
+    ob.animation_data.action_slot = slot
+```
+
+A joined mesh also inherits the **active** object's scale, so joining into a
+box that was scaled to `(0.8, 2.0, 0.1)` leaves a node with that non-uniform
+scale and geometry divided back through it. It renders in the right place but
+skews flat-shaded normals — apply transforms (`rotation=True, scale=True`)
+after joining. Watch for a related trap: setting `ob.scale.x` on a mesh whose
+size was already applied *multiplies* rather than replaces it.
+
+### A model only needs to stay split where something animates it
+
+Every glTF primitive is a draw call. Merge everything static into one mesh and
+keep separate nodes only for the parts a clip actually drives — a boat with a
+rabbit and a paddle went from 28 primitives to 5 that way, with no visible
+change.
+
+### One palette strip beats one material per colour
+
+An `InstancedMesh` is **one geometry and one material**, so a prop that wants
+five colours cannot use five materials. Give the whole model a single material
+whose image is an *N*×1 strip, one pixel per shade, and point each face's UVs
+at a cell centre (`u = (cell + 0.5) / N`, `v = 0.5`) with the sampler set to
+nearest. A whole scene's palette then costs one tiny texture, a merged mesh can
+be twenty colours, and there is nothing to bleed between cells.
+
+Colour-space trap when generating that strip programmatically: Blender's
+`image.pixels` are scene-linear floats, but this export path writes them out
+**verbatim**, so pre-converting sRGB→linear darkens every colour. White is the
+tell — it is the one value identical in both spaces, so if white survives and
+everything else came out dark, that is the bug. Verify by decoding the PNG back
+out of the GLB and comparing bytes to the source palette.
+
+### Feeding an authored mesh into an `InstancedMesh`
+
+`EXT_mesh_gpu_instancing` covers instances authored *in the file*. When the
+game places them itself, take the geometry off the parsed descriptor instead:
+
+```js
+const node = me.loader.getGLTF("palm").nodes[0];
+const trees = new me.InstancedMesh(0, groundY, {
+    vertices: node.vertices, uvs: node.uvs,
+    normals: node.normals, indices: node.indices,
+    texture: palette, textureFilter: "nearest", scale: 40,
+    instanceCount: count,
+});
+```
+
+`nodes` is one entry **per primitive**, each in its own local space with a
+separate `world` matrix — so this only works cleanly when the asset is a single
+merged primitive exported with an identity node transform. Model it at the
+origin, base on the floor, and apply transforms before exporting.
+
+One geometry stamped out hundreds of times reads as one object *copied*
+hundreds of times, so vary each instance in its transform. Rotate **after**
+translating, or the instance swings around the group origin instead of turning
+where it stands:
+
+```js
+placement.identity().translate(x / s, -y / s, z / s)
+         .rotate(math.randomFloat(0, Math.PI * 2), AXIS_Y);
+const j = math.randomFloat(0.82, 1.18);
+placement.scale(j, j, j);
+```
+
+Sizing every prop against **one** scale constant, rather than giving each its
+own, keeps "this looks wrong" a modelling question instead of a scaling one.
+
 ## Packaging
 
 A self-contained GLB is one file with nothing to resolve — the safest thing to
@@ -243,7 +375,14 @@ need a prefix.
 | a character does not deform | vertex skinning is out of scope; rig hierarchically or billboard |
 | animation names come back empty | the asset has no node-TRS channels (skin-only rig) |
 | a hundred copies tank the frame rate | exported without `EXT_mesh_gpu_instancing` |
+| a whole scatter looks like one object repeated | every instance shares the group transform — vary yaw/scale per instance, rotating *after* the translate |
+| three clips where you authored one | one action per object; use a single action with a slot each |
+| one part of a rig renders rigid while its curves exist | it was re-parented mid-pose, baking the inverse into `matrix_parent_inverse` |
+| a merged mesh lights wrong along one axis | it inherited the active object's non-uniform scale on join — apply transforms |
+| an authored palette comes out uniformly dark, but white is correct | linear values written to a strip that is saved verbatim |
+| `getGLTF(name).nodes[0]` geometry lands in the wrong place | `nodes` is per primitive, each with its own `world`; merge to one primitive and export at the origin |
 | a prop casts no visible shadow | wide and flat-bottomed — the blob is under it; `shadowGroundY` haloes it rather than revealing it |
+| shadows only show on casters near the camera | `shadowGroundY` is on the wrong side — Y-down means the floor is a **greater** y, so a `pos.y - lift` puts the blob inside the caster and the depth test leaves only a hairline ring |
 | a shadow smeared across the whole floor | a ground plane cast its own blob — use the scene-wide opt-in |
 | `onLoaded` gets a string, not the scene | it is called with the level id; load into your own container instead |
 | scene renders flat and unlit | no `Camera3d` — the 2D-camera path is CPU-projected and unlit (with a `Camera3d` on Canvas you get a black canvas instead) |

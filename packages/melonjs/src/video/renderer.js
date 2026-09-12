@@ -1409,6 +1409,32 @@ export default class Renderer {
 				}
 				break;
 
+			// Box3d — a 3D box has no 2D outline of its own, so draw the XY
+			// FOOTPRINT it already hands every 2D consumer through its own
+			// `getBounds()` (the body bounds, the broadphase pre-gate, and
+			// this). Without a case here it fell through to the `default`
+			// below, so switching on the debug panel's hitbox overlay threw
+			// "Invalid geometry for fill/stroke" on any body carrying one.
+			case "Box3d": {
+				const footprint = shape.getBounds();
+				if (fill) {
+					this.fillRect(
+						footprint.left,
+						footprint.top,
+						footprint.width,
+						footprint.height,
+					);
+				} else {
+					this.strokeRect(
+						footprint.left,
+						footprint.top,
+						footprint.width,
+						footprint.height,
+					);
+				}
+				break;
+			}
+
 			// Rect or Bounds
 			case "Rectangle":
 			case "Bounds":
