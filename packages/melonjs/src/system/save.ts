@@ -83,7 +83,52 @@ once(BOOT, () => {
 	}
 });
 
-const save: Record<string, unknown> = {
+/**
+ * The shape of the {@link save} namespace.
+ *
+ * Declared rather than left as a bare index signature: typed as
+ * `Record<string, unknown>` every member was swallowed by the index, so
+ * `save.add` came out as `unknown` and could not be CALLED at all under
+ * `strict` — the namespace's own documented example did not typecheck — while
+ * every registered key read back as `unknown` and needed a cast to compare or
+ * assign.
+ *
+ * The index signature stays, so anything registered elsewhere is still
+ * reachable; declared members simply take precedence over it.
+ */
+export interface SaveAPI {
+	/**
+	 * Add new keys to localStorage and set them to the given default values if
+	 * they do not exist.
+	 * @param props - key and corresponding values
+	 * @returns this namespace, typed with the keys just registered, so they can
+	 * be read back without a cast
+	 * @example
+	 * // Initialize "score" and "lives" with default values
+	 * me.save.add({ score : 0, lives : 3 });
+	 * // get or set the value through me.save
+	 * me.save.score = 1000;
+	 * @example
+	 * // or keep the returned view, and read the keys with their real types
+	 * const store = me.save.add({ score : 0, lives : 3 });
+	 * store.lives -= 1;
+	 */
+	add<T extends Record<string, Jsonifiable>>(props: T): this & T;
+
+	/**
+	 * Remove a key from localStorage
+	 * @param key - key to be removed
+	 * @example
+	 * // Remove the "score" key from localStorage
+	 * me.save.remove("score");
+	 */
+	remove(key: string): void;
+
+	/** keys registered through {@link SaveAPI.add} */
+	[key: string]: unknown;
+}
+
+const save: SaveAPI = {
 	/**
 	 * Add new keys to localStorage and set them to the given default values if they do not exist
 	 * @param props - key and corresponding values
@@ -93,7 +138,7 @@ const save: Record<string, unknown> = {
 	 * // get or set the value through me.save
 	 * me.save.score = 1000;
 	 */
-	add(props: Record<string, Jsonifiable>) {
+	add<T extends Record<string, Jsonifiable>>(props: T) {
 		const obj = save;
 
 		for (const key of Object.keys(props)) {
@@ -124,6 +169,11 @@ const save: Record<string, unknown> = {
 		if (hasLocalStorage) {
 			localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
 		}
+
+		// Handed back so the caller can read what it just registered with the
+		// types it registered them at. `add` returned nothing before, so this
+		// cannot break a caller — there was nothing to depend on.
+		return save as SaveAPI & T;
 	},
 
 	/**

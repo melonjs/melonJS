@@ -438,9 +438,7 @@ export default class Text extends Renderable {
 					32,
 			) * 32;
 
-		// invalidate the texture
 		const renderer = this.parentApp?.renderer ?? game.renderer;
-		this.canvasTexture.invalidate(renderer);
 
 		// resize the cache canvas if necessary
 		if (
@@ -457,6 +455,15 @@ export default class Text extends Renderable {
 			this.pos.x - this.metrics.x,
 			this.pos.y - this.metrics.y + this.metrics.inkPadTop,
 		);
+
+		// Invalidate LAST, so the renderer re-uploads the canvas at the size
+		// and with the content it ends up with. Invalidating first told the
+		// renderer to refresh against the dimensions the canvas had BEFORE the
+		// resize above — harmless on WebGL, which re-specifies texture storage
+		// on every upload, but a WebGPU texture is immutable-sized, so the
+		// refreshed copy kept the old height and the bottom of the label was
+		// sampled from outside it. Visible as glyph tops shorn off on Safari.
+		this.canvasTexture.invalidate(renderer);
 
 		this.isDirty = true;
 
@@ -581,7 +588,6 @@ export default class Text extends Renderable {
 	draw(renderer) {
 		// re-render the canvas texture when dirty (e.g. visibleCharacters changed)
 		if (this.isDirty) {
-			this.canvasTexture.invalidate(renderer);
 			this.canvasTexture.clear();
 			this._drawFont(
 				this.canvasTexture.context,
@@ -589,6 +595,8 @@ export default class Text extends Renderable {
 				this.pos.x - this.metrics.x,
 				this.pos.y - this.metrics.y + this.metrics.inkPadTop,
 			);
+			// after the repaint, not before it — see `setText`
+			this.canvasTexture.invalidate(renderer);
 		}
 
 		// adjust x,y position based on the bounding box. The blit rises by the

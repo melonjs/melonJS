@@ -193,4 +193,58 @@ describe("Text — the glyph is baked whole, not clipped", () => {
 			expect(text.metrics.height).toBe(Math.ceil(20 * 1.5 * 3));
 		});
 	});
+
+	describe("the texture is invalidated AFTER the repaint", () => {
+		// Ordering bug, and a backend-specific one: `setText` used to
+		// invalidate the cache texture BEFORE resizing and repainting the
+		// canvas, so the renderer was told to refresh against the dimensions
+		// the canvas had on the way in. WebGL re-specifies texture storage on
+		// every upload and silently healed it; a WebGPU texture is
+		// immutable-sized, so the refreshed copy kept the old height and the
+		// label was sampled past its own content — glyph tops shorn off, on
+		// Safari only.
+		//
+		// Padding the bake for the ink extent is what started resizing labels
+		// that never resized before, which is how a latent ordering bug became
+		// visible. Pinned here because no pixel assertion in this file would
+		// catch it: the bake is correct either way.
+
+		it("resizes and repaints before invalidating", () => {
+			const text = new Text(0, 0, {
+				font: "sans-serif",
+				size: 20,
+				text: "A",
+			});
+			const order = [];
+			const texture = text.canvasTexture;
+			const realInvalidate = texture.invalidate.bind(texture);
+			const realResize = texture.resize.bind(texture);
+			const realClear = texture.clear.bind(texture);
+			texture.invalidate = (...args) => {
+				order.push("invalidate");
+				return realInvalidate(...args);
+			};
+			texture.resize = (...args) => {
+				order.push("resize");
+				return realResize(...args);
+			};
+			texture.clear = (...args) => {
+				order.push("clear");
+				return realClear(...args);
+			};
+
+			// a much longer string, to force the canvas to grow
+			text.setText("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+			expect(order).toContain("invalidate");
+			expect(order).toContain("clear");
+			// whatever else happens, the refresh is the LAST thing
+			expect(order[order.length - 1]).toBe("invalidate");
+			if (order.includes("resize")) {
+				expect(order.indexOf("resize")).toBeLessThan(
+					order.indexOf("invalidate"),
+				);
+			}
+		});
+	});
 });

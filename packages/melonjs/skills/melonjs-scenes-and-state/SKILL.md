@@ -199,6 +199,21 @@ save.add({ hiscore: 0 });      // once; idempotent, loads any stored value
 save.hiscore = 1200;           // plain assignment writes to localStorage
 ```
 
+**In TypeScript, keep what `add()` returns.** The namespace carries a
+`[key: string]: unknown` index for keys registered anywhere, so reading
+`save.hiscore` off it gives you `unknown`. `add()` hands back the same
+namespace typed with the keys you just registered, which is the handle to
+keep:
+
+```ts
+const store = save.add({ hiscore: 0, lives: 3 });
+store.hiscore = 1200;          // number, no cast
+if (score > store.hiscore) { /* ... */ }
+```
+
+Chained calls accumulate, so `save.add({ a: 0 }).add({ b: "" })` is typed with
+both.
+
 ## Symptom → cause
 
 | symptom | cause |
