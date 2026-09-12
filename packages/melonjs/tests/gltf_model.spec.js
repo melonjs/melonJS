@@ -197,6 +197,55 @@ describe("GLTFModel", () => {
 		expect(childOf(model).pos.y).toBeCloseTo(0, 4);
 	});
 
+	describe("bounds", () => {
+		// A `GLTFModel` is a `Container`, and a container with no dimensions of
+		// its own takes NEITHER branch of `Container#updateBounds` — so it used
+		// to return the empty bounds it was initialised with (min `+Infinity`,
+		// max `-Infinity`): a model claiming to be nowhere. Everything reading
+		// bounds was then wrong about it, and the physics broadphase, which
+		// files every item by `getBounds()`, could not place one at all.
+		//
+		// The size comes from the glTF scene AABB, measured once at load, so
+		// this costs nothing per frame — unlike aggregating the parts, which
+		// is what `enableChildBoundsUpdate` is for and is priced accordingly.
+
+		it("reports a finite extent instead of nothing", () => {
+			const model = makeModel();
+
+			const bounds = model.updateBounds(true);
+
+			expect(bounds.isFinite()).toBe(true);
+			expect(bounds.width).toBeGreaterThan(0);
+			expect(bounds.height).toBeGreaterThan(0);
+		});
+
+		it("tracks the model as it moves", () => {
+			const model = makeModel();
+			const before = model.updateBounds(true);
+			const startX = before.centerX;
+			const startY = before.centerY;
+
+			model.pos.set(300, 200, 0);
+			// no re-pose needed: the extent was measured once from the glTF
+			// scene AABB, and `updateBounds` only places it
+			const after = model.updateBounds(true);
+
+			expect(after.isFinite()).toBe(true);
+			expect(after.centerX - startX).toBeCloseTo(300, 5);
+			expect(after.centerY - startY).toBeCloseTo(200, 5);
+		});
+
+		it("keeps reporting a finite extent at a large depth", () => {
+			// an endless runner drives thousands of units down +Z; the extent
+			// has to survive the trip, since a broadphase that cannot place the
+			// model silently stops colliding it
+			const model = makeModel();
+			model.pos.set(0, 0, 40000);
+
+			expect(model.updateBounds(true).isFinite()).toBe(true);
+		});
+	});
+
 	describe("placement", () => {
 		// The model's own transform is the parent every root node hangs from,
 		// so a rig can be moved and turned like any other renderable. Before

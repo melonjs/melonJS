@@ -80,7 +80,7 @@ function _raycastPolygon(
 	//   ray:   from + t * (to - from), t ∈ [0, 1]
 	//   edge:  A + s * (B - A),         s ∈ [0, 1]
 	const points = shape.points;
-	const normals = shape.normals;
+	const normals = shape.edgeNormals;
 	const len = points.length;
 	let bestT = Infinity;
 	let bestNormalIdx = -1;

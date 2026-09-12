@@ -140,7 +140,7 @@ describe("Shape : Polygon", () => {
 				{ x: 10, y: 20 },
 			]);
 			expect(poly.edges.length).toEqual(3);
-			expect(poly.normals.length).toEqual(3);
+			expect(poly.edgeNormals.length).toEqual(3);
 			expect(poly.edges.length).not.toEqual(edgeCount);
 		});
 	});
@@ -650,7 +650,7 @@ describe("Shape : Polygon", () => {
 				new Vector2d(0, 100),
 			]);
 			expect(poly.edges.length).toEqual(4);
-			expect(poly.normals.length).toEqual(4);
+			expect(poly.edgeNormals.length).toEqual(4);
 		});
 
 		it("edges represent direction between consecutive points", () => {
@@ -677,8 +677,8 @@ describe("Shape : Polygon", () => {
 			]);
 			for (let i = 0; i < poly.edges.length; i++) {
 				const dot =
-					poly.edges[i].x * poly.normals[i].x +
-					poly.edges[i].y * poly.normals[i].y;
+					poly.edges[i].x * poly.edgeNormals[i].x +
+					poly.edges[i].y * poly.edgeNormals[i].y;
 				expect(dot).toBeCloseTo(0);
 			}
 		});
@@ -690,7 +690,7 @@ describe("Shape : Polygon", () => {
 				new Vector2d(100, 50),
 				new Vector2d(0, 50),
 			]);
-			for (const normal of poly.normals) {
+			for (const normal of poly.edgeNormals) {
 				const len = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
 				expect(len).toBeCloseTo(1.0);
 			}
@@ -710,7 +710,7 @@ describe("Shape : Polygon", () => {
 				new Vector2d(25, 50),
 			]);
 			expect(poly.edges.length).toEqual(3);
-			expect(poly.normals.length).toEqual(3);
+			expect(poly.edgeNormals.length).toEqual(3);
 		});
 	});
 

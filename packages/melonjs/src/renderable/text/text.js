@@ -375,8 +375,17 @@ export default class Text extends Renderable {
 		// than exact sizing on purpose (hysteresis), far tighter than the
 		// old power-of-two rounding (waste is bounded at 31px per axis
 		// instead of up to 2× each).
+		// The canvas is the layout box PLUS whatever the ink escapes it by. The
+		// padding never reaches `metrics`, so the reported bounds are unmoved —
+		// see `TextMetrics#inkPadTop`.
 		const width = Math.ceil(this.metrics.width / 32) * 32;
-		const height = Math.ceil(this.metrics.height / 32) * 32;
+		const height =
+			Math.ceil(
+				(this.metrics.height +
+					this.metrics.inkPadTop +
+					this.metrics.inkPadBottom) /
+					32,
+			) * 32;
 
 		// invalidate the texture
 		const renderer = this.parentApp?.renderer ?? game.renderer;
@@ -395,7 +404,7 @@ export default class Text extends Renderable {
 			this.canvasTexture.context,
 			this._text,
 			this.pos.x - this.metrics.x,
-			this.pos.y - this.metrics.y,
+			this.pos.y - this.metrics.y + this.metrics.inkPadTop,
 		);
 
 		this.isDirty = true;
@@ -527,13 +536,15 @@ export default class Text extends Renderable {
 				this.canvasTexture.context,
 				this._text,
 				this.pos.x - this.metrics.x,
-				this.pos.y - this.metrics.y,
+				this.pos.y - this.metrics.y + this.metrics.inkPadTop,
 			);
 		}
 
-		// adjust x,y position based on the bounding box
+		// adjust x,y position based on the bounding box. The blit rises by the
+		// same padding the glyphs were drawn down by, so they land in exactly
+		// the pixels they always did and only the clipped ink is recovered.
 		let x = this.metrics.x;
-		let y = this.metrics.y;
+		let y = this.metrics.y - this.metrics.inkPadTop;
 
 		// clamp to pixel grid if required
 		if (renderer.settings.subPixel === false) {

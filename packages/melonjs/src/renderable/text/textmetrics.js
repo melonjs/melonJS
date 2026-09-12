@@ -126,6 +126,53 @@ class TextMetrics extends Bounds {
 			this.glyphMaxBottom = fontData.glyphMaxBottom * scaleY;
 		}
 
+		// How far the INK escapes the nominal line box, top and bottom.
+		//
+		// Everything above measures the box the font DECLARES —
+		// `fontSize × lineHeight` per line — which says nothing about where the
+		// glyphs actually land. A display face can carry glyphs that rise above
+		// the em box, and a STROKE is centred on the glyph outline, so half of
+		// `lineWidth` sits outside it in every direction and no metric reports
+		// that at all. Either way the ink runs past the offscreen canvas and is
+		// clipped.
+		//
+		// These are PADDING for the bake only: they are deliberately not folded
+		// into `width`/`height`, because those are the layout box that
+		// `Text#updateBounds` reports and moving it would shift every existing
+		// label. `Text#setText` grows the canvas by them, draws that much lower,
+		// and blits back up by the same amount — so the glyphs keep their exact
+		// screen position and only the clipped pixels are recovered.
+		//
+		// `actualBoundingBox*` is measured from the alignment point, so the
+		// values already account for whichever `textBaseline` is in force. A
+		// browser or font that cannot report them leaves the padding at zero,
+		// which is exactly today's behaviour.
+		this.inkPadTop = 0;
+		this.inkPadBottom = 0;
+		if (!isBitmapText && strings.length > 0 && typeof context !== "undefined") {
+			const style = this.ancestor;
+			const stroke =
+				style.lineWidth > 0 && style.strokeStyle.alpha > 0
+					? style.lineWidth / 2
+					: 0;
+			const first = context.measureText(strings[0].trimEnd());
+			const last =
+				strings.length === 1
+					? first
+					: context.measureText(strings[strings.length - 1].trimEnd());
+			const above = first.actualBoundingBoxAscent;
+			const below = last.actualBoundingBoxDescent;
+			if (Number.isFinite(above) && Number.isFinite(below)) {
+				this.inkPadTop = Math.max(0, Math.ceil(above + stroke));
+				// the last line starts one line box short of the bottom, so only
+				// what reaches past that needs room
+				this.inkPadBottom = Math.max(
+					0,
+					Math.ceil(this.inkPadTop + below + stroke - this.lineHeight()),
+				);
+			}
+		}
+
 		this.width = Math.ceil(this.width);
 		this.height = Math.ceil(this.height);
 

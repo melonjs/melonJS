@@ -6,27 +6,28 @@ license: MIT
 
 # UI, HUD and text
 
-## Outlined text: the stroke eats the glyph, then clips
+## Outlined text: the stroke eats into the glyph
 
 `Text` draws `fillText` and then `strokeText`, so the outline lands **on top of
 the fill** and is centred on the glyph edge — half of it inward. On a small or
 chunky face a `lineWidth` of 3 leaves the letters solid black. Keep it to 1,
 and raise the font size rather than the stroke.
 
-The same stroke then overflows the top of the render box. `TextMetrics` sizes
-that box from the line height alone, with no allowance for the stroke and no
-use of the font's actual ascent — and `textBaseline: "top"` puts the first
-line's ascenders at y = 0. A display face whose glyphs overshoot the nominal
-ascent loses its top row of pixels.
-
-A leading `\n` is the cheap fix: it buys exactly one line of headroom inside
-the box, and shifting the renderable up by the same amount keeps the layout
-where it was.
+The stroke used to cost you the top row of pixels as well, and a display face
+whose glyphs overshoot the nominal ascent did the same on its own: the render
+box was sized from the line height alone, with no allowance for either. **That
+is fixed** — the bake is padded by the ink's real extent and the blit shifts
+back by the same amount, so nothing is clipped and the reported bounds are
+unchanged. Write the string you mean:
 
 ```js
 new Text(x, y, { font: "Display", lineWidth: 1, lineHeight: 1.45, text: "" });
-hud.setText("\nSCORE 100");   // blank first line = room for the ascenders
+hud.setText("SCORE 100");
 ```
+
+If you have a label carrying a leading `\n` to buy headroom, that workaround is
+now dead weight — drop it, and take the line height back off the position you
+shifted it by.
 
 `fillStyle` is a `Color`, so there is **no gradient fill**. For the arcade
 look — light at the top running into a deeper tone — apply a small

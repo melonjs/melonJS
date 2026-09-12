@@ -272,6 +272,24 @@ This is the narrowphase and is independent of the 3D broadphase queries above
 — `querySphere` / `raycast3d` need `world.sortOn === "depth"`; `Box3d` shapes
 do not.
 
+**Bounds are what the broadphase sorts by, and they come from the SHAPE.**
+Every item is filed by its renderable's 2D `getBounds()`, so an object with no
+extent cannot be placed and silently collides with nothing. A `Mesh` takes its
+extent from its geometry and a `GLTFModel` from its part meshes, so both report
+where they are without being told. A body's shapes do **not** contribute, so a
+custom collidable built on a bare `Container` has no extent until you give it
+one:
+
+```js
+// a container reports an EMPTY bounds until it has a size of its own
+group.resize(width, height);
+```
+
+`enableChildBoundsUpdate` also gives it one, but it re-measures the whole child
+list on every update — reach for it only when the extent genuinely IS the
+members' union and moves with them (a flock, a squad), not to give a fixed
+group a size.
+
 ## Built-in world quirks
 
 These are specific to the default world and surprise people arriving from a

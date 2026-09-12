@@ -37,6 +37,8 @@ const _meshCorners = Array.from({ length: 8 }, () => {
 const _meshScreen = Array.from({ length: 8 }, () => {
 	return new Vector2d();
 });
+const _bodyMin = new Vector3d();
+const _bodyMax = new Vector3d();
 const _meshSavedProj = new Matrix3d();
 const _meshScreenProj = new Matrix3d();
 // the 12 edges of a box, indexing the 8 corners laid out by
@@ -75,8 +77,24 @@ function strokeMeshWireframe(renderer, panel, mesh, camera) {
 	if (!box.isFinite()) {
 		return;
 	}
-	const min = box.min;
-	const max = box.max;
+	strokeBoxWireframe(renderer, panel, camera, box.min, box.max, "green");
+}
+
+/**
+ * Stroke an axis-aligned world-space box as a wireframe, in SCREEN space.
+ *
+ * Under a `Camera3d` the renderer is mid-perspective-projection, so the flat
+ * `renderer.stroke(shape)` the 2D overlay uses draws nothing meaningful — the
+ * box has to be projected corner by corner and stroked against a screen ortho.
+ * That is why a 3D scene's debug overlay cannot simply reuse the 2D path.
+ * @param {*} renderer
+ * @param {import("./index").DebugPanelPlugin} panel
+ * @param {Camera3d} camera
+ * @param {Vector3d} min - world-space minimum corner
+ * @param {Vector3d} max - world-space maximum corner
+ * @param {string} color
+ */
+function strokeBoxWireframe(renderer, panel, camera, min, max, color) {
 	// near face (z = min): 0..3, far face (z = max): 4..7
 	_meshCorners[0].set(min.x, min.y, min.z);
 	_meshCorners[1].set(max.x, min.y, min.z);
@@ -105,7 +123,7 @@ function strokeMeshWireframe(renderer, panel, mesh, camera) {
 	renderer.currentTransform.identity();
 	_meshScreenProj.ortho(0, camera.width, camera.height, 0, -1, 1);
 	renderer.setProjection(_meshScreenProj);
-	renderer.setColor("green");
+	renderer.setColor(color);
 	renderer.lineWidth = 1;
 	for (const [a, b] of BOX_EDGES) {
 		renderer.strokeLine(
@@ -121,6 +139,58 @@ function strokeMeshWireframe(renderer, panel, mesh, camera) {
 	renderer.setProjection(_meshSavedProj);
 	renderer.restore();
 	panel.counters.inc("shapes");
+}
+
+/**
+ * Stroke a renderable's collision shapes as 3D wireframes, for a scene under a
+ * `Camera3d`.
+ *
+ * The 2D overlay strokes `shape` directly, which a perspective projection
+ * turns into nothing viewable — and a `Box3d` has a DEPTH the flat path could
+ * not show even if it drew. Shapes come from the adapter in renderable-local
+ * coordinates, so world space is the renderable's absolute position plus the
+ * shape's own offset.
+ *
+ * A 2D shape in a 3D scene is drawn as a flat box at the renderable's depth,
+ * which is what it collides as.
+ * @param {*} renderer
+ * @param {import("./index").DebugPanelPlugin} panel
+ * @param {import("melonjs").PhysicsAdapter} adapter
+ * @param {import("melonjs").default.Renderable} renderable
+ * @param {Camera3d} camera
+ */
+function strokeBodyShapes3d(renderer, panel, adapter, renderable, camera) {
+	const origin = renderable.getAbsolutePosition();
+	// `getAbsolutePosition()` only carries z from melonJS 20.2; before that it
+	// was 2D, and reading `.z` off it would project the whole box to NaN. The
+	// renderable's own depth is the same value for anything not nested under a
+	// depth-shifted ancestor, which is the overlay's common case.
+	const originZ = origin.z ?? renderable.depth ?? 0;
+	for (const shape of adapter.getBodyShapes(renderable)) {
+		if (shape.type === "Box3d") {
+			const half = shape.halfExtents;
+			_bodyMin.set(
+				origin.x + shape.pos.x - half.x,
+				origin.y + shape.pos.y - half.y,
+				originZ + shape.pos.z - half.z,
+			);
+			_bodyMax.set(
+				origin.x + shape.pos.x + half.x,
+				origin.y + shape.pos.y + half.y,
+				originZ + shape.pos.z + half.z,
+			);
+		} else {
+			// flat: its footprint, sitting at the renderable's own depth
+			const box = shape.getBounds();
+			_bodyMin.set(origin.x + box.left, origin.y + box.top, originZ);
+			_bodyMax.set(
+				origin.x + box.left + box.width,
+				origin.y + box.top + box.height,
+				originZ,
+			);
+		}
+		strokeBoxWireframe(renderer, panel, camera, _bodyMin, _bodyMax, "red");
+	}
 }
 
 /**
@@ -140,7 +210,21 @@ function strokeBodyHitbox(renderer, panel, adapter, renderable, aabb) {
 	renderer.stroke(aabb);
 	renderer.setColor("red");
 	for (const shape of adapter.getBodyShapes(renderable)) {
-		renderer.stroke(shape);
+		if (shape.type === "Box3d") {
+			// `Renderer#stroke` only learned this shape in melonJS 20.5, and
+			// threw `Invalid geometry` before that. The plugin supports older
+			// engines, so it draws the XY footprint itself rather than making
+			// the overlay depend on which engine is underneath.
+			const footprint = shape.getBounds();
+			renderer.strokeRect(
+				footprint.left,
+				footprint.top,
+				footprint.width,
+				footprint.height,
+			);
+		} else {
+			renderer.stroke(shape);
+		}
 		panel.counters.inc("shapes");
 	}
 }
@@ -209,15 +293,31 @@ export function applyPatches(panel) {
 			panel.counters.inc("draws");
 		}
 
-		// Mesh under a Camera3d: draw the proper 3D bounding-box wireframe
-		// instead of the flat, oversized 2D getBounds() box (which can't
-		// describe 3D geometry). Under a Camera2d a mesh self-projects to 2D,
-		// so it falls through to the generic box below.
-		if (this instanceof Mesh && panel.options.hitbox) {
+		// Under a Camera3d the renderer is mid-perspective-projection, so the
+		// flat 2D overlay below draws nothing viewable — every box has to be
+		// projected corner by corner and stroked against a screen ortho. That
+		// applies to the BODY as much as to the geometry: a `GLTFModel` is a
+		// Container, not a Mesh, so it used to fall through to the 2D path and
+		// render nothing at all, and a mesh returned after its green geometry
+		// box without ever drawing the collision shapes.
+		//
+		// Under a Camera2d a mesh self-projects to 2D, so it still falls
+		// through to the generic box below.
+		if (panel.options.hitbox) {
 			const cam = this.parentApp?.viewport ?? game.viewport;
 			if (cam instanceof Camera3d) {
-				strokeMeshWireframe(renderer, panel, this, cam);
-				return;
+				// green: the mesh's own geometry box
+				if (this instanceof Mesh) {
+					strokeMeshWireframe(renderer, panel, this, cam);
+				}
+				// red: what it actually collides as
+				const adapter3d = this.parentApp?.world.adapter;
+				if (this.body !== undefined && adapter3d !== undefined) {
+					strokeBodyShapes3d(renderer, panel, adapter3d, this, cam);
+				}
+				if (this instanceof Mesh || this.body !== undefined) {
+					return;
+				}
 			}
 		}
 

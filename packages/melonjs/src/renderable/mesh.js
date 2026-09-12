@@ -303,6 +303,73 @@ function buildTextureGroups(
  * vertex bake is the single anchoring mechanism.
  * @category Game Objects
  */
+/**
+ * The width and height a mesh should report, filling in from the GEOMETRY what
+ * the caller did not declare — the way a Sprite takes its size from its frame.
+ *
+ * Undeclared dimensions fall through as `0`, which leaves the mesh reporting a
+ * ZERO-SIZE box at its position while drawing at full size. Everything that
+ * reads `getBounds()` is then wrong about it: frustum culling, pointer picking,
+ * and the physics broadphase, which files every item by its bounds and cannot
+ * place one that claims no extent.
+ *
+ * Scoped to `normalize: false` with an explicit `scale`, which is the case that
+ * both bites and is answerable: the geometry keeps real-world coordinates, so
+ * the size is known exactly and simply was not being asked for. A normalized
+ * mesh is fitted to the `width` it is given, and `width` is documented as
+ * required there, so there is nothing to infer. Requiring an explicit `scale`
+ * also keeps `meshScale` — which falls back to `this.width` — reading exactly
+ * what it read before.
+ *
+ * Computed here rather than assigned in the constructor because `Mesh` shadows
+ * `Polygon#normals` with its own vertex-normal `Float32Array`: the `width`
+ * setter calls `Polygon#recalc`, which walks that array expecting `Vector2d`s.
+ * @param {object} settings - the mesh settings
+ * @returns {number[]} the `[width, height]` to hand to the Rect constructor
+ * @ignore
+ * @internal
+ */
+function declaredSize(settings) {
+	const width = settings.width;
+	const height = settings.height;
+	if (
+		settings.normalize !== false ||
+		typeof settings.scale !== "number" ||
+		(width > 0 && height > 0)
+	) {
+		return [width, height];
+	}
+	const vertices =
+		typeof settings.model === "string"
+			? getOBJ(settings.model)?.vertices
+			: settings.vertices;
+	if (!vertices || vertices.length < 3) {
+		return [width, height];
+	}
+	let minX = Infinity;
+	let maxX = -Infinity;
+	let minY = Infinity;
+	let maxY = -Infinity;
+	for (let i = 0; i < vertices.length; i += 3) {
+		if (vertices[i] < minX) {
+			minX = vertices[i];
+		}
+		if (vertices[i] > maxX) {
+			maxX = vertices[i];
+		}
+		if (vertices[i + 1] < minY) {
+			minY = vertices[i + 1];
+		}
+		if (vertices[i + 1] > maxY) {
+			maxY = vertices[i + 1];
+		}
+	}
+	return [
+		width > 0 ? width : (maxX - minX) * settings.scale,
+		height > 0 ? height : (maxY - minY) * settings.scale,
+	];
+}
+
 export default class Mesh extends Renderable {
 	/**
 	 * @param {number} x - the x screen position of the mesh object
@@ -314,7 +381,7 @@ export default class Mesh extends Renderable {
 	 * @param {Uint16Array|number[]} [settings.indices] - triangle vertex indices (alternative to settings.model)
 	 * @param {HTMLImageElement|TextureAtlas|string} [settings.texture] - the texture to apply (image name, HTMLImageElement, or TextureAtlas). If omitted and settings.material is provided, the texture is resolved from the MTL material's map_Kd. Passing this pins ONE binding over the whole model, which on a multi-material model suppresses the per-material texture split — see {@link Mesh#textureGroups}.
 	 * @param {string} [settings.material] - name of a preloaded MTL material (via loader.preload with type "mtl"). When provided, the diffuse texture (map_Kd), tint color (Kd), and opacity (d) are automatically applied. On a multi-material model each material's own `map_Kd` is bound for its own slice of the geometry (#1573) and each `Kd` is baked per-vertex, so one `Mesh` renders the whole model.
-	 * @param {number} settings.width - display width in pixels. With normalization on (the default) the model is scaled to fit this size; with `normalize: false` this is the uniform pixels-per-unit scale applied to the raw geometry.
+	 * @param {number} settings.width - display width in pixels. With normalization on (the default) the model is scaled to fit this size; with `normalize: false` this is the uniform pixels-per-unit scale applied to the raw geometry. With `normalize: false` and an explicit `scale`, an omitted `width`/`height` is derived from the GEOMETRY's own extent, the way a Sprite takes its size from its frame — a mesh that reports no extent misleads frustum culling, pointer picking and the physics broadphase alike.
 	 * @param {number} [settings.height] - display height in pixels (normalized models only; ignored when `normalize: false`)
 	 * @param {boolean} [settings.cullBackFaces=true] - enable backface culling
 	 * @param {boolean} [settings.normalize=true] - fit the source geometry into a `[-0.5, 0.5]` unit cube before scaling, so `width`/`height` behave like a Sprite. Set `false` to keep the geometry's real-world coordinates — required when several meshes share one coordinate space (e.g. nodes of an imported glTF scene) so their relative scale and layout are preserved.
@@ -381,7 +448,7 @@ export default class Mesh extends Renderable {
 	 * mesh.rotate(Math.PI / 4);
 	 */
 	constructor(x, y, settings) {
-		super(x, y, settings.width, settings.height);
+		super(x, y, ...declaredSize(settings));
 
 		// load geometry from OBJ model or raw data
 		let objGroups = null;

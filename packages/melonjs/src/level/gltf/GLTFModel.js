@@ -141,6 +141,23 @@ export default class GLTFModel extends Container {
 		// entirely (same mechanism Mesh uses on the Camera3d world path).
 		this.applyAnchorTransform = false;
 
+		// ...but a model still has to report WHERE IT IS. Those Infinity
+		// dimensions also mean `Container#updateBounds` takes neither of its
+		// branches, so `getBounds()` returns the EMPTY bounds it was
+		// initialised with (min `+Infinity`, max `-Infinity`) — a model that
+		// claims to be nowhere. Anything reading bounds is then wrong about it,
+		// and the physics broadphase, which files every item by `getBounds()`,
+		// could not place one: a model carrying a `Body` was sorted by that
+		// infinite rect into a node unrelated to where it stood and silently
+		// collided with nothing.
+		//
+		// A model's size is known at load — the glTF scene AABB — so it is
+		// measured once here and placed by `updateBounds`, costing nothing per
+		// frame. Aggregating the parts instead (`enableChildBoundsUpdate`)
+		// would walk the whole rig on every bounds update; that flag is for a
+		// group whose extent genuinely IS its members' union and changes as
+		// they move, like a flock or a squad, which a rig is not.
+
 		/**
 		 * the node hierarchy keyed by glTF node index
 		 * @ignore
@@ -185,6 +202,32 @@ export default class GLTFModel extends Container {
 		const dz = b.max[2] - b.min[2];
 		const radius = (Math.hypot(dx, dy, dz) / 2) * this.scale;
 		const boxSize = Math.max(radius, 1) * Math.SQRT2;
+
+		/**
+		 * The rig's own 2D extent, as a half-size and a centre offset from
+		 * `pos`, in RENDER space — so `updateBounds` is a placement rather than
+		 * a measurement. A sphere's square rather than the AABB's XY face, so
+		 * that a turned model still reports a box that contains it: bounds may
+		 * be generous without harm (it costs broadphase pruning), but must
+		 * never be tight enough to miss.
+		 *
+		 * The centre is the AABB's, NOT the origin: a model authored standing
+		 * on the ground has its origin at the feet.
+		 * @ignore
+		 * @internal
+		 */
+		this._extent = Math.max(radius, 1);
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._extentX = ((b.min[0] + b.max[0]) / 2) * this.scale;
+		// render space is Y-DOWN and the model is bridged from glTF's Y-up
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._extentY = -((b.min[1] + b.max[1]) / 2) * this.scale;
 
 		const lit = options.lit === true;
 		const rightHanded = options.rightHanded !== false;
@@ -568,6 +611,40 @@ export default class GLTFModel extends Container {
 	draw(renderer, viewport) {
 		renderer.translate(-this.pos.x, -this.pos.y);
 		super.draw(renderer, viewport);
+	}
+
+	/**
+	 * Where this model is, as a 2D box — what culling, picking and the physics
+	 * broadphase all read.
+	 *
+	 * A `Container` has no dimensions of its own, and one left that way reports
+	 * an EMPTY bounds: a model claiming to be nowhere, which the broadphase
+	 * cannot place. A rig's size is known at load from the glTF scene AABB, so
+	 * this is a placement of a measurement taken once in the constructor rather
+	 * than a walk of the parts — `Container#updateBounds` with
+	 * `enableChildBoundsUpdate` would re-measure the whole rig on every call,
+	 * and that flag is for a group whose extent really is its members' union.
+	 *
+	 * The box is the model's bounding SPHERE squared off, so a turned model
+	 * still reports something that contains it. Generous bounds only cost
+	 * broadphase pruning; tight ones lose contacts.
+	 * @param {boolean} [absolute=true] - in world rather than local coordinates
+	 * @returns {Bounds} this model's bounding box
+	 */
+	updateBounds(absolute = true) {
+		const bounds = this.getBounds();
+		const e = this._extent;
+		bounds.setMinMax(
+			this._extentX - e,
+			this._extentY - e,
+			this._extentX + e,
+			this._extentY + e,
+		);
+		if (absolute === true) {
+			const absPos = this.getAbsolutePosition();
+			bounds.translate(absPos.x, absPos.y);
+		}
+		return bounds;
 	}
 
 	/**

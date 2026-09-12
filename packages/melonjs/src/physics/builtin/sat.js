@@ -231,10 +231,10 @@ function vornoiRegion(line, point) {
 export function testPolygonPolygon(a, polyA, b, polyB, response) {
 	// specific point for
 	const aPoints = polyA.points;
-	const aNormals = polyA.normals;
+	const aNormals = polyA.edgeNormals;
 	const aLen = aNormals.length;
 	const bPoints = polyB.points;
-	const bNormals = polyB.normals;
+	const bNormals = polyB.edgeNormals;
 	const bLen = bNormals.length;
 	// aboslute shape position
 	const posA = T_VECTORS[--T_VECTORS_IDX]
@@ -484,7 +484,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 		} else {
 			// Need to check if the circle is intersecting the edge,
 			// Get the normal.
-			normal.copy(polyA.normals[i]);
+			normal.copy(polyA.edgeNormals[i]);
 			// Find the perpendicular distance between the center of the
 			// circle and the edge.
 			dist = point.dot(normal);

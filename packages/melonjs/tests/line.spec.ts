@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Bounds, Line } from "../src/index.js";
+import { Bounds, Line, Vector2d } from "../src/index.js";
 
 describe("Shape : Line", () => {
 	describe("Line", () => {
@@ -83,6 +83,27 @@ describe("Shape : Line", () => {
 			expect(line.pos.equals(clone.pos)).toEqual(true);
 			expect(bounds.width).toEqual(cloneBounds.width);
 			expect(bounds.height).toEqual(cloneBounds.height);
+		});
+	});
+
+	describe("edge normals", () => {
+		// `Line#recalc` writes into the slot `Polygon` keeps its per-EDGE
+		// normals in. That slot is `edgeNormals` rather than `normals` because
+		// a `Mesh` — also a `Polygon` by inheritance — holds per-VERTEX normals
+		// as a `Float32Array` under the latter name, and the collision broke
+		// `recalc` on every mesh.
+		it("computes one perpendicular unit normal", () => {
+			const line = new Line(0, 0, [new Vector2d(0, 0), new Vector2d(10, 0)]);
+
+			line.recalc();
+
+			expect(line.edgeNormals).toHaveLength(1);
+			expect(line.edgeNormals[0].length()).toBeCloseTo(1, 5);
+			// perpendicular to the edge it belongs to
+			expect(
+				line.edgeNormals[0].x * line.edges[0].x +
+					line.edgeNormals[0].y * line.edges[0].y,
+			).toBeCloseTo(0, 5);
 		});
 	});
 });

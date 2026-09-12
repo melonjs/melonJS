@@ -274,11 +274,26 @@ export default class Container extends Renderable {
 		};
 
 		/**
-		 * Specify if the container bounds should automatically take in account
-		 * all child bounds when updated (this is expensive and disabled by default,
-		 * only enable if necessary)
+		 * Re-measure this container's bounds from its children whenever a
+		 * child's bounds change. Expensive — every update walks the whole child
+		 * list — and off by default, because a parent almost never needs it.
+		 *
+		 * Enable it for a group whose extent genuinely IS its members' union
+		 * and moves as they do: a flock of birds, a squad of enemies. A
+		 * container whose size is known (or fixed) should be given that size
+		 * with {@link Renderable#resize} instead, which costs nothing per
+		 * frame — that is what {@link GLTFModel} does, from the glTF scene's
+		 * own bounding box.
+		 *
+		 * Note that a container with neither — no dimensions of its own and
+		 * this left off — reports an EMPTY bounds (min `+Infinity`, max
+		 * `-Infinity`), since {@link Container#updateBounds} then has nothing
+		 * to measure. Anything reading it is wrong about where the container
+		 * is, and the physics broadphase, which files every item by
+		 * `getBounds()`, cannot place it at all.
 		 * @type {boolean}
 		 * @default false
+		 * @see Renderable#getBounds
 		 */
 		this.enableChildBoundsUpdate = false;
 
