@@ -140,4 +140,114 @@ describe("Text — gradient fill", () => {
 		const colors = inkColors(text);
 		expect(colors.has("0,0,255")).toBe(true);
 	});
+
+	it("gives every line of a multi-line label the same ramp", () => {
+		// A CanvasGradient lives in the current transform's space, so left
+		// alone the canvas spreads ONE ramp across the whole block and every
+		// line after the first comes out flat — unless the caller happened to
+		// author the ramp over the exact block height. The gradient is
+		// re-anchored per line instead, which is what one `Text` per line would
+		// give you, and is how a HUD is usually built.
+		const text = new Text(0, 0, {
+			font: "sans-serif",
+			size: 24,
+			lineHeight: 1.8,
+			fillStyle: ramp(),
+			text: "AA\nAA\nAA",
+		});
+
+		const canvas = text.canvasTexture.canvas;
+		const data = text.canvasTexture.context.getImageData(
+			0,
+			0,
+			canvas.width,
+			canvas.height,
+		).data;
+
+		/**
+		 * The colour of the first ink in each contiguous band of rows — found
+		 * rather than assumed, because the bake is padded by the ink extent and
+		 * fixed-size bands would sample the wrong line.
+		 * @returns one "r,g,b" per line, top-down
+		 */
+		const topColorPerLine = () => {
+			const out = [];
+			let inBand = false;
+			for (let y = 0; y < canvas.height; y++) {
+				let found = null;
+				for (let x = 0; x < canvas.width; x++) {
+					const i = (y * canvas.width + x) * 4;
+					if (data[i + 3] > 200) {
+						found = `${data[i]},${data[i + 1]},${data[i + 2]}`;
+						break;
+					}
+				}
+				if (found !== null && !inBand) {
+					out.push(found);
+				}
+				inBand = found !== null;
+			}
+			return out;
+		};
+
+		const tops = topColorPerLine();
+
+		// each line starts at the ramp's light end, not part-way down it.
+		// Compared with a tolerance, because the topmost ink of a glyph is an
+		// antialiased edge and lands a channel step apart between lines.
+		const near = (a, b) => {
+			const x = a.split(",").map(Number);
+			const y = b.split(",").map(Number);
+			return x.every((v, i) => {
+				return Math.abs(v - y[i]) <= 4;
+			});
+		};
+
+		expect(tops).toHaveLength(3);
+		expect(near(tops[1], tops[0])).toBe(true);
+		expect(near(tops[2], tops[0])).toBe(true);
+		// and the ramp really does run: the bottom of a line is far from its top
+		expect(near(tops[0], "241,160,32")).toBe(false);
+	});
+
+	it("spans one ramp across the block when asked to", () => {
+		// the canvas-native behaviour, kept available for a deliberate fade
+		// across a multi-line title
+		const text = new Text(0, 0, {
+			font: "sans-serif",
+			size: 24,
+			lineHeight: 1.8,
+			fillStyle: ramp(),
+			gradientPerLine: false,
+			text: "AA\nAA",
+		});
+
+		const canvas = text.canvasTexture.canvas;
+		const data = text.canvasTexture.context.getImageData(
+			0,
+			0,
+			canvas.width,
+			canvas.height,
+		).data;
+		const tops = [];
+		let inBand = false;
+		for (let y = 0; y < canvas.height; y++) {
+			let found = null;
+			for (let x = 0; x < canvas.width; x++) {
+				const i = (y * canvas.width + x) * 4;
+				if (data[i + 3] > 200) {
+					found = `${data[i]},${data[i + 1]},${data[i + 2]}`;
+					break;
+				}
+			}
+			if (found !== null && !inBand) {
+				tops.push(found);
+			}
+			inBand = found !== null;
+		}
+
+		// the second line starts further along the ramp, not back at its start
+		expect(tops).toHaveLength(2);
+		expect(tops[1]).not.toBe(tops[0]);
+	});
 });

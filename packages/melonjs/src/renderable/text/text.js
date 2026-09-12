@@ -61,6 +61,7 @@ export default class Text extends Renderable {
 	 * @param {string} settings.font - a CSS font family: a specific name (`"Arial"`), a generic keyword (`"sans-serif"`, `"monospace"`, …), or a web font loaded via the `fontface` loader (referenced by its family name)
 	 * @param {number|string} settings.size - the font size: a number in pixels, or a CSS size string with a unit (`"24px"` / `"1.5em"` / `"18pt"`)
 	 * @param {Color|Gradient|string} [settings.fillStyle="#000000"] - a CSS color value used to fill the glyphs, or a {@link Gradient} to ramp them
+	 * @param {boolean} [settings.gradientPerLine=true] - restart a gradient fill on every line; `false` spans one ramp across the whole block, as a plain canvas does
 	 * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value used for the glyph outline (drawn when `lineWidth` > 0)
 	 * @param {number} [settings.lineWidth=0] - outline width in pixels (0 = no stroke)
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment ("left", "center", "right")
@@ -200,6 +201,23 @@ export default class Text extends Renderable {
 		 */
 		this.fillGradient = undefined;
 
+		/**
+		 * Whether a gradient fill restarts on every line.
+		 *
+		 * `true` (the default) re-anchors the ramp to each line, so a
+		 * multi-line label reads like one `Text` per line — which is how a HUD
+		 * is usually built, and means the ramp does not have to be authored
+		 * over the block height to look right.
+		 *
+		 * `false` spans one ramp across the whole block, which is what a plain
+		 * canvas does: a `CanvasGradient` lives in the current transform's
+		 * space, so lines further down sample further along it. Use it for a
+		 * deliberate fade across a multi-line title.
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.gradientPerLine = true;
+
 		if (typeof this.strokeStyle === "undefined") {
 			this.strokeStyle = colorPool.get(0, 0, 0);
 		}
@@ -229,6 +247,10 @@ export default class Text extends Renderable {
 				// string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
 				this.strokeStyle.parseCSS(settings.strokeStyle);
 			}
+		}
+
+		if (typeof settings.gradientPerLine === "boolean") {
+			this.gradientPerLine = settings.gradientPerLine;
 		}
 
 		this.lineWidth = settings.lineWidth || 0;
@@ -594,6 +616,25 @@ export default class Text extends Renderable {
 
 		let remaining = this.visibleCharacters;
 
+		// A gradient is re-anchored to EACH LINE, so every line of a multi-line
+		// label carries the same ramp — what you would get from one `Text` per
+		// line, which is how a HUD is usually built.
+		//
+		// The canvas would otherwise spread one ramp across the whole block:
+		// a `CanvasGradient` lives in the current transform's space, so lines
+		// drawn further down sample further along it, and every line after the
+		// first comes out flat unless the caller happens to have authored the
+		// ramp over the exact block height. That is silent and easy to get
+		// wrong. Translating per line instead keeps the gradient with the text.
+		//
+		// The trade is that a ramp spanning a whole two-line title is no longer
+		// expressible; compose that from one `Text` per line.
+		const perLine =
+			this.gradientPerLine === true &&
+			this.fillGradient !== undefined &&
+			text.length > 1;
+		const firstY = y;
+
 		for (let i = 0; i < text.length; i++) {
 			let string = text[i].trimEnd();
 
@@ -606,13 +647,26 @@ export default class Text extends Renderable {
 				remaining -= string.length;
 			}
 
+			// Shift the whole space down to this line rather than the draw
+			// position, so the gradient travels with it and each line is
+			// painted from the ramp's start.
+			if (perLine) {
+				context.save();
+				context.translate(0, y - firstY);
+			}
+			const lineY = perLine ? firstY : y;
+
 			// draw the string
 			if (this.fillStyle.alpha > 0) {
-				context.fillText(string, x, y);
+				context.fillText(string, x, lineY);
 			}
 			// stroke the text
 			if (this.lineWidth > 0 && this.strokeStyle.alpha > 0) {
-				context.strokeText(string, x, y);
+				context.strokeText(string, x, lineY);
+			}
+
+			if (perLine) {
+				context.restore();
 			}
 			// add leading space
 			y += this.metrics.lineHeight();

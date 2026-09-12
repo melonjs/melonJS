@@ -43,13 +43,11 @@ new Text(x, y, { font: "Display", size: 24, fillStyle: ramp });
 ```
 
 Coordinates are the label's own bake: `(0, 0)` is the top-left of the render
-box. **Span the whole block, not one line** — a ramp authored down a single
-line box leaves every line after the first past its last stop, and flat:
-
-```js
-const lines = 3;                         // "LIVES 2\nCARROTS 18\n240M"
-renderer.createLinearGradient(0, 0, 0, size * lineHeight * lines);
-```
+box, so the ramp above runs down one line. A multi-line label **restarts it on
+every line**, reading like one `Text` per line — you do not have to author the
+gradient over the block height. Pass `gradientPerLine: false` for a single ramp
+spanning the whole block, which is what a plain canvas does and what a
+deliberate fade across a two-line title wants.
 
 The ramp colours the **fill only** — `Text` strokes in a separate pass, so
 an outline keeps its own colour without any luminance trickery — and it works on
