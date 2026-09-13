@@ -491,10 +491,23 @@ Both of that call's traps fail **silently**, and they compound:
   **arrays**, read by index. A `Vector3d` has no `[0]`, so the light's direction
   becomes `NaN` and it contributes nothing. (`color` is the odd one out: it does
   take a `Color`, a CSS string or an `[r, g, b]` array.)
+- **`direction` is where the light GOES, and this is a Y-down space** — so a sun
+  overhead travels *downward* and its Y is **positive**. Get the sign wrong and
+  the scene is lit from underneath: faces that should be in shade are bright,
+  the ground glows and the sky-facing surfaces go dark.
 
-Fixing the first exposes the second — TypeScript stops checking an object
-literal once the argument count is already wrong — so a scene can go from
-"looks fine" to "entirely black" in one apparently-correct edit.
+  ```js
+  direction: [-0.35, 0.8, 0.45]   // sun overhead, late afternoon
+  direction: [-0.35, -0.8, 0.45]  // lit from below — almost never what you want
+  ```
+
+  `position` follows the same convention: a lamp above the floor has a
+  **smaller** y than the floor.
+
+They hide behind each other: TypeScript stops checking an object literal once
+the argument count is already wrong, so fixing the call reveals the `Vector3d`,
+and fixing that finally lets the sign show. A scene can go from "looks fine" to
+"entirely black" to "lit from below" across three apparently-correct edits.
 
 Use **both halves**: with a key light but no ambient, the shadow side of a mesh
 goes black. With no `Light3d` in the world at all, a `lit: true` mesh falls back
@@ -619,6 +632,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 
 | symptom | cause |
 |---|---|
+| scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | a `lit` mesh renders fullbright | it had no normals — supply them, or let the engine generate them |
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
 | a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |
