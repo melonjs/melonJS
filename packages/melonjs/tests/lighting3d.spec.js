@@ -6,6 +6,7 @@ import {
 	Light3d,
 	Stage,
 	state,
+	Vector3d,
 	video,
 } from "../src/index.js";
 import Renderable from "../src/renderable/renderable.js";
@@ -30,6 +31,51 @@ describe("Light3d", () => {
 		expect(l.intensity).toBe(1);
 		expect([l.color.r, l.color.g, l.color.b]).toEqual([255, 255, 255]);
 		expect([l.direction.x, l.direction.y, l.direction.z]).toEqual([0, 1, 0]);
+	});
+
+	it("takes a Vector3d for direction, the same as an array", () => {
+		const fromArray = new Light3d({ direction: [-0.35, 0.8, 0.45] });
+		const fromVector = new Light3d({
+			direction: new Vector3d(-0.35, 0.8, 0.45),
+		});
+
+		// identical, not merely close: both go through the same normalize
+		expect(fromVector.direction.x).toBe(fromArray.direction.x);
+		expect(fromVector.direction.y).toBe(fromArray.direction.y);
+		expect(fromVector.direction.z).toBe(fromArray.direction.z);
+		// and it is a real direction rather than the NaN an index-read produced
+		expect(Number.isFinite(fromVector.direction.x)).toBe(true);
+		expect(fromVector.direction.length()).toBeCloseTo(1, 5);
+	});
+
+	it("takes a Vector3d for position, the same as an array", () => {
+		const fromArray = new Light3d({ type: "point", position: [120, -40, 60] });
+		const fromVector = new Light3d({
+			type: "point",
+			position: new Vector3d(120, -40, 60),
+		});
+		expect([
+			fromVector.position.x,
+			fromVector.position.y,
+			fromVector.position.z,
+		]).toEqual([
+			fromArray.position.x,
+			fromArray.position.y,
+			fromArray.position.z,
+		]);
+	});
+
+	it("reads the vector rather than retaining it", () => {
+		// a caller's vector is theirs — moving it afterwards must not steer the
+		// light, and the light must not be able to write back into it
+		const mine = new Vector3d(0, 1, 0);
+		const l = new Light3d({ type: "spot", position: mine, direction: mine });
+		mine.set(99, 99, 99);
+
+		expect(l.position.x).toBe(0);
+		expect(l.direction.y).toBeCloseTo(1, 5);
+		expect(l.position).not.toBe(mine);
+		expect(l.direction).not.toBe(mine);
 	});
 
 	it("normalizes the direction on construction", () => {

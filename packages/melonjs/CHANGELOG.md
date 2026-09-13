@@ -9,6 +9,8 @@
 - `save`: registered keys are reachable from TypeScript without a cast. The namespace was typed `Record<string, unknown>`, and that index signature swallowed its own members, so under `strict` `save.add()` was `unknown` and could not be called at all. `add()` now returns the namespace typed with the keys just registered, and chained calls accumulate
 - `audio.tone()` and `audio.noise()` take a `delay` in seconds, scheduled on the audio clock, so a multi-part sound — a stinger's second note, an explosion's double-tap — sequences without a `setTimeout`. A timer fires on the main thread and a busy frame slips the note; this is scheduled up front and is sample-accurate. Omitting it is unchanged
 
+- `Light3d`: `direction` and `position` accept a `Vector3d` as well as an `[x, y, z]` array, so a value the game already holds goes straight in — `color` already took a `Color`, a string or an array. The vector is read, not retained. Passing one used to be read by index and silently produce a `NaN` direction, so the light contributed nothing ([#1661](https://github.com/melonjs/melonJS/issues/1661))
+
 ### Fixed
 - Renderable: opacity now cascades — `alpha` multiplies with the alpha already on the renderer instead of replacing it, so a child at 0.5 inside a parent at 0.5 draws at 0.25. **A nested renderable that was visibly opaque under a faded ancestor will now fade with it**
 - GLTFModel: a loaded model reported no bounds at all, so a model with a `Body` was filed in the broadphase away from where it stood and collided with nothing. Its extent now comes from the glTF bounding box, measured once at load
