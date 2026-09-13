@@ -15,7 +15,7 @@ import { linearToSrgb8 } from "./srgb.js";
 
 /**
  * additional import for TypeScript
- * @import { AnimationOptions } from "../../renderable/animation.ts";
+ * @import { AnimationOptionsInput } from "../../renderable/animation.ts";
  */
 
 // column-major identity, the root's parent transform when the model sits
@@ -92,7 +92,7 @@ const _localScratch = new Array(16);
  */
 export default class GLTFModel extends Container {
 	/**
-	 * @param {object} data - the parsed glTF descriptor (`{ graph, animations, bounds, ... }`)
+	 * @param {import("../../loader/loader.js").GLTFData} data - the parsed glTF descriptor, as returned by {@link loader.getGLTF}
 	 * @param {object} [options]
 	 * @param {number} [options.scale=1] - pixels per glTF unit (uniform scene scale)
 	 * @param {boolean} [options.rightHanded=true] - glTF Y-up → engine Y-down via a rotation (no mirror)
@@ -404,7 +404,7 @@ export default class GLTFModel extends Container {
 	 * another clip when this one ends, a `function` legacy completion callback
 	 * (return `false` to hold the final pose), or an options object.
 	 * @param {string} name - animation clip id (see {@link GLTFModel#getAnimationNames})
-	 * @param {string|Function|AnimationOptions} [options] - loop / chain / completion behavior
+	 * @param {AnimationOptionsInput} [options] - loop / chain / completion behavior
 	 * @param {boolean} [preserveTime=false] - keep the current playback time instead of restarting at 0
 	 * @returns {GLTFModel} this, for chaining
 	 * @example
@@ -478,7 +478,7 @@ export default class GLTFModel extends Container {
 	 * (and start) it, or with no argument to resume after {@link GLTFModel#pause}.
 	 * Always clears the paused state.
 	 * @param {string} [name] - clip id to play; omit to just resume
-	 * @param {string|Function|AnimationOptions} [options] - loop / chain / completion behavior (see {@link GLTFModel#setCurrentAnimation})
+	 * @param {AnimationOptionsInput} [options] - loop / chain / completion behavior (see {@link GLTFModel#setCurrentAnimation})
 	 * @returns {GLTFModel} this, for chaining
 	 * @example
 	 * model.play("walk");                  // switch to + play "walk"

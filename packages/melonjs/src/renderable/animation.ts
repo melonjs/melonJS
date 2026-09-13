@@ -24,6 +24,30 @@ export interface AnimationOptions {
 }
 
 /**
+ * What a caller may PASS as the second argument of `setCurrentAnimation`.
+ *
+ * The loose counterpart of {@link AnimationOptions}, which is what those
+ * choices normalize TO. Every field here is optional, because the defaults are
+ * the point: `{ loop: true }` has to be a complete thing to say. Typing an
+ * argument as the normalized shape instead makes `loop` and `speed` mandatory
+ * and turns the shortest useful call into a type error.
+ * @category Animation
+ */
+export type AnimationOptionsInput =
+	| string
+	| (() => unknown)
+	| {
+			/** called when the animation completes a cycle */
+			onComplete?: () => unknown;
+			/** name of an animation to switch to when this one finishes */
+			next?: string;
+			/** loop forever (default) or play once and hold the last frame */
+			loop?: boolean;
+			/** playback rate multiplier (1 = authored speed) */
+			speed?: number;
+	  };
+
+/**
  * Normalize the polymorphic second argument of `setCurrentAnimation` into a
  * uniform {@link AnimationOptions}. Accepts:
  * - `undefined` → loop forever
@@ -36,14 +60,7 @@ export interface AnimationOptions {
  */
 export function parseAnimationOptions(
 	arg?:
-		| string
-		| (() => unknown)
-		| {
-				onComplete?: () => unknown;
-				next?: string;
-				loop?: boolean;
-				speed?: number;
-		  }
+		| AnimationOptionsInput
 		// `null` is passed by the internal animation-chain call
 		// (`setCurrentAnimation(next, null, true)`), so it must be accepted.
 		| null,

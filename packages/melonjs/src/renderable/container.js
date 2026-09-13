@@ -959,7 +959,8 @@ export default class Container extends Renderable {
 	 * {@link Renderable#alpha} on the container instead: opacity cascades at
 	 * draw time and leaves every child's own value alone.
 	 * @param {string} prop - property name
-	 * @param {object} value - property value
+	 * @param {*} value - property value; whatever the named property holds, so a
+	 * flag is a boolean and a colour is a string, not only an object
 	 * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
 	 * @see Renderable#alpha
 	 */
