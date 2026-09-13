@@ -127,7 +127,7 @@ function buildScene(app: Application) {
 	// an ambient-only scene would show none however glossy the material.
 	const key = new Light3d({
 		type: "directional",
-		direction: [-0.45, -0.75, 0.5],
+		direction: [-0.45, 0.75, 0.5],
 		color: "#fff6e8",
 		intensity: 1.15,
 	});

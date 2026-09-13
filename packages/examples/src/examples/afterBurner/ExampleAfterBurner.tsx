@@ -162,7 +162,7 @@ const createGame = async () => {
 			app.world.addChild(
 				new Light3d({
 					type: "directional",
-					direction: [-0.35, -0.7, -0.6],
+					direction: [-0.35, 0.7, -0.6],
 					color: new Color(255, 244, 226),
 					intensity: 1.2,
 				}),
