@@ -7,7 +7,6 @@
 - `GLTFModel` can be placed and moved: `pos`, `depth`, `rotate` and `scale` drive the whole rig as on any other renderable, composing with the animated pose rather than replacing it. Every root node used to hang from the identity, so a loaded model posed at the world origin and stayed there
 - Text: `fillStyle` takes a `Gradient` as well as a colour, built with `createLinearGradient`/`addColorStop`. Coordinates are the label's own bake and the ramp colours the fill only, since the stroke is a separate pass. A multi-line label restarts the ramp on every line; `gradientPerLine: false` spans one ramp across the block instead
 - `save`: registered keys are reachable from TypeScript without a cast. The namespace was typed `Record<string, unknown>`, and that index signature swallowed its own members, so under `strict` `save.add()` was `unknown` and could not be called at all. `add()` now returns the namespace typed with the keys just registered, and chained calls accumulate
-
 - `audio.tone()` and `audio.noise()` take a `delay` in seconds, scheduled on the audio clock, so a multi-part sound — a stinger's second note, an explosion's double-tap — sequences without a `setTimeout`. A timer fires on the main thread and a busy frame slips the note; this is scheduled up front and is sample-accurate. Omitting it is unchanged
 
 ### Fixed
