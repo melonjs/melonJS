@@ -270,7 +270,7 @@ function onLoadingError(res) {
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
  * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
  * The loader will try each source in order and use the first one that loads successfully.
- * @property {string} [data]  - inline content if not provided through a src url: TMX data for "tmx" assets, GLSL source (the ShaderEffect fragment-body convention) for "shader" assets
+ * @property {string|{glsl?: string, wgsl?: string}} [data]  - inline content if not provided through a src url: TMX data for "tmx" assets, GLSL source (the ShaderEffect fragment-body convention) for "shader" assets. A shader may instead carry a `{glsl, wgsl}` pair, so one asset serves both backends; either half may be omitted
  * @property {boolean} [stream=false] - Set to true to not to wait for large audio or video file to be downloaded before playing.
  * @property {boolean} [autoplay=false] - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
  * @property {boolean} [loop=false] - Set to true to automatically loop the audio or video when playing
@@ -932,9 +932,34 @@ export function getOBJ(elt) {
 }
 
 /**
+ * One mesh primitive out of a parsed glTF/GLB scene.
+ *
+ * Spelled out rather than left as `object` so the geometry can be read from
+ * TypeScript — feeding `vertices`/`uvs`/`normals`/`indices` straight into a
+ * {@link Mesh} or {@link InstancedMesh} is the whole point of exposing it.
+ * @typedef {object} GLTFNode
+ * @property {number[]} world - accumulated world transform, 16 floats, column-major
+ * @property {Float32Array} vertices - positions, x,y,z triplets
+ * @property {Float32Array} normals - per-vertex normals
+ * @property {Float32Array} uvs - texture coordinates, u,v pairs
+ * @property {Uint16Array|Uint32Array} indices - triangle vertex indices
+ * @property {number} vertexCount - number of vertices
+ * @property {HTMLImageElement|null} image - decoded baseColor texture, or `null`
+ * @property {number[]} [baseColorFactor] - material baseColor factor, `[r, g, b, a]`
+ * @property {Uint32Array} [colors] - per-vertex colour, packed RGBA8
+ * @property {string} [textureRepeat] - wrap mode derived from the glTF sampler
+ * @property {string} [textureFilter] - magnification filter derived from the glTF sampler
+ * @property {number} [alphaCutoff] - cutout threshold from `alphaMode: "MASK"`
+ * @property {number[]} [emissive] - emissive factor, `[r, g, b]`
+ * @property {boolean} [unlit] - the material carried `KHR_materials_unlit`
+ * @property {boolean} [doubleSided] - the material is double-sided
+ * @property {string} [name] - the source node's name
+ */
+
+/**
  * a parsed glTF/GLB scene descriptor, as returned by {@link loader.getGLTF}
  * @typedef {object} GLTFData
- * @property {object[]} nodes - one entry per mesh primitive: accumulated `world` transform, `vertices`, `normals`, `uvs`, `indices`, `vertexCount`, decoded baseColor `image` (or `null`), `baseColorFactor`, per-vertex `colors`, sampler-derived `textureRepeat`/`textureFilter`, `alphaCutoff`, `emissive`, `unlit` (KHR_materials_unlit), `doubleSided`, and the source node `name`
+ * @property {GLTFNode[]} nodes - one entry per mesh primitive
  * @property {Array<{world: number[], type?: string, perspective?: {yfov?: number, aspectRatio?: number, znear?: number, zfar?: number}, orthographic?: object}>} cameras - glTF cameras, each with its `world` transform + the glTF camera parameters (`perspective` for perspective cameras, `orthographic` otherwise)
  * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, `innerConeAngle`/`outerConeAngle` for spots, world-space `direction`/`position`, `name`)
  * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
