@@ -69,6 +69,8 @@ export default class Text extends Renderable {
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixels of a line before it wraps
+	 * @param {boolean} [settings.bold=false] - render the face bold, as {@link Text#bold} does
+	 * @param {boolean} [settings.italic=false] - render the face italic, as {@link Text#italic} does
 	 * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
 	 * @example
 	 * // a styled, word-wrapped, multi-line label using a generic system font
