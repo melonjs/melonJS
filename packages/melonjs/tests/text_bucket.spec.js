@@ -13,6 +13,11 @@ import {
  * only happens across bucket boundaries, and the canvas never shrinks
  * (the pre-existing grow-only rule). Replaces the power-of-two rounding,
  * whose waste was multiplicative instead of ≤31px per axis.
+ *
+ * Height is bucketed from the layout box PLUS the ink padding, not from the
+ * layout box alone — the padding is canvas the glyphs genuinely occupy, so
+ * measuring waste against `metrics.height` would call it waste and would go
+ * red the moment the padding crossed a bucket boundary.
  */
 describe("Text — 32px canvas buckets", () => {
 	// borrow the session's single shared renderer — specs must never boot
@@ -43,6 +48,12 @@ describe("Text — 32px canvas buckets", () => {
 		return Math.ceil(n / 32) * 32;
 	};
 
+	// everything the canvas has to hold: the layout box and the ink that
+	// escapes it top and bottom
+	const baked = (t) => {
+		return t.metrics.height + t.metrics.inkPadTop + t.metrics.inkPadBottom;
+	};
+
 	it("the canvas lands exactly on the metric's 32px bucket (no power-of-two jumps)", (ctx) => {
 		requireWebGL(ctx, renderer);
 		const t = makeText("Hello World");
@@ -50,10 +61,10 @@ describe("Text — 32px canvas buckets", () => {
 		expect(c.width % 32).toBe(0);
 		expect(c.height % 32).toBe(0);
 		expect(c.width).toBe(bucket(t.metrics.width));
-		expect(c.height).toBe(bucket(t.metrics.height));
+		expect(c.height).toBe(bucket(baked(t)));
 		// waste is bounded additively — the whole point of the change
 		expect(c.width - t.metrics.width).toBeLessThan(32);
-		expect(c.height - t.metrics.height).toBeLessThan(32);
+		expect(c.height - baked(t)).toBeLessThan(32);
 	});
 
 	it("property sweep: every string's canvas is bucket-exact and minimal", (ctx) => {
@@ -80,7 +91,10 @@ describe("Text — 32px canvas buckets", () => {
 			expect(c.height % 32, str).toBe(0);
 			expect(c.width, str).toBeGreaterThanOrEqual(Math.ceil(t.metrics.width));
 			expect(c.width - t.metrics.width, str).toBeLessThan(32);
-			expect(c.height - t.metrics.height, str).toBeLessThan(32);
+			// the canvas must FIT the padded box — one pixel short of this is
+			// the top row of a stroke sheared off
+			expect(c.height, str).toBeGreaterThanOrEqual(Math.ceil(baked(t)));
+			expect(c.height - baked(t), str).toBeLessThan(32);
 		}
 	});
 
