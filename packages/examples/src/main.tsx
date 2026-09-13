@@ -48,9 +48,9 @@ const ExampleAfterBurner = lazy(() =>
 		default: m.ExampleAfterBurner,
 	})),
 );
-const ExampleCamera3d = lazy(() =>
-	import("./examples/camera3d/ExampleCamera3d").then((m) => ({
-		default: m.ExampleCamera3d,
+const ExampleJungleRabbit = lazy(() =>
+	import("./examples/jungleRabbit/ExampleJungleRabbit").then((m) => ({
+		default: m.ExampleJungleRabbit,
 	})),
 );
 const ExampleClipping = lazy(() =>
@@ -318,12 +318,12 @@ const examples: {
 			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models — arrows / WASD to fly, space to shoot.",
 	},
 	{
-		component: <ExampleCamera3d />,
-		label: "Camera3d (perspective)",
-		path: "camera-3d",
-		sourceDir: "camera3d",
+		component: <ExampleJungleRabbit />,
+		label: "Jungle Rabbit",
+		path: "jungle-rabbit",
+		sourceDir: "jungleRabbit",
 		description:
-			"Perspective camera orbiting three sprite billboards spaced along the z axis. Drag to orbit; closer sprites render larger.",
+			"Endless river run on Camera3d — authored glTF scenery through InstancedMesh, a rigged paddling boat, and a procedural valley. Arrows to steer, space to jump.",
 	},
 	{
 		component: <ExampleClipping />,
