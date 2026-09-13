@@ -148,7 +148,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} x - world x position
 	 * @param {number} y - world y position
 	 * @param {object} settings - configuration
-	 * @param {HTMLImageElement|Texture2d|string} [settings.image] - the sprite texture (image name, image, or a {@link Texture2d} asset such as a {@link TextureAtlas}). Alias: `settings.texture`.
+	 * @param {HTMLImageElement|HTMLCanvasElement|Texture2d|string} [settings.image] - the sprite texture (image name, image, or a {@link Texture2d} asset such as a {@link TextureAtlas}). Alias: `settings.texture`.
 	 * @param {number} [settings.width=settings.framewidth] - quad width in world units (pixels)
 	 * @param {number} [settings.height=settings.width] - quad height in world units
 	 * @param {number} [settings.framewidth] - width of a single frame within a spritesheet (enables frame animation)
@@ -162,6 +162,11 @@ export default class Sprite3d extends Mesh {
 	 * @param {boolean} [settings.flipY=false] - mirror the sprite vertically (see {@link Sprite3d#flipY})
 	 * @param {boolean} [settings.lit=false] - shade through the lit mesh batcher (see {@link Mesh})
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive color (see {@link Mesh})
+	 * @param {number} [settings.shadowGroundY] - world Y of the floor the blob shadow lands on. Omit and it falls back to the sprite's own base — which for a billboard moves with the camera, so a scene that knows where its floor is should say so.
+	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the sprite, before any height fade
+	 * @param {boolean} [settings.castGroundShadow] - give this sprite a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a {@link Camera3d}.
+	 * @param {boolean} [settings.fog] - set `false` to exempt this sprite from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does. A sun or a moon wants this — everything else at that distance dissolves into the haze, and so would it.
+	 * @param {boolean} [settings.transparent] - draw in the transparent pass (blended, back-to-front, no depth write) instead of the opaque one. Omit and the sprite goes transparent whenever its draw alpha is fractional; `true` for a soft-alpha sprite such as an additive glow; `false` to stay opaque however faded.
 	 * @param {number} [settings.alphaCutoff=0.5] - alpha cutout threshold (see {@link Mesh}). The mesh pass is opaque (no alpha blending), so this defaults to `0.5` to discard a sprite's transparent background (clean cutout silhouette, correct depth, no sorting). Set `0` for a fully-opaque quad, or tune the threshold.
 	 */
 	constructor(x, y, settings) {
@@ -272,6 +277,7 @@ export default class Sprite3d extends Mesh {
 			// flatten it to an explicit false, silently opting every sprite out
 			// of a scene-wide default
 			castGroundShadow: settings.castGroundShadow,
+			fog: settings.fog,
 			// raw for the same reason as above: `undefined` means "decide from
 			// the draw's alpha", and coercing it would pin every sprite opaque
 			transparent: settings.transparent,

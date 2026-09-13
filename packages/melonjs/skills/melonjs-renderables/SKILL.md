@@ -184,6 +184,37 @@ v.set(10, 20, v.z);   // keep it
 `pos` is an `ObservableVector3d`, whose `set(x = 0, y = 0, z = 0)` does the same
 — so `this.pos.set(x, y)` wipes the object's depth.
 
+## 7. A settings key the class never reads is silently ignored
+
+A settings object is a plain literal: nothing rejects a key, so a name that
+belongs somewhere else does nothing at all and says nothing about it.
+
+```js
+// WRONG — only the RENDERER reads a `blendMode` setting, never a renderable
+const glow = new Sprite3d(x, y, { image: "sun", blendMode: "additive" });
+
+// right: it is a property
+glow.blendMode = "additive";
+```
+
+The same shape catches `transparent` on a `GLTFModel` (its parts carry it —
+`model.setChildsProperty("transparent", true, true)`) and any `Mesh` setting
+handed to a class that forwards only a curated subset. If a visual option
+appears to do nothing, check whether the class actually reads it before
+tuning the value.
+
+## 8. `isRenderable` does not hide anything
+
+It gates `updateBounds`, not drawing. Setting it `false` leaves the object on
+screen and merely stops its bounds tracking, which is worse than doing nothing.
+
+```js
+sprite.isRenderable = false;   // WRONG — still drawn, bounds now stale
+sprite.alpha = 0;              // hides it
+```
+
+Use `alpha` for a blink, or remove the child for a long absence.
+
 ## Update and draw
 
 ```js
@@ -236,6 +267,8 @@ Hand-rolled equivalents miss the batching and the multi-backend support.
 | custom draw offset by half the size | centred `anchorPoint` default not zeroed |
 | spatial query never finds an object | `isKinematic` left `true` — not in the broadphase |
 | `z` unexpectedly 0 after a `set` | `Vector3d.set(x, y)` defaults `z` to 0 |
+| a settings option appears to do nothing | the class never reads that key — see section 7 |
+| `isRenderable = false` did not hide the object | it gates bounds, not drawing — use `alpha` |
 
 ## Related skills
 

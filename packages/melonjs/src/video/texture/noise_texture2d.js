@@ -13,6 +13,39 @@ const lerp = (a, b, t) => {
 };
 
 /**
+ * What a {@link NoiseTexture2d} bakes WITH — its own settings, as opposed to
+ * the field's.
+ * @typedef {object} NoiseTexture2dBakeSettings
+ * @property {number} [width=256] - baked texture width in pixels
+ * @property {number} [height=256] - baked texture height in pixels
+ * @property {Noise} [noise] - an existing {@link Noise} to bake; when omitted
+ * one is built from the forwarded field settings
+ * @property {boolean} [seamless=false] - tile cleanly in both axes
+ * @property {number} [seamlessBlendSkirt=0.1] - edge blend band width as a
+ * fraction (0..1) of the smaller dimension, when `seamless`
+ * @property {boolean} [invert=false] - invert the noise value (`1 - v`)
+ * @property {boolean} [asNormalMap=false] - encode as a normal map
+ * @property {number} [bumpStrength=1] - normal steepness when `asNormalMap`
+ * @property {import("../gradient.js").Gradient} [colorRamp] - map the noise
+ * value to a color
+ * @property {boolean} [animated=false] - sample in 3D (`getNoise3d`) using an
+ * internal `time` as the third axis, advanced by {@link NoiseTexture2d#update}
+ * @property {number} [speed=1] - animation speed in noise z-units per second
+ * (only used while `animated`)
+ */
+
+/**
+ * Everything the constructor takes.
+ *
+ * The settings object is handed to {@link Noise} WHOLE when no `noise` instance
+ * is given, so every field setting — `type`, `seed`, `frequency`/`scale`,
+ * `octaves`, `gain`/`persistence`, `lacunarity`, `fractalType`, the domain-warp
+ * settings — belongs here too. Spelling them out a second time is what would
+ * drift; the intersection cannot.
+ * @typedef {NoiseTexture2dBakeSettings & import("../../math/noise.ts").NoiseSettings} NoiseTexture2dSettings
+ */
+
+/**
  * A {@link Texture2d} that bakes a {@link Noise} field into a drawable canvas —
  * usable directly as a sprite image, a normal map, an image layer, or a custom
  * shader sampler.
@@ -54,25 +87,8 @@ const lerp = (a, b, t) => {
  */
 class NoiseTexture2d extends Texture2d {
 	/**
-	 * @param {object} [settings] - configuration; any {@link Noise} setting
-	 * (`type`, `seed`, `frequency`/`scale`, `octaves`, `gain`/`persistence`,
-	 * `lacunarity`, `fractalType`, domain-warp settings) is forwarded when no
-	 * `noise` instance is given.
-	 * @param {number} [settings.width=256] - baked texture width in pixels
-	 * @param {number} [settings.height=256] - baked texture height in pixels
-	 * @param {Noise} [settings.noise] - an existing {@link Noise} to bake; when
-	 * omitted one is built from the forwarded settings
-	 * @param {boolean} [settings.seamless=false] - tile cleanly in both axes
-	 * @param {number} [settings.seamlessBlendSkirt=0.1] - edge blend band width
-	 * as a fraction (0..1) of the smaller dimension, when `seamless`
-	 * @param {boolean} [settings.invert=false] - invert the noise value (`1 - v`)
-	 * @param {boolean} [settings.asNormalMap=false] - encode as a normal map
-	 * @param {number} [settings.bumpStrength=1] - normal steepness when `asNormalMap`
-	 * @param {Gradient} [settings.colorRamp] - map the noise value to a color
-	 * @param {boolean} [settings.animated=false] - sample in 3D (`getNoise3d`)
-	 * using an internal `time` as the third axis, advanced by {@link NoiseTexture2d#update}
-	 * @param {number} [settings.speed=1] - animation speed in noise z-units per
-	 * second (only used while `animated`)
+	 * @param {NoiseTexture2dSettings} [settings] - bake settings, plus any
+	 * {@link NoiseSettings} for the field itself
 	 */
 	constructor(settings = {}) {
 		super();

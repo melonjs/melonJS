@@ -101,14 +101,25 @@ const _dirtySpan = [0, 0];
  * forest.visibleInstanceCount = 1200;
  * app.world.addChild(forest, 10);
  */
+/**
+ * Everything {@link InstancedMesh} takes: the instancing settings, plus every
+ * {@link MeshSettings} — they are handed to {@link Mesh} whole, so the type
+ * says so by intersection rather than by copying the list.
+ * @typedef {object} InstancedMeshOwnSettings
+ * @property {number} [instanceCount=0] - number of instances to pre-allocate. Instances start at the group origin (identity transform) until placed; `addInstance` grows past this.
+ * @property {boolean} [instanceColors=false] - give each instance its own colour (16 bytes per instance), multiplied into the mesh tint
+ * @property {boolean} [instanceData=false] - give each instance an opaque `vec4` (16 bytes per instance). Read as emissive by the built-in lit shading, or as anything at all by a custom mesh shader.
+ */
+
+/**
+ * @typedef {InstancedMeshOwnSettings & import("./mesh.js").MeshSettings} InstancedMeshSettings
+ */
+
 export default class InstancedMesh extends Mesh {
 	/**
 	 * @param {number} x - the x coordinate of the group origin
 	 * @param {number} y - the y coordinate of the group origin
-	 * @param {object} settings - every {@link Mesh} setting, plus those below
-	 * @param {number} [settings.instanceCount=0] - number of instances to pre-allocate. Instances start at the group origin (identity transform) until placed; `addInstance` grows past this.
-	 * @param {boolean} [settings.instanceColors=false] - give each instance its own colour (16 bytes per instance), multiplied into the mesh tint
-	 * @param {boolean} [settings.instanceData=false] - give each instance an opaque `vec4` (16 bytes per instance). Read as emissive by the built-in lit shading, or as anything at all by a custom mesh shader.
+	 * @param {InstancedMeshSettings} settings - every {@link Mesh} setting, plus the instancing ones
 	 */
 	constructor(x, y, settings) {
 		super(x, y, settings);

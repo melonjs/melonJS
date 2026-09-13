@@ -16,11 +16,22 @@ export interface Light3dOptions {
 	 */
 	type?: "directional" | "ambient" | "point" | "spot";
 	/**
-	 * world-space direction the light travels along (directional lights,
-	 * and the cone axis of spot lights).
+	 * World-space direction the light TRAVELS ALONG — not the direction it
+	 * comes from (directional lights, and the cone axis of spot lights).
+	 *
+	 * Render space is **Y-down**, so a sun overhead shining onto the scene
+	 * travels *downward* and its Y is **positive**: `[-0.35, 0.8, 0.45]` is a
+	 * late-afternoon sun. A negative Y lights everything from underneath,
+	 * which reads instantly as wrong and is the usual mistake here.
+	 *
+	 * An `[x, y, z]` array, read by index — a `Vector3d` has no `[0]`, so
+	 * passing one yields `NaN` and the light contributes nothing at all.
 	 */
 	direction?: [number, number, number];
-	/** world-space position (point and spot lights). */
+	/**
+	 * World-space position (point and spot lights), as an `[x, y, z]` array.
+	 * Y-down again: a lamp above the floor has a **smaller** y than the floor.
+	 */
 	position?: [number, number, number];
 	/**
 	 * light color — a {@link Color}, a CSS color string, or an `[r, g, b]`

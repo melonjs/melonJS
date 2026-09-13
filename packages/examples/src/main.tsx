@@ -48,11 +48,6 @@ const ExampleAfterBurner = lazy(() =>
 		default: m.ExampleAfterBurner,
 	})),
 );
-const ExampleCamera3d = lazy(() =>
-	import("./examples/camera3d/ExampleCamera3d").then((m) => ({
-		default: m.ExampleCamera3d,
-	})),
-);
 const ExampleClipping = lazy(() =>
 	import("./examples/clipping/ExampleClipping").then((m) => ({
 		default: m.ExampleClipping,
@@ -316,14 +311,6 @@ const examples: {
 		sourceDir: "afterBurner",
 		description:
 			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models — arrows / WASD to fly, space to shoot.",
-	},
-	{
-		component: <ExampleCamera3d />,
-		label: "Camera3d (perspective)",
-		path: "camera-3d",
-		sourceDir: "camera3d",
-		description:
-			"Perspective camera orbiting three sprite billboards spaced along the z axis. Drag to orbit; closer sprites render larger.",
 	},
 	{
 		component: <ExampleClipping />,

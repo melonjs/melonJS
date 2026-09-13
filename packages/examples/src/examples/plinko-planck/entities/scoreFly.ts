@@ -14,16 +14,15 @@
  * with the spark burst spawned alongside it (see `sparkBurst.ts`),
  * each landing reads as a deliberate event with clear cause and effect.
  *
- * Implemented as a Container (not a custom Renderable) because the
- * engine's draw walk relies on container.draw translating to its own
- * pos before iterating children — without that translation, a Text
- * child renders at its baked-in metrics offset relative to the parent,
- * which for our purposes is the world origin. With Container as the
- * Tween target, animating `pos.x` / `pos.y` moves the text correctly.
+ * It is a `Text` itself. It used to be a `Container` wrapping one, because
+ * moving a `Text` did not move it — the blit origin was refreshed only when
+ * the string changed, so a label that travelled slid off its own canvas. The
+ * wrapper held the label still at its local origin and moved the container
+ * instead. That is fixed in the engine, so the label is the renderable now.
  */
 
 import type { Container as ContainerType } from "melonjs";
-import { Container, Text, Tween } from "melonjs";
+import { Text, Tween } from "melonjs";
 
 /** Total flight duration (ms). Tuned so the trip feels deliberate but not slow. */
 const FLY_MS = 800;
@@ -33,7 +32,7 @@ const FLY_MS = 800;
  */
 const ARC_HEIGHT = 80;
 
-export class ScoreFly extends Container {
+export class ScoreFly extends Text {
 	/** Tween-driven 0 → 1 lerp factor. */
 	private t = 0;
 	private readonly startX: number;
@@ -41,7 +40,6 @@ export class ScoreFly extends Container {
 	private readonly targetX: number;
 	private readonly targetY: number;
 	private readonly value: number;
-	private readonly label: Text;
 	private readonly onLand: (value: number) => void;
 
 	constructor(
@@ -54,8 +52,15 @@ export class ScoreFly extends Container {
 		fontSize: number,
 		onLand: (value: number) => void,
 	) {
-		super(startX, startY, 1, 1);
-		this.anchorPoint.set(0, 0);
+		super(startX, startY, {
+			font: "Courier New",
+			size: fontSize,
+			fillStyle: color,
+			textAlign: "center",
+			textBaseline: "middle",
+			bold: true,
+			text: `+${value}`,
+		});
 		this.alwaysUpdate = true;
 		// Float so the fly renders in screen space (matches the HUD's
 		// coordinate frame — the play area uses no camera scroll, so
@@ -71,20 +76,6 @@ export class ScoreFly extends Container {
 		this.targetY = targetY;
 		this.value = value;
 		this.onLand = onLand;
-
-		// Text is centred at this container's local (0, 0). Container.draw
-		// translates to `this.pos` before drawing children, so the Text
-		// appears at (this.pos.x, this.pos.y) in world space.
-		this.label = new Text(0, 0, {
-			font: "Courier New",
-			size: fontSize,
-			fillStyle: color,
-			textAlign: "center",
-			textBaseline: "middle",
-			bold: true,
-			text: `+${value}`,
-		});
-		this.addChild(this.label);
 	}
 
 	override onActivateEvent(): void {
@@ -123,27 +114,29 @@ export class ScoreFly extends Container {
 			oneMinusT * oneMinusT * this.startY +
 			2 * oneMinusT * t * midY +
 			t * t * this.targetY;
-		// Use `pos.set(x, y)` (2-arg form defaults z=0). The engine's
-		// `World._sortReverseZ` reads `pos.z` and crashes on undefined;
-		// stacking order is driven by `this.depth` (set in the ctor),
-		// not by stuffing a depth into `pos.z`.
-		this.pos.set(x, y);
+		// Assign x and y rather than `pos.set(x, y)`: the 2-argument form
+		// defaults z to 0, and `depth` IS `pos.z` — so setting the position
+		// that way wiped the depth given in the constructor on the very first
+		// frame, and the fly sorted at 0 instead of on top.
+		this.pos.x = x;
+		this.pos.y = y;
 
 		// Scale: pop up briefly (1 → 1.3 in the first 20% of flight),
 		// then settle back to 1.0 by 60%. Sells "ejected from the slot".
 		// `currentTransform.scale` MULTIPLIES the current matrix — reset
-		// to identity each frame before applying the new scale.
+		// to identity each frame before applying the new scale. `preDraw`
+		// pivots the transform around `pos`, so this scales in place.
 		const popPhase = Math.min(1, t / 0.2);
 		const settlePhase = Math.max(0, Math.min(1, (t - 0.2) / 0.4));
 		const scale = 1 + popPhase * 0.3 - settlePhase * 0.3;
-		this.label.currentTransform.identity();
-		this.label.currentTransform.scale(scale, scale);
+		this.currentTransform.identity();
+		this.currentTransform.scale(scale, scale);
 
 		// Alpha: full opacity until 75%, fade out in the final 25% so
 		// the fly dissolves into the counter rather than abruptly
 		// vanishing.
 		const alpha = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
-		this.label.setOpacity(alpha);
+		this.setOpacity(alpha);
 		super.update(dt);
 		return true;
 	}

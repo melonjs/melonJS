@@ -166,10 +166,23 @@ export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.ts"
 export { collision } from "./physics/collision.js";
 export * as plugin from "./plugin/plugin.ts";
 export { getPool } from "./pool.ts";
+export type {
+	AnimationOptions,
+	AnimationOptionsInput,
+} from "./renderable/animation.ts";
+export type {
+	InstancedMeshOwnSettings,
+	InstancedMeshSettings,
+} from "./renderable/instanced_mesh.js";
+export type { MeshSettings } from "./renderable/mesh.js";
 export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
 export * as utils from "./utils/utils.ts";
 export * from "./version.ts";
+export type {
+	NoiseTexture2dBakeSettings,
+	NoiseTexture2dSettings,
+} from "./video/texture/noise_texture2d.js";
 export * as video from "./video/video.js";
 // export all class definition
 export {

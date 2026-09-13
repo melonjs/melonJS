@@ -213,6 +213,17 @@ export interface NoiseOptions {
 	 * Has no effect when `filter` is unset.
 	 */
 	filterSweep?: number;
+	/**
+	 * Seconds to wait before the sound starts, scheduled on the audio
+	 * clock rather than a timer. `0` (the default) plays immediately.
+	 *
+	 * This is what sequences a multi-part sound — a stinger's second
+	 * note, an explosion's double-tap — and it is sample-accurate, which
+	 * `setTimeout` is not: a timer fires on the main thread, so a busy
+	 * frame slips the note audibly. Nothing is allocated until the sound
+	 * actually starts.
+	 */
+	delay?: number;
 }
 
 /**
@@ -250,6 +261,17 @@ export interface ToneOptions {
 	 * value < 1) or rising stings (value > 1).
 	 */
 	pitchSlide?: number;
+	/**
+	 * Seconds to wait before the sound starts, scheduled on the audio
+	 * clock rather than a timer. `0` (the default) plays immediately.
+	 *
+	 * This is what sequences a multi-part sound — a stinger's second
+	 * note, an explosion's double-tap — and it is sample-accurate, which
+	 * `setTimeout` is not: a timer fires on the main thread, so a busy
+	 * frame slips the note audibly. Nothing is allocated until the sound
+	 * actually starts.
+	 */
+	delay?: number;
 }
 
 /**

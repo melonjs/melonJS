@@ -294,9 +294,8 @@ export default class Stage {
 	}
 
 	/**
-	 * update function
-	 * @ignore
-	 * @internal
+	 * Update the stage. Override it to run your own per-frame logic, and call
+	 * `super.update(dt)` so the world and cameras still advance.
 	 * @param dt - time since the last update in milliseconds.
 	 * @returns true if the stage needs to be redrawn
 	 */
@@ -322,8 +321,9 @@ export default class Stage {
 	 * Lights are rendered as part of the world tree (they're now first-class
 	 * Renderables) and the ambient overlay pass runs inside each Camera's
 	 * post-effect FBO bracket via {@link Stage#drawLighting}.
-	 * @ignore
-	 * @internal
+	 *
+	 * Override it to draw under or over the world, calling `super.draw(...)`
+	 * where the world itself belongs in that order.
 	 * @param renderer - the renderer object to draw with
 	 * @param world - the world object to draw
 	 */

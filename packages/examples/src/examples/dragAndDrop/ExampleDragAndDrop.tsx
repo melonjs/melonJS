@@ -10,6 +10,7 @@ import {
 	DropTarget,
 	game,
 	Text,
+	timer,
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
@@ -106,10 +107,16 @@ class DropTarget1 extends DropTarget {
 
 		// indicate a succesful drop
 		this.color = "green";
-		// set the color back to red after a second
-		window.setTimeout(() => {
-			this.color = "red";
-		}, 1000);
+		// set the color back to red after a second. `timer.setTimeout`, not the
+		// window one: the third argument makes it respect the engine's pause
+		// state, so a paused game does not quietly finish the countdown
+		timer.setTimeout(
+			() => {
+				this.color = "red";
+			},
+			1000,
+			true,
+		);
 	}
 }
 

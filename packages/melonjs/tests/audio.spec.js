@@ -197,6 +197,76 @@ describe("audio", () => {
 			}).not.toThrow();
 		});
 
+		it("delay schedules the start on the audio clock, not a timer", () => {
+			const ctx = audio.getAudioContext();
+			if (ctx === null) {
+				// documented contract with no WebAudio: a silent no-op
+				expect(() => {
+					return audio.tone({ freq: 440, duration: 0.05, delay: 0.25 });
+				}).not.toThrow();
+				return;
+			}
+
+			// capture what time each oscillator is actually told to start
+			const starts = [];
+			const create = ctx.createOscillator.bind(ctx);
+			ctx.createOscillator = () => {
+				const osc = create();
+				const start = osc.start.bind(osc);
+				osc.start = (when) => {
+					starts.push(when);
+					return start(when);
+				};
+				return osc;
+			};
+
+			try {
+				const before = ctx.currentTime;
+				audio.tone({ freq: 440, duration: 0.05 });
+				audio.tone({ freq: 440, duration: 0.05, delay: 0.25 });
+				expect(starts).toHaveLength(2);
+				// BACKWARD COMPATIBILITY: omitting `delay` still starts now.
+				// The option is additive — a call that does not mention it
+				// schedules exactly where it always did.
+				expect(starts[0] - before).toBeGreaterThanOrEqual(0);
+				expect(starts[0] - before).toBeLessThan(0.05);
+				// and the gap is the delay, measured on the context's own
+				// clock — the point of the option over `setTimeout`
+				expect(starts[1] - starts[0]).toBeCloseTo(0.25, 2);
+			} finally {
+				Reflect.deleteProperty(ctx, "createOscillator");
+			}
+		});
+
+		it("a negative delay does not schedule in the past", () => {
+			const ctx = audio.getAudioContext();
+			if (ctx === null) {
+				expect(() => {
+					return audio.noise({ duration: 0.05, delay: -5 });
+				}).not.toThrow();
+				return;
+			}
+			const starts = [];
+			const create = ctx.createBufferSource.bind(ctx);
+			ctx.createBufferSource = () => {
+				const src = create();
+				const start = src.start.bind(src);
+				src.start = (when) => {
+					starts.push(when);
+					return start(when);
+				};
+				return src;
+			};
+			try {
+				const before = ctx.currentTime;
+				audio.noise({ duration: 0.05, delay: -5 });
+				expect(starts).toHaveLength(1);
+				expect(starts[0]).toBeGreaterThanOrEqual(before);
+			} finally {
+				Reflect.deleteProperty(ctx, "createBufferSource");
+			}
+		});
+
 		it("tone clamps pan to [-1, 1]", () => {
 			// Out-of-range pan should be clamped internally, no throw.
 			expect(() => {

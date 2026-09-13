@@ -83,6 +83,10 @@ class GameStage extends Stage {
   `camera.setClipPlanes(near, far)`.
 - **`camera.pos.set(x, y)` is 2-argument and zeroes z.** Use `camera.depth` —
   the documented z accessor — or assign `pos.x`/`pos.y` individually.
+- **`worldToLocal` does not project.** It is a 2D camera's offset subtraction.
+  To pin a label or marker to a point in the scene use
+  `camera.worldToScreen(x, y, z)`, which applies the projection and returns
+  `null` behind the camera. See `melonjs-camera-and-drawing`.
 
 ## Depth sorting
 
@@ -476,6 +480,35 @@ world.addChild(new Light3d({ type: "directional", direction: [0.3, 1, 0.2] }));
 world.addChild(new Light3d({ type: "ambient", intensity: 0.3 }));
 ```
 
+Both of that call's traps fail **silently**, and they compound:
+
+- `new Light3d(0, 0, {…})` — JavaScript drops the extra arguments, so `options`
+  becomes the number `0` and every setting in your literal is discarded. The
+  light still appears, on pure defaults: a `type: "ambient"` written this way is
+  a second DIRECTIONAL light, and the scene looks plausible enough that nobody
+  checks.
+- `direction: new Vector3d(x, y, z)` — `direction` and `position` are `[x, y, z]`
+  **arrays**, read by index. A `Vector3d` has no `[0]`, so the light's direction
+  becomes `NaN` and it contributes nothing. (`color` is the odd one out: it does
+  take a `Color`, a CSS string or an `[r, g, b]` array.)
+- **`direction` is where the light GOES, and this is a Y-down space** — so a sun
+  overhead travels *downward* and its Y is **positive**. Get the sign wrong and
+  the scene is lit from underneath: faces that should be in shade are bright,
+  the ground glows and the sky-facing surfaces go dark.
+
+  ```js
+  direction: [-0.35, 0.8, 0.45]   // sun overhead, late afternoon
+  direction: [-0.35, -0.8, 0.45]  // lit from below — almost never what you want
+  ```
+
+  `position` follows the same convention: a lamp above the floor has a
+  **smaller** y than the floor.
+
+They hide behind each other: TypeScript stops checking an object literal once
+the argument count is already wrong, so fixing the call reveals the `Vector3d`,
+and fixing that finally lets the sign show. A scene can go from "looks fine" to
+"entirely black" to "lit from below" across three apparently-correct edits.
+
 Use **both halves**: with a key light but no ambient, the shadow side of a mesh
 goes black. With no `Light3d` in the world at all, a `lit: true` mesh falls back
 to a white ambient and renders fullbright — indistinguishable from unlit, which
@@ -599,6 +632,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 
 | symptom | cause |
 |---|---|
+| scene lit from underneath | `direction` Y sign — this is Y-down, so a sun overhead is **+Y** |
 | a `lit` mesh renders fullbright | it had no normals — supply them, or let the engine generate them |
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
 | a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |

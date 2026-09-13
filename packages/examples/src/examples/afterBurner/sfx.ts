@@ -119,26 +119,27 @@ export function playEnemyHit(pan = 0): void {
 		filter: { type: "lowpass", frequency: 1600, Q: 0.5 },
 		filterSweep: 0.18,
 	});
-	// 5. secondary blast — real explosions double-tap
-	setTimeout(() => {
-		audio.noise({
-			type: "white",
-			duration: 0.05,
-			gain: 0.4,
-			attack: 0.001,
-			pan,
-			filter: { type: "highpass", frequency: 1200, Q: 0.8 },
-		});
-		audio.tone({
-			freq: 70,
-			duration: 0.32,
-			wave: "sine",
-			gain: 0.5,
-			attack: 0.002,
-			pitchSlide: 0.3,
-			pan,
-		});
-	}, 80);
+	// 5. secondary blast — real explosions double-tap. `delay` puts it on
+	//    the audio clock, so the 80ms gap holds through a frame spike.
+	audio.noise({
+		type: "white",
+		duration: 0.05,
+		gain: 0.4,
+		attack: 0.001,
+		pan,
+		filter: { type: "highpass", frequency: 1200, Q: 0.8 },
+		delay: 0.08,
+	});
+	audio.tone({
+		freq: 70,
+		duration: 0.32,
+		wave: "sine",
+		gain: 0.5,
+		attack: 0.002,
+		pitchSlide: 0.3,
+		pan,
+		delay: 0.08,
+	});
 }
 
 /**

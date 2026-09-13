@@ -69,6 +69,8 @@ export default class Text extends Renderable {
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixels of a line before it wraps
+	 * @param {boolean} [settings.bold=false] - render the face bold, as {@link Text#bold} does
+	 * @param {boolean} [settings.italic=false] - render the face italic, as {@link Text#italic} does
 	 * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
 	 * @example
 	 * // a styled, word-wrapped, multi-line label using a generic system font
@@ -86,6 +88,23 @@ export default class Text extends Renderable {
 	 * label.bold();                    // bold() / italic() are chainable
 	 * label.setOpacity(0.8);           // per-object transparency
 	 * app.world.addChild(label);
+	 * @example
+	 * // a gradient fill: `fillStyle` takes a Gradient as well as a colour.
+	 * // Its coordinates are the label's OWN bake, so (0, 0) is the top-left of
+	 * // the render box and the ramp below runs down exactly one line.
+	 * const ramp = app.renderer.createLinearGradient(0, 0, 0, 32);
+	 * ramp.addColorStop(0, "#fffdf0");
+	 * ramp.addColorStop(1, "#ffa71d");
+	 *
+	 * app.world.addChild(new Text(8, 8, {
+	 *     font: "sans-serif",
+	 *     size: 32,
+	 *     fillStyle: ramp,             // ramps the glyphs...
+	 *     strokeStyle: "#000000",      // ...while the outline keeps its own colour
+	 *     lineWidth: 1,
+	 *     text: "GAME\nOVER",          // every line restarts the ramp by default
+	 *     // gradientPerLine: false,   // ...or span ONE ramp across both lines
+	 * }));
 	 * @example
 	 * // a web font (loaded via the fontface loader) is used by its family name
 	 * loader.preload(
@@ -453,7 +472,7 @@ export default class Text extends Renderable {
 			this.canvasTexture.context,
 			this._text,
 			this.pos.x - this.metrics.x,
-			this.pos.y - this.metrics.y + this.metrics.inkPadTop,
+			this.pos.y - this.metrics.y,
 		);
 
 		// Invalidate LAST, so the renderer re-uploads the canvas at the size
@@ -495,9 +514,18 @@ export default class Text extends Renderable {
 
 	/**
 	 * the ratio of visible characters (0.0 to 1.0).
-	 * Setting this automatically updates {@link visibleCharacters}.
+	 * Setting this automatically updates {@link Text#visibleCharacters}.
+	 *
+	 * This is the one to tween: it is independent of how many characters the
+	 * label holds, so a reveal takes the same time whatever the string is.
 	 * @public
 	 * @type {number}
+	 * @default 1.0
+	 * @see Text#visibleCharacters
+	 * @example
+	 * // reveal over two seconds, regardless of length
+	 * label.visibleRatio = 0;
+	 * new Tween(label).to({ visibleRatio: 1.0 }, { duration: 2000 }).start();
 	 */
 	get visibleRatio() {
 		if (this._visibleCharacters === -1) {
@@ -576,6 +604,14 @@ export default class Text extends Renderable {
 	 * measure the given text size in pixels
 	 * @param {string} [text] - the text to be measured
 	 * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
+	 * @example
+	 * // size a panel around a label
+	 * const size = label.measureText();
+	 * panel.resize(size.width + 16, size.height + 16);
+	 *
+	 * // or measure a string the label does not currently hold, to reserve
+	 * // room for the widest state a counter will reach
+	 * const widest = label.measureText("00:00").width;
 	 */
 	measureText(text = this._text) {
 		return this.metrics.measureText(text, this.canvasTexture.context);
@@ -586,6 +622,18 @@ export default class Text extends Renderable {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
 	 */
 	draw(renderer) {
+		// Re-anchor the box to where the label is NOW.
+		//
+		// `metrics.x/y` is derived from `pos`, but the rest of `measureText` is
+		// not, so it used to refresh only when the STRING changed. Move a label
+		// without re-setting its text and the bake offset (`pos - metrics`) grew
+		// by the whole distance moved while the canvas stayed the size it was —
+		// the glyphs slid off their own canvas and were clipped, and the blit
+		// still went to where the label used to be. Refreshing the origin is
+		// cheap: it reads `pos` and the already-measured width, and measures no
+		// glyphs.
+		this.metrics.updateOrigin();
+
 		// re-render the canvas texture when dirty (e.g. visibleCharacters changed)
 		if (this.isDirty) {
 			this.canvasTexture.clear();
@@ -593,7 +641,7 @@ export default class Text extends Renderable {
 				this.canvasTexture.context,
 				this._text,
 				this.pos.x - this.metrics.x,
-				this.pos.y - this.metrics.y + this.metrics.inkPadTop,
+				this.pos.y - this.metrics.y,
 			);
 			// after the repaint, not before it — see `setText`
 			this.canvasTexture.invalidate(renderer);
@@ -620,65 +668,115 @@ export default class Text extends Renderable {
 	 * @internal
 	 */
 	_drawFont(context, text, x, y) {
-		setContextStyle(context, this);
+		// The bake canvas carries `inkPadTop` of headroom above the layout box.
+		// Translating INTO that headroom — rather than adding it to every draw
+		// position — keeps bake space equal to METRICS space, which is the
+		// space a caller authored their gradient coordinates in. Add the pad to
+		// the positions instead and the glyphs slide down the ramp while the
+		// ramp stays put, so the fill changes colour with the padding, and the
+		// padding differs per browser. The translate is a whole number of
+		// pixels, so glyph rasterization is untouched.
+		context.save();
+		context.translate(0, this.metrics.inkPadTop);
 
-		let remaining = this.visibleCharacters;
+		const fill = setContextStyle(context, this);
 
-		// A gradient is re-anchored to EACH LINE, so every line of a multi-line
-		// label carries the same ramp — what you would get from one `Text` per
-		// line, which is how a HUD is usually built.
+		const fills = this.fillStyle.alpha > 0;
+		const strokes = this.lineWidth > 0 && this.strokeStyle.alpha > 0;
+
+		// A gradient fill is painted THROUGH the glyphs rather than handed to
+		// `fillText`.
 		//
-		// The canvas would otherwise spread one ramp across the whole block:
-		// a `CanvasGradient` lives in the current transform's space, so lines
-		// drawn further down sample further along it, and every line after the
-		// first comes out flat unless the caller happens to have authored the
-		// ramp over the exact block height. That is silent and easy to get
-		// wrong. Translating per line instead keeps the gradient with the text.
+		// WebKit rasterizes gradient-filled text by drawing the glyphs into a
+		// mask it sizes from the FONT's layout box, then filling that mask —
+		// so ink rising above the declared ascent, which display faces do
+		// routinely, never enters the mask and comes out fully transparent.
+		// The stroke is a flat colour and takes a different path, which leaves
+		// an outlined but hollow glyph. Filling flat and re-colouring through
+		// `source-in` puts the glyphs through the same rasterizer every browser
+		// uses for ordinary text, so all of them agree.
 		//
-		// The trade is that a ramp spanning a whole two-line title is no longer
-		// expressible; compose that from one `Text` per line.
-		const perLine =
-			this.gradientPerLine === true &&
-			this.fillGradient !== undefined &&
-			text.length > 1;
-		const firstY = y;
+		// Measured on a plain canvas with no engine involved, 34px display
+		// face: with a FLAT fill both engines paint 7px above the top alignment
+		// point; with a GRADIENT, WebKit stops at 0 — precisely the ascent it
+		// reports for the face. Everything above that is absent, not faint.
+		// The mask path is `drawTextUnchecked` in WebCore's
+		// `CanvasRenderingContext2DBase`, under `USE(CG)`.
+		//
+		// Done unconditionally, not behind a browser check: one rasterization
+		// path is worth more than saving a `fillRect` on the engines that would
+		// have been fine either way.
+		//
+		// The trade is that fill and stroke now interleave per BLOCK rather
+		// than per line, observable only where lines overlap.
+		//
+		// DO NOT collapse this back into a single `fillText` with the gradient
+		// as `fillStyle`. The second pass reads as a redundant `fillRect` and
+		// is not one — it is the only reason the glyph tops survive on Safari.
+		const masked = fills && this.fillGradient !== undefined;
 
-		for (let i = 0; i < text.length; i++) {
-			let string = text[i].trimEnd();
+		/**
+		 * Walk the visible lines, handing each to `paint`.
+		 * @param {(line: string, x: number, y: number) => void} paint - per line
+		 */
+		const eachLine = (paint) => {
+			let remaining = this.visibleCharacters;
+			let lineY = y;
 
-			// limit visible characters if needed
-			if (remaining !== -1) {
-				if (remaining <= 0) {
-					break;
+			for (let i = 0; i < text.length; i++) {
+				let string = text[i].trimEnd();
+
+				// limit visible characters if needed
+				if (remaining !== -1) {
+					if (remaining <= 0) {
+						break;
+					}
+					string = string.substring(0, remaining);
+					remaining -= string.length;
 				}
-				string = string.substring(0, remaining);
-				remaining -= string.length;
-			}
 
-			// Shift the whole space down to this line rather than the draw
-			// position, so the gradient travels with it and each line is
-			// painted from the ramp's start.
-			if (perLine) {
-				context.save();
-				context.translate(0, y - firstY);
+				paint(string, x, lineY);
+				// add leading space
+				lineY += this.metrics.lineHeight();
 			}
-			const lineY = perLine ? firstY : y;
+		};
 
-			// draw the string
-			if (this.fillStyle.alpha > 0) {
-				context.fillText(string, x, lineY);
+		if (fills) {
+			if (masked === true) {
+				// any opaque colour: only the alpha it leaves behind survives
+				context.fillStyle = "#000000";
 			}
-			// stroke the text
-			if (this.lineWidth > 0 && this.strokeStyle.alpha > 0) {
-				context.strokeText(string, x, lineY);
-			}
-
-			if (perLine) {
-				context.restore();
-			}
-			// add leading space
-			y += this.metrics.lineHeight();
+			eachLine((line, lineX, lineY) => {
+				context.fillText(line, lineX, lineY);
+			});
 		}
+
+		if (masked === true) {
+			// Re-colour the silhouette under the SAME transform the glyphs were
+			// drawn with, so the gradient travels with them. The rect only has
+			// to cover the canvas — a gradient's colours come from its own
+			// coordinates, not from the rect it is painted into.
+			const canvas = context.canvas;
+			context.globalCompositeOperation = "source-in";
+			context.fillStyle = fill;
+			context.fillRect(
+				-1,
+				-this.metrics.inkPadTop - 1,
+				canvas.width + 2,
+				canvas.height + 2,
+			);
+			// back before the stroke: the outline is a flat colour and must not
+			// be masked by the fill it sits on
+			context.globalCompositeOperation = "source-over";
+		}
+
+		if (strokes) {
+			eachLine((line, lineX, lineY) => {
+				context.strokeText(line, lineX, lineY);
+			});
+		}
+
+		context.restore();
 		return this.metrics;
 	}
 

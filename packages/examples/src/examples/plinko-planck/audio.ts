@@ -216,34 +216,35 @@ export const playWin = (score: number, pan = 0): void => {
 		pitchSlide: 1.03,
 	});
 
-	// 4) Brass note 2 — fifth + octave climb at t=110ms.
-	setTimeout(() => {
-		audio.tone({
-			freq: [fifth, octave],
-			duration: 0.18,
-			gain: 0.32,
-			pan,
-			wave: "triangle",
-		});
-	}, 110);
+	// 4) Brass note 2 — fifth + octave climb at t=110ms. `delay` schedules
+	//    on the audio clock, so the fanfare keeps time through a frame spike
+	//    that would visibly slip a `setTimeout`.
+	audio.tone({
+		freq: [fifth, octave],
+		duration: 0.18,
+		gain: 0.32,
+		pan,
+		wave: "triangle",
+		delay: 0.11,
+	});
 
 	// 5) Resolution chord at t=230ms — sustained octave + fifth +
 	//    2-octave triangle chord. This is the headline "DAAAAH".
-	setTimeout(() => {
-		audio.tone({
-			freq: [octave, octave * 1.5, octave * 2],
-			duration: 0.75,
-			gain: 0.38,
-			pan,
-			wave: "triangle",
-		});
-		// 6) Bell sparkle — sine high-octave stack on top of the
-		//    chord swell for celebratory shimmer.
-		audio.tone({
-			freq: [octave * 2, octave * 3, octave * 4],
-			duration: 0.55,
-			gain: 0.16,
-			pan,
-		});
-	}, 230);
+	audio.tone({
+		freq: [octave, octave * 1.5, octave * 2],
+		duration: 0.75,
+		gain: 0.38,
+		pan,
+		wave: "triangle",
+		delay: 0.23,
+	});
+	// 6) Bell sparkle — sine high-octave stack on top of the
+	//    chord swell for celebratory shimmer.
+	audio.tone({
+		freq: [octave * 2, octave * 3, octave * 4],
+		duration: 0.55,
+		gain: 0.16,
+		pan,
+		delay: 0.23,
+	});
 };
