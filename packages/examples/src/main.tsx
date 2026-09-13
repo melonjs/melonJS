@@ -48,11 +48,6 @@ const ExampleAfterBurner = lazy(() =>
 		default: m.ExampleAfterBurner,
 	})),
 );
-const ExampleJungleRabbit = lazy(() =>
-	import("./examples/jungleRabbit/ExampleJungleRabbit").then((m) => ({
-		default: m.ExampleJungleRabbit,
-	})),
-);
 const ExampleClipping = lazy(() =>
 	import("./examples/clipping/ExampleClipping").then((m) => ({
 		default: m.ExampleClipping,
@@ -316,14 +311,6 @@ const examples: {
 		sourceDir: "afterBurner",
 		description:
 			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models — arrows / WASD to fly, space to shoot.",
-	},
-	{
-		component: <ExampleJungleRabbit />,
-		label: "Jungle Rabbit",
-		path: "jungle-rabbit",
-		sourceDir: "jungleRabbit",
-		description:
-			"Endless river run on Camera3d — authored glTF scenery through InstancedMesh, a rigged paddling boat, and a procedural valley. Arrows to steer, space to jump.",
 	},
 	{
 		component: <ExampleClipping />,
