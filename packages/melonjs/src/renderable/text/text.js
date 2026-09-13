@@ -87,6 +87,23 @@ export default class Text extends Renderable {
 	 * label.setOpacity(0.8);           // per-object transparency
 	 * app.world.addChild(label);
 	 * @example
+	 * // a gradient fill: `fillStyle` takes a Gradient as well as a colour.
+	 * // Its coordinates are the label's OWN bake, so (0, 0) is the top-left of
+	 * // the render box and the ramp below runs down exactly one line.
+	 * const ramp = app.renderer.createLinearGradient(0, 0, 0, 32);
+	 * ramp.addColorStop(0, "#fffdf0");
+	 * ramp.addColorStop(1, "#ffa71d");
+	 *
+	 * app.world.addChild(new Text(8, 8, {
+	 *     font: "sans-serif",
+	 *     size: 32,
+	 *     fillStyle: ramp,             // ramps the glyphs...
+	 *     strokeStyle: "#000000",      // ...while the outline keeps its own colour
+	 *     lineWidth: 1,
+	 *     text: "GAME\nOVER",          // every line restarts the ramp by default
+	 *     // gradientPerLine: false,   // ...or span ONE ramp across both lines
+	 * }));
+	 * @example
 	 * // a web font (loaded via the fontface loader) is used by its family name
 	 * loader.preload(
 	 *     [{ name: "kenpixel", type: "fontface", src: "data/font/kenvector.woff2" }],
@@ -495,9 +512,18 @@ export default class Text extends Renderable {
 
 	/**
 	 * the ratio of visible characters (0.0 to 1.0).
-	 * Setting this automatically updates {@link visibleCharacters}.
+	 * Setting this automatically updates {@link Text#visibleCharacters}.
+	 *
+	 * This is the one to tween: it is independent of how many characters the
+	 * label holds, so a reveal takes the same time whatever the string is.
 	 * @public
 	 * @type {number}
+	 * @default 1.0
+	 * @see Text#visibleCharacters
+	 * @example
+	 * // reveal over two seconds, regardless of length
+	 * label.visibleRatio = 0;
+	 * new Tween(label).to({ visibleRatio: 1.0 }, { duration: 2000 }).start();
 	 */
 	get visibleRatio() {
 		if (this._visibleCharacters === -1) {
@@ -576,6 +602,14 @@ export default class Text extends Renderable {
 	 * measure the given text size in pixels
 	 * @param {string} [text] - the text to be measured
 	 * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
+	 * @example
+	 * // size a panel around a label
+	 * const size = label.measureText();
+	 * panel.resize(size.width + 16, size.height + 16);
+	 *
+	 * // or measure a string the label does not currently hold, to reserve
+	 * // room for the widest state a counter will reach
+	 * const widest = label.measureText("00:00").width;
 	 */
 	measureText(text = this._text) {
 		return this.metrics.measureText(text, this.canvasTexture.context);

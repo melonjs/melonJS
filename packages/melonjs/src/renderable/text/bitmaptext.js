@@ -23,9 +23,8 @@ export default class BitmapText extends Renderable {
 	 * @param {object} settings - the text configuration
 	 * @param {string|Image} settings.font - a font name to identify the corresponding source image
 	 * @param {string} [settings.fontData=settings.font] - the bitmap font data corresponding name, or the bitmap font data itself (AngelCode BMFont, `.fnt` text or `.xml`)
-	 * @param {number} [settings.size] - size a scaling ratio
-	 * @param {Color|string} [settings.fillStyle] - a CSS color value used to tint the bitmapText (@see BitmapText.tint)
-	 * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+	 * @param {number} [settings.size=1.0] - a scaling RATIO applied to the font's authored size, not a pixel size: `2` draws it at double. ({@link Text} takes pixels here; this one does not.)
+	 * @param {Color|string} [settings.fillStyle] - a CSS color value used to tint the glyphs, see {@link Renderable#tint}
 	 * @param {string} [settings.textAlign="left"] - horizontal text alignment
 	 * @param {string} [settings.textBaseline="top"] - the text baseline
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
@@ -170,7 +169,7 @@ export default class BitmapText extends Renderable {
 	/**
 	 * change the font settings
 	 * @param {string} textAlign - ("left", "center", "right")
-	 * @param {number} [scale]
+	 * @param {number} [scale] - a scaling ratio, applied through {@link BitmapText#resize} when given
 	 * @returns {BitmapText} this object for chaining
 	 */
 	set(textAlign, scale) {
@@ -320,10 +319,27 @@ export default class BitmapText extends Renderable {
 	}
 
 	/**
-	 * defines the color used to tint the bitmap text
+	 * defines the color used to tint the bitmap text.
+	 *
+	 * This is {@link Renderable#tint} under another name, so the same rule
+	 * applies: white — `(255, 255, 255)` — is the absence of a tint, and any
+	 * other colour tints away from there. A page image authored in white
+	 * therefore keeps every colour available to it.
 	 * @public
 	 * @type {Color}
 	 * @see Renderable#tint
+	 * @example
+	 * // tint at construction...
+	 * const score = new BitmapText(8, 8, {
+	 *     font: "arial",
+	 *     text: "1000",
+	 *     fillStyle: "#ffd700",        // gold
+	 * });
+	 * app.world.addChild(score);
+	 *
+	 * // ...or at any point after it, from a CSS string or a Color
+	 * score.fillStyle = "#ff4040";                  // flash red on damage
+	 * score.fillStyle = new Color(255, 255, 255);   // back to untinted
 	 */
 	get fillStyle() {
 		return this.tint;
@@ -339,8 +355,14 @@ export default class BitmapText extends Renderable {
 
 	/**
 	 * change the font display size
-	 * @param {number} scale - ratio
+	 * @param {number} scale - a ratio against the font's authored size, NOT a
+	 * pixel size: `1` is the page image at its native scale, `2` is double
 	 * @returns {BitmapText} this object for chaining
+	 * @example
+	 * // a bitmap font is pixel art — whole-number ratios stay crisp, and
+	 * // fractional ones resample the page image
+	 * title.resize(3);                 // three times its authored size
+	 * title.set("center", 2);          // align and rescale in one call
 	 */
 	resize(scale) {
 		this.fontScale.set(scale, scale);
@@ -358,6 +380,10 @@ export default class BitmapText extends Renderable {
 	 * measure the given text size in pixels
 	 * @param {string} [text]
 	 * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
+	 * @example
+	 * // size a panel around a label, at the label's CURRENT scale
+	 * const size = label.measureText();
+	 * panel.resize(size.width + 16, size.height + 16);
 	 */
 	measureText(text = this._text) {
 		return this.metrics.measureText(text);

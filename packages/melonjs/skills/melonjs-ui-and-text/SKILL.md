@@ -54,6 +54,48 @@ an outline keeps its own colour without any luminance trickery — and it works 
 Canvas2D, which a post effect does not. `fillStyle.alpha` still gates the fill,
 and the property still reads back as a `Color`.
 
+## BitmapText: `size` is a RATIO, not pixels
+
+The trap when moving over from `Text`:
+
+```js
+new Text(x, y,       { font: "Arial", size: 24, text: "SCORE" });  // 24 pixels
+new BitmapText(x, y, { font: "arial", size: 24, text: "SCORE" });  // 24 TIMES
+```
+
+`size` scales the font's authored size, so `1` is native and `2` is double —
+`resize(scale)` and `set(textAlign, scale)` take the same ratio. Whole numbers
+keep pixel art crisp; fractional ones resample the page image.
+
+It has **no stroke** — there is no `strokeStyle` or `lineWidth` here, which is
+part of why it stays sharp. Colour comes from the tint instead:
+
+```js
+const score = new BitmapText(8, 8, {
+    font: "arial", text: "1000", fillStyle: "#ffd700",
+});
+score.fillStyle = "#ff4040";                  // recolour at any time
+score.fillStyle = new Color(255, 255, 255);   // UNTINTED, not "white text"
+```
+
+`fillStyle` is `Renderable#tint` under another name: white is the *absence* of a
+tint and every other colour tints away from it, so author the page in white to
+keep every colour available to you.
+
+Load the descriptor as `binary` and its page as `image` under the **same name**.
+Both BMFont flavours — text (`.fnt`) and XML — are auto-detected, so an `.xml`
+descriptor loads as-is:
+
+```js
+loader.preload([
+    { name: "arial", type: "binary", src: "data/font/arial.fnt" },
+    { name: "arial", type: "image",  src: "data/font/arial.png" },
+]);
+```
+
+Reach for it over `Text` when the text is mostly static, has to stay crisp at
+integer scales, or wants recolouring without a re-bake.
+
 ## The HUD pattern
 
 A HUD is a `floating` container at a high z, built once and re-added:
