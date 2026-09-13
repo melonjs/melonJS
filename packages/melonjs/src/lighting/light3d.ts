@@ -24,15 +24,19 @@ export interface Light3dOptions {
 	 * late-afternoon sun. A negative Y lights everything from underneath,
 	 * which reads instantly as wrong and is the usual mistake here.
 	 *
-	 * An `[x, y, z]` array, read by index — a `Vector3d` has no `[0]`, so
-	 * passing one yields `NaN` and the light contributes nothing at all.
+	 * Either an `[x, y, z]` array or a {@link Vector3d} — as
+	 * {@link Light3dOptions.color} already takes several forms. The vector is
+	 * READ, not retained: {@link Light3d#direction} remains the engine's own,
+	 * and normalized, so mutating what you passed in afterwards changes
+	 * nothing.
 	 */
-	direction?: [number, number, number];
+	direction?: [number, number, number] | Vector3d;
 	/**
-	 * World-space position (point and spot lights), as an `[x, y, z]` array.
-	 * Y-down again: a lamp above the floor has a **smaller** y than the floor.
+	 * World-space position (point and spot lights), as an `[x, y, z]` array or
+	 * a {@link Vector3d}. Y-down again: a lamp above the floor has a
+	 * **smaller** y than the floor.
 	 */
-	position?: [number, number, number];
+	position?: [number, number, number] | Vector3d;
 	/**
 	 * light color — a {@link Color}, a CSS color string, or an `[r, g, b]`
 	 * array with components in `0..1` (the glTF convention). Defaults to white.
@@ -98,9 +102,41 @@ export interface Light3dOptions {
  *     range: 800, innerConeAngle: 0.2, outerConeAngle: 0.45,
  * }));
  *
- * // animate the sun in-game (direction is the way light travels)
+ * // `direction` and `position` also take a Vector3d, so a value the game
+ * // already keeps can be handed over without unpacking it. It is READ, not
+ * // retained — move the vector afterwards and the light does not follow.
+ * app.world.addChild(new Light3d({
+ *     type: "spot",
+ *     position: torch.pos,
+ *     direction: new Vector3d(0, 1, 0.4),
+ * }));
+ *
+ * // animate the sun in-game (direction is the way light travels). Y-down, so
+ * // a positive Y is a sun overhead; a negative one lights from underneath.
  * sun.direction.set(Math.sin(t), 1, Math.cos(t)).normalize();
  */
+/**
+ * Read an `[x, y, z]` array or a {@link Vector3d} into `out`.
+ *
+ * Both forms are accepted for the same reason `color` accepts a {@link Color},
+ * a CSS string or an array: a `Vector3d` is the obvious thing to reach for when
+ * an option is named `direction`, and index-reading one silently produces
+ * `NaN`. The value is copied, never retained.
+ * @param out - the vector the light owns
+ * @param value - what the caller passed
+ * @returns `out`
+ * @ignore
+ * @internal
+ */
+function readVector(
+	out: Vector3d,
+	value: [number, number, number] | Vector3d,
+): Vector3d {
+	return Array.isArray(value)
+		? out.set(value[0], value[1], value[2])
+		: out.set(value.x, value.y, value.z);
+}
+
 export class Light3d extends Renderable {
 	/** `"directional"`, `"ambient"`, `"point"` or `"spot"`. */
 	override type: "directional" | "ambient" | "point" | "spot";
@@ -136,21 +172,13 @@ export class Light3d extends Renderable {
 
 		this.direction = new Vector3d(0, 1, 0);
 		if (options.direction) {
-			this.direction.set(
-				options.direction[0],
-				options.direction[1],
-				options.direction[2],
-			);
+			readVector(this.direction, options.direction);
 		}
 		this.direction.normalize();
 
 		this.position = new Vector3d(0, 0, 0);
 		if (options.position) {
-			this.position.set(
-				options.position[0],
-				options.position[1],
-				options.position[2],
-			);
+			readVector(this.position, options.position);
 		}
 
 		if (options.color instanceof Color) {

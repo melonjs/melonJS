@@ -478,19 +478,24 @@ default), `"ambient"`, `"point"` and `"spot"`.
 ```js
 world.addChild(new Light3d({ type: "directional", direction: [0.3, 1, 0.2] }));
 world.addChild(new Light3d({ type: "ambient", intensity: 0.3 }));
+// a Vector3d works too, wherever the game already has one
+world.addChild(new Light3d({ type: "spot", position: torch.pos, range: 400 }));
 ```
 
-Both of that call's traps fail **silently**, and they compound:
+`direction` and `position` take an `[x, y, z]` array **or** a `Vector3d`, and
+`color` takes a `Color`, a CSS string or an `[r, g, b]` array — so a value the
+game already holds can go straight in. Each is read, not retained: move your
+vector afterwards and the light stays where it was.
 
-- `new Light3d(0, 0, {…})` — JavaScript drops the extra arguments, so `options`
-  becomes the number `0` and every setting in your literal is discarded. The
-  light still appears, on pure defaults: a `type: "ambient"` written this way is
-  a second DIRECTIONAL light, and the scene looks plausible enough that nobody
-  checks.
-- `direction: new Vector3d(x, y, z)` — `direction` and `position` are `[x, y, z]`
-  **arrays**, read by index. A `Vector3d` has no `[0]`, so the light's direction
-  becomes `NaN` and it contributes nothing. (`color` is the odd one out: it does
-  take a `Color`, a CSS string or an `[r, g, b]` array.)
+Two things still bite, both silently:
+
+- `new Light3d(0, 0, {…})` — the constructor takes **options alone**. JavaScript
+  drops the extra arguments, so `options` becomes the number `0` and every
+  setting in your literal is discarded. The light still appears, on pure
+  defaults: a `type: "ambient"` written this way is a second DIRECTIONAL light,
+  and the scene looks plausible enough that nobody checks. TypeScript stops
+  checking a literal once the argument count is wrong, so nothing inside it is
+  verified either.
 - **`direction` is where the light GOES, and this is a Y-down space** — so a sun
   overhead travels *downward* and its Y is **positive**. Get the sign wrong and
   the scene is lit from underneath: faces that should be in shade are bright,
@@ -503,11 +508,6 @@ Both of that call's traps fail **silently**, and they compound:
 
   `position` follows the same convention: a lamp above the floor has a
   **smaller** y than the floor.
-
-They hide behind each other: TypeScript stops checking an object literal once
-the argument count is already wrong, so fixing the call reveals the `Vector3d`,
-and fixing that finally lets the sign show. A scene can go from "looks fine" to
-"entirely black" to "lit from below" across three apparently-correct edits.
 
 Use **both halves**: with a key light but no ambient, the shadow side of a mesh
 goes black. With no `Light3d` in the world at all, a `lit: true` mesh falls back
