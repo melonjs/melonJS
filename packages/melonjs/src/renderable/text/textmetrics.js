@@ -205,7 +205,33 @@ class TextMetrics extends Bounds {
 		this.width = Math.ceil(this.width);
 		this.height = Math.ceil(this.height);
 
-		// compute the bounding box position
+		this.updateOrigin();
+
+		if (typeof context !== "undefined") {
+			// restore the context
+			context.restore();
+		}
+
+		return this;
+	}
+
+	/**
+	 * Recompute the box's position from the ancestor's CURRENT `pos`.
+	 *
+	 * Split out of `measureText` because it depends on `pos` while everything
+	 * else there depends only on the string and the font. A label that moves
+	 * needs this refreshed — and nothing else — so the draw path can call it
+	 * per frame without re-measuring a single glyph.
+	 *
+	 * The `Math.floor` is what puts the canvas on a whole pixel. The remainder
+	 * it drops is not lost: `Text` bakes its glyphs at `pos - metrics`, so the
+	 * sub-pixel part lands in the rasterization, where the font rasterizer can
+	 * antialias it, instead of resampling the whole texture.
+	 * @returns {TextMetrics} this instance for chaining
+	 * @ignore
+	 * @internal
+	 */
+	updateOrigin() {
 		this.x = Math.floor(
 			this.ancestor.textAlign === "right"
 				? this.ancestor.pos.x - this.width
@@ -220,12 +246,6 @@ class TextMetrics extends Bounds {
 					? this.ancestor.pos.y - this.lineHeight() / 2
 					: this.ancestor.pos.y - this.lineHeight(),
 		);
-
-		if (typeof context !== "undefined") {
-			// restore the context
-			context.restore();
-		}
-
 		return this;
 	}
 

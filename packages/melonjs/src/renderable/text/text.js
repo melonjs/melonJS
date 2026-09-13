@@ -620,6 +620,18 @@ export default class Text extends Renderable {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
 	 */
 	draw(renderer) {
+		// Re-anchor the box to where the label is NOW.
+		//
+		// `metrics.x/y` is derived from `pos`, but the rest of `measureText` is
+		// not, so it used to refresh only when the STRING changed. Move a label
+		// without re-setting its text and the bake offset (`pos - metrics`) grew
+		// by the whole distance moved while the canvas stayed the size it was —
+		// the glyphs slid off their own canvas and were clipped, and the blit
+		// still went to where the label used to be. Refreshing the origin is
+		// cheap: it reads `pos` and the already-measured width, and measures no
+		// glyphs.
+		this.metrics.updateOrigin();
+
 		// re-render the canvas texture when dirty (e.g. visibleCharacters changed)
 		if (this.isDirty) {
 			this.canvasTexture.clear();

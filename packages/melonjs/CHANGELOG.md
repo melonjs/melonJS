@@ -19,6 +19,8 @@
 - Mesh: a mesh with `normalize: false` and an explicit `scale` now sizes itself from its geometry when no `width`/`height` is given, the way a `Sprite` sizes itself from its frame. It reported a zero-size box at its position while drawing at full size, misleading frustum culling, pointer picking and the broadphase alike. `meshScale` is unchanged
 - Mesh: a `ShaderEffect` attached to a mesh drew the geometry unplaced and without the camera on WebGL, and was refused on WebGPU with a message naming the wrong reason. An effect is realized against the quad vertex contract, which declares neither `uModelMatrix` nor `uViewMatrix` ([#1658](https://github.com/melonjs/melonJS/issues/1658))
 
+- Text: moving a label now moves it. `metrics.x/y` — the box the bake is blitted at — is derived from `pos`, but nothing else in `measureText` is, so it refreshed only when the *string* changed. Reposition a label without re-setting its text and the bake offset had grown by the whole distance travelled while the canvas stayed the size it was: the glyphs slid off their own canvas and were clipped, while the blit still went to where the label used to be. The origin is refreshed from `pos` on every draw now, which reads two numbers and measures no glyphs. Sub-pixel placement is unchanged — the canvas still lands on a whole pixel, and the fraction the floor drops still goes into the bake where the rasterizer can antialias it rather than resampling the texture
+
 ## [20.4.0] (melonJS 2) - _2026-09-09_
 
 ### Added
