@@ -141,6 +141,23 @@ audio.noise({ duration: 0.5, filter: { type: "lowpass", frequency: 800 } });
 `"white"`), `attack`, `pan`, `filter` and `filterSweep`. `gain` defaults to `0.1`
 on both.
 
+### Sequencing: `delay`, not `setTimeout`
+
+Both take `delay` — seconds before the sound starts, scheduled on the **audio
+clock**. That is what builds a multi-part sound: a stinger's second note, an
+explosion's double-tap.
+
+```js
+audio.tone({ freq: 392, duration: 0.12 });
+audio.tone({ freq: 587, duration: 0.18, delay: 0.11 });
+audio.tone({ freq: [784, 1176], duration: 0.75, delay: 0.23 });
+```
+
+Do not reach for `setTimeout` here. A timer fires on the main thread, so a busy
+frame slips the note late and the sequence audibly loses time — the fault is
+easy to blame on the sound design rather than the scheduling. `delay` is
+sample-accurate because the whole envelope is scheduled up front.
+
 Both are **silent no-ops** when there is no WebAudio context — they bail on
 `getAudioContext() === null` rather than throwing. Neither needs the clip to be
 loaded; neither goes through the file-playback path at all.

@@ -120,7 +120,7 @@ function _connectToOutput(
  * wants to show a "no audio" badge or fall back to a different
  * feedback channel.
  * @param opts - the {@link ToneOptions} (frequency, duration,
- *   envelope, pan, slide). See the interface for per-field defaults.
+ *   envelope, pan, slide, delay). See the interface for per-field defaults.
  * @example
  * // simple UI click
  * me.audio.tone({ freq: 1200, duration: 0.08, pitchSlide: 0.5 });
@@ -128,6 +128,11 @@ function _connectToOutput(
  * me.audio.tone({ freq: [880, 1320], duration: 0.4, gain: 0.18, pan: 0.5 });
  * // descending "thud" — square wave with a wide pitch drop
  * me.audio.tone({ freq: 200, duration: 0.15, wave: "square", pitchSlide: 0.25 });
+ * // a three-part fanfare, sequenced on the AUDIO clock — `delay` keeps the
+ * // notes in time whatever the frame rate is doing, which `setTimeout` cannot
+ * me.audio.tone({ freq: 392, duration: 0.12 });
+ * me.audio.tone({ freq: 587, duration: 0.18, delay: 0.11 });
+ * me.audio.tone({ freq: [784, 1176], duration: 0.75, delay: 0.23 });
  * @category Audio
  */
 export function tone(opts: ToneOptions): void {
@@ -142,6 +147,7 @@ export function tone(opts: ToneOptions): void {
 		attack = 0.005,
 		pan = 0,
 		pitchSlide = 1,
+		delay = 0,
 	} = opts;
 
 	const freqs = Array.isArray(freq) ? freq : [freq];
@@ -153,7 +159,9 @@ export function tone(opts: ToneOptions): void {
 	_resumeIfSuspended(ctx);
 
 	const dur = Math.max(0.001, duration);
-	const t0 = ctx.currentTime;
+	// Everything below hangs off `t0`, so a delay is one addition here
+	// rather than a timer around the whole call.
+	const t0 = ctx.currentTime + Math.max(0, delay);
 	const t1 = t0 + dur;
 	const env = _buildGainEnvelope(ctx, t0, t1, attack, dur, gain);
 	const panner = _connectToOutput(ctx, env, pan, t0);
@@ -256,7 +264,7 @@ function fillNoiseBuffer(
  * explicitly disabled) this is a silent no-op: {@link getAudioContext}
  * returns `null` and nothing is scheduled.
  * @param opts - the {@link NoiseOptions} (duration, spectral colour,
- *   envelope, pan, optional filter + sweep). See the interface for
+ *   envelope, pan, delay, optional filter + sweep). See the interface for
  *   per-field defaults.
  * @example
  * // Explosion: brown rumble closing into a thud
@@ -308,12 +316,15 @@ export function noise(opts: NoiseOptions): void {
 		pan = 0,
 		filter,
 		filterSweep = 1,
+		delay = 0,
 	} = opts;
 
 	_resumeIfSuspended(ctx);
 
 	const dur = Math.max(0.001, duration);
-	const t0 = ctx.currentTime;
+	// Everything below hangs off `t0`, so a delay is one addition here
+	// rather than a timer around the whole call.
+	const t0 = ctx.currentTime + Math.max(0, delay);
 	const t1 = t0 + dur;
 	const env = _buildGainEnvelope(ctx, t0, t1, attack, dur, gain);
 
