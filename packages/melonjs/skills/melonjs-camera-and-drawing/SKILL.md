@@ -78,6 +78,30 @@ whichever of world/screen matches the region — screen for a `floating` region,
 world otherwise. Use the screen pair for anything that *moves* the camera, or
 the drag feeds back on itself.
 
+### In 3D: `Camera3d#worldToScreen`
+
+`worldToLocal` is a 2D camera's offset subtraction — it knows nothing about a
+perspective projection. To pin a label, damage number or marker to a point in a
+3D scene, project it:
+
+```js
+const p = camera.worldToScreen(x, y, z);   // view + projection, divide included
+if (p !== null) {                          // null = at or BEHIND the camera
+    label.pos.set(p.x, p.y);
+}
+```
+
+It returns canvas pixels with the origin top-left and **y down**, which is the
+engine's own 2D draw space — so the result feeds a `floating` renderable or the
+immediate-mode API directly, with no flip.
+
+**Always check for `null`.** A point at or behind the camera (clip `w <= 0`)
+has no honest screen position, and projecting it anyway yields a mirrored
+coordinate that puts your label on the wrong side of the screen. Skip it.
+
+Do not hand-roll this with `Matrix3d` — the perspective divide and the behind-
+camera case are exactly what gets it wrong.
+
 ## Secondary cameras
 
 Cameras are first-class — a minimap is a second camera with `autoResize = false`

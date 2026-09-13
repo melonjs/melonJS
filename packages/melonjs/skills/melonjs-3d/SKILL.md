@@ -83,6 +83,10 @@ class GameStage extends Stage {
   `camera.setClipPlanes(near, far)`.
 - **`camera.pos.set(x, y)` is 2-argument and zeroes z.** Use `camera.depth` —
   the documented z accessor — or assign `pos.x`/`pos.y` individually.
+- **`worldToLocal` does not project.** It is a 2D camera's offset subtraction.
+  To pin a label or marker to a point in the scene use
+  `camera.worldToScreen(x, y, z)`, which applies the projection and returns
+  `null` behind the camera. See `melonjs-camera-and-drawing`.
 
 ## Depth sorting
 
@@ -475,6 +479,22 @@ default), `"ambient"`, `"point"` and `"spot"`.
 world.addChild(new Light3d({ type: "directional", direction: [0.3, 1, 0.2] }));
 world.addChild(new Light3d({ type: "ambient", intensity: 0.3 }));
 ```
+
+Both of that call's traps fail **silently**, and they compound:
+
+- `new Light3d(0, 0, {…})` — JavaScript drops the extra arguments, so `options`
+  becomes the number `0` and every setting in your literal is discarded. The
+  light still appears, on pure defaults: a `type: "ambient"` written this way is
+  a second DIRECTIONAL light, and the scene looks plausible enough that nobody
+  checks.
+- `direction: new Vector3d(x, y, z)` — `direction` and `position` are `[x, y, z]`
+  **arrays**, read by index. A `Vector3d` has no `[0]`, so the light's direction
+  becomes `NaN` and it contributes nothing. (`color` is the odd one out: it does
+  take a `Color`, a CSS string or an `[r, g, b]` array.)
+
+Fixing the first exposes the second — TypeScript stops checking an object
+literal once the argument count is already wrong — so a scene can go from
+"looks fine" to "entirely black" in one apparently-correct edit.
 
 Use **both halves**: with a key light but no ambient, the shadow side of a mesh
 goes black. With no `Light3d` in the world at all, a `lit: true` mesh falls back
