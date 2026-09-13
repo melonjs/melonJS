@@ -125,15 +125,15 @@ function buildScene(app: Application) {
 	// One directional key light plus a dim ambient fill. The key is what the
 	// specular highlight rides: a highlight needs a direction to reflect, so
 	// an ambient-only scene would show none however glossy the material.
-	const key = new Light3d(0, 0, {
+	const key = new Light3d({
 		type: "directional",
-		direction: new Vector3d(-0.45, -0.75, 0.5),
+		direction: [-0.45, -0.75, 0.5],
 		color: "#fff6e8",
 		intensity: 1.15,
 	});
 	key.name = "key";
 	world.addChild(key);
-	world.addChild(new Light3d(0, 0, { type: "ambient", color: "#3b4870" }));
+	world.addChild(new Light3d({ type: "ambient", color: "#3b4870" }));
 
 	// a floor for the shadows to land on
 	const F = 900;

@@ -32,7 +32,6 @@ import {
 	Light3d,
 	loader,
 	state,
-	Vector3d,
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
@@ -161,15 +160,15 @@ const createGame = async () => {
 			// A key light plus an ambient fill so the shadowed side stays
 			// readable rather than black.
 			app.world.addChild(
-				new Light3d(0, 0, 0, {
+				new Light3d({
 					type: "directional",
-					direction: new Vector3d(-0.35, -0.7, -0.6),
+					direction: [-0.35, -0.7, -0.6],
 					color: new Color(255, 244, 226),
 					intensity: 1.2,
 				}),
 			);
 			app.world.addChild(
-				new Light3d(0, 0, 0, {
+				new Light3d({
 					type: "ambient",
 					color: new Color(128, 146, 178),
 					intensity: 0.6,
