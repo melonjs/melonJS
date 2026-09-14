@@ -24,6 +24,7 @@
 - Mesh: a mesh with `normalize: false` and an explicit `scale` now sizes itself from its geometry when no `width`/`height` is given. It reported a zero-size box while drawing at full size, misleading frustum culling, pointer picking and the broadphase alike
 - Mesh: a `ShaderEffect` attached to a mesh drew the geometry unplaced and without the camera on WebGL, and was refused on WebGPU with a message naming the wrong reason ([#1658](https://github.com/melonjs/melonJS/issues/1658))
 - `Sprite3d`: `fog: false` reaches the mesh — a sprite builds its own settings for `Mesh` and did not copy it, so a sun could not be kept out of the haze. `transparent` and `castGroundShadow` are documented on `Sprite3d` too
+- Typings: `setUniform` accepts a number. It was typed `object|Float32Array`, so setting a `float` uniform — the commonest case, and the one the method's own examples show — did not compile from TypeScript. Scalars, arrays, `Float32Array` and any `toArray()`-bearing object are now all in the signature
 - Typings: documented options no longer fail to compile — the `Noise` settings `NoiseTexture2d` forwards, the `Mesh` settings `InstancedMesh` forwards, `setCurrentAnimation(name, { loop: true })`, non-object values for `Container#setChildsProperty`, an `HTMLCanvasElement` as `image`/`texture`, and `super.update(dt)` in a custom `Stage`. Settings shapes are exported as `MeshSettings`, `InstancedMeshSettings`, `NoiseTexture2dSettings` and `AnimationOptionsInput`
 
 ## [20.4.0] (melonJS 2) - _2026-09-09_

@@ -396,7 +396,17 @@ export default class ShaderEffect {
 	/**
 	 * Set the uniform to the given value
 	 * @param {string} name - the uniform name
-	 * @param {object|Float32Array} value - the value to assign to that uniform
+	 * @param {number|boolean|number[]|Float32Array|object} value - the value to assign to that
+	 * uniform. Scalars (`float`, `int`, `bool`) take a number or a boolean;
+	 * vectors and matrices take an array, a `Float32Array`, or any object
+	 * exposing `toArray()` — which is every {@link Vector2d},
+	 * {@link Vector3d}, {@link Color} and {@link Matrix3d}.
+	 * @example
+	 * // a scalar the body declares as `uniform float uStrength;`
+	 * fx.setUniform("uStrength", 0.5);
+	 * // a vec3 — an array, or anything with toArray()
+	 * fx.setUniform("uTint", [1.0, 0.82, 0.55]);
+	 * fx.setUniform("uOrigin", new me.Vector2d(0.5, 0.5));
 	 */
 	setUniform(name, value) {
 		// forward whenever a live shader exists (WebGL mode): GLShader handles
