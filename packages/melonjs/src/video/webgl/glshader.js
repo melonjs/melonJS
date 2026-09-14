@@ -366,9 +366,14 @@ export default class GLShader {
 	/**
 	 * Set the uniform to the given value
 	 * @param {string} name - the uniform name
-	 * @param {object|Float32Array} value - the value to assign to that uniform
+	 * @param {number|boolean|number[]|Float32Array|object} value - the value to assign to that
+	 * uniform. Scalars (`float`, `int`, `bool`) take a number or a boolean;
+	 * vectors and matrices take an array, a `Float32Array`, or any object
+	 * exposing `toArray()` — which is every {@link Vector2d},
+	 * {@link Vector3d}, {@link Color} and {@link Matrix3d}.
 	 * @example
 	 * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+	 * myShader.setUniform("uStrength", 0.5); // a scalar is a plain number
 	 */
 	setUniform(name, value) {
 		if (this.destroyed) {

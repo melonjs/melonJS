@@ -11,6 +11,8 @@
 
 - `Light3d`: `direction` and `position` accept a `Vector3d` as well as an `[x, y, z]` array, so a value the game already holds goes straight in — `color` already took a `Color`, a string or an array. The vector is read, not retained. Passing one used to be read by index and silently produce a `NaN` direction, so the light contributed nothing ([#1661](https://github.com/melonjs/melonJS/issues/1661))
 
+- Typings: a parsed glTF node's geometry is readable from TypeScript. `GLTFData.nodes` was `object[]` with its fields listed in prose, so `node.vertices` did not compile — the array is `GLTFNode[]` now. `Mesh`'s `texture` accepts a `Texture2d` and its `indices` a `Uint32Array`, both of which it already handled; a shader `Asset` may carry the `{glsl, wgsl}` pair the loader has always parsed
+
 ### Fixed
 - Renderable: opacity now cascades — `alpha` multiplies with the alpha already on the renderer instead of replacing it, so a child at 0.5 inside a parent at 0.5 draws at 0.25. **A nested renderable that was visibly opaque under a faded ancestor will now fade with it**
 - GLTFModel: a loaded model reported no bounds at all, so a model with a `Body` was filed in the broadphase away from where it stood and collided with nothing. Its extent now comes from the glTF bounding box, measured once at load
@@ -22,6 +24,7 @@
 - Mesh: a mesh with `normalize: false` and an explicit `scale` now sizes itself from its geometry when no `width`/`height` is given. It reported a zero-size box while drawing at full size, misleading frustum culling, pointer picking and the broadphase alike
 - Mesh: a `ShaderEffect` attached to a mesh drew the geometry unplaced and without the camera on WebGL, and was refused on WebGPU with a message naming the wrong reason ([#1658](https://github.com/melonjs/melonJS/issues/1658))
 - `Sprite3d`: `fog: false` reaches the mesh — a sprite builds its own settings for `Mesh` and did not copy it, so a sun could not be kept out of the haze. `transparent` and `castGroundShadow` are documented on `Sprite3d` too
+- Typings: `setUniform` accepts a number. It was typed `object|Float32Array`, so setting a `float` uniform — the commonest case, and the one the method's own examples show — did not compile from TypeScript. Scalars, arrays, `Float32Array` and any `toArray()`-bearing object are now all in the signature
 - Typings: documented options no longer fail to compile — the `Noise` settings `NoiseTexture2d` forwards, the `Mesh` settings `InstancedMesh` forwards, `setCurrentAnimation(name, { loop: true })`, non-object values for `Container#setChildsProperty`, an `HTMLCanvasElement` as `image`/`texture`, and `super.update(dt)` in a custom `Stage`. Settings shapes are exported as `MeshSettings`, `InstancedMeshSettings`, `NoiseTexture2dSettings` and `AnimationOptionsInput`
 
 ## [20.4.0] (melonJS 2) - _2026-09-09_
