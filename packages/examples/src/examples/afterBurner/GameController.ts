@@ -90,7 +90,6 @@ import {
 } from "./textures";
 import type {
 	BulletMover,
-	Camera3dWithRoll,
 	ContrailNode,
 	EnemyBulletMover,
 	EnemyMover,
@@ -214,6 +213,8 @@ export class GameController extends Renderable {
 	// current bank state, smoothed toward an input-driven target each
 	// frame. Player mesh transform is rebuilt from these every tick.
 	playerRoll = 0;
+	/** horizon bank, fed to the backdrop — see `updateCamera` for why not `camera.roll` */
+	bankRoll = 0;
 	playerPitch = 0;
 	// Tiny generated canvas used as the laser-bolt texture for bullets —
 	// avoids hauling around a placeholder PNG and keeps the asset list
@@ -467,13 +468,25 @@ export class GameController extends Renderable {
 		);
 		this.camera.pitch = (-this.player.pos.y / PLAY_BOUND_Y) * MAX_BANK_PITCH;
 		this.camera.yaw = (this.player.pos.x / PLAY_BOUND_X) * MAX_BANK_YAW;
-		// Roll lives as an ad-hoc property on the camera (Camera3d
-		// doesn't have a built-in roll field for now). SkyboxStage
-		// reads it back to rotate the horizon. Sign convention: banking
-		// right (positive X) rolls the cockpit left, which tilts the
-		// world to the right from the pilot's POV.
-		(this.camera as Camera3dWithRoll).roll =
-			(-this.player.pos.x / PLAY_BOUND_X) * MAX_BANK_ROLL;
+		// The HORIZON banks, the gameplay layer does not — and that is a
+		// deliberate arcade cheat, not a missing feature. `Camera3d.roll`
+		// exists and would bank the whole view, but this camera sits behind
+		// and below the ship rather than in its cockpit: rolling the view
+		// spins everything about the camera's own forward axis, which swings
+		// the player's craft out of its anchored lower-centre spot and drags
+		// the enemies around a screen-space reticle that does not rotate with
+		// them. A chase camera banking with its subject has to rotate ABOUT
+		// the subject, which is a roll plus a compensating translation. Until
+		// that exists, rolling only the painted backdrop is what sells the
+		// bank — the same trick the arcade original uses.
+		//
+		// Sign convention: banking right (positive X) rolls the cockpit left,
+		// tilting the world right from the pilot's POV.
+		this.bankRoll = (-this.player.pos.x / PLAY_BOUND_X) * MAX_BANK_ROLL;
+		const skybox = state.current();
+		if (skybox instanceof SkyboxStage) {
+			skybox.setRoll(this.bankRoll);
+		}
 	}
 
 	spawnBullet(): void {
@@ -627,7 +640,7 @@ export class GameController extends Renderable {
 			ENEMY_ROLL_DURATION_MAX_MS,
 		);
 		return new Tween(state)
-			.to({ roll: Math.PI * 2 }, duration)
+			.to({ roll: Math.PI * 2 }, { duration })
 			.delay(delay)
 			.onUpdate(() => {
 				mesh.currentTransform.identity();

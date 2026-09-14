@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
-import type { Camera3d, Mesh, Sprite, Tween } from "melonjs";
+import type { Mesh, Sprite, Tween } from "melonjs";
 
 export interface BulletMover {
 	sprite: Sprite;
@@ -70,13 +70,3 @@ export interface ContrailNode {
 	ageMs: number;
 	startScale: number;
 }
-
-/**
- * Camera3d augmented with an ad-hoc `roll` field set by GameController
- * and read by SkyboxStage to rotate the horizon. Engine-side Camera3d
- * doesn't model roll as a first-class rotation axis yet (pitch + yaw
- * only); we hang the value on the camera object via this typed view so
- * both producer and consumer agree on the contract without spreading
- * `(camera as Camera3d & { roll: number })` casts through the code.
- */
-export type Camera3dWithRoll = Camera3d & { roll: number };
