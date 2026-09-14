@@ -20,9 +20,15 @@ This is the single most important thing on this page.
 | vertical | **Y-down** — higher `y` is *lower* on screen | Y-up |
 | depth | **+Z forward** — higher `z` is *farther* away | −Z forward |
 
-Rotations are extrinsic XYZ. `Camera3d` exposes two of the three: `camera.pitch`
-(X, look up/down) and `camera.yaw` (Y, look left/right). **There is no `roll`**;
-neither camera applies a Z-axis bank to the view, so assigning one does nothing.
+Rotations are extrinsic XYZ, and `Camera3d` exposes all three: `camera.pitch`
+(X, look up/down), `camera.yaw` (Y, look left/right) and `camera.roll` (Z, bank
+the horizon). The view is `R(yaw) ∘ R(pitch) ∘ R(roll)` inverted, and the frustum
+planes come off that same matrix — so culling follows a banked view.
+
+`camera.rotate()` is NOT the way to bank a 3D camera. It writes the inherited
+`currentTransform`, which a 3D view never reads, so the call is silently inert.
+Set `roll`. (On a `Camera2d` it is the other way round: roll IS that transform's
+rotation, which is why `worldToLocal` / `localToWorld` compensate for it.)
 
 The payoff is that 2D code translates directly — anywhere you used `pos.x` /
 `pos.y`, add `pos.z` and the maths still holds. The cost is that every

@@ -17,6 +17,7 @@ export type { Fog3dState, FogMode, FogOptions } from "./fog.ts";
 // allocation only happens once per module load, not per frame.
 const AXIS_X = new Vector3d(1, 0, 0);
 const AXIS_Y = new Vector3d(0, 1, 0);
+const AXIS_Z = new Vector3d(0, 0, 1);
 
 // Scratch matrices reused by `_rebuildFrustumPlanes` to avoid per-frame
 // allocation. Single-instance is safe because draw / update is
@@ -55,9 +56,11 @@ const _bScratchB = new Vector3d();
  *   farther from the camera and renders smaller. Matches melonJS's
  *   2D conventions so existing Camera2d code translates directly.
  * - **Rotations are extrinsic XY.** `pitch` (X axis, look up/down) and
- *   `yaw` (Y axis, look left/right). There is no roll: the inherited
- *   `Camera2d.rotation` is not read by the view transform or the frustum
- *   rebuild, so a screen-plane bank has no effect on a 3D camera.
+ *   `yaw` (Y axis, look left/right) and `roll` (Z axis, bank the horizon).
+ *   The view is `R(yaw) ∘ R(pitch) ∘ R(roll)` inverted; the frustum planes are
+ *   extracted from that same matrix, so culling follows a banked view. The
+ *   inherited `currentTransform` is still NOT read — `camera.rotate()` on a
+ *   3D camera does nothing, so set `roll` rather than rotating the camera.
  * - **Follow offset (PR B scope).** When a target is set,
  *   `followOffset` is applied in **world space**:
  *   `camera.pos = target.pos + followOffset`. Target-rotation-aware
@@ -191,6 +194,35 @@ export default class Camera3d extends Camera2d {
 	yaw: number;
 
 	/**
+	 * Z-axis rotation in radians (bank the horizon). Positive values
+	 * roll the camera clockwise, so the world tilts anticlockwise —
+	 * the view from a cockpit banking right.
+	 *
+	 * Completes the `pitch` / `yaw` / `roll` trio. Note this is NOT the
+	 * inherited {@link Renderable#rotation}: a 3D camera builds its view
+	 * from these three angles and never reads `currentTransform`, which
+	 * is why `camera.rotate()` on a `Camera3d` is silently inert. A
+	 * `Camera2d` is the other way round — it has no `roll` because a
+	 * screen-plane rotation IS its only rotation, and `rotate()` already
+	 * does it through `currentTransform`.
+	 * @default 0
+	 * @example
+	 * // bank with the player's steering, as a flight game would
+	 * camera.roll = (player.pos.x / PLAY_BOUND_X) * MAX_BANK;
+	 */
+	override get roll(): number {
+		return this._roll;
+	}
+
+	override set roll(value: number) {
+		// Overrides the 2D accessor deliberately. A 2D camera's roll IS a
+		// `currentTransform` rotation, but a 3D view is built from its three
+		// angles and never reads that matrix — so rotating it here would leave
+		// a transform that does nothing in 3D but still skews `worldToLocal`.
+		this._roll = value;
+	}
+
+	/**
 	 * World-space offset from the followed target. When `target` is
 	 * set via {@link Camera2d#follow}, the camera position resolves to
 	 * `target.pos + followOffset`. Common usage: `(0, -2, -8)` for a
@@ -242,6 +274,7 @@ export default class Camera3d extends Camera2d {
 
 		this.pitch = 0;
 		this.yaw = 0;
+		this.roll = 0;
 		this.followOffset = new Vector3d(0, 0, 0);
 		this.lookAhead = new Vector3d(0, 0, 1);
 
@@ -603,6 +636,7 @@ export default class Camera3d extends Camera2d {
 		_basis.identity();
 		_basis.rotate(this.yaw, AXIS_Y);
 		_basis.rotate(this.pitch, AXIS_X);
+		_basis.rotate(this.roll, AXIS_Z);
 		const b = _basis.val;
 		state.heightAxis[0] = k * b[1];
 		state.heightAxis[1] = k * b[5];
@@ -642,6 +676,7 @@ export default class Camera3d extends Camera2d {
 		_basis.identity();
 		_basis.rotate(this.yaw, AXIS_Y);
 		_basis.rotate(this.pitch, AXIS_X);
+		_basis.rotate(this.roll, AXIS_Z);
 		const v = _basis.val;
 		right.set(v[0], v[1], v[2]);
 		up.set(v[4], v[5], v[6]);
@@ -804,6 +839,9 @@ export default class Camera3d extends Camera2d {
 		//   1. rotate(-pitch, X)  → currentTransform = R(-pitch)
 		//   2. rotate(-yaw,   Y)  → currentTransform = R(-pitch) ∘ R(-yaw)
 		//   3. translate(-pos)    → currentTransform = R(-pitch) ∘ R(-yaw) ∘ T(-pos)
+		if (this.roll !== 0) {
+			container.rotate(-this.roll, AXIS_Z);
+		}
 		if (this.pitch !== 0) {
 			container.rotate(-this.pitch, AXIS_X);
 		}
@@ -846,6 +884,9 @@ export default class Camera3d extends Camera2d {
 		}
 		if (this.pitch !== 0) {
 			container.rotate(this.pitch, AXIS_X);
+		}
+		if (this.roll !== 0) {
+			container.rotate(this.roll, AXIS_Z);
 		}
 	}
 
@@ -1136,6 +1177,9 @@ export default class Camera3d extends Camera2d {
 		// rotate (pitch then yaw), translate by -pos, then pre-multiply by the
 		// frustum projection.
 		_viewMatrix.identity();
+		if (this.roll !== 0) {
+			_viewMatrix.rotate(-this.roll, AXIS_Z);
+		}
 		if (this.pitch !== 0) {
 			_viewMatrix.rotate(-this.pitch, AXIS_X);
 		}
@@ -1181,6 +1225,9 @@ export default class Camera3d extends Camera2d {
 		// `_applyContainerViewTransform` builds it on the container —
 		// rotate first (pitch then yaw), then translate.
 		_viewMatrix.identity();
+		if (this.roll !== 0) {
+			_viewMatrix.rotate(-this.roll, AXIS_Z);
+		}
 		if (this.pitch !== 0) {
 			_viewMatrix.rotate(-this.pitch, AXIS_X);
 		}

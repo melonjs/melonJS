@@ -144,6 +144,9 @@ export default class Camera2d extends Renderable {
 	 */
 	_zoom: number;
 
+	/** backing store for {@link Camera2d#roll} — see the accessor */
+	_roll: number;
+
 	/**
 	 * the world-space projection matrix for non-default cameras (offset/zoomed).
 	 * Maps world coordinates to the camera's screen viewport.
@@ -267,6 +270,7 @@ export default class Camera2d extends Renderable {
 		this.screenX = 0;
 		this.screenY = 0;
 		this.zoom = 1;
+		this._roll = 0;
 		this.worldProjection = new Matrix3d();
 		this.screenProjection = new Matrix3d();
 		this._worldView = new Bounds();
@@ -381,6 +385,54 @@ export default class Camera2d extends Renderable {
 	 * // zoom out to show the full level in a 180x100 minimap
 	 * camera.zoom = Math.min(180 / levelWidth, 100 / levelHeight);
 	 */
+	/**
+	 * Roll this camera in the screen plane, in radians — the 2D spelling of
+	 * {@link Camera3d#roll}, so a helper that banks "a camera" works on either.
+	 *
+	 * Absolute and idempotent: assigning the same angle twice leaves the view
+	 * where it was. It is a thin accessor over the camera's own
+	 * `currentTransform`, which is what {@link Renderable#rotate} writes and
+	 * what `worldToLocal` / `localToWorld` already undo — so picking under a
+	 * rolled 2D camera stays correct for free.
+	 *
+	 * A 2D camera has no pitch or yaw, so a screen-plane rotation is its only
+	 * rotation; on a `Camera3d` the roll is a real view angle instead, because
+	 * a 3D view is built from its three angles and never reads
+	 * `currentTransform`.
+	 *
+	 * This OWNS the camera's `currentTransform`: the setter rebuilds it rather
+	 * than composing onto it, so assigning every frame cannot drift and
+	 * `roll = 0` lands back on an exact identity. (A delta-based version does
+	 * neither — a banking camera would accumulate float error across thousands
+	 * of frames.) The cost is that a manual `rotate()` / `scale()` on the
+	 * camera itself is discarded by the next assignment; a camera has `zoom`
+	 * and `shake` for those jobs, and neither touches this matrix.
+	 * @default 0
+	 * @example
+	 * camera.roll = Math.PI / 32; // a slight dutch angle
+	 */
+	get roll(): number {
+		return this._roll;
+	}
+
+	set roll(value: number) {
+		if (value === this._roll) {
+			return;
+		}
+		this._roll = value;
+		// Rebuilt, not composed — see the note above on drift.
+		this.currentTransform.identity();
+		if (value !== 0) {
+			this.currentTransform.rotate(value);
+		}
+		// `worldToLocal` reads this cached inverse, and `update()` only
+		// refreshes it once a frame — refresh it here so a pick taken straight
+		// after assigning the roll is already correct.
+		this.invCurrentTransform.copy(this.currentTransform).invert();
+		this.updateBounds();
+		this.isDirty = true;
+	}
+
 	get zoom(): number {
 		return this._zoom;
 	}
@@ -450,6 +502,8 @@ export default class Camera2d extends Renderable {
 
 		// reset the transformation matrix
 		this.currentTransform.identity();
+		// the roll lives IN that matrix, so clearing one clears the other
+		this._roll = 0;
 		this.invCurrentTransform.identity().invert();
 
 		// reset the projection matrices
