@@ -27,12 +27,38 @@ class DeviceInfo extends Renderable {
 			font: "Arial",
 			size: "24px",
 			fillStyle: "#FFFFFF",
+			// so a line's `y` is the top of its box: without this the first
+			// readout at y = 0 sits mostly above the canvas and never shows
+			textBaseline: "top",
 		});
 		this.anchorPoint.set(0, 0);
 	}
 
 	override update() {
 		return true;
+	}
+
+	/**
+	 * Draw one readout line.
+	 *
+	 * `Text` is a renderable, not the old `Font` blitter: `draw()` takes the
+	 * renderer and nothing else, and the label goes where its `pos` says. The
+	 * former `font.draw(renderer, text, x, y)` shape silently dropped the last
+	 * three arguments, so every call here drew the same empty label at (0, 0)
+	 * and the example rendered no text at all.
+	 */
+	private line(
+		renderer: WebGLRenderer | CanvasRenderer,
+		text: string,
+		x: number,
+		y: number,
+	) {
+		// per component: `pos.set(x, y)` is the 2-argument form and zeroes z,
+		// which is `depth`
+		this.font.pos.x = x;
+		this.font.pos.y = y;
+		this.font.setText(text);
+		this.font.draw(renderer);
 	}
 
 	override draw(renderer: WebGLRenderer | CanvasRenderer) {
@@ -43,28 +69,28 @@ class DeviceInfo extends Renderable {
 		renderer.setColor("#ffffff");
 
 		if (device.hasDeviceOrientation) {
-			this.font.draw(
+			this.line(
 				renderer,
 				"Touch to enable motion detection",
 				10,
-				game.viewport.height - 30,
+				game.viewport.height - 40,
 			);
 		} else {
-			this.font.draw(
+			this.line(
 				renderer,
 				"Motion detection not supported",
 				10,
-				game.viewport.height - 30,
+				game.viewport.height - 40,
 			);
 		}
 
-		this.font.draw(renderer, `Gamma: ${device.gamma}`, 10, 0);
-		this.font.draw(renderer, `Beta: ${device.beta}`, 10, 30);
-		this.font.draw(renderer, `Alpha: ${device.alpha}`, 10, 60);
-		this.font.draw(renderer, `X: ${device.accelerationX}`, 10, 90);
-		this.font.draw(renderer, `Y: ${device.accelerationY}`, 10, 120);
-		this.font.draw(renderer, `Z: ${device.accelerationZ}`, 10, 150);
-		this.font.draw(renderer, `orientation: ${orientation}`, 10, 180);
+		this.line(renderer, `Gamma: ${device.gamma}`, 10, 30);
+		this.line(renderer, `Beta: ${device.beta}`, 10, 60);
+		this.line(renderer, `Alpha: ${device.alpha}`, 10, 90);
+		this.line(renderer, `X: ${device.accelerationX}`, 10, 120);
+		this.line(renderer, `Y: ${device.accelerationY}`, 10, 150);
+		this.line(renderer, `Z: ${device.accelerationZ}`, 10, 180);
+		this.line(renderer, `orientation: ${orientation}`, 10, 210);
 
 		// draw a red circle based on the device motion and orientation
 		const deltaX =
