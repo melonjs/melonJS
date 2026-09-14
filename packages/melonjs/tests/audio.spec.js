@@ -67,9 +67,6 @@ const loadClip = (name, durationSec) => {
 	});
 };
 
-/** let `play()`'s `_playLock` clear, so a fade applies instead of queueing */
-const settle = () => new Promise((r) => setTimeout(r, 60));
-
 describe("audio", () => {
 	it("should export init function", () => {
 		expect(typeof audio.init).toBe("function");
@@ -764,7 +761,9 @@ describe("audio", () => {
 				audio.fade("fade-equal", 0.3, 0.3, 200, id);
 				expect(voice._volume).toBeCloseTo(0.3, 5);
 				expect(voice._interval).toBeUndefined();
-				await new Promise((r) => setTimeout(r, 60));
+				await new Promise((r) => {
+					setTimeout(r, 60);
+				});
 				expect(Number.isFinite(voice._volume)).toBe(true);
 				audio.unload("fade-equal");
 			});
@@ -774,7 +773,9 @@ describe("audio", () => {
 				const { id, voice } = await voiceOf("fade-real");
 				audio.fade("fade-real", 1, 0, 60, id);
 				expect(voice._interval).toBeDefined();
-				await new Promise((r) => setTimeout(r, 200));
+				await new Promise((r) => {
+					setTimeout(r, 200);
+				});
 				expect(Number.isFinite(voice._volume)).toBe(true);
 				expect(voice._volume).toBeCloseTo(0, 1);
 				audio.unload("fade-real");
