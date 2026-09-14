@@ -966,5 +966,56 @@ describe("Camera3d", () => {
 				expect(a[i]).toBeCloseTo(b[i], 5);
 			}
 		});
+		// Not a defect — a measurement, kept so the numbers behind a recurring
+		// "the shadow is missing" report stay checkable.
+		//
+		// A blob ground shadow is a decal lying IN the ground plane. Seen from a
+		// camera only a little above that plane it is viewed at a grazing angle,
+		// so its on-screen HEIGHT falls off with the square of the distance while
+		// its width falls off linearly. Past a certain range it is thinner than a
+		// pixel and no opacity can rescue it, because the primitive covers no
+		// sample point at all.
+		//
+		// jungleRabbit's numbers: camera ~221 units above the water, 480x270,
+		// 60-degree vertical fov. A carrot's blob is ~41 units across.
+		describe("ground-plane decals at grazing incidence", () => {
+			const W = 480;
+			const H = 270;
+			const CAM_HEIGHT = 221;
+
+			/** screen height in px of a `size`-deep ground patch `dist` ahead */
+			const patchHeightPx = (dist, size) => {
+				const cam = new Camera3d(0, 0, W, H);
+				cam.fov = Math.PI / 3;
+				cam.pos.set(0, 0, 0);
+				cam.depth = 0;
+				cam.lookAt(0, 0, 100);
+				// two points on the ground plane, `size` apart in depth
+				const near = cam.worldToScreen(new Vector3d(0, CAM_HEIGHT, dist));
+				const far = cam.worldToScreen(new Vector3d(0, CAM_HEIGHT, dist + size));
+				return near === null || far === null ? 0 : Math.abs(near.y - far.y);
+			};
+
+			it("falls off quadratically, not linearly, with distance", () => {
+				// doubling the distance quarters the height — the property that
+				// makes a decal vanish so much faster than the object casting it
+				const a = patchHeightPx(1000, 41);
+				const b = patchHeightPx(2000, 41);
+				expect(a / b).toBeGreaterThan(3.4);
+				expect(a / b).toBeLessThan(4.6);
+			});
+
+			it("is sub-pixel well before the far plane", () => {
+				// the reported symptom: nothing renders, at any opacity
+				expect(patchHeightPx(620, 41)).toBeGreaterThan(3);
+				expect(patchHeightPx(5820, 41)).toBeLessThan(1);
+			});
+
+			it("cannot be rescued by making the blob bigger", () => {
+				// visibility range goes as sqrt(size), so 2.5x the blob buys 1.6x
+				// the range — still sub-pixel where a carrot actually spawns
+				expect(patchHeightPx(5820, 41 * 2.5)).toBeLessThan(1);
+			});
+		});
 	});
 });

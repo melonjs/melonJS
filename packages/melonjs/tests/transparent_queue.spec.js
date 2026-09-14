@@ -269,6 +269,98 @@ describe("the transparent pass (#1516)", () => {
 		});
 	});
 
+	// A mesh is keyed by where its GEOMETRY is, not by where its origin is.
+	//
+	// Only `normalize: false` meshes can tell the difference: normalization
+	// recentres the vertices into [-0.5, 0.5], so an origin-centred mesh's
+	// centre IS its origin. Scene meshes opt out to keep real-world scale —
+	// glTF nodes, and jungleRabbit's river, one plane spanning 10,000 units
+	// with its origin pinned to the boat. Keyed on that origin it sorted as
+	// the NEAREST transparent object in the scene and was replayed last, over
+	// every prop shadow ahead of the boat.
+	describe("keying a large mesh by its geometry, not its origin", () => {
+		/** a long strip spanning `len` in z, its origin at either end */
+		const strip = (len, originAtNearEnd) => {
+			// local z runs away from the origin, so the same world volume can
+			// be authored with the origin at either end
+			const z0 = originAtNearEnd ? -len : 0;
+			const z1 = originAtNearEnd ? 0 : len;
+			const mesh = new Mesh(0, 0, {
+				vertices: [-64, -64, z0, 64, -64, z0, 64, 64, z1, -64, 64, z1],
+				uvs: [0, 0, 1, 0, 1, 1, 0, 1],
+				indices: [0, 1, 2, 0, 2, 3],
+				texture: whiteAtlas(),
+				// the whole point: keep the authored positions, so the origin
+				// and the geometry can diverge
+				normalize: false,
+				scale: 1,
+				width: 128,
+				height: 128,
+				cullBackFaces: false,
+				lit: false,
+			});
+			mesh._useWorldSpace = true;
+			mesh.transparent = true;
+			return mesh;
+		};
+
+		it("does not give a huge mesh the same key as a point at its origin", (ctx) => {
+			requireWebGL(ctx);
+			setup();
+			const tiny = quad(1);
+			tiny.transparent = true;
+			draw(tiny, 1000);
+			const huge = strip(8000, false);
+			draw(huge, 1000);
+
+			const keys = renderer._transparentPool.slice(0, 2).map((e) => {
+				return e.key;
+			});
+			expect(keys[0]).not.toBeCloseTo(keys[1], 0);
+		});
+
+		it("orders the SAME world volume identically however it was authored", (ctx) => {
+			requireWebGL(ctx);
+			// Two strips occupying the identical world volume — z 1000..5000 —
+			// authored with their origin at opposite ends. Sort order is a
+			// property of where the geometry is, so the two must agree; keyed
+			// on the origin they disagreed by the full length of the strip.
+			setup();
+			const originFar = strip(4000, false);
+			draw(originFar, 1000); // origin z=1000, body 1000..5000
+			const originNear = strip(4000, true);
+			draw(originNear, 5000); // origin z=5000, body 1000..5000
+
+			const [a, b] = renderer._transparentPool;
+			expect(a.key).toBeCloseTo(b.key, 0);
+		});
+
+		it("no longer paints a near-origin plane over a quad inside its span", (ctx) => {
+			requireWebGL(ctx);
+			// The consequence, in pixels. An opaque red quad at z=4000 sits
+			// inside a blue plane spanning z 1000..5000 whose origin is at the
+			// near end (5000). By origin the plane keys nearest and is
+			// replayed last, winning the pixel at 0.8 alpha: (51, 0, 204). By
+			// geometry its centre is 3000 — behind the quad — so the quad is
+			// replayed last and keeps its own colour.
+			setup([255, 255, 255]);
+			const inside = quad();
+			inside.transparent = true;
+			inside.tint.setColor(255, 0, 0);
+			draw(inside, 4000);
+
+			const plane = strip(4000, true);
+			plane.tint.setColor(0, 0, 255);
+			plane.setOpacity(0.8);
+			draw(plane, 5000);
+
+			renderer.flushTransparent();
+			const px = readPixel();
+			expect(px[0]).toBeGreaterThan(180);
+			expect(px[2]).toBeLessThan(80);
+		});
+	});
+
 	describe("ordering", () => {
 		/** near red over far blue, both half alpha, over white */
 		const composite = (nearFirst) => {
