@@ -17,6 +17,9 @@ import UIContainer from "./entities/HUD";
 import { MinimapCamera } from "./entities/minimap";
 import { gameState } from "./gameState";
 
+/** draw order for the screen-space overlays — above every level layer */
+const HUD_Z = 100;
+
 export class PlayScreen extends Stage {
 	private virtualJoypad?: VirtualJoypad;
 	private HUD?: UIContainer;
@@ -40,14 +43,15 @@ export class PlayScreen extends Stage {
 		if (typeof this.HUD === "undefined") {
 			this.HUD = new UIContainer();
 		}
-		app.world.addChild(this.HUD);
+		// explicit z: the HUD draws over the level
+		app.world.addChild(this.HUD, HUD_Z);
 
 		// display if debugPanel is enabled or on mobile
 		if (plugin.cache.debugPanel?.panel.visible || device.touch) {
 			if (typeof this.virtualJoypad === "undefined") {
 				this.virtualJoypad = new VirtualJoypad();
 			}
-			app.world.addChild(this.virtualJoypad);
+			app.world.addChild(this.virtualJoypad, HUD_Z);
 		}
 
 		// vignette post-effect + built-in color grading (always applied last).

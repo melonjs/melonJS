@@ -213,8 +213,10 @@ export class VirtualJoypad extends Container {
 		// Use screen coordinates
 		this.floating = true;
 
-		// make sure our object is always draw first
-		this.z = Number.POSITIVE_INFINITY;
+		// Draw order comes from the `addChild(child, z)` in `play.ts`.
+		// `renderable.z` is not a property — the accessor is `depth`, an alias
+		// for `pos.z` — so assigning it here only ever made an expando that
+		// nothing read, and the container was ordered by `autoDepth` instead.
 
 		// give a name
 		this.name = "VirtualJoypad";
