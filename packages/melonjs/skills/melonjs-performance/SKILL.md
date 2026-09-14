@@ -81,10 +81,16 @@ Two rules that cause subtle bugs when missed:
   successfully recycled object never sees it. Pair event subscriptions with
   `onActivateEvent` / `onDeactivateEvent` instead, or you leak handlers.
 
-Engine classes are poolable too: `pool.pull("Tween", target)`. The registered
-names carry no `me.` prefix — `Entity`, `Collectable`, `Trigger`, `Light2d`,
+Engine classes are poolable too: `pool.pull("Tween", target)`. The canonical
+names are unprefixed — `Entity`, `Collectable`, `Trigger`, `Light2d`,
 `Particle`, `Sprite`, `NineSliceSprite`, `Renderable`, `Text`, `BitmapText`,
 `ImageLayer`, `Tween`, `ColorLayer`.
+
+`pool.register` additionally aliases every name under an `me.` prefix, pointing
+at the same entry, so `pool.pull("me.Tween")` resolves identically — and the
+same alias is registered with the Tiled object factory, which is why a map
+authored against melonJS 1.x still finds its classes. Prefer the unprefixed
+name in new code; do not "correct" an `me.`-prefixed one, it is not broken.
 
 ## `scale()` is multiplicative
 
