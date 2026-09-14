@@ -25,6 +25,34 @@ app.viewport.addPostEffect(new VignetteEffect(app.renderer));
 `renderable.shader = …` is **deprecated since 19.2.0**, and its setter destroys
 whatever it replaces. Use `addPostEffect` / `getPostEffect` / `removePostEffect`.
 
+### A camera effect covers the HUD too
+
+A camera's post-effect brackets the **entire** world draw — floating children
+included. So the obvious way to write a full-screen pass also washes over every
+HUD label in that world, which is rarely what you want.
+
+To land a pass *after* the world but *before* the HUD, host the effect on a
+screen-filling floating renderable ordered below the HUD's z instead:
+
+```js
+const quad = new Sprite(0, 0, { image: anyImage });
+quad.anchorPoint.set(0, 0);
+quad.scale(viewW / anyImage.width, viewH / anyImage.height);
+quad.floating = true;                 // its own uv is now screen space
+quad.blendMode = "additive";
+quad.addPostEffect(myEffect);
+world.addChild(quad, HUD_Z - 10);     // BELOW the labels, not above
+```
+
+Two things follow from the quad filling the frame: its own `uv` is screen space
+(so a pass like this needs none of the `screen_uv` / `screen_texture` builtins),
+and the incoming `color` is the quad's own texture, which a body that paints
+from scratch can ignore entirely.
+
+Depth here is easy to get backwards — a higher z draws **later**, i.e. on top.
+Verify it by returning a flat colour from the body for one frame: whatever it
+tints is what the pass covers.
+
 ## Toggle with `enabled`, do not remove
 
 **`removePostEffect()` destroys the effect** — it calls `effect.destroy()` and
