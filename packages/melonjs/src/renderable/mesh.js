@@ -1619,6 +1619,69 @@ export default class Mesh extends Renderable {
 	}
 
 	/**
+	 * The centre of this mesh's own geometry, in MODEL space, written into
+	 * `_lcx` / `_lcy` / `_lcz`.
+	 *
+	 * The transparent pass needs a point that represents where a mesh
+	 * actually is. Its origin does not: a mesh whose vertices run away from
+	 * the origin — a ground plane authored from one corner, a river that
+	 * trails behind the boat it is parented to — sits nowhere near it. Keyed
+	 * on that origin, such a mesh sorts by an authoring choice rather than by
+	 * its position.
+	 *
+	 * Cached against `_geometryVersion`, so the vertex walk happens once per
+	 * geometry edit rather than once per queued draw. An origin-centred mesh
+	 * — which is most of them — resolves to (0, 0, 0) and keys exactly as it
+	 * did before.
+	 * @ignore
+	 * @internal
+	 */
+	_updateLocalCenter() {
+		if (this._lcVersion === this._geometryVersion) {
+			return;
+		}
+		const v = this.originalVertices;
+		const n = this.vertexCount;
+		let minX = Infinity;
+		let minY = Infinity;
+		let minZ = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+		let maxZ = -Infinity;
+		if (v !== undefined && n > 0) {
+			for (let i = 0; i < n; i++) {
+				const x = v[i * 3];
+				const y = v[i * 3 + 1];
+				const z = v[i * 3 + 2];
+				if (x < minX) {
+					minX = x;
+				}
+				if (x > maxX) {
+					maxX = x;
+				}
+				if (y < minY) {
+					minY = y;
+				}
+				if (y > maxY) {
+					maxY = y;
+				}
+				if (z < minZ) {
+					minZ = z;
+				}
+				if (z > maxZ) {
+					maxZ = z;
+				}
+			}
+		}
+		// an empty or absent buffer leaves the origin, which is what the key
+		// used before this existed
+		this._lcx = Number.isFinite(minX) ? (minX + maxX) * 0.5 : 0;
+		this._lcy = Number.isFinite(minY) ? (minY + maxY) * 0.5 : 0;
+		this._lcz = Number.isFinite(minZ) ? (minZ + maxZ) * 0.5 : 0;
+		this._lcVersion = this._geometryVersion;
+	}
+
+	/**
 	 * The mesh's world-space 3D axis-aligned bounding box. This is the 3D analog
 	 * of {@link Renderable#getBounds} (which returns a flat 2D box from
 	 * `width`/`height` and so cannot describe a mesh's real extent).

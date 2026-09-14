@@ -482,11 +482,33 @@ export default class Renderer {
 		// the pass. The length of the view-space position needs no such
 		// assumption, and agrees exactly with the old form whenever the view
 		// really is rigid — a rotation preserves length.
+		// Measured at the GEOMETRY's centre, not at the model matrix's
+		// translation. The translation is the mesh's ORIGIN, and a mesh whose
+		// vertices run away from its origin sits nowhere near it — a ground
+		// plane authored from one corner, or a river plane parented to the
+		// boat it trails behind. Keyed on the origin, two meshes occupying the
+		// identical world volume sort differently depending on where their
+		// author put it, and a long plane whose origin sits at the near end
+		// keys as the nearest thing in the scene and is replayed over
+		// everything inside its own span.
+		//
+		// `_updateLocalCenter` caches per geometry edit, and resolves to the
+		// origin for an origin-centred mesh, which is most of them.
 		const v = this.currentTransform.val;
 		const m = modelMatrix.val;
-		const mx = m[12];
-		const my = m[13];
-		const mz = m[14];
+		let cx = 0;
+		let cy = 0;
+		let cz = 0;
+		if (typeof mesh?._updateLocalCenter === "function") {
+			mesh._updateLocalCenter();
+			cx = mesh._lcx;
+			cy = mesh._lcy;
+			cz = mesh._lcz;
+		}
+		// that centre through the model matrix, giving its world position
+		const mx = m[0] * cx + m[4] * cy + m[8] * cz + m[12];
+		const my = m[1] * cx + m[5] * cy + m[9] * cz + m[13];
+		const mz = m[2] * cx + m[6] * cy + m[10] * cz + m[14];
 		const dx = v[0] * mx + v[4] * my + v[8] * mz + v[12];
 		const dy = v[1] * mx + v[5] * my + v[9] * mz + v[13];
 		const dz = v[2] * mx + v[6] * my + v[10] * mz + v[14];
