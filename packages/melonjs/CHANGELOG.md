@@ -14,6 +14,7 @@
 - Typings: a parsed glTF node's geometry is readable from TypeScript. `GLTFData.nodes` was `object[]` with its fields listed in prose, so `node.vertices` did not compile — the array is `GLTFNode[]` now. `Mesh`'s `texture` accepts a `Texture2d` and its `indices` a `Uint32Array`, both of which it already handled; a shader `Asset` may carry the `{glsl, wgsl}` pair the loader has always parsed
 
 ### Fixed
+- `audio.fade()` with a zero duration, or with matching start and end volumes, poisoned the volume with `NaN` and left an interval running forever — the step divided by the duration, and the exit test compares the two volumes strictly so equal ones never satisfied it. The reported symptom was a later `setValueAtTime` throwing on a non-finite value. Such a fade now settles on the target immediately without starting an interval
 - Renderable: opacity now cascades — `alpha` multiplies with the alpha already on the renderer instead of replacing it, so a child at 0.5 inside a parent at 0.5 draws at 0.25. **A nested renderable that was visibly opaque under a faded ancestor will now fade with it**
 - GLTFModel: a loaded model reported no bounds at all, so a model with a `Body` was filed in the broadphase away from where it stood and collided with nothing. Its extent now comes from the glTF bounding box, measured once at load
 - Mesh: `resize()`, `recalc()` and the `width`/`height` setters threw on every mesh — `Polygon#recalc` walked the `normals` and `indices` slots a `Mesh` repurposes for typed arrays. The polygon's edge normals are now `edgeNormals`

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getSoundOrThrow } from "../src/audio/state.ts";
 import { audio } from "../src/index.js";
 
 // Build a valid silent WAV in-memory and serve it as a data URL.
@@ -46,14 +47,14 @@ const makeSilentWavDataUrl = (durationSec = 0.01) => {
 	return `data:audio/wav;base64,${btoa(bin)}`;
 };
 
-const loadClip = (name) => {
+const loadClip = (name, durationSec) => {
 	audio.init("wav");
 	return new Promise((resolve, reject) => {
 		const timeout = setTimeout(() => {
 			reject(new Error(`timeout loading ${name}`));
 		}, 2000);
 		audio.load(
-			{ name, src: makeSilentWavDataUrl() },
+			{ name, src: makeSilentWavDataUrl(durationSec) },
 			() => {
 				clearTimeout(timeout);
 				resolve();
@@ -65,6 +66,9 @@ const loadClip = (name) => {
 		);
 	});
 };
+
+/** let `play()`'s `_playLock` clear, so a fade applies instead of queueing */
+const settle = () => new Promise((r) => setTimeout(r, 60));
 
 describe("audio", () => {
 	it("should export init function", () => {
@@ -712,6 +716,68 @@ describe("audio", () => {
 				}).not.toThrow();
 
 				audio.unload(CLIP);
+			});
+		});
+		// Regression: a fade with nothing to interpolate used to start an
+		// interval anyway, and that interval was broken two ways at once —
+		// see the guard in `Sound#fade`.
+		//
+		// These drive `fade` on a loaded-but-not-playing clip. `play()` holds
+		// `_playLock` until the source actually starts, which never happens in
+		// a headless context with no user gesture, and `fade` QUEUES rather
+		// than applies while that lock is held — so a test that played first
+		// would assert against a fade that never ran.
+		describe("degenerate fades (regression)", () => {
+			const voiceOf = async (name) => {
+				await loadClip(name, 2);
+				const sound = getSoundOrThrow(name);
+				const id = sound._getSoundIds()[0];
+				return { sound, id, voice: sound._soundById(id) };
+			};
+
+			it("zero duration settles immediately, with no interval", async () => {
+				const { id, voice } = await voiceOf("fade-zero-len");
+				// `tick` divides the elapsed time by the duration, so len=0
+				// gave Infinity (or 0/0) and `diff * tick` wrote NaN into the
+				// volume — surfacing later as a non-finite `setValueAtTime`.
+				audio.fade("fade-zero-len", 1, 0, 0, id);
+				expect(Number.isFinite(voice._volume)).toBe(true);
+				expect(voice._volume).toBeCloseTo(0, 5);
+				expect(voice._interval).toBeUndefined();
+				audio.unload("fade-zero-len");
+			});
+
+			it("zero duration with equal endpoints is finite too", async () => {
+				const { id, voice } = await voiceOf("fade-zero-equal");
+				audio.fade("fade-zero-equal", 0.5, 0.5, 0, id);
+				expect(Number.isFinite(voice._volume)).toBe(true);
+				expect(voice._volume).toBeCloseTo(0.5, 5);
+				expect(voice._interval).toBeUndefined();
+				audio.unload("fade-zero-equal");
+			});
+
+			it("equal endpoints settle instead of ticking forever", async () => {
+				const { id, voice } = await voiceOf("fade-equal");
+				// The exit test wants `to < from` or `to > from`; equal
+				// endpoints satisfy neither, so the interval never cleared
+				// even with a real duration.
+				audio.fade("fade-equal", 0.3, 0.3, 200, id);
+				expect(voice._volume).toBeCloseTo(0.3, 5);
+				expect(voice._interval).toBeUndefined();
+				await new Promise((r) => setTimeout(r, 60));
+				expect(Number.isFinite(voice._volume)).toBe(true);
+				audio.unload("fade-equal");
+			});
+
+			it("a genuine fade still starts an interval", async () => {
+				// the guard must not swallow the normal case
+				const { id, voice } = await voiceOf("fade-real");
+				audio.fade("fade-real", 1, 0, 60, id);
+				expect(voice._interval).toBeDefined();
+				await new Promise((r) => setTimeout(r, 200));
+				expect(Number.isFinite(voice._volume)).toBe(true);
+				expect(voice._volume).toBeCloseTo(0, 1);
+				audio.unload("fade-real");
 			});
 		});
 	});
