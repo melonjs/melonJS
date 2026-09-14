@@ -1725,4 +1725,64 @@ describe("Camera2d", () => {
 			expect(camera.pos.y).toBe(100);
 		});
 	});
+	describe("roll (2D)", () => {
+		it("defaults to zero", () => {
+			expect(new Camera2d(0, 0, 800, 600).roll).toBe(0);
+		});
+
+		it("is absolute, not cumulative", () => {
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.roll = 0.4;
+			cam.roll = 0.4;
+			expect(cam.roll).toBeCloseTo(0.4, 6);
+			// one rotation's worth in the matrix, not two
+			const once = new Camera2d(0, 0, 800, 600);
+			once.rotate(0.4);
+			const a = cam.currentTransform.val;
+			const b = once.currentTransform.val;
+			for (let i = 0; i < 16; i++) {
+				expect(a[i]).toBeCloseTo(b[i], 5);
+			}
+		});
+
+		it("does not drift when assigned every frame", () => {
+			// the reason the setter rebuilds instead of composing: a banking
+			// camera assigns this thousands of times per run
+			const cam = new Camera2d(0, 0, 800, 600);
+			for (let i = 0; i < 2000; i++) {
+				cam.roll = Math.sin(i / 10) * 0.5;
+			}
+			cam.roll = 0;
+			expect(cam.currentTransform.isIdentity()).toBe(true);
+		});
+
+		it("going back to zero restores the identity transform", () => {
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.roll = 0.7;
+			expect(cam.currentTransform.isIdentity()).toBe(false);
+			cam.roll = 0;
+			expect(cam.roll).toBe(0);
+			expect(cam.currentTransform.isIdentity()).toBe(true);
+		});
+
+		it("rolls THROUGH currentTransform, so picking compensates for it", () => {
+			// the whole reason the 2D roll is a currentTransform rotation:
+			// worldToLocal / localToWorld already undo that matrix, so a rolled
+			// 2D camera still converts screen <-> world correctly
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.roll = Math.PI / 5;
+			const world = cam.localToWorld(120, 80);
+			const back = cam.worldToLocal(world.x, world.y);
+			expect(back.x).toBeCloseTo(120, 4);
+			expect(back.y).toBeCloseTo(80, 4);
+		});
+
+		it("reset() clears the roll with the transform it lives in", () => {
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.roll = 0.6;
+			cam.reset();
+			expect(cam.roll).toBe(0);
+			expect(cam.currentTransform.isIdentity()).toBe(true);
+		});
+	});
 });

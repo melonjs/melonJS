@@ -806,4 +806,165 @@ describe("Camera3d", () => {
 			expect(out.y).toBe(-67890);
 		});
 	});
+	describe("roll", () => {
+		const W = 800;
+		const H = 600;
+		// looking straight down +Z from the origin, as the worldToScreen
+		// suite does — a forward-axis point lands dead centre, so anything a
+		// roll does to an OFF-axis point is unambiguous.
+		const mk = () => {
+			const cam = new Camera3d(0, 0, W, H);
+			cam.pos.set(0, 0, 0);
+			cam.lookAt(0, 0, 100);
+			return cam;
+		};
+
+		it("initializes to zero", () => {
+			expect(new Camera3d(0, 0, W, H).roll).toBe(0);
+		});
+
+		it("leaves the projection untouched at roll = 0", () => {
+			const cam = mk();
+			const before = cam.worldToScreen(new Vector3d(10, 0, 100)).clone();
+			cam.roll = 0;
+			const after = cam.worldToScreen(new Vector3d(10, 0, 100));
+			expect(after.x).toBeCloseTo(before.x, 5);
+			expect(after.y).toBeCloseTo(before.y, 5);
+		});
+
+		it("does not move a point ON the view axis", () => {
+			// the roll axis passes through the screen centre, so the one point
+			// a bank must NOT move is the one it turns about
+			const cam = mk();
+			cam.roll = Math.PI / 3;
+			const p = cam.worldToScreen(new Vector3d(0, 0, 100));
+			expect(p.x).toBeCloseTo(W / 2, 0);
+			expect(p.y).toBeCloseTo(H / 2, 0);
+		});
+
+		it("rotates an off-axis point about the screen centre", () => {
+			// a point on the +x axis, rolled a quarter turn, lands on the
+			// vertical through the centre — the radius is preserved, the angle
+			// has moved by exactly 90 degrees
+			const cam = mk();
+			const flat = cam.worldToScreen(new Vector3d(10, 0, 100)).clone();
+			const radius = Math.abs(flat.x - W / 2);
+			expect(radius).toBeGreaterThan(1); // guard: the fixture must be off-axis
+
+			cam.roll = Math.PI / 2;
+			const rolled = cam.worldToScreen(new Vector3d(10, 0, 100));
+			expect(rolled.x).toBeCloseTo(W / 2, 0);
+			expect(Math.abs(rolled.y - H / 2)).toBeCloseTo(radius, 0);
+		});
+
+		it("is signed: opposite rolls mirror across the axis", () => {
+			const cam = mk();
+			cam.roll = Math.PI / 4;
+			const cw = cam.worldToScreen(new Vector3d(10, 0, 100)).clone();
+			cam.roll = -Math.PI / 4;
+			const ccw = cam.worldToScreen(new Vector3d(10, 0, 100));
+			// same distance from the centre line, opposite sides of it
+			expect(cw.y - H / 2).toBeCloseTo(-(ccw.y - H / 2), 0);
+			expect(cw.x).toBeCloseTo(ccw.x, 0);
+		});
+
+		it("a full turn returns the projection to where it started", () => {
+			const cam = mk();
+			const before = cam.worldToScreen(new Vector3d(10, -7, 100)).clone();
+			cam.roll = Math.PI * 2;
+			const after = cam.worldToScreen(new Vector3d(10, -7, 100));
+			expect(after.x).toBeCloseTo(before.x, 0);
+			expect(after.y).toBeCloseTo(before.y, 0);
+		});
+
+		it("rolls the basis: the right axis tilts, the forward axis does not", () => {
+			// roll turns the camera ABOUT its forward axis, so `forward` is the
+			// one basis vector a bank must leave alone
+			const cam = mk();
+			const right = new Vector3d();
+			const up = new Vector3d();
+			const forward = new Vector3d();
+
+			cam.roll = 0;
+			cam.getBasis(right, up, forward);
+			const forward0 = forward.clone();
+			const right0 = right.clone();
+
+			cam.roll = Math.PI / 2;
+			cam.getBasis(right, up, forward);
+			expect(forward.x).toBeCloseTo(forward0.x, 5);
+			expect(forward.y).toBeCloseTo(forward0.y, 5);
+			expect(forward.z).toBeCloseTo(forward0.z, 5);
+			// the right axis has swung a quarter turn away from where it was
+			const dot = right.x * right0.x + right.y * right0.y + right.z * right0.z;
+			expect(dot).toBeCloseTo(0, 5);
+		});
+
+		it("is absolute, not cumulative: assigning twice does not double it", () => {
+			const cam = mk();
+			cam.roll = 0.3;
+			cam.roll = 0.3;
+			expect(cam.roll).toBeCloseTo(0.3, 6);
+			// and the projection agrees with a camera that got there in one step
+			const twice = cam.worldToScreen(new Vector3d(10, 0, 100)).clone();
+			const once = mk();
+			once.roll = 0.3;
+			const direct = once.worldToScreen(new Vector3d(10, 0, 100));
+			expect(twice.x).toBeCloseTo(direct.x, 4);
+			expect(twice.y).toBeCloseTo(direct.y, 4);
+		});
+
+		it("does NOT touch currentTransform (the 3D view never reads it)", () => {
+			// the 2D accessor rolls by rotating currentTransform; the 3D
+			// override must not, or a 3D camera ends up with a transform that
+			// draws nothing but still skews worldToLocal
+			const cam = mk();
+			cam.roll = 0.9;
+			expect(cam.currentTransform.isIdentity()).toBe(true);
+		});
+
+		it("the frustum follows the bank", () => {
+			// The planes are extracted from projection x view, so a roll has to
+			// reach culling too. A tall-thin camera sees far along its own up
+			// axis and not along its right axis; rolling a quarter turn must
+			// swap which of the two a point is visible in.
+			const cam = new Camera3d(0, 0, 200, 900);
+			cam.pos.set(0, 0, 0);
+			cam.lookAt(0, 0, 100);
+			// fov 60 deg at z=400 -> half-height tan(30)*400 = 231, and
+			// half-width = 231 * (200/900) = 51. y=150 clears the tall axis
+			// and busts the narrow one, so the bank decides visibility.
+			const probe = new Renderable(0, 0, 1, 1);
+			probe.pos.set(0, 150, 400);
+			probe.depth = 400;
+
+			cam.roll = 0;
+			cam.update(16);
+			expect(cam.isVisible(probe)).toBe(true);
+
+			cam.roll = Math.PI / 2;
+			cam.update(16);
+			expect(cam.isVisible(probe)).toBe(false);
+		});
+
+		it("survives the container apply/revert round trip", () => {
+			// `_applyContainerViewTransform` must be undone exactly by its
+			// revert, or the transform leaks into whatever draws next
+			const cam = mk();
+			cam.roll = 0.7;
+			const container = new Renderable(0, 0, 1, 1);
+			container.currentTransform.identity();
+			const before = new Matrix3d().copy(container.currentTransform);
+
+			cam._applyContainerViewTransform(container, 5, 9);
+			expect(container.currentTransform.isIdentity()).toBe(false);
+			cam._revertContainerViewTransform(container, 5, 9);
+
+			const a = container.currentTransform.val;
+			const b = before.val;
+			for (let i = 0; i < 16; i++) {
+				expect(a[i]).toBeCloseTo(b[i], 5);
+			}
+		});
+	});
 });

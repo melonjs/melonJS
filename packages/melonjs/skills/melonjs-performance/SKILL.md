@@ -81,7 +81,10 @@ Two rules that cause subtle bugs when missed:
   successfully recycled object never sees it. Pair event subscriptions with
   `onActivateEvent` / `onDeactivateEvent` instead, or you leak handlers.
 
-Engine classes are poolable too: `pool.pull("me.Tween", target)`.
+Engine classes are poolable too: `pool.pull("Tween", target)`. The registered
+names carry no `me.` prefix — `Entity`, `Collectable`, `Trigger`, `Light2d`,
+`Particle`, `Sprite`, `NineSliceSprite`, `Renderable`, `Text`, `BitmapText`,
+`ImageLayer`, `Tween`, `ColorLayer`.
 
 ## `scale()` is multiplicative
 

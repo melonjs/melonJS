@@ -231,7 +231,13 @@ export class HUD {
 		app: Application,
 		x: number,
 		y: number,
-		settings: ConstructorParameters<typeof Text>[2],
+		// `font` is supplied below, so callers must not be required to repeat
+		// it. Omitting it from the parameter type is also what lets TypeScript
+		// infer `textAlign` / `textBaseline` as their literal unions rather
+		// than widening them to `string`.
+		settings: Omit<ConstructorParameters<typeof Text>[2], "font"> & {
+			font?: string;
+		},
 	): Text {
 		const t = new Text(x, y, {
 			font: "Courier New",

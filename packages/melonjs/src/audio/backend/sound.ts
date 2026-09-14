@@ -945,14 +945,28 @@ class Sound {
 					}
 				}
 
-				this._startFadeInterval(
-					sound,
-					from,
-					to,
-					len,
-					ids[i],
-					typeof id === "undefined",
-				);
+				const isGroup = typeof id === "undefined";
+
+				// A fade with no duration, or one whose endpoints are equal,
+				// has nothing to interpolate — and an interval for it is not
+				// merely pointless, it is broken twice over. The tick divides
+				// the elapsed time by `len`, so a zero duration yields
+				// Infinity (or 0/0) and `diff * tick` writes NaN into the
+				// volume; and the exit test wants a STRICT inequality between
+				// `from` and `to`, which equal endpoints can never satisfy, so
+				// the interval would keep ticking forever. Settle on the
+				// target immediately instead. `!(len > 0)` rather than
+				// `len <= 0` so a NaN duration takes this path too.
+				if (!(len > 0) || to === from) {
+					if (isGroup) {
+						this._volume = to;
+					}
+					this.volume(to, ids[i]);
+					this._emit("fade", ids[i]);
+					continue;
+				}
+
+				this._startFadeInterval(sound, from, to, len, ids[i], isGroup);
 			}
 		}
 

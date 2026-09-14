@@ -38,6 +38,18 @@ export class SkyboxStage extends Stage {
 	 * via `state.isPaused()` inside `GroundGrid.update`; this flag
 	 * covers the game-over case where the engine isn't paused.)
 	 */
+	/**
+	 * Feed the backdrop the horizon bank. Not `Camera3d.roll`: rolling the
+	 * real camera also rolls the gameplay layer, which for a behind-the-ship
+	 * view swings the player's craft off its anchor. See `GameController`.
+	 * @param roll - bank angle in radians
+	 */
+	setRoll(roll: number): void {
+		if (this.backdrop) {
+			this.backdrop.roll = roll;
+		}
+	}
+
 	setScrollPaused(paused: boolean): void {
 		if (this.backdrop) {
 			this.backdrop.grid.scrollPaused = paused;

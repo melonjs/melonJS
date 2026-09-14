@@ -20,7 +20,6 @@ import {
 	Container,
 	type WebGLRenderer,
 } from "melonjs";
-import type { Camera3dWithRoll } from "../types";
 import { GroundGrid } from "./GroundGrid";
 import { MountainHorizon } from "./MountainHorizon";
 import { SkyGradient } from "./SkyGradient";
@@ -39,6 +38,8 @@ type Renderer = CanvasRenderer | WebGLRenderer;
 export const BACKDROP_DEPTH = 10000;
 
 export class BackdropContainer extends Container {
+	/** horizon bank in radians, fed by `SkyboxStage#setRoll` */
+	roll = 0;
 	readonly grid: GroundGrid;
 	readonly mountains: MountainHorizon;
 	readonly sky: SkyGradient;
@@ -61,13 +62,15 @@ export class BackdropContainer extends Container {
 	}
 
 	override draw(renderer: Renderer, viewport: Camera3d): void {
-		// Apply camera roll once for the whole backdrop. The engine
-		// already wrapped us with `setProjection(screenProjection)` +
-		// `resetTransform` because we're floating, so we're free to
-		// translate/rotate from identity.
+		// Bank the horizon in screen space. We are floating, so the engine
+		// wrapped us with `setProjection(screenProjection)` + `resetTransform`
+		// and no camera transform reached us — which is exactly what makes
+		// this the one layer that CAN bank without dragging the gameplay
+		// elements with it. See `GameController` for why the camera itself is
+		// deliberately left unrolled.
 		const w = renderer.width;
 		const h = renderer.height;
-		const roll = (viewport as Partial<Camera3dWithRoll>).roll ?? 0;
+		const roll = this.roll;
 		if (roll !== 0) {
 			renderer.translate(w / 2, h / 2);
 			renderer.rotate(roll);
