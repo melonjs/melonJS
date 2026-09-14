@@ -138,11 +138,22 @@ export class Gradient {
 	}
 
 	/**
-	 * Get or create a native CanvasGradient for use with a 2D context.
+	 * Get or create a native `CanvasGradient` for use with a 2D context.
+	 *
+	 * This is the one to reach for when baking a gradient into your own
+	 * canvas — it hands back a value for `ctx.fillStyle` and touches no
+	 * shared state, so two callers cannot clobber each other.
+	 *
+	 * The result is cached and reused until a stop changes.
 	 * @param {CanvasRenderingContext2D} context - the 2D context to create the gradient on
-	 * @returns {CanvasGradient}
-	 * @ignore
-	 * @internal
+	 * @returns {CanvasGradient} a native gradient bound to that context
+	 * @example
+	 * // bake a gradient into a standalone canvas
+	 * const c = document.createElement("canvas");
+	 * c.width = 64; c.height = 64;
+	 * const ctx = c.getContext("2d");
+	 * ctx.fillStyle = myGradient.toCanvasGradient(ctx);
+	 * ctx.fillRect(0, 0, 64, 64);
 	 */
 	toCanvasGradient(context) {
 		if (this._canvasGradient && !this._dirty) {
@@ -184,6 +195,10 @@ export class Gradient {
 	 * which is visually equivalent (linear stop interpolation × linear
 	 * texture filtering). The returned `width`/`height` describe the region
 	 * of the canvas the caller must use as the drawImage SOURCE rect.
+	 * Internal: the bake target is SHARED across every gradient and valid only
+	 * until the next call, which is a renderer implementation detail rather
+	 * than something a caller should reason about. The public way to rasterise
+	 * a gradient is {@link Gradient#toCanvasGradient}.
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - the active renderer (used to invalidate the GPU texture)
 	 * @param {number} x - draw rect x
 	 * @param {number} y - draw rect y
