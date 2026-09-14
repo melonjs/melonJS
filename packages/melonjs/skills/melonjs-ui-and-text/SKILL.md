@@ -129,6 +129,40 @@ Three things matter here:
   real accessor is `depth` (an alias for `pos.z`); `addChild(child, z)` sets it
   for you.
 
+### Buttons: extend the handlers, do not bind listeners
+
+`UISpriteElement` is a `Sprite` that already registers itself for pointer
+events, so a button is made by overriding methods rather than by wiring
+`registerPointerEvent`:
+
+| handler | fires | returns |
+|---|---|---|
+| `onClick(event)` | pressed | `false` to stop the event propagating |
+| `onRelease(event)` | pressed and released | `false` to stop propagating |
+| `onOver(event)` | pointer enters | — |
+| `onOut(event)` | pointer leaves | — |
+| `onHold()` | pressed and held | — |
+
+```js
+class MuteButton extends UISpriteElement {
+    constructor(x, y) {
+        super(x, y, { image: atlas, region: "speaker.png" });
+        this.setOpacity(0.5);
+    }
+    onOver() { this.setOpacity(1.0); }
+    onOut()  { this.setOpacity(0.5); }
+    onClick() {
+        audio.muteAll();
+        return false;          // consumed — do not fall through to the world
+    }
+}
+```
+
+The pointer still has to reach it: a renderable with `isKinematic = true` — the
+default on a plain `Renderable` — is skipped by the broadphase and receives
+nothing. `UISpriteElement` and `UIBaseElement` clear it for you; anything else
+you make clickable has to clear it itself.
+
 ### In a 3D scene, a HUD needs a SMALL depth
 
 `floating` opts a renderable out of the camera transform. It does **not** opt it

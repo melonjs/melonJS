@@ -120,6 +120,19 @@ this.body.setVelocity(vx, vy);
 this.body.force.x = this.body.maxVel.x;
 ```
 
+`maxVel` is what turns a force into a speed, so the two are set together. Use
+the setters rather than writing the vectors — both take an optional THIRD
+argument for the depth axis, left unchanged when omitted, so a 2D call keeps
+its behaviour:
+
+```js
+this.body.setMaxVelocity(3, 15);   // walk speed, jump speed
+this.body.setFriction(0.4, 0);     // ground drag, none vertically
+```
+
+`friction` here is per-axis per-step velocity damping, not a surface
+coefficient — see the built-in quirks below.
+
 Under matter and planck, `syncFromPhysics()` copies the engine body's position
 back onto `renderable.pos` after every step, so a direct write is simply erased
 — no error. The built-in world integrates `pos` in place instead, so a write
