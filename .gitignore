@@ -21,3 +21,4 @@ package-lock.json
 # the generated API reference, not every directory named `docs`
 /packages/melonjs/docs/
 .turbo
+backend-shots/

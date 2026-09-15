@@ -9,5 +9,8 @@
 		"noEmit": true,
 		"jsx": "react-jsx"
 	},
-	"include": ["./src"]
+	"include": ["./src"],
+	// Tiled writes its tilesets as `.tsx` — XML, not React. Left in, TS parses
+	// them as JSX and the type gate drowns in syntax errors on data files.
+	"exclude": ["src/**/assets/**/*.tsx"]
 }

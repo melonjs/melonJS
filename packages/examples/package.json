@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
+		"backends": "node scripts/backends.mjs",
 		"test:types": "tsc"
 	},
 	"dependencies": {
