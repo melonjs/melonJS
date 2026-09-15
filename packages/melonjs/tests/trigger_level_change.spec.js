@@ -30,6 +30,7 @@ import state from "../src/state/state.ts";
 describe("Trigger level change (#1646)", () => {
 	let app;
 	let loaded;
+	let loadOptions;
 	let originalAddTo;
 
 	beforeAll(async () => {
@@ -41,8 +42,9 @@ describe("Trigger level change (#1646)", () => {
 		});
 		await app.init();
 		originalAddTo = GLTFScene.prototype.addTo;
-		GLTFScene.prototype.addTo = function (container) {
+		GLTFScene.prototype.addTo = function (container, options) {
 			loaded.push(container);
+			loadOptions.push(options);
 		};
 		level.add("gltf", "trigger-target");
 	});
@@ -54,6 +56,7 @@ describe("Trigger level change (#1646)", () => {
 
 	beforeEach(() => {
 		loaded = [];
+		loadOptions = [];
 		state.stop();
 	});
 
@@ -85,6 +88,40 @@ describe("Trigger level change (#1646)", () => {
 		const t = trigger({});
 		t.triggerEvent();
 		expect(loaded).toHaveLength(1);
+		app.world.removeChildNow(t);
+	});
+
+	it("forwards glTF load options, including false and zero values", () => {
+		const options = {
+			scale: 50,
+			rightHanded: false,
+			lights: false,
+			lightIntensityScale: 0,
+			castGroundShadow: false,
+			shadowGroundY: 0,
+		};
+		const t = trigger(options);
+		t.triggerEvent();
+		expect(loadOptions).toHaveLength(1);
+		expect(loadOptions[0]).toMatchObject(options);
+		app.world.removeChildNow(t);
+	});
+
+	it("leaves omitted glTF options unset and ignores an authored async flag", () => {
+		const t = trigger({ async: true, scale: undefined });
+		t.triggerEvent();
+		expect(loadOptions).toHaveLength(1);
+		for (const key of [
+			"scale",
+			"rightHanded",
+			"lights",
+			"lightIntensityScale",
+			"castGroundShadow",
+			"shadowGroundY",
+			"async",
+		]) {
+			expect(loadOptions[0]).not.toHaveProperty(key);
+		}
 		app.world.removeChildNow(t);
 	});
 
@@ -136,7 +173,20 @@ describe("Trigger level change (#1646)", () => {
 		// with the loop RUNNING, so the load genuinely defers — with it stopped
 		// the load is synchronous and the ordering below proves nothing
 		state.restart();
-		const t = trigger({ color: "#000000", duration: 10 });
+		const options = {
+			scale: 50,
+			rightHanded: false,
+			lights: false,
+			lightIntensityScale: 0.001,
+			castGroundShadow: true,
+			shadowGroundY: -10,
+		};
+		const t = trigger({
+			color: "#000000",
+			duration: 10,
+			async: false,
+			...options,
+		});
 		t.triggerEvent();
 
 		// the hide effect, captured rather than added
@@ -145,9 +195,10 @@ describe("Trigger level change (#1646)", () => {
 
 		// swap the viewport while the load runs, as `game.reset()` would
 		const previousAddTo = GLTFScene.prototype.addTo;
-		GLTFScene.prototype.addTo = function (container) {
+		GLTFScene.prototype.addTo = function (container, settings) {
 			app.viewport = swapped;
 			loaded.push(container);
+			loadOptions.push(settings);
 		};
 
 		// Drive the hide tween to completion -> onComplete -> the load. Stop
@@ -177,6 +228,7 @@ describe("Trigger level change (#1646)", () => {
 		// the load happened, then the reveal — and on the viewport that existed
 		// AFTER the load, not the one captured before it
 		expect(loaded).toHaveLength(1);
+		expect(loadOptions[0]).toMatchObject({ ...options, async: true });
 		expect(seen).toHaveLength(2);
 		expect(seen[1].loadedSoFar).toBe(1);
 		expect(seen[1].who).toBe("swapped");
