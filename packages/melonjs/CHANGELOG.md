@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.5.0] (melonJS 2) - _unreleased_
+## [20.5.0] (melonJS 2) - _2026-09-15_
 
 ### Added
 - Mesh: a `ShaderEffect` can be hosted on a mesh — `addPostEffect` shades it on both backends as a colour hook, so the mesh keeps its own placement, alpha cutout, lighting and fog. `screen_uv`, `noise_uv`, `screen_texture`, a body's own samplers, WGSL `vColor` and `InstancedMesh` are unsupported and warn once ([#1658](https://github.com/melonjs/melonJS/issues/1658))
@@ -8,12 +8,9 @@
 - Text: `fillStyle` takes a `Gradient` as well as a colour, built with `createLinearGradient`/`addColorStop`. Coordinates are the label's own bake and the ramp colours the fill only, since the stroke is a separate pass. A multi-line label restarts the ramp on every line; `gradientPerLine: false` spans one ramp across the block instead
 - `save`: registered keys are reachable from TypeScript without a cast. The namespace was typed `Record<string, unknown>`, and that index signature swallowed its own members, so under `strict` `save.add()` was `unknown` and could not be called at all. `add()` now returns the namespace typed with the keys just registered, and chained calls accumulate
 - `audio.tone()` and `audio.noise()` take a `delay` in seconds, scheduled on the audio clock, so a multi-part sound — a stinger's second note, an explosion's double-tap — sequences without a `setTimeout`. A timer fires on the main thread and a busy frame slips the note; this is scheduled up front and is sample-accurate. Omitting it is unchanged
-
 - `Gradient#toCanvasGradient(ctx)` is public: a `Gradient` could be built and handed to `Text.fillStyle`, but there was no supported way to rasterise one into your own canvas. It returns a native `CanvasGradient` and holds no shared state
 - Camera: `roll` completes the `pitch` / `yaw` trio. On a `Camera3d` it banks the view and the frustum planes follow, so culling stays correct under a bank; on a `Camera2d` it is the screen-plane rotation, and picking compensates for it. Assigning it rebuilds the camera transform, so a camera banked every frame cannot drift
-
 - `Light3d`: `direction` and `position` accept a `Vector3d` as well as an `[x, y, z]` array, so a value the game already holds goes straight in — `color` already took a `Color`, a string or an array. The vector is read, not retained. Passing one used to be read by index and silently produce a `NaN` direction, so the light contributed nothing ([#1661](https://github.com/melonjs/melonJS/issues/1661))
-
 - Typings: a parsed glTF node's geometry is readable from TypeScript. `GLTFData.nodes` was `object[]` with its fields listed in prose, so `node.vertices` did not compile — the array is `GLTFNode[]` now. `Mesh`'s `texture` accepts a `Texture2d` and its `indices` a `Uint32Array`, both of which it already handled; a shader `Asset` may carry the `{glsl, wgsl}` pair the loader has always parsed
 
 ### Fixed
