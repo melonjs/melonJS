@@ -106,3 +106,29 @@ The dialogue panel `panel.png` and the web font `kenvector_future.woff2` in the
 same folder are from UI packs published by **Kenney** (<https://www.kenney.nl>),
 released under **CC0 1.0 Universal (Public Domain Dedication)** — no attribution
 legally required, credited here as a courtesy.
+
+### `jungleRabbit` example
+
+The 3D models in `public/assets/jungleRabbit/` — boat, carrot, log, rock, palm,
+fern, leaves, flowers and bird — were modelled for this example and are covered
+by the MIT license above, as is the procedurally generated terrain and water.
+
+The music track `bgm/jungle-theme.mp3` is by **Vlad Krotov**, published on
+Pixabay:
+
+<https://pixabay.com/users/vladkrotov/>
+
+Released under the **Pixabay Content License** — free for commercial and
+non-commercial use, no attribution required. Credited on the example's title
+screen and here as a courtesy.
+
+The display face `font/Crang.woff2` was created by **Caveras** with FontStruct:
+
+<https://fontstruct.com/fontstructors/caveras>
+
+⚠️ Released under **CC BY-NC-SA 4.0** — attribution, share-alike, and
+**non-commercial use only**. This is the one asset in the examples that is not
+free for commercial reuse: if you copy this example into a commercial game, you
+must replace this font or obtain a commercial license from the author
+(cava@caveras.net). The full license text ships alongside the font as
+`font/Crang-LICENSE.txt`.
