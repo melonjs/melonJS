@@ -123,6 +123,43 @@ describe("renderer.prewarm()", () => {
 			await second;
 		});
 
+		it("warms the keys the DRAW path actually asks for", async (ctx) => {
+			if (renderer === null || renderer === undefined) {
+				ctx.skip();
+			}
+			// `prewarm()` enumerates its variant keys and #defines by hand,
+			// duplicating what `meshShader()`, `instancedShaderFor()` and
+			// `instancedShadowShader()` build for real. If those drift apart it
+			// fails silently: prewarm fills keys nothing will ever ask for, the
+			// draw path compiles its own on first use, and the stall is back
+			// with every test still green.
+			//
+			// So assert through the REAL entry points rather than by writing
+			// the keys out a third time: after a prewarm, nothing the draw path
+			// asks for may add to the map.
+			const batcher = meshBatcher();
+			const fog = renderer._fog3d;
+			try {
+				batcher.shaderVariants.clear();
+				await batcher.prewarm();
+				const warmed = batcher.shaderVariants.size;
+
+				for (const fogState of [null, {}]) {
+					renderer._fog3d = fogState;
+					batcher.meshShader();
+					batcher.instancedShadowShader();
+					for (const hasColor of [false, true]) {
+						for (const hasData of [false, true]) {
+							batcher.instancedShaderFor({ hasColor, hasData });
+						}
+					}
+				}
+				expect(batcher.shaderVariants.size).toBe(warmed);
+			} finally {
+				renderer._fog3d = fog;
+			}
+		});
+
 		it("returns the same promise rather than compiling twice", async (ctx) => {
 			if (renderer === null || renderer === undefined) {
 				ctx.skip();

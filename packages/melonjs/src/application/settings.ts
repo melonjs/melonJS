@@ -147,9 +147,11 @@ export type ApplicationSettings = {
 	 * up moves it to where a progress bar is already on screen.
 	 *
 	 * **On by default.** The cost is small and it is paid where nothing is
-	 * waiting on a frame: a purely 2D game links the eleven mesh-tier
-	 * programs it will never bind, measured at about 60ms on a fast desktop
-	 * GPU, inside a preload that is already showing a progress bar. Set it to
+	 * waiting on a frame: a purely 2D game links the mesh-tier programs
+	 * it will never bind — both the unlit tier and the lit one that inherits
+	 * from it — measured at about 60ms on a fast desktop GPU, inside a preload
+	 * that is already showing a progress bar. A tiny 2D game with a near-empty
+	 * preload is the one case that pays without any possible benefit. Set it to
 	 * `false` for a target where linking is slow enough that the preload
 	 * itself would suffer.
 	 *

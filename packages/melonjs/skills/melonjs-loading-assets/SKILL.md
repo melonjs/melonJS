@@ -102,7 +102,8 @@ const app = new Application(1280, 720, {
 
 The preloader calls `renderer.prewarm()` once the assets are in and **before**
 `LOADER_COMPLETE` fires, so it happens while the progress bar is still up. On
-WebGL that links the mesh batcher's eleven variants; on WebGPU it compiles the
+WebGL that links the mesh batchers' variants, for the unlit tier and the lit
+one that inherits from it; on WebGPU it compiles the
 WGSL module of every shader the loader holds — which is the reason to declare
 effects as assets rather than build them inline (see above).
 

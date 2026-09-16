@@ -997,10 +997,25 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @internal
 	 */
 	async prewarm() {
+		// `setTimeout` is throttled to a tick a second in a background tab, and
+		// twenty-two of them would push `LOADER_COMPLETE` tens of seconds out
+		// for anyone who opened the game and switched away. Nothing is being
+		// drawn in a hidden tab, so there is no frame to be kind to: link
+		// straight through and only yield when the page is actually visible.
 		const yieldToFrame = () => {
+			if (globalThis.document?.hidden === true) {
+				return Promise.resolve();
+			}
 			return new Promise((resolve) => {
 				setTimeout(resolve, 0);
 			});
+		};
+		// A yield is a window in which the application can be destroyed or the
+		// context lost. Building into a batcher that has been torn down leaks a
+		// `GLShader` per remaining variant, each subscribed to the global
+		// context-loss events with nothing left to destroy it.
+		const alive = () => {
+			return this.gl !== null && this.gl?.isContextLost?.() !== true;
 		};
 		const sources = this._shaderSources();
 		const instanced = this._instancedShaderSources();
@@ -1010,6 +1025,9 @@ export default class MeshBatcher extends MaterialBatcher {
 			if (fogDefine !== "") {
 				this.shaderVariant("mesh|fog", sources, fogDefine, fogDefine);
 				await yieldToFrame();
+				if (!alive()) {
+					return;
+				}
 			}
 			for (const hasColor of [false, true]) {
 				for (const hasData of [false, true]) {
@@ -1024,6 +1042,9 @@ export default class MeshBatcher extends MaterialBatcher {
 						(hasData ? "#define INSTANCE_DATA\n" : "") + fogDefine,
 					);
 					await yieldToFrame();
+					if (!alive()) {
+						return;
+					}
 				}
 			}
 			this.shaderVariant(
@@ -1033,6 +1054,9 @@ export default class MeshBatcher extends MaterialBatcher {
 				fogDefine,
 			);
 			await yieldToFrame();
+			if (!alive()) {
+				return;
+			}
 		}
 	}
 

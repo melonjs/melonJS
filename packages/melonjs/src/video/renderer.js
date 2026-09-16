@@ -358,13 +358,18 @@ export default class Renderer {
 	 * this while a loading screen is still on screen moves that cost to where
 	 * nobody is waiting on a frame.
 	 *
-	 * Resolves once the programs are genuinely ready, not merely requested,
-	 * and resolves immediately on a backend that has nothing to compile
-	 * (Canvas) or on a second call — it is idempotent, and the same promise
-	 * is handed back.
+	 * Resolves immediately on a backend with nothing to compile (Canvas).
+	 * What "ready" means is backend-specific and worth knowing: WebGL's link
+	 * blocks, so a resolved promise there means the programs are genuinely
+	 * built; WebGPU's `createShaderModule` returns before its compilation
+	 * finishes, so a resolved promise there means the modules have been
+	 * requested and validation is under way.
 	 *
-	 * `Application` calls this during `init()` when `preWarmShaders` is set,
-	 * so most games never call it directly.
+	 * `loader.preload()` calls this once the assets are in and before
+	 * `LOADER_COMPLETE` fires, when `preWarmShaders` is set — which is while
+	 * the loading screen is still up. Most games never call it directly.
+	 * Deliberately not `Application.init()`: that runs before anything is on
+	 * screen, so warming there would only lengthen a blank page.
 	 * @returns {Promise<void>} settles when the built-in programs are ready
 	 * @example
 	 * // warm up before swapping to a heavy 3D stage

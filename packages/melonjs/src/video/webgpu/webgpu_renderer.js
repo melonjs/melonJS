@@ -1546,10 +1546,6 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
-	 * end the open pass and submit the frame's command buffer
-	 * @override
-	 */
-	/**
 	 * Compile the WGSL module of every shader asset the loader has, ahead of
 	 * the frame that first draws it.
 	 *
@@ -1576,27 +1572,40 @@ export default class WebGPURenderer extends Renderer {
 	 * @see {@link Renderer#prewarm}
 	 */
 	prewarm() {
-		if (this._prewarmed === undefined) {
-			this._prewarmed = Promise.resolve().then(() => {
-				for (const effect of Object.values(shaderList)) {
-					const realization = effect?.wgslRealization;
-					// a GLShader asset, or a body with no WGSL half, has no
-					// realization here — it is not an error, just not ours
-					if (realization === undefined || realization.valid !== true) {
-						continue;
-					}
-					if (
-						realization.gpu === null ||
-						realization.gpu.epoch !== this.pipelineCache.epoch
-					) {
-						buildEffectGPU(this, effect, realization);
-					}
+		// Deliberately NOT memoized, unlike the WebGL side.
+		//
+		// That backend's warm set is fixed — the batchers' variants exist
+		// whether or not anything loaded. This one's is `shaderList`, which
+		// GROWS with every preload, and per-stage preloading is exactly the
+		// pattern this feature is for. Caching the first run's promise would
+		// mean a second preload declaring a level's own effects warmed none of
+		// them, silently, with the lazy path quietly covering it.
+		//
+		// Re-running is close to free: the loop's own `gpu === null || epoch`
+		// guard skips every effect already built, which is the same guard the
+		// draw path uses.
+		return Promise.resolve().then(() => {
+			for (const effect of Object.values(shaderList)) {
+				const realization = effect?.wgslRealization;
+				// a GLShader asset, or a body with no WGSL half, has no
+				// realization here — it is not an error, just not ours
+				if (realization === undefined || realization.valid !== true) {
+					continue;
 				}
-			});
-		}
-		return this._prewarmed;
+				if (
+					realization.gpu === null ||
+					realization.gpu.epoch !== this.pipelineCache.epoch
+				) {
+					buildEffectGPU(this, effect, realization);
+				}
+			}
+		});
 	}
 
+	/**
+	 * end the open pass and submit the frame's command buffer
+	 * @override
+	 */
 	flush() {
 		// A bracketed draw is sitting in an offscreen target that has not been
 		// composited yet, so it has to land BEFORE the encoder is submitted
@@ -3674,9 +3683,6 @@ export default class WebGPURenderer extends Renderer {
 		for (const batcher of this.batchers.values()) {
 			batcher.init(this);
 		}
-		// anything a prewarm built belonged to the lost device; drop the memo
-		// so a later `prewarm()` rebuilds rather than reporting itself done
-		this._prewarmed = undefined;
 		emit(ONCONTEXT_RESTORED, this);
 	}
 

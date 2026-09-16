@@ -518,10 +518,11 @@ export default class WebGPUPipelineCache {
 	/**
 	 * Assemble a pipeline descriptor.
 	 *
-	 * Shared by the synchronous `get()` and the asynchronous `prewarm()` so
-	 * the two cannot drift: a prewarmed pipeline that differs from the one a
-	 * draw would have built is worse than no prewarm at all, because the draw
-	 * silently builds a second one and the stall comes back unexplained.
+	 * Split out of `get()` so the descriptor can be read on its own — it is
+	 * long, and every field in it is load-bearing for cache correctness: a
+	 * pipeline built from a descriptor that differs from the one a draw would
+	 * have produced is worse than no cache entry at all, because the draw
+	 * silently builds a second one under a key nothing will hit again.
 	 * @param {string} key - the cache key, used as the label
 	 * @param {string} shaderKey - the module family
 	 * @param {string} blend - normalized blend mode

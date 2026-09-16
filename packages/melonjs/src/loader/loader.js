@@ -249,8 +249,15 @@ function prewarmShaders() {
 		return Promise.resolve();
 	}
 	// never let a warm-up failure fail the preload — the frame it would have
-	// saved is not worth a game that cannot start
-	return Promise.resolve(_app.renderer?.prewarm?.()).catch(() => {});
+	// saved is not worth a game that cannot start. `try` as well as `catch`:
+	// `Promise.resolve()` only wraps a value, so a custom renderer whose
+	// `prewarm` throws SYNCHRONOUSLY would escape before there is a promise to
+	// reject, and take the preload down with it
+	try {
+		return Promise.resolve(_app.renderer?.prewarm?.()).catch(() => {});
+	} catch {
+		return Promise.resolve();
+	}
 }
 
 /**

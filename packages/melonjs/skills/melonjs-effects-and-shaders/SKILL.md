@@ -135,11 +135,16 @@ That is the practical reason to prefer the asset form even when the source is a
 string in your own module:
 
 ```js
-// with the level's other assets, not in the stage that uses them
-await loader.load({ name: "ripples", type: "shader", src: {
-    glsl: "assets/level2/ripples.glsl",
-    wgsl: "assets/level2/ripples.wgsl",
-}});
+// with the level's other assets, not in the stage that uses them.
+// `preload()` rather than `load()` — preload is what warms the shaders it
+// brought in, and it can be called again per level, not just at boot
+await loader.preload([
+    { name: "ripples", type: "shader", src: {
+        glsl: "assets/level2/ripples.glsl",
+        wgsl: "assets/level2/ripples.wgsl",
+    }},
+    // …that level's textures, maps and audio alongside it
+], undefined, false);   // `false`: stay on this stage, no loading screen
 ```
 
 `src` takes the dual-language pair, so one asset carries both realizations and
