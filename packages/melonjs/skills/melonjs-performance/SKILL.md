@@ -199,7 +199,18 @@ gl.linkProgram = function (p) { console.count("linkProgram"); return link.call(t
 
 The tell is that the second entry into the same scene is cheap: one measured
 case went 852ms of stall (worst frame 479ms) on first entry to 277ms (worst
-102ms) on the second, because the programs were already cached.
+102ms) on the second.
+
+**Careful with the conclusion, though — "the programs were cached" is the
+tempting reading and it is wrong.** Prewarming the engine's own programs ahead
+of that first entry moves the worst frame by about 3ms, measured. So the 575ms
+is not program linking: it is everything else the first *submit* pays for —
+texture residency, buffer uploads, and the driver specializing a pipeline
+against real bindings — all of which the second entry finds already done.
+
+That distinction decides which lever to reach for. Linking is what `prewarm`
+covers and what shrinking your shader count helps. The rest only goes away if
+the geometry is actually **drawn** once beforehand.
 
 Three things follow.
 

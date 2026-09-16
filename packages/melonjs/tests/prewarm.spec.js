@@ -1,10 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { defaultApplicationSettings } from "../src/application/defaultApplicationSettings.ts";
-import { Application, boot, loader, video } from "../src/index.js";
+import { Application, boot, event, loader, video } from "../src/index.js";
 import WebGLBatcher from "../src/video/webgl/batchers/batcher.js";
 import {
 	getWebGLRenderer,
 	releaseWebGLRenderer,
+	requireWebGL,
 } from "./helpers/webgl-context.js";
 
 /**
@@ -77,10 +78,21 @@ describe("renderer.prewarm()", () => {
 			return renderer.batchers.get("mesh");
 		};
 
+		/**
+		 * Both tiers that own lazy variants. `LitMeshBatcher extends
+		 * MeshBatcher`, is registered as its own batcher, and inherits
+		 * `prewarm()` — so the renderer warms twice as many programs as the
+		 * unlit tier alone, and a test that looks only at "mesh" sees half the
+		 * feature. That blind spot is exactly how the count in the changelog
+		 * and docs was wrong until review caught it.
+		 * @returns {object[]} the mesh batchers, unlit and lit
+		 */
+		const meshBatchers = () => {
+			return [renderer.batchers.get("mesh"), renderer.batchers.get("litMesh")];
+		};
+
 		it("builds every variant the mesh batcher can reach", async (ctx) => {
-			if (renderer === null || renderer === undefined) {
-				ctx.skip();
-			}
+			requireWebGL(ctx, renderer);
 			const batcher = meshBatcher();
 			batcher.shaderVariants.clear();
 			await batcher.prewarm();
@@ -107,16 +119,17 @@ describe("renderer.prewarm()", () => {
 		});
 
 		it("forgets it warmed once the context is restored", async (ctx) => {
-			if (renderer === null || renderer === undefined) {
-				ctx.skip();
-			}
+			requireWebGL(ctx, renderer);
 			// the programs died with the old context. Leaving the memo set
 			// would have `prewarm()` report the work done for the rest of the
 			// session, silently putting every variant back on the first-draw
 			// path — no error, just the feature quietly off
 			const first = renderer.prewarm();
 			await first;
-			renderer.onContextRestoredInvalidate(renderer);
+			// emit the real event rather than calling the handler: what needs
+			// pinning is that the renderer is actually SUBSCRIBED, not that the
+			// handler body works when invoked by hand
+			event.emit(event.ONCONTEXT_RESTORED, renderer);
 			expect(renderer._prewarmed).toBeUndefined();
 			const second = renderer.prewarm();
 			expect(second).not.toBe(first);
@@ -124,9 +137,7 @@ describe("renderer.prewarm()", () => {
 		});
 
 		it("warms the keys the DRAW path actually asks for", async (ctx) => {
-			if (renderer === null || renderer === undefined) {
-				ctx.skip();
-			}
+			requireWebGL(ctx, renderer);
 			// `prewarm()` enumerates its variant keys and #defines by hand,
 			// duplicating what `meshShader()`, `instancedShaderFor()` and
 			// `instancedShadowShader()` build for real. If those drift apart it
@@ -137,33 +148,33 @@ describe("renderer.prewarm()", () => {
 			// So assert through the REAL entry points rather than by writing
 			// the keys out a third time: after a prewarm, nothing the draw path
 			// asks for may add to the map.
-			const batcher = meshBatcher();
 			const fog = renderer._fog3d;
 			try {
-				batcher.shaderVariants.clear();
-				await batcher.prewarm();
-				const warmed = batcher.shaderVariants.size;
+				for (const batcher of meshBatchers()) {
+					batcher.shaderVariants.clear();
+					await batcher.prewarm();
+					const warmed = batcher.shaderVariants.size;
+					expect(warmed).toBeGreaterThan(0);
 
-				for (const fogState of [null, {}]) {
-					renderer._fog3d = fogState;
-					batcher.meshShader();
-					batcher.instancedShadowShader();
-					for (const hasColor of [false, true]) {
-						for (const hasData of [false, true]) {
-							batcher.instancedShaderFor({ hasColor, hasData });
+					for (const fogState of [null, {}]) {
+						renderer._fog3d = fogState;
+						batcher.meshShader();
+						batcher.instancedShadowShader();
+						for (const hasColor of [false, true]) {
+							for (const hasData of [false, true]) {
+								batcher.instancedShaderFor({ hasColor, hasData });
+							}
 						}
 					}
+					expect(batcher.shaderVariants.size).toBe(warmed);
 				}
-				expect(batcher.shaderVariants.size).toBe(warmed);
 			} finally {
 				renderer._fog3d = fog;
 			}
 		});
 
 		it("returns the same promise rather than compiling twice", async (ctx) => {
-			if (renderer === null || renderer === undefined) {
-				ctx.skip();
-			}
+			requireWebGL(ctx, renderer);
 			const first = renderer.prewarm();
 			const second = renderer.prewarm();
 			expect(second).toBe(first);
@@ -171,9 +182,7 @@ describe("renderer.prewarm()", () => {
 		});
 
 		it("leaves the lazy path intact — a variant still builds on demand", async (ctx) => {
-			if (renderer === null || renderer === undefined) {
-				ctx.skip();
-			}
+			requireWebGL(ctx, renderer);
 			// the regression that would matter: prewarm must POPULATE the
 			// cache the draw path reads, never replace or gate it. A game
 			// that does not preload has to keep working
@@ -191,9 +200,7 @@ describe("renderer.prewarm()", () => {
 		});
 
 		it("hands a warmed variant back to the draw path", async (ctx) => {
-			if (renderer === null || renderer === undefined) {
-				ctx.skip();
-			}
+			requireWebGL(ctx, renderer);
 			const batcher = meshBatcher();
 			batcher.shaderVariants.clear();
 			await batcher.prewarm();
@@ -236,8 +243,13 @@ describe("renderer.prewarm()", () => {
 		});
 
 		afterAll(() => {
+			// settings first: reaching into a destroyed app happens to work
+			// today, and is exactly the kind of order dependence that breaks
+			// silently the day destroy() starts nulling things
+			if (app) {
+				app.settings.prewarm = false;
+			}
 			app?.destroy();
-			app.settings.prewarm = false;
 		});
 
 		it("does not warm when the setting is turned off", async () => {
