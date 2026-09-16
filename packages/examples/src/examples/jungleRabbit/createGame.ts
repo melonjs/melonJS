@@ -91,7 +91,21 @@ export const createGame = async () => {
 
 	// One fade covers every state change, so neither stage has to know about
 	// the other.
-	state.transition("fade", "#0d1f14", 420);
+	//
+	// The colour is the built-in loading screen's own background (`#202020`),
+	// not a colour of this game's choosing. The first transition runs from the
+	// loading screen, and a fade between two DIFFERENT darks reads as a flash
+	// of a third colour rather than as a dissolve — the eye tracks the hue
+	// change, not the brightness. Matching it means the screen simply holds
+	// on one colour from the loader through to the title fading up.
+	//
+	// It does NOT make the hand-off itself graceful: `DefaultLoadingScreen`
+	// removes its logo and progress bar on `LOADER_COMPLETE`, which fires
+	// when PRELOADING finishes — before the block below has even configured
+	// the transition — so they pop rather than dim. Covering that wants a
+	// loading stage of this example's own, which is the same thing
+	// `prewarmScene` needs.
+	state.transition("fade", "#202020", 420);
 
 	state.change(state.MENU);
 };

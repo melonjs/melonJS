@@ -112,6 +112,14 @@ class DefaultLoadingScreen extends Stage {
 	#cleanedUp = false;
 
 	/**
+	 * whether the preloader has reported done. Latched on LOADER_COMPLETE
+	 * and read by the logo's own load callback — NOT a teardown signal.
+	 * @ignore
+	 * @internal
+	 */
+	#loadingComplete = false;
+
+	/**
 	 * Pin the loading screen to a Camera2d regardless of the
 	 * application's `cameraClass` setting. The loader must render
 	 * correctly even when the host app opts in to Camera3d globally
@@ -132,6 +140,7 @@ class DefaultLoadingScreen extends Stage {
 
 		this.#app = app;
 		this.#cleanedUp = false;
+		this.#loadingComplete = false;
 
 		// set a background color
 		app.world.backgroundColor.parseCSS("#202020");
@@ -142,24 +151,57 @@ class DefaultLoadingScreen extends Stage {
 		this.progressBar = new ProgressBar(0, height / 2, width, barHeight);
 		app.world.addChild(this.progressBar, 1);
 
-		// clean up loading screen children when the preloader completes,
-		// whether or not a state.change() follows
-		once(LOADER_COMPLETE, this.#cleanup, this);
+		// Latch "the preloader is done" — and ONLY that.
+		//
+		// This used to tear the screen down here, to fix a real race: the logo
+		// image loads asynchronously and, since the promise-based loader, can
+		// resolve AFTER the user's own assets do — so the sprite was added to a
+		// world that had already moved on, with nobody left to remove it. The
+		// latch is what actually fixes that, and the logo's load callback below
+		// is where it is read.
+		//
+		// Removing this screen's children is the STAGE's business, and happens
+		// in `onDestroyEvent`. Doing it here left the loading screen blank for
+		// the gap between "assets are in" and "the game changed state" — which
+		// is as long as the game's own post-preload setup takes — and, worse,
+		// meant a `state.transition()` had nothing left to fade over: the logo
+		// and bar popped out a beat before the transition that was supposed to
+		// carry them.
+		once(LOADER_COMPLETE, this.#onLoaderComplete, this);
 
-		// load the melonJS logo
-		load({ name: "melonjs_logo", type: "image", src: logo_url }, () => {
-			// guard against the logo loading after preload completed
-			if (this.#cleanedUp) {
-				return;
-			}
-			// melonJS logo
-			this.logoSprite = new Sprite(width / 2, height / 2, {
-				image: "melonjs_logo",
-				framewidth: 256,
-				frameheight: 256,
+		// load the melonJS logo. The promise form, like everything else the
+		// engine documents — `onResetEvent` cannot await, so the guard below
+		// is still what keeps a late logo out of a world that has moved on,
+		// but a failed decoration must not take the game's loading screen
+		// down with it, and `.catch()` is where that is said.
+		load({ name: "melonjs_logo", type: "image", src: logo_url })
+			.then(() => {
+				// guard against the logo loading after preload completed — see
+				// the LOADER_COMPLETE latch above
+				if (this.#loadingComplete || this.#cleanedUp) {
+					return;
+				}
+				// melonJS logo
+				this.logoSprite = new Sprite(width / 2, height / 2, {
+					image: "melonjs_logo",
+					framewidth: 256,
+					frameheight: 256,
+				});
+				app.world.addChild(this.logoSprite, 2);
+			})
+			.catch(() => {
+				// the logo is decoration; a game must still be able to load
 			});
-			app.world.addChild(this.logoSprite, 2);
-		});
+	}
+
+	/**
+	 * The preloader is done. Latched so a late-arriving logo is not added
+	 * to a world that is about to be replaced; nothing is torn down here.
+	 * @ignore
+	 * @internal
+	 */
+	#onLoaderComplete() {
+		this.#loadingComplete = true;
 	}
 
 	/**
@@ -202,8 +244,8 @@ class DefaultLoadingScreen extends Stage {
 	onDestroyEvent() {
 		// remove the listener in case state.change() is called
 		// before the preloader fires LOADER_COMPLETE
-		if (!this.#cleanedUp) {
-			off(LOADER_COMPLETE, this.#cleanup, this);
+		if (!this.#loadingComplete) {
+			off(LOADER_COMPLETE, this.#onLoaderComplete, this);
 		}
 		this.#cleanup();
 	}
