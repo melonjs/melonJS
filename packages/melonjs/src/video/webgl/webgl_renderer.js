@@ -532,6 +532,11 @@ export default class WebGLRenderer extends Renderer {
 		this.onContextRestoredInvalidate = (renderer) => {
 			if (renderer === this) {
 				this.currentProgram = undefined;
+				// the programs a prewarm built died with the old context, so
+				// the memo has to die too — otherwise `prewarm()` reports the
+				// work already done for the rest of the session and the
+				// variants silently go back to being built on first draw
+				this._prewarmed = undefined;
 			}
 		};
 		this.onCanvasResize = (width, height) => {

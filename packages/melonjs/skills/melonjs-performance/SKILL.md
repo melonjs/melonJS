@@ -172,6 +172,12 @@ fog) and links it on the first draw that needs it — and `compileProgram` calls
 `getProgramParameter(LINK_STATUS)` right after `linkProgram`, which blocks until
 the driver finishes. That whole cost lands inside one frame.
 
+Since 20.6 the engine's own programs are built during `preload()` instead
+(`preWarmShaders`, on by default), so on a current version this is one cause you
+can rule out before looking further — see `melonjs-loading-assets`. It does not
+cover effects you construct inline, and it does not cover the rest of what a
+first frame pays for, below.
+
 How to tell them apart, all from the page:
 
 ```js
@@ -193,10 +199,19 @@ The tell is that the second entry into the same scene is cheap: one measured
 case went 852ms of stall (worst frame 479ms) on first entry to 277ms (worst
 102ms) on the second, because the programs were already cached.
 
-Two things follow. Cut the number of programs — identical `ShaderEffect`s each
-link their own, so preload one as a `"shader"` asset and share it. And pay what
-remains behind the loading screen by drawing the scene once there and discarding
-it (see `melonjs-loading-assets`).
+Three things follow.
+
+- **Cut the number of programs.** Identical `ShaderEffect`s each link their own,
+  so preload one as a `"shader"` asset and share it.
+- **Declare effects as assets, not inline**, so the loader can prepare them
+  before a scene draws — an inline effect does not exist until the stage that
+  builds it runs.
+- **Pay what remains behind the loading screen** by drawing the scene once there
+  and discarding it (see `melonjs-loading-assets`). Linking is only part of a
+  first frame: texture residency, buffer uploads and the driver specializing
+  against real bindings all land on the first *submit*, and only an actual draw
+  front-loads those. A measured case on a fast desktop GPU had shader prewarming
+  move the worst frame by ~3ms while a warm-up draw moved it by hundreds.
 
 Do not profile this on a software rasterizer — headless Chromium falls back to
 SwiftShader, where the absolute numbers are wildly pessimistic and the JS

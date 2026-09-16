@@ -3674,6 +3674,9 @@ export default class WebGPURenderer extends Renderer {
 		for (const batcher of this.batchers.values()) {
 			batcher.init(this);
 		}
+		// anything a prewarm built belonged to the lost device; drop the memo
+		// so a later `prewarm()` rebuilds rather than reporting itself done
+		this._prewarmed = undefined;
 		emit(ONCONTEXT_RESTORED, this);
 	}
 

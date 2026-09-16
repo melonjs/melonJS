@@ -87,14 +87,35 @@ uploads four copies of the same pixels. Build them once after `preload`
 resolves and share them, the way the platformer example builds its
 `TextureAtlas` into a module the scenes read from.
 
-**3. The engine's own shader variants — not preloadable at all.** The mesh
-batcher compiles a program per *feature combination* (lit, instanced, instance
-colours, instance data, fog — fog joins the key), lazily, on the first draw that
-needs it. There is no loader type for these and no API to warm the cache: the
-only lever is to **draw** that combination once while the loading screen is
-still up, then throw the scene away — the compiled programs stay in the
-renderer. Worth doing for a heavy 3D scene, where first-draw linking is easily a
-few hundred ms and lands as a freeze on the first frame of the first level.
+**3. The engine's own shader programs — warmed for you, since 20.6.** The mesh
+batcher compiles a program per *feature combination* (instance colours, instance
+data, fog — fog joins the key), lazily, on the first draw that needs it.
+`preWarmShaders` builds them during `preload()` instead, behind the loading
+screen:
+
+```js
+const app = new Application(1280, 720, {
+    // on by default since 20.6 — named here only to show where it lives
+    preWarmShaders: true,
+});
+```
+
+The preloader calls `renderer.prewarm()` once the assets are in and **before**
+`LOADER_COMPLETE` fires, so it happens while the progress bar is still up. On
+WebGL that links the mesh batcher's eleven variants; on WebGPU it compiles the
+WGSL module of every shader the loader holds — which is the reason to declare
+effects as assets rather than build them inline (see above).
+
+Cost to a game that uses none of it is about 60ms of preload on a desktop GPU.
+Set it to `false` only for a target where linking is slow enough that the
+preload itself would suffer.
+
+**What it does not do.** It makes the shaders *ready* earlier. It does not
+remove the hitch on a scene's first frame, because most of that frame is
+first-**submit** work — texture residency, buffer uploads, the driver
+specializing against real bindings — which compiling a program does not touch.
+For that, the lever is still to **draw** the scene once while the loading screen
+is up and then throw it away; the warmed GPU state stays behind.
 
 ```js
 await loader.preload(resources);

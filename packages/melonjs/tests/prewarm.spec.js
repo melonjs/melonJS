@@ -106,6 +106,23 @@ describe("renderer.prewarm()", () => {
 			);
 		});
 
+		it("forgets it warmed once the context is restored", async (ctx) => {
+			if (renderer === null || renderer === undefined) {
+				ctx.skip();
+			}
+			// the programs died with the old context. Leaving the memo set
+			// would have `prewarm()` report the work done for the rest of the
+			// session, silently putting every variant back on the first-draw
+			// path — no error, just the feature quietly off
+			const first = renderer.prewarm();
+			await first;
+			renderer.onContextRestoredInvalidate(renderer);
+			expect(renderer._prewarmed).toBeUndefined();
+			const second = renderer.prewarm();
+			expect(second).not.toBe(first);
+			await second;
+		});
+
 		it("returns the same promise rather than compiling twice", async (ctx) => {
 			if (renderer === null || renderer === undefined) {
 				ctx.skip();
