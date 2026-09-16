@@ -7,7 +7,7 @@
 
 ### Fixed
 - Camera: a camera effect now draws on a `Camera3d`. A full-viewport overlay was rasterized through the camera's perspective projection and clipped away, so **no camera effect rendered at all on the 3D tier** — including the fade behind `state.transition()`, whose reveal was a hard cut
-- Loader: the built-in loading screen loads its own logo through the promise form of `load()`, and tolerates it failing
+- Loader: the built-in loading screen fetches its logo asynchronously and handles the failure case — a logo that does not load is treated as the decoration it is, leaving the progress bar running rather than putting an unhandled error in the way of the game's own preload
 
 ## [20.5.0] (melonJS 2) - _2026-09-15_
 
