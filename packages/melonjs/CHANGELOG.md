@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.6.0] (melonJS 2) - _unreleased_
+
+### Fixed
+- Camera: a camera effect now draws on a `Camera3d`. Effects are full-viewport overlays — `FadeEffect` fills the rect, `MaskEffect` cuts a hole in one — but they were rasterized through whatever the camera had bound for walking the **world**, which on a `Camera3d` is a perspective matrix. The overlay quad went through the frustum as geometry sitting at the camera's own eye and was clipped away, so every camera effect silently did nothing. `state.transition()` is built on a fade, so **scene transitions did not render at all for any game on a `Camera3d`**: the fade into a 3D stage played over the outgoing 2D screen, and the reveal out of it was a hard cut
+
 ## [20.5.0] (melonJS 2) - _2026-09-15_
 
 ### Added

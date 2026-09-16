@@ -9,8 +9,10 @@ import {
 } from "vitest";
 import {
 	boot,
+	Camera2d,
 	Camera3d,
 	Container,
+	FadeEffect,
 	InstancedMesh,
 	Matrix3d,
 	Mesh,
@@ -1127,6 +1129,74 @@ describe("the transparent pass (#1516)", () => {
 				camera.drawFX = fx;
 			}
 			expect(order).toEqual(["drain", "drawFX"]);
+		});
+
+		/**
+		 * Record which projection matrix was bound at the moment the camera
+		 * painted its effects.
+		 * @param camera - the camera to draw
+		 * @returns the matrix `setProjection` last received before `drawFX`
+		 */
+		const projectionAtDrawFX = (camera) => {
+			camera.addCameraEffect(
+				new FadeEffect(camera, { color: "#000", duration: 300 }),
+			);
+			let bound = null;
+			let boundAtDraw = null;
+			const setProjection = renderer.setProjection.bind(renderer);
+			renderer.setProjection = (m) => {
+				bound = m;
+				return setProjection(m);
+			};
+			const fx = camera.drawFX.bind(camera);
+			camera.drawFX = (...a) => {
+				boundAtDraw = bound;
+				return fx(...a);
+			};
+			try {
+				camera.draw(renderer, new Container(0, 0, SIZE, SIZE));
+			} finally {
+				renderer.setProjection = setProjection;
+				camera.drawFX = fx;
+			}
+			return { boundAtDraw, boundAfter: bound };
+		};
+
+		it("paints its effects in SCREEN space, not through its own view", (ctx) => {
+			requireWebGL(ctx);
+			// A camera effect is a full-viewport overlay — `FadeEffect` fills
+			// the rect, `MaskEffect` cuts a hole in one — so it has to be
+			// rasterized against the screen. It was drawn through whatever the
+			// camera had bound for walking the WORLD, which on a `Camera3d` is
+			// a PERSPECTIVE matrix: the quad then went through the frustum as
+			// geometry sitting at z = 0, at the camera's own eye, and was
+			// clipped away. Every camera effect silently did nothing on the 3D
+			// tier — and since `state.transition()` IS a camera effect, so did
+			// every scene transition in every 3D game.
+			const camera = new Camera3d(0, 0, SIZE, SIZE);
+			const { boundAtDraw } = projectionAtDrawFX(camera);
+			expect(boundAtDraw).toBe(camera.screenProjection);
+			expect(boundAtDraw).not.toBe(camera.projectionMatrix);
+		});
+
+		it("puts the view projection back for the passes that follow", (ctx) => {
+			requireWebGL(ctx);
+			// `postDraw` and the stage lighting overlay run after the effects.
+			// Leaving the screen ortho bound would quietly change what they
+			// rasterize against, trading one bug for another.
+			const camera = new Camera3d(0, 0, SIZE, SIZE);
+			const { boundAfter } = projectionAtDrawFX(camera);
+			expect(boundAfter).toBe(camera.projectionMatrix);
+		});
+
+		it("still binds a screen-space projection on a Camera2d", (ctx) => {
+			requireWebGL(ctx);
+			// The 2D path worked only because `screenProjection` is a copy of
+			// `projectionMatrix` there — it was right by coincidence, not by
+			// construction. Pin the construction so it stays right.
+			const camera = new Camera2d(0, 0, SIZE, SIZE);
+			const { boundAtDraw } = projectionAtDrawFX(camera);
+			expect(boundAtDraw).toBe(camera.screenProjection);
 		});
 	});
 
