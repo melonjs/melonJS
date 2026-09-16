@@ -15,16 +15,11 @@ import {
 	type Application,
 	type Camera3d,
 	type Container as ContainerType,
-	event,
-	GLTFModel,
 	InstancedMesh,
 	Light3d,
-	loader,
 	Matrix3d,
 	Mesh,
 	math,
-	ParticleEmitter,
-	type Renderable,
 	Sprite,
 	Sprite3d,
 	Vector2d,
@@ -41,7 +36,6 @@ import {
 	geometry as modelGeometry,
 } from "./assets";
 import {
-	BOAT_SCALE,
 	CAM_FOV,
 	CAM_PITCH,
 	FLARE_EDGE_FADE,
@@ -53,8 +47,6 @@ import {
 	HALF_W,
 	HUD_Z,
 	MODEL_SCALE,
-	RIDE_Y,
-	SHADOW_LIFT,
 	SKY,
 	SUN_AHEAD,
 	TILE_LEN,
@@ -76,193 +68,6 @@ const AXIS_Y = new Vector3d(0, 1, 0);
    allocates nothing. */
 const _sunAt = new Vector3d();
 const _sunScreen = new Vector2d();
-
-/**
- * Draw the scene once while the loading screen is still up.
- *
- * The procedural build itself is cheap — the whole backdrop assembles in about
- * 13ms, and the run's own scene in 6ms. What costs is the FIRST time that
- * geometry reaches the GPU: the shader programs and pipeline state for the lit,
- * instanced and blended mesh paths are created on first draw, and that is a
- * ~375ms stall measured on the first entry versus the second (479ms worst frame
- * against 102ms). It is one-time and it lives in the renderer's caches, so
- * paying it here — behind a loading screen that is already on screen — is the
- * whole trick. The menu and the run both come up warm afterwards.
- *
- * NOT WIRED UP. It works — it does link the programs and does save the stall —
- * but it cannot coexist with the engine's built-in loading screen under a
- * `Camera3d`. `DefaultLoadingScreen` is written for a `Camera2d`: its progress
- * bar is a WORLD-space renderable (`floating === false`) that reads as an
- * overlay only because that stage's world is otherwise empty. Add a 3D scene
- * beside it and the bar is inside that scene, where the depth buffer buries it
- * in the terrain. Raising its `z`, reordering with `moveToTop` and flipping it
- * to screen space for the duration were all tried; the scene still covers it.
- *
- * Wiring this in wants a loading stage of the example's own, drawing its
- * progress UI as floating renderables over the warm-up — at which point the
- * screen could show the river loading in rather than a logo. Until then the
- * ~180ms it saves is not worth a hidden loading screen.
- *
- * The scene is thrown away immediately; only the compiled programs are kept.
- * @param app - the running application
- * @returns a promise that settles once the scene has actually been drawn
- */
-export const prewarmScene = (app: Application) => {
-	// Keep the loading screen looking like the loading screen. `buildBackdrop`
-	// sets the sky as the clear colour, and the scene's very first drawn frame
-	// has nothing else in it yet — which is precisely the flash of empty blue
-	// this exists to remove, so it must not be shown here either.
-	const clear = app.renderer.backgroundColor.clone();
-	// Everything below is added to the world the LOADING stage owns, so note
-	// what was already in it. Tearing down with `world.reset()` took the
-	// loading screen's own logo and progress bar with it — the screen went
-	// blank for the rest of the load, which reads as no loading screen at all.
-	const existing = new Set(app.world.getChildren());
-	buildBackdrop(app);
-	// The run adds one thing the backdrop never does: the rigged boat, whose
-	// mesh permutation is its own program. Draw it here too, or it links on the
-	// first frame of the first run instead.
-	const gltf = loader.getGLTF("boat");
-	if (gltf === null) {
-		throw new Error('jungleRabbit: glTF "boat" was not preloaded');
-	}
-	const boat = new GLTFModel(gltf, {
-		scale: BOAT_SCALE,
-		lit: false,
-		castGroundShadow: true,
-		shadowGroundY: WATER_LEVEL + SHADOW_LIFT,
-	});
-	boat.pos.set(0, WATER_LEVEL + RIDE_Y);
-	boat.setCurrentAnimation("paddle", { loop: true });
-	app.world.addChild(boat, 0);
-
-	// The rest of what a run draws that a backdrop does not. A program is
-	// keyed on the combination of features a draw asks for, so what matters
-	// here is covering the KINDS — an additive transparent billboard, a
-	// particle emitter, a label carrying a post effect — not their values.
-	const sun = new Sprite3d(0, GROUND_Y - 1500, {
-		image: getSun(),
-		width: 620,
-		height: 620,
-		lit: false,
-		transparent: true,
-		fog: false,
-		castGroundShadow: false,
-	});
-	// a PROPERTY, not a setting — only the renderer reads a `blendMode`
-	// setting, so in the literal above it would have done nothing
-	sun.blendMode = "additive";
-	sun.depth = 3000;
-	app.world.addChild(sun, 0);
-
-	const spray = new ParticleEmitter(0, WATER_LEVEL, {
-		image: getPuff(),
-		referenceSpace: "world",
-		totalParticles: 8,
-		maxParticles: 8,
-		minLife: 200,
-		maxLife: 200,
-		speed: 0.2,
-		angle: Math.PI / 2,
-		angleVariation: Math.PI,
-	});
-	app.world.addChild(spray, 0);
-	spray.burstParticles(8);
-
-	// an UNLIT, non-instanced, fogged mesh — the pickups' combination, and the
-	// one the bank planting (instanced) and the hull (its own rig) never ask for
-	const pickup = new Mesh(0, GROUND_Y, {
-		...modelGeometry("carrot"),
-		texture: getPalette(),
-		normalize: false,
-		scale: MODEL_SCALE,
-		width: 120,
-		height: 200,
-		textureFilter: "nearest",
-		cullBackFaces: false,
-		lit: false,
-		castGroundShadow: true,
-		shadowGroundY: GROUND_Y,
-	});
-	pickup.depth = 900;
-	app.world.addChild(pickup, 0);
-
-	app.renderer.backgroundColor.setColor(clear.r, clear.g, clear.b, clear.alpha);
-
-	// Put the loading screen back on top of the warm-up scene.
-	//
-	// The world sorts by `z` — `autoSort` is on, only `autoDepth` is off — and
-	// that sort is DEFERRED, so it is the z values that decide the final draw
-	// order, not the array order at this moment. For a Camera3d mesh `z` IS its
-	// world depth: the terrain tiles are added at 0…7200, against the loading
-	// screen's bar at 1 and logo at 2, so the scene sorts over the UI and hides
-	// it completely. The tiles cannot be pushed down without moving the
-	// geometry, so the UI goes up instead.
-	//
-	// `moveToTop` is no good here: it early-returns for a child already at
-	// index 0, and the loading screen's own children are exactly that — added
-	// before anything else. Setting `z` directly is what survives the sort.
-	// These are `floating` renderables drawn in screen space, so their `z` buys
-	// them nothing else and is free to move.
-	// The built-in loading screen is built for a Camera2d: its progress bar is
-	// a WORLD-space renderable (`floating === false`) that only looks like an
-	// overlay because that stage's world is otherwise empty. Put a 3D scene in
-	// beside it under a Camera3d and the bar is simply inside that scene — the
-	// depth buffer buries it in the terrain, whatever its `z`. Drawing it in
-	// screen space for the duration is what keeps it on top; it is restored
-	// with everything else when the warm-up tears down.
-	const wasFloating = new Map<Renderable, boolean>();
-	const lift = () => {
-		for (const child of app.world.getChildren()) {
-			if (existing.has(child) && child.floating !== true) {
-				wasFloating.set(child, child.floating);
-				child.floating = true;
-			}
-		}
-	};
-	lift();
-
-	return new Promise<void>((resolve) => {
-		let drawn = 0;
-		const done = () => {
-			// the logo is added once its image decodes, which can land inside
-			// the warm-up — so keep catching newcomers
-			lift();
-			// two frames: the first links the programs this scene touches, the
-			// second proves they draw without a further stall. More does not
-			// help — two of the run's programs come from renderables the
-			// backdrop simply does not have, and no amount of extra frames
-			// here will link those.
-			if (++drawn < 90) {
-				// TEMP: hold so the warm-up can be observed
-				return;
-			}
-			event.off(event.GAME_AFTER_DRAW, done);
-			// Only what this function put there — see `existing` above.
-			for (const child of [...app.world.getChildren()]) {
-				if (!existing.has(child)) {
-					app.world.removeChild(child);
-				}
-			}
-			for (const [child, was] of wasFloating) {
-				child.floating = was;
-			}
-			app.renderer.backgroundColor.setColor(
-				clear.r,
-				clear.g,
-				clear.b,
-				clear.alpha,
-			);
-			resolve();
-		};
-		event.on(event.GAME_AFTER_DRAW, done);
-	});
-};
-
-/**
- * Build the menu backdrop into the world and frame the camera on it.
- * @param app - the running application
- */
 
 /**
  * The sun billboard and the screen-space quad its lens flare runs on.

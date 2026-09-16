@@ -99,12 +99,9 @@ export const createGame = async () => {
 	// change, not the brightness. Matching it means the screen simply holds
 	// on one colour from the loader through to the title fading up.
 	//
-	// It does NOT make the hand-off itself graceful: `DefaultLoadingScreen`
-	// removes its logo and progress bar on `LOADER_COMPLETE`, which fires
-	// when PRELOADING finishes — before the block below has even configured
-	// the transition — so they pop rather than dim. Covering that wants a
-	// loading stage of this example's own, which is the same thing
-	// `prewarmScene` needs.
+	// The loading screen's own logo and bar are still on screen at this point
+	// — they leave when this stage is destroyed, not when the assets land —
+	// so the fade below dims them out rather than finding an empty screen.
 	state.transition("fade", "#202020", 420);
 
 	state.change(state.MENU);
