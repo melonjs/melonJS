@@ -135,6 +135,31 @@ export type ApplicationSettings = {
 	antiAlias: boolean;
 
 	/**
+	 * Compile the backend's built-in shaders during `loader.preload()`,
+	 * behind the loading screen, instead of on the frame that first draws
+	 * them (GPU backends — the Canvas renderer has no shaders and ignores
+	 * this).
+	 *
+	 * A GPU backend does not finish a shader when handed the source; it
+	 * finishes it the first time something is drawn with it. That puts the
+	 * whole cost on the frame a scene first appears, which is the moment a
+	 * level or stage comes up and its geometry arrives a beat late. Warming
+	 * up moves it to where a progress bar is already on screen.
+	 *
+	 * **Off by default**, because the cost is only worth paying for a game
+	 * that reaches the programs being warmed: a purely 2D game would compile
+	 * the mesh, instanced and ground-shadow tiers it will never bind. Turn it
+	 * on for anything using the 3D tier.
+	 *
+	 * Shaders declared as assets (`{type: "shader"}`) are covered too, so a
+	 * level's own effects are warmed by declaring them alongside that level's
+	 * assets rather than building them inline when the level starts.
+	 * @default false
+	 * @see {@link Renderer#prewarm}
+	 */
+	preWarmShaders: boolean;
+
+	/**
 	 * Default texture magnification/minification filter, **decoupled from
 	 * `antiAlias`** (GPU backends — WebGL and WebGPU; the 2D Canvas
 	 * renderer has no per-texture filtering and ignores this).

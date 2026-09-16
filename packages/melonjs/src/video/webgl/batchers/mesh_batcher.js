@@ -981,6 +981,62 @@ export default class MeshBatcher extends MaterialBatcher {
 	}
 
 	/**
+	 * Build every shader variant this batcher can reach, so none of them is
+	 * compiled on the frame a scene first draws.
+	 *
+	 * The set is enumerable because each variant is a source permutation, not
+	 * a runtime branch: fog on or off, and the three instance-record slots.
+	 * That is 1 fogged mesh + 8 instanced + 2 ground-shadow programs; the
+	 * plain mesh program is built in the constructor and is already here.
+	 *
+	 * Yields between programs. Linking is synchronous in WebGL and a dozen
+	 * links in one task is a dropped frame — which on a loading screen is a
+	 * stuttering progress bar, trading one visible hitch for another.
+	 * @returns {Promise<void>} settles once every variant is linked
+	 * @ignore
+	 * @internal
+	 */
+	async prewarm() {
+		const yieldToFrame = () => {
+			return new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+		};
+		const sources = this._shaderSources();
+		const instanced = this._instancedShaderSources();
+		for (const fogDefine of ["", "#define FOG\n"]) {
+			// the unfogged plain mesh program is `defaultShader`, built in the
+			// constructor — only its fogged twin is missing
+			if (fogDefine !== "") {
+				this.shaderVariant("mesh|fog", sources, fogDefine, fogDefine);
+				await yieldToFrame();
+			}
+			for (const hasColor of [false, true]) {
+				for (const hasData of [false, true]) {
+					const key =
+						(hasColor ? 1 : 0) | (hasData ? 2 : 0) | (fogDefine !== "" ? 4 : 0);
+					this.shaderVariant(
+						`instanced|${key}`,
+						instanced,
+						(hasColor ? "#define INSTANCE_COLORS\n" : "") +
+							(hasData ? "#define INSTANCE_DATA\n" : "") +
+							fogDefine,
+						(hasData ? "#define INSTANCE_DATA\n" : "") + fogDefine,
+					);
+					await yieldToFrame();
+				}
+			}
+			this.shaderVariant(
+				fogDefine === "" ? "shadow" : "shadow|fog",
+				{ vertex: meshShadowInstancedVertex, fragment: meshFragment },
+				fogDefine,
+				fogDefine,
+			);
+			await yieldToFrame();
+		}
+	}
+
+	/**
 	 * Whether the bound program is one this batcher would pick for a plain
 	 * mesh — its own, or the fog variant of its own.
 	 *

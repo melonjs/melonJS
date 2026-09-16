@@ -669,6 +669,33 @@ export default class WebGLRenderer extends Renderer {
 		});
 	}
 
+	/**
+	 * Compile every shader variant the built-in batchers can reach.
+	 *
+	 * A WebGL batcher builds its own program in its constructor, so the base
+	 * programs are already linked by the time `init()` resolves. What is not
+	 * is the mesh batcher's permutations — fog, and the three instance-record
+	 * slots — which are built on first use and so land on the frame a 3D
+	 * scene first draws.
+	 * @returns {Promise<void>} settles once every variant is linked
+	 * @see {@link Renderer#prewarm}
+	 */
+	prewarm() {
+		if (this._prewarmed === undefined) {
+			this._prewarmed = Promise.all(
+				[...this.batchers.values()].map((batcher) => {
+					return batcher.prewarm();
+				}),
+			).then(() => {
+				// the batchers each leave their own program bound; put the
+				// renderer back on the one it started the frame with, or the
+				// next draw inherits whichever batcher finished last
+				this.setBatcher("quad");
+			});
+		}
+		return this._prewarmed;
+	}
+
 	destroy() {
 		// Unregister first: every handler closes over `this`, so leaving them
 		// on the bus keeps the renderer (and transitively its batchers and GL

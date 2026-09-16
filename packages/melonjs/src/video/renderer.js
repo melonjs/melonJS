@@ -348,6 +348,34 @@ export default class Renderer {
 	flush() {}
 
 	/**
+	 * Compile the backend's built-in shader programs up front, so the first
+	 * frame that draws them does not stall while the driver builds them.
+	 *
+	 * A GPU backend does not finish a shader when you hand it the source. It
+	 * finishes it the first time something is actually drawn with it, which
+	 * puts the whole cost on the frame a scene first appears — the moment a
+	 * level or stage comes up and its geometry arrives a beat late. Calling
+	 * this while a loading screen is still on screen moves that cost to where
+	 * nobody is waiting on a frame.
+	 *
+	 * Resolves once the programs are genuinely ready, not merely requested,
+	 * and resolves immediately on a backend that has nothing to compile
+	 * (Canvas) or on a second call — it is idempotent, and the same promise
+	 * is handed back.
+	 *
+	 * `Application` calls this during `init()` when `preWarmShaders` is set,
+	 * so most games never call it directly.
+	 * @returns {Promise<void>} settles when the built-in programs are ready
+	 * @example
+	 * // warm up before swapping to a heavy 3D stage
+	 * await app.renderer.prewarm();
+	 * state.change(state.PLAY);
+	 */
+	prewarm() {
+		return Promise.resolve();
+	}
+
+	/**
 	 * Mark the start of a screen-space (`floating`) draw, during which the
 	 * camera's screen projection is installed and world-space geometry cannot
 	 * be replayed. Balanced by {@link Renderer#endScreenSpace}.

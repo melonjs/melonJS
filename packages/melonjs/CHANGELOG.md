@@ -2,6 +2,9 @@
 
 ## [20.6.0] (melonJS 2) - _unreleased_
 
+### Added
+- `renderer.prewarm()` builds the backend's built-in shader programs during `loader.preload()`, behind the loading screen, rather than on the frame that first draws them — opt in with `preWarmShaders: true` in the application settings. A GPU backend does not finish a shader when it is handed the source; it finishes it the first time something is drawn with it, which puts the cost on the frame a scene appears. On WebGL this builds the mesh batcher's eleven variants — fog, the four instance-record shapes, and the ground-shadow pair; on WebGPU it compiles the WGSL module of every shader the loader holds, which is what makes declaring a level's effects alongside that level's assets worth doing. **Off by default**, and strictly additive: with it off, or with no `preload()` at all, every program is still built lazily exactly as before. Not a frame-rate feature — on a fast desktop GPU the difference is inside measurement noise; it is for the devices where linking is slow
+
 ### Fixed
 - Loader: the built-in loading screen stays up until the stage that replaces it is ready. It removed its own logo and progress bar the moment `LOADER_COMPLETE` fired — which is when the **assets** are in, not when the game changes state — so the screen went blank for however long the game's own post-preload setup took, and a `state.transition()` had nothing left to fade over: the logo and bar popped out a beat ahead of the transition meant to carry them. That teardown was there to stop a late-resolving logo being added to a world that had already moved on; only the latch it set was doing that work, and the latch is kept. Removing the screen's children now happens where it belongs, when the stage is destroyed
 - Loader: the built-in loading screen loads its own logo through the promise form of `load()`, and tolerates it failing — a decoration that 404s no longer risks taking the loading screen with it

@@ -1,3 +1,4 @@
+import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
 import { Bounds } from "../../physics/bounds.ts";
@@ -45,6 +46,7 @@ import WebGPUQuadBatcher from "./batchers/quad_batcher.js";
 import WebGPUBatcher from "./batchers/webgpu_batcher.js";
 import WebGPUBufferArena from "./buffer/arena.js";
 import WebGPUUniformRing from "./buffer/uniformring.js";
+import { buildEffectGPU } from "./effect_binding.js";
 import WebGPUPipelineCache, { DEPTH_STENCIL_FORMAT } from "./pipeline/cache.js";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { COMPRESSION_FEATURES } from "./texture/compressed.js";
@@ -1547,6 +1549,54 @@ export default class WebGPURenderer extends Renderer {
 	 * end the open pass and submit the frame's command buffer
 	 * @override
 	 */
+	/**
+	 * Compile the WGSL module of every shader asset the loader has, ahead of
+	 * the frame that first draws it.
+	 *
+	 * WebGPU splits what WebGL fuses into one program. The **modules** for
+	 * the engine's own families — quad, blit, primitive, clear, and the mesh
+	 * tiers — are already created when the pipeline cache and the batchers
+	 * are constructed, so there is nothing lazy there to warm. A **pipeline**
+	 * is lazy, but it is keyed by draw state (blend, cull, depth-write) as
+	 * well as by shader, so the set a scene will ask for cannot be known from
+	 * here — and creating one costs almost nothing anyway, because WebGPU
+	 * records the intent and leaves the work to first use.
+	 *
+	 * What IS both lazy and knowable is a `ShaderEffect`'s module:
+	 * `prepareEffectBinding` builds it, and it is only ever called from
+	 * inside the draw path. Every effect the loader compiled from a
+	 * `{type: "shader"}` asset is already in `shaderList`, so those are
+	 * exactly the ones that can be brought forward — which is what makes
+	 * declaring a level's effects alongside that level's assets worth doing.
+	 *
+	 * Effects constructed inline when a stage builds are not here yet and
+	 * cannot be warmed; that is a property of when they come into existence,
+	 * not a limitation of this method.
+	 * @returns {Promise<void>} settles once those modules are built
+	 * @see {@link Renderer#prewarm}
+	 */
+	prewarm() {
+		if (this._prewarmed === undefined) {
+			this._prewarmed = Promise.resolve().then(() => {
+				for (const effect of Object.values(shaderList)) {
+					const realization = effect?.wgslRealization;
+					// a GLShader asset, or a body with no WGSL half, has no
+					// realization here — it is not an error, just not ours
+					if (realization === undefined || realization.valid !== true) {
+						continue;
+					}
+					if (
+						realization.gpu === null ||
+						realization.gpu.epoch !== this.pipelineCache.epoch
+					) {
+						buildEffectGPU(this, effect, realization);
+					}
+				}
+			});
+		}
+		return this._prewarmed;
+	}
+
 	flush() {
 		// A bracketed draw is sitting in an offscreen target that has not been
 		// composited yet, so it has to land BEFORE the encoder is submitted
