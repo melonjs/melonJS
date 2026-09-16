@@ -40,7 +40,22 @@ const ME_SIZE = 32;
  * @ignore
  * @internal
  */
-function buildEffectGPU(renderer, effect, realization) {
+/**
+ * Create this effect's GPU-side objects: its WGSL module, the group-3 bind
+ * group layout for its uniform shape, and the pipeline layout pairing them.
+ * One-time per effect per device epoch.
+ *
+ * Exported so `WebGPURenderer.prewarm()` can do this while a loading screen
+ * is up rather than on the frame the effect first draws. It is the whole of
+ * the one-time cost; everything `prepareEffectBinding` does after calling it
+ * is per-draw arena work that must NOT run early.
+ * @param {object} renderer - the active renderer
+ * @param {object} effect - the effect to realize
+ * @param {object} realization - the effect's WGSL realization
+ * @ignore
+ * @internal
+ */
+export function buildEffectGPU(renderer, effect, realization) {
 	const cache = renderer.pipelineCache;
 	const bindings = realization.builtinBindings;
 	const builtins = realization.builtins;

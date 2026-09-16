@@ -126,6 +126,43 @@ loader.preload([{ name: "ramp", type: "shader", data: myFragmentBody }]);
 label.addPostEffect(loader.getShader("ramp"));
 ```
 
+### Declare a level's effects with that level's assets
+
+An effect the loader knows about can be prepared before anything draws it; an
+effect built inline cannot, because it does not exist until the code that
+constructs it runs — which is the stage or level you were hoping to speed up.
+That is the practical reason to prefer the asset form even when the source is a
+string in your own module:
+
+```js
+// with the level's other assets, not in the stage that uses them.
+// `preload()` rather than `load()` — preload is what warms the shaders it
+// brought in, and it can be called again per level, not just at boot
+await loader.preload([
+    { name: "ripples", type: "shader", src: {
+        glsl: "assets/level2/ripples.glsl",
+        wgsl: "assets/level2/ripples.wgsl",
+    }},
+    // …that level's textures, maps and audio alongside it
+], undefined, false);   // `false`: stay on this stage, no loading screen
+```
+
+`src` takes the dual-language pair, so one asset carries both realizations and
+the two backends cannot drift apart. `data` takes inline source the same way.
+
+With `prewarm` on (the default since 20.6), `loader.preload()` warms on its way
+through — automatically, on every call — and compiles the GPU-side objects for
+every shader it holds — on WebGPU that is the
+WGSL module, which is otherwise built inside the draw path the first time the
+effect is used. Effects constructed inline are not in the loader, so nothing can
+bring them forward.
+
+One caveat if you are moving an inline effect to a file: a template literal can
+interpolate constants into the source (`vec2(${ASPECT}, 1.0)`), and a static
+file cannot. Promote those to uniforms rather than duplicating the numbers
+across the GLSL and WGSL copies — duplicated constants are exactly how the two
+backends drift.
+
 Sharing one instance across renderables is safe *because* the loader sets
 `effect.shared`. Without that flag a renderable's teardown destroys its post
 effects, which would free the program out from under everything else still

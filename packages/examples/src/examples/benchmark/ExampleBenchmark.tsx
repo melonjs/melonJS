@@ -13,6 +13,8 @@ import {
 	loader,
 	plugin,
 	ScaleMethods,
+	Stage,
+	state,
 	Text,
 	video,
 } from "melonjs";
@@ -56,45 +58,57 @@ const createGame = async () => {
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	// load our monster image and populate the game world
-	loader.preload(assets, () => {
-		// add some keyboard shortcuts
-		event.on(event.KEYDOWN, (_, keyCode) => {
-			// toggle fullscreen on/off
-			if (keyCode === input.KEY.F) {
-				if (!device.isFullscreen()) {
-					device.requestFullscreen();
-				} else {
-					device.exitFullscreen();
+	await loader.preload(assets);
+
+	// The scene lives in a Stage of its own, and the example switches to it
+	// once the assets are in. Building it in the preload callback and staying
+	// put would leave the game running inside `state.LOADING` — a transitional
+	// stage nothing ever destroys, so the loading screen's logo and progress
+	// bar would sit on top of the scene for good.
+	class BenchmarkScene extends Stage {
+		override onResetEvent() {
+			// add some keyboard shortcuts
+			event.on(event.KEYDOWN, (_, keyCode) => {
+				// toggle fullscreen on/off
+				if (keyCode === input.KEY.F) {
+					if (!device.isFullscreen()) {
+						device.requestFullscreen();
+					} else {
+						device.exitFullscreen();
+					}
 				}
-			}
 
-			if (keyCode === input.KEY.ENTER || keyCode === input.KEY.SPACE) {
+				if (keyCode === input.KEY.ENTER || keyCode === input.KEY.SPACE) {
+					addFruits(FRUIT_STEP);
+				}
+			});
+
+			// register on pointer down
+			input.registerPointerEvent("pointerdown", game.viewport, () => {
 				addFruits(FRUIT_STEP);
-			}
-		});
+			});
 
-		// register on pointer down
-		input.registerPointerEvent("pointerdown", game.viewport, () => {
-			addFruits(FRUIT_STEP);
-		});
+			// reset/empty the game world
+			game.world.reset();
 
-		// reset/empty the game world
-		game.world.reset();
+			// add hint text
+			const hint = new Text(game.viewport.width / 2, 20, {
+				font: "Arial",
+				size: "16px",
+				fillStyle: "#ffffff",
+				textAlign: "center",
+				text: "Tap or Click to spawn more sprites",
+			});
+			hint.floating = true;
+			hint.setOpacity(0.6);
+			game.world.addChild(hint, Infinity);
 
-		// add hint text
-		const hint = new Text(game.viewport.width / 2, 20, {
-			font: "Arial",
-			size: "16px",
-			fillStyle: "#ffffff",
-			textAlign: "center",
-			text: "Tap or Click to spawn more sprites",
-		});
-		hint.floating = true;
-		hint.setOpacity(0.6);
-		game.world.addChild(hint, Infinity);
+			addFruits(FRUIT_STEP, "watermelon");
+		}
+	}
 
-		addFruits(FRUIT_STEP, "watermelon");
-	});
+	state.set(state.PLAY, new BenchmarkScene());
+	state.change(state.PLAY);
 };
 
 export const ExampleBenchmark = createExampleComponent(createGame);

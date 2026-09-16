@@ -796,6 +796,18 @@ export class WebGLBatcher extends Batcher {
 			vertex.clear();
 		}
 	}
+	/**
+	 * Build any shader variant this batcher compiles lazily.
+	 *
+	 * A batcher whose only program is the one built in its constructor has
+	 * nothing to do here — which is every batcher but the mesh one.
+	 * @returns {Promise<void>} settles once this batcher is warm
+	 * @ignore
+	 * @internal
+	 */
+	prewarm() {
+		return Promise.resolve();
+	}
 }
 
 export default WebGLBatcher;

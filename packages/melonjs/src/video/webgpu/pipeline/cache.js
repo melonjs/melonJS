@@ -503,46 +503,76 @@ export default class WebGPUPipelineCache {
 				primitive.cullMode = meshState.cullMode;
 				primitive.frontFace = meshState.frontFace;
 			}
-			pipeline = this.device.createRenderPipeline({
-				label: `melonJS ${key}`,
-				layout: this.pipelineLayouts[shaderKey],
-				vertex: {
-					module: this.modules[shaderKey],
-					entryPoint: "vertex_main",
-					buffers: vertexLayout ?? [],
-					...(meshState ? { constants: { enable_fog: fogFlag } } : {}),
-				},
-				fragment: {
-					module: this.modules[shaderKey],
-					entryPoint: "fragment_main",
-					...(meshState ? { constants: { enable_fog: fogFlag } } : {}),
-					targets: [
-						{
-							format: this.format,
-							blend:
-								shaderKey === "clear" ? undefined : gpuBlendState(blend, pma),
-							writeMask: stencil.colorWriteMask,
-						},
-					],
-				},
-				primitive,
-				depthStencil: {
-					format: DEPTH_STENCIL_FORMAT,
-					// `!== false`, not `!!`: mesh draws that never set the field (and
-					// every bare `{cullMode, frontFace}` literal) must keep writing
-					// depth exactly as they did before the axis existed
-					depthWriteEnabled: meshState ? meshState.depthWrite !== false : false,
-					depthCompare: meshState ? "less-equal" : "always",
-					stencilFront: stencil.stencil,
-					stencilBack: stencil.stencil,
-					stencilReadMask: stencil.readMask,
-					stencilWriteMask: stencil.writeMask,
-				},
-				multisample: { count: this.sampleCount },
-			});
+			pipeline = this.device.createRenderPipeline(
+				this._descriptor(key, shaderKey, blend, pma, stencil, primitive, {
+					vertexLayout,
+					meshState,
+					fogFlag,
+				}),
+			);
 			this.pipelines.set(key, pipeline);
 		}
 		return pipeline;
+	}
+
+	/**
+	 * Assemble a pipeline descriptor.
+	 *
+	 * Split out of `get()` so the descriptor can be read on its own — it is
+	 * long, and every field in it is load-bearing for cache correctness: a
+	 * pipeline built from a descriptor that differs from the one a draw would
+	 * have produced is worse than no cache entry at all, because the draw
+	 * silently builds a second one under a key nothing will hit again.
+	 * @param {string} key - the cache key, used as the label
+	 * @param {string} shaderKey - the module family
+	 * @param {string} blend - normalized blend mode
+	 * @param {boolean} pma - premultiplied alpha
+	 * @param {object} stencil - the resolved stencil state
+	 * @param {object} primitive - the resolved primitive state
+	 * @param {object} opts - `{vertexLayout, meshState, fogFlag}`
+	 * @returns {GPURenderPipelineDescriptor} the descriptor
+	 * @ignore
+	 * @internal
+	 */
+	_descriptor(key, shaderKey, blend, pma, stencil, primitive, opts) {
+		const { vertexLayout, meshState, fogFlag } = opts;
+		return {
+			label: `melonJS ${key}`,
+			layout: this.pipelineLayouts[shaderKey],
+			vertex: {
+				module: this.modules[shaderKey],
+				entryPoint: "vertex_main",
+				buffers: vertexLayout ?? [],
+				...(meshState ? { constants: { enable_fog: fogFlag } } : {}),
+			},
+			fragment: {
+				module: this.modules[shaderKey],
+				entryPoint: "fragment_main",
+				...(meshState ? { constants: { enable_fog: fogFlag } } : {}),
+				targets: [
+					{
+						format: this.format,
+						blend:
+							shaderKey === "clear" ? undefined : gpuBlendState(blend, pma),
+						writeMask: stencil.colorWriteMask,
+					},
+				],
+			},
+			primitive,
+			depthStencil: {
+				format: DEPTH_STENCIL_FORMAT,
+				// `!== false`, not `!!`: mesh draws that never set the field (and
+				// every bare `{cullMode, frontFace}` literal) must keep writing
+				// depth exactly as they did before the axis existed
+				depthWriteEnabled: meshState ? meshState.depthWrite !== false : false,
+				depthCompare: meshState ? "less-equal" : "always",
+				stencilFront: stencil.stencil,
+				stencilBack: stencil.stencil,
+				stencilReadMask: stencil.readMask,
+				stencilWriteMask: stencil.writeMask,
+			},
+			multisample: { count: this.sampleCount },
+		};
 	}
 
 	/**

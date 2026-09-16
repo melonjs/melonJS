@@ -348,6 +348,53 @@ export default class Renderer {
 	flush() {}
 
 	/**
+	 * Compile the backend's built-in shader programs up front, so the first
+	 * frame that draws them does not stall while the driver builds them.
+	 *
+	 * A GPU backend does not finish a shader when you hand it the source. It
+	 * finishes it the first time something is actually drawn with it, which
+	 * puts the whole cost on the frame a scene first appears — the moment a
+	 * level or stage comes up and its geometry arrives a beat late. Calling
+	 * this while a loading screen is still on screen moves that cost to where
+	 * nobody is waiting on a frame.
+	 *
+	 * Resolves immediately on a backend with nothing to compile (Canvas).
+	 * What "ready" means is backend-specific and worth knowing: WebGL's link
+	 * blocks, so a resolved promise there means the programs are genuinely
+	 * built; WebGPU's `createShaderModule` returns before its compilation
+	 * finishes, so a resolved promise there means the modules have been
+	 * requested and validation is under way.
+	 *
+	 * **You normally do not call this.** `loader.preload()` calls it for you,
+	 * once the assets are in and before `LOADER_COMPLETE` fires — so it runs
+	 * while the loading screen is still up — whenever the application's
+	 * `prewarm` setting is on, which it is by default. Every `preload()` warms,
+	 * not just the first, so a per-level preload warms whatever that level
+	 * brought with it.
+	 *
+	 * Two consequences worth knowing:
+	 *
+	 * - **A game that never calls `loader.preload()` is never warmed.** There
+	 *   is no other hook. Call this yourself if you load assets some other way
+	 *   and still want the warm-up.
+	 * - It is deliberately NOT called from `Application.init()`. That runs
+	 *   before anything is on screen, so warming there would only lengthen a
+	 *   blank page instead of hiding behind a progress bar.
+	 * @returns {Promise<void>} settles when the built-in programs are ready
+	 * @example
+	 * // the usual case: nothing to write. `preload()` warms on the way through
+	 * await loader.preload(resources);
+	 * @example
+	 * // only needed if you do not use the preloader, or want a second warm-up
+	 * // at a point of your own choosing
+	 * await app.renderer.prewarm();
+	 * state.change(state.PLAY);
+	 */
+	prewarm() {
+		return Promise.resolve();
+	}
+
+	/**
 	 * Mark the start of a screen-space (`floating`) draw, during which the
 	 * camera's screen projection is installed and world-space geometry cannot
 	 * be replayed. Balanced by {@link Renderer#endScreenSpace}.

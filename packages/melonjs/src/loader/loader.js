@@ -2,9 +2,11 @@ import { warning } from "../lang/console.js";
 import state from "./../state/state.ts";
 import {
 	emit,
+	GAME_INIT,
 	LOADER_COMPLETE,
 	LOADER_ERROR,
 	LOADER_PROGRESS,
+	on,
 } from "../system/event.ts";
 import { getBasename } from "../utils/file.ts";
 import {
@@ -215,6 +217,47 @@ function initParsers() {
 	setParser("aseprite", preloadAseprite);
 	setParser("shader", preloadShader);
 	parserInitialized = true;
+}
+
+// The running application, captured without importing the `game` global —
+// the loader is a module singleton and has no instance to be handed one.
+// `on` rather than `once` so a re-init (a second Application, tests) stays
+// current.
+let _app;
+on(GAME_INIT, (app) => {
+	_app = app;
+});
+
+/**
+ * Compile the backend's built-in shaders before completion is announced.
+ *
+ * Deliberately here rather than in `Application.init()`: init runs before
+ * anything is on screen, so warming there would just lengthen a blank page.
+ * By this point the loading screen is up, its progress bar has been at 100%
+ * for a frame, and `LOADER_COMPLETE` has not fired — so nothing has moved on
+ * yet and the time is genuinely free.
+ *
+ * Every shader declared as an asset is already compiled and in `shaderList`
+ * by now, which is what lets a level's own effects be warmed by declaring
+ * them alongside that level's assets.
+ * @returns {Promise<void>} settles when warm, or immediately when disabled
+ * @ignore
+ * @internal
+ */
+function runShaderPrewarm() {
+	if (_app === undefined || _app.settings?.prewarm !== true) {
+		return Promise.resolve();
+	}
+	// never let a warm-up failure fail the preload — the frame it would have
+	// saved is not worth a game that cannot start. `try` as well as `catch`:
+	// `Promise.resolve()` only wraps a value, so a custom renderer whose
+	// `prewarm` throws SYNCHRONOUSLY would escape before there is a promise to
+	// reject, and take the preload down with it
+	try {
+		return Promise.resolve(_app.renderer?.prewarm?.()).catch(() => {});
+	} catch {
+		return Promise.resolve();
+	}
 }
 
 /**
@@ -436,9 +479,11 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 	// Resolve once every asset has loaded; call the completion callback on
 	// success (back-compat). Returned so callers can `await loader.preload(...)`
 	// instead of (or as well as) passing a callback.
-	return Promise.all(promises).then(() => {
-		completeLoading(onload);
-	});
+	return Promise.all(promises)
+		.then(runShaderPrewarm)
+		.then(() => {
+			completeLoading(onload);
+		});
 }
 
 /**

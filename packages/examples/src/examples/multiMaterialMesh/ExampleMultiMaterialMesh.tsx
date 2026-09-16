@@ -29,6 +29,8 @@ import {
 	Mesh,
 	plugin,
 	Renderable,
+	Stage,
+	state,
 	Vector3d,
 	video,
 } from "melonjs";
@@ -93,11 +95,22 @@ const createGame = async () => {
 	app.world.backgroundColor.parseCSS("#0a0a1f");
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	loader.preload(buildAssetList(), () => {
-		spawnCrafts(app);
-		spawnLabels(app);
-		spawnCredit(app);
-	});
+	await loader.preload(buildAssetList());
+
+	// A Stage of its own, switched to once the assets are in: building the
+	// scene in the preload callback and staying there leaves the game running
+	// inside `state.LOADING`, which nothing destroys — so the loading screen's
+	// logo and progress bar stay on top of it for good.
+	class CraftScene extends Stage {
+		override onResetEvent() {
+			spawnCrafts(app);
+			spawnLabels(app);
+			spawnCredit(app);
+		}
+	}
+
+	state.set(state.PLAY, new CraftScene());
+	state.change(state.PLAY);
 };
 
 // Build the list of (.obj, .mtl) pairs for every craft. `type: "mtl"`

@@ -172,6 +172,14 @@ fog) and links it on the first draw that needs it — and `compileProgram` calls
 `getProgramParameter(LINK_STATUS)` right after `linkProgram`, which blocks until
 the driver finishes. That whole cost lands inside one frame.
 
+Since 20.6 the engine's own programs are built during `preload()` instead —
+`loader.preload()` calls `renderer.prewarm()` itself, on every call, when the
+application's `prewarm` setting is on, which is the default. So on a current
+version this is one cause you can rule out before looking further, **unless the
+game does not use the preloader at all**, which is the one way to miss it — see `melonjs-loading-assets`. It does not
+cover effects you construct inline, and it does not cover the rest of what a
+first frame pays for, below.
+
 How to tell them apart, all from the page:
 
 ```js
@@ -191,12 +199,32 @@ gl.linkProgram = function (p) { console.count("linkProgram"); return link.call(t
 
 The tell is that the second entry into the same scene is cheap: one measured
 case went 852ms of stall (worst frame 479ms) on first entry to 277ms (worst
-102ms) on the second, because the programs were already cached.
+102ms) on the second.
 
-Two things follow. Cut the number of programs — identical `ShaderEffect`s each
-link their own, so preload one as a `"shader"` asset and share it. And pay what
-remains behind the loading screen by drawing the scene once there and discarding
-it (see `melonjs-loading-assets`).
+**Careful with the conclusion, though — "the programs were cached" is the
+tempting reading and it is wrong.** Prewarming the engine's own programs ahead
+of that first entry moves the worst frame by about 3ms, measured. So the 575ms
+is not program linking: it is everything else the first *submit* pays for —
+texture residency, buffer uploads, and the driver specializing a pipeline
+against real bindings — all of which the second entry finds already done.
+
+That distinction decides which lever to reach for. Linking is what `prewarm`
+covers and what shrinking your shader count helps. The rest only goes away if
+the geometry is actually **drawn** once beforehand.
+
+Three things follow.
+
+- **Cut the number of programs.** Identical `ShaderEffect`s each link their own,
+  so preload one as a `"shader"` asset and share it.
+- **Declare effects as assets, not inline**, so the loader can prepare them
+  before a scene draws — an inline effect does not exist until the stage that
+  builds it runs.
+- **Pay what remains behind the loading screen** by drawing the scene once there
+  and discarding it (see `melonjs-loading-assets`). Linking is only part of a
+  first frame: texture residency, buffer uploads and the driver specializing
+  against real bindings all land on the first *submit*, and only an actual draw
+  front-loads those. A measured case on a fast desktop GPU had shader prewarming
+  move the worst frame by ~3ms while a warm-up draw moved it by hundreds.
 
 Do not profile this on a software rasterizer — headless Chromium falls back to
 SwiftShader, where the absolute numbers are wildly pessimistic and the JS

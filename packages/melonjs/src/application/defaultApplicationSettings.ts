@@ -9,6 +9,7 @@ export const defaultApplicationSettings = {
 	powerPreference: "default",
 	transparent: false,
 	antiAlias: false,
+	prewarm: true,
 	textureFilter: "auto",
 	maxTextures: "auto",
 	castGroundShadow: true,

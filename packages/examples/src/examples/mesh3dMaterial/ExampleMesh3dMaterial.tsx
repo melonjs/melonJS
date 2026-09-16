@@ -12,6 +12,8 @@ import {
 	plugin,
 	Renderable,
 	Sprite,
+	Stage,
+	state,
 	Text,
 	Vector3d,
 	video,
@@ -78,99 +80,111 @@ const createGame = async () => {
 		);
 	}
 
-	loader.preload(resources, () => {
-		// 2D jungle background
-		const bg = new Sprite(512, 384, {
-			image: "jungle_bg",
-			anchorPoint: { x: 0.5, y: 0.5 },
-		});
-		app.world.addChild(bg, 0);
+	await loader.preload(resources);
 
-		const axisY = new Vector3d(0, 1, 0);
+	// The scene lives in a Stage of its own, and the example switches to it
+	// once the assets are in. Building it in the preload callback and staying
+	// put would leave the game running inside `state.LOADING` — a transitional
+	// stage nothing ever destroys, so the loading screen's logo and progress
+	// bar would sit on top of the scene for good.
+	class MaterialScene extends Stage {
+		override onResetEvent() {
+			// 2D jungle background
+			const bg = new Sprite(512, 384, {
+				image: "jungle_bg",
+				anchorPoint: { x: 0.5, y: 0.5 },
+			});
+			app.world.addChild(bg, 0);
 
-		class PetGallery extends Renderable {
-			meshes: Mesh[];
-			currentIndex: number;
+			const axisY = new Vector3d(0, 1, 0);
 
-			constructor() {
-				super(0, 0, 1024, 768);
-				this.anchorPoint.set(0, 0);
-				this.currentIndex = 0;
+			class PetGallery extends Renderable {
+				meshes: Mesh[];
+				currentIndex: number;
 
-				this.meshes = animals.map((name) => {
-					return new Mesh(512, 384, {
-						model: name,
-						material: name,
-						texture: "colormap",
-						width: 400,
-						height: 400,
-						cullBackFaces: true,
+				constructor() {
+					super(0, 0, 1024, 768);
+					this.anchorPoint.set(0, 0);
+					this.currentIndex = 0;
+
+					this.meshes = animals.map((name) => {
+						return new Mesh(512, 384, {
+							model: name,
+							material: name,
+							texture: "colormap",
+							width: 400,
+							height: 400,
+							cullBackFaces: true,
+						});
 					});
-				});
+				}
+
+				override update(dt: number) {
+					this.meshes[this.currentIndex].rotate(dt * 0.001, axisY);
+					return true;
+				}
+
+				override draw(renderer: WebGLRenderer | CanvasRenderer) {
+					const mesh = this.meshes[this.currentIndex];
+					mesh.preDraw(renderer);
+					mesh.draw(renderer);
+					mesh.postDraw(renderer);
+				}
 			}
 
-			override update(dt: number) {
-				this.meshes[this.currentIndex].rotate(dt * 0.001, axisY);
-				return true;
+			const gallery = new PetGallery();
+			app.world.addChild(gallery, 1);
+
+			// dropdown to switch animals
+			const select = document.createElement("select");
+			select.style.cssText =
+				"position:absolute;top:110px;left:16px;padding:6px 12px;" +
+				"font-size:14px;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;" +
+				"border-radius:4px;z-index:1000;cursor:pointer;";
+
+			for (let i = 0; i < animals.length; i++) {
+				const opt = document.createElement("option");
+				opt.value = String(i);
+				const label = animals[i].replace("animal-", "");
+				opt.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+				select.appendChild(opt);
 			}
 
-			override draw(renderer: WebGLRenderer | CanvasRenderer) {
-				const mesh = this.meshes[this.currentIndex];
-				mesh.preDraw(renderer);
-				mesh.draw(renderer);
-				mesh.postDraw(renderer);
+			select.addEventListener("change", () => {
+				gallery.currentIndex = parseInt(select.value, 10);
+			});
+
+			// Kenney attribution text (bottom-left)
+			const credit = new Text(10, 700, {
+				font: "Arial",
+				size: 12,
+				fillStyle: "#FFFFFF",
+				textAlign: "left",
+				textBaseline: "bottom",
+				text: "Cube Pets (2.0) by Kenney (kenney.nl) \u2022 CC0 1.0",
+			});
+			credit.setOpacity(0.7);
+			app.world.addChild(credit, 2);
+
+			// Kenney logo (bottom-right)
+			const logo = new Sprite(1024 - 75, 700, {
+				image: "kenney_logo",
+				anchorPoint: { x: 0.5, y: 0.5 },
+			});
+			logo.scale(0.35);
+			logo.setOpacity(0.7);
+			app.world.addChild(logo, 2);
+
+			const parent = app.renderer.getCanvas().parentElement;
+			if (parent) {
+				parent.style.position = "relative";
+				parent.appendChild(select);
 			}
 		}
+	}
 
-		const gallery = new PetGallery();
-		app.world.addChild(gallery, 1);
-
-		// dropdown to switch animals
-		const select = document.createElement("select");
-		select.style.cssText =
-			"position:absolute;top:110px;left:16px;padding:6px 12px;" +
-			"font-size:14px;background:#1a1a1a;color:#e0e0e0;border:1px solid #444;" +
-			"border-radius:4px;z-index:1000;cursor:pointer;";
-
-		for (let i = 0; i < animals.length; i++) {
-			const opt = document.createElement("option");
-			opt.value = String(i);
-			const label = animals[i].replace("animal-", "");
-			opt.textContent = label.charAt(0).toUpperCase() + label.slice(1);
-			select.appendChild(opt);
-		}
-
-		select.addEventListener("change", () => {
-			gallery.currentIndex = parseInt(select.value, 10);
-		});
-
-		// Kenney attribution text (bottom-left)
-		const credit = new Text(10, 700, {
-			font: "Arial",
-			size: 12,
-			fillStyle: "#FFFFFF",
-			textAlign: "left",
-			textBaseline: "bottom",
-			text: "Cube Pets (2.0) by Kenney (kenney.nl) \u2022 CC0 1.0",
-		});
-		credit.setOpacity(0.7);
-		app.world.addChild(credit, 2);
-
-		// Kenney logo (bottom-right)
-		const logo = new Sprite(1024 - 75, 700, {
-			image: "kenney_logo",
-			anchorPoint: { x: 0.5, y: 0.5 },
-		});
-		logo.scale(0.35);
-		logo.setOpacity(0.7);
-		app.world.addChild(logo, 2);
-
-		const parent = app.renderer.getCanvas().parentElement;
-		if (parent) {
-			parent.style.position = "relative";
-			parent.appendChild(select);
-		}
-	});
+	state.set(state.PLAY, new MaterialScene());
+	state.change(state.PLAY);
 };
 
 export const ExampleMesh3dMaterial = createExampleComponent(createGame);

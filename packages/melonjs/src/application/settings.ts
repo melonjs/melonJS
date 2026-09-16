@@ -135,6 +135,44 @@ export type ApplicationSettings = {
 	antiAlias: boolean;
 
 	/**
+	 * Warm the renderer up during `loader.preload()`, behind the loading
+	 * screen, instead of paying for it on the frame that first draws (GPU
+	 * backends — the Canvas renderer has nothing to warm and ignores this).
+	 *
+	 * Today that means the built-in shader programs, which is all
+	 * {@link Renderer#prewarm} does. Named for the intent rather than the
+	 * current contents: anything else worth doing before the first frame
+	 * belongs behind the same switch, and should not need a second setting.
+	 *
+	 * A GPU backend does not finish a shader when handed the source; it
+	 * finishes it the first time something is drawn with it. That puts the
+	 * whole cost on the frame a scene first appears, which is the moment a
+	 * level or stage comes up and its geometry arrives a beat late. Warming
+	 * up moves it to where a progress bar is already on screen.
+	 *
+	 * **On by default.** The cost is small and it is paid where nothing is
+	 * waiting on a frame: a purely 2D game links the mesh-tier programs
+	 * it will never bind — both the unlit tier and the lit one that inherits
+	 * from it — measured at about 60ms on a fast desktop GPU, inside a preload
+	 * that is already showing a progress bar. A tiny 2D game with a near-empty
+	 * preload is the one case that pays without any possible benefit. Set it to
+	 * `false` for a target where linking is slow enough that the preload
+	 * itself would suffer.
+	 *
+	 * The warm-up is run by `loader.preload()` — every call, not just the
+	 * first — so a game that preloads gets it automatically and a game that
+	 * never calls `preload()` never gets it at all. Call
+	 * {@link Renderer#prewarm} directly in that case.
+	 *
+	 * Shaders declared as assets (`{type: "shader"}`) are covered too, so a
+	 * level's own effects are warmed by declaring them alongside that level's
+	 * assets rather than building them inline when the level starts.
+	 * @default true
+	 * @see {@link Renderer#prewarm}
+	 */
+	prewarm: boolean;
+
+	/**
 	 * Default texture magnification/minification filter, **decoupled from
 	 * `antiAlias`** (GPU backends — WebGL and WebGPU; the 2D Canvas
 	 * renderer has no per-texture filtering and ignores this).
