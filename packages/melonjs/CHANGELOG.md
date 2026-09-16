@@ -3,6 +3,8 @@
 ## [20.6.0] (melonJS 2) - _unreleased_
 
 ### Fixed
+- Loader: the built-in loading screen stays up until the stage that replaces it is ready. It removed its own logo and progress bar the moment `LOADER_COMPLETE` fired — which is when the **assets** are in, not when the game changes state — so the screen went blank for however long the game's own post-preload setup took, and a `state.transition()` had nothing left to fade over: the logo and bar popped out a beat ahead of the transition meant to carry them. That teardown was there to stop a late-resolving logo being added to a world that had already moved on; only the latch it set was doing that work, and the latch is kept. Removing the screen's children now happens where it belongs, when the stage is destroyed
+- Loader: the built-in loading screen loads its own logo through the promise form of `load()`, and tolerates it failing — a decoration that 404s no longer risks taking the loading screen with it
 - Camera: a camera effect now draws on a `Camera3d`. Effects are full-viewport overlays — `FadeEffect` fills the rect, `MaskEffect` cuts a hole in one — but they were rasterized through whatever the camera had bound for walking the **world**, which on a `Camera3d` is a perspective matrix. The overlay quad went through the frustum as geometry sitting at the camera's own eye and was clipped away, so every camera effect silently did nothing. `state.transition()` is built on a fade, so **scene transitions did not render at all for any game on a `Camera3d`**: the fade into a 3D stage played over the outgoing 2D screen, and the reveal out of it was a hard cut
 
 ## [20.5.0] (melonJS 2) - _2026-09-15_
