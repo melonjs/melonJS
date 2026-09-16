@@ -24,7 +24,7 @@ describe("renderer.prewarm()", () => {
 			// 60ms on a fast desktop GPU, inside a preload already showing a
 			// progress bar. The flag stays as an escape hatch for targets
 			// where linking is slow enough that the preload itself suffers
-			expect(defaultApplicationSettings.preWarmShaders).toBe(true);
+			expect(defaultApplicationSettings.prewarm).toBe(true);
 		});
 	});
 
@@ -47,7 +47,7 @@ describe("renderer.prewarm()", () => {
 
 		it("resolves, rather than throwing or returning undefined", async () => {
 			// the base class no-op: a Canvas game must be able to switch
-			// `preWarmShaders` on without the preload failing
+			// `prewarm` on without the preload failing
 			const result = app.renderer.prewarm();
 			expect(result).toBeInstanceOf(Promise);
 			await expect(result).resolves.toBeUndefined();
@@ -237,11 +237,11 @@ describe("renderer.prewarm()", () => {
 
 		afterAll(() => {
 			app?.destroy();
-			app.settings.preWarmShaders = false;
+			app.settings.prewarm = false;
 		});
 
 		it("does not warm when the setting is turned off", async () => {
-			app.settings.preWarmShaders = false;
+			app.settings.prewarm = false;
 			let called = 0;
 			const real = app.renderer.prewarm.bind(app.renderer);
 			app.renderer.prewarm = () => {
@@ -260,7 +260,7 @@ describe("renderer.prewarm()", () => {
 			// ordering is the point: LOADER_COMPLETE is what the loading
 			// screen and the game react to, so warming after it would be
 			// warming with nothing left on screen
-			app.settings.preWarmShaders = true;
+			app.settings.prewarm = true;
 			const order = [];
 			const real = app.renderer.prewarm.bind(app.renderer);
 			app.renderer.prewarm = () => {
@@ -277,7 +277,7 @@ describe("renderer.prewarm()", () => {
 				);
 			} finally {
 				app.renderer.prewarm = real;
-				app.settings.preWarmShaders = false;
+				app.settings.prewarm = false;
 			}
 			expect(order).toEqual(["prewarm", "complete"]);
 		});
@@ -285,7 +285,7 @@ describe("renderer.prewarm()", () => {
 		it("never fails a preload because the warm-up failed", async () => {
 			// the frame it would have saved is not worth a game that cannot
 			// start, so a throwing prewarm is swallowed
-			app.settings.preWarmShaders = true;
+			app.settings.prewarm = true;
 			const real = app.renderer.prewarm.bind(app.renderer);
 			app.renderer.prewarm = () => {
 				return Promise.reject(new Error("driver said no"));
@@ -296,7 +296,7 @@ describe("renderer.prewarm()", () => {
 				).resolves.toBeUndefined();
 			} finally {
 				app.renderer.prewarm = real;
-				app.settings.preWarmShaders = false;
+				app.settings.prewarm = false;
 			}
 		});
 	});

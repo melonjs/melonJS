@@ -90,18 +90,24 @@ resolves and share them, the way the platformer example builds its
 **3. The engine's own shader programs — warmed for you, since 20.6.** The mesh
 batcher compiles a program per *feature combination* (instance colours, instance
 data, fog — fog joins the key), lazily, on the first draw that needs it.
-`preWarmShaders` builds them during `preload()` instead, behind the loading
+`prewarm` builds them during `preload()` instead, behind the loading
 screen:
 
 ```js
 const app = new Application(1280, 720, {
     // on by default since 20.6 — named here only to show where it lives
-    preWarmShaders: true,
+    prewarm: true,
 });
 ```
 
-The preloader calls `renderer.prewarm()` once the assets are in and **before**
-`LOADER_COMPLETE` fires, so it happens while the progress bar is still up. On
+**You do not call this yourself.** `preload()` calls `renderer.prewarm()` once
+the assets are in and **before** `LOADER_COMPLETE` fires, so it happens while
+the progress bar is still up. Every `preload()` warms, not just the first, so a
+per-level preload warms whatever that level brought with it.
+
+The one precondition: **a game that never calls `loader.preload()` is never
+warmed**, because that is the only hook. If you load assets another way, call
+`await app.renderer.prewarm()` yourself. On
 WebGL that links the mesh batchers' variants, for the unlit tier and the lit
 one that inherits from it; on WebGPU it compiles the
 WGSL module of every shader the loader holds — which is the reason to declare

@@ -365,14 +365,28 @@ export default class Renderer {
 	 * finishes, so a resolved promise there means the modules have been
 	 * requested and validation is under way.
 	 *
-	 * `loader.preload()` calls this once the assets are in and before
-	 * `LOADER_COMPLETE` fires, when `preWarmShaders` is set — which is while
-	 * the loading screen is still up. Most games never call it directly.
-	 * Deliberately not `Application.init()`: that runs before anything is on
-	 * screen, so warming there would only lengthen a blank page.
+	 * **You normally do not call this.** `loader.preload()` calls it for you,
+	 * once the assets are in and before `LOADER_COMPLETE` fires — so it runs
+	 * while the loading screen is still up — whenever the application's
+	 * `prewarm` setting is on, which it is by default. Every `preload()` warms,
+	 * not just the first, so a per-level preload warms whatever that level
+	 * brought with it.
+	 *
+	 * Two consequences worth knowing:
+	 *
+	 * - **A game that never calls `loader.preload()` is never warmed.** There
+	 *   is no other hook. Call this yourself if you load assets some other way
+	 *   and still want the warm-up.
+	 * - It is deliberately NOT called from `Application.init()`. That runs
+	 *   before anything is on screen, so warming there would only lengthen a
+	 *   blank page instead of hiding behind a progress bar.
 	 * @returns {Promise<void>} settles when the built-in programs are ready
 	 * @example
-	 * // warm up before swapping to a heavy 3D stage
+	 * // the usual case: nothing to write. `preload()` warms on the way through
+	 * await loader.preload(resources);
+	 * @example
+	 * // only needed if you do not use the preloader, or want a second warm-up
+	 * // at a point of your own choosing
 	 * await app.renderer.prewarm();
 	 * state.change(state.PLAY);
 	 */

@@ -150,8 +150,9 @@ await loader.preload([
 `src` takes the dual-language pair, so one asset carries both realizations and
 the two backends cannot drift apart. `data` takes inline source the same way.
 
-With `preWarmShaders` on (the default since 20.6), `loader.preload()` also
-compiles the GPU-side objects for every shader it holds — on WebGPU that is the
+With `prewarm` on (the default since 20.6), `loader.preload()` warms on its way
+through — automatically, on every call — and compiles the GPU-side objects for
+every shader it holds — on WebGPU that is the
 WGSL module, which is otherwise built inside the draw path the first time the
 effect is used. Effects constructed inline are not in the loader, so nothing can
 bring them forward.

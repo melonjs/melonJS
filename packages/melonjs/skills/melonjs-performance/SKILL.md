@@ -172,9 +172,11 @@ fog) and links it on the first draw that needs it — and `compileProgram` calls
 `getProgramParameter(LINK_STATUS)` right after `linkProgram`, which blocks until
 the driver finishes. That whole cost lands inside one frame.
 
-Since 20.6 the engine's own programs are built during `preload()` instead
-(`preWarmShaders`, on by default), so on a current version this is one cause you
-can rule out before looking further — see `melonjs-loading-assets`. It does not
+Since 20.6 the engine's own programs are built during `preload()` instead —
+`loader.preload()` calls `renderer.prewarm()` itself, on every call, when the
+application's `prewarm` setting is on, which is the default. So on a current
+version this is one cause you can rule out before looking further, **unless the
+game does not use the preloader at all**, which is the one way to miss it — see `melonjs-loading-assets`. It does not
 cover effects you construct inline, and it does not cover the rest of what a
 first frame pays for, below.
 

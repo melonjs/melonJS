@@ -244,8 +244,8 @@ on(GAME_INIT, (app) => {
  * @ignore
  * @internal
  */
-function prewarmShaders() {
-	if (_app === undefined || _app.settings?.preWarmShaders !== true) {
+function runShaderPrewarm() {
+	if (_app === undefined || _app.settings?.prewarm !== true) {
 		return Promise.resolve();
 	}
 	// never let a warm-up failure fail the preload — the frame it would have
@@ -480,7 +480,7 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 	// success (back-compat). Returned so callers can `await loader.preload(...)`
 	// instead of (or as well as) passing a callback.
 	return Promise.all(promises)
-		.then(prewarmShaders)
+		.then(runShaderPrewarm)
 		.then(() => {
 			completeLoading(onload);
 		});

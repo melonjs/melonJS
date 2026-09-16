@@ -135,10 +135,14 @@ export type ApplicationSettings = {
 	antiAlias: boolean;
 
 	/**
-	 * Compile the backend's built-in shaders during `loader.preload()`,
-	 * behind the loading screen, instead of on the frame that first draws
-	 * them (GPU backends — the Canvas renderer has no shaders and ignores
-	 * this).
+	 * Warm the renderer up during `loader.preload()`, behind the loading
+	 * screen, instead of paying for it on the frame that first draws (GPU
+	 * backends — the Canvas renderer has nothing to warm and ignores this).
+	 *
+	 * Today that means the built-in shader programs, which is all
+	 * {@link Renderer#prewarm} does. Named for the intent rather than the
+	 * current contents: anything else worth doing before the first frame
+	 * belongs behind the same switch, and should not need a second setting.
 	 *
 	 * A GPU backend does not finish a shader when handed the source; it
 	 * finishes it the first time something is drawn with it. That puts the
@@ -155,13 +159,18 @@ export type ApplicationSettings = {
 	 * `false` for a target where linking is slow enough that the preload
 	 * itself would suffer.
 	 *
+	 * The warm-up is run by `loader.preload()` — every call, not just the
+	 * first — so a game that preloads gets it automatically and a game that
+	 * never calls `preload()` never gets it at all. Call
+	 * {@link Renderer#prewarm} directly in that case.
+	 *
 	 * Shaders declared as assets (`{type: "shader"}`) are covered too, so a
 	 * level's own effects are warmed by declaring them alongside that level's
 	 * assets rather than building them inline when the level starts.
 	 * @default true
 	 * @see {@link Renderer#prewarm}
 	 */
-	preWarmShaders: boolean;
+	prewarm: boolean;
 
 	/**
 	 * Default texture magnification/minification filter, **decoupled from
