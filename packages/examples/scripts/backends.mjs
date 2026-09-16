@@ -66,6 +66,18 @@ const clip = flag("clip", null)
  * ones that find backend bugs, and they must be headed: a headless browser gets
  * no GPU, so it silently falls back and stops testing what you think it tests.
  */
+/**
+ * The page viewport every target renders into.
+ *
+ * Fixed rather than "whatever the window is": a shot only means something next
+ * to the shots it is compared with, and a window-sized viewport makes every
+ * run a different size. The headed targets size their WINDOW to match instead.
+ */
+const VIEW_W = 1280;
+const VIEW_H = 800;
+/** tab strip + address bar, so the viewport above fits without scrollbars */
+const CHROME_UI_H = 92;
+
 const TARGETS = [
 	{
 		name: "headless",
@@ -75,7 +87,18 @@ const TARGETS = [
 	{
 		name: "chrome",
 		note: "real GPU — WebGPU",
-		open: () => chromium.launch({ channel: "chrome", headless: false }),
+		// `--window-size` matches the window to the VIEWPORT below, plus room
+		// for the tab strip and address bar. Playwright pins the page viewport
+		// independently of the window, so without this the page renders into a
+		// 1280x800 corner of whatever size Chrome happened to open at and the
+		// game sits in a quarter of the screen — fine for the screenshot,
+		// useless for watching the run.
+		open: () =>
+			chromium.launch({
+				channel: "chrome",
+				headless: false,
+				args: [`--window-size=${VIEW_W},${VIEW_H + CHROME_UI_H}`],
+			}),
 	},
 	{
 		name: "webkit",
@@ -109,7 +132,7 @@ for (const target of TARGETS) {
 	try {
 		browser = await target.open();
 		const page = await browser.newPage({
-			viewport: { width: 1280, height: 800 },
+			viewport: { width: VIEW_W, height: VIEW_H },
 			deviceScaleFactor: 2,
 		});
 		page.on("pageerror", (e) => {
