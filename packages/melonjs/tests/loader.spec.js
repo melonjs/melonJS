@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { audio, boot, event, loader } from "../src/index.js";
 import { fontList, videoList } from "../src/loader/cache.js";
+import { preloadFontFace } from "../src/loader/parsers/fontface.js";
 
 describe("loader", () => {
 	let audioURI;
@@ -275,14 +276,15 @@ describe("loader", () => {
 		loader.setBaseURL("fontface", "assets/");
 		const receivedSrc = [];
 
-		// stub fontface parser to capture the resolved src
-		loader.setParser("fontface", (data, onload) => {
+		// Capture the resolved src while retaining the font parser's rules.
+		const parser = (data, onload) => {
 			receivedSrc.push(data.src);
 			if (typeof onload === "function") {
 				onload();
 			}
 			return 1;
-		});
+		};
+		loader.setParser("fontface", Object.assign(parser, preloadFontFace));
 
 		// plain path
 		loader.load(
@@ -307,6 +309,7 @@ describe("loader", () => {
 
 		// reset
 		loader.setBaseURL("fontface", "./");
+		loader.setParser("fontface", preloadFontFace);
 	});
 
 	it("should not strip local() wrapper from fontface src", () => {
@@ -314,13 +317,14 @@ describe("loader", () => {
 		loader.setBaseURL("fontface", "./");
 		const receivedSrc = [];
 
-		loader.setParser("fontface", (data, onload) => {
+		const parser = (data, onload) => {
 			receivedSrc.push(data.src);
 			if (typeof onload === "function") {
 				onload();
 			}
 			return 1;
-		});
+		};
+		loader.setParser("fontface", Object.assign(parser, preloadFontFace));
 
 		loader.load(
 			{ name: "font4", type: "fontface", src: "local('My Font')" },
@@ -328,6 +332,7 @@ describe("loader", () => {
 		);
 
 		expect(receivedSrc[0]).toBe("local('My Font')");
+		loader.setParser("fontface", preloadFontFace);
 	});
 
 	it("should configure loader options", () => {
