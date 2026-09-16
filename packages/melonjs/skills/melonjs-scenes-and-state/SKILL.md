@@ -49,6 +49,43 @@ always drives the switch from its own completion callback.
 registered for that id, and `state.set` throws if the second argument is not a
 `Stage` instance. Neither fails quietly.
 
+### Always leave `state.LOADING` — it is transitional
+
+`loader.preload()` switches to `state.LOADING` for you. Building your scene in
+the preload callback and then *staying there* looks like it works, and is one
+of the easiest mistakes to make:
+
+```js
+// WRONG — the game now runs inside the loading stage, forever
+loader.preload(assets, () => {
+    app.world.addChild(new Player(...));
+});
+```
+
+Nothing ever destroys that stage, so the built-in loading screen's logo and
+progress bar are never removed and sit on top of your game. (Eight of this
+repository's own examples did this before it was noticed, so it is not an
+obscure trap.)
+
+Give the scene a stage of its own and switch to it:
+
+```js
+class PlayScreen extends Stage {
+    onResetEvent(app) {
+        app.world.addChild(new Player(...));
+    }
+}
+
+await loader.preload(assets);
+state.set(state.PLAY, new PlayScreen());
+state.change(state.PLAY);
+```
+
+The awaited form reads better here than the callback, because "load, then
+switch" is exactly what the code then says. If you genuinely want to keep using
+the loading stage as your scene, `state.change(state.DEFAULT)` at least gets
+you out of it — but a stage of your own is what you want.
+
 ## Persistent objects across levels
 
 ```js

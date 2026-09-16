@@ -56,6 +56,12 @@ The type strings are melonJS-specific — this is not a generic loader:
 Preloading is not only for things with a URL. Three tiers, and the middle one
 is the one people miss.
 
+**After preloading, switch to a stage of your own.** `preload()` puts you in
+`state.LOADING`, and that stage is transitional: build your scene in the
+callback and stay there, and nothing ever destroys it, so the built-in loading
+screen's logo and progress bar remain on top of your game. See
+`melonjs-scenes-and-state`.
+
 **1. Assets with a source.** Everything in the type table above. Note `"shader"`
 takes **inline source** as well as a `src`, via the `data` field:
 

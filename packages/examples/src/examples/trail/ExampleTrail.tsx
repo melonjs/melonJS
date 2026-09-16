@@ -8,6 +8,8 @@ import {
 	ColorLayer,
 	loader,
 	Sprite,
+	Stage,
+	state,
 	Trail,
 	Vector2d,
 	video,
@@ -50,34 +52,46 @@ const createGame = async () => {
 	});
 	await app.init();
 
-	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
-		app.world.addChild(new ColorLayer("bg", "#101020"), 0);
+	await loader.preload([{ name: "monster", type: "image", src: monsterImg }]);
 
-		const monster = new Monster(609, 281);
+	// The scene lives in a Stage of its own, and the example switches to it
+	// once the assets are in. Building it in the preload callback and staying
+	// put would leave the game running inside `state.LOADING` — a transitional
+	// stage nothing ever destroys, so the loading screen's logo and progress
+	// bar would sit on top of the scene for good.
+	class TrailScene extends Stage {
+		override onResetEvent() {
+			app.world.addChild(new ColorLayer("bg", "#101020"), 0);
 
-		const trail = new Trail({
-			target: monster,
-			length: 60,
-			lifetime: 2000,
-			minDistance: 8,
-			width: 60,
-			widthCurve: [1, 0.95, 0.85, 0.7, 0.5, 0.25, 0],
-			gradient: [
-				"#ff0000",
-				"#ff8800",
-				"#ffff00",
-				"#00ff00",
-				"#0088ff",
-				"#8800ff",
-				"#8800ff00",
-			],
-			opacity: 0.8,
-			blendMode: "additive",
-		});
+			const monster = new Monster(609, 281);
 
-		app.world.addChild(trail, 1);
-		app.world.addChild(monster, 2);
-	});
+			const trail = new Trail({
+				target: monster,
+				length: 60,
+				lifetime: 2000,
+				minDistance: 8,
+				width: 60,
+				widthCurve: [1, 0.95, 0.85, 0.7, 0.5, 0.25, 0],
+				gradient: [
+					"#ff0000",
+					"#ff8800",
+					"#ffff00",
+					"#00ff00",
+					"#0088ff",
+					"#8800ff",
+					"#8800ff00",
+				],
+				opacity: 0.8,
+				blendMode: "additive",
+			});
+
+			app.world.addChild(trail, 1);
+			app.world.addChild(monster, 2);
+		}
+	}
+
+	state.set(state.PLAY, new TrailScene());
+	state.change(state.PLAY);
 };
 
 export const ExampleTrail = createExampleComponent(createGame);

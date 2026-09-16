@@ -9,6 +9,8 @@ import {
 	loader,
 	Renderable,
 	Sprite,
+	Stage,
+	state,
 	Text,
 	video,
 	type WebGLRenderer,
@@ -271,10 +273,21 @@ const createGame = async () => {
 	};
 
 	if (resources.length > 0) {
-		loader.preload(resources, showScene);
-	} else {
-		showScene();
+		await loader.preload(resources);
 	}
+
+	// A Stage of its own, switched to once the assets are in: building the
+	// scene in the preload callback and staying there leaves the game running
+	// inside `state.LOADING`, which nothing destroys — so the loading screen's
+	// logo and progress bar stay on top of it for good.
+	class TextureScene extends Stage {
+		override onResetEvent() {
+			showScene();
+		}
+	}
+
+	state.set(state.PLAY, new TextureScene());
+	state.change(state.PLAY);
 };
 
 export const ExampleCompressedTextures = createExampleComponent(createGame);

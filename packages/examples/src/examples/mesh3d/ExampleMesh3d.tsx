@@ -12,6 +12,8 @@ import {
 	plugin,
 	Renderable,
 	Sprite,
+	Stage,
+	state,
 	Vector3d,
 	video,
 	type WebGLRenderer,
@@ -52,19 +54,29 @@ const createGame = async () => {
 	app.world.backgroundColor.parseCSS("#1a1a2e");
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	loader.preload(
-		[
-			{ name: "galaxy", type: "image", src: galaxyImg },
-			{
-				name: "checkerboard",
-				type: "image",
-				src: `${base}checkerboard.png`,
-			},
-			{ name: "cube", type: "obj", src: `${base}cube.obj` },
-			{ name: "sphere", type: "obj", src: `${base}sphere.obj` },
-			{ name: "teapot", type: "obj", src: `${base}teapot.obj` },
-		],
-		() => {
+	await loader.preload([
+		{ name: "galaxy", type: "image", src: galaxyImg },
+		{
+			name: "checkerboard",
+			type: "image",
+			src: `${base}checkerboard.png`,
+		},
+		{ name: "cube", type: "obj", src: `${base}cube.obj` },
+		{ name: "sphere", type: "obj", src: `${base}sphere.obj` },
+		{ name: "teapot", type: "obj", src: `${base}teapot.obj` },
+	]);
+
+	// The scene goes in a Stage of its own, and the example switches to it
+	// once the assets are in.
+	//
+	// Building it in the preload callback instead leaves the game running in
+	// `state.LOADING` forever — that stage is transitional by definition, and
+	// nothing ever destroys it, so the built-in loading screen's logo and
+	// progress bar stay on top of the scene for good.
+	class MeshScene extends Stage {
+		private select?: HTMLSelectElement;
+
+		override onResetEvent(app: Application) {
 			// 2D background sprite
 			const bg = new Sprite(512, 384, {
 				image: "galaxy",
@@ -139,8 +151,19 @@ const createGame = async () => {
 				parent.style.position = "relative";
 				parent.appendChild(select);
 			}
-		},
-	);
+			this.select = select;
+		}
+
+		override onDestroyEvent() {
+			// the dropdown is ours and lives outside the canvas, so the world
+			// teardown does not reach it
+			this.select?.remove();
+			this.select = undefined;
+		}
+	}
+
+	state.set(state.PLAY, new MeshScene());
+	state.change(state.PLAY);
 };
 
 export const ExampleMesh3d = createExampleComponent(createGame);
