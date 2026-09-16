@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.6.0] (melonJS 2) - _unreleased_
+## [20.6.0] (melonJS 2) - _2026-09-16_
 
 ### Added
 - `renderer.prewarm()` builds the backend's built-in shader programs during `loader.preload()`, behind the loading screen, instead of on the frame that first draws them. On by default — `prewarm: false` in the application settings opts out, and a game that never preloads can call it directly
