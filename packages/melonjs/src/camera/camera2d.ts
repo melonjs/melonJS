@@ -1147,8 +1147,32 @@ export default class Camera2d extends Renderable {
 		// camera is about to resolve rather than after it has been composited.
 		renderer.flushTransparent();
 
-		// draw the viewport/camera effects
+		// Draw the viewport/camera effects in SCREEN space.
+		//
+		// A camera effect is a full-viewport overlay — `FadeEffect` fills the
+		// rect, `MaskEffect` cuts a hole in one — so it has to be rasterized
+		// against the screen, not against whatever the camera is looking
+		// through. On a `Camera2d` that distinction is invisible, because
+		// `screenProjection` is a copy of `projectionMatrix` (see
+		// `_updateProjectionMatrix`), and the overlay happened to land right.
+		// A `Camera3d` binds a PERSPECTIVE `projectionMatrix` before walking
+		// the world, so the same quad went through the frustum as geometry at
+		// z = 0 and was clipped away entirely: every camera effect silently
+		// did nothing, which took `state.transition()` — a fade is a camera
+		// effect — with it for the whole 3D tier.
+		const hasCameraEffects = this.cameraEffects.length > 0;
+		if (hasCameraEffects) {
+			renderer.setProjection(this.screenProjection);
+		}
 		this.drawFX(renderer);
+		if (hasCameraEffects) {
+			// put back whatever this camera bound for the world walk, so the
+			// passes that follow (postDraw, the lighting overlay) are
+			// unaffected by the detour
+			renderer.setProjection(
+				isNonDefault ? this.worldProjection : this.projectionMatrix,
+			);
+		}
 
 		container.postDraw(r);
 
