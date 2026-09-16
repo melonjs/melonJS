@@ -146,15 +146,17 @@ export type ApplicationSettings = {
 	 * level or stage comes up and its geometry arrives a beat late. Warming
 	 * up moves it to where a progress bar is already on screen.
 	 *
-	 * **Off by default**, because the cost is only worth paying for a game
-	 * that reaches the programs being warmed: a purely 2D game would compile
-	 * the mesh, instanced and ground-shadow tiers it will never bind. Turn it
-	 * on for anything using the 3D tier.
+	 * **On by default.** The cost is small and it is paid where nothing is
+	 * waiting on a frame: a purely 2D game links the eleven mesh-tier
+	 * programs it will never bind, measured at about 60ms on a fast desktop
+	 * GPU, inside a preload that is already showing a progress bar. Set it to
+	 * `false` for a target where linking is slow enough that the preload
+	 * itself would suffer.
 	 *
 	 * Shaders declared as assets (`{type: "shader"}`) are covered too, so a
 	 * level's own effects are warmed by declaring them alongside that level's
 	 * assets rather than building them inline when the level starts.
-	 * @default false
+	 * @default true
 	 * @see {@link Renderer#prewarm}
 	 */
 	preWarmShaders: boolean;

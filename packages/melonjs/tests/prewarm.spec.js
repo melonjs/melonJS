@@ -17,11 +17,14 @@ import {
  * rather than merely starting slower.
  */
 describe("renderer.prewarm()", () => {
-	describe("the default is off", () => {
-		it("ships disabled", () => {
-			// on by default would make every 2D game compile the mesh,
-			// instanced and ground-shadow tiers it will never bind
-			expect(defaultApplicationSettings.preWarmShaders).toBe(false);
+	describe("the default", () => {
+		it("is on", () => {
+			// the cost is paid where nothing waits on a frame: a purely 2D
+			// game links the eleven mesh-tier programs it never binds, about
+			// 60ms on a fast desktop GPU, inside a preload already showing a
+			// progress bar. The flag stays as an escape hatch for targets
+			// where linking is slow enough that the preload itself suffers
+			expect(defaultApplicationSettings.preWarmShaders).toBe(true);
 		});
 	});
 
@@ -183,7 +186,7 @@ describe("renderer.prewarm()", () => {
 			app.settings.preWarmShaders = false;
 		});
 
-		it("does not warm when the setting is off", async () => {
+		it("does not warm when the setting is turned off", async () => {
 			app.settings.preWarmShaders = false;
 			let called = 0;
 			const real = app.renderer.prewarm.bind(app.renderer);
