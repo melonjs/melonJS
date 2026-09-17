@@ -319,8 +319,7 @@ real rigid-body engine:
 - **`applyForce(x, y)` is linear only** unless you pass the optional
   `(pointX, pointY)` application point, which generates a torque
   `τ = r × F` into `body.angularVelocity` via `body.pseudoInertia`.
-  `applyTorque(τ)` is the direct form. Note the rotation is visual: SAT
-  collisions stay axis-aligned.
+  `applyTorque(τ)` is the direct form.
 - **Force accumulators reset at end-of-step** — for every body, including
   static, paused and off-screen ones — so forces must be applied every frame to
   persist.
@@ -341,6 +340,27 @@ real rigid-body engine:
   integrate.
 - **`addBody` throws on double-registration** for a renderable that is already
   adapter-managed.
+
+### Rotation collides on planck and matter, but not on the built-in solver
+
+This is the sharpest behaviour difference between the adapters, and it is
+silent — nothing warns you.
+
+| adapter | a rotating body |
+| --- | --- |
+| **builtin** | rotates **visually only**. `body.angle`, `setAngle()` and angular integration write `renderable.currentTransform`; the collision shapes are never rotated, so a spinning sprite collides as if it were upright |
+| **planck** / **matter** | rotates for real — the solver owns the body's transform and collision follows it |
+
+So a turret, a swinging platform or a tumbling crate that must *collide*
+rotated needs planck or matter. Under the builtin solver, approximate it with a
+shape that is close enough at every angle (a circle, or a square for
+90° steps), or rotate the shapes yourself with `body.rotate(angle)` — which
+does rotate them, unlike `setAngle()`.
+
+`adapter.getBodyShapes(renderable)` reports whichever is true: rotated shapes
+on planck and matter (since matter-adapter 1.2.1 / planck-adapter 1.3.1),
+unrotated ones on the builtin solver because they genuinely are. That is what
+the debug overlay draws, so the hitbox you see is the hitbox that collides.
 
 ## Porting between adapters
 
@@ -391,6 +411,8 @@ use them. `adapter.capabilities` (`constraints`,
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
+| a rotated sprite collides as if upright | the built-in solver rotates visually only — `body.angle` never rotates the shapes. Use planck/matter, or `body.rotate(angle)` |
+| the debug hitbox does not follow a spinning body | pre-1.2.1 matter-adapter / pre-1.3.1 planck-adapter returned the authored shapes rather than the rotated ones |
 | a Tiled polyline becomes a solid box on matter | matter cannot build a zero-area polygon; the adapter falls back to its AABB |
 
 ## Related skills
