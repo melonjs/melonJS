@@ -17,6 +17,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Application,
+	Body,
+	Box3d,
 	BuiltinAdapter,
 	boot,
 	Rect,
@@ -311,6 +313,79 @@ describe("Physics : BuiltinAdapter angular API", () => {
 			t.apply(p);
 			expect(p.x).toBeCloseTo(40, 4);
 			expect(p.y).toBeCloseTo(0, 4);
+		});
+
+		it("pivots about the body centre for a renderable away from the origin", () => {
+			// The case the test above cannot see: it builds at (0, 0), where
+			// `bounds.centerX - ancestor.pos.x` and `bounds.centerX` agree, so
+			// a pivot that wrongly subtracts `pos` still passes it.
+			// `body.bounds` is already renderable-local — the adapter
+			// documents it that way — so subtracting `pos` a second time
+			// pivots a 40x40 body on a renderable at (100, 50) about
+			// (-80, -30) instead of its own centre.
+			const r = new Renderable(100, 50, 40, 40);
+			const body = adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 40, 40)],
+			});
+			body.setAngle(Math.PI / 2);
+			const p = new Vector2d(0, 0);
+			r.currentTransform.apply(p);
+			// identical to the origin case above: the local (0, 0) rotated a
+			// quarter-turn about the local centre (20, 20) lands on (40, 0)
+			expect(p.x).toBeCloseTo(40, 4);
+			expect(p.y).toBeCloseTo(0, 4);
+		});
+
+		it("notifies its owner that the body changed shape", () => {
+			// `Body#rotate()` grows the body's AABB, but its `onBodyUpdate`
+			// notification was commented out — so an owner that folds
+			// `body.getBounds()` into its own kept the pre-rotation extent.
+			// The broadphase indexes the RENDERABLE's bounds, so the rotated
+			// body was queried at the wrong size and the per-frame quadtree
+			// rebuild just re-read the same stale value.
+			//
+			// Asserted on the callback rather than through a renderable:
+			// today only the deprecated `Entity` passes one — the adapter
+			// builds bodies with `new Body(renderable, def.shapes)` and no
+			// callback — so this pins the mechanism, not its one consumer.
+			const r = new Renderable(0, 0, 80, 20);
+			let notified = 0;
+			const body = new Body(r, [new Rect(0, 0, 80, 20)], () => {
+				notified++;
+			});
+			const before = notified;
+			body.rotate(Math.PI / 2);
+			expect(body.getBounds().width).toBeCloseTo(20, 0);
+			expect(notified).toBe(before + 1);
+		});
+
+		it("does not notify when the rotation is a no-op", () => {
+			const r = new Renderable(0, 0, 80, 20);
+			let notified = 0;
+			const body = new Body(r, [new Rect(0, 0, 80, 20)], () => {
+				notified++;
+			});
+			// the constructor's own `addShape` fires it once, so the baseline
+			// is taken after construction rather than assumed to be zero
+			const before = notified;
+			body.rotate(0);
+			expect(notified).toBe(before);
+		});
+
+		it("does not throw for a shape that cannot rotate", () => {
+			// `Body#rotate()` calls `shape.rotate()` unguarded, and neither
+			// `Box3d` nor `Point` implements it — so the documented workaround
+			// for rotated collision crashes on exactly the bodies most likely
+			// to be carrying a 3D sensor.
+			const r = new Renderable(0, 0, 32, 32);
+			const body = adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Box3d(0, 0, 0, 16, 16, 16)],
+			});
+			expect(() => {
+				body.rotate(Math.PI / 4);
+			}).not.toThrow();
 		});
 	});
 

@@ -357,6 +357,12 @@ shape that is close enough at every angle (a circle, or a square for
 90° steps), or rotate the shapes yourself with `body.rotate(angle)` — which
 does rotate them, unlike `setAngle()`.
 
+`body.rotate()` applies a **delta** and does not update `body.angle`; the two
+are unlinked, so a body driven by `rotate()` still reports an angle of `0`.
+Track it yourself if you need to read it back. Before 20.7 it also threw on a
+`Box3d` or `Point` shape, and did not tell its owner that the body's bounds had
+grown.
+
 `adapter.getBodyShapes(renderable)` reports whichever is true: rotated shapes
 on planck and matter (since matter-adapter 1.2.1 / planck-adapter 1.3.1),
 unrotated ones on the builtin solver because they genuinely are. That is what
