@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 - _2026-09-17_
+
+### Fixed
+- `getBodyShapes()` follows the body's rotation. It returned the authored `def.shapes` — the pose the body was created with — while rotation lives in the matter body, so a turning body reported a shape that no longer matched where it collides. The debug overlay was the visible casualty, drawing an axis-aligned hitbox around a spinning body. Shapes are now rotated to the body's current angle, cached per body and rebuilt only when the angle changes, so an unrotated body still returns the authored array untouched
+
 ## 1.2.0 - _2026-08-24_
 
 ### Fixed
