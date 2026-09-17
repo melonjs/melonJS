@@ -2,13 +2,12 @@
 
 ## [20.7.0] (melonJS 2) - _unreleased_
 
-### Fixed
-- Body: rotation pivoted about the wrong point for any renderable not at the world origin. `body.bounds` is already renderable-local, and the visual pivot subtracted `renderable.pos` from it a second time — so a 40x40 body on a renderable at `(100, 50)` turned about `(-80, -30)` rather than its own centre. Only correct at the origin, which is where the spec covering it built its renderable
-- `Body.rotate()` no longer throws on a shape that cannot rotate. It called `shape.rotate()` unguarded, and neither `Box3d` nor `Point` implements one — so the documented way to rotate collision shapes crashed on exactly the bodies most likely to carry a 3D sensor. Such a shape keeps its orientation and still contributes its bounds
-- `Body.rotate()` reports the change to its owner again. The `onBodyUpdate` notification was commented out, so an owner that folds the body's bounds into its own kept the pre-rotation extent — and since the broadphase indexes the renderable's bounds, the rotated body was queried at the wrong size
-
 ### Changed
-- Loader: `load()` no longer names asset types while resolving a `src`. Every parser is registered with the same shape, and a type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` — which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
+- Loader: `load()` no longer names asset types while resolving a `src`. A type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` instead — which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
+
+### Fixed
+- Body: rotation pivoted about the wrong point for any renderable away from the world origin. `body.bounds` is already renderable-local and the pivot subtracted `renderable.pos` from it a second time, so a 40x40 body on a renderable at `(100, 50)` turned about `(-80, -30)` rather than its own centre
+- `Body.rotate()` no longer throws on a `Box3d` or `Point` shape, neither of which can rotate. Such a shape keeps its orientation and still contributes its bounds
 
 ## [20.6.0] (melonJS 2) - _2026-09-16_
 
