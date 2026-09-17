@@ -70,3 +70,30 @@ export function preloadFontFace(data, onload, onerror) {
 
 	return 1;
 }
+
+/**
+ * A `fontface` src may be a CSS font descriptor rather than a bare path, so
+ * unwrap `url(...)` before the loader prefixes the font base URL — it cannot be
+ * repaired afterwards, since `"data/font/" + "url('x.woff2')"` is not a path
+ * either half of the pipeline can recover from.
+ * @param {string} src - the descriptor as written in the manifest
+ * @returns {string} the path inside it, or the descriptor unchanged
+ * @ignore
+ * @internal
+ */
+preloadFontFace.normalizeSrc = (src) => {
+	const urlMatch = src.match(/^url\(\s*['"]?(.*?)['"]?\s*\)$/);
+	return urlMatch ? urlMatch[1] : src;
+};
+
+/**
+ * `local('Family Name')` names a font already installed on the machine, which
+ * is not a location and has no base to be relative to.
+ * @param {string} src - the normalized src
+ * @returns {boolean} false for an installed family, true for a path
+ * @ignore
+ * @internal
+ */
+preloadFontFace.needsBaseURL = (src) => {
+	return !src.startsWith("local(");
+};
