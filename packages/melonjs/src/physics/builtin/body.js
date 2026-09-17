@@ -572,10 +572,15 @@ export default class Body {
 			return;
 		}
 		const bounds = this.bounds;
-		// Pivot is body-local: subtract the renderable's pos so the
-		// translate is in the local frame of the renderable.
-		const cx = bounds.centerX - this.ancestor.pos.x;
-		const cy = bounds.centerY - this.ancestor.pos.y;
+		// `body.bounds` is ALREADY renderable-local — it is accumulated from
+		// the shapes' own points, which are local, and the adapter documents
+		// it that way. Subtracting `ancestor.pos` a second time offset the
+		// pivot by the renderable's world position, so a 40x40 body on a
+		// renderable at (100, 50) rotated about (-80, -30) rather than its
+		// own centre. Invisible at the origin, which is where the spec that
+		// covers this used to build its renderable.
+		const cx = bounds.centerX;
+		const cy = bounds.centerY;
 		t.identity();
 		if (this.angle !== 0) {
 			if (cx !== 0 || cy !== 0) {
@@ -1188,7 +1193,14 @@ export default class Body {
 		if (angle !== 0) {
 			this.bounds.clear();
 			this.forEach((shape) => {
-				shape.rotate(angle, v);
+				// `Box3d` and `Point` carry no `rotate()`. Calling it threw,
+				// which made the documented workaround for rotated collision
+				// crash on exactly the bodies most likely to hold a 3D sensor.
+				// Their bounds are still accumulated, so the body's AABB stays
+				// correct — the shape simply does not turn.
+				if (typeof shape.rotate === "function") {
+					shape.rotate(angle, v);
+				}
 				this.bounds.addBounds(shape.getBounds());
 				/*
                 if (!(shape instanceof Ellipse)) {
@@ -1197,11 +1209,14 @@ export default class Body {
                 }
                 */
 			});
-			/*
-            if (typeof this.onBodyUpdate === "function") {
-                this.onBodyUpdate(this);
-            }
-            */
+			// Tell the renderable its body changed shape. Without this its
+			// cached bounds keep the pre-rotation extent, and since the
+			// broadphase indexes the RENDERABLE's bounds rather than the
+			// body's, a rotated body was queried at the wrong size — the
+			// per-frame quadtree rebuild just re-read the same stale value.
+			if (typeof this.onBodyUpdate === "function") {
+				this.onBodyUpdate(this);
+			}
 		}
 		return this;
 	}
