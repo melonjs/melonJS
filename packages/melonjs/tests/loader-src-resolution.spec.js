@@ -16,8 +16,8 @@ describe("parser-owned source resolution", () => {
 		// Use the font parser's rules under another type, so resolution cannot
 		// depend on the loader recognizing the name "fontface".
 		Object.assign(parser, {
-			resolveSrc: preloadFontFace.resolveSrc,
-			skipBaseURL: preloadFontFace.skipBaseURL,
+			normalizeSrc: preloadFontFace.normalizeSrc,
+			needsBaseURL: preloadFontFace.needsBaseURL,
 		});
 		loader.setParser(type, parser);
 		loader.setBaseURL(type, "fonts/");

@@ -305,6 +305,51 @@ function onLoadingError(res) {
 	throw new Error("Failed loading resource " + res.src);
 }
 
+/** a src that is already a bare path needs no unwrapping @ignore @internal */
+const keepSrc = (src) => {
+	return src;
+};
+
+/**
+ * The one rule that holds for every asset type: a data URI carries its own
+ * payload, so nothing can be relative to it. Checked by `load()` for all types
+ * rather than left to `needsBaseURL`, so that a type overriding that hook
+ * declares only its OWN exceptions and cannot forget this one.
+ * @param {string} src - the normalized src
+ * @returns {boolean} true for a data URI
+ * @ignore
+ * @internal
+ */
+const isDataURI = (src) => {
+	return src.startsWith("data:");
+};
+
+/** default: a src is a path relative to its type's base URL @ignore @internal */
+const alwaysRelative = () => {
+	return true;
+};
+
+/**
+ * A registered parser, normalized by {@link loader.setParser}.
+ *
+ * Every type gets the same shape whether or not it needs the src hooks, so
+ * `load()` can treat all of them alike. The alternative — a bare function that
+ * some types decorate with extra properties — puts the knowledge of which
+ * types are special back into the caller, which is what moving it out was for.
+ * @typedef {object} AssetParser
+ * @property {Function} parse - preloads the asset and returns how many
+ * resources it will load (0 when already cached)
+ * @property {function(string): string} normalizeSrc - turns a type-specific
+ * descriptor into a bare path, before any base URL is applied. Identity unless
+ * the type overrides it
+ * @property {function(string): boolean} needsBaseURL - whether the normalized
+ * src is relative to this type's base URL. Declares only this type's own
+ * exceptions, such as a `local()` font naming an installed family — data URIs
+ * are excluded for every type before this is consulted
+ * @ignore
+ * @internal
+ */
+
 /**
  * an asset definition to be used with the loader
  * @typedef {object} Asset
@@ -390,7 +435,11 @@ export function setParser(type, parserFn) {
 		warning("overriding parser for " + type + " format");
 	}
 
-	parsers.set(type, parserFn);
+	parsers.set(type, {
+		parse: parserFn,
+		normalizeSrc: parserFn.normalizeSrc ?? keepSrc,
+		needsBaseURL: parserFn.needsBaseURL ?? alwaysRelative,
+	});
 }
 
 /**
@@ -582,19 +631,18 @@ export function load(asset, onload, onerror) {
 	// caller's original src; only the parser sees the resolved one.
 	let src = asset.src;
 
-	// Let the parser normalize its source before applying the shared base URL.
+	// Normalize, then prefix — both through the parser, so this function never
+	// names an asset type. `src` may legitimately be an array (an image
+	// fallback chain) or absent, and neither hook applies to those.
 	if (typeof src === "string") {
-		src = parser.resolveSrc?.(src) ?? src;
-	}
-
-	// Data URIs and parser-specific sources do not need a base URL.
-	if (
-		typeof baseURL[asset.type] !== "undefined" &&
-		typeof src === "string" &&
-		!src.startsWith("data:") &&
-		!parser.skipBaseURL?.(src)
-	) {
-		src = baseURL[asset.type] + src;
+		src = parser.normalizeSrc(src);
+		if (
+			typeof baseURL[asset.type] !== "undefined" &&
+			!isDataURI(src) &&
+			parser.needsBaseURL(src)
+		) {
+			src = baseURL[asset.type] + src;
+		}
 	}
 
 	const resource =
@@ -613,7 +661,7 @@ export function load(asset, onload, onerror) {
 		return new Promise((resolve, reject) => {
 			// parser returns the amount of asset to be loaded (usually 1, more
 			// if it splits into several); 0 means already cached → resolve now.
-			const count = parser.call(
+			const count = parser.parse.call(
 				this,
 				resource,
 				() => {
@@ -629,7 +677,7 @@ export function load(asset, onload, onerror) {
 	}
 
 	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-	return parser.call(this, resource, onload, onerror, settings);
+	return parser.parse.call(this, resource, onload, onerror, settings);
 }
 
 /**
