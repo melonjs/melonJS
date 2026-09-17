@@ -2,6 +2,9 @@
 
 ## [20.7.0] (melonJS 2) - _unreleased_
 
+### Changed
+- Loader: `load()` no longer names asset types while resolving a `src`. Every parser is registered with the same shape, and a type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` — which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
+
 ## [20.6.0] (melonJS 2) - _2026-09-16_
 
 ### Added
