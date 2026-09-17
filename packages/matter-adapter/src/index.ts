@@ -843,14 +843,72 @@ export class MatterAdapter implements PhysicsAdapter {
 
 	/**
 	 * Adapter-side debug surface: the body's collision shapes in
-	 * renderable-local coordinates. We return the original `def.shapes`
-	 * array — those are the input shape definitions in local space,
-	 * unchanged by matter's body transformation (rotation is baked into
-	 * matter's vertices, not into our local-space defs). Read-only.
+	 * renderable-local coordinates, **at the body's current rotation**.
+	 *
+	 * The authored `def.shapes` are the pose the body was created with;
+	 * rotation lives in the physics body, not in them. Returning them
+	 * unrotated made anything reading this — the debug overlay most visibly —
+	 * describe a spinning body with an axis-aligned shape. Read-only.
 	 * @param renderable - the renderable whose body shapes to read
 	 */
 	getBodyShapes(renderable: Renderable): readonly BodyShape[] {
-		return this.defMap.get(renderable)?.shapes ?? [];
+		const shapes = this.defMap.get(renderable)?.shapes;
+		if (shapes === undefined) {
+			return [];
+		}
+		const angle = this.getAngle(renderable);
+		if (angle === 0) {
+			// much the commonest case, and the one that must stay allocation
+			// free: hand back the authored array exactly as before
+			this.rotatedShapes.delete(renderable);
+			return shapes;
+		}
+		const cached = this.rotatedShapes.get(renderable);
+		if (cached !== undefined && cached.angle === angle) {
+			return cached.shapes;
+		}
+		const rotated = this.rotateShapes(shapes, angle);
+		this.rotatedShapes.set(renderable, { angle, shapes: rotated });
+		return rotated;
+	}
+
+	/**
+	 * Rotated copies of the authored shapes, keyed by renderable, with the
+	 * angle they were built for. Rebuilt only when the body has actually
+	 * turned — a scene of unrotated bodies never allocates, and a spinning one
+	 * allocates once per angle change rather than once per read.
+	 */
+	private readonly rotatedShapes = new Map<
+		Renderable,
+		{ angle: number; shapes: BodyShape[] }
+	>();
+
+	/**
+	 * Rotate the authored shapes to the body's current pose.
+	 *
+	 * The shapes are rotated about the body's own origin, which is where the
+	 * engine rotates it, so the result stays in the renderable-local frame the
+	 * contract promises.
+	 * @param shapes - the authored shape definitions
+	 * @param angle - the body's current angle, in radians
+	 * @returns fresh shapes at that angle
+	 */
+	private rotateShapes(
+		shapes: readonly BodyShape[],
+		angle: number,
+	): BodyShape[] {
+		const pivot = new Vector2d(0, 0);
+		return shapes.map((shape) => {
+			// `clone()` keeps each shape's own type — a Rect rotated off-axis
+			// becomes a Polygon, which is what Rect#toPolygon is for; an
+			// Ellipse has no rotated form and is returned as it came
+			if (shape instanceof Ellipse) {
+				return shape;
+			}
+			const rotated = shape instanceof Rect ? shape.toPolygon() : shape.clone();
+			rotated.rotate(angle, pivot);
+			return rotated;
+		});
 	}
 
 	isGrounded(renderable: Renderable): boolean {
