@@ -221,6 +221,13 @@ describe("Trigger level change (#1646)", () => {
 			...options,
 		});
 		t.triggerEvent();
+		// Out of the world the moment it has fired. The loop is running for
+		// this test, so the trigger's own body keeps colliding and re-entering
+		// `triggerEvent` — which queued extra loads under a busy scheduler and
+		// made this fail only in a full-suite run. The transition already owns
+		// everything it needs (the effect lives on the viewport), so the
+		// trigger has no further part to play.
+		app.world.removeChildNow(t);
 
 		// the hide effect, captured rather than added
 		expect(seen).toHaveLength(1);
@@ -260,7 +267,6 @@ describe("Trigger level change (#1646)", () => {
 
 		GLTFScene.prototype.addTo = previousAddTo;
 		app.viewport = original;
-		app.world.removeChildNow(t);
 
 		// the load happened, then the reveal — and on the viewport that existed
 		// AFTER the load, not the one captured before it

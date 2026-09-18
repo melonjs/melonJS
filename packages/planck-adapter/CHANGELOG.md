@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.0 - _2026-09-18_
+
+### Fixed
+- `getBodyShapes()` is read back from planck rather than derived, which fixes shapes that rotated about the wrong point. 1.3.1 rotated the authored shapes about the renderable's origin, while planck rotates a body about its own **origin**, not its centre of mass, which is a different point again on a body with several fixtures, so the reported shapes swung away from the body they belong to. A shape carrying its offset in `pos` fared worse still, because `Polygon#rotate` moves a shape's points without its `pos`, so the parts of one body came apart. The geometry now comes from the fixtures and the body transform, so there is no pivot to derive and nothing to keep in step with the sprite
+- `getBodyShapes()` no longer reports a body's previous geometry after `updateShape()` at an unchanged angle, and no longer pins a removed renderable and its shapes for the adapter's lifetime. The cache was keyed by angle and cleared on no path but one
+- `getBodyShapes()` allocates nothing once a body's structure is settled. It is called once per body per frame by the debug overlay, and the previous cache missed on every frame of a body that was actually turning, allocating a fresh shape set each time through the object pools without ever releasing it
+- `getBodyShapes()` reports a body's fixtures in the order they were authored. planck's fixture list runs newest-first, so the reported shapes were the reverse of `def.shapes` and an index into one did not address the same shape in the other
+
+### Changed
+- `getBodyShapes()` reports the geometry planck **simulates**, not the shapes as authored. A `Rect` comes back as the `Polygon` planck holds, an `Ellipse` as the circle of average radius it is simulated as, a concave polygon as the hull planck reduces it to, and a shape with `isActive: false` is absent entirely because it has no fixture. The overlay previously drew outlines that did not describe what collides. The authored definitions are unchanged and remain available on `renderable.bodyDef.shapes`
+
+### Notes
+- The peer range stays `>=20.0.0`: nothing here needs a newer engine
+
 ## 1.3.1 - _2026-09-17_
 
 ### Fixed

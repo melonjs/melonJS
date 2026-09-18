@@ -170,6 +170,14 @@ export class MatterAdapter implements PhysicsAdapter {
 	 */
 	private readonly posOffsets = new Map<Renderable, { x: number; y: number }>();
 
+	/**
+	 * Shapes handed back by {@link MatterAdapter#getBodyShapes}: one reusable
+	 * array per renderable whose members are refreshed in place, so a spinning
+	 * body costs no allocation on the debug overlay's per-frame path. Dropped
+	 * in `removeBody`, so nothing outlives the body it describes.
+	 */
+	private readonly reportedShapes = new Map<Renderable, BodyShape[]>();
+
 	private readonly matterOptions: Matter.IEngineDefinition | undefined;
 
 	private readonly subSteps: number;
@@ -285,6 +293,7 @@ export class MatterAdapter implements PhysicsAdapter {
 		this.defMap.clear();
 		this.bodyGravityScale.clear();
 		this.posOffsets.clear();
+		this.reportedShapes.clear();
 	}
 
 	step(dt: number): void {
@@ -369,11 +378,29 @@ export class MatterAdapter implements PhysicsAdapter {
 		// matter compound body (Matter.Body.create with parts).
 		const baseX = renderable.pos.x;
 		const baseY = renderable.pos.y;
-		const parts = def.shapes.map((s, i) => {
+		// `isActive === false` keeps a shape out of the simulation without
+		// removing it from the definition — the portable flag the builtin and
+		// the planck adapter both honour. Skipped here rather than created and
+		// disabled, so the same body collides the same way on every backend.
+		// The index carried into `partShapeMap` is the shape's index in the
+		// ORIGINAL list, so collision events still name the right shape.
+		const parts: Matter.Body[] = [];
+		def.shapes.forEach((s, i) => {
+			if ((s as { isActive?: boolean }).isActive === false) {
+				return;
+			}
 			const part = this._shapeToMatter(s, baseX, baseY);
 			this.partShapeMap.set(part, { shape: s, index: i });
-			return part;
+			parts.push(part);
 		});
+		if (parts.length === 0) {
+			// every shape disabled: matter cannot build a body from nothing, so
+			// keep one inert part rather than throwing — the body still exists
+			// for the caller to re-enable a shape on later via `updateShape`
+			parts.push(
+				Matter.Bodies.rectangle(baseX, baseY, 1, 1, { isSensor: true }),
+			);
+		}
 		let body: Matter.Body;
 		if (parts.length === 1) {
 			body = parts[0];
@@ -596,6 +623,9 @@ export class MatterAdapter implements PhysicsAdapter {
 			this.velocityLimits.delete(renderable);
 			this.defMap.delete(renderable);
 			this.posOffsets.delete(renderable);
+			// `updateShape` is a remove + add, so clearing here also stops a
+			// reshaped body reporting its previous geometry
+			this.reportedShapes.delete(renderable);
 			this.bodyGravityScale.delete(body);
 		}
 	}
@@ -852,63 +882,83 @@ export class MatterAdapter implements PhysicsAdapter {
 	 * @param renderable - the renderable whose body shapes to read
 	 */
 	getBodyShapes(renderable: Renderable): readonly BodyShape[] {
-		const shapes = this.defMap.get(renderable)?.shapes;
-		if (shapes === undefined) {
+		// Reported from MATTER'S OWN geometry, not by re-rotating the authored
+		// shapes. `part.vertices` are world-space and already carry the body's
+		// current pose, so there is no pivot to derive and nothing to keep in
+		// sync with `syncFromPhysics` — and it reports what actually collides,
+		// which the authored shapes do not: an Ellipse is simulated as a circle
+		// of the average radius, a degenerate polygon as its bounding box, and
+		// a concave one as convex chunks.
+		const body = this.bodyMap.get(renderable);
+		if (body === undefined) {
 			return [];
 		}
-		const angle = this.getAngle(renderable);
-		if (angle === 0) {
-			// much the commonest case, and the one that must stay allocation
-			// free: hand back the authored array exactly as before
-			this.rotatedShapes.delete(renderable);
-			return shapes;
-		}
-		const cached = this.rotatedShapes.get(renderable);
-		if (cached !== undefined && cached.angle === angle) {
-			return cached.shapes;
-		}
-		const rotated = this.rotateShapes(shapes, angle);
-		this.rotatedShapes.set(renderable, { angle, shapes: rotated });
-		return rotated;
-	}
+		const parts = body.parts;
+		// a compound body's real shapes are `parts[1..N]`; `parts[0]` is the
+		// wrapper whose vertices are the convex hull. Same walk as the raycast.
+		const startIdx = parts.length > 1 ? 1 : 0;
+		const count = parts.length - startIdx;
 
-	/**
-	 * Rotated copies of the authored shapes, keyed by renderable, with the
-	 * angle they were built for. Rebuilt only when the body has actually
-	 * turned — a scene of unrotated bodies never allocates, and a spinning one
-	 * allocates once per angle change rather than once per read.
-	 */
-	private readonly rotatedShapes = new Map<
-		Renderable,
-		{ angle: number; shapes: BodyShape[] }
-	>();
+		let cached = this.reportedShapes.get(renderable);
+		// rebuilt only when the STRUCTURE changes — the pose is refreshed in
+		// place below, so a spinning body allocates nothing per frame (the
+		// debug overlay calls this once per body per frame)
+		if (cached === undefined || cached.length !== count) {
+			cached = [];
+			this.reportedShapes.set(renderable, cached);
+		}
 
-	/**
-	 * Rotate the authored shapes to the body's current pose.
-	 *
-	 * The shapes are rotated about the body's own origin, which is where the
-	 * engine rotates it, so the result stays in the renderable-local frame the
-	 * contract promises.
-	 * @param shapes - the authored shape definitions
-	 * @param angle - the body's current angle, in radians
-	 * @returns fresh shapes at that angle
-	 */
-	private rotateShapes(
-		shapes: readonly BodyShape[],
-		angle: number,
-	): BodyShape[] {
-		const pivot = new Vector2d(0, 0);
-		return shapes.map((shape) => {
-			// `clone()` keeps each shape's own type — a Rect rotated off-axis
-			// becomes a Polygon, which is what Rect#toPolygon is for; an
-			// Ellipse has no rotated form and is returned as it came
-			if (shape instanceof Ellipse) {
-				return shape;
+		const rx = renderable.pos.x;
+		const ry = renderable.pos.y;
+		for (let p = startIdx; p < parts.length; p++) {
+			const part = parts[p];
+			const i = p - startIdx;
+			const radius = (part as { circleRadius?: number }).circleRadius;
+			if (typeof radius === "number" && radius > 0) {
+				// a circle has no vertex list; report the circle matter
+				// actually simulates rather than the ellipse that was authored
+				const existing = cached[i];
+				if (existing instanceof Ellipse) {
+					existing.pos.set(part.position.x - rx, part.position.y - ry);
+					existing.radiusV.set(radius, radius);
+				} else {
+					cached[i] = new Ellipse(
+						part.position.x - rx,
+						part.position.y - ry,
+						radius * 2,
+						radius * 2,
+					);
+				}
+				continue;
 			}
-			const rotated = shape instanceof Rect ? shape.toPolygon() : shape.clone();
-			rotated.rotate(angle, pivot);
-			return rotated;
-		});
+			const vertices = part.vertices;
+			const existing = cached[i];
+			if (
+				existing instanceof Polygon &&
+				existing.points.length === vertices.length
+			) {
+				// mutate in place: `recalc` reuses its edge/normal slots, so
+				// the steady state is allocation-free
+				for (let v = 0; v < vertices.length; v++) {
+					existing.points[v].set(vertices[v].x - rx, vertices[v].y - ry);
+				}
+				existing.pos.set(0, 0);
+				existing.recalc();
+				existing.updateBounds();
+			} else {
+				// matter guarantees at least three vertices for a polygon part;
+				// the cast satisfies Polygon's "three or more" tuple type,
+				// which a `map` result cannot prove on its own
+				cached[i] = new Polygon(
+					0,
+					0,
+					vertices.map((v) => {
+						return new Vector2d(v.x - rx, v.y - ry);
+					}) as unknown as ConstructorParameters<typeof Polygon>[2],
+				);
+			}
+		}
+		return cached;
 	}
 
 	isGrounded(renderable: Renderable): boolean {

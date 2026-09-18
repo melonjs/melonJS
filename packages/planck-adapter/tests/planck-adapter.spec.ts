@@ -13,6 +13,7 @@ import {
 	Application,
 	boot,
 	collision,
+	Polygon,
 	Rect,
 	Renderable,
 	Vector2d,
@@ -604,16 +605,28 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 			expect(bounds.max.y).toBeGreaterThan(24);
 		});
 
-		it("returns the original shape definitions", () => {
+		it("reports the geometry planck actually simulates, not the authored shape", () => {
+			// Deliberately NOT the authored objects. The engine is the source
+			// of truth here: an `Ellipse` is simulated as a circle of the
+			// average radius, a concave polygon is hulled, and a shape with
+			// `isActive: false` has no fixture at all — reporting the authored
+			// list would draw hitboxes that do not describe what collides.
+			// A `Rect` therefore comes back as the `Polygon` planck holds.
+			// The authored definitions remain available on `bodyDef.shapes`.
 			const rect = new Rect(0, 0, 32, 32);
 			const r = new Renderable(100, 100, 32, 32);
-			adapter.addBody(r, {
-				type: "dynamic",
-				shapes: [rect],
-			});
+			adapter.addBody(r, { type: "dynamic", shapes: [rect] });
 			const shapes = adapter.getBodyShapes(r);
 			expect(shapes.length).toEqual(1);
-			expect(shapes[0]).toEqual(rect);
+			const poly = shapes[0] as Polygon;
+			expect(poly.points).toHaveLength(4);
+			// same footprint, in renderable-local coordinates
+			const xs = poly.points.map((v) => poly.pos.x + v.x);
+			const ys = poly.points.map((v) => poly.pos.y + v.y);
+			expect(Math.min(...xs)).toBeCloseTo(0, 0);
+			expect(Math.min(...ys)).toBeCloseTo(0, 0);
+			expect(Math.max(...xs)).toBeCloseTo(32, 0);
+			expect(Math.max(...ys)).toBeCloseTo(32, 0);
 		});
 	});
 
