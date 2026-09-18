@@ -36,6 +36,12 @@ export default class Trigger extends Renderable {
 	 * @param {Function} [settings.onLoaded] - Level loaded callback. See {@link level.load}
 	 * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
 	 * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
+	 * @param {number} [settings.scale] - Pixels per glTF unit. See {@link level.load}
+	 * @param {boolean} [settings.rightHanded] - Convert the glTF scene to the engine's Y-down coordinates. See {@link level.load}
+	 * @param {boolean} [settings.lights] - Load the glTF scene's lights. See {@link level.load}
+	 * @param {number} [settings.lightIntensityScale] - Scale the glTF lights' authored intensity. See {@link level.load}
+	 * @param {boolean} [settings.castGroundShadow] - Enable ground shadows for glTF meshes. See {@link level.load}
+	 * @param {number} [settings.shadowGroundY] - World Y for glTF ground shadows. See {@link level.load}
 	 * @example
 	 * // fade transition (default)
 	 * world.addChild(new Trigger(x, y, {
@@ -96,6 +102,12 @@ export default class Trigger extends Renderable {
 			"onLoaded",
 			"flatten",
 			"setViewportBounds",
+			"scale",
+			"rightHanded",
+			"lights",
+			"lightIntensityScale",
+			"castGroundShadow",
+			"shadowGroundY",
 			"to",
 		]) {
 			if (typeof settings[property] !== "undefined") {

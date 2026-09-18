@@ -6,6 +6,7 @@
 - Loader: `load()` no longer names asset types while resolving a `src`. A type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` instead — which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
 
 ### Fixed
+- Trigger: a trigger targeting a glTF level forwards the scene options it was given. `scale`, `rightHanded`, `lights`, `lightIntensityScale`, `castGroundShadow` and `shadowGroundY` were dropped before `level.load()` saw them, so a Tiled-authored trigger loaded its scene at the default scale and handedness whatever the map said ([#1649](https://github.com/melonjs/melonJS/issues/1649), thanks @ICOM725)
 - Body: rotation pivoted about the wrong point for any renderable away from the world origin. `body.bounds` is already renderable-local and the pivot subtracted `renderable.pos` from it a second time, so a 40x40 body on a renderable at `(100, 50)` turned about `(-80, -30)` rather than its own centre
 - `Body.rotate()` no longer throws on a `Box3d` or `Point` shape, neither of which can rotate. Such a shape keeps its orientation and still contributes its bounds
 
