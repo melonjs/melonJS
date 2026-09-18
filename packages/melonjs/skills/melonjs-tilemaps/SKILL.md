@@ -100,6 +100,11 @@ melonJS pre-registers `Renderable`, `Sprite`, `NineSliceSprite`, `Text`,
 `BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable` and `Trigger`
 as Tiled classes, so `Collectable` and `Trigger` work out of the box.
 
+A `Trigger` passes its own settings through to `level.load()`, including the
+glTF scene options (`scale`, `rightHanded`, `lights`, `lightIntensityScale`,
+`castGroundShadow`, `shadowGroundY`) when the target is a glTF/GLB level — see
+the 3D assets skill. `async` is the exception: the trigger owns it.
+
 ## Camera bounds
 
 `level.load` sets the viewport bounds to the map size for you —

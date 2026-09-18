@@ -63,6 +63,27 @@ level.load("diorama", { scale: 50, onLoaded: () => {
 }});
 ```
 
+### The same options from a Tiled `Trigger`
+
+A `Trigger` authored in Tiled forwards these to `level.load()`, so a trigger that
+walks the player into a glTF level carries the scene's settings as Tiled
+properties:
+
+```js
+world.addChild(new Trigger(x, y, {
+    shapes: [new Rect(0, 0, 100, 100)],
+    to: "diorama",              // the level id — `to`, not `level`
+    scale: 50,
+    rightHanded: false,
+    castGroundShadow: false,
+}));
+```
+
+`scale`, `rightHanded`, `lights`, `lightIntensityScale`, `castGroundShadow` and
+`shadowGroundY` all travel. **`async` deliberately does not** — the trigger sets
+it itself, because it needs the promise to sequence its own fade and reveal, so
+an authored `async` property is ignored rather than honoured.
+
 ## `rightHanded` — and the default that differs between the two APIs
 
 glTF is authored **Y-up, right-handed**; melonJS is **Y-down, +Z forward**.
