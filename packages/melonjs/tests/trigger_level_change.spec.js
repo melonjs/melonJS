@@ -234,9 +234,12 @@ describe("Trigger level change (#1646)", () => {
 			loadOptions.push(settings);
 		};
 
-		// Drive the hide tween to completion -> onComplete -> the load. Stop
-		// ticking the moment the load starts: further ticks re-fire onComplete
-		// and would queue a second load.
+		// Drive the hide tween to completion -> onComplete -> the load, in ONE
+		// tick. Ticking in a loop until `loaded.length` moves cannot work: with
+		// the game loop running the load is deferred through a timer, so
+		// `loaded` is still empty on the next iteration, the tween fires
+		// `onComplete` again, and a second and third load queue up behind the
+		// first. That raced — it failed roughly one run in three.
 		const tween = seen[0].effect.tween;
 		// Yield to a MACROTASK between ticks, not a microtask: with the loop
 		// running the load is deferred through `defer`, i.e. a timer, so a
@@ -247,8 +250,9 @@ describe("Trigger level change (#1646)", () => {
 				setTimeout(resolve, 0);
 			});
 		};
-		for (let i = 1; i <= 20 && loaded.length === 0; i++) {
-			tween._onTick(i * 5);
+		// one tick past the 10ms duration finishes it outright
+		tween._onTick(1000);
+		for (let i = 0; i < 20 && loaded.length === 0; i++) {
 			await nextTask();
 		}
 		// and let the reveal chained after the load settle
