@@ -1,7 +1,7 @@
 import FadeEffect from "../camera/effects/fade_effect.ts";
 import MaskEffect from "../camera/effects/mask_effect.ts";
 import { polygonPool } from "../geometries/polygon.ts";
-import { level } from "./../level/level.js";
+import { LEVEL_LOAD_OPTIONS, level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
 import { boundsPool } from "./../physics/bounds.ts";
 import { collision } from "./../physics/collision.js";
@@ -18,6 +18,45 @@ import Renderable from "./renderable.js";
  * Supports both fade and mask-based transitions when loading a new level.
  * @category Game Objects
  */
+/**
+ * What a trigger carries from its own settings into `level.load()`.
+ *
+ * Derived from {@link LEVEL_LOAD_OPTIONS} rather than restated, which is the
+ * whole point: an option added to a level format is named once, beside the code
+ * that reads it, and arrives here for free. The previous hand-written list had
+ * fallen three releases behind the glTF path, so a Tiled-authored trigger
+ * loaded its scene at the default scale and handedness whatever the map said
+ * (#1649).
+ *
+ * Two exclusions and two additions:
+ * - `async` is the trigger's own to set. On the transition path it awaits the
+ *   load to time its reveal; on the direct path it does not await at all. An
+ *   authored value would break the first and mean nothing in the second.
+ * - `type` and `to` are the trigger's own settings rather than the director's,
+ *   and are carried for `triggerEvent` to read back at fire time.
+ *
+ * Built on FIRST USE, not at module scope: `level` reaches the level formats,
+ * which reach the renderables, which reach this module, so reading the export
+ * while that cycle is still unwinding throws on the temporal dead zone. A
+ * trigger cannot be constructed before the modules have settled, so by the
+ * time this runs the contract is there.
+ * @returns {ReadonlyArray<string>} the settings a trigger forwards
+ * @ignore
+ */
+let forwardedSettings;
+const getForwardedSettings = () => {
+	if (forwardedSettings === undefined) {
+		forwardedSettings = Object.freeze([
+			...LEVEL_LOAD_OPTIONS.filter((option) => {
+				return option !== "async";
+			}),
+			"type",
+			"to",
+		]);
+	}
+	return forwardedSettings;
+};
+
 export default class Trigger extends Renderable {
 	/**
 	 * @param {number} x - the x coordinates of the trigger area
@@ -96,20 +135,7 @@ export default class Trigger extends Renderable {
 			event: "level",
 		};
 
-		for (const property of [
-			"type",
-			"container",
-			"onLoaded",
-			"flatten",
-			"setViewportBounds",
-			"scale",
-			"rightHanded",
-			"lights",
-			"lightIntensityScale",
-			"castGroundShadow",
-			"shadowGroundY",
-			"to",
-		]) {
+		for (const property of getForwardedSettings()) {
 			if (typeof settings[property] !== "undefined") {
 				this.triggerSettings[property] = settings[property];
 			}

@@ -127,6 +127,34 @@ function levelIdAt(offset) {
  */
 
 /**
+ * Every option {@link level.load} understands: the three the director handles
+ * itself, plus each level format's own, declared next to the code that reads
+ * them (`TMXTileMap.loadOptions`, `GLTFScene.loadOptions`).
+ *
+ * This exists so that nothing has to keep a SECOND copy of the list. `Trigger`
+ * forwards a caller's settings on to `load()` and used to name the options it
+ * would carry, which meant every option added to a level format was silently
+ * dropped there until somebody noticed — the six glTF options were, for three
+ * releases (#1649). Forwarders now filter by this, so naming an option once,
+ * beside the code that reads it, is enough.
+ * Internal: this exists so the forwarders and the formats cannot disagree, not
+ * as a surface for games to read. `level.load` remains the documented API and
+ * its options are unchanged.
+ * @type {ReadonlyArray<string>}
+ * @see level.load
+ * @ignore
+ * @internal
+ */
+export const LEVEL_LOAD_OPTIONS = Object.freeze([
+	// handled by the director itself, whatever the format
+	"container",
+	"onLoaded",
+	"async",
+	...TMXTileMap.loadOptions,
+	...GLTFScene.loadOptions,
+]);
+
+/**
  * a level manager. once resources loaded, the level manager contains all references of defined levels.
  * @namespace level
  */

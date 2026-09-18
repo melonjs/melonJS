@@ -80,9 +80,14 @@ world.addChild(new Trigger(x, y, {
 ```
 
 `scale`, `rightHanded`, `lights`, `lightIntensityScale`, `castGroundShadow` and
-`shadowGroundY` all travel. **`async` deliberately does not** — the trigger sets
-it itself, because it needs the promise to sequence its own fade and reveal, so
-an authored `async` property is ignored rather than honoured.
+`shadowGroundY` all travel, and so do `container`, `onLoaded`, `flatten` and
+`setViewportBounds`. That list is **hardcoded** in `Trigger` — a `level.load`
+option outside it is dropped without a warning.
+
+**`async` is deliberately excluded.** A trigger with a `color` + `duration`
+sets it itself, because it needs the promise to sequence its fade and reveal; a
+trigger without one loads fire-and-forget and never sets it. Either way an
+authored `async` property is ignored rather than honoured.
 
 ## `rightHanded` — and the default that differs between the two APIs
 
