@@ -6,6 +6,7 @@ import {
 	ensureRemapCapacity,
 	remapIndex,
 } from "../../gpu/meshchunk.ts";
+import { meshHasNormalMap } from "../../gpu/meshmaterial.js";
 import { buildMeshVertexData, retainedScratch } from "../../gpu/meshvertex.ts";
 import WebGPUInstanceBuffer from "../buffer/instance_buffer.js";
 import WebGPURetainedGeometry from "../buffer/retained_geometry.js";
@@ -331,7 +332,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			// a multi-material prototype: every instance draws the same split
 			// (#1573), so each range is one instanced draw over the whole set
 			for (let i = 0; i < slices.length; i++) {
-				this.applyMeshMaterial(mesh, slices[i].texture);
+				this.applyMeshMaterial(mesh, slices[i].texture, slices[i].normalMap);
 				pass.setBindGroup(1, this.currentMaterial);
 				pass.drawIndexed(slices[i].count, count, slices[i].start);
 			}
@@ -763,12 +764,16 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 	 * @param {object} mesh - the mesh whose material should be applied
 	 * @param {TextureAtlas} [texture] - bind this texture instead of the mesh's
 	 * own — how a multi-material model's per-material `map_Kd` reaches the
-	 * sampler, one draw range at a time (#1573). The wrap override stays a
-	 * property of the mesh, not of the material group.
+	 * sampler, one draw range at a time (#1573)
+	 * @param {TextureAtlas} [normalMap] - bind this normal map instead of the
+	 * mesh's own, the same way and for the same reason: `map_bump` is declared
+	 * per material, so a multi-material model has no single mesh-level map to
+	 * fall back on (#1574). The wrap override stays a property of the mesh,
+	 * not of the material group.
 	 * @ignore
 	 * @internal
 	 */
-	applyMeshMaterial(mesh, texture = mesh.texture) {
+	applyMeshMaterial(mesh, texture = mesh.texture, normalMap = mesh.normalMap) {
 		const renderer = this.renderer;
 		const filter =
 			typeof texture.filter === "string"
@@ -781,6 +786,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const material = renderer.textureStore.getMeshBinding(
 			texture,
 			mesh.alphaMap ?? texture,
+			normalMap ?? renderer.getFlatNormalAtlas(),
 			{
 				repeat: mesh.textureRepeat,
 				// mesh textures sample a generated mip chain — trilinear
@@ -825,6 +831,10 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		scratch[38] = 0;
 		scratch[39] = 0;
 		scratch[37] = mesh.alphaMap !== undefined ? 1 : 0;
+		// "does any part of this mesh carry a normal map" — a group without one
+		// binds the flat-normal filler, whose perturbation is the identity, so
+		// one mesh-level flag stays correct across a mixed multi-material model
+		scratch[38] = meshHasNormalMap(mesh) ? 1 : 0;
 		const em = mesh.emissive;
 		scratch[40] = em ? em[0] : 0;
 		scratch[41] = em ? em[1] : 0;
@@ -969,7 +979,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// were accumulated for — and the uniforms are re-armed after that
 		// flush, never before it.
 		for (let i = 0; i < slices.length; i++) {
-			this.applyMeshMaterial(mesh, slices[i].texture);
+			this.applyMeshMaterial(mesh, slices[i].texture, slices[i].normalMap);
 			this.setPlacementUniforms(IDENTITY_MATRIX, tint, mesh);
 			this.accumulateRange(mesh, slices[i].start, slices[i].count);
 		}
@@ -1263,7 +1273,7 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 			for (let i = 0; i < slices.length; i++) {
 				// nothing is queued at this point, so the flush this may run is
 				// a no-op — it is here for the material tracking, not the flush
-				this.applyMeshMaterial(mesh, slices[i].texture);
+				this.applyMeshMaterial(mesh, slices[i].texture, slices[i].normalMap);
 				pass.setBindGroup(1, this.currentMaterial);
 				pass.drawIndexed(slices[i].count, 1, slices[i].start);
 			}

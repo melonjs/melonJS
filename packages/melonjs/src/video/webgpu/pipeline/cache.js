@@ -208,6 +208,12 @@ export default class WebGPUPipelineCache {
 				{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
 				{ binding: 2, visibility: GPUShaderStage.FRAGMENT, texture: {} },
 				{ binding: 3, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
+				// the tangent-space normal map (MTL `map_bump`), and like the
+				// alpha pair above it is always bound — the diffuse texture
+				// stands in as filler when a mesh has none, so the layout is
+				// one shape for every mesh
+				{ binding: 4, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+				{ binding: 5, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
 			],
 		});
 		// the quad family's group 1: eight texture slots (bindings 0-7) and

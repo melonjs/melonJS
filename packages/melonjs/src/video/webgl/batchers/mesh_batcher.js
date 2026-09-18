@@ -138,6 +138,10 @@ export default class MeshBatcher extends MaterialBatcher {
 		this.currentAlphaMapUnit = -1;
 		this.currentHasAlphaMap = -1;
 
+		// same pair for the normal map (MTL `map_bump`)
+		this.currentNormalMapUnit = -1;
+		this.currentHasNormalMap = -1;
+
 		// last `uEyePosition` pushed. NaN never equals itself, so the first
 		// camera position of a pass always sets it whatever it is
 		this.currentEyeX = Number.NaN;
@@ -326,6 +330,8 @@ export default class MeshBatcher extends MaterialBatcher {
 			this.currentSpecularB = -1;
 			this.currentAlphaMapUnit = -1;
 			this.currentHasAlphaMap = -1;
+			this.currentNormalMapUnit = -1;
+			this.currentHasNormalMap = -1;
 		}
 		super.useShader(shader);
 	}
@@ -610,7 +616,7 @@ export default class MeshBatcher extends MaterialBatcher {
 				// nothing is accumulated on this path: the flush a texture
 				// upload may trigger returns immediately at zero vertices,
 				// touching neither the vertex array nor ARRAY_BUFFER.
-				this.applyMeshMaterial(mesh, slices[i].texture);
+				this.applyMeshMaterial(mesh, slices[i].texture, slices[i].normalMap);
 				gl.drawElements(
 					this.mode,
 					slices[i].count,
@@ -1206,7 +1212,7 @@ export default class MeshBatcher extends MaterialBatcher {
 			// — bound per range for the reason spelled out in drawRetainedMesh
 			const indexBytes = geometry.indexType === gl.UNSIGNED_INT ? 4 : 2;
 			for (let i = 0; i < slices.length; i++) {
-				this.applyMeshMaterial(mesh, slices[i].texture);
+				this.applyMeshMaterial(mesh, slices[i].texture, slices[i].normalMap);
 				gl.drawElementsInstanced(
 					this.mode,
 					slices[i].count,
@@ -1618,13 +1624,17 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @param {object} mesh - the mesh whose material should be applied
 	 * @param {TextureAtlas} [texture] - bind this texture instead of the mesh's
 	 * own — how a multi-material model's per-material `map_Kd` reaches the
-	 * sampler, one draw range at a time (#1573). Everything else here is a
-	 * property of the mesh, not of the material group.
+	 * sampler, one draw range at a time (#1573)
+	 * @param {TextureAtlas} [normalMap] - bind this normal map instead of the
+	 * mesh's own, the same way and for the same reason: `map_bump` is declared
+	 * per material, so a multi-material model has no single mesh-level map to
+	 * fall back on (#1574). Everything else here is a property of the mesh,
+	 * not of the material group.
 	 * @returns {number} the texture unit the material landed on
 	 * @ignore
 	 * @internal
 	 */
-	applyMeshMaterial(mesh, texture = mesh.texture) {
+	applyMeshMaterial(mesh, texture = mesh.texture, normalMap = mesh.normalMap) {
 		// upload and activate the texture. The mesh's own `textureRepeat`
 		// (when set) is threaded through as a per-use wrap override — sampler
 		// state per mesh, never a mutation of the shared per-image atlas
@@ -1733,6 +1743,39 @@ export default class MeshBatcher extends MaterialBatcher {
 			}
 		}
 
+		// Tangent-space normal map (MTL `map_bump`), on its own unit. Same
+		// filler-and-weight shape as the alpha map above, for the same reason:
+		// a sampler that points nowhere is undefined behaviour, so with no map
+		// it points at the diffuse unit and the flag switches it off.
+		if (this.currentShader.uniforms.uHasNormalMap !== undefined) {
+			const normalUnit =
+				normalMap !== undefined
+					? this.uploadTexture(
+							normalMap,
+							undefined,
+							undefined,
+							false,
+							true,
+							mesh.textureRepeat,
+						)
+					: unit;
+			const hasNormalMap = normalMap !== undefined ? 1 : 0;
+			if (
+				normalUnit !== this.currentNormalMapUnit ||
+				hasNormalMap !== this.currentHasNormalMap
+			) {
+				this.currentShader.setUniform("uNormalMap", normalUnit);
+				this.currentShader.setUniform("uHasNormalMap", hasNormalMap);
+				this.currentNormalMapUnit = normalUnit;
+				this.currentHasNormalMap = hasNormalMap;
+			}
+			if (normalMap !== undefined) {
+				// uploading moved the active sampler — restore the diffuse
+				// binding before the draw reads it, as the alpha map does
+				this.bindSamplerUnit(unit);
+			}
+		}
+
 		// Specular (MTL Ks + Ns). Guarded by the exponent, not the colour:
 		// `Ns` of 0 is the format's "no highlight" however bright `Ks` is.
 		if (this.currentShader.uniforms.uShininess !== undefined) {
@@ -1833,7 +1876,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		// accumulated for — and the uniforms are re-armed after that flush,
 		// never before it.
 		for (let i = 0; i < slices.length; i++) {
-			this.applyMeshMaterial(mesh, slices[i].texture);
+			this.applyMeshMaterial(mesh, slices[i].texture, slices[i].normalMap);
 			this.setPlacementUniforms(_IDENTITY_MATRIX, tint, mesh);
 			this.accumulateRange(mesh, slices[i].start, slices[i].count);
 		}

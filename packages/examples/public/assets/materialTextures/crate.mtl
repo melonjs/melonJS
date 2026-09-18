@@ -4,6 +4,9 @@
 newmtl wood
 Kd 1.0 0.95 0.9
 map_Kd crate-wood.png
+# Tangent-space normal map. Plank chamfers, grain and corner rivets — surface
+# detail the flat geometry cannot carry, lit per fragment by the scene light.
+map_bump crate-wood-normal.png
 
 newmtl metal
 Kd 0.95 0.97 1.0

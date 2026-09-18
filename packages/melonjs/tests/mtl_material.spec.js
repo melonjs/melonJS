@@ -82,9 +82,11 @@ describe("MTL specular and alpha maps (#1575)", () => {
 		});
 
 		it("still warns for maps that genuinely are not consumed", () => {
-			// the set shrank; it must not have emptied
+			// the set shrank again in #1574, when `map_bump` / `bump` / `norm`
+			// became the normal map — it must not have emptied. `map_Ks` is
+			// still unconsumed: the lit path takes a scalar `Ks`, not a map
 			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-			parseMTL("newmtl m\nmap_bump b.png", "");
+			parseMTL("newmtl m\nmap_Ks s.png", "");
 			expect(warn).toHaveBeenCalled();
 			warn.mockRestore();
 		});

@@ -59,6 +59,49 @@ describe("the derived instanced WGSL module", () => {
 		expect(bare).toContain("uLights");
 	});
 
+	it("keeps every helper the fragment stage CALLS", () => {
+		// The splice drops everything between the two stages, so a helper
+		// defined there loses its definition while the fragment keeps the
+		// call — a module that fails to compile on every frame an instanced
+		// lit mesh is drawn, and nothing else in this file would notice.
+		// `ME_effect` is already placed in the head for exactly this reason;
+		// this is the general guard rather than one more name-by-name check.
+		for (const [source, variant] of [
+			[meshWGSL, UNLIT_INSTANCED],
+			[meshLitWGSL, LIT_INSTANCED],
+		]) {
+			const derived = buildInstancedMeshWGSL(source, {
+				...variant,
+				hasColor: false,
+				hasData: false,
+			});
+			const fragment = derived.slice(derived.indexOf("@fragment"));
+			const defined = new Set(
+				[...derived.matchAll(/^fn\s+([A-Za-z_]\w*)\s*\(/gm)].map((m) => {
+					return m[1];
+				}),
+			);
+			const called = [
+				...fragment.matchAll(/(?<![\w.])([A-Za-z_]\w*)\s*\(/g),
+			].map((m) => {
+				return m[1];
+			});
+			// every call the fragment makes to a name this MODULE defines
+			// somewhere must resolve — a name it never defines is a WGSL
+			// builtin and is not ours to check
+			const wholeModuleDefines = new Set(
+				[...source.matchAll(/^fn\s+([A-Za-z_]\w*)\s*\(/gm)].map((m) => {
+					return m[1];
+				}),
+			);
+			for (const name of called) {
+				if (wholeModuleDefines.has(name)) {
+					expect(defined, `${name}() lost its definition`).toContain(name);
+				}
+			}
+		}
+	});
+
 	it("replaces ONLY the vertex stage", () => {
 		const bare = buildInstancedMeshWGSL(meshWGSL, {
 			...UNLIT_INSTANCED,

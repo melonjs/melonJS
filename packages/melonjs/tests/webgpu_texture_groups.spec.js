@@ -49,6 +49,15 @@ const SPLIT = [
 	{ texture: METAL, start: 3, count: 3 },
 ];
 
+// `map_bump` is declared per material like `map_Kd`, so the ranges carry it:
+// one material with a normal map, one without, over ONE diffuse — the case a
+// mesh-level normal map cannot express
+const WOOD_NORMAL = { id: "wood-normal" };
+const SPLIT_NORMAL = [
+	{ texture: WOOD, start: 0, count: 3, normalMap: undefined },
+	{ texture: WOOD, start: 3, count: 3, normalMap: WOOD_NORMAL },
+];
+
 const MODEL = (() => {
 	const val = new Float32Array(16);
 	val[0] = val[5] = val[10] = val[15] = 1;
@@ -158,6 +167,86 @@ describe("WebGPU per-material textures (#1573)", () => {
 			// 3 vertices per range (no sharing across the split), so each
 			// flushed draw indexes only what it pushed
 			expect(renderer.calls.drawIndexed).toEqual([3, 3]);
+		});
+	});
+	/**
+	 * Per-material normal maps (#1574) on this backend.
+	 *
+	 * Both draw paths have to hand the store the RANGE's map. A multi-material
+	 * mesh has no mesh-level normal map to fall back on, so a path that reads
+	 * `mesh.normalMap` binds the flat filler everywhere and the model renders
+	 * with no normal mapping — silently, and on one backend only.
+	 */
+	describe("per-material normal maps (#1574)", () => {
+		it("the retained draw binds each range's own map", () => {
+			const mesh = makeMesh({ textureGroups: SPLIT_NORMAL, lit: true });
+			batcher.drawRetainedMesh(mesh, MODEL, 0xffffffff);
+
+			const normals = renderer.calls.textureBindings.map((b) => {
+				return b.normalTexture;
+			});
+			expect(normals).toEqual([renderer.getFlatNormalAtlas(), WOOD_NORMAL]);
+			// and the two ranges are genuinely different bindings, not one
+			// binding recorded twice
+			expect(renderer.calls.materialBinds[0]).not.toBe(
+				renderer.calls.materialBinds[1],
+			);
+		});
+
+		it("the ACCUMULATED draw binds each range's own map too", () => {
+			// the path a lit mesh takes under a 2D camera. Missed by the
+			// original change, so the same model rendered its normal maps
+			// under a Camera3d and not under a Camera2d
+			const mesh = makeMesh({ textureGroups: SPLIT_NORMAL, lit: true });
+			batcher.addMesh(mesh, 0xffffffff);
+			batcher.flush();
+
+			const normals = renderer.calls.textureBindings.map((b) => {
+				return b.normalTexture;
+			});
+			expect(normals).toEqual([renderer.getFlatNormalAtlas(), WOOD_NORMAL]);
+		});
+
+		it("a range with no map of its own binds the FLAT filler, never the diffuse", () => {
+			// the diffuse standing in would have its colours read as normals.
+			// The flat filler perturbs by the identity instead, which is what
+			// lets one mesh-level `hasNormalMap` flag cover a mixed model
+			const mesh = makeMesh({ textureGroups: SPLIT_NORMAL, lit: true });
+			batcher.drawRetainedMesh(mesh, MODEL, 0xffffffff);
+
+			const first = renderer.calls.textureBindings[0];
+			expect(first.normalTexture).toBe(renderer.getFlatNormalAtlas());
+			expect(first.normalTexture).not.toBe(first.texture);
+		});
+
+		it("an unsplit mesh with no map still binds the filler", () => {
+			batcher.drawRetainedMesh(makeMesh({ lit: true }), MODEL, 0xffffffff);
+			expect(renderer.calls.textureBindings).toHaveLength(1);
+			expect(renderer.calls.textureBindings[0].normalTexture).toBe(
+				renderer.getFlatNormalAtlas(),
+			);
+		});
+
+		it("an unsplit mesh's own normalMap reaches the store", () => {
+			const mesh = makeMesh({ lit: true, normalMap: WOOD_NORMAL });
+			batcher.drawRetainedMesh(mesh, MODEL, 0xffffffff);
+			expect(renderer.calls.textureBindings[0].normalTexture).toBe(WOOD_NORMAL);
+		});
+
+		it("does not leave a mapped range's binding on the next mesh", () => {
+			const mapped = makeMesh({ textureGroups: SPLIT_NORMAL, lit: true });
+			const plain = makeMesh({ lit: true });
+			batcher.drawRetainedMesh(mapped, MODEL, 0xffffffff);
+			batcher.drawRetainedMesh(plain, MODEL, 0xffffffff);
+
+			const normals = renderer.calls.textureBindings.map((b) => {
+				return b.normalTexture;
+			});
+			expect(normals).toEqual([
+				renderer.getFlatNormalAtlas(),
+				WOOD_NORMAL,
+				renderer.getFlatNormalAtlas(),
+			]);
 		});
 	});
 });

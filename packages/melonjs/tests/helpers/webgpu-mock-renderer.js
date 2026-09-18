@@ -66,6 +66,7 @@ export function createMockWebGPURenderer() {
 	const pipelines = new Map();
 	const materialBindings = new Map();
 	const meshBindings = new Map();
+	const flatNormalAtlas = { id: "flatNormal" };
 
 	const renderer = {
 		calls,
@@ -236,6 +237,12 @@ export function createMockWebGPURenderer() {
 		retireBuffer(buffer) {
 			calls.retiredBuffers.push(buffer);
 		},
+		// the 1x1 flat-normal filler the mesh path binds where a material has
+		// no normal map of its own. One stable object, so a mesh without one
+		// does not read as a material change
+		getFlatNormalAtlas() {
+			return flatNormalAtlas;
+		},
 		textureStore: {
 			// one stable bind-group token per atlas object
 			getBinding(texture, options) {
@@ -245,20 +252,27 @@ export function createMockWebGPURenderer() {
 				}
 				return materialBindings.get(texture);
 			},
-			// the mesh family's four-binding group: one stable token per
-			// (diffuse, alpha) PAIR, so a test can tell "same diffuse, new
-			// opacity map" from "same material" the way the real store does
-			getMeshBinding(texture, alphaTexture, options) {
-				calls.textureBindings.push({ texture, alphaTexture, options });
+			// the mesh family's six-binding group: one stable token per
+			// (diffuse, alpha, normal) TRIPLE, so a test can tell "same
+			// diffuse, new opacity map" from "same material" the way the real
+			// store does — and now also "same material, new normal map"
+			getMeshBinding(texture, alphaTexture, normalTexture, options) {
+				calls.textureBindings.push({
+					texture,
+					alphaTexture,
+					normalTexture,
+					options,
+				});
 				let byAlpha = meshBindings.get(texture);
 				if (byAlpha === undefined) {
 					byAlpha = new Map();
 					meshBindings.set(texture, byAlpha);
 				}
-				if (!byAlpha.has(alphaTexture)) {
-					byAlpha.set(alphaTexture, { texture, alphaTexture });
+				const key = `${alphaTexture?.id ?? "-"}|${normalTexture?.id ?? "-"}`;
+				if (!byAlpha.has(key)) {
+					byAlpha.set(key, { texture, alphaTexture, normalTexture });
 				}
-				return byAlpha.get(alphaTexture);
+				return byAlpha.get(key);
 			},
 			// one stable record per atlas object (the lit batcher composes
 			// combined bind groups from the raw view)

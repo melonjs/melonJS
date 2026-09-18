@@ -94,7 +94,7 @@ describe("WebGPUTextureStore", () => {
 					return [texture.__unit];
 				},
 			},
-			pipelineCache: { materialLayout: {} },
+			pipelineCache: { materialLayout: {}, meshMaterialLayout: {} },
 			getDefaultTextureFilter() {
 				return "nearest";
 			},
@@ -312,5 +312,98 @@ describe("WebGPUTextureStore", () => {
 		expect(binding).toBeDefined();
 		expect(createdTextures).toHaveLength(1);
 		expect(uploads).toHaveLength(0);
+	});
+	/**
+	 * The mesh material bind group (#1573 diffuse + #1575 `map_d` + #1574
+	 * `map_bump`) — six entries over three textures.
+	 *
+	 * The cache key is the whole contract here. Two materials routinely share
+	 * a diffuse and differ only in one of the other two maps, so a key that
+	 * collapses them hands the second material the first one's cut-outs or
+	 * the first one's surface detail — no error, no validation failure, just
+	 * the wrong pixels.
+	 */
+	describe("getMeshBinding", () => {
+		it("lays the three pairs out at bindings 0-5", () => {
+			// the store and the pipeline layout have to agree on this and
+			// nothing else checks it — a mismatch surfaces only as a runtime
+			// validation failure inside a real device
+			const diffuse = makeAtlas(makeSource(8, 8), { unit: 0 });
+			const alpha = makeAtlas(makeSource(8, 8), { unit: 1 });
+			const normal = makeAtlas(makeSource(8, 8), { unit: 2 });
+			const group = store.getMeshBinding(diffuse, alpha, normal);
+
+			const entries = group.descriptor.entries;
+			expect(
+				entries.map((e) => {
+					return e.binding;
+				}),
+			).toEqual([0, 1, 2, 3, 4, 5]);
+			expect(entries[0].resource.texture).toBe(createdTextures[0]);
+			expect(entries[2].resource.texture).toBe(createdTextures[1]);
+			expect(entries[4].resource.texture).toBe(createdTextures[2]);
+			expect(group.descriptor.layout).toBe(
+				renderer.pipelineCache.meshMaterialLayout,
+			);
+		});
+
+		it("re-uses one bind group for the same three textures", () => {
+			const diffuse = makeAtlas(makeSource(8, 8), { unit: 0 });
+			const alpha = makeAtlas(makeSource(8, 8), { unit: 1 });
+			const normal = makeAtlas(makeSource(8, 8), { unit: 2 });
+			expect(store.getMeshBinding(diffuse, alpha, normal)).toBe(
+				store.getMeshBinding(diffuse, alpha, normal),
+			);
+		});
+
+		it("separates two normal maps over one diffuse and one alpha", () => {
+			// the reachable case: a multi-material model whose materials share
+			// a `map_Kd` and differ only in `map_bump`. Keying on anything the
+			// two normal maps have in common — a sampler config, or a field
+			// the record does not carry — serves the second the first's group
+			const diffuse = makeAtlas(makeSource(8, 8), { unit: 0 });
+			const alpha = makeAtlas(makeSource(8, 8), { unit: 1 });
+			const normalA = makeAtlas(makeSource(8, 8), { unit: 2 });
+			const normalB = makeAtlas(makeSource(8, 8), { unit: 3 });
+
+			const a = store.getMeshBinding(diffuse, alpha, normalA);
+			const b = store.getMeshBinding(diffuse, alpha, normalB);
+			expect(a).not.toBe(b);
+			expect(a.descriptor.entries[4].resource.texture).not.toBe(
+				b.descriptor.entries[4].resource.texture,
+			);
+			// and each still resolves back to its own on a second ask
+			expect(store.getMeshBinding(diffuse, alpha, normalA)).toBe(a);
+			expect(store.getMeshBinding(diffuse, alpha, normalB)).toBe(b);
+		});
+
+		it("separates a mapped material from an unmapped one over one diffuse", () => {
+			// what an unmapped range actually asks for is the flat-normal
+			// filler, so the pair is (diffuse, flat) versus (diffuse, map) —
+			// the same collision, and the one the shipped multi-material
+			// example hits
+			const diffuse = makeAtlas(makeSource(8, 8), { unit: 0 });
+			const flat = makeAtlas(makeSource(1, 1), { unit: 9 });
+			const normal = makeAtlas(makeSource(8, 8), { unit: 2 });
+
+			const unmapped = store.getMeshBinding(diffuse, diffuse, flat);
+			const mapped = store.getMeshBinding(diffuse, diffuse, normal);
+			expect(unmapped).not.toBe(mapped);
+			expect(unmapped.descriptor.entries[4].resource.texture).not.toBe(
+				mapped.descriptor.entries[4].resource.texture,
+			);
+		});
+
+		it("separates two alpha maps over one diffuse and one normal map", () => {
+			// the same guarantee on the axis that already had it, so a future
+			// change to the key cannot trade one for the other
+			const diffuse = makeAtlas(makeSource(8, 8), { unit: 0 });
+			const alphaA = makeAtlas(makeSource(8, 8), { unit: 1 });
+			const alphaB = makeAtlas(makeSource(8, 8), { unit: 4 });
+			const normal = makeAtlas(makeSource(8, 8), { unit: 2 });
+			expect(store.getMeshBinding(diffuse, alphaA, normal)).not.toBe(
+				store.getMeshBinding(diffuse, alphaB, normal),
+			);
+		});
 	});
 });

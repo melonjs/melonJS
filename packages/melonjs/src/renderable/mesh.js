@@ -196,9 +196,10 @@ function resolveGroupMaterial(group, materials) {
  * @param {Array<object>} groups - the material groups, mutated in place to carry their resolved `texture`
  * @param {object} materials - MTL material table keyed by material name
  * @param {TextureAtlas} shared - the mesh-level texture, used by groups with no `map_Kd` of their own
+ * @param {TextureAtlas|undefined} sharedNormal - the mesh-level normal map, used by groups with no `map_bump` of their own
  * @param {number} [framewidth] - spritesheet cell width, as passed to the Mesh
  * @param {number} [frameheight] - spritesheet cell height, as passed to the Mesh
- * @returns {Array<{texture: TextureAtlas, start: number, count: number}>|undefined} the per-texture draw ranges, or `undefined` when one binding covers the whole mesh
+ * @returns {Array<{texture: TextureAtlas, start: number, count: number, normalMap: TextureAtlas|undefined}>|undefined} the per-texture draw ranges, or `undefined` when one binding covers the whole mesh
  * @ignore
  * @internal
  */
@@ -206,6 +207,7 @@ function buildTextureGroups(
 	groups,
 	materials,
 	shared,
+	sharedNormal,
 	framewidth,
 	frameheight,
 ) {
@@ -223,8 +225,34 @@ function buildTextureGroups(
 			}
 		}
 		group.texture = texture;
-		// only geometry that actually draws can make a split necessary
-		if (texture !== shared && group.count > 0) {
+		// The group's own normal map, resolved the same way and just as
+		// tolerantly — a missing one costs the surface detail, not the model.
+		// Falls back to the MESH-level map exactly as the texture above falls
+		// back to `shared`: a `settings.normalMap` is a statement about the
+		// whole mesh, and a material that declares no `map_bump` of its own
+		// has nothing to override it with. Usually that fallback is
+		// `undefined`, which is the filler.
+		group.normalMap = sharedNormal;
+		if (mat?.map_bump) {
+			try {
+				group.normalMap = resolveTextureAtlas(
+					mat.map_bump,
+					framewidth,
+					frameheight,
+				);
+			} catch {
+				console.warn(
+					`melonJS: Mesh material "${group.materialName}" references the normal map "${mat.map_bump}", which is not loaded — that material shades from its vertex normals`,
+				);
+			}
+		}
+		// only geometry that actually draws can make a split necessary. A
+		// group differing ONLY by its normal map still needs its own range:
+		// merging it would shade one material with another's surface detail
+		if (
+			(texture !== shared || group.normalMap !== sharedNormal) &&
+			group.count > 0
+		) {
 			distinct = true;
 		}
 	}
@@ -243,6 +271,7 @@ function buildTextureGroups(
 		if (
 			previous !== undefined &&
 			previous.texture === group.texture &&
+			previous.normalMap === group.normalMap &&
 			previous.start + previous.count === group.start
 		) {
 			previous.count += group.count;
@@ -251,6 +280,7 @@ function buildTextureGroups(
 				texture: group.texture,
 				start: group.start,
 				count: group.count,
+				normalMap: group.normalMap,
 			});
 		}
 	}
@@ -261,7 +291,8 @@ function buildTextureGroups(
 	if (slices.length > 1) {
 		return slices;
 	}
-	return slices.length === 1 && slices[0].texture !== shared
+	return slices.length === 1 &&
+		(slices[0].texture !== shared || slices[0].normalMap !== sharedNormal)
 		? slices
 		: undefined;
 }
@@ -331,6 +362,7 @@ function buildTextureGroups(
  * @property {number[]|Float32Array} [normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model, or generated from the geometry when the mesh is `lit`. Generated normals average per vertex where faces share vertices (smooth shading) and equal the face normal where they do not (flat shading) — the geometry decides, not a flag.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
+ * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect.
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
  * @property {boolean} [transparent] - draw in the transparent pass (blended, back-to-front, no depth write). Omit and a mesh goes transparent whenever its draw alpha is fractional; `true` for soft-alpha textures; `false` to stay opaque however faded
@@ -674,6 +706,24 @@ export default class Mesh extends Renderable {
 		this.alphaMap = undefined;
 
 		/**
+		 * Tangent-space normal map (MTL `map_bump` / `bump` / `norm`), or
+		 * `undefined`. Perturbs the interpolated vertex normal per fragment,
+		 * so a flat face can carry surface detail — rivets, grain, panel
+		 * seams — that the geometry does not have.
+		 *
+		 * The tangent frame is derived per fragment from the screen-space
+		 * derivatives of position and UV rather than from an authored tangent
+		 * attribute, so a normal map costs no change to the vertex format and
+		 * works on any mesh that already has UVs. The trade is accuracy under
+		 * extreme UV distortion, which low-poly props do not have.
+		 *
+		 * Only meaningful on a `lit` mesh: with no lights there is no shading
+		 * term for a perturbed normal to change. GPU mesh path only.
+		 * @type {TextureAtlas|undefined}
+		 */
+		this.normalMap = undefined;
+
+		/**
 		 * Cast a soft dark ellipse — a "blob" shadow — on the ground beneath
 		 * this mesh (#1515).
 		 *
@@ -908,6 +958,7 @@ export default class Mesh extends Renderable {
 		let textureSource = settings.texture;
 		// per-texel opacity map, resolved after the diffuse texture below
 		let alphaMapSource = settings.alphaMap;
+		let normalMapSource = settings.normalMap;
 		const materials =
 			typeof settings.material === "string" ? getMTL(settings.material) : null;
 		const isMultiMaterial =
@@ -1065,6 +1116,11 @@ export default class Mesh extends Renderable {
 						this.shininess = derived.shininess;
 					}
 				}
+				// MTL normal map (map_bump / bump / norm)
+				if (mat.map_bump) {
+					normalMapSource = mat.map_bump;
+				}
+
 				// MTL alpha map (map_d) — per-texel opacity
 				if (mat.map_d) {
 					alphaMapSource = mat.map_d;
@@ -1106,6 +1162,24 @@ export default class Mesh extends Renderable {
 			}
 		}
 
+		// Normal map (MTL `map_bump`). Same tolerance as the alpha map above:
+		// a map that failed to preload warns and leaves the mesh shading from
+		// its vertex normals, which is the model without surface detail rather
+		// than no model at all.
+		if (normalMapSource) {
+			try {
+				this.normalMap = resolveTextureAtlas(
+					normalMapSource,
+					settings.framewidth,
+					settings.frameheight,
+				);
+			} catch {
+				console.warn(
+					`melonJS: Mesh normal map "${normalMapSource}" is not loaded — the mesh shades from its vertex normals`,
+				);
+			}
+		}
+
 		/**
 		 * Index ranges that each need their own diffuse texture bound, for a
 		 * multi-material model whose materials carry different `map_Kd` maps
@@ -1121,7 +1195,7 @@ export default class Mesh extends Renderable {
 		 * The Canvas renderer ignores this: a multi-material mesh takes its
 		 * per-triangle solid-fill path there and never samples a texture at
 		 * all.
-		 * @type {Array<{texture: TextureAtlas, start: number, count: number}>|undefined}
+		 * @type {Array<{texture: TextureAtlas, start: number, count: number, normalMap: TextureAtlas|undefined}>|undefined}
 		 */
 		this.textureGroups =
 			isMultiMaterial === true && !settings.texture
@@ -1129,6 +1203,7 @@ export default class Mesh extends Renderable {
 						this.groups,
 						materials,
 						this.texture,
+						this.normalMap,
 						settings.framewidth,
 						settings.frameheight,
 					)

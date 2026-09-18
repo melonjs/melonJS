@@ -189,7 +189,7 @@ function buildScene(app: Application) {
 	ball.depth = PROP_Z;
 	props.push(ball);
 
-	// ── panel: per-texel cutout ──────────────────────────────────
+	// ── panel: per-texel cutout, and a normal map on flat geometry ──
 	const panel = new Mesh(SPACING, PROP_Y, {
 		model: "panel",
 		material: "props",
@@ -258,7 +258,8 @@ function spawnCaption(app: Application) {
 	el.innerHTML =
 		'<div style="font-size:16px;font-weight:bold">everything below comes out of the .mtl</div>' +
 		'<div style="font-size:12px;opacity:0.75;margin-top:6px">' +
-		"map_Kd per material · Ks + Ns specular · map_d per-texel cutout" +
+		"map_Kd per material · Ks + Ns specular · map_d per-texel cutout · " +
+		"map_bump normal maps" +
 		"</div>";
 	el.style.cssText =
 		"position:absolute;color:#e6e9ef;font-family:'Courier New',monospace;" +

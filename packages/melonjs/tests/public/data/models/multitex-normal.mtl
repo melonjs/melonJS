@@ -1,0 +1,21 @@
+# `multitex.mtl` with one normal map added, for #1574.
+#
+# `beta` is the interesting entry: it shares `alpha`'s diffuse and differs
+# ONLY in carrying a `map_bump`. That is what makes it bite — a merge guard
+# keyed on the diffuse alone folds the two together, and a WebGPU bind-group
+# key that does not separate normal maps hands one of them the other's.
+newmtl alpha
+Kd 1.0 0.2 0.2
+map_Kd multitex-a.png
+
+newmtl beta
+Kd 0.2 1.0 0.2
+map_Kd multitex-a.png
+map_bump multitex-b.png
+
+newmtl gamma
+Kd 0.2 0.2 1.0
+map_Kd multitex-b.png
+
+newmtl plain
+Kd 0.9 0.9 0.9

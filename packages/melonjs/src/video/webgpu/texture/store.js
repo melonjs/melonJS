@@ -437,16 +437,19 @@ export default class WebGPUTextureStore extends TextureStore {
 	 * mesh family in two.
 	 * @param {TextureAtlas} texture - the diffuse texture
 	 * @param {TextureAtlas} alphaTexture - the opacity map, or the white pixel
+	 * @param {object} normalTexture - the tangent-space normal map, or the
+	 * diffuse texture again as filler when the mesh has none
 	 * @param {object} [options] - wrap / mipmap options, as `getBinding` takes
 	 * @returns {GPUBindGroup} the group-1 bind group
 	 * @ignore
 	 * @internal
 	 */
-	getMeshBinding(texture, alphaTexture, options = {}) {
-		// residency first: this is the call that uploads either source, so it
+	getMeshBinding(texture, alphaTexture, normalTexture, options = {}) {
+		// residency first: this is the call that uploads any source, so it
 		// must happen before the records are read back
 		this.getBinding(texture, options);
 		this.getBinding(alphaTexture, options);
+		this.getBinding(normalTexture, options);
 
 		const wrapFor = (t) => {
 			return typeof options.repeat === "string"
@@ -455,9 +458,15 @@ export default class WebGPUTextureStore extends TextureStore {
 		};
 		const wrap = wrapFor(texture);
 		const alphaWrap = wrapFor(alphaTexture);
+		const normalWrap = wrapFor(normalTexture);
 		const record = this.records.get(texture.getTexture());
 		const alphaRecord = this.records.get(alphaTexture.getTexture());
-		if (record === undefined || alphaRecord === undefined) {
+		const normalRecord = this.records.get(normalTexture.getTexture());
+		if (
+			record === undefined ||
+			alphaRecord === undefined ||
+			normalRecord === undefined
+		) {
 			// a source that failed to become resident — the caller keeps its
 			// previous binding rather than recording a draw against nothing
 			return null;
@@ -475,6 +484,12 @@ export default class WebGPUTextureStore extends TextureStore {
 			alphaWrap,
 			false,
 		);
+		const normal = this.viewAndSampler(
+			normalRecord,
+			normalTexture,
+			normalWrap,
+			false,
+		);
 		// Cached on the diffuse record, keyed FIRST by the alpha record object
 		// and then by the two sampler keys. One diffuse texture is often drawn
 		// by several meshes with different opacity maps, and keying on the
@@ -490,8 +505,17 @@ export default class WebGPUTextureStore extends TextureStore {
 			byAlpha = new Map();
 			record.meshBindGroups.set(alphaRecord, byAlpha);
 		}
-		const key = `${diffuse.key}|${alpha.key}`;
-		let bindGroup = byAlpha.get(key);
+		// and then by the normal record, for exactly the same reason: one
+		// diffuse+alpha pair is drawn by several materials that differ only in
+		// their `map_bump`, and a key that did not separate them would hand the
+		// second material the first one's surface detail.
+		let byNormal = byAlpha.get(normalRecord);
+		if (byNormal === undefined) {
+			byNormal = new Map();
+			byAlpha.set(normalRecord, byNormal);
+		}
+		const key = `${diffuse.key}|${alpha.key}|${normal.key}`;
+		let bindGroup = byNormal.get(key);
 		if (bindGroup === undefined) {
 			bindGroup = this.device.createBindGroup({
 				label: "melonJS mesh material",
@@ -501,9 +525,11 @@ export default class WebGPUTextureStore extends TextureStore {
 					{ binding: 1, resource: diffuse.sampler },
 					{ binding: 2, resource: alpha.view },
 					{ binding: 3, resource: alpha.sampler },
+					{ binding: 4, resource: normal.view },
+					{ binding: 5, resource: normal.sampler },
 				],
 			});
-			byAlpha.set(key, bindGroup);
+			byNormal.set(key, bindGroup);
 		}
 		return bindGroup;
 	}

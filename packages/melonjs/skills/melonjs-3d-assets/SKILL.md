@@ -247,16 +247,21 @@ const mesh = new Mesh(400, 300, {
 world.addChild(mesh);
 ```
 
-**The MTL loader fetches the textures it references itself** — `map_Kd` and
-`map_d` are resolved relative to the `.mtl` and preloaded for you, so there is
-no image entry in the manifest above. Passing `texture:` explicitly overrides
-that and pins *one* binding over the whole model, which on a multi-material
-model suppresses the per-material texture split; leave it out unless you mean
-that.
+**The MTL loader fetches the textures it references itself** — `map_Kd`,
+`map_d` and `map_bump` are resolved relative to the `.mtl` and preloaded for
+you, so there is no image entry in the manifest above. Passing `texture:`
+explicitly overrides that and pins *one* binding over the whole model, which on
+a multi-material model suppresses the per-material texture split; leave it out
+unless you mean that.
 
 MTL contributes `Kd` (diffuse tint), `d` / `Tr` (opacity), `Ke` (emissive),
-`Ks` + `Ns` (specular highlight), `map_Kd` (diffuse texture) and `map_d`
-(per-texel opacity). Normal and specular *maps* are not supported.
+`Ks` + `Ns` (specular highlight), `map_Kd` (diffuse texture), `map_d`
+(per-texel opacity) and `map_bump` / `bump` / `norm` (tangent-space normal
+map — needs `lit: true`, and the tangent frame is derived per fragment, so the
+model needs no tangent attribute). All three normal-map spellings are read as
+normal maps even though the format specifies two of them as height maps, which
+is what every exporter actually writes. Specular *maps* (`map_Ks`) are not
+supported and warn.
 `loader.getOBJ(name)` and `loader.getMTL(name)` return the parsed data if you
 want it directly. OBJ has no scene graph, no lights, no animation — use glTF for
 anything beyond a single static model.

@@ -527,6 +527,14 @@ and spot, a stylised quadratic falloff, not inverse-square),
 **`Light2d` is 2D-only** and produces visible artifacts under perspective
 projection. Do not combine it with `Camera3d`.
 
+A `lit` mesh takes a **tangent-space normal map**, so relief comes from the
+material rather than from geometry — `settings.normalMap` (a loader key or any
+image-like source), or MTL `map_bump` / `bump` / `norm`, which the MTL loader
+fetches and applies per material. The tangent frame is derived per fragment, so
+the model needs no tangent attribute, and an unmapped mesh is unaffected. This
+is the 3D counterpart of the `Sprite` normal maps in the lighting skill; they
+are separate systems and a `Mesh` uses this one.
+
 Ground shadows are **on by default** (the `castGroundShadow` application
 setting), and need a GPU backend and a `Camera3d`. As a blanket default they
 skip geometry with no vertical extent — a ground plane. Per object,
