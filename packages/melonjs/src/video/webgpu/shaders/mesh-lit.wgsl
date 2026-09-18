@@ -73,6 +73,10 @@ struct Light3dBlock {
 // away rather than branched around.
 @group(1) @binding(2) var uAlphaMap : texture_2d<f32>;
 @group(1) @binding(3) var uAlphaSampler : sampler;
+// tangent-space normal map (MTL `map_bump`); `uMesh.params.z` is 0 when the
+// bound texture is the diffuse filler rather than a real map
+@group(1) @binding(4) var uNormalMap : texture_2d<f32>;
+@group(1) @binding(5) var uNormalSampler : sampler;
 @group(2) @binding(0) var<uniform> uLights : Light3dBlock;
 @group(3) @binding(0) var<uniform> uMesh : MeshUniforms;
 
@@ -173,6 +177,49 @@ fn apply_fog(rgb : vec3f, a : f32, fogDepth : f32) -> vec3f {
 // and every frame drawing an instanced lit mesh failed to compile.
 fn ME_effect(c : vec4f, uv : vec2f) -> vec4f { return c; }
 
+// Above `@vertex` for the very same reason as `ME_effect` right above: the
+// instanced module keeps `slice(0, vertexAt)` and `slice(fragmentAt)`, so a
+// helper the FRAGMENT stage calls has to live in the head or its definition
+// is spliced away and every instanced lit draw fails to compile.
+// Tangent frame from screen-space derivatives — the WGSL twin of
+// `perturbNormal` in mesh-lit.frag, deliberately the same construction so the
+// two backends shade a normal map identically. No authored tangent attribute,
+// so the mesh vertex layout — a declared contract on this backend (#1492) —
+// is untouched.
+fn perturbNormal(rawN : vec3f, worldPos : vec3f, uv : vec2f) -> vec3f {
+	// Every derivative and the fetch run unconditionally — no branch above
+	// them, and none between them. WGSL only permits `dpdx`/`dpdy` and an
+	// implicit-LOD sample in uniform control flow, and a test on an
+	// interpolated value is not uniform, so the degenerate cases below are
+	// resolved with `select` rather than an early return.
+	let dp1 = dpdx(worldPos);
+	let dp2 = dpdy(worldPos);
+	let duv1 = dpdx(uv);
+	let duv2 = dpdy(uv);
+	let mapped = textureSample(uNormalMap, uNormalSampler, uv).xyz * 2.0 - 1.0;
+
+	let nl = length(rawN);
+	let n = rawN / max(nl, 1e-6);
+
+	let dp2perp = cross(dp2, n);
+	let dp1perp = cross(n, dp1);
+	let tang = dp2perp * duv1.x + dp1perp * duv2.x;
+	let bitan = dp2perp * duv1.y + dp1perp * duv2.y;
+
+	let det = max(dot(tang, tang), dot(bitan, bitan));
+	let invmax = inverseSqrt(max(det, 1e-12));
+	let perturbed = mat3x3f(tang * invmax, bitan * invmax, n) * mapped;
+	// guarded rather than `normalize()`, as in the GLSL twin: a texel of
+	// exactly (128, 128, 128) decodes to the zero vector, and normalize(0) is
+	// NaN — which would then be selected below and poison the lighting sum
+	let frame = perturbed / max(length(perturbed), 1e-12);
+
+	// a face with no UV variation, or a mesh with no usable normal, keeps what
+	// it came in with — returned at the input LENGTH so the caller's own
+	// normalize behaves the same either way
+	return select(rawN, frame * nl, det >= 1e-12 && nl > 1e-6);
+}
+
 @vertex
 fn vertex_main(
 	@location(0) aVertex : vec3f,
@@ -205,7 +252,6 @@ fn vertex_main(
 	return out;
 }
 
-
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// sampled unconditionally, before the discard (uniform control flow)
@@ -216,6 +262,16 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// WEIGHTED: with no map bound the second pair is filler, and this keeps
 	// the sample in uniform control flow (and identical to the GLSL twin).
 	base.a = base.a * mix(1.0, textureSample(uAlphaMap, uAlphaSampler, in.vRegion).r, uMesh.params.y);
+	// The perturbed shading normal is resolved HERE, above the cutout, because
+	// the tangent frame is built from `dpdx`/`dpdy` and a `discard` makes
+	// everything after it non-uniform control flow — where WGSL forbids
+	// derivatives outright. Costs a frame's worth of work on texels that are
+	// about to be discarded; the alternative is no normal mapping on a cutout
+	// material at all.
+	var shadingNormal = in.vNormal;
+	if (uMesh.params.z > 0.5) {
+		shadingNormal = perturbNormal(in.vNormal, in.vWorldPos, in.vRegion);
+	}
 	// hard alpha cutout (glTF alphaMode MASK) — discard before any shading
 	// so cut-away texels cost nothing and never write depth
 	// Thresholded on the MATERIAL's own alpha, deliberately BEFORE the tint
@@ -236,7 +292,10 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 			base.a
 		);
 	}
-	let n = in.vNormal / nLength;
+	// `shadingNormal` carries the normal-map perturbation resolved above the
+	// cutout; it keeps `vNormal`'s length, so this divide normalizes both the
+	// mapped and the plain case identically
+	let n = shadingNormal / nLength;
 	var lit = uLights.ambient.rgb;
 	// Blinn-Phong specular, accumulated alongside the diffuse term. Gated on
 	// the exponent rather than the colour: `Ns` of 0 is the MTL format's "no

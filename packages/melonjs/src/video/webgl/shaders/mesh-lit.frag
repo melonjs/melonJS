@@ -29,6 +29,8 @@ uniform float uShininess;                 // specular exponent (0 = no highlight
 uniform vec3 uEyePosition;                // camera position, world space
 uniform sampler2D uAlphaMap;              // per-texel opacity (MTL map_d)
 uniform float uHasAlphaMap;               // 0 = uAlphaMap is filler, ignore it
+uniform sampler2D uNormalMap;             // tangent-space normals (MTL map_bump)
+uniform float uHasNormalMap;              // 0 = uNormalMap is filler, ignore it
 
 // One light, type inferred from sentinels (see std140.ts):
 // posRange.w < 0 -> directional (dirCone.xyz = surface->light, normalized);
@@ -111,6 +113,49 @@ vec3 applyFog(vec3 rgb, float a) {
 //
 // Deliberately a FUNCTION and not a marker comment: the shader pipeline
 // strips comments, so a comment cannot be relied on to reach the splicer.
+// Tangent frame from screen-space derivatives, so a normal map needs no
+// authored tangent attribute and therefore no change to the vertex format —
+// which on the WebGPU side is a declared contract (#1492), not a local choice.
+//
+// The cotangent frame is recovered from how position and UV change across the
+// fragment's 2x2 quad: solving that pair of gradients gives the two directions
+// in which u and v grow along the surface. Less exact than authored tangents
+// where UVs are severely stretched or mirrored; indistinguishable on the
+// low-poly props this format ships with.
+vec3 perturbNormal(vec3 rawN, vec3 worldPos, vec2 uv) {
+    // Derivatives and the fetch run unconditionally, with the degenerate
+    // cases resolved by mix() rather than an early return — the shape WGSL
+    // requires, kept here so the two backends read the same.
+    vec3 dp1 = dFdx(worldPos);
+    vec3 dp2 = dFdy(worldPos);
+    vec2 duv1 = dFdx(uv);
+    vec2 duv2 = dFdy(uv);
+    vec3 mapped = texture(uNormalMap, uv).xyz * 2.0 - 1.0;
+
+    float nl = length(rawN);
+    vec3 N = rawN / max(nl, 1e-6);
+
+    vec3 dp2perp = cross(dp2, N);
+    vec3 dp1perp = cross(N, dp1);
+    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+    float det = max(dot(T, T), dot(B, B));
+    float invmax = inversesqrt(max(det, 1e-12));
+    vec3 perturbed = mat3(T * invmax, B * invmax, N) * mapped;
+    // Normalized through a guarded length rather than normalize(): a face with
+    // no UV variation collapses the frame to mat3(0, 0, N), and a texel whose
+    // blue channel is exactly 128 makes `mapped.z` zero — together they give
+    // the zero vector, and normalize(0) is NaN. `mix` below evaluates BOTH of
+    // its operands, unlike the WGSL twin's `select`, so a NaN here would
+    // survive the blend as NaN * 0.0 and poison the whole lighting sum.
+    vec3 frame = perturbed / max(length(perturbed), 1e-12);
+
+    // no UV variation, or no usable normal: keep the input, at its own length
+    float ok = (det >= 1e-12 && nl > 1e-6) ? 1.0 : 0.0;
+    return mix(rawN, frame * nl, ok);
+}
+
 vec4 ME_effect(vec4 c, vec2 uv) { return c; }
 
 void main(void) {
@@ -125,6 +170,16 @@ void main(void) {
     // value is thrown away — and both backends run the identical expression
     // instead of one branching and the other not.
     base.a *= mix(1.0, texture(uAlphaMap, vRegion).r, uHasAlphaMap);
+
+    // Resolved HERE, above the cutout, to match the WGSL twin: the tangent
+    // frame comes from dFdx/dFdy, and a `discard` leaves derivatives
+    // undefined for every fragment after it. GLSL does not reject that the
+    // way WGSL does — it simply produces garbage on some drivers — so both
+    // backends take the same shape rather than one relying on leniency.
+    vec3 shadingNormal = vNormal;
+    if (uHasNormalMap > 0.5) {
+        shadingNormal = perturbNormal(vNormal, vWorldPos, vRegion);
+    }
 
     // hard alpha cutout (glTF alphaMode MASK) — discard before any shading
     // so cut-away texels cost nothing and never write depth.
@@ -160,7 +215,9 @@ void main(void) {
 #endif
         return;
     }
-    vec3 N = vNormal / nLength;
+    // `shadingNormal` carries the perturbation resolved above the cutout and
+    // keeps `vNormal`'s length, so this divide normalizes both cases alike
+    vec3 N = shadingNormal / nLength;
     vec3 lit = uAmbient;
     // Blinn-Phong specular, accumulated alongside the diffuse term. Gated on
     // the exponent rather than the colour: `Ns` of 0 is the format's "no

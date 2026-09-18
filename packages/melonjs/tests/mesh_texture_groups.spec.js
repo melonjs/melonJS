@@ -58,6 +58,11 @@ describe("Mesh per-material textures (#1573)", () => {
 			type: "mtl",
 			src: "/data/models/multitex-kdonly.mtl",
 		});
+		await loader.load({
+			name: "multitex_normal",
+			type: "mtl",
+			src: "/data/models/multitex-normal.mtl",
+		});
 		// a single-material OBJ + MTL pair, the no-split control
 		await loader.load({
 			name: "single",
@@ -590,6 +595,249 @@ describe("Mesh per-material textures (#1573)", () => {
 			first.destroy();
 			a.destroy();
 			b.destroy();
+		});
+	});
+	// ── per-material normal maps (#1574) ────────────────────────────────
+
+	/**
+	 * `map_bump` is declared PER MATERIAL, exactly like `map_Kd`, so a
+	 * multi-material model has no single mesh-level normal map to fall back
+	 * on — `mesh.normalMap` is undefined for every such model. Everything
+	 * here pins that the per-group map reaches the draw instead.
+	 *
+	 * The fixture adds one line to `multitex.mtl`: `beta` gains a `map_bump`
+	 * and keeps `alpha`'s diffuse. That is the case that bites — the two
+	 * differ only in a map the draw plan has to notice.
+	 */
+	describe("per-material normal maps (#1574)", () => {
+		const drawOnce = (mesh) => {
+			mesh.preDraw(renderer);
+			mesh.draw(renderer, camera);
+			mesh.postDraw(renderer);
+			renderer.flush();
+		};
+
+		const mapped = (settings = {}) => {
+			return new Mesh(0, 0, {
+				model: "multitex",
+				material: "multitex_normal",
+				width: 32,
+				lit: true,
+				...settings,
+			});
+		};
+
+		it("hangs the map on the group that declared it, and only that one", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = mapped();
+			expect(
+				mesh.groups.map((g) => {
+					return g.materialName;
+				}),
+			).toEqual(["alpha", "beta", "gamma", "plain"]);
+			expect(mesh.groups[0].normalMap).toBeUndefined();
+			expect(mesh.groups[1].normalMap).toBeDefined();
+			expect(mesh.groups[2].normalMap).toBeUndefined();
+			mesh.destroy();
+		});
+
+		it("leaves mesh.normalMap undefined — there is no model-wide map", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the reason the batcher cannot read `mesh.normalMap` and must be
+			// handed the group's own: this is not an oversight to be patched
+			// at the mesh level, it is what "per material" means
+			const mesh = mapped();
+			expect(mesh.normalMap).toBeUndefined();
+			mesh.destroy();
+		});
+
+		it("stops alpha and beta merging, though they share a diffuse", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// without the map they collapse into one 6-index range (the very
+			// first test in this file pins that). The normal map splits them,
+			// because merging would shade alpha with beta's surface detail
+			const mesh = mapped();
+			const groups = mesh.textureGroups;
+			expect(groups).toHaveLength(4);
+			expect(
+				groups.map((g) => {
+					return [g.start, g.count];
+				}),
+			).toEqual([
+				[0, 3],
+				[3, 3],
+				[6, 3],
+				[9, 3],
+			]);
+			expect(groups[0].texture).toBe(groups[1].texture);
+			expect(groups[0].normalMap).toBeUndefined();
+			expect(groups[1].normalMap).toBeDefined();
+			mesh.destroy();
+		});
+
+		it("still covers every index exactly once, in order", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = mapped();
+			let cursor = 0;
+			for (const group of mesh.textureGroups) {
+				expect(group.start).toBe(cursor);
+				cursor += group.count;
+			}
+			expect(cursor).toBe(mesh.indices.length);
+			mesh.destroy();
+		});
+
+		it("binds each range's own normal map at its own draw", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = mapped();
+			drawOnce(mesh);
+
+			// Recorded at the DRAW, not at the bind: what the uniform points
+			// at when each range is issued is the contract. Reading
+			// `mesh.normalMap` instead of the group's leaves this [0,0,0,0] —
+			// a multi-material model renders with no normal mapping at all,
+			// silently, and only on this backend.
+			const batcher = renderer.currentBatcher;
+			const gl = renderer.gl;
+			const flags = [];
+			const original = gl.drawElements;
+			gl.drawElements = function (...args) {
+				flags.push(batcher.currentHasNormalMap);
+				return original.apply(this, args);
+			};
+			try {
+				drawOnce(mesh);
+			} finally {
+				gl.drawElements = original;
+			}
+
+			expect(flags).toEqual([0, 1, 0, 0]);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			mesh.destroy();
+		});
+
+		it("points the normal sampler away from the diffuse only for that range", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// with no map of its own a range aims the normal sampler at its
+			// DIFFUSE unit and switches the flag off — a sampler pointing
+			// nowhere is undefined behaviour. The flag is what keeps those
+			// colours from being read as normals, so the two travel together
+			const mesh = mapped();
+			drawOnce(mesh);
+
+			const batcher = renderer.currentBatcher;
+			const gl = renderer.gl;
+			const seen = [];
+			const original = gl.drawElements;
+			gl.drawElements = function (...args) {
+				seen.push({
+					normal: batcher.currentNormalMapUnit,
+					diffuse: batcher.currentSamplerUnit,
+					flag: batcher.currentHasNormalMap,
+				});
+				return original.apply(this, args);
+			};
+			try {
+				drawOnce(mesh);
+			} finally {
+				gl.drawElements = original;
+			}
+
+			expect(seen[0].flag).toBe(0);
+			expect(seen[0].normal).toBe(seen[0].diffuse);
+			expect(seen[1].flag).toBe(1);
+			expect(seen[1].normal).not.toBe(seen[1].diffuse);
+			expect(seen[2].flag).toBe(0);
+			expect(seen[2].normal).toBe(seen[2].diffuse);
+			mesh.destroy();
+		});
+
+		it("does not leave the mapped range's state on the next mesh", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the guard that writes the uniforms only on a change is what
+			// makes a stale flag possible: draw a mapped mesh, then an
+			// unmapped one, and the second must not inherit the first's map
+			const withMap = mapped();
+			const without = new Mesh(0, 0, {
+				model: "single",
+				material: "single",
+				width: 32,
+				lit: true,
+			});
+			drawOnce(withMap);
+			drawOnce(without);
+
+			const batcher = renderer.currentBatcher;
+			const gl = renderer.gl;
+			const flags = [];
+			const original = gl.drawElements;
+			gl.drawElements = function (...args) {
+				flags.push(batcher.currentHasNormalMap);
+				return original.apply(this, args);
+			};
+			try {
+				drawOnce(withMap);
+				drawOnce(without);
+			} finally {
+				gl.drawElements = original;
+			}
+
+			// four ranges of the mapped mesh, then the single unmapped draw
+			expect(flags).toEqual([0, 1, 0, 0, 0]);
+			expect(gl.getError()).toBe(gl.NO_ERROR);
+			withMap.destroy();
+			without.destroy();
+		});
+
+		it("cascades a mesh-level normalMap onto groups that declare none", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the same fallback `mesh.texture` gives a group with no `map_Kd`.
+			// `settings.normalMap` is a statement about the whole mesh, and a
+			// material declaring no `map_bump` has nothing to override it with
+			const shared = new Mesh(0, 0, {
+				model: "multitex",
+				material: "multitex_normal",
+				normalMap: "cube",
+				width: 32,
+				lit: true,
+			});
+			expect(shared.normalMap).toBeDefined();
+			const groups = shared.textureGroups;
+			// alpha / gamma / plain took the mesh's map, beta kept its own
+			expect(groups[0].normalMap).toBe(shared.normalMap);
+			expect(groups[1].normalMap).not.toBe(shared.normalMap);
+			expect(groups[2].normalMap).toBe(shared.normalMap);
+			shared.destroy();
+		});
+
+		it("does not split a model whose groups ALL cascade to the same map", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the cost half of the cascade: if the fallback compared against
+			// `undefined` rather than the mesh's own map, every group would
+			// look distinct and a one-draw model would become four
+			const mesh = new Mesh(0, 0, {
+				model: "multitex",
+				material: "multitex_kdonly",
+				normalMap: "cube",
+				width: 32,
+				lit: true,
+			});
+			// Kd-only: one texture, one normal map, nothing to switch
+			expect(mesh.textureGroups).toBeUndefined();
+			mesh.destroy();
+		});
+
+		it("REGRESSION: a model with no map_bump still draws its merged plan", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the guard that the split above is caused by the normal map and
+			// not by anything else the fixture changed
+			const mesh = makeMesh();
+			expect(mesh.textureGroups).toHaveLength(3);
+			expect(mesh.textureGroups[0].count).toBe(6);
+			for (const group of mesh.textureGroups) {
+				expect(group.normalMap).toBeUndefined();
+			}
+			mesh.destroy();
 		});
 	});
 });

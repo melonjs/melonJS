@@ -8,13 +8,24 @@ newmtl chrome
 Kd 0.10 0.11 0.14
 Ks 1.0 0.97 0.90
 Ns 180
+# Hammered-and-pitted normal map (#1574). The interesting half is what it does
+# to the SPECULAR: a tight `Ns` on a smooth sphere gives one clean dot, and
+# perturbing the normal scatters it into the surface the way worn metal does.
+map_bump chrome-normal.png
 
 # `vent` is the per-texel opacity case: a solid steel diffuse punched
 # through by `map_d`, so one material cuts to the shape of the holes rather
 # than at a single threshold across the whole surface.
+#
+# It also carries all three maps at once, on the flattest geometry here. A
+# normal map on the sphere only modulates a curve that was already shading
+# itself; on a flat plate it is the ONLY variation there is, which is what
+# makes the punched rims and the stamped border read at all. The map is baked
+# from `vent-mask.png` itself, so the bevels land exactly on the cut edges.
 newmtl vent
 Kd 1.0 1.0 1.0
 Ks 0.4 0.45 0.5
 Ns 40
 map_Kd crate-metal.png
 map_d vent-mask.png
+map_bump vent-normal.png

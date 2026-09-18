@@ -14,6 +14,11 @@ const SUPPORTED_PROPS = new Set([
 	"Ks",
 	"Ns",
 	"map_d",
+	"map_bump",
+	// the capitalised spelling exporters actually emit
+	"map_Bump",
+	"bump",
+	"norm",
 	"Pr",
 	"Pm",
 	// ignored but harmless
@@ -28,24 +33,82 @@ const UNSUPPORTED_MAPS = new Set([
 	"map_Ke",
 	"map_Ks",
 	"map_Ns",
-	"map_bump",
-	"bump",
 	"map_refl",
 	"refl",
 	"disp",
 ]);
+
+// Option flags a texture-map line may carry before the filename. The format
+// allows them on every `map_*`, but a normal map is where they actually show
+// up: exporters write `map_Bump -bm 1.000000 rock-normal.png` as a matter of
+// course. Each entry is [how many values the flag takes at most, whether
+// those values are numbers] — the numeric ones take UP TO that many, so the
+// scan has to stop at the first token that is not one, or a two-value `-s`
+// would swallow the filename.
+const MAP_OPTIONS = new Map([
+	["-bm", [1, true]],
+	["-boost", [1, true]],
+	["-texres", [1, true]],
+	["-mm", [2, true]],
+	["-s", [3, true]],
+	["-o", [3, true]],
+	["-t", [3, true]],
+	// these take a word, not a number ("on"/"off", a channel letter, a type
+	// name), so their value count is exact rather than a maximum
+	["-clamp", [1, false]],
+	["-blendu", [1, false]],
+	["-blendv", [1, false]],
+	["-imfchan", [1, false]],
+	["-type", [1, false]],
+]);
+
+/**
+ * The filename off a `map_*` line, with any leading option flags removed.
+ *
+ * The filename is everything that survives, rejoined — a path may contain
+ * spaces, so it cannot simply be the last token. Only KNOWN flags are
+ * consumed, so a filename that happens to start with a dash ends the scan
+ * rather than being eaten.
+ * @param {string[]} parts - the whitespace-split line, keyword included
+ * @returns {string} the filename, or an empty string if the line carried none
+ * @ignore
+ * @internal
+ */
+function mapFilename(parts) {
+	let i = 1;
+	while (i < parts.length) {
+		const option = MAP_OPTIONS.get(parts[i]);
+		if (option === undefined) {
+			break;
+		}
+		const [count, numeric] = option;
+		i += 1;
+		let taken = 0;
+		while (taken < count && i < parts.length) {
+			// a numeric flag takes UP TO `count` numbers, so the first token
+			// that is not one ends it — and that token is the filename
+			if (numeric && Number.isNaN(Number(parts[i]))) {
+				break;
+			}
+			i += 1;
+			taken += 1;
+		}
+	}
+	return parts.slice(i).join(" ");
+}
 
 /**
  * Parse a Wavefront MTL file into material data.
  * Supports: `newmtl`, `Kd` (diffuse color), `Ke` (emissive color), `Ks`/`Ns`
  * (specular color and exponent), `Pr`/`Pm` (the PBR roughness/metalness
  * extension, approximated onto the specular terms when `Ks`/`Ns` are absent),
- * `map_Kd` (diffuse texture), `map_d` (alpha map), `d`/`Tr`
+ * `map_Kd` (diffuse texture), `map_d` (alpha map),
+ * `map_bump`/`bump`/`norm` (tangent-space normal map) and `d`/`Tr`
  * (opacity/transparency).
  *
  * Limitations:
  * - Ambient (`Ka`), optical density (`Ni`) and illumination model (`illum`) are parsed but ignored
- * - Normal maps (`map_bump`, `bump`), specular maps (`map_Ks`), and other texture maps are not supported
+ * - Specular maps (`map_Ks`) and other texture maps are not supported
  *
  * @param {string} text - raw MTL file contents
  * @param {string} basePath - base URL path for resolving texture references
@@ -103,6 +166,7 @@ export function parseMTL(text, basePath) {
 					d: 1.0,
 					map_Kd: null,
 					map_d: null,
+					map_bump: null,
 				};
 				materials[parts[1]] = current;
 				break;
@@ -181,7 +245,29 @@ export function parseMTL(text, basePath) {
 			case "map_Kd":
 				if (current) {
 					// resolve texture path relative to MTL file location
-					current.map_Kd = basePath + parts.slice(1).join(" ");
+					current.map_Kd = basePath + mapFilename(parts);
+				}
+				break;
+
+			case "map_bump":
+			case "map_Bump":
+			case "bump":
+			case "norm":
+				// Four spellings, one slot. `norm` is the only one the format
+				// defines as a tangent-space NORMAL map; `bump` and `map_bump`
+				// are specified as height maps. In practice every exporter
+				// worth supporting writes a normal map under `map_bump`, and
+				// treating it as a height field would misread the common case
+				// to honour the rare one — so all of them are read as normal
+				// maps, and a genuine height map is unsupported. `map_Bump` is
+				// the same keyword with the capital the exporters actually
+				// write; the format is case-sensitive, so it needs saying.
+				if (current) {
+					// a line whose options consumed everything names no file
+					const file = mapFilename(parts);
+					if (file !== "") {
+						current.map_bump = basePath + file;
+					}
 				}
 				break;
 
@@ -189,7 +275,7 @@ export function parseMTL(text, basePath) {
 				// per-texel opacity, driving the mesh alpha cutout per pixel
 				// rather than per material
 				if (current) {
-					current.map_d = basePath + parts.slice(1).join(" ");
+					current.map_d = basePath + mapFilename(parts);
 				}
 				break;
 		}
@@ -228,12 +314,13 @@ export function preloadMTL(data, onload, onerror, settings) {
 			// a scene's external textures automatically). A texture that fails to
 			// load is warned and skipped (the mesh falls back to the white pixel),
 			// so one missing map_Kd doesn't abort the whole load. `map_d`
-			// (per-texel opacity) rides the same fetch for the same reason.
+			// (per-texel opacity) and `map_bump` (the tangent-space normal map)
+			// ride the same fetch for the same reason.
 			const texturePaths = [
 				...new Set(
 					Object.values(materials)
 						.flatMap((material) => {
-							return [material.map_Kd, material.map_d];
+							return [material.map_Kd, material.map_d, material.map_bump];
 						})
 						.filter(Boolean),
 				),

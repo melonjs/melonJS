@@ -2,8 +2,11 @@
 
 ## [20.7.0] (melonJS 2) - _unreleased_
 
+### Added
+- Mesh: a tangent-space normal map gives a lit surface its relief. MTL `map_bump`, `map_Bump`, `bump` and `norm` are loaded and applied per material, `settings.normalMap` sets one directly, and the tangent frame is derived per fragment on both backends, so no tangent vertex attribute is needed. A map line's option flags (`-bm`, `-s`, `-clamp` and the rest) are stripped rather than read as part of the filename, which is what an exporter's `map_Bump -bm 1.000000 rock-normal.png` needs ([#1574](https://github.com/melonjs/melonJS/issues/1574))
+
 ### Changed
-- Loader: `load()` no longer names asset types while resolving a `src`. A type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` instead — which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
+- Loader: `load()` no longer names asset types while resolving a `src`. A type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` instead, which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
 
 ### Fixed
 - Trigger: a trigger targeting a glTF level forwards the scene options it was given. `scale`, `rightHanded`, `lights`, `lightIntensityScale`, `castGroundShadow` and `shadowGroundY` were dropped before `level.load()` saw them, so a Tiled-authored trigger loaded its scene at the default scale and handedness whatever the map said ([#1649](https://github.com/melonjs/melonJS/issues/1649), thanks @ICOM725)

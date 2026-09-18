@@ -2608,6 +2608,38 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Lazy-init a shared 1x1 flat-normal TextureAtlas — RGB (128, 128, 255),
+	 * which decodes to the tangent-space normal (0, 0, 1).
+	 *
+	 * Bound wherever the normal-map slot must be filled but the material has
+	 * no map of its own: a multi-material mesh where only some groups carry
+	 * one. Perturbing by a flat normal is the identity, so those groups shade
+	 * exactly as they did before — which the diffuse texture standing in as
+	 * filler would NOT do, since its colours would be read as normals.
+	 * @returns {TextureAtlas}
+	 * @ignore
+	 * @internal
+	 */
+	getFlatNormalAtlas() {
+		if (this.flatNormalAtlas === undefined) {
+			const canvas = globalThis.document
+				? globalThis.document.createElement("canvas")
+				: new OffscreenCanvas(1, 1);
+			canvas.width = 1;
+			canvas.height = 1;
+			const ctx = canvas.getContext("2d");
+			ctx.fillStyle = "rgb(128, 128, 255)";
+			ctx.fillRect(0, 0, 1, 1);
+			this.flatNormalAtlas = new TextureAtlas(
+				createAtlas(1, 1, "flatNormal", "no-repeat"),
+				canvas,
+				false,
+			);
+		}
+		return this.flatNormalAtlas;
+	}
+
+	/**
 	 * Lazy-init a shared 1×1 white TextureAtlas used as the source texture
 	 * for drawLight's procedural effect (same rationale as the GL backend)
 	 * @returns {TextureAtlas}
