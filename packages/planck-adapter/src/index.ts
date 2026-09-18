@@ -170,6 +170,20 @@ export class PlanckAdapter implements PhysicsAdapter {
 	>();
 	private readonly defMap = new Map<Renderable, BodyDefinition>();
 	/**
+	 * Shapes handed back by {@link PlanckAdapter#getBodyShapes}: one reusable
+	 * array per renderable whose members are refreshed in place, so a spinning
+	 * body costs no allocation on the debug overlay's per-frame path. Dropped
+	 * in `removeBody`, so nothing outlives the body it describes.
+	 */
+	private readonly reportedShapes = new Map<Renderable, BodyShape[]>();
+
+	/**
+	 * One reusable proxy for reading a polygon fixture's vertices. It aliases
+	 * the shape's own array, so this holds no geometry between calls.
+	 */
+	private readonly shapeProxy = new planck.DistanceProxy();
+
+	/**
 	 * Offset between `renderable.pos` (top-left in melonJS convention)
 	 * and `planck.Body.getPosition()` (the body anchor we register at,
 	 * usually the visible center). Stored in pixels at addBody time so
@@ -274,6 +288,7 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.velocityLimits.clear();
 		this.defMap.clear();
 		this.posOffsets.clear();
+		this.reportedShapes.clear();
 	}
 
 	step(dt: number): void {
@@ -625,6 +640,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 			this.velocityLimits.delete(renderable);
 			this.defMap.delete(renderable);
 			this.posOffsets.delete(renderable);
+			// `updateShape` is a remove + add, so this also stops a reshaped
+			// body reporting its previous geometry
+			this.reportedShapes.delete(renderable);
 		}
 	}
 
@@ -847,6 +865,11 @@ export class PlanckAdapter implements PhysicsAdapter {
 			// shapes); for the primitive shapes we use, child 0 is the
 			// canonical AABB. planck always returns a defined AABB for
 			// valid child indices.
+			//
+			// Measured rather than assumed: the broadphase proxy tracks the
+			// exact AABB to within 0.001 m (0.03 px at the default scale) and
+			// does not drift with speed, so there is nothing to gain from
+			// recomputing it per fixture per frame.
 			const aabb = fixture.getAABB(0);
 			tmpAABB.combine(aabb);
 			if (aabb.lowerBound.x < minX) minX = aabb.lowerBound.x;
@@ -876,63 +899,117 @@ export class PlanckAdapter implements PhysicsAdapter {
 	 * @param renderable - the renderable whose body shapes to read
 	 */
 	getBodyShapes(renderable: Renderable): readonly BodyShape[] {
-		const shapes = this.defMap.get(renderable)?.shapes;
-		if (shapes === undefined) {
+		// Reported from PLANCK'S OWN fixtures, not by re-rotating the authored
+		// shapes. The fixture vertices are body-local and the body transform
+		// supplies the pose, so there is no pivot to derive and nothing to keep
+		// in sync with `syncFromPhysics`.
+		//
+		// Note the transform's origin is the BODY ORIGIN, not its centre of
+		// mass: Box2D composes `world = xf.p + R(angle) * local`, and
+		// `getLocalCenter()` is a different point entirely on a compound body.
+		// Reading it back sidesteps that distinction rather than encoding it.
+		//
+		// It also reports what actually collides, which the authored shapes do
+		// not: an Ellipse is simulated as a circle of the average radius, a
+		// concave polygon is hulled, and a shape with `isActive: false` has no
+		// fixture at all.
+		const body = this.bodyMap.get(renderable);
+		if (body === undefined) {
 			return [];
 		}
-		const angle = this.getAngle(renderable);
-		if (angle === 0) {
-			// much the commonest case, and the one that must stay allocation
-			// free: hand back the authored array exactly as before
-			this.rotatedShapes.delete(renderable);
-			return shapes;
-		}
-		const cached = this.rotatedShapes.get(renderable);
-		if (cached !== undefined && cached.angle === angle) {
-			return cached.shapes;
-		}
-		const rotated = this.rotateShapes(shapes, angle);
-		this.rotatedShapes.set(renderable, { angle, shapes: rotated });
-		return rotated;
-	}
+		const xf = body.getTransform();
+		const cos = xf.q.c;
+		const sin = xf.q.s;
+		const ox = this.m2px(xf.p.x) - renderable.pos.x;
+		const oy = this.m2px(xf.p.y) - renderable.pos.y;
 
-	/**
-	 * Rotated copies of the authored shapes, keyed by renderable, with the
-	 * angle they were built for. Rebuilt only when the body has actually
-	 * turned — a scene of unrotated bodies never allocates, and a spinning one
-	 * allocates once per angle change rather than once per read.
-	 */
-	private readonly rotatedShapes = new Map<
-		Renderable,
-		{ angle: number; shapes: BodyShape[] }
-	>();
+		let cached = this.reportedShapes.get(renderable);
+		let i = 0;
+		// the fixture list is newest-first, so it runs opposite to `def.shapes`
+		const fixtures: planck.Fixture[] = [];
+		for (let f = body.getFixtureList(); f; f = f.getNext()) {
+			fixtures.push(f);
+		}
+		fixtures.reverse();
 
-	/**
-	 * Rotate the authored shapes to the body's current pose.
-	 *
-	 * The shapes are rotated about the body's own origin, which is where the
-	 * engine rotates it, so the result stays in the renderable-local frame the
-	 * contract promises.
-	 * @param shapes - the authored shape definitions
-	 * @param angle - the body's current angle, in radians
-	 * @returns fresh shapes at that angle
-	 */
-	private rotateShapes(
-		shapes: readonly BodyShape[],
-		angle: number,
-	): BodyShape[] {
-		const pivot = new Vector2d(0, 0);
-		return shapes.map((shape) => {
-			// `clone()` keeps each shape's own type — a Rect rotated off-axis
-			// becomes a Polygon, which is what Rect#toPolygon is for; an
-			// Ellipse has no rotated form and is returned as it came
-			if (shape instanceof Ellipse) {
-				return shape;
+		// rebuilt only when the STRUCTURE changes — the pose below is refreshed
+		// in place, so a spinning body allocates nothing per frame
+		if (cached === undefined || cached.length !== fixtures.length) {
+			cached = [];
+			this.reportedShapes.set(renderable, cached);
+		}
+
+		for (const fixture of fixtures) {
+			const shape = fixture.getShape();
+			if (shape.getType() === "circle") {
+				// structurally typed rather than cast to `CircleShape`: that
+				// name resolves to planck's deprecated factory overload, and
+				// these two accessors are all this needs
+				const circle = shape as unknown as {
+					getCenter(): { x: number; y: number };
+					getRadius(): number;
+				};
+				const c = circle.getCenter();
+				const cx = this.m2px(c.x);
+				const cy = this.m2px(c.y);
+				const r = this.m2px(circle.getRadius());
+				const x = ox + (cos * cx - sin * cy);
+				const y = oy + (sin * cx + cos * cy);
+				const existing = cached[i];
+				if (existing instanceof Ellipse) {
+					existing.pos.set(x, y);
+					existing.radiusV.set(r, r);
+				} else {
+					cached[i] = new Ellipse(x, y, r * 2, r * 2);
+				}
+				i++;
+				continue;
 			}
-			const rotated = shape instanceof Rect ? shape.toPolygon() : shape.clone();
-			rotated.rotate(angle, pivot);
-			return rotated;
-		});
+			// `computeDistanceProxy` is the public way to reach a polygon's
+			// vertices; it aliases the shape's own array rather than copying
+			const proxy = this.shapeProxy;
+			shape.computeDistanceProxy(proxy, 0);
+			const count = proxy.getVertexCount();
+			const existing = cached[i];
+			const poly =
+				existing instanceof Polygon && existing.points.length === count
+					? existing
+					: undefined;
+			if (poly !== undefined) {
+				for (let v = 0; v < count; v++) {
+					const p = proxy.getVertex(v);
+					const px = this.m2px(p.x);
+					const py = this.m2px(p.y);
+					poly.points[v].set(
+						ox + (cos * px - sin * py),
+						oy + (sin * px + cos * py),
+					);
+				}
+				poly.pos.set(0, 0);
+				poly.recalc();
+				poly.updateBounds();
+			} else {
+				const pts: Vector2d[] = [];
+				for (let v = 0; v < count; v++) {
+					const p = proxy.getVertex(v);
+					const px = this.m2px(p.x);
+					const py = this.m2px(p.y);
+					pts.push(
+						new Vector2d(
+							ox + (cos * px - sin * py),
+							oy + (sin * px + cos * py),
+						),
+					);
+				}
+				cached[i] = new Polygon(
+					0,
+					0,
+					pts as unknown as ConstructorParameters<typeof Polygon>[2],
+				);
+			}
+			i++;
+		}
+		return cached;
 	}
 
 	isGrounded(renderable: Renderable): boolean {

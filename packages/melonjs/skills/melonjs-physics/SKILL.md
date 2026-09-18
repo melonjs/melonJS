@@ -1,6 +1,6 @@
 ---
 name: melonjs-physics
-description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck/matter adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, and the behaviour differences between adapters. Triggers on: Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, PlanckAdapter, MatterAdapter, gravity, velocity, applyForce, isGrounded, SAT."
+description: "Use this skill for collision, physics bodies, movement, and spatial queries in melonJS — the built-in SAT world and the planck/matter adapters. Covers bodyDef vs Body, collision types and masks, the collision callback family and their firing rules, raycast/queryAABB/querySphere, the behaviour differences between adapters, and which one to pick for a given game. Triggers on: which physics engine, choosing an adapter, rotation collision, rotating body, torque, joints, stacking, Body, bodyDef, collision, collisionType, collisionMask, onCollision, onCollisionStart, onCollisionActive, raycast, queryAABB, querySphere, PlanckAdapter, MatterAdapter, gravity, velocity, applyForce, isGrounded, SAT."
 license: MIT
 ---
 
@@ -18,6 +18,52 @@ license: MIT
 | **built-in** (default) | Arcade-style: platformers, top-down games. Fast, position-based, not Newtonian. |
 | **`@melonjs/planck-adapter`** | Full rigid-body dynamics — stacking, joints, realistic restitution. |
 | **`@melonjs/matter-adapter`** | Same class of thing, backed by matter-js. |
+
+### Picking one
+
+Start with the built-in. It is the default for a reason: no dependency, the
+smallest bundle, and its position-based model is what most 2D games actually
+want — a platformer's jump arc is a designed curve, not a simulated one, and
+tuning gravity against a solver you are fighting is a bad afternoon.
+
+**Move to an adapter when the game needs something the builtin cannot express**,
+and these are the usual triggers:
+
+- **Rotation that collides.** The clearest signal. The builtin's SAT never reads
+  `body.angle`, so a spinning shape collides as though it never turned. See
+  the note in *Built-in world quirks* below.
+- **Torque, angular velocity, or spin from an impact.** Anything that should
+  start turning *because* it was hit.
+- **Joints and constraints** — ragdolls, chains, ropes, vehicles, hinged doors.
+  The builtin has no concept of them.
+- **Stacking and resting contacts.** Boxes that pile up and stay put need an
+  iterative solver; the builtin's push-out resolves one pair at a time and a
+  stack jitters apart.
+- **Believable restitution and friction**, where a ball's bounce height and roll
+  should follow from its material rather than from code you wrote per case.
+
+**Stay on the built-in when** the game is grid or tile based, movement is
+authored rather than simulated, collision is "did these two boxes touch" plus a
+push-out, or you are shipping to a tight bundle budget. Tiled maps, `Trigger`
+and `Collectable` all work on every backend, so this is not a fork in the road
+for level content.
+
+**planck or matter?** Both are real rigid-body engines and either will do; the
+adapters expose the same portable API, so a game can switch with an import
+change and a gravity re-tune.
+
+- **planck** (a Box2D port) is the more accurate and the more predictable under
+  stress: better stacking, better joint behaviour, a continuous-collision
+  `bullet` mode for fast movers. It works in **metres**, so it has a
+  `pixelsPerMeter` scale to think about, and its tuning vocabulary is Box2D's.
+- **matter-js** works directly in **pixels**, which makes it the gentler
+  introduction, and its compound bodies and constraints are pleasant to author.
+  It is the softer solver: stacks settle less crisply and fast bodies need
+  `subSteps`.
+
+If you have no preference and the game leans on stacking, joints or fast
+projectiles, take planck. If you want to be up and running with the least
+conversion to think about, take matter.
 
 An adapter is an `Application` setting, not a plugin:
 
@@ -363,10 +409,27 @@ Track it yourself if you need to read it back. Before 20.7 it also threw on a
 `Box3d` or `Point` shape, and did not tell its owner that the body's bounds had
 grown.
 
-`adapter.getBodyShapes(renderable)` reports whichever is true: rotated shapes
-on planck and matter (since matter-adapter 1.2.1 / planck-adapter 1.3.1),
-unrotated ones on the builtin solver because they genuinely are. That is what
-the debug overlay draws, so the hitbox you see is the hitbox that collides.
+`adapter.getBodyShapes(renderable)` reports whichever is true: the geometry
+the engine is actually simulating on planck and matter (matter-adapter 1.3.0 /
+planck-adapter 1.4.0 and later), unrotated shapes on the builtin solver because
+there they genuinely are. That is what the debug overlay draws, so the hitbox
+you see is the hitbox that collides — a sprite spinning inside a stationary red
+box on the builtin is the solver telling you the truth, not a drawing bug.
+
+On planck and matter that report comes from the engine rather than from your
+definitions, so it shows the approximations they make: an `Ellipse` appears as
+the circle of average radius it is simulated as, a concave polygon as the
+convex pieces it was decomposed into, and a `Rect` as a `Polygon`. Your
+authored shapes are untouched and still readable on `renderable.bodyDef.shapes`.
+
+**If you need rotation to affect collision, use planck or matter.** That is the
+dividing line: the builtin is a position-based solver whose SAT never reads
+`body.angle`, so rotation there is a visual property. `body.rotate(angle)` is
+the workaround, not a rotating body — it permanently moves the shapes, does not
+track an angle, and gives you no angular velocity, torque or rotational
+response from a collision. A game whose collision genuinely turns (a spinning
+hazard, a swinging bridge, a car, anything with torque) wants a real rigid-body
+adapter rather than a workaround.
 
 ## Porting between adapters
 

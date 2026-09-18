@@ -197,11 +197,24 @@ export class Polygon {
 			const sin = Math.sin(angle);
 
 			if (v) {
+				// A polygon's world geometry is `pos + points[i]`, so a pivot
+				// applies to the SUM — rotating the points alone spins the
+				// shape about its own origin and leaves `pos` behind, which
+				// for two shapes at different offsets pulls them apart.
+				// `Ellipse#rotate` has always rotated its `pos` for the same
+				// reason; this brings the two into agreement.
+				//
+				// Folded back into the points rather than written to `pos`, so
+				// `pos` keeps whatever meaning the caller gave it and a shape
+				// at the origin — every caller in the engine before now —
+				// rotates to exactly the same numbers as it always did.
+				const px = this.pos.x;
+				const py = this.pos.y;
 				for (let i = 0; i < len; i++) {
-					const x = points[i].x - v.x;
-					const y = points[i].y - v.y;
-					points[i].x = x * cos - y * sin + v.x;
-					points[i].y = x * sin + y * cos + v.y;
+					const x = px + points[i].x - v.x;
+					const y = py + points[i].y - v.y;
+					points[i].x = x * cos - y * sin + v.x - px;
+					points[i].y = x * sin + y * cos + v.y - py;
 				}
 			} else {
 				for (let i = 0; i < len; i++) {

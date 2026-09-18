@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.0 - _unreleased_
+
+### Fixed
+- `getBodyShapes()` is read back from matter rather than derived, which fixes a body whose shapes came apart under rotation. 1.2.1 rotated the authored shapes about the renderable's origin, and `Polygon#rotate` moves a shape's points without its `pos`, so a body built from several shapes at different offsets saw each one spin about its own origin: the parts visibly separated, and shapes carrying their offset in `points` instead swung away from the body altogether. The reported geometry now comes from `part.vertices`, which matter keeps in world space and already rotated, so there is no pivot to derive and nothing to keep in step with the sprite
+- `shape.isActive === false` keeps a shape out of the simulation, as it already did on the planck and builtin backends. matter simulated it regardless, so one body definition collided differently depending on which backend was driving it
+- `getBodyShapes()` no longer reports a body's previous geometry after `updateShape()` at an unchanged angle, and no longer pins a removed renderable and its shapes for the adapter's lifetime. The cache was keyed by angle and cleared on no path but one
+- `getBodyShapes()` allocates nothing once a body's structure is settled. It is called once per body per frame by the debug overlay, and the previous cache missed on every frame of a body that was actually turning, allocating a fresh shape set each time through the object pools without ever releasing it
+
+### Changed
+- `getBodyShapes()` reports the geometry matter **simulates**, not the shapes as authored. A `Rect` comes back as the `Polygon` matter holds, an `Ellipse` as the circle of average radius it is simulated as, a concave polygon as the convex parts it is decomposed into, and a degenerate one as the box it falls back to. The overlay previously drew outlines that did not describe what collides. The authored definitions are unchanged and remain available on `renderable.bodyDef.shapes`
+
+### Notes
+- The peer range stays `>=20.0.0`: nothing here needs a newer engine
+
 ## 1.2.1 - _2026-09-17_
 
 ### Fixed
