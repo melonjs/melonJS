@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0 - _unreleased_
+## 1.3.0 - _2026-09-18_
 
 ### Fixed
 - `getBodyShapes()` is read back from matter rather than derived, which fixes a body whose shapes came apart under rotation. 1.2.1 rotated the authored shapes about the renderable's origin, and `Polygon#rotate` moves a shape's points without its `pos`, so a body built from several shapes at different offsets saw each one spin about its own origin: the parts visibly separated, and shapes carrying their offset in `points` instead swung away from the body altogether. The reported geometry now comes from `part.vertices`, which matter keeps in world space and already rotated, so there is no pivot to derive and nothing to keep in step with the sprite

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0 - _unreleased_
+## 1.4.0 - _2026-09-18_
 
 ### Fixed
 - `getBodyShapes()` is read back from planck rather than derived, which fixes shapes that rotated about the wrong point. 1.3.1 rotated the authored shapes about the renderable's origin, while planck rotates a body about its own **origin**, not its centre of mass, which is a different point again on a body with several fixtures, so the reported shapes swung away from the body they belong to. A shape carrying its offset in `pos` fared worse still, because `Polygon#rotate` moves a shape's points without its `pos`, so the parts of one body came apart. The geometry now comes from the fixtures and the body transform, so there is no pivot to derive and nothing to keep in step with the sprite
