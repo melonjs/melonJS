@@ -59,6 +59,29 @@ export default class GLTFScene {
 	}
 
 	/**
+	 * The `level.load()` options this format reads, declared beside the code
+	 * that reads them.
+	 *
+	 * `level` publishes the union of every format's list as
+	 * `LEVEL_LOAD_OPTIONS`, and anything that forwards options on a caller's
+	 * behalf — `Trigger` — forwards by that union rather than by a list of
+	 * its own. An option added to `addTo` below therefore travels everywhere
+	 * the moment it is named here, instead of being silently dropped by
+	 * whichever forwarder nobody remembered to update (#1649).
+	 * @type {ReadonlyArray<string>}
+	 * @ignore
+	 * @internal
+	 */
+	static loadOptions = Object.freeze([
+		"scale",
+		"rightHanded",
+		"lights",
+		"lightIntensityScale",
+		"castGroundShadow",
+		"shadowGroundY",
+	]);
+
+	/**
 	 * Instantiate every glTF mesh node as a `Mesh` in the given container.
 	 * Called by the level director on `level.load(...)`.
 	 * @param {Container} container - the target container (e.g. `game.world`)

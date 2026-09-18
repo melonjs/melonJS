@@ -16,6 +16,7 @@ import {
 	video,
 } from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
+import { LEVEL_LOAD_OPTIONS } from "../src/level/level.js";
 import triggerSource from "../src/renderable/trigger.js?raw";
 import state from "../src/state/state.ts";
 
@@ -107,22 +108,54 @@ describe("Trigger level change (#1646)", () => {
 		app.world.removeChildNow(t);
 	});
 
-	it("leaves omitted glTF options unset and ignores an authored async flag", () => {
-		const t = trigger({ async: true, scale: undefined });
+	it("carries EVERY option the director understands, bar async", () => {
+		// Derived from the contract rather than a hand-copied list, which is
+		// the point of the contract: the previous test named its six literals
+		// and so could only ever catch the omission it was written for. This
+		// one fails the day a level format declares an option that stops
+		// travelling — which is the bug, not any particular option (#1649).
+		// `async` is the trigger's own (asserted separately below), and
+		// `container` is resolved from a name to a Container on the way
+		// through, so it is the one option that cannot survive as a sentinel
+		const carried = LEVEL_LOAD_OPTIONS.filter((option) => {
+			return option !== "async" && option !== "container";
+		});
+		expect(carried.length).toBeGreaterThan(5);
+		// a distinguishable value per option; `onLoaded` has to stay callable
+		const settings = {};
+		for (const option of carried) {
+			settings[option] =
+				option === "onLoaded" ? () => {} : `sentinel:${option}`;
+		}
+		const t = trigger(settings);
 		t.triggerEvent();
 		expect(loadOptions).toHaveLength(1);
-		for (const key of [
-			"scale",
-			"rightHanded",
-			"lights",
-			"lightIntensityScale",
-			"castGroundShadow",
-			"shadowGroundY",
-			"async",
-		]) {
-			expect(loadOptions[0]).not.toHaveProperty(key);
+		for (const option of carried) {
+			expect(loadOptions[0]).toHaveProperty(option, settings[option]);
 		}
 		app.world.removeChildNow(t);
+	});
+
+	it("leaves an omitted option unset rather than present-and-undefined", () => {
+		// `typeof settings[x] !== "undefined"` rather than `x in settings`:
+		// a key explicitly set to undefined must not reach `level.load` and
+		// override the director's own default for it
+		const t = trigger({ scale: undefined });
+		t.triggerEvent();
+		expect(loadOptions).toHaveLength(1);
+		expect(loadOptions[0]).not.toHaveProperty("scale");
+		app.world.removeChildNow(t);
+	});
+
+	it("never carries an authored async, on either path", () => {
+		// the trigger owns it: the transition path awaits the load to time its
+		// reveal, and the direct path does not await at all, so an authored
+		// value would break the first and mean nothing in the second
+		const direct = trigger({ async: true });
+		direct.triggerEvent();
+		expect(loadOptions[0]).not.toHaveProperty("async");
+		expect(direct.triggerSettings).not.toHaveProperty("async");
+		app.world.removeChildNow(direct);
 	});
 
 	it("does NOT overwrite the caller's onLoaded on the transition path", () => {

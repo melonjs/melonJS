@@ -144,6 +144,20 @@ function refreshAbsoluteBounds(container) {
  */
 export default class TMXTileMap {
 	/**
+	 * The `level.load()` options this format reads. See
+	 * {@link GLTFScene.loadOptions} for why the list lives here rather than
+	 * in the director or in a forwarder (#1649).
+	 *
+	 * The director reads these off the options object and passes them to
+	 * `loadTMXLevel` as positional arguments, so they are named here rather
+	 * than consumed from an `options` bag inside this class.
+	 * @type {ReadonlyArray<string>}
+	 * @ignore
+	 * @internal
+	 */
+	static loadOptions = Object.freeze(["flatten", "setViewportBounds"]);
+
+	/**
 	 * @param {string} levelId - name of TMX map
 	 * @param {object} data - TMX map in JSON format
 	 * @example
