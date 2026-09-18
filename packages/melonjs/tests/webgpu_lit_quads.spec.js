@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { Color, WebGPURenderer } from "../src/index.js";
 import { BLOCK_BYTES } from "../src/video/webgl/lighting/std140.ts";
 import WebGPULitQuadBatcher from "../src/video/webgpu/batchers/lit_quad_batcher.js";
+import litQuadSource from "../src/video/webgpu/shaders/quad-lit.wgsl?raw";
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
 
 /**
@@ -31,11 +32,85 @@ describe("WebGPU 2D lighting", () => {
 			lit = new WebGPULitQuadBatcher(renderer);
 		});
 
-		it("registers the lit family against the frozen quad layout", () => {
+		it("registers the lit family against its own vertex layout", () => {
 			expect(lit.shaderKey).toMatch(/^effect:/);
 			// a second instance (device-loss re-init) reuses the module text
 			const again = new WebGPULitQuadBatcher(renderer);
 			expect(again.shaderKey).toBe(lit.shaderKey);
+		});
+
+		/**
+		 * Specular (#1576 follow-up): a sprite with a normal map and a
+		 * non-zero `shininess` gets a highlight that MOVES with the light,
+		 * instead of just brightening.
+		 *
+		 * Pinned at the vertex data, because that is the whole contract on
+		 * this backend: the exponent rides a per-quad attribute, and the
+		 * shader gates the term on it being > 0.
+		 */
+		describe("specular", () => {
+			const atlas = { name: "colors" };
+			const normalMap = { width: 4, height: 4 };
+
+			/**
+			 * @param {number} shininess - the renderer-side exponent
+			 * @returns {Float32Array} the quad's four vertices
+			 */
+			const quadWith = (shininess) => {
+				renderer.currentShininess = shininess;
+				lit.addQuad(atlas, 0, 0, 32, 32, 0, 0, 1, 1, 0xffffffff, false, {
+					...normalMap,
+				});
+				const size = lit.vertexSize;
+				return lit.vertexData.bufferF32.slice(0, size * 4);
+			};
+
+			it("declares its OWN vertex layout, wider than the shared quad one", () => {
+				// widening the shared layout would charge every unlit sprite
+				// in the engine for a term it never evaluates
+				expect(lit.stride).toBe(32);
+				expect(
+					lit.attributes.map((a) => {
+						return a.name;
+					}),
+				).toContain("aShininess");
+			});
+
+			it("writes the exponent onto all four vertices", () => {
+				const v = quadWith(48);
+				const size = lit.vertexSize;
+				for (let i = 0; i < 4; i++) {
+					expect(v[i * size + 7]).toBe(48);
+				}
+			});
+
+			it("REGRESSION: a sprite that never opts in carries 0", () => {
+				// every existing lit sprite: the shader's `> 0` gate then runs
+				// exactly the maths it always did
+				const v = quadWith(0);
+				const size = lit.vertexSize;
+				for (let i = 0; i < 4; i++) {
+					expect(v[i * size + 7]).toBe(0);
+				}
+			});
+
+			it("does not leak one sprite's exponent onto the next", () => {
+				const shiny = quadWith(64);
+				expect(shiny[7]).toBe(64);
+				lit.flush();
+				const matte = quadWith(0);
+				expect(matte[7]).toBe(0);
+			});
+
+			it("the shader gates the term on the exponent, and ADDS it", () => {
+				// added, not multiplied into the albedo: a highlight is light
+				// reflected off the surface, so it blows out to white on a
+				// dark sprite rather than tinting with it
+				expect(litQuadSource).toContain("if (in.vShininess > 0.0)");
+				expect(litQuadSource).toContain("color.rgb * lighting + specular");
+				// the view vector is a constant in 2D — no world position
+				expect(litQuadSource).toContain("vec3f(0.0, 0.0, 1.0)");
+			});
 		});
 
 		it("every setLightUniforms call owns its snapshot bytes (distinct dynamic offsets)", () => {

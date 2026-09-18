@@ -19,6 +19,12 @@ import Texture2d from "./../video/texture/texture2d.ts";
 import { getShadowQuad, hasVerticalExtent } from "./groundshadow.js";
 import Renderable from "./renderable.js";
 
+// Fired at most once per session: a `lit` mesh drawn under a 2D camera cannot
+// be lit, and saying so every frame would bury the rest of the console. Module
+// scope rather than per-instance, matching `_warnedNoGpuTileSupportOnce` in
+// TMXLayer — the message is about the scene's setup, not about one mesh.
+let _warnedLitUnder2dOnce = false;
+
 /**
  * additional import for TypeScript
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
@@ -362,7 +368,7 @@ function buildTextureGroups(
  * @property {number[]|Float32Array} [normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model, or generated from the geometry when the mesh is `lit`. Generated normals average per vertex where faces share vertices (smooth shading) and equal the face normal where they do not (flat shading) — the geometry decides, not a flag.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
- * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect.
+ * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect, and a `Camera3d`. See the [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures).
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
  * @property {boolean} [transparent] - draw in the transparent pass (blended, back-to-front, no depth write). Omit and a mesh goes transparent whenever its draw alpha is fractional; `true` for soft-alpha textures; `false` to stay opaque however faded
@@ -2131,6 +2137,28 @@ export default class Mesh extends Renderable {
 			// get culled, leaving the model looking inside-out.
 			this.indices = this._indicesOriginal;
 			this._projectVertices(this.pos.x, this.pos.y, 1000);
+			// `lit` is a no-op here, and silently so — the lit shaders need
+			// world-space normals and a world-space fragment position, and this
+			// path has neither: its vertices ARE the projected output, so there
+			// is no world space left to light in. The mesh degrades to unlit,
+			// which is the model without shading rather than a hole, but a flag
+			// that quietly does nothing is worth one line in the console.
+			// A `Camera3d` is the supported way to light a mesh (#1576).
+			// `_useWorldSpace` is what the app's OWN camera resolved to, while
+			// the branch we are in reflects the camera of THIS pass. A scene
+			// with a Camera3d main view and a Camera2d minimap is supported and
+			// documented, and its mesh really is lit — on the pass that counts.
+			// Nagging it would be wrong, and its remedy is already in place.
+			if (
+				this.lit === true &&
+				this._useWorldSpace !== true &&
+				_warnedLitUnder2dOnce === false
+			) {
+				_warnedLitUnder2dOnce = true;
+				console.warn(
+					"melonJS: `lit: true` has no effect under a Camera2d — a lit mesh needs world-space normals, which only the 3D path writes. Set `cameraClass: Camera3d` in the application settings to light it, or `lit: false` to silence this.",
+				);
+			}
 		}
 		renderer.drawMesh(this);
 	}

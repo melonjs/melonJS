@@ -37,6 +37,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame). Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. For spritesheet atlases the anchor also becomes the cached atlas's per-frame pivot (see {@link TextureAtlas}).
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|Texture2d|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
+	 * @param {number} [settings.shininess=0] - specular exponent: how tight this sprite's highlight is, or 0 for none. Needs a `normalMap` — see {@link Sprite#shininess}
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
 	 * let sprite = new me.Sprite(0, 0, {
@@ -127,6 +128,58 @@ export default class Sprite extends Renderable {
 		 * @internal
 		 */
 		this._normalMap = null;
+
+		/**
+		 * How tight this sprite's specular highlight is, or `0` (the default)
+		 * for none.
+		 *
+		 * A normal map tells the light which way each texel FACES, which gives
+		 * a sprite shape; this decides whether it also SHINES. The highlight
+		 * only appears where a texel happens to reflect a light toward the
+		 * screen, so it slides across the surface as the light moves, rather
+		 * than the whole sprite merely brightening — the difference between
+		 * armour that glints as you walk past and armour that is just lit.
+		 *
+		 * Low values give a broad sheen (worn metal, wet stone), high values a
+		 * tight glint (polished steel, glass). Gated on the exponent exactly
+		 * as MTL `Ns` and {@link Mesh#shininess} are, so `0` means "matte"
+		 * however bright the scene is, and every existing sprite is unchanged.
+		 *
+		 * **Needs a `normalMap`**: with no surface directions there is nothing
+		 * to reflect, and the sprite stays matte whatever this is set to. The
+		 * normal map's ALPHA channel masks it per texel, so one sprite can
+		 * have a shiny blade and a matte leather grip; a normal map with no
+		 * alpha detail (the usual case) shines uniformly.
+		 *
+		 * Ignored by the Canvas renderer.
+		 * @type {number}
+		 * @default 0
+		 * @see [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map) — three orbs across the
+		 * exponent's range, on a normal-mapped wall, lit by two moving lights
+		 * @example
+		 * // a polished blade: the highlight slides across it as a torch
+		 * // moves past, instead of the sprite merely brightening
+		 * const sword = new Sprite(x, y, {
+		 *     image: "sword",
+		 *     normalMap: "sword_n",
+		 *     shininess: 64,       // a tight, metallic glint
+		 * });
+		 * @example
+		 * // masked per texel: the normal map's ALPHA channel decides where
+		 * // the sprite is glossy, so one sprite can be a shiny blade with a
+		 * // matte leather grip. 255 = fully reflective, 0 = dead matte.
+		 * const nm = document.createElement("canvas");
+		 * // ...draw the normals into RGB, the gloss mask into A...
+		 * const axe = new Sprite(x, y, {
+		 *     image: "axe",
+		 *     normalMap: nm,
+		 *     shininess: 96,
+		 * });
+		 * @example
+		 * // matte again at runtime
+		 * axe.shininess = 0;
+		 */
+		this.shininess = 0;
 
 		/**
 		 * flicker settings
@@ -307,6 +360,12 @@ export default class Sprite extends Renderable {
 			}
 		}
 
+		// the specular exponent belongs with the map it depends on — it does
+		// nothing without one (see Sprite#shininess)
+		if (typeof settings.shininess === "number") {
+			this.shininess = settings.shininess;
+		}
+
 		// store/reset the current atlas information if specified
 		if (typeof settings.atlas !== "undefined") {
 			this.textureAtlas = settings.atlas;
@@ -430,6 +489,23 @@ export default class Sprite extends Renderable {
 	 *
 	 * Silently ignored by the Canvas renderer.
 	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+	 * @see {@link Sprite#shininess} to add a specular highlight on top
+	 * @see [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map)
+	 * @see [SpriteIlluminator example](https://melonjs.github.io/melonJS/examples/#/sprite-illuminator)
+	 * @example
+	 * // the sidecar pattern: one `_n` image beside each diffuse image
+	 * await loader.preload([
+	 *     { name: "hero",   type: "image", src: "data/img/hero.png" },
+	 *     { name: "hero_n", type: "image", src: "data/img/hero_n.png" },
+	 * ]);
+	 * const hero = new Sprite(x, y, { image: "hero", normalMap: "hero_n" });
+	 *
+	 * // ...or assigned later, from any image-like source
+	 * hero.normalMap = loader.getImage("hero_n");
+	 *
+	 * // an atlas can carry one for every region it packs, which a Sprite
+	 * // built from that atlas picks up in preference to its own setting
+	 * const atlas = new TextureAtlas(json, image, { normalMap });
 	 */
 	get normalMap() {
 		return this._normalMap;
@@ -833,6 +909,9 @@ export default class Sprite extends Renderable {
 		// `currentNormalMap` from the renderer; Canvas ignores it.
 		if (this._normalMap !== null) {
 			renderer.currentNormalMap = this._normalMap;
+			// travels with the map, because it is meaningless without one:
+			// no surface directions, nothing to reflect
+			renderer.currentShininess = this.shininess;
 		}
 	}
 
@@ -844,6 +923,7 @@ export default class Sprite extends Renderable {
 		// Clear the slot so a subsequent un-lit sprite isn't accidentally lit.
 		if (this._normalMap !== null) {
 			renderer.currentNormalMap = null;
+			renderer.currentShininess = 0;
 		}
 		super.postDraw(renderer);
 	}

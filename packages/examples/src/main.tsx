@@ -410,7 +410,7 @@ const examples: {
 		path: "normal-map",
 		sourceDir: "normalMap",
 		description:
-			"Per-pixel sprite lighting from normal maps. Three procedurally-generated orbs (red, green, blue base colors paired with a sphere normal map) react to a moving Light2d.",
+			"Per-pixel sprite lighting from normal maps, with specular highlights. Three procedurally-generated orbs at different shininess, on a stone wall, lit by two moving Light2d sources.",
 	},
 	{
 		component: <ExampleSpriteIlluminator />,

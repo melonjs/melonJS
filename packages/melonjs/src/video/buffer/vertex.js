@@ -62,10 +62,16 @@ export default class VertexArrayBuffer {
 	 * @param {number} tint - tint color in UINT32 (argb) format
 	 * @param {number} [textureId] - texture unit index for multi-texture batching
 	 * @param {number} [normalTextureId] - paired normal-map texture unit index, or `-1` for unlit quads
+	 * @param {number} [shininess] - specular exponent for the GL lit-quad layout,
+	 * which is 9 floats; 0 (matte) when omitted. NOTE the WebGPU lit layout is 8
+	 * floats and carries its exponent in slot 7 instead, the slot whose omitted
+	 * default here is the `-1` unlit sentinel — that batcher therefore always
+	 * passes an explicit value through its own `pushQuadVertices` override and
+	 * never relies on this default.
 	 * @ignore
 	 * @internal
 	 */
-	push(x, y, z, u, v, tint, textureId, normalTextureId) {
+	push(x, y, z, u, v, tint, textureId, normalTextureId, shininess) {
 		const offset = this.vertexCount * this.vertexSize;
 
 		this.bufferF32[offset] = x;
@@ -85,6 +91,15 @@ export default class VertexArrayBuffer {
 				// shading on every sprite.
 				this.bufferF32[offset + 7] =
 					typeof normalTextureId === "number" ? normalTextureId : -1;
+				if (this.vertexSize > 8) {
+					// `aShininess` on the GL lit-quad layout, which carries
+					// both the normal-map slot and the exponent. 0 is matte,
+					// and matte is what every sprite that never opts in must
+					// get — so the fallback here is 0, not the -1 sentinel
+					// above (a negative exponent would make `pow` explode).
+					this.bufferF32[offset + 8] =
+						typeof shininess === "number" ? shininess : 0;
+				}
 			}
 		}
 
