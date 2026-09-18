@@ -3,12 +3,14 @@
 ## [20.7.0] (melonJS 2) - _unreleased_
 
 ### Added
+- Sprite: `shininess` gives a normal-mapped sprite a specular highlight, one that slides across the surface as a light moves past rather than the whole sprite merely brightening, in each light's own colour. Gated on the exponent as MTL `Ns` is, so `0` is matte and every existing sprite renders exactly as before; the normal map's alpha masks it per texel, and the Canvas renderer ignores it
 - Mesh: a tangent-space normal map gives a lit surface its relief. MTL `map_bump`, `map_Bump`, `bump` and `norm` are loaded and applied per material, `settings.normalMap` sets one directly, and the tangent frame is derived per fragment on both backends, so no tangent vertex attribute is needed. A map line's option flags (`-bm`, `-s`, `-clamp` and the rest) are stripped rather than read as part of the filename, which is what an exporter's `map_Bump -bm 1.000000 rock-normal.png` needs ([#1574](https://github.com/melonjs/melonJS/issues/1574))
 
 ### Changed
 - Loader: `load()` no longer names asset types while resolving a `src`. A type whose `src` is not a bare path declares `normalizeSrc` and `needsBaseURL` instead, which is how `fontface` unwraps a `url(...)` descriptor before the base URL goes on, and leaves an installed `local()` family alone ([#1648](https://github.com/melonjs/melonJS/issues/1648), thanks @ICOM725)
 
 ### Fixed
+- Mesh: `lit: true` under a `Camera2d` says so instead of silently doing nothing. Lighting a mesh needs world-space normals and a world-space fragment position, and that path has neither, since its vertices are already the projected output, so the mesh degrades to unlit and now warns once, naming `Camera3d` as the way to light it ([#1576](https://github.com/melonjs/melonJS/issues/1576))
 - Trigger: a trigger targeting a glTF level forwards the scene options it was given. `scale`, `rightHanded`, `lights`, `lightIntensityScale`, `castGroundShadow` and `shadowGroundY` were dropped before `level.load()` saw them, so a Tiled-authored trigger loaded its scene at the default scale and handedness whatever the map said ([#1649](https://github.com/melonjs/melonJS/issues/1649), thanks @ICOM725)
 - Body: rotation pivoted about the wrong point for any renderable away from the world origin. `body.bounds` is already renderable-local and the pivot subtracted `renderable.pos` from it a second time, so a 40x40 body on a renderable at `(100, 50)` turned about `(-80, -30)` rather than its own centre
 - `Body.rotate()` no longer throws on a `Box3d` or `Point` shape, neither of which can rotate. Such a shape keeps its orientation and still contributes its bounds

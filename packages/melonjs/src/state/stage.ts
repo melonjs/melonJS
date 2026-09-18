@@ -97,6 +97,17 @@ export default class Stage {
 	 * returns early and the lights still draw as additive glows.
 	 * @default rgba(0,0,0,0)
 	 * @see Light2d
+	 * @see {@link Stage#ambientLightingColor} for the other, easily confused knob
+	 * @see [Lights example](https://melonjs.github.io/melonJS/examples/#/lights)
+	 * @example
+	 * class PlayScene extends Stage {
+	 *     onResetEvent() {
+	 *         // near-black night. The alpha is what turns the pass ON:
+	 *         // leave it at 0 and lights still glow, but nothing darkens
+	 *         this.ambientLight.parseCSS("#0a0a1ee0");
+	 *         this.addChild(new Light2d(x, y, 200, 200, "#ffcc88", 1));
+	 *     }
+	 * }
 	 */
 	ambientLight: Color;
 
@@ -108,6 +119,17 @@ export default class Stage {
 	 * black. Defaults to black (0, 0, 0) — sprites without a
 	 * `normalMap` ignore it entirely.
 	 * @default "#000000"
+	 * @see {@link Stage#ambientLight} for the darkness overlay, which is a
+	 * different knob with a confusingly similar name
+	 * @see [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map)
+	 * @example
+	 * class PlayScene extends Stage {
+	 *     onResetEvent() {
+	 *         // without this the hemisphere facing away from every light
+	 *         // renders pure black, which reads as a hole in the sprite
+	 *         this.ambientLightingColor.setColor(60, 60, 70);
+	 *     }
+	 * }
 	 */
 	ambientLightingColor: Color;
 

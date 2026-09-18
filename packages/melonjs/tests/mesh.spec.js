@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
@@ -1268,6 +1268,48 @@ describe("Mesh × Camera3d world-space path", () => {
 		m._projectNormalsWorld();
 		expect([m.normals[0], m.normals[1], m.normals[2]]).toEqual([0, 1, 0]);
 		expect(Number.isNaN(m.normals[0])).toBe(false);
+	});
+
+	it("warns ONCE, and only for a LIT mesh, under a 2D camera (#1576)", async () => {
+		// A FRESH module registry, because the one-shot latch is module scope
+		// (deliberately — the message is about the scene's setup, not about one
+		// mesh). Any earlier test in this file that draws on the 2D path
+		// consumes it, so asserting on the shared instance proves nothing
+		// either way: silence would be the latch, not the guard.
+		vi.resetModules();
+		const { default: FreshMesh } = await import("../src/renderable/mesh.js");
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const said = () => {
+			return warn.mock.calls.filter((c) => {
+				return String(c[0]).includes("Camera2d");
+			});
+		};
+
+		// an UNLIT mesh on the same path must stay quiet: the warning is about
+		// the FLAG, not the path, and every 2D game drawing a plain mesh would
+		// otherwise be nagged
+		const plain = new FreshMesh(0, 0, litPyramid());
+		plain._useWorldSpace = false;
+		plain.lit = false;
+		plain.draw(stubRenderer);
+		expect(said()).toHaveLength(0);
+
+		// now a lit one: exactly one line, naming the fix
+		const lit = new FreshMesh(0, 0, litPyramid());
+		lit._useWorldSpace = false;
+		lit.lit = true;
+		lit.draw(stubRenderer);
+		expect(said()).toHaveLength(1);
+		expect(String(said()[0][0])).toContain("Camera3d");
+
+		// ...and not again, however many meshes or frames follow
+		lit.draw(stubRenderer);
+		const another = new FreshMesh(0, 0, litPyramid());
+		another._useWorldSpace = false;
+		another.lit = true;
+		another.draw(stubRenderer);
+		expect(said()).toHaveLength(1);
+		warn.mockRestore();
 	});
 
 	it("H2: a rightHanded mesh skips the reversed-index allocation", () => {

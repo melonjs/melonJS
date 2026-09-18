@@ -279,8 +279,9 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		expect(batcher.stride).toBe(28);
 	});
 
-	// LitQuadBatcher adds aNormalTextureId at the tail → 8 float-slots = 32 bytes
-	it("LitQuadBatcher declares aVertex size 3, stride 32", (ctx) => {
+	// LitQuadBatcher adds aNormalTextureId and aShininess at the tail
+	// → 9 float-slots = 36 bytes
+	it("LitQuadBatcher declares aVertex size 3, stride 36", (ctx) => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -290,7 +291,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		});
 		expect(aVertex).toBeDefined();
 		expect(aVertex.size).toBe(3);
-		expect(batcher.stride).toBe(32);
+		expect(batcher.stride).toBe(36);
 	});
 
 	// PrimitiveBatcher: aVertex(3) + aNormal(2) + aColor(4 UBYTE = 1 float-slot)

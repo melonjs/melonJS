@@ -261,6 +261,16 @@ export default class Renderer {
 		this.currentNormalMap = null;
 
 		/**
+		 * Specular exponent for the sprite currently being drawn, paired with
+		 * `currentNormalMap` and cleared with it. `0` is "matte", which is
+		 * every sprite that does not opt in.
+		 * @type {number}
+		 * @ignore
+		 * @internal
+		 */
+		this.currentShininess = 0;
+
+		/**
 		 * Number of active `Light2d` instances uploaded to the lit batcher
 		 * for the current frame. Set by `setLightUniforms`. The WebGL
 		 * renderer's `drawImage` reads this to decide between the unlit

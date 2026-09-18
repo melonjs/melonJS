@@ -10,6 +10,9 @@ in vec2 aRegion;
 in vec4 aColor;
 in float aTextureId;
 in float aNormalTextureId;
+// specular exponent for this quad, 0 = matte (the default for every sprite
+// that does not opt in)
+in float aShininess;
 
 uniform mat4 uProjectionMatrix;
 
@@ -17,6 +20,7 @@ out vec2 vRegion;
 out vec4 vColor;
 out float vTextureId;
 out float vNormalTextureId;
+out float vShininess;
 // Pre-projection vertex position (in the renderer's pre-projection
 // space — typically camera-local for default cameras with the world
 // container's translate applied). Used by the lit fragment path to
@@ -30,5 +34,6 @@ void main(void) {
     vRegion = aRegion;
     vTextureId = aTextureId;
     vNormalTextureId = aNormalTextureId;
+    vShininess = aShininess;
     vWorldPos = aVertex.xy;
 }

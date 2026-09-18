@@ -85,6 +85,9 @@ export interface Light3dOptions {
  * (e.g. a day/night cycle rotating `direction`, a flickering torch fading
  * `intensity`, a searchlight sweeping its cone).
  * @category Lighting
+ * @see [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures) — a key light plus ambient over MTL materials
+ * @see [Night City example](https://melonjs.github.io/melonJS/examples/#/night-city) — many lights across an instanced scene
+ * @see {@link Light2d} for the 2D sprite equivalent, which is a separate system
  * @example
  * import { Light3d } from "melonjs";
  *

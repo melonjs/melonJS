@@ -20,7 +20,8 @@ import QuadBatcher from "./quad_batcher.js";
 /**
  * Lit-aware variant of `QuadBatcher` for the SpriteIlluminator workflow.
  *
- * Adds a 5th vertex attribute (`aNormalTextureId`) so each quad knows
+ * Adds a 5th and 6th vertex attribute (`aNormalTextureId`, `aShininess`)
+ * so each quad knows
  * which slot its normal map occupies, and owns the per-frame
  * `Light2dBlock` uniform buffer that the lit fragment shader iterates.
  *
@@ -56,7 +57,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 			attributes: [
 				{
 					// vec3: (x, y, z). z carries `renderable.depth` for
-					// perspective projection (Camera3d). Stride = 32 bytes.
+					// perspective projection (Camera3d). Stride = 36 bytes.
 					name: "aVertex",
 					format: "float32x3",
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
@@ -80,6 +81,19 @@ export default class LitQuadBatcher extends QuadBatcher {
 					name: "aNormalTextureId",
 					format: "float32",
 					offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+				},
+				{
+					// Specular exponent, per QUAD rather than per normal-map
+					// slot. A uniform array indexed by the slot would be
+					// tighter on bandwidth, but uniform arrays are charged
+					// against `MAX_FRAGMENT_UNIFORM_VECTORS` — the scarcity
+					// that forced the light data into a UBO — and it would
+					// make two sprites sharing one normal map at different
+					// exponents fight over the slot. 4 bytes a vertex, on the
+					// lit path only, buys both problems away.
+					name: "aShininess",
+					format: "float32",
+					offset: 8 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],
 			shader: {
@@ -591,6 +605,10 @@ export default class LitQuadBatcher extends QuadBatcher {
 		}
 
 		let normalTextureId = -1;
+		// Meaningless without a normal map — there are no surface directions
+		// to reflect — so it rides on the same condition and stays 0 whenever
+		// the quad falls back to the unlit sentinel below.
+		let shininess = 0;
 		if (normalMap !== null && this.useMultiTexture) {
 			const epoch = this._cacheEpoch;
 			normalTextureId = this.resolveNormalUnit(normalMap);
@@ -609,6 +627,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 				// wrecks the lighting silently, so take the unlit path instead —
 				// flat shading is wrong, but visibly and recoverably so.
 				normalTextureId = -1;
+			}
+			if (normalTextureId >= 0) {
+				shininess = this.renderer.currentShininess || 0;
 			}
 		}
 
@@ -633,6 +654,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 			tint,
 			textureId,
 			normalTextureId,
+			shininess,
 		);
 		vertexData.push(
 			vec1.x,
@@ -643,6 +665,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 			tint,
 			textureId,
 			normalTextureId,
+			shininess,
 		);
 		vertexData.push(
 			vec2.x,
@@ -653,6 +676,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 			tint,
 			textureId,
 			normalTextureId,
+			shininess,
 		);
 		vertexData.push(
 			vec3.x,
@@ -663,6 +687,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 			tint,
 			textureId,
 			normalTextureId,
+			shininess,
 		);
 	}
 
@@ -712,10 +737,11 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		// blits are always rendered at z = 0 (screen-space, ortho)
 		const tint = 0xffffffff;
-		this.vertexData.push(vec0.x, vec0.y, 0, 0, 1, tint, 0, -1);
-		this.vertexData.push(vec1.x, vec1.y, 0, 1, 1, tint, 0, -1);
-		this.vertexData.push(vec2.x, vec2.y, 0, 0, 0, tint, 0, -1);
-		this.vertexData.push(vec3.x, vec3.y, 0, 1, 0, tint, 0, -1);
+		// trailing 0 is `aShininess`: a blit carries no material
+		this.vertexData.push(vec0.x, vec0.y, 0, 0, 1, tint, 0, -1, 0);
+		this.vertexData.push(vec1.x, vec1.y, 0, 1, 1, tint, 0, -1, 0);
+		this.vertexData.push(vec2.x, vec2.y, 0, 0, 0, tint, 0, -1, 0);
+		this.vertexData.push(vec3.x, vec3.y, 0, 1, 0, tint, 0, -1, 0);
 
 		this.flush();
 

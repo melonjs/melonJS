@@ -527,6 +527,14 @@ and spot, a stylised quadratic falloff, not inverse-square),
 **`Light2d` is 2D-only** and produces visible artifacts under perspective
 projection. Do not combine it with `Camera3d`.
 
+**`lit: true` only does anything under a `Camera3d`.** Lighting a mesh needs
+world-space normals and a world-space fragment position, and the 2D-camera path
+has neither: its vertices are already the projected output, so there is no world
+space left to light in. Such a mesh degrades to unlit and warns once, naming the
+fix. If you want lit 3D props in an otherwise 2D game, set
+`cameraClass: Camera3d` on the application. (For 2D **sprites**, lighting is a
+separate system that works under a 2D camera as normal, see the lighting skill.)
+
 A `lit` mesh takes a **tangent-space normal map**, so relief comes from the
 material rather than from geometry — `settings.normalMap` (a loader key or any
 image-like source), or MTL `map_bump` / `bump` / `norm`, which the MTL loader

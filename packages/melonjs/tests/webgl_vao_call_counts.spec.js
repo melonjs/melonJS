@@ -69,14 +69,14 @@ describe("WebGL VAO call counts (#1509 acceptance)", () => {
 		}
 	};
 
-	it("rebuilding all vertex states costs exactly 19 pointer + 19 enable calls", (ctx) => {
+	it("rebuilding all vertex states costs exactly 20 pointer + 20 enable calls", (ctx) => {
 		requireWebGL(ctx);
 		resetCounts();
 		for (const batcher of renderer.batchers.values()) {
 			batcher.createVertexState();
 		}
-		expect(counts.vertexAttribPointer).toBe(19);
-		expect(counts.enableVertexAttribArray).toBe(19);
+		expect(counts.vertexAttribPointer).toBe(20);
+		expect(counts.enableVertexAttribArray).toBe(20);
 		expect(counts.disableVertexAttribArray).toBe(0);
 	});
 

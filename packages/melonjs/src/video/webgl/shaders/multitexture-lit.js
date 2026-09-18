@@ -94,6 +94,7 @@ export function buildLitMultiTextureFragment(maxTextures) {
 	lines.push("in vec2 vRegion;");
 	lines.push("in float vTextureId;");
 	lines.push("in float vNormalTextureId;");
+	lines.push("in float vShininess;");
 	lines.push("in vec2 vWorldPos;");
 	lines.push("out vec4 fragColor;");
 	lines.push("");
@@ -129,6 +130,17 @@ export function buildLitMultiTextureFragment(maxTextures) {
 	lines.push("    normal.y = -normal.y;");
 
 	lines.push("    vec3 lighting = uAmbient;");
+	// Specular accumulates SEPARATELY from diffuse, because it is light
+	// reflected OFF the surface rather than the surface's own colour lit up:
+	// it is added at the end, not multiplied into the albedo, which is why a
+	// glint blows out to white on a dark sprite.
+	lines.push("    vec3 specular = vec3(0.0);");
+	// Per-texel mask from the normal map's ALPHA. Free — the sample is
+	// already taken — and safe, because normal maps upload with
+	// premultiplied alpha OFF (multiplying through alpha would corrupt the
+	// encoding), so the channel survives intact. A map authored without one
+	// is opaque, which reads as "uniformly shiny" and is the sensible default.
+	lines.push("    float specMask = normalSample.a;");
 	// ES 3.00 permits a non-constant bound, so this runs exactly as many
 	// iterations as there are live lights — unused capacity costs nothing
 	lines.push("    int count = min(int(uLightCount), " + MAX_LIGHTS + ");");
@@ -147,9 +159,38 @@ export function buildLitMultiTextureFragment(maxTextures) {
 	lines.push(
 		"        lighting += uLights[i].colorHeight.rgb * (lp.w * att * NdotL);",
 	);
+	// Blinn-Phong, gated on the exponent exactly as the mesh path gates on
+	// `Ns`: zero means matte however bright the light is, so every sprite
+	// that never opts in runs the same maths it always did and the branch is
+	// uniform across a quad (vShininess is flat per quad).
+	lines.push("        if (vShininess > 0.0) {");
+	// The view vector is a CONSTANT here, which is what makes this sound in
+	// 2D where it is not on the mesh-under-2D-camera path: a sprite lies in
+	// the screen plane and the camera looks straight down -Z at it, so there
+	// is no per-fragment world position to get wrong.
+	lines.push(
+		"            vec3 halfVec = normalize(lightDir + vec3(0.0, 0.0, 1.0));",
+	);
+	lines.push("            float NdotH = max(0.0, dot(normal, halfVec));");
+	// `NdotL > 0` gates it on the surface actually facing the light: without
+	// that, a back-facing texel whose half-vector happens to line up picks up
+	// a highlight from a light behind it.
+	lines.push("            float facing = step(0.0001, NdotL);");
+	lines.push(
+		"            specular += uLights[i].colorHeight.rgb * (lp.w * att * facing * specMask * pow(NdotH, vShininess));",
+	);
+	lines.push("        }");
 	lines.push("    }");
 
-	lines.push("    fragColor = vec4(color.rgb * lighting, color.a) * vColor;");
+	// `specular * color.a`, because the pipeline is PREMULTIPLIED: `color.rgb`
+	// already carries its own alpha, so the diffuse term self-cancels where the
+	// sprite is transparent, but an added highlight would not. A normal map is
+	// usually fully opaque even where its diffuse is cut away (every
+	// SpriteIlluminator export is), so without this a shiny sprite paints an
+	// additive glow across its own cut-out.
+	lines.push(
+		"    fragColor = vec4(color.rgb * lighting + specular * color.a, color.a) * vColor;",
+	);
 	lines.push("}");
 
 	return lines.join("\n");

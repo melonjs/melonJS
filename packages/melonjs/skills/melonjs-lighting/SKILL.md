@@ -1,6 +1,6 @@
 ---
 name: melonjs-lighting
-description: "Use this skill for 2D dynamic lighting in melonJS — Light2d, ambient light on a Stage, multiple lights, and per-pixel normal-mapped sprites authored in SpriteIlluminator. Covers the ambient-cutout model, which parts need a GPU backend, and why Light2d does not survive a Camera3d. Triggers on: Light2d, lighting, ambientLight, ambientLightingColor, normalMap, SpriteIlluminator, per-pixel lighting, drawLight, torch, glow, darkness."
+description: "Use this skill for 2D dynamic lighting in melonJS — Light2d, ambient light on a Stage, multiple lights, and per-pixel normal-mapped sprites authored in SpriteIlluminator. Covers specular highlights via shininess, the ambient-cutout model, which parts need a GPU backend, and why Light2d does not survive a Camera3d. Triggers on: Light2d, specular, shininess, highlight, glint, lighting, ambientLight, ambientLightingColor, normalMap, SpriteIlluminator, per-pixel lighting, drawLight, torch, glow, darkness."
 license: MIT
 ---
 
@@ -82,6 +82,50 @@ above — one `_n` image beside each diffuse image — is the simplest setup, bu
 atlas can carry one too: `new TextureAtlas(json, image, { normalMap })` pairs a
 normal texture sharing the colour texture's UVs, and a `Sprite` built from that
 atlas picks it up in preference to its own `settings.normalMap`.
+
+## Specular highlights
+
+A normal map gives a sprite **shape**: the light knows which way each texel
+faces, so a torch reveals bumps and crevices. `shininess` decides whether it
+also **shines**:
+
+```js
+const sword = new Sprite(x, y, {
+    image: "sword",
+    normalMap: "sword_n",
+    shininess: 64,        // 0 (the default) is matte
+});
+```
+
+The difference is what the highlight *does*. Diffuse brightness depends only on
+the angle between the surface and the light, so a torch moving past just makes
+the sprite brighter. A specular highlight only appears where a texel reflects
+the light **toward the screen**, so it slides across the surface as the light
+moves: armour that glints as you walk by, rather than armour that is merely lit.
+
+Low values give a broad sheen (worn metal, wet stone); high values a tight glint
+(polished steel, glass). It is gated on the exponent exactly as MTL `Ns` is on
+the 3D path, so `0` means matte however bright the scene, and a sprite that
+never sets it renders exactly as it always did.
+
+Three things worth knowing:
+
+- **It needs a `normalMap`.** With no surface directions there is nothing to
+  reflect, and the sprite stays matte whatever `shininess` says.
+- **The normal map's alpha channel masks it per texel.** 255 is fully
+  reflective, 0 is dead matte, so one sprite can be a shiny blade with a matte
+  leather grip. A normal map with no alpha detail (the usual case) shines
+  uniformly. Note the corollary: if your normal map already uses alpha for
+  something, that channel now also decides gloss.
+- **It accumulates per light.** Each light contributes its own highlight in its
+  own colour, so a sprite between a warm lamp and a cool one carries two
+  distinct glints that move independently.
+
+The highlight takes the light's own colour and is *added* on top of the lit
+result rather than multiplied into it, which is why a glint blows out toward
+white on a dark sprite instead of tinting with it.
+
+See it running: [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map).
 
 Unlit areas of a normal-mapped sprite render pure black unless you raise
 `Stage.ambientLightingColor` (default black) — that is the base level added to

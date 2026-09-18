@@ -1,5 +1,7 @@
 // the lighting math modules are pure CPU code shared with the GL backend
 // (published std140 layout, no GL calls)
+
+import { transformQuadCorners } from "../../gpu/quadcorners.ts";
 import {
 	BLOCK_BYTES,
 	BLOCK_FLOATS,
@@ -31,7 +33,47 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	 * @override
 	 */
 	init(renderer, settings) {
-		super.init(renderer, settings);
+		// Its OWN vertex layout rather than the shared frozen quad one: the
+		// lit family carries a per-quad specular exponent, and widening the
+		// base layout would charge every unlit sprite in the engine 4 bytes a
+		// vertex for a term it never evaluates. Mirrors the GL side, where
+		// `LitQuadBatcher` likewise declares a wider layout than `QuadBatcher`.
+		super.init(
+			renderer,
+			settings ?? {
+				shaderKey: "litQuad",
+				topology: "triangle-list",
+				attributes: [
+					{
+						name: "aVertex",
+						format: "float32x3",
+						offset: 0 * Float32Array.BYTES_PER_ELEMENT,
+					},
+					{
+						name: "aRegion",
+						format: "float32x2",
+						offset: 3 * Float32Array.BYTES_PER_ELEMENT,
+					},
+					{
+						name: "aColor",
+						format: "unorm8x4",
+						offset: 5 * Float32Array.BYTES_PER_ELEMENT,
+					},
+					{
+						name: "aTextureId",
+						format: "float32",
+						offset: 6 * Float32Array.BYTES_PER_ELEMENT,
+					},
+					{
+						// specular exponent, 0 = matte (every sprite that does
+						// not opt in)
+						name: "aShininess",
+						format: "float32",
+						offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+					},
+				],
+			},
+		);
 		const cache = renderer.pipelineCache;
 		const device = renderer.device;
 
@@ -58,14 +100,14 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 				},
 			],
 		});
-		// the lit family rides the frozen quad vertex layout
+		// the lit family rides its own layout, registered by super.init above
 		this.shaderKey = cache.registerShader(litQuadWGSL, {
 			bindGroupLayouts: [
 				cache.frameLayout,
 				this.litMaterialLayout,
 				this.lightsLayout,
 			],
-			vertexLayoutKey: "quad",
+			vertexLayoutKey: "litQuad",
 			label: "melonJS lit quad shader",
 		});
 
@@ -268,8 +310,43 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 			this.currentMaterial = combined;
 		}
 
+		// Flushes on a material change above, so a quad's exponent cannot
+		// smear onto the previous segment's vertices.
+		this.currentQuadShininess = renderer.currentShininess || 0;
 		// transform + push the four corners exactly like the base batcher
 		this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint);
+	}
+
+	/**
+	 * Push the four corners with this batcher's extra `aShininess`
+	 * component appended.
+	 * @param {number} x - destination x
+	 * @param {number} y - destination y
+	 * @param {number} w - destination width
+	 * @param {number} h - destination height
+	 * @param {number} u0 - texture UV (u0)
+	 * @param {number} v0 - texture UV (v0)
+	 * @param {number} u1 - texture UV (u1)
+	 * @param {number} v1 - texture UV (v1)
+	 * @param {number} tint - tint color in UINT32 (argb) format
+	 * @param {number} [textureId=0] - the segment slot
+	 * @override
+	 */
+	pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, textureId = 0) {
+		const vertexData = this.vertexData;
+		const shininess = this.currentQuadShininess || 0;
+		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
+			this.renderer.currentTransform,
+			x,
+			y,
+			w,
+			h,
+			this.renderer.currentDepth,
+		);
+		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, textureId, shininess);
+		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, textureId, shininess);
+		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, textureId, shininess);
+		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, textureId, shininess);
 	}
 
 	/**

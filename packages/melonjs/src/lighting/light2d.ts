@@ -26,11 +26,60 @@ import type WebGLRenderer from "../video/webgl/webgl_renderer.js";
  * allocation, no renderer reference held.
  * @category Lighting
  * @see stage.lights
+ * @see [Lights example](https://melonjs.github.io/melonJS/examples/#/lights) — several coloured lights over a night scene
+ * @see [Normal Map example](https://melonjs.github.io/melonJS/examples/#/normal-map) — per-pixel lighting and specular highlights
+ * @see [SpriteIlluminator example](https://melonjs.github.io/melonJS/examples/#/sprite-illuminator) — an authored normal-map workflow
+ * @example
+ * // A soft glowing spot, the simplest case. Add it like any renderable;
+ * // it registers itself with the active Stage on activation.
+ * const torch = new Light2d(x, y, 160, 160, "#ffcc88", 0.9);
+ * app.world.addChild(torch);
+ *
+ * // darkness for it to cut through (on your Stage)
+ * this.ambientLight.parseCSS("#000000d0");
+ * @example
+ * // Per-pixel lighting: the sprite reacts to the light's DIRECTION, not
+ * // just its distance, because the normal map says which way each texel
+ * // faces. `shininess` adds a highlight that slides as the light moves.
+ * await loader.preload([
+ *     { name: "crate",   type: "image", src: "data/img/crate.png" },
+ *     { name: "crate_n", type: "image", src: "data/img/crate_n.png" },
+ * ]);
+ *
+ * const crate = new Sprite(x, y, {
+ *     image: "crate",
+ *     normalMap: "crate_n",   // enables per-pixel lighting on this sprite
+ *     shininess: 48,          // 0 (the default) is matte, no highlight
+ * });
+ * app.world.addChild(crate);
+ *
+ * const lamp = new Light2d(x, y, 300, 300, "#ffffff", 1.2);
+ * // the light itself stays invisible — only its EFFECT on the crate shows
+ * lamp.illuminationOnly = true;
+ * app.world.addChild(lamp);
+ *
+ * // unlit areas are pure black without this (on your Stage)
+ * this.ambientLightingColor.setColor(40, 40, 50);
+ * @example
+ * // Several lights at once: each contributes its own diffuse shading AND
+ * // its own coloured highlight, so a normal-mapped sprite between a warm
+ * // and a cool source carries two distinct glints.
+ * app.world.addChild(new Light2d(200, 150, 260, 260, "#ffb266", 1.0));
+ * app.world.addChild(new Light2d(520, 320, 260, 260, "#66b2ff", 1.0));
+ * @example
+ * // Parented to a renderable, so it follows through the transform chain
+ * const player = new Sprite(x, y, { image: "player" });
+ * const halo = new Light2d(0, 0, 120, 120, "#fff2cc", 0.8);
+ * player.addChild(halo);
  */
 export default class Light2d extends Renderable {
 	/**
-	 * the color of the light
+	 * the color of the light. A normal-mapped sprite's diffuse shading AND
+	 * its specular highlight both take this colour, so a warm lamp gives a
+	 * warm glint.
 	 * @default "#FFF"
+	 * @example
+	 * light.color.parseCSS("#ff8844");
 	 */
 	color: Color;
 
@@ -41,8 +90,12 @@ export default class Light2d extends Renderable {
 	radiusY: number;
 
 	/**
-	 * The intensity of the light
+	 * The intensity of the light. Scales both the gradient's inner alpha and
+	 * the per-pixel shading a normal-mapped sprite receives from it.
 	 * @default 0.7
+	 * @example
+	 * // pulse a torch
+	 * torch.intensity = 0.8 + Math.sin(time * 0.01) * 0.15;
 	 */
 	intensity: number;
 
@@ -64,6 +117,12 @@ export default class Light2d extends Renderable {
 	 *
 	 * Default `false`, preserving the legacy "soft glowing spot" behavior.
 	 * @default false
+	 * @example
+	 * // a logical light source: it shades normal-mapped sprites but draws
+	 * // no glow of its own, so you see the effect and not the lamp
+	 * const sun = new Light2d(x, y, 900, 900, "#ffffff", 1.5);
+	 * sun.illuminationOnly = true;
+	 * app.world.addChild(sun);
 	 */
 	illuminationOnly: boolean;
 
@@ -81,6 +140,13 @@ export default class Light2d extends Renderable {
 	 *
 	 * Named `lightHeight` (not just `height`) to avoid colliding with the
 	 * bbox-height getter Light2d inherits from `Rect`.
+	 * @example
+	 * // grazing light: long shadows across the normal map's detail, good
+	 * // for showing off surface relief
+	 * light.lightHeight = light.radiusX * 0.02;
+	 *
+	 * // head-on: flatter, more even coverage of the lit hemisphere
+	 * light.lightHeight = light.radiusX * 0.4;
 	 */
 	lightHeight: number;
 
