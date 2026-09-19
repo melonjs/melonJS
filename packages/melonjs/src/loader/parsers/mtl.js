@@ -21,10 +21,12 @@ const SUPPORTED_PROPS = new Set([
 	"norm",
 	"Pr",
 	"Pm",
-	// ignored but harmless
+	// read onto the material but never consulted while shading — see the
+	// material record below for why each one stays out of the lit path
 	"Ka",
-	"Ni",
 	"illum",
+	// ignored but harmless
+	"Ni",
 ]);
 
 // unsupported texture maps (would need multi-texture or shader changes)
@@ -36,6 +38,14 @@ const UNSUPPORTED_MAPS = new Set([
 	"map_refl",
 	"refl",
 	"disp",
+	// The PBR extension's texture maps. Their SCALARS (`Pr` / `Pm`) are read
+	// and approximated onto the existing shading terms; the maps are not,
+	// because sampling roughness or metalness per texel only pays off against
+	// a genuine PBR model and this is a stylized half-Lambert one. Listed here
+	// rather than left to fall through: they are declined, not unrecognised,
+	// and an exporter writing them deserves to be told which.
+	"map_Pr",
+	"map_Pm",
 ]);
 
 // Option flags a texture-map line may carry before the filename. The format
@@ -107,8 +117,13 @@ function mapFilename(parts) {
  * (opacity/transparency).
  *
  * Limitations:
- * - Ambient (`Ka`), optical density (`Ni`) and illumination model (`illum`) are parsed but ignored
- * - Specular maps (`map_Ks`) and other texture maps are not supported
+ * - Ambient (`Ka`) and the illumination model (`illum`) are read onto the
+ *   material and readable from user code, but take no part in shading: `Ka`
+ *   would fight the engine's own ambient light, and `illum` describes a
+ *   fixed-function pipeline this renderer does not have
+ * - Optical density (`Ni`) is parsed and ignored
+ * - Specular maps (`map_Ks`), the PBR extension's `map_Pr` / `map_Pm`, and
+ *   other texture maps are not supported; each warns once naming itself
  *
  * @param {string} text - raw MTL file contents
  * @param {string} basePath - base URL path for resolving texture references
@@ -163,6 +178,28 @@ export function parseMTL(text, basePath) {
 					// means "mirror-smooth" for Pr and "non-metal" for Pm
 					Pr: null,
 					Pm: null,
+					// Ambient colour and illumination model: both parsed so an
+					// authored value is not silently dropped, and both
+					// deliberately left out of shading.
+					//
+					// `Ka` predates scene-wide ambient lighting. Adding it to
+					// the lit path would give two ambient contributions
+					// fighting each other, since `Stage.ambientLightingColor`
+					// already provides one.
+					//
+					// `illum` enumerates fixed-function behaviours from the
+					// Phong era — 0 is colour on / ambient off, 1 adds ambient,
+					// 2 adds a highlight, and the higher values describe
+					// reflection and raytrace modes. It describes a pipeline
+					// this renderer does not have, and exporters write it
+					// inconsistently, so it is reported rather than obeyed.
+					//
+					// `null` rather than a default, for the same reason `Pr`
+					// and `Pm` use it: absent must stay distinguishable from an
+					// authored value, and `illum 0` and `Ka 0 0 0` are both
+					// meaningful things to have written.
+					Ka: null,
+					illum: null,
 					d: 1.0,
 					map_Kd: null,
 					map_d: null,
@@ -190,6 +227,24 @@ export function parseMTL(text, basePath) {
 						parseFloat(parts[2]),
 						parseFloat(parts[3]),
 					];
+				}
+				break;
+
+			case "Ka":
+				// ambient colour, read but not shaded with
+				if (current) {
+					current.Ka = [
+						parseFloat(parts[1]),
+						parseFloat(parts[2]),
+						parseFloat(parts[3]),
+					];
+				}
+				break;
+
+			case "illum":
+				// illumination model, read but not obeyed
+				if (current) {
+					current.illum = parseInt(parts[1], 10);
 				}
 				break;
 
