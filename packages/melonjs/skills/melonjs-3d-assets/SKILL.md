@@ -265,8 +265,20 @@ MTL contributes `Kd` (diffuse tint), `d` / `Tr` (opacity), `Ke` (emissive),
 map — needs `lit: true`, and the tangent frame is derived per fragment, so the
 model needs no tangent attribute). All three normal-map spellings are read as
 normal maps even though the format specifies two of them as height maps, which
-is what every exporter actually writes. Specular *maps* (`map_Ks`) are not
-supported and warn.
+is what every exporter actually writes. Specular *maps* (`map_Ks`) and the PBR
+extension's `map_Pr` / `map_Pm` are not supported and warn — the `Pr` / `Pm`
+*scalars* are read and approximated onto the specular terms, the maps would
+need a real PBR model.
+
+`Ka` (ambient) and `illum` (illumination model) are read onto the material and
+readable from `loader.getMTL(name)`, but take no part in shading. That is
+deliberate rather than pending: `Ka` predates scene-wide ambient light and would
+fight `Stage.ambientLightingColor`, and `illum` enumerates fixed-function
+behaviours this renderer has no equivalent for. In particular an `illum` of 0 or
+1 nominally means "no specular", and the engine does **not** honour that — `Ns`
+stays the only gate, so a model that renders correctly today is not restyled by
+a field its exporter wrote inconsistently.
+
 `loader.getOBJ(name)` and `loader.getMTL(name)` return the parsed data if you
 want it directly. OBJ has no scene graph, no lights, no animation — use glTF for
 anything beyond a single static model.
