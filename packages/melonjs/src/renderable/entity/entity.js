@@ -181,6 +181,7 @@ export default class Entity extends Renderable {
 	 * @param {string} [settings.type] - object type
 	 * @param {number} [settings.collisionMask] - Mask collision detection for this object
 	 * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - the initial list of collision shapes (usually populated through Tiled)
+	 * @param {object} [settings.bodyDef] - adapter-portable body definition, see {@link Renderable#bodyDef}. Its shapes resolve when the entity joins the world, so they cannot size it: pass `settings.width` / `settings.height`
 	 * @deprecated since 18.1.0 — see the class-level documentation for migration examples
 	 */
 	constructor(x, y, settings) {
@@ -260,6 +261,11 @@ export default class Entity extends Renderable {
 		this.body = new Body(this, settings.shapes, () => {
 			return this.onBodyUpdate();
 		});
+
+		// consumed when this entity joins a container; see Renderable#bodyDef
+		if (typeof settings.bodyDef !== "undefined") {
+			this.bodyDef = settings.bodyDef;
+		}
 
 		// resize the entity if required
 		if (this.width === 0 && this.height === 0) {

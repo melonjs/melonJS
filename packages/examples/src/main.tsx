@@ -193,6 +193,11 @@ const ExamplePoolMatter = lazy(() =>
 		default: m.ExamplePoolMatter,
 	})),
 );
+const ExamplePhysicsShapes = lazy(() =>
+	import("./examples/physicsShapes/ExamplePhysicsShapes").then((m) => ({
+		default: m.ExamplePhysicsShapes,
+	})),
+);
 const ExamplePlinkoPlanck = lazy(() =>
 	import("./examples/plinko-planck/ExamplePlinko").then((m) => ({
 		default: m.ExamplePlinkoPlanck,
@@ -547,6 +552,14 @@ const examples: {
 		sourceDir: "pool-matter",
 		description:
 			"Top-down 8-ball pool driven by @melonjs/matter-adapter — drag-to-aim, release-to-strike.",
+	},
+	{
+		component: <ExamplePhysicsShapes />,
+		label: "Physics Shapes",
+		path: "physics-shapes",
+		sourceDir: "physicsShapes",
+		description:
+			"Collision shapes from a shape editor, the same body definition on every physics backend.",
 	},
 	{
 		component: <ExamplePlinkoPlanck />,

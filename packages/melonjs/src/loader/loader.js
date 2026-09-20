@@ -389,6 +389,9 @@ const alwaysRelative = () => {
  *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"}
  *   // JSON file (used for texturePacker)
  *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+ *   // JSON file holding collision shapes drawn in a physics-shape editor,
+ *   // named by a body definition as `{ shapes: "shapes", id: <body name> }`
+ *   {name: "shapes", type: "json", src: "data/physics/shapes.json"}
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
  *   // Font Face
@@ -476,6 +479,9 @@ export function setParser(type, parserFn) {
  *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
  *   // JSON file (used for texturePacker)
  *   {name: "texture", type: "json", src: "data/gfx/texture.json"},
+ *   // JSON file holding collision shapes drawn in a physics-shape editor,
+ *   // named by a body definition as `{ shapes: "shapes", id: <body name> }`
+ *   {name: "shapes", type: "json", src: "data/physics/shapes.json"},
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
  *   // Font Face

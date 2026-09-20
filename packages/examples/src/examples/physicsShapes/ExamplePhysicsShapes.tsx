@@ -1,0 +1,327 @@
+/**
+ * melonJS — collision shapes from a shape editor, on every physics backend.
+ * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * See `packages/examples/LICENSE.md` for full license + asset credits.
+ *
+ * One shape file, one body definition, three solvers. The buttons along the
+ * top switch backend; nothing else in the scene changes when they do.
+ *
+ * Every body is drawn from what the adapter reports as its ACTUAL collision
+ * geometry (`world.adapter.getBodyShapes`) rather than from a sprite, so what
+ * is on screen is what collides — including each solver's own approximations.
+ */
+import { MatterAdapter } from "@melonjs/matter-adapter";
+import { PlanckAdapter } from "@melonjs/planck-adapter";
+import {
+	Application,
+	type CanvasRenderer,
+	game,
+	loader,
+	Rect,
+	Renderable,
+	RoundRect,
+	Stage,
+	state,
+	Text,
+	timer,
+	UIBaseElement,
+	video,
+	type WebGLRenderer,
+} from "melonjs";
+import { createExampleComponent } from "../utils";
+
+const VIEWPORT_W = 960;
+const VIEWPORT_H = 640;
+
+const PARAMS = new URLSearchParams(globalThis.location.search);
+const BACKEND = PARAMS.get("physics") ?? "matter";
+
+/**
+ * The backends, and the honest one-line version of what each one does with a
+ * body once it has it. The built-in solver looking different here is the point
+ * of the example rather than a fault in it.
+ */
+const BACKENDS = [
+	{
+		id: "builtin",
+		label: "built-in",
+		note: "arcade SAT, one push-out per contact per frame: hitboxes stay upright and stacked bodies rest overlapping rather than settling. Use matter or planck for rigid-body stacking",
+	},
+	{
+		id: "matter",
+		label: "matter",
+		note: "full rigid body: compound shapes rotate and stack for real",
+	},
+	{
+		id: "planck",
+		label: "planck",
+		note: "full rigid body (Box2D): compound shapes rotate and stack for real",
+	},
+] as const;
+
+const ACTIVE = BACKENDS.find((b) => {
+	return b.id === BACKEND;
+});
+
+/** The bodies in the shape file, and how each one was authored. */
+const BODIES = [
+	{ id: "star", colour: "#ffd166", note: "6 convex pieces" },
+	{ id: "hook", colour: "#06d6a0", note: "3 pieces, as points" },
+	{ id: "cog", colour: "#ef476f", note: "circle + 4 polygons" },
+	{ id: "crate", colour: "#118ab2", note: "1 convex piece" },
+] as const;
+
+const INK = "#e8eaf2";
+const DIM = "#7c84a3";
+const PANEL = "#1b1f33";
+
+/**
+ * A body drawn from its own collision geometry.
+ *
+ * Two placement rules apply to any custom `draw()`, and both bite silently:
+ * the renderer is not pre-translated to the renderable's `pos`, and `preDraw`
+ * still applies the anchor offset even when `autoTransform` is off. So read
+ * `this.pos`, and zero the anchor.
+ *
+ * `autoTransform` is off deliberately: the shapes the adapter reports are
+ * already in their simulated orientation, so letting the renderable apply its
+ * own transform on top would turn everything twice.
+ */
+class ShapeBody extends Renderable {
+	readonly colour: string;
+
+	constructor(
+		x: number,
+		y: number,
+		size: number,
+		id: string,
+		colour: string,
+		still = false,
+	) {
+		super(x, y, size, size);
+		this.colour = colour;
+		this.anchorPoint.set(0, 0);
+		this.autoTransform = false;
+		this.isKinematic = false;
+		// the shape file, named by the key it was preloaded under, and the
+		// body to read out of it. Identical on all three backends.
+		this.bodyDef = {
+			type: still ? "static" : "dynamic",
+			shapes: "shapes",
+			id,
+		};
+	}
+
+	override update() {
+		// let anything that has fallen out of the world go
+		return this.pos.y < VIEWPORT_H + 400;
+	}
+
+	override draw(renderer: WebGLRenderer | CanvasRenderer) {
+		const shapes = game.world.adapter.getBodyShapes(this);
+		renderer.save();
+		renderer.translate(this.pos.x, this.pos.y);
+		renderer.setColor(`${this.colour}3d`);
+		for (const shape of shapes) {
+			renderer.stroke(shape, true);
+		}
+		renderer.setColor(this.colour);
+		renderer.lineWidth = 2;
+		for (const shape of shapes) {
+			renderer.stroke(shape, false);
+		}
+		renderer.restore();
+	}
+}
+
+/** A static wall, authored in code rather than imported. */
+class Wall extends Renderable {
+	constructor(x: number, y: number, w: number, h: number) {
+		super(x, y, w, h);
+		this.anchorPoint.set(0, 0);
+		this.autoTransform = false;
+		this.isKinematic = false;
+		// authored shapes and imported ones live side by side
+		this.bodyDef = { type: "static", shapes: [new Rect(0, 0, w, h)] };
+	}
+
+	override draw(renderer: WebGLRenderer | CanvasRenderer) {
+		renderer.setColor("#39406b");
+		renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+	}
+}
+
+/**
+ * One backend button. `UIBaseElement` carries the pointer plumbing, so this
+ * only has to say what it looks like and what a click means.
+ */
+class BackendButton extends UIBaseElement {
+	private readonly active: boolean;
+	private readonly target: string;
+
+	constructor(x: number, y: number, label: string, target: string) {
+		super(x, y, 108, 30);
+		this.target = target;
+		this.active = target === BACKEND;
+		this.anchorPoint.set(0, 0);
+
+		const text = new Text(54, 15, {
+			font: "monospace",
+			size: 14,
+			fillStyle: this.active ? "#10121c" : INK,
+			textAlign: "center",
+			textBaseline: "middle",
+			text: label,
+		});
+		text.floating = false;
+		this.addChild(text);
+	}
+
+	override onClick() {
+		// the adapter is chosen when the Application is constructed, so
+		// switching one means booting the example again
+		globalThis.location.search = `?physics=${this.target}`;
+		return true;
+	}
+
+	override draw(renderer: WebGLRenderer | CanvasRenderer) {
+		const pill = new RoundRect(
+			this.pos.x,
+			this.pos.y,
+			this.width,
+			this.height,
+			8,
+		);
+		renderer.setColor(this.active ? INK : PANEL);
+		renderer.stroke(pill, true);
+		renderer.setColor(this.active ? INK : "#39406b");
+		renderer.lineWidth = 1;
+		renderer.stroke(pill, false);
+		super.draw(renderer);
+	}
+}
+
+class PlayScreen extends Stage {
+	private spawned = 0;
+
+	override onResetEvent() {
+		game.world.backgroundColor.parseCSS("#10121c");
+
+		game.world.addChild(new Wall(0, VIEWPORT_H - 40, VIEWPORT_W, 40), 10);
+		game.world.addChild(new Wall(0, 0, 24, VIEWPORT_H), 10);
+		game.world.addChild(new Wall(VIEWPORT_W - 24, 0, 24, VIEWPORT_H), 10);
+		// a shelf for the specimens, and a shallow funnel so the pile builds
+		// where it can be seen
+		game.world.addChild(new Wall(24, 236, VIEWPORT_W - 48, 10), 10);
+		game.world.addChild(new Wall(24, VIEWPORT_H - 150, 130, 16), 10);
+		game.world.addChild(
+			new Wall(VIEWPORT_W - 154, VIEWPORT_H - 150, 130, 16),
+			10,
+		);
+
+		this.addHeader();
+		this.addSpecimens();
+
+		// then drop a pile of the same bodies onto the floor. Deterministic
+		// columns rather than a random x: bodies dropped on top of each other
+		// would be born overlapping, which no solver is required to untangle.
+		const columns = 5;
+		timer.setInterval(() => {
+			if (this.spawned >= 25) {
+				return;
+			}
+			const body = BODIES[this.spawned % BODIES.length];
+			const column = this.spawned % columns;
+			const x = 230 + column * ((VIEWPORT_W - 560) / (columns - 1));
+			const shape = new ShapeBody(x, 290, 80, body.id, body.colour);
+			game.world.addChild(shape, 20);
+			// drop each one already tilted, so a shape landing on a single
+			// point topples off it instead of balancing there
+			shape.body.setAngle?.(((this.spawned * 37) % 360) * (Math.PI / 180));
+			this.spawned++;
+		}, 460);
+	}
+
+	/** Title, backend buttons, and what the running backend does. */
+	private addHeader() {
+		const title = new Text(40, 16, {
+			font: "monospace",
+			size: 15,
+			fillStyle: INK,
+			text: "One shape file, one bodyDef, three physics backends",
+		});
+		title.isKinematic = true;
+		game.world.addChild(title, 100);
+
+		BACKENDS.forEach((backend, i) => {
+			game.world.addChild(
+				new BackendButton(40 + i * 120, 46, backend.label, backend.id),
+				100,
+			);
+		});
+
+		const note = new Text(408, 50, {
+			font: "monospace",
+			size: 12,
+			fillStyle: DIM,
+			text: ACTIVE?.note ?? "",
+			wordWrapWidth: VIEWPORT_W - 448,
+		});
+		note.isKinematic = true;
+		game.world.addChild(note, 100);
+	}
+
+	/** One still specimen of each body, so the geometry can be read. */
+	private addSpecimens() {
+		BODIES.forEach((body, i) => {
+			const x = 84 + i * 214;
+			game.world.addChild(
+				new ShapeBody(x, 130, 80, body.id, body.colour, true),
+				20,
+			);
+			const label = new Text(x, 200, {
+				font: "monospace",
+				size: 12,
+				fillStyle: body.colour,
+				text: `${body.id}: ${body.note}`,
+				wordWrapWidth: 200,
+			});
+			label.isKinematic = true;
+			game.world.addChild(label, 100);
+		});
+	}
+}
+
+const createGame = async () => {
+	const scaleTarget = document.getElementById("screen") ?? undefined;
+
+	// Each adapter's own default gravity, deliberately. They do not share a
+	// unit — planck takes pixels per second² while matter takes its own scaled
+	// figure — so passing one number to both compares nothing.
+	const physic =
+		BACKEND === "planck"
+			? new PlanckAdapter()
+			: BACKEND === "matter"
+				? new MatterAdapter()
+				: undefined;
+
+	const app = new Application(VIEWPORT_W, VIEWPORT_H, {
+		parent: "screen",
+		scaleMethod: "fit",
+		scaleTarget,
+		renderer: video.AUTO,
+		antiAlias: true,
+		...(physic ? { physic } : {}),
+	});
+	await app.init();
+
+	await loader.preload([
+		// the shape editor's export, preloaded like any other JSON
+		{ name: "shapes", type: "json", src: "assets/physicsShapes/shapes.json" },
+	]);
+
+	state.set(state.PLAY, new PlayScreen());
+	state.change(state.PLAY);
+};
+
+export const ExamplePhysicsShapes = createExampleComponent(createGame);

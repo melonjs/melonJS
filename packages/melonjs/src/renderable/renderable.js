@@ -8,7 +8,6 @@ import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector3dPool } from "../math/vector3d.ts";
 import { boundsPool } from "./../physics/bounds.ts";
 import Body from "./../physics/builtin/body.js";
-import pool from "../system/legacy_pool.js";
 
 /**
  * additional import for TypeScript
@@ -161,9 +160,36 @@ export default class Renderable extends Rect {
 		 * Typical fields: `type` (`"static"`/`"dynamic"`/`"kinematic"`),
 		 * `shapes`, `collisionType`, `collisionMask`, `restitution`,
 		 * `frictionAir`, `density`, `gravityScale`, `isSensor`,
-		 * `maxVelocity`, `fixedRotation`. See {@link BodyDefinition}.
+		 * `maxVelocity`, `fixedRotation`. See {@link BodyDefinitionInit}.
+		 *
+		 * `shapes` is normally a list of collision shapes, but it can also
+		 * name a collision shape file preloaded as JSON, paired with `id`
+		 * naming the body to read out of it. The file is resolved before any
+		 * adapter sees the definition, so the same one works unchanged on
+		 * every backend.
 		 * @type {object|undefined}
 		 * @default undefined
+		 * @example
+		 * // a shape authored in code
+		 * this.bodyDef = {
+		 *     type: "dynamic",
+		 *     shapes: [new me.Rect(0, 0, this.width, this.height)],
+		 * };
+		 *
+		 * @example
+		 * // shapes drawn in a physics-shape editor, preloaded as JSON with
+		 * // { name: "shapes", type: "json", src: "data/physics/shapes.json" }
+		 * this.bodyDef = { type: "dynamic", shapes: "shapes", id: "hotdog" };
+		 *
+		 * // the density, friction and bounce the shapes were authored with
+		 * // come with them, unless the definition states otherwise (each is
+		 * // honoured by whichever backends support it):
+		 * this.bodyDef = {
+		 *     type: "dynamic",
+		 *     shapes: "shapes",
+		 *     id: "hotdog",
+		 *     restitution: 0.9, // wins over whatever the file carries
+		 * };
 		 */
 		this.bodyDef = undefined;
 
@@ -1315,7 +1341,20 @@ export default class Renderable extends Rect {
 		this.onVisibilityChange = undefined;
 
 		if (this.mask) {
-			pool.push(this.mask);
+			// Dropped, not recycled. A mask is whatever the GAME handed us
+			// (`Rect`, `RoundRect`, `Polygon`, `Line` or `Ellipse`), and a
+			// renderable has no claim on an object it did not allocate: the
+			// same instance may still be masking something else, so returning
+			// it to a pool would hand a live shape to the next caller.
+			//
+			// This used to be `pool.push(this.mask)`, which THREW for every
+			// one of those types, because the legacy pool only knows classes
+			// registered with it and no geometry ever is. So the recycling it
+			// looked like it was doing had never once happened, while
+			// `destroy()` threw for any renderable carrying a mask at all.
+			// `boundsPool.release` above has already run by this point, so the
+			// throw left the bounds recycled, skipped the tint release below,
+			// and escaped into whatever was tearing the scene down.
 			this.mask = undefined;
 		}
 

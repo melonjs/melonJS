@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { roundedRectanglePool } from "../src/geometries/roundrect.ts";
 import { pool, Rect, RoundRect, Vector2d } from "../src/index.js";
 
 describe("Shape : RoundRect", () => {
@@ -521,6 +522,53 @@ describe("Shape : RoundRect", () => {
 			expect(rr.contains(1, 1)).toEqual(false);
 			// edge center should be inside
 			expect(rr.contains(100, 1)).toEqual(true);
+		});
+	});
+
+	describe("pooling", () => {
+		it("recycles instances rather than allocating every time", () => {
+			const seen = new Set<RoundRect>();
+			for (let i = 0; i < 10; i++) {
+				const rr = roundedRectanglePool.get(i, 0, 20, 10, 4);
+				seen.add(rr);
+				roundedRectanglePool.release(rr);
+			}
+			expect(seen.size).toBeLessThan(10);
+		});
+
+		it("resets every field a recycled instance carries, radius included", () => {
+			// the radius is the field a plain Polygon has no equivalent of, so
+			// it is the one a reset most easily forgets: a recycled corner
+			// radius would silently follow its previous owner around
+			const first = roundedRectanglePool.get(5, 6, 40, 30, 12);
+			roundedRectanglePool.release(first);
+
+			const second = roundedRectanglePool.get(1, 2, 20, 10, 3);
+			expect(second.pos.x).toEqual(1);
+			expect(second.pos.y).toEqual(2);
+			expect(second.width).toEqual(20);
+			expect(second.height).toEqual(10);
+			expect(second.radius).toEqual(3);
+			roundedRectanglePool.release(second);
+		});
+
+		it("falls back to the default radius when none is given", () => {
+			// sized so the default is NOT clamped: the setter caps the radius
+			// at half the shorter side, which for a small box can land on the
+			// very value a stale instance was carrying and hide a bad reset
+			const previous = roundedRectanglePool.get(0, 0, 100, 80, 7);
+			roundedRectanglePool.release(previous);
+
+			const recycled = roundedRectanglePool.get(0, 0, 100, 80);
+			expect(recycled.radius).not.toEqual(7);
+			expect(recycled.radius).toEqual(new RoundRect(0, 0, 100, 80).radius);
+			roundedRectanglePool.release(recycled);
+		});
+
+		it("still clamps a recycled radius to half the shorter side", () => {
+			const rr = roundedRectanglePool.get(0, 0, 40, 30, 50);
+			expect(rr.radius).toEqual(15);
+			roundedRectanglePool.release(rr);
 		});
 	});
 });

@@ -4,13 +4,15 @@ import { Line, linePool } from "../../geometries/line.ts";
 import { Point, pointPool } from "../../geometries/point.ts";
 import { Polygon, polygonPool } from "../../geometries/polygon.ts";
 import { Rect } from "../../geometries/rectangle.ts";
+import { RoundRect, roundedRectanglePool } from "../../geometries/roundrect.ts";
+import { warning } from "../../lang/console.js";
 import { clamp } from "../../math/math.ts";
 import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
-import pool from "../../system/legacy_pool.js";
 import timer from "../../system/timer.ts";
 import { remove } from "../../utils/array.ts";
 import { Bounds, boundsPool } from "../bounds.ts";
 import { collision } from "../collision.js";
+import { isShapeEntry } from "../physicseditor.js";
 
 /**
  * @import Entity from "../../renderable/entity/entity.js";
@@ -382,7 +384,28 @@ export default class Body {
 
 		// parses the given shapes array and add them
 		if (typeof shapes !== "undefined") {
+			if (typeof shapes === "string") {
+				// a loader key belongs on `bodyDef`, where the container
+				// resolves it. Reaching here it used to be iterated as a
+				// string: one `addShape` per CHARACTER, each falling through
+				// to `_fromJSON` and listing the character indices as
+				// candidate body names.
+				throw new Error(
+					`melonJS: new Body(renderable, "${shapes}") cannot take a loader key. Set \`renderable.bodyDef = { type, shapes: "${shapes}", id: <body name> }\` instead, which resolves the asset and works on the builtin, matter and planck backends alike.`,
+				);
+			}
 			if (Array.isArray(shapes)) {
+				// An exported shape list reaching here used to build a body
+				// with NO shapes at all: each entry was handed to `addShape`
+				// individually, fell through to `fromJSON`, and that read
+				// `.length` off a single object and skipped its loop. Silent,
+				// and on the default backend. Say so instead, and name the
+				// path that works on every backend.
+				if (shapes.some(isShapeEntry)) {
+					throw new Error(
+						"melonJS: new Body(renderable, shapes) cannot take an exported shape list. Set `renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }` instead, which works on the builtin, matter and planck backends alike.",
+					);
+				}
 				for (let s = 0; s < shapes.length; s++) {
 					this.addShape(shapes[s]);
 				}
@@ -768,8 +791,12 @@ export default class Body {
 	 * torso.isTrigger = true;      // detect hits, never get pushed by them
 	 * this.body.addShape(feet);
 	 * this.body.addShape(torso);
-	 * // add a shape from a JSON object
-	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
+	 * @example
+	 * // an exported shape list is DEPRECATED here since 20.7.0: it reaches
+	 * // the builtin solver only. Name the asset from a body definition
+	 * // instead, which every backend understands.
+	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);   // warns
+	 * this.bodyDef = { type: "dynamic", shapes: "shapesdef", id: "banana" };
 	 */
 	addShape(shape) {
 		// The object that ends up in `this.shapes` is not always the one passed
@@ -835,10 +862,18 @@ export default class Body {
 			this.bounds.addBounds(shape.getBounds());
 			this.hasDepth = true;
 		} else {
-			// JSON object — `fromJSON` re-enters `addShape` per shape it
-			// builds, so normalization happens there rather than here
+			// JSON object — `_fromJSON` re-enters `addShape` per shape it
+			// builds, so normalization happens there rather than here.
+			// Deprecated with `fromJSON`: the two are one path with two doors,
+			// so retiring one necessarily retires the other. The shape form of
+			// `addShape` is untouched.
+			warning(
+				"Body#addShape with an exported shape list",
+				"renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }, which works on the builtin, matter and planck backends alike",
+				"20.7.0",
+			);
 			stored = undefined;
-			this.fromJSON(shape);
+			this._fromJSON(shape);
 		}
 
 		if (stored !== undefined) {
@@ -911,19 +946,15 @@ export default class Body {
 	}
 
 	/**
-	 * add collision mesh based on a JSON object
-	 * (this will also apply any physic properties defined in the given JSON file)
-	 * @param {object} json - a JSON object as exported from a Physics Editor tool
-	 * @param {string} [id] - an optional shape identifier within the given the json object
-	 * @see https://www.codeandweb.com/physicseditor
+	 * The shape-building half of {@link Body#fromJSON}, without the
+	 * deprecation notice — `addShape` routes through it for the same reason.
+	 * @param {object} json - a shape list as exported by a physics-shape editor
+	 * @param {string} [id] - an optional body identifier within that object
 	 * @returns {number} how many shapes were added to the body
-	 * @example
-	 * // define the body based on the banana shape
-	 * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
-	 * // or ...
-	 * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
+	 * @ignore
+	 * @internal
 	 */
-	fromJSON(json, id) {
+	_fromJSON(json, id) {
 		let data = json;
 
 		if (typeof id !== "undefined") {
@@ -937,6 +968,21 @@ export default class Body {
 			);
 		}
 
+		if (!Array.isArray(data)) {
+			// a multi-body file with no `id` used to read `.length` off the
+			// whole object, get undefined, and add nothing at all
+			if (isShapeEntry(data)) {
+				// one fixture rather than a list of them. Listing its own field
+				// names as candidate body ids, which the message below would
+				// do, sends the reader somewhere there is nothing to find.
+				throw new Error(
+					"melonJS: Body#fromJSON — the given object is a single exported fixture, not a list of them. Pass the body's fixture list, or set `renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }`, which works on every backend.",
+				);
+			}
+			throw new Error(
+				`melonJS: Body#fromJSON — the given object is a map of body names, so an id is required. Available: ${Object.keys(data).join(", ")}`,
+			);
+		}
 		if (data.length) {
 			// go through all shapes and add them to the body
 			for (let i = 0; i < data.length; i++) {
@@ -1401,30 +1447,32 @@ export default class Body {
 				pointPool.release(shape);
 			} else if (shape instanceof Line) {
 				linePool.release(shape);
+			} else if (shape instanceof RoundRect) {
+				// BEFORE the Polygon branch, like Line above: `RoundRect`
+				// extends `Polygon` too, and `addShape` stores it as-is rather
+				// than converting it the way it converts a `Rect`. Caught by
+				// the Polygon branch it went back to `polygonPool`, so the next
+				// `polygonPool.get()` handed out a RoundRect wearing a
+				// Polygon's name, carrying its radius and its overrides.
+				roundedRectanglePool.release(shape);
 			} else if (shape instanceof Polygon) {
 				polygonPool.release(shape);
 			} else if (shape instanceof Ellipse) {
-				// Same trap the Box3d branch below documents: `addShape`
-				// accepts an Ellipse, but without a branch here it reaches the
-				// legacy `pool.push`, which THROWS for any class never
-				// `pool.register`ed. `boundsPool.release` has already run by
-				// then, so the throw aborts `destroy` partway and leaves the
-				// body holding a recycled Bounds — which dies later somewhere
-				// unrelated. Destroying a body with an ellipse collider threw
-				// on every version that had one.
 				ellipsePool.release(shape);
 			} else if (shape instanceof Box3d) {
-				// Box3d has its own pool. Without this branch it falls through
-				// to the legacy `pool.push`, which THROWS for any class that
-				// was never `pool.register`ed — and because `boundsPool.release`
-				// above has already run, the throw aborts `destroy` partway and
-				// leaves the body holding a recycled Bounds. The next
-				// broadphase insert then reads `bounds.min.x` off it and dies
-				// somewhere completely unrelated.
 				box3dPool.release(shape);
-			} else {
-				pool.push(shape);
 			}
+			// No fallback branch, deliberately. `addShape` can only ever store
+			// a Polygon (Line, RoundRect and user subclasses included), an
+			// Ellipse, a Point or a Box3d: a Rect and a Bounds are converted
+			// on the way in, and anything else is refused there rather than
+			// stored. Every one of those is caught above, so an `else` here
+			// would be unreachable. It used to hand the shape to the legacy
+			// `pool.push`, which THROWS for any class never `pool.register`ed,
+			// and since `boundsPool.release` has already run by this point the
+			// throw aborted `destroy` partway and left the body holding a
+			// recycled Bounds that died somewhere unrelated. The Ellipse and
+			// Box3d branches above were each added to dodge exactly that.
 		});
 
 		// set to undefined

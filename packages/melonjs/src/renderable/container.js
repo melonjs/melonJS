@@ -1,5 +1,9 @@
 import { colorPool } from "../math/color.ts";
 import Body from "../physics/builtin/body.js";
+import {
+	needsShapeResolution,
+	resolveBodyDefinition,
+} from "../physics/physicseditor.js";
 import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, off, on } from "../system/event.ts";
 import pool from "../system/legacy_pool.js";
@@ -135,6 +139,19 @@ function captureDepthOffset(container) {
 }
 
 /**
+ * A renderable named for an error message, preferring whatever the game
+ * called it over the class name.
+ * @param {object} child - the renderable
+ * @returns {string} something a developer can find in their own code
+ * @ignore
+ * @internal
+ */
+function describeChild(child) {
+	const type = child.constructor?.name ?? "Renderable";
+	return child.name ? `${type} '${child.name}'` : type;
+}
+
+/**
  * Register a child's physics body with the root world container when the
  * child is added to the tree. Two paths coexist:
  *  - `child.bodyDef`: declarative {@link BodyDefinition}, routed through
@@ -151,10 +168,18 @@ function captureDepthOffset(container) {
  */
 function registerChildBody(child, worldContainer) {
 	if (child.bodyDef) {
+		// The one place a body definition is normalized, and deliberately so:
+		// the adapters each implement `PhysicsAdapter` directly with no shared
+		// base, so anything done here instead of there is written once rather
+		// than three times, and every adapter receives real collision shapes
+		// without knowing the exported format exists.
+		const def = needsShapeResolution(child.bodyDef.shapes)
+			? resolveBodyDefinition(child.bodyDef, describeChild(child))
+			: child.bodyDef;
 		// adapter.addBody handles both cases: builds a fresh Body when
 		// none exists, or re-applies def fields onto the existing one
 		// (legacy-bridge path) — see BuiltinAdapter.addBody.
-		worldContainer.adapter.addBody(child, child.bodyDef);
+		worldContainer.adapter.addBody(child, def);
 	} else if (child.body instanceof Body) {
 		worldContainer.addBody(child.body);
 	}

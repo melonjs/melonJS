@@ -290,7 +290,12 @@ export interface PhysicsBody {
 export interface BodyDefinition {
 	/** simulation kind */
 	type: BodyType;
-	/** collision shapes (one or more — compound body support) */
+	/**
+	 * collision shapes (one or more — compound body support). Already
+	 * resolved: a definition naming a collision shape file is a
+	 * {@link BodyDefinitionInit}, and the engine resolves it before any
+	 * adapter is handed it.
+	 */
 	shapes: BodyShape[];
 
 	/** mass per unit area; defaults are adapter-specific */
@@ -354,6 +359,113 @@ export interface BodyDefinition {
 
 	/** arbitrary user data attached to the body */
 	userData?: unknown;
+}
+
+/**
+ * One fixture of a collision shape file, as exported by a physics-shape
+ * editor. Geometry is either a polygon outline or a circle, and the material
+ * values beside it are custom parameters the exporter template declares rather
+ * than guaranteed fields, so the spelling varies between templates. melonJS
+ * reads the common ones.
+ *
+ * Reached through {@link BodyDefinitionInit.shapes}; never written by hand in
+ * the usual case, where `shapes` names the preloaded file instead.
+ */
+export interface ShapeEntry {
+	/** polygon outline as a flat `[x0, y0, x1, y1, …]` coordinate list */
+	shape?: number[];
+	/**
+	 * polygon outline as points. A concave outline is exported already
+	 * decomposed, so this is normally a list of convex pieces, each of which
+	 * becomes its own {@link Polygon}; a single outline is also read.
+	 */
+	vertices?: { x: number; y: number }[] | { x: number; y: number }[][];
+	/** circle geometry, becoming an {@link Ellipse} */
+	circle?: { x: number; y: number; radius: number };
+	/** circle radius, when the centre sits beside it rather than inside it */
+	radius?: number;
+	/** circle centre, paired with a sibling `radius` */
+	center?: { x: number; y: number };
+
+	/** mass per unit area */
+	density?: number;
+	/** surface friction during contact */
+	friction?: number;
+	/** bounciness; `restitution` is the other spelling */
+	bounce?: number;
+	/** bounciness; `bounce` is the other spelling */
+	restitution?: number;
+	/** the fixture reports collisions without a physical response */
+	isSensor?: boolean;
+
+	/**
+	 * Collision filtering, in melonJS's own names, for a file written or
+	 * adjusted by hand. These are {@link collision.types} values.
+	 *
+	 * The exporting tool's own `filter` block (`categoryBits` / `maskBits`,
+	 * in any spelling) is deliberately NOT read: those numbers live in that
+	 * tool's namespace, a template writes its defaults for every fixture
+	 * whether or not the author set anything, and its default category `1`
+	 * is melonJS's `PLAYER_OBJECT`. Importing them would silently tag a shape
+	 * as something it is not and stop it colliding. Set filtering on the body
+	 * definition instead.
+	 */
+	collisionType?: number;
+	/** collision filtering, in melonJS's own names. See above. */
+	collisionMask?: number;
+}
+
+/**
+ * A body definition as authored, before the engine resolves it.
+ *
+ * This is what {@link Renderable#bodyDef} takes. It is a
+ * {@link BodyDefinition} whose `shapes` may additionally name a collision
+ * shape file, which is resolved into real shapes when the renderable is added
+ * to a container — so every adapter receives the same
+ * {@link BodyDefinition}, and one definition works unchanged on the builtin,
+ * matter and planck backends alike.
+ * @example
+ * // preload the file the shape editor exported, like any other JSON
+ * { name: "shapes", type: "json", src: "data/physics/shapes.json" }
+ *
+ * // then name it, and the body inside it to use
+ * new Sprite(x, y, {
+ *     image: "hotdog",
+ *     bodyDef: { type: "dynamic", shapes: "shapes", id: "hotdog" },
+ * });
+ *
+ * // material values the file carries are applied unless the definition
+ * // states otherwise, so this body bounces at 0.9 whatever the file says
+ * { type: "dynamic", shapes: "shapes", id: "hotdog", restitution: 0.9 }
+ *
+ * // authored shapes still work, and the two can be mixed
+ * { type: "static", shapes: [new Rect(0, 0, 32, 32)] }
+ */
+export interface BodyDefinitionInit extends Omit<BodyDefinition, "shapes"> {
+	/**
+	 * The body's collision shapes, as any of:
+	 *
+	 * - real shapes, the usual case
+	 * - the name a collision shape file was preloaded under, paired with
+	 *   {@link BodyDefinitionInit.id}
+	 * - the exported fixtures themselves, for a file read by hand
+	 *
+	 * Shapes are OWNED by the body they are given to, and a rotating body
+	 * mutates them in place, so never share one array between two bodies.
+	 * Naming the file instead sidesteps this: every body resolved from it
+	 * mints its own shapes.
+	 */
+	shapes: BodyShape[] | ShapeEntry[] | string;
+	/**
+	 * Which body to read out of the file, when `shapes` names one. A
+	 * collision shape file usually holds a map of body name to fixtures, and
+	 * this is the name the shapes were authored under.
+	 *
+	 * Not needed for a single-body export, where the file IS one body's
+	 * fixture list with no map above it; there is nothing for an id to name,
+	 * and the whole file is used.
+	 */
+	id?: string;
 }
 
 /**
