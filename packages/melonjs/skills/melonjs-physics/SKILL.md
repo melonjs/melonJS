@@ -37,8 +37,14 @@ and these are the usual triggers:
 - **Joints and constraints** — ragdolls, chains, ropes, vehicles, hinged doors.
   The builtin has no concept of them.
 - **Stacking and resting contacts.** Boxes that pile up and stay put need an
-  iterative solver; the builtin's push-out resolves one pair at a time and a
-  stack jitters apart.
+  iterative solver. The builtin resolves each contact once per step with no
+  iteration pass, which splits cleanly: a dynamic body resting on STATIC
+  geometry is exact, to the pixel, which is the platformer case it exists for.
+  A body squeezed between two contacts is not, because the per-pair
+  corrections compete within that single pass, and the pile comes to rest
+  visibly overlapping rather than settling. Three stacked 44px boxes sit
+  roughly 16px into each other and into the floor, and stay there: it is a
+  stable equilibrium, not jitter you can wait out or tune away.
 - **Believable restitution and friction**, where a ball's bounce height and roll
   should follow from its material rather than from code you wrote per case.
 
@@ -89,6 +95,22 @@ pixels. `subSteps` is the anti-tunnelling knob when per-frame motion exceeds a
 body radius. Pick **one** adapter per game; `physic: "none"` disables physics
 entirely — `world.step` skips the simulation and the world behaves as a pure
 scene graph.
+
+**The gravity figures are not comparable between adapters.** planck's is in
+pixels per second² (`320` ≈ Earth at `pixelsPerMeter: 32`), matter's is its own
+scaled figure (`1` ≈ Earth after matter's internal `gravity.scale`), and the
+built-in world has a third convention again. Passing the same number to two of
+them compares nothing: hand planck matter's `{x: 0, y: 1}` and it runs at a
+three-hundredth of Earth gravity. Unless you have a reason to retune, omit the
+option and take each adapter's default, which is Earth-like in all three.
+
+That mistake is quiet and it does not look like a gravity problem. Bodies fall
+slowly enough that a spawner keeping a fixed interval starts constructing them
+inside each other, and **a body born overlapping another is outside what a
+solver promises to fix**: the contact normals of an interlocked pair can cancel
+out, leaving the position solver with nowhere to push. The symptom is two
+shapes permanently fused at rest, which reads as a broken collision shape
+rather than as a bad gravity constant. Spawn clear of anything already there.
 
 `world.physic` carries the active adapter's label (`"builtin"`, `"planck"`,
 `"matter"`, `"none"`), so game code can branch without importing the class.
@@ -151,6 +173,54 @@ For contacts reported per *shape pair* rather than per body pair, define
 `onShapeCollisionStart` / `onShapeCollisionActive` / `onShapeCollisionEnd`.
 Declaring at least one of them opts into shape-pair enumeration; declaring none
 costs nothing.
+
+### Shapes drawn in a physics-shape editor
+
+A visual collision-shape editor exports a JSON file holding a map of body name
+to the fixtures authored for it. Preload it like any other JSON, then name it
+from `bodyDef.shapes` with `id` naming the body to read:
+
+```js
+// in the preloader
+{ name: "shapes", type: "json", src: "data/physics/shapes.json" }
+
+// then, on the renderable
+this.bodyDef = { type: "dynamic", shapes: "shapes", id: "hotdog" };
+```
+
+This works identically on the built-in, matter and planck adapters — the file is
+resolved into real shapes before any adapter is handed the definition. Circles
+and polygons both load, and a concave outline (exported already decomposed into
+convex pieces) becomes one `Polygon` per piece.
+
+The density, friction and bounce the shapes were authored with are carried onto
+the body definition too, each honoured by whichever backends support it — the
+built-in adapter ignores contact `friction`, as it does for a hand-written
+definition. The format carries these per fixture, but only planck could honour
+that, so they reduce onto the body and a file whose fixtures disagree warns. An
+explicit field on the definition always wins:
+
+```js
+// bounces at 0.9 whatever the file says
+this.bodyDef = { type: "dynamic", shapes: "shapes", id: "hotdog", restitution: 0.9 };
+```
+
+The exporting tool's own filter block is **not** read, in any spelling. Its
+category and mask bits are numbers in that tool's namespace rather than
+{@link collision.types}, and a template writes its defaults for every fixture
+whether or not you set anything — importing them would silently tag a shape as
+something it is not and stop it colliding. Set `collisionType` / `collisionMask`
+on the body definition instead. A file written by hand may carry those two names
+per fixture, and `isSensor`, which mean the same thing here as there.
+
+Authored shapes and imported ones can sit in the same list.
+
+Two bodies must never share one `shapes` array: a body **owns** its shapes and
+rotating it mutates them in place. Naming the file sidesteps this — every body
+resolved from it mints its own shapes.
+
+`Body#fromJSON()` and passing an exported list to `addShape()` are the old,
+built-in-only spelling of this and are deprecated since 20.7.0.
 
 ## Move with forces, not by assigning position
 
@@ -480,6 +550,7 @@ use them. `adapter.capabilities` (`constraints`,
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
+| `bodyDef.shapes: "…"` throws "is not loaded" | the name must match the `name` the JSON was preloaded under, not its filename |
 | a rotated sprite collides as if upright | the built-in solver rotates visually only — `body.angle` never rotates the shapes. Use planck/matter, or `body.rotate(angle)` |
 | the debug hitbox does not follow a spinning body | pre-1.2.1 matter-adapter / pre-1.3.1 planck-adapter returned the authored shapes rather than the rotated ones |
 | a Tiled polyline becomes a solid box on matter | matter cannot build a zero-area polygon; the adapter falls back to its AABB |
@@ -488,3 +559,4 @@ use them. `adapter.capabilities` (`constraints`,
 
 - `melonjs-renderables` — `isKinematic`, which also gates the broadphase
 - `melonjs-tilemaps` — collision shapes authored in Tiled
+- `melonjs-loading-assets` — preloading a shape editor's export as JSON

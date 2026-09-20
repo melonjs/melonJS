@@ -1,4 +1,5 @@
 import { game } from "../application/application.ts";
+import Body from "../physics/builtin/body.js";
 import { hasFullscreenSupport, isFullscreen } from "../system/fullscreen.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
@@ -201,3 +202,29 @@ export function exitFullscreen() {
 		result.catch(console.error);
 	}
 }
+
+/**
+ * add collision mesh based on a JSON object
+ * (this will also apply any physic properties defined in the given JSON file)
+ * @public
+ * @param {object} json - a JSON object as exported from a Physics Editor tool
+ * @param {string} [id] - an optional shape identifier within the given the json object
+ * @returns {number} how many shapes were added to the body
+ * @deprecated since 20.7.0
+ * @see Renderable#bodyDef
+ * @example
+ * // deprecated: reaches the builtin solver only
+ * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
+ *
+ * // the portable replacement, resolved before any adapter sees it
+ * // (preload with { name: "shapesdef", type: "json", src: … })
+ * this.bodyDef = { type: "dynamic", shapes: "shapesdef", id: "banana" };
+ */
+Body.prototype.fromJSON = function (json, id) {
+	warning(
+		"Body#fromJSON",
+		"renderable.bodyDef = { type, shapes: <loader key>, id: <body name> }, which works on the builtin, matter and planck backends alike",
+		"20.7.0",
+	);
+	return this._fromJSON(json, id);
+};

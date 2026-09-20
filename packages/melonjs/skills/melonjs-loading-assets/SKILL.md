@@ -39,7 +39,7 @@ The type strings are melonJS-specific — this is not a generic loader:
 | type | for |
 |---|---|
 | `"image"` | textures, sprite sheets, normal maps |
-| `"json"` | data, texture-atlas descriptors |
+| `"json"` | data, texture-atlas descriptors, collision shapes from a shape editor |
 | `"tmx"` / `"tsx"` | Tiled maps and external tilesets |
 | `"audio"` | sound — **`src` is a directory**, see below |
 | `"video"` | video textures |

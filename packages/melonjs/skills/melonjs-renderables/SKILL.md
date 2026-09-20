@@ -215,6 +215,18 @@ sprite.alpha = 0;              // hides it
 
 Use `alpha` for a blink, or remove the child for a long absence.
 
+## A mask belongs to you, not to the renderable
+
+`renderable.mask` takes a shape you created, and `destroy()` releases the
+reference without recycling it: the same instance may still be masking
+something else, so the engine has no claim on it. If you pool masks, release
+them yourself.
+
+Before 20.7.0 `destroy()` tried to recycle it and **threw** for every type
+`mask` accepts, because it used the legacy name-keyed pool and no geometry
+class is registered there. It failed mid-teardown, so a masked renderable
+could not be destroyed or removed without keepalive at all.
+
 ## Update and draw
 
 ```js
@@ -260,6 +272,7 @@ Hand-rolled equivalents miss the batching and the multi-backend support.
 | object draws at its parent's origin, ignores its position | `draw()` not reading `this.pos` |
 | pointer handler registered but never fires | `isKinematic` left at its `true` default |
 | wrong draw order | anything other than `addChild(child, z)` — see section 3 |
+| `me.pool: object ... cannot be recycled` while destroying | a mask on a renderable, before 20.7.0 |
 | effect cannot be re-enabled after removal | `removePostEffect()` destroyed it |
 | effect silently does nothing | running on the Canvas renderer |
 | object appears frozen while its state changes | `update()` not returning `true` |

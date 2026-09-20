@@ -151,6 +151,7 @@ export type {
 	AdapterCapabilities,
 	AdapterOptions,
 	BodyDefinition,
+	BodyDefinitionInit,
 	BodyShape,
 	BodyType,
 	CollisionResponse,
@@ -159,6 +160,7 @@ export type {
 	RaycastHit,
 	RaycastHit3d,
 	ShapeCollisionContact,
+	ShapeEntry,
 } from "./physics/adapter.ts";
 export { Bounds } from "./physics/bounds.ts";
 export { AABB3d } from "./physics/broadphase/aabb3d.ts";

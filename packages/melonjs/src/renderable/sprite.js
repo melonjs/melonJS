@@ -37,6 +37,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame). Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. For spritesheet atlases the anchor also becomes the cached atlas's per-frame pivot (see {@link TextureAtlas}).
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|Texture2d|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
+	 * @param {object} [settings.bodyDef] - declarative, adapter-portable body definition, applied when this sprite is added to a container. Its `shapes` may name a collision shape file preloaded as JSON, paired with `id`. See {@link Renderable#bodyDef} and {@link BodyDefinitionInit}
 	 * @param {number} [settings.shininess=0] - specular exponent: how tight this sprite's highlight is, or 0 for none. Needs a `normalMap` — see {@link Sprite#shininess}
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
@@ -358,6 +359,17 @@ export default class Sprite extends Renderable {
 			} else {
 				this.normalMap = settings.normalMap;
 			}
+		}
+
+		/**
+		 * Declarative, adapter-portable body definition. Assigned here so the
+		 * portable path is reachable from the constructor like everything else;
+		 * it is consumed when this renderable is added to a container, which is
+		 * also where a `shapes` naming a loaded JSON asset is resolved.
+		 * @see Renderable#bodyDef
+		 */
+		if (typeof settings.bodyDef !== "undefined") {
+			this.bodyDef = settings.bodyDef;
 		}
 
 		// the specular exponent belongs with the map it depends on — it does
