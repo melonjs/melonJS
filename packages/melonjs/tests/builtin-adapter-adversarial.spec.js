@@ -744,21 +744,20 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 			expect(r.body.vel.y).toBeLessThanOrEqual(0);
 		});
 
-		it("equal-mass dynamic pair: stationary body stays put; moving body's vel decays asymptotically", () => {
-			// The builtin SAT detector does mass-proportional push-out
-			// per call (detector.js + Body.respondToCollision), but the
-			// outer-loop iterates each non-static body once, so push-out
-			// fires twice per pair. With equal masses, the second pass
-			// effectively un-does the first body's positional shift —
-			// the stationary body never visibly moves, and the moving
-			// body's velocity is halved each frame (the normal-component
-			// cancellation runs from both calls).
+		it("equal-mass dynamic pair: overlap is split evenly, and no momentum is transferred", () => {
+			// The builtin SAT detector does mass-proportional push-out per
+			// call (detector.js + Body.respondToCollision), and each body
+			// takes its share in its OWN direction: SAT reports one MTV per
+			// pair, oriented for `response.a`, and `respondToCollision`
+			// mirrors it for the `b` side. With equal masses each takes half
+			// the overlap, outwards.
 			//
-			// This is acceptable for typical platformer play (player +
-			// enemies are dynamic, world geometry is static — collisions
-			// between two dynamics are rare and don't need Newtonian
-			// elastic response). For billiards-style dyn-dyn elastic
-			// collisions, use the matter adapter.
+			// Position is all that is exchanged. Velocity is only ever
+			// CANCELLED along the contact normal, never transferred, so the
+			// stationary body stays stationary and simply gets moved out of
+			// the way. That is fine for typical platformer play (player +
+			// enemies are dynamic, world geometry is static); for
+			// billiards-style elastic response, use the matter adapter.
 			const a = addDynamic(100, 100, {
 				gravityScale: 0,
 				collisionType: collision.types.PLAYER_OBJECT,
@@ -771,17 +770,21 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 			});
 			a.body.setVelocity(5, 0);
 			world.update(16);
-			// stationary body did not move
-			expect(b.pos.x).toEqual(124);
+			// a integrates to 105, overlapping b by 13; each takes 6.5, and
+			// they move APART rather than both sliding the same way
+			expect(a.pos.x).toBeCloseTo(98.5, 5);
+			expect(b.pos.x).toBeCloseTo(130.5, 5);
+			// b was shoved aside but gained no velocity from the impact
 			expect(b.body.vel.x).toEqual(0);
-			// moving body integrated forward and had its vel halved
+			// a's velocity into the contact is cancelled by its mass ratio
 			expect(a.body.vel.x).toBeCloseTo(2.5, 5);
 		});
 
 		it("asymmetric-mass dynamic pair: light is pushed back, heavy barely moves", () => {
 			// Push-out scales by `other.mass / total_mass`. A light body
 			// hitting a heavy one experiences a large positional
-			// correction; the heavy body experiences a tiny one.
+			// correction; the heavy body experiences a tiny one, and it is
+			// nudged AWAY from the impact rather than dragged along with it.
 			const light = addDynamic(100, 100, {
 				gravityScale: 0,
 				collisionType: collision.types.PLAYER_OBJECT,
@@ -800,11 +803,12 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 			// final X is *less* than its starting X (it backed up further
 			// than it moved forward).
 			expect(light.pos.x).toBeLessThan(100);
-			// heavy was nudged slightly but only by a small fraction
-			expect(heavy.pos.x).toBeLessThan(124);
-			expect(124 - heavy.pos.x).toBeLessThan(2);
+			// heavy was nudged forward, out of the way, but only by a small
+			// fraction of the overlap
+			expect(heavy.pos.x).toBeGreaterThan(124);
+			expect(heavy.pos.x - 124).toBeLessThan(2);
 			// magnitude check: light moved at least 4× more than heavy
-			expect(100 - light.pos.x).toBeGreaterThan(4 * (124 - heavy.pos.x));
+			expect(100 - light.pos.x).toBeGreaterThan(4 * (heavy.pos.x - 124));
 		});
 
 		it("Quirk #6: collision callbacks fire INLINE during step — handler-side vel mutation on a peer is integrated within the same step", () => {
@@ -1098,9 +1102,10 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 			//     (the bounce magnifies the push-out). Velocity drops
 			//     sharply but doesn't fully reverse — see quirk #10
 			//     "no momentum transfer".
-			//   - HEAVY's position is nudged slightly by the per-frame
-			//     push-out. Velocity stays at 0 — no momentum is
-			//     transferred from the light body into the heavy one.
+			//   - HEAVY's position is nudged out of the way by the
+			//     per-frame push-out, by its (small) share of the overlap.
+			//     Velocity stays at 0 — no momentum is transferred from the
+			//     light body into the heavy one.
 			const light = addDynamic(100, 100, {
 				gravityScale: 0,
 				restitution: 0.8,
@@ -1121,9 +1126,9 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 			expect(light.pos.x).toBeLessThan(100);
 			// light's velocity was dampened (restitution + ratio cancel)
 			expect(Math.abs(light.body.vel.x)).toBeLessThan(5);
-			// heavy was nudged backward by the push-out, but slightly
-			expect(heavy.pos.x).toBeLessThan(124);
-			expect(124 - heavy.pos.x).toBeLessThan(2);
+			// heavy was nudged away by the push-out, but slightly
+			expect(heavy.pos.x).toBeGreaterThan(124);
+			expect(heavy.pos.x - 124).toBeLessThan(2);
 			// no momentum transfer to heavy — vel stays 0
 			expect(heavy.body.vel.x).toEqual(0);
 		});

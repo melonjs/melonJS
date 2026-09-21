@@ -15,6 +15,19 @@ import { collision } from "../collision.js";
 import { isShapeEntry } from "../physicseditor.js";
 
 /**
+ * Direction bits for {@link Body#immovableBlock}. One per cardinal direction a
+ * body can be *prevented from moving in* by immovable geometry.
+ * @ignore
+ */
+const BLOCKED_LEFT = 1;
+/** @ignore */
+const BLOCKED_RIGHT = 2;
+/** @ignore */
+const BLOCKED_UP = 4;
+/** @ignore */
+const BLOCKED_DOWN = 8;
+
+/**
  * @import Entity from "../../renderable/entity/entity.js";
  * @import Container from "../../renderable/container.js";
  * @import Renderable from "../../renderable/renderable.js";
@@ -230,6 +243,29 @@ export default class Body {
 		 * boss.body.pseudoInertia *= 10;
 		 */
 		this.pseudoInertia = 1;
+
+		/**
+		 * Bitfield of the directions this body was pushed *out of* immovable
+		 * (static) geometry during the current simulation step, expressed as
+		 * the directions it may therefore no longer move in.
+		 *
+		 * The solver makes a single resolution pass per step, so a body wedged
+		 * between static geometry and another dynamic body is corrected once
+		 * against each. Without this record the later of the two corrections
+		 * wins and the body ends the step inside the immovable geometry,
+		 * which is a stable state, not a transient. Consulted by
+		 * {@link Body#respondToCollision}: a dynamic-dynamic contact will not
+		 * push a body back in a direction it was already blocked in this step,
+		 * and hands the whole correction to the other body instead.
+		 *
+		 * Reset at the top of each step by the adapter. Purely a per-step
+		 * solver detail, not contact state: it says nothing about what the
+		 * body is touching, only about corrections already applied this step.
+		 * @ignore
+		 * @internal
+		 * @type {number}
+		 */
+		this.immovableBlock = 0;
 
 		if (typeof this.maxVel === "undefined") {
 			/**
@@ -1102,11 +1138,26 @@ export default class Body {
 		// determine mass ratio: when both bodies are dynamic, split
 		// the response proportionally to mass; otherwise apply full overlap
 		const other = response.a === this.ancestor ? response.b : response.a;
+		const otherBody = other ? other.body : undefined;
+		const otherIsDynamic = otherBody !== undefined && !otherBody.isStatic;
 		let ratio = 1;
-		if (other && other.body && !other.body.isStatic) {
-			const totalMass = this.mass + other.body.mass;
-			ratio = totalMass > 0 ? other.body.mass / totalMass : 0.5;
+		if (otherIsDynamic) {
+			const totalMass = this.mass + otherBody.mass;
+			ratio = totalMass > 0 ? otherBody.mass / totalMass : 0.5;
 		}
+
+		// SAT reports ONE minimum translation vector per pair, oriented for
+		// `response.a`: `a` escapes along `-overlapV`, `b` along `+overlapV`.
+		// The detector hands that same response object to BOTH bodies of a
+		// pair, so the `b` side has to mirror it — otherwise the pair is
+		// translated bodily along one direction instead of being separated,
+		// and a body squeezed against immovable geometry is driven straight
+		// into it. Mirrored only when the receiver is unambiguously `b`: a
+		// duck-typed response literal carrying no `a`/`b` (this method is
+		// public and callers legitimately build one) keeps the historical
+		// `a`-oriented sign.
+		const sign =
+			response.b === this.ancestor && response.a !== this.ancestor ? -1 : 1;
 
 		// Z half of the minimum translation vector. Both are 0 for every
 		// planar shape pair (see ResponseObject#overlapZ), so everything below
@@ -1122,27 +1173,82 @@ export default class Body {
 		const overlapZ = response.overlapZ ?? 0;
 		const overlapNZ = response.overlapNZ ?? 0;
 
+		// the MTV and the contact normal as seen by THIS body (see `sign`)
+		const mtvX = overlap.x * sign;
+		const mtvY = overlap.y * sign;
+		const mtvZ = overlapZ * sign;
+		const normalX = overlapN.x * sign;
+		const normalY = overlapN.y * sign;
+		const normalZ = overlapNZ * sign;
+
+		// Planar corrections take part in the per-step "blocked by immovable
+		// geometry" bookkeeping. Skipped when the planar MTV is zero: either
+		// there is no planar correction to record (a pure-Z {@link Box3d}
+		// contact, which `immovableBlock` does not model), or a collision handler
+		// zeroed the overlap to opt this axis out, in which case nothing moves
+		// and there is nothing to remember.
+		if (otherBody !== undefined && (normalX !== 0 || normalY !== 0)) {
+			// This body escapes along -MTV, the other along +MTV. Reduce each
+			// to the single cardinal direction the correction mostly points
+			// in: the solver only needs to answer "is this body already pinned
+			// that way", and a dominant-axis answer keeps a diagonal push-out
+			// off a slope from also pinning the horizontal axis.
+			let escapeDir;
+			let pushBackDir;
+			if (Math.abs(normalX) > Math.abs(normalY)) {
+				escapeDir = normalX > 0 ? BLOCKED_LEFT : BLOCKED_RIGHT;
+				pushBackDir = normalX > 0 ? BLOCKED_RIGHT : BLOCKED_LEFT;
+			} else {
+				escapeDir = normalY > 0 ? BLOCKED_UP : BLOCKED_DOWN;
+				pushBackDir = normalY > 0 ? BLOCKED_DOWN : BLOCKED_UP;
+			}
+
+			if (otherIsDynamic) {
+				// A single pass resolves each contact once, so the two
+				// contacts of a body squeezed between immovable geometry and
+				// another dynamic body compete, and whichever is applied last
+				// wins. Immovable geometry gets the casting vote: once this
+				// body has been pushed out of static geometry this step, a
+				// dynamic contact may not push it back in, and the other body
+				// absorbs the whole correction instead.
+				//
+				// Both halves read a record written by an actually-applied
+				// correction, so a pair whose `onCollision` opted out of
+				// push-out neither writes one nor is affected by one, and no
+				// extra broadphase pass or handler dispatch is involved.
+				if ((this.immovableBlock & escapeDir) !== 0) {
+					ratio = 0;
+				} else if ((otherBody.immovableBlock & pushBackDir) !== 0) {
+					ratio = 1;
+				}
+			} else {
+				// pushed out of immovable geometry: remember that this body
+				// may no longer travel that way for the rest of the step
+				this.immovableBlock |= pushBackDir;
+			}
+		}
+
 		// Move out of the other object shape
 		this.ancestor.pos.set(
-			this.ancestor.pos.x - overlap.x * ratio,
-			this.ancestor.pos.y - overlap.y * ratio,
-			this.ancestor.pos.z - overlapZ * ratio,
+			this.ancestor.pos.x - mtvX * ratio,
+			this.ancestor.pos.y - mtvY * ratio,
+			this.ancestor.pos.z - mtvZ * ratio,
 		);
 
 		// cancel the velocity component along the collision normal
 		const projVel =
-			this.vel.x * overlapN.x + this.vel.y * overlapN.y + this.velZ * overlapNZ;
+			this.vel.x * normalX + this.vel.y * normalY + this.velZ * normalZ;
 		if (projVel > 0) {
 			if (this.bounce > 0) {
 				// reflect velocity along normal with bounce damping
-				this.vel.x -= (1 + this.bounce) * projVel * ratio * overlapN.x;
-				this.vel.y -= (1 + this.bounce) * projVel * ratio * overlapN.y;
-				this.velZ -= (1 + this.bounce) * projVel * ratio * overlapNZ;
+				this.vel.x -= (1 + this.bounce) * projVel * ratio * normalX;
+				this.vel.y -= (1 + this.bounce) * projVel * ratio * normalY;
+				this.velZ -= (1 + this.bounce) * projVel * ratio * normalZ;
 			} else {
 				// remove the velocity component along the collision normal
-				this.vel.x -= projVel * ratio * overlapN.x;
-				this.vel.y -= projVel * ratio * overlapN.y;
-				this.velZ -= projVel * ratio * overlapNZ;
+				this.vel.x -= projVel * ratio * normalX;
+				this.vel.y -= projVel * ratio * normalY;
+				this.velZ -= projVel * ratio * normalZ;
 			}
 		}
 
@@ -1151,11 +1257,11 @@ export default class Body {
 		// portable equivalent (see Body#gravityScale). Either disables the
 		// state machine — a hovering platform or a free-floating projectile
 		// shouldn't be marked "falling" on a head-on side collision.
-		if (overlap.y !== 0 && !this.ignoreGravity && this.gravityScale !== 0) {
+		if (mtvY !== 0 && !this.ignoreGravity && this.gravityScale !== 0) {
 			// cancel the falling an jumping flags if necessary
 			const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
-			this.falling = overlap.y >= dir;
-			this.jumping = overlap.y <= -dir;
+			this.falling = mtvY >= dir;
+			this.jumping = mtvY <= -dir;
 		}
 	}
 
