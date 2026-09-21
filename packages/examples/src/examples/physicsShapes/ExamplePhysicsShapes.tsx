@@ -14,6 +14,7 @@ import { MatterAdapter } from "@melonjs/matter-adapter";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
 import {
 	Application,
+	BuiltinAdapter,
 	type CanvasRenderer,
 	game,
 	loader,
@@ -25,6 +26,7 @@ import {
 	Text,
 	timer,
 	UIBaseElement,
+	Vector2d,
 	video,
 	type WebGLRenderer,
 } from "melonjs";
@@ -32,6 +34,13 @@ import { createExampleComponent } from "../utils";
 
 const VIEWPORT_W = 960;
 const VIEWPORT_H = 640;
+
+/**
+ * matter's own default fall speed, measured in this scene by timing a 200px
+ * free fall. It is the reference the other two backends are matched to, so
+ * the three piles are comparable.
+ */
+const GRAVITY_PX_S2 = 900;
 
 const PARAMS = new URLSearchParams(globalThis.location.search);
 const BACKEND = PARAMS.get("physics") ?? "matter";
@@ -295,15 +304,21 @@ class PlayScreen extends Stage {
 const createGame = async () => {
 	const scaleTarget = document.getElementById("screen") ?? undefined;
 
-	// Each adapter's own default gravity, deliberately. They do not share a
-	// unit — planck takes pixels per second² while matter takes its own scaled
-	// figure — so passing one number to both compares nothing.
+	// Gravity matched to MATTER across all three, which takes explicit numbers
+	// because the defaults are not comparable. Measured by timing a 200px free
+	// fall in this very scene: the built-in world falls at ~4450 px/s², matter
+	// at ~900 and planck at ~330, a thirteenfold spread. Each is "Earth-like"
+	// in its own unit (the built-in applies gravity per FRAME, integrated
+	// against `timer.tick`; planck takes px/s²; matter takes its own scaled
+	// figure), and comparing backends is worthless unless they agree.
 	const physic =
 		BACKEND === "planck"
-			? new PlanckAdapter()
+			? new PlanckAdapter({ gravity: { x: 0, y: GRAVITY_PX_S2 } })
 			: BACKEND === "matter"
-				? new MatterAdapter()
-				: undefined;
+				? new MatterAdapter() // the reference: its own default
+				: new BuiltinAdapter({
+						gravity: new Vector2d(0, (GRAVITY_PX_S2 / 4453) * 0.98),
+					});
 
 	const app = new Application(VIEWPORT_W, VIEWPORT_H, {
 		parent: "screen",
@@ -311,7 +326,7 @@ const createGame = async () => {
 		scaleTarget,
 		renderer: video.AUTO,
 		antiAlias: true,
-		...(physic ? { physic } : {}),
+		physic,
 	});
 	await app.init();
 
