@@ -161,6 +161,7 @@ export default class Renderable extends Rect {
 		 * `shapes`, `collisionType`, `collisionMask`, `restitution`,
 		 * `frictionAir`, `density`, `gravityScale`, `isSensor`,
 		 * `maxVelocity`, `fixedRotation`. See {@link BodyDefinitionInit}.
+
 		 *
 		 * `shapes` is normally a list of collision shapes, but it can also
 		 * name a collision shape file preloaded as JSON, paired with `id`

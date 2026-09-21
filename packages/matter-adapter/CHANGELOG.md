@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 - _2026-09-21_
+
+### Fixed
+- **`fixedRotation` now defaults to `false`, as it does in matter itself.** The adapter used to lock rotation unless told otherwise, giving every body infinite rotational inertia so that no collision, torque or impulse could turn it. That inverted the engine it wraps: a rigid body sat on a corner instead of toppling, a pile landed holding whatever angles it was given, and because `setAngle()` writes the transform directly a body could look rotated while being unable to rotate. The intent was to keep a game ported from the builtin solver behaving as it did, but the cost was that matter appeared broken. Pass `fixedRotation: true` for anything that must stay upright, such as a platformer actor; that is the only change a game relying on the old default needs
+
 ## 1.3.0 - _2026-09-18_
 
 ### Fixed

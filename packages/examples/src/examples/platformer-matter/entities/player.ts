@@ -84,6 +84,10 @@ export class PlayerEntity extends Sprite {
 					settings.height,
 				),
 			],
+			// a platformer actor must stay upright: since matter-adapter 2.0.0
+			// `fixedRotation` follows matter's own default of `false`, so a
+			// body that should never tip over asks for it
+			fixedRotation: true,
 			collisionType: collision.types.PLAYER_OBJECT,
 			maxVelocity: { x: MAX_VEL_X, y: MAX_VEL_Y },
 			// scalar frictionAir — matter-native form. Low so the jump arc

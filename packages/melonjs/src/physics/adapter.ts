@@ -305,6 +305,12 @@ export interface BodyDefinition {
 	 * off every frame regardless of contact, creating terminal velocity.
 	 * Number applies uniformly; `{x, y}` damps each axis independently
 	 * (melonJS-specific — Matter only supports scalar and will average).
+	 *
+	 * It damps ROTATION as well as translation on the matter and planck
+	 * adapters, so it is also what stops a body spinning once something has
+	 * set it turning. Left at `0`, a spin never decays. The builtin adapter
+	 * maps it onto its per-axis `body.friction` damping vector instead, and
+	 * has no rotation to damp.
 	 */
 	frictionAir?: number | { x: number; y: number };
 	/**
@@ -340,7 +346,21 @@ export interface BodyDefinition {
 	 */
 	maxVelocity?: { x: number; y: number };
 
-	/** disable rotation simulation; the body keeps its initial angle */
+	/**
+	 * Disable rotation simulation, so the body keeps whatever angle it has.
+	 *
+	 * Defaults to whatever the underlying engine defaults to, which for both
+	 * matter and planck is `false`: a rigid body turns when something turns
+	 * it. Pass `true` for anything that must stay upright, such as a
+	 * platformer actor that should never tip over.
+	 *
+	 * The builtin adapter ignores this field, since its rotation is visual
+	 * only and its collision shapes never turn either way.
+	 * @default false
+	 * @example
+	 * // a character that stays upright whatever it walks into
+	 * this.bodyDef = { type: "dynamic", shapes: [...], fixedRotation: true };
+	 */
 	fixedRotation?: boolean;
 	/** the body generates collision events but no physical response */
 	isSensor?: boolean;

@@ -140,6 +140,19 @@ world; the broadphase picks the renderable up on the next `world.update()`.
 Calling `adapter.addBody()` yourself registers the body but leaves the
 renderable out of the scene graph, so it integrates but never collides.
 
+**`fixedRotation` follows the engine, so bodies rotate.** Both matter and
+planck default it to `false`, and so do the adapters from matter-adapter 1.4.0
+and planck-adapter 1.5.0. Pass `fixedRotation: true` for anything that must
+stay upright, such as a platformer actor. Earlier adapter versions locked
+rotation unless told otherwise, which inverted the engine they wrap: bodies
+landed holding whatever angle they were given and no collision could turn them,
+while `setAngle()` still worked, so a body could look rotated while being
+unable to rotate.
+
+`frictionAir` damps **rotation as well as translation** on both adapters, so
+it is also what settles a spin. Left at `0` a body that starts turning never
+stops, which only became visible once rotation stopped being locked.
+
 Other portable `bodyDef` fields: `density`, `frictionAir` (number or `{x, y}`),
 `friction`, `restitution`, `gravityScale`, `maxVelocity`, `fixedRotation`,
 `isSensor`, `userData`. Not every adapter honours every one — the built-in
@@ -551,6 +564,7 @@ use them. `adapter.capabilities` (`constraints`,
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
 | `bodyDef.shapes: "…"` throws "is not loaded" | the name must match the `name` the JSON was preloaded under, not its filename |
+| debris lands holding its spawn angle and never tumbles | `fixedRotation: true`, or matter-adapter < 1.4.0 / planck-adapter < 1.5.0 |
 | a rotated sprite collides as if upright | the built-in solver rotates visually only — `body.angle` never rotates the shapes. Use planck/matter, or `body.rotate(angle)` |
 | the debug hitbox does not follow a spinning body | pre-1.2.1 matter-adapter / pre-1.3.1 planck-adapter returned the authored shapes rather than the rotated ones |
 | a Tiled polyline becomes a solid box on matter | matter cannot build a zero-area polygon; the adapter falls back to its AABB |

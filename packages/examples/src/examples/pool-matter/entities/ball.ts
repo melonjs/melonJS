@@ -174,6 +174,22 @@ export class Ball extends Sprite {
 			density: BALL_DENSITY,
 			// pool is top-down — no gravity (also set adapter-level to 0)
 			gravityScale: 0,
+			// ...and no rotation, because these sprites cannot be rotated.
+			// Each ball is painted WITH ITS LIGHTING: measuring the luminance
+			// centroid of the 16 images puts it 1 to 5 px toward the upper
+			// left of the disc, so turning the sprite turns the light with it
+			// and the ball reads as wobbling rather than spinning. The art is
+			// not quite circular either (a 32x31 disc in several files), so a
+			// rotating silhouette breathes by a pixel each quarter turn.
+			//
+			// It costs nothing to give up here: matter's angular velocity is
+			// about the SCREEN axis, which in a top-down view is english, not
+			// rolling. A ball rolling across the felt turns about a horizontal
+			// axis that a 2D sprite cannot show at all.
+			//
+			// matter-adapter 1.4.0 stopped locking rotation by default, so
+			// this now has to be asked for.
+			fixedRotation: true,
 		};
 
 		// always draw, even if the broadphase culls it briefly

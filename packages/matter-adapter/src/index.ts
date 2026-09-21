@@ -479,12 +479,13 @@ export class MatterAdapter implements PhysicsAdapter {
 		if (def.isSensor) {
 			body.isSensor = true;
 		}
-		// Default to fixed rotation. Matter has full rotational dynamics
-		// while SAT didn't; existing platformer-style game code assumes
-		// bodies stay axis-aligned. Users that genuinely want rotation
-		// (a rolling barrel, a rag-doll, etc.) opt out via
-		// `fixedRotation: false`.
-		if (def.fixedRotation !== false) {
+		// Only when asked. Matter computes a finite inertia from the body's
+		// vertices, so a body rotates by default, and an adapter that locks
+		// rotation unless told otherwise inverts the engine it wraps: a rigid
+		// body would sit on a corner instead of toppling, and `setAngle` would
+		// still work, so the body could look rotated while being unable to
+		// rotate. A game that needs bodies to stay axis-aligned asks for it.
+		if (def.fixedRotation === true) {
 			Matter.Body.setInertia(body, Number.POSITIVE_INFINITY);
 		}
 

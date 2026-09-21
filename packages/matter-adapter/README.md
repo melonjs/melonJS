@@ -164,7 +164,7 @@ if (hit) {
 
 Portable — same shape under the builtin SAT adapter, this one, and `@melonjs/planck-adapter`. Implementation walks each candidate body's vertices via per-edge segment intersection, so the reported `point` and `normal` reflect actual entry geometry rather than the body centre.
 
-> **Note on rotation:** `setAngle` / `setAngularVelocity` / `applyTorque` are now portable — they're declared on `PhysicsAdapter` and implemented by both this adapter and the builtin adapter. Under matter, rotation is fully solver-aware (the body's collision shape rotates and contact response reflects it); under builtin, rotation is visual-only (the SAT solver still tests axis-aligned shapes but the renderable's transform tracks the body's angle). Code that needs rotation-correct contact response should also opt in to `fixedRotation: false` in the `bodyDef` and check `adapter.capabilities` if it must branch.
+> **Note on rotation:** `setAngle` / `setAngularVelocity` / `applyTorque` are now portable — they're declared on `PhysicsAdapter` and implemented by both this adapter and the builtin adapter. Under matter, rotation is fully solver-aware (the body's collision shape rotates and contact response reflects it); under builtin, rotation is visual-only (the SAT solver still tests axis-aligned shapes but the renderable's transform tracks the body's angle). Rotation is on by default (see `fixedRotation` below); code that needs bodies to stay axis-aligned opts out with `fixedRotation: true`, and should check `adapter.capabilities` if it must branch. `frictionAir` damps rotation as well as translation, so it is also the knob that settles a spin.
 
 ## Region queries
 
@@ -342,12 +342,12 @@ this.bodyDef = {
     collisionType?: number,
     collisionMask?: number,
     maxVelocity?: { x, y },
-    frictionAir?: number | { x, y },
+    frictionAir?: number | { x, y },   // damps rotation as well as translation
     restitution?: number,
     density?: number,
     gravityScale?: number,
     isSensor?: boolean,
-    fixedRotation?: boolean,     // matter only — defaults to true
+    fixedRotation?: boolean,     // defaults to false, as matter does
 };
 ```
 
@@ -366,7 +366,7 @@ body.collisionMask = collision.types.ENEMY_OBJECT;
 
 ## Behavioural notes when porting from the builtin adapter
 
-- **Bodies have full rotational dynamics by default for non-fixedRotation bodies.** If your game code assumes axis-aligned bodies (e.g. it reads `pos` and expects an unrotated rect), keep `fixedRotation: true` (the default).
+- **Rotation follows the engine.** `fixedRotation` defaults to `false`, as it does in matter itself, so a rigid body turns when something turns it. If your game code assumes axis-aligned bodies (it reads `pos` and expects an unrotated rect), pass `fixedRotation: true`. Before 1.4.0 this adapter locked rotation unless told otherwise, which inverted the engine it wraps.
 - **Polylines (zero-thickness lines) don't translate.** matter can't make a body from collinear vertices. Give them a small thickness, or load the TMX shape and rewrite it post-load (see the `platformer-matter` example).
 - **`maxVelocity` is emulated.** matter has no native velocity cap; the adapter clamps each body's velocity in `afterUpdate`.
 - **Per-body `gravityScale` is emulated.** matter 0.20 only honors the engine-level `gravity.scale`; the adapter applies a counter-force in `beforeUpdate` for bodies that opt out.
@@ -595,7 +595,7 @@ class Player extends Sprite {
 
 | Behaviour | Builtin | Matter |
 |---|---|---|
-| `fixedRotation` default | n/a (SAT bodies don't rotate) | `true` — matches SAT. Set `false` in `bodyDef` to enable rotation. |
+| `fixedRotation` default | n/a (SAT bodies don't rotate) | `false` — matches matter. Set `true` for bodies that must stay upright |
 | Continuous collision detection | ❌ | ✅ |
 | Sleeping bodies | ❌ | ✅ |
 | Constraints (springs, joints) | ❌ | ✅ via `Matter.Constraint` (reach via `adapter.engine`) |
@@ -610,7 +610,7 @@ class Player extends Sprite {
 5. Mark trigger / one-way / pickup bodies as `isSensor: true` to disable physical resolution while still firing the lifecycle handlers
 6. Replace slope-response hacks with snap-to-surface in `onCollisionActive`
 7. Convert TMX polylines to thin rectangles at load time
-8. Pass `fixedRotation: true` in `bodyDef` for anything that should stay axis-aligned
+8. Pass `fixedRotation: true` in `bodyDef` for anything that must stay axis-aligned; bodies rotate by default, as they do in matter
 
 ## Examples
 
