@@ -39,7 +39,6 @@ function minimumEngineVersion() {
 const TIME_SAMPLES = 30;
 
 /**
- * @classdesc
  * a simple debug panel plugin <br>
  * <img src="images/debugPanel.png"/> <br>
  * <b>usage : </b><br>
@@ -62,6 +61,8 @@ const TIME_SAMPLES = 30;
  * &bull; current velocity vector <br>
  * &bull; quadtree spatial visualization <br>
  * @augments plugin.BasePlugin
+ * @category Plugins
+ * @document ../README.md
  */
 export class DebugPanelPlugin extends plugin.BasePlugin {
 	/**

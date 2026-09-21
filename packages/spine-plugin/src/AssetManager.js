@@ -4,7 +4,6 @@ import { loader, utils } from "melonjs";
 import { getManagedContext } from "./glContext.js";
 
 /**
- * @classdesc
  * An Asset Manager class that integrates Spine's asset loading with
  * melonJS's preloader via a custom "spine" parser.
  * Handles loading of atlas, JSON skeleton, and binary skeleton (.skel) files.

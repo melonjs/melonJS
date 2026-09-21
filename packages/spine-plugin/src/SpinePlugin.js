@@ -10,9 +10,10 @@ import AssetManager from "./AssetManager";
 import Spine from "./Spine.js";
 
 /**
- * @classdesc
  * a Spine 4.x plugin implementation for melonJS
  * @augments plugin.BasePlugin
+ * @category Plugins
+ * @document ../README.md
  */
 export class SpinePlugin extends plugin.BasePlugin {
 	/**

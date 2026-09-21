@@ -241,6 +241,17 @@ const lines: string[] = [
 	"- [Examples](https://melonjs.github.io/melonJS/examples/): runnable demos; sources under `packages/examples/src/examples/`.",
 	"- [Changelog](https://github.com/melonjs/melonJS/blob/master/packages/melonjs/CHANGELOG.md): what changed and when, including breaking changes.",
 	"",
+	"## Official plugins",
+	"",
+	"Published separately, documented here alongside the engine. Their pages are indexed in the list below like any other, and each plugin's page carries that package's README.",
+	"",
+	"- [@melonjs/matter-adapter](https://melonjs.github.io/melonJS/classes/MatterAdapter.html): matter-js physics backend. Rigid-body dynamics, constraints, sleeping bodies, continuous collision detection.",
+	"- [@melonjs/planck-adapter](https://melonjs.github.io/melonJS/classes/PlanckAdapter.html): Box2D (planck) physics backend. Same portable `bodyDef` contract as the built-in solver.",
+	"- [@melonjs/spine-plugin](https://melonjs.github.io/melonJS/classes/SpinePlugin.html): Spine 4.3 skeletal animation, on both the WebGL and Canvas renderers.",
+	"- [@melonjs/debug-plugin](https://melonjs.github.io/melonJS/classes/DebugPanelPlugin.html): on-screen debug panel — hitboxes, draw counts, frame timings, quadtree.",
+	"- [@melonjs/tiled-inflate-plugin](https://melonjs.github.io/melonJS/classes/TiledInflatePlugin.html): gzip, zlib and zstd compressed Tiled map layers.",
+	"- [@melonjs/capacitor-plugin](https://melonjs.github.io/melonJS/classes/CapacitorPlugin.html): native app integration — back button, orientation lock, splash screen.",
+	"",
 ];
 
 let total = 0;

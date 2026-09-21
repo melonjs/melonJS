@@ -25,6 +25,7 @@ declare const __VERSION__: string;
  * interface, `bodyDef` auto-registration, and the resolver in
  * `Application` are part of the 19.5 work — older releases don't have
  * the plumbing for instance-based adapters.
+ * @hidden
  */
 export const REQUIRED_MELONJS_VERSION = "19.5.0";
 
@@ -95,6 +96,8 @@ export interface PlanckAdapterOptions {
  *     parent: "screen",
  *     physic: new PlanckAdapter(),
  * });
+ * @category Plugins
+ * @document ../README.md
  */
 export class PlanckAdapter implements PhysicsAdapter {
 	readonly physicLabel = "planck";

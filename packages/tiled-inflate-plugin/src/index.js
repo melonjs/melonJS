@@ -5,7 +5,6 @@ import pako from "pako";
 import { homepage, name, version } from "../package.json";
 
 /**
- * @classdesc
  * a melonJS plugin to enable loading and parsing of compressed Tiled maps.
  * Supports gzip, zlib, and zstd compressed tile layer data.
  * @augments plugin.BasePlugin
@@ -15,6 +14,8 @@ import { homepage, name, version } from "../package.json";
  *
  * // register the plugin
  * mePlugin.register(TiledInflatePlugin);
+ * @category Plugins
+ * @document ../README.md
  */
 export class TiledInflatePlugin extends plugin.BasePlugin {
 	constructor() {
