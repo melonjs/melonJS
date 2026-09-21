@@ -38,13 +38,16 @@ and these are the usual triggers:
   The builtin has no concept of them.
 - **Stacking and resting contacts.** Boxes that pile up and stay put need an
   iterative solver. The builtin resolves each contact once per step with no
-  iteration pass, which splits cleanly: a dynamic body resting on STATIC
+  iteration pass, which splits three ways. A dynamic body resting on STATIC
   geometry is exact, to the pixel, which is the platformer case it exists for.
-  A body squeezed between two contacts is not, because the per-pair
-  corrections compete within that single pass, and the pile comes to rest
-  visibly overlapping rather than settling. Three stacked 44px boxes sit
-  roughly 16px into each other and into the floor, and stay there: it is a
-  stable equilibrium, not jitter you can wait out or tune away.
+  A body squeezed between a dynamic body and static geometry is exact too: the
+  immovable side gets the casting vote and the other body absorbs the whole
+  correction, so a crate shoved against a wall stops at the wall. But a body
+  squeezed between two DYNAMIC bodies has no immovable side to defer to, so
+  those per-pair corrections still compete and it comes to rest slightly
+  overlapping. Three stacked 44px boxes rest flush on the floor with about 2px
+  of overlap inside the pile, and stay there: a stable equilibrium, not jitter
+  you can wait out or tune away.
 - **Believable restitution and friction**, where a ball's bounce height and roll
   should follow from its material rather than from code you wrote per case.
 
@@ -96,13 +99,25 @@ body radius. Pick **one** adapter per game; `physic: "none"` disables physics
 entirely — `world.step` skips the simulation and the world behaves as a pure
 scene graph.
 
-**The gravity figures are not comparable between adapters.** planck's is in
-pixels per second² (`320` ≈ Earth at `pixelsPerMeter: 32`), matter's is its own
-scaled figure (`1` ≈ Earth after matter's internal `gravity.scale`), and the
-built-in world has a third convention again. Passing the same number to two of
-them compares nothing: hand planck matter's `{x: 0, y: 1}` and it runs at a
-three-hundredth of Earth gravity. Unless you have a reason to retune, omit the
-option and take each adapter's default, which is Earth-like in all three.
+**Gravity is a different unit in every backend, and the defaults are NOT the
+same speed.** Each is "Earth-like" in its own convention, but measured against
+each other by timing a 200px free fall in one scene:
+
+| backend | default | unit | measured fall |
+|---|---|---|---|
+| built-in | `0.98` | per FRAME, integrated against `timer.tick` | **~4450 px/s²** |
+| matter | `{x: 0, y: 1}` | matter's own, after its internal `gravity.scale` | **~900 px/s²** |
+| planck | `320` | pixels per second² | **~330 px/s²** |
+
+That is a **thirteenfold spread**, so swapping the built-in world for an adapter
+and keeping everything else the same makes the whole game feel different. It is
+not a bug in either one: they simply do not share a unit.
+
+To match a backend you are porting FROM, pick a target in px/s² and convert:
+planck takes it directly; matter takes `target / 900`; the built-in takes
+`target / 4450 * 0.98`, because it applies gravity per frame rather than per
+second. Passing one number to two of them compares nothing: hand planck
+matter's `{x: 0, y: 1}` and it runs at a three-hundredth of Earth gravity.
 
 That mistake is quiet and it does not look like a gravity problem. Bodies fall
 slowly enough that a spawner keeping a fixed interval starts constructing them
@@ -440,6 +455,13 @@ real rigid-body engine:
 - **Dynamic-dynamic collision is position-based, not Newtonian.** Separation is
   mass-proportional but the velocity response is per-body cancellation — two
   equal-mass bodies do not exchange momentum the way you would expect.
+- **An immovable contact wins the step.** Each step records, per body, which
+  directions it has already been pushed out of, and a later dynamic-dynamic
+  contact will not push it back in one of those directions: the other body
+  takes the whole correction instead. A light body shoving a heavy one against
+  a wall therefore stops dead at the wall rather than driving it through, and
+  the shover absorbs all of the separation. The record lasts one step and is
+  not contact state — it says nothing about what a body is touching.
 - **Gravity defaults to `(0, 0.98)`** — pixels per frame², not m/s². Mutate
   `app.world.adapter.gravity` at runtime, or pass
   `physic: new BuiltinAdapter({ gravity })` to override it. `body.gravityScale`
@@ -561,9 +583,11 @@ use them. `adapter.capabilities` (`constraints`,
 | `response.depth` / `response.normal` are `undefined` | reading a legacy `onCollision` response — it carries `overlap` / `overlapN` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |
+| a body in a pile sinks into the floor (built-in) | fixed in 20.7 for anything with an immovable side; bodies pinned only by other DYNAMIC bodies still overlap by a pixel or two, which is what planck/matter are for |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |
 | `bodyDef.shapes: "…"` throws "is not loaded" | the name must match the `name` the JSON was preloaded under, not its filename |
+| everything falls far too fast or too slow after swapping backends | gravity is a different unit per backend; see the table above |
 | debris lands holding its spawn angle and never tumbles | `fixedRotation: true`, or matter-adapter < 1.4.0 / planck-adapter < 1.5.0 |
 | a rotated sprite collides as if upright | the built-in solver rotates visually only — `body.angle` never rotates the shapes. Use planck/matter, or `body.rotate(angle)` |
 | the debug hitbox does not follow a spinning body | pre-1.2.1 matter-adapter / pre-1.3.1 planck-adapter returned the authored shapes rather than the rotated ones |

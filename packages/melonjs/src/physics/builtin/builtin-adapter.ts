@@ -278,6 +278,22 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// start/end events on top of SAT's frame-by-frame overlap reports
 		this.detector.beginFrame();
 		// iterate through all bodies
+		// Clear every body's record of which directions it was pushed out of
+		// immovable geometry in, BEFORE any of them is stepped.
+		//
+		// A separate pass rather than the head of the loop below, because that
+		// interleaves clearing with resolution: a body's pass reads the record
+		// of each body it collides with, and for those it has not reached yet
+		// that would still hold the previous step's value. The same scene then
+		// settles differently depending on the order bodies were added in.
+		//
+		// Cleared here rather than in `body.update()` so that bodies the loop
+		// skips (static, paused, off-screen) are cleared too: those are still
+		// reachable as the *other* side of a contact resolved from a simulated
+		// body's pass.
+		for (const body of this.bodies) {
+			body.immovableBlock = 0;
+		}
 		for (const body of this.bodies) {
 			const ancestor = body.ancestor;
 			if (!body.isStatic && ancestor) {
