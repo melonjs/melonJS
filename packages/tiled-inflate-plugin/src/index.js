@@ -15,6 +15,8 @@ import { homepage, name, version } from "../package.json";
  *
  * // register the plugin
  * mePlugin.register(TiledInflatePlugin);
+ * @category Plugins
+ * @document ../README.md
  */
 export class TiledInflatePlugin extends plugin.BasePlugin {
 	constructor() {

@@ -37,6 +37,7 @@ declare const __VERSION__: string;
  * the plumbing for instance-based adapters. Tracks the engine version
  * actually shipping these APIs (will be bumped to "19.5.0" once the
  * engine release is cut).
+ * @hidden
  */
 export const REQUIRED_MELONJS_VERSION = "19.5.0";
 
@@ -78,6 +79,8 @@ export interface MatterAdapterOptions {
  *     parent: "screen",
  *     physic: new MatterAdapter(),
  * });
+ * @category Plugins
+ * @document ../README.md
  */
 export class MatterAdapter implements PhysicsAdapter {
 	readonly physicLabel = "matter";

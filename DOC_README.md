@@ -57,6 +57,20 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 | **Custom Shaders** | Per-sprite {@link ShaderEffect | ShaderEffect} carrying both GLSL and WGSL, so one effect runs on either GPU backend |
 | **UI** | Built-in UI components (buttons, text input, containers) |
 
+## Official Plugins
+
+Each plugin is published separately. Its API is documented here alongside the
+engine, and each entry carries that package's own README.
+
+| Plugin | Package | Reference |
+|--------|---------|-----------|
+| **Matter physics** | `@melonjs/matter-adapter` | {@link MatterAdapter | MatterAdapter} |
+| **Box2D physics** | `@melonjs/planck-adapter` | {@link PlanckAdapter | PlanckAdapter} |
+| **Spine animation** | `@melonjs/spine-plugin` | {@link SpinePlugin | SpinePlugin} |
+| **Debug panel** | `@melonjs/debug-plugin` | {@link DebugPanelPlugin | DebugPanelPlugin} |
+| **Compressed Tiled maps** | `@melonjs/tiled-inflate-plugin` | {@link TiledInflatePlugin | TiledInflatePlugin} |
+| **Capacitor / native** | `@melonjs/capacitor-plugin` | {@link CapacitorPlugin | CapacitorPlugin} |
+
 ## Common Tasks
 
 #### Load a level from a Tiled map
@@ -170,6 +184,7 @@ They are plain Markdown — readable by any agent, or by you.
 ## Links
 
 - [Live Examples](https://melonjs.github.io/melonJS/examples/)
+- [Official Plugins](#official-plugins)
 - [GitHub Repository](https://github.com/melonjs/melonJS)
 - [Discord Community](https://discord.gg/aur7JMk)
 - [melonjs.org](http://www.melonjs.org/)

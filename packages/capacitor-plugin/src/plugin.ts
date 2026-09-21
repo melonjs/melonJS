@@ -12,6 +12,8 @@ import type { ConnectCapacitorOptions } from "./types.ts";
  * The instance is then accessible at `plugin.cache.capacitor`; call
  * `instance.teardown()` to detach all listeners (typically only
  * needed for hot-reload or unit tests).
+ * @category Plugins
+ * @document ../README.md
  */
 export class CapacitorPlugin extends plugin.BasePlugin {
 	/**
