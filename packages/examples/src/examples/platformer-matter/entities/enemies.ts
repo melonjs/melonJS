@@ -60,6 +60,10 @@ class PathEnemyEntity extends Sprite {
 			collisionMask:
 				collision.types.PLAYER_OBJECT | collision.types.WORLD_SHAPE,
 			maxVelocity: { x: this.maxVelX, y: this.maxVelY },
+			// a platformer actor must stay upright: since matter-adapter 2.0.0
+			// `fixedRotation` follows matter's own default of `false`, so a
+			// body that should never tip over asks for it
+			fixedRotation: true,
 		};
 
 		this.startX = x;

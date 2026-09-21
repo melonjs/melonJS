@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0 - _2026-09-21_
+
+### Fixed
+- **`fixedRotation` now defaults to `false`, as it does in planck itself.** The adapter used to lock rotation unless told otherwise, giving every body infinite rotational inertia so that no collision, torque or impulse could turn it. That inverted the engine it wraps: a rigid body sat on a corner instead of toppling, a pile landed holding whatever angles it was given, and because `setAngle()` writes the transform directly a body could look rotated while being unable to rotate. The intent was to keep a game ported from the builtin solver behaving as it did, but the cost was that planck appeared broken. Pass `fixedRotation: true` for anything that must stay upright, such as a platformer actor; that is the only change a game relying on the old default needs
+- `frictionAir` damps rotation as well as translation, which is what matter does with the same field. `angularDamping` was never set, so it kept planck's default of `0` and a body that picked up spin kept it forever. That was invisible while rotation was locked and guaranteed to show once it was not
+
 ## 1.4.0 - _2026-09-18_
 
 ### Fixed

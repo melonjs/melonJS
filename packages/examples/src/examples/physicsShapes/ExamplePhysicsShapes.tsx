@@ -235,8 +235,8 @@ class PlayScreen extends Stage {
 			const x = 230 + column * ((VIEWPORT_W - 560) / (columns - 1));
 			const shape = new ShapeBody(x, 290, 80, body.id, body.colour);
 			game.world.addChild(shape, 20);
-			// drop each one already tilted, so a shape landing on a single
-			// point topples off it instead of balancing there
+			// drop each one already tilted, so it lands off balance and has
+			// somewhere to topple to
 			shape.body.setAngle?.(((this.spawned * 37) % 360) * (Math.PI / 180));
 			this.spawned++;
 		}, 460);

@@ -269,11 +269,58 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 32, 32)],
 				gravityScale: 0,
-				// fixedRotation defaults to true
+				fixedRotation: true,
 			});
 			adapter.applyTorque(r, 5);
 			stepFrames(adapter, 5);
 			expect(adapter.getAngularVelocity(r)).toEqual(0);
+		});
+
+		it("frictionAir damps rotation, not just translation", () => {
+			// planck keeps linear and angular damping as separate fields and
+			// defaults both to 0. The adapter used to map `frictionAir` onto
+			// the linear one only, so a body that picked up spin kept it
+			// forever: invisible while rotation was locked, guaranteed to show
+			// once it was not. matter couples the two through the same field,
+			// so mapping both is also what keeps the backends agreeing.
+			const spun = new Renderable(100, 100, 32, 32);
+			adapter.addBody(spun, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 0,
+				frictionAir: 0.5,
+			});
+			adapter.setAngularVelocity(spun, 10);
+			stepFrames(adapter, 30);
+			expect(Math.abs(adapter.getAngularVelocity(spun))).toBeLessThan(10);
+
+			// control: with no damping asked for, the spin is kept
+			const free = new Renderable(200, 100, 32, 32);
+			adapter.addBody(free, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 0,
+				frictionAir: 0,
+			});
+			adapter.setAngularVelocity(free, 10);
+			stepFrames(adapter, 30);
+			expect(adapter.getAngularVelocity(free)).toBeCloseTo(10, 5);
+		});
+
+		it("applyTorque turns a body that did not ask to be locked", () => {
+			// `fixedRotation` follows planck's own default of `false`: an
+			// adapter that locked rotation unless told otherwise would invert
+			// the engine it wraps, and a rigid body that cannot be turned by a
+			// torque looks like a broken engine rather than a chosen default
+			const r = new Renderable(100, 100, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 0,
+			});
+			adapter.applyTorque(r, 5);
+			stepFrames(adapter, 5);
+			expect(Math.abs(adapter.getAngularVelocity(r))).toBeGreaterThan(0);
 		});
 	});
 

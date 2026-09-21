@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/matter-adapter",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "melonJS physics adapter for matter-js",
 	"homepage": "https://www.npmjs.com/package/@melonjs/matter-adapter",
 	"type": "module",

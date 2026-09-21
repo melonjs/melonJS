@@ -196,6 +196,57 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 			expect(r.pos.y).toBeGreaterThan(startY);
 		});
 
+		it("a body rotates unless it asks to be locked", () => {
+			// `fixedRotation` follows matter's own default. Matter computes a
+			// finite inertia from the vertices, so a body turns; an adapter
+			// that locked rotation unless told otherwise would invert the
+			// engine it wraps, and a rigid body that cannot be turned looks
+			// like a broken engine rather than a chosen default.
+			const r = new Renderable(100, 100, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+			});
+			adapter.applyTorque?.(r, 0.05);
+			for (let i = 0; i < 5; i++) {
+				adapter.step(16);
+			}
+			expect(Math.abs(adapter.getAngle?.(r) ?? 0)).toBeGreaterThan(0);
+		});
+
+		it("frictionAir damps rotation, not just translation", () => {
+			// matter couples the two: its integrator multiplies angular
+			// velocity by the same `frictionAir` factor as linear. Pinned on
+			// both adapters so the two backends agree about what the portable
+			// field means.
+			const spun = new Renderable(100, 100, 32, 32);
+			adapter.addBody(spun, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				gravityScale: 0,
+				frictionAir: 0.5,
+			});
+			adapter.setAngularVelocity(spun, 10);
+			for (let i = 0; i < 30; i++) {
+				adapter.step(16);
+			}
+			expect(Math.abs(adapter.getAngularVelocity(spun))).toBeLessThan(10);
+		});
+
+		it("fixedRotation: true still locks a body", () => {
+			const r = new Renderable(100, 100, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Rect(0, 0, 32, 32)],
+				fixedRotation: true,
+			});
+			adapter.applyTorque?.(r, 0.05);
+			for (let i = 0; i < 5; i++) {
+				adapter.step(16);
+			}
+			expect(adapter.getAngle?.(r) ?? 0).toBe(0);
+		});
+
 		it("applyForce nudges the body horizontally", () => {
 			const r = new Renderable(100, 100, 32, 32);
 			adapter.addBody(r, {

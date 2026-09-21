@@ -378,8 +378,17 @@ export class PlanckAdapter implements PhysicsAdapter {
 			type: def.type,
 			position: this.vec2InMeters(bodyWorldPx.x, bodyWorldPx.y),
 			angle: 0,
-			fixedRotation: def.fixedRotation !== false, // default true (mirrors matter-adapter)
+			// unset means planck's own default, which is `false`: a rigid body
+			// rotates unless told not to
+			fixedRotation: def.fixedRotation === true,
 			linearDamping: this._scalarOf(def.frictionAir) ?? 0,
+			// `frictionAir` damps rotation as well as translation, which is
+			// what matter does with the same field: its integrator multiplies
+			// angular velocity by the same factor. Left unset, planck's own
+			// default of 0 means a spin never decays, so a body that picks up
+			// rotation keeps it forever. That only became visible once
+			// rotation stopped being locked by default.
+			angularDamping: this._scalarOf(def.frictionAir) ?? 0,
 			gravityScale: def.gravityScale ?? 1,
 			bullet: false,
 		};

@@ -230,13 +230,13 @@ this.bodyDef = {
     collisionType?: number,
     collisionMask?: number,
     maxVelocity?: { x, y },      // emulated via afterStep clamp
-    frictionAir?: number,        // ⇒ planck.Body.setLinearDamping (scalar only)
+    frictionAir?: number,        // per-step damping, of rotation as well as translation
     restitution?: number,
     density?: number,            // ⇒ fixture density (kg/m²)
     friction?: number,           // ⇒ fixture surface friction coefficient
     gravityScale?: number,
     isSensor?: boolean,
-    fixedRotation?: boolean,     // planck native — defaults to true (matches SAT axis-aligned bodies)
+    fixedRotation?: boolean,     // defaults to false, as planck does
 };
 ```
 
@@ -257,7 +257,7 @@ body.getFixtureList().setFilterMaskBits(collision.types.ENEMY_OBJECT);
 
 ## Behavioural notes when porting from the builtin adapter
 
-- **Bodies have full rotational dynamics by default for non-fixedRotation bodies.** If your game code assumes axis-aligned bodies (reads `pos` and expects an unrotated rect), keep `fixedRotation: true` (the default).
+- **Rotation follows the engine.** `fixedRotation` defaults to `false`, as it does in planck itself, so a rigid body turns when something turns it. If your game code assumes axis-aligned bodies (it reads `pos` and expects an unrotated rect), pass `fixedRotation: true`. Before 1.5.0 this adapter locked rotation unless told otherwise, which inverted the engine it wraps.
 - **Polylines (zero-thickness lines) don't translate.** planck — like Box2D — can't make a body from collinear vertices, and polygons must be convex with ≤8 vertices. Replace TMX polylines with thin rectangles at load time, or load and rewrite them post-load.
 - **Ellipses are approximated as circles** with the average radius. For tall/narrow ellipses this is a poor fit; a polygon hull is a better choice when accuracy matters.
 - **`maxVelocity` is emulated.** Box2D has no native velocity cap; the adapter clamps each body's velocity after every step.
@@ -390,4 +390,4 @@ Useful for the player or any body that must respond instantly to input regardles
 4. Replace any `Matter.Body.applyForce(b, p, v)` direct calls with `body.applyForce(x, y, px, py)` (portable)
 5. Convert any concave TMX polygons to convex pieces (planck can't decompose them)
 6. Add `setBullet(true)` to any fast-moving projectiles
-7. Pass `fixedRotation: true` in `bodyDef` for anything that should stay axis-aligned
+7. Pass `fixedRotation: true` in `bodyDef` for anything that must stay axis-aligned; bodies rotate by default, as they do in planck
