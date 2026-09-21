@@ -39,7 +39,6 @@ function minimumEngineVersion() {
 const TIME_SAMPLES = 30;
 
 /**
- * @classdesc
  * a simple debug panel plugin <br>
  * <img src="images/debugPanel.png"/> <br>
  * <b>usage : </b><br>
