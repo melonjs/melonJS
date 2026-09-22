@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.7.0] (melonJS 2) - _unreleased_
+## [20.7.0] (melonJS 2) - _2026-09-23_
 
 ### Added
 - Physics: collision shapes drawn in a shape editor load on every backend. Preload the export as JSON, then set `bodyDef = { type, shapes: "<asset name>", id: "<body name>" }`; the engine resolves it before any adapter sees it, so one definition works on the builtin, matter and planck adapters ([#1685](https://github.com/melonjs/melonJS/issues/1685))
