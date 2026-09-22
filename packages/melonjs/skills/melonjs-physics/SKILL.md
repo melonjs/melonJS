@@ -340,6 +340,16 @@ ways is affected.
 The debug panel is the quickest check: green is the renderable's bounds, red
 is what actually collides, and the two now agree.
 
+One renderable does not take that offset at all: one that has cleared
+`applyAnchorTransform`, the flag `preDraw` reads before shifting anything.
+`GLTFModel` sets it `false` outright and `Mesh` clears it under a `Camera3d`,
+because both emit world coordinates and pivot about their own model origin
+rather than a bounds box, so they draw at `pos` whatever their `anchorPoint`
+still holds. Their bodies are built there too, on every backend, and
+`raycast3d` reports hits in that same frame. If you clear the flag on a
+renderable of your own, the same applies: you place it, and your shapes are
+measured from `pos`.
+
 ### `autoTransform: false` opts out of rotated bounds
 
 `updateBounds()` only applies `currentTransform` when `autoTransform` is

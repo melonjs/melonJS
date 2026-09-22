@@ -25,12 +25,24 @@ function absCenter(renderable, box, out) {
 	const anc = renderable.ancestor.getAbsolutePosition();
 	// `anchorPoint` moves the drawn frame in XY; shapes are measured from
 	// it, so the same offset comes off here. It has no Z term.
-	const ax = Number.isFinite(renderable.width)
-		? renderable.width * renderable.anchorPoint.x
-		: 0;
-	const ay = Number.isFinite(renderable.height)
-		? renderable.height * renderable.anchorPoint.y
-		: 0;
+	//
+	// Unless the renderable opts out of the anchor the way `preDraw` reads it,
+	// which is the normal case for the things that carry a `Box3d`: a
+	// `GLTFModel` sets `applyAnchorTransform = false` outright, and a `Mesh`
+	// clears it on the `Camera3d` world-space path, because both emit world
+	// coordinates and pivot about their own model origin. Taking an anchor off
+	// those moved each body by half its OWN bounds box, and a scene sizes that
+	// box per node, so a hull and the props it should hit were displaced by
+	// different amounts and the contact was simply never reported.
+	const anchored = renderable.applyAnchorTransform !== false;
+	const ax =
+		anchored && Number.isFinite(renderable.width)
+			? renderable.width * renderable.anchorPoint.x
+			: 0;
+	const ay =
+		anchored && Number.isFinite(renderable.height)
+			? renderable.height * renderable.anchorPoint.y
+			: 0;
 	out[0] = renderable.pos.x + anc.x + box.pos.x - ax;
 	out[1] = renderable.pos.y + anc.y + box.pos.y - ay;
 	out[2] = renderable.pos.z + anc.z + box.pos.z;

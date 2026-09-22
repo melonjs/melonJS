@@ -373,6 +373,42 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 					expect(box.getBounds().bottom).toBeCloseTo(drawnBottom, 1);
 				});
 			}
+
+			it("ignores the anchor on a renderable that places itself", () => {
+				// `applyAnchorTransform === false` is a renderable declaring
+				// that it draws at `pos` and pivots about its own origin,
+				// which is the flag `preDraw` reads before applying any
+				// offset. `GLTFModel` sets it outright and `Mesh` clears it on
+				// the `Camera3d` world-space path, and both keep the default
+				// `anchorPoint` of (0.5, 0.5) underneath, where it means
+				// nothing. Reading it anyway built the body half a bounds box
+				// off the model it belongs to.
+				const floorY = 200;
+				const floor = new Renderable(0, floorY, 800, 20);
+				floor.alwaysUpdate = true;
+				floor.anchorPoint.set(0, 0);
+				floor.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 800, 20)],
+				};
+				world.addChild(floor);
+
+				const box = new Renderable(100, 120, 32, 32);
+				box.alwaysUpdate = true;
+				box.applyAnchorTransform = false;
+				box.bodyDef = {
+					type: "dynamic",
+					shapes: [new Rect(0, 0, 32, 32)],
+				};
+				world.addChild(box);
+
+				for (let i = 0; i < 180; i++) {
+					world.update(16);
+				}
+
+				// drawn from `pos`, so the whole height is below it
+				expect(Math.abs(box.pos.y + box.height - floorY)).toBeLessThan(2);
+			});
 		});
 
 		describe("polygon placement", () => {

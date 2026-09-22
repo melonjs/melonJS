@@ -400,15 +400,23 @@ export class MatterAdapter implements PhysicsAdapter {
 		// its pixels by the same amount, and collision shapes are authored in
 		// that same frame, so the body is built there rather than on `pos`.
 		// Zero for an anchor of (0, 0) — what `Entity` and Tiled objects set —
-		// so those paths are unchanged. Guarded on `Number.isFinite` as
-		// `preDraw` is: a `Container`'s default size is `Infinity`, and
-		// `Infinity * 0` is `NaN`.
-		const anchorX = Number.isFinite(renderable.width)
-			? renderable.width * renderable.anchorPoint.x
-			: 0;
-		const anchorY = Number.isFinite(renderable.height)
-			? renderable.height * renderable.anchorPoint.y
-			: 0;
+		// so those paths are unchanged. Zero too when the renderable opts out
+		// of the anchor entirely via `applyAnchorTransform === false`, the
+		// flag `preDraw` itself reads: a `GLTFModel`, and a `Mesh` on the
+		// `Camera3d` world-space path, place themselves by their own transform
+		// and draw at `pos` with no anchor shift, so taking one off here would
+		// build the body half a bounds box away from the model. Guarded on
+		// `Number.isFinite` as `preDraw` is: a `Container`'s default size is
+		// `Infinity`, and `Infinity * 0` is `NaN`.
+		const anchored = renderable.applyAnchorTransform;
+		const anchorX =
+			anchored && Number.isFinite(renderable.width)
+				? renderable.width * renderable.anchorPoint.x
+				: 0;
+		const anchorY =
+			anchored && Number.isFinite(renderable.height)
+				? renderable.height * renderable.anchorPoint.y
+				: 0;
 		const baseX = renderable.pos.x - anchorX;
 		const baseY = renderable.pos.y - anchorY;
 		// `isActive === false` keeps a shape out of the simulation without

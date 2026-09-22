@@ -236,8 +236,10 @@ describe("a body whose renderable is not anchored at its corner", () => {
 	 * Stated as behaviour, not as shape coordinates: the bottom edge of what
 	 * is drawn comes to rest on the floor, whatever the anchor.
 	 * @param {number} anchor - anchorPoint on both axes
+	 * @param {boolean} [placesItself] - clear `applyAnchorTransform`, the way
+	 * a `GLTFModel` and a world-space `Mesh` do
 	 */
-	const restingDrawnBottom = (anchor) => {
+	const restingDrawnBottom = (anchor, placesItself = false) => {
 		const floor = new Renderable(0, 360, 400, 40);
 		floor.anchorPoint.set(0, 0);
 		floor.isKinematic = false;
@@ -246,6 +248,7 @@ describe("a body whose renderable is not anchored at its corner", () => {
 
 		const crate = new Renderable(100, 100, 44, 44);
 		crate.anchorPoint.set(anchor, anchor);
+		crate.applyAnchorTransform = !placesItself;
 		crate.isKinematic = false;
 		crate.bodyDef = { type: "dynamic", shapes: [new Rect(0, 0, 44, 44)] };
 		app.world.addChild(crate);
@@ -253,7 +256,11 @@ describe("a body whose renderable is not anchored at its corner", () => {
 		for (let i = 0; i < 400; i++) {
 			app.world.update(16);
 		}
-		return crate.pos.y + crate.height * (1 - crate.anchorPoint.y);
+		// where the bottom of the artwork ended up. A renderable that has
+		// opted out of the anchor draws from `pos` whatever its anchor says,
+		// so its own drawn bottom is a full height below `pos`.
+		const drawnTop = placesItself ? 0 : crate.height * crate.anchorPoint.y;
+		return crate.pos.y - drawnTop + crate.height;
 	};
 
 	it("rests on the floor when anchored at its corner", () => {
@@ -268,6 +275,15 @@ describe("a body whose renderable is not anchored at its corner", () => {
 	it("rests on the floor when anchored at its bottom edge", () => {
 		// the platformer anchor: feet on the ground
 		expect(restingDrawnBottom(1)).toBeCloseTo(360, 6);
+	});
+
+	it("ignores the anchor on a renderable that places itself", () => {
+		// `applyAnchorTransform === false` is a renderable saying it draws at
+		// `pos` and pivots about its own origin, which is what `preDraw`
+		// reads and what `GLTFModel` and a `Camera3d`-space `Mesh` set. Its
+		// `anchorPoint` still holds the default (0.5, 0.5) and means nothing,
+		// so reading it here put the body half a bounds box off the artwork.
+		expect(restingDrawnBottom(0.5, true)).toBeCloseTo(360, 6);
 	});
 });
 
