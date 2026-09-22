@@ -22,8 +22,15 @@ import {
 } from "../src/index.js";
 
 /**
- * A renderable centred on its position, carrying a `Box3d` body, added to
- * `world` at depth `z`.
+ * A corner-anchored renderable carrying a `Box3d` body, added to `world` at
+ * depth `z`, so its collision frame origin IS its `pos` and every expectation
+ * below can be read straight off the numbers passed in.
+ *
+ * Corner-anchored on purpose: since 20.7 a body is measured from the frame its
+ * renderable DRAWS in, which `anchorPoint` shifts by `-size * anchorPoint`, so
+ * a centred renderable would put the box half its own size from `pos`. That
+ * shift is the subject of its own test at the end of this file rather than a
+ * term buried in every other one.
  *
  * Body attached BEFORE `addChild`, which is what registers it with the
  * physics adapter (it reads `child.body` at insertion time). `raycast3d`
@@ -36,7 +43,7 @@ import {
  */
 function addBoxBody(world, { x, y, z, w, h, d }) {
 	const r = new Renderable(x, y, w, h);
-	r.anchorPoint.set(0.5, 0.5);
+	r.anchorPoint.set(0, 0);
 	r.isKinematic = false;
 	r.body = new Body(r, new Box3d(0, 0, 0, w, h, d));
 	world.addChild(r, z);
@@ -243,5 +250,45 @@ describe("raycast3d — exact ray vs Box3d", () => {
 		);
 		expect(hit).not.toBeNull();
 		expect(hit.renderable).toBe(target);
+	});
+	// Regression for the frame `raycast3d` measures in.
+	//
+	// 20.7 moved the narrowphase onto the renderable's DRAWN frame, so a body
+	// collides where its artwork is whatever the anchor. `raycast3d` builds
+	// its own world AABB and was left measuring from raw `pos`, which put a
+	// ray hit half a renderable away from the surface the same body collides
+	// on. Nothing failed: every existing case here was one body, and both
+	// halves of a query agreed with each other because neither was compared
+	// to the narrowphase.
+	//
+	// A floor probe is the whole reason this path exists, and it is exactly
+	// where the two disagreeing is worst: the character is placed on a surface
+	// the solver does not have there.
+	it("hits the box where the narrowphase collides with it", () => {
+		const world = new World(0, 0, 800, 600);
+		world.sortOn = "depth";
+
+		// A centred renderable: 200 wide and 20 tall at (300, 200), so it
+		// DRAWS from (200, 190) and its box top face is 10 below that.
+		const slab = new Renderable(300, 200, 200, 20);
+		slab.anchorPoint.set(0.5, 0.5);
+		slab.isKinematic = false;
+		slab.body = new Body(slab, new Box3d(100, 10, 0, 200, 20, 200));
+		world.addChild(slab, 100);
+		world.update(16);
+
+		// straight down the middle of the drawn frame
+		const hit = world.adapter.raycast3d(
+			{ x: 300, y: 0, z: 100 },
+			{ x: 300, y: 400, z: 100 },
+		);
+		expect(hit).not.toBeNull();
+
+		// the top of the box, in the frame the renderable draws in
+		const drawnTop = slab.pos.y - slab.height * slab.anchorPoint.y;
+		expect(hit.point.y).toBeCloseTo(drawnTop, 5);
+
+		// and the bounds the engine culls and draws with agree with it
+		expect(slab.getBounds().top).toBeCloseTo(drawnTop, 5);
 	});
 });

@@ -85,9 +85,11 @@ export default class Renderable extends Rect {
 		 * places the renderable in, so a shape of `Rect(0, 0, width, height)` covers the
 		 * renderable whatever the anchor is (since 20.7; before that shapes were measured
 		 * from `pos` regardless, and a non-corner anchor collided where it was not drawn).
-		 * A shape's own `pos` still offsets it inside that frame. Note also that the
-		 * adapters read the anchor when the body is created, so changing it afterwards
-		 * moves the drawing but not an already-built body.</i>
+		 * A shape's own `pos` still offsets it inside that frame. A renderable that has
+		 * cleared {@link Renderable#applyAnchorTransform} takes no offset at all, on the
+		 * drawing or on its shapes. Note also that the adapters read the anchor when the
+		 * body is created, so changing it afterwards moves the drawing but not an
+		 * already-built body.</i>
 		 * @type {ObservablePoint}
 		 * @default <0.5,0.5>
 		 */

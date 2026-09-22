@@ -228,6 +228,15 @@ function vornoiRegion(line, point) {
  * Zero whenever the anchor is (0, 0) — which is what `Entity` and Tiled
  * objects set — so every legacy path is bit-for-bit unchanged.
  *
+ * Also zero when the renderable opts out of the offset altogether via
+ * `applyAnchorTransform === false`, which is the flag `preDraw` itself reads:
+ * a {@link GLTFModel}, and a {@link Mesh} on the `Camera3d` world-space path,
+ * place themselves by their own transform and draw at `pos` with no anchor
+ * shift at all. Reading the anchor for those moved their shapes off the model
+ * by half its bounds box, and because a scene sizes that box per node, two
+ * objects that overlap on screen were pushed apart by DIFFERENT amounts and
+ * stopped colliding entirely.
+ *
  * Guarded on `Number.isFinite` exactly as `preDraw` is: a `Container`'s
  * default size is `Infinity`, and `Infinity * 0` is `NaN`, which would poison
  * every position derived from it.
@@ -236,7 +245,9 @@ function vornoiRegion(line, point) {
  * @ignore
  */
 function anchorOffsetX(r) {
-	return Number.isFinite(r.width) ? r.width * r.anchorPoint.x : 0;
+	return r.applyAnchorTransform !== false && Number.isFinite(r.width)
+		? r.width * r.anchorPoint.x
+		: 0;
 }
 
 /**
@@ -246,7 +257,9 @@ function anchorOffsetX(r) {
  * @ignore
  */
 function anchorOffsetY(r) {
-	return Number.isFinite(r.height) ? r.height * r.anchorPoint.y : 0;
+	return r.applyAnchorTransform !== false && Number.isFinite(r.height)
+		? r.height * r.anchorPoint.y
+		: 0;
 }
 
 /**

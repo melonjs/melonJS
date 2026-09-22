@@ -29,12 +29,34 @@ import {
  * at insertion time), so a body assigned afterwards never enters the
  * simulation and the object silently never collides.
  */
-function addBox(world, { x, y, z, w, h, d, isStatic = false, type }) {
+function addBox(
+	world,
+	{
+		x,
+		y,
+		z,
+		w,
+		h,
+		d,
+		isStatic = false,
+		type,
+		placesItself = false,
+		// the collision box, when it is not simply the renderable's size. A
+		// mesh's bounds box and its hitbox are independent numbers, and an
+		// anchor bug is invisible while they move together.
+		bw = w,
+		bh = h,
+		bd = d,
+	},
+) {
 	const r = new Renderable(x, y, w, h);
 	r.anchorPoint.set(0.5, 0.5);
+	// what a GLTFModel is, and what a Mesh becomes under a Camera3d: it emits
+	// world coordinates itself, so `preDraw` applies no anchor offset
+	r.applyAnchorTransform = !placesItself;
 	r.isKinematic = false;
 	r.alwaysUpdate = true;
-	r.body = new Body(r, new Box3d(0, 0, 0, w, h, d));
+	r.body = new Body(r, new Box3d(0, 0, 0, bw, bh, bd));
 	r.body.collisionType = type ?? collision.types.ENEMY_OBJECT;
 	r.body.collisionMask = collision.types.ALL_OBJECT;
 	r.body.isStatic = isStatic;
@@ -227,5 +249,107 @@ describe("Box3d — resolution through a full world step", () => {
 		expect(a.pos.z).toEqual(50);
 		expect(b.pos.z).toEqual(50);
 		expect(Number.isNaN(a.pos.x)).toBe(false);
+	});
+	// Regression for #1693's follow-up. A body is measured from the frame its
+	// renderable DRAWS in, and `anchorPoint` normally shifts that frame by
+	// `-size * anchorPoint`. But a renderable can opt out of the anchor
+	// altogether by clearing `applyAnchorTransform`, which is exactly what the
+	// things that carry a `Box3d` do: `GLTFModel` sets it `false` outright and
+	// `Mesh` clears it on the `Camera3d` world-space path, because both place
+	// themselves by their own transform and pivot about their model origin.
+	//
+	// Reading `anchorPoint` on those anyway moved each body by half its OWN
+	// bounds box. A scene sizes that box per node, so two objects sitting on
+	// top of each other on screen were displaced by DIFFERENT amounts, and the
+	// contact between them was not merely shifted, it was never reported.
+	describe("a renderable that places itself", () => {
+		it("collides where it draws, whatever its bounds box measures", () => {
+			// Same world position, same 20-cube, bounds boxes deliberately
+			// nothing alike: a hull model against a tall prop mesh. Identical
+			// boxes at one point is the least ambiguous overlap there is, so a
+			// miss here can only be a frame error.
+			const hull = addBox(world, {
+				x: 300,
+				y: 300,
+				z: 100,
+				w: 40,
+				h: 60,
+				d: 20,
+				bw: 20,
+				bh: 20,
+				bd: 20,
+				placesItself: true,
+				type: collision.types.PLAYER_OBJECT,
+			});
+			const prop = addBox(world, {
+				x: 300,
+				y: 300,
+				z: 100,
+				w: 120,
+				h: 200,
+				d: 20,
+				bw: 20,
+				bh: 20,
+				bd: 20,
+				isStatic: true,
+				placesItself: true,
+				type: collision.types.ENEMY_OBJECT,
+			});
+
+			let hits = 0;
+			hull.onCollisionStart = () => {
+				hits++;
+				// a sensor-style report: leave the positions alone so the
+				// assertion measures detection, not the push-out
+				return false;
+			};
+			world.update(16);
+
+			expect(prop).toBeDefined();
+			expect(hits).toBe(1);
+		});
+
+		it("still reads the anchor on a renderable that does not opt out", () => {
+			// The other half of the contract, so the fix cannot be "ignore
+			// `anchorPoint` in 3D". A centred 200-wide renderable draws from
+			// x=0, and its box sits at the centre of THAT frame, so the two
+			// boxes below overlap on screen while their raw `pos` values are
+			// 100 apart.
+			const anchored = addBox(world, {
+				x: 200,
+				y: 300,
+				z: 100,
+				w: 200,
+				h: 40,
+				d: 20,
+				bw: 20,
+				bh: 20,
+				bd: 20,
+				type: collision.types.PLAYER_OBJECT,
+			});
+			const corner = addBox(world, {
+				x: 100,
+				y: 280,
+				z: 100,
+				w: 20,
+				h: 20,
+				d: 20,
+				bw: 20,
+				bh: 20,
+				bd: 20,
+				isStatic: true,
+				type: collision.types.ENEMY_OBJECT,
+			});
+			corner.anchorPoint.set(0, 0);
+
+			let hits = 0;
+			anchored.onCollisionStart = () => {
+				hits++;
+				return false;
+			};
+			world.update(16);
+
+			expect(hits).toBe(1);
+		});
 	});
 });

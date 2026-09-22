@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 - _2026-09-22_
+
+### Fixed
+- A renderable that places itself is built at its `pos`, whatever its `anchorPoint` holds. 1.5.0 started measuring a body from the frame its renderable draws in, which `anchorPoint` shifts by `-size * anchorPoint`, but a renderable can opt out of that offset entirely by clearing `applyAnchorTransform`, which is what `preDraw` itself reads: a `GLTFModel` sets it outright and a `Mesh` clears it under a `Camera3d`, because both emit world coordinates and pivot about their own model origin rather than a bounds box. Reading the anchor on those anyway moved each body by half its OWN bounds box, and a scene sizes that box per node, so two objects that overlap on screen were displaced by different amounts and stopped colliding at all
+
 ## 1.5.0 - _2026-09-22_
 
 ### Fixed

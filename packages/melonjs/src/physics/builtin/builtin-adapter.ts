@@ -58,6 +58,11 @@ function worldBox3d(
 	if (body === undefined || !body.hasDepth) {
 		return false;
 	}
+	// the same frame the narrowphase measures in, so a ray hits a body where
+	// it actually collides rather than where its raw `pos` is
+	const anchor = anchorOffset(renderable);
+	const ox = cx - anchor.x;
+	const oy = cy - anchor.y;
 	let found = false;
 	const shapes = body.shapes as unknown as {
 		type: string;
@@ -71,11 +76,11 @@ function worldBox3d(
 		// an inactive shape is out of collision, and raycast3d is a collision
 		// query — skip it rather than let it contribute a depth extent (#1590)
 		if (shape.isActive === false) continue;
-		const minX = cx + shape.pos.x - shape.halfExtents.x;
-		const minY = cy + shape.pos.y - shape.halfExtents.y;
+		const minX = ox + shape.pos.x - shape.halfExtents.x;
+		const minY = oy + shape.pos.y - shape.halfExtents.y;
 		const minZ = cz + shape.pos.z - shape.halfExtents.z;
-		const maxX = cx + shape.pos.x + shape.halfExtents.x;
-		const maxY = cy + shape.pos.y + shape.halfExtents.y;
+		const maxX = ox + shape.pos.x + shape.halfExtents.x;
+		const maxY = oy + shape.pos.y + shape.halfExtents.y;
 		const maxZ = cz + shape.pos.z + shape.halfExtents.z;
 		if (!found) {
 			found = true;
@@ -95,6 +100,42 @@ function worldBox3d(
 		}
 	}
 	return found;
+}
+
+/** scratch for `anchorOffset`; never escapes its callers */
+const _anchor = { x: 0, y: 0 };
+/** shared zero, for renderables that place themselves */
+const _zeroAnchor = { x: 0, y: 0 };
+
+/**
+ * How far a renderable's drawn frame sits from its `pos`, per axis.
+ *
+ * The narrowphase measures collision shapes from the frame the renderable
+ * DRAWS in, which `anchorPoint` shifts by `-size * anchorPoint`, so anything
+ * reporting or querying that geometry has to use the same frame or it reads a
+ * body half its own size away from where it collides.
+ *
+ * `applyAnchorTransform === false` is the renderable saying it draws at `pos`
+ * with no anchor shift at all, which is what `preDraw` itself reads: a
+ * `GLTFModel` sets it outright, and a `Mesh` clears it on the `Camera3d`
+ * world-space path, both because they place themselves by their own transform
+ * and pivot about their model origin rather than a bounds box. `Number.isFinite`
+ * guards a `Container`'s default size of `Infinity`, where `Infinity * 0` would
+ * yield `NaN` and poison every position derived from it.
+ * @param renderable - the renderable to measure
+ * @returns the x and y offsets to subtract, both zero for a corner anchor
+ */
+function anchorOffset(renderable: Renderable): { x: number; y: number } {
+	if (!renderable.applyAnchorTransform) {
+		return _zeroAnchor;
+	}
+	_anchor.x = Number.isFinite(renderable.width)
+		? renderable.width * renderable.anchorPoint.x
+		: 0;
+	_anchor.y = Number.isFinite(renderable.height)
+		? renderable.height * renderable.anchorPoint.y
+		: 0;
+	return _anchor;
 }
 
 /**
@@ -574,12 +615,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		const b = body.bounds;
 		// same frame as `getBodyShapes`: where the body collides, which is
 		// the renderable's drawn frame rather than raw `pos`
-		const ax = Number.isFinite(renderable.width)
-			? renderable.width * renderable.anchorPoint.x
-			: 0;
-		const ay = Number.isFinite(renderable.height)
-			? renderable.height * renderable.anchorPoint.y
-			: 0;
+		const { x: ax, y: ay } = anchorOffset(renderable);
 		out.setMinMax(b.min.x - ax, b.min.y - ay, b.max.x - ax, b.max.y - ay);
 		return out;
 	}
@@ -602,12 +638,7 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// `applyForce`'s lever arm and the shape pools all keep reading the
 		// coordinates the caller wrote. Reporting those raw would put the
 		// debug overlay half a body away from where the collision happens.
-		const ax = Number.isFinite(renderable.width)
-			? renderable.width * renderable.anchorPoint.x
-			: 0;
-		const ay = Number.isFinite(renderable.height)
-			? renderable.height * renderable.anchorPoint.y
-			: 0;
+		const { x: ax, y: ay } = anchorOffset(renderable);
 		if (ax === 0 && ay === 0) {
 			// the overwhelmingly common case, and the one `Entity` and Tiled
 			// objects always take: hand back the live list, allocating nothing
