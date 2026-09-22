@@ -26,8 +26,8 @@ const STRESS_CYCLES = 100;
 const snapshotAdapter = (adapter) => {
 	return {
 		bodies: adapter.bodies.size,
-		activePairs: adapter.detector._activePairs.size,
-		frameSeen: adapter.detector._frameSeen.size,
+		activePairs: adapter.detector.activePairs.size,
+		frameSeen: adapter.detector.frameSeen.size,
 	};
 };
 
@@ -123,7 +123,7 @@ describe("Physics : BuiltinAdapter (lifecycle leak stress)", () => {
 
 	it("collision pair maps stay bounded across step()s with no contacts", () => {
 		// Spawn N bodies far apart so they never touch, then step the world
-		// repeatedly. _activePairs and _frameSeen should stay at zero.
+		// repeatedly. activePairs and frameSeen should stay at zero.
 		for (let i = 0; i < 20; i++) {
 			const r = new Renderable(i * 200, i * 200, 16, 16);
 			r.alwaysUpdate = true;
@@ -136,8 +136,8 @@ describe("Physics : BuiltinAdapter (lifecycle leak stress)", () => {
 		for (let step = 0; step < 20; step++) {
 			adapter.step(16);
 		}
-		expect(adapter.detector._activePairs.size).toEqual(0);
-		expect(adapter.detector._frameSeen.size).toEqual(0);
+		expect(adapter.detector.activePairs.size).toEqual(0);
+		expect(adapter.detector.frameSeen.size).toEqual(0);
 	});
 
 	it("removeBody mid-contact: collision-pair maps drain over one step", () => {
@@ -158,8 +158,8 @@ describe("Physics : BuiltinAdapter (lifecycle leak stress)", () => {
 		world.removeChildNow(a, true);
 		adapter.step(16);
 		adapter.step(16);
-		expect(adapter.detector._activePairs.size).toBeLessThanOrEqual(0);
-		expect(adapter.detector._frameSeen.size).toEqual(0);
+		expect(adapter.detector.activePairs.size).toBeLessThanOrEqual(0);
+		expect(adapter.detector.frameSeen.size).toEqual(0);
 	});
 
 	it("Container nested removal: direct children's bodies are cleaned", () => {

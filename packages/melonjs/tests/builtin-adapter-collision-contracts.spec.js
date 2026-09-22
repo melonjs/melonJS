@@ -14,7 +14,7 @@
  *     response where `response.a === this` and `response.b === other`,
  *     with `response.normal` pointing in the receiver's MTV direction.
  *     Dispatched once per pair per side per frame (dedup'd via
- *     `_pairKey` / `_frameSeen`). Same contract under every adapter.
+ *     `pairKey` / `frameSeen`). Same contract under every adapter.
  *
  * These tests pin both contracts so neither side regresses.
  */
@@ -339,7 +339,7 @@ describe("Physics : onCollisionActive new contract (19.5+, receiver-symmetric)",
 	it("fires exactly once per pair per side per frame (dedup'd)", () => {
 		world.update(16);
 		// Unlike legacy `onCollision`, the new handler is dedup'd via
-		// `_pairKey` so the second outer iteration skips the dispatch.
+		// `pairKey` so the second outer iteration skips the dispatch.
 		// Each side fires exactly once.
 		expect(aCalls.length).toEqual(1);
 		expect(bCalls.length).toEqual(1);

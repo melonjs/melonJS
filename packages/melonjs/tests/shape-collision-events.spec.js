@@ -68,7 +68,7 @@ describe("Physics : shape-level collision events", () => {
 		it("never engages the enumeration machinery when nobody subscribes", () => {
 			// The only behavioural difference inside `collides()` is gated on the
 			// `onContact` callback, and that callback is the sole writer of
-			// `_frameShapeSeen`. An empty map after a step with a real collision
+			// `frameShapeSeen`. An empty map after a step with a real collision
 			// therefore proves the loop took the pre-feature path and early
 			// returned on the first solid pair, rather than proving it merely
 			// produced the same answer.
@@ -86,8 +86,8 @@ describe("Physics : shape-level collision events", () => {
 			// the collision genuinely happened...
 			expect(resolved).toBeGreaterThan(0);
 			// ...and cost nothing on the new path
-			expect(world.detector._frameShapeSeen.size).toBe(0);
-			expect(world.detector._activeShapePairs.size).toBe(0);
+			expect(world.detector.frameShapeSeen.size).toBe(0);
+			expect(world.detector.activeShapePairs.size).toBe(0);
 		});
 
 		it("engages it as soon as one object subscribes", () => {
@@ -99,7 +99,7 @@ describe("Physics : shape-level collision events", () => {
 			});
 			a.onShapeCollisionActive = () => {};
 			world.update(16);
-			expect(world.detector._activeShapePairs.size).toBeGreaterThan(0);
+			expect(world.detector.activeShapePairs.size).toBeGreaterThan(0);
 		});
 
 		it("still delivers the same resolved contact to onCollision", () => {
@@ -383,7 +383,7 @@ describe("Physics : shape-level collision events", () => {
 
 	it("delivers events to a subscriber on a STATIC body", () => {
 		// a static body's own `collisions()` never runs, so its events can only
-		// arrive through the dynamic partner's visit. The `_wantsShapeContacts`
+		// arrive through the dynamic partner's visit. The `wantsShapeContacts`
 		// gate checks BOTH objects for exactly this reason.
 		const wall = add(108, [new Rect(0, 0, 32, 32)], {
 			type: "static",
@@ -401,8 +401,8 @@ describe("Physics : shape-level collision events", () => {
 	});
 
 	it("keeps Z data sign-symmetric between the two receivers", () => {
-		// `_fillShapeView` negates the Z triple on the flipped side, exactly as
-		// `_fillSymView` does. A sign error there would ship silently because
+		// `fillShapeView` negates the Z triple on the flipped side, exactly as
+		// `fillSymView` does. A sign error there would ship silently because
 		// planar pairs leave every Z field at 0.
 		const a = add(100, [new Rect(0, 0, 32, 32)]);
 		const b = add(108, [new Rect(0, 0, 32, 32)], {
