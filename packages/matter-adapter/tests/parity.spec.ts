@@ -19,15 +19,23 @@ import {
 	boot,
 	Container,
 	collision,
+	Line,
 	Polygon,
 	Rect,
 	Renderable,
+	RoundRect,
 	Vector2d,
 	video,
 	World,
 } from "melonjs";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { MatterAdapter } from "../src/index";
+
+/**
+ * `Polygon` takes a tuple of at least three points; the engine's own
+ * `PolygonVertices` is not exported from the package root.
+ */
+type PolygonPoints = [Vector2d, Vector2d, Vector2d, ...Vector2d[]];
 
 interface AdapterFactory {
 	name: string;
@@ -135,6 +143,140 @@ for (const { name, make, rayPrecision, expectedCapabilities } of factories) {
 			world.addChild(r);
 			return r;
 		};
+
+		describe("shape type coverage", () => {
+			it("keeps the extent of an outline with many vertices", () => {
+				// Box2D caps a polygon's vertex count and truncates past it
+				// without a word. Measured before the fix: a 36-point outline
+				// collapsed from 70x36 to 47x18. matter has no such cap, so
+				// this passes there either way and guards the planck path.
+				const points: Vector2d[] = [];
+				for (let i = 0; i < 36; i++) {
+					const a = (i / 36) * Math.PI * 2;
+					points.push(
+						new Vector2d(40 + 35 * Math.cos(a), 20 + 18 * Math.sin(a)),
+					);
+				}
+				const r = addToWorld(new Renderable(100, 100, 80, 40), {
+					type: "static",
+					shapes: [new Polygon(0, 0, points as unknown as PolygonPoints)],
+				});
+				let minX = Number.POSITIVE_INFINITY;
+				let minY = Number.POSITIVE_INFINITY;
+				let maxX = Number.NEGATIVE_INFINITY;
+				let maxY = Number.NEGATIVE_INFINITY;
+				for (const shape of adapter.getBodyShapes(r)) {
+					const poly = shape as Polygon;
+					for (const p of poly.points) {
+						minX = Math.min(minX, p.x + poly.pos.x);
+						minY = Math.min(minY, p.y + poly.pos.y);
+						maxX = Math.max(maxX, p.x + poly.pos.x);
+						maxY = Math.max(maxY, p.y + poly.pos.y);
+					}
+				}
+				// the authored outline spans 70 x 36
+				expect(maxX - minX).toBeCloseTo(70, 0);
+				expect(maxY - minY).toBeCloseTo(36, 0);
+			});
+
+			it("keeps a RoundRect's authored extent", () => {
+				// `RoundRect` extends `Polygon`, not `Rect`, and carries 36
+				// points (4 corners x 9 arc segments). Box2D caps a polygon's
+				// vertex count and truncates over it without a word: measured
+				// before the fix, an 80x40 rounded rect came back as 10x34.
+				const r = addToWorld(new Renderable(100, 100, 80, 40), {
+					type: "static",
+					shapes: [new RoundRect(0, 0, 80, 40, 10)],
+				});
+				let minX = Number.POSITIVE_INFINITY;
+				let minY = Number.POSITIVE_INFINITY;
+				let maxX = Number.NEGATIVE_INFINITY;
+				let maxY = Number.NEGATIVE_INFINITY;
+				for (const shape of adapter.getBodyShapes(r)) {
+					const poly = shape as Polygon;
+					for (const p of poly.points) {
+						minX = Math.min(minX, p.x + poly.pos.x);
+						minY = Math.min(minY, p.y + poly.pos.y);
+						maxX = Math.max(maxX, p.x + poly.pos.x);
+						maxY = Math.max(maxY, p.y + poly.pos.y);
+					}
+				}
+				expect(maxX - minX).toBeCloseTo(80, 0);
+				expect(maxY - minY).toBeCloseTo(40, 0);
+			});
+		});
+
+		describe("Line collision shapes", () => {
+			// A `Line` is two points and no area, and it is what Tiled emits
+			// for every polyline, so it is the natural way to author a slope
+			// or a strip of ground. Every backend accepts one and every
+			// backend currently does something different and silent with it:
+			// the builtin finds no contact at all against a segment that is
+			// not axis aligned, matter substitutes the bounding box, and
+			// planck substitutes a one-metre square (Box2D's `SetAsBox(1, 1)`
+			// fallback for a polygon with fewer than three vertices).
+			//
+			// Each body starts just above its surface. A zero-thickness shape
+			// is trivially tunnelled through by a body moving fast enough,
+			// and no backend claims continuous detection here, so a long drop
+			// would test CCD rather than whether the segment collides at all.
+			const settleOnto = (shape: Line, startBottom: number) => {
+				const ground = new Renderable(0, 200, 400, 200);
+				ground.anchorPoint.set(0, 0);
+				ground.alwaysUpdate = true;
+				ground.bodyDef = { type: "static", shapes: [shape] };
+				world.addChild(ground);
+
+				const box = new Renderable(190, startBottom - 20, 20, 20);
+				box.anchorPoint.set(0, 0);
+				box.alwaysUpdate = true;
+				box.bodyDef = { type: "dynamic", shapes: [new Rect(0, 0, 20, 20)] };
+				world.addChild(box);
+
+				for (let i = 0; i < 400; i++) {
+					world.update(16);
+				}
+				return { restedAt: box.pos.y + 20, ground };
+			};
+
+			it("rests a body on a horizontal Line", () => {
+				// segment at local y=100 on ground placed at y=200
+				const r = settleOnto(
+					new Line(0, 0, [new Vector2d(0, 100), new Vector2d(400, 100)]),
+					292,
+				);
+				expect(Math.abs(r.restedAt - 300)).toBeLessThan(2);
+			});
+
+			it("reports a Line as the segment it was given", () => {
+				// Every reported vertex has to sit ON the authored segment.
+				// A bounding box has the same extent as a diagonal segment,
+				// so comparing extents would not tell the two apart; the
+				// corners are what give it away.
+				const r = settleOnto(
+					new Line(0, 0, [new Vector2d(0, 0), new Vector2d(400, 200)]),
+					292,
+				);
+				const distanceToSegment = (px: number, py: number) => {
+					const t = Math.max(
+						0,
+						Math.min(1, (px * 400 + py * 200) / (400 * 400 + 200 * 200)),
+					);
+					return Math.hypot(px - t * 400, py - t * 200);
+				};
+				let worst = 0;
+				for (const shape of adapter.getBodyShapes(r.ground)) {
+					const poly = shape as Polygon;
+					for (const p of poly.points) {
+						worst = Math.max(
+							worst,
+							distanceToSegment(p.x + poly.pos.x, p.y + poly.pos.y),
+						);
+					}
+				}
+				expect(worst).toBeLessThan(2);
+			});
+		});
 
 		describe("anchorPoint and collision alignment", () => {
 			// `anchorPoint` moves where a renderable DRAWS: `updateBounds()`

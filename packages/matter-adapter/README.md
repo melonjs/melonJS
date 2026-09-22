@@ -338,7 +338,7 @@ melonJS body definitions (`BodyDefinition`) are mapped to matter bodies. The key
 ```ts
 this.bodyDef = {
     type: "dynamic" | "static",
-    shapes: BodyShape[],         // Rect, Polygon, Ellipse, etc.
+    shapes: BodyShape[],         // Rect, Polygon, RoundRect, Line, Ellipse (circle approximation)
     collisionType?: number,
     collisionMask?: number,
     maxVelocity?: { x, y },

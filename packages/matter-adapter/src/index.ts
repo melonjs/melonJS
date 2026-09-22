@@ -15,6 +15,7 @@ import {
 	type BodyShape,
 	type Bounds,
 	Ellipse,
+	Line,
 	version as melonjsVersion,
 	type PhysicsAdapter,
 	type PhysicsBody,
@@ -62,6 +63,21 @@ export interface MatterAdapterOptions {
 	 */
 	matterEngineOptions?: Matter.IEngineDefinition;
 }
+
+/**
+ * How thick a `Line` is simulated as, in pixels.
+ *
+ * matter has no segment primitive, so a zero-area outline cannot be built
+ * into a body at all: `Bodies.fromVertices` rejects the degenerate hull and
+ * the adapter used to fall back to the line's AXIS-ALIGNED BOUNDING BOX. For
+ * anything but a horizontal or vertical line that is a solid block rather
+ * than a surface, so a diagonal became a filled triangle-shaped wall and a
+ * body rested on the top of its bounding rectangle instead of on the slope.
+ *
+ * A thin oriented rectangle is the honest approximation: it follows the
+ * segment, it is convex, and matter simulates it exactly like any other box.
+ */
+const LINE_THICKNESS = 2;
 
 /**
  * melonJS physics adapter wrapping matter-js (https://brm.io/matter-js/).
@@ -1354,6 +1370,44 @@ export class MatterAdapter implements PhysicsAdapter {
 		baseX: number,
 		baseY: number,
 	): Matter.Body {
+		// A `Line` is two points and no area. Checked BEFORE `Polygon`,
+		// which it extends, and before `Rect`, so it never reaches the
+		// degenerate-hull path.
+		if (shape instanceof Line) {
+			const [a, b] = shape.points;
+			const dx = b.x - a.x;
+			const dy = b.y - a.y;
+			const length = Math.hypot(dx, dy);
+			if (length > 0) {
+				// Built from explicit VERTICES rather than a rectangle with an
+				// `angle`: an angle on the body is a rotation of the BODY, and
+				// `syncFromPhysics` mirrors that onto the renderable's
+				// transform, so the sprite would be turned by the slope of its
+				// own ground and the already-rotated shapes would be drawn
+				// turned a second time.
+				const nx = (-dy / length) * (LINE_THICKNESS / 2);
+				const ny = (dx / length) * (LINE_THICKNESS / 2);
+				const ox = baseX + shape.pos.x;
+				const oy = baseY + shape.pos.y;
+				const quad = [
+					{ x: ox + a.x + nx, y: oy + a.y + ny },
+					{ x: ox + b.x + nx, y: oy + b.y + ny },
+					{ x: ox + b.x - nx, y: oy + b.y - ny },
+					{ x: ox + a.x - nx, y: oy + a.y - ny },
+				];
+				const centre = Matter.Vertices.centre(quad);
+				const body: Matter.Body | undefined = Matter.Bodies.fromVertices(
+					centre.x,
+					centre.y,
+					[quad],
+				);
+				if (body) {
+					return body;
+				}
+			}
+			// a zero-length segment has no orientation to follow; let it fall
+			// through to the degenerate handling below rather than inventing one
+		}
 		if (shape instanceof Rect) {
 			// melonJS Rect: pos is top-left in shape-local space. Matter
 			// rectangles are centered, so we shift by half-width/half-height.

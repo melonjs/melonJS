@@ -226,7 +226,7 @@ melonJS body definitions (`BodyDefinition`) are mapped to planck bodies + fixtur
 ```ts
 this.bodyDef = {
     type: "dynamic" | "static" | "kinematic",
-    shapes: BodyShape[],         // Rect, Polygon, Ellipse (Ellipse → circle approximation)
+    shapes: BodyShape[],         // Rect, Polygon, RoundRect, Line, Ellipse (circle approximation)
     collisionType?: number,
     collisionMask?: number,
     maxVelocity?: { x, y },      // emulated via afterStep clamp
@@ -258,8 +258,10 @@ body.getFixtureList().setFilterMaskBits(collision.types.ENEMY_OBJECT);
 ## Behavioural notes when porting from the builtin adapter
 
 - **Rotation follows the engine.** `fixedRotation` defaults to `false`, as it does in planck itself, so a rigid body turns when something turns it. If your game code assumes axis-aligned bodies (it reads `pos` and expects an unrotated rect), pass `fixedRotation: true`. Before 1.5.0 this adapter locked rotation unless told otherwise, which inverted the engine it wraps.
-- **Polylines (zero-thickness lines) don't translate.** planck — like Box2D — can't make a body from collinear vertices, and polygons must be convex with ≤8 vertices. Replace TMX polylines with thin rectangles at load time, or load and rewrite them post-load.
+- **Segments are simulated as thin quads.** Box2D has no segment primitive and does not reject a degenerate polygon, it silently substitutes a one-metre box, so a `Line` (what Tiled emits for a polyline) used to collide as a 64px square wherever the body happened to be. Since 1.6.0 a `Line` is built as a thin quad following the segment, and that is what `getBodyShapes()` reports.
 - **Ellipses are approximated as circles** with the average radius. For tall/narrow ellipses this is a poor fit; a polygon hull is a better choice when accuracy matters.
+- **A polygon is capped at 12 vertices.** Box2D truncates past its cap without a word, and far past it the shape collapses. A `RoundRect` carries 36 points (four corner arcs of nine segments), so since 1.6.0 an outline over the cap is sampled down to it, keeping the extent and the silhouette. `getBodyShapes()` reports the decimated outline, so the debug overlay draws what is really simulated.
+- **A shape a 2D solver cannot express throws.** `Point`, `Box3d` and `Sphere` are refused with an error, as they are on the matter adapter. Before 1.6.0 they were skipped in silence, which left the body with no collision geometry at all.
 - **`maxVelocity` is emulated.** Box2D has no native velocity cap; the adapter clamps each body's velocity after every step.
 - **`isGrounded` is literal.** It returns `true` whenever any contact pair has the other body's center below this one's. Inside an `onCollisionStart` handler for a stomp, the enemy you just landed on already counts as "ground" — so don't use `!isGrounded` as a proxy for "I was airborne before this contact." Use the body's pre-contact velocity instead (`vel.y > 0` ⇒ falling at impact).
 - **Forces are real Newtons.** `applyForce(x, y)` is integrated as `force / mass * dt²`. Magnitudes feel ~100× smaller than the legacy SAT adapter — for jumps and dashes use `setVelocity` (immediate) or `applyImpulse` (`Δv = J / m`) instead.

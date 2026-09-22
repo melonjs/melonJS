@@ -3,6 +3,9 @@
 ## 1.6.0 - _unreleased_
 
 ### Fixed
+- A `RoundRect` collides at the size it was given. It extends `Polygon`, not `Rect`, and carries 36 points for its corner arcs, while Box2D caps a polygon's vertex count and truncates past it without a word: an 80x40 rounded rect was simulated as a 10x34 blob. An outline over the cap is sampled down to it evenly now, keeping the extent and the silhouette, and `getBodyShapes()` reports the decimated outline so the debug overlay draws what is really simulated
+- An unsupported shape type throws instead of being skipped in silence. A `Point`, `Box3d` or `Sphere` used to leave the body with no collision geometry at all and say nothing, so it simply never collided, while the same shape threw on the matter adapter. Both refuse the same way now
+- A `Line` collides as the segment it is. Box2D polygons need at least three vertices and it does not reject fewer: `b2PolygonShape` silently falls back to `SetAsBox(1, 1)`, so a two-point line became a one-metre square, 64px at the default `pixelsPerMeter`, sitting wherever the body was, with the authored segment discarded and nothing logged. It is simulated as a thin quad along the segment now, which is also what `getBodyShapes()` reports. `Line` is what Tiled emits for a polyline, so this is the usual way to author a slope or a strip of ground
 - A body is built in the frame its renderable draws in. The body origin was taken from `renderable.pos` with no regard for `anchorPoint`, which shifts where a renderable draws by `-size * anchorPoint`, so a sprite anchored anywhere other than its corner collided where it was not drawn: half its size away at the default centred anchor. A shape's own offset is untouched, so a hitbox deliberately placed inside the frame still lands where it was put
 
 ## 1.5.0 - _2026-09-21_
