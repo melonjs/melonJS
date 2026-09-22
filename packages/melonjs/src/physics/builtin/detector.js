@@ -60,6 +60,19 @@ const SAT_LOOKUP = {
 const reportedMissingPairs = new Set();
 
 /**
+ * How many separation sweeps a pair of bodies gets when at least one of them
+ * carries several collision shapes.
+ *
+ * One sweep already resolves EVERY overlapping shape pair once, so a second is
+ * only needed where correcting one contact reveals another — a body wedged
+ * into the junction between two shapes. The loop stops as soon as a sweep
+ * finds nothing left to push out of, so this is a ceiling, not a cost.
+ * @ignore
+ * @internal
+ */
+const COMPOUND_SEPARATION_PASSES = 3;
+
+/**
  * @import Entity from "../../renderable/entity/entity.js";
  * @import Container from "../../renderable/container.js";
  * @import Renderable from "../../renderable/renderable.js";
@@ -91,20 +104,31 @@ class Detector {
 		this.response = new ResponseObject();
 
 		/**
+		 * Scratch response for the compound-body separation sweep. Its own
+		 * object rather than `this.response`, because by the time the sweep
+		 * runs `this.response` is the contact that was already reported to the
+		 * collision handlers, and the sweep visits every OTHER overlapping
+		 * shape pair of the same body pair.
+		 * @ignore
+		 * @internal
+		 */
+		this.separationResponse = new ResponseObject();
+
+		/**
 		 * Pairs (key → [renderableA, renderableB]) that were colliding in
-		 * the previous step. Diffed against `_frameSeen` at end of step
+		 * the previous step. Diffed against `frameSeen` at end of step
 		 * to fire `onCollisionEnd` for pairs that just separated.
 		 * @ignore
 		 * @internal
 		 */
-		this._activePairs = new Map();
+		this.activePairs = new Map();
 		/**
 		 * Pairs seen during the current step. Built up as the per-object
 		 * `collisions()` calls run; consumed by `endFrame()`.
 		 * @ignore
 		 * @internal
 		 */
-		this._frameSeen = new Map();
+		this.frameSeen = new Map();
 		/**
 		 * Two-slot pool of "symmetric view" objects passed to the new
 		 * collision lifecycle handlers (`onCollisionStart` /
@@ -121,7 +145,7 @@ class Detector {
 		 * @ignore
 		 * @internal
 		 */
-		this._symViews = [
+		this.symViews = [
 			{
 				a: null,
 				b: null,
@@ -163,28 +187,28 @@ class Detector {
 
 		/**
 		 * Shape-pair contacts that were overlapping in the previous step (#1596).
-		 * Keyed by `_shapePairKey`, diffed against `_frameShapeSeen` in
+		 * Keyed by `shapePairKey`, diffed against `frameShapeSeen` in
 		 * `endFrame()` to fire `onShapeCollisionEnd`. Populated only when someone
 		 * subscribes, so a game that does not use the feature keeps these empty.
 		 * @ignore
 		 * @internal
 		 */
-		this._activeShapePairs = new Map();
+		this.activeShapePairs = new Map();
 		/**
 		 * @ignore
 		 * @internal
 		 */
-		this._frameShapeSeen = new Map();
+		this.frameShapeSeen = new Map();
 
 		/**
 		 * Two-slot pool of receiver-symmetric shape-contact views, mirroring
-		 * `_symViews`: `a` is the receiver, `b` the partner, and `shapeA` /
+		 * `symViews`: `a` is the receiver, `b` the partner, and `shapeA` /
 		 * `indexShapeA` are always the RECEIVER's shape. Two slots because both
 		 * sides may be live at once when a handler mutates the world.
 		 * @ignore
 		 * @internal
 		 */
-		this._shapeViews = [
+		this.shapeViews = [
 			{
 				a: null,
 				b: null,
@@ -228,25 +252,18 @@ class Detector {
 		 * @ignore
 		 * @internal
 		 */
-		this._contactObjA = null;
+		this.contactObjA = null;
 		/**
 		 * @ignore
 		 * @internal
 		 */
-		this._contactObjB = null;
+		this.contactObjB = null;
 		/**
 		 * @ignore
 		 * @internal
 		 */
-		this._onShapeContact = (shapeA, indexA, shapeB, indexB, isTrigger, res) => {
-			this._dispatchShapeContact(
-				shapeA,
-				indexA,
-				shapeB,
-				indexB,
-				isTrigger,
-				res,
-			);
+		this.onShapeContact = (shapeA, indexA, shapeB, indexB, isTrigger, res) => {
+			this.dispatchShapeContact(shapeA, indexA, shapeB, indexB, isTrigger, res);
 		};
 	}
 
@@ -260,8 +277,8 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_fillSymView(slot, satResponse, flip) {
-		const view = this._symViews[slot];
+	fillSymView(slot, satResponse, flip) {
+		const view = this.symViews[slot];
 		const oN = satResponse.overlapN;
 		const oV = satResponse.overlapV;
 		const oNZ = satResponse.overlapNZ;
@@ -312,8 +329,8 @@ class Detector {
 	 * @internal
 	 */
 	beginFrame() {
-		this._frameSeen.clear();
-		this._frameShapeSeen.clear();
+		this.frameSeen.clear();
+		this.frameShapeSeen.clear();
 	}
 
 	/**
@@ -325,8 +342,8 @@ class Detector {
 	 * @internal
 	 */
 	endFrame() {
-		for (const [key, pair] of this._activePairs) {
-			if (this._frameSeen.has(key)) {
+		for (const [key, pair] of this.activePairs) {
+			if (this.frameSeen.has(key)) {
 				continue;
 			}
 			const [a, b] = pair;
@@ -354,8 +371,8 @@ class Detector {
 		// per-renderable diff above, including the detached-object rule: a
 		// contact whose objects have both left the world is dropped silently
 		// rather than dispatched into torn-down handlers.
-		for (const [key, entry] of this._activeShapePairs) {
-			if (this._frameShapeSeen.has(key)) {
+		for (const [key, entry] of this.activeShapePairs) {
+			if (this.frameShapeSeen.has(key)) {
 				continue;
 			}
 			const [a, b, shapeA, shapeB] = entry;
@@ -368,20 +385,20 @@ class Detector {
 			// truthful to measure. The view carries identity only, which is
 			// why `onCollisionEnd` passes `undefined` for its response too.
 			if (aAttached && typeof a.onShapeCollisionEnd === "function") {
-				a.onShapeCollisionEnd(this._fillEndedView(0, a, b, shapeA, shapeB), b);
+				a.onShapeCollisionEnd(this.fillEndedView(0, a, b, shapeA, shapeB), b);
 			}
 			if (bAttached && typeof b.onShapeCollisionEnd === "function") {
-				b.onShapeCollisionEnd(this._fillEndedView(1, b, a, shapeB, shapeA), a);
+				b.onShapeCollisionEnd(this.fillEndedView(1, b, a, shapeB, shapeA), a);
 			}
 		}
 
-		const prev = this._activePairs;
-		this._activePairs = this._frameSeen;
-		this._frameSeen = prev;
-		const prevShapes = this._activeShapePairs;
-		this._activeShapePairs = this._frameShapeSeen;
-		this._frameShapeSeen = prevShapes;
-		this._frameShapeSeen.clear();
+		const prev = this.activePairs;
+		this.activePairs = this.frameSeen;
+		this.frameSeen = prev;
+		const prevShapes = this.activeShapePairs;
+		this.activeShapePairs = this.frameShapeSeen;
+		this.frameShapeSeen = prevShapes;
+		this.frameShapeSeen.clear();
 	}
 
 	/**
@@ -391,8 +408,8 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_fillEndedView(slot, receiver, partner, ownShape, otherShape) {
-		const view = this._shapeViews[slot];
+	fillEndedView(slot, receiver, partner, ownShape, otherShape) {
+		const view = this.shapeViews[slot];
 		view.a = receiver;
 		view.b = partner;
 		view.shapeA = ownShape;
@@ -422,7 +439,7 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_pairKey(a, b) {
+	pairKey(a, b) {
 		const ga = a.GUID;
 		const gb = b.GUID;
 		if (ga === undefined || gb === undefined) {
@@ -446,7 +463,7 @@ class Detector {
 	 * @internal
 	 * @returns {boolean} true when the pair was re-measured
 	 */
-	_retest(bodyA, bodyB, shapeA, shapeB, response) {
+	retest(bodyA, bodyB, shapeA, shapeB, response) {
 		const indexA = bodyA.shapes.indexOf(shapeA);
 		const indexB = bodyB.shapes.indexOf(shapeB);
 		if (indexA < 0 || indexB < 0) {
@@ -472,7 +489,7 @@ class Detector {
 	/**
 	 * Stable, order-independent key for one SHAPE pair (#1596).
 	 *
-	 * The renderable GUIDs order the pair, exactly as `_pairKey` does, and the
+	 * The renderable GUIDs order the pair, exactly as `pairKey` does, and the
 	 * two shape ids MUST swap alongside them: keying `guidA|guidB|idA|idB`
 	 * without that swap gives the same physical contact two different keys
 	 * depending on which object the outer loop visited first, and the contact
@@ -484,7 +501,7 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_shapePairKey(a, b, shapeA, shapeB) {
+	shapePairKey(a, b, shapeA, shapeB) {
 		const ga = a.GUID;
 		const gb = b.GUID;
 		const sa = shapeA?._contactId;
@@ -517,7 +534,7 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_wantsShapeContacts(obj) {
+	wantsShapeContacts(obj) {
 		return (
 			typeof obj.onShapeCollisionStart === "function" ||
 			typeof obj.onShapeCollisionActive === "function" ||
@@ -527,13 +544,13 @@ class Detector {
 
 	/**
 	 * Populate a pooled shape-contact view, same flip convention as
-	 * `_fillSymView`: `flip=false` builds the view for `response.a`'s side,
+	 * `fillSymView`: `flip=false` builds the view for `response.a`'s side,
 	 * `flip=true` for `response.b`'s, so `shapeA` is always the receiver's.
 	 * @ignore
 	 * @internal
 	 */
-	_fillShapeView(slot, satResponse, flip, shapeA, shapeB, isTrigger) {
-		const view = this._shapeViews[slot];
+	fillShapeView(slot, satResponse, flip, shapeA, shapeB, isTrigger) {
+		const view = this.shapeViews[slot];
 		const oN = satResponse.overlapN;
 		const oV = satResponse.overlapV;
 		const oNZ = satResponse.overlapNZ;
@@ -583,18 +600,18 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_dispatchShapeContact(shapeA, shapeB, isTrigger, response) {
-		const objA = this._contactObjA;
-		const objB = this._contactObjB;
-		const key = this._shapePairKey(objA, objB, shapeA, shapeB);
-		if (key === undefined || this._frameShapeSeen.has(key)) {
+	dispatchShapeContact(shapeA, shapeB, isTrigger, response) {
+		const objA = this.contactObjA;
+		const objB = this.contactObjB;
+		const key = this.shapePairKey(objA, objB, shapeA, shapeB);
+		if (key === undefined || this.frameShapeSeen.has(key)) {
 			// a dynamic-dynamic pair is visited twice per step (once per outer
 			// loop object); the second visit must not re-fire
 			return;
 		}
-		this._frameShapeSeen.set(key, [objA, objB, shapeA, shapeB]);
-		const isEntry = !this._activeShapePairs.has(key);
-		const viewA = this._fillShapeView(
+		this.frameShapeSeen.set(key, [objA, objB, shapeA, shapeB]);
+		const isEntry = !this.activeShapePairs.has(key);
+		const viewA = this.fillShapeView(
 			0,
 			response,
 			false,
@@ -602,7 +619,7 @@ class Detector {
 			shapeB,
 			isTrigger,
 		);
-		const viewB = this._fillShapeView(
+		const viewB = this.fillShapeView(
 			1,
 			response,
 			true,
@@ -636,9 +653,190 @@ class Detector {
 	 * @ignore
 	 * @internal
 	 */
-	_clearContactPair() {
-		this._contactObjA = null;
-		this._contactObjB = null;
+	clearContactPair() {
+		this.contactObjA = null;
+		this.contactObjB = null;
+	}
+
+	/**
+	 * Per-shape half of {@link Detector#shouldCollide} (#1590).
+	 *
+	 * A body's `collisionType` / `collisionMask` decide whether a pair of
+	 * bodies reaches the narrowphase at all; these refine that per shape, so a
+	 * shape can narrow what its body allows but never widen it.
+	 *
+	 * `isActive === false` removes a shape from the simulation entirely — no
+	 * test, no contact, no events — without the cost of removing and re-adding
+	 * it.
+	 * @ignore
+	 * @internal
+	 * @returns {boolean} true when this shape pair may produce a contact
+	 */
+	shapesShouldCollide(bodyA, shapeA, bodyB, shapeB) {
+		if (shapeA.isActive === false || shapeB.isActive === false) {
+			return false;
+		}
+		// `??` and not `||`: 0 is a legitimate collision type, so an unset
+		// field must fall through to the body while a deliberate zero must not.
+		const typeA = shapeA.collisionType ?? bodyA.collisionType;
+		const maskA = shapeA.collisionMask ?? bodyA.collisionMask;
+		const typeB = shapeB.collisionType ?? bodyB.collisionType;
+		const maskB = shapeB.collisionMask ?? bodyB.collisionMask;
+		return (maskA & typeB) !== 0 && (typeA & maskB) !== 0;
+	}
+
+	/**
+	 * Push a pair of bodies apart along EVERY overlapping shape pair, for the
+	 * case where at least one of them carries more than one collision shape.
+	 *
+	 * `collides()` reports ONE contact per body pair: it returns at the first
+	 * overlapping shape pair it finds, and the solver resolves that one. For a
+	 * single-shape body that is the whole truth, but a compound body can be
+	 * penetrated on several of its shapes at once, and the siblings of the
+	 * reported pair are never even tested.
+	 *
+	 * This used to be handled by re-running `collides()` up to three times and
+	 * applying whatever it reported, which cannot work: the re-run scans in the
+	 * same order and returns the SAME pair every time. Once that pair has been
+	 * resolved it is exactly touching, which still counts as a contact, so the
+	 * loop spent all three passes re-resolving a zero overlap while a sibling
+	 * shape was penetrated without limit. A body resting across the junction of
+	 * a polyline drifted into the neighbouring segment at the full rate of its
+	 * horizontal motion, and dropped out of the world when the segment it was
+	 * standing on finally stopped overlapping and the accumulated penetration
+	 * was resolved the short way — straight through.
+	 *
+	 * So the sweep enumerates the shape pairs itself and corrects each one,
+	 * measuring every pair against the position the previous corrections left
+	 * behind. Nothing is accumulated and re-applied, so a pair whose overlap an
+	 * earlier correction already removed contributes nothing, and no contact
+	 * can be counted twice.
+	 * @ignore
+	 * @internal
+	 * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} objA - object A
+	 * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} objB - object B
+	 */
+	separateCompound(objA, objB) {
+		const bodyA = objA.body;
+		const bodyB = objB.body;
+		const aIsDynamic = bodyA.isStatic === false;
+		const bIsDynamic = bodyB.isStatic === false;
+		if (aIsDynamic === false && bIsDynamic === false) {
+			return;
+		}
+
+		// mass ratio for proportional response, constant across the sweep
+		const bothDynamic = aIsDynamic && bIsDynamic;
+		const totalMass = bothDynamic ? bodyA.mass + bodyB.mass : 0;
+		const ratioA = bothDynamic
+			? totalMass > 0
+				? bodyB.mass / totalMass
+				: 0.5
+			: 1;
+		const ratioB = bothDynamic
+			? totalMass > 0
+				? bodyA.mass / totalMass
+				: 0.5
+			: 1;
+
+		const response = this.separationResponse;
+		let passes = COMPOUND_SEPARATION_PASSES;
+		while (passes-- > 0) {
+			let separated = false;
+			for (
+				let indexA = bodyA.shapes.length, shapeA;
+				indexA--, (shapeA = bodyA.shapes[indexA]);
+			) {
+				for (
+					let indexB = bodyB.shapes.length, shapeB;
+					indexB--, (shapeB = bodyB.shapes[indexB]);
+				) {
+					// A trigger shape reports a contact but is never pushed out
+					// of, and it must not suppress a solid sibling either — so
+					// it is skipped here rather than ending the sweep.
+					if (shapeA.isTrigger === true || shapeB.isTrigger === true) {
+						continue;
+					}
+					if (!this.shapesShouldCollide(bodyA, shapeA, bodyB, shapeB)) {
+						continue;
+					}
+					const test = SAT_LOOKUP[shapeA.type + shapeB.type];
+					if (test === undefined) {
+						// already warned about by `collides`
+						continue;
+					}
+					if (
+						test.call(
+							this,
+							bodyA.ancestor,
+							shapeA,
+							bodyB.ancestor,
+							shapeB,
+							response.clear(),
+						) !== true
+					) {
+						continue;
+					}
+					// Exactly touching is a contact but not a penetration, and
+					// it is what every resolved contact looks like. Correcting
+					// it would be a no-op write; skipping it is what lets the
+					// sweep below detect that there is nothing left to do.
+					if (response.overlap <= 0) {
+						continue;
+					}
+					separated = true;
+
+					const overlap = response.overlapV;
+					const overlapN = response.overlapN;
+					// Z half of the same two vectors. Both are 0 for every
+					// planar shape pair, so the arithmetic below is bit-for-bit
+					// inert for a 2D body — no branch needed.
+					const overlapZ = response.overlapZ;
+					const overlapNZ = response.overlapNZ;
+
+					if (aIsDynamic) {
+						bodyA.ancestor.pos.set(
+							bodyA.ancestor.pos.x - overlap.x * ratioA,
+							bodyA.ancestor.pos.y - overlap.y * ratioA,
+							bodyA.ancestor.pos.z - overlapZ * ratioA,
+						);
+						// cancel velocity into this surface (no bounce)
+						const projVel =
+							bodyA.vel.x * overlapN.x +
+							bodyA.vel.y * overlapN.y +
+							bodyA.velZ * overlapNZ;
+						if (projVel > 0) {
+							bodyA.vel.x -= projVel * ratioA * overlapN.x;
+							bodyA.vel.y -= projVel * ratioA * overlapN.y;
+							bodyA.velZ -= projVel * ratioA * overlapNZ;
+						}
+					}
+					if (bIsDynamic) {
+						bodyB.ancestor.pos.set(
+							bodyB.ancestor.pos.x + overlap.x * ratioB,
+							bodyB.ancestor.pos.y + overlap.y * ratioB,
+							bodyB.ancestor.pos.z + overlapZ * ratioB,
+						);
+						const projVel =
+							bodyB.vel.x * overlapN.x +
+							bodyB.vel.y * overlapN.y +
+							bodyB.velZ * overlapNZ;
+						if (projVel > 0) {
+							bodyB.vel.x -= projVel * ratioB * overlapN.x;
+							bodyB.vel.y -= projVel * ratioB * overlapN.y;
+							bodyB.velZ -= projVel * ratioB * overlapNZ;
+						}
+					}
+				}
+			}
+			if (separated === false) {
+				// every shape pair is either clear or exactly touching
+				break;
+			}
+			// update the cached bounds after the positions changed
+			boundsA.addBounds(objA.getBounds(), true);
+			boundsA.addBounds(bodyA.getBounds());
+		}
 	}
 
 	/**
@@ -705,25 +903,10 @@ class Detector {
 				let indexB = bodyB.shapes.length, shapeB;
 				indexB--, (shapeB = bodyB.shapes[indexB]);
 			) {
-				// Per-shape gate (#1590), before any geometry work. A body's
-				// `collisionType`/`collisionMask` still decide whether the pair
-				// reaches this loop at all; these refine it per shape, so a
-				// shape can narrow what its body allows but never widen it.
-				//
-				// `isActive === false` removes a shape from the simulation
-				// entirely — no test, no contact, no events — without the cost
-				// of removing and re-adding it.
-				if (shapeA.isActive === false || shapeB.isActive === false) {
-					continue;
-				}
-				// `??` and not `||`: 0 is a legitimate collision type, so an
-				// unset field must fall through to the body while a deliberate
-				// zero must not.
-				const typeA = shapeA.collisionType ?? bodyA.collisionType;
-				const maskA = shapeA.collisionMask ?? bodyA.collisionMask;
-				const typeB = shapeB.collisionType ?? bodyB.collisionType;
-				const maskB = shapeB.collisionMask ?? bodyB.collisionMask;
-				if ((maskA & typeB) === 0 || (typeA & maskB) === 0) {
+				// Per-shape gate (#1590), before any geometry work. Shared with
+				// the compound separation sweep so the two can never disagree
+				// about which shape pairs exist.
+				if (!this.shapesShouldCollide(bodyA, shapeA, bodyB, shapeB)) {
 					continue;
 				}
 
@@ -804,7 +987,7 @@ class Detector {
 
 		if (
 			solidShapeA !== null &&
-			this._retest(bodyA, bodyB, solidShapeA, solidShapeB, response)
+			this.retest(bodyA, bodyB, solidShapeA, solidShapeB, response)
 		) {
 			return true;
 		}
@@ -814,7 +997,7 @@ class Detector {
 			// Re-run the remembered pair to repopulate the response: the loop
 			// above cleared it on every subsequent test, and the handlers still
 			// need a truthful overlap to read.
-			if (this._retest(bodyA, bodyB, triggerShapeA, triggerShapeB, response)) {
+			if (this.retest(bodyA, bodyB, triggerShapeA, triggerShapeB, response)) {
 				// consumed at the push-out sites — the contact reports normally
 				// and simply contributes no position correction
 				response.isTriggerContact = true;
@@ -853,12 +1036,12 @@ class Detector {
 					// callback stays undefined so `collides()` takes exactly the
 					// path it took before this feature existed.
 					const wantsContacts =
-						this._wantsShapeContacts(objA) || this._wantsShapeContacts(objB);
+						this.wantsShapeContacts(objA) || this.wantsShapeContacts(objB);
 					let onContact;
 					if (wantsContacts === true) {
-						this._contactObjA = objA;
-						this._contactObjB = objB;
-						onContact = this._onShapeContact;
+						this.contactObjA = objA;
+						this.contactObjB = objB;
+						onContact = this.onShapeContact;
 					}
 					const didCollide = this.collides(
 						objA.body,
@@ -867,7 +1050,7 @@ class Detector {
 						onContact,
 					);
 					if (wantsContacts === true) {
-						this._clearContactPair();
+						this.clearContactPair();
 					}
 					if (didCollide) {
 						// we touched something !
@@ -879,8 +1062,8 @@ class Detector {
 						// once per frame to these handlers (regardless of
 						// the SAT detector visiting it twice across the two
 						// outer iterations — once with objA as outer, once
-						// with objB as outer). `_frameSeen` is the per-frame
-						// dedup; `_activePairs` carries pair state across
+						// with objB as outer). `frameSeen` is the per-frame
+						// dedup; `activePairs` carries pair state across
 						// frames so we can fire onCollisionStart on entry and
 						// onCollisionEnd on separation.
 						//
@@ -890,14 +1073,14 @@ class Detector {
 						// of `this`). The legacy `onCollision` dispatch
 						// below uses the unmodified SAT response (fixed
 						// a/b, fixed sign) for 19.4 backward compatibility.
-						const pairKey = this._pairKey(objA, objB);
+						const pairKey = this.pairKey(objA, objB);
 						const firstVisitThisFrame =
-							pairKey !== undefined && !this._frameSeen.has(pairKey);
+							pairKey !== undefined && !this.frameSeen.has(pairKey);
 						if (firstVisitThisFrame) {
-							this._frameSeen.set(pairKey, [objA, objB]);
-							const isEntry = !this._activePairs.has(pairKey);
-							const viewA = this._fillSymView(0, this.response, false);
-							const viewB = this._fillSymView(1, this.response, true);
+							this.frameSeen.set(pairKey, [objA, objB]);
+							const isEntry = !this.activePairs.has(pairKey);
+							const viewA = this.fillSymView(0, this.response, false);
+							const viewB = this.fillSymView(1, this.response, true);
 							if (isEntry) {
 								if (typeof objA.onCollisionStart === "function") {
 									objA.onCollisionStart(viewA, objB);
@@ -995,11 +1178,13 @@ class Detector {
 							objB.body.respondToCollision.call(objB.body, this.response);
 						}
 
-						// for multi-shape bodies (e.g. polylines), resolve remaining
-						// overlaps at segment junctions.
+						// For multi-shape bodies (e.g. polylines), push out of every
+						// OTHER overlapping shape pair too: `collides` above reported
+						// only the first one it found, and the siblings it stopped
+						// short of are the junctions a body falls through.
 						//
-						// `!eitherSensor` matters as much here as it does above: this
-						// loop writes positions DIRECTLY (`ancestor.pos.set(...)`)
+						// `!eitherSensor` matters as much here as it does above: the
+						// sweep writes positions DIRECTLY (`ancestor.pos.set(...)`)
 						// rather than going through `respondToCollision`, and it used
 						// to gate only on `isStatic`. A sensor with a single shape was
 						// therefore held in place correctly, and the same sensor with
@@ -1009,88 +1194,7 @@ class Detector {
 							!eitherSensor &&
 							(objA.body.shapes.length > 1 || objB.body.shapes.length > 1)
 						) {
-							let extraPasses = 3;
-							while (extraPasses-- > 0 && this.collides(objA.body, objB.body)) {
-								// Defence in depth. The `!eitherSensor` gate on this
-								// loop already covers the common case, since it is
-								// computed from the first reported pair. But
-								// `collides` runs again each iteration and may report
-								// a DIFFERENT pair — one involving a trigger — after
-								// an earlier pass moved things. Cheap to re-check,
-								// and the alternative is a trigger being repositioned
-								// by a later pass having been correctly skipped by
-								// the first.
-								const passShapeA = objA.body.shapes[this.response.indexShapeA];
-								const passShapeB = objB.body.shapes[this.response.indexShapeB];
-								if (
-									passShapeA?.isTrigger === true ||
-									passShapeB?.isTrigger === true
-								) {
-									break;
-								}
-								const overlap = this.response.overlapV;
-								const overlapN = this.response.overlapN;
-								// Z half of the same two vectors. Both are 0 for
-								// every planar shape pair, so the arithmetic below
-								// is bit-for-bit inert for a 2D body — no branch
-								// needed to keep the legacy path unchanged.
-								const overlapZ = this.response.overlapZ;
-								const overlapNZ = this.response.overlapNZ;
-
-								// mass ratio for proportional response
-								const bothDynamic = !objA.body.isStatic && !objB.body.isStatic;
-								const totalMass = bothDynamic
-									? objA.body.mass + objB.body.mass
-									: 0;
-								const ratioA = bothDynamic
-									? totalMass > 0
-										? objB.body.mass / totalMass
-										: 0.5
-									: 1;
-								const ratioB = bothDynamic
-									? totalMass > 0
-										? objA.body.mass / totalMass
-										: 0.5
-									: 1;
-
-								// correct position
-								if (objA.body.isStatic === false) {
-									objA.body.ancestor.pos.set(
-										objA.body.ancestor.pos.x - overlap.x * ratioA,
-										objA.body.ancestor.pos.y - overlap.y * ratioA,
-										objA.body.ancestor.pos.z - overlapZ * ratioA,
-									);
-									// cancel velocity into this surface (no bounce)
-									const projVel =
-										objA.body.vel.x * overlapN.x +
-										objA.body.vel.y * overlapN.y +
-										objA.body.velZ * overlapNZ;
-									if (projVel > 0) {
-										objA.body.vel.x -= projVel * ratioA * overlapN.x;
-										objA.body.vel.y -= projVel * ratioA * overlapN.y;
-										objA.body.velZ -= projVel * ratioA * overlapNZ;
-									}
-								}
-								if (objB.body.isStatic === false) {
-									objB.body.ancestor.pos.set(
-										objB.body.ancestor.pos.x + overlap.x * ratioB,
-										objB.body.ancestor.pos.y + overlap.y * ratioB,
-										objB.body.ancestor.pos.z + overlapZ * ratioB,
-									);
-									const projVel =
-										objB.body.vel.x * overlapN.x +
-										objB.body.vel.y * overlapN.y +
-										objB.body.velZ * overlapNZ;
-									if (projVel > 0) {
-										objB.body.vel.x -= projVel * ratioB * overlapN.x;
-										objB.body.vel.y -= projVel * ratioB * overlapN.y;
-										objB.body.velZ -= projVel * ratioB * overlapNZ;
-									}
-								}
-								// update bounds after position changed
-								boundsA.addBounds(objA.getBounds(), true);
-								boundsA.addBounds(objA.body.getBounds());
-							}
+							this.separateCompound(objA, objB);
 						}
 					}
 				}

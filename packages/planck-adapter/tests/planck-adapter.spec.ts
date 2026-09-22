@@ -11,11 +11,16 @@
 
 import {
 	Application,
+	Box3d,
 	boot,
 	collision,
+	Ellipse,
+	Line,
+	Point,
 	Polygon,
 	Rect,
 	Renderable,
+	Sphere,
 	Vector2d,
 	video,
 	World,
@@ -233,6 +238,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 
 		it("applyForce at off-centre point generates torque", () => {
 			const r = new Renderable(100, 100, 64, 64);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 64, 64)],
@@ -349,6 +356,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 
 		it("body.applyForce(x, y, px, py) signature works", () => {
 			const r = new Renderable(100, 100, 64, 64);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			const body = adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 64, 64)],
@@ -632,6 +641,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 	describe("getBodyAABB / getBodyShapes", () => {
 		it("returns a local-space AABB for the body", () => {
 			const r = new Renderable(100, 100, 32, 32);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 32, 32)],
@@ -662,6 +673,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 			// The authored definitions remain available on `bodyDef.shapes`.
 			const rect = new Rect(0, 0, 32, 32);
 			const r = new Renderable(100, 100, 32, 32);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			adapter.addBody(r, { type: "dynamic", shapes: [rect] });
 			const shapes = adapter.getBodyShapes(r);
 			expect(shapes.length).toEqual(1);
@@ -762,6 +775,8 @@ describe("PlanckAdapter — unit conversion", () => {
 
 	it("internal planck position is in meters", () => {
 		const r = new Renderable(100, 100, 32, 32);
+		// corner-anchored: this case works in `pos + size` terms
+		r.anchorPoint.set(0, 0);
 		const body = adapter.addBody(r, {
 			type: "dynamic",
 			shapes: [new Rect(0, 0, 32, 32)],
@@ -782,5 +797,151 @@ describe("PlanckAdapter — unit conversion", () => {
 		});
 		const v = body.getLinearVelocity();
 		expect(v).toBeInstanceOf(planck.Vec2);
+	});
+});
+
+describe("PlanckAdapter — a Line is a real segment", () => {
+	let world: World;
+	let adapter: PlanckAdapter;
+
+	beforeAll(async () => {
+		boot();
+		const app = new Application(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+	});
+
+	beforeEach(() => {
+		adapter = new PlanckAdapter({ gravity: { x: 0, y: 320 } });
+		world = new World(0, 0, 800, 600, adapter);
+	});
+
+	it("lands a body on a sloped Line rather than passing through it", () => {
+		// The engine has no segment primitive, so a `Line` is simulated as a
+		// thin oriented quad. Before that it was a degenerate outline, and
+		// each engine substituted something of its own invention: the
+		// bounding box, or a one-metre square.
+		//
+		// A short run on purpose. This is a real rigid body on a 26 degree
+		// slope, so it lands and then SLIDES, which is correct; the surface
+		// height is therefore read at wherever the body has got to.
+		const ground = new Renderable(0, 200, 400, 200);
+		ground.anchorPoint.set(0, 0);
+		ground.alwaysUpdate = true;
+		ground.bodyDef = {
+			type: "static",
+			shapes: [new Line(0, 0, [new Vector2d(0, 0), new Vector2d(400, 200)])],
+		};
+		world.addChild(ground);
+
+		const box = new Renderable(190, 272, 20, 20);
+		box.anchorPoint.set(0, 0);
+		box.alwaysUpdate = true;
+		box.bodyDef = { type: "dynamic", shapes: [new Rect(0, 0, 20, 20)] };
+		world.addChild(box);
+
+		for (let i = 0; i < 60; i++) {
+			world.update(16);
+		}
+
+		// The slope runs from (0,200) to (400,400) in world terms. The
+		// tolerance is loose on purpose: a SQUARE resting on a 26 degree
+		// slope touches it at a corner, so its bottom edge sits up to
+		// `halfWidth * sin(angle)` above the surface before any solver slop.
+		// What is being pinned is that it landed at all, against the 2000px
+		// and 70000px it fell when the segment was replaced by something
+		// else.
+		const surfaceY = 200 + (box.pos.x + 10) * 0.5;
+		expect(Math.abs(box.pos.y + 20 - surfaceY)).toBeLessThan(12);
+	});
+});
+
+describe("PlanckAdapter — unsupported shape types", () => {
+	let world: World;
+	let adapter: PlanckAdapter;
+
+	beforeAll(async () => {
+		boot();
+		const app = new Application(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+	});
+
+	beforeEach(() => {
+		adapter = new PlanckAdapter({ gravity: { x: 0, y: 320 } });
+		world = new World(0, 0, 800, 600, adapter);
+	});
+
+	// A 3D shape has no meaning to a 2D solver, and a `Point` has no area to
+	// build a fixture from. Refusing them LOUDLY is the contract: skipping
+	// them quietly left a body with no collision geometry at all, so it
+	// simply never collided, and it did so on only one of the two backends.
+	it("does not rotate the renderable to the slope of its own Line", () => {
+		// A segment is simulated as a thin quad. Built as a RECTANGLE WITH AN
+		// ANGLE, that angle belongs to the BODY, and `syncFromPhysics` mirrors
+		// a body's angle onto the renderable's transform: the sprite would
+		// silently be turned by the slope of the ground it is made of, and the
+		// already-posed shapes drawn turned a second time on top. Built from
+		// explicit vertices instead, the body stays unrotated.
+		const r = new Renderable(100, 100, 400, 200);
+		r.anchorPoint.set(0, 0);
+		r.alwaysUpdate = true;
+		r.bodyDef = {
+			type: "static",
+			shapes: [new Line(0, 0, [new Vector2d(0, 0), new Vector2d(400, 200)])],
+		};
+		world.addChild(r);
+		world.update(16);
+
+		expect(adapter.getAngle?.(r) ?? 0).toBeCloseTo(0, 6);
+		// and the transform the sprite is drawn through turns nothing: a unit
+		// vector comes back unrotated. Asserted on behaviour rather than with
+		// `isIdentity()`, which is stricter than the question being asked.
+		const probe = new Vector2d(1, 0);
+		r.currentTransform.apply(probe);
+		expect(probe.x).toBeCloseTo(1, 6);
+		expect(probe.y).toBeCloseTo(0, 6);
+	});
+
+	it("reports an Ellipse as the circle it is simulated as", () => {
+		// Neither engine has an ellipse primitive, so one is simulated as a
+		// circle of the average radius. A tall or narrow ellipse is therefore
+		// a poor fit, which is a documented approximation rather than a bug,
+		// and `getBodyShapes()` reports the circle so the debug overlay draws
+		// what actually collides.
+		const r = new Renderable(100, 100, 80, 40);
+		r.anchorPoint.set(0, 0);
+		r.alwaysUpdate = true;
+		r.bodyDef = { type: "static", shapes: [new Ellipse(40, 20, 80, 40)] };
+		world.addChild(r);
+
+		const shapes = adapter.getBodyShapes(r);
+		expect(shapes.length).toBe(1);
+		const reported = shapes[0] as Ellipse;
+		// a circle: both radii equal, and the average of the authored 40 / 20
+		expect(reported.radiusV.x).toBeCloseTo(30, 0);
+		expect(reported.radiusV.y).toBeCloseTo(30, 0);
+	});
+
+	it("throws rather than silently building no geometry", () => {
+		for (const shape of [
+			new Point(10, 10),
+			new Box3d(0, 0, 0, 80, 40, 10),
+			new Sphere(40, 20, 0, 20),
+		]) {
+			const r = new Renderable(100, 100, 80, 40);
+			r.anchorPoint.set(0, 0);
+			r.alwaysUpdate = true;
+			expect(() => {
+				r.bodyDef = { type: "static", shapes: [shape] };
+				world.addChild(r);
+			}).toThrow(/unsupported shape type/);
+		}
 	});
 });

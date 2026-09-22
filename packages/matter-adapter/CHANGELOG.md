@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 - _2026-09-22_
+
+### Fixed
+- A `Line` collides as the segment it is. matter has no segment primitive and refuses a zero-area outline, so a line fell back to its AXIS-ALIGNED BOUNDING BOX: a diagonal became a solid block, and a body rested on the top of that rectangle rather than on the slope. It is simulated as a thin oriented rectangle following the segment now, which is also what `getBodyShapes()` reports. `Line` is what Tiled emits for a polyline, so this is the usual way to author a slope or a strip of ground
+- A body is built in the frame its renderable draws in. The body origin was taken from `renderable.pos` with no regard for `anchorPoint`, which shifts where a renderable draws by `-size * anchorPoint`, so a sprite anchored anywhere other than its corner collided where it was not drawn: half its size away at the default centred anchor. A shape's own offset is untouched, so a hitbox deliberately placed inside the frame still lands where it was put
+- Polygon bodies are placed where they were authored. `Bodies.fromVertices` puts a polygon's area centroid at the position it is handed, and the adapter handed it the arithmetic mean of the vertices instead, so every polygon was shifted by the difference between those two points. The two coincide for a rectangle and for any triangle, which is why simple shapes never showed this; the gap grows with how unevenly the vertices are spread, making a traced outline from a shape editor the worst case, far enough off to sit visibly clear of the artwork it was drawn on
+
 ## 1.4.0 - _2026-09-21_
 
 ### Fixed

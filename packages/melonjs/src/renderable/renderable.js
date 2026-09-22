@@ -80,6 +80,14 @@ export default class Renderable extends Rect {
 		 * `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`,
 		 * `"bottom-left"`, `"bottom-right"` on every renderable that consumes it
 		 * (Sprite, Entity, Collectable, ImageLayer, Text, BitmapText, Sprite3d and subclasses).
+		 * <br>
+		 * <i><b>Note:</b> a body's collision shapes are measured from the same frame this
+		 * places the renderable in, so a shape of `Rect(0, 0, width, height)` covers the
+		 * renderable whatever the anchor is (since 20.7; before that shapes were measured
+		 * from `pos` regardless, and a non-corner anchor collided where it was not drawn).
+		 * A shape's own `pos` still offsets it inside that frame. Note also that the
+		 * adapters read the anchor when the body is created, so changing it afterwards
+		 * moves the drawing but not an already-built body.</i>
 		 * @type {ObservablePoint}
 		 * @default <0.5,0.5>
 		 */

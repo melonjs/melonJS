@@ -708,6 +708,12 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 		// uses).
 		const addDynamic = (x, y, def) => {
 			const r = new Renderable(x, y, 32, 32);
+			// These cases do their arithmetic in `pos + size` terms, which is
+			// the shape frame only for a renderable anchored at its corner.
+			// `Renderable` defaults to (0.5, 0.5), and shapes now follow the
+			// anchor as the drawing does, so the corner anchor is stated
+			// rather than assumed.
+			r.anchorPoint.set(0, 0);
 			r.alwaysUpdate = true;
 			r.bodyDef = { type: "dynamic", shapes: [new Rect(0, 0, 32, 32)], ...def };
 			world.addChild(r);
@@ -715,6 +721,7 @@ describe("Physics : BuiltinAdapter (adversarial)", () => {
 		};
 		const addStatic = (x, y, w, h, def) => {
 			const r = new Renderable(x, y, w, h);
+			r.anchorPoint.set(0, 0);
 			r.alwaysUpdate = true;
 			r.bodyDef = { type: "static", shapes: [new Rect(0, 0, w, h)], ...def };
 			world.addChild(r);

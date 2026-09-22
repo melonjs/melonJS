@@ -70,15 +70,15 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 			bEndCount++;
 		};
 
-		// seed `_activePairs` directly (skip the SAT integration path)
+		// seed `activePairs` directly (skip the SAT integration path)
 		const key = `${a.GUID}|${b.GUID}`;
-		detector._activePairs.set(key, [a, b]);
+		detector.activePairs.set(key, [a, b]);
 
 		// frame N+1: pair not seen this frame, and `b` got detached
 		// (level teardown / removeChild)
 		b.ancestor = undefined;
 
-		detector._frameSeen.clear();
+		detector.frameSeen.clear();
 		detector.endFrame();
 
 		expect(aEndCount).toEqual(1);
@@ -99,12 +99,12 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 		};
 
 		const key = `${a.GUID}|${b.GUID}`;
-		detector._activePairs.set(key, [a, b]);
+		detector.activePairs.set(key, [a, b]);
 
 		a.ancestor = undefined;
 		b.ancestor = undefined;
 
-		detector._frameSeen.clear();
+		detector.frameSeen.clear();
 		detector.endFrame();
 
 		expect(aEndCount).toEqual(0);
@@ -125,9 +125,9 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 		};
 
 		const key = `${a.GUID}|${b.GUID}`;
-		detector._activePairs.set(key, [a, b]);
+		detector.activePairs.set(key, [a, b]);
 
-		detector._frameSeen.clear();
+		detector.frameSeen.clear();
 		detector.endFrame();
 
 		expect(aEndCount).toEqual(1);
@@ -144,8 +144,8 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 		};
 
 		const key = `${a.GUID}|${b.GUID}`;
-		detector._activePairs.set(key, [a, b]);
-		detector._frameSeen.set(key, [a, b]);
+		detector.activePairs.set(key, [a, b]);
+		detector.frameSeen.set(key, [a, b]);
 		detector.endFrame();
 
 		expect(aEndCount).toEqual(0);
@@ -165,12 +165,12 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 		};
 
 		const key = `${a.GUID}|${b.GUID}`;
-		detector._activePairs.set(key, [a, b]);
+		detector.activePairs.set(key, [a, b]);
 
 		// some older code paths set ancestor to null instead of undefined
 		b.ancestor = null;
 
-		detector._frameSeen.clear();
+		detector.frameSeen.clear();
 		detector.endFrame();
 
 		expect(aEndCount).toEqual(1);
@@ -182,20 +182,20 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 		const b = makeRenderable(2);
 
 		const key = `${a.GUID}|${b.GUID}`;
-		detector._activePairs.set(key, [a, b]);
+		detector.activePairs.set(key, [a, b]);
 		// fresh frame: no pairs seen
 		detector.beginFrame();
 		detector.endFrame();
-		expect(detector._activePairs.size).toEqual(0);
+		expect(detector.activePairs.size).toEqual(0);
 
 		// next frame: a different pair seen
 		const c = makeRenderable(3);
 		const key2 = `${a.GUID}|${c.GUID}`;
 		detector.beginFrame();
-		detector._frameSeen.set(key2, [a, c]);
+		detector.frameSeen.set(key2, [a, c]);
 		detector.endFrame();
-		expect(detector._activePairs.size).toEqual(1);
-		expect(detector._activePairs.has(key2)).toEqual(true);
+		expect(detector.activePairs.size).toEqual(1);
+		expect(detector.activePairs.has(key2)).toEqual(true);
 	});
 
 	// Make sure direct collisions() path also exercises endFrame survivor dispatch
@@ -221,14 +221,14 @@ describe("Detector.endFrame — onCollisionEnd survivor dispatch", () => {
 		// no endFrame swap yet — sneak the pair manually as if seen
 		// (the SAT path can be flaky in test envs); just verify the
 		// endFrame path itself.
-		const key = detector._pairKey(a, b);
+		const key = detector.pairKey(a, b);
 		if (key) {
-			detector._activePairs.set(key, [a, b]);
+			detector.activePairs.set(key, [a, b]);
 		}
 
 		// frame 2: detach b, run endFrame
 		world.removeChild(b);
-		detector._frameSeen.clear();
+		detector.frameSeen.clear();
 		detector.endFrame();
 		expect(aEndCount).toBeGreaterThanOrEqual(1);
 	});

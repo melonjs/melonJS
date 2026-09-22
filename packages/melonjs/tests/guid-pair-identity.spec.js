@@ -6,7 +6,7 @@
  * call returned the literal string "-1" every time. Every renderable added to a
  * container shared one GUID.
  *
- * GUID's only consumer is `Detector._pairKey`, so every colliding pair in the
+ * GUID's only consumer is `Detector.pairKey`, so every colliding pair in the
  * world collapsed onto one key: the second simultaneous collision was treated
  * as already-seen that frame and its `onCollisionStart` / `onCollisionActive` /
  * `onCollisionEnd` never fired. `onCollision` was unaffected, which is how it

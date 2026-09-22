@@ -572,7 +572,15 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			return undefined;
 		}
 		const b = body.bounds;
-		out.setMinMax(b.min.x, b.min.y, b.max.x, b.max.y);
+		// same frame as `getBodyShapes`: where the body collides, which is
+		// the renderable's drawn frame rather than raw `pos`
+		const ax = Number.isFinite(renderable.width)
+			? renderable.width * renderable.anchorPoint.x
+			: 0;
+		const ay = Number.isFinite(renderable.height)
+			? renderable.height * renderable.anchorPoint.y
+			: 0;
+		out.setMinMax(b.min.x - ax, b.min.y - ay, b.max.x - ax, b.max.y - ay);
 		return out;
 	}
 
@@ -587,7 +595,33 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		if (!body || !this.bodies.has(body)) {
 			return [];
 		}
-		return body.shapes as BodyShape[];
+		const src = body.shapes as BodyShape[];
+		// Reported in the frame the body actually collides in. The stored
+		// shapes stay exactly as authored — the anchor offset is applied by
+		// the narrowphase, not baked into them, so that the rotation pivot,
+		// `applyForce`'s lever arm and the shape pools all keep reading the
+		// coordinates the caller wrote. Reporting those raw would put the
+		// debug overlay half a body away from where the collision happens.
+		const ax = Number.isFinite(renderable.width)
+			? renderable.width * renderable.anchorPoint.x
+			: 0;
+		const ay = Number.isFinite(renderable.height)
+			? renderable.height * renderable.anchorPoint.y
+			: 0;
+		if (ax === 0 && ay === 0) {
+			// the overwhelmingly common case, and the one `Entity` and Tiled
+			// objects always take: hand back the live list, allocating nothing
+			return src;
+		}
+		// Anything else needs shifted copies, since the live shapes must not
+		// be mutated. Only debug consumers read this, and only for a body
+		// whose renderable is not corner-anchored.
+		const shifted = src.map((shape) => {
+			const copy = shape.clone();
+			copy.pos.set(shape.pos.x - ax, shape.pos.y - ay);
+			return copy;
+		});
+		return shifted;
 	}
 
 	isGrounded(renderable: Renderable): boolean {

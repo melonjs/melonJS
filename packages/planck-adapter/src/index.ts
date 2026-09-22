@@ -4,6 +4,7 @@ import {
 	type BodyShape,
 	type Bounds,
 	Ellipse,
+	Line,
 	version as melonjsVersion,
 	type PhysicsAdapter,
 	type PhysicsBody,
@@ -70,6 +71,28 @@ export interface PlanckAdapterOptions {
 	velocityIterations?: number;
 	positionIterations?: number;
 }
+
+/**
+ * How thick a `Line` is simulated as, in pixels.
+ *
+ * Box2D polygons need at least three vertices, and it does NOT reject a
+ * degenerate set: `b2PolygonShape` silently falls back to `SetAsBox(1, 1)`, a
+ * one-metre square. A two-point `Line` therefore became a 64px box sitting
+ * wherever the body happened to be, at the default `pixelsPerMeter` of 32,
+ * with the authored segment discarded entirely and nothing logged.
+ *
+ * A thin quad along the segment is a real convex polygon, so it needs no
+ * special case anywhere else: the readback, the debug overlay and the
+ * simulation all treat it as the polygon it is.
+ */
+const LINE_THICKNESS = 2;
+
+/**
+ * The most vertices Box2D will keep on one polygon. Measured against planck
+ * rather than taken from the header: anything above this is truncated without
+ * a word, and far above it the shape collapses.
+ */
+const MAX_POLYGON_VERTICES = 12;
 
 /**
  * melonJS physics adapter wrapping planck.js (https://piqnt.com/planck.js/).
@@ -367,8 +390,22 @@ export class PlanckAdapter implements PhysicsAdapter {
 	// -------------------------------------------------------------------
 
 	addBody(renderable: Renderable, def: BodyDefinition): PlanckAdapter.Body {
-		const baseX = renderable.pos.x;
-		const baseY = renderable.pos.y;
+		// The frame the renderable DRAWS in. `anchorPoint` shifts a
+		// renderable's bounds by `-size * anchorPoint` and `preDraw` shifts
+		// its pixels by the same amount, and collision shapes are authored in
+		// that same frame, so the body is built there rather than on `pos`.
+		// Zero for an anchor of (0, 0) — what `Entity` and Tiled objects set —
+		// so those paths are unchanged. Guarded on `Number.isFinite` as
+		// `preDraw` is: a `Container`'s default size is `Infinity`, and
+		// `Infinity * 0` is `NaN`.
+		const anchorX = Number.isFinite(renderable.width)
+			? renderable.width * renderable.anchorPoint.x
+			: 0;
+		const anchorY = Number.isFinite(renderable.height)
+			? renderable.height * renderable.anchorPoint.y
+			: 0;
+		const baseX = renderable.pos.x - anchorX;
+		const baseY = renderable.pos.y - anchorY;
 
 		// Compute the shape centroid in renderable-local pixel space. We
 		// register the body anchor at that centroid (in world meters), so
@@ -466,7 +503,15 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.bodyMap.set(renderable, body);
 		this.renderableMap.set(body, renderable);
 		this.defMap.set(renderable, def);
-		this.posOffsets.set(renderable, { x: -centroid.x, y: -centroid.y });
+		// Maps the body origin back onto `renderable.pos` on the way out of
+		// the simulation. The body is anchored in the renderable's DRAWN
+		// frame (`pos - anchor`), so the anchor has to come back on here or
+		// every sync would pull the sprite to `pos - anchor` and a body that
+		// never moved would appear to jump on its first step.
+		this.posOffsets.set(renderable, {
+			x: anchorX - centroid.x,
+			y: anchorY - centroid.y,
+		});
 
 		// Helper methods spliced onto the planck body so user code can
 		// write `renderable.body.setVelocity(x, y)` regardless of which
@@ -1421,13 +1466,59 @@ export class PlanckAdapter implements PhysicsAdapter {
 				this.px2m(radius),
 			);
 		}
+		// A `Line` is two points and no area. Checked BEFORE `Polygon`, which
+		// it extends, so it never reaches the degenerate fallback above.
+		if (shape instanceof Line) {
+			const [a, b] = shape.points;
+			const dx = b.x - a.x;
+			const dy = b.y - a.y;
+			const length = Math.hypot(dx, dy);
+			if (length > 0) {
+				const nx = (-dy / length) * (LINE_THICKNESS / 2);
+				const ny = (dx / length) * (LINE_THICKNESS / 2);
+				const quad = [
+					{ x: a.x + nx, y: a.y + ny },
+					{ x: b.x + nx, y: b.y + ny },
+					{ x: b.x - nx, y: b.y - ny },
+					{ x: a.x - nx, y: a.y - ny },
+				];
+				return new planck.Polygon(
+					quad.map((q) => {
+						return new planck.Vec2(
+							this.px2m(shape.pos.x + q.x - centroid.x),
+							this.px2m(shape.pos.y + q.y - centroid.y),
+						);
+					}),
+				);
+			}
+			// a zero-length segment has no orientation to follow
+		}
 		if (shape instanceof Polygon) {
 			// Box2D polygons must be convex with vertices in CCW order
 			// and ≤ 8 vertices. The melonJS Polygon class doesn't enforce
 			// these constraints; we let planck throw if the user passes
 			// something invalid (same failure mode as matter's
 			// `Bodies.fromVertices` on a degenerate hull).
-			const pts = shape.points.map(
+			// Box2D caps a polygon's vertex count, and it does NOT report going
+			// over: measured, a 16-point outline comes back with 12 vertices
+			// and a 36-point one collapses from 70x36 to 47x18, silently. A
+			// `RoundRect` is the common way to hit this, since it carries 36
+			// points (4 corners x 9 arc segments).
+			//
+			// An outline over the cap is therefore sampled down to it, evenly,
+			// which keeps the extent and the overall silhouette. It is an
+			// approximation and it is reported as one: `getBodyShapes()`
+			// returns the decimated outline, so the debug overlay draws what
+			// is actually simulated.
+			const source = shape.points;
+			const step = source.length / MAX_POLYGON_VERTICES;
+			const kept =
+				source.length > MAX_POLYGON_VERTICES
+					? Array.from({ length: MAX_POLYGON_VERTICES }, (_, i) => {
+							return source[Math.round(i * step) % source.length];
+						})
+					: source;
+			const pts = kept.map(
 				(p) =>
 					new planck.Vec2(
 						this.px2m(shape.pos.x + p.x - centroid.x),
@@ -1436,10 +1527,17 @@ export class PlanckAdapter implements PhysicsAdapter {
 			);
 			return new planck.Polygon(pts);
 		}
-		// Unknown shape — skip silently rather than throw, matching the
-		// matter-adapter philosophy of "best effort" for compound bodies
-		// with mixed shape types.
-		return null;
+		// Unsupported shape type. Thrown rather than skipped: returning null
+		// left the body with no collision geometry at all and said nothing,
+		// so a `Point`, `Box3d` or `Sphere` simply never collided. The matter
+		// adapter throws for the same input, and a game that silently does
+		// not collide on one backend and throws on the other is worse than
+		// one that fails the same way on both.
+		throw new Error(
+			`PlanckAdapter: unsupported shape type ${
+				(shape as { constructor: { name: string } }).constructor.name
+			}`,
+		);
 	}
 }
 

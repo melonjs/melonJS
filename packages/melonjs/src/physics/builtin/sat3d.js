@@ -23,8 +23,16 @@ import {
  */
 function absCenter(renderable, box, out) {
 	const anc = renderable.ancestor.getAbsolutePosition();
-	out[0] = renderable.pos.x + anc.x + box.pos.x;
-	out[1] = renderable.pos.y + anc.y + box.pos.y;
+	// `anchorPoint` moves the drawn frame in XY; shapes are measured from
+	// it, so the same offset comes off here. It has no Z term.
+	const ax = Number.isFinite(renderable.width)
+		? renderable.width * renderable.anchorPoint.x
+		: 0;
+	const ay = Number.isFinite(renderable.height)
+		? renderable.height * renderable.anchorPoint.y
+		: 0;
+	out[0] = renderable.pos.x + anc.x + box.pos.x - ax;
+	out[1] = renderable.pos.y + anc.y + box.pos.y - ay;
 	out[2] = renderable.pos.z + anc.z + box.pos.z;
 	return out;
 }

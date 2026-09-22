@@ -15,6 +15,7 @@ import {
 	type BodyShape,
 	type Bounds,
 	Ellipse,
+	Line,
 	version as melonjsVersion,
 	type PhysicsAdapter,
 	type PhysicsBody,
@@ -62,6 +63,21 @@ export interface MatterAdapterOptions {
 	 */
 	matterEngineOptions?: Matter.IEngineDefinition;
 }
+
+/**
+ * How thick a `Line` is simulated as, in pixels.
+ *
+ * matter has no segment primitive, so a zero-area outline cannot be built
+ * into a body at all: `Bodies.fromVertices` rejects the degenerate hull and
+ * the adapter used to fall back to the line's AXIS-ALIGNED BOUNDING BOX. For
+ * anything but a horizontal or vertical line that is a solid block rather
+ * than a surface, so a diagonal became a filled triangle-shaped wall and a
+ * body rested on the top of its bounding rectangle instead of on the slope.
+ *
+ * A thin oriented rectangle is the honest approximation: it follows the
+ * segment, it is convex, and matter simulates it exactly like any other box.
+ */
+const LINE_THICKNESS = 2;
 
 /**
  * melonJS physics adapter wrapping matter-js (https://brm.io/matter-js/).
@@ -379,8 +395,22 @@ export class MatterAdapter implements PhysicsAdapter {
 	addBody(renderable: Renderable, def: BodyDefinition): MatterAdapter.Body {
 		// translate shapes into matter bodies. Multi-shape defs become a
 		// matter compound body (Matter.Body.create with parts).
-		const baseX = renderable.pos.x;
-		const baseY = renderable.pos.y;
+		// The frame the renderable DRAWS in. `anchorPoint` shifts a
+		// renderable's bounds by `-size * anchorPoint` and `preDraw` shifts
+		// its pixels by the same amount, and collision shapes are authored in
+		// that same frame, so the body is built there rather than on `pos`.
+		// Zero for an anchor of (0, 0) — what `Entity` and Tiled objects set —
+		// so those paths are unchanged. Guarded on `Number.isFinite` as
+		// `preDraw` is: a `Container`'s default size is `Infinity`, and
+		// `Infinity * 0` is `NaN`.
+		const anchorX = Number.isFinite(renderable.width)
+			? renderable.width * renderable.anchorPoint.x
+			: 0;
+		const anchorY = Number.isFinite(renderable.height)
+			? renderable.height * renderable.anchorPoint.y
+			: 0;
+		const baseX = renderable.pos.x - anchorX;
+		const baseY = renderable.pos.y - anchorY;
 		// `isActive === false` keeps a shape out of the simulation without
 		// removing it from the definition — the portable flag the builtin and
 		// the planck adapter both honour. Skipped here rather than created and
@@ -499,9 +529,14 @@ export class MatterAdapter implements PhysicsAdapter {
 		// Track the offset between renderable.pos (top-left) and the
 		// matter body's centroid so syncFromPhysics places the sprite
 		// correctly.
+		// Deliberately `renderable.pos`, not `baseX`/`baseY`: this offset
+		// puts the SPRITE back where it belongs on the way out of the
+		// simulation, and the sprite is placed from `pos`. Using the
+		// anchor-shifted origin here would feed the offset back in twice and
+		// walk the renderable away from the body every step.
 		this.posOffsets.set(renderable, {
-			x: baseX - body.position.x,
-			y: baseY - body.position.y,
+			x: renderable.pos.x - body.position.x,
+			y: renderable.pos.y - body.position.y,
 		});
 		// Debug-plugin compatibility is provided via the adapter-side
 		// `getBodyAABB` / `getBodyShapes` methods (see below). No
@@ -1335,6 +1370,44 @@ export class MatterAdapter implements PhysicsAdapter {
 		baseX: number,
 		baseY: number,
 	): Matter.Body {
+		// A `Line` is two points and no area. Checked BEFORE `Polygon`,
+		// which it extends, and before `Rect`, so it never reaches the
+		// degenerate-hull path.
+		if (shape instanceof Line) {
+			const [a, b] = shape.points;
+			const dx = b.x - a.x;
+			const dy = b.y - a.y;
+			const length = Math.hypot(dx, dy);
+			if (length > 0) {
+				// Built from explicit VERTICES rather than a rectangle with an
+				// `angle`: an angle on the body is a rotation of the BODY, and
+				// `syncFromPhysics` mirrors that onto the renderable's
+				// transform, so the sprite would be turned by the slope of its
+				// own ground and the already-rotated shapes would be drawn
+				// turned a second time.
+				const nx = (-dy / length) * (LINE_THICKNESS / 2);
+				const ny = (dx / length) * (LINE_THICKNESS / 2);
+				const ox = baseX + shape.pos.x;
+				const oy = baseY + shape.pos.y;
+				const quad = [
+					{ x: ox + a.x + nx, y: oy + a.y + ny },
+					{ x: ox + b.x + nx, y: oy + b.y + ny },
+					{ x: ox + b.x - nx, y: oy + b.y - ny },
+					{ x: ox + a.x - nx, y: oy + a.y - ny },
+				];
+				const centre = Matter.Vertices.centre(quad);
+				const body: Matter.Body | undefined = Matter.Bodies.fromVertices(
+					centre.x,
+					centre.y,
+					[quad],
+				);
+				if (body) {
+					return body;
+				}
+			}
+			// a zero-length segment has no orientation to follow; let it fall
+			// through to the degenerate handling below rather than inventing one
+		}
 		if (shape instanceof Rect) {
 			// melonJS Rect: pos is top-left in shape-local space. Matter
 			// rectangles are centered, so we shift by half-width/half-height.
@@ -1365,19 +1438,38 @@ export class MatterAdapter implements PhysicsAdapter {
 				x: baseX + shape.pos.x + p.x,
 				y: baseY + shape.pos.y + p.y,
 			}));
-			// average the points to get an initial center for Bodies.fromVertices
-			const cx =
-				points.reduce((s, p) => s + p.x, 0) / Math.max(1, points.length);
-			const cy =
-				points.reduce((s, p) => s + p.y, 0) / Math.max(1, points.length);
-			const body = Matter.Bodies.fromVertices(cx, cy, [points]);
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: matter-js types claim non-null, but fromVertices returns undefined for degenerate polygons (collinear / zero-area)
+			// `fromVertices` places the polygon's AREA CENTROID at the
+			// position it is given: it translates the vertex list by
+			// `-Vertices.centre(...)` and then moves it to that position.
+			// So the position handed to it has to be that same centroid for
+			// the vertices to land where they were authored. The arithmetic
+			// mean of the points is a different point entirely, and using it
+			// shifted every polygon by `mean - centroid`.
+			//
+			// That difference is zero exactly when the vertices are evenly
+			// distributed — a rectangle, and any triangle — which is why
+			// simple test shapes never showed it, and it grows with how
+			// lopsided the distribution is. A traced outline out of a shape
+			// editor is the worst case, since such a tool puts vertices
+			// densely along curves and sparsely along straights: measured at
+			// ~39px of drift on a 200px blob, with the collision geometry
+			// visibly off the artwork it was drawn on.
+			const centre = Matter.Vertices.centre(points);
+			// `Vertices.centre` divides by the polygon area, so a degenerate
+			// (collinear / zero-area) outline yields a non-finite centre
+			// rather than throwing.
+			// The annotation is load-bearing: matter-js types `fromVertices`
+			// as non-null, but it returns undefined for a degenerate polygon.
+			const body: Matter.Body | undefined =
+				Number.isFinite(centre.x) && Number.isFinite(centre.y)
+					? Matter.Bodies.fromVertices(centre.x, centre.y, [points])
+					: undefined;
 			if (body) {
 				return body;
 			}
-			// Bodies.fromVertices returns undefined when the vertices form
-			// a degenerate (collinear, zero-area, etc.) polygon. Fall back
-			// to an axis-aligned bounding box so the body still exists in
+			// Degenerate polygon: no usable centroid, and `fromVertices`
+			// returns undefined for one anyway. Fall back to an
+			// axis-aligned bounding box so the body still exists in
 			// the simulation rather than disappearing silently.
 			let minX = Number.POSITIVE_INFINITY;
 			let minY = Number.POSITIVE_INFINITY;
