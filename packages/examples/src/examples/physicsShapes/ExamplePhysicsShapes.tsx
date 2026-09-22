@@ -10,6 +10,7 @@
  * geometry (`world.adapter.getBodyShapes`) rather than from a sprite, so what
  * is on screen is what collides — including each solver's own approximations.
  */
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { MatterAdapter } from "@melonjs/matter-adapter";
 import { PlanckAdapter } from "@melonjs/planck-adapter";
 import {
@@ -18,6 +19,8 @@ import {
 	type CanvasRenderer,
 	game,
 	loader,
+	Matrix3d,
+	plugin,
 	Rect,
 	Renderable,
 	RoundRect,
@@ -54,7 +57,7 @@ const BACKENDS = [
 	{
 		id: "builtin",
 		label: "built-in",
-		note: "arcade SAT, one push-out per contact per frame: hitboxes stay upright and stacked bodies rest overlapping rather than settling. Use matter or planck for rigid-body stacking",
+		note: "arcade SAT. The outlines are tilted here because the example calls `body.rotate()`, which turns the shape points themselves: `setAngle` would turn the sprite alone, since the SAT never reads `body.angle`. So rotation is a one-time bake, not a tracked angle, and nothing tumbles on impact. Stacked bodies also rest overlapping. Use matter or planck to rotate and stack for real",
 	},
 	{
 		id: "matter",
@@ -80,6 +83,27 @@ const BODIES = [
 	{ id: "crate", colour: "#118ab2", note: "1 convex piece" },
 ] as const;
 
+/**
+ * The artwork is generated FROM the shape file, by
+ * `scripts/generate-physics-shape-sprites.mjs`, in the same coordinate
+ * space: image pixel (0, 0) is the body's local origin. So the sprite and
+ * the collision outline are drawn from one source of truth, and any gap
+ * between them on screen is a real bug rather than an authoring mismatch.
+ *
+ * That gap is the whole reason the art exists. Drawing only the outlines
+ * each adapter reports looks correct by construction, because the outline
+ * IS the visual: a body placed slightly wrong draws a slightly wrong
+ * outline and nothing looks amiss. The matter adapter shipped exactly that
+ * bug (polygon placement, fixed in 1.4.1) and this scene could not show it.
+ */
+const ART = "#e8eaf2";
+
+/**
+ * Scratch for undoing a renderable's own transform, reused every frame so
+ * the draw path allocates nothing.
+ */
+const INVERSE = new Matrix3d();
+
 const INK = "#e8eaf2";
 const DIM = "#7c84a3";
 const PANEL = "#1b1f33";
@@ -98,19 +122,30 @@ const PANEL = "#1b1f33";
  */
 class ShapeBody extends Renderable {
 	readonly colour: string;
+	readonly art: string;
 
-	constructor(
-		x: number,
-		y: number,
-		size: number,
-		id: string,
-		colour: string,
-		still = false,
-	) {
-		super(x, y, size, size);
+	constructor(x: number, y: number, id: string, colour: string, still = false) {
+		// sized from the artwork, which is sized from the shape file, so the
+		// renderable's bounds agree with both rather than being a guess
+		const image = loader.getImage(id);
+		super(x, y, image?.width ?? 64, image?.height ?? 64);
+		this.art = id;
 		this.colour = colour;
+		// (0, 0) is load-bearing here, not a default. `anchorPoint` shifts a
+		// renderable's bounds and its drawing, but NOT its collision shapes,
+		// which are measured from `pos`. Any other anchor therefore draws the
+		// body offset from the geometry it collides with: measured at anchor
+		// 0.5, a 44px crate rests with its shapes on the floor at 360 while
+		// its bounds stop at 338. The physics is identical either way.
 		this.anchorPoint.set(0, 0);
-		this.autoTransform = false;
+		// ON, so `preDraw` turns the sprite and, just as importantly,
+		// `updateBounds()` reports the rotated extent. With it off the engine
+		// does not know the renderable is turned at all, and the debug
+		// panel's green bounds stay stuck on the unrotated frame while the
+		// artwork tilts inside them. The collision shapes below need the
+		// transform UNDONE rather than never applied, which is what the
+		// inverse in `draw()` is for.
+		this.autoTransform = true;
 		this.isKinematic = false;
 		// the shape file, named by the key it was preloaded under, and the
 		// body to read out of it. Identical on all three backends.
@@ -127,15 +162,32 @@ class ShapeBody extends Renderable {
 	}
 
 	override draw(renderer: WebGLRenderer | CanvasRenderer) {
+		// The sprite just draws at `pos`. `preDraw` has already applied this
+		// renderable's transform, which the adapter keeps in step with the
+		// body's angle, so this is exactly what any ordinary game sprite
+		// gets and it needs no special handling here.
+		const image = loader.getImage(this.art);
+		if (image !== null) {
+			renderer.drawImage(image, this.pos.x, this.pos.y);
+		}
+
+		// The collision geometry is the odd one out: `getBodyShapes()`
+		// reports it ALREADY in its simulated pose, so `preDraw`'s transform
+		// has to be undone or every shape turns twice.
+		//
+		// `preDraw` maps a point v to `pos + T(v - pos - anchor)`, so placing
+		// an already-posed point q takes v = pos + anchor + T⁻¹(q). The
+		// anchor is (0, 0) here, which leaves the translate and the inverse
+		// below.
 		const shapes = game.world.adapter.getBodyShapes(this);
 		renderer.save();
 		renderer.translate(this.pos.x, this.pos.y);
-		renderer.setColor(`${this.colour}3d`);
-		for (const shape of shapes) {
-			renderer.stroke(shape, true);
+		if (!this.currentTransform.isIdentity()) {
+			INVERSE.copy(this.currentTransform).invert();
+			renderer.transform(INVERSE);
 		}
-		renderer.setColor(this.colour);
-		renderer.lineWidth = 2;
+		renderer.setColor(ART);
+		renderer.lineWidth = 1;
 		for (const shape of shapes) {
 			renderer.stroke(shape, false);
 		}
@@ -242,11 +294,36 @@ class PlayScreen extends Stage {
 			const body = BODIES[this.spawned % BODIES.length];
 			const column = this.spawned % columns;
 			const x = 230 + column * ((VIEWPORT_W - 560) / (columns - 1));
-			const shape = new ShapeBody(x, 290, 80, body.id, body.colour);
+			const shape = new ShapeBody(x, 290, body.id, body.colour);
 			game.world.addChild(shape, 20);
 			// drop each one already tilted, so it lands off balance and has
 			// somewhere to topple to
-			shape.body.setAngle?.(((this.spawned * 37) % 360) * (Math.PI / 180));
+			const tilt = ((this.spawned * 37) % 360) * (Math.PI / 180);
+			if (BACKEND === "builtin") {
+				// `setAngle` on the builtin solver turns the SPRITE only: its
+				// SAT never reads `body.angle`, so the hitbox would stay
+				// upright under the artwork. `body.rotate()` is the supported
+				// way to get rotated collision there, and it genuinely turns
+				// the shape points.
+				//
+				// It bakes the rotation in rather than tracking an angle, so
+				// the pivot has to be captured BEFORE the call (rotating the
+				// shapes moves the bounds, and with it their centre), and the
+				// sprite is turned about that same point by hand. `angle` is
+				// left at 0 deliberately: non-zero makes the body re-sync its
+				// own transform every step, from the NEW bounds centre, which
+				// would pull the sprite off the shapes it just matched.
+				const pivot = shape.body.getBounds().center;
+				const px = pivot.x;
+				const py = pivot.y;
+				shape.body.rotate(tilt);
+				shape.currentTransform
+					.translate(px, py)
+					.rotate(tilt)
+					.translate(-px, -py);
+			} else {
+				shape.body.setAngle?.(tilt);
+			}
 			this.spawned++;
 		}, 460);
 	}
@@ -269,6 +346,18 @@ class PlayScreen extends Stage {
 			);
 		});
 
+		// what the two layers on every body mean. Worth stating outright:
+		// the sprite is generated from the shape file, so wherever the
+		// outline leaves the artwork, the body is not where it looks.
+		const legend = new Text(40, VIEWPORT_H - 26, {
+			font: "monospace",
+			size: 12,
+			fillStyle: DIM,
+			text: "sprite = artwork from the shape file    outline = the geometry the adapter reports as colliding    [S] debug panel",
+		});
+		legend.isKinematic = true;
+		game.world.addChild(legend, 100);
+
 		const note = new Text(408, 50, {
 			font: "monospace",
 			size: 12,
@@ -285,7 +374,7 @@ class PlayScreen extends Stage {
 		BODIES.forEach((body, i) => {
 			const x = 84 + i * 214;
 			game.world.addChild(
-				new ShapeBody(x, 130, 80, body.id, body.colour, true),
+				new ShapeBody(x, 130, body.id, body.colour, true),
 				20,
 			);
 			const label = new Text(x, 200, {
@@ -330,9 +419,24 @@ const createGame = async () => {
 	});
 	await app.init();
 
+	// The debug panel reads its hitboxes from `adapter.getBodyShapes()`, the
+	// same call this example draws its outlines with, so the two overlays
+	// agree by construction. Press S to open it.
+	plugin.register(DebugPanelPlugin, "debugPanel");
+
 	await loader.preload([
 		// the shape editor's export, preloaded like any other JSON
 		{ name: "shapes", type: "json", src: "assets/physicsShapes/shapes.json" },
+		// and the artwork generated from it, one image per body, each keyed
+		// by the body name so a sprite and its shapes cannot be wired to
+		// different bodies by mistake
+		...BODIES.map((body) => {
+			return {
+				name: body.id,
+				type: "image" as const,
+				src: `assets/physicsShapes/${body.id}.png`,
+			};
+		}),
 	]);
 
 	state.set(state.PLAY, new PlayScreen());
