@@ -250,6 +250,75 @@ resolved from it mints its own shapes.
 `Body#fromJSON()` and passing an exported list to `addShape()` are the old,
 built-in-only spelling of this and are deprecated since 20.7.0.
 
+### Which shapes each backend can actually simulate
+
+| shape | builtin | matter | planck |
+|---|---|---|---|
+| `Rect`, `Polygon` | exact | exact | exact, up to 12 vertices |
+| `RoundRect` | exact | exact (decomposed) | sampled down to 12 vertices |
+| `Ellipse` | exact | circle of the average radius | circle of the average radius |
+| `Line` | exact | thin quad along the segment | thin quad along the segment |
+| `Point`, `Box3d`, `Sphere` | supported | **throws** | **throws** |
+
+Two of those are worth knowing before you author geometry. Box2D caps a
+polygon's vertex count and says nothing when you go over: measured, a
+16-point outline comes back with 12 vertices and a 36-point one collapses
+from 70x36 to 47x18. A `RoundRect` carries 36 points, four corners of nine
+arc segments each, so it is the usual way to meet that cap; the adapter now
+samples it down and keeps the extent. Anything the 2D backends cannot express
+is refused loudly on both, rather than leaving a body with no collision
+geometry that silently never collides.
+
+Whatever a backend really simulates is what `getBodyShapes()` reports, so the
+debug panel is the fastest way to see an approximation for what it is.
+
+### `Line` shapes, and why slopes need a rigid-body adapter
+
+A `Line` is two points and no area, and it is what Tiled emits for every
+polyline, so it is the natural way to author a slope or a strip of ground.
+Neither rigid-body engine has a segment primitive, so both simulate one as a
+thin quad following the segment (2px), which is what `getBodyShapes()` reports
+back. Before 20.7 each substituted something of its own instead: matter the
+line's bounding box, planck a one-metre square wherever the body happened to
+be. Neither logged anything.
+
+The builtin solver resolves a sloped segment too, and correctly: a body lands
+on it and SLIDES down it, holding a constant distance from the surface while
+its x advances. What it has no notion of is SURFACE friction. `def.friction`
+is ignored entirely and `body.friction` is a per-step velocity damping vector
+fed from `def.frictionAir`, so nothing removes the tangential component of
+gravity. A body on an incline therefore accelerates down it forever and leaves
+at the end, and in a valley of segments it swings from arm to arm for a while
+before coming to rest on the flat. (It used to escape through an arm instead;
+that was a separate defect in how a body was separated from a shape list, fixed
+in 20.7.)
+
+matter and planck both have real surface friction, so the same valley holds a
+body still.
+
+**Several shapes on one body.** A Tiled polyline arrives as ONE body carrying
+one shape per segment, and until 20.7 a body resting on such a ground could
+sink through one of the segments and drop out. The narrowphase reports the
+FIRST overlapping shape pair it finds, and the compound resolution pass
+re-ran that same first-hit-wins scan, so it kept re-resolving the pair it had
+already resolved while a neighbour was penetrated unmeasured. Every pair is
+enumerated now. If you are ever diagnosing something similar, the experiment
+that localises it is to re-run the same geometry as SEVERAL single-shape
+bodies: if that holds and one multi-shape body does not, the fault is in the
+compound path rather than in the shape type.
+
+Do not diagnose this by dropping a body and reading its final `y`. A body that
+slid off the end of a ramp and a body that fell straight through it both end up
+far below, and they look identical in that one number. Track the body against
+the surface height at its CURRENT x instead: riding the slope shows a constant
+offset while x advances.
+
+So segments collide on every backend. If you need a body to come to REST on a
+sloped one, use matter or planck, or damp it yourself: the builtin will slide
+it down the incline indefinitely. The `Line Collision` example draws the
+authored segment against the geometry each backend reports, which is the
+quickest way to see what a backend is really simulating.
+
 ### `anchorPoint` moves the collision shapes with the drawing
 
 `anchorPoint` says where in its own bounds a renderable sits on its `pos`:
@@ -616,6 +685,8 @@ use them. `adapter.capabilities` (`constraints`,
 | `response.depth` / `response.normal` are `undefined` | reading a legacy `onCollision` response — it carries `overlap` / `overlapN` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |
+| a body sinks through one shape of a multi-shape body | fixed in 20.7; before that the compound pass only ever re-resolved the first overlapping pair |
+| a body will not stay put on a slope on the builtin | it is riding the slope and sliding: the builtin has no surface friction, only `frictionAir` damping. Damp it yourself, or use matter/planck |
 | the sprite is drawn offset from its hitbox | pre-20.7 `anchorPoint` moved the drawing but not the collision shapes; upgrade, and drop any offsets you added to compensate |
 | a rotated renderable reports an unrotated bounding box | `autoTransform: false` opts `updateBounds()` out of the transform |
 | a body in a pile sinks into the floor (built-in) | fixed in 20.7 for anything with an immovable side; bodies pinned only by other DYNAMIC bodies still overlap by a pixel or two, which is what planck/matter are for |

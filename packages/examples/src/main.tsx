@@ -193,6 +193,11 @@ const ExamplePoolMatter = lazy(() =>
 		default: m.ExamplePoolMatter,
 	})),
 );
+const ExampleLineCollision = lazy(() =>
+	import("./examples/lineCollision/ExampleLineCollision").then((m) => ({
+		default: m.ExampleLineCollision,
+	})),
+);
 const ExamplePhysicsShapes = lazy(() =>
 	import("./examples/physicsShapes/ExamplePhysicsShapes").then((m) => ({
 		default: m.ExamplePhysicsShapes,
@@ -552,6 +557,14 @@ const examples: {
 		sourceDir: "pool-matter",
 		description:
 			"Top-down 8-ball pool driven by @melonjs/matter-adapter — drag-to-aim, release-to-strike.",
+	},
+	{
+		component: <ExampleLineCollision />,
+		label: "Line Collision",
+		path: "line-collision",
+		sourceDir: "lineCollision",
+		description:
+			"What each physics backend does with a Line, authored geometry against what actually collides.",
 	},
 	{
 		component: <ExamplePhysicsShapes />,
