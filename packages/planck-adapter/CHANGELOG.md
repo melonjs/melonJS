@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0 - _unreleased_
+
+### Fixed
+- A body is built in the frame its renderable draws in. The body origin was taken from `renderable.pos` with no regard for `anchorPoint`, which shifts where a renderable draws by `-size * anchorPoint`, so a sprite anchored anywhere other than its corner collided where it was not drawn: half its size away at the default centred anchor. A shape's own offset is untouched, so a hitbox deliberately placed inside the frame still lands where it was put
+
 ## 1.5.0 - _2026-09-21_
 
 ### Fixed

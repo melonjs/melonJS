@@ -87,6 +87,48 @@ describe("Physics : BuiltinAdapter (Body parity with body.spec.js)", () => {
 			expect(body.shapes.length).toEqual(1);
 		});
 
+		// A lopsided convex quad, whose vertex average and area centroid are
+		// about 8px apart. The builtin solver uses the shape as given and so
+		// has no anchor to get wrong, but that is worth pinning rather than
+		// assuming: an adapter that re-centres a polygon on the wrong one of
+		// those two points shifts the whole outline by the difference, which
+		// is exactly what matter did (`@melonjs/matter-adapter` 1.4.1).
+		//
+		// A rectangle or a triangle cannot catch that, since for both the
+		// average IS the centroid. Hence the deliberately irregular outline.
+		it("keeps an irregular Polygon on its authored vertices", () => {
+			const r = new Renderable(100, 100, 220, 220);
+			r.anchorPoint.set(0, 0);
+			const points = [
+				new Vector2d(10, 0),
+				new Vector2d(190, 40),
+				new Vector2d(150, 260),
+				new Vector2d(40, 200),
+			];
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Polygon(0, 0, points)],
+			});
+
+			let minX = Number.POSITIVE_INFINITY;
+			let minY = Number.POSITIVE_INFINITY;
+			let maxX = Number.NEGATIVE_INFINITY;
+			let maxY = Number.NEGATIVE_INFINITY;
+			for (const shape of adapter.getBodyShapes(r)) {
+				for (const p of shape.points) {
+					minX = Math.min(minX, p.x + shape.pos.x);
+					minY = Math.min(minY, p.y + shape.pos.y);
+					maxX = Math.max(maxX, p.x + shape.pos.x);
+					maxY = Math.max(maxY, p.y + shape.pos.y);
+				}
+			}
+
+			expect(minX).toBeCloseTo(10, 1);
+			expect(minY).toBeCloseTo(0, 1);
+			expect(maxX).toBeCloseTo(190, 1);
+			expect(maxY).toBeCloseTo(260, 1);
+		});
+
 		it("creates a body with multiple shapes (compound body)", () => {
 			const r = new Renderable(0, 0, 64, 64);
 			const body = adapter.addBody(r, {

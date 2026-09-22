@@ -218,6 +218,38 @@ function vornoiRegion(line, point) {
 }
 
 /**
+ * How far a renderable's drawn frame sits from its `pos`, per axis.
+ *
+ * `anchorPoint` moves where a renderable DRAWS: `updateBounds()` shifts its
+ * bounds by `-size * anchorPoint` and `preDraw` shifts its pixels by the same
+ * amount. Collision shapes have to be measured from that same corner, or the
+ * hitbox ends up somewhere the artwork is not.
+ *
+ * Zero whenever the anchor is (0, 0) — which is what `Entity` and Tiled
+ * objects set — so every legacy path is bit-for-bit unchanged.
+ *
+ * Guarded on `Number.isFinite` exactly as `preDraw` is: a `Container`'s
+ * default size is `Infinity`, and `Infinity * 0` is `NaN`, which would poison
+ * every position derived from it.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} r - the renderable
+ * @returns {number} the x offset to subtract
+ * @ignore
+ */
+function anchorOffsetX(r) {
+	return Number.isFinite(r.width) ? r.width * r.anchorPoint.x : 0;
+}
+
+/**
+ * The y half of {@link anchorOffsetX}.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} r - the renderable
+ * @returns {number} the y offset to subtract
+ * @ignore
+ */
+function anchorOffsetY(r) {
+	return Number.isFinite(r.height) ? r.height * r.anchorPoint.y : 0;
+}
+
+/**
  * Checks whether polygons collide.
  * @ignore
  * @internal
@@ -245,6 +277,11 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(polyB.pos);
+	// measured from each renderable's drawn frame, not its `pos`
+	posA.x -= anchorOffsetX(a);
+	posA.y -= anchorOffsetY(a);
+	posB.x -= anchorOffsetX(b);
+	posB.y -= anchorOffsetY(b);
 
 	// If any of the edge normals of A is a separating axis, no intersection.
 	for (let i = 0; i < aLen; i++) {
@@ -326,6 +363,10 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 		.sub(a.pos)
 		.sub(a.ancestor.getAbsolutePosition())
 		.sub(ellipseA.pos);
+	// B's drawn-frame offset comes off, A's goes back on: this vector is
+	// B relative to A, so the two corrections have opposite signs
+	differenceV.x -= anchorOffsetX(b) - anchorOffsetX(a);
+	differenceV.y -= anchorOffsetY(b) - anchorOffsetY(a);
 	const radiusA = ellipseA.radius;
 	const radiusB = ellipseB.radius;
 	const totalRadius = radiusA + radiusB;
@@ -383,6 +424,9 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 		.sub(a.pos)
 		.sub(a.ancestor.getAbsolutePosition())
 		.sub(polyA.pos);
+	// as above: relative vector, so the two offsets subtract
+	circlePos.x -= anchorOffsetX(b) - anchorOffsetX(a);
+	circlePos.y -= anchorOffsetY(b) - anchorOffsetY(a);
 	const radius = ellipseB.radius;
 	const radius2 = radius * radius;
 	const points = polyA.points;

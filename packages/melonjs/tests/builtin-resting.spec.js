@@ -206,6 +206,71 @@ describe("built-in solver resting behaviour", () => {
  * still has the normalized anchor offset applied underneath it, and renders
  * half its own size away from where it is. Nothing throws.
  */
+describe("a body whose renderable is not anchored at its corner", () => {
+	let app;
+
+	beforeAll(async () => {
+		boot();
+		app = new Application(400, 400, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+	});
+
+	afterEach(() => {
+		for (const c of app.world.getChildren().slice()) {
+			app.world.removeChildNow(c);
+		}
+	});
+
+	/**
+	 * `anchorPoint` moves where a renderable DRAWS: `updateBounds()` shifts
+	 * its bounds by `-size * anchorPoint` and `preDraw` shifts its pixels by
+	 * the same amount. The collision shapes have to land in that frame too,
+	 * or the hitbox is somewhere the artwork is not.
+	 *
+	 * Only the `bodyDef` path is in scope. `Entity` sets its own anchor to
+	 * (0, 0), as Tiled objects do, so the legacy route never saw this.
+	 *
+	 * Stated as behaviour, not as shape coordinates: the bottom edge of what
+	 * is drawn comes to rest on the floor, whatever the anchor.
+	 * @param {number} anchor - anchorPoint on both axes
+	 */
+	const restingDrawnBottom = (anchor) => {
+		const floor = new Renderable(0, 360, 400, 40);
+		floor.anchorPoint.set(0, 0);
+		floor.isKinematic = false;
+		floor.bodyDef = { type: "static", shapes: [new Rect(0, 0, 400, 40)] };
+		app.world.addChild(floor);
+
+		const crate = new Renderable(100, 100, 44, 44);
+		crate.anchorPoint.set(anchor, anchor);
+		crate.isKinematic = false;
+		crate.bodyDef = { type: "dynamic", shapes: [new Rect(0, 0, 44, 44)] };
+		app.world.addChild(crate);
+
+		for (let i = 0; i < 400; i++) {
+			app.world.update(16);
+		}
+		return crate.pos.y + crate.height * (1 - crate.anchorPoint.y);
+	};
+
+	it("rests on the floor when anchored at its corner", () => {
+		// the control: this is the case that has always worked
+		expect(restingDrawnBottom(0)).toBeCloseTo(360, 6);
+	});
+
+	it("rests on the floor when centred on its position", () => {
+		expect(restingDrawnBottom(0.5)).toBeCloseTo(360, 6);
+	});
+
+	it("rests on the floor when anchored at its bottom edge", () => {
+		// the platformer anchor: feet on the ground
+		expect(restingDrawnBottom(1)).toBeCloseTo(360, 6);
+	});
+});
+
 describe("preDraw anchor offset", () => {
 	let app;
 

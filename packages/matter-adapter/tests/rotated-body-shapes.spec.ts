@@ -53,6 +53,9 @@ describe("MatterAdapter — getBodyShapes() follows the body's rotation", () => 
 	 */
 	const square = (angle: number) => {
 		const r = new Renderable(100, 100, 40, 40);
+		// corner-anchored: this spec reasons about shape coordinates
+		// relative to `pos`, and shapes now follow the anchor
+		r.anchorPoint.set(0, 0);
 		world.addChild(r);
 		adapter.addBody(r, {
 			type: "dynamic",
@@ -182,6 +185,9 @@ describe("MatterAdapter — getBodyShapes() follows the body's rotation", () => 
 
 		const bodyWith = (shapes: Polygon[]) => {
 			const r = new Renderable(200, 200, 100, 240);
+			// corner-anchored: this spec reasons about shape coordinates
+			// relative to `pos`, and shapes now follow the anchor
+			r.anchorPoint.set(0, 0);
 			world.addChild(r);
 			adapter.addBody(r, { type: "static", shapes });
 			return r;

@@ -873,6 +873,8 @@ describe("MatterAdapter — feature parity with BuiltinAdapter", () => {
 	describe("raycast / queryAABB", () => {
 		it("raycast hits a body in the ray's path", () => {
 			const target = new Renderable(200, 100, 32, 32);
+			// corner-anchored: the ray is aimed at `pos + size` coordinates
+			target.anchorPoint.set(0, 0);
 			adapter.addBody(target, {
 				type: "static",
 				shapes: [new Rect(0, 0, 32, 32)],

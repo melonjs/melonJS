@@ -367,8 +367,22 @@ export class PlanckAdapter implements PhysicsAdapter {
 	// -------------------------------------------------------------------
 
 	addBody(renderable: Renderable, def: BodyDefinition): PlanckAdapter.Body {
-		const baseX = renderable.pos.x;
-		const baseY = renderable.pos.y;
+		// The frame the renderable DRAWS in. `anchorPoint` shifts a
+		// renderable's bounds by `-size * anchorPoint` and `preDraw` shifts
+		// its pixels by the same amount, and collision shapes are authored in
+		// that same frame, so the body is built there rather than on `pos`.
+		// Zero for an anchor of (0, 0) — what `Entity` and Tiled objects set —
+		// so those paths are unchanged. Guarded on `Number.isFinite` as
+		// `preDraw` is: a `Container`'s default size is `Infinity`, and
+		// `Infinity * 0` is `NaN`.
+		const anchorX = Number.isFinite(renderable.width)
+			? renderable.width * renderable.anchorPoint.x
+			: 0;
+		const anchorY = Number.isFinite(renderable.height)
+			? renderable.height * renderable.anchorPoint.y
+			: 0;
+		const baseX = renderable.pos.x - anchorX;
+		const baseY = renderable.pos.y - anchorY;
 
 		// Compute the shape centroid in renderable-local pixel space. We
 		// register the body anchor at that centroid (in world meters), so
@@ -466,7 +480,15 @@ export class PlanckAdapter implements PhysicsAdapter {
 		this.bodyMap.set(renderable, body);
 		this.renderableMap.set(body, renderable);
 		this.defMap.set(renderable, def);
-		this.posOffsets.set(renderable, { x: -centroid.x, y: -centroid.y });
+		// Maps the body origin back onto `renderable.pos` on the way out of
+		// the simulation. The body is anchored in the renderable's DRAWN
+		// frame (`pos - anchor`), so the anchor has to come back on here or
+		// every sync would pull the sprite to `pos - anchor` and a body that
+		// never moved would appear to jump on its first step.
+		this.posOffsets.set(renderable, {
+			x: anchorX - centroid.x,
+			y: anchorY - centroid.y,
+		});
 
 		// Helper methods spliced onto the planck body so user code can
 		// write `renderable.body.setVelocity(x, y)` regardless of which

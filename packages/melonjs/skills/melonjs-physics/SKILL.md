@@ -250,6 +250,39 @@ resolved from it mints its own shapes.
 `Body#fromJSON()` and passing an exported list to `addShape()` are the old,
 built-in-only spelling of this and are deprecated since 20.7.0.
 
+### `anchorPoint` moves the collision shapes with the drawing
+
+`anchorPoint` says where in its own bounds a renderable sits on its `pos`:
+`updateBounds()` translates its bounds by `-width * anchorPoint.x, -height *
+anchorPoint.y`, and `preDraw` shifts its rendering by the same amount. A
+body's collision shapes are measured from that same frame, so a shape of
+`new Rect(0, 0, width, height)` covers the sprite whatever the anchor is, and
+a shape's own `pos` still offsets it inside that frame (a small hitbox at the
+feet, a hurtbox at the head).
+
+This was broken until 20.7: shapes were measured from `pos` regardless of the
+anchor, so anything not anchored at its top-left corner collided where it was
+not drawn, by half a body at the default centred anchor and by a full body
+height at the bottom anchor a platformer actor uses. If you compensated by
+offsetting your shapes by hand, remove those offsets. `Entity` and Tiled
+objects set their own anchor to `(0, 0)`, so nothing built either of those
+ways is affected.
+
+The debug panel is the quickest check: green is the renderable's bounds, red
+is what actually collides, and the two now agree.
+
+### `autoTransform: false` opts out of rotated bounds
+
+`updateBounds()` only applies `currentTransform` when `autoTransform` is
+`true`. Turn it off and the renderable's bounds stay the UNROTATED frame
+while the sprite turns inside them, which quietly feeds a wrong box to
+frustum culling and to the broadphase. Measured on a 60x20 box at 90
+degrees: `20x60` with `autoTransform` on, `60x20` with it off.
+
+That flag means "I place myself", so it is a fair contract, but reach for it
+only when you really are drawing in your own frame, and remember the bounds
+are yours to keep honest then.
+
 ## Move with forces, not by assigning position
 
 ```js
@@ -583,6 +616,8 @@ use them. `adapter.capabilities` (`constraints`,
 | `response.depth` / `response.normal` are `undefined` | reading a legacy `onCollision` response — it carries `overlap` / `overlapN` |
 | `onCollisionEnd` handler throws on `response` | built-in dispatches it with `undefined` |
 | off-screen bodies stop simulating | built-in gating on `inViewport`; set `alwaysUpdate` |
+| the sprite is drawn offset from its hitbox | pre-20.7 `anchorPoint` moved the drawing but not the collision shapes; upgrade, and drop any offsets you added to compensate |
+| a rotated renderable reports an unrotated bounding box | `autoTransform: false` opts `updateBounds()` out of the transform |
 | a body in a pile sinks into the floor (built-in) | fixed in 20.7 for anything with an immovable side; bodies pinned only by other DYNAMIC bodies still overlap by a pixel or two, which is what planck/matter are for |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |
 | `body.position` disagrees with `renderable.pos` on matter | matter stores the centroid, melonJS the top-left — the adapter offsets between them |

@@ -20,6 +20,7 @@ import {
 	boot,
 	Container,
 	collision,
+	Polygon,
 	Rect,
 	Renderable,
 	Vector2d,
@@ -134,10 +135,152 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 			def: Parameters<typeof adapter.addBody>[1],
 		) => {
 			r.alwaysUpdate = true;
+			// Every fixture below does its arithmetic in `pos + size` terms,
+			// which is the shape frame only for a renderable anchored at its
+			// corner. `Renderable` defaults to (0.5, 0.5), and shapes now
+			// follow the anchor as the drawing does, so the corner anchor is
+			// stated here rather than assumed. The `anchorPoint and collision
+			// alignment` cases deliberately bypass this helper.
+			r.anchorPoint.set(0, 0);
 			r.bodyDef = def;
 			world.addChild(r);
 			return r;
 		};
+
+		describe("anchorPoint and collision alignment", () => {
+			// `anchorPoint` moves where a renderable DRAWS: `updateBounds()`
+			// shifts its bounds by `-size * anchorPoint`, and `preDraw` shifts
+			// every pixel it puts on screen by the same amount. A body's
+			// collision shapes have to end up in that same frame, or the
+			// hitbox sits where the artwork is not.
+			//
+			// `Entity` hid this for years by forcing its own anchor to (0, 0),
+			// as Tiled objects do, so only the `bodyDef`-on-a-Renderable path
+			// is exposed, and there the default anchor is (0.5, 0.5).
+			//
+			// Pinned as observable behaviour rather than as shape
+			// coordinates, so it constrains the contract and not the
+			// implementation: drop a body on a floor, and the bottom edge of
+			// what is DRAWN must come to rest on the floor top, whatever the
+			// anchor is.
+			it("reports its geometry in the frame it collides in", () => {
+				// The readback has to agree with the narrowphase. The builtin
+				// applies the anchor offset in the SAT and leaves the stored
+				// shapes as authored, so reporting those raw would put the
+				// debug overlay half a body from where the collision is.
+				const box = new Renderable(300, 300, 40, 40);
+				box.alwaysUpdate = true;
+				box.anchorPoint.set(0.5, 0.5);
+				box.bodyDef = {
+					type: "static",
+					shapes: [new Rect(0, 0, 40, 40)],
+				};
+				world.addChild(box);
+
+				// the drawn frame, in renderable-local terms, is -20..20
+				const aabb = adapter.getBodyAABB?.(box, new Bounds());
+				expect(aabb).toBeDefined();
+				expect(aabb!.left).toBeCloseTo(-20, 0);
+				expect(aabb!.top).toBeCloseTo(-20, 0);
+				expect(aabb!.right).toBeCloseTo(20, 0);
+				expect(aabb!.bottom).toBeCloseTo(20, 0);
+
+				let minX = Number.POSITIVE_INFINITY;
+				let maxX = Number.NEGATIVE_INFINITY;
+				for (const shape of adapter.getBodyShapes(box)) {
+					const poly = shape as Polygon;
+					for (const p of poly.points) {
+						minX = Math.min(minX, p.x + poly.pos.x);
+						maxX = Math.max(maxX, p.x + poly.pos.x);
+					}
+				}
+				expect(minX).toBeCloseTo(-20, 0);
+				expect(maxX).toBeCloseTo(20, 0);
+			});
+
+			for (const anchor of [0, 0.5, 1]) {
+				it(`rests where it draws with anchorPoint ${anchor}`, () => {
+					const floorY = 200;
+					const floor = new Renderable(0, floorY, 800, 20);
+					floor.alwaysUpdate = true;
+					floor.anchorPoint.set(0, 0);
+					floor.bodyDef = {
+						type: "static",
+						shapes: [new Rect(0, 0, 800, 20)],
+					};
+					world.addChild(floor);
+
+					const box = new Renderable(100, 120, 32, 32);
+					box.alwaysUpdate = true;
+					box.anchorPoint.set(anchor, anchor);
+					box.bodyDef = {
+						type: "dynamic",
+						shapes: [new Rect(0, 0, 32, 32)],
+					};
+					world.addChild(box);
+
+					for (let i = 0; i < 180; i++) {
+						world.update(16);
+					}
+
+					// the bottom of the drawn frame: `pos` plus whatever part
+					// of the height sits below it for this anchor
+					const drawnBottom = box.pos.y + box.height * (1 - box.anchorPoint.y);
+					expect(Math.abs(drawnBottom - floorY)).toBeLessThan(2);
+					// and the renderable's own bounds agree with that frame
+					expect(box.getBounds().bottom).toBeCloseTo(drawnBottom, 1);
+				});
+			}
+		});
+
+		describe("polygon placement", () => {
+			/**
+			 * A lopsided convex quad. The arithmetic mean of its vertices and
+			 * its area centroid sit about 8px apart, and an adapter that
+			 * confuses the two shifts the whole outline by that difference.
+			 *
+			 * Deliberately neither a rectangle nor a triangle: for both of
+			 * those the mean IS the centroid, so they cannot tell a correct
+			 * implementation from a broken one. Every simple fixture in these
+			 * suites was one or the other, which is how matter shipped this
+			 * drifting for real (`@melonjs/matter-adapter` 1.4.1), visible
+			 * only once a body had artwork behind it to be measured against.
+			 *
+			 * Whatever each engine uses internally as the body anchor, the
+			 * geometry it reports has to be the geometry that was authored.
+			 */
+			it("reports an irregular polygon on its authored vertices", () => {
+				const points: [Vector2d, Vector2d, Vector2d, ...Vector2d[]] = [
+					new Vector2d(10, 0),
+					new Vector2d(190, 40),
+					new Vector2d(150, 260),
+					new Vector2d(40, 200),
+				];
+				const r = addToWorld(new Renderable(100, 100, 220, 220), {
+					type: "dynamic",
+					shapes: [new Polygon(0, 0, points)],
+				});
+
+				let minX = Number.POSITIVE_INFINITY;
+				let minY = Number.POSITIVE_INFINITY;
+				let maxX = Number.NEGATIVE_INFINITY;
+				let maxY = Number.NEGATIVE_INFINITY;
+				for (const shape of adapter.getBodyShapes(r)) {
+					const poly = shape as Polygon;
+					for (const p of poly.points) {
+						minX = Math.min(minX, p.x + poly.pos.x);
+						minY = Math.min(minY, p.y + poly.pos.y);
+						maxX = Math.max(maxX, p.x + poly.pos.x);
+						maxY = Math.max(maxY, p.y + poly.pos.y);
+					}
+				}
+
+				expect(minX).toBeCloseTo(10, 1);
+				expect(minY).toBeCloseTo(0, 1);
+				expect(maxX).toBeCloseTo(190, 1);
+				expect(maxY).toBeCloseTo(260, 1);
+			});
+		});
 
 		describe("velocity API", () => {
 			it("velocity round-trips through set/get", () => {
@@ -688,6 +831,9 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 			// the right face at x≈240. Ray well above the box must miss.
 			const placeBox = () => {
 				const wall = new Renderable(200, 200, 40, 40);
+				// corner-anchored: the ray coordinates below are the wall's
+				// edges in `pos + size` terms
+				wall.anchorPoint.set(0, 0);
 				wall.alwaysUpdate = true;
 				wall.bodyDef = {
 					type: "static",
@@ -739,6 +885,7 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 		describe("queryAABB — portable region query", () => {
 			const placeBox = (x: number, y: number) => {
 				const r = new Renderable(x, y, 40, 40);
+				r.anchorPoint.set(0, 0);
 				r.alwaysUpdate = true;
 				r.bodyDef = {
 					type: "static",
@@ -893,6 +1040,8 @@ for (const { name, make, aabbPrecision, expectedCapabilities } of factories) {
 				collisionMask: number,
 			) => {
 				const wall = new Renderable(x, 200, 40, 40);
+				// corner-anchored: the ray below is aimed in `pos + size` terms
+				wall.anchorPoint.set(0, 0);
 				wall.alwaysUpdate = true;
 				wall.bodyDef = {
 					type: "static",

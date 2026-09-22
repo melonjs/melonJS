@@ -233,6 +233,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 
 		it("applyForce at off-centre point generates torque", () => {
 			const r = new Renderable(100, 100, 64, 64);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 64, 64)],
@@ -349,6 +351,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 
 		it("body.applyForce(x, y, px, py) signature works", () => {
 			const r = new Renderable(100, 100, 64, 64);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			const body = adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 64, 64)],
@@ -632,6 +636,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 	describe("getBodyAABB / getBodyShapes", () => {
 		it("returns a local-space AABB for the body", () => {
 			const r = new Renderable(100, 100, 32, 32);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			adapter.addBody(r, {
 				type: "dynamic",
 				shapes: [new Rect(0, 0, 32, 32)],
@@ -662,6 +668,8 @@ describe("PlanckAdapter — feature parity with BuiltinAdapter", () => {
 			// The authored definitions remain available on `bodyDef.shapes`.
 			const rect = new Rect(0, 0, 32, 32);
 			const r = new Renderable(100, 100, 32, 32);
+			// corner-anchored: this case works in `pos + size` terms
+			r.anchorPoint.set(0, 0);
 			adapter.addBody(r, { type: "dynamic", shapes: [rect] });
 			const shapes = adapter.getBodyShapes(r);
 			expect(shapes.length).toEqual(1);
@@ -762,6 +770,8 @@ describe("PlanckAdapter — unit conversion", () => {
 
 	it("internal planck position is in meters", () => {
 		const r = new Renderable(100, 100, 32, 32);
+		// corner-anchored: this case works in `pos + size` terms
+		r.anchorPoint.set(0, 0);
 		const body = adapter.addBody(r, {
 			type: "dynamic",
 			shapes: [new Rect(0, 0, 32, 32)],
