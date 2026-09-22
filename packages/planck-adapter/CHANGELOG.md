@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0 - _unreleased_
+## 1.6.0 - _2026-09-22_
 
 ### Fixed
 - A `RoundRect` collides at the size it was given. It extends `Polygon`, not `Rect`, and carries 36 points for its corner arcs, while Box2D caps a polygon's vertex count and truncates past it without a word: an 80x40 rounded rect was simulated as a 10x34 blob. An outline over the cap is sampled down to it evenly now, keeping the extent and the silhouette, and `getBodyShapes()` reports the decimated outline so the debug overlay draws what is really simulated

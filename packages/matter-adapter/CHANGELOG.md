@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.0 - _unreleased_
+## 1.5.0 - _2026-09-22_
 
 ### Fixed
 - A `Line` collides as the segment it is. matter has no segment primitive and refuses a zero-area outline, so a line fell back to its AXIS-ALIGNED BOUNDING BOX: a diagonal became a solid block, and a body rested on the top of that rectangle rather than on the slope. It is simulated as a thin oriented rectangle following the segment now, which is also what `getBodyShapes()` reports. `Line` is what Tiled emits for a polyline, so this is the usual way to author a slope or a strip of ground
