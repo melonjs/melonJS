@@ -16,7 +16,7 @@
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  */
-import { Mesh } from "melonjs";
+import { Box3d, collision, Mesh } from "melonjs";
 import { AXIS_Y, SPEEDER_MODEL } from "./constants";
 
 export interface PlaneSettings {
@@ -49,6 +49,39 @@ export class Plane extends Mesh {
 		if (settings.facing === -1) {
 			this.rotate(Math.PI, AXIS_Y);
 		}
+
+		// The hitbox is the model, measured. `getBounds3d()` bounds the
+		// model-space geometry through this mesh's own placement, and it does
+		// so from `originalVertices` rather than from whatever the last draw
+		// left behind, so it is correct here, before the first frame.
+		//
+		// This is the difference between hitting a plane and hitting a ball
+		// around a plane: a speeder is wide across the wings, long down the
+		// fuselage and thin from above, and a single radius covering the
+		// wingtips also covers a lot of empty sky above and below them.
+		const box = this.getBounds3d();
+		this.bodyDef = {
+			// Enemies are static and the player is dynamic, which is what
+			// pairs them in the broadphase: a pair is only considered when at
+			// least one side moves under the simulation. `gravityScale: 0`
+			// keeps the player weightless, since this game flies it by writing
+			// `pos` directly and the world must not pull it down.
+			type: settings.facing === 1 ? "dynamic" : "static",
+			gravityScale: 0,
+			shapes: [new Box3d(0, 0, 0, box.width, box.height, box.depth)],
+			// SENSORS. A contact here means "you were hit", and the game
+			// decides what that costs. A push-out would fight the flight
+			// model, which owns where both planes are.
+			isSensor: true,
+			collisionType:
+				settings.facing === 1
+					? collision.types.PLAYER_OBJECT
+					: collision.types.ENEMY_OBJECT,
+			collisionMask:
+				settings.facing === 1
+					? collision.types.ENEMY_OBJECT
+					: collision.types.PLAYER_OBJECT,
+		};
 	}
 
 	/**

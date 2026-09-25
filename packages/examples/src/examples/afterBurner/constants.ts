@@ -24,6 +24,62 @@ export const PLAY_BOUND_Y = 200;
 // bullets converge." Tunable: smaller value → bigger reticle, more
 // parallax with bank; larger value → smaller, less responsive.
 export const RETICLE_FORWARD_Z = 600;
+/**
+ * World depth at which the guns are harmonised on the reticle.
+ *
+ * The reticle marks the camera's line of sight, and the guns fire from the
+ * jet, which is not where the camera is. Two lines through different points
+ * meet at one depth and one only, so a gun has to be told which range to
+ * agree with the sight at. Real aircraft call this harmonisation and pick
+ * the distance they expect to fight at; this one picks the middle of the
+ * band enemies are actually engaged in, between spawning at SPAWN_Z and
+ * arriving at the player.
+ */
+export const GUN_CONVERGENCE_Z = 1600;
+
+/**
+ * Half-cycle of the lock blink, in milliseconds. A gun sight does not glow
+ * steadily when it has something; it flickers, and the flicker is what the
+ * eye catches in peripheral vision while it is busy flying.
+ */
+/**
+ * Muzzle and fireball flashes as real {@link Light3d} point lights.
+ *
+ * The scene is a dusk sky lit by one directional key and an ambient fill, so
+ * until now every explosion was bright pixels that lit nothing: a fireball
+ * could go off against a wing and leave it exactly as dark as it was. A short
+ * point light at the burst puts that light back on the geometry around it.
+ *
+ * Pooled and reused rather than created per burst. `MAX_LIGHTS` is 32 across
+ * the whole scene and lights past it are dropped silently, so a game that
+ * allocates one per explosion is a game that stops lighting anything the
+ * moment it gets busy, without saying so.
+ */
+export const FLASH_LIGHT_POOL = 6;
+/** peak intensity of a kill fireball, and how long it takes to die */
+export const FLASH_KILL_INTENSITY = 5.5;
+export const FLASH_KILL_RANGE = 900;
+export const FLASH_KILL_MS = 340;
+/** the player's own death, which is bigger and lingers */
+export const FLASH_DEATH_INTENSITY = 7;
+export const FLASH_DEATH_RANGE = 1400;
+export const FLASH_DEATH_MS = 620;
+/** one gun flash: weak, tight and gone before the next round */
+export const FLASH_MUZZLE_INTENSITY = 2.2;
+export const FLASH_MUZZLE_RANGE = 420;
+export const FLASH_MUZZLE_MS = 70;
+
+/** the guns' own flash colour: hotter and whiter than the fireballs */
+export const TINT_MUZZLE_FLASH = "#ffe9b0";
+
+export const RETICLE_BLINK_MS = 85;
+/** how faint the reticle goes on the dark half of that blink */
+export const RETICLE_BLINK_DIM = 0.3;
+
+/** reticle tint with nothing framed: the texture's own warm white */
+export const TINT_RETICLE_FREE = "#ffffff";
+/** reticle tint with a target framed, and therefore being led */
+export const TINT_RETICLE_LOCKED = "#ff4038";
 // World-space size of the reticle quad. Combined with the forward Z
 // offset above, lands at roughly 1/6 the player's apparent size on
 // screen at default framing — visible but not dominating.
@@ -35,7 +91,6 @@ export const BULLET_SPEED = 1800; // world units per second toward +Z
 export const ENEMY_SPEED = 600; // world units per second toward -Z
 export const ENEMY_SPAWN_INTERVAL_MS = 700;
 export const FIRE_COOLDOWN_MS = 140;
-export const HIT_RADIUS = 60; // sphere radius for collision
 
 // ─── lives + respawn invulnerability ───────────────────────────────────
 export const LIVES_START = 3;
