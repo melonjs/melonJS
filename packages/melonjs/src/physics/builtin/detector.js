@@ -11,8 +11,15 @@ import {
 	testBox3dBox3d,
 	testBox3dEllipse,
 	testBox3dPolygon,
+	testBox3dSphere,
 	testEllipseBox3d,
+	testEllipseSphere,
 	testPolygonBox3d,
+	testPolygonSphere,
+	testSphereBox3d,
+	testSphereEllipse,
+	testSpherePolygon,
+	testSphereSphere,
 } from "./sat3d.js";
 
 // pre-built lookup table for SAT collision tests to avoid string concatenation
@@ -49,6 +56,23 @@ const SAT_LOOKUP = {
 	RoundRectBox3d: testPolygonBox3d,
 	Box3dEllipse: testBox3dEllipse,
 	EllipseBox3d: testEllipseBox3d,
+	// Sphere is the orientation-free 3D shape: nothing about it changes
+	// when it turns, which is what a Box3d cannot say and what anything
+	// tumbling or laid out over a curved surface needs. Its mixed pairs
+	// degrade exactly as the box's do, against a footprint that for a sphere
+	// is EXACT rather than a bounding approximation: the XY silhouette of a
+	// sphere is a circle of its own radius.
+	SphereSphere: testSphereSphere,
+	SphereBox3d: testSphereBox3d,
+	Box3dSphere: testBox3dSphere,
+	SpherePolygon: testSpherePolygon,
+	PolygonSphere: testPolygonSphere,
+	SphereRectangle: testSpherePolygon,
+	RectangleSphere: testPolygonSphere,
+	SphereRoundRect: testSpherePolygon,
+	RoundRectSphere: testPolygonSphere,
+	SphereEllipse: testSphereEllipse,
+	EllipseSphere: testEllipseSphere,
 };
 
 /**
@@ -155,8 +179,11 @@ class Detector {
 				normal: { x: 0, y: 0 },
 				depth: 0,
 				// Z half of the same three vectors, as scalars — see
-				// `ResponseObject.overlapNZ`. Always 0 unless both shapes
-				// are a Box3d and the contact resolved along Z.
+				// `ResponseObject.overlapNZ`. Always 0 for a planar shape
+				// pair. A Box3d pair puts the whole contact on one world
+				// axis, so this is 0 or ±1; a Sphere contact runs along the
+				// line between two centres, so it is any value in [-1, 1]
+				// and the planar half is non-zero at the same time.
 				overlapNZ: 0,
 				overlapZ: 0,
 				normalZ: 0,

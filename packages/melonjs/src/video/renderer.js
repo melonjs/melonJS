@@ -1462,7 +1462,7 @@ export default class Renderer {
 
 	/**
 	 * stroke the given shape
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} shape - a shape object to stroke
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} shape - a shape object to stroke
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
@@ -1510,6 +1510,22 @@ export default class Renderer {
 						footprint.width,
 						footprint.height,
 					);
+				}
+				break;
+			}
+
+			// Sphere — same reasoning as `Box3d` above, and the outline is
+			// exact rather than a footprint approximation: the XY silhouette
+			// of a sphere IS a circle of its own radius. Without a case here
+			// the debug panel's hitbox overlay threw on any body carrying one
+			// the moment the viewport was a 2D camera, which is every
+			// `Camera2d` scene and the Entity overlay in all of them.
+			case "Sphere": {
+				const r = Math.abs(shape.radius);
+				if (fill) {
+					this.fillEllipse(shape.pos.x, shape.pos.y, r, r);
+				} else {
+					this.strokeEllipse(shape.pos.x, shape.pos.y, r, r);
 				}
 				break;
 			}
@@ -1574,7 +1590,7 @@ export default class Renderer {
 
 	/**
 	 * fill the given shape
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} shape - a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} shape - a shape object to fill
 	 */
 	fill(shape) {
 		this.stroke(shape, true);

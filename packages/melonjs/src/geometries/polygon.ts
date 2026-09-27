@@ -86,6 +86,21 @@ export class Polygon {
 	type = "Polygon";
 
 	/**
+	 * Optional per-shape collision settings, honoured by {@link Body#addShape}
+	 * and defaulted there. Declared rather than initialized: the body writes
+	 * them when the shape joins it, so a class field here would emit an
+	 * `undefined` own property on every shape ever built. See `addShape` for
+	 * the table of defaults and what each one does.
+	 * @see Body#addShape
+	 */
+	declare collisionType?: number;
+	declare collisionMask?: number;
+	/** `false` takes this shape out of collision without removing it */
+	declare isActive?: boolean;
+	/** `true` reports contacts but skips the position correction */
+	declare isTrigger?: boolean;
+
+	/**
 	 * @param [x=0] - origin point of the Polygon
 	 * @param [y=0] - origin point of the Polygon
 	 * @param vertices - array of vector defining the Polygon

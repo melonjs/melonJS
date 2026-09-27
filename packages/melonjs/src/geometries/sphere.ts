@@ -9,9 +9,12 @@ import { createPool } from "../system/pool.ts";
  * sphere-vs-sphere / sphere-vs-AABB collision check under
  * {@link Camera3d}.
  *
- * Not currently part of the {@link BodyShape} union — `Body` is 2D-
- * only in melonJS today; Sphere is a math/geometry primitive that
- * would slot in once a 3D physics adapter ships.
+ * Also a BODY SHAPE. A `Body` carrying a Sphere is resolved by the
+ * builtin 3D narrowphase against another Sphere or a {@link Box3d},
+ * which is what makes it the right primitive for anything that tumbles
+ * or is laid out over a curved surface: a {@link Box3d} is
+ * world-axis-aligned and cannot be oriented, so every object whose "up"
+ * points a different way needs a shape that has no "up" at all.
  * @category Geometry
  * @example
  * import { Sphere } from "melonjs";
@@ -21,6 +24,29 @@ import { createPool } from "../system/pool.ts";
  * a.overlaps(b); // true — surfaces touch at x = 5
  */
 export class Sphere {
+	/**
+	 * Shape tag, as the narrowphase's pair table keys on. That table is a
+	 * string concat of the two shapes' types and a missing entry is a hard
+	 * failure rather than a missed collision, so this has to match the
+	 * entries registered in the detector exactly.
+	 */
+	type = "Sphere";
+
+	/**
+	 * Optional per-shape collision settings, honoured by {@link Body#addShape}
+	 * and defaulted there. Declared rather than initialized: the body writes
+	 * them when the shape joins it, so a class field here would emit an
+	 * `undefined` own property on every shape ever built. See `addShape` for
+	 * the table of defaults and what each one does.
+	 * @see Body#addShape
+	 */
+	declare collisionType?: number;
+	declare collisionMask?: number;
+	/** `false` takes this shape out of collision without removing it */
+	declare isActive?: boolean;
+	/** `true` reports contacts but skips the position correction */
+	declare isTrigger?: boolean;
+
 	/** Centre coordinates of the sphere (Y-down, +Z forward — Camera3d convention). */
 	pos: Vector3d;
 
@@ -28,9 +54,10 @@ export class Sphere {
 	radius: number;
 
 	/**
-	 * Cached AABB for this sphere. Allocated lazily on the first
+	 * Reusable AABB for this sphere. Allocated lazily on the first
 	 * {@link Sphere.getBounds} call so a sphere used only for inline
-	 * `overlaps` checks doesn't pay for the AABB.
+	 * `overlaps` checks doesn't pay for the AABB, and rewritten rather
+	 * than reallocated on every call after that.
 	 * @ignore
 	 * @internal
 	 */
@@ -59,10 +86,6 @@ export class Sphere {
 	setShape(x: number, y: number, z: number, radius: number) {
 		this.pos.set(x, y, z);
 		this.radius = radius;
-		// Invalidate the cached AABB — next `getBounds` call rebuilds.
-		if (typeof this._bounds !== "undefined") {
-			this._updateBounds();
-		}
 		return this;
 	}
 
@@ -131,15 +154,20 @@ export class Sphere {
 	}
 
 	/**
-	 * Smallest {@link AABB3d} containing this sphere. Cached — repeat
-	 * calls without a `setShape` between return the same instance and
-	 * the same values.
+	 * Smallest {@link AABB3d} containing this sphere. The same instance
+	 * every time, refreshed from the current centre and radius on each
+	 * call, so it is never stale: as a body shape a sphere gets moved by
+	 * whoever owns it — directly through `pos`, not only through
+	 * {@link Sphere.setShape} — and a cache that only refreshed on
+	 * `setShape` reported the position the sphere was first asked about
+	 * for the rest of its life. Callers must not hold the instance across
+	 * a move and expect the old values.
 	 */
 	getBounds(): AABB3d {
 		if (typeof this._bounds === "undefined") {
 			this._bounds = new AABB3d();
-			this._updateBounds();
 		}
+		this._updateBounds();
 		return this._bounds;
 	}
 
@@ -165,9 +193,6 @@ export class Sphere {
 	clear() {
 		this.pos.set(0, 0, 0);
 		this.radius = 0;
-		if (typeof this._bounds !== "undefined") {
-			this._updateBounds();
-		}
 		return this;
 	}
 
