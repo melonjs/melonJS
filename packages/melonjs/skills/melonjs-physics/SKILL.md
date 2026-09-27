@@ -258,7 +258,8 @@ built-in-only spelling of this and are deprecated since 20.7.0.
 | `RoundRect` | exact | exact (decomposed) | sampled down to 12 vertices |
 | `Ellipse` | exact | circle of the average radius | circle of the average radius |
 | `Line` | exact | thin quad along the segment | thin quad along the segment |
-| `Point`, `Box3d`, `Sphere` | supported | **throws** | **throws** |
+| `Box3d`, `Sphere` | exact, and in 3D | **throws** | **throws** |
+| `Point` | supported | **throws** | **throws** |
 
 Two of those are worth knowing before you author geometry. Box2D caps a
 polygon's vertex count and says nothing when you go over: measured, a
@@ -496,50 +497,76 @@ Two prerequisites that produce empty results rather than errors:
 - On the **built-in** adapter, the broadphase is cleared and rebuilt inside
   `world.update()`, so querying before the first update returns nothing.
 
-## 3D collision: `Box3d` and the Z pushback
+## 3D collision: `Box3d`, `Sphere` and the Z pushback
 
-The narrowphase is not 2D-only. `Box3d` is the one shape with a depth extent,
-and a `Box3d`-vs-`Box3d` contact is resolved in three dimensions — it is the
-only pair in the engine that can push back along **Z**.
+The narrowphase is not 2D-only. Two shapes carry a depth extent — `Box3d` and
+`Sphere` — and any pair of them is resolved in three dimensions, pushing back
+along **Z** as well as X and Y.
 
 ```js
-import { Box3d } from "melonjs";
+import { Box3d, Sphere } from "melonjs";
 
-// centre offset from the body, then half-extents on each axis
-rock.body.addShape(new Box3d(0, 0, 0, 40, 60, 40));
-boat.body.addShape(new Box3d(0, 0, 0, 30, 40, 60));
+// a box: centre offset from the body, then half-extents on each axis
+crate.body.addShape(new Box3d(0, 0, 0, 40, 60, 40));
+// a sphere: centre offset, then one radius
+rock.body.addShape(new Sphere(0, 0, 0, 30));
 ```
 
-Reach for this for anything moving in the XZ plane under a `Camera3d` — a
+Reach for these for anything moving in the XZ plane under a `Camera3d` — a
 runner dodging obstacles, a 2.5D platformer, pickups on a course. Hand-rolling
 a distance check there is the usual mistake, and it throws away the
 penetration vector the response already carries.
 
-**Read the Z axis off the response, not `overlapN`.** The MTV is a single
-axis, so exactly one of `overlapN.x`, `overlapN.y` and `overlapNZ` is
-non-zero:
+**Which of the two.** A `Box3d` is world-axis-aligned and cannot be oriented:
+it is right for walls, floors, crates and anything else that stays square to
+the world, and wrong for anything that turns. A `Sphere` has no orientation to
+get wrong, which makes it the shape for things that tumble, and for anything
+laid out over a curved surface — on a globe every object's own "up" points a
+different way, so no single axis-aligned box fits any of them. It is also the
+cheaper test: one distance against a sum of radii.
+
+**Z arrives beside `overlapN`, not inside it.** `overlapN` stays the 2D unit
+vector it always was and `overlapNZ` carries the depth component, because
+`Vector3d` does not extend `Vector2d` and widening the field would have broken
+every existing 2D handler. The two together are a 3D unit vector, and
+`overlapZ = overlapNZ * overlap` exactly as `overlapV = overlapN * overlap`.
+
+**How much of the normal is in each half depends on the shapes.** A `Box3d`
+pair separates along ONE world axis, so a depth contact leaves the 2D fields
+at zero and a legacy 2D handler correctly applies no push. A `Sphere`
+separates along the line between the two centres, which is generally diagonal:
+all three components are non-zero at once. So subtract both halves rather than
+branching on one:
 
 ```js
 onCollision(response, other) {
-    if (response.overlapNZ !== 0) {
-        // a depth-only contact: overlapN / overlapV are BOTH zero here
-        this.pos.z -= response.overlapZ;
-    }
-    return true;
+    // works for either shape: the 2D half is zero when there is no 2D push
+    this.pos.x -= response.overlapV.x;
+    this.pos.y -= response.overlapV.y;
+    this.pos.z -= response.overlapZ;
+    return false;
 }
 ```
 
-That is deliberate: a collision resolved along Z leaves the 2D fields at zero,
-so an existing 2D `onCollision` applies no push rather than a wrong one.
+Branching on `if (response.overlapNZ !== 0)` and then moving only `pos.z` is
+the mistake to avoid: correct for a box pair, and for a sphere it throws away
+the planar half of the contact.
 
-**Mixed pairs degrade to 2D.** `Box3d` against a `Polygon`, `Rectangle`,
-`RoundRect` or `Ellipse` tests the box's XY footprint and treats the planar
-shape as unbounded along Z. Only `Box3d`-vs-`Box3d` gives a depth result, so
-give BOTH sides a `Box3d` when you want one.
+**Mixed pairs degrade to 2D.** A `Box3d` or a `Sphere` against a `Polygon`,
+`Rectangle`, `RoundRect` or `Ellipse` tests the 3D shape's XY footprint and
+treats the planar shape as unbounded along Z, which is what keeps a sphere or
+box body colliding with an ordinary Tiled collision layer. `overlapZ` is zero
+for those, since only one side has a depth to resolve. Give BOTH sides a 3D
+shape when you want a depth result.
 
 This is the narrowphase and is independent of the 3D broadphase queries above
-— `querySphere` / `raycast3d` need `world.sortOn === "depth"`; `Box3d` shapes
-do not.
+— `querySphere` / `raycast3d` need `world.sortOn === "depth"`; a 3D body shape
+does not.
+
+`raycast3d` measures a `Box3d` body as its box and a body that is one `Sphere`
+as that sphere, both exactly. Anything else, including a body mixing the two,
+is measured as the AABB containing its 3D shapes, and a body with none falls
+back to a bounding sphere derived from the renderable's 2D bounds.
 
 **Bounds are what the broadphase sorts by, and they come from the SHAPE.**
 Every item is filed by its renderable's 2D `getBounds()`, so an object with no

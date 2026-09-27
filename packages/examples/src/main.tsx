@@ -325,7 +325,7 @@ const examples: {
 		path: "after-burner",
 		sourceDir: "afterBurner",
 		description:
-			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models — arrows / WASD to fly, space to shoot.",
+			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models. Rounds hit by raycast3d, planes collide as Box3d bodies — arrows / WASD to fly, space to shoot.",
 	},
 	{
 		component: <ExampleJungleRabbit />,

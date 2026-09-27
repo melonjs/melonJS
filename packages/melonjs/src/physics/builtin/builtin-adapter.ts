@@ -34,10 +34,15 @@ const _rayBox = {
 const _rayHit = { t: 0, nx: 0, ny: 0, nz: 0 };
 
 /**
- * Fill `out` with the world-space AABB of a renderable's {@link Box3d}
- * shapes, unioned. Returns `false` when the renderable has no body, or a
- * body with no `Box3d` in it — those keep the bounding-sphere path, so no
- * existing `raycast3d` result changes.
+ * Fill `out` with the world-space AABB of a renderable's 3D shapes
+ * ({@link Box3d} and {@link Sphere}), unioned. Returns `false` when the
+ * renderable has no body, or a body with no 3D shape in it — those keep the
+ * bounding-sphere path, so no existing `raycast3d` result changes.
+ *
+ * A sphere contributes the AABB that contains it. A body that is nothing but
+ * ONE sphere is measured exactly instead, by {@link worldSphere}, which the
+ * ray tries first; this box is what a body mixing the two shapes, or carrying
+ * several spheres, degrades to.
  *
  * A shape's world position follows the same convention the SAT narrowphase
  * uses: the renderable's absolute position plus the shape's local offset.
@@ -69,19 +74,25 @@ function worldBox3d(
 		isActive?: boolean;
 		pos: { x: number; y: number; z: number };
 		halfExtents: { x: number; y: number; z: number };
+		radius: number;
 	}[];
 	for (let i = 0, len = shapes.length; i < len; i++) {
 		const shape = shapes[i];
-		if (shape.type !== "Box3d") continue;
+		const isSphere = shape.type === "Sphere";
+		if (shape.type !== "Box3d" && !isSphere) continue;
 		// an inactive shape is out of collision, and raycast3d is a collision
 		// query — skip it rather than let it contribute a depth extent (#1590)
 		if (shape.isActive === false) continue;
-		const minX = ox + shape.pos.x - shape.halfExtents.x;
-		const minY = oy + shape.pos.y - shape.halfExtents.y;
-		const minZ = cz + shape.pos.z - shape.halfExtents.z;
-		const maxX = ox + shape.pos.x + shape.halfExtents.x;
-		const maxY = oy + shape.pos.y + shape.halfExtents.y;
-		const maxZ = cz + shape.pos.z + shape.halfExtents.z;
+		// a sphere's extent is its radius on all three axes
+		const hx = isSphere ? Math.abs(shape.radius) : shape.halfExtents.x;
+		const hy = isSphere ? Math.abs(shape.radius) : shape.halfExtents.y;
+		const hz = isSphere ? Math.abs(shape.radius) : shape.halfExtents.z;
+		const minX = ox + shape.pos.x - hx;
+		const minY = oy + shape.pos.y - hy;
+		const minZ = cz + shape.pos.z - hz;
+		const maxX = ox + shape.pos.x + hx;
+		const maxY = oy + shape.pos.y + hy;
+		const maxZ = cz + shape.pos.z + hz;
 		if (!found) {
 			found = true;
 			out.minX = minX;
@@ -100,6 +111,63 @@ function worldBox3d(
 		}
 	}
 	return found;
+}
+
+/** reusable world-space sphere for `raycast3d`; never escapes it */
+const _raySphere = { x: 0, y: 0, z: 0, r: 0 };
+
+/**
+ * Fill `out` with the world-space centre and radius of a renderable's body
+ * when that body is exactly ONE active {@link Sphere}, and return `true`.
+ *
+ * Worth its own path because the ray test for a sphere is exact and cheap —
+ * the generic fallback below already solves ray-vs-sphere, it just solves it
+ * against the renderable's 2D bounds half-diagonal, which for a sphere body
+ * is the wrong radius about the wrong centre. A body carrying several shapes,
+ * or mixing a sphere with a {@link Box3d}, returns `false` here and is
+ * measured as the unioned AABB instead: one sphere cannot stand in for two.
+ * @param renderable - the candidate to measure
+ * @param cx - the renderable's absolute x
+ * @param cy - the renderable's absolute y
+ * @param cz - the renderable's absolute z
+ * @param out - scratch sphere to fill; only written when this returns `true`
+ */
+function worldSphere(
+	renderable: Renderable,
+	cx: number,
+	cy: number,
+	cz: number,
+	out: typeof _raySphere,
+): boolean {
+	const body = (renderable as { body?: Body }).body;
+	if (body === undefined || !body.hasDepth) {
+		return false;
+	}
+	const shapes = body.shapes as unknown as {
+		type: string;
+		isActive?: boolean;
+		pos: { x: number; y: number; z: number };
+		radius: number;
+	}[];
+	let only: (typeof shapes)[number] | undefined;
+	for (let i = 0, len = shapes.length; i < len; i++) {
+		const shape = shapes[i];
+		if (shape.isActive === false) continue;
+		if (shape.type !== "Sphere" || only !== undefined) {
+			return false;
+		}
+		only = shape;
+	}
+	if (only === undefined) {
+		return false;
+	}
+	// the same frame the narrowphase measures in; see `worldBox3d`
+	const anchor = anchorOffset(renderable);
+	out.x = cx - anchor.x + only.pos.x;
+	out.y = cy - anchor.y + only.pos.y;
+	out.z = cz + only.pos.z;
+	out.r = Math.abs(only.radius);
+	return true;
 }
 
 /** scratch for `anchorOffset`; never escapes its callers */
@@ -649,7 +717,14 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// whose renderable is not corner-anchored.
 		const shifted = src.map((shape) => {
 			const copy = shape.clone();
-			copy.pos.set(shape.pos.x - ax, shape.pos.y - ay);
+			// Written component-wise, not through `pos.set(x, y)`. A `Box3d`
+			// and a `Sphere` carry a `Vector3d` here and `Vector3d.set(x, y)`
+			// defaults z to 0, so the two-argument call silently flattened
+			// every 3D shape's depth offset onto the renderable's own depth,
+			// which put the debug overlay's wireframe at the wrong altitude.
+			// `clone()` has already carried z across.
+			copy.pos.x = shape.pos.x - ax;
+			copy.pos.y = shape.pos.y - ay;
 			return copy;
 		});
 		return shifted;
@@ -721,11 +796,16 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			// always present at runtime.
 			const cz = (center as { z?: number }).z ?? 0;
 
-			// Exact ray-vs-AABB when this renderable carries a Box3d body,
+			// Exact ray-vs-AABB when this renderable carries a 3D body,
 			// which is the case that matters: probing floor height under a
 			// character. Everything else keeps the bounding-sphere path
 			// below, so no existing raycast3d result changes.
-			if (worldBox3d(r, cx, cy, cz, _rayBox)) {
+			//
+			// A body that is one sphere skips this and goes through the path
+			// below with its OWN centre and radius, which is exact for a
+			// sphere where an AABB is not.
+			const isSphereBody = worldSphere(r, cx, cy, cz, _raySphere);
+			if (!isSphereBody && worldBox3d(r, cx, cy, cz, _rayBox)) {
 				const hit = rayAABB3d(from, dx, dy, dz, _rayBox);
 				if (hit === null) continue;
 				if (hit.t < bestFraction) {
@@ -739,18 +819,31 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 				continue;
 			}
 
-			// bounding-sphere radius = bounds half-diagonal (matches
-			// `Camera3d.isVisible`'s circumradius convention).
-			const bounds = r.getBounds();
-			const w = bounds.width;
-			const h = bounds.height;
-			const radius = Math.sqrt(w * w + h * h) * 0.5;
+			// A sphere body is measured as itself. Everything else falls back
+			// to a bounding sphere of radius = bounds half-diagonal (matching
+			// `Camera3d.isVisible`'s circumradius convention), centred on the
+			// renderable.
+			let sx = cx;
+			let sy = cy;
+			let sz = cz;
+			let radius: number;
+			if (isSphereBody) {
+				sx = _raySphere.x;
+				sy = _raySphere.y;
+				sz = _raySphere.z;
+				radius = _raySphere.r;
+			} else {
+				const bounds = r.getBounds();
+				const w = bounds.width;
+				const h = bounds.height;
+				radius = Math.sqrt(w * w + h * h) * 0.5;
+			}
 			// Ray–sphere intersection in parametric form: solve
 			//   |from + t·(to − from) − center|² = r²
 			// for t ∈ [0, 1]. Take the smaller root (entry).
-			const ox = from.x - cx;
-			const oy = from.y - cy;
-			const oz = from.z - cz;
+			const ox = from.x - sx;
+			const oy = from.y - sy;
+			const oz = from.z - sz;
 			const a = dx * dx + dy * dy + dz * dz;
 			if (a === 0) continue;
 			const b = 2 * (ox * dx + oy * dy + oz * dz);
@@ -786,9 +879,9 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 				const px = from.x + dx * t;
 				const py = from.y + dy * t;
 				const pz = from.z + dz * t;
-				const ux = px - cx;
-				const uy = py - cy;
-				const uz = pz - cz;
+				const ux = px - sx;
+				const uy = py - sy;
+				const uz = pz - sz;
 				const uLen = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1;
 				bestNx = ux / uLen;
 				bestNy = uy / uLen;

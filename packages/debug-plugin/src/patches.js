@@ -41,6 +41,16 @@ const _bodyMin = new Vector3d();
 const _bodyMax = new Vector3d();
 const _meshSavedProj = new Matrix3d();
 const _meshScreenProj = new Matrix3d();
+// Scratch for the Sphere wireframe: three great circles, one per world
+// plane, projected before any renderer state is touched (as the box is) and
+// then stroked in screen space.
+const SPHERE_SEGMENTS = 24;
+const _ringWorld = new Vector3d();
+const _ringScreen = Array.from({ length: 3 * (SPHERE_SEGMENTS + 1) }, () => {
+	return new Vector2d();
+});
+const _ringDrawable = [false, false, false];
+
 // the 12 edges of a box, indexing the 8 corners laid out by
 // `strokeMeshWireframe`: near face (z=min) 0-3, far face (z=max) 4-7.
 const BOX_EDGES = [
@@ -142,6 +152,78 @@ function strokeBoxWireframe(renderer, panel, camera, min, max, color) {
 }
 
 /**
+ * Stroke a sphere as three great circles, one in each world plane.
+ *
+ * A cube around it would be easier and says the wrong thing: the corners of
+ * that cube stick out by 73% of the radius, so a shape that reads as touching
+ * its neighbour in the overlay is still clear of it in the simulation, and the
+ * reader cannot tell the box IS a sphere. Three rings are unambiguous at a
+ * glance and show the real radius in every direction.
+ *
+ * Projected first, drawn second, for the same reason {@link
+ * strokeBoxWireframe} does it: `worldToScreen` reads the camera's own
+ * matrices, so it has to run before the renderer is switched to the screen
+ * projection.
+ * @param {*} renderer
+ * @param {import("./index").DebugPanelPlugin} panel
+ * @param {Camera3d} camera
+ * @param {Vector3d} centre - the sphere's world centre
+ * @param {number} radius - its radius in world units
+ * @param {string} color - the stroke colour
+ */
+function strokeSphereWireframe(renderer, panel, camera, centre, radius, color) {
+	for (let ring = 0; ring < 3; ring++) {
+		_ringDrawable[ring] = true;
+		for (let i = 0; i <= SPHERE_SEGMENTS; i++) {
+			const a = (i / SPHERE_SEGMENTS) * Math.PI * 2;
+			const c = Math.cos(a) * radius;
+			const s2 = Math.sin(a) * radius;
+			if (ring === 0) {
+				_ringWorld.set(centre.x + c, centre.y + s2, centre.z);
+			} else if (ring === 1) {
+				_ringWorld.set(centre.x + c, centre.y, centre.z + s2);
+			} else {
+				_ringWorld.set(centre.x, centre.y + c, centre.z + s2);
+			}
+			const out = _ringScreen[ring * (SPHERE_SEGMENTS + 1) + i];
+			// null for a point at or behind the camera: projecting it mirrors
+			// the point and throws an edge across the screen, so that ring is
+			// dropped rather than drawn wrong
+			if (camera.worldToScreen(_ringWorld, out) === null) {
+				_ringDrawable[ring] = false;
+				break;
+			}
+		}
+	}
+	if (!_ringDrawable[0] && !_ringDrawable[1] && !_ringDrawable[2]) {
+		return;
+	}
+
+	renderer.save();
+	_meshSavedProj.copy(renderer.projectionMatrix);
+	renderer.currentTransform.identity();
+	_meshScreenProj.ortho(0, camera.width, camera.height, 0, -1, 1);
+	renderer.setProjection(_meshScreenProj);
+	renderer.setColor(color);
+	renderer.lineWidth = 1;
+	for (let ring = 0; ring < 3; ring++) {
+		if (!_ringDrawable[ring]) {
+			continue;
+		}
+		const base = ring * (SPHERE_SEGMENTS + 1);
+		for (let i = 0; i < SPHERE_SEGMENTS; i++) {
+			const a = _ringScreen[base + i];
+			const b = _ringScreen[base + i + 1];
+			renderer.strokeLine(a.x, a.y, b.x, b.y);
+		}
+	}
+	renderer.flush();
+	renderer.setProjection(_meshSavedProj);
+	renderer.restore();
+	panel.counters.inc("shapes");
+}
+
+/**
  * Stroke a renderable's collision shapes as 3D wireframes, for a scene under a
  * `Camera3d`.
  *
@@ -179,6 +261,22 @@ function strokeBodyShapes3d(renderer, panel, adapter, renderable, camera) {
 				origin.y + shape.pos.y + half.y,
 				originZ + shape.pos.z + half.z,
 			);
+		} else if (shape.type === "Sphere") {
+			// drawn as a sphere, not as the box around it
+			_bodyMin.set(
+				origin.x + shape.pos.x,
+				origin.y + shape.pos.y,
+				originZ + shape.pos.z,
+			);
+			strokeSphereWireframe(
+				renderer,
+				panel,
+				camera,
+				_bodyMin,
+				Math.abs(shape.radius),
+				"red",
+			);
+			continue;
 		} else {
 			// flat: its footprint, sitting at the renderable's own depth
 			const box = shape.getBounds();
@@ -222,6 +320,13 @@ function strokeBodyHitbox(renderer, panel, adapter, renderable, aabb) {
 				footprint.width,
 				footprint.height,
 			);
+		} else if (shape.type === "Sphere") {
+			// Same story one version later: `Sphere` became a body shape in
+			// melonJS 20.8 and `stroke` threw on it before that. Its XY
+			// silhouette is a circle of its own radius, so this is the exact
+			// outline rather than a bounding approximation.
+			const r = Math.abs(shape.radius);
+			renderer.strokeEllipse(shape.pos.x, shape.pos.y, r, r);
 		} else {
 			renderer.stroke(shape);
 		}

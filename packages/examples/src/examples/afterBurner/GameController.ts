@@ -20,6 +20,7 @@ import {
 	ChromaticAberrationEffect,
 	GlowEffect,
 	input,
+	Light3d,
 	math,
 	ParticleEmitter,
 	pool,
@@ -29,6 +30,7 @@ import {
 	Sprite,
 	state,
 	Tween,
+	Vector2d,
 	Vector3d,
 } from "melonjs";
 import {
@@ -57,7 +59,17 @@ import {
 	ENEMY_SPAWN_INTERVAL_MS,
 	ENEMY_SPEED,
 	FIRE_COOLDOWN_MS,
-	HIT_RADIUS,
+	FLASH_DEATH_INTENSITY,
+	FLASH_DEATH_MS,
+	FLASH_DEATH_RANGE,
+	FLASH_KILL_INTENSITY,
+	FLASH_KILL_MS,
+	FLASH_KILL_RANGE,
+	FLASH_LIGHT_POOL,
+	FLASH_MUZZLE_INTENSITY,
+	FLASH_MUZZLE_MS,
+	FLASH_MUZZLE_RANGE,
+	GUN_CONVERGENCE_Z,
 	INVULN_BLINK_MS,
 	INVULN_MS,
 	LIVES_START,
@@ -71,12 +83,18 @@ import {
 	PLAYER_MAX_ROLL,
 	PLAYER_SPEED,
 	PLAYER_Z,
+	RETICLE_BLINK_DIM,
+	RETICLE_BLINK_MS,
 	RETICLE_FORWARD_Z,
+	RETICLE_SIZE,
 	SPAWN_Z,
 	TINT_BULLET_RGB,
 	TINT_ENEMY_BULLET_RGB,
 	TINT_ENEMY_EXPLOSION,
+	TINT_MUZZLE_FLASH,
 	TINT_PLAYER_EXPLOSION,
+	TINT_RETICLE_FREE,
+	TINT_RETICLE_LOCKED,
 } from "./constants";
 import { HUD } from "./HUD";
 import { Plane } from "./Plane";
@@ -96,24 +114,35 @@ import type {
 } from "./types";
 
 /**
- * Lightweight tag on bullets / enemies so the broadphase walk in
- * the per-frame bullet × enemy hit loop can filter
- * {@link adapter.querySphere} candidates by kind in O(1) —
- * `world.adapter.querySphere(center, r)` returns every non-kinematic
- * renderable centred within `r` (including particles, the player,
- * the reticle), so we tag the two we care about at spawn time and
- * skip the rest. The tag has no runtime cost — just a string field.
+ * The collision callbacks are not declared on `Renderable` — it checks
+ * `typeof` at dispatch time — so a renderable opts in by being widened to
+ * carry one.
  */
-type RenderableWithKind = (Renderable | Sprite) & {
-	__kind?: "bullet" | "enemy";
+type CollisionAware = Renderable & {
+	onCollisionStart?: (response: object, other: Renderable) => boolean;
 };
 
 /**
- * Module-level scratch for the `world.adapter.querySphere` centre
- * argument. Reused each frame to avoid Vector3d allocation in the
- * bullet × enemy hit check (one call per live enemy each tick).
+ * Module-level scratch for the two ends of a bullet's per-frame ray.
+ * `raycast3d` reads them and returns before the next call, so one pair
+ * is reused for every bullet rather than allocating two vectors per
+ * bullet per frame.
  */
-const _sphereCenter = new Vector3d();
+const _rayFrom = new Vector3d();
+const _rayTo = new Vector3d();
+const _aimProbe = new Vector3d();
+/**
+ * Scratch for the screen projections in {@link GameController#framedEnemy}.
+ *
+ * `Camera3d.worldToScreen` allocates its result when it is not given one, and
+ * that call runs for the sight, the visor's edge and EVERY live enemy on
+ * every frame: about ten short-lived vectors a frame, six hundred a second,
+ * all of them dead before the next tick. Handing it somewhere to write costs
+ * nothing and leaves the collector out of the aiming path.
+ */
+const _sightScreen = new Vector2d();
+const _edgeScreen = new Vector2d();
+const _enemyScreen = new Vector2d();
 
 // ─── Pool keys for `me.pool` ───────────────────────────────────────────
 // One-time registered subclasses of Sprite, built on the fly inside the
@@ -203,6 +232,28 @@ export class GameController extends Renderable {
 	enemySpawnTimerMs = 0;
 	fireCooldownMs = 0;
 	hud!: HUD;
+	/**
+	 * The enemy the sight is on this frame, or `undefined` for empty sky.
+	 *
+	 * Resolved ONCE per frame and read by both the reticle tint and the
+	 * gun solution, so the two cannot disagree: if it is red, those are the
+	 * rounds that will be led onto that target. A reticle that lit up on
+	 * one rule while the guns solved by another would be worse than no
+	 * reticle at all.
+	 */
+	private lockedTarget: EnemyMover | undefined;
+	/** phase of the lock blink, reset each time a target is acquired */
+	private lockBlinkMs = 0;
+	/** reusable point lights for muzzle and fireball flashes */
+	private flashLights: Light3d[] = [];
+	/** remaining life of each pooled flash, parallel to `flashLights` */
+	private flashRemainingMs: number[] = [];
+	/** peak intensity each pooled flash is decaying from */
+	private flashPeak: number[] = [];
+	/** total life each pooled flash was given */
+	private flashLifeMs: number[] = [];
+	/** round-robin cursor into the flash pool */
+	private nextFlash = 0;
 	// Lives + post-respawn invulnerability. `lives` counts down on each
 	// hit; when it reaches zero the next hit triggers game-over. While
 	// `invulnRemainingMs > 0` the player ignores enemy collisions and
@@ -284,6 +335,11 @@ export class GameController extends Renderable {
 		// atomically sets `pos.z`, so the world's depth sort key is correct
 		// from the first frame.
 		this.player = new Plane({ size: 60, facing: 1 });
+		// The body comes from `Plane`'s own definition; what belongs here is
+		// what a contact MEANS. `Container.addChild` reads `bodyDef` at
+		// insertion, so the handler is installed before the world can
+		// deliver to it.
+		this.installPlayerCollision();
 		app.world.addChild(this.player, PLAYER_Z);
 
 		this.bulletTexture = makeLaserBoltTexture();
@@ -296,6 +352,7 @@ export class GameController extends Renderable {
 		app.world.addChild(this.reticle, PLAYER_Z + RETICLE_FORWARD_Z);
 
 		this.muzzleEmitter = this._makeMuzzleEmitter();
+		this.initFlashLights(app);
 
 		this.registerPools();
 
@@ -502,25 +559,313 @@ export class GameController extends Renderable {
 		// `addChild(child, z)` atomically sets the depth at insertion —
 		// no window where the world's sort key is stale.
 		this.app.world.addChild(b, PLAYER_Z + 40);
-		// Tag bullets so the per-frame bullet×enemy broadphase walk
-		// (see the enemy-update loop) can filter sphere candidates by
-		// kind without having to call `indexOf` against `this.bullets`.
-		(b as RenderableWithKind).__kind = "bullet";
-		// `Sprite` defaults `isKinematic = true`, which means
-		// `World.broadphase.insertContainer` skips it. We need the
-		// bullet to live in the broadphase so the per-frame
-		// `querySphere(enemy.pos, HIT_RADIUS)` walk can find it as a
-		// candidate. Opt the bullet in by flipping isKinematic before
-		// the world's next update tick. This costs nothing — bullets
-		// have no body, so there's no SAT side effect; pointer events
-		// don't fire on bullets either.
-		b.isKinematic = false;
-		this.bullets.push({ sprite: b, vx: 0, vy: 0, vz: BULLET_SPEED });
+		// A bullet is not a thing in the broadphase, it is a RAY. It
+		// carries no body and stays kinematic; what it hits is resolved
+		// in `tickBullets` by casting along the segment it travelled
+		// this frame. Nothing to tag, nothing to insert, nothing to
+		// filter back out of a query result.
+		this.bullets.push(this.aimedBullet(b));
 		this.spawnMuzzleFlash();
 		// Pan the blip with the player's X — sells "the bullets came from
 		// where the jet is on screen" without needing a real spatial
 		// audio graph.
 		playFire(this.player.pos.x / PLAY_BOUND_X);
+	}
+
+	/**
+	 * Resolve what the sight is on, and colour it accordingly.
+	 *
+	 * Red is a promise the guns keep: it appears exactly when
+	 * {@link GameController#framedEnemy} finds something, which is the same
+	 * call the intercept solver leads on.
+	 */
+	private updateLock(dt: number): void {
+		this.lockedTarget = this.framedEnemy();
+		if (this.lockedTarget === undefined) {
+			this.lockBlinkMs = 0;
+			this.reticle.tint.parseCSS(TINT_RETICLE_FREE);
+			this.reticle.setOpacity(1);
+			return;
+		}
+		this.reticle.tint.parseCSS(TINT_RETICLE_LOCKED);
+		// A square wave, not a sine: a gun sight flickers, it does not
+		// breathe. The phase resets on acquisition (above), so every lock
+		// opens lit rather than on whatever phase the last one left behind.
+		this.lockBlinkMs += dt;
+		const lit = Math.floor(this.lockBlinkMs / RETICLE_BLINK_MS) % 2 === 0;
+		this.reticle.setOpacity(lit ? 1 : RETICLE_BLINK_DIM);
+	}
+
+	/**
+	 * The enemy closest to the middle of the sight, or `undefined` when
+	 * nothing is framed.
+	 *
+	 * Screen distance rather than world distance on purpose: what the player
+	 * means by "I am aiming at that one" is where it sits in the visor, not
+	 * how near it is. Only enemies ahead of the guns count, and only those
+	 * within a generous slice of the screen, so a lone straggler off in the
+	 * corner does not silently re-range the guns.
+	 * @returns the enemy the guns should be solving for
+	 */
+	private framedEnemy(): EnemyMover | undefined {
+		const sight = this.camera.worldToScreen(
+			_aimProbe.set(this.reticle.pos.x, this.reticle.pos.y, this.reticle.depth),
+		);
+		if (sight === null) {
+			return undefined;
+		}
+		// The visor's own radius, measured on screen rather than assumed.
+		// It is world geometry, so its apparent size changes with distance
+		// and camera angle, and a fixed pixel figure is right at one range
+		// only: the first attempt here used 70px against brackets that draw
+		// about 33px across, so nearly anything ahead of the jet counted as
+		// framed and the sight sat lit permanently. Projecting the reticle's
+		// own edge keeps the test honest to what the player can see.
+		const edge = this.camera.worldToScreen(
+			_aimProbe.set(
+				this.reticle.pos.x + RETICLE_SIZE / 2,
+				this.reticle.pos.y,
+				this.reticle.depth,
+			),
+			_edgeScreen,
+		);
+		if (edge === null) {
+			return undefined;
+		}
+		let best: EnemyMover | undefined;
+		let bestOff = Math.abs(edge.x - sight.x);
+		for (const e of this.enemies) {
+			if (e.mesh.depth <= PLAYER_Z) {
+				continue;
+			}
+			const screen = this.camera.worldToScreen(
+				_aimProbe.set(e.mesh.pos.x, e.mesh.pos.y, e.mesh.depth),
+				_enemyScreen,
+			);
+			if (screen === null) {
+				continue;
+			}
+			const off = Math.hypot(screen.x - sight.x, screen.y - sight.y);
+			if (off < bestOff) {
+				bestOff = off;
+				best = e;
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * Vector from the muzzle to where the framed enemy and a bolt fired now
+	 * would arrive together, or `undefined` when nothing is framed.
+	 *
+	 * The intercept is the positive root of `|r + v t| = speed * t`, with `r`
+	 * the offset to the target and `v` its velocity: the moment their
+	 * separation closes to nothing. A head-on target makes the quadratic
+	 * nearly linear, so the closed form is guarded rather than assumed.
+	 * @param sprite - the bolt being launched, for its muzzle position
+	 * @returns the offset to aim down, in world units
+	 */
+	private interceptPoint(
+		sprite: Sprite,
+	): { x: number; y: number; z: number } | undefined {
+		const target = this.lockedTarget;
+		if (target === undefined) {
+			return undefined;
+		}
+		const rx = target.mesh.pos.x - sprite.pos.x;
+		const ry = target.mesh.pos.y - sprite.pos.y;
+		const rz = target.mesh.depth - sprite.depth;
+		const { vx, vy, vz } = target;
+
+		const a = vx * vx + vy * vy + vz * vz - BULLET_SPEED * BULLET_SPEED;
+		const b = 2 * (rx * vx + ry * vy + rz * vz);
+		const c = rx * rx + ry * ry + rz * rz;
+
+		let t: number;
+		if (Math.abs(a) < 1e-6) {
+			// speeds match: the quadratic degenerates to a straight line
+			t = b !== 0 ? -c / b : 0;
+		} else {
+			const disc = b * b - 4 * a * c;
+			if (disc < 0) {
+				// nothing this bolt can catch
+				return undefined;
+			}
+			const root = Math.sqrt(disc);
+			const t1 = (-b - root) / (2 * a);
+			const t2 = (-b + root) / (2 * a);
+			// the soonest meeting that is actually in the future, picked
+			// without building an array and a closure to do it
+			const lo = Math.min(t1, t2);
+			const hi = Math.max(t1, t2);
+			t = lo > 0 ? lo : hi;
+		}
+		if (!Number.isFinite(t) || t <= 0) {
+			return undefined;
+		}
+		return { x: rx + vx * t, y: ry + vy * t, z: rz + vz * t };
+	}
+
+	/**
+	 * Give a freshly spawned bolt its velocity, harmonised on the sight.
+	 *
+	 * Bullets used to fly straight out along +Z from wherever the jet was,
+	 * which put them on a line the camera does not sit on: seen from off to
+	 * one side, that line projects to a DIFFERENT screen point at every
+	 * depth, while the reticle can only mark one of them. Measured with the
+	 * jet at the edge of its box, the reticle and the rounds agreed exactly
+	 * at the reticle's own depth and were 80px apart out where the enemies
+	 * are, which is a target framed dead centre and never hit.
+	 *
+	 * So the rounds are aimed at the sight instead of parallel to it: the
+	 * camera's line of sight runs from the camera through the reticle, and
+	 * the bolt is pointed at the spot that line reaches at
+	 * `GUN_CONVERGENCE_Z`. The two lines cross there, and near enough
+	 * either side of it that a framed enemy is a hit rather than a moral
+	 * victory.
+	 *
+	 * They stay two different lines on purpose. Firing ALONG the camera ray
+	 * would be exact at every range, and the bolt would then sit motionless
+	 * in the middle of the reticle for its whole flight, shrinking rather
+	 * than travelling. The offset is what makes tracers read as tracers.
+	 * @param sprite - the pooled bolt to launch
+	 * @returns the mover to push onto the bullet list
+	 */
+	private aimedBullet(sprite: Sprite): BulletMover {
+		// Lead the target that is framed, if there is one.
+		//
+		// Pointing at where it IS misses by about 160 units: a bolt takes the
+		// better part of half a second to cross the gap, and in that time an
+		// enemy closing at 600 units a second has come some 300 units nearer
+		// and moved across the sight. Measured with a rig that held an enemy
+		// inside the visor for 92% of frames, only one crossing in five
+		// landed inside the hitbox.
+		//
+		// So the guns solve for the intercept instead: where the bolt and the
+		// enemy will be at the same moment. That is the arcade contract this
+		// game is playing by, and the one the sight promises: frame it, and
+		// the rounds go where it is going to be.
+		const lead = this.interceptPoint(sprite);
+		if (lead !== undefined) {
+			const len = Math.hypot(lead.x, lead.y, lead.z) || 1;
+			const speed = BULLET_SPEED / len;
+			return {
+				sprite,
+				vx: lead.x * speed,
+				vy: lead.y * speed,
+				vz: lead.z * speed,
+			};
+		}
+
+		const cam = this.camera.pos as unknown as Vector3d;
+		// Nothing framed: fall back to harmonising on a fixed distance.
+		//
+		// A gun sighted at one range agrees with the sight there and nowhere
+		// else, and measured at the play-box edge the rounds were still 17px
+		// wide of the reticle at z=2500 with a 15px target to hit. Ranging on
+		// whatever is actually framed makes the crossing point follow the
+		// enemy, so "in the visor" means "hit" at every distance instead of
+		// at one. With nothing framed there is nothing to range on, and the
+		// fixed distance stands in.
+		const convergeZ = GUN_CONVERGENCE_Z;
+		// how far along the camera-to-reticle ray the convergence point sits
+		const t =
+			(convergeZ - this.camera.depth) /
+			(this.reticle.depth - this.camera.depth);
+		const aimX = cam.x + (this.reticle.pos.x - cam.x) * t;
+		const aimY = cam.y + (this.reticle.pos.y - cam.y) * t;
+
+		const dx = aimX - sprite.pos.x;
+		const dy = aimY - sprite.pos.y;
+		const dz = convergeZ - sprite.depth;
+		const len = Math.hypot(dx, dy, dz) || 1;
+		const speed = BULLET_SPEED / len;
+		return { sprite, vx: dx * speed, vy: dy * speed, vz: dz * speed };
+	}
+
+	/**
+	 * Build the pool of flash lights, dark, and add them to the world once.
+	 *
+	 * A `Light3d` is an ordinary renderable that registers with the stage on
+	 * activation, so adding and removing one per explosion would mean churning
+	 * the stage's light set several times a second. They are created dark
+	 * instead and lit in place: an intensity of zero contributes nothing, so
+	 * an idle light is free everywhere except the uniform packer.
+	 * @param app - the application to add them to
+	 */
+	private initFlashLights(app: Application): void {
+		for (let i = 0; i < FLASH_LIGHT_POOL; i++) {
+			const light = new Light3d({
+				type: "point",
+				intensity: 0,
+				range: FLASH_KILL_RANGE,
+				color: TINT_ENEMY_EXPLOSION,
+			});
+			app.world.addChild(light);
+			this.flashLights.push(light);
+			this.flashRemainingMs.push(0);
+			this.flashPeak.push(0);
+			this.flashLifeMs.push(1);
+		}
+	}
+
+	/**
+	 * Light the world from a point, briefly.
+	 *
+	 * Round-robin over the pool: with six lights and flashes lasting a third
+	 * of a second, the only thing that can steal one is sustained fire, and
+	 * the muzzle flash it steals was about to expire anyway.
+	 * @param x - world x
+	 * @param y - world y
+	 * @param z - world depth
+	 * @param color - CSS colour of the flash
+	 * @param intensity - peak intensity, decaying to zero over `lifeMs`
+	 * @param range - falloff distance in world units
+	 * @param lifeMs - how long the flash lasts
+	 */
+	private flash(
+		x: number,
+		y: number,
+		z: number,
+		color: string,
+		intensity: number,
+		range: number,
+		lifeMs: number,
+	): void {
+		const i = this.nextFlash;
+		this.nextFlash = (this.nextFlash + 1) % this.flashLights.length;
+		const light = this.flashLights[i];
+		light.position.set(x, y, z);
+		light.color.parseCSS(color);
+		light.range = range;
+		light.intensity = intensity;
+		this.flashPeak[i] = intensity;
+		this.flashLifeMs[i] = lifeMs;
+		this.flashRemainingMs[i] = lifeMs;
+	}
+
+	/**
+	 * Decay the live flashes.
+	 *
+	 * Quadratic rather than linear: a fireball's light collapses far faster
+	 * than its fire, and a linear ramp reads as a lamp being turned down
+	 * rather than as something burning out.
+	 * @param dt - frame time in milliseconds
+	 */
+	private tickFlashes(dt: number): void {
+		for (let i = 0; i < this.flashLights.length; i++) {
+			if (this.flashRemainingMs[i] <= 0) {
+				continue;
+			}
+			this.flashRemainingMs[i] -= dt;
+			if (this.flashRemainingMs[i] <= 0) {
+				this.flashRemainingMs[i] = 0;
+				this.flashLights[i].intensity = 0;
+				continue;
+			}
+			const k = this.flashRemainingMs[i] / this.flashLifeMs[i];
+			this.flashLights[i].intensity = this.flashPeak[i] * k * k;
+		}
 	}
 
 	/**
@@ -534,6 +879,17 @@ export class GameController extends Renderable {
 		this.muzzleEmitter.pos.x = this.player.pos.x;
 		this.muzzleEmitter.pos.y = this.player.pos.y;
 		this.muzzleEmitter.burstParticles(8);
+		// just ahead of the nose, so the jet's own nacelles catch the light
+		// rather than it sitting inside the fuselage
+		this.flash(
+			this.player.pos.x,
+			this.player.pos.y,
+			this.player.depth + 40,
+			TINT_MUZZLE_FLASH,
+			FLASH_MUZZLE_INTENSITY,
+			FLASH_MUZZLE_RANGE,
+			FLASH_MUZZLE_MS,
+		);
 	}
 
 	/**
@@ -582,14 +938,10 @@ export class GameController extends Renderable {
 		const ey = math.randomFloat(-PLAY_BOUND_Y, PLAY_BOUND_Y);
 		e.pos.set(ex, ey);
 		this.app.world.addChild(e, SPAWN_Z);
-		// Tag for the broadphase-filter walk; see {@link RenderableWithKind}.
-		(e as unknown as RenderableWithKind).__kind = "enemy";
-		// Opt the enemy into the broadphase (see the matching note in
-		// `spawnBullet`). The bullet-side `querySphere` walk doesn't
-		// need this — it queries around the enemy and only filters for
-		// bullets — but flipping it now keeps the broadphase the
-		// authoritative spatial index for any future query in the
-		// other direction (e.g. enemy-of-bullet for explosion AoE).
+		// Into the broadphase: `Mesh` defaults `isKinematic = true`, which
+		// makes `World.broadphase.insertContainer` skip it, and `raycast3d`
+		// walks that same Octree. An enemy outside it is an enemy no bullet
+		// can hit.
 		e.isKinematic = false;
 		// partial homing — enemies drift toward where the player IS at
 		// spawn, not where they end up. Adds genuine threat without being
@@ -721,12 +1073,57 @@ export class GameController extends Renderable {
 	 * invulnerability window. The last life triggers the full death
 	 * sequence via {@link GameController#setGameOver}.
 	 */
+	/**
+	 * An enemy flying into the player, reported by the engine rather than
+	 * measured by this game.
+	 *
+	 * `Box3d` against `Box3d` is the only contact the engine resolves in
+	 * three dimensions, and both planes carry one sized from their own
+	 * model, so the ram registers on the silhouette the player can see
+	 * instead of on a sphere that has to be generous enough to cover the
+	 * wingtips.
+	 *
+	 * `onCollisionStart` rather than the legacy `onCollision`: it is
+	 * receiver-symmetric, so `other` is always the thing that was hit, and
+	 * it is deduped to once per pair per frame. None of the collision
+	 * callbacks are declared on `Renderable`, which checks `typeof`, so
+	 * assigning one is how a renderable opts in.
+	 */
+	private installPlayerCollision(): void {
+		(this.player as CollisionAware).onCollisionStart = (
+			_response: object,
+			other: Renderable,
+		) => {
+			if (this.gameOver || this.invulnRemainingMs > 0) {
+				return false;
+			}
+			const k = this.enemies.findIndex((e) => e.mesh === other);
+			if (k === -1) {
+				return false;
+			}
+			this.removeEnemy(k);
+			this.onPlayerHit();
+			// A sensor: report the contact, resolve nothing. The flight
+			// model owns where both planes are.
+			return false;
+		};
+	}
+
 	onPlayerHit(): void {
 		this.spawnExplosion(
 			this.player.pos.x,
 			this.player.pos.y,
 			this.player.depth,
 			TINT_PLAYER_EXPLOSION,
+		);
+		this.flash(
+			this.player.pos.x,
+			this.player.pos.y,
+			this.player.depth,
+			TINT_PLAYER_EXPLOSION,
+			FLASH_DEATH_INTENSITY,
+			FLASH_DEATH_RANGE,
+			FLASH_DEATH_MS,
 		);
 		playPlayerDeath();
 		if (this.lives > 1) {
@@ -818,14 +1215,26 @@ export class GameController extends Renderable {
 	}
 
 	override update(dt: number): boolean {
+		// Before the game-over branch, not after it. The death wash is
+		// triggered BY game over, so a fade that only runs while the game is
+		// live never runs at all: the frame stays flooded red and the
+		// "GAME OVER" text sits unreadable on top of it.
+		this.hud.update(dt);
+
 		if (this.gameOver) {
+			this.lockedTarget = undefined;
+			this.reticle.tint.parseCSS(TINT_RETICLE_FREE);
+			this.reticle.setOpacity(1);
 			if (input.isKeyPressed("restart")) this.reset();
 			return true;
 		}
 
 		this.tickPlayerInput(dt);
+		// after the reticle has been placed, before anything is fired
+		this.updateLock(dt);
 		this.updateContrail(dt);
 		this.tickFireAndSpawn(dt);
+		this.tickFlashes(dt);
 		this.tickBullets(dt);
 		if (this.tickEnemyBullets(dt)) return true; // game-over fast path
 		if (this.tickEnemies(dt)) return true;
@@ -930,15 +1339,45 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Advance player bullets, despawning anything past the far edge.
+	 * Advance player bullets, resolve what each one flew THROUGH this
+	 * frame, and despawn anything past the far edge.
+	 *
+	 * The hit test is `adapter.raycast3d(from, to)` along the segment the
+	 * bullet just travelled, not a proximity test at its new position.
+	 * That matters because a bullet closes on an enemy at 2400 units/s
+	 * (1800 out, 600 back) while an enemy is only about 60 units across:
+	 * sampling a point once a frame asks "was it near something at the
+	 * instant I looked", and the answer drifts with the frame rate. The
+	 * swept segment asks "what did it pass through", which does not.
+	 *
+	 * `raycast3d` returns the NEAREST hit along the ray, which is the one
+	 * a bullet should stop at, and its `point` is on the surface of the
+	 * body rather than at its centre, so the fireball lands where the
+	 * round actually struck. A renderable carrying a `Box3d` body is
+	 * tested against that box exactly; anything else falls back to its
+	 * bounding sphere, which is why only the planes carry one.
 	 */
 	private tickBullets(dt: number): void {
 		const dts = dt / 1000;
 		for (let i = this.bullets.length - 1; i >= 0; i--) {
 			const b = this.bullets[i];
+			_rayFrom.set(b.sprite.pos.x, b.sprite.pos.y, b.sprite.depth);
 			b.sprite.pos.x += b.vx * dts;
 			b.sprite.pos.y += b.vy * dts;
 			b.sprite.depth += b.vz * dts;
+			_rayTo.set(b.sprite.pos.x, b.sprite.pos.y, b.sprite.depth);
+
+			const hit = this.app.world.adapter.raycast3d?.(_rayFrom, _rayTo);
+			if (hit) {
+				const k = this.enemies.findIndex((e) => e.mesh === hit.renderable);
+				if (k !== -1) {
+					this.scoreEnemyKill(this.enemies[k], hit.point);
+					this.removeEnemy(k);
+					this.removeBullet(i);
+					continue;
+				}
+			}
+
 			if (b.sprite.depth > DESPAWN_Z_FAR) this.removeBullet(i);
 		}
 	}
@@ -952,9 +1391,11 @@ export class GameController extends Renderable {
 		const dts = dt / 1000;
 		for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
 			const b = this.enemyBullets[i];
+			_rayFrom.set(b.sprite.pos.x, b.sprite.pos.y, b.sprite.depth);
 			b.sprite.pos.x += b.vx * dts;
 			b.sprite.pos.y += b.vy * dts;
 			b.sprite.depth += b.vz * dts;
+			_rayTo.set(b.sprite.pos.x, b.sprite.pos.y, b.sprite.depth);
 
 			// Cull bolts past the player or way off-screen. Generous XY
 			// bounds: at speed the bolt's projected screen position can
@@ -969,15 +1410,12 @@ export class GameController extends Renderable {
 			}
 
 			if (this.invulnRemainingMs > 0) continue;
-			if (
-				!this.withinPlayerHitRadius(
-					b.sprite.pos.x,
-					b.sprite.pos.y,
-					b.sprite.depth,
-				)
-			) {
-				continue;
-			}
+			// Swept, exactly as the player's rounds are. Only a hit on the
+			// player counts: `raycast3d` carries no collision mask, and a
+			// bolt that clips a squadron mate on its way down is not
+			// something this game models.
+			const hit = this.app.world.adapter.raycast3d?.(_rayFrom, _rayTo);
+			if (hit?.renderable !== this.player) continue;
 			this.removeEnemyBullet(i);
 			this.onPlayerHit();
 			if (this.gameOver) return true;
@@ -1003,23 +1441,12 @@ export class GameController extends Renderable {
 
 			if (e.mesh.depth < DESPAWN_Z_NEAR) {
 				this.removeEnemy(i);
-				continue;
 			}
 
-			if (this.enemyHitByPlayerBullet(e)) {
-				this.scoreEnemyKill(e);
-				this.removeEnemy(i);
-				continue;
-			}
-
-			if (this.invulnRemainingMs > 0) continue;
-			if (
-				this.withinPlayerHitRadius(e.mesh.pos.x, e.mesh.pos.y, e.mesh.depth)
-			) {
-				this.onPlayerHit();
-				this.removeEnemy(i);
-				if (this.gameOver) return true;
-			}
+			// Nothing here resolves a hit any more. A player round is a ray
+			// cast in `tickBullets`, and an enemy flying INTO the player is
+			// a `Box3d` against a `Box3d`, reported by the engine's own 3D
+			// narrowphase to the handler installed in `installPlayerBody`.
 		}
 		return false;
 	}
@@ -1042,49 +1469,30 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Walk the world's broadphase for player bullets within HIT_RADIUS
-	 * of this enemy. Returns `true` (and removes the bullet that hit)
-	 * on the first match. Without this pass the bullet × enemy check is
-	 * O(K × M) per frame; the Octree-backed broadphase brings it to
-	 * O(M × candidates-near-enemy) — sparse in 3D because the tree
-	 * partitions in z as well as x/y.
-	 *
-	 * Bullets opt into the broadphase via `isKinematic = false` at
-	 * spawn time AND carry `__kind = "bullet"` so we can drop the
-	 * unrelated candidates (particles, player, reticle, contrail) in
-	 * O(1) per hit.
-	 */
-	private enemyHitByPlayerBullet(e: EnemyMover): boolean {
-		_sphereCenter.set(e.mesh.pos.x, e.mesh.pos.y, e.mesh.depth);
-		const candidates =
-			this.app.world.adapter.querySphere?.(_sphereCenter, HIT_RADIUS) ?? [];
-		for (let k = 0; k < candidates.length; k++) {
-			const c = candidates[k] as RenderableWithKind;
-			if (c.__kind !== "bullet") continue;
-			// Linear-in-bullets indexOf, but only on a confirmed hit —
-			// keeps the per-frame complexity at O(M × candidates).
-			const sprite = c as Sprite;
-			for (let j = this.bullets.length - 1; j >= 0; j--) {
-				if (this.bullets[j].sprite === sprite) {
-					this.removeBullet(j);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * On a confirmed enemy kill: explosion VFX at the enemy position,
+	 * On a confirmed enemy kill: explosion VFX at the impact point,
 	 * audio pan with the X-position, brief camera kick, score bump,
 	 * HUD update.
+	 *
+	 * `at` is the ray's surface hit when one is available, which puts the
+	 * fireball on the wing that was clipped rather than in the middle of
+	 * the fuselage every time. The enemy's own position is the fallback,
+	 * for a kill that did not come from a round.
+	 * @param e - the enemy that died
+	 * @param at - world-space impact point, if the caller has one
 	 */
-	private scoreEnemyKill(e: EnemyMover): void {
-		this.spawnExplosion(
-			e.mesh.pos.x,
-			e.mesh.pos.y,
-			e.mesh.depth,
+	private scoreEnemyKill(e: EnemyMover, at?: Vector3d): void {
+		const bx = at?.x ?? e.mesh.pos.x;
+		const by = at?.y ?? e.mesh.pos.y;
+		const bz = at?.z ?? e.mesh.depth;
+		this.spawnExplosion(bx, by, bz, TINT_ENEMY_EXPLOSION);
+		this.flash(
+			bx,
+			by,
+			bz,
 			TINT_ENEMY_EXPLOSION,
+			FLASH_KILL_INTENSITY,
+			FLASH_KILL_RANGE,
+			FLASH_KILL_MS,
 		);
 		// Pan the crunch with the kill's X so far-off-screen hits sit
 		// on the right side audibly.
@@ -1095,18 +1503,5 @@ export class GameController extends Renderable {
 		this.camera.shake(4, 90);
 		this.score += 100;
 		this.hud.setScore(this.score);
-	}
-
-	/**
-	 * Squared-distance sphere test against the player. Inlines the
-	 * narrow phase used by both `tickEnemyBullets` and `tickEnemies`
-	 * for the player-hit check, dropping three copies of the same
-	 * `dx²+dy²+dz² < r²` math down to one.
-	 */
-	private withinPlayerHitRadius(x: number, y: number, z: number): boolean {
-		const dx = x - this.player.pos.x;
-		const dy = y - this.player.pos.y;
-		const dz = z - this.player.depth;
-		return dx * dx + dy * dy + dz * dz < HIT_RADIUS * HIT_RADIUS;
 	}
 }

@@ -5,6 +5,7 @@ import { Point, pointPool } from "../../geometries/point.ts";
 import { Polygon, polygonPool } from "../../geometries/polygon.ts";
 import { Rect } from "../../geometries/rectangle.ts";
 import { RoundRect, roundedRectanglePool } from "../../geometries/roundrect.ts";
+import { Sphere, spherePool } from "../../geometries/sphere.ts";
 import { warning } from "../../lang/console.js";
 import { clamp } from "../../math/math.ts";
 import { Vector2d, vector2dPool } from "../../math/vector2d.ts";
@@ -328,8 +329,9 @@ export default class Body {
 		this.maxVelZ = 490;
 
 		/**
-		 * `true` when at least one of this body's shapes is a {@link Box3d},
-		 * i.e. this body has a depth extent and can be resolved along z.
+		 * `true` when at least one of this body's shapes has a depth extent
+		 * and can therefore be resolved along z: a {@link Box3d} or a
+		 * {@link Sphere}.
 		 * Maintained by {@link Body#addShape} / {@link Body#removeShape}.
 		 * @readonly
 		 * @public
@@ -340,7 +342,7 @@ export default class Body {
 		// allocated when undefined, so a pooled body handed back for reuse
 		// still carries its previous shapes at this point.
 		this.hasDepth = this.shapes.some((shape) => {
-			return shape.type === "Box3d";
+			return shape.type === "Box3d" || shape.type === "Sphere";
 		});
 
 		/**
@@ -886,6 +888,23 @@ export default class Body {
 				this.shapes.push(shape);
 			}
 			this.bounds.addPoint(shape);
+		} else if (shape instanceof Sphere) {
+			if (!this.shapes.includes(shape)) {
+				// see removeShape
+				this.shapes.push(shape);
+			}
+			// Only the XY footprint goes into `this.bounds`, as for a Box3d:
+			// that bounds is 2D and feeds the broadphase pre-gate, the debug
+			// draw and `containsPoint`. The depth lives on the shape and the
+			// narrowphase reads it there.
+			const r = Math.abs(shape.radius);
+			this.bounds.addFrame(
+				shape.pos.x - r,
+				shape.pos.y - r,
+				shape.pos.x + r,
+				shape.pos.y + r,
+			);
+			this.hasDepth = true;
 		} else if (shape instanceof Box3d) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
@@ -1187,7 +1206,22 @@ export default class Body {
 		// contact, which `immovableBlock` does not model), or a collision handler
 		// zeroed the overlap to opt this axis out, in which case nothing moves
 		// and there is nothing to remember.
-		if (otherBody !== undefined && (normalX !== 0 || normalY !== 0)) {
+		//
+		// Also skipped when DEPTH is what the contact is mostly along, which
+		// is where a {@link Sphere} differs from every shape that came before
+		// it. A box pair resolves along one world axis, so the planar half of
+		// the normal was always either zero or the whole of it; a sphere pair
+		// resolves along the line between two centres, so a contact that is
+		// 99% depth still carries a sliver of x and y. Recorded as a planar
+		// block, that sliver pinned the body sideways for the rest of the
+		// step and handed the whole of any genuine planar correction to
+		// whatever it touched next.
+		const planarN = Math.max(Math.abs(normalX), Math.abs(normalY));
+		if (
+			otherBody !== undefined &&
+			planarN > 0 &&
+			planarN >= Math.abs(normalZ)
+		) {
 			// This body escapes along -MTV, the other along +MTV. Reduce each
 			// to the single cardinal direction the correction mostly points
 			// in: the solver only needs to answer "is this body already pinned
@@ -1257,7 +1291,17 @@ export default class Body {
 		// portable equivalent (see Body#gravityScale). Either disables the
 		// state machine — a hovering platform or a free-floating projectile
 		// shouldn't be marked "falling" on a head-on side collision.
-		if (mtvY !== 0 && !this.ignoreGravity && this.gravityScale !== 0) {
+		// `>= mtvZ` for the same reason the planar block above is gated: a
+		// sphere contact along depth carries a sliver of y with it, and an
+		// unqualified `mtvY !== 0` read that sliver as a floor or a ceiling.
+		// A body resting on a surface then reported itself airborne, since
+		// `isGrounded()` is `!falling && !jumping`.
+		if (
+			Math.abs(mtvY) >= Math.abs(mtvZ) &&
+			mtvY !== 0 &&
+			!this.ignoreGravity &&
+			this.gravityScale !== 0
+		) {
 			// cancel the falling an jumping flags if necessary
 			const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
 			this.falling = mtvY >= dir;
@@ -1565,15 +1609,17 @@ export default class Body {
 				polygonPool.release(shape);
 			} else if (shape instanceof Ellipse) {
 				ellipsePool.release(shape);
+			} else if (shape instanceof Sphere) {
+				spherePool.release(shape);
 			} else if (shape instanceof Box3d) {
 				box3dPool.release(shape);
 			}
 			// No fallback branch, deliberately. `addShape` can only ever store
 			// a Polygon (Line, RoundRect and user subclasses included), an
-			// Ellipse, a Point or a Box3d: a Rect and a Bounds are converted
-			// on the way in, and anything else is refused there rather than
-			// stored. Every one of those is caught above, so an `else` here
-			// would be unreachable. It used to hand the shape to the legacy
+			// Ellipse, a Point, a Box3d or a Sphere: a Rect and a Bounds are
+			// converted on the way in, and anything else is refused there
+			// rather than stored. Every one of those is caught above, so an
+			// `else` here would be unreachable. It used to hand the shape to the legacy
 			// `pool.push`, which THROWS for any class never `pool.register`ed,
 			// and since `boundsPool.release` has already run by this point the
 			// throw aborted `destroy` partway and left the body holding a

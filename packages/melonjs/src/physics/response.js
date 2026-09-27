@@ -8,7 +8,7 @@ import { Vector2d } from "../math/vector2d.ts";
  * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
  * @property {Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
  * @property {Vector2d} overlapN The shortest colliding axis (unit-vector)
- * @property {number} overlapNZ The Z component of the shortest colliding axis, as a unit scalar (`-1`, `0` or `1`). Always `0` for a collision between planar shapes
+ * @property {number} overlapNZ The Z component of the shortest colliding axis. `overlapN` plus this is a 3D unit vector, so it is `-1`, `0` or `1` for a box pair and any value in between for a sphere. Always `0` for a collision between planar shapes
  * @property {number} overlapZ The Z component of the overlap vector (i.e. `overlapNZ * overlap`). Always `0` for a collision between planar shapes
  * @property {boolean} aInB Whether the first object is entirely inside the second
  * @property {boolean} bInA Whether the second object is entirely inside the first
@@ -29,16 +29,27 @@ class ResponseObject {
 		 * subclass of {@link Vector2d} — retyping them would break every
 		 * existing consumer of a 2D collision response.
 		 *
-		 * The minimum translation axis is a single axis, so at most one of
-		 * `overlapN.x`, `overlapN.y` and `overlapNZ` is ever non-zero. The 2D
-		 * invariant `overlapV = overlapN * overlap` therefore extends
-		 * unchanged as `overlapZ = overlapNZ * overlap`, and a collision
-		 * resolved along Z leaves `overlapN` / `overlapV` at zero — a legacy
-		 * 2D handler reading them applies no push, which is correct, because
-		 * there is no 2D push to apply.
+		 * The 2D invariant `overlapV = overlapN * overlap` extends unchanged
+		 * as `overlapZ = overlapNZ * overlap`, and `overlapN` together with
+		 * `overlapNZ` is always a 3D unit vector.
 		 *
-		 * Only ever non-zero when both shapes are a {@link Box3d}; every
-		 * planar shape pair leaves these at `0`.
+		 * How that vector is SHAPED depends on which 3D shapes met:
+		 *
+		 * - A {@link Box3d} pair separates along one world axis, so exactly
+		 *   one of `overlapN.x`, `overlapN.y` and `overlapNZ` is non-zero and
+		 *   that one is `-1` or `1`. A contact resolved along Z leaves
+		 *   `overlapN` / `overlapV` at zero, so a legacy 2D handler reading
+		 *   them applies no push, which is correct — there is no 2D push to
+		 *   apply.
+		 * - A {@link Sphere} against anything separates along the line
+		 *   between the two closest points, which is generally DIAGONAL: all
+		 *   three components can be non-zero at once, and each is any value
+		 *   in `[-1, 1]`. A handler that branches on `overlapNZ !== 0` and
+		 *   then ignores `overlapV` drops the planar half of such a contact.
+		 *   Subtract both halves, or read `overlap` along the full normal.
+		 *
+		 * Both are `0` for every planar shape pair, so nothing about a 2D
+		 * collision changed.
 		 */
 		this.overlapNZ = 0;
 		this.overlapZ = 0;

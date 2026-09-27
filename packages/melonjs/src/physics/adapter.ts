@@ -1,3 +1,4 @@
+import type { Box3d } from "../geometries/box3d.ts";
 import type { Ellipse } from "../geometries/ellipse.ts";
 import type { Polygon } from "../geometries/polygon.ts";
 import type { Rect } from "../geometries/rectangle.ts";
@@ -27,8 +28,15 @@ export type BodyType = "static" | "dynamic" | "kinematic";
  * them onto per-fixture filters, which Box2D provides natively). The matter
  * adapter does NOT — its `collisionFilter` and `isSensor` belong to a body, not
  * to the parts it is built from, so per-shape values are ignored there.
+ *
+ * **The two 3D shapes are builtin-only.** `Box3d` and `Sphere` exist because
+ * the builtin solver resolves along Z; the matter and planck adapters are 2D
+ * engines with no depth to resolve and THROW when handed either one. They are
+ * in this union because a body definition is otherwise portable and these are
+ * body shapes, not because every adapter accepts them: a game that wants to
+ * stay adapter-portable builds its bodies from the planar three.
  */
-export type BodyShape = Rect | Ellipse | Polygon;
+export type BodyShape = Rect | Ellipse | Polygon | Box3d | Sphere;
 
 /**
  * One overlapping SHAPE pair, passed to the shape-level collision lifecycle

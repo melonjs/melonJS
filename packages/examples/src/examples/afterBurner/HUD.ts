@@ -16,19 +16,16 @@
  */
 import {
 	type Application,
-	type CanvasRenderer,
-	Renderable,
+	FlashEffect,
+	type Gradient,
 	save,
 	Text,
-	type WebGLRenderer,
 } from "melonjs";
 
 // World-Z = camera position, so the squared distance to camera is the
 // smallest possible — the world's depth-sort then draws the HUD last,
 // on top of every other renderable.
 const HUD_Z = -150;
-// Above HUD_Z so the death flash overpaints score + game-over text.
-const FLASH_Z = -200;
 // Initial overlay alpha at the moment of death — strong enough to "white
 // out" the cockpit (red, in this case), faint enough that the player can
 // still see the explosion underneath.
@@ -36,73 +33,6 @@ const DEATH_FLASH_ALPHA = 0.55;
 // Linear fade — matches the death rumble's ~1.1 s tail so the flash and
 // audio decay together.
 const DEATH_FLASH_FADE_MS = 1100;
-
-/**
- * Full-screen colored overlay that fades to transparent over a fixed
- * duration. Used as the player death "hit flash" so the cockpit washes
- * red in time with the explosion + audio rumble.
- *
- * Implementation note: rendered as a floating Renderable (screen-space
- * projection) with a manual `fillRect` so the alpha blends correctly —
- * the engine's `ColorLayer` would `clearColor` over the framebuffer,
- * which would overwrite the explosion underneath instead of tinting it.
- */
-class DeathFlash extends Renderable {
-	private remainingMs = 0;
-	private startAlpha = DEATH_FLASH_ALPHA;
-	private screenW: number;
-	private screenH: number;
-
-	constructor(width: number, height: number) {
-		super(0, 0, width, height);
-		this.screenW = width;
-		this.screenH = height;
-		this.floating = true;
-		this.alwaysUpdate = true;
-		// Renderable defaults anchorPoint to (0.5, 0.5), which would
-		// shift our fillRect by (-w/2, -h/2) via preDraw and leave
-		// only the top-left quadrant visible — zero it so our
-		// fillRect(0, 0, w, h) covers the whole screen.
-		this.anchorPoint.set(0, 0);
-		this.setOpacity(0);
-		this.tint.parseCSS("#ff3030");
-	}
-
-	trigger(): void {
-		this.remainingMs = DEATH_FLASH_FADE_MS;
-		this.setOpacity(this.startAlpha);
-	}
-
-	hide(): void {
-		this.remainingMs = 0;
-		this.setOpacity(0);
-	}
-
-	override update(dt: number): boolean {
-		if (this.remainingMs <= 0) {
-			return false;
-		}
-		this.remainingMs -= dt;
-		if (this.remainingMs <= 0) {
-			this.setOpacity(0);
-			return false;
-		}
-		this.setOpacity((this.remainingMs / DEATH_FLASH_FADE_MS) * this.startAlpha);
-		return true;
-	}
-
-	override draw(renderer: CanvasRenderer | WebGLRenderer): void {
-		const alpha = this.getOpacity();
-		if (alpha <= 0) {
-			return;
-		}
-		renderer.save();
-		renderer.setColor(this.tint);
-		renderer.setGlobalAlpha(alpha);
-		renderer.fillRect(0, 0, this.screenW, this.screenH);
-		renderer.restore();
-	}
-}
 
 // Persistent HiScore key under `me.save`. The engine wires up the
 // localStorage round-trip + private-mode fallback for us; we just
@@ -116,7 +46,22 @@ export class HUD {
 	private livesText: Text;
 	private gameOverLine: Text;
 	private gameOverSub: Text;
-	private deathFlash: DeathFlash;
+	/**
+	 * The death wash, as the engine's own {@link FlashEffect} on the camera.
+	 *
+	 * This used to be a floating `Renderable` with a manual `fillRect`,
+	 * written around `ColorLayer` clearing the framebuffer rather than
+	 * tinting it. A camera post-effect is the thing that was actually wanted:
+	 * it shades the frame that has already been composited, so the explosion
+	 * and the HUD wash together instead of one being painted over the other,
+	 * and the engine ships it.
+	 *
+	 * Held rather than added and removed, because `removePostEffect` destroys
+	 * the effect it removes; the intensity is what gets driven.
+	 */
+	private deathFlash: FlashEffect;
+	/** remaining fade, counted down by {@link HUD#update} */
+	private flashRemainingMs = 0;
 	private hiScore: number;
 
 	constructor(app: Application) {
@@ -134,9 +79,16 @@ export class HUD {
 		const w = app.viewport.width;
 		const h = app.viewport.height;
 
+		// The arcade readout, as a vertical ramp rather than a flat colour.
+		// `Text.fillStyle` takes a `Gradient` as well as a colour: the
+		// coordinates are the label's OWN bake, not the screen, so a ramp from
+		// y=0 to the cap height runs down each glyph whatever the label's
+		// position on screen. The stroke is a separate pass, so the dark
+		// outline underneath is untouched and the ramp reads as gold leaf
+		// rather than as a fade to nothing.
 		this.scoreText = this._makeText(app, 16, 24, {
 			size: 32,
-			fillStyle: "#ffe066",
+			fillStyle: this._goldRamp(app, 32),
 			textAlign: "left",
 			textBaseline: "top",
 			bold: true,
@@ -145,7 +97,7 @@ export class HUD {
 
 		this.hiScoreText = this._makeText(app, w - 16, 24, {
 			size: 32,
-			fillStyle: "#ffae3a",
+			fillStyle: this._goldRamp(app, 32),
 			textAlign: "right",
 			textBaseline: "top",
 			bold: true,
@@ -214,8 +166,12 @@ export class HUD {
 		});
 		this.gameOverSub.setOpacity(0);
 
-		this.deathFlash = new DeathFlash(w, h);
-		app.world.addChild(this.deathFlash, FLASH_Z);
+		// [r, g, b] in 0..1, the same red the hand-rolled overlay used
+		this.deathFlash = new FlashEffect(app.renderer, {
+			color: [1.0, 0.19, 0.19],
+			intensity: 0,
+		});
+		app.viewport.addPostEffect(this.deathFlash);
 	}
 
 	/**
@@ -249,6 +205,27 @@ export class HUD {
 	}
 
 	/**
+	 * A hot-to-cool gold ramp the height of one line of text.
+	 *
+	 * Two labels each get their own: a `Gradient` is baked into the label
+	 * that owns it, so sharing one instance across two `Text` renderables
+	 * would couple their bakes. They are cheap enough that separate ones
+	 * are the simpler answer.
+	 * @param app - for the renderer that mints the gradient
+	 * @param lineHeight - the label's font size, which the ramp spans
+	 * @returns the gradient to hand to `fillStyle`
+	 */
+	private _goldRamp(app: Application, lineHeight: number): Gradient {
+		const ramp = app.renderer.createLinearGradient(0, 0, 0, lineHeight);
+		// pale at the top where a cabinet's glass would catch the light,
+		// deepening through gold to a warm amber at the baseline
+		ramp.addColorStop(0, "#fffbe6");
+		ramp.addColorStop(0.45, "#ffe066");
+		ramp.addColorStop(1, "#ff9a2e");
+		return ramp;
+	}
+
+	/**
 	 * Refresh the score readout. Zero-padded to 6 digits. Also bumps
 	 * the HiScore display + persists it to localStorage whenever the
 	 * running score crosses the previous best — gives the player a
@@ -278,12 +255,31 @@ export class HUD {
 	hideGameOver(): void {
 		this.gameOverLine.setOpacity(0);
 		this.gameOverSub.setOpacity(0);
-		this.deathFlash.hide();
+		this.flashRemainingMs = 0;
+		this.deathFlash.setUniform("uFlashIntensity", 0);
 	}
 
-	/** Trigger the red full-screen death flash. Self-fading. */
+	/** Trigger the red full-screen death flash. Faded by {@link HUD#update}. */
 	flashDeath(): void {
-		this.deathFlash.trigger();
+		this.flashRemainingMs = DEATH_FLASH_FADE_MS;
+		this.deathFlash.setUniform("uFlashIntensity", DEATH_FLASH_ALPHA);
+	}
+
+	/**
+	 * Fade the death wash out.
+	 *
+	 * Driven from the game's own tick rather than from a renderable's
+	 * `update`, since the effect is no longer a renderable: it lives on the
+	 * camera, which has nothing to tick it.
+	 * @param dt - frame time in milliseconds
+	 */
+	update(dt: number): void {
+		if (this.flashRemainingMs <= 0) {
+			return;
+		}
+		this.flashRemainingMs -= dt;
+		const k = Math.max(0, this.flashRemainingMs / DEATH_FLASH_FADE_MS);
+		this.deathFlash.setUniform("uFlashIntensity", k * DEATH_FLASH_ALPHA);
 	}
 
 	/**

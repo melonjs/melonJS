@@ -88,6 +88,34 @@ export interface PlanckAdapterOptions {
 const LINE_THICKNESS = 2;
 
 /**
+ * The message for a shape this adapter cannot build a fixture from.
+ *
+ * Worth more than the shape's name. Both refusals are deliberate rather than
+ * oversights, and what the caller has to do about them differs: a 3D shape is
+ * a backend choice, a `Point` is a modelling one. The old message named the
+ * shape and stopped, which left the reader to work out whether they had hit a
+ * bug, a gap, or a rule.
+ * @param adapter - the adapter's name, for the prefix
+ * @param shape - the shape that was refused
+ * @returns the message to throw
+ */
+function unsupportedShapeMessage(adapter: string, shape: BodyShape): string {
+	// `type` rather than `constructor.name`: the class name is mangled by a
+	// minifier and this string is most useful in a production build.
+	const name =
+		(shape as { type?: string }).type ??
+		(shape as { constructor: { name: string } }).constructor.name;
+	const prefix = `${adapter}: unsupported shape type ${name}.`;
+	if (name === "Box3d" || name === "Sphere") {
+		return `${prefix} Box3d and Sphere carry a depth extent, and a 2D solver has no depth to resolve it against, so they are resolved only by the builtin adapter. Either give this body the planar shape with the same footprint (an Ellipse for a Sphere, a Rect for a Box3d), or leave it on the builtin adapter.`;
+	}
+	if (name === "Point") {
+		return `${prefix} A Point has no area to build a fixture from. Use a small Rect or Ellipse instead, with isSensor set if it is only meant to report contacts.`;
+	}
+	return `${prefix} This adapter builds fixtures from Rect, RoundRect, Polygon, Line and Ellipse.`;
+}
+
+/**
  * The most vertices Box2D will keep on one polygon. Measured against planck
  * rather than taken from the header: anything above this is truncated without
  * a word, and far above it the shape collapses.
@@ -1540,12 +1568,9 @@ export class PlanckAdapter implements PhysicsAdapter {
 		// so a `Point`, `Box3d` or `Sphere` simply never collided. The matter
 		// adapter throws for the same input, and a game that silently does
 		// not collide on one backend and throws on the other is worse than
-		// one that fails the same way on both.
-		throw new Error(
-			`PlanckAdapter: unsupported shape type ${
-				(shape as { constructor: { name: string } }).constructor.name
-			}`,
-		);
+		// one that fails the same way on both. The message says which of the
+		// two reasons applies and what to do about it.
+		throw new Error(unsupportedShapeMessage("PlanckAdapter", shape));
 	}
 }
 

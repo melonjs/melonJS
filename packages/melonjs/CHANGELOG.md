@@ -1,5 +1,17 @@
 # Changelog
 
+## [20.8.0] (melonJS 2) - _unreleased_
+
+### Added
+- Physics: `Sphere` is a collision shape. A body can carry one, and the builtin 3D narrowphase resolves it against another `Sphere`, a `Box3d`, or any planar shape through its own XY silhouette. It has no orientation to get wrong, which is what a `Box3d` cannot say and what anything tumbling or laid out over a curved surface needs. It joins `Box3d` in the portable `BodyShape` union
+- Physics: `raycast3d` reports the surface of a sphere body, measured as that sphere rather than as a bounding sphere derived from the renderable's 2D bounds
+- `renderer.stroke()` and `renderer.fill()` accept a `Sphere`, drawing the circle that is its silhouette
+
+### Fixed
+- Pooling: a shape built by hand is dropped on `body.destroy()` rather than pooled without a reset. A pool can only reset instances it created itself, so releasing any other one handed the next caller a shape carrying the destroyed body's geometry and ignoring the arguments it asked for. This affected every shape pool
+- Physics: `adapter.getBodyShapes()` keeps a 3D shape's depth offset on a renderable that is not corner-anchored. The anchor-shifted copy was written with a two-argument `Vector3d.set`, which zeroes z, so the debug overlay drew the shape at its renderable's own depth
+- `Sphere#getBounds()` reports where the sphere is now. The AABB was rebuilt only by `setShape`, so a sphere moved through `pos` kept reporting its first position for the rest of its life
+
 ## [20.7.0] (melonJS 2) - _2026-09-23_
 
 ### Added

@@ -16,12 +16,16 @@ const MIN_FOOTPRINT = 1e-6;
 /**
  * An axis-aligned 3D box, usable as a {@link Body} collision shape.
  *
- * This is the shape that lets a body collide along **Z** as well as X and Y.
- * Every other built-in shape ({@link Polygon}, {@link Rect}, {@link RoundRect},
- * {@link Ellipse}) is planar and is resolved by the 2D SAT narrowphase, which
- * can only ever produce a 2D pushback — see {@link ResponseObject#overlapV}.
- * A `Box3d` pair is instead resolved by an AABB-vs-AABB narrowphase that also
- * fills {@link ResponseObject#overlapZ}.
+ * One of the two shapes that let a body collide along **Z** as well as X and
+ * Y, the other being {@link Sphere}. The planar shapes ({@link Polygon},
+ * {@link Rect}, {@link RoundRect}, {@link Ellipse}) are resolved by the 2D SAT
+ * narrowphase, which can only ever produce a 2D pushback — see
+ * {@link ResponseObject#overlapV}. A `Box3d` pair is instead resolved by an
+ * AABB-vs-AABB narrowphase that also fills {@link ResponseObject#overlapZ}.
+ *
+ * A `Box3d` is world-axis-aligned and cannot be oriented, which makes it the
+ * shape for walls, floors and crates, and the wrong one for anything that
+ * turns. Reach for a `Sphere` there.
  *
  * Coordinate convention matches the rest of melonJS 3D code (see
  * {@link Camera3d}): **Y-down, +Z forward / away from the camera.**
@@ -67,6 +71,21 @@ export class Box3d {
 	 * @default "Box3d"
 	 */
 	type = "Box3d";
+
+	/**
+	 * Optional per-shape collision settings, honoured by {@link Body#addShape}
+	 * and defaulted there. Declared rather than initialized: the body writes
+	 * them when the shape joins it, so a class field here would emit an
+	 * `undefined` own property on every shape ever built. See `addShape` for
+	 * the table of defaults and what each one does.
+	 * @see Body#addShape
+	 */
+	declare collisionType?: number;
+	declare collisionMask?: number;
+	/** `false` takes this shape out of collision without removing it */
+	declare isActive?: boolean;
+	/** `true` reports contacts but skips the position correction */
+	declare isTrigger?: boolean;
 
 	/**
 	 * 2D XY footprint, kept in sync by {@link Box3d#setShape}. This is what

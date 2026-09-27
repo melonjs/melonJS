@@ -11,6 +11,7 @@
 
 import {
 	Application,
+	type BodyShape,
 	Box3d,
 	boot,
 	collision,
@@ -939,9 +940,35 @@ describe("PlanckAdapter — unsupported shape types", () => {
 			r.anchorPoint.set(0, 0);
 			r.alwaysUpdate = true;
 			expect(() => {
-				r.bodyDef = { type: "static", shapes: [shape] };
+				// Cast on purpose. `BodyShape` does not include `Point`, and
+				// lists the two 3D shapes as builtin-only, so this assignment
+				// is what a game CANNOT write by accident any more. The cast
+				// is what lets the test prove the runtime still refuses it.
+				r.bodyDef = {
+					type: "static",
+					shapes: [shape as unknown as BodyShape],
+				};
 				world.addChild(r);
 			}).toThrow(/unsupported shape type/);
 		}
+	});
+
+	it("says why the shape was refused and what to use instead", () => {
+		// The name alone left the reader to work out whether they had hit a
+		// bug, a gap or a rule. Each refusal has a different answer.
+		const build = (shape: unknown) => () => {
+			const r = new Renderable(100, 100, 80, 40);
+			r.anchorPoint.set(0, 0);
+			r.alwaysUpdate = true;
+			r.bodyDef = { type: "static", shapes: [shape as BodyShape] };
+			world.addChild(r);
+		};
+
+		// a 3D shape: a backend choice, so the message names the backend
+		expect(build(new Sphere(40, 20, 0, 20))).toThrow(/builtin adapter/);
+		expect(build(new Sphere(40, 20, 0, 20))).toThrow(/Ellipse for a Sphere/);
+		expect(build(new Box3d(0, 0, 0, 80, 40, 10))).toThrow(/Rect for a Box3d/);
+		// a Point: a modelling choice, so the message names the modelling fix
+		expect(build(new Point(10, 10))).toThrow(/no area to build a fixture/);
 	});
 });

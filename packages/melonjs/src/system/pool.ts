@@ -57,6 +57,21 @@ export const createPool = <T, A extends unknown[]>(
 			if (available.has(instance)) {
 				throw new Error("Instance is already in pool.");
 			}
+			// Only an instance this pool CREATED can be recycled. `reset` is
+			// registered per instance at creation, closing over that instance,
+			// so a foreign object has none — and `get` applies whatever reset
+			// it finds, which for a foreign object was nothing at all: it came
+			// back out carrying its previous owner's geometry and silently
+			// ignoring the arguments the caller asked for.
+			//
+			// `Body#destroy` releases the shapes its body was built from, and
+			// those are hand-constructed (`new Body(r, new Rect(...))`) in the
+			// documented idiom, so this was reached by ordinary game code
+			// tearing a body down. Dropping the instance loses nothing: it was
+			// never recyclable, and the garbage collector takes it from here.
+			if (!instanceResetMethods.has(instance)) {
+				return;
+			}
 			const release = instanceReleaseMethods.get(instance);
 			release?.();
 			available.add(instance);

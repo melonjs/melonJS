@@ -587,10 +587,28 @@ caster's own y and check which one is larger.
 
 ## Collision in 3D
 
-Use `Box3d` bodies, not a hand-rolled distance check. `Box3d`-vs-`Box3d` is
-the engine's 3D narrowphase and the only contact that pushes back along Z; the
-response carries `overlapNZ` / `overlapZ` for the depth axis. See the physics
-skill for the contract and the mixed-pair caveat.
+Use a body with a depth shape, not a hand-rolled distance check. Two shapes
+carry depth — `Box3d` and `Sphere` — and any pair of them is resolved in three
+dimensions; the response carries `overlapNZ` / `overlapZ` for the depth axis.
+
+Pick by whether the thing turns. `Box3d` is world-axis-aligned and cannot be
+oriented, so it fits walls, floors and crates and misfits anything that
+tumbles. `Sphere` has no orientation at all, which makes it the shape for
+spinning debris, projectiles, and anything spread over a curved surface: on a
+globe each object's own "up" points a different way, so one axis-aligned box
+cannot fit any of them.
+
+A hand-rolled check is the usual mistake here and it costs twice — it throws
+away the penetration vector the response already carries, and it is invisible
+to the debug plugin's hitbox overlay, which draws from `body.shapes`. If the
+red boxes never appear, the reason is usually that there is no body to draw.
+
+Against a planar shape, either 3D shape degrades to its XY footprint with the
+planar side read as unbounded along Z, so a sphere or box body still collides
+with an ordinary collision layer, just without a depth result. And mind the
+normal: a box pair separates along one world axis, a sphere along the line
+between two centres, so a sphere contact fills the 2D and depth halves of the
+response at the same time. See the physics skill for the full contract.
 
 ## glTF / GLB scenes
 
