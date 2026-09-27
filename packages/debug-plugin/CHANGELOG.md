@@ -1,5 +1,10 @@
 # Changelog
 
+## 16.2.0
+
+### Added
+- The hitbox overlay draws a `Sphere` collision shape, which melonJS 20.8 makes a body shape. A circle under a 2D camera, three great circles under a `Camera3d`, and not the box that contains it, whose corners stick out 73% past the radius and cannot be told from a `Box3d`. Both are drawn directly rather than through `Renderer#stroke`, which only learned the shape in 20.8, so the overlay keeps working on older engines
+
 ## 16.1.2
 
 ### Fixed
