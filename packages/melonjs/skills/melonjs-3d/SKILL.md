@@ -233,10 +233,14 @@ mesh shaders, so a screen-space overlay stays clean with no work.
 **A custom mesh shader is not fogged unless it asks to be.** Fog is compiled
 into the engine's own mesh programs — `#define FOG` on WebGL, an `enable_fog`
 overridable constant on WebGPU — and a shader you supply is yours: the engine
-binds it as written and never substitutes a fogged variant. So a mesh carrying a
-`ShaderEffect` keeps full contrast while the scene around it recedes. It is safe
-— nothing throws, and the camera's fog is simply not applied — but it is usually
-surprising.
+binds it as written and never substitutes a fogged variant. So a mesh given its
+own `GLShader` keeps full contrast while the scene around it recedes. It is
+safe — nothing throws, and the camera's fog is simply not applied — but it is
+usually surprising.
+
+A hosted `ShaderEffect` is the other case and needs nothing: its body is
+spliced into the engine's own mesh program as a colour hook, and fog is applied
+to the hook's result, so such a mesh fogs like any other.
 
 To opt in, declare the same uniforms and the engine will feed them, because the
 fog values are pushed to any mesh program that declares them rather than only to

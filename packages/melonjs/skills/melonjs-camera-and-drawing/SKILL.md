@@ -24,6 +24,25 @@ frame-rate independent since 19.7. `AXIS.HORIZONTAL` / `AXIS.VERTICAL` /
 
 Call it from the followed entity's `onActivateEvent`, using `this.parentApp`.
 
+**For anything that is NOT the camera, the same smoothing is `math.damp`.**
+`follow()` is frame-rate independent for you; a value you smooth yourself is
+not, and `lerp(current, target, alpha)` once per frame moves further on a slow
+frame than on a fast one, so the feel changes with the frame rate:
+
+```js
+import { math } from "melonjs";
+
+// dt is milliseconds, damp wants seconds
+this.speed = math.damp(this.speed, targetSpeed, 5, dt / 1000);
+this.turret.angle = math.damp(this.turret.angle, wanted, 8, dt / 1000);
+```
+
+`damp(current, target, lambda, dt)`. Higher `lambda` converges faster; it is
+the rate, not a per-frame fraction. Use it for camera pans you drive yourself,
+turret tracking, zoom, input smoothing and any value that should chase another
+one — it is the tool that is easy to miss and easy to hand-write slightly
+wrong.
+
 ## Bounds are the thing people forget
 
 The camera's bounds default to the **renderer size**, so it cannot scroll until
@@ -194,6 +213,24 @@ drawable, and the engine's own bakes (the particle emitter's default texture)
 hand `.canvas` on for exactly that reason.
 
 This is the sanctioned performance idiom before reaching for a custom shader.
+
+**For a solid fill you do not need a canvas at all.** `Renderer.getWhitePixel()`
+is a shared, lazily-created 1x1 white canvas, and stretching it is how you get
+a coloured rectangle, a bar, a flat screen overlay, or a blank carrier for an
+effect that paints from scratch:
+
+```js
+const bar = new Sprite(0, 0, { image: Renderer.getWhitePixel() });
+bar.anchorPoint.set(0, 0);
+bar.tint.parseCSS("#39d0ff");
+bar.scale(width, height);     // a 1x1 texture, so scale IS the size in pixels
+```
+
+It is also the right texture under a `ShaderEffect` whose body ignores the
+incoming colour, and it keeps the quad batched with everything else using it.
+When you DO need a real canvas, `Renderer.createCanvas(width, height)` is the
+engine's allocator: it hands back an `OffscreenCanvas` where that is safe and
+throws on a zero dimension, instead of `document.createElement("canvas")`.
 
 `renderer.toFrameTexture()` is the related tool for capturing the *current frame*
 into a texture for a shader to sample.

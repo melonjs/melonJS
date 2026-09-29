@@ -330,6 +330,29 @@ body's collision shapes are measured from that same frame, so a shape of
 a shape's own `pos` still offsets it inside that frame (a small hitbox at the
 feet, a hurtbox at the head).
 
+**That frame's origin is its TOP-LEFT corner, which is the trap for a small
+shape.** `new Rect(0, 0, w, h)` reads naturally because it spans the frame.
+A circle or a `Sphere` does not span anything, so `new Sphere(0, 0, 0, r)` on
+a centre-anchored sprite sits on the sprite's corner, not on the sprite. Put
+it at half the frame:
+
+```js
+// centred on a 24x128 sprite whose anchorPoint is (0.5, 0.5)
+bolt.bodyDef = { type: "dynamic", shapes: [new Sphere(24 / 2, 128 / 2, 0, r)] };
+```
+
+Measured on exactly that sprite: with the shape at `(0, 0, 0)`,
+`adapter.getBodyShapes()` reported it at `(-12, -64)` — **64 units up the
+screen, four times its own radius** — so the projectile collided well away
+from where the player saw it, in a way that still looked like a working game
+because the targets were large.
+
+The offset comes from the renderable's own `width` / `height`, NOT from what
+it draws at. Scale a sprite through `currentTransform` and those stay the
+texture's size, so the half-frame term is half the texture, not half the
+drawn quad. The debug overlay is the quickest confirmation: the red shape
+should sit on the art.
+
 This was broken until 20.7: shapes were measured from `pos` regardless of the
 anchor, so anything not anchored at its top-left corner collided where it was
 not drawn, by half a body at the default centred anchor and by a full body
@@ -401,7 +424,30 @@ survives but fights collision resolution and jitters. To teleport, go through
 The lifecycle is `onCollisionStart` (contact begins), `onCollisionActive` (every
 step while it persists) and `onCollisionEnd` (contact breaks). None of them are
 defined on `Renderable` — you just declare the ones you want and the dispatcher
-checks `typeof`. The legacy `onCollision` still exists and has a trap:
+checks `typeof`. That is also why they cannot be declared on the base class: a
+field there would SHADOW the prototype method every subclass that implements
+one defines.
+
+**In TypeScript the response is `CollisionResponse`**, exported from `melonjs`:
+
+```ts
+import type { CollisionResponse, Renderable } from "melonjs";
+
+class Coin extends Sprite {
+    onCollisionStart(response: CollisionResponse, other: Renderable) { … }
+}
+```
+
+On a renderable you do not subclass, declare the hooks you want as OPTIONAL
+members of a local interface and assign through one plain cast — that is the
+opt-in, and it needs no `as unknown as`:
+
+```ts
+interface Contacts {
+    onCollisionStart?: (response: CollisionResponse, other: Renderable) => void;
+}
+(rock as Contacts).onCollisionStart = (response, other) => { … };
+``` The legacy `onCollision` still exists and has a trap:
 
 > On the built-in world, `onCollision` fires **twice per frame** for
 > dynamic-dynamic pairs — once per outer-loop visit — and gets the raw SAT
@@ -725,6 +771,7 @@ use them. `adapter.capabilities` (`constraints`,
 | a body sinks through one shape of a multi-shape body | fixed in 20.7; before that the compound pass only ever re-resolved the first overlapping pair |
 | a body will not stay put on a slope on the builtin | it is riding the slope and sliding: the builtin has no surface friction, only `frictionAir` damping. Damp it yourself, or use matter/planck |
 | the sprite is drawn offset from its hitbox | pre-20.7 `anchorPoint` moved the drawing but not the collision shapes; upgrade, and drop any offsets you added to compensate |
+| a small shape sits at the sprite's corner | a shape's offset is measured from the drawn frame's TOP-LEFT; `new Sphere(0, 0, 0, r)` is the corner, `(width / 2, height / 2)` is the centre |
 | a rotated renderable reports an unrotated bounding box | `autoTransform: false` opts `updateBounds()` out of the transform |
 | a body in a pile sinks into the floor (built-in) | fixed in 20.7 for anything with an immovable side; bodies pinned only by other DYNAMIC bodies still overlap by a pixel or two, which is what planck/matter are for |
 | forces do nothing after switching adapter | magnitude units differ — re-tune, don't reuse numbers |

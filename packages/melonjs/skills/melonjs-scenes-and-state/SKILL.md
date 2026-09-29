@@ -165,6 +165,18 @@ Returning nothing is falsy and the object can appear frozen while its state move
 `dt` is milliseconds since the last frame and is the right basis for motion —
 the engine already paces it. Do not reach for `performance.now()`.
 
+**Smooth a value toward a target with `math.damp`, not with `lerp` per
+frame.** `lerp(current, target, 0.1)` once per frame moves further on a slow
+frame than on a fast one, so the feel drifts with the frame rate:
+
+```js
+this.speed = math.damp(this.speed, targetSpeed, 5, dt / 1000);
+```
+
+`damp(current, target, lambda, dt)` takes SECONDS, so divide `dt`. Higher
+`lambda` converges faster. See `melonjs-camera-and-drawing` for the camera's
+own `follow()` damping, which is already frame-rate independent for you.
+
 A common idiom for a per-frame game controller with nothing to draw is a
 `Renderable(0, 0, 1, 1)` with `alwaysUpdate = true` and an empty `draw()`.
 
@@ -215,6 +227,30 @@ Four traps:
   *through* a hit-stop.
 - **Stop a tween before destroying its target**, or `onUpdate` fires against a
   dead renderable.
+
+**To animate something that is not a property, tween a holder and push the
+value in `onUpdate`.** A shader uniform and a light's intensity are both set
+through a method, so there is nothing for `to()` to interpolate directly. The
+callback is invoked with the tweened object as `this` and the eased progress
+`0..1` as its argument:
+
+```js
+const fade = { level: 1 };
+pool.pull("Tween", fade)
+    .to({ level: 0 }, { duration: 400 })
+    .easing(Tween.Easing.Quadratic.Out)
+    .onUpdate(function () {
+        effect.setUniform("uIntensity", this.level);
+        muzzleLight.intensity = this.level * 3;
+    })
+    .start();
+```
+
+Use a `function`, not an arrow, if you want `this` to be the tweened object;
+an arrow keeps the enclosing `this` and you read the holder by name instead.
+For a handful of pooled objects a hand-rolled countdown in `update()` is
+cheaper than a `Tween` each — this is the right tool for one-off effects, not
+for every particle.
 
 ## Guard teardown-adjacent callbacks
 
