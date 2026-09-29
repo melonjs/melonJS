@@ -118,6 +118,11 @@ const ExampleAquarium = lazy(() =>
 		default: m.ExampleAquarium,
 	})),
 );
+const ExampleHdr = lazy(() =>
+	import("./examples/hdr/ExampleHdr").then((m) => ({
+		default: m.ExampleHdr,
+	})),
+);
 const ExampleHeatHaze = lazy(() =>
 	import("./examples/heatHaze/ExampleHeatHaze").then((m) => ({
 		default: m.ExampleHeatHaze,
@@ -437,6 +442,14 @@ const examples: {
 		sourceDir: "aquarium",
 		description:
 			"Screen-space refraction via renderer.toFrameTexture(): swimming fish rippled through the live scene, captured on the GPU and distorted by a scrolling NoiseTexture2d.",
+	},
+	{
+		component: <ExampleHdr />,
+		label: "HDR",
+		path: "hdr",
+		sourceDir: "hdr",
+		description:
+			"A settings page for the hdr option: a night skyline under an over-bright sun, with live controls for the tone curve, exposure and white point.",
 	},
 	{
 		component: <ExampleHeatHaze />,

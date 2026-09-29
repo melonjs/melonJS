@@ -4,6 +4,7 @@ import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
 import { createCanvas } from "./canvas_factory.js";
+import ToneMappingEffect from "./effects/tonemap.js";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
@@ -144,6 +145,55 @@ export default class Renderer {
 		 * @default false
 		 */
 		this.supportsShaderTileLayers = false;
+
+		/**
+		 * Whether this backend can render into a half-float color buffer.
+		 * Renderability alone; {@link Renderer#supportsHDR} is the one to
+		 * branch on.
+		 * @type {boolean}
+		 * @default false
+		 * @ignore
+		 * @internal
+		 */
+		this.supportsFloatTargets = false;
+
+		/**
+		 * Whether the effect chain is carrying color values above 1 instead
+		 * of clamping at every write. This is what the `hdr` application
+		 * setting asked for and what it actually GOT: a GPU backend sets it
+		 * when the setting is on and the driver can honour it, and leaves it
+		 * `false` when either is missing. `false` always on the base/Canvas
+		 * renderer, which has no render targets.
+		 *
+		 * Branch on this rather than on `settings.hdr` when a grade depends
+		 * on it, because a look tuned for headroom applied to a chain that
+		 * clamps is not a lesser version of that look, it is a dark picture.
+		 *
+		 * **Headroom through the chain, not HDR output.** The frame is
+		 * presented in SDR by default, so anything still above 1 clamps on
+		 * the final blit; what this buys is that nothing clamped BEFORE
+		 * then, which is what makes a bloom threshold and a tone curve
+		 * meaningful. To remove that last clamp as well, see
+		 * {@link Renderer#supportsHDROutput} and the `hdrOutput` setting.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.supportsHDR = false;
+
+		/**
+		 * Whether the frame is PRESENTED in the display's full dynamic range
+		 * rather than clamped to SDR on the way to the screen.
+		 *
+		 * The difference from {@link Renderer#supportsHDR}: that one is
+		 * headroom through the effect chain, which still ends in a clamp;
+		 * this one removes that clamp. Granted, not supported, and expect it
+		 * to differ per backend on the same machine — only the WebGPU
+		 * backend can do it, because the WebGL2 equivalent is an unapproved
+		 * specification change no browser implements.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.supportsHDROutput = false;
 
 		/**
 		 * Whether this renderer backend can keep mesh geometry resident on the
@@ -1417,6 +1467,151 @@ export default class Renderer {
 			this.settings.antiAlias = enable;
 			this.renderTarget.setAntiAlias(enable);
 		}
+	}
+
+	/**
+	 * The enabled post effects for a renderable, plus the tone curve when the
+	 * `toneMapping` setting asks for one.
+	 *
+	 * Shared by every backend's `beginPostEffect` / `endPostEffect`, because
+	 * a chain the two ends disagree about is a bug with no symptom until the
+	 * pass count differs.
+	 *
+	 * The curve goes LAST and only on a CAMERA: last so that whatever the
+	 * game put in front of it — bloom, a colour matrix — is mapped along with
+	 * everything else rather than clipping where they overlap, and camera
+	 * only because a sprite's chain is composited back over the scene, where
+	 * a second mapping would grade the same pixels twice.
+	 *
+	 * Nothing is appended for `hdr` alone. That was tried: it restyled every
+	 * scene the moment the setting went on, because a curve maps 1 to less
+	 * than 1 and a 2D look is usually built on clipped whites. Headroom and
+	 * grading are separate decisions and stayed separate.
+	 * @param {Renderable} renderable - the renderable whose chain this is
+	 * @returns {ShaderEffect[]} the effects to run, in order
+	 * @ignore
+	 * @internal
+	 */
+	_effectChainFor(renderable) {
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx.enabled !== false;
+		});
+		if (
+			this._toneMapEffect !== undefined &&
+			effects.length > 0 &&
+			renderable._postEffectManaged === true
+		) {
+			effects.push(this._toneMapEffect);
+		}
+		return effects;
+	}
+
+	/**
+	 * Set the tone curve applied at the end of the camera's chain.
+	 *
+	 * The settings-screen entry point: a game can drive this straight from an
+	 * options menu, and the cheap half is genuinely cheap. Changing `mode`
+	 * rebuilds one shader, because the curve is baked into it; changing
+	 * `exposure` or `white` is a uniform write, so either can be driven per
+	 * frame (dipping exposure when the player is hit, say).
+	 *
+	 * **A curve is a look decision, not a companion to `hdr`.** Every curve
+	 * maps 1 to less than 1, so switching one on will change a game whose art
+	 * is authored against a clamp. Turn it on for art authored in linear
+	 * light, or when you want a deliberate grade.
+	 * @param {"none"|"aces"|"reinhard"|"exponential"} [mode="none"] - the curve, or `"none"` to remove it
+	 * @param {object} [options] - curve parameters, each left as-is when omitted
+	 * @param {number} [options.exposure] - multiplier applied before the curve
+	 * @param {number} [options.white] - the post-exposure value to map to display white; `0` leaves the curve its own shoulder
+	 * @example
+	 * // straight from a settings screen
+	 * renderer.setToneMapping(settings.curve, {
+	 *     exposure: settings.brightness,
+	 *     white: settings.peak,
+	 * });
+	 *
+	 * // and off again
+	 * renderer.setToneMapping("none");
+	 */
+	setToneMapping(mode = "none", options = {}) {
+		this.settings.toneMapping = mode;
+		if (typeof options.exposure === "number") {
+			this.settings.toneMappingExposure = options.exposure;
+		}
+		if (typeof options.white === "number") {
+			this.settings.toneMappingWhite = options.white;
+		}
+		this._resolveToneMapping();
+	}
+
+	/**
+	 * Build, update or drop the renderer-owned tone curve from the settings.
+	 *
+	 * Called by `setToneMapping` and from each backend once its shader
+	 * language is known. Rebuilds only when the MODE changed, since that is
+	 * the only parameter baked into the program.
+	 * @ignore
+	 * @internal
+	 */
+	_resolveToneMapping() {
+		const mode = this.settings.toneMapping ?? "none";
+		// no shader language means no shaders at all (the Canvas backend), so
+		// there is nothing to build and saying so is better than failing to
+		// compile something nobody can use
+		const wanted = mode !== "none" && this.shaderLanguage !== null;
+
+		if (!wanted) {
+			this._toneMapEffect?.destroy?.();
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._toneMapEffect = undefined;
+			return;
+		}
+
+		if (this._toneMapEffect?.mode !== mode) {
+			this._toneMapEffect?.destroy?.();
+			this._toneMapEffect = new ToneMappingEffect(this, { mode });
+			// renderer-owned: a camera tearing its own effects down must not
+			// free the program every other camera is still using
+			this._toneMapEffect.shared = true;
+		}
+		this._toneMapEffect.setExposure(this.settings.toneMappingExposure ?? 1);
+		this._toneMapEffect.setWhite(this.settings.toneMappingWhite ?? 0);
+	}
+
+	/**
+	 * Turn the `hdrOutput` application setting on or off at runtime.
+	 *
+	 * Records the request. A backend that can honour it overrides this to
+	 * reconfigure the surface it presents into; read
+	 * {@link Renderer#supportsHDROutput} afterwards for what was granted,
+	 * which on every backend but WebGPU is `false`.
+	 * @param {boolean} [enable=false] - whether to present in the display's full range
+	 */
+	setHDROutput(enable = false) {
+		this.settings.hdrOutput = enable;
+	}
+
+	/**
+	 * Turn the `hdr` application setting on or off at runtime.
+	 *
+	 * Records the request. A backend that can honour it overrides this to
+	 * also move its render targets, so read {@link Renderer#supportsHDR}
+	 * afterwards for what was actually granted — asking is not getting, and
+	 * on this base renderer (and the Canvas one, which has no render targets)
+	 * the answer is always `false`.
+	 * @param {boolean} [enable=false] - whether the effect chain should carry
+	 * values above 1
+	 * @example
+	 * renderer.setHDR(true);
+	 * if (renderer.supportsHDR === false) {
+	 *     // this driver refused: grade for a chain that clamps instead
+	 * }
+	 */
+	setHDR(enable = false) {
+		this.settings.hdr = enable;
 	}
 
 	/**

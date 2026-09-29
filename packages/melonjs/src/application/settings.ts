@@ -135,6 +135,99 @@ export type ApplicationSettings = {
 	antiAlias: boolean;
 
 	/**
+	 * Let the post-effect chain carry color values above 1 instead of
+	 * clamping at every write.
+	 *
+	 * Render targets become half-float rather than 8 bits per channel, which
+	 * is what gives {@link BloomEffect} genuinely over-bright pixels to
+	 * threshold on and {@link ToneMappingEffect} a range to compress. Off by
+	 * default, for the same reasons `antiAlias` is: it costs GPU memory, and
+	 * a game gets a different pipeline depending on the driver underneath.
+	 *
+	 * The cost is narrow. Render targets exist only while something is
+	 * actually running a multi-pass effect chain, and only the CAMERA pair
+	 * takes the half-float format, at 8 bytes per pixel instead of 4. Sprite
+	 * chains and the advanced-blend target stay 8-bit whatever this says. A
+	 * game with no camera post-effects allocates nothing either way.
+	 *
+	 * **Not HDR output on its own.** This is headroom THROUGH the chain:
+	 * the frame is presented in SDR, so anything still above 1 at the end
+	 * clamps on the blit, exactly as it did before this setting existed. See
+	 * `hdrOutput` to remove that last clamp as well, on the backends that
+	 * can. Nothing is added to your effect
+	 * chain, so turning this on does not restyle your game. Add a
+	 * `ToneMappingEffect` to the camera if you want a curve rather than that
+	 * clamp, bearing in mind that every curve maps 1 to less than 1, so a
+	 * look built on clipped whites will change.
+	 *
+	 * Ignored where it cannot be honoured: the Canvas renderer has no render
+	 * targets, and a WebGL2 driver missing either half-float extension warns
+	 * once, naming which half, and stays at 8 bits. Read
+	 * {@link Renderer#supportsHDR} for what you actually got, and branch a
+	 * grade on that rather than on this, which is only the request.
+	 * @default false
+	 */
+	hdr: boolean;
+
+	/**
+	 * Tone curve applied to the camera at the very end of its effect chain,
+	 * or `"none"` to leave the frame alone.
+	 *
+	 * `"none"` by default, and that default is deliberate. Every curve maps 1
+	 * to less than 1, so a 2D look built on clipped whites and saturated
+	 * colour goes matte the moment one is applied, at any exposure. Turn it
+	 * on when your art is authored in linear light and you want the
+	 * highlights rolled off, not as a companion to `hdr`.
+	 *
+	 * Independent of `hdr`: a curve without headroom is a grade on an
+	 * already-clamped frame, which is a legitimate thing to want, and
+	 * headroom without a curve is the additive-accumulation win on its own.
+	 * @default "none"
+	 */
+	/**
+	 * Present the frame in the display's full dynamic range, instead of
+	 * clamping it to SDR on the way to the screen.
+	 *
+	 * `hdr` gives the effect chain headroom and then clamps at the very last
+	 * step, because the surface the browser presents is 8 bits per channel.
+	 * This changes that surface: values above 1 reach the compositor and, on
+	 * a display that has the range, are actually shown brighter.
+	 *
+	 * **Requires `hdr`, and changes how your game looks on an HDR display.**
+	 * A 2D look built on clipped whites relies on that final clamp; remove it
+	 * and everything you drove above 1 gets brighter rather than saturating.
+	 * That is the point, and it is why this is a separate opt-in rather than
+	 * part of `hdr`.
+	 *
+	 * **WebGPU only.** The WebGL2 equivalent is an unapproved specification
+	 * change that no browser implements, so that backend reports `false` and
+	 * presents in SDR as it always has. Query
+	 * {@link Renderer#supportsHDROutput} for what was granted, and expect it
+	 * to differ per backend on the same machine.
+	 * @default false
+	 */
+	hdrOutput: boolean;
+
+	toneMapping: "none" | "aces" | "reinhard" | "exponential";
+
+	/**
+	 * Multiplier applied before the tone curve. Above `1` lifts the image
+	 * into the curve's shoulder; below `1` pulls it down. Ignored while
+	 * `toneMapping` is `"none"`.
+	 * @default 1
+	 */
+	toneMappingExposure: number;
+
+	/**
+	 * The post-exposure value the tone curve should map to display white, or
+	 * `0` to leave the curve its own shoulder. This is what a "brightness" or
+	 * "peak" slider in a settings screen drives. Ignored while `toneMapping`
+	 * is `"none"`.
+	 * @default 0
+	 */
+	toneMappingWhite: number;
+
+	/**
 	 * Warm the renderer up during `loader.preload()`, behind the loading
 	 * screen, instead of paying for it on the frame that first draws (GPU
 	 * backends — the Canvas renderer has nothing to warm and ignores this).

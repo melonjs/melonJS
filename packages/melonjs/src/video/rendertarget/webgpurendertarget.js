@@ -1,13 +1,40 @@
 import RenderTarget from "./rendertarget.ts";
 
 /**
+ * Decode one IEEE half (the `rgba16float` channel type) to a JS number.
+ *
+ * Written out rather than using `Float16Array`, which is recent enough that
+ * a readback would throw on browsers this backend otherwise runs on.
+ * @param {number} h - the 16 raw bits
+ * @returns {number} the value
+ * @ignore
+ * @internal
+ */
+function halfToFloat(h) {
+	const sign = h & 0x8000 ? -1 : 1;
+	const exponent = (h & 0x7c00) >> 10;
+	const fraction = h & 0x03ff;
+	if (exponent === 0) {
+		// subnormal, including zero
+		return sign * 2 ** -14 * (fraction / 1024);
+	}
+	if (exponent === 0x1f) {
+		return fraction === 0 ? sign * Number.POSITIVE_INFINITY : Number.NaN;
+	}
+	return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
+}
+
+/**
  * WebGPU offscreen render target — the WebGPU counterpart of the WebGL
  * FBO-backed {@link WebGLRenderTarget}, used by the post-effect chain
  * through the shared {@link RenderTargetPool}.
  *
  * Owns one color `GPUTexture` (renderable AND sampleable — the whole point
- * of a post-effect target) in the renderer's preferred canvas format, so
- * pipelines keyed on that format serve canvas and offscreen passes alike.
+ * of a post-effect target). Its format is the renderer's preferred canvas
+ * format by default, so pipelines keyed on that format serve canvas and
+ * offscreen passes alike, and `"rgba16float"` for the camera chain under the
+ * `hdr` setting. The pipeline cache already keys on format, so both kinds
+ * coexist compiled.
  * The depth-stencil attachment is NOT per-target: every pass shares the
  * renderer's canvas-sized depth-stencil texture (targets in this flow are
  * canvas-sized, only one pass is open at a time — and sharing the stencil
@@ -42,6 +69,19 @@ export default class WebGPURenderTarget extends RenderTarget {
 		 * @type {number}
 		 */
 		this.sampleCount = options.sampleCount ?? 1;
+		/**
+		 * Texture format of the color attachment, defaulting to the surface's
+		 * preferred format. The renderer passes `"rgba16float"` for the
+		 * camera chain when the `hdr` setting is on, which is what lets the
+		 * chain carry values above 1 instead of clamping at every write.
+		 *
+		 * Both halves take it, or the MSAA resolve has nothing to resolve
+		 * between, and every pipeline recorded into a pass targeting this
+		 * must declare the same one — `setRenderTarget` drives that through
+		 * the pipeline cache, which already keys on format.
+		 * @type {string}
+		 */
+		this.format = options.format ?? renderer.preferredFormat;
 		/** @type {GPUTexture|null} */
 		this.texture = null;
 		/** @type {GPUTextureView|null} */
@@ -87,7 +127,7 @@ export default class WebGPURenderTarget extends RenderTarget {
 		this.texture = this.renderer.device.createTexture({
 			label: "melonJS render target",
 			size: [width, height],
-			format: this.renderer.preferredFormat,
+			format: this.format,
 			usage:
 				GPUTextureUsage.RENDER_ATTACHMENT |
 				GPUTextureUsage.TEXTURE_BINDING |
@@ -106,7 +146,7 @@ export default class WebGPURenderTarget extends RenderTarget {
 				label: "melonJS render target msaa",
 				size: [width, height],
 				sampleCount: this.sampleCount,
-				format: this.renderer.preferredFormat,
+				format: this.format,
 				usage: GPUTextureUsage.RENDER_ATTACHMENT,
 			});
 			this.msaaView = this.msaaTexture.createView();
@@ -199,8 +239,14 @@ export default class WebGPURenderTarget extends RenderTarget {
 		y = Math.max(0, y | 0);
 		width = Math.max(1, Math.min(width | 0, this.width - x));
 		height = Math.max(1, Math.min(height | 0, this.height - y));
+		// A half-float attachment is EIGHT bytes per pixel, not four. Reading
+		// it with the 8-bit stride would walk half the rows and return a
+		// buffer that looks plausible and is wrong, which is worse than a
+		// failure.
+		const half = this.format === "rgba16float";
+		const bytesPerPixel = half ? 8 : 4;
 		// bytesPerRow must be a multiple of 256
-		const bytesPerRow = (width * 4 + 255) & ~255;
+		const bytesPerRow = (width * bytesPerPixel + 255) & ~255;
 		const buffer = device.createBuffer({
 			label: "melonJS readback",
 			size: bytesPerRow * height,
@@ -219,9 +265,41 @@ export default class WebGPURenderTarget extends RenderTarget {
 			);
 			device.queue.submit([encoder.finish()]);
 			await buffer.mapAsync(GPUMapMode.READ);
-			const mapped = new Uint8Array(buffer.getMappedRange());
 			const out = new Uint8ClampedArray(width * height * 4);
-			const bgra = renderer.preferredFormat.startsWith("bgra");
+			if (half) {
+				// Clamped, not tone mapped. A value above 1 has nowhere to go
+				// in an 8-bit `ImageData`, and quietly applying a curve here
+				// would make the readback disagree with what the canvas
+				// showed: the frame on screen went through whatever tone map
+				// the game installed, and guessing a different one would be
+				// worse than clipping.
+				const words = new Uint16Array(buffer.getMappedRange());
+				const stride = bytesPerRow / 2;
+				for (let row = 0; row < height; row++) {
+					const src = row * stride;
+					const dst = row * width * 4;
+					for (let px = 0; px < width; px++) {
+						const s = src + px * 4;
+						const d = dst + px * 4;
+						// Uint8ClampedArray does the clamping; the 255 scale
+						// is the only arithmetic needed
+						out[d] = halfToFloat(words[s]) * 255;
+						out[d + 1] = halfToFloat(words[s + 1]) * 255;
+						out[d + 2] = halfToFloat(words[s + 2]) * 255;
+						out[d + 3] = halfToFloat(words[s + 3]) * 255;
+					}
+				}
+				buffer.unmap();
+				buffer.destroy();
+				return new ImageData(out, width, height);
+			}
+			const mapped = new Uint8Array(buffer.getMappedRange());
+			// rgba16float is RGBA by name; only the 8-bit surface format can
+			// be the swapped one
+			// THIS target's format, not the canvas's: an offscreen target can
+			// be rgba while the surface is bgra, and reading one through the
+			// other's channel order swaps red and blue
+			const bgra = this.format.startsWith("bgra");
 			for (let row = 0; row < height; row++) {
 				const src = row * bytesPerRow;
 				const dst = row * width * 4;

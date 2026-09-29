@@ -40,6 +40,18 @@ export class FrameTexture extends Texture2d {
 		 */
 		this.glTexture = null;
 		/**
+		 * Sized internal format the storage was allocated with, or `0` while
+		 * there is none. `copyTexImage2D` bakes this at the first capture and
+		 * `copyTexSubImage2D` cannot change it afterwards, so a capture whose
+		 * format no longer matches the render target has to be thrown away
+		 * rather than refreshed — which is what a live `setHDR` toggle does
+		 * to every capture alive at the time.
+		 * @type {number}
+		 * @ignore
+		 * @internal
+		 */
+		this.format = 0;
+		/**
 		 * marks this as a live GPU-resident source — see {@link ShaderEffect#setTexture}
 		 * @type {boolean}
 		 */
@@ -63,6 +75,10 @@ export class FrameTexture extends Texture2d {
 		if (this.glTexture !== null) {
 			this._renderer.gl.deleteTexture(this.glTexture);
 			this.glTexture = null;
+			// there is no storage now, so there is no format either: leaving
+			// the old one would have the next capture refresh in place
+			// against a format that no longer exists
+			this.format = 0;
 		}
 	}
 }

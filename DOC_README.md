@@ -54,6 +54,7 @@ loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
 | **Input** | Keyboard, mouse, touch, gamepad |
 | **Particles** | Configurable {@link ParticleEmitter | ParticleEmitter}, with a reference space so particles can be measured from the emitter, the world, or any container |
 | **Effects** | All thirteen CSS blend modes on every renderer, tinting, masking, and camera post-processing chains |
+| **HDR** | Optional half-float render targets (`hdr`), {@link BloomEffect | BloomEffect} and {@link ToneMappingEffect | ToneMappingEffect}, and extended-range presentation on WebGPU (`hdrOutput`). All off by default |
 | **Custom Shaders** | Per-sprite {@link ShaderEffect | ShaderEffect} carrying both GLSL and WGSL, so one effect runs on either GPU backend |
 | **UI** | Built-in UI components (buttons, text input, containers) |
 

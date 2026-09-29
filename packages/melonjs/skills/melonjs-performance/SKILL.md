@@ -1,6 +1,6 @@
 ---
 name: melonjs-performance
-description: "Use this skill when a melonJS game drops frames, allocates heavily, or needs to scale to many objects. Covers object pooling, draw-call batching, atlases, baking with CanvasRenderTarget, instancing, culling and alwaysUpdate, the debug plugin, and where the real costs are. Triggers on: performance, slow, frame rate, fps, lag, pool, pool.register, pool.pull, batching, draw calls, InstancedMesh, culling, alwaysUpdate, inViewport, CanvasRenderTarget, optimise, profiling, debug plugin, memory."
+description: "Use this skill when a melonJS game drops frames, allocates heavily, or needs to scale to many objects. Covers object pooling, draw-call batching, atlases, baking with CanvasRenderTarget, instancing, culling and alwaysUpdate, the debug plugin, and where the real costs are. Triggers on: performance, slow, frame rate, fps, lag, pool, pool.register, pool.pull, batching, draw calls, InstancedMesh, culling, alwaysUpdate, inViewport, CanvasRenderTarget, optimise, profiling, debug plugin, memory, render targets, hdr."
 license: MIT
 ---
 
@@ -81,6 +81,23 @@ Two rules that cause subtle bugs when missed:
   successfully recycled object never sees it. Pair event subscriptions with
   `onActivateEvent` / `onDeactivateEvent` instead, or you leak handlers.
 
+- **`removeChild` is DEFERRED, which breaks a pool you re-lend in the same
+  frame.** The removal is queued and runs after the update and draw stack has
+  unwound, so an object you remove and immediately hand out again is torn out
+  from under its new owner when the queue drains: it vanishes, and the frame
+  after that the removal throws `Child is not mine.` Take it out immediately
+  instead, keeping the instance alive for reuse:
+
+  ```js
+  world.removeChildNow(bullet, true);   // keepalive: do NOT destroy it
+  this.freeList.push(bullet);
+  ```
+
+  `removeChildNow(child, keepalive)` with `keepalive` true skips the destroy,
+  which is what you want for anything you own the lifetime of. This is the
+  usual cause of a pooled effect that flickers out one frame after it is
+  recycled.
+
 Engine classes are poolable too: `pool.pull("Tween", target)`. The canonical
 names are unprefixed — `Entity`, `Collectable`, `Trigger`, `Light2d`,
 `Particle`, `Sprite`, `NineSliceSprite`, `Renderable`, `Text`, `BitmapText`,
@@ -95,12 +112,33 @@ name in new code; do not "correct" an `me.`-prefixed one, it is not broken.
 ## `scale()` is multiplicative
 
 A pooled sprite arrives carrying its previous life's transform, and calling
-`scale()` each frame compounds. For absolute scaling:
+`scale()` each frame compounds. `rotate()` is the same. For absolute values,
+reset first:
 
 ```js
 sprite.currentTransform.identity();
 sprite.currentTransform.scale(s, s, 1);
 ```
+
+**Order matters, and it is the opposite of what reads naturally.**
+`Matrix2d.scale` multiplies the matrix ROWS, so it applies AFTER whatever the
+matrix already holds. Scale first and then rotate; rotate first and the scale
+lands in the rotated frame and SHEARS anything non-uniform:
+
+```js
+// correct: a long thin quad, rotated
+t.identity();
+t.scale(length / texW, width / texH);
+t.rotate(angle);
+
+// wrong: the same quad arrives as a parallelogram
+t.identity();
+t.rotate(angle);
+t.scale(length / texW, width / texH);
+```
+
+The symptom is a sprite that looks right at 0 and 90 degrees and skews in
+between, which reads as a bad texture rather than as a transform bug.
 
 ## Culling and update cost
 
@@ -230,6 +268,45 @@ Do not profile this on a software rasterizer — headless Chromium falls back to
 SwiftShader, where the absolute numbers are wildly pessimistic and the JS
 profile shows the time as `(program)`, outside JS entirely. Ratios transfer;
 milliseconds do not.
+
+## Render targets, and what `hdr` costs
+
+A render target is a canvas-sized GPU surface. The engine allocates them
+lazily and only where a multi-pass chain actually needs one, which is worth
+knowing before assuming an effect is expensive:
+
+- a renderable with **no** post effects: none
+- a renderable with **exactly one** post effect: still none. It takes the
+  `customShader` fast path and draws straight into whatever target is already
+  bound
+- a **camera** with effects: a pair (one capture, one ping-pong intermediate)
+- a sprite with **two or more** effects: its own pair
+
+So the first lever is the count, not the cost of any one effect: going from
+one effect to two on a sprite is what allocates, not going from a cheap shader
+to an expensive one.
+
+`hdr: true` changes the format of that camera pair from 8 bits per channel to
+half-float, which is **8 bytes per pixel instead of 4**. At 1920×1080 that is
+about 8 MB per target instead of 4 MB, so roughly +8 MB for the pair. With
+`antiAlias` on, the capture half is also multisampled and its multisampled
+surface takes the same format, so that part doubles too.
+
+Nothing else moves. Sprite chains and the advanced-blend target stay 8-bit
+whatever `hdr` says, for a correctness reason rather than a thrifty one: their
+final blit composites with `ONE_MINUS_SRC_ALPHA`, and additive blending
+accumulates alpha past 1 in a float target, which would turn that factor
+negative and subtract the backdrop.
+
+**With `hdr` off, nothing changes at all** — every target keeps the 8-bit
+attachment it has always had, and a game that never adds a camera post-effect
+allocates no render targets in the first place. The setting costs nothing
+until something is actually using it.
+
+```js
+// what you actually got, which is not always what you asked for
+if (app.renderer.supportsHDR === false) { /* grade for a chain that clamps */ }
+```
 
 ## Where the costs actually are
 

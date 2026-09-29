@@ -67,7 +67,7 @@ export default class RenderTargetPool {
 			// them — factories may give those MSAA); odd indices are
 			// ping-pong intermediates (screen-aligned effect quads only,
 			// nothing to antialias — always single-sampled)
-			this._pool[index] = this._factory(width, height, index % 2 === 0);
+			this._pool[index] = this._factory(width, height, index % 2 === 0, index);
 		} else {
 			this._pool[index].resize(width, height);
 		}

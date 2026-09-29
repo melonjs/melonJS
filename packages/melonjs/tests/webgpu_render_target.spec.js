@@ -25,6 +25,8 @@ describe("WebGPURenderTarget (mock device)", () => {
 					const texture = {
 						label: descriptor.label,
 						size: descriptor.size,
+						format: descriptor.format,
+						sampleCount: descriptor.sampleCount ?? 1,
 						destroyed: false,
 						destroy() {
 							this.destroyed = true;
@@ -143,6 +145,76 @@ describe("WebGPURenderTarget (mock device)", () => {
 		expect(pool.end()).toBe(camera);
 		expect(pool.end()).toBeNull();
 		pool.destroy();
+	});
+
+	it("takes the half-float format on both halves, or the resolve has nothing to resolve between", () => {
+		// `hdr` moves the camera chain to rgba16float. The MSAA half has to
+		// move with it: a resolve between attachments of different formats
+		// is invalid, and the two are created in separate calls, which is
+		// exactly the kind of pair that drifts.
+		const rt = new WebGPURenderTarget(renderer, 64, 64, {
+			format: "rgba16float",
+			sampleCount: 4,
+		});
+		expect(rt.format).toBe("rgba16float");
+		const halves = created.filter((t) => {
+			return t.label.includes("render target");
+		});
+		expect(halves).toHaveLength(2);
+		for (const half of halves) {
+			expect(half.format).toBe("rgba16float");
+		}
+		// and the multisampled one is the multisampled one
+		expect(
+			halves.some((t) => {
+				return t.sampleCount === 4;
+			}),
+		).toBe(true);
+	});
+
+	it("defaults to the surface format, which may be bgra", () => {
+		const rt = new WebGPURenderTarget(renderer, 64, 64);
+		// NOT a hardcoded rgba8unorm: on a bgra surface that would swap red
+		// and blue in every composited frame
+		expect(rt.format).toBe("bgra8unorm");
+		expect(created[0].format).toBe("bgra8unorm");
+	});
+
+	it("the pool gives the camera pair the color format and sprite chains the surface one", () => {
+		// the renderer's own factory, transcribed: only indices 0/1 take the
+		// half-float format. A sprite chain's final blit composites with
+		// ONE_MINUS_SRC_ALPHA, and additive blending accumulates alpha past
+		// 1 in a float target, which would turn that factor negative and
+		// subtract the backdrop.
+		const colorFormat = "rgba16float";
+		const pool = new RenderTargetPool((w, h, isCapture, index) => {
+			return new WebGPURenderTarget(renderer, w, h, {
+				format: index < 2 ? colorFormat : renderer.preferredFormat,
+			});
+		});
+		pool.begin(true, 2, 64, 64);
+		expect(pool.getCaptureTarget().format).toBe("rgba16float");
+		expect(pool.getPingPongTarget().format).toBe("rgba16float");
+
+		const sprite = pool.begin(false, 2, 64, 64);
+		expect(sprite.format).toBe("bgra8unorm");
+		pool.destroy();
+	});
+
+	it("a capture follows the format of what it captures FROM", () => {
+		// `copyTextureToTexture` requires both sides to agree, so a capture
+		// taken from a half-float camera target and one taken from the
+		// canvas are not interchangeable
+		const capture = new WebGPUFrameTexture(renderer, 64, 64, "rgba16float");
+		expect(capture.format).toBe("rgba16float");
+		expect(created[0].format).toBe("rgba16float");
+
+		const first = capture.gpuTexture;
+		capture.realloc(64, 64, "bgra8unorm");
+		expect(capture.format).toBe("bgra8unorm");
+		// reallocated, not refilled: the old storage cannot change format
+		expect(capture.gpuTexture).not.toBe(first);
+		expect(created[created.length - 1].format).toBe("bgra8unorm");
 	});
 
 	it("the shared frame capture reallocates by size and retires safely", () => {

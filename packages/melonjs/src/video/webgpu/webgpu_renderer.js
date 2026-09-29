@@ -140,6 +140,22 @@ export default class WebGPURenderer extends Renderer {
 		 */
 		this.preferredFormat = undefined;
 
+		/**
+		 * The format the presentation surface was actually CONFIGURED with,
+		 * as opposed to the one the system prefers.
+		 *
+		 * The two are the same until `hdrOutput` is granted, when this
+		 * becomes `"rgba16float"` so values above 1 survive the last step
+		 * instead of clamping. Everything that targets the canvas has to
+		 * follow it — the pipelines recorded into a canvas pass, the canvas
+		 * MSAA texture, and a capture taken from the canvas — while OFFSCREEN
+		 * targets keep their own formats and are unaffected.
+		 * @type {string|undefined}
+		 * @ignore
+		 * @internal
+		 */
+		this.canvasFormat = undefined;
+
 		// there is no renderer to draw with until init() resolves
 		this.isContextValid = false;
 
@@ -162,6 +178,21 @@ export default class WebGPURenderer extends Renderer {
 		this.supportsDepthBuffer = true;
 		this.supportsRetainedMesh = true;
 		this.supportsInstancing = true;
+		// `rgba16float` is renderable, blendable and filterable in core
+		// WebGPU, with no optional feature to request and nothing to probe —
+		// unlike WebGL2, where it takes an extension that some drivers do
+		// not ship. So this is a constant rather than a capability query,
+		// and the honest answer is yes.
+		this.supportsFloatTargets = true;
+		// through the public door, same as the WebGL backend: one path for
+		// the startup setting and for a runtime toggle. `preferredFormat` is
+		// not known until `init()` negotiates the surface, so this settles
+		// the FLAG now and `init()` calls it again to settle the format.
+		this.setHDR(this.settings.hdr === true);
+		// and the tone curve, now that the shader language is known
+		this._resolveToneMapping();
+		// presentation is settled again by init(), once the surface exists
+		this.setHDROutput(this.settings.hdrOutput === true);
 		// lazy orientation-specific GPU tilemap renderer (device-scoped:
 		// dropped on device loss, rebuilt on first use)
 		/** @ignore
@@ -534,19 +565,14 @@ export default class WebGPURenderer extends Renderer {
 		});
 
 		this.preferredFormat = gpu.getPreferredCanvasFormat();
-		this.context.configure({
-			device: this.device,
-			format: this.preferredFormat,
-			alphaMode: this.settings.transparent ? "premultiplied" : "opaque",
-			// COPY_SRC on top of the default: captureFrame() copies the
-			// canvas texture into the shared capture (screen_texture builtin)
-			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-		});
+		// the fallback half of `_colorFormat` is only knowable now
+		this._resolveColorFormat();
+		this._configureCanvas();
 
 		// GPU-facing infrastructure, in dependency order
 		this.pipelineCache = new WebGPUPipelineCache(
 			this.device,
-			this.preferredFormat,
+			this.canvasFormat,
 		);
 		this.uniformRing = new WebGPUUniformRing(
 			this.device,
@@ -662,7 +688,9 @@ export default class WebGPURenderer extends Renderer {
 		this.msaaColorTexture = this.device.createTexture({
 			label: "melonJS msaa color",
 			size: [width, height],
-			format: this.preferredFormat,
+			// it resolves INTO the canvas, so it must match what the canvas
+			// was configured with, not what the system prefers
+			format: this.canvasFormat,
 			sampleCount: this.canvasSampleCount,
 			usage: GPUTextureUsage.RENDER_ATTACHMENT,
 		});
@@ -778,9 +806,17 @@ export default class WebGPURenderer extends Renderer {
 		const sampleCount =
 			target === null ? this.canvasSampleCount : (target.sampleCount ?? 1);
 		this.createDepthTexture(width, height, sampleCount);
-		// every pipeline recorded into this pass must declare its count —
-		// the cache keys on it, so both variants coexist compiled
+		// every pipeline recorded into this pass must declare its count AND
+		// its colour format — the cache keys on both, so the variants
+		// coexist compiled. Under `hdr` the camera's targets are half-float
+		// while the canvas stays at the surface format, so a frame genuinely
+		// switches format mid-flight and a pipeline built for the wrong one
+		// fails validation on every draw.
 		this.pipelineCache.sampleCount = sampleCount;
+		this.pipelineCache.format =
+			target === null
+				? this.canvasFormat
+				: (target.format ?? this.preferredFormat);
 		let colorAttachment;
 		if (sampleCount > 1) {
 			let msaaView;
@@ -1156,19 +1192,33 @@ export default class WebGPURenderer extends Renderer {
 				? undefined
 				: options.target;
 
+		// `copyTextureToTexture` requires both sides to agree on format, and
+		// under `hdr` the source is half-float while the canvas is not — so
+		// a capture taken from a camera target and one taken from the canvas
+		// are not interchangeable, and a capture whose format no longer
+		// matches has to be reallocated rather than refilled.
+		const captureFormat =
+			this.currentRenderTarget !== null
+				? (this.currentRenderTarget.format ?? this.preferredFormat)
+				: // `canvasFormat` is only known once `init()` has negotiated
+					// the surface; before that the preferred one is what a
+					// capture would get
+					(this.canvasFormat ?? this.preferredFormat);
+
 		if (typeof frame === "undefined") {
-			frame = new WebGPUFrameTexture(this, w, h);
+			frame = new WebGPUFrameTexture(this, w, h, captureFormat);
 			if (shared) {
 				this.captureTexture = frame;
 			}
 		} else if (
 			frame.width !== w ||
 			frame.height !== h ||
-			frame.gpuTexture === null
+			frame.gpuTexture === null ||
+			frame.format !== captureFormat
 		) {
-			// size change or released backing: reallocate keeping the object
+			// size, format or released backing: reallocate keeping the object
 			// identity — generation advances so stale bind groups re-key
-			frame.realloc(w, h);
+			frame.realloc(w, h, captureFormat);
 		}
 
 		if (this.commandEncoder === null) {
@@ -1199,9 +1249,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @internal
 	 */
 	beginPostEffect(renderable) {
-		const effects = renderable.postEffects.filter((fx) => {
-			return fx.enabled !== false;
-		});
+		const effects = this._effectChainFor(renderable);
 		if (effects.length === 0) {
 			this.customShader = undefined;
 			return false;
@@ -1237,11 +1285,22 @@ export default class WebGPURenderer extends Renderer {
 		 * @ignore
 		 * @internal
 		 */
-		this._renderTargetPool ??= new RenderTargetPool((w, h, isCapture) => {
-			return new WebGPURenderTarget(this, w, h, {
-				sampleCount: isCapture === true ? this.canvasSampleCount : 1,
-			});
-		});
+		this._renderTargetPool ??= new RenderTargetPool(
+			(w, h, isCapture, index) => {
+				// Indices 0/1 are the CAMERA chain; 2 and up are sprite chains.
+				// Only the camera pair takes the half-float format, and that is
+				// a correctness limit rather than thrift: a sprite chain's final
+				// blit composites source-over with `ONE_MINUS_SRC_ALPHA`, and
+				// additive blending accumulates ALPHA past 1 in a float target,
+				// so that factor goes negative and subtracts the backdrop. The
+				// camera chain blits without that factor, and is the documented
+				// place for these effects anyway.
+				return new WebGPURenderTarget(this, w, h, {
+					sampleCount: isCapture === true ? this.canvasSampleCount : 1,
+					format: index < 2 ? this._colorFormat : this.preferredFormat,
+				});
+			},
+		);
 		const rt = this._renderTargetPool.begin(
 			isCamera,
 			effects.length,
@@ -1278,9 +1337,8 @@ export default class WebGPURenderer extends Renderer {
 	 * @internal
 	 */
 	endPostEffect(renderable) {
-		const effects = renderable.postEffects.filter((fx) => {
-			return fx.enabled !== false;
-		});
+		// the SAME chain `beginPostEffect` built, tone map included
+		const effects = this._effectChainFor(renderable);
 		if (effects.length === 0) {
 			return;
 		}
@@ -1472,8 +1530,15 @@ export default class WebGPURenderer extends Renderer {
 		this._advancedBlendParent = this.currentRenderTarget;
 
 		if (typeof this._advancedBlendTarget === "undefined") {
+			// Deliberately 8 bits per channel even under `hdr`, and NOT
+			// `_colorFormat`. The W3C blend formulas this target feeds are
+			// defined on straight colour recovered from a PREMULTIPLIED
+			// source, which relies on `rgb <= a`; a texel with `rgb > a` is
+			// undefined and diverges across browsers. Half-float storage is
+			// exactly what makes `rgb > a` reachable.
 			this._advancedBlendTarget = new WebGPURenderTarget(this, w, h, {
 				sampleCount: 1,
+				format: this.preferredFormat,
 			});
 		} else {
 			this._advancedBlendTarget.resize(w, h);
@@ -3655,6 +3720,146 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Turn the `hdr` application setting on or off at runtime, moving the
+	 * render targets with it.
+	 *
+	 * The pool is emptied when the format actually changes, so the next
+	 * frame mints its targets in the new one. Cheap enough to drive from a
+	 * settings toggle; not something to do per frame, since it throws away
+	 * every pooled target.
+	 * @param {boolean} [enable=false] - whether the effect chain should carry
+	 * values above 1
+	 */
+	setHDR(enable = false) {
+		super.setHDR(enable);
+		this._resolveColorFormat();
+		// presentation depends on it: `hdrOutput` cannot be granted without
+		// headroom to present
+		this._configureCanvas();
+	}
+
+	/**
+	 * Turn the `hdrOutput` application setting on or off at runtime,
+	 * reconfiguring the surface the frame is presented into.
+	 *
+	 * Cheap: it reconfigures the swap chain, which the next frame acquires
+	 * from anyway. Read {@link WebGPURenderer#supportsHDROutput} afterwards,
+	 * because this needs `hdr` as well and a device that reports the
+	 * capability.
+	 * @param {boolean} [enable=false] - whether to present in the display's full range
+	 */
+	setHDROutput(enable = false) {
+		super.setHDROutput(enable);
+		this._configureCanvas();
+	}
+
+	/**
+	 * Configure the presentation surface, and settle
+	 * {@link WebGPURenderer#supportsHDROutput} while doing it.
+	 *
+	 * Two things are decided here. The FORMAT: `rgba16float` when the frame
+	 * is to be presented in extended range, because an 8-bit unorm surface
+	 * cannot hold a value above 1 whatever the tone mapping mode says. And
+	 * the MODE: `"extended"` tells the compositor those values are meant,
+	 * rather than clamping them into `[0, 1]` as `"standard"` does.
+	 *
+	 * Requires `hdr` as well, and not merely for tidiness: the last pass
+	 * blits from the camera's target into this surface, so if that target is
+	 * 8-bit there is nothing above 1 left to present and the extra cost would
+	 * buy an identical picture.
+	 * @ignore
+	 * @internal
+	 */
+	_configureCanvas() {
+		if (this.context === undefined || this.device === undefined) {
+			// pre-init: `init()` calls this once the surface is negotiated
+			return;
+		}
+		const wanted = this.settings.hdrOutput === true;
+		const granted = wanted && this.supportsHDR === true;
+
+		this.supportsHDROutput = granted;
+		this.canvasFormat = granted ? "rgba16float" : this.preferredFormat;
+
+		this.context.configure({
+			device: this.device,
+			format: this.canvasFormat,
+			alphaMode: this.settings.transparent ? "premultiplied" : "opaque",
+			// `"standard"` clamps everything into [0, 1] in the screen's
+			// colour space, which is what every frame before this setting
+			// existed got. `"extended"` matches it inside [0, 1] and lets
+			// values past it through to the display's own range.
+			toneMapping: { mode: granted ? "extended" : "standard" },
+			// COPY_SRC on top of the default: captureFrame() copies the
+			// canvas texture into the shared capture (screen_texture builtin)
+			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+		});
+
+		if (wanted && !granted && this._hdrOutputRefusalWarned !== true) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._hdrOutputRefusalWarned = true;
+			console.warn(
+				"hdrOutput: true was requested but hdr is off, so the effect chain has nothing above 1 to present — presenting in SDR",
+			);
+		}
+	}
+
+	/**
+	 * Settle {@link WebGPURenderer#supportsHDR} and the format every camera
+	 * render target takes.
+	 *
+	 * Called from the constructor, from `setHDR`, and again from `init()`
+	 * once the surface has been negotiated: `preferredFormat` is the
+	 * fallback and is not known before then, so the constructor settles the
+	 * flag and `init()` settles the format.
+	 * @ignore
+	 * @internal
+	 */
+	_resolveColorFormat() {
+		const previous = this._colorFormat;
+		const granted =
+			this.settings.hdr === true && this.supportsFloatTargets === true;
+
+		/**
+		 * Whether the effect chain is carrying color values above 1 instead
+		 * of clamping at every write. GRANTED, not supported: the `hdr`
+		 * setting AND a backend that can honour it.
+		 *
+		 * **Headroom through the chain, not HDR output on its own.** The frame
+		 * is presented in SDR unless `hdrOutput` is granted as well, so
+		 * anything still above 1 clamps on the final blit; what this buys is
+		 * that nothing clamped before then. See
+		 * {@link WebGPURenderer#setHDROutput} for the other half.
+		 * @type {boolean}
+		 */
+		this.supportsHDR = granted;
+
+		/**
+		 * Format every camera render target's color attachment takes.
+		 * @type {string}
+		 * @ignore
+		 * @internal
+		 */
+		this._colorFormat = granted ? "rgba16float" : this.preferredFormat;
+
+		// Empty the pool when the format changed under it. A pooled target
+		// is reused by INDEX and `resize()` early-returns on unchanged
+		// dimensions, so nothing else would replace one minted in the old
+		// format, and a pass cannot mix attachments that disagree.
+		if (
+			previous !== undefined &&
+			previous !== this._colorFormat &&
+			this._renderTargetPool
+		) {
+			this._renderTargetPool.destroy();
+			this._renderTargetPool = undefined;
+		}
+	}
+
+	/**
 	 * Set the default texture filter at runtime, decoupled from
 	 * {@link WebGPURenderer#setAntiAlias} — same re-pairing mechanism.
 	 * @param {"auto"|"nearest"|"linear"} [mode="auto"] - `"auto"` follows `antiAlias`
@@ -3758,6 +3963,14 @@ export default class WebGPURenderer extends Renderer {
 	 * @override
 	 */
 	destroy() {
+		// renderer-owned, so no camera's teardown will have freed it
+		this._toneMapEffect?.destroy?.();
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._toneMapEffect = undefined;
+
 		// advanced-blend resources, all lazily created: a game that never used
 		// one of the six modes has nothing here to release
 		this._advancedBlendEffect?.destroy();

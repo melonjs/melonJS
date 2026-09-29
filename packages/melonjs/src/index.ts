@@ -63,6 +63,7 @@ import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import Tween from "./tweens/tween.ts";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import BloomEffect from "./video/effects/bloom.js";
 import BlurEffect from "./video/effects/blur.js";
 import ChromaticAberrationEffect from "./video/effects/chromaticAberration.js";
 import ColorMatrixEffect from "./video/effects/colorMatrix.js";
@@ -75,11 +76,13 @@ import HologramEffect from "./video/effects/hologram.js";
 import InvertEffect from "./video/effects/invert.js";
 import OutlineEffect from "./video/effects/outline.js";
 import PixelateEffect from "./video/effects/pixelate.js";
+import RadialGradientEffect from "./video/effects/radialGradient.js";
 import ScanlineEffect from "./video/effects/scanline.js";
 import SepiaEffect from "./video/effects/sepia.js";
 import ShaderEffect from "./video/effects/shadereffect.js";
 import ShineEffect from "./video/effects/shine.js";
 import TintPulseEffect from "./video/effects/tintPulse.js";
+import ToneMappingEffect from "./video/effects/tonemap.js";
 import VignetteEffect from "./video/effects/vignette.js";
 import WaveEffect from "./video/effects/wave.js";
 import { Batcher } from "./video/gpu/batcher.js";
@@ -192,6 +195,7 @@ export {
 	Batcher,
 	BitmapText,
 	BitmapTextData,
+	BloomEffect,
 	BlurEffect,
 	Body,
 	Camera2d,
@@ -242,6 +246,7 @@ export {
 	plugins,
 	pool,
 	QuadBatcher,
+	RadialGradientEffect,
 	Renderable,
 	Renderer,
 	RenderState,
@@ -272,6 +277,7 @@ export {
 	TMXTileset,
 	TMXTilesetGroup,
 	TMXUtils,
+	ToneMappingEffect,
 	Trail,
 	Trigger,
 	Tween,
