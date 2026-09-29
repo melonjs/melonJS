@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Application, boot, video, WebGPURenderer } from "../src/index.js";
 
 /**
@@ -128,5 +128,120 @@ describe("WebGPURenderer (experimental bootstrap)", () => {
 			// the reject path suspends too — that is all this test asserts
 		});
 		second.destroy();
+	});
+});
+
+/**
+ * `hdr` on the WebGPU backend.
+ *
+ * `rgba16float` is renderable, blendable and filterable in core WebGPU: no
+ * optional feature to request and nothing to probe, unlike WebGL2 where it
+ * takes an extension some drivers do not ship. So this backend grants the
+ * setting unconditionally, and the machinery it needs was mostly already
+ * there — the pipeline cache has always keyed on colour format, which is
+ * what lets the camera's half-float passes and the 8-bit canvas pass coexist
+ * compiled in one frame.
+ */
+describe("WebGPURenderer — hdr is honoured", () => {
+	let app;
+	let ready = false;
+
+	beforeAll(async () => {
+		boot();
+		app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.WEBGPU,
+			consoleHeader: false,
+			hdr: true,
+		});
+		try {
+			await app.init();
+			ready = true;
+		} catch {
+			ready = false;
+		}
+	});
+
+	afterAll(() => {
+		app?.destroy();
+	});
+
+	it("grants the setting and takes half-float camera targets", (ctx) => {
+		if (!ready) {
+			ctx.skip();
+			return;
+		}
+		expect(app.renderer).toBeInstanceOf(WebGPURenderer);
+		expect(app.renderer.supportsFloatTargets).toBe(true);
+		expect(app.renderer.supportsHDR).toBe(true);
+		expect(app.renderer._colorFormat).toBe("rgba16float");
+	});
+});
+
+/**
+ * The same contract, without a device.
+ *
+ * The suite above skips wherever WebGPU is unavailable, which is most CI
+ * runners and this one — so on its own it would prove nothing anywhere it
+ * actually runs. This drives the shipped resolver directly against the
+ * prototype, so the behaviour is covered on every machine.
+ */
+describe("WebGPURenderer.setHDR (no device required)", () => {
+	const bare = () => {
+		const renderer = Object.create(WebGPURenderer.prototype);
+		renderer.settings = { hdr: false };
+		// what the constructor sets, and what `init()` learns from the
+		// surface once it is negotiated
+		renderer.supportsFloatTargets = true;
+		renderer.preferredFormat = "bgra8unorm";
+		return renderer;
+	};
+
+	it("moves the camera format with the setting", () => {
+		const renderer = bare();
+
+		renderer.setHDR(true);
+		expect(renderer.settings.hdr).toBe(true);
+		expect(renderer.supportsHDR).toBe(true);
+		expect(renderer._colorFormat).toBe("rgba16float");
+
+		renderer.setHDR(false);
+		expect(renderer.supportsHDR).toBe(false);
+		// back to the surface format, not to some 8-bit constant: the
+		// surface may be bgra and a hardcoded rgba would silently swap the
+		// red and blue channels of every composited frame
+		expect(renderer._colorFormat).toBe("bgra8unorm");
+	});
+
+	it("empties the pool when the format changes, and not when it does not", () => {
+		const renderer = bare();
+		renderer.setHDR(false);
+		const destroy = vi.fn();
+		renderer._renderTargetPool = { destroy };
+
+		renderer.setHDR(false);
+		expect(destroy).not.toHaveBeenCalled();
+
+		// a pooled target is reused by INDEX and `resize()` early-returns on
+		// unchanged dimensions, so nothing else would ever replace one minted
+		// in the old format
+		renderer.setHDR(true);
+		expect(destroy).toHaveBeenCalledTimes(1);
+		expect(renderer._renderTargetPool).toBeUndefined();
+	});
+
+	it("says nothing at all, either way", () => {
+		// the WebGL backend warns when a driver refuses. There is nothing to
+		// refuse here, so a game that turns this on must not be told
+		// anything about it.
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		try {
+			const renderer = bare();
+			renderer.setHDR(true);
+			renderer.setHDR(false);
+			expect(warn).not.toHaveBeenCalled();
+		} finally {
+			warn.mockRestore();
+		}
 	});
 });

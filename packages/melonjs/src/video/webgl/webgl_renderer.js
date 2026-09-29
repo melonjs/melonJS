@@ -152,17 +152,58 @@ export default class WebGLRenderer extends Renderer {
 		// multisampled render half resolved via blitFramebuffer, so MSAA
 		// composes with post-effects instead of silently turning off the
 		// moment a camera has one. Ping-pong intermediates stay 1×.
+		/**
+		 * Memo for {@link WebGLRenderer#extension}. CLEARED on context
+		 * restore, never carried across: an extension object obtained from a
+		 * lost context is dead, and handing a stale one out is the kind of
+		 * failure that surfaces as a driver error three subsystems away.
+		 * @ignore
+		 * @internal
+		 */
+		this._extensions = new Map();
+		this._deriveCapabilities();
+
 		const msaaSamples =
 			this.settings.antiAlias === true
 				? Math.min(4, this.gl.getParameter(this.gl.MAX_SAMPLES))
 				: 0;
+
+		/**
+		 * Sized internal format every render target's color attachment takes.
+		 * Resolved ONCE per context rather than per target: it depends on a
+		 * driver probe, and a per-target decision would let two targets in
+		 * the same chain disagree, which `blitFramebuffer` cannot resolve
+		 * across.
+		 * @type {number}
+		 * @ignore
+		 * @internal
+		 */
+		this._colorFormat = this.gl.RGBA8;
+		// through the public door, so startup and a runtime toggle are one
+		// code path rather than two that have to be kept in step
+		this.setHDR(this.settings.hdr === true);
+		// and the tone curve, now that the shader language is known
+		this._resolveToneMapping();
+		this.setHDROutput(this.settings.hdrOutput === true);
+
 		/**
 		 * @ignore
 		 * @internal
 		 */
-		this._renderTargetPool = new RenderTargetPool((w, h, isCapture) => {
+		this._renderTargetPool = new RenderTargetPool((w, h, isCapture, index) => {
+			// Indices 0/1 are the CAMERA chain; 2 and up are sprite chains.
+			// Only the camera pair gets the half-float format, and that is a
+			// correctness limit rather than thrift: a sprite chain's final
+			// blit composites source-over with `dstFactor =
+			// ONE_MINUS_SRC_ALPHA`, and `blendFunc(ONE, ONE)` accumulates
+			// ALPHA past 1 in a float target, so that factor goes negative
+			// and subtracts the backdrop. A sprite with a multi-effect chain
+			// over additive content would draw a black box. The camera chain
+			// blits with `keepBlend = false`, so it is unaffected — and it is
+			// the documented place to put these effects anyway.
 			return new WebGLRenderTarget(this.gl, w, h, {
 				samples: isCapture === true ? msaaSamples : 0,
+				format: index < 2 ? this._colorFormat : this.gl.RGBA8,
 			});
 		});
 
@@ -514,6 +555,27 @@ export default class WebGLRenderer extends Renderer {
 				// shared active-unit tracking so the next bind re-issues it
 				this._activeTextureUnit = -1;
 
+				// Every extension object died with the old context, and the
+				// capability flags derived from them are now stale booleans.
+				// Clearing the memo alone is not enough — the flags were
+				// captured at construction and nothing else recomputes them.
+				this._extensions.clear();
+				this._hdrRefusalWarned = false;
+				this._deriveCapabilities();
+				// and the format derived from them: a restored context is a
+				// NEW context and need not offer what the old one did. Left
+				// alone, a target would be asked for a half-float format the
+				// driver can no longer give it.
+				//
+				// Safe to do this AFTER `reset()` only because `reset()`
+				// DESTROYS the pool rather than rebuilding it, and the pool
+				// factory reads `_colorFormat` when it mints a target rather
+				// than when it is constructed — so nothing exists between
+				// here and the next frame to capture the stale format. Make
+				// `reset()` resize instead of destroy and that stops being
+				// true: move these two calls above it if you do.
+				this._resolveColorFormat();
+
 				this.isContextValid = true;
 				emit(ONCONTEXT_RESTORED, this);
 			},
@@ -573,6 +635,141 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	get WebGLVersion() {
 		return 2;
+	}
+
+	/**
+	 * A WebGL extension object, probed once and memoized.
+	 *
+	 * Deliberately WebGL-only and internal: WebGPU has no extensions, it has
+	 * `device.features` and `adapter.limits`, so a shared cross-backend
+	 * signature returning extension OBJECTS would force that backend to fake
+	 * a shape it does not have. What crosses the backends is the capability
+	 * FLAG derived from this, never the object.
+	 *
+	 * The memo is dropped on context restore, because an extension object
+	 * from a lost context is dead.
+	 * @param {string} name - the extension name
+	 * @returns {object|null} the extension object, or `null` when absent
+	 * @ignore
+	 * @internal
+	 */
+	extension(name) {
+		let ext = this._extensions.get(name);
+		if (ext === undefined) {
+			ext = this.gl.getExtension(name) ?? null;
+			this._extensions.set(name, ext);
+		}
+		return ext;
+	}
+
+	/**
+	 * (Re)derive the driver-dependent capability flags.
+	 *
+	 * Called from the constructor and again on context restore. Both are
+	 * needed: the flags are plain booleans captured at a moment in time, so
+	 * clearing the extension memo alone would leave them describing a context
+	 * that no longer exists.
+	 * @ignore
+	 * @internal
+	 */
+	_deriveCapabilities() {
+		/**
+		 * Whether this backend CAN render into a half-float color buffer,
+		 * which is a property of the driver alone. What the chain is
+		 * actually doing is {@link WebGLRenderer#supportsHDR}: this AND the
+		 * `hdr` setting asking for it.
+		 * @type {boolean}
+		 * @ignore
+		 * @internal
+		 */
+		// EITHER extension makes RGBA16F color-renderable on WebGL2, and a
+		// driver may ship only one: `EXT_color_buffer_float` is the one
+		// written against the WebGL 2.0 spec (and also covers RGBA32F),
+		// while `EXT_color_buffer_half_float` is the WebGL 1 era name that
+		// most WebGL2 drivers still expose.
+		this.supportsFloatTargets =
+			this.extension("EXT_color_buffer_float") !== null ||
+			this.extension("EXT_color_buffer_half_float") !== null;
+
+		// No filtering probe. Linear filtering of a half-float texture is
+		// CORE in WebGL 2 — `OES_texture_half_float_linear` is, per the
+		// Khronos registry, "no longer available as of the WebGL API 2.0
+		// specification", so gating on it made this permanently false and
+		// the whole setting unreachable.
+		//
+		// `supportsHDR` is NOT set here. This is what the driver can do;
+		// that is whether the chain is doing it, which also depends on the
+		// `hdr` setting, and `_resolveColorFormat` settles both together.
+	}
+
+	/**
+	 * Settle `_colorFormat` from the `hdr` setting and what the driver can
+	 * actually do. Called from the constructor and again on context restore,
+	 * after {@link WebGLRenderer#_deriveCapabilities}.
+	 * @ignore
+	 * @internal
+	 */
+	_resolveColorFormat() {
+		const previous = this._colorFormat;
+		const wanted = this.settings.hdr === true;
+		const granted = wanted && this.supportsFloatTargets === true;
+
+		/**
+		 * Whether the effect chain is carrying color values above 1 instead
+		 * of clamping at every write. GRANTED, not supported: it is the
+		 * `hdr` setting AND a driver that can honour it, because a game
+		 * branching on this is choosing a grade, and a grade tuned for
+		 * headroom applied to a chain that clamps is not a lesser version of
+		 * the look, it is a dark picture.
+		 *
+		 * Both halves or nothing: the chain samples its targets with
+		 * `LINEAR` (`BloomEffect` reads at fractional texel offsets), so
+		 * being able to render into a half-float buffer without being able
+		 * to filter it is not a lesser HDR, it is none.
+		 *
+		 * **Headroom through the chain, not HDR output.** The frame is
+		 * presented in SDR, so anything still above 1 clamps on the final
+		 * blit; what this buys is that nothing clamped before then. The
+		 * `hdrOutput` setting removes that last clamp too, but not on this
+		 * backend: see {@link WebGLRenderer#setHDROutput}.
+		 * @type {boolean}
+		 */
+		this.supportsHDR = granted;
+		this._colorFormat = granted ? this.gl.RGBA16F : this.gl.RGBA8;
+
+		// Empty the pool when the format changed under it. A pooled target is
+		// reused by INDEX and `resize()` early-returns on unchanged
+		// dimensions, so nothing else would ever replace one minted in the
+		// old format, and a chain whose capture and ping-pong halves disagree
+		// cannot be blitted between. `setHDR` is the caller that reaches
+		// this in normal use; a context restore also does, and destroys the
+		// pool itself anyway.
+		if (
+			previous !== undefined &&
+			previous !== this._colorFormat &&
+			this._renderTargetPool
+		) {
+			this._renderTargetPool.destroy();
+		}
+
+		if (wanted && granted !== true && this._hdrRefusalWarned !== true) {
+			// Once. `setHDR` is meant to be driven from a settings toggle,
+			// and a refusal repeated on every press is noise that teaches
+			// people to ignore the console. Cleared on context restore,
+			// where a NEW context may refuse for a new reason.
+			//
+			// `warning()` is the deprecation helper and would format this as
+			// one, so this uses the plain console form the other capability
+			// notices take. A game that never asked is never nagged.
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._hdrRefusalWarned = true;
+			console.warn(
+				"hdr: true was requested but this WebGL2 driver cannot render into a half-float color buffer (neither EXT_color_buffer_float nor EXT_color_buffer_half_float is available) — falling back to 8 bits per channel",
+			);
+		}
 	}
 
 	/**
@@ -702,6 +899,14 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	destroy() {
+		// renderer-owned, so no camera's teardown will have freed it
+		this._toneMapEffect?.destroy?.();
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._toneMapEffect = undefined;
+
 		// Unregister first: every handler closes over `this`, so leaving them
 		// on the bus keeps the renderer (and transitively its batchers and GL
 		// objects) reachable forever — a destroyed renderer would also still
@@ -1361,13 +1566,22 @@ export default class WebGLRenderer extends Renderer {
 				? undefined
 				: options.target;
 
-		// (re)allocate when missing, resized, or the GL handle went stale (a
+		// The destination internal format has to match the TYPE of the read
+		// buffer. `gl.RGB` is fixed-point, so copying into it from a
+		// half-float attachment is INVALID_OPERATION (measured) and the
+		// capture silently stays whatever it was.
+		const captureFormat =
+			this._colorFormat === gl.RGBA16F ? gl.RGBA16F : gl.RGB;
+
+		// (re)allocate when missing, resized, allocated in a format the
+		// target no longer uses, or the GL handle went stale (a
 		// context-loss/restore cycle deletes it — gl.isTexture catches that)
 		if (
 			typeof frame === "undefined" ||
 			frame.width !== w ||
 			frame.height !== h ||
 			frame.glTexture === null ||
+			frame.format !== captureFormat ||
 			gl.isTexture(frame.glTexture) === false
 		) {
 			if (typeof frame !== "undefined") {
@@ -1411,15 +1625,19 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		if (frame.glTexture === null) {
-			// first capture into this slot: copyTexImage2D allocates the RGB
-			// storage AND copies in one call
+			// First capture into this slot: copyTexImage2D allocates the
+			// storage AND copies in one call. Getting `captureFormat` wrong
+			// under `hdr: true` would break every `screen_texture` effect
+			// and the advanced-blend backdrop at once, with only a GL log
+			// line to show for it.
+			frame.format = captureFormat;
 			frame.glTexture = gl.createTexture();
 			batcher.bindTexture2D(frame.glTexture, unit, false);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, x, y, w, h, 0);
+			gl.copyTexImage2D(gl.TEXTURE_2D, 0, captureFormat, x, y, w, h, 0);
 		} else {
 			// steady state: refresh the existing storage in place — no per-frame
 			// reallocation. Same size is guaranteed (a size change nulls
@@ -1494,9 +1712,7 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	beginPostEffect(renderable) {
 		// filter to only enabled effects
-		const effects = renderable.postEffects.filter((fx) => {
-			return fx.enabled !== false;
-		});
+		const effects = this._effectChainFor(renderable);
 		if (effects.length === 0) {
 			this.customShader = undefined;
 			return false;
@@ -1556,10 +1772,10 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	endPostEffect(renderable) {
-		// filter to only enabled effects
-		const effects = renderable.postEffects.filter((fx) => {
-			return fx.enabled !== false;
-		});
+		// the SAME chain `beginPostEffect` built, tone map included: the two
+		// ends disagreeing about the pass count is a bug with no symptom
+		// until it is a very confusing one
+		const effects = this._effectChainFor(renderable);
 		if (effects.length === 0) {
 			return;
 		}
@@ -1762,8 +1978,17 @@ export default class WebGLRenderer extends Renderer {
 				: null;
 
 		if (typeof this._advancedBlendTarget === "undefined") {
+			// Deliberately 8 bits per channel even under `hdr: true`, and NOT
+			// `this._colorFormat`. The W3C blend formulas this target feeds
+			// are defined on straight color recovered from a PREMULTIPLIED
+			// source, which relies on the invariant `rgb <= a`; a texel with
+			// `rgb > a` is undefined and diverges across browsers. Half-float
+			// storage is exactly what makes `rgb > a` reachable, since an
+			// additive stack no longer saturates on the way in. So this one
+			// target keeps the clamp that keeps its own maths defined.
 			this._advancedBlendTarget = new WebGLRenderTarget(gl, w, h, {
 				samples: 0,
+				format: gl.RGBA8,
 			});
 		} else {
 			this._advancedBlendTarget.resize(w, h);
@@ -2891,6 +3116,65 @@ export default class WebGLRenderer extends Renderer {
 	setTextureFilter(mode = "auto") {
 		super.setTextureFilter(mode);
 		this._reapplyTextureFilter(this._glTextureFilter());
+	}
+
+	/**
+	 * Turn the `hdr` application setting on or off at runtime, moving the
+	 * render targets with it.
+	 *
+	 * The pool is emptied when the format actually changes, so the next frame
+	 * mints its targets in the new one, and any live capture reallocates
+	 * rather than being refreshed in place (`copyTexImage2D` bakes the format
+	 * and `copyTexSubImage2D` cannot change it). Cheap enough to drive from a
+	 * settings toggle; not something to do per frame, since it throws away
+	 * every pooled target.
+	 *
+	 * Read {@link WebGLRenderer#supportsHDR} afterwards rather than assuming:
+	 * a driver offering neither half-float extension refuses, warns once and
+	 * stays at 8 bits.
+	 * @param {boolean} [enable=false] - whether the effect chain should carry
+	 * values above 1
+	 * @example
+	 * renderer.setHDR(true);
+	 * // grade for what was granted, not for what was asked
+	 * tone.setExposure(renderer.supportsHDR ? 0.45 : 1);
+	 */
+	/**
+	 * Record a request for `hdrOutput`, which this backend cannot honour.
+	 *
+	 * Presenting in extended range needs the surface to say so, and the
+	 * WebGL2 change that would allow it (`drawingBufferToneMapping`) is an
+	 * unapproved specification proposal that no browser implements. The
+	 * colour-space half exists behind a browser flag, which is not something
+	 * a shipped game can rely on, so this backend presents in SDR and says
+	 * so rather than leaving a flag to be discovered.
+	 * @param {boolean} [enable=false] - whether to present in the display's full range
+	 */
+	setHDROutput(enable = false) {
+		super.setHDROutput(enable);
+		this.supportsHDROutput = false;
+		if (enable === true && this._hdrOutputRefusalWarned !== true) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._hdrOutputRefusalWarned = true;
+			console.warn(
+				"hdrOutput: true was requested but the WebGL2 backend cannot present in extended range (no browser implements the drawing-buffer tone mapping that would allow it) — presenting in SDR",
+			);
+		}
+	}
+
+	setHDR(enable = false) {
+		// No "did it change?" guard here. `_resolveColorFormat` compares the
+		// resolved FORMAT before it empties the pool, which is the only
+		// expensive part, so a redundant call costs a couple of comparisons.
+		// Guarding on `settings.hdr` instead would have made this unusable
+		// from the constructor, where the setting already holds the
+		// requested value and the guard would skip the one call that has to
+		// happen.
+		super.setHDR(enable);
+		this._resolveColorFormat();
 	}
 
 	/**

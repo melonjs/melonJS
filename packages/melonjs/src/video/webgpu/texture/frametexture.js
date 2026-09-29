@@ -27,8 +27,13 @@ export class WebGPUFrameTexture extends Texture2d {
 	 * @param {import("../webgpu_renderer.js").default} renderer - the owning renderer
 	 * @param {number} width - capture width in pixels
 	 * @param {number} height - capture height in pixels
+	 * @param {string} [format] - texture format, defaulting to the surface's
+	 * preferred one. A capture is filled by `copyTextureToTexture`, which
+	 * requires the source and destination formats to agree, so this has to
+	 * follow whatever is being captured FROM: the canvas, or a render target
+	 * that may be half-float under the `hdr` setting.
 	 */
-	constructor(renderer, width, height) {
+	constructor(renderer, width, height, format) {
 		super();
 		this.renderer = renderer;
 		/**
@@ -38,6 +43,11 @@ export class WebGPUFrameTexture extends Texture2d {
 		this.isGPUResident = true;
 		/** @type {GPUTexture} */
 		this.gpuTexture = null;
+		/**
+		 * Texture format of the backing storage.
+		 * @type {string}
+		 */
+		this.format = format ?? renderer.preferredFormat;
 		this.realloc(width, height);
 	}
 
@@ -50,8 +60,12 @@ export class WebGPUFrameTexture extends Texture2d {
 	 * at a destroyed texture and failing every subsequent submit.
 	 * @param {number} width - capture width in pixels
 	 * @param {number} height - capture height in pixels
+	 * @param {string} [format] - new format; unchanged when omitted
 	 */
-	realloc(width, height) {
+	realloc(width, height, format) {
+		if (typeof format === "string") {
+			this.format = format;
+		}
 		if (this.gpuTexture !== null) {
 			this.renderer.retireTexture(this.gpuTexture);
 		}
@@ -67,7 +81,7 @@ export class WebGPUFrameTexture extends Texture2d {
 		this.gpuTexture = this.renderer.device.createTexture({
 			label: "melonJS frame capture",
 			size: [width, height],
-			format: this.renderer.preferredFormat,
+			format: this.format,
 			usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
 		});
 		/** @type {GPUTextureView} */
