@@ -4,7 +4,7 @@ import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
 import { createCanvas } from "./canvas_factory.js";
-import ToneMappingEffect from "./effects/tonemap.js";
+import ToneMappingEffect, { CURVES } from "./effects/tonemap.js";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
@@ -1523,6 +1523,7 @@ export default class Renderer {
 	 * @param {object} [options] - curve parameters, each left as-is when omitted
 	 * @param {number} [options.exposure] - multiplier applied before the curve
 	 * @param {number} [options.white] - the post-exposure value to map to display white; `0` leaves the curve its own shoulder
+	 * @throws {Error} on an unknown `mode`, or a non-finite `exposure` or `white`
 	 * @example
 	 * // straight from a settings screen
 	 * renderer.setToneMapping(settings.curve, {
@@ -1534,6 +1535,29 @@ export default class Renderer {
 	 * renderer.setToneMapping("none");
 	 */
 	setToneMapping(mode = "none", options = {}) {
+		// Everything is checked before anything is written. A rejected call
+		// has to leave the settings as they were: half-applied, the next
+		// `_resolveToneMapping` from a resize or a context restore would pick
+		// up the bad value on its own and throw somewhere unrelated.
+		if (mode !== "none" && !(mode in CURVES)) {
+			throw new Error(
+				`Renderer.setToneMapping: unknown mode "${mode}", expected "none" or one of ${Object.keys(
+					CURVES,
+				)
+					.map((k) => {
+						return `"${k}"`;
+					})
+					.join(", ")}`,
+			);
+		}
+		for (const key of ["exposure", "white"]) {
+			const value = options[key];
+			if (value !== undefined && !Number.isFinite(value)) {
+				throw new Error(
+					`Renderer.setToneMapping: ${key} must be a finite number, got ${value}`,
+				);
+			}
+		}
 		this.settings.toneMapping = mode;
 		if (typeof options.exposure === "number") {
 			this.settings.toneMappingExposure = options.exposure;

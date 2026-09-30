@@ -69,12 +69,19 @@ describe("ToneMappingEffect — the baked curve", () => {
 		expect(body(effect)).not.toContain("2.51");
 	});
 
-	it("falls back to the default for a curve it does not have", () => {
-		// a typo must not produce a shader with `undefined` spliced into it
-		const effect = make({ mode: "filmic-ish" });
-		expect(effect.mode).toBe("aces");
-		expect(body(effect)).not.toContain("undefined");
-		expect(body(effect)).toContain("2.51");
+	it("refuses a curve it does not have", () => {
+		// It used to substitute the default. A typo then reported back as a
+		// curve the caller never asked for, and the renderer's "did the curve
+		// change?" test compares against exactly that, so a settings screen
+		// holding one stale name rebuilt the program on every call. Refusing
+		// also rules out the older failure of `undefined` spliced into a body.
+		expect(() => {
+			return make({ mode: "filmic-ish" });
+		}).toThrow(/unknown mode "filmic-ish"/);
+		// and every curve it DOES have builds a complete body
+		for (const mode of Object.keys(CURVES)) {
+			expect(body(make({ mode })), mode).not.toContain("undefined");
+		}
 	});
 });
 
