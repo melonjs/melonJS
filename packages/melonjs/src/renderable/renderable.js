@@ -529,6 +529,45 @@ export default class Renderable extends Rect {
 	}
 
 	/**
+	 * Move this renderable, optionally in three dimensions.
+	 *
+	 * `pos` holds an `ObservableVector3d`, but the geometry this class
+	 * inherits from declares it as a 2D vector, so from TypeScript
+	 * `pos.set(x, y)` takes two arguments and silently writes a zero z.
+	 * Anything with a depth then drops to the near plane. Reaching past that
+	 * previously meant a double cast or assigning `pos.x`, `pos.y` and
+	 * `depth` by hand, which is why that pattern is written out dozens of
+	 * times across the examples.
+	 *
+	 * **Omitting `z` leaves the depth exactly as it was**, rather than
+	 * zeroing it. That is the whole difference from `pos.set(x, y)`, and it
+	 * is what makes this safe to call on a 2D sprite that happens to sit at
+	 * a depth, or on a `Camera2d`, without having to know whether it does.
+	 * @param {number} x - the new x position
+	 * @param {number} y - the new y position
+	 * @param {number} [z] - the new depth; left untouched when omitted
+	 * @returns {Renderable} this renderable, for chaining
+	 * @example
+	 * sprite.setPosition(120, 64);        // 2D: depth unchanged
+	 * mesh.setPosition(0, -20, 140);      // 3D
+	 * camera.setPosition(0, 0, -300).lookAt(player);
+	 */
+	setPosition(x, y, z) {
+		// ONE batched write, not three component assignments. `pos` is a
+		// proxied observable: every component write fires its callback, which
+		// runs `updateBounds()`. `set` mutes that and fires once, so this
+		// costs one bounds recompute where assigning `pos.x`, `pos.y` and
+		// `depth` in turn costs three. That matters because the paths this
+		// method exists for are per-frame ones.
+		//
+		// A type check on `z`, not a truthiness one: `setPosition(x, y, 0)`
+		// is a request to sit at depth zero, not an omitted argument. Omitted,
+		// the current depth is written back unchanged.
+		this.pos.set(x, y, typeof z === "number" ? z : this.pos.z);
+		return this;
+	}
+
+	/**
 	 * Whether the renderable object is visible and within the viewport
 	 * @type {boolean}
 	 * @default false

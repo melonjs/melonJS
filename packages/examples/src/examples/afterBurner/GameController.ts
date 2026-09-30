@@ -518,7 +518,7 @@ export class GameController extends Renderable {
 		// pitch/yaw/roll are driven DIRECTLY from player position so
 		// the view-tilt is dramatic at the play-bound corners. Skips
 		// `lookAt` entirely — we set the rotation we want.
-		(this.camera.pos as unknown as Vector3d).set(
+		this.camera.setPosition(
 			this.player.pos.x * 0.3,
 			this.player.pos.y * 0.3 + GameController.CAM_OFFSET_Y,
 			PLAYER_Z + GameController.CAM_OFFSET_Z,
@@ -757,7 +757,9 @@ export class GameController extends Renderable {
 			};
 		}
 
-		const cam = this.camera.pos as unknown as Vector3d;
+		// only x and y are read below, so this needs no 3D vector and never
+		// needed the cast it used to carry
+		const cam = this.camera.pos;
 		// Nothing framed: fall back to harmonising on a fixed distance.
 		//
 		// A gun sighted at one range agrees with the sight there and nowhere

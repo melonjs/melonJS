@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, and baking with CanvasRenderTarget. Triggers on: Camera2d, viewport, follow, setBounds, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, and baking with CanvasRenderTarget. Triggers on: Camera2d, viewport, follow, setBounds, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis."
 license: MIT
 ---
 
@@ -120,6 +120,24 @@ coordinate that puts your label on the wrong side of the screen. Skip it.
 
 Do not hand-roll this with `Matrix3d` — the perspective divide and the behind-
 camera case are exactly what gets it wrong.
+
+## Pointing a 3D camera
+
+A 2D camera's only rotation is `roll`. A 3D one can be pointed at a target, and
+optionally banked at the same time:
+
+```js
+camera.lookAt(target);                  // pitch and yaw; roll untouched
+camera.lookAt(target, up);              // and bank, where `up` is what should
+                                        // appear UP ON SCREEN
+camera.setBasis(right, up, forward);    // or pose it from a basis outright
+```
+
+`up` has no default, so the one-argument form behaves exactly as it always
+did. Because this engine renders Y-down, a level horizon is `(0, -1, 0)`.
+`setBasis` is the writable counterpart of `getBasis` and takes the camera's
+own columns, whose `up` points down the screen: the opposite sense, one
+negation apart. See `melonjs-3d` for the full account.
 
 ## Secondary cameras
 
@@ -250,6 +268,7 @@ into a texture for a shader to sample.
 | `container.clipping = true` does nothing | container has no explicit size, so `width`/`height` are `Infinity` |
 | baked target draws nothing / throws | passed the `CanvasRenderTarget`, not its `.canvas` |
 | frame rate drops with many static draws | bake into a `CanvasRenderTarget` instead |
+| a 3D camera cannot be given an arbitrary up | `Camera3d#lookAt(target, up)` or `setBasis(right, up, forward)`; see `melonjs-3d` |
 
 ## Related skills
 

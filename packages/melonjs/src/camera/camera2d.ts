@@ -489,9 +489,9 @@ export default class Camera2d extends Renderable {
 	 * @param [y=0] - initial position of the camera on the y axis
 	 */
 	reset(x: number = 0, y: number = 0): void {
-		// reset the initial camera position to 0,0
-		this.pos.x = x;
-		this.pos.y = y;
+		// reset the initial camera position to 0,0. No z: a `Camera3d`
+		// override sets its own depth after this has run.
+		this.setPosition(x, y);
 
 		// reset the target
 		this.unfollow();

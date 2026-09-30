@@ -237,6 +237,54 @@ describe("Camera3d", () => {
 	});
 
 	describe("lookAt", () => {
+		it("leaves a non-zero roll exactly alone when given no up", () => {
+			// The single most load-bearing assertion for this API. `up` is
+			// optional and has NO default on purpose: give it one and every
+			// existing camera that had banked its horizon is silently
+			// levelled the next time it looks at something.
+			const cam = new Camera3d(0, 0, 800, 600);
+			cam.pos.set(0, 0, 0);
+			cam.roll = 0.7;
+			cam.lookAt(0, 10, 100);
+			expect(cam.roll).toBe(0.7);
+		});
+
+		it("solves the same yaw and pitch it always did, to the last bit", () => {
+			// Pinned with `toBe`, not `toBeCloseTo`: the no-up path must stay
+			// the original two expressions rather than being re-routed
+			// through the basis decode, which would agree to ~1e-7 and no
+			// further.
+			const cam = new Camera3d(0, 0, 800, 600);
+			cam.pos.set(1, 2);
+			cam.depth = 3;
+			cam.lookAt(7, -4, 11);
+			expect(cam.yaw).toBe(Math.atan2(6, 8));
+			expect(cam.pitch).toBe(Math.atan2(6, Math.hypot(6, 8)));
+		});
+
+		it("still dispatches every call shape", () => {
+			// none of the object forms had a test before the overloads were
+			// added, so this pins the branch they were added on top of
+			const cam = new Camera3d(0, 0, 800, 600);
+			cam.pos.set(0, 0, 0);
+
+			cam.lookAt(new Vector3d(0, 0, 100));
+			expect(cam.yaw).toBeCloseTo(0, 6);
+
+			cam.lookAt({ x: 100, y: 0, z: 0 });
+			expect(cam.yaw).toBeCloseTo(Math.PI / 2, 6);
+
+			// `.pos` form, placed away from the origin so it discriminates
+			const target = new Renderable(0, 0, 8, 8);
+			target.pos.set(-100, 0, 0);
+			cam.lookAt(target);
+			expect(cam.yaw).toBeCloseTo(-Math.PI / 2, 6);
+
+			// z defaults to 0 in the numeric form
+			cam.lookAt(0, 10);
+			expect(cam.pitch).toBeLessThan(0);
+		});
+
 		it("derives yaw from XZ direction (target to the right → positive yaw)", () => {
 			const cam = new Camera3d(0, 0, 800, 600);
 			cam.pos.set(0, 0, 0);

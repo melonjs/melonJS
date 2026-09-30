@@ -86,8 +86,7 @@ const _localScratch = new Array(16);
  * app.world.addChild(boat);
  *
  * // ...then drive it like anything else
- * boat.pos.set(steerX, waterLevel);
- * boat.depth = travelled;
+ * boat.setPosition(steerX, waterLevel, travelled);
  * boat.rotate(lean - lastLean, AXIS_Z);
  */
 export default class GLTFModel extends Container {
@@ -787,8 +786,11 @@ export default class GLTFModel extends Container {
 	 * @internal
 	 */
 	_applyWorldToMesh(mesh, world) {
-		mesh.pos.set(world[12] * this.scale, -world[13] * this.scale);
-		mesh.depth = this._zSign * world[14] * this.scale;
+		mesh.setPosition(
+			world[12] * this.scale,
+			-world[13] * this.scale,
+			this._zSign * world[14] * this.scale,
+		);
 		const v = mesh.currentTransform.val;
 		v.set(world);
 		v[12] = 0;
