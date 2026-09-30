@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit, setBasis, getBasis, lookAt, up vector, gimbal."
 license: MIT
 ---
 
@@ -20,10 +20,14 @@ This is the single most important thing on this page.
 | vertical | **Y-down** — higher `y` is *lower* on screen | Y-up |
 | depth | **+Z forward** — higher `z` is *farther* away | −Z forward |
 
-Rotations are extrinsic XYZ, and `Camera3d` exposes all three: `camera.pitch`
+`Camera3d` exposes three rotation angles: `camera.pitch`
 (X, look up/down), `camera.yaw` (Y, look left/right) and `camera.roll` (Z, bank
 the horizon). The view is `R(yaw) ∘ R(pitch) ∘ R(roll)` inverted, and the frustum
 planes come off that same matrix — so culling follows a banked view.
+
+The basis those angles produce is **readable and writable**: `getBasis(right,
+up, forward)` reads it, `setBasis(right, up, forward)` poses the camera from
+one.
 
 `camera.rotate()` is NOT the way to bank a 3D camera. It writes the inherited
 `currentTransform`, which a 3D view never reads, so the call is silently inert.
@@ -89,10 +93,71 @@ class GameStage extends Stage {
   `camera.setClipPlanes(near, far)`.
 - **`camera.pos.set(x, y)` is 2-argument and zeroes z.** Use `camera.depth` —
   the documented z accessor — or assign `pos.x`/`pos.y` individually.
+- **`lookAt(target)` solves pitch and yaw only**, so on its own it cannot
+  express "up is this direction" and it leaves `roll` alone. Pass an up to
+  bank the horizon too: `camera.lookAt(target, up)`, where `up` is what should
+  appear UP ON SCREEN. This engine renders Y-down, so a level horizon is
+  `(0, -1, 0)`. There is deliberately no default, because giving one would
+  silently level every camera that had banked its own horizon.
+- **When the game already has all three axes, hand them over**:
+  `camera.setBasis(right, up, forward)`, the writable counterpart of
+  `getBasis`. The case that needs it is a view over a curved surface, where up
+  is the surface normal and differs at every point, so no pitch and yaw pair
+  expresses it and integrating towards one drifts and gimbals at the poles.
+  `setBasis` absorbs a triple that has drifted off orthonormal rather than
+  leaving the camera holding something that is not a rotation, and it does not
+  care what the axes are scaled to: a direction is a direction, so anything
+  from a denormal to 1e300 resolves the same way. Note its `up` is the camera's
+  local +Y column, which under Y-down points DOWN the screen: the opposite
+  sense to `lookAt`'s, and one negation apart.
 - **`worldToLocal` does not project.** It is a 2D camera's offset subtraction.
   To pin a label or marker to a point in the scene use
   `camera.worldToScreen(x, y, z)`, which applies the projection and returns
   `null` behind the camera. See `melonjs-camera-and-drawing`.
+
+## Where an up vector earns its keep
+
+Three cases. In the first two, `lookAt(target)` on its own is already right and
+an up would be noise. The third is the one it exists for.
+
+```js
+// 1. ordinary third-person: world up never changes, so say nothing
+camera.setPosition(x, y, z).lookAt(player);
+
+// 2. a deliberate dutch angle: this is a ROLL, not an up vector
+camera.lookAt(player);
+camera.roll = Math.PI / 32;
+
+// 3. a view over a curved surface: up is the surface normal, and it is
+//    different at every point on the globe. No pitch and yaw pair expresses
+//    it, and integrating towards it drifts and gimbals over the poles.
+const up = player.pos.clone().sub(planetCentre).normalize();  // surface normal
+camera.setPosition(eye.x, eye.y, eye.z).lookAt(player, up.negate());
+```
+
+Note the `negate()` in case 3. The surface normal points away from the planet,
+which is the direction the player's head points, and `up` wants what should
+appear UP ON SCREEN. This engine renders Y-down, so `(0, -1, 0)` is a level
+horizon and a world-space "up" direction has to be handed over in that sense.
+Get it backwards and the view is upside down, which is the single most likely
+mistake with this argument.
+
+If the game already computes all three axes, skip the solve entirely:
+
+```js
+// a surface frame the game is already maintaining
+camera.setBasis(right, up, forward);
+```
+
+`setBasis` takes the camera's OWN columns, where `up` is local +Y and so points
+down the screen: the opposite sense to `lookAt`'s, one negation apart. It also
+absorbs a frame that has drifted off orthonormal, which one integrated over
+thousands of steps will have.
+
+**A camera posed this way and a world rotated into a fixed camera's frame are
+the same picture.** If a game already transforms its world into view space by
+hand, there is nothing to gain by switching; the value of `setBasis` is not
+having to write that transform in the first place.
 
 ## Depth sorting
 
@@ -473,6 +538,10 @@ and the bottom of the frame falls off the world.
 | `false` (default) / `"none"` | no rotation — a flat plane in the world |
 | `true` / `"cylindrical"` | yaws to face the camera, stays upright (characters, trees) |
 | `"spherical"` | always fully faces the camera (particles, impostors) |
+| the camera will not tilt its horizon to an arbitrary up | `lookAt(target)` solves pitch and yaw only; pass the up as the next argument, or hand all three axes to `setBasis` |
+| the view is upside down after `lookAt(target, up)` | `up` is the direction that should appear UP ON SCREEN, and this is Y-down, so a level horizon is `(0, -1, 0)` |
+| `setBasis` throws "forward must have a non-zero length" | `forward` is all zeros, the one case that names no direction; a short one is fine, so a surface frame that shrank as it drifted still works |
+| roll is ignored when the target is straight up or down | no rotation about the view axis is determined there, so `lookAt` keeps the roll it had and `setBasis` falls back to the `right` axis |
 
 `"cylindrical"` is what you want for paper-thin characters in a 2.5D game.
 Billboarding needs a `Camera3d` drawing the frame; under a 2D camera the quad

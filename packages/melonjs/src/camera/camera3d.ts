@@ -1,5 +1,5 @@
 import { Color } from "../math/color.ts";
-import { clamp } from "../math/math.ts";
+import { clamp, EPSILON } from "../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import type { ObservableVector3d } from "../math/observableVector3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -31,6 +31,118 @@ const _wsPoint = new Vector3d();
 const _basis = new Matrix3d();
 const _bScratchA = new Vector3d();
 const _bScratchB = new Vector3d();
+// scratch for setBasis, kept apart from the pair above because those belong to
+// getRight / getUp / getForward. Only forward needs one: `rollFromLocalUp`
+// takes the up axis as three scalars and never writes to it.
+const _sbForward = new Vector3d();
+
+/**
+ * True when every component of `v` is finite.
+ *
+ * Checked per component rather than on the sum: `(1e308, 1e308, 0)` has three
+ * perfectly good components and a sum that is `Infinity`, and rejecting that
+ * would refuse a direction we can resolve exactly.
+ * @param v - the vector to test
+ * @ignore
+ * @internal
+ */
+function isFiniteVector(v: Vector3d): boolean {
+	return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
+}
+
+/**
+ * Write the unit vector along `(x, y, z)` into `out`, at any input scale.
+ *
+ * Divides by the largest component before squaring anything, which puts the
+ * sum of squares in `[1, 3]` however large or small the input is. Squaring in
+ * the input's own scale instead has two failure modes, and this call site hits
+ * both: past ~1e154 the sum is `Infinity` and every component divides to zero,
+ * and past ~1e-162 the sum is zero and they divide to `Infinity`. The first
+ * scale is unreachable in a game, but the SMALL end is not, and either way the
+ * pre-division is exact in binary floating point, so it costs nothing but the
+ * three divides.
+ * @param out - vector to write into
+ * @param x - x of the direction to normalise
+ * @param y - y of the same
+ * @param z - z of the same
+ * @returns false when every component is zero, the one case that carries no
+ * direction at all
+ * @ignore
+ * @internal
+ */
+function normalizeInto(
+	out: Vector3d,
+	x: number,
+	y: number,
+	z: number,
+): boolean {
+	const scale = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
+	if (scale === 0) {
+		return false;
+	}
+	const sx = x / scale;
+	const sy = y / scale;
+	const sz = z / scale;
+	const len = Math.sqrt(sx * sx + sy * sy + sz * sz);
+	out.set(sx / len, sy / len, sz / len);
+	return true;
+}
+
+/**
+ * Solve the roll of a camera whose local +Y axis is `(ux, uy, uz)`, given the
+ * pitch and yaw already solved from its forward axis.
+ *
+ * Works by projecting the given axis onto the zero-roll basis for that pitch
+ * and yaw: `r0` is where the right axis would sit with no roll, `u0` where the
+ * up axis would. The two dot products are then `-sin(roll)` and `cos(roll)`.
+ *
+ * Deliberately NOT the textbook `atan2(right.y, up.y)`, which divides through
+ * by `cos(pitch)`: both of those components vanish at the poles, so that form
+ * needs a degenerate branch that pins the roll to zero and loses the
+ * orientation. These two operands stay O(1) at every pitch, so there is no
+ * pole case to special-case.
+ * @param ux - x of the camera's local +Y axis (need not be unit)
+ * @param uy - y of the same
+ * @param uz - z of the same
+ * @param pitch - the pitch already solved from the forward axis
+ * @param yaw - the yaw already solved from the forward axis
+ * @returns the roll, or `NaN` when the axis is parallel to forward and so
+ * determines nothing
+ * @ignore
+ * @internal
+ */
+function rollFromLocalUp(
+	ux: number,
+	uy: number,
+	uz: number,
+	pitch: number,
+	yaw: number,
+): number {
+	// scale-reduce first. The test below asks whether the projection onto the
+	// screen plane is negligible COMPARED WITH the axis itself, which is a
+	// question about direction; against a fixed epsilon it would instead call
+	// any axis shorter than 1e-6 degenerate and silently drop the roll of a
+	// perfectly good `up`. Dividing by the largest component leaves the length
+	// in [1, sqrt(3)], so the threshold is relative to within that factor.
+	const scale = Math.max(Math.abs(ux), Math.abs(uy), Math.abs(uz));
+	if (scale === 0) {
+		return Number.NaN;
+	}
+	const nx = ux / scale;
+	const ny = uy / scale;
+	const nz = uz / scale;
+	const cp = Math.cos(pitch);
+	const sp = Math.sin(pitch);
+	const cy = Math.cos(yaw);
+	const sy = Math.sin(yaw);
+	// the zero-roll right (r0) and up (u0) axes for this pitch and yaw
+	const dRight = nx * cy - nz * sy;
+	const dUp = nx * sy * sp + ny * cp + nz * cy * sp;
+	if (dRight * dRight + dUp * dUp < EPSILON * EPSILON) {
+		return Number.NaN;
+	}
+	return Math.atan2(-dRight, dUp);
+}
 
 /**
  * A perspective camera that extends {@link Camera2d} with a view
@@ -55,12 +167,16 @@ const _bScratchB = new Vector3d();
  *   on screen (same as Camera2d). Sprite at higher `pos.z` is
  *   farther from the camera and renders smaller. Matches melonJS's
  *   2D conventions so existing Camera2d code translates directly.
- * - **Rotations are extrinsic XY.** `pitch` (X axis, look up/down) and
+ * - **Three rotation angles.** `pitch` (X axis, look up/down) and
  *   `yaw` (Y axis, look left/right) and `roll` (Z axis, bank the horizon).
  *   The view is `R(yaw) ∘ R(pitch) ∘ R(roll)` inverted; the frustum planes are
  *   extracted from that same matrix, so culling follows a banked view. The
  *   inherited `currentTransform` is still NOT read — `camera.rotate()` on a
  *   3D camera does nothing, so set `roll` rather than rotating the camera.
+ *   The basis those angles produce is readable with
+ *   {@link Camera3d#getBasis} and writable with {@link Camera3d#setBasis},
+ *   which is how a camera is posed over a curved surface where up is the
+ *   surface normal and no pitch and yaw pair expresses it.
  * - **Follow offset (PR B scope).** When a target is set,
  *   `followOffset` is applied in **world space**:
  *   `camera.pos = target.pos + followOffset`. Target-rotation-aware
@@ -685,6 +801,115 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * Restore the camera to its initial state: at the given position, looking
+	 * straight down the z axis with a level horizon.
+	 *
+	 * Overridden because the inherited 2D version resets only what a 2D
+	 * camera has. It clears `roll`, since in 2D the roll IS the transform
+	 * matrix it identity-resets, and it writes `pos.x` and `pos.y`. A 3D
+	 * camera also has `pitch`, `yaw` and a depth, none of which it knows
+	 * about, so `reset()` used to leave a camera pointing wherever it had
+	 * been left and standing at whatever depth it had reached.
+	 * @param [x=0] - world x to reset to
+	 * @param [y=0] - world y to reset to
+	 * @param [z=0] - depth to reset to
+	 */
+	override reset(x = 0, y = 0, z = 0): void {
+		// clears the 2D state, `roll` included: that one lives in the
+		// transform matrix this identity-resets
+		super.reset(x, y);
+		this.pitch = 0;
+		this.yaw = 0;
+		this.depth = z;
+	}
+
+	/**
+	 * Pose the camera FROM a basis: the writable counterpart of
+	 * {@link Camera3d#getBasis}, taking the same three vectors in the same
+	 * order. `setBasis(...)` straight after `getBasis(...)` is the identity.
+	 *
+	 * This is what a view over a curved surface needs. Up there is the
+	 * surface normal and differs at every point, so no pitch and yaw pair
+	 * expresses it, and integrating angles towards it drifts and gimbals at
+	 * the poles. Hand over the frame the game already has instead.
+	 *
+	 * The basis is decoded into `pitch`, `yaw` and `roll`, which remain the
+	 * camera's only orientation state, so the view transform, the frustum
+	 * planes, the fog axis and {@link Sprite3d} billboards all follow with
+	 * nothing to invalidate. A consequence worth knowing: the camera can
+	 * never end up holding something that is not a rotation. A non-unit or
+	 * slightly sheared triple is absorbed rather than rejected, `forward`
+	 * winning, then the component of `up` perpendicular to it, with `right`
+	 * consulted only when `up` decides nothing. A surface frame integrated
+	 * over thousands of steps drifts off orthonormal, and this is the
+	 * difference between a camera that tolerates that and one that renders a
+	 * sheared view.
+	 *
+	 * The vectors passed in are never modified.
+	 *
+	 * Note `up` here is the camera's local +Y column, which under this
+	 * engine's Y-down render space points DOWN the screen. That is the
+	 * opposite of {@link Camera3d#lookAt}'s `up`, which is the direction that
+	 * should appear up on screen. The two are one negation apart, and each
+	 * is the natural sense for its own call.
+	 * @param right - the camera's local +X axis, in world space
+	 * @param up - the camera's local +Y axis, in world space
+	 * @param forward - the camera's local +Z axis: where it looks
+	 * @returns this camera, for chaining
+	 * @throws {Error} if any component is not finite, or every component of
+	 * `forward` is zero. The axes need not be unit, or even close to it: only
+	 * their directions are read.
+	 * @see Camera3d#getBasis
+	 * @example
+	 * // a camera standing on the surface of a globe, looking along it
+	 * const up = surfaceNormal(player);          // differs at every point
+	 * const forward = heading(player);
+	 * const right = forward.clone().cross(up).normalize();
+	 * camera.setBasis(right, up, forward);
+	 */
+	setBasis(right: Vector3d, up: Vector3d, forward: Vector3d): this {
+		if (
+			!isFiniteVector(right) ||
+			!isFiniteVector(up) ||
+			!isFiniteVector(forward)
+		) {
+			throw new Error(
+				"Camera3d.setBasis: right, up and forward must all be finite vectors",
+			);
+		}
+		// writes a copy, so a caller handing over a shared read-only axis
+		// keeps it. Only an all-zero forward is refused: every other length is
+		// a direction, and the magnitude of one carries no meaning.
+		if (!normalizeInto(_sbForward, forward.x, forward.y, forward.z)) {
+			throw new Error("Camera3d.setBasis: forward must have a non-zero length");
+		}
+
+		// `clamp` is belt and braces: after the normalise above the component
+		// is within [-1, 1] by construction. It stays because `asin` of a
+		// value a single ulp past 1 is NaN, which blanks the view with nothing
+		// in the console, and one comparison is a poor price for ruling that
+		// out. No test covers it: I could not construct an input that reaches
+		// it.
+		const pitch = Math.asin(clamp(-_sbForward.y, -1, 1));
+		const yaw = Math.atan2(_sbForward.x, _sbForward.z);
+
+		// roll from `up` where it determines one, else from `right`, else
+		// leave the roll alone: with up parallel to forward there is no
+		// rotation about the view axis to recover
+		let roll = rollFromLocalUp(up.x, up.y, up.z, pitch, yaw);
+		if (Number.isNaN(roll)) {
+			// `right` lands a quarter turn from `up`, hence the offset
+			const fromRight = rollFromLocalUp(right.x, right.y, right.z, pitch, yaw);
+			roll = Number.isNaN(fromRight) ? this.roll : fromRight + Math.PI / 2;
+		}
+
+		this.pitch = pitch;
+		this.yaw = yaw;
+		this.roll = roll;
+		return this;
+	}
+
+	/**
 	 * The camera's world-space right axis (unit). See {@link Camera3d#getBasis}.
 	 * @param out - vector to write into (returned)
 	 * @returns `out`
@@ -892,7 +1117,7 @@ export default class Camera3d extends Camera2d {
 
 	/**
 	 * Point the camera at a world-space target by deriving pitch and
-	 * yaw from the direction (target − camera.pos). Roll is unaffected.
+	 * yaw from the direction (target − camera.pos).
 	 *
 	 * Three call shapes:
 	 * - `lookAt(x, y, z)` — raw world coordinates
@@ -901,14 +1126,45 @@ export default class Camera3d extends Camera2d {
 	 *   `Renderable.lookAt(target)` signature so Camera3d is a structural
 	 *   drop-in replacement for Camera2d / Renderable in user code).
 	 *
+	 * **With no `up`, roll is untouched**, exactly as before this argument
+	 * existed. Pass one to bank the horizon as well: it is the direction that
+	 * should appear UP ON SCREEN, so a level horizon is `(0, -1, 0)` — this
+	 * engine renders Y-down, which is why the visual up axis is negative Y.
+	 * It is given no default on purpose, because defaulting it would silently
+	 * zero the roll of every camera that had one.
+	 *
+	 * Note this is the opposite sense to {@link Camera3d#setBasis}'s `up`,
+	 * which is the camera's local +Y column and points down the screen. Each
+	 * is the natural reading for its own call, and they are one negation
+	 * apart.
+	 *
+	 * When the direction to the target is parallel to `up` there is no
+	 * rotation about the view axis to solve, so the roll is left as it was
+	 * and the camera still points exactly at the target.
+	 *
 	 * Last-write-wins with manual `pitch` / `yaw` assignment: if you
 	 * call `lookAt(...)` then set `camera.pitch = 0.1` directly, the
-	 * next frame renders with the manual pitch.
+	 * next frame renders with the manual pitch. The same holds for
+	 * {@link Camera3d#setBasis}.
 	 * @param xOrTarget - target world x, or a target with `pos` / `x`,`y`,`z`
-	 * @param y - target world y (only when first arg is a number)
+	 * @param yOrUp - target world y when the first argument is a number, otherwise the up direction
 	 * @param z - target world z (only when first arg is a number)
+	 * @param up - the direction to appear up on screen (only when first arg is a number)
 	 * @returns this camera
+	 * @example
+	 * camera.lookAt(target);                        // pitch and yaw only
+	 * camera.lookAt(target, surfaceNormal);         // and bank to the surface
 	 */
+	override lookAt(
+		target: {
+			x: number;
+			y: number;
+			z?: number;
+			pos?: ObservableVector3d;
+		},
+		up?: Vector3d,
+	): this;
+	override lookAt(x: number, y?: number, z?: number, up?: Vector3d): this;
 	override lookAt(
 		xOrTarget:
 			| number
@@ -918,12 +1174,22 @@ export default class Camera3d extends Camera2d {
 					z?: number;
 					pos?: ObservableVector3d;
 			  },
-		y?: number,
+		yOrUp?: number | Vector3d,
 		z?: number,
+		up?: Vector3d,
 	): this {
 		let tx: number;
 		let ty: number;
 		let tz: number;
+		// the object form carries `up` as its SECOND argument, the numeric
+		// form as its fourth
+		let wantedUp: Vector3d | undefined;
+		if (typeof xOrTarget === "number") {
+			wantedUp = up;
+		} else {
+			wantedUp = yOrUp instanceof Vector3d ? yOrUp : undefined;
+		}
+		const y = typeof yOrUp === "number" ? yOrUp : undefined;
 		if (typeof xOrTarget === "number") {
 			tx = xOrTarget;
 			ty = y ?? 0;
@@ -951,8 +1217,29 @@ export default class Camera3d extends Camera2d {
 		// `dy` sits BELOW the camera; the camera should look DOWN,
 		// which is a NEGATIVE pitch — exactly what `atan2(-dy, …)`
 		// produces.
-		const horizontalDist = Math.sqrt(dx * dx + dz * dz);
+		// `hypot`, not `sqrt(dx * dx + dz * dz)`: that sum overflows to
+		// Infinity for a target far enough out, and the pitch then collapses
+		// to a level zero instead of pointing at it
+		const horizontalDist = Math.hypot(dx, dz);
 		this.pitch = Math.atan2(-dy, horizontalDist);
+
+		if (wantedUp !== undefined) {
+			// `up` is what should read as up on SCREEN, and the camera's own
+			// +Y points screen-down under Y-down, so the local up axis it
+			// asks for is the negation
+			const roll = rollFromLocalUp(
+				-wantedUp.x,
+				-wantedUp.y,
+				-wantedUp.z,
+				this.pitch,
+				this.yaw,
+			);
+			// NaN means the target lies along `up`, where no roll is
+			// determined; keep the one we had rather than lurching to zero
+			if (!Number.isNaN(roll)) {
+				this.roll = roll;
+			}
+		}
 
 		return this;
 	}
@@ -960,10 +1247,11 @@ export default class Camera3d extends Camera2d {
 	/**
 	 * Convenience overload of `lookAt` accepting a {@link Vector3d}.
 	 * @param target - world-space point to look at
+	 * @param up - optional direction to appear up on screen; see {@link Camera3d#lookAt}
 	 * @returns this camera
 	 */
-	setLookAt(target: Vector3d): this {
-		return this.lookAt(target.x, target.y, target.z);
+	setLookAt(target: Vector3d, up?: Vector3d): this {
+		return this.lookAt(target.x, target.y, target.z, up);
 	}
 
 	/**
@@ -1013,12 +1301,11 @@ export default class Camera3d extends Camera2d {
 			// silently lost their depth.
 			const targetZ =
 				"z" in target && typeof target.z === "number" ? target.z : 0;
-			// Direct .x/.y assignment + `this.depth` (which proxies to
-			// pos.z) avoids the `as unknown as Pos3d` cast — Renderable
-			// already exposes `depth` as the proper z accessor.
-			this.pos.x = target.x + this.followOffset.x;
-			this.pos.y = target.y + this.followOffset.y;
-			this.depth = targetZ + this.followOffset.z;
+			this.setPosition(
+				target.x + this.followOffset.x,
+				target.y + this.followOffset.y,
+				targetZ + this.followOffset.z,
+			);
 			this.isDirty = true;
 			return;
 		}

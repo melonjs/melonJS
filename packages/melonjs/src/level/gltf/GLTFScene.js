@@ -280,8 +280,7 @@ export default class GLTFScene {
 			local[13] = 0;
 			local[14] = 0;
 			mesh.currentTransform.val.set(local);
-			mesh.pos.set(cx, cy);
-			mesh.depth = cz;
+			mesh.setPosition(cx, cy, cz);
 			mesh.name = node.name;
 			container.addChild(mesh);
 		}
