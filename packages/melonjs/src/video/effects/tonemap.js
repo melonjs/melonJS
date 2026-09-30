@@ -105,8 +105,29 @@ export const CURVES = {
 	},
 };
 
-/** the default curve, and what an unknown `mode` falls back to */
+/** the curve used when `mode` is omitted */
 const DEFAULT_MODE = "aces";
+
+/**
+ * Throw unless `value` is a finite number.
+ *
+ * `Math.max(0, x)` reads like a guard and is not one: it passes `NaN` and
+ * `Infinity` straight through to the uniform, and a NaN there multiplies the
+ * whole frame to NaN. That renders as black or as garbage depending on the
+ * driver and reports nothing, so the game's own broken arithmetic surfaces as
+ * a blank screen an hour later.
+ * @param {string} name - the parameter, for the message
+ * @param {number} value - what the caller passed
+ * @ignore
+ * @internal
+ */
+function assertFinite(name, value) {
+	if (typeof value !== "number" || !Number.isFinite(value)) {
+		throw new Error(
+			`ToneMappingEffect: ${name} must be a finite number, got ${value}`,
+		);
+	}
+}
 
 /**
  * Both bodies from one template, so a fix to the premultiply handling cannot
@@ -117,7 +138,7 @@ const DEFAULT_MODE = "aces";
  * @internal
  */
 function buildBody(mode) {
-	const curve = CURVES[mode] ?? CURVES[DEFAULT_MODE];
+	const curve = CURVES[mode];
 	// The two bodies are written from ONE shape below, because the last time
 	// they were separate literals they drifted in exactly the line that
 	// matters here.
@@ -221,9 +242,27 @@ export default class ToneMappingEffect extends ShaderEffect {
 	 * @param {string} [options.mode="aces"] - curve: `"aces"`, `"reinhard"` or `"exponential"`
 	 * @param {number} [options.exposure=1.0] - multiplier applied before the curve; above `1` lifts the image into the curve's shoulder
 	 * @param {number} [options.white] - the post-exposure value that should come out as display white. Omitted, the curve keeps its own shoulder and nothing reaches 1 exactly
+	 * @throws {Error} on an unknown `mode`, or a non-finite `exposure` or `white`
 	 */
 	constructor(renderer, options = {}) {
 		const mode = options.mode ?? DEFAULT_MODE;
+		// Refused rather than substituted. Substituting looks kinder and is
+		// not: the caller asked for a curve it did not get, `mode` then reads
+		// back as something it was never given, and the renderer's own "did
+		// the curve change?" test compares against that substitute and so
+		// never matches — a settings screen writing one stale name rebuilds
+		// the program on every single call.
+		if (!(mode in CURVES)) {
+			throw new Error(
+				`ToneMappingEffect: unknown mode "${mode}", expected one of ${Object.keys(
+					CURVES,
+				)
+					.map((k) => {
+						return `"${k}"`;
+					})
+					.join(", ")}`,
+			);
+		}
 		super(renderer, buildBody(mode));
 
 		/**
@@ -231,9 +270,8 @@ export default class ToneMappingEffect extends ShaderEffect {
 		 * @type {string}
 		 * @readonly
 		 */
-		this.mode = mode in CURVES ? mode : DEFAULT_MODE;
-		this.exposure = options.exposure ?? 1.0;
-		this.setUniform("uExposure", this.exposure);
+		this.mode = mode;
+		this.setExposure(options.exposure ?? 1.0);
 
 		/**
 		 * The post-exposure value that comes out as display white, or `0`
@@ -260,8 +298,10 @@ export default class ToneMappingEffect extends ShaderEffect {
 	 * the curve's shape. Values above it clip, which is what "white point"
 	 * means.
 	 * @param {number} white - the value to map to white; `0` or less restores the curve's own shoulder
+	 * @throws {Error} if `white` is not a finite number
 	 */
 	setWhite(white) {
+		assertFinite("white", white);
 		this.white = Math.max(0, white);
 		// `curve(white)` is at most 1, so the reciprocal is at least 1 — the
 		// image can only get brighter from here, never darker
@@ -273,8 +313,10 @@ export default class ToneMappingEffect extends ShaderEffect {
 	 * set the exposure. Cheap, and safe to drive per frame: it is a uniform,
 	 * so changing it does not rebuild the program the way `mode` would.
 	 * @param {number} exposure - multiplier applied before the curve; `0` maps everything to black
+	 * @throws {Error} if `exposure` is not a finite number
 	 */
 	setExposure(exposure) {
+		assertFinite("exposure", exposure);
 		this.exposure = Math.max(0, exposure);
 		this.setUniform("uExposure", this.exposure);
 	}
