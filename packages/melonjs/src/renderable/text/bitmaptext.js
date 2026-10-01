@@ -7,6 +7,14 @@ import { bitmapTextDataPool } from "./bitmaptextdata.ts";
 import TextMetrics from "./textmetrics.js";
 
 /**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
+ * @import {Vector2d} from "../../math/vector2d.ts";
+ * @import WebGLRenderer from "../../video/webgl/webgl_renderer.js";
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import Renderer from "../../video/renderer.js";
+ */
+/**
  * a bitmap font object.
  *
  * The font descriptor uses the AngelCode BMFont format and may be supplied in
@@ -391,7 +399,7 @@ export default class BitmapText extends Renderable {
 
 	/**
 	 * draw the bitmap font
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
+	 * @param {Renderer} renderer - Reference to the destination renderer instance
 	 */
 	draw(renderer) {
 		let x = this.pos.x;

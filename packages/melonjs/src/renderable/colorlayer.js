@@ -7,6 +7,7 @@ import Renderable from "./renderable.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import Camera2d from "./../camera/camera2d.ts";
+ * @import Renderer from "../video/renderer.js";
  */
 
 /**
@@ -43,7 +44,7 @@ export default class ColorLayer extends Renderable {
 
 	/**
 	 * draw this color layer (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {

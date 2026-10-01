@@ -7,6 +7,7 @@ import RenderTarget from "./rendertarget.ts";
  * additional import for TypeScript
  * @import CanvasRenderer from "./../canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../webgl/webgl_renderer.js";
+ * @import Renderer from "../renderer.js";
  */
 
 // default canvas settings
@@ -257,7 +258,7 @@ class CanvasRenderTarget extends RenderTarget {
 	/**
 	 * invalidate the current CanvasRenderTarget, and force a reupload of the corresponding texture
 	 * (call this if you modify the canvas content between two draw calls)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
+	 * @param {Renderer} renderer - the renderer to which this canvas texture is attached
 	 */
 	invalidate(renderer) {
 		// Refreshing a texture is engine plumbing, not a scene draw, and the
@@ -312,7 +313,7 @@ class CanvasRenderTarget extends RenderTarget {
 
 	/**
 	 * Destroy this canvas render target and release associated GPU resources.
-	 * @param {CanvasRenderer|WebGLRenderer} [renderer] - the renderer to clean up WebGL resources from
+	 * @param {Renderer} [renderer] - the renderer to clean up WebGL resources from
 	 * @ignore
 	 * @internal
 	 */

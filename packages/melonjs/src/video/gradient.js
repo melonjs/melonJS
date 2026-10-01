@@ -199,7 +199,7 @@ export class Gradient {
 	 * until the next call, which is a renderer implementation detail rather
 	 * than something a caller should reason about. The public way to rasterise
 	 * a gradient is {@link Gradient#toCanvasGradient}.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - the active renderer (used to invalidate the GPU texture)
+	 * @param {Renderer} renderer - the active renderer (used to invalidate the GPU texture)
 	 * @param {number} x - draw rect x
 	 * @param {number} y - draw rect y
 	 * @param {number} width - draw rect width

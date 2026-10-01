@@ -14,6 +14,10 @@ import Sprite from "../sprite.js";
  * @import {Bounds} from "./../../physics/bounds.ts";
  * @import CanvasRenderer from "./../../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../../video/webgl/webgl_renderer.js";
+ * @import {Matrix3d} from "../../math/matrix3d.ts";
+ * @import {Vector2d} from "../../math/vector2d.ts";
+ * @import Camera2d from "../../camera/camera2d.ts";
+ * @import Renderer from "../../video/renderer.js";
  **/
 
 /**
@@ -399,7 +403,7 @@ export default class Entity extends Renderable {
 
 	/**
 	 * draw this entity (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {

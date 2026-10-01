@@ -4,7 +4,7 @@ import { parseAnimationOptions } from "./animation.ts";
 /**
  * additional import for TypeScript
  * @import { TextureAtlas } from "../video/texture/atlas.js";
- * @import { Vector2d } from "../math/vector2d.js";
+ * @import { Vector2d } from "../math/vector2d.ts";
  */
 
 /**

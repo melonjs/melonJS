@@ -36,6 +36,12 @@ import { preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
 
 /**
+ * additional import for TypeScript
+ * @import {CompressedImage} from "./parsers/compressed_textures/compressed_image.js";
+ * @import GLShader from "../video/webgl/glshader.js";
+ * @import ShaderEffect from "../video/effects/shadereffect.js";
+ */
+/**
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
  */

@@ -3,6 +3,7 @@ import { Matrix3d } from "../math/matrix3d.ts";
 
 /**
  * @import {Gradient} from "./gradient.js";
+ * @import ShaderEffect from "./effects/shadereffect.js";
  */
 
 /**

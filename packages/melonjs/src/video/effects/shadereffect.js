@@ -10,6 +10,13 @@ import { buildGLSLProgram } from "./glsl_realization.js";
 import WGSLEffectRealization from "./wgsl_realization.js";
 
 /**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
+ * @import Renderer from "../renderer.js";
+ */
+/**
  * A simplified shader class for applying custom fragment effects to renderables.
  * Only requires a fragment `apply()` function — the vertex shader, uniforms, and
  * texture sampling boilerplate are handled automatically.
@@ -177,7 +184,7 @@ export default class ShaderEffect {
 	shared = false;
 
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {string|{glsl?: string, wgsl?: string}} body - the effect body:
 	 *   a GLSL string (containing a `vec4 apply(vec4 color, vec2 uv)` function —
 	 *   unchanged from previous versions), or an object carrying one body per

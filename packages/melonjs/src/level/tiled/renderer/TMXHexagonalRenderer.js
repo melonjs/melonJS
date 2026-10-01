@@ -3,6 +3,10 @@ import { boundsPool } from "../../../physics/bounds.ts";
 import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
 
+/**
+ * additional import for TypeScript
+ * @import TMXTileMap from "../TMXTileMap.js";
+ */
 // scope global variables & constants
 const offsetsStaggerX = [
 	{ x: 0, y: 0 },

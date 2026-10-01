@@ -22,6 +22,16 @@ import Body from "./../physics/builtin/body.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import ResponseObject from "./../physics/response.js";
+ * @import {Bounds} from "../physics/bounds.ts";
+ * @import Camera2d from "../camera/camera2d.ts";
+ * @import {Color} from "../math/color.ts";
+ * @import GLShader from "../video/webgl/glshader.js";
+ * @import {Matrix2d} from "../math/matrix2d.ts";
+ * @import {PhysicsBody} from "../physics/adapter.ts";
+ * @import ShaderEffect from "../video/effects/shadereffect.js";
+ * @import {Vector2d} from "../math/vector2d.ts";
+ * @import {Vector3d} from "../math/vector3d.ts";
+ * @import Renderer from "../video/renderer.js";
  **/
 
 /**
@@ -1140,7 +1150,7 @@ export default class Renderable extends Rect {
 	 * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
 	 * @see Renderable#draw
 	 * @see Renderable#postDraw
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+	 * @param {Renderer} renderer - a renderer object
 	 */
 	preDraw(renderer) {
 		// The anchor offset of an `Infinity`-sized renderable (a Container's
@@ -1250,8 +1260,13 @@ export default class Renderable extends Rect {
 	 * `(0, 0)` places the shape at the container's origin instead.
 	 * @see Renderable#preDraw
 	 * @see Renderable#postDraw
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
-	 * @param {Camera2d} [viewport] - the viewport to (re)draw
+	 * @param {Renderer} renderer - a renderer instance
+	 * @param {Camera2d|Container} [viewport] - the frame this draw happens in:
+	 * the camera drawing it, or -- when a camera is itself the renderable being
+	 * drawn -- the container it draws. `Camera2d#draw` takes the second, and
+	 * declaring only the first here meant a camera was not assignable to the
+	 * `Renderable` it extends, which cascaded into every signature mentioning
+	 * either of them
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 	draw(renderer, viewport) {
@@ -1262,7 +1277,7 @@ export default class Renderable extends Rect {
 	 * restore the rendering context after drawing (automatically called by melonJS).
 	 * @see Renderable#preDraw
 	 * @see Renderable#draw
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+	 * @param {Renderer} renderer - a renderer object
 	 */
 	postDraw(renderer) {
 		// remove the previously applied tint

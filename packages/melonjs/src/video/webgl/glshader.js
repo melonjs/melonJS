@@ -40,9 +40,11 @@ import { captureValue, extractUniforms } from "./utils/uniforms.js";
  */
 export default class GLShader {
 	/**
-	 * @param {WebGLRenderingContext} [gl] - the current WebGL rendering
+	 * @param {WebGLRenderingContext|undefined} gl - the current WebGL rendering
 	 * context (`renderer.gl` — undefined on non-WebGL renderers, which
-	 * simply skips the GLSL realization)
+	 * simply skips the GLSL realization). Pass it either way: it is required
+	 * positionally because `vertex` follows it, and an optional parameter
+	 * cannot precede a required one
 	 * @param {string|object} vertex - a string containing the GLSL vertex
 	 * source, OR a sources object `{vertex, fragment, wgsl, precision,
 	 * label}` carrying one realization per backend (any omittable)

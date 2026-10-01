@@ -5,6 +5,10 @@ import { resolveAnchorPoint } from "./anchorPoint.ts";
 import Sprite from "./sprite.js";
 
 /**
+ * additional import for TypeScript
+ * @import {Vector2d} from "../math/vector2d.ts";
+ */
+/**
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @category Game Objects
  */

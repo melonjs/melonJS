@@ -3,9 +3,11 @@ import ShaderEffect from "./shadereffect.js";
 /**
  * additional import for TypeScript
  * @import { Color } from "../../math/color.ts";
- * @import { default as WebGLRenderer } from "../webgl_renderer.js";
+ * @import { default as WebGLRenderer } from "../webgl/webgl_renderer.js";
  * @import { default as WebGPURenderer } from "../webgpu/webgpu_renderer.js";
  * @import { default as CanvasRenderer } from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import Renderer from "../renderer.js";
  */
 
 /**
@@ -81,7 +83,7 @@ import ShaderEffect from "./shadereffect.js";
  */
 export default class RadialGradientEffect extends ShaderEffect {
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - initial uniform values
 	 * @param {Color} [options.color] - center color (0..255 RGB); defaults to white
 	 * @param {number} [options.intensity=1] - peak alpha at the center (0..1+)

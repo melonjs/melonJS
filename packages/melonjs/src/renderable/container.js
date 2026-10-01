@@ -199,7 +199,7 @@ let globalFloatingCounter = 0;
  * @import NineSliceSprite from "./nineslicesprite.js";
  * @import ImageLayer from "./imagelayer.js";
  * @import ColorLayer from "./colorlayer.js";
- * @import Light2d from "./light2d.js";
+ * @import Light2d from "../lighting/light2d.ts";
  * @import UIBaseElement from "./ui/uibaseelement.ts";
  * @import UISpriteElement from "./ui/uispriteelement.ts";
  * @import UITextButton from "./ui/uitextbutton.ts";
@@ -208,6 +208,9 @@ let globalFloatingCounter = 0;
  * @import {Bounds} from "./../physics/bounds.ts";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import {Matrix3d} from "../math/matrix3d.ts";
+ * @import Camera2d from "../camera/camera2d.ts";
+ * @import Renderer from "../video/renderer.js";
  */
 
 /**
@@ -1318,7 +1321,7 @@ export default class Container extends Renderable {
 
 	/**
 	 * draw this renderable (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {

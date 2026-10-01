@@ -4,6 +4,10 @@ import TMXLayer from "./../TMXLayer.js";
 import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
 
 /**
+ * additional import for TypeScript
+ * @import {Bounds} from "../../../physics/bounds.ts";
+ */
+/**
  * an Oblique Map Renderer (Tiled 1.12+)
  * Extends the orthogonal renderer with a 2D shear transform
  * controlled by the map's skewx/skewy attributes.

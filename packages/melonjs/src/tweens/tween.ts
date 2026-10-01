@@ -18,20 +18,21 @@ import { Interpolation, InterpolationFunction } from "./interpolation.js";
  */
 
 /**
- * @ignore
- * @internal
+ * Called once when a tween starts, with `this` bound to the tweened object.
+ * @see Tween#onStart
  */
-type OnStartCallback<T> = (this: T) => void;
+export type OnStartCallback<T> = (this: T) => void;
 /**
- * @ignore
- * @internal
+ * Called on every tween step with the eased progress in `[0, 1]`, and `this`
+ * bound to the tweened object.
+ * @see Tween#onUpdate
  */
-type OnUpdateCallback<T> = (this: T, value: number) => void;
+export type OnUpdateCallback<T> = (this: T, value: number) => void;
 /**
- * @ignore
- * @internal
+ * Called once when a tween finishes, with `this` bound to the tweened object.
+ * @see Tween#onComplete
  */
-type OnCompleteCallback<T> = (this: T) => void;
+export type OnCompleteCallback<T> = (this: T) => void;
 
 /**
  * A tweening engine for smoothly interpolating object properties over time.

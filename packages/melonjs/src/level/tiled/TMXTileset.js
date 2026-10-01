@@ -591,7 +591,7 @@ export default class TMXTileset {
 
 	/**
 	 * draw a tile at the specified position
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {number} dx - destination x position
 	 * @param {number} dy - destination y position
 	 * @param {Tile} tmxTile - the tile object to draw
@@ -689,7 +689,7 @@ export default class TMXTileset {
 	 * the renderer hot loop can pass the GID and flip mask straight from
 	 * `layer.layerData` without ever allocating a Tile instance.
 	 *
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {number} dx - destination x position
 	 * @param {number} dy - destination y position
 	 * @param {number} gid - the tile's global id (with flip bits already stripped)

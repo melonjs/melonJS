@@ -3,6 +3,10 @@ import { Noise } from "../../math/noise.ts";
 import Renderer from "../renderer.js";
 import Texture2d from "./texture2d.ts";
 
+/**
+ * additional import for TypeScript
+ * @import {Gradient} from "../gradient.js";
+ */
 const smoothstep = (t) => {
 	const c = t < 0 ? 0 : t > 1 ? 1 : t;
 	return c * c * (3 - 2 * c);

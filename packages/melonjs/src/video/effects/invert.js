@@ -1,6 +1,13 @@
 import ColorMatrixEffect from "./colorMatrix.js";
 
 /**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
+ * @import Renderer from "../renderer.js";
+ */
+/**
  * A shader effect that inverts the colors of the sprite.
  * Commonly used for damage feedback, negative image, or X-ray effects.
  * @category Effects
@@ -13,7 +20,7 @@ import ColorMatrixEffect from "./colorMatrix.js";
  */
 export default class InvertEffect extends ColorMatrixEffect {
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.intensity=1.0] - inversion intensity (0.0 = original, 1.0 = fully inverted)
 	 */

@@ -156,6 +156,6 @@ export default class UITextButton extends UIBaseElement {
 		r.fill(this.border);
 		r.setColor(this.borderStrokeColor);
 		r.stroke(this.border);
-		super.draw(renderer as any, viewport as any);
+		super.draw(renderer, viewport);
 	}
 }

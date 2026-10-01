@@ -11,6 +11,12 @@ import {
 import Tile from "./TMXTile.js";
 import * as TMXUtils from "./TMXUtils.js";
 
+/**
+ * additional import for TypeScript
+ * @import TMXRenderer from "./renderer/TMXRenderer.js";
+ * @import TMXTileset from "./TMXTileset.js";
+ * @import TMXTilesetGroup from "./TMXTilesetGroup.js";
+ */
 // flip-mask bit layout for layerData's G channel
 const FLIP_H_BIT = 1 << 0;
 const FLIP_V_BIT = 1 << 1;

@@ -2,6 +2,10 @@ import { vector2dPool } from "../../../math/vector2d.ts";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
+ * additional import for TypeScript
+ * @import TMXTileMap from "../TMXTileMap.js";
+ */
+/**
  * an Orthogonal Map Renderer
  * @category Tilemap
  */

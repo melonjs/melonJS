@@ -16,6 +16,11 @@ import { linearToSrgb8 } from "./srgb.js";
 /**
  * additional import for TypeScript
  * @import { AnimationOptionsInput } from "../../renderable/animation.ts";
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import Camera2d from "../../camera/camera2d.ts";
+ * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../../video/webgl/webgl_renderer.js";
+ * @import Renderer from "../../video/renderer.js";
  */
 
 // column-major identity, the root's parent transform when the model sits
@@ -604,7 +609,7 @@ export default class GLTFModel extends Container {
 	 * so that translation is undone here rather than doubling the placement.
 	 * Paired with `autoTransform = false`, which suppresses the matching
 	 * rotation fold.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the camera rendering this frame
 	 */
 	draw(renderer, viewport) {

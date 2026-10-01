@@ -97,6 +97,10 @@ export class WebGLBatcher extends Batcher {
 		// layout so the attribute definitions below can be rebuilt
 		if (this.vertexState) {
 			this.vertexState.destroy();
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this.vertexState = null;
 		}
 
@@ -126,6 +130,8 @@ export class WebGLBatcher extends Batcher {
 		/**
 		 * the vertex data buffer used by this batcher
 		 * @type {VertexArrayBuffer}
+		 * @ignore
+		 * @internal
 		 */
 		this.vertexData = null;
 

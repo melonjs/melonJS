@@ -14,8 +14,9 @@ const FLICKER_INTERVAL_MS = 33;
 
 /**
  * additional import for TypeScript
- * @import {Vector2d} from "../math/vector2d.js";
+ * @import {Vector2d} from "../math/vector2d.ts";
  * @import Renderer from "./../video/renderer.js";
+ * @import {CompressedImage} from "../loader/parsers/compressed_textures/compressed_image.js";
  */
 
 /**

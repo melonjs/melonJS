@@ -1,5 +1,12 @@
 import ShaderEffect from "./shadereffect.js";
 
+/**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
+ * @import Renderer from "../renderer.js";
+ */
 /*
  * Tone mapping: squeeze a range brighter than the display into the range the
  * display has, with a curve instead of a clamp.
@@ -237,7 +244,7 @@ ${body("wgsl")}
  */
 export default class ToneMappingEffect extends ShaderEffect {
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {string} [options.mode="aces"] - curve: `"aces"`, `"reinhard"` or `"exponential"`
 	 * @param {number} [options.exposure=1.0] - multiplier applied before the curve; above `1` lifts the image into the curve's shoulder

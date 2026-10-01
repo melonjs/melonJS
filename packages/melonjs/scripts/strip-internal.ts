@@ -78,6 +78,77 @@ function isUnderscoreMember(node: ts.Node): boolean {
 	);
 }
 
+/**
+ * Remove imports left with nothing referring to them once the internals that
+ * used them are gone.
+ *
+ * Needed because a module whose declarations were ALL internal is emptied
+ * completely, and a file still importing from it then fails with "is not a
+ * module" — which makes the imported name an error type, so every signature
+ * naming it silently becomes `any` for consumers. The import is dead either
+ * way: its binding no longer appears anywhere in the file.
+ *
+ * Only bindings with no remaining reference are dropped, so an import still
+ * used by a surviving declaration is untouched, as is a side-effect import
+ * (no bindings at all).
+ * @param path - the declaration file, for parsing
+ * @param text - its contents, after the internal declarations were spliced out
+ * @returns the contents with dead imports removed
+ */
+function dropOrphanedImports(path: string, text: string): string {
+	const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+	const cuts: Array<{ start: number; end: number }> = [];
+
+	// every identifier in the file that is NOT part of an import clause
+	const used = new Set<string>();
+	const note = (node: ts.Node) => {
+		if (ts.isImportDeclaration(node)) {
+			// the module specifier can't reference a binding; skip the clause
+			return;
+		}
+		if (ts.isIdentifier(node)) {
+			used.add(node.text);
+		}
+		node.forEachChild(note);
+	};
+	source.forEachChild(note);
+
+	for (const statement of source.statements) {
+		if (
+			!ts.isImportDeclaration(statement) ||
+			statement.importClause === undefined
+		) {
+			continue; // side-effect import: nothing to orphan
+		}
+		const clause = statement.importClause;
+		const bindings: string[] = [];
+		if (clause.name !== undefined) {
+			bindings.push(clause.name.text);
+		}
+		if (clause.namedBindings !== undefined) {
+			if (ts.isNamespaceImport(clause.namedBindings)) {
+				bindings.push(clause.namedBindings.name.text);
+			} else {
+				for (const element of clause.namedBindings.elements) {
+					bindings.push(element.name.text);
+				}
+			}
+		}
+		// drop the statement only when NONE of what it brings in is still
+		// referenced; a partially-used import keeps all of its bindings,
+		// which costs an unused name rather than risking a live one
+		if (bindings.length > 0 && bindings.every((name) => !used.has(name))) {
+			cuts.push({ start: statement.getFullStart(), end: statement.getEnd() });
+		}
+	}
+
+	let out = text;
+	for (const cut of cuts.sort((a, b) => b.start - a.start)) {
+		out = out.slice(0, cut.start) + out.slice(cut.end);
+	}
+	return out;
+}
+
 let filesTouched = 0;
 let membersStripped = 0;
 
@@ -92,14 +163,62 @@ for (const path of walkFiles(ROOT)) {
 	// comment goes with the declaration) of every @internal-tagged node:
 	// class members plus top-level statements
 	const ranges: Array<{ start: number; end: number }> = [];
+	// names of the top-level declarations being removed, so the export
+	// statements that point at them can go too (see below)
+	const removedNames = new Set<string>();
 	const collect = (node: ts.Node) => {
 		if (isInternal(node) || isUnderscoreMember(node)) {
 			ranges.push({ start: node.getFullStart(), end: node.getEnd() });
+			const name = (node as { name?: ts.Node }).name;
+			if (name !== undefined && ts.isIdentifier(name)) {
+				removedNames.add(name.text);
+			}
 			return; // no need to descend into a removed subtree
 		}
 		node.forEachChild(collect);
 	};
 	source.forEachChild(collect);
+
+	// Remove the export that re-exported a declaration we just deleted.
+	//
+	// Without this the file keeps `export default TextureCache;` with nothing
+	// named TextureCache left in it, and that is not merely untidy: the name
+	// is then unresolved, so every signature mentioning it degrades to `any`
+	// for consumers, silently, because `skipLibCheck` hides the only error
+	// that would have said so.
+	//
+	// Only top-level exports, and only ones naming a removed declaration —
+	// an export of something still present is untouched.
+	for (const statement of source.statements) {
+		if (
+			ts.isExportAssignment(statement) &&
+			ts.isIdentifier(statement.expression) &&
+			removedNames.has(statement.expression.text)
+		) {
+			ranges.push({
+				start: statement.getFullStart(),
+				end: statement.getEnd(),
+			});
+			continue;
+		}
+		// `export { A, B };` — drop it only when EVERY name it exports is
+		// gone, so a surviving sibling keeps its export
+		if (
+			ts.isExportDeclaration(statement) &&
+			statement.exportClause !== undefined &&
+			ts.isNamedExports(statement.exportClause) &&
+			statement.moduleSpecifier === undefined &&
+			statement.exportClause.elements.length > 0 &&
+			statement.exportClause.elements.every((element) =>
+				removedNames.has((element.propertyName ?? element.name).text),
+			)
+		) {
+			ranges.push({
+				start: statement.getFullStart(),
+				end: statement.getEnd(),
+			});
+		}
+	}
 
 	if (ranges.length === 0) {
 		continue;
@@ -109,6 +228,7 @@ for (const path of walkFiles(ROOT)) {
 	for (const range of ranges.sort((a, b) => b.start - a.start)) {
 		out = out.slice(0, range.start) + out.slice(range.end);
 	}
+	out = dropOrphanedImports(path, out);
 	writeFileSync(path, out);
 	filesTouched += 1;
 	membersStripped += ranges.length;

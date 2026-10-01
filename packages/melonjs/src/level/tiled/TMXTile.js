@@ -2,6 +2,12 @@ import { degToRad } from "../../math/math.ts";
 import { Matrix2d } from "../../math/matrix2d.ts";
 import { Bounds } from "../../physics/bounds.ts";
 import Sprite from "../../renderable/sprite.js";
+
+/**
+ * additional import for TypeScript
+ * @import Renderable from "../../renderable/renderable.js";
+ * @import TMXTileset from "./TMXTileset.js";
+ */
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,

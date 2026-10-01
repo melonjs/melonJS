@@ -1146,7 +1146,7 @@ export default class Camera3d extends Camera2d {
 	 * call `lookAt(...)` then set `camera.pitch = 0.1` directly, the
 	 * next frame renders with the manual pitch. The same holds for
 	 * {@link Camera3d#setBasis}.
-	 * @param xOrTarget - target world x, or a target with `pos` / `x`,`y`,`z`
+	 * @param xOrTarget - target world x, or a target to look at: any renderable, or anything carrying `pos` or `x`/`y`/`z`
 	 * @param yOrUp - target world y when the first argument is a number, otherwise the up direction
 	 * @param z - target world z (only when first arg is a number)
 	 * @param up - the direction to appear up on screen (only when first arg is a number)
@@ -1156,18 +1156,21 @@ export default class Camera3d extends Camera2d {
 	 * camera.lookAt(target, surfaceNormal);         // and bank to the surface
 	 */
 	override lookAt(
-		target: {
-			x: number;
-			y: number;
-			z?: number;
-			pos?: ObservableVector3d;
-		},
+		target:
+			| Renderable
+			| {
+					x: number;
+					y: number;
+					z?: number;
+					pos?: ObservableVector3d;
+			  },
 		up?: Vector3d,
 	): this;
 	override lookAt(x: number, y?: number, z?: number, up?: Vector3d): this;
 	override lookAt(
 		xOrTarget:
 			| number
+			| Renderable
 			| {
 					x: number;
 					y: number;
@@ -1194,14 +1197,21 @@ export default class Camera3d extends Camera2d {
 			tx = xOrTarget;
 			ty = y ?? 0;
 			tz = z ?? 0;
-		} else if (xOrTarget.pos) {
-			tx = xOrTarget.pos.x;
-			ty = xOrTarget.pos.y;
-			tz = xOrTarget.pos.z;
 		} else {
-			tx = xOrTarget.x;
-			ty = xOrTarget.y;
-			tz = xOrTarget.z ?? 0;
+			// A renderable carries its position in `pos`; anything else IS the
+			// position. Stated as one weak shape both arms satisfy, so neither
+			// needs an assertion to read. `z` is optional throughout, which is
+			// what lets a 2D vector target land on depth 0.
+			const target: {
+				x?: number;
+				y?: number;
+				z?: number;
+				pos?: { x: number; y: number; z?: number };
+			} = xOrTarget;
+			const at = target.pos ?? target;
+			tx = at.x ?? 0;
+			ty = at.y ?? 0;
+			tz = at.z ?? 0;
 		}
 		const dx = tx - this.pos.x;
 		const dy = ty - this.pos.y;

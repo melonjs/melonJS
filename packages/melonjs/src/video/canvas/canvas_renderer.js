@@ -22,6 +22,11 @@ import { CanvasFrameTexture } from "./../texture/frametexture.js";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import {default as Texture2d} from "../texture/texture2d.ts";
+ * @import {Matrix3d} from "../../math/matrix3d.ts";
+ * @import Mesh from "../../renderable/mesh.js";
+ * @import {ApplicationSettings} from "../../application/settings.ts";
+ * @import {Box3d} from "../../geometries/box3d.ts";
+ * @import {Sphere} from "../../geometries/sphere.ts";
  */
 
 /**
@@ -45,6 +50,10 @@ export default class CanvasRenderer extends Renderer {
 		this.setColor(this.currentColor);
 
 		// create a texture cache
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this.cache = new TextureCache(this);
 
 		if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
@@ -880,7 +889,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * stroke the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to stroke
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to stroke
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
@@ -921,7 +930,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * fill the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to fill
 	 */
 	fill(shape) {
 		this.stroke(shape, true);

@@ -4,6 +4,10 @@ import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
+ * additional import for TypeScript
+ * @import TMXTileMap from "../TMXTileMap.js";
+ */
+/**
  * an Isometric Map Renderer
  * @category Tilemap
  */
