@@ -237,14 +237,16 @@ export default class Sprite extends Renderable {
 				this.image instanceof globalThis.HTMLVideoElement;
 
 			if (this.isVideo) {
-				this.width =
-					this.current.width =
-					settings.framewidth =
-						settings.framewidth || this.image.videoWidth;
-				this.height =
-					this.current.height =
-					settings.frameheight =
-						settings.frameheight || this.image.videoHeight;
+				/** @type {number} */
+				const videoW = settings.framewidth || this.image.videoWidth;
+				/** @type {number} */
+				const videoH = settings.frameheight || this.image.videoHeight;
+				settings.framewidth = videoW;
+				settings.frameheight = videoH;
+				this.current.width = videoW;
+				this.current.height = videoH;
+				this.width = videoW;
+				this.height = videoH;
 				// video specific parameter
 				this.animationpause = this.image.autoplay !== true;
 				if (this.animationpause) {
@@ -304,14 +306,16 @@ export default class Sprite extends Renderable {
 				};
 			} else {
 				// update the default "current" frame size
-				this.width =
-					this.current.width =
-					settings.framewidth =
-						settings.framewidth || this.image.width;
-				this.height =
-					this.current.height =
-					settings.frameheight =
-						settings.frameheight || this.image.height;
+				/** @type {number} */
+				const frameW = settings.framewidth || this.image.width;
+				/** @type {number} */
+				const frameH = settings.frameheight || this.image.height;
+				settings.framewidth = frameW;
+				settings.frameheight = frameH;
+				this.current.width = frameW;
+				this.current.height = frameH;
+				this.width = frameW;
+				this.height = frameH;
 				this.source = game.renderer.cache.get(
 					this.image,
 					// forward the RESOLVED anchor into the atlas descriptor —

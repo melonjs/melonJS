@@ -95,6 +95,15 @@ export default class BitmapTextData {
 	descent: number = 0;
 	glyphMinTop: number = 0;
 	glyphMaxBottom: number = 0;
+	/**
+	 * the parsed glyph map, keyed by char code.
+	 *
+	 * Internal because `Glyph` is: it carries `@internal` on the class and on
+	 * every member, so it is stripped from the published declarations, and a
+	 * public member naming it left the type unresolved rather than private.
+	 * @ignore
+	 * @internal
+	 */
 	glyphs: { [key: number]: Glyph } = {};
 
 	constructor(data: string) {

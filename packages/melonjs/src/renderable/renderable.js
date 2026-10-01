@@ -778,7 +778,7 @@ export default class Renderable extends Rect {
 	 * multiply the renderable currentTransform with the given matrix
 	 * @see Renderable#currentTransform
 	 * @param {Matrix2d|Matrix3d} m - the transformation matrix
-	 * @returns {Renderable} Reference to this object for method chaining
+	 * @returns {this} Reference to this object for method chaining
 	 */
 	transform(m) {
 		this.currentTransform.multiply(m);
@@ -860,7 +860,7 @@ export default class Renderable extends Rect {
 	 * When called with an angle and a Vector3d axis, rotates around that axis in 3D.
 	 * @param {number} angle - The angle to rotate (in radians)
 	 * @param {Vector3d} [v] - the axis to rotate around (defaults to Z axis for 2D)
-	 * @returns {Renderable} Reference to this object for method chaining
+	 * @returns {this} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
 		if (angle !== 0) {
@@ -880,7 +880,7 @@ export default class Renderable extends Rect {
 	 * @param {number} x - a number representing the abscissa of the scaling vector.
 	 * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
 	 * @param {number} [z=1] - a number representing the depth of the scaling vector.
-	 * @returns {Renderable} Reference to this object for method chaining
+	 * @returns {this} Reference to this object for method chaining
 	 */
 	scale(x, y = x, z = 1) {
 		this.currentTransform.scale(x, y, z);
@@ -892,7 +892,7 @@ export default class Renderable extends Rect {
 	/**
 	 * scale the renderable around his anchor point
 	 * @param {Vector2d} v - scaling vector
-	 * @returns {Renderable} Reference to this object for method chaining
+	 * @returns {this} Reference to this object for method chaining
 	 */
 	scaleV(v) {
 		this.scale(v.x, v.y);
@@ -901,10 +901,10 @@ export default class Renderable extends Rect {
 
 	/**
 	 * Translate the renderable by the specified offset.
-	 * @param {number} x - x offset
-	 * @param {number} [y=0] - y offset
-	 * @param {number} [z=0] - z offset
-	 * @returns {Renderable} Reference to this object for method chaining
+	 * @param {number|Vector2d|Vector3d} x - x offset, or a vector to translate by
+	 * @param {number} [y=0] - y offset, ignored when the first argument is a vector
+	 * @param {number} [z=0] - z offset, ignored when the first argument is a vector
+	 * @returns {this} Reference to this object for method chaining
 	 */
 	translate(x, y = 0, z = 0) {
 		this.currentTransform.translate(x, y, z);

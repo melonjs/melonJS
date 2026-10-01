@@ -290,7 +290,6 @@ export default class ImageLayer extends Sprite {
 
 	/**
 	 * draw this ImageLayer (automatically called by melonJS)
-	 * @protected
 	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
