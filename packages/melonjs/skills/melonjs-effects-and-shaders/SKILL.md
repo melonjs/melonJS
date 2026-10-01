@@ -363,6 +363,23 @@ one `@group(3) @binding(0) var<uniform>` struct — so a single `setUniform` cal
 feeds whichever backend is live. `setTime` is a convenience for a `uTime`
 uniform and silently does nothing if the shader does not declare one.
 
+**Never put a backtick in a shader body, including in its comments.** An inline
+body is a JavaScript template literal, so a backtick ENDS it — and what follows
+is parsed as code, which fails somewhere further down the file with an error
+that says nothing about shaders:
+
+```js
+const glsl = `
+// x * x, not `pow(x, 2.0)`: the base goes negative here   <-- ends the literal
+vec4 apply(vec4 color, vec2 uv) { ... }
+`;
+```
+
+Markdown-quoting an identifier is a reflex when writing a comment, and this is
+the one place it breaks the file. Write `pow(x, 2.0)` bare. A body loaded from
+a `.glsl` / `.wgsl` file has no such problem, which is one more reason to move
+a shader out once it stops being a sketch.
+
 ### One effect is one program — prefer preloading, and share
 
 A `ShaderEffect` compiles and links in its **constructor**, and the link is
@@ -564,6 +581,7 @@ same question after construction.
 | shadow/smear offset flips on some draws | vertical UV offset not multiplied by `uUVYDir` |
 | frame rate collapses with many blended sprites | an *advanced* mode (overlay, darken, …) — each draw is a capture plus a composite |
 | animated shader never moves | `setTime` fed milliseconds, or the shader declares no `uTime` |
+| syntax error in a file whose shader you just edited, pointing at a line of GLSL | a backtick in the shader body ended the template literal — most often one wrapped around an identifier in a comment |
 
 ## Related skills
 

@@ -186,6 +186,13 @@ export default class ShaderEffect {
 	 *   body matching its {@link Renderer#shaderLanguage}; when no matching body
 	 *   exists the effect warns once and stays disabled (`enabled === false`),
 	 *   exactly like the Canvas renderer.
+	 *
+	 *   Written inline, a body is a JavaScript template literal, so it must
+	 *   contain **no backtick anywhere — including in its comments**. One
+	 *   ends the literal, and everything after it is parsed as code, which
+	 *   fails further down the file with an error that names no shader.
+	 *   Quoting an identifier in a comment is the usual way in. A body kept
+	 *   in a `.glsl` / `.wgsl` file and preloaded has no such restriction.
 	 * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp'), GLSL only
 	 */
 	constructor(renderer, body, precision) {

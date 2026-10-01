@@ -570,15 +570,27 @@ and the bottom of the frame falls off the world.
 | `false` (default) / `"none"` | no rotation — a flat plane in the world |
 | `true` / `"cylindrical"` | yaws to face the camera, stays upright (characters, trees) |
 | `"spherical"` | always fully faces the camera (particles, impostors) |
-| the camera will not tilt its horizon to an arbitrary up | `lookAt(target)` solves pitch and yaw only; pass the up as the next argument, or hand all three axes to `setBasis` |
-| the view is upside down after `lookAt(target, up)` | `up` is the direction that should appear UP ON SCREEN, and this is Y-down, so a level horizon is `(0, -1, 0)` |
-| `setBasis` throws "forward must have a non-zero length" | `forward` is all zeros, the one case that names no direction; a short one is fine, so a surface frame that shrank as it drifted still works |
-| roll is ignored when the target is straight up or down | no rotation about the view axis is determined there, so `lookAt` keeps the roll it had and `setBasis` falls back to the `right` axis |
 
 `"cylindrical"` is what you want for paper-thin characters in a 2.5D game.
 Billboarding needs a `Camera3d` drawing the frame; under a 2D camera the quad
 renders fixed-orientation. **Any other string falls through to the spherical
 branch**, so a guessed value like `"upright"` silently gives you spherical.
+
+A billboard takes its **orientation** from the camera, so `rotate()` has no
+effect on one: a card already turned to face the camera has no free rotation
+left to give. Everything that is not an orientation still applies, `scale()`
+and `meshScale` included, so animating the size of a shockwave or a pickup is
+the ordinary call and the cull bounds grow with it:
+
+```js
+const wave = new Sprite3d(x, y, { image: "ring", width: 64, height: 64,
+                                  billboard: "spherical", transparent: true });
+wave.scale(1 + 3 * t);          // grows; `scale` accumulates, so drive it
+                                 // from the authored size, not per frame
+```
+
+For an in-plane rotation, a bolt streak or an exhaust, use `billboard: false`
+and orient the quad yourself.
 
 ## Lighting
 
@@ -805,6 +817,11 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |
 | a mesh sits half its size off | `anchorPoint` — only on the 2D-camera path; a `Camera3d` mesh pivots on its model origin |
 | a billboard tips over when the camera looks down | `"spherical"`, or a mistyped mode string falling through to it — use `true` / `"cylindrical"` |
+| `rotate()` does nothing on a billboard | the camera owns its orientation; `billboard: false` and orient the quad yourself |
+| the camera will not tilt its horizon to an arbitrary up | `lookAt(target)` solves pitch and yaw only; pass the up as the next argument, or hand all three axes to `setBasis` |
+| the view is upside down after `lookAt(target, up)` | `up` is the direction that should appear UP ON SCREEN, and this is Y-down, so a level horizon is `(0, -1, 0)` |
+| `setBasis` throws "forward must have a non-zero length" | `forward` is all zeros, the one case that names no direction; a short one is fine, so a surface frame that shrank as it drifted still works |
+| roll is ignored when the target is straight up or down | no rotation about the view axis is determined there, so `lookAt` keeps the roll it had and `setBasis` falls back to the `right` axis |
 | an object jumps to the camera plane | `Vector3d.set(x, y)` / `camera.pos.set(x, y)` zeroed its z |
 | lighting looks wrong under a 3D camera | `Light2d` used instead of `Light3d` |
 
