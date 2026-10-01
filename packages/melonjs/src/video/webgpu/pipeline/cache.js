@@ -454,7 +454,7 @@ export default class WebGPUPipelineCache {
 	 * @param {string} blendMode - blend mode (normalized internally)
 	 * @param {boolean} premultipliedAlpha - source premultiplication flag
 	 * @param {string} [stencilMode="none"] - "none" | "write" | "test" | "tag" | "mark"
-	 * @param {{cullMode: string, frontFace: string, depthWrite?: boolean, fog?: boolean}} [meshState] - mesh pass
+	 * @param {{cullMode: string, frontFace: string, depthWrite?: boolean, depthTest?: boolean, fog?: boolean}} [meshState] - mesh pass
 	 *   state: its presence switches the depth half of the attachment on —
 	 *   depth writes enabled, "less-equal" testing (the GL mesh mode's
 	 *   LEQUAL, keeping coplanar geometry stable) — and sets the per-mesh
@@ -480,6 +480,12 @@ export default class WebGPUPipelineCache {
 			// value none of them changed.
 			if (meshState.depthWrite === false) {
 				key += "|dw0";
+			}
+			// Same treatment, and a separate axis: writing and testing are
+			// different questions, and a mesh may want either without the
+			// other. Appended only when off, so no existing pipeline moves.
+			if (meshState.depthTest === false) {
+				key += "|dt0";
 			}
 			// Fog is a PIPELINE axis, not a uniform test: the mesh modules
 			// declare an `enable_fog` overridable constant, and specializing it
@@ -571,7 +577,12 @@ export default class WebGPUPipelineCache {
 				// every bare `{cullMode, frontFace}` literal) must keep writing
 				// depth exactly as they did before the axis existed
 				depthWriteEnabled: meshState ? meshState.depthWrite !== false : false,
-				depthCompare: meshState ? "less-equal" : "always",
+				// "always" IS the depth test switched off: every fragment
+				// passes, whatever is already in the buffer. The 2D tier
+				// reaches it by having no `meshState` at all; a mesh reaches
+				// it by asking, which is what `Mesh#depthTest = false` does.
+				depthCompare:
+					meshState && meshState.depthTest !== false ? "less-equal" : "always",
 				stencilFront: stencil.stencil,
 				stencilBack: stencil.stencil,
 				stencilReadMask: stencil.readMask,

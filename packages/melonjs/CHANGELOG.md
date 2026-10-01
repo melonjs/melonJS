@@ -3,6 +3,7 @@
 ## [20.8.0] (melonJS 2) - _unreleased_
 
 ### Added
+- `Mesh#depthTest` decides whether geometry in front of a mesh hides it, `true` by default so nothing existing moves. Depth TEST, not depth write: the transparent pass already turns writing off for everything blended, and that is policy, while being occluded at all is an authoring choice. `false` is for a mesh standing in for a screen-space effect, an additive glow carrying a world position only so it can sort and move with what it belongs to. Left depth tested, a flat billboard is sliced along a hard straight line the moment any geometry is nearer at some pixel, worst around something round where the near surface bulges further toward the camera than any offset would clear. Honoured in the transparent pass on both GPU backends; the Canvas renderer has no depth buffer and ignores it
 - Physics: `Sphere` is a collision shape. A body can carry one, and the builtin 3D narrowphase resolves it against another `Sphere`, a `Box3d`, or any planar shape through its own XY silhouette. It has no orientation to get wrong, which is what a `Box3d` cannot say and what anything tumbling or laid out over a curved surface needs. It joins `Box3d` in the portable `BodyShape` union
 - Physics: `raycast3d` reports the surface of a sphere body, measured as that sphere rather than as a bounding sphere derived from the renderable's 2D bounds
 - `renderer.stroke()` and `renderer.fill()` accept a `Sphere`, drawing the circle that is its silhouette
