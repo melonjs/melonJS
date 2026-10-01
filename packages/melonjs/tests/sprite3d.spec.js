@@ -4,6 +4,7 @@ import {
 	boot,
 	Camera3d,
 	Mesh,
+	Sprite,
 	Sprite3d,
 	Vector2d,
 	Vector3d,
@@ -491,13 +492,56 @@ describe("Sprite3d flipX / flipY", () => {
 		return s;
 	};
 
+	it("reads the flip through a GETTER, the same as every other renderable", () => {
+		// It was a method, which shadowed `Renderable`'s getter with a member
+		// of a different KIND. Reading `sprite.isFlippedX` then handed back
+		// the function — always truthy — so `if (thing.isFlippedX)` written
+		// against the common renderable API was silently true for a Sprite3d
+		// and only for a Sprite3d. It also stopped the class satisfying
+		// `Renderable` structurally, so `renderable === sprite3d` was
+		// rejected by TypeScript as having no overlap.
+		const s = makeAnimated();
+		expect(typeof s.isFlippedX).toBe("boolean");
+		expect(typeof s.isFlippedY).toBe("boolean");
+		expect(s.isFlippedX).toBe(false);
+		expect(s.isFlippedY).toBe(false);
+
+		s.flipX();
+		s.flipY();
+		expect(s.isFlippedX).toBe(true);
+		expect(s.isFlippedY).toBe(true);
+
+		s.flipX(false);
+		expect(s.isFlippedX).toBe(false);
+		expect(s.isFlippedY).toBe(true);
+	});
+
+	it("names the flip accessors the same way the 2D Sprite does", () => {
+		// `Sprite3d` extends `Mesh`, NOT `Sprite`, so nothing in the type
+		// system keeps the two sprite APIs in step — they are siblings under
+		// `Renderable` and the match is maintained by hand. This is the test
+		// that notices when one of them drifts again.
+		const s3 = makeAnimated();
+		const sheet = document.createElement("canvas");
+		sheet.width = 32;
+		sheet.height = 32;
+		const s2 = new Sprite(0, 0, { image: sheet });
+		for (const key of ["isFlippedX", "isFlippedY"]) {
+			expect(typeof s3[key], `Sprite3d#${key}`).toBe(typeof s2[key]);
+		}
+		for (const key of ["flipX", "flipY"]) {
+			expect(typeof s3[key], `Sprite3d#${key}`).toBe("function");
+			expect(typeof s2[key], `Sprite#${key}`).toBe("function");
+		}
+	});
+
 	it("flipX mirrors the quad horizontally — geometry only, UVs unchanged", () => {
 		const s = makeAnimated();
 		const ov = Array.from(s.originalVertices);
 		const uv = Array.from(s.uvs);
-		expect(s.isFlippedX()).toBe(false);
+		expect(s.isFlippedX).toBe(false);
 		expect(s.flipX()).toBe(s); // chainable
-		expect(s.isFlippedX()).toBe(true);
+		expect(s.isFlippedX).toBe(true);
 		for (let i = 0; i < 4; i++) {
 			expect(s.originalVertices[i * 3]).toBeCloseTo(-ov[i * 3], 5); // x negated
 			expect(s.originalVertices[i * 3 + 1]).toBeCloseTo(ov[i * 3 + 1], 5); // y same
@@ -510,7 +554,7 @@ describe("Sprite3d flipX / flipY", () => {
 		const ov = Array.from(s.originalVertices);
 		const uv = Array.from(s.uvs);
 		s.flipY();
-		expect(s.isFlippedY()).toBe(true);
+		expect(s.isFlippedY).toBe(true);
 		for (let i = 0; i < 4; i++) {
 			expect(s.originalVertices[i * 3]).toBeCloseTo(ov[i * 3], 5); // x same
 			expect(s.originalVertices[i * 3 + 1]).toBeCloseTo(-ov[i * 3 + 1], 5); // y neg
@@ -523,7 +567,7 @@ describe("Sprite3d flipX / flipY", () => {
 		const ov = Array.from(s.originalVertices);
 		s.flipX();
 		s.flipX(false);
-		expect(s.isFlippedX()).toBe(false);
+		expect(s.isFlippedX).toBe(false);
 		for (let i = 0; i < 12; i++) {
 			expect(s.originalVertices[i]).toBeCloseTo(ov[i], 5);
 		}
@@ -532,7 +576,7 @@ describe("Sprite3d flipX / flipY", () => {
 	it("settings.flipX applies the flip at construction", () => {
 		const a = makeAnimated();
 		const b = makeAnimated({ flipX: true });
-		expect(b.isFlippedX()).toBe(true);
+		expect(b.isFlippedX).toBe(true);
 		expect(b.originalVertices[0]).toBeCloseTo(-a.originalVertices[0], 5);
 	});
 
@@ -549,7 +593,7 @@ describe("Sprite3d flipX / flipY", () => {
 		const x0 = s.originalVertices[0];
 		s.update(100); // advance to frame 1
 		expect(s.getCurrentAnimationFrame()).toBe(1);
-		expect(s.isFlippedX()).toBe(true);
+		expect(s.isFlippedX).toBe(true);
 		// same-size frames → geometry identical, still mirrored to the same side
 		expect(s.originalVertices[0]).toBeCloseTo(x0, 5);
 		expect(s.originalVertices[0]).toBeGreaterThan(0); // c0 on the mirrored side
@@ -656,14 +700,14 @@ describe("Sprite3d flipX / flipY", () => {
 		// advance through several full loops (incl. wraps back to frame 0)
 		for (let i = 0; i < 6; i++) {
 			s.update(100);
-			expect(s.isFlippedX()).toBe(true);
+			expect(s.isFlippedX).toBe(true);
 			// same-size frames → c0 stays on the mirrored (positive x) side every frame
 			expect(s.originalVertices[0]).toBeGreaterThan(0);
 		}
 		expect(s.getCurrentAnimationFrame()).toBe(0); // 6 × 100ms on a 2-frame loop
 		// switching animations keeps the flip
 		s.setCurrentAnimation("idle");
-		expect(s.isFlippedX()).toBe(true);
+		expect(s.isFlippedX).toBe(true);
 		expect(s.originalVertices[0]).toBeGreaterThan(0);
 	});
 });
@@ -1031,7 +1075,7 @@ describe("Sprite3d anchorPoint — adversarial", () => {
 		// offsets: ox = (0.5-1)*32 = -16, oy = (0-0.5)*32 = -16
 		expect(new Set(xs(s.originalVertices))).toEqual(new Set([-32, 0]));
 		expect(new Set(ys(s.originalVertices))).toEqual(new Set([-32, 0]));
-		expect(s.isFlippedX()).toBe(true);
+		expect(s.isFlippedX).toBe(true);
 
 		// unflip: geometry extents identical (mirror about art center), UVs revert
 		s.flipX(false);
