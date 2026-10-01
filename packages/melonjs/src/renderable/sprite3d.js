@@ -637,16 +637,31 @@ export default class Sprite3d extends Mesh {
 	}
 
 	/**
-	 * @returns {boolean} true if the sprite is mirrored horizontally.
+	 * returns true if this sprite is flipped on the horizontal axis
+	 *
+	 * A GETTER, matching {@link Renderable#isFlippedX} and the 2D
+	 * {@link Sprite}. It was a method, which shadowed the inherited getter
+	 * with a member of a different kind: reading `sprite.isFlippedX` then
+	 * handed back the FUNCTION, which is always truthy, so any
+	 * `if (thing.isFlippedX)` written against the common renderable API was
+	 * silently true for a `Sprite3d` and only for a `Sprite3d`. It also made
+	 * the class fail to satisfy `Renderable` structurally, so a plain
+	 * `renderable === sprite3d` was rejected as having no overlap.
+	 * @public
+	 * @see Sprite3d#flipX
+	 * @type {boolean}
 	 */
-	isFlippedX() {
+	get isFlippedX() {
 		return this._flipX === true;
 	}
 
 	/**
-	 * @returns {boolean} true if the sprite is mirrored vertically.
+	 * returns true if this sprite is flipped on the vertical axis
+	 * @public
+	 * @see Sprite3d#flipY
+	 * @type {boolean}
 	 */
-	isFlippedY() {
+	get isFlippedY() {
 		return this._flipY === true;
 	}
 
