@@ -218,6 +218,38 @@ geometry with an opaque one would drag the opaque half into the transparent pass
 
 **`transparent: false`** pins a mesh to the opaque pass however it is faded.
 
+### `depthTest: false` for something with no surface to be occluded on
+
+`transparent` decides the PASS, and the transparent pass turns depth *writing*
+off on its own so overlapping blended draws blend instead of fighting. Whether
+geometry in front of a mesh **hides** it is a separate question, and
+`depthTest` is where you answer it. The default, `true`, is what you want for
+anything genuinely in the scene — a muzzle flash behind a wall should still be
+behind the wall, and this is not a synonym for "additive".
+
+Set it `false` for a mesh standing in for a screen-space effect: an additive
+glow carrying a world position only so it can sort and move with the thing it
+belongs to. Left depth tested, a flat billboard is sliced along a hard straight
+line the moment any geometry is nearer at some pixel. That shows up worst
+around something round — a glow on a rock near a planet's limb gets cut,
+and no offset escapes it, because the near surface bulges further toward the
+camera than any offset you would dare apply.
+
+```js
+const halo = new Sprite3d(0, 0, {
+    image: glowTexture,
+    width: rock.radius * 3, height: rock.radius * 3,
+    billboard: "spherical",
+    blendMode: "additive",
+    transparent: true,     // the blended pass
+    alphaCutoff: 0,        // do not cut the soft falloff
+    depthTest: false,      // and do not let the world slice it
+});
+```
+
+Honoured in the transparent pass on both GPU backends; the Canvas renderer has
+no depth buffer and ignores it.
+
 Blending uses the renderable's existing `blendMode`, so a glow is one property.
 The advanced modes (`"overlay"`, `"difference"`, and the rest that need a
 compositing pass) fall back to `"normal"` here, on both backends:
@@ -749,6 +781,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | a `lit` mesh renders fullbright | it had no normals — supply them, or let the engine generate them |
 | a gradient across one mesh is impossible | `tint` is per object — use `vertexColors` / `setVertexColor` |
 | a mesh stays solid as you fade it out | meshes render opaque; only `alpha` 0 (hidden) and 1 differ |
+| a glow is cut along a hard straight line, worst near a round object's limb | a flat billboard being depth tested against the geometry behind it — `depthTest: false` |
 | vertex colour applies under a 2D camera but not `Camera3d` | wrote the array directly without setting `needsUpdate` |
 | `Mesh: vertexColors has N entries, expected M` | one colour per *vertex*, not per triangle or per index |
 | nothing renders, or a backdrop covers everything | wrong depth sign — "far" is *larger* z when looking along +Z |

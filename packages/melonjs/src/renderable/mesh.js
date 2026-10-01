@@ -372,6 +372,7 @@ function buildTextureGroups(
  * @property {string|TextureAtlas|HTMLImageElement} [alphaMap] - per-texel opacity map, sampled in addition to the diffuse texture (MTL `map_d`).
  * @property {boolean} [castGroundShadow] - give this mesh a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a `Camera3d`.
  * @property {boolean} [transparent] - draw in the transparent pass (blended, back-to-front, no depth write). Omit and a mesh goes transparent whenever its draw alpha is fractional; `true` for soft-alpha textures; `false` to stay opaque however faded
+ * @property {boolean} [depthTest=true] - whether geometry in front of this mesh hides it. `false` draws it over whatever is already there, for a glow or an overlay that has no surface to be occluded ON. Separate from the depth WRITE the transparent pass turns off on its own. Transparent pass only, GPU backends only
  * @property {boolean} [fog] - set `false` to exempt this mesh from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does
  * @property {number} [shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
  * @property {number} [shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
@@ -858,6 +859,46 @@ export default class Mesh extends Renderable {
 			typeof settings.transparent === "boolean"
 				? settings.transparent
 				: undefined;
+
+		/**
+		 * Whether geometry in front of this mesh hides it.
+		 *
+		 * Depth TEST, not depth WRITE. The two are different questions and the
+		 * engine answers them in different places: writing is policy, and the
+		 * transparent pass already turns it off for everything blended so
+		 * overlapping draws blend instead of fighting. Testing is an authoring
+		 * choice, and this is it.
+		 *
+		 * `false` is for something with no surface to be occluded ON. An
+		 * additive glow is the case that forced it: it is a screen-space
+		 * effect wearing a mesh's clothes, carrying a world position only so
+		 * it can sort and move with the thing it belongs to. Left depth
+		 * tested, a flat billboard is sliced along a straight line the moment
+		 * any geometry is nearer at some pixel — most visibly where a glowing
+		 * object passes near the limb of something round.
+		 *
+		 * Leave it `true` for anything that is genuinely in the scene. A
+		 * muzzle flash behind a wall should still be behind the wall; this is
+		 * not a synonym for "additive".
+		 *
+		 * Honoured in the transparent pass, so a mesh wanting it also wants
+		 * {@link Mesh#transparent}. The Canvas renderer has no depth buffer
+		 * and ignores it.
+		 * @type {boolean}
+		 * @default true
+		 * @example
+		 * // a glow that belongs to the rock, but is never cut by the planet
+		 * const halo = new Sprite3d(0, 0, {
+		 *     image: glowTexture,
+		 *     width: 64, height: 64,
+		 *     billboard: "spherical",
+		 *     blendMode: "additive",
+		 *     transparent: true,
+		 *     alphaCutoff: 0,
+		 *     depthTest: false,
+		 * });
+		 */
+		this.depthTest = settings.depthTest !== false;
 
 		/**
 		 * World Y of the floor the shadow lands on, or `undefined` (the

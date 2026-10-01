@@ -300,6 +300,10 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		const blend = renderer._replayBlend ?? null;
 		const blended = blend !== null;
 		this.meshState.depthWrite = blended ? false : undefined;
+		// `undefined` unless the mesh asks, for the same reason as above:
+		// the axis reads `!== false`, so an unset field keeps every existing
+		// pipeline exactly where it was
+		this.meshState.depthTest = mesh.depthTest === false ? false : undefined;
 		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.instancedFamilyFor(mesh.instanceLayout),
@@ -1236,6 +1240,10 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// `!== false`, so leaving it unset keeps `meshState` byte-for-byte what
 		// it was before this existed, and the pipeline key gains nothing
 		this.meshState.depthWrite = blended ? false : undefined;
+		// `undefined` unless the mesh asks, for the same reason as above:
+		// the axis reads `!== false`, so an unset field keeps every existing
+		// pipeline exactly where it was
+		this.meshState.depthTest = mesh.depthTest === false ? false : undefined;
 		this.meshState.fog = renderer._fog3d != null ? true : undefined;
 		const pipeline = renderer.pipelineCache.get(
 			this.activeShaderKey(),

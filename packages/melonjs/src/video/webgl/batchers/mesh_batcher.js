@@ -588,7 +588,7 @@ export default class MeshBatcher extends MaterialBatcher {
 
 		const blend = this.renderer._replayBlend ?? null;
 		if (blend !== null) {
-			this.beginBlendedDraw(blend);
+			this.beginBlendedDraw(blend, mesh.depthTest);
 		}
 
 		const slices = mesh.textureGroups;
@@ -651,15 +651,23 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 * @internal
 	 */
-	beginBlendedDraw(mode = "normal") {
+	beginBlendedDraw(mode = "normal", depthTest = true) {
 		// straight through the renderer's tables rather than the cached
 		// `setBlendMode`: this state belongs to one entry of the transparent
 		// pass and is torn down after it, so the 2D cache must not learn it
 		this.renderer.applyBlendFunction(mode);
-		// depth TEST stays on — a transparent object must still be occluded by
-		// geometry in front of it — but writes are off, so overlapping
-		// transparent draws blend instead of fighting under LEQUAL
+		// writes are off, so overlapping transparent draws blend instead of
+		// fighting under LEQUAL
 		this.gl.depthMask(false);
+		// and the TEST, which is the caller's to decide. On by default,
+		// because a transparent object is usually still something in the
+		// scene that geometry in front of it should hide. Off for a mesh
+		// standing in for a screen-space effect — see `Mesh#depthTest`.
+		if (depthTest === false) {
+			this.gl.disable(this.gl.DEPTH_TEST);
+			/** @ignore @internal */
+			this._blendedDepthTestOff = true;
+		}
 	}
 
 	/**
@@ -677,6 +685,13 @@ export default class MeshBatcher extends MaterialBatcher {
 	 */
 	endBlendedDraw() {
 		const gl = this.gl;
+		// tracked rather than re-derived: the entry that turned it off is long
+		// out of scope here, and `bind()` guarantees the test was on
+		if (this._blendedDepthTestOff === true) {
+			gl.enable(gl.DEPTH_TEST);
+			/** @ignore @internal */
+			this._blendedDepthTestOff = false;
+		}
 		gl.depthMask(true);
 		const renderer = this.renderer;
 		const mode = renderer.currentBlendMode;
@@ -1187,7 +1202,7 @@ export default class MeshBatcher extends MaterialBatcher {
 		// drawn opaque anyway, which is strictly worse than not deferring it.
 		const blend = this.renderer._replayBlend ?? null;
 		if (blend !== null) {
-			this.beginBlendedDraw(blend);
+			this.beginBlendedDraw(blend, mesh.depthTest);
 		}
 
 		const slices = mesh.textureGroups;

@@ -236,6 +236,53 @@ describe("WebGPU pipeline (device-free units)", () => {
 			expect(device.pipelines).toHaveLength(5);
 		});
 
+		it("depthTest is its own pipeline axis, separate from depthWrite", () => {
+			const { device, cache } = makeCache();
+			const mesh = { cullMode: "back", frontFace: "ccw" };
+			const depthOf = (state) => {
+				return cache.get(
+					"quad",
+					"triangle-list",
+					"additive",
+					true,
+					"none",
+					state,
+				).descriptor.depthStencil;
+			};
+
+			// the default: tested and written, exactly as before the axis
+			const plain = depthOf(mesh);
+			expect(plain.depthCompare).toBe("less-equal");
+			expect(plain.depthWriteEnabled).toBe(true);
+
+			// "always" IS the test switched off — every fragment passes
+			// whatever is already in the buffer
+			const noTest = depthOf({ ...mesh, depthTest: false });
+			expect(noTest.depthCompare).toBe("always");
+			// and it did NOT drag the write along with it
+			expect(noTest.depthWriteEnabled).toBe(true);
+
+			// the other half still moves independently
+			const noWrite = depthOf({ ...mesh, depthWrite: false });
+			expect(noWrite.depthCompare).toBe("less-equal");
+			expect(noWrite.depthWriteEnabled).toBe(false);
+
+			// four distinct pipelines: the key has to separate them, or the
+			// second mesh to ask would silently get the first one's state
+			depthOf({ ...mesh, depthTest: false, depthWrite: false });
+			expect(device.pipelines).toHaveLength(4);
+		});
+
+		it("leaves the 2D tier's descriptors untouched", () => {
+			// the whole 2D path passes no meshState at all, and must keep
+			// getting the depth half switched off entirely
+			const { cache } = makeCache();
+			const d = cache.get("quad", "triangle-list", "normal", true).descriptor
+				.depthStencil;
+			expect(d.depthCompare).toBe("always");
+			expect(d.depthWriteEnabled).toBe(false);
+		});
+
 		it("the blend table matches the GL setBlendMode table", () => {
 			const { cache } = makeCache();
 			const blend = (mode, pma = true) => {
