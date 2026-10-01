@@ -173,13 +173,15 @@ export class MaterialBatcher extends WebGLBatcher {
 	/**
 	 * Create a WebGL texture from an image
 	 * @param {number} unit - Destination texture unit
-	 * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} [pixels=null] - Source image
+	 * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]|null} pixels - Source image, or `null` for an empty texture. Required positionally because `filter` follows it, and an optional parameter cannot precede a required one
 	 * @param {number} filter - gl.LINEAR or gl.NEAREST
 	 * @param {string} [repeat="no-repeat"] - Image repeat behavior
 	 * @param {number} [w=pixels.width] - Source image width
 	 * @param {number} [h=pixels.height] - Source image height
 	 * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
 	 * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated
+	 * @param {WebGLTexture} [texture] - an existing texture to upload into, rather than creating one
+	 * @param {boolean} [flush=true] - flush the current batch before binding
 	 * @returns {WebGLTexture} a WebGL texture
 	 */
 	createTexture2D(

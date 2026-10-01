@@ -1807,7 +1807,6 @@ export default class WebGPURenderer extends Renderer {
 	 * mask window only, which is the behavior masks actually promise.
 	 * @param {Color|string} [color="#000000"] - css color
 	 * @param {boolean} [opaque=false] - allow transparency or not
-	 * @override
 	 */
 	clearColor(color = "#000000", opaque = false) {
 		if (typeof this.device === "undefined") {
@@ -1858,7 +1857,6 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} y - y axis of the coordinate for the rectangle starting point.
 	 * @param {number} width - The rectangle's width.
 	 * @param {number} height - The rectangle's height.
-	 * @override
 	 */
 	clearRect(x, y, width, height) {
 		this.save();
