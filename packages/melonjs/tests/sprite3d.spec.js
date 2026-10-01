@@ -1278,3 +1278,477 @@ describe("Sprite3d anchorPoint — remaining gap coverage", () => {
 		expect(shippedRadius).toBeGreaterThanOrEqual(farthestCorner - 1e-6);
 	});
 });
+
+/**
+ * `scale()` on a BILLBOARDING Sprite3d.
+ *
+ * A billboard takes its orientation from the camera, so it cannot apply
+ * `currentTransform` wholesale — but a scale is not an orientation. These pin
+ * that the scale IS applied (it used to be silently dropped, so `scale()` was
+ * a no-op on the one renderable whose size you most want to animate), that it
+ * is applied identically on the CPU and GPU paths, and that an unscaled
+ * billboard is untouched.
+ */
+describe("Sprite3d billboard scale", () => {
+	let app;
+	beforeAll(async () => {
+		boot();
+		app = new Application(64, 64, {
+			parent: "screen",
+			renderer: video.CANVAS,
+		});
+		await app.init();
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns — browsers cap
+		// live contexts, and a leak surfaces as UNRELATED specs failing
+		app?.destroy();
+	});
+
+	const makeTex = () => {
+		const c = document.createElement("canvas");
+		c.width = 4;
+		c.height = 4;
+		c.getContext("2d").fillRect(0, 0, 4, 4);
+		return c;
+	};
+
+	const makeSprite = (settings = {}) => {
+		return new Sprite3d(100, 50, {
+			image: makeTex(),
+			width: 20,
+			height: 30,
+			z: -200,
+			billboard: "spherical",
+			...settings,
+		});
+	};
+
+	// normal of the projected quad (corners 0, 1, 3)
+	const quadNormalOf = (v) => {
+		const e1 = new Vector3d(v[3] - v[0], v[4] - v[1], v[5] - v[2]);
+		const e2 = new Vector3d(v[9] - v[0], v[10] - v[1], v[11] - v[2]);
+		return e1.cross(e2).normalize();
+	};
+
+	// project, then measure the card's two edge lengths in world units:
+	// corner0→corner1 is the horizontal edge, corner0→corner3 the vertical one
+	const edges = (s, cam) => {
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const v = s.vertices;
+		return {
+			w: Math.hypot(v[3] - v[0], v[4] - v[1], v[5] - v[2]),
+			h: Math.hypot(v[9] - v[0], v[10] - v[1], v[11] - v[2]),
+		};
+	};
+
+	it("an unscaled billboard projects at its authored size", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const e = edges(makeSprite(), cam);
+		expect(e.w).toBeCloseTo(20, 5);
+		expect(e.h).toBeCloseTo(30, 5);
+	});
+
+	it("BIT-IDENTICAL: an untouched transform changes no vertex", () => {
+		// the compatibility claim, stated as an equality rather than a
+		// tolerance: identity + the default meshScale of 1 must multiply by
+		// exactly 1.0, not by 0.9999999
+		const cam = new Camera3d(0, 0, 64, 64);
+		cam.yaw = 0.6;
+		cam.pitch = -0.25;
+		const s = makeSprite();
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const before = Array.from(s.vertices);
+		// scale by exactly 1 — a no-op that still goes through the new path
+		s.scale(1, 1);
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		expect(Array.from(s.vertices)).toEqual(before);
+	});
+
+	it("scale(2) doubles the card in both axes", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.scale(2);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(40, 5);
+		expect(e.h).toBeCloseTo(60, 5);
+	});
+
+	it("a non-uniform scale sizes each axis independently", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.scale(2, 3);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(40, 5);
+		expect(e.h).toBeCloseTo(90, 5);
+	});
+
+	it("scale accumulates, as it does on every other renderable", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.scale(2);
+		s.scale(1.5);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(60, 5);
+		expect(e.h).toBeCloseTo(90, 5);
+	});
+
+	it("a fractional scale shrinks it (a particle fading out)", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.scale(0.25);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(5, 5);
+		expect(e.h).toBeCloseTo(7.5, 5);
+	});
+
+	it("scale(0) collapses the card instead of producing NaN", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.scale(0);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		for (const n of s.vertices) {
+			expect(Number.isFinite(n)).toBe(true);
+		}
+		// every corner collapsed onto pos
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(0, 6);
+		expect(e.h).toBeCloseTo(0, 6);
+	});
+
+	it("SIGN: scale(-1, 1) mirrors the card rather than reading as scale(1, 1)", () => {
+		// a column LENGTH cannot carry a sign, so a naive extraction would
+		// turn a mirror into a no-op. The axis-aligned fast path reads the
+		// diagonal directly for exactly this case.
+		const cam = new Camera3d(0, 0, 64, 64);
+		const plain = makeSprite();
+		const mirrored = makeSprite();
+		mirrored.scale(-1, 1);
+		plain._billboardCam = cam;
+		plain._projectVerticesWorld(plain.pos.x, plain.pos.y, plain.depth);
+		mirrored._billboardCam = cam;
+		mirrored._projectVerticesWorld(
+			mirrored.pos.x,
+			mirrored.pos.y,
+			mirrored.depth,
+		);
+		// same extents (a mirror is not a resize)
+		const e = edges(mirrored, cam);
+		expect(e.w).toBeCloseTo(20, 5);
+		expect(e.h).toBeCloseTo(30, 5);
+		// but corner 0 and corner 1 swapped places: the left edge is now on
+		// the right. x is the camera-right axis at yaw/pitch 0.
+		expect(mirrored.vertices[0]).toBeCloseTo(plain.vertices[3], 5);
+		expect(mirrored.vertices[3]).toBeCloseTo(plain.vertices[0], 5);
+		// and it genuinely differs from the unmirrored quad
+		expect(mirrored.vertices[0]).not.toBeCloseTo(plain.vertices[0], 3);
+	});
+
+	it("SIGN: scale(1, -1) mirrors the other axis", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const plain = makeSprite();
+		const mirrored = makeSprite();
+		mirrored.scale(1, -1);
+		plain._billboardCam = cam;
+		plain._projectVerticesWorld(plain.pos.x, plain.pos.y, plain.depth);
+		mirrored._billboardCam = cam;
+		mirrored._projectVerticesWorld(
+			mirrored.pos.x,
+			mirrored.pos.y,
+			mirrored.depth,
+		);
+		// corner0 (bottom-left) and corner3 (top-left) swapped
+		expect(mirrored.vertices[1]).toBeCloseTo(plain.vertices[10], 5);
+		expect(mirrored.vertices[10]).toBeCloseTo(plain.vertices[1], 5);
+	});
+
+	it("the scale survives a rotation sitting in the same transform", () => {
+		// `rotate()` is still ignored (the camera owns the orientation), but
+		// the SCALE beside it must not be: a column length is the scale
+		// magnitude whatever rotation multiplies it
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.rotate(0.7);
+		s.scale(2);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(40, 4);
+		expect(e.h).toBeCloseTo(60, 4);
+	});
+
+	it("a rotation alone still leaves the card unscaled and camera-facing", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const f = new Vector3d();
+		cam.yaw = 0.5;
+		cam.pitch = -0.2;
+		const s = makeSprite();
+		s.rotate(1.1);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(20, 4);
+		expect(e.h).toBeCloseTo(30, 4);
+		// still facing the camera: a rotation must not have leaked in as a tilt
+		const n = quadNormalOf(s.vertices);
+		cam.getForward(f);
+		expect(Math.abs(n.x * f.x + n.y * f.y + n.z * f.z)).toBeCloseTo(1, 4);
+	});
+
+	it("meshScale sizes the card too, as it does a fixed-orientation mesh", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.meshScale = 3;
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(60, 5);
+		expect(e.h).toBeCloseTo(90, 5);
+	});
+
+	it("meshScale and scale() compose", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s.meshScale = 2;
+		s.scale(1.5, 0.5);
+		const e = edges(s, cam);
+		expect(e.w).toBeCloseTo(60, 5);
+		expect(e.h).toBeCloseTo(30, 5);
+	});
+
+	it("cylindrical mode scales as well, and stays upright", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		cam.yaw = 1.0;
+		cam.pitch = -0.5;
+		const s = makeSprite({ billboard: "cylindrical" });
+		s.scale(2, 4);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const v = s.vertices;
+		// the vertical edge is still purely world-up, and now 4x the height
+		expect(v[9] - v[0]).toBeCloseTo(0, 4);
+		expect(v[11] - v[2]).toBeCloseTo(0, 4);
+		expect(Math.abs(v[10] - v[1])).toBeCloseTo(120, 4);
+		expect(Math.hypot(v[3] - v[0], v[4] - v[1], v[5] - v[2])).toBeCloseTo(
+			40,
+			4,
+		);
+	});
+
+	it("scales about the anchor, so a bottom-anchored sprite keeps its feet", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite({ anchorPoint: "bottom", billboard: "cylindrical" });
+		s.scale(1, 3);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const v = s.vertices;
+		const ys = [v[1], v[4], v[7], v[10]];
+		// pos stays on the base edge (y == pos.y); the sprite grows UPWARD,
+		// which is -y in this Y-down render space
+		expect(Math.max(...ys)).toBeCloseTo(s.pos.y, 4);
+		expect(Math.min(...ys)).toBeCloseTo(s.pos.y - 90, 4);
+	});
+
+	it("scale() grows the frustum-cull bounds, so a scaled-up card is not culled early", () => {
+		const s = makeSprite();
+		const before = s.getBounds().width;
+		s.scale(2);
+		expect(s.getBounds().width).toBeCloseTo(before * 2, 4);
+	});
+
+	it("REGRESSION GUARD: unscaled bounds would cull a scaled-up card while on screen", () => {
+		// the defect this half of the change exists for. `Mesh` sets
+		// `autoTransform = false`, so the base updateBounds skips
+		// currentTransform — a scaled card would keep its authored bounds
+		// while its geometry grew, and Camera3d culls on those bounds.
+		const s = makeSprite({ billboard: "cylindrical" });
+		const authored = s.getBounds().width;
+		s.scale(4);
+		const cam = new Camera3d(0, 0, 64, 64);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		// farthest projected corner from pos
+		let farthest = 0;
+		const v = s.vertices;
+		for (let i = 0; i < 4; i++) {
+			farthest = Math.max(
+				farthest,
+				Math.hypot(
+					v[i * 3] - s.pos.x,
+					v[i * 3 + 1] - s.pos.y,
+					v[i * 3 + 2] - s.depth,
+				),
+			);
+		}
+		// the OLD bounds would not have enclosed it — that is the bug
+		const legacyRadius = Math.hypot(authored, authored) / 2;
+		expect(farthest).toBeGreaterThan(legacyRadius);
+		// the shipped bounds do
+		const b = s.getBounds();
+		const shippedRadius = Math.hypot(b.width, b.height) / 2;
+		expect(shippedRadius).toBeGreaterThanOrEqual(farthest - 1e-6);
+	});
+
+	it("the cull sphere encloses a SCALED bottom-anchored card in any orientation", () => {
+		// anchor offset and scale compose in the cull side, not just the
+		// half-extents: a bottom-anchored card reaches its full height from
+		// pos on one side, and scaling multiplies that reach too
+		const s = makeSprite({
+			width: 130,
+			height: 225,
+			anchorPoint: "bottom",
+			billboard: "spherical",
+		});
+		s.scale(2);
+		const farthestCorner = Math.hypot((130 * 2) / 2, 225 * 2);
+		const b = s.getBounds();
+		expect(Math.hypot(b.width, b.height) / 2).toBeGreaterThanOrEqual(
+			farthestCorner - 1e-6,
+		);
+	});
+
+	it("a mirror does not shrink the cull bounds", () => {
+		// `_refreshCullSide` takes magnitudes — a negative side would invert
+		// the box and cull the sprite permanently
+		const s = makeSprite();
+		const before = s.getBounds().width;
+		s.scale(-1, -1);
+		const b = s.getBounds();
+		expect(b.width).toBeCloseTo(before, 4);
+		expect(b.width).toBeGreaterThan(0);
+		expect(b.height).toBeGreaterThan(0);
+	});
+
+	it("a scale-down shrinks the cull bounds rather than over-reporting", () => {
+		const s = makeSprite();
+		const before = s.getBounds().width;
+		s.scale(0.5);
+		expect(s.getBounds().width).toBeCloseTo(before * 0.5, 4);
+	});
+
+	it("an anchor change after a scale keeps both", () => {
+		const s = makeSprite({ billboard: "cylindrical" });
+		s.scale(2);
+		s.anchorPoint.set(0.5, 1); // "bottom", at runtime
+		const cam = new Camera3d(0, 0, 64, 64);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const v = s.vertices;
+		const ys = [v[1], v[4], v[7], v[10]];
+		// still scaled (60 tall) AND still anchored at the base
+		expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(60, 4);
+		expect(Math.max(...ys)).toBeCloseTo(s.pos.y, 4);
+	});
+
+	it("GPU path: the model matrix carries the same scale as the CPU path", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		cam.yaw = 0.4;
+		cam.pitch = 0.3;
+		const s = makeSprite();
+		s.scale(2, 5);
+		s._billboardCam = cam;
+		const m = s._composeModelMatrix().val;
+		// columns 0/1 are the camera right/up axes scaled by the card size
+		expect(Math.hypot(m[0], m[1], m[2])).toBeCloseTo(2, 5);
+		expect(Math.hypot(m[4], m[5], m[6])).toBeCloseTo(5, 5);
+		// column 2 is the card NORMAL and must stay UNIT: the lit shader
+		// rotates the mesh normal by this matrix's upper 3×3
+		expect(Math.hypot(m[8], m[9], m[10])).toBeCloseTo(1, 5);
+		// translation untouched by the scale
+		expect(m[12]).toBeCloseTo(s.pos.x, 5);
+		expect(m[13]).toBeCloseTo(s.pos.y, 5);
+		expect(m[14]).toBeCloseTo(s.depth, 5);
+	});
+
+	it("GPU path: the two paths agree corner for corner", () => {
+		// the real consistency claim — the CPU projection and the model
+		// matrix must place the quad in the same place, or a WebGL build and
+		// a Canvas build of the same scene disagree
+		const cam = new Camera3d(0, 0, 64, 64);
+		cam.yaw = -0.9;
+		cam.pitch = 0.45;
+		const s = makeSprite();
+		s.scale(2.5, 0.75);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const cpu = Array.from(s.vertices);
+		const m = s._composeModelMatrix().val;
+		const src = s.originalVertices;
+		for (let i = 0; i < 4; i++) {
+			const i3 = i * 3;
+			const lx = src[i3];
+			const ly = src[i3 + 1];
+			// model matrix × (lx, ly, 0, 1)
+			expect(m[0] * lx + m[4] * ly + m[12]).toBeCloseTo(cpu[i3], 4);
+			expect(m[1] * lx + m[5] * ly + m[13]).toBeCloseTo(cpu[i3 + 1], 4);
+			expect(m[2] * lx + m[6] * ly + m[14]).toBeCloseTo(cpu[i3 + 2], 4);
+		}
+	});
+
+	it("GPU path: an unscaled billboard still yields a unit basis", () => {
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite();
+		s._billboardCam = cam;
+		const m = s._composeModelMatrix().val;
+		expect(Math.hypot(m[0], m[1], m[2])).toBeCloseTo(1, 6);
+		expect(Math.hypot(m[4], m[5], m[6])).toBeCloseTo(1, 6);
+	});
+
+	it("the ground shadow and the card now agree on the size", () => {
+		// the corroborating detail: the blob footprint ALWAYS read
+		// `currentTransform` (Mesh#_drawGroundShadow reads `c[0] * hx`
+		// deliberately, so a billboard's blob does not spin with the camera),
+		// so before this change `scale(2)` gave a double-size shadow under a
+		// normal-size sprite. They are measured from the same factor now.
+		const s = makeSprite({ castGroundShadow: true, billboard: "cylindrical" });
+		s.scale(2);
+		s._measureShadowFootprint();
+		const shadowHalfX = s._shadowHalfX * s.currentTransform.val[0];
+		// the card's own projected half-width, from the same scale
+		const cam = new Camera3d(0, 0, 64, 64);
+		const e = edges(s, cam);
+		expect(shadowHalfX * 2).toBeCloseTo(e.w, 4);
+	});
+
+	it("a non-billboarding Sprite3d is untouched by all of this", () => {
+		// it already went through the standard Mesh world transform, which
+		// applies currentTransform in full — including the rotation
+		const cam = new Camera3d(0, 0, 64, 64);
+		const s = makeSprite({ billboard: false });
+		s.scale(2);
+		s._billboardCam = cam;
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const v = s.vertices;
+		expect(Math.hypot(v[3] - v[0], v[4] - v[1], v[5] - v[2])).toBeCloseTo(
+			40,
+			5,
+		);
+	});
+
+	it("no state leaks between sprites drawn in sequence", () => {
+		// the scale lives in module scratch, like the basis vectors. A scaled
+		// sprite drawn before an unscaled one must not resize it.
+		const cam = new Camera3d(0, 0, 64, 64);
+		const big = makeSprite();
+		big.scale(4);
+		const small = makeSprite();
+		edges(big, cam);
+		const e = edges(small, cam);
+		expect(e.w).toBeCloseTo(20, 5);
+		expect(e.h).toBeCloseTo(30, 5);
+	});
+
+	it("an un-posed billboard (no camera) falls back to the mesh path", () => {
+		// `_billboardCam` null ⇒ not billboarding ⇒ Mesh's own transform,
+		// which already honours the scale. Pins that the early return still
+		// happens BEFORE the scale is resolved.
+		const s = makeSprite();
+		s._billboardCam = null;
+		expect(s._billboardBasis()).toBe(false);
+		s.scale(2);
+		s._projectVerticesWorld(s.pos.x, s.pos.y, s.depth);
+		const v = s.vertices;
+		expect(Math.hypot(v[3] - v[0], v[4] - v[1], v[5] - v[2])).toBeCloseTo(
+			40,
+			5,
+		);
+	});
+});

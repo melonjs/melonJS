@@ -311,6 +311,19 @@ export default class Sprite3d extends Mesh {
 		 * @internal
 		 */
 		this._anchorOffsetY = anchorOffsetY;
+		// in-plane scale the card is drawn at, resolved from `currentTransform`
+		// + `meshScale` by `_resolveScale` (see there for why a billboard
+		// applies the scale but not the rotation)
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._scaleX = 1;
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._scaleY = 1;
 		// the anchor lives in the vertex data — tell Mesh.preDraw to suppress
 		// the base transform-level anchor on BOTH camera paths (single
 		// anchoring mechanism; see Mesh#_anchorBaked)
@@ -415,11 +428,14 @@ export default class Sprite3d extends Mesh {
 		 *
 		 * **Only applies under a `Camera3d`**; ignored on the 2D path.
 		 *
-		 * Note: while billboarding, orientation comes from the camera, so the
-		 * renderable's `currentTransform` (`rotate()` / `scale()` / parent-container
-		 * transforms) and `meshScale` are **not** applied — only `pos` / `depth`,
-		 * `flipX` / `flipY`, and the quad's authored size. With billboarding `false`
-		 * the standard {@link Mesh} world transform applies as usual.
+		 * Note: while billboarding, **orientation** comes from the camera, so an
+		 * in-plane `rotate()` has no effect (a card that faces the camera has no
+		 * free rotation left to give) — use `billboard: false` and orient the quad
+		 * yourself for a streak or an exhaust. Everything that is not an
+		 * orientation still applies: `pos` / `depth`, `flipX` / `flipY`, the quad's
+		 * authored size, and `scale()` / {@link Mesh#meshScale}, which size the
+		 * card in its own plane. With billboarding `false` the standard
+		 * {@link Mesh} world transform applies as usual.
 		 * @type {boolean|string}
 		 * @default false
 		 */
@@ -472,6 +488,102 @@ export default class Sprite3d extends Mesh {
 	}
 
 	/**
+	 * Resolve the in-plane scale this card should be drawn at, into
+	 * `_scaleX` / `_scaleY`.
+	 *
+	 * A billboard takes its **orientation** from the camera, so it cannot
+	 * apply `currentTransform` wholesale — but a scale is not an orientation,
+	 * and sizing the card is well defined whichever way it ends up facing. So
+	 * the scale is extracted and applied; only the rotation is dropped.
+	 *
+	 * Column **lengths** rather than the raw diagonal, so the factor is right
+	 * whatever rotation sits alongside the scale in the matrix (that rotation
+	 * is still ignored, as documented on {@link Sprite3d#billboard}). An
+	 * axis-aligned transform is read off the diagonal directly instead,
+	 * because a length cannot carry a sign and `scale(-1, 1)` has to mirror
+	 * the card rather than read as `scale(1, 1)`.
+	 *
+	 * An identity transform with the default `meshScale` of 1 gives exactly
+	 * `1` / `1`, so a card that was never scaled is bit-for-bit unchanged.
+	 *
+	 * Note: a non-uniform scale applied *before* a rotation (`scale(2, 3)`
+	 * then `rotate()`) does not decompose exactly — no per-axis pair
+	 * reproduces that matrix — so the columns give a value between the two
+	 * factors. Mixing the two is already outside what a billboard honours,
+	 * since the rotation itself is discarded.
+	 * @ignore
+	 * @internal
+	 */
+	_resolveScale() {
+		const c = this.currentTransform.val;
+		const s = this.meshScale;
+		if (c[1] === 0 && c[2] === 0 && c[4] === 0 && c[6] === 0) {
+			this._scaleX = c[0] * s;
+			this._scaleY = c[5] * s;
+		} else {
+			this._scaleX = Math.hypot(c[0], c[1], c[2]) * s;
+			this._scaleY = Math.hypot(c[4], c[5], c[6]) * s;
+		}
+	}
+
+	/**
+	 * Rewrite the frustum-cull box from the current half-extents, anchor
+	 * offset and scale. Writes the `points` only — the caller runs
+	 * `updateBounds`.
+	 *
+	 * Direct point mutation rather than the Rect width/height setters: those
+	 * run `Polygon.recalc()`, which walks `this.normals` — a field `Mesh`
+	 * repurposes for per-vertex lighting normals (a Float32Array), so the
+	 * setters would throw here. The polygon edge/normal machinery is unused
+	 * by meshes anyway, so this is exactly the setter minus `recalc`.
+	 * @ignore
+	 * @internal
+	 */
+	_refreshCullSide() {
+		// magnitudes: a mirror is not a resize, and a negative side would
+		// invert the box
+		const sx = Math.abs(this._scaleX);
+		const sy = Math.abs(this._scaleY);
+		const cullSide = cullSideForAnchor(
+			this._halfW * sx,
+			this._halfH * sy,
+			this._anchorOffsetX * sx,
+			this._anchorOffsetY * sy,
+		);
+		this.points[1].x = this.points[2].x = cullSide;
+		this.points[2].y = this.points[3].y = cullSide;
+	}
+
+	/**
+	 * Keep the frustum-cull box in step with `scale()` / `meshScale`.
+	 *
+	 * `Mesh` sets `autoTransform = false`, so the base `updateBounds` skips
+	 * `currentTransform` entirely — right for what that flag means (the
+	 * transform is applied to the VERTICES, never pushed onto the 2D context)
+	 * but it leaves a scaled card carrying unscaled bounds, and
+	 * {@link Camera3d#isVisible} derives its cull sphere from exactly those.
+	 * A card scaled up would pop out of view while a third of it was still on
+	 * screen — the same defect the anchored cull side was widened to fix.
+	 *
+	 * Resolved here because every trigger already arrives here: `scale`,
+	 * `scaleV` and `rotate` all call `updateBounds`, and so does a `pos`
+	 * write.
+	 * @param {boolean} [absolute=true] - update the absolute bounds
+	 * @returns {Bounds} this renderable bounds
+	 * @ignore
+	 * @internal
+	 */
+	updateBounds(absolute = true) {
+		// runs during `super()` too, before any of the fields below exist —
+		// `_halfW` is the last of them to be assigned, so it gates them all
+		if (this._halfW !== undefined) {
+			this._resolveScale();
+			this._refreshCullSide();
+		}
+		return super.updateBounds(absolute);
+	}
+
+	/**
 	 * anchorPoint changed at runtime (the ObservablePoint callback wired in
 	 * the constructor): recompute the baked local offset from the live anchor
 	 * and the art size, re-bake the quad, and re-derive the frustum-cull
@@ -502,20 +614,7 @@ export default class Sprite3d extends Mesh {
 				this.originalVertices,
 			);
 		}
-		// Resize the bounds box directly: the Rect width/height setters run
-		// Polygon.recalc(), which walks `this.normals` — a field Mesh
-		// repurposes for per-vertex lighting normals (a Float32Array), so the
-		// setters would throw here. The polygon edge/normal machinery is
-		// unused by meshes anyway; mutating the corner points + updateBounds
-		// is exactly the setter minus recalc.
-		const cullSide = cullSideForAnchor(
-			hw,
-			hh,
-			this._anchorOffsetX,
-			this._anchorOffsetY,
-		);
-		this.points[1].x = this.points[2].x = cullSide;
-		this.points[2].y = this.points[3].y = cullSide;
+		// re-derives the cull box from the new offsets on the way through
 		this.updateBounds();
 		this.isDirty = true;
 	}
@@ -934,10 +1033,11 @@ export default class Sprite3d extends Mesh {
 
 	/**
 	 * Resolve the camera-facing basis this billboard should use, leaving it in
-	 * the shared `_right` / `_up` scratch vectors.
+	 * the shared `_right` / `_up` scratch vectors, and its in-plane scale in
+	 * `_scaleX` / `_scaleY`.
 	 *
 	 * Shared by the CPU projection and the model-matrix composition so the two
-	 * can never disagree about which way the card faces.
+	 * can never disagree about which way the card faces, or how big it is.
 	 * @returns {boolean} `false` when this sprite is not billboarding
 	 * @ignore
 	 * @internal
@@ -948,6 +1048,8 @@ export default class Sprite3d extends Mesh {
 		if (mode === false || mode === "none" || cam === null) {
 			return false;
 		}
+
+		this._resolveScale();
 
 		// camera basis (world space): right / up / forward. Note `getBasis`
 		// returns a math basis (+Y up) while render space is Y-down — each mode
@@ -1006,15 +1108,21 @@ export default class Sprite3d extends Mesh {
 			this._modelMatrix = new Matrix3d();
 		}
 		const out = this._modelMatrix.val;
-		// columns: right, up, right×up (unused by a flat quad but kept
-		// well-formed), then the world position
-		out[0] = _right.x;
-		out[1] = _right.y;
-		out[2] = _right.z;
+		// columns: right, up, right×up, then the world position. The first two
+		// carry the in-plane scale; the third stays UNIT, because it is the
+		// card's normal — the lit shader rotates the mesh normal by this
+		// matrix's upper 3×3, and scaling that column would feed a scaled
+		// normal into lighting for no gain (a flat quad has no geometry along
+		// it to stretch).
+		const sx = this._scaleX;
+		const sy = this._scaleY;
+		out[0] = _right.x * sx;
+		out[1] = _right.y * sx;
+		out[2] = _right.z * sx;
 		out[3] = 0;
-		out[4] = _up.x;
-		out[5] = _up.y;
-		out[6] = _up.z;
+		out[4] = _up.x * sy;
+		out[5] = _up.y * sy;
+		out[6] = _up.z * sy;
 		out[7] = 0;
 		out[8] = _right.y * _up.z - _right.z * _up.y;
 		out[9] = _right.z * _up.x - _right.x * _up.z;
@@ -1043,10 +1151,12 @@ export default class Sprite3d extends Mesh {
 		const ux = _up.x;
 		const uy = _up.y;
 		const uz = _up.z;
+		const sx = this._scaleX;
+		const sy = this._scaleY;
 		for (let i = 0; i < 4; i++) {
 			const i3 = i * 3;
-			const lx = src[i3];
-			const ly = src[i3 + 1];
+			const lx = src[i3] * sx;
+			const ly = src[i3 + 1] * sy;
 			out[i3] = offsetX + rx * lx + ux * ly;
 			out[i3 + 1] = offsetY + ry * lx + uy * ly;
 			out[i3 + 2] = offsetZ + rz * lx + uz * ly;
