@@ -29,6 +29,8 @@ let _warnedLitUnder2dOnce = false;
  * additional import for TypeScript
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Camera2d from "../camera/camera2d.ts";
+ * @import GLShader from "../video/webgl/glshader.js";
  */
 
 // How far above the ground an object rises before its shadow is gone, as a
@@ -1844,7 +1846,7 @@ export default class Mesh extends Renderable {
 	 * path keeps the anchor — except for subclasses with a vertex-baked anchor
 	 * (`_anchorBaked`, e.g. {@link Sprite3d}), which suppress it on both paths.
 	 * See the class description for the pivot rationale.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 */
 	preDraw(renderer) {
 		// world-space meshes pivot about their own origin, not a bounds-box
@@ -2109,7 +2111,7 @@ export default class Mesh extends Renderable {
 	 * builds). Without the per-draw read, a stage with multiple
 	 * cameras (Camera3d main + Camera2d minimap, say) would run the
 	 * wrong projection on whichever camera didn't match activation.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the camera rendering this frame
 	 */
 	draw(renderer, viewport) {

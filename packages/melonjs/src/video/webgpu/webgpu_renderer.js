@@ -53,6 +53,21 @@ import { COMPRESSION_FEATURES } from "./texture/compressed.js";
 import { WebGPUFrameTexture } from "./texture/frametexture.js";
 import WebGPUTextureStore from "./texture/store.js";
 
+/**
+ * additional import for TypeScript
+ * @import {ApplicationSettings} from "../../application/settings.ts";
+ * @import {Ellipse} from "../../geometries/ellipse.ts";
+ * @import Light2d from "../../lighting/light2d.ts";
+ * @import {Line} from "../../geometries/line.ts";
+ * @import {Matrix2d} from "../../math/matrix2d.ts";
+ * @import {Polygon} from "../../geometries/polygon.ts";
+ * @import {Rect} from "../../geometries/rectangle.ts";
+ * @import {RoundRect} from "../../geometries/roundrect.ts";
+ * @import ShaderEffect from "../effects/shadereffect.js";
+ * @import Texture2d from "../texture/texture2d.ts";
+ * @import {Box3d} from "../../geometries/box3d.ts";
+ * @import {Sphere} from "../../geometries/sphere.ts";
+ */
 // scratch matrix for the affine-components form of transform()
 const tempMatrix = new Matrix3d();
 // scratch: the projection saved across a blitEffect quad
@@ -200,6 +215,10 @@ export default class WebGPURenderer extends Renderer {
 		this.orthogonalTMXRenderer = undefined;
 
 		// create a texture cache
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this.cache = new TextureCache(this);
 
 		// the model/view matrix lives in the base-owned RenderState — same
@@ -3664,7 +3683,7 @@ export default class WebGPURenderer extends Renderer {
 
 	/**
 	 * stroke the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to stroke
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to stroke
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
@@ -3696,7 +3715,7 @@ export default class WebGPURenderer extends Renderer {
 
 	/**
 	 * fill the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to fill
 	 */
 	fill(shape) {
 		this.stroke(shape, true);

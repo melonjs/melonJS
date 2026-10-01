@@ -11,6 +11,12 @@ import Renderable from "./renderable.js";
 /**
  * additional import for TypeScript
  * @import ResponseObject from "./../physics/response.js";
+ * @import {Color} from "../math/color.ts";
+ * @import Container from "./container.js";
+ * @import {Ellipse} from "../geometries/ellipse.ts";
+ * @import {Line} from "../geometries/line.ts";
+ * @import {Polygon} from "../geometries/polygon.ts";
+ * @import {Rect} from "../geometries/rectangle.ts";
  */
 
 /**

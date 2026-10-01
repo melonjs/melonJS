@@ -8,6 +8,14 @@ import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
 
+/**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
+ * @import {Vector2d} from "../../math/vector2d.ts";
+ * @import WebGLRenderer from "../../video/webgl/webgl_renderer.js";
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import Renderer from "../../video/renderer.js";
+ */
 /*
  * ASCII Table
  * http://www.asciitable.com/
@@ -619,7 +627,7 @@ export default class Text extends Renderable {
 
 	/**
 	 * draw a text at the specified coord
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
+	 * @param {Renderer} renderer - Reference to the destination renderer instance
 	 */
 	draw(renderer) {
 		// Re-anchor the box to where the label is NOW.

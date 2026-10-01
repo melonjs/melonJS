@@ -2,6 +2,16 @@ import { Bounds, boundsPool } from "./../../../physics/bounds.ts";
 import TMXLayer from "./../TMXLayer.js";
 
 /**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../../../video/canvas/canvas_renderer.js";
+ * @import {Rect} from "../../../geometries/rectangle.ts";
+ * @import TMXTileMap from "../TMXTileMap.js";
+ * @import Tile from "../TMXTile.js";
+ * @import {Vector2d} from "../../../math/vector2d.ts";
+ * @import WebGLRenderer from "../../../video/webgl/webgl_renderer.js";
+ * @import Renderer from "../../../video/renderer.js";
+ */
+/**
  * The map renderer base class
  * @category Tilemap
  */
@@ -92,7 +102,7 @@ export default class TMXRenderer {
 
 	/**
 	 * draw the given tile at the specified layer
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+	 * @param {Renderer} renderer - a renderer object
 	 * @param {number} x - X coordinate where to draw the tile
 	 * @param {number} y - Y coordinate where to draw the tile
 	 * @param {Tile} tile - the tile object to draw
@@ -102,7 +112,7 @@ export default class TMXRenderer {
 
 	/**
 	 * draw the given TMX Layer for the given area
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+	 * @param {Renderer} renderer - a renderer object
 	 * @param {TMXLayer} layer - a TMX Layer object
 	 * @param {Rect} rect - the area of the layer to draw
 	 */

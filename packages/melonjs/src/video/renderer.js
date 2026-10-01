@@ -11,6 +11,12 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
  * @import RenderTargetPool from "./rendertarget/render_target_pool.js";
+ * @import Application from "../application/application.ts";
+ * @import {ApplicationSettings} from "../application/settings.ts";
+ * @import {Box3d} from "../geometries/box3d.ts";
+ * @import Mesh from "../renderable/mesh.js";
+ * @import ShaderEffect from "./effects/shadereffect.js";
+ * @import {Sphere} from "../geometries/sphere.ts";
  */
 
 /**
@@ -1681,7 +1687,7 @@ export default class Renderer {
 
 	/**
 	 * stroke the given shape
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} shape - a shape object to stroke
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to stroke
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
@@ -1809,7 +1815,7 @@ export default class Renderer {
 
 	/**
 	 * fill the given shape
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} shape - a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to fill
 	 */
 	fill(shape) {
 		this.stroke(shape, true);
@@ -2116,7 +2122,11 @@ export default class Renderer {
 	 *   NOTE the origin differs by backend: WebGL uses framebuffer coords
 	 *   (**bottom-left** origin), Canvas uses **top-left** — relevant under
 	 *   `video.AUTO`.
-	 * @returns {Texture2d} a texture holding the captured frame
+	 * @returns {Texture2d|null} a texture holding the captured frame, or `null`
+	 *   when the backend has no device to capture with. The WebGPU renderer
+	 *   returns null in that case and there is a spec pinning it, so this is the
+	 *   honest contract: declaring a bare `Texture2d` here had every caller
+	 *   skipping a check the implementation can require
 	 * @example
 	 * effect.setTexture("uScene", renderer.toFrameTexture());
 	 */

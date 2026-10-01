@@ -912,7 +912,7 @@ export default class Camera2d extends Renderable {
 	 * @param target - the renderable to focus the camera on
 	 */
 	focusOn(target: Renderable): void {
-		const bounds = target.getBounds() as Bounds;
+		const bounds = target.getBounds();
 		this.moveTo(
 			bounds.left + bounds.width / 2 - this.width / 2,
 			bounds.top + bounds.height / 2 - this.height / 2,
@@ -1051,7 +1051,16 @@ export default class Camera2d extends Renderable {
 	 * @ignore
 	 * @internal
 	 */
-	override draw(renderer: Renderer, container: Container): void {
+	override draw(renderer: Renderer, container?: Container): void {
+		// Optional because the `draw` this overrides declares its second
+		// argument optional, and an override that demands one is not
+		// substitutable for it -- which is what stopped `Camera2d` being
+		// assignable to `Renderable` at all, and cascaded into every
+		// signature that mentions either. Every real caller passes the world
+		// container; there is nothing to draw without one.
+		if (container === undefined) {
+			return;
+		}
 		// cast to any to access canvas/webgl renderer-specific methods not on base Renderer
 		const r = renderer as any;
 		const isNonDefault = !this.isDefault;
@@ -1065,7 +1074,7 @@ export default class Camera2d extends Renderable {
 		// sync the built-in colorMatrix: append as final pass if non-identity
 		if (!this.colorMatrix.isIdentity()) {
 			if (!this._colorMatrixEffect) {
-				this._colorMatrixEffect = new ColorMatrixEffect(renderer as any);
+				this._colorMatrixEffect = new ColorMatrixEffect(renderer);
 			}
 			this._colorMatrixEffect.reset().multiply(this.colorMatrix);
 			this.postEffects.push(this._colorMatrixEffect);

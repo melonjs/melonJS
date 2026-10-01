@@ -7,6 +7,10 @@ import { resetGUID } from "./../utils/utils.ts";
 import GLTFScene from "./gltf/GLTFScene.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 
+/**
+ * additional import for TypeScript
+ * @import Container from "../renderable/container.js";
+ */
 // our levels
 const levels = {};
 // level index table

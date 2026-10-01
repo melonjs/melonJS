@@ -77,6 +77,10 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// slot assignment is the shared backend-neutral policy (#1585) — the
 		// same table the WebGL texture cache allocates units from, so the two
 		// backends cannot drift on when a texture set overflows
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this.slotTable = new TextureSlotTable({
 			capacity: MAX_QUAD_TEXTURES,
 			// draw the pending quads with THEIR slots before any reassignment

@@ -59,8 +59,13 @@ function worldBox3d(
 	cz: number,
 	out: typeof _rayBox,
 ): boolean {
-	const body = (renderable as { body?: Body }).body;
-	if (body === undefined || !body.hasDepth) {
+	// `renderable.body` is the PORTABLE handle, and this is the builtin
+	// adapter, so narrow to the concrete type rather than asserting it. The
+	// cast this replaces only existed because `Renderable.body` was `any`;
+	// `instanceof` is both safe and more correct, since a body belonging to
+	// another adapter now reports no hit instead of being read as one.
+	const body = renderable.body;
+	if (!(body instanceof Body) || !body.hasDepth) {
 		return false;
 	}
 	// the same frame the narrowphase measures in, so a ray hits a body where
@@ -139,8 +144,13 @@ function worldSphere(
 	cz: number,
 	out: typeof _raySphere,
 ): boolean {
-	const body = (renderable as { body?: Body }).body;
-	if (body === undefined || !body.hasDepth) {
+	// `renderable.body` is the PORTABLE handle, and this is the builtin
+	// adapter, so narrow to the concrete type rather than asserting it. The
+	// cast this replaces only existed because `Renderable.body` was `any`;
+	// `instanceof` is both safe and more correct, since a body belonging to
+	// another adapter now reports no hit instead of being read as one.
+	const body = renderable.body;
+	if (!(body instanceof Body) || !body.hasDepth) {
 		return false;
 	}
 	const shapes = body.shapes as unknown as {

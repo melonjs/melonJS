@@ -1,5 +1,12 @@
 import ShaderEffect from "./shadereffect.js";
 
+/**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
+ * @import Renderer from "../renderer.js";
+ */
 /*
  * Bloom in ONE pass.
  *
@@ -147,7 +154,7 @@ ${tapList("vec2f", (at) => {
  */
 export default class BloomEffect extends ShaderEffect {
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.threshold=0.75] - luminance a pixel must pass before it blooms, `0` (everything blooms) to `1` (only white does)
 	 * @param {number} [options.intensity=1.0] - how much of the gathered light is added back

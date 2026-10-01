@@ -12,6 +12,13 @@ import TMXLayer from "./TMXLayer.js";
 import { createTMXObject } from "./TMXObjectFactory.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
+
+/**
+ * additional import for TypeScript
+ * @import {Bounds} from "../../physics/bounds.ts";
+ * @import Renderable from "../../renderable/renderable.js";
+ * @import TMXRenderer from "./renderer/TMXRenderer.js";
+ */
 import {
 	applyObjectOpacity,
 	applyTMXProperties,

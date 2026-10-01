@@ -3,6 +3,11 @@ import Text from "./text.js";
 import setContextStyle from "./textstyle.js";
 
 /**
+ * additional import for TypeScript
+ * @import BitmapText from "./bitmaptext.js";
+ * @import Renderable from "../renderable.js";
+ */
+/**
  * One pixel of slack on top of the reported ink extent.
  *
  * `actualBoundingBox*` describes the OUTLINE, and the rasterizer paints past

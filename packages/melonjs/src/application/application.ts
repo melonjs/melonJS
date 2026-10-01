@@ -543,7 +543,7 @@ export default class Application {
 					// (autoDetectRenderer) instead of failing the application.
 					let negotiated;
 					if (typeof globalThis.navigator?.gpu !== "undefined") {
-						const attempt = new WebGPURenderer(this.settings as any);
+						const attempt = new WebGPURenderer(this.settings);
 						attempt.parentApplication = this;
 						try {
 							await attempt.init();
@@ -584,7 +584,7 @@ export default class Application {
 								"`device.isWebGLSupported()` before construction.",
 						);
 					}
-					this.renderer = new WebGLRenderer(this.settings as any);
+					this.renderer = new WebGLRenderer(this.settings);
 					break;
 				case WEBGPU:
 					// "I require WebGPU" — like WEBGL, an explicit request
@@ -595,10 +595,10 @@ export default class Application {
 					// the adapter/device negotiation happens in the
 					// `renderer.init()` await below. Use `video.AUTO` for
 					// the WebGPU → WebGL → Canvas fallback ladder.
-					this.renderer = new WebGPURenderer(this.settings as any);
+					this.renderer = new WebGPURenderer(this.settings);
 					break;
 				default:
-					this.renderer = new CanvasRenderer(this.settings as any);
+					this.renderer = new CanvasRenderer(this.settings);
 					break;
 			}
 		} else {

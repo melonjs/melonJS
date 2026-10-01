@@ -24,6 +24,7 @@ on(VIDEO_INIT, (renderer) => {
 /**
  * additional import for TypeScript
  * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
+ * @import {CompressedImage} from "../../loader/parsers/compressed_textures/compressed_image.js";
  */
 
 /**

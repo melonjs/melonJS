@@ -10,6 +10,15 @@ import {
 import { getInstancedShadowQuad } from "./groundshadow.js";
 import Mesh from "./mesh.js";
 
+/**
+ * additional import for TypeScript
+ * @import Camera2d from "../camera/camera2d.ts";
+ * @import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+ * @import {Color} from "../math/color.ts";
+ * @import WebGLRenderer from "../video/webgl/webgl_renderer.js";
+ * @import {Bounds} from "../physics/bounds.ts";
+ * @import Renderer from "../video/renderer.js";
+ */
 // scratch reused by getBounds3d(); never handed out
 const _instanceMatrix = new Matrix3d();
 
@@ -623,7 +632,7 @@ export default class InstancedMesh extends Mesh {
 	 * Draw the instanced mesh. Under a GPU backend this is one instanced
 	 * draw call; the Canvas renderer has no instancing, so each instance is
 	 * drawn through the ordinary mesh path instead.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the camera rendering this frame
 	 */
 	draw(renderer, viewport) {

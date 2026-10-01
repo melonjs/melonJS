@@ -1,6 +1,10 @@
 import { TMX_CLEAR_BIT_MASK } from "./constants";
 
 /**
+ * additional import for TypeScript
+ * @import TMXTileset from "./TMXTileset.js";
+ */
+/**
  * an object containing all tileset
  */
 export default class TMXTilesetGroup {

@@ -4,6 +4,8 @@ import Sprite from "./sprite.js";
  * additional import for TypeScript
  * @import {Color} from "./../math/color.ts";
  * @import { TextureAtlas } from "./../video/texture/atlas.js";
+ * @import {CompressedImage} from "../loader/parsers/compressed_textures/compressed_image.js";
+ * @import {Vector2d} from "../math/vector2d.ts";
  */
 
 // Reusable scratch for the 9-slice grid, refilled on every draw. A

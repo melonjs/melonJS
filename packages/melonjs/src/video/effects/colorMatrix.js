@@ -1,6 +1,13 @@
 import { ColorMatrix } from "../../math/color_matrix.ts";
 import ShaderEffect from "./shadereffect.js";
 
+/**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
+ * @import Renderer from "../renderer.js";
+ */
 // the WGSL twin of the GLSL body below — same logic, same uniform
 // names, picked by the ShaderEffect base per renderer.shaderLanguage
 const wgslFragment = `
@@ -31,7 +38,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  */
 export default class ColorMatrixEffect extends ShaderEffect {
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {ColorMatrix} [options.matrix] - an initial color matrix. Defaults to identity.
 	 */

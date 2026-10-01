@@ -34,7 +34,7 @@ const BLOCKED_DOWN = 8;
  * @import Renderable from "../../renderable/renderable.js";
  * @import Sprite from "../../renderable/sprite.js";
  * @import NineSliceSprite from "../../renderable/nineslicesprite.js";
- * @import {Vector2d} from "../../math/vector2d.js";
+ * @import {Vector2d} from "../../math/vector2d.ts";
  * @import ResponseObject from "../response.js";
  **/
 

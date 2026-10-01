@@ -8,6 +8,8 @@ import { MaterialBatcher } from "./material_batcher.js";
 /**
  * additional import for TypeScript
  * @import {TextureAtlas} from "./../../texture/atlas.js";
+ * @import GLShader from "../glshader.js";
+ * @import ShaderEffect from "../../effects/shadereffect.js";
  */
 
 /**

@@ -1,4 +1,8 @@
 /**
+ * additional import for TypeScript
+ * @import {VertexScalar} from "./vertexformat.ts";
+ */
+/**
  * Backend-neutral vertex attribute formats.
  *
  * A vertex format names a component type and a component count in one token:
@@ -21,8 +25,6 @@
 
 /**
  * The scalar component type underlying a {@link VertexFormat}.
- * @ignore
- * @internal
  */
 export type VertexScalar =
 	| "float32"
@@ -92,8 +94,11 @@ export type VertexFormat =
 
 /**
  * What a {@link VertexFormat} resolves to.
- * @ignore
- * @internal
+ *
+ * Public, because the exported `resolveVertexFormat()` returns it. Marked
+ * internal it was stripped from the declarations while that public signature
+ * kept naming it, which left the name unresolved and quietly turned the
+ * function's return type into `any` for every consumer.
  */
 export interface VertexFormatInfo {
 	/** number of components (1, 2, 3 or 4) */

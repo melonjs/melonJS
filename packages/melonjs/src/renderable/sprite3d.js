@@ -7,6 +7,10 @@ import { resolveAnchorPoint } from "./anchorPoint.ts";
 import FrameAnimation from "./frameAnimation.js";
 import Mesh from "./mesh.js";
 
+/**
+ * additional import for TypeScript
+ * @import {Vector2d} from "../math/vector2d.ts";
+ */
 // reusable basis vectors for the billboard projection (one draw runs at a time)
 const _right = new Vector3d();
 const _up = new Vector3d();
@@ -1007,7 +1011,7 @@ export default class Sprite3d extends Mesh {
 	 * by `Container.draw`), so a multi-camera stage billboards correctly against
 	 * whichever camera is drawing. When no `Camera3d` viewport is supplied the
 	 * billboard is inactive and the quad renders fixed-orientation.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer
+	 * @param {Renderer} renderer
 	 * @param {Camera2d} [viewport]
 	 * @ignore
 	 * @internal

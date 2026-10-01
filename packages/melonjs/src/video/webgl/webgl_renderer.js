@@ -55,6 +55,12 @@ import { GLSamplerCache } from "./utils/samplercache.js";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
  * @import {default as Texture2d} from "../texture/texture2d.ts";
+ * @import {CompressedImage} from "../../loader/parsers/compressed_textures/compressed_image.js";
+ * @import GLShader from "./glshader.js";
+ * @import {ApplicationSettings} from "../../application/settings.ts";
+ * @import ShaderEffect from "../effects/shadereffect.js";
+ * @import {Box3d} from "../../geometries/box3d.ts";
+ * @import {Sphere} from "../../geometries/sphere.ts";
  */
 
 // reusable constants for 2D→3D matrix operations
@@ -479,6 +485,10 @@ export default class WebGLRenderer extends Renderer {
 		// customShader is declared on the base Renderer class
 
 		// Create a texture cache
+		/**
+		 * @ignore
+		 * @internal
+		 */
 		this.cache = new TextureCache(this, this.maxTextures);
 
 		// set the renderer type
@@ -2778,7 +2788,7 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * stroke the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to stroke
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to stroke
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
@@ -2810,7 +2820,7 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * fill the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds|Box3d|Sphere} [shape] - a shape object to fill
 	 */
 	fill(shape) {
 		this.stroke(shape, true);

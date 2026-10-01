@@ -27,8 +27,12 @@ const pools: Record<string, Pool<any, any[]>> = {};
 
 /**
  * Register a pool instance to the pool registry.
- * @ignore
- * @internal
+ *
+ * Public because `pool.js` re-exports it. Marked internal it was stripped
+ * from the declarations while that re-export kept naming it, which left the
+ * public `pool` module exporting something no longer declared.
+ * @param key - the name this pool is reachable by
+ * @param pool - the pool instance to register under it
  */
 export const registerPool = (key: string, pool: Pool<any, any[]>) => {
 	pools[key] = pool;

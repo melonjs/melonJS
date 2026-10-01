@@ -1,6 +1,13 @@
 import ColorMatrixEffect from "./colorMatrix.js";
 
 /**
+ * additional import for TypeScript
+ * @import CanvasRenderer from "../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "../webgl/webgl_renderer.js";
+ * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
+ * @import Renderer from "../renderer.js";
+ */
+/**
  * A shader effect that applies a warm sepia (vintage photo) tone to the sprite.
  * @category Effects
  * @see {@link Renderable#addPostEffect} for usage
@@ -12,7 +19,7 @@ import ColorMatrixEffect from "./colorMatrix.js";
  */
 export default class SepiaEffect extends ColorMatrixEffect {
 	/**
-	 * @param {WebGLRenderer|WebGPURenderer|CanvasRenderer} renderer - the current renderer instance
+	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.intensity=1.0] - sepia intensity (0.0 = original, 1.0 = full sepia)
 	 */

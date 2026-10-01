@@ -61,6 +61,10 @@ export default class WebGPUBatcher extends Batcher {
 			this.stride = last.offset + last.bytes;
 			this.vertexSize = this.stride / Float32Array.BYTES_PER_ELEMENT;
 
+			/**
+			 * @ignore
+			 * @internal
+			 */
 			this.vertexData = new VertexArrayBuffer(
 				this.vertexSize,
 				settings.maxVertices ?? DEFAULT_MAX_VERTICES,

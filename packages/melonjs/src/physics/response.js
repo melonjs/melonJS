@@ -1,25 +1,35 @@
 import { Vector2d } from "../math/vector2d.ts";
 
 /**
+ * additional import for TypeScript
+ * @import Renderable from "../renderable/renderable.js";
+ */
+/**
  * An object representing the result of an intersection.
- * @typedef {object} ResponseObject
- * @property {Renderable} a The first object participating in the intersection
- * @property {Renderable} b The second object participating in the intersection
- * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
- * @property {Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
- * @property {Vector2d} overlapN The shortest colliding axis (unit-vector)
- * @property {number} overlapNZ The Z component of the shortest colliding axis. `overlapN` plus this is a 3D unit vector, so it is `-1`, `0` or `1` for a box pair and any value in between for a sphere. Always `0` for a collision between planar shapes
- * @property {number} overlapZ The Z component of the overlap vector (i.e. `overlapNZ * overlap`). Always `0` for a collision between planar shapes
- * @property {boolean} aInB Whether the first object is entirely inside the second
- * @property {boolean} bInA Whether the second object is entirely inside the first
- * @property {number} indexShapeA The index of the colliding shape for the object a body
- * @property {number} indexShapeB The index of the colliding shape for the object b body
  */
 class ResponseObject {
 	constructor() {
+		/**
+		 * The first object participating in the intersection
+		 * @type {Renderable|null}
+		 */
 		this.a = null;
+		/**
+		 * The second object participating in the intersection
+		 * @type {Renderable|null}
+		 */
 		this.b = null;
+		/**
+		 * The shortest colliding axis (unit-vector)
+		 * @type {Vector2d}
+		 */
 		this.overlapN = new Vector2d();
+		/**
+		 * The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If
+		 * this vector is subtracted from the position of a, a and b will no
+		 * longer be colliding
+		 * @type {Vector2d}
+		 */
 		this.overlapV = new Vector2d();
 		/**
 		 * Z half of the minimum translation axis.
@@ -52,12 +62,22 @@ class ResponseObject {
 		 * collision changed.
 		 */
 		this.overlapNZ = 0;
+		/**
+		 * The Z component of the overlap vector (i.e. `overlapNZ * overlap`).
+		 * Always `0` for a collision between planar shapes
+		 * @type {number}
+		 */
 		this.overlapZ = 0;
+		/** Whether the first object is entirely inside the second */
 		this.aInB = true;
+		/** Whether the second object is entirely inside the first */
 		this.bInA = true;
+		/** The index of the colliding shape for the object a body */
 		this.indexShapeA = -1;
+		/** The index of the colliding shape for the object b body */
 		this.indexShapeB = -1;
 		this.isTriggerContact = false;
+		/** Magnitude of the overlap on the shortest colliding axis */
 		this.overlap = Number.MAX_VALUE;
 	}
 
