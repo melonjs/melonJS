@@ -690,6 +690,98 @@ describe("Container", () => {
 			expect(container._sortReverseZ(b, a)).toBeGreaterThan(0); // a still first
 		});
 
+		// `_sortReverseZ` orders the FLAT list of pointer hit-test candidates,
+		// so unlike `_sortZ` it has to cope with pairs from different
+		// containers. `pos.z` is container-local, so raw z says nothing about
+		// such a pair and it has to be resolved where `draw` resolves it:
+		// between the two siblings whose order picks the subtree painted last.
+		describe("_sortReverseZ across containers", () => {
+			// root
+			//  +- low  (z 1) -+- buried (z 9)
+			//  +- high (z 2) -+- shallow (z 1)
+			const build = () => {
+				const root = new Container(0, 0, 100, 100, true);
+				root.autoSort = false;
+				const low = new Container(0, 0, 50, 50);
+				const high = new Container(0, 0, 50, 50);
+				root.addChild(low, 1);
+				root.addChild(high, 2);
+				const buried = new Renderable(0, 0, 1, 1);
+				const shallow = new Renderable(0, 0, 1, 1);
+				low.addChild(buried, 9);
+				high.addChild(shallow, 1);
+				return { root, low, high, buried, shallow };
+			};
+
+			it("a high container outranks a high-z child of a low one", () => {
+				const { high, buried } = build();
+				// raw z would put `buried` (9) above `high` (2)
+				expect(high.pos.z).toBeLessThan(buried.pos.z);
+				expect(container._sortReverseZ(buried, high)).toBeLessThan(0);
+				expect(container._sortReverseZ(high, buried)).toBeGreaterThan(0);
+			});
+
+			it("a child of the high container outranks a child of the low one", () => {
+				const { buried, shallow } = build();
+				expect(container._sortReverseZ(buried, shallow)).toBeLessThan(0);
+				expect(container._sortReverseZ(shallow, buried)).toBeGreaterThan(0);
+			});
+
+			it("a child outranks the container holding it", () => {
+				const { low, buried } = build();
+				expect(container._sortReverseZ(low, buried)).toBeLessThan(0);
+				expect(container._sortReverseZ(buried, low)).toBeGreaterThan(0);
+			});
+
+			it("equal sibling z resolves by child order, lower index on top", () => {
+				// `draw` sorts stably and walks the result backwards, so the
+				// lower index is painted LAST and must be hit FIRST
+				const { root, low, high, buried, shallow } = build();
+				high.pos.z = low.pos.z;
+				expect(root.getChildIndex(low)).toBeLessThan(root.getChildIndex(high));
+				expect(container._sortReverseZ(high, low)).toBeLessThan(0);
+				expect(container._sortReverseZ(low, high)).toBeGreaterThan(0);
+				// and it carries through to their children
+				expect(container._sortReverseZ(shallow, buried)).toBeLessThan(0);
+				expect(container._sortReverseZ(buried, shallow)).toBeGreaterThan(0);
+			});
+
+			it("does not walk off the top for a renderable with no ancestor", () => {
+				const { buried } = build();
+				const orphan = new Renderable(0, 0, 1, 1);
+				orphan.pos.z = 4;
+				expect(() => {
+					return container._sortReverseZ(orphan, buried);
+				}).not.toThrow();
+				expect(() => {
+					return container._sortReverseZ(buried, orphan);
+				}).not.toThrow();
+			});
+
+			it("stays a consistent total order over the whole tree", () => {
+				const parts = build();
+				const nodes = [parts.low, parts.high, parts.buried, parts.shallow];
+				for (const x of nodes) {
+					for (const y of nodes) {
+						// summed rather than negated: -Math.sign(0) is -0, which
+						// `toBe` (Object.is) would not match against 0
+						expect(
+							Math.sign(container._sortReverseZ(x, y)) +
+								Math.sign(container._sortReverseZ(y, x)),
+						).toBe(0);
+						for (const z of nodes) {
+							if (
+								container._sortReverseZ(x, y) < 0 &&
+								container._sortReverseZ(y, z) < 0
+							) {
+								expect(container._sortReverseZ(x, z)).toBeLessThan(0);
+							}
+						}
+					}
+				}
+			});
+		});
+
 		it("_sortX should sort by z first, then by x", () => {
 			const a = new Renderable(100, 0, 1, 1);
 			const b = new Renderable(200, 0, 1, 1);

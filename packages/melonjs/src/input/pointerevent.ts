@@ -333,8 +333,10 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		currentPointer.pos.set(pointer.gameWorldX, pointer.gameWorldY);
 		currentPointer.setSize(pointer.width, pointer.height);
 
+		const isPointerMove = POINTER_MOVE.includes(pointer.type);
+
 		// trigger a global event for pointer move
-		if (POINTER_MOVE.includes(pointer.type)) {
+		if (isPointerMove) {
 			pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
 			pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
 			emit(POINTERMOVE, pointer);
@@ -375,6 +377,10 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		// add the main game viewport to the list of candidates
 		candidates = candidates.concat([_app.viewport]);
 
+		// set once something above has consumed a move: everything left in the
+		// walk is drawn under it, so the pointer is no longer theirs
+		let occluded = false;
+
 		for (
 			let c = candidates.length, candidate;
 			c--, (candidate = candidates[c]);
@@ -410,6 +416,25 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					region.isFloating === true
 						? bounds.contains(pointer.gameX, pointer.gameY)
 						: bounds.contains(absoluteWorldX, absoluteWorldY);
+
+				// Covered by whatever consumed the move above. Being inside its
+				// own bounds is no longer what decides it, so release the
+				// pointer the same way moving out of bounds would: a region
+				// left holding one it cannot see stays in its hover state until
+				// the pointer happens to leave its bounds entirely, which is
+				// how a button half under a panel stayed lit while the pointer
+				// sat on the panel.
+				if (occluded) {
+					if (handlers.pointerId === pointer.pointerId) {
+						triggerEvent(
+							handlers,
+							findActiveEvent(activeEventList, POINTER_LEAVE),
+							pointer,
+							null,
+						);
+					}
+					continue;
+				}
 
 				switch (pointer.type) {
 					case POINTER_MOVE[0]:
@@ -503,8 +528,13 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 				}
 			}
 			if (handled) {
-				// stop iterating through this list of candidates
-				break;
+				if (!isPointerMove) {
+					// stop iterating through this list of candidates
+					break;
+				}
+				// a move still has to reach the regions underneath, not to
+				// offer them the event but to take it away from them
+				occluded = true;
 			}
 		}
 	}
@@ -728,6 +758,14 @@ export function unbindPointer(button?: number): void {
 /**
  * allows registration of event listeners on the object target. <br>
  * melonJS will pass a me.Pointer object to the defined callback.
+ *
+ * Regions under the pointer are asked in the order they are drawn, topmost
+ * first, and the walk continues downwards until a callback returns `false`.
+ * Depth is resolved per container, so a child's `pos.z` orders it among its
+ * siblings only and a cross-container pair is decided at the common ancestor,
+ * matching what is drawn on top. `app.viewport` is asked BEFORE all of them
+ * rather than as a fallback, so a callback registered on it should not return
+ * `false` unless it means to swallow every pointer event in the game.
  * @see Pointer
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events | W3C Pointer Event list}
  * @param eventType - The event type for which the object is registering <br>

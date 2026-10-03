@@ -12,7 +12,36 @@ import Container from "../container.js";
 /**
  * This is a basic clickable and draggable container which you can use in your game UI.
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
+ *
+ * Regions under the pointer are asked in the order they are drawn, topmost
+ * first, and the walk carries on downwards until a handler returns `false`. An
+ * element that can overlap another one is therefore not opaque until it says
+ * so: by default a widget it covers still answers clicks and still lights up on
+ * hover. {@link UIBaseElement#onClick}, {@link UIBaseElement#onRelease} and
+ * {@link UIBaseElement#onOver} each consume by returning `false`.
  * @category UI
+ * @example
+ * // a panel that is opaque to the pointer and comes to the front when picked
+ * class Panel extends UIBaseElement {
+ *     onClick() {
+ *         this.ancestor.moveToTop(this);
+ *         return false;
+ *     }
+ *     // the frame the pointer crosses in
+ *     onOver() {
+ *         return false;
+ *     }
+ *     // and every frame after that, when the pointer is already inside and
+ *     // `onOver` no longer fires
+ *     onActivateEvent() {
+ *         super.onActivateEvent();
+ *         me.input.registerPointerEvent("pointermove", this, () => false);
+ *     }
+ *     onDeactivateEvent() {
+ *         me.input.releasePointerEvent("pointermove", this);
+ *         super.onDeactivateEvent();
+ *     }
+ * }
  */
 export default class UIBaseElement extends Container {
 	/**
@@ -133,7 +162,7 @@ export default class UIBaseElement extends Container {
 	 * @ignore
 	 * @internal
 	 */
-	enter(event: Pointer): void {
+	enter(event: Pointer): boolean | void {
 		this.hover = true;
 		this.isDirty = true;
 		if (this.isDraggable) {
@@ -142,7 +171,7 @@ export default class UIBaseElement extends Container {
 			// to memorize where we grab the object
 			this.grabOffset = vector2dPool.get(0, 0);
 		}
-		this.onOver(event);
+		return this.onOver(event);
 	}
 
 	/**
@@ -173,11 +202,19 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the pointer is over the object
+	 * function called when the pointer is over the object.
+	 *
+	 * Fires once, on the frame the pointer crosses into the element. To stay
+	 * opaque for as long as the pointer rests on it, an element also wants a
+	 * `"pointermove"` callback registered through
+	 * {@link input.registerPointerEvent} returning `false`, since by then the
+	 * pointer is already inside and this no longer runs.
 	 * @param _event - the event object
+	 * @returns return false if we need to stop propagating the event, so that an
+	 * element covered by this one does not also light up on hover
 	 */
 
-	onOver(_event?: Pointer): void {
+	onOver(_event?: Pointer): boolean | void {
 		// to be extended
 	}
 
@@ -201,7 +238,15 @@ export default class UIBaseElement extends Container {
 	}
 
 	/**
-	 * function called when the pointer is leaving the object area
+	 * function called when the pointer is leaving the object area.
+	 *
+	 * Fires when the pointer leaves the element's bounds, and also when it is
+	 * still inside them but something drawn above has consumed the move, since
+	 * the pointer is then over that instead.
+	 *
+	 * Unlike {@link UIBaseElement#onOver} this one cannot consume the event, on
+	 * purpose: an element that suppressed its own leave would stay in its hover
+	 * state after the pointer had gone.
 	 * @param _event - the event object
 	 */
 
@@ -271,7 +316,7 @@ export default class UIBaseElement extends Container {
 			return this.release(e);
 		});
 		registerPointerEvent("pointerenter", this, (e) => {
-			this.enter(e);
+			return this.enter(e);
 		});
 		registerPointerEvent("pointerleave", this, (e) => {
 			this.leave(e);

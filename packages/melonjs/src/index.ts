@@ -51,6 +51,7 @@ import BitmapTextData from "./renderable/text/bitmaptextdata.ts";
 import Text from "./renderable/text/text.js";
 import Trail from "./renderable/trail.js";
 import Trigger from "./renderable/trigger.js";
+import ProgressBar from "./renderable/ui/progressbar.ts";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
 import UISpriteElement from "./renderable/ui/uispriteelement.ts";
 import UITextButton from "./renderable/ui/uitextbutton.ts";
@@ -180,6 +181,10 @@ export type {
 	InstancedMeshSettings,
 } from "./renderable/instanced_mesh.js";
 export type { MeshSettings } from "./renderable/mesh.js";
+export type {
+	ProgressBarDirection,
+	ProgressBarSettings,
+} from "./renderable/ui/progressbar.js";
 export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
 export * as utils from "./utils/utils.ts";
@@ -243,6 +248,7 @@ export {
 	PORTABLE_TOPOLOGIES,
 	Pointer,
 	PrimitiveBatcher,
+	ProgressBar,
 	plugins,
 	pool,
 	QuadBatcher,

@@ -443,7 +443,13 @@ export default class Container extends Renderable {
 	 * if the given child implements an onActivateEvent method, that method will be called
 	 * once the child is added to this container.
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
-	 * @param {number} [z] - forces the z index of the child to the specified value
+	 * @param {number} [z] - forces the z index of the child to the specified
+	 * value. This depth is scoped to THIS container: it orders the child among
+	 * its siblings only, and says nothing about children of another container.
+	 * Both drawing and pointer hit-testing resolve a cross-container pair at
+	 * the common ancestor instead, so to put a whole subtree in front use
+	 * {@link Container#moveToTop} on the container rather than a large `z` on
+	 * something inside it. Left out, `autoDepth` numbers children from 1.
 	 * @returns {Renderable} the added child
 	 */
 	addChild(child, z) {
@@ -1031,6 +1037,11 @@ export default class Container extends Renderable {
 
 	/**
 	 * Move the specified child to the top(z depth).
+	 *
+	 * Moves the whole subtree: the child's own children keep their depths among
+	 * themselves and come with it, because depth is resolved per container. This
+	 * is how one overlapping panel is brought in front of another, for drawing
+	 * and for pointer hit-testing alike.
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
 	 */
 	moveToTop(child) {
@@ -1155,12 +1166,66 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * Reverse Z Sorting function
+	 * Hit-test ordering function: orders renderables the way
+	 * {@link Container#draw} paints them, topmost last.
+	 *
+	 * `pos.z` is **container-local** - `autoDepth` numbers each
+	 * container's own children from 1, so the z of two children of
+	 * different containers are unrelated numbers. `draw` never compares
+	 * them: it recurses, so a child's z is only ever weighed against its
+	 * siblings. The pointer hit-test sorts one flat list of broadphase
+	 * candidates instead, so comparing raw z there let a button nested in
+	 * a low panel sort above an entire panel stacked on top of it, and
+	 * the covered button still answered the pointer.
+	 *
+	 * Resolve each pair at the depth where `draw` decides it: walk both
+	 * up to their common parent and compare the two siblings whose order
+	 * picks which subtree paints last. When one is an ancestor of the
+	 * other the descendant wins, since a child paints after its parent.
+	 * Equal sibling z falls back to child order, because the sort in
+	 * `draw` is stable and its reverse walk paints the lower index last.
 	 * @ignore
 	 * @internal
 	 */
 	_sortReverseZ(a, b) {
-		return a.pos.z - b.pos.z;
+		let nodeA = a;
+		let nodeB = b;
+
+		if (nodeA.ancestor !== nodeB.ancestor) {
+			let depthA = 0;
+			for (let n = nodeA.ancestor; n; n = n.ancestor) {
+				depthA++;
+			}
+			let depthB = 0;
+			for (let n = nodeB.ancestor; n; n = n.ancestor) {
+				depthB++;
+			}
+			// keep the original difference: if the two turn out to be on
+			// the same ancestor chain, the deeper one paints later
+			const deeper = depthA - depthB;
+			while (depthA > depthB) {
+				nodeA = nodeA.ancestor;
+				depthA--;
+			}
+			while (depthB > depthA) {
+				nodeB = nodeB.ancestor;
+				depthB--;
+			}
+			// both at equal depth now, rise in step until they are siblings
+			while (nodeA.ancestor !== nodeB.ancestor) {
+				nodeA = nodeA.ancestor;
+				nodeB = nodeB.ancestor;
+			}
+			if (nodeA === nodeB) {
+				return deeper;
+			}
+		}
+
+		const parent = nodeA.ancestor;
+		return (
+			nodeA.pos.z - nodeB.pos.z ||
+			(parent ? parent.getChildIndex(nodeB) - parent.getChildIndex(nodeA) : 0)
+		);
 	}
 
 	/**

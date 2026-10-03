@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, Draggable and DropTarget, the floating screen-space container pattern, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, Draggable, DropTarget, menu, dialogue, Text, BitmapText, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, Text, BitmapText, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
 license: MIT
 ---
 
@@ -129,6 +129,79 @@ Three things matter here:
   real accessor is `depth` (an alias for `pos.z`); `addChild(child, z)` sets it
   for you.
 
+### Bars and gauges: `ProgressBar`
+
+A health bar, a shield gauge, a cooldown and a loading bar are one object. Set
+`value`; it redraws.
+
+```js
+const hp = new ProgressBar(20, 20, {
+    width: 200, height: 24,
+    min: 0, max: 100, value: 100,      // min/max default to 0 and 1
+    trackColor: "#0000001a",
+    fillColor: "#c0392b",
+    borderColor: "black", borderWidth: 2,
+    padding: 2,                        // inset of the fill inside the track
+    radius: 6,                         // 0 is square
+});
+hud.addChild(hp);
+
+hp.value -= 15;                        // clamps; `ratio` reads back 0..1
+```
+
+`direction` takes `"left-to-right"` (the default), `"right-to-left"`,
+`"top-to-bottom"` or `"bottom-to-top"`, each growing from its own edge.
+
+**The colour follows the value by mutating the `Color` you passed.** This is
+the one non-obvious part, and it is deliberate: every game wants a different
+rule, and most want the colour somewhere else too, next to a shader uniform or
+a glow. The bar re-reads `fillColor` every frame, so it never has to know:
+
+```js
+const full = new Color().parseCSS("#7fe0ff");
+const empty = new Color().parseCSS("#ff2a1e");
+const mixed = new Color();
+
+const shield = new ProgressBar(x, y, {
+    width: 190, height: 13,
+    trackColor: null,                  // hollow: the scene shows through
+    borderColor: "rgba(122, 190, 235, 0.8)",
+    padding: 2,
+    fillColor: mixed,                  // KEPT, not copied
+});
+
+// each frame
+mixed.copy(empty).lerp(full, hp);      // the bar follows, and so can a shader
+shield.value = hp;
+```
+
+Blinking is the same story: `setOpacity()` already does it, on whatever clock
+the game is already keeping. Neither is built in.
+
+**`bindEvent` takes the value from an event instead**, and the subscription
+then lives exactly as long as the bar:
+
+```js
+const bar = new ProgressBar(0, y, {
+    width: renderer.width, height: 4,
+    trackColor: "black", fillColor: "#55aa00",
+    bindEvent: event.LOADER_PROGRESS,
+});
+```
+
+Hold that subscription anywhere else and it outlives the bar, firing into a
+renderable whose `pos` has already been released. The engine's own loading
+screen is built on exactly this.
+
+Two more worth knowing:
+
+- **The border is four filled rects, not a stroke** (unless the bar is
+  rounded). A stroke is centred on the path, so half of it falls outside and a
+  bordered bar paints over its neighbour; and `strokeRect` adds corner joins
+  only above a line width of 1, so at exactly 1 a corner pixel goes missing.
+- **`trackColor: null` leaves the bar hollow**, which is what a HUD over a busy
+  scene usually wants: the border is then the only chrome.
+
 ### Buttons: extend the handlers, do not bind listeners
 
 `UISpriteElement` is a `Sprite` that already registers itself for pointer
@@ -139,7 +212,7 @@ events, so a button is made by overriding methods rather than by wiring
 |---|---|---|
 | `onClick(event)` | pressed | `false` to stop the event propagating |
 | `onRelease(event)` | pressed and released | `false` to stop propagating |
-| `onOver(event)` | pointer enters | — |
+| `onOver(event)` | pointer enters | `false` to stop propagating |
 | `onOut(event)` | pointer leaves | — |
 | `onHold()` | pressed and held | — |
 
@@ -162,6 +235,59 @@ The pointer still has to reach it: a renderable with `isKinematic = true` — th
 default on a plain `Renderable` — is skipped by the broadphase and receives
 nothing. `UISpriteElement` and `UIBaseElement` clear it for you; anything else
 you make clickable has to clear it itself.
+
+### `z` is container-local
+
+`addChild(child, z)` writes a depth that means something **only among that
+container's own children**. `autoDepth` numbers them from 1, so a button at
+`z = 8` inside one panel and a whole second panel at `z = 2` are not comparable
+numbers, and the second panel is still the one on top. Drawing and hit-testing
+both resolve a cross-container pair the same way: walk up to the common parent
+and compare the two siblings there.
+
+So a panel is raised by raising **the panel**, not its contents:
+
+```js
+this.ancestor.moveToTop(panel);   // reorders, and sets z past its neighbour
+```
+
+Giving a child a huge `z` to "put it in front" lifts it only within its own
+panel. This is also why a widget's `z` never has to be coordinated with
+anything outside its own container.
+
+### An opaque panel has to say so
+
+The hit test asks the topmost renderable first and then keeps walking down, so
+consuming is what stops a widget underneath answering too. A panel that can
+overlap another one therefore wants both:
+
+```js
+class Panel extends UIBaseElement {
+    onClick() {
+        this.ancestor.moveToTop(this);  // and bring it to the front
+        return false;                   // consumed
+    }
+    onOver() {
+        return false;                   // the frame the pointer crosses in
+    }
+    onActivateEvent() {
+        super.onActivateEvent();
+        // and every frame after that, when the pointer is ALREADY inside and
+        // `onOver` no longer fires
+        input.registerPointerEvent("pointermove", this, () => false);
+    }
+    onDeactivateEvent() {
+        input.releasePointerEvent("pointermove", this);
+        super.onDeactivateEvent();
+    }
+}
+```
+
+Leave `onOut` alone: an element that suppresses its own leave stays lit after
+the pointer has gone. It fires for the covered element too, not only when the
+pointer leaves its bounds, so a button half under the panel goes dark as soon as
+the pointer slides onto the panel, which never takes it out of the button's
+bounds.
 
 ### In a 3D scene, a HUD needs a SMALL depth
 
