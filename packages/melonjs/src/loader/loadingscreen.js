@@ -1,83 +1,15 @@
 import Camera2d from "./../camera/camera2d.ts";
-import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
+import ProgressBar from "./../renderable/ui/progressbar.ts";
 import Stage from "./../state/stage.ts";
 import {
 	LOADER_COMPLETE,
 	LOADER_PROGRESS,
 	off,
-	on,
 	once,
-	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import { load, unload } from "./loader.js";
 import logo_url from "./melonjs_logo.png";
-
-// a basic progress bar object
-class ProgressBar extends Renderable {
-	/**
-	 * @ignore
-	 * @internal
-	 */
-	constructor(x, y, w, h) {
-		super(x, y, w, h);
-
-		this.barHeight = h;
-		this.anchorPoint.set(0, 0);
-
-		on(LOADER_PROGRESS, this.onProgressUpdate, this);
-		on(VIEWPORT_ONRESIZE, this.resize, this);
-
-		this.anchorPoint.set(0, 0);
-
-		// store current progress
-		this.progress = 0;
-	}
-
-	/**
-	 * make sure the screen is refreshed every frame
-	 * @ignore
-	 * @internal
-	 */
-	onProgressUpdate(progress) {
-		this.progress = ~~(progress * this.width);
-		this.isDirty = true;
-	}
-
-	/**
-	 * draw function
-	 * @ignore
-	 * @internal
-	 */
-	draw(renderer, viewport) {
-		// draw the progress bar
-		renderer.setColor("black");
-		renderer.fillRect(
-			this.pos.x,
-			viewport.centerY,
-			renderer.width,
-			this.barHeight / 2,
-		);
-
-		renderer.setColor("#55aa00");
-		renderer.fillRect(
-			this.pos.x,
-			viewport.centerY,
-			this.progress,
-			this.barHeight / 2,
-		);
-	}
-
-	/**
-	 * Called by engine before deleting the object
-	 * @ignore
-	 * @internal
-	 */
-	onDestroyEvent() {
-		off(LOADER_PROGRESS, this.onProgressUpdate, this);
-		off(VIEWPORT_ONRESIZE, this.resize, this);
-	}
-}
 
 /**
  * a default loading screen
@@ -147,8 +79,30 @@ class DefaultLoadingScreen extends Stage {
 
 		const { width, height } = app.renderer;
 
-		// progress bar
-		this.progressBar = new ProgressBar(0, height / 2, width, barHeight);
+		// The progress bar, which is the public `ProgressBar` renderable: the
+		// loading screen is the first consumer of it, and being a consumer
+		// rather than carrying a private copy is what keeps the two honest.
+		//
+		// `barHeight / 2` because the private bar this replaces was built at 8
+		// and drew at half that, so the look is preserved exactly.
+		this.progressBar = new ProgressBar(0, height / 2, {
+			width,
+			height: barHeight / 2,
+			trackColor: "black",
+			fillColor: "#55aa00",
+			borderColor: null,
+			// Bound rather than driven, and bound BY THE BAR so the listener
+			// cannot outlive it. The private bar this replaces hard-coded this
+			// same subscription in its own constructor, which is what made it
+			// useless to a game; naming the event in the settings keeps the
+			// lifetime guarantee and gives the choice back.
+			//
+			// The bar holds a RATIO rather than a pixel count, which fixes a
+			// bug on the way past: the old one multiplied by its width on
+			// arrival, so a viewport resize part way through a load left the
+			// fill at the old scale until the next asset happened to land.
+			bindEvent: LOADER_PROGRESS,
+		});
 		app.world.addChild(this.progressBar, 1);
 
 		// Latch "the preloader is done" — and ONLY that.

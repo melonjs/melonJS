@@ -135,18 +135,26 @@ export default class UISpriteElement extends Sprite {
 	 * @ignore
 	 * @internal
 	 */
-	enter(event: Pointer): void {
+	enter(event: Pointer): boolean | void {
 		this.hover = true;
 		this.isDirty = true;
-		this.onOver(event);
+		return this.onOver(event);
 	}
 
 	/**
-	 * function called when the pointer is over the object
+	 * function called when the pointer is over the object.
+	 *
+	 * Fires once, on the frame the pointer crosses into the element. To stay
+	 * opaque for as long as the pointer rests on it, an element also wants a
+	 * `"pointermove"` callback registered through
+	 * {@link input.registerPointerEvent} returning `false`, since by then the
+	 * pointer is already inside and this no longer runs.
 	 * @param _event - the event object
+	 * @returns return false if we need to stop propagating the event, so that an
+	 * element covered by this one does not also light up on hover
 	 */
 
-	onOver(_event?: Pointer): void {
+	onOver(_event?: Pointer): boolean | void {
 		// to be extended
 	}
 
@@ -163,7 +171,15 @@ export default class UISpriteElement extends Sprite {
 	}
 
 	/**
-	 * function called when the pointer is leaving the object area
+	 * function called when the pointer is leaving the object area.
+	 *
+	 * Fires when the pointer leaves the element's bounds, and also when it is
+	 * still inside them but something drawn above has consumed the move, since
+	 * the pointer is then over that instead.
+	 *
+	 * Unlike {@link UISpriteElement#onOver} this one cannot consume the event, on
+	 * purpose: an element that suppressed its own leave would stay in its hover
+	 * state after the pointer had gone.
 	 * @param _event - the event object
 	 */
 
@@ -233,7 +249,7 @@ export default class UISpriteElement extends Sprite {
 			return this.release(e);
 		});
 		registerPointerEvent("pointerenter", this, (e) => {
-			this.enter(e);
+			return this.enter(e);
 		});
 		registerPointerEvent("pointerleave", this, (e) => {
 			this.leave(e);

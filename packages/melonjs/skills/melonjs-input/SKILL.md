@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, click, touch, drag."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
 license: MIT
 ---
 
@@ -64,9 +64,11 @@ subclasses with no body are the ones that catch people.
 Register in `onActivateEvent` and release in `onDeactivateEvent`, not in the
 constructor — pooled objects are reused and would otherwise accumulate handlers.
 
-`app.viewport` works as a whole-screen region when you want global clicks: the
-dispatcher appends it to the candidate list on every event, so it is reachable
-even when nothing else is under the pointer.
+`app.viewport` works as a whole-screen region when you want global clicks. Note
+it is asked **before** everything else, not as a fallback after nothing matched:
+the dispatcher appends it to the candidate list and walks that list from the
+end. So a viewport handler must not return `false` unless it really means to
+swallow every pointer event in the game.
 
 The accepted event names are exactly `"pointerdown"`, `"pointerup"`,
 `"pointermove"`, `"pointercancel"`, `"pointerenter"`, `"pointerover"`,
@@ -75,6 +77,44 @@ The accepted event names are exactly `"pointerdown"`, `"pointerup"`,
 throw `invalid event type`. melonJS maps the canonical name onto whichever
 mouse/touch events the device actually supports, so you always register the
 pointer name.
+
+## Which object gets the event
+
+The dispatcher collects the regions near the pointer from the broadphase,
+bounds-checks each one, orders them **the way they are drawn** and asks the
+topmost first, walking down until something consumes.
+
+A handler consumes by returning `false`. This is the DOM sense and it reads
+backwards: `false` means handled, and anything else, `undefined` included, lets
+the walk carry on to whatever is underneath.
+
+```js
+input.registerPointerEvent("pointerdown", this, () => {
+    this.fire();
+    return false;        // nothing under this gets the click
+});
+```
+
+Three things decide the order, and only the first is obvious:
+
+- **`pos.z`, among siblings of one container.** Higher is on top.
+- **Across containers, the common ancestor decides.** `pos.z` is
+  container-local, since `autoDepth` numbers each container's children from 1,
+  so a button at `z = 8` inside one panel does not outrank a second panel at
+  `z = 2`. The pair is resolved by walking both up to their shared parent and
+  comparing the two siblings there, which is exactly how drawing resolves it.
+  Raise a whole panel with `ancestor.moveToTop(panel)`, not by inflating a
+  child's `z`.
+- **A child is asked before the container holding it**, since it draws over it.
+
+Equal `z` between siblings falls back to child order, lower index on top. Two
+callbacks registered on the **same** region for the same event run
+last-registered-first.
+
+Consuming a **move** also takes the pointer away from the regions below: each
+one still holding it gets its `pointerleave`, because it is covered now and
+being inside its own bounds no longer decides. Consuming a press, a release or a
+wheel does not, since none of those says where the pointer is.
 
 ## World coordinates versus screen coordinates
 
@@ -159,6 +199,10 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | jump fires every frame while held | `bindKey` without its third `lock` argument |
 | `invalid event type` thrown at registration | non-pointer name (`"click"`, `"mousedown"`, …) passed to `registerPointerEvent` |
 | `no action defined for keycode N` | `bindGamepad` called before `bindKey` for that keycode |
+| a widget under an overlapping panel still reacts | the panel consumes nothing — return `false` from its `onClick` and `onOver` |
+| a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
+| a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |
+| every click in the game stops working | a handler on `app.viewport` returning `false`, which is asked first |
 
 ## Related skills
 
