@@ -6,7 +6,6 @@ import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
 import { writeInstanceTRS } from "../../video/gpu/instancerecord.ts";
 import GLTFModel from "./GLTFModel.js";
-import { linearToSrgb8 } from "./srgb.js";
 
 /**
  * additional import for TypeScript
@@ -262,16 +261,13 @@ export default class GLTFScene {
 			// path renders opaque.) Composes with COLOR_0 and the texture: the
 			// batcher does factor × vertexColor × texel, matching glTF.
 			//
-			// The factor is LINEAR per the glTF spec and a tint is 8-bit sRGB,
-			// so it has to be encoded rather than scaled by 255 — see
-			// `linearToSrgb8`.
+			// The factor is LINEAR per the glTF spec and a tint is sRGB, so it
+			// has to be encoded rather than scaled by 255: that is exactly
+			// what `setLinear` is for, and it keeps the encoded value as a
+			// float instead of rounding it through 8 bits on the way in.
 			const f = node.baseColorFactor;
 			if (f) {
-				mesh.tint.setColor(
-					linearToSrgb8(f[0]),
-					linearToSrgb8(f[1]),
-					linearToSrgb8(f[2]),
-				);
+				mesh.tint.setLinear(f[0], f[1], f[2]);
 			}
 			// per-vertex colors (COLOR_0) — multiplied by the tint per vertex
 			if (node.colors) {

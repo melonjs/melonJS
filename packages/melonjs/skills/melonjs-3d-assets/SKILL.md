@@ -129,6 +129,54 @@ asset fails to load. Export uncompressed.
 `"auto"`) drives sampling; glTF materials that declare their own sampler carry
 it through. Pixel-art models want `"nearest"`.
 
+### `baseColorFactor` is LINEAR; a `tint` is sRGB
+
+The loader handles this for you. It only bites when you build meshes yourself
+from `loader.getGLTF(name).nodes` — which is what you do for per-node control,
+since there is no public per-node `Mesh` factory — and reach for the obvious
+`* 255`:
+
+```js
+// WRONG — every untextured material renders far too dark
+mesh.tint.setColor(f[0] * 255, f[1] * 255, f[2] * 255, 1);
+```
+
+glTF defines `pbrMetallicRoughness.baseColorFactor` in **linear** space (spec
+3.9.2), while a melonJS `tint` is 8-bit **sRGB** — the same space as a CSS
+colour or a texel out of a PNG. They are not the same number, and the gap is
+widest exactly where art tends to live:
+
+| linear | `* 255` | correct | 
+|---|---|---|
+| 0.05 | 13 | 63 |
+| 0.20 | 51 | 124 |
+| 0.42 | 107 | 173 |
+| 0.72 | 184 | 221 |
+| 1.00 | 255 | 255 |
+
+`Color.setLinear` does the encoding for you — it is the linear-space sibling of
+`setFloat`, which takes the same `0..1` range but treats it as already-sRGB:
+
+```js
+mesh.tint.setLinear(...node.baseColorFactor);   // encodes; what you want
+mesh.tint.setFloat(...node.baseColorFactor);    // does NOT encode; too dark
+```
+
+It clamps, so the slightly out-of-range factors some exporters emit cannot turn
+into `NaN`, and it keeps the encoded value as a float rather than rounding
+through 8 bits.
+
+Measured on a scene whose every material went through `* 255`: mean frame luma
+85.5 against 147.8 once encoded, with each channel sitting 60 to 73 counts low.
+
+**Fix it early.** It is nearly invisible as a bug, because the scene still
+looks coherent — just moody — so lighting and bloom thresholds get tuned
+against the wrong values. Correcting the encoding afterwards blows the frame
+out and forces a lighting retune, which is a much bigger job than the encode.
+
+This applies only to factors coming out of glTF. Colours **you** author for the
+screen, a HUD tint or a glow, are already sRGB: `* 255` is right for those.
+
 ## Lights
 
 Authored `KHR_lights_punctual` lights — sun, point, spot — become `Light3d`
@@ -423,6 +471,7 @@ need a prefix.
 | one part of a rig renders rigid while its curves exist | it was re-parented mid-pose, baking the inverse into `matrix_parent_inverse` |
 | a merged mesh lights wrong along one axis | it inherited the active object's non-uniform scale on join — apply transforms |
 | an authored palette comes out uniformly dark, but white is correct | linear values written to a strip that is saved verbatim |
+| every untextured glTF material renders too dark, white unaffected | `baseColorFactor` is linear and a `tint` is sRGB — `tint.setLinear(...)`, not `* 255` or `setFloat` |
 | `getGLTF(name).nodes[0]` geometry lands in the wrong place | `nodes` is per primitive, each with its own `world`; merge to one primitive and export at the origin |
 | a prop casts no visible shadow | wide and flat-bottomed — the blob is under it; `shadowGroundY` haloes it rather than revealing it |
 | shadows only show on casters near the camera | `shadowGroundY` is on the wrong side — Y-down means the floor is a **greater** y, so a `pos.y - lift` puts the blob inside the caster and the depth test leaves only a hairline ring |
