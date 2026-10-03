@@ -424,6 +424,93 @@ describe("Color", () => {
 		});
 	});
 
+	describe("setLinear", () => {
+		it("encodes linear to sRGB rather than copying the number", () => {
+			// the whole point: linear 0.42 is sRGB 173, NOT 107 (0.42 * 255)
+			const c = new Color().setLinear(0.42, 0.42, 0.42);
+			expect(c.r).toBe(173);
+			expect(c.g).toBe(173);
+			expect(c.b).toBe(173);
+		});
+
+		it("differs from setFloat, which treats the same range as sRGB", () => {
+			const linear = new Color().setLinear(0.42, 0.37, 0.33);
+			const asIs = new Color().setFloat(0.42, 0.37, 0.33);
+			expect(linear.r).not.toBe(asIs.r);
+			// the byte getters TRUNCATE (`~~(v * 255)`), so these are the
+			// encoded values floored, not rounded
+			expect([linear.r, linear.g, linear.b]).toEqual([173, 163, 155]);
+			expect([asIs.r, asIs.g, asIs.b]).toEqual([107, 94, 84]);
+		});
+
+		it("keeps full float precision rather than going through 8 bits", () => {
+			// what the renderer actually samples is the normalized array, and
+			// storing the encoded float there is why this is not just
+			// an encode that rounds to 8 bits on the way in
+			const c = new Color().setLinear(0.37, 0.37, 0.37);
+			const expected = 1.055 * 0.37 ** (1 / 2.4) - 0.055;
+			expect(c.toArray()[0]).toBeCloseTo(expected, 6);
+		});
+
+		it("matches the sRGB transfer function to within the byte truncation", () => {
+			// the reference encode, rounded to 8 bits. This class keeps the
+			// float and its byte getters truncate, so the two can sit one
+			// count apart in that view and no more.
+			const reference = (c: number) => {
+				const v = c <= 0 ? 0 : c >= 1 ? 1 : c;
+				const sr = v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
+				return Math.round(sr * 255);
+			};
+			for (const v of [0, 0.002, 0.1, 0.29, 0.42, 0.73, 1]) {
+				expect(
+					Math.abs(new Color().setLinear(v, v, v).r - reference(v)),
+				).toBeLessThanOrEqual(1);
+			}
+		});
+
+		it("keeps the endpoints exact", () => {
+			const black = new Color().setLinear(0, 0, 0);
+			expect([black.r, black.g, black.b]).toEqual([0, 0, 0]);
+			const white = new Color().setLinear(1, 1, 1);
+			expect([white.r, white.g, white.b]).toEqual([255, 255, 255]);
+		});
+
+		it("uses the linear segment near black", () => {
+			// below 0.0031308 the curve is the straight 12.92x, not the power
+			const c = new Color().setLinear(0.002, 0.002, 0.002);
+			expect(c.toArray()[0]).toBeCloseTo(0.002 * 12.92, 6);
+		});
+
+		it("clamps out-of-range factors instead of producing NaN", () => {
+			// exporters do emit these, and a negative base under a fractional
+			// power is NaN, which would poison the whole colour
+			const c = new Color().setLinear(-0.5, 2, Number.NaN);
+			expect(c.r).toBe(0);
+			expect(c.g).toBe(255);
+			expect(Number.isNaN(c.b)).toBe(false);
+		});
+
+		it("passes alpha through untouched — it carries no transfer function", () => {
+			const c = new Color().setLinear(0.5, 0.5, 0.5, 0.25);
+			expect(c.alpha).toBeCloseTo(0.25, 5);
+		});
+
+		it("is monotonic across the range", () => {
+			// ported here when `level/gltf/srgb.js` was folded into this class
+			let prev = -1;
+			for (let i = 0; i <= 20; i++) {
+				const c = new Color().setLinear(i / 20, i / 20, i / 20);
+				expect(c.r).toBeGreaterThanOrEqual(prev);
+				prev = c.r;
+			}
+		});
+
+		it("returns itself for chaining, like its siblings", () => {
+			const c = new Color();
+			expect(c.setLinear(0.5, 0.5, 0.5)).toBe(c);
+		});
+	});
+
 	describe("toHex8", () => {
 		it("converts full alpha", () => {
 			expect(new Color(255, 0, 0, 1).toHex8()).toEqual("#FF0000FF");

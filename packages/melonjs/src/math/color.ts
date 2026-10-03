@@ -209,6 +209,26 @@ for (const [name, rgb] of CSS_COLORS) {
  * A color manipulation object.
  * @category Math
  */
+/**
+ * Encode one LINEAR colour channel to sRGB.
+ *
+ * The standard sRGB transfer function. Kept at `0..1` rather than `0..255`
+ * because that is what {@link Color} stores internally, so nothing is rounded
+ * through 8 bits on the way in.
+ * `@internal`, so it is stripped from the published declarations;
+ * {@link Color#setLinear} is the public way in.
+ * @param c - linear channel value, clamped to `0..1`
+ * @returns the sRGB-encoded channel, `0..1`
+ * @internal
+ */
+export function linearToSrgb(c: number) {
+	// clamp first: exporters emit slightly out-of-range factors, and a
+	// negative base under a fractional power is NaN, which would poison the
+	// whole colour rather than just one channel
+	const v = c <= 0 ? 0 : c >= 1 ? 1 : c;
+	return v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
+}
+
 export class Color {
 	private normalizedRGBA: Float32Array;
 
@@ -327,6 +347,41 @@ export class Color {
 		a[0] = clamp(r, 0, 1.0);
 		a[1] = clamp(g, 0, 1.0);
 		a[2] = clamp(b, 0, 1.0);
+		a[3] = clamp(alpha, 0, 1.0);
+		return this;
+	}
+
+	/**
+	 * Sets the color from LINEAR values, encoding them to sRGB.
+	 *
+	 * The sibling of {@link Color#setFloat}, which takes the same `0..1` range
+	 * but treats it as already-sRGB. Which one you want depends entirely on
+	 * where the numbers came from, and the two are NOT interchangeable: a
+	 * linear `0.42` is sRGB `0.68`, not `0.42`.
+	 *
+	 * Reach for this whenever a value arrives from a renderer's own colour
+	 * space rather than from a CSS string or an image. The common case is
+	 * glTF, which defines `baseColorFactor` and `emissiveFactor` as linear
+	 * (spec 3.9.2) — handing those straight to `setFloat` or scaling them by
+	 * 255 into `setColor` renders every untextured material markedly too
+	 * DARK, by 60 to 70 counts per channel in the midtones. It is an easy
+	 * mistake to leave in, because the result still looks coherent, just
+	 * moody, so lighting gets tuned against the wrong values.
+	 * @param r - The red component [0.0 .. 1.0], linear.
+	 * @param g - The green component [0.0 .. 1.0], linear.
+	 * @param b - The blue component [0.0 .. 1.0], linear.
+	 * @param [alpha=1.0] - The alpha value [0.0 .. 1.0]. Alpha is NOT a colour
+	 * and carries no transfer function, so it is taken as-is.
+	 * @returns Reference to this object for method chaining.
+	 * @example
+	 * // a glTF material factor, which the spec defines as linear
+	 * mesh.tint.setLinear(...node.baseColorFactor);
+	 */
+	setLinear(r: number, g: number, b: number, alpha = 1.0) {
+		const a = this.normalizedRGBA;
+		a[0] = linearToSrgb(r);
+		a[1] = linearToSrgb(g);
+		a[2] = linearToSrgb(b);
 		a[3] = clamp(alpha, 0, 1.0);
 		return this;
 	}

@@ -11,7 +11,6 @@ import InstancedMesh from "../../renderable/instanced_mesh.js";
 import Mesh from "../../renderable/mesh.js";
 import { fillInstances } from "./GLTFScene.js";
 import { sampleChannel } from "./gltf_sampler.js";
-import { linearToSrgb8 } from "./srgb.js";
 
 /**
  * additional import for TypeScript
@@ -294,15 +293,11 @@ export default class GLTFModel extends Container {
 				if (prim.instances) {
 					fillInstances(mesh, prim.instances);
 				}
-				// LINEAR per the glTF spec; a tint is 8-bit sRGB — see
-				// `linearToSrgb8`
+				// LINEAR per the glTF spec; a tint is sRGB. See
+				// {@link Color#setLinear}.
 				const f = prim.baseColorFactor;
 				if (f) {
-					mesh.tint.setColor(
-						linearToSrgb8(f[0]),
-						linearToSrgb8(f[1]),
-						linearToSrgb8(f[2]),
-					);
+					mesh.tint.setLinear(f[0], f[1], f[2]);
 				}
 				if (prim.colors) {
 					mesh.vertexColors = prim.colors;
