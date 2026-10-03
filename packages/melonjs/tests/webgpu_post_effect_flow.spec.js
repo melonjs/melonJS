@@ -205,6 +205,58 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 		expect(log).toEqual([]);
 	});
 
+	// A renderable that draws with primitives cannot use that fast path: the
+	// primitive batcher never reads `customShader`, so its one effect would
+	// apply to nothing. `postEffectNeedsCapture` sends it through the pool
+	// instead, and BOTH ends have to agree, since a `begin` that opens a target
+	// an `end` declines to resolve draws the renderable into a buffer nobody
+	// reads and it disappears.
+	it("postEffectNeedsCapture sends a single effect through the pool instead", () => {
+		const fx = makeEffect({ name: "solo" });
+		const bar = makeRenderable([fx]);
+		bar.postEffectNeedsCapture = true;
+
+		expect(renderer.beginPostEffect(bar)).toBe(true);
+		expect(renderer.customShader).toBeUndefined();
+		log.push("---content---");
+		renderer.endPostEffect(bar);
+
+		expect(log).toEqual([
+			"save",
+			// a sprite-style pass opens on a transparent clear, unscissored
+			"target:rt0:clear",
+			"descissor",
+			"---content---",
+			// back to the parent, then the one effect blits straight across
+			// with no ping-pong, keeping the blend for non-camera content
+			"target:canvas",
+			"blit:rt0→solo:keep=true",
+			"restore",
+			"pushGlobals",
+		]);
+	});
+
+	it("both ends agree, so the pass depth comes back to where it started", () => {
+		const bar = makeRenderable([makeEffect({ name: "solo" })]);
+		bar.postEffectNeedsCapture = true;
+		expect(renderer.effectPassDepth).toBe(0);
+		renderer.beginPostEffect(bar);
+		expect(renderer.effectPassDepth).toBe(1);
+		renderer.endPostEffect(bar);
+		expect(renderer.effectPassDepth).toBe(0);
+	});
+
+	it("leaves a renderable that has not opted in on the fast path", () => {
+		const fx = makeEffect({ name: "solo" });
+		const sprite = makeRenderable([fx]);
+		sprite.postEffectNeedsCapture = false;
+		expect(renderer.beginPostEffect(sprite)).toBe(false);
+		expect(renderer.customShader).toBe(fx);
+		expect(log).toEqual([]);
+		renderer.endPostEffect(sprite);
+		expect(log).toEqual([]);
+	});
+
 	it("disabled effects are filtered before any pooling decision", () => {
 		const sprite = makeRenderable([
 			makeEffect({ name: "off", enabled: false }),

@@ -1104,6 +1104,36 @@ export default class Renderer {
 	}
 
 	/**
+	 * Whether ONE post effect on this renderable can be applied by swapping the
+	 * shader the draw uses, rather than capturing the renderable offscreen and
+	 * post-processing what it drew.
+	 *
+	 * The swap is the cheap path and costs no render target, but it is only
+	 * equivalent when everything the renderable draws is a textured quad: the
+	 * effect's own program stands in for the quad shader and samples the same
+	 * texture. A renderable that draws with primitives goes through a batcher
+	 * that never reads `customShader`, so its effect would silently do nothing.
+	 * Such a renderable sets {@link Renderable#postEffectNeedsCapture}.
+	 *
+	 * Asked at BOTH ends from this one place on purpose. `beginPostEffect` and
+	 * `endPostEffect` have to reach the same answer, and a `begin` that opens a
+	 * render target which `end` then declines to resolve leaves the renderable
+	 * drawn into a buffer nobody reads: it simply disappears.
+	 * @param {Renderable} renderable - the renderable being drawn
+	 * @param {object[]} effects - its enabled effect chain
+	 * @returns {boolean} true to take the shader-swap path
+	 * @ignore
+	 * @internal
+	 */
+	_usesPostEffectFastPath(renderable, effects) {
+		return (
+			effects.length === 1 &&
+			!renderable._postEffectManaged &&
+			renderable.postEffectNeedsCapture !== true
+		);
+	}
+
+	/**
 	 * Begin capturing rendering to an offscreen buffer for post-effect processing.
 	 * Call endPostEffect() after rendering to blit the result to the screen.
 	 * No-op on Canvas renderer.
@@ -1117,7 +1147,7 @@ export default class Renderer {
 		const effects = renderable.postEffects.filter((fx) => {
 			return fx.enabled !== false;
 		});
-		if (effects.length === 1) {
+		if (this._usesPostEffectFastPath(renderable, effects)) {
 			this.customShader = effects[0];
 		} else {
 			this.customShader = undefined;

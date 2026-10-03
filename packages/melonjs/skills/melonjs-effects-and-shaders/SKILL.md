@@ -1,6 +1,6 @@
 ---
 name: melonjs-effects-and-shaders
-description: "Use this skill for post-processing effects, custom shaders, blend modes and colour grading in melonJS. Covers the built-in ShaderEffect presets, addPostEffect on renderables and cameras, writing a custom dual-language GLSL/WGSL effect, the screen_texture builtins, and why effects silently do nothing on the Canvas fallback. Triggers on: ShaderEffect, addPostEffect, removePostEffect, getPostEffect, VignetteEffect, GlowEffect, BlurEffect, PixelateEffect, ScanlineEffect, shader, GLSL, WGSL, uniform, setUniform, setTexture, setTime, blendMode, colorMatrix, screen_texture, toFrameTexture, post effect, filter."
+description: "Use this skill for post-processing effects, custom shaders, blend modes and colour grading in melonJS. Covers the built-in ShaderEffect presets, addPostEffect on renderables and cameras, writing a custom dual-language GLSL/WGSL effect, the screen_texture builtins, and why effects silently do nothing on the Canvas fallback. Triggers on: ShaderEffect, addPostEffect, removePostEffect, getPostEffect, postEffectNeedsCapture, VignetteEffect, GlowEffect, BlurEffect, PixelateEffect, ScanlineEffect, shader, GLSL, WGSL, uniform, setUniform, setTexture, setTime, blendMode, colorMatrix, screen_texture, toFrameTexture, post effect, filter."
 license: MIT
 ---
 
@@ -63,6 +63,33 @@ wants a small depth, not the huge z that would put it on top in 2D).
 
 Either way, verify it rather than reasoning about it: return a flat colour from
 the body for one frame and see what it tints.
+
+## A renderable that draws with PRIMITIVES has to ask to be captured
+
+One effect is applied the cheap way: the renderable is drawn with the effect's
+own program instead of being captured offscreen and post-processed, which costs
+no render target. That is equivalent only when everything the renderable draws
+is a textured quad. `fillRect`, `strokeRect` and `renderer.fill(shape)` go
+through a batcher that never reads that shader, so **one** effect on such a
+renderable would silently do nothing, while **two** would work, because a chain
+always captures.
+
+So a renderable of your own that draws with primitives says so:
+
+```js
+class Bar extends Renderable {
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
+        this.postEffectNeedsCapture = true;   // ← or one effect is a no-op
+    }
+    draw(renderer) {
+        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+    }
+}
+```
+
+`ProgressBar` and `Trail` set it for you, and a sprite needs nothing: the flag
+defaults to `false` and only ever changes the single-effect case.
 
 ## Toggle with `enabled`, do not remove
 
@@ -576,6 +603,7 @@ same question after construction.
 | effect does nothing, warning in console | Canvas fallback — no programmable pipeline |
 | effect does nothing on some machines only | GLSL-only shader, `video.AUTO` chose WebGPU |
 | a white or solid box where the effect should be | carrier renderable drawn while the effect is disabled |
+| ONE effect does nothing but two of them work | the renderable draws with primitives — set `postEffectNeedsCapture` |
 | effect cannot be re-enabled | `removePostEffect()` destroyed it — use `enabled` |
 | ported shader renders upside down | a hand-bound `toFrameTexture()` capture — GL is bottom-up, WebGPU top-down |
 | shadow/smear offset flips on some draws | vertical UV offset not multiplied by `uUVYDir` |
