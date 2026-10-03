@@ -429,6 +429,37 @@ export default class Renderable extends Rect {
 		this.isKinematic = true;
 
 		/**
+		 * whether a single post effect on this renderable needs an offscreen
+		 * capture instead of the renderer's shader-swap fast path.
+		 *
+		 * One effect is normally applied by drawing the renderable with the
+		 * effect's own program rather than capturing and post-processing it,
+		 * which costs no render target. That is only equivalent when everything
+		 * the renderable draws is a textured quad. `fillRect` and the shape
+		 * dispatch go through a batcher that never looks at that shader, so a
+		 * single effect on a renderable that draws with primitives silently
+		 * does nothing. Set this and the capture is used instead, at the cost
+		 * of a render target while the effect is active.
+		 *
+		 * Two or more effects always capture, so this only ever changes the
+		 * single-effect case.
+		 * @type {boolean}
+		 * @default false
+		 * @example
+		 * class Bar extends Renderable {
+		 *     constructor(x, y, w, h) {
+		 *         super(x, y, w, h);
+		 *         // this draws itself with primitives, not as a sprite
+		 *         this.postEffectNeedsCapture = true;
+		 *     }
+		 *     draw(renderer) {
+		 *         renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+		 *     }
+		 * }
+		 */
+		this.postEffectNeedsCapture = false;
+
+		/**
 		 * when true the renderable will be redrawn during the next update cycle
 		 * @type {boolean}
 		 * @default true

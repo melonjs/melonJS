@@ -1728,7 +1728,7 @@ export default class WebGLRenderer extends Renderer {
 			return false;
 		}
 		// single effect on non-managed renderable: fast path via customShader (no FBO)
-		if (effects.length === 1 && !renderable._postEffectManaged) {
+		if (this._usesPostEffectFastPath(renderable, effects)) {
 			this.customShader = effects[0];
 			return false;
 		}
@@ -1790,7 +1790,7 @@ export default class WebGLRenderer extends Renderer {
 			return;
 		}
 		// single effect on non-managed renderable used customShader — no FBO to unbind
-		if (effects.length === 1 && !renderable._postEffectManaged) {
+		if (this._usesPostEffectFastPath(renderable, effects)) {
 			return;
 		}
 

@@ -201,6 +201,12 @@ export default class ProgressBar extends Renderable {
 		// everything by half the bar
 		this.anchorPoint.set(0, 0);
 
+		// Drawn with primitives rather than as a textured quad, so a single
+		// post effect has to capture rather than take the shader-swap path:
+		// the primitive batcher never reads that shader and the effect would
+		// silently do nothing.
+		this.postEffectNeedsCapture = true;
+
 		// Bound for exactly as long as this bar exists. Tying the two together
 		// is what stops the listener outliving the thing it writes into: a
 		// subscription held somewhere else goes on firing after the bar is

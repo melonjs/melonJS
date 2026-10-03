@@ -1274,7 +1274,7 @@ export default class WebGPURenderer extends Renderer {
 			return false;
 		}
 		// single effect on a non-managed renderable: fast path (no target)
-		if (effects.length === 1 && !renderable._postEffectManaged) {
+		if (this._usesPostEffectFastPath(renderable, effects)) {
 			this.customShader = effects[0];
 			return false;
 		}
@@ -1362,7 +1362,7 @@ export default class WebGPURenderer extends Renderer {
 			return;
 		}
 		// the fast path set customShader — nothing offscreen to composite
-		if (effects.length === 1 && !renderable._postEffectManaged) {
+		if (this._usesPostEffectFastPath(renderable, effects)) {
 			return;
 		}
 

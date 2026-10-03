@@ -80,6 +80,12 @@ export default class Trail extends Renderable {
 		 * @ignore
 		 * @internal
 		 */
+		// Every segment is a path filled through `renderer.fill()`, which goes
+		// to the primitive batcher. That batcher never reads `customShader`,
+		// so the renderer's single-effect shader-swap would apply to nothing
+		// at all: a trail with one post effect has to be captured instead.
+		this.postEffectNeedsCapture = true;
+
 		this._gradient = this._buildGradient(options);
 		/**
 		 * @ignore
