@@ -748,10 +748,13 @@ describe("particle referenceSpace", () => {
 			emitter.burstParticles();
 			const particle = emitter.getChildren()[0];
 
-			// the particle carries the emitter's depth (addParticles passes it
-			// as the child z), and the frame it is measured from contributes
-			// the rest of the chain
-			expect(particle.depth).toBe(7);
+			// A particle's own depth is an OFFSET from the emitter it left,
+			// zero at birth, whatever frame its x and y are measured in:
+			// `_spawnMap` re-bases the birth point within the emitter's plane
+			// and leaves z alone.
+			expect(particle.depth).toBe(0);
+			// so the emitter's own place in the world (40 + 7) is the whole of
+			// it, counted ONCE
 			expect(particle.getAbsolutePosition().z).toBeCloseTo(47);
 		});
 
@@ -765,8 +768,23 @@ describe("particle referenceSpace", () => {
 			emitter.burstParticles();
 			const particle = emitter.getChildren()[0];
 
-			// emitter's own 7 + the emitter's absolute z (40 + 7)
-			expect(particle.getAbsolutePosition().z).toBeCloseTo(54);
+			// 40 + 7, the emitter's absolute depth, and nothing on top of it.
+			// 54 here would mean the emitter's own 7 had been stamped onto the
+			// particle as a LOCAL z and then summed again by the chain walk —
+			// which is what `Camera3d.isVisible` culls against, so a burst
+			// anywhere but the near face of a 3D scene drew nothing at all.
+			expect(particle.getAbsolutePosition().z).toBeCloseTo(47);
+		});
+
+		it("places a particle at the emitter's depth, not twice it", () => {
+			// the shape every 3D burst actually has: an emitter parked at a
+			// scene depth, directly under the world
+			const emitter = pointEmitter(100, 100);
+			app.world.addChild(emitter, 900);
+			emitter.burstParticles();
+			const particle = emitter.getChildren()[0];
+
+			expect(particle.getAbsolutePosition().z).toBeCloseTo(900);
 		});
 	});
 
