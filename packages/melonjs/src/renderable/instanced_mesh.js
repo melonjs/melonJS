@@ -725,7 +725,12 @@ export default class InstancedMesh extends Mesh {
 	 * @internal
 	 */
 	_drawInstancedGroundShadow(renderer) {
-		if (typeof renderer.drawInstancedShadow !== "function") {
+		const shadowScale = this.shadowScale;
+		if (
+			typeof renderer.drawInstancedShadow !== "function" ||
+			!Number.isFinite(shadowScale) ||
+			shadowScale <= 0
+		) {
 			return;
 		}
 		// Sized from the PROTOTYPE's own footprint, with the same contact
@@ -746,8 +751,8 @@ export default class InstancedMesh extends Mesh {
 		const quad = getInstancedShadowQuad(
 			this,
 			Mesh,
-			hx,
-			hz,
+			hx * shadowScale,
+			hz * shadowScale,
 			this._geometryVersion ?? 0,
 		);
 		const group = this._modelMatrix.val;

@@ -168,6 +168,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive color (see {@link Mesh})
 	 * @param {number} [settings.shadowGroundY] - world Y of the floor the blob shadow lands on. Omit and it falls back to the sprite's own base — which for a billboard moves with the camera, so a scene that knows where its floor is should say so.
 	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the sprite, before any height fade
+	 * @param {number} [settings.shadowScale=1] - multiplier for the ground shadow's footprint; non-positive or non-finite values hide the shadow
 	 * @param {boolean} [settings.castGroundShadow] - give this sprite a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a {@link Camera3d}.
 	 * @param {boolean} [settings.fog] - set `false` to exempt this sprite from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does. A sun or a moon wants this — everything else at that distance dissolves into the haze, and so would it.
 	 * @param {boolean} [settings.transparent] - draw in the transparent pass (blended, back-to-front, no depth write) instead of the opaque one. Omit and the sprite goes transparent whenever its draw alpha is fractional; `true` for a soft-alpha sprite such as an additive glow; `false` to stay opaque however faded.
@@ -288,6 +289,7 @@ export default class Sprite3d extends Mesh {
 			transparent: settings.transparent,
 			shadowGroundY: settings.shadowGroundY,
 			shadowOpacity: settings.shadowOpacity,
+			shadowScale: settings.shadowScale,
 		});
 
 		/**
