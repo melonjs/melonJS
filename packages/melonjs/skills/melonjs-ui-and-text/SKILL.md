@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, Text, BitmapText, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, Tween, easing, animate a label, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
 license: MIT
 ---
 
@@ -51,8 +51,24 @@ deliberate fade across a two-line title wants.
 
 The ramp colours the **fill only** — `Text` strokes in a separate pass, so
 an outline keeps its own colour without any luminance trickery — and it works on
-Canvas2D, which a post effect does not. `fillStyle.alpha` still gates the fill,
-and the property still reads back as a `Color`.
+Canvas2D, which a post effect does not.
+
+### The gradient does not live in `fillStyle`
+
+`fillStyle` ACCEPTS a `Gradient`; it never HOLDS one. The constructor routes it
+to `fillGradient` and leaves `fillStyle` as the pooled `Color` it always is,
+which is what keeps `fillStyle.alpha` gating the fill and keeps the colour
+owned by the pool.
+
+So changing the ramp later means assigning the field it actually landed in:
+
+```js
+label.fillGradient = ramp;   // ✓
+label.fillStyle = ramp;      // ✗ TS2740: Gradient is not a Color
+```
+
+The ramp is authored for ONE line height, so a label that changes size needs a
+new one built at the new size; there is nothing that rescales it for you.
 
 ## BitmapText: `size` is a RATIO, not pixels
 
@@ -95,6 +111,19 @@ loader.preload([
 
 Reach for it over `Text` when the text is mostly static, has to stay crisp at
 integer scales, or wants recolouring without a re-bake.
+
+### `fillStyle` means two different things
+
+The name is shared and the behaviour is not, which is the trap when moving a
+label from one class to the other:
+
+| | `Text` | `BitmapText` |
+|---|---|---|
+| what `fillStyle` holds | a real `Color`, the fill | `Renderable#tint`, under another name |
+| white | white glyphs | the ABSENCE of a tint |
+| gradient | yes, via `fillGradient` | no: a tint is one colour over a page image |
+| stroke | `strokeStyle` + `lineWidth` | none |
+| `size` | pixels | a RATIO of the authored size |
 
 ## The HUD pattern
 
@@ -313,3 +342,9 @@ Give a HUD the huge z that would put it on top in 2D and it lands at the far end
 of the level instead, with the scenery drawing over it. Both shipped idioms are
 the same rule: afterBurner's HUD sits at `-150`, and the glTF, Billboard, Night
 City and Instanced Forest examples park a floating sky at `-10000` or `100000`.
+
+## Related skills
+
+- `melonjs-scenes-and-state` — `Tween` and the easing families, for animating any of this
+- `melonjs-input` — which object gets a pointer event, and how to consume it
+- `melonjs-loading-assets` — web fonts have to be loaded before a `Text` bakes

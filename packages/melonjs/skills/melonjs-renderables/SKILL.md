@@ -1,6 +1,6 @@
 ---
 name: melonjs-renderables
-description: "Use this skill when subclassing Renderable, writing a custom draw() method, handling pointer or click events on game objects, applying post effects and shaders, or controlling draw order. Covers the pos-relative draw contract, isKinematic and input, addPostEffect vs the deprecated shader property, and z-ordering. Triggers on: Renderable, extends Renderable, draw(, update(, isKinematic, pointerEvent, registerPointerEvent, onClick, addPostEffect, removePostEffect, ShaderEffect, addChild, z-order, anchorPoint, floating."
+description: "Use this skill when subclassing Renderable, writing a custom draw() method, handling pointer or click events on game objects, applying post effects and shaders, or controlling draw order. Covers the pos-relative draw contract, isKinematic and input, addPostEffect vs the deprecated shader property, and z-ordering. Triggers on: Tween, easing, animate, Renderable, extends Renderable, draw(, update(, isKinematic, pointerEvent, registerPointerEvent, onClick, addPostEffect, removePostEffect, ShaderEffect, addChild, z-order, anchorPoint, floating."
 license: MIT
 ---
 
@@ -284,6 +284,7 @@ Hand-rolled equivalents miss the batching and the multi-backend support.
 | `isRenderable = false` did not hide the object | it gates bounds, not drawing — use `alpha` |
 
 ## Related skills
+- `melonjs-scenes-and-state` — `Tween` and the easing families, for animating any of this
 
 - `melonjs-getting-started` — Application lifecycle and the scene graph
 - `melonjs-20-migration` — the deprecated `shader` property and other pre-20 APIs

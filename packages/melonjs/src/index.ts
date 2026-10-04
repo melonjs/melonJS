@@ -328,5 +328,7 @@ DOMContentLoaded(() => {
 	}
 });
 
+export type { EasingFunction } from "./tweens/easing.ts";
+export type { InterpolationFunction } from "./tweens/interpolation.ts";
 export type { Topology } from "./video/gpu/topology.ts";
 export type { VertexFormat } from "./video/gpu/vertexformat.ts";

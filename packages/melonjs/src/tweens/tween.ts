@@ -673,12 +673,43 @@ export default class Tween {
 
 	/**
 	 * Available easing functions, accessed via `Tween.Easing`.
-	 * Each family provides `In`, `Out`, and `InOut` variants.
-	 * @see {@link Easing} for the full list
+	 *
+	 * Eleven families, each providing `In`, `Out` and `InOut`. `In` applies the
+	 * curve at the start, `Out` at the end, and `InOut` at both. `Out` is what
+	 * most UI wants: the value arrives decisively rather than creeping in.
+	 *
+	 * | family | shape | reach for it when |
+	 * | --- | --- | --- |
+	 * | `Linear.None` | no curve at all | the value IS the progress, e.g. a loading bar |
+	 * | `Quadratic` `Cubic` `Quartic` `Quintic` | progressively sharper power curves | general motion; higher powers start slower and finish harder |
+	 * | `Sinusoidal` | gentlest of all | a drift or a breath that should not call attention |
+	 * | `Exponential` | extreme, near-instant at one end | something that snaps |
+	 * | `Circular` | hard, like the quarter of a circle | a mechanical slide |
+	 * | `Back` | **overshoots past the target and settles back** | impact: a stamp, a button press, anything that should land rather than arrive |
+	 * | `Elastic` | overshoots repeatedly, oscillating | springy, cartoon motion |
+	 * | `Bounce` | lands and bounces, settling | something falling onto a surface |
+	 *
+	 * `Back` and `Elastic` overshoot, so the value LEAVES the range between
+	 * your start and end: clamp anything that cannot take it, an opacity or a
+	 * colour channel in particular. Note the direction of the overshoot follows
+	 * the direction of travel, so a value tweened DOWN to its target overshoots
+	 * below it.
+	 * @see https://easings.net/ for a visual reference of every curve
 	 * @example
 	 * me.Tween.Easing.Quadratic.InOut
 	 * me.Tween.Easing.Bounce.Out
 	 * me.Tween.Easing.Elastic.In
+	 * @example
+	 * // a stamp: scale falls to 1 and springs through it
+	 * const driver = { scale: 5 };
+	 * new me.Tween(driver)
+	 *     .to({ scale: 1 }, { duration: 420 })
+	 *     .easing(me.Tween.Easing.Back.Out)
+	 *     .onUpdate(() => {
+	 *         label.currentTransform.identity();
+	 *         label.scale(driver.scale);
+	 *     })
+	 *     .start();
 	 */
 	static get Easing() {
 		return Easing;
