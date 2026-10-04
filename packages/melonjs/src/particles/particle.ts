@@ -24,7 +24,27 @@ const _spawn = new Vector2d();
  * @category Particles
  */
 export default class Particle extends Renderable {
+	/**
+	 * Launch velocity.
+	 *
+	 * `x` and `y` are the emitter's plane. `z` is only ever non-zero when the
+	 * emitter was given an {@link ParticleEmitterSettings.elevation}, and the
+	 * integration below skips it entirely when it is not: a 2D emitter runs
+	 * exactly the path it ran before, rather than the 3D path with a zero in
+	 * it.
+	 */
 	vel: Vector2d;
+	/**
+	 * Velocity along Z, kept beside `vel` rather than in it.
+	 *
+	 * `vel` is pooled as a `Vector2d` and every existing effect reads it as
+	 * one; widening the pooled type would make every 2D emitter carry a third
+	 * component it never uses. A separate number costs one double per particle
+	 * and leaves the 2D path untouched.
+	 */
+	velZ: number;
+	/** whether this particle has any Z motion at all; see {@link Particle#velZ} */
+	moves3d: boolean;
 	image: HTMLCanvasElement | HTMLImageElement;
 	life: number;
 	startLife: number;
@@ -186,7 +206,104 @@ export default class Particle extends Renderable {
 			emitter.settings.speed +
 			(Math.random() * 2 - 1) * emitter.settings.speedVariation;
 
-		this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
+		// The launch. `angle` is the azimuth within the emitter's plane, and
+		// `elevation` lifts out of it.
+		//
+		// Gated rather than generalized: an emitter with no elevation and no
+		// variation runs the two trig call path it always ran and sets no Z at
+		// all, so nothing existing pays for this. Only an emitter that asked
+		// for depth does the extra two.
+		const maxSpread = emitter.settings.maxSpread;
+		if (maxSpread > 0) {
+			// Aimed RELATIVE TO AN AXIS rather than within a rectangle of
+			// azimuth x elevation. `angle` and `elevation` give the axis; a
+			// particle leaves at a polar angle `theta` off it, around a
+			// uniformly random azimuth `phi`.
+			//
+			// This is the only way to describe a shape defined against a
+			// direction. A ring of debris tangent to a sphere is the set of
+			// directions perpendicular to the surface normal, and on the
+			// independent path the elevation that satisfies that is a
+			// function of the azimuth, which independent sampling cannot
+			// express at any variation.
+			// Both taken UNJITTERED, straight off the settings: the axis is
+			// the one direction the whole burst is measured against, so
+			// `angleVariation` must not wobble it per particle the way it
+			// does on the independent path. `minSpread`/`maxSpread` own the
+			// spread here, and an axis that moves would add a second,
+			// invisible one.
+			const axisAngle = emitter.settings.angle;
+			const axisElev = emitter.settings.elevation;
+			const ce = Math.cos(axisElev);
+			const ax = ce * Math.cos(axisAngle);
+			const ay = -ce * Math.sin(axisAngle);
+			const az = Math.sin(axisElev);
+
+			// Any basis perpendicular to the axis will do, and the usual
+			// warning about a continuous choice does not apply: `phi` is
+			// uniform over the whole circle, so rotating the basis only
+			// relabels which particle got which angle. The pick just has to
+			// avoid being parallel to the axis, hence the branch.
+			let ux: number;
+			let uy: number;
+			let uz: number;
+			if (Math.abs(az) < 0.9) {
+				// cross(axis, world Z)
+				ux = ay;
+				uy = -ax;
+				uz = 0;
+			} else {
+				// cross(axis, world X)
+				ux = 0;
+				uy = az;
+				uz = -ay;
+			}
+			const ul = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1;
+			ux /= ul;
+			uy /= ul;
+			uz /= ul;
+			// v = axis x u, already unit since both are and they are
+			// perpendicular
+			const vx = ay * uz - az * uy;
+			const vy = az * ux - ax * uz;
+			const vz = ax * uy - ay * ux;
+
+			const theta = randomFloat(emitter.settings.minSpread, maxSpread);
+			const phi = Math.random() * Math.PI * 2;
+			const ct = Math.cos(theta);
+			const st = Math.sin(theta);
+			const cp = Math.cos(phi);
+			const sp = Math.sin(phi);
+			// d = cos(theta) * axis + sin(theta) * (cos(phi) * u + sin(phi) * v)
+			const dx = ct * ax + st * (cp * ux + sp * vx);
+			const dy = ct * ay + st * (cp * uy + sp * vy);
+			const dz = ct * az + st * (cp * uz + sp * vz);
+			this.vel.set(speed * dx, speed * dy);
+			this.velZ = speed * dz;
+			// A ring or cone off an axis is a 3D launch whatever the numbers
+			// work out to, and treating a zero `velZ` as 2D here would hand
+			// the particle a stale `moves3d` from its last life in the pool.
+			this.moves3d = true;
+		} else {
+			const elevationVariation = emitter.settings.elevationVariation;
+			const elevation =
+				emitter.settings.elevation +
+				(Math.random() * 2 - 1) * elevationVariation;
+			if (elevation === 0) {
+				this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
+				this.velZ = 0;
+				this.moves3d = false;
+			} else {
+				// speed is the length of the whole 3D vector, so the in-plane
+				// part is foreshortened by the elevation exactly as a sphere
+				// requires: without the cosine an "all directions" burst would
+				// bunch toward the poles instead of covering the sphere evenly
+				const flat = speed * Math.cos(elevation);
+				this.vel.set(flat * Math.cos(angle), -flat * Math.sin(angle));
+				this.velZ = speed * Math.sin(elevation);
+				this.moves3d = true;
+			}
+		}
 
 		// randomFloat already returns a value in [min, max] — no extra clamp needed.
 		this.life = randomFloat(emitter.settings.minLife, emitter.settings.maxLife);
@@ -283,6 +400,12 @@ export default class Particle extends Renderable {
 
 		this.pos.x += this.vel.x * skew;
 		this.pos.y += this.vel.y * skew;
+		// Only for a particle that was actually launched out of the plane.
+		// `gravity` and `wind` stay 2D: they are screen space stylings and a
+		// Z equivalent has no obvious meaning until something asks for one.
+		if (this.moves3d) {
+			this.depth += this.velZ * skew;
+		}
 
 		// Update particle transform — the COMPLETE placement, in one
 		// setTransform(), landing the particle's centre exactly on `pos`.
@@ -348,7 +471,20 @@ export default class Particle extends Renderable {
 	 * @internal
 	 */
 	override preDraw(renderer: CanvasRenderer | WebGLRenderer) {
+		// The emitter's own `preDraw` left its depth on the renderer, and a
+		// particle's is an OFFSET from it: `Renderable#preDraw` assigns
+		// `setDepth(this.depth)` rather than accumulating, so taken as is a
+		// particle would be drawn at its drift alone — on the plane through
+		// the world origin, whatever slice its emitter is on.
+		//
+		// Added here rather than stamped onto `pos.z` at spawn. A particle's
+		// `pos` is local to its emitter and `getAbsolutePosition()` sums the
+		// chain, so an absolute z held there is counted TWICE — which is what
+		// {@link Camera3d#isVisible} then culled against, and why a burst on
+		// anything but the near face of a 3D scene silently drew nothing.
+		const inherited = renderer.currentDepth;
 		super.preDraw(renderer);
+		renderer.setDepth(inherited + this.depth);
 		if (!this.currentTransform.isIdentity()) {
 			renderer.transform(this.currentTransform);
 		}
@@ -450,7 +586,18 @@ export default class Particle extends Renderable {
 		// Vector2d even though a Renderable holds an ObservableVector3d
 		this._absPos.set(this.pos.x, this.pos.y, this.depth);
 		if (!this.floating) {
-			this._absPos.add(origin.getAbsolutePosition());
+			// Z is measured from the EMITTER even when x and y are not.
+			// `_spawnMap` re-bases the birth point within the emitter's PLANE
+			// — it is applied to a `Vector2d` — so a particle's `depth` stays
+			// an offset from the emitter it left, whatever frame its x and y
+			// are measured in. Read before `origin`, since both chains end at
+			// the same root and the second walk overwrites the first's
+			// scratch vector.
+			const emitterZ = (this.ancestor as Renderable).getAbsolutePosition().z;
+			const frame = origin.getAbsolutePosition();
+			this._absPos.x += frame.x;
+			this._absPos.y += frame.y;
+			this._absPos.z += emitterZ;
 		}
 		return this._absPos;
 	}

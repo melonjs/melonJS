@@ -3,6 +3,8 @@
 ## [20.8.0] (melonJS 2) - _unreleased_
 
 ### Added
+- **3D particles** (`elevation`, `elevationVariation`): the launch lifts out of the emitter's plane, so a burst is a volume rather than a disc facing the viewer and a trail can recede. Both default to `0`, which leaves the 2D path exactly as it was ([#1696](https://github.com/melonjs/melonJS/issues/1696))
+- **`minSpread` / `maxSpread`**: `angle` and `elevation` become an AXIS and each particle leaves at a polar angle off it, giving a cone, a flat disc or a whole sphere. Sampling azimuth and elevation independently cannot describe a ring tangent to a surface, since there the elevation is a function of the azimuth ([#1696](https://github.com/melonjs/melonJS/issues/1696))
 - **`ProgressBar`**, a gauge renderable: track, value-sized fill, optional border and label, four directions, colour or gradient. The loading screen is built on it
 - **HDR rendering** (`hdr`, `hdrOutput`, `renderer.setHDR()` / `setHDROutput()`), off by default: half-float camera targets so additive content stops saturating, and the frame presented in the display's full range. `hdrOutput` is WebGPU only; check `renderer.supportsHDR` / `supportsHDROutput`
 - **`toneMapping` setting and `renderer.setToneMapping(mode, options)`**: `"aces"`, `"reinhard"` or `"exponential"`, kept last on the camera and driveable from a settings screen
@@ -15,6 +17,8 @@
 - **`Camera3d#setBasis(right, up, forward)` and `lookAt(target, up)`**: pose a camera from a basis the game already holds, which is what a view over a curved surface needs
 
 ### Fixed
+- A particle was culled and sorted at twice its depth, because the emitter's depth was stamped onto each particle as a container-local `pos.z` and then summed again by the chain walk. Under a `Camera3d` a burst anywhere but the near face of the scene drew nothing at all
+- Destroying a `ParticleEmitter` returns its particles to the pool and cancels the sort it still owed. `Container#destroy` emptied itself through its own public `reset()`, which `ParticleEmitter` redefines to re-apply settings, so on an emitter that call did neither
 - Pointer events reach whatever is drawn on top. `pos.z` is container-local, so a button inside one panel outranked another panel stacked over it. A covered region is also told when it loses the pointer
 - `onOver` can consume the pointer by returning `false`, as `onClick` and `onRelease` already could, so a panel can stop a widget it covers lighting up on hover
 - A single post effect did nothing on a renderable that draws with primitives, while two or more worked. `Trail` was affected; opt in with `postEffectNeedsCapture`

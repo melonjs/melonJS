@@ -51,6 +51,10 @@ export interface ParticleEmitterSettings {
 
 	/**
 	 * Start angle for particle launch in Radians.
+	 *
+	 * This is the AZIMUTH: the direction within the emitter's XY plane. With
+	 * {@link ParticleEmitterSettings.elevation} left at its default of `0`
+	 * every particle stays in that plane, which is how all 2D emitters behave.
 	 * @default Math.PI / 2
 	 */
 	angle: number;
@@ -60,6 +64,75 @@ export interface ParticleEmitterSettings {
 	 * @default 0
 	 */
 	angleVariation: number;
+
+	/**
+	 * Launch angle OUT of the emitter's plane, in radians.
+	 *
+	 * `0` fires along the plane, `Math.PI / 2` straight toward the viewer,
+	 * `-Math.PI / 2` straight away. Combined with
+	 * {@link ParticleEmitterSettings.elevationVariation} this is what turns a
+	 * burst from a flat disc facing the camera into a sphere: without it a
+	 * particle keeps the depth it was born at for its whole life, so no effect
+	 * can expand along Z or trail away.
+	 *
+	 * Zero by default, and zero is not merely a value: an emitter with no
+	 * elevation and no variation takes the same two trig call launch path it
+	 * always did and never touches a Z component, so no existing effect pays
+	 * anything for this.
+	 * @default 0
+	 * @example
+	 * // a spherical burst rather than a disc
+	 * new ParticleEmitter(x, y, {
+	 *     angle: 0, angleVariation: Math.PI * 2,
+	 *     elevation: 0, elevationVariation: Math.PI / 2,
+	 * });
+	 */
+	elevation: number;
+
+	/**
+	 * Variation in the launch elevation, in radians.
+	 *
+	 * `Math.PI / 2` with an `elevation` of `0` spreads particles over the
+	 * whole sphere; a small value gives a cone around the azimuth.
+	 * @default 0
+	 */
+	elevationVariation: number;
+
+	/**
+	 * Narrowest angle off the launch axis a particle may be thrown, in radians.
+	 *
+	 * Together with {@link ParticleEmitterSettings.maxSpread} this selects a
+	 * different way of aiming. Normally `angleVariation` and
+	 * `elevationVariation` are sampled INDEPENDENTLY, which spreads particles
+	 * over a rectangle of azimuth x elevation. That cannot describe a shape
+	 * defined relative to a direction: a ring of debris leaving a point on a
+	 * sphere is the set of directions at 90 degrees to that point's normal,
+	 * and on a rectangle the required elevation is a function of the azimuth
+	 * rather than independent of it.
+	 *
+	 * So when `maxSpread` is greater than zero, {@link
+	 * ParticleEmitterSettings.angle} and {@link
+	 * ParticleEmitterSettings.elevation} stop being a rectangle's centre and
+	 * become an AXIS, and each particle is thrown at a polar angle between
+	 * `minSpread` and `maxSpread` from it, around a uniformly random azimuth.
+	 * `angleVariation` and `elevationVariation` are then unused.
+	 *
+	 * - `0` to `0.5` is a tight cone along the axis
+	 * - either value at `Math.PI / 2` is a flat disc perpendicular to it
+	 * - `0` to `Math.PI` is the whole sphere
+	 * @default 0
+	 */
+	minSpread: number;
+
+	/**
+	 * Widest angle off the launch axis a particle may be thrown, in radians.
+	 *
+	 * Zero, the default, leaves the emitter on the independent
+	 * azimuth/elevation path it has always used. See {@link
+	 * ParticleEmitterSettings.minSpread} for what a non-zero value switches to.
+	 * @default 0
+	 */
+	maxSpread: number;
 
 	/**
 	 * Minimum time each particle lives once it is emitted in ms.
@@ -285,6 +358,10 @@ const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	totalParticles: 50,
 	angle: Math.PI / 2,
 	angleVariation: 0,
+	elevation: 0,
+	elevationVariation: 0,
+	minSpread: 0,
+	maxSpread: 0,
 	minLife: 1000,
 	maxLife: 3000,
 	speed: 2,

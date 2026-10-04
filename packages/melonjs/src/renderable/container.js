@@ -412,6 +412,29 @@ export default class Container extends Renderable {
 	 * reset the container, removing all children, and resetting transforms.
 	 */
 	reset() {
+		this.clearChildren();
+
+		this.currentTransform.identity();
+
+		this.backgroundColor.setColor(0, 0, 0, 0.0);
+	}
+
+	/**
+	 * Empty the container and cancel any sort it still owes.
+	 *
+	 * Split out of {@link Container#reset} so {@link Container#destroy} does
+	 * not have to call it. `reset` is public and subclasses legitimately
+	 * redefine it to mean something else: {@link ParticleEmitter#reset} takes
+	 * a settings object and re-applies it. A `destroy` routed through `reset`
+	 * therefore tore down a plain container correctly and an emitter not at
+	 * all, which left two things behind on every destroyed emitter — its
+	 * particles, never removed and so never returned to the pool, and its
+	 * deferred sort, which then ran against a container whose `pos` had
+	 * already been released and threw from `getAbsolutePosition`.
+	 * @ignore
+	 * @internal
+	 */
+	clearChildren() {
 		// cancel any sort operation
 		if (this.pendingSort) {
 			clearTimeout(this.pendingSort);
@@ -426,10 +449,6 @@ export default class Container extends Renderable {
 				this.removeChildNow(child);
 			}
 		}
-
-		this.currentTransform.identity();
-
-		this.backgroundColor.setColor(0, 0, 0, 0.0);
 	}
 
 	/**
@@ -1292,8 +1311,13 @@ export default class Container extends Renderable {
 			this.onCanvasResize = undefined;
 		}
 
-		// empty the container
-		this.reset();
+		// empty the container. NOT via `reset()`: that is public and a
+		// subclass may have redefined it to mean something else entirely.
+		this.clearChildren();
+		// blanked before it goes back to the pool, which `reset()` used to do
+		// on this path: the next caller to take this instance out must not
+		// find the colour still on it
+		this.backgroundColor.setColor(0, 0, 0, 0.0);
 		// call the parent destroy method, spreading the actual arguments —
 		// passing the `arguments` object itself would hand subclasses'
 		// `onDestroyEvent(app)` an Arguments wrapper instead of the value

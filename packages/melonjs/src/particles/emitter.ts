@@ -6,7 +6,7 @@ import timer from "../system/timer.ts";
 import type CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import type WebGLRenderer from "../video/webgl/webgl_renderer.js";
-import { particlePool } from "./particle.ts";
+import Particle, { particlePool } from "./particle.ts";
 import defaultEmitterSettings, {
 	type ParticleEmitterSettings,
 } from "./settings.ts";
@@ -174,6 +174,46 @@ export default class ParticleEmitter extends Container {
 	#appliedBlendMode: string = "normal";
 
 	/**
+	 * Decide whether this emitter's particles have to be depth sorted.
+	 *
+	 * Sorting is off by default and should stay off: while every particle
+	 * shares the emitter's depth there is nothing to order, and an emitter is
+	 * exactly the place where a per-frame sort of hundreds of children is
+	 * worth avoiding.
+	 *
+	 * Two things have to be true before it is needed. The particles must
+	 * actually move independently along Z, which happens once an `elevation`
+	 * or a `maxSpread` is asked for. AND the blend must be order dependent:
+	 * additive blending is commutative, so an additive burst looks identical
+	 * however it is ordered and pays nothing. `"normal"` is the default and is
+	 * NOT commutative, so a 3D burst drawn with it needs back to front or near
+	 * particles are overdrawn by far ones.
+	 *
+	 * Keyed off the blend mode rather than off the 3D flag for that reason:
+	 * most 3D bursts are additive and want no sort at all.
+	 */
+	#refreshSorting() {
+		// `maxSpread` counts too, and independently of the other two: aiming
+		// off an axis throws particles out of the emitter's plane whatever
+		// the axis itself is, so a ring with `elevation` left at 0 still
+		// moves in Z.
+		const moves3d =
+			this.settings.elevation !== 0 ||
+			this.settings.elevationVariation !== 0 ||
+			this.settings.maxSpread !== 0;
+		const commutative =
+			this.blendMode === "additive" ||
+			(this.blendMode === "normal" && this.settings.textureAdditive);
+		const sorted = moves3d && !commutative;
+		if (sorted !== this.autoSort) {
+			this.autoSort = sorted;
+			if (sorted) {
+				this.sortOn = "depth";
+			}
+		}
+	}
+
+	/**
 	 * whether at least one particle has been spawned by this emitter — used as
 	 * the precondition for completion detection (a brand-new emitter with zero
 	 * children must not count as "complete")
@@ -260,7 +300,11 @@ export default class ParticleEmitter extends Container {
 		this._enabled = false;
 		// emitter ticks regardless of viewport
 		this.alwaysUpdate = true;
-		// preserve insertion order — particle z-sort would be wasted work
+		// Preserve insertion order. A particle z-sort is wasted work while
+		// every particle in an emitter shares the emitter's depth, which was
+		// true of all of them until `elevation` let particles move along Z.
+		// `#refreshSorting` re-decides this whenever the settings or the blend
+		// mode change: see it for why the answer keys off the BLEND MODE.
 		this.autoSort = false;
 		// frame-skip bookkeeping
 		this._updateCount = 0;
@@ -318,6 +362,7 @@ export default class ParticleEmitter extends Container {
 		// it rather than the "normal" the Renderable constructor assigned
 		this.blendMode = this.settings.blendMode;
 		this.#appliedBlendMode = this.settings.blendMode;
+		this.#refreshSorting();
 
 		// no-op from the constructor (no children yet) and whenever the
 		// reference space is unchanged
@@ -514,14 +559,6 @@ export default class ParticleEmitter extends Container {
 	 * @internal
 	 */
 	addParticles(count: number): void {
-		// Propagate the emitter's depth onto each new particle via
-		// `Container.addChild(child, z)` so Camera3d projects them at
-		// the emitter's z slice (not at the world origin, which would
-		// place them on the wrong perspective plane for explosions /
-		// exhaust trails attached to a moving Mesh).
-		// `Renderable.depth` proxies to `pos.z` — same value, no cast.
-		const z = this.depth;
-
 		// Refresh the spawn mapping once for the whole batch, not per
 		// particle: every particle in this call is born in the same frame.
 		// `S = inv(W_target) · W_emitter` takes an emitter-local point to the
@@ -548,7 +585,13 @@ export default class ParticleEmitter extends Container {
 
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
-			this.addChild(particlePool.get(this), z);
+			// `z = 0`: a particle's `pos` is LOCAL to its emitter, the z
+			// component included, exactly like any other child of any other
+			// container. The explicit 0 is not decoration — left out,
+			// `Container.autoDepth` would number the particles 1, 2, 3...
+			// {@link Particle#preDraw} is what puts the burst back on the
+			// emitter's perspective slice, by ADDING the depth it inherits.
+			this.addChild(particlePool.get(this), 0);
 		}
 		if (count > 0) {
 			this._hasSpawned = true;
@@ -613,6 +656,7 @@ export default class ParticleEmitter extends Container {
 		// in the scene would pay for on every `preDraw`.
 		if (this.blendMode !== this.#appliedBlendMode) {
 			this.#appliedBlendMode = this.blendMode;
+			this.#refreshSorting();
 			// future particles inherit it at birth...
 			this.settings.blendMode = this.blendMode;
 			// ...and the ones already alive switch now, rather than the mode
@@ -711,6 +755,36 @@ export default class ParticleEmitter extends Container {
 		}
 
 		return this.isDirty;
+	}
+
+	/**
+	 * Hand the live particles back to `particlePool` instead of letting the
+	 * generic child teardown dispose of them.
+	 *
+	 * A {@link Particle} is not registered with the legacy `pool.register`
+	 * registry, so the inherited `removeChildNow(child)` finds it unrecyclable
+	 * and calls `destroy()` on it — which releases its `pos` and leaves the
+	 * instance permanently out of `particlePool`, counted as in use and never
+	 * handed out again. An emitter torn down mid-burst (a level change, a
+	 * game over, a `world.reset()`) leaks its whole cloud that way.
+	 *
+	 * `keepalive=true` plus an explicit `release` is the same pairing a
+	 * particle uses when it dies of old age; see {@link Particle#update}.
+	 * @ignore
+	 * @internal
+	 */
+	override clearChildren(): void {
+		const children = this.getChildren();
+		for (let i = children.length; i-- > 0; ) {
+			const particle = children[i];
+			if (particle instanceof Particle && !particle.isPersistent) {
+				this.removeChildNow(particle, true);
+				particlePool.release(particle);
+			}
+		}
+		// anything the loop above left, and the pending sort this container
+		// may still owe
+		super.clearChildren();
 	}
 
 	/**
