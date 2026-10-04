@@ -20,6 +20,7 @@ import {
 	type Gradient,
 	save,
 	Text,
+	Tween,
 } from "melonjs";
 
 // World-Z = camera position, so the squared distance to camera is the
@@ -29,6 +30,26 @@ const HUD_Z = -150;
 // Initial overlay alpha at the moment of death — strong enough to "white
 // out" the cockpit (red, in this case), faint enough that the player can
 // still see the explosion underneath.
+/** how much of the viewport width GAME OVER spans */
+const GAME_OVER_WIDTH_RATIO = 0.82;
+/**
+ * The outline, which is what makes it readable.
+ *
+ * The death flash washes the whole screen red, and the word is red: without a
+ * dark edge the two have almost no contrast at the one moment the player is
+ * meant to read it.
+ *
+ * Scaled with the font rather than pinned at 1. The usual advice is to keep a
+ * stroke at 1 and raise the size instead, because `Text` strokes ON TOP of the
+ * fill and half the line lands inside the glyph, which fills in a small face.
+ * At a couple of hundred pixels there is glyph to spare and a hairline would
+ * simply vanish.
+ */
+const GAME_OVER_STROKE_RATIO = 0.03;
+const GAME_OVER_STROKE = "#2a0006";
+/** the drop, matching Earth Defender's: falls from this and springs onto 1 */
+const GAME_OVER_STAMP_FROM = 5;
+const GAME_OVER_STAMP_MS = 420;
 const DEATH_FLASH_ALPHA = 0.55;
 // Linear fade — matches the death rumble's ~1.1 s tail so the flash and
 // audio decay together.
@@ -61,7 +82,14 @@ export class HUD {
 	 */
 	private deathFlash: FlashEffect;
 	/** remaining fade, counted down by {@link HUD#update} */
-	private flashRemainingMs = 0;
+	/** the death wash fading out, stopped if a restart cuts it short */
+	private flashTween: Tween | undefined;
+	/** what the fade drives, read straight into the effect's uniform */
+	private readonly flashDriver = { k: 0 };
+	/** the GAME OVER drop in flight */
+	private stampTween: Tween | undefined;
+	/** the live scale of the GAME OVER line, 1 at rest */
+	private readonly stampDriver = { scale: 1 };
 	private hiScore: number;
 
 	constructor(app: Application) {
@@ -147,9 +175,34 @@ export class HUD {
 			text: "3D assets by Kenney: https://kenney.nl",
 		});
 
-		this.gameOverLine = this._makeText(app, w / 2, h / 2 - 12, {
-			size: 42,
+		// Sized to the viewport rather than to a fixed 42px, so GAME OVER reads
+		// as the ending on any canvas instead of as another label.
+		//
+		// `Text` bakes to a canvas at its FONT SIZE, so the size has to be
+		// found rather than faked with a transform: a small bake scaled up is
+		// blurry, and it would be blurry at rest. Measure a throwaway at a
+		// known size, then build the real one at the size that lands on the
+		// target width.
+		const TRIAL_SIZE = 42;
+		const trial = this._makeText(app, 0, 0, {
+			size: TRIAL_SIZE,
+			textAlign: "center",
+			textBaseline: "middle",
+			bold: true,
+			text: "GAME OVER",
+		});
+		const trialWidth = trial.getBounds().width;
+		app.world.removeChild(trial);
+		const overSize =
+			trialWidth > 0
+				? Math.round(TRIAL_SIZE * ((w * GAME_OVER_WIDTH_RATIO) / trialWidth))
+				: TRIAL_SIZE;
+
+		this.gameOverLine = this._makeText(app, w / 2, h / 2 - overSize * 0.3, {
+			size: overSize,
 			fillStyle: "#ff5566",
+			strokeStyle: GAME_OVER_STROKE,
+			lineWidth: Math.max(2, Math.round(overSize * GAME_OVER_STROKE_RATIO)),
 			textAlign: "center",
 			textBaseline: "middle",
 			bold: true,
@@ -157,7 +210,7 @@ export class HUD {
 		});
 		this.gameOverLine.setOpacity(0);
 
-		this.gameOverSub = this._makeText(app, w / 2, h / 2 + 32, {
+		this.gameOverSub = this._makeText(app, w / 2, h / 2 + overSize * 0.55, {
 			size: 18,
 			fillStyle: "#cccccc",
 			textAlign: "center",
@@ -244,42 +297,84 @@ export class HUD {
 		}
 	}
 
+	/**
+	 * Drop GAME OVER onto the screen, the way Earth Defender stamps it.
+	 *
+	 * `Back.Out` is what makes it a stamp: on a scale coming DOWN to 1 that
+	 * easing overshoots past the target and springs back, so the word lands
+	 * rather than arrives. No shake here, because the death that got us this
+	 * far already fired a hard one of its own.
+	 */
+	private stampGameOver(): void {
+		this.stampTween?.stop();
+		this.stampDriver.scale = GAME_OVER_STAMP_FROM;
+		const tween = new Tween(this.stampDriver);
+		tween.updateWhenPaused = true;
+		this.stampTween = tween
+			.to({ scale: 1 }, { duration: GAME_OVER_STAMP_MS })
+			.easing(Tween.Easing.Back.Out)
+			.onUpdate(() => {
+				// `scale` MULTIPLIES into the transform, so it is reset first
+				this.gameOverLine.currentTransform.identity();
+				this.gameOverLine.scale(this.stampDriver.scale);
+			})
+			.onComplete(() => {
+				this.stampTween = undefined;
+			})
+			.start();
+	}
+
 	/** Reveal the GAME OVER overlay with the final score + restart hint. */
 	showGameOver(score: number): void {
 		this.gameOverLine.setOpacity(1);
 		this.gameOverSub.setOpacity(1);
 		this.gameOverSub.setText(`SCORE ${score} — press R to restart`);
+		this.stampGameOver();
 	}
 
 	/** Hide the GAME OVER overlay on restart. */
 	hideGameOver(): void {
 		this.gameOverLine.setOpacity(0);
 		this.gameOverSub.setOpacity(0);
-		this.flashRemainingMs = 0;
+		this.stampTween?.stop();
+		this.stampTween = undefined;
+		this.stampDriver.scale = 1;
+		this.gameOverLine.currentTransform.identity();
+		this.flashTween?.stop();
+		this.flashTween = undefined;
+		this.flashDriver.k = 0;
 		this.deathFlash.setUniform("uFlashIntensity", 0);
 	}
 
-	/** Trigger the red full-screen death flash. Faded by {@link HUD#update}. */
-	flashDeath(): void {
-		this.flashRemainingMs = DEATH_FLASH_FADE_MS;
-		this.deathFlash.setUniform("uFlashIntensity", DEATH_FLASH_ALPHA);
-	}
-
 	/**
-	 * Fade the death wash out.
+	 * Trigger the red full-screen death flash, which then fades on its own.
 	 *
-	 * Driven from the game's own tick rather than from a renderable's
-	 * `update`, since the effect is no longer a renderable: it lives on the
-	 * camera, which has nothing to tick it.
-	 * @param dt - frame time in milliseconds
+	 * A `Tween` rather than a countdown the game has to tick. This effect
+	 * lives on the camera rather than on a renderable, so nothing updates it
+	 * for free, and the fade used to need a whole `HUD#update(dt)` and a call
+	 * site in the game loop purely to drive it. A tween updates itself, so
+	 * both are gone.
 	 */
-	update(dt: number): void {
-		if (this.flashRemainingMs <= 0) {
-			return;
-		}
-		this.flashRemainingMs -= dt;
-		const k = Math.max(0, this.flashRemainingMs / DEATH_FLASH_FADE_MS);
-		this.deathFlash.setUniform("uFlashIntensity", k * DEATH_FLASH_ALPHA);
+	flashDeath(): void {
+		this.flashTween?.stop();
+		this.flashDriver.k = 1;
+		this.deathFlash.setUniform("uFlashIntensity", DEATH_FLASH_ALPHA);
+		const tween = new Tween(this.flashDriver);
+		// the wash has to finish even though the run is over
+		tween.updateWhenPaused = true;
+		this.flashTween = tween
+			.to({ k: 0 }, { duration: DEATH_FLASH_FADE_MS })
+			.easing(Tween.Easing.Quadratic.Out)
+			.onUpdate(() => {
+				this.deathFlash.setUniform(
+					"uFlashIntensity",
+					this.flashDriver.k * DEATH_FLASH_ALPHA,
+				);
+			})
+			.onComplete(() => {
+				this.flashTween = undefined;
+			})
+			.start();
 	}
 
 	/**

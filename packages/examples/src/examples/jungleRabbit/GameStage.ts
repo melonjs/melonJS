@@ -402,7 +402,10 @@ export class GameStage extends Stage {
 	/** when the current run of carrots goes stale, measured against `elapsed` */
 	private comboExpires = 0;
 	/** how far through the step animation, in ms; at or past the duration = idle */
-	private multPunchAge = MULT_PUNCH_MS;
+	/** the multiplier punch in flight, restarted whenever the step changes */
+	private multPunchTween: Tween | undefined;
+	/** the live scale, 1 at rest; written by the tween, read by `draw` */
+	private readonly multPunchDriver = { scale: 1 };
 	/** the distance, the one line that really changes every frame */
 	private hudDistance!: Text;
 	/** the persisted best, top right */
@@ -465,7 +468,14 @@ export class GameStage extends Stage {
 		this.combo = 0;
 		this.comboExpires = 0;
 		this.shownMultiplier = 1;
-		this.multPunchAge = MULT_PUNCH_MS;
+		// No `hudMultiplier.currentTransform.identity()` here: this block runs
+		// at the TOP of `onResetEvent` and the label is not built until much
+		// further down it, so touching it throws. It is rebuilt with an
+		// identity transform anyway, and the next punch resets the transform
+		// as the first thing it does.
+		this.multPunchTween?.stop();
+		this.multPunchTween = undefined;
+		this.multPunchDriver.scale = 1;
 		this.lives = START_LIVES;
 		this.elapsed = 0;
 		this.invulnUntil = 0;
@@ -1621,21 +1631,6 @@ export class GameStage extends Stage {
 				? 0.15
 				: 1;
 
-		// The step itself: a scale that starts big and settles back. Only this
-		// label gets one — the score and the distance tick every frame, and
-		// animating those would be noise rather than emphasis.
-		if (this.multPunchAge < MULT_PUNCH_MS) {
-			this.multPunchAge += dt;
-			const k = Math.min(1, this.multPunchAge / MULT_PUNCH_MS);
-			// out-quadratic, so most of the shrink happens at once and it reads
-			// as a snap rather than a slow deflate
-			const punch = 1 + MULT_PUNCH * (1 - k) * (1 - k);
-			// `preDraw` pivots a renderable's transform around its own `pos`,
-			// so this grows out of where the label already is
-			this.hudMultiplier.currentTransform.identity();
-			this.hudMultiplier.currentTransform.scale(punch, punch);
-		}
-
 		this.followCamera(seconds);
 		// Pickups turn on the spot — a carrot that just slides toward you reads
 		// as scenery, and the turn is what marks it as something to collect.
@@ -2190,8 +2185,40 @@ export class GameStage extends Stage {
 			this.shownMultiplier = mult;
 			// restart the punch, including on the drop back to x1 — losing a
 			// combo is worth as much of a beat as earning one
-			this.multPunchAge = 0;
+			this.punchMultiplier();
 		}
+	}
+
+	/**
+	 * Punch the multiplier label: a scale that starts big and settles back.
+	 *
+	 * Only this label gets one. The score and the distance tick every frame,
+	 * and animating those would be noise rather than emphasis.
+	 *
+	 * A `Tween` on `Quadratic.Out` rather than a countdown in `update`: the
+	 * curve used to be written out as `1 + MULT_PUNCH * (1 - k) * (1 - k)`,
+	 * which is that easing spelled by hand. `preDraw` pivots a renderable's
+	 * transform around its own `pos`, so this grows out of where the label
+	 * already sits.
+	 */
+	private punchMultiplier(): void {
+		this.multPunchTween?.stop();
+		this.multPunchDriver.scale = 1 + MULT_PUNCH;
+		const tween = new Tween(this.multPunchDriver);
+		this.multPunchTween = tween
+			.to({ scale: 1 }, { duration: MULT_PUNCH_MS })
+			.easing(Tween.Easing.Quadratic.Out)
+			.onUpdate(() => {
+				this.hudMultiplier.currentTransform.identity();
+				this.hudMultiplier.currentTransform.scale(
+					this.multPunchDriver.scale,
+					this.multPunchDriver.scale,
+				);
+			})
+			.onComplete(() => {
+				this.multPunchTween = undefined;
+			})
+			.start();
 	}
 
 	onDestroyEvent() {

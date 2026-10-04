@@ -1,6 +1,6 @@
 ---
 name: melonjs-scenes-and-state
-description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Stage, state, state.set, state.change, state.transition, state.pause, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze."
+description: "Use this skill for scene structure and game flow in melonJS — Stage subclasses, the state manager, transitions, pausing, the update loop, timers and tweens. Covers onResetEvent versus the constructor, state.set before state.change, the camera and world lifecycle per stage, and pause-aware timing. Triggers on: Tween, easing, fade out, flash, pulse, punch, shrink back, ease in, ease out, animate over time, countdown in update, Stage, state, state.set, state.change, state.transition, state.pause, onResetEvent, onDestroyEvent, onActivateEvent, onDeactivateEvent, PLAY, MENU, LOADING, update loop, GAME_UPDATE, timer, setTimeout, setInterval, Tween, freeze."
 license: MIT
 ---
 
@@ -203,6 +203,59 @@ countdown that should not freeze needs. (That argument was ignored by
 
 ## Tweens
 
+### You are hand-rolling a tween if you write this
+
+The shape, in any of its spellings. If you are adding a field that counts
+milliseconds and dividing it by a constant to get a `0..1`, stop:
+
+```js
+// ✗ a tween, written out longhand
+private flashMs = 0;
+// ... in update(dt)
+if (this.flashMs > 0) {
+    this.flashMs -= dt;
+    const k = this.flashMs / FLASH_MS;      // ← the 0..1
+    effect.setUniform("uIntensity", k * k); // ← and a curve, by hand
+}
+```
+
+```js
+// ✓ the same thing
+const driver = { k: 1 };
+new Tween(driver)
+    .to({ k: 0 }, { duration: FLASH_MS })
+    .easing(Tween.Easing.Quadratic.In)      // the curve, named
+    .onUpdate(() => effect.setUniform("uIntensity", driver.k))
+    .start();
+```
+
+The tells, any one of which is enough: a `*Ms` or `*Age` field that only
+`update()` touches; a division by a `*_MS` constant; `k * k`, `(1 - k) ** 2` or
+`** 1.4` written inline, which is an easing curve spelled by hand; an
+`if (x <= 0)` arm that exists only to clean up at the end, which is
+`onComplete`; a second timer counting the same duration to chain what happens
+next, which is `delay`.
+
+It matters beyond tidiness: a hand-rolled fade needs something to tick it, and
+an effect that is NOT a renderable (one living on the camera, say) has nothing
+that will. That forces an `update(dt)` method and a call site in the game loop
+whose only job is to drive the fade. A tween updates itself, so both disappear.
+
+### When NOT to reach for one
+
+Four shapes that look similar and are not tweens:
+
+| shape | what it is | use |
+| --- | --- | --- |
+| approaching a value that keeps MOVING | a follow, not an animation | `math.damp` |
+| a loop that never ends | oscillation | a sine of your own clock |
+| a gate: cooldown, spawn interval, invulnerability window | a timer, nothing is interpolated | a plain countdown |
+| the same effect on dozens of live objects | per-instance churn | a hand-rolled countdown really is cheaper |
+
+The rule in one line: **fixed duration, known endpoint, one-shot, few
+instances.** All four, or it is not a tween.
+
+
 ```js
 import { Tween, pool } from "melonjs";
 
@@ -251,6 +304,37 @@ an arrow keeps the enclosing `this` and you read the holder by name instead.
 For a handful of pooled objects a hand-rolled countdown in `update()` is
 cheaper than a `Tween` each — this is the right tool for one-off effects, not
 for every particle.
+
+### Pick the easing, not just the duration
+
+Eleven families, each with `In`, `Out` and `InOut`. `Out` is what most UI
+wants: the value arrives decisively instead of creeping in. The two worth
+knowing by name beyond the power curves:
+
+| family | what it does |
+| --- | --- |
+| `Back` | **overshoots past the target and settles back**, which is impact: a stamp, a button press, anything that should LAND rather than arrive |
+| `Bounce` | lands and bounces, for something dropping onto a surface |
+
+```js
+// a stamp: scale falls to 1 and springs through it
+const driver = { scale: 5 };
+new Tween(driver)
+    .to({ scale: 1 }, { duration: 420 })
+    .easing(Tween.Easing.Back.Out)
+    .onUpdate(() => { label.currentTransform.identity(); label.scale(driver.scale); })
+    .onComplete(() => camera.shake(12, 400))     // the thump, when it truly lands
+    .start();
+```
+
+`Back` and `Elastic` **leave the range** between your start and end, so clamp
+anything that cannot take it, an opacity or a colour channel above all. The
+overshoot follows the direction of travel: a value tweened DOWN overshoots
+below its target.
+
+Reach for `onComplete` for anything that must happen on arrival, rather than a
+second timer counting the same duration. `delay` in the `to()` options chains
+the next one without a timer either.
 
 ## Guard teardown-adjacent callbacks
 

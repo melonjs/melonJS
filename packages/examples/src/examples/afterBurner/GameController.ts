@@ -1221,7 +1221,6 @@ export class GameController extends Renderable {
 		// triggered BY game over, so a fade that only runs while the game is
 		// live never runs at all: the frame stays flooded red and the
 		// "GAME OVER" text sits unreadable on top of it.
-		this.hud.update(dt);
 
 		if (this.gameOver) {
 			this.lockedTarget = undefined;
