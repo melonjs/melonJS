@@ -60,6 +60,18 @@ const SHADOW_MIN_AXIS_RATIO = 0.5;
 // contact shadows spread a little anyway, because no light source is a point.
 const SHADOW_SPREAD = 1.2;
 
+/**
+ * Ceiling on {@link Mesh#shadowStretch}.
+ *
+ * A stretched ellipse is not a projected silhouette, and the further it is
+ * pulled the more plainly it is a smear rather than a shadow. Past about three
+ * times its own footprint there is nothing left to read, so the setting stops
+ * there rather than letting a game dial in something that can only look broken.
+ * @ignore
+ * @internal
+ */
+const SHADOW_MAX_STRETCH = 3;
+
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
 
@@ -378,6 +390,11 @@ function buildTextureGroups(
  * @property {boolean} [fog] - set `false` to exempt this mesh from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does
  * @property {number} [shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
  * @property {number} [shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
+ * @property {number} [shadowOffset=0] - world distance to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, for the look of a light that is not directly overhead. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor.
+ * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches.
+ * @property {number} [shadowDirectionX=0] - x of the ground direction the shadow is cast along. Together with `shadowDirectionZ`, zero length means no offset and no stretch.
+ * @property {number} [shadowDirectionZ=0] - z of the ground direction the shadow is cast along.
+ * @property {object} [shadowLight] - a {@link Light3d} to take the direction from instead of setting it by hand. Read every draw, so a moving sun carries the shadow with it. Nothing is inferred from the scene: no light here means no direction.
  */
 
 /**
@@ -931,6 +948,77 @@ export default class Mesh extends Renderable {
 			typeof settings.shadowOpacity === "number"
 				? settings.shadowOpacity
 				: 0.45;
+
+		/**
+		 * World distance to slide the ground shadow along
+		 * {@link Mesh#shadowDirectionX}/{@link Mesh#shadowDirectionZ}, which is
+		 * what gives the look of a light that is not directly overhead.
+		 *
+		 * Honoured ONLY when {@link Mesh#shadowGroundY} is set. The blob is a
+		 * flat quad on one named plane with no contact with terrain, so sliding
+		 * it across a plane the game has not named puts it somewhere there may
+		 * be no floor at all. Setting `shadowGroundY` is the game saying where
+		 * its floor is, and that is the only case where an offset is honest.
+		 *
+		 * Per-object: an {@link InstancedMesh} ignores this, because its
+		 * instances share one quad and each carries its own rotation.
+		 * @type {number}
+		 * @default 0
+		 */
+		this.shadowOffset =
+			typeof settings.shadowOffset === "number" ? settings.shadowOffset : 0;
+
+		/**
+		 * How much longer the ground shadow is along its direction, for the
+		 * look of a low light. `1` leaves it round.
+		 *
+		 * Clamped to 3, and the blob fades as it stretches: this is art
+		 * direction, not a projection, and the further it is pulled the less
+		 * there is to believe. Values below `1` are treated as `1`; shortening
+		 * the blob is what {@link Mesh#shadowScale} is for.
+		 *
+		 * Per-object, for the same reason as {@link Mesh#shadowOffset}.
+		 * @type {number}
+		 * @default 1
+		 */
+		this.shadowStretch =
+			typeof settings.shadowStretch === "number" ? settings.shadowStretch : 1;
+
+		/**
+		 * X of the ground direction the shadow is cast along.
+		 * @type {number}
+		 * @default 0
+		 * @see Mesh#shadowOffset
+		 */
+		this.shadowDirectionX =
+			typeof settings.shadowDirectionX === "number"
+				? settings.shadowDirectionX
+				: 0;
+
+		/**
+		 * Z of the ground direction the shadow is cast along. Together with
+		 * {@link Mesh#shadowDirectionX}, a zero-length pair means no offset and
+		 * no stretch.
+		 * @type {number}
+		 * @default 0
+		 * @see Mesh#shadowOffset
+		 */
+		this.shadowDirectionZ =
+			typeof settings.shadowDirectionZ === "number"
+				? settings.shadowDirectionZ
+				: 0;
+
+		/**
+		 * A {@link Light3d} to take the shadow direction from, instead of
+		 * setting it by hand.
+		 *
+		 * Read every draw, so a sun that moves carries the shadow with it.
+		 * NOTHING is inferred: the engine never picks a dominant light for you,
+		 * because a scene with several has no non-arbitrary answer and one with
+		 * none has no answer at all. Name the light or get no direction.
+		 * @type {object|undefined}
+		 */
+		this.shadowLight = settings.shadowLight;
 
 		/**
 		 * Cached horizontal half-extent used to size the shadow, resolved on
@@ -2029,6 +2117,62 @@ export default class Mesh extends Renderable {
 			}
 		}
 
+		// A light that is not overhead: slide the blob along the ground and
+		// pull it out along the same line.
+		//
+		// The basis below is already an ORIENTED, anisotropic pair — `axX/axZ`
+		// and `azX/azZ` come from the caster's own model columns and carry
+		// independent lengths — so stretching it needs no new primitive, only
+		// an anisotropic scale applied in world XZ:
+		//
+		//     S = I + (stretch - 1) · d ⊗ d        (d unit, in the ground plane)
+		//     S·v = v + (stretch - 1) · (v · d) · d
+		//
+		// which leaves anything perpendicular to `d` exactly as it was.
+		let offsetX = 0;
+		let offsetZ = 0;
+		let stretchFade = 1;
+		const light = this.shadowLight;
+		let dirX = this.shadowDirectionX;
+		let dirZ = this.shadowDirectionZ;
+		if (light !== undefined && light.direction !== undefined) {
+			// the direction a light TRAVELS along is the way its shadows go
+			dirX = light.direction.x;
+			dirZ = light.direction.z;
+		}
+		const dirLen = Math.hypot(dirX, dirZ);
+		if (dirLen > 1e-6) {
+			dirX /= dirLen;
+			dirZ /= dirLen;
+
+			let stretch = this.shadowStretch;
+			if (!Number.isFinite(stretch) || stretch < 1) {
+				stretch = 1;
+			} else if (stretch > SHADOW_MAX_STRETCH) {
+				stretch = SHADOW_MAX_STRETCH;
+			}
+			if (stretch !== 1) {
+				const gain = stretch - 1;
+				const axDot = axX * dirX + axZ * dirZ;
+				axX += gain * axDot * dirX;
+				axZ += gain * axDot * dirZ;
+				const azDot = azX * dirX + azZ * dirZ;
+				azX += gain * azDot * dirX;
+				azZ += gain * azDot * dirZ;
+				// the same darkness spread over more ground is less of it
+				// anywhere, and fading as it pulls is what lets an extreme
+				// value degrade into nothing rather than into a smear
+				stretchFade = 1 / Math.sqrt(stretch);
+			}
+
+			// Only on a plane the game NAMED: see `shadowOffset`.
+			const distance = this.shadowOffset;
+			if (this.shadowGroundY !== undefined && Number.isFinite(distance)) {
+				offsetX = dirX * distance;
+				offsetZ = dirZ * distance;
+			}
+		}
+
 		// the quad is a unit square, so a half-extent of `k · axis` needs the
 		// basis column to be twice that
 		const k = (0.5 + strength * 0.5) * 2 * SHADOW_SPREAD;
@@ -2051,10 +2195,12 @@ export default class Mesh extends Renderable {
 		out[9] = 0;
 		out[10] = azZ * k;
 		out[11] = 0;
-		out[12] = originX;
-		// render space is Y-DOWN, so lifting off the floor is a SMALLER y
+		out[12] = originX + offsetX;
+		// render space is Y-DOWN, so lifting off the floor is a SMALLER y.
+		// `extent` is measured BEFORE any stretch, so pulling the blob out
+		// does not also lift it off the floor it is lying on.
 		out[13] = groundY - extent * SHADOW_LIFT;
-		out[14] = originZ;
+		out[14] = originZ + offsetZ;
 		out[15] = 1;
 
 		// Stash and restore by hand rather than save()/restore(): restore()
@@ -2071,7 +2217,9 @@ export default class Mesh extends Renderable {
 		const savedTintAlpha = tint.alpha;
 		const savedAlpha = renderer.getGlobalAlpha();
 		tint.setColor(0, 0, 0);
-		renderer.setGlobalAlpha(this.shadowOpacity * strength * savedAlpha);
+		renderer.setGlobalAlpha(
+			this.shadowOpacity * strength * stretchFade * savedAlpha,
+		);
 		try {
 			renderer.drawMesh(quad, quad._modelMatrix);
 		} finally {

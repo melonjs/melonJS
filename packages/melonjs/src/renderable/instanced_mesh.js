@@ -725,6 +725,13 @@ export default class InstancedMesh extends Mesh {
 	 * @internal
 	 */
 	_drawInstancedGroundShadow(renderer) {
+		// NOTE: `shadowOffset` and `shadowStretch` are per-object controls and
+		// are deliberately ignored here. One quad is shared by every instance
+		// and each applies its OWN transform, so a direction fixed in world
+		// space cannot be baked into the shared geometry: instances that are
+		// rotated differently would each stretch a different way. Honouring
+		// one of the two and not the other would read as a bug, so neither is.
+		// `shadowScale` is uniform and so has no such problem.
 		if (typeof renderer.drawInstancedShadow !== "function") {
 			return;
 		}

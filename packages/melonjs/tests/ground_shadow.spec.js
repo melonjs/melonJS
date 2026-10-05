@@ -329,6 +329,255 @@ describe("Ground shadows (#1515)", () => {
 			mesh.destroy();
 		});
 	});
+	/**
+	 * Offset and stretch (#1631 items 2 and 3).
+	 *
+	 * The blob is a flat quad on one named plane, so an offset is only honest
+	 * where the game has NAMED that plane. The stretch needs no new primitive:
+	 * the basis is already an oriented, anisotropic pair, so pulling it out is
+	 * an anisotropic scale `S = I + (stretch - 1)·d⊗d` applied in world XZ.
+	 */
+	describe("shadowOffset / shadowStretch", () => {
+		/** a mesh on a NAMED floor, which is what an offset needs */
+		const onFloor = (settings = {}) => {
+			return makeMesh({
+				castGroundShadow: true,
+				shadowGroundY: 20,
+				...settings,
+			});
+		};
+		const origin = (lit = false) => {
+			const m = renderer._shadowQuads[lit ? "lit" : "unlit"]._modelMatrix.val;
+			return { x: m[12], z: m[14] };
+		};
+
+		it("slides the blob along the direction, by exactly the distance asked", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor();
+			drawOnce(mesh);
+			const before = origin();
+			mesh.shadowDirectionX = 3;
+			mesh.shadowDirectionZ = 4; // length 5, so it must be normalised
+			mesh.shadowOffset = 10;
+			drawOnce(mesh);
+			const after = origin();
+			expect(after.x - before.x).toBeCloseTo(6, 5);
+			expect(after.z - before.z).toBeCloseTo(8, 5);
+			mesh.destroy();
+		});
+
+		it("refuses to slide off a plane the game never named", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// no `shadowGroundY`: the blob falls back to the caster's own base,
+			// and there is no claim about where the floor is to slide across
+			const mesh = makeMesh({ castGroundShadow: true });
+			drawOnce(mesh);
+			const before = origin();
+			mesh.shadowDirectionX = 1;
+			mesh.shadowOffset = 25;
+			drawOnce(mesh);
+			expect(origin().x).toBeCloseTo(before.x, 6);
+			expect(origin().z).toBeCloseTo(before.z, 6);
+			mesh.destroy();
+		});
+
+		it("does nothing without a direction to go in", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor();
+			// twice: the caster's half-extent is resolved lazily on the first
+			// shadowed draw, so the first frame is not comparable with later ones
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const before = { o: origin(), a: shadowAxes() };
+			// asked for both, but with nowhere to point
+			mesh.shadowOffset = 40;
+			mesh.shadowStretch = 2;
+			drawOnce(mesh);
+			expect(origin().x).toBeCloseTo(before.o.x, 6);
+			expect(origin().z).toBeCloseTo(before.o.z, 6);
+			expect(shadowAxes().x).toBeCloseTo(before.a.x, 6);
+			expect(shadowAxes().z).toBeCloseTo(before.a.z, 6);
+			mesh.destroy();
+		});
+
+		it("lengthens along the direction and leaves the perpendicular alone", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// direction along world X, so the X axis stretches and Z must not
+			const mesh = onFloor({ shadowDirectionX: 1, shadowDirectionZ: 0 });
+			drawOnce(mesh);
+			const before = shadowAxes();
+			mesh.shadowStretch = 2;
+			drawOnce(mesh);
+			const after = shadowAxes();
+			expect(after.x).toBeCloseTo(before.x * 2, 5);
+			expect(after.z).toBeCloseTo(before.z, 5);
+			mesh.destroy();
+		});
+
+		it("stretches along a DIAGONAL, where both basis axes contribute", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// A direction along a world axis only exercises one of the two
+			// basis columns on an axis-aligned caster: the other projects to
+			// zero and could be left untouched without anything noticing.
+			// At 45 degrees both carry a share.
+			const d = Math.SQRT1_2;
+			// the blob is a unit square mapped by the two basis columns, so its
+			// reach along a unit vector is half the sum of their projections
+			const support = (ux, uz) => {
+				const m = renderer._shadowQuads.unlit._modelMatrix.val;
+				return (
+					(Math.abs(m[0] * ux + m[2] * uz) + Math.abs(m[8] * ux + m[10] * uz)) *
+					0.5
+				);
+			};
+			const mesh = onFloor({ shadowDirectionX: d, shadowDirectionZ: d });
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const along = support(d, d);
+			const across = support(d, -d);
+			mesh.shadowStretch = 2.5;
+			drawOnce(mesh);
+			expect(support(d, d)).toBeCloseTo(along * 2.5, 4);
+			// and nothing at right angles to it moved
+			expect(support(d, -d)).toBeCloseTo(across, 4);
+			mesh.destroy();
+		});
+
+		it("clamps the stretch rather than letting it run", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor({ shadowDirectionX: 1 });
+			drawOnce(mesh);
+			const before = shadowAxes().x;
+			mesh.shadowStretch = 50;
+			drawOnce(mesh);
+			// 3, the ceiling, not 50
+			expect(shadowAxes().x).toBeCloseTo(before * 3, 5);
+			mesh.destroy();
+		});
+
+		it.for([0.25, 0, -2, Number.NaN, Number.POSITIVE_INFINITY])(
+			"treats a stretch of %s as 1 rather than shrinking the blob",
+			(stretch, ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = onFloor({ shadowDirectionX: 1 });
+				drawOnce(mesh);
+				const before = shadowAxes();
+				mesh.shadowStretch = stretch;
+				drawOnce(mesh);
+				expect(shadowAxes().x).toBeCloseTo(before.x, 5);
+				expect(shadowAxes().z).toBeCloseTo(before.z, 5);
+				mesh.destroy();
+			},
+		);
+
+		it("fades as it stretches, so an extreme value goes to nothing", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor({ shadowDirectionX: 1, shadowOpacity: 0.8 });
+			let alpha;
+			const draw = renderer.drawMesh.bind(renderer);
+			const spy = vi
+				.spyOn(renderer, "drawMesh")
+				.mockImplementation((object, matrix) => {
+					if (object !== mesh) {
+						alpha = renderer.getGlobalAlpha();
+					}
+					return draw(object, matrix);
+				});
+			try {
+				drawOnce(mesh); // warm-up, as above
+				drawOnce(mesh);
+				const flat = alpha;
+				mesh.shadowStretch = 4; // clamps to 3
+				drawOnce(mesh);
+				// The alpha round-trips through an 8-bit packed tint, so it
+				// lands on the nearest 1/255 and cannot be compared more
+				// finely than that: 147/255 stretches to 84.87/255, which is
+				// read back as 85/255.
+				expect(Math.abs(alpha - flat / Math.sqrt(3))).toBeLessThanOrEqual(
+					1 / 255,
+				);
+				// and it is genuinely fainter, not merely different
+				expect(alpha).toBeLessThan(flat);
+			} finally {
+				spy.mockRestore();
+				mesh.destroy();
+			}
+		});
+
+		it("takes the direction from a named light, and follows it when it moves", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const sun = { direction: { x: 1, y: -1, z: 0 } };
+			const mesh = onFloor({ shadowLight: sun, shadowOffset: 10 });
+			drawOnce(mesh);
+			const east = origin();
+			// the sun swings round; the shadow goes with it
+			sun.direction.x = 0;
+			sun.direction.z = 1;
+			drawOnce(mesh);
+			const south = origin();
+			expect(east.x - south.x).toBeCloseTo(10, 5);
+			expect(south.z - east.z).toBeCloseTo(10, 5);
+			mesh.destroy();
+		});
+
+		it("prefers the light over a direction set by hand", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor({
+				shadowDirectionX: -1,
+				shadowLight: { direction: { x: 1, y: -1, z: 0 } },
+				shadowOffset: 7,
+			});
+			drawOnce(mesh);
+			const withLight = origin().x;
+			mesh.shadowLight = undefined;
+			drawOnce(mesh);
+			// the hand-set direction is the OPPOSITE way, so the two differ by 2x
+			expect(withLight - origin().x).toBeCloseTo(14, 5);
+			mesh.destroy();
+		});
+
+		it("is ignored by an InstancedMesh, both halves of it", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// one shared quad, each instance with its own transform: a
+			// world-space direction cannot be baked in, so neither half
+			// applies rather than one of them silently doing so
+			const mesh = new InstancedMesh(0, 0, {
+				...GEOMETRY,
+				width: 32,
+				normalize: false,
+				instanceCount: 2,
+				castGroundShadow: true,
+				shadowGroundY: 20,
+			});
+			const placement = new Matrix3d();
+			for (let i = 0; i < 2; i++) {
+				placement.identity().translate(i * 8, 0, 0);
+				mesh.setInstance(i, placement);
+			}
+			drawOnce(mesh);
+			const before = mesh._shadowQuad.originalVertices.slice();
+			mesh.shadowDirectionX = 1;
+			mesh.shadowOffset = 30;
+			mesh.shadowStretch = 3;
+			drawOnce(mesh);
+			expect(Array.from(mesh._shadowQuad.originalVertices)).toEqual(
+				Array.from(before),
+			);
+			mesh.destroy();
+		});
+
+		it("leaves the lift alone, so a stretched blob still lies on the floor", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor({ shadowDirectionX: 1 });
+			drawOnce(mesh);
+			const before = shadowGroundY();
+			mesh.shadowStretch = 3;
+			drawOnce(mesh);
+			expect(shadowGroundY()).toBeCloseTo(before, 6);
+			mesh.destroy();
+		});
+	});
+
 	// ── Sprite3d, which is the whole point of the feature ───────────────
 
 	describe("Sprite3d", () => {

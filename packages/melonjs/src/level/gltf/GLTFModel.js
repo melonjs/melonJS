@@ -102,6 +102,12 @@ export default class GLTFModel extends Container {
 	 * @param {boolean} [options.lit=false] - render the part meshes through the lit batcher
 	 * @param {boolean} [options.castGroundShadow] - give the parts a ground shadow; omit to inherit the application setting
 	 * @param {number} [options.shadowGroundY] - world Y of the floor those shadows land on
+	 * @param {number} [options.shadowOpacity=0.45] - opacity of those shadows before any height fade
+	 * @param {number} [options.shadowOffset=0] - world distance to slide them along their direction; needs `shadowGroundY` (see {@link Mesh#shadowOffset})
+	 * @param {number} [options.shadowStretch=1] - how much longer they are along that direction, clamped to 3
+	 * @param {number} [options.shadowDirectionX=0] - x of the ground direction they are cast along
+	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
+	 * @param {object} [options.shadowLight] - a {@link Light3d} to take that direction from instead
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);
@@ -289,6 +295,16 @@ export default class GLTFModel extends Container {
 							? hasVerticalExtent(prim.vertices, prim.vertexCount)
 							: castGroundShadow,
 					shadowGroundY: options.shadowGroundY,
+					// the rest of the shadow controls, which did not reach a
+					// glTF model at all before: a wide flat-bottomed prop is
+					// exactly the case they exist for, and a prop is usually
+					// loaded rather than built
+					shadowOpacity: options.shadowOpacity,
+					shadowOffset: options.shadowOffset,
+					shadowStretch: options.shadowStretch,
+					shadowDirectionX: options.shadowDirectionX,
+					shadowDirectionZ: options.shadowDirectionZ,
+					shadowLight: options.shadowLight,
 				});
 				if (prim.instances) {
 					fillInstances(mesh, prim.instances);

@@ -667,16 +667,40 @@ skip geometry with no vertical extent — a ground plane. Per object,
 given, safeguard included; `shadowGroundY` names the floor the blob lands on.
 
 The blob is an ellipse sized to the caster's own footprint and placed at the
-caster's x/z — it is **never offset by light direction**. So a tall or narrow
-object (a character, a tree, a pickup) shows its shadow clearly, while a wide,
-flat-bottomed one resting on the floor covers its own completely from a camera
-looking down at it. That is the shadow behaving correctly, not a bug.
+caster's x/z. So a tall or narrow object (a character, a tree, a pickup) shows
+its shadow clearly, while a wide, flat-bottomed one resting on the floor covers
+its own completely from a camera looking down at it. That is the shadow
+behaving correctly, not a bug.
 
 **Do not chase it by raising `shadowGroundY`.** Lifting the plane does not slide
 the blob out from under the object, it floats the blob *up* — and past a few
-units it projects over the top of the caster as a dark halo ringing it. If an
-object needs a visible shadow, give it a smaller footprint relative to its
-height, or accept that a boulder bedded in the ground has none.
+units it projects over the top of the caster as a dark halo ringing it.
+
+Use the shape controls instead:
+
+```js
+mesh.shadowOffset = 30;        // slide it out along the direction below
+mesh.shadowDirectionX = 1;     // the ground direction it is cast along
+mesh.shadowDirectionZ = 0;
+mesh.shadowStretch = 2;        // and lengthen it along the same line
+```
+
+`shadowOffset` is honoured **only when `shadowGroundY` is set**, because the
+blob is a flat quad on one named plane: sliding it across a plane the game has
+not named puts it where there may be no floor. `shadowStretch` is clamped to 3
+and the blob fades as it pulls, so an extreme value degrades to nothing rather
+than to a smear. Both are per-object — an `InstancedMesh` shares one quad
+across instances that each carry their own rotation, so it ignores them.
+
+`shadowLight` takes the direction from a `Light3d` you name, re-read every
+draw, so a moving sun carries the shadows with it. Nothing is inferred: the
+engine never picks a dominant light, because a scene with several has no
+non-arbitrary answer and one with none has no answer at all.
+
+These are **art direction, not a projection**. A stretched ellipse is not a
+silhouette and has no contact with terrain, so on ground that is not the plane
+you named it will not lie on it. Direction-correct shadows want a shadow map,
+which this tier does not do.
 
 ### Get the sign right: the floor is a GREATER y
 

@@ -3,6 +3,7 @@
 ## [20.8.0] (melonJS 2) - _unreleased_
 
 ### Added
+- **Ground shadow shape** (`shadowOffset`, `shadowStretch`, `shadowDirectionX` / `shadowDirectionZ`, `shadowLight`): slide the blob along the ground and lengthen it, for a light that is not overhead. The offset needs `shadowGroundY`, since a flat quad can only be slid across a plane the game has named; the stretch is clamped and fades as it pulls. Per-object, and art direction rather than a projection ([#1631](https://github.com/melonjs/melonJS/issues/1631))
 - **3D particles** (`elevation`, `elevationVariation`): the launch lifts out of the emitter's plane, so a burst is a volume rather than a disc facing the viewer and a trail can recede. Both default to `0`, which leaves the 2D path exactly as it was ([#1696](https://github.com/melonjs/melonJS/issues/1696))
 - **`minSpread` / `maxSpread`**: `angle` and `elevation` become an AXIS and each particle leaves at a polar angle off it, giving a cone, a flat disc or a whole sphere. Sampling azimuth and elevation independently cannot describe a ring tangent to a surface, since there the elevation is a function of the azimuth ([#1696](https://github.com/melonjs/melonJS/issues/1696))
 - **`ProgressBar`**, a gauge renderable: track, value-sized fill, optional border and label, four directions, colour or gradient. The loading screen is built on it
@@ -17,6 +18,7 @@
 - **`Camera3d#setBasis(right, up, forward)` and `lookAt(target, up)`**: pose a camera from a basis the game already holds, which is what a view over a curved surface needs
 
 ### Fixed
+- `GLTFModel` passes the ground-shadow settings to the parts it builds. Only `castGroundShadow` and `shadowGroundY` reached them, so `shadowOpacity` was silently ignored on every loaded model, which is most of the props a scene has
 - A particle was culled and sorted at twice its depth, because the emitter's depth was stamped onto each particle as a container-local `pos.z` and then summed again by the chain walk. Under a `Camera3d` a burst anywhere but the near face of the scene drew nothing at all
 - Destroying a `ParticleEmitter` returns its particles to the pool and cancels the sort it still owed. `Container#destroy` emptied itself through its own public `reset()`, which `ParticleEmitter` redefines to re-apply settings, so on an emitter that call did neither
 - Pointer events reach whatever is drawn on top. `pos.z` is container-local, so a button inside one panel outranked another panel stacked over it. A covered region is also told when it loses the pointer
