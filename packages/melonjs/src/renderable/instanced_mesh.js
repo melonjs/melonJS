@@ -732,7 +732,12 @@ export default class InstancedMesh extends Mesh {
 		// rotated differently would each stretch a different way. Honouring
 		// one of the two and not the other would read as a bug, so neither is.
 		// `shadowScale` is uniform and so has no such problem.
-		if (typeof renderer.drawInstancedShadow !== "function") {
+		const shadowScale = this.shadowScale;
+		if (
+			typeof renderer.drawInstancedShadow !== "function" ||
+			!Number.isFinite(shadowScale) ||
+			shadowScale <= 0
+		) {
 			return;
 		}
 		// Sized from the PROTOTYPE's own footprint, with the same contact
@@ -753,8 +758,8 @@ export default class InstancedMesh extends Mesh {
 		const quad = getInstancedShadowQuad(
 			this,
 			Mesh,
-			hx,
-			hz,
+			hx * shadowScale,
+			hz * shadowScale,
 			this._geometryVersion ?? 0,
 		);
 		const group = this._modelMatrix.val;

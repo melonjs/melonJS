@@ -390,6 +390,7 @@ function buildTextureGroups(
  * @property {boolean} [fog] - set `false` to exempt this mesh from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does
  * @property {number} [shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
  * @property {number} [shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
+ * @property {number} [shadowScale=1] - multiplier for the ground shadow's footprint. Non-positive or non-finite values hide the shadow without hiding the mesh.
  * @property {number} [shadowOffset=0] - world distance to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, for the look of a light that is not directly overhead. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor.
  * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches.
  * @property {number} [shadowDirectionX=0] - x of the ground direction the shadow is cast along. Together with `shadowDirectionZ`, zero length means no offset and no stretch.
@@ -948,6 +949,18 @@ export default class Mesh extends Renderable {
 			typeof settings.shadowOpacity === "number"
 				? settings.shadowOpacity
 				: 0.45;
+
+		/**
+		 * Multiplier for the ground shadow's footprint, independent of the
+		 * object's size, ground height and opacity. Values above `1` can reveal
+		 * the blob beneath a wide prop; values below `1` tighten it.
+		 * Non-positive or non-finite values hide the shadow. Can be changed live.
+		 * Changing the value on an {@link InstancedMesh} rebuilds its shadow quad.
+		 * @type {number}
+		 * @default 1
+		 */
+		this.shadowScale =
+			typeof settings.shadowScale === "number" ? settings.shadowScale : 1;
 
 		/**
 		 * World distance to slide the ground shadow along
@@ -2023,6 +2036,10 @@ export default class Mesh extends Renderable {
 	 * @internal
 	 */
 	_drawGroundShadow(renderer) {
+		const shadowScale = this.shadowScale;
+		if (!Number.isFinite(shadowScale) || shadowScale <= 0) {
+			return;
+		}
 		const quad = getShadowQuad(renderer, this.lit === true, Mesh);
 		const model = this._modelMatrix.val;
 		const originX = model[12];
@@ -2175,7 +2192,7 @@ export default class Mesh extends Renderable {
 
 		// the quad is a unit square, so a half-extent of `k · axis` needs the
 		// basis column to be twice that
-		const k = (0.5 + strength * 0.5) * 2 * SHADOW_SPREAD;
+		const k = (0.5 + strength * 0.5) * 2 * SHADOW_SPREAD * shadowScale;
 		// written into the quad's OWN model matrix rather than a module scratch:
 		// it is the quad's placement, the renderer copies it when queueing the
 		// deferred draw, and it keeps the placement inspectable from the outside

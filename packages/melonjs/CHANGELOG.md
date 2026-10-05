@@ -17,6 +17,8 @@
 - **`Renderable#setPosition(x, y, z)`**, `z` optional: `pos` is 3D but typed 2D, so `pos.set(x, y)` silently zeroes the depth
 - **`Camera3d#setBasis(right, up, forward)` and `lookAt(target, up)`**: pose a camera from a basis the game already holds, which is what a view over a curved surface needs
 
+- Mesh: `shadowScale` adjusts the ground shadow's footprint independently of the object size, including Sprite3d and InstancedMesh. Defaults to `1`; set `0` to hide the shadow.
+
 ### Fixed
 - `GLTFModel` passes the ground-shadow settings to the parts it builds. Only `castGroundShadow` and `shadowGroundY` reached them, so `shadowOpacity` was silently ignored on every loaded model, which is most of the props a scene has
 - A particle was culled and sorted at twice its depth, because the emitter's depth was stamped onto each particle as a container-local `pos.z` and then summed again by the chain walk. Under a `Camera3d` a burst anywhere but the near face of the scene drew nothing at all

@@ -168,6 +168,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number[]|Float32Array} [settings.emissive] - emissive color (see {@link Mesh})
 	 * @param {number} [settings.shadowGroundY] - world Y of the floor the blob shadow lands on. Omit and it falls back to the sprite's own base — which for a billboard moves with the camera, so a scene that knows where its floor is should say so.
 	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the sprite, before any height fade
+	 * @param {number} [settings.shadowScale=1] - multiplier for the ground shadow's footprint; non-positive or non-finite values hide the shadow
 	 * @param {number} [settings.shadowOffset=0] - world distance to slide the shadow along its direction; needs `shadowGroundY` (see {@link Mesh#shadowOffset})
 	 * @param {number} [settings.shadowStretch=1] - how much longer the blob is along its direction, clamped to 3
 	 * @param {number} [settings.shadowDirectionX=0] - x of the ground direction the shadow is cast along
@@ -293,6 +294,7 @@ export default class Sprite3d extends Mesh {
 			transparent: settings.transparent,
 			shadowGroundY: settings.shadowGroundY,
 			shadowOpacity: settings.shadowOpacity,
+			shadowScale: settings.shadowScale,
 			shadowOffset: settings.shadowOffset,
 			shadowStretch: settings.shadowStretch,
 			shadowDirectionX: settings.shadowDirectionX,
