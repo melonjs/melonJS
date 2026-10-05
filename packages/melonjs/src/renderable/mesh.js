@@ -6,6 +6,7 @@ import { specularFromMetallicRoughness } from "./../loader/parsers/pbr.ts";
 import { Color } from "../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
+import { Vector3d } from "../math/vector3d.ts";
 import {
 	convexHull,
 	generateNormals,
@@ -72,6 +73,84 @@ const SHADOW_SPREAD = 1.2;
  * @internal
  */
 const SHADOW_MAX_STRETCH = 3;
+
+/**
+ * How far from vertical {@link Mesh#shadowGroundNormal} may tilt the blob,
+ * as the cosine of the angle.
+ *
+ * A blob is a flat quad with no thickness and no contact with what it lies
+ * on, and the further it is tilted toward the viewer's line of sight the less
+ * of it there is to see: at ninety degrees it is edge-on and gone. Past about
+ * seventy-five degrees there is nothing left worth drawing, so the tilt stops
+ * there rather than letting a game dial in a shadow standing on its rim.
+ * @ignore
+ * @internal
+ */
+const SHADOW_MAX_TILT_COS = Math.cos((75 * Math.PI) / 180);
+
+/**
+ * Rotation taking the world up axis onto `n`, applied to a vector lying in
+ * the horizontal plane.
+ *
+ * The blob is ROTATED onto the receiving plane rather than projected onto it.
+ * A vertical projection would lengthen it by `1 / cos(tilt)` along the slope
+ * and an orthogonal one would shrink it by `cos(tilt)`, and either way the
+ * blob would change size for no reason the game asked for, by more and more
+ * exactly where the feature is used. A rotation preserves its shape.
+ *
+ * Derived rather than composed from a general axis-angle: the source axis is
+ * always world up, so the usual `k x p` terms collapse and this is the
+ * Rodrigues matrix with `ky = 0` written out.
+ * @param {number} nx - x of the unit surface normal
+ * @param {number} ny - y of it
+ * @param {number} nz - z of it
+ * @param {number} px - x of the horizontal vector to rotate
+ * @param {number} pz - z of it
+ * @param {Float64Array} out - receives the rotated vector
+ * @ignore
+ * @internal
+ */
+function tiltOntoPlane(nx, ny, nz, px, pz, out) {
+	const horizontal = nx * nx + nz * nz;
+	if (horizontal < 1e-12) {
+		// parallel to world up: nothing to do, or a half turn for a ceiling
+		const flip = ny <= 0 ? 1 : -1;
+		out[0] = px * flip;
+		out[1] = 0;
+		out[2] = pz;
+		return;
+	}
+	// `cos` of the rotation is `WORLD_UP . n`, and WORLD_UP is (0, -1, 0)
+	const cos = -ny;
+	const w = (1 + ny) / horizontal;
+	out[0] = (cos + w * nz * nz) * px - w * nx * nz * pz;
+	out[1] = nx * px + nz * pz;
+	out[2] = -w * nx * nz * px + (cos + w * nx * nx) * pz;
+}
+
+/**
+ * Copy a caller's normal into a vector this mesh owns, normalized.
+ *
+ * Copied rather than retained, the way {@link Light3d} treats its own
+ * vectors: a game that keeps mutating the array it passed would otherwise be
+ * steering this mesh's shadow by accident.
+ * @param {number[]|Vector3d} value - the normal to read
+ * @returns {Vector3d} a vector owned by the caller of this function
+ * @ignore
+ * @internal
+ */
+function readShadowNormal(value) {
+	const out = Array.isArray(value)
+		? new Vector3d(value[0], value[1], value[2])
+		: new Vector3d(value.x, value.y, value.z);
+	const length = Math.hypot(out.x, out.y, out.z);
+	// a zero normal describes no plane at all; fall back to level rather than
+	// dividing by it
+	return length > 1e-6 ? out.scale(1 / length) : out.set(0, -1, 0);
+}
+
+/** scratch for the three vectors `tiltOntoPlane` turns per shadow */
+const _tilted = new Float64Array(3);
 
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
@@ -395,6 +474,7 @@ function buildTextureGroups(
  * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches.
  * @property {number} [shadowDirectionX=0] - x of the ground direction the shadow is cast along. Together with `shadowDirectionZ`, zero length means no offset and no stretch.
  * @property {number} [shadowDirectionZ=0] - z of the ground direction the shadow is cast along.
+ * @property {number[]|Vector3d} [shadowGroundNormal] - the UP normal of the floor the shadow lands on, for a surface that is not level. Needs `shadowGroundY`, which says where that floor is; this says which way it faces. Defaults to world up, and the tilt is clamped at 75 degrees. Per-object: an `InstancedMesh` shares one quad across its instances and ignores it.
  * @property {Light3d} [shadowLight] - a {@link Light3d} to take the direction from instead of setting it by hand. Read every draw, so a moving sun carries the shadow with it. Nothing is inferred from the scene: no light here means no direction.
  */
 
@@ -1028,6 +1108,11 @@ export default class Mesh extends Renderable {
 		 * @type {Light3d|undefined}
 		 */
 		this.shadowLight = settings.shadowLight;
+
+		this._shadowGroundNormal = undefined;
+		if (settings.shadowGroundNormal !== undefined) {
+			this.shadowGroundNormal = settings.shadowGroundNormal;
+		}
 
 		/**
 		 * Cached horizontal half-extent used to size the shadow, resolved on
@@ -2192,6 +2277,30 @@ export default class Mesh extends Renderable {
 			}
 		}
 
+		// The tilt of the floor it lands on. Only alongside a named plane:
+		// `shadowGroundY` says where that floor is and this says which way it
+		// faces, and tilting the bounds fallback has nothing to tilt about.
+		let nX = 0;
+		let nY = -1;
+		let nZ = 0;
+		const normal = this.shadowGroundNormal;
+		if (normal !== undefined && this.shadowGroundY !== undefined) {
+			nX = normal.x;
+			nY = normal.y;
+			nZ = normal.z;
+			// Clamped toward up rather than refused: a game sliding a normal
+			// off a curved surface should get a shadow that stops tilting,
+			// not one that vanishes at some threshold.
+			if (-nY < SHADOW_MAX_TILT_COS) {
+				const flat = Math.hypot(nX, nZ);
+				const wanted = Math.sqrt(1 - SHADOW_MAX_TILT_COS * SHADOW_MAX_TILT_COS);
+				const scale = flat > 1e-6 ? wanted / flat : 0;
+				nX *= scale;
+				nZ *= scale;
+				nY = -SHADOW_MAX_TILT_COS;
+			}
+		}
+
 		// the quad is a unit square, so a half-extent of `k · axis` needs the
 		// basis column to be twice that
 		const k = (0.5 + strength * 0.5) * 2 * SHADOW_SPREAD;
@@ -2202,24 +2311,40 @@ export default class Mesh extends Renderable {
 			quad._modelMatrix = new Matrix3d();
 		}
 		const out = quad._modelMatrix.val;
-		out[0] = axX * k;
-		out[1] = 0;
-		out[2] = axZ * k;
+		// Both ground axes turned onto the plane, and the quad's own axis
+		// becomes the normal itself — negated, because the quad's vertices
+		// carry `(0, -1, 0)` normals and the lit batcher pushes those through
+		// this matrix. At the default normal this is `(0, 1, 0)` and every
+		// term below is the level case unchanged.
+		tiltOntoPlane(nX, nY, nZ, axX, axZ, _tilted);
+		out[0] = _tilted[0] * k;
+		out[1] = _tilted[1] * k;
+		out[2] = _tilted[2] * k;
 		out[3] = 0;
-		out[4] = 0;
-		out[5] = 1;
-		out[6] = 0;
+		out[4] = -nX;
+		out[5] = -nY;
+		out[6] = -nZ;
 		out[7] = 0;
-		out[8] = azX * k;
-		out[9] = 0;
-		out[10] = azZ * k;
+		tiltOntoPlane(nX, nY, nZ, azX, azZ, _tilted);
+		out[8] = _tilted[0] * k;
+		out[9] = _tilted[1] * k;
+		out[10] = _tilted[2] * k;
 		out[11] = 0;
-		out[12] = originX + offsetX;
-		// render space is Y-DOWN, so lifting off the floor is a SMALLER y.
-		// `extent` is measured BEFORE any stretch, so pulling the blob out
-		// does not also lift it off the floor it is lying on.
-		out[13] = groundY - extent * SHADOW_LIFT;
-		out[14] = originZ + offsetZ;
+		// The offset rides IN the plane, turned onto it like the axes: slid
+		// horizontally instead, it would climb off a tilted floor by
+		// `distance * tan(tilt)` and hang in the air or sink into the hill.
+		tiltOntoPlane(nX, nY, nZ, offsetX, offsetZ, _tilted);
+		// And the lift steps along the normal. At the default that is a
+		// SMALLER y, which is off the floor in a Y-down space, exactly as
+		// before. `extent` is measured BEFORE any stretch, so pulling the
+		// blob out does not also lift it off the floor it is lying on.
+		const lift = extent * SHADOW_LIFT;
+		out[12] = originX + _tilted[0] + nX * lift;
+		// The blob still sits directly UNDER the caster: the normal turns it,
+		// it does not move it. Projecting the origin along the normal instead
+		// would slide a jumping character's shadow down the slope as it rose.
+		out[13] = groundY + _tilted[1] + nY * lift;
+		out[14] = originZ + _tilted[2] + nZ * lift;
 		out[15] = 1;
 
 		// Stash and restore by hand rather than save()/restore(): restore()
@@ -2245,6 +2370,48 @@ export default class Mesh extends Renderable {
 			tint.setColor(savedR, savedG, savedB, savedTintAlpha);
 			renderer.setGlobalAlpha(savedAlpha);
 		}
+	}
+
+	/**
+	 * The UP normal of the floor this object's shadow lands on, for a
+	 * surface that is not level.
+	 *
+	 * {@link Mesh#shadowGroundY} says where the floor is and this says
+	 * which way it faces, so it is honoured only alongside it: tilting the
+	 * fallback plane, which is the caster's own bounds, has no anchor to
+	 * tilt about. Defaults to world up, which is `(0, -1, 0)` because
+	 * render space is Y-down, and that default reproduces a level blob
+	 * exactly.
+	 *
+	 * The blob is ROTATED onto the plane, not projected, so it keeps its
+	 * shape; it still sits directly under the caster rather than sliding
+	 * along the slope, and it is still a flat quad with no contact with
+	 * what it lies on. The tilt is clamped at 75 degrees, past which an
+	 * edge-on blob has nothing left to show.
+	 *
+	 * Per-object. An {@link InstancedMesh} shares one quad across all its
+	 * instances, so one normal cannot serve a scatter spread over curved
+	 * ground; it ignores this.
+	 * @type {Vector3d|undefined}
+	 * @default undefined
+	 * @example
+	 * // a prop resting on a 20 degree slope that falls away along +x
+	 * prop.shadowGroundY = floorY;
+	 * prop.shadowGroundNormal = [Math.sin(0.35), -Math.cos(0.35), 0];
+	 */
+	get shadowGroundNormal() {
+		return this._shadowGroundNormal;
+	}
+
+	/**
+	 * Takes an array or a `Vector3d` and keeps a normalized copy of its own,
+	 * so a game that goes on mutating what it passed does not steer this
+	 * mesh's shadow by accident. `undefined` puts the blob back level.
+	 * @param {number[]|Vector3d|undefined} value - the floor's up normal
+	 */
+	set shadowGroundNormal(value) {
+		this._shadowGroundNormal =
+			value === undefined ? undefined : readShadowNormal(value);
 	}
 
 	/**

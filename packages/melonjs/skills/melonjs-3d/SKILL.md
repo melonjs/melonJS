@@ -700,6 +700,28 @@ draw, so a moving sun carries the shadows with it. Nothing is inferred: the
 engine never picks a dominant light, because a scene with several has no
 non-arbitrary answer and one with none has no answer at all.
 
+### A floor that is not level
+
+`shadowGroundY` says where the floor is; `shadowGroundNormal` says which way
+it faces:
+
+```js
+prop.shadowGroundY = floorY;
+prop.shadowGroundNormal = [Math.sin(0.35), -Math.cos(0.35), 0];  // a 20 deg slope
+```
+
+World up is `(0, -1, 0)`, because render space is Y-down, and that is the
+default. The blob is **rotated** onto the plane rather than projected, so it
+keeps its size; it still sits directly under the caster, since the normal
+turns it rather than moving it. The tilt is clamped at 75 degrees, past which
+an edge-on blob has nothing left to show. It needs `shadowGroundY`, for the
+same reason the offset does: tilting the bounds fallback has no anchor to turn
+about.
+
+Per-object. An `InstancedMesh` shares one quad across all its instances, so
+one normal cannot serve a scatter spread over curved ground, and it ignores
+this along with the offset and the stretch.
+
 These are **art direction, not a projection**. A stretched ellipse is not a
 silhouette and has no contact with terrain, so on ground that is not the plane
 you named it will not lie on it. Direction-correct shadows want a shadow map,

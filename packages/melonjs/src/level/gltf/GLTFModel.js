@@ -107,6 +107,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.shadowStretch=1] - how much longer they are along that direction, clamped to 3
 	 * @param {number} [options.shadowDirectionX=0] - x of the ground direction they are cast along
 	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
+	 * @param {number[]|Vector3d} [options.shadowGroundNormal] - the UP normal of the floor those shadows land on; needs `shadowGroundY` (see {@link Mesh#shadowGroundNormal})
 	 * @param {Light3d} [options.shadowLight] - a {@link Light3d} to take that direction from instead
 	 */
 	constructor(data, options = {}) {
@@ -304,6 +305,7 @@ export default class GLTFModel extends Container {
 					shadowStretch: options.shadowStretch,
 					shadowDirectionX: options.shadowDirectionX,
 					shadowDirectionZ: options.shadowDirectionZ,
+					shadowGroundNormal: options.shadowGroundNormal,
 					shadowLight: options.shadowLight,
 				});
 				if (prim.instances) {

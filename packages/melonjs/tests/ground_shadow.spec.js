@@ -621,6 +621,189 @@ describe("Ground shadows (#1515)", () => {
 		});
 	});
 
+	/**
+	 * `shadowGroundNormal` — the blob on a floor that is not level.
+	 *
+	 * The blob is ROTATED onto the plane rather than projected, so it keeps
+	 * its shape: a vertical projection would lengthen it by `1/cos(tilt)` and
+	 * an orthogonal one shrink it by `cos(tilt)`, growing exactly where the
+	 * feature is used. It also stays directly under the caster; the normal
+	 * turns it, it does not move it.
+	 */
+	describe("shadowGroundNormal", () => {
+		const onFloor = (settings = {}) => {
+			return makeMesh({
+				castGroundShadow: true,
+				shadowGroundY: 0,
+				...settings,
+			});
+		};
+		const matrix = () => {
+			return [...renderer._shadowQuads.unlit._modelMatrix.val];
+		};
+		/** the quad's three basis columns, as vectors */
+		const basis = (m) => {
+			return {
+				ax: [m[0], m[1], m[2]],
+				up: [m[4], m[5], m[6]],
+				az: [m[8], m[9], m[10]],
+			};
+		};
+		const dot = (a, b) => {
+			return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+		};
+		const len = (a) => {
+			return Math.hypot(a[0], a[1], a[2]);
+		};
+		const unit = (v) => {
+			const l = len(v);
+			return [v[0] / l, v[1] / l, v[2] / l];
+		};
+
+		it("world up is the default, and reproduces a level blob exactly", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const plain = onFloor();
+			drawOnce(plain);
+			drawOnce(plain);
+			const before = matrix();
+			// WORLD_UP is (0, -1, 0): render space is Y-down
+			plain.shadowGroundNormal = [0, -1, 0];
+			drawOnce(plain);
+			expect(matrix()).toEqual(before);
+			plain.destroy();
+		});
+
+		it("lays the blob in the plane, both axes perpendicular to the normal", (ctx) => {
+			requireWebGL(ctx, renderer);
+			for (const n of [
+				[0.6, -0.8, 0],
+				[0, -0.707106, 0.707106],
+				[0.4, -0.6, 0.69282],
+			]) {
+				const mesh = onFloor({ shadowGroundNormal: n });
+				drawOnce(mesh);
+				drawOnce(mesh);
+				const b = basis(matrix());
+				const u = unit(n);
+				expect(Math.abs(dot(unit(b.ax), u))).toBeLessThan(1e-6);
+				expect(Math.abs(dot(unit(b.az), u))).toBeLessThan(1e-6);
+				// and the quad's own axis IS the normal, negated
+				expect(b.up[0]).toBeCloseTo(-u[0], 5);
+				expect(b.up[1]).toBeCloseTo(-u[1], 5);
+				expect(b.up[2]).toBeCloseTo(-u[2], 5);
+				mesh.destroy();
+			}
+		});
+
+		it("rotates rather than projects, so the blob keeps its size", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor();
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const flat = basis(matrix());
+			// 40 degrees of tilt: a projection would change these by 1/cos or
+			// cos, about 30% either way
+			mesh.shadowGroundNormal = [Math.sin(0.698), -Math.cos(0.698), 0];
+			drawOnce(mesh);
+			const tilted = basis(matrix());
+			expect(len(tilted.ax)).toBeCloseTo(len(flat.ax), 5);
+			expect(len(tilted.az)).toBeCloseTo(len(flat.az), 5);
+		});
+
+		it("keeps the blob under the caster, and lifts along the normal", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor();
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const flat = matrix();
+			mesh.shadowGroundNormal = [0.5, -Math.sqrt(0.75), 0];
+			drawOnce(mesh);
+			const tilted = matrix();
+			// the lift is the only thing that moved it, and it went along the
+			// normal: a +x component appears where a level blob had none
+			const liftY = flat[13] - 0;
+			expect(tilted[12] - flat[12]).toBeCloseTo(0.5 * -liftY, 5);
+			expect(tilted[14]).toBeCloseTo(flat[14], 6);
+			mesh.destroy();
+		});
+
+		it("carries the offset IN the plane instead of sliding off it", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// without this the blob climbs off a tilted floor by
+			// distance * tan(tilt) and hangs in the air
+			const n = [Math.sin(0.6), -Math.cos(0.6), 0];
+			const mesh = onFloor({
+				shadowGroundNormal: n,
+				shadowDirectionX: 1,
+				shadowDirectionZ: 0,
+			});
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const before = matrix();
+			mesh.shadowOffset = 2;
+			drawOnce(mesh);
+			const after = matrix();
+			const moved = [
+				after[12] - before[12],
+				after[13] - before[13],
+				after[14] - before[14],
+			];
+			// perpendicular to the normal: it stayed on the floor
+			expect(Math.abs(dot(moved, n))).toBeLessThan(1e-5);
+			expect(len(moved)).toBeGreaterThan(1);
+			mesh.destroy();
+		});
+
+		it("clamps the tilt rather than letting a blob stand on its rim", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// very nearly vertical, which would be edge-on and invisible
+			const mesh = onFloor({ shadowGroundNormal: [0.999, -0.0447, 0] });
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const up = basis(matrix()).up;
+			// 75 degrees from world up is the ceiling
+			const tilt = Math.acos(Math.min(1, Math.abs(up[1])));
+			expect((tilt * 180) / Math.PI).toBeCloseTo(75, 3);
+			mesh.destroy();
+		});
+
+		it("is ignored without a named plane to tilt", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// no shadowGroundY: the fallback is the caster's own bounds, which
+			// gives the tilt nothing to turn about
+			const mesh = makeMesh({ castGroundShadow: true });
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const before = matrix();
+			mesh.shadowGroundNormal = [0.6, -0.8, 0];
+			drawOnce(mesh);
+			expect(matrix()).toEqual(before);
+			mesh.destroy();
+		});
+
+		it("normalizes what it is given, and copies it", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const given = [0, -7, 0]; // not a unit vector
+			const mesh = onFloor({ shadowGroundNormal: given });
+			expect(mesh.shadowGroundNormal.y).toBeCloseTo(-1, 9);
+			// mutating what was passed must not steer the mesh
+			given[0] = 99;
+			expect(mesh.shadowGroundNormal.x).toBe(0);
+			mesh.destroy();
+		});
+
+		it("falls back to level for a zero normal rather than dividing by it", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = onFloor({ shadowGroundNormal: [0, 0, 0] });
+			drawOnce(mesh);
+			drawOnce(mesh);
+			const b = basis(matrix());
+			expect(b.up[1]).toBeCloseTo(1, 9);
+			expect(Number.isFinite(matrix()[12])).toBe(true);
+			mesh.destroy();
+		});
+	});
+
 	// ── Sprite3d, which is the whole point of the feature ───────────────
 
 	describe("Sprite3d", () => {

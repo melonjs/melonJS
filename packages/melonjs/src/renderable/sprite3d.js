@@ -172,6 +172,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} [settings.shadowStretch=1] - how much longer the blob is along its direction, clamped to 3
 	 * @param {number} [settings.shadowDirectionX=0] - x of the ground direction the shadow is cast along
 	 * @param {number} [settings.shadowDirectionZ=0] - z of the ground direction the shadow is cast along
+	 * @param {number[]|Vector3d} [settings.shadowGroundNormal] - the UP normal of the floor the shadow lands on; needs `shadowGroundY` (see {@link Mesh#shadowGroundNormal})
 	 * @param {Light3d} [settings.shadowLight] - a {@link Light3d} to take that direction from instead
 	 * @param {boolean} [settings.castGroundShadow] - give this sprite a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a {@link Camera3d}.
 	 * @param {boolean} [settings.fog] - set `false` to exempt this sprite from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does. A sun or a moon wants this — everything else at that distance dissolves into the haze, and so would it.
@@ -297,6 +298,7 @@ export default class Sprite3d extends Mesh {
 			shadowStretch: settings.shadowStretch,
 			shadowDirectionX: settings.shadowDirectionX,
 			shadowDirectionZ: settings.shadowDirectionZ,
+			shadowGroundNormal: settings.shadowGroundNormal,
 			shadowLight: settings.shadowLight,
 		});
 
