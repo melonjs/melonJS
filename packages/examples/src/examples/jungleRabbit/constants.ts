@@ -104,8 +104,26 @@ export const RIPPLE_UV = 520;
  * The shadows are offset along the real sun now, so the lever is gone and the
  * plane sits on the water where it belongs.
  */
-export const SHADOW_OFFSET = 26;
-export const SHADOW_STRETCH = 1.5;
+export const SHADOW_OFFSET = 70;
+export const SHADOW_SINK = 8;
+/**
+ * The ground bearing the shadows are thrown along.
+ *
+ * Taken from where the sun is DRAWN, not from the `Light3d`. The two do not
+ * agree: the billboard sits dead ahead at `SUN_AHEAD` and about ten degrees
+ * up, so its light travels toward the camera, while the light's own direction
+ * was chosen for how it shades the valley walls and travels away from it. They
+ * are 107 degrees apart.
+ *
+ * Shading can afford a direction picked for looks, because nothing in the
+ * frame contradicts it. A shadow cannot: the player can see the sun, so a
+ * shadow pointing away from it reads as a bug. It also happens to be the
+ * visible choice, since a shadow thrown toward the camera lands in front of
+ * its caster instead of hiding behind it.
+ */
+export const SHADOW_DIR_X = 0;
+export const SHADOW_DIR_Z = -1;
+export const SHADOW_STRETCH = 2.5;
 
 /** length of one terrain tile along +Z */
 export const TILE_LEN = 2400;

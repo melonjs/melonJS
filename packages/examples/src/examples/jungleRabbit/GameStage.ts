@@ -132,7 +132,10 @@ import {
 	RIDE_Y,
 	ROCK_COUNT,
 	ROCK_HALF,
+	SHADOW_DIR_X,
+	SHADOW_DIR_Z,
 	SHADOW_OFFSET,
+	SHADOW_SINK,
 	SHADOW_STRETCH,
 	SKY,
 	SPAWN_AHEAD,
@@ -697,8 +700,9 @@ export class GameStage extends Stage {
 			castGroundShadow: true,
 			// on the water, not floated above it: the blob is thrown clear by
 			// the sun's own direction now rather than by fake altitude
-			shadowGroundY: WATER_LEVEL,
-			shadowLight: this.sun,
+			shadowGroundY: WATER_LEVEL + SHADOW_SINK,
+			shadowDirectionX: SHADOW_DIR_X,
+			shadowDirectionZ: SHADOW_DIR_Z,
 			shadowOffset: SHADOW_OFFSET,
 			shadowStretch: SHADOW_STRETCH,
 		});
@@ -1421,8 +1425,9 @@ export class GameStage extends Stage {
 			// flat boulder and lights correctly.
 			lit: kind !== "carrot",
 			castGroundShadow: true,
-			shadowGroundY: WATER_LEVEL,
-			shadowLight: this.sun,
+			shadowGroundY: WATER_LEVEL + SHADOW_SINK,
+			shadowDirectionX: SHADOW_DIR_X,
+			shadowDirectionZ: SHADOW_DIR_Z,
 			shadowOffset: SHADOW_OFFSET,
 			shadowStretch: SHADOW_STRETCH,
 			// The engine default (0.45), for both kinds. A carrot used to be
@@ -1486,7 +1491,7 @@ export class GameStage extends Stage {
 		sprite.pos.x = x;
 		sprite.pos.y = WATER_LEVEL;
 		// the plane the blob lands on is the water the prop sits in
-		sprite.shadowGroundY = sprite.pos.y;
+		sprite.shadowGroundY = sprite.pos.y + SHADOW_SINK;
 		sprite.depth = this.travelled + aheadOfSkier;
 		// keep the frontier honest even on the initial fill, or the first
 		// respawns measure from zero and pile up at the near edge
