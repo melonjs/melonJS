@@ -104,7 +104,22 @@ export const RIPPLE_UV = 520;
  * The shadows are offset along the real sun now, so the lever is gone and the
  * plane sits on the water where it belongs.
  */
-export const SHADOW_OFFSET = 70;
+/**
+ * How far each kind throws its shadow, in world units.
+ *
+ * Per KIND, because the right distance is not a property of the scene: it is
+ * roughly `footprint radius x (stretch - 1)`, the amount that shifts a
+ * stretched ellipse so its trailing edge still sits at the caster's feet. One
+ * value cannot serve both here. A boulder's blob has a radius around 76 and a
+ * carrot's around 26, so a single 70 left the boulder barely moved and threw
+ * the carrot's shadow clean off its own feet, floating a gap ahead of it.
+ *
+ * The carrots are what this is for. A boulder is bedded in the water with its
+ * widest part at the surface, so it covers its own contact shadow whatever is
+ * done to it, which is the shadow behaving correctly.
+ */
+export const SHADOW_OFFSET_CARROT = 38;
+export const SHADOW_OFFSET_ROCK = 110;
 export const SHADOW_SINK = 8;
 /**
  * The ground bearing the shadows are thrown along.
