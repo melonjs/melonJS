@@ -955,7 +955,8 @@ export default class Mesh extends Renderable {
 		 * object's size, ground height and opacity. Values above `1` can reveal
 		 * the blob beneath a wide prop; values below `1` tighten it.
 		 * Non-positive or non-finite values hide the shadow. Can be changed live.
-		 * Changing the value on an {@link InstancedMesh} rebuilds its shadow quad.
+		 * Changing the value on an {@link InstancedMesh} rebuilds its shadow quad,
+		 * so set it once there rather than animating it every frame.
 		 * @type {number}
 		 * @default 1
 		 */

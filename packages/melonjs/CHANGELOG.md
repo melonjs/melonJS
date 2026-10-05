@@ -3,6 +3,7 @@
 ## [20.8.0] (melonJS 2) - _unreleased_
 
 ### Added
+- **`Mesh#shadowScale`**: a size multiplier for the ground shadow, independent of the object's own size, so a wide flat-bottomed prop can show a blob that would otherwise hide under it. Defaults to `1`; `0` or less hides the shadow and leaves the object drawn. Works on `Sprite3d`, `InstancedMesh` and `GLTFModel` ([#1631](https://github.com/melonjs/melonJS/issues/1631))
 - **Ground shadow shape** (`shadowOffset`, `shadowStretch`, `shadowDirectionX` / `shadowDirectionZ`, `shadowLight`): slide the blob along the ground and lengthen it, for a light that is not overhead. The offset needs `shadowGroundY`, since a flat quad can only be slid across a plane the game has named; the stretch is clamped and fades as it pulls. Per-object, and art direction rather than a projection ([#1631](https://github.com/melonjs/melonJS/issues/1631))
 - **3D particles** (`elevation`, `elevationVariation`): the launch lifts out of the emitter's plane, so a burst is a volume rather than a disc facing the viewer and a trail can recede. Both default to `0`, which leaves the 2D path exactly as it was ([#1696](https://github.com/melonjs/melonJS/issues/1696))
 - **`minSpread` / `maxSpread`**: `angle` and `elevation` become an AXIS and each particle leaves at a polar angle off it, giving a cone, a flat disc or a whole sphere. Sampling azimuth and elevation independently cannot describe a ring tangent to a surface, since there the elevation is a function of the azimuth ([#1696](https://github.com/melonjs/melonJS/issues/1696))
@@ -16,8 +17,6 @@
 - **`raycast3d` on a sphere body** reports that sphere's surface, not a bounding sphere derived from the renderable's 2D bounds
 - **`Renderable#setPosition(x, y, z)`**, `z` optional: `pos` is 3D but typed 2D, so `pos.set(x, y)` silently zeroes the depth
 - **`Camera3d#setBasis(right, up, forward)` and `lookAt(target, up)`**: pose a camera from a basis the game already holds, which is what a view over a curved surface needs
-
-- Mesh: `shadowScale` adjusts the ground shadow's footprint independently of the object size, including Sprite3d and InstancedMesh. Defaults to `1`; set `0` to hide the shadow.
 
 ### Fixed
 - `GLTFModel` passes the ground-shadow settings to the parts it builds. Only `castGroundShadow` and `shadowGroundY` reached them, so `shadowOpacity` was silently ignored on every loaded model, which is most of the props a scene has
