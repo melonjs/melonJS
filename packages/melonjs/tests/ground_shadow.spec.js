@@ -338,11 +338,20 @@ describe("Ground shadows (#1515)", () => {
 	 * an anisotropic scale `S = I + (stretch - 1)·d⊗d` applied in world XZ.
 	 */
 	describe("shadowOffset / shadowStretch", () => {
-		/** a mesh on a NAMED floor, which is what an offset needs */
+		/**
+		 * A mesh on a NAMED floor, which is what an offset needs, and sitting
+		 * ON it rather than above it.
+		 *
+		 * `shadowGroundY` at the caster's own origin means no height fade, so
+		 * `strength` is 1 and the drawn blob is its full-strength size. That
+		 * matters because `shadowOffset` is measured in full-strength radii:
+		 * it deliberately does NOT shrink with the fade, so that a rising
+		 * object's shadow does not slide back under it as it goes.
+		 */
 		const onFloor = (settings = {}) => {
 			return makeMesh({
 				castGroundShadow: true,
-				shadowGroundY: 20,
+				shadowGroundY: 0,
 				...settings,
 			});
 		};
@@ -351,19 +360,49 @@ describe("Ground shadows (#1515)", () => {
 			return { x: m[12], z: m[14] };
 		};
 
-		it("slides the blob along the direction, by exactly the distance asked", (ctx) => {
+		/** the blob's own radius, which is the unit `shadowOffset` is in */
+		const blobRadius = () => {
+			const a = shadowAxes();
+			return (a.x + a.z) / 2;
+		};
+
+		it("slides the blob by the asked multiple of its OWN radius", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const mesh = onFloor();
 			drawOnce(mesh);
+			drawOnce(mesh);
 			const before = origin();
+			const r = blobRadius();
 			mesh.shadowDirectionX = 3;
 			mesh.shadowDirectionZ = 4; // length 5, so it must be normalised
-			mesh.shadowOffset = 10;
+			mesh.shadowOffset = 2;
 			drawOnce(mesh);
 			const after = origin();
-			expect(after.x - before.x).toBeCloseTo(6, 5);
-			expect(after.z - before.z).toBeCloseTo(8, 5);
+			// 2 radii along (0.6, 0.8)
+			expect(after.x - before.x).toBeCloseTo(2 * r * 0.6, 4);
+			expect(after.z - before.z).toBeCloseTo(2 * r * 0.8, 4);
 			mesh.destroy();
+		});
+
+		it("throws two differently sized casters the same RELATIVE distance", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// the whole reason the unit is a ratio: one value has to serve a
+			// big caster and a small one, which a world distance cannot do
+			const shifts = [];
+			for (const width of [16, 64]) {
+				const mesh = onFloor({ width, shadowDirectionX: 1 });
+				drawOnce(mesh);
+				drawOnce(mesh);
+				const before = origin().x;
+				const r = blobRadius();
+				mesh.shadowOffset = 1.5;
+				drawOnce(mesh);
+				shifts.push((origin().x - before) / r);
+				mesh.destroy();
+			}
+			// different sizes, different world distances, same ratio
+			expect(shifts[0]).toBeCloseTo(1.5, 4);
+			expect(shifts[1]).toBeCloseTo(1.5, 4);
 		});
 
 		it("refuses to slide off a plane the game never named", (ctx) => {
@@ -507,16 +546,18 @@ describe("Ground shadows (#1515)", () => {
 		it("takes the direction from a named light, and follows it when it moves", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const sun = { direction: { x: 1, y: -1, z: 0 } };
-			const mesh = onFloor({ shadowLight: sun, shadowOffset: 10 });
+			const mesh = onFloor({ shadowLight: sun, shadowOffset: 2 });
+			drawOnce(mesh);
 			drawOnce(mesh);
 			const east = origin();
+			const reach = 2 * blobRadius();
 			// the sun swings round; the shadow goes with it
 			sun.direction.x = 0;
 			sun.direction.z = 1;
 			drawOnce(mesh);
 			const south = origin();
-			expect(east.x - south.x).toBeCloseTo(10, 5);
-			expect(south.z - east.z).toBeCloseTo(10, 5);
+			expect(east.x - south.x).toBeCloseTo(reach, 4);
+			expect(south.z - east.z).toBeCloseTo(reach, 4);
 			mesh.destroy();
 		});
 
@@ -525,14 +566,16 @@ describe("Ground shadows (#1515)", () => {
 			const mesh = onFloor({
 				shadowDirectionX: -1,
 				shadowLight: { direction: { x: 1, y: -1, z: 0 } },
-				shadowOffset: 7,
+				shadowOffset: 1.5,
 			});
 			drawOnce(mesh);
+			drawOnce(mesh);
 			const withLight = origin().x;
+			const reach = 1.5 * blobRadius();
 			mesh.shadowLight = undefined;
 			drawOnce(mesh);
 			// the hand-set direction is the OPPOSITE way, so the two differ by 2x
-			expect(withLight - origin().x).toBeCloseTo(14, 5);
+			expect(withLight - origin().x).toBeCloseTo(2 * reach, 4);
 			mesh.destroy();
 		});
 

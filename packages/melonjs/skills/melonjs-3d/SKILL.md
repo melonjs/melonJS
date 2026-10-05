@@ -679,13 +679,16 @@ units it projects over the top of the caster as a dark halo ringing it.
 Use the shape controls instead:
 
 ```js
-mesh.shadowOffset = 30;        // slide it out along the direction below
+mesh.shadowOffset = 1.5;       // slide it out, in blob radii
 mesh.shadowDirectionX = 1;     // the ground direction it is cast along
 mesh.shadowDirectionZ = 0;
 mesh.shadowStretch = 2;        // and lengthen it along the same line
 ```
 
-`shadowOffset` is honoured **only when `shadowGroundY` is set**, because the
+`shadowOffset` is measured in multiples of the blob's **own radius**, not in
+world units, so one value serves a boulder and a pebble and every part of a
+glTF model. About `stretch - 1` is what keeps the shadow attached to its
+caster. It is honoured **only when `shadowGroundY` is set**, because the
 blob is a flat quad on one named plane: sliding it across a plane the game has
 not named puts it where there may be no floor. `shadowStretch` is clamped to 3
 and the blob fades as it pulls, so an extreme value degrades to nothing rather

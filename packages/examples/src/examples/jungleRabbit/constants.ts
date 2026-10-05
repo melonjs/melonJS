@@ -105,21 +105,19 @@ export const RIPPLE_UV = 520;
  * plane sits on the water where it belongs.
  */
 /**
- * How far each kind throws its shadow, in world units.
+ * How far a shadow is thrown, in multiples of the blob's own radius.
  *
- * Per KIND, because the right distance is not a property of the scene: it is
- * roughly `footprint radius x (stretch - 1)`, the amount that shifts a
- * stretched ellipse so its trailing edge still sits at the caster's feet. One
- * value cannot serve both here. A boulder's blob has a radius around 76 and a
- * carrot's around 26, so a single 70 left the boulder barely moved and threw
- * the carrot's shadow clean off its own feet, floating a gap ahead of it.
+ * One value for everything now. It used to be two, a carrot's and a
+ * boulder's, because the setting took a world distance and a boulder's blob
+ * is about three times a carrot's: 38 and 110 units. Both worked out at the
+ * same 1.45 of their own radius, which is what a world distance was hiding.
+ * The engine takes the ratio directly, so the two collapse.
  *
- * The carrots are what this is for. A boulder is bedded in the water with its
- * widest part at the surface, so it covers its own contact shadow whatever is
- * done to it, which is the shadow behaving correctly.
+ * It is roughly `stretch - 1`: enough to shift a stretched ellipse so its
+ * trailing edge still sits at the caster's feet, which is what keeps a
+ * shadow attached to the thing casting it.
  */
-export const SHADOW_OFFSET_CARROT = 38;
-export const SHADOW_OFFSET_ROCK = 110;
+export const SHADOW_OFFSET = 1.45;
 export const SHADOW_SINK = 8;
 /**
  * The ground bearing the shadows are thrown along.

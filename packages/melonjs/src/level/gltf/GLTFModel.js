@@ -107,7 +107,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.shadowStretch=1] - how much longer they are along that direction, clamped to 3
 	 * @param {number} [options.shadowDirectionX=0] - x of the ground direction they are cast along
 	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
-	 * @param {object} [options.shadowLight] - a {@link Light3d} to take that direction from instead
+	 * @param {Light3d} [options.shadowLight] - a {@link Light3d} to take that direction from instead
 	 */
 	constructor(data, options = {}) {
 		super(0, 0);

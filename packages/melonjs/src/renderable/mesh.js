@@ -30,6 +30,7 @@ let _warnedLitUnder2dOnce = false;
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import Camera2d from "../camera/camera2d.ts";
+ * @import Light3d from "../lighting/light3d.ts";
  * @import GLShader from "../video/webgl/glshader.js";
  */
 
@@ -390,11 +391,11 @@ function buildTextureGroups(
  * @property {boolean} [fog] - set `false` to exempt this mesh from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does
  * @property {number} [shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
  * @property {number} [shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
- * @property {number} [shadowOffset=0] - world distance to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, for the look of a light that is not directly overhead. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor.
+ * @property {number} [shadowOffset=0] - how far to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, in multiples of the blob's own radius, for the look of a light that is not directly overhead. A ratio rather than a world distance so one value serves casters of any size. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor.
  * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches.
  * @property {number} [shadowDirectionX=0] - x of the ground direction the shadow is cast along. Together with `shadowDirectionZ`, zero length means no offset and no stretch.
  * @property {number} [shadowDirectionZ=0] - z of the ground direction the shadow is cast along.
- * @property {object} [shadowLight] - a {@link Light3d} to take the direction from instead of setting it by hand. Read every draw, so a moving sun carries the shadow with it. Nothing is inferred from the scene: no light here means no direction.
+ * @property {Light3d} [shadowLight] - a {@link Light3d} to take the direction from instead of setting it by hand. Read every draw, so a moving sun carries the shadow with it. Nothing is inferred from the scene: no light here means no direction.
  */
 
 /**
@@ -950,9 +951,17 @@ export default class Mesh extends Renderable {
 				: 0.45;
 
 		/**
-		 * World distance to slide the ground shadow along
-		 * {@link Mesh#shadowDirectionX}/{@link Mesh#shadowDirectionZ}, which is
-		 * what gives the look of a light that is not directly overhead.
+		 * How far to slide the ground shadow along
+		 * {@link Mesh#shadowDirectionX}/{@link Mesh#shadowDirectionZ}, in
+		 * multiples of the blob's OWN radius, which is what gives the look of
+		 * a light that is not directly overhead.
+		 *
+		 * A ratio rather than a world distance. The distance that reads right
+		 * is the one that shifts a stretched ellipse far enough for its
+		 * trailing edge to stay at the caster's feet, which is about
+		 * `stretch - 1` of its radius, so a world distance has to be retuned
+		 * for every size of thing and cannot serve the parts of one glTF model
+		 * at all.
 		 *
 		 * Honoured ONLY when {@link Mesh#shadowGroundY} is set. The blob is a
 		 * flat quad on one named plane with no contact with terrain, so sliding
@@ -1016,7 +1025,7 @@ export default class Mesh extends Renderable {
 		 * NOTHING is inferred: the engine never picks a dominant light for you,
 		 * because a scene with several has no non-arbitrary answer and one with
 		 * none has no answer at all. Name the light or get no direction.
-		 * @type {object|undefined}
+		 * @type {Light3d|undefined}
 		 */
 		this.shadowLight = settings.shadowLight;
 
@@ -2166,8 +2175,18 @@ export default class Mesh extends Renderable {
 			}
 
 			// Only on a plane the game NAMED: see `shadowOffset`.
-			const distance = this.shadowOffset;
-			if (this.shadowGroundY !== undefined && Number.isFinite(distance)) {
+			//
+			// Measured in the blob's OWN radii, not in world units. The
+			// distance that reads right is the one that shifts a stretched
+			// ellipse far enough for its trailing edge to stay at the
+			// caster's feet, and that is a property of the caster: a value in
+			// world units has to be retuned for every size of thing. Taken
+			// against `extent * SHADOW_SPREAD`, the blob's radius at full
+			// strength, so a rising object's shadow does not slide as the
+			// height fade shrinks it.
+			const ratio = this.shadowOffset;
+			if (this.shadowGroundY !== undefined && Number.isFinite(ratio)) {
+				const distance = ratio * extent * SHADOW_SPREAD;
 				offsetX = dirX * distance;
 				offsetZ = dirZ * distance;
 			}

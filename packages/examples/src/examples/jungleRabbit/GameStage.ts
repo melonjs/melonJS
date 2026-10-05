@@ -134,8 +134,7 @@ import {
 	ROCK_HALF,
 	SHADOW_DIR_X,
 	SHADOW_DIR_Z,
-	SHADOW_OFFSET_CARROT,
-	SHADOW_OFFSET_ROCK,
+	SHADOW_OFFSET,
 	SHADOW_SINK,
 	SHADOW_STRETCH,
 	SKY,
@@ -704,7 +703,7 @@ export class GameStage extends Stage {
 			shadowGroundY: WATER_LEVEL + SHADOW_SINK,
 			shadowDirectionX: SHADOW_DIR_X,
 			shadowDirectionZ: SHADOW_DIR_Z,
-			shadowOffset: SHADOW_OFFSET_ROCK,
+			shadowOffset: SHADOW_OFFSET,
 			shadowStretch: SHADOW_STRETCH,
 		});
 		// The hull's own box. A SENSOR: the engine reports the contact and the
@@ -1429,8 +1428,7 @@ export class GameStage extends Stage {
 			shadowGroundY: WATER_LEVEL + SHADOW_SINK,
 			shadowDirectionX: SHADOW_DIR_X,
 			shadowDirectionZ: SHADOW_DIR_Z,
-			shadowOffset:
-				kind === "carrot" ? SHADOW_OFFSET_CARROT : SHADOW_OFFSET_ROCK,
+			shadowOffset: SHADOW_OFFSET,
 			shadowStretch: SHADOW_STRETCH,
 			// The engine default (0.45), for both kinds. A carrot used to be
 			// darkened to 0.78 here because its shadow was barely there — but
