@@ -221,6 +221,49 @@ export function getShadowQuad(renderer, lit, MeshClass) {
 }
 
 /**
+ * Rotation taking the world up axis onto `n`, applied to a vector lying in
+ * the horizontal plane.
+ *
+ * The blob is ROTATED onto the receiving plane rather than projected onto it.
+ * A vertical projection would lengthen it by `1 / cos(tilt)` along the slope
+ * and an orthogonal one would shrink it by `cos(tilt)`, and either way the
+ * blob would change size for no reason the game asked for, by more and more
+ * exactly where the feature is used. A rotation preserves its shape.
+ *
+ * Derived rather than composed from a general axis-angle: the source axis is
+ * always world up, so the usual `k x p` terms collapse and this is the
+ * Rodrigues matrix with `ky = 0` written out.
+ * @param {number} nx - x of the unit surface normal
+ * @param {number} ny - y of it
+ * @param {number} nz - z of it
+ * @param {number} px - x of the horizontal vector to rotate
+ * @param {number} pz - z of it
+ * @param {Float64Array} out - receives the rotated vector
+ * @ignore
+ * @internal
+ */
+export function tiltOntoPlane(nx, ny, nz, px, pz, out) {
+	const horizontal = nx * nx + nz * nz;
+	if (horizontal < 1e-12) {
+		// parallel to world up: nothing to do, or a half turn for a ceiling
+		const flip = ny <= 0 ? 1 : -1;
+		out[0] = px * flip;
+		out[1] = 0;
+		out[2] = pz;
+		return;
+	}
+	// `cos` of the rotation is `WORLD_UP . n`, and WORLD_UP is (0, -1, 0)
+	const cos = -ny;
+	const w = (1 + ny) / horizontal;
+	out[0] = (cos + w * nz * nz) * px - w * nx * nz * pz;
+	out[1] = nx * px + nz * pz;
+	out[2] = -w * nx * nz * px + (cos + w * nx * nx) * pz;
+}
+
+/** scratch for the vectors `tiltOntoPlane` turns */
+const _axis = new Float64Array(3);
+
+/**
  * The blob quad an `InstancedMesh` draws from — sized to the prototype's own
  * footprint (#1515).
  *
@@ -244,27 +287,55 @@ export function getShadowQuad(renderer, lit, MeshClass) {
  * @ignore
  * @internal
  */
-export function getInstancedShadowQuad(mesh, MeshClass, halfX, halfZ, version) {
-	const key = `${mesh.lit === true}:${version}:${halfX}:${halfZ}`;
+export function getInstancedShadowQuad(
+	mesh,
+	MeshClass,
+	halfX,
+	halfZ,
+	version,
+	nx = 0,
+	ny = 1,
+	nz = 0,
+) {
+	const key = `${mesh.lit === true}:${version}:${halfX}:${halfZ}:${nx}:${ny}:${nz}`;
 	let quad = mesh._shadowQuad;
 	if (quad !== undefined && quad._shadowKey === key) {
 		return quad;
 	}
 	quad?.destroy();
+	// The tilt is BAKED into the four vertices rather than applied by the
+	// group matrix. The instanced shadow reaches the GPU as
+	// `uModelMatrix * (instancePosition + quadOffset)`, one matrix for the
+	// whole set, so a tilt put there would turn the instance POSITIONS too and
+	// slide the whole scatter. Baked here it rides on the offsets alone, and
+	// since a vector already in the plane is unchanged by the projection the
+	// matrix still does, the two compose.
+	//
+	// `nx/ny/nz` is the plane's normal in GROUP-LOCAL space: the caller pulls
+	// the world normal back through the axis bridge, because these vertices
+	// are in the space the bridge starts from.
+	tiltOntoPlane(-nx, -ny, -nz, halfX, 0, _axis);
+	const ux = _axis[0];
+	const uy = _axis[1];
+	const uz = _axis[2];
+	tiltOntoPlane(-nx, -ny, -nz, 0, halfZ, _axis);
+	const vx = _axis[0];
+	const vy = _axis[1];
+	const vz = _axis[2];
 	quad = new MeshClass(0, 0, {
 		vertices: new Float32Array([
-			-halfX,
-			0,
-			-halfZ,
-			halfX,
-			0,
-			-halfZ,
-			halfX,
-			0,
-			halfZ,
-			-halfX,
-			0,
-			halfZ,
+			-ux - vx,
+			-uy - vy,
+			-uz - vz,
+			ux - vx,
+			uy - vy,
+			uz - vz,
+			ux + vx,
+			uy + vy,
+			uz + vz,
+			-ux + vx,
+			-uy + vy,
+			-uz + vz,
 		]),
 		uvs: QUAD_UVS,
 		indices: QUAD_INDICES,

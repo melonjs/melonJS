@@ -756,12 +756,23 @@ export default class InstancedMesh extends Mesh {
 			hx = hx < least ? least : hx;
 			hz = hz < least ? least : hz;
 		}
+		// The plane's tilt, pulled back into GROUP-LOCAL space, because that is
+		// the space the baked quad vertices live in. The group matrix is
+		// `diag(s, -s, ±s) · transform`, so a normal rides through it as
+		// `transpose(G) · n`, which for that diagonal is the world normal with
+		// its y negated and its z carrying the handedness sign. Unit in, unit
+		// out, so nothing has to be renormalized.
+		const tilt = this.shadowGroundNormal;
+		const zSign = this.rightHanded ? -1 : 1;
 		const quad = getInstancedShadowQuad(
 			this,
 			Mesh,
 			hx,
 			hz,
 			this._geometryVersion ?? 0,
+			tilt !== undefined ? tilt.x : 0,
+			tilt !== undefined ? -tilt.y : 1,
+			tilt !== undefined ? zSign * tilt.z : 0,
 		);
 		const group = this._modelMatrix.val;
 		const out = _SHADOW_MATRIX.val;
@@ -774,19 +785,38 @@ export default class InstancedMesh extends Mesh {
 		// Y components, so a group rotated about X or Z would tilt the blobs
 		// onto a slanted plane and sink half of them below the floor. Zeroing
 		// the row makes every output Y the translation, whatever the rotation.
-		out[1] = 0;
-		out[5] = 0;
-		out[9] = 0;
-		// ...and put that plane at the ground. Render space is Y-DOWN, so the
-		// floor is a GREATER Y than the objects standing on it.
-		// lifted a hair off the floor, for the reason spelled out at
-		// `SHADOW_LIFT` in mesh.js: a coplanar blob is order-dependent. Y is
-		// DOWN, so off the floor is a smaller y.
-		const ground =
-			this.shadowGroundY !== undefined
-				? this.shadowGroundY
-				: this.getBounds3d().bottom;
-		out[13] = ground - this.meshScale * 0.01;
+		if (tilt === undefined) {
+			out[1] = 0;
+			out[5] = 0;
+			out[9] = 0;
+			// ...and put that plane at the ground. Render space is Y-DOWN, so
+			// the floor is a GREATER Y than the objects standing on it.
+			// lifted a hair off the floor, for the reason spelled out at
+			// `SHADOW_LIFT` in mesh.js: a coplanar blob is order-dependent. Y
+			// is DOWN, so off the floor is a smaller y.
+			const ground =
+				this.shadowGroundY !== undefined
+					? this.shadowGroundY
+					: this.getBounds3d().bottom;
+			out[13] = ground - this.meshScale * 0.01;
+		} else {
+			// TILTED: the Y row stays, so each blob keeps the height of the
+			// instance it belongs to.
+			//
+			// That is the whole point on uneven ground. Flattening a whole
+			// scatter onto one plane puts every blob at the SAME height, which
+			// on a slope draws them as one hard stripe across the hillside
+			// instead of a shadow under each plant. An instance planted on the
+			// ground already carries the right height in its own transform, so
+			// the honest thing is to leave it there and only turn the quad.
+			//
+			// `shadowGroundY` is unused on this branch for that reason: the
+			// anchor is each instance, not a plane the whole set shares.
+			const lift = this.meshScale * 0.01;
+			out[12] += tilt.x * lift;
+			out[13] += tilt.y * lift;
+			out[14] += tilt.z * lift;
+		}
 
 		const tint = renderer.currentTint;
 		const savedR = tint.r;

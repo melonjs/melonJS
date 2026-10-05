@@ -17,7 +17,11 @@ import { AABB3d } from "../physics/broadphase/aabb3d.ts";
 import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
-import { getShadowQuad, hasVerticalExtent } from "./groundshadow.js";
+import {
+	getShadowQuad,
+	hasVerticalExtent,
+	tiltOntoPlane,
+} from "./groundshadow.js";
 import Renderable from "./renderable.js";
 
 // Fired at most once per session: a `lit` mesh drawn under a 2D camera cannot
@@ -88,45 +92,8 @@ const SHADOW_MAX_STRETCH = 3;
  */
 const SHADOW_MAX_TILT_COS = Math.cos((75 * Math.PI) / 180);
 
-/**
- * Rotation taking the world up axis onto `n`, applied to a vector lying in
- * the horizontal plane.
- *
- * The blob is ROTATED onto the receiving plane rather than projected onto it.
- * A vertical projection would lengthen it by `1 / cos(tilt)` along the slope
- * and an orthogonal one would shrink it by `cos(tilt)`, and either way the
- * blob would change size for no reason the game asked for, by more and more
- * exactly where the feature is used. A rotation preserves its shape.
- *
- * Derived rather than composed from a general axis-angle: the source axis is
- * always world up, so the usual `k x p` terms collapse and this is the
- * Rodrigues matrix with `ky = 0` written out.
- * @param {number} nx - x of the unit surface normal
- * @param {number} ny - y of it
- * @param {number} nz - z of it
- * @param {number} px - x of the horizontal vector to rotate
- * @param {number} pz - z of it
- * @param {Float64Array} out - receives the rotated vector
- * @ignore
- * @internal
- */
-function tiltOntoPlane(nx, ny, nz, px, pz, out) {
-	const horizontal = nx * nx + nz * nz;
-	if (horizontal < 1e-12) {
-		// parallel to world up: nothing to do, or a half turn for a ceiling
-		const flip = ny <= 0 ? 1 : -1;
-		out[0] = px * flip;
-		out[1] = 0;
-		out[2] = pz;
-		return;
-	}
-	// `cos` of the rotation is `WORLD_UP . n`, and WORLD_UP is (0, -1, 0)
-	const cos = -ny;
-	const w = (1 + ny) / horizontal;
-	out[0] = (cos + w * nz * nz) * px - w * nx * nz * pz;
-	out[1] = nx * px + nz * pz;
-	out[2] = -w * nx * nz * px + (cos + w * nx * nx) * pz;
-}
+/** scratch for the three vectors `tiltOntoPlane` turns per shadow */
+const _tilted = new Float64Array(3);
 
 /**
  * Copy a caller's normal into a vector this mesh owns, normalized.
@@ -135,7 +102,7 @@ function tiltOntoPlane(nx, ny, nz, px, pz, out) {
  * vectors: a game that keeps mutating the array it passed would otherwise be
  * steering this mesh's shadow by accident.
  * @param {number[]|Vector3d} value - the normal to read
- * @returns {Vector3d} a vector owned by the caller of this function
+ * @returns {Vector3d} a vector owned by the mesh
  * @ignore
  * @internal
  */
@@ -148,9 +115,6 @@ function readShadowNormal(value) {
 	// dividing by it
 	return length > 1e-6 ? out.scale(1 / length) : out.set(0, -1, 0);
 }
-
-/** scratch for the three vectors `tiltOntoPlane` turns per shadow */
-const _tilted = new Float64Array(3);
 
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
