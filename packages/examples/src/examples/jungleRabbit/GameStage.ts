@@ -132,7 +132,8 @@ import {
 	RIDE_Y,
 	ROCK_COUNT,
 	ROCK_HALF,
-	SHADOW_LIFT,
+	SHADOW_OFFSET,
+	SHADOW_STRETCH,
 	SKY,
 	SPAWN_AHEAD,
 	SPAWN_BEHIND,
@@ -694,7 +695,12 @@ export class GameStage extends Stage {
 			// a lit and a shaded fur tone, which is enough shape at this size.
 			lit: false,
 			castGroundShadow: true,
-			shadowGroundY: WATER_LEVEL + SHADOW_LIFT,
+			// on the water, not floated above it: the blob is thrown clear by
+			// the sun's own direction now rather than by fake altitude
+			shadowGroundY: WATER_LEVEL,
+			shadowLight: this.sun,
+			shadowOffset: SHADOW_OFFSET,
+			shadowStretch: SHADOW_STRETCH,
 		});
 		// The hull's own box. A SENSOR: the engine reports the contact and the
 		// game decides what it means (a life, a lurch, a hit-stop, a pickup) —
@@ -1415,7 +1421,10 @@ export class GameStage extends Stage {
 			// flat boulder and lights correctly.
 			lit: kind !== "carrot",
 			castGroundShadow: true,
-			shadowGroundY: WATER_LEVEL + SHADOW_LIFT,
+			shadowGroundY: WATER_LEVEL,
+			shadowLight: this.sun,
+			shadowOffset: SHADOW_OFFSET,
+			shadowStretch: SHADOW_STRETCH,
 			// The engine default (0.45), for both kinds. A carrot used to be
 			// darkened to 0.78 here because its shadow was barely there — but
 			// that was the renderer replaying the river plane over the top of
@@ -1476,9 +1485,8 @@ export class GameStage extends Stage {
 
 		sprite.pos.x = x;
 		sprite.pos.y = WATER_LEVEL;
-		// Render space is Y-DOWN, so the floor an object stands on is a GREATER
-		// y than the object: the shadow plane is `pos.y + LIFT`, never minus.
-		sprite.shadowGroundY = sprite.pos.y + SHADOW_LIFT;
+		// the plane the blob lands on is the water the prop sits in
+		sprite.shadowGroundY = sprite.pos.y;
 		sprite.depth = this.travelled + aheadOfSkier;
 		// keep the frontier honest even on the initial fill, or the first
 		// respawns measure from zero and pile up at the near edge

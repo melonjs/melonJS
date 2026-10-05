@@ -91,14 +91,21 @@ export const RIVER_FLOW = 0;
 export const RIPPLE_UV = 520;
 
 /**
- * How far above the water a blob shadow floats, in world units.
+ * How far the blob shadows are thrown along the sun's direction, in world
+ * units, and how much longer they are along it.
  *
- * The engine centres a blob under its caster and does not offset it by the
- * light direction, so a boulder sitting in the shallows hides its own contact
- * shadow completely from this camera. A small lift brings the near edge out
- * from under the rock; too much and the blob rides up over the top of it.
+ * This used to be `SHADOW_LIFT`, a few units of fake altitude added to the
+ * shadow plane. A boulder sitting in the shallows hides its own contact
+ * shadow completely from this camera, and raising the plane was the only
+ * lever there was: it does not slide the blob out from under the rock, it
+ * floats the blob UP, and past a few units it rides over the top of the rock
+ * as a dark ring. The engine's own 3D skill warns against exactly that.
+ *
+ * The shadows are offset along the real sun now, so the lever is gone and the
+ * plane sits on the water where it belongs.
  */
-export const SHADOW_LIFT = 8;
+export const SHADOW_OFFSET = 26;
+export const SHADOW_STRETCH = 1.5;
 
 /** length of one terrain tile along +Z */
 export const TILE_LEN = 2400;
