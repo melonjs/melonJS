@@ -738,7 +738,12 @@ export default class InstancedMesh extends Mesh {
 		// leave an instanced set lit by the same settings as its per-object
 		// neighbours and looking different for no reason the game can see, so
 		// neither applies. `shadowScale` is uniform and has no such problem.
-		if (typeof renderer.drawInstancedShadow !== "function") {
+		const shadowScale = this.shadowScale;
+		if (
+			typeof renderer.drawInstancedShadow !== "function" ||
+			!Number.isFinite(shadowScale) ||
+			shadowScale <= 0
+		) {
 			return;
 		}
 		// Sized from the PROTOTYPE's own footprint, with the same contact
@@ -767,8 +772,8 @@ export default class InstancedMesh extends Mesh {
 		const quad = getInstancedShadowQuad(
 			this,
 			Mesh,
-			hx,
-			hz,
+			hx * shadowScale,
+			hz * shadowScale,
 			this._geometryVersion ?? 0,
 			tilt !== undefined ? tilt.x : 0,
 			tilt !== undefined ? -tilt.y : 1,

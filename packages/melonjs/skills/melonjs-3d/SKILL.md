@@ -664,7 +664,8 @@ Ground shadows are **on by default** (the `castGroundShadow` application
 setting), and need a GPU backend and a `Camera3d`. As a blanket default they
 skip geometry with no vertical extent — a ground plane. Per object,
 `castGroundShadow: true`/`false` overrides the app setting and is obeyed as
-given, safeguard included; `shadowGroundY` names the floor the blob lands on.
+given, safeguard included; `shadowGroundY` names the floor the blob lands on,
+`shadowOpacity` how dark it is and `shadowScale` how big it is.
 
 The blob is an ellipse sized to the caster's own footprint and placed at the
 caster's x/z. So a tall or narrow object (a character, a tree, a pickup) shows
@@ -676,7 +677,17 @@ behaving correctly, not a bug.
 the blob out from under the object, it floats the blob *up* — and past a few
 units it projects over the top of the caster as a dark halo ringing it.
 
-Use the shape controls instead:
+The simplest fix is a bigger blob, so its edge shows past the object:
+
+```js
+mesh.shadowScale = 1.5;        // 1 is the default; 0 hides the shadow
+```
+
+`shadowScale` works everywhere, `InstancedMesh` included. On an
+`InstancedMesh` changing it rebuilds the shared shadow geometry, so set it
+once rather than animating it every frame.
+
+Or, for the look of a sun that is not overhead, use the shape controls:
 
 ```js
 mesh.shadowOffset = 1.5;       // slide it out, in blob radii
@@ -861,7 +872,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | fog does not match the sky after a background fade | an explicit `color` was passed; omit it to track `renderer.backgroundColor` |
 | geometry clips before it has finished fading | fog `far` beyond the clip far — omit the distances and they default to the clip planes |
 | one marker must stay readable in fog | `fog: false` on that mesh |
-| an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raising `shadowGroundY` haloes it instead of revealing it |
+| an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raise `shadowScale` (or slide it out with `shadowOffset`), not `shadowGroundY`, which haloes it instead of revealing it |
 | a dark ring around the top of an object | `shadowGroundY` lifted too far, floating the blob up into the caster |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |
 | a mesh sits half its size off | `anchorPoint` — only on the 2D-camera path; a `Camera3d` mesh pivots on its model origin |

@@ -329,6 +329,99 @@ describe("Ground shadows (#1515)", () => {
 			mesh.destroy();
 		});
 	});
+	describe("shadowScale", () => {
+		it("defaults to the same footprint as an explicit 1", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = makeMesh({ castGroundShadow: true });
+			expect(mesh.shadowScale).toBe(1);
+			drawOnce(mesh);
+			const before = renderer._shadowQuads.unlit._modelMatrix.val.slice();
+			const explicit = makeMesh({ castGroundShadow: true, shadowScale: 1 });
+			drawOnce(explicit);
+			expect(renderer._shadowQuads.unlit._modelMatrix.val).toEqual(before);
+			mesh.destroy();
+			explicit.destroy();
+		});
+
+		it.for([0.5, 2])(
+			"scales both axes by %s without moving or fading the blob",
+			(scale, ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeMesh({
+					castGroundShadow: true,
+					shadowGroundY: 20,
+					shadowOpacity: 0.7,
+				});
+				let alpha;
+				const draw = renderer.drawMesh.bind(renderer);
+				const spy = vi
+					.spyOn(renderer, "drawMesh")
+					.mockImplementation((object, matrix) => {
+						if (object !== mesh) {
+							alpha = renderer.getGlobalAlpha();
+						}
+						return draw(object, matrix);
+					});
+				try {
+					drawOnce(mesh);
+					const before = renderer._shadowQuads.unlit._modelMatrix.val.slice();
+					const beforeAlpha = alpha;
+					mesh.shadowScale = scale;
+					drawOnce(mesh);
+					const after = renderer._shadowQuads.unlit._modelMatrix.val;
+					for (const i of [0, 2, 8, 10]) {
+						expect(after[i]).toBeCloseTo(before[i] * scale, 5);
+					}
+					for (const i of [12, 13, 14]) {
+						expect(after[i]).toBe(before[i]);
+					}
+					expect(alpha).toBe(beforeAlpha);
+				} finally {
+					spy.mockRestore();
+					mesh.destroy();
+				}
+			},
+		);
+
+		it("forwards the Sprite3d setting and responds to live changes", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const sprite = new Sprite3d(0, 0, {
+				image: Renderer.getWhitePixel(),
+				width: 40,
+				height: 60,
+				castGroundShadow: true,
+				shadowScale: 2,
+			});
+			expect(sprite.shadowScale).toBe(2);
+			drawOnce(sprite);
+			const before = shadowAxes();
+			sprite.shadowScale = 0.5;
+			drawOnce(sprite);
+			expect(shadowAxes().x).toBeCloseTo(before.x / 4, 5);
+			expect(shadowAxes().z).toBeCloseTo(before.z / 4, 5);
+			sprite.destroy();
+		});
+
+		it.for([
+			0,
+			-1,
+			Number.NaN,
+			Number.POSITIVE_INFINITY,
+			Number.NEGATIVE_INFINITY,
+		])("hides only the shadow for scale %s", (scale, ctx) => {
+			requireWebGL(ctx, renderer);
+			const mesh = makeMesh({ castGroundShadow: true, shadowScale: scale });
+			const spy = vi.spyOn(renderer.gl, "drawElements");
+			try {
+				drawOnce(mesh);
+				expect(spy).toHaveBeenCalledTimes(1);
+			} finally {
+				spy.mockRestore();
+				mesh.destroy();
+			}
+		});
+	});
+
 	/**
 	 * Offset and stretch (#1631 items 2 and 3).
 	 *
@@ -940,6 +1033,74 @@ describe("Ground shadows (#1515)", () => {
 			many.destroy();
 		});
 
+		it.for([0.5, 2, 1e-8])(
+			"scales instanced footprints by %s and refreshes retained geometry",
+			(scale, ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(2);
+				drawOnce(mesh);
+				const oldQuad = mesh._shadowQuad;
+				const before = oldQuad.originalVertices.slice();
+				expect(Math.abs(before[0])).toBeGreaterThan(0);
+				mesh.shadowScale = scale;
+				drawOnce(mesh);
+				const resized = mesh._shadowQuad;
+				expect(resized.originalVertices).toHaveLength(before.length);
+				for (let i = 0; i < before.length; i++) {
+					expect(resized.originalVertices[i] / scale).toBeCloseTo(before[i], 5);
+				}
+				expect(resized).not.toBe(oldQuad);
+				drawOnce(mesh);
+				expect(mesh._shadowQuad).toBe(resized);
+				mesh.destroy();
+			},
+		);
+
+		it("keeps one instanced mesh's scale independent of another", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const large = makeInstanced(2, { shadowScale: 2 });
+			const normal = makeInstanced(2);
+			drawOnce(large);
+			drawOnce(normal);
+			expect(Math.abs(normal._shadowQuad.originalVertices[0])).toBeGreaterThan(
+				0,
+			);
+			expect(Math.abs(large._shadowQuad.originalVertices[0])).toBeCloseTo(
+				Math.abs(normal._shadowQuad.originalVertices[0]) * 2,
+				5,
+			);
+			large.destroy();
+			normal.destroy();
+		});
+
+		it.for([
+			0,
+			-1,
+			Number.NaN,
+			Number.POSITIVE_INFINITY,
+			Number.NEGATIVE_INFINITY,
+		])(
+			"keeps the instances visible but hides their shadows for scale %s",
+			(scale, ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(2);
+				drawOnce(mesh);
+				mesh.shadowScale = scale;
+				const spy = vi.spyOn(renderer.gl, "drawElementsInstanced");
+				try {
+					drawOnce(mesh);
+					expect(spy).toHaveBeenCalledTimes(1);
+					mesh.shadowScale = 1;
+					spy.mockClear();
+					drawOnce(mesh);
+					expect(spy).toHaveBeenCalledTimes(2);
+				} finally {
+					spy.mockRestore();
+					mesh.destroy();
+				}
+			},
+		);
+
 		it("REGRESSION: no shadow flag means no extra draw", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const gl = renderer.gl;
@@ -1494,6 +1655,50 @@ describe("Ground shadows (#1515)", () => {
 		const makeCaster = (settings) => {
 			return activate(makeMesh({ width: 40, ...settings }));
 		};
+
+		it.for([
+			["Mesh", Mesh],
+			["InstancedMesh", InstancedMesh],
+		])(
+			"an enlarged %s shadow becomes visible outside a wide flat prop",
+			([_name, Type], ctx) => {
+				requireWebGL(ctx, renderer);
+				const F = 40;
+				const prop = activate(
+					new Type(0, 40, {
+						vertices: new Float32Array([
+							-F,
+							0,
+							-F,
+							F,
+							0,
+							-F,
+							F,
+							0,
+							F,
+							-F,
+							0,
+							F,
+						]),
+						uvs: GEOMETRY.uvs,
+						indices: GEOMETRY.indices,
+						width: 1,
+						normalize: false,
+						cullBackFaces: false,
+						castGroundShadow: true,
+						shadowGroundY: FLOOR_Y,
+						instanceCount: 1,
+					}),
+				);
+				prop.tint.setColor(80, 140, 200);
+				const before = renderScene(prop)(96, 64)[0];
+				prop.shadowScale = 2;
+				const after = renderScene(prop)(96, 64)[0];
+				prop.destroy();
+				expect(before).toBe(FLOOR_RGB);
+				expect(after).toBeLessThan(FLOOR_RGB - 15);
+			},
+		);
 
 		it("darkens the ground beneath the caster, even though the ground draws AFTER it", (ctx) => {
 			requireWebGL(ctx, renderer);
