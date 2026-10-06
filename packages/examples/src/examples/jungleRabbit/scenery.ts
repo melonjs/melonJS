@@ -47,13 +47,21 @@ import {
 	HALF_W,
 	HUD_Z,
 	MODEL_SCALE,
+	SHADOW_DIR_X,
+	SHADOW_DIR_Z,
 	SKY,
 	SUN_AHEAD,
+	TERRAIN_OVERHANG,
 	TILE_LEN,
+	TILE_NX,
 	TITLE_CARROT_SCALE,
 	TITLE_CARROT_X,
 	TITLE_CARROT_Y,
 	TITLE_CARROT_Z,
+	VEG_SHADOW_OFFSET,
+	VEG_SHADOW_OPACITY,
+	VEG_SHADOW_SEAM_LIFT,
+	VEG_SHADOW_STRETCH,
 	VIEW_H,
 	VIEW_W,
 	WATER_LEVEL,
@@ -204,15 +212,41 @@ export const buildBackdrop = (app: Application) => {
 	const placement = new Matrix3d();
 	// The same authored models the run uses, planted the same way: a menu
 	// built from different scenery reads as a separate screen bolted on.
-	const beds: [string, number, [number, number]][] = [
-		["fern", 330, [0.55, 1.34]],
-		["bigleaf", 175, [0.68, 1.52]],
+	// `shadow` is the blob's size as a multiple of the plant's own footprint;
+	// the blooms leave it out and cast nothing, because a flower is too small
+	// to put a believable shadow under and there are a hundred and fifty of
+	// them threaded through the plants that do.
+	const beds: [string, number, [number, number], number?][] = [
+		["fern", 330, [0.55, 1.34], 0.55],
+		["bigleaf", 175, [0.68, 1.52], 0.6],
 		["flower-red", 75, [0.58, 1.3]],
 		["flower-pink", 75, [0.58, 1.3]],
-		["palm", 170, [0.6, 1.64]],
+		["palm", 170, [0.6, 1.64], 0.4],
 	];
-	for (const [asset, count, band] of beds) {
+
+	/**
+	 * Plant one set, optionally casting onto ONE named plane.
+	 * @param asset - the preloaded model
+	 * @param count - how many instances
+	 * @param lo - inner edge of the span it occupies, in world x
+	 * @param hi - outer edge
+	 * @param shadow - blob size as a multiple of the plant's footprint
+	 * @param bank - which side to plant on, or undefined for both
+	 * @param normal - up normal of the facet it stands on, in render space
+	 * @param groundY - that facet's plane carried back to x = 0
+	 */
+	const plant = (
+		asset: string,
+		count: number,
+		lo: number,
+		hi: number,
+		shadow?: number,
+		bank?: -1 | 1,
+		normal?: [number, number, number],
+		groundY?: number,
+	) => {
 		const geometry: Geometry = modelGeometry(asset);
+		const casts = shadow !== undefined && normal !== undefined;
 		const mesh = new InstancedMesh(0, GROUND_Y, {
 			...geometry,
 			texture: palette,
@@ -224,13 +258,24 @@ export const buildBackdrop = (app: Application) => {
 			cullBackFaces: false,
 			lit: true,
 			instanceCount: count,
-			castGroundShadow: false,
+			castGroundShadow: casts,
+			...(casts
+				? {
+						shadowGroundNormal: normal,
+						shadowGroundY: groundY,
+						shadowScale: shadow,
+						shadowDirectionX: SHADOW_DIR_X,
+						shadowDirectionZ: SHADOW_DIR_Z,
+						shadowOffset: VEG_SHADOW_OFFSET,
+						shadowStretch: VEG_SHADOW_STRETCH,
+						shadowOpacity: VEG_SHADOW_OPACITY,
+					}
+				: {}),
 		});
 		world.addChild(mesh, 0);
 		for (let i = 0; i < count; i++) {
-			const x =
-				math.randomFloat(HALF_W * band[0], HALF_W * band[1]) *
-				(Math.random() < 0.5 ? -1 : 1);
+			const side = bank ?? (Math.random() < 0.5 ? -1 : 1);
+			const x = math.randomFloat(lo, hi) * side;
 			const y = GROUND_Y + valleyY(x);
 			const z = math.random(200, TILE_LEN * 3);
 			placement
@@ -242,6 +287,72 @@ export const buildBackdrop = (app: Application) => {
 			const jitter = math.randomFloat(0.82, 1.18);
 			placement.scale(jitter, jitter, jitter);
 			mesh.setInstance(i, placement);
+		}
+	};
+
+	// An `InstancedMesh` gets ONE shadow plane, so a set that casts is planted
+	// one FACET of one bank at a time, exactly as the run does it. The gorge is
+	// drawn as flat quads between terrain columns, so a plane matched to a
+	// facet matches the surface exactly: no height error and no tilt error.
+	// Per bank as well, because `valleyY` reads `|x|` and the two sides sit at
+	// matching heights with MIRRORED tilt. The plateau past the rim is level
+	// either way and takes one set for both.
+	const facet = (2 * HALF_W * TERRAIN_OVERHANG) / (TILE_NX - 1);
+	for (const [asset, count, band, shadow] of beds) {
+		const x0 = HALF_W * band[0];
+		const x1 = HALF_W * band[1];
+		if (shadow === undefined) {
+			plant(asset, count, x0, x1);
+			continue;
+		}
+		const span = x1 - x0;
+		for (let edge = Math.floor(x0 / facet) * facet; edge < x1; edge += facet) {
+			const lo = Math.max(x0, edge);
+			const hi = Math.min(x1, edge + facet);
+			if (hi - lo < 1) {
+				continue;
+			}
+			// COLUMN to column, not band edge to band edge: see the same spot
+			// in `GameStage.addScatter`. A secant taken across a band that
+			// starts part-way through a facet lies below the facet, and every
+			// blob on it is buried under the ground mesh.
+			const colLo = edge;
+			const colHi = edge + facet;
+			const slope = (valleyY(colHi) - valleyY(colLo)) / facet;
+			const length = Math.hypot(slope, 1);
+			const share = (hi - lo) / span;
+			// the set sits at x = 0, and its plane passes through its own
+			// origin, so what it needs is this chord carried back to the
+			// centre line rather than the chord's own height
+			const intercept = GROUND_Y + valleyY(colLo) - slope * colLo;
+			if (lo >= HALF_W) {
+				plant(
+					asset,
+					Math.max(1, Math.round(count * share)),
+					lo,
+					hi,
+					shadow,
+					undefined,
+					[0, -1, 0],
+					intercept,
+				);
+				continue;
+			}
+			for (const side of [-1, 1] as const) {
+				plant(
+					asset,
+					Math.max(1, Math.round((count * share) / 2)),
+					lo,
+					hi,
+					shadow,
+					side,
+					// up normal of that chord; +y is DOWN, so up is -1
+					[(side * slope) / length, -1 / length, 0],
+					// raised clear of the seams; the level sets take the
+					// intercept as it is, having no seam to clear
+					intercept - VEG_SHADOW_SEAM_LIFT,
+				);
+			}
 		}
 	}
 

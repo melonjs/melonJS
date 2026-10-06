@@ -138,6 +138,57 @@ export const SHADOW_DIR_X = 0;
 export const SHADOW_DIR_Z = -1;
 export const SHADOW_STRETCH = 2.5;
 
+/**
+ * The bank planting's own shadow settings, which are NOT the boat's.
+ *
+ * A plant's blob has to fight three things the boat's does not: it is drawn
+ * against a lit green hillside rather than against water, it is one of a
+ * thousand rather than one of one, and `shadowStretch` fades it by
+ * `1 / sqrt(stretch)` on the way. Tuned by measuring instead of by eye: the
+ * bank used to darken under its planting by about 3 of 255, where the
+ * shadow showcase's stations measure 34 to 69, which is why the shadows were
+ * there in every draw and still read as missing.
+ *
+ * The offset is shorter than the boat's because it is in blob RADII and the
+ * blobs below are now near full size: 1.45 radii of a full-size blob throws
+ * a fern's shadow most of a plant away from the fern.
+ */
+export const VEG_SHADOW_OPACITY = 0.5;
+export const VEG_SHADOW_OFFSET = 0.3;
+/**
+ * The bank planting's stretch, which is NOT the boat's 2.5 either.
+ *
+ * A blob stretched two and a half times its own length is a bar, and a
+ * hillside of them is a set of dark stripes lying across the slope. The boat
+ * gets away with it because there is one of it, it is large, and it sits on
+ * open water where a long shadow reads as a wake. A plant does not: it is one
+ * of a thousand, it is small, and the eye reads the smear as geometry.
+ *
+ * `shadowOffset` tracks it, since the distance that keeps a shadow attached to
+ * its caster is about `stretch - 1` of the blob's radius.
+ */
+export const VEG_SHADOW_STRETCH = 1.25;
+
+/**
+ * How far a bank set's shadow plane is raised off its own facet, in world px.
+ *
+ * A blob is a flat quad on ONE plane, and a set gets ONE plane: the chord of
+ * its own facet. A blob near a facet SEAM reaches past it, and there the chord
+ * extended diverges from the next facet's chord and ends up under it, so the
+ * neighbouring terrain is drawn over that part of the blob and it is cut along
+ * a dead-straight line. Measured at a tenth of all blob rims, up to 13 px deep;
+ * the level plateau sets, whose plane cannot diverge from level ground, were
+ * the control at exactly zero.
+ *
+ * The divergence a blob can reach is `|slope step| * radius`, and the slope
+ * step between adjacent facets of this parabola is a constant
+ * `2 * WALL_H / HALF_W^2 * facet` = 0.196. The widest blob here is about 71 px,
+ * so 15 px clears every seam. The cost is that the blob floats that far above
+ * its own facet, which at this scale is under half a model unit and reads as
+ * nothing, where the cut read as a crease in the hillside.
+ */
+export const VEG_SHADOW_SEAM_LIFT = 15;
+
 /** length of one terrain tile along +Z */
 export const TILE_LEN = 2400;
 /**
