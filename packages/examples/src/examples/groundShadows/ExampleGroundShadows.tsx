@@ -47,6 +47,7 @@ import {
 	plugin,
 	Renderable,
 	Sprite3d,
+	Stage,
 	state,
 	Vector3d,
 	video,
@@ -405,6 +406,16 @@ const sunDirection = (out: Vector3d, azimuth: number, elevation: number) => {
    The scene
 \* ------------------------------------------------------------------ */
 
+/** everything the scene loads; the sky, floor, labels and sun are baked at boot */
+const resources = [
+	{ name: "palm", type: "glb", src: `${base}palm.glb` },
+	{ name: "fern", type: "glb", src: `${base}fern.glb` },
+	{ name: "bigleaf", type: "glb", src: `${base}bigleaf.glb` },
+	{ name: "rock", type: "glb", src: `${base}rock.glb` },
+	{ name: "log", type: "glb", src: `${base}log.glb` },
+	{ name: "carrot", type: "glb", src: `${base}carrot.glb` },
+];
+
 const createGame = async () => {
 	let app: Application;
 	try {
@@ -430,14 +441,15 @@ const createGame = async () => {
 
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	let torndown = false;
-	let pointerCleanup: (() => void) | null = null;
-	let domCleanup: (() => void) | null = null;
-
-	const setupScene = () => {
-		if (torndown) {
-			return;
-		}
+	/**
+	 * Build the scene into the app's world.
+	 * @param app - the running application
+	 * @returns the per-frame tick, and the teardown for the two things the
+	 *          stage owns OUTSIDE the world: pointer handlers and a DOM panel
+	 */
+	const buildScene = (app: Application) => {
+		let pointerCleanup: (() => void) | null = null;
+		let domCleanup: (() => void) | null = null;
 		const world = app.world;
 
 		// The sky is a screen-space backdrop, so it has to be drawn BEFORE the
@@ -780,66 +792,55 @@ const createGame = async () => {
 		let readout: HTMLDivElement | null = null;
 
 		/**
-		 * Drives the sun, the marker, the bird and the one stretch that is
-		 * computed rather than set. Nothing drawn: `update` is the only reason
-		 * it is in the world.
+		 * Drives the sun, its marker, the climbing carrot and the one stretch
+		 * that is computed rather than set. This is what the stage calls from
+		 * its own `update`, which is where per-frame work belongs: a
+		 * `Renderable` that draws nothing and exists only to be ticked is a
+		 * stage wearing a disguise.
+		 * @param dt - milliseconds since the last frame
 		 */
-		class Director extends Renderable {
-			constructor() {
-				super(0, 0, 1, 1);
-				// the scene is static, so nothing else would tick this
-				this.alwaysUpdate = true;
+		const tick = (dt: number) => {
+			clock += dt;
+			if (running) {
+				azimuth += dt * SUN_SPEED;
 			}
+			sunDirection(sun.direction, azimuth, elevation);
 
-			override update(dt: number) {
-				clock += dt;
-				if (running) {
-					azimuth += dt * SUN_SPEED;
-				}
-				sunDirection(sun.direction, azimuth, elevation);
+			// the marker sits back along the travel direction: with a
+			// positive (downward) y, -y is up
+			sunMarker.pos.set(
+				CENTRE_X - sun.direction.x * SUN_RADIUS,
+				GROUND_Y - sun.direction.y * SUN_RADIUS,
+			);
+			sunMarker.depth = CENTRE_Z - sun.direction.z * SUN_RADIUS;
 
-				// the marker sits back along the travel direction: with a
-				// positive (downward) y, -y is up
-				sunMarker.pos.set(
-					CENTRE_X - sun.direction.x * SUN_RADIUS,
-					GROUND_Y - sun.direction.y * SUN_RADIUS,
-				);
-				sunMarker.depth = CENTRE_Z - sun.direction.z * SUN_RADIUS;
+			// A low sun throws a long shadow. Set live rather than once,
+			// because `shadowStretch` is read every draw like the rest of
+			// them — and it fades as it pulls, so an extreme value
+			// degrades into nothing instead of into a smear.
+			const lift = Math.max(Math.sin(elevation), 0.18);
+			const pull = clamp(0.85 / lift, 1, 3);
+			smear.shadowStretch = pull;
+			// ...and the scatters take the same pull. One stretch, one
+			// direction and one offset serve a whole instanced set, which
+			// is what lets a scatter sit next to loose props without
+			// looking lit from somewhere else.
+			flat.shadowStretch = pull;
+			sloped.shadowStretch = pull;
 
-				// A low sun throws a long shadow. Set live rather than once,
-				// because `shadowStretch` is read every draw like the rest of
-				// them — and it fades as it pulls, so an extreme value
-				// degrades into nothing instead of into a smear.
-				const lift = Math.max(Math.sin(elevation), 0.18);
-				const pull = clamp(0.85 / lift, 1, 3);
-				smear.shadowStretch = pull;
-				// ...and the scatters take the same pull. One stretch, one
-				// direction and one offset serve a whole instanced set, which
-				// is what lets a scatter sit next to loose props without
-				// looking lit from somewhere else.
-				flat.shadowStretch = pull;
-				sloped.shadowStretch = pull;
+			// the bird climbs and sinks over six seconds, which is the
+			// height fade: the blob shrinks and thins as the gap opens
+			const bob = 0.5 - 0.5 * Math.cos(clock * 0.00105);
+			flier.pos.y = GROUND_Y - 60 - bob * 660;
 
-				// the bird climbs and sinks over six seconds, which is the
-				// height fade: the blob shrinks and thins as the gap opens
-				const bob = 0.5 - 0.5 * Math.cos(clock * 0.00105);
-				flier.pos.y = GROUND_Y - 60 - bob * 660;
-
-				if (readout !== null) {
-					dir.copy(sun.direction);
-					readout.textContent =
-						`azimuth ${(((azimuth * 180) / Math.PI) % 360) | 0}°  ` +
-						`elevation ${((elevation * 180) / Math.PI) | 0}°\n` +
-						`direction  ${dir.x.toFixed(2)}, ${dir.y.toFixed(2)}, ${dir.z.toFixed(2)}`;
-				}
-				return true;
+			if (readout !== null) {
+				dir.copy(sun.direction);
+				readout.textContent =
+					`azimuth ${(((azimuth * 180) / Math.PI) % 360) | 0}°  ` +
+					`elevation ${((elevation * 180) / Math.PI) | 0}°\n` +
+					`direction  ${dir.x.toFixed(2)}, ${dir.y.toFixed(2)}, ${dir.z.toFixed(2)}`;
 			}
-
-			override draw() {
-				// nothing to draw
-			}
-		}
-		world.addChild(new Director(), -1000);
+		};
 
 		/* -- controls ----------------------------------------------------- */
 
@@ -901,31 +902,52 @@ const createGame = async () => {
 		domCleanup = () => {
 			panel.remove();
 		};
+
+		return {
+			tick,
+			teardown: () => {
+				pointerCleanup?.();
+				domCleanup?.();
+				pointerCleanup = null;
+				domCleanup = null;
+			},
+		};
 	};
 
-	loader.preload(
-		[
-			{ name: "palm", type: "glb", src: `${base}palm.glb` },
-			{ name: "fern", type: "glb", src: `${base}fern.glb` },
-			{ name: "bigleaf", type: "glb", src: `${base}bigleaf.glb` },
-			{ name: "rock", type: "glb", src: `${base}rock.glb` },
-			{ name: "log", type: "glb", src: `${base}log.glb` },
-			{ name: "carrot", type: "glb", src: `${base}carrot.glb` },
-		],
-		() => {
-			// Leave `state.LOADING`, or the loading screen stays pinned over
-			// the running scene for good — the loader does not change state on
-			// its own.
-			state.change(state.DEFAULT, true);
-			setupScene();
-		},
-	);
+	/**
+	 * The scene's own stage.
+	 *
+	 * `loader.preload()` puts the app in `state.LOADING`, and that stage is
+	 * TRANSITIONAL. Building the scene in the preload callback and staying
+	 * there looks like it works, but nothing ever destroys the loading stage,
+	 * so its logo and progress bar sit on top of the game for good. A stage of
+	 * its own is also what gives the pointer handlers and the DOM panel an
+	 * `onDestroyEvent` to be released in, instead of a teardown closure the
+	 * engine knows nothing about.
+	 */
+	class GroundShadowsStage extends Stage {
+		#scene: ReturnType<typeof buildScene> | null = null;
 
-	return () => {
-		torndown = true;
-		pointerCleanup?.();
-		domCleanup?.();
-	};
+		override onResetEvent(app: Application) {
+			this.#scene = buildScene(app);
+		}
+
+		override update(dt: number) {
+			this.#scene?.tick(dt);
+			return super.update(dt);
+		}
+
+		override onDestroyEvent() {
+			this.#scene?.teardown();
+			this.#scene = null;
+		}
+	}
+
+	// Load, then switch. The awaited form says exactly that, where a callback
+	// only implies it.
+	await loader.preload(resources);
+	state.set(state.PLAY, new GroundShadowsStage());
+	state.change(state.PLAY);
 };
 
 export const ExampleGroundShadows = createExampleComponent(createGame);
