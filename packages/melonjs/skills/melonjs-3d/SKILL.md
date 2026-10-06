@@ -229,7 +229,9 @@ behind the wall, and this is not a synonym for "additive".
 
 Set it `false` for a mesh standing in for a screen-space effect: an additive
 glow carrying a world position only so it can sort and move with the thing it
-belongs to. Left depth tested, a flat billboard is sliced along a hard straight
+belongs to. A world-space caption billboarded over a prop wants it for the
+same reason, since it has no surface for the prop's own foliage to be in front
+of. Left depth tested, a flat billboard is sliced along a hard straight
 line the moment any geometry is nearer at some pixel. That shows up worst
 around something round — a glow on a rock near a planet's limb gets cut,
 and no offset escapes it, because the near surface bulges further toward the
@@ -660,6 +662,35 @@ the model needs no tangent attribute, and an unmapped mesh is unaffected. This
 is the 3D counterpart of the `Sprite` normal maps in the lighting skill; they
 are separate systems and a `Mesh` uses this one.
 
+### What the ground-shadow tier can and cannot do
+
+Check this table before claiming a setting is unsupported. Every one of these
+is read **every draw**, so all of them can be animated.
+
+| setting | `Mesh` / `Sprite3d` / `GLTFModel` part | `InstancedMesh` |
+|---|---|---|
+| `castGroundShadow` | yes | yes |
+| `shadowGroundY` | yes, the caster's own floor | yes, **one plane** through the SET's origin |
+| `shadowGroundNormal` | yes | yes, one plane for the set |
+| `shadowOpacity` | yes | yes |
+| `shadowScale` | yes | yes |
+| `shadowOffset` | yes | yes, one throw for the set |
+| `shadowStretch` | yes | yes, one stretch for the set |
+| `shadowDirectionX` / `Z` | yes | yes |
+| `shadowLight` | yes | yes |
+| height fade as the caster rises | yes | **no** |
+| a different value per instance | n/a | **no**, and there is no plan for one |
+
+The two "no"s are the same limitation seen twice: a set gets ONE shadow plane
+and ONE shared quad, so the instance's own height is dropped and nothing can
+vary between instances. Everything else is one value for the whole set, which
+is what a set means. A scatter over curved ground is therefore one set per flat
+facet, and a flying scatter wanting a height fade has to be per-object meshes.
+
+Nothing here is per-object-only. If a claim that a setting "does not work on an
+`InstancedMesh`" is in your head, it is out of date: `shadowOffset` and
+`shadowStretch` both reached the instanced tier in 20.8.
+
 Ground shadows are **on by default** (the `castGroundShadow` application
 setting), and need a GPU backend and a `Camera3d`. As a blanket default they
 skip geometry with no vertical extent — a ground plane. Per object,
@@ -683,9 +714,10 @@ The simplest fix is a bigger blob, so its edge shows past the object:
 mesh.shadowScale = 1.5;        // 1 is the default; 0 hides the shadow
 ```
 
-`shadowScale` works everywhere, `InstancedMesh` included. On an
-`InstancedMesh` changing it rebuilds the shared shadow geometry, so set it
-once rather than animating it every frame.
+`shadowScale` works everywhere, `InstancedMesh` included. Changing it on a
+set rewrites the shared quad's four corners in place rather than rebuilding
+it, as does a `shadowLight` that moves, so an animated sun costs no
+allocation.
 
 Or, for the look of a sun that is not overhead, use the shape controls:
 
@@ -703,8 +735,14 @@ caster. It is honoured **only when `shadowGroundY` is set**, because the
 blob is a flat quad on one named plane: sliding it across a plane the game has
 not named puts it where there may be no floor. `shadowStretch` is clamped to 3
 and the blob fades as it pulls, so an extreme value degrades to nothing rather
-than to a smear. Both are per-object — an `InstancedMesh` shares one quad
-across instances that each carry their own rotation, so it ignores them.
+than to a smear.
+
+An `InstancedMesh` honours both, as **one** offset and **one** stretch for the
+whole set, which is all a shared set can carry. Both ride the quad the blobs
+share rather than the matrix that also places them: a stretch in the matrix
+would scale the instance positions too and smear the scatter instead of
+lengthening its blobs. So a scatter can sit next to loose props under the same
+sun without looking lit from somewhere else.
 
 `shadowLight` takes the direction from a `Light3d` you name, re-read every
 draw, so a moving sun carries the shadows with it. Nothing is inferred: the
@@ -729,9 +767,21 @@ an edge-on blob has nothing left to show. It needs `shadowGroundY`, for the
 same reason the offset does: tilting the bounds fallback has no anchor to turn
 about.
 
-Per-object. An `InstancedMesh` shares one quad across all its instances, so
-one normal cannot serve a scatter spread over curved ground, and it ignores
-this along with the offset and the stretch.
+On an `InstancedMesh` one plane serves the **whole set**: it passes through
+the set's origin at `shadowGroundY`, faces the normal, and every blob is
+projected onto it whatever height its own instance sits at, exactly as the
+level case puts every blob at one height. A scatter over curved ground is
+therefore one set per flat facet, each with the facet's own plane, not one
+set with an averaged normal.
+
+All three compose on a set: the stretch turns the shared quad, the offset
+slides the whole set along the light, and both are carried onto the tilted
+plane rather than applied flat, so a bank's planting lies along its slope
+instead of hovering across it.
+
+Give blobs to the plants that stand apart. Dense low ground cover is better
+left without: a thousand blobs each as wide as its own fern sum to a darkened
+hillside, not to a thousand shadows, and ground cover is the ground.
 
 These are **art direction, not a projection**. A stretched ellipse is not a
 silhouette and has no contact with terrain, so on ground that is not the plane
@@ -794,6 +844,13 @@ Loaded through the same level director as everything else:
 ```js
 await loader.preload([{ name: "diorama", type: "glb", src: "data/diorama.glb" }]);
 level.load("diorama", { scale, castGroundShadow, shadowGroundY, onLoaded });
+
+// every ground-shadow setting travels, not just those two: a loaded scene can
+// be told where its sun is, and `shadowLight` is re-read every draw
+level.load("diorama", {
+    scale, castGroundShadow: true, shadowGroundY: 0,
+    shadowLight: sun, shadowOffset: 0.6, shadowStretch: 1.8, async: true,
+});
 ```
 
 `.obj` / `.mtl` are also supported loader types.
