@@ -246,7 +246,6 @@ export const buildBackdrop = (app: Application) => {
 		groundY?: number,
 	) => {
 		const geometry: Geometry = modelGeometry(asset);
-		const casts = shadow !== undefined && normal !== undefined;
 		const mesh = new InstancedMesh(0, GROUND_Y, {
 			...geometry,
 			texture: palette,
@@ -258,8 +257,9 @@ export const buildBackdrop = (app: Application) => {
 			cullBackFaces: false,
 			lit: true,
 			instanceCount: count,
-			castGroundShadow: casts,
-			...(casts
+			castGroundShadow:
+				shadow !== undefined && normal !== undefined && groundY !== undefined,
+			...(shadow !== undefined && normal !== undefined && groundY !== undefined
 				? {
 						shadowGroundNormal: normal,
 						shadowGroundY: groundY,
