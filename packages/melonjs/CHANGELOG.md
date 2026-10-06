@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.8.0] (melonJS 2) - _unreleased_
+## [20.8.0] (melonJS 2) - _2026-10-06_
 
 ### Added
 - **`Mesh#shadowScale`**: a size multiplier for the ground shadow, independent of the object's own size, so a wide flat-bottomed prop can show a blob that would otherwise hide under it. Defaults to `1`; `0` or less hides the shadow and leaves the object drawn. Works on `Sprite3d`, `InstancedMesh` and `GLTFModel`, and can be animated on a set, whose shared quad is rewritten in place rather than rebuilt ([#1631](https://github.com/melonjs/melonJS/issues/1631), [#1712](https://github.com/melonjs/melonJS/issues/1712), thanks @snowyukitty)
@@ -13,11 +13,13 @@
 - **`toneMapping` setting and `renderer.setToneMapping(mode, options)`**: `"aces"`, `"reinhard"` or `"exponential"`, kept last on the camera and driveable from a settings screen
 - **`ToneMappingEffect`**: exposure plus a filmic curve instead of clipping flat at white. `white` sets what reads as display white
 - **`BloomEffect`**: bright areas bleed light into their surroundings
+- **`RadialGradientEffect` is exported.** It was already a complete effect with both language bodies, reached by the renderers through a direct import for `drawLight`, so nothing failed and nobody noticed that `import { RadialGradientEffect } from "melonjs"` did not work. A soft spot, a pickup highlight or a damage flash no longer needs a baked canvas
 - **`Mesh#depthTest`**: whether geometry in front of a mesh hides it, `true` by default. Set `false` for an additive glow, or a world-space label, with no surface to be occluded on. Honoured by `Sprite3d` too
 - **Physics: `Sphere` collision shape**, resolved against another `Sphere`, a `Box3d`, or any planar shape through its XY silhouette
 - **`raycast3d` on a sphere body** reports that sphere's surface, not a bounding sphere derived from the renderable's 2D bounds
 - **`Renderable#setPosition(x, y, z)`**, `z` optional: `pos` is 3D but typed 2D, so `pos.set(x, y)` silently zeroes the depth
 - **`Camera3d#setBasis(right, up, forward)` and `lookAt(target, up)`**: pose a camera from a basis the game already holds, which is what a view over a curved surface needs
+- **`Color#setLinear(r, g, b, alpha)`**: set a colour from LINEAR values, encoded to sRGB on the way in. The sibling of `setFloat`, which takes the same `0..1` range and treats it as already sRGB, and the two are not interchangeable: a linear `0.42` is sRGB `0.68`. Reach for it when the numbers come from a renderer's own colour space rather than from a css string or an image, glTF's `baseColorFactor` and `emissiveFactor` being the common case. Handing those to `setFloat` renders every untextured material markedly too dark
 
 ### Fixed
 - A glTF scene loaded with `level.load()` takes every ground-shadow setting, not just `castGroundShadow` and `shadowGroundY`. `shadowLight`, the direction pair, the offset, the stretch, the scale, the opacity and the ground normal reached a rigged `GLTFModel` but not a static scene, so a loaded scene could not be told where its sun was
