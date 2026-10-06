@@ -672,33 +672,57 @@ describe("Ground shadows (#1515)", () => {
 			mesh.destroy();
 		});
 
-		it("is ignored by an InstancedMesh, both halves of it", (ctx) => {
+		it("puts an instanced throw in the matrix and the stretch nowhere near it", (ctx) => {
 			requireWebGL(ctx, renderer);
-			// one shared quad, each instance with its own transform: a
-			// world-space direction cannot be baked in, so neither half
-			// applies rather than one of them silently doing so
-			const mesh = new InstancedMesh(0, 0, {
-				...GEOMETRY,
-				width: 32,
-				normalize: false,
-				instanceCount: 2,
-				castGroundShadow: true,
-				shadowGroundY: 20,
-			});
-			const placement = new Matrix3d();
-			for (let i = 0; i < 2; i++) {
-				placement.identity().translate(i * 8, 0, 0);
-				mesh.setInstance(i, placement);
+			// The offset is ONE translation shared by the whole set, so the
+			// group matrix carries it. The stretch must NOT: an anisotropic
+			// scale there reaches the instance POSITIONS through the same
+			// matrix and smears the scatter. It rides the shared quad instead
+			// (see `InstancedMesh > shadowStretch`), which is why the matrix
+			// below is untouched by it.
+			const build = () => {
+				const mesh = new InstancedMesh(0, 0, {
+					...GEOMETRY,
+					width: 32,
+					normalize: false,
+					instanceCount: 2,
+					castGroundShadow: true,
+					shadowGroundY: 20,
+					shadowDirectionX: 1,
+					shadowDirectionZ: 0,
+				});
+				const placement = new Matrix3d();
+				for (let i = 0; i < 2; i++) {
+					placement.identity().translate(i * 8, 0, 0);
+					mesh.setInstance(i, placement);
+				}
+				return mesh;
+			};
+			const matrixOf = (m) => {
+				const spy = vi.spyOn(renderer, "drawInstancedShadow");
+				try {
+					drawOnce(m);
+					expect(spy).toHaveBeenCalled();
+					return [...spy.mock.calls[0][1].val];
+				} finally {
+					spy.mockRestore();
+				}
+			};
+			const mesh = build();
+			const before = matrixOf(mesh);
+			mesh.shadowOffset = 2;
+			const after = matrixOf(mesh);
+			// the throw moved it along +x, and only the translation moved
+			expect(after[12] - before[12]).toBeGreaterThan(1);
+			expect(after[14]).toBeCloseTo(before[14], 6);
+			for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) {
+				expect(after[i]).toBeCloseTo(before[i], 6);
 			}
-			drawOnce(mesh);
-			const before = mesh._shadowQuad.originalVertices.slice();
-			mesh.shadowDirectionX = 1;
-			mesh.shadowOffset = 30;
+
+			// the stretch, by contrast, leaves this matrix exactly as it was
+			const pinned = matrixOf(mesh);
 			mesh.shadowStretch = 3;
-			drawOnce(mesh);
-			expect(Array.from(mesh._shadowQuad.originalVertices)).toEqual(
-				Array.from(before),
-			);
+			expect(matrixOf(mesh)).toEqual(pinned);
 			mesh.destroy();
 		});
 
@@ -1008,6 +1032,639 @@ describe("Ground shadows (#1515)", () => {
 			return mesh;
 		};
 
+		/**
+		 * `shadowGroundNormal` on a SET: one plane for all of it, tilted.
+		 *
+		 * The vertex stage builds `instancePos + (v.x, 0, v.z) * footprint`
+		 * and pushes the sum through ONE matrix, so the slope has to live in
+		 * that matrix's Y row as the plane's equation: a vertical projection.
+		 * The quad is baked pre-rotated into the plane so the projection
+		 * returns its true shape. Nothing about that is visible from a draw
+		 * count, so these replay exactly what the shader computes, from the
+		 * matrix handed to `drawInstancedShadow` and the baked quad, and check
+		 * where every blob vertex lands. The first case is the one the
+		 * example found: a row left as the group's keeps each instance's
+		 * height but drops the quad's tilt, and a row zeroed drops both.
+		 */
+		describe("shadowGroundNormal", () => {
+			const sloped = (settings = {}) => {
+				const mesh = new InstancedMesh(0, 0, {
+					...GEOMETRY,
+					width: 32,
+					normalize: false,
+					instanceCount: 4,
+					castGroundShadow: true,
+					...settings,
+				});
+				const placement = new Matrix3d();
+				for (let i = 0; i < 4; i++) {
+					// spread along X, climbing in Y, one of them twice the size:
+					// a set that is NOT on one height, so a row that passed an
+					// instance's own height through would show
+					placement.identity().translate(i * 8, i * 5, i * 2);
+					if (i === 2) {
+						placement.scale(2, 2, 2);
+					}
+					mesh.setInstance(i, placement);
+				}
+				return mesh;
+			};
+			const shadowMatrix = (mesh) => {
+				const spy = vi.spyOn(renderer, "drawInstancedShadow");
+				try {
+					drawOnce(mesh);
+					expect(spy).toHaveBeenCalled();
+					return [...spy.mock.calls[0][1].val];
+				} finally {
+					spy.mockRestore();
+				}
+			};
+			/** the vertex stage replayed: Y of the baked vertex DROPPED */
+			const landed = (m, mesh, i, k) => {
+				const record = mesh.getInstance(i).val;
+				const footprint = Math.hypot(record[0], record[1], record[2]);
+				const v = mesh._shadowQuad.originalVertices;
+				const x = record[12] + v[k * 3] * footprint;
+				const y = record[13];
+				const z = record[14] + v[k * 3 + 2] * footprint;
+				return [
+					m[0] * x + m[4] * y + m[8] * z + m[12],
+					m[1] * x + m[5] * y + m[9] * z + m[13],
+					m[2] * x + m[6] * y + m[10] * z + m[14],
+				];
+			};
+			const NORMAL = [Math.sin(0.6), -Math.cos(0.6), 0];
+
+			it("lands every blob vertex on the plane, whatever height its instance sits at", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = sloped({ shadowGroundY: 40, shadowGroundNormal: NORMAL });
+				const m = shadowMatrix(mesh);
+				const lift = mesh.meshScale * 0.01;
+				const sx = -NORMAL[0] / NORMAL[1];
+				// the plane through the set's origin at groundY, lifted along
+				// its normal
+				const planeY = (x) => {
+					return 40 + sx * (x - m[12]) + lift / NORMAL[1];
+				};
+				const heights = new Set();
+				for (let i = 0; i < 4; i++) {
+					for (let k = 0; k < 4; k++) {
+						const q = landed(m, mesh, i, k);
+						expect(q[1]).toBeCloseTo(planeY(q[0]), 4);
+						heights.add(Math.round(q[1]));
+					}
+				}
+				// ...and it IS a slope: the blobs do not share one height
+				expect(heights.size).toBeGreaterThan(1);
+				mesh.destroy();
+			});
+
+			it("keeps the blob's size on the slope rather than stretching it", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// 60 degrees: a flat quad projected vertically onto this plane
+				// would come out twice as long along the slope
+				const steep = [Math.sin(Math.PI / 3), -Math.cos(Math.PI / 3), 0];
+				const level = sloped({ shadowGroundY: 40 });
+				const tilted = sloped({ shadowGroundY: 40, shadowGroundNormal: steep });
+				const flat = shadowMatrix(level);
+				const m = shadowMatrix(tilted);
+				const span = (mat, mesh) => {
+					const a = landed(mat, mesh, 0, 0);
+					const b = landed(mat, mesh, 0, 1);
+					return Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+				};
+				expect(span(m, tilted)).toBeCloseTo(span(flat, level), 3);
+				level.destroy();
+				tilted.destroy();
+			});
+
+			it("is ignored without shadowGroundY, like the per-object tier", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = sloped({ shadowGroundNormal: NORMAL });
+				const m = shadowMatrix(mesh);
+				expect(m[1]).toBe(0);
+				expect(m[5]).toBe(0);
+				expect(m[9]).toBe(0);
+				expect(m[13]).toBeCloseTo(
+					mesh.getBounds3d().bottom - mesh.meshScale * 0.01,
+					6,
+				);
+				mesh.destroy();
+			});
+
+			it("clamps the tilt at 75 degrees on a set too", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const past = [Math.sin(1.48), -Math.cos(1.48), 0];
+				const mesh = sloped({ shadowGroundY: 40, shadowGroundNormal: past });
+				const m = shadowMatrix(mesh);
+				// the row's gradient along X is the slope the plane was given
+				const gradient = m[1] / m[0];
+				expect(gradient).toBeCloseTo(Math.tan((75 * Math.PI) / 180), 5);
+				expect(gradient).toBeLessThan(Math.tan(1.48));
+				mesh.destroy();
+			});
+
+			it("world up is the default, and reproduces the level matrix exactly", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const plain = sloped({ shadowGroundY: 40 });
+				const named = sloped({
+					shadowGroundY: 40,
+					shadowGroundNormal: [0, -1, 0],
+				});
+				const a = shadowMatrix(plain);
+				const b = shadowMatrix(named);
+				expect(b).toEqual(a);
+				plain.destroy();
+				named.destroy();
+			});
+		});
+
+		/**
+		 * `shadowStretch` on a SET.
+		 *
+		 * This used to be refused outright, on the grounds that an anisotropic
+		 * scale reaches the GPU through the group matrix and would smear the
+		 * instance POSITIONS along with each blob. That is true of the MATRIX
+		 * and only of the matrix: the vertex stage builds
+		 * `uModelMatrix * (instancePos + quadOffset * footprint)`, so the
+		 * shared QUAD is the one thing the positions never pass through — the
+		 * same reason the slope's tilt is baked there. One stretch, one
+		 * direction, one quad for the whole set, which is all a set needs.
+		 *
+		 * So these check both halves: that the blob genuinely lengthens along
+		 * the light, and that nothing else in the scatter moved.
+		 */
+		describe("shadowStretch", () => {
+			const EAST = { shadowDirectionX: 1, shadowDirectionZ: 0 };
+
+			/** the quad's two ground axes, read back from its baked corners */
+			const quadAxes = (mesh) => {
+				const v = mesh._shadowQuad.originalVertices;
+				return {
+					u: [(v[3] - v[0]) / 2, (v[4] - v[1]) / 2, (v[5] - v[2]) / 2],
+					v: [(v[9] - v[0]) / 2, (v[10] - v[1]) / 2, (v[11] - v[2]) / 2],
+				};
+			};
+			/** the blob's half-extent along a ground direction */
+			const reachAlong = (mesh, dx, dz) => {
+				const { u, v } = quadAxes(mesh);
+				return (
+					Math.abs(u[0] * dx + u[2] * dz) + Math.abs(v[0] * dx + v[2] * dz)
+				);
+			};
+
+			it("lengthens the blob along the light and leaves its width alone", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(3, {
+					shadowGroundY: 0,
+					...EAST,
+				});
+				drawOnce(mesh);
+				const alongFlat = reachAlong(mesh, 1, 0);
+				const acrossFlat = reachAlong(mesh, 0, 1);
+				mesh.shadowStretch = 2.5;
+				drawOnce(mesh);
+				expect(reachAlong(mesh, 1, 0)).toBeCloseTo(alongFlat * 2.5, 4);
+				// across the light it is EXACTLY as wide as it was: the scale
+				// is `I + (s-1)·d⊗d`, which is the identity perpendicular to d
+				expect(reachAlong(mesh, 0, 1)).toBeCloseTo(acrossFlat, 5);
+				mesh.destroy();
+			});
+
+			it("stretches along a DIAGONAL light, not along the set's own axes", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(3, {
+					shadowGroundY: 0,
+					// length 5, so it has to be normalised before it is used
+					shadowDirectionX: 3,
+					shadowDirectionZ: 4,
+				});
+				drawOnce(mesh);
+				const dx = 0.6;
+				const dz = 0.8;
+				const along = reachAlong(mesh, dx, dz);
+				const across = reachAlong(mesh, -dz, dx);
+				mesh.shadowStretch = 2;
+				drawOnce(mesh);
+				expect(reachAlong(mesh, dx, dz)).toBeCloseTo(along * 2, 4);
+				expect(reachAlong(mesh, -dz, dx)).toBeCloseTo(across, 4);
+				mesh.destroy();
+			});
+
+			it("THE POINT: lengthens each blob without moving the scatter", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// no offset, so the only thing that could move a blob is the
+				// stretch leaking into the positions — which is exactly the
+				// failure the old refusal was written to avoid
+				const mesh = makeInstanced(4, { shadowGroundY: 0, ...EAST });
+				const spy = vi.spyOn(renderer, "drawInstancedShadow");
+				const centres = () => {
+					spy.mockClear();
+					drawOnce(mesh);
+					const m = spy.mock.calls[0][1].val;
+					return Array.from({ length: 4 }, (_, i) => {
+						const r = mesh.getInstance(i).val;
+						return [
+							m[0] * r[12] + m[4] * r[13] + m[8] * r[14] + m[12],
+							m[2] * r[12] + m[6] * r[13] + m[10] * r[14] + m[14],
+						];
+					});
+				};
+				try {
+					const before = centres();
+					// the instances are spread along x, so a smear would show
+					expect(before[3][0]).not.toBeCloseTo(before[0][0], 3);
+					mesh.shadowStretch = 3;
+					const after = centres();
+					for (let i = 0; i < 4; i++) {
+						expect(after[i][0]).toBeCloseTo(before[i][0], 5);
+						expect(after[i][1]).toBeCloseTo(before[i][1], 5);
+					}
+				} finally {
+					spy.mockRestore();
+					mesh.destroy();
+				}
+			});
+
+			it("clamps at 3, the same ceiling the per-object tier uses", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(2, { shadowGroundY: 0, ...EAST });
+				drawOnce(mesh);
+				const flat = reachAlong(mesh, 1, 0);
+				mesh.shadowStretch = 3;
+				drawOnce(mesh);
+				const atCeiling = reachAlong(mesh, 1, 0);
+				mesh.shadowStretch = 50;
+				drawOnce(mesh);
+				expect(reachAlong(mesh, 1, 0)).toBeCloseTo(atCeiling, 5);
+				expect(atCeiling).toBeCloseTo(flat * 3, 4);
+				mesh.destroy();
+			});
+
+			it.for([1, 0.5, 0, -2, Number.NaN, Number.POSITIVE_INFINITY])(
+				"leaves the blob alone at shadowStretch %s",
+				(value, ctx) => {
+					requireWebGL(ctx, renderer);
+					const mesh = makeInstanced(2, { shadowGroundY: 0, ...EAST });
+					drawOnce(mesh);
+					const flat = reachAlong(mesh, 1, 0);
+					mesh.shadowStretch = value;
+					drawOnce(mesh);
+					expect(reachAlong(mesh, 1, 0)).toBeCloseTo(flat, 5);
+					mesh.destroy();
+				},
+			);
+
+			it("does nothing without a direction to stretch along", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// no light and no direction: a zero-length pair names no way
+				// to pull, and guessing one would be an invention
+				const mesh = makeInstanced(2, { shadowGroundY: 0, shadowStretch: 3 });
+				drawOnce(mesh);
+				const pulled = reachAlong(mesh, 1, 0);
+				mesh.shadowStretch = 1;
+				drawOnce(mesh);
+				expect(reachAlong(mesh, 1, 0)).toBeCloseTo(pulled, 5);
+				mesh.destroy();
+			});
+
+			it("takes the direction from a light, and refreshes in place as it moves", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const sun = { direction: { x: 1, y: 1, z: 0 } };
+				const mesh = makeInstanced(2, {
+					shadowGroundY: 0,
+					shadowLight: sun,
+					shadowStretch: 2.5,
+				});
+				drawOnce(mesh);
+				const quad = mesh._shadowQuad;
+				const version = quad._geometryVersion;
+				expect(reachAlong(mesh, 1, 0)).toBeGreaterThan(reachAlong(mesh, 0, 1));
+				// the sun swings a quarter turn: the blob must follow it
+				sun.direction.x = 0;
+				sun.direction.z = 1;
+				drawOnce(mesh);
+				expect(reachAlong(mesh, 0, 1)).toBeGreaterThan(reachAlong(mesh, 1, 0));
+				// ...and a sweeping sun must not allocate a mesh per frame
+				expect(mesh._shadowQuad).toBe(quad);
+				expect(quad._geometryVersion).toBeGreaterThan(version);
+				mesh.destroy();
+			});
+
+			it("fades as it stretches, like the per-object tier", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(2, {
+					shadowGroundY: 0,
+					shadowOpacity: 0.8,
+					...EAST,
+				});
+				let alpha;
+				const draw = renderer.drawInstancedShadow.bind(renderer);
+				const spy = vi
+					.spyOn(renderer, "drawInstancedShadow")
+					.mockImplementation((...args) => {
+						alpha = renderer.getGlobalAlpha();
+						return draw(...args);
+					});
+				try {
+					drawOnce(mesh);
+					const flat = alpha;
+					mesh.shadowStretch = 4; // clamps to 3
+					drawOnce(mesh);
+					// the alpha round-trips through an 8-bit packed tint, so it
+					// lands on the nearest 1/255 and cannot be compared finer
+					expect(Math.abs(alpha - flat / Math.sqrt(3))).toBeLessThanOrEqual(
+						1 / 255,
+					);
+					expect(alpha).toBeLessThan(flat);
+				} finally {
+					spy.mockRestore();
+					mesh.destroy();
+				}
+			});
+
+			it("composes with a slope: a stretched blob still lies IN the plane", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const normal = [Math.sin(0.6), -Math.cos(0.6), 0];
+				const mesh = makeInstanced(3, {
+					shadowGroundY: 40,
+					shadowGroundNormal: normal,
+					shadowStretch: 2.5,
+					...EAST,
+				});
+				const spy = vi.spyOn(renderer, "drawInstancedShadow");
+				try {
+					drawOnce(mesh);
+					const m = spy.mock.calls[0][1].val;
+					const lift = mesh.meshScale * 0.01;
+					const sx = -normal[0] / normal[1];
+					const q = mesh._shadowQuad.originalVertices;
+					for (let i = 0; i < 3; i++) {
+						const r = mesh.getInstance(i).val;
+						const footprint = Math.hypot(r[0], r[1], r[2]);
+						for (let k = 0; k < 4; k++) {
+							// the vertex stage, replayed: the quad's own Y is dropped
+							const x = r[12] + q[k * 3] * footprint;
+							const y = r[13];
+							const z = r[14] + q[k * 3 + 2] * footprint;
+							const wx = m[0] * x + m[4] * y + m[8] * z + m[12];
+							const wy = m[1] * x + m[5] * y + m[9] * z + m[13];
+							expect(wy).toBeCloseTo(
+								40 + sx * (wx - m[12]) + lift / normal[1],
+								4,
+							);
+						}
+					}
+				} finally {
+					spy.mockRestore();
+					mesh.destroy();
+				}
+			});
+
+			it("matches the per-object tier for the same asset and settings", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// the whole reason the two tiers share `resolveShadowStretch`
+				// and `stretchAlong`: one tree in a scatter and the same tree
+				// standing loose beside it have to draw the same blob
+				const settings = {
+					castGroundShadow: true,
+					shadowGroundY: 0,
+					shadowStretch: 2.5,
+					shadowDirectionX: 3,
+					shadowDirectionZ: 4,
+				};
+				const loose = makeMesh(settings);
+				drawOnce(loose);
+				drawOnce(loose);
+				// the per-object blob's two ground axes live in its quad's
+				// model matrix, as the X and Z basis columns of a unit square
+				const m = renderer._shadowQuads.unlit._modelMatrix.val;
+				const looseReach = (dx, dz) => {
+					return (
+						Math.abs((m[0] * dx + m[2] * dz) / 2) +
+						Math.abs((m[8] * dx + m[10] * dz) / 2)
+					);
+				};
+				const looseAlong = looseReach(0.6, 0.8);
+				const looseAcross = looseReach(-0.8, 0.6);
+				loose.destroy();
+
+				const set = makeInstanced(1, settings);
+				drawOnce(set);
+				// The instanced quad is in MODEL units and the per-object
+				// matrix in world ones, so the absolute sizes differ by the
+				// mesh scale. What has to match is the SHAPE: how much longer
+				// the blob is along the light than across it.
+				const along = reachAlong(set, 0.6, 0.8);
+				const across = reachAlong(set, -0.8, 0.6);
+				expect(along / across).toBeCloseTo(looseAlong / looseAcross, 3);
+				expect(along).toBeGreaterThan(across);
+				set.destroy();
+			});
+
+			/* ── adversarial ──────────────────────────────────────────── */
+
+			it("ADVERSARIAL: stretches along the WORLD light, not the set's own axis", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// The quad's axes live in GROUP-LOCAL space, so the world
+				// direction has to be pulled back through the group matrix. A
+				// set turned a quarter turn about Y that skipped the pull-back
+				// would stretch across the light instead of along it, and no
+				// test on an unrotated set could tell.
+				//
+				// Measured as a RATIO against the same set unstretched: the
+				// fixture's own blob is not round, so an absolute along/across
+				// number says nothing.
+				const ratio = (mesh) => {
+					return reachAlong(mesh, 1, 0) / reachAlong(mesh, 0, 1);
+				};
+				const flat = makeInstanced(2, { shadowGroundY: 0, ...EAST });
+				drawOnce(flat);
+				const base = ratio(flat);
+				flat.destroy();
+
+				const upright = makeInstanced(2, {
+					shadowGroundY: 0,
+					...EAST,
+					shadowStretch: 2.5,
+				});
+				drawOnce(upright);
+				expect(ratio(upright) / base).toBeCloseTo(2.5, 4);
+				upright.destroy();
+
+				// turned a quarter turn: the world +x light now lands on the
+				// set's local z, so the LONG axis must have swapped sides
+				const turned = makeInstanced(2, {
+					shadowGroundY: 0,
+					...EAST,
+					shadowStretch: 2.5,
+				});
+				turned.rotate(Math.PI / 2, new Vector3d(0, 1, 0));
+				drawOnce(turned);
+				const { u, v } = quadAxes(turned);
+				const lenU = Math.hypot(u[0], u[2]);
+				const lenV = Math.hypot(v[0], v[2]);
+				const plain = makeInstanced(2, { shadowGroundY: 0, ...EAST });
+				plain.rotate(Math.PI / 2, new Vector3d(0, 1, 0));
+				drawOnce(plain);
+				const flatAxes = quadAxes(plain);
+				const flatU = Math.hypot(flatAxes.u[0], flatAxes.u[2]);
+				const flatV = Math.hypot(flatAxes.v[0], flatAxes.v[2]);
+				// the stretch landed on the OTHER local axis than it did
+				// upright, which is the pull-back doing its job
+				expect(lenV / flatV).toBeCloseTo(2.5, 3);
+				expect(lenU / flatU).toBeCloseTo(1, 3);
+				turned.destroy();
+				plain.destroy();
+			});
+
+			it("ADVERSARIAL: shadowScale and shadowStretch multiply, not override", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(2, { shadowGroundY: 0, ...EAST });
+				drawOnce(mesh);
+				const plain = reachAlong(mesh, 1, 0);
+				mesh.shadowScale = 2;
+				drawOnce(mesh);
+				expect(reachAlong(mesh, 1, 0)).toBeCloseTo(plain * 2, 4);
+				mesh.shadowStretch = 1.5;
+				drawOnce(mesh);
+				// both, not the last one written
+				expect(reachAlong(mesh, 1, 0)).toBeCloseTo(plain * 3, 4);
+				// ...and across the light only `shadowScale` applies
+				expect(reachAlong(mesh, 0, 1)).toBeCloseTo(reachAlong(mesh, 0, 1), 6);
+				mesh.destroy();
+			});
+
+			it("ADVERSARIAL: offset, stretch and a slope all compose", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const normal = [Math.sin(0.5), -Math.cos(0.5), 0];
+				const sx = -normal[0] / normal[1];
+				const build = (offset) => {
+					return makeInstanced(3, {
+						shadowGroundY: 40,
+						shadowGroundNormal: normal,
+						shadowStretch: 2.5,
+						shadowOffset: offset,
+						...EAST,
+					});
+				};
+				const matrixOf = (mesh) => {
+					const spy = vi.spyOn(renderer, "drawInstancedShadow");
+					try {
+						drawOnce(mesh);
+						return [...spy.mock.calls[0][1].val];
+					} finally {
+						spy.mockRestore();
+					}
+				};
+				const still = build(0);
+				const a = matrixOf(still);
+				still.destroy();
+				const thrown = build(1.2);
+				const b = matrixOf(thrown);
+
+				// the throw moved it along the light...
+				expect(b[12] - a[12]).toBeGreaterThan(1);
+				// ...and rode IN the plane while doing so, which is the whole
+				// point: slid flat instead, a stretched set climbs off the hill
+				// by `distance * tan(tilt)`
+				expect(b[13] - a[13]).toBeCloseTo(sx * (b[12] - a[12]), 4);
+				expect(b[14]).toBeCloseTo(a[14], 5);
+
+				// and every blob vertex still lands on that one plane
+				const q = thrown._shadowQuad.originalVertices;
+				for (let i = 0; i < 3; i++) {
+					const r = thrown.getInstance(i).val;
+					const f = Math.hypot(r[0], r[1], r[2]);
+					for (let k = 0; k < 4; k++) {
+						const x = r[12] + q[k * 3] * f;
+						const z = r[14] + q[k * 3 + 2] * f;
+						const wx = b[0] * x + b[4] * r[13] + b[8] * z + b[12];
+						const wy = b[1] * x + b[5] * r[13] + b[9] * z + b[13];
+						expect(wy).toBeCloseTo(b[13] + sx * (wx - b[12]), 3);
+					}
+				}
+				thrown.destroy();
+			});
+
+			it("ADVERSARIAL: a light pointing straight down stretches nothing", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// a sun directly overhead has no ground direction at all, and
+				// normalising a zero-length pair would divide by zero
+				const noon = { direction: { x: 0, y: 1, z: 0 } };
+				const plain = makeInstanced(2, { shadowGroundY: 0, shadowLight: noon });
+				drawOnce(plain);
+				const a = reachAlong(plain, 1, 0);
+				const b = reachAlong(plain, 0, 1);
+				plain.destroy();
+
+				const asked = makeInstanced(2, {
+					shadowGroundY: 0,
+					shadowLight: noon,
+					shadowStretch: 3,
+					shadowOffset: 2,
+				});
+				drawOnce(asked);
+				// identical to the set that asked for nothing, and finite
+				expect(reachAlong(asked, 1, 0)).toBeCloseTo(a, 5);
+				expect(reachAlong(asked, 0, 1)).toBeCloseTo(b, 5);
+				expect(Number.isFinite(a)).toBe(true);
+				asked.destroy();
+			});
+
+			it("ADVERSARIAL: flipping `lit` rebuilds the quad instead of editing it", (ctx) => {
+				requireWebGL(ctx, renderer);
+				// the in-place refresh is only safe while the quad still wants
+				// the same shader; `lit` decides which batcher draws it, so
+				// that one change has to make a new mesh
+				const mesh = makeInstanced(2, {
+					shadowGroundY: 0,
+					...EAST,
+					shadowStretch: 2,
+				});
+				drawOnce(mesh);
+				const first = mesh._shadowQuad;
+				expect(first.lit).toBe(false);
+				mesh.lit = true;
+				drawOnce(mesh);
+				expect(mesh._shadowQuad).not.toBe(first);
+				expect(mesh._shadowQuad.lit).toBe(true);
+				mesh.destroy();
+			});
+
+			it("ADVERSARIAL: the stretch fade rides ON the caller's alpha", (ctx) => {
+				requireWebGL(ctx, renderer);
+				const mesh = makeInstanced(2, {
+					shadowGroundY: 0,
+					shadowOpacity: 0.8,
+					...EAST,
+				});
+				let alpha;
+				const draw = renderer.drawInstancedShadow.bind(renderer);
+				const spy = vi
+					.spyOn(renderer, "drawInstancedShadow")
+					.mockImplementation((...args) => {
+						alpha = renderer.getGlobalAlpha();
+						return draw(...args);
+					});
+				try {
+					mesh.shadowStretch = 4; // clamps to 3
+					renderer.setGlobalAlpha(0.5);
+					drawOnce(mesh);
+					// opacity × fade × the alpha already on the renderer, and
+					// the renderer gets its own alpha back afterwards
+					expect(Math.abs(alpha - 0.8 / Math.sqrt(3) / 2)).toBeLessThanOrEqual(
+						1 / 255,
+					);
+					expect(renderer.getGlobalAlpha()).toBeCloseTo(0.5, 6);
+				} finally {
+					renderer.setGlobalAlpha(1);
+					spy.mockRestore();
+					mesh.destroy();
+				}
+			});
+		});
+
 		it("costs ONE extra draw, whatever the instance count", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const gl = renderer.gl;
@@ -1041,6 +1698,7 @@ describe("Ground shadows (#1515)", () => {
 				drawOnce(mesh);
 				const oldQuad = mesh._shadowQuad;
 				const before = oldQuad.originalVertices.slice();
+				const version = oldQuad._geometryVersion;
 				expect(Math.abs(before[0])).toBeGreaterThan(0);
 				mesh.shadowScale = scale;
 				drawOnce(mesh);
@@ -1049,7 +1707,12 @@ describe("Ground shadows (#1515)", () => {
 				for (let i = 0; i < before.length; i++) {
 					expect(resized.originalVertices[i] / scale).toBeCloseTo(before[i], 5);
 				}
-				expect(resized).not.toBe(oldQuad);
+				// Resized in PLACE, not rebuilt. Four corners moved, and a
+				// light that sweeps moves them every frame — allocating a mesh
+				// and its GPU buffers at that rate to write twelve floats is
+				// what the geometry version exists to avoid.
+				expect(resized).toBe(oldQuad);
+				expect(resized._geometryVersion).toBeGreaterThan(version);
 				drawOnce(mesh);
 				expect(mesh._shadowQuad).toBe(resized);
 				mesh.destroy();

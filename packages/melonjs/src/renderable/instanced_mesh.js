@@ -7,7 +7,13 @@ import {
 	writeIdentityTransform,
 	writeInstanceTransform,
 } from "../video/gpu/instancerecord.ts";
-import { getInstancedShadowQuad } from "./groundshadow.js";
+import {
+	clampShadowTilt,
+	getInstancedShadowQuad,
+	resolveShadowStretch,
+	stretchAlong,
+	tiltOntoPlane,
+} from "./groundshadow.js";
 import Mesh from "./mesh.js";
 
 /**
@@ -24,7 +30,14 @@ const _instanceMatrix = new Matrix3d();
 
 // scratch for the flattened group matrix a shadow pass draws with —
 // synchronous, single-use per draw, never held
+/** scratch for the shadow throw, turned onto the plane */
+const _THROW = new Float64Array(3);
+
 const _SHADOW_MATRIX = new Matrix3d();
+/** scratch for the clamped floor normal of an instanced shadow */
+const _shadowNormal = new Float64Array(3);
+/** scratch for one blob axis lengthened along the light */
+const _STRETCHED = new Float64Array(2);
 const _instanceBounds = new AABB3d();
 // scratch for dirtyRange() — read synchronously and never retained
 const _dirtySpan = [0, 0];
@@ -712,32 +725,51 @@ export default class InstancedMesh extends Mesh {
 	 * Draw a ground shadow for every visible instance — one call for the whole
 	 * set, over the instance buffer the mesh itself just drew from (#1515).
 	 *
-	 * The group matrix is passed with its Y basis column zeroed and its
-	 * translation Y set to the ground, so whatever Y the shadow vertex stage
-	 * produces is flattened onto the floor. That is what lets the ground
-	 * height reach the shader without a new uniform.
+	 * The group matrix is passed with its Y ROW replaced by the floor's
+	 * plane equation and its translation Y set to the ground, so whatever Y
+	 * the shadow vertex stage produces is projected onto the floor. That is
+	 * what lets the ground reach the shader without a new uniform, and it
+	 * is why a tilted floor costs no shader change either: a gradient in
+	 * that row is a slope, zero is level.
 	 *
-	 * One ground height serves the whole set — flat terrain. Per-instance
-	 * ground height would have to ride the `instanceData` slot, which the
-	 * built-in shading already reads as emissive.
+	 * One plane serves the whole set, level or tilted. Per-instance ground
+	 * height would have to ride the `instanceData` slot, which the built-in
+	 * shading already reads as emissive.
 	 * @param {WebGLRenderer} renderer - the active renderer
 	 * @ignore
 	 * @internal
+	 * @example
+	 * // A scatter's blobs share ONE plane, so a scatter over curved ground is
+	 * // one set per flat facet, each with that facet's own plane. Everything
+	 * // else is one value for the whole set, which is all a set can carry.
+	 * const bank = new InstancedMesh(0, 0, {
+	 *     ...fernGeometry,
+	 *     instanceCount: 60,
+	 *     castGroundShadow: true,
+	 *     shadowGroundY: planeHeightAtTheSetsOrigin,
+	 *     shadowGroundNormal: [facetNx, facetNy, 0],  // world up is (0,-1,0)
+	 *     shadowLight: sun,
+	 *     shadowOffset: 0.6,
+	 *     shadowStretch: 1.8,
+	 * });
 	 */
 	_drawInstancedGroundShadow(renderer) {
-		// NOTE: `shadowOffset` and `shadowStretch` are per-object controls and
-		// are ignored here. That is a CHOICE, and only half of it is forced.
+		// `shadowOffset`, `shadowStretch` and `shadowScale` all apply here, the
+		// same as on a per-object blob, so a scatter is lit by the same
+		// settings as the loose props standing next to it.
 		//
-		// `shadowStretch` genuinely cannot work: an anisotropic world-space
-		// scale reaches this path through the group matrix, which multiplies
-		// the instance POSITIONS as well as each quad, so it would smear the
-		// whole scatter rather than lengthen each blob. `shadowOffset` is a
-		// pure translation and would compose perfectly well.
+		// What a shared set cannot carry is a setting that differs PER
+		// INSTANCE — and none of those three do: one offset, one stretch, one
+		// scale for the whole set. The only real constraint is WHERE each one
+		// is applied. The vertex stage builds `uModelMatrix · (instancePos +
+		// quadOffset · footprint)`, so anything put in the matrix multiplies
+		// the instance POSITIONS too and smears the scatter instead of its
+		// blobs. The stretch therefore rides in the shared QUAD, which the
+		// positions never pass through, exactly as the slope's tilt already
+		// does; only the throw, a pure translation identical for every blob,
+		// belongs in the matrix.
 		//
-		// Honouring the one that works and not the one that does not would
-		// leave an instanced set lit by the same settings as its per-object
-		// neighbours and looking different for no reason the game can see, so
-		// neither applies. `shadowScale` is uniform and has no such problem.
+		// Still one plane for the whole set: see `shadowGroundNormal`.
 		const shadowScale = this.shadowScale;
 		if (
 			typeof renderer.drawInstancedShadow !== "function" ||
@@ -761,66 +793,182 @@ export default class InstancedMesh extends Mesh {
 			hx = hx < least ? least : hx;
 			hz = hz < least ? least : hz;
 		}
-		// The plane's tilt, pulled back into GROUP-LOCAL space, because that is
-		// the space the baked quad vertices live in. The group matrix is
-		// `diag(s, -s, ±s) · transform`, so a normal rides through it as
-		// `transpose(G) · n`, which for that diagonal is the world normal with
-		// its y negated and its z carrying the handedness sign. Unit in, unit
-		// out, so nothing has to be renormalized.
+		// The plane the whole set lands on: through the set's origin at
+		// `shadowGroundY`, facing `shadowGroundNormal`. Level unless the game
+		// named BOTH, the same rule as the per-object tier: a normal without a
+		// floor has nothing to turn about.
+		let nX = 0;
+		let nY = -1;
+		let nZ = 0;
+		const groundY = this.shadowGroundY;
 		const tilt = this.shadowGroundNormal;
-		const zSign = this.rightHanded ? -1 : 1;
+		if (tilt !== undefined && groundY !== undefined) {
+			clampShadowTilt(tilt.x, tilt.y, tilt.z, _shadowNormal);
+			nX = _shadowNormal[0];
+			nY = _shadowNormal[1];
+			nZ = _shadowNormal[2];
+		}
+		const group = this._modelMatrix.val;
+		// The same normal pulled back into GROUP-LOCAL space for the bake,
+		// because that is the space the quad vertices live in. A normal
+		// crosses a matrix as `transpose(G) · n`, exact up to length for a
+		// rotation and a uniform scale, and the length is renormalized away.
+		// At the plain axis bridge `diag(s, -s, ±s)` that is the world normal
+		// with its y negated and its z carrying the handedness sign.
+		let lx = group[0] * nX + group[1] * nY + group[2] * nZ;
+		let ly = group[4] * nX + group[5] * nY + group[6] * nZ;
+		let lz = group[8] * nX + group[9] * nY + group[10] * nZ;
+		const localLength = Math.hypot(lx, ly, lz);
+		if (localLength > 1e-12) {
+			lx /= localLength;
+			ly /= localLength;
+			lz /= localLength;
+		} else {
+			lx = 0;
+			ly = 1;
+			lz = 0;
+		}
+		// The ground direction the light travels, resolved ONCE: the stretch
+		// below turns the quad's axes along it and the throw further down
+		// slides the whole set along the same vector, so reading the light
+		// twice could only let the two disagree inside a frame.
+		let dirX = this.shadowDirectionX;
+		let dirZ = this.shadowDirectionZ;
+		const light = this.shadowLight;
+		if (light !== undefined && light.direction !== undefined) {
+			// the direction a light TRAVELS along is the way its shadows go
+			dirX = light.direction.x;
+			dirZ = light.direction.z;
+		}
+		const dirLen = Math.hypot(dirX, dirZ);
+		if (dirLen > 1e-6) {
+			dirX /= dirLen;
+			dirZ /= dirLen;
+		} else {
+			dirX = 0;
+			dirZ = 0;
+		}
+
+		// The blob's two ground axes, in the GROUP-LOCAL space the quad's
+		// vertices live in: local X and local Z before any stretch.
+		let axX = hx * shadowScale;
+		let axZ = 0;
+		let azX = 0;
+		let azZ = hz * shadowScale;
+		const stretch = resolveShadowStretch(this.shadowStretch);
+		let stretchFade = 1;
+		if (stretch !== 1 && dirLen > 1e-6) {
+			// the same pull-back the normal takes, for the same reason: these
+			// axes are in the space the axis bridge starts from, so the world
+			// direction has to be brought back through it. Its local Y is
+			// dropped — the stretch happens IN the ground plane, and the tilt
+			// onto the slope is applied afterwards, exactly as the per-object
+			// tier orders the two.
+			let dlx = group[0] * dirX + group[2] * dirZ;
+			let dlz = group[8] * dirX + group[10] * dirZ;
+			const dlLen = Math.hypot(dlx, dlz);
+			if (dlLen > 1e-6) {
+				dlx /= dlLen;
+				dlz /= dlLen;
+				const gain = stretch - 1;
+				stretchAlong(axX, axZ, dlx, dlz, gain, _STRETCHED);
+				axX = _STRETCHED[0];
+				axZ = _STRETCHED[1];
+				stretchAlong(azX, azZ, dlx, dlz, gain, _STRETCHED);
+				azX = _STRETCHED[0];
+				azZ = _STRETCHED[1];
+				// the same darkness spread over more ground is less of it
+				// anywhere, which is what lets an extreme value degrade into
+				// nothing rather than into a smear
+				stretchFade = 1 / Math.sqrt(stretch);
+			}
+		}
 		const quad = getInstancedShadowQuad(
 			this,
 			Mesh,
-			hx * shadowScale,
-			hz * shadowScale,
+			axX,
+			axZ,
+			azX,
+			azZ,
 			this._geometryVersion ?? 0,
-			tilt !== undefined ? tilt.x : 0,
-			tilt !== undefined ? -tilt.y : 1,
-			tilt !== undefined ? zSign * tilt.z : 0,
+			lx,
+			ly,
+			lz,
 		);
-		const group = this._modelMatrix.val;
 		const out = _SHADOW_MATRIX.val;
 		for (let i = 0; i < 16; i++) {
 			out[i] = group[i];
 		}
-		// Zero the Y ROW — `out[1]`, `out[5]`, `out[9]`, the Y components of all
-		// three basis columns — not the Y column. Clearing the column alone
-		// kills only the instance's own height; the X and Z columns keep their
-		// Y components, so a group rotated about X or Z would tilt the blobs
-		// onto a slanted plane and sink half of them below the floor. Zeroing
-		// the row makes every output Y the translation, whatever the rotation.
-		if (tilt === undefined) {
-			out[1] = 0;
-			out[5] = 0;
-			out[9] = 0;
-			// ...and put that plane at the ground. Render space is Y-DOWN, so
-			// the floor is a GREATER Y than the objects standing on it.
-			// lifted a hair off the floor, for the reason spelled out at
-			// `SHADOW_LIFT` in mesh.js: a coplanar blob is order-dependent. Y
-			// is DOWN, so off the floor is a smaller y.
-			const ground =
-				this.shadowGroundY !== undefined
-					? this.shadowGroundY
-					: this.getBounds3d().bottom;
-			out[13] = ground - this.meshScale * 0.01;
-		} else {
-			// TILTED: the Y row stays, so each blob keeps the height of the
-			// instance it belongs to.
-			//
-			// That is the whole point on uneven ground. Flattening a whole
-			// scatter onto one plane puts every blob at the SAME height, which
-			// on a slope draws them as one hard stripe across the hillside
-			// instead of a shadow under each plant. An instance planted on the
-			// ground already carries the right height in its own transform, so
-			// the honest thing is to leave it there and only turn the quad.
-			//
-			// `shadowGroundY` is unused on this branch for that reason: the
-			// anchor is each instance, not a plane the whole set shares.
-			const lift = this.meshScale * 0.01;
-			out[12] += tilt.x * lift;
-			out[13] += tilt.y * lift;
-			out[14] += tilt.z * lift;
+		// Replace the Y ROW — `out[1]`, `out[5]`, `out[9]`, the Y components
+		// of all three basis columns — with the plane's equation, so whatever
+		// Y the vertex stage produces is thrown away and every output Y is
+		// the plane's height at that vertex's own world X and Z:
+		//
+		//     y = groundY + sx · (x - originX) + sz · (z - originZ)
+		//
+		// The ROW and not the Y column. Clearing the column alone kills only
+		// the instance's own height; the X and Z columns keep their Y
+		// components, so a group rotated about X or Z would tilt the blobs
+		// through those and sink half of them below the floor. Rewriting the
+		// row makes every output Y the plane's, whatever the rotation.
+		//
+		// This is a VERTICAL projection onto the plane, and the quad was baked
+		// pre-rotated into that plane for exactly this reason: a vertex
+		// already in the plane projects onto itself, so the blob keeps the
+		// rotated quad's true shape instead of stretching by `1 / cos(tilt)`.
+		// On level ground the gradient is zero and this is the flat case.
+		//
+		// ONE plane for the whole set, tilted or not. The instance's own
+		// height goes the way of everything else in the row: the vertex stage
+		// builds `instancePos + offset` and pushes the sum through this one
+		// matrix, so a row that passed a position's height through would
+		// multiply the offset by the same row, and no single row can both
+		// keep a height and slope an offset around it. A scatter over curved
+		// ground is one set per flat facet, not one set with a normal.
+		const sx = -nX / nY;
+		const sz = -nZ / nY;
+		out[1] = sx * group[0] + sz * group[2];
+		out[5] = sx * group[4] + sz * group[6];
+		out[9] = sx * group[8] + sz * group[10];
+		// ...and put that plane at the ground, lifted a hair along its normal
+		// for the reason spelled out at `SHADOW_LIFT` in mesh.js: a coplanar
+		// blob is order-dependent. The plane passes through the set's ORIGIN,
+		// so the translation's own X and Z drop out of the intercept, and a
+		// lift of `l` along the unit normal moves the intercept by `l / nY`:
+		// at the default normal that is `groundY - l`, off the floor in a
+		// Y-down space, where the floor is a GREATER Y than what stands on it.
+		const ground = groundY !== undefined ? groundY : this.getBounds3d().bottom;
+		out[13] = ground + (this.meshScale * 0.01) / nY;
+
+		// And the throw along the light, which the shared matrix CAN carry: it
+		// is one translation, the same for every blob in the set, so moving
+		// the instance positions by it moves each blob by exactly the amount
+		// it was going to move anyway. (The stretch cannot go here for that
+		// same reason read the other way: it scales with distance from the
+		// origin, so the positions would spread.) Turned onto the plane first,
+		// exactly as the per-object path does, or a horizontal slide would
+		// climb off a tilted floor.
+		//
+		// Measured in the blob's own radius like everywhere else, but the
+		// radius here is the SET's prototype footprint rather than one
+		// caster's: every instance shares the quad, so they share the unit.
+		const throwRatio = this.shadowOffset;
+		if (
+			this.shadowGroundY !== undefined &&
+			Number.isFinite(throwRatio) &&
+			throwRatio !== 0 &&
+			dirLen > 1e-6
+		) {
+			// `hx`/`hz` are MODEL units and already carry the spread; the
+			// drawn blob's world radius is those times the set's scale and
+			// `shadowScale`, which is the unit the ratio is in. Measured
+			// BEFORE the stretch, like the per-object tier: pulling the blob
+			// out must not also push it away from the feet it belongs to.
+			const reach = throwRatio * (hx + hz) * 0.5 * shadowScale * this.meshScale;
+			tiltOntoPlane(nX, nY, nZ, dirX * reach, dirZ * reach, _THROW);
+			out[12] += _THROW[0];
+			out[13] += _THROW[1];
+			out[14] += _THROW[2];
 		}
 
 		const tint = renderer.currentTint;
@@ -831,7 +979,7 @@ export default class InstancedMesh extends Mesh {
 		const savedTintAlpha = tint.alpha;
 		const savedAlpha = renderer.getGlobalAlpha();
 		tint.setColor(0, 0, 0);
-		renderer.setGlobalAlpha(this.shadowOpacity * savedAlpha);
+		renderer.setGlobalAlpha(this.shadowOpacity * stretchFade * savedAlpha);
 		try {
 			renderer.drawInstancedShadow(this, _SHADOW_MATRIX, quad);
 		} finally {

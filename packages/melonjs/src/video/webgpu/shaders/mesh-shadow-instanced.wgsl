@@ -18,8 +18,13 @@
 // however its tree is turned, and only the horizontal footprint sets its
 // width. Translation and horizontal scale come straight out of the record's
 // three rows with no matrix built. Flattening onto the ground is
-// `uMesh.model`'s job — the caller passes the group matrix with its Y basis
-// column zeroed and its translation Y set to the ground height.
+// `uMesh.model`'s job — the caller passes the group matrix with its Y ROW
+// replaced by the floor's plane equation (zero on level ground, the slope's
+// gradient otherwise) and its translation Y set to the ground height, so
+// every blob is projected onto the floor. That is also why `aVertex.y` is
+// dropped below without loss: on a slope the caller bakes the quad already
+// rotated into the plane, and a vertical projection of its footprint is the
+// rotated quad itself.
 
 struct FrameUniforms {
 	projection : mat4x4<f32>,

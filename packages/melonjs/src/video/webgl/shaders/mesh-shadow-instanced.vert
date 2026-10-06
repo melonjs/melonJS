@@ -23,9 +23,13 @@
 //   horizontal scale = length(vec3(aInstanceRow0.x, aInstanceRow1.x, aInstanceRow2.x))
 //
 // Flattening onto the ground plane is `uModelMatrix`'s job: the caller passes
-// the group matrix with its Y basis column zeroed and its translation Y set
+// the group matrix with its Y ROW replaced by the floor's plane equation (zero
+// on level ground, the slope's gradient otherwise) and its translation Y set
 // to the ground height, so whatever Y this stage produces is discarded and
-// every blob lands on the floor.
+// every blob is projected onto the floor. That is also why `aVertex.y` is
+// dropped below without loss: on a slope the caller bakes the quad already
+// rotated into the plane, and a vertical projection of its footprint is the
+// rotated quad itself.
 attribute vec3 aVertex;
 attribute vec2 aRegion;
 attribute vec4 aColor;

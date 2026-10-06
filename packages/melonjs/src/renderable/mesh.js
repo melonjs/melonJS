@@ -18,8 +18,11 @@ import Renderer from "./../video/renderer.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
 import {
+	clampShadowTilt,
 	getShadowQuad,
 	hasVerticalExtent,
+	resolveShadowStretch,
+	stretchAlong,
 	tiltOntoPlane,
 } from "./groundshadow.js";
 import Renderable from "./renderable.js";
@@ -66,34 +69,10 @@ const SHADOW_MIN_AXIS_RATIO = 0.5;
 // contact shadows spread a little anyway, because no light source is a point.
 const SHADOW_SPREAD = 1.2;
 
-/**
- * Ceiling on {@link Mesh#shadowStretch}.
- *
- * A stretched ellipse is not a projected silhouette, and the further it is
- * pulled the more plainly it is a smear rather than a shadow. Past about three
- * times its own footprint there is nothing left to read, so the setting stops
- * there rather than letting a game dial in something that can only look broken.
- * @ignore
- * @internal
- */
-const SHADOW_MAX_STRETCH = 3;
-
-/**
- * How far from vertical {@link Mesh#shadowGroundNormal} may tilt the blob,
- * as the cosine of the angle.
- *
- * A blob is a flat quad with no thickness and no contact with what it lies
- * on, and the further it is tilted toward the viewer's line of sight the less
- * of it there is to see: at ninety degrees it is edge-on and gone. Past about
- * seventy-five degrees there is nothing left worth drawing, so the tilt stops
- * there rather than letting a game dial in a shadow standing on its rim.
- * @ignore
- * @internal
- */
-const SHADOW_MAX_TILT_COS = Math.cos((75 * Math.PI) / 180);
-
 /** scratch for the three vectors `tiltOntoPlane` turns per shadow */
 const _tilted = new Float64Array(3);
+/** scratch for one blob axis lengthened along the light */
+const _STRETCH = new Float64Array(2);
 
 /**
  * Copy a caller's normal into a vector this mesh owns, normalized.
@@ -435,11 +414,11 @@ function buildTextureGroups(
  * @property {number} [shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
  * @property {number} [shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
  * @property {number} [shadowScale=1] - multiplier for the ground shadow's footprint. Non-positive or non-finite values hide the shadow without hiding the mesh.
- * @property {number} [shadowOffset=0] - how far to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, in multiples of the blob's own radius, for the look of a light that is not directly overhead. A ratio rather than a world distance so one value serves casters of any size. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor.
- * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches.
+ * @property {number} [shadowOffset=0] - how far to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, in multiples of the blob's own radius, for the look of a light that is not directly overhead. A ratio rather than a world distance so one value serves casters of any size. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor. On an `InstancedMesh` it is one throw for the whole set.
+ * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches. On an `InstancedMesh` it is one stretch for the whole set.
  * @property {number} [shadowDirectionX=0] - x of the ground direction the shadow is cast along. Together with `shadowDirectionZ`, zero length means no offset and no stretch.
  * @property {number} [shadowDirectionZ=0] - z of the ground direction the shadow is cast along.
- * @property {number[]|Vector3d} [shadowGroundNormal] - the UP normal of the floor the shadow lands on, for a surface that is not level. Needs `shadowGroundY`, which says where that floor is; this says which way it faces. Defaults to world up, and the tilt is clamped at 75 degrees. Per-object: an `InstancedMesh` shares one quad across its instances and ignores it.
+ * @property {number[]|Vector3d} [shadowGroundNormal] - the UP normal of the floor the shadow lands on, for a surface that is not level. Needs `shadowGroundY`, which says where that floor is; this says which way it faces. Defaults to world up, and the tilt is clamped at 75 degrees. On an `InstancedMesh` one plane serves the whole set, through the set's origin at `shadowGroundY`, so a scatter over curved ground is one set per facet.
  * @property {Light3d} [shadowLight] - a {@link Light3d} to take the direction from instead of setting it by hand. Read every draw, so a moving sun carries the shadow with it. Nothing is inferred from the scene: no light here means no direction.
  */
 
@@ -981,6 +960,13 @@ export default class Mesh extends Renderable {
 		 * object above it.
 		 * @type {number|undefined}
 		 * @default undefined
+		 * @example
+		 * // a collectible bobbing above the floor: naming the floor is what
+		 * // lets the blob shrink and fade as it rises. Left unset the blob
+		 * // rides the object's own base and never leaves it.
+		 * const coin = new Mesh(x, floorY, { ...geometry, castGroundShadow: true });
+		 * coin.shadowGroundY = floorY;
+		 * coin.pos.y = floorY - 40 - 30 * Math.sin(t);
 		 */
 		this.shadowGroundY = settings.shadowGroundY;
 
@@ -996,15 +982,18 @@ export default class Mesh extends Renderable {
 				: 0.45;
 
 		/**
-
 		 * Multiplier for the ground shadow's footprint, independent of the
 		 * object's size, ground height and opacity. Values above `1` can reveal
 		 * the blob beneath a wide prop; values below `1` tighten it.
-		 * Non-positive or non-finite values hide the shadow. Can be changed live.
-		 * Changing the value on an {@link InstancedMesh} rebuilds its shadow quad,
-		 * so set it once there rather than animating it every frame.
+		 * Non-positive or non-finite values hide the shadow. Can be changed live
+		 * on an {@link InstancedMesh} too: the set's shared quad is rewritten in
+		 * place rather than rebuilt, so animating it allocates nothing.
 		 * @type {number}
 		 * @default 1
+		 * @example
+		 * // a crate's own blob hides underneath it, so widen it until the edge
+		 * // shows; `0` and below hide the shadow and leave the mesh drawn
+		 * crate.shadowScale = 1.6;
 		 */
 		this.shadowScale =
 			typeof settings.shadowScale === "number" ? settings.shadowScale : 1;
@@ -1022,7 +1011,6 @@ export default class Mesh extends Renderable {
 		 * for every size of thing and cannot serve the parts of one glTF model
 		 * at all. {@link Mesh#shadowScale} rides in that radius, so widening
 		 * the blob carries the offset with it.
-
 		 *
 		 * Honoured ONLY when {@link Mesh#shadowGroundY} is set. The blob is a
 		 * flat quad on one named plane with no contact with terrain, so sliding
@@ -1030,8 +1018,8 @@ export default class Mesh extends Renderable {
 		 * be no floor at all. Setting `shadowGroundY` is the game saying where
 		 * its floor is, and that is the only case where an offset is honest.
 		 *
-		 * Per-object: an {@link InstancedMesh} ignores this, because its
-		 * instances share one quad and each carries its own rotation.
+		 * An {@link InstancedMesh} honours it too, as one throw shared by the
+		 * whole set, measured in the SET's own blob radius.
 		 * @type {number}
 		 * @default 0
 		 */
@@ -1047,7 +1035,9 @@ export default class Mesh extends Renderable {
 		 * there is to believe. Values below `1` are treated as `1`; shortening
 		 * the blob is what {@link Mesh#shadowScale} is for.
 		 *
-		 * Per-object, for the same reason as {@link Mesh#shadowOffset}.
+		 * An {@link InstancedMesh} honours it too: one stretch along one
+		 * direction for the whole set, baked into the quad its blobs share
+		 * rather than into the matrix that also places them.
 		 * @type {number}
 		 * @default 1
 		 */
@@ -1087,6 +1077,20 @@ export default class Mesh extends Renderable {
 		 * because a scene with several has no non-arbitrary answer and one with
 		 * none has no answer at all. Name the light or get no direction.
 		 * @type {Light3d|undefined}
+		 * @example
+		 * // one sun, every shadow in the scene following it. Read every draw,
+		 * // so a day/night cycle needs nothing else.
+		 * const sun = new Light3d({ direction: [0.4, 1, 0.2] });
+		 * app.world.addChild(sun);
+		 * for (const prop of props) {
+		 *     prop.castGroundShadow = true;
+		 *     prop.shadowGroundY = floorY;
+		 *     prop.shadowLight = sun;   // instead of shadowDirectionX / Z
+		 *     prop.shadowOffset = 0.8;  // slid out from its feet, in blob radii
+		 *     prop.shadowStretch = 2;   // and pulled long, for a low sun
+		 * }
+		 * // later: turning the sun turns every blob with it
+		 * sun.direction.set(Math.sin(t), 1, Math.cos(t)).normalize();
 		 */
 		this.shadowLight = settings.shadowLight;
 
@@ -2224,20 +2228,17 @@ export default class Mesh extends Renderable {
 			dirX /= dirLen;
 			dirZ /= dirLen;
 
-			let stretch = this.shadowStretch;
-			if (!Number.isFinite(stretch) || stretch < 1) {
-				stretch = 1;
-			} else if (stretch > SHADOW_MAX_STRETCH) {
-				stretch = SHADOW_MAX_STRETCH;
-			}
+			// Shared with the instanced tier, so the same asset cannot draw a
+			// differently-stretched blob depending on which one carries it.
+			const stretch = resolveShadowStretch(this.shadowStretch);
 			if (stretch !== 1) {
 				const gain = stretch - 1;
-				const axDot = axX * dirX + axZ * dirZ;
-				axX += gain * axDot * dirX;
-				axZ += gain * axDot * dirZ;
-				const azDot = azX * dirX + azZ * dirZ;
-				azX += gain * azDot * dirX;
-				azZ += gain * azDot * dirZ;
+				stretchAlong(axX, axZ, dirX, dirZ, gain, _STRETCH);
+				axX = _STRETCH[0];
+				axZ = _STRETCH[1];
+				stretchAlong(azX, azZ, dirX, dirZ, gain, _STRETCH);
+				azX = _STRETCH[0];
+				azZ = _STRETCH[1];
 				// the same darkness spread over more ground is less of it
 				// anywhere, and fading as it pulls is what lets an extreme
 				// value degrade into nothing rather than into a smear
@@ -2275,20 +2276,11 @@ export default class Mesh extends Renderable {
 		let nZ = 0;
 		const normal = this.shadowGroundNormal;
 		if (normal !== undefined && this.shadowGroundY !== undefined) {
-			nX = normal.x;
-			nY = normal.y;
-			nZ = normal.z;
-			// Clamped toward up rather than refused: a game sliding a normal
-			// off a curved surface should get a shadow that stops tilting,
-			// not one that vanishes at some threshold.
-			if (-nY < SHADOW_MAX_TILT_COS) {
-				const flat = Math.hypot(nX, nZ);
-				const wanted = Math.sqrt(1 - SHADOW_MAX_TILT_COS * SHADOW_MAX_TILT_COS);
-				const scale = flat > 1e-6 ? wanted / flat : 0;
-				nX *= scale;
-				nZ *= scale;
-				nY = -SHADOW_MAX_TILT_COS;
-			}
+			// clamped toward up rather than refused; see `clampShadowTilt`
+			clampShadowTilt(normal.x, normal.y, normal.z, _tilted);
+			nX = _tilted[0];
+			nY = _tilted[1];
+			nZ = _tilted[2];
 		}
 
 		// the quad is a unit square, so a half-extent of `k · axis` needs the
@@ -2379,9 +2371,12 @@ export default class Mesh extends Renderable {
 	 * what it lies on. The tilt is clamped at 75 degrees, past which an
 	 * edge-on blob has nothing left to show.
 	 *
-	 * Per-object. An {@link InstancedMesh} shares one quad across all its
-	 * instances, so one normal cannot serve a scatter spread over curved
-	 * ground; it ignores this.
+	 * On an {@link InstancedMesh} the plane serves the WHOLE set: it passes
+	 * through the set's origin at `shadowGroundY` and faces this way, and
+	 * every blob is projected onto it whatever height its own instance sits
+	 * at, exactly as the level case puts every blob at one height. A scatter
+	 * spread over curved ground is therefore one set per flat facet, each
+	 * with the facet's own plane, not one set with an averaged normal.
 	 * @type {Vector3d|undefined}
 	 * @default undefined
 	 * @example
@@ -2398,6 +2393,12 @@ export default class Mesh extends Renderable {
 	 * so a game that goes on mutating what it passed does not steer this
 	 * mesh's shadow by accident. `undefined` puts the blob back level.
 	 * @param {number[]|Vector3d|undefined} value - the floor's up normal
+	 * @example
+	 * // a prop standing on a 20 degree hillside: `shadowGroundY` says where
+	 * // the floor is, this says which way it faces. World up is (0, -1, 0),
+	 * // because render space is Y-down.
+	 * prop.shadowGroundY = groundAt(prop.pos.x);
+	 * prop.shadowGroundNormal = [Math.sin(0.35), -Math.cos(0.35), 0];
 	 */
 	set shadowGroundNormal(value) {
 		this._shadowGroundNormal =
