@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.2 - _unreleased_
+## 1.5.2 - _2026-10-07_
 
 ### Changed
 - Refusing a shape this adapter cannot simulate now says why and what to use instead: a `Box3d` or `Sphere` is builtin-only and the message names the planar shape with the same footprint, while a `Point` has no area to build a fixture from. Both are still refused loudly rather than skipped silently
