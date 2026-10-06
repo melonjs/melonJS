@@ -112,6 +112,8 @@ legally required, credited here as a courtesy.
 The 3D models in `public/assets/jungleRabbit/` — boat, carrot, log, rock, palm,
 fern, leaves, flowers and bird — were modelled for this example and are covered
 by the MIT license above, as is the procedurally generated terrain and water.
+The `groundShadows` example borrows the same models rather than shipping its
+own, so this covers both.
 
 The music track `bgm/jungle-theme.mp3` is by **Vlad Krotov**, published on
 Pixabay:

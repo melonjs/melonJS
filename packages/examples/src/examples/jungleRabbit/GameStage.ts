@@ -132,7 +132,11 @@ import {
 	RIDE_Y,
 	ROCK_COUNT,
 	ROCK_HALF,
-	SHADOW_LIFT,
+	SHADOW_DIR_X,
+	SHADOW_DIR_Z,
+	SHADOW_OFFSET,
+	SHADOW_SINK,
+	SHADOW_STRETCH,
 	SKY,
 	SPAWN_AHEAD,
 	SPAWN_BEHIND,
@@ -146,9 +150,11 @@ import {
 	STEER_LIMIT,
 	STEER_MAX,
 	SUN_AHEAD,
+	TERRAIN_OVERHANG,
 	TEXT_RAMP_BOTTOM,
 	TEXT_RAMP_TOP,
 	TILE_LEN,
+	TILE_NX,
 	TRAIL_FOAM,
 	TRAIL_LIFT,
 	TRAIL_POINTS,
@@ -161,10 +167,15 @@ import {
 	TRAIL_WIDTH_NEAR,
 	TREE_SPAWN_AHEAD,
 	TUMBLE_RATE,
+	VEG_SHADOW_OFFSET,
+	VEG_SHADOW_OPACITY,
+	VEG_SHADOW_SEAM_LIFT,
+	VEG_SHADOW_STRETCH,
 	VIEW_W,
 	WARMUP_DISTANCE,
 	WATER_LEVEL,
 } from "./constants";
+
 import { menuText } from "./menuText";
 import type { Geometry } from "./props";
 import { PALETTE_CELLS, WHITE_CELL } from "./props";
@@ -282,6 +293,15 @@ interface Prop {
  */
 interface Scatter {
 	mesh: InstancedMesh;
+	/**
+	 * The bank this set plants on, when it plants on only one.
+	 *
+	 * A set that carries a ground shadow has ONE plane for all of it, and the
+	 * two banks are mirror images: same heights, opposite tilt. So a shadowed
+	 * set belongs to a single bank, and the frontier it streams against is
+	 * that bank's alone.
+	 */
+	side?: -1 | 1;
 	/**
 	 * Where each instance sits, so the game can read positions back — plus the
 	 * pose it was placed with. `yaw`/`jitter` used to be rolled inline and
@@ -594,8 +614,12 @@ export class GameStage extends Stage {
 			TREE_SPAWN_AHEAD,
 			[0.55, 1.34],
 			true,
+			false,
+			0.55,
 		);
-		// broad leaves through the middle of the bank
+		// Broad leaves through the middle of the bank, with the widest blob of
+		// the three: they stand furthest apart, so theirs is the one that reads
+		// as a single plant's shadow rather than as ground shading.
 		this.addScatter(
 			geometry("bigleaf"),
 			palette,
@@ -605,6 +629,8 @@ export class GameStage extends Stage {
 			TREE_SPAWN_AHEAD,
 			[0.68, 1.52],
 			true,
+			false,
+			0.6,
 		);
 		// Flowers, in two colours, threaded through the same band as the
 		// leaves. Nothing about the bank was any colour but green before, and
@@ -636,7 +662,10 @@ export class GameStage extends Stage {
 			true,
 			true,
 		);
-		// palms overhead and furthest out, leaning over the gorge
+		// Palms overhead and furthest out, leaning over the gorge. Their blob
+		// is sized to the trunk, not the crown: the crown's footprint is a
+		// fiction under a sun this low, and a trunk-sized spot is what says
+		// where the tree stands.
 		this.addScatter(
 			geometry("palm"),
 			palette,
@@ -646,6 +675,8 @@ export class GameStage extends Stage {
 			TREE_SPAWN_AHEAD,
 			[0.6, 1.64],
 			true,
+			false,
+			0.4,
 		);
 		for (let i = 0; i < CARROT_COUNT; i++) {
 			this.addProp(
@@ -694,7 +725,13 @@ export class GameStage extends Stage {
 			// a lit and a shaded fur tone, which is enough shape at this size.
 			lit: false,
 			castGroundShadow: true,
-			shadowGroundY: WATER_LEVEL + SHADOW_LIFT,
+			// on the water, not floated above it: the blob is thrown clear by
+			// the sun's own direction now rather than by fake altitude
+			shadowGroundY: WATER_LEVEL + SHADOW_SINK,
+			shadowDirectionX: SHADOW_DIR_X,
+			shadowDirectionZ: SHADOW_DIR_Z,
+			shadowOffset: SHADOW_OFFSET,
+			shadowStretch: SHADOW_STRETCH,
 		});
 		// The hull's own box. A SENSOR: the engine reports the contact and the
 		// game decides what it means (a life, a lurch, a hit-stop, a pickup) —
@@ -1182,7 +1219,108 @@ export class GameStage extends Stage {
 		band: [number, number] = [0.58, 1.05],
 		spin = false,
 		drift = false,
+		shadow?: number,
+		side?: -1 | 1,
+		normal?: [number, number, number],
+		groundY?: number,
 	): Scatter {
+		// A bank set that casts a ground shadow is planted one FACET at a
+		// time, per bank. `shadow` is the blob's size as a multiple of the
+		// plant's own footprint, and leaving it out means no shadow and no
+		// split: a set that casts nothing has no plane to match.
+		//
+		// The gorge is drawn as flat quads between terrain columns, not as the
+		// smooth parabola the profile describes, so a plane that matches a
+		// facet matches the surface exactly: no height error, no tilt error.
+		// A set spanning several facets would have to pick one plane for all
+		// of them, which is what drew every blob at a single height and left
+		// a hard stripe across the hillside.
+		//
+		// Per bank as well, because `valleyY` reads `|x|`: the two sides sit
+		// at matching heights with MIRRORED tilt, so one normal cannot serve
+		// both. The flat plateau past the rim is the exception and takes one
+		// set for both banks, since level is level either way.
+		if (onWall && shadow !== undefined && normal === undefined) {
+			const facet = (2 * HALF_W * TERRAIN_OVERHANG) / (TILE_NX - 1);
+			const x0 = HALF_W * band[0];
+			const x1 = HALF_W * band[1];
+			const span = x1 - x0;
+			// the last facet's set, returned so the caller still gets ONE handle
+			let last: Scatter | undefined;
+			for (
+				let edge = Math.floor(x0 / facet) * facet;
+				edge < x1;
+				edge += facet
+			) {
+				const lo = Math.max(x0, edge);
+				const hi = Math.min(x1, edge + facet);
+				if (hi - lo < 1) {
+					continue;
+				}
+				// The chord the terrain actually draws, which runs COLUMN to
+				// COLUMN — not between this band's own edges. A band that
+				// starts part-way through a facet (the ferns begin at 0.55 of
+				// the half-width, the palms at 0.6, neither of which is a
+				// column) gives a secant of the parabola instead, and a secant
+				// of a convex curve lies BELOW the chord it is standing in
+				// for: about three pixels at the waterline, against a lift of
+				// half a pixel. The blobs were drawn, lost the depth test to
+				// the ground mesh, and never appeared — which is exactly the
+				// "ferns at the bottom of the slope cast nothing" report.
+				const colLo = edge;
+				const colHi = edge + facet;
+				const slope = (valleyY(colHi) - valleyY(colLo)) / facet;
+				const length = Math.hypot(slope, 1);
+				const share = (hi - lo) / span;
+				// The plane an instanced set casts onto passes through the
+				// SET'S origin, and every set sits at x = 0: so the height it
+				// is given is this chord carried back to the centre line, not
+				// the chord's own height. Both banks share it, since `valleyY`
+				// is even and only the tilt is mirrored.
+				const intercept = GROUND_Y + valleyY(colLo) - slope * colLo;
+				if (lo >= HALF_W) {
+					// level: one set serves both banks
+					last = this.addScatter(
+						geometry,
+						palette,
+						scale,
+						Math.max(1, Math.round(count * share)),
+						onWall,
+						spawnAhead,
+						[lo / HALF_W, hi / HALF_W],
+						spin,
+						drift,
+						shadow,
+						undefined,
+						[0, -1, 0],
+						intercept,
+					);
+					continue;
+				}
+				for (const bank of [-1, 1] as const) {
+					last = this.addScatter(
+						geometry,
+						palette,
+						scale,
+						Math.max(1, Math.round((count * share) / 2)),
+						onWall,
+						spawnAhead,
+						[lo / HALF_W, hi / HALF_W],
+						spin,
+						drift,
+						shadow,
+						bank,
+						// up normal of that chord; +y is DOWN, so up is -1
+						[(bank * slope) / length, -1 / length, 0],
+						// raised clear of the seams; the level sets below take
+						// the intercept as it is, having no seam to clear
+						intercept - VEG_SHADOW_SEAM_LIFT,
+					);
+				}
+			}
+			return last ?? this.scatters[this.scatters.length - 1];
+		}
+
 		const mesh = new InstancedMesh(0, GROUND_Y, {
 			...geometry,
 			texture: palette,
@@ -1194,11 +1332,28 @@ export class GameStage extends Stage {
 			cullBackFaces: false,
 			lit: true,
 			instanceCount: count,
-			// An instanced set gets ONE ground-shadow plane for all of it, and
-			// this floor is a parabola — every instance would cast onto the
-			// same height and the blobs would slide off the slope. The carrots
-			// and the boat still cast, being ordinary meshes.
-			castGroundShadow: false,
+			// One plane for the whole set, which is why the set is one facet
+			// of one bank: `shadowGroundY` puts that plane through the set's
+			// origin and `shadowGroundNormal` tilts it onto the facet, and
+			// every blob is projected onto it.
+			castGroundShadow:
+				normal !== undefined && groundY !== undefined && shadow !== undefined,
+			...(normal !== undefined && groundY !== undefined && shadow !== undefined
+				? {
+						shadowGroundNormal: normal,
+						shadowGroundY: groundY,
+						shadowScale: shadow,
+						// thrown and pulled along the same sun the carrots and
+						// the boat use, so the bank does not read as lit from
+						// somewhere else. All three are one value for the whole
+						// set, which is all a set can carry and all this needs.
+						shadowDirectionX: SHADOW_DIR_X,
+						shadowDirectionZ: SHADOW_DIR_Z,
+						shadowOffset: VEG_SHADOW_OFFSET,
+						shadowStretch: VEG_SHADOW_STRETCH,
+						shadowOpacity: VEG_SHADOW_OPACITY,
+					}
+				: {}),
 		});
 		this.app.world.addChild(mesh, 0);
 		const items = [];
@@ -1212,6 +1367,7 @@ export class GameStage extends Stage {
 		const live = spawnAhead + SPAWN_BEHIND;
 		const scatter: Scatter = {
 			mesh,
+			...(side !== undefined ? { side } : {}),
 			items,
 			onWall,
 			spawnAhead,
@@ -1223,7 +1379,9 @@ export class GameStage extends Stage {
 			// floor become the placement rule again — the very model the
 			// frontier exists to replace — and a bare stretch then repeats
 			// forever at a fixed period.
-			spacing: live / Math.max(1, count / 2),
+			// A set pinned to one bank puts ALL of its instances there, so it
+			// covers the live stretch with the full count rather than half.
+			spacing: live / Math.max(1, side === undefined ? count / 2 : count),
 			spin,
 			drift,
 		};
@@ -1297,7 +1455,14 @@ export class GameStage extends Stage {
 		// Serve whichever side has fallen furthest behind. Choosing at random
 		// lets one bank starve for a stretch purely by chance, which is the
 		// other half of how a bald patch forms.
-		const i = scatter.frontier[0] <= scatter.frontier[1] ? 0 : 1;
+		const i =
+			scatter.side !== undefined
+				? scatter.side < 0
+					? 0
+					: 1
+				: scatter.frontier[0] <= scatter.frontier[1]
+					? 0
+					: 1;
 		// Jittered, or the bank reads as a picket fence. The frontier advances
 		// by the mean either way, so the jitter costs no density.
 		const step = scatter.spacing * math.randomFloat(0.55, 1.45);
@@ -1340,7 +1505,7 @@ export class GameStage extends Stage {
 		// — a plain uniform spread — as the run goes on.
 		const warmup = Math.min(1, this.travelled / WARMUP_DISTANCE);
 		const bias = 0.3 + 0.7 * warmup;
-		const dir = side ?? (Math.random() < 0.5 ? -1 : 1);
+		const dir = scatter.side ?? side ?? (Math.random() < 0.5 ? -1 : 1);
 		const x = scatter.onWall
 			? math.randomFloat(HALF_W * scatter.band[0], HALF_W * scatter.band[1]) *
 				dir
@@ -1415,7 +1580,11 @@ export class GameStage extends Stage {
 			// flat boulder and lights correctly.
 			lit: kind !== "carrot",
 			castGroundShadow: true,
-			shadowGroundY: WATER_LEVEL + SHADOW_LIFT,
+			shadowGroundY: WATER_LEVEL + SHADOW_SINK,
+			shadowDirectionX: SHADOW_DIR_X,
+			shadowDirectionZ: SHADOW_DIR_Z,
+			shadowOffset: SHADOW_OFFSET,
+			shadowStretch: SHADOW_STRETCH,
 			// The engine default (0.45), for both kinds. A carrot used to be
 			// darkened to 0.78 here because its shadow was barely there — but
 			// that was the renderer replaying the river plane over the top of
@@ -1476,9 +1645,8 @@ export class GameStage extends Stage {
 
 		sprite.pos.x = x;
 		sprite.pos.y = WATER_LEVEL;
-		// Render space is Y-DOWN, so the floor an object stands on is a GREATER
-		// y than the object: the shadow plane is `pos.y + LIFT`, never minus.
-		sprite.shadowGroundY = sprite.pos.y + SHADOW_LIFT;
+		// the plane the blob lands on is the water the prop sits in
+		sprite.shadowGroundY = sprite.pos.y + SHADOW_SINK;
 		sprite.depth = this.travelled + aheadOfSkier;
 		// keep the frontier honest even on the initial fill, or the first
 		// respawns measure from zero and pile up at the near edge

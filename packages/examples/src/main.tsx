@@ -148,6 +148,11 @@ const ExampleForest = lazy(() =>
 		default: m.ExampleForest,
 	})),
 );
+const ExampleGroundShadows = lazy(() =>
+	import("./examples/groundShadows/ExampleGroundShadows").then((m) => ({
+		default: m.ExampleGroundShadows,
+	})),
+);
 const ExampleGltfCharacter = lazy(() =>
 	import("./examples/gltf/ExampleGltfCharacter").then((m) => ({
 		default: m.ExampleGltfCharacter,
@@ -506,6 +511,14 @@ const examples: {
 		sourceDir: "forest",
 		description:
 			"100 000 trees drawn from one geometry in a single call, scattered by the glTF asset itself.",
+	},
+	{
+		component: <ExampleGroundShadows />,
+		label: "Ground Shadows",
+		path: "ground-shadows",
+		sourceDir: "groundShadows",
+		description:
+			"Every blob-shadow setting side by side on one floor, under an orbiting sun, including shadows lying on a slope.",
 	},
 	{
 		component: <ExampleNightCity />,

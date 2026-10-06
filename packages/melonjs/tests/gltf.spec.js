@@ -6,6 +6,7 @@ import {
 	level,
 	loader,
 	Mesh,
+	Vector3d,
 	video,
 } from "../src/index.js";
 import GLTFScene from "../src/level/gltf/GLTFScene.js";
@@ -876,6 +877,138 @@ describe("GLTFScene → Mesh instantiation", () => {
 
 	afterAll(() => {
 		delete gltfList[NAME];
+	});
+
+	it("forwards every ground-shadow option to the meshes it builds", () => {
+		const scene = new GLTFScene(NAME);
+		const container = {
+			autoDepth: true,
+			kids: [],
+			addChild(c) {
+				this.kids.push(c);
+			},
+		};
+		const sun = { direction: { x: 1, y: 1, z: 0 } };
+		scene.addTo(container, {
+			scale: 10,
+			castGroundShadow: true,
+			shadowGroundY: 42,
+			shadowOpacity: 0.8,
+			shadowScale: 1.75,
+			shadowOffset: 0.9,
+			shadowStretch: 2.25,
+			shadowDirectionX: 3,
+			shadowDirectionZ: 4,
+			shadowGroundNormal: [0.5, -Math.sqrt(0.75), 0],
+			shadowLight: sun,
+		});
+		// `GLTFScene` builds its own settings object rather than passing the
+		// caller's, so an option it forgets to name is dropped in silence.
+		// Only `castGroundShadow` and `shadowGroundY` used to be named, which
+		// left a loaded scene unable to say where its sun was.
+		const mesh = container.kids.find((k) => {
+			return k.castGroundShadow === true;
+		});
+		expect(mesh).toBeDefined();
+		expect(mesh.shadowGroundY).toBe(42);
+		expect(mesh.shadowOpacity).toBe(0.8);
+		expect(mesh.shadowScale).toBe(1.75);
+		expect(mesh.shadowOffset).toBe(0.9);
+		expect(mesh.shadowStretch).toBe(2.25);
+		expect(mesh.shadowDirectionX).toBe(3);
+		expect(mesh.shadowDirectionZ).toBe(4);
+		expect(mesh.shadowGroundNormal.x).toBeCloseTo(0.5, 6);
+		expect(mesh.shadowLight).toBe(sun);
+	});
+
+	it("leaves the shadow settings at their defaults when none are given", () => {
+		const scene = new GLTFScene(NAME);
+		const container = {
+			autoDepth: true,
+			kids: [],
+			addChild(c) {
+				this.kids.push(c);
+			},
+		};
+		scene.addTo(container, { scale: 10 });
+		// passed RAW, so an omitted option arrives as `undefined` and the mesh
+		// keeps its own default rather than being pinned to a coerced value
+		const mesh = container.kids[0];
+		expect(mesh.shadowGroundY).toBeUndefined();
+		expect(mesh.shadowLight).toBeUndefined();
+		expect(mesh.shadowGroundNormal).toBeUndefined();
+		expect(mesh.shadowOpacity).toBe(0.45);
+		expect(mesh.shadowScale).toBe(1);
+		expect(mesh.shadowOffset).toBe(0);
+		expect(mesh.shadowStretch).toBe(1);
+	});
+
+	it("ADVERSARIAL: survives the loadOptions filter a forwarder applies", () => {
+		// `Trigger` and friends do NOT pass a caller's settings through whole:
+		// they filter by `GLTFScene.loadOptions` (see `level.loadOptions`), so
+		// an option read by `addTo` but missing from that list is silently
+		// dropped on every forwarded load. Six glTF options were lost that way
+		// for three releases (#1649), and the test above would not have caught
+		// it, because it calls `addTo` directly. This one filters first.
+		const asked = {
+			scale: 10,
+			castGroundShadow: true,
+			shadowGroundY: 42,
+			shadowOpacity: 0.8,
+			shadowScale: 1.75,
+			shadowOffset: 0.9,
+			shadowStretch: 2.25,
+			shadowDirectionX: 3,
+			shadowDirectionZ: 4,
+			shadowGroundNormal: [0.5, -Math.sqrt(0.75), 0],
+			shadowLight: { direction: { x: 1, y: 1, z: 0 } },
+		};
+		const allowed = new Set(GLTFScene.loadOptions);
+		const filtered = Object.fromEntries(
+			Object.entries(asked).filter(([k]) => {
+				return allowed.has(k);
+			}),
+		);
+		// nothing was dropped on the way through the list
+		expect(Object.keys(filtered).sort()).toEqual(Object.keys(asked).sort());
+
+		const container = {
+			autoDepth: true,
+			kids: [],
+			addChild(c) {
+				this.kids.push(c);
+			},
+		};
+		new GLTFScene(NAME).addTo(container, filtered);
+		const mesh = container.kids.find((k) => {
+			return k.castGroundShadow === true;
+		});
+		expect(mesh.shadowStretch).toBe(2.25);
+		expect(mesh.shadowOffset).toBe(0.9);
+		expect(mesh.shadowLight).toBe(asked.shadowLight);
+	});
+
+	it("ADVERSARIAL: a Vector3d ground normal survives, not just an array", () => {
+		const container = {
+			autoDepth: true,
+			kids: [],
+			addChild(c) {
+				this.kids.push(c);
+			},
+		};
+		new GLTFScene(NAME).addTo(container, {
+			scale: 10,
+			castGroundShadow: true,
+			shadowGroundY: 0,
+			shadowGroundNormal: new Vector3d(0.5, -Math.sqrt(0.75), 0),
+		});
+		const mesh = container.kids.find((k) => {
+			return k.castGroundShadow === true;
+		});
+		// the accessor COPIES and renormalizes, so the mesh must not alias the
+		// caller's vector: mutating theirs afterwards must not steer the blob
+		expect(mesh.shadowGroundNormal.x).toBeCloseTo(0.5, 6);
+		expect(mesh.shadowGroundNormal.y).toBeCloseTo(-Math.sqrt(0.75), 6);
 	});
 
 	it("instantiates one Mesh per mesh node into the container", () => {

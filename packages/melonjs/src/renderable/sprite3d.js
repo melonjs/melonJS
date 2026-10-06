@@ -169,6 +169,12 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} [settings.shadowGroundY] - world Y of the floor the blob shadow lands on. Omit and it falls back to the sprite's own base — which for a billboard moves with the camera, so a scene that knows where its floor is should say so.
 	 * @param {number} [settings.shadowOpacity=0.45] - opacity of the shadow directly beneath the sprite, before any height fade
 	 * @param {number} [settings.shadowScale=1] - multiplier for the ground shadow's footprint; non-positive or non-finite values hide the shadow
+	 * @param {number} [settings.shadowOffset=0] - how far to slide the shadow along its direction, in multiples of the blob's own radius; needs `shadowGroundY` (see {@link Mesh#shadowOffset})
+	 * @param {number} [settings.shadowStretch=1] - how much longer the blob is along its direction, clamped to 3
+	 * @param {number} [settings.shadowDirectionX=0] - x of the ground direction the shadow is cast along
+	 * @param {number} [settings.shadowDirectionZ=0] - z of the ground direction the shadow is cast along
+	 * @param {number[]|Vector3d} [settings.shadowGroundNormal] - the UP normal of the floor the shadow lands on; needs `shadowGroundY` (see {@link Mesh#shadowGroundNormal})
+	 * @param {Light3d} [settings.shadowLight] - a {@link Light3d} to take that direction from instead
 	 * @param {boolean} [settings.castGroundShadow] - give this sprite a blob ground shadow, overriding the application's `castGroundShadow` setting in both directions. Omit to inherit. Needs a GPU backend and a {@link Camera3d}.
 	 * @param {boolean} [settings.fog] - set `false` to exempt this sprite from the camera's distance fog ({@link Camera3d#setFog}); omit to fog whenever the camera does. A sun or a moon wants this — everything else at that distance dissolves into the haze, and so would it.
 	 * @param {boolean} [settings.transparent] - draw in the transparent pass (blended, back-to-front, no depth write) instead of the opaque one. Omit and the sprite goes transparent whenever its draw alpha is fractional; `true` for a soft-alpha sprite such as an additive glow; `false` to stay opaque however faded.
@@ -287,9 +293,18 @@ export default class Sprite3d extends Mesh {
 			// raw for the same reason as above: `undefined` means "decide from
 			// the draw's alpha", and coercing it would pin every sprite opaque
 			transparent: settings.transparent,
+			// raw for the same reason: `Mesh` reads it as `!== false`, so an
+			// omitted value has to arrive as `undefined` to mean "depth tested"
+			depthTest: settings.depthTest,
 			shadowGroundY: settings.shadowGroundY,
 			shadowOpacity: settings.shadowOpacity,
 			shadowScale: settings.shadowScale,
+			shadowOffset: settings.shadowOffset,
+			shadowStretch: settings.shadowStretch,
+			shadowDirectionX: settings.shadowDirectionX,
+			shadowDirectionZ: settings.shadowDirectionZ,
+			shadowGroundNormal: settings.shadowGroundNormal,
+			shadowLight: settings.shadowLight,
 		});
 
 		/**

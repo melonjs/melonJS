@@ -221,6 +221,148 @@ export function getShadowQuad(renderer, lit, MeshClass) {
 }
 
 /**
+ * Rotation taking the world up axis onto `n`, applied to a vector lying in
+ * the horizontal plane.
+ *
+ * The blob is ROTATED onto the receiving plane rather than projected onto it.
+ * A vertical projection would lengthen it by `1 / cos(tilt)` along the slope
+ * and an orthogonal one would shrink it by `cos(tilt)`, and either way the
+ * blob would change size for no reason the game asked for, by more and more
+ * exactly where the feature is used. A rotation preserves its shape.
+ *
+ * Derived rather than composed from a general axis-angle: the source axis is
+ * always world up, so the usual `k x p` terms collapse and this is the
+ * Rodrigues matrix with `ky = 0` written out.
+ * @param {number} nx - x of the unit surface normal
+ * @param {number} ny - y of it
+ * @param {number} nz - z of it
+ * @param {number} px - x of the horizontal vector to rotate
+ * @param {number} pz - z of it
+ * @param {Float64Array} out - receives the rotated vector
+ * @ignore
+ * @internal
+ */
+export function tiltOntoPlane(nx, ny, nz, px, pz, out) {
+	const horizontal = nx * nx + nz * nz;
+	if (horizontal < 1e-12) {
+		// parallel to world up: nothing to do, or a half turn for a ceiling
+		const flip = ny <= 0 ? 1 : -1;
+		out[0] = px * flip;
+		out[1] = 0;
+		out[2] = pz;
+		return;
+	}
+	// `cos` of the rotation is `WORLD_UP . n`, and WORLD_UP is (0, -1, 0)
+	const cos = -ny;
+	const w = (1 + ny) / horizontal;
+	out[0] = (cos + w * nz * nz) * px - w * nx * nz * pz;
+	out[1] = nx * px + nz * pz;
+	out[2] = -w * nx * nz * px + (cos + w * nx * nx) * pz;
+}
+
+/**
+ * How far from vertical a ground shadow's floor may tilt the blob, as the
+ * cosine of the angle. Shared by the per-object and the instanced tiers.
+ *
+ * A blob is a flat quad with no thickness and no contact with what it lies
+ * on, and the further it is tilted toward the viewer's line of sight the less
+ * of it there is to see: at ninety degrees it is edge-on and gone. Past about
+ * seventy-five degrees there is nothing left worth drawing, so the tilt stops
+ * there rather than letting a game dial in a shadow standing on its rim.
+ * @ignore
+ * @internal
+ */
+export const SHADOW_MAX_TILT_COS = Math.cos((75 * Math.PI) / 180);
+
+/**
+ * Clamp a floor normal to the tilt ceiling, keeping it unit length.
+ *
+ * Clamped toward up rather than refused: a game sliding a normal off a
+ * curved surface should get a shadow that stops tilting, not one that
+ * vanishes at some threshold. A normal that points down, or sideways, is
+ * the same case taken to its limit and lands on the ceiling too, so the
+ * result always faces up and its `y` is never zero.
+ * @param {number} nx - x of the unit up normal
+ * @param {number} ny - y of it (negative is up: render space is Y-down)
+ * @param {number} nz - z of it
+ * @param {Float64Array} out - receives the clamped normal
+ * @ignore
+ * @internal
+ */
+export function clampShadowTilt(nx, ny, nz, out) {
+	if (-ny < SHADOW_MAX_TILT_COS) {
+		const flat = Math.hypot(nx, nz);
+		const wanted = Math.sqrt(1 - SHADOW_MAX_TILT_COS * SHADOW_MAX_TILT_COS);
+		const scale = flat > 1e-6 ? wanted / flat : 0;
+		nx *= scale;
+		nz *= scale;
+		ny = -SHADOW_MAX_TILT_COS;
+	}
+	out[0] = nx;
+	out[1] = ny;
+	out[2] = nz;
+}
+
+/** scratch for the vectors `tiltOntoPlane` turns */
+/**
+ * Ceiling on `shadowStretch`, shared by both tiers.
+ *
+ * A blob is a round smudge standing in for a shape nobody traced; the further
+ * it is pulled the more plainly it is a smear rather than a shadow. Past about
+ * three times its own length it stops reading as one at all.
+ * @ignore
+ * @internal
+ */
+export const SHADOW_MAX_STRETCH = 3;
+
+/**
+ * The usable stretch for a given setting: 1 for anything below it or not a
+ * number, and never past {@link SHADOW_MAX_STRETCH}.
+ *
+ * Shared so the per-object and instanced tiers cannot drift apart — the same
+ * asset has to draw the same blob whichever one happens to carry it.
+ * @param {number} value - the requested `shadowStretch`
+ * @returns {number} the stretch to apply, in `[1, SHADOW_MAX_STRETCH]`
+ * @ignore
+ * @internal
+ */
+export function resolveShadowStretch(value) {
+	if (!Number.isFinite(value) || value < 1) {
+		return 1;
+	}
+	return value > SHADOW_MAX_STRETCH ? SHADOW_MAX_STRETCH : value;
+}
+
+/**
+ * Lengthen a ground-plane vector along a ground direction.
+ *
+ * The anisotropic scale both tiers stretch a blob with:
+ *
+ *     S = I + (stretch - 1) · d ⊗ d        (d unit, in the ground plane)
+ *     S·v = v + (stretch - 1) · (v · d) · d
+ *
+ * which leaves anything perpendicular to `d` exactly as it was, so the blob
+ * grows along the light and keeps its width across it.
+ * @param {number} vx - x of the vector to stretch
+ * @param {number} vz - z of the vector to stretch
+ * @param {number} dx - x of the unit ground direction
+ * @param {number} dz - z of the unit ground direction
+ * @param {number} gain - `stretch - 1`
+ * @param {Float64Array|number[]} out - receives `[x, z]`
+ * @returns {Float64Array|number[]} `out`
+ * @ignore
+ * @internal
+ */
+export function stretchAlong(vx, vz, dx, dz, gain, out) {
+	const dot = vx * dx + vz * dz;
+	out[0] = vx + gain * dot * dx;
+	out[1] = vz + gain * dot * dz;
+	return out;
+}
+
+const _axis = new Float64Array(3);
+
+/**
  * The blob quad an `InstancedMesh` draws from — sized to the prototype's own
  * footprint (#1515).
  *
@@ -244,35 +386,107 @@ export function getShadowQuad(renderer, lit, MeshClass) {
  * @ignore
  * @internal
  */
-export function getInstancedShadowQuad(mesh, MeshClass, halfX, halfZ, version) {
-	const key = `${mesh.lit === true}:${version}:${halfX}:${halfZ}`;
+/**
+ * Write the quad's four corners as `±u ±v` into a 12-float array.
+ * @param {Float32Array} out - the vertex array to fill
+ * @param {number} ux - x of the first axis
+ * @param {number} uy - y of the first axis
+ * @param {number} uz - z of the first axis
+ * @param {number} vx - x of the second axis
+ * @param {number} vy - y of the second axis
+ * @param {number} vz - z of the second axis
+ * @ignore
+ * @internal
+ */
+function writeQuadCorners(out, ux, uy, uz, vx, vy, vz) {
+	out[0] = -ux - vx;
+	out[1] = -uy - vy;
+	out[2] = -uz - vz;
+	out[3] = ux - vx;
+	out[4] = uy - vy;
+	out[5] = uz - vz;
+	out[6] = ux + vx;
+	out[7] = uy + vy;
+	out[8] = uz + vz;
+	out[9] = -ux + vx;
+	out[10] = -uy + vy;
+	out[11] = -uz + vz;
+}
+
+export function getInstancedShadowQuad(
+	mesh,
+	MeshClass,
+	axX,
+	axZ,
+	azX,
+	azZ,
+	version,
+	nx = 0,
+	ny = 1,
+	nz = 0,
+) {
+	const lit = mesh.lit === true;
+	const key = `${lit}:${version}:${axX}:${axZ}:${azX}:${azZ}:${nx}:${ny}:${nz}`;
 	let quad = mesh._shadowQuad;
 	if (quad !== undefined && quad._shadowKey === key) {
 		return quad;
 	}
+	// The tilt is BAKED into the four vertices rather than applied by the
+	// group matrix. The instanced shadow reaches the GPU as
+	// `uModelMatrix * (instancePosition + quadOffset)`, one matrix for the
+	// whole set, so a rotation put there would turn the instance POSITIONS
+	// too and slide the whole scatter. Baked here it rides on the offsets
+	// alone, and the matrix does the other half: its Y row is the plane's
+	// equation, a VERTICAL projection onto the plane, and a vector already
+	// in the plane projects onto itself. So the two compose, and the blob
+	// lands with the rotated quad's true shape rather than stretched by
+	// `1 / cos(tilt)` the way a flat quad projected vertically would be.
+	//
+	// That also makes the vertex stage dropping `aVertex.y` harmless: the
+	// projection reads only the vertex's own X and Z, which are exactly what
+	// survive. Nothing about the slope rides on the Y it throws away.
+	//
+	// `nx/ny/nz` is the plane's normal in GROUP-LOCAL space: the caller pulls
+	// the world normal back through the axis bridge, because these vertices
+	// are in the space the bridge starts from.
+	// The two axes arrive as ground-plane vectors rather than half-widths,
+	// because `shadowStretch` turns them: the stretched blob's axes are no
+	// longer along local X and local Z. Anything the whole set shares belongs
+	// here — the quad is the one thing in this path that is NOT multiplied
+	// into the instance positions.
+	tiltOntoPlane(-nx, -ny, -nz, axX, axZ, _axis);
+	const ux = _axis[0];
+	const uy = _axis[1];
+	const uz = _axis[2];
+	tiltOntoPlane(-nx, -ny, -nz, azX, azZ, _axis);
+	const vx = _axis[0];
+	const vy = _axis[1];
+	const vz = _axis[2];
+
+	// Only four corners moved. A sun that sweeps changes them every frame, and
+	// rebuilding a mesh and its GPU buffers at that rate to move twelve floats
+	// is the kind of cost that makes a feature not worth having — so when a
+	// quad is already here and still wants the same shader, the geometry is
+	// written in place and the version bumped, which is exactly what the
+	// retained path re-uploads on.
+	if (quad !== undefined && quad.lit === lit) {
+		writeQuadCorners(quad.originalVertices, ux, uy, uz, vx, vy, vz);
+		quad.needsUpdate = true;
+		quad._shadowKey = key;
+		return quad;
+	}
 	quad?.destroy();
+	const vertices = new Float32Array(12);
+	writeQuadCorners(vertices, ux, uy, uz, vx, vy, vz);
 	quad = new MeshClass(0, 0, {
-		vertices: new Float32Array([
-			-halfX,
-			0,
-			-halfZ,
-			halfX,
-			0,
-			-halfZ,
-			halfX,
-			0,
-			halfZ,
-			-halfX,
-			0,
-			halfZ,
-		]),
+		vertices,
 		uvs: QUAD_UVS,
 		indices: QUAD_INDICES,
 		normals: QUAD_NORMALS,
 		texture: getShadowFalloff(),
 		width: 1,
 		normalize: false,
-		lit: mesh.lit === true,
+		lit,
 		cullBackFaces: false,
 	});
 	quad._blendedDraw = true;

@@ -10,6 +10,9 @@ import TMXTileMap from "./tiled/TMXTileMap.js";
 /**
  * additional import for TypeScript
  * @import Container from "../renderable/container.js";
+ * @import Mesh from "../renderable/mesh.js";
+ * @import {Light3d} from "../lighting/light3d.ts";
+ * @import {Vector3d} from "../math/vector3d.ts";
  */
 // our levels
 const levels = {};
@@ -128,6 +131,14 @@ function levelIdAt(offset) {
  * @property {number} [lightIntensityScale] - (glTF/GLB only) multiply each light's authored physical intensity by this factor instead of normalizing it to 1
  * @property {boolean} [castGroundShadow] - (glTF/GLB only) give every mesh in the scene a ground shadow; omit to inherit the application's `castGroundShadow` setting (on by default)
  * @property {number} [shadowGroundY] - (glTF/GLB only) world Y the ground shadows land on
+ * @property {number} [shadowOpacity] - (glTF/GLB only) how dark the blobs are ({@link Mesh#shadowOpacity})
+ * @property {number} [shadowScale] - (glTF/GLB only) blob footprint multiplier ({@link Mesh#shadowScale})
+ * @property {number} [shadowOffset] - (glTF/GLB only) how far to slide them along the light, in blob radii ({@link Mesh#shadowOffset})
+ * @property {number} [shadowStretch] - (glTF/GLB only) how much longer they are along it ({@link Mesh#shadowStretch})
+ * @property {number} [shadowDirectionX] - (glTF/GLB only) x of the ground direction they are cast along
+ * @property {number} [shadowDirectionZ] - (glTF/GLB only) z of that direction
+ * @property {number[]|Vector3d} [shadowGroundNormal] - (glTF/GLB only) up normal of the floor, for a scene that is not level
+ * @property {Light3d} [shadowLight] - (glTF/GLB only) a {@link Light3d} to take the shadow direction from, re-read every draw
  */
 
 /**

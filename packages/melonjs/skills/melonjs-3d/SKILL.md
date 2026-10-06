@@ -229,7 +229,9 @@ behind the wall, and this is not a synonym for "additive".
 
 Set it `false` for a mesh standing in for a screen-space effect: an additive
 glow carrying a world position only so it can sort and move with the thing it
-belongs to. Left depth tested, a flat billboard is sliced along a hard straight
+belongs to. A world-space caption billboarded over a prop wants it for the
+same reason, since it has no surface for the prop's own foliage to be in front
+of. Left depth tested, a flat billboard is sliced along a hard straight
 line the moment any geometry is nearer at some pixel. That shows up worst
 around something round — a glow on a rock near a planet's limb gets cut,
 and no offset escapes it, because the near surface bulges further toward the
@@ -660,23 +662,131 @@ the model needs no tangent attribute, and an unmapped mesh is unaffected. This
 is the 3D counterpart of the `Sprite` normal maps in the lighting skill; they
 are separate systems and a `Mesh` uses this one.
 
+### What the ground-shadow tier can and cannot do
+
+Check this table before claiming a setting is unsupported. Every one of these
+is read **every draw**, so all of them can be animated.
+
+| setting | `Mesh` / `Sprite3d` / `GLTFModel` part | `InstancedMesh` |
+|---|---|---|
+| `castGroundShadow` | yes | yes |
+| `shadowGroundY` | yes, the caster's own floor | yes, **one plane** through the SET's origin |
+| `shadowGroundNormal` | yes | yes, one plane for the set |
+| `shadowOpacity` | yes | yes |
+| `shadowScale` | yes | yes |
+| `shadowOffset` | yes | yes, one throw for the set |
+| `shadowStretch` | yes | yes, one stretch for the set |
+| `shadowDirectionX` / `Z` | yes | yes |
+| `shadowLight` | yes | yes |
+| height fade as the caster rises | yes | **no** |
+| a different value per instance | n/a | **no**, and there is no plan for one |
+
+The two "no"s are the same limitation seen twice: a set gets ONE shadow plane
+and ONE shared quad, so the instance's own height is dropped and nothing can
+vary between instances. Everything else is one value for the whole set, which
+is what a set means. A scatter over curved ground is therefore one set per flat
+facet, and a flying scatter wanting a height fade has to be per-object meshes.
+
+Nothing here is per-object-only. If a claim that a setting "does not work on an
+`InstancedMesh`" is in your head, it is out of date: `shadowOffset` and
+`shadowStretch` both reached the instanced tier in 20.8.
+
 Ground shadows are **on by default** (the `castGroundShadow` application
 setting), and need a GPU backend and a `Camera3d`. As a blanket default they
 skip geometry with no vertical extent — a ground plane. Per object,
 `castGroundShadow: true`/`false` overrides the app setting and is obeyed as
-given, safeguard included; `shadowGroundY` names the floor the blob lands on.
+given, safeguard included; `shadowGroundY` names the floor the blob lands on,
+`shadowOpacity` how dark it is and `shadowScale` how big it is.
 
 The blob is an ellipse sized to the caster's own footprint and placed at the
-caster's x/z — it is **never offset by light direction**. So a tall or narrow
-object (a character, a tree, a pickup) shows its shadow clearly, while a wide,
-flat-bottomed one resting on the floor covers its own completely from a camera
-looking down at it. That is the shadow behaving correctly, not a bug.
+caster's x/z. So a tall or narrow object (a character, a tree, a pickup) shows
+its shadow clearly, while a wide, flat-bottomed one resting on the floor covers
+its own completely from a camera looking down at it. That is the shadow
+behaving correctly, not a bug.
 
 **Do not chase it by raising `shadowGroundY`.** Lifting the plane does not slide
 the blob out from under the object, it floats the blob *up* — and past a few
-units it projects over the top of the caster as a dark halo ringing it. If an
-object needs a visible shadow, give it a smaller footprint relative to its
-height, or accept that a boulder bedded in the ground has none.
+units it projects over the top of the caster as a dark halo ringing it.
+
+The simplest fix is a bigger blob, so its edge shows past the object:
+
+```js
+mesh.shadowScale = 1.5;        // 1 is the default; 0 hides the shadow
+```
+
+`shadowScale` works everywhere, `InstancedMesh` included. Changing it on a
+set rewrites the shared quad's four corners in place rather than rebuilding
+it, as does a `shadowLight` that moves, so an animated sun costs no
+allocation.
+
+Or, for the look of a sun that is not overhead, use the shape controls:
+
+```js
+mesh.shadowOffset = 1.5;       // slide it out, in blob radii
+mesh.shadowDirectionX = 1;     // the ground direction it is cast along
+mesh.shadowDirectionZ = 0;
+mesh.shadowStretch = 2;        // and lengthen it along the same line
+```
+
+`shadowOffset` is measured in multiples of the blob's **own radius**, not in
+world units, so one value serves a boulder and a pebble and every part of a
+glTF model. About `stretch - 1` is what keeps the shadow attached to its
+caster. It is honoured **only when `shadowGroundY` is set**, because the
+blob is a flat quad on one named plane: sliding it across a plane the game has
+not named puts it where there may be no floor. `shadowStretch` is clamped to 3
+and the blob fades as it pulls, so an extreme value degrades to nothing rather
+than to a smear.
+
+An `InstancedMesh` honours both, as **one** offset and **one** stretch for the
+whole set, which is all a shared set can carry. Both ride the quad the blobs
+share rather than the matrix that also places them: a stretch in the matrix
+would scale the instance positions too and smear the scatter instead of
+lengthening its blobs. So a scatter can sit next to loose props under the same
+sun without looking lit from somewhere else.
+
+`shadowLight` takes the direction from a `Light3d` you name, re-read every
+draw, so a moving sun carries the shadows with it. Nothing is inferred: the
+engine never picks a dominant light, because a scene with several has no
+non-arbitrary answer and one with none has no answer at all.
+
+### A floor that is not level
+
+`shadowGroundY` says where the floor is; `shadowGroundNormal` says which way
+it faces:
+
+```js
+prop.shadowGroundY = floorY;
+prop.shadowGroundNormal = [Math.sin(0.35), -Math.cos(0.35), 0];  // a 20 deg slope
+```
+
+World up is `(0, -1, 0)`, because render space is Y-down, and that is the
+default. The blob is **rotated** onto the plane rather than projected, so it
+keeps its size; it still sits directly under the caster, since the normal
+turns it rather than moving it. The tilt is clamped at 75 degrees, past which
+an edge-on blob has nothing left to show. It needs `shadowGroundY`, for the
+same reason the offset does: tilting the bounds fallback has no anchor to turn
+about.
+
+On an `InstancedMesh` one plane serves the **whole set**: it passes through
+the set's origin at `shadowGroundY`, faces the normal, and every blob is
+projected onto it whatever height its own instance sits at, exactly as the
+level case puts every blob at one height. A scatter over curved ground is
+therefore one set per flat facet, each with the facet's own plane, not one
+set with an averaged normal.
+
+All three compose on a set: the stretch turns the shared quad, the offset
+slides the whole set along the light, and both are carried onto the tilted
+plane rather than applied flat, so a bank's planting lies along its slope
+instead of hovering across it.
+
+Give blobs to the plants that stand apart. Dense low ground cover is better
+left without: a thousand blobs each as wide as its own fern sum to a darkened
+hillside, not to a thousand shadows, and ground cover is the ground.
+
+These are **art direction, not a projection**. A stretched ellipse is not a
+silhouette and has no contact with terrain, so on ground that is not the plane
+you named it will not lie on it. Direction-correct shadows want a shadow map,
+which this tier does not do.
 
 ### Get the sign right: the floor is a GREATER y
 
@@ -734,6 +844,13 @@ Loaded through the same level director as everything else:
 ```js
 await loader.preload([{ name: "diorama", type: "glb", src: "data/diorama.glb" }]);
 level.load("diorama", { scale, castGroundShadow, shadowGroundY, onLoaded });
+
+// every ground-shadow setting travels, not just those two: a loaded scene can
+// be told where its sun is, and `shadowLight` is re-read every draw
+level.load("diorama", {
+    scale, castGroundShadow: true, shadowGroundY: 0,
+    shadowLight: sun, shadowOffset: 0.6, shadowStretch: 1.8, async: true,
+});
 ```
 
 `.obj` / `.mtl` are also supported loader types.
@@ -812,7 +929,7 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | fog does not match the sky after a background fade | an explicit `color` was passed; omit it to track `renderer.backgroundColor` |
 | geometry clips before it has finished fading | fog `far` beyond the clip far — omit the distances and they default to the clip planes |
 | one marker must stay readable in fog | `fog: false` on that mesh |
-| an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raising `shadowGroundY` haloes it instead of revealing it |
+| an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raise `shadowScale` (or slide it out with `shadowOffset`), not `shadowGroundY`, which haloes it instead of revealing it |
 | a dark ring around the top of an object | `shadowGroundY` lifted too far, floating the blob up into the caster |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |
 | a mesh sits half its size off | `anchorPoint` — only on the 2D-camera path; a `Camera3d` mesh pivots on its model origin |

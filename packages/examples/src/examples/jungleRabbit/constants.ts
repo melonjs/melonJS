@@ -91,14 +91,103 @@ export const RIVER_FLOW = 0;
 export const RIPPLE_UV = 520;
 
 /**
- * How far above the water a blob shadow floats, in world units.
+ * How far the blob shadows are thrown along the sun's direction, in world
+ * units, and how much longer they are along it.
  *
- * The engine centres a blob under its caster and does not offset it by the
- * light direction, so a boulder sitting in the shallows hides its own contact
- * shadow completely from this camera. A small lift brings the near edge out
- * from under the rock; too much and the blob rides up over the top of it.
+ * This used to be `SHADOW_LIFT`, a few units of fake altitude added to the
+ * shadow plane. A boulder sitting in the shallows hides its own contact
+ * shadow completely from this camera, and raising the plane was the only
+ * lever there was: it does not slide the blob out from under the rock, it
+ * floats the blob UP, and past a few units it rides over the top of the rock
+ * as a dark ring. The engine's own 3D skill warns against exactly that.
+ *
+ * The shadows are offset along the real sun now, so the lever is gone and the
+ * plane sits on the water where it belongs.
  */
-export const SHADOW_LIFT = 8;
+/**
+ * How far a shadow is thrown, in multiples of the blob's own radius.
+ *
+ * One value for everything now. It used to be two, a carrot's and a
+ * boulder's, because the setting took a world distance and a boulder's blob
+ * is about three times a carrot's: 38 and 110 units. Both worked out at the
+ * same 1.45 of their own radius, which is what a world distance was hiding.
+ * The engine takes the ratio directly, so the two collapse.
+ *
+ * It is roughly `stretch - 1`: enough to shift a stretched ellipse so its
+ * trailing edge still sits at the caster's feet, which is what keeps a
+ * shadow attached to the thing casting it.
+ */
+export const SHADOW_OFFSET = 1.45;
+export const SHADOW_SINK = 8;
+/**
+ * The ground bearing the shadows are thrown along.
+ *
+ * Taken from where the sun is DRAWN, not from the `Light3d`. The two do not
+ * agree: the billboard sits dead ahead at `SUN_AHEAD` and about ten degrees
+ * up, so its light travels toward the camera, while the light's own direction
+ * was chosen for how it shades the valley walls and travels away from it. They
+ * are 107 degrees apart.
+ *
+ * Shading can afford a direction picked for looks, because nothing in the
+ * frame contradicts it. A shadow cannot: the player can see the sun, so a
+ * shadow pointing away from it reads as a bug. It also happens to be the
+ * visible choice, since a shadow thrown toward the camera lands in front of
+ * its caster instead of hiding behind it.
+ */
+export const SHADOW_DIR_X = 0;
+export const SHADOW_DIR_Z = -1;
+export const SHADOW_STRETCH = 2.5;
+
+/**
+ * The bank planting's own shadow settings, which are NOT the boat's.
+ *
+ * A plant's blob has to fight three things the boat's does not: it is drawn
+ * against a lit green hillside rather than against water, it is one of a
+ * thousand rather than one of one, and `shadowStretch` fades it by
+ * `1 / sqrt(stretch)` on the way. Tuned by measuring instead of by eye: the
+ * bank used to darken under its planting by about 3 of 255, where the
+ * shadow showcase's stations measure 34 to 69, which is why the shadows were
+ * there in every draw and still read as missing.
+ *
+ * The offset is shorter than the boat's because it is in blob RADII and the
+ * blobs below are now near full size: 1.45 radii of a full-size blob throws
+ * a fern's shadow most of a plant away from the fern.
+ */
+export const VEG_SHADOW_OPACITY = 0.5;
+export const VEG_SHADOW_OFFSET = 0.3;
+/**
+ * The bank planting's stretch, which is NOT the boat's 2.5 either.
+ *
+ * A blob stretched two and a half times its own length is a bar, and a
+ * hillside of them is a set of dark stripes lying across the slope. The boat
+ * gets away with it because there is one of it, it is large, and it sits on
+ * open water where a long shadow reads as a wake. A plant does not: it is one
+ * of a thousand, it is small, and the eye reads the smear as geometry.
+ *
+ * `shadowOffset` tracks it, since the distance that keeps a shadow attached to
+ * its caster is about `stretch - 1` of the blob's radius.
+ */
+export const VEG_SHADOW_STRETCH = 1.25;
+
+/**
+ * How far a bank set's shadow plane is raised off its own facet, in world px.
+ *
+ * A blob is a flat quad on ONE plane, and a set gets ONE plane: the chord of
+ * its own facet. A blob near a facet SEAM reaches past it, and there the chord
+ * extended diverges from the next facet's chord and ends up under it, so the
+ * neighbouring terrain is drawn over that part of the blob and it is cut along
+ * a dead-straight line. Measured at a tenth of all blob rims, up to 13 px deep;
+ * the level plateau sets, whose plane cannot diverge from level ground, were
+ * the control at exactly zero.
+ *
+ * The divergence a blob can reach is `|slope step| * radius`, and the slope
+ * step between adjacent facets of this parabola is a constant
+ * `2 * WALL_H / HALF_W^2 * facet` = 0.196. The widest blob here is about 71 px,
+ * so 15 px clears every seam. The cost is that the blob floats that far above
+ * its own facet, which at this scale is under half a model unit and reads as
+ * nothing, where the cut read as a crease in the hillside.
+ */
+export const VEG_SHADOW_SEAM_LIFT = 15;
 
 /** length of one terrain tile along +Z */
 export const TILE_LEN = 2400;

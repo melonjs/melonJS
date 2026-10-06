@@ -40,6 +40,13 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `lightIntensityScale` | — | keep authored intensity ratios instead of normalising every light to 1 |
 | `castGroundShadow` | inherits the app setting (**on**) | blob shadows for this scene's meshes |
 | `shadowGroundY` | each object's own base | world Y of the floor the blobs land on |
+| `shadowOpacity` | `0.45` | how dark the blobs are |
+| `shadowScale` | `1` | blob footprint multiplier; `0` or less hides them |
+| `shadowOffset` | `0` | slide them along the light, in blob radii; needs `shadowGroundY` |
+| `shadowStretch` | `1` | lengthen them along it, clamped to 3 |
+| `shadowDirectionX` / `shadowDirectionZ` | `0` | the ground direction they are cast along |
+| `shadowGroundNormal` | world up | up normal of the floor, for a scene that is not level |
+| `shadowLight` | — | a `Light3d` to take the direction from, re-read every draw |
 
 `onLoaded` receives the level id — it is a "done" signal, not a handle on the
 scene. You need it, or `async`: with the game loop running, `level.load` stops
@@ -79,10 +86,11 @@ world.addChild(new Trigger(x, y, {
 }));
 ```
 
-`scale`, `rightHanded`, `lights`, `lightIntensityScale`, `castGroundShadow` and
-`shadowGroundY` all travel, and so do `container`, `onLoaded`, `flatten` and
-`setViewportBounds`. That list is **hardcoded** in `Trigger` — a `level.load`
-option outside it is dropped without a warning.
+Every `level.load` option above travels, including the whole ground-shadow set,
+and so do `container`, `onLoaded`, `flatten` and `setViewportBounds`. The list is
+**derived** from `level.loadOptions` rather than restated, so an option added to
+a level format arrives here for free. It used to be hand-written and had fallen
+three releases behind the glTF path (#1649).
 
 **`async` is deliberately excluded.** A trigger with a `color` + `duration`
 sets it itself, because it needs the promise to sequence its fade and reveal; a
@@ -271,11 +279,21 @@ Omit `shadowGroundY` and each blob sits at its own object's base at full
 strength, which is right for props already resting on the ground. Set it when
 things jump or fly, so the shadow stays on the floor and shrinks with height.
 
-A blob is centred on its caster's x/z and is never offset by light direction, so
-a wide flat-bottomed prop hides its own shadow under itself. Raising
-`shadowGroundY` to force one into view floats the blob up over the object as a
-dark ring rather than sliding it clear — the setting is for things that leave
-the ground, not a visibility knob.
+A blob sits on its caster's x/z by default, so a wide flat-bottomed prop hides
+its own shadow under itself. The knob for that is `shadowScale`, which widens
+the blob until its edge shows past the prop, or `shadowOffset` plus a direction,
+which slides it clear. **Not** `shadowGroundY`: raising that floats the blob up
+over the object as a dark ring instead of sliding it out, because it is for
+things that leave the ground, not a visibility control.
+
+For a light that is not overhead, name one: `shadowLight` takes the direction
+from a `Light3d` and is re-read every draw, so a day or night cycle carries
+every shadow in the scene with it. Nothing is inferred — a scene with no named
+light and no `shadowDirectionX`/`Z` gets no direction, because a scene with
+several lights has no non-arbitrary answer. `shadowStretch` lengthens the blob
+along that direction and fades it as it pulls; `shadowGroundNormal` lays it on
+a floor that is not level. All of these apply to an `InstancedMesh` too, as one
+value for the whole set.
 
 ## OBJ/MTL
 

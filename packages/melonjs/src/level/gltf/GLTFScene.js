@@ -10,6 +10,9 @@ import GLTFModel from "./GLTFModel.js";
 /**
  * additional import for TypeScript
  * @import Container from "../../renderable/container.js";
+ * @import Mesh from "../../renderable/mesh.js";
+ * @import {Light3d} from "../../lighting/light3d.ts";
+ * @import {Vector3d} from "../../math/vector3d.ts";
  */
 /**
  * A loadable 3D scene parsed from a glTF / GLB asset. Instances are created
@@ -82,6 +85,14 @@ export default class GLTFScene {
 		"lightIntensityScale",
 		"castGroundShadow",
 		"shadowGroundY",
+		"shadowOpacity",
+		"shadowScale",
+		"shadowOffset",
+		"shadowStretch",
+		"shadowDirectionX",
+		"shadowDirectionZ",
+		"shadowGroundNormal",
+		"shadowLight",
 	]);
 
 	/**
@@ -118,11 +129,47 @@ export default class GLTFScene {
 	 * shadows land on ({@link Mesh#shadowGroundY}); omit it and each blob sits
 	 * at its own object's base at full strength, which is right for a scene
 	 * whose props already rest on the ground.
+	 * @param {number} [options.shadowOpacity] - how dark the blobs are ({@link Mesh#shadowOpacity})
+	 * @param {number} [options.shadowScale] - blob footprint multiplier ({@link Mesh#shadowScale})
+	 * @param {number} [options.shadowOffset] - how far to slide them along the light, in blob radii ({@link Mesh#shadowOffset})
+	 * @param {number} [options.shadowStretch] - how much longer they are along it ({@link Mesh#shadowStretch})
+	 * @param {number} [options.shadowDirectionX] - x of the ground direction they are cast along ({@link Mesh#shadowDirectionX})
+	 * @param {number} [options.shadowDirectionZ] - z of that direction ({@link Mesh#shadowDirectionZ})
+	 * @param {number[]|Vector3d} [options.shadowGroundNormal] - up normal of the floor, for a scene that is not level ({@link Mesh#shadowGroundNormal})
+	 * @param {Light3d} [options.shadowLight] - a light to take the direction from, re-read every draw ({@link Mesh#shadowLight})
+	 * @example
+	 * // a loaded scene lit by a sun the game owns, so a day/night cycle
+	 * // carries the shadows with it
+	 * const sun = new Light3d({ direction: [0.4, 1, 0.2] });
+	 * app.world.addChild(sun);
+	 * await level.load("village", {
+	 *     scale: 40,
+	 *     castGroundShadow: true,
+	 *     shadowGroundY: 0,
+	 *     shadowLight: sun,
+	 *     shadowOffset: 0.6,
+	 *     shadowStretch: 1.8,
+	 *     async: true,
+	 * });
 	 */
 	addTo(container, options = {}) {
 		if (!this.data) {
 			return;
 		}
+		// The shape controls, forwarded as one object so the animated and the
+		// static path cannot drift apart. Each is passed RAW: `undefined` means
+		// "not set", which is what lets a `Mesh` fall back to its own default.
+		const shadowOptions = {
+			shadowGroundY: options.shadowGroundY,
+			shadowOpacity: options.shadowOpacity,
+			shadowScale: options.shadowScale,
+			shadowOffset: options.shadowOffset,
+			shadowStretch: options.shadowStretch,
+			shadowDirectionX: options.shadowDirectionX,
+			shadowDirectionZ: options.shadowDirectionZ,
+			shadowGroundNormal: options.shadowGroundNormal,
+			shadowLight: options.shadowLight,
+		};
 		const scale = options.scale ?? 1;
 		const rightHanded = options.rightHanded !== false;
 		// tri-state on purpose: `undefined` means "the caller said nothing",
@@ -161,7 +208,7 @@ export default class GLTFScene {
 				rightHanded,
 				lit,
 				castGroundShadow,
-				shadowGroundY: options.shadowGroundY,
+				...shadowOptions,
 			});
 			model.name = this.name;
 			container.addChild(model);
@@ -250,7 +297,7 @@ export default class GLTFScene {
 					castGroundShadow === true
 						? hasVerticalExtent(node.vertices, node.vertexCount)
 						: castGroundShadow,
-				shadowGroundY: options.shadowGroundY,
+				...shadowOptions,
 			});
 			if (instances) {
 				fillInstances(mesh, instances);

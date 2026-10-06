@@ -305,6 +305,38 @@ describe("Sprite3d billboard projection", () => {
 		expect(c.alphaCutoff).toBe(0.25);
 	});
 
+	it("forwards depthTest to the mesh, which documents it and reads `!== false`", () => {
+		const img = document.createElement("canvas");
+		img.width = 32;
+		img.height = 32;
+		img.getContext("2d").fillRect(0, 0, 32, 32);
+		// omitted → depth tested, the documented default
+		expect(
+			new Sprite3d(0, 0, { image: img, width: 32, height: 32 }).depthTest,
+		).toBe(true);
+		// `false` has to survive the constructor: `Sprite3d` builds its own
+		// settings object for `Mesh` rather than passing the caller's, so a key
+		// it forgets to name is dropped in silence — which is what happened
+		// here, leaving a documented option with no effect at all.
+		expect(
+			new Sprite3d(0, 0, {
+				image: img,
+				width: 32,
+				height: 32,
+				depthTest: false,
+			}).depthTest,
+		).toBe(false);
+		// and a `true` passed by hand is still true, not flattened
+		expect(
+			new Sprite3d(0, 0, {
+				image: img,
+				width: 32,
+				height: 32,
+				depthTest: true,
+			}).depthTest,
+		).toBe(true);
+	});
+
 	it("world quad size falls back to the frame size when width is omitted", () => {
 		const sheet = document.createElement("canvas");
 		sheet.width = 64;
