@@ -87,6 +87,14 @@ export default class Trigger extends Renderable {
 	 * @param {number} [settings.lightIntensityScale] - Scale the glTF lights' authored intensity. See {@link level.load}
 	 * @param {boolean} [settings.castGroundShadow] - Enable ground shadows for glTF meshes. See {@link level.load}
 	 * @param {number} [settings.shadowGroundY] - World Y for glTF ground shadows. See {@link level.load}
+	 * @param {number} [settings.shadowOpacity] - How dark those blobs are. See {@link level.load}
+	 * @param {number} [settings.shadowScale] - Blob footprint multiplier. See {@link level.load}
+	 * @param {number} [settings.shadowOffset] - Slide them along the light, in blob radii. See {@link level.load}
+	 * @param {number} [settings.shadowStretch] - Lengthen them along it. See {@link level.load}
+	 * @param {number} [settings.shadowDirectionX] - X of the ground direction they are cast along. See {@link level.load}
+	 * @param {number} [settings.shadowDirectionZ] - Z of that direction. See {@link level.load}
+	 * @param {number[]|Vector3d} [settings.shadowGroundNormal] - Up normal of the floor, for a scene that is not level. See {@link level.load}
+	 * @param {Light3d} [settings.shadowLight] - A light to take the shadow direction from. See {@link level.load}
 	 * @example
 	 * // fade transition (default)
 	 * world.addChild(new Trigger(x, y, {

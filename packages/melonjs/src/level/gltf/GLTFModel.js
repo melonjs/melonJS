@@ -104,7 +104,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.shadowGroundY] - world Y of the floor those shadows land on
 	 * @param {number} [options.shadowOpacity=0.45] - opacity of those shadows before any height fade
 	 * @param {number} [options.shadowScale=1] - size multiplier for those shadows (see {@link Mesh#shadowScale})
-	 * @param {number} [options.shadowOffset=0] - world distance to slide them along their direction; needs `shadowGroundY` (see {@link Mesh#shadowOffset})
+	 * @param {number} [options.shadowOffset=0] - how far to slide them along their direction, in multiples of each blob's own radius; needs `shadowGroundY` (see {@link Mesh#shadowOffset})
 	 * @param {number} [options.shadowStretch=1] - how much longer they are along that direction, clamped to 3
 	 * @param {number} [options.shadowDirectionX=0] - x of the ground direction they are cast along
 	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
