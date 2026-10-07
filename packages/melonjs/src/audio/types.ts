@@ -5,6 +5,8 @@
  * `me.audio` exactly as before.
  */
 
+import type Renderable from "../renderable/renderable.js";
+
 /**
  * Sound asset descriptor passed to `audio.load`.
  * @category Audio
@@ -133,13 +135,22 @@ export interface PannerAttributes {
 	 */
 	maxDistance?: number;
 	/**
-	 * Spatialization algorithm — `"equalpower"` (cheap, stereo-only) or
-	 * `"HRTF"` (head-related, full 3D). Defaults to `"HRTF"`.
+	 * Spatialization algorithm, `"equalpower"` (cheap, stereo-only) or
+	 * `"HRTF"` (head-related, full 3D).
+	 *
+	 * A voice placed through `follow` / `at` starts from `"equalpower"`, which
+	 * is what a 2D mix wants; a bare `audio.position()` keeps the WebAudio
+	 * default of `"HRTF"`. See `audio.setSpatialDefaults`.
 	 */
 	panningModel?: "HRTF" | "equalpower";
 	/**
-	 * Reference distance for the falloff curve — volume is `1` at this
-	 * distance from the listener. Defaults to `1`.
+	 * Reference distance for the falloff curve: volume is `1` at this distance
+	 * from the listener.
+	 *
+	 * A voice placed through `follow` / `at` starts from `240`, which is a
+	 * pixel distance a few tiles wide; a bare `audio.position()` keeps the
+	 * WebAudio default of `1`, which is one METRE and leaves a sound given
+	 * pixel coordinates near silent. See `audio.setSpatialDefaults`.
 	 */
 	refDistance?: number;
 	/**
@@ -275,7 +286,7 @@ export interface ToneOptions {
 }
 
 /**
- * Options accepted by {@link play} in place of the positional `loop` argument.
+ * Options accepted by {@link audio.play | `audio.play`} in place of the positional `loop` argument.
  *
  * Every field is optional, and the positional form
  * `play(name, loop, onend, volume)` continues to work unchanged.
@@ -293,13 +304,39 @@ export interface PlayOptions {
 	onend?: (() => void) | undefined;
 	/** Playback volume, `0.0..1.0`. Defaults to the current global volume. */
 	volume?: number | undefined;
+	/**
+	 * Place this sound at a renderable and keep it there, re-reading its world
+	 * position every frame. Tracking stops when the renderable is destroyed.
+	 *
+	 * Positions are WORLD pixels, with `+y` down like everything else in
+	 * melonJS; the Y flip Web Audio wants is applied for you. Sounds placed
+	 * this way are given the pixel-shaped panner defaults, which
+	 * `audio.setSpatialDefaults()` can change and `audio.panner()` overrides.
+	 */
+	follow?: Renderable | undefined;
+	/**
+	 * Place this sound at a fixed world point. Same coordinates and same
+	 * defaults as `follow`, for something that does not move.
+	 *
+	 * Mutually exclusive with `follow`: passing both throws, rather than
+	 * quietly picking one and leaving the other looking broken.
+	 */
+	at?: { x: number; y: number; z?: number } | undefined;
+	/**
+	 * Stop the sound when the renderable it follows is destroyed, rather than
+	 * leaving it playing where the renderable was. Defaults to `false`.
+	 *
+	 * Note that stopping discards the playback id, so keep this `false` for a
+	 * looping sound you intend to reposition and resume later.
+	 */
+	stopWithTarget?: boolean | undefined;
 }
 
 /**
  * Lifecycle callbacks accepted by a {@link SoundAsset} under `on`.
  *
  * These fire for the clip as a whole. To react to a single instance, keep the
- * id returned by {@link play}.
+ * id returned by {@link audio.play | `audio.play`}.
  * @category Audio
  */
 export interface SoundEvents {

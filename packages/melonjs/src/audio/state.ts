@@ -213,6 +213,72 @@ export function setGlobalVolume(v: number): void {
  * @ignore
  * @internal
  */
+/**
+ * Move the Web Audio listener. Coordinates are AUDIO space (+Y up).
+ * @param x - audio-space x
+ * @param y - audio-space y
+ * @param z - audio-space z
+ * @ignore
+ * @internal
+ */
+export function setListenerPosition(x: number, y: number, z: number): void {
+	if (!isAudioAvailable()) return;
+	audioEngine.pos(x, y, z);
+}
+
+/**
+ * Read the Web Audio listener position, in AUDIO space.
+ * @returns a fresh `[x, y, z]`, or null when there is no context
+ * @ignore
+ * @internal
+ */
+export function getListenerPosition(): [number, number, number] | null {
+	if (!isAudioAvailable()) return null;
+	// the backend returns the engine itself when it has nothing to report,
+	// and otherwise hands back its own array by reference
+	const read = audioEngine.pos();
+	return Array.isArray(read) ? [read[0], read[1], read[2]] : null;
+}
+
+/**
+ * Aim the Web Audio listener. Vectors are AUDIO space (+Y up).
+ * @param fx - forward x
+ * @param fy - forward y
+ * @param fz - forward z
+ * @param ux - up x
+ * @param uy - up y
+ * @param uz - up z
+ * @ignore
+ * @internal
+ */
+export function setListenerOrientation(
+	fx: number,
+	fy: number,
+	fz: number,
+	ux: number,
+	uy: number,
+	uz: number,
+): void {
+	if (!isAudioAvailable()) return;
+	audioEngine.orientation(fx, fy, fz, ux, uy, uz);
+}
+
+/**
+ * Read the Web Audio listener orientation, in AUDIO space.
+ * @returns a fresh six-tuple, or null when there is no context
+ * @ignore
+ * @internal
+ */
+export function getListenerOrientation():
+	| [number, number, number, number, number, number]
+	| null {
+	if (!isAudioAvailable()) return null;
+	const read = audioEngine.orientation();
+	return Array.isArray(read)
+		? [read[0], read[1], read[2], read[3], read[4], read[5]]
+		: null;
+}
+
 export function setGlobalMuted(muted: boolean): void {
 	audioEngine.mute(muted);
 }

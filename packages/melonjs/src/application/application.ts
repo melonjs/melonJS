@@ -1,3 +1,4 @@
+import { muteOnBlur, unmuteOnFocus } from "../audio/autopause.ts";
 import type Camera2d from "./../camera/camera2d.ts";
 import { AUTO, CANVAS, WEBGL, WEBGPU } from "../const.ts";
 import type { PhysicsAdapter } from "../physics/adapter.ts";
@@ -1075,6 +1076,12 @@ export default class Application {
 		if (this.pauseOnBlur) {
 			state.pause(true);
 		}
+		if (this.stopOnBlur || this.pauseOnBlur) {
+			// `state.stop()` / `state.pause()` only reach the current music
+			// track, so without this a looping sound effect plays on over
+			// whatever the player switched to
+			muteOnBlur();
+		}
 	}
 
 	/**
@@ -1088,6 +1095,10 @@ export default class Application {
 		if (this.resumeOnFocus) {
 			state.resume(true);
 		}
+		// unconditional: it only undoes a mute this module itself applied, and
+		// a game that stops on blur without resuming on focus would otherwise
+		// be left silent for good
+		unmuteOnFocus();
 	}
 
 	/**

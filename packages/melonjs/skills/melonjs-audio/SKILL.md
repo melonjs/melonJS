@@ -76,8 +76,9 @@ audio.play("sfx", { sprite: "jump" });
 
 The optional third element marks a region as looping. `play()`'s second argument
 takes either the original `loop` boolean or a `PlayOptions` object
-(`sprite`, `loop`, `onend`, `volume`) — both forms work. Object fields win over
-the positional `onend` / `volume` arguments when both are supplied.
+(`sprite`, `loop`, `onend`, `volume`, plus the spatial `follow`, `at` and
+`stopWithTarget`) — both forms work. Object fields win over the positional
+`onend` / `volume` arguments when both are supplied.
 
 ## Clip state
 
@@ -111,6 +112,14 @@ audio.muted();                  // global mute state
 `audio.unload(name)` / `audio.unloadAll()` free the decoded buffers; `unload`
 also clears the current-track pointer if it named that clip.
 
+### Losing focus mutes everything
+
+When the window loses focus the engine mutes all audio, and unmutes it on
+focus. That covers sound effects, procedural `tone` / `noise` and the mixer
+effects, not just the music track that `state.pause()` pauses. Set
+`pauseOnBlur: false` in the application settings if a clip has to keep playing
+in the background.
+
 ## Spatial audio
 
 ```js
@@ -126,44 +135,113 @@ Called with just the clip name, each of the four returns the current value —
 `stereo` gives `0` and `position` gives `[0, 0, 0]` before they have ever been
 set.
 
-### The listener is fixed at the origin
+### Let the engine place the sound: `follow` and `at`
 
-The ear sits at `(0, 0, 0)` facing `-z`, and **there is no public call to move
-it**. Positions are therefore *relative to the listener*: for a sound to come
-from the left of the player, pass the source's position minus the player's,
-every frame either one moves.
-
-```js
-// in the emitter's update()
-audio.position("engine", this.pos.x - player.pos.x, 0, -0.5, this.engineId);
-```
-
-### Distances are in the units you pass — and the defaults assume metres
-
-The panner defaults are `distanceModel: "inverse"`, `refDistance: 1`,
-`rolloffFactor: 1`, `maxDistance: 10000`, `panningModel: "HRTF"`. With
-`refDistance: 1`, a source 100 units away plays at about **1%** volume, so a
-sound positioned in raw pixels is effectively silent a few tiles out. Either
-set `refDistance` to the distance in pixels at which it should still be at full
-volume, or scale positions down (divide by a tile size) before passing them:
+The shortest path to positional audio is a play option. Both take **world
+pixels**, the same numbers as `pos.x` / `pos.y`, and the engine converts to
+audio space for you:
 
 ```js
-audio.panner("engine", { refDistance: 200, rolloffFactor: 1 });
-// or: audio.position("engine", dx / 32, 0, -0.5);
+// tracks the renderable every frame, and stops when it is destroyed
+audio.play("ufo", { follow: this, stopWithTarget: true });
+
+// pinned to a fixed world point
+audio.play("portal", { at: { x: 1200, y: 480 } });
 ```
 
-### `stereo` and `position` are one or the other
+`follow` and `at` are mutually exclusive: passing both throws, rather than
+quietly picking one. `follow` re-reads the target's **absolute** position each
+frame, so a renderable nested in a moving container is placed correctly. `stopWithTarget` is what you
+want for a sound that belongs to an entity: without it a looping clip on a
+destroyed renderable keeps playing from wherever it last was. `audio.unfollow(id)`
+detaches a sound and leaves it playing where it is.
 
-Both drive the same per-instance panner node, and **the first one called
-decides what that node is**: a stereo panner after `stereo()`, a 3D panner after
-`position()`. After that the other call silently does nothing on that instance.
-For a 2D game, left-right `stereo()` is usually all you want; reach for
-`position()` only when distance falloff matters, and then use it alone.
+### Move the listener, don't do the subtraction yourself
+
+```js
+audio.setListener(player);                  // tracked every frame
+audio.listener(x, y, z);                    // or place it by hand
+audio.listener();                           // → [x, y, z] in world pixels
+audio.listenerOrientation(fx, fy, fz, ux, uy, uz);
+audio.setListener(null);                    // stop tracking
+```
+
+With a listener in the world, source positions are **absolute world
+coordinates**, not offsets. The older idiom — passing `source.pos.x -
+player.pos.x` every frame with the ear stuck at the origin — still works, but
+only if you leave the listener at `(0, 0, 0)`; mixing the two double-counts the
+player's position.
+
+`setListener` places the ear at the target's absolute position after the world
+updates. A plain renderable contributes position only, so a side-scroller keeps
+the default "facing into the screen" and gets left-right panning plus distance
+falloff from the one call.
+
+A `Camera3d` target also contributes its **orientation**, taken from its own
+basis, so turning the camera swings the stereo image with it. That is the whole
+of what a posed 3D scene needs:
+
+```js
+audio.setListener(app.viewport);                 // in a 3D scene this is a Camera3d
+audio.play("drone", { follow: saucer });         // scene coordinates, directly
+```
+
+**Y is down.** Every one of these calls takes and returns melonJS world
+coordinates, where y grows downward; the Y-up flip Web Audio wants happens
+inside the engine. Pass `pos.y` as it is.
+
+### The defaults are tuned for pixels
+
+`audio.setSpatialDefaults()` / `getSpatialDefaults()` set the panner attributes
+a sound placed through `follow` or `at` starts from, and the shipped values
+assume a 2D game measured in pixels:
+
+| attribute | default |
+|---|---|
+| `refDistance` | `240` |
+| `maxDistance` | `10000` |
+| `panningModel` | `"equalpower"` |
+| `distanceModel` | `"inverse"` |
+
+With those, a placed sound is at full volume out to 240 px and then halves
+each time the distance doubles: about half at 480, a quarter at 960, roughly
+an eighth at 2000. `maxDistance` is where it stops getting quieter.
+
+**They apply to placed sounds only.** A plain `audio.play()` followed by a
+bare `audio.position()` keeps WebAudio's own defaults, where `refDistance` is
+`1` METRE and a source 100 px out is already near silent. That path is
+unchanged, which is what keeps old code working.
+
+Widen or tighten the field once, globally:
+
+```js
+audio.setSpatialDefaults({ refDistance: 400, maxDistance: 20000 });
+```
+
+`audio.panner(name, attrs, id?)` still overrides per clip or per voice, and it
+merges over the current values rather than replacing them, so writing one field
+no longer resets the rest. Called without an `id` it writes the **group**
+defaults, which is what a clip-wide tuning call looks like.
+
+For a 3D scene where front-to-back matters, `panningModel: "HRTF"` is worth the
+cost; for a 2D one it mostly muddies the stereo image.
+
+### `stereo` and `position`: last writer wins
+
+Both drive the same per-instance panner node, and the engine swaps the node to
+match whichever you called **last**: `stereo()` after `position()` gives you
+plain left-right panning, and `position()` after `stereo()` gives you 3D
+falloff. Neither silently does nothing any more, and the order you call them in
+no longer matters.
+
+Still pick one per voice and stay with it. A 2D game usually wants `stereo()`
+alone; reach for `position()` (or `follow` / `at`) when distance falloff
+matters.
 
 **Spatial audio is WebAudio-only.** On a clip loaded with `stream: true` (or
 `html5: true`) `stereo` / `position` / `orientation` return early and do
 nothing — which is exactly the case for the long music tracks people reach for
-first.
+first. `follow` and `at` are equally inert on a streamed clip.
 
 ## Procedural sound
 
@@ -327,10 +405,13 @@ either way — blank screen, empty console.
 | a streamed clip ignores `withCredentials` | `stream: true` plays through an `<audio>` element; preload it buffered instead |
 | `audio.tone(440, {...})` does nothing / errors | `tone` takes a single options object with a required `duration` |
 | `tone` / `noise` are silent with no error | no WebAudio context — `getAudioContext()` returned `null` |
-| a positioned sound is silent, or only audible right next to the player | positions in pixels with the default `refDistance: 1` — set `refDistance` in pixels, or scale positions down |
-| a positioned sound does not follow the player | the listener never moves — pass positions relative to the player, every frame |
-| `position()` does nothing on a clip that pans with `stereo()` (or the reverse) | the first call fixed the instance's panner type — use one or the other |
+| a positioned sound is silent, or only audible right next to the player | placed by hand with `audio.position()`, which keeps WebAudio's metre defaults (`refDistance: 1`) — use `follow` / `at`, or set `refDistance` in pixels with `audio.panner()` |
+| a positioned sound does not follow the player | nothing is placing it — `audio.play(name, { follow: entity })`, and `audio.setListener(player)` once |
+| a followed sound pans to the wrong side as the player moves | the listener was moved **and** positions are still relative to the player — with a listener in the world, pass absolute world coordinates |
+| a looping sound outlives the entity that owns it | `follow` without `stopWithTarget: true` |
+| a voice panned with `stereo()` loses its 3D placement, or the reverse | one panner node per voice and last writer wins — pick one per voice and stay with it |
 | a reverb / compressor on the master gain does not affect the music | the music is `stream: true`, which bypasses the master gain — preload it buffered |
+| sound effects keep playing after the window loses focus | `pauseOnBlur` and `stopOnBlur` are both off, so the engine is deliberately leaving the game running in the background |
 
 ## Related skills
 

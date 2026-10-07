@@ -118,6 +118,11 @@ export * from "./application/scaleMethods.ts";
 export * from "./application/settings.ts";
 // export all utility function
 export * as audio from "./audio/audio.ts";
+export type {
+	PannerAttributes,
+	PlayOptions,
+	SoundEvents,
+} from "./audio/types.ts";
 // export all public constants
 export * from "./const.ts";
 export { Box3d } from "./geometries/box3d.ts";
