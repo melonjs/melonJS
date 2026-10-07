@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.9.0] (melonJS 2) - _unreleased_
+
+### Fixed
+- Skills: the UI skill listed `NineSliceSprite` panels among what it covers but never mentioned them. It now shows both ways to make one (`createSpriteFromName(name, { width, height }, true)` from an atlas, or the constructor from an image) and the three things that trip people up: `width` and `height` are the size to stretch to and are mandatory, `insetx` / `insety` default to a quarter of the image rather than its border, and the anchor is the centre
+
 ## [20.8.0] (melonJS 2) - _2026-10-06_
 
 ### Added
