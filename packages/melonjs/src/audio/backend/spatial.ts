@@ -275,6 +275,65 @@ export type SpatialSound = Sound &
 	};
 
 /**
+ * Merge a partial panner-attribute object over a full one.
+ *
+ * Every field keeps the base's value unless the patch names it, which is what
+ * lets `pannerAttr({ refDistance })` leave the cone geometry alone.
+ * @param base - the attributes to start from
+ * @param patch - the fields the caller named
+ * @returns a new, complete attribute set
+ */
+function mergePannerAttr(
+	base: PannerAttrOptions,
+	patch: Partial<PannerAttrOptions>,
+): PannerAttrOptions {
+	return {
+		coneInnerAngle: patch.coneInnerAngle ?? base.coneInnerAngle,
+		coneOuterAngle: patch.coneOuterAngle ?? base.coneOuterAngle,
+		coneOuterGain: patch.coneOuterGain ?? base.coneOuterGain,
+		distanceModel: patch.distanceModel ?? base.distanceModel,
+		maxDistance: patch.maxDistance ?? base.maxDistance,
+		refDistance: patch.refDistance ?? base.refDistance,
+		rolloffFactor: patch.rolloffFactor ?? base.rolloffFactor,
+		panningModel: patch.panningModel ?? base.panningModel,
+	};
+}
+
+/**
+ * Make sure a voice's panner is the flavour being asked for.
+ *
+ * A voice has ONE panner, and the two kinds are mutually exclusive: a
+ * `StereoPannerNode` takes a pan, a `PannerNode` takes a position. The
+ * original code built one only if none existed and then guarded each updater
+ * with an `instanceof`, so whichever of `stereo()` / `pos()` ran first won and
+ * the other became a SILENT no-op, with nothing logged.
+ *
+ * Last writer wins instead: the wrong node is disconnected and rebuilt. The
+ * caller must clear whichever of `_stereo` / `_pos` it is not setting, or the
+ * voice's `reset()` resurrects the old flavour on the next play.
+ * @param sound - the voice to check
+ * @param want - the flavour the caller is about to write
+ * @returns true when the panner was rebuilt
+ */
+function ensurePannerType(
+	sound: Voice & SpatialVoiceState,
+	want: "stereo" | "spatial",
+): boolean {
+	const isStereo = sound._panner instanceof StereoPannerNode;
+	if (sound._panner !== undefined && isStereo === (want === "stereo")) {
+		return false;
+	}
+	if (sound._panner !== undefined) {
+		// leaving it connected would strand a live node between the source
+		// and the voice's gain. No need to clear the field: `setupPanner`
+		// assigns the replacement over it.
+		sound._panner.disconnect();
+	}
+	setupPanner(sound, want);
+	return true;
+}
+
+/**
  * Setup a panner node for a sound
  * @param sound - the sound the hook fires for
  * @param type - which panner flavour to build
@@ -663,16 +722,18 @@ export function installSpatialOnSound(
 		for (let i = 0; i < ids.length; i++) {
 			const sound = self._soundById(ids[i]) as Voice & SpatialVoiceState;
 			if (sound) {
-				sound._stereo = pan ?? null;
-
-				// Create a new panner node if one doesn't already exist
-				if (!sound._panner) {
-					// Make sure we have a position to setup the node with
-					if (!sound._pos) {
-						sound._pos = self._pos || [0, 0, -0.5];
-					}
-					setupPanner(sound, pannerType);
-				} else if (
+				// Make sure we have a position to setup the node with
+				if (!sound._pos) {
+					sound._pos = self._pos || [0, 0, -0.5];
+				}
+				// `0` rather than `null`: `reset()` prefers `_stereo` over
+				// `_pos` and skips a null one, so a voice panned back to
+				// centre would come back as the OTHER flavour on its next play
+				sound._stereo = pan ?? 0;
+				// a position may have been set on this voice first, in which
+				// case the panner is the other flavour and has to be swapped
+				ensurePannerType(sound, pannerType);
+				if (
 					pannerType === "stereo" &&
 					sound._panner instanceof StereoPannerNode
 				) {
@@ -735,11 +796,15 @@ export function installSpatialOnSound(
 				const sound = self._soundById(ids[i]) as Voice & SpatialVoiceState;
 				if (sound) {
 					sound._pos = [x, y, z];
+					// the mirror of the clear in `stereo()`: last writer wins,
+					// and `reset()` must not resurrect a stale stereo node
+					sound._stereo = null;
 
-					// Create a new panner node if one doesn't already exist
-					if (!sound._panner) {
-						setupPanner(sound, "spatial");
-					} else if (sound._panner instanceof PannerNode) {
+					// a stereo pan may have been set on this voice first, in
+					// which case the panner is the other flavour; swap it
+					// rather than letting this call do nothing
+					ensurePannerType(sound, "spatial");
+					if (sound._panner instanceof PannerNode) {
 						// Update position
 						if (typeof sound._panner.positionX !== "undefined") {
 							sound._panner.positionX.setValueAtTime(
@@ -901,6 +966,18 @@ export function installSpatialOnSound(
 			id = parseInt(String(args[1]), 10);
 		}
 
+		// Update the GROUP too when no single voice was named. Upstream does
+		// this and the port dropped it, so `pannerAttr({...})` before the
+		// first play changed nothing at all, the getter read back
+		// construction-time defaults forever, and every new voice inherited
+		// those defaults rather than what the game had asked for.
+		if (id === undefined) {
+			self._pannerAttr = mergePannerAttr(
+				self._pannerAttr,
+				o as Partial<PannerAttrOptions>,
+			);
+		}
+
 		// Update the values of the specified sounds
 		const ids = self._getSoundIds(id);
 		for (let i = 0; i < ids.length; i++) {
@@ -908,41 +985,10 @@ export function installSpatialOnSound(
 
 			if (sound) {
 				// Merge the new values into the sound
-				const pa = sound._pannerAttr;
-				sound._pannerAttr = {
-					coneInnerAngle:
-						typeof o.coneInnerAngle !== "undefined"
-							? o.coneInnerAngle
-							: pa.coneInnerAngle,
-					coneOuterAngle:
-						typeof o.coneOuterAngle !== "undefined"
-							? o.coneOuterAngle
-							: pa.coneOuterAngle,
-					coneOuterGain:
-						typeof o.coneOuterGain !== "undefined"
-							? o.coneOuterGain
-							: pa.coneOuterGain,
-					distanceModel:
-						typeof o.distanceModel !== "undefined"
-							? o.distanceModel
-							: pa.distanceModel,
-					maxDistance:
-						typeof o.maxDistance !== "undefined"
-							? o.maxDistance
-							: pa.maxDistance,
-					refDistance:
-						typeof o.refDistance !== "undefined"
-							? o.refDistance
-							: pa.refDistance,
-					rolloffFactor:
-						typeof o.rolloffFactor !== "undefined"
-							? o.rolloffFactor
-							: pa.rolloffFactor,
-					panningModel:
-						typeof o.panningModel !== "undefined"
-							? o.panningModel
-							: pa.panningModel,
-				};
+				sound._pannerAttr = mergePannerAttr(
+					sound._pannerAttr,
+					o as Partial<PannerAttrOptions>,
+				);
 
 				// Create a new panner node if one doesn't already exist
 				let panner = sound._panner;

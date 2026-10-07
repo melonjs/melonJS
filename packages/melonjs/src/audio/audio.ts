@@ -9,6 +9,9 @@
  *   `pause`, `resume`, `stop`, `fade`, `seek`, `rate`, `stereo`,
  *   `position`, `orientation`, `panner`).
  * - {@link ./procedural.ts} — procedural primitives (`tone`, `noise`).
+ * - {@link ./spatial.ts} — the world-space layer: a movable listener,
+ *   sounds that follow a renderable, and the pixel-shaped defaults.
+ * - {@link ./autopause.ts} — silencing the mix while the window is away.
  * - {@link ./types.ts} — public TypeScript shapes.
  *
  * This file owns the remaining lifecycle / track / mix / unload
@@ -16,6 +19,7 @@
  */
 
 import { play } from "./playback.ts";
+import { releaseSpatialClip } from "./spatial.ts";
 import {
 	state as audioState,
 	getGlobalVolume,
@@ -45,6 +49,15 @@ export {
 	stop,
 } from "./playback.ts";
 export { noise, tone } from "./procedural.ts";
+
+export {
+	getSpatialDefaults,
+	listener,
+	listenerOrientation,
+	setListener,
+	setSpatialDefaults,
+	unfollow,
+} from "./spatial.ts";
 // Public re-exports from the split modules.
 export {
 	getAudioContext,
@@ -275,6 +288,7 @@ export function muted(): boolean {
  * @category Audio
  */
 export function unload(sound_name: string): boolean {
+	releaseSpatialClip(sound_name);
 	const sound = audioState.tracks[sound_name];
 	if (!sound) {
 		return false;
@@ -303,6 +317,7 @@ export function unload(sound_name: string): boolean {
  * @category Audio
  */
 export function unloadAll(): void {
+	releaseSpatialClip();
 	for (const sound_name in audioState.tracks) {
 		if (Object.prototype.hasOwnProperty.call(audioState.tracks, sound_name)) {
 			unload(sound_name);

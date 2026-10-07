@@ -11,6 +11,11 @@ import { isDataUrl } from "../utils/string.ts";
 import { Sound } from "./backend/core.ts";
 import type { SpatialSound } from "./backend/spatial.ts";
 import {
+	applySpatialPlacement,
+	releaseSpatialClip,
+	releaseSpatialPlacement,
+} from "./spatial.ts";
+import {
 	state as audioState,
 	getGlobalVolume,
 	getSoundOrThrow,
@@ -164,6 +169,10 @@ export function play(
 	// in its place so sprites (and anything added later) do not have to be
 	// appended after `volume` positionally. The positional form is unchanged.
 	const options: PlayOptions =
+		// the null test is not redundant at runtime: `typeof null` is "object",
+		// and a JS caller reaching for a later positional argument writes
+		// `play(name, null, onend)`
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		typeof loopOrOptions === "object" && loopOrOptions !== null
 			? loopOrOptions
 			: { loop: loopOrOptions };
@@ -193,6 +202,22 @@ export function play(
 			sound.on("end", endCallback, id);
 		} else {
 			sound.once("end", endCallback, id);
+		}
+	}
+	// Placed in the world only when the caller asked for it. Everything above
+	// is the path every existing call already took, unchanged.
+	if (options.follow !== undefined || options.at !== undefined) {
+		applySpatialPlacement(sound_name, id, options);
+		// a one-shot stops being tracked when it ends, so a scene full of
+		// short placed sounds does not grow the follow table forever
+		if (!loop) {
+			sound.once(
+				"end",
+				() => {
+					releaseSpatialPlacement(id);
+				},
+				id,
+			);
 		}
 	}
 	return id;
@@ -466,6 +491,16 @@ export function panner(
  * @category Audio
  */
 export function stop(sound_name?: string, id?: number): void {
+	// a stopped sound is no longer somewhere, so it stops being followed.
+	// Without this the frame handler writes positions to a dead voice forever
+	// and the Map pins the renderable it was following.
+	if (sound_name === undefined) {
+		releaseSpatialClip();
+	} else if (id === undefined) {
+		releaseSpatialClip(sound_name);
+	} else {
+		releaseSpatialPlacement(id);
+	}
 	if (sound_name === undefined) {
 		stopAllPlayback();
 		return;
