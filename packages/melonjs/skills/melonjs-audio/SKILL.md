@@ -1,6 +1,6 @@
 ---
 name: melonjs-audio
-description: "Use this skill for sound and music in melonJS — loading audio, playing effects, background tracks, audio sprites, volume and muting, spatial audio, and procedural tone/noise generation. Covers the mandatory audio.init format list, the directory-not-file src convention, playTrack versus play, and browser autoplay unlocking. Triggers on: audio, sound, audio.init, audio.play, playTrack, stopTrack, audio.load, sfx, music, volume, mute, sprite audio, stereo, panner, audio.tone, audio.noise, getAudioContext, autoplay."
+description: "Use this skill for sound and music in melonJS — loading audio, playing effects, background tracks, audio sprites, volume and muting, spatial audio, procedural tone/noise generation, and effects such as reverb or a compressor on the whole mix. Covers the mandatory audio.init format list, the directory-not-file src convention, playTrack versus play, the fixed listener and pixel-scale distances of positional sound, and browser autoplay unlocking. Triggers on: audio, sound, audio.init, audio.play, playTrack, stopTrack, audio.load, sfx, music, volume, mute, fade, rate, pitch, sprite audio, stereo, panner, position, listener, refDistance, reverb, echo, delay, compressor, distortion, filter, audio effect, audio.tone, audio.noise, getAudioContext, getMasterGain, hasAudio, hasFormat, autoplay."
 license: MIT
 ---
 
@@ -28,6 +28,10 @@ await loader.preload([
    `data/sfx/` + `cling` + `mp3` → `data/sfx/cling.mp3`. Passing a full filename
    gives you a 404. A `data:audio/...` URL is the one exception: it is used
    verbatim, prefix and extension skipped.
+
+`audio.hasAudio()` says whether the browser can play audio at all, and
+`audio.hasFormat("ogg")` whether it can play one codec — useful for choosing
+the `init` list or hiding a sound toggle on a device with no audio.
 
 Order matters — melonJS tries the listed formats left to right, so put the
 preferred one first. Two formats (`"webm,mp3"` or `"mp3,ogg"`) is the usual
@@ -88,7 +92,9 @@ audio.state("theme");           // "unloaded" | "loading" | "loaded"
 `stop()`, `pause()` and `resume()` take an optional instance `id` too; omit it
 and the whole group is affected. `audio.stop()` with no arguments at all stops
 every sound. `audio.seek(name)` reads the position, `audio.seek(name, s, id?)`
-writes it; `audio.rate` and `audio.fade(name, from, to, ms, id?)` round it out.
+writes it; `audio.rate(name, r, id?)` changes speed and pitch together
+(`0.5`..`4.0`, `1` is normal) and `audio.fade(name, from, to, ms, id?)` ramps
+the volume (`0`..`1`, over milliseconds).
 
 ## Volume and muting
 
@@ -119,6 +125,40 @@ audio.panner("engine", { coneInnerAngle: 90, /* … */ });
 Called with just the clip name, each of the four returns the current value —
 `stereo` gives `0` and `position` gives `[0, 0, 0]` before they have ever been
 set.
+
+### The listener is fixed at the origin
+
+The ear sits at `(0, 0, 0)` facing `-z`, and **there is no public call to move
+it**. Positions are therefore *relative to the listener*: for a sound to come
+from the left of the player, pass the source's position minus the player's,
+every frame either one moves.
+
+```js
+// in the emitter's update()
+audio.position("engine", this.pos.x - player.pos.x, 0, -0.5, this.engineId);
+```
+
+### Distances are in the units you pass — and the defaults assume metres
+
+The panner defaults are `distanceModel: "inverse"`, `refDistance: 1`,
+`rolloffFactor: 1`, `maxDistance: 10000`, `panningModel: "HRTF"`. With
+`refDistance: 1`, a source 100 units away plays at about **1%** volume, so a
+sound positioned in raw pixels is effectively silent a few tiles out. Either
+set `refDistance` to the distance in pixels at which it should still be at full
+volume, or scale positions down (divide by a tile size) before passing them:
+
+```js
+audio.panner("engine", { refDistance: 200, rolloffFactor: 1 });
+// or: audio.position("engine", dx / 32, 0, -0.5);
+```
+
+### `stereo` and `position` are one or the other
+
+Both drive the same per-instance panner node, and **the first one called
+decides what that node is**: a stereo panner after `stereo()`, a 3D panner after
+`position()`. After that the other call silently does nothing on that instance.
+For a 2D game, left-right `stereo()` is usually all you want; reach for
+`position()` only when distance falloff matters, and then use it alone.
 
 **Spatial audio is WebAudio-only.** On a clip loaded with `stream: true` (or
 `html5: true`) `stereo` / `position` / `orientation` return early and do
@@ -167,6 +207,42 @@ custom Web Audio work; both return `null` when audio is unavailable, so guard.
 Connect a custom graph to the master gain rather than `ctx.destination` if you
 want it to respect `setVolume` / `muteAll`.
 
+## Effects on all game audio: reverb, echo, compressor
+
+There is no built-in reverb, delay, distortion or compressor, and no per-clip
+filter on file playback. There does not need to be one for the common case:
+every buffered clip and every `tone` / `noise` passes through the master gain
+on its way to the speakers, so an effect inserted **after** it applies to the
+whole mix.
+
+```js
+const ctx = audio.getAudioContext();   // creates the context if needed
+const master = audio.getMasterGain();
+if (ctx && master) {                   // null when audio is unavailable
+    const comp = ctx.createDynamicsCompressor();
+    master.disconnect();               // master -> speakers becomes
+    master.connect(comp);              // master -> compressor -> speakers
+    comp.connect(ctx.destination);
+}
+```
+
+Any Web Audio node or chain works the same way: a `ConvolverNode` with an
+impulse response for reverb, a `DelayNode` with a feedback gain for echo, a
+`BiquadFilterNode` for an underwater low-pass, a `WaveShaperNode` for
+distortion. Do it once, at startup; the master gain lives as long as the
+context.
+
+- **`setVolume` / `muteAll` still work**, because they act on the master gain,
+  which is now upstream of the effect.
+- **Streamed clips are not affected.** A `stream: true` (`html5: true`) clip
+  plays through an `<audio>` element and never reaches the master gain — which
+  is usually the music. Preload the music buffered if it must go through the
+  effect.
+- **It is all or nothing.** The per-instance nodes are not public, so an effect
+  on one clip only (muffling one sound behind a wall) is not possible through
+  this route; `noise` has its own `filter` for generated sounds.
+- To remove it, reverse the wiring: `master.disconnect(); master.connect(ctx.destination);`.
+
 ## Autoplay: sound is silent until the first gesture
 
 Browsers create the audio context in the `suspended` state and keep it there
@@ -209,6 +285,10 @@ same switch under its backend name.) `on` accepts the full lifecycle set:
 `play`, `pause`, `stop`, `end`, `fade`, `seek`, `rate`, `volume`, `mute`,
 `unlock`.
 
+Outside a preload, `audio.load(asset, onload?, onerror?)` takes the same
+descriptor and loads one clip at runtime — for a level's sounds fetched when
+the level starts. The loader calls the same function, so the same rules apply.
+
 Re-preloading a manifest that already contains a loaded clip is a no-op —
 `audio.unload(name)` first if you genuinely want to reload it.
 
@@ -247,6 +327,10 @@ either way — blank screen, empty console.
 | a streamed clip ignores `withCredentials` | `stream: true` plays through an `<audio>` element; preload it buffered instead |
 | `audio.tone(440, {...})` does nothing / errors | `tone` takes a single options object with a required `duration` |
 | `tone` / `noise` are silent with no error | no WebAudio context — `getAudioContext()` returned `null` |
+| a positioned sound is silent, or only audible right next to the player | positions in pixels with the default `refDistance: 1` — set `refDistance` in pixels, or scale positions down |
+| a positioned sound does not follow the player | the listener never moves — pass positions relative to the player, every frame |
+| `position()` does nothing on a clip that pans with `stereo()` (or the reverse) | the first call fixed the instance's panner type — use one or the other |
+| a reverb / compressor on the master gain does not affect the music | the music is `stream: true`, which bypasses the master gain — preload it buffered |
 
 ## Related skills
 

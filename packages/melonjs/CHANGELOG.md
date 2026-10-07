@@ -1,5 +1,11 @@
 # Changelog
 
+## [20.9.0] (melonJS 2) - _unreleased_
+
+### Fixed
+- Skills: the UI skill listed `NineSliceSprite` panels among what it covers but never mentioned them. It now shows both ways to make one (`createSpriteFromName(name, { width, height }, true)` from an atlas, or the constructor from an image) and the three things that trip people up: `width` and `height` are the size to stretch to and are mandatory, `insetx` / `insety` default to a quarter of the image rather than its border, and the anchor is the centre
+- Skills: the audio skill now covers what positional sound needs and did not say: the listener is fixed at the origin with no public call to move it, so positions are relative to the player; the panner defaults assume metres, so a sound placed in pixels is near silent a few tiles out (`refDistance: 1` puts one 100 px away at about 1%); and `stereo()` and `position()` drive the same per-instance panner, so whichever runs first makes the other a silent no-op. It also shows how to put reverb, echo or a compressor on the whole mix through `getMasterGain()`, noting that a streamed clip bypasses it, and documents `hasAudio()`, `hasFormat()`, runtime `audio.load()`, and the `rate` and `fade` ranges
+
 ## [20.8.0] (melonJS 2) - _2026-10-06_
 
 ### Added

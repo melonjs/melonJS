@@ -284,6 +284,57 @@ Giving a child a huge `z` to "put it in front" lifts it only within its own
 panel. This is also why a widget's `z` never has to be coordinated with
 anything outside its own container.
 
+### Panels and boxes that stretch: `NineSliceSprite`
+
+A panel, dialogue box or button background drawn from one small image wants
+`NineSliceSprite`, not a `Sprite` scaled up. It cuts the image into a 3×3 grid,
+keeps the four corners at their own size, and stretches only the edges and the
+middle, so the border stays crisp at any size. Do not hand-roll it from nine
+sprites.
+
+From a texture atlas, the third argument of `createSpriteFromName` asks for the
+9-slice version. This is how the UI example's draggable panel draws itself:
+
+```js
+class Panel extends UIBaseElement {
+    constructor(x, y, width, height) {
+        super(x, y, width, height);
+        // `true` returns a NineSliceSprite stretched to the panel's size
+        this.addChild(
+            texture.createSpriteFromName("grey_panel", { width, height }, true),
+        );
+    }
+}
+```
+
+From a loaded image, construct it directly (the Text example's dialogue box):
+
+```js
+const box = new NineSliceSprite(48, 640, {
+    image: "panel",
+    width: 900,
+    height: 256,
+    insetx: 36,          // the border thickness in the source image
+    insety: 36,
+    tint: "#3a3f58",     // tint works as on any sprite
+});
+box.anchorPoint.set(0, 0); // place it by its top-left corner
+```
+
+Three things trip people up:
+
+- **`width` and `height` are mandatory.** They are the size to stretch *to*, not
+  the image's size, and the constructor throws without them.
+- **Set `insetx` / `insety` to the art's border.** Left out, each defaults to a
+  quarter of the source image, which on most panel art cuts through the border:
+  the corners smear or the border thins out when the box grows.
+- **The anchor is the centre**, as for any `Sprite`. Set it to `(0, 0)` to place
+  the box by its corner, as a layout usually wants.
+
+It resizes live: set `width` / `height` and the next draw re-slices, so a box
+that grows with its text, or a panel the player drags larger, needs no new
+sprite.
+
 ### An opaque panel has to say so
 
 The hit test asks the topmost renderable first and then keeps walking down, so
