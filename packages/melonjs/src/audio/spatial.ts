@@ -12,6 +12,7 @@
  */
 
 import type Camera3d from "../camera/camera3d.ts";
+import { Vector3d } from "../math/vector3d.ts";
 import type Renderable from "../renderable/renderable.js";
 import { GAME_AFTER_UPDATE, off, on } from "../system/event.ts";
 import { position as setPosition, stop as stopSound } from "./playback.ts";
@@ -200,8 +201,6 @@ function releaseFollow(id: number) {
 }
 
 // scratch for the camera basis, reused every frame
-import { Vector3d } from "../math/vector3d.ts";
-
 const _right = new Vector3d();
 const _up = new Vector3d();
 const _forward = new Vector3d();

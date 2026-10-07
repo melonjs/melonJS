@@ -317,6 +317,9 @@ export interface PlayOptions {
 	/**
 	 * Place this sound at a fixed world point. Same coordinates and same
 	 * defaults as `follow`, for something that does not move.
+	 *
+	 * Mutually exclusive with `follow`: passing both throws, rather than
+	 * quietly picking one and leaving the other looking broken.
 	 */
 	at?: { x: number; y: number; z?: number } | undefined;
 	/**
