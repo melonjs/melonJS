@@ -274,6 +274,31 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			expect(renderer.getGlobalAlpha()).toBe(0.5);
 		});
 
+		it("REGRESSION: a falsy assignment disables the effect, it does not throw", () => {
+			// `undefined` is how an unset option arrives and how a caller
+			// spells "turn it off". The constructor normalized it with
+			// `|| null`; the setter stored it, which left the draw path's
+			// `!== null` test true with nothing callable behind it, and the
+			// `TypeError` came out of `draw()`, from inside the frame loop.
+			const text = makeText();
+			text.glyphEffect = (out) => {
+				out.offsetY = 3;
+			};
+			expect(typeof text.glyphEffect).toEqual("function");
+
+			text.glyphEffect = undefined;
+			// reads back as the documented `GlyphEffect|null`, not `undefined`
+			expect(text.glyphEffect).toBe(null);
+			expect(() => {
+				text.draw(renderer);
+			}).not.toThrow();
+
+			// and the ordinary path really is back: no per-glyph callback runs
+			const draw = vi.spyOn(renderer, "drawImage");
+			text.draw(renderer);
+			expect(draw).toHaveBeenCalledTimes(3);
+		});
+
 		it("renders offset/tinted pixels through the world, keeps the next glyph untouched and batches GPU colours", () => {
 			const text = makeText({
 				fillStyle: "#80ffff",

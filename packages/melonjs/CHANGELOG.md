@@ -3,7 +3,7 @@
 ## [20.9.0] (melonJS 2) - _unreleased_
 
 ### Added
-- **`BitmapText#glyphEffect`**: offset and tint individual glyphs in one renderable for wave, shake and colour effects, with reused callback objects and the existing GPU batch. Layout and typewriter reveal keep their normal behaviour; the text example uses the hook for its wavy speaker name ([#1522](https://github.com/melonjs/melonJS/issues/1522))
+- **`BitmapText#glyphEffect`**: offset and tint individual glyphs in one renderable for wave, shake and colour effects, with reused callback objects and the existing GPU batch. Layout and typewriter reveal keep their normal behaviour; the text example uses the hook for its wavy speaker name ([#1522](https://github.com/melonjs/melonJS/issues/1522), thanks @snowyukitty)
 - **`RenderTarget#toImageData()`**: read back a render target's pixels as a promise. The portable readback, and the one backend-agnostic code should use: `toBlob()`, `toDataURL()` and `toImageBitmap()` are all built on it
 - **`Texture2d#isAtlas`**: whether a texture carries named regions addressable with `getRegion()`. `false` on every texture but a `TextureAtlas`, so a game holding a `Texture2d` of unknown kind can ask without a type test
 - **Spatial audio placed in world coordinates**: `audio.play(name, { follow: renderable })` tracks a sound to a renderable every frame, `{ at: { x, y } }` pins one to a fixed world point, and `{ stopWithTarget: true }` ends it when that renderable is destroyed. The numbers are world pixels with y measured down, the same ones already in `pos`, so a game converts nothing by hand. `audio.unfollow(id)` detaches a sound and leaves it playing where it is

@@ -179,13 +179,13 @@ export default class BitmapText extends Renderable {
 		/**
 		 * Lazily allocated; plain bitmap text needs no effect scratch objects.
 		 * @private
-		 * @type {{out: GlyphEffectOutput, context: GlyphEffectContext, tint: Color, chars: string[][]}|undefined}
+		 * @type {{out: GlyphEffectOutput, context: GlyphEffectContext, tint: Color}|undefined}
 		 */
 		this._glyphEffectState = undefined;
 
-		// set the text before preparing the effect's character cache
+		// set the text
 		this.setText(settings.text);
-		this.glyphEffect = settings.glyphEffect || null;
+		this.glyphEffect = settings.glyphEffect;
 	}
 
 	/**
@@ -227,12 +227,6 @@ export default class BitmapText extends Renderable {
 			this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
 		}
 
-		if (this._glyphEffect !== null) {
-			this._glyphEffectState.chars = this._text.map((line) => {
-				return line.split("");
-			});
-		}
-
 		// measure text dimensions (cached for updateBounds)
 		this.metrics.measureText(this._text);
 		this.updateBounds();
@@ -247,8 +241,15 @@ export default class BitmapText extends Renderable {
 	 * so drawing through multiple cameras does not advance the animation.
 	 * Effects change drawing only: metrics, wrapping and bounds stay unchanged.
 	 * Keep the measured text in view: effects do not extend the culling bounds.
-	 * Canvas uses its existing tinted-image cache; prefer a finite colour palette
-	 * there. WebGL/WebGPU retain batching.
+	 * WebGL and WebGPU retain batching: the tint rides the per-vertex colour,
+	 * so a whole animated line is still one draw call. Canvas realizes each
+	 * DISTINCT tint as a cached, tinted copy of the entire font page, and that
+	 * cache is unbounded for the life of the renderer, so a colour driven by
+	 * `ctx.time` costs a font-page canvas per frame there. On Canvas, keep the
+	 * palette finite or vary only the offsets.
+	 *
+	 * While an effect is set the renderable reports itself as changed every
+	 * frame, since whether the callback reads `ctx.time` cannot be known.
 	 * @type {GlyphEffect|null}
 	 * @example
 	 * text.glyphEffect = (out, ctx) => {
@@ -261,18 +262,21 @@ export default class BitmapText extends Renderable {
 	}
 
 	set glyphEffect(effect) {
-		if (this._glyphEffect !== effect) {
-			this._glyphEffect = effect;
-			if (effect !== null) {
+		// Normalized, as the constructor's `settings.glyphEffect || null`
+		// already was. `undefined` is how an unset option arrives and how a
+		// caller spells "turn it off", and storing it left the draw path's
+		// `!== null` test true with nothing callable behind it: a
+		// `TypeError: effect is not a function` out of `draw()`, i.e. from
+		// inside the frame loop.
+		const next = effect || null;
+		if (this._glyphEffect !== next) {
+			this._glyphEffect = next;
+			if (next !== null) {
 				this._glyphEffectState ??= {
 					out: { offsetX: 0, offsetY: 0, tint: new Color(255, 255, 255) },
 					context: { index: 0, char: "", code: 0, time: 0, x: 0, y: 0 },
 					tint: new Color(255, 255, 255),
-					chars: [],
 				};
-				this._glyphEffectState.chars = this._text.map((line) => {
-					return line.split("");
-				});
 			}
 			this.isDirty = true;
 		}
@@ -542,7 +546,7 @@ export default class BitmapText extends Renderable {
 							glyph,
 							charCount,
 							ch,
-							this._glyphEffectState.chars[i][c],
+							string.charAt(c),
 							x + glyph.xoffset * scaleX,
 							y + glyph.yoffset * scaleY,
 						);
