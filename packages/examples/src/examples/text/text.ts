@@ -19,7 +19,6 @@ import {
 	type Application,
 	BitmapText,
 	ColorLayer,
-	Container,
 	NineSliceSprite,
 	Renderable,
 	type Renderer,
@@ -93,18 +92,8 @@ class ContinueArrow extends Renderable {
 	}
 }
 
-/**
- * RPG-style "wavy text": a bitmap-font string whose glyphs bob on a sine wave.
- * Each character is its own BitmapText (BitmapText draws a string in one batch,
- * with no per-glyph hook) so it can be offset independently every frame.
- */
-class WavyText extends Container {
-	private glyphs: BitmapText[] = [];
-	private elapsed = 0;
-	private amplitude: number;
-	private speed: number;
-	private phaseStep: number;
-
+/** RPG-style wavy text, kept in one batched BitmapText renderable. */
+class WavyText extends BitmapText {
 	constructor(
 		x: number,
 		y: number,
@@ -114,38 +103,14 @@ class WavyText extends Container {
 		speed = 0.009,
 		phaseStep = 0.7,
 	) {
-		super(x, y);
-		this.amplitude = amplitude;
-		this.speed = speed;
-		this.phaseStep = phaseStep;
-		this.alwaysUpdate = true;
-
-		// lay glyphs out left-to-right by measured advance
-		const measurer = new BitmapText(0, 0, settings);
-		let cx = 0;
-		for (const ch of text) {
-			const glyph = new BitmapText(cx, 0, { ...settings, text: ch });
-			this.glyphs.push(glyph);
-			this.addChild(glyph);
-			measurer.setText(ch === " " ? "M" : ch); // spaces measure to 0 otherwise
-			cx += measurer.measureText().width;
-		}
-
-		// Fixed, non-empty bounds so the camera never culls the group. Deriving
-		// bounds from the (continuously moving) child glyphs is what let MELONA
-		// occasionally vanish; a stable box covering the text + wave is robust.
-		this.width = cx;
-		this.height = (Number(settings.size) || 1) * 16 + this.amplitude * 2;
-	}
-
-	override update(dt: number) {
-		this.elapsed += dt;
-		this.glyphs.forEach((glyph, i) => {
-			glyph.pos.y =
-				Math.sin(this.elapsed * this.speed + i * this.phaseStep) *
-				this.amplitude;
+		super(x, y, {
+			...settings,
+			text,
+			glyphEffect: (out, ctx) => {
+				out.offsetY =
+					Math.sin(ctx.time * speed + ctx.index * phaseStep) * amplitude;
+			},
 		});
-		return super.update(dt);
 	}
 }
 

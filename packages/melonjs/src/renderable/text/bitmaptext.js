@@ -13,6 +13,7 @@ import TextMetrics from "./textmetrics.js";
  * @import WebGLRenderer from "../../video/webgl/webgl_renderer.js";
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import Renderer from "../../video/renderer.js";
+ * @import {GlyphEffect, GlyphEffectContext, GlyphEffectOutput} from "./glypheffect.ts";
  */
 /**
  * a bitmap font object.
@@ -38,6 +39,7 @@ export default class BitmapText extends Renderable {
 	 * @param {number} [settings.lineHeight=1.0] - line spacing height
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+	 * @param {GlyphEffect|null} [settings.glyphEffect=null] - a per-glyph offset and tint callback
 	 * @param {(string|string[])} [settings.text] - a string, or an array of strings
 	 * @example
 	 * // Load the BMFont descriptor as a "binary" asset and its page as an "image".
@@ -170,8 +172,20 @@ export default class BitmapText extends Renderable {
 			this.resize(settings.size);
 		}
 
+		/** @private @type {GlyphEffect|null} */
+		this._glyphEffect = null;
+		/** @private */
+		this._glyphEffectTime = 0;
+		/**
+		 * Lazily allocated; plain bitmap text needs no effect scratch objects.
+		 * @private
+		 * @type {{out: GlyphEffectOutput, context: GlyphEffectContext, tint: Color}|undefined}
+		 */
+		this._glyphEffectState = undefined;
+
 		// set the text
 		this.setText(settings.text);
+		this.glyphEffect = settings.glyphEffect;
 	}
 
 	/**
@@ -218,6 +232,63 @@ export default class BitmapText extends Renderable {
 		this.updateBounds();
 
 		return this;
+	}
+
+	/**
+	 * A per-glyph offset and multiplicative tint callback, or `null` to disable.
+	 * The output and context are reused: do not retain them. Offsets start at
+	 * zero and tint at opaque white on each call. Time advances through update,
+	 * so drawing through multiple cameras does not advance the animation.
+	 * Effects change drawing only: metrics, wrapping and bounds stay unchanged.
+	 * Keep the measured text in view: effects do not extend the culling bounds.
+	 * WebGL and WebGPU retain batching: the tint rides the per-vertex colour,
+	 * so a whole animated line is still one draw call. Canvas realizes each
+	 * DISTINCT tint as a cached, tinted copy of the entire font page, and that
+	 * cache is unbounded for the life of the renderer, so a colour driven by
+	 * `ctx.time` costs a font-page canvas per frame there. On Canvas, keep the
+	 * palette finite or vary only the offsets.
+	 *
+	 * While an effect is set the renderable reports itself as changed every
+	 * frame, since whether the callback reads `ctx.time` cannot be known.
+	 * @type {GlyphEffect|null}
+	 * @example
+	 * text.glyphEffect = (out, ctx) => {
+	 *     out.offsetY = Math.sin(ctx.time * 0.008 + ctx.index * 0.6) * 6;
+	 *     out.tint.setColor(255, 128, 128);
+	 * };
+	 */
+	get glyphEffect() {
+		return this._glyphEffect;
+	}
+
+	set glyphEffect(effect) {
+		// Normalized, as the constructor's `settings.glyphEffect || null`
+		// already was. `undefined` is how an unset option arrives and how a
+		// caller spells "turn it off", and storing it left the draw path's
+		// `!== null` test true with nothing callable behind it: a
+		// `TypeError: effect is not a function` out of `draw()`, i.e. from
+		// inside the frame loop.
+		const next = effect || null;
+		if (this._glyphEffect !== next) {
+			this._glyphEffect = next;
+			if (next !== null) {
+				this._glyphEffectState ??= {
+					out: { offsetX: 0, offsetY: 0, tint: new Color(255, 255, 255) },
+					context: { index: 0, char: "", code: 0, time: 0, x: 0, y: 0 },
+					tint: new Color(255, 255, 255),
+				};
+			}
+			this.isDirty = true;
+		}
+	}
+
+	/** @inheritdoc */
+	update(dt) {
+		if (this._glyphEffect !== null) {
+			this._glyphEffectTime += dt;
+			return true;
+		}
+		return super.update(dt);
 	}
 
 	/**
@@ -469,7 +540,17 @@ export default class BitmapText extends Renderable {
 					const scaleY = this.fontScale.y;
 
 					// draw it
-					if (glyphWidth !== 0 && glyphHeight !== 0) {
+					if (this._glyphEffect !== null) {
+						this._drawGlyphEffect(
+							renderer,
+							glyph,
+							charCount,
+							ch,
+							string.charAt(c),
+							x + glyph.xoffset * scaleX,
+							y + glyph.yoffset * scaleY,
+						);
+					} else if (glyphWidth !== 0 && glyphHeight !== 0) {
 						// some browser throw an exception when drawing a 0 width or height image
 						renderer.drawImage(
 							this.fontImage,
@@ -501,11 +582,68 @@ export default class BitmapText extends Renderable {
 	}
 
 	/**
+	 * Draw a glyph without changing the pen advance or renderer state.
+	 * @private
+	 * @param {Renderer} renderer
+	 * @param {import("./glyph.ts").default} glyph
+	 * @param {number} index
+	 * @param {number} code
+	 * @param {string} char
+	 * @param {number} x
+	 * @param {number} y
+	 */
+	_drawGlyphEffect(renderer, glyph, index, code, char, x, y) {
+		const { out, context, tint } = this._glyphEffectState;
+		out.offsetX = out.offsetY = 0;
+		out.tint.setFloat(1, 1, 1, 1);
+		context.index = index;
+		context.char = char;
+		context.code = code;
+		context.time = this._glyphEffectTime;
+		context.x = x;
+		context.y = y;
+		tint.copy(renderer.currentTint);
+		const alpha = renderer.getGlobalAlpha();
+		try {
+			const effect = this._glyphEffect;
+			effect(out, context);
+			const base = tint.toArray();
+			const color = out.tint.toArray();
+			renderer.currentTint.setFloat(
+				base[0] * color[0],
+				base[1] * color[1],
+				base[2] * color[2],
+				base[3],
+			);
+			// Global alpha is shared by Canvas and both GPU backends.
+			renderer.setGlobalAlpha(alpha * color[3]);
+			if (glyph.width !== 0 && glyph.height !== 0) {
+				renderer.drawImage(
+					this.fontImage,
+					glyph.x,
+					glyph.y,
+					glyph.width,
+					glyph.height,
+					x + out.offsetX,
+					y + out.offsetY,
+					glyph.width * this.fontScale.x,
+					glyph.height * this.fontScale.y,
+				);
+			}
+		} finally {
+			renderer.currentTint.copy(tint);
+			renderer.setGlobalAlpha(alpha);
+		}
+	}
+
+	/**
 	 * Destroy function
 	 * @ignore
 	 * @internal
 	 */
 	destroy() {
+		this._glyphEffect = null;
+		this._glyphEffectState = undefined;
 		vector2dPool.release(this.fontScale);
 		this.fontScale = undefined;
 		bitmapTextDataPool.release(this.fontData);

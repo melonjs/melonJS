@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, Tween, easing, animate a label, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
 license: MIT
 ---
 
@@ -124,6 +124,49 @@ label from one class to the other:
 | gradient | yes, via `fillGradient` | no: a tint is one colour over a page image |
 | stroke | `strokeStyle` + `lineWidth` | none |
 | `size` | pixels | a RATIO of the authored size |
+
+### Per-glyph wave, shake and colour: `glyphEffect`
+
+Animating individual letters does **not** mean one renderable per character.
+`BitmapText#glyphEffect` offsets and tints each glyph inside the batch the
+label already draws, so an animated 100-character line stays one draw call and
+costs no extra objects:
+
+```js
+label.glyphEffect = (out, ctx) => {
+    out.offsetY = Math.sin(ctx.time * 0.008 + ctx.index * 0.6) * 6;  // wave
+    out.tint.setColor(255, 128, 128);                                // per glyph
+};
+label.glyphEffect = null;    // back to the plain path
+```
+
+`out` and `ctx` are **reused**: read `ctx` during the call and write `out`, but
+never keep either. `out.offsetX` / `offsetY` start at zero and `out.tint` at
+opaque white on every glyph, so an effect that only touches some glyphs leaves
+the rest alone. `ctx` carries `index` (across lines, line breaks excluded),
+`char`, `code`, `x`, `y` and `time`.
+
+Four things that catch people:
+
+- **`time` advances in `update`, not in `draw`.** A label drawn through two
+  cameras animates once, not twice. It is the milliseconds ACCUMULATED across
+  updates while an effect was set, and nothing resets it, so swapping the
+  callback continues the same clock rather than starting a new one.
+- **Effects move pixels, not layout.** Metrics, wrapping, alignment,
+  `visibleCharacters` and the bounds all ignore the offsets, so the pen advance
+  and kerning are exactly as without one. The flip side is that **offsets do
+  not extend the culling bounds**: a big wave near the screen edge can clip, so
+  keep the measured text in view.
+- **Canvas pays per distinct colour.** WebGL and WebGPU carry the tint in the
+  per-vertex colour, so batching survives. The Canvas renderer instead caches a
+  tinted copy of the whole font page per colour, and that cache is unbounded
+  for the renderer's life, so a colour driven by `ctx.time` allocates a
+  page-sized canvas every frame there. On Canvas, keep the palette finite or
+  animate only the offsets.
+- **`tint` is multiplicative**, like `fillStyle` above: white leaves the glyph
+  alone, and `out.tint` multiplies whatever the label's own `fillStyle` is.
+
+`Text` has no equivalent, since it rasterises the whole string into one texture.
 
 ## The HUD pattern
 

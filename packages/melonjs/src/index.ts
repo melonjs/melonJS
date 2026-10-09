@@ -338,6 +338,11 @@ DOMContentLoaded(() => {
 	}
 });
 
+export type {
+	GlyphEffect,
+	GlyphEffectContext,
+	GlyphEffectOutput,
+} from "./renderable/text/glypheffect.ts";
 export type { EasingFunction } from "./tweens/easing.ts";
 export type { InterpolationFunction } from "./tweens/interpolation.ts";
 export type { Topology } from "./video/gpu/topology.ts";
