@@ -8,18 +8,13 @@ import {
 	LOADER_PROGRESS,
 	on,
 } from "../system/event.ts";
-import { getBasename } from "../utils/file.ts";
 import {
-	binList,
-	fontList,
-	gltfList,
-	imgList,
-	jsonList,
-	mtlList,
-	objList,
-	shaderList,
-	tmxList,
-	videoList,
+	assetNames,
+	CACHED_TYPES,
+	deleteAsset,
+	getFont,
+	getShader,
+	hasAsset,
 } from "./cache.js";
 import { preloadAseprite } from "./parsers/aseprite.js";
 import { preloadAudio, unloadAllAudio, unloadAudio } from "./parsers/audio.js";
@@ -35,11 +30,40 @@ import { preloadShader } from "./parsers/shader.js";
 import { preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
 
+// the cache read accessors live with the caches themselves; re-exported
+// here so `loader.getImage(...)` and its siblings are unchanged
+export {
+	getBinary,
+	getFont,
+	getGLTF,
+	getImage,
+	getJSON,
+	getMTL,
+	getOBJ,
+	getShader,
+	getTMX,
+	getVideo,
+} from "./cache.js";
+
 /**
  * additional import for TypeScript
  * @import {CompressedImage} from "./parsers/compressed_textures/compressed_image.js";
  * @import GLShader from "../video/webgl/glshader.js";
  * @import ShaderEffect from "../video/effects/shadereffect.js";
+ */
+
+/**
+ * The parsed glTF/GLB scene descriptors, re-exported from the parser that
+ * defines them so `loader.GLTFData` keeps naming a type.
+ *
+ * `getGLTF` is reached as `loader.getGLTF`, and the parser module is not part
+ * of the public entry point, so without these the return type of a public
+ * function was a type a consumer could not name.
+ * @typedef {import("./parsers/gltf.js").GLTFData} GLTFData
+ */
+/**
+ * One mesh primitive out of a parsed glTF/GLB scene.
+ * @typedef {import("./parsers/gltf.js").GLTFNode} GLTFNode
  */
 /**
  * a small class to manage loading of stuff and manage resources
@@ -701,124 +725,61 @@ export function load(asset, onload, onerror) {
  */
 export function unload(asset) {
 	switch (asset.type) {
-		case "binary":
-			if (!(asset.name in binList)) {
-				return false;
-			}
-
-			delete binList[asset.name];
-			return true;
-
-		case "image":
-			if (!(asset.name in imgList)) {
-				return false;
-			}
-			delete imgList[asset.name];
-			return true;
-
-		case "json":
-			if (!(asset.name in jsonList)) {
-				return false;
-			}
-
-			delete jsonList[asset.name];
-			return true;
-
 		case "js":
-			// ??
+			// nothing is cached for a script: it ran at load time
 			return true;
 
-		case "fontface":
-			// membership guard like every other type — FontFaceSet.delete is
-			// WebIDL-typed and THROWS on undefined instead of returning false
-			if (!(asset.name in fontList)) {
+		case "audio":
+			return unloadAudio(asset.name);
+
+		case "fontface": {
+			// the FontFace has to leave the document's own set as well, and
+			// the membership guard comes first because `FontFaceSet.delete`
+			// is silent about a face it does not have
+			if (!hasAsset("fontface", asset.name)) {
 				return false;
 			}
 			if (
 				typeof globalThis.document !== "undefined" &&
 				typeof globalThis.document.fonts !== "undefined"
 			) {
-				globalThis.document.fonts.delete(fontList[asset.name]);
-				delete fontList[asset.name];
-				return true;
+				globalThis.document.fonts.delete(getFont(asset.name));
+				return deleteAsset("fontface", asset.name);
 			}
 			return false;
-
-		case "tmx":
-		case "tsx":
-			if (!(asset.name in tmxList)) {
-				return false;
-			}
-
-			delete tmxList[asset.name];
-			return true;
-
-		case "audio":
-			return unloadAudio(asset.name);
-
-		case "video":
-			if (!(asset.name in videoList)) {
-				return false;
-			}
-
-			delete videoList[asset.name];
-			return true;
-
-		case "obj":
-			if (!(asset.name in objList)) {
-				return false;
-			}
-
-			delete objList[asset.name];
-			return true;
-
-		case "gltf":
-		case "glb":
-			if (!(asset.name in gltfList)) {
-				return false;
-			}
-
-			delete gltfList[asset.name];
-			return true;
-
-		case "mtl":
-			if (!(asset.name in mtlList)) {
-				return false;
-			}
-
-			delete mtlList[asset.name];
-			return true;
-
-		case "aseprite": {
-			// aseprite asset populates both imgList and jsonList under the same key
-			const hadImage = asset.name in imgList;
-			const hadJson = asset.name in jsonList;
-			if (!hadImage && !hadJson) {
-				return false;
-			}
-			delete imgList[asset.name];
-			delete jsonList[asset.name];
-			return true;
 		}
 
 		case "shader": {
-			const effect = shaderList[asset.name];
-			if (typeof effect === "undefined") {
-				return false;
-			}
+			// the `false` for a shader that was never loaded comes from
+			// `deleteAsset` below; `getShader` returns null for a missing key,
+			// so there is nothing to guard against here
+			const effect = getShader(asset.name);
 			// the loader owns the shared ShaderEffect/GLShader — actually free
 			// the GL program, don't just drop the cache entry. A `null` entry
 			// is a {vertex, fragment} pair loaded under the Canvas renderer
 			// (no GL program to free).
 			effect?.destroy();
-			delete shaderList[asset.name];
-			return true;
+			return deleteAsset("shader", asset.name);
+		}
+
+		case "aseprite": {
+			// an aseprite asset populates both the image and the json cache
+			// under the same key, and either one alone counts as present
+			const hadImage = deleteAsset("image", asset.name);
+			const hadJson = deleteAsset("json", asset.name);
+			return hadImage || hadJson;
 		}
 
 		default:
-			throw new Error(
-				"unload : unknown or invalid resource type : " + asset.type,
-			);
+			// every other type is one entry in one cache. An unrecognised type
+			// throws, as it always has: `load` throws for one too, and a typo
+			// that is loud going in should not be silent coming out
+			if (!CACHED_TYPES.includes(asset.type)) {
+				throw new Error(
+					"unload : unknown or invalid resource type : " + asset.type,
+				);
+			}
+			return deleteAsset(asset.type, asset.name);
 	}
 }
 
@@ -828,426 +789,15 @@ export function unload(asset) {
  * @category Assets
  */
 export function unloadAll() {
-	let name;
-
-	// unload all binary resources
-	for (name in binList) {
-		if (binList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "binary",
-			});
+	// Driven off the cache registry itself, so a new asset type is swept by
+	// registering its cache and nothing else. `tsx` and `glb` alias caches
+	// their siblings already cleared, which costs one empty pass each.
+	for (const type of CACHED_TYPES) {
+		for (const name of assetNames(type)) {
+			unload({ name, type });
 		}
 	}
 
-	// unload all image resources
-	for (name in imgList) {
-		if (imgList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "image",
-			});
-		}
-	}
-
-	// unload all tmx resources
-	for (name in tmxList) {
-		if (tmxList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "tmx",
-			});
-		}
-	}
-
-	// unload all json resources
-	for (name in jsonList) {
-		if (jsonList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "json",
-			});
-		}
-	}
-
-	// unload all video resources
-	for (name in videoList) {
-		if (videoList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "video",
-			});
-		}
-	}
-
-	// unload all font resources
-	for (name in fontList) {
-		if (fontList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "fontface",
-			});
-		}
-	}
-
-	// unload all OBJ resources
-	for (name in objList) {
-		if (objList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "obj",
-			});
-		}
-	}
-
-	// unload all MTL resources
-	for (name in mtlList) {
-		if (mtlList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "mtl",
-			});
-		}
-	}
-
-	// unload all glTF/GLB scene resources
-	for (name in gltfList) {
-		if (gltfList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "glb",
-			});
-		}
-	}
-
-	// unload all shader resources (destroys their shared GL programs)
-	for (name in shaderList) {
-		if (shaderList.hasOwnProperty(name)) {
-			unload({
-				name: name,
-				type: "shader",
-			});
-		}
-	}
-
-	// unload all audio resources
+	// and the audio, which keeps its own store
 	unloadAllAudio();
-}
-
-/**
- * return the specified TMX/TSX object
- * @param {string} elt - name of the tmx/tsx element ("map1");
- * @returns {object} requested element or null if not found
- * @category Assets
- */
-export function getTMX(elt) {
-	// force as string
-	elt = "" + elt;
-	if (elt in tmxList) {
-		return tmxList[elt];
-	}
-	return null;
-}
-
-/**
- * return the specified Binary object
- * @param {string} elt - name of the binary object ("ymTrack");
- * @returns {object} requested element or null if not found
- * @category Assets
- */
-export function getBinary(elt) {
-	// force as string
-	elt = "" + elt;
-	if (elt in binList) {
-		return binList[elt];
-	}
-	return null;
-}
-
-/**
- * return the specified Image Object
- * @param {string} image - name of the Image element ("tileset-platformer");
- * @returns {HTMLImageElement|CompressedImage|null} requested element or null if not found
- * @category Assets
- */
-export function getImage(image) {
-	// force as string and extract the base name
-	image = getBasename("" + image);
-	if (image in imgList) {
-		// return the corresponding Image object
-		return imgList[image];
-	}
-	return null;
-}
-
-/**
- * return the specified JSON Object
- * @param {string} elt - name of the json file
- * @returns {JSON}
- * @category Assets
- */
-export function getJSON(elt) {
-	// force as string
-	elt = "" + elt;
-	if (elt in jsonList) {
-		return jsonList[elt];
-	}
-	return null;
-}
-
-/**
- * return the specified OBJ model data
- * @param {string} elt - name of the OBJ file (as specified in the preload list)
- * @returns {object} parsed OBJ data with `vertices` (Float32Array), `uvs` (Float32Array), `indices` (Uint16Array), and `vertexCount` (number), or null if not found
- * @category Assets
- * @example
- * // 1. preload the OBJ model and its texture
- * me.loader.preload([
- *     { name: "cube", type: "obj", src: "models/cube.obj" },
- *     { name: "cube", type: "image", src: "models/cube_texture.png" },
- * ], () => {
- *     // 2. create a Mesh using the preloaded model name
- *     const mesh = new me.Mesh(400, 300, {
- *         model: "cube",        // references the preloaded OBJ
- *         texture: "cube",      // references the preloaded image
- *         width: 200,
- *         height: 200,
- *     });
- *     me.game.world.addChild(mesh);
- *
- *     // 3. or access the raw parsed data directly
- *     const data = me.loader.getOBJ("cube");
- *     // data.vertices — Float32Array of x,y,z positions
- *     // data.uvs — Float32Array of u,v texture coordinates
- *     // data.indices — Uint16Array of triangle vertex indices
- *     // data.vertexCount — number of unique vertices
- *     // data.groups — usemtl material groups ({materialName, start, count} index ranges)
- * });
- */
-export function getOBJ(elt) {
-	// force as string
-	elt = "" + elt;
-	if (elt in objList) {
-		return objList[elt];
-	}
-	return null;
-}
-
-/**
- * One mesh primitive out of a parsed glTF/GLB scene.
- *
- * Spelled out rather than left as `object` so the geometry can be read from
- * TypeScript — feeding `vertices`/`uvs`/`normals`/`indices` straight into a
- * {@link Mesh} or {@link InstancedMesh} is the whole point of exposing it.
- * @typedef {object} GLTFNode
- * @property {number[]} world - accumulated world transform, 16 floats, column-major
- * @property {Float32Array} vertices - positions, x,y,z triplets
- * @property {Float32Array} normals - per-vertex normals
- * @property {Float32Array} uvs - texture coordinates, u,v pairs
- * @property {Uint16Array|Uint32Array} indices - triangle vertex indices
- * @property {number} vertexCount - number of vertices
- * @property {HTMLImageElement|null} image - decoded baseColor texture, or `null`
- * @property {number[]} [baseColorFactor] - material baseColor factor, `[r, g, b, a]`
- * @property {Uint32Array} [colors] - per-vertex colour, packed RGBA8
- * @property {string} [textureRepeat] - wrap mode derived from the glTF sampler
- * @property {string} [textureFilter] - magnification filter derived from the glTF sampler
- * @property {number} [alphaCutoff] - cutout threshold from `alphaMode: "MASK"`
- * @property {number[]} [emissive] - emissive factor, `[r, g, b]`
- * @property {boolean} [unlit] - the material carried `KHR_materials_unlit`
- * @property {boolean} [doubleSided] - the material is double-sided
- * @property {string} [name] - the source node's name
- */
-
-/**
- * a parsed glTF/GLB scene descriptor, as returned by {@link loader.getGLTF}
- * @typedef {object} GLTFData
- * @property {GLTFNode[]} nodes - one entry per mesh primitive
- * @property {Array<{world: number[], type?: string, perspective?: {yfov?: number, aspectRatio?: number, znear?: number, zfar?: number}, orthographic?: object}>} cameras - glTF cameras, each with its `world` transform + the glTF camera parameters (`perspective` for perspective cameras, `orthographic` otherwise)
- * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, `innerConeAngle`/`outerConeAngle` for spots, world-space `direction`/`position`, `name`)
- * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
- * @property {object[]} graph - the full node graph (every node's TRS/matrix + children), for custom traversal
- * @property {object[]} animations - parsed node animations (consumed by `GLTFModel` playback)
- */
-
-/**
- * return the parsed glTF/GLB scene descriptor for the given asset name.
- *
- * The descriptor is `{ nodes, cameras, lights, bounds, graph, animations }`:
- * - `nodes` — one entry per mesh primitive, each carrying its accumulated
- *   `world` transform (16 floats, column-major), `vertices`, `normals`,
- *   `uvs`, `indices`, `vertexCount`, a decoded baseColor `image` (or `null`),
- *   and a `doubleSided` flag.
- * - `cameras` — glTF cameras, each with its `world` transform + perspective
- *   parameters.
- * - `lights` — parsed `KHR_lights_punctual` lights (`type`, `color`,
- *   `intensity`, `range`, spot cone angles, world-space
- *   `direction`/`position`, `name`); empty without the extension. The
- *   level director instantiates directional, point and spot lights
- *   automatically (see {@link level.load} options).
- * - `bounds` — world-space `{ min, max }` (glTF units), handy for framing.
- *
- * Most code never needs this: a preloaded glTF/GLB auto-registers with the
- * {@link level} director, so the whole scene loads into a container in one
- * call via `me.level.load(name)` — exactly like a Tiled map. Reach for
- * `getGLTF` only when you want to inspect the raw descriptor (e.g. to frame
- * a `Camera3d` from the embedded camera).
- * @param {string} elt - name of the glTF/GLB file (as specified in the preload list)
- * @returns {GLTFData|null} the parsed scene descriptor, or `null` if not found
- * @category Assets
- * @example
- * me.loader.preload(
- *     [{ name: "diorama", type: "glb", src: "scenes/diorama.glb" }],
- *     () => {
- *         // load the whole scene into the world (view under a Camera3d)
- *         me.level.load("diorama", { scale: 32 });
- *
- *         // ...or inspect the raw descriptor for custom framing
- *         const scene = me.loader.getGLTF("diorama");
- *         const { min, max } = scene.bounds;
- *     },
- * );
- */
-export function getGLTF(elt) {
-	elt = "" + elt;
-	if (elt in gltfList) {
-		return gltfList[elt];
-	}
-	return null;
-}
-
-/**
- * Return the precompiled `ShaderEffect` for the given "shader" asset —
- * compiled once during preloading, ready to assign to a renderable or
- * camera `shader` property.
- *
- * **This returns a SHARED instance**: the *same* `ShaderEffect` object on
- * every call, owned by the loader (its `shared` flag is `true`). That means:
- * - it is safe to assign to any number of renderables — none of their
- *   cleanup paths will auto-destroy it, only {@link loader.unload} /
- *   {@link loader.unloadAll} free it (and its GL program);
- * - all of them share ONE set of uniform values — `setUniform` on it
- *   affects every renderable using the shader.
- *
- * When a renderable needs its **own** uniform values, make a private,
- * caller-owned copy with `ShaderEffect.clone()` — the clone's `shared` flag
- * is reset to `false`, so it is auto-destroyed with the renderable it is
- * assigned to, like any hand-constructed effect.
- *
- * A shader asset declared as a **complete program** — a
- * `{vertex, fragment}` GLSL pair and/or a full `wgsl` module (see the
- * example) — compiles into a raw {@link GLShader} instead, carrying one
- * realization per GPU backend (`isWebGL` / `isWebGPU`): the type the
- * hosted paths take directly (a `Mesh` custom shader,
- * `renderer.customShader`, a custom batcher). Same shared-instance
- * semantics, and `GLShader.clone()` likewise yields a caller-owned copy.
- *
- * Degradation is never fatal: a fragment-body asset without a body in the
- * active renderer's language (or on Canvas) is an inert `ShaderEffect`
- * stub, and a complete-program asset without a realization for the active
- * backend is an inert `GLShader` — assigning either just keeps the
- * built-in rendering. Note that shader assets require an initialized
- * Application (`await app.init()`) — an inherent precondition of the
- * preload flow, since the loading screen itself needs the renderer.
- * @param {string} elt - name of the shader asset (as specified in the preload list)
- * @returns {ShaderEffect|GLShader|null} the shared, precompiled shader, or `null` if not found
- * @category Assets
- * @example
- * me.loader.preload([
- *     // from a file (or data: URI)
- *     { name: "waterRipple", type: "shader", src: "shaders/waterRipple.frag" },
- *     // or inline GLSL via the `data` field
- *     { name: "flash", type: "shader", data: `
- *         uniform float uIntensity;
- *         vec4 apply(vec4 color, vec2 uv) { return mix(color, vec4(1.0), uIntensity); }
- *     ` },
- *     // or a complete program — a {vertex, fragment} GLSL pair and/or a
- *     // full WGSL module → one GLShader carrying both realizations; the
- *     // active renderer hosts the one it speaks
- *     { name: "toonMesh", type: "shader", src: {
- *         vertex: "shaders/toon.vert",
- *         fragment: "shaders/toon.frag",
- *         wgsl: "shaders/toon.wgsl",
- *     } },
- * ], () => {
- *     // one shared program — same uniform state for every user
- *     mySprite.addPostEffect(me.loader.getShader("waterRipple"));
- *     // private copy with its own uniforms (caller-owned, shared = false)
- *     boss.addPostEffect(me.loader.getShader("flash").clone());
- *     // a complete program hosts on a mesh, replacing the built-in shading
- *     myMesh.addPostEffect(me.loader.getShader("toonMesh"));
- * });
- */
-export function getShader(elt) {
-	elt = "" + elt;
-	if (elt in shaderList) {
-		return shaderList[elt];
-	}
-	return null;
-}
-
-/**
- * return the specified MTL material data
- * @param {string} elt - name of the MTL file (as specified in the preload list)
- * @returns {object} map of material names to properties (`Kd`, `d`, `map_Kd`), or null if not found
- * @category Assets
- * @example
- * // 1. preload OBJ + MTL + texture
- * me.loader.preload([
- *     { name: "fox", type: "obj", src: "models/fox.obj" },
- *     { name: "fox", type: "mtl", src: "models/fox.mtl" },
- *     { name: "colormap", type: "image", src: "models/colormap.png" },
- * ], () => {
- *     // 2. create a Mesh with material — texture, tint, opacity auto-applied
- *     const mesh = new me.Mesh(400, 300, {
- *         model: "fox",
- *         material: "fox",
- *         texture: "colormap",
- *         width: 200,
- *         height: 200,
- *     });
- *
- *     // 3. or access the raw material data directly
- *     const materials = me.loader.getMTL("fox");
- *     // materials["colormap"].Kd — [r, g, b] diffuse color (0-1 range)
- *     // materials["colormap"].d — opacity (0-1)
- *     // materials["colormap"].Ke — [r, g, b] emissive color (glow, applied as Mesh.emissive)
- *     // materials["colormap"].map_Kd — resolved texture URL
- * });
- */
-export function getMTL(elt) {
-	elt = "" + elt;
-	if (elt in mtlList) {
-		return mtlList[elt];
-	}
-	return null;
-}
-
-/**
- * return the specified Video Object
- * @param {string} elt - name of the video file
- * @returns {HTMLVideoElement}
- * @category Assets
- */
-export function getVideo(elt) {
-	// force as string
-	elt = "" + elt;
-	if (elt in videoList) {
-		return videoList[elt];
-	}
-	return null;
-}
-
-/**
- * return the specified FontFace Object
- * @param {string} elt - name of the font file
- * @returns {FontFace}
- * @category Assets
- */
-export function getFont(elt) {
-	// force as string
-	elt = "" + elt;
-	if (elt in fontList) {
-		return fontList[elt];
-	}
-	return null;
 }

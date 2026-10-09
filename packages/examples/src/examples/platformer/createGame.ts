@@ -11,7 +11,7 @@ import {
 	input,
 	loader,
 	plugin,
-	pool,
+	registerTiledObjectClass,
 	state,
 	TextureAtlas,
 	video,
@@ -52,13 +52,13 @@ export const createGame = async () => {
 		// set the fade transition effect
 		state.transition("fade", "#FFFFFF", 250);
 
-		// register entity classes in the object pool
-		pool.register("mainPlayer", PlayerEntity);
-		pool.register("SlimeEntity", SlimeEnemyEntity);
-		pool.register("FlyEntity", FlyEnemyEntity);
-		pool.register("CoinEntity", CoinEntity, true);
+		// name the entity classes a Tiled map can place
+		registerTiledObjectClass("mainPlayer", PlayerEntity);
+		registerTiledObjectClass("SlimeEntity", SlimeEnemyEntity);
+		registerTiledObjectClass("FlyEntity", FlyEnemyEntity);
+		registerTiledObjectClass("CoinEntity", CoinEntity);
 		// override the built-in trigger with star mask transition
-		pool.register("me.Trigger", LevelTrigger, true);
+		registerTiledObjectClass("me.Trigger", LevelTrigger);
 
 		// load the texture atlas
 		gameState.texture = new TextureAtlas(

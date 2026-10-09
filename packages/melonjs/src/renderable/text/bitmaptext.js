@@ -365,7 +365,7 @@ export default class BitmapText extends Renderable {
 	 * change the font display size
 	 * @param {number} scale - a ratio against the font's authored size, NOT a
 	 * pixel size: `1` is the page image at its native scale, `2` is double
-	 * @returns {BitmapText} this object for chaining
+	 * @returns {this} this object for chaining
 	 * @example
 	 * // a bitmap font is pixel art — whole-number ratios stay crisp, and
 	 * // fractional ones resample the page image

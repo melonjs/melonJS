@@ -44,10 +44,17 @@ export class Batcher {
 	 * Initialize (or re-initialize after a context/device loss) this batcher.
 	 * Derived classes override this with their full `(renderer, settings)`
 	 * signature and own the whole body; the base implementation only stores
-	 * the renderer reference.
+	 * the renderer reference and ignores the settings.
+	 *
+	 * `settings` is declared here even though this body does not read it: a
+	 * subclass cannot add a required parameter the base does not have without
+	 * breaking substitutability, and the backends all take one.
 	 * @param {Renderer} renderer - the owning renderer
+	 * @param {object} [settings] - backend-specific batcher settings, owned
+	 * and documented by the derived class
 	 */
-	init(renderer) {
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	init(renderer, settings) {
 		/**
 		 * the renderer this batcher is bound to
 		 * @type {Renderer}

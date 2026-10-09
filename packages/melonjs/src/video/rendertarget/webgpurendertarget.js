@@ -212,25 +212,32 @@ export default class WebGPURenderTarget extends RenderTarget {
 
 	/**
 	 * Synchronous readback is impossible under WebGPU — use
-	 * {@link WebGPURenderTarget#readPixels}.
+	 * {@link RenderTarget#toImageData}.
+	 *
+	 * Kept, and kept throwing, so the two backends that DO read back
+	 * synchronously can still be used that way without this one silently
+	 * returning something wrong.
 	 * @throws {Error} always
-	 * @override
 	 */
 	getImageData() {
 		throw new Error(
-			"WebGPURenderTarget.getImageData: WebGPU readback is asynchronous — use `await target.readPixels()` instead",
+			"WebGPURenderTarget.getImageData: WebGPU readback is asynchronous — use `await target.toImageData()` instead",
 		);
 	}
 
 	/**
-	 * Asynchronously read back this target's pixels.
+	 * Read back pixel data from this render target.
+	 *
+	 * The portable readback, and the ONLY form this backend can offer: WebGPU
+	 * maps its buffer asynchronously, which is why the shared contract is a
+	 * promise. See {@link RenderTarget#toImageData}.
 	 * @param {number} [x=0] - x of the top-left corner
 	 * @param {number} [y=0] - y of the top-left corner
 	 * @param {number} [width=this.width] - width of the area to read
 	 * @param {number} [height=this.height] - height of the area to read
 	 * @returns {Promise<ImageData>} the pixel data (RGBA order)
 	 */
-	async readPixels(x = 0, y = 0, width = this.width, height = this.height) {
+	async toImageData(x = 0, y = 0, width = this.width, height = this.height) {
 		const renderer = this.renderer;
 		const device = renderer.device;
 		// clamp the read window to the target (an out-of-bounds copy is a

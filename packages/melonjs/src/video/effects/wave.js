@@ -68,14 +68,6 @@ export default class WaveEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the current time (call each frame for animation)
-	 * @param {number} time - time in seconds
-	 */
-	setTime(time) {
-		this.setUniform("uTime", time);
-	}
-
-	/**
 	 * set the wave amplitude
 	 * @param {number} amplitude - displacement strength in UV space
 	 */

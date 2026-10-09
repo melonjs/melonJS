@@ -187,6 +187,22 @@ class CanvasRenderTarget extends RenderTarget {
 	}
 
 	/**
+	 * Read back pixel data from this render target.
+	 *
+	 * The canvas backend can read back synchronously, so this resolves
+	 * immediately; it exists so code that must work on every backend has one
+	 * method to call. See {@link RenderTarget#toImageData}.
+	 * @param {number} [x=0] - x coordinate of the top-left corner
+	 * @param {number} [y=0] - y coordinate of the top-left corner
+	 * @param {number} [width=this.width] - width of the area to read
+	 * @param {number} [height=this.height] - height of the area to read
+	 * @returns {Promise<ImageData>} the pixel data
+	 */
+	toImageData(x, y, width, height) {
+		return Promise.resolve(this.getImageData(x, y, width, height));
+	}
+
+	/**
 	 * Returns an ImageData object representing the underlying pixel data for a specified portion of this canvas texture.
 	 * (Note: when using getImageData(), it is highly recommended to use the `willReadFrequently` attribute when creatimg the corresponding canvas texture)
 	 * @param {number} x - The x-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted

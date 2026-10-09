@@ -124,11 +124,47 @@ describe("WebGPURenderTarget (mock device)", () => {
 		expect(renderer.currentRenderTarget).toBeNull();
 	});
 
-	it("getImageData throws with async guidance (WebGPU readback is async)", () => {
+	it("getImageData throws and names the portable readback instead", () => {
+		// WebGPU maps its buffer asynchronously, so synchronous readback is
+		// impossible here. The message has to name the method that DOES work
+		// on every backend, not a WebGPU-only one.
 		const rt = new WebGPURenderTarget(renderer, 64, 64);
 		expect(() => {
 			return rt.getImageData();
-		}).toThrow(/readPixels/);
+		}).toThrow(/toImageData/);
+	});
+
+	it("toImageData is the async readback, and is what the base contract names", async () => {
+		const rt = new WebGPURenderTarget(renderer, 64, 64);
+		expect(typeof rt.toImageData).toBe("function");
+		// `readPixels` was this backend's own spelling of the same thing and
+		// was never part of the RenderTarget API; it is gone
+		expect(rt.readPixels).toBeUndefined();
+	});
+
+	it("REGRESSION: toBlob, toDataURL and toImageBitmap read through toImageData", async () => {
+		// All three inherit `RenderTarget`'s implementations, which used to
+		// call the SYNCHRONOUS `getImageData` — the one method this backend
+		// can only answer by throwing. So all three were broken on WebGPU
+		// while working everywhere else, which is the contract mismatch this
+		// fixed. `CanvasRenderTarget` cannot cover it: it overrides toBlob and
+		// toDataURL with canvas-native versions that never read back.
+		const rt = new WebGPURenderTarget(renderer, 8, 8);
+
+		// a device that can really map a buffer is out of scope for this mock,
+		// so the readback itself is stubbed; the ROUTE is what is under test
+		let reads = 0;
+		rt.toImageData = () => {
+			reads++;
+			return Promise.resolve(new ImageData(8, 8));
+		};
+
+		await expect(rt.toBlob()).resolves.toBeInstanceOf(Blob);
+		await expect(rt.toDataURL()).resolves.toMatch(/^data:image\/png/);
+		await expect(rt.toImageBitmap()).resolves.toBeDefined();
+
+		// toBlob once, toDataURL through toBlob once, toImageBitmap once
+		expect(reads).toEqual(3);
 	});
 
 	it("the render-target pool composes with the WebGPU factory (camera 0/1, sprite 2/3)", () => {

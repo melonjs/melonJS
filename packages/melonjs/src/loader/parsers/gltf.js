@@ -1096,6 +1096,42 @@ export async function parseGLTF(arrayBuffer, baseURI, settings) {
 }
 
 /**
+ * One mesh primitive out of a parsed glTF/GLB scene.
+ *
+ * Spelled out rather than left as `object` so the geometry can be read from
+ * TypeScript — feeding `vertices`/`uvs`/`normals`/`indices` straight into a
+ * {@link Mesh} or {@link InstancedMesh} is the whole point of exposing it.
+ * @typedef {object} GLTFNode
+ * @property {number[]} world - accumulated world transform, 16 floats, column-major
+ * @property {Float32Array} vertices - positions, x,y,z triplets
+ * @property {Float32Array} normals - per-vertex normals
+ * @property {Float32Array} uvs - texture coordinates, u,v pairs
+ * @property {Uint16Array|Uint32Array} indices - triangle vertex indices
+ * @property {number} vertexCount - number of vertices
+ * @property {HTMLImageElement|null} image - decoded baseColor texture, or `null`
+ * @property {number[]} [baseColorFactor] - material baseColor factor, `[r, g, b, a]`
+ * @property {Uint32Array} [colors] - per-vertex colour, packed RGBA8
+ * @property {string} [textureRepeat] - wrap mode derived from the glTF sampler
+ * @property {string} [textureFilter] - magnification filter derived from the glTF sampler
+ * @property {number} [alphaCutoff] - cutout threshold from `alphaMode: "MASK"`
+ * @property {number[]} [emissive] - emissive factor, `[r, g, b]`
+ * @property {boolean} [unlit] - the material carried `KHR_materials_unlit`
+ * @property {boolean} [doubleSided] - the material is double-sided
+ * @property {string} [name] - the source node's name
+ */
+
+/**
+ * a parsed glTF/GLB scene descriptor, as returned by {@link loader.getGLTF}
+ * @typedef {object} GLTFData
+ * @property {GLTFNode[]} nodes - one entry per mesh primitive
+ * @property {Array<{world: number[], type?: string, perspective?: {yfov?: number, aspectRatio?: number, znear?: number, zfar?: number}, orthographic?: object}>} cameras - glTF cameras, each with its `world` transform + the glTF camera parameters (`perspective` for perspective cameras, `orthographic` otherwise)
+ * @property {object[]} lights - parsed `KHR_lights_punctual` lights (`type`, `color`, `intensity`, `range`, `innerConeAngle`/`outerConeAngle` for spots, world-space `direction`/`position`, `name`)
+ * @property {{min: number[], max: number[]}} bounds - world-space scene bounds in glTF units
+ * @property {object[]} graph - the full node graph (every node's TRS/matrix + children), for custom traversal
+ * @property {object[]} animations - parsed node animations (consumed by `GLTFModel` playback)
+ */
+
+/**
  * parse/preload a glTF/GLB file
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the resource is loaded

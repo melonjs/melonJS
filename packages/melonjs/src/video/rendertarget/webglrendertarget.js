@@ -362,6 +362,22 @@ export default class WebGLRenderTarget extends RenderTarget {
 	}
 
 	/**
+	 * Read back pixel data from this render target.
+	 *
+	 * The WebGL backend can read back synchronously, so this resolves
+	 * immediately; it exists so code that must work on every backend has one
+	 * method to call. See {@link RenderTarget#toImageData}.
+	 * @param {number} [x=0] - x coordinate of the top-left corner
+	 * @param {number} [y=0] - y coordinate of the top-left corner
+	 * @param {number} [width=this.width] - width of the area to read
+	 * @param {number} [height=this.height] - height of the area to read
+	 * @returns {Promise<ImageData>} the pixel data
+	 */
+	toImageData(x, y, width, height) {
+		return Promise.resolve(this.getImageData(x, y, width, height));
+	}
+
+	/**
 	 * Returns an ImageData object representing the pixel contents of this render target.
 	 * @param {number} [x=0] - x coordinate of the top-left corner
 	 * @param {number} [y=0] - y coordinate of the top-left corner

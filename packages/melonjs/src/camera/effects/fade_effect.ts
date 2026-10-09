@@ -115,9 +115,8 @@ export default class FadeEffect extends CameraEffect {
 		// Guarded and cleared so a second destroy() is a no-op rather than a
 		// throw. `removePostEffect()` destroys the effect it removes, so a
 		// caller that also destroys it explicitly hits this path, and an
-		// unguarded re-release throws "Instance is already in pool" from the
-		// pool rather than from anything the caller can see. Same defect and
-		// same fix as `Body.destroy()` in 20.0.0.
+		// unguarded second pass releases a tween this effect no longer owns.
+		// Same defect and same fix as `Body.destroy()` in 20.0.0.
 		if (this.tween !== undefined) {
 			this.tween.stop();
 			tweenPool.release(this.tween);

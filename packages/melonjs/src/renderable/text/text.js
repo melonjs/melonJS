@@ -1,10 +1,11 @@
 import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
+import { createPool, registerPool } from "../../system/pool.ts";
 import { Gradient } from "../../video/gradient.js";
 
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 import { resolveAnchorPoint } from "../anchorPoint.ts";
-import Renderable from "../renderable.js";
+import Renderable, { resetRenderableState } from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
 
@@ -205,6 +206,14 @@ export default class Text extends Renderable {
 	 * @internal
 	 */
 	onResetEvent(x, y, settings) {
+		// Everything inherited from `Renderable` first, before the settings
+		// below write over whatever they name. A pooled label handed back
+		// still carries the previous one's alpha, tint, blend mode and
+		// transform, and the settings do not mention any of them.
+		if (typeof this.currentTransform !== "undefined") {
+			resetRenderableState(this);
+		}
+
 		if (typeof this.fillStyle === "undefined") {
 			this.fillStyle = colorPool.get(0, 0, 0);
 		}
@@ -265,6 +274,11 @@ export default class Text extends Renderable {
 				// string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
 				this.fillStyle.parseCSS(settings.fillStyle);
 			}
+		} else {
+			// back to black. Without this a RECYCLED label keeps the previous
+			// one's colour, because the pool hands the same instance back and
+			// only the settings that were given are written.
+			this.fillStyle.setColor(0, 0, 0, 1);
 		}
 
 		if (typeof settings.strokeStyle !== "undefined") {
@@ -274,6 +288,9 @@ export default class Text extends Renderable {
 				// string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
 				this.strokeStyle.parseCSS(settings.strokeStyle);
 			}
+		} else {
+			// as above: a recycled label must not inherit an outline colour
+			this.strokeStyle.setColor(0, 0, 0, 1);
 		}
 
 		if (typeof settings.gradientPerLine === "boolean") {
@@ -301,6 +318,10 @@ export default class Text extends Renderable {
 		// if floating was specified through settings
 		if (typeof settings.floating !== "undefined") {
 			this.floating = !!settings.floating;
+		} else {
+			// `Renderable`'s default, restated so a recycled label does not
+			// stay pinned to the viewport because an earlier one was
+			this.floating = false;
 		}
 
 		// font name and type
@@ -317,9 +338,16 @@ export default class Text extends Renderable {
 		// the canvas Texture used to render this text
 		// offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
 		// see https://github.com/melonjs/melonJS/issues/1180
-		this.canvasTexture = new CanvasRenderTarget(2, 2, {
-			offscreenCanvas: false,
-		});
+		//
+		// Kept across a recycle, which is most of what makes a pooled label
+		// worth pooling. A fresh one per reset also LEAKED the previous
+		// canvas and its GL texture, since only `destroy()` frees those, so a
+		// label reused often enough walked through a texture unit per reuse.
+		if (typeof this.canvasTexture === "undefined") {
+			this.canvasTexture = new CanvasRenderTarget(2, 2, {
+				offscreenCanvas: false,
+			});
+		}
 
 		/**
 		 * @ignore
@@ -327,8 +355,11 @@ export default class Text extends Renderable {
 		 */
 		this._visibleCharacters = -1;
 
-		// instance to text metrics functions
-		this.metrics = new TextMetrics(this);
+		// instance to text metrics functions. Kept across a recycle too: it
+		// closes over this label and is re-measured by `setText` below.
+		if (typeof this.metrics === "undefined") {
+			this.metrics = new TextMetrics(this);
+		}
 
 		// set the text
 		this.setText(settings.text);
@@ -806,3 +837,31 @@ export default class Text extends Renderable {
 		super.destroy();
 	}
 }
+
+/**
+ * A pool of reusable {@link Text} instances.
+ *
+ * Text is worth recycling: each one owns a canvas-backed measurement cache and
+ * a colour, so a scene that spawns damage numbers or score popups churns
+ * meaningfully without one. Reachable as `getPool("text")`.
+ *
+ * `release` it yourself when the text is finished, as the particle and tween
+ * pools require. A label this pool built is the exception: it carries the pool
+ * it came from, so removing it from a container releases it back rather than
+ * destroying it. Pass `keepalive` to `removeChild()` to keep holding one.
+ * @example
+ * const label = getPool("text").get(x, y, { font: "Arial", size: 12, text: "+10" });
+ * // ... later
+ * getPool("text").release(label);
+ */
+export const textPool = createPool((x, y, settings) => {
+	const instance = new Text(x, y, settings);
+	return {
+		instance,
+		reset(x, y, settings) {
+			instance.onResetEvent(x, y, settings);
+		},
+	};
+});
+
+registerPool("text", textPool);

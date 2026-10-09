@@ -6,7 +6,7 @@ import {
 } from "../physics/physicseditor.js";
 import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, off, on } from "../system/event.ts";
-import pool from "../system/legacy_pool.js";
+import { releaseToOwningPool } from "../system/pool.ts";
 import { defer } from "../utils/function";
 import { createGUID } from "../utils/utils";
 import Renderable from "./renderable.js";
@@ -974,9 +974,13 @@ export default class Container extends Renderable {
 			}
 
 			if (!keepalive) {
-				// attempt at recycling the object
-				if (pool.push(child, false) === false) {
-					//  else just destroy it
+				// Back to whichever pool built it, if any. A container holds a
+				// child and has no idea what it is, so the object has to carry
+				// the answer: `createPool` stamps the owning pool on everything
+				// it builds. The legacy pool answered the same question with a
+				// `className` string and a global registry.
+				if (!releaseToOwningPool(child)) {
+					// nothing owns it, so it is ours to destroy
 					if (typeof child.destroy === "function") {
 						child.destroy();
 					}

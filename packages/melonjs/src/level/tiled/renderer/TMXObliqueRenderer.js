@@ -6,6 +6,7 @@ import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
 /**
  * additional import for TypeScript
  * @import {Bounds} from "../../../physics/bounds.ts";
+ * @import TMXTileMap from "../TMXTileMap.js";
  */
 /**
  * an Oblique Map Renderer (Tiled 1.12+)

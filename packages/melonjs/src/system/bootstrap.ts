@@ -2,7 +2,6 @@ import { initKeyboardEvent } from "../input/keyboard.ts";
 import { registerBuiltinTiledClass } from "../level/tiled/TMXObjectFactory.js";
 import Light2d from "../lighting/light2d.ts";
 import { setNocache } from "../loader/loader.js";
-import Particle from "../particles/particle.ts";
 import Collectable from "../renderable/collectable.js";
 import ColorLayer from "../renderable/colorlayer.js";
 import Entity from "../renderable/entity/entity.js";
@@ -13,12 +12,10 @@ import Sprite from "../renderable/sprite.js";
 import BitmapText from "../renderable/text/bitmaptext.js";
 import Text from "../renderable/text/text.js";
 import Trigger from "../renderable/trigger.js";
-import Tween from "../tweens/tween.ts";
 import { getUriFragment } from "../utils/utils.ts";
 import { version } from "../version.ts";
 import { initVisibilityEvents } from "./device.js";
 import { BOOT, DOM_READY, emit } from "./event.ts";
-import pool from "./legacy_pool.js";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -41,25 +38,18 @@ export function boot() {
 	// output melonJS version in the console
 	console.log(`melonJS 2 (v${version}) | http://melonjs.org`);
 
-	// register all built-ins objects into the object legacy pool
-	// eslint-disable-next-line @typescript-eslint/no-deprecated
-	pool.register("Entity", Entity);
-	pool.register("Collectable", Collectable);
-	pool.register("Trigger", Trigger);
-	pool.register("Light2d", Light2d);
-	pool.register("Particle", Particle, true);
-	pool.register("Sprite", Sprite);
-	pool.register("NineSliceSprite", NineSliceSprite);
-	pool.register("Renderable", Renderable);
-	pool.register("Text", Text, true);
-	pool.register("BitmapText", BitmapText);
-	pool.register("ImageLayer", ImageLayer);
-	pool.register("Tween", Tween, true);
-	pool.register("ColorLayer", ColorLayer, true);
-
-	// ensure built-in classes are registered as Tiled object factories
-	// (redundant with pool.register auto-registration, but ensures
-	// built-ins remain available if pool behavior changes in the future)
+	// The built-in classes are registered as Tiled object factories, and
+	// ONLY there. They used to be registered in the legacy object pool as
+	// well, which bought nothing and cost something:
+	//
+	// - nine of them had recycling off, so `pool.pull("Sprite")` was a plain
+	//   construction behind a string key and `pool.push` refused them;
+	// - `Particle` and `Tween` have typed pools (`particlePool`, `tweenPool`)
+	//   and neither can reach the container's recycle path anyway, one being
+	//   skipped with `keepalive` and the other not a `Renderable` at all;
+	// - every one of them registered a Tiled factory a second time, by side
+	//   effect, and that duplicate is what silently replaced a game's own
+	//   class when it registered one under a built-in name.
 	registerBuiltinTiledClass("Renderable", Renderable);
 	registerBuiltinTiledClass("Text", Text);
 	registerBuiltinTiledClass("BitmapText", BitmapText);

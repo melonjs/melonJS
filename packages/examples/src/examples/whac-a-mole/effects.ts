@@ -7,7 +7,7 @@ import {
 	type Camera2d,
 	ChromaticAberrationEffect,
 	DropShadowEffect,
-	pool,
+	getPool,
 	type Renderer,
 	type Sprite,
 	Tween,
@@ -72,7 +72,7 @@ export function triggerChromaticBurst(
 ): void {
 	fx.setOffset(peak);
 	const driver = { offset: peak };
-	const tween = pool.pull("me.Tween", driver) as Tween;
+	const tween = getPool("tween").get(driver);
 	tween.updateWhenPaused = true;
 	tween
 		.to({ offset: 0 }, { duration: durationMs })

@@ -2,8 +2,8 @@ import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
+import ImageLayer from "../../renderable/imagelayer.js";
 import { off, on, VIEWPORT_ONRESIZE } from "../../system/event.ts";
-import pool from "../../system/legacy_pool.js";
 import { checkVersion } from "../../utils/utils.ts";
 import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
@@ -81,8 +81,7 @@ function readImageLayer(map, data, z) {
 	const oy = +(data.offsety ?? data.y ?? 0) + poy * ratioY;
 
 	// create the layer
-	const imageLayer = pool.pull(
-		"ImageLayer",
+	const imageLayer = new ImageLayer(
 		ox,
 		oy,
 		Object.assign(
@@ -385,7 +384,7 @@ export default class TMXTileMap {
 		if (this.background_image) {
 			// add a new image layer
 			this.layers.push(
-				pool.pull("ImageLayer", 0, 0, {
+				new ImageLayer(0, 0, {
 					name: "background_image",
 					image: this.background_image,
 					z: zOrder++,

@@ -1,5 +1,6 @@
 import { colorPool } from "../math/color.ts";
-import Renderable from "./renderable.js";
+import { createPool, registerPool } from "../system/pool.ts";
+import Renderable, { resetRenderableState } from "./renderable.js";
 
 /**
  * additional import for TypeScript
@@ -34,6 +35,11 @@ export default class ColorLayer extends Renderable {
 	}
 
 	onResetEvent(name, color, z = 0) {
+		// the inherited state first: a recycled layer carried the previous
+		// one's alpha and blend mode, so a flash faded out came back faded
+		if (typeof this.currentTransform !== "undefined") {
+			resetRenderableState(this);
+		}
 		// apply given parameters
 		this.name = name;
 		this.pos.z = z;
@@ -65,3 +71,27 @@ export default class ColorLayer extends Renderable {
 		super.destroy();
 	}
 }
+
+/**
+ * A pool of reusable {@link ColorLayer} instances.
+ *
+ * Reachable as `getPool("colorLayer")`. `release` it yourself when the layer
+ * is finished, or let a container do it: a layer this pool built carries the
+ * pool it came from, so removing it from a container releases it back. Pass
+ * `keepalive` to `removeChild()` to keep holding one.
+ * @example
+ * const flash = getPool("colorLayer").get("flash", "#ffffff", 10);
+ * // ... later
+ * getPool("colorLayer").release(flash);
+ */
+export const colorLayerPool = createPool((name, color, z) => {
+	const instance = new ColorLayer(name, color, z);
+	return {
+		instance,
+		reset(name, color, z) {
+			instance.onResetEvent(name, color, z);
+		},
+	};
+});
+
+registerPool("colorLayer", colorLayerPool);

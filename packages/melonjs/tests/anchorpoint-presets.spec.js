@@ -5,10 +5,10 @@ import {
 	boot,
 	Collectable,
 	Entity,
+	getPool,
 	ImageLayer,
 	loader,
 	NineSliceSprite,
-	pool,
 	Sprite,
 	Sprite3d,
 	Text,
@@ -442,21 +442,25 @@ describe("Tiled property chain", () => {
 });
 
 describe("pool recycling", () => {
-	it("a pooled Text resolves presets on pull AND on recycle", () => {
-		const t1 = pool.pull("Text", 0, 0, {
+	it("a pooled Text resolves presets on get AND on recycle", () => {
+		// through the typed pool: `Text` is no longer registered in the legacy
+		// name-keyed one, which only ever gave it string-keyed construction
+		const pool2d = getPool("text");
+		const t1 = pool2d.get(0, 0, {
 			font: "Arial",
 			size: 16,
 			anchorPoint: "bottom",
 		});
 		expect([t1.anchorPoint.x, t1.anchorPoint.y]).toEqual([0.5, 1]);
-		pool.push(t1);
+		pool2d.release(t1);
 		// recycled instance must re-resolve the NEW settings, not keep the old
-		const t2 = pool.pull("Text", 0, 0, {
+		const t2 = pool2d.get(0, 0, {
 			font: "Arial",
 			size: 16,
 			anchorPoint: "top-right",
 		});
+		expect(t2).toBe(t1);
 		expect([t2.anchorPoint.x, t2.anchorPoint.y]).toEqual([1, 0]);
-		pool.push(t2);
+		pool2d.release(t2);
 	});
 });

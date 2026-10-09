@@ -3,6 +3,8 @@ import {
 	Application,
 	boot,
 	CanvasTexture,
+	NineSliceSprite,
+	pool,
 	Sprite,
 	TextureAtlas,
 	video,
@@ -423,6 +425,122 @@ describe("Texture", () => {
 			// Net: one additional bound texture unit, not the same one
 			// reused.
 			expect(app.renderer.cache.usedUnits.size).toEqual(usedUnitsBefore + 1);
+		});
+	});
+
+	describe("TextureAtlas.createSpriteFromName", () => {
+		// No coverage existed for this factory at all, and it is not a
+		// convenience nobody uses: `TMXTile` builds every Tiled tile object
+		// through it. It also resolves its class indirectly, so a change to
+		// HOW it resolves is invisible unless the class and the region are
+		// both pinned here.
+		let atlas;
+
+		beforeAll(() => {
+			const mockImage = Renderer.createCanvas(256, 256);
+			atlas = new TextureAtlas(
+				{
+					meta: {
+						app: "https://www.codeandweb.com/texturepacker",
+						size: { w: 256, h: 256 },
+						image: "default",
+					},
+					frames: [
+						{
+							filename: "tile.png",
+							frame: { x: 0, y: 0, w: 32, h: 48 },
+							rotated: false,
+							trimmed: false,
+							spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+							sourceSize: { w: 32, h: 48 },
+						},
+						{
+							filename: "panel.png",
+							frame: { x: 32, y: 0, w: 16, h: 16 },
+							rotated: false,
+							trimmed: false,
+							spriteSourceSize: { x: 0, y: 0, w: 16, h: 16 },
+							sourceSize: { w: 16, h: 16 },
+						},
+					],
+				},
+				mockImage,
+			);
+		});
+
+		it("returns a Sprite sized to the REGION, not to the sheet", () => {
+			const sprite = atlas.createSpriteFromName("tile.png");
+			expect(sprite).toBeInstanceOf(Sprite);
+			expect(sprite).not.toBeInstanceOf(NineSliceSprite);
+			// the sheet is 256x256; reading the region is the whole point
+			expect(sprite.width).toEqual(32);
+			expect(sprite.height).toEqual(48);
+			// and it went through the atlas branch rather than being treated
+			// as a plain drawable source
+			expect(sprite.textureAtlas).toBe(atlas);
+			expect(sprite.source).toBe(atlas);
+			// and `image` is the atlas's BACKING canvas, not the atlas object
+			expect(sprite.image).toBe(atlas.getTexture());
+		});
+
+		it("returns a NineSliceSprite when asked, stretched to the given size", () => {
+			const panel = atlas.createSpriteFromName(
+				"panel.png",
+				{ width: 64, height: 48 },
+				true,
+			);
+			expect(panel).toBeInstanceOf(NineSliceSprite);
+			// width/height on a 9-slice are the size to stretch TO, which is
+			// what separates it from the plain sprite above
+			expect(panel.width).toEqual(64);
+			expect(panel.height).toEqual(48);
+			expect(panel.textureAtlas).toBe(atlas);
+		});
+
+		it("passes extra settings through to the sprite", () => {
+			const sprite = atlas.createSpriteFromName("tile.png", {
+				anchorPoint: { x: 0, y: 1 },
+			});
+			expect(sprite.anchorPoint.x).toEqual(0);
+			expect(sprite.anchorPoint.y).toEqual(1);
+		});
+
+		it("throws for a region the atlas does not have", () => {
+			// matched, not bare: a bare `.toThrow()` passes for ANY error,
+			// including the atlas branch not being taken at all
+			expect(() => {
+				return atlas.createSpriteFromName("nope.png");
+			}).toThrow(/region for nope\.png not found/);
+		});
+
+		it("builds the real classes, not whatever the pool has registered", () => {
+			// This is the `### Changed` entry in the changelog. The factory used
+			// to resolve through `pool.pull("me.Sprite")`, so re-registering a
+			// BUILT-IN name substituted the class. It constructs directly now.
+			// Without this test, putting the pool lookup back is invisible.
+			class MySprite extends Sprite {}
+			class MyNineSlice extends NineSliceSprite {}
+			try {
+				pool.register("Sprite", MySprite);
+				pool.register("NineSliceSprite", MyNineSlice);
+
+				const plain = atlas.createSpriteFromName("tile.png");
+				expect(plain.constructor).toBe(Sprite);
+				expect(plain).not.toBeInstanceOf(MySprite);
+
+				const nine = atlas.createSpriteFromName(
+					"panel.png",
+					{ width: 32, height: 32 },
+					true,
+				);
+				expect(nine.constructor).toBe(NineSliceSprite);
+				expect(nine).not.toBeInstanceOf(MyNineSlice);
+			} finally {
+				// registration is global AND registers a Tiled object factory,
+				// so it has to be put back whatever happens above
+				pool.register("Sprite", Sprite);
+				pool.register("NineSliceSprite", NineSliceSprite);
+			}
 		});
 	});
 

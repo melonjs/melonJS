@@ -1,9 +1,30 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { audio, boot, event, loader } from "../src/index.js";
-import { fontList, videoList } from "../src/loader/cache.js";
+import {
+	binList,
+	fontList,
+	gltfList,
+	imgList,
+	jsonList,
+	mtlList,
+	objList,
+	shaderList,
+	tmxList,
+	videoList,
+} from "../src/loader/cache.js";
 import { preloadFontFace } from "../src/loader/parsers/fontface.js";
 
 describe("loader", () => {
+	// `silence` is the only audio fixture in the repo, so several tests across
+	// this file load it. Releasing it here rather than in each test is what
+	// keeps them independent: a loaded clip does not fire its load callback
+	// again, so one test forgetting to clean up made a later one time out after
+	// five seconds, and it passed only because an `unloadAll()` happened to run
+	// in between. Unloading something that was never loaded is a no-op.
+	afterEach(() => {
+		loader.unload({ name: "silence", type: "audio" });
+	});
+
 	let audioURI;
 	let imgURI;
 
@@ -390,6 +411,48 @@ describe("loader", () => {
 		expect(loader.getBinary("nonexistent")).toBeNull();
 		expect(loader.getVideo("nonexistent")).toBeNull();
 		expect(loader.getFont("nonexistent")).toBeNull();
+		// null, not undefined: both are documented "or null if not found",
+		// and both have call sites that mask the difference
+		expect(loader.getOBJ("nonexistent")).toBeNull();
+		expect(loader.getMTL("nonexistent")).toBeNull();
+		expect(loader.getShader("nonexistent")).toBeNull();
+		expect(loader.getGLTF("nonexistent")).toBeNull();
+	});
+
+	it("unloading a `js` asset is a successful no-op", () => {
+		// a script ran at load time and is never cached, so there is nothing to
+		// delete and nothing to report missing. Pinned because the case looks
+		// like an oversight otherwise, and because falling to `default` would
+		// now THROW on an unknown type
+		expect(loader.unload({ name: "anything", type: "js" })).toBe(true);
+	});
+
+	it("unloading audio reports what the audio backend found", () => {
+		// the case delegates, so it has to return the delegate's answer rather
+		// than an unconditional true
+		expect(loader.unload({ name: "never-loaded-sound", type: "audio" })).toBe(
+			false,
+		);
+	});
+
+	it("unloading an aseprite asset clears BOTH of its caches", () => {
+		// an aseprite asset writes the image and the json cache under one key.
+		// Deleting them with `a || b` short-circuits once the image goes and
+		// leaks the json half forever, which is why both calls are made before
+		// the result is combined. Seeding one cache at a time cannot catch it.
+		imgList["ase-both"] = {};
+		jsonList["ase-both"] = {};
+		expect(loader.unload({ name: "ase-both", type: "aseprite" })).toBe(true);
+		expect("ase-both" in imgList).toBe(false);
+		expect("ase-both" in jsonList).toBe(false);
+	});
+
+	it("getImage coerces a non-string name, as its callers rely on", () => {
+		// `getBasename` calls `.replace`, so an un-coerced number THROWS rather
+		// than missing. The other getters index an object and coerce anyway.
+		imgList["123"] = {};
+		expect(loader.getImage(123)).toBe(imgList["123"]);
+		delete imgList["123"];
 	});
 
 	it("should return false when unloading non-existent assets", () => {
@@ -733,6 +796,123 @@ describe("loader", () => {
 			expect("unloadall-test" in fontList).toBe(false);
 			expect("unloadall-test" in videoList).toBe(false);
 		});
+
+		it("frees audio too, which keeps its own store", async () => {
+			// audio is not in `cacheByType`: `unloadAll` has to call the audio
+			// backend separately, and dropping that call leaves every clip
+			// loaded with nothing to notice
+			audio.init("mp3");
+			await new Promise((resolve, reject) => {
+				loader.load(
+					{ name: "silence", type: "audio", src: "data/sfx/" },
+					resolve,
+					reject,
+				);
+			});
+			expect(audio.state("silence")).toBe("loaded");
+
+			loader.unloadAll();
+
+			expect(() => {
+				return audio.state("silence");
+			}).toThrow();
+		});
+
+		it("unloads a tsx asset through the tmx cache it shares", () => {
+			// `tsx` and `tmx` are one cache, and that aliasing is the reason
+			// the type map exists. `glb`/`gltf` is covered in gltf.spec.js;
+			// this is the other half.
+			tmxList["alias-tsx"] = {};
+			expect(loader.unload({ name: "alias-tsx", type: "tsx" })).toBe(true);
+			expect("alias-tsx" in tmxList).toBe(false);
+			expect(loader.unload({ name: "alias-tsx", type: "tmx" })).toBe(false);
+		});
+
+		it("unloads an aseprite asset when only one of its two caches is set", () => {
+			// an aseprite asset writes BOTH the image and the json cache under
+			// one key, and either half alone still counts as present. `&&`
+			// here instead of `||` would report false and leak the other half.
+			imgList["ase-img-only"] = {};
+			expect(loader.unload({ name: "ase-img-only", type: "aseprite" })).toBe(
+				true,
+			);
+			expect("ase-img-only" in imgList).toBe(false);
+
+			jsonList["ase-json-only"] = {};
+			expect(loader.unload({ name: "ase-json-only", type: "aseprite" })).toBe(
+				true,
+			);
+			expect("ase-json-only" in jsonList).toBe(false);
+
+			expect(loader.unload({ name: "ase-neither", type: "aseprite" })).toBe(
+				false,
+			);
+		});
+
+		it("throws for an unknown or missing asset type, as `load` does", () => {
+			// the pair has to agree: a typo that is loud going in must not be
+			// silent coming out
+			expect(() => {
+				return loader.unload({ name: "x", type: "bogus" });
+			}).toThrow(/unknown or invalid resource type/);
+			expect(() => {
+				return loader.unload({ name: "x" });
+			}).toThrow(/unknown or invalid resource type/);
+		});
+
+		it("removes a fontface from the document, not only from the cache", () => {
+			// the cache entry going is the easy half; the FontFace also has to
+			// leave `document.fonts`, and nothing asserted that before
+			const ff = new FontFace(
+				"unload-doc-test",
+				"url(data:font/woff2;base64,)",
+			);
+			globalThis.document.fonts.add(ff);
+			fontList["unload-doc-test"] = ff;
+
+			expect(loader.unload({ name: "unload-doc-test", type: "fontface" })).toBe(
+				true,
+			);
+			expect("unload-doc-test" in fontList).toBe(false);
+			const stillThere = [...globalThis.document.fonts].some((f) => {
+				return f.family === "unload-doc-test";
+			});
+			expect(stillThere).toBe(false);
+		});
+
+		it("empties EVERY cache, not just the ones a test happens to seed", () => {
+			// `unloadAll` walks a list of asset types. A type missing from that
+			// list leaks its whole cache silently, and no other test notices:
+			// seeding one entry per cache and demanding all of them go is the
+			// only thing that catches it.
+			const caches = {
+				binary: binList,
+				image: imgList,
+				json: jsonList,
+				tmx: tmxList,
+				obj: objList,
+				mtl: mtlList,
+				gltf: gltfList,
+				shader: shaderList,
+				video: videoList,
+			};
+			for (const cache of Object.values(caches)) {
+				cache["unloadall-sweep"] = {};
+			}
+			// a `null` shader entry is the Canvas-renderer case: no GL program
+			shaderList["unloadall-sweep"] = null;
+
+			loader.unloadAll();
+
+			const leaked = Object.entries(caches)
+				.filter(([, cache]) => {
+					return "unloadall-sweep" in cache;
+				})
+				.map(([type]) => {
+					return type;
+				});
+			expect(leaked).toEqual([]);
+		});
 	});
 
 	describe("audio parser registration", () => {
@@ -775,7 +955,6 @@ describe("loader", () => {
 			});
 			expect(count).toBeGreaterThan(0);
 			expect(audio.state("silence")).toBe("loaded");
-			loader.unload({ name: "silence", type: "audio" });
 		});
 
 		it("unloads an audio asset through the loader", async () => {

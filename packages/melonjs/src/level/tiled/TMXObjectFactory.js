@@ -29,6 +29,19 @@ const registeredClasses = new Map();
 let factoriesInitialized = false;
 
 /**
+ * Names whose current factory came from a built-in class.
+ *
+ * A built-in is a DEFAULT, so a game's own class takes the name over whenever
+ * it is registered, and not only before the first map load. Without this the
+ * outcome depended on the ordering: a `Stage` registering its classes in
+ * `onResetEvent`, with an earlier level already loaded, hit the
+ * duplicate-registration error rather than winning.
+ * @ignore
+ * @internal
+ */
+const builtinNames = new Set();
+
+/**
  * Return a default shape (polygon) for the given dimensions,
  * or the existing shapes if already defined in settings.
  * @param {object} settings - TMX object settings
@@ -151,27 +164,40 @@ export function registerTiledObjectFactory(type, factory) {
  * registerTiledObjectClass("Enemy", Enemy);
  *
  * @example
- * // equivalent to pool.register (which auto-registers for Tiled too)
+ * // the older spelling: `pool.register` registers a Tiled factory as a side
+ * // effect, and additionally makes the class RECYCLABLE, which this registry
+ * // alone does not do
  * pool.register("CoinEntity", CoinEntity, true);
- * // CoinEntity is now available both in the pool AND as a Tiled object factory
  */
 export function registerTiledObjectClass(name, Constructor) {
 	const existing = registeredClasses.get(name);
+	let displacesBuiltin = false;
 	if (typeof existing !== "undefined") {
 		if (existing === Constructor) {
 			// same class already registered — no-op
 			return;
 		}
-		throw new Error(
-			"a different class is already registered for Tiled type: " + name,
-		);
+		if (!builtinNames.has(name)) {
+			throw new Error(
+				"a different class is already registered for Tiled type: " + name,
+			);
+		}
+		// only a default sat here, so the game's class takes the name over
+		builtinNames.delete(name);
+		displacesBuiltin = true;
 	}
 	registeredClasses.set(name, Constructor);
-	registerTiledObjectFactory(name, (settings) => {
+	const factory = (settings) => {
 		const obj = new Constructor(settings.x, settings.y, settings);
 		obj.pos.z = settings.z;
 		return obj;
-	});
+	};
+	if (displacesBuiltin) {
+		// expected, so no "overriding Tiled object factory" warning
+		factories.set(name, factory);
+	} else {
+		registerTiledObjectFactory(name, factory);
+	}
 }
 
 /**
@@ -180,6 +206,19 @@ export function registerTiledObjectClass(name, Constructor) {
  * @internal
  */
 const pendingClasses = [];
+
+/**
+ * Built-in classes queued at boot, kept apart from `pendingClasses`.
+ *
+ * They are DEFAULTS: a game that registers its own class for one of these
+ * names must win, and before this was separated it lost. Built-ins are queued
+ * at boot and flushed at the first map load, while `registerTiledObjectClass`
+ * writes immediately, so the built-in landed second and silently replaced the
+ * game's class with no error at the call and none at load.
+ * @ignore
+ * @internal
+ */
+const pendingBuiltins = [];
 
 /**
  * Queue a class for registration as a Tiled object factory.
@@ -192,10 +231,31 @@ const pendingClasses = [];
  */
 export function registerBuiltinTiledClass(name, Constructor) {
 	if (factoriesInitialized) {
-		// already initialized, register immediately
-		registerTiledObjectClass(name, Constructor);
+		applyBuiltinTiledClass(name, Constructor);
 	} else {
-		pendingClasses.push([name, Constructor]);
+		pendingBuiltins.push([name, Constructor]);
+	}
+}
+
+/**
+ * Register one built-in class as a default, under its name and its `me.` alias.
+ *
+ * The alias is the 1.x spelling: a map authored then has objects classed
+ * `me.Trigger`, and the engine has always answered to both. It used to arrive
+ * by side effect, since `pool.register` registered a Tiled factory for the
+ * prefixed name as well, and the built-ins went through that call.
+ * @param {string} name - the Tiled class or name to match
+ * @param {Function} Constructor - class constructor with signature (x, y, settings)
+ * @ignore
+ * @internal
+ */
+function applyBuiltinTiledClass(name, Constructor) {
+	for (const key of [name, "me." + name]) {
+		// a default fills a gap, it never overwrites
+		if (!factories.has(key)) {
+			registerTiledObjectClass(key, Constructor);
+			builtinNames.add(key);
+		}
 	}
 }
 
@@ -217,7 +277,16 @@ function initFactories() {
 		registerTiledObjectFactory("shape", createShapeObject);
 	}
 
-	// apply pending class-based factories
+	// Built-ins first, and only where the game has not already claimed the
+	// name. Same rule as the structural factories above: a default fills a
+	// gap, it never overwrites.
+	for (const [name, Constructor] of pendingBuiltins) {
+		applyBuiltinTiledClass(name, Constructor);
+	}
+	pendingBuiltins.length = 0;
+
+	// then everything registered through `pool.register`, in call order, so a
+	// game's registration still displaces the built-in of the same name
 	for (const entry of pendingClasses) {
 		const [name, Constructor, factoryFn] = entry;
 		if (typeof factoryFn === "function") {
@@ -263,20 +332,27 @@ export function createTMXObject(settings, map) {
 	return factory(settings, map);
 }
 
-// wire pool.register() to automatically register Tiled object factories
-// uses pool.pull instead of new Constructor to preserve object recycling
-setPoolRegisterCallback((className, classObj, poolInstance) => {
+// Wire `pool.register()` to register a Tiled object factory too, so the older
+// one-call idiom keeps working.
+//
+// It constructs directly. It used to call `pool.pull`, to keep Tiled objects
+// recycled, but that stopped meaning anything once `Container` released to
+// the typed pools instead of pushing here: nothing refills the legacy pool,
+// so every `pull` took its construction branch anyway. The only thing it did
+// that `new` does not is stamp `className` on the instance, which was read by
+// `pool.push` and by nothing else.
+setPoolRegisterCallback((className, Constructor) => {
 	const factoryFn = (settings) => {
-		const obj = poolInstance.pull(className, settings.x, settings.y, settings);
+		const obj = new Constructor(settings.x, settings.y, settings);
 		obj.pos.z = settings.z;
 		return obj;
 	};
 
 	if (factoriesInitialized) {
-		registeredClasses.set(className, classObj);
+		registeredClasses.set(className, Constructor);
 		registerTiledObjectFactory(className, factoryFn);
 	} else {
 		// queue as a raw factory (not via registerTiledObjectClass which uses new Constructor)
-		pendingClasses.push([className, classObj, factoryFn]);
+		pendingClasses.push([className, Constructor, factoryFn]);
 	}
 });

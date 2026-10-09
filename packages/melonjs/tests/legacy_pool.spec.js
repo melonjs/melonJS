@@ -46,11 +46,27 @@ describe("pool", () => {
 			expect(obj.alive).toEqual(true);
 		});
 
-		it("object is not recycled when pushed and pulled back again", () => {
-			// pushing it into the object pool should throw an exception
+		it("REGRESSION: refusing to recycle REPORTS, it does not throw", () => {
+			// It used to throw by default, and nothing at the call site made
+			// that visible, so a class registered without recycling aborted
+			// whatever was running. Both internal uses removed in 20.7.0
+			// failed that way, from inside a `destroy()` that had already
+			// recycled other state.
+			let returned;
 			expect(() => {
-				pool.push(obj);
-			}).toThrow();
+				returned = pool.push(obj);
+			}).not.toThrow();
+			expect(returned).toBe(false);
+			// and it really did not take it: the next pull is a fresh one
+			expect(pool.pull("dummyClass")).not.toBe(obj);
+		});
+
+		it("still throws when the caller asks for it", () => {
+			// the opt-in, for a caller that wants a missed registration to be
+			// loud rather than silent
+			expect(() => {
+				pool.push(obj, true);
+			}).toThrow("cannot be recycled");
 		});
 	});
 });

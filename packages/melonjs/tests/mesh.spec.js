@@ -10,6 +10,7 @@ import {
 	Renderable,
 	Stage,
 	state,
+	TextureAtlas,
 	Vector2d,
 	Vector3d,
 	video,
@@ -1824,5 +1825,87 @@ describe("Mesh × Camera3d world-space path", () => {
 			expect(Number.isFinite(mesh.width)).toBe(true);
 			expect(Number.isFinite(mesh.height)).toBe(true);
 		});
+	});
+});
+
+describe("Mesh texture resolution", () => {
+	// `resolveTextureAtlas` returns a TextureAtlas it is handed AS IS, and
+	// builds one from the renderer cache otherwise. The existing readback
+	// spec cannot tell the two apart: its atlas came OUT of the cache, so
+	// falling through returns the very same object and the test passes with
+	// the branch broken. This one hands over an atlas the cache has never
+	// seen, so identity is the whole assertion.
+	let app;
+
+	beforeAll(async () => {
+		boot();
+		app = new Application(64, 64, { parent: "screen", renderer: video.AUTO });
+		await app.init();
+	});
+
+	afterAll(() => {
+		app?.destroy();
+	});
+
+	// a local copy: the other fixture is scoped to its own describe
+	const pyramid = () => {
+		return {
+			vertices: new Float32Array([
+				0, 1, 0, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1,
+			]),
+			uvs: new Float32Array([0.5, 0, 0, 1, 1, 1, 1, 1, 0, 1]),
+			indices: new Uint16Array([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1]),
+			width: 60,
+			height: 60,
+			cullBackFaces: true,
+		};
+	};
+
+	const namedAtlas = () => {
+		return new TextureAtlas(
+			{
+				meta: {
+					app: "https://www.codeandweb.com/texturepacker",
+					size: { w: 64, h: 64 },
+					image: "default",
+				},
+				frames: [
+					{
+						filename: "face.png",
+						frame: { x: 0, y: 0, w: 16, h: 16 },
+						rotated: false,
+						trimmed: false,
+						spriteSourceSize: { x: 0, y: 0, w: 16, h: 16 },
+						sourceSize: { w: 16, h: 16 },
+					},
+				],
+			},
+			Renderer.createCanvas(64, 64),
+			// `cache: false`, and that is the whole point of the fixture.
+			// A TextureAtlas registers ITSELF in the renderer cache keyed by
+			// its source (atlas.js:283), so a cached one is handed back by
+			// `cache.get(image)` too — and an identity assertion then passes
+			// even with the branch under test disabled. Keeping this one out
+			// of the cache is what makes the test able to fail.
+			{ cache: false },
+		);
+	};
+
+	it("keeps the exact TextureAtlas it was given", () => {
+		const atlas = namedAtlas();
+		const settings = pyramid();
+		settings.texture = atlas;
+		const mesh = new Mesh(0, 0, settings);
+		// identity, not equality: re-resolving through the cache would hand
+		// back a DIFFERENT, whole-image atlas and silently lose the regions
+		expect(mesh.texture).toBe(atlas);
+		expect(mesh.texture.getRegion("face.png")).toBeDefined();
+	});
+
+	it("builds an atlas for a plain canvas source", () => {
+		const settings = pyramid();
+		settings.texture = Renderer.createCanvas(32, 32);
+		const mesh = new Mesh(0, 0, settings);
+		expect(mesh.texture).toBeInstanceOf(TextureAtlas);
 	});
 });

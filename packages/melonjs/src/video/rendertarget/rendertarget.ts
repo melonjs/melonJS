@@ -41,33 +41,54 @@ export default abstract class RenderTarget {
 	 * @param width - new width in pixels
 	 * @param height - new height in pixels
 	 */
-	abstract resize(width: number, height: number): void;
+	resize(width: number, height: number): void {
+		throw new Error(
+			`${this.constructor.name} does not implement resize(${width}, ${height})`,
+		);
+	}
 
 	/**
 	 * Clear the render target contents.
 	 */
-	abstract clear(): void;
+	clear(): void {
+		throw new Error(`${this.constructor.name} does not implement clear()`);
+	}
 
 	/**
 	 * Release all resources held by this render target.
 	 * The target must not be used after calling destroy.
 	 */
-	abstract destroy(): void;
+	destroy(): void {
+		throw new Error(`${this.constructor.name} does not implement destroy()`);
+	}
 
 	/**
 	 * Read back pixel data from this render target.
+	 *
+	 * The portable form, and the one anything backend-agnostic should use.
+	 * Synchronous readback is NOT portable: WebGPU can only map a buffer
+	 * asynchronously, so a render target of that backend cannot answer at all
+	 * until a frame has been awaited. The two backends that CAN read back
+	 * synchronously offer `getImageData()` as an extra, but it is not part of
+	 * this contract and does not exist on every target.
 	 * @param x - x coordinate of the top-left corner (default 0)
 	 * @param y - y coordinate of the top-left corner (default 0)
 	 * @param width - width of the area to read (default full width)
 	 * @param height - height of the area to read (default full height)
-	 * @returns an ImageData object containing the pixel data
+	 * @returns the pixel data
 	 */
-	abstract getImageData(
+	toImageData(
 		x?: number,
 		y?: number,
 		width?: number,
 		height?: number,
-	): ImageData;
+	): Promise<ImageData> {
+		return Promise.reject(
+			new Error(
+				`${this.constructor.name} does not implement toImageData(${x}, ${y}, ${width}, ${height})`,
+			),
+		);
+	}
 
 	/**
 	 * Creates a Blob object representing the image contained in this render target.
@@ -75,8 +96,8 @@ export default abstract class RenderTarget {
 	 * @param quality - a number between 0 and 1 for lossy formats (e.g. image/jpeg)
 	 * @returns a Promise resolving to a Blob
 	 */
-	toBlob(type = "image/png", quality?: number): Promise<Blob> {
-		const imageData = this.getImageData();
+	async toBlob(type = "image/png", quality?: number): Promise<Blob> {
+		const imageData = await this.toImageData();
 		if (typeof OffscreenCanvas !== "undefined") {
 			const canvas = new OffscreenCanvas(this.width, this.height);
 			const ctx = canvas.getContext("2d");
@@ -117,8 +138,8 @@ export default abstract class RenderTarget {
 	 * Creates an ImageBitmap object from the current contents of this render target.
 	 * @returns a Promise resolving to an ImageBitmap
 	 */
-	toImageBitmap(): Promise<ImageBitmap> {
-		const imageData = this.getImageData();
+	async toImageBitmap(): Promise<ImageBitmap> {
+		const imageData = await this.toImageData();
 		return globalThis.createImageBitmap(imageData);
 	}
 

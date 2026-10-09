@@ -176,7 +176,10 @@ export { AABB3d } from "./physics/broadphase/aabb3d.ts";
 export { default as BuiltinAdapter } from "./physics/builtin/builtin-adapter.ts";
 export { collision } from "./physics/collision.js";
 export * as plugin from "./plugin/plugin.ts";
-export { getPool } from "./pool.ts";
+// `createPool` is public because the deprecation path needs it: a game moving
+// off `pool.register(name, Class, true)` has to be able to build a pool for
+// its own class. `getPool` only reaches the ones the engine ships.
+export { createPool, getPool } from "./pool.ts";
 export type {
 	AnimationOptions,
 	AnimationOptionsInput,
@@ -192,6 +195,8 @@ export type {
 } from "./renderable/ui/progressbar.js";
 export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
+// and the two types it names, so a game can declare a field holding one
+export type { CreatePoolOptions, Pool } from "./system/pool.ts";
 export * as utils from "./utils/utils.ts";
 export * from "./version.ts";
 export type {

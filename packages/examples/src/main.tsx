@@ -218,11 +218,6 @@ const ExamplePlinkoPlanck = lazy(() =>
 		default: m.ExamplePlinkoPlanck,
 	})),
 );
-const ExampleSpaceInvaders = lazy(() =>
-	import("./examples/spaceInvaders/ExampleSpaceInvaders").then((m) => ({
-		default: m.ExampleSpaceInvaders,
-	})),
-);
 const ExampleSpine = lazy(() =>
 	import("./examples/spine/ExampleSpine").then((m) => ({
 		default: m.ExampleSpine,
@@ -607,14 +602,6 @@ const examples: {
 		sourceDir: "plinko-planck",
 		description:
 			"Neon-cyberpunk plinko driven by @melonjs/planck-adapter — click to drop balls, all-procedural rendering.",
-	},
-	{
-		component: <ExampleSpaceInvaders />,
-		label: "Space Invaders",
-		path: "space-invaders",
-		sourceDir: "spaceInvaders",
-		description:
-			"Classic space invaders game with player movement, shooting mechanics, and enemy wave patterns.",
 	},
 	{
 		component: <ExampleShaderEffects />,

@@ -4,7 +4,13 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import { Application, loader, plugin, pool, state } from "melonjs";
+import {
+	Application,
+	loader,
+	plugin,
+	registerTiledObjectClass,
+	state,
+} from "melonjs";
 import { PlayerEntity } from "./PlayerEntity.js";
 import { PlayScreen } from "./play.js";
 import { resources } from "./resources.js";
@@ -27,8 +33,8 @@ export const createGame = async () => {
 		// set the fade transition effect
 		state.transition("fade", "#FFFFFF", 250);
 
-		// register our objects entity in the object pool
-		pool.register("mainPlayer", PlayerEntity);
+		// name the player class so the Tiled map can place it
+		registerTiledObjectClass("mainPlayer", PlayerEntity);
 
 		// switch to PLAY state
 		state.change(state.PLAY);

@@ -71,6 +71,25 @@ export type Texture2dSource =
  */
 export default abstract class Texture2d {
 	/**
+	 * Whether this texture carries named regions, addressable with
+	 * `getRegion()`. `false` on every texture but a {@link TextureAtlas}.
+	 * @default false
+	 */
+	// Tested instead of `instanceof TextureAtlas` because `atlas.js` cannot be
+	// imported from everything that needs to ask: `sprite.js` importing it
+	// forms a cycle that `NineSliceSprite` and `ImageLayer` cannot load
+	// through, since `class X extends Sprite` reads `Sprite` as it evaluates.
+	// Concrete rather than `abstract` because `Texture2d` is publicly
+	// subclassable, and an abstract member would break external subclasses.
+	// A prototype getter rather than an instance field, so it stays out of
+	// `Object.keys` and off anything that enumerates a texture, and so the
+	// answer cannot be written over at runtime the way `instanceof` could not
+	// be spoofed.
+	get isAtlas(): boolean {
+		return false;
+	}
+
+	/**
 	 * Return the backing source for this texture — a drawable canvas/image for
 	 * CPU-backed assets (assignable to {@link Sprite#image} /
 	 * {@link Sprite#normalMap} / an {@link ImageLayer}), or an opaque

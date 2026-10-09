@@ -15,6 +15,7 @@ import { sampleChannel } from "./gltf_sampler.js";
 /**
  * additional import for TypeScript
  * @import { AnimationOptionsInput } from "../../renderable/animation.ts";
+ * @import {Vector3d} from "../../math/vector3d.ts";
  * @import {Bounds} from "../../physics/bounds.ts";
  * @import Camera2d from "../../camera/camera2d.ts";
  * @import CanvasRenderer from "../../video/canvas/canvas_renderer.js";
@@ -95,7 +96,7 @@ const _localScratch = new Array(16);
  */
 export default class GLTFModel extends Container {
 	/**
-	 * @param {import("../../loader/loader.js").GLTFData} data - the parsed glTF descriptor, as returned by {@link loader.getGLTF}
+	 * @param {import("../../loader/parsers/gltf.js").GLTFData} data - the parsed glTF descriptor, as returned by {@link loader.getGLTF}
 	 * @param {object} [options]
 	 * @param {number} [options.scale=1] - pixels per glTF unit (uniform scene scale)
 	 * @param {boolean} [options.rightHanded=true] - glTF Y-up → engine Y-down via a rotation (no mirror)

@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, and baking with CanvasRenderTarget. Triggers on: Camera2d, viewport, follow, setBounds, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, setBounds, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -253,6 +253,36 @@ throws on a zero dimension, instead of `document.createElement("canvas")`.
 `renderer.toFrameTexture()` is the related tool for capturing the *current frame*
 into a texture for a shader to sample.
 
+## Reading pixels back
+
+To grab what a render target holds, as pixels or as a file:
+
+```js
+const pixels = await rt.toImageData();      // ImageData, any backend
+const blob   = await rt.toBlob();           // Blob, "image/png" by default
+const url    = await rt.toDataURL();        // data: URL string
+const bitmap = await rt.toImageBitmap();    // ImageBitmap
+```
+
+All four are promises, and that is not decoration. **WebGPU cannot read a
+texture back synchronously** — it has to map a buffer, which only completes on
+a later tick. So `toImageData()` is the portable readback and the other three
+are built on it.
+
+There is also a synchronous `getImageData()` on `CanvasRenderTarget` and
+`WebGLRenderTarget`, because those two genuinely can. It is **not** part of the
+`RenderTarget` contract and it **throws on a WebGPU target**. Reach for it only
+in code that already knows which backend it is on; anything backend-agnostic
+should await `toImageData()`.
+
+```js
+// fine in canvas-only or WebGL-only code
+const data = rt.getImageData(0, 0, w, h);
+
+// the version that works wherever the game runs
+const data = await rt.toImageData(0, 0, w, h);
+```
+
 ## Symptom → cause
 
 | symptom | cause |
@@ -267,6 +297,7 @@ into a texture for a shader to sample.
 | clipping in the wrong place inside a container | container clips in local coordinates, after its own translate |
 | `container.clipping = true` does nothing | container has no explicit size, so `width`/`height` are `Infinity` |
 | baked target draws nothing / throws | passed the `CanvasRenderTarget`, not its `.canvas` |
+| `getImageData()` throws on one machine but not another | that one is on the WebGPU renderer, which cannot read back synchronously — `await toImageData()` instead |
 | frame rate drops with many static draws | bake into a `CanvasRenderTarget` instead |
 | a 3D camera cannot be given an arbitrary up | `Camera3d#lookAt(target, up)` or `setBasis(right, up, forward)`; see `melonjs-3d` |
 

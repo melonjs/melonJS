@@ -4,6 +4,7 @@ import {
 	boot,
 	Container,
 	collision,
+	ImageLayer,
 	pool,
 	Renderable,
 	registerTiledObjectClass,
@@ -1459,8 +1460,9 @@ describe("TMXTileMap", () => {
 
 			// save original behavior via a wrapper
 			const originalShapeFactory = (settings) => {
-				const obj = pool.pull(
-					"Renderable",
+				// constructed directly: the built-in classes are no longer
+				// registered in the legacy name-keyed pool
+				const obj = new Renderable(
 					settings.x,
 					settings.y,
 					settings.width,
@@ -1731,6 +1733,257 @@ describe("TMXTileMap", () => {
 			expect(() => {
 				registerTiledObjectFactory("invalid", "not a function");
 			}).toThrow("invalid factory function for invalid");
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// Image layers
+	// ---------------------------------------------------------------
+	describe("image layers", () => {
+		// Both image-layer constructions had no coverage at all. They matter
+		// for more than the class: `readImageLayer` hands the constructor a
+		// positional (ox, oy) pair ahead of its settings object, which is the
+		// kind of argument order an edit silently gets wrong.
+		beforeAll(() => {
+			fakeImage("bg", 128, 128);
+		});
+
+		it("builds an ImageLayer for an imagelayer, with its offset and parallax", () => {
+			const map = new TMXTileMap("imagelayer-test", {
+				width: 4,
+				height: 4,
+				tilewidth: 32,
+				tileheight: 32,
+				orientation: "orthogonal",
+				version: "1.0",
+				tilesets: [],
+				layers: [
+					{
+						type: "imagelayer",
+						name: "clouds",
+						image: "bg",
+						offsetx: 12,
+						offsety: 34,
+						parallaxx: 0.5,
+						parallaxy: 0.25,
+						opacity: 1,
+						visible: true,
+					},
+				],
+			});
+			const layer = map.getLayers().find((l) => {
+				return l.name === "clouds";
+			});
+
+			expect(layer).toBeInstanceOf(ImageLayer);
+			// the positional pair: offset x then y, not swapped
+			expect(layer.pos.x).toEqual(12);
+			expect(layer.pos.y).toEqual(34);
+			expect(layer.ratio.x).toBeCloseTo(0.5, 5);
+			expect(layer.ratio.y).toBeCloseTo(0.25, 5);
+		});
+
+		it("honours repeatx / repeaty on an image layer", () => {
+			const map = new TMXTileMap("imagelayer-repeat", {
+				width: 4,
+				height: 4,
+				tilewidth: 32,
+				tileheight: 32,
+				orientation: "orthogonal",
+				version: "1.0",
+				tilesets: [],
+				layers: [
+					{
+						type: "imagelayer",
+						name: "banner",
+						image: "bg",
+						repeatx: true,
+						repeaty: false,
+						opacity: 1,
+						visible: true,
+					},
+				],
+			});
+			const layer = map.getLayers().find((l) => {
+				return l.name === "banner";
+			});
+			expect(layer.repeat).toEqual("repeat-x");
+		});
+
+		const mapWith = (layers, props) => {
+			return {
+				width: 4,
+				height: 4,
+				tilewidth: 32,
+				tileheight: 32,
+				orientation: "orthogonal",
+				version: "1.0",
+				tilesets: [],
+				layers,
+				...(props ?? {}),
+			};
+		};
+
+		it("carries tint, blend mode and opacity onto the layer", () => {
+			const map = new TMXTileMap(
+				"il-style",
+				mapWith([
+					{
+						type: "imagelayer",
+						name: "lit",
+						image: "bg",
+						opacity: 0.5,
+						visible: true,
+						mode: "multiply",
+						tintcolor: "#ff0000",
+					},
+					{
+						type: "imagelayer",
+						name: "hidden",
+						image: "bg",
+						opacity: 0.5,
+						visible: false,
+					},
+					// no `visible` key at all: the default is visible
+					{ type: "imagelayer", name: "default", image: "bg", opacity: 1 },
+				]),
+			);
+			const byName = (n) => {
+				return map.getLayers().find((l) => {
+					return l.name === n;
+				});
+			};
+
+			expect(byName("lit").getOpacity()).toBeCloseTo(0.5, 5);
+			expect(byName("lit").blendMode).toEqual("multiply");
+			expect(byName("lit").tint.toHex()).toEqual("#FF0000");
+			// `visible: false` is expressed as zero opacity, not a flag
+			expect(byName("hidden").getOpacity()).toEqual(0);
+			expect(byName("default").getOpacity()).toEqual(1);
+		});
+
+		it("derives the repeat mode from every repeatx / repeaty combination", () => {
+			const cases = [
+				["both", { repeatx: true, repeaty: true }, "repeat"],
+				["x-only", { repeatx: true }, "repeat-x"],
+				["y-only", { repeaty: true }, "repeat-y"],
+				// the XML path gives strings rather than booleans
+				["strings", { repeatx: "1", repeaty: "1" }, "repeat"],
+				[
+					// the legacy custom property takes precedence over the
+					// Tiled 1.8+ native flags
+					"legacy-wins",
+					{ repeatx: true, properties: { repeat: "no-repeat" } },
+					"no-repeat",
+				],
+			];
+			for (const [name, flags, expected] of cases) {
+				const map = new TMXTileMap(
+					"il-repeat-" + name,
+					mapWith([
+						{
+							type: "imagelayer",
+							name,
+							image: "bg",
+							opacity: 1,
+							visible: true,
+							...flags,
+						},
+					]),
+				);
+				const layer = map.getLayers().find((l) => {
+					return l.name === name;
+				});
+				expect(layer.repeat, name).toEqual(expected);
+			}
+		});
+
+		it("folds the map-level parallax origin into the offset, scaled by the ratio", () => {
+			const map = new TMXTileMap(
+				"il-origin",
+				mapWith(
+					[
+						{
+							type: "imagelayer",
+							name: "scaled",
+							image: "bg",
+							offsetx: 10,
+							offsety: 20,
+							parallaxx: 0.5,
+							parallaxy: 0.25,
+							opacity: 1,
+							visible: true,
+						},
+						// x / y as the offset, which is the older Tiled spelling
+						{
+							type: "imagelayer",
+							name: "legacy-offset",
+							image: "bg",
+							x: 7,
+							y: 9,
+							opacity: 1,
+							visible: true,
+						},
+					],
+					{ parallaxoriginx: 100, parallaxoriginy: 200 },
+				),
+			);
+			const byName = (n) => {
+				return map.getLayers().find((l) => {
+					return l.name === n;
+				});
+			};
+			// offset + origin * ratio, not offset + origin
+			expect(byName("scaled").pos.x).toBeCloseTo(10 + 100 * 0.5, 5);
+			expect(byName("scaled").pos.y).toBeCloseTo(20 + 200 * 0.25, 5);
+			expect(byName("legacy-offset").pos.x).toBeCloseTo(7 + 100, 5);
+			expect(byName("legacy-offset").pos.y).toBeCloseTo(9 + 200, 5);
+		});
+
+		it("builds an ImageLayer for a map-level background image", () => {
+			const map = new TMXTileMap("bg-test", {
+				width: 4,
+				height: 4,
+				tilewidth: 32,
+				tileheight: 32,
+				orientation: "orthogonal",
+				version: "1.0",
+				tilesets: [],
+				layers: [],
+				properties: { background_image: "bg" },
+			});
+			const layer = map.getLayers().find((l) => {
+				return l.name === "background_image";
+			});
+
+			expect(layer).toBeInstanceOf(ImageLayer);
+			expect(layer.pos.x).toEqual(0);
+			expect(layer.pos.y).toEqual(0);
+		});
+
+		it("the background image takes z 0 and pushes the other layers up", () => {
+			const map = new TMXTileMap(
+				"bg-z",
+				mapWith(
+					[
+						{
+							type: "imagelayer",
+							name: "second",
+							image: "bg",
+							opacity: 1,
+							visible: true,
+						},
+					],
+					{ properties: { background_image: "bg" } },
+				),
+			);
+			const byName = (n) => {
+				return map.getLayers().find((l) => {
+					return l.name === n;
+				});
+			};
+			expect(byName("background_image").pos.z).toEqual(0);
+			expect(byName("second").pos.z).toEqual(1);
 		});
 	});
 });

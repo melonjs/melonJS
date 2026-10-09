@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax."
+description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory."
 license: MIT
 ---
 
@@ -72,19 +72,30 @@ Tiled **class**, then its **name**, then the structural fallbacks `"text"`,
 `"tile"` and `"shape"`.
 
 ```js
-pool.register("mainPlayer", PlayerEntity);   // ← matches Tiled class OR name
+import { registerTiledObjectClass, registerTiledObjectFactory } from "melonjs";
+
+registerTiledObjectClass("Enemy", Enemy);   // ← matches Tiled class OR name
+registerTiledObjectFactory("Spine", (settings, map) => { /* → Renderable */ });
 level.load("map1");
 ```
 
-`pool.register(className, classObj, recycling)` also registers the class as a
-Tiled object factory (and again under an `me.`-prefixed alias), unless you set
-`pool.autoRegisterTiled = false`. The dedicated entry points are:
+These are the entry points to use. The registry is Tiled's own, held by the
+object factory, and has nothing to do with object pooling.
+
+`pool.register(className, classObj)` **also** works and registers a Tiled
+factory as a side effect, under the name and again under an `me.`-prefixed
+alias, unless you set `pool.autoRegisterTiled = false`. That is the older
+spelling, kept working for maps and games written against it, and it now
+prints a one-off deprecation notice: `me.pool` is deprecated since 18.0.0.
+
+Its third argument no longer buys anything here. It used to make Tiled
+objects recyclable; they are constructed directly now, and the container
+returns children to typed pools rather than to the name-keyed one. To pool a
+class you spawn constantly, give it a `createPool` and register it for Tiled
+separately:
 
 ```js
-import { registerTiledObjectClass, registerTiledObjectFactory } from "melonjs";
-
-registerTiledObjectClass("Enemy", Enemy);            // new Enemy(x, y, settings)
-registerTiledObjectFactory("Spine", (settings, map) => { /* → Renderable */ });
+registerTiledObjectClass("mainPlayer", PlayerEntity);
 ```
 
 Register **before** loading. With no match the object falls through to the
@@ -94,11 +105,24 @@ not error, it just has none of your behaviour.
 `registerTiledObjectClass` **throws** if you register a *different* constructor
 under a name already taken (re-registering the same one is a no-op).
 `registerTiledObjectFactory` overwrites and only `console.warn`s, so it is the
-one to use for overriding a built-in such as `"shape"`.
+one to use for replacing something already registered.
+
+**Overriding a built-in name always works.** The engine's own classes are
+DEFAULTS: they fill a name nothing else has claimed, and yours takes it over
+whenever you register, before or after a map has loaded.
+
+```js
+registerTiledObjectClass("Trigger", MyTrigger);   // whenever you like
+```
+
+The throw is for a clash between two of *your* classes under one name. For
+that case `registerTiledObjectFactory` overwrites and only warns.
 
 melonJS pre-registers `Renderable`, `Sprite`, `NineSliceSprite`, `Text`,
-`BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable` and `Trigger`
-as Tiled classes, so `Collectable` and `Trigger` work out of the box.
+`BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable`, `Trigger`
+and `Entity` as Tiled classes, so `Collectable` and `Trigger` work out of the
+box. Each is registered under its `me.`-prefixed alias as well, so a map
+authored against melonJS 1.x finds them where it looks.
 
 A `Trigger` forwards a **fixed list** of settings to `level.load()` — not
 whatever you pass it. Today that list is `container`, `onLoaded`, `flatten`,
