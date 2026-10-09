@@ -1038,24 +1038,22 @@ export default class Octree implements Broadphase<OctreeItem> {
  * — captures only the fields the walk inspects. Same approach as
  * QuadTree. `getChildren` is optional because leaf renderables don't
  * have it; the recursive walk narrows via {@link hasGetChildren}.
- * @ignore
- * @internal
  */
-interface ContainerOrChild extends OctreeItem {
+export interface ContainerOrChild extends OctreeItem {
 	addChild?: (...args: unknown[]) => unknown;
 	getChildren?: () => ContainerOrChild[];
 }
 
 /**
- * @ignore
- * @internal
+ * Structural shape used as the `insertContainer` / `removeContainer`
+ * parameter type. `Container` itself satisfies it.
  */
-type ContainerLike = { getChildren(): ContainerOrChild[] };
+export type ContainerLike = { getChildren(): ContainerOrChild[] };
 /**
- * @ignore
- * @internal
+ * The same shape with `getChildren` optional, for a container whose lazy
+ * `children` accessor may not have produced one yet.
  */
-type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
+export type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
 
 /**
  * Type predicate mirror of QuadTree's. Narrows a `ContainerOrChild`

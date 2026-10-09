@@ -6,8 +6,9 @@
  *
  * - `gl.readPixels` rows are BOTTOM-up, so y must be flipped
  * - `CanvasRenderingContext2D.getImageData` rows are TOP-down already
- * - `WebGPURenderTarget.readPixels` is top-down AND un-swizzles BGRA→RGBA,
- *   but it is asynchronous — `getImageData` throws by contract on WebGPU
+ * - `RenderTarget#toImageData` is top-down AND un-swizzles BGRA→RGBA on
+ *   WebGPU, and is a promise on every backend, because WebGPU can only read
+ *   back asynchronously. Synchronous `getImageData` throws on that one.
  *
  * Everything here is async so the WebGPU path fits the same shape as the
  * other two, rather than forcing callers to branch.

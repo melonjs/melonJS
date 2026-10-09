@@ -1528,3 +1528,50 @@ export default class Renderable extends Rect {
 		// to be extended !
 	}
 }
+
+/**
+ * Restore the mutable `Renderable` state a recycled instance must not inherit.
+ *
+ * A pool hands the SAME object back, so everything the previous user wrote
+ * stays written. `onResetEvent` applies the new settings and nothing else, and
+ * the fields below are the ones a game routinely drives: a damage number
+ * tweened to `alpha` 0 came back invisible, a popup scaled up came back large,
+ * a flash faded out came back faded. Named here rather than in each pooled
+ * class so the list has one home.
+ *
+ * Owned resources follow `destroy()`: the mask is dropped rather than recycled,
+ * since it belongs to the game, and post effects are destroyed unless they are
+ * `shared`. A body is left alone: a pooled label is not expected to carry one,
+ * and tearing one down from a reset would be a surprise.
+ * @param {Renderable} renderable - the instance being handed out again
+ * @ignore
+ * @internal
+ */
+export function resetRenderableState(renderable) {
+	renderable.setOpacity(1.0);
+	renderable.tint.setColor(255, 255, 255, 1.0);
+	renderable.blendMode = "normal";
+	renderable.name = "";
+	renderable.floating = false;
+	renderable.isRenderable = true;
+	renderable.isKinematic = true;
+	renderable.visibleInAllCameras = false;
+	renderable.alwaysUpdate = false;
+	renderable.updateWhenPaused = false;
+	renderable.isPersistent = false;
+	renderable.autoTransform = true;
+	renderable.applyAnchorTransform = true;
+	renderable.postEffectNeedsCapture = false;
+	renderable.anchorPoint.set(0.5, 0.5);
+	renderable.currentTransform.identity();
+	renderable._flip.x = false;
+	renderable._flip.y = false;
+	renderable.mask = undefined;
+	for (const effect of renderable.postEffects) {
+		if (typeof effect.destroy === "function" && !effect.shared) {
+			effect.destroy();
+		}
+	}
+	renderable.postEffects.length = 0;
+	renderable.isDirty = true;
+}

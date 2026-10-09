@@ -1,9 +1,13 @@
 import { game } from "../application/application.ts";
-import { getImage } from "./../loader/loader.js";
+// `cache.js`, not `loader.js`: the accessor lives with its data, and this
+// file must not reach the whole loader. `loader.js` pulls in the glTF parser
+// and through it `level.js` and `TMXTileMap.js`, which imports `ImageLayer`,
+// which `extends Sprite` — and reading `Sprite` while THIS file is still
+// loading is a `Cannot access 'Sprite' before initialization` at startup.
+import { getImage } from "./../loader/cache.js";
 import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { on, STATE_PAUSE } from "../system/event.ts";
-import { TextureAtlas } from "./../video/texture/atlas.js";
 import Texture2d from "./../video/texture/texture2d.ts";
 import { resolveAnchorPoint } from "./anchorPoint.ts";
 import FrameAnimation from "./frameAnimation.js";
@@ -14,6 +18,7 @@ const FLICKER_INTERVAL_MS = 33;
 
 /**
  * additional import for TypeScript
+ * @import {TextureAtlas} from "./../video/texture/atlas.js";
  * @import {Vector2d} from "../math/vector2d.ts";
  * @import Renderer from "./../video/renderer.js";
  * @import {CompressedImage} from "../loader/parsers/compressed_textures/compressed_image.js";
@@ -196,7 +201,7 @@ export default class Sprite extends Renderable {
 		};
 
 		// set the proper image/texture to use
-		if (settings.image instanceof TextureAtlas) {
+		if (settings.image instanceof Texture2d && settings.image.isAtlas) {
 			this.source = settings.image;
 			this.image = this.source.getTexture();
 			this.textureAtlas = settings.image;
@@ -334,7 +339,8 @@ export default class Sprite extends Renderable {
 		// When the source is a TextureAtlas, prefer its paired normal-map
 		// over an explicit `settings.normalMap` (the atlas drove the layout).
 		if (
-			settings.image instanceof TextureAtlas &&
+			settings.image instanceof Texture2d &&
+			settings.image.isAtlas &&
 			typeof settings.image.getNormalTexture === "function"
 		) {
 			const fromAtlas = settings.image.getNormalTexture();

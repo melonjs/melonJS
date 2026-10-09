@@ -620,10 +620,8 @@ export default class QuadTree implements Broadphase<QuadTreeItem> {
  *
  * `getChildren` is optional because leaf renderables don't have it;
  * the recursive `insertContainer` narrows via {@link hasGetChildren}.
- * @ignore
- * @internal
  */
-interface ContainerOrChild extends QuadTreeItem {
+export interface ContainerOrChild extends QuadTreeItem {
 	addChild?: (...args: unknown[]) => unknown;
 	getChildren?: () => ContainerOrChild[];
 }
@@ -635,15 +633,13 @@ interface ContainerOrChild extends QuadTreeItem {
  * documentation at every call site. `Container` itself satisfies this
  * shape; the optional variant covers the case where the World's lazy
  * `children` accessor returns `undefined`.
- * @ignore
- * @internal
  */
-type ContainerLike = { getChildren(): ContainerOrChild[] };
+export type ContainerLike = { getChildren(): ContainerOrChild[] };
 /**
- * @ignore
- * @internal
+ * The same shape with `getChildren` optional, for a container whose lazy
+ * `children` accessor may not have produced one yet.
  */
-type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
+export type ContainerLikeOptional = { getChildren?(): ContainerOrChild[] };
 
 /**
  * Type predicate: narrows a `ContainerOrChild` to one whose

@@ -141,9 +141,14 @@ The insets default to a quarter of the frame.
 Frequently spawned sprites should be pooled:
 
 ```js
-pool.register("bullet", Bullet, true);      // true = recyclable
-const b = pool.pull("bullet", x, y);        // new Bullet(x, y), or onResetEvent(x, y) on a reused one
-world.removeChild(b);                       // returns it to the pool automatically
+import { createPool } from "melonjs";
+
+const bulletPool = createPool((x, y) => {    // me.pool is deprecated
+    const instance = new Bullet(x, y);
+    return { instance, reset: (x, y) => instance.onResetEvent(x, y) };
+});
+const b = bulletPool.get(x, y);             // new Bullet(x, y), or reset(x, y) on a reused one
+world.removeChild(b);                       // returns it to bulletPool automatically
 ```
 
 Two consequences:

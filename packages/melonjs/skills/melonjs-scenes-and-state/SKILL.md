@@ -257,9 +257,9 @@ instances.** All four, or it is not a tween.
 
 
 ```js
-import { Tween, pool } from "melonjs";
+import { getPool, Tween } from "melonjs";
 
-const t = pool.pull("Tween", sprite.pos)   // registered name is "Tween"
+const t = getPool("tween").get(sprite.pos) // typed pool, release when done
     .to({ x: 300 }, { duration: 500 })     // options object, not a number
     .easing(Tween.Easing.Quadratic.Out)
     .onComplete(() => { /* … */ })
@@ -289,7 +289,7 @@ callback is invoked with the tweened object as `this` and the eased progress
 
 ```js
 const fade = { level: 1 };
-pool.pull("Tween", fade)
+getPool("tween").get(fade)
     .to({ level: 0 }, { duration: 400 })
     .easing(Tween.Easing.Quadratic.Out)
     .onUpdate(function () {

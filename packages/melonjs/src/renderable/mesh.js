@@ -38,7 +38,7 @@ let _warnedLitUnder2dOnce = false;
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import Camera2d from "../camera/camera2d.ts";
- * @import Light3d from "../lighting/light3d.ts";
+ * @import {Light3d} from "../lighting/light3d.ts";
  * @import GLShader from "../video/webgl/glshader.js";
  */
 

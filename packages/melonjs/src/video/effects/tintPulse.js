@@ -72,14 +72,6 @@ export default class TintPulseEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the current time (call each frame for animation)
-	 * @param {number} time - time in seconds
-	 */
-	setTime(time) {
-		this.setUniform("uTime", time);
-	}
-
-	/**
 	 * set the pulse color
 	 * @param {number[]} color - pulse color as [r, g, b] (0.0–1.0)
 	 */

@@ -92,8 +92,12 @@ export default class Body {
 		/**
 		 * The body collision mask, that defines what should collide with what.<br>
 		 * (by default will collide with all entities)
-		 * @ignore
-		 * @internal
+		 *
+		 * Public, and not `@internal`: it is part of the portable
+		 * {@link PhysicsBody} contract every adapter implements, this class's
+		 * own examples assign to it, and stripping it made `Body` fail to
+		 * satisfy `PhysicsBody` in the published declarations.
+		 * @public
 		 * @type {number}
 		 * @default collision.types.ALL_OBJECT
 		 * @see collision.types

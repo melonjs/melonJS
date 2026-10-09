@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import * as me from "melonjs";
+import { WaterTextureObj } from "./entities.js";
 
 export class WaterOverworldStage extends me.Stage {
 	override onResetEvent() {
@@ -16,11 +17,11 @@ export class WaterOverworldStage extends me.Stage {
 		// the refracting pond, over the scene (z 20), scaled like the
 		// original demo
 		me.game.world.addChild(
-			me.pool.pull("waterTextureObj", 480, 301, {
+			new WaterTextureObj(480, 301, {
 				inspectors: {
 					scale: { x: 2.032, y: 2.032 },
 				},
-			}) as me.Renderable,
+			}),
 			20,
 		);
 	}

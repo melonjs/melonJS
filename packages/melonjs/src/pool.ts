@@ -12,7 +12,11 @@ import { vector3dPool } from "./math/vector3d";
 import type ParticleEmitter from "./particles/emitter";
 import type Particle from "./particles/particle";
 import { boundsPool } from "./physics/bounds";
+// `textPool` / `colorLayerPool` register themselves in their own modules,
+// the same way `particlePool` does, so these are types only
+import type { colorLayerPool } from "./renderable/colorlayer.js";
 import { bitmapTextDataPool } from "./renderable/text/bitmaptextdata";
+import type { textPool } from "./renderable/text/text.js";
 import type { Pool } from "./system/pool";
 import { getRegisteredPools, registerPool } from "./system/pool";
 import { tweenPool } from "./tweens/tween";
@@ -50,6 +54,8 @@ interface PoolMap {
 	roundedRectangle: typeof roundedRectanglePool;
 	ellipse: typeof ellipsePool;
 	tween: typeof tweenPool;
+	text: typeof textPool;
+	colorLayer: typeof colorLayerPool;
 	particle: Pool<Particle, [emitter: ParticleEmitter]>;
 	bitmapTextData: typeof bitmapTextDataPool;
 }

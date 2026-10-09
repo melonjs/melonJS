@@ -182,8 +182,8 @@ export default class MaskEffect extends CameraEffect {
 	}
 
 	override destroy(): void {
-		// see FadeEffect.destroy(): guarded so a second call is a no-op instead
-		// of throwing "Instance is already in pool" out of the pool
+		// see FadeEffect.destroy(): guarded so a second call is a no-op rather
+		// than releasing a tween this effect no longer owns
 		if (this.tween !== undefined) {
 			this.tween.stop();
 			tweenPool.release(this.tween);

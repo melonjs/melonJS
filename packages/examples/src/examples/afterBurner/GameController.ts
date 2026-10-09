@@ -18,12 +18,13 @@ import {
 	audio,
 	type Camera3d,
 	ChromaticAberrationEffect,
+	createPool,
 	GlowEffect,
 	input,
 	Light3d,
 	math,
 	ParticleEmitter,
-	pool,
+	type Pool,
 	Renderable,
 	type Renderer,
 	ScanlineEffect,
@@ -144,20 +145,36 @@ const _sightScreen = new Vector2d();
 const _edgeScreen = new Vector2d();
 const _enemyScreen = new Vector2d();
 
-// ─── Pool keys for `me.pool` ───────────────────────────────────────────
-// One-time registered subclasses of Sprite, built on the fly inside the
-// `GameController` constructor (the texture isn't available before that).
-// `pool.pull(name, x, y)` reuses an existing instance (calling its
-// `onResetEvent`) before falling back to construction; `world.removeChild`
-// automatically returns the sprite to the pool, no manual release call.
-const POOL_PLAYER_BULLET = "AfterBurnerPlayerBullet";
-const POOL_ENEMY_BULLET = "AfterBurnerEnemyBullet";
-const POOL_CONTRAIL_NODE = "AfterBurnerContrailNode";
+// ─── Pooled sprites ───────────────────────────────────────────────────
+// The three recycled Sprite subclasses are built on the fly inside the
+// `GameController` constructor, because the texture isn't available before
+// that, so their pools are fields rather than module constants.
+// `somePool.get(x, y)` reuses an existing instance (calling its
+// `onResetEvent`) before falling back to construction, and
+// `world.removeChild` returns the sprite to the pool that built it, with no
+// manual release call.
+type PooledSprite = Sprite & { onResetEvent(x: number, y: number): void };
+type SpritePool = Pool<PooledSprite, [x: number, y: number]>;
+
+/** wrap a `(x, y)` Sprite subclass in a pool that recycles it */
+function poolOf(
+	Constructor: new (x: number, y: number) => PooledSprite,
+): SpritePool {
+	return createPool((x: number, y: number) => {
+		const instance = new Constructor(x, y);
+		return {
+			instance,
+			reset: (x: number, y: number) => {
+				instance.onResetEvent(x, y);
+			},
+		};
+	});
+}
 
 /**
  * Build a `Sprite` subclass with the given texture + RGB tint pre-applied.
  * Both the constructor and `onResetEvent` take `(x, y)`, so the pool can
- * call either on `pull(name, x, y)` without the call site caring whether
+ * call either on `get(x, y)` without the call site caring whether
  * this is a fresh instance or a recycled one.
  */
 function buildBulletClass(
@@ -223,6 +240,10 @@ export class GameController extends Renderable {
 	enemyBullets: EnemyBulletMover[] = [];
 	score = 0;
 	gameOver = false;
+	// built in the constructor, once the textures exist
+	playerBulletPool!: SpritePool;
+	enemyBulletPool!: SpritePool;
+	contrailPool!: SpritePool;
 	// `dt`-driven countdown timers. Each frame we subtract the engine-
 	// delivered `dt`; when the value crosses 0 the corresponding event
 	// (spawn enemy / fire bullet / spawn contrail node) is allowed and
@@ -354,7 +375,7 @@ export class GameController extends Renderable {
 		this.muzzleEmitter = this._makeMuzzleEmitter();
 		this.initFlashLights(app);
 
-		this.registerPools();
+		this.createPools();
 
 		this.hud = new HUD(app);
 		this.updateCamera();
@@ -379,26 +400,20 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Register the three pooled Sprite subclasses with `me.pool`. After
-	 * this, `pool.pull(name, x, y)` recycles instances and
-	 * `world.removeChild(sprite)` auto-returns them. Re-registering on
-	 * each example mount overwrites the prior entry, no leak.
+	 * Build the three pools. `get(x, y)` recycles an instance and
+	 * `world.removeChild(sprite)` returns it, because a pool stamps itself on
+	 * everything it builds. One set of pools per mount, which goes with the
+	 * controller.
 	 */
-	private registerPools(): void {
-		pool.register(
-			POOL_PLAYER_BULLET,
+	private createPools(): void {
+		this.playerBulletPool = poolOf(
 			buildBulletClass(this.bulletTexture, TINT_BULLET_RGB),
-			true,
 		);
-		pool.register(
-			POOL_ENEMY_BULLET,
+		this.enemyBulletPool = poolOf(
 			buildBulletClass(this.bulletTexture, TINT_ENEMY_BULLET_RGB),
-			true,
 		);
-		pool.register(
-			POOL_CONTRAIL_NODE,
+		this.contrailPool = poolOf(
 			buildContrailClass(this.contrailTexture, this.app.renderer),
-			true,
 		);
 	}
 
@@ -446,7 +461,7 @@ export class GameController extends Renderable {
 		const oy = CONTRAIL_OFFSET_Y;
 		const sx = this.player.pos.x + ox * cosR - oy * sinR;
 		const sy = this.player.pos.y + ox * sinR + oy * cosR;
-		const sprite = pool.pull(POOL_CONTRAIL_NODE, sx, sy) as Sprite;
+		const sprite = this.contrailPool.get(sx, sy);
 		// Spawn at the plane's own depth — the trail then advances
 		// TOWARD the camera each frame, so node 0 is co-planar with
 		// the plane and node N is in front of it (closer to camera =
@@ -547,15 +562,10 @@ export class GameController extends Renderable {
 	}
 
 	spawnBullet(): void {
-		// `pool.pull` reuses an existing sprite (running its
-		// `onResetEvent`) before allocating a new one — the additive
-		// blend mode + gold tint are pre-baked into the registered
-		// subclass.
-		const b = pool.pull(
-			POOL_PLAYER_BULLET,
-			this.player.pos.x,
-			this.player.pos.y,
-		) as Sprite;
+		// `get` reuses an existing sprite (running its `onResetEvent`)
+		// before allocating a new one — the additive blend mode and gold tint
+		// are pre-baked into the pooled subclass.
+		const b = this.playerBulletPool.get(this.player.pos.x, this.player.pos.y);
 		// `addChild(child, z)` atomically sets the depth at insertion —
 		// no window where the world's sort key is stale.
 		this.app.world.addChild(b, PLAYER_Z + 40);
@@ -1033,7 +1043,7 @@ export class GameController extends Renderable {
 		const dz = this.player.depth - ez;
 		const len = Math.hypot(dx, dy, dz) || 1;
 		const inv = ENEMY_BULLET_SPEED / len;
-		const b = pool.pull(POOL_ENEMY_BULLET, ex, ey) as Sprite;
+		const b = this.enemyBulletPool.get(ex, ey);
 		this.app.world.addChild(b, ez);
 		this.enemyBullets.push({
 			sprite: b,

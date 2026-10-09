@@ -59,16 +59,28 @@ Anything spawned frequently — bullets, particles, pickups, damage numbers —
 should be pooled rather than allocated:
 
 ```js
-pool.register("bullet", Bullet, true);      // third arg = enable recycling
-const b = pool.pull("bullet", x, y);        // recycled: onResetEvent(x, y)
-                                            // fresh:    new Bullet(x, y)
-world.removeChild(b);                        // returns to the pool automatically
+import { createPool } from "melonjs";
+
+const bulletPool = createPool((x, y) => {
+    const instance = new Bullet(x, y);
+    return { instance, reset: (x, y) => instance.onResetEvent(x, y) };
+});
+
+const b = bulletPool.get(x, y);   // recycled: reset(x, y)
+                                  // fresh:    new Bullet(x, y)
+world.removeChild(b);             // returns to bulletPool automatically
 ```
 
-`register` also publishes the class as a Tiled object factory under that name,
-so an object with a matching class or name in a `.tmx` map instantiates it. Set
-`pool.autoRegisterTiled = false` around the call for classes that should stay
-programmatic.
+The container returns a child to whichever pool built it, so removal is enough;
+you only call `release()` yourself for something that was never added to the
+world.
+
+**`me.pool` is the older, string-keyed version and is deprecated since
+18.0.0.** `pool.register(name, Class, true)` / `pool.pull(name)` still work and
+print a one-off console notice, but a recycled object is no longer returned on
+removal, so pooling through it now costs an allocation per spawn. To register a
+class so a Tiled map can name it, use `registerTiledObjectClass` — that is a
+separate registry and is not deprecated.
 
 Two rules that cause subtle bugs when missed:
 
@@ -76,10 +88,11 @@ Two rules that cause subtle bugs when missed:
   alpha, tint, scale, animation, velocity. Anything you forget carries into the
   next use, which looks like a random visual glitch.
 - **Pooled objects do not fire `onDestroyEvent` on removal.** Removal always
-  calls `onDeactivateEvent`, then tries `pool.push`; only when that *fails* does
-  it fall through to `destroy()`, which is what calls `onDestroyEvent`. So a
-  successfully recycled object never sees it. Pair event subscriptions with
-  `onActivateEvent` / `onDeactivateEvent` instead, or you leak handlers.
+  calls `onDeactivateEvent`, then tries to return the object to the pool that
+  built it; only when nothing owns it does it fall through to `destroy()`,
+  which is what calls `onDestroyEvent`. So a successfully recycled object never
+  sees it. Pair event subscriptions with `onActivateEvent` /
+  `onDeactivateEvent` instead, or you leak handlers.
 
 - **`removeChild` is DEFERRED, which breaks a pool you re-lend in the same
   frame.** The removal is queued and runs after the update and draw stack has
@@ -98,14 +111,24 @@ Two rules that cause subtle bugs when missed:
   usual cause of a pooled effect that flickers out one frame after it is
   recycled.
 
-Engine classes are poolable too: `pool.pull("Tween", target)`. The canonical
-names are unprefixed — `Entity`, `Collectable`, `Trigger`, `Light2d`,
-`Particle`, `Sprite`, `NineSliceSprite`, `Renderable`, `Text`, `BitmapText`,
-`ImageLayer`, `Tween`, `ColorLayer`.
+**The engine's own classes are NOT in this pool.** They were registered in it
+once, which bought nothing: most had recycling off, so `pool.pull("Sprite")`
+was a plain construction behind a string key. The ones worth recycling have
+typed pools instead, reached by key and fully typed:
 
-`pool.register` additionally aliases every name under an `me.` prefix, pointing
-at the same entry, so `pool.pull("me.Tween")` resolves identically — and the
-same alias is registered with the Tiled object factory, which is why a map
+```js
+const tween = getPool("tween").get(target);
+const label = getPool("text").get(x, y, { font: "Arial", size: 12 });
+getPool("text").release(label);          // yours to release, as with particles
+```
+
+`getPool` covers `vector2d`, `vector3d`, `point`, `matrix2d`, `matrix3d`,
+`bounds`, `color`, `polygon`, `line`, `rectangle`, `roundedRectangle`,
+`ellipse`, `tween`, `particle`, `text`, `colorLayer` and `bitmapTextData`.
+
+`pool.register` still aliases every name you give it under an `me.` prefix,
+pointing at the same entry, so `pool.pull("me.Bullet")` resolves identically —
+and the same alias reaches the Tiled object factory, which is why a map
 authored against melonJS 1.x still finds its classes. Prefer the unprefixed
 name in new code; do not "correct" an `me.`-prefixed one, it is not broken.
 

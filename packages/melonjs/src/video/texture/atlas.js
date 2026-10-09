@@ -1,8 +1,12 @@
-import { getImage } from "./../../loader/loader.js";
+// from `cache.js` rather than `loader.js`, for the same reason `sprite.js`
+// does: this module is inside the cycle that `class NineSliceSprite extends
+// Sprite` has to load through, and the cache module keeps a single runtime
+// import where the loader pulls in every parser
+import { getImage } from "./../../loader/cache.js";
 import { Vector2d } from "../../math/vector2d.ts";
+import NineSliceSprite from "./../../renderable/nineslicesprite.js";
 import Sprite from "./../../renderable/sprite.js";
 import { on, VIDEO_INIT } from "../../system/event.ts";
-import pool from "../../system/legacy_pool.js";
 import { parseAseprite } from "./parser/aseprite.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
@@ -23,7 +27,6 @@ on(VIDEO_INIT, (renderer) => {
 
 /**
  * additional import for TypeScript
- * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
  * @import {CompressedImage} from "../../loader/parsers/compressed_textures/compressed_image.js";
  */
 
@@ -85,6 +88,15 @@ export function identifyFormat(app) {
  * @category Game Objects
  */
 export class TextureAtlas extends Texture2d {
+	/**
+	 * This texture carries named regions, so `getRegion()` is meaningful.
+	 * @type {boolean}
+	 * @readonly
+	 */
+	get isAtlas() {
+		return true;
+	}
+
 	/**
 	 * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
@@ -543,8 +555,8 @@ export class TextureAtlas extends Texture2d {
 	 */
 	createSpriteFromName(name, settings, nineSlice = false) {
 		// instantiate a new sprite object
-		return pool.pull(
-			nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
+		const Class = nineSlice === true ? NineSliceSprite : Sprite;
+		return new Class(
 			0,
 			0,
 			Object.assign(

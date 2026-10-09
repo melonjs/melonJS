@@ -257,13 +257,28 @@ describe("Trigger level change (#1646)", () => {
 				setTimeout(resolve, 0);
 			});
 		};
-		// one tick past the 10ms duration finishes it outright
-		tween._onTick(1000);
-		for (let i = 0; i < 20 && loaded.length === 0; i++) {
+		// Advance it by a DELTA well past the 10ms duration, which finishes it
+		// outright. Through `update(dt)` rather than `_onTick(timestamp)`:
+		// `_onTick` takes an absolute `performance.now()` stamp, derives
+		// `dt = timestamp - _lastTick` against the stamp `start()` recorded,
+		// and ignores any `dt` outside `(0, 1000)`. The hardcoded `1000` this
+		// used to pass is therefore a valid tick only while the PAGE is
+		// younger than one second; past that the delta is negative and the
+		// call does nothing at all, leaving the tween to be finished by a real
+		// animation frame instead. That is what flaked: a fixed count of
+		// immediate timers below racing one rAF callback, which a loaded
+		// full-suite run loses often enough. It failed with `loaded` empty,
+		// because the hide tween had never completed and so the load had
+		// never been asked for.
+		tween.update(500);
+		// Wait on a DEADLINE for the END state, rather than counting task
+		// boundaries to an intermediate one: how many macrotasks sit between
+		// the load's timer and the reveal chained off the promise it returns
+		// is the scheduler's business, not this test's.
+		const deadline = globalThis.performance.now() + 5000;
+		while (seen.length < 2 && globalThis.performance.now() < deadline) {
 			await nextTask();
 		}
-		// and let the reveal chained after the load settle
-		await nextTask();
 
 		GLTFScene.prototype.addTo = previousAddTo;
 		app.viewport = original;

@@ -53,6 +53,25 @@ describe("RenderTarget", () => {
 			expect(data.height).toEqual(50);
 		});
 
+		it("toImageData resolves the same pixels getImageData returns", async () => {
+			// the portable readback. On this backend it wraps the synchronous
+			// one, so the two must agree; the point of the promise is that
+			// WebGPU, which cannot read back synchronously, can honour the
+			// same contract.
+			const rt = new CanvasRenderTarget(16, 16);
+			rt.context.fillStyle = "#ff0000";
+			rt.context.fillRect(0, 0, 16, 16);
+
+			const data = await rt.toImageData(0, 0, 16, 16);
+			expect(data).toBeInstanceOf(ImageData);
+			expect(data.width).toEqual(16);
+			expect(data.height).toEqual(16);
+			expect(Array.from(data.data.slice(0, 4))).toEqual([255, 0, 0, 255]);
+			expect(Array.from(data.data)).toEqual(
+				Array.from(rt.getImageData(0, 0, 16, 16).data),
+			);
+		});
+
 		it("should destroy without error", () => {
 			const rt = new CanvasRenderTarget(100, 100);
 			expect(() => {

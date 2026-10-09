@@ -18,8 +18,11 @@ type Release = (() => void) | undefined;
 
 export interface CreatePoolOptions<T, A extends unknown[]> {
 	instance: T;
-	reset?: Reset<A>;
-	release?: Release;
+	// spelled out rather than naming the two aliases above: those are
+	// internal, and a public interface must not reference a type a consumer
+	// cannot see
+	reset?: ((...args: A) => void) | undefined;
+	release?: (() => void) | undefined;
 }
 
 // Pool registry for centralized access via getPool/getTotalPoolSize
@@ -44,6 +47,69 @@ export const registerPool = (key: string, pool: Pool<any, any[]>) => {
  */
 export const getRegisteredPools = () => pools;
 
+/**
+ * Instances currently sitting in the pool that built them.
+ *
+ * `Pool#release` throws on an instance it already holds, which is the right
+ * answer for a caller releasing the same object twice by hand. It is the wrong
+ * answer for `releaseToOwningPool`, which is called for EVERY child a
+ * container drops: a game that released a pooled label itself, with the label
+ * still a container child, then had the next `clearChildren()` or level change
+ * throw out of the teardown. This lets that path recognise the object is
+ * already home and say so without going near `release`.
+ * @ignore
+ * @internal
+ */
+const parked = new WeakSet();
+
+/**
+ * The back-pointer `createPool` stamps on everything it builds.
+ *
+ * It answers "which pool owns this object", which is the question a GENERIC
+ * caller has to ask: `Container#removeChildNow` holds a child and has no idea
+ * what it is. A per-class check cannot answer it, because two pools can exist
+ * for one class and releasing to the wrong one silently corrupts both.
+ *
+ * The legacy pool answered the same question with a `className` string; this
+ * is that, typed and without the registry.
+ * @internal
+ * @ignore
+ */
+export interface Poolable {
+	/**
+	 * the pool that created this object, if any
+	 *
+	 * Typed the same way the pool registry above is: a pool's parameters vary
+	 * per class, and this field holds whichever one built the object.
+	 * @internal
+	 * @ignore
+	 */
+	poolable?: Pool<any, any[]>;
+}
+
+/**
+ * Hand an object back to whichever pool created it.
+ *
+ * Returns false for anything a pool did not build, which is the signal a
+ * caller needs to fall back to destroying it instead.
+ * @param instance - the object to release
+ * @returns true if a pool took it back
+ * @internal
+ * @ignore
+ */
+export const releaseToOwningPool = (instance: object): boolean => {
+	const owner = (instance as Poolable).poolable;
+	if (owner === undefined) {
+		return false;
+	}
+	// already back in its pool, so the caller must not destroy it either
+	if (parked.has(instance)) {
+		return true;
+	}
+	owner.release(instance);
+	return true;
+};
+
 export const createPool = <T, A extends unknown[]>(
 	options: (...args: A) => CreatePoolOptions<T, A>,
 ): Pool<T, A> => {
@@ -52,7 +118,7 @@ export const createPool = <T, A extends unknown[]>(
 	const instanceReleaseMethods = new Map<T, Release>();
 	let inUse: number = 0;
 
-	return {
+	const pool: Pool<T, A> = {
 		/**
 		 * release an object back to the pool
 		 * @param instance The object to release.
@@ -79,6 +145,9 @@ export const createPool = <T, A extends unknown[]>(
 			const release = instanceReleaseMethods.get(instance);
 			release?.();
 			available.add(instance);
+			if (instance !== null && typeof instance === "object") {
+				parked.add(instance);
+			}
 			inUse--;
 		},
 		/**
@@ -88,6 +157,9 @@ export const createPool = <T, A extends unknown[]>(
 		get: (...args) => {
 			const object = takeFromSet(available);
 			if (object) {
+				if (object !== null && typeof object === "object") {
+					parked.delete(object);
+				}
 				const reset = instanceResetMethods.get(object);
 				reset?.(...args);
 				inUse++;
@@ -96,6 +168,23 @@ export const createPool = <T, A extends unknown[]>(
 				const { instance, reset, release } = options(...args);
 				instanceResetMethods.set(instance, reset);
 				instanceReleaseMethods.set(instance, release);
+				// Stamped once, at construction: a recycled instance already
+				// carries it, and this is what lets a generic caller return
+				// the object without knowing its type.
+				//
+				// NON-ENUMERABLE, which is not a detail: as a plain property
+				// it joins `Object.keys`, `JSON.stringify`, console output and
+				// every deep-equality comparison. `tests/vector2d.spec.ts`
+				// caught it immediately, comparing two vectors that were now
+				// carrying a pool each.
+				if (instance !== null && typeof instance === "object") {
+					Object.defineProperty(instance, "poolable", {
+						value: pool,
+						enumerable: false,
+						writable: true,
+						configurable: true,
+					});
+				}
 				inUse++;
 				return instance;
 			}
@@ -120,4 +209,6 @@ export const createPool = <T, A extends unknown[]>(
 			return inUse;
 		},
 	};
+
+	return pool;
 };

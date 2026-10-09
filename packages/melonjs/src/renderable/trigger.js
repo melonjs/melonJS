@@ -15,6 +15,7 @@ import Renderable from "./renderable.js";
  * @import Container from "./container.js";
  * @import {Ellipse} from "../geometries/ellipse.ts";
  * @import {Line} from "../geometries/line.ts";
+ * @import {Vector3d} from "../math/vector3d.ts";
  * @import {Polygon} from "../geometries/polygon.ts";
  * @import {Rect} from "../geometries/rectangle.ts";
  */

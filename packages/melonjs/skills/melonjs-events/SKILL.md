@@ -112,9 +112,9 @@ onDeactivateEvent() {
 ```
 
 **Pool-recycled objects never fire `onDestroyEvent` on removal** — `removeChildNow`
-tries `pool.push(child)` first and only calls `destroy()` if that fails, so a
-class registered with `pool.register(name, Class, true)` goes back to the pool
-instead. Anything you clean up there will not run. `destroy()` is also what calls
+first tries to return the child to the pool that built it, and only calls
+`destroy()` when nothing owns it. So anything taken from a `createPool` goes
+back to that pool instead. Anything you clean up there will not run. `destroy()` is also what calls
 `releaseAllPointerEvents(this)`, which is why a pooled object must release its
 own pointer registrations in `onDeactivateEvent`.
 

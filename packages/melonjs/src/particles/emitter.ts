@@ -6,7 +6,7 @@ import timer from "../system/timer.ts";
 import type CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import type WebGLRenderer from "../video/webgl/webgl_renderer.js";
-import Particle, { particlePool } from "./particle.ts";
+import { particlePool } from "./particle.ts";
 import defaultEmitterSettings, {
 	type ParticleEmitterSettings,
 } from "./settings.ts";
@@ -755,36 +755,6 @@ export default class ParticleEmitter extends Container {
 		}
 
 		return this.isDirty;
-	}
-
-	/**
-	 * Hand the live particles back to `particlePool` instead of letting the
-	 * generic child teardown dispose of them.
-	 *
-	 * A {@link Particle} is not registered with the legacy `pool.register`
-	 * registry, so the inherited `removeChildNow(child)` finds it unrecyclable
-	 * and calls `destroy()` on it — which releases its `pos` and leaves the
-	 * instance permanently out of `particlePool`, counted as in use and never
-	 * handed out again. An emitter torn down mid-burst (a level change, a
-	 * game over, a `world.reset()`) leaks its whole cloud that way.
-	 *
-	 * `keepalive=true` plus an explicit `release` is the same pairing a
-	 * particle uses when it dies of old age; see {@link Particle#update}.
-	 * @ignore
-	 * @internal
-	 */
-	override clearChildren(): void {
-		const children = this.getChildren();
-		for (let i = children.length; i-- > 0; ) {
-			const particle = children[i];
-			if (particle instanceof Particle && !particle.isPersistent) {
-				this.removeChildNow(particle, true);
-				particlePool.release(particle);
-			}
-		}
-		// anything the loop above left, and the pending sort this container
-		// may still owe
-		super.clearChildren();
 	}
 
 	/**

@@ -82,7 +82,7 @@
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist:publish",
 		"clean": "tsx scripts/clean.ts",
-		"types": "tsc --project tsconfig.build.json && tsx scripts/strip-internal.ts",
+		"types": "tsc --project tsconfig.build.json && tsx scripts/strip-internal.ts && tsx scripts/check-declarations.ts",
 		"test:types": "tsc",
 		"doc:css": "cat scripts/docs/brand.css scripts/docs/copy-page.css > scripts/docs/.docs.css"
 	}

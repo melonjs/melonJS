@@ -505,14 +505,13 @@ export class WaterTextureObj extends me.Sprite {
 	}
 }
 
-/** register every TMX-spawnable entity in the object pool */
+/** name every class the TMX can place */
 export const registerEntities = () => {
-	me.pool.register("spriteTP", SpriteTP);
-	me.pool.register("collisionTP", CollisionTP);
-	me.pool.register("cloud", Cloud);
-	me.pool.register("foodie", Foodie);
-	me.pool.register("portal", Portal);
-	me.pool.register("cookingArea", CookingArea);
-	me.pool.register("male", Male);
-	me.pool.register("waterTextureObj", WaterTextureObj);
+	me.registerTiledObjectClass("spriteTP", SpriteTP);
+	me.registerTiledObjectClass("collisionTP", CollisionTP);
+	me.registerTiledObjectClass("cloud", Cloud);
+	me.registerTiledObjectClass("foodie", Foodie);
+	me.registerTiledObjectClass("portal", Portal);
+	me.registerTiledObjectClass("cookingArea", CookingArea);
+	me.registerTiledObjectClass("male", Male);
 };

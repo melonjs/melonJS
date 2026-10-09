@@ -1,3 +1,4 @@
+import { warning } from "../lang/console.js";
 import { getTotalPoolSize } from "../pool";
 
 /**
@@ -18,6 +19,40 @@ export function setPoolRegisterCallback(callback) {
 }
 
 /**
+ * Which methods have already warned.
+ *
+ * Once per method, never per call: `pull` runs in the hot path of any game
+ * that pools its bullets, and `warning` prints a collapsed group WITH a stack
+ * trace. Firing that per bullet would be worse than the thing it warns about.
+ * @ignore
+ * @internal
+ */
+const warned = new Set();
+
+/**
+ * Say this method is on the way out, once.
+ *
+ * Names both replacements, because `pool.register` was doing two unrelated
+ * jobs and a caller only ever wanted one of them: recycling instances, or
+ * letting a Tiled map name a class.
+ * @param {string} method - the method being called
+ * @ignore
+ * @internal
+ */
+function warnOnce(method) {
+	if (warned.has(method)) {
+		return;
+	}
+	warned.add(method);
+	warning(
+		"pool." + method + "()",
+		'getPool("tween") / createPool() to pool instances, or ' +
+			"registerTiledObjectClass() to let a Tiled map name a class",
+		"18.0.0",
+	);
+}
+
+/**
  * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class
@@ -28,6 +63,17 @@ export function setPoolRegisterCallback(callback) {
  * which means, that on level loading the engine will try to instantiate every object
  * found in the map, based on the user defined name in each Object Properties<br>
  * <img src="../images/object_properties.png"/><br>
+ *
+ * **Superseded by the typed pools.** `createPool` arrived in 18.0.0 and does
+ * the same job without the string keys: `getPool("tween")`, `getPool("text")`
+ * and the rest are typed, so a wrong name is a compile error rather than a
+ * throw, and a pool can be created for any class with `createPool`. For
+ * registering a class so a Tiled map can name it, use
+ * {@link registerTiledObjectClass}, which is what this now delegates to.
+ *
+ * The engine itself no longer uses this pool for anything.
+ * @deprecated since 18.0.0, use {@link getPool} / `createPool`, and
+ * {@link registerTiledObjectClass} for Tiled classes
  * @see {@link pool} the default global instance of ObjectPool
  */
 class ObjectPool {
@@ -78,6 +124,7 @@ class ObjectPool {
 	 * me.pool.register("cherrysprite", Cherry, true);
 	 */
 	register(className, classObj, recycling = false) {
+		warnOnce("register");
 		if (typeof classObj !== "undefined") {
 			const entry = {
 				class: classObj,
@@ -125,6 +172,7 @@ class ObjectPool {
 	 * app.world.removeChild(bullet);
 	 */
 	pull(name, ...args) {
+		warnOnce("pull");
 		const className = this.objectClass[name];
 		if (className) {
 			const proto = className["class"];
@@ -166,12 +214,22 @@ class ObjectPool {
 	 * Object pooling for the object class must be enabled,
 	 * and object must have been instantiated using {@link pull},
 	 * otherwise this function won't work
-	 * @throws will throw an error if the object cannot be recycled
+	 *
+	 * Reports failure by RETURNING FALSE. It used to throw by default, and
+	 * nothing at the call site made that visible: a class that was never
+	 * registered, or registered without recycling, aborted whatever was
+	 * running. Both of the internal uses removed in 20.7.0 failed that way,
+	 * inside a `destroy()` that had already recycled other state, which left
+	 * a half-torn-down object to die later somewhere unrelated. Pass
+	 * `throwOnError` to opt back in where a missed registration is a bug you
+	 * want to hear about immediately.
 	 * @param {object} obj - instance to be recycled
-	 * @param {boolean} [throwOnError=true] - throw an exception if the object cannot be recycled
+	 * @param {boolean} [throwOnError=false] - throw an exception instead of returning false
+	 * @throws when the object cannot be recycled AND `throwOnError` is true
 	 * @returns {boolean} true if the object was successfully recycled in the object pool
 	 */
-	push(obj, throwOnError = true) {
+	push(obj, throwOnError = false) {
+		warnOnce("push");
 		if (!this.poolable(obj)) {
 			if (throwOnError === true) {
 				throw new Error("me.pool: object " + obj + " cannot be recycled");
