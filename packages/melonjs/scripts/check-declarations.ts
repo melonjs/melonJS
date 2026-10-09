@@ -131,8 +131,7 @@ try {
 } catch (error) {
 	const output = (error as { stdout?: string; stderr?: string }).stdout ?? "";
 	problems.push(
-		"the published declarations do not type-check against a consumer:\n" +
-			output.trim(),
+		`the published declarations do not type-check against a consumer:\n${output.trim()}`,
 	);
 }
 
