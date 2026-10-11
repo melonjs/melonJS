@@ -30,6 +30,40 @@ export interface ParticleEmitterSettings {
 	image: HTMLCanvasElement | HTMLImageElement | undefined;
 
 	/**
+	 * Width of one sprite-sheet frame in pixels. Defaults to the image width.
+	 * Must be a positive integer no larger than the image width.
+	 * Only whole cells are used; partial cells at the right edge are ignored.
+	 * @default undefined
+	 */
+	framewidth?: number | undefined;
+
+	/**
+	 * Height of one sprite-sheet frame in pixels. Defaults to the image height.
+	 * Must be a positive integer no larger than the image height.
+	 * Only whole cells are used; partial cells at the bottom are ignored.
+	 * @default undefined
+	 */
+	frameheight?: number | undefined;
+
+	/**
+	 * Frame indices, numbered from zero left-to-right, then top-to-bottom.
+	 * Defaults to every whole cell. An explicit sequence must be nonempty and
+	 * contain only in-range integers; repeated indices hold a frame longer.
+	 * Each particle plays the sequence once over its own lifetime, with equal
+	 * time per entry. The sequence is copied on emitter construction/reset;
+	 * changing settings through reset affects only particles emitted afterwards.
+	 * @default undefined
+	 */
+	frames?: readonly number[] | undefined;
+
+	/**
+	 * Pick one entry from frames uniformly at birth and keep it for the whole
+	 * lifetime, instead of animating. Useful for debris from a shared sheet.
+	 * @default false
+	 */
+	randomFrame?: boolean;
+
+	/**
 	 * Default texture size used for particles if no image is specified
 	 * (by default melonJS will create a white 8x8 texture image).
 	 * @default 8
@@ -353,6 +387,10 @@ const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	width: 1,
 	height: 1,
 	image: undefined,
+	framewidth: undefined,
+	frameheight: undefined,
+	frames: undefined,
+	randomFrame: false,
 	textureSize: 8,
 	tint: "#fff",
 	totalParticles: 50,

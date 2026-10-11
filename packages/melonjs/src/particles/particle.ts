@@ -75,6 +75,12 @@ export default class Particle extends Renderable {
 	 */
 	_angle: number;
 	alive: boolean;
+	/** @ignore */
+	private _frames: ReadonlyArray<readonly [number, number]> | undefined;
+	/** @ignore */
+	private _frameIndex: number;
+	/** @ignore */
+	private _animateFrames: boolean;
 
 	/**
 	 * @param emitter - the particle emitter
@@ -88,8 +94,8 @@ export default class Particle extends Renderable {
 		super(
 			emitter.getRandomPointX(),
 			emitter.getRandomPointY(),
-			image.width,
-			image.height,
+			emitter.settings.framewidth ?? image.width,
+			emitter.settings.frameheight ?? image.height,
 		);
 		// particle velocity
 		this.vel = vector2dPool.get();
@@ -145,11 +151,20 @@ export default class Particle extends Renderable {
 		}
 
 		if (!newInstance) {
-			this.resize(image.width, image.height);
+			this.resize(
+				emitter.settings.framewidth ?? image.width,
+				emitter.settings.frameheight ?? image.height,
+			);
 			this.currentTransform.identity();
 		}
 
 		this.image = image;
+		this._frames = emitter._particleFrames;
+		this._frameIndex =
+			this._frames && emitter.settings.randomFrame
+				? Math.floor(Math.random() * this._frames.length)
+				: 0;
+		this._animateFrames = !!this._frames && !emitter.settings.randomFrame;
 
 		// cache half-sizes — used every frame in the transform construction;
 		// width/height stay fixed for the particle's lifetime.
@@ -375,6 +390,15 @@ export default class Particle extends Renderable {
 
 		// Calculate the particle Age Ratio
 		const ageRatio = this.life / this.startLife;
+		if (this._animateFrames && this._frames) {
+			this._frameIndex = Math.max(
+				0,
+				Math.min(
+					this._frames.length - 1,
+					Math.floor((1 - ageRatio) * this._frames.length),
+				),
+			);
+		}
 
 		// Resize the particle as particle Age Ratio
 		let scale = this.startScale;
@@ -620,7 +644,18 @@ export default class Particle extends Renderable {
 		const w = this.width;
 		const h = this.height;
 		// the transform already places (0,0) at the visual top-left corner.
-		renderer.drawImage(this.image, 0, 0, w, h, 0, 0, w, h);
+		const frame = this._frames?.[this._frameIndex];
+		renderer.drawImage(
+			this.image,
+			frame?.[0] ?? 0,
+			frame?.[1] ?? 0,
+			w,
+			h,
+			0,
+			0,
+			w,
+			h,
+		);
 	}
 }
 

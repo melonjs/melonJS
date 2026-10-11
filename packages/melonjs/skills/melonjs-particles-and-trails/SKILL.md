@@ -28,6 +28,41 @@ emitter.burstParticles();      // one shot
 `duration` setting, which defaults to `Infinity` — a stream runs until
 `stopStream()`. `burstParticles(n)` launches `n`, or `totalParticles`.
 
+## Sprite-sheet particles
+
+Use `framewidth` and `frameheight` (the same names as on `Sprite`) to divide
+`image` into a regular grid. Each omitted dimension defaults to that of the
+image. Frames are numbered from zero left-to-right, then top-to-bottom; only
+whole cells count, so partial cells along the right/bottom edges are ignored.
+Margins and spacing are not supported.
+
+```js
+const explosion = new ParticleEmitter(x, y, {
+    image: loader.getImage("explosion-sheet"),
+    framewidth: 32, frameheight: 32,
+    frames: [0, 1, 2, 3],
+    minLife: 400, maxLife: 800,
+});
+world.addChild(explosion);
+explosion.burstParticles();
+```
+
+Omit `frames` to use every cell. Each particle traverses the sequence once
+over its own lifetime, with equal time for each entry; repeated indices hold
+a frame longer. Existing scale, opacity and rotation still apply. Bounds and
+the rotation pivot use one frame's dimensions, rather than the whole sheet.
+
+Set `randomFrame: true` for debris: a particle chooses one entry at birth and
+keeps it until it dies. Different frames share the same image and GPU batch.
+Without sheet settings, particles still draw the whole image as before.
+
+Frame dimensions must be positive integers that fit inside the image, and an
+explicit `frames` sequence must be nonempty and contain valid integer indices.
+Invalid configurations throw `RangeError` before changing an emitter during
+`reset()`. The frame sequence is copied on construction/reset; resetting changes
+only future particles, so ones already alive finish with their original image,
+frame size and sequence.
+
 ## Where particles are born
 
 `width` and `height` are the spawn AREA, and both default to `1` — so by

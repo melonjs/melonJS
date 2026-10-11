@@ -73,6 +73,61 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
 }
 
 /**
+ * Resolve source rectangles once per reset, not once per particle or draw.
+ * The snapshot stays alive with existing particles when the emitter resets.
+ * @ignore
+ * @internal
+ */
+function particleFrames(
+	settings: ParticleEmitterSettings,
+): ReadonlyArray<readonly [number, number]> | undefined {
+	if (
+		settings.framewidth === undefined &&
+		settings.frameheight === undefined &&
+		settings.frames === undefined
+	) {
+		return undefined;
+	}
+	const imageWidth = settings.image?.width ?? settings.textureSize;
+	const imageHeight = settings.image?.height ?? settings.textureSize;
+	const width = settings.framewidth ?? imageWidth;
+	const height = settings.frameheight ?? imageHeight;
+	if (
+		!Number.isInteger(width) ||
+		width <= 0 ||
+		width > imageWidth ||
+		!Number.isInteger(height) ||
+		height <= 0 ||
+		height > imageHeight
+	) {
+		throw new RangeError(
+			"ParticleEmitter: frame dimensions must be positive integers within the image",
+		);
+	}
+	const columns = Math.floor(imageWidth / width);
+	const count = columns * Math.floor(imageHeight / height);
+	const indices = settings.frames;
+	if (indices !== undefined && indices.length === 0) {
+		throw new RangeError(
+			"ParticleEmitter: frames must be a nonempty sequence of valid frame indices",
+		);
+	}
+	return Array.from({ length: indices?.length ?? count }, (_, i) => {
+		const index = indices === undefined ? i : indices[i];
+		// Reading every slot also rejects sparse sequences; Array.some skips holes.
+		if (!Number.isInteger(index) || index < 0 || index >= count) {
+			throw new RangeError(
+				"ParticleEmitter: frames must be a nonempty sequence of valid frame indices",
+			);
+		}
+		return [
+			(index % columns) * width,
+			Math.floor(index / columns) * height,
+		] as const;
+	});
+}
+
+/**
  * Particle Emitter Object.
  *
  * ### Blend modes
@@ -122,6 +177,13 @@ export default class ParticleEmitter extends Container {
 	 * the current (active) emitter settings (with defaults merged in)
 	 */
 	settings: ParticleEmitterSettings;
+
+	/**
+	 * Shared source-coordinate snapshot for particles emitted after reset.
+	 * @ignore
+	 * @internal
+	 */
+	_particleFrames: ReadonlyArray<readonly [number, number]> | undefined;
 
 	/**
 	 * @ignore
@@ -325,7 +387,12 @@ export default class ParticleEmitter extends Container {
 		// settings intact, hence reading it here.
 		const previousFrame = this.#frameOf(this.settings?.referenceSpace);
 
-		Object.assign(this.settings, defaultEmitterSettings, settings);
+		// Reject invalid sheet settings before changing settings or destroying the
+		// fallback texture. Live particles retain the previous frame snapshot.
+		const nextSettings = { ...defaultEmitterSettings, ...settings };
+		const frames = particleFrames(nextSettings);
+		Object.assign(this.settings, nextSettings);
+		this._particleFrames = frames;
 
 		// Clamp range-style settings: if `min > max`, lower `min` to `max`.
 		// Catches the common footgun where a user overrides only one half of
