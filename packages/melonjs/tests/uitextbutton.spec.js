@@ -1,8 +1,10 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
 	Container,
+	event,
+	input,
 	loader,
 	UITextButton,
 	video,
@@ -79,12 +81,13 @@ function makeFakeRenderer() {
 	};
 }
 
-function makeButton() {
+function makeButton(settings = {}) {
 	return new UITextButton(50, 50, {
 		font: "xolo12",
 		text: "Play",
 		borderWidth: 200,
 		borderHeight: 50,
+		...settings,
 	});
 }
 
@@ -144,6 +147,218 @@ describe("UITextButton", () => {
 		}).not.toThrow();
 
 		parent.removeChildNow(button);
+	});
+
+	describe("keyboard binding", () => {
+		let button;
+
+		const addButton = (bindKey) => {
+			button = makeButton({ bindKey });
+			button.anchorPoint.set(0, 0);
+			vi.spyOn(button, "onClick");
+			vi.spyOn(button, "onRelease");
+			app.world.addChild(button);
+			return button;
+		};
+
+		const pointer = (type, x, y) => {
+			app.world.broadphase.clear();
+			app.world.broadphase.insertContainer(app.world);
+			const canvas = app.renderer.getCanvas();
+			const rect = canvas.getBoundingClientRect();
+			canvas.dispatchEvent(
+				new PointerEvent(type, {
+					clientX: rect.left + (x * rect.width) / canvas.width,
+					clientY: rect.top + (y * rect.height) / canvas.height,
+					pointerId: 1,
+					isPrimary: true,
+					bubbles: true,
+				}),
+			);
+		};
+
+		afterEach(() => {
+			if (button?.ancestor) {
+				button.ancestor.removeChildNow(button);
+			} else {
+				button?.destroy();
+			}
+			input.unbindKey(input.KEY.ENTER);
+			input.unbindKey(input.KEY.SPACE);
+			button = undefined;
+			vi.restoreAllMocks();
+		});
+
+		it("clicks once per numeric key press and releases only the initiating key", () => {
+			addButton(input.KEY.ENTER);
+			button.isDirty = false;
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledExactlyOnceWith();
+			expect(button.released).toBe(false);
+			expect(button.isDirty).toBe(true);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			input.triggerKeyEvent(input.KEY.SPACE, false);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			expect(button.onRelease).not.toHaveBeenCalled();
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.released).toBe(true);
+			expect(button.onRelease).toHaveBeenCalledExactlyOnceWith();
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(2);
+		});
+
+		it("uses an existing action without replacing its global binding", () => {
+			input.bindKey(input.KEY.ENTER, "play");
+			input.bindKey(input.KEY.SPACE, "play");
+			addButton("play");
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			input.triggerKeyEvent(input.KEY.SPACE, true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			input.triggerKeyEvent(input.KEY.SPACE, false);
+			expect(button.released).toBe(false);
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+			app.world.removeChildNow(button, true);
+			expect(input.getBindingKey(input.KEY.ENTER)).toBe("play");
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(input.keyStatus("play")).toBe(true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+		});
+
+		it("receives real browser keyboard events", () => {
+			addButton(input.KEY.ENTER);
+			for (const type of ["keydown", "keydown", "keyup"]) {
+				globalThis.dispatchEvent(
+					new KeyboardEvent(type, { keyCode: input.KEY.ENTER }),
+				);
+			}
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+		});
+
+		it("ignores unrelated keys, unbound buttons and non-clickable buttons", () => {
+			addButton();
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).not.toHaveBeenCalled();
+			button.bindKey = input.KEY.ENTER;
+			input.triggerKeyEvent(input.KEY.SPACE, true);
+			button.isClickable = false;
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).not.toHaveBeenCalled();
+			button.isClickable = true;
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+		});
+
+		it("subscribes only while active and resets a held key on removal", () => {
+			button = makeButton({ bindKey: input.KEY.ENTER });
+			vi.spyOn(button, "onClick");
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).not.toHaveBeenCalled();
+			app.world.addChild(button);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			app.world.removeChildNow(button, true);
+			expect(button.released).toBe(true);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			app.world.addChild(button);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(2);
+		});
+
+		it("cancels a held key on blur without firing a release callback", () => {
+			addButton(input.KEY.ENTER);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			event.emit(event.BLUR);
+			expect(button.released).toBe(true);
+			expect(button.onRelease).not.toHaveBeenCalled();
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(2);
+		});
+
+		it("releases the original physical key even if bindKey changes", () => {
+			addButton(input.KEY.ENTER);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			button.bindKey = input.KEY.SPACE;
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+		});
+
+		it("allows the click callback to remove the button", () => {
+			addButton(input.KEY.ENTER);
+			button.onClick.mockImplementation(() => {
+				app.world.removeChildNow(button, true);
+			});
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.released).toBe(true);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+		});
+
+		it("does not let pointer presses or leaving release a held shortcut", () => {
+			addButton(input.KEY.ENTER);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			pointer("pointermove", 75, 70);
+			pointer("pointerdown", 75, 70);
+			pointer("pointerup", 75, 70);
+			pointer("pointermove", 400, 400);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			expect(button.onRelease).not.toHaveBeenCalled();
+			expect(button.released).toBe(false);
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+		});
+
+		it("does not let a shortcut release an existing pointer press", () => {
+			addButton(input.KEY.ENTER);
+			pointer("pointerdown", 75, 70);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			expect(button.onRelease).not.toHaveBeenCalled();
+			expect(button.released).toBe(false);
+			pointer("pointerup", 75, 70);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+		});
+
+		it("still releases a shortcut disabled while held", () => {
+			addButton(input.KEY.ENTER);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			button.isClickable = false;
+			input.triggerKeyEvent(input.KEY.ENTER, false);
+			expect(button.released).toBe(true);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+			input.triggerKeyEvent(input.KEY.ENTER, true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+		});
+
+		it("preserves a numeric keycode of zero", () => {
+			addButton(0);
+			input.triggerKeyEvent(0, true);
+			expect(button.onClick).toHaveBeenCalledTimes(1);
+			input.triggerKeyEvent(0, false);
+			expect(button.onRelease).toHaveBeenCalledTimes(1);
+		});
+
+		it("ignores a queued shortcut after an earlier listener removes the button", () => {
+			button = makeButton({ bindKey: input.KEY.ENTER });
+			vi.spyOn(button, "onClick");
+			const remove = event.on(event.KEYDOWN, () => {
+				app.world.removeChildNow(button, true);
+			});
+			try {
+				app.world.addChild(button);
+				input.triggerKeyEvent(input.KEY.ENTER, true);
+				expect(button.ancestor).toBeUndefined();
+				expect(button.onClick).not.toHaveBeenCalled();
+			} finally {
+				remove();
+			}
+		});
 	});
 });
 
