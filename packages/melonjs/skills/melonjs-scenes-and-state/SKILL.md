@@ -194,6 +194,17 @@ timer.clearInterval(id);        // in the Stage's onDestroyEvent
 `onActivateEvent` / `onDeactivateEvent` on a stage. Those two are `Renderable`
 hooks; put per-renderable teardown there instead.
 
+**The outgoing stage is destroyed before the incoming one is reset.** That
+ordering is what makes "each stage owns what it started" work: a scene can
+release a resource in `onDestroyEvent` and the next scene can claim the same
+one in `onResetEvent` without the teardown arriving late and undoing it.
+
+What a stage starts, it must end: `input.registerPointerEvent` regions,
+`event.on` subscriptions and running `Tween`s all outlive the stage that made
+them. Music is the exception rather than the rule, since `audio.playTrack()`
+stops the track it replaces, so `stopTrack()` in `onDestroyEvent` is only
+needed where the next screen has no music of its own.
+
 Engine timers are **pause-aware**. `window.setTimeout` keeps firing while the
 game is paused, which produces enemies spawning behind a pause menu. Pass
 `false` as the third argument — `timer.setInterval(fn, 500, false)` — for one

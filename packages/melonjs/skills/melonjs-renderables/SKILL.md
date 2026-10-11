@@ -184,6 +184,11 @@ v.set(10, 20, v.z);   // keep it
 `pos` is an `ObservableVector3d`, whose `set(x = 0, y = 0, z = 0)` does the same
 — so `this.pos.set(x, y)` wipes the object's depth.
 
+`Renderable#setPosition(x, y, z?)` is the renderable-level form and does not:
+omit `z` and the depth is left exactly as it was. Reach for it whenever you
+are moving an object rather than editing a vector, and keep `v.set(x, y, v.z)`
+for the vector itself.
+
 ## 7. A settings key the class never reads is silently ignored
 
 A settings object is a plain literal: nothing rejects a key, so a name that
@@ -279,7 +284,7 @@ Hand-rolled equivalents miss the batching and the multi-backend support.
 | off-screen object never ticks | `update()` is gated on `inViewport` — set `alwaysUpdate = true` |
 | custom draw offset by half the size | centred `anchorPoint` default not zeroed |
 | spatial query never finds an object | `isKinematic` left `true` — not in the broadphase |
-| `z` unexpectedly 0 after a `set` | `Vector3d.set(x, y)` defaults `z` to 0 |
+| `z` unexpectedly 0 after a `set` | `Vector3d.set(x, y)` defaults `z` to 0 — `setPosition(x, y)` on the renderable leaves the depth alone |
 | a settings option appears to do nothing | the class never reads that key — see section 7 |
 | `isRenderable = false` did not hide the object | it gates bounds, not drawing — use `alpha` |
 

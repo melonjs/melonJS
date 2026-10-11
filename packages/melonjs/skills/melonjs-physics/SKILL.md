@@ -500,7 +500,8 @@ onCollisionStart(response, other) {
 What actually happens per adapter:
 
 - **built-in** — callbacks fire inline during `step()`. `Container.removeChild`
-  is deferred, so it is safe; `removeChildNow()` and `destroy()` are immediate,
+  is deferred, so it is safe; `removeChildNow()`, and the internal `destroy()`
+  it calls, are immediate,
   and the detector only survives them because it re-checks `body === undefined`
   after every user callback.
 - **planck** — `onCollisionStart` / `onCollisionEnd` are dispatched from

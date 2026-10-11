@@ -122,6 +122,14 @@ const label = getPool("text").get(x, y, { font: "Arial", size: 12 });
 getPool("text").release(label);          // yours to release, as with particles
 ```
 
+A recycled label comes back with its **base-class** state reset as well as its
+own: `floating`, `blendMode`, `alpha`, `tint`, the transform, the anchor, the
+behaviour flags, any mask and any post effect, and `depth` back to 0. The
+settings object names none of those, so set them again after `get()`. A pooled
+HUD number that is not re-marked `floating` is drawn through the camera, i.e.
+somewhere out in the world rather than on the screen, and `addChild(label, z)`
+is what gives it its depth back.
+
 `getPool` covers `vector2d`, `vector3d`, `point`, `matrix2d`, `matrix3d`,
 `bounds`, `color`, `polygon`, `line`, `rectangle`, `roundedRectangle`,
 `ellipse`, `tween`, `particle`, `text`, `colorLayer` and `bitmapTextData`.

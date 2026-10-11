@@ -5,6 +5,7 @@ import {
 	convexHull,
 	normalizeVertices,
 	projectVertices,
+	ribbonSides,
 } from "../src/math/vertex.ts";
 
 // ── normalizeVertices ───────────────────────────────────────────────────────
@@ -725,5 +726,152 @@ describe("convexHull()", () => {
 		const hull = convexHull(points);
 		expect(hull.length).toBeGreaterThanOrEqual(8);
 		expect(hull.length).toBeLessThan(208);
+	});
+});
+
+// ── ribbonSides ─────────────────────────────────────────────────────────────
+
+describe("ribbonSides()", () => {
+	const P = (x, y, z) => {
+		return { x, y, z, age: 0 };
+	};
+	/** run it and hand back the sides as [x, y, z] triples */
+	const sides = (points, { eye, normal, fallback } = {}) => {
+		const out = new Float32Array(points.length * 3);
+		ribbonSides(
+			points,
+			points.length,
+			out,
+			eye ?? { x: 0, y: 0, z: -300 },
+			normal ?? null,
+			fallback ?? { x: 1, y: 0, z: 0 },
+		);
+		const r = [];
+		for (let i = 0; i < points.length; i++) {
+			r.push([out[i * 3], out[i * 3 + 1], out[i * 3 + 2]]);
+		}
+		return r;
+	};
+	const len = (v) => {
+		return Math.hypot(v[0], v[1], v[2]);
+	};
+	const dot = (a, b) => {
+		return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+	};
+
+	it("is unit length and perpendicular to both the tangent and the facing", () => {
+		// a straight ribbon along +X with the eye square on it
+		const pts = [P(0, 0, 0), P(10, 0, 0), P(20, 0, 0)];
+		const r = sides(pts);
+		for (let i = 0; i < r.length; i++) {
+			expect(len(r[i])).toBeCloseTo(1, 6);
+			// tangent is +X, so the side must have no X component
+			expect(r[i][0]).toBeCloseTo(0, 6);
+		}
+	});
+
+	it("puts +side screen-DOWN when the tangent runs screen-right", () => {
+		// The sign convention, pinned. Eye on -Z so the facing is (0,0,-1),
+		// tangent +X; `tangent x facing` is then (0,1,0), and y is down.
+		// Swapping the cross operands flips every one of these.
+		const r = sides([P(0, 0, 0), P(10, 0, 0)], {
+			eye: { x: 0, y: 0, z: -300 },
+		});
+		expect(r[0][1]).toBeCloseTo(1, 6);
+		expect(r[1][1]).toBeCloseTo(1, 6);
+	});
+
+	it("survives two coincident points, and still uses the live edge", () => {
+		// A stalled object samples the same place twice. Two things to get
+		// right: no NaN anywhere, and a vertex with ONE dead edge still
+		// takes its tangent from the other one rather than giving up.
+		//
+		// The path BENDS after the coincident pair on purpose. With
+		// collinear points, "carry the previous side forward" and "use the
+		// live edge" agree, so the test cannot tell a working guard from a
+		// missing one.
+		const pts = [P(0, 0, 0), P(10, 0, 0), P(10, 0, 0), P(10, 10, 0)];
+		const r = sides(pts, { normal: { x: 0, y: 0, z: -1 } });
+		for (const v of r) {
+			expect(Number.isFinite(v[0])).toBe(true);
+			expect(Number.isFinite(v[1])).toBe(true);
+			expect(Number.isFinite(v[2])).toBe(true);
+			expect(len(v)).toBeCloseTo(1, 6);
+		}
+		// index 2's backward edge is dead and its forward edge runs +Y, so
+		// its side is -X. Drop the zero-length guard and the dead edge
+		// poisons the sum with NaN, the vertex falls through to
+		// carry-forward, and this comes out (0, 1, 0) instead.
+		expect(r[2][0]).toBeCloseTo(-1, 5);
+		expect(r[2][1]).toBeCloseTo(0, 5);
+	});
+
+	it("falls back when the ribbon points straight at the eye", () => {
+		// tangent along +Z, eye along -Z: the cross collapses
+		const fallback = { x: 0, y: 1, z: 0 };
+		const r = sides([P(0, 0, 0), P(0, 0, 100)], {
+			eye: { x: 0, y: 0, z: -300 },
+			fallback,
+		});
+		expect(r[0]).toEqual([fallback.x, fallback.y, fallback.z]);
+		// and the second carries the first forward rather than re-falling back
+		expect(len(r[1])).toBeCloseTo(1, 6);
+	});
+
+	it("keeps the side continuous across a hairpin", () => {
+		// doubling back flips the cross product; without the continuity
+		// guard the strip crosses itself into a bowtie
+		const r = sides([P(0, 0, 0), P(10, 0, 0), P(0, 0, 0)]);
+		for (let i = 1; i < r.length; i++) {
+			expect(dot(r[i], r[i - 1])).toBeGreaterThanOrEqual(0);
+		}
+	});
+
+	it("writes nothing for fewer than two points", () => {
+		const out = new Float32Array(3).fill(7);
+		expect(() => {
+			return ribbonSides([P(1, 2, 3)], 1, out, { x: 0, y: 0, z: -300 }, null, {
+				x: 1,
+				y: 0,
+				z: 0,
+			});
+		}).not.toThrow();
+		expect([...out]).toEqual([7, 7, 7]);
+	});
+
+	it("uses a fixed normal when given one, and then ignores the eye", () => {
+		// The eye-invariance is the half that makes this mutation-proof:
+		// ignoring `normal` and always using the eye would still satisfy the
+		// first assertion by coincidence for this geometry.
+		const pts = [P(0, 0, 0), P(10, 0, 0)];
+		const normal = { x: 0, y: -1, z: 0 };
+		const a = sides(pts, { normal, eye: { x: 0, y: 0, z: -300 } });
+		const b = sides(pts, { normal, eye: { x: 500, y: -400, z: 900 } });
+		expect(a[0][1]).toBeCloseTo(0, 6);
+		for (let i = 0; i < a.length; i++) {
+			expect(a[i][0]).toBeCloseTo(b[i][0], 6);
+			expect(a[i][1]).toBeCloseTo(b[i][1], 6);
+			expect(a[i][2]).toBeCloseTo(b[i][2], 6);
+		}
+	});
+
+	it("bisects the angle rather than letting the long edge win", () => {
+		// One SHORT edge and one LONG one meeting at a right angle. The
+		// bisector is 45 degrees between them whatever their lengths, so the
+		// side is (-1,1,0)/sqrt(2). A raw central difference would use
+		// p[2]-p[0] = (1,400,0), almost straight up, and give (-1, 0.0025, 0)
+		// instead — the two are nowhere near each other.
+		//
+		// A FIXED normal, so the facing is identical at every vertex: with
+		// an eye-derived one the two points sit at different distances and
+		// the facing changes too, which would confound the thing being
+		// measured.
+		const r = sides([P(0, 0, 0), P(1, 0, 0), P(1, 400, 0)], {
+			normal: { x: 0, y: 0, z: -1 },
+		});
+		const root2 = Math.SQRT1_2;
+		expect(r[1][0]).toBeCloseTo(-root2, 5);
+		expect(r[1][1]).toBeCloseTo(root2, 5);
+		expect(r[1][2]).toBeCloseTo(0, 5);
 	});
 });

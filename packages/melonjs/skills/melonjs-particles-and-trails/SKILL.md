@@ -1,6 +1,6 @@
 ---
 name: melonjs-particles-and-trails
-description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: ParticleEmitter, particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter."
+description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter."
 license: MIT
 ---
 
@@ -184,19 +184,48 @@ Omit `target` and feed it yourself with `trail.addPoint(x, y)` — the mode for 
 sword slash, where the ribbon follows a weapon tip rather than an object. Points
 closer together than `minDistance` (default 4 px) are dropped.
 
-**`Trail` is 2D.** `addPoint` takes `(x, y)`, points are stored without a `z`,
-and the ribbon is drawn as connected screen-space quads. Under a `Camera3d` it
-draws a flat ribbon that does not recede with perspective — so it is the wrong
-tool for a trail behind an object moving *into* the scene. For that:
+**`Trail` is 2D. Use `Trail3d` in a 3D scene** (20.9.0 and later). `Trail`
+stores points without a `z` and draws connected screen-space quads, which carry
+one depth for the whole renderable, so under a `Camera3d` the ribbon stays flat
+and does not narrow along its own length.
 
-- **`ParticleEmitter` with `referenceSpace: "world"`** — particles stay where
-  they were dropped while the emitter moves on, and each one sits at the
-  emitter's depth slice so `Camera3d` projects it correctly. Add an `elevation`
-  and they recede as well. This is the built-in answer for exhaust, ski tracks
-  and speed trails in 3D.
-- **A procedural `Mesh`** built from the object's recent path, with
-  `mesh.vertexColors` for a per-vertex gradient — more work, but a continuous
-  ribbon rather than discrete puffs.
+```js
+const exhaust = new Trail3d(0, 0, {
+    target: ship,                 // samples pos.x / pos.y / pos.z
+    width: 6,                     // world units, and free to change per frame
+    lifetime: 260,
+    gradient: ["#eaffff", "#2ea8ff", "#2ea8ff00"],
+});
+exhaust.blendMode = "additive";
+app.world.addChild(exhaust);      // no z: it derives its own from its points
+```
+
+`Trail3d` is a `Mesh`, which is most of the difference:
+
+- `billboard` is spelled and valued exactly as on `Sprite3d` —
+  `"spherical"` (the default here) faces the camera on all axes,
+  `true` / `"cylindrical"` faces it but stays upright, `false` uses the
+  `ribbonNormal` you give it. `billboard: false, ribbonNormal: [0, -1, 0]`
+  lays the ribbon in the ground plane for a tyre mark or a wake.
+- **`tint` works**, and is the per-frame colour lever. On `Trail` it does
+  nothing at all, because the primitive batcher reads the draw colour and never
+  the tint. `setColor()` / `setGradient()` rebuild the gradient for a change of
+  state; they allocate, so they are not per-frame.
+
+  **If the colour is going to change, author the gradient WHITE.** `tint`
+  multiplies, so tinting a cyan ribbon red gives muddy brown rather than red. A
+  neutral gradient hands the hue entirely to the tint, which is what lets one
+  lever take a trail from white through to red as something overheats.
+- A post effect reaches it properly, where `Trail` has to force a screen
+  capture.
+- It is **cheaper**: one indexed draw call, against one filled path per segment.
+- `length` is fixed at construction, because the geometry is sized once.
+  Assigning `maxPoints` throws rather than silently truncating the ribbon, and
+  a `length` that is not a finite number throws at construction.
+- It needs a `Camera3d`. Under a 2D camera it draws nothing and warns once.
+
+A world-space `ParticleEmitter` (`referenceSpace: "world"`) is still the right
+answer when you want discrete puffs rather than a continuous ribbon.
 
 ## Performance
 
@@ -219,7 +248,11 @@ tool for a trail behind an object moving *into* the scene. For that:
 
 | symptom | cause |
 |---|---|
-| trail looks flat under a `Camera3d` | `Trail` is 2D — use a world-space emitter or a ribbon mesh |
+| trail looks flat under a `Camera3d` | `Trail` is 2D; use `Trail3d` |
+| `Trail3d` draws nothing, with a console warning | it needs a `Camera3d`; the app's `cameraClass` is still the 2D default |
+| `trail.tint` does nothing | `Trail` cannot be tinted at all; `Trail3d` can |
+| assigning `maxPoints` throws | `Trail3d` sizes its geometry once; pass `length` to the constructor |
+| `Trail3d: \`length\` must be a finite number` | a computed `length` came out `NaN`; it is refused rather than silently rendering nothing |
 | emitter added but nothing appears | `streamParticles()` / `burstParticles()` never called |
 | the cloud follows a moving emitter | default `referenceSpace: "local"` — use `"world"` for trails |
 | particles do not travel far enough | settings tuned pre-20.2, when drawn travel was doubled |

@@ -103,7 +103,7 @@ Packing into one atlas keeps everything on a single binding.
 ## Visual properties
 
 ```js
-sprite.tint.setColor(255, 128, 0);   // multiply tint
+sprite.setTint("#ff8000");   // multiply tint
 sprite.alpha = 0.5;
 sprite.flipX(true);                   // mirror horizontally
 sprite.flipY(true);

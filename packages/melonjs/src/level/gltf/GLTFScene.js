@@ -93,6 +93,12 @@ export default class GLTFScene {
 		"shadowDirectionZ",
 		"shadowGroundNormal",
 		"shadowLight",
+		// `shadowGroundPoint` is deliberately NOT here. Every option in this
+		// list is handed to each part of the scene, and one floor POINT
+		// shared by every part would stack the whole scene's blobs on a
+		// single spot. `shadowGroundY` forwards because one floor HEIGHT is
+		// a sensible thing for a scene to share; a point is not. A part that
+		// needs one is given it by hand after the load.
 	]);
 
 	/**
@@ -297,24 +303,15 @@ export default class GLTFScene {
 					castGroundShadow === true
 						? hasVerticalExtent(node.vertices, node.vertexCount)
 						: castGroundShadow,
+				// so an untextured solid-colour material renders its colour
+				// instead of the white-pixel fallback. Composes with COLOR_0
+				// and the texture, since the batcher does
+				// factor × vertexColor × texel, which is what glTF specifies.
+				baseColorFactor: node.baseColorFactor,
 				...shadowOptions,
 			});
 			if (instances) {
 				fillInstances(mesh, instances);
-			}
-			// material baseColorFactor → mesh tint, so an untextured solid-color
-			// material renders its color instead of the white-pixel fallback.
-			// (RGB only; alpha/transparency is a separate feature — the mesh
-			// path renders opaque.) Composes with COLOR_0 and the texture: the
-			// batcher does factor × vertexColor × texel, matching glTF.
-			//
-			// The factor is LINEAR per the glTF spec and a tint is sRGB, so it
-			// has to be encoded rather than scaled by 255: that is exactly
-			// what `setLinear` is for, and it keeps the encoded value as a
-			// float instead of rounding it through 8 bits on the way in.
-			const f = node.baseColorFactor;
-			if (f) {
-				mesh.tint.setLinear(f[0], f[1], f[2]);
 			}
 			// per-vertex colors (COLOR_0) — multiplied by the tint per vertex
 			if (node.colors) {

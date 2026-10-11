@@ -105,7 +105,7 @@ export default class GLTFModel extends Container {
 	 * @param {number} [options.shadowGroundY] - world Y of the floor those shadows land on
 	 * @param {number} [options.shadowOpacity=0.45] - opacity of those shadows before any height fade
 	 * @param {number} [options.shadowScale=1] - size multiplier for those shadows (see {@link Mesh#shadowScale})
-	 * @param {number} [options.shadowOffset=0] - how far to slide them along their direction, in multiples of each blob's own radius; needs `shadowGroundY` (see {@link Mesh#shadowOffset})
+	 * @param {number} [options.shadowOffset=0] - how far to slide them along their direction, in multiples of each blob's own radius; needs `shadowGroundY` (see {@link Mesh#shadowOffset}). `shadowGroundPoint` is deliberately not a scene option: one floor point shared by every part would stack their blobs on a single spot
 	 * @param {number} [options.shadowStretch=1] - how much longer they are along that direction, clamped to 3
 	 * @param {number} [options.shadowDirectionX=0] - x of the ground direction they are cast along
 	 * @param {number} [options.shadowDirectionZ=0] - z of the ground direction they are cast along
@@ -310,15 +310,10 @@ export default class GLTFModel extends Container {
 					shadowDirectionZ: options.shadowDirectionZ,
 					shadowGroundNormal: options.shadowGroundNormal,
 					shadowLight: options.shadowLight,
+					baseColorFactor: prim.baseColorFactor,
 				});
 				if (prim.instances) {
 					fillInstances(mesh, prim.instances);
-				}
-				// LINEAR per the glTF spec; a tint is sRGB. See
-				// {@link Color#setLinear}.
-				const f = prim.baseColorFactor;
-				if (f) {
-					mesh.tint.setLinear(f[0], f[1], f[2]);
 				}
 				if (prim.colors) {
 					mesh.vertexColors = prim.colors;

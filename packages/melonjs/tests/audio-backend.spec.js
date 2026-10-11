@@ -664,4 +664,46 @@ describe("audio backend", () => {
 			audio.unload("fx-inline");
 		});
 	});
+
+	describe("looping a voice that has no window yet", () => {
+		it("does not put a non-finite loopEnd on the buffer source", async () => {
+			// `audio.play(name, { loop: true })` is two calls underneath: the
+			// play, then `loop(true, id)` on the id it returned. There are two
+			// paths through `play()` that hand an id back BEFORE the voice has
+			// been given its loop window: a clip that is still loading queues
+			// the play, and a suspended AudioContext defers it to "resume".
+			// `loop()` then wrote `undefined` into `loopEnd` and Web Audio
+			// threw "The provided value is non-finite" out of the caller's
+			// frame, which in a game is the scene that was being built.
+			await loadClip("loop-window");
+			const clip = state.tracks["loop-window"];
+			const id = audio.play("loop-window");
+			const voice = clip._soundById(id);
+			expect(voice).toBeTruthy();
+
+			// The state either unconfigured path leaves behind, set up here
+			// rather than played into: a buffer source only exists once a play
+			// has actually STARTED, and nothing starts headless, where there
+			// is no gesture to resume the context with.
+			voice._node.bufferSource = audio.getAudioContext().createBufferSource();
+			voice._start = undefined;
+			voice._stop = undefined;
+
+			expect(() => {
+				clip.loop(true, id);
+			}).not.toThrow();
+			expect(Number.isFinite(voice._node.bufferSource.loopEnd)).toBe(true);
+
+			// and the window IS still written once the voice has one, so this
+			// is not fixed by never writing it
+			voice._start = 0.25;
+			voice._stop = 1.5;
+			clip.loop(true, id);
+			expect(voice._node.bufferSource.loopStart).toBe(0.25);
+			expect(voice._node.bufferSource.loopEnd).toBe(1.5);
+
+			audio.stop("loop-window");
+			audio.unload("loop-window");
+		});
+	});
 });

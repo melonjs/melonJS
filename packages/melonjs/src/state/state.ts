@@ -646,7 +646,23 @@ const state = {
 					case "fade": {
 						const color = _transitionConfig.color;
 						const duration = _transitionConfig.duration;
+						const fadeEffect = new FadeEffect(_app.viewport, {
+							color,
+							duration,
+							direction: "in",
+							onComplete,
+						});
+						// Persistent, so the camera keeps it after it has
+						// completed and through the stage reset: it is what
+						// holds the screen covered across the deferred switch.
+						// Taken away here, by its owner, which is what a
+						// persistent effect means.
+						fadeEffect.isPersistent = true;
+						const hidCamera = _app.viewport;
 						_onSwitchComplete = () => {
+							// the camera it was ADDED to, which a stage is
+							// free to have replaced by now
+							hidCamera.removeCameraEffect(fadeEffect);
 							// create reveal with the post-switch viewport
 							_app.viewport.addCameraEffect(
 								new FadeEffect(_app.viewport, {
@@ -656,13 +672,6 @@ const state = {
 								}),
 							);
 						};
-						const fadeEffect = new FadeEffect(_app.viewport, {
-							color,
-							duration,
-							direction: "in",
-							onComplete,
-						});
-						fadeEffect.isPersistent = true;
 						_app.viewport.addCameraEffect(fadeEffect);
 						break;
 					}
@@ -677,7 +686,20 @@ const state = {
 						const shape = _transitionConfig.shape;
 						const color = _transitionConfig.color;
 						const duration = _transitionConfig.duration;
+						const maskEffect = new MaskEffect(_app.viewport, {
+							shape,
+							color,
+							duration,
+							direction: "hide",
+							onComplete,
+						});
+						// see the note in the fade case: persistent is what
+						// keeps the closed iris on screen until the switch
+						// lands, and the owner is what takes it away again
+						maskEffect.isPersistent = true;
+						const hidCamera = _app.viewport;
 						_onSwitchComplete = () => {
+							hidCamera.removeCameraEffect(maskEffect);
 							// create reveal with the post-switch viewport
 							_app.viewport.addCameraEffect(
 								new MaskEffect(_app.viewport, {
@@ -688,14 +710,6 @@ const state = {
 								}),
 							);
 						};
-						const maskEffect = new MaskEffect(_app.viewport, {
-							shape,
-							color,
-							duration,
-							direction: "hide",
-							onComplete,
-						});
-						maskEffect.isPersistent = true;
 						_app.viewport.addCameraEffect(maskEffect);
 						break;
 					}

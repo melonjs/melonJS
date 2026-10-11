@@ -1,4 +1,4 @@
-import type { XYPoint } from "../utils/types.ts";
+import type { XYPoint, XYZPoint } from "../utils/types.ts";
 import type { Vector2d } from "./vector2d.ts";
 
 /**
@@ -312,6 +312,178 @@ export function computeVertexNormal(
 	out.x = nx;
 	out.y = ny;
 	return out;
+}
+
+/**
+ * The angle below which a ribbon segment is treated as pointing at the eye.
+ *
+ * `|T x N|` is `sin(angle)` once both are unit length, so this is an ANGULAR
+ * test, about 0.006 degrees, rather than one that scales with world units.
+ * That is the whole reason both vectors are normalized before the cross
+ * rather than after: the same constant then means the same thing whether a
+ * game is measured in pixels or in metres. Matches the threshold `Sprite3d`
+ * uses for its own degenerate cross.
+ */
+const RIBBON_PARALLEL_EPSILON = 1e-4;
+
+/**
+ * Compute the side vector at every vertex of a 3D ribbon.
+ *
+ * The 3D sibling of {@link computeVertexNormal}, and deliberately shaped like
+ * it: the tangent at a vertex is the sum of the NORMALIZED adjacent edge
+ * directions, which is the angle bisector rather than a raw central
+ * difference. That difference matters wherever samples bunch up, because a
+ * raw `p[i + 1] - p[i - 1]` lets a long edge outvote a short one and the
+ * ribbon kinks.
+ *
+ * The side vector is `tangent x facing`, in that order, so with the eye on
+ * -Z and the tangent running screen-right the side comes out `(0, 1, 0)`:
+ * screen-DOWN, since render space is y-down. The two vertices a caller then
+ * emits are `p - side * halfWidth` and `p + side * halfWidth`, which is the
+ * same order a 2D trail lays its quad in.
+ *
+ * Degeneracies cascade rather than throw, because every one of them is a
+ * frame a game will actually hit: a stalled object produces coincident
+ * points, and anything flying straight at the camera produces a tangent
+ * parallel to the facing vector. In both cases the previous vertex's side is
+ * carried forward, which keeps the ribbon stable between frames instead of
+ * flickering; a ribbon seen exactly end-on is genuinely edge-on and projects
+ * to zero width, so any stable choice looks right.
+ * @param points - the path, newest first, at least `count` long
+ * @param count - how many of them are live
+ * @param out - 3 floats per point, written in place; at least `count * 3` long
+ * @param eye - the camera position in world space, ignored when `normal` is given
+ * @param normal - a fixed facing to use instead of the eye, or null to face `eye`
+ * @param fallback - the side vector for vertex 0 when everything else degenerates
+ * @ignore
+ * @internal
+ */
+export function ribbonSides(
+	points: ReadonlyArray<XYZPoint>,
+	count: number,
+	out: Float32Array,
+	eye: XYZPoint,
+	normal: XYZPoint | null,
+	fallback: XYZPoint,
+): void {
+	if (count < 2) {
+		return;
+	}
+	// the previous vertex's side, carried across a degenerate one
+	let px = 0;
+	let py = 0;
+	let pz = 0;
+	let hasPrev = false;
+
+	for (let i = 0; i < count; i++) {
+		const p = points[i];
+		// THE BISECTOR, not a central difference: each adjacent edge
+		// contributes its unit direction, so spacing cannot bias the result
+		let tx = 0;
+		let ty = 0;
+		let tz = 0;
+		if (i < count - 1) {
+			const q = points[i + 1];
+			const dx = q.x - p.x;
+			const dy = q.y - p.y;
+			const dz = q.z - p.z;
+			const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+			// a zero-length edge drops out rather than contributing NaN,
+			// which is what two coincident samples produce
+			if (len > 0) {
+				tx += dx / len;
+				ty += dy / len;
+				tz += dz / len;
+			}
+		}
+		if (i > 0) {
+			const q = points[i - 1];
+			const dx = p.x - q.x;
+			const dy = p.y - q.y;
+			const dz = p.z - q.z;
+			const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+			if (len > 0) {
+				tx += dx / len;
+				ty += dy / len;
+				tz += dz / len;
+			}
+		}
+
+		let sx = 0;
+		let sy = 0;
+		let sz = 0;
+		const tlen = Math.sqrt(tx * tx + ty * ty + tz * tz);
+		if (tlen > 0) {
+			tx /= tlen;
+			ty /= tlen;
+			tz /= tlen;
+
+			let nx: number;
+			let ny: number;
+			let nz: number;
+			if (normal !== null) {
+				nx = normal.x;
+				ny = normal.y;
+				nz = normal.z;
+			} else {
+				nx = eye.x - p.x;
+				ny = eye.y - p.y;
+				nz = eye.z - p.z;
+			}
+			const nlen = Math.sqrt(nx * nx + ny * ny + nz * nz);
+			if (nlen > 0) {
+				nx /= nlen;
+				ny /= nlen;
+				nz /= nlen;
+				// tangent x facing, in that order: see the sign note above
+				sx = ty * nz - tz * ny;
+				sy = tz * nx - tx * nz;
+				sz = tx * ny - ty * nx;
+				const slen = Math.sqrt(sx * sx + sy * sy + sz * sz);
+				// `slen` is sin(angle between them), so this is the
+				// "pointing at the eye" case
+				if (slen > RIBBON_PARALLEL_EPSILON) {
+					sx /= slen;
+					sy /= slen;
+					sz /= slen;
+				} else {
+					sx = 0;
+					sy = 0;
+					sz = 0;
+				}
+			}
+		}
+
+		if (sx === 0 && sy === 0 && sz === 0) {
+			if (hasPrev) {
+				sx = px;
+				sy = py;
+				sz = pz;
+			} else {
+				sx = fallback.x;
+				sy = fallback.y;
+				sz = fallback.z;
+			}
+		} else if (hasPrev && sx * px + sy * py + sz * pz < 0) {
+			// A HAIRPIN. The cross product has no idea which of the two
+			// opposite perpendiculars a caller wanted, so a path that doubles
+			// back flips the side vector and the strip crosses itself into a
+			// bowtie. Continuity with the previous vertex is the only thing
+			// that disambiguates it.
+			sx = -sx;
+			sy = -sy;
+			sz = -sz;
+		}
+
+		const o = i * 3;
+		out[o] = sx;
+		out[o + 1] = sy;
+		out[o + 2] = sz;
+		px = sx;
+		py = sy;
+		pz = sz;
+		hasPrev = true;
+	}
 }
 
 /**

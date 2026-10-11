@@ -134,8 +134,10 @@ Without this, a "children emptied" handler can reset the wrong stage.
 Contact callbacks fire inline inside the physics step, mid-iteration over the
 detector's pair list. `container.removeChild()` is safe there — it defers the
 actual removal to the next tick, which is exactly why it defers. The immediate
-forms are the dangerous ones: `removeChildNow()` and `destroy()` tear the object
-down under the iteration (`destroy()` nulls `pos` and `body`). The builtin
+forms are the dangerous ones: `removeChildNow()` tears the object down under
+the iteration, via the internal `destroy()` it calls, which nulls `pos` and
+`body`. (`destroy()` is engine teardown and is not in the published types, so
+`removeChildNow` is the call a game actually makes.) The builtin
 detector guards the pair it is currently resolving, but nothing guarantees that
 for the rest of the step or for another adapter.
 
@@ -149,7 +151,7 @@ Use `removeChild()`, or flag the work and drain it from `Stage.update`.
 | handlers accumulate on pooled objects | subscribed in the constructor rather than `onActivateEvent` |
 | cleanup never runs on a pooled object | pooled removal does not fire `onDestroyEvent` |
 | crash during a stage switch | callback ran mid-teardown — guard with `state.isCurrent` |
-| crash after a collision | `removeChildNow()` / `destroy()` inside a contact callback — use `removeChild()` |
+| crash after a collision | `removeChildNow()` inside a contact callback — use `removeChild()` |
 | progress callbacks never fire | assigned `loader.onProgress` (removed in 20.3) instead of subscribing to `LOADER_PROGRESS` |
 | `onActivateEvent` never runs | the child was added to a container not yet attached to the world |
 

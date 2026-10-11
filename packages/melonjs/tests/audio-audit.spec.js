@@ -181,6 +181,96 @@ describe("audio audit fixes", () => {
 		audio.unload("audit-resume");
 	});
 
+	it("playTrack() stops the track it replaces", async () => {
+		// pre-fix: playTrack only ASSIGNED the current-track slot, so the
+		// previous bed kept looping under the new one and, with the slot
+		// moved on, stopTrack() could no longer reach it — two tracks at
+		// once and the older one stuck for the life of the page
+		await loadClip("audit-bed-a");
+		await loadClip("audit-bed-b");
+
+		const firstVoice = audio.playTrack("audit-bed-a");
+		const first = state.tracks["audit-bed-a"];
+		let stopped = 0;
+		let stoppedId;
+		const realStop = first.stop.bind(first);
+		first.stop = (...args) => {
+			stopped++;
+			stoppedId = args[0];
+			return realStop(...args);
+		};
+
+		audio.playTrack("audit-bed-b");
+
+		// Counted rather than read off the voice: a suspended context leaves
+		// the clip play-locked, which makes stop() QUEUE instead of taking
+		// effect, so `_ended` is not deterministic here and the call is.
+		// The id matters as much as the count — a group stop would catch a
+		// replacement voice when the queue finally drains.
+		expect(stopped).toBe(1);
+		expect(stoppedId).toBe(firstVoice);
+		expect(audio.getCurrentTrack()).toBe("audit-bed-b");
+
+		audio.stopTrack();
+		audio.unload("audit-bed-a");
+		audio.unload("audit-bed-b");
+	});
+
+	it("playTrack() with the name already playing restarts it rather than layering", async () => {
+		// the same-name case is the one that used to stack voices: two
+		// calls left two looping instances of one clip playing together
+		await loadClip("audit-bed-same");
+		const bed = state.tracks["audit-bed-same"];
+		const stops = [];
+		const realStop = bed.stop.bind(bed);
+		bed.stop = (...args) => {
+			stops.push(args[0]);
+			return realStop(...args);
+		};
+
+		const firstVoice = audio.playTrack("audit-bed-same");
+		const secondVoice = audio.playTrack("audit-bed-same");
+
+		// The FIRST voice is stopped and the second is not. Asserted on the
+		// ids rather than on `_ended`, because a locked context queues the
+		// stop: the id is what proves the queued call cannot come back later
+		// and take the voice that replaced it, which a group stop would.
+		expect(stops).toEqual([firstVoice]);
+		expect(secondVoice).not.toBe(firstVoice);
+		expect(audio.getCurrentTrack()).toBe("audit-bed-same");
+		bed.stop = realStop;
+
+		audio.stopTrack();
+		audio.unload("audit-bed-same");
+	});
+
+	it("playTrack() with an unknown clip throws without silencing the current track", async () => {
+		// stopping first and playing second would mean a typo kills the
+		// music and then throws, which is the worse half of both outcomes
+		await loadClip("audit-bed-keep");
+		const voice = audio.playTrack("audit-bed-keep");
+		const bed = state.tracks["audit-bed-keep"];
+		let stopped = 0;
+		const realStop = bed.stop.bind(bed);
+		bed.stop = (...args) => {
+			stopped++;
+			return realStop(...args);
+		};
+
+		expect(() => {
+			return audio.playTrack("audit-bed-nope");
+		}).toThrow();
+
+		// nothing stopped, and the slot still names the track that is on
+		expect(stopped).toBe(0);
+		expect(audio.getCurrentTrack()).toBe("audit-bed-keep");
+		expect(voice).toBeTypeOf("number");
+		bed.stop = realStop;
+
+		audio.stopTrack();
+		audio.unload("audit-bed-keep");
+	});
+
 	it("unload() clears the current-track pointer when it referenced the unloaded clip", async () => {
 		// pre-fix: getCurrentTrack() kept reporting a track that no longer
 		// existed, and pauseTrack()/resumeTrack() silently no-op'd on it

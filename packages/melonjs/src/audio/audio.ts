@@ -138,24 +138,63 @@ export function disable(): void {
 }
 
 /**
- * Play the specified audio track. Automatically loops the clip and
- * tracks it as the current track for {@link stopTrack} / {@link pauseTrack}
- * / {@link resumeTrack}.
+ * Play the specified audio track, **replacing** whatever track was playing.
+ *
+ * The clip loops, and its name becomes the current track for
+ * {@link stopTrack} / {@link pauseTrack} / {@link resumeTrack} /
+ * {@link getCurrentTrack}. The previous track is stopped first, so only one
+ * track is ever playing: there is a single current-track slot, and a track
+ * left running after the slot had moved on could no longer be reached by any
+ * of those four.
+ *
+ * Calling it with the name already playing restarts that track from the
+ * beginning, the same as {@link play} on any other clip. Scene code that
+ * wants the bed to carry on across a screen change should not call this
+ * again, rather than rely on it doing nothing.
+ *
+ * Use {@link play} for sound effects: they are meant to overlap, and nothing
+ * here applies to them.
  * @param sound_name - Audio track name (case-sensitive).
  * @param volume - Playback volume, `0.0..1.0`. Defaults to the current
  *   global volume.
  * @returns The sound instance ID.
+ * @throws {Error} when no clip of that name is loaded, raised before anything
+ *   is stopped, so a mistyped name cannot silence the music already playing.
  * @example
- * me.audio.playTrack("awesome_music");
+ * me.audio.playTrack("menu_theme");
+ * me.audio.playTrack("battle_theme");  // the menu theme stops
  * @category Audio
  */
 export function playTrack(sound_name: string, volume?: number): number {
+	const previousName = audioState.currentTrackId;
+	const previousVoice = audioState.currentTrackVoiceId;
+
+	// The new track STARTS first, and only then is the old one stopped.
+	//
+	// Both halves of that matter. `play` throws on a clip that was never
+	// loaded, and going first means a mistyped name throws with the music
+	// still playing rather than killing it and then throwing. And the old
+	// voice is stopped BY ID, which is what makes replacing a track with
+	// itself safe: `Sound#stop` queues while the clip is loading or the
+	// audio context is still locked, and a queued stop with no id resolves
+	// its ids when it finally runs — late enough to catch the replacement
+	// and leave the game silent.
+	const id = play(sound_name, true, null, volume);
 	audioState.currentTrackId = sound_name;
-	return play(audioState.currentTrackId, true, null, volume);
+	audioState.currentTrackVoiceId = id;
+
+	if (previousName !== null && previousVoice !== undefined) {
+		audioState.tracks[previousName]?.stop(previousVoice);
+	}
+	return id;
 }
 
 /**
- * Stop the current audio track.
+ * Stop the current audio track, and leave no current track behind.
+ *
+ * Only needed where nothing else follows, since {@link playTrack} stops the
+ * track it replaces: a scene whose successor has no music of its own, or a
+ * game going quiet. A no-op when no track is playing.
  * @see {@link playTrack}
  * @example
  * me.audio.playTrack("awesome_music");
@@ -166,6 +205,7 @@ export function stopTrack(): void {
 	if (audioState.currentTrackId !== null) {
 		audioState.tracks[audioState.currentTrackId]?.stop();
 		audioState.currentTrackId = null;
+		audioState.currentTrackVoiceId = undefined;
 	}
 }
 
@@ -298,6 +338,7 @@ export function unload(sound_name: string): boolean {
 	// getCurrentTrack() / pauseTrack() / resumeTrack() don't act on a ghost
 	if (audioState.currentTrackId === sound_name) {
 		audioState.currentTrackId = null;
+		audioState.currentTrackVoiceId = undefined;
 	}
 
 	// destroy the backend Sound object

@@ -269,6 +269,13 @@ export function tiltOntoPlane(nx, ny, nz, px, pz, out) {
  * of it there is to see: at ninety degrees it is edge-on and gone. Past about
  * seventy-five degrees there is nothing left worth drawing, so the tilt stops
  * there rather than letting a game dial in a shadow standing on its rim.
+ *
+ * It measures the tilt from WORLD up, which stands in for "tilted away from
+ * the viewer" only while the camera looks down the Y axis. So it is a
+ * heuristic, and `Mesh#shadowGroundPoint` is a game opting out of it: a point
+ * and a normal state the plane outright, and the per-object tier skips this
+ * for them. Every other caller still clamps, the instanced tier included,
+ * where the plane's intercept divides by the normal's `y`.
  * @ignore
  * @internal
  */

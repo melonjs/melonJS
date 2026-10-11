@@ -552,9 +552,50 @@ export default class Renderable extends Rect {
 	get tint() {
 		return this._tint;
 	}
+	/**
+	 * Takes a {@link Color} to copy, or a CSS colour string.
+	 *
+	 * It COPIES rather than holds, so a caller that goes on mutating what it
+	 * passed does not steer this renderable's tint by accident. What the
+	 * getter hands back is always a `Color`, whichever form went in.
+	 * @param {Color|string} value - the colour to tint with
+	 */
 	set tint(value) {
-		this._tint.copy(value);
+		if (typeof value === "string") {
+			this._tint.parseCSS(value);
+		} else {
+			this._tint.copy(value);
+		}
 		this.isDirty = true;
+	}
+
+	/**
+	 * Tint this renderable, chainably.
+	 *
+	 * Exactly {@link Renderable#tint}'s own setter, returning the renderable
+	 * so it can be chained with the other `set*` methods. It exists because
+	 * `tint` is a live {@link Color}, so reaching for it means choosing
+	 * between `setColor` (0 to 255), `setFloat` (0 to 1), `parseCSS`,
+	 * `setHSL` and `setLinear` — and picking the wrong one is silent, it just
+	 * renders the wrong colour.
+	 *
+	 * Deliberately sRGB only. A LINEAR value, which in practice means a glTF
+	 * `baseColorFactor` or `emissiveFactor`, stays an explicit
+	 * `tint.setLinear(...)` so the conversion is never silent; for a mesh
+	 * built from an asset, pass {@link Mesh#baseColorFactor} as a setting and
+	 * the loader's value is applied for you.
+	 * @param {Color|string} value - a `Color` to copy, or a CSS colour string
+	 * @returns {this} this renderable, for chaining
+	 * @example
+	 * sprite.setTint("#ff8800");
+	 * // the same on any renderable, mesh included
+	 * mesh.setTint(theme.accent).setOpacity(0.5);
+	 * // remove a tint
+	 * sprite.setTint("#ffffff");
+	 */
+	setTint(value) {
+		this.tint = value;
+		return this;
 	}
 
 	/**
@@ -587,7 +628,7 @@ export default class Renderable extends Rect {
 	 * @param {number} x - the new x position
 	 * @param {number} y - the new y position
 	 * @param {number} [z] - the new depth; left untouched when omitted
-	 * @returns {Renderable} this renderable, for chaining
+	 * @returns {this} this renderable, for chaining
 	 * @example
 	 * sprite.setPosition(120, 64);        // 2D: depth unchanged
 	 * mesh.setPosition(0, -20, 140);      // 3D

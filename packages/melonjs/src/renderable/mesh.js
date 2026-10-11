@@ -95,6 +95,76 @@ function readShadowNormal(value) {
 	return length > 1e-6 ? out.scale(1 / length) : out.set(0, -1, 0);
 }
 
+/**
+ * Take a floor anchor as an array or a `Vector3d` and keep a copy.
+ *
+ * A copy rather than the caller's object, like `readShadowNormal` above and
+ * for the same reason: a game placing these from its own scratch vector
+ * every frame would otherwise have every shadow in the scene share one point.
+ * @param {number[]|Vector3d} value - the point on the floor
+ * @returns {Vector3d} this mesh's own copy of it
+ * @ignore
+ * @internal
+ */
+function readShadowPoint(value) {
+	const out = Array.isArray(value)
+		? new Vector3d(value[0], value[1], value[2])
+		: new Vector3d(value.x, value.y, value.z);
+	// Checked, as `shadowScale`, `shadowOffset` and `readShadowNormal` all
+	// are. A non-finite component lands straight in the quad's translation
+	// and puts NaN geometry into a batch shared with every other blob, which
+	// surfaces as the whole pass vanishing rather than as one bad shadow.
+	//
+	// It does NOT catch a 2D value: `Vector3d` defaults a missing `z` to 0,
+	// which is finite, so a `Vector2d` or a two-element array lands the
+	// point silently on the `z = 0` plane. Worth knowing, because
+	// `Renderable#pos` is TYPED `Vector2d` even though it holds three
+	// components, which makes it the most natural thing to hand this.
+	if (
+		!Number.isFinite(out.x) ||
+		!Number.isFinite(out.y) ||
+		!Number.isFinite(out.z)
+	) {
+		throw new Error(
+			"melonJS: shadowGroundPoint needs three finite components; got " +
+				`(${out.x}, ${out.y}, ${out.z})`,
+		);
+	}
+	return out;
+}
+
+/**
+ * The floor normal the blob is laid on, clamped or not.
+ *
+ * The 75 degree ceiling exists because a blob tilted toward the VIEWER goes
+ * edge-on and disappears, and it measures that tilt from world up, which is
+ * only the same thing in a world whose camera looks down the Y axis. A
+ * `Camera3d` posed freely, around a sphere say, breaks that: a floor 146
+ * degrees from world up can face the camera squarely, and clamping it lays
+ * the blob at an angle the surface never had.
+ *
+ * So the ceiling holds for `shadowGroundY`, where a steep normal has no
+ * well-defined plane to go with a bare height, and is lifted once the game
+ * has named the floor outright with `shadowGroundPoint`: a point and a normal
+ * are a plane, with nothing left to guess. A blob that does end up edge-on
+ * is then simply not seen, which is what being edge-on means.
+ * @param {Vector3d} normal - the floor's up normal, already unit length
+ * @param {boolean} anchored - whether `shadowGroundPoint` named the floor
+ * @param {Float64Array} out - receives the normal to use
+ * @ignore
+ * @internal
+ */
+function readShadowPlaneNormal(normal, anchored, out) {
+	if (anchored) {
+		out[0] = normal.x;
+		out[1] = normal.y;
+		out[2] = normal.z;
+		return;
+	}
+	// clamped toward up rather than refused; see `clampShadowTilt`
+	clampShadowTilt(normal.x, normal.y, normal.z, out);
+}
+
 // reusable matrix for combining projection × model in draw()
 const _combinedMatrix = new Matrix3d();
 
@@ -403,6 +473,7 @@ function buildTextureGroups(
  * @property {boolean} [lit=false] - shade this mesh with the scene's {@link Light3d} lights (the lit mesh pipeline) instead of rendering fullbright. Set automatically by the glTF importer when the scene carries a directional, point or spot light. With `lit` on and no lights present the batcher uploads a white ambient, so the result is indistinguishable from unlit.
  * @property {Uint32Array|Color[]|number[]} [vertexColors] - per-vertex colour, one entry per vertex, multiplied into {@link Mesh#tint}. Either packed RGBA8 (`Uint32Array`, the form the batchers read — no conversion) or one {@link Color} per vertex. Omit for plain white. Lets a single mesh carry a gradient — fading a terrain toward the sky with distance, darkening a crease — which a per-object `tint` cannot express. An explicit value wins over the colours a multi-material OBJ bakes from its MTL.
  * @property {number[]|Float32Array} [normals] - per-vertex normals for the lit path. An explicit value wins over the ones an OBJ or glTF source supplies; omit it and they are taken from the model, or generated from the geometry when the mesh is `lit`. Generated normals average per vertex where faces share vertices (smooth shading) and equal the face normal where they do not (flat shading) — the geometry decides, not a flag.
+ * @property {number[]|Float32Array|undefined} [baseColorFactor] - the material's base colour factor `[r, g, b]` in 0..1, LINEAR, applied as the mesh tint. That is the form a glTF material states it in (spec 3.9.2) and the form the loader hands back, so a mesh built from a node passes the node's own field straight through. It is ENCODED rather than scaled: a linear factor pushed through `tint.setColor` by multiplying by 255 renders every untextured material 60 to 70 counts too dark in the midtones, which reads as a lighting fault and gets debugged as one. For an ordinary sRGB colour use {@link Renderable#setTint}. The type admits `undefined` deliberately: the loader declares the field optional, so `baseColorFactor: node.baseColorFactor` is the headline use and it has to compile for a consumer building under `exactOptionalPropertyTypes`.
  * @property {number[]|Float32Array} [specular] - specular color `[r, g, b]` (0..1) for the lit path. Set by the OBJ loader from MTL `Ks`, and derived from glTF metallic/roughness.
  * @property {number} [shininess=0] - specular exponent for the lit path (MTL `Ns`). `0` for a fully diffuse surface.
  * @property {string|TextureAtlas|HTMLImageElement} [normalMap] - tangent-space normal map (MTL `map_bump`/`bump`/`norm`), perturbing the lit path's shading normal per fragment. Needs `lit` to have any effect, and a `Camera3d`. See the [Material Textures example](https://melonjs.github.io/melonJS/examples/#/material-textures).
@@ -414,11 +485,12 @@ function buildTextureGroups(
  * @property {number} [shadowGroundY] - world Y of the floor the shadow lands on. Omit and the blob sits at the object's own base at full strength; set it and the blob shrinks and fades as the object rises. Render space is Y-down, so the floor is a **greater** Y than the object above it.
  * @property {number} [shadowOpacity=0.45] - opacity of the shadow directly beneath the object, before any height fade.
  * @property {number} [shadowScale=1] - multiplier for the ground shadow's footprint. Non-positive or non-finite values hide the shadow without hiding the mesh.
- * @property {number} [shadowOffset=0] - how far to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, in multiples of the blob's own radius, for the look of a light that is not directly overhead. A ratio rather than a world distance so one value serves casters of any size. Honoured only when `shadowGroundY` is set, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor. On an `InstancedMesh` it is one throw for the whole set.
+ * @property {number} [shadowOffset=0] - how far to slide the shadow along `shadowDirectionX`/`shadowDirectionZ`, in multiples of the blob's own radius, for the look of a light that is not directly overhead. A ratio rather than a world distance so one value serves casters of any size. Honoured only when the floor has been named, by `shadowGroundY` or by `shadowGroundPoint`, since the blob is a flat quad and sliding it off a plane the game has NOT named puts it somewhere there is no floor. On an `InstancedMesh` it is one throw for the whole set.
  * @property {number} [shadowStretch=1] - how much longer the blob is along `shadowDirectionX`/`shadowDirectionZ`, for the look of a low light. Clamped to 3, and the shadow fades as it stretches. On an `InstancedMesh` it is one stretch for the whole set.
  * @property {number} [shadowDirectionX=0] - x of the ground direction the shadow is cast along. Together with `shadowDirectionZ`, zero length means no offset and no stretch.
  * @property {number} [shadowDirectionZ=0] - z of the ground direction the shadow is cast along.
- * @property {number[]|Vector3d} [shadowGroundNormal] - the UP normal of the floor the shadow lands on, for a surface that is not level. Needs `shadowGroundY`, which says where that floor is; this says which way it faces. Defaults to world up, and the tilt is clamped at 75 degrees. On an `InstancedMesh` one plane serves the whole set, through the set's origin at `shadowGroundY`, so a scatter over curved ground is one set per facet.
+ * @property {number[]|Vector3d} [shadowGroundPoint] - the point on the floor the blob lands on, for ground that is not flat. Supersedes `shadowGroundY`, which can only put the blob on the caster's own vertical column; anywhere "down" is not world down, such as on a sphere, that lands the blob beside its caster rather than under it. Names a floor the same way `shadowGroundY` does, so `shadowOffset` and the height fade work with it.
+ * @property {number[]|Vector3d} [shadowGroundNormal] - the UP normal of the floor the shadow lands on, for a surface that is not level. Needs the floor to be named, by `shadowGroundY` or by `shadowGroundPoint`; this says which way it faces. Defaults to world up. The tilt is clamped at 75 degrees alongside `shadowGroundY`, and NOT clamped alongside `shadowGroundPoint`, which states the plane outright. On an `InstancedMesh` one plane serves the whole set, through the set's origin at `shadowGroundY`, so a scatter over curved ground is one set per facet.
  * @property {Light3d} [shadowLight] - a {@link Light3d} to take the direction from instead of setting it by hand. Read every draw, so a moving sun carries the shadow with it. Nothing is inferred from the scene: no light here means no direction.
  */
 
@@ -743,6 +815,15 @@ export default class Mesh extends Renderable {
 		this.shininess =
 			typeof settings.shininess === "number" ? settings.shininess : 0;
 
+		// The material's base colour, applied as the tint. LINEAR per the
+		// glTF spec, so it is encoded rather than scaled: see the setting's
+		// own note. Applied here so that the three places that used to spell
+		// it out — the glTF scene loader, the rigged glTF model, and any game
+		// building a mesh from a node by hand — all get it for free.
+		if (settings.baseColorFactor) {
+			this.setBaseColorFactor(settings.baseColorFactor);
+		}
+
 		/**
 		 * Per-texel opacity map (MTL `map_d`), or `undefined`. Its red channel
 		 * multiplies the fragment's alpha before {@link Mesh#alphaCutoff} is
@@ -967,6 +1048,7 @@ export default class Mesh extends Renderable {
 		 * const coin = new Mesh(x, floorY, { ...geometry, castGroundShadow: true });
 		 * coin.shadowGroundY = floorY;
 		 * coin.pos.y = floorY - 40 - 30 * Math.sin(t);
+		 * @see Mesh#shadowGroundPoint
 		 */
 		this.shadowGroundY = settings.shadowGroundY;
 
@@ -1012,11 +1094,12 @@ export default class Mesh extends Renderable {
 		 * at all. {@link Mesh#shadowScale} rides in that radius, so widening
 		 * the blob carries the offset with it.
 		 *
-		 * Honoured ONLY when {@link Mesh#shadowGroundY} is set. The blob is a
-		 * flat quad on one named plane with no contact with terrain, so sliding
-		 * it across a plane the game has not named puts it somewhere there may
-		 * be no floor at all. Setting `shadowGroundY` is the game saying where
-		 * its floor is, and that is the only case where an offset is honest.
+		 * Honoured ONLY when the floor has been NAMED, by
+		 * {@link Mesh#shadowGroundY} or by {@link Mesh#shadowGroundPoint}. The
+		 * blob is a flat quad on one named plane with no contact with terrain,
+		 * so sliding it across a plane the game has not named puts it somewhere
+		 * there may be no floor at all. Naming the floor is the game saying
+		 * where it is, and that is the only case where an offset is honest.
 		 *
 		 * An {@link InstancedMesh} honours it too, as one throw shared by the
 		 * whole set, measured in the SET's own blob radius.
@@ -1094,6 +1177,10 @@ export default class Mesh extends Renderable {
 		 */
 		this.shadowLight = settings.shadowLight;
 
+		this._shadowGroundPoint = undefined;
+		if (settings.shadowGroundPoint !== undefined) {
+			this.shadowGroundPoint = settings.shadowGroundPoint;
+		}
 		this._shadowGroundNormal = undefined;
 		if (settings.shadowGroundNormal !== undefined) {
 			this.shadowGroundNormal = settings.shadowGroundNormal;
@@ -2183,16 +2270,63 @@ export default class Mesh extends Renderable {
 		// one scalar for the height fade and the lift — the blob's own size
 		const extent = (axLen + azLen) * 0.5;
 
+		// Where on the floor the blob lands, and how high above it the caster
+		// is.
+		//
 		// Render space is Y-DOWN, so the floor sits at a GREATER Y than the
-		// object standing on it. `bottom` is `max.y` for the same reason.
+		// object standing on it, and `bottom` is `max.y` for the same reason.
+		//
+		// Three cases, in order of how much the game has told us:
+		//
+		//  - `shadowGroundPoint`: the point itself, which is the only way to put
+		//    a blob off the caster's own vertical column. Ground that is not
+		//    flat needs it: on a sphere "down" is radial, so a blob pinned to
+		//    the column lands beside its caster rather than under it.
+		//  - `shadowGroundY`: a height, and the column supplies x and z.
+		//  - neither: the caster's own base, at full strength.
+		const at = this.shadowGroundPoint;
+		let anchorX = originX;
 		let groundY = this.shadowGroundY;
+		let anchorZ = originZ;
 		let strength = 1;
+		if (at !== undefined) {
+			anchorX = at.x;
+			groundY = at.y;
+			anchorZ = at.z;
+		}
 		if (groundY === undefined) {
 			groundY = this.getBounds3d().bottom;
 		} else {
-			// how far the object floats above that floor, as a fraction of its
-			// own size — a blob that shrinks and fades is what reads as height
-			const height = groundY - originY;
+			// How far the object floats above that floor, as a fraction of its
+			// own size: a blob that shrinks and fades is what reads as height.
+			// Measured along the FLOOR'S OWN normal once a point names a
+			// tilted plane, since the vertical drop to a slope is not the
+			// height above it; a plain `shadowGroundY` keeps the Y difference
+			// it always used, which is the same number on level ground.
+			let height = groundY - originY;
+			if (at !== undefined) {
+				const dx = originX - anchorX;
+				const dy = originY - groundY;
+				const dz = originZ - anchorZ;
+				const n = this.shadowGroundNormal;
+				if (n !== undefined) {
+					readShadowPlaneNormal(n, true, _tilted);
+					// `origin - anchor` projected on the UP normal, so a caster
+					// above its floor reads POSITIVE, exactly as the plain
+					// `groundY - originY` does on level ground. Written the
+					// other way round it came out negated, which pinned every
+					// tilted blob at full strength.
+					height = dx * _tilted[0] + dy * _tilted[1] + dz * _tilted[2];
+				} else {
+					// No normal, so no direction to project on: the DISTANCE
+					// to the point is the height, which the point alone fully
+					// determines. The straight-down drop is wrong here and
+					// silently so, because on the flank of a sphere the floor
+					// point is BESIDE the caster rather than below it, which
+					// reads as no height at all and a blob that never fades.
+					height = Math.hypot(dx, dy, dz);
+				}
+			}
 			const fade = 1 - height / (extent * SHADOW_FADE_SPAN);
 			strength = fade > 0 ? (fade < 1 ? fade : 1) : 0;
 			if (strength === 0) {
@@ -2256,7 +2390,14 @@ export default class Mesh extends Renderable {
 			// strength, so a rising object's shadow does not slide as the
 			// height fade shrinks it.
 			const ratio = this.shadowOffset;
-			if (this.shadowGroundY !== undefined && Number.isFinite(ratio)) {
+			// EITHER way of naming the floor enables it. Gated on
+			// `shadowGroundY` alone, an anchored blob stretched along the
+			// light but was never slid, and a game had to keep a
+			// `shadowGroundY` it no longer used purely to switch this on.
+			if (
+				(at !== undefined || this.shadowGroundY !== undefined) &&
+				Number.isFinite(ratio)
+			) {
 				// `shadowScale` is in the product because the unit is the
 				// blob's OWN radius, and scaling the blob changes that
 				// radius. Left out, a game that widened its blob would find
@@ -2275,9 +2416,11 @@ export default class Mesh extends Renderable {
 		let nY = -1;
 		let nZ = 0;
 		const normal = this.shadowGroundNormal;
-		if (normal !== undefined && this.shadowGroundY !== undefined) {
-			// clamped toward up rather than refused; see `clampShadowTilt`
-			clampShadowTilt(normal.x, normal.y, normal.z, _tilted);
+		if (
+			normal !== undefined &&
+			(at !== undefined || this.shadowGroundY !== undefined)
+		) {
+			readShadowPlaneNormal(normal, at !== undefined, _tilted);
 			nX = _tilted[0];
 			nY = _tilted[1];
 			nZ = _tilted[2];
@@ -2321,12 +2464,14 @@ export default class Mesh extends Renderable {
 		// before. `extent` is measured BEFORE any stretch, so pulling the
 		// blob out does not also lift it off the floor it is lying on.
 		const lift = extent * SHADOW_LIFT;
-		out[12] = originX + _tilted[0] + nX * lift;
-		// The blob still sits directly UNDER the caster: the normal turns it,
-		// it does not move it. Projecting the origin along the normal instead
-		// would slide a jumping character's shadow down the slope as it rose.
+		// The blob sits directly UNDER the caster unless a point says
+		// otherwise: the normal turns it, it does not move it. Projecting the
+		// origin along the normal instead would slide a jumping character's
+		// shadow down the slope as it rose, which is why `shadowGroundPoint` is
+		// something the game states rather than something inferred here.
+		out[12] = anchorX + _tilted[0] + nX * lift;
 		out[13] = groundY + _tilted[1] + nY * lift;
-		out[14] = originZ + _tilted[2] + nZ * lift;
+		out[14] = anchorZ + _tilted[2] + nZ * lift;
 		out[15] = 1;
 
 		// Stash and restore by hand rather than save()/restore(): restore()
@@ -2366,10 +2511,16 @@ export default class Mesh extends Renderable {
 	 * exactly.
 	 *
 	 * The blob is ROTATED onto the plane, not projected, so it keeps its
-	 * shape; it still sits directly under the caster rather than sliding
-	 * along the slope, and it is still a flat quad with no contact with
-	 * what it lies on. The tilt is clamped at 75 degrees, past which an
-	 * edge-on blob has nothing left to show.
+	 * shape; it sits directly under the caster rather than sliding along the
+	 * slope, unless {@link Mesh#shadowGroundPoint} says otherwise, and it is
+	 * still a flat quad with no contact with what it lies on.
+	 *
+	 * The tilt is clamped at 75 degrees ALONGSIDE `shadowGroundY`, past
+	 * which an edge-on blob has nothing left to show. That ceiling measures
+	 * the tilt from world up, which stands in for "tilted away from the
+	 * viewer" only while the camera looks down the Y axis; it is lifted
+	 * alongside `shadowGroundPoint`, where a point and a normal state the
+	 * plane outright and there is nothing left to guess.
 	 *
 	 * On an {@link InstancedMesh} the plane serves the WHOLE set: it passes
 	 * through the set's origin at `shadowGroundY` and faces this way, and
@@ -2403,6 +2554,87 @@ export default class Mesh extends Renderable {
 	set shadowGroundNormal(value) {
 		this._shadowGroundNormal =
 			value === undefined ? undefined : readShadowNormal(value);
+	}
+
+	/**
+	 * The point on the floor the blob lands on, for ground that is not flat.
+	 *
+	 * {@link Mesh#shadowGroundY} names a HEIGHT and lets the caster's own
+	 * vertical column supply the rest, which is a flat-world assumption: the
+	 * blob can only ever be directly below the thing casting it. That is the
+	 * right answer for a platformer, and the wrong one anywhere "down" is not
+	 * world down. On a sphere it is radial, so a blob pinned to the column
+	 * lands BESIDE its caster by the drop times the tangent of the tilt.
+	 *
+	 * Set this and the blob goes where you put it. It supersedes
+	 * `shadowGroundY`, which it already contains, and it names a floor the
+	 * same way, so {@link Mesh#shadowOffset} and the height fade work with it;
+	 * pair it with {@link Mesh#shadowGroundNormal} to say which way that floor
+	 * faces, and the fade is then measured along that normal rather than
+	 * straight down.
+	 * Per object only. An {@link InstancedMesh} shares one plane across a
+	 * set, built through the set's own origin, and refuses this with a
+	 * warning rather than accepting it silently. `level.load()` and
+	 * `GLTFScene` do not forward it either, since one point shared by every
+	 * part of a scene would stack that scene's blobs on a single spot; set
+	 * it on the part you want after the load.
+	 * @type {Vector3d|undefined}
+	 * @default undefined
+	 * @see Mesh#shadowGroundY
+	 * @see Mesh#shadowGroundNormal
+	 */
+	get shadowGroundPoint() {
+		return this._shadowGroundPoint;
+	}
+
+	/**
+	 * Takes an array or a `Vector3d` and keeps a copy of its own, so a game
+	 * placing these from one scratch vector per frame does not end up with
+	 * every shadow in the scene sharing a point. `undefined` goes back to
+	 * `shadowGroundY` and the caster's own column.
+	 * @param {number[]|Vector3d|undefined} value - the point on the floor
+	 * @example
+	 * // a rock resting on a globe: the contact point is radially below it,
+	 * // and the floor it lands on faces the same way
+	 * rock.shadowGroundPoint = surfacePoint;
+	 * rock.shadowGroundNormal = outwardNormal;
+	 */
+	set shadowGroundPoint(value) {
+		this._shadowGroundPoint =
+			value === undefined ? undefined : readShadowPoint(value);
+	}
+
+	/**
+	 * Tint this mesh from a LINEAR material factor.
+	 *
+	 * The counterpart of {@link Renderable#setTint}, which takes an ordinary
+	 * sRGB colour: this one takes the form a renderer's own colour space
+	 * states it in, which in practice means a glTF `baseColorFactor`, and
+	 * encodes it. Scaling such a value by 255 into `setColor` instead renders
+	 * the material 60 to 70 counts too dark in the midtones.
+	 *
+	 * The same thing the `baseColorFactor` SETTING does at construction, so a
+	 * material that changes during play is reached the same way as one that
+	 * is set up front. `emissive`, `specular` and `shininess` are all
+	 * settable after construction; this was the one material value that was
+	 * not.
+	 *
+	 * A METHOD rather than a property, deliberately: the factor is encoded
+	 * into {@link Renderable#tint} and nothing holds the original, so a
+	 * readable `baseColorFactor` would either have to invert the encoding or
+	 * keep a copy that goes stale the moment anything writes `tint`.
+	 * @param {number[]|Float32Array} factor - `[r, g, b]` in 0..1, linear
+	 * @returns {this} this mesh, for chaining
+	 * @example
+	 * // what the glTF loader hands back, applied by hand
+	 * mesh.setBaseColorFactor(node.baseColorFactor);
+	 * // and the sRGB counterpart, for a colour a game picked
+	 * mesh.setTint("#ff8800");
+	 */
+	setBaseColorFactor(factor) {
+		this.tint.setLinear(factor[0], factor[1], factor[2]);
+		this.isDirty = true;
+		return this;
 	}
 
 	/**
