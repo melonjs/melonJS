@@ -72,6 +72,26 @@ The fade pair is named from the *colour's* point of view, not the scene's:
 (screen starts at `color` and clears). Both default to a 1000 ms duration and
 take an optional completion callback.
 
+**`fadeIn` does not HOLD the colour.** The effect completes, the camera's own
+update destroys it, and the screen snaps back — which is why the engine's
+idiom does the work in the completion callback and then calls `fadeOut`. To
+keep a filled screen across a state change, own the effect: a completed one
+marked `isPersistent` is left alone, and taking it away again is yours to do.
+
+```js
+const hide = camera.addCameraEffect(
+    new FadeEffect(camera, { color: "#000", duration: 400, direction: "in" }),
+);
+hide.isPersistent = true;          // survives completion AND Camera2d#reset()
+// ... later, once the new stage is up
+camera.removeCameraEffect(hide);   // which destroys it for you
+```
+
+That is exactly what `state.transition()` is built on, so a hand-rolled
+transition behaves the same way. Before 20.9 a persistent effect was destroyed
+on completion like any other, which is why a transition used to flash the
+scene it had just covered.
+
 `colorMatrix` (`brightness` / `contrast` / `saturate` / `hueRotate` / `sepia` /
 `invertColors`, all chainable) is the cheap way to grade a whole camera: the
 camera appends it as a final post-effect pass by itself whenever the matrix is
@@ -240,7 +260,7 @@ effect that paints from scratch:
 ```js
 const bar = new Sprite(0, 0, { image: Renderer.getWhitePixel() });
 bar.anchorPoint.set(0, 0);
-bar.tint.parseCSS("#39d0ff");
+bar.setTint("#39d0ff");
 bar.scale(width, height);     // a 1x1 texture, so scale IS the size in pixels
 ```
 

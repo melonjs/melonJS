@@ -42,11 +42,17 @@ or it renders flat. See `melonjs-3d` for the camera.
 | `shadowGroundY` | each object's own base | world Y of the floor the blobs land on |
 | `shadowOpacity` | `0.45` | how dark the blobs are |
 | `shadowScale` | `1` | blob footprint multiplier; `0` or less hides them |
-| `shadowOffset` | `0` | slide them along the light, in blob radii; needs `shadowGroundY` |
+| `shadowOffset` | `0` | slide them along the light, in blob radii; needs `shadowGroundY`, which is the only way a scene load can name its floor |
 | `shadowStretch` | `1` | lengthen them along it, clamped to 3 |
 | `shadowDirectionX` / `shadowDirectionZ` | `0` | the ground direction they are cast along |
 | `shadowGroundNormal` | world up | up normal of the floor, for a scene that is not level |
 | `shadowLight` | — | a `Light3d` to take the direction from, re-read every draw |
+
+`shadowGroundPoint` is **not** on that list, and a scene load drops it without
+a warning. One floor POINT shared by every part of a scene would stack the
+whole thing's blobs on a single spot, which is nonsense where one floor
+HEIGHT is perfectly sensible. Ground that is not flat is a per-object answer:
+set it on the parts you want once the load has finished.
 
 `onLoaded` receives the level id — it is a "done" signal, not a handle on the
 scene. You need it, or `async`: with the game loop running, `level.load` stops
@@ -138,6 +144,26 @@ asset fails to load. Export uncompressed.
 it through. Pixel-art models want `"nearest"`.
 
 ### `baseColorFactor` is LINEAR; a `tint` is sRGB
+**Pass the factor as a setting and the encoding is done for you.** `Mesh`
+takes `baseColorFactor` — `[r, g, b]` in 0..1, linear, which is the form the
+loader hands back — so a mesh built from a node passes the node's own field
+straight through:
+
+```js
+const node = loader.getGLTF("palm").nodes[0];
+const mesh = new Mesh(x, y, {
+    vertices: node.vertices, normals: node.normals,
+    uvs: node.uvs, indices: node.indices, normalize: false,
+    baseColorFactor: node.baseColorFactor,   // encoded, not scaled
+});
+```
+
+The setting's type admits `undefined`, because the loader declares the field
+optional and that line has to compile under `exactOptionalPropertyTypes`.
+`Sprite3d` forwards it too, and `mesh.setBaseColorFactor(f)` applies one after
+construction. For an ordinary sRGB colour use `setTint` instead — the rest of
+this section is why the two are different.
+
 
 The loader handles this for you. It only bites when you build meshes yourself
 from `loader.getGLTF(name).nodes` — which is what you do for per-node control,

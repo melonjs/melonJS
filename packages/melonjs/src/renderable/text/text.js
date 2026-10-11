@@ -212,6 +212,22 @@ export default class Text extends Renderable {
 		// transform, and the settings do not mention any of them.
 		if (typeof this.currentTransform !== "undefined") {
 			resetRenderableState(this);
+			// And the position its own two arguments name. They were accepted
+			// and then written nowhere, so a label from `getPool("text")`
+			// came back sitting wherever the PREVIOUS one was left: a damage
+			// number asked for at the kill appeared at the last one's resting
+			// place and flew from there. `ColorLayer#onResetEvent` honours its
+			// `z` argument for the same reason.
+			//
+			// Guarded with the reset above rather than written unconditionally
+			// because the constructor has already placed the renderable by the
+			// time it calls this, and only a recycle needs moving.
+			//
+			// `z` goes to 0 with them: a freshly constructed `Renderable`
+			// starts there, so a recycled one has to, and `get()` has no third
+			// argument to say otherwise. `addChild(child, z)` is what a caller
+			// that wants another one uses.
+			this.pos.set(x, y, 0);
 		}
 
 		if (typeof this.fillStyle === "undefined") {

@@ -56,6 +56,12 @@ export function setStopOnAudioError(value: boolean): void {
  *   even though the type signature wouldn't normally admit it.
  * - `currentTrackId` — the name of the currently-playing track managed
  *   by the `playTrack` / `stopTrack` helpers.
+ * - `currentTrackVoiceId` — the playback id `playTrack` started, so the
+ *   track it replaces can be stopped by id. A group stop by name would do
+ *   for a different clip, but not for the same one: `Sound#stop` QUEUES
+ *   while the clip is loading or the context is still locked, and a queued
+ *   group stop resolves its ids when it finally runs, by which point the
+ *   replacement voice is among them and gets stopped too.
  * - `retryCounters` — per-sound retry counters for `soundLoadError`'s
  *   back-off, keyed by sound name (a single shared counter let parallel
  *   loads steal each other's retry budget).
@@ -66,6 +72,7 @@ export function setStopOnAudioError(value: boolean): void {
 export const state = {
 	tracks: {} as Record<string, SpatialSound | undefined>,
 	currentTrackId: null as string | null,
+	currentTrackVoiceId: undefined as number | undefined,
 	retryCounters: {} as Record<string, number>,
 	audioExts: [] as string[],
 };

@@ -129,9 +129,17 @@ export default class MaskEffect extends CameraEffect {
 			(this.direction === "reveal" && this.progress.value >= 1.0)
 		) {
 			this.progress.value = this.direction === "hide" ? 0.0 : 1.0;
-			this.isComplete = true;
-			if (typeof this.onComplete === "function") {
-				this.onComplete();
+			// On the TRANSITION into complete, not on every frame that finds
+			// it complete. A persistent effect is still updated after it
+			// finishes, by design, so an unguarded call here repeats for as
+			// long as its owner keeps it: a state transition's callback
+			// defers the switch and the effect is only taken away once that
+			// switch lands, so every frame in between queued another one.
+			if (!this.isComplete) {
+				this.isComplete = true;
+				if (typeof this.onComplete === "function") {
+					this.onComplete();
+				}
 			}
 			return;
 		}

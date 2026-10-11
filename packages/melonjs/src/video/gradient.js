@@ -379,3 +379,52 @@ export class Gradient {
 		}
 	}
 }
+
+/**
+ * Build a {@link Gradient} from the colour options a trail accepts.
+ *
+ * Here rather than on `Trail`, because `Trail` and `Trail3d` document the
+ * SAME option format and parse it the same way. Two hand-maintained parsers
+ * for one documented format drift, and the symptom reads as a rendering bug
+ * on whichever class was not updated.
+ *
+ * Accepts, in order of precedence: `gradient`, an array of either plain
+ * colours spread evenly or `{ pos, color }` stops; `color`, one colour faded
+ * to transparent; or nothing, which is white faded to transparent.
+ * @param {object} options - the colour options
+ * @param {Array<string|Color|{pos: number, color: string|Color}>} [options.gradient] - the stops
+ * @param {Color|string} [options.color] - a single colour, faded out along the ribbon
+ * @returns {Gradient} a horizontal gradient, 0 at the head and 1 at the tail
+ * @ignore
+ * @internal
+ */
+export function gradientFromOptions(options) {
+	const gradient = new Gradient("linear", [0, 0, 1, 0]);
+
+	if (options.gradient) {
+		const entries = options.gradient;
+		for (let i = 0; i < entries.length; i++) {
+			const entry = entries[i];
+			if (typeof entry === "string" || (entry && entry.toRGBA)) {
+				// plain color: evenly distribute
+				const offset = entries.length > 1 ? i / (entries.length - 1) : 0;
+				gradient.addColorStop(offset, entry);
+			} else {
+				// positioned stop: { pos, color }
+				gradient.addColorStop(entry.pos, entry.color);
+			}
+		}
+	} else if (options.color) {
+		// parse into a Color to handle CSS names, rgba(), hex, or Color objects
+		const parsed = colorPool.get(options.color);
+		const hex = parsed.toHex();
+		colorPool.release(parsed);
+		gradient.addColorStop(0, `${hex}ff`);
+		gradient.addColorStop(1, `${hex}00`);
+	} else {
+		gradient.addColorStop(0, "#ffffffff");
+		gradient.addColorStop(1, "#ffffff00");
+	}
+
+	return gradient;
+}

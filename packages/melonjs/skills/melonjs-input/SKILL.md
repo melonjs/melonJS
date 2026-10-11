@@ -1,6 +1,6 @@
 ---
 name: melonjs-input
-description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
+description: "Use this skill for keyboard, pointer, mouse, touch and gamepad input in melonJS. Covers the bindKey action indirection, registerPointerEvent on regions, the isKinematic requirement that silently blocks pointer events, which of several overlapping objects receives an event and how to consume it, world vs screen pointer coordinates, and gamepad mapping onto the same actions. Triggers on: input, bindKey, isKeyPressed, KEY, registerPointerEvent, releasePointerEvent, pointerdown, pointerup, pointermove, POINTERMOVE, gamepad, bindGamepad, triggerKeyEvent, KEYDOWN, KEYUP, press any key, splash screen, click, touch, drag, hit test, event propagation, stop propagating, overlapping, which object gets the click."
 license: MIT
 ---
 
@@ -28,6 +28,31 @@ The third argument to `bindKey` is `lock` (default `false`). Without it,
 wrong for jump or fire. A locked action stays consumed until the key is released
 or you call `input.unlockKey("jump")`. Use `input.keyStatus(action)` when you
 want the raw held/not-held state regardless of locking.
+
+### A poll can miss a press entirely
+
+`isKeyPressed` is sampled once per frame, and `keyup` decrements the key's
+counter the moment it arrives — locked or not. A press that goes down and up
+between two frames therefore leaves the counter back at zero and is never
+seen. At 60fps that is anything under ~16ms: rare from a human finger, routine
+from a synthetic event, and more likely the slower the frame rate.
+
+For a screen where a missed press is a dead end — a splash, a "press any key",
+a notice to acknowledge — listen for the event instead, which cannot be missed:
+
+```js
+import { event } from "melonjs";
+
+// action is the bound action name, or undefined for an unbound key
+const onKey = (action) => { if (action === "menuSelect") continue(); };
+event.on(event.KEYDOWN, onKey);      // in onResetEvent
+event.off(event.KEYDOWN, onKey);     // in onDestroyEvent — it does not self-remove
+```
+
+`KEYDOWN` fires for *every* key, bound or not, so matching on `action` is what
+narrows it; it also repeats while the key is held, so guard anything that must
+happen once. Keep polling for movement and for a menu cursor, where one step
+per press and a key held across a state change are the things that matter.
 
 The full signature is `bindKey(keyCode, action, lock?, preventDefault?)`;
 `preventDefault` defaults to `input.preventDefault` (itself `true`). Pass the

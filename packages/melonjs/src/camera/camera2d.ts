@@ -749,10 +749,21 @@ export default class Camera2d extends Renderable {
 			for (const fx of this.cameraEffects) {
 				fx.update(dt ?? 0);
 			}
-			// remove completed effects
+			// Remove completed effects, EXCEPT the persistent ones, which
+			// `reset()` already spares for the same reason: a persistent
+			// effect is one whose owner means to keep it across a state
+			// change and will take it away itself.
+			//
+			// A state transition is exactly that. Its "hide" half completes
+			// one frame and only DEFERS the switch, so dropping it here left
+			// the outgoing scene drawing with nothing over it until the
+			// switch landed: the closed iris flashed the screen it had just
+			// covered. A completed hide still fills, which is what holds the
+			// screen through the gap.
 			for (let i = this.cameraEffects.length - 1; i >= 0; i--) {
-				if (this.cameraEffects[i].isComplete) {
-					this.cameraEffects[i].destroy();
+				const fx = this.cameraEffects[i];
+				if (fx.isComplete && !fx.isPersistent) {
+					fx.destroy();
 					this.cameraEffects.splice(i, 1);
 				}
 			}

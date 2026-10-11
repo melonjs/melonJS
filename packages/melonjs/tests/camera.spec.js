@@ -993,6 +993,128 @@ describe("Camera2d", () => {
 			expect(camera.offset.y).toEqual(0);
 		});
 
+		it("REGRESSION: onComplete fires once, not on every frame after completing", () => {
+			// The other half of keeping a persistent effect alive. `update()`
+			// called `onComplete` whenever it found itself complete, which
+			// only ever ran once while the sweep took the effect away on the
+			// completing frame. A persistent one stays, so it kept calling.
+			//
+			// A state transition's `onComplete` DEFERS the switch with a
+			// `setTimeout`, and the effect is not taken away until that
+			// switch lands, so every frame in between queued another switch
+			// into the same state: `_switchState` has no "already there"
+			// check, so the second one destroyed the stage it had just
+			// built and built it again.
+			const { camera } = setup();
+			let fired = 0;
+			const hide = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 100,
+				direction: "hide",
+				onComplete: () => {
+					fired++;
+				},
+			});
+			hide.isPersistent = true;
+			camera.addCameraEffect(hide);
+
+			advanceTween(hide.tween, 200);
+			camera.update(16);
+			expect(hide.isComplete).toBe(true);
+			expect(fired).toBe(1);
+
+			// the frames the deferred switch is still pending for
+			camera.update(16);
+			camera.update(16);
+			camera.update(16);
+			expect(fired).toBe(1);
+		});
+
+		it("REGRESSION: a shake's onComplete fires once however long it is kept", () => {
+			// Same shape as the mask's: the callback sat in the completed
+			// branch with nothing to say it had already run. A shake is
+			// swept on the frame it completes, so this only shows when one
+			// is held, but the contract is the same either way.
+			const { camera } = setup();
+			let fired = 0;
+			const shake = new ShakeEffect(camera, {
+				intensity: 5,
+				duration: 100,
+				onComplete: () => {
+					fired++;
+				},
+			});
+			shake.isPersistent = true;
+			camera.addCameraEffect(shake);
+
+			camera.update(200);
+			expect(shake.isComplete).toBe(true);
+			expect(fired).toBe(1);
+
+			camera.update(16);
+			camera.update(16);
+			expect(fired).toBe(1);
+		});
+
+		it("REGRESSION: a completed PERSISTENT effect is not swept away", () => {
+			// `reset()` spares persistent effects; `update()` did not, and
+			// swept any completed one regardless. A state transition's "hide"
+			// half completes one frame and only DEFERS the switch, so losing
+			// it there left the outgoing scene drawing with nothing over it:
+			// the closed iris flashed the screen it had just covered.
+			const { camera } = setup();
+			const hide = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 100,
+				direction: "hide",
+			});
+			hide.isPersistent = true;
+			const ordinary = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 100,
+				direction: "hide",
+			});
+			camera.addCameraEffect(hide);
+			camera.addCameraEffect(ordinary);
+
+			// run both past their end
+			advanceTween(hide.tween, 200);
+			advanceTween(ordinary.tween, 200);
+			camera.update(16);
+			camera.update(16);
+
+			expect(hide.isComplete).toBe(true);
+			expect(ordinary.isComplete).toBe(true);
+			// the persistent one stays for its owner to take away
+			expect(camera.cameraEffects).toContain(hide);
+			// and the ordinary one is still swept, which is what the sweep
+			// is for
+			expect(camera.cameraEffects).not.toContain(ordinary);
+
+			// and it is still COVERING: a completed hide fills the screen,
+			// which is the whole reason keeping it matters
+			const filled = [];
+			const recorder = {
+				save() {},
+				restore() {},
+				resetTransform() {},
+				setColor() {},
+				setMask() {},
+				clearMask() {},
+				fillRect(x, y, w, h) {
+					filled.push([x, y, w, h]);
+				},
+			};
+			hide.draw(recorder, 320, 240);
+			expect(filled).toEqual([[0, 0, 320, 240]]);
+
+			camera.removeCameraEffect(hide);
+			expect(camera.cameraEffects).toHaveLength(0);
+		});
+
 		it("removeCameraEffect should be a no-op for unknown effects", () => {
 			const { camera } = setup();
 			const shake = new ShakeEffect(camera, {

@@ -112,6 +112,25 @@ loader.preload([
 Reach for it over `Text` when the text is mostly static, has to stay crisp at
 integer scales, or wants recolouring without a re-bake.
 
+### Do not build a throwaway label to measure a string
+
+A `Text` owns a canvas bake and a GPU texture, and only `destroy()` frees
+them — which is `@internal` and absent from the published types, so a game
+cannot free a label it owns outside a container. A label built purely to
+measure something therefore strands both, and if it is built in a stage's
+`onResetEvent` it strands another on every entry to that state.
+
+`measureText(text?)` measures any string on a label that already exists,
+including one it is not currently holding:
+
+```js
+const widest = hudScore.measureText("00:00").width;
+```
+
+Advance widths scale linearly with the point size for one family, so measuring
+on an existing label and scaling the result is exact. For labels you genuinely
+spawn in bulk, `getPool("text")` recycles the bake.
+
 ### `fillStyle` means two different things
 
 The name is shared and the behaviour is not, which is the trap when moving a
@@ -122,6 +141,7 @@ label from one class to the other:
 | what `fillStyle` holds | a real `Color`, the fill | `Renderable#tint`, under another name |
 | white | white glyphs | the ABSENCE of a tint |
 | gradient | yes, via `fillGradient` | no: a tint is one colour over a page image |
+| recolour it later | `label.fillStyle.parseCSS("#ff4040")` — the field is a `Color` with no setter, and ASSIGNING a string replaces it, after which the glyphs stop filling entirely and nothing is logged | `label.fillStyle = "#ff4040"` — a real setter that parses the string |
 | stroke | `strokeStyle` + `lineWidth` | none |
 | `size` | pixels | a RATIO of the authored size |
 

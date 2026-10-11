@@ -753,6 +753,36 @@ export default class InstancedMesh extends Mesh {
 	 *     shadowStretch: 1.8,
 	 * });
 	 */
+	/**
+	 * Refused here, rather than accepted and quietly ignored.
+	 *
+	 * A set gets ONE plane and ONE shared quad, and this tier builds that
+	 * plane through the set's own origin so the translation's x and z drop
+	 * out of the intercept, which is then `groundY + lift / nY`. An
+	 * arbitrary point does not drop out, and that `nY` is why the tilt
+	 * ceiling cannot be lifted here either. Supporting it means a different
+	 * derivation, not a different value.
+	 *
+	 * Inherited from {@link Mesh} it would have stored the point and handed
+	 * it back from the getter while changing nothing on screen, which is the
+	 * worse failure: a game would have every reason to believe it worked.
+	 * @param {number[]|Vector3d|undefined} value - ignored
+	 * @see Mesh#shadowGroundPoint
+	 */
+	set shadowGroundPoint(value) {
+		if (value !== undefined && !this._warnedGroundPoint) {
+			this._warnedGroundPoint = true;
+			console.warn(
+				"melonJS: InstancedMesh does not support shadowGroundPoint — a set shares one shadow plane, built through the set's own origin. Use shadowGroundY, or one set per facet of the surface.",
+			);
+		}
+	}
+
+	/** @ignore */
+	get shadowGroundPoint() {
+		return undefined;
+	}
+
 	_drawInstancedGroundShadow(renderer) {
 		// `shadowOffset`, `shadowStretch` and `shadowScale` all apply here, the
 		// same as on a per-object blob, so a scatter is lit by the same

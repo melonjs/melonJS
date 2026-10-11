@@ -1079,7 +1079,21 @@ class Sound {
 					sound._node.bufferSource
 				) {
 					sound._node.bufferSource.loop = loopVal ?? false;
-					if (loopVal) {
+					// `_stop` is the voice's loop WINDOW, and a voice only has
+					// one once `play()` has configured it. Two paths through
+					// `play()` hand an id back before that happens: a clip
+					// that is still loading queues the play, and a suspended
+					// AudioContext defers it to the "resume" event. Writing
+					// the window then put `undefined` into `loopEnd`, which
+					// Web Audio rejects outright with "The provided value is
+					// non-finite", taking the caller's frame with it.
+					//
+					// There is nothing to write in either case, rather than
+					// something that has to be defaulted: `_refreshBuffer`
+					// sets the window from these same two fields when the
+					// play actually runs, which is the only moment the
+					// numbers exist.
+					if (loopVal && typeof sound._stop === "number") {
 						sound._node.bufferSource.loopStart = sound._start || 0;
 						sound._node.bufferSource.loopEnd = sound._stop;
 

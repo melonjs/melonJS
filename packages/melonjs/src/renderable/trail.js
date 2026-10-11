@@ -1,7 +1,7 @@
 import { colorPool } from "../math/color.ts";
 import { lerpArray } from "../math/math.ts";
 import { computeVertexNormal } from "../math/vertex.ts";
-import { Gradient } from "../video/gradient.js";
+import { gradientFromOptions } from "../video/gradient.js";
 import Renderable from "./renderable.js";
 
 /**
@@ -230,39 +230,13 @@ export default class Trail extends Renderable {
 	/**
 	 * Build a Gradient from trail constructor options.
 	 * @param {object} options - trail constructor options
-	 * @returns {Gradient}
+	 * @returns {object} the gradient the ribbon is coloured by
 	 * @ignore
 	 * @internal
 	 */
 	_buildGradient(options) {
-		const gradient = new Gradient("linear", [0, 0, 1, 0]);
-
-		if (options.gradient) {
-			const entries = options.gradient;
-			for (let i = 0; i < entries.length; i++) {
-				const entry = entries[i];
-				if (typeof entry === "string" || (entry && entry.toRGBA)) {
-					// plain color: evenly distribute
-					const offset = entries.length > 1 ? i / (entries.length - 1) : 0;
-					gradient.addColorStop(offset, entry);
-				} else {
-					// positioned stop: { pos, color }
-					gradient.addColorStop(entry.pos, entry.color);
-				}
-			}
-		} else if (options.color) {
-			// parse into a Color to handle CSS names, rgba(), hex, or Color objects
-			const parsed = colorPool.get(options.color);
-			const hex = parsed.toHex();
-			colorPool.release(parsed);
-			gradient.addColorStop(0, `${hex}ff`);
-			gradient.addColorStop(1, `${hex}00`);
-		} else {
-			gradient.addColorStop(0, "#ffffffff");
-			gradient.addColorStop(1, "#ffffff00");
-		}
-
-		return gradient;
+		// Shared with `Trail3d`, which documents the same option format.
+		return gradientFromOptions(options);
 	}
 
 	/**

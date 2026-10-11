@@ -61,9 +61,13 @@ export default class ShakeEffect extends CameraEffect {
 		if (this.duration <= 0) {
 			this.duration = 0;
 			this.camera.offset.setZero();
-			this.isComplete = true;
-			if (typeof this.onComplete === "function") {
-				this.onComplete();
+			// once, on the transition into complete: see the same guard in
+			// `MaskEffect`, which a persistent effect makes load-bearing
+			if (!this.isComplete) {
+				this.isComplete = true;
+				if (typeof this.onComplete === "function") {
+					this.onComplete();
+				}
 			}
 		} else {
 			const axis = this.camera.AXIS;

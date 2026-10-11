@@ -8,6 +8,7 @@ import {
 	Matrix3d,
 	Mesh,
 	Renderable,
+	Sprite3d,
 	Stage,
 	state,
 	TextureAtlas,
@@ -1907,5 +1908,129 @@ describe("Mesh texture resolution", () => {
 		settings.texture = Renderer.createCanvas(32, 32);
 		const mesh = new Mesh(0, 0, settings);
 		expect(mesh.texture).toBeInstanceOf(TextureAtlas);
+	});
+});
+
+describe("baseColorFactor", () => {
+	const GEOM = {
+		vertices: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+		indices: new Uint16Array([0, 1, 2]),
+		normalize: false,
+	};
+
+	it("ENCODES the factor rather than scaling it", () => {
+		// The whole reason this is a setting. glTF states the factor in
+		// LINEAR space (spec 3.9.2) and a tint is sRGB, so linear 0.5 is sRGB
+		// 188, not 128. Scaling by 255 is the mistake it exists to prevent,
+		// and it renders every untextured material markedly too dark.
+		const mesh = new Mesh(0, 0, { ...GEOM, baseColorFactor: [0.5, 0.5, 0.5] });
+		const scaled = new Mesh(0, 0, GEOM);
+		scaled.tint.setColor(0.5 * 255, 0.5 * 255, 0.5 * 255);
+
+		const encoded = new Color().setLinear(0.5, 0.5, 0.5);
+		expect(mesh.tint.toHex()).toEqual(encoded.toHex());
+		expect(mesh.tint.toHex()).not.toEqual(scaled.tint.toHex());
+		// and it really is the brighter of the two, which is the symptom
+		expect(mesh.tint.r).toBeGreaterThan(scaled.tint.r);
+	});
+
+	it("leaves the tint alone when omitted", () => {
+		const mesh = new Mesh(0, 0, GEOM);
+		expect(mesh.tint.toHex()).toEqual("#FFFFFF");
+	});
+});
+
+describe("Renderable#setTint", () => {
+	const GEOM = {
+		vertices: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+		indices: new Uint16Array([0, 1, 2]),
+		normalize: false,
+	};
+
+	it("takes a CSS string or a Color, and chains", () => {
+		const mesh = new Mesh(0, 0, GEOM);
+		expect(mesh.setTint("#ff8800")).toBe(mesh);
+		expect(mesh.tint.toHex()).toEqual("#FF8800");
+		mesh.setTint(new Color(18, 52, 86));
+		expect(mesh.tint.toHex()).toEqual("#123456");
+	});
+
+	it("copies the Color rather than holding it", () => {
+		// the same rule `tint`'s own setter follows: a caller that goes on
+		// mutating what it passed must not steer this renderable
+		const mesh = new Mesh(0, 0, GEOM);
+		const shared = new Color(255, 0, 0);
+		mesh.setTint(shared);
+		shared.setColor(0, 255, 0);
+		expect(mesh.tint.toHex()).toEqual("#FF0000");
+	});
+
+	it("is the tint setter, which now takes a string too", () => {
+		// `setTint` delegates rather than repeating the setter's body, so the
+		// two cannot drift; the property itself accepts both forms.
+		const a = new Mesh(0, 0, GEOM);
+		const b = new Mesh(0, 0, GEOM);
+		a.setTint("#ff8800");
+		b.tint = "#ff8800";
+		expect(a.tint.toHex()).toEqual(b.tint.toHex());
+		b.tint = new Color(1, 2, 3);
+		expect(b.tint.toHex()).toEqual("#010203");
+	});
+
+	it("is inherited by every renderable, Mesh and Sprite3d included", () => {
+		// `setTint` lives on `Renderable` and nothing overrides it, so every
+		// subclass gets the one implementation. No glTF node ever reaches it:
+		// that is `baseColorFactor`'s job, at construction or through
+		// `setBaseColorFactor`.
+		const mesh = new Mesh(0, 0, GEOM);
+		const sprite3d = new Sprite3d(0, 0, {
+			image: Renderer.createCanvas(8, 8),
+			width: 8,
+			height: 8,
+		});
+		for (const r of [mesh, sprite3d]) {
+			expect(typeof r.setTint).toBe("function");
+			expect(r.setTint("#336699")).toBe(r);
+			expect(r.tint.toHex()).toEqual("#336699");
+		}
+	});
+
+	it("setBaseColorFactor is the linear counterpart, after construction", () => {
+		// the one material value that used to be construction-only, while
+		// emissive, specular and shininess were all settable afterwards
+		const built = new Mesh(0, 0, {
+			...GEOM,
+			baseColorFactor: [0.5, 0.25, 0.75],
+		});
+		const later = new Mesh(0, 0, GEOM);
+		expect(later.setBaseColorFactor([0.5, 0.25, 0.75])).toBe(later);
+		expect(later.tint.toHex()).toEqual(built.tint.toHex());
+	});
+
+	it("Sprite3d forwards baseColorFactor instead of dropping it", () => {
+		// its constructor hands `Mesh` a built settings object, so anything
+		// not named in that list is silently lost
+		const lit = new Sprite3d(0, 0, {
+			image: Renderer.createCanvas(8, 8),
+			width: 8,
+			height: 8,
+			baseColorFactor: [0.5, 0.5, 0.5],
+		});
+		const plain = new Sprite3d(0, 0, {
+			image: Renderer.createCanvas(8, 8),
+			width: 8,
+			height: 8,
+		});
+		expect(lit.tint.toHex()).toEqual(
+			new Color().setLinear(0.5, 0.5, 0.5).toHex(),
+		);
+		expect(plain.tint.toHex()).toEqual("#FFFFFF");
+	});
+
+	it("marks the renderable dirty", () => {
+		const mesh = new Mesh(0, 0, GEOM);
+		mesh.isDirty = false;
+		mesh.setTint("#123456");
+		expect(mesh.isDirty).toBe(true);
 	});
 });

@@ -55,7 +55,33 @@ loops, and it records the name as the current track — which is what
 `app.pauseOnBlur` / `resumeOnFocus` / `stopOnBlur` act on, via
 `state.pause(true)` → `pauseTrack()`. `stopTrack()`, `pauseTrack()`,
 `resumeTrack()` and `getCurrentTrack()` all read that same single slot, so there
-is only ever one current track. Stop it in `onDestroyEvent`.
+is only ever one current *track name*.
+
+**`playTrack` stops the track it replaces** (20.9.0 and later; before that it
+only assigned the slot, and the previous bed kept looping underneath where
+`stopTrack()` could no longer reach it). So a scene just states its own music
+and nothing cancels anything:
+
+```js
+class PlayScreen extends Stage {
+    onResetEvent() { audio.playTrack("battle", 0.6); }
+}
+```
+
+Calling it with the track already playing **restarts** it, the same as `play()`
+on any other clip. A scene that wants the bed to carry on across a screen
+change should not call it again, rather than rely on it doing nothing.
+
+`stopTrack()` is for where nothing follows: a scene whose successor has no
+music of its own, or a game going quiet. `state.change` destroys the outgoing
+stage **before** it resets the incoming one, so a `stopTrack()` in
+`onDestroyEvent` and a `playTrack()` in the next `onResetEvent` are in that
+order and never cancel each other.
+
+To end a track on an event rather than on a screen change, say a run ending
+while the player stays on the same screen, `audio.fade(name, from, 0, ms)`
+takes it down gently. A fade to zero is silence, not a stop, so the voice is
+still live until something stops it or replaces it.
 
 Every per-clip function throws `audio clip <name> does not exist` if the clip was
 never loaded, and `play` additionally throws when a named sprite region is
@@ -328,7 +354,11 @@ until a user interaction. Nothing errors — audio simply does not play, which
 reads as a bug. melonJS installs one-shot `touchstart` / `touchend` / `click` /
 `keydown` unlock listeners on `document`, so the first real gesture anywhere
 unlocks it and fires the clip's `on.unlock` callback. Design for it: start music
-on the first click or key press, not on load. `tone` / `noise` additionally call
+on the first click or key press, not on load. The usual way to guarantee one is
+a gate screen — a splash, a "press any key", or a health/photosensitivity notice
+— whose dismissal *is* the gesture, so the menu behind it can start its music
+unconditionally. Note the unlock listens for `keydown` too, so a keyboard-only
+player is covered. `tone` / `noise` additionally call
 `ctx.resume()` themselves, best-effort, on every invocation.
 
 Playback also starts **asynchronously**: `play()` returns an id while the
@@ -399,6 +429,8 @@ either way — blank screen, empty console.
 | nothing plays until the user clicks | browser autoplay policy — expected, design around it |
 | `playing()` is false right after `play()` | playback starts asynchronously |
 | music keeps playing after leaving a scene | used `play` instead of `playTrack`, or no `stopTrack` in teardown |
+| two music tracks playing at once, and `stopTrack()` only silences one | melonJS before 20.9.0: `playTrack` did not stop the previous track, so the scene that started it had to `stopTrack()` on the way out |
+| the music restarts when returning to a screen | `playTrack` with the track already playing restarts it; don't call it again if the bed should carry on |
 | `stereo` / `position` do nothing | the clip was loaded with `stream: true` — spatial is WebAudio-only |
 | one format works, another does not | that codec is not in the `audio.init()` list |
 | audio behind a login fails, or the preload hangs | `loader.setOptions({ withCredentials: true })` — the same switch every asset type uses |

@@ -50,6 +50,7 @@ import BitmapText from "./renderable/text/bitmaptext.js";
 import BitmapTextData from "./renderable/text/bitmaptextdata.ts";
 import Text from "./renderable/text/text.js";
 import Trail from "./renderable/trail.js";
+import Trail3d from "./renderable/trail3d.js";
 import Trigger from "./renderable/trigger.js";
 import ProgressBar from "./renderable/ui/progressbar.ts";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
@@ -295,6 +296,7 @@ export {
 	TMXUtils,
 	ToneMappingEffect,
 	Trail,
+	Trail3d,
 	Trigger,
 	Tween,
 	timer,

@@ -777,6 +777,190 @@ describe("Ground shadows (#1515)", () => {
 			return [v[0] / l, v[1] / l, v[2] / l];
 		};
 
+		it("shadowGroundPoint puts the blob off the caster's own column", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// `shadowGroundY` can only ever put the blob at the caster's x
+			// and z, which is a flat-world assumption: wherever "down" is not
+			// world down, such as radially on a sphere, that lands the blob
+			// beside its caster rather than under it.
+			const mesh = onFloor();
+			mesh.pos.set(10, -40, 0);
+			mesh.depth = 25;
+			drawOnce(mesh);
+			const column = matrix();
+			// the column case is unchanged: x and z are the caster's own
+			expect(column[12]).toBeCloseTo(10, 5);
+			expect(column[14]).toBeCloseTo(25, 5);
+
+			// Near the caster, as a contact shadow is: the height fade spans
+			// six blob radii, so a point further off than that leaves no
+			// blob at all to measure.
+			mesh.shadowGroundPoint = [18, -34, 31];
+			drawOnce(mesh);
+			const anchored = matrix();
+			// x and z are the point's outright; the lift rides the normal,
+			// which is world up here, so it only touches y
+			expect(anchored[12]).toBeCloseTo(18, 5);
+			expect(anchored[14]).toBeCloseTo(31, 5);
+			// and y moved off the column by the same difference
+			expect(anchored[13] - column[13]).toBeCloseTo(-34, 1);
+
+			// and it goes back to the column when cleared
+			mesh.shadowGroundPoint = undefined;
+			drawOnce(mesh);
+			expect(matrix()).toEqual(column);
+			mesh.destroy();
+		});
+
+		it("shadowGroundPoint keeps a copy, so one scratch vector is safe", (ctx) => {
+			requireWebGL(ctx, renderer);
+			const scratch = new Vector3d(5, 3, 7);
+			const a = onFloor({ shadowGroundPoint: scratch });
+			const b = onFloor({ shadowGroundPoint: scratch });
+			// the caller goes on using its own vector, as a game placing these
+			// every frame would
+			scratch.set(999, 999, 999);
+			expect(a.shadowGroundPoint.x).toEqual(5);
+			expect(b.shadowGroundPoint.x).toEqual(5);
+			expect(a.shadowGroundPoint).not.toBe(b.shadowGroundPoint);
+			a.destroy();
+			b.destroy();
+		});
+
+		it("shadowGroundPoint measures the height fade along the floor's normal", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// A caster one unit above a 45 degree floor is one unit above it,
+			// not 1/cos(45) as the straight-down drop would say. Two meshes
+			// the same height above their own floor must fade the same.
+			// the full column length: on a tilted plane the ground axes carry
+			// a y component, so reading x and z alone measures the blob
+			// foreshortened rather than measuring the blob
+			const axisLength = () => {
+				const m = matrix();
+				return Math.hypot(m[0], m[1], m[2]);
+			};
+			const level = onFloor({ shadowGroundNormal: [0, -1, 0] });
+			level.pos.set(0, -20, 0);
+			level.depth = 0;
+			level.shadowGroundPoint = [0, 0, 0];
+			drawOnce(level);
+			const levelScale = axisLength();
+
+			const tilt = Math.PI / 4;
+			const n = [Math.sin(tilt), -Math.cos(tilt), 0];
+			const slope = onFloor({ shadowGroundNormal: n });
+			// 20 along the floor's own UP normal, so the same height above it
+			slope.pos.set(20 * n[0], 20 * n[1], 0);
+			slope.depth = 0;
+			slope.shadowGroundPoint = [0, 0, 0];
+			drawOnce(slope);
+			const slopeScale = axisLength();
+
+			// the fade drives the blob's size, so equal heights give equal
+			// blobs; the straight-down reading would make the slope's 1.41x
+			// taller and visibly smaller
+			expect(slopeScale).toBeCloseTo(levelScale, 4);
+			level.destroy();
+			slope.destroy();
+		});
+
+		it("shadowGroundPoint lifts the 75 degree tilt ceiling", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// The ceiling measures tilt from WORLD up, which only stands in
+			// for "tilted away from the viewer" when the camera looks down
+			// the Y axis. A `Camera3d` posed around a sphere breaks that: a
+			// floor far past 75 degrees can face the camera squarely. A named
+			// floor is a plane with nothing left to guess, so it is trusted.
+			const steep = [Math.sin(2.2), -Math.cos(2.2), 0]; // ~126 degrees
+			const clamped = onFloor({ shadowGroundNormal: steep });
+			drawOnce(clamped);
+			const up = basis(matrix()).up;
+			// the quad's own axis is the NEGATED normal
+			const held = unit([-up[0], -up[1], -up[2]]);
+			// held at the ceiling, nowhere near the 126 asked for
+			expect(Math.acos(dot(held, [0, -1, 0])) * (180 / Math.PI)).toBeCloseTo(
+				75,
+				1,
+			);
+			clamped.destroy();
+
+			const named = onFloor({ shadowGroundNormal: steep });
+			named.shadowGroundPoint = [0, 0, 0];
+			drawOnce(named);
+			const up2 = basis(matrix()).up;
+			const free = unit([-up2[0], -up2[1], -up2[2]]);
+			expect(Math.acos(dot(free, [0, -1, 0])) * (180 / Math.PI)).toBeCloseTo(
+				126,
+				0,
+			);
+			named.destroy();
+		});
+
+		it("shadowGroundPoint ALONE names a floor: the offset is honoured", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// `shadowOffset` was gated on `shadowGroundY`, so a point on its
+			// own left the blob stretched along the light and never slid,
+			// and a game had to keep a `shadowGroundY` it no longer used
+			// assigned purely to switch the slide back on.
+			const mesh = makeMesh({
+				castGroundShadow: true,
+				shadowGroundPoint: [40, -18, -10],
+				// a direction for it to slide along, as a light that is not
+				// overhead gives; without one there is nothing to measure
+				shadowDirectionX: 1,
+				shadowDirectionZ: 0,
+				shadowOffset: 0,
+			});
+			mesh.pos.set(40, -30, 0);
+			mesh.depth = -10;
+			drawOnce(mesh);
+			const still = matrix();
+
+			mesh.shadowOffset = 1.4;
+			drawOnce(mesh);
+			const slid = matrix();
+			const moved = Math.hypot(
+				slid[12] - still[12],
+				slid[13] - still[13],
+				slid[14] - still[14],
+			);
+			expect(moved).toBeGreaterThan(1);
+			mesh.destroy();
+		});
+
+		it("shadowGroundPoint ALONE still fades with height", (ctx) => {
+			requireWebGL(ctx, renderer);
+			// Without a normal the fade fell back to the straight-down drop,
+			// which on the flank of a sphere is near zero however far the
+			// caster is from the floor: the blob never shrank. The distance
+			// to the point is the height, and the point alone gives it.
+			const near = makeMesh({
+				castGroundShadow: true,
+				shadowGroundPoint: [0, 0, 0],
+			});
+			// SIDEWAYS, as a caster on a sphere's flank is, and inside the
+			// fade's span so there is a blob to measure at both distances
+			near.pos.set(6, 0, 0);
+			near.depth = 0;
+			drawOnce(near);
+			const nearAxis = Math.hypot(matrix()[0], matrix()[1], matrix()[2]);
+
+			const far = makeMesh({
+				castGroundShadow: true,
+				shadowGroundPoint: [0, 0, 0],
+			});
+			far.pos.set(26, 0, 0);
+			far.depth = 0;
+			drawOnce(far);
+			const farAxis = Math.hypot(matrix()[0], matrix()[1], matrix()[2]);
+
+			// further away must be smaller; equal means the fade is blind to
+			// a caster that moved sideways off its floor
+			expect(farAxis).toBeLessThan(nearAxis);
+			near.destroy();
+			far.destroy();
+		});
+
 		it("world up is the default, and reproduces a level blob exactly", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const plain = onFloor();

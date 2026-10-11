@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit, setBasis, getBasis, lookAt, up vector, gimbal."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit, setBasis, getBasis, lookAt, up vector, gimbal."
 license: MIT
 ---
 
@@ -91,8 +91,9 @@ class GameStage extends Stage {
   Objects beyond the far plane clip or project with bad w-divides; a `near` that
   is too small wastes depth precision and distant props z-fight. Use
   `camera.setClipPlanes(near, far)`.
-- **`camera.pos.set(x, y)` is 2-argument and zeroes z.** Use `camera.depth` —
-  the documented z accessor — or assign `pos.x`/`pos.y` individually.
+- **`camera.pos.set(x, y)` is 2-argument and zeroes z.** Use
+  `camera.setPosition(x, y, z)`, which leaves the depth untouched when `z` is
+  omitted; `camera.depth` is the z accessor if you only want that.
 - **`lookAt(target)` solves pitch and yaw only**, so on its own it cannot
   express "up is this direction" and it leaves `roll` alone. Pass an up to
   bank the horizon too: `camera.lookAt(target, up)`, where `up` is what should
@@ -272,6 +273,12 @@ const glow = new Mesh(0, 0, {
 
 Ground shadows ride the same pass — a blob is a decal, and decals are its first
 client rather than a feature of their own.
+
+**`Trail3d`** is the transparent pass's other obvious client: a camera-facing
+ribbon for an exhaust streak, a speed trail or a tyre mark. It is a `Mesh`, so
+it sorts and fogs with everything else here, and like the rest of this tier it
+needs a `Camera3d`. `Trail` is the 2D one and stays flat under a perspective
+camera. See `melonjs-particles-and-trails`.
 
 ## Distance fog
 
@@ -456,7 +463,7 @@ There are four levels, and picking the wrong one is the usual reason a colour
 
 | level | how | use for |
 |---|---|---|
-| whole object | `mesh.tint.setColor(r, g, b)` | flash on hit, team colour, fading one object |
+| whole object | `mesh.setTint("#ff8800")`, or `mesh.tint.setColor(r, g, b)` | flash on hit, team colour, fading one object |
 | per vertex | `settings.vertexColors`, or `mesh.setVertexColor(i, color)` | a gradient *within* one mesh — distance haze, a darker crease |
 | per material | `textureGroups`, from a multi-material OBJ + MTL | a model whose parts differ, in one draw call |
 | per instance | `new InstancedMesh(…, { instanceColors: true })` then `setInstanceColor(i, color)` | a thousand copies that differ |
@@ -671,6 +678,7 @@ is read **every draw**, so all of them can be animated.
 |---|---|---|
 | `castGroundShadow` | yes | yes |
 | `shadowGroundY` | yes, the caster's own floor | yes, **one plane** through the SET's origin |
+| `shadowGroundPoint` | yes on a `Mesh` or `Sprite3d`; on a `GLTFModel` part only by setting it after the load, since it is neither a model nor a `level.load` option | **no**, warns and ignores |
 | `shadowGroundNormal` | yes | yes, one plane for the set |
 | `shadowOpacity` | yes | yes |
 | `shadowScale` | yes | yes |
@@ -681,13 +689,22 @@ is read **every draw**, so all of them can be animated.
 | height fade as the caster rises | yes | **no** |
 | a different value per instance | n/a | **no**, and there is no plan for one |
 
-The two "no"s are the same limitation seen twice: a set gets ONE shadow plane
-and ONE shared quad, so the instance's own height is dropped and nothing can
-vary between instances. Everything else is one value for the whole set, which
-is what a set means. A scatter over curved ground is therefore one set per flat
-facet, and a flying scatter wanting a height fade has to be per-object meshes.
+The last two "no"s are the same limitation seen twice: a set gets ONE shadow
+plane and ONE shared quad, so the instance's own height is dropped and nothing
+can vary between instances. Everything else is one value for the whole set,
+which is what a set means. A scatter over curved ground is therefore one set
+per flat facet, and a flying scatter wanting a height fade has to be
+per-object meshes.
 
-Nothing here is per-object-only. If a claim that a setting "does not work on an
+`shadowGroundPoint` (20.9) is the one genuinely per-object setting, and the
+reason is structural rather than missing work: the instanced tier builds its
+plane THROUGH the set's own origin so the translation's x and z drop out of
+the intercept, which is then `groundY + lift / nY`. An arbitrary point does
+not drop out, and that same `nY` divisor is why the 75 degree tilt ceiling
+cannot be lifted there either. `InstancedMesh` warns and ignores rather than
+storing it, so a game cannot think it took.
+
+Apart from that one, if a claim that a setting "does not work on an
 `InstancedMesh`" is in your head, it is out of date: `shadowOffset` and
 `shadowStretch` both reached the instanced tier in 20.8.
 
@@ -698,8 +715,27 @@ skip geometry with no vertical extent — a ground plane. Per object,
 given, safeguard included; `shadowGroundY` names the floor the blob lands on,
 `shadowOpacity` how dark it is and `shadowScale` how big it is.
 
+On ground that is not flat, name the floor with `shadowGroundPoint` instead:
+a point and `shadowGroundNormal` are a plane, and the blob leaves the caster's
+vertical column to land on it. `shadowGroundY` cannot express that, because
+the blob is always directly below the caster in world Y, which is only "below"
+on level ground. It is also what lifts the tilt ceiling, since that ceiling
+measures tilt from world up and so assumes a camera looking down the Y axis.
+
+The height fade follows whichever floor you named. With a point **and** a
+normal it is measured along that normal; with a point alone it is the
+straight-line distance to the point. So on a sphere the blob fades with
+ALTITUDE rather than with the vertical drop, which is the whole reason the
+point exists. Two consequences worth knowing, because they fail in opposite
+directions: a `shadowGroundNormal` facing inward makes the height negative, so
+the fade clamps to full strength and the blob never fades at all; and a point
+on the wrong side of the caster reads as a large height, so the blob
+disappears outright rather than thinning to a ring the way a backwards
+`shadowGroundY` does. It is also the one shadow setting that THROWS rather
+than clamping or hiding: a non-finite component is rejected on the spot.
+
 The blob is an ellipse sized to the caster's own footprint and placed at the
-caster's x/z. So a tall or narrow object (a character, a tree, a pickup) shows
+caster's x/z, or at `shadowGroundPoint` when one is set. So a tall or narrow object (a character, a tree, a pickup) shows
 its shadow clearly, while a wide, flat-bottomed one resting on the floor covers
 its own completely from a camera looking down at it. That is the shadow
 behaving correctly, not a bug.
@@ -731,7 +767,8 @@ mesh.shadowStretch = 2;        // and lengthen it along the same line
 `shadowOffset` is measured in multiples of the blob's **own radius**, not in
 world units, so one value serves a boulder and a pebble and every part of a
 glTF model. About `stretch - 1` is what keeps the shadow attached to its
-caster. It is honoured **only when `shadowGroundY` is set**, because the
+caster. It is honoured **only when the floor has been named**, by
+`shadowGroundY` or by `shadowGroundPoint`, because the
 blob is a flat quad on one named plane: sliding it across a plane the game has
 not named puts it where there may be no floor. `shadowStretch` is clamped to 3
 and the blob fades as it pulls, so an extreme value degrades to nothing rather
@@ -761,11 +798,17 @@ prop.shadowGroundNormal = [Math.sin(0.35), -Math.cos(0.35), 0];  // a 20 deg slo
 
 World up is `(0, -1, 0)`, because render space is Y-down, and that is the
 default. The blob is **rotated** onto the plane rather than projected, so it
-keeps its size; it still sits directly under the caster, since the normal
-turns it rather than moving it. The tilt is clamped at 75 degrees, past which
-an edge-on blob has nothing left to show. It needs `shadowGroundY`, for the
-same reason the offset does: tilting the bounds fallback has no anchor to turn
+keeps its size; it sits directly under the caster, since the normal turns it
+rather than moving it, unless `shadowGroundPoint` says where instead. It needs
+the floor named, by `shadowGroundY` or `shadowGroundPoint`, for the same
+reason the offset does: tilting the bounds fallback has no anchor to turn
 about.
+
+The tilt is clamped at 75 degrees alongside `shadowGroundY`, past which an
+edge-on blob has nothing left to show. That ceiling measures tilt from WORLD
+up, which stands in for "tilted away from the viewer" only while the camera
+looks down the Y axis, so it is lifted alongside `shadowGroundPoint`, where a
+point and a normal state the plane outright.
 
 On an `InstancedMesh` one plane serves the **whole set**: it passes through
 the set's origin at `shadowGroundY`, faces the normal, and every blob is
@@ -845,7 +888,8 @@ Loaded through the same level director as everything else:
 await loader.preload([{ name: "diorama", type: "glb", src: "data/diorama.glb" }]);
 level.load("diorama", { scale, castGroundShadow, shadowGroundY, onLoaded });
 
-// every ground-shadow setting travels, not just those two: a loaded scene can
+// every ground-shadow setting travels except shadowGroundPoint, which is
+// per object and dropped by a scene load: a loaded scene can
 // be told where its sun is, and `shadowLight` is re-read every draw
 level.load("diorama", {
     scale, castGroundShadow: true, shadowGroundY: 0,
@@ -931,6 +975,10 @@ To branch rather than fail, read `app.renderer.supportsDepthBuffer` after
 | one marker must stay readable in fog | `fog: false` on that mesh |
 | an object casts no visible shadow | wide and flat-bottomed — its own blob is underneath it; raise `shadowScale` (or slide it out with `shadowOffset`), not `shadowGroundY`, which haloes it instead of revealing it |
 | a dark ring around the top of an object | `shadowGroundY` lifted too far, floating the blob up into the caster |
+| a tilted blob never fades as its caster rises | `shadowGroundNormal` faces inward, so the height came out negative and clamped to full strength |
+| a blob vanishes completely after setting `shadowGroundPoint` | the point is on the wrong side of the caster; the fade reads that as height and hides it |
+| `shadowGroundPoint` throws | it is the one shadow setting that rejects a bad value instead of clamping: all three components must be finite |
+| a scatter ignores `shadowGroundPoint` | `InstancedMesh` shares one plane across the set and warns; use one set per facet, or per-object meshes |
 | a mesh sits at the wrong depth after being added | `autoDepth` overwrote `pos.z` with the child index — pass `addChild(mesh, z)` |
 | a mesh sits half its size off | `anchorPoint` — only on the 2D-camera path; a `Camera3d` mesh pivots on its model origin |
 | a billboard tips over when the camera looks down | `"spherical"`, or a mistyped mode string falling through to it — use `true` / `"cylindrical"` |

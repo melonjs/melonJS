@@ -136,6 +136,33 @@ describe("textPool", () => {
 		}
 	});
 
+	it("REGRESSION: a recycled label goes to the position it was asked for", () => {
+		// `onResetEvent` took `x` and `y` and wrote NEITHER, so a recycled
+		// label came back sitting wherever the previous one was left. The
+		// case the pool exists for is the one it broke: a damage number asked
+		// for at the kill appeared at the last one's resting place, which for
+		// a score popup is the score readout it had just flown into, and then
+		// flew from there. The two arguments were silently inert.
+		const first = textPool.get(10, 20, quiet);
+		// where the previous user left it, as a tween or a hand-written
+		// position would
+		first.pos.set(640, 480, 7);
+		textPool.release(first);
+
+		const second = textPool.get(123, 456, quiet);
+		try {
+			expect(second).toBe(first);
+			expect(second.pos.x).toEqual(123);
+			expect(second.pos.y).toEqual(456);
+			// and `z` with them: `get()` has no third argument, so a recycled
+			// label has to start where a freshly constructed one does rather
+			// than at the last caller's depth
+			expect(second.pos.z).toEqual(0);
+		} finally {
+			textPool.release(second);
+		}
+	});
+
 	it("a recycled label reuses its canvas and metrics rather than leaking them", () => {
 		// the whole justification for pooling a label. A fresh
 		// `CanvasRenderTarget` per reset also stranded the previous canvas and
