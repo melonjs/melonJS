@@ -2430,7 +2430,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @see WebGLRenderer#createPattern
 	 */
 	drawPattern(pattern, x, y, width, height) {
-		const uvs = pattern.getUVs("0,0," + width + "," + height);
+		const uvs = pattern.getUVs(0, 0, width, height);
 		this.setBatcher("quad");
 		this.currentBatcher.addQuad(
 			pattern,
