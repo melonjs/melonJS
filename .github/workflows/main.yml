@@ -107,7 +107,7 @@ jobs:
 
   # Windows build — only on master push, not on PRs
   windows:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' || github.head_ref == 'fix/check-declarations-windows'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
