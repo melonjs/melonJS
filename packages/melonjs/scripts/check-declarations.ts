@@ -26,10 +26,28 @@ import {
 	rmSync,
 	writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
+/**
+ * The compiler's own CLI entry point, run through `node` rather than `npx`.
+ *
+ * `execFileSync` deliberately does NOT use a shell, and on Windows `npx` is
+ * `npx.cmd`, a batch file Node refuses to execute directly. So the spawn
+ * failed with ENOENT before the compiler ever started, and a failed spawn
+ * carries no `stdout`: the report at the bottom of this file printed its
+ * heading with an empty list underneath, which reads exactly like a type
+ * error with no diagnostics. That is what kept master's `windows` job red
+ * from 2026-10-09, where it is also the only job that runs this on Windows.
+ *
+ * Resolving the entry point is both portable and cheaper, since it skips the
+ * package resolution `npx` redoes on every invocation.
+ */
+const tscEntry = createRequire(import.meta.url).resolve(
+	"typescript/lib/tsc.js",
+);
 const pkgRoot = resolve(here, "..");
 const buildDir = resolve(pkgRoot, "build");
 const checkDir = resolve(buildDir, ".declcheck");
@@ -109,9 +127,9 @@ writeFileSync(join(checkDir, "fixture.ts"), fixture);
 
 try {
 	execFileSync(
-		"npx",
+		process.execPath,
 		[
-			"tsc",
+			tscEntry,
 			"--noEmit",
 			"--strict",
 			"--target",
@@ -129,9 +147,20 @@ try {
 		{ cwd: pkgRoot, stdio: "pipe", encoding: "utf8" },
 	);
 } catch (error) {
-	const output = (error as { stdout?: string; stderr?: string }).stdout ?? "";
+	const failure = error as {
+		stdout?: string;
+		stderr?: string;
+		message?: string;
+	};
+	const output = (failure.stdout ?? "").trim();
+	// Tell a compiler that REPORTED something apart from one that never ran.
+	// Reporting the first case only is what made the Windows breakage above
+	// unreadable: a heading, a blank line, and nothing to act on.
 	problems.push(
-		`the published declarations do not type-check against a consumer:\n${output.trim()}`,
+		output.length > 0
+			? `the published declarations do not type-check against a consumer:\n${output}`
+			: "the type-check could not be run at all, so the published " +
+					`declarations are unverified:\n${(failure.stderr ?? "").trim() || failure.message}`,
 	);
 }
 
