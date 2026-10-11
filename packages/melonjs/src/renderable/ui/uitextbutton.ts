@@ -1,6 +1,8 @@
 import type Camera2d from "../../camera/camera2d.ts";
 import { RoundRect } from "../../geometries/roundrect.ts";
+import type Pointer from "../../input/pointer.ts";
 import type { Bounds } from "../../physics/bounds.ts";
+import { BLUR, KEYDOWN, KEYUP, off, on } from "../../system/event.ts";
 import type Renderer from "../../video/renderer.js";
 import BitmapText from "../text/bitmaptext.js";
 import UIBaseElement from "./uibaseelement.ts";
@@ -27,9 +29,56 @@ interface UITextButtonSettings {
  */
 export default class UITextButton extends UIBaseElement {
 	/**
-	 * The key to bind the action to
+	 * Keyboard shortcut: an input.KEY keycode or an existing input action name.
+	 * A press calls onClick() and its matching release calls onRelease(), both
+	 * without a pointer event. Shortcuts are active only while the button is
+	 * activated, respect isClickable, and never change global key bindings.
+	 * The first input to press owns the button until released; shortcuts do not
+	 * start pointer dragging or tap-and-hold.
+	 * @default -1
 	 */
 	bindKey: string | number;
+
+	private keyboardKey: number | undefined;
+	private keyboardActive = false;
+
+	private readonly keyDown = (action: string | undefined, keyCode: number) => {
+		const matches =
+			typeof this.bindKey === "number"
+				? this.bindKey >= 0 && this.bindKey === keyCode
+				: this.bindKey.length > 0 && this.bindKey === action;
+		if (
+			!this.keyboardActive ||
+			!matches ||
+			!this.isClickable ||
+			!this.released ||
+			this.keyboardKey !== undefined
+		) {
+			return;
+		}
+		this.keyboardKey = keyCode;
+		this.released = false;
+		this.isDirty = true;
+		this.onClick();
+	};
+
+	private readonly keyUp = (_action: string | undefined, keyCode: number) => {
+		if (!this.keyboardActive || this.keyboardKey !== keyCode) {
+			return;
+		}
+		this.keyboardKey = undefined;
+		this.released = true;
+		this.isDirty = true;
+		this.onRelease();
+	};
+
+	private readonly cancelKeyboardPress = () => {
+		if (this.keyboardKey !== undefined) {
+			this.keyboardKey = undefined;
+			this.released = true;
+			this.isDirty = true;
+		}
+	};
 
 	/**
 	 * The css value of a color to be used if the pointer is not hovering over the button
@@ -108,7 +157,7 @@ export default class UITextButton extends UIBaseElement {
 	constructor(x: number, y: number, settings: UITextButtonSettings) {
 		super(x, y);
 
-		this.bindKey = settings.bindKey || -1;
+		this.bindKey = settings.bindKey ?? -1;
 
 		this.hoverOffColor = settings.hoverOffColor || "#00aa0080";
 		this.hoverOnColor = settings.hoverOnColor || "#00ff00ff";
@@ -144,6 +193,46 @@ export default class UITextButton extends UIBaseElement {
 
 		// add bitmapText to the UI container
 		this.addChild(this.bitmapText);
+	}
+
+	override onActivateEvent(): void {
+		super.onActivateEvent();
+		if (this.keyboardActive) {
+			return;
+		}
+		this.keyboardActive = true;
+		on(KEYDOWN, this.keyDown);
+		on(KEYUP, this.keyUp);
+		on(BLUR, this.cancelKeyboardPress);
+	}
+
+	override onDeactivateEvent(): void {
+		this.keyboardActive = false;
+		off(KEYDOWN, this.keyDown);
+		off(KEYUP, this.keyUp);
+		off(BLUR, this.cancelKeyboardPress);
+		this.cancelKeyboardPress();
+		super.onDeactivateEvent();
+	}
+
+	override clicked(event: Pointer): boolean | void {
+		if (this.keyboardKey !== undefined) {
+			return false;
+		}
+		return super.clicked(event);
+	}
+
+	override release(event: Pointer): boolean | void {
+		if (this.keyboardKey !== undefined) {
+			return false;
+		}
+		return super.release(event);
+	}
+
+	override pointerMove(event: Pointer): void {
+		if (this.keyboardKey === undefined) {
+			super.pointerMove(event);
+		}
 	}
 
 	override draw(renderer: Renderer, viewport?: Camera2d): void {
