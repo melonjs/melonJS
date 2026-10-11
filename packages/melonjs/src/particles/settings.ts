@@ -59,6 +59,11 @@ export interface ParticleEmitterSettings {
 	/**
 	 * Pick one entry from frames uniformly at birth and keep it for the whole
 	 * lifetime, instead of animating. Useful for debris from a shared sheet.
+	 *
+	 * Needs a grid to choose from, so it does nothing on its own: pair it
+	 * with `framewidth`/`frameheight` (and optionally `frames`). The variety
+	 * it gives is in the frame alone, since `tint` is one value for the whole
+	 * emitter.
 	 * @default false
 	 */
 	randomFrame?: boolean;

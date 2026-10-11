@@ -391,13 +391,17 @@ export default class Particle extends Renderable {
 		// Calculate the particle Age Ratio
 		const ageRatio = this.life / this.startLife;
 		if (this._animateFrames && this._frames) {
-			this._frameIndex = Math.max(
-				0,
-				Math.min(
-					this._frames.length - 1,
-					Math.floor((1 - ageRatio) * this._frames.length),
-				),
-			);
+			// No clamp, and that is deliberate rather than an oversight.
+			// `dt` is never negative, because `timer.update` already pins a
+			// negative delta to zero at the source, so `life` only shrinks;
+			// a particle whose `life` reaches 0 returns above. `ageRatio` is
+			// therefore in `(0, 1]` here, the progress below is in `[0, 1)`,
+			// and the floor of that times the length cannot leave
+			// `[0, length - 1]`. A clamp would be unreachable, which is
+			// worse than absent: it would read as the thing keeping the
+			// index in range, and the two facts actually keeping it there
+			// would be free to change out from under it.
+			this._frameIndex = Math.floor((1 - ageRatio) * this._frames.length);
 		}
 
 		// Resize the particle as particle Age Ratio

@@ -54,7 +54,13 @@ the rotation pivot use one frame's dimensions, rather than the whole sheet.
 
 Set `randomFrame: true` for debris: a particle chooses one entry at birth and
 keeps it until it dies. Different frames share the same image and GPU batch.
-Without sheet settings, particles still draw the whole image as before.
+Without sheet settings, particles still draw the whole image as before, and
+that includes `randomFrame` on its own: it needs a grid to choose from, so
+pair it with `framewidth`/`frameheight` or it does nothing.
+
+Note the variety is in SHAPE, not colour. `tint` belongs to the emitter, so
+every particle from one emitter is tinted alike however many frames it picks
+between.
 
 Frame dimensions must be positive integers that fit inside the image, and an
 explicit `frames` sequence must be nonempty and contain valid integer indices.
