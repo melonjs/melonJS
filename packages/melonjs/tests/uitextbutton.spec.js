@@ -269,6 +269,43 @@ describe("UITextButton", () => {
 			expect(button.onClick).toHaveBeenCalledTimes(2);
 		});
 
+		it("unsubscribes its key handlers when deactivated", async () => {
+			// `keyboardActive` gates both handlers, so dropping the `off()`
+			// calls changes no BEHAVIOUR at all: every assertion above still
+			// passes while each add/remove cycle leaks two listeners onto the
+			// global bus, and every later key press walks all of them.
+			// Counting net subscriptions is the only thing that sees it.
+			const { EventEmitter } = await import("../src/system/eventEmitter.js");
+			const net = { [event.KEYDOWN]: 0, [event.KEYUP]: 0 };
+			const proto = EventEmitter.prototype;
+			const on = proto.addListener;
+			const off = proto.removeListener;
+			proto.addListener = function (e, ...rest) {
+				if (e in net) {
+					net[e]++;
+				}
+				return on.call(this, e, ...rest);
+			};
+			proto.removeListener = function (e, ...rest) {
+				if (e in net) {
+					net[e]--;
+				}
+				return off.call(this, e, ...rest);
+			};
+			try {
+				for (let i = 0; i < 20; i++) {
+					const b = makeButton({ bindKey: input.KEY.ENTER });
+					app.world.addChild(b);
+					app.world.removeChildNow(b, true);
+				}
+				expect(net[event.KEYDOWN]).toBe(0);
+				expect(net[event.KEYUP]).toBe(0);
+			} finally {
+				proto.addListener = on;
+				proto.removeListener = off;
+			}
+		});
+
 		it("cancels a held key on blur without firing a release callback", () => {
 			addButton(input.KEY.ENTER);
 			input.triggerKeyEvent(input.KEY.ENTER, true);

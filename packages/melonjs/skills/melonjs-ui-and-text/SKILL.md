@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
 license: MIT
 ---
 
@@ -327,6 +327,47 @@ The pointer still has to reach it: a renderable with `isKinematic = true` — th
 default on a plain `Renderable` — is skipped by the broadphase and receives
 nothing. `UISpriteElement` and `UIBaseElement` clear it for you; anything else
 you make clickable has to clear it itself.
+
+### Keyboard shortcuts on a button: `bindKey`
+
+A `UITextButton` can be activated from the keyboard as well as the pointer:
+
+```js
+const resume = new UITextButton(x, y, {
+    font: "PressStart2P", text: "RESUME",
+    bindKey: input.KEY.ENTER,     // a keycode, or an action name you bound
+});
+```
+
+It takes either an `input.KEY` keycode or the NAME of an action the game has
+already bound. Neither form touches the global bindings, so a keycode works
+even when nothing has called `input.bindKey` for it.
+
+**The handlers fire with no `Pointer`.** This is the one that breaks existing
+code: a button whose `onClick(event)` reads `event.gameX` worked for years
+because only a pointer could ever press it, and the first key press throws.
+Guard the argument, or keep pointer-only work out of the handler:
+
+```js
+onClick(event) {
+    if (event) { this.ripple(event.gameX, event.gameY); }  // pointer only
+    this.resumeGame();                                     // either input
+}
+```
+
+Three more rules, each with a reason you can feel in a game:
+
+- **The first input to press owns the button.** A pointer cannot release a key
+  press and a key cannot release a pointer press, so a button cannot be left
+  half pressed by using both at once.
+- **Losing focus cancels a held key WITHOUT calling `onRelease()`.** If you
+  use the pair as press and depress, firing while held, also stop on
+  `event.BLUR` or the gun is still firing when the player alt-tabs back.
+- **`isClickable` gates the press, not the release.** Disabling a button while
+  its key is down still releases it, so it cannot stick.
+
+Shortcuts live only while the button is activated, and never start dragging or
+tap-and-hold: those stay pointer gestures.
 
 ### `z` is container-local
 
