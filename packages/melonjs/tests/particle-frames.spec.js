@@ -235,6 +235,51 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			p.update(999);
 			expect(crop(p).slice(0, 2)).toEqual([8, 0]);
 		});
+		it("stays in range at both ends of the sequence", () => {
+			// Guards the absence of a clamp on the frame index. Walk a whole
+			// lifetime in small steps and assert every frame drawn is one of
+			// the sequence's own cells, never a default `0, 0` from an index
+			// off either end. The first and last entries both have to be
+			// reached, or the walk is not covering the ends it claims to.
+			const p = make({ framewidth: 8, frameheight: 8, frames: [1, 2, 3] })
+				.children[0];
+			const cells = [
+				[8, 0],
+				[0, 8],
+				[8, 8],
+			];
+			const seen = new Set();
+			for (let i = 0; i < 100; i++) {
+				const at = crop(p).slice(0, 2);
+				expect(cells).toContainEqual(at);
+				seen.add(at.join(","));
+				p.update(10);
+			}
+			expect(seen.has("8,0")).toBe(true);
+			expect(seen.has("8,8")).toBe(true);
+		});
+		it("HOLDS the random frame rather than animating off it", () => {
+			// The sibling test above cannot see this. It mocks `random` to
+			// 0.75, which picks the LAST of two frames, and then checks the
+			// frame again at 99.9% of the lifetime, where an animating
+			// particle would also be on the last frame. The two answers
+			// coincide, so the assertion passes either way.
+			//
+			// 0.25 picks the FIRST frame, which an animating particle leaves
+			// almost immediately, so the two answers now differ.
+			vi.spyOn(Math, "random").mockReturnValue(0.25);
+			const p = make({
+				framewidth: 8,
+				frameheight: 8,
+				frames: [2, 1],
+				randomFrame: true,
+			}).children[0];
+			expect(crop(p).slice(0, 2)).toEqual([0, 8]);
+			p.update(600);
+			expect(crop(p).slice(0, 2)).toEqual([0, 8]);
+			p.update(399);
+			expect(crop(p).slice(0, 2)).toEqual([0, 8]);
+		});
 		it("preserves live particles' image, dimensions and sequence on reset", () => {
 			const em = make({ framewidth: 8, frameheight: 8, frames: [3, 2] });
 			const old = em.children[0];
