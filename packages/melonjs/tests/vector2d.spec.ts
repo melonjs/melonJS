@@ -296,4 +296,129 @@ describe("Vector2d", () => {
 		b.set(8, 4);
 		expect(math.radToDeg(a.angle(b))).toBeCloseTo(90, -1);
 	});
+
+	describe("slerp", () => {
+		// the signed angle from `u` to `v`, the shorter way round
+		const turn = (u: Vector2d, v: Vector2d) =>
+			Math.atan2(u.x * v.y - u.y * v.x, u.x * v.x + u.y * v.y);
+		const len = (v: Vector2d) => Math.sqrt(v.x * v.x + v.y * v.y);
+
+		it("turns at a constant angular rate, where lerp does not", () => {
+			// A quarter turn from +X to +Y. Halfway along the arc is 45
+			// degrees from each end; halfway along the CHORD is not, and it
+			// has fallen off the unit circle as well.
+			const from = new Vector2d(1, 0);
+			const to = new Vector2d(0, 1);
+			const half = from.clone().slerp(to, 0.5);
+			expect(turn(from, half)).toBeCloseTo(Math.PI / 4, 6);
+			expect(turn(half, to)).toBeCloseTo(Math.PI / 4, 6);
+			expect(len(half)).toBeCloseTo(1, 6);
+			expect(len(from.clone().lerp(to, 0.5))).toBeLessThan(0.95);
+		});
+
+		it("reaches both ends exactly", () => {
+			const to = new Vector2d(0, 3);
+			const atZero = new Vector2d(2, 0).slerp(to, 0);
+			expect(atZero.x).toBeCloseTo(2, 6);
+			expect(atZero.y).toBeCloseTo(0, 6);
+			const atOne = new Vector2d(2, 0).slerp(to, 1);
+			expect(atOne.x).toBeCloseTo(0, 6);
+			expect(atOne.y).toBeCloseTo(3, 6);
+		});
+
+		it("interpolates length alongside direction", () => {
+			const out = new Vector2d(2, 0).slerp(new Vector2d(0, 4), 0.5);
+			expect(len(out)).toBeCloseTo(3, 6);
+			expect(turn(new Vector2d(1, 0), out)).toBeCloseTo(Math.PI / 4, 6);
+		});
+
+		it("takes the SHORTER way round across the wrap", () => {
+			// This is the bug a scalar `damp` on a heading has: 170 degrees
+			// to -170 degrees is 20 degrees apart, and damping the numbers
+			// sweeps the other 340. The arc cannot do that.
+			const from = new Vector2d(
+				Math.cos(math.degToRad(170)),
+				Math.sin(math.degToRad(170)),
+			);
+			const to = new Vector2d(
+				Math.cos(math.degToRad(-170)),
+				Math.sin(math.degToRad(-170)),
+			);
+			const step = from.clone().slerp(to, 0.5);
+			// ten degrees on, not a hundred and seventy
+			expect(math.radToDeg(Math.abs(turn(from, step)))).toBeCloseTo(10, 4);
+			expect(len(step)).toBeCloseTo(1, 6);
+		});
+
+		it("turns a half circle between exactly opposite directions", () => {
+			const from = new Vector2d(1, 0);
+			const half = from.clone().slerp(new Vector2d(-1, 0), 0.5);
+			expect(len(half)).toBeCloseTo(1, 6);
+			expect(Math.abs(turn(from, half))).toBeCloseTo(Math.PI / 2, 5);
+			expect(from.clone().slerp(new Vector2d(-1, 0), 1).x).toBeCloseTo(-1, 5);
+			// and the way it goes is the documented one: a POSITIVE turn,
+			// the same direction `rotate` takes for a positive angle
+			expect(half.y).toBeCloseTo(1, 6);
+		});
+
+		it("turns the same way for every opposite pair", () => {
+			// The sine of two exactly opposite vectors is a ZERO whose SIGN
+			// depends on which components are zero, and `atan2` reads that
+			// sign: `(1,0)` toward `(-1,0)` gives `+0` and so `+pi`, while
+			// `(0,1)` toward `(0,-1)` gives `-0` and so `-pi`. Unguarded,
+			// those two turn in opposite directions for no reason visible to
+			// a caller.
+			//
+			// Both ends are written out in full rather than derived as
+			// `(-x, -y)`: negating a `0` yields `-0`, which lands the sine
+			// back on `+0` every time and hides the whole problem. An
+			// earlier version of this test did exactly that and stayed green
+			// with the guard deleted.
+			const turns = [
+				[
+					[1, 0],
+					[-1, 0],
+				],
+				[
+					[0, 1],
+					[0, -1],
+				],
+				[
+					[-1, 0],
+					[1, 0],
+				],
+				[
+					[0, -1],
+					[0, 1],
+				],
+			].map(([[ax, ay], [bx, by]]) => {
+				const from = new Vector2d(ax, ay);
+				return Math.sign(
+					turn(from, from.clone().slerp(new Vector2d(bx, by), 0.5)),
+				);
+			});
+			expect(new Set(turns).size).toBe(1);
+			expect(turns[0]).toBe(1);
+		});
+
+		it("holds still between identical directions", () => {
+			const out = new Vector2d(3, 4).slerp(new Vector2d(6, 8), 0.5);
+			// same direction, so only the length moves
+			expect(len(out)).toBeCloseTo(7.5, 6);
+			expect(turn(new Vector2d(3, 4), out)).toBeCloseTo(0, 9);
+		});
+
+		it("falls back to a straight interpolation for a zero vector", () => {
+			const out = new Vector2d(0, 0).slerp(new Vector2d(0, 2), 0.5);
+			expect(out.x).toBeCloseTo(0, 6);
+			expect(out.y).toBeCloseTo(1, 6);
+			const back = new Vector2d(0, 2).slerp(new Vector2d(0, 0), 0.5);
+			expect(back.y).toBeCloseTo(1, 6);
+		});
+
+		it("returns itself for chaining", () => {
+			const v = new Vector2d(1, 0);
+			expect(v.slerp(new Vector2d(0, 1), 0.5)).toBe(v);
+		});
+	});
 });

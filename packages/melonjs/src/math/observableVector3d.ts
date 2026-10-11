@@ -19,6 +19,13 @@ const isObservableProperty = (
 };
 
 /**
+ * Working room for {@link ObservableVector3d.slerp}, which has to arrive at
+ * the whole answer before publishing any of it.
+ * @ignore
+ */
+const _slerpScratch = new Vector3d();
+
+/**
  * Represents a point in a 3D coordinate vector that can be observed for changes.
  * @category Math
  */
@@ -485,6 +492,29 @@ export class ObservableVector3d {
 			lerp(this.y, v.y, alpha),
 			lerp(this.z, v.z, alpha),
 		);
+		return this;
+	}
+
+	/**
+	 * Spherically interpolate between this vector and the given one: the
+	 * path runs along the great circle between the two directions rather
+	 * than straight across the chord. See {@link Vector3d.slerp} for what
+	 * it is for and how the degenerate cases are handled.
+	 *
+	 * Delegates to the wrapped vector and publishes the result through
+	 * {@link ObservableVector3d.set}, so the change callback fires exactly
+	 * once however far the vector turned.
+	 * @param v - the vector to interpolate toward
+	 * @param alpha - 0 leaves this vector alone, 1 reaches `v`
+	 * @returns Reference to this object for method chaining
+	 */
+	slerp(v: Vector3d | ObservableVector3d, alpha: number) {
+		// Through a scratch, for the same reason `damp` computes before it
+		// sets: writing x, y and z onto the wrapped vector would skip the
+		// callback, and three `set` calls would fire it three times.
+		_slerpScratch.set(this.x, this.y, this.z);
+		_slerpScratch.slerp(v as Vector3d, alpha);
+		this.set(_slerpScratch.x, _slerpScratch.y, _slerpScratch.z);
 		return this;
 	}
 

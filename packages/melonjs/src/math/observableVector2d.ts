@@ -17,7 +17,14 @@ const isObservableProperty = (
 };
 
 /**
- * Represents a point in a 3D coordinate vector that can be observed for changes.
+ * Working room for {@link ObservableVector2d.slerp}, which has to arrive at
+ * the whole answer before publishing any of it.
+ * @ignore
+ */
+const _slerpScratch = new Vector2d();
+
+/**
+ * Represents a point in a 2D coordinate vector that can be observed for changes.
  * @category Math
  */
 export class ObservableVector2d {
@@ -425,6 +432,27 @@ export class ObservableVector2d {
 	 */
 	lerp(v: Vector2d | ObservableVector2d, alpha: number) {
 		this.set(lerp(this.x, v.x, alpha), lerp(this.y, v.y, alpha));
+		return this;
+	}
+
+	/**
+	 * Spherically interpolate between this vector and the given one.
+	 *
+	 * Turns along the arc between the two DIRECTIONS at a constant angular
+	 * rate rather than straight across the chord, taking the shorter way
+	 * round. See {@link Vector2d.slerp} for what that is good for and how
+	 * the opposite-directions case resolves.
+	 * @param v - the vector to interpolate toward
+	 * @param alpha - 0 leaves this vector alone, 1 reaches `v`
+	 * @returns Reference to this object for method chaining
+	 */
+	slerp(v: Vector2d | ObservableVector2d, alpha: number) {
+		// Through a scratch, for the same reason `damp` computes before it
+		// sets: writing x and y onto the wrapped vector would skip the
+		// callback, and two `set` calls would fire it twice.
+		_slerpScratch.set(this.x, this.y);
+		_slerpScratch.slerp(v as Vector2d, alpha);
+		this.set(_slerpScratch.x, _slerpScratch.y);
 		return this;
 	}
 

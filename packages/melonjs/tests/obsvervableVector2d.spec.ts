@@ -308,4 +308,27 @@ describe("ObservableVector2d : constructor", () => {
 		b.set(8, 4);
 		expect(math.radToDeg(a.angle(b))).toBeCloseTo(90, -1);
 	});
+
+	describe("slerp", () => {
+		it("turns along the arc and fires the callback ONCE", () => {
+			// the whole reason this is not two component writes
+			let calls = 0;
+			const v = new ObservableVector2d(1, 0);
+			v.setCallback(() => {
+				calls++;
+			});
+			v.slerp(new Vector2d(0, 1), 0.5);
+			expect(calls).toBe(1);
+			expect(v.x).toBeCloseTo(Math.SQRT1_2, 6);
+			expect(v.y).toBeCloseTo(Math.SQRT1_2, 6);
+			expect(Math.sqrt(v.x * v.x + v.y * v.y)).toBeCloseTo(1, 6);
+		});
+
+		it("accepts another observable as the target", () => {
+			const v = new ObservableVector2d(2, 0);
+			v.slerp(new ObservableVector2d(0, 2), 1);
+			expect(v.x).toBeCloseTo(0, 6);
+			expect(v.y).toBeCloseTo(2, 6);
+		});
+	});
 });

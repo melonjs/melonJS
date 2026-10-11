@@ -472,4 +472,27 @@ describe("ObservableVector3d : constructor", () => {
 			expect(v.z).toEqual(0);
 		});
 	});
+
+	describe("slerp", () => {
+		it("turns along the great circle and fires the callback ONCE", () => {
+			// the whole reason this is not three component writes
+			let calls = 0;
+			const v = new ObservableVector3d(1, 0, 0);
+			v.setCallback(() => {
+				calls++;
+			});
+			v.slerp(new Vector3d(0, 1, 0), 0.5);
+			expect(calls).toBe(1);
+			expect(v.x).toBeCloseTo(Math.SQRT1_2, 6);
+			expect(v.y).toBeCloseTo(Math.SQRT1_2, 6);
+			expect(Math.hypot(v.x, v.y, v.z)).toBeCloseTo(1, 6);
+		});
+
+		it("accepts another observable as the target", () => {
+			const v = new ObservableVector3d(1, 0, 0);
+			v.slerp(new ObservableVector3d(0, 0, 1), 1);
+			expect(v.z).toBeCloseTo(1, 6);
+			expect(v.x).toBeCloseTo(0, 6);
+		});
+	});
 });

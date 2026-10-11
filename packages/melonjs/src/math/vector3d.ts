@@ -4,6 +4,18 @@ import { clamp, damp, lerp } from "./math.ts";
 import { Vector2d } from "./vector2d.ts";
 
 /**
+ * How near parallel (or antiparallel) two directions have to be before
+ * {@link Vector3d.slerp} stops trusting the great circle between them.
+ *
+ * `sin(angle)` is the divisor, and it is what vanishes at both ends. This is
+ * stated as a COSINE rather than an angle so the test costs no `acos`: at
+ * 1e-6 it trips about a twentieth of a degree from either extreme, where the
+ * sine has already fallen to roughly 1.4e-3 and the weights it divides are
+ * starting to lose their meaning.
+ */
+const SLERP_EPSILON = 1e-6;
+
+/**
  * a generic 3D Vector Object
  * @category Math
  */
@@ -387,6 +399,126 @@ export class Vector3d {
 		this.x = lerp(this.x, v.x, alpha);
 		this.y = lerp(this.y, v.y, alpha);
 		this.z = lerp(this.z, v.z, alpha);
+		return this;
+	}
+
+	/**
+	 * Spherically interpolate between this vector and the given one.
+	 *
+	 * Where {@link Vector3d.lerp} cuts straight across the chord, this runs
+	 * along the great circle between the two DIRECTIONS at constant angular
+	 * speed. Reach for it whenever a direction matters more than the
+	 * components carrying it: a camera swinging to look somewhere, a body
+	 * moving across the face of a planet, one axis turning onto another. A
+	 * lerp between two directions is not wrong so much as uneven, since it
+	 * slows at the ends and runs fast through the middle, and it shortens
+	 * the vector as it passes the midpoint.
+	 *
+	 * The length is interpolated linearly alongside the direction, so two
+	 * unit vectors give a unit vector and two of equal length keep it. There
+	 * is no need to normalize the inputs or the result.
+	 *
+	 * Two cases have no great circle to run along, and both are reached by
+	 * ordinary game code rather than by abuse:
+	 *
+	 * - the two directions are the SAME, so every path between them is the
+	 *   same path. Falls back to a straight interpolation.
+	 * - the two directions are OPPOSITE, where infinitely many great circles
+	 *   pass through both and none of them is the answer. Rather than divide
+	 *   by a vanishing sine and hand back `NaN`, an axis perpendicular to
+	 *   both is chosen and the turn runs through that, which is stable from
+	 *   frame to frame as the inputs drift past each other.
+	 * @param v - the vector to interpolate toward
+	 * @param alpha - 0 leaves this vector alone, 1 reaches `v`
+	 * @returns Reference to this object for method chaining
+	 * @example
+	 * // swing a camera's facing a third of the way onto its target
+	 * facing.slerp(toTarget, 0.33);
+	 * @example
+	 * // frame-rate independent: raise alpha with the frame's own elapsed time
+	 * facing.slerp(toTarget, 1 - Math.exp(-6 * dt / 1000));
+	 */
+	slerp(v: Vector3d, alpha: number) {
+		const lenA = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+		const lenB = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+		// a zero vector has no direction to turn, so there is nothing a
+		// great circle could mean here
+		if (lenA === 0 || lenB === 0) {
+			return this.lerp(v, alpha);
+		}
+		const ax = this.x / lenA;
+		const ay = this.y / lenA;
+		const az = this.z / lenA;
+		const bx = v.x / lenB;
+		const by = v.y / lenB;
+		const bz = v.z / lenB;
+		// No clamp before the `acos` below, and that is deliberate rather
+		// than an oversight. The dot of two freshly normalized vectors does
+		// routinely land a few ulps past 1, where `Math.acos` returns `NaN`
+		// — but the two branches below intercept everything within
+		// `SLERP_EPSILON` of either extreme, so by the time `acos` is
+		// reached the value is well inside its domain. A clamp here would be
+		// unreachable, which is worse than absent: it would read as the
+		// thing keeping `acos` safe, and the branches would be free to
+		// change out from under it.
+		const cos = ax * bx + ay * by + az * bz;
+		const len = lerp(lenA, lenB, alpha);
+
+		let dx: number;
+		let dy: number;
+		let dz: number;
+		if (cos > 1 - SLERP_EPSILON) {
+			// the same direction: interpolate straight and renormalize
+			dx = lerp(ax, bx, alpha);
+			dy = lerp(ay, by, alpha);
+			dz = lerp(az, bz, alpha);
+			const l = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+			dx /= l;
+			dy /= l;
+			dz /= l;
+		} else if (cos < SLERP_EPSILON - 1) {
+			// OPPOSITE directions. Any axis perpendicular to `a` serves, and
+			// the one chosen has to be stable: crossing with whichever world
+			// axis `a` leans on least cannot itself degenerate, where a fixed
+			// choice collapses whenever `a` happens to lie along it.
+			let px = 0;
+			let py = 0;
+			let pz = 0;
+			if (Math.abs(ax) <= Math.abs(ay) && Math.abs(ax) <= Math.abs(az)) {
+				px = 1;
+			} else if (Math.abs(ay) <= Math.abs(az)) {
+				py = 1;
+			} else {
+				pz = 1;
+			}
+			// perpendicular = normalize(a x p)
+			let ux = ay * pz - az * py;
+			let uy = az * px - ax * pz;
+			let uz = ax * py - ay * px;
+			const ul = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1;
+			ux /= ul;
+			uy /= ul;
+			uz /= ul;
+			// turn `a` through half a circle about that axis
+			const theta = Math.PI * alpha;
+			const c = Math.cos(theta);
+			const sn = Math.sin(theta);
+			dx = ax * c + ux * sn;
+			dy = ay * c + uy * sn;
+			dz = az * c + uz * sn;
+		} else {
+			const angle = Math.acos(cos);
+			const sin = Math.sin(angle);
+			const wa = Math.sin((1 - alpha) * angle) / sin;
+			const wb = Math.sin(alpha * angle) / sin;
+			dx = ax * wa + bx * wb;
+			dy = ay * wa + by * wb;
+			dz = az * wa + bz * wb;
+		}
+
+		this.x = dx * len;
+		this.y = dy * len;
+		this.z = dz * len;
 		return this;
 	}
 

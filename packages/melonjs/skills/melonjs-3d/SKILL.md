@@ -1,6 +1,6 @@
 ---
 name: melonjs-3d
-description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit, setBasis, getBasis, lookAt, up vector, gimbal."
+description: "Use this skill for anything 3D or 2.5D in melonJS — Camera3d, Mesh, InstancedMesh, Sprite3d billboards, Light3d, ground shadows, glTF/GLB scenes, and depth sorting. Covers the Y-down/+Z-forward convention that is the inverse of OpenGL, the cameraClass opt-in, clip planes, and what does not work on the Canvas fallback. Triggers on: Camera3d, Mesh, InstancedMesh, Sprite3d, Trail3d, ribbon, exhaust trail, Light3d, billboard, glTF, glb, 3D, 2.5D, depth, cameraClass, fov, setClipPlanes, setFog, fog, distance fog, height fog, heightFalloff, transparent, transparency, alpha, blendMode, fade, castGroundShadow, lit, setBasis, getBasis, lookAt, up vector, gimbal, slerp, great circle, turn a direction."
 license: MIT
 ---
 
@@ -159,6 +159,52 @@ thousands of steps will have.
 the same picture.** If a game already transforms its world into view space by
 hand, there is nothing to gain by switching; the value of `setBasis` is not
 having to write that transform in the first place.
+
+## Turning a direction: `slerp`, not `lerp`
+
+`lerp` walks the straight line between the two tips, which passes INSIDE the
+sphere. The result points the right way at both ends, lingers near them, rushes
+the middle, and comes out shorter than either input as it crosses the midpoint.
+On a camera swing that reads as a lurch; on a body walking over a globe it dips
+into the surface.
+
+`Vector3d#slerp` turns along the great circle instead, at a constant angular
+rate, and carries the length across linearly, so two unit vectors give back a
+unit vector and nothing needs renormalizing.
+
+```js
+// a turret, a camera, a ship: a facing chasing another facing
+facing.slerp(toTarget, 0.25);
+
+// frame-rate independent, the same shape as math.damp
+facing.slerp(toTarget, 1 - Math.exp((-6 * dt) / 1000));
+```
+
+`ObservableVector3d` has it too and fires its callback ONCE, so
+`renderable.pos.slerp(...)` is one notification rather than three.
+
+**`Vector2d` has the same method**, and it is not a cut-down copy: in 2D the
+whole turn is one signed angle, so there is no sine to divide by and no
+degenerate near-parallel case at all. What it buys a 2D game is the wrap: a
+heading damped as a NUMBER from 170 degrees to -170 degrees sweeps the long 340
+instead of the short 20, and an arc between directions cannot do that.
+
+Two degenerate pairs are handled inside rather than left to the caller, and
+both turn up in ordinary game code:
+
+- **the same direction**, where every path between them is the same path.
+- **opposite directions**, where infinitely many great circles pass through
+  both and none is the shorter way round. The textbook formula divides by a
+  vanishing sine here and hands back `NaN`, which propagates into a position or
+  a matrix and the object disappears. `slerp` picks a stable perpendicular and
+  turns through half a circle instead.
+
+That second case is why a hand-rolled version is a liability rather than a
+shortcut: anything orbiting a planet reaches the antipode of where it started,
+every run.
+
+**`math.damp` for a scalar, `slerp` for a direction.** Same job, different
+space; what `damp` cannot do is keep a vector on the sphere.
 
 ## Depth sorting
 

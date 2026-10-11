@@ -342,6 +342,72 @@ export class Vector2d {
 	}
 
 	/**
+	 * Spherically interpolate between this vector and the given one.
+	 *
+	 * Where {@link Vector2d.lerp} cuts straight across the chord, this turns
+	 * along the arc between the two DIRECTIONS at a constant angular rate,
+	 * taking the shorter way round. Reach for it whenever a direction
+	 * matters more than the components carrying it: a facing swinging onto a
+	 * target, a turret, a steering vector. A lerp between two directions is
+	 * not wrong so much as uneven, since it slows at the ends and runs fast
+	 * through the middle, and it shortens the vector as it passes the
+	 * midpoint.
+	 *
+	 * The length is interpolated linearly alongside the direction, so two
+	 * unit vectors give a unit vector and two of equal length keep it. There
+	 * is no need to normalize the inputs or the result.
+	 *
+	 * For two EXACTLY opposite directions both ways round are the same half
+	 * circle, so there is no shorter one to take; the turn then goes the way
+	 * {@link Vector2d.rotate} does for a positive angle.
+	 * @param v - the vector to interpolate toward
+	 * @param alpha - 0 leaves this vector alone, 1 reaches `v`
+	 * @returns Reference to this object for method chaining
+	 * @example
+	 * // swing a facing a quarter of the way onto its target
+	 * facing.slerp(toTarget, 0.25);
+	 * @example
+	 * // frame-rate independent: raise alpha with the frame's own elapsed time
+	 * facing.slerp(toTarget, 1 - Math.exp(-6 * dt / 1000));
+	 */
+	slerp(v: Vector2d, alpha: number) {
+		const lenA = Math.sqrt(this.x * this.x + this.y * this.y);
+		const lenB = Math.sqrt(v.x * v.x + v.y * v.y);
+		// a zero vector has no direction to turn, so there is no arc here
+		if (lenA === 0 || lenB === 0) {
+			return this.lerp(v, alpha);
+		}
+		const ax = this.x / lenA;
+		const ay = this.y / lenA;
+		const bx = v.x / lenB;
+		const by = v.y / lenB;
+		// In 2D the whole turn is ONE signed angle, and `atan2` gives it
+		// exactly. That is why this is shorter than its 3D sibling rather
+		// than a trimmed copy of it: there is no sine to divide by, so no
+		// near-parallel special case, and no `acos` domain to keep a dot
+		// product inside of.
+		const cos = ax * bx + ay * by;
+		const sin = ax * by - ay * bx;
+		// EXACTLY opposite directions are the one case `atan2` cannot be
+		// handed: both ways round cover the same half circle and neither is
+		// shorter, and the sine is a ZERO whose sign decides the direction.
+		// That sign flips with the axis: `(1, 0)` toward `(-1, 0)` produces
+		// `+0` and turns one way, `(0, 1)` toward `(0, -1)` produces `-0`
+		// and turns the other. Same shape of input, opposite result, which
+		// is not something a caller can work around, so pick one. Note the
+		// angle is set rather than the sine faked: a unit sine against a
+		// cosine of -1 is a turn of 135 degrees, not 180.
+		const angle =
+			(sin === 0 && cos < 0 ? Math.PI : Math.atan2(sin, cos)) * alpha;
+		const c = Math.cos(angle);
+		const s = Math.sin(angle);
+		const len = lerp(lenA, lenB, alpha);
+		this.x = (ax * c - ay * s) * len;
+		this.y = (ax * s + ay * c) * len;
+		return this;
+	}
+
+	/**
 	 * Frame-rate independent exponential damping toward `target`.
 	 * Wrapper around {@link damp} applied per component.
 	 * @param target - vector to approach
