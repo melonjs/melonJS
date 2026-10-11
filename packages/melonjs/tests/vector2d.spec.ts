@@ -298,7 +298,7 @@ describe("Vector2d", () => {
 	});
 
 	describe("slerp", () => {
-		/** signed angle from `u` to `v`, the shorter way round */
+		// the signed angle from `u` to `v`, the shorter way round
 		const turn = (u: Vector2d, v: Vector2d) =>
 			Math.atan2(u.x * v.y - u.y * v.x, u.x * v.x + u.y * v.y);
 		const len = (v: Vector2d) => Math.sqrt(v.x * v.x + v.y * v.y);
