@@ -38,7 +38,26 @@ this.turret.angle = math.damp(this.turret.angle, wanted, 8, dt / 1000);
 ```
 
 `damp(current, target, lambda, dt)`. Higher `lambda` converges faster; it is
-the rate, not a per-frame fraction. Use it for camera pans you drive yourself,
+the rate, not a per-frame fraction.
+
+**For a DIRECTION rather than a scalar, the tool is `slerp`**, on `Vector2d`
+and `Vector3d` alike. Two reasons, and the second is the one that bites:
+
+```js
+// a turret, a ship, a camera: a facing that chases another facing
+facing.slerp(toTarget, 1 - Math.exp((-6 * dt) / 1000));
+```
+
+1. Damping a facing component by component drags it through the inside of the
+   circle, so it slows at the ends, rushes the middle and comes out shorter
+   than it went in.
+2. **Damping a scalar heading goes the wrong way round the wrap.** From 170
+   degrees to -170 degrees is 20 degrees apart, and the numbers are 340 apart,
+   so the turret sweeps all the way round the back. `slerp` works on the
+   directions, takes the shorter arc by construction, and has no wrap to cross.
+
+See `melonjs-3d` for the rest, including what happens between two exactly
+opposite directions. Use it for camera pans you drive yourself,
 turret tracking, zoom, input smoothing and any value that should chase another
 one — it is the tool that is easy to miss and easy to hand-write slightly
 wrong.

@@ -414,4 +414,111 @@ describe("Vector3d", () => {
 			expect(vector.equals(4, 5, 6)).toEqual(false);
 		});
 	});
+
+	describe("slerp", () => {
+		const unit = (v: Vector3d) => Math.hypot(v.x, v.y, v.z);
+		const angleBetween = (a: Vector3d, b: Vector3d) =>
+			Math.acos(
+				Math.min(
+					1,
+					Math.max(
+						-1,
+						(a.x * b.x + a.y * b.y + a.z * b.z) / (unit(a) * unit(b)),
+					),
+				),
+			);
+
+		it("turns at a constant angular rate, where lerp does not", () => {
+			// A quarter turn from +X to +Y. At the halfway point a slerp is
+			// 45 degrees from each end; a lerp cuts the chord and lands short.
+			const a = new Vector3d(1, 0, 0);
+			const b = new Vector3d(0, 1, 0);
+			const half = new Vector3d(1, 0, 0).slerp(b, 0.5);
+			expect(angleBetween(a, half)).toBeCloseTo(Math.PI / 4, 6);
+			expect(angleBetween(half, b)).toBeCloseTo(Math.PI / 4, 6);
+			// and it stayed on the sphere, where a lerp would have shortened
+			expect(unit(half)).toBeCloseTo(1, 6);
+			expect(unit(new Vector3d(1, 0, 0).lerp(b, 0.5))).toBeLessThan(0.95);
+		});
+
+		it("reaches both ends exactly", () => {
+			const b = new Vector3d(0, 0, 1);
+			const atZero = new Vector3d(1, 0, 0).slerp(b, 0);
+			expect(atZero.x).toBeCloseTo(1, 6);
+			const atOne = new Vector3d(1, 0, 0).slerp(b, 1);
+			expect(atOne.x).toBeCloseTo(0, 6);
+			expect(atOne.z).toBeCloseTo(1, 6);
+		});
+
+		it("interpolates length alongside direction", () => {
+			const out = new Vector3d(2, 0, 0).slerp(new Vector3d(0, 4, 0), 0.5);
+			expect(unit(out)).toBeCloseTo(3, 6);
+			expect(angleBetween(new Vector3d(1, 0, 0), out)).toBeCloseTo(
+				Math.PI / 4,
+				6,
+			);
+		});
+
+		it("survives a dot product that floats past 1", () => {
+			// `acos(1.0000000000000002)` is NaN, and normalized vectors land
+			// there routinely. Two directions as near identical as doubles get.
+			const a = new Vector3d(
+				0.5773502691896258,
+				0.5773502691896258,
+				0.5773502691896258,
+			);
+			const b = new Vector3d(
+				0.5773502691896257,
+				0.5773502691896258,
+				0.5773502691896258,
+			);
+			const out = a.clone().slerp(b, 0.5);
+			expect(Number.isFinite(out.x)).toBe(true);
+			expect(Number.isFinite(out.y)).toBe(true);
+			expect(Number.isFinite(out.z)).toBe(true);
+			expect(unit(out)).toBeCloseTo(1, 6);
+		});
+
+		it("turns a half circle between exactly opposite directions", () => {
+			// Infinitely many great circles pass through both, so there is no
+			// right answer — but there is a wrong one, and it is NaN. The
+			// example that prompted this method returned (0, 0, 0) here.
+			const a = new Vector3d(0, 0, 1);
+			const b = new Vector3d(0, 0, -1);
+			const half = a.clone().slerp(b, 0.5);
+			expect(Number.isFinite(half.x)).toBe(true);
+			expect(unit(half)).toBeCloseTo(1, 6);
+			// halfway round is square to both ends
+			expect(angleBetween(a, half)).toBeCloseTo(Math.PI / 2, 5);
+			// and it still arrives
+			expect(a.clone().slerp(b, 1).z).toBeCloseTo(-1, 5);
+		});
+
+		it("picks a stable axis whichever way the opposite pair points", () => {
+			// A fixed perpendicular collapses when the input lies along it,
+			// so each of the three world axes has to work.
+			for (const [x, y, z] of [
+				[1, 0, 0],
+				[0, 1, 0],
+				[0, 0, 1],
+			]) {
+				const a = new Vector3d(x, y, z);
+				const out = a.clone().slerp(new Vector3d(-x, -y, -z), 0.5);
+				expect(unit(out)).toBeCloseTo(1, 6);
+				expect(angleBetween(a, out)).toBeCloseTo(Math.PI / 2, 5);
+			}
+		});
+
+		it("falls back to a straight interpolation for a zero vector", () => {
+			// nothing has a direction to turn from
+			const out = new Vector3d(0, 0, 0).slerp(new Vector3d(0, 0, 2), 0.5);
+			expect(out.z).toBeCloseTo(1, 6);
+			expect(Number.isFinite(out.x)).toBe(true);
+		});
+
+		it("returns itself, for chaining", () => {
+			const v = new Vector3d(1, 0, 0);
+			expect(v.slerp(new Vector3d(0, 1, 0), 0.5)).toBe(v);
+		});
+	});
 });
