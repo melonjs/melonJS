@@ -11,6 +11,7 @@ interface UITextButtonSettings {
 	font?: string;
 	size?: number;
 	text?: string;
+	/** see {@link UITextButton.bindKey} */
 	bindKey?: string | number;
 	hoverOffColor?: string;
 	hoverOnColor?: string;
@@ -32,9 +33,20 @@ export default class UITextButton extends UIBaseElement {
 	 * Keyboard shortcut: an input.KEY keycode or an existing input action name.
 	 * A press calls onClick() and its matching release calls onRelease(), both
 	 * without a pointer event. Shortcuts are active only while the button is
-	 * activated, respect isClickable, and never change global key bindings.
-	 * The first input to press owns the button until released; shortcuts do not
-	 * start pointer dragging or tap-and-hold.
+	 * activated and never change global key bindings. The first input to press
+	 * owns the button until released; shortcuts do not start pointer dragging
+	 * or tap-and-hold.
+	 *
+	 * `isClickable` gates the PRESS, not the release: a button disabled while
+	 * its key is held still releases when that key comes up, so it cannot be
+	 * left stuck down.
+	 *
+	 * **Losing focus or being removed cancels a held press WITHOUT calling
+	 * `onRelease()`.** The press was abandoned rather than completed, so the
+	 * button returns to its released state silently. Code that treats the pair
+	 * as press and depress, firing a weapon on click and stopping on release,
+	 * needs to stop on {@link event.BLUR} too or it will still be firing when
+	 * the window comes back.
 	 * @default -1
 	 */
 	bindKey: string | number;
