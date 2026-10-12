@@ -15,6 +15,12 @@ the full notice.
 ## [3.1.0] - _unreleased_
 
 ### Fixed
+- `off(event, undefined, id)` removed only the FIRST listener registered for
+  that id and left the rest attached. It is how a stopped voice clears its own
+  callbacks, and ids are reused by the next voice to take the slot, so every
+  extra listener outlived its sound and then fired against an unrelated one. A
+  named function still removes exactly one registration, and listeners
+  registered without an id are untouched. Upstream goldfire/howler.js#1780
 - Plugin hooks collided: the sound-level and voice-level create hooks shared one
   name, and the spatial plugin registered that key twice in the same object, so
   the second silently replaced the first and one of the two never ran. Split into
