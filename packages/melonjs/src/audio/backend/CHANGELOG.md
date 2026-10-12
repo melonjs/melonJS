@@ -68,7 +68,44 @@ Upstream's last release was 2.2.4 in September 2023; these sat open against it.
   ([#1648](https://github.com/goldfire/howler.js/pull/1648))
 - A backgrounded tab could leave the context stopped with no further user
   gesture coming to restart it
-  ([#1770](https://github.com/goldfire/howler.js/pull/1770))
+  ([#1770](https://github.com/goldfire/howler.js/pull/1770)). Reworked
+  rather than carried as written: the upstream watch was registered inside
+  the scratch source's `onended`, which a context that is not running never
+  fires, so it only existed once the context had already proved it could run;
+  it was bound to whichever context existed at unlock time, while the
+  sample-rate path replaces the boot context; it resumed on every non-running
+  `statechange`, cancelling the engine's own 30-second idle suspension in the
+  same tick; and it called `ctx.resume()` directly, which restarts the
+  hardware but leaves `state` behind and sends no "resume" to the voices
+  waiting under `_playLock`. The watch is now attached when a context is
+  created, follows the live context, acts only when the engine believes it is
+  running, and goes through `_autoResume`. The tab becoming visible and the
+  next gesture retry it
+- The unlock completed only from the scratch source's `onended`. A one-sample
+  buffer in a context that stays suspended never ends, so a refused gesture
+  left the engine half-unlocked for good: listeners attached, no "unlock"
+  event ever sent. A resolved `resume()` now completes it too
+- An idle suspension the browser never acknowledged wedged the engine. The
+  thirty-second idle timer moves the engine to "suspending" and waits for
+  `ctx.suspend()` to settle before anything can resume; a resume asked for
+  meanwhile only raised a flag for that settlement to act on. WebKit parks a
+  suspend requested outside a user gesture, on a context the page was never
+  allowed to start, until the context next actually suspends, and an engine
+  waiting on that promise never asks for one again. Thirty idle seconds on a
+  freshly loaded page, then the first click: the unlock's scratch resume
+  started the hardware, so a generated tone was heard, while every loaded
+  clip parked under `_playLock` for the life of the page. A resume requested
+  while "suspending" is issued at once; the context orders it after the
+  suspend, and the bookkeeping follows the resume's own answer
+
+### Changed
+- The engine no longer owns the audio context's lifetime. Creating it, watching
+  it and deciding when a stop should be reverted moved OUT of the fork, to
+  melonJS's own `../context.ts`, which both this engine and the procedural
+  generators now go through; the engine keeps only what needs its own
+  bookkeeping, `_autoResume` and `_autoSuspend`, and answers two questions for
+  the owner. Worth knowing before applying anything upstream that touches
+  `ctx`, since upstream has no such split
 
 ### Removed
 - The plugin registry. Upstream shipped spatial audio as an opt-in plugin behind

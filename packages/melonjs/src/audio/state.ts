@@ -216,6 +216,23 @@ export function setGlobalVolume(v: number): void {
 }
 
 /**
+ * Make the shared context run for a caller about to produce sound outside
+ * a `Sound` (the procedural generators). Same path a `Sound#play` takes, so
+ * the engine's own state and "resume" event follow; the generators used to
+ * carry a private `ctx.resume()` that did neither.
+ * @ignore
+ * @internal
+ */
+export function resumeAudioContext(): void {
+	// Straight to the owner, the same entry point the gesture and visibility
+	// nets use. The procedural generators used to carry their own copy of
+	// this and poke `ctx.resume()` directly, which brought the hardware back
+	// and left the engine's own state behind: one context, two owners, and
+	// only one of them keeping the books.
+	audioEngine.contextOwner.requestResume();
+}
+
+/**
  * Mute or unmute the audio module globally.
  * @ignore
  * @internal
