@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { setAudioFetcher } from "../src/audio/backend/buffer.ts";
 import { audioEngine } from "../src/audio/backend/core.ts";
+import { Sound } from "../src/audio/backend/sound.ts";
 import { state } from "../src/audio/state.ts";
 import { audio } from "../src/index.js";
 import { fetchData } from "../src/utils/fetchdata.js";
@@ -704,6 +705,56 @@ describe("audio backend", () => {
 
 			audio.stop("loop-window");
 			audio.unload("loop-window");
+		});
+	});
+
+	describe("off(event, undefined, id) clears EVERY listener for that id", () => {
+		// `off` is list surgery, so it is exercised directly: building a real
+		// Sound would need a decoded clip and a context, and neither has any
+		// bearing on which entries come out of the array.
+		const listeners = (events) => {
+			return { _onend: events };
+		};
+
+		it("removes all of an id's listeners, not just the first", () => {
+			// How the engine ends a voice: `stop(id)` then
+			// `off("end", undefined, id)`. Stopping at the first match left
+			// the rest live, and the id is REUSED by the next voice, so a
+			// callback outlived its sound and then fired against someone
+			// else's.
+			const a = () => {};
+			const b = () => {};
+			const other = () => {};
+			const target = listeners([
+				{ fn: a, id: 7 },
+				{ fn: b, id: 7 },
+				{ fn: other, id: 9 },
+			]);
+			Sound.prototype.off.call(target, "end", undefined, 7);
+			expect(target._onend).toEqual([{ fn: other, id: 9 }]);
+		});
+
+		it("still removes exactly one when a function is named", () => {
+			// the other half of the contract: a named listener is one
+			// registration, and removing it must not take its twin with it
+			const a = () => {};
+			const target = listeners([
+				{ fn: a, id: 3 },
+				{ fn: a, id: 3 },
+			]);
+			Sound.prototype.off.call(target, "end", a, 3);
+			expect(target._onend).toHaveLength(1);
+		});
+
+		it("leaves listeners registered without an id alone", () => {
+			const a = () => {};
+			const global = () => {};
+			const target = listeners([
+				{ fn: a, id: 4 },
+				{ fn: global, id: undefined },
+			]);
+			Sound.prototype.off.call(target, "end", undefined, 4);
+			expect(target._onend).toEqual([{ fn: global, id: undefined }]);
 		});
 	});
 });

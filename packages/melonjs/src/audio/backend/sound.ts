@@ -1458,7 +1458,17 @@ class Sound {
 				const isId = id === events[i].id;
 				if ((fn === events[i].fn && isId) || (!fn && isId)) {
 					events.splice(i, 1);
-					break;
+					// A named listener is one registration, so it is removed
+					// once. Without a function this means "every listener for
+					// this id", and stopping at the first left the rest live:
+					// `off("end", undefined, id)` is how a stop clears the
+					// callbacks of the voice it just ended, so each extra one
+					// outlived its sound and fired against the next voice to
+					// take that id. Upstream goldfire/howler.js#1780.
+					if (fn) {
+						break;
+					}
+					i--;
 				}
 			}
 		} else if (event) {
