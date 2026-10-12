@@ -38,6 +38,10 @@ also skip `src` and pass the map inline via `data` (with `format: "json"` or
 `level <id> not found` for an unknown id — synchronously, in both forms, because
 that is a typo rather than a load failure.
 
+Those `game.` defaults are the engine's own, and `game` is whichever
+`Application` finished `init()` last. **Pass `container` explicitly** from a
+`Stage`, which has the right one: `level.load("map", { container: this.app.world })`.
+
 **`level.load` is deferred while the game loop is running.** It calls
 `state.stop()` and finishes the load on a timer, after the current frame, so by
 default it returns `true` before anything is in the world. Two ways to sequence
