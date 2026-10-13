@@ -1,4 +1,5 @@
 // Import helper functions directly for better tree-shaking
+import { AudioContextOwner } from "../context.ts";
 import type { Sound } from "./sound.ts";
 import { installSpatialOnEngine } from "./spatial.ts";
 import {
@@ -58,6 +59,20 @@ export class AudioEngine {
 	 */
 	_audioUnlocked: boolean = false;
 	/**
+	 * The single owner of the context: see `../context.ts`.
+	 *
+	 * The engine no longer creates listeners for keeping the context alive,
+	 * nor decides when a stop should be reverted. It answers the owner's two
+	 * questions and does the reviving, which is the part only it can do
+	 * because only it has the voices waiting on the result.
+	 */
+	readonly contextOwner: AudioContextOwner = new AudioContextOwner({
+		isRunning: () => this.state === "running",
+		resume: () => {
+			this._autoResume();
+		},
+	});
+	/**
 	 * @ignore
 	 * @internal
 	 */
@@ -67,11 +82,6 @@ export class AudioEngine {
 	 * @internal
 	 */
 	_suspendTimer: ReturnType<typeof setTimeout> | null = null;
-	/**
-	 * @ignore
-	 * @internal
-	 */
-	_resumeAfterSuspend?: boolean;
 	/**
 	 * @ignore
 	 * @internal
@@ -187,6 +197,7 @@ export class AudioEngine {
 		) {
 			void this.ctx.close();
 			this.ctx = null;
+			this.contextOwner.detach();
 			this.ensureContext();
 		}
 
@@ -242,6 +253,7 @@ export class AudioEngine {
 		);
 		this.masterGain.connect(this.ctx.destination);
 
+		this.contextOwner.attach(this.ctx);
 		this._setup();
 		return this.ctx;
 	}
@@ -410,25 +422,19 @@ export class AudioEngine {
 			source.connect(this.ctx!.destination);
 			source.start(0);
 
-			if (typeof this.ctx!.resume === "function") {
-				void this.ctx!.resume();
-			}
-
-			source.onended = () => {
-				source.disconnect(0);
+			// Unlocked the moment the context is known to run, from whichever
+			// signal says so first. The scratch source's `onended` was the only
+			// one, and a one-sample buffer in a context that is not running
+			// never ends: the gesture was spent, the listeners stayed, and the
+			// "unlock" event never reached a sound. A resolved `resume()` is
+			// the same proof and arrives on its own. Idempotent, because both
+			// signals normally arrive.
+			const unlocked = () => {
+				if (this._audioUnlocked) {
+					return;
+				}
 				this._audioUnlocked = true;
-
-				// once unlocked, a backgrounded tab can leave the context stopped
-				// with no further gesture coming to restart it
-				// (goldfire/howler.js#1770)
-				this.ctx?.addEventListener("statechange", () => {
-					if (this.ctx && this.ctx.state !== "running" && this._audioUnlocked) {
-						void this.ctx.resume().catch(() => {
-							// nothing to do — a refused resume is reported by the
-							// resume path itself
-						});
-					}
-				});
+				source.disconnect(0);
 
 				document.removeEventListener("touchstart", unlock, true);
 				document.removeEventListener("touchend", unlock, true);
@@ -439,6 +445,14 @@ export class AudioEngine {
 					this.sounds[i]._emit("unlock");
 				}
 			};
+			source.onended = unlocked;
+
+			if (typeof this.ctx!.resume === "function") {
+				this.ctx!.resume().then(unlocked, () => {
+					// refused: the gesture did not count, or the output is not
+					// available. The listeners stay for the next one
+				});
+			}
 		};
 
 		document.addEventListener("touchstart", unlock, true);
@@ -525,11 +539,6 @@ export class AudioEngine {
 
 			const handleSuspension = () => {
 				this.state = "suspended";
-
-				if (this._resumeAfterSuspend) {
-					delete this._resumeAfterSuspend;
-					this._autoResume();
-				}
 			};
 
 			this.ctx!.suspend().then(handleSuspension, handleSuspension);
@@ -547,13 +556,34 @@ export class AudioEngine {
 
 		if (
 			this.state === "running" &&
-			this.ctx.state !== "interrupted" &&
+			// The context has to actually be running for this to be "cancel the
+			// idle suspension, nothing else to do". Upstream only ruled out
+			// "interrupted" here, so a context the browser stopped during the
+			// 30-second idle window landed in this branch: the timer was
+			// cleared, nothing was resumed, and the play went ahead into a
+			// stopped context. Only the play after that one found the timer
+			// gone and resumed. A stop inside the window is a stop like any
+			// other, and belongs to the branch below
+			this.ctx.state === "running" &&
 			this._suspendTimer
 		) {
 			clearTimeout(this._suspendTimer);
 			this._suspendTimer = null;
 		} else if (
 			this.state === "suspended" ||
+			// A suspend this engine asked for that the browser has not answered
+			// yet. Upstream only raised a flag here and resumed once the suspend
+			// settled, which assumed it would. WebKit parks a suspend requested
+			// outside a user gesture on a context the page was never allowed to
+			// start, until the context next actually suspends, and an engine
+			// waiting on that promise never asks for one again: thirty idle
+			// seconds on a fresh page left it "suspending" for good, every clip
+			// parked under `_playLock` for a "resume" that could not come, while
+			// the first gesture's scratch resume had the hardware running
+			// underneath. Resume now instead. The context orders it after the
+			// suspend, so the state lands where the last request pointed, and
+			// the bookkeeping follows the resume's own answer
+			this.state === "suspending" ||
 			// iOS reports "suspended" (not "interrupted") after the output device
 			// changes — unplugging headphones left playback dead
 			// (goldfire/howler.js#1551)
@@ -586,8 +616,6 @@ export class AudioEngine {
 				clearTimeout(this._suspendTimer);
 				this._suspendTimer = null;
 			}
-		} else if (this.state === "suspending") {
-			this._resumeAfterSuspend = true;
 		}
 	}
 }
