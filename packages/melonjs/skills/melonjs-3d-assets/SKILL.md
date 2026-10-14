@@ -33,11 +33,19 @@ or it renders flat. See `melonjs-3d` for the camera.
 |---|---|---|
 | `scale` | `1` | pixels per glTF unit, applied to the whole scene. Blender's metre-scale export usually needs 20–100. |
 | `container` | `game.world` | where the nodes are added |
-| `onLoaded` | `app.onLevelLoaded` | called with the **level id**, not the scene |
+| `onLoaded` | `game.onLevelLoaded` | called with the **level id**, not the scene |
 | `async` | `false` | return a promise that settles once the scene is in the world, instead of a boolean |
 | `rightHanded` | `true` | see below |
 | `lights` | `true` | instantiate authored `KHR_lights_punctual` lights as `Light3d` world children |
 | `lightIntensityScale` | — | keep authored intensity ratios instead of normalising every light to 1 |
+
+Those `game.` defaults are the engine's, not a recommendation. `game` is
+whichever `Application` finished `init()` last, so **pass `container`
+explicitly** from a `Stage`, where the right one is in your hand:
+
+```js
+level.load("sceneId", { container: this.app.world, scale: 40 });
+```
 | `castGroundShadow` | inherits the app setting (**on**) | blob shadows for this scene's meshes |
 | `shadowGroundY` | each object's own base | world Y of the floor the blobs land on |
 | `shadowOpacity` | `0.45` | how dark the blobs are |

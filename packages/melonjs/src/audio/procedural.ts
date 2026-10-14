@@ -13,28 +13,12 @@
  * primitives can be added with zero copy-paste.
  */
 
-import { getAudioContext, getMasterGain } from "./state.ts";
+import { getAudioContext, getMasterGain, resumeAudioContext } from "./state.ts";
 import type { NoiseOptions, ToneOptions } from "./types.ts";
 
 // ---------------------------------------------------------------------
 // Procedural-audio internals — shared between `tone` and `noise`.
 // ---------------------------------------------------------------------
-
-/**
- * Resume the AudioContext if a browser autoplay policy has it
- * suspended. Best-effort and idempotent; the promise is intentionally
- * unawaited because we want the same call site to work in both gesture
- * and non-gesture contexts.
- * @ignore
- * @internal
- */
-function _resumeIfSuspended(ctx: AudioContext): void {
-	if (ctx.state === "suspended") {
-		ctx.resume().catch(() => {
-			/* ignore */
-		});
-	}
-}
 
 /**
  * Build the linear-attack / exponential-decay gain envelope used by
@@ -156,7 +140,7 @@ export function tone(opts: ToneOptions): void {
 	// oscillator would ever fire `onended` to clean them up).
 	if (freqs.length === 0) return;
 
-	_resumeIfSuspended(ctx);
+	resumeAudioContext();
 
 	const dur = Math.max(0.001, duration);
 	// Everything below hangs off `t0`, so a delay is one addition here
@@ -319,7 +303,7 @@ export function noise(opts: NoiseOptions): void {
 		delay = 0,
 	} = opts;
 
-	_resumeIfSuspended(ctx);
+	resumeAudioContext();
 
 	const dur = Math.max(0.001, duration);
 	// Everything below hangs off `t0`, so a delay is one addition here

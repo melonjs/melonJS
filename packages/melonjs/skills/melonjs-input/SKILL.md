@@ -197,10 +197,79 @@ input.bindGamepad(0,
 ```
 
 **Order matters:** `bindGamepad` throws `no action defined for keycode N` if the
-keycode has not already been passed to `bindKey`. Axes use the same call with a
-threshold: `{ type: "axes", code: input.GAMEPAD.AXES.LX, threshold: -0.5 }`.
-`unbindGamepad(index, button)`, `setGamepadDeadzone(value)` and
+keycode has not already been passed to `bindKey`.
+
+Axes use the same call with a threshold, and bind **one half of the axis each**
+— the sign selects which half:
+
+```js
+input.bindGamepad(0, { type: "axes", code: input.GAMEPAD.AXES.LX, threshold: -0.15 }, input.KEY.LEFT);
+input.bindGamepad(0, { type: "axes", code: input.GAMEPAD.AXES.LX, threshold:  0.15 }, input.KEY.RIGHT);
+```
+
+**`threshold` is added to the deadzone, it does not replace it.** The test is
+`abs(value) >= deadzone + abs(threshold)`, so with the default deadzone of 0.1
+a threshold of `0.5` does not fire until 0.6 of full travel, and `0.15` fires at
+0.25. Pick the number you want the stick to break at and subtract the deadzone.
+Raising `setGamepadDeadzone` moves every axis binding with it.
+
+`unbindGamepad(index, button, type?)`, `setGamepadDeadzone(value)` and
 `setGamepadMapping(id, mapping)` complete the surface.
+
+### Which index to bind
+
+Bindings are per pad **index**, and the index is plug order, not identity —
+nothing reports which pad is "the" controller. Slot 0 is a guess: a wheel, a
+spare pad or a keyboard-shaped device left plugged in can hold it for a whole
+session while the player presses buttons on slot 1.
+
+So a one-player game binds **every slot it will accept** to the same actions,
+and lets `activeGamepad()` say which one is in use when something has to go
+back the other way:
+
+```js
+for (let pad = 0; pad < 4; pad++) {
+    input.bindGamepad(pad, { type: "buttons", code: input.GAMEPAD.BUTTONS.FACE_1 }, input.KEY.X);
+}
+input.activeGamepad();   // the last pad to produce a bound input, else the
+                         // first connected one, else -1
+```
+
+Binding spare slots costs nothing: the poll skips a bound index with no pad in
+it. `activeGamepad()` follows **bound inputs only**, which is what makes it an
+answer about the player rather than about electrical noise — a worn stick at
+rest reports movement for ever and would otherwise claim to be the active pad.
+
+### Rumble
+
+```js
+input.vibrateGamepad(input.activeGamepad(), {
+    duration: 120, strongMagnitude: 0.6, weakMagnitude: 0.9,
+});
+input.stopGamepadVibration(index);   // cut a long effect short
+input.hasGamepadVibration(index);    // for an options-screen toggle
+```
+
+Safe to call blind: no pad, no motors, or no Gamepad API at all resolves
+`false` and does nothing, so game code never branches on support. Magnitudes
+default to **full** — the underlying web API defaults every parameter to zero,
+which makes a bare `playEffect` a silent no-op. A second call preempts the
+first on the same pad, so a rapid series of hits reads as a rapid series of
+hits rather than as a queue. For a SUSTAINED rumble issue one effect with a
+long `duration` instead of calling every frame.
+
+Hot-plugging needs no polling of your own — the engine listens for the browser's
+own events and republishes them:
+
+```js
+import { event } from "melonjs";
+
+event.on(event.GAMEPAD_CONNECTED,    (gamepad) => { /* gamepad.id, .index */ });
+event.on(event.GAMEPAD_DISCONNECTED, (gamepad) => { /* pause, show a prompt */ });
+```
+
+Bindings survive a disconnect: they are attached to the index, not to the
+device, so a pad unplugged and plugged back into the same slot keeps working.
 
 ## Virtual controls
 
@@ -224,6 +293,8 @@ input.triggerKeyEvent(input.KEY.LEFT, false);   // release
 | jump fires every frame while held | `bindKey` without its third `lock` argument |
 | `invalid event type` thrown at registration | non-pointer name (`"click"`, `"mousedown"`, …) passed to `registerPointerEvent` |
 | `no action defined for keycode N` | `bindGamepad` called before `bindKey` for that keycode |
+| stick has to be pushed well past its `threshold` before it registers | `threshold` is ADDED to the deadzone, not used instead of it |
+| one half of a stick does nothing | each half is a separate `bindGamepad`, chosen by the sign of `threshold` |
 | a widget under an overlapping panel still reacts | the panel consumes nothing — return `false` from its `onClick` and `onOver` |
 | a widget stays highlighted after the pointer moves onto a panel over it | the panel consumes no `pointermove`, so nothing takes the pointer off the widget |
 | a child's big `z` does not put it in front of another container | `pos.z` is container-local — use `ancestor.moveToTop()` on the container |

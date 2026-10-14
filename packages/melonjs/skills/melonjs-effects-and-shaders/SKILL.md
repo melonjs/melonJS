@@ -136,9 +136,9 @@ bright pixels bleed into their neighbours — and it is the one to put on the
 camera:
 
 ```js
-game.viewport.addPostEffect(new BloomEffect(app.renderer));
+app.viewport.addPostEffect(new BloomEffect(app.renderer));
 // only the brightest highlights, with a wider halo
-game.viewport.addPostEffect(
+app.viewport.addPostEffect(
     new BloomEffect(app.renderer, { threshold: 0.85, radius: 4 }),
 );
 ```
@@ -154,8 +154,8 @@ reads as a white sticker. `exposure` lifts the image into the curve, and the
 curve (`aces`, `reinhard` or `exponential`) is baked at construction:
 
 ```js
-game.viewport.addPostEffect(new BloomEffect(app.renderer));
-game.viewport.addPostEffect(
+app.viewport.addPostEffect(new BloomEffect(app.renderer));
+app.viewport.addPostEffect(
     new ToneMappingEffect(app.renderer, { exposure: 1.6 }),
 );
 ```

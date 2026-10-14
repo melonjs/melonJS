@@ -1,6 +1,15 @@
-import { afterEach, describe, expect, it } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { setAudioFetcher } from "../src/audio/backend/buffer.ts";
 import { audioEngine } from "../src/audio/backend/core.ts";
+import { Sound } from "../src/audio/backend/sound.ts";
 import { state } from "../src/audio/state.ts";
 import { audio } from "../src/index.js";
 import { fetchData } from "../src/utils/fetchdata.js";
@@ -704,6 +713,361 @@ describe("audio backend", () => {
 
 			audio.stop("loop-window");
 			audio.unload("loop-window");
+		});
+	});
+
+	describe("off(event, undefined, id) clears EVERY listener for that id", () => {
+		// `off` is list surgery, so it is exercised directly: building a real
+		// Sound would need a decoded clip and a context, and neither has any
+		// bearing on which entries come out of the array.
+		const listeners = (events) => {
+			return { _onend: events };
+		};
+
+		it("removes all of an id's listeners, not just the first", () => {
+			// How the engine ends a voice: `stop(id)` then
+			// `off("end", undefined, id)`. Stopping at the first match left
+			// the rest live, and the id is REUSED by the next voice, so a
+			// callback outlived its sound and then fired against someone
+			// else's.
+			const a = () => {};
+			const b = () => {};
+			const other = () => {};
+			const target = listeners([
+				{ fn: a, id: 7 },
+				{ fn: b, id: 7 },
+				{ fn: other, id: 9 },
+			]);
+			Sound.prototype.off.call(target, "end", undefined, 7);
+			expect(target._onend).toEqual([{ fn: other, id: 9 }]);
+		});
+
+		it("still removes exactly one when a function is named", () => {
+			// the other half of the contract: a named listener is one
+			// registration, and removing it must not take its twin with it
+			const a = () => {};
+			const target = listeners([
+				{ fn: a, id: 3 },
+				{ fn: a, id: 3 },
+			]);
+			Sound.prototype.off.call(target, "end", a, 3);
+			expect(target._onend).toHaveLength(1);
+		});
+
+		it("leaves listeners registered without an id alone", () => {
+			const a = () => {};
+			const global = () => {};
+			const target = listeners([
+				{ fn: a, id: 4 },
+				{ fn: global, id: undefined },
+			]);
+			Sound.prototype.off.call(target, "end", undefined, 4);
+			expect(target._onend).toEqual([{ fn: global, id: undefined }]);
+		});
+	});
+	describe("a context stopped behind the engine's back", () => {
+		// The test page has had no gesture, so the real context sits in
+		// "suspended" for the whole run: exactly the shape of a context the
+		// browser stopped. What is under test is who notices and what they do
+		// about it, so `resume()` is observed or stubbed on the instance and
+		// the engine's own `state` is set by hand to say what it believes.
+		//
+		// Order matters for the first tests, which need the page still locked;
+		// the unlock test then completes it. The gesture tests count calls
+		// exactly, which needs the unlock listeners gone, so each completes
+		// the unlock itself when it runs alone.
+		let ctx;
+		let savedState;
+		let savedResume;
+		const tick = (ms = 20) => {
+			return new Promise((resolve) => {
+				setTimeout(resolve, ms);
+			});
+		};
+		// complete the page's unlock so its gesture listeners are gone and a
+		// gesture reaches resume by the owner's net alone
+		const completeUnlock = async () => {
+			if (audioEngine._audioUnlocked) {
+				return;
+			}
+			ctx.resume = () => {
+				return Promise.resolve();
+			};
+			document.dispatchEvent(new Event("click"));
+			await tick();
+			expect(audioEngine._audioUnlocked).toBe(true);
+		};
+		beforeAll(async () => {
+			// the first Sound of a page runs the unlock path, which closes the
+			// boot context and builds the one the engine keeps; capture after
+			await loadClip("recover-boot");
+			audio.unload("recover-boot");
+		});
+		beforeEach(() => {
+			ctx = audioEngine.ensureContext();
+			savedState = audioEngine.state;
+			savedResume = ctx.resume;
+		});
+		afterEach(() => {
+			audioEngine.state = savedState;
+			ctx.resume = savedResume;
+		});
+
+		it("is restarted from statechange before any unlock has completed", () => {
+			// The watch used to be registered inside the scratch source's
+			// `onended`, and a one-sample buffer in a context that is not
+			// running never ends: the protection only existed once the
+			// context had already proved it could run. Here nothing has ever
+			// unlocked, and the watch must already be in place.
+			expect(audioEngine._audioUnlocked).toBe(false);
+			audioEngine.state = "running";
+			const resume = vi.fn(() => {
+				return new Promise(() => {});
+			});
+			ctx.resume = resume;
+			ctx.dispatchEvent(new Event("statechange"));
+			expect(resume).toHaveBeenCalledTimes(1);
+		});
+
+		it("leaves a suspension the engine asked for alone", () => {
+			// `_autoSuspend` moves `state` off "running" before it suspends, and
+			// that is the whole signal. Resuming on every non-running
+			// statechange undid the engine's own idle suspension in the same
+			// tick, so an idle game kept its audio thread running for good.
+			audioEngine.state = "suspended";
+			const resume = vi.fn(() => {
+				return new Promise(() => {});
+			});
+			ctx.resume = resume;
+			ctx.dispatchEvent(new Event("statechange"));
+			expect(resume).not.toHaveBeenCalled();
+		});
+
+		it("is restarted even inside the engine's own idle window", () => {
+			// With a one-shot just ended the engine has a 30-second suspension
+			// pending. `_autoResume` used to read "running, timer pending" as
+			// "cancel the timer, done", without looking at the context, so a
+			// stop by the browser in that window was never reverted: the next
+			// play went into a stopped context, and only the one after found
+			// the timer gone and resumed.
+			audioEngine.state = "running";
+			if (audioEngine._suspendTimer) {
+				clearTimeout(audioEngine._suspendTimer);
+			}
+			audioEngine._suspendTimer = setTimeout(() => {}, 100000);
+			const resume = vi.fn(() => {
+				return new Promise(() => {});
+			});
+			ctx.resume = resume;
+			ctx.dispatchEvent(new Event("statechange"));
+			expect(resume).toHaveBeenCalledTimes(1);
+			expect(audioEngine._suspendTimer).toBeNull();
+		});
+
+		it("sends the resume event to the voices waiting on it when it restarts", async () => {
+			// A bare `ctx.resume()` restarts the hardware and nothing else: no
+			// "resume" reaches the voices parked under `_playLock`, which wait
+			// for exactly that event. The engine's own state transition is
+			// pinned by the gesture test below, where it is a real one; here
+			// `state` is "running" by construction, for the watch to fire.
+			await loadClip("recover-books");
+			const sound = state.tracks["recover-books"];
+			const resumed = vi.fn();
+			sound.on("resume", resumed);
+			audioEngine.state = "running";
+			ctx.resume = () => {
+				return Promise.resolve();
+			};
+			ctx.dispatchEvent(new Event("statechange"));
+			// the resolved resume is a microtask, then `_emit` hands each
+			// listener to its own `setTimeout(0)`
+			await tick();
+			expect(resumed).toHaveBeenCalledTimes(1);
+			sound.off("resume", resumed);
+			audio.unload("recover-books");
+		});
+
+		it("unlocks from a resolved resume() even if the scratch source never ends", async () => {
+			// It completes the unlock for the page, and the listeners it
+			// removes do not come back: every gesture test below relies on
+			// that to count calls exactly.
+			//
+			// The scratch source's `onended` was the only completion signal.
+			// In this page it never fires, so after a gesture the engine was
+			// left half-unlocked for good: listeners still attached, no
+			// "unlock" event ever sent to a sound.
+			if (audioEngine.autoUnlock) {
+				audioEngine._unlockAudio();
+			}
+			expect(audioEngine._audioUnlocked).toBe(false);
+			ctx.resume = () => {
+				return Promise.resolve();
+			};
+			document.dispatchEvent(new Event("click"));
+			await tick();
+			expect(audioEngine._audioUnlocked).toBe(true);
+		});
+
+		it("is revived by a gesture even after the engine idled on purpose", async () => {
+			// Thirty idle seconds is how `_autoSuspend` leaves `state` at
+			// "suspended", and an earlier recovery net asked whether the engine
+			// still believed it was running before it would act. From here
+			// that is answered "no" forever: no gesture and no return to the
+			// tab could restart it, and only the next play would.
+			await completeUnlock();
+			audioEngine.state = "suspended";
+			const resume = vi.fn(() => {
+				return Promise.resolve();
+			});
+			ctx.resume = resume;
+			// exact: the unlock listeners are gone, so the owner's own net is
+			// the only route from a keypress to resume
+			document.dispatchEvent(new Event("keydown"));
+			expect(resume).toHaveBeenCalledTimes(1);
+			await tick();
+			// and it went through the bookkeeping: the engine's state followed
+			expect(audioEngine.state).toBe("running");
+			audioEngine.state = "suspended";
+			document.dispatchEvent(new Event("visibilitychange"));
+			expect(resume).toHaveBeenCalledTimes(2);
+			await tick();
+			expect(audioEngine.state).toBe("running");
+		});
+
+		it("corrects an engine that believes it is stopped under a running context", async () => {
+			// The two can disagree: the unlock path's scratch resume starts the
+			// hardware and tells nobody. A net that only asked the context
+			// found it running and did nothing, which left every voice the
+			// engine had parked waiting until the next play happened to call
+			// `_autoResume` itself. A gesture is the moment to put it right.
+			await completeUnlock();
+			audioEngine.state = "suspended";
+			Object.defineProperty(ctx, "state", {
+				configurable: true,
+				get: () => {
+					return "running";
+				},
+			});
+			const resume = vi.fn(() => {
+				return Promise.resolve();
+			});
+			ctx.resume = resume;
+			document.dispatchEvent(new Event("keydown"));
+			expect(resume).toHaveBeenCalledTimes(1);
+			await tick();
+			expect(audioEngine.state).toBe("running");
+			delete ctx.state;
+		});
+
+		it("takes a generated tone through the engine's bookkeeping, not around it", async () => {
+			// The generators used to carry a private `ctx.resume()`. It brought
+			// the hardware back and left the engine's own `state` where it
+			// was, so a page could play a beep while every loaded clip stayed
+			// parked. The beep now asks the owner, and the engine's state
+			// follows the resume it issues.
+			audioEngine.state = "suspended";
+			const resume = vi.fn(() => {
+				return Promise.resolve();
+			});
+			ctx.resume = resume;
+			audio.tone({ freq: 440, duration: 0.01, gain: 0 });
+			expect(resume).toHaveBeenCalledTimes(1);
+			await tick();
+			expect(audioEngine.state).toBe("running");
+		});
+
+		it("comes back from an idle suspension the browser never acknowledged", async () => {
+			// THE reported bug, from the engine's side. `_autoSuspend` moves the
+			// engine to "suspending" and waited for `ctx.suspend()` to settle
+			// before it would move on; a resume asked for meanwhile only raised
+			// a flag for that settlement to act on. WebKit does not settle it:
+			// a suspend requested outside a user gesture, on a context the
+			// page was never allowed to start, is parked behind the autoplay
+			// restriction until the context next actually suspends, which an
+			// engine waiting on that very promise never asks for again. Thirty
+			// idle seconds on a freshly loaded page, then the first click: the
+			// unlock path's own scratch resume starts the hardware, so a
+			// generated tone is heard, while every loaded clip parks under
+			// `_playLock` for a "resume" that cannot come, for the life of the
+			// page.
+			await completeUnlock();
+			await loadClip("recover-wedge");
+			const sound = state.tracks["recover-wedge"];
+			// the suspend the browser will never answer
+			const savedSuspend = ctx.suspend;
+			ctx.suspend = () => {
+				return new Promise(() => {});
+			};
+			vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+			try {
+				audioEngine._autoSuspend();
+				vi.advanceTimersByTime(30000);
+			} finally {
+				vi.useRealTimers();
+			}
+			expect(audioEngine.state).toBe("suspending");
+			// the first gesture of the page: the unlock listeners are still
+			// attached, and their scratch resume is what starts the hardware
+			audioEngine._audioUnlocked = false;
+			audioEngine.autoUnlock = true;
+			audioEngine._unlockAudio();
+			let running = false;
+			Object.defineProperty(ctx, "state", {
+				configurable: true,
+				get: () => {
+					return running ? "running" : "suspended";
+				},
+			});
+			ctx.resume = () => {
+				running = true;
+				return Promise.resolve();
+			};
+			// the game plays a clip from its click handler, after the nets
+			const played = vi.fn();
+			sound.on("play", played);
+			let id = null;
+			document.addEventListener(
+				"click",
+				() => {
+					id = sound.play();
+				},
+				{ once: true },
+			);
+			document.dispatchEvent(new Event("click"));
+			await tick();
+			// the hardware is running: a generated tone would be heard here
+			expect(ctx.state).toBe("running");
+			// and so must the engine be, with the clip actually started. The
+			// fixture is ten milliseconds long, so `playing()` is already false
+			// again by now: the "play" event is the record that it started
+			expect(audioEngine.state).toBe("running");
+			expect(played).toHaveBeenCalledTimes(1);
+			expect(played.mock.calls[0][0]).toBe(id);
+			delete ctx.state;
+			ctx.suspend = savedSuspend;
+			audio.unload("recover-wedge");
+		});
+
+		it("follows the context the engine is actually using", () => {
+			// LAST: `unload()` closes the live context and builds another, the
+			// way the mobile sample-rate path does at the first unlock. A
+			// watch bound to the first one guards nothing, and its "closed"
+			// notification must not act on the successor.
+			const replaced = ctx;
+			audioEngine.unload();
+			ctx = audioEngine.ctx;
+			expect(ctx).not.toBe(replaced);
+			expect(audioEngine.contextOwner.current).toBe(ctx);
+			savedResume = ctx.resume;
+			audioEngine.state = "running";
+			const resume = vi.fn(() => {
+				return new Promise(() => {});
+			});
+			ctx.resume = resume;
+			ctx.dispatchEvent(new Event("statechange"));
+			expect(resume).toHaveBeenCalledTimes(1);
+			replaced.dispatchEvent(new Event("statechange"));
+			expect(resume).toHaveBeenCalledTimes(1);
 		});
 	});
 });
