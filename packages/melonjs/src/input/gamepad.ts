@@ -32,56 +32,27 @@ interface GamepadBindings {
 let deadzone = 0.1;
 
 /**
- * Normalize axis values for wired Xbox 360
+ * The pad that last did something, as a slot AND the id that was in it.
+ *
+ * Which pad the PLAYER is holding cannot be asked of the browser: slots are
+ * handed out in plug order and a keyboard-shaped device, a wheel or a spare
+ * pad left plugged in can sit in slot 0 for the whole session. The one thing
+ * that does identify it is use, so this follows the last bound input.
+ *
+ * The id is kept beside the index because the index alone goes stale in the
+ * one way that matters: a pad unplugged leaves its slot behind, and the next
+ * device plugged in can be handed the same slot. Checking only that the slot
+ * is occupied would then report a DIFFERENT pad as the active one, which is
+ * the whole failure this is here to avoid.
  * @ignore
  * @internal
  */
-function wiredXbox360NormalizeFn(
-	this: any,
-	value: number,
-	/**
-	 * @ignore
-	 * @internal
-	 */
-	_axis: number,
-	button: number,
-): number {
-	if (
-		button === this.GAMEPAD.BUTTONS.L2 ||
-		button === this.GAMEPAD.BUTTONS.R2
-	) {
-		return (value + 1) / 2;
-	}
-	return value;
-}
-
+let lastActiveIndex = -1;
 /**
- * Normalize axis values for OUYA
  * @ignore
  * @internal
  */
-function ouyaNormalizeFn(
-	this: any,
-	value: number,
-	_axis: number,
-	button: number,
-): number {
-	if (value > 0) {
-		if (button === this.GAMEPAD.BUTTONS.L2) {
-			// L2 is wonky; seems like the deadzone is around 20000
-			// (That's over 15% of the total range!)
-			value = Math.max(0, value - 20000) / 111070;
-		} else {
-			// Normalize [1..65536] => [0.0..0.5]
-			value = (value - 1) / 131070;
-		}
-	} else {
-		// Normalize [-65536..-1] => [0.5..1.0]
-		value = (65536 + value) / 131070 + 0.5;
-	}
-
-	return value;
-}
+let lastActiveId = "";
 
 // Match vendor and product codes for Firefox
 const vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
@@ -137,18 +108,11 @@ const remap: Map<string, GamepadMapping> = new Map();
 // Default gamepad mappings
 (
 	[
-		// Firefox mappings
-		[
-			"45e-28e-Xbox 360 Wired Controller",
-			{
-				axes: [0, 1, 3, 4],
-				buttons: [11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10],
-				analog: [
-					-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-				],
-				normalize_fn: wiredXbox360NormalizeFn,
-			},
-		],
+		// Firefox reports its own ids for pads it has no standard mapping for.
+		// Only entries for hardware still in use are worth carrying: a remap is
+		// consulted ONLY when `gamepad.mapping !== "standard"`, and every browser
+		// now reports "standard" for the pads it knows, so these are a fallback
+		// for old hardware and nothing else.
 		[
 			"54c-268-PLAYSTATION(R)3 Controller",
 			{
@@ -161,30 +125,6 @@ const remap: Map<string, GamepadMapping> = new Map();
 			{
 				axes: [0, 1, 2, 3],
 				buttons: [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13],
-			},
-		],
-		[
-			"2836-1-OUYA Game Controller",
-			{
-				axes: [0, 3, 7, 9],
-				buttons: [3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1],
-				analog: [
-					-1, -1, -1, -1, -1, -1, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-				],
-				normalize_fn: ouyaNormalizeFn,
-			},
-		],
-
-		// Chrome mappings
-		[
-			"OUYA Game Controller (Vendor: 2836 Product: 0001)",
-			{
-				axes: [0, 1, 3, 4],
-				buttons: [0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1],
-				analog: [
-					-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-				],
-				normalize_fn: ouyaNormalizeFn,
 			},
 		],
 	] as [string, Partial<GamepadMapping>][]
@@ -259,6 +199,14 @@ const updateGamepads = function (): void {
 
 			// Edge detection
 			if (!last.pressed && current.pressed) {
+				// No guard on the keycode here, unlike the axes path below: a
+				// BUTTON binding only ever exists with a real one, because
+				// `bindGamepad` refuses a keycode with no action and
+				// `unbindGamepad` deletes the entry outright. An axis binding
+				// can legitimately hold a zero, since binding one half auto
+				// creates the other.
+				lastActiveIndex = Number(index);
+				lastActiveId = gamepad.id;
 				triggerKeyEvent(last.keyCode, true, Number(mapped_button) + 256);
 			} else if (last.pressed && !current.pressed) {
 				triggerKeyEvent(last.keyCode, false, Number(mapped_button) + 256);
@@ -314,6 +262,8 @@ const updateGamepads = function (): void {
 					last[-range].pressed = false;
 				}
 
+				lastActiveIndex = Number(index);
+				lastActiveId = gamepad.id;
 				triggerKeyEvent(last[range].keyCode, true, Number(mapped_axis) + 256);
 			} else if ((last[range].pressed || last[-range].pressed) && !pressed) {
 				range = last[range].pressed ? range : -range;
@@ -425,16 +375,27 @@ export const GAMEPAD = {
  * @param button - Button/Axis definition
  * @param button.type - "buttons" or "axes"
  * @param button.code - button or axis code id
- * @param button.threshold - value indicating when the axis should trigger the keycode
+ * @param button.threshold - how far past the deadzone the axis must travel to
+ * trigger the keycode. It is ADDED to {@link input.setGamepadDeadzone}, it does
+ * not replace it, so with the default deadzone of 0.1 a threshold of 0.5 fires
+ * at 0.6 of full deflection. Its SIGN picks the half of the axis to watch:
+ * negative for left/up, positive for right/down, and the two halves are bound
+ * separately. Ignored for `"buttons"`, which take the browser's own pressed
+ * state; the deadzone reaches a button only where a non-standard mapping
+ * routes an axis onto one through its `analog` array.
  * @param keyCode - (See {@link input.KEY})
+ * @throws {Error} if `keyCode` has no action bound to it yet — call
+ * {@link input.bindKey} first.
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
  * ...
  * // map the lower face button on the first gamepad to the X key
  * me.input.bindGamepad(0, {type:"buttons", code: me.input.GAMEPAD.BUTTONS.FACE_1}, me.input.KEY.X);
- * // map the left axis value on the first gamepad to the LEFT key
+ * // map the left half of the stick to LEFT, firing at 0.6 of full travel
+ * // (0.1 deadzone + 0.5 threshold), and the right half to RIGHT
  * me.input.bindGamepad(0, {type:"axes", code: me.input.GAMEPAD.AXES.LX, threshold: -0.5}, me.input.KEY.LEFT);
+ * me.input.bindGamepad(0, {type:"axes", code: me.input.GAMEPAD.AXES.LX, threshold: 0.5}, me.input.KEY.RIGHT);
  * @category Input
  */
 export function bindGamepad(
@@ -500,23 +461,46 @@ export function bindGamepad(
 
 /**
  * unbind the defined keycode
+ *
+ * Takes the `type` the binding was made with, because a button code and an
+ * axis code are both small integers from different sets and they collide:
+ * `GAMEPAD.AXES.LX` and `GAMEPAD.BUTTONS.FACE_1` are both 0. Without it an
+ * axis could not be unbound at all, and asking for one by its code removed
+ * whatever button happened to share the number.
  * @param index - Gamepad index
  * @param button - (See {@link input.GAMEPAD})
+ * @param type - which table the binding is in, `"buttons"` by default
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
+ * me.input.unbindGamepad(0, me.input.GAMEPAD.AXES.LX, "axes");
  * @category Input
  */
-export function unbindGamepad(index: number, button: number): void {
+export function unbindGamepad(
+	index: number,
+	button: number,
+	type: "buttons" | "axes" = "buttons",
+): void {
 	if (!bindings[index]) {
 		throw new Error(`no bindings for gamepad ${index}`);
 	}
-	bindings[index].buttons[button] = {} as ButtonBinding;
+	// deleted rather than overwritten with an empty object: a binding left
+	// behind with no keycode still answers the poll, which made an unbound
+	// button go on marking its pad as the active one
+	delete bindings[index][type][button];
 }
 
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
+ *
+ * For axes it is the floor that a binding's own `threshold` is added to: one
+ * bound with `threshold: 0.5` under this default fires at 0.6, so raising it
+ * moves every axis binding with it. An ordinary button never consults it at
+ * all, since its pressed state comes from the browser; it reaches a button
+ * only where a non-standard mapping routes an axis onto one through its
+ * `analog` array.
  * @param value - Deadzone value
+ * @see {@link input.bindGamepad}
  * @category Input
  */
 export function setGamepadDeadzone(value: number): void {
@@ -557,3 +541,204 @@ export const setGamepadMapping: (
 	id: string,
 	mapping: Partial<GamepadMapping>,
 ) => void = addMapping;
+
+/**
+ * Options for {@link input.vibrateGamepad}.
+ * @category Input
+ */
+export interface GamepadVibration {
+	/** how long the effect runs, milliseconds */
+	duration?: number;
+	/** the heavy, low-frequency motor, `0` to `1` */
+	strongMagnitude?: number;
+	/** the light, high-frequency motor, `0` to `1` */
+	weakMagnitude?: number;
+	/** how long to wait before it starts, milliseconds */
+	startDelay?: number;
+	/** left trigger motor, `0` to `1`. `"trigger-rumble"` only */
+	leftTrigger?: number;
+	/** right trigger motor, `0` to `1`. `"trigger-rumble"` only */
+	rightTrigger?: number;
+	/**
+	 * Which effect to play. `"dual-rumble"` is the one every haptic pad
+	 * supports; `"trigger-rumble"` drives the motors inside the triggers and
+	 * is not widely implemented.
+	 */
+	type?: GamepadHapticEffectType;
+}
+
+/**
+ * The pads the browser is reporting, or undefined where it reports none.
+ *
+ * `vibrationActuator` is restated as OPTIONAL here. lib.dom declares it
+ * always present, which is optimistic: a pad without motors does not have
+ * one, and narrowing through a plain annotation would make the runtime check
+ * for it dead in the type system while it is very much alive at run time.
+ * @ignore
+ * @internal
+ */
+function gamepads():
+	| (
+			| (Omit<Gamepad, "vibrationActuator"> & {
+					vibrationActuator?: GamepadHapticActuator;
+			  })
+			| null
+	  )[]
+	| undefined {
+	if (
+		!globalThis.navigator ||
+		typeof globalThis.navigator.getGamepads !== "function"
+	) {
+		return undefined;
+	}
+	return globalThis.navigator.getGamepads();
+}
+
+/**
+ * The haptic hardware on a pad, or undefined when there is none to drive.
+ *
+ * Read fresh every call rather than cached: `navigator.getGamepads()` returns
+ * new objects as the browser sees fit, and a pad unplugged and plugged back in
+ * is a different object in the same slot. `vibrationActuator` is typed as
+ * always present but is absent on a pad without motors, and present without a
+ * usable `playEffect` on older implementations, so both are checked.
+ * @ignore
+ * @internal
+ */
+function vibrationActuatorOf(index: number): GamepadHapticActuator | undefined {
+	const pad = gamepads()?.[index];
+	if (!pad) {
+		return undefined;
+	}
+	const actuator = pad.vibrationActuator;
+	// `playEffect` as well as the actuator itself: an older implementation
+	// can expose the object without the method
+	if (!actuator || typeof actuator.playEffect !== "function") {
+		return undefined;
+	}
+	return actuator;
+}
+
+/**
+ * Whether the pad at this index can vibrate.
+ *
+ * For deciding what to OFFER — a rumble toggle in an options screen, say.
+ * Nothing needs to call it before {@link input.vibrateGamepad}, which is a
+ * no-op on a pad without motors.
+ * @param index - Gamepad index
+ * @returns true when there is haptic hardware to drive
+ * @category Input
+ */
+export function hasGamepadVibration(index: number): boolean {
+	return vibrationActuatorOf(index) !== undefined;
+}
+
+/**
+ * Vibrate a gamepad.
+ *
+ * Safe to call blind: with no pad in that slot, no motors, or a browser
+ * without the Gamepad API at all, it resolves `false` and does nothing. That
+ * is the whole error path, so game code never has to branch on support.
+ *
+ * Magnitudes default to FULL, unlike the underlying web API where every
+ * parameter defaults to zero and a bare `playEffect("dual-rumble")` is a
+ * silent no-op. `vibrateGamepad(0)` vibrates.
+ *
+ * A second call preempts the first on the same pad, which is what makes a
+ * rapid series of hits read as a rapid series of hits rather than a queue.
+ * That is for DISTINCT events: a sustained rumble should be one effect with
+ * a long `duration`, not a call per frame, which would spend a promise and a
+ * preempted effect every frame to produce one continuous one.
+ * @param index - Gamepad index
+ * @param options - how hard and how long; see {@link GamepadVibration}
+ * @returns whether the effect ran to completion. `false` covers unsupported,
+ * preempted by a later call, and rejected by the device alike — a rumble is
+ * feedback, and nothing sensible branches on which of those happened.
+ * @example
+ * // a short, sharp knock
+ * input.vibrateGamepad(0, { duration: 90, strongMagnitude: 0.4, weakMagnitude: 0.8 });
+ * // and a long heavy one for something big
+ * input.vibrateGamepad(0, { duration: 600, strongMagnitude: 1, weakMagnitude: 0.5 });
+ * @category Input
+ */
+export function vibrateGamepad(
+	index: number,
+	options: GamepadVibration = {},
+): Promise<boolean> {
+	const actuator = vibrationActuatorOf(index);
+	if (actuator === undefined) {
+		return Promise.resolve(false);
+	}
+	const { type = "dual-rumble", ...params } = options;
+	return actuator
+		.playEffect(type, {
+			duration: 200,
+			strongMagnitude: 1,
+			weakMagnitude: 1,
+			...params,
+		})
+		.then((result) => result === "complete")
+		.catch(() => false);
+}
+
+/**
+ * Stop whatever a gamepad is currently playing.
+ *
+ * For cutting a long effect short — the player pausing, or a run ending under
+ * a rumble that would otherwise outlive it. A no-op where there is nothing to
+ * stop.
+ * @param index - Gamepad index
+ * @category Input
+ */
+export function stopGamepadVibration(index: number): void {
+	const actuator = vibrationActuatorOf(index);
+	if (actuator !== undefined && typeof actuator.reset === "function") {
+		// the rejection is ignored on purpose: asking a device that is gone to
+		// stop is already the outcome wanted
+		actuator.reset().catch(() => undefined);
+	}
+}
+
+/**
+ * The index of the pad the player is actually using.
+ *
+ * Slots are handed out in plug order, so index 0 is a guess rather than an
+ * answer: a wheel, a spare pad or a keyboard-shaped device left plugged in
+ * can hold slot 0 for a whole session while the player presses buttons on
+ * slot 1. Nothing in the browser reports which is "the" controller, and the
+ * one thing that identifies it is use.
+ *
+ * So this reports the last pad to produce a BOUND input, falling back to the
+ * first connected one before anything has been pressed, and to -1 when there
+ * is no pad at all. Pass it wherever an index is wanted —
+ * {@link input.vibrateGamepad} most of all, since rumbling the wrong pad is
+ * both useless and impossible to notice in testing.
+ *
+ * It follows bound inputs only, which is what makes it an answer about the
+ * player rather than about electrical noise: a resting stick on a worn pad
+ * reports movement for ever, and would otherwise claim to be the active one.
+ * @returns the gamepad index, or -1 when no gamepad is connected
+ * @example
+ * // rumble whichever pad the player is holding
+ * input.vibrateGamepad(input.activeGamepad(), { duration: 120 });
+ * @category Input
+ */
+export function activeGamepad(): number {
+	const pads = gamepads();
+	if (pads === undefined) {
+		return -1;
+	}
+	// Still the active one only while the SAME pad is still in that slot. A
+	// pad that was unplugged leaves its index behind and the next device
+	// plugged in can be handed it, so an index on its own would go on
+	// reporting a slot that now holds something else.
+	if (lastActiveIndex >= 0 && pads[lastActiveIndex]?.id === lastActiveId) {
+		return lastActiveIndex;
+	}
+	for (let i = 0; i < pads.length; i++) {
+		if (pads[i]) {
+			return i;
+		}
+	}
+	return -1;
+}
