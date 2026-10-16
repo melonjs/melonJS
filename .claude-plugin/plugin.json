@@ -28,6 +28,7 @@
 		"./packages/melonjs/skills/melonjs-particles-and-trails",
 		"./packages/melonjs/skills/melonjs-camera-and-drawing",
 		"./packages/melonjs/skills/melonjs-lighting",
+		"./packages/melonjs/skills/melonjs-math",
 		"./packages/melonjs/skills/melonjs-deployment",
 		"./packages/melonjs/skills/melonjs-loading-assets",
 		"./packages/melonjs/skills/melonjs-renderer-backends",
