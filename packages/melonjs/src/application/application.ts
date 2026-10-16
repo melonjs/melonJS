@@ -171,7 +171,6 @@ export default class Application {
 	 * A 3D game therefore has two sound options, and neither of them is a
 	 * cast. OWN the camera, which is the better one, because the type is
 	 * never lost in the first place:
-	 *
 	 * @example
 	 * class GameStage extends Stage {
 	 *     readonly camera: Camera3d;
