@@ -59,7 +59,21 @@ const makeRecorder = () => {
 			calls.push({ op: "fill", shape, radius: shape.radius });
 		},
 		stroke(shape) {
-			calls.push({ op: "stroke", shape });
+			// Snapshotted, every field of it, for the same reason `fill`
+			// snapshots the radius: ONE RoundRect is reused for the track, the
+			// fill and the border, so the object read after the draw holds
+			// whatever the LAST caller left in it. `lineWidth` too, because
+			// the border puts it back before the draw returns, so reading it
+			// afterwards can only ever see the value from before.
+			calls.push({
+				op: "stroke",
+				x: shape.pos.x,
+				y: shape.pos.y,
+				width: shape.width,
+				height: shape.height,
+				radius: shape.radius,
+				lineWidth: this.lineWidth,
+			});
 		},
 	};
 };
@@ -353,6 +367,84 @@ describe("ProgressBar", () => {
 			).toBe(true);
 		});
 
+		it("insets a rounded border by half its width, so it lands INSIDE", () => {
+			// The reason this is not simply `stroke(0, 0, 100, 20)`: every
+			// backend expands a line symmetrically about its path, so a stroke
+			// on the bar's own rectangle would put half the border outside the
+			// width and height the bar was given. Pulling the path in by
+			// `borderWidth / 2` is what cancels that.
+			const bar = new ProgressBar(0, 0, {
+				width: 100,
+				height: 20,
+				value: 0,
+				radius: 6,
+				borderColor: "#fff",
+				borderWidth: 4,
+			});
+			const r = makeRecorder();
+			bar.draw(r);
+			const border = r.calls.find((c) => {
+				return c.op === "stroke";
+			});
+			expect(border).toMatchObject({
+				x: 2,
+				y: 2,
+				width: 96,
+				height: 16,
+				lineWidth: 4,
+			});
+			// and the radius comes in with it, or the border would be a
+			// different curve from the edge it is tracing
+			expect(border.radius).toBe(4);
+		});
+
+		it("keeps a rounded border within the declared box at every width", () => {
+			// The property the inset exists for, checked rather than
+			// hard-coded: whatever the width, the OUTER edge of the stroke
+			// (path + half the line) may not pass the bar's own rectangle.
+			for (const borderWidth of [1, 2, 3, 7, 40]) {
+				const bar = new ProgressBar(10, 20, {
+					width: 100,
+					height: 30,
+					value: 0,
+					radius: 8,
+					borderColor: "#fff",
+					borderWidth,
+				});
+				const r = makeRecorder();
+				bar.draw(r);
+				const b = r.calls.find((c) => {
+					return c.op === "stroke";
+				});
+				const half = b.lineWidth / 2;
+				expect(b.x - half).toBeGreaterThanOrEqual(10);
+				expect(b.y - half).toBeGreaterThanOrEqual(20);
+				expect(b.x + b.width + half).toBeLessThanOrEqual(110);
+				expect(b.y + b.height + half).toBeLessThanOrEqual(50);
+			}
+		});
+
+		it("clamps a border thicker than half the bar", () => {
+			// Unclamped, the inset rectangle would invert: a 40px border on a
+			// 30px tall bar gives a height of -10, which is a shape no
+			// renderer can do anything sensible with.
+			const bar = new ProgressBar(0, 0, {
+				width: 100,
+				height: 30,
+				value: 0,
+				radius: 8,
+				borderColor: "#fff",
+				borderWidth: 40,
+			});
+			const r = makeRecorder();
+			bar.draw(r);
+			const b = r.calls.find((c) => {
+				return c.op === "stroke";
+			});
+			expect(b.lineWidth).toBe(15); // half the height, not 40
+			expect(b.height).toBeGreaterThan(0);
+		});
+
 		it("draws the border LAST, over the track and the fill", () => {
 			const bar = new ProgressBar(0, 0, {
 				width: 100,
@@ -376,9 +468,13 @@ describe("ProgressBar", () => {
 		});
 
 		it("restores the renderer's lineWidth after stroking", () => {
+			// ROUNDED on purpose. A square border is four fills and never
+			// touches `lineWidth` at all, so this test passed against a
+			// version that leaked it.
 			const bar = new ProgressBar(0, 0, {
 				width: 100,
 				height: 10,
+				radius: 4,
 				borderColor: "#fff",
 				borderWidth: 7,
 			});

@@ -8,6 +8,7 @@ import {
 	input,
 	loader,
 	UIBaseElement,
+	UIPanel,
 	UISpriteElement,
 	UITextButton,
 	video,
@@ -468,6 +469,136 @@ describe("UI pointer interaction", () => {
 				app.world.removeChildNow(far);
 				app.world.removeChildNow(target);
 			}
+		});
+	});
+
+	describe("a button inside a UIPanel", () => {
+		/**
+		 * Build a panel with one element in it, in the world.
+		 * @param settings - extra panel settings
+		 * @returns the panel, the child and a spy on its onClick
+		 */
+		const panelWithChild = (settings = {}) => {
+			const panel = new UIPanel(100, 100, {
+				width: 300,
+				height: 200,
+				fillColor: "#123456",
+				...settings,
+			});
+			const child = new UIBaseElement(50, 50, 120, 40);
+			const spy = vi.spyOn(child, "onClick");
+			panel.addChild(child);
+			app.world.addChild(panel);
+			syncBroadphase();
+			return { panel, child, spy };
+		};
+
+		it("fires, nested inside the panel", () => {
+			// The baseline the rest of this block depends on: a child of a
+			// panel is reachable at all. It sits at (150, 150) absolute, which
+			// is the panel's position plus its own.
+			const { panel, spy } = panelWithChild();
+			dispatchPointer("pointerdown", 210, 170);
+			expect(spy).toHaveBeenCalledTimes(1);
+			app.world.removeChild(panel);
+		});
+
+		it("still fires while the panel is bobbing", () => {
+			// The question this block exists for. A bob is a draw offset, so
+			// nothing about it should reach the hit area in either direction:
+			// the button must not stop working, and it must not start
+			// answering somewhere else.
+			const { panel, spy } = panelWithChild({
+				bobAmplitude: 8,
+				bobPeriod: 1000,
+			});
+			panel.update(250); // the top of the cycle, 8px up
+			syncBroadphase();
+			dispatchPointer("pointerdown", 210, 170);
+			expect(spy).toHaveBeenCalledTimes(1);
+
+			spy.mockClear();
+			panel.update(500); // the bottom of it, 8px down
+			syncBroadphase();
+			dispatchPointer("pointerdown", 210, 170);
+			expect(spy).toHaveBeenCalledTimes(1);
+			app.world.removeChild(panel);
+		});
+
+		it("answers where the bob DRAWS it, not where it rests", () => {
+			// The whole point of routing the offset through
+			// `getAbsolutePosition()`: you click the button you can see.
+			const { panel, spy } = panelWithChild({
+				bobAmplitude: 60,
+				bobPeriod: 1000,
+			});
+			panel.update(250); // 60px up, far outside its own 40px height
+			// DRAWN as well as stepped, which is what proves the offset is
+			// not coming from a `pos` write.
+			panel.preDraw(app.renderer);
+			panel.draw(app.renderer);
+			panel.postDraw(app.renderer);
+			syncBroadphase();
+			dispatchPointer("pointerdown", 210, 110); // where it is DRAWN
+			expect(spy).toHaveBeenCalledTimes(1);
+			spy.mockClear();
+			dispatchPointer("pointerdown", 210, 170); // where it rests
+			expect(spy).not.toHaveBeenCalled();
+			// and `pos` is still the resting place the caller set
+			expect(panel.pos.y).toBe(100);
+			app.world.removeChild(panel);
+		});
+
+		it("carries a GRANDCHILD's hit area too", () => {
+			// `getAbsolutePosition()` sums the whole chain, so the offset
+			// reaches any depth without the levels in between knowing.
+			const panel = new UIPanel(100, 100, {
+				width: 300,
+				height: 200,
+				bobAmplitude: 60,
+				bobPeriod: 1000,
+			});
+			const group = new UIBaseElement(20, 20, 200, 100);
+			const deep = new UIBaseElement(30, 30, 120, 40);
+			const spy = vi.spyOn(deep, "onClick");
+			group.addChild(deep);
+			panel.addChild(group);
+			app.world.addChild(panel);
+			panel.update(250);
+			syncBroadphase();
+			// rests at 100+20+30 = 150, drawn 60 up at 90
+			dispatchPointer("pointerdown", 210, 110);
+			expect(spy).toHaveBeenCalledTimes(1);
+			app.world.removeChild(panel);
+		});
+
+		it("carries the child's hit area when the panel MOVES", () => {
+			// Not the same thing as the bob, and the one that is a real bug.
+			// A child's bounds are absolute and cached, and `UIPanel` turns
+			// off the container flag that refreshes them, so a panel slid into
+			// place after it was built used to leave every button answering at
+			// the old spot.
+			const { panel, spy } = panelWithChild();
+			panel.pos.y += 60;
+			syncBroadphase();
+			dispatchPointer("pointerdown", 210, 170); // where it used to be
+			expect(spy).not.toHaveBeenCalled();
+			dispatchPointer("pointerdown", 210, 230); // where it is now
+			expect(spy).toHaveBeenCalledTimes(1);
+			app.world.removeChild(panel);
+		});
+
+		it("keeps its own bounds off its children while doing that", () => {
+			// The reason the container flag is off in the first place: an
+			// overhanging child must not grow the rectangle a blocking panel
+			// swallows clicks inside.
+			const panel = new UIPanel(100, 100, { width: 300, height: 200 });
+			panel.addChild(new UIBaseElement(0, 0, 900, 900));
+			app.world.addChild(panel);
+			panel.pos.y += 10;
+			expect(panel.getBounds().width).toBe(300);
+			expect(panel.getBounds().height).toBe(200);
+			app.world.removeChild(panel);
 		});
 	});
 });

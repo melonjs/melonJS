@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, UIPanel, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
 license: MIT
 ---
 
@@ -204,9 +204,10 @@ class HUD extends Container {
 app.world.addChild(new HUD(app), 100);   // explicit z — not `.z = Infinity`
 ```
 
-There is no `UIContainer` class. Use `Container`, or `UIBaseElement` when the
-panel itself must react to the pointer — it is a `Container` that already sets
-`floating = true` and `isKinematic = false`.
+There is no `UIContainer` class. Use `Container` for a bare grouping,
+`UIPanel` for anything with a background or a border (see below), or
+`UIBaseElement` when you want the pointer handling and nothing drawn — it is a
+`Container` that already sets `floating = true` and `isKinematic = false`.
 
 Three things matter here:
 
@@ -293,6 +294,88 @@ Two more worth knowing:
   only above a line width of 1, so at exactly 1 a corner pixel goes missing.
 - **`trackColor: null` leaves the bar hollow**, which is what a HUD over a busy
   scene usually wants: the border is then the only chrome.
+
+### Panels and cards: `UIPanel`
+
+A dialog, a menu card, a HUD frame: a rectangle with a fill, an optional
+border and children on top. `UIPanel` is a `UIBaseElement`, so it is a
+container that carries pointer events.
+
+```js
+import { UIPanel, Text } from "melonjs";
+
+const card = new UIPanel(cx - 200, cy - 120, {
+    width: 400, height: 240,
+    fillColor: "#0a1526",                       // null leaves it transparent
+    borderColor: "rgba(130, 200, 240, 0.55)",   // null for none
+    borderWidth: 2,
+    radius: 14,
+});
+card.addChild(new Text(200, 24, { text: "PAUSED", textAlign: "center" }));
+app.world.addChild(card, -150);   // small depth: see the 3D section below
+```
+
+**`fillColor`, not `backgroundColor`.** `Container` already has a
+`backgroundColor` and it does something else entirely: it is handed to
+`clearColor` and wipes the whole render target, so a panel setting it repaints
+the screen. The names here match `ProgressBarSettings`.
+
+**The border is drawn INSIDE the box.** `width` and `height` are the outer
+size, border included, so a panel never paints past the rectangle you gave it
+and its `getBounds()`, which is what the pointer dispatcher hit-tests, stays
+that rectangle. One thing to know with a `radius`: keep `borderWidth` at 2 or
+more. A rounded border has to be stroked, and a stroke at exactly 1 goes out as
+plain lines, which drops a pixel where each arc meets its straight edge. A
+square border is four fills and is fine at 1.
+
+**`blocking` (default `true`)** makes the panel consume clicks and hovers that
+miss its children, which is what a dialog wants — a click on the card, or on
+the dimmed scene behind it, must not reach the game. Children are unaffected:
+the dispatcher asks a child before the container holding it. Set it `false` for
+a frame drawn over a playfield that still has to receive clicks.
+
+A full-screen panel with a translucent `fillColor` and `borderColor: null` is
+the veil behind a modal, and it blocks for free.
+
+**`bobAmplitude` / `bobPeriod`** give the panel the slow float an idle
+dialogue or pause panel usually has, so a screen waiting for input does not
+look frozen:
+
+```js
+card.bobAmplitude = 3;      // pixels either side; 2 to 4 is the usual range
+card.bobPeriod = 2500;      // ms for a full up-and-down cycle
+```
+
+Three things to know. **The panel is clickable where it is drawn**: the offset
+goes into `getAbsolutePosition()`, which is what the bounds pipeline reads, so
+the hit area of the panel and of every widget inside it follows the float at
+any depth. `pos` is left alone, so it still reads and writes the resting place.
+It is fed from `update(dt)`, so it stops with the rest of the game on
+`state.pause()` unless the panel sets `updateWhenPaused`, which a pause menu
+does anyway. And do not go below an amplitude of 2: the offset is rounded to whole
+pixels, so an amplitude of 1 has three positions to move through and twitches
+instead of drifting.
+
+One consequence worth knowing: `getBounds()` on a bobbing panel answers
+differently each frame, so do not cache it or compare two children's bounds
+while a bob is running.
+
+### A pause overlay: `updateWhenPaused` cascades
+
+`state.pause()` stops every world child stepping while rendering carries on, so
+the overlay that reads the key to UNPAUSE has to opt out:
+
+```js
+const overlay = new UIPanel(0, 0, { width: w, height: h, fillColor: "rgba(4,8,16,0.72)" });
+overlay.updateWhenPaused = true;   // the whole subtree, not just this one
+```
+
+The flag covers the container's **entire subtree**, so nested labels, buttons
+and the card inside the veil all keep stepping without being flagged one by
+one. That matters for more than their `update`: `inViewport` is computed in the
+same loop that honours the pause, so a skipped child keeps whatever it had —
+`false` for one built while paused — and `Container.draw` then declines to draw
+it, silently. A panel whose labels never appear while paused is this.
 
 ### Buttons: extend the handlers, do not bind listeners
 
