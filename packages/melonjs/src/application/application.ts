@@ -200,6 +200,17 @@ export default class Application {
 	pauseOnBlur: boolean;
 
 	/**
+	 * Whether the pause now in force is one this application applied on blur.
+	 *
+	 * The engine cannot otherwise tell its own pause from the game's, and
+	 * undoing the wrong one is how a pause menu ends up with the game running
+	 * behind it.
+	 * @ignore
+	 * @internal
+	 */
+	_pausedOnBlur: boolean;
+
+	/**
 	 * Specify whether to unpause this app when gaining back focus
 	 * @default true
 	 */
@@ -330,6 +341,7 @@ export default class Application {
 		this.lastUpdate = 0;
 		this.isInitialized = false;
 		this.pauseOnBlur = true;
+		this._pausedOnBlur = false;
 		this.resumeOnFocus = true;
 		this.stopOnBlur = false;
 		this.isDirty = true;
@@ -1073,8 +1085,21 @@ export default class Application {
 		if (this.stopOnBlur) {
 			state.stop(true);
 		}
-		if (this.pauseOnBlur) {
+		// Remembered so focus can undo THIS pause and not someone else's. A
+		// game that paused itself, for a pause menu, is already paused when
+		// the window goes away: `state.pause` sees that and does nothing, so
+		// there is nothing here for focus to reverse.
+		//
+		// Only ever RAISED here, never cleared: a tab switch emits BLUR
+		// twice, once from the window and once from `visibilitychange`, and
+		// the second one finds the state already paused by the first. Clearing
+		// it at the top of this method therefore threw away the record of the
+		// pause that had just been applied, and the game never came back.
+		// Focus clears it instead, which is the one place that knows the
+		// pause has been undone.
+		if (this.pauseOnBlur && !state.isPaused()) {
 			state.pause(true);
+			this._pausedOnBlur = true;
 		}
 		if (this.stopOnBlur || this.pauseOnBlur) {
 			// `state.stop()` / `state.pause()` only reach the current music
@@ -1092,9 +1117,15 @@ export default class Application {
 		if (this.stopOnBlur) {
 			state.restart(true);
 		}
-		if (this.resumeOnFocus) {
+		// Only the pause this application applied, which is the same rule
+		// `unmuteOnFocus` below already follows. Resuming unconditionally
+		// restarted a game that had paused ITSELF: switch tabs from a pause
+		// menu and the run was playing again underneath it on the way back,
+		// with its music, while the menu was still on screen.
+		if (this.resumeOnFocus && this._pausedOnBlur) {
 			state.resume(true);
 		}
+		this._pausedOnBlur = false;
 		// unconditional: it only undoes a mute this module itself applied, and
 		// a game that stops on blur without resuming on focus would otherwise
 		// be left silent for good

@@ -730,6 +730,68 @@ describe("Application", () => {
 			await next;
 			expect(state.isPaused()).toBe(false);
 		});
+
+		it("focus resumes a pause it applied on blur", () => {
+			expect(state.isPaused()).toBe(false);
+			app._onBlur();
+			expect(state.isPaused()).toBe(true);
+			app._onFocus();
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("focus leaves a pause the GAME applied alone", () => {
+			// The pause-menu case. A game pauses itself, the player switches
+			// tab and comes back: resuming here would put the run back in
+			// motion behind a menu that is still on screen, with its music,
+			// and nothing would tell the menu it had lost control.
+			state.pause();
+			expect(state.isPaused()).toBe(true);
+
+			app._onBlur();
+			app._onFocus();
+			expect(state.isPaused()).toBe(true);
+
+			// and the game can still end its own pause afterwards
+			state.resume();
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("survives the two BLUR events a real tab switch sends", () => {
+			// `device.js` emits BLUR from the window handler AND from
+			// `visibilitychange`, so this runs twice per switch. The second
+			// one finds the state already paused by the first; if that made
+			// the application forget it was the one that paused, focus would
+			// not resume and the game would never come back.
+			expect(state.isPaused()).toBe(false);
+			app._onBlur();
+			app._onBlur();
+			expect(state.isPaused()).toBe(true);
+			app._onFocus();
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("leaves a game pause alone across two BLUR events", () => {
+			state.pause();
+			app._onBlur();
+			app._onBlur();
+			app._onFocus();
+			expect(state.isPaused()).toBe(true);
+			state.resume();
+		});
+
+		it("does not carry a blur pause over to a later game pause", () => {
+			// the flag has to clear on focus, or the NEXT game pause would be
+			// treated as this application's and undone by a later tab switch
+			app._onBlur();
+			app._onFocus();
+			expect(state.isPaused()).toBe(false);
+
+			state.pause();
+			app._onBlur();
+			app._onFocus();
+			expect(state.isPaused()).toBe(true);
+			state.resume();
+		});
 	});
 
 	describe("parentApp", () => {

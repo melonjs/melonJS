@@ -188,6 +188,17 @@ function registerChildBody(child, worldContainer) {
 let globalFloatingCounter = 0;
 
 /**
+ * How many containers up the chain currently being stepped have opted into
+ * running while the game is paused. Same idiom as `globalFloatingCounter`
+ * above, for the same reason: `update` recurses through `obj.update(dt)`
+ * with a fixed signature, so an ancestor's opt-in has to travel down as
+ * module state rather than as a parameter.
+ * @ignore
+ * @internal
+ */
+let globalPausedCounter = 0;
+
+/**
  * additional import for TypeScript
  * @import {Color} from "./../math/color.ts";
  * @import Entity from "./entity/entity.js";
@@ -1340,6 +1351,21 @@ export default class Container extends Renderable {
 	update(dt) {
 		let isFloating = false;
 		const isPaused = state.isPaused();
+		// The frame boundary, and the reason the counter below cannot strand
+		// the world. Saving and restoring it around a child is idempotent but
+		// NOT exception safe: a throw escaping `obj.update` skips the restore
+		// just as it would skip a decrement, and a counter left raised makes
+		// every container read an opt-in that is not there, so the whole game
+		// steps through `state.pause()` from then on. Zeroing it where the
+		// walk begins bounds that to the frame it happened in, which is what
+		// `Application.draw` does with the screen-space depth for the same
+		// reason. A try/finally per child would also do it, in the hottest
+		// loop in the engine, to buy nothing this does not.
+		if (this.root === true) {
+			globalPausedCounter = 0;
+		}
+		// whether a pause is already opted out of for everything in here
+		const inherited = globalPausedCounter > 0 || this.updateWhenPaused === true;
 		const children = this.getChildren();
 		const cameras = state.current().cameras;
 
@@ -1362,7 +1388,23 @@ export default class Container extends Renderable {
 			if (obj.ancestor !== this) {
 				continue;
 			}
-			if (isPaused && !obj.updateWhenPaused) {
+			// A child steps through a pause on its own opt-in OR on one from
+			// this container or any container above it. Not only its own: a
+			// pause menu is a container that keeps running so it can read the
+			// key that closes it, and its labels are nested one or two
+			// containers down. Gated on their own flag alone they were skipped
+			// here, and since this loop is also where `inViewport` is
+			// computed, a label added while paused kept the `false` it was
+			// constructed with and `draw` never painted it. Flagging each
+			// descendant by hand is what a caller had to do instead, and the
+			// first one missed a level.
+			//
+			// This container's own flag is read here too, not only carried
+			// down by the counter from the loop above: the counter is only
+			// raised by a PARENT visiting a flagged child, and a container
+			// stepped directly, by a stage or by a test, has no parent loop.
+			const runsPaused = inherited || obj.updateWhenPaused === true;
+			if (isPaused && !runsPaused) {
 				// skip this object
 				continue;
 			}
@@ -1370,6 +1412,21 @@ export default class Container extends Renderable {
 			isFloating = globalFloatingCounter > 0 || obj.floating;
 			if (isFloating) {
 				globalFloatingCounter++;
+			}
+			// SAVED, not incremented, so the restore below cannot get out of
+			// step with it. A paired increment/decrement around `obj.update`
+			// is not exception safe: one throw leaves the counter raised, and
+			// from then on every container reads `inherited` as true and the
+			// whole world steps through `state.pause()` for the rest of the
+			// session. The engine has already been bitten by exactly this,
+			// with the screen-space depth bracket in `Container.draw` (see
+			// `Application.draw`, which zeroes that one per frame for the
+			// same reason). Restoring a saved value is idempotent: a throw
+			// skips it, and the next frame's save reads whatever is there and
+			// puts the same thing back.
+			const previousPaused = globalPausedCounter;
+			if (runsPaused) {
+				globalPausedCounter++;
 			}
 
 			// check if object is in any active cameras — accumulate into a
@@ -1388,6 +1445,7 @@ export default class Container extends Renderable {
 			// update our object
 			this.isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
 
+			globalPausedCounter = previousPaused;
 			if (globalFloatingCounter > 0) {
 				globalFloatingCounter--;
 			}
