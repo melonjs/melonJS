@@ -1,4 +1,12 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	Application,
 	Body,
@@ -6,6 +14,7 @@ import {
 	Container,
 	Rect,
 	Renderable,
+	state,
 	video,
 	World,
 } from "../src/index.js";
@@ -2000,6 +2009,139 @@ describe("Container", () => {
 			mk("c");
 			parent.update(16);
 			expect([...counts.values()]).toEqual([1, 1, 1]);
+		});
+	});
+	describe("updateWhenPaused on a container", () => {
+		// `Container.update()` reads `state.current().cameras` and the pause
+		// flag lives on `state`, so these need a real application behind them
+		beforeAll(async () => {
+			boot();
+			const app = new Application(400, 300, {
+				parent: "screen",
+				scale: "auto",
+				renderer: video.CANVAS,
+			});
+			await app.init();
+		});
+
+		afterEach(() => {
+			// always end with the game running for subsequent tests
+			if (state.isPaused()) {
+				state.resume();
+			}
+		});
+
+		/**
+		 * A child whose `update` counts its calls.
+		 *
+		 * On screen, so that `inViewport` comes out true whenever the loop
+		 * gets as far as computing it, and WITHOUT `alwaysUpdate`: the count
+		 * then proves the visibility was computed as well as the step taken,
+		 * which is the half of the loop a skipped child also loses. The
+		 * negative cases pass `always` so that the pause gate is the only
+		 * thing left that can stop them.
+		 */
+		const counting = (parent, always = false) => {
+			const r = new Renderable(10, 10, 8, 8);
+			r.alwaysUpdate = always;
+			r.calls = 0;
+			r.update = () => {
+				r.calls++;
+				return false;
+			};
+			parent.addChild(r);
+			return r;
+		};
+
+		it("a child inherits the opt-in from the container above it", () => {
+			const parent = new Container(0, 0, 400, 300);
+			parent.updateWhenPaused = true;
+			const child = counting(parent);
+			state.pause();
+			expect(state.isPaused()).toBe(true);
+			parent.update(16);
+			expect(child.calls).toBe(1);
+			expect(child.inViewport).toBe(true);
+		});
+
+		it("the opt-in reaches a grandchild through a container that has no flag of its own", () => {
+			// the shape of a pause menu: the menu is flagged, the card inside
+			// it is a plain container, and the labels are inside the card.
+			// A cascade that only looks one level up stops at the card.
+			const menu = new Container(0, 0, 400, 300);
+			menu.updateWhenPaused = true;
+			const card = new Container(0, 0, 200, 100);
+			menu.addChild(card);
+			const label = counting(card);
+			state.pause();
+			menu.update(16);
+			expect(label.calls).toBe(1);
+			expect(label.inViewport).toBe(true);
+		});
+
+		it("without an opt-in anywhere above, a paused child is still skipped", () => {
+			// `parent` stands in for the world here, which the application
+			// steps unconditionally and which carries no flag of its own
+			const parent = new Container(0, 0, 400, 300);
+			const child = counting(parent, true);
+			state.pause();
+			parent.update(16);
+			expect(child.calls).toBe(0);
+			state.resume();
+			parent.update(16);
+			expect(child.calls).toBe(1);
+		});
+
+		it("the opt-in ends with its subtree and is not left raised for the next step", () => {
+			// Stepped TWICE on purpose. Whether the subtree's opt-in is still
+			// in force is read once at the top of `update`, so a sibling in
+			// the SAME call could never see it however the loop is ordered:
+			// the only way an opt-in left behind becomes visible is on a
+			// later call, which is what the second step here is.
+			const parent = new Container(0, 0, 400, 300);
+			const plain = counting(parent, true);
+			const menu = new Container(0, 0, 200, 100);
+			menu.updateWhenPaused = true;
+			parent.addChild(menu);
+			const label = counting(menu);
+			state.pause();
+
+			parent.update(16);
+			expect(label.calls).toBe(1);
+			expect(plain.calls).toBe(0);
+
+			parent.update(16);
+			expect(label.calls).toBe(2);
+			// the one that matters: still skipped on a step that began after
+			// the flagged subtree had already been walked once
+			expect(plain.calls).toBe(0);
+		});
+
+		it("a child that throws does not leave the world running through a pause", () => {
+			// The bookkeeping brackets `obj.update`, so an exception escaping
+			// it must not strand the opt-in. If it does, every container from
+			// then on believes a pause has been opted out of and the whole
+			// game steps through `state.pause()` for the rest of the session.
+			const parent = new Container(0, 0, 400, 300);
+			const menu = new Container(0, 0, 200, 100);
+			menu.updateWhenPaused = true;
+			parent.addChild(menu);
+			const thrower = counting(menu);
+			thrower.update = () => {
+				throw new Error("boom");
+			};
+			state.pause();
+			expect(() => {
+				return parent.update(16);
+			}).toThrow("boom");
+
+			// The next FRAME, which is where the walk begins and where the
+			// bookkeeping is zeroed. A world with no opt-in anywhere in it
+			// must be paused again, not left running by the throw.
+			const world = new Container(0, 0, 400, 300, true);
+			const plain = counting(world, true);
+			world.update(16);
+			expect(plain.calls).toBe(0);
 		});
 	});
 });
