@@ -5,7 +5,7 @@ const takeFromSet = <T>(set: Set<T>) => {
 	}
 };
 
-export interface Pool<T, A extends unknown[]> {
+export interface Pool<T extends object, A extends unknown[]> {
 	get(...args: A): T;
 	release(object: T): void;
 	purge(): void;
@@ -16,7 +16,7 @@ export interface Pool<T, A extends unknown[]> {
 type Reset<A extends unknown[]> = ((...args: A) => void) | undefined;
 type Release = (() => void) | undefined;
 
-export interface CreatePoolOptions<T, A extends unknown[]> {
+export interface CreatePoolOptions<T extends object, A extends unknown[]> {
 	instance: T;
 	// spelled out rather than naming the two aliases above: those are
 	// internal, and a public interface must not reference a type a consumer
@@ -110,12 +110,18 @@ export const releaseToOwningPool = (instance: object): boolean => {
 	return true;
 };
 
-export const createPool = <T, A extends unknown[]>(
+export const createPool = <T extends object, A extends unknown[]>(
 	options: (...args: A) => CreatePoolOptions<T, A>,
 ): Pool<T, A> => {
 	const available = new Set<T>();
-	const instanceResetMethods = new Map<T, Reset<A>>();
-	const instanceReleaseMethods = new Map<T, Release>();
+	// WEAK, and that is the whole point. These are keyed by the instance, so
+	// a strong Map keeps every object the pool ever handed out alive for the
+	// life of the page: `clone()` takes from the pool, game code drops the
+	// result, and nothing can collect it because the registry still refers to
+	// it. Measured before this: 600k dropped clones retained 150MB and
+	// `used()` climbed for ever. A WeakMap lets a dropped instance go.
+	const instanceResetMethods = new WeakMap<T, Reset<A>>();
+	const instanceReleaseMethods = new WeakMap<T, Release>();
 	let inUse: number = 0;
 
 	const pool: Pool<T, A> = {
