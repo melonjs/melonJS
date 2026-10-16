@@ -2759,7 +2759,7 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} height - height of the pattern
 	 */
 	drawPattern(pattern, x, y, width, height) {
-		const uvs = pattern.getUVs("0,0," + width + "," + height);
+		const uvs = pattern.getUVs(0, 0, width, height);
 		this.setBatcher("quad");
 		this.currentBatcher.addQuad(
 			pattern,

@@ -146,7 +146,7 @@ describe("no-arg atlas iteration (getAnimationSettings)", () => {
 	});
 });
 
-describe("UV coordinate-alias cache (#1281 workaround)", () => {
+describe("UV source-rectangle cache", () => {
 	it("a full-image lookup is not poisoned by a frame at (0,0)", () => {
 		const atlas = new TextureAtlas(
 			{ framewidth: 32, frameheight: 32 },
@@ -159,15 +159,14 @@ describe("UV coordinate-alias cache (#1281 workaround)", () => {
 		expect(Array.from(uvs)).toEqual([0, 0, 1, 1]);
 	});
 
-	it("a sub-region lookup hits the alias instead of duplicating the region", () => {
+	it("a sub-region lookup reuses the frame's precomputed UVs", () => {
 		const atlas = new TextureAtlas(
 			{ framewidth: 32, frameheight: 32 },
 			fakeImage(64, 64, "sheet.png"),
 			false,
 		);
 		const frame1uvs = atlas.getAtlas()["1"].uvs;
-		// frame "1" is at (32,0,32,32) — the coordinate lookup must resolve
-		// to the SAME uvs array (cache hit), not an ad-hoc duplicate region
+		// frame "1" is at (32,0,32,32); numeric lookup reuses its UV array.
 		expect(atlas.getUVs(32, 0, 32, 32)).toBe(frame1uvs);
 	});
 });

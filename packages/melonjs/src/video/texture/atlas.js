@@ -180,11 +180,18 @@ export class TextureAtlas extends Texture2d {
 		this.activeAtlas = undefined;
 
 		/**
-		 * UV lookup cache to avoid per-frame string allocation in drawImage
+		 * Source-rectangle UVs, separate from the named regions in each atlas.
 		 * @ignore
 		 * @internal
 		 */
-		this._uvCache = { sx: -1, sy: -1, sw: -1, sh: -1, uvs: null };
+		this._uvsByAtlas = new WeakMap();
+
+		/**
+		 * Last numeric lookup, scoped to its atlas page.
+		 * @ignore
+		 * @internal
+		 */
+		this._uvCache = { atlas: null, sx: -1, sy: -1, sw: -1, sh: -1, uvs: null };
 
 		// parse given atlas(es) paremeters
 		if (typeof atlases !== "undefined") {
@@ -445,19 +452,23 @@ export class TextureAtlas extends Texture2d {
 	}
 
 	/**
-	 * return the uvs mapping for the given region
+	 * Return precomputed UVs for a named region, or cached UVs for a numeric
+	 * source rectangle. Numeric lookups do not add regions to the atlas.
 	 * @param {string|number} name - region (or frame) name, or sx when using numeric parameters
 	 * @param {number} [sy] - source y coordinate (when using numeric parameters)
 	 * @param {number} [sw] - source width (when using numeric parameters)
 	 * @param {number} [sh] - source height (when using numeric parameters)
 	 * @returns {Float32Array} region Uvs
+	 * @throws {Error} if the named region does not exist
 	 */
 	getUVs(name, sy, sw, sh) {
 		if (typeof name === "number") {
 			const sx = name;
+			const atlas = this.getAtlas();
 			const cache = this._uvCache;
 			// fast path: return cached UVs if coordinates match last lookup
 			if (
+				atlas === cache.atlas &&
 				sx === cache.sx &&
 				sy === cache.sy &&
 				sw === cache.sw &&
@@ -465,29 +476,70 @@ export class TextureAtlas extends Texture2d {
 			) {
 				return cache.uvs;
 			}
-			// cache miss: fall back to string-keyed region lookup
-			const key = sx + "," + sy + "," + sw + "," + sh;
-			let region = this.getRegion(key);
-			if (typeof region === "undefined") {
-				region = this.addRegion(key, sx, sy, sw, sh);
+			const rectangles = this._getUVCache(atlas, sx, sy, sw);
+			let uvs = rectangles.get(sh);
+			if (typeof uvs === "undefined") {
+				const source = this.getTexture();
+				const width = source.width || source.videoWidth;
+				const height = source.height || source.videoHeight;
+				uvs = new Float32Array([
+					sx / width,
+					sy / height,
+					(sx + sw) / width,
+					(sy + sh) / height,
+				]);
+				rectangles.set(sh, uvs);
 			}
+			cache.atlas = atlas;
 			cache.sx = sx;
 			cache.sy = sy;
 			cache.sw = sw;
 			cache.sh = sh;
-			cache.uvs = region.uvs;
-			return region.uvs;
+			cache.uvs = uvs;
+			return uvs;
 		}
 
 		// string-based lookup (named regions)
-		let region = this.getRegion(name);
+		const region = this.getRegion(name);
 
-		if (typeof region === "undefined") {
-			// see https://github.com/melonjs/melonJS/issues/1281
-			const keys = name.split(",");
-			region = this.addRegion(name, +keys[0], +keys[1], +keys[2], +keys[3]);
+		if (typeof region?.uvs === "undefined") {
+			throw new Error("Texture - region for " + name + " not found");
 		}
 		return region.uvs;
+	}
+
+	/**
+	 * Locate a rectangle's height-keyed UV map without constructing string keys.
+	 * @param {object} atlas - atlas dictionary
+	 * @param {number} x - source x coordinate
+	 * @param {number} y - source y coordinate
+	 * @param {number} width - source width
+	 * @returns {Map<number, Float32Array>} cached UVs by source height
+	 * @ignore
+	 * @internal
+	 */
+	_getUVCache(atlas, x, y, width) {
+		let byX = this._uvsByAtlas.get(atlas);
+		if (typeof byX === "undefined") {
+			byX = new Map();
+			this._uvsByAtlas.set(atlas, byX);
+		}
+		let byY = byX.get(x);
+		if (typeof byY === "undefined") {
+			byY = new Map();
+			byX.set(x, byY);
+		}
+		let byWidth = byY.get(y);
+		if (typeof byWidth === "undefined") {
+			byWidth = new Map();
+			byY.set(y, byWidth);
+		}
+		let byHeight = byWidth.get(width);
+		if (typeof byHeight === "undefined") {
+			byHeight = new Map();
+			byWidth.set(width, byHeight);
+		}
+		return byHeight;
 	}
 
 	/**
@@ -510,17 +562,11 @@ export class TextureAtlas extends Texture2d {
 			(s.x + sw) / w, // u1 (right)
 			(s.y + sh) / h, // v1 (bottom)
 		]);
-		// Cache source coordinates
-		// see https://github.com/melonjs/melonJS/issues/1281
-		// keyed by the REGION rect (x, y, width, height) — the same key shape
-		// `getUVs(sx, sy, sw, sh)` builds for coordinate lookups. (Keying by
-		// the texture dimensions instead made the alias unmatchable for any
-		// sub-region AND poisoned full-image lookups whenever a frame sat at
-		// (0,0): "0,0,texW,texH" pointed at that frame, not the whole image.)
-		const key = `${s.x},${s.y},${sw},${sh}`;
-		if (key !== name) {
-			atlas[key] = atlas[name];
-		}
+		// Numeric draws reuse the frame's precomputed UVs without exposing
+		// coordinate aliases to animation consumers of the atlas dictionary.
+		this._getUVCache(atlas, s.x, s.y, sw).set(sh, atlas[name].uvs);
+		// A newly defined region may replace the UVs from the last lookup.
+		this._uvCache.atlas = null;
 
 		return atlas[name].uvs;
 	}
@@ -639,9 +685,8 @@ export class TextureAtlas extends Texture2d {
 			const isArray = Array.isArray(names);
 			const name = isArray ? names[i] : i;
 			// in dictionary mode, only iterate real regions: a region's `name`
-			// matches its dictionary key. This skips both the coordinate-alias
-			// keys added by `addUVs` (#1281 — they'd duplicate every frame) and
-			// non-region entries like the aseprite parser's `anims` dictionary
+			// matches its dictionary key. This skips non-region entries like
+			// the aseprite parser's `anims` dictionary
 			// (whose value has no `name`, and which `getRegion` would otherwise
 			// happily return as a NaN-sized pseudo-region).
 			if (!isArray && (names[i] == null || names[i].name !== i)) {
@@ -704,8 +749,8 @@ export class TextureAtlas extends Texture2d {
 		for (const i in names) {
 			const isArray = Array.isArray(names);
 			const name = isArray ? names[i] : i;
-			// dictionary mode: skip coordinate-alias keys and non-region
-			// entries (see getAnimationSettings for the full rationale)
+			// dictionary mode: skip non-region entries (see
+			// getAnimationSettings for the full rationale)
 			if (!isArray && (names[i] == null || names[i].name !== i)) {
 				continue;
 			}
