@@ -1,6 +1,6 @@
 ---
 name: melonjs-audio
-description: "Use this skill for sound and music in melonJS — loading audio, playing effects, background tracks, audio sprites, volume and muting, spatial audio, procedural tone/noise generation, and effects such as reverb or a compressor on the whole mix. Covers the mandatory audio.init format list, the directory-not-file src convention, playTrack versus play, the fixed listener and pixel-scale distances of positional sound, and browser autoplay unlocking. Triggers on: audio, sound, audio.init, audio.play, playTrack, stopTrack, audio.load, sfx, music, volume, mute, fade, rate, pitch, sprite audio, stereo, panner, position, listener, refDistance, reverb, echo, delay, compressor, distortion, filter, audio effect, audio.tone, audio.noise, getAudioContext, getMasterGain, hasAudio, hasFormat, autoplay."
+description: "Use this skill for sound and music in melonJS — loading audio, playing effects, background tracks, audio sprites, volume and muting, spatial audio, procedural tone/noise generation, and effects such as reverb or a compressor on the whole mix. Covers the mandatory audio.init format list, the directory-not-file src convention, playTrack versus play, the fixed listener and pixel-scale distances of positional sound, and browser autoplay unlocking. Triggers on: audio, sound, audio.init, audio.play, playTrack, stopTrack, audio.load, sfx, music, volume, mute, fade, rate, pitch, sprite audio, stereo, panner, position, listener, refDistance, reverb, echo, delay, compressor, distortion, filter, audio effect, audio.tone, audio.noise, getAudioContext, getMasterGain, hasAudio, hasFormat, autoplay, no sound, sound stopped working, context suspended, silent after idle, clips silent but tones play."
 license: MIT
 ---
 
@@ -358,8 +358,32 @@ on the first click or key press, not on load. The usual way to guarantee one is
 a gate screen — a splash, a "press any key", or a health/photosensitivity notice
 — whose dismissal *is* the gesture, so the menu behind it can start its music
 unconditionally. Note the unlock listens for `keydown` too, so a keyboard-only
-player is covered. `tone` / `noise` additionally call
-`ctx.resume()` themselves, best-effort, on every invocation.
+player is covered.
+
+### The context can stop again, long after it was unlocked
+
+Unlocking is only the first half. A context that has been running can be
+stopped later: melonJS suspends it itself after thirty idle seconds to save
+power, and browsers stop it for their own reasons, a backgrounded tab among
+them. Recovery is automatic and you do not have to write it: a user gesture
+or the tab coming back to the front revives it, and a deliberate idle
+suspension is left alone so the power saving still works.
+
+**The symptom worth memorising**, because it points straight at the cause:
+if `tone` and `noise` are audible while loaded clips are silent, the context
+is healthy and the engine's playback state is wrong. The generators only need
+a live context, where a clip goes through the engine's state machine and can
+be parked waiting for a resume. It is never "the context died".
+
+Both routes ask the same owner to resume, so hearing a tone tells you the
+hardware is back; it tells you nothing about whether the clips waiting on the
+engine's state have been let go.
+
+That asymmetry was a real Safari-only bug: thirty idle seconds before the
+first click left the engine waiting on a suspend the browser never confirmed,
+so every clip queued for the life of the page while generated sound played
+normally. Fixed in 20.9, and the lesson generalises: a clip that will not play
+is a state question, not a hardware one.
 
 Playback also starts **asynchronously**: `play()` returns an id while the
 instance is still starting, so `playing()` can legitimately be `false` on the
