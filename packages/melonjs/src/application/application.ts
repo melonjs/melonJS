@@ -871,15 +871,31 @@ export default class Application {
 	 * into — see {@link Application#getParentElement}), so the canvas and
 	 * any sibling HUD / overlay markup inside that container go fullscreen
 	 * together.
+	 * Must be called from a USER GESTURE, a click or a key press. Browsers
+	 * refuse it otherwise: the returned promise rejects, this logs the
+	 * rejection and nothing happens on screen. That is why the example below
+	 * hangs the call off a key rather than calling it at startup, and why a
+	 * game offering fullscreen puts it behind a button or a menu entry.
+	 *
+	 * Does nothing when the browser has no fullscreen support, or when the
+	 * application is already fullscreen.
 	 * @param element - optional element to fullscreen instead of `this.parentElement`
 	 * @example
-	 * // bind F to toggle fullscreen
-	 * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
-	 * me.event.on(me.event.KEYDOWN, (action) => {
-	 *   if (action === "toggleFullscreen") {
-	 *     if (!app.isFullscreen()) app.requestFullscreen();
-	 *     else app.exitFullscreen();
-	 *   }
+	 * import { event, input } from "melonjs";
+	 *
+	 * // F toggles fullscreen, from anywhere in the game
+	 * input.bindKey(input.KEY.F, "fullscreen");
+	 * event.on(event.KEYDOWN, (action, keyCode, edge) => {
+	 *     // `edge` only: a held key auto-repeats, and a repeat would toggle
+	 *     // straight back out of what it just turned on
+	 *     if (action !== "fullscreen" || !edge) {
+	 *         return;
+	 *     }
+	 *     if (app.isFullscreen()) {
+	 *         app.exitFullscreen();
+	 *     } else {
+	 *         app.requestFullscreen();
+	 *     }
 	 * });
 	 * @category Application
 	 */
@@ -901,6 +917,16 @@ export default class Application {
 
 	/**
 	 * Exit fullscreen mode for this application.
+	 *
+	 * Does nothing when the browser has no fullscreen support, or when the
+	 * application is not fullscreen, so it is safe to call blind. Unlike
+	 * {@link Application#requestFullscreen} it needs no user gesture: a page
+	 * is always allowed to give fullscreen back.
+	 *
+	 * Note that the user can leave fullscreen without this being called, with
+	 * Escape or the browser's own control, so a UI showing the current state
+	 * should read {@link Application#isFullscreen} back rather than remember
+	 * what it last asked for.
 	 * @category Application
 	 */
 	exitFullscreen(): void {
