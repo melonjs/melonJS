@@ -154,7 +154,39 @@ export default class Application {
 	renderer!: Renderer;
 
 	/**
-	 * the active stage "default" camera
+	 * The "default" camera of the stage that is currently active.
+	 *
+	 * It MIRRORS the active stage, so it changes with every `state.change()`,
+	 * and its concrete class is whatever that stage resolved to: an explicit
+	 * `cameras` entry on the stage, then the stage's own `cameraClass`, then
+	 * the application's `cameraClass`, then a shared {@link Camera2d}.
+	 *
+	 * **Typed as the base class on purpose.** A stage overrides the
+	 * application, and built-in stages do: the loading screen pins a
+	 * {@link Camera2d} whatever `cameraClass` the application was given. So
+	 * there is no type this property could carry that a stage could not
+	 * contradict, and a 3D application would be told it has a
+	 * {@link Camera3d} here while the loader is up.
+	 *
+	 * A 3D game therefore has two sound options, and neither of them is a
+	 * cast. OWN the camera, which is the better one, because the type is
+	 * never lost in the first place:
+	 * @example
+	 * class GameStage extends Stage {
+	 *     readonly camera: Camera3d;
+	 *
+	 *     constructor(app) {
+	 *         const camera = new Camera3d(0, 0, app.renderer.width, app.renderer.height);
+	 *         super({ cameras: [camera] });
+	 *         // kept with its real type; nothing downstream has to narrow
+	 *         this.camera = camera;
+	 *     }
+	 * }
+	 * @example
+	 * // or narrow where you read it, which the language already verifies
+	 * if (app.viewport instanceof Camera3d) {
+	 *     app.viewport.setBasis(right, up, forward);
+	 * }
 	 */
 	viewport!: Camera2d;
 

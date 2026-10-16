@@ -71,6 +71,46 @@ That flips the world's sort to `"depth"`, switches the broadphase to a 3D index,
 and renders sprites and meshes with perspective projection. `Camera3d` extends
 `Camera2d`, so follow, fade, shake and post effects all still work.
 
+### Keep the camera, do not fish it back out
+
+`app.viewport` is the **active stage's** default camera, so it is typed
+`Camera2d`: a stage overrides the application's `cameraClass`, and the
+built-in loading screen does exactly that. Reading your `Camera3d` back out of
+it therefore needs a cast, and a cast that is wrong while the loader is up:
+
+```js
+const camera = app.viewport as Camera3d;   // works, until it does not
+```
+
+Own it instead. Pass the camera in and keep the typed reference, and nothing
+downstream ever narrows:
+
+```js
+class GameStage extends Stage {
+    readonly camera: Camera3d;
+
+    constructor(app) {
+        const camera = new Camera3d(0, 0, app.renderer.width, app.renderer.height);
+        super({ cameras: [camera] });
+        this.camera = camera;
+    }
+}
+```
+
+A freshly built camera is named `"default"`, and a stage registers its
+`cameras` by name, so this IS the stage's default camera: `app.viewport`
+returns the same instance. Same runtime behaviour as `cameraClass`, which
+also builds one camera per stage, without losing the type on the way.
+
+Where you really do have to read a shared slot, narrow rather than assert.
+The language verifies this and a cast does not:
+
+```js
+if (app.viewport instanceof Camera3d) {
+    app.viewport.setBasis(right, up, forward);
+}
+```
+
 Per-stage opt-in also works, which is useful when the loading screen is 2D:
 
 ```js
