@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, UIPanel, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, UIPanel, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating., fullscreen, full screen, requestFullscreen, exitFullscreen, isFullscreen, fullscreen button, fullscreen option"
 license: MIT
 ---
 
@@ -451,6 +451,65 @@ Three more rules, each with a reason you can feel in a game:
 
 Shortcuts live only while the button is activated, and never start dragging or
 tap-and-hold: those stay pointer gestures.
+
+### A fullscreen option
+
+Three methods on the `Application`, not on `device` (they moved there in
+19.7.0):
+
+```js
+app.isFullscreen();        // boolean
+app.requestFullscreen();   // needs a USER GESTURE
+app.exitFullscreen();      // needs none
+```
+
+**`requestFullscreen` only works from a click or a key press.** Called at
+startup, or from a timer, the browser rejects it and nothing happens. That is
+why a fullscreen option lives on a menu entry or a key, never in a scene's
+setup:
+
+```js
+import { event, input } from "melonjs";
+
+input.bindKey(input.KEY.F, "fullscreen");
+event.on(event.KEYDOWN, (action, keyCode, edge) => {
+    // `edge` only: a held key auto-repeats, and a repeat toggles straight
+    // back out of what it just turned on
+    if (action !== "fullscreen" || !edge) {
+        return;
+    }
+    if (app.isFullscreen()) {
+        app.exitFullscreen();
+    } else {
+        app.requestFullscreen();
+    }
+});
+```
+
+One subscription on `KEYDOWN` covers every screen, where polling
+`isKeyPressed` would need a copy in each menu that is up.
+
+**It fullscreens the canvas's PARENT**, not the canvas, so a DOM HUD or
+overlay inside that container goes with it. Pass an element to override.
+
+**A menu entry showing `ON`/`OFF` must read the state back**, not cache it:
+the player can leave fullscreen with Escape or the browser's own control
+without your code hearing about it, and a remembered flag then lies.
+
+```js
+entry.setLabel(`FULLSCREEN: ${app.isFullscreen() ? "ON" : "OFF"}`);
+```
+
+**Nothing to branch on for support.** `requestFullscreen` checks
+`device.hasFullscreenSupport` itself and no-ops without it, and
+`exitFullscreen` no-ops when not fullscreen. Query
+`device.hasFullscreenSupport` only to decide whether to *offer* the option at
+all.
+
+Fullscreen does not resize a fixed-resolution game: with
+`new Application(w, h, { scale: "auto" })` the internal resolution is
+unchanged and only the canvas scales, so a HUD built from
+`renderer.width`/`height` needs no repositioning.
 
 ### `z` is container-local
 
