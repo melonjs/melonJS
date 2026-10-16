@@ -75,7 +75,15 @@ export default defineConfig(() =>
 			...(process.env.CI ? { maxWorkers: 2 } : {}),
 			browser: {
 				enabled: true,
-				provider: playwright(),
+				// `--expose-gc` so `tests/pool.test.ts` can prove that a dropped
+				// pooled instance is actually collectable. Without it the only
+				// honest alternative is a test that silently skips, and a
+				// retention bug is exactly the kind that comes back unnoticed.
+				// Exposing `globalThis.gc` changes nothing unless a test calls
+				// it; it does not alter collection behaviour on its own.
+				provider: playwright({
+					launchOptions: { args: ["--js-flags=--expose-gc"] },
+				}),
 				instances: [
 					{
 						browser: "chromium",
