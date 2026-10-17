@@ -239,6 +239,41 @@ describe("Vector2d", () => {
 		expect(a.project(b).equals(b)).toEqual(true);
 	});
 
+	it("projectN onto a unit vector skips the division", () => {
+		// `projectN` exists to skip the `/ v.length2()` that `project` pays,
+		// because the target is already unit. On a unit target the two must
+		// agree exactly, which is what makes it a safe substitution.
+		//
+		// Note melonJS scales THIS by the ratio rather than returning the
+		// component along `v`, so the result points along `a`, not along `b`.
+		const unit = new Vector2d(3, 4).normalize(); // (0.6, 0.8), length 1
+		const byProject = new Vector2d(1, 2).project(unit);
+		const byProjectN = new Vector2d(1, 2).projectN(unit);
+		expect(byProjectN.x).toBeCloseTo(byProject.x, 12);
+		expect(byProjectN.y).toBeCloseTo(byProject.y, 12);
+
+		// and the value itself: `a` scaled by `a . b`
+		const dot = 1 * unit.x + 2 * unit.y;
+		expect(byProjectN.x).toBeCloseTo(1 * dot, 12);
+		expect(byProjectN.y).toBeCloseTo(2 * dot, 12);
+	});
+
+	it("projectN does NOT divide by the target's length", () => {
+		// The contract is that the caller supplies a unit vector. Handed one
+		// that is not, `projectN` must scale by the RAW dot product, which is
+		// the whole point of it being cheaper; it must not quietly behave
+		// like `project`. This is the assertion that fails if the division is
+		// ever put back.
+		const long = new Vector2d(0, 10);
+		const n = new Vector2d(1, 2).projectN(long); // dot 20 -> (20, 40)
+		const pr = new Vector2d(1, 2).project(long); // /100 -> (0.2, 0.4)
+		expect(n.x).toBeCloseTo(20, 12);
+		expect(n.y).toBeCloseTo(40, 12);
+		expect(pr.x).toBeCloseTo(0.2, 12);
+		expect(pr.y).toBeCloseTo(0.4, 12);
+		expect(n.y).not.toBeCloseTo(pr.y, 6);
+	});
+
 	it("angle between a and b", () => {
 		a.set(x, y);
 		b.set(-x, -y);

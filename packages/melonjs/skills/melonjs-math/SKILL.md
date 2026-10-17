@@ -1,6 +1,6 @@
 ---
 name: melonjs-math
-description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z., currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix."
+description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z., moveTowards ignores z, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix."
 license: MIT
 ---
 
@@ -121,6 +121,14 @@ a.damp(b, lambda, dt);   // frame-rate independent ease toward b
 a.moveTowards(b, step);  // fixed distance per call, never overshoots
 ```
 
+**`moveTowards` is X/Y ONLY, on `Vector3d` as well as `Vector2d`.** It is the
+one of the four that is not 3D: it measures the distance from `dx` and `dy`,
+steps along `atan2(dy, dx)`, and leaves `z` exactly where it was. The source
+says so in a comment and the JSDoc says "on the x and y axis", but the name
+gives no hint, and in a list like the one above it reads as the sibling of the
+other three. Anything moving in three dimensions wants `damp` or an explicit
+step; reach for `moveTowards` only when the motion really is planar.
+
 **`lerp` between two directions is uneven**: it slows at the ends, runs fast
 through the middle, and shortens the vector as it passes halfway. Anything
 whose direction matters more than its components wants `slerp` — a camera
@@ -131,6 +139,30 @@ nothing needs normalising afterwards.
 **`damp` is the one to use for "ease toward a target every frame"**, because
 `lerp(current, target, 0.1)` per frame is frame-rate dependent: it converges
 twice as fast at 120fps as at 60.
+
+## `project` scales THIS, and `projectN` is the one without the divide
+
+`a.project(b)` does not return the component of `a` along `b`. It scales **a**
+by `a.b / |b|^2` and returns `a`, so the result points along `a`, not along
+`b`. Worth knowing before you reach for it expecting the textbook projection.
+
+`projectN(v)` is the same thing for a `v` that is already unit, so it skips
+the `/ v.length2()`:
+
+```js
+a.project(b);   // a scaled by (a.b / |b|^2)
+a.projectN(b);  // a scaled by (a.b)      -- only correct when |b| = 1
+```
+
+Handing `projectN` a target that is NOT unit does not normalise anything, it
+just scales by the raw dot product. That is the price of it being cheaper, and
+it is the caller's job to meet the contract.
+
+Until 20.9 both 3D classes got this wrong: `Vector3d.projectN` and
+`ObservableVector3d.projectN` were copies of `project`, division and all,
+under `projectN`'s name and its "slightly more efficient" doc comment. Nothing
+in the engine called either one and nothing tested them, which is how it
+survived. Both are fixed and all four classes are now pinned by tests.
 
 ## `length()` is `sqrt(x*x + y*y + z*z)`
 
