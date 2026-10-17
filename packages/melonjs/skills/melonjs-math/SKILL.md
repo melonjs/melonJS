@@ -1,6 +1,6 @@
 ---
 name: melonjs-math
-description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z."
+description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z., moveTowards ignores z, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix."
 license: MIT
 ---
 
@@ -121,6 +121,14 @@ a.damp(b, lambda, dt);   // frame-rate independent ease toward b
 a.moveTowards(b, step);  // fixed distance per call, never overshoots
 ```
 
+**`moveTowards` is X/Y ONLY, on `Vector3d` as well as `Vector2d`.** It is the
+one of the four that is not 3D: it measures the distance from `dx` and `dy`,
+steps along `atan2(dy, dx)`, and leaves `z` exactly where it was. The source
+says so in a comment and the JSDoc says "on the x and y axis", but the name
+gives no hint, and in a list like the one above it reads as the sibling of the
+other three. Anything moving in three dimensions wants `damp` or an explicit
+step; reach for `moveTowards` only when the motion really is planar.
+
 **`lerp` between two directions is uneven**: it slows at the ends, runs fast
 through the middle, and shortens the vector as it passes halfway. Anything
 whose direction matters more than its components wants `slerp` — a camera
@@ -131,6 +139,30 @@ nothing needs normalising afterwards.
 **`damp` is the one to use for "ease toward a target every frame"**, because
 `lerp(current, target, 0.1)` per frame is frame-rate dependent: it converges
 twice as fast at 120fps as at 60.
+
+## `project` scales THIS, and `projectN` is the one without the divide
+
+`a.project(b)` does not return the component of `a` along `b`. It scales **a**
+by `a.b / |b|^2` and returns `a`, so the result points along `a`, not along
+`b`. Worth knowing before you reach for it expecting the textbook projection.
+
+`projectN(v)` is the same thing for a `v` that is already unit, so it skips
+the `/ v.length2()`:
+
+```js
+a.project(b);   // a scaled by (a.b / |b|^2)
+a.projectN(b);  // a scaled by (a.b)      -- only correct when |b| = 1
+```
+
+Handing `projectN` a target that is NOT unit does not normalise anything, it
+just scales by the raw dot product. That is the price of it being cheaper, and
+it is the caller's job to meet the contract.
+
+Until 20.9 both 3D classes got this wrong: `Vector3d.projectN` and
+`ObservableVector3d.projectN` were copies of `project`, division and all,
+under `projectN`'s name and its "slightly more efficient" doc comment. Nothing
+in the engine called either one and nothing tested them, which is how it
+survived. Both are fixed and all four classes are now pinned by tests.
 
 ## `length()` is `sqrt(x*x + y*y + z*z)`
 
@@ -179,6 +211,69 @@ m.identity().translate(x, y).rotate(angle).scale(sx, sy);
 made LAST reaches the vertex FIRST. To rotate a thing about its own centre,
 translate to the centre last.
 
+### Every renderable already HAS one
+
+`Renderable.currentTransform` is a `Matrix3d`. If you are orienting something
+on screen, the matrix exists: write into it rather than building a parallel
+structure and copying.
+
+```js
+// the whole transform of a renderable, written in place
+mesh.currentTransform.identity().translate(x, y, z).rotate(angle, axis);
+```
+
+### The sixteen numbers are `val`, column-major
+
+Composing with `translate`/`rotate`/`scale` is one way to fill a matrix. The
+other is to write the numbers, which is what you want when the orientation
+comes from a basis you have already computed — three orthonormal vectors, a
+surface frame, a camera basis.
+
+`val` is a `Float32Array(16)` in **column-major** order, the OpenGL
+convention: each basis vector occupies a stride-4 run, and the translation is
+the last column.
+
+| | X column | Y column | Z column | translation |
+|---|---|---|---|---|
+| indices | `0,1,2` | `4,5,6` | `8,9,10` | `12,13,14` |
+
+```js
+// an orientation from three axes, straight into the renderable's own matrix
+const m = mesh.currentTransform.val;
+m[0] = right.x;   m[1] = right.y;   m[2] = right.z;   m[3] = 0;
+m[4] = up.x;      m[5] = up.y;      m[6] = up.z;      m[7] = 0;
+m[8] = fwd.x;     m[9] = fwd.y;     m[10] = fwd.z;    m[11] = 0;
+m[12] = 0;        m[13] = 0;        m[14] = 0;        m[15] = 1;
+```
+
+A helper that builds one should take the destination, the same way the engine
+takes an `out`, so it writes once into the matrix that will be used:
+
+```js
+const orient = (frame, out) => { /* writes out.val */ return out; };
+orient(frame, mesh.currentTransform);
+```
+
+### Getting numbers IN from somewhere else
+
+`setTransform(...)` takes the sixteen as arguments, and `copy(m)` takes
+another matrix:
+
+```js
+m.setTransform(a, b, c, d, e, f, g, h, i, j, k, l, p, q, r, s);
+m.copy(other);                 // Float32Array.set under the hood
+```
+
+Both are fine occasionally. In a per-frame loop, prefer writing `val` or
+`copy()` over spreading sixteen arguments, and note that **one matrix built
+once and applied to many renderables** is a `copy()` per renderable, not a
+rebuild per renderable.
+
+**`val` is `Float32Array`, so it holds float32.** Numbers you put in are
+rounded to single precision. That is where they were always heading, since
+this is what reaches the GPU, but it means a value read back out is not
+bit-identical to the double you wrote.
+
 ## Utilities
 
 ```js
@@ -207,6 +302,8 @@ math.DEG_TO_RAD  math.RAD_TO_DEG  math.TAU  math.ETA  math.EPSILON
 | two helper results are the same object | a shared scratch vector was returned |
 | `.z` is a type error | `Renderable.pos` is declared `Vector2d` (#1510) |
 | rotation eases oddly between directions | `lerp` on directions; use `slerp` |
+| you built your own 16-number array | `Renderable.currentTransform` is already a `Matrix3d`; write its `val` |
+| a value read back from a matrix differs | `val` is `Float32Array`; it holds float32 |
 | easing differs at 120fps | per-frame `lerp`; use `damp` |
 
 ## Related skills

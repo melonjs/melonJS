@@ -604,7 +604,10 @@ export class ObservableVector3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	projectN(v: Vector2d | Vector3d | ObservableVector3d) {
-		const ratio = this.dot(v) / v.length2();
+		// no division: `v` is unit, so `v.length2()` is 1. That divide was
+		// here, which made this an exact copy of `project` and the method
+		// pointless; the 2D classes never had it.
+		const ratio = this.dot(v);
 		return this.scale(ratio, ratio, ratio);
 	}
 

@@ -314,6 +314,49 @@ describe("ObservableVector3d : constructor", () => {
 		expect(a.project(b).equals(b)).toEqual(true);
 	});
 
+	it("projectN onto a unit vector skips the division", () => {
+		// `projectN` exists to skip the `/ v.length2()` that `project` pays,
+		// because the target is already unit. On a unit target the two must
+		// agree exactly, which is what makes it a safe substitution.
+		//
+		// Note melonJS scales THIS by the ratio rather than returning the
+		// component along `v`, so the result points along `a`, not along `b`.
+		const unit = new ObservableVector3d(1, 2, 2).normalize(); // length 3 -> unit
+		const byProject = new ObservableVector3d(1, 2, 3).project(unit);
+		const byProjectN = new ObservableVector3d(1, 2, 3).projectN(unit);
+		expect(byProjectN.x).toBeCloseTo(byProject.x, 12);
+		expect(byProjectN.y).toBeCloseTo(byProject.y, 12);
+		expect(byProjectN.z).toBeCloseTo(byProject.z, 12);
+
+		// and the value itself: `a` scaled by `a . b`
+		const dot = 1 * unit.x + 2 * unit.y + 3 * unit.z;
+		expect(byProjectN.x).toBeCloseTo(1 * dot, 12);
+		expect(byProjectN.y).toBeCloseTo(2 * dot, 12);
+		expect(byProjectN.z).toBeCloseTo(3 * dot, 12);
+	});
+
+	it("projectN does NOT divide by the target's length", () => {
+		// The contract is that the caller supplies a unit vector. Handed one
+		// that is not, `projectN` must scale by the RAW dot product, which is
+		// the whole point of it being cheaper; it must not quietly behave
+		// like `project`.
+		//
+		// This is the assertion that was missing. Both 3D classes carried a
+		// copy of `project`, division and all, under `projectN`'s name and
+		// its "slightly more efficient" doc comment. Nothing in the engine
+		// called it and nothing tested it, which is how it survived.
+		const long = new ObservableVector3d(0, 10, 0);
+		const n = new ObservableVector3d(1, 2, 3).projectN(long); // dot 20 -> (20, 40, 60)
+		const pr = new ObservableVector3d(1, 2, 3).project(long); // /100 -> (0.2, 0.4, 0.6)
+		expect(n.x).toBeCloseTo(20, 12);
+		expect(n.y).toBeCloseTo(40, 12);
+		expect(n.z).toBeCloseTo(60, 12);
+		expect(pr.x).toBeCloseTo(0.2, 12);
+		expect(pr.y).toBeCloseTo(0.4, 12);
+		expect(pr.z).toBeCloseTo(0.6, 12);
+		expect(n.y).not.toBeCloseTo(pr.y, 6);
+	});
+
 	it("angle between a and b", () => {
 		a.set(0, -0.18851655680720186, 0.9820700116639124);
 		b.set(0, 0.18851655680720186, -0.9820700116639124);
