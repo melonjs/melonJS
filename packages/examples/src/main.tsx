@@ -343,7 +343,7 @@ const examples: {
 		path: "earth-defender",
 		sourceDir: "earthDefender",
 		description:
-			"Fly a craft over a globe, shooting asteroids off a hexagonal shield dome.",
+			"Arcade shooter on a globe: a Camera3d posed from the player's own surface point, blob shadows lying on a sphere, HDR bloom and spatial audio — left / right to steer, up to boost, space to shoot.",
 	},
 	{
 		component: <ExampleJungleRabbit />,
