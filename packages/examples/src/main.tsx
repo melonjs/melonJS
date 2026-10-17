@@ -148,6 +148,11 @@ const ExampleForest = lazy(() =>
 		default: m.ExampleForest,
 	})),
 );
+const ExampleEarthDefender = lazy(() =>
+	import("./examples/earthDefender/ExampleEarthDefender").then((m) => ({
+		default: m.ExampleEarthDefender,
+	})),
+);
 const ExampleGroundShadows = lazy(() =>
 	import("./examples/groundShadows/ExampleGroundShadows").then((m) => ({
 		default: m.ExampleGroundShadows,
@@ -331,6 +336,14 @@ const examples: {
 		sourceDir: "afterBurner",
 		description:
 			"Behind-the-plane arcade shooter on Camera3d + 3D Mesh models. Rounds hit by raycast3d, planes collide as Box3d bodies — arrows / WASD to fly, space to shoot.",
+	},
+	{
+		component: <ExampleEarthDefender />,
+		label: "Earth Defender",
+		path: "earth-defender",
+		sourceDir: "earthDefender",
+		description:
+			"Arcade shooter on a globe: a Camera3d posed from the player's own surface point, blob shadows lying on a sphere, HDR bloom and spatial audio — left / right to steer, up to boost, space to shoot.",
 	},
 	{
 		component: <ExampleJungleRabbit />,
