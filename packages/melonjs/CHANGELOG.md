@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.9.0] (melonJS 2) - _unreleased_
+## [20.9.0] (melonJS 2) - _2026-10-17_
 
 ### Added
 - **Sprite-sheet particles** (`framewidth`, `frameheight`, `frames`, `randomFrame` on `ParticleEmitter`): a particle plays a frame sequence once over its own lifetime, or holds one frame picked at random when it is born. One sheet is one image, so a burst of varied debris still batches into a single draw call ([#1610](https://github.com/melonjs/melonJS/issues/1610), thanks @snowyukitty)
