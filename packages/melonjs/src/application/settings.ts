@@ -80,19 +80,54 @@ export type ApplicationSettings = {
 	renderer: RendererType | Renderer;
 
 	/**
-	 * enable scaling of the canvas ('auto' for automatic scaling)
+	 * how the canvas is scaled to the page. A number is a fixed multiplier applied to the design resolution and nothing is measured; `"auto"` scales to the available space every time the window changes, using {@link ApplicationSettings.scaleMethod} to decide how and {@link ApplicationSettings.scaleTarget} to decide what is measured.
+	 *
+	 * `scaleMethod`, `scaleTarget` and {@link ApplicationSettings.scaleRounding} apply to `"auto"` only. With a fixed number they are ignored.
 	 * @default 1
+	 * @see ApplicationSettings.scaleMethod
+	 * @see ApplicationSettings.scaleTarget
+	 * @see ApplicationSettings.scaleRounding
 	 */
 	scale: number | "auto";
 
 	/**
-	 * screen scaling modes
+	 * how automatic scaling uses the space available to it. Applies when {@link ApplicationSettings.scale} is `"auto"`.
+	 *
+	 * The distinction that decides which to pick is whether the DESIGN RESOLUTION moves. `"fit"` keeps it and scales the whole frame to the largest factor that fits, leaving the rest as margin, so the game always sees exactly the world it was authored for. Every other mode calls `renderer.resize()`, so the design resolution follows the container and the game sees MORE or LESS of the world on a different window: `"fill-min"` / `"fill-max"` keep the aspect ratio while doing so, `"flex"` / `"flex-width"` / `"flex-height"` resize one or both axes, and `"stretch"` scales each axis independently so the aspect ratio is not preserved. `"manual"` does nothing automatic.
+	 *
+	 * A game whose layout assumes a known frame wants `"fit"`. A game that should reveal more world on a larger window wants one of the others, and has to cope with a viewport whose size it did not choose.
 	 * @default "manual"
+	 * @see ApplicationSettings.scale
 	 */
 	scaleMethod: ScaleMethod;
 
 	/**
-	 * the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
+	 * whether the automatically computed scale factor may be fractional, or must be a whole number of device pixels. `"fractional"` (the default) lets the canvas fill its container exactly, at the cost of source pixels landing on uneven numbers of device pixels: at a 2.667 factor some are 3 device pixels wide and some are 2, which browsers resolve differently and which pixel art shows as shimmering or uneven stems. `"integer"` rounds the factor DOWN so every source pixel covers the same whole number of device pixels, and letterboxes with whatever space is left over.
+	 *
+	 * Only `scaleMethod: "fit"` is affected: every other method resizes the renderer to the container, so the design resolution changes and there is no fixed factor to round. The rounding is applied in DEVICE pixels, so `devicePixelRatio` cannot reintroduce a fraction.
+	 *
+	 * **What it costs depends on the container, and on `devicePixelRatio`, far more than it looks.** A higher ratio has more device pixels to round among, so it lands closer to the factor it wanted. For a 480x270 design, which is exactly a quarter of 1920x1080:
+	 *
+	 * | container | ratio | fit | integer | presented | area lost |
+	 * |---|---|---|---|---|---|
+	 * | 1920x1080 | 1 or 2 | 4.000 | 4 / 8 | 1920x1080 | none |
+	 * | 1440x810 | 1 | 3.000 | 3 | 1440x810 | none |
+	 * | 1280x720 | 2 | 2.667 | 5 | 1200x675 | 12% |
+	 * | 1280x720 | 1 | 2.667 | 2 | 960x540 | 44% |
+	 * | 1366x768 | 1 | 2.844 | 2 | 960x540 | 51% |
+	 *
+	 * A design resolution that divides the sizes you expect costs nothing at all; one that does not can give up half the screen on a 1x display. Choose the design resolution with this in mind rather than reaching for the setting afterwards.
+	 * @default "fractional"
+	 */
+	scaleRounding: "fractional" | "integer";
+
+	/**
+	 * the element automatic scaling measures to decide how much space it has. By default it is the PARENT of the container the canvas was mounted in, which is one level further out than most callers expect and is the usual cause of a canvas that does not fit its box.
+	 *
+	 * The case to watch for: a container that is `position: fixed` or `absolute` contributes no height to its parent, so that parent measures only whatever else it holds. If it measures `<body>`, the window size is used instead, and the canvas comes out larger than the box it lives in, cropped by whatever sits above it, by exactly the height of that other content on every resize.
+	 *
+	 * Name the element here when the default does not land on the box you meant, or give the canvas container a parent whose box IS that area.
+	 * @see ApplicationSettings.scale
 	 */
 	scaleTarget: HTMLElement;
 
@@ -115,7 +150,9 @@ export type ApplicationSettings = {
 	powerPreference: PowerPreference;
 
 	/**
-	 * whether to allow transparent pixels in the front buffer (screen).
+	 * whether the canvas composites with the page behind it. `false`, the default, makes the front buffer opaque: the clear alpha is 1, WebGPU is configured `alphaMode: "opaque"`, and the canvas renderer clears rather than erases.
+	 *
+	 * Turn it on only when the page is meant to show through, since an opaque surface is the cheaper one to composite and is what a game filling its container wants. With it on the clear alpha becomes 0 and WebGPU switches to `"premultiplied"`, so anything drawn at partial alpha blends with the page rather than with a known background.
 	 * @default false
 	 */
 	transparent: boolean;
@@ -208,6 +245,16 @@ export type ApplicationSettings = {
 	 */
 	hdrOutput: boolean;
 
+	/**
+	 * the tone curve applied at the end of the camera's chain, or `"none"` for no curve. `"aces"` is the filmic one, `"reinhard"` the gentlest, `"exponential"` the simplest.
+	 *
+	 * **A curve is a look decision, not a companion to {@link ApplicationSettings.hdr}.** Every curve maps 1 to less than 1, so switching one on changes a game whose art was authored against a clamp: the clipped white goes matte and the picture flattens. Turn it on for art authored in linear light, or when a deliberate grade is wanted.
+	 *
+	 * Changing the mode rebuilds one shader, since the curve is baked into it; {@link ApplicationSettings.toneMappingExposure} and {@link ApplicationSettings.toneMappingWhite} are uniform writes and can be driven per frame, which is what makes a settings screen or a hit flash cheap. `renderer.setToneMapping()` is the runtime entry point.
+	 * @default "none"
+	 * @see ApplicationSettings.toneMappingExposure
+	 * @see ApplicationSettings.toneMappingWhite
+	 */
 	toneMapping: "none" | "aces" | "reinhard" | "exponential";
 
 	/**
@@ -447,8 +494,13 @@ export type ApplicationSettings = {
 	highPrecisionShader: boolean;
 
 	/**
-	 * whether to enable sub-pixel rendering (avoid sprite flickering when using transforms)
+	 * whether a renderable may sit on a fractional position WITHIN the frame. `false`, the default, snaps each translation to whole pixels, which is what stops a slowly moving or transformed sprite shimmering along its edges.
+	 *
+	 * The snap TRUNCATES rather than rounds, and truncates toward zero, so a value that should swing symmetrically about the origin does not: an offset travelling between -3 and +3 lands on -2 and +2, and sits at each extreme a little longer than it should. Something animating over a short distance is where this shows.
+	 *
+	 * It says nothing about how the frame reaches the screen. A game that snaps positions here and is then presented at a fractional scale has undone the work at the last step; {@link ApplicationSettings.scaleRounding} is what addresses that half.
 	 * @default false
+	 * @see ApplicationSettings.scaleRounding
 	 */
 	subPixel: boolean;
 
