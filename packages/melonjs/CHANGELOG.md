@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.9.0] (melonJS 2) - _unreleased_
+## [20.9.0] (melonJS 2) - _2026-10-18_
 
 ### Added
 - **`scaleRounding`**: `"integer"` constrains the automatic scale factor to a whole number of device pixels per source pixel, letterboxing whatever is left over, where the default `"fractional"` fills the container exactly. A 480 wide design in a 1280 wide container is scaled by 2.667, so some source pixels cover three device pixels and some cover two, which pixel art shows as uneven stems and shimmering edges and which browsers resolve differently, so the same scene looks crisp in one and soft in another. The rounding is applied in DEVICE pixels, since `devicePixelRatio` would otherwise put the fraction back. It affects `scaleMethod: "fit"` only, because every other method resizes the renderer to its container and so has no fixed factor to round
