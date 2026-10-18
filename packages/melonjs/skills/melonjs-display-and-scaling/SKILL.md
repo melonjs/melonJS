@@ -168,6 +168,72 @@ snaps positions and is then scaled by 2.667 has thrown that work away at the
 last step, which is the contradiction `scaleRounding: "integer"` exists to
 resolve.
 
+## Soft text next to crisp sprites
+
+If everything is crisp EXCEPT the text, the scale factor is not the cause: a
+fractional factor softens the whole frame equally. The text is different
+because of how it is made.
+
+`Text` draws through the browser's `fillText`, which anti-aliases glyph edges
+into partial-alpha pixels. Measured on one label at 16px: **171 distinct
+partial alpha levels**. Nothing in the canvas API turns that off. `antiAlias`
+and the `imageSmoothingEnabled` that `CanvasRenderTarget` sets govern IMAGE
+drawing, not glyph rasterisation.
+
+So the label arrives already soft, and the upscale then magnifies each grey
+edge pixel into a grey block, sitting beside sprites that were hard-edged to
+begin with and stay hard-edged under nearest sampling.
+
+It also explains the same scene looking crisp in one browser and soft in
+another at identical size and settings: engines use different font
+rasterisers, with different hinting and anti-aliasing, so they bake DIFFERENT
+textures from the same font at the same size.
+
+**Use `BitmapText` for a game that upscales.** A pixel-font atlas is
+hard-edged source art like every other texture, so it survives magnification
+the way the sprites do. Raising the design resolution only shrinks the
+magnification of anti-aliasing that is still there, so it softens the symptom
+rather than removing it, and `scaleRounding` does nothing for this at all.
+
+Keep `Text` where the frame is not upscaled much, or where the label is meant
+to look smooth.
+
+### Baking an atlas from a face you already use
+
+Swapping in a bitmap face means generating one, and three things decide
+whether it comes out looking like the original:
+
+- **Threshold the coverage.** Hard edges are the whole point, so every pixel
+  has to end up fully on or fully off. Hardening only the ALPHA is not enough:
+  an outlined glyph keeps a soft stroke-to-fill blend INSIDE the silhouette,
+  which still reads as blur once magnified. Pick the colours from a mask.
+- **Bake each size at that size, and draw it at a ratio of 1.** `size` on
+  `BitmapText` is a ratio of the authored size, and a bitmap face has the sizes
+  it was baked at. Doubling a smaller atlas halves the detail; a ratio below 1
+  drops whole stems; a fractional ratio resamples hard pixels unevenly. One
+  atlas per step of the type scale.
+- **Grow the outline outward, but carve it INWARD around a counter.** This is
+  the one that costs the most time. A stroke drawn by the canvas is centred on
+  the contour, so around an enclosed hole it eats into the letter and the hole
+  keeps its size. Dilating a mask outward instead grows black INTO the hole
+  from every side, which closes anything under about 3px: the letter loses its
+  counter and reads as a blob. Take the rim from the fill side and the hole
+  survives at every size. Neither leaving holes unrimmed nor closing the small
+  ones is a substitute — both were tried and both look wrong.
+
+Two traps in the generator itself:
+
+- A face whose glyphs overshoot the `textBaseline` origin is clipped by a tight
+  cell, and the symptom is an outline that goes missing along one edge of some
+  glyphs. Pad the cell by a fraction of the size, and assert that no glyph's
+  ink reaches its border.
+- The threshold decides the TOPOLOGY, not just the weight. A notch or a narrow
+  gap in a letterform closes over at a full threshold and becomes an isolated
+  hole, which then bakes as a black blob sitting on the glyph. Thinner, the
+  same feature stays joined to the background and reads as the face intends.
+  So a small size may want a thinner fill than a large one, and the way to see
+  it is to magnify one glyph, not a whole line.
+
 ## A pixel-art setup
 
 ```js
@@ -203,5 +269,5 @@ const app = new Application(1024, 576, {
 | 3D model edges are jagged | `antiAlias: false` also disables MSAA; turn it on and use `textureFilter` for textures |
 | textures are smoothed when they should be blocky | `antiAlias: true` makes the default texture filter linear; set `textureFilter: "nearest"` |
 | `scaleRounding: "integer"` changes nothing | it applies to `scaleMethod: "fit"` only; the others resize the renderer |
-| text is soft but sprites are crisp | `Text` bakes at its font size and is scaled with the frame; raise the design resolution |
+| text is soft but sprites are crisp | the glyphs were anti-aliased when `Text` baked them; use `BitmapText` (see below) |
 | the game shows more world on a bigger window | that is `fill-*` or `flex-*` doing their job; use `"fit"` to keep a fixed frame |
