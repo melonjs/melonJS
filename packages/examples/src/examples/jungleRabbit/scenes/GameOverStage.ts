@@ -19,7 +19,7 @@ import {
 	Tween,
 	Vector3d,
 } from "melonjs";
-import { getRipples } from "./assets";
+import { getRipples } from "../assets";
 import {
 	HUD_Z,
 	PROMPT_BLINK_MS,
@@ -29,13 +29,16 @@ import {
 	TITLE_CARROT_SPIN,
 	TITLE_CARROT_Y,
 	TITLE_DRIFT,
+	TITLE_WAVE_AMP,
+	TITLE_WAVE_RATE,
+	TITLE_WAVE_SPREAD,
 	VIEW_H,
 	VIEW_W,
-} from "./constants";
-import { menuLines, menuText } from "./menuText";
-import { bestMetres, bestScore, initRecords } from "./records";
-import { aimFlare, buildBackdrop } from "./scenery";
-import { driftWaterPlane } from "./terrain";
+} from "../constants";
+import { driftWaterPlane } from "../entities/terrain";
+import { aimFlare, buildBackdrop } from "../fx/scenery";
+import { bestMetres, bestScore, initRecords } from "../lib/records";
+import { menuText, waveEffect } from "../ui/menuText";
 
 /** the axis the carrots turn about — Y, so they spin where they float */
 const AXIS_Y = new Vector3d(0, 1, 0);
@@ -64,18 +67,28 @@ export class GameOverStage extends Stage {
 		this.carrotAngle = 0;
 
 		const world = app.world;
+		// The heading arrives moving, on the same wave the title rides, so the
+		// two screens read as one piece of lettering rather than two.
+		//
+		// This is the heading the player actually reads: the in-game banner
+		// says the same words, but `gameOver` changes state in the same
+		// breath, so it only ever shows under the 420ms fade.
+		const heading = menuText(
+			VIEW_W / 2,
+			84,
+			"title",
+			beatRecord ? "NEW BEST!" : "CAPSIZED!",
+		);
+		heading.glyphEffect = waveEffect(
+			TITLE_WAVE_AMP,
+			TITLE_WAVE_RATE,
+			TITLE_WAVE_SPREAD,
+		);
+		world.addChild(heading, HUD_Z);
 		world.addChild(
-			menuText(VIEW_W / 2, 84, 30, beatRecord ? "NEW BEST!" : "CAPSIZED!"),
+			menuText(VIEW_W / 2, 134, "body", `${score} CARROTS\n${metres}M`),
 			HUD_Z,
 		);
-		for (const line of menuLines(
-			VIEW_W / 2,
-			134,
-			15,
-			`${score} CARROTS\n${metres}M`,
-		)) {
-			world.addChild(line, HUD_Z);
-		}
 		// The stats sit still; only the line the player is waiting to act on
 		// breathes — pulsing the record alongside it would make the whole
 		// panel flicker and read as a fault.
@@ -83,7 +96,7 @@ export class GameOverStage extends Stage {
 			menuText(
 				VIEW_W / 2,
 				VIEW_H - 55,
-				13,
+				"body",
 				`BEST ${bestScore()} CARROTS   ${bestMetres()}M`,
 			),
 			HUD_Z,
@@ -91,7 +104,7 @@ export class GameOverStage extends Stage {
 		const prompt = menuText(
 			VIEW_W / 2,
 			VIEW_H - 27,
-			13,
+			"body",
 			"SPACE TO PADDLE AGAIN   ESC FOR MENU",
 		);
 		world.addChild(prompt, HUD_Z);

@@ -26,7 +26,7 @@ import {
 	WATER_HALF_W,
 	WATER_LEVEL,
 	WATER_UV,
-} from "./constants";
+} from "../constants";
 
 /**
  * Height of the river bed at a given X, in **world** space. Y-down, so the

@@ -10,14 +10,36 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { flare } from "./flare";
-import { ripples } from "./ripples";
+import { flare } from "./shaders/flare";
+import { ripples } from "./shaders/ripples";
 
 const base = `${import.meta.env.BASE_URL}assets/jungleRabbit/`;
 
 export const resources = [
-	/* Font. */
-	{ name: "Crang", type: "fontface", src: `${base}font/Crang.woff2` },
+	/* The display face, baked to hard-edged BitmapText atlases.
+
+	   Crang is an outline face with no pixel grid — measured, every size from
+	   6 to 40 leaves 18% to 80% of its ink on partial alpha — so `Text` hands
+	   back glyphs the browser has already anti-aliased, and the upscale to the
+	   window magnifies each grey edge pixel into a grey block beside sprites
+	   that stayed hard-edged. The atlases are two colours and nothing in
+	   between, so they survive magnification the way every other
+	   nearest-sampled texture here does.
+
+	   Each size is baked AT that size and drawn at a ratio of 1. Doubling a
+	   smaller atlas would halve the detail, and Crang's counters are the first
+	   thing to go: the outline is dilated a pixel into every hole, which reads
+	   as a rim at 30 but closes an "A" solid at 15.
+
+	   `CrangHot` is the same geometry under the combo ramp, so it is a second
+	   PAGE against the one descriptor rather than a second font. */
+	{ name: "CrangTitle", type: "binary", src: `${base}font/CrangTitle.fnt` },
+	{ name: "CrangTitle", type: "image", src: `${base}font/CrangTitle.png` },
+	{ name: "Crang", type: "binary", src: `${base}font/Crang.fnt` },
+	{ name: "Crang", type: "image", src: `${base}font/Crang.png` },
+	{ name: "CrangHot", type: "image", src: `${base}font/CrangHot.png` },
+	{ name: "CrangSmall", type: "binary", src: `${base}font/CrangSmall.fnt` },
+	{ name: "CrangSmall", type: "image", src: `${base}font/CrangSmall.png` },
 
 	/* The label ramp, as an inline shader asset rather than a hand-built
 	   effect: a "shader" resource is compiled AT LOAD TIME and the loader owns

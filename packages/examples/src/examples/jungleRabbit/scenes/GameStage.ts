@@ -29,6 +29,7 @@
 import {
 	type Application,
 	audio,
+	type BitmapText,
 	Box3d,
 	type Camera3d,
 	Color,
@@ -46,7 +47,6 @@ import {
 	type Sprite3d,
 	Stage,
 	state,
-	Text,
 	Tween,
 	Vector2d,
 	Vector3d,
@@ -58,8 +58,11 @@ import {
 	getPuff,
 	getRipples,
 	getWater,
-} from "./assets";
+} from "../assets";
 import {
+	BANNER_SHAKE_AMP,
+	BANNER_SHAKE_MS,
+	BANNER_SHAKE_RATE,
 	BIRD_AHEAD,
 	BIRD_COUNT,
 	BIRD_HEIGHT,
@@ -115,8 +118,6 @@ import {
 	MODEL_SCALE,
 	MULT_PUNCH,
 	MULT_PUNCH_MS,
-	MULT_RAMP_BOTTOM,
-	MULT_RAMP_TOP,
 	MUSIC_VOLUME,
 	PADDLE_TEMPO_GAIN,
 	PADDLE_TEMPO_MIN,
@@ -151,8 +152,6 @@ import {
 	STEER_MAX,
 	SUN_AHEAD,
 	TERRAIN_OVERHANG,
-	TEXT_RAMP_BOTTOM,
-	TEXT_RAMP_TOP,
 	TILE_LEN,
 	TILE_NX,
 	TRAIL_FOAM,
@@ -174,13 +173,16 @@ import {
 	VIEW_W,
 	WARMUP_DISTANCE,
 	WATER_LEVEL,
-} from "./constants";
-
-import { menuText } from "./menuText";
-import type { Geometry } from "./props";
-import { PALETTE_CELLS, WHITE_CELL } from "./props";
-import { bestMetres, bestScore, initRecords, submitRun } from "./records";
-import { aimFlare, createSun } from "./scenery";
+} from "../constants";
+import {
+	createTerrainTile,
+	createWaterPlane,
+	scrollWaterPlane,
+	valleyY,
+} from "../entities/terrain";
+import type { Geometry } from "../fx/props";
+import { PALETTE_CELLS, WHITE_CELL } from "../fx/props";
+import { aimFlare, createSun } from "../fx/scenery";
 import {
 	playCapsize,
 	playHit,
@@ -188,13 +190,9 @@ import {
 	playPickup,
 	playRiver,
 	playSplash,
-} from "./sfx";
-import {
-	createTerrainTile,
-	createWaterPlane,
-	scrollWaterPlane,
-	valleyY,
-} from "./terrain";
+} from "../fx/sfx";
+import { bestMetres, bestScore, initRecords, submitRun } from "../lib/records";
+import { hotText, impactEffect, lineHeightOf, menuText } from "../ui/menuText";
 
 /**
  * The parsed descriptor for a preloaded glTF, or a loud failure.
@@ -360,7 +358,7 @@ export class GameStage extends Stage {
 	/** the one scatter that is animated per frame */
 	private leaves!: Scatter;
 	/** pooled "+N" labels, cycled so a fast run never allocates one mid-frame */
-	private pops: { label: Text; age: number; x: number; y: number }[] = [];
+	private pops: { label: BitmapText; age: number; x: number; y: number }[] = [];
 	private nextPop = 0;
 	/** the boat's reflection: the same rig, upside down under the surface */
 	private reflection!: GLTFModel;
@@ -406,17 +404,17 @@ export class GameStage extends Stage {
 	private lastTrailZ = 0;
 	private sun!: Light3d;
 	private ambient!: Light3d;
-	/** LIVES — rebaked only when a life is lost */
-	private hudLives!: Text;
-	/** CARROTS — rebaked only on a pickup */
-	private hudCarrots!: Text;
+	/** LIVES — re-set only when a life is lost */
+	private hudLives!: BitmapText;
+	/** CARROTS — re-set only on a pickup */
+	private hudCarrots!: BitmapText;
 	/**
-	 * The multiplier, as its OWN label: one `Text` carries one `fillStyle`, so
-	 * a second colour in the same line needs a second label. It also lets the
-	 * two animate independently — the score ticks constantly, the multiplier
-	 * changes rarely, and only the rare one is worth punching.
+	 * The multiplier, as its OWN label: it is drawn from the combo-ramp atlas
+	 * page, and one label reads from one page. It also lets the two animate
+	 * independently — the score ticks constantly, the multiplier changes
+	 * rarely, and only the rare one is worth punching.
 	 */
-	private hudMultiplier!: Text;
+	private hudMultiplier!: BitmapText;
 	/** what the multiplier label is currently showing, to notice a step */
 	private shownMultiplier = 1;
 	/** when the current run of carrots goes stale, measured against `elapsed` */
@@ -427,11 +425,11 @@ export class GameStage extends Stage {
 	/** the live scale, 1 at rest; written by the tween, read by `draw` */
 	private readonly multPunchDriver = { scale: 1 };
 	/** the distance, the one line that really changes every frame */
-	private hudDistance!: Text;
-	/** the persisted best, top right */
-	private bestLabels: Text[] = [];
+	private hudDistance!: BitmapText;
+	/** the persisted best, top right — written once, never measured */
+	private bestRecord!: BitmapText;
 	private beatRecord = false;
-	private banner!: Text;
+	private banner!: BitmapText;
 
 	// ── the run: the whole simulation, in a dozen numbers ───────────────────
 
@@ -983,54 +981,17 @@ export class GameStage extends Stage {
 	 * @param world - the world to add them to
 	 */
 	private buildHud(world: Application["world"]) {
-		// The ramp each HUD label fills with — a `Gradient` handed to `fillStyle`,
-		// which colours the fill and leaves the outline alone.
-		//
-		// One line box: `Text` re-anchors a gradient to each line by default, so
-		// every line of a multi-line label gets the same ramp.
-		const ramp = (size: number) => {
-			const g = this.app.renderer.createLinearGradient(0, 0, 0, size * 1.45);
-			g.addColorStop(0, TEXT_RAMP_TOP);
-			g.addColorStop(1, TEXT_RAMP_BOTTOM);
-			return g;
-		};
-		// `Text` already anchors at (0, 0) — passing textAlign/textBaseline on
-		// top of that fights the default rather than helping
-		// sized for the 480×270 internal buffer, not for the window it is
-		// blown up into — a 26px face here would fill a third of the screen
-		// One label PER ENTRY, not one multi-line label. Each then carries its
-		// own ramp without the gradient having to span a block, and — the part
-		// that actually matters in a run — only the line whose value changed is
-		// re-baked. `setText` re-measures, re-rasterizes the offscreen canvas
-		// and invalidates the GPU texture on every call, so a distance counter
-		// ticking every frame used to drag LIVES and CARROTS through all of
-		// that with it.
+		// One label PER ENTRY, not one multi-line label: the multiplier has to
+		// sit after the score, so the carrots line needs its own measurable
+		// width, and the three values change at different moments.
 		const line = (index: number, align: "left" | "right" = "left") => {
-			const label = new Text(align === "left" ? 10 : VIEW_W - 10, 0, {
-				// the preloaded face, by the name it was registered under
-				font: "Crang",
-				size: align === "left" ? 15 : 13,
-				// Crang is a chunky display face and its glyphs fill the em box,
-				// so consecutive lines collide at the default 1.0
-				lineHeight: 1.45,
-				fillStyle: ramp(align === "left" ? 15 : 13),
-				// The outline. `lineWidth` is what switches stroking on at all —
-				// a strokeStyle with zero width draws nothing — but keep it THIN:
-				// the stroke is drawn ON TOP of the fill and centred on the glyph
-				// outline, so half of it eats inward. At 3 on a 15px face the
-				// letters came out solid black.
-				strokeStyle: "#000000",
-				lineWidth: 1,
-				textAlign: align,
-				text: "",
-			});
-			const size = align === "left" ? 15 : 13;
-			label.pos.y = (align === "left" ? 8 : 7) + index * size * 1.45;
-			// `floating` exempts it from the perspective projection, but NOT
-			// from the depth sort — z still means distance. A HUD wants to be
-			// NEAR the camera to draw last; parked at a large z it sorts to the
-			// far end of the valley and the trees draw over the score.
-			label.floating = true;
+			const label = menuText(
+				align === "left" ? 10 : VIEW_W - 10,
+				(align === "left" ? 8 : 7) + index * lineHeightOf("body"),
+				"body",
+				"",
+				align,
+			);
 			world.addChild(label, HUD_Z);
 			return label;
 		};
@@ -1039,49 +1000,30 @@ export class GameStage extends Stage {
 		this.hudCarrots = line(1);
 		this.hudDistance = line(2);
 
-		// Same row as the carrots, its own hotter ramp. Positioned in
-		// `refreshCounters` from the carrots line's measured width, because
-		// where it belongs depends on how many digits the score has.
-		const hot = this.app.renderer.createLinearGradient(0, 0, 0, 15 * 1.45);
-		hot.addColorStop(0, MULT_RAMP_TOP);
-		hot.addColorStop(1, MULT_RAMP_BOTTOM);
-		this.hudMultiplier = new Text(10, 8 + 15 * 1.45, {
-			font: "Crang",
-			size: 15,
-			lineHeight: 1.45,
-			fillStyle: hot,
-			strokeStyle: "#000000",
-			lineWidth: 1,
-			textAlign: "left",
-			text: "",
-		});
-		this.hudMultiplier.floating = true;
+		// Same row as the carrots, under the combo ramp — a second atlas PAGE
+		// against the same descriptor, since on a bitmap face `fillStyle` is a
+		// flat tint and cannot re-ramp one. Positioned in `refreshCounters`
+		// from the carrots line's measured width, because where it belongs
+		// depends on how many digits the score has.
+		this.hudMultiplier = hotText(10, 8 + lineHeightOf("body"), "");
 		world.addChild(this.hudMultiplier, HUD_Z);
 
-		// the record, opposite the live score so the two read as a pair
+		// the record, opposite the live score so the two read as a pair. One
+		// label: it is written once and never measured.
 		initRecords();
-		this.bestLabels = [line(0, "right"), line(1, "right"), line(2, "right")];
-		// The persisted record does not move during a run, so it is written
-		// once here rather than re-set every frame.
-		this.bestLabels[0].setText("BEST");
-		this.bestLabels[1].setText(`${bestScore()}`);
-		this.bestLabels[2].setText(`${bestMetres()}M`);
+		this.bestRecord = menuText(
+			VIEW_W - 10,
+			7,
+			"body",
+			`BEST\n${bestScore()}\n${bestMetres()}M`,
+			"right",
+		);
+		world.addChild(this.bestRecord, HUD_Z);
 
-		this.banner = new Text(VIEW_W / 2, 105, {
-			font: "Crang",
-			size: 20,
-			lineHeight: 1.45,
-			fillStyle: ramp(20),
-			strokeStyle: "#000000",
-			// 1, not 1.5. Text metrics size the box from the line height alone
-			// and make no allowance for the stroke, and `textBaseline: "top"`
-			// puts the first line's ascenders at y = 0 — so the outer half of a
-			// thick stroke overflows the top of the box and is clipped away.
-			lineWidth: 1,
-			textAlign: "center",
-			text: "",
-		});
-		this.banner.floating = true;
+		// The run's closing word, at title size so it carries straight through
+		// the fade into the game-over screen's own heading rather than
+		// changing size across the transition.
+		this.banner = menuText(VIEW_W / 2, 105, "title", "");
 		world.addChild(this.banner, HUD_Z);
 	}
 
@@ -1131,14 +1073,15 @@ export class GameStage extends Stage {
 		input.bindKey(input.KEY.D, "right");
 		input.bindKey(input.KEY.SPACE, "jump", true);
 
-		// A pooled set of "+N" labels. Pooled rather than created on pickup:
-		// a `Text` rasterizes its glyphs on construction, and doing that in
-		// the middle of a run is a visible hitch for the sake of two
-		// characters. Six is more than a fast run ever has in the air at once.
+		// A pooled set of "+N" labels. Still pooled now that they are bitmap
+		// labels: construction no longer rasterizes anything, but six
+		// renderables entering and leaving the world mid-run would churn the
+		// child list for the sake of two characters. Six is more than a fast
+		// run ever has in the air at once.
 		this.pops = [];
 		this.nextPop = 0;
 		for (let i = 0; i < POP_POOL; i++) {
-			const label = menuText(0, 0, 13, "");
+			const label = menuText(0, 0, "body", "");
 			label.alpha = 0;
 			world.addChild(label, HUD_Z);
 			// `age` past POP_MS means "retired" — nothing to draw and nothing
@@ -2260,6 +2203,16 @@ export class GameStage extends Stage {
 		// the banner says nothing until this moment, so this is the only place
 		// that writes it
 		this.banner.setText(this.beatRecord ? "NEW BEST!" : "CAPSIZED!");
+		// The hit itself. Attached HERE rather than at construction because
+		// `ctx.time` counts from the moment an effect is assigned, so this is
+		// what puts the shake at full strength on the frame the boat goes
+		// over. The game-over screen's own heading rides the title's wave
+		// instead: this is the impact, that is the aftermath.
+		this.banner.glyphEffect = impactEffect(
+			BANNER_SHAKE_AMP,
+			BANNER_SHAKE_MS,
+			BANNER_SHAKE_RATE,
+		);
 		// Hand the result to the game-over stage rather than freezing here.
 		// It rebuilds the world, so nothing can be read back off this one —
 		// the numbers travel as `state.change` arguments.
@@ -2345,7 +2298,7 @@ export class GameStage extends Stage {
 		const mult = this.multiplier;
 		this.hudMultiplier.setText(mult > 1 ? `COMBO x${mult}` : "");
 		// Sits after the score, so where it goes depends on how many digits
-		// that has — measured rather than guessed. Moving a `Text` is what
+		// that has — measured rather than guessed. Moving a label is what
 		// this relies on, which is why it can follow the number as it grows.
 		this.hudMultiplier.pos.x =
 			this.hudCarrots.pos.x + this.hudCarrots.measureText().width + 9;
