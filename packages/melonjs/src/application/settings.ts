@@ -138,7 +138,9 @@ export type ApplicationSettings = {
 	powerPreference: PowerPreference;
 
 	/**
-	 * whether to allow transparent pixels in the front buffer (screen).
+	 * whether the canvas composites with the page behind it. `false`, the default, makes the front buffer opaque: the clear alpha is 1, WebGPU is configured `alphaMode: "opaque"`, and the canvas renderer clears rather than erases.
+	 *
+	 * Turn it on only when the page is meant to show through, since an opaque surface is the cheaper one to composite and is what a game filling its container wants. With it on the clear alpha becomes 0 and WebGPU switches to `"premultiplied"`, so anything drawn at partial alpha blends with the page rather than with a known background.
 	 * @default false
 	 */
 	transparent: boolean;
@@ -231,6 +233,16 @@ export type ApplicationSettings = {
 	 */
 	hdrOutput: boolean;
 
+	/**
+	 * the tone curve applied at the end of the camera's chain, or `"none"` for no curve. `"aces"` is the filmic one, `"reinhard"` the gentlest, `"exponential"` the simplest.
+	 *
+	 * **A curve is a look decision, not a companion to {@link ApplicationSettings.hdr}.** Every curve maps 1 to less than 1, so switching one on changes a game whose art was authored against a clamp: the clipped white goes matte and the picture flattens. Turn it on for art authored in linear light, or when a deliberate grade is wanted.
+	 *
+	 * Changing the mode rebuilds one shader, since the curve is baked into it; {@link ApplicationSettings.toneMappingExposure} and {@link ApplicationSettings.toneMappingWhite} are uniform writes and can be driven per frame, which is what makes a settings screen or a hit flash cheap. `renderer.setToneMapping()` is the runtime entry point.
+	 * @default "none"
+	 * @see ApplicationSettings.toneMappingExposure
+	 * @see ApplicationSettings.toneMappingWhite
+	 */
 	toneMapping: "none" | "aces" | "reinhard" | "exponential";
 
 	/**
