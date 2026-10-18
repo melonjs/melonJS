@@ -72,7 +72,11 @@ describe("first-use costs a preload should have paid", () => {
 			// `is*` queries block until the driver answers, and teardown runs
 			// once per object, so a scene dropping a batch of retained meshes
 			// paid a round trip for every buffer in it
-			const gl = { isContextLost: () => false };
+			const gl = {
+				isContextLost: () => {
+					return false;
+				},
+			};
 			let probed = 0;
 			const probe = () => {
 				probed++;
@@ -90,7 +94,11 @@ describe("first-use costs a preload should have paid", () => {
 		});
 
 		it("refuses while the context is lost, without probing", () => {
-			const gl = { isContextLost: () => true };
+			const gl = {
+				isContextLost: () => {
+					return true;
+				},
+			};
 			let probed = 0;
 			expect(
 				deletable(
@@ -106,11 +114,23 @@ describe("first-use costs a preload should have paid", () => {
 		});
 
 		it("honours the probe's answer for a handle that died with a context", () => {
-			const gl = { isContextLost: () => false };
+			const gl = {
+				isContextLost: () => {
+					return false;
+				},
+			};
 			markContextLost(gl);
 			// the restored context is live, but this handle belonged to the
 			// one that died — exactly what the probe exists to catch
-			expect(deletable(gl, () => false, {})).toBe(false);
+			expect(
+				deletable(
+					gl,
+					() => {
+						return false;
+					},
+					{},
+				),
+			).toBe(false);
 		});
 	});
 });
