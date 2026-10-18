@@ -631,14 +631,6 @@ const _trailColor = new Color();
 const _engineColor = new Color();
 
 /**
- * The parsed descriptor for a preloaded glTF, or a loud failure.
- *
- * `loader.getGLTF` answers `null` for a name that was never preloaded, and a
- * model built from `null` fails somewhere far from the typo that caused it.
- * @param name - the name the asset was preloaded under
- * @returns the parsed glTF
- */
-/**
  * How much heat a block of ice takes out of the boost when flown through.
  *
  * Three bands, biggest to smallest. `grade` is continuous, so the bands are
@@ -2013,28 +2005,6 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Give a rock a new heading without letting its mesh notice.
-	 *
-	 * The mesh is oriented by a surface frame built from the heading, which
-	 * is right while the rock is just travelling: the tangent is continuous
-	 * because the motion maintaining it is. A bounce breaks that. Reflecting
-	 * a heading is a step change by design, and a head-on contact reverses
-	 * it, so the frame built from it turns a half circle between two frames
-	 * and the rock visibly flips. Measured in play at up to 145 degrees in a
-	 * single frame, and every jump recorded had just bounced.
-	 *
-	 * The orientation that reaches the screen is the frame TIMES the rock's
-	 * own turn about the normal, so the fix is to pay the frame's jump into
-	 * that turn and let the two cancel. `turnBetween` is signed for exactly
-	 * this reason: the correction has to know which way the heading went.
-	 *
-	 * Smoothing the bounce instead would also hide it, but it would make the
-	 * rock pivot over several frames rather than bounce, which is a change to
-	 * how the game plays rather than to how it looks.
-	 * @param d - the rock being turned
-	 * @param heading - its new unit heading, tangent at its current position
-	 */
-	/**
 	 * Add `amount` of speed along `dir` to a drifter, and keep it a drifter.
 	 *
 	 * A rock carries its motion as a unit `heading` and a scalar `speed`, so
@@ -2062,6 +2032,28 @@ export class GameController extends Renderable {
 		d.speed = math.clamp(sp, ROCK_SPEED_FLOOR, ROCK_SPEED_CEIL);
 	}
 
+	/**
+	 * Give a rock a new heading without letting its mesh notice.
+	 *
+	 * The mesh is oriented by a surface frame built from the heading, which
+	 * is right while the rock is just travelling: the tangent is continuous
+	 * because the motion maintaining it is. A bounce breaks that. Reflecting
+	 * a heading is a step change by design, and a head-on contact reverses
+	 * it, so the frame built from it turns a half circle between two frames
+	 * and the rock visibly flips. Measured in play at up to 145 degrees in a
+	 * single frame, and every jump recorded had just bounced.
+	 *
+	 * The orientation that reaches the screen is the frame TIMES the rock's
+	 * own turn about the normal, so the fix is to pay the frame's jump into
+	 * that turn and let the two cancel. `turnBetween` is signed for exactly
+	 * this reason: the correction has to know which way the heading went.
+	 *
+	 * Smoothing the bounce instead would also hide it, but it would make the
+	 * rock pivot over several frames rather than bounce, which is a change to
+	 * how the game plays rather than to how it looks.
+	 * @param d - the rock being turned
+	 * @param heading - its new unit heading, tangent at its current position
+	 */
 	private deflect(d: Drifter, heading: Vector3d): void {
 		// MINUS, and the direction is pinned by a test rather than by this
 		// comment: `turnBetween` is signed as `turn` takes its angle, which
@@ -2645,16 +2637,6 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * A rock reached the craft.
-	 *
-	 * Nothing explodes. The shield takes the damage and the two are thrown
-	 * apart along the line the rock came in on, which is the only reading
-	 * of a shield that makes sense: it is the thing that stopped them
-	 * touching. The run ends only on an impact the shield had nothing left
-	 * to absorb.
-	 * @param hit - the rock that arrived
-	 */
-	/**
 	 * The craft flew through ice, and the ice loses.
 	 *
 	 * No shield cost and no bounce: this is the one contact in the game the
@@ -2715,6 +2697,16 @@ export class GameController extends Renderable {
 		this.removeDrifter(this.drifters.indexOf(hit));
 	}
 
+	/**
+	 * A rock reached the craft.
+	 *
+	 * Nothing explodes. The shield takes the damage and the two are thrown
+	 * apart along the line the rock came in on, which is the only reading
+	 * of a shield that makes sense: it is the thing that stopped them
+	 * touching. The run ends only on an impact the shield had nothing left
+	 * to absorb.
+	 * @param hit - the rock that arrived
+	 */
 	private onShipHit(hit: Drifter): void {
 		// the rock's scene position, named once for the three users below
 		const sx = hit.model.pos.x;
@@ -3003,17 +2995,6 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * The shield's own frame: what it has left, and how that reads.
-	 *
-	 * Regeneration is on a delay rather than continuous, so a hit actually
-	 * costs something: fly clear for a couple of seconds and it starts
-	 * coming back, stay in the rocks and it does not.
-	 *
-	 * Empty is a state, not an end. The bar blinks red and the bubble goes
-	 * with it, which is the warning that the next contact is the last one.
-	 * @param dt - frame time in milliseconds
-	 */
-	/**
 	 * Flash the shield shell on impact.
 	 *
 	 * The curve used to be written out as `(flashMs / SHIELD_FLASH_MS) ** 2`
@@ -3177,6 +3158,17 @@ export class GameController extends Renderable {
 		}
 	}
 
+	/**
+	 * The shield's own frame: what it has left, and how that reads.
+	 *
+	 * Regeneration is on a delay rather than continuous, so a hit actually
+	 * costs something: fly clear for a couple of seconds and it starts
+	 * coming back, stay in the rocks and it does not.
+	 *
+	 * Empty is a state, not an end. The bar blinks red and the bubble goes
+	 * with it, which is the warning that the next contact is the last one.
+	 * @param dt - frame time in milliseconds
+	 */
 	private tickShield(dt: number): void {
 		this.sinceHitMs += dt;
 		if (this.sinceHitMs >= SHIELD_REGEN_DELAY_MS && this.shield < SHIELD_MAX) {
@@ -3629,16 +3621,6 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Pose the camera and write every renderable's scene position. This is
-	 * the only place the sphere meets the engine.
-	 *
-	 * The camera is POSED from the player's surface frame rather than the
-	 * world being counter-rotated into a fixed camera. The globe is then a
-	 * fixed object in a fixed place, which is what it is, and the rotation
-	 * that used to be applied by hand to every single renderable is carried
-	 * once by the view matrix.
-	 */
-	/**
 	 * Put the WARNING banner up for a committed bombing run.
 	 *
 	 * One at a time. Raids do not overlap today, but a banner that stacked
@@ -3723,6 +3705,16 @@ export class GameController extends Renderable {
 		this.boltPool.length = 0;
 	}
 
+	/**
+	 * Pose the camera and write every renderable's scene position. This is
+	 * the only place the sphere meets the engine.
+	 *
+	 * The camera is POSED from the player's surface frame rather than the
+	 * world being counter-rotated into a fixed camera. The globe is then a
+	 * fixed object in a fixed place, which is what it is, and the rotation
+	 * that used to be applied by hand to every single renderable is carried
+	 * once by the view matrix.
+	 */
 	private placeWorld(): void {
 		const view = this.viewFrame();
 		const basis = viewBasis(view);
@@ -4066,16 +4058,6 @@ export class GameController extends Renderable {
 	}
 
 	/**
-	 * Apply the contacts the engine reported during the last world update.
-	 *
-	 * Drained here rather than handled in the callbacks because the
-	 * callbacks run INSIDE the world's update walk, and what a hit does is
-	 * tear renderables out of the world: a bolt goes back to its pool the
-	 * moment it lands, and `removeChildNow` mid-walk is how a container
-	 * loses track of its own children. A frame of latency is invisible, and
-	 * it puts every structural change in one place.
-	 */
-	/**
 	 * One bolt's worth of damage to a rock, and everything that follows from
 	 * it: the flash, the debris, the score, the split.
 	 *
@@ -4244,6 +4226,16 @@ export class GameController extends Renderable {
 		}
 	}
 
+	/**
+	 * Apply the contacts the engine reported during the last world update.
+	 *
+	 * Drained here rather than handled in the callbacks because the
+	 * callbacks run INSIDE the world's update walk, and what a hit does is
+	 * tear renderables out of the world: a bolt goes back to its pool the
+	 * moment it lands, and `removeChildNow` mid-walk is how a container
+	 * loses track of its own children. A frame of latency is invisible, and
+	 * it puts every structural change in one place.
+	 */
 	private drainHits(): void {
 		// Nothing lands after the run has ended.
 		//

@@ -11,6 +11,9 @@
  */
 import { Noise } from "melonjs";
 
+/** every sky baked so far, keyed by the three numbers that define it */
+const fields = new Map<string, HTMLCanvasElement>();
+
 /**
  * Repeat the generated tile into the single bitmap the backdrop draws.
  *
@@ -23,9 +26,6 @@ import { Noise } from "melonjs";
  * @param seed - deterministic: the same seed is the same sky
  * @returns the composed bitmap, `size * repeat` square
  */
-/** every sky baked so far, keyed by the three numbers that define it */
-const fields = new Map<string, HTMLCanvasElement>();
-
 export const nebulaField = (
 	size: number,
 	repeat: number,

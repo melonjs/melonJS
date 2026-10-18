@@ -73,23 +73,6 @@ const PANEL_FILL = "#0a1526";
 const PANEL_EDGE = "rgba(130, 210, 255, 0.75)";
 
 /**
- * One step per press, for the screens a menu lives on.
- *
- * `isKeyPressed` reports a key as pressed for as long as it is HELD unless it
- * was bound with the lock, and the actions these screens share with the game
- * — `boost` for up, `fire` for select — are deliberately unlocked there so
- * they repeat while flying. Taking the edge here means a menu does not have
- * to rebind them and restore them on the way out.
- *
- * The seeding is the part worth having in one place. The map starts from the
- * keys that are ALREADY down rather than empty, because an empty map says
- * every key was up and so reads a key held across a state change as a fresh
- * press: a player who held space to leave a finished run was bounced
- * straight back into a new game, and one who held it to dismiss the warning
- * panel would have been thrown into the menu's first entry the same way. A
- * key held across a switch has to be released before it counts.
- */
-/**
  * One entry.
  *
  * `onOver` moves the cursor instead of lighting itself, so the pointer and the

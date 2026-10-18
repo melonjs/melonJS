@@ -29,6 +29,7 @@ import { type Matrix3d, math, Vector3d } from "melonjs";
  * function, {@link project}.
  *
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
+ * @module
  */
 
 /** a thing on the surface: where it is, and which way it faces */
@@ -711,16 +712,6 @@ export const ringHeading = (
 };
 
 /**
- * Two unit vectors perpendicular to `axis` and to each other.
- *
- * The seed is chosen against the axis rather than fixed, because crossing
- * with a constant collapses to zero when the axis happens to be parallel to
- * it, and "happens to be" is a thing that occurs about once a session and
- * looks like the saucer vanishing.
- * @param axis - the pole, unit
- * @returns the pair, as `b` and `c`
- */
-/**
  * Put a surface point into the frame a mesh's own matrix is built in.
  *
  * The scene is Y-down and `onGlobe` places things with no flip, but the
@@ -752,6 +743,16 @@ export const bridgeY = (
 	return out;
 };
 
+/**
+ * Two unit vectors perpendicular to `axis` and to each other.
+ *
+ * The seed is chosen against the axis rather than fixed, because crossing
+ * with a constant collapses to zero when the axis happens to be parallel to
+ * it, and "happens to be" is a thing that occurs about once a session and
+ * looks like the saucer vanishing.
+ * @param axis - the pole, unit
+ * @returns the pair, as `b` and `c`
+ */
 export const ringBasis = (axis: Vector3d): { b: Vector3d; c: Vector3d } => {
 	const seed =
 		Math.abs(axis.x) < 0.8 ? new Vector3d(1, 0, 0) : new Vector3d(0, 1, 0);
@@ -884,24 +885,6 @@ export const tangentMatrixWorld = (q: Vector3d, out: Matrix3d): Matrix3d => {
 };
 
 /**
- * How near the planet's centre a camera's line of sight to a point passes.
- *
- * Both arguments are given RELATIVE to that centre, which is what lets the
- * same maths serve a caller working in globe space, where the centre is the
- * origin, and one working in scene space, where it sits at `PLANET_Z`.
- *
- * It is the closest approach to the centre of the SEGMENT, not the infinite
- * line: clamping to the segment is what distinguishes a thing hidden behind
- * the globe from one in front of it, since both lie on the same line.
- * @param cx - camera x, from the planet's centre
- * @param cy - camera y
- * @param cz - camera z
- * @param tx - target x, from the planet's centre
- * @param ty - target y
- * @param tz - target z
- * @returns the squared distance, so callers compare against a squared radius
- */
-/**
  * Move a world point a fixed distance toward another one.
  *
  * Used to lift a billboard off what it wraps, toward the camera. That has to
@@ -934,6 +917,24 @@ export const stepToward = (
 	return out;
 };
 
+/**
+ * How near the planet's centre a camera's line of sight to a point passes.
+ *
+ * Both arguments are given RELATIVE to that centre, which is what lets the
+ * same maths serve a caller working in globe space, where the centre is the
+ * origin, and one working in scene space, where it sits at `PLANET_Z`.
+ *
+ * It is the closest approach to the centre of the SEGMENT, not the infinite
+ * line: clamping to the segment is what distinguishes a thing hidden behind
+ * the globe from one in front of it, since both lie on the same line.
+ * @param cx - camera x, from the planet's centre
+ * @param cy - camera y
+ * @param cz - camera z
+ * @param tx - target x, from the planet's centre
+ * @param ty - target y
+ * @param tz - target z
+ * @returns the squared distance, so callers compare against a squared radius
+ */
 export const sightlineClearance2 = (
 	cx: number,
 	cy: number,

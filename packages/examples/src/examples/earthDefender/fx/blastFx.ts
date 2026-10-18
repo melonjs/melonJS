@@ -437,14 +437,6 @@ export class BlastFx {
 	}
 
 	/**
-	 * Particle burst at a projected position.
-	 * @param x - scene x
-	 * @param y - scene y
-	 * @param z - scene depth
-	 * @param tint - CSS colour
-	 * @param count - particles in the burst
-	 */
-	/**
 	 * Aim a burst away from the planet.
 	 *
 	 * Particles move in the emitter's own frame: `angle` is the azimuth across
