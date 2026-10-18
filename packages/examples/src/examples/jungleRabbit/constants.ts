@@ -475,7 +475,14 @@ export const CARROT_SCORE = 25;
 export const COMBO_STEP = 4;
 export const COMBO_MAX = 4;
 
-/** the multiplier's own ramp — hotter than the HUD's cream-to-gold */
+/**
+ * The multiplier's own ramp, hotter than the HUD's cream-to-gold.
+ *
+ * Baked into the `CrangHot` atlas page rather than read at runtime: on a
+ * bitmap face `fillStyle` is a flat tint, and no single multiplier maps one
+ * ramp's two ends onto another's. Kept here as the colours that page is
+ * generated from.
+ */
 export const MULT_RAMP_TOP = "#fff3c4";
 export const MULT_RAMP_BOTTOM = "#ff3b1f";
 
@@ -675,6 +682,38 @@ export const TITLE_CARROT_Y = WATER_LEVEL - 168;
 export const TITLE_CARROT_Z = 620;
 export const TITLE_CARROT_SCALE = 43;
 export const TITLE_CARROT_SPIN = 1.15;
+/**
+ * The title's wave: how far a glyph rides, how fast the wave travels, and how
+ * long it is along the line.
+ *
+ * Scaled from the usual values for this effect, which are an amplitude of
+ * about an eighth of the font size, a little under 5 radians per second, and
+ * a wavelength around ten times the font size. At a 30px heading that is 4
+ * buffer pixels, a 1.3 second cycle, and a wave about 300 pixels long, which
+ * puts a little over three quarters of a cycle across "JUNGLE RABBIT".
+ *
+ * The amplitude is in WHOLE buffer pixels, because the effect rounds: a
+ * fractional glyph destination shimmers under a nearest-sampled upscale. So
+ * the amplitude is also a step count, and 4 gives nine of them.
+ */
+export const TITLE_WAVE_AMP = 4;
+export const TITLE_WAVE_RATE = 0.005;
+export const TITLE_WAVE_SPREAD = 0.021;
+
+/**
+ * The death banner's impact: how far it throws a glyph, how long it rings
+ * before settling, and how many times a second each glyph picks a new
+ * direction.
+ *
+ * `gameOver` changes state in the same breath as it writes the banner, so
+ * this plays out under the 420ms fade. That is the window it is tuned to: it
+ * decays on the square, so the violent part is over well inside it and the
+ * letters are near still by the time the screen is dark.
+ */
+export const BANNER_SHAKE_AMP = 3;
+export const BANNER_SHAKE_MS = 650;
+export const BANNER_SHAKE_RATE = 24;
+
 /** how far they bob, and how fast */
 export const TITLE_CARROT_BOB = 12;
 export const TITLE_CARROT_BOB_RATE = 1.6;
@@ -682,8 +721,9 @@ export const TITLE_CARROT_BOB_RATE = 1.6;
 /**
  * The menu/HUD text ramp: light at the top falling into gold.
  *
- * Handed to `Text.fillStyle` as a `Gradient`, so it colours the glyph fill and
- * leaves the black outline alone — `Text` strokes in a separate pass.
+ * Baked into the `Crang` and `CrangSmall` atlas pages, together with the black
+ * outline, rather than applied at runtime. Kept here as the colours those
+ * pages are generated from.
  */
 export const TEXT_RAMP_TOP = "#fffdf0";
 /** the deep end of the same ramp */

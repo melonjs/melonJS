@@ -122,7 +122,8 @@ Pixabay:
 
 Released under the **Pixabay Content License** — free for commercial and
 non-commercial use, no attribution required. Credited on the example's title
-screen and here as a courtesy.
+screen and here as a courtesy, unlike the display face below, whose credit is
+a condition of using it.
 
 The display face `font/Crang.woff2` was created by **Caveras** with FontStruct:
 
@@ -133,4 +134,13 @@ The display face `font/Crang.woff2` was created by **Caveras** with FontStruct:
 free for commercial reuse: if you copy this example into a commercial game, you
 must replace this font or obtain a commercial license from the author
 (cava@caveras.net). The full license text ships alongside the font as
-`font/Crang-LICENSE.txt`.
+`font/Crang-LICENSE.txt`, and the attribution the license calls for is on the
+example's own title screen, not only here.
+
+The bitmap atlases beside it — `font/Crang.{fnt,png}`, `font/CrangHot.png`,
+`font/CrangTitle.{fnt,png}` and `font/CrangSmall.{fnt,png}` — are **adaptations
+of that face**, rendered from `Crang.woff2` at 30, 15 and 9 pixels with the
+glyph coverage thresholded to hard edges and the game's own ramp and outline
+baked in. CC BY-NC-SA 4.0 permits the adaptation and requires it to carry the
+same license, which it does: the same attribution, share-alike and
+non-commercial terms apply to them as to the face they come from.

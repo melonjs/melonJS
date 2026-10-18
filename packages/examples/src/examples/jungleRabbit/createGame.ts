@@ -32,10 +32,10 @@ import {
 } from "melonjs";
 import { initAssets } from "./assets";
 import { VIEW_H, VIEW_W } from "./constants";
-import { GameOverStage } from "./GameOverStage";
-import { GameStage } from "./GameStage";
 import { resources } from "./resources";
-import { TitleStage } from "./TitleStage";
+import { GameOverStage } from "./scenes/GameOverStage";
+import { GameStage } from "./scenes/GameStage";
+import { TitleStage } from "./scenes/TitleStage";
 
 export const createGame = async () => {
 	const app = new Application(VIEW_W, VIEW_H, {

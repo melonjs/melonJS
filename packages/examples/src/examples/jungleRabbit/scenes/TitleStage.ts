@@ -21,7 +21,7 @@ import {
 	Tween,
 	Vector3d,
 } from "melonjs";
-import { getRipples } from "./assets";
+import { getRipples } from "../assets";
 import {
 	HUD_Z,
 	PROMPT_BLINK_MS,
@@ -31,13 +31,16 @@ import {
 	TITLE_CARROT_SPIN,
 	TITLE_CARROT_Y,
 	TITLE_DRIFT,
+	TITLE_WAVE_AMP,
+	TITLE_WAVE_RATE,
+	TITLE_WAVE_SPREAD,
 	VIEW_H,
 	VIEW_W,
-} from "./constants";
-import { menuLines, menuText } from "./menuText";
-import { bestMetres, bestScore, initRecords } from "./records";
-import { aimFlare, buildBackdrop } from "./scenery";
-import { driftWaterPlane } from "./terrain";
+} from "../constants";
+import { driftWaterPlane } from "../entities/terrain";
+import { aimFlare, buildBackdrop } from "../fx/scenery";
+import { bestMetres, bestScore, initRecords } from "../lib/records";
+import { lineHeightOf, menuText, waveEffect } from "../ui/menuText";
 
 /** the axis the carrots turn about — Y, so they spin where they float */
 const AXIS_Y = new Vector3d(0, 1, 0);
@@ -60,57 +63,74 @@ export class TitleStage extends Stage {
 		initRecords();
 
 		const world = app.world;
-		world.addChild(menuText(VIEW_W / 2, 93, 34, "JUNGLE RABBIT"), HUD_Z);
+		// The title breathes rather than sitting still. `glyphEffect` is a
+		// `BitmapText` feature with no `Text` equivalent, so this is something
+		// the baked atlas bought rather than a cost of it: the wave runs
+		// inside the existing batch, with no re-layout and no extra draw call.
+		const title = menuText(VIEW_W / 2, 93, "title", "JUNGLE RABBIT");
+		title.glyphEffect = waveEffect(
+			TITLE_WAVE_AMP,
+			TITLE_WAVE_RATE,
+			TITLE_WAVE_SPREAD,
+		);
+		world.addChild(title, HUD_Z);
 		// The prompt breathes rather than sitting dead on the screen — the
 		// arcade idiom, and the one element the player is waiting to act on.
 		// It dips to `PROMPT_DIM` and back rather than blinking to nothing:
 		// a prompt that vanishes reads as a glitch at this size, and the
 		// controls line underneath it has to stay legible throughout.
-		const promptLines = menuLines(
+		//
+		// Both lines are one label, so one tween blinks them in step rather
+		// than two that could drift apart.
+		const prompt = menuText(
 			VIEW_W / 2,
 			VIEW_H - 90,
-			15,
+			"body",
 			"PRESS SPACE TO PADDLE\nARROWS STEER   SPACE JUMPS",
 		);
-		for (const line of promptLines) {
-			world.addChild(line, HUD_Z);
-		}
-		// every line blinks, not just the first — one tween each, started
-		// together so they stay in step
-		for (const line of promptLines) {
-			new Tween(line)
-				.to({ alpha: PROMPT_DIM }, { duration: PROMPT_BLINK_MS / 2 })
-				.easing(Tween.Easing.Sinusoidal.InOut)
-				.yoyo(true)
-				.repeat(Number.POSITIVE_INFINITY)
-				.start();
-		}
-		// Credits, small and out of the way along the bottom. The music is
-		// Pixabay-licensed and asks for attribution, so this is not decoration
-		// — it is the condition of using the track.
-		for (const line of menuLines(
-			VIEW_W / 2,
-			VIEW_H - 29,
-			9,
-			"MADE WITH MELONJS   ASSETS MODELLED IN BLENDER\nMUSIC BY VLAD KROTOV - PIXABAY",
-			"center",
-			0.35,
-		)) {
-			world.addChild(line, HUD_Z);
-		}
+		world.addChild(prompt, HUD_Z);
+		new Tween(prompt)
+			.to({ alpha: PROMPT_DIM }, { duration: PROMPT_BLINK_MS / 2 })
+			.easing(Tween.Easing.Sinusoidal.InOut)
+			.yoyo(true)
+			.repeat(Number.POSITIVE_INFINITY)
+			.start();
+		// Credits, small and out of the way along the bottom.
+		//
+		// The FONT is the one asset here that makes this a condition rather
+		// than a courtesy: it is CC BY-NC-SA, so attribution is part of the
+		// licence, and the atlases the game actually draws from are
+		// adaptations of it covered by the same terms. The music asks for
+		// nothing — its licence requires no attribution at all — and the
+		// engine and the modelling tool ask for nothing either; those three
+		// are here because crediting them is the decent thing, not because
+		// anyone has to.
+		//
+		// Sitting one line higher than the other two needed, so the block
+		// still clears the bottom of the frame.
+		world.addChild(
+			menuText(
+				VIEW_W / 2,
+				VIEW_H - 29 - lineHeightOf("fine"),
+				"fine",
+				"MADE WITH MELONJS   ASSETS MODELLED IN BLENDER\nMUSIC BY VLAD KROTOV - PIXABAY\nCRANG FONT BY CAVERAS - FONTSTRUCT",
+			),
+			HUD_Z,
+		);
 
 		// only once there is a record — a first run should not be greeted by
 		// a row of zeroes
 		if (bestScore() > 0 || bestMetres() > 0) {
-			for (const line of menuLines(
-				VIEW_W - 10,
-				21,
-				13,
-				`BEST\n${bestScore()}\n${bestMetres()}M`,
-				"right",
-			)) {
-				world.addChild(line, HUD_Z);
-			}
+			world.addChild(
+				menuText(
+					VIEW_W - 10,
+					21,
+					"body",
+					`BEST\n${bestScore()}\n${bestMetres()}M`,
+					"right",
+				),
+				HUD_Z,
+			);
 		}
 
 		input.bindKey(input.KEY.SPACE, "start", true);
