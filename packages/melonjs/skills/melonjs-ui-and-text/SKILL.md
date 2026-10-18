@@ -154,8 +154,9 @@ costs no extra objects:
 
 ```js
 label.glyphEffect = (out, ctx) => {
-    out.offsetY = Math.sin(ctx.time * 0.008 + ctx.index * 0.6) * 6;  // wave
-    out.tint.setColor(255, 128, 128);                                // per glyph
+    // phase from the glyph's POSITION, not its index — see below
+    out.offsetY = Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 6;  // wave
+    out.tint.setColor(255, 128, 128);                             // per glyph
 };
 label.glyphEffect = null;    // back to the plain path
 ```
@@ -187,6 +188,86 @@ Four things that catch people:
   alone, and `out.tint` multiplies whatever the label's own `fillStyle` is.
 
 `Text` has no equivalent, since it rasterises the whole string into one texture.
+
+### Making it read as motion
+
+Three things decide whether a wave looks alive or mechanical, and none of them
+is the amplitude.
+
+- **Take the phase from `ctx.x`, not `ctx.index`.** This is the big one.
+  Stepping per glyph advances the wave as far across a narrow `I` as across a
+  wide `M`, so the wavelength stretches and squashes with whatever the line
+  happens to spell, and the eye reads the unevenness as a mechanism. `ctx.x`
+  gives the wave one fixed length in pixels and lets it travel through the
+  text at a constant rate, whatever the letters are.
+- **Round the offsets if the frame is upscaled.** They are added to the glyph
+  destination unchanged, so a fractional offset in a small design resolution
+  that is then magnified with nearest sampling makes the glyph's OWN pixels
+  come out uneven — and differently uneven each frame. That is a shimmer, not
+  movement. `Math.round` the offset and it steps cleanly, for the same reason
+  `subPixel` defaults to false. Whole pixels mean few steps, so the amplitude
+  has to be large enough to give you several.
+- **A shake is not a sine.** A sine moves the whole line as one body, which is
+  a wave however fast you run it. A shake gives each glyph a direction
+  unrelated to its neighbours: pick a random angle per glyph, hold it for a
+  tick, interpolate to the next, and scale the whole thing by a decay if it is
+  an impact rather than a state.
+
+Starting points that look right across sizes, as fractions of the font size:
+an amplitude around an eighth of it, a wavelength around ten times it, and a
+little under 5 radians per second. For a shake, re-target each glyph roughly
+20 to 40 times a second.
+
+`ctx.time` starts when the effect is **assigned**, so attach it at the moment
+you want to be t=0 — on the frame the hit lands, not when the label was built.
+A label reused across lives carries the old clock, so a decay attached once
+will already be spent the second time.
+
+Both, whole:
+
+```js
+import { BitmapText } from "melonjs";
+
+const title = new BitmapText(app.viewport.width / 2, 60, {
+    font: "display",
+    textAlign: "center",
+    text: "JUNGLE RABBIT",
+});
+title.floating = true;
+app.world.addChild(title);
+
+// A wave: four pixels deep, a ~1.3s cycle, and a wavelength of roughly ten
+// times the font size. Phase from ctx.x, offset rounded.
+title.glyphEffect = (out, ctx) => {
+    out.offsetY = Math.round(Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 4);
+};
+
+// A shake: each glyph picks its own direction, holds it for a tick, slides to
+// the next, and the whole thing decays. Deterministic, so the same hit shakes
+// the same way every time.
+const angle = (i, tick) => {
+    const h = Math.sin(i * 127.1 + tick * 311.7) * 43758.5453;
+    return (h - Math.floor(h)) * Math.PI * 2;
+};
+const impact = (amplitude, durationMs, rate) => (out, ctx) => {
+    const left = 1 - ctx.time / durationMs;
+    if (left <= 0) {
+        return;                              // settled; `out` is already zeroed
+    }
+    const amp = amplitude * left * left;
+    const tick = (ctx.time / 1000) * rate;
+    const held = Math.floor(tick);
+    const k = tick - held;
+    const a = angle(ctx.index, held);
+    const b = angle(ctx.index, held + 1);
+    out.offsetX = Math.round((Math.sin(a) + (Math.sin(b) - Math.sin(a)) * k) * amp);
+    out.offsetY = Math.round((Math.cos(a) + (Math.cos(b) - Math.cos(a)) * k) * amp);
+};
+
+// assigned at the moment of the hit, which is what makes ctx.time start here
+banner.setText("CAPSIZED!");
+banner.glyphEffect = impact(3, 650, 24);
+```
 
 ## The HUD pattern
 
