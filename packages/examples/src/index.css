@@ -23,12 +23,24 @@ body:has(#screen canvas) {
  * the centre while leaving room for the controls. When no example is
  * mounted (`#screen` is empty), the flex container is a no-op.
  */
-#screen {
+/*
+ * The box the engine measures. It carries the geometry `#screen` used to
+ * own, so `getParentElement(#screen)` is a real element of the right size
+ * rather than `<body>`, which a fixed child contributes no height to.
+ */
+#stage {
 	position: fixed;
 	top: 41px;
 	right: 0;
 	bottom: 0;
 	left: 0;
+	/* see the pointer-events note on #screen below */
+	pointer-events: none;
+}
+
+#screen {
+	width: 100%;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;

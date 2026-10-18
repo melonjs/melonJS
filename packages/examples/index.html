@@ -8,7 +8,19 @@
   </head>
   <body>
     <div id="root"></div>
-    <div id="screen"></div>
+    <!--
+      `#stage` exists so the engine has something correct to MEASURE.
+
+      Automatic scaling measures the parent of the element the canvas is
+      mounted in (`resize.ts`, `getParentElement(game.getParentElement())`).
+      With `#screen` sitting directly under `<body>`, that was `<body>`, and
+      since `#screen` is `position: fixed` it contributes no height, so body
+      measured 43px: just the topbar. The engine's body case then falls back
+      to the WINDOW, sizing the canvas to the full window height while it
+      lives in a box that is 41px shorter, so the bottom was cropped by the
+      height of the topbar on every resize.
+    -->
+    <div id="stage"><div id="screen"></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
