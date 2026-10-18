@@ -80,14 +80,24 @@ export type ApplicationSettings = {
 	renderer: RendererType | Renderer;
 
 	/**
-	 * enable scaling of the canvas ('auto' for automatic scaling)
+	 * how the canvas is scaled to the page. A number is a fixed multiplier applied to the design resolution and nothing is measured; `"auto"` scales to the available space every time the window changes, using {@link ApplicationSettings.scaleMethod} to decide how and {@link ApplicationSettings.scaleTarget} to decide what is measured.
+	 *
+	 * `scaleMethod`, `scaleTarget` and {@link ApplicationSettings.scaleRounding} apply to `"auto"` only. With a fixed number they are ignored.
 	 * @default 1
+	 * @see ApplicationSettings.scaleMethod
+	 * @see ApplicationSettings.scaleTarget
+	 * @see ApplicationSettings.scaleRounding
 	 */
 	scale: number | "auto";
 
 	/**
-	 * screen scaling modes
+	 * how automatic scaling uses the space available to it. Applies when {@link ApplicationSettings.scale} is `"auto"`.
+	 *
+	 * The distinction that decides which to pick is whether the DESIGN RESOLUTION moves. `"fit"` keeps it and scales the whole frame to the largest factor that fits, leaving the rest as margin, so the game always sees exactly the world it was authored for. Every other mode calls `renderer.resize()`, so the design resolution follows the container and the game sees MORE or LESS of the world on a different window: `"fill-min"` / `"fill-max"` keep the aspect ratio while doing so, `"flex"` / `"flex-width"` / `"flex-height"` resize one or both axes, and `"stretch"` scales each axis independently so the aspect ratio is not preserved. `"manual"` does nothing automatic.
+	 *
+	 * A game whose layout assumes a known frame wants `"fit"`. A game that should reveal more world on a larger window wants one of the others, and has to cope with a viewport whose size it did not choose.
 	 * @default "manual"
+	 * @see ApplicationSettings.scale
 	 */
 	scaleMethod: ScaleMethod;
 
@@ -100,7 +110,12 @@ export type ApplicationSettings = {
 	scaleRounding: "fractional" | "integer";
 
 	/**
-	 * the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
+	 * the element automatic scaling measures to decide how much space it has. By default it is the PARENT of the container the canvas was mounted in, which is one level further out than most callers expect and is the usual cause of a canvas that does not fit its box.
+	 *
+	 * The case to watch for: a container that is `position: fixed` or `absolute` contributes no height to its parent, so that parent measures only whatever else it holds. If it measures `<body>`, the window size is used instead, and the canvas comes out larger than the box it lives in, cropped by whatever sits above it, by exactly the height of that other content on every resize.
+	 *
+	 * Name the element here when the default does not land on the box you meant, or give the canvas container a parent whose box IS that area.
+	 * @see ApplicationSettings.scale
 	 */
 	scaleTarget: HTMLElement;
 
@@ -455,8 +470,13 @@ export type ApplicationSettings = {
 	highPrecisionShader: boolean;
 
 	/**
-	 * whether to enable sub-pixel rendering (avoid sprite flickering when using transforms)
+	 * whether a renderable may sit on a fractional position WITHIN the frame. `false`, the default, snaps each translation to whole pixels, which is what stops a slowly moving or transformed sprite shimmering along its edges.
+	 *
+	 * The snap TRUNCATES rather than rounds, and truncates toward zero, so a value that should swing symmetrically about the origin does not: an offset travelling between -3 and +3 lands on -2 and +2, and sits at each extreme a little longer than it should. Something animating over a short distance is where this shows.
+	 *
+	 * It says nothing about how the frame reaches the screen. A game that snaps positions here and is then presented at a fractional scale has undone the work at the last step; {@link ApplicationSettings.scaleRounding} is what addresses that half.
 	 * @default false
+	 * @see ApplicationSettings.scaleRounding
 	 */
 	subPixel: boolean;
 
