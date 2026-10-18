@@ -49,6 +49,7 @@ dependencies.
 | [melonjs-deployment](../melonjs-deployment/SKILL.md) | Scaffolding a project, building, browser support and transpiling, native and mini-game platforms. |
 | [melonjs-loading-assets](../melonjs-loading-assets/SKILL.md) | Resource descriptors, the asset type list, base URLs, cross-origin, progress events, unloading. |
 | [melonjs-renderer-backends](../melonjs-renderer-backends/SKILL.md) | A feature works on one machine but not another; choosing or pinning a backend; degrading gracefully. |
+| [melonjs-display-and-scaling](../melonjs-display-and-scaling/SKILL.md) | Blurry, soft or cropped output; the design resolution, how the canvas fills its page, and pixel-perfect integer scaling. |
 | [melonjs-events](../melonjs-events/SKILL.md) | The event bus, per-frame and lifecycle events, and subscribing without leaking. |
 | [melonjs-performance](../melonjs-performance/SKILL.md) | Dropped frames, draw-call counts, pooling, batching, culling, baking, profiling. |
 | [melonjs-plugins](../melonjs-plugins/SKILL.md) | Registering the debug, Spine or Tiled-inflate plugins, physics adapters, or writing your own plugin. |

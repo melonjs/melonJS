@@ -92,6 +92,14 @@ export type ApplicationSettings = {
 	scaleMethod: ScaleMethod;
 
 	/**
+	 * whether the automatically computed scale factor may be fractional, or must be a whole number of device pixels. `"fractional"` (the default) lets the canvas fill its container exactly, at the cost of source pixels landing on uneven numbers of device pixels: at a 2.667 factor some are 3 device pixels wide and some are 2, which browsers resolve differently and which pixel art shows as shimmering or uneven stems. `"integer"` rounds the factor DOWN so every source pixel covers the same whole number of device pixels, and letterboxes with whatever space is left over.
+	 *
+	 * Only `scaleMethod: "fit"` is affected: every other method resizes the renderer to the container, so the design resolution changes and there is no fixed factor to round. The rounding is applied in DEVICE pixels, so `devicePixelRatio` cannot reintroduce a fraction.
+	 * @default "fractional"
+	 */
+	scaleRounding: "fractional" | "integer";
+
+	/**
 	 * the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
 	 */
 	scaleTarget: HTMLElement;

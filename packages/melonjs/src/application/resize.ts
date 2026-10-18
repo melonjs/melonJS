@@ -34,6 +34,34 @@ function scale(game: Application, x: number, y: number): void {
 }
 
 /**
+ * The largest scale at or below `scale` that covers each source pixel with a
+ * WHOLE number of device pixels.
+ *
+ * Rounded down, and rounded in DEVICE pixels rather than CSS ones. That
+ * distinction is the whole of it: the canvas is given a CSS size and the
+ * browser multiplies by `devicePixelRatio` on the way to real pixels, so
+ * flooring the CSS factor lets the fraction come straight back. A factor of
+ * 2 at a ratio of 1.25 is 2.5 device pixels per source pixel, which is the
+ * unevenness the setting exists to remove.
+ *
+ * Worked through at a ratio of 2, fitting a 480 wide design into 1280: the
+ * raw factor is 2.667 CSS, which is 5.333 device pixels. Flooring here gives
+ * 5 device pixels, so a CSS factor of 2.5. Flooring the CSS factor instead
+ * would give 2, which is 4 device pixels: also whole, and a whole device
+ * pixel smaller than the container could have afforded.
+ *
+ * Never returns less than one device pixel per source pixel. A container
+ * smaller than the design resolution has no whole factor to give, and a
+ * scale of zero does not draw at all.
+ * @param scale - the unconstrained factor, in CSS pixels
+ * @param ratio - `devicePixelRatio`
+ * @returns the constrained factor, still in CSS pixels
+ */
+export function integerDeviceScale(scale: number, ratio: number): number {
+	return Math.max(1, Math.floor(scale * ratio)) / ratio;
+}
+
+/**
  * callback for window resize event
  * @param game - the game application instance triggering the resize
  */
@@ -137,6 +165,9 @@ export function onresize(game: Application): void {
 				scaleX = scaleY = _max_width / settings.width;
 			} else {
 				scaleX = scaleY = _max_height / settings.height;
+			}
+			if (settings.scaleRounding === "integer") {
+				scaleX = scaleY = integerDeviceScale(scaleX, device.devicePixelRatio);
 			}
 		}
 	}
