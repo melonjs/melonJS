@@ -343,7 +343,7 @@ const examples: {
 		path: "earth-defender",
 		sourceDir: "earthDefender",
 		description:
-			"A Stardust tribute on a globe: a Camera3d posed from the player's own surface point, blob shadows lying on a sphere through shadowGroundPoint, mesh-hosted ShaderEffect shields, spatial audio and HDR bloom.",
+			"A Stardust tribute: a Camera3d posed from the player's own surface point, blob shadows lying on a sphere through shadowGroundPoint, mesh-hosted ShaderEffect shields, spatial audio and HDR bloom.",
 	},
 	{
 		component: <ExampleJungleRabbit />,
