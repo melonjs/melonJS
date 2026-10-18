@@ -1,7 +1,7 @@
 {
 	"name": "melonjs",
 	"version": "20.9.0",
-	"description": "Build games with melonJS — 23 guides to the 2D, 2.5D and 3D HTML5 game engine, its conventions and idioms, so generated code runs the first time.",
+	"description": "Build games with melonJS — 24 guides to the 2D, 2.5D and 3D HTML5 game engine, its conventions and idioms, so generated code runs the first time.",
 	"author": {
 		"name": "melonJS",
 		"url": "https://melonjs.org"
@@ -28,9 +28,11 @@
 		"./packages/melonjs/skills/melonjs-particles-and-trails",
 		"./packages/melonjs/skills/melonjs-camera-and-drawing",
 		"./packages/melonjs/skills/melonjs-lighting",
+		"./packages/melonjs/skills/melonjs-math",
 		"./packages/melonjs/skills/melonjs-deployment",
 		"./packages/melonjs/skills/melonjs-loading-assets",
 		"./packages/melonjs/skills/melonjs-renderer-backends",
+		"./packages/melonjs/skills/melonjs-display-and-scaling",
 		"./packages/melonjs/skills/melonjs-performance",
 		"./packages/melonjs/skills/melonjs-events",
 		"./packages/melonjs/skills/melonjs-plugins"

@@ -1,12 +1,10 @@
-import type { RoundRect } from "../../geometries/roundrect.ts";
-import { roundedRectanglePool } from "../../geometries/roundrect.ts";
-import { Color, colorPool } from "../../math/color.ts";
 import { clamp } from "../../math/math.ts";
 import { off, on } from "../../system/event.ts";
-import type { Gradient } from "../../video/gradient.js";
 import type Renderer from "../../video/renderer.js";
 import Renderable from "../renderable.js";
 import Text from "../text/text.js";
+import type { Paint } from "./panelpaint.ts";
+import { PanelPainter } from "./panelpaint.ts";
 
 /**
  * The name of any event the engine knows about.
@@ -15,9 +13,6 @@ import Text from "../text/text.js";
  * the event module; this gets the same set without widening that surface.
  */
 type EventName = Parameters<typeof on>[0];
-
-/** anything {@link Renderer#setColor} will take */
-type Paint = Color | string | Gradient;
 
 /** which way the fill grows */
 export type ProgressBarDirection =
@@ -167,11 +162,16 @@ export default class ProgressBar extends Renderable {
 	readonly bindEvent?: EventName | undefined;
 
 	private _value: number;
-	/** reused for the rounded path, so a rounded bar allocates nothing */
-	private _round?: RoundRect | undefined;
-	/** a css colour string resolved once and kept; see {@link ProgressBar#_paint} */
-	private _css = colorPool.get();
-	private _lastCss = "";
+	/**
+	 * The shape and colour plumbing, shared with {@link UIPanel}.
+	 *
+	 * A field and not a base class: this widget extends `Renderable` to stay
+	 * cheap, while a panel is a `Container`, so there is no class the two
+	 * could share.
+	 * @ignore
+	 * @internal
+	 */
+	private _painter = new PanelPainter();
 
 	/**
 	 * @param x - position of the bar's left edge
@@ -294,95 +294,6 @@ export default class ProgressBar extends Renderable {
 	}
 
 	/**
-	 * Set the draw colour, with its own alpha folded into the cascaded one.
-	 *
-	 * Not simply `setColor` then `setGlobalAlpha(cascade)`: that discards
-	 * whatever alpha the colour asked for, so a track given `#00000033` comes
-	 * out solid. Nor `setColor` then reading the alpha back, which is worse —
-	 * a renderer keeps ONE current colour, and parsing a six digit hex into it
-	 * leaves the alpha from the colour before, so the track's transparency
-	 * silently leaks into the fill drawn after it.
-	 *
-	 * So the alpha is resolved HERE, from the value handed in, and nothing is
-	 * read back. A gradient carries alpha in its own stops and has none of its
-	 * own, so it just takes the cascade.
-	 * @param renderer - the renderer to set the colour on
-	 * @param color - what to paint with
-	 * @param cascade - the alpha this renderable inherited
-	 * @ignore
-	 * @internal
-	 */
-	private _paint(renderer: Renderer, color: Paint, cascade: number) {
-		if (typeof color === "string") {
-			// cached, because this runs per shape per frame and the string is
-			// almost always the same one as last time
-			if (color !== this._lastCss) {
-				this._css.parseCSS(color);
-				this._lastCss = color;
-			}
-			renderer.setColor(this._css);
-			renderer.setGlobalAlpha(this._css.alpha * cascade);
-		} else if (color instanceof Color) {
-			renderer.setColor(color);
-			renderer.setGlobalAlpha(color.alpha * cascade);
-		} else {
-			renderer.setColor(color);
-			renderer.setGlobalAlpha(cascade);
-		}
-	}
-
-	/**
-	 * Paint one rectangle, rounded if this bar is.
-	 * @param renderer - the renderer to draw with
-	 * @param x - left edge
-	 * @param y - top edge
-	 * @param w - width
-	 * @param h - height
-	 * @param stroke - outline it instead of filling it
-	 * @param radius - corner radius; defaults to the bar's own
-	 * @ignore
-	 * @internal
-	 */
-	private _rect(
-		renderer: Renderer,
-		x: number,
-		y: number,
-		w: number,
-		h: number,
-		stroke = false,
-		radius = this.radius,
-	) {
-		if (w <= 0 || h <= 0) {
-			return;
-		}
-		if (radius > 0) {
-			// through the shape dispatch, which is the only portable route to
-			// a rounded rectangle: `fillRoundRect` is on the concrete
-			// renderers and not on the base class
-			// Borrowed once and kept for this bar's lifetime, then given back
-			// in `onDestroyEvent`. Not fetched and released per draw: `get`
-			// and `release` are a handful of Set and Map operations each, and
-			// this runs for up to three shapes every frame.
-			if (this._round === undefined) {
-				this._round = roundedRectanglePool.get(x, y, w, h, radius);
-			} else {
-				this._round.pos.set(x, y);
-				this._round.setSize(w, h);
-				this._round.radius = radius;
-			}
-			if (stroke) {
-				renderer.stroke(this._round);
-			} else {
-				renderer.fill(this._round);
-			}
-		} else if (stroke) {
-			renderer.strokeRect(x, y, w, h);
-		} else {
-			renderer.fillRect(x, y, w, h);
-		}
-	}
-
-	/**
 	 * Draw the track, the fill, the border and the label, in that order.
 	 * @param renderer - the renderer to draw with
 	 */
@@ -399,8 +310,8 @@ export default class ProgressBar extends Renderable {
 		const alpha = renderer.globalAlpha();
 
 		if (this.trackColor !== null) {
-			this._paint(renderer, this.trackColor, alpha);
-			this._rect(renderer, x, y, w, h);
+			this._painter.paint(renderer, this.trackColor, alpha);
+			this._painter.rect(renderer, x, y, w, h, this.radius);
 		}
 
 		// the fill grows from one edge, inside the padding
@@ -415,45 +326,29 @@ export default class ProgressBar extends Renderable {
 			// fill retreats toward the edge it grew from
 			const fx = this.direction === "right-to-left" ? x + p + iw - fw : x + p;
 			const fy = this.direction === "bottom-to-top" ? y + p + ih - fh : y + p;
-			this._paint(renderer, this.fillColor, alpha);
+			this._painter.paint(renderer, this.fillColor, alpha);
 			// Concentric with the track, not the same radius as it. A shape
 			// inset by `padding` has to lose `padding` from its corner radius
 			// too, or it comes out proportionally rounder than the thing it
 			// sits inside: at a radius of 4 with 2 of padding, a 13 tall bar
 			// got a 9 tall fill that was very nearly a capsule inside a frame
 			// that plainly was not.
-			this._rect(renderer, fx, fy, fw, fh, false, Math.max(0, this.radius - p));
+			this._painter.rect(
+				renderer,
+				fx,
+				fy,
+				fw,
+				fh,
+				Math.max(0, this.radius - p),
+			);
 		}
 
 		if (this.borderColor !== null && this.borderWidth > 0) {
-			this._paint(renderer, this.borderColor, alpha);
-			const bw = Math.min(this.borderWidth, w / 2, h / 2);
-			if (this.radius > 0) {
-				// a rounded border has to be a stroke; there is no four-rect
-				// equivalent of a corner arc
-				const previous = renderer.lineWidth;
-				renderer.lineWidth = this.borderWidth;
-				this._rect(renderer, x, y, w, h, true);
-				renderer.lineWidth = previous;
-			} else {
-				// FOUR FILLED RECTS, not `strokeRect`, and for two reasons.
-				//
-				// A stroke is centred on the path, so half of it falls outside
-				// the bar: a bordered bar would be `borderWidth` wider than it
-				// says it is, and would paint over whatever it sits next to.
-				//
-				// And `strokeRect` only adds corner joins above a line width
-				// of one, so at exactly 1 the corners drop a pixel. That is
-				// visible on any dark HUD and is what a hand-baked frame used
-				// to avoid with a half-pixel offset.
-				//
-				// Four rects have no joins to miss and land exactly where they
-				// are put, at any width.
-				renderer.fillRect(x, y, w, bw); // top
-				renderer.fillRect(x, y + h - bw, w, bw); // bottom
-				renderer.fillRect(x, y + bw, bw, h - bw * 2); // left
-				renderer.fillRect(x + w - bw, y + bw, bw, h - bw * 2); // right
-			}
+			this._painter.paint(renderer, this.borderColor, alpha);
+			// Drawn INSIDE the bar: four fills when square, an inset stroke
+			// when rounded. See {@link PanelPainter.border} for why neither
+			// one is a plain `strokeRect`.
+			this._painter.border(renderer, x, y, w, h, this.radius, this.borderWidth);
 		}
 
 		if (this.label !== undefined) {
@@ -496,10 +391,6 @@ export default class ProgressBar extends Renderable {
 		}
 		this.label?.destroy();
 		this.label = undefined;
-		if (this._round !== undefined) {
-			roundedRectanglePool.release(this._round);
-			this._round = undefined;
-		}
-		colorPool.release(this._css);
+		this._painter.dispose();
 	}
 }

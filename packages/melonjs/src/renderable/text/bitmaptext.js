@@ -250,11 +250,41 @@ export default class BitmapText extends Renderable {
 	 *
 	 * While an effect is set the renderable reports itself as changed every
 	 * frame, since whether the callback reads `ctx.time` cannot be known.
+	 *
+	 * Two things decide whether a travelling effect reads as motion. Take the
+	 * phase from `ctx.x` rather than `ctx.index`: a per-glyph step advances
+	 * the wave as far across a narrow glyph as a wide one, so its wavelength
+	 * changes with whatever the line spells. And round the offsets if the
+	 * frame is upscaled, since they are applied unchanged and a fractional
+	 * destination under nearest sampling makes the glyph's own pixels uneven,
+	 * differently each frame.
 	 * @type {GlyphEffect|null}
 	 * @example
-	 * text.glyphEffect = (out, ctx) => {
-	 *     out.offsetY = Math.sin(ctx.time * 0.008 + ctx.index * 0.6) * 6;
-	 *     out.tint.setColor(255, 128, 128);
+	 * // A wave travelling along the line, four pixels deep, about a 1.3s
+	 * // cycle, with a wavelength of roughly ten times the font size.
+	 * title.glyphEffect = (out, ctx) => {
+	 *     out.offsetY = Math.round(Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 4);
+	 * };
+	 *
+	 * // One hit, ringing down to nothing. A shake throws each glyph somewhere
+	 * // unrelated to its neighbours; a sine would move the line as one body.
+	 * // `ctx.time` counts from the moment the effect is ASSIGNED, so attach
+	 * // this on the frame the hit lands, not when the label was built.
+	 * const angle = (i, tick) => {
+	 *     const h = Math.sin(i * 127.1 + tick * 311.7) * 43758.5453;
+	 *     return (h - Math.floor(h)) * Math.PI * 2;
+	 * };
+	 * banner.glyphEffect = (out, ctx) => {
+	 *     const left = 1 - ctx.time / 650;
+	 *     if (left <= 0) return;               // settled; `out` is already zeroed
+	 *     const amp = 3 * left * left;         // decays on the square
+	 *     const tick = (ctx.time / 1000) * 24; // a new direction 24 times a second
+	 *     const held = Math.floor(tick);
+	 *     const k = tick - held;
+	 *     const a = angle(ctx.index, held);
+	 *     const b = angle(ctx.index, held + 1);
+	 *     out.offsetX = Math.round((Math.sin(a) + (Math.sin(b) - Math.sin(a)) * k) * amp);
+	 *     out.offsetY = Math.round((Math.cos(a) + (Math.cos(b) - Math.cos(a)) * k) * amp);
 	 * };
 	 */
 	get glyphEffect() {

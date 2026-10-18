@@ -34,7 +34,7 @@ import {
 	getSun,
 	getWater,
 	geometry as modelGeometry,
-} from "./assets";
+} from "../assets";
 import {
 	CAM_FOV,
 	CAM_PITCH,
@@ -65,9 +65,13 @@ import {
 	VIEW_H,
 	VIEW_W,
 	WATER_LEVEL,
-} from "./constants";
+} from "../constants";
+import {
+	createTerrainTile,
+	createWaterPlane,
+	valleyY,
+} from "../entities/terrain";
 import type { Geometry } from "./props";
-import { createTerrainTile, createWaterPlane, valleyY } from "./terrain";
 
 /** the axis a planted instance turns about — Y, so a plant spins where it stands */
 const AXIS_Y = new Vector3d(0, 1, 0);

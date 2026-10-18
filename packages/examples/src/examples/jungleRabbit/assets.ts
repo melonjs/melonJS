@@ -16,8 +16,8 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { loader, type NoiseTexture2d, type ShaderEffect } from "melonjs";
-import { bakePalette, type Geometry } from "./props";
-import { bakeGround, bakePuff, bakeSun, makeWater } from "./textures";
+import { bakePalette, type Geometry } from "./fx/props";
+import { bakeGround, bakePuff, bakeSun, makeWater } from "./fx/textures";
 
 let palette: HTMLCanvasElement | undefined;
 let ground: HTMLCanvasElement | undefined;

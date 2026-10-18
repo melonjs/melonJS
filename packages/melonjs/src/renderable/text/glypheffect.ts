@@ -2,9 +2,19 @@ import type { Color } from "../../math/color.ts";
 
 /** Mutable per-glyph output, reset before each call. Do not retain it. */
 export interface GlyphEffectOutput {
-	/** Horizontal offset in drawing pixels, after font scaling. */
+	/**
+	 * Horizontal offset in drawing pixels, after font scaling.
+	 *
+	 * Added to the glyph's destination as given, with no rounding. On an
+	 * upscaled low-resolution frame, round it: a fractional destination under
+	 * nearest sampling makes the glyph's own pixels come out uneven, and
+	 * differently so each frame, which reads as a shimmer rather than motion.
+	 */
 	offsetX: number;
-	/** Vertical offset in drawing pixels, after font scaling. */
+	/**
+	 * Vertical offset in drawing pixels, after font scaling. Rounds like
+	 * {@link GlyphEffectOutput.offsetX}.
+	 */
 	offsetY: number;
 	/** Multiplicative tint; reset to opaque white before each call. */
 	readonly tint: Color;
@@ -20,7 +30,14 @@ export interface GlyphEffectContext {
 	code: number;
 	/** Elapsed update time in milliseconds while the effect is enabled. */
 	time: number;
-	/** Unmodified glyph destination coordinates, after alignment and scaling. */
+	/**
+	 * Unmodified glyph destination coordinates, after alignment and scaling.
+	 *
+	 * The natural phase source for a travelling effect: deriving it from
+	 * {@link GlyphEffectContext.index} instead advances the wave as far across
+	 * a narrow glyph as a wide one, so its wavelength changes with whatever
+	 * the line spells.
+	 */
 	x: number;
 	y: number;
 }

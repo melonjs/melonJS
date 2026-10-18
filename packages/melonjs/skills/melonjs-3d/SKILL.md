@@ -71,6 +71,86 @@ That flips the world's sort to `"depth"`, switches the broadphase to a 3D index,
 and renders sprites and meshes with perspective projection. `Camera3d` extends
 `Camera2d`, so follow, fade, shake and post effects all still work.
 
+### Keep the camera, do not fish it back out
+
+`app.viewport` is the **active stage's** default camera, so it is typed
+`Camera2d`: a stage overrides the application's `cameraClass`, and the
+built-in loading screen does exactly that. Reading your `Camera3d` back out of
+it therefore needs a cast, and a cast that is wrong while the loader is up:
+
+```js
+const camera = app.viewport as Camera3d;   // works, until it does not
+```
+
+Own it instead. Pass the camera in and keep the typed reference, and nothing
+downstream ever narrows:
+
+```js
+class GameStage extends Stage {
+    readonly camera: Camera3d;
+
+    constructor(app) {
+        const camera = new Camera3d(0, 0, app.renderer.width, app.renderer.height);
+        super({ cameras: [camera] });
+        this.camera = camera;
+    }
+}
+```
+
+A freshly built camera is named `"default"`, and a stage registers its
+`cameras` by name, so this IS the stage's default camera: `app.viewport`
+returns the same instance.
+
+### The two patterns differ in LIFETIME, and that decides which you want
+
+This is the part that bites. `cameraClass` builds a **fresh camera for each
+stage**, which the engine does deliberately so "Camera3d state shouldn't
+bleed across stages". An owned camera passed through `super({ cameras })` is
+built once and lives as long as the stage object, which for a stage you
+register with `state.set()` means as long as the application.
+
+So anything you attach to the camera now outlives the visit:
+
+```js
+// in onResetEvent — runs EVERY time the stage is entered
+app.viewport.addPostEffect(bloom);
+```
+
+With `cameraClass` that lands on a fresh camera each time and is harmless.
+With an owned camera it stacks: a second bloom on the second visit, a third
+on the third. The symptom is text and edges appearing to double or smear,
+because the scene is being post-processed once per accumulated effect.
+
+Note that `removePostEffect` DESTROYS the effect rather than detaching it, so
+"just remove it on the way out" is not a free undo.
+
+**Choose on lifetime, not on typing:**
+
+| your effects / camera state are | use |
+|---|---|
+| set up per stage visit, in `onResetEvent` | `cameraClass` — fresh camera per stage |
+| set up once, in the stage constructor | an owned camera in `super({ cameras })` |
+
+If you want the typed reference but your setup is per-visit, keep
+`cameraClass` and narrow once on reset:
+
+```js
+override onResetEvent(app) {
+    const viewport = app.viewport;
+    if (!(viewport instanceof Camera3d)) {
+        throw new Error("this stage needs a Camera3d");
+    }
+    this.camera = viewport;   // typed, checked, and still fresh per visit
+}
+```
+
+That is what the Earth Defender example does, and why: it attaches post
+effects on every reset and never removes them.
+
+Narrowing beats asserting wherever you read the shared slot: the language
+verifies `instanceof`, and fails loudly if the application was never given a
+`cameraClass`, where a cast fails silently at the first 3D call.
+
 Per-stage opt-in also works, which is useful when the loading screen is 2D:
 
 ```js

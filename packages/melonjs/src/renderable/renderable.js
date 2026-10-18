@@ -244,6 +244,10 @@ export default class Renderable extends Rect {
 
 		/**
 		 * Whether to update this object when the game is paused.
+		 *
+		 * On a container it covers everything under it: a child steps through
+		 * a pause on its own opt-in or on one from any container above it, so
+		 * a pause menu flags itself once and its nested labels follow.
 		 * @type {boolean}
 		 * @default false
 		 */

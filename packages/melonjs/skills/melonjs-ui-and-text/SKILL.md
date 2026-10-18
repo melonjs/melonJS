@@ -1,6 +1,6 @@
 ---
 name: melonjs-ui-and-text
-description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating."
+description: "Use this skill for HUDs, buttons, menus, dialogue panels, progress bars and on-screen text in melonJS. Covers UIBaseElement/UISpriteElement/UITextButton, ProgressBar, UIPanel, Draggable and DropTarget, the floating screen-space container pattern, which of two overlapping panels gets the pointer, Text and BitmapText, web font loading, and NineSliceSprite panels. Triggers on: UI, HUD, button, UIBaseElement, UISpriteElement, UITextButton, ProgressBar, progress bar, health bar, gauge, Draggable, DropTarget, menu, dialogue, overlapping panels, moveToTop, onOver, onClick, bindKey, keyboard shortcut, button keyboard, Tween, easing, animate a label, wavy text, per-glyph effect, glyphEffect, shake text, rainbow text, Text, BitmapText, fillStyle, fillGradient, gradient text, tint, font, fontface, wordWrapWidth, NineSliceSprite, score display, floating., fullscreen, full screen, requestFullscreen, exitFullscreen, isFullscreen, fullscreen button, fullscreen option"
 license: MIT
 ---
 
@@ -154,8 +154,9 @@ costs no extra objects:
 
 ```js
 label.glyphEffect = (out, ctx) => {
-    out.offsetY = Math.sin(ctx.time * 0.008 + ctx.index * 0.6) * 6;  // wave
-    out.tint.setColor(255, 128, 128);                                // per glyph
+    // phase from the glyph's POSITION, not its index — see below
+    out.offsetY = Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 6;  // wave
+    out.tint.setColor(255, 128, 128);                             // per glyph
 };
 label.glyphEffect = null;    // back to the plain path
 ```
@@ -188,6 +189,86 @@ Four things that catch people:
 
 `Text` has no equivalent, since it rasterises the whole string into one texture.
 
+### Making it read as motion
+
+Three things decide whether a wave looks alive or mechanical, and none of them
+is the amplitude.
+
+- **Take the phase from `ctx.x`, not `ctx.index`.** This is the big one.
+  Stepping per glyph advances the wave as far across a narrow `I` as across a
+  wide `M`, so the wavelength stretches and squashes with whatever the line
+  happens to spell, and the eye reads the unevenness as a mechanism. `ctx.x`
+  gives the wave one fixed length in pixels and lets it travel through the
+  text at a constant rate, whatever the letters are.
+- **Round the offsets if the frame is upscaled.** They are added to the glyph
+  destination unchanged, so a fractional offset in a small design resolution
+  that is then magnified with nearest sampling makes the glyph's OWN pixels
+  come out uneven — and differently uneven each frame. That is a shimmer, not
+  movement. `Math.round` the offset and it steps cleanly, for the same reason
+  `subPixel` defaults to false. Whole pixels mean few steps, so the amplitude
+  has to be large enough to give you several.
+- **A shake is not a sine.** A sine moves the whole line as one body, which is
+  a wave however fast you run it. A shake gives each glyph a direction
+  unrelated to its neighbours: pick a random angle per glyph, hold it for a
+  tick, interpolate to the next, and scale the whole thing by a decay if it is
+  an impact rather than a state.
+
+Starting points that look right across sizes, as fractions of the font size:
+an amplitude around an eighth of it, a wavelength around ten times it, and a
+little under 5 radians per second. For a shake, re-target each glyph roughly
+20 to 40 times a second.
+
+`ctx.time` starts when the effect is **assigned**, so attach it at the moment
+you want to be t=0 — on the frame the hit lands, not when the label was built.
+A label reused across lives carries the old clock, so a decay attached once
+will already be spent the second time.
+
+Both, whole:
+
+```js
+import { BitmapText } from "melonjs";
+
+const title = new BitmapText(app.viewport.width / 2, 60, {
+    font: "display",
+    textAlign: "center",
+    text: "JUNGLE RABBIT",
+});
+title.floating = true;
+app.world.addChild(title);
+
+// A wave: four pixels deep, a ~1.3s cycle, and a wavelength of roughly ten
+// times the font size. Phase from ctx.x, offset rounded.
+title.glyphEffect = (out, ctx) => {
+    out.offsetY = Math.round(Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 4);
+};
+
+// A shake: each glyph picks its own direction, holds it for a tick, slides to
+// the next, and the whole thing decays. Deterministic, so the same hit shakes
+// the same way every time.
+const angle = (i, tick) => {
+    const h = Math.sin(i * 127.1 + tick * 311.7) * 43758.5453;
+    return (h - Math.floor(h)) * Math.PI * 2;
+};
+const impact = (amplitude, durationMs, rate) => (out, ctx) => {
+    const left = 1 - ctx.time / durationMs;
+    if (left <= 0) {
+        return;                              // settled; `out` is already zeroed
+    }
+    const amp = amplitude * left * left;
+    const tick = (ctx.time / 1000) * rate;
+    const held = Math.floor(tick);
+    const k = tick - held;
+    const a = angle(ctx.index, held);
+    const b = angle(ctx.index, held + 1);
+    out.offsetX = Math.round((Math.sin(a) + (Math.sin(b) - Math.sin(a)) * k) * amp);
+    out.offsetY = Math.round((Math.cos(a) + (Math.cos(b) - Math.cos(a)) * k) * amp);
+};
+
+// assigned at the moment of the hit, which is what makes ctx.time start here
+banner.setText("CAPSIZED!");
+banner.glyphEffect = impact(3, 650, 24);
+```
+
 ## The HUD pattern
 
 A HUD is a `floating` container at a high z, built once and re-added:
@@ -204,9 +285,10 @@ class HUD extends Container {
 app.world.addChild(new HUD(app), 100);   // explicit z — not `.z = Infinity`
 ```
 
-There is no `UIContainer` class. Use `Container`, or `UIBaseElement` when the
-panel itself must react to the pointer — it is a `Container` that already sets
-`floating = true` and `isKinematic = false`.
+There is no `UIContainer` class. Use `Container` for a bare grouping,
+`UIPanel` for anything with a background or a border (see below), or
+`UIBaseElement` when you want the pointer handling and nothing drawn — it is a
+`Container` that already sets `floating = true` and `isKinematic = false`.
 
 Three things matter here:
 
@@ -294,6 +376,88 @@ Two more worth knowing:
 - **`trackColor: null` leaves the bar hollow**, which is what a HUD over a busy
   scene usually wants: the border is then the only chrome.
 
+### Panels and cards: `UIPanel`
+
+A dialog, a menu card, a HUD frame: a rectangle with a fill, an optional
+border and children on top. `UIPanel` is a `UIBaseElement`, so it is a
+container that carries pointer events.
+
+```js
+import { UIPanel, Text } from "melonjs";
+
+const card = new UIPanel(cx - 200, cy - 120, {
+    width: 400, height: 240,
+    fillColor: "#0a1526",                       // null leaves it transparent
+    borderColor: "rgba(130, 200, 240, 0.55)",   // null for none
+    borderWidth: 2,
+    radius: 14,
+});
+card.addChild(new Text(200, 24, { text: "PAUSED", textAlign: "center" }));
+app.world.addChild(card, -150);   // small depth: see the 3D section below
+```
+
+**`fillColor`, not `backgroundColor`.** `Container` already has a
+`backgroundColor` and it does something else entirely: it is handed to
+`clearColor` and wipes the whole render target, so a panel setting it repaints
+the screen. The names here match `ProgressBarSettings`.
+
+**The border is drawn INSIDE the box.** `width` and `height` are the outer
+size, border included, so a panel never paints past the rectangle you gave it
+and its `getBounds()`, which is what the pointer dispatcher hit-tests, stays
+that rectangle. One thing to know with a `radius`: keep `borderWidth` at 2 or
+more. A rounded border has to be stroked, and a stroke at exactly 1 goes out as
+plain lines, which drops a pixel where each arc meets its straight edge. A
+square border is four fills and is fine at 1.
+
+**`blocking` (default `true`)** makes the panel consume clicks and hovers that
+miss its children, which is what a dialog wants — a click on the card, or on
+the dimmed scene behind it, must not reach the game. Children are unaffected:
+the dispatcher asks a child before the container holding it. Set it `false` for
+a frame drawn over a playfield that still has to receive clicks.
+
+A full-screen panel with a translucent `fillColor` and `borderColor: null` is
+the veil behind a modal, and it blocks for free.
+
+**`bobAmplitude` / `bobPeriod`** give the panel the slow float an idle
+dialogue or pause panel usually has, so a screen waiting for input does not
+look frozen:
+
+```js
+card.bobAmplitude = 3;      // pixels either side; 2 to 4 is the usual range
+card.bobPeriod = 2500;      // ms for a full up-and-down cycle
+```
+
+Three things to know. **The panel is clickable where it is drawn**: the offset
+goes into `getAbsolutePosition()`, which is what the bounds pipeline reads, so
+the hit area of the panel and of every widget inside it follows the float at
+any depth. `pos` is left alone, so it still reads and writes the resting place.
+It is fed from `update(dt)`, so it stops with the rest of the game on
+`state.pause()` unless the panel sets `updateWhenPaused`, which a pause menu
+does anyway. And do not go below an amplitude of 2: the offset is rounded to whole
+pixels, so an amplitude of 1 has three positions to move through and twitches
+instead of drifting.
+
+One consequence worth knowing: `getBounds()` on a bobbing panel answers
+differently each frame, so do not cache it or compare two children's bounds
+while a bob is running.
+
+### A pause overlay: `updateWhenPaused` cascades
+
+`state.pause()` stops every world child stepping while rendering carries on, so
+the overlay that reads the key to UNPAUSE has to opt out:
+
+```js
+const overlay = new UIPanel(0, 0, { width: w, height: h, fillColor: "rgba(4,8,16,0.72)" });
+overlay.updateWhenPaused = true;   // the whole subtree, not just this one
+```
+
+The flag covers the container's **entire subtree**, so nested labels, buttons
+and the card inside the veil all keep stepping without being flagged one by
+one. That matters for more than their `update`: `inViewport` is computed in the
+same loop that honours the pause, so a skipped child keeps whatever it had —
+`false` for one built while paused — and `Container.draw` then declines to draw
+it, silently. A panel whose labels never appear while paused is this.
+
 ### Buttons: extend the handlers, do not bind listeners
 
 `UISpriteElement` is a `Sprite` that already registers itself for pointer
@@ -368,6 +532,65 @@ Three more rules, each with a reason you can feel in a game:
 
 Shortcuts live only while the button is activated, and never start dragging or
 tap-and-hold: those stay pointer gestures.
+
+### A fullscreen option
+
+Three methods on the `Application`, not on `device` (they moved there in
+19.7.0):
+
+```js
+app.isFullscreen();        // boolean
+app.requestFullscreen();   // needs a USER GESTURE
+app.exitFullscreen();      // needs none
+```
+
+**`requestFullscreen` only works from a click or a key press.** Called at
+startup, or from a timer, the browser rejects it and nothing happens. That is
+why a fullscreen option lives on a menu entry or a key, never in a scene's
+setup:
+
+```js
+import { event, input } from "melonjs";
+
+input.bindKey(input.KEY.F, "fullscreen");
+event.on(event.KEYDOWN, (action, keyCode, edge) => {
+    // `edge` only: a held key auto-repeats, and a repeat toggles straight
+    // back out of what it just turned on
+    if (action !== "fullscreen" || !edge) {
+        return;
+    }
+    if (app.isFullscreen()) {
+        app.exitFullscreen();
+    } else {
+        app.requestFullscreen();
+    }
+});
+```
+
+One subscription on `KEYDOWN` covers every screen, where polling
+`isKeyPressed` would need a copy in each menu that is up.
+
+**It fullscreens the canvas's PARENT**, not the canvas, so a DOM HUD or
+overlay inside that container goes with it. Pass an element to override.
+
+**A menu entry showing `ON`/`OFF` must read the state back**, not cache it:
+the player can leave fullscreen with Escape or the browser's own control
+without your code hearing about it, and a remembered flag then lies.
+
+```js
+entry.setLabel(`FULLSCREEN: ${app.isFullscreen() ? "ON" : "OFF"}`);
+```
+
+**Nothing to branch on for support.** `requestFullscreen` checks
+`device.hasFullscreenSupport` itself and no-ops without it, and
+`exitFullscreen` no-ops when not fullscreen. Query
+`device.hasFullscreenSupport` only to decide whether to *offer* the option at
+all.
+
+Fullscreen does not resize a fixed-resolution game: with
+`new Application(w, h, { scale: "auto" })` the internal resolution is
+unchanged and only the canvas scales, so a HUD built from
+`renderer.width`/`height` needs no repositioning.
 
 ### `z` is container-local
 
