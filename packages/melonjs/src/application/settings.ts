@@ -105,6 +105,18 @@ export type ApplicationSettings = {
 	 * whether the automatically computed scale factor may be fractional, or must be a whole number of device pixels. `"fractional"` (the default) lets the canvas fill its container exactly, at the cost of source pixels landing on uneven numbers of device pixels: at a 2.667 factor some are 3 device pixels wide and some are 2, which browsers resolve differently and which pixel art shows as shimmering or uneven stems. `"integer"` rounds the factor DOWN so every source pixel covers the same whole number of device pixels, and letterboxes with whatever space is left over.
 	 *
 	 * Only `scaleMethod: "fit"` is affected: every other method resizes the renderer to the container, so the design resolution changes and there is no fixed factor to round. The rounding is applied in DEVICE pixels, so `devicePixelRatio` cannot reintroduce a fraction.
+	 *
+	 * **What it costs depends on the container, and on `devicePixelRatio`, far more than it looks.** A higher ratio has more device pixels to round among, so it lands closer to the factor it wanted. For a 480x270 design, which is exactly a quarter of 1920x1080:
+	 *
+	 * | container | ratio | fit | integer | presented | area lost |
+	 * |---|---|---|---|---|---|
+	 * | 1920x1080 | 1 or 2 | 4.000 | 4 / 8 | 1920x1080 | none |
+	 * | 1440x810 | 1 | 3.000 | 3 | 1440x810 | none |
+	 * | 1280x720 | 2 | 2.667 | 5 | 1200x675 | 12% |
+	 * | 1280x720 | 1 | 2.667 | 2 | 960x540 | 44% |
+	 * | 1366x768 | 1 | 2.844 | 2 | 960x540 | 51% |
+	 *
+	 * A design resolution that divides the sizes you expect costs nothing at all; one that does not can give up half the screen on a 1x display. Choose the design resolution with this in mind rather than reaching for the setting afterwards.
 	 * @default "fractional"
 	 */
 	scaleRounding: "fractional" | "integer";

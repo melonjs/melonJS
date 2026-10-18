@@ -103,6 +103,29 @@ differently, so the same scene can look crisp in one and soft in another.
 number of device pixels, and letterboxes with the space left over. That trade,
 crisp pixels for black bars, is the whole decision.
 
+### What it costs
+
+More than "some letterboxing", and the size of it is decided by
+`devicePixelRatio` as much as by the window. A higher ratio has more device
+pixels to round among, so it lands closer to the factor it wanted. For a
+480x270 design, which is exactly a quarter of 1920x1080:
+
+| container | ratio | fit | integer | presented | area lost |
+|---|---|---|---|---|---|
+| 1920x1080 | 1 or 2 | 4.000 | 4 / 8 | 1920x1080 | none |
+| 1440x810 | 1 | 3.000 | 3 | 1440x810 | none |
+| 960x540 | 1 | 2.000 | 2 | 960x540 | none |
+| 1280x720 | 2 | 2.667 | 5 | 1200x675 | 12% |
+| 2560x1440 | 2 | 5.333 | 10 | 2400x1350 | 12% |
+| 1280x720 | 1 | 2.667 | 2 | 960x540 | **44%** |
+| 1366x768 | 1 | 2.844 | 2 | 960x540 | **51%** |
+
+So the decision is mostly made when the design resolution is chosen, not when
+this setting is. One that divides the sizes you expect costs nothing; one that
+does not can give up half the screen on a 1x display, and 1366x768 laptops are
+not rare. A game that must fill the window on any machine should stay
+fractional and accept the uneven pixels.
+
 Two things to know:
 
 - It applies to **`scaleMethod: "fit"` only.** Every other method resizes the

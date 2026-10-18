@@ -47,16 +47,6 @@ export const createGame = async () => {
 		// hand-placed 1px details out of every texture
 		antiAlias: false,
 		textureFilter: "nearest",
-		// and the other half of that look, which `antiAlias` cannot give.
-		//
-		// This is a 480x270 frame, so a typical window scales it by something
-		// like 2.667, and at a fractional factor some source pixels land on
-		// three screen pixels and some on two. Chunky pixels of UNEQUAL size
-		// is not the look; it reads as soft, it shimmers as things move, and
-		// browsers distribute the unevenness differently, so the same scene
-		// was crisp in one and blurry in another. Whole pixels, and the
-		// leftover space becomes margin.
-		scaleRounding: "integer",
 		// the boat's blob shadow is opted into per renderable, so the scenery
 		// that should not cast one can say so
 		castGroundShadow: false,
