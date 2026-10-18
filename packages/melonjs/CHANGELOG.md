@@ -2,6 +2,10 @@
 
 ## [20.10.0] (melonJS 2) - _unreleased_
 
+### Fixed
+- WebGL: releasing retained geometry no longer stalls the frame. Teardown asked a synchronous `is*` query about every buffer and vertex array before deleting it, and those block until the driver answers, so a scene dropping a batch of meshes paid a round trip per object. The question only has an answer on a context that has actually been lost, so that is now the only case where it is asked
+- WebGL: a `ShaderEffect` hosted on a `Mesh` is compiled during `loader.preload()` rather than on the frame it first draws. Preloading the shader built its standalone program, but a mesh host splices the body into the mesh shader, which is a different program again, so a game that declared every effect in its manifest still stuttered the first time each one appeared
+
 ## [20.9.0] (melonJS 2) - _2026-10-18_
 
 ### Added

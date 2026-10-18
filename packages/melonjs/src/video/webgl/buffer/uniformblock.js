@@ -1,3 +1,4 @@
+import { deletable } from "./deletable.js";
 /**
  * A uniform buffer bound to a named block in one or more shader programs.
  *
@@ -184,9 +185,12 @@ export default class UniformBlock {
 	destroy() {
 		const gl = this.gl;
 		if (this.buffer !== null) {
-			// `isBuffer` is false for a handle from a context that has since
-			// been lost, and deleting such a handle raises INVALID_OPERATION
-			if (gl.isBuffer(this.buffer)) {
+			// Not `isBuffer`: the `is*` queries are SYNCHRONOUS and block until
+			// the driver answers, and this runs per buffer as geometry is torn
+			// down. What matters here is only whether deleting is legal, which a
+			// lost context decides, and `isContextLost` answers without a round
+			// trip. See `VertexState#release` for the measurement.
+			if (deletable(gl, gl.isBuffer, this.buffer)) {
 				gl.deleteBuffer(this.buffer);
 			}
 			this.buffer = null;

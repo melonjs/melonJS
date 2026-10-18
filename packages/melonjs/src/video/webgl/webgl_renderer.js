@@ -1,3 +1,4 @@
+import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
 import { Bounds } from "../../physics/bounds.ts";
@@ -38,6 +39,7 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import { markContextLost } from "./buffer/deletable.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { WebGLTextureStore } from "./texture/store.js";
@@ -522,6 +524,11 @@ export default class WebGLRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
+				// From here on a handle may belong to the dead context, so
+				// teardown has to probe before deleting. Until this happens
+				// the probe is skipped, because it is synchronous and every
+				// released buffer would pay for it. See `buffer/deletable.js`.
+				markContextLost(this.gl);
 				// driver auto-frees lost resources; just drop the ref
 				this.vertexBuffer = null;
 				emit(ONCONTEXT_LOST, this);
@@ -894,9 +901,14 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	prewarm() {
 		if (this._prewarmed === undefined) {
+			// Every preloaded `{type: "shader"}` asset, so a mesh-hosted
+			// effect's spliced variant is built here rather than on the frame
+			// it first draws. The WebGPU backend already warms this list; the
+			// splice is what WebGL has to do on top of it.
+			const effects = Object.values(shaderList);
 			this._prewarmed = Promise.all(
 				[...this.batchers.values()].map((batcher) => {
-					return batcher.prewarm();
+					return batcher.prewarm(effects);
 				}),
 			).then(() => {
 				// the batchers each leave their own program bound; put the
