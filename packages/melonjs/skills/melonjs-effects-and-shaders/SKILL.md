@@ -453,8 +453,15 @@ With `prewarm` on (the default since 20.6), `loader.preload()` warms on its way
 through — automatically, on every call — and compiles the GPU-side objects for
 every shader it holds — on WebGPU that is the
 WGSL module, which is otherwise built inside the draw path the first time the
-effect is used. Effects constructed inline are not in the loader, so nothing can
-bring them forward.
+effect is used.
+
+Since 20.10 the rest is warmed when the effect is **attached**, inline effects
+included: `addPostEffect` (or assigning `shader`) compiles the pipelines that
+effect will draw with on that renderable — on WebGPU the costly part, keyed by
+the renderable's blend mode and target as well as the shader — and on WebGL
+links the spliced program when the host is a mesh. It finishes off the frame,
+so attach when you build (a pool, a stage starting), not when you show: an
+effect attached and drawn in the same frame still compiles on that frame.
 
 One caveat if you are moving an inline effect to a file: a template literal can
 interpolate constants into the source (`vec2(${ASPECT}, 1.0)`), and a static
@@ -470,8 +477,8 @@ uniform values — fine when the look is uniform, and the reason to clone (and
 pay a link) when it is not.
 
 Note this covers **your** effects only. The engine's own mesh/quad shader
-variants are compiled lazily per feature combination on first draw and cannot be
-preloaded — see `melonjs-loading-assets` for the warm-up that covers those.
+variants are covered by the loading-screen warm-up and by the per-renderable one
+— see `melonjs-loading-assets`.
 
 ### Screen-reading builtins
 

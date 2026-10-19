@@ -118,22 +118,42 @@ describe("renderer.prewarm()", () => {
 			);
 		});
 
-		it("forgets it warmed once the context is restored", async (ctx) => {
+		it("warms again once the context is restored", async (ctx) => {
 			requireWebGL(ctx, renderer);
 			// the programs died with the old context. Leaving the memo set
 			// would have `prewarm()` report the work done for the rest of the
 			// session, silently putting every variant back on the first-draw
-			// path — no error, just the feature quietly off
+			// path — no error, just the feature quietly off. And clearing it
+			// is not enough on its own: the loader only warms on a preload,
+			// which a running game has long finished, so the restore itself
+			// has to start the warm-up again
 			const first = renderer.prewarm();
 			await first;
+			const batcher = meshBatcher();
 			// emit the real event rather than calling the handler: what needs
 			// pinning is that the renderer is actually SUBSCRIBED, not that the
 			// handler body works when invoked by hand
 			event.emit(event.ONCONTEXT_RESTORED, renderer);
-			expect(renderer._prewarmed).toBeUndefined();
-			const second = renderer.prewarm();
-			expect(second).not.toBe(first);
-			await second;
+			const rewarm = renderer._prewarmed;
+			expect(rewarm).toBeInstanceOf(Promise);
+			expect(rewarm).not.toBe(first);
+			// and asking again joins that warm-up rather than starting a third
+			expect(renderer.prewarm()).toBe(rewarm);
+			await rewarm;
+			expect(batcher.shaderVariants.has("mesh|fog")).toBe(true);
+		});
+
+		it("leaves a restored context cold when prewarm is off", async (ctx) => {
+			requireWebGL(ctx, renderer);
+			await renderer.prewarm();
+			const setting = renderer.settings.prewarm;
+			renderer.settings.prewarm = false;
+			try {
+				event.emit(event.ONCONTEXT_RESTORED, renderer);
+				expect(renderer._prewarmed).toBeUndefined();
+			} finally {
+				renderer.settings.prewarm = setting;
+			}
 		});
 
 		it("warms the keys the DRAW path actually asks for", async (ctx) => {

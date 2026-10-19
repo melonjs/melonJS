@@ -695,11 +695,18 @@ export default class Renderable extends Rect {
 			this.postEffects.length = 0;
 		} else {
 			this.postEffects = [value];
+			value._renderer?._queueWarm?.(this);
 		}
 	}
 
 	/**
 	 * Add a post-processing shader effect to this renderable.
+	 *
+	 * With the `prewarm` application setting on (the default), what the
+	 * effect will need to draw here is compiled from this call, off the
+	 * frame, rather than on the frame the renderable first draws with it.
+	 * That takes a moment to finish, so attach effects when the renderable
+	 * is built (a pool, a stage starting) rather than when it is shown.
 	 * @param {GLShader|ShaderEffect} effect - the effect to add
 	 * @returns {GLShader|ShaderEffect} the added effect
 	 * @example
@@ -707,6 +714,9 @@ export default class Renderable extends Rect {
 	 */
 	addPostEffect(effect) {
 		this.postEffects.push(effect);
+		// compile what this effect will need now rather than on the frame the
+		// renderable first draws with it (honours the `prewarm` setting)
+		effect?._renderer?._queueWarm?.(this);
 		return effect;
 	}
 

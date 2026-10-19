@@ -292,4 +292,34 @@ describe("WebGPUTextureStore mipmaps", () => {
 		expect(createdTextures[0].mipLevelCount).toBe(1);
 		expect(mipgen.submits).toBe(0);
 	});
+
+	it("warmMipmaps builds the blitter and runs it once, on a throwaway", () => {
+		// creating the pipeline is not enough everywhere: some implementations
+		// compile on first USE, so the warm-up uses it
+		store.warmMipmaps();
+		expect(store.mipPipeline).toBeDefined();
+		expect(mipgen.submits).toBe(1);
+		expect(mipgen.draws).toBe(1);
+		const scratch = createdTextures.find((t) => {
+			return t.label === "melonJS mip warm-up";
+		});
+		expect(scratch.mipLevelCount).toBe(2);
+		expect(scratch.destroyed).toBe(true);
+	});
+
+	it("warmMipmaps is a no-op once the blitter exists", () => {
+		store.getBinding(makeAtlas(makeSource(64, 32)), { mipmaps: true });
+		const pipeline = store.mipPipeline;
+		const submits = mipgen.submits;
+		store.warmMipmaps();
+		expect(store.mipPipeline).toBe(pipeline);
+		expect(mipgen.submits).toBe(submits);
+	});
+
+	it("a warmed blitter is the one the first real chain uses", () => {
+		store.warmMipmaps();
+		const pipeline = store.mipPipeline;
+		store.getBinding(makeAtlas(makeSource(64, 32)), { mipmaps: true });
+		expect(store.mipPipeline).toBe(pipeline);
+	});
 });

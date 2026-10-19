@@ -73,6 +73,28 @@ const _FOG_PARAMS = new Float32Array(4);
 const _FOG_HEIGHT = new Float32Array(4);
 
 /**
+ * Give the page a frame between two shader links during a warm-up.
+ *
+ * Linking is synchronous in WebGL and a dozen links in one task is a dropped
+ * frame. `setTimeout` is throttled to a tick a second in a background tab,
+ * though, and twenty-two of them would push `LOADER_COMPLETE` tens of seconds
+ * out for anyone who opened the game and switched away. Nothing is being
+ * drawn in a hidden tab, so there is no frame to be kind to: link straight
+ * through and only yield when the page is actually visible.
+ * @returns {Promise<void>} settles on the next task, or now when hidden
+ * @ignore
+ * @internal
+ */
+function prewarmYield() {
+	if (globalThis.document?.hidden === true) {
+		return Promise.resolve();
+	}
+	return new Promise((resolve) => {
+		setTimeout(resolve, 0);
+	});
+}
+
+/**
  * A WebGL Batcher for rendering textured triangle meshes.
  * Uses indexed drawing to efficiently render arbitrary triangle geometry.
  *
@@ -859,7 +881,22 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @internal
 	 */
 	effectShaderFor(effect) {
-		const fog = this._fogDefine();
+		return this._effectShader(effect, this._fogDefine());
+	}
+
+	/**
+	 * The spliced program for one effect under one fog state.
+	 *
+	 * Split out of {@link MeshBatcher#effectShaderFor} so `prewarm` can build
+	 * BOTH fog variants at load, rather than only the one the current scene
+	 * happens to be using.
+	 * @param {object} effect - the hosted ShaderEffect
+	 * @param {string} fog - the fog define, or ""
+	 * @returns {GLShader|null} the spliced program, or null if it will not build
+	 * @ignore
+	 * @internal
+	 */
+	_effectShader(effect, fog) {
 		const sources = this._shaderSources();
 		const fragment = spliceEffect(sources.fragment, effect._meshBody);
 		if (fragment === null) {
@@ -1017,26 +1054,14 @@ export default class MeshBatcher extends MaterialBatcher {
 	 * @ignore
 	 * @internal
 	 */
-	async prewarm() {
-		// `setTimeout` is throttled to a tick a second in a background tab, and
-		// twenty-two of them would push `LOADER_COMPLETE` tens of seconds out
-		// for anyone who opened the game and switched away. Nothing is being
-		// drawn in a hidden tab, so there is no frame to be kind to: link
-		// straight through and only yield when the page is actually visible.
-		const yieldToFrame = () => {
-			if (globalThis.document?.hidden === true) {
-				return Promise.resolve();
-			}
-			return new Promise((resolve) => {
-				setTimeout(resolve, 0);
-			});
-		};
-		// A yield is a window in which the application can be destroyed or the
-		// context lost. Building into a batcher that has been torn down leaks a
-		// `GLShader` per remaining variant, each subscribed to the global
-		// context-loss events with nothing left to destroy it.
+	/**
+	 * @param {object[]} [effects] - hosted ShaderEffects to warm the spliced
+	 * mesh variants for, normally every preloaded `{type: "shader"}` asset
+	 */
+	async prewarm(effects = []) {
+		const yieldToFrame = prewarmYield;
 		const alive = () => {
-			return this.gl !== null && this.gl?.isContextLost?.() !== true;
+			return this._prewarmAlive();
 		};
 		const sources = this._shaderSources();
 		const instanced = this._instancedShaderSources();
@@ -1079,6 +1104,56 @@ export default class MeshBatcher extends MaterialBatcher {
 				return;
 			}
 		}
+		await this.prewarmEffects(effects);
+	}
+
+	/**
+	 * Build the spliced mesh variant of each effect, in both fog states.
+	 *
+	 * A ShaderEffect hosted on a mesh does NOT draw with the program its
+	 * asset compiled to: the body is spliced into the mesh shader, which is a
+	 * different program again, and it was built on the frame the effect first
+	 * drew. Preloading the shader looked like it covered this and did not, so
+	 * a game that declared every effect in its manifest still stuttered the
+	 * first time each one appeared. Warming them here is what makes the
+	 * preload mean what it looks like it means.
+	 *
+	 * Separate from {@link MeshBatcher#prewarm} because the two halves have
+	 * different lifetimes: the batcher's own variants are built once, while
+	 * the effects grow with every preload.
+	 * @param {object[]} [effects] - hosted ShaderEffects, normally the
+	 * preloaded `{type: "shader"}` assets
+	 * @returns {Promise<void>} settles once every variant is linked
+	 * @ignore
+	 * @internal
+	 */
+	async prewarmEffects(effects = []) {
+		for (const fogDefine of ["", "#define FOG\n"]) {
+			for (const effect of effects) {
+				if (effect?._meshBody === undefined) {
+					continue;
+				}
+				this._effectShader(effect, fogDefine);
+				await prewarmYield();
+				if (!this._prewarmAlive()) {
+					return;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Whether a warm-up may keep building into this batcher. A yield is a
+	 * window in which the application can be destroyed or the context lost,
+	 * and building into a batcher that has been torn down leaks a `GLShader`
+	 * per remaining variant, each subscribed to the global context-loss
+	 * events with nothing left to destroy it.
+	 * @returns {boolean} true while the context is live
+	 * @ignore
+	 * @internal
+	 */
+	_prewarmAlive() {
+		return this.gl !== null && this.gl?.isContextLost?.() !== true;
 	}
 
 	/**

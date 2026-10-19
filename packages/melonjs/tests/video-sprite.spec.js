@@ -1,4 +1,12 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { Application, boot, event, Sprite, video } from "../src/index.js";
 
 /**
@@ -225,5 +233,274 @@ describe("Video Sprite (rVFC frame sync)", () => {
 		expect(state.pauseCalls).toBe(baseline + 1);
 
 		sprite.destroy();
+	});
+
+	/**
+	 * Browsers refuse to start a video before the user has interacted with
+	 * the page. `update()` used to call `play()` again on every frame and
+	 * leave each refusal unhandled: one uncaught console error per frame
+	 * until the first click. The refusal is now handled once, and the next
+	 * gesture starts playback from inside its own handler, where the browser
+	 * allows it.
+	 */
+	describe("playback refused until a user gesture", () => {
+		const GESTURES = ["touchstart", "touchend", "click", "keydown"];
+		let unhandled;
+		const onUnhandled = (e) => {
+			unhandled.push(e.reason);
+		};
+		// the gesture listeners currently left on the document
+		let tracked;
+		const listening = () => {
+			return tracked.length;
+		};
+
+		beforeEach(() => {
+			unhandled = [];
+			window.addEventListener("unhandledrejection", onUnhandled);
+			tracked = [];
+			const add = document.addEventListener;
+			const remove = document.removeEventListener;
+			vi.spyOn(document, "addEventListener").mockImplementation(
+				(type, listener, options) => {
+					if (GESTURES.includes(type)) {
+						tracked.push([type, listener]);
+					}
+					add.call(document, type, listener, options);
+				},
+			);
+			vi.spyOn(document, "removeEventListener").mockImplementation(
+				(type, listener, options) => {
+					const i = tracked.findIndex(([t, l]) => {
+						return t === type && l === listener;
+					});
+					if (i !== -1) {
+						tracked.splice(i, 1);
+					}
+					remove.call(document, type, listener, options);
+				},
+			);
+		});
+
+		afterEach(() => {
+			window.removeEventListener("unhandledrejection", onUnhandled);
+			vi.restoreAllMocks();
+		});
+
+		// a rejection's handler runs as a microtask, `unhandledrejection` as a task
+		const settle = () => {
+			return new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+		};
+
+		const refuse = (el, state, name = "NotAllowedError") => {
+			el.play = () => {
+				state.playCalls++;
+				return Promise.reject(new DOMException("refused", name));
+			};
+		};
+
+		const allow = (el, state) => {
+			el.play = () => {
+				state.paused = false;
+				state.playCalls++;
+				return Promise.resolve();
+			};
+		};
+
+		const gesture = (type) => {
+			document.dispatchEvent(new Event(type, { bubbles: true }));
+		};
+
+		it("a refused play() is tried once, not on every frame", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			for (let i = 0; i < 10; i++) {
+				sprite.update(16);
+				await settle();
+			}
+			expect(state.playCalls).toBe(1);
+			expect(listening()).toBe(GESTURES.length);
+			sprite.destroy();
+		});
+
+		it("the refusal is handled, so it never reaches the console", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			await settle();
+			expect(unhandled).toHaveLength(0);
+			sprite.destroy();
+		});
+
+		it.for(GESTURES)(
+			"a %s starts playback from inside the gesture",
+			async (type) => {
+				const { el, state } = makeVideoStub();
+				refuse(el, state);
+				const sprite = makeVideoSprite(el);
+				sprite.play();
+				sprite.update(16);
+				await settle();
+
+				allow(el, state);
+				gesture(type);
+				// synchronously, inside the handler: no update() in between
+				expect(state.playCalls).toBe(2);
+				expect(el.paused).toBe(false);
+				sprite.destroy();
+			},
+		);
+
+		it("a gesture refused again keeps listening, and playing stops listening", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			await settle();
+
+			gesture("click");
+			expect(state.playCalls).toBe(2);
+			await settle();
+			gesture("click");
+			expect(state.playCalls).toBe(3);
+			await settle();
+
+			allow(el, state);
+			gesture("click");
+			expect(state.playCalls).toBe(4);
+			await settle();
+			// playing now: nothing is left listening, and neither a gesture
+			// nor a frame calls play() again
+			expect(listening()).toBe(0);
+			gesture("click");
+			sprite.update(16);
+			expect(state.playCalls).toBe(4);
+			expect(unhandled).toHaveLength(0);
+			sprite.destroy();
+		});
+
+		it("a paused game does not start the video on a gesture", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			await settle();
+
+			event.emit(event.STATE_PAUSE);
+			expect(listening()).toBe(0);
+			allow(el, state);
+			gesture("click");
+			expect(state.playCalls).toBe(1);
+
+			// once the game runs again, update() asks as it always has
+			sprite.update(16);
+			expect(state.playCalls).toBe(2);
+			expect(el.paused).toBe(false);
+			sprite.destroy();
+		});
+
+		it("a refusal landing after the game paused does not start listening", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			// paused while the request is still pending
+			event.emit(event.STATE_PAUSE);
+			await settle();
+
+			expect(listening()).toBe(0);
+			allow(el, state);
+			gesture("click");
+			expect(state.playCalls).toBe(1);
+			sprite.destroy();
+		});
+
+		it("a sprite paused while waiting ignores the gesture", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			await settle();
+
+			sprite.pause();
+			allow(el, state);
+			gesture("click");
+			expect(state.playCalls).toBe(1);
+
+			// resuming later plays on the next frame, as before
+			sprite.play();
+			sprite.update(16);
+			expect(state.playCalls).toBe(2);
+			sprite.destroy();
+		});
+
+		it("destroy() stops listening for the gesture", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			await settle();
+
+			sprite.destroy();
+			expect(listening()).toBe(0);
+			allow(el, state);
+			gesture("click");
+			expect(state.playCalls).toBe(1);
+		});
+
+		it("a sprite destroyed while play() is pending never starts listening", async () => {
+			const { el, state } = makeVideoStub();
+			refuse(el, state);
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			// the refusal lands after the sprite is gone
+			sprite.destroy();
+			await settle();
+
+			const thrown = [];
+			const onError = (e) => {
+				thrown.push(e.error);
+				e.preventDefault();
+			};
+			window.addEventListener("error", onError);
+			try {
+				allow(el, state);
+				gesture("click");
+			} finally {
+				window.removeEventListener("error", onError);
+			}
+			expect(thrown).toHaveLength(0);
+			expect(state.playCalls).toBe(1);
+		});
+
+		it("an interrupted play() is retried on the next frame, still handled", async () => {
+			const { el, state } = makeVideoStub();
+			// e.g. pause() landing while play() was pending
+			refuse(el, state, "AbortError");
+			const sprite = makeVideoSprite(el);
+			sprite.play();
+			sprite.update(16);
+			await settle();
+			expect(state.playCalls).toBe(1);
+
+			allow(el, state);
+			sprite.update(16);
+			expect(state.playCalls).toBe(2);
+			expect(el.paused).toBe(false);
+			expect(unhandled).toHaveLength(0);
+			sprite.destroy();
+		});
 	});
 });

@@ -29,8 +29,22 @@ describe("WebGPURenderer.prewarm()", () => {
 	 * @param {number} epoch - the pipeline cache's device epoch
 	 * @returns {object} the stub
 	 */
-	const rendererStub = (epoch = 1) => {
+	const rendererStub = (epoch = 1, filter = "nearest") => {
+		const mipWarms = [];
 		return {
+			mipWarms,
+			getDefaultTextureFilter: () => {
+				return filter;
+			},
+			// no device behind this stub: the pipeline warm-ups stand down
+			_canWarm: () => {
+				return false;
+			},
+			textureStore: {
+				warmMipmaps() {
+					mipWarms.push(true);
+				},
+			},
 			device: { limits: { minUniformBufferOffsetAlignment: 256 } },
 			pipelineCache: {
 				epoch,
@@ -140,5 +154,21 @@ describe("WebGPURenderer.prewarm()", () => {
 	it("resolves on an empty loader", async () => {
 		await expect(rendererStub().prewarm()).resolves.toBeUndefined();
 		expect(registered).toEqual([]);
+	});
+
+	it("builds the mip-chain blitter when textures are filtered", async () => {
+		// the first mipmapped texture uploaded would otherwise build it, in
+		// the middle of the frame that first draws a mesh
+		const renderer = rendererStub(1, "linear");
+		await renderer.prewarm();
+		expect(renderer.mipWarms).toHaveLength(1);
+	});
+
+	it("leaves the mip blitter alone under nearest filtering", async () => {
+		// `textureFilter: "nearest"`, or `"auto"` with `antiAlias: false`,
+		// never builds a mip chain, so there is nothing to warm
+		const renderer = rendererStub(1, "nearest");
+		await renderer.prewarm();
+		expect(renderer.mipWarms).toHaveLength(0);
 	});
 });

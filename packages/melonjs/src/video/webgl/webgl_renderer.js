@@ -1,3 +1,4 @@
+import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
 import { Bounds } from "../../physics/bounds.ts";
@@ -38,6 +39,7 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import { markContextLost } from "./buffer/deletable.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import OrthogonalTMXLayerGPURenderer from "./renderers/tmxlayer/orthogonal.js";
 import { WebGLTextureStore } from "./texture/store.js";
@@ -112,6 +114,15 @@ function initBlendEnums(gl) {
 		"one-minus-dst-alpha": gl.ONE_MINUS_DST_ALPHA,
 	};
 }
+
+/**
+ * How long, in milliseconds, the mesh-effect warm-up may link programs in
+ * one task before giving the page a frame. Linking is synchronous; a budget
+ * keeps a stage's worth of it from landing in a single frame.
+ * @ignore
+ * @internal
+ */
+const MESH_EFFECT_LINK_BUDGET = 4;
 
 /**
  * a WebGL renderer object
@@ -522,6 +533,11 @@ export default class WebGLRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
+				// From here on a handle may belong to the dead context, so
+				// teardown has to probe before deleting. Until this happens
+				// the probe is skipped, because it is synchronous and every
+				// released buffer would pay for it. See `buffer/deletable.js`.
+				markContextLost(this.gl);
 				// driver auto-frees lost resources; just drop the ref
 				this.vertexBuffer = null;
 				emit(ONCONTEXT_LOST, this);
@@ -609,6 +625,12 @@ export default class WebGLRenderer extends Renderer {
 				// work already done for the rest of the session and the
 				// variants silently go back to being built on first draw
 				this._prewarmed = undefined;
+				this._prewarmedEffects = new WeakSet();
+				// and nothing else would rebuild them: the loader only warms
+				// on a preload, and the game has long finished preloading
+				if (this.settings.prewarm === true) {
+					this.prewarm().catch(() => {});
+				}
 			}
 		};
 		this.onCanvasResize = (width, height) => {
@@ -893,10 +915,29 @@ export default class WebGLRenderer extends Renderer {
 	 * @see {@link Renderer#prewarm}
 	 */
 	prewarm() {
+		// Every preloaded `{type: "shader"}` asset, so a mesh-hosted effect's
+		// spliced variant is built here rather than on the frame it first
+		// draws. The WebGPU backend already warms this list; the splice is
+		// what WebGL has to do on top of it.
+		//
+		// Two halves with different lifetimes. The batchers' own variants are
+		// a fixed set, built once per context, so that half is memoized. The
+		// effects are NOT: `shaderList` grows with every preload, and loading
+		// a level's effects with that level is the pattern this is for. Only
+		// memoizing the whole call meant a second preload warmed none of its
+		// shaders, silently, with the lazy path covering for it.
+		this._prewarmedEffects ??= new WeakSet();
+		const effects = Object.values(shaderList).filter((effect) => {
+			return effect != null && !this._prewarmedEffects.has(effect);
+		});
+		for (const effect of effects) {
+			this._prewarmedEffects.add(effect);
+		}
+		const batchers = [...this.batchers.values()];
 		if (this._prewarmed === undefined) {
 			this._prewarmed = Promise.all(
-				[...this.batchers.values()].map((batcher) => {
-					return batcher.prewarm();
+				batchers.map((batcher) => {
+					return batcher.prewarm(effects);
 				}),
 			).then(() => {
 				// the batchers each leave their own program bound; put the
@@ -904,11 +945,204 @@ export default class WebGLRenderer extends Renderer {
 				// next draw inherits whichever batcher finished last
 				this.setBatcher("quad");
 			});
+		} else if (effects.length > 0) {
+			// chained, so a warm-up never runs while the previous one is
+			// still yielding between links
+			this._prewarmed = this._prewarmed.then(() => {
+				return Promise.all(
+					batchers.map((batcher) => {
+						return batcher.prewarmEffects?.(effects);
+					}),
+				).then(() => {
+					this.setBatcher("quad");
+				});
+			});
 		}
 		return this._prewarmed;
 	}
 
+	/**
+	 * Warm what one renderable's post effects will need on this backend.
+	 *
+	 * An effect's own program is linked when the effect is constructed, so
+	 * what is left is what depends on where it is drawn: a mesh does not
+	 * draw an effect with that program but with the effect spliced into the
+	 * mesh shader, built on first draw; and a chain composites through
+	 * render targets, built on the frame the chain first runs or grows a
+	 * second effect.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmPostEffects(renderable) {
+		const gl = this.gl;
+		if (gl === null || gl.isContextLost?.() === true) {
+			return;
+		}
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx != null;
+		});
+		if (effects.length === 0) {
+			return;
+		}
+
+		// Render targets: only outside any effect pass, because making a
+		// framebuffer rebinds the screen framebuffer when it is done, and a
+		// pass in progress has its own bound. A warm-up runs after the
+		// caller's task, which is between frames in practice.
+		const isCamera = renderable._postEffectManaged === true;
+		if (
+			this._effectPassDepth === 0 &&
+			(isCamera ||
+				effects.length > 1 ||
+				renderable.postEffectNeedsCapture === true)
+		) {
+			const { width, height } = this.getCanvas();
+			this.flush();
+			this._renderTargetPool.reserve(
+				isCamera,
+				this._postEffectCapacity(renderable, effects),
+				width,
+				height,
+			);
+			// creating a target binds (then clears) TEXTURE0, as in
+			// `beginPostEffect`
+			this.invalidateTextureUnit(0);
+		}
+
+		if (!this._hostsMeshEffect(renderable)) {
+			return;
+		}
+		const batcher = this.batchers.get(
+			renderable.lit === true ? "litMesh" : "mesh",
+		);
+		if (batcher === undefined) {
+			return;
+		}
+		// Queued rather than linked here. Linking is synchronous, and a stage
+		// that builds a pool of effect-carrying meshes up front (projectiles,
+		// impact flashes) would pay every link in one frame, a spike of its
+		// own. Each clone of an effect is its own program, so a pool of
+		// twenty is twenty links.
+		this._meshEffectWarmQueue ??= [];
+		for (const fx of effects) {
+			this._meshEffectWarmQueue.push(batcher, fx);
+		}
+		if (this._meshEffectWarmScheduled !== true) {
+			this._meshEffectWarmScheduled = true;
+			queueMicrotask(() => {
+				this._linkQueuedMeshEffects();
+			});
+		}
+	}
+
+	/**
+	 * Link the spliced mesh programs queued by `_warmPostEffects`, a few
+	 * milliseconds' worth per task, so a pool's worth spreads over the next
+	 * frames instead of landing in one. A draw that comes first simply links
+	 * its own program, as it would have without the warm-up.
+	 * @ignore
+	 * @internal
+	 */
+	_linkQueuedMeshEffects() {
+		const queue = this._meshEffectWarmQueue;
+		const gl = this.gl;
+		if (gl === null || gl.isContextLost?.() === true) {
+			queue.length = 0;
+			this._meshEffectWarmScheduled = false;
+			return;
+		}
+		const start = globalThis.performance.now();
+		const previous = this.currentProgram;
+		try {
+			while (
+				queue.length > 0 &&
+				globalThis.performance.now() - start < MESH_EFFECT_LINK_BUDGET
+			) {
+				const batcher = queue.shift();
+				const fx = queue.shift();
+				if (fx.destroyed !== true && batcher.canHostEffect?.(fx) === true) {
+					batcher.effectShaderFor(fx);
+				}
+			}
+		} finally {
+			this._restoreProgram(previous);
+		}
+		if (queue.length === 0) {
+			this._meshEffectWarmScheduled = false;
+		} else if (globalThis.document?.hidden === true) {
+			// a hidden tab throttles timers to one a second and draws nothing,
+			// so there is no frame to protect: finish now
+			this._linkQueuedMeshEffects();
+		} else {
+			setTimeout(() => {
+				this._linkQueuedMeshEffects();
+			}, 0);
+		}
+	}
+
+	/**
+	 * Build the advanced blend shader and its offscreen target before the
+	 * first draw in one of those modes, which otherwise compiles the shader
+	 * and creates the target in the middle of that frame.
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmAdvancedBlend() {
+		const gl = this.gl;
+		if (gl === null || gl.isContextLost?.() === true) {
+			return;
+		}
+		if (typeof this._advancedBlendEffect === "undefined") {
+			const previous = this.currentProgram;
+			try {
+				this._advancedBlendEffect = new BlendEffect(this);
+			} finally {
+				this._restoreProgram(previous);
+			}
+		}
+		// the target only outside any pass or bracket, for the same reason as
+		// the effect targets in `_warmPostEffects`
+		if (
+			typeof this._advancedBlendTarget === "undefined" &&
+			this._effectPassDepth === 0 &&
+			this._advancedBlendOpen !== true
+		) {
+			const { width, height } = this.getCanvas();
+			this.flush();
+			// the same target `_openAdvancedBlend` makes, see the note there
+			this._advancedBlendTarget = new WebGLRenderTarget(gl, width, height, {
+				samples: 0,
+				format: gl.RGBA8,
+			});
+			this.invalidateTextureUnit(0);
+		}
+	}
+
+	/**
+	 * Put back the program a warm-up found bound. Linking leaves the new
+	 * program bound, and the batchers trust what they last bound, so a
+	 * warm-up between two draws would otherwise hand the next one a
+	 * stranger's program.
+	 * @param {WebGLProgram|undefined} previous - what was bound before
+	 * @ignore
+	 * @internal
+	 */
+	_restoreProgram(previous) {
+		if (previous != null && this.currentProgram !== previous) {
+			this.gl.useProgram(previous);
+			this.currentProgram = previous;
+		}
+	}
+
 	destroy() {
+		// a warm-up slice still pending must not link into batchers that are
+		// about to be torn down
+		if (this._meshEffectWarmQueue !== undefined) {
+			this._meshEffectWarmQueue.length = 0;
+		}
 		// renderer-owned, so no camera's teardown will have freed it
 		this._toneMapEffect?.destroy?.();
 		/**
@@ -1756,7 +1990,12 @@ export default class WebGLRenderer extends Renderer {
 		savedProjection.copy(this.projectionMatrix);
 		this._effectPassDepth++;
 
-		const rt = this._renderTargetPool.begin(isCamera, effects.length, w, h);
+		const rt = this._renderTargetPool.begin(
+			isCamera,
+			this._postEffectCapacity(renderable, effects),
+			w,
+			h,
+		);
 		// FBO creation/resize binds (then nulls) TEXTURE0 — invalidate EVERY
 		// batcher's cache for that unit, not just the current one: a batcher
 		// that isn't current right now would otherwise keep trusting its stale

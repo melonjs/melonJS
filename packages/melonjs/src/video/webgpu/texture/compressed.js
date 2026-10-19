@@ -88,7 +88,11 @@ export function uploadCompressedTexture(device, texture, image, metrics) {
 				bytesPerRow: blocksPerRow * metrics.bytes,
 				rowsPerImage: rows,
 			},
-			[mip.width, mip.height],
+			// whole blocks: a level smaller than one block (the 2×2 and 1×1
+			// tail of a 4×4-block chain) is stored padded to a full block,
+			// and a copy of its logical size fails validation, leaving the
+			// level empty
+			[blocksPerRow * metrics.blockW, rows * metrics.blockH],
 		);
 	}
 }

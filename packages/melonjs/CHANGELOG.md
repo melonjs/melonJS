@@ -1,5 +1,22 @@
 # Changelog
 
+## [20.10.0] (melonJS 2) - _unreleased_
+
+**Highlights:** a game no longer stutters the first time an effect, a blend mode or a new kind of object appears. Shaders, pipelines and render targets are now prepared when the object is added, or during `loader.preload()`, rather than in the frame that first draws it, where a single first draw was measured at up to 140ms. Dropping a batch of meshes no longer stalls the frame either.
+
+### Fixed
+- WebGL: releasing retained geometry no longer stalls the frame, a stutter whenever a scene dropped a batch of meshes. Teardown asked a blocking `is*` query about every buffer and vertex array before deleting it, a round trip per object, and now only asks once the context has been lost, the only case where the answer can be no
+- WebGL: a `ShaderEffect` hosted on a `Mesh` is compiled during `loader.preload()`, on every call including a later one that brings a level's own effects, rather than on the frame it first draws. Preloading the shader built its standalone program, but a mesh host splices the body into the mesh shader, which is a different program again, so a game that declared every effect in its manifest still stuttered the first time each one appeared
+- WebGPU: a post effect's pipelines are compiled when the effect is attached (`addPostEffect`, assigning `shader`, or the tone curve `setToneMapping` builds), off the frame, rather than in the frame that first draws it, a stutter measured at up to 140ms per effect on desktop. Attaching effects when a pool or a stage is built, rather than when the object is shown, gives the compile time to finish
+- WebGL: a `ShaderEffect` hosted on a `Mesh` is also linked when it is attached, so an effect built inline and never preloaded no longer stalls its first draw either. The links are spread over the following frames, so a stage building a pool of effect-carrying meshes does not pay for all of them in one
+- Effects: switching a disabled effect on no longer creates a render target in that frame. A chain gets its targets for every effect attached to it, enabled or not, when the effect is attached
+- Rendering: adding a renderable to the world starts preparing its draw, so one added before it is first shown no longer pays for it on that frame. On WebGPU that is the pipeline for its blend mode, culling and transparency, compiled off the frame, and on both GPU backends an advanced blend mode (`overlay`, `difference` and the rest) gets its blend shader and offscreen target, a first draw measured at up to 136ms
+- WebGL and WebGPU: the shader warm-up runs again after a lost context or device is restored. It never did, so every shader went back to compiling on the frame it next drew
+- WebGPU: the mip-chain generator is built during `loader.preload()` when textures are filtered (`textureFilter` resolving to `"linear"`), instead of on the frame the first mipmapped texture is uploaded
+- Sprite: a video the browser refuses to start, as it does before the user has interacted with the page, no longer logs an uncaught error on every frame. The refusal is handled once, and playback starts on the next click, touch or key press
+- WebGL: ETC1 compressed textures no longer draw black. They were uploaded with a call ETC1 does not accept, which left the texture empty; they now upload as ETC2, which reads the same data, or level by level when the browser only supports ETC1
+- WebGPU: the smallest mip levels of a compressed texture (the 2×2 and 1×1 levels of a 4×4-block format) are no longer rejected and left empty. Each upload now covers whole blocks, as WebGPU requires
+
 ## [20.9.0] (melonJS 2) - _2026-10-18_
 
 ### Added
