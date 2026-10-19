@@ -111,13 +111,31 @@ the assets are in and **before** `LOADER_COMPLETE` fires, so it happens while
 the progress bar is still up. Every `preload()` warms, not just the first, so a
 per-level preload warms whatever that level brought with it.
 
-The one precondition: **a game that never calls `loader.preload()` is never
-warmed**, because that is the only hook. If you load assets another way, call
+The one precondition for this part: **a game that never calls
+`loader.preload()` does not get it**. If you load assets another way, call
 `await app.renderer.prewarm()` yourself. On
 WebGL that links the mesh batchers' variants, for the unlit tier and the lit
 one that inherits from it; on WebGPU it compiles the
-WGSL module of every shader the loader holds — which is the reason to declare
-effects as assets rather than build them inline (see above).
+WGSL module of every shader the loader holds, and the mip-chain blitter when
+textures are filtered.
+
+**4. Everything that depends on the renderable — warmed as you build, since
+20.10.** The rest cannot be done at preload, because it depends on what draws:
+on WebGPU a *pipeline* is keyed by blend mode, culling, transparency and the
+format of the target as well as by shader, and that compile is the expensive
+part (tens of milliseconds, up to 140ms measured, per effect). So, behind the
+same `prewarm` setting, the engine warms a renderable when it gains an effect
+(`addPostEffect`, or assigning `shader`) and when it is added to the world:
+its effect pipelines, its own draw, the render targets its chain composites
+through, the advanced-blend shader if it uses one. Inline effects are covered
+too; on WebGL that means linking a mesh-hosted effect's spliced program.
+
+That work starts after your code has run and finishes off the frame, so it
+needs **at least a frame between setting a renderable up and drawing it**. The
+pattern that gets it for free is the one you want anyway: build pools (and
+attach their effects) when the stage starts, then show and hide them during
+play. Something created and drawn in the same frame still compiles on that
+frame.
 
 Cost to a game that uses none of it is about 60ms of preload on a desktop GPU.
 Set it to `false` only for a target where linking is slow enough that the

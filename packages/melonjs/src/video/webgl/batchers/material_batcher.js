@@ -7,11 +7,6 @@ import { WebGLBatcher } from "./batcher.js";
  */
 
 /**
- * Base class for batchers that manage WebGL textures and material properties.
- * Provides texture creation, binding, uploading, and deletion.
- * @category Rendering
- */
-/**
  * Immutable-storage bookkeeping: `texStorage2D` allocations can never be
  * respecified, so each GL texture's allocated shape is recorded here and a
  * mismatching re-upload replaces the texture object outright. WeakMap so
@@ -32,6 +27,16 @@ function mipLevels(w, h) {
 	return Math.floor(Math.log2(Math.max(w, h))) + 1;
 }
 
+// ETC1 is the one compressed format `compressedTexSubImage2D` refuses, and
+// ETC2's RGB8 format decodes ETC1 data unchanged
+const COMPRESSED_RGB_ETC1_WEBGL = 0x8d64;
+const COMPRESSED_RGB8_ETC2 = 0x9274;
+
+/**
+ * Base class for batchers that manage WebGL textures and material properties.
+ * Provides texture creation, binding, uploading, and deletion.
+ * @category Rendering
+ */
 export class MaterialBatcher extends WebGLBatcher {
 	/**
 	 * Initialize the textured batcher
@@ -231,6 +236,20 @@ export class MaterialBatcher extends WebGLBatcher {
 		const resourceOwned =
 			pixels !== null && typeof pixels.upload === "function";
 		const compressed = pixels !== null && pixels.compressed === true;
+		// ETC1 refuses `compressedTexSubImage2D`, so it cannot fill immutable
+		// storage: uploaded that way the texture stayed empty and drew black.
+		// ETC2 decodes the same bytes and takes the immutable path like every
+		// other format; with ETC1 alone the texture stays mutable and each
+		// level is filled with `compressedTexImage2D`, the one upload it allows
+		let compressedFormat = compressed ? pixels.format : undefined;
+		let mutableETC1 = false;
+		if (compressedFormat === COMPRESSED_RGB_ETC1_WEBGL) {
+			if (this.renderer.getSupportedCompressedTextureFormats().etc2) {
+				compressedFormat = COMPRESSED_RGB8_ETC2;
+			} else {
+				mutableETC1 = true;
+			}
+		}
 		if (!resourceOwned) {
 			const storageW = Math.max(1, w | 0);
 			const storageH = Math.max(1, h | 0);
@@ -239,7 +258,7 @@ export class MaterialBatcher extends WebGLBatcher {
 				: mipmap === true
 					? mipLevels(storageW, storageH)
 					: 1;
-			const format = compressed ? pixels.format : gl.RGBA8;
+			const format = compressed ? compressedFormat : gl.RGBA8;
 			let storage = immutableStorage.get(currentTexture);
 			if (
 				storage &&
@@ -257,7 +276,7 @@ export class MaterialBatcher extends WebGLBatcher {
 				this.boundTextures[unit] = currentTexture;
 				storage = undefined;
 			}
-			if (!storage) {
+			if (!storage && !mutableETC1) {
 				gl.texStorage2D(gl.TEXTURE_2D, levels, format, storageW, storageH);
 				immutableStorage.set(currentTexture, {
 					width: storageW,
@@ -290,17 +309,38 @@ export class MaterialBatcher extends WebGLBatcher {
 			// levels, so the chain is inherently complete — the old
 			// TEXTURE_MAX_LEVEL cap is subsumed by the `levels` parameter
 			const mipmaps = pixels.mipmaps;
-			for (let i = 0; i < mipmaps.length; i++) {
-				gl.compressedTexSubImage2D(
+			if (mutableETC1) {
+				// ...except the mutable ETC1 texture, complete only when capped
+				// to the levels it was given
+				gl.texParameteri(
 					gl.TEXTURE_2D,
-					i,
-					0,
-					0,
-					mipmaps[i].width,
-					mipmaps[i].height,
-					pixels.format,
-					mipmaps[i].data,
+					gl.TEXTURE_MAX_LEVEL,
+					mipmaps.length - 1,
 				);
+			}
+			for (let i = 0; i < mipmaps.length; i++) {
+				if (mutableETC1) {
+					gl.compressedTexImage2D(
+						gl.TEXTURE_2D,
+						i,
+						compressedFormat,
+						mipmaps[i].width,
+						mipmaps[i].height,
+						0,
+						mipmaps[i].data,
+					);
+				} else {
+					gl.compressedTexSubImage2D(
+						gl.TEXTURE_2D,
+						i,
+						0,
+						0,
+						mipmaps[i].width,
+						mipmaps[i].height,
+						compressedFormat,
+						mipmaps[i].data,
+					);
+				}
 			}
 		} else if (pixels === null) {
 			// allocation without data — WebGL guarantees zero-initialized

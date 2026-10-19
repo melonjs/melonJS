@@ -245,9 +245,12 @@ Since 20.6 the engine's own programs are built during `preload()` instead —
 `loader.preload()` calls `renderer.prewarm()` itself, on every call, when the
 application's `prewarm` setting is on, which is the default. So on a current
 version this is one cause you can rule out before looking further, **unless the
-game does not use the preloader at all**, which is the one way to miss it — see `melonjs-loading-assets`. It does not
-cover effects you construct inline, and it does not cover the rest of what a
-first frame pays for, below.
+game does not use the preloader at all**, which is the one way to miss it — see `melonjs-loading-assets`. Since 20.10 the
+pipelines that depend on the renderable (effects, blend modes, render targets)
+are warmed when an effect is attached or a renderable is added to the world, as
+long as that happens at least a frame before it is drawn: a pool built at stage
+start is covered, an object created and drawn in the same frame is not. None of
+this covers the rest of what a first frame pays for, below.
 
 How to tell them apart, all from the page:
 
@@ -364,6 +367,7 @@ In rough order for a typical 2D game:
 | memory grows with long music | missing `stream: true` |
 | slow only on some machines | Canvas fallback — no GPU tilemap path |
 | a freeze the first time a level shows, never again | shader variants linking on first draw — warm them behind the loading screen |
+| a freeze the first time an effect appears mid-play (a shield, a hit flash) | the effect attached in the same frame it is drawn — attach it when the pool is built, so the warm-up has a frame to finish |
 | the same scene stutters once per entry | a derived texture rebuilt per stage: the texture cache keys on the image object, so each rebuild is a new upload |
 
 ## Related skills

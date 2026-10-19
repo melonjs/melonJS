@@ -279,10 +279,13 @@ export type ApplicationSettings = {
 	 * screen, instead of paying for it on the frame that first draws (GPU
 	 * backends — the Canvas renderer has nothing to warm and ignores this).
 	 *
-	 * Today that means the built-in shader programs, which is all
-	 * {@link Renderer#prewarm} does. Named for the intent rather than the
-	 * current contents: anything else worth doing before the first frame
-	 * belongs behind the same switch, and should not need a second setting.
+	 * Named for the intent rather than the contents: anything worth doing
+	 * before the first frame belongs behind this one switch. Today that is
+	 * {@link Renderer#prewarm} during `loader.preload()` (the built-in shader
+	 * programs, and the shaders declared as assets), and then, as the game
+	 * runs, warming each renderable when it gains a post effect or is added
+	 * to the world: its effect pipelines, its own draw, the render targets an
+	 * effect chain composites through. That second part needs no preload.
 	 *
 	 * A GPU backend does not finish a shader when handed the source; it
 	 * finishes it the first time something is drawn with it. That puts the
@@ -299,10 +302,11 @@ export type ApplicationSettings = {
 	 * `false` for a target where linking is slow enough that the preload
 	 * itself would suffer.
 	 *
-	 * The warm-up is run by `loader.preload()` — every call, not just the
-	 * first — so a game that preloads gets it automatically and a game that
-	 * never calls `preload()` never gets it at all. Call
-	 * {@link Renderer#prewarm} directly in that case.
+	 * The loading-screen warm-up is run by `loader.preload()` — every call,
+	 * not just the first — so a game that preloads gets it automatically and
+	 * a game that never calls `preload()` does not. Call
+	 * {@link Renderer#prewarm} directly in that case. It runs again on its
+	 * own after a lost context or device is restored.
 	 *
 	 * Shaders declared as assets (`{type: "shader"}`) are covered too, so a
 	 * level's own effects are warmed by declaring them alongside that level's

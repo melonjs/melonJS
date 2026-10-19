@@ -538,6 +538,9 @@ export default class Container extends Renderable {
 					registerChildBody(cchild, worldContainer);
 				});
 			}
+			// it will draw from the next frame on: build what that draw needs
+			// now (honours the `prewarm` setting)
+			worldContainer?.app?.renderer?._queueWarm?.(child);
 		}
 
 		if (
@@ -608,6 +611,8 @@ export default class Container extends Renderable {
 						registerChildBody(cchild, worldContainer);
 					});
 				}
+				// see addChild
+				worldContainer?.app?.renderer?._queueWarm?.(child);
 			}
 
 			if (

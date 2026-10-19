@@ -61,6 +61,57 @@ describe("WebGPU compressed textures", () => {
 		expect(writes[2].dst.mipLevel).toBe(2);
 	});
 
+	// WebGPU rejects a compressed copy that does not cover whole blocks
+	// ("copySize.width (2) is not a multiple of compressed texture format
+	// block width (4)"), and a rejected write leaves that mip level empty. A
+	// level smaller than one block is stored padded to a full block, so the
+	// copy covers the padded size, which is also how its data is laid out.
+	it("sizes every copy to whole blocks, so mips smaller than a block upload", () => {
+		const copySizes = (format, chain) => {
+			const metrics = COMPRESSED_FORMATS.get(format);
+			const sizes = [];
+			const device = {
+				queue: {
+					writeTexture(dst, data, layout, size) {
+						sizes.push(size);
+					},
+				},
+			};
+			const mipmaps = chain.map((px) => {
+				const blocks =
+					Math.ceil(px / metrics.blockW) * Math.ceil(px / metrics.blockH);
+				return {
+					data: new Uint8Array(blocks * metrics.bytes),
+					width: px,
+					height: px,
+				};
+			});
+			uploadCompressedTexture(
+				device,
+				{ label: "t" },
+				{ format, mipmaps },
+				metrics,
+			);
+			return sizes;
+		};
+
+		// DXT1 → bc1, 4×4 blocks: the 2×2 and 1×1 tail covers one block each
+		expect(copySizes(0x83f0, [8, 4, 2, 1])).toEqual([
+			[8, 8],
+			[4, 4],
+			[4, 4],
+			[4, 4],
+		]);
+		// ASTC 5×5: whole blocks of five, not of four
+		expect(copySizes(0x93b2, [20, 10, 5, 2, 1])).toEqual([
+			[20, 20],
+			[10, 10],
+			[5, 5],
+			[5, 5],
+			[5, 5],
+		]);
+	});
+
 	it("format families mirror the device features in the GL shape", () => {
 		const stub = {
 			device: { features: new Set(["texture-compression-bc"]) },

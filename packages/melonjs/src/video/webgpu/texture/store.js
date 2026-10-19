@@ -315,6 +315,78 @@ export default class WebGPUTextureStore extends TextureStore {
 	}
 
 	/**
+	 * Build the mip-chain blitter, once. Split out of
+	 * {@link WebGPUTextureStore#generateMipmaps} so the warm-up can build it
+	 * before the first mipmapped texture is uploaded, which is otherwise in
+	 * the middle of the frame that first draws a mesh.
+	 * @ignore
+	 * @internal
+	 */
+	ensureMipPipeline() {
+		if (typeof this.mipPipeline !== "undefined") {
+			return;
+		}
+		const device = this.device;
+		const module = device.createShaderModule({
+			label: "melonJS mip blit",
+			code: mipblitWGSL,
+		});
+		this.mipLayout = device.createBindGroupLayout({
+			label: "melonJS mip blit layout",
+			entries: [
+				{ binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+				{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
+			],
+		});
+		// deliberately NOT a pipeline-cache family: mip passes have no
+		// depth-stencil attachment and target the texture format, both
+		// of which every cached pipeline hard-declares otherwise
+		this.mipPipeline = device.createRenderPipeline({
+			label: "melonJS mip blit",
+			layout: device.createPipelineLayout({
+				bindGroupLayouts: [this.mipLayout],
+			}),
+			vertex: { module, entryPoint: "vertex_main" },
+			fragment: {
+				module,
+				entryPoint: "fragment_main",
+				targets: [{ format: "rgba8unorm" }],
+			},
+			primitive: { topology: "triangle-list" },
+		});
+		this.mipSampler = device.createSampler({
+			label: "melonJS mip blit sampler",
+			magFilter: "linear",
+			minFilter: "linear",
+		});
+	}
+
+	/**
+	 * Build the mip-chain blitter and run it once, on a throwaway 2×2
+	 * texture, so its native compile has happened before the first real
+	 * texture needs it. Creating a pipeline is not enough on every
+	 * implementation: some defer the compile to first use, so this uses it.
+	 * @ignore
+	 * @internal
+	 */
+	warmMipmaps() {
+		if (typeof this.mipPipeline !== "undefined") {
+			return;
+		}
+		const texture = this.device.createTexture({
+			label: "melonJS mip warm-up",
+			size: [2, 2],
+			format: "rgba8unorm",
+			mipLevelCount: 2,
+			usage:
+				GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
+		});
+		this.generateMipmaps({ texture, mipLevelCount: 2 });
+		// safe straight after the submit: the queued pass keeps what it uses
+		texture.destroy();
+	}
+
+	/**
 	 * Build the full mip chain of a freshly-uploaded record: one blit pass
 	 * per level, each rendering the previous level with linear filtering.
 	 * Runs in its own encoder submitted immediately — queue ordering places
@@ -326,40 +398,7 @@ export default class WebGPUTextureStore extends TextureStore {
 	 */
 	generateMipmaps(record) {
 		const device = this.device;
-		if (typeof this.mipPipeline === "undefined") {
-			const module = device.createShaderModule({
-				label: "melonJS mip blit",
-				code: mipblitWGSL,
-			});
-			this.mipLayout = device.createBindGroupLayout({
-				label: "melonJS mip blit layout",
-				entries: [
-					{ binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: {} },
-					{ binding: 1, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
-				],
-			});
-			// deliberately NOT a pipeline-cache family: mip passes have no
-			// depth-stencil attachment and target the texture format, both
-			// of which every cached pipeline hard-declares otherwise
-			this.mipPipeline = device.createRenderPipeline({
-				label: "melonJS mip blit",
-				layout: device.createPipelineLayout({
-					bindGroupLayouts: [this.mipLayout],
-				}),
-				vertex: { module, entryPoint: "vertex_main" },
-				fragment: {
-					module,
-					entryPoint: "fragment_main",
-					targets: [{ format: "rgba8unorm" }],
-				},
-				primitive: { topology: "triangle-list" },
-			});
-			this.mipSampler = device.createSampler({
-				label: "melonJS mip blit sampler",
-				magFilter: "linear",
-				minFilter: "linear",
-			});
-		}
+		this.ensureMipPipeline();
 		const encoder = device.createCommandEncoder({ label: "melonJS mipgen" });
 		for (let level = 1; level < record.mipLevelCount; level++) {
 			const bindGroup = device.createBindGroup({
