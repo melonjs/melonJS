@@ -12,13 +12,25 @@ import {
 	level,
 	Rect,
 	Sprite,
+	SquishEffect,
+	Tween,
 	timer,
 } from "melonjs";
 import { gameState } from "../gameState";
 
+// falling faster than this, then stopping, is a landing worth a squash
+const LANDING_SPEED = 3;
+// the most a landing squashes the player, at full falling speed
+const MAX_SQUASH = 0.25;
+
 export class PlayerEntity extends Sprite {
 	dying: boolean;
 	multipleJump: number;
+	squish: SquishEffect | undefined;
+	// the height the player is stretched (above 1) or squashed (below 1) to
+	stretch = { scaleY: 1 };
+	stretchTween: Tween | undefined;
+	lastVelY: number;
 
 	constructor(x, y, settings) {
 		// create the sprite using atlas animation frames
@@ -64,6 +76,8 @@ export class PlayerEntity extends Sprite {
 		this.dying = false;
 
 		this.multipleJump = 1;
+
+		this.lastVelY = 0;
 
 		// enable keyboard
 		input.bindKey(input.KEY.LEFT, "left");
@@ -157,6 +171,43 @@ export class PlayerEntity extends Sprite {
 		const app = this.parentApp;
 		// set the viewport to follow this renderable on both axis, and enable damping
 		app.viewport.follow(this, app.viewport.AXIS.BOTH, 0.1);
+		// the bulge that keeps a stretched or squashed player's volume is a
+		// shader effect, so on the GPU renderers only
+		if (this.squish === undefined && app.renderer.shaderLanguage !== null) {
+			this.squish = new SquishEffect(app.renderer);
+			this.addPostEffect(this.squish);
+		}
+	}
+
+	/**
+	 * stretch (above 1) or squash (below 1) the player to `scaleY` of its
+	 * height, then ease back to rest with a single small overshoot
+	 */
+	stretchTo(scaleY: number) {
+		this.stretchTween?.stop();
+		this.stretch.scaleY = scaleY;
+		this.stretchTween = new Tween(this.stretch)
+			.to({ scaleY: 1 }, { duration: 300, easing: Tween.Easing.Back.Out })
+			.onComplete(() => {
+				this.stretchTween = undefined;
+			})
+			.start();
+	}
+
+	/**
+	 * scale the player's height about its feet, and bulge it the other way
+	 * so it keeps its volume: pinched in when stretched, bulging out when
+	 * squashed. Called from update(), after the physics step.
+	 */
+	applyStretch(scaleY: number) {
+		const feet = this.height * (1 - this.anchorPoint.y);
+		this.currentTransform
+			.identity()
+			.translate(0, feet)
+			.scale(1, scaleY)
+			.translate(0, -feet);
+		this.updateBounds();
+		this.squish?.setBulge(1 - scaleY);
 	}
 
 	/**
@@ -177,14 +228,18 @@ export class PlayerEntity extends Sprite {
 			this.flipX(false);
 		}
 
+		let jumped = false;
 		if (input.isKeyPressed("jump")) {
 			this.setCurrentAnimation("jump");
 			this.body.jumping = true;
 			if (this.multipleJump <= 2) {
+				jumped = true;
 				// easy "math" for double jump
 				this.body.force.y = -this.body.maxVel.y * this.multipleJump++;
 				audio.stop("jump");
 				audio.play("jump", false);
+				// stretch on take-off
+				this.stretchTo(1.25);
 			}
 		} else {
 			if (!this.body.falling && !this.body.jumping) {
@@ -200,6 +255,18 @@ export class PlayerEntity extends Sprite {
 			this.setCurrentAnimation("stand");
 		}
 
+		// squash on landing, harder the faster we came down. A landing stops the
+		// fall; a double jump turns it upward, which is not a landing, and a
+		// jump on the frame we land wins over the squash
+		const velY = this.body.vel.y;
+		if (!jumped && this.lastVelY > LANDING_SPEED && Math.abs(velY) < 1) {
+			this.stretchTo(
+				1 - MAX_SQUASH * Math.min(this.lastVelY / this.body.maxVel.y, 1),
+			);
+		}
+		this.lastVelY = velY;
+		this.applyStretch(this.stretch.scaleY);
+
 		// check if we fell into a hole
 		if (!this.inViewport && this.getBounds().top > game.renderer.height) {
 			const app = this.parentApp;
@@ -213,8 +280,14 @@ export class PlayerEntity extends Sprite {
 			return true;
 		}
 
-		// check if we moved (an "idle" animation would definitely be cleaner)
-		if (this.body.vel.x !== 0 || this.body.vel.y !== 0 || this.isFlickering()) {
+		// check if we moved (an "idle" animation would definitely be cleaner),
+		// or are still wobbling from a squash
+		if (
+			this.body.vel.x !== 0 ||
+			this.body.vel.y !== 0 ||
+			this.isFlickering() ||
+			this.stretchTween !== undefined
+		) {
 			super.update(dt);
 			return true;
 		}

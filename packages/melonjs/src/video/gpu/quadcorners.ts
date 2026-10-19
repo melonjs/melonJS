@@ -53,3 +53,37 @@ export function transformQuadCorners(
 	}
 	return corners;
 }
+
+/**
+ * The scaled quad {@link scaleQuad} returns, shared like the corners.
+ * @ignore
+ * @internal
+ */
+const scaled = new Float64Array(4);
+
+/**
+ * Scale a quad's width by `sx` and its height by `sy` about its centre,
+ * leaving its UVs alone: the texture stretches across the larger quad. This
+ * is an effect's vertex stage (`ShaderEffect#_vertexScale`), the
+ * `VERTEX *= factor` a shader with a vertex function would write, run here
+ * because the quad batchers transform corners on the CPU. The effect's
+ * fragment undoes the stretch, which leaves it room to draw past the
+ * sprite's own edges.
+ * Returns the shared array, valid until the next call: `[x, y, w, h]`.
+ * @ignore
+ * @internal
+ */
+export function scaleQuad(
+	x: number,
+	y: number,
+	w: number,
+	h: number,
+	sx: number,
+	sy: number,
+): Float64Array {
+	scaled[0] = x + (w * (1 - sx)) / 2;
+	scaled[1] = y + (h * (1 - sy)) / 2;
+	scaled[2] = w * sx;
+	scaled[3] = h * sy;
+	return scaled;
+}

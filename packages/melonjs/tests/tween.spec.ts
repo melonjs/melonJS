@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Tween } from "../src/index.js";
+import { emit, off, on, TICK } from "../src/system/event.ts";
 import { Easing } from "../src/tweens/easing.js";
 import { Interpolation } from "../src/tweens/interpolation.js";
 
@@ -127,6 +128,54 @@ describe("Tween", () => {
 			expect(() => {
 				tween.stop();
 			}).not.toThrow();
+		});
+
+		// The game loop is itself a TICK listener, and the emitter calls a
+		// snapshot of its listeners. A tween stopped from inside a game update
+		// (replaced by a new one, say) was still called for that same tick: it
+		// stepped once more, and fired onComplete if that step reached the end.
+		describe("stopped from a listener earlier in the same tick", () => {
+			let calls: { updates: number; completes: number };
+			const stopIt = () => {
+				tween.stop();
+			};
+
+			beforeEach(() => {
+				calls = { updates: 0, completes: 0 };
+				// registered before the tween subscribes, as the game loop is
+				on(TICK, stopIt);
+			});
+
+			afterEach(() => {
+				off(TICK, stopIt);
+			});
+
+			const startTween = (duration: number) => {
+				tween
+					.to({ x: 100 }, { duration })
+					.onUpdate(() => {
+						calls.updates++;
+					})
+					.onComplete(() => {
+						calls.completes++;
+					})
+					.start();
+			};
+
+			it("does not step again", () => {
+				startTween(1000);
+				emit(TICK, tween._lastTick + 16);
+				expect(calls.updates).toBe(0);
+				expect(obj.x).toBe(0);
+			});
+
+			it("does not complete", () => {
+				startTween(100);
+				// a tick past the end: the step it must not take would finish it
+				emit(TICK, tween._lastTick + 150);
+				expect(calls.completes).toBe(0);
+				expect(obj.x).toBe(0);
+			});
 		});
 	});
 
