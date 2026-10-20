@@ -1,5 +1,5 @@
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
-import { transformQuadCorners } from "../../gpu/quadcorners.ts";
+import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
 import UniformBlock from "../buffer/uniformblock.js";
 import { MAX_LIGHTS } from "../lighting/constants.ts";
 import {
@@ -604,6 +604,15 @@ export default class LitQuadBatcher extends QuadBatcher {
 			// direct atlas sampling: uv.y grows downward — see
 			// QuadBatcher.addQuad
 			this.currentShader._setUVYDir?.(1);
+			// the effect's vertex stage — see QuadBatcher.addQuad
+			const scale = this.currentShader._vertexScale;
+			if (scale !== undefined && (scale.x !== 1 || scale.y !== 1)) {
+				const q = scaleQuad(x, y, w, h, scale.x, scale.y);
+				x = q[0];
+				y = q[1];
+				w = q[2];
+				h = q[3];
+			}
 		}
 
 		let normalTextureId = -1;

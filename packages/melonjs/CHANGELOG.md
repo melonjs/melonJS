@@ -4,6 +4,9 @@
 
 **Highlights:** a game no longer stutters the first time an effect, a blend mode or a new kind of object appears. Shaders, pipelines and render targets are now prepared when the object is added, or during `loader.preload()`, rather than in the frame that first draws it, where a single first draw was measured at up to 140ms. Dropping a batch of meshes no longer stalls the frame either.
 
+### Added
+- Effects: `SquishEffect` bulges a sprite's middle out, or pinches it in, while its top and bottom rows stay where they are. Paired with a change of height it gives squash and stretch that keeps the sprite's volume, and it draws past the sprite's own frame, so the art needs no transparent margin
+
 ### Fixed
 - WebGL: releasing retained geometry no longer stalls the frame, a stutter whenever a scene dropped a batch of meshes. Teardown asked a blocking `is*` query about every buffer and vertex array before deleting it, a round trip per object, and now only asks once the context has been lost, the only case where the answer can be no
 - WebGL: a `ShaderEffect` hosted on a `Mesh` is compiled during `loader.preload()`, on every call including a later one that brings a level's own effects, rather than on the frame it first draws. Preloading the shader built its standalone program, but a mesh host splices the body into the mesh shader, which is a different program again, so a game that declared every effect in its manifest still stuttered the first time each one appeared
@@ -16,6 +19,7 @@
 - Sprite: a video the browser refuses to start, as it does before the user has interacted with the page, no longer logs an uncaught error on every frame. The refusal is handled once, and playback starts on the next click, touch or key press
 - WebGL: ETC1 compressed textures no longer draw black. They were uploaded with a call ETC1 does not accept, which left the texture empty; they now upload as ETC2, which reads the same data, or level by level when the browser only supports ETC1
 - WebGPU: the smallest mip levels of a compressed texture (the 2×2 and 1×1 levels of a 4×4-block format) are no longer rejected and left empty. Each upload now covers whole blocks, as WebGPU requires
+- Tween: a tween stopped while the game updates (replaced by a new one, say) no longer takes one more step and fires its `onComplete` in that same frame
 
 ## [20.9.0] (melonJS 2) - _2026-10-18_
 

@@ -227,6 +227,21 @@ export default class ShaderEffect {
 		 */
 		this._precision = precision;
 
+		/**
+		 * The vertex stage of this effect, on the single-effect fast path:
+		 * the quad batchers scale the quad it draws by `x` and `y` about its
+		 * centre, UVs unchanged, as a shader's vertex function would with
+		 * `VERTEX *= factor`. melonJS transforms quad corners on the CPU, so
+		 * an effect body has no vertex stage of its own and asks for it here.
+		 * An effect that scales must undo the stretch in its fragment, which
+		 * leaves it room to draw past the sprite's own edges. 1 for every
+		 * effect that stays inside its quad.
+		 * @type {{x: number, y: number}}
+		 * @ignore
+		 * @internal
+		 */
+		this._vertexScale = { x: 1, y: 1 };
+
 		// resolve the body matching this renderer's shading language: a bare
 		// string keeps meaning GLSL (the historical signature), an object
 		// carries one body per language

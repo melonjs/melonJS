@@ -1,5 +1,5 @@
 import IndexBuffer from "../../buffer/index.js";
-import { transformQuadCorners } from "../../gpu/quadcorners.ts";
+import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
 import { TextureSlotTable } from "../../gpu/textureslots.js";
 import { prepareEffectBinding } from "../effect_binding.js";
 import { MAX_QUAD_TEXTURES } from "../pipeline/cache.js";
@@ -210,7 +210,15 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 				Math.min(v0, v1),
 			);
 
-			this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, 0);
+			// the effect's vertex stage, AFTER the frame rect above, which
+			// must stay the sprite's own
+			const scale = effect._vertexScale;
+			if (scale !== undefined && (scale.x !== 1 || scale.y !== 1)) {
+				const q = scaleQuad(x, y, w, h, scale.x, scale.y);
+				this.pushQuadVertices(q[0], q[1], q[2], q[3], u0, v0, u1, v1, tint, 0);
+			} else {
+				this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, 0);
+			}
 
 			// per-quad draw under the fast path: each sprite needs its own
 			// capture state, noise rect and uniform snapshot (draw-time

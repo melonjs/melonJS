@@ -1,4 +1,4 @@
-import { transformQuadCorners } from "../../gpu/quadcorners.ts";
+import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
 import IndexBuffer from "../buffer/index.js";
 import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
 import quadMultiVertex from "./../shaders/quad-multi.vert";
@@ -327,6 +327,16 @@ export default class QuadBatcher extends MaterialBatcher {
 			// direct atlas sampling: uv.y grows downward (directional bodies
 			// compensate on the pooled path, where captures are bottom-up)
 			this.currentShader._setUVYDir?.(1);
+			// the effect's vertex stage, AFTER the frame rect above, which
+			// must stay the sprite's own
+			const scale = this.currentShader._vertexScale;
+			if (scale !== undefined && (scale.x !== 1 || scale.y !== 1)) {
+				const q = scaleQuad(x, y, w, h, scale.x, scale.y);
+				x = q[0];
+				y = q[1];
+				w = q[2];
+				h = q[3];
+			}
 		}
 
 		// Transform vertices. Stamp per-sprite depth onto z BEFORE
