@@ -54,6 +54,40 @@ function getCommits(previousTag: string, currentTag: string): Commit[] {
 	});
 }
 
+/**
+ * The CHANGELOG entries for a version, which ARE the release notes.
+ *
+ * The notes used to be the commit subjects between two tags. That reads as
+ * history rather than as a release: it opens with whatever landed last, which
+ * is the release and changelog housekeeping, and the written entries, the ones
+ * that tell somebody whether to upgrade, never left the file. The compare link
+ * at the end still carries the full commit list for anyone who wants it.
+ * @param version - the released version, which is also the tag
+ * @returns the section body without its heading, or "" if there is no entry
+ */
+function changelogSection(version: string): string {
+	let text: string;
+	try {
+		text = readFileSync(resolve("packages/melonjs/CHANGELOG.md"), "utf8");
+	} catch {
+		return "";
+	}
+	// a plain search for the heading at the start of a line, rather than a
+	// pattern built from the version: nothing in it then needs escaping. The
+	// leading newline makes the file's first line count as a line start.
+	const start = `\n${text}`.indexOf(`\n## [${version}]`);
+	if (start === -1) {
+		return "";
+	}
+	const rest = text.slice(start);
+	// the next version heading, searched past the first character so the
+	// section's own heading does not match
+	const next = rest.slice(1).search(/^## \[/m);
+	const body = next === -1 ? rest : rest.slice(0, next + 1);
+	// the release is already titled with the version, so drop the heading
+	return body.replace(/^##[^\n]*\n/, "").trim();
+}
+
 function buildCategorizedNotes(
 	previousTag: string,
 	currentTag: string,
@@ -111,11 +145,16 @@ function buildCategorizedNotes(
 		}
 	}
 
-	// Build notes
-	let notes = "## What's Changed\n\n";
-
-	if (teamCommits.length > 0) {
-		notes += "### melonJS Team\n\n";
+	// Build notes, led by what the changelog says changed. The team's commits
+	// are deliberately not listed one by one: they are the changelog entries
+	// above, said once and said better, and the compare link covers the rest.
+	let notes = "";
+	const changelog = changelogSection(currentTag);
+	if (changelog) {
+		notes += `${changelog}\n\n`;
+	} else if (teamCommits.length > 0) {
+		// no entry for this version, so fall back to the commit subjects
+		notes += "## What's Changed\n\n";
 		for (const c of teamCommits) {
 			notes += `- ${c.message} (${c.hash})\n`;
 		}

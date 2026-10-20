@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.10.0] (melonJS 2) - _unreleased_
+## [20.10.0] (melonJS 2) - _2026-10-20_
 
 **Highlights:** a game no longer stutters the first time an effect, a blend mode or a new kind of object appears. Shaders, pipelines and render targets are now prepared when the object is added, or during `loader.preload()`, rather than in the frame that first draws it, where a single first draw was measured at up to 140ms. Dropping a batch of meshes no longer stalls the frame either.
 
