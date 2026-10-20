@@ -72,8 +72,10 @@ function changelogSection(version: string): string {
 	} catch {
 		return "";
 	}
-	const escaped = version.replace(/\./g, "\\.");
-	const start = text.search(new RegExp(`^## \\[${escaped}\\]`, "m"));
+	// a plain search for the heading at the start of a line, rather than a
+	// pattern built from the version: nothing in it then needs escaping. The
+	// leading newline makes the file's first line count as a line start.
+	const start = `\n${text}`.indexOf(`\n## [${version}]`);
 	if (start === -1) {
 		return "";
 	}
