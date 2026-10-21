@@ -1,7 +1,15 @@
 import "./helpers/webgpu-globals.js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Color, ShaderEffect, WebGPURenderer } from "../src/index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	Camera2d,
+	Color,
+	ColorMatrix,
+	ShaderEffect,
+	WebGPURenderer,
+} from "../src/index.js";
+import state from "../src/state/state.ts";
 import ToneMappingEffect from "../src/video/effects/tonemap.js";
+import { instanceRecordLayout } from "../src/video/gpu/instancerecord.ts";
 import WebGPUMeshBatcher from "../src/video/webgpu/batchers/mesh_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
 import WebGPUPipelineCache from "../src/video/webgpu/pipeline/cache.js";
@@ -35,11 +43,19 @@ const MODEL = (() => {
 
 /** the renderer methods under test, lifted off the real prototype */
 const WARM_METHODS = [
+	"_queueWarm",
+	"_flushWarm",
+	"_collectWarms",
+	"_whenWarmed",
+	"_warmFogStates",
+	"_warmCameraColorMatrices",
+	"_warmInstancedDraw",
 	"_warmRenderable",
 	"_warmPostEffects",
 	"_warmDraw",
 	"_warmHostedEffect",
 	"_warmMeshDraw",
+	"_warmMeshDrawFog",
 	"_warmAdvancedBlend",
 	"_warmToneMap",
 	"_sceneTargets",
@@ -164,6 +180,31 @@ function makeMesh(overrides = {}) {
 		postEffects: [],
 		...overrides,
 	};
+}
+
+/**
+ * An `InstancedMesh` as the instanced draw path reads it: `makeMesh` plus the
+ * per-instance records and their upload plan.
+ * @param {object} [overrides] - fields to replace
+ * @returns {object} the mesh
+ */
+function makeInstancedMesh(overrides = {}) {
+	const layout = instanceRecordLayout(false, false);
+	return makeMesh({
+		cullBackFaces: false,
+		instanceLayout: layout,
+		instanceCount: 2,
+		visibleInstanceCount: 2,
+		instanceBuffer: new Float32Array((layout.stride / 4) * 2),
+		instanceUpload() {
+			return { full: true, first: 0, count: 2, revision: 1 };
+		},
+		clearInstanceDirty() {},
+		_castsGroundShadow() {
+			return true;
+		},
+		...overrides,
+	});
 }
 
 describe("warm-up keys match the draw path (WebGPU)", () => {
@@ -343,6 +384,274 @@ describe("warm-up keys match the draw path (WebGPU)", () => {
 		bindTarget(renderer, "bgra8unorm", 1);
 		renderer.drawMesh(host, MODEL);
 		expect(renderer.pipelinesBuilt()).toBe(warmed);
+	});
+
+	describe("fog, as the stage's cameras will draw it", () => {
+		const FOG = {
+			color: [0, 0, 0],
+			mode: 1,
+			near: 0,
+			invRange: 1,
+			density: 0,
+			heightAxis: [0, 0, 0],
+			heightBase: 1,
+		};
+		/** a camera that installs `FOG` when it draws, or none */
+		const camera = (fogged) => {
+			return {
+				_fog3dState() {
+					return fogged ? FOG : null;
+				},
+			};
+		};
+		/** make the current stage's cameras these */
+		const stageWith = (...cameras) => {
+			return vi.spyOn(state, "current").mockReturnValue({
+				cameras: new Map(
+					cameras.map((c, i) => {
+						return [`camera${i}`, c];
+					}),
+				),
+			});
+		};
+
+		beforeEach(() => {
+			renderer.shaderLanguage = "wgsl";
+			// Between frames the renderer still holds the fog of the camera
+			// that drew LAST. After a state change that is the previous
+			// screen's: a loading screen, with none.
+			renderer._fog3d = null;
+		});
+
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it("warms a fogged camera's variant while the renderer still holds none", async () => {
+			stageWith(camera(true));
+			const host = makeMesh();
+			renderer._queueWarm(host);
+			await settle();
+			const warmed = renderer.pipelinesBuilt();
+			expect(warmed).toBeGreaterThan(0);
+			// the camera installs its fog as it starts drawing
+			renderer._fog3d = FOG;
+			bindTarget(renderer, "bgra8unorm", 1);
+			renderer.drawMesh(host, MODEL);
+			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+
+		it("warms both variants for a fogged camera and a clear one", async () => {
+			// a fogged 3D view with a clear minimap, say
+			stageWith(camera(true), camera(false));
+			const host = makeMesh();
+			renderer._queueWarm(host);
+			await settle();
+			const warmed = renderer.pipelinesBuilt();
+			bindTarget(renderer, "bgra8unorm", 1);
+			for (const fog of [FOG, null]) {
+				renderer._fog3d = fog;
+				renderer.drawMesh(host, MODEL);
+			}
+			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+
+		it("warms only the clear variant when no camera has fog", async () => {
+			stageWith(camera(false));
+			const host = makeMesh();
+			renderer._queueWarm(host);
+			await settle();
+			const clear = renderer.pipelinesBuilt();
+			renderer._fog3d = null;
+			bindTarget(renderer, "bgra8unorm", 1);
+			renderer.drawMesh(host, MODEL);
+			expect(renderer.pipelinesBuilt()).toBe(clear);
+			// and nothing was spent on a fogged one nobody will draw
+			const { renderer: both } = makeRenderer({ hdr: true });
+			both.shaderLanguage = "wgsl";
+			both._fog3d = null;
+			vi.restoreAllMocks();
+			stageWith(camera(true), camera(false));
+			both._queueWarm(makeMesh());
+			await settle();
+			expect(both.pipelinesBuilt()).toBeGreaterThan(clear);
+		});
+	});
+
+	describe("an InstancedMesh", () => {
+		it("its own draw, which used to be left to the first frame", async () => {
+			const host = makeInstancedMesh({
+				_castsGroundShadow() {
+					return false;
+				},
+			});
+			renderer._warmDraw(host);
+			await settle();
+			const warmed = renderer.pipelinesBuilt();
+			expect(warmed).toBeGreaterThan(0);
+			bindTarget(renderer, "bgra8unorm", 1);
+			renderer.customShader = undefined;
+			renderer.drawMesh(host, MODEL);
+			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+
+		it("its ground shadow, when it casts one", async () => {
+			const host = makeInstancedMesh();
+			renderer._warmDraw(host);
+			await settle();
+			const warmed = renderer.pipelinesBuilt();
+			bindTarget(renderer, "bgra8unorm", 1);
+			renderer.customShader = undefined;
+			renderer.drawMesh(host, MODEL);
+			renderer.batchers
+				.get("mesh")
+				.drawInstancedShadow(host, MODEL, 0xffffffff, makeMesh());
+			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+
+		it("no shadow family for one that casts none", async () => {
+			renderer._warmDraw(
+				makeInstancedMesh({
+					_castsGroundShadow() {
+						return false;
+					},
+				}),
+			);
+			await settle();
+			const without = renderer.pipelinesBuilt();
+			const { renderer: other } = makeRenderer({ hdr: true });
+			other._warmDraw(makeInstancedMesh());
+			await settle();
+			expect(other.pipelinesBuilt()).toBeGreaterThan(without);
+		});
+	});
+
+	describe("a camera's built-in colour matrix", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it("is made and warmed last in the camera's chain once the stage is built", async () => {
+			renderer.shaderLanguage = "wgsl";
+			// what `camera.colorMatrix.contrast(...)` leaves on a camera
+			const camera = {
+				postEffects: [],
+				_postEffectManaged: true,
+				blendMode: "normal",
+				colorMatrix: new ColorMatrix().contrast(1.2),
+				_colorMatrixEffect: null,
+				_syncColorMatrixEffect: Camera2d.prototype._syncColorMatrixEffect,
+			};
+			vi.spyOn(state, "current").mockReturnValue({
+				cameras: new Map([["default", camera]]),
+			});
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			// the stage being entered: what a state switch runs
+			renderer._queueWarm({ blendMode: "normal" });
+			await renderer._whenWarmed();
+			warn.mockRestore();
+			// built before the frame rather than inside the camera's draw
+			expect(camera._colorMatrixEffect).not.toBe(null);
+			// and the camera's own list left as it was
+			expect(camera.postEffects).toEqual([]);
+			const warmed = renderer.pipelinesBuilt();
+			const source = {
+				getMaterialBindGroup() {
+					return {};
+				},
+			};
+			// last in the chain: onto the canvas
+			bindTarget(renderer, "bgra8unorm", 1);
+			quad.blitTexture(
+				source,
+				0,
+				0,
+				320,
+				240,
+				camera._colorMatrixEffect,
+				false,
+			);
+			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+	});
+
+	describe("a camera's colour matrix, after the stage is built", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		const gradedCamera = () => {
+			const camera = {
+				postEffects: [],
+				_postEffectManaged: true,
+				blendMode: "normal",
+				colorMatrix: new ColorMatrix().contrast(1.2),
+				_colorMatrixEffect: null,
+				_syncColorMatrixEffect: Camera2d.prototype._syncColorMatrixEffect,
+			};
+			vi.spyOn(state, "current").mockReturnValue({
+				cameras: new Map([["default", camera]]),
+			});
+			return camera;
+		};
+
+		it("is left alone by a sprite spawned during play", async () => {
+			// a flush runs after every burst of addChild in play, and the
+			// camera is not what changed
+			renderer.shaderLanguage = "wgsl";
+			const camera = gradedCamera();
+			renderer._queueWarm({ blendMode: "normal" });
+			await settle();
+			expect(camera._colorMatrixEffect).toBe(null);
+		});
+
+		it("is warmed again when the camera itself changes", async () => {
+			// an effect added to the camera moves the grading along its chain
+			renderer.shaderLanguage = "wgsl";
+			const camera = gradedCamera();
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			renderer._queueWarm(camera);
+			await settle();
+			warn.mockRestore();
+			expect(camera._colorMatrixEffect).not.toBe(null);
+		});
+	});
+
+	describe("what a state change waits on before it draws", () => {
+		const drawMultiply = () => {
+			for (const format of ["bgra8unorm", "rgba16float"]) {
+				bindTarget(renderer, format, 1);
+				renderer.customShader = undefined;
+				renderer.currentBlendMode = "multiply";
+				quad.addQuad(ATLAS, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+				quad.flush();
+			}
+		};
+
+		it("the pipelines its stage queued, until they are built", async () => {
+			renderer.shaderLanguage = "wgsl";
+			renderer._queueWarm({ blendMode: "multiply" });
+			const ready = renderer._whenWarmed();
+			expect(ready).toBeInstanceOf(Promise);
+			// run now rather than left to the microtask: the stage is built
+			expect(renderer.pipelineCache.pending.size).toBeGreaterThan(0);
+			await ready;
+			expect(renderer.pipelineCache.pending.size).toBe(0);
+			// so the first frame finds what it draws with
+			const warmed = renderer.pipelinesBuilt();
+			drawMultiply();
+			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+
+		it("nothing, for a stage that queued nothing or has it all", async () => {
+			renderer.shaderLanguage = "wgsl";
+			expect(renderer._whenWarmed()).toBeUndefined();
+			renderer._queueWarm({ blendMode: "multiply" });
+			await renderer._whenWarmed();
+			// the same stage, entered a second time
+			renderer._queueWarm({ blendMode: "multiply" });
+			expect(renderer._whenWarmed()).toBeUndefined();
+		});
 	});
 
 	it("the tone curve: last in the camera chain, onto the canvas", async () => {

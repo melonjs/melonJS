@@ -1058,6 +1058,30 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * The built-in {@link Camera2d#colorMatrix} as the effect that applies it,
+	 * made on first need and kept, and set to the current matrix.
+	 *
+	 * `draw` appends it last in the camera's chain for the frame. The
+	 * renderer's warm-up calls this too, once a stage has been built, so the
+	 * effect exists, and is warmed where `draw` will run it, before the frame
+	 * that first needs it rather than inside that frame.
+	 * @param renderer - the renderer the camera draws with
+	 * @returns the effect, or null while the matrix is identity
+	 * @ignore
+	 * @internal
+	 */
+	_syncColorMatrixEffect(renderer: Renderer): ColorMatrixEffect | null {
+		if (this.colorMatrix.isIdentity()) {
+			return null;
+		}
+		if (!this._colorMatrixEffect) {
+			this._colorMatrixEffect = new ColorMatrixEffect(renderer);
+		}
+		this._colorMatrixEffect.reset().multiply(this.colorMatrix);
+		return this._colorMatrixEffect;
+	}
+
+	/**
 	 * draw all objects visible in this viewport
 	 * @ignore
 	 * @internal
@@ -1083,12 +1107,9 @@ export default class Camera2d extends Renderable {
 		const translateY = this.pos.y + this.offset.y + containerOffsetY;
 
 		// sync the built-in colorMatrix: append as final pass if non-identity
-		if (!this.colorMatrix.isIdentity()) {
-			if (!this._colorMatrixEffect) {
-				this._colorMatrixEffect = new ColorMatrixEffect(renderer);
-			}
-			this._colorMatrixEffect.reset().multiply(this.colorMatrix);
-			this.postEffects.push(this._colorMatrixEffect);
+		const colorMatrixEffect = this._syncColorMatrixEffect(renderer);
+		if (colorMatrixEffect !== null) {
+			this.postEffects.push(colorMatrixEffect);
 		}
 
 		// post-effect: bind FBO if shader effects are set (WebGL only)

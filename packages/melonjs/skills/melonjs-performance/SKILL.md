@@ -249,8 +249,12 @@ game does not use the preloader at all**, which is the one way to miss it — se
 pipelines that depend on the renderable (effects, blend modes, render targets)
 are warmed when an effect is attached or a renderable is added to the world, as
 long as that happens at least a frame before it is drawn: a pool built at stage
-start is covered, an object created and drawn in the same frame is not. None of
-this covers the rest of what a first frame pays for, below.
+start is covered, an object created and drawn in the same frame is not. Since
+20.10.1 a state change also holds the new stage's first frame until what its
+`onResetEvent` built is warmed, for at most 1.5s, so the opening frame no longer
+compiles them itself: a few milliseconds once the browser has compiled them
+before, longer on a first visit. None of this covers the rest of what a first
+frame pays for, below.
 
 How to tell them apart, all from the page:
 

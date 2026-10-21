@@ -2,6 +2,7 @@ import Path2D from "./../geometries/path2d.ts";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
+import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
 import { isAdvancedBlendMode } from "./blendmodes.js";
 import { createCanvas } from "./canvas_factory.js";
@@ -1620,21 +1621,174 @@ export default class Renderer {
 
 	/**
 	 * Run the warm-ups queued by {@link Renderer#_queueWarm}.
+	 * @param {boolean} [stage=false] - true when a stage is being entered,
+	 *   which warms its cameras' grading as well
+	 * @returns {Promise<void>[]} what they started that is still being built
 	 * @ignore
 	 * @internal
 	 */
-	_flushWarm() {
-		const hosts = [...this._warmHosts];
-		this._warmHosts.clear();
-		for (const host of hosts) {
-			// A warm-up that fails changes nothing: the draw builds what it
-			// needs on first use, exactly as it did before there was one.
+	_flushWarm(stage = false) {
+		const hosts = this._warmHosts === undefined ? [] : [...this._warmHosts];
+		// already run, by `_whenWarmed`, ahead of the microtask that queued it
+		if (hosts.length === 0 && !stage) {
+			return [];
+		}
+		this._warmHosts?.clear();
+		// The cameras' grading when a stage is entered, or when a camera is
+		// itself among what changed (an effect added to it moves the grading
+		// along its chain). Not for every flush: one runs after each burst of
+		// `addChild` during play, and a graded camera is not what changed.
+		const cameras =
+			stage ||
+			hosts.some((host) => {
+				return host?._postEffectManaged === true;
+			});
+		// read once for the whole flush: the cameras do not change under it
+		this._warmFog = this._warmFogStates();
+		try {
+			return this._collectWarms(() => {
+				for (const host of hosts) {
+					// A warm-up that fails changes nothing: the draw builds what
+					// it needs on first use, exactly as it did before there was
+					// one.
+					try {
+						this._warmRenderable(host);
+					} catch {
+						// deliberately silent, see above
+					}
+				}
+				if (cameras) {
+					try {
+						this._warmCameraColorMatrices();
+					} catch {
+						// as above: the draw builds it on first use
+					}
+				}
+			});
+		} finally {
+			this._warmFog = undefined;
+		}
+	}
+
+	/**
+	 * Run `warm` and hand back what it started that is still being built,
+	 * as one promise each. Every warm-up on this base is done by the time it
+	 * returns, so nothing.
+	 * @param {Function} warm - issues the warm-ups
+	 * @returns {Promise<void>[]} the warm-ups still on their way
+	 * @ignore
+	 * @internal
+	 */
+	_collectWarms(warm) {
+		warm();
+		return [];
+	}
+
+	/**
+	 * Run the queued warm-ups now, and say when they are built.
+	 *
+	 * What a state change waits on before drawing the stage it has just built
+	 * (see `state.change`). A warm-up on its own does not keep the first
+	 * frame from compiling: the frame comes some milliseconds after the stage
+	 * is built, and a pipeline still compiling then is compiled again, on the
+	 * spot, by the draw that needs it. Holding the frame until they land is
+	 * what lets them do their job.
+	 *
+	 * Only what this flush asked for is waited on, not every warm-up in
+	 * flight: one a game started for later (an effect attached ahead of
+	 * time, a level's own preload) is not this stage's to wait for.
+	 * @returns {Promise<void>|undefined} settles once they are built, or
+	 *   `undefined` when nothing is being built and the frame can draw now
+	 * @ignore
+	 * @internal
+	 */
+	_whenWarmed() {
+		let waits;
+		try {
+			waits = this._flushWarm(true);
+		} catch {
+			// a warm-up that fails must not keep the state from starting
+			return undefined;
+		}
+		if (waits.length === 0) {
+			return undefined;
+		}
+		return Promise.all(waits).then(() => {});
+	}
+
+	/**
+	 * Warm each of the current stage's cameras for its built-in colour
+	 * matrix.
+	 *
+	 * A camera applies `colorMatrix` as one more effect at the end of its
+	 * chain, but it built that effect inside its own `draw`, on the first
+	 * frame the matrix was not identity, and appends it for that frame only.
+	 * Nothing ever attached it, so nothing warmed it: its program (WebGL) or
+	 * its pipelines (WebGPU) were built in the first frame of a stage that
+	 * grades its camera. Made here instead, once the stage has been built,
+	 * and warmed where `draw` runs it, last in the camera's chain.
+	 * @ignore
+	 * @internal
+	 */
+	_warmCameraColorMatrices() {
+		const cameras = state.current()?.cameras;
+		if (cameras === undefined) {
+			return;
+		}
+		for (const camera of cameras.values()) {
+			const effect = camera._syncColorMatrixEffect?.(this);
+			if (effect == null) {
+				continue;
+			}
+			const effects = camera.postEffects;
+			effects.push(effect);
 			try {
-				this._warmRenderable(host);
-			} catch {
-				// deliberately silent, see above
+				this._warmPostEffects(camera);
+			} finally {
+				effects.splice(effects.indexOf(effect), 1);
 			}
 		}
+	}
+
+	/**
+	 * Whether the meshes being warmed will draw with fog, without it, or both.
+	 *
+	 * Fog is a pipeline variant, and which one a mesh draws with is decided by
+	 * the camera drawing it: each camera installs its own fog on the renderer
+	 * as it starts drawing ({@link Renderer#setFog}), and the frame clears it.
+	 * So the renderer's own value is no answer here. A warm-up runs between
+	 * frames, while the renderer still holds the fog of whichever camera drew
+	 * LAST, which after a state change is the previous screen's: a loading
+	 * screen has none, so every mesh of a fogged scene was warmed without it
+	 * and then compiled with it, synchronously, on its first frame.
+	 *
+	 * Asked of the current stage's cameras instead, through the same
+	 * `_fog3dState` the draw installs, so the warm-up and the draw cannot
+	 * disagree. A stage with a fogged camera and a clear one (a minimap, say)
+	 * warms both variants. Fog switched on in a later frame than the scene was
+	 * built in is not seen here, and is built on that frame as before.
+	 * @returns {boolean[]} the fog states to warm, each `true` for fogged
+	 * @ignore
+	 * @internal
+	 */
+	_warmFogStates() {
+		let fogged = false;
+		let clear = false;
+		const cameras = state.current()?.cameras;
+		if (cameras !== undefined) {
+			for (const camera of cameras.values()) {
+				if (camera._fog3dState?.(this) != null) {
+					fogged = true;
+				} else {
+					clear = true;
+				}
+			}
+		}
+		if (!fogged && !clear) {
+			// no stage to ask: what the renderer holds is the best guess left
+			return [this._fog3d != null];
+		}
+		return clear && fogged ? [false, true] : [fogged];
 	}
 
 	/**

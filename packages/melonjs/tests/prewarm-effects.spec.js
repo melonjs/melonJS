@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Mesh, ShaderEffect } from "../src/index.js";
 import { shaderList } from "../src/loader/cache.js";
+import state from "../src/state/state.ts";
 import {
 	deletable,
 	markContextLost,
@@ -165,6 +166,103 @@ describe("first-use costs a preload should have paid", () => {
 			await settle();
 			expect(batcher.shaderVariants.has(key)).toBe(true);
 			mesh.destroy();
+		});
+
+		it("links the variant for the fog the stage's camera will draw with", async (ctx) => {
+			requireWebGL(ctx, renderer);
+			const batcher = renderer.batchers.get("mesh");
+			// Between frames the renderer still holds the fog of the camera
+			// that drew LAST, which after a state change is the previous
+			// screen's: none. The new stage's camera has fog, and installs it
+			// only once it starts drawing.
+			const held = renderer._fog3d;
+			renderer._fog3d = null;
+			const current = vi.spyOn(state, "current").mockReturnValue({
+				cameras: new Map([
+					[
+						"default",
+						{
+							_fog3dState() {
+								return { mode: 1 };
+							},
+						},
+					],
+				]),
+			});
+			let mesh;
+			let effect;
+			try {
+				mesh = quadMesh();
+				effect = new ShaderEffect(
+					renderer,
+					"vec4 apply(vec4 color, vec2 uv) { return color * 0.6; }",
+				);
+				mesh.addPostEffect(effect);
+				// flushed here, while the stage is the mocked one: the fog is
+				// read when the links are queued, and a frame drawn under the
+				// mock would hand the game loop a stage it cannot update
+				renderer._flushWarm();
+			} finally {
+				current.mockRestore();
+				renderer._fog3d = held;
+			}
+			await settle();
+			// the fogged splice, which is the one the draw will ask for
+			expect(batcher.shaderVariants.has(`effect|${effect._effectId}|1`)).toBe(
+				true,
+			);
+			expect(batcher.shaderVariants.has(`effect|${effect._effectId}|0`)).toBe(
+				false,
+			);
+			mesh.destroy();
+		});
+
+		it("is what a state change waits on before it draws", async (ctx) => {
+			requireWebGL(ctx, renderer);
+			const batcher = renderer.batchers.get("mesh");
+			const meshes = [quadMesh(), quadMesh()];
+			const effects = meshes.map((mesh, i) => {
+				const effect = new ShaderEffect(
+					renderer,
+					`vec4 apply(vec4 color, vec2 uv) { return color * 0.${i + 1}5; }`,
+				);
+				mesh.addPostEffect(effect);
+				return effect;
+			});
+			const keys = effects.map((effect) => {
+				return `effect|${effect._effectId}|0`;
+			});
+			// a clock that runs out after every link (the slice checks its 4ms
+			// budget before each one), so the two are linked in separate tasks
+			// and the wait has to outlast both
+			let clock = 0;
+			const now = vi
+				.spyOn(globalThis.performance, "now")
+				.mockImplementation(() => {
+					clock += 3;
+					return clock;
+				});
+			try {
+				const ready = renderer._whenWarmed();
+				expect(ready).toBeInstanceOf(Promise);
+				// queued, not linked inside the switch
+				expect(
+					keys.some((key) => {
+						return batcher.shaderVariants.has(key);
+					}),
+				).toBe(false);
+				await ready;
+			} finally {
+				now.mockRestore();
+			}
+			for (const key of keys) {
+				expect(batcher.shaderVariants.has(key)).toBe(true);
+			}
+			// and with all of them linked, nothing is left to wait on
+			expect(renderer._whenWarmed()).toBeUndefined();
+			for (const mesh of meshes) {
+				mesh.destroy();
+			}
 		});
 
 		it("puts back the program it found bound", (ctx) => {
