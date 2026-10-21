@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.10.2] (melonJS 2) - _unreleased_
+
+### Fixed
+- Tiled: tile objects on isometric maps are placed where Tiled draws them. Object positions were converted using half the tile width instead of the tile height, which only matches 2:1 tiles, and tile objects were placed from their top left instead of their bottom center, so they appeared below and to the right of their spot in Tiled. Code that offsets these objects to compensate should drop that offset (thanks @vtxe02023274)
+
 ## [20.10.1] (melonJS 2) - _2026-10-21_
 
 ### Fixed
