@@ -293,7 +293,9 @@ The contract:
   stalls every other asset's progress for that long. Bake in slices of a few
   milliseconds and yield between them, with `setTimeout`, not
   `requestAnimationFrame`, which stops in a background tab and would hold the
-  whole preload with it:
+  whole preload with it. Skip the yield while the tab is hidden: a background
+  tab runs timers about once a second, which turns a bake of 25 slices into 25
+  seconds, and there is no loading screen on show to keep smooth:
 
 ```js
 const bakeSky = async (name) => {
@@ -304,7 +306,9 @@ const bakeSky = async (name) => {
         while (y < size && performance.now() - start < 8) {
             tile.fillRow(y++);
         }
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (!document.hidden) {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
     }
     return tile.finish();
 };

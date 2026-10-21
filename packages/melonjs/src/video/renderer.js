@@ -1621,17 +1621,28 @@ export default class Renderer {
 
 	/**
 	 * Run the warm-ups queued by {@link Renderer#_queueWarm}.
+	 * @param {boolean} [stage=false] - true when a stage is being entered,
+	 *   which warms its cameras' grading as well
 	 * @returns {Promise<void>[]} what they started that is still being built
 	 * @ignore
 	 * @internal
 	 */
-	_flushWarm() {
+	_flushWarm(stage = false) {
+		const hosts = this._warmHosts === undefined ? [] : [...this._warmHosts];
 		// already run, by `_whenWarmed`, ahead of the microtask that queued it
-		if (this._warmHosts === undefined || this._warmHosts.size === 0) {
+		if (hosts.length === 0 && !stage) {
 			return [];
 		}
-		const hosts = [...this._warmHosts];
-		this._warmHosts.clear();
+		this._warmHosts?.clear();
+		// The cameras' grading when a stage is entered, or when a camera is
+		// itself among what changed (an effect added to it moves the grading
+		// along its chain). Not for every flush: one runs after each burst of
+		// `addChild` during play, and a graded camera is not what changed.
+		const cameras =
+			stage ||
+			hosts.some((host) => {
+				return host?._postEffectManaged === true;
+			});
 		// read once for the whole flush: the cameras do not change under it
 		this._warmFog = this._warmFogStates();
 		try {
@@ -1646,10 +1657,12 @@ export default class Renderer {
 						// deliberately silent, see above
 					}
 				}
-				try {
-					this._warmCameraColorMatrices();
-				} catch {
-					// as above: the draw builds it on first use
+				if (cameras) {
+					try {
+						this._warmCameraColorMatrices();
+					} catch {
+						// as above: the draw builds it on first use
+					}
 				}
 			});
 		} finally {
@@ -1681,9 +1694,9 @@ export default class Renderer {
 	 * spot, by the draw that needs it. Holding the frame until they land is
 	 * what lets them do their job.
 	 *
-	 * Only what this flush asked for is waited on, not everything in
-	 * flight: the loading screen's own warm-ups must not wait behind the
-	 * whole built-in set {@link Renderer#prewarm} is compiling.
+	 * Only what this flush asked for is waited on, not every warm-up in
+	 * flight: one a game started for later (an effect attached ahead of
+	 * time, a level's own preload) is not this stage's to wait for.
 	 * @returns {Promise<void>|undefined} settles once they are built, or
 	 *   `undefined` when nothing is being built and the frame can draw now
 	 * @ignore
@@ -1692,7 +1705,7 @@ export default class Renderer {
 	_whenWarmed() {
 		let waits;
 		try {
-			waits = this._flushWarm();
+			waits = this._flushWarm(true);
 		} catch {
 			// a warm-up that fails must not keep the state from starting
 			return undefined;

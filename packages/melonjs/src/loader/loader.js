@@ -486,7 +486,13 @@ const alwaysRelative = () => {
  * const levels = new Map();
  * loader.setParser("csv", (asset, onload, onerror) => {
  *     fetch(asset.src)
- *         .then((response) => response.text())
+ *         .then((response) => {
+ *             // a 404 still resolves: without this the error page is parsed
+ *             if (!response.ok) {
+ *                 throw new Error(`${asset.src}: HTTP ${response.status}`);
+ *             }
+ *             return response.text();
+ *         })
  *         .then((text) => {
  *             levels.set(asset.name, text.split("\n").map((row) => row.split(",")));
  *             onload();

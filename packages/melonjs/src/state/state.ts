@@ -20,6 +20,7 @@ import {
 	VIDEO_INIT,
 } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
+import type Renderer from "../video/renderer.js";
 
 interface StageEntry {
 	stage: Stage;
@@ -216,6 +217,8 @@ function _renderFrame(time: number): void {
  * @internal
  */
 function _stopRunLoop(): void {
+	// first, as ending a held switch runs game code that may start the loop
+	_endHeldSwitches();
 	// cancel any previous animationRequestFrame
 	globalThis.cancelAnimationFrame(_animFrameId);
 	/**
@@ -223,11 +226,22 @@ function _stopRunLoop(): void {
 	 * @internal
 	 */
 	_animFrameId = -1;
-	// A switch still waiting to draw ends now, without starting the loop:
-	// whoever stopped it decides when it runs again. Ended rather than
-	// dropped, so its `STATE_CHANGE` is still sent and its transition still
-	// takes away the cover it put up.
-	if (_heldSwitch !== null) {
+}
+
+/**
+ * End every switch still waiting to draw, without starting the loop: whoever
+ * ended it decides when the loop runs again. Ended rather than dropped, so
+ * its `STATE_CHANGE` is still sent and its transition still takes away the
+ * cover it put up.
+ *
+ * Until none is left, because ending one can start another: a
+ * `STATE_CHANGE` listener is free to call `state.change`, and that switch
+ * may be held in turn.
+ * @ignore
+ * @internal
+ */
+function _endHeldSwitches(): void {
+	while (_heldSwitch !== null) {
 		const finish = _heldSwitch;
 		_heldSwitch = null;
 		finish();
@@ -254,22 +268,27 @@ function _switchState(stateId: number): void {
 		// set the global variable
 		_state = stateId;
 
+		// Taken before the reset, so it stays this switch's own: a stage may
+		// change state again from its `onResetEvent`, and a change asked for
+		// while this one is held sets its own.
+		const onSwitchComplete = _onSwitchComplete;
+		_onSwitchComplete = null;
+		const finish = () => {
+			try {
+				// publish the state change
+				emit(STATE_CHANGE);
+			} finally {
+				// the transition's cover comes down even if a listener throws
+				onSwitchComplete?.();
+			}
+		};
+
 		// call the reset function with the app reference and any extra args
 		if (_extraArgs) {
 			_stages[_state].stage.reset(_app, ..._extraArgs);
 		} else {
 			_stages[_state].stage.reset(_app);
 		}
-
-		// taken now: a change asked for while this one is held sets its own
-		const onSwitchComplete = _onSwitchComplete;
-		_onSwitchComplete = null;
-		const finish = () => {
-			// publish the state change
-			emit(STATE_CHANGE);
-			// execute callback if defined
-			onSwitchComplete?.();
-		};
 
 		// The first frame waits for what the stage just built to be compiled.
 		// It used to draw some milliseconds later regardless, and a pipeline
@@ -278,9 +297,17 @@ function _switchState(stateId: number): void {
 		// be needed. Everything after the start waits with it, so the timer
 		// and a transition's reveal begin on the frame that is drawn, rather
 		// than having run their course behind a screen that was not.
-		// no application yet when the display is brought up without one (a
-		// stub renderer in a test): nothing to warm, nothing to wait for
-		const warmed = (_app as Application | undefined)?.renderer._whenWarmed();
+		// Optional all the way: there is no application yet when the display
+		// is brought up without one (a stub renderer in a test), and a custom
+		// renderer need not extend `Renderer` (see `Application#init`).
+		const renderer = (_app as Application | undefined)?.renderer as
+			| Partial<Renderer>
+			| undefined;
+		const warmed = renderer?._whenWarmed?.();
+		// a switch the stage made from its own reset may be waiting to draw
+		// a stage that is no longer current: it ends here, before this one
+		// takes its place
+		_endHeldSwitches();
 		if (warmed === undefined) {
 			// nothing being built: start now, as a stage always has
 			_startRunLoop();
@@ -289,12 +316,7 @@ function _switchState(stateId: number): void {
 		}
 		_heldSwitch = finish;
 		let cap: ReturnType<typeof setTimeout> | undefined;
-		void Promise.race([
-			warmed,
-			new Promise<void>((resolve) => {
-				cap = setTimeout(resolve, MAX_WARM_HOLD);
-			}),
-		]).then(() => {
+		const start = () => {
 			clearTimeout(cap);
 			// stopped, or replaced by another switch, while it waited
 			if (_heldSwitch !== finish) {
@@ -303,7 +325,15 @@ function _switchState(stateId: number): void {
 			_heldSwitch = null;
 			_startRunLoop();
 			finish();
-		});
+		};
+		// a warm-up that fails is one the draw builds on first use, as it
+		// did before there was a wait: the state starts either way
+		void Promise.race([
+			warmed,
+			new Promise<void>((resolve) => {
+				cap = setTimeout(resolve, MAX_WARM_HOLD);
+			}),
+		]).then(start, start);
 	}
 }
 

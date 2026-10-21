@@ -135,12 +135,17 @@ const bakeNebulaField = async (
 			bake.fill(y, y + 1);
 			y++;
 		}
-		// a timer rather than a frame callback: the loader keeps going in a
+		// A timer rather than a frame callback: the loader keeps going in a
 		// hidden tab, where frame callbacks stop and a bake waiting on one
-		// would hold the whole preload with it
-		await new Promise((resolve) => {
-			setTimeout(resolve, 0);
-		});
+		// would hold the whole preload with it. And no yield at all while
+		// hidden: timers there run about once a second, which would stretch
+		// the bake over as many seconds as it has slices, with no loading
+		// screen on show to keep smooth.
+		if (document.hidden !== true) {
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+		}
 	}
 	const field = compose(bake.finish(), size, repeat);
 	fields.set(key, field);

@@ -546,9 +546,9 @@ describe("warm-up keys match the draw path (WebGPU)", () => {
 				cameras: new Map([["default", camera]]),
 			});
 			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-			// any warm-up flush: here, a sprite entering the world
+			// the stage being entered: what a state switch runs
 			renderer._queueWarm({ blendMode: "normal" });
-			await settle();
+			await renderer._whenWarmed();
 			warn.mockRestore();
 			// built before the frame rather than inside the camera's draw
 			expect(camera._colorMatrixEffect).not.toBe(null);
@@ -572,6 +572,48 @@ describe("warm-up keys match the draw path (WebGPU)", () => {
 				false,
 			);
 			expect(renderer.pipelinesBuilt()).toBe(warmed);
+		});
+	});
+
+	describe("a camera's colour matrix, after the stage is built", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		const gradedCamera = () => {
+			const camera = {
+				postEffects: [],
+				_postEffectManaged: true,
+				blendMode: "normal",
+				colorMatrix: new ColorMatrix().contrast(1.2),
+				_colorMatrixEffect: null,
+				_syncColorMatrixEffect: Camera2d.prototype._syncColorMatrixEffect,
+			};
+			vi.spyOn(state, "current").mockReturnValue({
+				cameras: new Map([["default", camera]]),
+			});
+			return camera;
+		};
+
+		it("is left alone by a sprite spawned during play", async () => {
+			// a flush runs after every burst of addChild in play, and the
+			// camera is not what changed
+			renderer.shaderLanguage = "wgsl";
+			const camera = gradedCamera();
+			renderer._queueWarm({ blendMode: "normal" });
+			await settle();
+			expect(camera._colorMatrixEffect).toBe(null);
+		});
+
+		it("is warmed again when the camera itself changes", async () => {
+			// an effect added to the camera moves the grading along its chain
+			renderer.shaderLanguage = "wgsl";
+			const camera = gradedCamera();
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			renderer._queueWarm(camera);
+			await settle();
+			warn.mockRestore();
+			expect(camera._colorMatrixEffect).not.toBe(null);
 		});
 	});
 
