@@ -1,7 +1,9 @@
 import "./helpers/webgpu-globals.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ShaderEffect } from "../src/index.js";
+import { ImageLayer, ShaderEffect } from "../src/index.js";
+import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
 import { prepareEffectBinding } from "../src/video/webgpu/effect_binding.js";
+import WebGPURenderer from "../src/video/webgpu/webgpu_renderer.js";
 import { createMockWebGPURenderer } from "./helpers/webgpu-mock-renderer.js";
 
 /**
@@ -427,5 +429,114 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 			"blit|triangle-list|normal|true|none",
 		);
 		expect(renderer.calls.drawIndexed).toEqual([6]);
+	});
+});
+
+describe("WebGPU drawPattern (mock renderer)", () => {
+	// An ImageLayer draws its repeated image through `drawPattern`. With a
+	// single effect it takes the fast path: its own `preDraw` hands the effect
+	// to the renderer as the custom shader, and the quad has to draw with it.
+	// The WebGL backend dropped it on this path (its batcher only draws with
+	// an effect the draw call binds); this pins that WebGPU keeps it.
+	const BODY = `
+struct Fx { uStrength : f32, };
+@group(3) @binding(0) var<uniform> fx : Fx;
+fn apply(color : vec4f, uv : vec2f) -> vec4f {
+	return vec4f(color.rgb * fx.uStrength, color.a);
+}
+`;
+
+	/** the mock, with the real draw path an image layer goes through */
+	const makeRenderer = () => {
+		const renderer = createMockWebGPURenderer();
+		const quad = new WebGPUQuadBatcher(renderer);
+		const proto = WebGPURenderer.prototype;
+		Object.assign(renderer, {
+			beginPostEffect: proto.beginPostEffect,
+			_effectChainFor: proto._effectChainFor,
+			_usesPostEffectFastPath: proto._usesPostEffectFastPath,
+			drawPattern: proto.drawPattern,
+			currentTint: renderer.currentColor.clone(),
+			setBatcher() {
+				this.currentBatcher = quad;
+				return quad;
+			},
+			// the state `ImageLayer#preDraw` touches around the effect
+			save() {},
+			globalAlpha() {
+				return 1;
+			},
+			setGlobalAlpha() {},
+			setTint() {},
+			getBlendMode() {
+				return "normal";
+			},
+			setBlendMode() {},
+		});
+		return { renderer, quad };
+	};
+
+	// a repeat-x pattern, as `createPattern` makes one for an image layer
+	const pattern = {
+		getTexture() {
+			return { width: 64, height: 32 };
+		},
+		getUVs() {
+			return [0, 0, 2, 1];
+		},
+	};
+
+	// the fields `ImageLayer#preDraw` reads, run through the real `preDraw`:
+	// constructing an ImageLayer needs an Application, which this mock is not
+	const makeLayer = (postEffects = []) => {
+		return {
+			postEffects,
+			_postEffectManaged: false,
+			tint: undefined,
+			blendMode: "normal",
+			getOpacity() {
+				return 1;
+			},
+			preDraw: ImageLayer.prototype.preDraw,
+		};
+	};
+
+	it("draws the layer's pattern through its own effect", () => {
+		const { renderer, quad } = makeRenderer();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const effect = new ShaderEffect({ shaderLanguage: "wgsl" }, { wgsl: BODY });
+		warn.mockRestore();
+		const layer = makeLayer([effect]);
+
+		layer.preDraw(renderer);
+		renderer.drawPattern(pattern, 0, 0, 128, 32);
+		quad.flush();
+
+		expect(renderer.calls.pipelineKeys.at(-1)).toBe(
+			"effect:0|triangle-list|normal|true|none",
+		);
+		expect(renderer.calls.drawIndexed).toEqual([6]);
+	});
+
+	it("draws the next layer, without an effect, with the plain quad pipeline", () => {
+		const { renderer, quad } = makeRenderer();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const effect = new ShaderEffect({ shaderLanguage: "wgsl" }, { wgsl: BODY });
+		warn.mockRestore();
+
+		makeLayer([effect]).preDraw(renderer);
+		renderer.drawPattern(pattern, 0, 0, 128, 32);
+		// the layer behind it has no effect of its own: the one left installed
+		// by the layer before must not carry over to it
+		makeLayer().preDraw(renderer);
+		renderer.drawPattern(pattern, 0, 0, 128, 32);
+		quad.flush();
+
+		expect(renderer.calls.pipelineKeys).toHaveLength(2);
+		expect(renderer.calls.pipelineKeys[0]).toBe(
+			"effect:0|triangle-list|normal|true|none",
+		);
+		expect(renderer.calls.pipelineKeys[1]).toContain("quad|");
+		expect(renderer.calls.drawIndexed).toEqual([6, 6]);
 	});
 });
