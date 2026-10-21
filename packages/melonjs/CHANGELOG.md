@@ -1,9 +1,14 @@
 # Changelog
 
-## [20.10.2] (melonJS 2) - _unreleased_
+## [20.11.0] (melonJS 2) - _unreleased_
 
 ### Fixed
-- Tiled: tile objects on isometric maps are placed where Tiled draws them. Object positions were converted using half the tile width instead of the tile height, which only matches 2:1 tiles, and tile objects were placed from their top left instead of their bottom center, so they appeared below and to the right of their spot in Tiled. Code that offsets these objects to compensate should drop that offset (thanks @vtxe02023274)
+- TextureAtlas: drawing part of an image, a bitmap font glyph or a repeating pattern no longer adds a region to the atlas for every new source rectangle. Those regions piled up for as long as the atlas lived, and turned up among the frames an animation is built from ([#1281](https://github.com/melonjs/melonJS/issues/1281), thanks @snowyukitty)
+- TextureAtlas: on an atlas with pages of different sizes, a source rectangle drawn from one page no longer reuses the UVs worked out for the same rectangle on another (thanks @snowyukitty)
+- Tiled: objects on isometric maps are placed where Tiled draws them. Positions are measured in tile heights on both axes, which changes maps whose tiles are not 2:1, and tile objects are anchored at their bottom center, so a game that offset them to compensate should drop that offset (thanks @vtxe02023274)
+
+### Performance
+- Rendering: drawing a sprite, a glyph or a pattern computes its UVs from the image size instead of looking them up, with no string built and nothing allocated or kept. On the platformer, text and Jungle Rabbit examples a lookup took 34 to 58 ns and now takes 6 to 10, in Chrome and WebKit: 1 to 2% of a frame's CPU time on the text example, and too little to measure on the platformer
 
 ## [20.10.1] (melonJS 2) - _2026-10-21_
 

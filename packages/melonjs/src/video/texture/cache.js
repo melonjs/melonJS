@@ -292,6 +292,19 @@ class TextureCache {
 	/**
 	 * @ignore
 	 * @internal
+	 * the image's pixels are being replaced, maybe at another size: every
+	 * atlas drawn from it reads its size again on its next draw (see
+	 * `TextureAtlas#_decideUVs`)
+	 */
+	sizeChanged(image) {
+		for (const atlas of this.cache.get(image)) {
+			atlas._sizeChanged?.();
+		}
+	}
+
+	/**
+	 * @ignore
+	 * @internal
 	 * return the textureAltas for the given image
 	 */
 	get(image, atlas) {

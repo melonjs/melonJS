@@ -3071,7 +3071,7 @@ export default class WebGPURenderer extends Renderer {
 				reupload = true;
 			}
 		}
-		const uvs = texture.getUVs(sx, sy, sw, sh);
+		const uvs = texture._quadUVs(image, sx, sy, sw, sh);
 		this.currentBatcher.addQuad(
 			texture,
 			dx,
@@ -3300,8 +3300,9 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} height - height of the pattern
 	 */
 	drawPattern(pattern, x, y, width, height) {
-		const uvs = pattern.getUVs("0,0," + width + "," + height);
 		this.setBatcher("quad");
+		// computed last: it is a scratch array, valid until the next call
+		const uvs = pattern._quadUVs(pattern.getTexture(), 0, 0, width, height);
 		this.currentBatcher.addQuad(
 			pattern,
 			x,
