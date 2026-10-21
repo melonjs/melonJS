@@ -252,6 +252,50 @@ describe("ShaderEffect builtins (screen_texture / screen_uv / noise_uv)", () => 
 		fx.destroy();
 	});
 
+	it("samples the true scene behind a pattern too (ImageLayer path)", (ctx) => {
+		requireWebGL(ctx);
+
+		// the same swizzle as above, drawn through `drawPattern`, which is how
+		// an ImageLayer draws: it has to bind the effect AND refresh the
+		// screen copy, as `drawImage` does. A backdrop of its own, green over
+		// red, so a copy left over from the test above cannot pass for it
+		renderer.clearColor("#000000ff");
+		renderer.drawImage(solidCanvas(0, 255, 0, 64, 32), 0, 0);
+		renderer.drawImage(solidCanvas(255, 0, 0, 64, 32), 0, 32);
+		renderer.flush();
+
+		const fx = new ShaderEffect(
+			renderer,
+			`
+			uniform sampler2D screenTex : screen_texture;
+			vec4 apply(vec4 color, vec2 uv) {
+				return vec4(texture2D(screenTex, screen_uv).bgr, 1.0);
+			}
+		`,
+		);
+		const pattern = renderer.createPattern(
+			solidCanvas(64, 64, 64, 8, 8),
+			"repeat",
+		);
+		renderer.save();
+		renderer.customShader = fx;
+		renderer.drawPattern(pattern, 16, 16, 32, 32);
+		renderer.flush();
+		renderer.customShader = undefined;
+		renderer.restore();
+
+		// green swizzled stays green; red swizzled turns blue
+		const top = readPixel(32, 20);
+		expect(top[1]).toBeGreaterThan(200);
+		expect(top[0]).toBeLessThan(60);
+		expect(top[2]).toBeLessThan(60);
+		const bottom = readPixel(32, 44);
+		expect(bottom[2]).toBeGreaterThan(200);
+		expect(bottom[0]).toBeLessThan(60);
+
+		fx.destroy();
+	});
+
 	it("noise_uv is frame-local for an atlas sub-frame", (ctx) => {
 		requireWebGL(ctx);
 

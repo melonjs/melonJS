@@ -2715,8 +2715,20 @@ export default class WebGLRenderer extends Renderer {
 	 * @see WebGLRenderer#createPattern
 	 */
 	drawPattern(pattern, x, y, width, height) {
+		// the renderable's own effect, bound as `drawImage` binds it. Left
+		// out, an `ImageLayer` with a single ShaderEffect drew without it on
+		// this backend: `setBatcher` puts the batcher back on its default
+		// program, and nothing here put the effect on again.
+		if (this.customShader?._screenTextureUniforms?.length > 0) {
+			this.toFrameTexture();
+		}
 		const uvs = pattern.getUVs("0,0," + width + "," + height);
 		this.setBatcher("quad");
+		const shader = this.customShader;
+		if (shader != null) {
+			this.currentBatcher.useShader(shader);
+			shader._prepareTextures?.(this.currentBatcher);
+		}
 		this.currentBatcher.addQuad(
 			pattern,
 			x,
