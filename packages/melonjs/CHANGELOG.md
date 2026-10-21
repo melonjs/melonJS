@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.11.0] (melonJS 2) - _unreleased_
+## [20.10.1] (melonJS 2) - _unreleased_
 
 ### Fixed
 - Rendering: entering a state no longer stalls its first frame compiling the shaders its stage had only started preparing. That frame now waits until they are ready, for at most 1.5s, and `STATE_CHANGE` and a transition's reveal come with it, so the reveal plays in full instead of running its course behind the stall
