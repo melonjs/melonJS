@@ -2668,7 +2668,7 @@ export default class WebGLRenderer extends Renderer {
 				reupload = true;
 			}
 		}
-		const uvs = texture.getUVs(sx, sy, sw, sh);
+		const uvs = texture._quadUVs(image, sx, sy, sw, sh);
 		if (useLit) {
 			this.currentBatcher.addQuad(
 				texture,
@@ -2722,13 +2722,14 @@ export default class WebGLRenderer extends Renderer {
 		if (this.customShader?._screenTextureUniforms?.length > 0) {
 			this.toFrameTexture();
 		}
-		const uvs = pattern.getUVs("0,0," + width + "," + height);
 		this.setBatcher("quad");
 		const shader = this.customShader;
 		if (shader != null) {
 			this.currentBatcher.useShader(shader);
 			shader._prepareTextures?.(this.currentBatcher);
 		}
+		// computed last: it is a scratch array, valid until the next call
+		const uvs = pattern._quadUVs(pattern.getTexture(), 0, 0, width, height);
 		this.currentBatcher.addQuad(
 			pattern,
 			x,

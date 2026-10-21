@@ -17,6 +17,7 @@ import Texture2d from "./texture2d.ts";
 // (`on`, not `once`: a re-init — new Application after destroy — must
 // re-capture the new renderer).
 let _renderer;
+
 on(VIDEO_INIT, (renderer) => {
 	/**
 	 * @ignore
@@ -24,6 +25,28 @@ on(VIDEO_INIT, (renderer) => {
 	 */
 	_renderer = renderer;
 });
+
+/**
+ * The stored UVs of the frame at exactly this source rectangle of a page.
+ * @param {object} page - a page's record from `TextureAtlas#_pageUVs`
+ * @param {number} x - source x coordinate
+ * @param {number} y - source y coordinate
+ * @param {number} w - source width
+ * @param {number} h - source height
+ * @returns {Float32Array|undefined} the frame's UVs, if one is there
+ * @ignore
+ */
+function frameUVs(page, x, y, w, h) {
+	const corner = page.frames.get(x)?.get(y);
+	if (corner !== undefined) {
+		for (const f of corner) {
+			if (f.width === w && f.height === h) {
+				return f.uvs;
+			}
+		}
+	}
+	return undefined;
+}
 
 /**
  * additional import for TypeScript
@@ -180,11 +203,38 @@ export class TextureAtlas extends Texture2d {
 		this.activeAtlas = undefined;
 
 		/**
-		 * UV lookup cache to avoid per-frame string allocation in drawImage
+		 * Per atlas page: the size its frames' UVs were normalized by, and
+		 * its frames by source rectangle (x, then y, then the frames at that
+		 * corner), kept out of the page dictionary that animation code
+		 * walks. See {@link TextureAtlas#addUVs}.
 		 * @ignore
 		 * @internal
 		 */
-		this._uvCache = { sx: -1, sy: -1, sw: -1, sh: -1, uvs: null };
+		this._pageUVs = new WeakMap();
+
+		/**
+		 * What {@link TextureAtlas#_quadUVs} writes a computed rectangle into,
+		 * so a draw allocates nothing. Overwritten by the next call.
+		 * @ignore
+		 * @internal
+		 */
+		this._uvScratch = new Float32Array(4);
+
+		/**
+		 * The image and page last drawn from, their size, and whether that
+		 * page computes every UV from it, so a draw from the same page
+		 * decides nothing. See {@link TextureAtlas#_quadUVs}.
+		 * @ignore
+		 * @internal
+		 */
+		this._uvSizeCheck = {
+			source: null,
+			page: null,
+			width: 0,
+			height: 0,
+			fixed: false,
+			computed: true,
+		};
 
 		// parse given atlas(es) paremeters
 		if (typeof atlases !== "undefined") {
@@ -445,49 +495,144 @@ export class TextureAtlas extends Texture2d {
 	}
 
 	/**
-	 * return the uvs mapping for the given region
+	 * Return the UVs of a named region, or of a source rectangle of the
+	 * active page.
+	 *
+	 * A rectangle that is one of the active page's frames returns that
+	 * frame's own UVs. Any other rectangle returns a new array, computed from
+	 * the size of the active page's image: nothing is cached and nothing is
+	 * added to the atlas.
 	 * @param {string|number} name - region (or frame) name, or sx when using numeric parameters
 	 * @param {number} [sy] - source y coordinate (when using numeric parameters)
 	 * @param {number} [sw] - source width (when using numeric parameters)
 	 * @param {number} [sh] - source height (when using numeric parameters)
 	 * @returns {Float32Array} region Uvs
+	 * @throws {Error} if no region has that name
 	 */
 	getUVs(name, sy, sw, sh) {
 		if (typeof name === "number") {
-			const sx = name;
-			const cache = this._uvCache;
-			// fast path: return cached UVs if coordinates match last lookup
-			if (
-				sx === cache.sx &&
-				sy === cache.sy &&
-				sw === cache.sw &&
-				sh === cache.sh
-			) {
-				return cache.uvs;
-			}
-			// cache miss: fall back to string-keyed region lookup
-			const key = sx + "," + sy + "," + sw + "," + sh;
-			let region = this.getRegion(key);
-			if (typeof region === "undefined") {
-				region = this.addRegion(key, sx, sy, sw, sh);
-			}
-			cache.sx = sx;
-			cache.sy = sy;
-			cache.sw = sw;
-			cache.sh = sh;
-			cache.uvs = region.uvs;
+			const page = this._pageUVs.get(this.getAtlas());
+			const frame =
+				page === undefined ? undefined : frameUVs(page, name, sy, sw, sh);
+			return (
+				frame ??
+				Float32Array.from(this._quadUVs(this.getTexture(), name, sy, sw, sh))
+			);
+		}
+
+		const region = this.getRegion(name);
+		if (typeof region?.uvs !== "undefined") {
 			return region.uvs;
 		}
+		throw new Error("Texture - region for " + name + " not found");
+	}
 
-		// string-based lookup (named regions)
-		let region = this.getRegion(name);
-
-		if (typeof region === "undefined") {
-			// see https://github.com/melonjs/melonJS/issues/1281
-			const keys = name.split(",");
-			region = this.addRegion(name, +keys[0], +keys[1], +keys[2], +keys[3]);
+	/**
+	 * The UVs a renderer draws a source rectangle of the active page with.
+	 *
+	 * Computed, not looked up: four divisions by the page's size. The
+	 * result is written into one scratch array, so a draw allocates nothing
+	 * and the next call overwrites it; read it straight away.
+	 *
+	 * A frame's UVs are normalized by the size its atlas file gives, which
+	 * is the page's own size unless the image was exported or loaded at
+	 * another scale than its file describes. On such a page a frame is drawn
+	 * with its own UVs, as it always was, and anything else with the page's
+	 * real size. Which kind of page this is gets decided once, and again
+	 * when another page or image is drawn from, or when the image's pixels
+	 * are replaced (see {@link TextureAtlas#_decideUVs}).
+	 * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|ImageBitmap|OffscreenCanvas|CompressedImage} source - the active page's image, as drawn
+	 * @param {number} sx - source x coordinate
+	 * @param {number} sy - source y coordinate
+	 * @param {number} sw - source width
+	 * @param {number} sh - source height
+	 * @returns {Float32Array} the UVs, valid until the next call
+	 * @ignore
+	 * @internal
+	 */
+	_quadUVs(source, sx, sy, sw, sh) {
+		const check = this._uvSizeCheck;
+		// kept small so engines inline it into the draw: deciding a page and
+		// reading a frame's own UVs are the rare work, out of line
+		if (
+			check.source !== source ||
+			check.page !== this.activeAtlas ||
+			!check.fixed
+		) {
+			this._decideUVs(source);
 		}
-		return region.uvs;
+		if (!check.computed) {
+			const frame = frameUVs(
+				this._pageUVs.get(this.getAtlas()),
+				sx,
+				sy,
+				sw,
+				sh,
+			);
+			if (frame !== undefined) {
+				return frame;
+			}
+		}
+		const width = check.width;
+		const height = check.height;
+		const uvs = this._uvScratch;
+		uvs[0] = sx / width;
+		uvs[1] = sy / height;
+		uvs[2] = (sx + sw) / width;
+		uvs[3] = (sy + sh) / height;
+		return uvs;
+	}
+
+	/**
+	 * The out-of-line half of {@link TextureAtlas#_quadUVs}: read the size
+	 * of the image drawn from, and decide whether the active page computes
+	 * every UV from it.
+	 *
+	 * The size is read when the image's pixels go to the GPU: the first
+	 * time it is drawn, and again after {@link TextureAtlas#_sizeChanged},
+	 * which a canvas render target's `invalidate()` calls when it hands the
+	 * GPU new pixels, maybe at a new size. Between those, a resized canvas
+	 * still shows its old pixels on the GPU, and the old size is the one
+	 * that samples them; reading a DOM image's size also costs more than the
+	 * whole computation. A video is read on every draw, as it uploads every
+	 * frame, and so is an image with no size yet, one still loading.
+	 * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|ImageBitmap|OffscreenCanvas|CompressedImage} source - the active page's image, as drawn
+	 * @ignore
+	 * @internal
+	 */
+	_decideUVs(source) {
+		const check = this._uvSizeCheck;
+		const width = source.width || source.videoWidth;
+		const height = source.height || source.videoHeight;
+		if (
+			check.source === source &&
+			check.page === this.activeAtlas &&
+			check.width === width &&
+			check.height === height
+		) {
+			return;
+		}
+		const page = this._pageUVs.get(this.getAtlas());
+		check.source = source;
+		check.page = this.activeAtlas;
+		check.width = width;
+		check.height = height;
+		check.fixed =
+			width > 0 && height > 0 && typeof source.videoWidth !== "number";
+		check.computed =
+			page === undefined ||
+			(!page.mixed && page.width === width && page.height === height);
+	}
+
+	/**
+	 * Read the image's size and decide its page again on the next draw:
+	 * the image's pixels are being replaced, maybe at another size, or a
+	 * new frame changed what its page needs.
+	 * @ignore
+	 * @internal
+	 */
+	_sizeChanged() {
+		this._uvSizeCheck.source = null;
 	}
 
 	/**
@@ -510,17 +655,39 @@ export class TextureAtlas extends Texture2d {
 			(s.x + sw) / w, // u1 (right)
 			(s.y + sh) / h, // v1 (bottom)
 		]);
-		// Cache source coordinates
-		// see https://github.com/melonjs/melonJS/issues/1281
-		// keyed by the REGION rect (x, y, width, height) — the same key shape
-		// `getUVs(sx, sy, sw, sh)` builds for coordinate lookups. (Keying by
-		// the texture dimensions instead made the alias unmatchable for any
-		// sub-region AND poisoned full-image lookups whenever a frame sat at
-		// (0,0): "0,0,texW,texH" pointed at that frame, not the whole image.)
-		const key = `${s.x},${s.y},${sw},${sh}`;
-		if (key !== name) {
-			atlas[key] = atlas[name];
+		// Indexed by source rectangle beside the page, not in it: animation
+		// code walks the page dictionary, and a second key per frame would
+		// show up there. Also note the size these UVs were normalized by:
+		// a draw computes its UVs from the page's own size, and only a page
+		// where that would differ needs a frame's stored UVs.
+		let page = this._pageUVs.get(atlas);
+		if (page === undefined) {
+			page = { width: w, height: h, mixed: false, frames: new Map() };
+			this._pageUVs.set(atlas, page);
+		} else if (page.width !== w || page.height !== h) {
+			page.mixed = true;
 		}
+		let column = page.frames.get(s.x);
+		if (column === undefined) {
+			column = new Map();
+			page.frames.set(s.x, column);
+		}
+		let corner = column.get(s.y);
+		if (corner === undefined) {
+			corner = [];
+			column.set(s.y, corner);
+		}
+		const entry = { width: sw, height: sh, uvs: atlas[name].uvs };
+		const i = corner.findIndex((f) => {
+			return f.width === sw && f.height === sh;
+		});
+		if (i === -1) {
+			corner.push(entry);
+		} else {
+			corner[i] = entry;
+		}
+		// a new frame can change whether its page computes every UV
+		this._sizeChanged();
 
 		return atlas[name].uvs;
 	}
@@ -639,9 +806,8 @@ export class TextureAtlas extends Texture2d {
 			const isArray = Array.isArray(names);
 			const name = isArray ? names[i] : i;
 			// in dictionary mode, only iterate real regions: a region's `name`
-			// matches its dictionary key. This skips both the coordinate-alias
-			// keys added by `addUVs` (#1281 — they'd duplicate every frame) and
-			// non-region entries like the aseprite parser's `anims` dictionary
+			// matches its dictionary key. This skips non-region entries like
+			// the aseprite parser's `anims` dictionary
 			// (whose value has no `name`, and which `getRegion` would otherwise
 			// happily return as a NaN-sized pseudo-region).
 			if (!isArray && (names[i] == null || names[i].name !== i)) {
@@ -704,8 +870,8 @@ export class TextureAtlas extends Texture2d {
 		for (const i in names) {
 			const isArray = Array.isArray(names);
 			const name = isArray ? names[i] : i;
-			// dictionary mode: skip coordinate-alias keys and non-region
-			// entries (see getAnimationSettings for the full rationale)
+			// dictionary mode: skip non-region entries (see
+			// getAnimationSettings for the full rationale)
 			if (!isArray && (names[i] == null || names[i].name !== i)) {
 				continue;
 			}

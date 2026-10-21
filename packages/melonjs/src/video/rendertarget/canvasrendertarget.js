@@ -314,6 +314,9 @@ class CanvasRenderTarget extends RenderTarget {
 				renderer.cache.get(this.canvas),
 			);
 			renderer.currentBatcher.markTextureDirty(this.glTextureUnit);
+			// the new pixels may come at a new size, and UVs are worked out
+			// from the size of the pixels on the GPU
+			renderer.cache.sizeChanged(this.canvas);
 		} else if (renderer.type === "WebGPU" && renderer.cache.has(this.canvas)) {
 			// drain pending vertices, then re-upload the canvas. The store
 			// gives the new pixels a fresh GPUTexture when draws recorded
@@ -324,6 +327,7 @@ class CanvasRenderTarget extends RenderTarget {
 			renderer.textureStore.getBinding(renderer.cache.get(this.canvas), {
 				force: true,
 			});
+			renderer.cache.sizeChanged(this.canvas);
 		}
 	}
 

@@ -481,7 +481,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		getTexture() {
 			return { width: 64, height: 32 };
 		},
-		getUVs() {
+		_quadUVs() {
 			return [0, 0, 2, 1];
 		},
 	};
