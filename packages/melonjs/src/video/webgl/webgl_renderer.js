@@ -1026,15 +1026,48 @@ export default class WebGLRenderer extends Renderer {
 		// own. Each clone of an effect is its own program, so a pool of
 		// twenty is twenty links.
 		this._meshEffectWarmQueue ??= [];
-		for (const fx of effects) {
-			this._meshEffectWarmQueue.push(batcher, fx);
+		// The fog `#define` is captured NOW, from the stage's cameras (see
+		// `Renderer#_warmFogStates`). The link runs in later tasks, and the
+		// renderer's own fog at that point is whichever camera drew last.
+		for (const fog of this._warmFog ?? [this._fog3d != null]) {
+			const fogDefine = fog ? "#define FOG\n" : "";
+			for (const fx of effects) {
+				this._meshEffectWarmQueue.push(batcher, fx, fogDefine);
+			}
 		}
 		if (this._meshEffectWarmScheduled !== true) {
 			this._meshEffectWarmScheduled = true;
+			/**
+			 * settles once the queue `_linkQueuedMeshEffects` works through
+			 * is empty, for a state change waiting to draw
+			 * @type {Promise<void>}
+			 * @ignore
+			 * @internal
+			 */
+			this._meshEffectWarmDone = new Promise((resolve) => {
+				this._meshEffectWarmSettle = resolve;
+			});
 			queueMicrotask(() => {
 				this._linkQueuedMeshEffects();
 			});
 		}
+	}
+
+	/**
+	 * Run `warm` and hand back what is still to be built once it returns:
+	 * the spliced mesh programs it queued, which are linked over the next
+	 * tasks rather than all at once.
+	 * @param {Function} warm - issues the warm-ups
+	 * @returns {Promise<void>[]} the queued links, as one promise, or nothing
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_collectWarms(warm) {
+		warm();
+		return this._meshEffectWarmScheduled === true
+			? [this._meshEffectWarmDone]
+			: [];
 	}
 
 	/**
@@ -1050,7 +1083,7 @@ export default class WebGLRenderer extends Renderer {
 		const gl = this.gl;
 		if (gl === null || gl.isContextLost?.() === true) {
 			queue.length = 0;
-			this._meshEffectWarmScheduled = false;
+			this._settleMeshEffectWarm();
 			return;
 		}
 		const start = globalThis.performance.now();
@@ -1062,15 +1095,16 @@ export default class WebGLRenderer extends Renderer {
 			) {
 				const batcher = queue.shift();
 				const fx = queue.shift();
+				const fogDefine = queue.shift();
 				if (fx.destroyed !== true && batcher.canHostEffect?.(fx) === true) {
-					batcher.effectShaderFor(fx);
+					batcher._effectShader(fx, fogDefine);
 				}
 			}
 		} finally {
 			this._restoreProgram(previous);
 		}
 		if (queue.length === 0) {
-			this._meshEffectWarmScheduled = false;
+			this._settleMeshEffectWarm();
 		} else if (globalThis.document?.hidden === true) {
 			// a hidden tab throttles timers to one a second and draws nothing,
 			// so there is no frame to protect: finish now
@@ -1080,6 +1114,18 @@ export default class WebGLRenderer extends Renderer {
 				this._linkQueuedMeshEffects();
 			}, 0);
 		}
+	}
+
+	/**
+	 * The link queue is empty: let the next warm-up schedule a new one, and
+	 * release whatever is waiting on this one.
+	 * @ignore
+	 * @internal
+	 */
+	_settleMeshEffectWarm() {
+		this._meshEffectWarmScheduled = false;
+		this._meshEffectWarmSettle?.();
+		this._meshEffectWarmSettle = undefined;
 	}
 
 	/**

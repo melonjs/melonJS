@@ -55,6 +55,7 @@ import {
 	SUN_DIRECTION,
 	SUN_INTENSITY,
 } from "./constants";
+import { registerNebulaAsset } from "./fx/nebula";
 import { GameController } from "./GameController";
 import { TitleScreen } from "./scenes/TitleScreen";
 import { WarningScreen } from "./scenes/WarningScreen";
@@ -267,6 +268,10 @@ const createGame = async () => {
 	// reference distance to the play area puts a nearby event at full volume
 	// and still leaves the far side of the globe audibly further off.
 	audio.setSpatialDefaults({ refDistance: 1200, maxDistance: 20000 });
+
+	// The generated skies are preload entries of a type the game defines
+	// itself, so the loader has to be taught it before it is asked for one.
+	registerNebulaAsset();
 
 	await loader.preload(earthDefenderAssets());
 

@@ -359,10 +359,52 @@ describe("WebGPUPipelineCache warm-up", () => {
 				"bgra8unorm",
 				1,
 			);
-			const drawn = cache.get("quad", "triangle-list", "normal", true);
+			// compiling by the time the draw comes: one queued but not yet
+			// started is skipped instead, see the case above
 			await settle();
+			expect(device.asyncRequests).toHaveLength(1);
+			const drawn = cache.get("quad", "triangle-list", "normal", true);
 			device.asyncRequests[0].resolve();
 			await warming;
+			expect(cache.get("quad", "triangle-list", "normal", true)).toBe(drawn);
+		});
+
+		it("does not compile a queued warm-up a draw has already built", async () => {
+			// sixteen compiling, so the next one waits in the queue
+			const { device, cache } = makeCache();
+			for (let i = 0; i < 16; i++) {
+				cache.warm(
+					"quad",
+					"triangle-list",
+					"normal",
+					true,
+					"none",
+					undefined,
+					`format${i}`,
+					1,
+				);
+			}
+			const queued = cache.warm(
+				"quad",
+				"triangle-list",
+				"normal",
+				true,
+				"none",
+				undefined,
+				"bgra8unorm",
+				1,
+			);
+			await settle();
+			expect(device.asyncRequests).toHaveLength(16);
+			// the frame cannot wait for it, and builds its own
+			const drawn = cache.get("quad", "triangle-list", "normal", true);
+			expect(device.syncPipelines).toHaveLength(1);
+			// a slot frees up and the queued job's turn comes
+			device.asyncRequests[0].resolve();
+			await settle();
+			expect(device.asyncRequests).toHaveLength(16);
+			await expect(queued).resolves.toBeUndefined();
+			expect(cache.pending.size).toBe(15);
 			expect(cache.get("quad", "triangle-list", "normal", true)).toBe(drawn);
 		});
 
@@ -424,6 +466,67 @@ describe("WebGPUPipelineCache warm-up", () => {
 			await settle();
 			cache.clear();
 			await expect(Promise.all(queued.slice(16))).resolves.toBeDefined();
+		});
+	});
+
+	describe("collecting what one caller asked for", () => {
+		const warmFor = (cache, format) => {
+			return cache.warm(
+				"quad",
+				"triangle-list",
+				"normal",
+				true,
+				"none",
+				undefined,
+				format,
+				1,
+			);
+		};
+
+		it("hands back what it started and what was already compiling", async () => {
+			// what a state change waits on before drawing its stage: every
+			// pipeline that stage needs and does not have yet, including one
+			// someone else had already started
+			const { cache } = makeCache();
+			const already = warmFor(cache, "rgba8unorm");
+			const asked = cache.collect(() => {
+				warmFor(cache, "bgra8unorm");
+				warmFor(cache, "rgba8unorm");
+			});
+			expect(asked).toHaveLength(2);
+			expect(asked[0]).toBe(
+				cache.pending.get(
+					cache.keyFor(
+						"quad",
+						"triangle-list",
+						"normal",
+						true,
+						"none",
+						undefined,
+						"bgra8unorm",
+						1,
+					),
+				),
+			);
+			expect(asked[1]).toBe(already);
+		});
+
+		it("leaves out what it did not ask for, and what is built", async () => {
+			// the loading screen's warm-ups must not wait behind everything
+			// `prewarm` happens to be compiling
+			const { device, cache } = makeCache();
+			const built = warmFor(cache, "bgra8unorm");
+			await settle();
+			device.asyncRequests[0].resolve();
+			await built;
+			void warmFor(cache, "rgba16float");
+			const asked = cache.collect(() => {
+				warmFor(cache, "bgra8unorm");
+			});
+			expect(asked).toHaveLength(0);
+			// and stops collecting once it returns
+			void warmFor(cache, "rgba8unorm");
+			expect(asked).toHaveLength(0);
 		});
 	});
 

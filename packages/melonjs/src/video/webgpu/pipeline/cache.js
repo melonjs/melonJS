@@ -202,6 +202,12 @@ export default class WebGPUPipelineCache {
 		 * @type {Map<string, Promise<void>>}
 		 */
 		this.pending = new Map();
+		/**
+		 * where {@link WebGPUPipelineCache#collect} is gathering the warm-ups
+		 * asked for, while it runs
+		 * @type {Promise<void>[]|undefined}
+		 */
+		this.collecting = undefined;
 		/** @type {{run: Function, resolve: Function}[]} */
 		this.warmQueue = [];
 		this.warmInFlight = 0;
@@ -683,6 +689,7 @@ export default class WebGPUPipelineCache {
 		}
 		const inFlight = this.pending.get(key);
 		if (inFlight !== undefined) {
+			this.collecting?.push(inFlight);
 			return inFlight;
 		}
 		// the descriptor is assembled now, not when the queue reaches it:
@@ -702,6 +709,14 @@ export default class WebGPUPipelineCache {
 		const promise = new Promise((resolve) => {
 			this.warmQueue.push({
 				run: () => {
+					// A draw that could not wait while this sat in the queue
+					// has built the pipeline itself by now: compiling it again
+					// would only compete with the frames for the compiler. One
+					// already compiling when the draw came cannot be stopped,
+					// and is the copy the draw's makes redundant.
+					if (this.pipelines.has(key)) {
+						return undefined;
+					}
 					return typeof this.device.createRenderPipelineAsync === "function"
 						? this.device.createRenderPipelineAsync(descriptor)
 						: this.device.createRenderPipeline(descriptor);
@@ -723,8 +738,29 @@ export default class WebGPUPipelineCache {
 			});
 		});
 		this.pending.set(key, promise);
+		this.collecting?.push(promise);
 		this._pumpWarmQueue();
 		return promise;
+	}
+
+	/**
+	 * Run `ask` and hand back the warm-ups it asked for that are not built
+	 * yet: the ones it started, and the ones already compiling that it asked
+	 * for again. A pipeline already in the cache is not waited on, so a scene
+	 * entered a second time hands back nothing.
+	 * @param {Function} ask - asks for warm-ups, through {@link WebGPUPipelineCache#warm}
+	 * @returns {Promise<void>[]} one promise per pipeline still on its way
+	 */
+	collect(ask) {
+		const outer = this.collecting;
+		const asked = [];
+		this.collecting = asked;
+		try {
+			ask();
+		} finally {
+			this.collecting = outer;
+		}
+		return asked;
 	}
 
 	/**

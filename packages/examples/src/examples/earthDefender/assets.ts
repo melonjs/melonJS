@@ -45,6 +45,7 @@ import {
 	UFO_MODEL,
 	UFO_SOUND,
 } from "./constants";
+import { NEBULA_ASSET } from "./fx/nebula";
 import { SFX_FILES, sfxAssets } from "./fx/sfx";
 import { atmosphere } from "./shaders/atmosphere";
 import { domeGlow } from "./shaders/domeGlow";
@@ -118,4 +119,12 @@ export const earthDefenderAssets = () => [
 	{ name: DAMAGE_SHADER, type: "shader", data: damageVignette },
 	// the band of lit air past the limb
 	{ name: ATM_SHADER, type: "shader", data: atmosphere },
+	// The two skies, generated rather than shipped and baked HERE: some
+	// millions of noise samples each, which on the frame a stage is built
+	// held the screen black on the way into the title, and again into the
+	// first game for the near cloud. Not an engine type: `nebula.ts`
+	// registers it with `loader.setParser`, the name says which sky, and the
+	// stages find the result already baked.
+	{ name: "far", type: NEBULA_ASSET },
+	{ name: "near", type: NEBULA_ASSET },
 ];

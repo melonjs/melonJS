@@ -164,6 +164,52 @@ describe("WebGPURenderer.prewarm()", () => {
 		expect(renderer.mipWarms).toHaveLength(1);
 	});
 
+	it("settles only once the clear pipelines it starts are built", async () => {
+		// the loader waits on this promise to keep the loading screen up, so
+		// a compile still running when it settles lands after the screen
+		const renderer = rendererStub();
+		const compiling = [];
+		renderer._canWarm = () => {
+			return true;
+		};
+		renderer._sceneTargets = () => {
+			return [
+				["bgra8unorm", 1],
+				["rgba16float", 1],
+			];
+		};
+		renderer.pipelineCache.warm = (family, ...rest) => {
+			return new Promise((resolve) => {
+				compiling.push({ family, format: rest[5], resolve });
+			});
+		};
+		const flush = async () => {
+			for (let i = 0; i < 5; i++) {
+				await Promise.resolve();
+			}
+		};
+		let settled = false;
+		const warming = renderer.prewarm().then(() => {
+			settled = true;
+		});
+		await flush();
+		expect(
+			compiling.map((c) => {
+				return [c.family, c.format];
+			}),
+		).toEqual([
+			["clear", "bgra8unorm"],
+			["clear", "rgba16float"],
+		]);
+		expect(settled).toBe(false);
+		compiling[0].resolve();
+		await flush();
+		expect(settled).toBe(false);
+		compiling[1].resolve();
+		await warming;
+		expect(settled).toBe(true);
+	});
+
 	it("leaves the mip blitter alone under nearest filtering", async () => {
 		// `textureFilter: "nearest"`, or `"auto"` with `antiAlias: false`,
 		// never builds a mip chain, so there is nothing to warm

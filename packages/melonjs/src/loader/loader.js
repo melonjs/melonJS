@@ -384,7 +384,7 @@ const alwaysRelative = () => {
  * an asset definition to be used with the loader
  * @typedef {object} Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tsx"|"fontface"|"video"|"aseprite"|"shader"|"obj"|"mtl"|"gltf"|"glb"). JSON-serialised Tiled maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"` — those are file extensions, not asset types.
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tsx"|"fontface"|"video"|"aseprite"|"shader"|"obj"|"mtl"|"gltf"|"glb"). JSON-serialised Tiled maps and tilesets (`.tmj` / `.tsj`) load under `"tmx"` / `"tsx"` — those are file extensions, not asset types. Any other type is one registered with {@link loader.setParser}.
  * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
  * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
  * The loader will try each source in order and use the first one that loads successfully.
@@ -439,24 +439,63 @@ const alwaysRelative = () => {
  */
 
 /**
- * specify a parser/preload function for the given asset type
+ * Teach the loader an asset type of your own, or replace the parser of an
+ * existing one.
+ *
+ * Once registered, an entry of that `type` goes in a preload list like any
+ * other: {@link loader.preload} counts it as one step of the progress bar and
+ * waits for it before `LOADER_COMPLETE`. That makes it the place for work
+ * that is not a download at all, such as a texture generated in code: done
+ * here it happens behind the loading screen, rather than on the first frame
+ * of the stage that needs it.
+ *
+ * The parser is called as `parserFn(asset, onload, onerror, settings)`:
+ * - `asset` is the preload entry, `{ name, type, src, ... }`. `src` is
+ *   optional, so `{ name, type }` is a complete entry for something generated.
+ * - Call `onload()` once the asset is ready, or `onerror(error)` if it
+ *   failed. Exactly one of them, now or later.
+ * - Return `1` if it will call one of them, or `0` when there is nothing to
+ *   load, in which case the loader moves on without waiting.
+ * - `onload` takes no value, and the loader keeps nothing for a type it does
+ *   not know: keep the result yourself (a `Map` keyed by `asset.name`, say)
+ *   and read it from there.
+ *
+ * Register before preloading. Registering the same type twice logs a
+ * warning, so do it once rather than in code that runs on every scene.
+ * A `src` is prefixed by {@link loader.setBaseURL} only when one is set for
+ * this type by name: the `"*"` wildcard does not cover custom types.
  * @param {string} type - asset type
- * @param {function} parserFn - parser function
+ * @param {Function} parserFn - parser function, as described above
  * @see {@link Asset.type}
  * @example
- * // specify a custom function for "abc" format
- * function customAbcParser(data, onload, onerror) {
- *    // preload and do something with the data
- *    let parsedData = doSomething(data);
- *    // when done, call the onload callback with the parsed data
- *    onload(parsedData);
- *    // in case of error, call the onerror callback
- *    onerror();
- *    // return the amount of asset parsed
- *    return 1
- * }
- * // set the parser for the custom format
- * loader.setParser("abc", customAbcParser);
+ * // a texture generated in code rather than loaded, baked behind the
+ * // loading screen and read back by name
+ * const skies = new Map();
+ * loader.setParser("sky", (asset, onload, onerror) => {
+ *     bakeSky(asset.name) // the game's own generator, returning a Promise
+ *         .then((canvas) => {
+ *             skies.set(asset.name, canvas);
+ *             onload();
+ *         }, onerror);
+ *     return 1;
+ * });
+ * await loader.preload([{ name: "nebula", type: "sky" }]);
+ * const backdrop = new Sprite(0, 0, { image: skies.get("nebula") });
+ * @example
+ * // a file format of your own, fetched from `src`
+ * const levels = new Map();
+ * loader.setParser("csv", (asset, onload, onerror) => {
+ *     fetch(asset.src)
+ *         .then((response) => response.text())
+ *         .then((text) => {
+ *             levels.set(asset.name, text.split("\n").map((row) => row.split(",")));
+ *             onload();
+ *         })
+ *         .catch(onerror);
+ *     return 1;
+ * });
+ * loader.setBaseURL("csv", "data/levels/");
+ * await loader.preload([{ name: "level1", type: "csv", src: "level1.csv" }]);
  * @category Assets
  */
 export function setParser(type, parserFn) {

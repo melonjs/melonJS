@@ -1312,6 +1312,22 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Run `warm` and hand back the pipelines it asked for that are still
+	 * compiling, which on this backend is every one not already cached.
+	 * @param {Function} warm - issues the warm-ups
+	 * @returns {Promise<void>[]} one promise per pipeline on its way
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_collectWarms(warm) {
+		if (this.pipelineCache == null) {
+			return super._collectWarms(warm);
+		}
+		return this.pipelineCache.collect(warm);
+	}
+
+	/**
 	 * Build, off the frame, every pipeline a renderable's post effects can
 	 * draw with, and the render targets its chain will composite through.
 	 *
@@ -1517,6 +1533,23 @@ export default class WebGPURenderer extends Renderer {
 	 * @internal
 	 */
 	_warmMeshDraw(mesh, family, scene) {
+		// the fog states the stage's cameras will draw it under, see
+		// `_warmFogStates`; outside a flush, what the renderer holds
+		for (const fog of this._warmFog ?? [this._fog3d != null]) {
+			this._warmMeshDrawFog(mesh, family, scene, fog);
+		}
+	}
+
+	/**
+	 * {@link WebGPURenderer#_warmMeshDraw} for one fog state.
+	 * @param {object} mesh - the mesh
+	 * @param {string} family - the pipeline family it draws with
+	 * @param {Array<Array<string|number>>} scene - the targets it can land on
+	 * @param {boolean} fog - whether it draws fogged
+	 * @ignore
+	 * @internal
+	 */
+	_warmMeshDrawFog(mesh, family, scene, fog) {
 		const culling = mesh.cullBackFaces === true;
 		const state = {
 			cullMode: culling ? "back" : "none",
@@ -1529,7 +1562,9 @@ export default class WebGPURenderer extends Renderer {
 					: "ccw",
 			depthWrite: undefined,
 			depthTest: mesh.depthTest === false ? false : undefined,
-			fog: this._fog3d != null ? true : undefined,
+			// `undefined` rather than `false`, as the draw sets it: the key only
+			// grows a fog suffix for `true`
+			fog: fog ? true : undefined,
 		};
 		const blendedOnly = mesh.transparent === true || mesh._blendedDraw === true;
 		const blended = mesh.transparent !== false || mesh._blendedDraw === true;
@@ -1589,7 +1624,7 @@ export default class WebGPURenderer extends Renderer {
 			return;
 		}
 		if (renderable.instanceLayout !== undefined) {
-			// instanced families are keyed per record layout, built on draw
+			this._warmInstancedDraw(renderable, scene);
 			return;
 		}
 		const blendMode = renderable.blendMode ?? "normal";
@@ -1604,6 +1639,68 @@ export default class WebGPURenderer extends Renderer {
 				format,
 				sampleCount,
 			);
+		}
+	}
+
+	/**
+	 * Warm what an `InstancedMesh` draws with: its instanced family, and the
+	 * instanced ground-shadow family when it casts one.
+	 *
+	 * Both families are registered per instance record layout, on first use,
+	 * which the warm-up used to leave to the first draw. Nothing about them
+	 * needs the draw, though: the layout is the mesh's own, so registering
+	 * them here builds the same module and vertex layout the draw would, and
+	 * the keys follow the same rules as an ordinary mesh's. A scatter of
+	 * props is one of these, and it is exactly the kind of thing a stage
+	 * builds when it starts and draws on its next frame.
+	 * @param {object} mesh - the instanced mesh
+	 * @param {Array<Array<string|number>>} scene - the targets it can land on
+	 * @ignore
+	 * @internal
+	 */
+	_warmInstancedDraw(mesh, scene) {
+		// without instancing every copy draws as an ordinary mesh
+		if (this.supportsInstancing !== true) {
+			return;
+		}
+		const batcher = this._meshBatcherFor(mesh);
+		if (typeof batcher?.instancedFamilyFor !== "function") {
+			return;
+		}
+		this._warmMeshDraw(
+			mesh,
+			batcher.instancedFamilyFor(mesh.instanceLayout),
+			scene,
+		);
+		if (
+			mesh._castsGroundShadow?.(this) !== true ||
+			typeof batcher.instancedShadowFamily !== "function"
+		) {
+			return;
+		}
+		const family = batcher.instancedShadowFamily(mesh.instanceLayout);
+		for (const fog of this._warmFog ?? [this._fog3d != null]) {
+			// as `drawInstancedGroundShadow` keys it: never culled, blended,
+			// no depth write, and the depth test the mesh draw just set
+			const state = {
+				cullMode: "none",
+				frontFace: "ccw",
+				depthWrite: false,
+				depthTest: mesh.depthTest === false ? false : undefined,
+				fog: fog ? true : undefined,
+			};
+			for (const [format, sampleCount] of scene) {
+				void this.pipelineCache.warm(
+					family,
+					"triangle-list",
+					"normal",
+					true,
+					"none",
+					state,
+					format,
+					sampleCount,
+				);
+			}
 		}
 	}
 
@@ -2099,21 +2196,28 @@ export default class WebGPURenderer extends Renderer {
 				this.textureStore.warmMipmaps();
 			}
 			// the full-target clear every frame opens with, in each target
-			// format a frame draws into
+			// format a frame draws into. Awaited, unlike the warm-ups made while
+			// a game runs: the loader waits on this promise, so the compile
+			// finishes behind the loading screen instead of after it
+			const warms = [];
 			if (this._canWarm()) {
 				for (const [format, sampleCount] of this._sceneTargets()) {
-					void this.pipelineCache.warm(
-						"clear",
-						"triangle-list",
-						"none",
-						true,
-						"none",
-						undefined,
-						format,
-						sampleCount,
+					warms.push(
+						this.pipelineCache.warm(
+							"clear",
+							"triangle-list",
+							"none",
+							true,
+							"none",
+							undefined,
+							format,
+							sampleCount,
+						),
 					);
 				}
 			}
+			// a warm-up never rejects: a failed compile settles empty
+			return Promise.all(warms).then(() => {});
 		});
 	}
 

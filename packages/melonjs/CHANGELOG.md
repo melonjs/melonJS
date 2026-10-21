@@ -1,5 +1,12 @@
 # Changelog
 
+## [20.11.0] (melonJS 2) - _unreleased_
+
+### Fixed
+- Rendering: entering a state no longer stalls its first frame compiling the shaders its stage had only started preparing. That frame now waits until they are ready, for at most 1.5s, and `STATE_CHANGE` and a transition's reveal come with it, so the reveal plays in full instead of running its course behind the stall
+- Rendering: the first frame of a scene whose camera uses fog no longer stalls compiling its meshes. The warm-up read the fog of whichever camera drew last, which after a state change is the previous screen's, so it prepared the variant without fog and the first frame then built the fogged one on the spot
+- Rendering: a camera's `colorMatrix`, and on WebGPU an `InstancedMesh` and its ground shadow, are now prepared when the stage is built, like every other renderable since 20.10, instead of compiling in the first frame that draws them
+
 ## [20.10.0] (melonJS 2) - _2026-10-20_
 
 **Highlights:** a game no longer stutters the first time an effect, a blend mode or a new kind of object appears. Shaders, pipelines and render targets are now prepared when the object is added, or during `loader.preload()`, rather than in the frame that first draws it, where a single first draw was measured at up to 140ms. Dropping a batch of meshes no longer stalls the frame either.
