@@ -1,9 +1,13 @@
 # Changelog
 
-## _unreleased_
+## [20.11.0] (melonJS 2) - _unreleased_
 
 ### Fixed
-- TextureAtlas: source-rectangle UVs are cached separately from named frames, so cropped image and pattern draws no longer add regions to the animation dictionary. `getUVs(name)` now throws for an unknown name instead of parsing it as coordinates; use `getUVs(x, y, width, height)` for a source rectangle, or define a named region with `addRegion()` before looking it up ([#1281](https://github.com/melonjs/melonJS/issues/1281)). (thanks @snowyukitty)
+- TextureAtlas: drawing part of an image, a bitmap font glyph or a repeating pattern no longer adds a region to the atlas for every new source rectangle. Those regions piled up for as long as the atlas lived, and turned up among the frames an animation is built from ([#1281](https://github.com/melonjs/melonJS/issues/1281), thanks @snowyukitty)
+- TextureAtlas: on an atlas with pages of different sizes, a source rectangle drawn from one page no longer reuses the UVs worked out for the same rectangle on another (thanks @snowyukitty)
+
+### Performance
+- Rendering: drawing a sprite, a glyph or a pattern computes its UVs from the image size instead of looking them up, with no string built and nothing allocated or kept. On the platformer, text and Jungle Rabbit examples a lookup took 34 to 58 ns and now takes 6 to 10, in Chrome and WebKit: 1 to 2% of a frame's CPU time on the text example, and too little to measure on the platformer
 
 ## [20.10.1] (melonJS 2) - _2026-10-21_
 

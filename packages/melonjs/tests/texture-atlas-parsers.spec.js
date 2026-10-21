@@ -146,7 +146,7 @@ describe("no-arg atlas iteration (getAnimationSettings)", () => {
 	});
 });
 
-describe("UV source-rectangle cache", () => {
+describe("UV lookup by source rectangle", () => {
 	it("a full-image lookup is not poisoned by a frame at (0,0)", () => {
 		const atlas = new TextureAtlas(
 			{ framewidth: 32, frameheight: 32 },

@@ -337,7 +337,7 @@ describe("WebGPU 2D lighting", () => {
 				cache: {
 					get() {
 						return {
-							getUVs() {
+							_quadUVs() {
 								return [0, 0, 1, 1];
 							},
 						};
