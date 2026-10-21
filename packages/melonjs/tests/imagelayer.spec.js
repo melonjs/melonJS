@@ -5,6 +5,9 @@ import {
 	ImageLayer,
 	Matrix2d,
 	Rect,
+	ShaderEffect,
+	Stage,
+	state,
 	video,
 } from "../src/index.js";
 
@@ -577,5 +580,84 @@ describe("ImageLayer", () => {
 			expectClose(actual.bottomLeft, exp.topRight);
 			expectClose(actual.bottomRight, exp.topLeft);
 		});
+	});
+});
+
+describe("ImageLayer's own effect (WebGL)", () => {
+	// An image layer with a single ShaderEffect draws through the fast path:
+	// `beginPostEffect` installs the effect as the renderer's custom shader,
+	// and the layer's `drawPattern` has to draw with it. It drew with the
+	// default program instead, so the effect did nothing on this backend.
+	const SIZE = 64;
+	let app;
+	let gl;
+
+	beforeAll(async () => {
+		await boot();
+		app = new Application(SIZE, SIZE, {
+			parent: "screen",
+			renderer: video.WEBGL,
+			failIfMajorPerformanceCaveat: false,
+			antiAlias: false,
+		});
+		await app.init();
+		gl = app.renderer.gl ?? undefined;
+		// a stage of its own, which is what gives this application a viewport
+		const own = state.USER + 30;
+		state.set(own, new Stage());
+		state.setTransition(own, false);
+		state.change(own, true);
+	});
+
+	afterAll(() => {
+		// release the WebGL context this describe owns
+		app?.destroy();
+	});
+
+	const solid = (color) => {
+		const canvas = document.createElement("canvas");
+		canvas.width = 4;
+		canvas.height = 4;
+		const ctx = canvas.getContext("2d");
+		ctx.fillStyle = color;
+		ctx.fillRect(0, 0, 4, 4);
+		return canvas;
+	};
+
+	// one engine frame, read back in the same task
+	const drawAndRead = (x, y) => {
+		app.world.update(16);
+		app.repaint();
+		app.draw();
+		const px = new Uint8Array(4);
+		gl.readPixels(x, SIZE - 1 - y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+		return Array.from(px);
+	};
+
+	it("draws through its effect, and the next layer draws as itself", (ctx) => {
+		if (gl === undefined) {
+			ctx.skip("WebGL2 renderer not available in this environment");
+		}
+		const layer = new ImageLayer(0, 0, {
+			image: solid("#00ff00"),
+			name: "tinted",
+			repeat: "repeat",
+		});
+		app.world.addChild(layer);
+		try {
+			expect(drawAndRead(32, 32)).toEqual([0, 255, 0, 255]);
+			layer.addPostEffect(
+				new ShaderEffect(
+					app.renderer,
+					"vec4 apply(vec4 color, vec2 uv) { return vec4(1.0, 0.0, 0.0, 1.0); }",
+				),
+			);
+			expect(drawAndRead(32, 32)).toEqual([255, 0, 0, 255]);
+			// the batcher is back on its own program once the layer is done
+			layer.clearPostEffects();
+			expect(drawAndRead(32, 32)).toEqual([0, 255, 0, 255]);
+		} finally {
+			app.world.removeChildNow(layer);
+		}
 	});
 });

@@ -743,6 +743,9 @@ export default class WebGPURenderer extends Renderer {
 		this.uniformRing.reset();
 		this.effectUniformArena.reset();
 		this.frameId++;
+		// from here to the submit, a pipeline built on demand is a compile
+		// paid inside the frame — the cache counts those
+		this.pipelineCache.inFrame = true;
 		// a frame always begins on the canvas, outside any effect bracket
 		// (an exception that escaped between begin/endPostEffect last frame
 		// must not leave the projection stack wound up)
@@ -1256,6 +1259,535 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * The post-effect render-target pool, created on first use.
+	 * @returns {RenderTargetPool} the pool
+	 * @ignore
+	 * @internal
+	 */
+	_postEffectPool() {
+		// capture targets rasterize the scene — under antiAlias they carry
+		// the pass sample count so MSAA composes with post-effects (the GL
+		// twin resolves via blitFramebuffer). Ping-pong intermediates draw
+		// screen-aligned effect quads only and stay single-sampled.
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._renderTargetPool ??= new RenderTargetPool(
+			(w, h, isCapture, index) => {
+				// Indices 0/1 are the CAMERA chain; 2 and up are sprite chains.
+				// Only the camera pair takes the half-float format, and that is
+				// a correctness limit rather than thrift: a sprite chain's final
+				// blit composites source-over with `ONE_MINUS_SRC_ALPHA`, and
+				// additive blending accumulates ALPHA past 1 in a float target,
+				// so that factor goes negative and subtracts the backdrop. The
+				// camera chain blits without that factor, and is the documented
+				// place for these effects anyway.
+				return new WebGPURenderTarget(this, w, h, {
+					sampleCount: isCapture === true ? this.canvasSampleCount : 1,
+					format: index < 2 ? this._colorFormat : this.preferredFormat,
+				});
+			},
+		);
+		return this._renderTargetPool;
+	}
+
+	/**
+	 * The pipeline-cache family of an effect's WGSL realization, building its
+	 * module and layouts first if this device has not seen it yet.
+	 * @param {ShaderEffect} effect - an effect with a valid WGSL realization
+	 * @returns {string} the family key
+	 * @ignore
+	 * @internal
+	 */
+	_effectFamily(effect) {
+		const realization = effect.wgslRealization;
+		if (
+			realization.gpu === null ||
+			realization.gpu.epoch !== this.pipelineCache.epoch
+		) {
+			buildEffectGPU(this, effect, realization);
+		}
+		return realization.gpu.key;
+	}
+
+	/**
+	 * Run `warm` and hand back the pipelines it asked for that are still
+	 * compiling, which on this backend is every one not already cached.
+	 * @param {Function} warm - issues the warm-ups
+	 * @returns {Promise<void>[]} one promise per pipeline on its way
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_collectWarms(warm) {
+		if (this.pipelineCache == null) {
+			return super._collectWarms(warm);
+		}
+		return this.pipelineCache.collect(warm);
+	}
+
+	/**
+	 * Build, off the frame, every pipeline a renderable's post effects can
+	 * draw with, and the render targets its chain will composite through.
+	 *
+	 * Which pipeline an effect draws with depends on where it sits: an
+	 * effect alone on a sprite draws the sprite itself (blended with the
+	 * sprite's own mode), one alone on a mesh is spliced into the mesh
+	 * shader, and one in a chain is a full-screen blit into either the next
+	 * offscreen target or the one below. Its colour format depends on that
+	 * target too, and under `hdr` the camera's targets are half-float while
+	 * the canvas is not. So this warms every position the effect can reach
+	 * with the effects ATTACHED, enabled or not, since turning one on moves
+	 * the others: enabling a camera's second effect sends its first one
+	 * from the canvas into the ping-pong target, a different pipeline.
+	 *
+	 * Each key is composed by the same function the draw uses, from the
+	 * renderable's own state (blend mode, culling, transparency, fog), so
+	 * what is built here is what the draw will ask for.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmPostEffects(renderable) {
+		if (!this._canWarm()) {
+			return;
+		}
+		const cache = this.pipelineCache;
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx?.wgslRealization?.valid === true;
+		});
+		const count = effects.length;
+		if (count === 0) {
+			return;
+		}
+		const isCamera = renderable._postEffectManaged === true;
+		const needsCapture = renderable.postEffectNeedsCapture === true;
+		const pooled = isCamera || count > 1 || needsCapture;
+		const canvas = [this.canvasFormat, this.canvasSampleCount];
+		const scene = this._sceneTargets();
+		const blit = (family, blendMode, [format, sampleCount]) => {
+			void cache.warm(
+				family,
+				"triangle-list",
+				blendMode,
+				true,
+				"none",
+				undefined,
+				format,
+				sampleCount,
+			);
+		};
+
+		if (pooled) {
+			// the targets a chain composites through, made now rather than
+			// on the frame the chain first runs or grows a second effect
+			const pool = this._postEffectPool();
+			const { width, height } = this.getCanvas();
+			pool.reserve(
+				isCamera,
+				this._postEffectCapacity(renderable, effects),
+				width,
+				height,
+			);
+		}
+
+		if (isCamera) {
+			for (const fx of effects) {
+				const family = this._effectFamily(fx);
+				// mid-chain (another effect, or the tone curve, after it) into
+				// the camera's ping-pong target, or last onto the canvas —
+				// toggling either neighbour moves it between the two
+				blit(family, "none", [this._colorFormat, 1]);
+				blit(family, "none", canvas);
+			}
+			this._warmToneMap();
+			return;
+		}
+
+		const blendMode = renderable.blendMode ?? "normal";
+		const meshHost = this._hostsMeshEffect(renderable);
+		for (let i = 0; i < count; i++) {
+			const fx = effects[i];
+			const family = this._effectFamily(fx);
+			if (!needsCapture) {
+				// alone on the renderable (the only effect, or the only one
+				// left enabled): no offscreen pass, the effect IS the draw
+				if (meshHost) {
+					this._warmHostedEffect(renderable, fx, scene);
+				} else {
+					for (const target of scene) {
+						blit(family, blendMode, target);
+					}
+				}
+			}
+			if (pooled) {
+				// last in the chain: composited back with the renderable's
+				// own blend mode, onto whatever was below it
+				for (const target of scene) {
+					blit(family, blendMode, target);
+				}
+				// mid-chain: into the chain's own ping-pong target
+				if (i < count - 1) {
+					blit(family, "none", [this.preferredFormat, 1]);
+				}
+			}
+		}
+		if (pooled && !meshHost) {
+			// and the renderable's own content, drawn into the chain's capture
+			// target before any effect runs
+			blit("quad", blendMode, [this.preferredFormat, this.canvasSampleCount]);
+		}
+	}
+
+	/**
+	 * The `[format, sampleCount]` targets an ordinary renderable can be drawn
+	 * into: the canvas, or the camera's capture target when the camera runs
+	 * an effect chain of its own. The two differ only in format, and only
+	 * under `hdr`, so this is usually one target.
+	 * @returns {Array<Array<string|number>>} the targets
+	 * @ignore
+	 * @internal
+	 */
+	_sceneTargets() {
+		const canvas = [this.canvasFormat, this.canvasSampleCount];
+		return this._colorFormat === this.canvasFormat
+			? [canvas]
+			: [canvas, [this._colorFormat, this.canvasSampleCount]];
+	}
+
+	/**
+	 * Whether the warm-ups can run: a live device and a pipeline cache.
+	 * @returns {boolean} true when ready
+	 * @ignore
+	 * @internal
+	 */
+	_canWarm() {
+		return (
+			this.pipelineCache != null &&
+			typeof this.device !== "undefined" &&
+			this.isContextValid !== false
+		);
+	}
+
+	/**
+	 * The mesh batcher a mesh draws through.
+	 * @param {object} mesh - the mesh
+	 * @returns {object|undefined} the batcher
+	 * @ignore
+	 * @internal
+	 */
+	_meshBatcherFor(mesh) {
+		return this.batchers.get(
+			mesh.lit === true && this.batchers.has("litMesh") ? "litMesh" : "mesh",
+		);
+	}
+
+	/**
+	 * Warm the pipelines a mesh will draw with when it hosts an effect: the
+	 * effect spliced into the mesh shader.
+	 * @param {object} mesh - the hosting mesh
+	 * @param {ShaderEffect} effect - the effect it hosts
+	 * @param {Array<Array<string|number>>} scene - the targets it can land on
+	 * @ignore
+	 * @internal
+	 */
+	_warmHostedEffect(mesh, effect, scene) {
+		const realization = effect.wgslRealization;
+		if (
+			meshHostingBlocker(realization.builtins, realization.textures, "wgsl") !==
+			null
+		) {
+			return;
+		}
+		const batcher = this._meshBatcherFor(mesh);
+		if (
+			batcher === undefined ||
+			realization.meshModule(batcher.shaderSource?.() ?? "") === null
+		) {
+			return;
+		}
+		// the family is registered by the batcher's own lookup, so the warm-up
+		// and the draw cannot disagree on which module and layout it is
+		const previous = batcher.hostedEffect;
+		let family;
+		batcher.hostedEffect = effect;
+		try {
+			family = batcher.activeShaderKey();
+		} finally {
+			batcher.hostedEffect = previous;
+		}
+		this._warmMeshDraw(mesh, family, scene);
+	}
+
+	/**
+	 * Warm the pipelines one mesh draw resolves to, keyed on the mesh's own
+	 * culling, depth test and transparency exactly as `drawMesh` keys them:
+	 * the opaque pass, the transparent pass, or both when `transparent` is
+	 * left unset (blended whenever the mesh is faded).
+	 * @param {object} mesh - the mesh
+	 * @param {string} family - the pipeline family it draws with
+	 * @param {Array<Array<string|number>>} scene - the targets it can land on
+	 * @ignore
+	 * @internal
+	 */
+	_warmMeshDraw(mesh, family, scene) {
+		// the fog states the stage's cameras will draw it under, see
+		// `_warmFogStates`; outside a flush, what the renderer holds
+		for (const fog of this._warmFog ?? [this._fog3d != null]) {
+			this._warmMeshDrawFog(mesh, family, scene, fog);
+		}
+	}
+
+	/**
+	 * {@link WebGPURenderer#_warmMeshDraw} for one fog state.
+	 * @param {object} mesh - the mesh
+	 * @param {string} family - the pipeline family it draws with
+	 * @param {Array<Array<string|number>>} scene - the targets it can land on
+	 * @param {boolean} fog - whether it draws fogged
+	 * @ignore
+	 * @internal
+	 */
+	_warmMeshDrawFog(mesh, family, scene, fog) {
+		const culling = mesh.cullBackFaces === true;
+		const state = {
+			cullMode: culling ? "back" : "none",
+			// the retained path's winding rule, see `drawMesh`
+			frontFace:
+				culling &&
+				this.supportsRetainedMesh === true &&
+				mesh.rightHanded !== true
+					? "cw"
+					: "ccw",
+			depthWrite: undefined,
+			depthTest: mesh.depthTest === false ? false : undefined,
+			// `undefined` rather than `false`, as the draw sets it: the key only
+			// grows a fog suffix for `true`
+			fog: fog ? true : undefined,
+		};
+		const blendedOnly = mesh.transparent === true || mesh._blendedDraw === true;
+		const blended = mesh.transparent !== false || mesh._blendedDraw === true;
+		for (const [format, sampleCount] of scene) {
+			if (!blendedOnly) {
+				void this.pipelineCache.warm(
+					family,
+					"triangle-list",
+					"none",
+					true,
+					"none",
+					state,
+					format,
+					sampleCount,
+				);
+			}
+			if (blended) {
+				// the transparent pass: blended, premultiplied, no depth write
+				void this.pipelineCache.warm(
+					family,
+					"triangle-list",
+					mesh._blendedDraw === true ? "normal" : mesh.blendMode,
+					true,
+					"none",
+					{ ...state, depthWrite: false },
+					format,
+					sampleCount,
+				);
+			}
+		}
+	}
+
+	/**
+	 * Warm the renderable's own draw: a mesh through its mesh family, and
+	 * everything else that draws a texture through the quad family, each with
+	 * the renderable's blend mode. Containers draw nothing of their own, and
+	 * a camera is a chain, warmed with its effects.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmDraw(renderable) {
+		if (
+			!this._canWarm() ||
+			renderable._postEffectManaged === true ||
+			Array.isArray(renderable.children)
+		) {
+			return;
+		}
+		const scene = this._sceneTargets();
+		if (this._hostsMeshEffect(renderable)) {
+			const batcher = this._meshBatcherFor(renderable);
+			if (batcher?.shaderKey !== undefined) {
+				this._warmMeshDraw(renderable, batcher.shaderKey, scene);
+			}
+			return;
+		}
+		if (renderable.instanceLayout !== undefined) {
+			this._warmInstancedDraw(renderable, scene);
+			return;
+		}
+		const blendMode = renderable.blendMode ?? "normal";
+		for (const [format, sampleCount] of scene) {
+			void this.pipelineCache.warm(
+				"quad",
+				"triangle-list",
+				blendMode,
+				true,
+				"none",
+				undefined,
+				format,
+				sampleCount,
+			);
+		}
+	}
+
+	/**
+	 * Warm what an `InstancedMesh` draws with: its instanced family, and the
+	 * instanced ground-shadow family when it casts one.
+	 *
+	 * Both families are registered per instance record layout, on first use,
+	 * which the warm-up used to leave to the first draw. Nothing about them
+	 * needs the draw, though: the layout is the mesh's own, so registering
+	 * them here builds the same module and vertex layout the draw would, and
+	 * the keys follow the same rules as an ordinary mesh's. A scatter of
+	 * props is one of these, and it is exactly the kind of thing a stage
+	 * builds when it starts and draws on its next frame.
+	 * @param {object} mesh - the instanced mesh
+	 * @param {Array<Array<string|number>>} scene - the targets it can land on
+	 * @ignore
+	 * @internal
+	 */
+	_warmInstancedDraw(mesh, scene) {
+		// without instancing every copy draws as an ordinary mesh
+		if (this.supportsInstancing !== true) {
+			return;
+		}
+		const batcher = this._meshBatcherFor(mesh);
+		if (typeof batcher?.instancedFamilyFor !== "function") {
+			return;
+		}
+		this._warmMeshDraw(
+			mesh,
+			batcher.instancedFamilyFor(mesh.instanceLayout),
+			scene,
+		);
+		if (
+			mesh._castsGroundShadow?.(this) !== true ||
+			typeof batcher.instancedShadowFamily !== "function"
+		) {
+			return;
+		}
+		const family = batcher.instancedShadowFamily(mesh.instanceLayout);
+		for (const fog of this._warmFog ?? [this._fog3d != null]) {
+			// as `drawInstancedGroundShadow` keys it: never culled, blended,
+			// no depth write, and the depth test the mesh draw just set
+			const state = {
+				cullMode: "none",
+				frontFace: "ccw",
+				depthWrite: false,
+				depthTest: mesh.depthTest === false ? false : undefined,
+				fog: fog ? true : undefined,
+			};
+			for (const [format, sampleCount] of scene) {
+				void this.pipelineCache.warm(
+					family,
+					"triangle-list",
+					"normal",
+					true,
+					"none",
+					state,
+					format,
+					sampleCount,
+				);
+			}
+		}
+	}
+
+	/**
+	 * Build the advanced blend shader and its offscreen target before the
+	 * first draw in one of those modes, and warm the two pipelines a bracket
+	 * uses: the draw itself into the 8-bit offscreen, and the composite back
+	 * onto the scene.
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmAdvancedBlend() {
+		if (!this._canWarm()) {
+			return;
+		}
+		if (typeof this._advancedBlendEffect === "undefined") {
+			this._advancedBlendEffect = new BlendEffect(this);
+		}
+		const effect = this._advancedBlendEffect;
+		if (effect.enabled !== true || effect.wgslRealization?.valid !== true) {
+			return;
+		}
+		const { width, height } = this.getCanvas();
+		if (typeof this._advancedBlendTarget === "undefined") {
+			// the same target `_openAdvancedBlend` makes, see the note there
+			this._advancedBlendTarget = new WebGPURenderTarget(this, width, height, {
+				sampleCount: 1,
+				format: this.preferredFormat,
+			});
+		}
+		// the renderable drawn into the offscreen: an advanced mode has no
+		// blend state of its own, so it lands source-over
+		void this.pipelineCache.warm(
+			"quad",
+			"triangle-list",
+			"normal",
+			true,
+			"none",
+			undefined,
+			this.preferredFormat,
+			1,
+		);
+		const family = this._effectFamily(effect);
+		for (const [format, sampleCount] of this._sceneTargets()) {
+			void this.pipelineCache.warm(
+				family,
+				"triangle-list",
+				"normal",
+				true,
+				"none",
+				undefined,
+				format,
+				sampleCount,
+			);
+		}
+	}
+
+	/**
+	 * Warm the tone curve's pipeline: always the last step of a camera chain,
+	 * so a full-screen blit onto the canvas with blending off.
+	 * @override
+	 * @ignore
+	 * @internal
+	 */
+	_warmToneMap() {
+		const toneMap = this._toneMapEffect;
+		if (
+			this.settings?.prewarm !== true ||
+			toneMap?.wgslRealization?.valid !== true ||
+			!this._canWarm()
+		) {
+			return;
+		}
+		void this.pipelineCache.warm(
+			this._effectFamily(toneMap),
+			"triangle-list",
+			"none",
+			true,
+			"none",
+			undefined,
+			this.canvasFormat,
+			this.canvasSampleCount,
+		);
+	}
+
+	/**
 	 * Begin a post-effect pass for the given renderable — the WebGPU
 	 * realization of the WebGL FBO path: the renderable's whole content
 	 * renders into a pooled offscreen target, composited by
@@ -1296,33 +1828,9 @@ export default class WebGPURenderer extends Renderer {
 		savedProjection.copy(this.projectionMatrix);
 		this.effectPassDepth++;
 
-		// capture targets rasterize the scene — under antiAlias they carry
-		// the pass sample count so MSAA composes with post-effects (the GL
-		// twin resolves via blitFramebuffer). Ping-pong intermediates draw
-		// screen-aligned effect quads only and stay single-sampled.
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._renderTargetPool ??= new RenderTargetPool(
-			(w, h, isCapture, index) => {
-				// Indices 0/1 are the CAMERA chain; 2 and up are sprite chains.
-				// Only the camera pair takes the half-float format, and that is
-				// a correctness limit rather than thrift: a sprite chain's final
-				// blit composites source-over with `ONE_MINUS_SRC_ALPHA`, and
-				// additive blending accumulates ALPHA past 1 in a float target,
-				// so that factor goes negative and subtracts the backdrop. The
-				// camera chain blits without that factor, and is the documented
-				// place for these effects anyway.
-				return new WebGPURenderTarget(this, w, h, {
-					sampleCount: isCapture === true ? this.canvasSampleCount : 1,
-					format: index < 2 ? this._colorFormat : this.preferredFormat,
-				});
-			},
-		);
-		const rt = this._renderTargetPool.begin(
+		const rt = this._postEffectPool().begin(
 			isCamera,
-			effects.length,
+			this._postEffectCapacity(renderable, effects),
 			canvas.width,
 			canvas.height,
 		);
@@ -1636,23 +2144,24 @@ export default class WebGPURenderer extends Renderer {
 	 * WebGPU splits what WebGL fuses into one program. The **modules** for
 	 * the engine's own families — quad, blit, primitive, clear, and the mesh
 	 * tiers — are already created when the pipeline cache and the batchers
-	 * are constructed, so there is nothing lazy there to warm. A **pipeline**
-	 * is lazy, but it is keyed by draw state (blend, cull, depth-write) as
-	 * well as by shader, so the set a scene will ask for cannot be known from
-	 * here — and creating one costs almost nothing anyway, because WebGPU
-	 * records the intent and leaves the work to first use.
+	 * are constructed. A **pipeline** is where the real compile happens, and
+	 * it is the expensive part: tens of milliseconds each, paid in the frame
+	 * that first draws with it. But it is keyed by draw state (blend, cull,
+	 * depth write) and by the format of the target being drawn into, as well
+	 * as by shader, so the set a scene will ask for cannot be known from
+	 * here. Those are warmed when an effect is attached to a renderable
+	 * ({@link Renderable#addPostEffect}), which is the first moment the
+	 * renderable that decides them is known.
 	 *
-	 * What IS both lazy and knowable is a `ShaderEffect`'s module:
-	 * `prepareEffectBinding` builds it, and it is only ever called from
-	 * inside the draw path. Every effect the loader compiled from a
-	 * `{type: "shader"}` asset is already in `shaderList`, so those are
-	 * exactly the ones that can be brought forward — which is what makes
-	 * declaring a level's effects alongside that level's assets worth doing.
-	 *
-	 * Effects constructed inline when a stage builds are not here yet and
-	 * cannot be warmed; that is a property of when they come into existence,
-	 * not a limitation of this method.
-	 * @returns {Promise<void>} settles once those modules are built
+	 * What this does warm is what needs no renderable. A `ShaderEffect`'s
+	 * module: `prepareEffectBinding` builds it, and only ever from inside the
+	 * draw path. Every effect the loader compiled from a `{type: "shader"}`
+	 * asset is already in `shaderList`, so those can be brought forward —
+	 * which is what makes declaring a level's effects alongside that level's
+	 * assets worth doing. And the mip-chain blitter every mipmapped texture
+	 * goes through on upload, when textures are filtered (`textureFilter`
+	 * resolving to `"linear"`; nearest filtering never builds a chain).
+	 * @returns {Promise<void>} settles once those are built
 	 * @see {@link Renderer#prewarm}
 	 */
 	prewarm() {
@@ -1683,6 +2192,32 @@ export default class WebGPURenderer extends Renderer {
 					buildEffectGPU(this, effect, realization);
 				}
 			}
+			if (this.getDefaultTextureFilter() === "linear") {
+				this.textureStore.warmMipmaps();
+			}
+			// the full-target clear every frame opens with, in each target
+			// format a frame draws into. Awaited, unlike the warm-ups made while
+			// a game runs: the loader waits on this promise, so the compile
+			// finishes behind the loading screen instead of after it
+			const warms = [];
+			if (this._canWarm()) {
+				for (const [format, sampleCount] of this._sceneTargets()) {
+					warms.push(
+						this.pipelineCache.warm(
+							"clear",
+							"triangle-list",
+							"none",
+							true,
+							"none",
+							undefined,
+							format,
+							sampleCount,
+						),
+					);
+				}
+			}
+			// a warm-up never rejects: a failed compile settles empty
+			return Promise.all(warms).then(() => {});
 		});
 	}
 
@@ -1709,6 +2244,9 @@ export default class WebGPURenderer extends Renderer {
 			this.frameTextureView = null;
 			this.frameTexture = null;
 		}
+		if (this.pipelineCache != null) {
+			this.pipelineCache.inFrame = false;
+		}
 		this.destroyRetiredTextures();
 	}
 
@@ -1731,6 +2269,9 @@ export default class WebGPURenderer extends Renderer {
 		}
 		this.frameTextureView = null;
 		this.frameTexture = null;
+		if (this.pipelineCache != null) {
+			this.pipelineCache.inFrame = false;
+		}
 		// an abandoned frame may have died inside a post-effect bracket —
 		// never leave an offscreen target active for the next frame
 		this.currentRenderTarget = null;
@@ -3938,6 +4479,11 @@ export default class WebGPURenderer extends Renderer {
 			batcher.init(this);
 		}
 		emit(ONCONTEXT_RESTORED, this);
+		// everything warmed died with the old device, and the loader only
+		// warms on a preload, which the game has long finished
+		if (this.settings.prewarm === true) {
+			this.prewarm().catch(() => {});
+		}
 	}
 
 	/**

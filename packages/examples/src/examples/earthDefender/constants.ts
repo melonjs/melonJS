@@ -2251,6 +2251,8 @@ export const NEBULA_TEX = 512;
  * `drawImage` calls.
  */
 export const NEBULA_REPEAT = 3;
+/** the far cloud's seed: the same seed is the same sky */
+export const NEBULA_SEED = 1337;
 /**
  * How large that whole quad is drawn in the world.
  *

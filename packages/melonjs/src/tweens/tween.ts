@@ -265,6 +265,12 @@ export default class Tween {
 	 * @internal
 	 */
 	_onTick(timestamp: number) {
+		// Stopped during this tick, by a listener called before this one (the
+		// game loop is one): the emitter walks a snapshot of its listeners, so
+		// unsubscribing does not take a tween out of the tick in progress.
+		if (!this._isRunning) {
+			return;
+		}
 		if (!this._isPaused || this.updateWhenPaused) {
 			// compute delta from the raw RAF timestamp
 			const dt = timestamp - this._lastTick;

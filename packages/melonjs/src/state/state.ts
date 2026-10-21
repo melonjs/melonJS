@@ -20,6 +20,7 @@ import {
 	VIDEO_INIT,
 } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
+import type Renderer from "../video/renderer.js";
 
 interface StageEntry {
 	stage: Stage;
@@ -59,6 +60,28 @@ const _transitionConfig: {
  * @internal
  */
 let _onSwitchComplete: (() => void) | null = null;
+
+/**
+ * The longest a state's first frame waits for its stage's warm-ups, in ms.
+ *
+ * The wait is normally the time the pipelines take to compile, and that
+ * time is spent either way: drawing sooner only moves it into the frame,
+ * where whatever is still compiling is compiled a second time. The cap is
+ * for a compile that never reports back, so a state cannot be held forever.
+ * Past it the stage draws, and the frame builds what is still missing, as
+ * it did before there was a wait.
+ * @ignore
+ * @internal
+ */
+const MAX_WARM_HOLD = 1500;
+
+/**
+ * The end of a state switch held back until its stage's warm-ups are built
+ * (see `_switchState`), or `null` when none is waiting.
+ * @ignore
+ * @internal
+ */
+let _heldSwitch: (() => void) | null = null;
 
 // just to keep track of possible extra arguments
 let _extraArgs: unknown[] | null = null;
@@ -194,6 +217,8 @@ function _renderFrame(time: number): void {
  * @internal
  */
 function _stopRunLoop(): void {
+	// first, as ending a held switch runs game code that may start the loop
+	_endHeldSwitches();
 	// cancel any previous animationRequestFrame
 	globalThis.cancelAnimationFrame(_animFrameId);
 	/**
@@ -201,6 +226,26 @@ function _stopRunLoop(): void {
 	 * @internal
 	 */
 	_animFrameId = -1;
+}
+
+/**
+ * End every switch still waiting to draw, without starting the loop: whoever
+ * ended it decides when the loop runs again. Ended rather than dropped, so
+ * its `STATE_CHANGE` is still sent and its transition still takes away the
+ * cover it put up.
+ *
+ * Until none is left, because ending one can start another: a
+ * `STATE_CHANGE` listener is free to call `state.change`, and that switch
+ * may be held in turn.
+ * @ignore
+ * @internal
+ */
+function _endHeldSwitches(): void {
+	while (_heldSwitch !== null) {
+		const finish = _heldSwitch;
+		_heldSwitch = null;
+		finish();
+	}
 }
 
 /**
@@ -223,6 +268,21 @@ function _switchState(stateId: number): void {
 		// set the global variable
 		_state = stateId;
 
+		// Taken before the reset, so it stays this switch's own: a stage may
+		// change state again from its `onResetEvent`, and a change asked for
+		// while this one is held sets its own.
+		const onSwitchComplete = _onSwitchComplete;
+		_onSwitchComplete = null;
+		const finish = () => {
+			try {
+				// publish the state change
+				emit(STATE_CHANGE);
+			} finally {
+				// the transition's cover comes down even if a listener throws
+				onSwitchComplete?.();
+			}
+		};
+
 		// call the reset function with the app reference and any extra args
 		if (_extraArgs) {
 			_stages[_state].stage.reset(_app, ..._extraArgs);
@@ -230,18 +290,50 @@ function _switchState(stateId: number): void {
 			_stages[_state].stage.reset(_app);
 		}
 
-		// and start the main loop of the
-		// new requested state
-		_startRunLoop();
-
-		// publish the pause event
-		emit(STATE_CHANGE);
-
-		// execute callback if defined
-		if (_onSwitchComplete) {
-			_onSwitchComplete();
-			_onSwitchComplete = null;
+		// The first frame waits for what the stage just built to be compiled.
+		// It used to draw some milliseconds later regardless, and a pipeline
+		// still compiling then was compiled again, on the spot, inside that
+		// frame: the warm-ups only helped when they were fast enough not to
+		// be needed. Everything after the start waits with it, so the timer
+		// and a transition's reveal begin on the frame that is drawn, rather
+		// than having run their course behind a screen that was not.
+		// Optional all the way: there is no application yet when the display
+		// is brought up without one (a stub renderer in a test), and a custom
+		// renderer need not extend `Renderer` (see `Application#init`).
+		const renderer = (_app as Application | undefined)?.renderer as
+			| Partial<Renderer>
+			| undefined;
+		const warmed = renderer?._whenWarmed?.();
+		// a switch the stage made from its own reset may be waiting to draw
+		// a stage that is no longer current: it ends here, before this one
+		// takes its place
+		_endHeldSwitches();
+		if (warmed === undefined) {
+			// nothing being built: start now, as a stage always has
+			_startRunLoop();
+			finish();
+			return;
 		}
+		_heldSwitch = finish;
+		let cap: ReturnType<typeof setTimeout> | undefined;
+		const start = () => {
+			clearTimeout(cap);
+			// stopped, or replaced by another switch, while it waited
+			if (_heldSwitch !== finish) {
+				return;
+			}
+			_heldSwitch = null;
+			_startRunLoop();
+			finish();
+		};
+		// a warm-up that fails is one the draw builds on first use, as it
+		// did before there was a wait: the state starts either way
+		void Promise.race([
+			warmed,
+			new Promise<void>((resolve) => {
+				cap = setTimeout(resolve, MAX_WARM_HOLD);
+			}),
+		]).then(start, start);
 	}
 }
 
@@ -494,7 +586,8 @@ const state = {
 	 * @returns true if a "process is running"
 	 */
 	isRunning(): boolean {
-		return _animFrameId !== -1;
+		// a switch waiting for its stage's warm-ups is running, about to draw
+		return _animFrameId !== -1 || _heldSwitch !== null;
 	},
 
 	/**

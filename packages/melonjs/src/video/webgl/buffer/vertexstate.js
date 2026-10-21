@@ -1,3 +1,5 @@
+import { deletable } from "./deletable.js";
+
 /**
  * Normalize a descriptor into the list-of-buffer-layouts form.
  *
@@ -217,12 +219,15 @@ export default class WebGLVertexState {
 	/**
 	 * Delete the underlying vertex array object, if any. Idempotent, and
 	 * safe on a lost context: deleting an object belonging to a lost
-	 * context would queue `INVALID_OPERATION` (deletion counts as *using*
-	 * it — only the `is*` queries are exempt), so probe first.
+	 * context would queue `INVALID_OPERATION`, because deletion counts as
+	 * *using* it.
+	 *
+	 * The probe behind `deletable` is synchronous, so it is skipped unless
+	 * this context has actually lost one — see `buffer/deletable.js`.
 	 */
 	release() {
 		if (this.handle !== null) {
-			if (this.gl.isVertexArray(this.handle)) {
+			if (deletable(this.gl, this.gl.isVertexArray, this.handle)) {
 				this.gl.deleteVertexArray(this.handle);
 			}
 			this.handle = null;

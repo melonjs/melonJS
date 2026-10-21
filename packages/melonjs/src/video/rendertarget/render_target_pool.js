@@ -107,6 +107,27 @@ export default class RenderTargetPool {
 	}
 
 	/**
+	 * Create, ahead of the pass that will use them, the targets a top-level
+	 * chain needs: the camera pair, or the first sprite pair. Targets that
+	 * already exist are left as they are (the pass resizes them when it
+	 * begins), and the active-pass stack is not touched, so this is safe
+	 * outside any pass.
+	 * @param {boolean} isCamera - true for the camera pair (0/1), false for the first sprite pair (2/3)
+	 * @param {number} effectCount - the number of effects in the chain
+	 * @param {number} width - target width in pixels
+	 * @param {number} height - target height in pixels
+	 */
+	reserve(isCamera, effectCount, width, height) {
+		const base = isCamera ? 0 : 2;
+		if (!this._pool[base]) {
+			this.get(base, width, height);
+		}
+		if (effectCount > 1 && !this._pool[base + 1]) {
+			this.get(base + 1, width, height);
+		}
+	}
+
+	/**
 	 * Get the capture render target for the current active pass.
 	 * @returns {RenderTarget|undefined} the capture target, or undefined if no active pass
 	 */

@@ -1,6 +1,6 @@
 ---
 name: melonjs-loading-assets
-description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload."
+description: "Use this skill for loading and managing game assets in melonJS — the resource descriptor format, the full asset type list, preload versus load, retrieving loaded assets, base URLs and cross-origin settings, and the loading screen. Triggers on: loader, loader.preload, loader.load, resources, getImage, getJSON, getTMX, getGLTF, getVideo, getFont, setBaseURL, setOptions, crossOrigin, withCredentials, credentials, cookies, authenticated assets, CORS, asset, preload, LOADER_COMPLETE, loading screen, unload, setParser, custom asset type, generated texture, procedural texture."
 license: MIT
 ---
 
@@ -50,6 +50,7 @@ The type strings are melonJS-specific — this is not a generic loader:
 | `"obj"` / `"mtl"` | Wavefront models and materials |
 | `"gltf"` / `"glb"` | glTF scenes |
 | `"js"` | scripts |
+| any type you register | your own formats, and things you generate rather than download — see [Custom asset types](#custom-asset-types) |
 
 ## What belongs in the manifest — and what cannot
 
@@ -84,14 +85,24 @@ is compiled at load time, behind the loading screen, and the loader hands out a
 renderable's teardown freeing it out from under the others. `clone()` does NOT
 help here — it constructs a new effect, and therefore links a new program.
 
-**2. Derived assets — build once, after the preload.** Canvases you bake,
-`NoiseTexture2d`, `TextureAtlas`: the loader cannot carry these, but they must
-not be rebuilt per scene either. The renderer's texture cache is keyed by the
-**image object**, so a freshly baked canvas is a brand new GPU texture with a
-new mip chain — rebuild one per stage and a title → play → game-over cycle
-uploads four copies of the same pixels. Build them once after `preload`
-resolves and share them, the way the platformer example builds its
-`TextureAtlas` into a module the scenes read from.
+**2. Derived assets — build once, before the first stage.** Canvases you bake,
+`NoiseTexture2d`, `TextureAtlas`: none of the built-in types describes these,
+and they must not be rebuilt per scene either. The renderer's texture cache is
+keyed by the **image object**, so a freshly baked canvas is a brand new GPU
+texture with a new mip chain — rebuild one per stage and a title → play →
+game-over cycle uploads four copies of the same pixels. Build each once and
+share it from a module the scenes read from, the way the platformer example
+builds its `TextureAtlas`.
+
+*Where* you build it depends on what it costs. A gradient or a palette strip is
+well under a millisecond: build it after `preload` resolves. A bake that takes
+real time — procedural noise is the usual one: Earth Defender's sky, two fractal
+simplex fields over a 512² tile, takes about 200ms on a desktop — belongs
+**inside** the preload as an asset type of your
+own ([Custom asset types](#custom-asset-types)). It then runs behind the loading
+screen and counts on the progress bar. Built on stage entry instead, it lands on
+the frame the scene is assembled, and with a transition running that frame is a
+black screen.
 
 **3. The engine's own shader programs — warmed for you, since 20.6.** The mesh
 batcher compiles a program per *feature combination* (instance colours, instance
@@ -111,13 +122,31 @@ the assets are in and **before** `LOADER_COMPLETE` fires, so it happens while
 the progress bar is still up. Every `preload()` warms, not just the first, so a
 per-level preload warms whatever that level brought with it.
 
-The one precondition: **a game that never calls `loader.preload()` is never
-warmed**, because that is the only hook. If you load assets another way, call
+The one precondition for this part: **a game that never calls
+`loader.preload()` does not get it**. If you load assets another way, call
 `await app.renderer.prewarm()` yourself. On
 WebGL that links the mesh batchers' variants, for the unlit tier and the lit
 one that inherits from it; on WebGPU it compiles the
-WGSL module of every shader the loader holds — which is the reason to declare
-effects as assets rather than build them inline (see above).
+WGSL module of every shader the loader holds, and the mip-chain blitter when
+textures are filtered.
+
+**4. Everything that depends on the renderable — warmed as you build, since
+20.10.** The rest cannot be done at preload, because it depends on what draws:
+on WebGPU a *pipeline* is keyed by blend mode, culling, transparency and the
+format of the target as well as by shader, and that compile is the expensive
+part (tens of milliseconds, up to 140ms measured, per effect). So, behind the
+same `prewarm` setting, the engine warms a renderable when it gains an effect
+(`addPostEffect`, or assigning `shader`) and when it is added to the world:
+its effect pipelines, its own draw, the render targets its chain composites
+through, the advanced-blend shader if it uses one. Inline effects are covered
+too; on WebGL that means linking a mesh-hosted effect's spliced program.
+
+That work starts after your code has run and finishes off the frame, so it
+needs **at least a frame between setting a renderable up and drawing it**. The
+pattern that gets it for free is the one you want anyway: build pools (and
+attach their effects) when the stage starts, then show and hide them during
+play. Something created and drawn in the same frame still compiles on that
+frame.
 
 Cost to a game that uses none of it is about 60ms of preload on a desktop GPU.
 Set it to `false` only for a target where linking is slow enough that the
@@ -211,6 +240,83 @@ loader.getBinary("font-fnt");
 
 Most engine classes take the asset **name** directly, so you often do not need
 these — `new Sprite(x, y, { image: "tiles" })` resolves it for you.
+
+## Custom asset types
+
+`loader.setParser(type, parserFn)` teaches the loader a type of its own. An entry
+of that type then sits in the preload list like any other: it is one step of the
+progress bar, and `preload()` waits for it before `LOADER_COMPLETE`. Use it for a
+file format melonJS does not know, and for anything you **generate** that takes
+long enough to matter.
+
+```js
+import { loader, Sprite } from "melonjs";
+
+const skies = new Map();
+
+// once, before preloading: registering a type twice logs a warning
+loader.setParser("sky", (asset, onload, onerror) => {
+    bakeSky(asset.name)                 // your generator, returning a Promise
+        .then((canvas) => {
+            skies.set(asset.name, canvas);
+            onload();                   // takes no value, see below
+        }, onerror);
+    return 1;                           // one asset, settling later
+});
+
+await loader.preload([
+    { name: "nebula", type: "sky" },    // no src: nothing to download
+    // ...the rest of the manifest
+]);
+
+// in the stage, later: already baked
+const backdrop = new Sprite(0, 0, { image: skies.get("nebula") });
+```
+
+The contract:
+
+- **Call `onload()` or `onerror(error)`, exactly once,** now or later. Return `1`
+  when you will, `0` when there is nothing to load (the loader then moves on
+  without waiting).
+- **The loader keeps nothing for a type it does not know.** `onload` takes no
+  value, and `loader.getImage` and friends will not find your result. Keep it
+  yourself, keyed by `asset.name`, and read it from there.
+- **`name` and `type` are a complete entry.** `src` is only for a type that
+  fetches something. `data` is typed for the built-in uses (a string, or a
+  `{glsl, wgsl}` pair), so for a generator's settings, keep a table in your own
+  module keyed by name and let the entry carry only the name. That also keeps
+  the preload and the stages from disagreeing on a seed.
+- **Base URLs:** a `src` is prefixed only by `setBaseURL(yourType, …)`. The `"*"`
+  wildcard does not cover custom types.
+- **Do not hold the main thread for the whole bake.** A parser runs alongside
+  the downloads, and a 200ms synchronous loop freezes the loading screen and
+  stalls every other asset's progress for that long. Bake in slices of a few
+  milliseconds and yield between them, with `setTimeout`, not
+  `requestAnimationFrame`, which stops in a background tab and would hold the
+  whole preload with it. Skip the yield while the tab is hidden: a background
+  tab runs timers about once a second, which turns a bake of 25 slices into 25
+  seconds, and there is no loading screen on show to keep smooth:
+
+```js
+const bakeSky = async (name) => {
+    const { size, seed } = SKIES[name];         // your recipe table
+    const tile = startTile(size, seed);         // set up the canvas and the noise
+    for (let y = 0; y < size; ) {
+        const start = performance.now();
+        while (y < size && performance.now() - start < 8) {
+            tile.fillRow(y++);
+        }
+        if (!document.hidden) {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+    }
+    return tile.finish();
+};
+```
+
+The Earth Defender example does exactly this for its two nebula skies
+(`fx/nebula.ts`): a `"nebula"` type, two name-only entries in its manifest, and
+stages that ask for a sky by name and find it baked.
 
 ## Base URLs
 
@@ -308,6 +414,9 @@ throws, the same trap as the removed `loader.onload` / `onProgress`.
 | text renders in a fallback font | web font not preloaded as `"fontface"` |
 | `BitmapText` renders nothing | the `.fnt` (as `"binary"`) or its image is missing |
 | `TypeError` assigning `loader.onProgress` / `onload` | removed in 20.3; they were never writable — use the `LOADER_*` events |
+| `load : unknown or invalid resource type` | a custom type in the manifest before its `loader.setParser` call |
+| black or frozen screen when a stage is first entered, the profile shows your own code (noise, a canvas bake) | a costly derived asset built on stage entry — bake it inside the preload as a [custom asset type](#custom-asset-types) |
+| a custom asset preloads but the result is nowhere to be found | `onload` takes no value and the loader stores nothing for custom types — keep the result in your own module |
 
 ## Related skills
 

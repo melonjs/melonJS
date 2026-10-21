@@ -1,3 +1,4 @@
+import { deletable } from "./deletable.js";
 /**
  * The GPU half of an {@link InstancedMesh}'s instance records — one
  * `ARRAY_BUFFER` holding the packed per-instance transforms (and the opt-in
@@ -81,14 +82,18 @@ export default class WebGLInstanceBuffer {
 	}
 
 	/**
-	 * Release the GL buffer. Safe to call twice, and on a lost context — the
-	 * `isBuffer` probe is itself error-free, whereas deleting a handle whose
-	 * context died raises INVALID_OPERATION.
+	 * Release the GL buffer. Safe to call twice, and on a lost context:
+	 * deleting a handle whose context died raises INVALID_OPERATION.
 	 */
 	destroy() {
 		const gl = this.gl;
 		if (this.buffer !== null) {
-			if (gl.isBuffer(this.buffer)) {
+			// Not `isBuffer`: the `is*` queries are SYNCHRONOUS and block until
+			// the driver answers, and this runs per buffer as geometry is torn
+			// down. What matters here is only whether deleting is legal, which a
+			// lost context decides, and `isContextLost` answers without a round
+			// trip. See `VertexState#release` for the measurement.
+			if (deletable(gl, gl.isBuffer, this.buffer)) {
 				gl.deleteBuffer(this.buffer);
 			}
 			this.buffer = null;

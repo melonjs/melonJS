@@ -84,6 +84,7 @@ import ScanlineEffect from "./video/effects/scanline.js";
 import SepiaEffect from "./video/effects/sepia.js";
 import ShaderEffect from "./video/effects/shadereffect.js";
 import ShineEffect from "./video/effects/shine.js";
+import SquishEffect from "./video/effects/squish.js";
 import TintPulseEffect from "./video/effects/tintPulse.js";
 import ToneMappingEffect from "./video/effects/tonemap.js";
 import VignetteEffect from "./video/effects/vignette.js";
@@ -278,6 +279,7 @@ export {
 	ShineEffect,
 	Sprite,
 	Sprite3d,
+	SquishEffect,
 	Stage,
 	save,
 	state,

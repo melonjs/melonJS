@@ -21,22 +21,18 @@ import {
 	NEBULA_NEAR_DEPTH,
 	NEBULA_NEAR_OFFSET_X,
 	NEBULA_NEAR_OFFSET_Y,
-	NEBULA_NEAR_REPEAT,
-	NEBULA_NEAR_SEED,
 	NEBULA_NEAR_SPAN,
 	NEBULA_NEAR_TINT,
 	NEBULA_PARALLAX_FAR,
 	NEBULA_PARALLAX_NEAR,
-	NEBULA_REPEAT,
 	NEBULA_SPAN,
-	NEBULA_TEX,
 	SHIP_VIEW_Z,
 	SKY_PARALLAX,
 	SKY_SPREAD,
 	SKY_Z,
 	STAR_COUNT,
 } from "../constants";
-import { nebulaField } from "./nebula";
+import { nebulaSky } from "./nebula";
 import { disc } from "./textures";
 
 /**
@@ -89,7 +85,7 @@ export function buildSky(app: Application): SkyLayer[] {
 	// ONE quad. The repeat lives inside the texture on purpose, where it
 	// is a texel-aligned copy of a seamless tile; as a grid of separate
 	// quads the shared edges rasterised as bright lines.
-	const field = nebulaField(NEBULA_TEX, NEBULA_REPEAT, 1337);
+	const field = nebulaSky("far");
 	// `width` / `height` are the quad's size in world units. On a plain
 	// `Sprite` this was `scale`, because `resize` moves the BOUNDS and
 	// leaves the geometry at the texture's pixel size; a `Sprite3d` is
@@ -125,7 +121,7 @@ export function buildSky(app: Application): SkyLayer[] {
 	// the depth cue. Its pan comes from its depth, through `addSky`, so
 	// placing it nearer is the whole of the setup.
 	const veil = new Sprite3d(0, 0, {
-		image: nebulaField(NEBULA_TEX, NEBULA_NEAR_REPEAT, NEBULA_NEAR_SEED),
+		image: nebulaSky("near"),
 		width: NEBULA_NEAR_SPAN,
 		height: NEBULA_NEAR_SPAN,
 		billboard: "spherical",

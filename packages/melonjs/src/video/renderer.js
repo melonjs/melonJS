@@ -2,7 +2,9 @@ import Path2D from "./../geometries/path2d.ts";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
+import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
+import { isAdvancedBlendMode } from "./blendmodes.js";
 import { createCanvas } from "./canvas_factory.js";
 import ToneMappingEffect, { CURVES } from "./effects/tonemap.js";
 import { Gradient } from "./gradient.js";
@@ -440,12 +442,25 @@ export default class Renderer {
 	 *
 	 * Two consequences worth knowing:
 	 *
-	 * - **A game that never calls `loader.preload()` is never warmed.** There
-	 *   is no other hook. Call this yourself if you load assets some other way
-	 *   and still want the warm-up.
+	 * - **A game that never calls `loader.preload()` never gets this part.**
+	 *   Call it yourself if you load assets some other way and still want it.
 	 * - It is deliberately NOT called from `Application.init()`. That runs
 	 *   before anything is on screen, so warming there would only lengthen a
 	 *   blank page instead of hiding behind a progress bar.
+	 *
+	 * This is the half that needs no renderable. The other half cannot run
+	 * here, because what it compiles depends on the renderable drawing: under
+	 * WebGPU a pipeline is keyed by blend mode, culling, transparency and the
+	 * format of the target as well as by shader. So, behind the same
+	 * `prewarm` setting, the renderer also warms a renderable when it gains
+	 * a post effect ({@link Renderable#addPostEffect}) and when it is added
+	 * to the world ({@link Container#addChild}): its effect pipelines, its
+	 * own draw, the render targets its effect chain composites through, and
+	 * the advanced blend machinery if its blend mode needs it. That work is
+	 * started after the caller's code has run and finishes off the frame, so
+	 * it pays off when a renderable is set up at least a frame before it is
+	 * first drawn: build pools and attach their effects when a stage starts,
+	 * not when the object is first shown.
 	 * @returns {Promise<void>} settles when the built-in programs are ready
 	 * @example
 	 * // the usual case: nothing to write. `preload()` warms on the way through
@@ -1543,6 +1558,327 @@ export default class Renderer {
 	}
 
 	/**
+	 * How many effects a renderable's chain has to have render targets for:
+	 * every one attached, not just the ones enabled right now.
+	 *
+	 * Sizing the pool by the enabled count meant the ping-pong target was
+	 * only created on the frame a second effect was switched on, which is a
+	 * frame in the middle of play by construction (a hit flash, a power-up),
+	 * and creating a target there is a stall in that frame. A disabled effect
+	 * is one the game intends to turn on, so its target is made up front.
+	 * @param {Renderable} renderable - the renderable whose chain this is
+	 * @param {ShaderEffect[]} effects - its enabled chain, from `_effectChainFor`
+	 * @returns {number} the number of chain slots to provision
+	 * @ignore
+	 * @internal
+	 */
+	_postEffectCapacity(renderable, effects) {
+		return Math.max(effects.length, renderable.postEffects.length);
+	}
+
+	/**
+	 * Warm, ahead of its first draw, what a renderable will need: the
+	 * pipelines, programs and render targets that would otherwise be built
+	 * on the frame it first shows up.
+	 *
+	 * Called when a renderable gains a post effect
+	 * ({@link Renderable#addPostEffect}) and when it enters the world
+	 * ({@link Container#addChild}), the two moments its draw becomes
+	 * knowable. Deferred to a microtask so it runs once the caller's own code
+	 * has finished, which is when the rest of the picture exists: a
+	 * renderable usually gets its effect before it is added to the world,
+	 * sized, or given its blend mode, and those all decide which pipeline its
+	 * draw will ask for. Several requests in one task collapse into one
+	 * warm-up per renderable.
+	 *
+	 * Honours the `prewarm` setting, the same switch as the loading-screen
+	 * warm-up.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @ignore
+	 * @internal
+	 */
+	_queueWarm(renderable) {
+		// no shader language means nothing to compile (the Canvas backend)
+		if (this.settings?.prewarm !== true || this.shaderLanguage == null) {
+			return;
+		}
+		if (this._warmHosts === undefined) {
+			/**
+			 * renderables waiting for the next post-effect warm-up
+			 * @type {Set<Renderable>}
+			 * @ignore
+			 * @internal
+			 */
+			this._warmHosts = new Set();
+		}
+		if (this._warmHosts.size === 0) {
+			queueMicrotask(() => {
+				this._flushWarm();
+			});
+		}
+		this._warmHosts.add(renderable);
+	}
+
+	/**
+	 * Run the warm-ups queued by {@link Renderer#_queueWarm}.
+	 * @param {boolean} [stage=false] - true when a stage is being entered,
+	 *   which warms its cameras' grading as well
+	 * @returns {Promise<void>[]} what they started that is still being built
+	 * @ignore
+	 * @internal
+	 */
+	_flushWarm(stage = false) {
+		const hosts = this._warmHosts === undefined ? [] : [...this._warmHosts];
+		// already run, by `_whenWarmed`, ahead of the microtask that queued it
+		if (hosts.length === 0 && !stage) {
+			return [];
+		}
+		this._warmHosts?.clear();
+		// The cameras' grading when a stage is entered, or when a camera is
+		// itself among what changed (an effect added to it moves the grading
+		// along its chain). Not for every flush: one runs after each burst of
+		// `addChild` during play, and a graded camera is not what changed.
+		const cameras =
+			stage ||
+			hosts.some((host) => {
+				return host?._postEffectManaged === true;
+			});
+		// read once for the whole flush: the cameras do not change under it
+		this._warmFog = this._warmFogStates();
+		try {
+			return this._collectWarms(() => {
+				for (const host of hosts) {
+					// A warm-up that fails changes nothing: the draw builds what
+					// it needs on first use, exactly as it did before there was
+					// one.
+					try {
+						this._warmRenderable(host);
+					} catch {
+						// deliberately silent, see above
+					}
+				}
+				if (cameras) {
+					try {
+						this._warmCameraColorMatrices();
+					} catch {
+						// as above: the draw builds it on first use
+					}
+				}
+			});
+		} finally {
+			this._warmFog = undefined;
+		}
+	}
+
+	/**
+	 * Run `warm` and hand back what it started that is still being built,
+	 * as one promise each. Every warm-up on this base is done by the time it
+	 * returns, so nothing.
+	 * @param {Function} warm - issues the warm-ups
+	 * @returns {Promise<void>[]} the warm-ups still on their way
+	 * @ignore
+	 * @internal
+	 */
+	_collectWarms(warm) {
+		warm();
+		return [];
+	}
+
+	/**
+	 * Run the queued warm-ups now, and say when they are built.
+	 *
+	 * What a state change waits on before drawing the stage it has just built
+	 * (see `state.change`). A warm-up on its own does not keep the first
+	 * frame from compiling: the frame comes some milliseconds after the stage
+	 * is built, and a pipeline still compiling then is compiled again, on the
+	 * spot, by the draw that needs it. Holding the frame until they land is
+	 * what lets them do their job.
+	 *
+	 * Only what this flush asked for is waited on, not every warm-up in
+	 * flight: one a game started for later (an effect attached ahead of
+	 * time, a level's own preload) is not this stage's to wait for.
+	 * @returns {Promise<void>|undefined} settles once they are built, or
+	 *   `undefined` when nothing is being built and the frame can draw now
+	 * @ignore
+	 * @internal
+	 */
+	_whenWarmed() {
+		let waits;
+		try {
+			waits = this._flushWarm(true);
+		} catch {
+			// a warm-up that fails must not keep the state from starting
+			return undefined;
+		}
+		if (waits.length === 0) {
+			return undefined;
+		}
+		return Promise.all(waits).then(() => {});
+	}
+
+	/**
+	 * Warm each of the current stage's cameras for its built-in colour
+	 * matrix.
+	 *
+	 * A camera applies `colorMatrix` as one more effect at the end of its
+	 * chain, but it built that effect inside its own `draw`, on the first
+	 * frame the matrix was not identity, and appends it for that frame only.
+	 * Nothing ever attached it, so nothing warmed it: its program (WebGL) or
+	 * its pipelines (WebGPU) were built in the first frame of a stage that
+	 * grades its camera. Made here instead, once the stage has been built,
+	 * and warmed where `draw` runs it, last in the camera's chain.
+	 * @ignore
+	 * @internal
+	 */
+	_warmCameraColorMatrices() {
+		const cameras = state.current()?.cameras;
+		if (cameras === undefined) {
+			return;
+		}
+		for (const camera of cameras.values()) {
+			const effect = camera._syncColorMatrixEffect?.(this);
+			if (effect == null) {
+				continue;
+			}
+			const effects = camera.postEffects;
+			effects.push(effect);
+			try {
+				this._warmPostEffects(camera);
+			} finally {
+				effects.splice(effects.indexOf(effect), 1);
+			}
+		}
+	}
+
+	/**
+	 * Whether the meshes being warmed will draw with fog, without it, or both.
+	 *
+	 * Fog is a pipeline variant, and which one a mesh draws with is decided by
+	 * the camera drawing it: each camera installs its own fog on the renderer
+	 * as it starts drawing ({@link Renderer#setFog}), and the frame clears it.
+	 * So the renderer's own value is no answer here. A warm-up runs between
+	 * frames, while the renderer still holds the fog of whichever camera drew
+	 * LAST, which after a state change is the previous screen's: a loading
+	 * screen has none, so every mesh of a fogged scene was warmed without it
+	 * and then compiled with it, synchronously, on its first frame.
+	 *
+	 * Asked of the current stage's cameras instead, through the same
+	 * `_fog3dState` the draw installs, so the warm-up and the draw cannot
+	 * disagree. A stage with a fogged camera and a clear one (a minimap, say)
+	 * warms both variants. Fog switched on in a later frame than the scene was
+	 * built in is not seen here, and is built on that frame as before.
+	 * @returns {boolean[]} the fog states to warm, each `true` for fogged
+	 * @ignore
+	 * @internal
+	 */
+	_warmFogStates() {
+		let fogged = false;
+		let clear = false;
+		const cameras = state.current()?.cameras;
+		if (cameras !== undefined) {
+			for (const camera of cameras.values()) {
+				if (camera._fog3dState?.(this) != null) {
+					fogged = true;
+				} else {
+					clear = true;
+				}
+			}
+		}
+		if (!fogged && !clear) {
+			// no stage to ask: what the renderer holds is the best guess left
+			return [this._fog3d != null];
+		}
+		return clear && fogged ? [false, true] : [fogged];
+	}
+
+	/**
+	 * Warm one renderable, and everything under it when it is a container:
+	 * adding a container to the world brings its whole subtree in with it,
+	 * without an `addChild` per descendant.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @ignore
+	 * @internal
+	 */
+	_warmRenderable(renderable) {
+		// a renderable destroyed between being queued and this running has
+		// no effects left, and nothing here builds anything without a draw
+		// to build for
+		if (renderable == null) {
+			return;
+		}
+		if (renderable.postEffects?.length > 0) {
+			this._warmPostEffects(renderable);
+		}
+		this._warmDraw(renderable);
+		if (isAdvancedBlendMode(renderable.blendMode)) {
+			this._warmAdvancedBlend();
+		}
+		const children = renderable.children;
+		if (Array.isArray(children)) {
+			for (const child of children) {
+				this._warmRenderable(child);
+			}
+		}
+	}
+
+	/**
+	 * Warm everything one renderable's post effects will need. Each backend
+	 * knows what that is; this base has no shaders, so nothing.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @ignore
+	 * @internal
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	_warmPostEffects(renderable) {}
+
+	/**
+	 * Warm the renderable's own draw, the one it makes without any effect.
+	 * Only meaningful where that is a pipeline keyed by draw state; nothing
+	 * to do on this base.
+	 * @param {Renderable} renderable - the renderable to warm for
+	 * @ignore
+	 * @internal
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	_warmDraw(renderable) {}
+
+	/**
+	 * Warm the advanced blend modes' machinery: the blend shader, built on
+	 * the first draw that uses one of those modes, and its offscreen target.
+	 * Nothing to do on this base.
+	 * @ignore
+	 * @internal
+	 */
+	_warmAdvancedBlend() {}
+
+	/**
+	 * Whether a renderable draws through `drawMesh`, where a lone effect is
+	 * spliced into the mesh shader instead of being drawn as a quad.
+	 * Duck-typed on fields only a `Mesh` carries, so the renderer does not
+	 * have to import the renderable classes. An instanced mesh never hosts
+	 * an effect: its shading is a separate family that knows nothing of one.
+	 * @param {Renderable} renderable - the renderable to test
+	 * @returns {boolean} true for a non-instanced mesh
+	 * @ignore
+	 * @internal
+	 */
+	_hostsMeshEffect(renderable) {
+		return (
+			typeof renderable.cullBackFaces === "boolean" &&
+			renderable.indices !== undefined &&
+			renderable.instanceLayout === undefined
+		);
+	}
+
+	/**
+	 * Warm the tone curve's pipeline once it exists. Nothing to do on a
+	 * backend that compiles it in its constructor.
+	 * @ignore
+	 * @internal
+	 */
+	_warmToneMap() {}
+
+	/**
 	 * Set the tone curve applied at the end of the camera's chain.
 	 *
 	 * The settings-screen entry point: a game can drive this straight from an
@@ -1636,6 +1972,7 @@ export default class Renderer {
 			// renderer-owned: a camera tearing its own effects down must not
 			// free the program every other camera is still using
 			this._toneMapEffect.shared = true;
+			this._warmToneMap();
 		}
 		this._toneMapEffect.setExposure(this.settings.toneMappingExposure ?? 1);
 		this._toneMapEffect.setWhite(this.settings.toneMappingWhite ?? 0);

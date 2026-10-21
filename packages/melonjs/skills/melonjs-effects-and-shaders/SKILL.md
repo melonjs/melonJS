@@ -110,14 +110,15 @@ reused across renderables.
 
 ## Built-in effects
 
-Twenty-one presets, every one constructed as `new XEffect(renderer, options)` and
+Twenty-two presets, every one constructed as `new XEffect(renderer, options)` and
 every one shipping both a GLSL and a WGSL body, so they all run on either GPU
 backend: `VignetteEffect`, `ScanlineEffect` (optional CRT curvature),
 `BloomEffect`, `GlowEffect`, `BlurEffect`, `PixelateEffect`,
 `ChromaticAberrationEffect`, `DropShadowEffect`, `FlashEffect`,
 `OutlineEffect`, `ColorMatrixEffect`, `DesaturateEffect`, `DissolveEffect`,
 `TintPulseEffect`, `WaveEffect`, `InvertEffect`, `SepiaEffect`,
-`HologramEffect`, `ShineEffect`, `RadialGradientEffect`, `ToneMappingEffect`.
+`HologramEffect`, `ShineEffect`, `RadialGradientEffect`, `SquishEffect`,
+`ToneMappingEffect`.
 
 `RadialGradientEffect` is a procedural soft spot: solid at the centre of its
 host quad, fading linearly to transparent at the edge, and elliptical for free
@@ -126,6 +127,40 @@ a canvas, for a pickup highlight, a trigger marker or a damage flash. Its
 falloff assumes the quad samples a FULL texture rect, so pair it with a
 standalone image or `Renderer.getWhitePixel()` rather than a sprite that draws
 a sub-region of an atlas, where the centre would land off-quad.
+
+`SquishEffect` bulges a sprite's middle out (`setBulge(0.3)`) or pinches it in
+(`setBulge(-0.3)`), its top and bottom rows staying put. Bulging out widens the
+sprite past its own frame, and the effect draws on a wider quad to make room,
+so the art needs no transparent margin. On its own it is a jelly wobble; paired
+with a change of height it is **squash and stretch that keeps the volume**:
+scale the sprite to `scaleY` of its height about its feet and set the bulge to
+`1 - scaleY`, so a stretched sprite pinches in and a squashed one bulges out.
+Ease `scaleY` back to 1 with a short `Tween.Easing.Back.Out`; an elastic ease
+keeps it trembling long after the landing.
+
+```js
+const squish = new SquishEffect(app.renderer);
+player.addPostEffect(squish);
+// every frame, from the player's update()
+const feet = player.height * (1 - player.anchorPoint.y);
+player.currentTransform
+    .identity()
+    .translate(0, feet)
+    .scale(1, scaleY)
+    .translate(0, -feet);
+squish.setBulge(1 - scaleY);
+```
+
+Apply that from the sprite's own `update()`, not from a tween's `onUpdate`. A
+physics adapter that mirrors a body's angle (Matter does) rewrites
+`currentTransform` on every step, before the renderables update, so a scale set
+anywhere else is gone by the time the sprite is drawn. Let the tween animate a
+plain `{ scaleY }` object and read it in `update()`.
+
+It is made for a sprite carrying it as its only effect: chained with another,
+or on the camera, the frame it measures against is the whole capture, so it
+squishes the whole frame. The bulge is outside the sprite's bounds, so culling
+and pointer events ignore it.
 
 **`BloomEffect` and `GlowEffect` are not the same thing**, and reaching for the
 wrong one is the usual disappointment here. `GlowEffect` draws a halo OUTSIDE a
@@ -453,8 +488,15 @@ With `prewarm` on (the default since 20.6), `loader.preload()` warms on its way
 through — automatically, on every call — and compiles the GPU-side objects for
 every shader it holds — on WebGPU that is the
 WGSL module, which is otherwise built inside the draw path the first time the
-effect is used. Effects constructed inline are not in the loader, so nothing can
-bring them forward.
+effect is used.
+
+Since 20.10 the rest is warmed when the effect is **attached**, inline effects
+included: `addPostEffect` (or assigning `shader`) compiles the pipelines that
+effect will draw with on that renderable — on WebGPU the costly part, keyed by
+the renderable's blend mode and target as well as the shader — and on WebGL
+links the spliced program when the host is a mesh. It finishes off the frame,
+so attach when you build (a pool, a stage starting), not when you show: an
+effect attached and drawn in the same frame still compiles on that frame.
 
 One caveat if you are moving an inline effect to a file: a template literal can
 interpolate constants into the source (`vec2(${ASPECT}, 1.0)`), and a static
@@ -470,8 +512,8 @@ uniform values — fine when the look is uniform, and the reason to clone (and
 pay a link) when it is not.
 
 Note this covers **your** effects only. The engine's own mesh/quad shader
-variants are compiled lazily per feature combination on first draw and cannot be
-preloaded — see `melonjs-loading-assets` for the warm-up that covers those.
+variants are covered by the loading-screen warm-up and by the per-renderable one
+— see `melonjs-loading-assets`.
 
 ### Screen-reading builtins
 
@@ -609,6 +651,8 @@ same question after construction.
 | shadow/smear offset flips on some draws | vertical UV offset not multiplied by `uUVYDir` |
 | frame rate collapses with many blended sprites | an *advanced* mode (overlay, darken, …) — each draw is a capture plus a composite |
 | animated shader never moves | `setTime` fed milliseconds, or the shader declares no `uTime` |
+| squash and stretch only bulges, the height never changes, under Matter | the adapter rewrites `currentTransform` every step; set the scale from the sprite's `update()` |
+| `SquishEffect` squishes the whole screen instead of the sprite | it is chained with another effect, or on the camera; give the sprite it alone |
 | syntax error in a file whose shader you just edited, pointing at a line of GLSL | a backtick in the shader body ended the template literal — most often one wrapped around an identifier in a comment |
 
 ## Related skills

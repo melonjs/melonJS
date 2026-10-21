@@ -52,9 +52,7 @@ import {
 	MENU_MUSIC,
 	MENU_MUSIC_VOLUME,
 	NEBULA_ALPHA,
-	NEBULA_REPEAT,
 	NEBULA_SPAN,
-	NEBULA_TEX,
 	ROCK_ALBEDO,
 	ROCK_MODEL,
 	ROCK_NORMAL,
@@ -65,7 +63,7 @@ import {
 	UFO_MODEL,
 	VERSION_COLOR,
 } from "../constants";
-import { nebulaField } from "../fx/nebula";
+import { nebulaSky } from "../fx/nebula";
 import {
 	CREDITS,
 	INSTRUCTION_ROCKS,
@@ -302,7 +300,7 @@ export class TitleScreen extends Stage {
 	/** the same generated nebula the game flies in front of */
 	private addSky(app: Application) {
 		const cloud = new Sprite3d(0, 0, {
-			image: nebulaField(NEBULA_TEX, NEBULA_REPEAT, 1337),
+			image: nebulaSky("far"),
 			width: NEBULA_SPAN,
 			height: NEBULA_SPAN,
 			billboard: "spherical",

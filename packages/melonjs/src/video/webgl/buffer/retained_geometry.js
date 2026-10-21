@@ -1,3 +1,4 @@
+import { deletable } from "./deletable.js";
 import WebGLVertexState from "./vertexstate.js";
 
 /**
@@ -150,18 +151,22 @@ export default class RetainedGeometry {
 			this.vertexState.destroy();
 			this.vertexState = null;
 		}
-		// `isBuffer` is false for a handle belonging to a context that has since
-		// been lost, and asking is itself error-free. Deleting such a handle
-		// after the context came back raises INVALID_OPERATION — the objects
-		// died with the old context, so there is nothing left to release.
+		// Deleting a handle belonging to a context that has since been lost
+		// raises INVALID_OPERATION: the objects died with the old context, so
+		// there is nothing left to release.
+		// Not `isBuffer`: the `is*` queries are SYNCHRONOUS and block until
+		// the driver answers, and this runs per buffer as geometry is torn
+		// down. What matters here is only whether deleting is legal, which a
+		// lost context decides, and `isContextLost` answers without a round
+		// trip. See `VertexState#release` for the measurement.
 		if (this.vertexBuffer !== null) {
-			if (gl.isBuffer(this.vertexBuffer)) {
+			if (deletable(gl, gl.isBuffer, this.vertexBuffer)) {
 				gl.deleteBuffer(this.vertexBuffer);
 			}
 			this.vertexBuffer = null;
 		}
 		if (this.glIndexBuffer !== null) {
-			if (gl.isBuffer(this.glIndexBuffer)) {
+			if (deletable(gl, gl.isBuffer, this.glIndexBuffer)) {
 				gl.deleteBuffer(this.glIndexBuffer);
 			}
 			this.glIndexBuffer = null;

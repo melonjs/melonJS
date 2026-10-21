@@ -45,6 +45,13 @@ of on a deferred tick, which is what you want when changing state right after a
 preload completes. It is ignored when a transition is configured — a transition
 always drives the switch from its own completion callback.
 
+`onResetEvent` runs when the switch is made. The first frame, `STATE_CHANGE` and
+a transition's reveal follow once the shaders the stage queued are ready, which
+is a few milliseconds once the browser has compiled them before, and at most
+1.5s on a first visit. So build the stage in `onResetEvent`: an object a
+`STATE_CHANGE` listener adds is not waited for, and its first draw may still
+compile what it needs.
+
 `state.change` **throws** `Undefined Stage for state '<id>'` if nothing was
 registered for that id, and `state.set` throws if the second argument is not a
 `Stage` instance. Neither fails quietly.
