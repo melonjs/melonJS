@@ -92,11 +92,10 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		obj.x = isoPos.x;
 		obj.y = isoPos.y;
 
-		// tile objects are aligned to their bottom center on isometric maps,
-		// while melonJS places renderables from their top left
+		// unless their tileset says otherwise, tile objects are aligned to
+		// their bottom center on isometric maps
 		if (typeof obj.gid === "number") {
-			obj.x -= obj.width / 2;
-			obj.y -= obj.height;
+			this.alignTileObject(obj, "bottom");
 		}
 
 		vector2dPool.release(isoPos);

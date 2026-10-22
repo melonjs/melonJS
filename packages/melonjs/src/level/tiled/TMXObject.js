@@ -216,8 +216,12 @@ export default class TMXObject {
 		const tileset = tilesets.getTilesetByGid(this.gid);
 
 		if (tileset.isCollection === false) {
-			this.width = this.framewidth = tileset.tilewidth;
-			this.height = this.frameheight = tileset.tileheight;
+			this.framewidth = tileset.tilewidth;
+			this.frameheight = tileset.tileheight;
+			// an object resized in Tiled keeps its size, and its tile is
+			// stretched to fill it; one saved without a size is the tile's
+			this.width ||= tileset.tilewidth;
+			this.height ||= tileset.tileheight;
 		}
 
 		this.tile = new Tile(this.x, this.y, this.gid, tileset);

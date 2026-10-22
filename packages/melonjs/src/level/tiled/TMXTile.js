@@ -196,30 +196,23 @@ export default class Tile extends Bounds {
 			const frameId = [];
 			for (const frame of tileset.animations.get(localId).frames) {
 				frameId.push(frame.tileid);
+				// named by position: the sprite's atlas holds the frames in
+				// this order, and a spritesheet atlas refuses string names
 				frames.push({
-					name: "" + frame.tileid,
+					name: frames.length,
 					delay: frame.duration,
 				});
 			}
-			renderable = tileset.texture.createAnimationFromName(frameId, settings);
+			renderable = tileset
+				.getAnimationTexture()
+				.createAnimationFromName(frameId, settings);
 			renderable.addAnimation(localId, frames);
 			renderable.setCurrentAnimation(localId);
 		} else if (tileset.isCollection) {
 			// collection tile — create a sprite from the tile image
 			const image = tileset.getTileImage(this.tileId);
-			renderable = new Sprite(0, 0, { image });
+			renderable = new Sprite(0, 0, { image, rotation: settings?.rotation });
 			renderable.anchorPoint.set(0, 0);
-			renderable.scale(
-				settings.width / this.width,
-				settings.height / this.height,
-			);
-			if (settings.rotation !== undefined) {
-				renderable.anchorPoint.set(0.5, 0.5);
-				renderable.rotate(settings.rotation);
-				renderable.translate(settings.width / 2, settings.height / 2);
-				// clear rotation to prevent double-application by the caller
-				settings.rotation = undefined;
-			}
 		} else {
 			// regular tile — create a sprite from the tileset atlas
 			renderable = tileset.texture.createSpriteFromName(
@@ -227,6 +220,17 @@ export default class Tile extends Bounds {
 				settings,
 			);
 			renderable.anchorPoint.set(0, 0);
+		}
+
+		// stretch the tile to the object's size, as Tiled draws a resized
+		// tile object: after the rotation, which turns the stretched box,
+		// and before the flip, which turns the tile around its own center
+		if (settings?.width > 0 && settings.height > 0) {
+			const scaleX = settings.width / this.width;
+			const scaleY = settings.height / this.height;
+			if (scaleX !== 1 || scaleY !== 1) {
+				renderable.scale(scaleX, scaleY);
+			}
 		}
 
 		// apply any H/V/AD flip transforms
