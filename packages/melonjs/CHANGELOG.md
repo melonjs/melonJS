@@ -5,6 +5,7 @@
 ### Fixed
 - TextureAtlas: drawing part of an image, a bitmap font glyph or a repeating pattern no longer adds a region to the atlas for every new source rectangle. Those regions piled up for as long as the atlas lived, and turned up among the frames an animation is built from ([#1281](https://github.com/melonjs/melonJS/issues/1281), thanks @snowyukitty)
 - TextureAtlas: on an atlas with pages of different sizes, a source rectangle drawn from one page no longer reuses the UVs worked out for the same rectangle on another (thanks @snowyukitty)
+- Tiled: objects on isometric maps are placed where Tiled draws them. Positions are measured in tile heights on both axes, which changes maps whose tiles are not 2:1, and tile objects are anchored at their bottom center, so a game that offset them to compensate should drop that offset (thanks @vtxe02023274)
 
 ### Performance
 - Rendering: drawing a sprite, a glyph or a pattern computes its UVs from the image size instead of looking them up, with no string built and nothing allocated or kept. On the platformer, text and Jungle Rabbit examples a lookup took 34 to 58 ns and now takes 6 to 10, in Chrome and WebKit: 1 to 2% of a frame's CPU time on the text example, and too little to measure on the platformer

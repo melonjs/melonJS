@@ -130,6 +130,39 @@ describe("TMX Renderers", () => {
 			// isometric adjustPosition converts coordinates differently
 			expect(obj.x).not.toEqual(32);
 		});
+
+		describe("adjustPosition matches Tiled", () => {
+			// 4x4 map with 186x108 tiles, the expected values are where Tiled
+			// draws these objects (tmxrasterizer), with the map's left corner at x = 0
+			let iso;
+
+			beforeAll(() => {
+				iso = new TMXIsometricRenderer(
+					mockMap({
+						orientation: "isometric",
+						cols: 4,
+						rows: 4,
+						tilewidth: 186,
+						tileheight: 108,
+					}),
+				);
+			});
+
+			it("should project object positions in tileheight units on both axes", () => {
+				const obj = { x: 54, y: 54 };
+				iso.adjustPosition(obj);
+				expect(obj.x).toBeCloseTo(372);
+				expect(obj.y).toBeCloseTo(54);
+			});
+
+			it("should align tile objects to their bottom center", () => {
+				const obj = { gid: 2, x: 162, y: 54, width: 40, height: 40 };
+				iso.adjustPosition(obj);
+				// Tiled draws this 40x40 tile from (445, 68) to (484, 107)
+				expect(obj.x).toBeCloseTo(445);
+				expect(obj.y).toBeCloseTo(68);
+			});
+		});
 	});
 
 	describe("TMXHexagonalRenderer", () => {
