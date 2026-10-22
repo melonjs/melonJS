@@ -50,9 +50,11 @@ describe("RadialGradientEffect", () => {
 		expect(make(glslRenderer)).toBeDefined();
 	});
 
-	it("defaults to white at full intensity", () => {
+	it("defaults to opaque white at full intensity", () => {
 		const effect = make(wgslRenderer);
-		expect(Array.from(effect._uniformValues.get("uColor"))).toEqual([1, 1, 1]);
+		expect(Array.from(effect._uniformValues.get("uColor"))).toEqual([
+			1, 1, 1, 1,
+		]);
 		expect(effect._uniformValues.get("uIntensity")).toBe(1);
 	});
 
@@ -65,7 +67,18 @@ describe("RadialGradientEffect", () => {
 		expect(rgb[0]).toBeCloseTo(1, 5);
 		expect(rgb[1]).toBeCloseTo(128 / 255, 5);
 		expect(rgb[2]).toBeCloseTo(64 / 255, 5);
+		expect(rgb[3]).toBe(1);
 		expect(effect._uniformValues.get("uIntensity")).toBe(0.5);
+	});
+
+	it("takes the Color's alpha, which scales the whole gradient", () => {
+		// it used to be dropped: a half-transparent color drew a full spot
+		const effect = make(wgslRenderer, { color: new Color(255, 0, 0, 0.5) });
+		expect(effect._uniformValues.get("uColor")[3]).toBeCloseTo(0.5, 5);
+		effect.setColor(new Color(0, 255, 0, 0.25));
+		expect(effect._uniformValues.get("uColor")[3]).toBeCloseTo(0.25, 5);
+		// and the WGSL block holds it in the color's own vec4f
+		expect(effect.wgslRealization.layout.get("uColor").size).toBe(16);
 	});
 
 	it("reuses one buffer across setColor, rather than allocating per light", () => {

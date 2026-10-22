@@ -1,3 +1,4 @@
+import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -11,7 +12,7 @@ import ShaderEffect from "./shadereffect.js";
 // names, picked by the ShaderEffect base per renderer.shaderLanguage
 const wgslFragment = `
 struct ShineUniforms {
-	uShineColor : vec3f,
+	uShineColor : vec4f,
 	uShineWidth : f32,
 	uShineSpeed : f32,
 	uShineIntensity : f32,
@@ -43,7 +44,8 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	let dist = min(d, 1.0 - d);
 	let glint = smoothstep(fx.uShineWidth, 0.0, dist) * fx.uShineIntensity;
 	// premultiplied-alpha discipline mirrors the GLSL twin
-	let result = color.rgb * pulse + fx.uShineColor * glint * color.a;
+	// the color's alpha scales the glint
+	let result = color.rgb * pulse + fx.uShineColor.rgb * glint * color.a * fx.uShineColor.a;
 	return vec4f(result, color.a);
 }
 `;
@@ -83,12 +85,15 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  *
  * // update each frame
  * coinShine.setTime(timer.getTime() / 1000);
+ * @example
+ * // a gentler glint: the color's alpha scales its strength
+ * mySprite.addPostEffect(new ShineEffect(renderer, { color: [1.0, 1.0, 1.0, 0.4] }));
  */
 export default class ShineEffect extends ShaderEffect {
 	/**
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
-	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - shine color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - shine color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales the glint
 	 * @param {number} [options.speed=0.5] - sweeps per second
 	 * @param {number} [options.width=0.15] - glint half-width as a fraction of one tile (0.0–1.0)
 	 * @param {number} [options.intensity=0.5] - maximum highlight strength
@@ -100,7 +105,7 @@ export default class ShineEffect extends ShaderEffect {
 	constructor(renderer, options = {}) {
 		super(renderer, {
 			glsl: `
-			uniform vec3  uShineColor;
+			uniform vec4  uShineColor;
 			uniform float uShineWidth;
 			uniform float uShineSpeed;
 			uniform float uShineIntensity;
@@ -138,17 +143,15 @@ export default class ShineEffect extends ShaderEffect {
 				// added glint by color.a so it stays premultiplied too, but
 				// do NOT scale the whole result by color.a (that would dim
 				// antialiased edges twice).
-				vec3 result = color.rgb * pulse + uShineColor * glint * color.a;
+				// the color's alpha scales the glint
+				vec3 result = color.rgb * pulse + uShineColor.rgb * glint * color.a * uShineColor.a;
 				return vec4(result, color.a);
 			}
 			`,
 			wgsl: wgslFragment,
 		});
 
-		this.setUniform(
-			"uShineColor",
-			new Float32Array(options.color ?? [1.0, 1.0, 1.0]),
-		);
+		this.setUniform("uShineColor", rgba(options.color ?? [1.0, 1.0, 1.0]));
 		this.setUniform("uShineWidth", options.width ?? 0.15);
 		this.setUniform("uShineSpeed", options.speed ?? 0.5);
 		this.setUniform("uShineIntensity", options.intensity ?? 0.5);
@@ -164,10 +167,10 @@ export default class ShineEffect extends ShaderEffect {
 
 	/**
 	 * set the shine color
-	 * @param {number[]} color - shine color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} color - shine color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales the glint
 	 */
 	setColor(color) {
-		this.setUniform("uShineColor", new Float32Array(color));
+		this.setUniform("uShineColor", rgba(color));
 	}
 
 	/**

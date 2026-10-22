@@ -80,18 +80,23 @@ import ShaderEffect from "./shadereffect.js";
  *     color: new Color(80, 160, 255),
  *     intensity: 0.4,
  * });
+ * @example
+ * // a half-strength warm spot: the Color's alpha scales the whole gradient
+ * const dim = new RadialGradientEffect(renderer, {
+ *     color: new Color(255, 220, 120, 0.5),
+ * });
  */
 export default class RadialGradientEffect extends ShaderEffect {
 	/**
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - initial uniform values
-	 * @param {Color} [options.color] - center color (0..255 RGB); defaults to white
+	 * @param {Color} [options.color] - center color (0..255 RGB, and its alpha scales the gradient); defaults to opaque white
 	 * @param {number} [options.intensity=1] - peak alpha at the center (0..1+)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
 			glsl: `
-			uniform vec3 uColor;
+			uniform vec4 uColor;
 			uniform float uIntensity;
 			vec4 apply(vec4 color, vec2 uv) {
 				// recenter to [-1, 1] across the quad. The quad's own aspect
@@ -107,8 +112,10 @@ export default class RadialGradientEffect extends ShaderEffect {
 				// (1,1,1,1) and the uniforms drive the look; for the Light2d
 				// batching path the uniforms stay at default and the tint
 				// carries the per-light color + intensity.
-				vec3 rgb = color.rgb * uColor * uIntensity * f;
-				float a = color.a * uIntensity * f;
+				// the color's own alpha scales the whole gradient
+				float k = uIntensity * f * uColor.a;
+				vec3 rgb = color.rgb * uColor.rgb * k;
+				float a = color.a * k;
 				return vec4(rgb, a);
 			}
 			`,
@@ -116,7 +123,7 @@ export default class RadialGradientEffect extends ShaderEffect {
 			// tinted (textureSample * vColor), identical to the GLSL contract
 			wgsl: `
 			struct RadialGradientUniforms {
-				uColor : vec3f,
+				uColor : vec4f,
 				uIntensity : f32,
 			};
 			@group(3) @binding(0) var<uniform> fx : RadialGradientUniforms;
@@ -125,20 +132,21 @@ export default class RadialGradientEffect extends ShaderEffect {
 				let c = uv * 2.0 - vec2f(1.0);
 				let d = length(c);
 				let f = clamp(1.0 - d, 0.0, 1.0);
-				let rgb = color.rgb * fx.uColor * fx.uIntensity * f;
-				let a = color.a * fx.uIntensity * f;
+				let k = fx.uIntensity * f * fx.uColor.a;
+				let rgb = color.rgb * fx.uColor.rgb * k;
+				let a = color.a * k;
 				return vec4f(rgb, a);
 			}
 			`,
 		});
 
 		// reused across `setColor` calls so we don't allocate a fresh
-		// 3-element array every frame on every light.
+		// array every frame on every light.
 		/**
 		 * @ignore
 		 * @internal
 		 */
-		this._colorBuf = new Float32Array(3);
+		this._colorBuf = new Float32Array(4);
 
 		const color = options.color;
 		if (color) {
@@ -147,20 +155,22 @@ export default class RadialGradientEffect extends ShaderEffect {
 			this._colorBuf[0] = 1;
 			this._colorBuf[1] = 1;
 			this._colorBuf[2] = 1;
+			this._colorBuf[3] = 1;
 			this.setUniform("uColor", this._colorBuf);
 		}
 		this.setIntensity(options.intensity ?? 1);
 	}
 
 	/**
-	 * Set the center color. RGB only — alpha is ignored (the radial
-	 * falloff supplies the per-pixel alpha).
-	 * @param {Color} color - 0..255 RGB color
+	 * Set the center color. Its alpha scales the whole gradient, on top of
+	 * the falloff, so a half-transparent color gives a half-strength spot.
+	 * @param {Color} color - 0..255 RGB color, with its alpha
 	 */
 	setColor(color) {
 		this._colorBuf[0] = color.r / 255;
 		this._colorBuf[1] = color.g / 255;
 		this._colorBuf[2] = color.b / 255;
+		this._colorBuf[3] = color.alpha;
 		this.setUniform("uColor", this._colorBuf);
 	}
 

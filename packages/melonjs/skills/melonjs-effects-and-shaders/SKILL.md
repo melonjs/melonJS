@@ -110,15 +110,45 @@ reused across renderables.
 
 ## Built-in effects
 
-Twenty-two presets, every one constructed as `new XEffect(renderer, options)` and
-every one shipping both a GLSL and a WGSL body, so they all run on either GPU
-backend: `VignetteEffect`, `ScanlineEffect` (optional CRT curvature),
+Twenty-three presets, every one constructed as `new XEffect(renderer, options)`
+and every one shipping both a GLSL and a WGSL body, so they all run on either
+GPU backend: `VignetteEffect`, `ScanlineEffect` (optional CRT curvature),
 `BloomEffect`, `GlowEffect`, `BlurEffect`, `PixelateEffect`,
 `ChromaticAberrationEffect`, `DropShadowEffect`, `FlashEffect`,
 `OutlineEffect`, `ColorMatrixEffect`, `DesaturateEffect`, `DissolveEffect`,
-`TintPulseEffect`, `WaveEffect`, `InvertEffect`, `SepiaEffect`,
+`TintPulseEffect`, `WaveEffect`, `SwayEffect`, `InvertEffect`, `SepiaEffect`,
 `HologramEffect`, `ShineEffect`, `RadialGradientEffect`, `SquishEffect`,
 `ToneMappingEffect`.
+
+**Colors take an alpha.** Every color option and `setColor` takes `[r, g, b]`
+or `[r, g, b, a]`, each 0.0 to 1.0, and the alpha is the color's own opacity: a
+half-transparent outline, a glow at half strength, a flash that only half
+covers. `[r, g, b]` is opaque, as it always was. Any other length throws.
+`RadialGradientEffect` takes a `Color` instead, and its alpha scales the spot.
+
+```js
+sprite.addPostEffect(new OutlineEffect(app.renderer, { color: [1, 1, 1, 0.5] }));
+```
+
+`SwayEffect` leans a sprite or a layer from side to side, as if in a breeze: the
+top sways most and everything from its `anchor` row down stays put, so a tree's
+trunk or a reed's root stays planted. It suits anything planted at its bottom;
+something hanging from its top, like a banner, needs its own shader. It is a
+`WaveEffect`, which takes the same `anchor`, so it adds no shader. Drive it with
+`setTime(seconds)` every frame, like any time-based effect; it wraps the phase
+itself, so a raw clock never costs precision on a phone's medium-precision
+floats.
+
+```js
+const sway = new SwayEffect(app.renderer, { strength: 0.02, anchor: 0.9 });
+tree.addPostEffect(sway);
+// each frame
+sway.setTime(timer.getTime() / 1000);
+```
+
+Rows are measured across the texture the effect samples, so on a sprite cut from
+an atlas the anchor is a row of the atlas: it suits a standalone image or a
+layer best.
 
 `RadialGradientEffect` is a procedural soft spot: solid at the centre of its
 host quad, fading linearly to transparent at the edge, and elliptical for free

@@ -1,3 +1,4 @@
+import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -11,13 +12,14 @@ import ShaderEffect from "./shadereffect.js";
 // names, picked by the ShaderEffect base per renderer.shaderLanguage
 const wgslFragment = `
 struct FlashUniforms {
-	uFlashColor : vec3f,
+	uFlashColor : vec4f,
 	uFlashIntensity : f32,
 };
 @group(3) @binding(0) var<uniform> fx : FlashUniforms;
 
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
-	return vec4f(mix(color.rgb, fx.uFlashColor * color.a, fx.uFlashIntensity), color.a);
+	// the color's alpha scales how far the flash covers the sprite
+	return vec4f(mix(color.rgb, fx.uFlashColor.rgb * color.a, fx.uFlashIntensity * fx.uFlashColor.a), color.a);
 }
 `;
 
@@ -41,21 +43,26 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * @example
  * // red flash
  * const flash = new FlashEffect(renderer, { color: [1.0, 0.0, 0.0] });
+ * @example
+ * // a hit flash that only half covers the sprite, even at full intensity
+ * const hit = new FlashEffect(renderer, { color: [1.0, 1.0, 1.0, 0.5] });
+ * hit.setIntensity(1.0);
  */
 export default class FlashEffect extends ShaderEffect {
 	/**
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
-	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - flash color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - flash color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales the intensity
 	 * @param {number} [options.intensity=0.0] - initial flash intensity (0.0–1.0)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
 			glsl: `
-			uniform vec3 uFlashColor;
+			uniform vec4 uFlashColor;
 			uniform float uFlashIntensity;
 			vec4 apply(vec4 color, vec2 uv) {
-				return vec4(mix(color.rgb, uFlashColor * color.a, uFlashIntensity), color.a);
+				// the color's alpha scales how far the flash covers the sprite
+				return vec4(mix(color.rgb, uFlashColor.rgb * color.a, uFlashIntensity * uFlashColor.a), color.a);
 			}
 			`,
 			wgsl: wgslFragment,
@@ -64,7 +71,7 @@ export default class FlashEffect extends ShaderEffect {
 		const color = options.color ?? [1.0, 1.0, 1.0];
 		this.intensity = options.intensity ?? 0.0;
 
-		this.setUniform("uFlashColor", new Float32Array(color));
+		this.setUniform("uFlashColor", rgba(color));
 		this.setUniform("uFlashIntensity", this.intensity);
 	}
 
@@ -79,9 +86,9 @@ export default class FlashEffect extends ShaderEffect {
 
 	/**
 	 * set the flash color
-	 * @param {number[]} color - flash color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} color - flash color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales the intensity
 	 */
 	setColor(color) {
-		this.setUniform("uFlashColor", new Float32Array(color));
+		this.setUniform("uFlashColor", rgba(color));
 	}
 }

@@ -1,3 +1,4 @@
+import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -11,7 +12,7 @@ import ShaderEffect from "./shadereffect.js";
 // names, picked by the ShaderEffect base per renderer.shaderLanguage
 const wgslFragment = `
 struct OutlineUniforms {
-	uOutlineColor : vec3f,
+	uOutlineColor : vec4f,
 	uOutlineWidth : f32,
 	uTextureSize : vec2f,
 };
@@ -33,7 +34,9 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, texel.y), 0.0).a);
 	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, texel.y), 0.0).a);
 	if (a > 0.0) {
-		return vec4f(fx.uOutlineColor, a) * vColor;
+		// the color's alpha is the outline's opacity; premultiplied, as everything the batcher draws is
+		let alpha = a * fx.uOutlineColor.a;
+		return vec4f(fx.uOutlineColor.rgb * alpha, alpha) * vColor;
 	}
 	return color;
 }
@@ -53,6 +56,9 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  *     width: 2.0,
  * }));
  * @example
+ * // a half-transparent white outline
+ * mySprite.addPostEffect(new OutlineEffect(renderer, { color: [1, 1, 1, 0.5] }));
+ * @example
  * // remove the effect
  * mySprite.removePostEffect(outline);
  */
@@ -60,14 +66,14 @@ export default class OutlineEffect extends ShaderEffect {
 	/**
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
-	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - outline color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - outline color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the outline's opacity
 	 * @param {number} [options.width=1.0] - outline width in pixels
 	 * @param {number[]} [options.textureSize] - texture dimensions [width, height] (defaults to renderer size)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
 			glsl: `
-			uniform vec3 uOutlineColor;
+			uniform vec4 uOutlineColor;
 			uniform float uOutlineWidth;
 			uniform vec2 uTextureSize;
 			vec4 apply(vec4 color, vec2 uv) {
@@ -86,7 +92,9 @@ export default class OutlineEffect extends ShaderEffect {
 				a = max(a, texture2D(uSampler, uv + vec2(-texel.x,  texel.y)).a);
 				a = max(a, texture2D(uSampler, uv + vec2( texel.x,  texel.y)).a);
 				if (a > 0.0) {
-					return vec4(uOutlineColor, a) * vColor;
+					// the color's alpha is the outline's opacity; premultiplied, as everything the batcher draws is
+					float alpha = a * uOutlineColor.a;
+					return vec4(uOutlineColor.rgb * alpha, alpha) * vColor;
 				}
 				return color;
 			}
@@ -98,17 +106,17 @@ export default class OutlineEffect extends ShaderEffect {
 		const width = options.width ?? 1.0;
 		const texSize = options.textureSize ?? [renderer.width, renderer.height];
 
-		this.setUniform("uOutlineColor", new Float32Array(color));
+		this.setUniform("uOutlineColor", rgba(color));
 		this.setUniform("uOutlineWidth", width);
 		this.setUniform("uTextureSize", new Float32Array(texSize));
 	}
 
 	/**
 	 * set the outline color
-	 * @param {number[]} color - outline color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} color - outline color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the outline's opacity
 	 */
 	setColor(color) {
-		this.setUniform("uOutlineColor", new Float32Array(color));
+		this.setUniform("uOutlineColor", rgba(color));
 	}
 
 	/**
