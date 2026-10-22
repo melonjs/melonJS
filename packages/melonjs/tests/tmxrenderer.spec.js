@@ -162,6 +162,57 @@ describe("TMX Renderers", () => {
 				expect(obj.x).toBeCloseTo(445);
 				expect(obj.y).toBeCloseTo(68);
 			});
+
+			it("should align tile objects by their tileset's objectalignment", () => {
+				// the same object projects to (465, 108), the point its
+				// tileset's alignment puts on the map
+				const place = (objectalignment) => {
+					const obj = {
+						gid: 2,
+						x: 162,
+						y: 54,
+						width: 40,
+						height: 40,
+						tile: { tileset: { objectalignment } },
+					};
+					iso.adjustPosition(obj);
+					return [obj.x, obj.y];
+				};
+				expect(place("topleft")).toEqual([465, 108]);
+				expect(place("center")).toEqual([445, 88]);
+				expect(place("bottomright")).toEqual([425, 68]);
+				// unspecified, or a value Tiled does not know, is the bottom center
+				expect(place("unspecified")).toEqual([445, 68]);
+				expect(place("middle")).toEqual([445, 68]);
+			});
+
+			it("should turn a rotated tile object about the point its tileset aligns", () => {
+				// melonJS turns the sprite and body about their top left, so that
+				// corner must sit where Tiled's turn about (465, 108) leaves it
+				const place = (objectalignment, degrees) => {
+					const obj = {
+						gid: 2,
+						x: 162,
+						y: 54,
+						width: 40,
+						height: 40,
+						rotation: (degrees * Math.PI) / 180,
+						tile: { tileset: { objectalignment } },
+					};
+					iso.adjustPosition(obj);
+					return [obj.x, obj.y].map((v) => {
+						return Math.round(v * 1e6) / 1e6;
+					});
+				};
+				// the bottom center: (-20, -40) from the anchor turns to (40, -20)
+				expect(place("unspecified", 90)).toEqual([505, 88]);
+				// the center: (-20, -20) turns to (20, -20)
+				expect(place("center", 90)).toEqual([485, 88]);
+				// the top left is the anchor: it does not move
+				expect(place("topleft", 90)).toEqual([465, 108]);
+				// half a turn: (-20, -40) turns to (20, 40)
+				expect(place("unspecified", 180)).toEqual([485, 148]);
+			});
 		});
 	});
 
@@ -344,6 +395,39 @@ describe("TMX Renderers", () => {
 				expect(spy.calls.length).toEqual(1);
 				expect(spy.calls[0].dw).toBeCloseTo(16);
 				expect(spy.calls[0].dh).toBeCloseTo(16);
+			});
+
+			it("should sit collection tiles of different heights on the cell's bottom", () => {
+				// the tileset's tileheight is its tallest image (64): the short
+				// one must not be drawn as if it were that tall
+				fakeImage("short", 48, 32);
+				fakeImage("tall", 48, 64);
+				const ts = makeTileset(
+					{
+						tileheight: 64,
+						tilecount: 2,
+						columns: 0,
+						image: undefined,
+						tiles: [
+							{ id: 0, image: "short.png" },
+							{ id: 1, image: "tall.png" },
+						],
+					},
+					32,
+					32,
+				);
+				expect(ts.isCollection).toEqual(true);
+				const ortho = new TMXOrthogonalRenderer(mockMap());
+				for (const gid of [1, 2]) {
+					const spy = spyRenderer();
+					ortho.drawTile(spy, 0, 0, new Tile(0, 0, gid, ts));
+					ortho.drawTileRaw(spy, 0, 0, gid, 0, ts);
+					for (const { dy, dh } of spy.calls) {
+						// the bottom of the first row of 32px cells
+						expect(dy + dh, `gid ${gid}`).toEqual(32);
+					}
+					expect(spy.calls.length).toEqual(2);
+				}
 			});
 		});
 

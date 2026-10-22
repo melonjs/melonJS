@@ -1318,6 +1318,232 @@ describe("TMXTileMap", () => {
 		});
 	});
 
+	describe("getObjects: tile object size and alignment, as Tiled draws them", () => {
+		// one tile object at (64, 96) over the 32x32 test tiles
+		function tileObject(object, tileset = {}) {
+			const map = new TMXTileMap("test", {
+				...tileObjectMap,
+				tilesets: [{ ...tilesetData, ...tileset }],
+				layers: [
+					{
+						type: "objectgroup",
+						name: "TileObjects",
+						opacity: 1,
+						visible: true,
+						objects: [
+							{ id: 300, name: "", type: "", gid: 1, x: 64, y: 96, ...object },
+						],
+					},
+				],
+			});
+			return map.getObjects(true)[0];
+		}
+
+		it("draws a tile object resized in Tiled at its own size, with a body to match", () => {
+			const obj = tileObject({ width: 64, height: 48 });
+			expect(obj.getBounds().width).toBeCloseTo(64);
+			expect(obj.getBounds().height).toBeCloseTo(48);
+			// anchored at its bottom left: Tiled's y is the bottom of the 48px box
+			expect([obj.pos.x, obj.pos.y]).toEqual([64, 48]);
+			const body = obj.bodyDef.shapes[0].getBounds();
+			expect([body.width, body.height]).toEqual([64, 48]);
+		});
+
+		it("draws a tile object at the tile's size when it has that size or none", () => {
+			for (const size of [{ width: 32, height: 32 }, {}]) {
+				const obj = tileObject(size);
+				expect(obj.getBounds().width).toBeCloseTo(32);
+				expect(obj.getBounds().height).toBeCloseTo(32);
+				expect([obj.pos.x, obj.pos.y]).toEqual([64, 64]);
+				const body = obj.bodyDef.shapes[0].getBounds();
+				expect([body.width, body.height]).toEqual([32, 32]);
+			}
+		});
+
+		it("stretches a flipped tile object without moving it off its box", () => {
+			// gid with the horizontal flip bit: flipped around the tile's own
+			// center, then stretched, it covers the same box as unflipped.
+			// Stretched first, then flipped, it would sit 32px to the left
+			const plain = tileObject({ width: 64, height: 48 }).getBounds();
+			const flipped = tileObject({
+				gid: (0x80000000 | 1) >>> 0,
+				width: 64,
+				height: 48,
+			}).getBounds();
+			expect(flipped.left).toBeCloseTo(plain.left);
+			expect(flipped.top).toBeCloseTo(plain.top);
+			expect(flipped.width).toBeCloseTo(64);
+			expect(flipped.height).toBeCloseTo(48);
+		});
+
+		it("keeps a resized or flipped image-collection tile on its box", () => {
+			// a collection tile is its own 32x48 image. Scaled or flipped about
+			// a centered anchor, it would sit off the box: a quarter of the
+			// lost size up and left, or a whole width to the right
+			const image = fakeImage("tallblock", 32, 48);
+			const collection = {
+				name: "blocks",
+				tilewidth: 32,
+				tileheight: 48,
+				tilecount: 1,
+				columns: 0,
+				image: undefined,
+				tiles: [{ id: 0, image: "tallblock.png" }],
+			};
+			for (const object of [
+				{ width: 16, height: 24 },
+				{ width: 48, height: 36 },
+				{ gid: (0x80000000 | 1) >>> 0, width: 32, height: 48 },
+				{ gid: (0x40000000 | 1) >>> 0, width: 16, height: 24 },
+			]) {
+				const obj = tileObject(object, collection);
+				expect(obj.image).toBe(image);
+				// the world does this on its first update
+				const bounds = obj.updateBounds();
+				const box = [64, 96 - object.height, object.width, object.height];
+				[bounds.left, bounds.top, bounds.width, bounds.height].forEach(
+					(value, i) => {
+						expect(value, JSON.stringify(object)).toBeCloseTo(box[i]);
+					},
+				);
+			}
+		});
+
+		it("turns a rotated tile object about its anchor, sprite and body alike", () => {
+			// [object, the box Tiled draws it in]: Tiled turns a tile object
+			// about the point its tileset aligns, here the bottom left (64, 96)
+			const tallblock = {
+				name: "blocks",
+				tilewidth: 32,
+				tileheight: 48,
+				tilecount: 1,
+				columns: 0,
+				image: undefined,
+				tiles: [{ id: 0, image: "tallblock.png" }],
+			};
+			fakeImage("tallblock", 32, 48);
+			const cases = [
+				// a quarter turn: the box hangs below and right of the corner
+				[{ width: 32, height: 32, rotation: 90 }, {}, [64, 96, 32, 32]],
+				// half a turn: it hangs below and left of it
+				[{ width: 64, height: 48, rotation: 180 }, {}, [0, 96, 64, 48]],
+				// a collection tile, stretched and turned
+				[{ width: 32, height: 48, rotation: 90 }, tallblock, [64, 96, 48, 32]],
+				// centered by its tileset: it turns about its own center
+				[
+					{ width: 64, height: 32, rotation: 90 },
+					{ objectalignment: "center" },
+					[48, 64, 32, 64],
+				],
+			];
+			for (const [object, tileset, box] of cases) {
+				const obj = tileObject(object, tileset);
+				// the world does this on its first update
+				const drawn = obj.updateBounds();
+				const shape = obj.bodyDef.shapes[0].getBounds();
+				const body = [
+					obj.pos.x + shape.left,
+					obj.pos.y + shape.top,
+					shape.width,
+					shape.height,
+				];
+				const label = JSON.stringify(object);
+				[drawn.left, drawn.top, drawn.width, drawn.height].forEach((v, i) => {
+					expect(v, label + " drawn").toBeCloseTo(box[i]);
+				});
+				body.forEach((v, i) => {
+					expect(v, label + " body").toBeCloseTo(box[i]);
+				});
+			}
+		});
+
+		it("loads an animated tile object and shows its frames in order", () => {
+			// frames 0 then 3 of the 2x2 test tiles: by position, not by id
+			const obj = tileObject(
+				{ width: 32, height: 32 },
+				{
+					tiles: [
+						{
+							id: 0,
+							animation: [
+								{ tileid: 0, duration: 100 },
+								{ tileid: 3, duration: 100 },
+							],
+						},
+					],
+				},
+			);
+			expect(obj.current.length).toEqual(2);
+			expect([obj.current.offset.x, obj.current.offset.y]).toEqual([0, 0]);
+			obj.setAnimationFrame(1);
+			expect([obj.current.offset.x, obj.current.offset.y]).toEqual([32, 32]);
+		});
+
+		it("loads an animated image-collection tile object and shows each image", () => {
+			// two 32x48 images, red then blue: the second frame must show blue
+			for (const [name, colour] of [
+				["redblock", "#ff0000"],
+				["blueblock", "#0000ff"],
+			]) {
+				const context = fakeImage(name, 32, 48).getContext("2d");
+				context.fillStyle = colour;
+				context.fillRect(0, 0, 32, 48);
+			}
+			const obj = tileObject(
+				{ width: 32, height: 48 },
+				{
+					name: "animblocks",
+					tilewidth: 32,
+					tileheight: 48,
+					tilecount: 2,
+					columns: 0,
+					image: undefined,
+					tiles: [
+						{
+							id: 0,
+							image: "redblock.png",
+							animation: [
+								{ tileid: 0, duration: 100 },
+								{ tileid: 1, duration: 100 },
+							],
+						},
+						{ id: 1, image: "blueblock.png" },
+					],
+				},
+			);
+			const pixel = () => {
+				const { x, y } = obj.current.offset;
+				return Array.from(
+					obj.image.getContext("2d").getImageData(x + 1, y + 1, 1, 1).data,
+				);
+			};
+			expect(obj.current.length).toEqual(2);
+			expect(pixel()).toEqual([255, 0, 0, 255]);
+			obj.setAnimationFrame(1);
+			expect(pixel()).toEqual([0, 0, 255, 255]);
+		});
+
+		it("places a tile object by its tileset's objectalignment", () => {
+			// [x, y] of the top left of a 64x48 object whose anchor is at (64, 96)
+			const expected = {
+				unspecified: [64, 48],
+				topleft: [64, 96],
+				top: [32, 96],
+				topright: [0, 96],
+				left: [64, 72],
+				center: [32, 72],
+				right: [0, 72],
+				bottomleft: [64, 48],
+				bottom: [32, 48],
+				bottomright: [0, 48],
+			};
+			for (const [objectalignment, position] of Object.entries(expected)) {
+				const obj = tileObject({ width: 64, height: 48 }, { objectalignment });
+				expect([obj.pos.x, obj.pos.y], objectalignment).toEqual(position);
+			}
+		});
+	});
+
 	// ---------------------------------------------------------------
 	// TMXLayer passthrough
 	// ---------------------------------------------------------------

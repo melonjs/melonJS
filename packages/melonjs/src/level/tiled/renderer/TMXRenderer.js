@@ -1,6 +1,21 @@
 import { Bounds, boundsPool } from "./../../../physics/bounds.ts";
 import TMXLayer from "./../TMXLayer.js";
 
+// where each Tiled `objectalignment` puts a tile object's position, as a
+// fraction of its width and height from its top left ("unspecified" is
+// not listed: the renderer picks the orientation's default)
+const OBJECT_ALIGNMENT = new Map([
+	["topleft", [0, 0]],
+	["top", [0.5, 0]],
+	["topright", [1, 0]],
+	["left", [0, 0.5]],
+	["center", [0.5, 0.5]],
+	["right", [1, 0.5]],
+	["bottomleft", [0, 1]],
+	["bottom", [0.5, 1]],
+	["bottomright", [1, 1]],
+]);
+
 /**
  * additional import for TypeScript
  * @import CanvasRenderer from "../../../video/canvas/canvas_renderer.js";
@@ -94,9 +109,35 @@ export default class TMXRenderer {
 	adjustPosition(obj) {
 		// only adjust position if obj.gid is defined
 		if (typeof obj.gid === "number") {
-			// Tiled objects origin point is "bottom-left" in Tiled,
-			// "top-left" in melonJS
-			obj.y -= obj.height;
+			this.alignTileObject(obj, "bottomleft");
+		}
+	}
+
+	/**
+	 * move a tile object from the point Tiled anchors it at to its top left,
+	 * where melonJS places renderables. The point is the tileset's
+	 * `objectalignment`, or `fallback` when the tileset leaves it unspecified
+	 * @param {object} obj - a TMX Object with x, y, width, height and rotation properties
+	 * @param {string} fallback - the alignment Tiled uses for this orientation
+	 * @ignore
+	 * @internal
+	 */
+	alignTileObject(obj, fallback) {
+		const offset =
+			OBJECT_ALIGNMENT.get(obj.tile?.tileset.objectalignment) ??
+			OBJECT_ALIGNMENT.get(fallback);
+		const ax = offset[0] !== 0 ? obj.width * offset[0] : 0;
+		const ay = offset[1] !== 0 ? obj.height * offset[1] : 0;
+		obj.x -= ax;
+		obj.y -= ay;
+		// Tiled turns a tile object about that point, while its sprite and
+		// body turn about their top left: move the top left to where turning
+		// about the point leaves it
+		if (obj.rotation) {
+			const cos = Math.cos(obj.rotation);
+			const sin = Math.sin(obj.rotation);
+			obj.x += ax - (ax * cos - ay * sin);
+			obj.y += ay - (ax * sin + ay * cos);
 		}
 	}
 

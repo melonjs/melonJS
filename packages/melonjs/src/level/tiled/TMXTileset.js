@@ -4,6 +4,8 @@ import { Matrix2d } from "../../math/matrix2d.ts";
 import { Vector2d } from "../../math/vector2d.ts";
 import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
+import { createCanvas } from "../../video/canvas_factory.js";
+import { TextureAtlas } from "../../video/texture/atlas.js";
 import { buildFlipTransform } from "./TMXTile.js";
 import { resolveEmbeddedImage } from "./TMXUtils.js";
 
@@ -133,6 +135,16 @@ export default class TMXTileset {
 		 * @default "stretch"
 		 */
 		this.fillmode = tileset.fillmode ?? "stretch";
+
+		/**
+		 * the point of a tile object from this tileset that sits at its
+		 * position: "topleft", "top", "topright", "left", "center", "right",
+		 * "bottomleft", "bottom" or "bottomright". "unspecified" means the
+		 * bottom left, or the bottom center on an isometric map
+		 * @type {string}
+		 * @default "unspecified"
+		 */
+		this.objectalignment = tileset.objectalignment ?? "unspecified";
 
 		/**
 		 * the map's tile grid width (used for tilerendersize="grid")
@@ -514,6 +526,53 @@ export default class TMXTileset {
 	}
 
 	/**
+	 * the texture the sprite of an animated tile object is cut from: the
+	 * tileset image, or for an image collection the images its animations
+	 * show, painted side by side once and named by their tile id
+	 * @returns {TextureAtlas}
+	 * @ignore
+	 * @internal
+	 */
+	getAnimationTexture() {
+		if (!this.isCollection) {
+			return this.texture;
+		}
+		if (this._animationTexture === undefined) {
+			const ids = new Set();
+			for (const animation of this.animations.values()) {
+				for (const frame of animation.frames) {
+					ids.add(+frame.tileid);
+				}
+			}
+			let width = 0;
+			let height = 0;
+			for (const id of ids) {
+				const image = this.getTileImage(id + this.firstgid);
+				width += image.width;
+				height = Math.max(height, image.height);
+			}
+			const canvas = createCanvas(width, height);
+			const context = canvas.getContext("2d");
+			const frames = [];
+			let x = 0;
+			for (const id of ids) {
+				const image = this.getTileImage(id + this.firstgid);
+				context.drawImage(image, x, 0);
+				frames.push({
+					filename: "" + id,
+					frame: { x, y: 0, w: image.width, h: image.height },
+				});
+				x += image.width;
+			}
+			this._animationTexture = new TextureAtlas(
+				{ meta: { app: "melonJS", size: { w: width, h: height } }, frames },
+				canvas,
+			);
+		}
+		return this._animationTexture;
+	}
+
+	/**
 	 * set the tile properties
 	 * @param {number} gid - global tile ID
 	 * @param {object} prop - property object
@@ -626,6 +685,9 @@ export default class TMXTileset {
 			} else {
 				dw = tmxTile.width;
 				dh = tmxTile.height;
+				// bottom-align against tileset baseline (renderer uses
+				// tileset.tileheight, the tallest image of the collection)
+				dy += this.tileheight - dh;
 			}
 		} else {
 			// spritesheet: use precomputed values
@@ -730,6 +792,9 @@ export default class TMXTileset {
 			} else {
 				dw = tileWidth;
 				dh = tileHeight;
+				// bottom-align against tileset baseline (renderer uses
+				// tileset.tileheight, the tallest image of the collection)
+				dy += this.tileheight - dh;
 			}
 		} else {
 			// spritesheet: use precomputed values
