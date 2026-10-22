@@ -15,11 +15,14 @@ struct WaveUniforms {
 	uFrequency : f32,
 	uSpeed : f32,
 	uTime : f32,
+	uAnchor : f32,
 };
 @group(3) @binding(0) var<uniform> fx : WaveUniforms;
 
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
-	let wave = sin(uv.y * fx.uFrequency + fx.uTime * fx.uSpeed) * fx.uAmplitude;
+	// with an anchor, rows fade from full wave at the top to none at the anchor
+	let bend = select(1.0, clamp((fx.uAnchor - uv.y) / fx.uAnchor, 0.0, 1.0), fx.uAnchor > 0.0);
+	let wave = sin(uv.y * fx.uFrequency + fx.uTime * fx.uSpeed) * fx.uAmplitude * bend;
 	let distorted = vec2f(uv.x + wave, uv.y);
 	return textureSample(uTexture, uSampler, distorted) * vColor;
 }
@@ -29,6 +32,12 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * A shader effect that applies a sine wave distortion to the sprite.
  * Commonly used for underwater, heat haze, or dream sequence effects.
  * The `time` uniform should be updated each frame for animation.
+ *
+ * With an `anchor`, the wave fades out toward a row instead of moving the
+ * whole sprite: full at the top, nothing at the anchor and below. That is
+ * how {@link SwayEffect} leans a sprite while its feet stay planted. Rows
+ * are measured across the texture the effect samples, so on a sprite cut
+ * from an atlas the anchor is a row of the atlas.
  * @category Effects
  * @see {@link Renderable#addPostEffect} for usage
  * @example
@@ -36,6 +45,10 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * mySprite.addPostEffect(wave);
  * // update each frame
  * wave.setTime(performance.now() / 1000);
+ * @example
+ * // seaweed: the tips wave, the roots on the bottom row stay planted
+ * const seaweed = new WaveEffect(renderer, { amplitude: 0.02, frequency: 6.0, anchor: 1.0 });
+ * mySprite.addPostEffect(seaweed);
  */
 export default class WaveEffect extends ShaderEffect {
 	/**
@@ -44,6 +57,7 @@ export default class WaveEffect extends ShaderEffect {
 	 * @param {number} [options.amplitude=0.01] - wave displacement strength (in UV space, 0.01 = subtle)
 	 * @param {number} [options.frequency=10.0] - number of waves across the sprite
 	 * @param {number} [options.speed=2.0] - wave animation speed
+	 * @param {number} [options.anchor=0] - the row the wave fades out at, as a fraction of the height from the top (0..1); 0 waves every row alike
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
@@ -52,8 +66,11 @@ export default class WaveEffect extends ShaderEffect {
 			uniform float uFrequency;
 			uniform float uSpeed;
 			uniform float uTime;
+			uniform float uAnchor;
 			vec4 apply(vec4 color, vec2 uv) {
-				float wave = sin(uv.y * uFrequency + uTime * uSpeed) * uAmplitude;
+				// with an anchor, rows fade from full wave at the top to none at the anchor
+				float bend = uAnchor > 0.0 ? clamp((uAnchor - uv.y) / uAnchor, 0.0, 1.0) : 1.0;
+				float wave = sin(uv.y * uFrequency + uTime * uSpeed) * uAmplitude * bend;
 				vec2 distorted = vec2(uv.x + wave, uv.y);
 				return texture2D(uSampler, distorted) * vColor;
 			}
@@ -65,6 +82,7 @@ export default class WaveEffect extends ShaderEffect {
 		this.setUniform("uFrequency", options.frequency ?? 10.0);
 		this.setUniform("uSpeed", options.speed ?? 2.0);
 		this.setUniform("uTime", 0.0);
+		this.setUniform("uAnchor", options.anchor ?? 0);
 	}
 
 	/**
@@ -81,5 +99,13 @@ export default class WaveEffect extends ShaderEffect {
 	 */
 	setFrequency(frequency) {
 		this.setUniform("uFrequency", frequency);
+	}
+
+	/**
+	 * set the row the wave fades out at
+	 * @param {number} anchor - a fraction of the height from the top (0..1); 0 waves every row alike
+	 */
+	setAnchor(anchor) {
+		this.setUniform("uAnchor", anchor);
 	}
 }

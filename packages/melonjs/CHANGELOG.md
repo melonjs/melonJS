@@ -2,7 +2,14 @@
 
 ## [20.11.0] (melonJS 2) - _unreleased_
 
+### Added
+- Effects: colors take an alpha. Every color option and `setColor` takes `[r, g, b]` or `[r, g, b, a]`, the alpha being the color's opacity (`[r, g, b]` stays opaque), `RadialGradientEffect` honours the alpha of its `Color`, and `DropShadowEffect` gains the `setColor` the others have
+- Effects: `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze, its top swaying most and everything from its anchor row down staying put. It is a `WaveEffect`, which now takes an `anchor` for the row its wave fades out at, and it wraps its own time so it never stutters on a phone's medium-precision floats
+- Skills: the effects skill covers colors with an alpha and `SwayEffect`, with an example of each
+
 ### Fixed
+- Effects: a color given four values no longer breaks the effect. WebGL rejected it, and on WebGPU the fourth value overwrote the next setting, such as an outline's width; a color of any other length now throws a `TypeError` saying so
+- Effects: a colored drop shadow below full opacity is no longer too bright, nor are the soft edges of an outline. Both added their color at full strength whatever its opacity
 - TextureAtlas: drawing part of an image, a bitmap font glyph or a repeating pattern no longer adds a region to the atlas for every new source rectangle. Those regions piled up for as long as the atlas lived, and turned up among the frames an animation is built from ([#1281](https://github.com/melonjs/melonJS/issues/1281), thanks @snowyukitty)
 - TextureAtlas: on an atlas with pages of different sizes, a source rectangle drawn from one page no longer reuses the UVs worked out for the same rectangle on another (thanks @snowyukitty)
 - Tiled: objects on isometric maps are placed where Tiled draws them. Positions are measured in tile heights on both axes, which changes maps whose tiles are not 2:1, and tile objects are anchored at their bottom center, so a game that offset them to compensate should drop that offset (thanks @vtxe02023274)

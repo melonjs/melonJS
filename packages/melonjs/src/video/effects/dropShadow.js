@@ -1,3 +1,4 @@
+import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -12,7 +13,7 @@ import ShaderEffect from "./shadereffect.js";
 const wgslFragment = `
 struct ShadowUniforms {
 	uShadowOffset : vec2f,
-	uShadowColor : vec3f,
+	uShadowColor : vec4f,
 	uShadowOpacity : f32,
 	uTextureSize : vec2f,
 	uUVYDir : f32,
@@ -33,7 +34,9 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	offset.y = offset.y * fx.uUVYDir;
 	let shadowAlpha = textureSampleLevel(uTexture, uSampler, uv - offset, 0.0).a;
 	if (shadowAlpha > 0.0) {
-		return vec4f(fx.uShadowColor, shadowAlpha * fx.uShadowOpacity) * vColor;
+		// the color's alpha scales the opacity; premultiplied, as everything the batcher draws is
+		let alpha = shadowAlpha * fx.uShadowOpacity * fx.uShadowColor.a;
+		return vec4f(fx.uShadowColor.rgb * alpha, alpha) * vColor;
 	}
 	return color;
 }
@@ -53,6 +56,12 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  *     color: [0.0, 0.0, 0.0],
  *     opacity: 0.5,
  * }));
+ * @example
+ * // a soft blue shadow: the color's alpha scales `opacity`
+ * mySprite.addPostEffect(new DropShadowEffect(renderer, {
+ *     color: [0.1, 0.2, 0.6, 0.5],
+ *     opacity: 0.8,
+ * }));
  */
 export default class DropShadowEffect extends ShaderEffect {
 	/**
@@ -60,7 +69,7 @@ export default class DropShadowEffect extends ShaderEffect {
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.offsetX=2.0] - shadow x offset in texels
 	 * @param {number} [options.offsetY=2.0] - shadow y offset in texels
-	 * @param {number[]} [options.color=[0.0, 0.0, 0.0]] - shadow color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} [options.color=[0.0, 0.0, 0.0]] - shadow color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales `opacity`
 	 * @param {number} [options.opacity=0.5] - shadow opacity (0.0–1.0)
 	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
 	 */
@@ -68,7 +77,7 @@ export default class DropShadowEffect extends ShaderEffect {
 		super(renderer, {
 			glsl: `
 			uniform vec2 uShadowOffset;
-			uniform vec3 uShadowColor;
+			uniform vec4 uShadowColor;
 			uniform float uShadowOpacity;
 			uniform vec2 uTextureSize;
 			uniform float uUVYDir;
@@ -84,7 +93,9 @@ export default class DropShadowEffect extends ShaderEffect {
 				offset.y *= uUVYDir;
 				float shadowAlpha = texture2D(uSampler, uv - offset).a;
 				if (shadowAlpha > 0.0) {
-					return vec4(uShadowColor, shadowAlpha * uShadowOpacity) * vColor;
+					// the color's alpha scales the opacity; premultiplied, as everything the batcher draws is
+					float alpha = shadowAlpha * uShadowOpacity * uShadowColor.a;
+					return vec4(uShadowColor.rgb * alpha, alpha) * vColor;
 				}
 				return color;
 			}
@@ -97,10 +108,7 @@ export default class DropShadowEffect extends ShaderEffect {
 			"uShadowOffset",
 			new Float32Array([options.offsetX ?? 2.0, options.offsetY ?? 2.0]),
 		);
-		this.setUniform(
-			"uShadowColor",
-			new Float32Array(options.color ?? [0.0, 0.0, 0.0]),
-		);
+		this.setUniform("uShadowColor", rgba(options.color ?? [0.0, 0.0, 0.0]));
 		this.setUniform("uShadowOpacity", options.opacity ?? 0.5);
 		this.setUniform("uTextureSize", new Float32Array(texSize));
 		// uv.y grows downward until a renderer path says otherwise
@@ -114,6 +122,14 @@ export default class DropShadowEffect extends ShaderEffect {
 	 */
 	setOffset(x, y) {
 		this.setUniform("uShadowOffset", new Float32Array([x, y]));
+	}
+
+	/**
+	 * set the shadow color
+	 * @param {number[]} color - shadow color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales the opacity
+	 */
+	setColor(color) {
+		this.setUniform("uShadowColor", rgba(color));
 	}
 
 	/**

@@ -8,7 +8,7 @@ import {
 	event,
 	ImageLayer,
 	loader,
-	type ShaderEffect,
+	SwayEffect,
 	timer,
 } from "melonjs";
 
@@ -28,38 +28,41 @@ const BASE = 0.57;
 /** radians per second: one full sway about every four seconds */
 const SPEED = 1.5;
 
-/** one turn, the period the phase is wrapped to (see `shaders/sway.ts`) */
-const TURN = Math.PI * 2;
-
 /**
  * Sway the background hills in every level the game loads.
+ *
+ * A `SwayEffect` leans the round cactus pillars of the background image from
+ * side to side, as if a breeze were going through them: the tips move most,
+ * and nothing below `BASE` moves at all, so the hills they stand in stay put
+ * while the pillars bend.
  *
  * The maps say nothing about it: when a level is in the world, this looks for
  * the image layer drawing the hills and puts the sway on it. So it follows
  * that layer into any map, whatever the map calls it, without anyone marking
  * it up in Tiled.
  *
- * One effect for every level. It is the preloaded `"sway"` shader asset,
- * compiled behind the loading screen and owned by the loader as a shared
- * instance, so a level being unloaded takes its layer away but not the
- * effect, and the next level reuses it rather than compiling a new one.
+ * One effect for every level. It is marked `shared`, so a level being
+ * unloaded takes its layer away but not the effect, and the next level puts
+ * the same one on its own layer.
  *
  * Call once, after the preload and before the first level loads. Does
  * nothing on the Canvas renderer.
  * @param app - the application whose world the levels load into
  */
 export const addBackgroundSway = (app: Application) => {
-	const sway = loader.getShader("sway") as ShaderEffect | undefined;
-	// The Canvas renderer has no shaders: the asset still loads, as an inert
-	// effect, and the hills simply stand still. Nothing is put on the layer
-	// and nothing runs per frame, rather than feeding an effect that is never
-	// drawn.
-	if (sway?.enabled !== true) {
+	const sway = new SwayEffect(app.renderer, {
+		strength: STRENGTH,
+		anchor: BASE,
+		speed: SPEED,
+	});
+	// The Canvas renderer has no shaders: the effect comes back inert, and the
+	// hills simply stand still. Nothing is put on the layer and nothing runs
+	// per frame, rather than feeding an effect that is never drawn.
+	if (!sway.enabled) {
 		return;
 	}
-	sway.setUniform("uStrength", STRENGTH);
-	sway.setUniform("uBase", BASE);
-	sway.setUniform("uPhase", 0);
+	// kept when the layer carrying it is destroyed with its level
+	sway.shared = true;
 
 	// every level: the first when play starts, the next through the door at
 	// the end of it, and either again after a restart
@@ -76,7 +79,8 @@ export const addBackgroundSway = (app: Application) => {
 		}
 	});
 
+	// the effect wraps the phase itself, so a raw clock is fine here
 	event.on(event.GAME_UPDATE, () => {
-		sway.setUniform("uPhase", ((timer.getTime() / 1000) * SPEED) % TURN);
+		sway.setTime(timer.getTime() / 1000);
 	});
 };

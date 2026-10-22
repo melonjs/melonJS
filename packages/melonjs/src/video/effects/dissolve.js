@@ -1,3 +1,4 @@
+import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -12,7 +13,7 @@ import ShaderEffect from "./shadereffect.js";
 const wgslFragment = `
 struct DissolveUniforms {
 	uDissolveProgress : f32,
-	uEdgeColor : vec3f,
+	uEdgeColor : vec4f,
 	uEdgeWidth : f32,
 };
 @group(3) @binding(0) var<uniform> fx : DissolveUniforms;
@@ -57,11 +58,12 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 		// 3-stop gradient: red edge -> orange -> bright white core
 		let red = vec3f(0.8, 0.1, 0.0);
 		var glow = select(
-			mix(fx.uEdgeColor, vec3f(1.0, 0.95, 0.8), (t - 0.5) * 2.0),
-			mix(red, fx.uEdgeColor, t * 2.0),
+			mix(fx.uEdgeColor.rgb, vec3f(1.0, 0.95, 0.8), (t - 0.5) * 2.0),
+			mix(red, fx.uEdgeColor.rgb, t * 2.0),
 			t < 0.5);
 		glow *= 1.0 + t * t;
-		return vec4f(mix(color.rgb, glow, t) * color.a, color.a);
+		// the color's alpha is the edge's opacity over the sprite
+		return vec4f(mix(color.rgb, glow, t * fx.uEdgeColor.a) * color.a, color.a);
 	}
 	return color;
 }
@@ -81,20 +83,23 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  *
  * // animate the dissolve (0 = fully visible, 1 = fully dissolved)
  * dissolve.setProgress(0.5);
+ * @example
+ * // a dissolve whose edge glows only faintly over the sprite
+ * mySprite.addPostEffect(new DissolveEffect(renderer, { edgeColor: [1.0, 0.5, 0.0, 0.4] }));
  */
 export default class DissolveEffect extends ShaderEffect {
 	/**
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.progress=0.0] - dissolve progress (0.0 = visible, 1.0 = dissolved)
-	 * @param {number[]} [options.edgeColor=[1.0, 0.5, 0.0]] - color of the dissolve edge
+	 * @param {number[]} [options.edgeColor=[1.0, 0.5, 0.0]] - color of the dissolve edge as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the edge's opacity
 	 * @param {number} [options.edgeWidth=0.1] - width of the colored edge (0.0–1.0)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
 			glsl: `
 			uniform float uDissolveProgress;
-			uniform vec3 uEdgeColor;
+			uniform vec4 uEdgeColor;
 			uniform float uEdgeWidth;
 			// pseudo-random hash
 			float hash(vec2 p) {
@@ -129,10 +134,11 @@ export default class DissolveEffect extends ShaderEffect {
 					// 3-stop gradient: red edge -> orange -> bright white core
 					vec3 red = vec3(0.8, 0.1, 0.0);
 					vec3 glow = (t < 0.5)
-						? mix(red, uEdgeColor, t * 2.0)
-						: mix(uEdgeColor, vec3(1.0, 0.95, 0.8), (t - 0.5) * 2.0);
+						? mix(red, uEdgeColor.rgb, t * 2.0)
+						: mix(uEdgeColor.rgb, vec3(1.0, 0.95, 0.8), (t - 0.5) * 2.0);
 					glow *= 1.0 + t * t;
-					return vec4(mix(color.rgb, glow, t) * color.a, color.a);
+					// the color's alpha is the edge's opacity over the sprite
+					return vec4(mix(color.rgb, glow, t * uEdgeColor.a) * color.a, color.a);
 				}
 				return color;
 			}
@@ -142,10 +148,7 @@ export default class DissolveEffect extends ShaderEffect {
 
 		this.progress = options.progress ?? 0.0;
 		this.setUniform("uDissolveProgress", this.progress);
-		this.setUniform(
-			"uEdgeColor",
-			new Float32Array(options.edgeColor ?? [1.0, 0.5, 0.0]),
-		);
+		this.setUniform("uEdgeColor", rgba(options.edgeColor ?? [1.0, 0.5, 0.0]));
 		this.setUniform("uEdgeWidth", options.edgeWidth ?? 0.1);
 	}
 
@@ -160,9 +163,9 @@ export default class DissolveEffect extends ShaderEffect {
 
 	/**
 	 * set the edge color
-	 * @param {number[]} color - edge color as [r, g, b] (0.0–1.0)
+	 * @param {number[]} color - edge color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the edge's opacity
 	 */
 	setEdgeColor(color) {
-		this.setUniform("uEdgeColor", new Float32Array(color));
+		this.setUniform("uEdgeColor", rgba(color));
 	}
 }
