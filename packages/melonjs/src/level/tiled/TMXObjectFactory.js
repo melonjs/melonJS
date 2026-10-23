@@ -7,6 +7,12 @@ import { createTileObject } from "./factories/tile.js";
 import TMXLayer from "./TMXLayer.js";
 
 /**
+ * @import Renderable from "../../renderable/renderable.js";
+ * @import TMXObject from "./TMXObject.js";
+ * @import TMXTileMap from "./TMXTileMap.js";
+ */
+
+/**
  * registry of Tiled object factory functions
  * @ignore
  * @internal
@@ -42,6 +48,13 @@ let factoriesInitialized = false;
 const builtinNames = new Set();
 
 /**
+ * the factories for an object's shape rather than its class
+ * @ignore
+ * @internal
+ */
+const STRUCTURAL_TYPES = new Set(["text", "tile", "shape"]);
+
+/**
  * Return a default shape (polygon) for the given dimensions,
  * or the existing shapes if already defined in settings.
  * @param {object} settings - TMX object settings
@@ -70,9 +83,11 @@ export function getDefaultShape(settings) {
  * 1. TMXLayer instances → "layer" (passthrough)
  * 2. Object class matching a registered factory → class name
  * 3. Object name matching a registered factory → name
- * 4. Object with text data → "text"
- * 5. Object with tile/gid data → "tile"
- * 6. Everything else → "shape"
+ * 4. A tile object with no class, whose tile's class matches a factory or
+ *    class the game registered (never a built-in) → the tile's class
+ * 5. Object with text data → "text"
+ * 6. Object with tile/gid data → "tile"
+ * 7. Everything else → "shape"
  * @param {object} settings - TMX object settings
  * @returns {string} the factory type key
  * @ignore
@@ -90,6 +105,20 @@ export function detectObjectType(settings) {
 	if (typeof settings.name === "string" && factories.has(settings.name)) {
 		return settings.name;
 	}
+	// a tile object with no class of its own takes its tile's class, as in
+	// Tiled. Only for a name the game registered itself, so a tile classed
+	// like a built-in ("shape", "Trigger"...) stays a tile
+	if (!settings.class && typeof settings.tile === "object") {
+		const tileClass = settings.tile.tileset.getTileClass(settings.tile.tileId);
+		if (
+			tileClass !== undefined &&
+			factories.has(tileClass) &&
+			!STRUCTURAL_TYPES.has(tileClass) &&
+			!builtinNames.has(tileClass)
+		) {
+			return tileClass;
+		}
+	}
 	if (typeof settings.text === "object") {
 		return "text";
 	}
@@ -106,12 +135,14 @@ export function detectObjectType(settings) {
  * <br><br>
  * Built-in structural types are: `"text"`, `"tile"`, `"shape"`.
  * Custom types are matched against the object's Tiled `class` or `name` property.
+ * A tile object with no class of its own is matched by its tile's class.
  * <br><br>
  * For simple cases where you just want to map a Tiled class to a constructor,
  * use {@link registerTiledObjectClass} instead.
  * @category Tilemap
+ * @template [S=TMXObject]
  * @param {string} type - the object type key (built-in type or Tiled class/name)
- * @param {Function} factory - factory function with signature `(settings, map) => Renderable`
+ * @param {(settings: S, map: TMXTileMap) => Renderable} factory - factory function, given the Tiled object (a {@link TMXObject}) and its map
  * @example
  * // register a custom factory for "Spine" objects in Tiled
  * // (set the object class to "Spine" in Tiled, and add atlasFile/jsonFile custom properties)
@@ -147,7 +178,14 @@ export function registerTiledObjectFactory(type, factory) {
 /**
  * Register a class constructor as a Tiled object factory.
  * When an object with a matching `class` or `name` is found in a Tiled map,
- * an instance of the given constructor will be created with `new Constructor(x, y, settings)`.
+ * an instance of the given constructor will be created with `new Constructor(x, y, settings)`,
+ * `settings` being the {@link TMXObject} as read from the map.
+ * <br><br>
+ * A tile object with no class of its own is matched by its tile's class, as in
+ * Tiled: give a tile a class in Tiled's tileset editor, and every object placed
+ * from that tile is built by the class registered under that name (an object's
+ * own class or name, when registered, still comes first). The tile's custom
+ * properties are read with {@link TMXObject#resolvedProperty}.
  * <br><br>
  * This is a convenience wrapper around {@link registerTiledObjectFactory}.
  * If the same class is registered twice with the same constructor, the call is silently ignored.
@@ -156,8 +194,9 @@ export function registerTiledObjectFactory(type, factory) {
  * Note: classes registered via {@link pool.register} are also automatically registered
  * as Tiled object factories (unless {@link pool.autoRegisterTiled} is set to `false`).
  * @category Tilemap
+ * @template [S=TMXObject]
  * @param {string} name - the Tiled class or object name to match
- * @param {Function} Constructor - class constructor with signature `(x, y, settings)`
+ * @param {new (x: number, y: number, settings: S) => Renderable} Constructor - class constructor, given the object's position and the object (a {@link TMXObject})
  * @example
  * // register a custom enemy class for use in Tiled maps
  * // In Tiled: set the object class to "Enemy" and add custom properties

@@ -143,6 +143,7 @@ export * as input from "./input/input.ts";
 export * from "./lang/deprecated.js";
 export type { LevelLoadOptions } from "./level/level.js";
 export { level } from "./level/level.js";
+export type { default as TMXObject } from "./level/tiled/TMXObject.js";
 export {
 	registerTiledObjectClass,
 	registerTiledObjectFactory,

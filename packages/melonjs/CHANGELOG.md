@@ -6,6 +6,11 @@
 - Effects: colors take an alpha. Every color option and `setColor` takes `[r, g, b]` or `[r, g, b, a]`, the alpha being the color's opacity (`[r, g, b]` stays opaque), `RadialGradientEffect` honours the alpha of its `Color`, and `DropShadowEffect` gains the `setColor` the others have
 - Effects: `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze, its top swaying most and everything from its anchor row down staying put. It is a `WaveEffect`, which now takes an `anchor` for the row its wave fades out at, and it wraps its own time so it never stutters on a phone's medium-precision floats
 - Skills: the effects skill covers colors with an alpha and `SwayEffect`, with an example of each
+- Tiled: a tile object with no class of its own is built by the class registered under its tile's class, as Tiled shows it, so a class set once on a tile in the tileset applies to every object placed from it. The object's own class or registered name still comes first, and a tile classed like a built-in (`Sprite`, `Trigger`, `shape`...) stays a plain tile
+- Tiled: `TMXObject#resolvedProperty()` and `resolvedProperties()` return an object's custom properties together with those it inherits from its tile, the object's own winning, as the methods of the same names in Tiled's scripting API do. Only the object's own properties are set on it by name, as before
+- Tiled: `TMXTileset#getTileClass()` returns the class set on a tile in Tiled's tileset editor
+- Typings: `TMXObject`, the settings a class registered with `registerTiledObjectClass` (or a factory registered with `registerTiledObjectFactory`) receives, is exported as a type, and both functions are typed with it. A class or factory typed with its own settings still compiles
+- Skills: the tilemaps skill covers classes and properties set on tiles, `resolvedProperty()` and the `TMXObject` type
 
 ### Fixed
 - Effects: a color given four values no longer breaks the effect. WebGL rejected it, and on WebGPU the fourth value overwrote the next setting, such as an outline's width; a color of any other length now throws a `TypeError` saying so
