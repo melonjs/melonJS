@@ -10,7 +10,7 @@
 - Tiled: `TMXObject#resolvedProperty()` and `resolvedProperties()` return an object's custom properties together with those it inherits from its tile, the object's own winning, as the methods of the same names in Tiled's scripting API do. Only the object's own properties are set on it by name, as before
 - Tiled: `TMXTileset#getTileClass()` returns the class set on a tile in Tiled's tileset editor
 - Typings: `TMXObject`, the settings a class registered with `registerTiledObjectClass` (or a factory registered with `registerTiledObjectFactory`) receives, is exported as a type, and both functions are typed with it. A class or factory typed with its own settings still compiles
-- Skills: the tilemaps skill covers classes and properties set on tiles, `resolvedProperty()` and the `TMXObject` type
+- Skills: the tilemaps skill covers classes and properties set on tiles, `resolvedProperty()`, the `TMXObject` type and `Tile#getRenderable()` for a sprite of a tile
 
 ### Fixed
 - Effects: a color given four values no longer breaks the effect. WebGL rejected it, and on WebGPU the fourth value overwrote the next setting, such as an outline's width; a color of any other length now throws a `TypeError` saying so

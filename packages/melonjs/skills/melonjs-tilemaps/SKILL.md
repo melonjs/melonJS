@@ -165,6 +165,11 @@ registerTiledObjectClass("Door", Door);   // and give the door tile the class "D
 receives: the object as read from the map, with `tile` (a `Tile`) on a tile
 object. Extend it with the properties your class reads.
 
+For a class that is not a `Sprite` itself (a `Container` holding the tile and
+something else, say), `settings.tile.getRenderable()` returns the tile's sprite
+as a plain tile object would get it: from a tileset image, an image collection
+or an animated tile alike, with no region names to build by hand.
+
 melonJS pre-registers `Renderable`, `Sprite`, `NineSliceSprite`, `Text`,
 `BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable`, `Trigger`
 and `Entity` as Tiled classes, so `Collectable` and `Trigger` work out of the
