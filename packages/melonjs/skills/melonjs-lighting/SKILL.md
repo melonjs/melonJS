@@ -131,8 +131,9 @@ Unlit areas of a normal-mapped sprite render pure black unless you raise
 `Stage.ambientLightingColor` (default black) — that is the base level added to
 every lit pixel, and it is a different knob from `Stage.ambientLight`.
 
-Without a normal map a sprite is still lit, but flatly: brightness varies with
-distance from the light, not with surface direction.
+Without a normal map a sprite is not shaded at all: it takes the unlit path on
+every backend, and a light changes how it looks only through its additive glow
+and its cutout in the ambient darkness.
 
 ## What needs a GPU backend, and what does not
 
@@ -171,7 +172,7 @@ See the `melonjs-3d` skill.
 | symptom | cause |
 |---|---|
 | lights added but the scene never darkens | no ambient colour set — `ambientLight` alpha is 0, so the pass returns early |
-| sprite lit flatly, ignoring light direction | no `normalMap` on the sprite, or the Canvas backend is active |
+| sprite not shaded by a light, only glowed over | no `normalMap` on the sprite, or the Canvas backend is active |
 | normal-mapped sprite is pure black where unlit | `Stage.ambientLightingColor` left at black |
 | the 33rd light shades nothing | `MAX_LIGHTS = 32` for the normal-map pipeline |
 | `TypeError` assigning `normalMap` | not an image-like value (a video element is rejected outright) |

@@ -273,6 +273,27 @@ describe("pointer events against a shifted world", () => {
 		).toBeUndefined();
 	});
 
+	// ---- a zoomed camera ---------------------------------------------------
+
+	it("hits through a zoomed camera, where the region is drawn", () => {
+		// zoomed out to half size, the 40x40 box at world (200, 200) is drawn
+		// 20x20 at canvas (100, 100)
+		const region = place(box(200, 200));
+		app.viewport.zoom = 0.5;
+		try {
+			const pointer = clickAt(region, 110, 110);
+			expect(pointer, "missed where the box is drawn").toBeDefined();
+			expect(pointer.gameWorldX).toBeCloseTo(220);
+			expect(pointer.gameWorldY).toBeCloseTo(220);
+			expect(
+				clickAt(region, 210, 210),
+				"hit where the box would be unzoomed",
+			).toBeUndefined();
+		} finally {
+			app.viewport.zoom = 1;
+		}
+	});
+
 	// ---- the unshifted path must be untouched ------------------------------
 
 	it("leaves an unshifted world behaving exactly as before", () => {

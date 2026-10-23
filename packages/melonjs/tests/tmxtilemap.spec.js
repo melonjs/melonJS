@@ -754,6 +754,46 @@ describe("TMXTileMap", () => {
 				expect(obj.anchorPoint.y).toEqual(0);
 			}
 		});
+
+		it("should cover the projected shape of a rectangle on an isometric map", () => {
+			// projected, a rectangle reaches left of its origin; the bounds
+			// box (what the broadphase files it by) must still cover it
+			const map = new TMXTileMap("test", {
+				...minimalMap,
+				orientation: "isometric",
+				width: 4,
+				height: 4,
+				tilewidth: 64,
+				tileheight: 32,
+				layers: [
+					{
+						type: "objectgroup",
+						name: "collision",
+						opacity: 1,
+						visible: true,
+						objects: [
+							{ id: 1, name: "", type: "", x: 32, y: 0, width: 8, height: 96 },
+						],
+					},
+				],
+			});
+			const [obj] = map.getObjects(true);
+			const shape = obj.bodyDef.shapes[0];
+			const xs = shape.points.map((p) => {
+				return obj.pos.x + shape.pos.x + p.x;
+			});
+			const ys = shape.points.map((p) => {
+				return obj.pos.y + shape.pos.y + p.y;
+			});
+			const b = obj.getBounds();
+			expect(Math.min(...xs)).toBeLessThan(obj.pos.x + 8);
+			expect([b.left, b.top, b.right, b.bottom]).toEqual([
+				Math.min(...xs),
+				Math.min(...ys),
+				Math.max(...xs),
+				Math.max(...ys),
+			]);
+		});
 	});
 
 	// ---------------------------------------------------------------
@@ -1306,6 +1346,28 @@ describe("TMXTileMap", () => {
 
 			expect(objects[0].bodyDef).toBeDefined();
 			expect(objects[0].bodyDef.type).toEqual("static");
+		});
+
+		it("should not project the body of a tile object on an isometric map", () => {
+			// Tiled draws a tile object upright, so the default body covers
+			// the image box rather than a projected diamond
+			const map = new TMXTileMap("test", {
+				...tileObjectMap,
+				orientation: "isometric",
+				tilewidth: 64,
+				tileheight: 32,
+			});
+			const shape = map.getObjects(true)[0].bodyDef.shapes[0];
+			expect(
+				shape.points.map((p) => {
+					return [p.x, p.y];
+				}),
+			).toEqual([
+				[0, 0],
+				[32, 0],
+				[32, 32],
+				[0, 32],
+			]);
 		});
 
 		it("should position tile objects correctly", () => {

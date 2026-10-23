@@ -269,6 +269,14 @@ Pass `rt.canvas`, never `rt` — a `CanvasRenderTarget` is a wrapper, not a
 drawable, and the engine's own bakes (the particle emitter's default texture)
 hand `.canvas` on for exactly that reason.
 
+**Create it once and keep it.** On a GPU backend, once drawn, its texture stays
+on the GPU for as long as the renderer lives: a stage change does not release
+it, and no public call does. A target made for every level, every restart or
+every spawned object leaks one texture each time, so make it once (at module
+level, say) and clear it for reuse. If you paint into it again after it has
+been drawn, call `rt.invalidate(renderer)` before the next draw so the GPU copy
+is refreshed.
+
 This is the sanctioned performance idiom before reaching for a custom shader.
 
 **For a solid fill you do not need a canvas at all.** `Renderer.getWhitePixel()`
@@ -338,6 +346,8 @@ const data = await rt.toImageData(0, 0, w, h);
 | baked target draws nothing / throws | passed the `CanvasRenderTarget`, not its `.canvas` |
 | `getImageData()` throws on one machine but not another | that one is on the WebGPU renderer, which cannot read back synchronously — `await toImageData()` instead |
 | frame rate drops with many static draws | bake into a `CanvasRenderTarget` instead |
+| GPU memory grows with every level or restart | a `CanvasRenderTarget` created each time: make one and reuse it |
+| a repainted `CanvasRenderTarget` still shows the old pixels | call `rt.invalidate(renderer)` after painting |
 | a 3D camera cannot be given an arbitrary up | `Camera3d#lookAt(target, up)` or `setBasis(right, up, forward)`; see `melonjs-3d` |
 
 ## Related skills

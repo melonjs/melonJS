@@ -503,13 +503,18 @@ export default class Text extends Renderable {
 		// The canvas is the layout box PLUS whatever the ink escapes it by. The
 		// padding never reaches `metrics`, so the reported bounds are unmoved —
 		// see `TextMetrics#inkPadTop`.
-		const width = Math.ceil(this.metrics.width / 32) * 32;
+		// At least one bucket: a blank string measures 0 wide, and a canvas with
+		// a zero side cannot be uploaded (WebGPU throws).
+		const width = Math.max(1, Math.ceil(this.metrics.width / 32)) * 32;
 		const height =
-			Math.ceil(
-				(this.metrics.height +
-					this.metrics.inkPadTop +
-					this.metrics.inkPadBottom) /
-					32,
+			Math.max(
+				1,
+				Math.ceil(
+					(this.metrics.height +
+						this.metrics.inkPadTop +
+						this.metrics.inkPadBottom) /
+						32,
+				),
 			) * 32;
 
 		const renderer = this.parentApp?.renderer ?? game.renderer;

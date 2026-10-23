@@ -10,12 +10,6 @@ import { getDefaultShape } from "../TMXObjectFactory.js";
  * @internal
  */
 export function createShapeObject(settings) {
-	const obj = new Renderable(
-		settings.x,
-		settings.y,
-		settings.width,
-		settings.height,
-	);
 	const shape = getDefaultShape(settings);
 	if (!shape || (Array.isArray(shape) && shape.length === 0)) {
 		// Bail out loudly instead of poisoning `bodyDef.shapes` with
@@ -25,6 +19,32 @@ export function createShapeObject(settings) {
 			`melonJS: TMX object (id=${settings.id}, name=${settings.name ?? ""}, type=${settings.type ?? ""}) has no usable collision shape. Check the object's geometry in Tiled.`,
 		);
 	}
+	const shapes = Array.isArray(shape) ? shape : [shape];
+
+	// Size from the union of all shapes' bounds — the body isn't built
+	// until adapter auto-registration, so we can't read body.getBounds().
+	const bounds = boundsPool.get();
+	bounds.addShapes(shapes, true);
+	const { left, top, width, height } = bounds;
+	boundsPool.release(bounds);
+
+	// The object's bounds start at its pos, and the broadphase files it by
+	// them, but the shapes can start anywhere: every rectangle on an
+	// isometric map reaches left of its origin once projected, and so does
+	// a polygon drawn up or left from its first point. Start the object
+	// where the shapes start, and move the shapes back by as much, so they
+	// stay where they are. A point has no extent, and keeps its position.
+	let x = settings.x;
+	let y = settings.y;
+	if ((width > 0 || height > 0) && (left !== 0 || top !== 0)) {
+		x += left;
+		y += top;
+		for (const s of shapes) {
+			s.translate(-left, -top);
+		}
+	}
+
+	const obj = new Renderable(x, y, width, height);
 	obj.anchorPoint.set(0, 0);
 	obj.name = settings.name;
 	obj.type = settings.type;
@@ -33,14 +53,8 @@ export function createShapeObject(settings) {
 	// declarative body — adapter-portable, auto-registered on addChild
 	obj.bodyDef = {
 		type: "static",
-		shapes: Array.isArray(shape) ? shape : [shape],
+		shapes,
 	};
-	// Size from the union of all shapes' bounds — the body isn't built
-	// until adapter auto-registration, so we can't read body.getBounds().
-	const bounds = boundsPool.get();
-	bounds.addShapes(obj.bodyDef.shapes, true);
-	obj.resize(bounds.width, bounds.height);
-	boundsPool.release(bounds);
 	obj.pos.z = settings.z;
 	return obj;
 }

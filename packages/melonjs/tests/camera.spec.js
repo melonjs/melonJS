@@ -616,6 +616,196 @@ describe("Camera2d", () => {
 		});
 	});
 
+	// A zoomed camera sees `width / zoom` of the world. Following, clamping to
+	// the bounds and focusing measured in its size on screen instead, so a
+	// zoomed-out camera kept its target off centre and scrolled past its
+	// bounds, and a zoomed-in one stopped short of them.
+	describe("zoom: follow, bounds and focusOn", () => {
+		const zoomed = (zoom, size = 2000) => {
+			const cam = new Camera2d(0, 0, 100, 100);
+			cam.reset(0, 0);
+			cam.setBounds(0, 0, size, size);
+			cam.zoom = zoom;
+			return cam;
+		};
+		// where a point sits in the camera's view, as a fraction of it
+		const placeInView = (cam, p) => {
+			const view = cam.worldView;
+			return [(p.x - view.left) / view.width, (p.y - view.top) / view.height];
+		};
+
+		it("keeps a followed target where an unzoomed camera keeps it", () => {
+			const ref = zoomed(1);
+			const refTarget = new Vector2d(1000, 1000);
+			ref.follow(refTarget, ref.AXIS.BOTH);
+			const [rx, ry] = placeInView(ref, refTarget);
+			for (const zoom of [0.5, 2]) {
+				const cam = zoomed(zoom);
+				const target = new Vector2d(1000, 1000);
+				cam.follow(target, cam.AXIS.BOTH);
+				const [x, y] = placeInView(cam, target);
+				expect(x, `zoom ${zoom}`).toBeCloseTo(rx, 3);
+				expect(y, `zoom ${zoom}`).toBeCloseTo(ry, 3);
+			}
+		});
+
+		it("lets the target move inside the deadzone as measured on screen", () => {
+			// a 40 px deadzone on a 100 px camera spans 30..70 px of the screen,
+			// which at zoom 0.5 is 60..140 world units from the camera's left
+			const cam = zoomed(0.5);
+			cam.setDeadzone(40, 40);
+			cam.moveTo(0, 0);
+			const target = new Vector2d(100, 50);
+			cam.follow(target, cam.AXIS.HORIZONTAL);
+			// 50 px on screen: inside, so the camera stays put
+			expect(cam.pos.x).toEqual(0);
+
+			// 75 px on screen: past the right edge, so the camera catches up
+			// until the target is back on it
+			target.x = 150;
+			cam.updateTarget();
+			expect(cam.pos.x).toBeCloseTo(150 - 70 / 0.5, 5);
+		});
+
+		it("settles a smooth follow where an unzoomed camera keeps the target", () => {
+			const ref = zoomed(1);
+			const refTarget = new Vector2d(1000, 1000);
+			ref.follow(refTarget, ref.AXIS.BOTH);
+			const [rx, ry] = placeInView(ref, refTarget);
+			for (const zoom of [0.5, 2]) {
+				const cam = zoomed(zoom);
+				const target = new Vector2d(1000, 1000);
+				cam.follow(target, cam.AXIS.BOTH, 0.2);
+				for (let i = 0; i < 600; i++) {
+					cam.update(16);
+				}
+				const [x, y] = placeInView(cam, target);
+				expect(x, `zoom ${zoom}`).toBeCloseTo(rx, 3);
+				expect(y, `zoom ${zoom}`).toBeCloseTo(ry, 3);
+			}
+		});
+
+		it("keeps the target in its deadzone when the zoom changes while following", () => {
+			const cam = zoomed(1);
+			const target = new Vector2d(1000, 1000);
+			cam.follow(target, cam.AXIS.BOTH);
+			for (const zoom of [0.5, 2, 1]) {
+				cam.zoom = zoom;
+				cam.updateTarget();
+				const [x] = placeInView(cam, target);
+				expect(x, `zoom ${zoom}`).toBeGreaterThanOrEqual(
+					cam.deadzone.left / cam.width - 1e-9,
+				);
+				expect(x, `zoom ${zoom}`).toBeLessThanOrEqual(
+					cam.deadzone.right / cam.width + 1e-9,
+				);
+			}
+		});
+
+		it("keeps its view inside the bounds when zoomed out", () => {
+			const cam = zoomed(0.5, 1000);
+			cam.moveTo(5000, 5000);
+			expect(cam.worldView.right).toBeCloseTo(1000, 5);
+			expect(cam.worldView.bottom).toBeCloseTo(1000, 5);
+
+			const target = new Vector2d(990, 990);
+			cam.moveTo(0, 0);
+			cam.follow(target, cam.AXIS.BOTH);
+			expect(cam.worldView.right).toBeLessThanOrEqual(1000);
+			expect(cam.worldView.bottom).toBeLessThanOrEqual(1000);
+		});
+
+		it("reaches the edge of its bounds when zoomed in", () => {
+			const cam = zoomed(2, 1000);
+			cam.moveTo(5000, 5000);
+			expect(cam.worldView.right).toBeCloseTo(1000, 5);
+			expect(cam.worldView.bottom).toBeCloseTo(1000, 5);
+		});
+
+		it("centres on a renderable with focusOn when zoomed", () => {
+			for (const zoom of [0.5, 2]) {
+				const cam = zoomed(zoom);
+				const target = new Renderable(1000, 1000, 10, 10);
+				target.anchorPoint.set(0, 0);
+				cam.focusOn(target);
+				expect(cam.worldView.centerX, `zoom ${zoom}`).toBeCloseTo(1005, 5);
+				expect(cam.worldView.centerY, `zoom ${zoom}`).toBeCloseTo(1005, 5);
+			}
+		});
+	});
+
+	// A camera draws world point W at `(W - pos) * zoom + (screenX, screenY)`
+	// on the canvas. The conversions only undid `pos` (and `currentTransform`),
+	// so on a zoomed camera, or one drawn in a corner of the screen, a point
+	// on screen mapped to the wrong place in the world and back.
+	describe("zoom and screen offset: localToWorld / worldToLocal", () => {
+		const camera = (zoom, screenX = 0, screenY = 0) => {
+			const cam = new Camera2d(0, 0, 200, 100);
+			cam.reset(0, 0);
+			cam.setBounds(-5000, -5000, 10000, 10000);
+			cam.zoom = zoom;
+			cam.screenX = screenX;
+			cam.screenY = screenY;
+			cam.moveTo(100, 50);
+			return cam;
+		};
+
+		it("maps a point on a zoomed camera to the world it shows there", () => {
+			const cam = camera(0.5);
+			const world = cam.localToWorld(80, 40, new Vector2d());
+			expect(world.x).toBeCloseTo(100 + 80 / 0.5, 5);
+			expect(world.y).toBeCloseTo(50 + 40 / 0.5, 5);
+
+			const local = cam.worldToLocal(world.x, world.y, new Vector2d());
+			expect(local.x).toBeCloseTo(80, 5);
+			expect(local.y).toBeCloseTo(40, 5);
+		});
+
+		it("measures from where a secondary camera is drawn on the screen", () => {
+			const cam = camera(0.25, 600, 20);
+			// 50 px into the camera's own rectangle
+			const world = cam.localToWorld(650, 70, new Vector2d());
+			expect(world.x).toBeCloseTo(100 + 50 / 0.25, 5);
+			expect(world.y).toBeCloseTo(50 + 50 / 0.25, 5);
+
+			const local = cam.worldToLocal(world.x, world.y, new Vector2d());
+			expect(local.x).toBeCloseTo(650, 5);
+			expect(local.y).toBeCloseTo(70, 5);
+		});
+
+		it("maps the corners of the camera's rectangle to the corners of its worldView", () => {
+			for (const [zoom, sx, sy] of [
+				[1, 0, 0],
+				[0.5, 0, 0],
+				[2, 0, 0],
+				[0.25, 600, 20],
+			]) {
+				const cam = camera(zoom, sx, sy);
+				const view = cam.worldView;
+				const topLeft = cam.localToWorld(sx, sy, new Vector2d());
+				const bottomRight = cam.localToWorld(
+					sx + cam.width,
+					sy + cam.height,
+					new Vector2d(),
+				);
+				const label = `zoom ${zoom} at ${sx},${sy}`;
+				expect(topLeft.x, label).toBeCloseTo(view.left, 5);
+				expect(topLeft.y, label).toBeCloseTo(view.top, 5);
+				expect(bottomRight.x, label).toBeCloseTo(view.right, 5);
+				expect(bottomRight.y, label).toBeCloseTo(view.bottom, 5);
+			}
+		});
+
+		it("round-trips with a zoom, a screen offset and a roll together", () => {
+			const cam = camera(0.5, 300, 40);
+			cam.roll = Math.PI / 7;
+			const world = cam.localToWorld(420, 90, new Vector2d());
+			const back = cam.worldToLocal(world.x, world.y, new Vector2d());
+			expect(back.x).toBeCloseTo(420, 4);
+			expect(back.y).toBeCloseTo(90, 4);
+		});
+	});
+
 	describe("isDefault", () => {
 		it("should be true for a default camera", () => {
 			const { camera } = setup();

@@ -773,7 +773,8 @@ export class TextureAtlas extends Texture2d {
 	 * @param {string[]|number[]} [names] - list of names for each sprite
 	 * (when manually creating a Texture out of a spritesheet, only numeric values are authorized).
 	 * If not specified, all defined names/entries in the atlas will be added.
-	 * @returns {object} A settings object suitable for passing to the {@link Sprite} constructor
+	 * @returns {{image: TextureAtlas, framewidth: number, frameheight: number, margin: number, spacing: number, atlas: object[], anims: Object<string, object>|undefined, atlasIndices: Record<string, number>}}
+	 * A settings object suitable for passing to the {@link Sprite} constructor
 	 * @example
 	 * // extend Sprite directly with texture atlas animation frames
 	 * class MyPlayer extends me.Sprite {

@@ -21,12 +21,19 @@
  * arc. The hit points form the visible-area polygon (same building
  * block, used 21× per frame), so obstacles correctly occlude
  * everything behind them. Arrow keys move the sentry; drag the green
- * boxes to rearrange the obstacles.
+ * shapes to rearrange the obstacles.
+ *
+ * Square blocks are placed by their top left corner, round pillars by
+ * their centre: a ray finds each where it is drawn. Intruders walk the
+ * edges of the room and a corridor, and the sentry spots one in its cone when the
+ * first hit of a ray towards it (`hit.fraction` along the ray) lies
+ * further away than the intruder does.
  */
 import {
 	Application,
 	Color,
 	ColorLayer,
+	Ellipse,
 	input,
 	type PhysicsAdapter,
 	type Pointer,
@@ -76,33 +83,45 @@ const CONE_REACH = 1200;
 const CONE_FILL_COLOR = "#ff5e9a";
 const CONE_FILL_ALPHA = 0.18;
 
+const PILLAR_RADIUS = 34;
+
+/** How fast an intruder walks its beat, in pixels per frame. */
+const INTRUDER_SPEED = 1.2;
+const INTRUDER_RADIUS = 7;
+const INTRUDER_COLOR = "#7fb4ff";
+const SPOTTED_COLOR = "#ff3355";
+
 const OBSTACLE_LIT_COLOR = new Color(255, 60, 90);
 const OBSTACLE_DEFAULT_COLOR = new Color(60, 220, 140);
 const OBSTACLE_OUTLINE_WIDTH = 2;
 
 /**
- * Static rectangular obstacle. Declarative `bodyDef` — the engine
- * forwards it to the active physics adapter (BuiltinAdapter here, but
- * the same code runs unchanged under Matter or Planck) on `addChild`,
- * which creates the actual `body` and wires it into the broadphase
- * so raycasts can find it. The user can drag obstacles around; the
- * body's bounds follow `pos`, so the next raycast picks up the new
- * position automatically.
+ * Something the sentry cannot see through. Declarative `bodyDef` — the
+ * engine forwards it to the active physics adapter (BuiltinAdapter here,
+ * but the same code runs unchanged under Matter or Planck) on `addChild`,
+ * which creates the actual `body` and wires it into the broadphase so
+ * raycasts can find it. The user can drag obstacles around; the body
+ * follows `pos`, so the next raycast picks up the new position
+ * automatically.
  */
-class Obstacle extends Renderable {
-	private isLit = false;
+abstract class Obstacle extends Renderable {
+	protected isLit = false;
 	private isDragging = false;
-	private readonly grabOffset: Vector2d;
+	private readonly grabOffset = new Vector2d(0, 0);
 
-	constructor(x: number, y: number, width: number, height: number) {
+	constructor(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		shape: Rect | Ellipse,
+	) {
 		super(x, y, width, height);
-		this.anchorPoint.set(0, 0);
 		this.isKinematic = false;
 		this.bodyDef = {
 			type: "static",
-			shapes: [new Rect(0, 0, width, height)],
+			shapes: [shape],
 		};
-		this.grabOffset = new Vector2d(0, 0);
 	}
 
 	override onActivateEvent(): void {
@@ -124,6 +143,10 @@ class Obstacle extends Renderable {
 		this.isLit = lit;
 	}
 
+	protected get color(): Color {
+		return this.isLit ? OBSTACLE_LIT_COLOR : OBSTACLE_DEFAULT_COLOR;
+	}
+
 	private onPointerDown = (event: Pointer): boolean => {
 		this.isDragging = true;
 		this.grabOffset.set(event.gameX, event.gameY).sub(this.pos);
@@ -139,19 +162,27 @@ class Obstacle extends Renderable {
 		if (!this.isDragging) {
 			return false;
 		}
-		this.pos.set(
+		// setPosition keeps the depth, where pos.set() would reset it
+		this.setPosition(
 			event.gameX - this.grabOffset.x,
 			event.gameY - this.grabOffset.y,
 		);
 		return false;
 	};
+}
+
+/** A square block, placed by its top left corner. */
+class Block extends Obstacle {
+	constructor(x: number, y: number, size: number) {
+		super(x, y, size, size, new Rect(0, 0, size, size));
+		this.anchorPoint.set(0, 0);
+	}
 
 	override draw(renderer: Renderer): void {
-		const color = this.isLit ? OBSTACLE_LIT_COLOR : OBSTACLE_DEFAULT_COLOR;
 		renderer.save();
 		renderer.translate(this.pos.x, this.pos.y);
 		renderer.setGlobalAlpha(0.5);
-		renderer.setColor(color);
+		renderer.setColor(this.color);
 		renderer.fillRect(0, 0, this.width, this.height);
 		renderer.setGlobalAlpha(1.0);
 		renderer.lineWidth = OBSTACLE_OUTLINE_WIDTH;
@@ -161,6 +192,98 @@ class Obstacle extends Renderable {
 			this.width - OBSTACLE_OUTLINE_WIDTH * 2,
 			this.height - OBSTACLE_OUTLINE_WIDTH * 2,
 		);
+		renderer.restore();
+	}
+}
+
+/**
+ * A round pillar, placed by its centre: the anchor most renderables have,
+ * and a `Sprite`'s default. Its body is a circle in the frame the pillar
+ * draws in, which starts half its size before `pos`, and that is where
+ * the rays find it.
+ */
+class Pillar extends Obstacle {
+	constructor(x: number, y: number, radius: number) {
+		const size = radius * 2;
+		super(x, y, size, size, new Ellipse(radius, radius, size, size));
+		this.anchorPoint.set(0.5, 0.5);
+	}
+
+	override draw(renderer: Renderer): void {
+		// in the anchored frame, so the centre is half the size from its corner
+		const radius = this.width / 2;
+		const cx = this.pos.x + radius;
+		const cy = this.pos.y + radius;
+		renderer.save();
+		renderer.setGlobalAlpha(0.5);
+		renderer.setColor(this.color);
+		renderer.fillEllipse(cx, cy, radius, radius);
+		renderer.setGlobalAlpha(1.0);
+		renderer.lineWidth = OBSTACLE_OUTLINE_WIDTH;
+		renderer.strokeEllipse(
+			cx,
+			cy,
+			radius - OBSTACLE_OUTLINE_WIDTH,
+			radius - OBSTACLE_OUTLINE_WIDTH,
+		);
+		renderer.restore();
+	}
+}
+
+/**
+ * Walks back and forth between two points. It has no body, so the rays of
+ * the cone pass through it: the sentry spots it with a ray of its own.
+ */
+class Intruder extends Renderable {
+	/** Set by `VisionCone.update` each frame. */
+	spotted = false;
+	private readonly from: Vector2d;
+	private readonly to: Vector2d;
+	// how far along its beat, 0 at `from` and 1 at `to`
+	private t: number;
+	private step: number;
+
+	constructor(from: Vector2d, to: Vector2d, start: number) {
+		super(from.x, from.y, INTRUDER_RADIUS * 2, INTRUDER_RADIUS * 2);
+		// pos is its centre
+		this.anchorPoint.set(0.5, 0.5);
+		this.alwaysUpdate = true;
+		this.from = from;
+		this.to = to;
+		this.t = start;
+		this.step = INTRUDER_SPEED / from.distance(to);
+	}
+
+	override update(_dt: number): boolean {
+		this.t += this.step;
+		if (this.t >= 1 || this.t <= 0) {
+			this.t = Math.min(Math.max(this.t, 0), 1);
+			this.step = -this.step;
+		}
+		this.setPosition(
+			this.from.x + (this.to.x - this.from.x) * this.t,
+			this.from.y + (this.to.y - this.from.y) * this.t,
+		);
+		return true;
+	}
+
+	override draw(renderer: Renderer): void {
+		const cx = this.pos.x + INTRUDER_RADIUS;
+		const cy = this.pos.y + INTRUDER_RADIUS;
+		renderer.save();
+		renderer.setColor(this.spotted ? SPOTTED_COLOR : INTRUDER_COLOR);
+		renderer.fillEllipse(cx, cy, INTRUDER_RADIUS, INTRUDER_RADIUS);
+		if (this.spotted) {
+			// an exclamation mark over its head
+			renderer.lineWidth = 3;
+			renderer.strokeLine(
+				cx,
+				cy - INTRUDER_RADIUS - 14,
+				cx,
+				cy - INTRUDER_RADIUS - 7,
+			);
+			renderer.fillRect(cx - 1.5, cy - INTRUDER_RADIUS - 5, 3, 3);
+		}
 		renderer.restore();
 	}
 }
@@ -270,9 +393,19 @@ class VisionCone extends Renderable {
 	// Vector2d allocations per frame.
 	private readonly rayFrom = new Vector2d(0, 0);
 	private readonly rayTo = new Vector2d(0, 0);
+	private readonly intruders: Intruder[];
+	private readonly status: Text;
+	private spottedCount = -1;
 
-	constructor(sentry: Sentry, adapter: PhysicsAdapter) {
+	constructor(
+		sentry: Sentry,
+		adapter: PhysicsAdapter,
+		intruders: Intruder[],
+		status: Text,
+	) {
 		super(0, 0, 1, 1);
+		this.intruders = intruders;
+		this.status = status;
 		this.alwaysUpdate = true;
 		// The cone's polygon is drawn at arbitrary world positions far
 		// from `this.pos`, so the default in-viewport check (which uses
@@ -350,6 +483,39 @@ class VisionCone extends Renderable {
 		// Refresh polygon edges / bounds from the mutated points array.
 		this.conePolygon.setVertices(this.polyPoints as Polyline);
 
+		// Spot the intruders: one in the cone is seen when the first thing a
+		// ray towards it enters lies further away than it does. `fraction`
+		// is how far along the ray the hit is, 0 at `from` and 1 at `to`.
+		let spotted = 0;
+		for (const intruder of this.intruders) {
+			const dx = intruder.pos.x - originX;
+			const dy = intruder.pos.y - originY;
+			const distance = Math.hypot(dx, dy);
+			let off = Math.atan2(dy, dx) - baseAngle;
+			off = Math.atan2(Math.sin(off), Math.cos(off));
+			intruder.spotted = false;
+			if (distance <= CONE_REACH && Math.abs(off) <= halfSpread) {
+				this.rayFrom.set(originX, originY);
+				this.rayTo.set(
+					originX + (dx / distance) * CONE_REACH,
+					originY + (dy / distance) * CONE_REACH,
+				);
+				const hit = raycast(this.rayFrom, this.rayTo);
+				intruder.spotted = !hit || hit.fraction * CONE_REACH > distance;
+			}
+			if (intruder.spotted) {
+				spotted++;
+			}
+		}
+		if (spotted !== this.spottedCount) {
+			this.spottedCount = spotted;
+			this.status.setText(
+				spotted > 0
+					? `INTRUDER SPOTTED (${spotted} / ${this.intruders.length})`
+					: "all quiet",
+			);
+		}
+
 		return true;
 	}
 
@@ -362,6 +528,22 @@ class VisionCone extends Renderable {
 		renderer.setGlobalAlpha(CONE_FILL_ALPHA);
 		renderer.setColor(CONE_FILL_COLOR);
 		(renderer as DemoRenderer).fillPolygon(this.conePolygon);
+		renderer.restore();
+
+		// the sentry's line of sight to everyone it spots
+		renderer.save();
+		renderer.setColor(SPOTTED_COLOR);
+		renderer.lineWidth = 1.5;
+		for (const intruder of this.intruders) {
+			if (intruder.spotted) {
+				renderer.strokeLine(
+					this.sentry.centerX,
+					this.sentry.centerY,
+					intruder.pos.x,
+					intruder.pos.y,
+				);
+			}
+		}
 		renderer.restore();
 	}
 }
@@ -391,10 +573,20 @@ class PlayScreen extends Stage {
 				fillStyle: "#a8b0e8",
 				textAlign: "center",
 				textBaseline: "top",
-				text: "drag the green boxes to rearrange the obstacles",
+				text: "drag the green shapes to rearrange the obstacles",
 			}),
 			200,
 		);
+		// what the sentry sees, updated by the cone
+		const status = new Text(app.viewport.width / 2, 50, {
+			font: "bold Courier New",
+			size: 12,
+			fillStyle: SPOTTED_COLOR,
+			textAlign: "center",
+			textBaseline: "top",
+			text: "all quiet",
+		});
+		app.world.addChild(status, 200);
 
 		// Obstacle layout — six static rectangles with gaps the cone
 		// can sweep through. The top-middle box sits a bit higher than
@@ -409,7 +601,27 @@ class PlayScreen extends Stage {
 			[600, 410],
 		];
 		for (const [x, y] of positions) {
-			app.world.addChild(new Obstacle(x, y, OBSTACLE_SIZE, OBSTACLE_SIZE), 1);
+			app.world.addChild(new Block(x, y, OBSTACLE_SIZE), 1);
+		}
+		// round pillars in the gaps, placed by their centre
+		const pillars: ReadonlyArray<[number, number]> = [
+			[250, 300],
+			[525, 300],
+			[680, 120],
+		];
+		for (const [x, y] of pillars) {
+			app.world.addChild(new Pillar(x, y, PILLAR_RADIUS), 1);
+		}
+
+		// intruders walking the edges of the room and the corridor in the
+		// middle, out of step
+		const intruders = [
+			new Intruder(new Vector2d(25, 70), new Vector2d(25, 580), 0),
+			new Intruder(new Vector2d(775, 70), new Vector2d(775, 580), 0.5),
+			new Intruder(new Vector2d(468, 70), new Vector2d(468, 580), 0.25),
+		];
+		for (const intruder of intruders) {
+			app.world.addChild(intruder, 8);
 		}
 
 		// Sentry at the viewport centre. The cone owns a reference to
@@ -417,7 +629,10 @@ class PlayScreen extends Stage {
 		// world's active physics adapter (where it dispatches the
 		// per-frame raycasts).
 		const sentry = new Sentry(app.viewport.width / 2, app.viewport.height / 2);
-		app.world.addChild(new VisionCone(sentry, app.world.adapter), 5);
+		app.world.addChild(
+			new VisionCone(sentry, app.world.adapter, intruders, status),
+			5,
+		);
 		app.world.addChild(sentry, 10);
 	}
 }
