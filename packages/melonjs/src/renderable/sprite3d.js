@@ -158,7 +158,7 @@ export default class Sprite3d extends Mesh {
 	 * @param {number} [settings.framewidth] - width of a single frame within a spritesheet (enables frame animation)
 	 * @param {number} [settings.frameheight] - height of a single frame within a spritesheet
 	 * @param {string} [settings.region] - region name when using a texture atlas (see {@link TextureAtlas})
-	 * @param {object[]} [settings.anims] - predefined animations (same shape as {@link Sprite})
+	 * @param {Object<string, object>|object[]} [settings.anims] - predefined animations (same shape as {@link Sprite}), such as the ones an aseprite atlas defines, keyed by name
 	 * @param {number} [settings.z=0] - 3D depth (world z); also settable later via `.depth`
 	 * @param {boolean|string} [settings.billboard=false] - billboard mode: `false` (fixed orientation), `true` / `"cylindrical"` (faces the camera but stays upright — the 2.5D default), or `"spherical"` (faces the camera on all axes). Only applies under a `Camera3d`.
 	 * @param {string|Vector2d|{x:number,y:number}} [settings.anchorPoint={x:0.5,y:0.5}] - anchor of the quad relative to `pos` — same key, normalized 0..1 convention (`x`: 0 left→1 right, `y`: 0 top→1 bottom) and centered default as the 2D {@link Sprite}. Also accepts the named presets `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`. Baked into the quad's local vertices (composes with billboarding, flips, and trimmed/rotated atlas frames) — never applied as a renderer transform on either camera path. Mutable at runtime via `this.anchorPoint.set(...)` (re-bakes the quad and re-derives the cull bounds). Invalid values throw.

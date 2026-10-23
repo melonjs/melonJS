@@ -478,7 +478,7 @@ const examples: {
 		path: "line-of-sight",
 		sourceDir: "lineOfSight",
 		description:
-			"Stealth-style vision cone driven by the portable adapter.raycast API.",
+			"Stealth-style vision cone and line-of-sight checks with the portable adapter.raycast API.",
 	},
 	{
 		component: <ExampleMasking />,

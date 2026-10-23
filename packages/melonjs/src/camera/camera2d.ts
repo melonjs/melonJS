@@ -342,17 +342,23 @@ export default class Camera2d extends Renderable {
 	 * @internal
 	 */
 	_followH(target: Vector2d | Vector3d): number {
+		// the deadzone is in screen pixels, and a zoomed camera sees
+		// `width / zoom` of the world: compare and clamp in world units
+		const zoom = this.zoom;
 		let targetX = this.pos.x;
-		if (target.x - this.pos.x > this.deadzone.right) {
+		if ((target.x - this.pos.x) * zoom > this.deadzone.right) {
 			// clamp against the bounds' right EDGE — `bounds.width` is
 			// `right - left`, so using it as a max only worked for a
 			// zero-origin world and cut `left` px off the far side
 			targetX = Math.min(
-				target.x - this.deadzone.right,
-				this.bounds.right - this.width,
+				target.x - this.deadzone.right / zoom,
+				this.bounds.right - this.width / zoom,
 			);
-		} else if (target.x - this.pos.x < this.deadzone.pos.x) {
-			targetX = Math.max(target.x - this.deadzone.pos.x, this.bounds.left);
+		} else if ((target.x - this.pos.x) * zoom < this.deadzone.pos.x) {
+			targetX = Math.max(
+				target.x - this.deadzone.pos.x / zoom,
+				this.bounds.left,
+			);
 		}
 		return targetX;
 	}
@@ -362,14 +368,19 @@ export default class Camera2d extends Renderable {
 	 * @internal
 	 */
 	_followV(target: Vector2d | Vector3d): number {
+		// in world units, as `_followH`
+		const zoom = this.zoom;
 		let targetY = this.pos.y;
-		if (target.y - this.pos.y > this.deadzone.bottom) {
+		if ((target.y - this.pos.y) * zoom > this.deadzone.bottom) {
 			targetY = Math.min(
-				target.y - this.deadzone.bottom,
-				this.bounds.bottom - this.height,
+				target.y - this.deadzone.bottom / zoom,
+				this.bounds.bottom - this.height / zoom,
 			);
-		} else if (target.y - this.pos.y < this.deadzone.pos.y) {
-			targetY = Math.max(target.y - this.deadzone.pos.y, this.bounds.top);
+		} else if ((target.y - this.pos.y) * zoom < this.deadzone.pos.y) {
+			targetY = Math.max(
+				target.y - this.deadzone.pos.y / zoom,
+				this.bounds.top,
+			);
 		}
 		return targetY;
 	}
@@ -670,9 +681,18 @@ export default class Camera2d extends Renderable {
 		const _y = this.pos.y;
 
 		// clamp against the bounds' far edges — `bounds.width/height` are
-		// extents (`right - left`), correct as a max only for a zero origin
-		this.pos.x = clamp(x, this.bounds.left, this.bounds.right - this.width);
-		this.pos.y = clamp(y, this.bounds.top, this.bounds.bottom - this.height);
+		// extents (`right - left`), correct as a max only for a zero origin.
+		// A zoomed camera sees `width / zoom` of the world
+		this.pos.x = clamp(
+			x,
+			this.bounds.left,
+			this.bounds.right - this.width / this.zoom,
+		);
+		this.pos.y = clamp(
+			y,
+			this.bounds.top,
+			this.bounds.bottom - this.height / this.zoom,
+		);
 
 		//publish the VIEWPORT_ONCHANGE event if necessary
 		if (_x !== this.pos.x || _y !== this.pos.y) {
@@ -925,8 +945,8 @@ export default class Camera2d extends Renderable {
 	focusOn(target: Renderable): void {
 		const bounds = target.getBounds();
 		this.moveTo(
-			bounds.left + bounds.width / 2 - this.width / 2,
-			bounds.top + bounds.height / 2 - this.height / 2,
+			bounds.left + bounds.width / 2 - this.width / this.zoom / 2,
+			bounds.top + bounds.height / 2 - this.height / this.zoom / 2,
 		);
 	}
 
@@ -963,7 +983,10 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
-	 * convert the given "local" (screen) coordinates into world coordinates
+	 * convert the given "local" (screen) coordinates into world coordinates.
+	 * Screen coordinates are in canvas pixels: on a zoomed camera, or one
+	 * drawn in a corner of the screen (see {@link screenX}), they are
+	 * measured from where the camera is drawn, and scaled by its zoom.
 	 * @param x - the x coordinate of the local point to be converted
 	 * @param y - the y coordinate of the local point to be converted
 	 * @param [v] - an optional vector object where to set the converted value
@@ -971,7 +994,9 @@ export default class Camera2d extends Renderable {
 	 */
 	localToWorld(x: number, y: number, v?: Vector2d): Vector2d {
 		v = v || vector2dPool.get();
-		v.set(x, y).add(this.pos).sub(game.world.pos);
+		v.set((x - this.screenX) / this.zoom, (y - this.screenY) / this.zoom)
+			.add(this.pos)
+			.sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
 			this.invCurrentTransform.apply(v);
 		}
@@ -979,7 +1004,8 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
-	 * convert the given world coordinates into "local" (screen) coordinates
+	 * convert the given world coordinates into "local" (screen) coordinates,
+	 * in canvas pixels: where this camera draws the given point
 	 * @param x - the x world coordinate to be converted
 	 * @param y - the y world coordinate to be converted
 	 * @param [v] - an optional vector object where to set the converted value
@@ -991,7 +1017,11 @@ export default class Camera2d extends Renderable {
 		if (!this.currentTransform.isIdentity()) {
 			this.currentTransform.apply(v);
 		}
-		return v.sub(this.pos).add(game.world.pos);
+		v.sub(this.pos).add(game.world.pos);
+		return v.set(
+			v.x * this.zoom + this.screenX,
+			v.y * this.zoom + this.screenY,
+		);
 	}
 
 	/**

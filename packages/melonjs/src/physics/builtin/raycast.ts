@@ -6,6 +6,7 @@ import type Renderable from "../../renderable/renderable.js";
 import type { RaycastHit } from "../adapter.ts";
 import type World from "../world.js";
 import type Body from "./body.js";
+import { anchorOffsetX, anchorOffsetY } from "./sat.js";
 
 /**
  * Shared internal raycast walker for the built-in physics path. Used by
@@ -45,8 +46,9 @@ function _computeShapeAbsPos(
 	outPos: Vector2d,
 ): void {
 	// Compute the absolute world position of a shape attached to a body
-	// attached to a renderable. Mirrors what SAT does:
-	//   absPos = renderable.pos + ancestor.absPos + shape.pos
+	// attached to a renderable. Mirrors what SAT does, measuring the shape
+	// from the frame the renderable draws in:
+	//   absPos = renderable.pos - size * anchorPoint + ancestor.absPos + shape.pos
 	const ancestor = renderable.ancestor as
 		| { getAbsolutePosition?(): { x: number; y: number } }
 		| undefined;
@@ -56,8 +58,8 @@ function _computeShapeAbsPos(
 			: null;
 	const ax = ancestorAbs ? ancestorAbs.x : 0;
 	const ay = ancestorAbs ? ancestorAbs.y : 0;
-	outPos.x = renderable.pos.x + ax + shape.pos.x;
-	outPos.y = renderable.pos.y + ay + shape.pos.y;
+	outPos.x = renderable.pos.x - anchorOffsetX(renderable) + ax + shape.pos.x;
+	outPos.y = renderable.pos.y - anchorOffsetY(renderable) + ay + shape.pos.y;
 }
 
 const _shapeAbs = new Vector2d(0, 0);

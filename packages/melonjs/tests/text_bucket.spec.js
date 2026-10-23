@@ -98,6 +98,21 @@ describe("Text — 32px canvas buckets", () => {
 		}
 	});
 
+	it("an empty or blank label still gets a canvas with no zero side", (ctx) => {
+		requireWebGL(ctx, renderer);
+		// a blank string measures 0 wide, and WebGPU throws on a 0-sized canvas
+		for (const str of ["", " ", "   ", "\n"]) {
+			const t = makeText(str);
+			expect(t.canvasTexture.width, JSON.stringify(str)).toBeGreaterThan(0);
+			expect(t.canvasTexture.height, JSON.stringify(str)).toBeGreaterThan(0);
+		}
+		// blanking a label keeps its canvas
+		const t = makeText("Chests 3 / 8");
+		const w = t.canvasTexture.width;
+		t.setText(" ");
+		expect(t.canvasTexture.width).toBe(w);
+	});
+
 	it("a ticking counter stays in the SAME bucket: same dimensions, same canvas element", (ctx) => {
 		requireWebGL(ctx, renderer);
 		const t = makeText("Score: 10");

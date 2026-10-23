@@ -325,8 +325,9 @@ export default class TMXObject {
 				break;
 		}
 
-		// Apply isometric projection
-		if (this.orientation === "isometric") {
+		// Apply isometric projection, except to a tile object: Tiled draws
+		// it upright, so its box is already in screen space
+		if (this.orientation === "isometric" && this.gid === null) {
 			for (let i = 0; i < shapes.length; i++) {
 				if (typeof shapes[i].toIso === "function") {
 					shapes[i].toIso();

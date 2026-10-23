@@ -187,6 +187,43 @@ app.world.sortOn = "y";       // after level.load
 on anything else. `Vector2d`, `Vector3d`, their observable variants and `Polygon`
 all carry `.toIso()` / `.to2d()` for converting between screen and map space.
 
+### What the y-sort can and cannot sort
+
+`sortOn = "y"` sorts **objects**, never tiles. A tile layer is a single
+renderable drawn in one piece, so a character ends up in front of all of it or
+behind all of it. Anything a character walks both in front of and behind
+(walls, trees, furniture) has to be on an **object layer, as tile objects**,
+and in the **same** object layer as the characters: each Tiled layer gets its
+own `z`, and the y-sort compares `z` before `y`. Keep the floor on a tile layer
+below them. This holds for any y-sorted map, isometric or a top-down
+orthogonal one.
+
+```
+floor      tile layer     the ground, drawn first
+dungeon    object layer   walls, props, chests, doors, the hero
+collision  object layer   the shapes (not drawn)
+```
+
+Tile objects with no class are built for you: each one is a `Sprite` with its
+default body, static, over its whole image box and typed `ENEMY_OBJECT`. A
+character keeping the default `collisionMask` (every type) collides with all of
+them, so when the scenery's real collision is drawn in the collision layer,
+mask the character to it:
+
+```js
+this.body.setCollisionMask(collision.types.WORLD_SHAPE);
+```
+
+Give the objects with behaviour a Tiled class and register it, as above.
+
+The `y` it sorts on is `pos.y`, and Tiled objects default to a `(0, 0)` anchor,
+so that is the **top** of each image. Sorting by the top only matches sorting by
+the feet when every image is the same height and stands on the bottom of its
+box, the usual layout of an isometric pack. A shorter image sorts in front of
+things it stands behind, so pad the art to one height. A character you create
+in code needs the same convention: `anchorPoint` `(0, 0)` and a frame as tall
+as the scenery's.
+
 ## Image layers
 
 `ImageLayer` gives parallax backgrounds with a ratio per axis, set in Tiled or in
@@ -241,6 +278,9 @@ unanimated layer into the offscreen-bake path instead.
 | `No inflate function set` at parse time | compressed layers without the tiled-inflate plugin |
 | collision shapes are not solid | the object layer's name does not contain `"collision"`, or the objects are named |
 | isometric objects overlap wrongly | `world.sortOn` not set to `"y"` |
+| a character is always in front of (or behind) every wall | the walls are on a tile layer, or on another object layer than the character: each layer has its own `z`, compared before `y` |
+| a small prop draws over a character standing in front of it | images of different heights: the y-sort uses `pos.y`, the top of a Tiled object's image |
+| a character is stopped short of walls and props placed as tile objects | it collides with their default bodies (static, `ENEMY_OBJECT`, the whole image box); mask it to `collision.types.WORLD_SHAPE` when the collision layer holds the real shapes |
 | missing tiles or a blank map | the `.tsx` or tileset image was not preloaded |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
 

@@ -244,7 +244,7 @@ function vornoiRegion(line, point) {
  * @returns {number} the x offset to subtract
  * @ignore
  */
-function anchorOffsetX(r) {
+export function anchorOffsetX(r) {
 	return r.applyAnchorTransform !== false && Number.isFinite(r.width)
 		? r.width * r.anchorPoint.x
 		: 0;
@@ -256,7 +256,7 @@ function anchorOffsetX(r) {
  * @returns {number} the y offset to subtract
  * @ignore
  */
-function anchorOffsetY(r) {
+export function anchorOffsetY(r) {
 	return r.applyAnchorTransform !== false && Number.isFinite(r.height)
 		? r.height * r.anchorPoint.y
 		: 0;

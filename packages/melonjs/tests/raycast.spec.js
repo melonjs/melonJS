@@ -11,6 +11,7 @@ import {
 	Polygon,
 	Rect,
 	Renderable,
+	Sprite,
 	Vector2d,
 	video,
 	World,
@@ -315,6 +316,152 @@ describe("Raycast", () => {
 			expect(typeof collision.rayCast).toEqual("function");
 			const result = collision.rayCast(lineBetween(0, 60, 200, 60));
 			expect(Array.isArray(result)).toEqual(true);
+		});
+	});
+
+	// Since 20.7 the narrowphase measures a body from the frame its renderable
+	// DRAWS in, which `anchorPoint` shifts by `-size * anchorPoint`. The 2D
+	// raycast kept measuring from raw `pos`, so on a centre-anchored body (a
+	// `Sprite`'s default) a ray hit half the body away from where it collides,
+	// and missed outright through part of it. Every case above is corner
+	// anchored, where the two agree.
+	describe("anchored bodies", () => {
+		// 50x50 at (100, 100), centre anchored: it draws from (75, 75)
+		const makeCentred = () => {
+			const r = new Renderable(100, 100, 50, 50);
+			r.anchorPoint.set(0.5, 0.5);
+			r.isKinematic = false;
+			r.body = new Body(r, [new Rect(0, 0, 50, 50)]);
+			world.addChild(r);
+			return r;
+		};
+
+		it("hits a centre-anchored box at the top of its drawn frame", () => {
+			const target = makeCentred();
+			rebuildBroadphase(world);
+
+			const hits = raycastQuery(world, 110, 0, 110, 300);
+			expect(hits.length).toEqual(1);
+			expect(hits[0].renderable).toBe(target);
+			expect(hits[0].point.y).toBeCloseTo(75, 3);
+			expect(hits[0].normal.y).toBeCloseTo(-1, 3);
+			// where the engine culls, draws and collides with it
+			expect(target.getBounds().top).toBeCloseTo(75, 3);
+		});
+
+		it("hits it through the part left of its pos, and not beside its drawn frame", () => {
+			makeCentred();
+			rebuildBroadphase(world);
+
+			expect(raycastQuery(world, 80, 0, 80, 300).length).toEqual(1);
+			expect(raycastQuery(world, 140, 0, 140, 300).length).toEqual(0);
+		});
+
+		it("hits a centre-anchored ellipse at the top of its drawn frame", () => {
+			// a 40 wide circle centred in a 40x40 renderable at (200, 200)
+			const r = new Renderable(200, 200, 40, 40);
+			r.anchorPoint.set(0.5, 0.5);
+			r.isKinematic = false;
+			r.body = new Body(r, [new Ellipse(20, 20, 40, 40)]);
+			world.addChild(r);
+			rebuildBroadphase(world);
+
+			const hits = raycastQuery(world, 200, 0, 200, 400);
+			expect(hits.length).toEqual(1);
+			expect(hits[0].point.y).toBeCloseTo(180, 1);
+		});
+
+		it("measures from pos when the renderable opts out of the anchor", () => {
+			const target = makeCentred();
+			target.applyAnchorTransform = false;
+			rebuildBroadphase(world);
+
+			const hits = raycastQuery(world, 110, 0, 110, 300);
+			expect(hits.length).toEqual(1);
+			expect(hits[0].point.y).toBeCloseTo(100, 3);
+		});
+
+		it("hits the drawn frame whatever the anchor", () => {
+			// 50x50 at (100, 100): the frame starts `size * anchor` before pos
+			for (const [ax, ay] of [
+				[0, 0],
+				[0.5, 0.5],
+				[1, 1],
+				[0, 1],
+				[1, 0],
+			]) {
+				world = new World(0, 0, 800, 600, adapter);
+				const r = new Renderable(100, 100, 50, 50);
+				r.anchorPoint.set(ax, ay);
+				r.isKinematic = false;
+				r.body = new Body(r, [new Rect(0, 0, 50, 50)]);
+				world.addChild(r);
+				rebuildBroadphase(world);
+				const left = 100 - 50 * ax;
+				const top = 100 - 50 * ay;
+
+				const down = raycastQuery(world, left + 25, 0, left + 25, 400);
+				expect(down.length, `anchor ${ax},${ay}`).toEqual(1);
+				expect(down[0].point.y, `anchor ${ax},${ay}`).toBeCloseTo(top, 3);
+
+				const across = raycastQuery(world, 0, top + 25, 400, top + 25);
+				expect(across.length, `anchor ${ax},${ay}`).toEqual(1);
+				expect(across[0].point.x, `anchor ${ax},${ay}`).toBeCloseTo(left, 3);
+			}
+		});
+
+		it("hits a Sprite with its default anchor where it is drawn", () => {
+			const image = document.createElement("canvas");
+			image.width = image.height = 50;
+			const sprite = new Sprite(100, 100, { image });
+			sprite.isKinematic = false;
+			sprite.body = new Body(sprite, [new Rect(0, 0, 50, 50)]);
+			world.addChild(sprite);
+			rebuildBroadphase(world);
+
+			const hits = raycastQuery(world, 110, 0, 110, 300);
+			expect(hits.length).toEqual(1);
+			expect(hits[0].renderable).toBe(sprite);
+			expect(hits[0].point.y).toBeCloseTo(sprite.getBounds().top, 3);
+			expect(hits[0].point.y).toBeCloseTo(75, 3);
+		});
+
+		it("adds the anchor to the offset of the container it is in", () => {
+			const room = new Container(300, 200, 400, 400);
+			world.addChild(room);
+			const r = new Renderable(100, 100, 50, 50);
+			r.anchorPoint.set(0.5, 0.5);
+			r.isKinematic = false;
+			r.body = new Body(r, [new Rect(0, 0, 50, 50)]);
+			room.addChild(r);
+			rebuildBroadphase(world);
+
+			// at (400, 300) in the world, drawn from (375, 275)
+			const hits = raycastQuery(world, 410, 0, 410, 600);
+			expect(hits.length).toEqual(1);
+			expect(hits[0].renderable).toBe(r);
+			expect(hits[0].point.y).toBeCloseTo(275, 3);
+		});
+
+		it("does the same through the legacy Detector.rayCast", () => {
+			const target = makeCentred();
+			rebuildBroadphase(world);
+
+			// through the part left of pos, then beside the drawn frame
+			expect(world.detector.rayCast(lineBetween(80, 0, 80, 300))).toEqual([
+				target,
+			]);
+			expect(world.detector.rayCast(lineBetween(140, 0, 140, 300))).toEqual([]);
+		});
+
+		it("does the same through BuiltinAdapter.raycast", () => {
+			const target = makeCentred();
+			rebuildBroadphase(world);
+
+			const hit = adapter.raycast(new Vector2d(80, 0), new Vector2d(80, 300));
+			expect(hit).not.toBeNull();
+			expect(hit.renderable).toBe(target);
+			expect(hit.point.y).toBeCloseTo(75, 3);
 		});
 	});
 
