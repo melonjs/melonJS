@@ -352,6 +352,95 @@ describe("TMXObject", () => {
 			expect(pts[1].x).toBeCloseTo(0, 0);
 			expect(pts[1].y).toBeCloseTo(100, 0);
 		});
+
+		describe("on isometric maps", () => {
+			// where Tiled draws a point (x, y) of an object relative to the
+			// object position: (x - y) * tilewidth / (2 * tileheight), (x + y) / 2
+			const project = (tw, th, x, y) => {
+				return [((x - y) * tw) / (2 * th), (x + y) / 2];
+			};
+			const isoMap = (tilewidth, tileheight) => {
+				return { ...mockMap("isometric"), tilewidth, tileheight };
+			};
+			const expectPoints = (shape, expected) => {
+				const pts = shape.points.map((p) => {
+					return [p.x + shape.pos.x, p.y + shape.pos.y];
+				});
+				expect(pts.length).toEqual(expected.length);
+				for (let i = 0; i < pts.length; i++) {
+					expect(pts[i][0]).toBeCloseTo(expected[i][0], 6);
+					expect(pts[i][1]).toBeCloseTo(expected[i][1], 6);
+				}
+			};
+
+			for (const [tw, th] of [
+				[64, 32],
+				[128, 32],
+				[186, 108],
+				[32, 32],
+			]) {
+				it(`should project a rectangle with ${tw}x${th} tiles`, () => {
+					const obj = new TMXObject(
+						isoMap(tw, th),
+						{ name: "", x: 0, y: 0, width: 96, height: 48 },
+						0,
+					);
+					expectPoints(obj.shapes[0], [
+						project(tw, th, 0, 0),
+						project(tw, th, 96, 0),
+						project(tw, th, 96, 48),
+						project(tw, th, 0, 48),
+					]);
+				});
+
+				it(`should project a polygon with ${tw}x${th} tiles`, () => {
+					const obj = new TMXObject(
+						isoMap(tw, th),
+						{
+							name: "",
+							x: 0,
+							y: 0,
+							polygon: [
+								{ x: 0, y: 0 },
+								{ x: 60, y: 10 },
+								{ x: 20, y: 70 },
+							],
+						},
+						0,
+					);
+					expectPoints(obj.shapes[0], [
+						project(tw, th, 0, 0),
+						project(tw, th, 60, 10),
+						project(tw, th, 20, 70),
+					]);
+				});
+
+				it(`should project polyline segments with ${tw}x${th} tiles`, () => {
+					const obj = new TMXObject(
+						isoMap(tw, th),
+						{
+							name: "",
+							x: 0,
+							y: 0,
+							polyline: [
+								{ x: 0, y: 0 },
+								{ x: 50, y: 0 },
+								{ x: 50, y: 40 },
+							],
+						},
+						0,
+					);
+					expectPoints(obj.shapes[0], [
+						project(tw, th, 0, 0),
+						project(tw, th, 50, 0),
+					]);
+					expectPoints(obj.shapes[1], [
+						project(tw, th, 50, 0),
+						project(tw, th, 50, 40),
+					]);
+				});
+			}
+		});
 	});
 
 	describe("basic properties", () => {
