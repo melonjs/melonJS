@@ -329,6 +329,64 @@ describe("TMXTileset", () => {
 	});
 
 	// ==============================================================
+	// Tile classes
+	// ==============================================================
+	describe("tile classes", () => {
+		const base = {
+			firstgid: 10,
+			name: "ground",
+			tilewidth: 32,
+			tileheight: 32,
+			spacing: 0,
+			margin: 0,
+			tilecount: 16,
+			columns: 4,
+			image: "ground.png",
+		};
+
+		it("reads a tile's class, as Tiled 1.10 and older write it (type)", () => {
+			const ts = new TMXTileset({ ...base, tiles: [{ id: 2, type: "Chest" }] });
+			expect(ts.getTileClass(12)).toBe("Chest");
+		});
+
+		it("reads a tile's class as Tiled 1.9 writes it (class)", () => {
+			const ts = new TMXTileset({ ...base, tiles: [{ id: 3, class: "Door" }] });
+			expect(ts.getTileClass(13)).toBe("Door");
+		});
+
+		it("reads it from tiles keyed by id (TMX and older JSON)", () => {
+			const ts = new TMXTileset({ ...base, tiles: { 4: { type: "Torch" } } });
+			expect(ts.getTileClass(14)).toBe("Torch");
+		});
+
+		it("returns undefined for a tile with no class, or an empty one", () => {
+			const ts = new TMXTileset({
+				...base,
+				tiles: [{ id: 0 }, { id: 1, type: "" }],
+			});
+			expect(ts.getTileClass(10)).toBeUndefined();
+			expect(ts.getTileClass(11)).toBeUndefined();
+			// and for a tile with no entry at all
+			expect(ts.getTileClass(15)).toBeUndefined();
+		});
+
+		it("keeps a tile's class and its properties side by side", () => {
+			const ts = new TMXTileset({
+				...base,
+				tiles: [
+					{
+						id: 5,
+						type: "Chest",
+						properties: [{ name: "gold", type: "int", value: 5 }],
+					},
+				],
+			});
+			expect(ts.getTileClass(15)).toBe("Chest");
+			expect(ts.getTileProperties(15)).toEqual({ gold: 5 });
+		});
+	});
+
+	// ==============================================================
 	// Collection with properties on tiles
 	// ==============================================================
 	describe("collection tiles with properties", () => {
