@@ -34,6 +34,14 @@ export default class TMXTileset {
 		this.tileProperties = new Map();
 
 		/**
+		 * per-tile class indexed by gid
+		 * @type {Map<number, string>}
+		 * @ignore
+		 * @internal
+		 */
+		this.tileClasses = new Map();
+
+		/**
 		 * per-tile images for "Collection of Image" tilesets, indexed by gid
 		 * @type {Map<number, HTMLImageElement|HTMLCanvasElement>}
 		 * @ignore
@@ -382,6 +390,12 @@ export default class TMXTileset {
 		for (const tile of tileEntries) {
 			const tileId = +tile.id;
 
+			// the tile's class: `class` in Tiled 1.9, `type` before and since 1.10
+			const tileClass = tile.class ?? tile.type;
+			if (typeof tileClass === "string" && tileClass !== "") {
+				this.tileClasses.set(tileId + this.firstgid, tileClass);
+			}
+
 			// parse animation frames
 			if (tile.animation) {
 				this.isAnimated = true;
@@ -616,6 +630,16 @@ export default class TMXTileset {
 	 */
 	getTileProperties(tileId) {
 		return this.tileProperties.get(tileId);
+	}
+
+	/**
+	 * return the class of the specified tile, as set on the tile in Tiled's
+	 * tileset editor. A tile object with no class of its own is matched by it.
+	 * @param {number} tileId - global tile ID
+	 * @returns {string|undefined} the tile's class, or undefined if it has none
+	 */
+	getTileClass(tileId) {
+		return this.tileClasses.get(tileId);
 	}
 
 	/**

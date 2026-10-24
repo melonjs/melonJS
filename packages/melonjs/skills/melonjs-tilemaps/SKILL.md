@@ -1,6 +1,6 @@
 ---
 name: melonjs-tilemaps
-description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory."
+description: "Use this skill for Tiled maps in melonJS — loading TMX/TSX levels, spawning entities from Tiled objects, collision shapes authored in Tiled, isometric and hexagonal maps, and image layers. Covers registerTiledObjectClass and the pool.register name contract, camera bounds, compressed maps needing the inflate plugin, and the level director API. Triggers on: Tiled, TMX, TSX, tilemap, level.load, level.load async, await level.load, tileset, ImageLayer, isometric, hexagonal, staggered, pool.register, Collectable, Trigger, object layer, collision layer, parallax, registerTiledObjectClass, registerTiledObjectFactory, TMXObject, resolvedProperty, resolvedProperties, tile class, tile properties."
 license: MIT
 ---
 
@@ -72,7 +72,8 @@ object group in its own `Container` named after the group.
 ## Spawning entities from Tiled objects
 
 Objects are matched against a factory registry, in this order: the object's
-Tiled **class**, then its **name**, then the structural fallbacks `"text"`,
+Tiled **class**, then its **name**, then, for a tile object with no class of
+its own, its **tile's class**, then the structural fallbacks `"text"`,
 `"tile"` and `"shape"`.
 
 ```js
@@ -121,6 +122,53 @@ registerTiledObjectClass("Trigger", MyTrigger);   // whenever you like
 
 The throw is for a clash between two of *your* classes under one name. For
 that case `registerTiledObjectFactory` overwrites and only warns.
+
+### Classes and properties set on tiles
+
+In Tiled, a tile can carry a class and custom properties (tileset editor), and
+every object placed from that tile shows them as its own. melonJS follows:
+
+- **The tile's class.** A tile object with no class is built by the class
+  registered under its tile's class, so a designer sets "Chest" once on the
+  chest tile and every chest dropped in the map is a `Chest`. The object's
+  own class or registered name still comes first, and a tile classed like a
+  built-in (`Sprite`, `Trigger`, `shape`...) stays a plain tile.
+- **The tile's properties.** Read them with `settings.resolvedProperty(name)`
+  or `settings.resolvedProperties()`, which merge the tile's properties under
+  the object's own, as Tiled's scripting API of the same names does. They are
+  **not** set on `settings` by name: only the object's own properties are,
+  as before, so a tile property named like a sprite setting never reaches a
+  plain tile sprite.
+
+```ts
+import { registerTiledObjectClass, Sprite, type TMXObject } from "melonjs";
+
+// the custom properties set on the object itself, by name
+interface DoorSettings extends TMXObject {
+    locked?: boolean;
+}
+
+class Door extends Sprite {
+    locked: boolean;
+    facing: string;
+    constructor(x: number, y: number, settings: DoorSettings) {
+        super(x, y, { image: "door" });
+        this.locked = settings.locked ?? false;
+        // on the object, or else on the door tile in the tileset
+        this.facing = settings.resolvedProperty("facing") ?? "N";
+    }
+}
+registerTiledObjectClass("Door", Door);   // and give the door tile the class "Door"
+```
+
+`TMXObject` is the type of the `settings` a registered class (or factory)
+receives: the object as read from the map, with `tile` (a `Tile`) on a tile
+object. Extend it with the properties your class reads.
+
+For a class that is not a `Sprite` itself (a `Container` holding the tile and
+something else, say), `settings.tile.getRenderable()` returns the tile's sprite
+as a plain tile object would get it: from a tileset image, an image collection
+or an animated tile alike, with no region names to build by hand.
 
 melonJS pre-registers `Renderable`, `Sprite`, `NineSliceSprite`, `Text`,
 `BitmapText`, `ImageLayer`, `ColorLayer`, `Light2d`, `Collectable`, `Trigger`
@@ -171,7 +219,8 @@ An object that matches no factory and carries no text or tile data falls to the
 geometry, which the world auto-registers with the active adapter on `addChild`.
 
 For per-object physics, set the object's custom properties in Tiled; they arrive
-on the settings object passed to your entity's constructor.
+on the settings object passed to your entity's constructor. Properties set on
+the object's tile are read with `settings.resolvedProperty(name)`.
 
 ## Map orientations
 
@@ -305,6 +354,8 @@ unanimated layer into the offscreen-bake path instead.
 | a decoration placed at the same position as a wall disappears behind it | a tie keeps insertion order and draws the later one behind: `sortOffset = 1` |
 | particles (or a container) at the foot of something draw over a character standing in front of it | they sort by the top of their spawn area (or the container's top left): set `sortOffset` to line them up with what they belong to |
 | a character is stopped short of walls and props placed as tile objects | it collides with their default bodies (static, `ENEMY_OBJECT`, the whole image box); mask it to `collision.types.WORLD_SHAPE` when the collision layer holds the real shapes |
+| a property set on a tile is undefined on the object's `settings` | tile properties are not copied onto `settings`: read them with `settings.resolvedProperty(name)` |
+| objects placed from a classed tile come out as plain sprites | that class is not registered, it is a built-in name, or the object has a class or a registered name of its own, which come first |
 | missing tiles or a blank map | the `.tsx` or tileset image was not preloaded |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
 
