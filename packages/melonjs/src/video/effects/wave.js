@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -15,16 +16,16 @@ struct WaveUniforms {
 	uFrequency : f32,
 	uSpeed : f32,
 	uTime : f32,
-	uAnchor : f32,
+	uAnchor : f32,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : WaveUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// with an anchor, rows fade from full wave at the top to none at the anchor
 	let bend = select(1.0, clamp((fx.uAnchor - uv.y) / fx.uAnchor, 0.0, 1.0), fx.uAnchor > 0.0);
 	let wave = sin(uv.y * fx.uFrequency + fx.uTime * fx.uSpeed) * fx.uAmplitude * bend;
 	let distorted = vec2f(uv.x + wave, uv.y);
-	return textureSample(uTexture, uSampler, distorted) * vColor;
+	return frameTexel(distorted) * vColor;
 }
 `;
 
@@ -67,12 +68,13 @@ export default class WaveEffect extends ShaderEffect {
 			uniform float uSpeed;
 			uniform float uTime;
 			uniform float uAnchor;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				// with an anchor, rows fade from full wave at the top to none at the anchor
 				float bend = uAnchor > 0.0 ? clamp((uAnchor - uv.y) / uAnchor, 0.0, 1.0) : 1.0;
 				float wave = sin(uv.y * uFrequency + uTime * uSpeed) * uAmplitude * bend;
 				vec2 distorted = vec2(uv.x + wave, uv.y);
-				return texture2D(uSampler, distorted) * vColor;
+				return frameTexel(distorted) * vColor;
 			}
 			`,
 			wgsl: wgslFragment,

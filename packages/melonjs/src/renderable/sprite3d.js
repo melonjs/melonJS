@@ -709,7 +709,7 @@ export default class Sprite3d extends Mesh {
 	/**
 	 * Select the active animation, identical to {@link Sprite#setCurrentAnimation}.
 	 * @param {string} name - animation id
-	 * @param {string|Function|object} [resetAnim] - loop / chain / completion behavior
+	 * @param {string|Function|object} [resetAnim] - loop / chain / completion / per-frame (`onFrame`) behavior
 	 * @param {boolean} [preserve_dt=false]
 	 * @returns {Sprite3d} Reference to this object for method chaining
 	 */

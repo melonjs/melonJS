@@ -409,8 +409,8 @@ describe("TMXLayer.layerData (Uint16Array refactor)", () => {
 			expect(got2).not.toBe(got1);
 		});
 
-		it("isometricRpg-style usage: stable identity across pointerMove calls", () => {
-			// regression for examples/isometricRpg/play.ts line 49:
+		it("tile-selector usage: stable identity across pointerMove calls", () => {
+			// a tile selector compares the hovered cell with the previous one:
 			//   if (tile && tile !== this.currentTile) { ... }
 			const data = [...ALL_ZERO_4x3];
 			data[6] = 3;

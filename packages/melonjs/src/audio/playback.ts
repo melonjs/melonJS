@@ -176,7 +176,6 @@ export function play(
 		typeof loopOrOptions === "object" && loopOrOptions !== null
 			? loopOrOptions
 			: { loop: loopOrOptions };
-	const loop = options.loop === true;
 	const endCallback = options.onend ?? onend;
 	const level = options.volume ?? volume;
 
@@ -192,6 +191,13 @@ export function play(
 				: `melonJS: audio clip "${sound_name}" could not be played`,
 		);
 	}
+	// Left out, `loop` follows the clip: its own default, or the loop flag
+	// of the region played (the third element of its sprite entry). The
+	// positional form always says, so only the options form can leave it out
+	const loop =
+		options.loop ??
+		(sound.loop() ||
+			sound._sprite[options.sprite ?? "__default"]?.[2] === true);
 	sound.loop(loop, id);
 	sound.volume(
 		typeof level === "number" ? clamp(level, 0.0, 1.0) : getGlobalVolume(),

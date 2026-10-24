@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
@@ -14,10 +15,10 @@ const wgslFragment = `
 struct OutlineUniforms {
 	uOutlineColor : vec4f,
 	uOutlineWidth : f32,
-	uTextureSize : vec2f,
+	uTextureSize : vec2f,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : OutlineUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	if (color.a > 0.0) {
 		return color;
@@ -25,14 +26,14 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// sample neighbors to detect edges (level-0: non-uniform flow)
 	let texel = fx.uOutlineWidth / fx.uTextureSize;
 	var a = 0.0;
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, 0.0), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, 0.0), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(0.0, -texel.y), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(0.0, texel.y), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, -texel.y), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, -texel.y), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(-texel.x, texel.y), 0.0).a);
-	a = max(a, textureSampleLevel(uTexture, uSampler, uv + vec2f(texel.x, texel.y), 0.0).a);
+	a = max(a, frameTexelLevel(uv + vec2f(-texel.x, 0.0)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(texel.x, 0.0)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(0.0, -texel.y)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(0.0, texel.y)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(-texel.x, -texel.y)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(texel.x, -texel.y)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(-texel.x, texel.y)).a);
+	a = max(a, frameTexelLevel(uv + vec2f(texel.x, texel.y)).a);
 	if (a > 0.0) {
 		// the color's alpha is the outline's opacity; premultiplied, as everything the batcher draws is
 		let alpha = a * fx.uOutlineColor.a;
@@ -76,6 +77,7 @@ export default class OutlineEffect extends ShaderEffect {
 			uniform vec4 uOutlineColor;
 			uniform float uOutlineWidth;
 			uniform vec2 uTextureSize;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				if (color.a > 0.0) {
 					return color;
@@ -83,14 +85,14 @@ export default class OutlineEffect extends ShaderEffect {
 				// sample neighbors to detect edges
 				vec2 texel = uOutlineWidth / uTextureSize;
 				float a = 0.0;
-				a = max(a, texture2D(uSampler, uv + vec2(-texel.x, 0.0)).a);
-				a = max(a, texture2D(uSampler, uv + vec2( texel.x, 0.0)).a);
-				a = max(a, texture2D(uSampler, uv + vec2(0.0, -texel.y)).a);
-				a = max(a, texture2D(uSampler, uv + vec2(0.0,  texel.y)).a);
-				a = max(a, texture2D(uSampler, uv + vec2(-texel.x, -texel.y)).a);
-				a = max(a, texture2D(uSampler, uv + vec2( texel.x, -texel.y)).a);
-				a = max(a, texture2D(uSampler, uv + vec2(-texel.x,  texel.y)).a);
-				a = max(a, texture2D(uSampler, uv + vec2( texel.x,  texel.y)).a);
+				a = max(a, frameTexel(uv + vec2(-texel.x, 0.0)).a);
+				a = max(a, frameTexel(uv + vec2( texel.x, 0.0)).a);
+				a = max(a, frameTexel(uv + vec2(0.0, -texel.y)).a);
+				a = max(a, frameTexel(uv + vec2(0.0,  texel.y)).a);
+				a = max(a, frameTexel(uv + vec2(-texel.x, -texel.y)).a);
+				a = max(a, frameTexel(uv + vec2( texel.x, -texel.y)).a);
+				a = max(a, frameTexel(uv + vec2(-texel.x,  texel.y)).a);
+				a = max(a, frameTexel(uv + vec2( texel.x,  texel.y)).a);
 				if (a > 0.0) {
 					// the color's alpha is the outline's opacity; premultiplied, as everything the batcher draws is
 					float alpha = a * uOutlineColor.a;

@@ -18,6 +18,7 @@ import {
 	normalizeBlendMode,
 	reportedBlendMode,
 } from "../blendmodes.js";
+import AmbientLightEffect from "../effects/ambientlight.js";
 import BlendEffect from "../effects/blendEffect.js";
 import { meshHostingBlocker } from "../effects/mesh_splice.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
@@ -3231,6 +3232,42 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Draw the ambient darkness with a hole per light, as one quad over the
+	 * view through the ambient-light effect (see `AmbientLightEffect`).
+	 * @ignore
+	 * @internal
+	 */
+	drawAmbientLight(color, lights, x, y, width, height) {
+		if (this._ambientShader === undefined) {
+			this._ambientShader = new AmbientLightEffect(this);
+		}
+		this._ambientShader.setLights(lights, x, y, width, height);
+		this.save();
+		this.setGlobalAlpha(1.0);
+		this.setBlendMode("normal");
+		const previousShader = this.customShader;
+		this.customShader = this._ambientShader;
+		const batcher = this.setBatcher("quad");
+		batcher.addQuad(
+			this.getLightAtlas(),
+			x,
+			y,
+			width,
+			height,
+			0,
+			0,
+			1,
+			1,
+			// the ambient color and its alpha, through the vertex tint
+			color.toUint32(color.alpha),
+		);
+		// drawn now, under these lights: the next camera loads its own
+		this.flush();
+		this.customShader = previousShader;
+		this.restore();
+	}
+
+	/**
 	 * Lazy-init a shared 1x1 flat-normal TextureAtlas — RGB (128, 128, 255),
 	 * which decodes to the tangent-space normal (0, 0, 1).
 	 *
@@ -4534,6 +4571,13 @@ export default class WebGPURenderer extends Renderer {
 		 * @internal
 		 */
 		this._toneMapEffect = undefined;
+		// the ambient-light effect, created by the first soft-cutout pass
+		this._ambientShader?.destroy?.();
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._ambientShader = undefined;
 
 		// advanced-blend resources, all lazily created: a game that never used
 		// one of the six modes has nothing here to release

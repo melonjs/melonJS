@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
@@ -16,10 +17,10 @@ struct ShadowUniforms {
 	uShadowColor : vec4f,
 	uShadowOpacity : f32,
 	uTextureSize : vec2f,
-	uUVYDir : f32,
+	uUVYDir : f32,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : ShadowUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	if (color.a > 0.0) {
 		return color;
@@ -32,7 +33,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// vertical orientation (always +1 under WebGPU; the GL pooled path
 	// sets -1 for its bottom-up captures)
 	offset.y = offset.y * fx.uUVYDir;
-	let shadowAlpha = textureSampleLevel(uTexture, uSampler, uv - offset, 0.0).a;
+	let shadowAlpha = frameTexelLevel(uv - offset).a;
 	if (shadowAlpha > 0.0) {
 		// the color's alpha scales the opacity; premultiplied, as everything the batcher draws is
 		let alpha = shadowAlpha * fx.uShadowOpacity * fx.uShadowColor.a;
@@ -81,6 +82,7 @@ export default class DropShadowEffect extends ShaderEffect {
 			uniform float uShadowOpacity;
 			uniform vec2 uTextureSize;
 			uniform float uUVYDir;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				if (color.a > 0.0) {
 					return color;
@@ -91,7 +93,7 @@ export default class DropShadowEffect extends ShaderEffect {
 				// the pooled path's bottom-up capture FBOs)
 				vec2 offset = uShadowOffset / uTextureSize;
 				offset.y *= uUVYDir;
-				float shadowAlpha = texture2D(uSampler, uv - offset).a;
+				float shadowAlpha = frameTexel(uv - offset).a;
 				if (shadowAlpha > 0.0) {
 					// the color's alpha scales the opacity; premultiplied, as everything the batcher draws is
 					float alpha = shadowAlpha * uShadowOpacity * uShadowColor.a;

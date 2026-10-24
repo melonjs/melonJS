@@ -95,6 +95,9 @@ export default class Stage {
 	 * an ambient light that will be added to the stage rendering. Its alpha
 	 * is what gates the lighting pass: at alpha 0 (the default) `drawLighting`
 	 * returns early and the lights still draw as additive glows.
+	 *
+	 * Every active {@link Light2d} cuts a hole in it, hard-edged unless the
+	 * light has a {@link Light2d#softness}.
 	 * @default rgba(0,0,0,0)
 	 * @see Light2d
 	 * @see {@link Stage#ambientLightingColor} for the other, easily confused knob
@@ -362,9 +365,13 @@ export default class Stage {
 	 * Renderables); this pass only paints the dark fill that the lights cut
 	 * holes through.
 	 *
+	 * A light with a {@link Light2d#softness} takes the whole pass to the
+	 * renderer's soft path, which fades each hole along the light's falloff.
+	 *
 	 * Subclasses can override this method to implement custom lighting (e.g.
-	 * per-pixel normal-mapped lighting via a custom shader). Called once per
-	 * camera per frame.
+	 * per-pixel normal-mapped lighting via a custom shader), or to skip a
+	 * camera (a minimap showing the level lit). Called once per camera per
+	 * frame.
 	 * @param renderer - the active renderer
 	 * @param camera - the camera currently rendering this stage
 	 * @param translateX - the same world-to-screen X translate that
@@ -398,15 +405,46 @@ export default class Stage {
 		if (tx !== 0 || ty !== 0) {
 			r.translate(-tx, -ty);
 		}
+		// the darkness covers the camera's view in the (now world-space)
+		// renderer: from the camera origin, as wide as the world it shows
+		// (`width / zoom`: zoomed out, a camera-sized fill left part of the
+		// view lit), and a unit more on every side. Unless `subPixel` is set,
+		// the renderer drops the fraction of that translate, which moves the
+		// view's edge by up to a unit: a camera at a fractional position (any
+		// smoothed follow) left its first column and row lit. The camera
+		// clips what reaches past its view. A whole number of pixels, so a
+		// renderer drawing the darkness at screen resolution keeps it on the
+		// screen's pixel grid
+		const margin = Math.ceil(camera.zoom) / camera.zoom;
+		const x = tx - margin;
+		const y = ty - margin;
+		const width = camera.width / camera.zoom + margin * 2;
+		const height = camera.height / camera.zoom + margin * 2;
+		// any light with a soft edge: the renderer draws the darkness with
+		// every light's falloff
+		for (const light of this._activeLights) {
+			if (light.softness > 0) {
+				r.drawAmbientLight(
+					this.ambientLight,
+					this._activeLights,
+					x,
+					y,
+					width,
+					height,
+					width * camera.zoom,
+					height * camera.zoom,
+				);
+				r.restore();
+				return;
+			}
+		}
 		// punch out each active light's visible area so the ambient fill
 		// doesn't darken what the light is illuminating
 		this._activeLights.forEach((light) => {
 			r.setMask(light.getVisibleArea(), true);
 		});
 		r.setColor(this.ambientLight);
-		// fillRect must cover the camera's view in the (now world-space)
-		// renderer — offset by the camera origin so it matches the viewport.
-		r.fillRect(tx, ty, camera.width, camera.height);
+		r.fillRect(x, y, width, height);
 		r.clearMask();
 		r.restore();
 	}

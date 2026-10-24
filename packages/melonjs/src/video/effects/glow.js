@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import { rgba } from "./rgba.js";
 import ShaderEffect from "./shadereffect.js";
 
@@ -15,10 +16,10 @@ struct GlowUniforms {
 	uGlowColor : vec4f,
 	uGlowWidth : f32,
 	uGlowIntensity : f32,
-	uTextureSize : vec2f,
+	uTextureSize : vec2f,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : GlowUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	if (color.a > 0.0) {
 		return color;
@@ -28,7 +29,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	let texel = fx.uGlowWidth / fx.uTextureSize;
 	for (var angle = 0.0; angle < 6.28; angle += 0.785) {
 		let offset = vec2f(cos(angle), sin(angle)) * texel;
-		a += textureSampleLevel(uTexture, uSampler, uv + offset, 0.0).a;
+		a += frameTexelLevel(uv + offset).a;
 	}
 	a = a / 8.0 * fx.uGlowIntensity;
 	if (a > 0.0) {
@@ -72,6 +73,7 @@ export default class GlowEffect extends ShaderEffect {
 			uniform float uGlowWidth;
 			uniform float uGlowIntensity;
 			uniform vec2 uTextureSize;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				if (color.a > 0.0) {
 					return color;
@@ -81,7 +83,7 @@ export default class GlowEffect extends ShaderEffect {
 				vec2 texel = uGlowWidth / uTextureSize;
 				for (float angle = 0.0; angle < 6.28; angle += 0.785) {
 					vec2 offset = vec2(cos(angle), sin(angle)) * texel;
-					a += texture2D(uSampler, uv + offset).a;
+					a += frameTexel(uv + offset).a;
 				}
 				a = a / 8.0 * uGlowIntensity;
 				if (a > 0.0) {

@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -12,15 +13,15 @@ import ShaderEffect from "./shadereffect.js";
 const wgslFragment = `
 struct AberrationUniforms {
 	uOffset : f32,
-	uTextureSize : vec2f,
+	uTextureSize : vec2f,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : AberrationUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	let texel = fx.uOffset / fx.uTextureSize;
-	let r = textureSample(uTexture, uSampler, uv + vec2f(texel.x, 0.0)).r;
+	let r = frameTexel(uv + vec2f(texel.x, 0.0)).r;
 	let g = textureSample(uTexture, uSampler, uv).g;
-	let b = textureSample(uTexture, uSampler, uv - vec2f(texel.x, 0.0)).b;
+	let b = frameTexel(uv - vec2f(texel.x, 0.0)).b;
 	let a = textureSample(uTexture, uSampler, uv).a;
 	return vec4f(r, g, b, a) * vColor;
 }
@@ -51,11 +52,12 @@ export default class ChromaticAberrationEffect extends ShaderEffect {
 			glsl: `
 			uniform float uOffset;
 			uniform vec2 uTextureSize;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				vec2 texel = uOffset / uTextureSize;
-				float r = texture2D(uSampler, uv + vec2(texel.x, 0.0)).r;
+				float r = frameTexel(uv + vec2(texel.x, 0.0)).r;
 				float g = texture2D(uSampler, uv).g;
-				float b = texture2D(uSampler, uv - vec2(texel.x, 0.0)).b;
+				float b = frameTexel(uv - vec2(texel.x, 0.0)).b;
 				float a = texture2D(uSampler, uv).a;
 				return vec4(r, g, b, a) * vColor;
 			}

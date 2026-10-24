@@ -284,7 +284,23 @@ export default class Container extends Renderable {
 		this._comparator = this._sortZ;
 
 		/**
-		 * Specify if the children list should be automatically sorted when adding a new child
+		 * Whether the container keeps its children sorted by itself.
+		 *
+		 * - When a child is added, the container sorts (on the next tick).
+		 * - On a `"x"` or `"y"` sort, it also keeps its children in order every
+		 *   frame, as they move: at the end of each update, after physics and
+		 *   the children's own updates, it checks the order and re-sorts when
+		 *   anything is out of place. A character walking around a y-sorted
+		 *   scene passes in front of and behind things with no `sort()` call.
+		 *   A frame where nothing moved costs one pass over the children, and
+		 *   nothing is redrawn because of it.
+		 * - On a `"z"` sort, changing a child's `depth` after adding it does
+		 *   NOT re-sort: call {@link Container#sort}, or use
+		 *   {@link Container#moveToTop} and the other move methods, which
+		 *   reorder the children themselves. `"depth"` is re-sorted every frame
+		 *   by its {@link Camera3d}.
+		 *
+		 * Turn it off to keep the children in the order you put them.
 		 * @type {boolean}
 		 * @default true
 		 */
@@ -382,7 +398,11 @@ export default class Container extends Renderable {
 	 *
 	 * - `"x"` / `"y"` — 2D scroll-order, descending on both axes
 	 *   (higher pos.z first; tied z, higher pos.x or pos.y first).
-	 *   Suited to side-scrollers and top-down games.
+	 *   Suited to side-scrollers and top-down games. Each child is compared
+	 *   at `pos.x` / `pos.y` plus its {@link Renderable#sortOffset}, which
+	 *   changes the order and never the position. With
+	 *   {@link Container#autoSort} on (the default), the children are kept in
+	 *   that order every frame as they move.
 	 * - `"z"` — descending pos.z (higher z draws on top). Default for
 	 *   `Camera2d` — matches the painter's-algorithm 2D layering model
 	 *   where pos.z is "layer index".
@@ -1303,7 +1323,9 @@ export default class Container extends Renderable {
 	 * @internal
 	 */
 	_sortX(a, b) {
-		return b.pos.z - a.pos.z || b.pos.x - a.pos.x;
+		return (
+			b.pos.z - a.pos.z || b.pos.x + b.sortOffset - (a.pos.x + a.sortOffset)
+		);
 	}
 
 	/**
@@ -1312,7 +1334,9 @@ export default class Container extends Renderable {
 	 * @internal
 	 */
 	_sortY(a, b) {
-		return b.pos.z - a.pos.z || b.pos.y - a.pos.y;
+		return (
+			b.pos.z - a.pos.z || b.pos.y + b.sortOffset - (a.pos.y + a.sortOffset)
+		);
 	}
 
 	/**
@@ -1456,8 +1480,36 @@ export default class Container extends Renderable {
 			}
 		}
 
+		// an "x" / "y" sort follows its children every frame, now that they
+		// have all moved, by physics or by their own update (see `autoSort`)
+		if (
+			this.autoSort === true &&
+			(this.sortOn === "x" || this.sortOn === "y")
+		) {
+			this.keepSorted();
+		}
+
 		// call the parent method
 		return super.update(dt);
+	}
+
+	/**
+	 * Re-sort the children if any is out of order: one pass when none is,
+	 * which leaves the container clean, so a still scene is not redrawn
+	 * because of it.
+	 * @ignore
+	 * @internal
+	 */
+	keepSorted() {
+		const children = this.getChildren();
+		const compare = this._comparator;
+		for (let i = 1; i < children.length; i++) {
+			if (compare(children[i - 1], children[i]) > 0) {
+				children.sort(compare);
+				this.isDirty = true;
+				return;
+			}
+		}
 	}
 
 	/**
@@ -1520,14 +1572,19 @@ export default class Container extends Renderable {
 		// viewport is documented optional — legacy subclass overrides call
 		// `super.draw(renderer)` without one; treat that as the default camera
 		const isNonDefaultCamera = viewport ? !viewport.isDefault : false;
+		// a minimap or a split-screen view leaves the UI-only floating
+		// elements to the main camera, which draws them zoomed or not (a
+		// viewport that is not a camera answers with `isDefault`)
+		const skipsFloating = viewport
+			? !(viewport.drawsFloating ?? viewport.isDefault)
+			: false;
 
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
 			const isFloating = obj.floating === true;
 
 			if (obj.inViewport || isFloating) {
-				// skip UI-only floating elements on non-default cameras
-				if (isFloating && isNonDefaultCamera && !obj.visibleInAllCameras) {
+				if (isFloating && skipsFloating && !obj.visibleInAllCameras) {
 					continue;
 				}
 

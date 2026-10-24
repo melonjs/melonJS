@@ -100,7 +100,27 @@ await loader.preload([{
 audio.play("sfx", { sprite: "jump" });
 ```
 
-The optional third element marks a region as looping. `play()`'s second argument
+### A loop with no gap
+
+An MP3 encoder pads the end of its file. Chrome and Firefox trim the padding when
+they decode it, Safari keeps it, so a looping MP3 has a short silence at every
+loop there (27 ms on a 12 s clip at 22 kHz, measured). Declare a region of the
+loop's exact length and loop on that: the voice never reaches the padding.
+
+```js
+await loader.preload([{
+    name: "ambience", type: "audio", src: "data/sfx/",
+    sprite: { loop: [0, 12000] },
+}]);
+audio.playTrack("ambience", { sprite: "loop", volume: 0.6 });
+// or, as a plain clip: audio.play("ambience", { sprite: "loop", loop: true })
+```
+
+Ogg Vorbis carries no such padding.
+
+The optional third element marks a region as looping: it loops unless `play()` is
+told `loop: false` (before 20.11 it only looped when `loop: true` was passed as
+well). `play()`'s second argument
 takes either the original `loop` boolean or a `PlayOptions` object
 (`sprite`, `loop`, `onend`, `volume`, plus the spatial `follow`, `at` and
 `stopWithTarget`) — both forms work. Object fields win over the positional
@@ -467,6 +487,7 @@ either way — blank screen, empty console.
 | a looping sound outlives the entity that owns it | `follow` without `stopWithTarget: true` |
 | a voice panned with `stereo()` loses its 3D placement, or the reverse | one panner node per voice and last writer wins — pick one per voice and stay with it |
 | a reverb / compressor on the master gain does not affect the music | the music is `stream: true`, which bypasses the master gain — preload it buffered |
+| a looping MP3 drops out for a moment at every loop, in Safari only | Safari keeps the encoder's padding at the end of the file: loop a sprite region of the clip's exact length (see "A loop with no gap") |
 | sound effects keep playing after the window loses focus | `pauseOnBlur` and `stopOnBlur` are both off, so the engine is deliberately leaving the game running in the background |
 
 ## Related skills

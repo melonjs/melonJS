@@ -7,6 +7,7 @@ import {
 	off,
 	on,
 } from "../../system/event.ts";
+import { createCanvas } from "./../canvas_factory.js";
 import { Gradient } from "./../gradient.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
@@ -513,6 +514,84 @@ export default class CanvasRenderer extends Renderer {
 			light.width,
 			light.height,
 		);
+	}
+
+	/**
+	 * Draw the ambient darkness with a hole per light: filled into an
+	 * offscreen canvas at the view's resolution, each light erased from it
+	 * along its falloff (`destination-out` leaves `1 - cut` of what was
+	 * there, so overlapping lights multiply), then drawn over the view.
+	 * @ignore
+	 * @internal
+	 */
+	drawAmbientLight(
+		color,
+		lights,
+		x,
+		y,
+		width,
+		height,
+		pixelWidth,
+		pixelHeight,
+	) {
+		const pw = Math.max(1, Math.ceil(pixelWidth));
+		const ph = Math.max(1, Math.ceil(pixelHeight));
+		// one canvas, kept and resized, so a frame allocates nothing
+		if (this._ambientCanvas === undefined) {
+			this._ambientCanvas = createCanvas(pw, ph, true);
+		} else if (
+			this._ambientCanvas.width !== pw ||
+			this._ambientCanvas.height !== ph
+		) {
+			this._ambientCanvas.width = pw;
+			this._ambientCanvas.height = ph;
+		}
+		const canvas = this._ambientCanvas;
+		const context = canvas.getContext("2d");
+		const sx = pw / width;
+		const sy = ph / height;
+
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.globalCompositeOperation = "copy";
+		context.fillStyle = color.toRGBA();
+		context.fillRect(0, 0, pw, ph);
+		context.globalCompositeOperation = "destination-out";
+		for (const light of lights) {
+			const area = light.getVisibleArea();
+			const cx = (area.pos.x - x) * sx;
+			const cy = (area.pos.y - y) * sy;
+			const rx = area.radiusV.x * sx;
+			const ry = area.radiusV.y * sy;
+			if (
+				!(rx > 0) ||
+				!(ry > 0) ||
+				cx + rx < 0 ||
+				cx - rx > pw ||
+				cy + ry < 0 ||
+				cy - ry > ph
+			) {
+				continue;
+			}
+			// a circle of radius `rx`, squashed to the light's ellipse: fully
+			// erased out to the core, then straight back to nothing at the edge
+			context.setTransform(1, 0, 0, ry / rx, cx, cy);
+			const fill = context.createRadialGradient(0, 0, 0, 0, 0, rx);
+			fill.addColorStop(0, "rgba(0, 0, 0, 1)");
+			fill.addColorStop(1 - light.softness, "rgba(0, 0, 0, 1)");
+			fill.addColorStop(1, "rgba(0, 0, 0, 0)");
+			context.fillStyle = fill;
+			context.fillRect(-rx, -rx, rx * 2, rx * 2);
+		}
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		context.globalCompositeOperation = "source-over";
+
+		// over the view, straight onto the context: no tint, no blend mode
+		const target = this.getContext();
+		target.save();
+		target.globalAlpha = 1;
+		target.globalCompositeOperation = "source-over";
+		target.drawImage(canvas, 0, 0, pw, ph, x, y, width, height);
+		target.restore();
 	}
 
 	/**
@@ -1576,7 +1655,14 @@ export default class CanvasRenderer extends Renderer {
 			// shape adds another hole to the same evenodd path) instead of
 			// duplicate full-canvas rects cancelling under evenodd parity.
 			if (this._maskInvertOuterAdded !== true) {
+				// the whole canvas, in canvas pixels whatever the transform: a
+				// path takes the transform current at each command, and a
+				// scrolled or zoomed view put the outer edge somewhere in the
+				// world, so the mask kept what it should have cut
+				const transform = context.getTransform();
+				context.setTransform(1, 0, 0, 1, 0, 0);
 				context.rect(0, 0, this.getCanvas().width, this.getCanvas().height);
+				context.setTransform(transform);
 				this._maskInvertOuterAdded = true;
 			}
 			context.clip("evenodd");

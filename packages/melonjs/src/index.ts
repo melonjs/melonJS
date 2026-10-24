@@ -126,6 +126,7 @@ export type {
 	PannerAttributes,
 	PlayOptions,
 	SoundEvents,
+	TrackOptions,
 } from "./audio/types.ts";
 // export all public constants
 export * from "./const.ts";

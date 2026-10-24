@@ -54,8 +54,12 @@ export default class ColorLayer extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {
+		// a zoomed camera measures itself in the world it sees while the
+		// world is drawn, and the layer fills the screen: scale back by the
+		// zoom, as ImageLayer does, or zoomed in it fills part of the view
+		const zoom = viewport.zoom;
 		renderer.save();
-		renderer.clipRect(0, 0, viewport.width, viewport.height);
+		renderer.clipRect(0, 0, viewport.width * zoom, viewport.height * zoom);
 		renderer.clearColor(this.color);
 		renderer.restore();
 	}

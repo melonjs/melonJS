@@ -47,6 +47,14 @@ describe("parseAnimationOptions", () => {
 		expect(opts.legacyFn).toBeUndefined();
 	});
 
+	it("an options object carries onFrame; the other forms have none", () => {
+		const onFrame = () => {};
+		expect(parseAnimationOptions({ onFrame }).onFrame).toBe(onFrame);
+		expect(parseAnimationOptions("idle").onFrame).toBeUndefined();
+		expect(parseAnimationOptions(() => {}).onFrame).toBeUndefined();
+		expect(parseAnimationOptions().onFrame).toBeUndefined();
+	});
+
 	it("options loop:false disables looping (only an explicit false)", () => {
 		expect(parseAnimationOptions({ loop: false }).loop).toBe(false);
 		// any other falsy-ish value is NOT treated as false

@@ -19,6 +19,7 @@ import {
 	isSupportedBlendMode,
 	normalizeBlendMode,
 } from "../blendmodes.js";
+import AmbientLightEffect from "../effects/ambientlight.js";
 import BlendEffect from "../effects/blendEffect.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
 import { Gradient } from "../gradient.js";
@@ -1305,6 +1306,16 @@ export default class WebGLRenderer extends Renderer {
 			 */
 			this._lightShader = undefined;
 		}
+		// the same for the ambient-light effect (re-created on the next
+		// soft-cutout pass)
+		if (this._ambientShader !== undefined) {
+			this._ambientShader.destroy?.();
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._ambientShader = undefined;
+		}
 		if (this._lightAtlas !== undefined) {
 			// `TextureCache` is keyed by the source image, not by the
 			// `TextureAtlas` instance. Dropping the wrong key would leak
@@ -1684,6 +1695,39 @@ export default class WebGLRenderer extends Renderer {
 		// here. The next `setBatcher` call (sprites, primitives, etc.)
 		// will reconcile to the right shader on its own (see
 		// `setBatcher`), and that's what unlocks the cross-light batch.
+	}
+
+	/**
+	 * Draw the ambient darkness with a hole per light, as one quad over the
+	 * view through the ambient-light effect (see `AmbientLightEffect`).
+	 * @ignore
+	 * @internal
+	 */
+	drawAmbientLight(color, lights, x, y, width, height) {
+		if (this._ambientShader === undefined) {
+			this._ambientShader = new AmbientLightEffect(this);
+		}
+		this._ambientShader.setLights(lights, x, y, width, height);
+		this.save();
+		this.setGlobalAlpha(1.0);
+		this.setBlendMode("normal");
+		const batcher = this.setBatcher("quad", this._ambientShader);
+		batcher.addQuad(
+			this._getLightAtlas(),
+			x,
+			y,
+			width,
+			height,
+			0,
+			0,
+			1,
+			1,
+			// the ambient color and its alpha, through the vertex tint
+			color.toUint32(color.alpha),
+		);
+		// drawn now, under these lights: the next camera loads its own
+		this.flush();
+		this.restore();
 	}
 
 	/**

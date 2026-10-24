@@ -232,6 +232,10 @@ Isometric maps need y-sorting so objects overlap correctly:
 app.world.sortOn = "y";       // after level.load
 ```
 
+The world then keeps its objects in order as they move (`autoSort`, on by
+default): a character walking around passes in front of and behind the scenery
+with no `sort()` call.
+
 `sortOn` only accepts `"x"`, `"y"`, `"z"` (the default) or `"depth"` and throws
 on anything else. `Vector2d`, `Vector3d`, their observable variants and `Polygon`
 all carry `.toIso()` / `.to2d()` for converting between screen and map space.
@@ -269,9 +273,27 @@ The `y` it sorts on is `pos.y`, and Tiled objects default to a `(0, 0)` anchor,
 so that is the **top** of each image. Sorting by the top only matches sorting by
 the feet when every image is the same height and stands on the bottom of its
 box, the usual layout of an isometric pack. A shorter image sorts in front of
-things it stands behind, so pad the art to one height. A character you create
-in code needs the same convention: `anchorPoint` `(0, 0)` and a frame as tall
-as the scenery's.
+things it stands behind. Either pad the art to one height, or line every object
+up by the bottom of its image with `sortOffset`, which changes the order and
+never the position:
+
+```js
+level.load("map1");
+app.world.sortOn = "y";
+for (const child of app.world.getChildren()) {
+    child.sortOffset = child.height;   // sort by the bottom of each image
+}
+```
+
+A character you create in code follows the same convention as the scenery: by
+the top of a frame as tall as the scenery's (`anchorPoint` `(0, 0)`), or by its
+feet when everything sorts by the bottom.
+
+Two equal positions keep insertion order, and the one added **last** is drawn
+**behind**: a decoration placed at its wall's exact position disappears. Give
+it `sortOffset = 1`. A `Container` or a particle emitter is sorted by its top
+left corner (an emitter's by the top of its spawn area); give it the offset to
+the point it belongs with, such as `door.pos.y - dust.pos.y`.
 
 ## Image layers
 
@@ -328,7 +350,9 @@ unanimated layer into the offscreen-bake path instead.
 | collision shapes are not solid | the object layer's name does not contain `"collision"`, or the objects are named |
 | isometric objects overlap wrongly | `world.sortOn` not set to `"y"` |
 | a character is always in front of (or behind) every wall | the walls are on a tile layer, or on another object layer than the character: each layer has its own `z`, compared before `y` |
-| a small prop draws over a character standing in front of it | images of different heights: the y-sort uses `pos.y`, the top of a Tiled object's image |
+| a small prop draws over a character standing in front of it | images of different heights: the y-sort uses `pos.y`, the top of a Tiled object's image. Pad the art, or set `sortOffset = height` on every object to sort by the bottom |
+| a decoration placed at the same position as a wall disappears behind it | a tie keeps insertion order and draws the later one behind: `sortOffset = 1` |
+| particles (or a container) at the foot of something draw over a character standing in front of it | they sort by the top of their spawn area (or the container's top left): set `sortOffset` to line them up with what they belong to |
 | a character is stopped short of walls and props placed as tile objects | it collides with their default bodies (static, `ENEMY_OBJECT`, the whole image box); mask it to `collision.types.WORLD_SHAPE` when the collision layer holds the real shapes |
 | a property set on a tile is undefined on the object's `settings` | tile properties are not copied onto `settings`: read them with `settings.resolvedProperty(name)` |
 | objects placed from a classed tile come out as plain sprites | that class is not registered, it is a built-in name, or the object has a class or a registered name of its own, which come first |

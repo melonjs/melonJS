@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -12,23 +13,23 @@ import ShaderEffect from "./shadereffect.js";
 const wgslFragment = `
 struct BlurUniforms {
 	uBlurStrength : f32,
-	uTextureSize : vec2f,
+	uTextureSize : vec2f,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : BlurUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	let texel = fx.uBlurStrength / fx.uTextureSize;
 	var sum = vec4f(0.0);
 	// 9-tap box blur
-	sum += textureSample(uTexture, uSampler, uv + vec2f(-texel.x, -texel.y));
-	sum += textureSample(uTexture, uSampler, uv + vec2f(0.0, -texel.y));
-	sum += textureSample(uTexture, uSampler, uv + vec2f(texel.x, -texel.y));
-	sum += textureSample(uTexture, uSampler, uv + vec2f(-texel.x, 0.0));
-	sum += textureSample(uTexture, uSampler, uv);
-	sum += textureSample(uTexture, uSampler, uv + vec2f(texel.x, 0.0));
-	sum += textureSample(uTexture, uSampler, uv + vec2f(-texel.x, texel.y));
-	sum += textureSample(uTexture, uSampler, uv + vec2f(0.0, texel.y));
-	sum += textureSample(uTexture, uSampler, uv + vec2f(texel.x, texel.y));
+	sum += frameTexel(uv + vec2f(-texel.x, -texel.y));
+	sum += frameTexel(uv + vec2f(0.0, -texel.y));
+	sum += frameTexel(uv + vec2f(texel.x, -texel.y));
+	sum += frameTexel(uv + vec2f(-texel.x, 0.0));
+	sum += frameTexel(uv);
+	sum += frameTexel(uv + vec2f(texel.x, 0.0));
+	sum += frameTexel(uv + vec2f(-texel.x, texel.y));
+	sum += frameTexel(uv + vec2f(0.0, texel.y));
+	sum += frameTexel(uv + vec2f(texel.x, texel.y));
 	return (sum / 9.0) * vColor;
 }
 `;
@@ -55,19 +56,20 @@ export default class BlurEffect extends ShaderEffect {
 			glsl: `
 			uniform float uBlurStrength;
 			uniform vec2 uTextureSize;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				vec2 texel = uBlurStrength / uTextureSize;
 				vec4 sum = vec4(0.0);
 				// 9-tap box blur
-				sum += texture2D(uSampler, uv + vec2(-texel.x, -texel.y));
-				sum += texture2D(uSampler, uv + vec2( 0.0,    -texel.y));
-				sum += texture2D(uSampler, uv + vec2( texel.x, -texel.y));
-				sum += texture2D(uSampler, uv + vec2(-texel.x,  0.0));
-				sum += texture2D(uSampler, uv);
-				sum += texture2D(uSampler, uv + vec2( texel.x,  0.0));
-				sum += texture2D(uSampler, uv + vec2(-texel.x,  texel.y));
-				sum += texture2D(uSampler, uv + vec2( 0.0,     texel.y));
-				sum += texture2D(uSampler, uv + vec2( texel.x,  texel.y));
+				sum += frameTexel(uv + vec2(-texel.x, -texel.y));
+				sum += frameTexel(uv + vec2( 0.0,    -texel.y));
+				sum += frameTexel(uv + vec2( texel.x, -texel.y));
+				sum += frameTexel(uv + vec2(-texel.x,  0.0));
+				sum += frameTexel(uv);
+				sum += frameTexel(uv + vec2( texel.x,  0.0));
+				sum += frameTexel(uv + vec2(-texel.x,  texel.y));
+				sum += frameTexel(uv + vec2( 0.0,     texel.y));
+				sum += frameTexel(uv + vec2( texel.x,  texel.y));
 				return (sum / 9.0) * vColor;
 			}
 			`,

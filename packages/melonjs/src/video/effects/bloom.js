@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -81,7 +82,7 @@ uniform float uThreshold;
 uniform float uIntensity;
 uniform float uRadius;
 uniform vec2 uTextureSize;
-
+${FRAME_GLSL}
 vec3 overBright(vec4 c) {
 	float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
 	// soft quadratic knee over the eighth of a unit above the threshold
@@ -93,7 +94,7 @@ vec4 apply(vec4 color, vec2 uv) {
 	vec2 texel = uRadius / uTextureSize;
 	vec3 sum = overBright(color) * 0.16;
 ${tapList("vec2", (at) => {
-	return `texture2D(uSampler, ${at})`;
+	return `frameTexel(${at})`;
 })}
 	return vec4(color.rgb + sum * uIntensity, color.a);
 }
@@ -104,10 +105,10 @@ struct BloomUniforms {
 	uThreshold : f32,
 	uIntensity : f32,
 	uRadius : f32,
-	uTextureSize : vec2f,
+	uTextureSize : vec2f,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : BloomUniforms;
-
+${FRAME_WGSL}
 fn overBright(c : vec4f) -> vec3f {
 	let l = dot(c.rgb, vec3f(0.2126, 0.7152, 0.0722));
 	let knee = clamp((l - fx.uThreshold) / 0.125, 0.0, 1.0);
@@ -118,7 +119,7 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	let texel = fx.uRadius / fx.uTextureSize;
 	var sum = overBright(color) * 0.16;
 ${tapList("vec2f", (at) => {
-	return `textureSample(uTexture, uSampler, ${at})`;
+	return `frameTexel(${at})`;
 })}
 	return vec4f(color.rgb + sum * fx.uIntensity, color.a);
 }

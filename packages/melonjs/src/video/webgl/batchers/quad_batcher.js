@@ -217,6 +217,8 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
+		// and the whole texture is the frame: sampling stays unbounded
+		shader._clearFrameRect?.();
 
 		// the blit samples a bottom-up capture FBO (the Y-flipped UVs
 		// below): uv.y grows UPWARD inside apply(), so directional bodies
@@ -315,13 +317,25 @@ export default class QuadBatcher extends MaterialBatcher {
 			// quad's frame rect — min() normalizes flipped (swapped) UVs
 			if (typeof this.currentShader._setNoiseUVRect === "function") {
 				const source = texture.getTexture();
+				const sourceWidth = source.width || source.videoWidth || 1;
+				const sourceHeight = source.height || source.videoHeight || 1;
 				this.currentShader._setNoiseUVRect(
-					source.width || source.videoWidth || 1,
-					source.height || source.videoHeight || 1,
+					sourceWidth,
+					sourceHeight,
 					w,
 					h,
 					Math.min(u0, u1),
 					Math.min(v0, v1),
+				);
+				// and keep its samples inside that frame: on an atlas, the
+				// texture goes on into the neighbouring frames
+				this.currentShader._setFrameRect?.(
+					u0,
+					v0,
+					u1,
+					v1,
+					sourceWidth,
+					sourceHeight,
 				);
 			}
 			// direct atlas sampling: uv.y grows downward (directional bodies
