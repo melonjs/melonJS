@@ -16,6 +16,13 @@ import WGSLEffectRealization from "./wgsl_realization.js";
  * @import WebGPURenderer from "../webgpu/webgpu_renderer.js";
  * @import Renderer from "../renderer.js";
  */
+
+/**
+ * `ME_frame` when there is no frame to keep to: far past any UV
+ * @ignore
+ */
+const UNBOUNDED_FRAME = [-1e6, -1e6, 1e6, 1e6];
+
 /**
  * A simplified shader class for applying custom fragment effects to renderables.
  * Only requires a fragment `apply()` function — the vertex shader, uniforms, and
@@ -373,6 +380,29 @@ export default class ShaderEffect {
 			this.enabled = true;
 		}
 
+		// the frame a body declaring `ME_frame` keeps its samples inside (see
+		// frame.js): unbounded until a quad batcher hands it one. Recorded
+		// as well, for a mesh hosting the effect, which replays the record
+		// and has no frame to keep to
+		const hasFrame =
+			typeof this._shader !== "undefined"
+				? typeof this._shader.uniforms?.ME_frame !== "undefined"
+				: this.wgslRealization.hasUniform("ME_frame");
+		if (hasFrame) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._frameRect = new Float32Array(UNBOUNDED_FRAME);
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._frameHalf = new Float32Array(2);
+			this.setUniform("ME_frame", new Float32Array(UNBOUNDED_FRAME));
+			this.setUniform("ME_frame_half", new Float32Array(2));
+		}
+
 		// flip enabled across context/device loss so beginPostEffect skips us
 		on(ONCONTEXT_LOST, this._onContextLost, this);
 		on(ONCONTEXT_RESTORED, this._onContextRestored, this);
@@ -564,6 +594,101 @@ export default class ShaderEffect {
 		) {
 			this._uvYDir = dir;
 			this.wgslRealization.setUniform("uUVYDir", dir);
+		}
+	}
+
+	/**
+	 * Hand a body declaring `ME_frame` the frame of the quad about to draw,
+	 * so it keeps its samples inside it (see frame.js): on an atlas, the
+	 * texture goes on past the frame into the neighbouring ones. A side of
+	 * the frame that is the texture's own edge has no frame past it, and is
+	 * left unbounded: there, sampling stays what it always was (the
+	 * texture's wrap mode), so a standalone image, a pattern, or a frame on
+	 * the outside of its atlas draws as it did. Called by the quad batchers
+	 * per quad, each of which an effect draws on its own (a quad through an
+	 * effect is drawn before the next one is queued); a no-op for any other
+	 * body.
+	 * @param {number} u0 - the frame's left UV coordinate
+	 * @param {number} v0 - the frame's top UV coordinate
+	 * @param {number} u1 - the frame's right UV coordinate
+	 * @param {number} v1 - the frame's bottom UV coordinate
+	 * @param {number} sourceWidth - the texture's width, in pixels
+	 * @param {number} sourceHeight - the texture's height, in pixels
+	 * @ignore
+	 * @internal
+	 */
+	_setFrameRect(u0, v0, u1, v1, sourceWidth, sourceHeight) {
+		const width = Math.max(sourceWidth, 1);
+		const height = Math.max(sourceHeight, 1);
+		const left = Math.min(u0, u1);
+		const top = Math.min(v0, v1);
+		const right = Math.max(u0, u1);
+		const bottom = Math.max(v0, v1);
+		// within a hundredth of a texel of the texture's edge: on it (a UV
+		// is a division, and rarely lands on 0 or 1 exactly)
+		const edge = 0.01;
+		this._writeFrameRect(
+			left * width <= edge ? UNBOUNDED_FRAME[0] : left,
+			top * height <= edge ? UNBOUNDED_FRAME[1] : top,
+			right * width >= width - edge ? UNBOUNDED_FRAME[2] : right,
+			bottom * height >= height - edge ? UNBOUNDED_FRAME[3] : bottom,
+			0.5 / width,
+			0.5 / height,
+		);
+	}
+
+	/**
+	 * Leave the samples of a body declaring `ME_frame` unbounded, for a pass
+	 * over a whole texture (a render target blit): there, sampling is what
+	 * it always was, clamped by the texture's own wrap mode.
+	 * @ignore
+	 * @internal
+	 */
+	_clearFrameRect() {
+		this._writeFrameRect(
+			UNBOUNDED_FRAME[0],
+			UNBOUNDED_FRAME[1],
+			UNBOUNDED_FRAME[2],
+			UNBOUNDED_FRAME[3],
+			0,
+			0,
+		);
+	}
+
+	/**
+	 * @ignore
+	 * @internal
+	 */
+	_writeFrameRect(left, top, right, bottom, halfX, halfY) {
+		const rect = this._frameRect;
+		const half = this._frameHalf;
+		if (rect === undefined || this.destroyed === true) {
+			return;
+		}
+		if (
+			rect[0] === left &&
+			rect[1] === top &&
+			rect[2] === right &&
+			rect[3] === bottom &&
+			half[0] === halfX &&
+			half[1] === halfY
+		) {
+			return;
+		}
+		rect[0] = left;
+		rect[1] = top;
+		rect[2] = right;
+		rect[3] = bottom;
+		half[0] = halfX;
+		half[1] = halfY;
+		// straight to the program, past the record a mesh replays (as the
+		// `noise_uv` rect does)
+		if (typeof this.wgslRealization !== "undefined") {
+			this.wgslRealization.setUniform("ME_frame", rect);
+			this.wgslRealization.setUniform("ME_frame_half", half);
+		} else if (typeof this._shader !== "undefined") {
+			this._shader.setUniform("ME_frame", rect);
+			this._shader.setUniform("ME_frame_half", half);
 		}
 	}
 

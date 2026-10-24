@@ -1350,6 +1350,38 @@ export default class Renderer {
 	}
 
 	/**
+	 * Draw the stage's ambient darkness over a view, with a hole for each
+	 * light that follows its {@link Light2d#softness}: the soft-cutout path of
+	 * {@link Stage#drawLighting}, taken when any light has a softness. Called
+	 * with the renderer translated to world space. The base implementation is
+	 * a no-op; concrete renderers override.
+	 * @param {Color} color - the ambient color, its alpha the darkness
+	 * @param {Iterable<Light2d>} lights - the stage's active lights
+	 * @param {number} x - left of the view, in world units
+	 * @param {number} y - top of the view, in world units
+	 * @param {number} width - width of the view, in world units
+	 * @param {number} height - height of the view, in world units
+	 * @param {number} pixelWidth - width of the view on the screen, in pixels
+	 * @param {number} pixelHeight - height of the view on the screen, in pixels
+	 * @ignore
+	 * @internal
+	 */
+	/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
+	drawAmbientLight(
+		color,
+		lights,
+		x,
+		y,
+		width,
+		height,
+		pixelWidth,
+		pixelHeight,
+	) {
+		// base no-op; concrete renderers override
+	}
+	/* eslint-enable no-unused-vars, @typescript-eslint/no-unused-vars */
+
+	/**
 	 * Draw a TMX tile layer. Default behavior:
 	 *   - if `layer.canvasRenderer` is set (preRender bake), blit the cached
 	 *     offscreen canvas in a single `drawImage` call;

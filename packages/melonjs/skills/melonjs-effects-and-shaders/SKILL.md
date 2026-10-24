@@ -130,6 +130,15 @@ covers. `[r, g, b]` is opaque, as it always was. Any other length throws.
 sprite.addPostEffect(new OutlineEffect(app.renderer, { color: [1, 1, 1, 0.5] }));
 ```
 
+**On a sprite cut from an atlas or a tileset, the effects that read around a
+pixel keep to the sprite's own frame.** `GlowEffect`, `OutlineEffect`,
+`BlurEffect`, `DropShadowEffect`, `ChromaticAberrationEffect`, `WaveEffect`,
+`SwayEffect`, `PixelateEffect` and `BloomEffect` read the neighbouring frames
+as transparent, as if the sprite were drawn on its own, so they never show
+along its edges and the atlas needs no padding for them. Past the texture's own
+edge (a standalone image, or the outside of an atlas) nothing changes. Their `textureSize` is still the size of the whole atlas image: it is
+what turns a width in texels into a distance in the texture.
+
 `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze: the
 top sways most and everything from its `anchor` row down stays put, so a tree's
 trunk or a reed's root stays planted. It suits anything planted at its bottom;

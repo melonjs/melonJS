@@ -79,8 +79,34 @@ export interface ParticleEmitterSettings {
 	/**
 	 * Tint to be applied to particles.
 	 * @default "#fff"
+	 * @see {@link tintOverLife} for a tint that changes over each particle's life
 	 */
 	tint: string;
+
+	/**
+	 * The tints a particle takes over its life: the first at birth, the last
+	 * at the end, evenly spaced and blended in between, such as a flame that
+	 * starts white hot and dies deep red. Give as many CSS colors as you like
+	 * (one is a plain tint), and repeat a color to hold it longer. When set,
+	 * it replaces {@link tint}.
+	 * <br><br>
+	 * It changes the color only: a particle still fades out over its life,
+	 * and the alpha of a color given here is ignored. However many colors
+	 * there are, the blend is taken in 32 steps, the same on every renderer,
+	 * so a particle changes color at most 32 times; on the Canvas renderer,
+	 * which keeps a tinted copy of the texture per color, that bounds the
+	 * copies to 32.
+	 * <br><br>
+	 * Set it through the constructor or {@link ParticleEmitter#reset}.
+	 * @default undefined
+	 * @throws {TypeError} from the emitter, if not a non-empty array of strings
+	 * @example
+	 * new ParticleEmitter(x, y, {
+	 *     image: spark,
+	 *     tintOverLife: ["#fff3b0", "#ffb04a", "#e45414", "#501408"],
+	 * });
+	 */
+	tintOverLife?: readonly string[] | undefined;
 
 	/**
 	 * Total number of particles in the emitter.
@@ -398,6 +424,7 @@ const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	randomFrame: false,
 	textureSize: 8,
 	tint: "#fff",
+	tintOverLife: undefined,
 	totalParticles: 50,
 	angle: Math.PI / 2,
 	angleVariation: 0,

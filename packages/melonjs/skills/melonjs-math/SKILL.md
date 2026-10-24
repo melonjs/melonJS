@@ -1,6 +1,6 @@
 ---
 name: melonjs-math
-description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z., moveTowards ignores z, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix."
+description: "Use this skill for vector and matrix maths in melonJS — Vector2d, Vector3d, their observable variants, Matrix2d, Matrix3d, and the math utility functions. Covers which methods mutate and which allocate, the vector pool and when clone() is the wrong tool, interpolation with lerp, slerp, damp and moveTowards, and the argument defaults that silently drop a component. Triggers on: Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, vector, vector maths, dot, cross, normalize, length, distance, angle, lerp, slerp, damp, moveTowards, project, clamp, degToRad, radToDeg, clone, vector pool, vector3dPool, setMuted, setCallback, my vector is wrong, z is zero, scale ignores z., moveTowards ignores z, projectN, currentTransform, setTransform, matrix, transform matrix, column-major, val, Float32Array, basis matrix, orientation matrix, Noise, getNoise1d, flicker, wobble."
 license: MIT
 ---
 
@@ -291,6 +291,25 @@ math.pow(n);                     // n squared
 math.DEG_TO_RAD  math.RAD_TO_DEG  math.TAU  math.ETA  math.EPSILON
 ```
 
+### Values that wobble over time
+
+`Noise`, the generator behind `NoiseTexture2d`, also samples directly. For a
+value that should drift without repeating (a torch's flicker, a sway, a camera
+wander), sample it with time:
+
+```js
+import { Noise } from "melonjs";
+
+const noise = new Noise({ seed: 7, frequency: 1.5, octaves: 3 });
+// around 1; give each object its own offset so they do not move together
+const flicker = 1 + 0.2 * noise.getNoise1d(seconds + offset);
+```
+
+`getNoise1d` returns `[-1, 1]` (with fractal octaves most values fall within
+about ±0.6), `frequency` is in changes per unit of the input, and the same seed
+gives the same field every run. A sum of sines repeats where people notice it,
+and `Math.random()` every frame jitters instead of drifting.
+
 ## Symptoms
 
 | symptom | cause |
@@ -305,6 +324,7 @@ math.DEG_TO_RAD  math.RAD_TO_DEG  math.TAU  math.ETA  math.EPSILON
 | you built your own 16-number array | `Renderable.currentTransform` is already a `Matrix3d`; write its `val` |
 | a value read back from a matrix differs | `val` is `Float32Array`; it holds float32 |
 | easing differs at 120fps | per-frame `lerp`; use `damp` |
+| a flicker or sway looks mechanical, or visibly repeats | a sum of sines or a per-frame `Math.random()`: sample `Noise#getNoise1d(time)` |
 
 ## Related skills
 

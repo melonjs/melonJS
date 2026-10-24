@@ -71,6 +71,13 @@ export default class FrameAnimation {
 		 */
 		this.resetAnim = undefined;
 
+		/**
+		 * called with each frame index playback reaches (the `onFrame` option)
+		 * @ignore
+		 * @internal
+		 */
+		this.onFrame = undefined;
+
 		/** current frame info @type {object} */
 		this.current = {
 			// the current animation name
@@ -259,11 +266,16 @@ export default class FrameAnimation {
 				} else {
 					this.resetAnim = undefined;
 				}
+				this.onFrame = opts.onFrame;
 				// `setAnimationFrame(0)` applies frame 0 → `_applyFrame`, which is
 				// where the host marks itself dirty (the engine never touches it).
 				this.setAnimationFrame(0);
 				if (!preserve_dt) {
 					this.dt = 0;
+				}
+				// the first frame is reached too
+				if (typeof this.onFrame === "function") {
+					this.onFrame(0);
 				}
 			}
 		} else {
@@ -426,6 +438,9 @@ export default class FrameAnimation {
 			while (this.dt >= duration) {
 				changed = true;
 				this.dt -= duration;
+				// what was playing, to tell whether a callback below replaced it
+				const playing = this.current.name;
+				const onFrame = this.onFrame;
 
 				const nextFrame =
 					this.current.length > 1 ? this.current.idx + 1 : this.current.idx;
@@ -458,6 +473,18 @@ export default class FrameAnimation {
 							this.dt %= duration;
 							break;
 						}
+					}
+				}
+				// the frame playback reached, unless a callback above switched to
+				// another animation, which reported its own first frame
+				if (
+					typeof onFrame === "function" &&
+					this.current.name === playing &&
+					this.onFrame === onFrame
+				) {
+					onFrame(this.current.idx);
+					if (!this._isCurrentAnimationLive()) {
+						break;
 					}
 				}
 				// Get next frame duration

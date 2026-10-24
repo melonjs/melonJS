@@ -236,6 +236,14 @@ export default class Renderable extends Rect {
 		this.onVisibilityChange = undefined;
 
 		/**
+		 * backing value of {@link Renderable#sortOffset}
+		 * @type {number}
+		 * @ignore
+		 * @internal
+		 */
+		this._sortOffset = 0;
+
+		/**
 		 * Whether the renderable object will always update, even when outside of the viewport<br>
 		 * @type {boolean}
 		 * @default false
@@ -271,7 +279,8 @@ export default class Renderable extends Rect {
 		/**
 		 * If true, this floating renderable will be rendered by all cameras
 		 * (e.g. background image layers). If false (default), floating elements
-		 * are only rendered by the default camera (e.g. UI/HUD elements).
+		 * are only rendered by the default camera (e.g. UI/HUD elements),
+		 * zoomed or not.
 		 * Only applies to floating renderables in multi-camera setups.
 		 * @type {boolean}
 		 * @default false
@@ -600,6 +609,59 @@ export default class Renderable extends Rect {
 	setTint(value) {
 		this.tint = value;
 		return this;
+	}
+
+	/**
+	 * An offset, in pixels, added to this renderable's position when its
+	 * parent container sorts its children on `"y"` (or `"x"`), and used for
+	 * nothing else. It **never moves the renderable** and never changes where
+	 * or how it is drawn: it only decides whether it is drawn before or after
+	 * its siblings, and so which one is on top, and which one a pointer hits.
+	 * <br><br>
+	 * A container sorted on `"y"` draws its children from the smallest
+	 * `pos.y` to the largest, the last one on top. A child with a
+	 * `sortOffset` is lined up as if it stood that many pixels lower
+	 * (positive) or higher (negative), while staying where it is. Use it when
+	 * `pos` is not the point a renderable should be sorted by: the top of a
+	 * Tiled tile object's image, the top left corner of a container, or the
+	 * top of a particle emitter's spawn area.
+	 * <br><br>
+	 * - A container that keeps itself sorted (`autoSort`, the default) picks a
+	 *   change up at its next update; with `autoSort` off, call its `sort()`.
+	 * - Containers sorted on `"z"` or `"depth"` ignore it, and on `"x"` and
+	 *   `"y"` a different `pos.z` still decides first.
+	 * - Two children that come out equal keep their order, which draws the one
+	 *   added last BEHIND the other: an offset of `1` settles such a tie on
+	 *   purpose.
+	 * - A renderable taken from a pool starts again at `0`.
+	 * @type {number}
+	 * @default 0
+	 * @throws {TypeError} if set to anything but a finite number
+	 * @example
+	 * // a torch hung on a wall at the wall's own position: line it up
+	 * // 1 px lower, so that it is drawn over the wall
+	 * torch.sortOffset = 1;
+	 * @example
+	 * // a particle emitter's pos is the top of its spawn area. Dust rising at
+	 * // the foot of a door sits far below the door's pos, and would be drawn
+	 * // over everything between the two: line it up with the door instead
+	 * dust.sortOffset = door.pos.y - dust.pos.y;
+	 */
+	get sortOffset() {
+		return this._sortOffset;
+	}
+	set sortOffset(value) {
+		// a NaN or a string would quietly scramble the order of every sibling
+		// (`pos.y + "5"` is "1005"), so refuse it where it is set
+		if (typeof value !== "number" || !Number.isFinite(value)) {
+			throw new TypeError(
+				`sortOffset must be a finite number, not ${String(value)}`,
+			);
+		}
+		if (value === this._sortOffset) {
+			return;
+		}
+		this._sortOffset = value;
 	}
 
 	/**
@@ -1618,6 +1680,7 @@ export function resetRenderableState(renderable) {
 	renderable.applyAnchorTransform = true;
 	renderable.postEffectNeedsCapture = false;
 	renderable.anchorPoint.set(0.5, 0.5);
+	renderable.sortOffset = 0;
 	renderable.currentTransform.identity();
 	renderable._flip.x = false;
 	renderable._flip.y = false;

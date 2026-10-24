@@ -462,6 +462,26 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * Whether this camera draws the floating renderables that are not
+	 * `visibleInAllCameras` (a HUD, a `ColorLayer`). A camera with default
+	 * settings does, and so does the stage's main camera when it is zoomed:
+	 * zoom does not make it a minimap. Any other camera (a minimap, a
+	 * split-screen view) leaves them to the main camera.
+	 * @ignore
+	 * @internal
+	 */
+	get drawsFloating(): boolean {
+		if (this.isDefault) {
+			return true;
+		}
+		return (
+			this.screenX === 0 &&
+			this.screenY === 0 &&
+			state.current()?.cameras.get("default") === this
+		);
+	}
+
+	/**
 	 * The world-space bounds currently visible through this camera,
 	 * taking into account position and zoom level.
 	 * @returns the visible world area
@@ -1259,7 +1279,17 @@ export default class Camera2d extends Renderable {
 		// non-default cameras (minimap/splitscreen) line up correctly —
 		// `camera.pos + camera.offset` alone misses `containerOffsetX/Y`.
 		if (stage) {
+			// the projection the world was drawn through, bound again: the
+			// Canvas renderer keeps it in the context transform, which the
+			// world's restore has undone by now, so the darkness of a zoomed
+			// or offset camera was cut where the lights would be unzoomed.
+			// Within its own save, so nothing drawn after inherits it
+			renderer.save();
+			renderer.setProjection(
+				isNonDefault ? this.worldProjection : this.projectionMatrix,
+			);
 			stage.drawLighting(renderer, this, translateX, translateY);
+			renderer.restore();
 		}
 
 		// post-effect: unbind FBO and blit to screen through shader effect

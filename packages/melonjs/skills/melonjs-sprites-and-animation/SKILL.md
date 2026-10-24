@@ -59,6 +59,10 @@ hero.setCurrentAnimation("walk");
 hero.setCurrentAnimation("die", "idle");                          // chain to idle when it ends
 hero.setCurrentAnimation("die", { loop: false });                 // play once, hold the last frame
 hero.setCurrentAnimation("die", { loop: false, onComplete: fn }); // …and call fn when it does
+hero.setCurrentAnimation("use", { next: "idle", onComplete: fn }); // call fn, then chain to idle
+hero.setCurrentAnimation("run", { onFrame: (frame) => {            // each frame playback reaches
+    if (frame === 3 || frame === 8) footstep();
+} });
 
 if (hero.isCurrentAnimation("walk")) { /* … */ }
 ```
@@ -71,13 +75,25 @@ accepted — passing region names throws.
 
 The second argument to `setCurrentAnimation` is polymorphic. A **string** chains
 to that animation when this one ends. An **options object** takes
-`{ loop, next, speed, onComplete }`, and only an explicit `loop: false` stops the
-looping. A **bare function** is the legacy form: it fires at *every* cycle end,
+`{ loop, next, speed, onComplete, onFrame }`, and only an explicit `loop: false`
+stops the looping. A **bare function** is the legacy form: it fires at *every* cycle end,
 and only holds the last frame if it returns `false`. Omit the argument entirely
 and the animation loops forever.
 
+`onFrame(frame)` is called with frame 0 when the animation starts, then with each
+frame playback reaches, so a footstep or a hit lands on its frame without polling
+`getCurrentAnimationFrame()`. A long tick reports every frame it goes past. It is
+not called for a frame set with `setAnimationFrame`, nor for the frame 0 a
+play-once animation would wrap to. Keep the callback in a field when you call
+`setCurrentAnimation` every frame: re-selecting keeps the first one anyway.
+
+With both `next` and `onComplete`, the callback runs first and the chained
+animation starts with none of its own, so a one-off action (a pickup, an
+attack) needs no manual switch back to idle.
+
 Re-selecting the animation that is already current is a no-op, so calling
-`setCurrentAnimation` every frame is safe. An unknown id throws.
+`setCurrentAnimation` every frame is safe, and an `isCurrentAnimation` check
+around it adds nothing. An unknown id throws.
 
 ## Texture atlases
 

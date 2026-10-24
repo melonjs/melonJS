@@ -717,17 +717,28 @@ export default class Sprite extends Renderable {
 	 * set the current animation, and reset the frame to zero. Selecting the
 	 * animation that is already current is a no-op unless it had completed.
 	 * @param {string} name - animation id
-	 * @param {string|Function|object} [resetAnim] - animation id to switch to when complete, a callback, or an options object (`{ loop, next, speed, onComplete }`)
+	 * @param {string|Function|object} [resetAnim] - animation id to switch to when complete, a callback, or an options object (`{ loop, next, speed, onComplete, onFrame }`)
 	 * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
 	 * @returns {Sprite} Reference to this object for method chaining
 	 * @example
 	 * // set "walk" animation
 	 * this.setCurrentAnimation("walk");
 	 *
-	 * // set "walk" animation if it is not the current animation
-	 * if (!this.isCurrentAnimation("walk")) {
-	 *     this.setCurrentAnimation("walk");
-	 * }
+	 * // calling it every frame is fine: selecting the animation that is
+	 * // already playing does nothing, so it is never restarted
+	 * this.setCurrentAnimation(moving ? "walk" : "stand");
+	 *
+	 * // a footstep on the frames where a foot touches the ground
+	 * this.setCurrentAnimation("walk", {
+	 *     onFrame: (frame) => {
+	 *         if (frame === 3 || frame === 8) {
+	 *             audio.play("step");
+	 *         }
+	 *     },
+	 * });
+	 *
+	 * // pick something up, then stand still
+	 * this.setCurrentAnimation("pickup", { next: "stand", onComplete: () => this.take() });
 	 *
 	 * // set "eat" animation, and switch to "walk" when complete
 	 * this.setCurrentAnimation("eat", "walk");
@@ -739,11 +750,12 @@ export default class Sprite extends Renderable {
 	 * });
 	 *
 	 * // set "attack" animation, and pause for a short duration
-	 * this.setCurrentAnimation("die", () => {
+	 * this.setCurrentAnimation("attack", () => {
 	 *    this.animationpause = true;
 	 *
 	 *    // back to "standing" animation after 1 second
-	 *    setTimeout(function () {
+	 *    setTimeout(() => {
+	 *        this.animationpause = false;
 	 *        this.setCurrentAnimation("standing");
 	 *    }, 1000);
 	 *

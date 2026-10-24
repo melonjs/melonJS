@@ -5,7 +5,14 @@
 ### Added
 - Effects: colors take an alpha. Every color option and `setColor` takes `[r, g, b]` or `[r, g, b, a]`, the alpha being the color's opacity (`[r, g, b]` stays opaque), `RadialGradientEffect` honours the alpha of its `Color`, and `DropShadowEffect` gains the `setColor` the others have
 - Effects: `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze, its top swaying most and everything from its anchor row down staying put. It is a `WaveEffect`, which now takes an `anchor` for the row its wave fades out at, and it wraps its own time so it never stutters on a phone's medium-precision floats
-- Skills: the effects skill covers colors with an alpha and `SwayEffect`, with an example of each
+- Rendering: `Renderable#sortOffset` lines a renderable up as if it stood that many pixels lower (or higher) when its container sorts on `"y"` or `"x"`, without moving it: a torch drawn over the wall it hangs on, dust sorted with the door it rises from, or art of different heights sorted by its base
+- Lighting: `Light2d#softness` (0 to 1) fades the edge of a light's hole in the stage's ambient darkness, from a hard rim (0, the default, as before) to a darkness that thins straight from the center (1), along the same falloff as the glow. Hard and soft lights mix in one scene, overlapping lights multiply, and it works on every renderer
+- Particles: `tintOverLife` gives the tints a particle takes over its life, evenly spaced and blended from the first at birth to the last at the end, such as a flame turning from white hot to deep red. It sets the color only (the fade still sets the opacity), and the blend is taken in 32 steps, which keeps the Canvas renderer to 32 tinted copies of the texture
+- Animation: `setCurrentAnimation(name, { onFrame })` calls back with each frame index as playback reaches it, from frame 0 when the animation starts, so a footstep or a hit can land on its frame. It applies to the frame animations of a `Sprite` or a `Sprite3d`
+- Audio: `playTrack(name, { volume, sprite })` plays one region of a clip as the track and loops on it. A region of a loop's exact length keeps an MP3 loop gapless in Safari, which plays the padding an MP3 encoder adds to the end of the file
+
+### Changed
+- Rendering: a container sorted on `"x"` or `"y"` keeps its children in order as they move. With `autoSort` on, the default, it checks the order at the end of every update and re-sorts when anything is out of place, so a walking character no longer needs a `sort()` call to pass in front of and behind things. A frame where nothing moved costs one pass over the children and causes no redraw; turn `autoSort` off to keep the order you set. A `"z"` sort is unchanged
 
 ### Fixed
 - Effects: a color given four values no longer breaks the effect. WebGL rejected it, and on WebGPU the fourth value overwrote the next setting, such as an outline's width; a color of any other length now throws a `TypeError` saying so
@@ -24,9 +31,13 @@
 - Physics: the builtin `raycast` measures a body from the frame its renderable draws in, as collisions have since 20.7. On a body whose anchor is not its top left corner, such as a `Sprite`'s default centre, a ray hit half the body's size away from where it collides, or missed it
 - Camera: a zoomed camera follows its target, stays within its bounds and centres on `focusOn` in world units. Zoomed out, it kept the target off centre and scrolled past its bounds; zoomed in, it stopped short of them
 - Camera: `localToWorld` and `worldToLocal` take the camera's zoom and its place on the screen (`screenX`, `screenY`) into account. A pointer on a zoomed camera, or on one drawn in a corner of the screen, hit the world somewhere else than it pointed
-- Skills: the lighting skill no longer says a sprite without a normal map is lit flatly. Only a normal-mapped sprite is shaded by a `Light2d`; any other sprite just sits under its glow and its cutout
-- Skills: the drawing skill never said that on a GPU backend a `CanvasRenderTarget` keeps its texture for as long as the renderer lives. It now says to create one once and reuse it, and to call `invalidate()` after painting it again
-- Skills: the tilemaps skill now explains that `sortOn = "y"` sorts objects and never tiles, so scenery a character walks in front of and behind belongs on the character's own object layer as tile objects. It also warns that Tiled objects sort by the top of their image, and that a character with the default collision mask collides with the default body of every class-less tile object
+- Effects: a glow, outline, blur, drop shadow, chromatic aberration, wave, sway, pixelate or bloom on a sprite cut from an atlas or a tileset keeps to the sprite's own frame. Along the frame's edges it picked up the neighbouring frames, and drew a glow or a line from pixels that are not part of the sprite
+- Camera: a zoomed camera draws its floating renderables, such as a HUD or a `ColorLayer`, and a `ColorLayer` fills all of its view. It skipped them all, as a minimap does, on every renderer
+- Lighting: on the Canvas renderer, a light's hole in the ambient darkness is cut where the light is under a scrolled camera. The mask kept the darkness inside the light and cleared it around it instead
+- Lighting: on the Canvas renderer, the ambient darkness of a zoomed camera, or of one drawn at an offset such as a minimap, has its holes where the lights are. They were cut as if the camera were neither zoomed nor offset
+- Lighting: the ambient darkness covers the first column and row of a camera at a fractional position, such as one following its target with damping. Unless `subPixel` was set, they were left lit
+- Lighting: the ambient darkness covers the whole view of a zoomed-out camera. It covered as much of the world as the camera is wide, leaving the rest of the view lit
+- Audio: a sprite region declared looping (`[start, duration, true]`) loops when played with `audio.play(name, { sprite })`. It played only once unless `loop: true` was passed as well
 - Text: a label whose text is empty or only spaces no longer blanks the whole frame on WebGPU. Its canvas was sized 0 pixels wide, which WebGPU refuses to upload
 - Typings: `TextureAtlas#getAnimationSettings()` is typed as the settings it returns, so they pass to a `Sprite` constructor from TypeScript without a cast. It returned `object`, and `Sprite3d` typed the named animations an aseprite atlas carries as an array
 

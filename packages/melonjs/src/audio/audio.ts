@@ -30,6 +30,7 @@ import {
 	setGlobalMuted,
 	setGlobalVolume,
 } from "./state.ts";
+import type { TrackOptions } from "./types.ts";
 
 export {
 	duration,
@@ -73,6 +74,7 @@ export type {
 	PannerAttributes,
 	SoundAsset,
 	ToneOptions,
+	TrackOptions,
 } from "./types.ts";
 
 /**
@@ -154,18 +156,34 @@ export function disable(): void {
  *
  * Use {@link play} for sound effects: they are meant to overlap, and nothing
  * here applies to them.
+ * The track can be one region of the clip, from its `sprite` map. An MP3
+ * encoder pads the end of its file and Safari plays the padding, so a looping
+ * MP3 drops out for a moment at each loop there: a region of the loop's exact
+ * length keeps it gapless.
  * @param sound_name - Audio track name (case-sensitive).
- * @param volume - Playback volume, `0.0..1.0`. Defaults to the current
- *   global volume.
+ * @param volumeOrOptions - Playback volume, `0.0..1.0` (defaults to the
+ *   current global volume), or a {@link TrackOptions} object with `volume`
+ *   and the `sprite` region to loop on.
  * @returns The sound instance ID.
  * @throws {Error} when no clip of that name is loaded, raised before anything
  *   is stopped, so a mistyped name cannot silence the music already playing.
  * @example
  * me.audio.playTrack("menu_theme");
  * me.audio.playTrack("battle_theme");  // the menu theme stops
+ * @example
+ * // loop on a region of exactly 12 s, declared when the clip is loaded:
+ * // { name: "ambience", type: "audio", src: "sfx/", sprite: { loop: [0, 12000] } }
+ * me.audio.playTrack("ambience", { sprite: "loop", volume: 0.6 });
  * @category Audio
  */
-export function playTrack(sound_name: string, volume?: number): number {
+export function playTrack(
+	sound_name: string,
+	volumeOrOptions?: number | TrackOptions,
+): number {
+	const options: TrackOptions =
+		typeof volumeOrOptions === "object"
+			? volumeOrOptions
+			: { volume: volumeOrOptions };
 	const previousName = audioState.currentTrackId;
 	const previousVoice = audioState.currentTrackVoiceId;
 
@@ -179,7 +197,11 @@ export function playTrack(sound_name: string, volume?: number): number {
 	// audio context is still locked, and a queued stop with no id resolves
 	// its ids when it finally runs — late enough to catch the replacement
 	// and leave the game silent.
-	const id = play(sound_name, true, null, volume);
+	const id = play(sound_name, {
+		loop: true,
+		sprite: options.sprite,
+		volume: options.volume,
+	});
 	audioState.currentTrackId = sound_name;
 	audioState.currentTrackVoiceId = id;
 

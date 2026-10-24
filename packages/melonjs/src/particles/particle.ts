@@ -1,3 +1,4 @@
+import type { Color } from "../math/color.ts";
 import { randomFloat } from "../math/math.ts";
 import type { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
@@ -77,6 +78,13 @@ export default class Particle extends Renderable {
 	alive: boolean;
 	/** @ignore */
 	private _frames: ReadonlyArray<readonly [number, number]> | undefined;
+
+	/**
+	 * the emitter's tint for each step of the particle's life, if any
+	 * @ignore
+	 * @internal
+	 */
+	private _tintSteps: readonly Color[] | undefined;
 	/** @ignore */
 	private _frameIndex: number;
 	/** @ignore */
@@ -201,7 +209,10 @@ export default class Particle extends Renderable {
 		// consume the matrix directly instead.
 		this.autoTransform = false;
 
-		if (typeof emitter.settings.tint === "string") {
+		this._tintSteps = emitter._tintSteps;
+		if (this._tintSteps !== undefined) {
+			this.tint.copy(this._tintSteps[0]);
+		} else if (typeof emitter.settings.tint === "string") {
 			this.tint.parseCSS(emitter.settings.tint);
 		}
 
@@ -416,6 +427,13 @@ export default class Particle extends Renderable {
 
 		// Set the particle opacity as Age Ratio
 		this.alpha = ageRatio;
+
+		// the tint over life, stepped like the frames above, and on the same
+		// grounds the index stays within the steps
+		const tintSteps = this._tintSteps;
+		if (tintSteps !== undefined) {
+			this.tint.copy(tintSteps[Math.floor((1 - ageRatio) * tintSteps.length)]);
+		}
 
 		// Adjust the particle velocity
 		this.vel.x += this.wind * skew;

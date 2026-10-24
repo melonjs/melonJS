@@ -201,14 +201,19 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 			// feed the effect's `noise_uv` builtin with this quad's frame
 			// rect — min() normalizes flipped (swapped) UVs
 			const source = texture.getTexture();
+			const sourceWidth = source.width || source.videoWidth || 1;
+			const sourceHeight = source.height || source.videoHeight || 1;
 			effect._setNoiseUVRect?.(
-				source.width || source.videoWidth || 1,
-				source.height || source.videoHeight || 1,
+				sourceWidth,
+				sourceHeight,
 				w,
 				h,
 				Math.min(u0, u1),
 				Math.min(v0, v1),
 			);
+			// and keep its samples inside that frame: on an atlas, the
+			// texture goes on into the neighbouring frames
+			effect._setFrameRect?.(u0, v0, u1, v1, sourceWidth, sourceHeight);
 
 			// the effect's vertex stage, AFTER the frame rect above, which
 			// must stay the sprite's own
@@ -443,6 +448,8 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// identity noise_uv rect for the fullscreen quad (GL parity), BEFORE
 		// the uniform snapshot below
 		effect?._setNoiseUVRect?.(w, h, w, h, 0, 0);
+		// and the whole texture is the frame: sampling stays unbounded
+		effect?._clearFrameRect?.();
 		const binding = effect ? prepareEffectBinding(renderer, effect) : null;
 
 		const pass = renderer.ensurePass();

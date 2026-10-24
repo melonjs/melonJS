@@ -589,16 +589,27 @@ export default class LitQuadBatcher extends QuadBatcher {
 				this.currentShader.setUniform("uSampler", unit);
 				this.currentSamplerUnit = unit;
 			}
-			// feed the effect's `noise_uv` builtin — see QuadBatcher.addQuad
+			// feed the effect's `noise_uv` builtin and its frame — see
+			// QuadBatcher.addQuad
 			if (typeof this.currentShader._setNoiseUVRect === "function") {
 				const source = texture.getTexture();
+				const sourceWidth = source.width || source.videoWidth || 1;
+				const sourceHeight = source.height || source.videoHeight || 1;
 				this.currentShader._setNoiseUVRect(
-					source.width || source.videoWidth || 1,
-					source.height || source.videoHeight || 1,
+					sourceWidth,
+					sourceHeight,
 					w,
 					h,
 					Math.min(u0, u1),
 					Math.min(v0, v1),
+				);
+				this.currentShader._setFrameRect?.(
+					u0,
+					v0,
+					u1,
+					v1,
+					sourceWidth,
+					sourceHeight,
 				);
 			}
 			// direct atlas sampling: uv.y grows downward — see
@@ -727,6 +738,8 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
+		// and the whole texture is the frame: sampling stays unbounded
+		shader._clearFrameRect?.();
 
 		// bottom-up capture FBO: uv.y grows upward inside apply() — see
 		// QuadBatcher.blitTexture

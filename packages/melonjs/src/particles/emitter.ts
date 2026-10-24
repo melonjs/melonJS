@@ -1,3 +1,4 @@
+import { Color } from "./../math/color.ts";
 import { randomFloat } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
@@ -78,6 +79,55 @@ function clampMinToMax<K extends keyof ParticleEmitterSettings>(
  * @ignore
  * @internal
  */
+/**
+ * How many steps a {@link ParticleEmitterSettings.tintOverLife} blend is taken
+ * in, whatever the number of colors.
+ * @ignore
+ * @internal
+ */
+const TINT_STEPS = 32;
+
+/**
+ * The tint of each step of a particle's life, blended from the
+ * `tintOverLife` colors (undefined without them). Checked before the
+ * settings change, like the sheet settings.
+ * @ignore
+ * @internal
+ */
+function tintOverLifeSteps(
+	settings: ParticleEmitterSettings,
+): readonly Color[] | undefined {
+	const colors = settings.tintOverLife;
+	if (colors === undefined) {
+		return undefined;
+	}
+	if (!Array.isArray(colors) || colors.length === 0) {
+		throw new TypeError(
+			"ParticleEmitter: tintOverLife must be a non-empty array of CSS colors",
+		);
+	}
+	const stops = colors.map((css: unknown) => {
+		if (typeof css !== "string") {
+			throw new TypeError(
+				`ParticleEmitter: tintOverLife colors must be CSS strings, not ${String(css)}`,
+			);
+		}
+		return new Color().parseCSS(css);
+	});
+	const steps: Color[] = [];
+	for (let i = 0; i < TINT_STEPS; i++) {
+		// the first step is the first color, the last one the last color
+		const at = (i / (TINT_STEPS - 1)) * (stops.length - 1);
+		const from = Math.floor(at);
+		const to = Math.min(from + 1, stops.length - 1);
+		const step = stops[from].clone().lerp(stops[to], at - from);
+		// the color only: opacity is the particle's fade
+		step.alpha = 1;
+		steps.push(step);
+	}
+	return steps;
+}
+
 function particleFrames(
 	settings: ParticleEmitterSettings,
 ): ReadonlyArray<readonly [number, number]> | undefined {
@@ -184,6 +234,14 @@ export default class ParticleEmitter extends Container {
 	 * @internal
 	 */
 	_particleFrames: ReadonlyArray<readonly [number, number]> | undefined;
+
+	/**
+	 * The tint of each step of a particle's life (`tintOverLife`), shared by
+	 * the particles emitted after reset.
+	 * @ignore
+	 * @internal
+	 */
+	_tintSteps: readonly Color[] | undefined;
 
 	/**
 	 * @ignore
@@ -391,8 +449,10 @@ export default class ParticleEmitter extends Container {
 		// fallback texture. Live particles retain the previous frame snapshot.
 		const nextSettings = { ...defaultEmitterSettings, ...settings };
 		const frames = particleFrames(nextSettings);
+		const tintSteps = tintOverLifeSteps(nextSettings);
 		Object.assign(this.settings, nextSettings);
 		this._particleFrames = frames;
+		this._tintSteps = tintSteps;
 
 		// Clamp range-style settings: if `min > max`, lower `min` to `max`.
 		// Catches the common footgun where a user overrides only one half of

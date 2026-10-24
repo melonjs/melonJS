@@ -151,6 +151,13 @@ export default class Light2d extends Renderable {
 	lightHeight: number;
 
 	/**
+	 * backing value of {@link Light2d#softness}
+	 * @ignore
+	 * @internal
+	 */
+	private _softness = 0;
+
+	/**
 	 * Create a 2D point light.
 	 *
 	 * A `Light2d` is a first-class world Renderable: add it to a container
@@ -250,6 +257,51 @@ export default class Light2d extends Renderable {
 		this.pos.y = value;
 		this.recalc();
 		this.updateBounds();
+	}
+
+	/**
+	 * How soft the edge of this light's hole in the stage's ambient darkness
+	 * ({@link Stage#ambientLight}) is, from `0` to `1`. The light only cuts
+	 * that darkness; its glow, and the shading of normal-mapped sprites, are
+	 * unaffected.
+	 *
+	 * - `0` (the default): a hard edge. Inside the light's radius the darkness
+	 *   is gone, outside it is whole.
+	 * - `1`: the darkness thins out from the edge all the way to the center,
+	 *   along the same straight falloff as the glow.
+	 * - In between: a fully lit core of `1 - softness` of the radius, then the
+	 *   darkness comes back over the rest of it.
+	 *
+	 * Hard and soft lights mix in one scene, and where lights overlap, the
+	 * darkness left is what each of them leaves, multiplied. The hole has the
+	 * light's size: for an opening wider than a glow, add a second, bigger
+	 * light with {@link Light2d#illuminationOnly} set, which cuts the darkness
+	 * and draws nothing. Up to 32 soft-path lights in view at once are cut.
+	 * @default 0
+	 * @throws {TypeError} if set to anything but a number from 0 to 1
+	 * @example
+	 * // a torch whose light fades into the dark, rather than a hole with a hard rim
+	 * const torch = new Light2d(x, y, 200, 200, "#ffb46a", 0.4);
+	 * torch.softness = 0.8;
+	 * app.world.addChild(torch);
+	 * // the darkness it cuts (on your Stage)
+	 * this.ambientLight.parseCSS("rgba(4, 3, 10, 0.95)");
+	 */
+	get softness(): number {
+		return this._softness;
+	}
+	set softness(value: number) {
+		if (
+			typeof value !== "number" ||
+			!Number.isFinite(value) ||
+			value < 0 ||
+			value > 1
+		) {
+			throw new TypeError(
+				`Light2d: softness must be a number from 0 to 1, not ${String(value)}`,
+			);
+		}
+		this._softness = value;
 	}
 
 	/**

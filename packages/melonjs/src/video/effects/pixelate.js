@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -12,14 +13,14 @@ import ShaderEffect from "./shadereffect.js";
 const wgslFragment = `
 struct PixelateUniforms {
 	uPixelSize : f32,
-	uTextureSize : vec2f,
+	uTextureSize : vec2f,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : PixelateUniforms;
-
+${FRAME_WGSL}
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	let texel = fx.uPixelSize / fx.uTextureSize;
 	let snapped = texel * floor(uv / texel) + texel * 0.5;
-	return textureSample(uTexture, uSampler, snapped) * vColor;
+	return frameTexel(snapped) * vColor;
 }
 `;
 
@@ -47,10 +48,11 @@ export default class PixelateEffect extends ShaderEffect {
 			glsl: `
 			uniform float uPixelSize;
 			uniform vec2 uTextureSize;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				vec2 texel = uPixelSize / uTextureSize;
 				vec2 snapped = texel * floor(uv / texel) + texel * 0.5;
-				return texture2D(uSampler, snapped) * vColor;
+				return frameTexel(snapped) * vColor;
 			}
 			`,
 			wgsl: wgslFragment,

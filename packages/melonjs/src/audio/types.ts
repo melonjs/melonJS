@@ -298,7 +298,10 @@ export interface PlayOptions {
 	 * whole clip.
 	 */
 	sprite?: string | undefined;
-	/** Loop playback when the region ends. Defaults to `false`. */
+	/**
+	 * Loop playback when the region ends. Defaults to the region's own loop
+	 * flag (the third element of its `sprite` entry), else `false`.
+	 */
 	loop?: boolean | undefined;
 	/** Called when this instance finishes playing. */
 	onend?: (() => void) | undefined;
@@ -360,4 +363,20 @@ export interface SoundEvents {
 	mute?: (() => void) | undefined;
 	/** Audio was unlocked by a user gesture. */
 	unlock?: (() => void) | undefined;
+}
+
+/**
+ * Options accepted by {@link audio.playTrack | `audio.playTrack`} in place of its `volume` argument.
+ * @category Audio
+ */
+export interface TrackOptions {
+	/** Playback volume, `0.0..1.0`. Defaults to the current global volume. */
+	volume?: number | undefined;
+	/**
+	 * Name of a region declared in the clip's `sprite` map: the track loops on
+	 * that region instead of the whole clip. A region of a loop's exact length
+	 * keeps it gapless where a decoder pads the end of the clip (Safari, on
+	 * MP3).
+	 */
+	sprite?: string | undefined;
 }

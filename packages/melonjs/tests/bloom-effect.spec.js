@@ -49,7 +49,8 @@ describe("BloomEffect — the two language bodies", () => {
 		const body = effect.wgslRealization.body;
 		expect(body).toContain("fn overBright(");
 		// one read per tap, plus none for the centre, which reuses `color`
-		const taps = body.match(/textureSample\(uTexture, uSampler, uv \+/g) ?? [];
+		// (through `frameTexel`, which keeps it inside the sprite's frame)
+		const taps = body.match(/frameTexel\(uv \+/g) ?? [];
 		expect(taps).toHaveLength(TAP_COUNT);
 		// the centre is the incoming colour, NOT a thirteenth sample: taking
 		// it would read the same texel the quad already handed over
@@ -145,7 +146,7 @@ describe("BloomEffect — on a real driver", () => {
 		const effect = new BloomEffect(renderer);
 		const src = effect._shader._sourceFragment;
 		expect(src).toContain("overBright");
-		const taps = src.match(/texture2D\(uSampler, uv \+/g) ?? [];
+		const taps = src.match(/frameTexel\(uv \+/g) ?? [];
 		expect(taps).toHaveLength(TAP_COUNT);
 		// and the same kernel as the WGSL body, checked here rather than
 		// assumed: both are generated from one table, so the only way they

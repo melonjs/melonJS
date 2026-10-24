@@ -1,6 +1,6 @@
 ---
 name: melonjs-particles-and-trails
-description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter."
+description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
 license: MIT
 ---
 
@@ -60,7 +60,8 @@ pair it with `framewidth`/`frameheight` or it does nothing.
 
 Note the variety is in SHAPE, not colour. `tint` belongs to the emitter, so
 every particle from one emitter is tinted alike however many frames it picks
-between.
+between. For a colour that changes over each particle's life, use
+`tintOverLife` (below) rather than drawing one frame per colour.
 
 Frame dimensions must be positive integers that fit inside the image, and an
 explicit `frames` sequence must be nonempty and contain valid integer indices.
@@ -68,6 +69,35 @@ Invalid configurations throw `RangeError` before changing an emitter during
 `reset()`. The frame sequence is copied on construction/reset; resetting changes
 only future particles, so ones already alive finish with their original image,
 frame size and sequence.
+
+## Colour over life: `tintOverLife`
+
+`tintOverLife` is the list of tints a particle takes over its life: the first at
+birth, the last at the end, evenly spaced and blended in between. Give as many
+CSS colours as you like (repeat one to hold it longer); it replaces `tint`.
+
+```js
+// a flame: white hot, then orange, then deep red as it rises and dies
+const flame = new ParticleEmitter(x, y, {
+    image: softDot,                     // a white texture takes the tints as they are
+    tintOverLife: ["#fff3b0", "#ffc455", "#ff8a26", "#e45414", "#a0280c"],
+    textureAdditive: true,
+});
+```
+
+- **Colour only.** Opacity is still the built-in fade over the particle's life;
+  the alpha of a colour in the list is ignored. On an additive emitter, a darker
+  colour is a dimmer particle, so fold a "fainter" step into the colour itself.
+- **32 steps.** However many colours, the blend is taken in 32 steps, the same on
+  every renderer: a particle changes colour at most 32 times. That matters on
+  Canvas, which keeps a tinted copy of the texture for every colour it is asked
+  to draw: 32 at most per texture.
+- **Author the texture white.** `tint` multiplies, so a coloured texture muddies
+  every step.
+- It works alongside sprite-sheet `frames` (one picks the image, the other the
+  colour), and a list that is empty, not an array, or holds a non-string throws a
+  `TypeError` from the constructor or `reset()`, which then leaves the emitter as
+  it was. The list is copied: change it through `reset()`.
 
 ## Where particles are born
 
@@ -298,6 +328,9 @@ answer when you want discrete puffs rather than a continuous ribbon.
 | the cloud follows a moving emitter | default `referenceSpace: "local"` — use `"world"` for trails |
 | particles do not travel far enough | settings tuned pre-20.2, when drawn travel was doubled |
 | one-shot emitters accumulate | missing `autoDestroyOnComplete: true` |
+| every particle of an emitter is the same colour all its life | `tint` is one value for the emitter: use `tintOverLife` for a colour that changes as it ages |
+| a `tintOverLife` colour's transparency has no effect | the list sets the colour only; opacity is the particle's fade |
+| `tintOverLife` colours look muddy | the texture is coloured; author it white so the tints come through as given |
 | frame rate drops with many effects | an emitter per event instead of one re-aimed emitter |
 | a 3D burst is invisible under a `Camera3d` | before 20.8 a particle was culled at twice its depth; update |
 | the whole burst launches from one pixel | `width`/`height` are the spawn area and default to `1` |

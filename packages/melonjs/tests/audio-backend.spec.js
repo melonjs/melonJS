@@ -370,6 +370,87 @@ describe("audio backend", () => {
 			audio.unload("sp-dur");
 		});
 
+		// a clip with a region declared looping (the third element) and one not
+		const loadLooping = (name) => {
+			audio.init("wav");
+			return new Promise((resolve, reject) => {
+				audio.load(
+					{
+						name,
+						src: makeSilentWavDataUrl(0.05),
+						sprite: { loopy: [0, 20, true], once: [20, 20] },
+					},
+					resolve,
+					() => {
+						reject(new Error(`load failed for ${name}`));
+					},
+				);
+			});
+		};
+
+		it("a region declared looping loops when played with no loop option", async () => {
+			await loadLooping("sp-loopy");
+			const id = audio.play("sp-loopy", { sprite: "loopy" });
+			expect(state.tracks["sp-loopy"].loop(id)).toBe(true);
+			audio.stop("sp-loopy");
+			audio.unload("sp-loopy");
+		});
+
+		it("a region not declared looping still plays once by default", async () => {
+			await loadLooping("sp-once");
+			const id = audio.play("sp-once", { sprite: "once" });
+			expect(state.tracks["sp-once"].loop(id)).toBe(false);
+			audio.stop("sp-once");
+			audio.unload("sp-once");
+		});
+
+		it("loop: true loops a region that is not declared looping", async () => {
+			await loadLooping("sp-force");
+			const id = audio.play("sp-force", { sprite: "once", loop: true });
+			expect(state.tracks["sp-force"].loop(id)).toBe(true);
+			audio.stop("sp-force");
+			audio.unload("sp-force");
+		});
+
+		it("the positional form still decides on its own", async () => {
+			// play(name) has always meant once, play(name, true) a loop
+			await loadClip("sp-pos");
+			const sound = state.tracks["sp-pos"];
+			expect(sound.loop(audio.play("sp-pos"))).toBe(false);
+			expect(sound.loop(audio.play("sp-pos", true))).toBe(true);
+			audio.stop("sp-pos");
+			audio.unload("sp-pos");
+		});
+
+		it("playTrack loops on the region it is given, at its volume", async () => {
+			await loadLooping("sp-track");
+			const sound = state.tracks["sp-track"];
+			// the volume of a voice is queued while the context is locked, so
+			// what can be pinned is the call that sets it
+			const volume = vi.spyOn(sound, "volume");
+			const id = audio.playTrack("sp-track", { sprite: "once", volume: 0.4 });
+			expect(sound._soundById(id)._sprite).toBe("once");
+			expect(sound.loop(id)).toBe(true);
+			expect(volume).toHaveBeenCalledWith(0.4, id);
+			expect(audio.getCurrentTrack()).toBe("sp-track");
+			audio.stopTrack();
+			volume.mockRestore();
+			audio.unload("sp-track");
+		});
+
+		it("playTrack still takes a plain volume, and loops the whole clip", async () => {
+			await loadClip("sp-track2");
+			const sound = state.tracks["sp-track2"];
+			const volume = vi.spyOn(sound, "volume");
+			const id = audio.playTrack("sp-track2", 0.3);
+			expect(sound._soundById(id)._sprite).toBe("__default");
+			expect(sound.loop(id)).toBe(true);
+			expect(volume).toHaveBeenCalledWith(0.3, id);
+			audio.stopTrack();
+			volume.mockRestore();
+			audio.unload("sp-track2");
+		});
+
 		it("playing() reports instance state", async () => {
 			// Headless has no user gesture, so the AudioContext stays suspended and
 			// an instance never leaves `_playLock` — playback genuinely does not
