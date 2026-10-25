@@ -83,6 +83,12 @@ export default class TMXObject {
 	#properties = Object.create(null);
 
 	/**
+	 * how much wider than 2:1 the map's tiles are, see parseTMXShapes
+	 * @type {number}
+	 */
+	#isoRatio = 1;
+
+	/**
 	 * @param {TMXTileMap} map - the map the object belongs to
 	 * @param {object} settings - the object as parsed from the map
 	 * @param {number} z - the depth of the object's layer
@@ -195,6 +201,10 @@ export default class TMXObject {
 		 * @type {string}
 		 */
 		this.orientation = map.orientation;
+
+		if (map.tilewidth > 0 && map.tileheight > 0) {
+			this.#isoRatio = map.tilewidth / (2 * map.tileheight);
+		}
 
 		/**
 		 * the collision shapes defined for this object
@@ -436,11 +446,15 @@ export default class TMXObject {
 		}
 
 		// Apply isometric projection, except to a tile object: Tiled draws
-		// it upright, so its box is already in screen space
+		// it upright, so its box is already in screen space. toIso() is the
+		// projection of 2:1 tiles, Tiled uses the map's tile ratio
 		if (this.orientation === "isometric" && this.gid === null) {
 			for (let i = 0; i < shapes.length; i++) {
 				if (typeof shapes[i].toIso === "function") {
 					shapes[i].toIso();
+					if (this.#isoRatio !== 1) {
+						shapes[i].scale(this.#isoRatio, 1);
+					}
 				}
 			}
 		}
