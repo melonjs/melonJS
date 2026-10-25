@@ -95,16 +95,19 @@ describe("SquishEffect", () => {
 				return { width: 64, height: 32 };
 			},
 		};
-		const quadOf = (renderer) => {
+		// the quad the batcher drew: effect sprites share a draw, so the
+		// queued one is drawn first
+		const quadOf = (renderer, batcher) => {
+			batcher.flush();
 			const f = renderer.calls.writes.at(-1).floats;
-			// corners: (x,y) (x+w,y) (x,y+h) (x+w,y+h), stride 7 floats
+			// corners: (x,y) (x+w,y) (x,y+h) (x+w,y+h), stride 9 floats
 			return {
 				left: f[0],
-				right: f[7],
+				right: f[9],
 				top: f[1],
-				bottom: f[15],
+				bottom: f[19],
 				u0: f[3],
-				u1: f[10],
+				u1: f[12],
 			};
 		};
 		const make = (bulge) => {
@@ -125,7 +128,7 @@ describe("SquishEffect", () => {
 			const { renderer, batcher } = make(0.5);
 			// the right half of a 64x32 sheet, drawn 32x32 at (16, 0)
 			batcher.addQuad(atlas, 16, 0, 32, 32, 0.5, 0, 1, 1, 0xffffffff);
-			const quad = quadOf(renderer);
+			const quad = quadOf(renderer, batcher);
 			// 1.5x as wide about the centre: x 8..56
 			expect([quad.left, quad.right]).toEqual([8, 56]);
 			expect([quad.top, quad.bottom]).toEqual([0, 32]);
@@ -149,7 +152,7 @@ describe("SquishEffect", () => {
 				},
 			);
 			batcher.addQuad(atlas, 16, 0, 32, 32, 0.5, 0, 1, 1, 0xffffffff);
-			const quad = quadOf(renderer);
+			const quad = quadOf(renderer, batcher);
 			expect([quad.left, quad.right]).toEqual([16, 48]);
 			expect([quad.u0, quad.u1]).toEqual([0.5, 1]);
 		});
@@ -157,7 +160,7 @@ describe("SquishEffect", () => {
 		it("draws the quad as it is when it pinches in", () => {
 			const { renderer, batcher } = make(-0.5);
 			batcher.addQuad(atlas, 16, 0, 32, 32, 0.5, 0, 1, 1, 0xffffffff);
-			const quad = quadOf(renderer);
+			const quad = quadOf(renderer, batcher);
 			expect([quad.left, quad.right]).toEqual([16, 48]);
 			expect([quad.u0, quad.u1]).toEqual([0.5, 1]);
 		});
@@ -296,6 +299,170 @@ describe("SquishEffect", () => {
 			expect(pixel(2, 32)).toEqual(RED);
 			expect(pixel(8, 16)).toEqual([0, 0, 0]);
 			squish.destroy();
+		});
+
+		describe("kept to its own frame", () => {
+			/**
+			 * 64x8: blue | a 4x4 red frame over a yellow one | green. The red
+			 * frame drawn 16 times its size: smooth filtering reaches across
+			 * three of its edges into a neighbour (the top one is the
+			 * texture's own edge)
+			 */
+			const edges = () => {
+				const source = Renderer.createCanvas(64, 8);
+				const ctx2d = source.getContext("2d");
+				ctx2d.fillStyle = "#0000ff";
+				ctx2d.fillRect(0, 0, 32, 8);
+				ctx2d.fillStyle = "#ffff00";
+				ctx2d.fillRect(32, 0, 4, 8);
+				ctx2d.fillStyle = "#ff0000";
+				ctx2d.fillRect(32, 0, 4, 4);
+				ctx2d.fillStyle = "#00ff00";
+				ctx2d.fillRect(36, 0, 28, 8);
+				return source;
+			};
+
+			const drawEdges = (effect, filter) => {
+				const previous = renderer.settings.textureFilter;
+				renderer.setTextureFilter(filter);
+				try {
+					renderer.clearColor("#000000ff");
+					renderer.save();
+					renderer.customShader = effect;
+					renderer.drawImage(edges(), 32, 0, 4, 4, 0, 0, SIZE, SIZE);
+					renderer.flush();
+					renderer.customShader = undefined;
+					renderer.restore();
+				} finally {
+					renderer.setTextureFilter(previous);
+				}
+			};
+
+			/** the pixels that are not pure red, as "x,y: r,g,b" */
+			const notRed = () => {
+				const gl = renderer.gl;
+				const out = new Uint8Array(SIZE * SIZE * 4);
+				gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, out);
+				const wrong = [];
+				for (let i = 0; i < out.length; i += 4) {
+					if (out[i] !== 255 || out[i + 1] !== 0 || out[i + 2] !== 0) {
+						const x = (i / 4) % SIZE;
+						const y = SIZE - 1 - Math.floor(i / 4 / SIZE);
+						wrong.push(`${x},${y}: ${out[i]},${out[i + 1]},${out[i + 2]}`);
+					}
+				}
+				return wrong;
+			};
+
+			it("never filters in the next frame along its edges", (ctx) => {
+				requireWebGL(ctx);
+				const squish = new SquishEffect(renderer);
+				drawEdges(squish, "linear");
+				expect(notRed()).toEqual([]);
+				squish.destroy();
+			});
+
+			it("CONTROL: the same draw without it does", (ctx) => {
+				requireWebGL(ctx);
+				drawEdges(undefined, "linear");
+				const wrong = notRed();
+				// blue on the left, yellow below, green on the right
+				expect(
+					wrong.some((p) => {
+						return p.startsWith("0,");
+					}),
+				).toBe(true);
+				expect(
+					wrong.some((p) => {
+						return p.startsWith(`${SIZE - 1},`);
+					}),
+				).toBe(true);
+				expect(
+					wrong.some((p) => {
+						return p.includes(`,${SIZE - 1}:`);
+					}),
+				).toBe(true);
+			});
+
+			it("reads the right mipmap level along the edge of its shape", (ctx) => {
+				// every smaller level painted its own color: drawn 1:1, the
+				// sprite reads level 0 and 1. A sample taken after a branch
+				// some pixels of its 2x2 block skipped picks its level from
+				// undefined derivatives, a far smaller one, which drew a dark
+				// line along the sprite's edge under linear-mipmap
+				requireWebGL(ctx);
+				const previous = renderer.settings.textureFilter;
+				renderer.setTextureFilter("linear-mipmap");
+				const squish = new SquishEffect(renderer, { bulge: 0.6 });
+				const source = Renderer.createCanvas(64, 32);
+				const ctx2d = source.getContext("2d");
+				ctx2d.fillStyle = "#0000ff";
+				ctx2d.fillRect(0, 0, 32, 32);
+				ctx2d.fillStyle = "#ff0000";
+				ctx2d.fillRect(32, 0, 32, 32);
+				try {
+					renderer.clearColor("#000000ff");
+					renderer.save();
+					renderer.customShader = squish;
+					renderer.drawImage(source, 32, 0, 32, 32, 16, 16, 32, 32);
+					renderer.flush();
+					const gl = renderer.gl;
+					gl.bindTexture(
+						gl.TEXTURE_2D,
+						renderer.textureStore.peek(source).handle,
+					);
+					gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+					for (let level = 1; 64 >> level >= 1; level++) {
+						const w = 64 >> level;
+						const h = Math.max(32 >> level, 1);
+						const painted = new Uint8Array(w * h * 4);
+						for (let i = 0; i < painted.length; i += 4) {
+							painted.set([255, 0, level * 30, 255], i);
+						}
+						gl.texSubImage2D(
+							gl.TEXTURE_2D,
+							level,
+							0,
+							0,
+							w,
+							h,
+							gl.RGBA,
+							gl.UNSIGNED_BYTE,
+							painted,
+						);
+					}
+					gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+					// the same draw again, now that the levels show
+					renderer.clearColor("#000000ff");
+					renderer.drawImage(source, 32, 0, 32, 32, 16, 16, 32, 32);
+					renderer.flush();
+					renderer.customShader = undefined;
+					renderer.restore();
+					const out = new Uint8Array(SIZE * SIZE * 4);
+					gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, out);
+					// level n is painted with blue = 30 n
+					let drawn = 0;
+					const deep = [];
+					for (let i = 0; i < out.length; i += 4) {
+						if (out[i] === 255) {
+							drawn++;
+						}
+						if (out[i + 2] >= 45) {
+							const x = (i / 4) % SIZE;
+							const y = SIZE - 1 - Math.floor(i / 4 / SIZE);
+							deep.push(`${x},${y}: level ${Math.round(out[i + 2] / 30)}`);
+						}
+					}
+					// the sprite drew, bulged, and no pixel of it read past level
+					// 1: near the top and bottom rows the bulge shears the
+					// texture a little, a blend of level 1 is right there
+					expect(drawn).toBeGreaterThan(32 * 32);
+					expect(deep).toEqual([]);
+				} finally {
+					renderer.setTextureFilter(previous);
+					squish.destroy();
+				}
+			});
 		});
 
 		it("squishes a Sprite carrying it", (ctx) => {

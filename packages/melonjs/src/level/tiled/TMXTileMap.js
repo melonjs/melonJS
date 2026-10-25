@@ -1,4 +1,5 @@
 import { warning } from "../../lang/console.js";
+import { getImage } from "../../loader/loader.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
@@ -22,6 +23,7 @@ import TMXTilesetGroup from "./TMXTilesetGroup.js";
 import {
 	applyObjectOpacity,
 	applyTMXProperties,
+	applyTransparentColor,
 	parseTintColor,
 	propagateBlendMode,
 	resolveEmbeddedImage,
@@ -87,7 +89,14 @@ function readImageLayer(map, data, z) {
 		Object.assign(
 			{
 				name: data.name,
-				image: data.image,
+				// its transparent color applied, when Tiled gives one
+				image:
+					typeof data.transparentcolor === "string"
+						? (applyTransparentColor(
+								getImage(data.image),
+								data.transparentcolor,
+							) ?? data.image)
+						: data.image,
 				ratio: vector2dPool.get(ratioX, ratioY),
 				tint: parseTintColor(data.tintcolor),
 				z: z,
@@ -593,6 +602,11 @@ export default class TMXTileMap {
 					} else if (settings.opacity < 1) {
 						applyObjectOpacity(obj, settings.opacity);
 					}
+				}
+
+				// the layers the cameras draw it on, from a custom property
+				if (typeof settings.visibilityLayer === "number") {
+					obj.visibilityLayer = settings.visibilityLayer;
 				}
 
 				// propagate group blend mode to child objects

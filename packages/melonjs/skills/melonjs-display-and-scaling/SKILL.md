@@ -1,6 +1,6 @@
 ---
 name: melonjs-display-and-scaling
-description: "Use this skill when a melonJS game looks blurry, soft, shimmering or cropped, or when choosing how the canvas fills its page. Covers the design resolution, scale and scaleMethod, scaleTarget, scaleRounding for pixel-perfect integer scaling, antiAlias, textureFilter, subPixel, devicePixelRatio, and which setting does which job. Triggers on: blurry, soft, fuzzy, shimmering, pixel art, pixel perfect, crisp, nearest, linear, scale, scaleMethod, scaleTarget, scaleRounding, integer scaling, antiAlias, textureFilter, subPixel, devicePixelRatio, retina, hidpi, design resolution, canvas size, canvas cropped, letterbox, image-rendering, upscale, resolution."
+description: "Use this skill when a melonJS game looks blurry, soft, shimmering or cropped, or when choosing how the canvas fills its page. Covers the design resolution, scale and scaleMethod, scaleTarget, scaleRounding for pixel-perfect integer scaling, antiAlias, textureFilter and linear-mipmap for what is drawn small, subPixel, syncToDisplay for steady motion, devicePixelRatio, and which setting does which job. Triggers on: blurry, soft, fuzzy, shimmering, pixel art, pixel perfect, crisp, nearest, linear, scale, scaleMethod, scaleTarget, scaleRounding, integer scaling, antiAlias, textureFilter, linear-mipmap, mipmaps, minimap shimmer, zoomed out, subPixel, syncToDisplay, stutter, judder, uneven scrolling, devicePixelRatio, retina, hidpi, design resolution, canvas size, canvas cropped, letterbox, image-rendering, upscale, resolution."
 license: MIT
 ---
 
@@ -23,7 +23,9 @@ separate decisions. Knowing which setting owns which is most of the work.
 | how a texture is sampled | `antiAlias`, `textureFilter` | nearest or linear, and the CSS upscale filter |
 
 `subPixel` is a fifth, orthogonal to all of them: it decides whether a
-renderable may sit on a fractional position WITHIN the frame.
+renderable may sit on a fractional position WITHIN the frame. `syncToDisplay`
+is about the frames in a row rather than one frame: whether motion advances
+by the same amount on each.
 
 ## Design resolution
 
@@ -155,6 +157,42 @@ can have smooth model edges and nearest-sampled sprites. The presentation half
 is not separable: there is no way to get MSAA silhouettes and a hard-edged
 upscale at the same time.
 
+## Drawn small: `textureFilter: "linear-mipmap"`
+
+A sprite drawn much smaller than its texture (a zoomed-out camera, a minimap,
+a scaled-down sprite) shimmers as it moves, even with linear sampling: each
+screen pixel covers many texels and linear sampling blends only four of them.
+`"linear-mipmap"` samples the texture's mipmaps, smaller copies averaged in
+advance, wherever something is drawn below its size:
+
+```js
+const app = new Application(1280, 720, { textureFilter: "linear-mipmap" });
+```
+
+At its size or larger a texture draws as it does under `"linear"`, so a game
+whose main view is at its size and whose minimap is zoomed out gets a smooth
+minimap and an unchanged view. It covers sprites, text and tile layers, not a
+video nor a texture the engine renders into, and a `nearest` texture keeps to
+its full size. GPU backends only; on WebGPU each texture it applies to takes
+about a third more memory.
+
+A small mipmap level's texels span many of the art's pixels, so a sample near
+the edge of a frame would reach into the next frame of the atlas. Under
+`"linear-mipmap"` every sprite and tile keeps its samples half a texel of the
+level it reads inside its own frame, so the next frame no longer streaks along
+its edges. Two limits:
+
+- a level's texel is an average of a square of the art, 2, 4, 8 pixels a side
+  and so on. Where a frame's edge falls inside such a square, its outermost
+  texel already holds some of the neighbour: drawn very small, a frame of an
+  atlas packed edge to edge can show a faint line of it. Frames on a grid of
+  a power of two (a 32 or 64 px sheet) are free of it, and a padding of a few
+  pixels between frames removes it elsewhere;
+- a sprite drawn through a `ShaderEffect` samples the texture in the effect's
+  own program, which is not kept to the frame.
+
+A repeating pattern is left to wrap.
+
 ## `subPixel` is about position, not scale
 
 `subPixel: false` (the default) truncates a renderable's translation to whole
@@ -167,6 +205,58 @@ It does nothing about how the frame reaches the screen. A game that carefully
 snaps positions and is then scaled by 2.667 has thrown that work away at the
 last step, which is the contradiction `scaleRounding: "integer"` exists to
 resolve.
+
+`subPixel: true` alone does not make motion smooth: with nearest sampling a
+sprite between two pixels is still drawn on one of them, so a scene moving
+4.5 pixels a frame jumps by 4 and 5 in turn. Rendered art (not pixel art)
+moves smoothly with `textureFilter: "linear"` as well, which blends it across
+the two, while the upscale stays crisp (`antiAlias: true` would also smooth the
+whole canvas as it is scaled up, which is what makes it look blurry). A still
+scene is only sharp when the camera rests on a whole pixel, so give it a
+target on whole pixels:
+
+```js
+const app = new Application(1280, 720, {
+	scale: "auto",
+	subPixel: true,
+	textureFilter: "linear",
+	syncToDisplay: true,
+});
+// the camera follows a point on whole pixels, kept on the hero: it glides
+// between pixels while following, and comes to rest on one
+const focus = new Vector2d();
+app.viewport.follow(focus, app.viewport.AXIS.BOTH, 0.12);
+
+// in the hero's update(dt)
+focus.set(Math.round(this.pos.x), Math.round(this.pos.y));
+```
+
+## `syncToDisplay` is about steady motion
+
+The game updates in fixed steps, 60 a second by default, as many as the time
+since the last frame holds. Browsers report that time with up to a millisecond
+of jitter, so on a 60 Hz display a frame now and then gets no update and the
+next one gets two: the world holds still for a frame, then moves twice as far.
+Scrolling, and anything else moving steadily, stutters while the frame rate
+reads a solid 60.
+
+```js
+const app = new Application(1280, 720, { scale: "auto", syncToDisplay: true });
+```
+
+With it on, frame times are counted in whole display frames and what is
+rounded off is carried to the next frame: one update every frame at 60 Hz, one
+every other frame at 120 Hz, and the game keeps its speed. A display within 2%
+of `timer.maxfps` (60 by default), or of 2, 3 or 4 times it, or a half, a third
+or a quarter of it, is counted at exactly that rate, so a 59.94 Hz screen runs
+the game 0.1% slower than the wall clock; leave it off when the updates must
+keep to the wall clock exactly. The display's rate is learned as the game runs,
+and again when it changes (the window moved to another screen). At a refresh
+that is no multiple of the update rate (144 Hz, 165 Hz) the steps cannot fall
+evenly however the time is counted.
+
+It is off by default. It sets `timer.syncToDisplay` when the application is
+initialized, which a game can also switch at any time.
 
 ## Soft text next to crisp sprites
 
@@ -266,6 +356,12 @@ const app = new Application(1024, 576, {
 | the canvas is cropped or overflows its box | automatic scaling measured the wrong element; name it with `scaleTarget` |
 | the canvas grows on every resize | the measured ancestor is auto-sized around the canvas itself |
 | things shimmer as they move | fractional positions; check `subPixel`, and that the scale factor is whole |
+| scrolling stutters while the frame rate reads 60 | a frame now and then runs no update and the next two; set `syncToDisplay: true` |
+| moving rendered art jumps by whole pixels with `subPixel: true` | nearest sampling still draws it on one pixel; add `textureFilter: "linear"` |
+| the whole game looks blurry with `antiAlias: true` | it also smooths the canvas as it is scaled up; use `textureFilter: "linear"` instead |
+| a minimap or a zoomed-out view shimmers as it moves | linear sampling blends 4 texels where a pixel covers many; use `textureFilter: "linear-mipmap"` |
+| faint lines along sprites drawn small, from the next frame of the atlas | under `"linear-mipmap"` the built-in sprite shaders keep to the frame, but not a `ShaderEffect`'s own sample, and the smallest levels still mix a frame not on a power-of-two grid with its neighbour: pad the atlas |
+| a still scene looks a little soft with linear sampling | the camera rests between two pixels; follow a target rounded to whole pixels |
 | 3D model edges are jagged | `antiAlias: false` also disables MSAA; turn it on and use `textureFilter` for textures |
 | textures are smoothed when they should be blocky | `antiAlias: true` makes the default texture filter linear; set `textureFilter: "nearest"` |
 | `scaleRounding: "integer"` changes nothing | it applies to `scaleMethod: "fit"` only; the others resize the renderer |

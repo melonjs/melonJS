@@ -1,3 +1,4 @@
+import { FRAME_GLSL, FRAME_WGSL, FRAME_WGSL_MEMBERS } from "./frame.js";
 import ShaderEffect from "./shadereffect.js";
 
 /**
@@ -13,9 +14,10 @@ const wgslFragment = `
 struct SquishUniforms {
 	uSquishFrame : vec4f,
 	uSquishXFactor : f32,
-	uSquishBulge : f32,
+	uSquishBulge : f32,${FRAME_WGSL_MEMBERS}
 };
 @group(3) @binding(0) var<uniform> fx : SquishUniforms;
+${FRAME_WGSL}
 
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// -1..1 across the quad: the sprite's frame, stretched by the vertex scale
@@ -27,8 +29,10 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// middle, none at the top and bottom
 	p.x = p.x / max(1.0 + fx.uSquishBulge * sqrt(max(1.0 - p.y * p.y, 0.0)), 0.0001);
 	let local = (p + 1.0) * 0.5;
-	// sampled before the test, since textureSample needs uniform control flow
-	let texel = textureSample(uTexture, uSampler, fx.uSquishFrame.xy + clamp(local, vec2f(0.0), vec2f(1.0)) * fx.uSquishFrame.zw) * vColor;
+	// sampled before the test, since textureSample needs uniform control
+	// flow, and kept inside the sprite's frame (frame.js): never filtered
+	// with the next frame of the atlas along its edge
+	let texel = frameTexel(fx.uSquishFrame.xy + clamp(local, vec2f(0.0), vec2f(1.0)) * fx.uSquishFrame.zw) * vColor;
 	let inside = all(local >= vec2f(0.0)) && all(local <= vec2f(1.0));
 	return select(vec4f(0.0), texel, inside);
 }
@@ -97,6 +101,7 @@ export default class SquishEffect extends ShaderEffect {
 			uniform vec4 uSquishFrame;
 			uniform float uSquishXFactor;
 			uniform float uSquishBulge;
+			${FRAME_GLSL}
 			vec4 apply(vec4 color, vec2 uv) {
 				// -1..1 across the quad: the sprite's frame, stretched by the vertex scale
 				vec2 p = (uv - uSquishFrame.xy) / uSquishFrame.zw * 2.0 - 1.0;
@@ -107,12 +112,18 @@ export default class SquishEffect extends ShaderEffect {
 				// the middle, none at the top and bottom
 				p.x /= max(1.0 + uSquishBulge * sqrt(max(1.0 - p.y * p.y, 0.0)), 0.0001);
 				vec2 local = (p + 1.0) * 0.5;
+				// sampled before the test, while every pixel of the 2x2 block
+				// still runs: a sample after a branch some of them skipped
+				// has no derivatives to pick its mipmap level from, and reads
+				// a far too small one, a dark line along the sprite's edge
+				// under "linear-mipmap". And kept inside the sprite's frame
+				// (frame.js): never filtered with the next frame of the atlas
+				// along its edge
+				vec4 texel = frameTexel(uSquishFrame.xy + clamp(local, 0.0, 1.0) * uSquishFrame.zw) * vColor;
 				// transparent past the sprite: the room around it, or the
 				// indent of a pinch
-				if (local.x < 0.0 || local.x > 1.0 || local.y < 0.0 || local.y > 1.0) {
-					return vec4(0.0);
-				}
-				return texture2D(uSampler, uSquishFrame.xy + local * uSquishFrame.zw) * vColor;
+				float inside = step(0.0, local.x) * step(local.x, 1.0) * step(0.0, local.y) * step(local.y, 1.0);
+				return texel * inside;
 			}
 			`,
 			wgsl: wgslFragment,

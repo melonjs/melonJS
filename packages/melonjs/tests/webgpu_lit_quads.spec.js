@@ -67,8 +67,9 @@ describe("WebGPU 2D lighting", () => {
 
 			it("declares its OWN vertex layout, wider than the shared quad one", () => {
 				// widening the shared layout would charge every unlit sprite
-				// in the engine for a term it never evaluates
-				expect(lit.stride).toBe(32);
+				// in the engine for a term it never evaluates: the quad
+				// layout's 36 bytes, plus the exponent
+				expect(lit.stride).toBe(40);
 				expect(
 					lit.attributes.map((a) => {
 						return a.name;
@@ -80,7 +81,7 @@ describe("WebGPU 2D lighting", () => {
 				const v = quadWith(48);
 				const size = lit.vertexSize;
 				for (let i = 0; i < 4; i++) {
-					expect(v[i * size + 7]).toBe(48);
+					expect(v[i * size + 9]).toBe(48);
 				}
 			});
 
@@ -90,16 +91,17 @@ describe("WebGPU 2D lighting", () => {
 				const v = quadWith(0);
 				const size = lit.vertexSize;
 				for (let i = 0; i < 4; i++) {
-					expect(v[i * size + 7]).toBe(0);
+					expect(v[i * size + 9]).toBe(0);
 				}
 			});
 
 			it("does not leak one sprite's exponent onto the next", () => {
+				// the exponent is float 9, after the frame (floats 7 and 8)
 				const shiny = quadWith(64);
-				expect(shiny[7]).toBe(64);
+				expect(shiny[9]).toBe(64);
 				lit.flush();
 				const matte = quadWith(0);
-				expect(matte[7]).toBe(0);
+				expect(matte[9]).toBe(0);
 			});
 
 			it("the shader gates the term on the exponent, and ADDS it", () => {

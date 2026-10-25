@@ -20,8 +20,8 @@ describe("WebGL vertex state (VAO) isolation", () => {
 
 	// (batcher name → expected stride in bytes)
 	const STRIDES = {
-		quad: 28,
-		litQuad: 36,
+		quad: 36,
+		litQuad: 44,
 		primitive: 24,
 		mesh: 36,
 		litMesh: 48,

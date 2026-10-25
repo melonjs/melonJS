@@ -297,6 +297,10 @@ other correct ending.
 - `floating = true` pins a renderable to the screen rather than the world, which
   is what you want for HUD elements. It opts the object out of camera transforms
   and out of ancestor position accumulation.
+- `visibilityLayer` decides which cameras draw a renderable: a camera draws it
+  only if it shares a bit with the camera's `cullMask` (every camera, by
+  default). See `melonjs-camera-and-drawing` for keeping something off a
+  minimap.
 
 ## Prefer built-in features
 

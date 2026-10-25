@@ -5,14 +5,18 @@
 // The std140 Light2dBlock binds at group 2 with a dynamic offset — one
 // snapshot per setLightUniforms call, per the queue-write ordering law.
 //
-// Vertex layout: this family's OWN 32-byte `litQuad` layout — the frozen
-// quad layout plus a per-quad `aShininess`, so unlit sprites are not charged
-// for a term they never evaluate.
+// Vertex layout: this family's OWN 40-byte `litQuad` layout — the quad
+// layout (`aFrame` fifth, as in every sprite layout), then a per-quad
+// `aShininess`, so unlit sprites are not charged for a term they never
+// evaluate. Under "linear-mipmap" the color and normal samples stay inside
+// the quad's frame, as in quad.wgsl.
 
 struct FrameUniforms {
 	projection : mat4x4<f32>,
 	// unused by this shader; part of the shared frame-globals block
 	lineWidth : f32,
+	// how each sample keeps inside the quad's frame (quad.wgsl, gpu/frame.js)
+	frameClamp : f32,
 };
 
 struct Light2dData {
@@ -47,6 +51,10 @@ struct VSOut {
 	@location(2) vWorldPos : vec2f,
 	// specular exponent, flat across the quad; 0 = matte
 	@location(3) vShininess : f32,
+	// the quad's frame (left, top, right, bottom), the same at all corners
+	@location(4) vFrame : vec4f,
+	// 1 when the clamp follows the mipmap level read, 0 at the full size
+	@location(5) @interpolate(flat) vFrameLevels : f32,
 };
 
 @vertex
@@ -55,7 +63,8 @@ fn vertex_main(
 	@location(1) aRegion : vec2f,
 	@location(2) aColor : vec4f,
 	@location(3) aTextureId : f32,
-	@location(4) aShininess : f32,
+	@location(4) aFrame : vec2f,
+	@location(5) aShininess : f32,
 ) -> VSOut {
 	var out : VSOut;
 	let clip = uFrame.projection * vec4f(aVertex, 1.0);
@@ -65,14 +74,42 @@ fn vertex_main(
 	out.vRegion = aRegion;
 	out.vWorldPos = aVertex.xy;
 	out.vShininess = aShininess;
+	// unbounded when the quad has no frame, or the clamp is off (the frame
+	// globals are bound to the vertex stage only)
+	out.vFrame = select(
+		vec4f(min(aRegion, aFrame), max(aRegion, aFrame)),
+		vec4f(-1.0e6, -1.0e6, 1.0e6, 1.0e6),
+		aFrame.x < -5.0e5 || uFrame.frameClamp < 0.5,
+	);
+	out.vFrameLevels = select(0.0, 1.0, uFrame.frameClamp > 1.5);
 	return out;
+}
+
+// `uv` kept inside `frame`, half a texel of the deepest level read in from
+// its edge, unless the frame is unbounded (quad.wgsl's twin)
+fn frameUV(uv : vec2f, frame : vec4f, size : vec2f, dx : vec2f, dy : vec2f, levels : f32) -> vec2f {
+	if (frame.x < -5.0e5) {
+		return uv;
+	}
+	let lod = select(
+		0.0,
+		ceil(log2(max(max(length(dx * size), length(dy * size)), 1.0)) - 0.01),
+		levels > 0.5,
+	);
+	let inset = min(vec2f(0.5 * exp2(lod)) / size, (frame.zw - frame.xy) * 0.5);
+	return clamp(uv, frame.xy + inset, frame.zw - inset);
 }
 
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
-	let color = textureSample(uTexture, uSampler, in.vRegion);
-	// the normal map is UV-paired with the color atlas — same vRegion
-	let normalSample = textureSample(uNormal, uNormalSampler, in.vRegion);
+	// sampled with the unclamped UV's derivatives, so a clamped sample reads
+	// the level the unclamped one would
+	let dx = dpdx(in.vRegion);
+	let dy = dpdy(in.vRegion);
+	let uv = frameUV(in.vRegion, in.vFrame, vec2f(textureDimensions(uTexture, 0)), dx, dy, in.vFrameLevels);
+	let color = textureSampleGrad(uTexture, uSampler, uv, dx, dy);
+	// the normal map is UV-paired with the color atlas — same frame
+	let normalSample = textureSampleGrad(uNormal, uNormalSampler, uv, dx, dy);
 
 	// Decode 0..1 -> -1..1. Normal maps use the Y-up authoring convention
 	// but screen space here is Y-down — flip Y so dot(normal, lightDir)

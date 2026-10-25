@@ -1578,10 +1578,19 @@ export default class Container extends Renderable {
 		const skipsFloating = viewport
 			? !(viewport.drawsFloating ?? viewport.isDefault)
 			: false;
+		// the layers this camera draws: every layer without a camera, or for
+		// a viewport that has no mask
+		const cullMask = viewport?.cullMask ?? -1;
 
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
 			const isFloating = obj.floating === true;
+
+			// on no layer this camera draws: left out, and with it whatever
+			// it contains
+			if (((obj.visibilityLayer ?? 1) & cullMask) === 0) {
+				continue;
+			}
 
 			if (obj.inViewport || isFloating) {
 				if (isFloating && skipsFloating && !obj.visibleInAllCameras) {

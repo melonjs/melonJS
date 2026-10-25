@@ -1382,6 +1382,31 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
+	 * A tile layer drawn tile by tile: the sprite shaders keep each tile's
+	 * samples half a texel inside it (see `gpu/frame.js`), so two tiles
+	 * never blend the next tile of their tileset in along their edge.
+	 * @ignore
+	 * @internal
+	 */
+	beginTileLayer() {
+		this.drawingTiles = true;
+		this.batchers.forEach((batcher) => {
+			batcher.syncFrameClamp?.();
+		});
+	}
+
+	/**
+	 * @ignore
+	 * @internal
+	 */
+	endTileLayer() {
+		this.drawingTiles = false;
+		this.batchers.forEach((batcher) => {
+			batcher.syncFrameClamp?.();
+		});
+	}
+
+	/**
 	 * Lazy-init the orientation-specific GPU tilemap renderer.
 	 * @param {string} orientation
 	 * @returns {object|undefined}
@@ -2684,11 +2709,12 @@ export default class WebGLRenderer extends Renderer {
 			this.batchers.has("litQuad") &&
 			this.activeLightCount > 0 &&
 			this.currentNormalMap !== null;
-		this.setBatcher(useLit ? "litQuad" : "quad");
-
+		// the sprite's own effect, or the default program. Left bound after
+		// the quad: the next sprite drawn with the same effect joins the
+		// same draw, and one drawn without it puts the default back here
 		const shader = this.customShader;
+		this.setBatcher(useLit ? "litQuad" : "quad", shader);
 		if (shader != null) {
-			this.currentBatcher.useShader(shader);
 			// (re)bind any extra textures a ShaderEffect declared via setTexture
 			shader._prepareTextures?.(this.currentBatcher);
 		}
@@ -2743,10 +2769,6 @@ export default class WebGLRenderer extends Renderer {
 				reupload,
 			);
 		}
-
-		if (typeof shader === "object") {
-			this.currentBatcher.useShader(this.currentBatcher.defaultShader);
-		}
 	}
 
 	/**
@@ -2766,10 +2788,9 @@ export default class WebGLRenderer extends Renderer {
 		if (this.customShader?._screenTextureUniforms?.length > 0) {
 			this.toFrameTexture();
 		}
-		this.setBatcher("quad");
 		const shader = this.customShader;
+		this.setBatcher("quad", shader);
 		if (shader != null) {
-			this.currentBatcher.useShader(shader);
 			shader._prepareTextures?.(this.currentBatcher);
 		}
 		// computed last: it is a scratch array, valid until the next call
@@ -3462,12 +3483,21 @@ export default class WebGLRenderer extends Renderer {
 	 * decoupled from {@link WebGLRenderer#setAntiAlias} (which controls MSAA).
 	 * Records the setting (via the base) then re-filters every currently-bound
 	 * texture. WebGL only.
-	 * @param {"auto"|"nearest"|"linear"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 * @param {"auto"|"nearest"|"linear"|"linear-mipmap"} [mode="auto"] - `"auto"` follows `antiAlias`
 	 * @see Renderer#getDefaultTextureFilter
+	 * @example
+	 * // smooth, and from the mipmaps wherever something is drawn small
+	 * app.renderer.setTextureFilter("linear-mipmap");
+	 * // back to the antiAlias setting
+	 * app.renderer.setTextureFilter("auto");
 	 */
 	setTextureFilter(mode = "auto") {
 		super.setTextureFilter(mode);
 		this._reapplyTextureFilter(this._glTextureFilter());
+		// under "linear-mipmap" a sprite keeps its samples inside its frame
+		this.batchers.forEach((batcher) => {
+			batcher.syncFrameClamp?.();
+		});
 	}
 
 	/**

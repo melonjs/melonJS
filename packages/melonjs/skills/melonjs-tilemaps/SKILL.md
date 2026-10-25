@@ -205,7 +205,9 @@ opposite of `level.load`'s.
 
 Draw collision geometry in Tiled on an object layer and melonJS turns it into
 world shapes automatically — rectangles, polygons, polylines, ellipses and
-points all work.
+points all work. On an isometric map they are projected with the map's tile
+ratio; a circle stays an `Ellipse`, but any other ellipse comes out tilted and
+becomes a `Polygon`, so code that checks a shape's type should expect either.
 
 The contract is the **layer name**: melonJS lowercases it and checks whether it
 *contains* `"collision"` (so `collision`, `Collision`, `world collision` all
@@ -220,7 +222,9 @@ geometry, which the world auto-registers with the active adapter on `addChild`.
 
 For per-object physics, set the object's custom properties in Tiled; they arrive
 on the settings object passed to your entity's constructor. Properties set on
-the object's tile are read with `settings.resolvedProperty(name)`.
+the object's tile are read with `settings.resolvedProperty(name)`. One is also
+applied to the object the map creates: an `int` property named
+`visibilityLayer` sets which cameras draw it (see `melonjs-camera-and-drawing`).
 
 ## Map orientations
 
@@ -357,6 +361,9 @@ unanimated layer into the offscreen-bake path instead.
 | a property set on a tile is undefined on the object's `settings` | tile properties are not copied onto `settings`: read them with `settings.resolvedProperty(name)` |
 | objects placed from a classed tile come out as plain sprites | that class is not registered, it is a built-in name, or the object has a class or a registered name of its own, which come first |
 | missing tiles or a blank map | the `.tsx` or tileset image was not preloaded |
+| a tileset's transparent color (`trans`) still shows (the console says it could not be applied) | the image cannot be read back: one from another origin needs CORS headers on the server and `loader.setOptions({ crossOrigin: "anonymous" })` (without them WebGL and WebGPU cannot draw it at all), and a compressed texture cannot be changed: export it with an alpha channel instead |
+| changing tiles at runtime is slow on a pre-rendered layer | outside an orthogonal map whose tiles fit their cells, a changed tile re-bakes the whole layer before it next draws: keep layers you edit often off `preRender` |
+| thin lines between tiles on the Canvas renderer, with smoothing on | filtering blends in the next tile of the tileset or its spacing, which a canvas cannot prevent: set `antiAlias: false`, or `preRender` the layer. WebGL and WebGPU keep each tile to itself |
 | tilemap slow on some machines | layer fell back off the shader path — check the console warning for the reason |
 
 ## Related skills

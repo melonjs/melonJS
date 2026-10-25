@@ -4,11 +4,12 @@
 // single-texture group-1 shape the effect scaffold shares (the QUAD family
 // batches across eight textures and has its own group-1 layout).
 //
-// Vertex layout (28-byte stride, frozen, shared with the WebGL backend):
+// Vertex layout (36-byte stride, frozen, shared with the WebGL backend):
 //   @location(0) aVertex    float32x3  offset 0
 //   @location(1) aRegion    float32x2  offset 12
 //   @location(2) aColor     unorm8x4   offset 20
 //   @location(3) aTextureId float32    offset 24 (unused here)
+//   @location(4) aFrame     float32x2  offset 28 (unused here)
 //
 // aColor arrives from a packed ARGB uint32 (Color.toUint32). Little-endian
 // memory bytes are [B,G,R,A] and unorm8x4 maps byte i -> component i, so the

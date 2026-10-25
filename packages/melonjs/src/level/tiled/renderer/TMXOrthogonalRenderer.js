@@ -89,8 +89,14 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 
 		// get top-left and bottom-right tile position
 		const start = this.pixelToTileCoords(
-			Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
-			Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
+			Math.max(
+				rect.pos.x - Math.max(layer.maxTileSize.width - layer.tilewidth, 0),
+				0,
+			),
+			Math.max(
+				rect.pos.y - Math.max(layer.maxTileSize.height - layer.tileheight, 0),
+				0,
+			),
 			vector2dPool.get(),
 		).floorSelf();
 

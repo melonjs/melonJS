@@ -460,6 +460,49 @@ describe("Camera2d", () => {
 			// deadzone y = ~~((600 - 100) / 2 - 100 * 0.25) = ~~(250 - 25) = 225
 			expect(camera.deadzone.pos.y).toEqual(225);
 		});
+
+		it("keeps every edge on a whole pixel", () => {
+			const { camera } = setup();
+			// the default deadzone is a sixth of the view: 213.33 x 121.67
+			camera.resize(1280, 730);
+			const zone = camera.deadzone;
+			for (const edge of [zone.left, zone.right, zone.top, zone.bottom]) {
+				expect(Number.isInteger(edge)).toBe(true);
+			}
+			// the nearest whole size to the one asked for
+			camera.setDeadzone(213.6, 99.4);
+			expect(camera.deadzone.width).toEqual(214);
+			expect(camera.deadzone.height).toEqual(99);
+			// rounded either way, as the nearest is
+			camera.setDeadzone(213.4, 99.6);
+			expect(camera.deadzone.width).toEqual(213);
+			expect(camera.deadzone.height).toEqual(100);
+		});
+
+		it("brings a camera following a whole-pixel target to rest on a whole pixel", () => {
+			const { camera } = setup();
+			camera.resize(1280, 730);
+			camera.setBounds(0, 0, 100000, 100000);
+			camera.reset(20000, 20000);
+			const target = new Vector2d(20640, 20365);
+			camera.follow(target, camera.AXIS.BOTH);
+			// right and left, then down and up: the camera is pushed by the
+			// right and bottom edges as much as by the left and top ones
+			for (const [dx, dy] of [
+				[7, 0],
+				[-7, 0],
+				[0, 7],
+				[0, -7],
+			]) {
+				for (let i = 0; i < 100; i++) {
+					target.x += dx;
+					target.y += dy;
+					camera.update(16);
+					expect(Number.isInteger(camera.pos.x)).toBe(true);
+					expect(Number.isInteger(camera.pos.y)).toBe(true);
+				}
+			}
+		});
 	});
 
 	describe("focusOn()", () => {

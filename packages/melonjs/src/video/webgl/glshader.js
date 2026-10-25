@@ -8,7 +8,11 @@ import { extractAttributes } from "./utils/attributes.js";
 import { getMaxShaderPrecision, setPrecision } from "./utils/precision.js";
 import { compileProgram } from "./utils/program.js";
 import { minify } from "./utils/string.js";
-import { captureValue, extractUniforms } from "./utils/uniforms.js";
+import {
+	captureValue,
+	extractUniforms,
+	valuesMatch,
+} from "./utils/uniforms.js";
 
 /**
  * a complete custom shader program. Historically a WebGL-only GLSL
@@ -210,6 +214,15 @@ export default class GLShader {
 		 */
 		this._uniformCache = Object.create(null);
 
+		/**
+		 * the batcher that last bound this shader, whose queued quads a
+		 * uniform change draws first (see {@link GLShader#setUniform})
+		 * @type {object|undefined}
+		 * @ignore
+		 * @internal
+		 */
+		this._host = undefined;
+
 		if (this.isWebGL) {
 			// defer compile if constructed mid-suspended-window; replay handles it
 			if (gl.isContextLost()) {
@@ -366,6 +379,24 @@ export default class GLShader {
 	}
 
 	/**
+	 * Draw the quads the batcher hosting this shader queued with it, before
+	 * something they are drawn with changes (a uniform, a texture): they
+	 * draw when the batch is flushed, and would otherwise take the new one
+	 * @ignore
+	 * @internal
+	 */
+	_drawQueued() {
+		const host = this._host;
+		if (
+			host !== undefined &&
+			host.vertexData.vertexCount > 0 &&
+			(host.currentShader === this || host.currentShader?._shader === this)
+		) {
+			host.flush();
+		}
+	}
+
+	/**
 	 * Set the uniform to the given value
 	 * @param {string} name - the uniform name
 	 * @param {number|boolean|number[]|Float32Array|object} value - the value to assign to that
@@ -381,25 +412,34 @@ export default class GLShader {
 		if (this.destroyed) {
 			return;
 		}
+		const incoming =
+			typeof value === "object" &&
+			value !== null &&
+			typeof value.toArray === "function"
+				? value.toArray()
+				: value;
+		// quads queued with this shader and not drawn yet were queued under
+		// the value this one replaces: the batcher holding them draws them
+		// first. The same value again changes nothing, so sprites sharing a
+		// shader keep sharing a draw
+		if (
+			this._host?.vertexData.vertexCount > 0 &&
+			!valuesMatch(this._uniformCache[name], incoming)
+		) {
+			this._drawQueued();
+		}
 		// cache via captureValue (slot reuse, mutation-detached); pass
 		// caller's value to GL (uniform setters copy synchronously)
 		let cached;
-		let glValue;
-		if (typeof value === "object" && value !== null) {
-			if (typeof value.toArray === "function") {
-				const arr = value.toArray();
-				cached = captureValue(this._uniformCache[name], arr);
-				glValue = arr;
-			} else if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-				cached = captureValue(this._uniformCache[name], value);
-				glValue = value;
+		const glValue = incoming;
+		if (typeof incoming === "object" && incoming !== null) {
+			if (Array.isArray(incoming) || ArrayBuffer.isView(incoming)) {
+				cached = captureValue(this._uniformCache[name], incoming);
 			} else {
-				cached = value;
-				glValue = value;
+				cached = incoming;
 			}
 		} else {
-			cached = value;
-			glValue = value;
+			cached = incoming;
 		}
 		this._uniformCache[name] = cached;
 

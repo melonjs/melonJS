@@ -348,6 +348,45 @@ export default class TMXObject {
 	}
 
 	/**
+	 * An ellipse object on an isometric map, projected with the map as its
+	 * other shapes are: the ellipse inside the object's box, inside the box
+	 * as projected. A circle stays an ellipse, level on screen, its centre
+	 * and radii projected here. Any other ellipse comes out tilted, which an
+	 * Ellipse cannot be: it becomes a polygon around it, in the object's own
+	 * space, which parseTMXShapes then projects with the other shapes.
+	 * @returns {Ellipse|Polygon} the shape
+	 */
+	#isoEllipse() {
+		const rx = this.width / 2;
+		const ry = this.height / 2;
+		if (rx === ry) {
+			// its centre, turned with the object about the object's position
+			const cos = Math.cos(this.rotation);
+			const sin = Math.sin(this.rotation);
+			const cx = rx * cos - ry * sin;
+			const cy = rx * sin + ry * cos;
+			// a circle of radius r projects to r * sqrt(2) across, times the
+			// tile ratio, and r / sqrt(2) down
+			return ellipsePool.get(
+				(cx - cy) * this.#isoRatio,
+				(cx + cy) / 2,
+				this.width * Math.SQRT2 * this.#isoRatio,
+				this.width * Math.SQRT1_2,
+			);
+		}
+		// as many points as an ellipse takes to collide as a polygon
+		const segments = 16;
+		const points = [];
+		for (let i = 0; i < segments; i++) {
+			const angle = (i * 2 * Math.PI) / segments;
+			points.push(
+				vector2dPool.get(rx + rx * Math.cos(angle), ry + ry * Math.sin(angle)),
+			);
+		}
+		return polygonPool.get(0, 0, points).rotate(this.rotation);
+	}
+
+	/**
 	 * parses the TMX shape definition and returns a corresponding array of shape objects
 	 * @private
 	 * @returns {Polygon[]|Line[]|Ellipse[]|RoundRect[]} an array of shape objects
@@ -357,11 +396,15 @@ export default class TMXObject {
 
 		switch (this.shapeType) {
 			case "ellipse":
-				shapes.push(
-					ellipsePool
-						.get(this.width / 2, this.height / 2, this.width, this.height)
-						.rotate(this.rotation),
-				);
+				if (this.orientation === "isometric" && this.gid === null) {
+					shapes.push(this.#isoEllipse());
+				} else {
+					shapes.push(
+						ellipsePool
+							.get(this.width / 2, this.height / 2, this.width, this.height)
+							.rotate(this.rotation),
+					);
+				}
 				break;
 
 			case "capsule": {

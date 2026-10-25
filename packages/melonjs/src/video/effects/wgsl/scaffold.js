@@ -3,7 +3,7 @@
  * `glsl_realization.js`'s source templating. The user body is embedded
  * VERBATIM (WGSL module-scope declarations are order-independent); the
  * scaffold contributes the vertex/fragment entry points over the frozen
- * 28-byte quad layout, the frame-globals and material groups, and the
+ * 36-byte quad layout, the frame-globals and material groups, and the
  * builtin declarations the parser detected.
  *
  * Frozen conventions carried over from the core quad shader:
@@ -14,6 +14,17 @@
  * @ignore
  * @internal
  */
+
+/**
+ * reads of the frame uniform by frame.js's FRAME_WGSL helpers (not of
+ * `fx.ME_frame_half`: no word boundary inside the longer name)
+ * @ignore
+ */
+const SPRITE_FRAME_READ = /\bfx\.ME_frame\b/;
+/**
+ * @ignore
+ */
+const SPRITE_FRAME_READS = /\bfx\.ME_frame\b/g;
 
 /**
  * builtin group-3 bindings are assigned ABOVE the highest user binding so
@@ -61,6 +72,14 @@ export function assignBuiltinBindings(parsed) {
 export function buildWGSLModule(body, parsed) {
 	const builtins = parsed.builtins;
 	const bindings = assignBuiltinBindings(parsed);
+	// a body keeping its samples inside its frame (frame.js's FRAME_WGSL):
+	// on a sprite the frame comes with the quad, so its reads of the
+	// uniform become reads of the frame the vertex stage hands over. The
+	// struct keeps the member, which a mesh hosting the body still reads
+	const spriteFrame = SPRITE_FRAME_READ.test(body);
+	if (spriteFrame) {
+		body = body.replace(SPRITE_FRAME_READS, "ME_frame_v");
+	}
 
 	const scaffold = [
 		"// ---- melonJS effect scaffold ----",
@@ -80,6 +99,9 @@ export function buildWGSLModule(body, parsed) {
 		// the interpolated tint, exposed under its GLSL varying name so
 		// re-sampling bodies port literally
 		scaffold.push("var<private> vColor : vec4f;");
+	}
+	if (spriteFrame) {
+		scaffold.push("var<private> ME_frame_v : vec4f;");
 	}
 	if (builtins.noiseUV) {
 		scaffold.push(
@@ -115,6 +137,7 @@ export function buildWGSLModule(body, parsed) {
 		"\t@location(1) vColor : vec4f,",
 		...(builtins.screenUV ? ["\t@location(2) vScreenUV : vec2f,"] : []),
 		...(builtins.noiseUV ? ["\t@location(3) vNoiseUV : vec2f,"] : []),
+		...(spriteFrame ? ["\t@location(4) vFrame : vec4f,"] : []),
 		"};",
 		"",
 		"@vertex",
@@ -123,6 +146,7 @@ export function buildWGSLModule(body, parsed) {
 		"\t@location(1) aRegion : vec2f,",
 		"\t@location(2) aColor : vec4f,",
 		"\t@location(3) aTextureId : f32,",
+		...(spriteFrame ? ["\t@location(4) aFrame : vec2f,"] : []),
 		") -> VSOut {",
 		"\tvar out : VSOut;",
 		"\tlet clip = uFrame.projection * vec4f(aVertex, 1.0);",
@@ -142,6 +166,15 @@ export function buildWGSLModule(body, parsed) {
 					"\tout.vNoiseUV = aRegion * (ME.size_img / ME.size_obj) - ME.offset / ME.size_obj;",
 				]
 			: []),
+		...(spriteFrame
+			? [
+					"\tout.vFrame = select(",
+					"\t\tvec4f(min(aRegion, aFrame), max(aRegion, aFrame)),",
+					"\t\tvec4f(-1.0e6, -1.0e6, 1.0e6, 1.0e6),",
+					"\t\taFrame.x < -5.0e5,",
+					"\t);",
+				]
+			: []),
 		"\treturn out;",
 		"}",
 		"",
@@ -153,6 +186,19 @@ export function buildWGSLModule(body, parsed) {
 		...(builtins.screenUV ? ["\tscreen_uv = in.vScreenUV;"] : []),
 		...(builtins.noiseUV ? ["\tnoise_uv = in.vNoiseUV;"] : []),
 		...(builtins.vColor ? ["\tvColor = in.vColor;"] : []),
+		...(spriteFrame
+			? [
+					// a side on the texture's own edge (within a hundredth of a
+					// texel) has no frame past it, and is left unbounded
+					"\tlet meEdge = fx.ME_frame_half * 0.02;",
+					"\tME_frame_v = vec4f(",
+					"\t\tselect(in.vFrame.x, -1.0e6, in.vFrame.x <= meEdge.x),",
+					"\t\tselect(in.vFrame.y, -1.0e6, in.vFrame.y <= meEdge.y),",
+					"\t\tselect(in.vFrame.z, 1.0e6, in.vFrame.z >= 1.0 - meEdge.x),",
+					"\t\tselect(in.vFrame.w, 1.0e6, in.vFrame.w >= 1.0 - meEdge.y),",
+					"\t);",
+				]
+			: []),
 		"\tlet texColor = textureSample(uTexture, uSampler, in.vRegion) * in.vColor;",
 		"\treturn apply(texColor, in.vRegion);",
 		"}",

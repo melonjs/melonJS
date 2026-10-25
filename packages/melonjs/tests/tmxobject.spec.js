@@ -440,6 +440,95 @@ describe("TMXObject", () => {
 					]);
 				});
 			}
+
+			describe("ellipses", () => {
+				// where Tiled puts the point at angle t of the ellipse inside
+				// the object's box, the box turned by `rotation` about the
+				// object's position
+				const onEllipse = (tw, th, w, h, t, rotation = 0) => {
+					const x = w / 2 + (w / 2) * Math.cos(t);
+					const y = h / 2 + (h / 2) * Math.sin(t);
+					const c = Math.cos(rotation);
+					const s = Math.sin(rotation);
+					return project(tw, th, x * c - y * s, x * s + y * c);
+				};
+				const ellipse = (map, w, h, rotation = 0) => {
+					return new TMXObject(
+						map,
+						{
+							name: "",
+							x: 0,
+							y: 0,
+							width: w,
+							height: h,
+							rotation,
+							ellipse: true,
+						},
+						0,
+					);
+				};
+
+				for (const [tw, th] of [
+					[64, 32],
+					[128, 32],
+					[186, 108],
+				]) {
+					it.each([[0], [30]])(
+						`projects a circle turned by %s degrees with ${tw}x${th} tiles, as an ellipse`,
+						(degrees) => {
+							const rotation = (degrees * Math.PI) / 180;
+							const shape = ellipse(isoMap(tw, th), 100, 100, degrees)
+								.shapes[0];
+							expect(shape.type).toEqual("Ellipse");
+							// every point of the projected circle lies on it
+							for (let k = 0; k < 16; k++) {
+								const [x, y] = onEllipse(
+									tw,
+									th,
+									100,
+									100,
+									(k * Math.PI) / 8,
+									rotation,
+								);
+								const u = (x - shape.pos.x) / shape.radiusV.x;
+								const v = (y - shape.pos.y) / shape.radiusV.y;
+								expect(u * u + v * v).toBeCloseTo(1, 6);
+							}
+						},
+					);
+
+					it(`projects any other ellipse with ${tw}x${th} tiles, as a polygon on it`, () => {
+						const shape = ellipse(isoMap(tw, th), 216, 108).shapes[0];
+						expect(shape.type).toEqual("Polygon");
+						const expected = [];
+						for (let k = 0; k < 16; k++) {
+							expected.push(onEllipse(tw, th, 216, 108, (k * Math.PI) / 8));
+						}
+						expectPoints(shape, expected);
+					});
+				}
+
+				it("turns any other ellipse with the object before projecting it", () => {
+					const rotation = Math.PI / 6;
+					const shape = ellipse(isoMap(186, 108), 216, 108, 30).shapes[0];
+					const expected = [];
+					for (let k = 0; k < 16; k++) {
+						expected.push(
+							onEllipse(186, 108, 216, 108, (k * Math.PI) / 8, rotation),
+						);
+					}
+					expectPoints(shape, expected);
+				});
+
+				it("leaves an ellipse on an orthogonal map as it was", () => {
+					const shape = ellipse(mockMap(), 216, 108).shapes[0];
+					expect(shape.type).toEqual("Ellipse");
+					expect(shape.pos.x).toEqual(108);
+					expect(shape.pos.y).toEqual(54);
+					expect(shape.radiusV.x).toEqual(108);
+					expect(shape.radiusV.y).toEqual(54);
+				});
+			});
 		});
 	});
 

@@ -1,6 +1,7 @@
 // the lighting math modules are pure CPU code shared with the GL backend
 // (published std140 layout, no GL calls)
 
+import { isFramed } from "../../gpu/frame.js";
 import { transformQuadCorners } from "../../gpu/quadcorners.ts";
 import {
 	BLOCK_BYTES,
@@ -65,11 +66,19 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 						offset: 6 * Float32Array.BYTES_PER_ELEMENT,
 					},
 					{
+						// the UV of the quad's opposite corner: the frame the
+						// quad draws (see quad-lit.wgsl). Fifth, as in every
+						// sprite layout
+						name: "aFrame",
+						format: "float32x2",
+						offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+					},
+					{
 						// specular exponent, 0 = matte (every sprite that does
 						// not opt in)
 						name: "aShininess",
 						format: "float32",
-						offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+						offset: 9 * Float32Array.BYTES_PER_ELEMENT,
 					},
 				],
 			},
@@ -274,8 +283,10 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	) {
 		const renderer = this.renderer;
 		// resolve the combined color+normal material for this segment
+		const mipmaps = this.wantsMipmaps(texture);
 		const record = renderer.textureStore.getResidentRecord(texture, {
 			force: reupload,
+			mipmaps,
 		});
 		const normal = this.residentNormalMap(normalMap);
 
@@ -292,12 +303,16 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 					: renderer.getDefaultTextureFilter();
 			const wrap = texture.repeat ?? "no-repeat";
 			const store = renderer.textureStore;
+			// the color under "linear-mipmap" samples its chain, as on the
+			// plain quad path; the normal map keeps to its full size (the
+			// average of several normals is not a normal)
+			const color = store.viewAndSampler(record, texture, wrap, mipmaps);
 			combined = this.device.createBindGroup({
 				label: "melonJS lit material",
 				layout: this.litMaterialLayout,
 				entries: [
-					{ binding: 0, resource: record.view },
-					{ binding: 1, resource: store.getSampler(filter, wrap) },
+					{ binding: 0, resource: color.view },
+					{ binding: 1, resource: color.sampler },
 					{ binding: 2, resource: normal.view },
 					{ binding: 3, resource: store.getSampler(filter, "no-repeat") },
 				],
@@ -314,7 +329,19 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 		// smear onto the previous segment's vertices.
 		this.currentQuadShininess = renderer.currentShininess || 0;
 		// transform + push the four corners exactly like the base batcher
-		this.pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint);
+		this.pushQuadVertices(
+			x,
+			y,
+			w,
+			h,
+			u0,
+			v0,
+			u1,
+			v1,
+			tint,
+			0,
+			isFramed(texture),
+		);
 	}
 
 	/**
@@ -330,10 +357,22 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 	 * @param {number} v1 - texture UV (v1)
 	 * @param {number} tint - tint color in UINT32 (argb) format
 	 * @param {number} [textureId=0] - the segment slot
+	 * @param {boolean} [framed=true] - false when the quad has no frame to keep to
 	 * @override
 	 */
-	pushQuadVertices(x, y, w, h, u0, v0, u1, v1, tint, textureId = 0) {
-		const vertexData = this.vertexData;
+	pushQuadVertices(
+		x,
+		y,
+		w,
+		h,
+		u0,
+		v0,
+		u1,
+		v1,
+		tint,
+		textureId = 0,
+		framed = true,
+	) {
 		const shininess = this.currentQuadShininess || 0;
 		const [vec0, vec1, vec2, vec3] = transformQuadCorners(
 			this.renderer.currentTransform,
@@ -343,10 +382,20 @@ export default class WebGPULitQuadBatcher extends WebGPUQuadBatcher {
 			h,
 			this.renderer.currentDepth,
 		);
-		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, textureId, shininess);
-		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, textureId, shininess);
-		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, textureId, shininess);
-		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, textureId, shininess);
+		this.vertexData.pushSpriteQuad(
+			vec0,
+			vec1,
+			vec2,
+			vec3,
+			u0,
+			v0,
+			u1,
+			v1,
+			tint,
+			textureId,
+			framed,
+			shininess,
+		);
 	}
 
 	/**

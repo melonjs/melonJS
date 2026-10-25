@@ -330,6 +330,20 @@ export type ApplicationSettings = {
 	 *   when `false`): unchanged behavior.
 	 * - `"nearest"` — crisp/pixelated upscaling, regardless of `antiAlias`.
 	 * - `"linear"` — smooth, regardless of `antiAlias`.
+	 * - `"linear-mipmap"` — smooth, and a sprite, a tile or a text drawn
+	 *   smaller than its texture (a scaled-down sprite, or anything under a
+	 *   zoomed-out camera) takes its colour from the texture's mipmaps, its
+	 *   pre-shrunk copies, instead of shimmering as it moves. A sprite cut
+	 *   from an atlas or a tileset keeps its samples inside its own frame,
+	 *   so the neighbouring frames do not streak along its edges (a frame
+	 *   whose edges are not on a power of two can still mix a little of its
+	 *   neighbour into its outermost pixel at the smallest sizes, and a
+	 *   sprite drawn through a {@link ShaderEffect} is not kept to its
+	 *   frame); otherwise, drawn at its size or larger, a texture is the same
+	 *   as under `"linear"`. Not for the
+	 *   textures the engine renders into, nor a video, which keep to their
+	 *   full size. On WebGPU each texture it applies to takes about a third
+	 *   more memory.
 	 *
 	 * This is the **default** for every texture; a {@link Mesh} can still override
 	 * it per-mesh via its own `textureFilter` setting (which wins).
@@ -348,8 +362,13 @@ export type ApplicationSettings = {
 	 *     antiAlias: true,          // MSAA on
 	 *     textureFilter: "nearest", // textures stay crisp
 	 * });
+	 *
+	 * // smooth, and smooth again when zoomed out
+	 * new Application(1280, 720, {
+	 *     textureFilter: "linear-mipmap",
+	 * });
 	 */
-	textureFilter: "auto" | "nearest" | "linear";
+	textureFilter: "auto" | "nearest" | "linear" | "linear-mipmap";
 
 	/**
 	 * How many texture units the WebGL multi-texture batchers may use
@@ -507,6 +526,35 @@ export type ApplicationSettings = {
 	 * @see ApplicationSettings.scaleRounding
 	 */
 	subPixel: boolean;
+
+	/**
+	 * Run the game's updates in a steady pattern on a display that refreshes
+	 * at `maxfps`, or a whole multiple or fraction of it: one update every
+	 * frame at 60 Hz, one every other frame at 120 Hz, for the default
+	 * `maxfps` of 60.
+	 *
+	 * The game updates in fixed steps, as many as the time since the last
+	 * frame holds. That time jitters around the display's refresh by up to a
+	 * millisecond, so on a 60 Hz display a frame can get no update and the
+	 * next one two: anything that scrolls or moves steadily stutters. With
+	 * this on, the time is counted in whole display frames, the rest carried
+	 * to the next frame, so the steps fall evenly and the game keeps its
+	 * speed. A display within 2% of `maxfps`, or of 2, 3 or 4 times it, or a
+	 * half, a third or a quarter of it, is counted at exactly that rate (a
+	 * 59.94 Hz screen runs the game 0.1% slower than the wall clock). The
+	 * display's rate is learned as the game runs, and learned again when it
+	 * changes, such as when the window moves to another screen.
+	 *
+	 * It sets `timer.syncToDisplay` when the application is initialized.
+	 * The timer is shared, so with more than one application the last one
+	 * initialized decides, and a game can turn it on or off later through
+	 * `timer.syncToDisplay`.
+	 * @default false
+	 * @example
+	 * // steady updates on a 60 or 120 Hz display
+	 * const app = new Application(1280, 720, { syncToDisplay: true });
+	 */
+	syncToDisplay: boolean;
 
 	/**
 	 * whether to enable verbose mode (additional console output for debugging)

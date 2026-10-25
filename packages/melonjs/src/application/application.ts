@@ -809,6 +809,10 @@ export default class Application {
 
 		this.isInitialized = true;
 
+		// how the update loop counts frame times, on the timer every
+		// application shares (so the last one initialized decides)
+		timer.syncToDisplay = this.settings.syncToDisplay;
+
 		// Only publish this instance as the default `game` once it is fully
 		// usable — a constructed-but-not-initialized Application has no
 		// renderer, which is precisely the half-built state this split
@@ -866,7 +870,9 @@ export default class Application {
 	updateFrameRate(): void {
 		// reset the frame counter
 		this.frameCounter = 0;
-		this.frameRate = ~~(0.5 + 60 / timer.maxfps);
+		// an update every `frameRate` frames: every frame at a maxfps of 60
+		// or more (rounded down to 0 above 120, it never updated at all)
+		this.frameRate = Math.max(1, ~~(0.5 + 60 / timer.maxfps));
 
 		// set step size based on the updatesPerSecond
 		this.stepSize = 1000 / this.world.fps;

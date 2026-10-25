@@ -1,4 +1,5 @@
 import { Color, Matrix3d } from "../../src/index.js";
+import Renderer from "../../src/video/renderer.js";
 
 /**
  * A mock WebGPU renderer for unit-testing batchers without a GPU device:
@@ -277,15 +278,37 @@ export function createMockWebGPURenderer() {
 			// one stable record per atlas object (the lit batcher composes
 			// combined bind groups from the raw view)
 			records: new Map(),
-			getResidentRecord(texture) {
+			// options are recorded like getBinding's; a record gains a mip
+			// chain the first time a draw asks for one, as in the real store
+			residentOptions: [],
+			getResidentRecord(texture, options) {
+				this.residentOptions.push({ texture, options });
 				if (!this.records.has(texture)) {
 					this.records.set(texture, {
 						view: { texture },
 						width: 64,
 						height: 64,
+						mipLevelCount: 1,
 					});
 				}
-				return this.records.get(texture);
+				const record = this.records.get(texture);
+				if (options?.mipmaps === true) {
+					record.mipLevelCount = 7;
+				}
+				return record;
+			},
+			// the real store's pairing: mipmaps only for a linear filter over
+			// a record that has a chain
+			viewAndSampler(record, texture, wrap, wantMips) {
+				const filter =
+					typeof texture.filter === "string" ? texture.filter : "linear";
+				const mip =
+					wantMips === true && record.mipLevelCount > 1 && filter === "linear";
+				return {
+					view: record.view,
+					sampler: this.getSampler(filter, wrap, mip),
+					key: `${filter}|${wrap}|${mip ? "mip" : "flat"}`,
+				};
 			},
 			samplers: new Map(),
 			getSampler(filter, repeat, mipmaps = false) {
@@ -300,6 +323,11 @@ export function createMockWebGPURenderer() {
 		},
 		getDefaultTextureFilter() {
 			return "linear";
+		},
+		// the application settings the batchers read
+		settings: { textureFilter: "auto" },
+		wantsMipmaps(texture) {
+			return Renderer.prototype.wantsMipmaps.call(this, texture);
 		},
 		ensurePass() {
 			return pass;

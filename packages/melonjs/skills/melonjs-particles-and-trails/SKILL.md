@@ -320,6 +320,7 @@ answer when you want discrete puffs rather than a continuous ribbon.
 | symptom | cause |
 |---|---|
 | trail looks flat under a `Camera3d` | `Trail` is 2D; use `Trail3d` |
+| particles clutter a minimap or a second camera | every camera draws them: set the emitter's `visibilityLayer` to a layer that camera's `cullMask` leaves out (see `melonjs-camera-and-drawing`) |
 | `Trail3d` draws nothing, with a console warning | it needs a `Camera3d`; the app's `cameraClass` is still the 2D default |
 | `trail.tint` does nothing | `Trail` cannot be tinted at all; `Trail3d` can |
 | assigning `maxPoints` throws | `Trail3d` sizes its geometry once; pass `length` to the constructor |

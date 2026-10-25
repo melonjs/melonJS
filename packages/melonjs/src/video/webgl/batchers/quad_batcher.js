@@ -1,3 +1,4 @@
+import { FRAME_UNBOUNDED, frameClampMode, isFramed } from "../../gpu/frame.js";
 import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
 import IndexBuffer from "../buffer/index.js";
 import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
@@ -41,7 +42,7 @@ export default class QuadBatcher extends MaterialBatcher {
 			attributes: [
 				{
 					// vec3: (x, y, z). z carries `renderable.depth` for
-					// perspective projection (Camera3d). Stride = 28 bytes.
+					// perspective projection (Camera3d). Stride = 36 bytes.
 					name: "aVertex",
 					format: "float32x3",
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
@@ -61,6 +62,16 @@ export default class QuadBatcher extends MaterialBatcher {
 					format: "float32",
 					offset: 6 * Float32Array.BYTES_PER_ELEMENT,
 				},
+				{
+					// the UV of the quad's opposite corner, which with the
+					// vertex's own makes the frame the quad draws (see
+					// shaders/frameclamp.js). After the attributes a custom
+					// shader declares, so those keep their locations; the
+					// lit layout keeps it here too, its extras after it
+					name: "aFrame",
+					format: "float32x2",
+					offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+				},
 			],
 			shader: {
 				vertex: quadMultiVertex,
@@ -69,6 +80,7 @@ export default class QuadBatcher extends MaterialBatcher {
 		});
 
 		this.bindColorSamplers();
+		this.syncFrameClamp();
 
 		/**
 		 * whether multi-texture batching is currently active
@@ -119,6 +131,41 @@ export default class QuadBatcher extends MaterialBatcher {
 		for (let i = 0; i < this.maxBatchTextures; i++) {
 			this.defaultShader.setUniform("uSampler" + i, i);
 		}
+	}
+
+	/**
+	 * Point the default shader's frame clamp at the renderer's texture
+	 * filter: on under `"linear-mipmap"`, where a sprite drawn small reads a
+	 * mipmap level wide enough to reach into the next frame of its atlas,
+	 * off otherwise (see `shaders/frameclamp.js`). Called at init and when
+	 * the filter changes; the quads already queued draw under the mode they
+	 * were queued with.
+	 * @ignore
+	 * @internal
+	 */
+	syncFrameClamp() {
+		const shader = this.defaultShader;
+		const mode = frameClampMode(this.renderer);
+		// keyed to the shader too: a rebuilt default shader starts unset
+		if (this._frameClampShader === shader && this._frameClamp === mode) {
+			return;
+		}
+		this.flush();
+		// binds the default program: keep the renderer's record of the bound
+		// program true, so the next draw re-binds whichever shader it needs
+		shader.setUniform("uFrameClamp", mode);
+		this.renderer.currentProgram = shader.program;
+		/**
+		 * the frame clamp mode last written to `_frameClampShader`
+		 * @ignore
+		 * @internal
+		 */
+		this._frameClamp = mode;
+		/**
+		 * @ignore
+		 * @internal
+		 */
+		this._frameClampShader = shader;
 	}
 
 	/**
@@ -248,12 +295,14 @@ export default class QuadBatcher extends MaterialBatcher {
 		);
 
 		// blits stay at z = 0 (screen-space, ortho); pre-PR behavior
-		// preserved unchanged
+		// preserved unchanged. A blit draws the whole target: no frame
 		const tint = 0xffffffff;
-		this.vertexData.push(vec0.x, vec0.y, 0, 0, 1, tint, 0);
-		this.vertexData.push(vec1.x, vec1.y, 0, 1, 1, tint, 0);
-		this.vertexData.push(vec2.x, vec2.y, 0, 0, 0, tint, 0);
-		this.vertexData.push(vec3.x, vec3.y, 0, 1, 0, tint, 0);
+		const open = FRAME_UNBOUNDED;
+		const vertexData = this.vertexData;
+		vertexData.pushSprite(vec0.x, vec0.y, 0, 0, 1, tint, 0, open, open);
+		vertexData.pushSprite(vec1.x, vec1.y, 0, 1, 1, tint, 0, open, open);
+		vertexData.pushSprite(vec2.x, vec2.y, 0, 0, 0, tint, 0, open, open);
+		vertexData.pushSprite(vec3.x, vec3.y, 0, 1, 0, tint, 0, open, open);
 
 		this.flush();
 
@@ -327,16 +376,10 @@ export default class QuadBatcher extends MaterialBatcher {
 					Math.min(u0, u1),
 					Math.min(v0, v1),
 				);
-				// and keep its samples inside that frame: on an atlas, the
-				// texture goes on into the neighbouring frames
-				this.currentShader._setFrameRect?.(
-					u0,
-					v0,
-					u1,
-					v1,
-					sourceWidth,
-					sourceHeight,
-				);
+				// and keep its samples inside that frame (on an atlas, the
+				// texture goes on into the neighbouring frames): the frame
+				// comes with the quad, the half texel with the texture
+				this.currentShader._setFrameTexel?.(sourceWidth, sourceHeight);
 			}
 			// direct atlas sampling: uv.y grows downward (directional bodies
 			// compensate on the pooled path, where captures are bottom-up)
@@ -369,11 +412,21 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		// 4 vertices per quad; the index buffer provides the 6 indices.
 		// textureId is the unit index for multi-texture, or 0 for
-		// single-texture fallback.
+		// single-texture fallback. A repeating texture (a pattern) samples
+		// past its UVs on purpose, so it has no frame to keep to
 		const textureId = this.useMultiTexture ? unit : 0;
-		vertexData.push(vec0.x, vec0.y, vec0.z, u0, v0, tint, textureId);
-		vertexData.push(vec1.x, vec1.y, vec1.z, u1, v0, tint, textureId);
-		vertexData.push(vec2.x, vec2.y, vec2.z, u0, v1, tint, textureId);
-		vertexData.push(vec3.x, vec3.y, vec3.z, u1, v1, tint, textureId);
+		vertexData.pushSpriteQuad(
+			vec0,
+			vec1,
+			vec2,
+			vec3,
+			u0,
+			v0,
+			u1,
+			v1,
+			tint,
+			textureId,
+			isFramed(texture),
+		);
 	}
 }

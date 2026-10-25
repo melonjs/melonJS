@@ -3,6 +3,32 @@ import { parseWGSLBody } from "./wgsl/parse.js";
 import { buildWGSLModule } from "./wgsl/scaffold.js";
 
 /**
+ * whether a uniform's new value is the one it already has: numbers by
+ * value, vectors and matrices element by element (callers reuse arrays)
+ * @param {number|number[]|ArrayLike<number>|undefined} previous - the value recorded
+ * @param {number|ArrayLike<number>} value - the incoming value
+ * @returns {boolean} true when nothing changes
+ * @ignore
+ */
+function sameValue(previous, value) {
+	if (previous === undefined) {
+		return false;
+	}
+	if (typeof value === "number" || typeof previous === "number") {
+		return previous === value;
+	}
+	if (previous.length !== value.length) {
+		return false;
+	}
+	for (let i = 0; i < value.length; i++) {
+		if (previous[i] !== value[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
  * The WGSL realization of a ShaderEffect — the WebGPU counterpart of the
  * GLShader the GLSL branch compiles.
  *
@@ -97,6 +123,19 @@ export default class WGSLEffectRealization {
 		 * @type {object|null}
 		 */
 		this.gpu = null;
+
+		/**
+		 * set by the quad batcher drawing with this effect: called before a
+		 * uniform (or the `noise_uv` rect) takes a new value, so the quads
+		 * queued under the old one draw first. The mirror is uploaded when
+		 * the queued quads draw, so without it they would all draw with the
+		 * last value set. The same value again calls nothing, so sprites
+		 * sharing the effect keep sharing a draw
+		 * @type {(() => void)|null}
+		 * @ignore
+		 * @internal
+		 */
+		this.onUniformChange = null;
 	}
 
 	/**
@@ -130,6 +169,12 @@ export default class WGSLEffectRealization {
 		// GLSL accepts booleans for bool/int uniforms — normalize
 		if (typeof value === "boolean") {
 			value = value ? 1 : 0;
+		}
+		if (
+			this.onUniformChange !== null &&
+			!sameValue(this.values.get(name), value)
+		) {
+			this.onUniformChange();
 		}
 		const index = placement.offset >> 2;
 		if (typeof value === "number") {

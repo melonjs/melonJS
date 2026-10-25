@@ -63,6 +63,11 @@ torch.softness = 0.8;      // lit core of 20% of the radius, then fading out
   count. A scene with no soft light draws exactly as before.
 - To keep a camera out of the darkness (a minimap showing the level lit),
   override `drawLighting` on the stage and skip that camera.
+- To keep one light out of a camera, put it, or a container it is in, on a
+  `visibilityLayer` the camera's `cullMask` leaves out: there it neither glows,
+  nor cuts the darkness, nor lights normal-mapped sprites (see
+  `melonjs-camera-and-drawing`). This is for a `Light2d`: a `Light3d` lights
+  the meshes of every camera.
 
 ## Multiple lights
 
@@ -199,6 +204,7 @@ See the `melonjs-3d` skill.
 | the lit area has a hard rim | `softness` is 0 (the default): set it on the light |
 | the darkness opens no wider than the glow | the hole is the light's size: add a bigger `illuminationOnly` light for the opening |
 | a minimap or second camera is dark too | every camera draws the stage's darkness: override `drawLighting` and skip that camera |
+| a light should show in one camera only | put it on a `visibilityLayer` the other camera's `cullMask` leaves out |
 | sprite not shaded by a light, only glowed over | no `normalMap` on the sprite, or the Canvas backend is active |
 | normal-mapped sprite is pure black where unlit | `Stage.ambientLightingColor` left at black |
 | the 33rd light shades nothing | `MAX_LIGHTS = 32` for the normal-map pipeline |

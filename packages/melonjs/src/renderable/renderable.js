@@ -288,6 +288,36 @@ export default class Renderable extends Rect {
 		this.visibleInAllCameras = false;
 
 		/**
+		 * The layers this renderable belongs to, as bits (1, 2, 4, 8... up to
+		 * 32 of them). A camera draws it only if it shares a bit with the
+		 * camera's {@link Camera2d#cullMask}: by default every renderable is on
+		 * layer 1 and every camera draws every layer, so it shows in all of
+		 * them. Put something on a layer a camera leaves out to keep it off that
+		 * camera only, such as the particles off a minimap. A container left
+		 * out is left out with everything inside it (the world included), and
+		 * a renderable on no layer, `0`, is drawn by no camera.
+		 * <br><br>
+		 * It decides what a camera draws, and nothing else: the renderable
+		 * still updates, collides and receives pointer events. A
+		 * {@link Light2d} a camera leaves out, itself or a container it is in,
+		 * neither glows, nor cuts its hole in the darkness, nor lights
+		 * normal-mapped sprites in that camera (a `Light3d` lights the meshes
+		 * of every camera). A
+		 * floating renderable must also pass the camera's floating rule (see
+		 * {@link Renderable#visibleInAllCameras}). On an object of a Tiled map
+		 * it can be set as an `int` custom property of the object.
+		 * @type {number}
+		 * @default 1
+		 * @see Camera2d#cullMask
+		 * @example
+		 * // particles on their own layer, and a minimap that leaves it out
+		 * const PARTICLES = 2;
+		 * emitter.visibilityLayer = PARTICLES;
+		 * minimap.cullMask = ~PARTICLES;
+		 */
+		this.visibilityLayer = 1;
+
+		/**
 		 * When enabled, an object container will automatically apply
 		 * any defined transformation before calling the child draw method.
 		 * @type {boolean}
@@ -1673,6 +1703,7 @@ export function resetRenderableState(renderable) {
 	renderable.isRenderable = true;
 	renderable.isKinematic = true;
 	renderable.visibleInAllCameras = false;
+	renderable.visibilityLayer = 1;
 	renderable.alwaysUpdate = false;
 	renderable.updateWhenPaused = false;
 	renderable.isPersistent = false;

@@ -200,14 +200,17 @@ export default class TMXObliqueRenderer extends TMXOrthogonalRenderer {
 		// add margin for oversize tiles
 		startX = Math.max(
 			Math.floor(
-				startX - (layer.maxTileSize.width - layer.tilewidth) / this.tilewidth,
+				startX -
+					Math.max(layer.maxTileSize.width - layer.tilewidth, 0) /
+						this.tilewidth,
 			),
 			0,
 		);
 		startY = Math.max(
 			Math.floor(
 				startY -
-					(layer.maxTileSize.height - layer.tileheight) / this.tileheight,
+					Math.max(layer.maxTileSize.height - layer.tileheight, 0) /
+						this.tileheight,
 			),
 			0,
 		);

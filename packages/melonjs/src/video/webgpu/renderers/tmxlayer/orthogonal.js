@@ -1,3 +1,4 @@
+import VertexArrayBuffer from "../../../buffer/vertex.js";
 import { transformQuadCorners } from "../../../gpu/quadcorners.ts";
 import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
 
@@ -9,12 +10,13 @@ import tmxLayerWGSL from "../../shaders/tmxlayer.wgsl";
 
 /**
  * byte size of the TMXUniforms block (see tmxlayer.wgsl): ten vec2f (80)
- * interleaved with one vec4f at a 16-aligned offset, two f32 and the
- * trailing vec4f tint → 112 bytes
+ * interleaved with one vec4f at a 16-aligned offset, two f32, the vec4f
+ * tint (ending at 112) and the mipmap flag, rounded up to the block's
+ * 16-byte alignment → 128 bytes
  * @ignore
  * @internal
  */
-const TMX_UNIFORM_SIZE = 112;
+const TMX_UNIFORM_SIZE = 128;
 
 /**
  * GPU-accelerated renderer for orthogonal TMX tile layers on the WebGPU
@@ -89,11 +91,13 @@ export default class OrthogonalTMXLayerGPURenderer {
 		 */
 		this.bindGroups = new Map();
 
-		// CPU staging for the uniform block and the quad vertices
+		// CPU staging for the uniform block; the quad's vertices are staged
+		// in the quad batcher's own layout, sized on first draw
 		this.uniformScratch = new Float32Array(TMX_UNIFORM_SIZE / 4);
-		this.vertexScratch = new ArrayBuffer(4 * 28);
-		this.vertexF32 = new Float32Array(this.vertexScratch);
-		this.vertexU32 = new Uint32Array(this.vertexScratch);
+		/**
+		 * @type {VertexArrayBuffer|undefined}
+		 */
+		this.vertexScratch = undefined;
 	}
 
 	/**
@@ -258,8 +262,9 @@ export default class OrthogonalTMXLayerGPURenderer {
 
 		const resource = this.getResource(layer);
 
-		// the transformed quad, shared by every tileset pass (28-byte
-		// stride: x,y,z, u,v, packed tint, textureId)
+		// the transformed quad, shared by every tileset pass, in the quad
+		// batcher's layout (its pipelines ride that layout). The shader keeps
+		// to its own tiles, so the quad carries no frame
 		const corners = transformQuadCorners(
 			renderer.currentTransform,
 			worldX,
@@ -268,26 +273,32 @@ export default class OrthogonalTMXLayerGPURenderer {
 			worldH,
 			renderer.currentDepth,
 		);
-		const f32 = this.vertexF32;
-		const u32 = this.vertexU32;
-		const uvs = [0, 0, 1, 0, 0, 1, 1, 1];
-		for (let i = 0; i < 4; i++) {
-			const base = i * 7;
-			f32[base] = corners[i].x;
-			f32[base + 1] = corners[i].y;
-			f32[base + 2] = corners[i].z;
-			f32[base + 3] = uvs[i * 2];
-			f32[base + 4] = uvs[i * 2 + 1];
-			u32[base + 5] = 0xffffffff;
-			f32[base + 6] = 0;
+		if (this.vertexScratch?.vertexSize !== batcher.vertexSize) {
+			this.vertexScratch = new VertexArrayBuffer(batcher.vertexSize, 4);
 		}
-		const vertexRegion = renderer.vertexArena.alloc(4 * 28);
+		const vertices = this.vertexScratch;
+		vertices.clear();
+		vertices.pushSpriteQuad(
+			corners[0],
+			corners[1],
+			corners[2],
+			corners[3],
+			0,
+			0,
+			1,
+			1,
+			0xffffffff,
+			0,
+			false,
+		);
+		const byteLength = 4 * batcher.stride;
+		const vertexRegion = renderer.vertexArena.alloc(byteLength);
 		device.queue.writeBuffer(
 			vertexRegion.buffer,
 			vertexRegion.offset,
-			this.vertexScratch,
+			vertices.toUint8(),
 			0,
-			4 * 28,
+			byteLength,
 		);
 
 		// layer-level uniform values (identical for every tileset pass)
@@ -300,7 +311,9 @@ export default class OrthogonalTMXLayerGPURenderer {
 		scratch[19] = startTileY;
 		scratch[20] = endTileX - startTileX;
 		scratch[21] = endTileY - startTileY;
-		scratch[22] = layer.getOpacity();
+		// the layer's opacity, and the fade of everything it is drawn in:
+		// set on the renderer by the layer's preDraw
+		scratch[22] = renderer.getGlobalAlpha();
 		const tint = layer.tint ? layer.tint.toArray() : null;
 		scratch[24] = tint ? tint[0] : 1;
 		scratch[25] = tint ? tint[1] : 1;
@@ -321,7 +334,12 @@ export default class OrthogonalTMXLayerGPURenderer {
 		const frame = renderer.currentFrameBinding;
 		pass.setBindGroup(0, frame.bindGroup, [frame.dynamicOffset]);
 		pass.setBindGroup(2, renderer.pipelineCache.emptyBindGroup);
-		pass.setVertexBuffer(0, vertexRegion.buffer, vertexRegion.offset, 4 * 28);
+		pass.setVertexBuffer(
+			0,
+			vertexRegion.buffer,
+			vertexRegion.offset,
+			byteLength,
+		);
 		pass.setIndexBuffer(batcher.indexBuffer, "uint32");
 
 		// one pass per tileset — the GID-range guard hides other tilesets
@@ -377,6 +395,16 @@ export default class OrthogonalTMXLayerGPURenderer {
 			scratch[16] = tileset.firstgid;
 			scratch[17] = tileset.lastgid;
 			scratch[23] = animEntry ? animEntry.tileCount : 0;
+			// the "linear-mipmap" filter, on a linear tileset: the binding
+			// below asks the store for a chain, and the shader keeps each
+			// sample clear of the neighbouring tiles at the level it reads
+			const filter =
+				typeof tileset.texture.filter === "string"
+					? tileset.texture.filter
+					: renderer.getDefaultTextureFilter();
+			const mipmaps =
+				filter === "linear" && renderer.wantsMipmaps(tileset.texture);
+			scratch[28] = mipmaps ? 1 : 0;
 			const region = renderer.effectUniformArena.alloc(
 				TMX_UNIFORM_SIZE,
 				device.limits?.minUniformBufferOffsetAlignment ?? 256,
@@ -419,7 +447,10 @@ export default class OrthogonalTMXLayerGPURenderer {
 				layerGroups.set(tileset, cached);
 			}
 
-			pass.setBindGroup(1, renderer.textureStore.getBinding(tileset.texture));
+			pass.setBindGroup(
+				1,
+				renderer.textureStore.getBinding(tileset.texture, { mipmaps }),
+			);
 			pass.setBindGroup(3, cached.bindGroup, [region.offset]);
 			pass.drawIndexed(6);
 		}

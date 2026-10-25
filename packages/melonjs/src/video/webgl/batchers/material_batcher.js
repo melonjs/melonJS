@@ -630,10 +630,16 @@ export class MaterialBatcher extends WebGLBatcher {
 		// texture's own parameters, so one upload can serve a source drawn at
 		// several repeat modes. `createTexture2D` still sets the texture
 		// parameters too, which keeps any path that binds no sampler working
-		// exactly as before.
+		// exactly as before. Under `"linear-mipmap"` it samples the chain
+		// `createTexture2D` generated (a mip sampler is only built over a
+		// linear filter, so a `nearest` texture keeps to its full size).
 		this.renderer.samplerCache.bind(
 			unit,
-			this.renderer.samplerCache.get(filter, wrap, false),
+			this.renderer.samplerCache.get(
+				filter,
+				wrap,
+				this.renderer.wantsMipmaps(texture),
+			),
 		);
 
 		return flush ? this.currentTextureUnit : unit;

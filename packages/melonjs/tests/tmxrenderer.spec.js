@@ -8,6 +8,7 @@ import TMXStaggeredRenderer from "../src/level/tiled/renderer/TMXStaggeredRender
 import Tile from "../src/level/tiled/TMXTile.js";
 import TMXTileset from "../src/level/tiled/TMXTileset.js";
 import { imgList } from "../src/loader/cache.js";
+import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
 
 // helper to create a fake image in the loader cache
 function fakeImage(name, w = 64, h = 64) {
@@ -331,7 +332,6 @@ describe("TMX Renderers", () => {
 				restore() {},
 				translate() {},
 				transform() {},
-				uvOffset: 0,
 			};
 		}
 
@@ -366,6 +366,24 @@ describe("TMX Renderers", () => {
 				// native tile size: 48x48
 				expect(spy.calls[0].dw).toEqual(48);
 				expect(spy.calls[0].dh).toEqual(48);
+			});
+
+			it("draws a tile at its own size on a Canvas renderer without smoothing", () => {
+				// it used to be drawn a pixel larger there, to hide the seams
+				// smoothing drew once a resize had turned it back on
+				const renderer = new CanvasRenderer({
+					width: 8,
+					height: 8,
+					antiAlias: false,
+				});
+				const calls = [];
+				renderer.drawImage = (img, sx, sy, sw, sh, dx, dy, dw, dh) => {
+					calls.push({ dw, dh });
+				};
+				const ts = makeTileset({}, 48, 48);
+				const ortho = new TMXOrthogonalRenderer(mockMap());
+				ortho.drawTile(renderer, 0, 0, new Tile(0, 0, 1, ts));
+				expect(calls).toEqual([{ dw: 48, dh: 48 }]);
 			});
 
 			it("should scale tile to grid size with tilerendersize='grid' stretch", () => {
@@ -675,7 +693,6 @@ describe("TMX Renderers", () => {
 				restore() {},
 				translate() {},
 				transform() {},
-				uvOffset: 0,
 			};
 			const renderer = new TMXObliqueRenderer(obliqueMap(16, 0));
 			// draw tile at grid (0, 5) — dx should include skewX * 5 = 80

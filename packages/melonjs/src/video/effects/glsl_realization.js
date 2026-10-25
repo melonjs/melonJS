@@ -30,6 +30,9 @@ const SCREEN_TEXTURE_ANNOTATION =
 	/\buniform\s+sampler2D\s+([A-Za-z_]\w*)\s*:\s*screen_texture(?:\((repeat|repeat-x|repeat-y|no-repeat)\))?\s*;/g;
 const SCREEN_UV_IDENTIFIER = /\bscreen_uv\b/;
 const NOISE_UV_IDENTIFIER = /\bnoise_uv\b/;
+// a body built with frame.js's FRAME_GLSL, whose frame a sprite's vertex
+// stage computes from the quad
+const SPRITE_FRAME_SWITCH = /#ifdef\s+ME_SPRITE_FRAME\b/;
 
 /**
  * whether the body declares `name` itself (as a varying/uniform/attribute) —
@@ -65,29 +68,40 @@ function parseShaderBuiltins(fragmentBody) {
 		!hasOwnDeclaration(body, "screen_uv");
 	const noiseUV =
 		NOISE_UV_IDENTIFIER.test(body) && !hasOwnDeclaration(body, "noise_uv");
-	return { body, screenTextures, screenUV, noiseUV };
+	const spriteFrame = SPRITE_FRAME_SWITCH.test(body);
+	return { body, screenTextures, screenUV, noiseUV, spriteFrame };
 }
 
 /**
  * The effect's vertex shader: the stock quad template, or — when a builtin
  * varying is in play — a variant that additionally computes `screen_uv`
- * (clip space → 0..1) and/or `noise_uv` (atlas UV → frame-local, fed by
- * `_setNoiseUVRect` through the `ME_*` uniforms). Built deterministically
- * from a template; user source is never rewritten.
+ * (clip space → 0..1), `noise_uv` (atlas UV → frame-local, fed by
+ * `_setNoiseUVRect` through the `ME_*` uniforms) and/or `ME_frame` (the
+ * frame the quad draws, from the vertex's own UV and `aFrame`, the
+ * opposite corner's; see frame.js). Built deterministically from a
+ * template; user source is never rewritten.
  * @ignore
  * @internal
  */
 function buildEffectVertex(builtins) {
-	if (!builtins.screenUV && !builtins.noiseUV) {
+	if (!builtins.screenUV && !builtins.noiseUV && !builtins.spriteFrame) {
 		return quadVertex;
 	}
 	return [
 		"attribute vec3 aVertex;",
 		"attribute vec2 aRegion;",
 		"attribute vec4 aColor;",
+		// declared, though unread, so `aFrame` takes the location it has in
+		// every sprite layout: the fifth (attributes are bound in order)
+		...(builtins.spriteFrame
+			? ["attribute float aTextureId;", "attribute vec2 aFrame;"]
+			: []),
 		"uniform mat4 uProjectionMatrix;",
 		"varying vec2 vRegion;",
 		"varying vec4 vColor;",
+		...(builtins.spriteFrame
+			? ["uniform vec2 ME_frame_half;", "varying vec4 ME_frame;"]
+			: []),
 		...(builtins.screenUV ? ["varying vec2 screen_uv;"] : []),
 		...(builtins.noiseUV
 			? [
@@ -106,6 +120,23 @@ function buildEffectVertex(builtins) {
 		...(builtins.noiseUV
 			? [
 					"    noise_uv = aRegion * (ME_size_img / ME_size_obj) - ME_offset / ME_size_obj;",
+				]
+			: []),
+		...(builtins.spriteFrame
+			? [
+					// a side on the texture's own edge (within a hundredth of
+					// a texel) has no frame past it and is left unbounded, as
+					// is a quad with no frame at all
+					"    vec4 ME_rect = vec4(min(aRegion, aFrame), max(aRegion, aFrame));",
+					"    vec2 ME_edge = ME_frame_half * 0.02;",
+					"    ME_frame = vec4(",
+					"        ME_rect.x <= ME_edge.x ? -1.0e6 : ME_rect.x,",
+					"        ME_rect.y <= ME_edge.y ? -1.0e6 : ME_rect.y,",
+					"        ME_rect.z >= 1.0 - ME_edge.x ? 1.0e6 : ME_rect.z,",
+					"        ME_rect.w >= 1.0 - ME_edge.y ? 1.0e6 : ME_rect.w);",
+					"    if (aFrame.x < -5.0e5) {",
+					"        ME_frame = vec4(-1.0e6, -1.0e6, 1.0e6, 1.0e6);",
+					"    }",
 				]
 			: []),
 		"    vColor = vec4(aColor.bgr * aColor.a, aColor.a);",
@@ -131,6 +162,8 @@ export function buildGLSLProgram(fragmentBody) {
 
 	// wrap the user's apply() with the texture-sampling boilerplate
 	const fragment = [
+		// the frame is the varying the vertex stage computes (frame.js)
+		...(builtins.spriteFrame ? ["#define ME_SPRITE_FRAME"] : []),
 		"uniform sampler2D uSampler;",
 		"varying vec4 vColor;",
 		"varying vec2 vRegion;",

@@ -333,7 +333,9 @@ export default class OrthogonalTMXLayerGPURenderer {
 		this._setV2("uVisibleStart", visStartX, visStartY);
 		this._setV2("uVisibleSize", visSizeX, visSizeY);
 		this._setV2("uCellSize", tileWidth, tileHeight);
-		this.shader.setUniform("uOpacity", layer.getOpacity());
+		// the layer's opacity, and the fade of everything it is drawn in:
+		// set on the renderer by the layer's preDraw
+		this.shader.setUniform("uOpacity", renderer.getGlobalAlpha());
 		this.shader.setUniform(
 			"uTint",
 			layer.tint ? layer.tint.toArray() : DEFAULT_TINT,
@@ -404,6 +406,19 @@ export default class OrthogonalTMXLayerGPURenderer {
 				Math.max(0, Math.ceil(tsH / tileHeight) - 1),
 			);
 			this._setV2("uGidRange", tileset.firstgid, tileset.lastgid);
+			// the tileset samples its mipmaps when the batcher binds it a
+			// mip sampler: the "linear-mipmap" filter, on a linear texture
+			const filter =
+				typeof tileset.texture.filter !== "undefined"
+					? tileset.texture.filter
+					: batcher.renderer._glTextureFilter();
+			this.shader.setUniform(
+				"uMipmaps",
+				(filter === this.gl.LINEAR || filter === "linear") &&
+					batcher.renderer.wantsMipmaps(tileset.texture)
+					? 1
+					: 0,
+			);
 
 			// emit one screen-quad. The batcher will bind the tileset's
 			// TextureAtlas to uSampler (single-texture fallback path is
