@@ -39,7 +39,7 @@ const fnHash = {
  * @ignore
  * @internal
  */
-function valuesMatch(cached, val) {
+export function valuesMatch(cached, val) {
 	if (cached === undefined) {
 		return false;
 	}

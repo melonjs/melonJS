@@ -108,6 +108,28 @@ export default class Camera2d extends Renderable {
 	damping: number;
 
 	/**
+	 * The layers this camera draws, as bits: a renderable is drawn only if
+	 * its {@link Renderable#visibilityLayer} shares a bit with this mask. All
+	 * bits by default, so a camera draws everything. Leave a layer out to
+	 * keep what is on it off this camera only, such as the particles off a
+	 * minimap: `~layer` is every layer but that one.
+	 * <br><br>
+	 * It decides what this camera draws, and nothing else: what it leaves
+	 * out still updates, collides and receives pointer events. A
+	 * {@link Light2d} it leaves out, itself or a container it is in,
+	 * neither glows, nor cuts its hole in the darkness, nor lights
+	 * normal-mapped sprites in this camera. A mask of `0` draws nothing.
+	 * @default -1 (all bits)
+	 * @see Renderable#visibilityLayer
+	 * @example
+	 * // particles on their own layer, and a minimap that leaves it out
+	 * const PARTICLES = 2;
+	 * emitter.visibilityLayer = PARTICLES;
+	 * minimap.cullMask = ~PARTICLES;
+	 */
+	cullMask: number;
+
+	/**
 	 * the closest point relative to the camera. Widened from `-1000` in
 	 * 19.7 to accommodate sprites at large `depth` values now that
 	 * `aVertex.z` participates in clip-space (PR A): the default
@@ -245,6 +267,8 @@ export default class Camera2d extends Renderable {
 		this.smoothFollow = true;
 
 		this.damping = 1.0;
+
+		this.cullMask = -1;
 
 		this.near = -1e6;
 
@@ -557,21 +581,30 @@ export default class Camera2d extends Renderable {
 	 * change the deadzone settings.
 	 * the "deadzone" defines an area within the current camera in which
 	 * the followed renderable can move without scrolling the camera.
+	 * Its edges are on whole pixels: the size is rounded to the nearest one.
 	 * @see {@link follow}
 	 * @param w - deadzone width
 	 * @param h - deadzone height
+	 * @example
+	 * // the hero moves 200 x 120 pixels around the middle before the camera follows
+	 * app.viewport.follow(hero, app.viewport.AXIS.BOTH);
+	 * app.viewport.setDeadzone(200, 120);
 	 */
 	setDeadzone(w: number, h: number): void {
 		if (typeof this.deadzone === "undefined") {
 			this.deadzone = new Rect(0, 0, 0, 0);
 		}
 
-		// reusing the old code for now...
+		// whole pixels on every side, so a camera following a target that is
+		// on a whole pixel comes to rest on one (the default, a sixth of the
+		// view, is a fraction for most sizes)
+		const width = Math.round(w);
+		const height = Math.round(h);
 		this.deadzone.pos.set(
-			~~((this.width - w) / 2),
-			~~((this.height - h) / 2 - h * 0.25),
+			~~((this.width - width) / 2),
+			~~((this.height - height) / 2 - height * 0.25),
 		);
-		this.deadzone.resize(w, h);
+		this.deadzone.resize(width, height);
 
 		this.smoothFollow = false;
 
@@ -1208,7 +1241,7 @@ export default class Camera2d extends Renderable {
 		// no-op.
 		const stage = state.current();
 		renderer.setLightUniforms(
-			stage?._activeLights,
+			stage?._lightsFor(this),
 			stage?.ambientLightingColor,
 			translateX,
 			translateY,
@@ -1219,17 +1252,21 @@ export default class Camera2d extends Renderable {
 		// for non-default cameras, temporarily expand the camera rect to the
 		// visible world area so TMXLayer draws all tiles within the zoomed view.
 		// When zoom is 1, worldView matches camera size — no visible effect.
-		if (isNonDefault) {
-			const view = this.worldView;
-			const savedWidth = this.width;
-			const savedHeight = this.height;
-			this.width = view.width;
-			this.height = view.height;
-			container.draw(r, this);
-			this.width = savedWidth;
-			this.height = savedHeight;
-		} else {
-			container.draw(r, this);
+		// the world itself obeys the mask, as every container in it does: on
+		// no layer this camera draws, nothing of it is drawn
+		if ((container.visibilityLayer & this.cullMask) !== 0) {
+			if (isNonDefault) {
+				const view = this.worldView;
+				const savedWidth = this.width;
+				const savedHeight = this.height;
+				this.width = view.width;
+				this.height = view.height;
+				container.draw(r, this);
+				this.width = savedWidth;
+				this.height = savedHeight;
+			} else {
+				container.draw(r, this);
+			}
 		}
 
 		// Ground shadows (#1515) are held back until every opaque mesh in the

@@ -1,3 +1,5 @@
+import { FRAME_UNBOUNDED } from "../gpu/frame.js";
+
 /**
  * A fixed-size vertex array buffer for batching vertex data.
  * Renderer-agnostic — stores vertex data in typed arrays (Float32/Uint32).
@@ -5,7 +7,6 @@
  * @ignore
  * @internal
  */
-
 export default class VertexArrayBuffer {
 	constructor(vertexSize, maxVertex) {
 		// the size of one vertex in floats
@@ -53,25 +54,20 @@ export default class VertexArrayBuffer {
 	}
 
 	/**
-	 * push a new vertex to the buffer
+	 * push a new vertex to the buffer: the 6-float layout of the primitive
+	 * batcher (a shape's position, its normal or UV, and a packed color).
+	 * Sprites have their own, wider layout: see {@link pushSprite}.
 	 * @param {number} x - x position
 	 * @param {number} y - y position
 	 * @param {number} z - z position (per-renderable depth; 0 under ortho)
 	 * @param {number} u - texture U coordinate (or aNormal.x for primitives)
 	 * @param {number} v - texture V coordinate (or aNormal.y for primitives)
 	 * @param {number} tint - tint color in UINT32 (argb) format
-	 * @param {number} [textureId] - texture unit index for multi-texture batching
-	 * @param {number} [normalTextureId] - paired normal-map texture unit index, or `-1` for unlit quads
-	 * @param {number} [shininess] - specular exponent for the GL lit-quad layout,
-	 * which is 9 floats; 0 (matte) when omitted. NOTE the WebGPU lit layout is 8
-	 * floats and carries its exponent in slot 7 instead, the slot whose omitted
-	 * default here is the `-1` unlit sentinel — that batcher therefore always
-	 * passes an explicit value through its own `pushQuadVertices` override and
-	 * never relies on this default.
+	 * @returns {VertexArrayBuffer} this
 	 * @ignore
 	 * @internal
 	 */
-	push(x, y, z, u, v, tint, textureId, normalTextureId, shininess) {
+	push(x, y, z, u, v, tint) {
 		const offset = this.vertexCount * this.vertexSize;
 
 		this.bufferF32[offset] = x;
@@ -80,31 +76,159 @@ export default class VertexArrayBuffer {
 		this.bufferF32[offset + 3] = u;
 		this.bufferF32[offset + 4] = v;
 		this.bufferU32[offset + 5] = tint;
-		if (this.vertexSize > 6) {
-			this.bufferF32[offset + 6] = textureId || 0;
-			if (this.vertexSize > 7) {
-				// `aNormalTextureId`: -1 (sentinel for unlit) is the safe
-				// default when the caller doesn't supply one. Writing 0
-				// here would let the fragment shader's lit path activate
-				// on unlit quads with whatever normal-map happened to be
-				// bound at unit 0 — visible as garbage hemispheric
-				// shading on every sprite.
-				this.bufferF32[offset + 7] =
-					typeof normalTextureId === "number" ? normalTextureId : -1;
-				if (this.vertexSize > 8) {
-					// `aShininess` on the GL lit-quad layout, which carries
-					// both the normal-map slot and the exponent. 0 is matte,
-					// and matte is what every sprite that never opts in must
-					// get — so the fallback here is 0, not the -1 sentinel
-					// above (a negative exponent would make `pow` explode).
-					this.bufferF32[offset + 8] =
-						typeof shininess === "number" ? shininess : 0;
-				}
+
+		this.vertexCount++;
+
+		return this;
+	}
+
+	/**
+	 * push a sprite vertex: the quad batchers' layout, whose fifth attribute
+	 * (floats 7 and 8, after the texture slot) is the UV of the quad's
+	 * opposite corner. With the vertex's own UV, that is the frame of the
+	 * texture the quad draws, so the sprite shaders can keep their samples
+	 * inside it ({@link FRAME_UNBOUNDED} for a quad that has none). It sits
+	 * at the same place in every sprite layout, so an effect's program reads
+	 * it on any of them. Any field a layout adds after it (a lit layout's
+	 * normal map slot and shininess) goes in `extra0` and `extra1`, in
+	 * layout order. Every field is written as given, so a caller passes all
+	 * of its layout's: the lit batchers write `-1` for "no normal map" and
+	 * `0` for a matte sprite themselves.
+	 * @param {number} x - x position
+	 * @param {number} y - y position
+	 * @param {number} z - depth
+	 * @param {number} u - texture u
+	 * @param {number} v - texture v
+	 * @param {number} tint - tint color in UINT32 (argb) format
+	 * @param {number} textureId - the texture slot
+	 * @param {number} frameU - u of the quad's opposite corner
+	 * @param {number} frameV - v of the quad's opposite corner
+	 * @param {number} [extra0] - the layout's first field after the slot
+	 * @param {number} [extra1] - the layout's second field after the slot
+	 * @returns {VertexArrayBuffer} this
+	 * @ignore
+	 * @internal
+	 */
+	pushSprite(x, y, z, u, v, tint, textureId, frameU, frameV, extra0, extra1) {
+		const size = this.vertexSize;
+		const offset = this.vertexCount * size;
+		const f32 = this.bufferF32;
+
+		f32[offset] = x;
+		f32[offset + 1] = y;
+		f32[offset + 2] = z;
+		f32[offset + 3] = u;
+		f32[offset + 4] = v;
+		this.bufferU32[offset + 5] = tint;
+		f32[offset + 6] = textureId;
+		f32[offset + 7] = frameU;
+		f32[offset + 8] = frameV;
+		if (size > 9) {
+			f32[offset + 9] = extra0;
+			if (size > 10) {
+				f32[offset + 10] = extra1;
 			}
 		}
 
 		this.vertexCount++;
 
+		return this;
+	}
+
+	/**
+	 * push the four corners of a sprite quad (see {@link pushSprite}):
+	 * top left, top right, bottom left, bottom right, each carrying the UV
+	 * of the corner opposite it. A quad with no frame of its own (a
+	 * repeating pattern, a whole render target) carries the unbounded mark
+	 * instead, and its samples are left alone.
+	 * @param {{x: number, y: number, z: number}} c0 - top left corner
+	 * @param {{x: number, y: number, z: number}} c1 - top right corner
+	 * @param {{x: number, y: number, z: number}} c2 - bottom left corner
+	 * @param {{x: number, y: number, z: number}} c3 - bottom right corner
+	 * @param {number} u0 - left u
+	 * @param {number} v0 - top v
+	 * @param {number} u1 - right u
+	 * @param {number} v1 - bottom v
+	 * @param {number} tint - tint color in UINT32 (argb) format
+	 * @param {number} textureId - the texture slot
+	 * @param {boolean} framed - false when the quad has no frame to keep to
+	 * @param {number} [extra0] - the layout's first field after the slot
+	 * @param {number} [extra1] - the layout's second field after the slot
+	 * @returns {VertexArrayBuffer} this
+	 * @ignore
+	 * @internal
+	 */
+	pushSpriteQuad(
+		c0,
+		c1,
+		c2,
+		c3,
+		u0,
+		v0,
+		u1,
+		v1,
+		tint,
+		textureId,
+		framed,
+		extra0,
+		extra1,
+	) {
+		const fu0 = framed ? u0 : FRAME_UNBOUNDED;
+		const fv0 = framed ? v0 : FRAME_UNBOUNDED;
+		const fu1 = framed ? u1 : FRAME_UNBOUNDED;
+		const fv1 = framed ? v1 : FRAME_UNBOUNDED;
+		this.pushSprite(
+			c0.x,
+			c0.y,
+			c0.z,
+			u0,
+			v0,
+			tint,
+			textureId,
+			fu1,
+			fv1,
+			extra0,
+			extra1,
+		);
+		this.pushSprite(
+			c1.x,
+			c1.y,
+			c1.z,
+			u1,
+			v0,
+			tint,
+			textureId,
+			fu0,
+			fv1,
+			extra0,
+			extra1,
+		);
+		this.pushSprite(
+			c2.x,
+			c2.y,
+			c2.z,
+			u0,
+			v1,
+			tint,
+			textureId,
+			fu1,
+			fv0,
+			extra0,
+			extra1,
+		);
+		this.pushSprite(
+			c3.x,
+			c3.y,
+			c3.z,
+			u1,
+			v1,
+			tint,
+			textureId,
+			fu0,
+			fv0,
+			extra0,
+			extra1,
+		);
 		return this;
 	}
 

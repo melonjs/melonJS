@@ -21,40 +21,14 @@ describe("VertexArrayBuffer", () => {
 			expect(buf.bufferU32[5]).toBe(0xffffffff); // tint
 		});
 
-		it("should write vertex data with textureId (7 floats)", () => {
-			// vertexSize=7 matches the multi-texture quad format
-			const buf = new VertexArrayBuffer(7, 4);
-
-			buf.push(10, 20, 5, 0.0, 1.0, 0xffffffff, 3);
-
-			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[0]).toBe(10); // x
-			expect(buf.bufferF32[1]).toBe(20); // y
-			expect(buf.bufferF32[2]).toBe(5); // z
-			expect(buf.bufferF32[3]).toBe(0.0); // u
-			expect(buf.bufferF32[4]).toBe(1.0); // v
-			expect(buf.bufferU32[5]).toBe(0xffffffff); // tint
-			expect(buf.bufferF32[6]).toBe(3); // textureId
-		});
-
-		it("should write default textureId 0 when not provided (vertexSize 7)", () => {
-			const buf = new VertexArrayBuffer(7, 4);
-
-			buf.push(10, 20, 0, 0.0, 1.0, 0xffffffff);
-
-			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[6]).toBe(0); // default 0
-		});
-
-		it("should not write textureId when vertexSize is 6", () => {
+		it("writes only the 6 floats of the primitive layout", () => {
+			// sprites have their own layout and writer (pushSprite); push()
+			// must not reach past its own vertex into the next one
 			const buf = new VertexArrayBuffer(6, 4);
-
-			// write a sentinel at offset 6
 			buf.bufferF32[6] = 99;
 			buf.push(10, 20, 0, 0.0, 1.0, 0xffffffff);
-
 			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[6]).toBe(99); // untouched
+			expect(buf.bufferF32[6]).toBe(99);
 		});
 
 		it("should write multiple vertices sequentially", () => {
@@ -72,72 +46,45 @@ describe("VertexArrayBuffer", () => {
 			expect(buf.bufferF32[10]).toBe(1.0); // v / ny
 			expect(buf.bufferU32[11]).toBe(0x00ff0000); // tint
 		});
+	});
 
-		it("should write multiple vertices with textureId sequentially", () => {
-			const buf = new VertexArrayBuffer(7, 4);
-
-			buf.push(1, 2, 0, 0.0, 0.0, 0xff000000, 0);
-			buf.push(3, 4, 0, 1.0, 1.0, 0x00ff0000, 5);
-
-			expect(buf.vertexCount).toBe(2);
-			expect(buf.bufferF32[6]).toBe(0); // textureId vertex 0
-			expect(buf.bufferF32[13]).toBe(5); // textureId vertex 1
-		});
-
-		it("should write vertex data with textureId + normalTextureId (8 floats)", () => {
-			// vertexSize=8 matches the lit-pipeline quad format:
-			// x, y, z, u, v, tint, textureId, normalTextureId
-			const buf = new VertexArrayBuffer(8, 4);
-
-			buf.push(10, 20, 5, 0.0, 1.0, 0xffffffff, 3, 2);
-
+	describe("pushSprite()", () => {
+		it("writes the sprite layout: position, UV, tint, slot, then the frame", () => {
+			const buf = new VertexArrayBuffer(9, 4);
+			buf.pushSprite(10, 20, 5, 0.0, 1.0, 0xffffffff, 3, 0.5, 0.25);
 			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[0]).toBe(10);
-			expect(buf.bufferF32[1]).toBe(20);
-			expect(buf.bufferF32[2]).toBe(5); // z
-			expect(buf.bufferF32[3]).toBe(0.0);
-			expect(buf.bufferF32[4]).toBe(1.0);
+			expect(Array.from(buf.bufferF32.slice(0, 5))).toEqual([10, 20, 5, 0, 1]);
 			expect(buf.bufferU32[5]).toBe(0xffffffff);
 			expect(buf.bufferF32[6]).toBe(3); // textureId
-			expect(buf.bufferF32[7]).toBe(2); // normalTextureId
+			expect([buf.bufferF32[7], buf.bufferF32[8]]).toEqual([0.5, 0.25]);
 		});
 
-		it("should default normalTextureId to -1 when not provided (vertexSize 8)", () => {
-			// Regression test: with vertexSize=8, omitting `normalTextureId`
-			// must NOT leave stale data at offset 7. The shader's lit path
-			// activates on `vNormalTextureId >= 0`; reading garbage there
-			// causes unlit sprites to render through the lit path with
-			// random normal-map / light state — visible as broken
-			// hemispheric shading on every WebGL example after the
-			// normal-map vertex format was introduced.
-			const buf = new VertexArrayBuffer(8, 4);
-			// poison the slot to prove push() actively writes -1
-			buf.bufferF32[7] = 99;
-
-			buf.push(10, 20, 0, 0.0, 1.0, 0xffffffff, 3);
-
-			expect(buf.bufferF32[7]).toBe(-1);
+		it("writes consecutive vertices one stride apart", () => {
+			const buf = new VertexArrayBuffer(9, 4);
+			buf.pushSprite(1, 2, 0, 0, 0, 0xff000000, 0, 1, 1);
+			buf.pushSprite(3, 4, 0, 1, 1, 0x00ff0000, 5, 0, 0);
+			expect(buf.vertexCount).toBe(2);
+			expect(buf.bufferF32[6]).toBe(0);
+			expect(buf.bufferF32[9]).toBe(3);
+			expect(buf.bufferF32[15]).toBe(5);
 		});
 
-		it("should accept negative normalTextureId (sentinel for unlit)", () => {
-			const buf = new VertexArrayBuffer(8, 4);
-			buf.push(0, 0, 0, 0, 0, 0, 0, -1);
-			expect(buf.bufferF32[7]).toBe(-1);
+		it("writes a lit layout's normal map slot and shininess after the frame", () => {
+			// the WebGL lit layout: 11 floats. -1 is the "no normal map"
+			// sentinel the lit batcher writes for an unlit sprite
+			const buf = new VertexArrayBuffer(11, 4);
+			buf.pushSprite(0, 0, 0, 0, 0, 0, 2, 0.5, 0.5, -1, 0);
+			expect(buf.bufferF32[9]).toBe(-1);
+			expect(buf.bufferF32[10]).toBe(0);
 		});
 
-		it("should not touch offset 7 when vertexSize is 7 (backward compat)", () => {
-			// older quad batchers using vertexSize=7 mustn't get any
-			// writes past offset 6
-			const buf = new VertexArrayBuffer(7, 4);
-			// pre-fill the next vertex's first slot with a sentinel
-			buf.bufferF32[7] = 77;
-
-			// pass a normalTextureId — should be silently dropped because
-			// vertexSize is 7 (the unlit layout has no `aNormalTextureId`)
-			buf.push(10, 20, 0, 0, 0, 0xff, 1, 9);
-			// offset 7 is the next vertex's first float — verify push()
-			// didn't bleed into it
-			expect(buf.bufferF32[7]).toBe(77);
+		it("does not reach past its own vertex", () => {
+			for (const size of [9, 10, 11]) {
+				const buf = new VertexArrayBuffer(size, 4);
+				buf.bufferF32[size] = 77;
+				buf.pushSprite(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+				expect(buf.bufferF32[size]).toBe(77);
+			}
 		});
 	});
 
@@ -161,7 +108,7 @@ describe("VertexArrayBuffer", () => {
 		it("should include fallback to uSampler0", () => {
 			const src = buildMultiTextureFragment(2);
 			expect(src).toContain("} else {");
-			expect(src).toContain("color = texture2D(uSampler0, vRegion);");
+			expect(src).toContain("color = frameSample(uSampler0, vRegion, gx, gy);");
 		});
 
 		it("should generate a single sampler for maxTextures=1", () => {
@@ -173,7 +120,7 @@ describe("VertexArrayBuffer", () => {
 
 		it("should include vColor multiplication", () => {
 			const src = buildMultiTextureFragment(2);
-			expect(src).toContain("gl_FragColor = color * vColor;");
+			expect(src).toContain("fragColor = color * vColor;");
 		});
 	});
 
@@ -413,12 +360,12 @@ describe("VertexArrayBuffer", () => {
 				},
 			);
 
-			it("textureId slot in vertexSize=7 writes through the float view", () => {
+			it("the sprite layout's textureId slot writes through the float view", () => {
 				// Color sits at slot 5 (Uint32); textureId at slot 6
 				// stays Float32 — its value range (small integers
 				// 0..N) never forms a NaN pattern.
-				const buf = new VertexArrayBuffer(7, 4);
-				buf.push(0, 0, 0, 0, 0, 0xffd7dee8, 3);
+				const buf = new VertexArrayBuffer(9, 4);
+				buf.pushSprite(0, 0, 0, 0, 0, 0xffd7dee8, 3, 0, 0);
 				expect(buf.bufferF32[6]).toBe(3);
 				expect(buf.bufferU32[5]).toBe(0xffd7dee8);
 				expect(buf.bufferU8[5 * 4 + 3]).toBe(0xff);

@@ -7,7 +7,7 @@ import { getBasename, getExtension } from "../../utils/file.ts";
 import { createCanvas } from "../../video/canvas_factory.js";
 import { TextureAtlas } from "../../video/texture/atlas.js";
 import { buildFlipTransform } from "./TMXTile.js";
-import { resolveEmbeddedImage } from "./TMXUtils.js";
+import { applyTransparentColor, resolveEmbeddedImage } from "./TMXUtils.js";
 
 // shared scratch matrix for flip-transform construction in drawTileRaw — avoids
 // per-call allocation in the hot path. Single-threaded JS means it's safe to
@@ -429,7 +429,10 @@ export default class TMXTileset {
 
 			// store per-tile image (collection of images tileset)
 			if (tile.image) {
-				const image = getImage(tile.image);
+				const image = applyTransparentColor(
+					getImage(tile.image),
+					tile.transparentcolor,
+				);
 				if (!image) {
 					throw new Error(
 						`melonJS: '${tile.image}' file for tile '${tileId + this.firstgid}' not found!`,
@@ -490,8 +493,11 @@ export default class TMXTileset {
 	 * @internal
 	 */
 	_initAtlas(tileset) {
-		// get the global tileset texture
-		this.image = getImage(tileset.image);
+		// get the global tileset texture, its transparent color applied
+		this.image = applyTransparentColor(
+			getImage(tileset.image),
+			tileset.transparentcolor,
+		);
 
 		if (!this.image) {
 			throw new Error(
@@ -757,8 +763,8 @@ export default class TMXTileset {
 				this.tileheight,
 				dx,
 				dy,
-				dw + renderer.uvOffset,
-				dh + renderer.uvOffset,
+				dw,
+				dh,
 			);
 		}
 
@@ -870,8 +876,8 @@ export default class TMXTileset {
 				this.tileheight,
 				dx,
 				dy,
-				dw + renderer.uvOffset,
-				dh + renderer.uvOffset,
+				dw,
+				dh,
 			);
 		}
 

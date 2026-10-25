@@ -1,4 +1,5 @@
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
+import { FRAME_UNBOUNDED, isFramed } from "../../gpu/frame.js";
 import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
 import UniformBlock from "../buffer/uniformblock.js";
 import { MAX_LIGHTS } from "../lighting/constants.ts";
@@ -59,7 +60,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 			attributes: [
 				{
 					// vec3: (x, y, z). z carries `renderable.depth` for
-					// perspective projection (Camera3d). Stride = 36 bytes.
+					// perspective projection (Camera3d). Stride = 44 bytes.
 					name: "aVertex",
 					format: "float32x3",
 					offset: 0 * Float32Array.BYTES_PER_ELEMENT,
@@ -80,9 +81,18 @@ export default class LitQuadBatcher extends QuadBatcher {
 					offset: 6 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
+					// the UV of the quad's opposite corner: the frame the
+					// quad draws (see shaders/frameclamp.js). Fifth, as in
+					// every sprite layout, so an effect drawn on a lit
+					// sprite reads it where it reads it on any other
+					name: "aFrame",
+					format: "float32x2",
+					offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+				},
+				{
 					name: "aNormalTextureId",
 					format: "float32",
-					offset: 7 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 9 * Float32Array.BYTES_PER_ELEMENT,
 				},
 				{
 					// Specular exponent, per QUAD rather than per normal-map
@@ -95,7 +105,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 					// lit path only, buys both problems away.
 					name: "aShininess",
 					format: "float32",
-					offset: 8 * Float32Array.BYTES_PER_ELEMENT,
+					offset: 10 * Float32Array.BYTES_PER_ELEMENT,
 				},
 			],
 			shader: {
@@ -108,6 +118,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// shader/attribute layout, just iterate `this.maxBatchTextures`.
 		this.bindColorSamplers();
 		this.createIndexBuffer();
+		this.syncFrameClamp();
 
 		this.useMultiTexture = true;
 
@@ -603,14 +614,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 					Math.min(u0, u1),
 					Math.min(v0, v1),
 				);
-				this.currentShader._setFrameRect?.(
-					u0,
-					v0,
-					u1,
-					v1,
-					sourceWidth,
-					sourceHeight,
-				);
+				this.currentShader._setFrameTexel?.(sourceWidth, sourceHeight);
 			}
 			// direct atlas sampling: uv.y grows downward — see
 			// QuadBatcher.addQuad
@@ -667,47 +671,18 @@ export default class LitQuadBatcher extends QuadBatcher {
 		);
 
 		const textureId = this.useMultiTexture ? unit : 0;
-		vertexData.push(
-			vec0.x,
-			vec0.y,
-			vec0.z,
+		vertexData.pushSpriteQuad(
+			vec0,
+			vec1,
+			vec2,
+			vec3,
 			u0,
 			v0,
-			tint,
-			textureId,
-			normalTextureId,
-			shininess,
-		);
-		vertexData.push(
-			vec1.x,
-			vec1.y,
-			vec1.z,
-			u1,
-			v0,
-			tint,
-			textureId,
-			normalTextureId,
-			shininess,
-		);
-		vertexData.push(
-			vec2.x,
-			vec2.y,
-			vec2.z,
-			u0,
-			v1,
-			tint,
-			textureId,
-			normalTextureId,
-			shininess,
-		);
-		vertexData.push(
-			vec3.x,
-			vec3.y,
-			vec3.z,
 			u1,
 			v1,
 			tint,
 			textureId,
+			isFramed(texture),
 			normalTextureId,
 			shininess,
 		);
@@ -759,13 +734,16 @@ export default class LitQuadBatcher extends QuadBatcher {
 			0,
 		);
 
-		// blits are always rendered at z = 0 (screen-space, ortho)
+		// blits are always rendered at z = 0 (screen-space, ortho), carry no
+		// normal map (-1) and no material (shininess 0), and draw the whole
+		// target: no frame
 		const tint = 0xffffffff;
-		// trailing 0 is `aShininess`: a blit carries no material
-		this.vertexData.push(vec0.x, vec0.y, 0, 0, 1, tint, 0, -1, 0);
-		this.vertexData.push(vec1.x, vec1.y, 0, 1, 1, tint, 0, -1, 0);
-		this.vertexData.push(vec2.x, vec2.y, 0, 0, 0, tint, 0, -1, 0);
-		this.vertexData.push(vec3.x, vec3.y, 0, 1, 0, tint, 0, -1, 0);
+		const open = FRAME_UNBOUNDED;
+		const vertexData = this.vertexData;
+		vertexData.pushSprite(vec0.x, vec0.y, 0, 0, 1, tint, 0, open, open, -1, 0);
+		vertexData.pushSprite(vec1.x, vec1.y, 0, 1, 1, tint, 0, open, open, -1, 0);
+		vertexData.pushSprite(vec2.x, vec2.y, 0, 0, 0, tint, 0, open, open, -1, 0);
+		vertexData.pushSprite(vec3.x, vec3.y, 0, 1, 0, tint, 0, open, open, -1, 0);
 
 		this.flush();
 

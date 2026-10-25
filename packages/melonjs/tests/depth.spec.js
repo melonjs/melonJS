@@ -265,8 +265,8 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 	};
 
 	// QuadBatcher layout: aVertex(3) + aRegion(2) + aColor(4 UBYTE = 1 float-slot)
-	// + aTextureId(1) = 7 float-slots * 4 bytes = 28 bytes
-	it("QuadBatcher declares aVertex size 3, stride 28", (ctx) => {
+	// + aTextureId(1) + aFrame(2) = 9 float-slots * 4 bytes = 36 bytes
+	it("QuadBatcher declares aVertex size 3, stride 36", (ctx) => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -276,12 +276,12 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		});
 		expect(aVertex).toBeDefined();
 		expect(aVertex.size).toBe(3);
-		expect(batcher.stride).toBe(28);
+		expect(batcher.stride).toBe(36);
 	});
 
-	// LitQuadBatcher adds aNormalTextureId and aShininess at the tail
-	// → 9 float-slots = 36 bytes
-	it("LitQuadBatcher declares aVertex size 3, stride 36", (ctx) => {
+	// LitQuadBatcher adds aNormalTextureId and aShininess, then aFrame at
+	// the tail → 11 float-slots = 44 bytes
+	it("LitQuadBatcher declares aVertex size 3, stride 44", (ctx) => {
 		if (skipIfNoWebGL(ctx)) {
 			return;
 		}
@@ -291,7 +291,7 @@ describe("WebGL batchers carry depth as vec3 aVertex (PR A)", () => {
 		});
 		expect(aVertex).toBeDefined();
 		expect(aVertex.size).toBe(3);
-		expect(batcher.stride).toBe(36);
+		expect(batcher.stride).toBe(44);
 	});
 
 	// PrimitiveBatcher: aVertex(3) + aNormal(2) + aColor(4 UBYTE = 1 float-slot)

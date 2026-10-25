@@ -9,6 +9,10 @@ in vec3 aVertex;
 in vec2 aRegion;
 in vec4 aColor;
 in float aTextureId;
+// the UV of the quad's opposite corner: with this vertex's own, the frame of
+// the texture the quad draws (see shaders/frameclamp.js). Far below zero for
+// a quad with no frame to keep to. Fifth, as in every sprite layout.
+in vec2 aFrame;
 in float aNormalTextureId;
 // specular exponent for this quad, 0 = matte (the default for every sprite
 // that does not opt in)
@@ -27,6 +31,8 @@ out float vShininess;
 // compute `lightPos - fragmentPos` for each Light2d. 2D — light math is
 // in the screen plane, depth doesn't participate.
 out vec2 vWorldPos;
+// the frame (left, top, right, bottom), the same at all four corners
+out vec4 vFrame;
 
 void main(void) {
     gl_Position = uProjectionMatrix * vec4(aVertex, 1.0);
@@ -36,4 +42,7 @@ void main(void) {
     vNormalTextureId = aNormalTextureId;
     vShininess = aShininess;
     vWorldPos = aVertex.xy;
+    vFrame = aFrame.x < -5.0e5
+        ? vec4(-1.0e6, -1.0e6, 1.0e6, 1.0e6)
+        : vec4(min(aRegion, aFrame), max(aRegion, aFrame));
 }

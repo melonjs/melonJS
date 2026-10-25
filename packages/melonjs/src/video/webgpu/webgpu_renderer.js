@@ -22,6 +22,7 @@ import AmbientLightEffect from "../effects/ambientlight.js";
 import BlendEffect from "../effects/blendEffect.js";
 import { meshHostingBlocker } from "../effects/mesh_splice.js";
 import RadialGradientEffect from "../effects/radialGradient.js";
+import { frameClampMode } from "../gpu/frame.js";
 import { Gradient } from "../gradient.js";
 import Renderer from "../renderer.js";
 import RenderTargetPool from "../rendertarget/render_target_pool.js";
@@ -2435,6 +2436,44 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * A tile layer drawn tile by tile: the sprite shaders keep each tile's
+	 * samples half a texel inside it (see `gpu/frame.js`), so two tiles
+	 * never blend the next tile of their tileset in along their edge.
+	 * @ignore
+	 * @internal
+	 */
+	beginTileLayer() {
+		this.setDrawingTiles(true);
+	}
+
+	/**
+	 * @ignore
+	 * @internal
+	 */
+	endTileLayer() {
+		this.setDrawingTiles(false);
+	}
+
+	/**
+	 * Flip `drawingTiles`, and when that changes the sprite shaders' frame
+	 * clamp, draw the quads queued under the old one and push a frame-globals
+	 * slot carrying the new one (the shaders read it from there).
+	 * @param {boolean} on - whether a tile layer is drawing
+	 * @ignore
+	 * @internal
+	 */
+	setDrawingTiles(on) {
+		const before = frameClampMode(this);
+		this.drawingTiles = on;
+		// pushed even when no pass is open, which happens mid-frame too (a
+		// post effect, a mask, a flush): the next draws read it
+		if (frameClampMode(this) !== before && this.uniformRing !== null) {
+			this.currentBatcher?.flush();
+			this.pushFrameGlobals();
+		}
+	}
+
+	/**
 	 * Add a batcher to this renderer.
 	 * @param {WebGPUBatcher} batcher - a batcher instance
 	 * @param {string} [name="default"] - the batcher name
@@ -2996,6 +3035,7 @@ export default class WebGPURenderer extends Renderer {
 		this.currentFrameBinding = this.uniformRing.pushFrameGlobals(
 			this.projectionMatrix,
 			this.lineWidth,
+			frameClampMode(this),
 		);
 		this.currentFrameLineWidth = this.lineWidth;
 	}
@@ -4458,7 +4498,12 @@ export default class WebGPURenderer extends Renderer {
 	/**
 	 * Set the default texture filter at runtime, decoupled from
 	 * {@link WebGPURenderer#setAntiAlias} — same re-pairing mechanism.
-	 * @param {"auto"|"nearest"|"linear"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 * @param {"auto"|"nearest"|"linear"|"linear-mipmap"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 * @example
+	 * // smooth, and from the mipmaps wherever something is drawn small
+	 * app.renderer.setTextureFilter("linear-mipmap");
+	 * // back to the antiAlias setting
+	 * app.renderer.setTextureFilter("auto");
 	 */
 	setTextureFilter(mode = "auto") {
 		super.setTextureFilter(mode);
@@ -4469,6 +4514,13 @@ export default class WebGPURenderer extends Renderer {
 		// each embeds samplers resolved from the default filter
 		this.batchers.get("litQuad")?.clearMaterialCache();
 		this.batchers.get("quad")?.clearMaterialCache();
+		// the sprite shaders read the frame clamp mode from the frame
+		// globals (under "linear-mipmap" a sprite keeps its samples inside
+		// its frame): a fresh slot carries it, pushed even when no pass is
+		// open, which happens mid-frame too (a post effect, a mask, a flush)
+		if (this.uniformRing !== null) {
+			this.pushFrameGlobals();
+		}
 	}
 
 	/**

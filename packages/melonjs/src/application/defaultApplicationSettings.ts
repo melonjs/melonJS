@@ -26,6 +26,7 @@ export const defaultApplicationSettings = {
 	highPrecisionShader: true,
 	scaleRounding: "fractional",
 	subPixel: false,
+	syncToDisplay: false,
 	verbose: false,
 	backgroundColor: "#000000",
 } satisfies Partial<ApplicationSettings>;

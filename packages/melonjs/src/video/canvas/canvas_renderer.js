@@ -57,11 +57,6 @@ export default class CanvasRenderer extends Renderer {
 		 */
 		this.cache = new TextureCache(this);
 
-		if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
-			// enable the tile texture seam fix with the canvas renderer
-			this.uvOffset = 1;
-		}
-
 		// set the renderer type
 		this.type = "CANVAS";
 
@@ -105,6 +100,33 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	destroy() {
 		off(GAME_RESET, this.onGameReset);
+	}
+
+	/**
+	 * Resize the canvas, keeping the drawing state this renderer set on it
+	 * (image smoothing, blend mode, color or gradient, line width, join and
+	 * dash).
+	 * Resizing a canvas resets its 2D context to the defaults, image
+	 * smoothing on among them: without this, a game created with
+	 * `antiAlias: false` drew smoothed from its first resize on, with seams
+	 * between its tiles where smoothing took in the spacing of their tileset.
+	 * @param {number} width - new width of the canvas
+	 * @param {number} height - new height of the canvas
+	 */
+	resize(width, height) {
+		const canvas = this.getCanvas();
+		if (width === canvas.width && height === canvas.height) {
+			return;
+		}
+		const lineWidth = this.lineWidth;
+		const lineJoin = this.lineJoin;
+		super.resize(width, height);
+		this.renderTarget.setAntiAlias(this.settings.antiAlias);
+		this.setBlendMode(this.currentBlendMode);
+		this.setColor(this.renderState.currentGradient ?? this.currentColor);
+		this.lineWidth = lineWidth;
+		this.lineJoin = lineJoin;
+		this.getContext().setLineDash(this.renderState.lineDash);
 	}
 
 	/**

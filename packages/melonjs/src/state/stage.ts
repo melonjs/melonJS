@@ -7,6 +7,15 @@ import type World from "./../physics/world.js";
 import { emit, STAGE_RESET } from "../system/event.ts";
 import type Renderer from "./../video/renderer.js";
 
+/**
+ * what a camera's cull mask is checked against, up a renderable's ancestors
+ * @ignore
+ */
+type Layered = {
+	visibilityLayer?: number;
+	ancestor?: Layered | null;
+};
+
 interface StageSettings {
 	cameras: Camera2d[];
 	/**
@@ -83,6 +92,14 @@ export default class Stage {
 	_activeLights: Set<Light2d>;
 
 	/**
+	 * The active lights the camera being drawn draws, refilled by
+	 * {@link Stage#_lightsFor} for each camera (never reallocated).
+	 * @ignore
+	 * @internal
+	 */
+	_cameraLights: Light2d[];
+
+	/**
 	 * Internal set of active 3D lights, auto-populated by `Light3d`'s
 	 * `onActivateEvent` / `onDeactivateEvent` hooks. Read by the lit mesh
 	 * batcher each frame to shade `lit` meshes under a `Camera3d`.
@@ -151,6 +168,7 @@ export default class Stage {
 		this.cameras = new Map();
 		this.lights = new Map();
 		this._activeLights = new Set();
+		this._cameraLights = [];
 		this._activeLights3d = new Set();
 		this.ambientLight = new Color(0, 0, 0, 0);
 		this.ambientLightingColor = new Color(0, 0, 0, 1);
@@ -359,6 +377,41 @@ export default class Stage {
 	}
 
 	/**
+	 * The active lights a camera draws: those on a layer in its
+	 * {@link Camera2d#cullMask}, in containers that are too, as the camera
+	 * leaves out a container with everything in it. A light it leaves out
+	 * neither glows, nor cuts its hole in the darkness, nor lights
+	 * normal-mapped sprites in that camera. The list is reused, so read it
+	 * before the next camera asks.
+	 * @param camera - the camera being drawn
+	 * @returns the lights that camera draws
+	 * @ignore
+	 * @internal
+	 */
+	_lightsFor(camera: Camera2d): Light2d[] {
+		const mask = camera.cullMask;
+		const lights = this._cameraLights;
+		lights.length = 0;
+		for (const light of this._activeLights) {
+			let shown = true;
+			for (
+				let node: Layered | null | undefined = light;
+				node !== undefined && node !== null;
+				node = node.ancestor
+			) {
+				if (((node.visibilityLayer ?? 1) & mask) === 0) {
+					shown = false;
+					break;
+				}
+			}
+			if (shown) {
+				lights.push(light);
+			}
+		}
+		return lights;
+	}
+
+	/**
 	 * Draw the stage's ambient-light overlay with cutouts for each active
 	 * light. Called from each `Camera2d` inside its post-effect FBO bracket —
 	 * lights themselves render via the world tree (they're standard
@@ -420,13 +473,15 @@ export default class Stage {
 		const y = ty - margin;
 		const width = camera.width / camera.zoom + margin * 2;
 		const height = camera.height / camera.zoom + margin * 2;
+		// the lights this camera draws (see `cullMask`)
+		const lights = this._lightsFor(camera);
 		// any light with a soft edge: the renderer draws the darkness with
 		// every light's falloff
-		for (const light of this._activeLights) {
+		for (const light of lights) {
 			if (light.softness > 0) {
 				r.drawAmbientLight(
 					this.ambientLight,
-					this._activeLights,
+					lights,
 					x,
 					y,
 					width,
@@ -440,9 +495,9 @@ export default class Stage {
 		}
 		// punch out each active light's visible area so the ambient fill
 		// doesn't darken what the light is illuminating
-		this._activeLights.forEach((light) => {
+		for (const light of lights) {
 			r.setMask(light.getVisibleArea(), true);
-		});
+		}
 		r.setColor(this.ambientLight);
 		r.fillRect(x, y, width, height);
 		r.clearMask();

@@ -380,26 +380,29 @@ export default class ShaderEffect {
 			this.enabled = true;
 		}
 
-		// the frame a body declaring `ME_frame` keeps its samples inside (see
-		// frame.js): unbounded until a quad batcher hands it one. Recorded
-		// as well, for a mesh hosting the effect, which replays the record
-		// and has no frame to keep to
+		// a body keeping its samples inside the frame it draws (see
+		// frame.js). On a sprite the frame comes with the quad, and only its
+		// half texel is a uniform; a mesh hosting the effect reads `ME_frame`
+		// as a uniform too, and has no frame to keep to: it is recorded
+		// unbounded, for the mesh to replay (the WGSL struct keeps the member,
+		// which the sprite scaffold does not read)
 		const hasFrame =
 			typeof this._shader !== "undefined"
-				? typeof this._shader.uniforms?.ME_frame !== "undefined"
-				: this.wgslRealization.hasUniform("ME_frame");
+				? typeof this._shader.uniforms?.ME_frame_half !== "undefined"
+				: this.wgslRealization.hasUniform("ME_frame_half");
 		if (hasFrame) {
 			/**
 			 * @ignore
 			 * @internal
 			 */
-			this._frameRect = new Float32Array(UNBOUNDED_FRAME);
-			/**
-			 * @ignore
-			 * @internal
-			 */
 			this._frameHalf = new Float32Array(2);
-			this.setUniform("ME_frame", new Float32Array(UNBOUNDED_FRAME));
+			this._uniformValues.set("ME_frame", new Float32Array(UNBOUNDED_FRAME));
+			if (typeof this.wgslRealization !== "undefined") {
+				this.wgslRealization.setUniform(
+					"ME_frame",
+					new Float32Array(UNBOUNDED_FRAME),
+				);
+			}
 			this.setUniform("ME_frame_half", new Float32Array(2));
 		}
 
@@ -460,12 +463,25 @@ export default class ShaderEffect {
 	 * vectors and matrices take an array, a `Float32Array`, or any object
 	 * exposing `toArray()` — which is every {@link Vector2d},
 	 * {@link Vector3d}, {@link Color} and {@link Matrix3d}.
+	 *
+	 * Sprites drawn one after the other through the same effect share one
+	 * draw call. A new value draws the sprites queued before it first, so
+	 * each sprite draws with the values it was given; the value it already
+	 * has changes nothing, and keeps the draw shared.
 	 * @example
 	 * // a scalar the body declares as `uniform float uStrength;`
 	 * fx.setUniform("uStrength", 0.5);
 	 * // a vec3 — an array, or anything with toArray()
 	 * fx.setUniform("uTint", [1.0, 0.82, 0.55]);
 	 * fx.setUniform("uOrigin", new me.Vector2d(0.5, 0.5));
+	 * @example
+	 * // one outline shared by every enemy: drawn in a single call. Marked
+	 * // shared, so the first enemy destroyed does not destroy it for the rest
+	 * const outline = new me.OutlineEffect(renderer, { color: [1, 1, 1] });
+	 * outline.shared = true;
+	 * for (const enemy of enemies) {
+	 *     enemy.addPostEffect(outline);
+	 * }
 	 */
 	setUniform(name, value) {
 		// forward whenever a live shader exists (WebGL mode): GLShader handles
@@ -598,96 +614,56 @@ export default class ShaderEffect {
 	}
 
 	/**
-	 * Hand a body declaring `ME_frame` the frame of the quad about to draw,
-	 * so it keeps its samples inside it (see frame.js): on an atlas, the
-	 * texture goes on past the frame into the neighbouring ones. A side of
-	 * the frame that is the texture's own edge has no frame past it, and is
-	 * left unbounded: there, sampling stays what it always was (the
-	 * texture's wrap mode), so a standalone image, a pattern, or a frame on
-	 * the outside of its atlas draws as it did. Called by the quad batchers
-	 * per quad, each of which an effect draws on its own (a quad through an
-	 * effect is drawn before the next one is queued); a no-op for any other
-	 * body.
-	 * @param {number} u0 - the frame's left UV coordinate
-	 * @param {number} v0 - the frame's top UV coordinate
-	 * @param {number} u1 - the frame's right UV coordinate
-	 * @param {number} v1 - the frame's bottom UV coordinate
+	 * Hand a body declaring `ME_frame` (see frame.js) the half texel of the
+	 * texture the quad about to draw comes from, which `frameTexel()` keeps
+	 * its samples inside the frame by. The frame itself comes with the quad:
+	 * the effect's vertex stage computes it from the quad's corners, leaving
+	 * a side on the texture's own edge unbounded, so sprites drawn from
+	 * different frames through the same effect share one draw. Called by the
+	 * quad batchers per quad; writes only when the texture's size changes,
+	 * and is a no-op for any other body.
 	 * @param {number} sourceWidth - the texture's width, in pixels
 	 * @param {number} sourceHeight - the texture's height, in pixels
 	 * @ignore
 	 * @internal
 	 */
-	_setFrameRect(u0, v0, u1, v1, sourceWidth, sourceHeight) {
-		const width = Math.max(sourceWidth, 1);
-		const height = Math.max(sourceHeight, 1);
-		const left = Math.min(u0, u1);
-		const top = Math.min(v0, v1);
-		const right = Math.max(u0, u1);
-		const bottom = Math.max(v0, v1);
-		// within a hundredth of a texel of the texture's edge: on it (a UV
-		// is a division, and rarely lands on 0 or 1 exactly)
-		const edge = 0.01;
-		this._writeFrameRect(
-			left * width <= edge ? UNBOUNDED_FRAME[0] : left,
-			top * height <= edge ? UNBOUNDED_FRAME[1] : top,
-			right * width >= width - edge ? UNBOUNDED_FRAME[2] : right,
-			bottom * height >= height - edge ? UNBOUNDED_FRAME[3] : bottom,
-			0.5 / width,
-			0.5 / height,
+	_setFrameTexel(sourceWidth, sourceHeight) {
+		this._writeFrameHalf(
+			0.5 / Math.max(sourceWidth, 1),
+			0.5 / Math.max(sourceHeight, 1),
 		);
 	}
 
 	/**
-	 * Leave the samples of a body declaring `ME_frame` unbounded, for a pass
-	 * over a whole texture (a render target blit): there, sampling is what
-	 * it always was, clamped by the texture's own wrap mode.
+	 * For a pass over a whole texture (a render target blit), which draws
+	 * its quad with no frame: `frameTexel()` then samples as it always did,
+	 * clamped by the texture's own wrap mode.
 	 * @ignore
 	 * @internal
 	 */
 	_clearFrameRect() {
-		this._writeFrameRect(
-			UNBOUNDED_FRAME[0],
-			UNBOUNDED_FRAME[1],
-			UNBOUNDED_FRAME[2],
-			UNBOUNDED_FRAME[3],
-			0,
-			0,
-		);
+		this._writeFrameHalf(0, 0);
 	}
 
 	/**
 	 * @ignore
 	 * @internal
 	 */
-	_writeFrameRect(left, top, right, bottom, halfX, halfY) {
-		const rect = this._frameRect;
+	_writeFrameHalf(halfX, halfY) {
 		const half = this._frameHalf;
-		if (rect === undefined || this.destroyed === true) {
+		if (half === undefined || this.destroyed === true) {
 			return;
 		}
-		if (
-			rect[0] === left &&
-			rect[1] === top &&
-			rect[2] === right &&
-			rect[3] === bottom &&
-			half[0] === halfX &&
-			half[1] === halfY
-		) {
+		if (half[0] === halfX && half[1] === halfY) {
 			return;
 		}
-		rect[0] = left;
-		rect[1] = top;
-		rect[2] = right;
-		rect[3] = bottom;
 		half[0] = halfX;
 		half[1] = halfY;
 		// straight to the program, past the record a mesh replays (as the
 		// `noise_uv` rect does)
 		if (typeof this.wgslRealization !== "undefined") {
-			this.wgslRealization.setUniform("ME_frame", rect);
 			this.wgslRealization.setUniform("ME_frame_half", half);
 		} else if (typeof this._shader !== "undefined") {
-			this._shader.setUniform("ME_frame", rect);
 			this._shader.setUniform("ME_frame_half", half);
 		}
 	}
@@ -722,13 +698,33 @@ export default class ShaderEffect {
 			// WGSL: write the engine ME struct's CPU mirror (size_obj @0,
 			// size_img @2, offset @4 — the scaffold's MEBuiltins layout);
 			// snapshot-uploaded alongside the uniform block at bind time
-			const me = this.wgslRealization.meMirror;
-			me[0] = Math.max(Math.abs(objectWidth), 1);
-			me[1] = Math.max(Math.abs(objectHeight), 1);
-			me[2] = Math.max(sourceWidth, 1);
-			me[3] = Math.max(sourceHeight, 1);
-			me[4] = u0 * me[2];
-			me[5] = v0 * me[3];
+			const realization = this.wgslRealization;
+			const me = realization.meMirror;
+			const objW = Math.max(Math.abs(objectWidth), 1);
+			const objH = Math.max(Math.abs(objectHeight), 1);
+			const imgW = Math.max(sourceWidth, 1);
+			const imgH = Math.max(sourceHeight, 1);
+			const offX = u0 * imgW;
+			const offY = v0 * imgH;
+			if (
+				me[0] === objW &&
+				me[1] === objH &&
+				me[2] === imgW &&
+				me[3] === imgH &&
+				me[4] === offX &&
+				me[5] === offY
+			) {
+				return;
+			}
+			// the quads queued under the old rect draw first (the mirror is
+			// uploaded when they draw)
+			realization.onUniformChange?.();
+			me[0] = objW;
+			me[1] = objH;
+			me[2] = imgW;
+			me[3] = imgH;
+			me[4] = offX;
+			me[5] = offY;
 			return;
 		}
 		if (typeof this._shader === "undefined" || this._shader.suspended) {
@@ -779,6 +775,28 @@ export default class ShaderEffect {
 			: gl.CLAMP_TO_EDGE;
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapS);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapT);
+	}
+
+	/**
+	 * Delete a GL texture this effect owns, and forget it wherever a batcher
+	 * still holds it as bound: a filter change re-binds every texture a
+	 * batcher holds, and binding a deleted one is a GL error
+	 * @param {WebGLTexture} texture - the texture to delete
+	 * @ignore
+	 * @internal
+	 */
+	_deleteTexture(texture) {
+		this._renderer.batchers?.forEach((batcher) => {
+			const bound = batcher.boundTextures;
+			if (bound !== undefined) {
+				for (let i = 0; i < bound.length; i++) {
+					if (bound[i] === texture) {
+						bound[i] = undefined;
+					}
+				}
+			}
+		});
+		this._shader.gl.deleteTexture(texture);
 	}
 
 	/**
@@ -847,6 +865,8 @@ export default class ShaderEffect {
 			if (!wgslLive && image instanceof Texture2d) {
 				image = image.getTexture();
 			}
+			// the sprites queued with the previous texture draw first
+			this.wgslRealization.onUniformChange?.();
 			this._extraTextures.set(name, {
 				image,
 				repeat,
@@ -880,12 +900,14 @@ export default class ShaderEffect {
 		// the effect is disabled — or mid-context-loss, where entries set
 		// during the window used to vanish permanently — survives intact.
 		const existing = this._extraTextures.get(name);
+		// the sprites queued with the previous texture draw first
+		this._shader._drawQueued();
 		if (existing && existing.tex !== null) {
 			// drop the old STATIC GL texture we own so the new image re-uploads
 			// into the SAME reserved unit (kept below) on the next enabled draw.
 			// A live entry never owns a GL texture (tex stays null — the
 			// renderer/caller owns the handle), so this correctly skips it.
-			this._shader.gl.deleteTexture(existing.tex);
+			this._deleteTexture(existing.tex);
 		}
 		this._extraTextures.set(name, {
 			image,
@@ -1193,7 +1215,7 @@ export default class ShaderEffect {
 					this._renderer.cache.releaseUnit(entry.unit);
 				}
 				if (entry.tex !== null) {
-					this._shader.gl.deleteTexture(entry.tex);
+					this._deleteTexture(entry.tex);
 				}
 			}
 			this._extraTextures.clear();

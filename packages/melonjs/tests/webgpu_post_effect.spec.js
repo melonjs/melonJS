@@ -284,15 +284,20 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 			renderer.pipelineCache.emptyBindGroup,
 		);
 
-		// the last write is the quad: 4×28 bytes, v=0 at the top (no flip)
+		// the last write is the quad: 4×36 bytes, v=0 at the top (no flip)
 		const quadWrite = renderer.calls.writes.at(-1);
-		expect(quadWrite.size).toBe(112);
+		expect(quadWrite.size).toBe(144);
 		// vertex 0 uv = (0,0); vertex 2 (x, y+h) uv = (0,1)
 		expect([quadWrite.floats[3], quadWrite.floats[4]]).toEqual([0, 0]);
-		expect([quadWrite.floats[17], quadWrite.floats[18]]).toEqual([0, 1]);
+		expect([quadWrite.floats[21], quadWrite.floats[22]]).toEqual([0, 1]);
+		// a blit draws the whole target: its frame is unbounded
+		for (let v = 0; v < 4; v++) {
+			expect(quadWrite.floats[v * 9 + 7]).toBe(-1e6);
+			expect(quadWrite.floats[v * 9 + 8]).toBe(-1e6);
+		}
 	});
 
-	it("fast path: adopting customShader drains the pending batch, then draws per quad", async () => {
+	it("fast path: effect sprites share a draw until a uniform changes", async () => {
 		const { default: WebGPUQuadBatcherClass } = await import(
 			"../src/video/webgpu/batchers/quad_batcher.js"
 		);
@@ -306,42 +311,82 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 				return { width: 64, height: 32 };
 			},
 		};
+		const snapshots = () => {
+			return renderer.calls.writes
+				.filter((write) => {
+					return write.size === 16;
+				})
+				.map((write) => {
+					return write.floats[0];
+				});
+		};
 
 		// two plain quads batch together...
 		batcher.addQuad(atlas, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
 		batcher.addQuad(atlas, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
 		expect(renderer.calls.drawIndexed).toEqual([]);
 
-		// ...the effect sprite adopts: pending batch drains under the DEFAULT
-		// pipeline, then the effect quad draws alone under the effect family
+		// ...the effect sprite adopts: the pending batch drains under the
+		// DEFAULT pipeline, and the effect quad waits for company
 		renderer.customShader = effect;
 		effect.setUniform("uStrength", 0.5);
 		batcher.addQuad(atlas, 16, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
-		expect(renderer.calls.drawIndexed).toEqual([12, 6]);
+		expect(renderer.calls.drawIndexed).toEqual([12]);
 		expect(renderer.calls.pipelineKeys[0]).toContain("quad|");
+
+		// the same uniform value again changes nothing: it joins the draw
+		effect.setUniform("uStrength", 0.5);
+		batcher.addQuad(atlas, 24, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([12]);
+
+		// a new value draws the two queued under the old one first, with it
+		effect.setUniform("uStrength", 0.9);
+		expect(renderer.calls.drawIndexed).toEqual([12, 12]);
 		// blending KEPT — live compositing is the fast path's semantic
-		expect(renderer.calls.pipelineKeys[1]).toBe(
+		expect(renderer.calls.pipelineKeys.at(-1)).toBe(
 			"effect:0|triangle-list|normal|true|none",
 		);
-
-		// a second effect sprite is its own draw with its own snapshot
-		effect.setUniform("uStrength", 0.9);
-		batcher.addQuad(atlas, 24, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
-		expect(renderer.calls.drawIndexed).toEqual([12, 6, 6]);
-		const snapshots = renderer.calls.writes.filter((write) => {
-			return write.size === 16;
-		});
-		expect(
-			snapshots.map((write) => {
-				return write.floats[0];
-			}),
-		).toEqual([0.5, expect.closeTo(0.9)]);
-
-		// clearing customShader returns to plain batching
-		renderer.customShader = undefined;
 		batcher.addQuad(atlas, 32, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([12, 12]);
+
+		// clearing customShader draws the queued effect quad, with ITS value,
+		// and returns to plain batching
+		renderer.customShader = undefined;
+		batcher.addQuad(atlas, 40, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		expect(renderer.calls.drawIndexed).toEqual([12, 12, 6]);
+		expect(snapshots()).toEqual([0.5, expect.closeTo(0.9)]);
 		batcher.flush();
 		expect(renderer.calls.pipelineKeys.at(-1)).toContain("quad|");
+	});
+
+	it("fast path: a change to an effect no longer drawn draws nothing", async () => {
+		// the hook belongs to the batcher's current effect only
+		const { default: WebGPUQuadBatcherClass } = await import(
+			"../src/video/webgpu/batchers/quad_batcher.js"
+		);
+		const renderer = createMockWebGPURenderer();
+		const batcher = new WebGPUQuadBatcherClass(renderer);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const first = new ShaderEffect({ shaderLanguage: "wgsl" }, { wgsl: BODY });
+		const second = new ShaderEffect({ shaderLanguage: "wgsl" }, { wgsl: BODY });
+		warn.mockRestore();
+		const atlas = {
+			getTexture() {
+				return { width: 64, height: 32 };
+			},
+		};
+		renderer.customShader = first;
+		batcher.addQuad(atlas, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		renderer.customShader = second;
+		batcher.addQuad(atlas, 8, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+		const draws = renderer.calls.drawIndexed.length;
+		// `first` is not the one queued: changing it draws nothing
+		first.setUniform("uStrength", 0.3);
+		expect(renderer.calls.drawIndexed.length).toBe(draws);
+		expect(first.wgslRealization.onUniformChange).toBe(null);
+		// `second` is: changing it draws its quad
+		second.setUniform("uStrength", 0.7);
+		expect(renderer.calls.drawIndexed.length).toBe(draws + 1);
 	});
 
 	it("fast path: screen_texture effects capture the backdrop before each sprite", async () => {

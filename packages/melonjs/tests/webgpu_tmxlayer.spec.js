@@ -68,6 +68,31 @@ describe("WebGPU orthogonal TMX layer renderer (mock)", () => {
 		expect(again.key).toBe(tmx.key);
 	});
 
+	it("draws its quad in the sprite vertex layout, with no frame to keep to", () => {
+		// four vertices of the quad batcher's own stride (it grew from 28 to
+		// 36 bytes when sprite vertices took a frame): a quad written or bound
+		// at another size is not drawn on a real device
+		const layer = makeLayer();
+		tmx.draw(layer, RECT);
+		const batcher = renderer.currentBatcher;
+		const size = 4 * batcher.stride;
+		expect(batcher.stride).toBe(36);
+		expect(renderer.calls.vertexBufferBinds.at(-1).size).toBe(size);
+		const quad = renderer.calls.writes.find((write) => {
+			return write.size === size;
+		});
+		expect(quad).toBeDefined();
+		const floats = batcher.stride / 4;
+		const uvs = [];
+		for (let v = 0; v < 4; v++) {
+			const at = v * floats;
+			uvs.push(`${quad.floats[at + 3]},${quad.floats[at + 4]}`);
+			// the whole index texture is read: no frame
+			expect(quad.floats[at + 7]).toBe(-1e6);
+		}
+		expect(uvs.sort()).toEqual(["0,0", "0,1", "1,0", "1,1"]);
+	});
+
 	it("uploads the GID index once per data version", () => {
 		const layer = makeLayer();
 		tmx.draw(layer, RECT);

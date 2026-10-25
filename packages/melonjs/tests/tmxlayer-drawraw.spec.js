@@ -84,7 +84,6 @@ function makeRecordingRenderer() {
 	const transformStack = [];
 	let current = { tx: 0, ty: 0 };
 	return {
-		uvOffset: 0,
 		drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
 			calls.push({
 				image,
@@ -247,7 +246,6 @@ describe("Tile rendering raw path (drawTileRaw)", () => {
 			let saved = 0;
 			let restored = 0;
 			const renderer = {
-				uvOffset: 0,
 				drawImage() {},
 				save() {
 					saved++;
@@ -269,7 +267,6 @@ describe("Tile rendering raw path (drawTileRaw)", () => {
 			let saved = 0;
 			let restored = 0;
 			const renderer = {
-				uvOffset: 0,
 				drawImage() {},
 				save() {
 					saved++;

@@ -88,40 +88,83 @@ describe("2D specular", () => {
 	});
 
 	describe("the vertex layout", () => {
-		it("writes the exponent into the layout's last slot", (ctx) => {
+		it("writes the exponent into the layout's last slot, after the frame", (ctx) => {
 			requireWebGL(ctx, renderer);
 			const batcher = renderer.setBatcher("litQuad");
 			batcher.vertexData.clear();
 			const size = batcher.vertexData.vertexSize;
-			// the layout's last slot is aShininess
-			expect(size).toBe(9);
+			// the two-float aFrame fifth, as in every sprite layout, then
+			// aNormalTextureId and aShininess
+			expect(size).toBe(11);
 
-			batcher.vertexData.push(1, 2, 0, 0, 0, 0xffffffff, 0, 3, 48);
-			expect(batcher.vertexData.bufferF32[8]).toBe(48);
+			batcher.vertexData.pushSprite(
+				1,
+				2,
+				0,
+				0,
+				0,
+				0xffffffff,
+				0,
+				0.25,
+				0.5,
+				3,
+				48,
+			);
+			const f32 = batcher.vertexData.bufferF32;
+			expect([f32[7], f32[8]]).toEqual([0.25, 0.5]);
+			expect(f32[9]).toBe(3);
+			expect(f32[10]).toBe(48);
 		});
 
-		it("REGRESSION: an omitted exponent writes 0, not the -1 unlit sentinel", (ctx) => {
+		it("REGRESSION: an unlit sprite carries -1 for its normal map and 0 for its exponent", (ctx) => {
 			requireWebGL(ctx, renderer);
-			// -1 is the sentinel for `aNormalTextureId` one slot earlier; a
-			// negative exponent reaching `pow()` would explode, so the two
-			// defaults deliberately differ
+			// -1 is the "no normal map" sentinel the shader's unlit path keys
+			// on, 0 a matte exponent; the two differ on purpose, as a
+			// negative exponent reaching `pow()` would explode, and 0 for
+			// the normal map would shade an unlit sprite with whatever sits
+			// in slot 0
 			const batcher = renderer.setBatcher("litQuad");
 			batcher.vertexData.clear();
-			// poison the slot first: `clear()` only resets the vertex count, so
-			// a fresh buffer reads 0 there anyway and the assertion below would
-			// pass on a build that never writes it at all
-			batcher.vertexData.bufferF32[8] = -999;
-			batcher.vertexData.push(1, 2, 0, 0, 0, 0xffffffff, 0);
-			expect(batcher.vertexData.bufferF32[7]).toBe(-1);
-			expect(batcher.vertexData.bufferF32[8]).toBe(0);
+			// poison both slots: `clear()` only resets the vertex count, so
+			// a build that never wrote them would still read 0 there
+			batcher.vertexData.bufferF32[9] = -999;
+			batcher.vertexData.bufferF32[10] = -999;
+			renderer.currentShininess = undefined;
+			const image = document.createElement("canvas");
+			image.width = image.height = 8;
+			batcher.addQuad(
+				renderer.cache.get(image),
+				0,
+				0,
+				8,
+				8,
+				0,
+				0,
+				1,
+				1,
+				0xffffffff,
+				false,
+				null,
+			);
+			expect(batcher.vertexData.bufferF32[9]).toBe(-1);
+			expect(batcher.vertexData.bufferF32[10]).toBe(0);
+			batcher.vertexData.clear();
+			renderer.currentShininess = 0;
 		});
 
-		it("REGRESSION: the unlit quad layout is untouched", (ctx) => {
+		it("REGRESSION: the lit terms stay off the unlit quad layout", (ctx) => {
 			requireWebGL(ctx, renderer);
 			// widening the shared layout would charge every unlit sprite in
-			// the engine 4 bytes a vertex for a term it never evaluates
-			expect(renderer.setBatcher("quad").stride).toBe(28);
-			expect(renderer.setBatcher("litQuad").stride).toBe(36);
+			// the engine 4 bytes a vertex for each term it never evaluates
+			const quad = renderer.setBatcher("quad");
+			const lit = renderer.setBatcher("litQuad");
+			const names = quad.attributes.map((a) => {
+				return a.name;
+			});
+			expect(names).not.toContain("aNormalTextureId");
+			expect(names).not.toContain("aShininess");
+			// the normal map slot and the exponent, and nothing else
+			expect(lit.stride - quad.stride).toBe(8);
 		});
 	});
 

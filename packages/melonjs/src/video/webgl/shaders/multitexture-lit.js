@@ -1,10 +1,14 @@
 import { MAX_LIGHTS } from "../lighting/constants.ts";
+import { FRAME_FRAGMENT_GLSL } from "./frameclamp.js";
 
 /**
  * Build the GLSL `if/else` chain that picks among N samplers based on
  * an interpolated float texture-id. Dynamic indexing of a `sampler2D`
  * array is forbidden in GLSL ES 3.00 exactly as it was in 1.00, so this
- * stays an if-ladder using the usual `< i + 0.5` threshold pattern.
+ * stays an if-ladder using the usual `< i + 0.5` threshold pattern. Each
+ * sample stays inside the quad's frame under the `"linear-mipmap"` filter
+ * (see `frameclamp.js`); a normal map is UV-paired with its color atlas,
+ * so the two keep to the same frame.
  * @ignore
  * @internal
  */
@@ -17,12 +21,21 @@ function buildSamplerSelect(varName, samplerPrefix, count, target) {
 			lines.push("    } else if (" + varName + " < " + (i + 0.5) + ") {");
 		}
 		lines.push(
-			"        " + target + " = texture(" + samplerPrefix + i + ", vRegion);",
+			"        " +
+				target +
+				" = frameSample(" +
+				samplerPrefix +
+				i +
+				", vRegion, gx, gy);",
 		);
 	}
 	lines.push("    } else {");
 	lines.push(
-		"        " + target + " = texture(" + samplerPrefix + "0, vRegion);",
+		"        " +
+			target +
+			" = frameSample(" +
+			samplerPrefix +
+			"0, vRegion, gx, gy);",
 	);
 	lines.push("    }");
 	return lines;
@@ -97,8 +110,11 @@ export function buildLitMultiTextureFragment(maxTextures) {
 	lines.push("in float vShininess;");
 	lines.push("in vec2 vWorldPos;");
 	lines.push("out vec4 fragColor;");
-	lines.push("");
+	lines.push(FRAME_FRAGMENT_GLSL);
 	lines.push("void main(void) {");
+	// the UV's derivatives, while control flow is still uniform
+	lines.push("    vec2 gx = dFdx(vRegion);");
+	lines.push("    vec2 gy = dFdy(vRegion);");
 	lines.push("    vec4 color;");
 
 	lines.push(...buildSamplerSelect("vTextureId", "uSampler", count, "color"));

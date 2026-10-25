@@ -1,4 +1,6 @@
+import { Rect } from "../../geometries/rectangle.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
+import { boundsPool } from "../../physics/bounds.ts";
 import Renderable from "../../renderable/renderable.js";
 import CanvasRenderer from "../../video/canvas/canvas_renderer";
 import { createCanvas } from "../../video/canvas_factory.js";
@@ -345,16 +347,10 @@ export default class TMXLayer extends Renderable {
 		// per-layer preRender hint
 		this._resolveRenderMode();
 
-		// if pre-rendering method is in use, create an offline canvas/renderer
+		// if pre-rendering method is in use, bake the layer into an offscreen
+		// canvas, drawn as one image from then on
 		if (this.renderMode === "prerender" && !this.canvasRenderer) {
-			this.canvasRenderer = new CanvasRenderer({
-				canvas: createCanvas(this.width, this.height),
-				width: this.width,
-				height: this.height,
-				transparent: true,
-			});
-			// pre render the layer on the canvas
-			this.getRenderer().drawTileLayer(this.canvasRenderer, this, this);
+			this._bakePreRender();
 		}
 		// keep `preRender` boolean in sync with the resolved mode (legacy
 		// callers still read it; `Renderer.drawTileLayer` itself reads
@@ -362,6 +358,126 @@ export default class TMXLayer extends Renderable {
 		this.preRender = this.renderMode === "prerender";
 
 		this.isDirty = true;
+	}
+
+	/**
+	 * Bake every tile of the layer into its offscreen canvas. The canvas
+	 * covers what the map renderer gives as the layer's bounds, which on a
+	 * hexagonal, staggered or oblique map reach past `cols * tilewidth`
+	 * (and on an oblique one, left of or above 0), grown on every side by
+	 * how far an oversized or offset tile can reach past its cell. `_preRenderX` /
+	 * `_preRenderY` are where the canvas's top left corner sits.
+	 * @ignore
+	 * @internal
+	 */
+	_bakePreRender() {
+		const renderer = this.getRenderer();
+		const bounds = renderer.getBounds(this);
+		// an oversized tile reaches past its cell (which way depends on the
+		// orientation: up on an orthogonal map, down on a hexagonal one), and
+		// a tileset's offset moves all of its tiles
+		const overX = Math.max(this.maxTileSize.width - this.tilewidth, 0);
+		const overY = Math.max(this.maxTileSize.height - this.tileheight, 0);
+		let left = bounds.left - overX;
+		let top = bounds.top - overY;
+		let right = bounds.right + overX;
+		let bottom = bounds.bottom + overY;
+		boundsPool.release(bounds);
+		let offset = false;
+		for (let i = 0; i < this.tilesets.length; i++) {
+			const { x, y } = this.tilesets.getTilesetByIndex(i).tileoffset;
+			left += Math.min(x, 0);
+			right += Math.max(x, 0);
+			top += Math.min(y, 0);
+			bottom += Math.max(y, 0);
+			offset = offset || x !== 0 || y !== 0;
+		}
+		const x = Math.floor(left);
+		const y = Math.floor(top);
+		const width = Math.max(Math.ceil(right) - x, 1);
+		const height = Math.max(Math.ceil(bottom) - y, 1);
+
+		const previous = this.canvasRenderer?.getCanvas();
+		if (previous?.width === width && previous?.height === height) {
+			this.canvasRenderer.clearRect(0, 0, width, height);
+		} else {
+			// not resized: a renderer's resize is announced to the whole
+			// game, whose own renderer would take the canvas's size
+			this.canvasRenderer?.destroy();
+			this.canvasRenderer = new CanvasRenderer({
+				canvas: createCanvas(width, height),
+				width,
+				height,
+				transparent: true,
+			});
+		}
+		/** @ignore */
+		this._preRenderX = x;
+		/** @ignore */
+		this._preRenderY = y;
+		/**
+		 * whether a tile changed at runtime can be redrawn in its cell alone,
+		 * overlapping no other: an orthogonal map whose tiles all fit their
+		 * cell, with no offset. Anywhere else the layer is baked again
+		 * @ignore
+		 */
+		this._preRenderInPlace =
+			this.orientation === "orthogonal" &&
+			this.maxTileSize.width <= this.tilewidth &&
+			this.maxTileSize.height <= this.tileheight &&
+			!offset;
+		/** @ignore */
+		this._preRenderStale = false;
+		/**
+		 * whether the baked canvas changed since the layer last drew it: the
+		 * renderer drawing it keeps a copy (a texture on the GPU, a tinted
+		 * image on Canvas) to refresh
+		 * @ignore
+		 */
+		this._preRenderChanged = true;
+
+		this.canvasRenderer.save();
+		this.canvasRenderer.translate(-x, -y);
+		renderer.drawTileLayer(
+			this.canvasRenderer,
+			this,
+			new Rect(x, y, width, height),
+		);
+		this.canvasRenderer.restore();
+	}
+
+	/**
+	 * Bring the baked canvas up to date with the tile at (x, y), just set or
+	 * cleared: redrawn in its cell where that is exact, else baked again
+	 * before the layer next draws
+	 * @param {number} x - the tile's column
+	 * @param {number} y - the tile's row
+	 * @ignore
+	 * @internal
+	 */
+	_preRenderCell(x, y) {
+		if (this.preRender !== true || this.canvasRenderer === undefined) {
+			return;
+		}
+		if (this._preRenderInPlace !== true) {
+			this._preRenderStale = true;
+			return;
+		}
+		const canvas = this.canvasRenderer;
+		canvas.save();
+		canvas.translate(-this._preRenderX, -this._preRenderY);
+		canvas.clearRect(
+			x * this.tilewidth,
+			y * this.tileheight,
+			this.tilewidth,
+			this.tileheight,
+		);
+		const tile = this.cellAt(x, y, false);
+		if (tile !== null) {
+			this.getRenderer().drawTile(canvas, x, y, tile);
+		}
+		canvas.restore();
+		this._preRenderChanged = true;
 	}
 
 	/**
@@ -599,6 +715,7 @@ export default class TMXLayer extends Renderable {
 		}
 		this.dataVersion++;
 		this.isDirty = true;
+		this._preRenderCell(x, y);
 		return tile;
 	}
 
@@ -691,17 +808,9 @@ export default class TMXLayer extends Renderable {
 		if (this.cachedTile !== null) {
 			this.cachedTile[slot] = null;
 		}
-		// erase the corresponding area in the canvas
-		if (this.preRender) {
-			this.canvasRenderer.clearRect(
-				x * this.tilewidth,
-				y * this.tileheight,
-				this.tilewidth,
-				this.tileheight,
-			);
-		}
 		this.dataVersion++;
 		this.isDirty = true;
+		this._preRenderCell(x, y);
 	}
 
 	/**
@@ -725,6 +834,18 @@ export default class TMXLayer extends Renderable {
 	 * @internal
 	 */
 	draw(renderer, rect) {
+		// a tile changed since the layer was baked, where it could not be
+		// redrawn alone
+		if (this._preRenderStale === true && this.canvasRenderer !== undefined) {
+			this._bakePreRender();
+		}
+		// the baked canvas changed: refresh the renderer's copy of it, its
+		// texture on the GPU or a tinted image on Canvas
+		if (this._preRenderChanged === true && this.canvasRenderer !== undefined) {
+			this._preRenderChanged = false;
+			this.canvasRenderer.renderTarget.invalidate(renderer);
+			renderer.cache.tinted?.delete(this.canvasRenderer.getCanvas());
+		}
 		// dispatch to the active renderer — picks shader / preRender / perTile
 		// based on `this.renderMode` and the renderer's capabilities
 		renderer.drawTileLayer(this, rect);

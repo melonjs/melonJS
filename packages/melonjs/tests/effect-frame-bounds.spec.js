@@ -297,17 +297,31 @@ describe("effects keep to the sprite's frame (WebGL)", () => {
 		return out;
 	};
 
-	/** run `fn` with the effects sampling as they did before frames were kept to */
+	/**
+	 * run `fn` with the effects sampling as they did before frames were kept
+	 * to: every quad drawn with no frame (as a blit is), and no half texel
+	 */
 	const unbounded = (fn) => {
 		const proto = ShaderEffect.prototype;
-		const setFrameRect = proto._setFrameRect;
-		proto._setFrameRect = function () {
+		const setFrameTexel = proto._setFrameTexel;
+		const vertices = renderer.batchers.get("quad").vertexData;
+		const pushSpriteQuad = vertices.pushSpriteQuad;
+		// fail loudly rather than silently compare a frame with itself, should
+		// either hook be renamed
+		expect(typeof setFrameTexel).toBe("function");
+		expect(typeof pushSpriteQuad).toBe("function");
+		proto._setFrameTexel = function () {
 			this._clearFrameRect();
+		};
+		vertices.pushSpriteQuad = function (...args) {
+			args[10] = false;
+			return pushSpriteQuad.apply(this, args);
 		};
 		try {
 			return fn();
 		} finally {
-			proto._setFrameRect = setFrameRect;
+			proto._setFrameTexel = setFrameTexel;
+			vertices.pushSpriteQuad = pushSpriteQuad;
 		}
 	};
 

@@ -70,6 +70,7 @@ uniform vec2 uVisibleSize;
 uniform int  uAnimSize;          // number of entries in uAnimLookup, 0 if disabled
 uniform float uOpacity;
 uniform vec4 uTint;
+uniform float uMipmaps;          // 1 under the "linear-mipmap" filter, else 0
 
 out vec4 fragColor;
 
@@ -80,7 +81,13 @@ const int MAX_OVERFLOW = 4;
 // contains a visible, in-range tile whose pixel covers this fragment.
 // Identical logic for both fast and slow paths — GLSL inlines this
 // trivially so there's no function-call overhead at runtime.
-bool tryRenderCell(int cx, int cy, vec2 worldPx, out vec4 outColor) {
+//
+// `dWorldX` / `dWorldY` are the world position's screen derivatives, taken
+// in `main` where control flow is still uniform: the atlas coordinate jumps
+// from one tile to the next, so its own derivatives would pick a tiny mip
+// level along every tile edge. A texel of the atlas is a world pixel, so
+// the world's derivatives are the atlas's.
+bool tryRenderCell(int cx, int cy, vec2 worldPx, vec2 dWorldX, vec2 dWorldY, out vec4 outColor) {
 	int mapW = int(uMapSize.x);
 	int mapH = int(uMapSize.y);
 	if (cx < 0 || cx >= mapW || cy < 0 || cy >= mapH) {
@@ -135,9 +142,25 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, out vec4 outColor) {
 	vec2 tileOriginPx = uTilesetMargin.xy
 		+ vec2(col, row) * (uTileSize + uTilesetMargin.zw);
 	vec2 texelPx = tileOriginPx + inTile * uTileSize;
+	// keep the sample half a texel of the level it reads inside the tile,
+	// so filtering never blends in the next tile of the tileset, or the
+	// spacing around it, along the tile's edge: a seam between two tiles
+	// (never past the tile's centre). Without mipmaps that level is the
+	// full-size art; under them, the deepest level read is the next one up
+	// once the level is past a whole number, by more than a rounding error:
+	// drawn at its size, the derivatives are 1 give or take a few ulps, and
+	// level 0 it is. Sampled nearest, the sample stays in the same texel
+	float lod = ceil(log2(max(max(length(dWorldX), length(dWorldY)), 1.0)) - 0.01);
+	vec2 inset = min(vec2(0.5 * exp2(lod * uMipmaps)), uTileSize * 0.5);
+	texelPx = clamp(texelPx, tileOriginPx + inset, tileOriginPx + uTileSize - inset);
 	vec2 texelUV = texelPx * uInvTilesetSize;
 
-	vec4 sampled = texture(uSampler, texelUV);
+	vec4 sampled = textureGrad(
+		uSampler,
+		texelUV,
+		dWorldX * uInvTilesetSize,
+		dWorldY * uInvTilesetSize
+	);
 	if (sampled.a <= 0.0) {
 		return false;
 	}
@@ -145,10 +168,20 @@ bool tryRenderCell(int cx, int cy, vec2 worldPx, out vec4 outColor) {
 	return true;
 }
 
+// the layer's opacity and tint applied to a texel. The texel is
+// premultiplied, as the blending expects: the opacity scales its color as
+// well as its alpha. The tint colors it; its alpha is not an opacity, as on
+// a sprite
+vec4 layerColor(vec4 texel) {
+	return texel * uOpacity * vec4(uTint.rgb, 1.0);
+}
+
 void main(void) {
 	vec2 tileCoord = uVisibleStart + vRegion * uVisibleSize;
 	vec2 geomCell = floor(tileCoord);
 	vec2 worldPx = tileCoord * uCellSize;
+	vec2 dWorldX = dFdx(worldPx);
+	vec2 dWorldY = dFdy(worldPx);
 
 	int gx = int(geomCell.x);
 	int gy = int(geomCell.y);
@@ -160,11 +193,10 @@ void main(void) {
 	// Fast path: tiles fit the cell exactly (the common case) — only the
 	// geometric cell can contain this fragment's tile.
 	if (overflowX == 0 && overflowY == 0) {
-		if (!tryRenderCell(gx, gy, worldPx, result)) {
+		if (!tryRenderCell(gx, gy, worldPx, dWorldX, dWorldY, result)) {
 			discard;
 		}
-		result.a *= uOpacity;
-		fragColor = result * uTint;
+		fragColor = layerColor(result);
 		return;
 	}
 
@@ -177,7 +209,7 @@ void main(void) {
 		if (dy > overflowY) continue;
 		for (int dx = 0; dx <= MAX_OVERFLOW; dx++) {
 			if (dx > overflowX) break;
-			if (tryRenderCell(gx - dx, gy + dy, worldPx, result)) {
+			if (tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY, result)) {
 				found = true;
 				break;
 			}
@@ -185,6 +217,5 @@ void main(void) {
 		if (found) break;
 	}
 	if (!found) discard;
-	result.a *= uOpacity;
-	fragColor = result * uTint;
+	fragColor = layerColor(result);
 }

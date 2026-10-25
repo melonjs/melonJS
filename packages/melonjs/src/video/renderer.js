@@ -304,8 +304,14 @@ export default class Renderer {
 		 */
 		this._fog3d = null;
 
-		// default uvOffset
-		this.uvOffset = 0;
+		/**
+		 * true while a tile layer draws its tiles one by one, between
+		 * `beginTileLayer` and `endTileLayer`
+		 * @type {boolean}
+		 * @ignore
+		 * @internal
+		 */
+		this.drawingTiles = false;
 
 		/**
 		 * The normal-map texture associated with the next `drawImage` call,
@@ -1396,31 +1402,63 @@ export default class Renderer {
 	 */
 	drawTileLayer(layer, rect) {
 		if (layer.canvasRenderer) {
-			// clamp the source rect to the cached canvas bounds — the
-			// visible region can start inside the layer (camera scrolled
-			// in from the origin) and extend past the layer's right /
-			// bottom edge, so the source width must be reduced by
-			// `rect.pos.*` to avoid reading past the canvas
-			const width = Math.min(rect.width, layer.width - rect.pos.x);
-			const height = Math.min(rect.height, layer.height - rect.pos.y);
+			// the visible region, in the baked canvas, whose top left corner
+			// sits at (_preRenderX, _preRenderY): clamped to the canvas, as
+			// the region can start before it or run past it
+			const canvas = layer.canvasRenderer.getCanvas();
+			const originX = layer._preRenderX ?? 0;
+			const originY = layer._preRenderY ?? 0;
+			const sx = Math.max(rect.pos.x - originX, 0);
+			const sy = Math.max(rect.pos.y - originY, 0);
+			const width =
+				Math.min(rect.pos.x + rect.width - originX, canvas.width) - sx;
+			const height =
+				Math.min(rect.pos.y + rect.height - originY, canvas.height) - sy;
 			if (width <= 0 || height <= 0) {
 				return;
 			}
 			this.drawImage(
-				layer.canvasRenderer.getCanvas(),
-				rect.pos.x,
-				rect.pos.y,
+				canvas,
+				sx,
+				sy,
 				width,
 				height,
-				rect.pos.x,
-				rect.pos.y,
+				sx + originX,
+				sy + originY,
 				width,
 				height,
 			);
 			return;
 		}
-		layer.getRenderer().drawTileLayer(this, layer, rect);
+		// a tile keeps to its own tile while the layer draws (see
+		// `beginTileLayer`): no seam between two of them
+		this.beginTileLayer();
+		try {
+			layer.getRenderer().drawTileLayer(this, layer, rect);
+		} finally {
+			this.endTileLayer();
+		}
 	}
+
+	/**
+	 * Called before a tile layer draws its tiles one by one, and paired with
+	 * {@link Renderer#endTileLayer} after. Between the two, the GPU
+	 * renderers keep every sample half a texel inside its tile, so that
+	 * filtering never blends the next tile of the tileset, or the spacing
+	 * around it, into a tile's edge: a seam between two tiles. The base, and
+	 * so the Canvas renderer, does nothing.
+	 * @ignore
+	 * @internal
+	 */
+	beginTileLayer() {}
+
+	/**
+	 * Called after a tile layer has drawn its tiles (see
+	 * {@link Renderer#beginTileLayer}). The base does nothing.
+	 * @ignore
+	 * @internal
+	 */
+	endTileLayer() {}
 
 	/**
 	 * Set the current fill & stroke style color.
@@ -2046,8 +2084,9 @@ export default class Renderer {
 	/**
 	 * Resolve the default texture filter **mode** for this renderer, decoupled
 	 * from {@link Renderer#setAntiAlias} (which controls polygon-edge MSAA on GPU
-	 * backends). Honors the `textureFilter` setting (`"nearest"` / `"linear"`),
-	 * falling back to the `antiAlias` setting when it's `"auto"` (the default).
+	 * backends). Honors the `textureFilter` setting (`"nearest"` / `"linear"`,
+	 * `"linear-mipmap"` resolving to `"linear"`), falling back to the
+	 * `antiAlias` setting when it's `"auto"` (the default).
 	 *
 	 * Backend-neutral on purpose: it returns the mode as a string so each GPU
 	 * backend maps it to its own enum (WebGL `gl.LINEAR` / `gl.NEAREST`, a future
@@ -2060,8 +2099,36 @@ export default class Renderer {
 		if (mode === "linear" || mode === "nearest") {
 			return mode;
 		}
+		// linear, plus mipmaps where `wantsMipmaps` allows them
+		if (mode === "linear-mipmap") {
+			return "linear";
+		}
 		// "auto" (or unset) → follow the antiAlias setting
 		return this.settings.antiAlias ? "linear" : "nearest";
+	}
+
+	/**
+	 * Whether a texture drawn in 2D samples its mipmaps: the
+	 * `"linear-mipmap"` filter, over a source the backend keeps a full chain
+	 * for. Not a video, which would have to rebuild it every frame, nor a
+	 * texture the engine renders into (a `TextureResource`), whose smaller
+	 * levels are never filled. The backend also requires the texture's own
+	 * filter to be linear. Checks the filter first, so that with any other
+	 * the texture is never looked at.
+	 * @param {object} texture - the texture drawn (a `TextureAtlas`)
+	 * @returns {boolean} true to sample the mipmaps
+	 * @ignore
+	 * @internal
+	 */
+	wantsMipmaps(texture) {
+		if (this.settings.textureFilter !== "linear-mipmap") {
+			return false;
+		}
+		const source = texture.getTexture();
+		return (
+			typeof source.videoWidth === "undefined" &&
+			typeof source.upload !== "function"
+		);
 	}
 
 	/**
@@ -2069,7 +2136,12 @@ export default class Renderer {
 	 * decoupled from {@link Renderer#setAntiAlias}. The base implementation just
 	 * records the setting (the Canvas renderer has no per-texture filtering);
 	 * GPU backends override this to re-apply the filter to live textures.
-	 * @param {"auto"|"nearest"|"linear"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 * @param {"auto"|"nearest"|"linear"|"linear-mipmap"} [mode="auto"] - `"auto"` follows `antiAlias`
+	 * @example
+	 * // smooth, and from the mipmaps wherever something is drawn small
+	 * app.renderer.setTextureFilter("linear-mipmap");
+	 * // back to the antiAlias setting
+	 * app.renderer.setTextureFilter("auto");
 	 */
 	setTextureFilter(mode = "auto") {
 		this.settings.textureFilter = mode;

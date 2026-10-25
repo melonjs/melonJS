@@ -373,6 +373,7 @@ In rough order for a typical 2D game:
 | a freeze the first time a level shows, never again | shader variants linking on first draw — warm them behind the loading screen |
 | a freeze the first time an effect appears mid-play (a shield, a hit flash) | the effect attached in the same frame it is drawn — attach it when the pool is built, so the warm-up has a frame to finish |
 | the same scene stutters once per entry | a derived texture rebuilt per stage: the texture cache keys on the image object, so each rebuild is a new upload |
+| steady movement stutters while the frame rate reads 60 | not a cost: frame-time jitter gives a frame no update and the next two; set `syncToDisplay: true` (see `melonjs-display-and-scaling`) |
 
 ## Related skills
 

@@ -278,8 +278,8 @@ describe("depth pipeline adversarial integration", () => {
 		// intercept vertex pushes so we can inspect z values before the
 		// internal flush wipes them
 		const captured = [];
-		const originalPush = batcher.vertexData.push.bind(batcher.vertexData);
-		batcher.vertexData.push = (...args) => {
+		const originalPush = batcher.vertexData.pushSprite.bind(batcher.vertexData);
+		batcher.vertexData.pushSprite = (...args) => {
 			captured.push(args[2]); // z is the 3rd component (x, y, z, ...)
 			originalPush(...args);
 		};
@@ -287,7 +287,7 @@ describe("depth pipeline adversarial integration", () => {
 		try {
 			batcher.blitTexture(rawTex, 0, 0, 32, 32, fx);
 		} finally {
-			batcher.vertexData.push = originalPush;
+			batcher.vertexData.pushSprite = originalPush;
 			fx.destroy();
 		}
 

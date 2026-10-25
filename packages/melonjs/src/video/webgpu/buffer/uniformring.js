@@ -91,16 +91,19 @@ export default class WebGPUUniformRing {
 	}
 
 	/**
-	 * Write a frame-globals slot (projection matrix + line width).
+	 * Write a frame-globals slot (projection matrix, line width, and the
+	 * sprite shaders' frame clamp mode, in the block's padding).
 	 * @param {import("../../math/matrix3d.ts").Matrix3d} projection - the projection matrix
 	 * @param {number} lineWidth - current stroke line width
+	 * @param {number} [frameClamp=0] - 1 to keep sprite samples inside their frame
 	 * @returns {{bindGroup: GPUBindGroup, dynamicOffset: number}} the binding for subsequent draws
 	 */
-	pushFrameGlobals(projection, lineWidth) {
+	pushFrameGlobals(projection, lineWidth, frameClamp = 0) {
 		const { page, dynamicOffset } = this.#allocSlot();
 		const scratch = this.scratch;
 		scratch.set(projection.val, 0);
 		scratch[16] = lineWidth;
+		scratch[17] = frameClamp;
 		this.device.queue.writeBuffer(
 			page.buffer,
 			dynamicOffset,

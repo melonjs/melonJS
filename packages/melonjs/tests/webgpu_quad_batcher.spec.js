@@ -27,20 +27,20 @@ describe("WebGPUQuadBatcher", () => {
 		}).toThrow(/attributes definition missing/);
 	});
 
-	it("addQuad writes the frozen 28-byte layout: corners, UVs, packed tint, z", () => {
+	it("addQuad writes the frozen 36-byte layout: corners, UVs, packed tint, z, frame", () => {
 		renderer.currentDepth = 2;
 		batcher.addQuad(atlasA, 10, 20, 30, 40, 0.1, 0.2, 0.3, 0.4, 0xffaabbcc);
 		batcher.flush();
 
 		expect(renderer.calls.drawIndexed).toEqual([6]);
 		const { size, floats, view } = renderer.calls.writes[0];
-		expect(size).toBe(4 * 28);
+		expect(size).toBe(4 * 36);
 
-		// corner order: (x,y) (x+w,y) (x,y+h) (x+w,y+h); stride = 7 floats
+		// corner order: (x,y) (x+w,y) (x,y+h) (x+w,y+h); stride = 9 floats
 		expect([floats[0], floats[1]]).toEqual([10, 20]);
-		expect([floats[7], floats[8]]).toEqual([40, 20]);
-		expect([floats[14], floats[15]]).toEqual([10, 60]);
-		expect([floats[21], floats[22]]).toEqual([40, 60]);
+		expect([floats[9], floats[10]]).toEqual([40, 20]);
+		expect([floats[18], floats[19]]).toEqual([10, 60]);
+		expect([floats[27], floats[28]]).toEqual([40, 60]);
 		// per-sprite depth stamped on z (identity transform passes it through)
 		expect(floats[2]).toBe(2);
 		// per-corner UV mapping
@@ -48,7 +48,7 @@ describe("WebGPUQuadBatcher", () => {
 			expect.closeTo(0.1),
 			expect.closeTo(0.2),
 		]);
-		expect([floats[10], floats[11]]).toEqual([
+		expect([floats[12], floats[13]]).toEqual([
 			expect.closeTo(0.3),
 			expect.closeTo(0.2),
 		]);
@@ -56,6 +56,15 @@ describe("WebGPUQuadBatcher", () => {
 		expect(view.getUint32(20, true)).toBe(0xffaabbcc);
 		// aTextureId is 0 under single-texture batching
 		expect(floats[6]).toBe(0);
+		// and each corner carries the opposite corner's UV: the frame
+		expect([floats[7], floats[8]]).toEqual([
+			expect.closeTo(0.3),
+			expect.closeTo(0.4),
+		]);
+		expect([floats[34], floats[35]]).toEqual([
+			expect.closeTo(0.1),
+			expect.closeTo(0.2),
+		]);
 	});
 
 	it("the current transform is applied to all four corners", () => {
@@ -65,7 +74,7 @@ describe("WebGPUQuadBatcher", () => {
 
 		const floats = renderer.calls.writes[0].floats;
 		expect([floats[0], floats[1]]).toEqual([110, 1020]);
-		expect([floats[21], floats[22]]).toEqual([140, 1060]);
+		expect([floats[27], floats[28]]).toEqual([140, 1060]);
 	});
 
 	it("a texture change claims a new slot — quads batch across textures in ONE segment", () => {
@@ -80,12 +89,12 @@ describe("WebGPUQuadBatcher", () => {
 		expect(renderer.calls.drawIndexed).toEqual([18]);
 		expect(renderer.calls.materialBinds).toHaveLength(1);
 		// aTextureId per vertex: quads 1-2 slot 0, quad 3 slot 1 (float
-		// at offset 6 of each 7-float vertex)
+		// at offset 6 of each 9-float vertex)
 		const vertexWrite = renderer.calls.writes.find((w) => {
 			return w.buffer === renderer.vertexArena.page;
 		});
 		const slotOf = (vertex) => {
-			return vertexWrite.floats[vertex * 7 + 6];
+			return vertexWrite.floats[vertex * 9 + 6];
 		};
 		expect(slotOf(0)).toBe(0);
 		expect(slotOf(4)).toBe(0);

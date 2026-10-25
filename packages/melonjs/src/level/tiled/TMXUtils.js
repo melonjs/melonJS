@@ -2,6 +2,7 @@ import { imgList } from "../../loader/cache.js";
 import { colorPool } from "../../math/color.ts";
 import { decode, decodeBase64Image } from "../../utils/decode.ts";
 import { xmlToObject } from "../../utils/xml.ts";
+import { createCanvas } from "../../video/canvas_factory.js";
 
 // counter for generating unique cache keys for embedded images
 let embeddedImageId = 0;
@@ -119,6 +120,79 @@ export function parseTintColor(tintcolor) {
 	return undefined;
 }
 
+// the images a transparent color was applied to: per image, the result
+// for each color, so tilesets sharing an image share one copy
+const keyedImages = new WeakMap();
+// an image that cannot be read is warned about once
+let warnedUnreadable = false;
+
+/**
+ * An image with Tiled's transparent color applied: every pixel of exactly
+ * that color made transparent, as Tiled draws it (the `trans` attribute of
+ * an `<image>`, `transparentcolor` in JSON). Done once, on a copy of the
+ * image, cached per image and color; the image itself is left untouched.
+ * An image that cannot be read back, a compressed texture or one from
+ * another origin loaded without CORS, is returned as it is, with a warning.
+ * @ignore
+ * @internal
+ * @param {HTMLImageElement|HTMLCanvasElement|ImageBitmap} image - the image
+ * @param {string} [color] - the color, `"#ff00ff"` or `"ff00ff"`
+ * @returns {HTMLImageElement|HTMLCanvasElement|ImageBitmap} the image with
+ *   that color transparent, or the image itself when there is no color
+ */
+export function applyTransparentColor(image, color) {
+	if (typeof color !== "string" || color === "" || !image) {
+		return image;
+	}
+	// #RRGGBB, or #AARRGGBB whose alpha says nothing here
+	const hex = color.replace(/^#/, "").slice(-6).toLowerCase();
+	if (!/^[\da-f]{6}$/.test(hex)) {
+		return image;
+	}
+	let byColor = keyedImages.get(image);
+	if (byColor === undefined) {
+		byColor = new Map();
+		keyedImages.set(image, byColor);
+	}
+	let keyed = byColor.get(hex);
+	if (keyed !== undefined) {
+		return keyed;
+	}
+	const width = image.naturalWidth || image.width;
+	const height = image.naturalHeight || image.height;
+	const canvas = createCanvas(width, height);
+	const context = canvas.getContext("2d", { willReadFrequently: true });
+	let pixels;
+	try {
+		// a compressed texture cannot be drawn on a canvas, and an image
+		// from another origin cannot be read back without CORS
+		context.drawImage(image, 0, 0);
+		pixels = context.getImageData(0, 0, width, height);
+	} catch {
+		if (!warnedUnreadable) {
+			warnedUnreadable = true;
+			console.warn(
+				'melonJS: a Tiled transparent color could not be applied to an image that cannot be read back (a compressed texture, or an image from another origin: load it with `loader.setOptions({ crossOrigin: "anonymous" })` from a server sending CORS headers); it is drawn as it is',
+			);
+		}
+		byColor.set(hex, image);
+		return image;
+	}
+	const r = parseInt(hex.slice(0, 2), 16);
+	const g = parseInt(hex.slice(2, 4), 16);
+	const b = parseInt(hex.slice(4, 6), 16);
+	const data = pixels.data;
+	for (let i = 0; i < data.length; i += 4) {
+		if (data[i] === r && data[i + 1] === g && data[i + 2] === b) {
+			data[i + 3] = 0;
+		}
+	}
+	context.putImageData(pixels, 0, 0);
+	keyed = canvas;
+	byColor.set(hex, keyed);
+	return keyed;
+}
+
 // pre-compiled regex for #ARGB → #RGBA color conversion
 // matches #ARGB (5 chars) or #AARRGGBB (9 chars)
 const SHORT_ARGB = /^#([\da-fA-F])([\da-fA-F]{3})$/;
@@ -233,6 +307,19 @@ function coerceTMXValue(name, type, raw) {
 }
 
 /**
+ * Keep the transparent color of an `<image>` (its `trans` attribute, as
+ * `RRGGBB`) on the object it belongs to, under the key the JSON format uses
+ * @ignore
+ * @internal
+ */
+function keepTransparentColor(obj) {
+	const trans = obj.image.trans;
+	if (typeof trans === "string" && trans !== "") {
+		obj.transparentcolor = trans.startsWith("#") ? trans : `#${trans}`;
+	}
+}
+
+/**
  * Flatten image child object into parent (used by tile and tileset).
  * Moves source → image, width → imagewidth, height → imageheight.
  * For embedded images (no source, has data), decodes and caches the image.
@@ -243,6 +330,7 @@ function flattenImage(obj) {
 	if (obj.image) {
 		obj.imagewidth = obj.image.width;
 		obj.imageheight = obj.image.height;
+		keepTransparentColor(obj);
 		if (obj.image.source) {
 			obj.image = obj.image.source;
 		} else if (obj.image.data) {
@@ -314,6 +402,7 @@ function normalizeTMX(obj, item, parse) {
 			layer.type = nodeName === "layer" ? "tilelayer" : nodeName;
 			if (layer.image) {
 				// flattenImage equivalent for image layers
+				keepTransparentColor(layer);
 				if (layer.image.source) {
 					layer.image = layer.image.source;
 				} else if (layer.image.data) {

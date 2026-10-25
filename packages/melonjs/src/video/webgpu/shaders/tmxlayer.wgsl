@@ -37,6 +37,7 @@ struct TMXUniforms {
 	uOpacity : f32,
 	uAnimSize : f32,        // entries in the anim lookup, 0 when disabled
 	uTint : vec4f,
+	uMipmaps : f32,         // 1 under the "linear-mipmap" filter, else 0
 };
 
 @group(0) @binding(0) var<uniform> uFrame : FrameUniforms;
@@ -78,7 +79,18 @@ struct CellSample {
 // Try to render the tile at cell (cx, cy) for the current fragment —
 // identical logic to the GLSL tryRenderCell, returning a hit/color pair
 // (WGSL has no out parameters).
-fn tryRenderCell(cx : i32, cy : i32, worldPx : vec2f) -> CellSample {
+// `dWorldX` / `dWorldY`: the world position's screen derivatives, taken in
+// `fragment_main` while control flow is still uniform. The atlas coordinate
+// jumps from one tile to the next, so its own derivatives would pick a tiny
+// mip level along every tile edge; a texel of the atlas is a world pixel,
+// so the world's derivatives are the atlas's.
+fn tryRenderCell(
+	cx : i32,
+	cy : i32,
+	worldPx : vec2f,
+	dWorldX : vec2f,
+	dWorldY : vec2f,
+) -> CellSample {
 	var miss : CellSample;
 	miss.hit = false;
 	miss.color = vec4f(0.0);
@@ -134,10 +146,29 @@ fn tryRenderCell(cx : i32, cy : i32, worldPx : vec2f) -> CellSample {
 	let col = f32(localId) - row * tmx.uTilesetCols.x;
 	let tileOriginPx = tmx.uTilesetMargin.xy
 		+ vec2f(col, row) * (tmx.uTileSize + tmx.uTilesetMargin.zw);
-	let texelPx = tileOriginPx + inTile * tmx.uTileSize;
+	var texelPx = tileOriginPx + inTile * tmx.uTileSize;
+	// keep the sample half a texel of the level it reads inside the tile,
+	// so filtering never blends in the next tile of the tileset, or the
+	// spacing around it, along the tile's edge: a seam between two tiles
+	// (never past the tile's centre). Without mipmaps that level is the
+	// full-size art; under them, the deepest level read is the next one up
+	// once the level is past a whole number, by more than a rounding error:
+	// drawn at its size, the derivatives are 1 give or take a few ulps, and
+	// level 0 it is. Sampled nearest, the sample stays in the same texel
+	let lod = ceil(log2(max(max(length(dWorldX), length(dWorldY)), 1.0)) - 0.01);
+	let inset = min(vec2f(0.5 * exp2(lod * tmx.uMipmaps)), tmx.uTileSize * 0.5);
+	texelPx = clamp(texelPx, tileOriginPx + inset, tileOriginPx + tmx.uTileSize - inset);
 	let texelUV = texelPx * tmx.uInvTilesetSize;
 
-	let sampled = textureSampleLevel(uTexture, uSampler, texelUV, 0.0);
+	// explicit gradients, so the sample is legal here (non-uniform control
+	// flow); a sampler without mipmaps clamps to level 0, as before
+	let sampled = textureSampleGrad(
+		uTexture,
+		uSampler,
+		texelUV,
+		dWorldX * tmx.uInvTilesetSize,
+		dWorldY * tmx.uInvTilesetSize,
+	);
 	if (sampled.a <= 0.0) {
 		return miss;
 	}
@@ -147,11 +178,21 @@ fn tryRenderCell(cx : i32, cy : i32, worldPx : vec2f) -> CellSample {
 	return out;
 }
 
+// the layer's opacity and tint applied to a texel. The texel is
+// premultiplied, as the blending expects: the opacity scales its color as
+// well as its alpha. The tint colors it; its alpha is not an opacity, as on
+// a sprite
+fn layerColor(texel : vec4f) -> vec4f {
+	return texel * tmx.uOpacity * vec4f(tmx.uTint.rgb, 1.0);
+}
+
 @fragment
 fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	let tileCoord = tmx.uVisibleStart + in.vRegion * tmx.uVisibleSize;
 	let geomCell = floor(tileCoord);
 	let worldPx = tileCoord * tmx.uCellSize;
+	let dWorldX = dpdx(worldPx);
+	let dWorldY = dpdy(worldPx);
 
 	let gx = i32(geomCell.x);
 	let gy = i32(geomCell.y);
@@ -163,11 +204,11 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	// fast path: tiles fit the cell exactly — only the geometric cell can
 	// contain this fragment's tile
 	if (overflowX == 0 && overflowY == 0) {
-		result = tryRenderCell(gx, gy, worldPx);
+		result = tryRenderCell(gx, gy, worldPx, dWorldX, dWorldY);
 		if (!result.hit) {
 			discard;
 		}
-		return vec4f(result.color.rgb, result.color.a * tmx.uOpacity) * tmx.uTint;
+		return layerColor(result.color);
 	}
 
 	// slow path: oversized tiles. Scan candidates dy high→low, dx low→high
@@ -183,7 +224,7 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 			if (dx > overflowX) {
 				break;
 			}
-			let candidate = tryRenderCell(gx - dx, gy + dy, worldPx);
+			let candidate = tryRenderCell(gx - dx, gy + dy, worldPx, dWorldX, dWorldY);
 			if (candidate.hit) {
 				result = candidate;
 				found = true;
@@ -197,5 +238,5 @@ fn fragment_main(in : VSOut) -> @location(0) vec4f {
 	if (!found) {
 		discard;
 	}
-	return vec4f(result.color.rgb, result.color.a * tmx.uOpacity) * tmx.uTint;
+	return layerColor(result.color);
 }

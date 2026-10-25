@@ -12,6 +12,14 @@ import {
 } from "./event.js";
 
 /**
+ * The display frame times {@link Timer#syncToDisplay} counts exactly, as
+ * multiples of `1000 / maxfps`: 15, 20, 30, 60, 120, 180 and 240 Hz at the
+ * default `maxfps` of 60.
+ * @ignore
+ */
+const STEP_RATIOS = [4, 3, 2, 1, 1 / 2, 1 / 3, 1 / 4];
+
+/**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
  * @see {@link timer} the default global timer instance
  */
@@ -20,6 +28,33 @@ class Timer {
 	fps: number;
 	maxfps: number;
 	interpolation: boolean;
+	syncToDisplay: boolean;
+	/**
+	 * the display's frame time, learned by {@link Timer#syncToDisplay}
+	 * @ignore
+	 * @internal
+	 */
+	_displayFrame: number;
+	/**
+	 * the time {@link Timer#syncToDisplay} rounded off, carried to the next
+	 * frames (less than a display frame either way)
+	 * @ignore
+	 * @internal
+	 */
+	_frameLeftover: number;
+	/**
+	 * how many frames running were far from the learned display frame, and
+	 * close to one another: a display whose rate changed
+	 * @ignore
+	 * @internal
+	 */
+	_displayRun: number;
+	/**
+	 * the total time of those frames
+	 * @ignore
+	 * @internal
+	 */
+	_displayRunTotal: number;
 	framecount: number;
 	framedelta: number;
 	last: number;
@@ -66,6 +101,36 @@ class Timer {
 		 * @default false
 		 */
 		this.interpolation = false;
+
+		/**
+		 * Count the time each frame took in whole display frames.<br>
+		 * The browser reports frame times that jitter around the display's
+		 * refresh, by up to a millisecond either way. When the display runs
+		 * as fast as the game updates (60 Hz for 60 updates a second), that
+		 * jitter can leave a frame with no update and give the next one two,
+		 * and whatever moves on screen stutters. Counted in whole display
+		 * frames, the updates fall in a steady pattern: one every frame at
+		 * 60 Hz, one every other frame at 120 Hz. The time rounded off is
+		 * carried to the next frame, so the game keeps its speed.<br>
+		 * A display within 2% of `maxfps` (60 by default), or of 2, 3 or 4
+		 * times it, or a half, a third or a quarter of it (120, 180, 240, 30,
+		 * 20 or 15 Hz), is counted at exactly that rate, so a 59.94 Hz screen
+		 * runs the game 0.1% slower than the wall clock. The display's rate
+		 * is learned as the game runs, and learned again when it changes.
+		 * Leave it off when the updates must keep to the wall clock exactly.<br>
+		 * Set by the `syncToDisplay` application setting when the
+		 * {@link Application} is initialized.
+		 * @see ApplicationSettings.syncToDisplay
+		 * @default false
+		 * @example
+		 * // turned on or off while the game runs, as the setting does at start
+		 * timer.syncToDisplay = true;
+		 */
+		this.syncToDisplay = false;
+		this._displayFrame = 0;
+		this._frameLeftover = 0;
+		this._displayRun = 0;
+		this._displayRunTotal = 0;
 
 		//hold element to display fps
 		this.framecount = 0;
@@ -120,6 +185,9 @@ class Timer {
 		this.framecount = 0;
 		this.step = 1000 / this.maxfps;
 		this.minstep = (1000 / this.maxfps) * 1.25;
+		// the display is the same; only the time it was owed is dropped
+		this._frameLeftover = 0;
+		this._displayRun = 0;
 	}
 
 	/**
@@ -240,6 +308,10 @@ class Timer {
 			this.delta = 0;
 		}
 
+		if (this.syncToDisplay) {
+			this.delta = this.countDisplayFrames(this.delta);
+		}
+
 		// get the game tick
 		this.tick =
 			this.delta > this.minstep && this.interpolation
@@ -260,6 +332,74 @@ class Timer {
 		}
 
 		this.updateTimers();
+	}
+
+	/**
+	 * The time a frame took, counted in whole display frames (see
+	 * {@link Timer#syncToDisplay}).
+	 * @param delta - the time the frame took, in milliseconds
+	 * @returns that time as a whole number of display frames
+	 * @ignore
+	 * @internal
+	 */
+	countDisplayFrames(delta: number) {
+		const step = this.step;
+		if (!(this._displayFrame > 0)) {
+			this._displayFrame = step;
+		}
+		// the display's frame time, learned from the frames of about its
+		// length
+		const learned = this._displayFrame;
+		if (delta > learned / 1.5 && delta < learned * 1.5) {
+			this._displayFrame += (delta - learned) * 0.05;
+			this._displayRun = 0;
+		} else if (delta > 0) {
+			// a frame far from it: a dropped one (longer), the partial first
+			// frame after a reset (shorter), or a display whose rate changed,
+			// moved to another screen or slowed down on battery. Frames of the
+			// same length several times running are the display's new rate; a
+			// shorter frame is never a dropped one, so it is taken sooner
+			const mean =
+				this._displayRun > 0 ? this._displayRunTotal / this._displayRun : 0;
+			if (this._displayRun > 0 && Math.abs(delta - mean) < mean * 0.2) {
+				this._displayRun++;
+				this._displayRunTotal += delta;
+			} else {
+				this._displayRun = 1;
+				this._displayRunTotal = delta;
+			}
+			if (this._displayRun >= (delta < learned ? 2 : 6)) {
+				this._displayFrame = this._displayRunTotal / this._displayRun;
+				this._displayRun = 0;
+			}
+		}
+		// a display in step with the updates counts exactly that multiple or
+		// fraction of a step, so the updates fall in a fixed pattern
+		let frame = this._displayFrame;
+		for (const ratio of STEP_RATIOS) {
+			const exact = step * ratio;
+			if (Math.abs(frame - exact) < exact * 0.02) {
+				frame = exact;
+				break;
+			}
+		}
+		// whole frames: each frame counted by its own length, so one a little
+		// early or late is still one frame. What is rounded off is carried,
+		// and counted once it adds up to a whole frame either way, which
+		// brings the carry back near nothing: the game keeps its speed, and a
+		// carry left near half a frame cannot flip the count on the jitter
+		const learnedFrame = this._displayFrame;
+		let frames = Math.max(0, Math.round(delta / learnedFrame));
+		let leftover = this._frameLeftover + delta - frames * learnedFrame;
+		if (leftover >= learnedFrame) {
+			frames++;
+			leftover -= learnedFrame;
+		} else if (leftover <= -learnedFrame && frames > 0) {
+			frames--;
+			leftover += learnedFrame;
+		}
+		this._frameLeftover = leftover;
+		return frames * frame;
 	}
 
 	/**

@@ -437,6 +437,11 @@ export class WebGLBatcher extends Batcher {
 			this.renderer.currentProgram !== shader.program
 		) {
 			this.flush();
+			// this batcher draws with it now: a change to one of its
+			// uniforms draws the quads queued with it first (see
+			// GLShader#setUniform). A ShaderEffect holds its program in
+			// `_shader`
+			(shader._shader ?? shader)._host = this;
 			shader.bind();
 			shader.setUniform(this.projectionUniform, this.renderer.projectionMatrix);
 
