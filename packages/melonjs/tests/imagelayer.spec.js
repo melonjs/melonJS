@@ -189,6 +189,7 @@ describe("ImageLayer", () => {
 				width,
 				height,
 				pos: { x: 0, y: 0 },
+				offset: { x: 0, y: 0 },
 				bounds: { width, height },
 			};
 		}
@@ -382,6 +383,7 @@ describe("ImageLayer", () => {
 				width,
 				height,
 				pos: { x: 0, y: 0 },
+				offset: { x: 0, y: 0 },
 				bounds: { width, height },
 			};
 		}

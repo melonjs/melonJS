@@ -1,6 +1,6 @@
 ---
 name: melonjs-camera-and-drawing
-description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
+description: "Use this skill for camera control and immediate-mode drawing in melonJS — following a target, viewport bounds, shake and fade, secondary cameras and what each one draws, and drawing shapes, lines and gradients inside a custom draw(). Covers world versus screen coordinate conversion, clipping and masking, baking with CanvasRenderTarget, and reading pixels back. Triggers on: Camera2d, viewport, follow, offset, look ahead, setBounds, minimap, second camera, split screen, cullMask, visibilityLayer, hide from a camera, shake, fadeIn, fadeOut, worldToLocal, localToWorld, colorMatrix, renderer.fill, renderer.stroke, Rect, Ellipse, Polygon, Line, Gradient, clipRect, mask, CanvasRenderTarget, NoiseTexture2d, lookAt, setBasis, toImageData, getImageData, toBlob, toDataURL, screenshot, read pixels."
 license: MIT
 ---
 
@@ -23,6 +23,24 @@ frame-rate independent since 19.7. `AXIS.HORIZONTAL` / `AXIS.VERTICAL` /
 `AXIS.BOTH` / `AXIS.NONE`.
 
 Call it from the followed entity's `onActivateEvent`, using `this.parentApp`.
+
+**To frame the target off centre, set `offset`; do not follow a helper
+object.** It shifts the view without moving the camera, in world units, and is
+applied after following and the bounds, so the view can show past them:
+
+```js
+app.viewport.follow(player, app.viewport.AXIS.BOTH, 0.1);
+app.viewport.offset.set(0, -70);   // look a little above the feet
+
+// or ahead of where the player faces, eased (see math.damp below)
+const ahead = facingLeft ? -80 : 80;
+app.viewport.offset.x = math.damp(app.viewport.offset.x, ahead, 4, dt / 1000);
+```
+
+Culling, tile layers, parallax `ImageLayer`s, lights and the pointer
+(`localToWorld`, `worldToLocal`) all count it. `shake()` adds its jitter on top
+and gives the value back when it ends, so setting it before or during a shake
+is fine. `reset()` clears it.
 
 **For anything that is NOT the camera, the same smoothing is `math.damp`.**
 `follow()` is frame-rate independent for you; a value you smooth yourself is
