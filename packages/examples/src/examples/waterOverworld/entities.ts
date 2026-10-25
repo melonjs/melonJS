@@ -229,12 +229,9 @@ export class Male extends me.Sprite {
 		super(x, y, settings);
 		addStripAnimations(this, built.animations, "idle");
 
-		// hit box authored in frame-local (top-left) space; the sprite is
-		// center-anchored, so shift it by half the frame like the original
-		this.body = new me.Body(
-			this,
-			new me.Rect(35 - this.width * 0.5, 21 - this.height * 0.5, 9, 43),
-		);
+		// hit box in frame-local (top-left) space: shapes are placed in the
+		// frame the sprite draws in, whatever its anchor
+		this.body = new me.Body(this, new me.Rect(35, 21, 9, 43));
 		this.body.collisionType = me.collision.types.PLAYER_OBJECT;
 		this.body.setMaxVelocity(2, 15);
 		this.body.setFriction(0.5, 0);
