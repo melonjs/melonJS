@@ -435,6 +435,10 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
+		// a sprite with a normal map, under lights it cannot be lit by here
+		if (this.currentNormalMap !== null) {
+			this._warnUnlitNormalMap();
+		}
 		const context = this.getContext();
 
 		if (typeof sw === "undefined") {
