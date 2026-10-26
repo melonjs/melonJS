@@ -2981,6 +2981,15 @@ export default class WebGLRenderer extends Renderer {
 			: null;
 		let hostedShader = spliced !== null && spliced !== undefined;
 		if (hostedShader) {
+			// an effect measuring in texels counts the mesh's (before binding
+			// the spliced program: this writes the effect's own)
+			const image = mesh.texture?.getTexture();
+			if (image !== undefined) {
+				this.customShader._setSourceSize?.(
+					image.width || image.videoWidth || 1,
+					image.height || image.videoHeight || 1,
+				);
+			}
 			this.currentBatcher.useShader(spliced);
 			this.currentBatcher.replayEffectUniforms(this.customShader, spliced);
 		} else if (this.customShader != null && this.customShader.program != null) {

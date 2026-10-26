@@ -566,8 +566,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// identity noise_uv rect for the fullscreen quad (GL parity), BEFORE
 		// the uniform snapshot below
 		effect?._setNoiseUVRect?.(w, h, w, h, 0, 0);
-		// and the whole texture is the frame: sampling stays unbounded
-		effect?._clearFrameRect?.();
+		// and the whole texture is the frame: sampling stays unbounded. The
+		// texture is the pass's render target, the size of the quad
+		effect?._clearFrameRect?.(source.width ?? w, source.height ?? h);
 		const binding = effect ? prepareEffectBinding(renderer, effect) : null;
 
 		const pass = renderer.ensurePass();

@@ -136,8 +136,19 @@ pixel keep to the sprite's own frame.** `GlowEffect`, `OutlineEffect`,
 `SwayEffect`, `PixelateEffect` and `BloomEffect` read the neighbouring frames
 as transparent, as if the sprite were drawn on its own, so they never show
 along its edges and the atlas needs no padding for them. Past the texture's own
-edge (a standalone image, or the outside of an atlas) nothing changes. Their `textureSize` is still the size of the whole atlas image: it is
-what turns a width in texels into a distance in the texture.
+edge (a standalone image, or the outside of an atlas) nothing changes.
+
+**Their widths, offsets and sizes are in pixels of the texture they draw, with
+nothing to pass.** Each of those effects takes the size of what it draws: the
+sprite's whole texture (the atlas image, not the frame), the screen for a
+camera's effect, a mesh's texture. Do not pass `textureSize` to get this: a
+`textureSize` (or `setTextureSize()`) fixes the size instead, for a width
+meant in some other texture's pixels.
+
+```js
+// 2 pixels of the sprite's art, whatever the size of its atlas
+sprite.addPostEffect(new OutlineEffect(app.renderer, { width: 2 }));
+```
 
 `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze: the
 top sways most and everything from its `anchor` row down stays put, so a tree's
@@ -217,9 +228,8 @@ app.viewport.addPostEffect(
 );
 ```
 
-Its tap offsets are in texels, so it takes its size from the renderer at
-construction; call `setTextureSize(w, h)` from an `event.ONRESIZE` handler, or
-when applying it to something smaller than the frame.
+Its `radius` is in texels of what it filters, the screen on a camera, and it
+follows a resize by itself.
 
 **`ToneMappingEffect` goes after it, and goes last.** Bloom spreads the bright
 parts; the tone map is what stops the sum of the two clipping flat at white,

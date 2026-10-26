@@ -69,7 +69,7 @@ export default class OutlineEffect extends ShaderEffect {
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - outline color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the outline's opacity
 	 * @param {number} [options.width=1.0] - outline width in pixels
-	 * @param {number[]} [options.textureSize] - texture dimensions [width, height] (defaults to renderer size)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its width is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
@@ -106,11 +106,14 @@ export default class OutlineEffect extends ShaderEffect {
 
 		const color = options.color ?? [1.0, 1.0, 1.0];
 		const width = options.width ?? 1.0;
-		const texSize = options.textureSize ?? [renderer.width, renderer.height];
 
 		this.setUniform("uOutlineColor", rgba(color));
 		this.setUniform("uOutlineWidth", width);
-		this.setUniform("uTextureSize", new Float32Array(texSize));
+		// its width is in texels: of the texture it draws, unless given one
+		this._initTextureSize(options.textureSize, [
+			renderer.width,
+			renderer.height,
+		]);
 	}
 
 	/**
@@ -130,7 +133,8 @@ export default class OutlineEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the texture size for accurate outline width calculation
+	 * Measure the effect's width in the texels of a texture of this size,
+	 * rather than of the texture it draws (the default)
 	 * @param {number} width - texture width in pixels
 	 * @param {number} height - texture height in pixels
 	 */
