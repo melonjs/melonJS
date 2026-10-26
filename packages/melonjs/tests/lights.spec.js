@@ -1582,41 +1582,70 @@ describe("Light2d + Stage lighting", () => {
 		});
 	});
 
-	describe("Renderer.setLightUniforms (Canvas fallback warning)", () => {
-		it("emits a one-shot console warning when called with count > 0 in Canvas mode", () => {
-			const renderer = app.renderer;
-			// Reset the once-flag on the live renderer so we can re-trigger.
-			renderer._litPipelineWarned = false;
+	// A light only reaches a sprite with a normal map, and only on a GPU
+	// renderer: a sprite without one is drawn unlit everywhere. So the Canvas
+	// renderer has something to say only when it draws a normal-mapped sprite
+	// under lights. It used to warn as soon as any light existed, which every
+	// lit game without normal maps heard for nothing.
+	describe("the Canvas renderer's warning about normal-mapped sprites", () => {
+		const fakeLight = {
+			getBounds: () => {
+				return { centerX: 0, centerY: 0, width: 30, height: 30 };
+			},
+			intensity: 1,
+			color: { r: 255, g: 255, b: 255 },
+			lightHeight: 1,
+		};
 
+		// what console.warn was called with while `run` ran, from a renderer
+		// that has not warned yet
+		const warningsDuring = (run) => {
+			const renderer = app.renderer;
+			renderer._litPipelineWarned = false;
 			const orig = console.warn;
 			const warnings = [];
 			console.warn = (...args) => {
 				return warnings.push(args.join(" "));
 			};
-
-			const fakeLight = {
-				getBounds: () => {
-					return { centerX: 0, centerY: 0, width: 30, height: 30 };
-				},
-				intensity: 1,
-				color: { r: 255, g: 255, b: 255 },
-				lightHeight: 1,
-			};
 			try {
-				renderer.setLightUniforms([], null, 0, 0); // empty — no warn
-				renderer.setLightUniforms([fakeLight], null, 0, 0); // first warn
-				renderer.setLightUniforms(
-					[fakeLight, fakeLight, fakeLight, fakeLight, fakeLight],
-					null,
-					0,
-					0,
-				);
-				renderer.setLightUniforms([fakeLight], null, 0, 0);
+				run(renderer);
 			} finally {
 				console.warn = orig;
+				renderer.setLightUniforms([], null, 0, 0);
+				renderer.currentNormalMap = null;
 			}
+			return warnings;
+		};
 
-			// only the first non-empty call warns
+		// a sprite drawn as the world draws it, so it hands the renderer its
+		// normal map as it does in a game
+		const drawSprite = (renderer, settings = {}) => {
+			const sprite = new Sprite(0, 0, {
+				image: Renderer.createCanvas(16, 16),
+				...settings,
+			});
+			sprite.preDraw(renderer);
+			sprite.draw(renderer);
+			sprite.postDraw(renderer);
+		};
+
+		it("says nothing about lights alone: a sprite without a normal map is unlit everywhere", () => {
+			const warnings = warningsDuring((renderer) => {
+				for (let i = 0; i < 10; i++) {
+					renderer.setLightUniforms([fakeLight, fakeLight], null, 0, 0);
+					drawSprite(renderer);
+				}
+			});
+			expect(warnings).toEqual([]);
+		});
+
+		it("warns once when it draws a sprite with a normal map under lights", () => {
+			const warnings = warningsDuring((renderer) => {
+				renderer.setLightUniforms([fakeLight], null, 0, 0);
+				for (let i = 0; i < 5; i++) {
+					drawSprite(renderer, { normalMap: Renderer.createCanvas(16, 16) });
+				}
+			});
 			expect(warnings.length).toBe(1);
 			// the message names a GPU *backend*, not WebGL specifically —
 			// WebGPU implements the lit pipeline too, so naming one renderer
@@ -1626,25 +1655,79 @@ describe("Light2d + Stage lighting", () => {
 			);
 		});
 
-		it("does NOT warn when count is 0 (every-frame default with no active lights)", () => {
+		it("says nothing about a sprite with a normal map when no light shines", () => {
+			const warnings = warningsDuring((renderer) => {
+				renderer.setLightUniforms([], null, 0, 0);
+				drawSprite(renderer, { normalMap: Renderer.createCanvas(16, 16) });
+				renderer.setLightUniforms(null, null, 0, 0);
+				drawSprite(renderer, { normalMap: Renderer.createCanvas(16, 16) });
+			});
+			expect(warnings).toEqual([]);
+		});
+
+		it("counts the lights it is given, whatever holds them", () => {
 			const renderer = app.renderer;
-			renderer._litPipelineWarned = false;
-
-			const orig = console.warn;
-			const warnings = [];
-			console.warn = (...args) => {
-				return warnings.push(args.join(" "));
-			};
-
 			try {
-				for (let i = 0; i < 10; i++) {
-					renderer.setLightUniforms([], null, 0, 0);
-				}
+				renderer.setLightUniforms([fakeLight, fakeLight], null, 0, 0);
+				expect(renderer.activeLightCount).toBe(2);
+				renderer.setLightUniforms(new Set([fakeLight]), null, 0, 0);
+				expect(renderer.activeLightCount).toBe(1);
+				renderer.setLightUniforms(
+					new Map([[1, fakeLight]]).values(),
+					null,
+					0,
+					0,
+				);
+				expect(renderer.activeLightCount).toBe(1);
+				renderer.setLightUniforms(undefined, null, 0, 0);
+				expect(renderer.activeLightCount).toBe(0);
 			} finally {
-				console.warn = orig;
+				renderer.setLightUniforms([], null, 0, 0);
 			}
+		});
 
-			expect(warnings.length).toBe(0);
+		// a whole frame with a light and the sprite in the world: the warnings,
+		// and whether the sprite was drawn at all (a culled one would pass the
+		// quiet case for nothing)
+		const frame = (settings) => {
+			const image = Renderer.createCanvas(16, 16);
+			const light = new Light2d(100, 100, 50);
+			const sprite = new Sprite(100, 100, { image, ...settings });
+			let drawn = false;
+			const warnings = warningsDuring((renderer) => {
+				const drawImage = renderer.drawImage;
+				renderer.drawImage = function (...args) {
+					drawn ||= args[0] === image;
+					return drawImage.apply(this, args);
+				};
+				try {
+					app.world.addChild(light);
+					app.world.addChild(sprite);
+					// the update finds the sprite in view, the draw draws it
+					app.world.update(16);
+					app.repaint();
+					app.draw();
+				} finally {
+					renderer.drawImage = drawImage;
+					app.world.removeChildNow(sprite);
+					app.world.removeChildNow(light);
+				}
+			});
+			return { drawn, warnings };
+		};
+
+		it("in a whole frame: a lit world without normal maps draws without a word", () => {
+			const { drawn, warnings } = frame({});
+			expect(drawn).toBe(true);
+			expect(warnings).toEqual([]);
+		});
+
+		it("in a whole frame: a normal-mapped sprite under a light is warned about", () => {
+			const { drawn, warnings } = frame({
+				normalMap: Renderer.createCanvas(16, 16),
+			});
+			expect(drawn).toBe(true);
+			expect(warnings.length).toBe(1);
 		});
 	});
 
