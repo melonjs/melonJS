@@ -32,6 +32,10 @@ const FLIP_AD_BIT = 1 << 2;
 // ever loaded).
 let _warnedNoGpuTileSupportOnce = false;
 
+// the area an offset camera shows, handed to the tile renderers in its place
+// (made on first use)
+let viewRect;
+
 /**
  * extract a 3-bit flip mask from a raw 32-bit GID (Tiled's flip bits live in
  * the upper 3 bits)
@@ -845,6 +849,14 @@ export default class TMXLayer extends Renderable {
 			this._preRenderChanged = false;
 			this.canvasRenderer.renderTarget.invalidate(renderer);
 			renderer.cache.tinted?.delete(this.canvasRenderer.getCanvas());
+		}
+		// the camera's offset (a look ahead, a shake) shifts what it shows
+		// without moving it: the tiles to draw are the ones in that view
+		const offset = rect.offset;
+		if (offset !== undefined && (offset.x !== 0 || offset.y !== 0)) {
+			viewRect ??= new Rect(0, 0, 0, 0);
+			viewRect.pos.set(rect.pos.x + offset.x, rect.pos.y + offset.y);
+			rect = viewRect.setSize(rect.width, rect.height);
 		}
 		// dispatch to the active renderer — picks shader / preRender / perTile
 		// based on `this.renderMode` and the renderer's capabilities

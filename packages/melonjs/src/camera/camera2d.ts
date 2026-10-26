@@ -210,7 +210,21 @@ export default class Camera2d extends Renderable {
 	 */
 	invCurrentTransform: Matrix3d;
 
-	/** offset for shake effect */
+	/**
+	 * Shifts the view without moving the camera, in world units: to look
+	 * ahead of what the camera follows, or above it, or for a shake of
+	 * your own. It is applied after following and the camera's bounds, so
+	 * the view can show past them. Drawing, culling, the lights and the
+	 * pointer (`localToWorld`, `worldToLocal`) all count it. The built-in
+	 * {@link Camera2d#shake} adds its jitter to it and takes it back off
+	 * when it ends, so a value set before or during a shake is kept.
+	 * Cleared by {@link Camera2d#reset}.
+	 * @default <0,0>
+	 * @example
+	 * // follow the hero, looking a little above his feet
+	 * app.viewport.follow(hero, app.viewport.AXIS.BOTH, 0.1);
+	 * app.viewport.offset.set(0, -70);
+	 */
 	offset: Vector2d;
 
 	/** target to follow */
@@ -278,7 +292,7 @@ export default class Camera2d extends Renderable {
 
 		this.invCurrentTransform = new Matrix3d();
 
-		// offset for shake effect
+		// shifts the view, see the field's doc
 		this.offset = new Vector2d();
 
 		// target to follow
@@ -507,15 +521,17 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * The world-space bounds currently visible through this camera,
-	 * taking into account position and zoom level.
+	 * taking into account position, {@link Camera2d#offset} and zoom level.
 	 * @returns the visible world area
 	 */
 	get worldView(): Bounds {
+		const x = this.pos.x + this.offset.x;
+		const y = this.pos.y + this.offset.y;
 		this._worldView.setMinMax(
-			this.pos.x,
-			this.pos.y,
-			this.pos.x + this.width / this.zoom,
-			this.pos.y + this.height / this.zoom,
+			x,
+			y,
+			x + this.width / this.zoom,
+			y + this.height / this.zoom,
 		);
 		return this._worldView;
 	}
@@ -548,8 +564,9 @@ export default class Camera2d extends Renderable {
 		// override sets its own depth after this has run.
 		this.setPosition(x, y);
 
-		// reset the target
+		// reset the target, and the view's offset from it
 		this.unfollow();
+		this.offset.setZero();
 
 		// damping default value
 		this.smoothFollow = true;
@@ -1047,7 +1064,10 @@ export default class Camera2d extends Renderable {
 	 */
 	localToWorld(x: number, y: number, v?: Vector2d): Vector2d {
 		v = v || vector2dPool.get();
-		v.set((x - this.screenX) / this.zoom, (y - this.screenY) / this.zoom)
+		v.set(
+			(x - this.screenX) / this.zoom + this.offset.x,
+			(y - this.screenY) / this.zoom + this.offset.y,
+		)
 			.add(this.pos)
 			.sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
@@ -1072,8 +1092,8 @@ export default class Camera2d extends Renderable {
 		}
 		v.sub(this.pos).add(game.world.pos);
 		return v.set(
-			v.x * this.zoom + this.screenX,
-			v.y * this.zoom + this.screenY,
+			(v.x - this.offset.x) * this.zoom + this.screenX,
+			(v.y - this.offset.y) * this.zoom + this.screenY,
 		);
 	}
 

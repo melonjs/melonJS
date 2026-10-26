@@ -222,16 +222,17 @@ export default class ImageLayer extends Sprite {
 		 * Automatic positioning
 		 *
 		 * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
-		 * for a thorough description of how this works.
+		 * for a thorough description of how this works. The camera looks
+		 * where its position, shifted by its offset, puts it.
 		 */
 		const x =
 			ax * (rx - 1) * (bw - viewport.width) +
 			this.offset.x -
-			rx * viewport.pos.x;
+			rx * (viewport.pos.x + viewport.offset.x);
 		const y =
 			ay * (ry - 1) * (bh - viewport.height) +
 			this.offset.y -
-			ry * viewport.pos.y;
+			ry * (viewport.pos.y + viewport.offset.y);
 
 		// Repeat horizontally; start drawing from left boundary
 		if (this.repeatX) {
@@ -311,15 +312,16 @@ export default class ImageLayer extends Sprite {
 			x = this.pos.x + ax * (bw - width);
 			y = this.pos.y + ay * (bh - height);
 		} else {
-			// parallax — compute position from the current viewport passed to draw()
+			// parallax — compute position from the current viewport passed to
+			// draw(), where it looks: its position shifted by its offset
 			x =
 				ax * (rx - 1) * (bw - viewport.width) +
 				this.offset.x -
-				rx * viewport.pos.x;
+				rx * (viewport.pos.x + viewport.offset.x);
 			y =
 				ay * (ry - 1) * (bh - viewport.height) +
 				this.offset.y -
-				ry * viewport.pos.y;
+				ry * (viewport.pos.y + viewport.offset.y);
 
 			if (this.repeatX) {
 				x = x % width;
