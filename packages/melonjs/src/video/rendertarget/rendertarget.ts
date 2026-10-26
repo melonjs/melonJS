@@ -1,13 +1,12 @@
 /**
- * Abstract base class for offscreen render targets.
- * Provides a renderer-agnostic interface for binding, clearing, resizing,
- * and reading back pixel data from an offscreen surface.
- * Concrete implementations:
- * - {@link WebGLRenderTarget} — WebGL framebuffer object (FBO) for post-processing
- * - {@link CanvasRenderTarget} — 2D canvas surface for texture generation
+ * The base class of an offscreen render target: a surface the engine can
+ * draw into, clear, resize and read back, whatever the renderer.
  *
- * A future WebGPU implementation would extend this class with
- * GPUTexture / GPURenderPassDescriptor management.
+ * The one to create yourself is {@link CanvasRenderTarget}, a 2D canvas:
+ * draw something into it once (a texture, a background, a fog map) and
+ * reuse it every frame. The WebGL and WebGPU renderers keep render targets
+ * of their own for post effects (a framebuffer, a GPU texture); those are
+ * internal.
  * @category Rendering
  */
 export default abstract class RenderTarget {
@@ -24,15 +23,13 @@ export default abstract class RenderTarget {
 	/**
 	 * Bind this render target as the active draw destination.
 	 * All subsequent draw calls will render into this target until {@link unbind} is called.
-	 * No-op by default — subclasses override for GPU render targets
-	 * (a WebGL FBO today, a `GPURenderPassEncoder` once the WebGPU
-	 * renderer lands).
+	 * No-op by default: only the GPU renderers' own targets override it.
 	 */
 	bind(): void {}
 
 	/**
 	 * Unbind this render target, restoring the default (screen) output.
-	 * No-op by default — subclasses override for GPU render targets.
+	 * No-op by default: only the GPU renderers' own targets override it.
 	 */
 	unbind(): void {}
 
@@ -67,10 +64,9 @@ export default abstract class RenderTarget {
 	 *
 	 * The portable form, and the one anything backend-agnostic should use.
 	 * Synchronous readback is NOT portable: WebGPU can only map a buffer
-	 * asynchronously, so a render target of that backend cannot answer at all
-	 * until a frame has been awaited. The two backends that CAN read back
-	 * synchronously offer `getImageData()` as an extra, but it is not part of
-	 * this contract and does not exist on every target.
+	 * asynchronously, so its render targets cannot answer until a frame has
+	 * been awaited. A {@link CanvasRenderTarget} also offers
+	 * {@link CanvasRenderTarget#getImageData}, which answers at once.
 	 * @param x - x coordinate of the top-left corner (default 0)
 	 * @param y - y coordinate of the top-left corner (default 0)
 	 * @param width - width of the area to read (default full width)

@@ -51,6 +51,7 @@
 - Audio: a sprite region declared looping (`[start, duration, true]`) loops when played with `audio.play(name, { sprite })`. It played only once unless `loop: true` was passed as well
 - Text: a label whose text is empty or only spaces no longer blanks the whole frame on WebGPU. Its canvas was sized 0 pixels wide, which WebGPU refuses to upload
 - Typings: `TextureAtlas#getAnimationSettings()` is typed as the settings it returns, so they pass to a `Sprite` constructor from TypeScript without a cast. It returned `object`, and `Sprite3d` typed the named animations an aseprite atlas carries as an array
+- Typings: `CanvasRenderTarget#destroy(renderer)` is typed and documented with its `renderer`, which frees the copy of the canvas uploaded to the GPU as well. It was hidden, so only the parent's `destroy()` showed, and TypeScript refused the argument
 
 ### Performance
 - Effects: sprites drawn one after the other through the same `ShaderEffect` share one draw call, as plain sprites do, even from different frames of an atlas. A uniform set to a new value draws the sprites queued before it first, so each sprite still draws with the values it was given; a `screen_texture` effect still draws each sprite on its own
