@@ -264,8 +264,9 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
-		// and the whole texture is the frame: sampling stays unbounded
-		shader._clearFrameRect?.();
+		// and the whole texture is the frame: sampling stays unbounded. The
+		// texture is the pass's render target, the size of the quad
+		shader._clearFrameRect?.(width, height);
 
 		// the blit samples a bottom-up capture FBO (the Y-flipped UVs
 		// below): uv.y grows UPWARD inside apply(), so directional bodies

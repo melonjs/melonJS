@@ -5,8 +5,10 @@
  */
 import {
 	Application,
+	BloomEffect,
 	BlurEffect,
 	ChromaticAberrationEffect,
+	ColorMatrixEffect,
 	DesaturateEffect,
 	DissolveEffect,
 	DropShadowEffect,
@@ -20,7 +22,9 @@ import {
 	PixelateEffect,
 	ScanlineEffect,
 	SepiaEffect,
+	ShineEffect,
 	Sprite,
+	SquishEffect,
 	Stage,
 	state,
 	Text,
@@ -32,8 +36,13 @@ import {
 import { createExampleComponent } from "../utils";
 import monsterImg from "./assets/monster.png";
 
+// five rows of four
+const WIDTH = 1218;
+const HEIGHT = 702;
+const SPRITE_SCALE = 0.25;
+
 const createGame = async () => {
-	const app = new Application(1218, 562, {
+	const app = new Application(WIDTH, HEIGHT, {
 		parent: "screen",
 		scale: "auto",
 		backgroundColor: "#202020",
@@ -53,10 +62,7 @@ const createGame = async () => {
 	class EffectsScene extends Stage {
 		override onResetEvent() {
 			const r = app.renderer;
-			const img = loader.getImage("monster");
-			if (!img) return;
-			const tw = img.width;
-			const th = img.height;
+			if (!loader.getImage("monster")) return;
 
 			const names = [
 				"Original",
@@ -75,18 +81,26 @@ const createGame = async () => {
 				"Invert",
 				"Sepia",
 				"Hologram",
+				"Shine",
+				"Squish",
+				"Color Matrix",
+				"Bloom",
 			];
 
 			const cols = 4;
 			const rows = Math.ceil(names.length / cols);
-			const cellW = 1218 / cols;
-			const cellH = 562 / rows;
+			const cellW = WIDTH / cols;
+			const cellH = HEIGHT / rows;
 			let flashEffect: FlashEffect | null = null;
 			let glowEffect: GlowEffect | null = null;
 			let dissolveEffect: DissolveEffect | null = null;
 			let pulseEffect: TintPulseEffect | null = null;
 			let waveEffect: WaveEffect | null = null;
 			let hologramEffect: HologramEffect | null = null;
+			let shineEffect: ShineEffect | null = null;
+			let squishEffect: SquishEffect | null = null;
+			let squishSprite: Sprite | null = null;
+			let matrixEffect: ColorMatrixEffect | null = null;
 
 			for (let i = 0; i < names.length; i++) {
 				const col = i % cols;
@@ -95,7 +109,7 @@ const createGame = async () => {
 				const cy = cellH * row + cellH / 2;
 
 				const sprite = new Sprite(cx, cy - 10, { image: "monster" });
-				sprite.scale(0.25);
+				sprite.scale(SPRITE_SCALE);
 				app.world.addChild(sprite);
 
 				// apply effect based on index
@@ -109,14 +123,12 @@ const createGame = async () => {
 							color: [1, 1, 0],
 							width: 2,
 						});
-						(sprite.shader as OutlineEffect).setTextureSize(tw, th);
 						break;
 					case 3:
 						glowEffect = new GlowEffect(r, {
 							color: [0.3, 0.6, 1],
 							width: 10,
 							intensity: 2.5,
-							textureSize: [tw, th],
 						});
 						sprite.shader = glowEffect;
 						break;
@@ -126,19 +138,16 @@ const createGame = async () => {
 					case 5:
 						sprite.shader = new PixelateEffect(r, {
 							size: 6,
-							textureSize: [tw, th],
 						});
 						break;
 					case 6:
 						sprite.shader = new BlurEffect(r, {
 							strength: 5,
-							textureSize: [tw, th],
 						});
 						break;
 					case 7:
 						sprite.shader = new ChromaticAberrationEffect(r, {
 							offset: 5,
-							textureSize: [tw, th],
 						});
 						break;
 					case 8:
@@ -150,7 +159,6 @@ const createGame = async () => {
 							offsetX: 6,
 							offsetY: 6,
 							opacity: 0.7,
-							textureSize: [tw, th],
 						});
 						break;
 					case 10:
@@ -185,6 +193,30 @@ const createGame = async () => {
 					case 15:
 						hologramEffect = new HologramEffect(r);
 						sprite.shader = hologramEffect;
+						break;
+					case 16:
+						shineEffect = new ShineEffect(r, {
+							color: [1.0, 0.95, 0.7],
+							width: 0.18,
+							intensity: 0.7,
+						});
+						sprite.shader = shineEffect;
+						break;
+					case 17:
+						squishEffect = new SquishEffect(r);
+						squishSprite = sprite;
+						sprite.shader = squishEffect;
+						break;
+					case 18:
+						matrixEffect = new ColorMatrixEffect(r);
+						sprite.shader = matrixEffect;
+						break;
+					case 19:
+						sprite.shader = new BloomEffect(r, {
+							threshold: 0.3,
+							intensity: 2.2,
+							radius: 6,
+						});
 						break;
 				}
 
@@ -231,6 +263,26 @@ const createGame = async () => {
 				}
 				if (hologramEffect) {
 					hologramEffect.setTime(t);
+				}
+				if (shineEffect) {
+					shineEffect.setTime(t);
+				}
+				if (squishEffect && squishSprite) {
+					// squash and stretch about the feet, keeping the volume: a
+					// taller sprite pinches in, a shorter one bulges out
+					const scaleY = 1 + 0.2 * Math.sin(t * 4);
+					const feet = squishSprite.height * (1 - squishSprite.anchorPoint.y);
+					squishSprite.currentTransform
+						.identity()
+						.scale(SPRITE_SCALE)
+						.translate(0, feet)
+						.scale(1, scaleY)
+						.translate(0, -feet);
+					squishEffect.setBulge(1 - scaleY);
+				}
+				if (matrixEffect) {
+					// the hue turns around the color wheel
+					matrixEffect.reset().hueRotate(t);
 				}
 			});
 		}

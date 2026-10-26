@@ -493,6 +493,22 @@ export default class ShaderEffect {
 		if (this.destroyed === true) {
 			return;
 		}
+		// a size the game gives replaces the one taken from the texture drawn
+		// (see `_initTextureSize`)
+		if (name === "uTextureSize") {
+			this._sourceSize = undefined;
+		}
+		this._applyUniform(name, value);
+	}
+
+	/**
+	 * `setUniform` without its side effects: record the value and apply it
+	 * @param {string} name - the uniform's name
+	 * @param {*} value - its value
+	 * @ignore
+	 * @internal
+	 */
+	_applyUniform(name, value) {
 		// Recorded as well as applied. The GLSL branch writes straight into
 		// its own compiled program, which is all a quad ever needs — but a
 		// mesh hosts this effect as a DIFFERENT, spliced program, and that one
@@ -632,17 +648,76 @@ export default class ShaderEffect {
 			0.5 / Math.max(sourceWidth, 1),
 			0.5 / Math.max(sourceHeight, 1),
 		);
+		this._setSourceSize(sourceWidth, sourceHeight);
 	}
 
 	/**
 	 * For a pass over a whole texture (a render target blit), which draws
 	 * its quad with no frame: `frameTexel()` then samples as it always did,
 	 * clamped by the texture's own wrap mode.
+	 * @param {number} [width] - the texture's width, in pixels
+	 * @param {number} [height] - the texture's height, in pixels
 	 * @ignore
 	 * @internal
 	 */
-	_clearFrameRect() {
+	_clearFrameRect(width, height) {
 		this._writeFrameHalf(0, 0);
+		if (width !== undefined && height !== undefined) {
+			this._setSourceSize(width, height);
+		}
+	}
+
+	/**
+	 * Make the body's `uTextureSize` the size of the texture it draws: a
+	 * built-in effect whose offsets are in texels (a glow, an outline, a
+	 * blur...) calls it from its constructor. With `size` (the effect's
+	 * `textureSize` option), that size is used instead, as it is once the
+	 * game sets one later (`setTextureSize()`, or
+	 * `setUniform("uTextureSize")`). A body of the game's own is never
+	 * given one.
+	 * @param {number[]} [size] - the size the game gave, `[width, height]`
+	 * @param {number[]} fallback - the size until the effect first draws
+	 * @ignore
+	 * @internal
+	 */
+	_initTextureSize(size, fallback) {
+		if (size !== undefined) {
+			this.setUniform("uTextureSize", new Float32Array(size));
+			return;
+		}
+		/**
+		 * the size of the texture drawn, given to the body as
+		 * `uTextureSize`; undefined once the game sets the size itself
+		 * @ignore
+		 * @internal
+		 */
+		this._sourceSize = new Float32Array(fallback);
+		this._applyUniform("uTextureSize", this._sourceSize);
+	}
+
+	/**
+	 * Hand the size of the texture about to draw to an effect that takes it
+	 * (see `_initTextureSize`): the sprite's texture, the render target a
+	 * pass reads, the mesh's texture. Writes only when it changes, so the
+	 * sprites of one texture keep sharing a draw.
+	 * @param {number} width - the texture's width, in pixels
+	 * @param {number} height - the texture's height, in pixels
+	 * @ignore
+	 * @internal
+	 */
+	_setSourceSize(width, height) {
+		const size = this._sourceSize;
+		if (size === undefined || this.destroyed === true) {
+			return;
+		}
+		width = Math.max(width, 1);
+		height = Math.max(height, 1);
+		if (size[0] === width && size[1] === height) {
+			return;
+		}
+		size[0] = width;
+		size[1] = height;
+		this._applyUniform("uTextureSize", size);
 	}
 
 	/**
@@ -1073,6 +1148,7 @@ export default class ShaderEffect {
 			for (const [name, entry] of this._extraTextures) {
 				copy.setTexture(name, entry.image, entry.repeat);
 			}
+			copy._copyTextureSize(this);
 			return copy;
 		}
 		// Canvas-mode effects are inert stubs — nothing further to copy
@@ -1098,8 +1174,23 @@ export default class ShaderEffect {
 			for (const [name, entry] of this._extraTextures) {
 				copy.setTexture(name, entry.image, entry.repeat);
 			}
+			copy._copyTextureSize(this);
 		}
 		return copy;
+	}
+
+	/**
+	 * a clone takes the size of the texture it draws as its original does
+	 * (see `_initTextureSize`)
+	 * @param {ShaderEffect} source - the effect cloned
+	 * @ignore
+	 * @internal
+	 */
+	_copyTextureSize(source) {
+		if (source._sourceSize !== undefined) {
+			this._sourceSize = new Float32Array(source._sourceSize);
+			this._applyUniform("uTextureSize", this._sourceSize);
+		}
 	}
 
 	// the GL-program pass-throughs below additionally guard on `_shader`:

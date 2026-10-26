@@ -64,7 +64,7 @@ export default class GlowEffect extends ShaderEffect {
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - glow color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the halo's opacity
 	 * @param {number} [options.width=3.0] - glow spread in pixels
 	 * @param {number} [options.intensity=1.0] - glow brightness multiplier
-	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its spread is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
@@ -99,13 +99,13 @@ export default class GlowEffect extends ShaderEffect {
 
 		const color = options.color ?? [1.0, 1.0, 1.0];
 		const width = options.width ?? 3.0;
-		const texSize = options.textureSize ?? [256, 256];
 		this.intensity = options.intensity ?? 1.0;
 
 		this.setUniform("uGlowColor", rgba(color));
 		this.setUniform("uGlowWidth", width);
 		this.setUniform("uGlowIntensity", this.intensity);
-		this.setUniform("uTextureSize", new Float32Array(texSize));
+		// its spread is in texels: of the texture it draws, unless given one
+		this._initTextureSize(options.textureSize, [256, 256]);
 	}
 
 	/**
@@ -126,7 +126,8 @@ export default class GlowEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the texture size
+	 * Measure the effect's spread in the texels of a texture of this size,
+	 * rather than of the texture it draws (the default)
 	 * @param {number} width - texture width in pixels
 	 * @param {number} height - texture height in pixels
 	 */

@@ -2720,6 +2720,16 @@ export default class WebGPURenderer extends Renderer {
 			);
 		}
 		batcher.hostedEffect = instanced ? null : hostedEffect;
+		// an effect measuring in texels counts the mesh's
+		if (batcher.hostedEffect !== null) {
+			const image = mesh.texture?.getTexture();
+			if (image !== undefined) {
+				hostedEffect._setSourceSize?.(
+					image.width || image.videoWidth || 1,
+					image.height || image.videoHeight || 1,
+				);
+			}
+		}
 
 		// per-mesh culling is a pipeline axis here. Retained geometry keeps
 		// its authored winding, so the axis bridge's reflection (which

@@ -169,7 +169,13 @@ function makeMesh(overrides = {}) {
 		_indicesOriginal: new Uint16Array([0, 1, 2, 0, 2, 3]),
 		_geometryVersion: 0,
 		vertexCount: 4,
-		texture: { id: "atlas" },
+		// a mesh's texture is a TextureAtlas, which hands out its image
+		texture: {
+			id: "atlas",
+			getTexture() {
+				return { width: 64, height: 64 };
+			},
+		},
 		alphaCutoff: 0,
 		lit: false,
 		cullBackFaces: true,

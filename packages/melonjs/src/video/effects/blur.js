@@ -49,7 +49,7 @@ export default class BlurEffect extends ShaderEffect {
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.strength=1.0] - blur strength in texels
-	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its strength is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
@@ -77,10 +77,10 @@ export default class BlurEffect extends ShaderEffect {
 		});
 
 		this.strength = options.strength ?? 1.0;
-		const texSize = options.textureSize ?? [256, 256];
 
 		this.setUniform("uBlurStrength", this.strength);
-		this.setUniform("uTextureSize", new Float32Array(texSize));
+		// its strength is in texels: of the texture it draws, unless given one
+		this._initTextureSize(options.textureSize, [256, 256]);
 	}
 
 	/**
@@ -93,7 +93,8 @@ export default class BlurEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the texture size
+	 * Measure the effect's strength in the texels of a texture of this size,
+	 * rather than of the texture it draws (the default)
 	 * @param {number} width - texture width in pixels
 	 * @param {number} height - texture height in pixels
 	 */

@@ -713,8 +713,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		// `noise_uv` builtin: a blit is a full-frame quad — identity rect
 		shader._setNoiseUVRect?.(width, height, width, height, 0, 0);
-		// and the whole texture is the frame: sampling stays unbounded
-		shader._clearFrameRect?.();
+		// and the whole texture is the frame: sampling stays unbounded. The
+		// texture is the pass's render target, the size of the quad
+		shader._clearFrameRect?.(width, height);
 
 		// bottom-up capture FBO: uv.y grows upward inside apply() — see
 		// QuadBatcher.blitTexture

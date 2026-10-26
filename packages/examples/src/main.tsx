@@ -622,7 +622,7 @@ const examples: {
 		path: "shader-effects",
 		sourceDir: "shaderEffects",
 		description:
-			"Showcase of all 16 built-in ShaderEffect presets for per-sprite visual effects (WebGL).",
+			"Showcase of the built-in ShaderEffect presets for per-sprite visual effects.",
 	},
 	{
 		component: <ExampleSprite />,

@@ -72,7 +72,7 @@ export default class DropShadowEffect extends ShaderEffect {
 	 * @param {number} [options.offsetY=2.0] - shadow y offset in texels
 	 * @param {number[]} [options.color=[0.0, 0.0, 0.0]] - shadow color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha scales `opacity`
 	 * @param {number} [options.opacity=0.5] - shadow opacity (0.0–1.0)
-	 * @param {number[]} [options.textureSize=[256, 256]] - texture dimensions [width, height]
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its offset is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {
@@ -105,14 +105,14 @@ export default class DropShadowEffect extends ShaderEffect {
 			wgsl: wgslFragment,
 		});
 
-		const texSize = options.textureSize ?? [256, 256];
 		this.setUniform(
 			"uShadowOffset",
 			new Float32Array([options.offsetX ?? 2.0, options.offsetY ?? 2.0]),
 		);
 		this.setUniform("uShadowColor", rgba(options.color ?? [0.0, 0.0, 0.0]));
 		this.setUniform("uShadowOpacity", options.opacity ?? 0.5);
-		this.setUniform("uTextureSize", new Float32Array(texSize));
+		// its offset is in texels: of the texture it draws, unless given one
+		this._initTextureSize(options.textureSize, [256, 256]);
 		// uv.y grows downward until a renderer path says otherwise
 		this.setUniform("uUVYDir", 1.0);
 	}
@@ -135,7 +135,8 @@ export default class DropShadowEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the texture size
+	 * Measure the effect's offset in the texels of a texture of this size,
+	 * rather than of the texture it draws (the default)
 	 * @param {number} width - texture width in pixels
 	 * @param {number} height - texture height in pixels
 	 */
