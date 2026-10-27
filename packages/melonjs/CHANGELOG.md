@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.11.0] (melonJS 2) - _unreleased_
+## [20.11.0] (melonJS 2) - _2026-10-27_
 
 ### Added
 - Effects: colors take an alpha. Every color option and `setColor` takes `[r, g, b]` or `[r, g, b, a]`, the alpha being the color's opacity (`[r, g, b]` stays opaque), `RadialGradientEffect` honours the alpha of its `Color`, and `DropShadowEffect` gains the `setColor` the others have. Four values used to break an effect (WebGL rejected them, and on WebGPU the fourth overwrote the next setting, such as an outline's width); a color of any other length now throws a `TypeError` saying so

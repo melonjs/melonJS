@@ -1,6 +1,6 @@
 melonJS 2
 =========
-![melonJS Logo](https://github.com/melonjs/melonJS/raw/master/media/Banner/Banner%20-%20Billboard%20-%20Original%20Logo%20-%20horizontal.png)
+![melonJS: fast & light 2D & 3D games for the web, running on WebGPU, WebGL 2 or Canvas](https://github.com/melonjs/melonJS/raw/master/media/readme/hero.webp)
 
 [![Build Status](https://github.com/melonjs/melonJS/actions/workflows/main.yml/badge.svg)](https://github.com/melonjs/melonJS/actions/workflows/main.yml)
 [![NPM Package](https://img.shields.io/npm/v/melonjs)](https://www.npmjs.com/package/melonjs)
@@ -14,8 +14,6 @@ melonJS 2
 
 A modern & fully featured HTML5 game engine
 -------------------------------------------------------------------------------
-![melonJS](https://melonjs.org/img/alex4-github.png)
-
 [melonJS](https://melonjs.org/) is an open-source 2D & 3D game engine designed for indie developers — perspective and orthogonal cameras, GPU-accelerated tilemap rendering, post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance. Runs on WebGPU, WebGL 2 or Canvas2D with automatic fallback. The whole engine is ~250 KB minzipped of vanilla JS/TS, with no dependencies and no toolchain lock-in. Built with modern class syntax and bundled with [esbuild](https://esbuild.github.io).
 
 [melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained by the team at AltByte in Singapore.
@@ -180,7 +178,7 @@ Examples
 -------------------------------------------------------------------------------
 
 * [Platformer](https://melonjs.github.io/melonJS/examples/#/platformer) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer))
-* [Isometric RPG](https://melonjs.github.io/melonJS/examples/#/isometric-rpg) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricRpg))
+* [Isometric Dungeon](https://melonjs.github.io/melonJS/examples/#/isometric-dungeon) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricDungeon))
 * [SVG Shapes](https://melonjs.github.io/melonJS/examples/#/svg-shapes) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/svgShapes))
 * [Graphics](https://melonjs.github.io/melonJS/examples/#/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))
 * [Hello World](https://melonjs.github.io/melonJS/examples/#/hello-world) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/helloWorld))
