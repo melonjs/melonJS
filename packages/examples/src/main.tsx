@@ -587,7 +587,7 @@ const examples: {
 		path: "alex4",
 		sourceDir: "alex4",
 		description:
-			"A complete port of the 2003 Game Boy-style platformer: 12 levels, two guardians, and a fixed-step game loop on top of Tiled maps (GPL, like the original game).",
+			"A complete port of the 2003 Game Boy-style platformer: 12 Tiled levels, two guardians and the original ending (GPL, like the original game).",
 	},
 	{
 		component: <ExamplePlatformerMatter />,
