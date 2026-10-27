@@ -7,139 +7,176 @@
 import {
 	type Application,
 	audio,
-	loader,
-	Renderable,
-	type Renderer,
+	BitmapText,
+	input,
+	Sprite,
 	Stage,
 	state,
+	Tween,
 } from "melonjs";
-import { confirmPressed, justPressed, syncControls } from "../controls";
-import { gameState, newGame } from "../gameState";
-import { blit, drawLabel } from "../gfx";
-import { addBackground } from "./background";
-import { playMusic, stopMusic } from "./music";
+import { LEVELS } from "../constants";
+import { gameState } from "../gameState";
+import { addParallaxBackground } from "./background";
 
 const SCROLLER =
-	"GUIDE ALEX THROUGH THE JUNGLE TO SAVE LOLA FROM THE EVIL HUMANS ... " +
-	"ARROWS TO MOVE , X OR SPACE TO JUMP , Z TO SPIT EGGS ... " +
-	"JUMP ON ENEMIES AND EAT THEM , PICK UP STARS AND CHERRIES ON THE WAY ... " +
-	"P TO PAUSE , ESC TO QUIT ...       ";
+	"GUIDE ALEX THROUGH THE JUNGLE TO SAVE LOLA FROM THE EVIL HUMANS , " +
+	"USING ARROWS TO MOVE , X TO JUMP AND Z TO SPIT EGGS . " +
+	"JUMP ON ENEMIES TO EAT THEM , AND PICK UP STARS AND CHERRIES ON THE WAY     ";
 
-class TitleMenu extends Renderable {
-	selected = 0;
-	startLevel = 0;
-	private time = 0;
+/*---------------------------------------------------------------------
 
-	constructor() {
-		super(0, 0, 640, 480);
-		this.anchorPoint.set(0, 0);
-		this.floating = true;
-		this.alwaysUpdate = true;
-		this.startLevel = gameState.maxLevel;
+	A title screen
+
+  ---------------------------------------------------------------------	*/
+
+export class TitleScreen extends Stage {
+	private items: BitmapText[] = [];
+	private arrow!: Sprite;
+	private selectedItem = 0;
+	private startLevel = 0;
+
+	override onResetEvent(app: Application) {
+		addParallaxBackground(app);
+
+		// title screen image
+		const title = new Sprite(0, 60, {
+			image: "menu_title",
+			anchorPoint: { x: 0, y: 0 },
+		});
+		title.pos.x = (app.viewport.width - title.width) / 2;
+		title.floating = true;
+		app.world.addChild(title, 10);
+
+		// the menu items
+		this.items = [];
+		for (let i = 0; i < 4; i++) {
+			const item = new BitmapText(140, 205 + i * 50, { font: "atascii40" });
+			item.floating = true;
+			this.items.push(item);
+			app.world.addChild(item, 10);
+		}
+		this.startLevel = Math.min(gameState.saved.maxLevel, LEVELS.length - 1);
+		this.updateMenu();
+
+		// the selection arrow, moving back and forth
+		this.arrow = new Sprite(80, 0, {
+			image: "menu_arrow",
+			anchorPoint: { x: 0, y: 0 },
+		});
+		this.arrow.floating = true;
+		app.world.addChild(this.arrow, 10);
+		this.selectedItem = 0;
+		this.arrow.pos.y = this.items[0].pos.y - 4;
+		new Tween(this.arrow.pos)
+			.to({ x: 90 }, { duration: 400, yoyo: true, repeat: Infinity })
+			.start();
+
+		// best score, and the scrolling help text
+		if (gameState.saved.hiscore > 0) {
+			const hiscore = new BitmapText(320, 405, {
+				font: "atascii32",
+				textAlign: "center",
+				text: `HI SCORE ${gameState.saved.hiscore}`,
+			});
+			hiscore.floating = true;
+			app.world.addChild(hiscore, 10);
+		}
+		const scroller = new BitmapText(640, 444, {
+			font: "atascii32",
+			text: SCROLLER,
+		});
+		scroller.floating = true;
+		app.world.addChild(scroller, 10);
+		const width = scroller.measureText().width;
+		new Tween(scroller.pos)
+			.to({ x: -width }, { duration: width * 8, repeat: Infinity })
+			.start();
+
+		// enable the keyboard
+		input.bindKey(input.KEY.UP, "up", true);
+		input.bindKey(input.KEY.DOWN, "down", true);
+		input.bindKey(input.KEY.LEFT, "left", true);
+		input.bindKey(input.KEY.RIGHT, "right", true);
+		input.bindKey(input.KEY.ENTER, "enter", true);
+		input.bindKey(input.KEY.X, "enter", true);
+		input.bindKey(input.KEY.SPACE, "enter", true);
+
+		// play menu song
+		audio.playTrack("menu_song");
 	}
 
-	private items() {
-		return [
-			"START GAME",
-			`LEVEL : ${this.startLevel + 1}`,
-			`SOUND : ${audio.muted() ? "OFF" : "ON"}`,
-			"CREDITS",
-		];
+	private updateMenu() {
+		this.items[0].setText("START GAME");
+		this.items[1].setText(`LEVEL : ${this.startLevel + 1}`);
+		this.items[2].setText(`SOUND : ${audio.muted() ? "OFF" : "ON"}`);
+		this.items[3].setText("CREDITS");
+	}
+
+	private selectItem(index: number) {
+		if (index < 0 || index >= this.items.length) {
+			return;
+		}
+		this.selectedItem = index;
+		this.arrow.pos.y = this.items[index].pos.y - 4;
+		audio.play("menu");
 	}
 
 	override update(dt: number) {
-		this.time += dt;
-		const count = this.items().length;
-		if (justPressed("up") && this.selected > 0) {
-			this.selected--;
+		if (input.isKeyPressed("up")) {
+			this.selectItem(this.selectedItem - 1);
+		}
+		if (input.isKeyPressed("down")) {
+			this.selectItem(this.selectedItem + 1);
+		}
+
+		// change the starting level, among the ones already reached
+		const step = input.isKeyPressed("left")
+			? -1
+			: input.isKeyPressed("right")
+				? 1
+				: 0;
+		if (step !== 0 && this.selectedItem === 1) {
+			const count = Math.min(gameState.saved.maxLevel, LEVELS.length - 1) + 1;
+			this.startLevel = (this.startLevel + step + count) % count;
+			this.updateMenu();
 			audio.play("menu");
 		}
-		if (justPressed("down") && this.selected < count - 1) {
-			this.selected++;
+
+		if (input.isKeyPressed("enter")) {
 			audio.play("menu");
-		}
-		const left = justPressed("left");
-		const right = justPressed("right");
-		if (this.selected === 1 && (left || right)) {
-			const max = gameState.maxLevel;
-			this.startLevel = left
-				? (this.startLevel + max) % (max + 1)
-				: (this.startLevel + 1) % (max + 1);
-			audio.play("menu");
-		}
-		if (this.selected === 2 && (left || right)) {
-			this.toggleSound();
-		}
-		if (confirmPressed()) {
-			switch (this.selected) {
+			switch (this.selectedItem) {
 				case 0:
 				case 1:
-					audio.play("menu");
-					newGame(this.startLevel);
-					state.change(state.PLAY, false);
+					gameState.reset(this.startLevel);
+					state.change(state.PLAY);
 					break;
 				case 2:
-					this.toggleSound();
+					if (audio.muted()) {
+						audio.unmuteAll();
+					} else {
+						audio.muteAll();
+					}
+					this.updateMenu();
 					break;
 				case 3:
-					audio.play("menu");
-					state.change(state.CREDITS, false);
+					state.change(state.CREDITS);
 					break;
 			}
 		}
-		return true;
-	}
-
-	private toggleSound() {
-		if (audio.muted()) {
-			audio.unmuteAll();
-			audio.play("menu");
-		} else {
-			audio.muteAll();
-		}
-	}
-
-	override draw(renderer: Renderer) {
-		const title = loader.getImage("menu_title") as HTMLImageElement;
-		blit(renderer, title, Math.round((640 - title.width) / 2), 40);
-
-		const items = this.items();
-		items.forEach((label, i) => {
-			drawLabel(renderer, label, 150, 180 + i * 56, 40);
-		});
-
-		// the bouncing selection arrow
-		const arrow = loader.getImage("menu_arrow") as HTMLImageElement;
-		const dx = Math.round(Math.abs(Math.sin(this.time / 250)) * 10);
-		blit(renderer, arrow, 84 + dx, 176 + this.selected * 56);
-
-		if (gameState.hiscore > 0) {
-			drawLabel(
-				renderer,
-				`HISCORE ${gameState.hiscore}`,
-				320,
-				404,
-				32,
-				"center",
-			);
-		}
-
-		// the scrolling help text
-		const width = SCROLLER.length * 32;
-		const x = 640 - ((this.time * 0.15) % (width + 640));
-		drawLabel(renderer, SCROLLER, Math.round(x), 444);
-	}
-}
-
-export class TitleScreen extends Stage {
-	override onResetEvent(app: Application) {
-		syncControls();
-		addBackground(app);
-		app.world.addChild(new TitleMenu(), 10);
-		playMusic("menu");
+		return super.update(dt);
 	}
 
 	override onDestroyEvent() {
-		stopMusic();
+		for (const key of [
+			"UP",
+			"DOWN",
+			"LEFT",
+			"RIGHT",
+			"ENTER",
+			"X",
+			"SPACE",
+		] as const) {
+			input.unbindKey(input.KEY[key]);
+		}
 	}
 }

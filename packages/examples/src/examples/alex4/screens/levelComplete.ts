@@ -7,161 +7,185 @@
 import {
 	type Application,
 	audio,
-	loader,
-	Renderable,
-	type Renderer,
+	BitmapText,
+	ColorLayer,
+	input,
+	Sprite,
 	Stage,
 	state,
 	Tween,
+	timer,
 } from "melonjs";
 import { LEVELS } from "../constants";
-import { confirmPressed, syncControls } from "../controls";
-import { gameState, saveProgress } from "../gameState";
-import { blit, drawLabel } from "../gfx";
-import { addBackground } from "./background";
+import { gameState } from "../gameState";
+import { addParallaxBackground } from "./background";
 
-/**
- * The level complete screen: the bonus points count up into the score,
- * as in the original `show_cutscene`
- */
-class Tally extends Renderable {
-	titleY: number;
-	ready = false;
-	counting = false;
-	done = false;
-	/** level number (1 based) */
-	levelNumber: number;
-	bonus: { level: number; lives: number; stars: number; cherries: number };
-	private ticks = 0;
-	private waited = 0;
+type Row = {
+	label: string;
+	count: number;
+	bonus: number;
+	step: number;
+	text?: BitmapText;
+};
 
-	constructor() {
-		super(0, 0, 640, 480);
-		this.anchorPoint.set(0, 0);
-		this.floating = true;
-		this.alwaysUpdate = true;
-		this.levelNumber = gameState.level + 1;
-		this.bonus = {
-			level: this.levelNumber * 100,
-			lives: gameState.lives * 100,
-			stars: gameState.stars * 100,
-			cherries: gameState.cherries * 10,
-		};
-		const title = loader.getImage("levelcomplete") as HTMLImageElement;
-		this.titleY = -title.height;
-		new Tween(this)
-			.to({ titleY: 0 }, { duration: 750, easing: Tween.Easing.Bounce.Out })
-			.onComplete(() => {
-				this.ready = true;
-			})
-			.start();
-	}
+/*---------------------------------------------------------------------
 
-	override update(dt: number) {
-		if (!this.ready) return true;
-		const pressed = confirmPressed();
-		if (!this.counting && !this.done) {
-			this.waited += dt;
-			if (pressed || this.waited > 4000) {
-				this.counting = true;
-			}
-		} else if (this.counting) {
-			// one step every 4 ticks of 20 ms
-			this.ticks += dt;
-			while (this.ticks >= 80 && this.counting) {
-				this.ticks -= 80;
-				this.step();
-			}
-		} else if (pressed) {
-			this.next();
-		}
-		return true;
-	}
+	A level complete screen: the bonus points are added to the score
 
-	private step() {
-		const b = this.bonus;
-		let any = false;
-		if (b.level) {
-			gameState.score += 100;
-			b.level -= 100;
-			any = true;
-		}
-		if (b.lives) {
-			gameState.score += 100;
-			b.lives -= 100;
-			any = true;
-		}
-		if (b.stars) {
-			gameState.score += 100;
-			b.stars -= 100;
-			any = true;
-		}
-		if (b.cherries) {
-			gameState.score += 10;
-			b.cherries -= 10;
-			any = true;
-		}
-		if (any) {
-			audio.play("point");
-		} else {
-			this.counting = false;
-			this.done = true;
-		}
-	}
-
-	private next() {
-		gameState.level++;
-		saveProgress();
-		if (gameState.level >= LEVELS.length) {
-			state.change(state.GAME_END, false);
-		} else {
-			state.change(state.PLAY, false);
-		}
-	}
-
-	override draw(renderer: Renderer) {
-		renderer.setGlobalAlpha(0.6);
-		renderer.setColor("#0c4400");
-		renderer.fillRect(0, 0, 640, 480);
-		renderer.setGlobalAlpha(1);
-
-		const title = loader.getImage("levelcomplete") as HTMLImageElement;
-		blit(
-			renderer,
-			title,
-			Math.round((640 - title.width) / 2),
-			Math.round(this.titleY),
-		);
-
-		const rows: [string, number, string, number][] = [
-			["LEVEL", this.levelNumber, "X100=", this.bonus.level],
-			["LIVES", gameState.lives, "X100=", this.bonus.lives],
-			["STARS", gameState.stars, "X100=", this.bonus.stars],
-			["CHERRIES", gameState.cherries, "X10=", this.bonus.cherries],
-		];
-		rows.forEach(([label, count, mult, value], i) => {
-			const y = 190 + i * 52;
-			drawLabel(renderer, label, 8, y);
-			drawLabel(renderer, count, 360, y, 32, "right");
-			drawLabel(renderer, mult, 520, y, 32, "right");
-			drawLabel(renderer, value, 636, y, 32, "right");
-		});
-		drawLabel(renderer, `SCORE ${gameState.score}`, 320, 398, 32, "center");
-		if (this.done) {
-			drawLabel(renderer, "PRESS JUMP", 320, 440, 32, "center");
-		}
-	}
-}
+  ---------------------------------------------------------------------	*/
 
 export class LevelCompleteScreen extends Stage {
+	private rows: Row[] = [];
+	private score!: BitmapText;
+	private prompt!: BitmapText;
+	private counter = -1;
+	private counting = false;
+	private done = false;
+
 	override onResetEvent(app: Application) {
-		syncControls();
-		addBackground(app);
-		app.world.addChild(new Tally(), 10);
+		addParallaxBackground(app);
+		app.world.addChild(new ColorLayer("shade", "rgba(12, 68, 0, 0.6)"), 5);
+
+		// the title bounces down
+		const title = new Sprite(0, 0, {
+			image: "levelcomplete",
+			anchorPoint: { x: 0, y: 0 },
+		});
+		title.floating = true;
+		title.pos.set((app.viewport.width - title.width) / 2, -title.height);
+		app.world.addChild(title, 10);
+		new Tween(title.pos)
+			.to({ y: 0 }, { duration: 750, easing: Tween.Easing.Bounce.Out })
+			.onComplete(() => this.startCounting(2000))
+			.start();
+
+		this.rows = [
+			{
+				label: "LEVEL",
+				count: gameState.level + 1,
+				bonus: (gameState.level + 1) * 100,
+				step: 100,
+			},
+			{
+				label: "LIVES",
+				count: gameState.lives,
+				bonus: gameState.lives * 100,
+				step: 100,
+			},
+			{
+				label: "STARS",
+				count: gameState.stars,
+				bonus: gameState.stars * 100,
+				step: 100,
+			},
+			{
+				label: "CHERRIES",
+				count: gameState.cherries,
+				bonus: gameState.cherries * 10,
+				step: 10,
+			},
+		];
+		this.rows.forEach((row, i) => {
+			const y = 200 + i * 52;
+			const add = (
+				x: number,
+				text: string | number,
+				textAlign: "left" | "right" = "right",
+			) => {
+				const label = new BitmapText(x, y, {
+					font: "atascii32",
+					text: String(text),
+					textAlign,
+				});
+				label.floating = true;
+				app.world.addChild(label, 10);
+				return label;
+			};
+			add(8, row.label, "left");
+			add(360, row.count);
+			add(520, `X${row.step}=`);
+			row.text = add(636, row.bonus);
+		});
+		this.score = new BitmapText(320, 410, {
+			font: "atascii32",
+			textAlign: "center",
+		});
+		this.prompt = new BitmapText(320, 446, {
+			font: "atascii32",
+			textAlign: "center",
+		});
+		for (const label of [this.score, this.prompt]) {
+			label.floating = true;
+			app.world.addChild(label, 10);
+		}
+		this.score.setText(`SCORE ${gameState.score}`);
+		this.counting = false;
+		this.done = false;
+
+		input.bindKey(input.KEY.ENTER, "enter", true);
+		input.bindKey(input.KEY.X, "enter", true);
+		input.bindKey(input.KEY.SPACE, "enter", true);
+
 		audio.play("level_done");
 	}
 
+	/** add the bonus points to the score, a little at a time */
+	private startCounting(delay: number) {
+		if (this.counting || this.done) {
+			return;
+		}
+		this.counting = true;
+		this.counter = timer.setTimeout(() => {
+			this.counter = timer.setInterval(() => this.count(), 80);
+		}, delay);
+	}
+
+	private count() {
+		let more = false;
+		for (const row of this.rows) {
+			if (row.bonus > 0) {
+				row.bonus -= row.step;
+				gameState.score += row.step;
+				row.text?.setText(row.bonus);
+				more = true;
+			}
+		}
+		this.score.setText(`SCORE ${gameState.score}`);
+		if (more) {
+			audio.play("point");
+		} else {
+			timer.clearInterval(this.counter);
+			this.counter = -1;
+			this.counting = false;
+			this.done = true;
+			this.prompt.setText("PRESS JUMP");
+		}
+	}
+
+	override update(dt: number) {
+		if (input.isKeyPressed("enter")) {
+			if (this.done) {
+				gameState.level++;
+				gameState.record();
+				state.change(
+					gameState.level < LEVELS.length ? state.PLAY : state.GAME_END,
+				);
+			} else if (!this.counting) {
+				// don't wait for the title
+				this.startCounting(0);
+			}
+		}
+		return super.update(dt);
+	}
+
 	override onDestroyEvent() {
+		timer.clearInterval(this.counter);
+		timer.clearTimeout(this.counter);
+		this.counter = -1;
+		this.counting = false;
 		audio.stop("level_done");
+		for (const key of ["ENTER", "X", "SPACE"] as const) {
+			input.unbindKey(input.KEY[key]);
+		}
 	}
 }

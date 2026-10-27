@@ -37,7 +37,9 @@ export const resources = [
 	// tilesets
 	image("a4_tileset", "map"),
 	image("a4_tiles", "map"),
-	image("metatiles64x64", "map"),
+
+	// particles
+	image("dust"),
 
 	// bitmap fonts
 	image("atascii32", "fnt"),

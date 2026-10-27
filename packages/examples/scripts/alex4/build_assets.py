@@ -53,6 +53,37 @@ for n, im in bmps.items():
     else:
         frames[n.lower()] = im
 
+# Alex is drawn from a separate head and body: bake every combination we need
+# into frames of one size (48x40), with the body always in the middle column
+# so that flipping the sprite never moves him. The feet sit on row 24.
+def alex(body=None, head=None, eat=False, ball=None):
+    im = Image.new("RGBA", (48, 40))
+    if eat:
+        im.alpha_composite(bmps["HERO_EAT"], (0, 8))
+    if body:
+        im.alpha_composite(bmps[body], (16, 8))
+    if head:
+        im.alpha_composite(bmps[head], (16, 8))
+    if ball is not None:
+        im.alpha_composite(bmps["HERO_BALL"].rotate(-90 * ball), (16, 8))
+    return im
+
+for i in range(4):
+    frames[f"alex_walk{i}"] = alex(f"HERO00{i}", "HERO_NORM")
+    frames[f"alex_full_walk{i}"] = alex(f"HERO00{i}", "HERO_FULL")
+    frames[f"alex_ball{i}"] = alex(ball=i)
+frames["alex_jump"] = alex("HERO_JUMP", "HERO_NORM")
+frames["alex_full_jump"] = alex("HERO_JUMP", "HERO_FULL")
+frames["alex_spit"] = alex("HERO000", "HERO_SPIT")
+frames["alex_jump_spit"] = alex("HERO_JUMP", "HERO_SPIT")
+frames["alex_eat"] = alex(eat=True)
+for n in list(frames):
+    if n.startswith("hero"):
+        del frames[n]
+
+# the particle emitter wants a plain image
+up(bmps["PARTICLE_DUST"]).save(f"{OUT}/img/dust.png", optimize=True)
+
 PAD = 2
 items = sorted(frames.items(), key=lambda kv: (-kv[1].height, kv[0]))
 W = 1024
@@ -70,10 +101,10 @@ meta = {}
 for n, im in items:
     x, y, w, h = place[n]
     atlas.paste(up(im), (x, y))
-    meta[n] = {"frame": {"x": x, "y": y, "w": w, "h": h}, "rotated": False, "trimmed": False,
+    meta[n] = {"filename": n, "frame": {"x": x, "y": y, "w": w, "h": h}, "rotated": False, "trimmed": False,
                "spriteSourceSize": {"x": 0, "y": 0, "w": w, "h": h}, "sourceSize": {"w": w, "h": h}}
 atlas.save(f"{OUT}/img/sprites.png", optimize=True)
-json.dump({"frames": meta, "meta": {"app": "alex4 build_assets.py", "image": "sprites.png",
+json.dump({"frames": [meta[n] for n in sorted(meta)], "meta": {"app": "melonJS (alex4 build_assets.py)",
            "format": "RGBA8888", "size": {"w": W, "h": H}, "scale": "1"}},
           open(f"{OUT}/img/sprites.json", "w"), indent=1, sort_keys=True)
 print("atlas", W, H, len(meta))
@@ -120,6 +151,8 @@ for f in os.listdir(f"{WE}/audio/sfx"):
 # ---- missing sound effects from the original sample data -------------------
 sfx = {p["NAME"]: d for t, p, d in parse_dat(unpack_file(f"{ORIG}/sfx_22.dat", password())) if t == "SAMP"}
 for name in ("spit", "shoot", "ship", "energy"):
+    if os.path.exists(f"{OUT}/sfx/{name}.ogg"):
+        continue  # the encoders are not deterministic, keep what is there
     d = sfx[name]
     bits, freq, length = struct.unpack(">hHI", d[:8])
     ch = 2 if bits < 0 else 1

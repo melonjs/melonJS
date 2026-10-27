@@ -7,74 +7,67 @@
 import {
 	type Application,
 	audio,
-	loader,
-	Renderable,
-	type Renderer,
+	BitmapText,
+	input,
+	Sprite,
 	Stage,
 	state,
 } from "melonjs";
-import { confirmPressed, justPressed, syncControls } from "../controls";
-import { blit, drawLabel, drawText } from "../gfx";
-import { addBackground } from "./background";
-import { playMusic, stopMusic } from "./music";
+import { addParallaxBackground } from "./background";
 
-const LINES: [string, number][] = [
-	[">ORIGINAL GAME<", 40],
-	["DESIGN CODE GFX", 0],
-	["  JOHAN PEITZ", 0],
-	["MUSIC SFX", 0],
-	["  ANDERS SVENSSON", 0],
-	[">WEB EDITION<", 40],
-	["  OLIVIER BIOT", 0],
-];
+/*---------------------------------------------------------------------
 
-class Credits extends Renderable {
-	constructor() {
-		super(0, 0, 640, 480);
-		this.anchorPoint.set(0, 0);
-		this.floating = true;
-		this.alwaysUpdate = true;
-	}
+	A credit screen
 
-	override update() {
-		if (confirmPressed() || justPressed("escape")) {
-			audio.play("menu");
-			state.change(state.MENU, false);
-		}
-		return true;
-	}
-
-	override draw(renderer: Renderer) {
-		const title = loader.getImage("menu_title") as HTMLImageElement;
-		blit(renderer, title, Math.round((640 - title.width) / 2), 30);
-		let y = 150;
-		for (const [line, size] of LINES) {
-			if (size === 40 && y > 150) y += 8;
-			drawLabel(renderer, line, 40, y, size === 40 ? 40 : 32);
-			y += size === 40 ? 44 : 38;
-		}
-		drawText(
-			renderer,
-			"(C) 2003 FREE LUNCH DESIGN",
-			320,
-			448,
-			32,
-			"center",
-			0.75,
-			true,
-		);
-	}
-}
+  ---------------------------------------------------------------------	*/
 
 export class CreditsScreen extends Stage {
 	override onResetEvent(app: Application) {
-		syncControls();
-		addBackground(app);
-		app.world.addChild(new Credits(), 10);
-		playMusic("menu");
+		addParallaxBackground(app);
+
+		const title = new Sprite(0, 30, {
+			image: "menu_title",
+			anchorPoint: { x: 0, y: 0 },
+		});
+		title.pos.x = (app.viewport.width - title.width) / 2;
+		title.floating = true;
+		app.world.addChild(title, 10);
+
+		const lines: [string, number, number, "atascii32" | "atascii40"][] = [
+			[">ORIGINAL GAME<", 40, 160, "atascii40"],
+			["DESIGN CODE GFX :", 40, 210, "atascii32"],
+			["JOHAN PEITZ", 100, 245, "atascii32"],
+			["MUSIC SFX :", 40, 285, "atascii32"],
+			["ANDERS SVENSSON", 100, 320, "atascii32"],
+			[">WEB EDITION<", 40, 365, "atascii40"],
+			["OLIVIER BIOT", 100, 410, "atascii32"],
+		];
+		for (const [text, x, y, font] of lines) {
+			const line = new BitmapText(x, y, { font, text });
+			line.floating = true;
+			app.world.addChild(line, 10);
+		}
+
+		// enable the keyboard
+		input.bindKey(input.KEY.ENTER, "enter", true);
+		input.bindKey(input.KEY.X, "enter", true);
+		input.bindKey(input.KEY.SPACE, "enter", true);
+		input.bindKey(input.KEY.ESC, "enter", true);
+
+		audio.playTrack("menu_song");
+	}
+
+	override update(dt: number) {
+		if (input.isKeyPressed("enter")) {
+			audio.play("menu");
+			state.change(state.MENU);
+		}
+		return super.update(dt);
 	}
 
 	override onDestroyEvent() {
-		stopMusic();
+		for (const key of ["ENTER", "X", "SPACE", "ESC"] as const) {
+			input.unbindKey(input.KEY[key]);
+		}
 	}
 }

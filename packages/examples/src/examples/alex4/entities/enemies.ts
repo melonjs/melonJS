@@ -1,0 +1,397 @@
+/**
+ * melonJS — Alex the Allegator 4 example.
+ * Port of "Alex the Allegator 4" (c) 2003 Johan Peitz / Free Lunch Design.
+ * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
+ * game it is ported from — see `packages/examples/LICENSE.md`.
+ */
+import {
+	audio,
+	type CollisionResponse,
+	collision,
+	game,
+	type PhysicsAdapter,
+	Rect,
+	type Renderable,
+	Sprite,
+	type TMXObject,
+	Vector2d,
+} from "melonjs";
+import { gameState } from "../gameState";
+import { dust, flash } from "./effects";
+import type { Hazard, PlayerEntity } from "./player";
+import type { Shootable } from "./projectiles";
+
+/**
+ * The bodies of the enemies have two shapes: a solid one, colliding with the
+ * level only, and a trigger one to know when Alex or an egg touches them
+ * (a trigger never pushes anyone, so enemies do not shove Alex around).
+ */
+export function enemyShapes(solid: Rect, hitbox: Rect = solid.clone()) {
+	solid.collisionMask = collision.types.WORLD_SHAPE;
+	hitbox.collisionMask =
+		collision.types.PLAYER_OBJECT | collision.types.PROJECTILE_OBJECT;
+	hitbox.isTrigger = true;
+	return [solid, hitbox];
+}
+
+/************************************************************************************/
+/*                                                                                  */
+/*      a generic enemy                                                             */
+/*                                                                                  */
+/************************************************************************************/
+export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
+	alive = true;
+	walkLeft = true;
+	walkSpeed = 1.7;
+	/** jumped on, waiting to be eaten */
+	flat = false;
+	protected flatTime = 0;
+
+	// what can be done to it
+	stompable = true;
+	flatable = true;
+	rollable = true;
+	shootable = true;
+
+	protected adapter!: PhysicsAdapter;
+	protected vel = new Vector2d();
+
+	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
+		const atlas = gameState.atlas.getAnimationSettings(frames);
+		// stand on the bottom of the Tiled object
+		super(x, y + settings.height - atlas.frameheight, {
+			...atlas,
+			anchorPoint: { x: 0, y: 0 },
+		});
+		this.bodyDef = {
+			type: "dynamic",
+			shapes: enemyShapes(new Rect(8, 8, this.width - 16, this.height - 8)),
+			collisionType: collision.types.ENEMY_OBJECT,
+			collisionMask:
+				collision.types.WORLD_SHAPE |
+				collision.types.PLAYER_OBJECT |
+				collision.types.PROJECTILE_OBJECT,
+			maxVelocity: { x: 2, y: 16 },
+		};
+	}
+
+	override onActivateEvent() {
+		this.adapter = this.parentApp.world.adapter;
+	}
+
+	override update(dt: number) {
+		if (this.alive) {
+			this.think(dt);
+		}
+
+		// fell out of the map
+		if (this.pos.y > game.viewport.height + 64) {
+			game.world.removeChild(this);
+		}
+
+		super.update(dt);
+		return true;
+	}
+
+	/** what to do this frame, while alive */
+	think(dt: number) {
+		const vel = this.body.getVelocity(this.vel);
+		if (this.flat) {
+			this.body.setVelocity(0, vel.y);
+			// get back on its feet after a while
+			this.flatTime += dt;
+			if (this.flatTime > 4000 && !this.isFlickering()) {
+				this.flicker(1000, () => {
+					if (this.flat) {
+						this.flat = false;
+						this.setCurrentAnimation("walk");
+					}
+				});
+			}
+		} else {
+			this.walk(vel.y);
+		}
+	}
+
+	/** walk ahead */
+	walk(vy: number) {
+		this.body.setVelocity(this.walkLeft ? -this.walkSpeed : this.walkSpeed, vy);
+		this.flipX(!this.walkLeft);
+	}
+
+	touchPlayer(player: PlayerEntity, fromAbove: boolean) {
+		if (!this.alive) {
+			return;
+		}
+		if (this.flat) {
+			if (player.rolling) {
+				this.kill(player.facingLeft);
+			} else if (!fromAbove && player.grounded && this.flatTime > 250) {
+				// walked into it
+				this.eaten(player);
+			}
+		} else if (player.rolling && this.rollable) {
+			this.kill(player.facingLeft);
+		} else if (fromAbove && this.stompable) {
+			this.stomp();
+			player.bounce();
+		} else {
+			player.hurt();
+		}
+	}
+
+	/** jumped on */
+	stomp() {
+		audio.play("stomp");
+		flash("particle_bopp", this.pos.x + this.width / 2 - 32, this.pos.y - 32);
+		if (this.flatable) {
+			this.flat = true;
+			this.flatTime = 0;
+			this.setCurrentAnimation("flat");
+		} else {
+			this.kill(false);
+		}
+	}
+
+	/** miam miam */
+	eaten(player: PlayerEntity) {
+		this.alive = false;
+		game.world.removeChild(this);
+		gameState.score += 50;
+		audio.play("eat");
+		player.eat();
+	}
+
+	shot(fromLeft: boolean) {
+		if (this.alive) {
+			this.kill(!fromLeft);
+		}
+	}
+
+	/** knocked out: flip over and fall out of the screen */
+	kill(left: boolean) {
+		this.alive = false;
+		this.flat = false;
+		audio.play("kill");
+		this.flipY(true);
+		this.body.setCollisionMask(collision.types.NO_OBJECT);
+		this.adapter.setGravityScale(this, 1);
+		this.body.setVelocity(left ? -2 : 2, -10);
+		this.alwaysUpdate = true;
+	}
+
+	onCollisionActive(response: CollisionResponse, other: Renderable) {
+		// bumped into a wall: turn around
+		if (
+			this.alive &&
+			other.body.collisionType === collision.types.WORLD_SHAPE &&
+			Math.abs(response.normal.x) > 0.7 &&
+			response.normal.x > 0 === this.walkLeft
+		) {
+			this.walkLeft = !this.walkLeft;
+		}
+	}
+}
+
+/************************************************************************************/
+/*      the small human: walks, and falls off the edges                             */
+/************************************************************************************/
+export class Enemy1Entity extends GenericEnemyEntity {
+	constructor(x: number, y: number, settings: TMXObject) {
+		super(x, y, settings, [
+			"enemy1_01",
+			"enemy1_02",
+			"enemy1_03",
+			"enemy1_04",
+			"enemy1_05",
+		]);
+		this.addAnimation(
+			"walk",
+			["enemy1_01", "enemy1_02", "enemy1_03", "enemy1_04"],
+			100,
+		);
+		this.addAnimation("flat", ["enemy1_05"]);
+		this.setCurrentAnimation("walk");
+	}
+}
+
+/************************************************************************************/
+/*      the big human, with a spear: walks back and forth on its platform           */
+/************************************************************************************/
+export class Enemy2Entity extends GenericEnemyEntity {
+	startX: number;
+	endX: number;
+
+	constructor(x: number, y: number, settings: TMXObject) {
+		super(x, y, settings, [
+			"enemy2_01",
+			"enemy2_02",
+			"enemy2_03",
+			"enemy2_04",
+			"enemy2_05",
+		]);
+		this.addAnimation(
+			"walk",
+			["enemy2_01", "enemy2_02", "enemy2_03", "enemy2_04"],
+			100,
+		);
+		this.addAnimation("flat", ["enemy2_05"]);
+		this.setCurrentAnimation("walk");
+
+		// the Tiled object is the area to walk in, start from its right end
+		this.startX = x;
+		this.endX = x + settings.width - this.width;
+		this.pos.x = this.endX;
+	}
+
+	override walk(vy: number) {
+		if (this.walkLeft && this.pos.x <= this.startX) {
+			this.walkLeft = false;
+		} else if (!this.walkLeft && this.pos.x >= this.endX) {
+			this.walkLeft = true;
+		}
+		super.walk(vy);
+	}
+}
+
+/************************************************************************************/
+/*      the crusher: falls on Alex when he walks under it                           */
+/************************************************************************************/
+export class CrusherEntity extends GenericEnemyEntity {
+	startY: number;
+	mode: "wait" | "fall" | "landed" | "rise" = "wait";
+	private delay = 0;
+
+	constructor(x: number, y: number, settings: TMXObject) {
+		super(x, y, settings, ["enemy3"]);
+		this.addAnimation("idle", ["enemy3"]);
+		this.setCurrentAnimation("idle");
+		this.stompable = this.rollable = this.shootable = false;
+
+		// it hangs on a chain: only the spiked bottom is solid
+		this.bodyDef = {
+			type: "dynamic",
+			shapes: enemyShapes(new Rect(4, this.height - 64, 120, 64)),
+			collisionType: collision.types.ENEMY_OBJECT,
+			collisionMask:
+				collision.types.WORLD_SHAPE | collision.types.PLAYER_OBJECT,
+			gravityScale: 0,
+			maxVelocity: { x: 0, y: 20 },
+		};
+		this.startY = this.pos.y;
+	}
+
+	override think(dt: number) {
+		switch (this.mode) {
+			case "wait": {
+				const alex = game.world.getChildByName("alex")[0];
+				if (alex && Math.abs(alex.pos.x + 96 - (this.pos.x + 64)) < 128) {
+					this.mode = "fall";
+					this.adapter.setGravityScale(this, 1);
+				}
+				break;
+			}
+			case "fall":
+				if (this.adapter.isGrounded?.(this)) {
+					this.mode = "landed";
+					this.delay = 500;
+					audio.play("impact");
+					dust(this.pos.x + 64, this.pos.y + this.height);
+				}
+				break;
+			case "landed":
+				this.delay -= dt;
+				if (this.delay <= 0) {
+					this.mode = "rise";
+					this.adapter.setGravityScale(this, 0);
+				}
+				break;
+			case "rise":
+				this.body.setVelocity(0, -1.5);
+				if (this.pos.y <= this.startY) {
+					this.body.setVelocity(0, 0);
+					this.mode = "wait";
+				}
+				break;
+		}
+	}
+
+	override touchPlayer(player: PlayerEntity) {
+		player.hurt();
+	}
+}
+
+/************************************************************************************/
+/*      the fish: jumps out of the water, again and again                           */
+/************************************************************************************/
+class FishEntity extends GenericEnemyEntity {
+	jumpSpeed: number;
+	private underwater: number;
+
+	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
+		super(x, y, settings, frames);
+		this.flatable = false;
+		this.alwaysUpdate = true;
+
+		// jump high enough to reach where it was placed
+		const height = game.viewport.height - this.pos.y;
+		this.jumpSpeed = Math.sqrt(2 * 0.98 * height);
+		this.pos.y = game.viewport.height;
+		this.underwater = 500 + Math.random() * 500;
+
+		// it swims through the walls and the water
+		const hitbox = new Rect(8, 8, this.width - 16, this.height - 8);
+		hitbox.isTrigger = true;
+		this.bodyDef = {
+			type: "dynamic",
+			shapes: [hitbox],
+			collisionType: collision.types.ENEMY_OBJECT,
+			collisionMask:
+				collision.types.PLAYER_OBJECT | collision.types.PROJECTILE_OBJECT,
+			gravityScale: 0,
+			maxVelocity: { x: 0, y: 40 },
+		};
+	}
+
+	override think(dt: number) {
+		const vy = this.body.getVelocity(this.vel).y;
+		if (this.underwater > 0) {
+			this.underwater -= dt;
+			if (this.underwater <= 0) {
+				this.adapter.setGravityScale(this, 1);
+				this.body.setVelocity(0, -this.jumpSpeed);
+			}
+		} else if (vy > 0 && this.pos.y >= game.viewport.height) {
+			// back in the water, wait a bit
+			this.adapter.setGravityScale(this, 0);
+			this.body.setVelocity(0, 0);
+			this.underwater = 800;
+		}
+		this.onJump(vy);
+	}
+
+	onJump(_vy: number) {}
+}
+
+export class SpikeFishEntity extends FishEntity {
+	constructor(x: number, y: number, settings: TMXObject) {
+		super(x, y, settings, ["enemy4"]);
+		this.addAnimation("walk", ["enemy4"]);
+		this.setCurrentAnimation("walk");
+		this.stompable = false;
+	}
+}
+
+export class JellyFishEntity extends FishEntity {
+	constructor(x: number, y: number, settings: TMXObject) {
+		super(x, y, settings, ["enemy5_01", "enemy5_02"]);
+		this.addAnimation("walk", ["enemy5_01"]);
+		this.addAnimation("up", ["enemy5_02"]);
+		this.setCurrentAnimation("walk");
+	}
+
+	override onJump(vy: number) {
+		// stretched while going up
+		this.setCurrentAnimation(vy < 0 ? "up" : "walk");
+	}
+}
