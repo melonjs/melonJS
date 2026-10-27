@@ -17,7 +17,7 @@ import {
 	timer,
 	UIPanel,
 } from "melonjs";
-import { PALETTE } from "../constants";
+import { PALETTE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 
 // the original script moved things one step every 20ms, at 1/4 of our scale
@@ -85,7 +85,10 @@ export class OutroScreen extends Stage {
 	private say(who: Sprite, lines: string[], ms: number) {
 		const width = Math.max(...lines.map((line) => line.length)) * 16 + 24;
 		const height = lines.length * 16 + 20;
-		const x = Math.max(4, Math.min(who.pos.x + 32 - width / 2, 636 - width));
+		const x = Math.max(
+			4,
+			Math.min(who.pos.x + 32 - width / 2, WIDTH - 4 - width),
+		);
 		const bubble = new UIPanel(x, who.pos.y - height - 16, {
 			width,
 			height,
@@ -180,7 +183,7 @@ export class OutroScreen extends Stage {
 		// Lola takes the ship, and goes after them
 		this.at(20040, () => {
 			audio.play("ship");
-			ship = this.actor("ship0", 640, 256);
+			ship = this.actor("ship0", WIDTH, 256);
 			this.move(ship, -2, 0, 43).start();
 		});
 		this.at(20900, () => this.say(lola, ["Yay!"], 500));
@@ -209,7 +212,7 @@ export class OutroScreen extends Stage {
 				["PRESS JUMP", 290, "atascii32"],
 			] as const) {
 				world.addChild(
-					new BitmapText(320, y, {
+					new BitmapText(WIDTH / 2, y, {
 						font,
 						text,
 						textAlign: "center",

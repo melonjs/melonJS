@@ -16,7 +16,7 @@ import {
 	Tween,
 	timer,
 } from "melonjs";
-import { LEVELS } from "../constants";
+import { INSET, LEVELS, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { addParallaxBackground } from "./background";
 
@@ -101,16 +101,16 @@ export class LevelCompleteScreen extends Stage {
 				app.world.addChild(label, 10);
 				return label;
 			};
-			add(8, row.label, "left");
-			add(360, row.count);
-			add(520, `X${row.step}=`);
-			row.text = add(636, row.bonus);
+			add(INSET + 8, row.label, "left");
+			add(INSET + 360, row.count);
+			add(INSET + 520, `X${row.step}=`);
+			row.text = add(INSET + 636, row.bonus);
 		});
-		this.score = new BitmapText(320, 410, {
+		this.score = new BitmapText(WIDTH / 2, 410, {
 			font: "atascii32",
 			textAlign: "center",
 		});
-		this.prompt = new BitmapText(320, 446, {
+		this.prompt = new BitmapText(WIDTH / 2, 446, {
 			font: "atascii32",
 			textAlign: "center",
 		});

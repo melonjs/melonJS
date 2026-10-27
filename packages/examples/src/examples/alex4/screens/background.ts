@@ -5,6 +5,7 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 import { type Application, ImageLayer, Tween, Vector2d } from "melonjs";
+import { shaders } from "../shaders";
 
 /**
  * add the jungle parallax layers behind a menu screen, slowly scrolling
@@ -16,6 +17,7 @@ export function addParallaxBackground(app: Application) {
 	);
 	app.world.addChild(
 		new ImageLayer(0, 0, {
+			name: "layer2",
 			image: "layer2",
 			ratio: new Vector2d(0.35, 0),
 			repeat: "repeat-x",
@@ -24,12 +26,15 @@ export function addParallaxBackground(app: Application) {
 	);
 	app.world.addChild(
 		new ImageLayer(0, 0, {
+			name: "layer3",
 			image: "layer3",
 			ratio: new Vector2d(0.5, 0),
 			repeat: "repeat-x",
 		}),
 		3,
 	);
+
+	shaders.sway(app.world);
 
 	// move the camera around a huge world to scroll the layers
 	app.viewport.setBounds(0, 0, 1e7, app.viewport.height);

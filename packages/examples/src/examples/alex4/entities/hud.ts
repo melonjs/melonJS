@@ -5,7 +5,7 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 import { BitmapText, Container, game, Sprite, Tween, UIPanel } from "melonjs";
-import { PALETTE } from "../constants";
+import { HEIGHT, PALETTE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 
 /************************************************************************************/
@@ -74,7 +74,7 @@ export class HUD extends Container {
 	score: BitmapText;
 
 	constructor() {
-		super(0, 440, 640, 40);
+		super(0, HEIGHT - 40, WIDTH, 40);
 		// screen space, kept when the level reloads
 		this.floating = true;
 		this.isPersistent = true;
@@ -82,7 +82,7 @@ export class HUD extends Container {
 
 		this.addChild(
 			new UIPanel(0, 0, {
-				width: 640,
+				width: WIDTH,
 				height: 40,
 				fillColor: PALETTE[0],
 				borderColor: null,
@@ -91,7 +91,7 @@ export class HUD extends Container {
 		this.addChild(new HUDCounter(4, 0, "hud_life", () => gameState.lives));
 		this.addChild(new HUDEnergy(180, 0));
 		this.addChild(new HUDCounter(300, 0, "hud_egg", () => gameState.eggs));
-		this.score = new BitmapText(636, -2, {
+		this.score = new BitmapText(WIDTH - 4, -2, {
 			font: "atascii40",
 			textAlign: "right",
 		});
@@ -174,14 +174,14 @@ export class GameOverMessage extends Sprite {
 export class PauseMessage extends UIPanel {
 	constructor() {
 		super(0, 210, {
-			width: 640,
+			width: WIDTH,
 			height: 60,
 			fillColor: "rgba(0, 0, 0, 0.8)",
 			borderColor: null,
 		});
 		this.updateWhenPaused = true;
 		this.addChild(
-			new BitmapText(320, 10, {
+			new BitmapText(WIDTH / 2, 10, {
 				font: "atascii40",
 				textAlign: "center",
 				text: "P A U S E",

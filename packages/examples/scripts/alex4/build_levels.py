@@ -36,6 +36,9 @@ WE_NAMES = {"playerspawnpoint": "player", "cherryentity": "cherry", "heartentity
             "enemy1entity": "enemy1", "enemy2entity": "enemy2", "boss1entity": "boss1",
             "canonentity": "cannon", "spikeentity": "spike", "tmxlevelentity": "exit"}
 
+# the width of the screen, in tiles (832 pixels)
+WIDE = 13
+
 TILESET_WE = dict(name="a4_tileset", image="a4_tileset.png", w=640, h=480, count=63, columns=9, spacing=1, margin=1)
 TILESET_ORIG = dict(name="a4_tiles", image="a4_tiles.png", w=768, h=512, count=96, columns=12, spacing=0, margin=0)
 
@@ -240,6 +243,10 @@ for t, p, d in parse_dat(unpack_file(f"{ORIG}/data.dat", password())):
     if p.get("NAME") == "SCRIPTMAP1":
         h = d[6:102]
         w, hh = struct.unpack("<ii", h[64:72])
-        m = dict(name="outro", w=w, h=hh, flags=[0, 0, 0, 0, 0], start=(3, 4), cells=d[102:102 + w * hh * 4])
+        cells = d[102:102 + w * hh * 4]
+        # the scene was made for a 4:3 screen: repeat its right column to fill a 16:9 one
+        rows = [cells[y * w * 4:(y + 1) * w * 4] for y in range(hh)]
+        rows = [row + row[-4:] * (WIDE - w) for row in rows]
+        m = dict(name="outro", w=WIDE, h=hh, flags=[0, 0, 0, 0, 0], start=(3, 4), cells=b"".join(rows))
         convert_original(m, 13, f"{OUT}/a4_outro.tmx", scene=True)
         print("outro", w, hh)

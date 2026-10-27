@@ -8,6 +8,7 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
+	FlashEffect,
 	game,
 	input,
 	type PhysicsAdapter,
@@ -16,6 +17,7 @@ import {
 	Sprite,
 	state,
 	type TMXObject,
+	Tween,
 	Vector2d,
 } from "melonjs";
 import { gameState } from "../gameState";
@@ -52,6 +54,8 @@ export class PlayerEntity extends Sprite {
 	private vel = new Vector2d();
 	/** what the camera looks at: Alex is in the middle of his frame */
 	private focus = new Vector2d();
+	/** turns Alex white for a moment when he gets hurt */
+	private hit!: FlashEffect;
 
 	constructor(x: number, y: number, settings: TMXObject & { facing?: string }) {
 		// the frames are 192x160: Alex stands in the middle column, feet 96px down
@@ -127,6 +131,8 @@ export class PlayerEntity extends Sprite {
 	override onActivateEvent() {
 		const app = this.parentApp;
 		this.adapter = app.world.adapter;
+		this.hit = new FlashEffect(app.renderer);
+		this.addPostEffect(this.hit);
 		this.updateFocus();
 		app.viewport.follow(this.focus, app.viewport.AXIS.HORIZONTAL, 0.1);
 		app.viewport.setDeadzone(app.viewport.width / 5, app.viewport.height);
@@ -283,6 +289,11 @@ export class PlayerEntity extends Sprite {
 		} else {
 			audio.play("hurt");
 			this.flicker(2000);
+			this.hit.setIntensity(1);
+			new Tween(this.hit)
+				.to({ intensity: 0 }, { duration: 400 })
+				.onUpdate(() => this.hit.setIntensity(this.hit.intensity))
+				.start();
 		}
 	}
 

@@ -15,6 +15,7 @@ import {
 	type TMXObject,
 } from "melonjs";
 import { gameState } from "../gameState";
+import { shaders } from "../shaders";
 import { burst, flash } from "./effects";
 import { PlayerEntity } from "./player";
 
@@ -80,6 +81,7 @@ export class StarEntity extends Pickup {
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings, "star");
+		this.addPostEffect(shaders.shine);
 		StarEntity.count++;
 	}
 

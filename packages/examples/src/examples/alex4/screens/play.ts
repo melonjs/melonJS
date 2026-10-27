@@ -22,6 +22,7 @@ import {
 	PauseMessage,
 } from "../entities/hud";
 import { gameState } from "../gameState";
+import { shaders } from "../shaders";
 
 // the custom properties of our Tiled maps
 export type LevelMap = TMXTileMap & {
@@ -86,6 +87,7 @@ export class PlayScreen extends Stage {
 			container: this.app.world,
 			onLoaded: () => {
 				const map = level.getCurrentLevel() as LevelMap;
+				shaders.sway(this.app.world);
 				if (firstTry) {
 					this.app.world.addChild(new LetsGoMessage(map.label), 101);
 				}

@@ -14,8 +14,9 @@ import {
 	state,
 	Tween,
 } from "melonjs";
-import { LEVELS } from "../constants";
+import { INSET, LEVELS, WIDTH } from "../constants";
 import { gameState } from "../gameState";
+import { shaders } from "../shaders";
 import { addParallaxBackground } from "./background";
 
 const SCROLLER =
@@ -45,12 +46,15 @@ export class TitleScreen extends Stage {
 		});
 		title.pos.x = (app.viewport.width - title.width) / 2;
 		title.floating = true;
+		title.addPostEffect(shaders.shine);
 		app.world.addChild(title, 10);
 
 		// the menu items
 		this.items = [];
 		for (let i = 0; i < 4; i++) {
-			const item = new BitmapText(140, 205 + i * 50, { font: "atascii40" });
+			const item = new BitmapText(INSET + 140, 205 + i * 50, {
+				font: "atascii40",
+			});
 			item.floating = true;
 			this.items.push(item);
 			app.world.addChild(item, 10);
@@ -59,7 +63,7 @@ export class TitleScreen extends Stage {
 		this.updateMenu();
 
 		// the selection arrow, moving back and forth
-		this.arrow = new Sprite(80, 0, {
+		this.arrow = new Sprite(INSET + 80, 0, {
 			image: "menu_arrow",
 			anchorPoint: { x: 0, y: 0 },
 		});
@@ -68,12 +72,12 @@ export class TitleScreen extends Stage {
 		this.selectedItem = 0;
 		this.arrow.pos.y = this.items[0].pos.y - 4;
 		new Tween(this.arrow.pos)
-			.to({ x: 90 }, { duration: 400, yoyo: true, repeat: Infinity })
+			.to({ x: INSET + 90 }, { duration: 400, yoyo: true, repeat: Infinity })
 			.start();
 
 		// best score, and the scrolling help text
 		if (gameState.saved.hiscore > 0) {
-			const hiscore = new BitmapText(320, 405, {
+			const hiscore = new BitmapText(WIDTH / 2, 405, {
 				font: "atascii32",
 				textAlign: "center",
 				text: `HI SCORE ${gameState.saved.hiscore}`,
@@ -81,7 +85,7 @@ export class TitleScreen extends Stage {
 			hiscore.floating = true;
 			app.world.addChild(hiscore, 10);
 		}
-		const scroller = new BitmapText(640, 444, {
+		const scroller = new BitmapText(WIDTH, 444, {
 			font: "atascii32",
 			text: SCROLLER,
 		});

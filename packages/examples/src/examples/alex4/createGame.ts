@@ -18,7 +18,7 @@ import {
 	TextureAtlas,
 	video,
 } from "melonjs";
-import { FADE_COLOR } from "./constants";
+import { FADE_COLOR, HEIGHT, WIDTH } from "./constants";
 import { GroundPounderEntity, SpikeTruckEntity } from "./entities/bosses";
 import {
 	CherryEntity,
@@ -51,10 +51,11 @@ import { LevelCompleteScreen } from "./screens/levelComplete";
 import { OutroScreen } from "./screens/outro";
 import { PlayScreen } from "./screens/play";
 import { TitleScreen } from "./screens/title";
+import { shaders } from "./shaders";
 
 export const createGame = async () => {
 	// 4 times the original 160x120 resolution
-	const app = new Application(640, 480, {
+	const app = new Application(WIDTH, HEIGHT, {
 		parent: "screen",
 		scale: "auto",
 		scaleMethod: "fit",
@@ -65,6 +66,9 @@ export const createGame = async () => {
 
 	// add "#debug" to the URL to enable the debug Panel
 	plugin.register(DebugPanelPlugin, "debugPanel");
+
+	// a touch of modern shading
+	shaders.init(app);
 
 	// initialize the "audio"
 	audio.init("mp3,ogg");

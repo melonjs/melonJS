@@ -5,6 +5,12 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 
+/** the screen: the original 160x120 at 4x, widened to about 16:9 */
+export const WIDTH = 832;
+export const HEIGHT = 480;
+/** where the menus, laid out for the original 640 pixels, start */
+export const INSET = (WIDTH - 640) / 2;
+
 /** the level files, in play order */
 export const LEVELS = [
 	"a4_level1",

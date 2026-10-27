@@ -13,6 +13,7 @@ import {
 	Stage,
 	state,
 } from "melonjs";
+import { INSET } from "../constants";
 import { addParallaxBackground } from "./background";
 
 /*---------------------------------------------------------------------
@@ -43,7 +44,7 @@ export class CreditsScreen extends Stage {
 			["OLIVIER BIOT", 100, 410, "atascii32"],
 		];
 		for (const [text, x, y, font] of lines) {
-			const line = new BitmapText(x, y, { font, text });
+			const line = new BitmapText(INSET + x, y, { font, text });
 			line.floating = true;
 			app.world.addChild(line, 10);
 		}
