@@ -45,9 +45,13 @@ export class PlayerEntity extends Sprite {
 	spitting = false;
 	dying = false;
 	grounded = false;
+	/** still holding the button since the jump started */
+	private jumpHeld = false;
 	private gone = false;
 	private adapter!: PhysicsAdapter;
 	private vel = new Vector2d();
+	/** what the camera looks at: Alex is in the middle of his frame */
+	private focus = new Vector2d();
 
 	constructor(x: number, y: number, settings: TMXObject & { facing?: string }) {
 		// the frames are 192x160: Alex stands in the middle column, feet 96px down
@@ -104,9 +108,10 @@ export class PlayerEntity extends Sprite {
 		);
 		this.addAnimation("jump", ["alex_jump"]);
 		this.addAnimation("full_jump", ["alex_full_jump"]);
-		this.addAnimation("spit", ["alex_spit"], 160);
-		this.addAnimation("jump_spit", ["alex_jump_spit"], 160);
-		this.addAnimation("eat", ["alex_eat"], 160);
+		// shown twice, a single frame animation never completes
+		this.addAnimation("spit", ["alex_spit", "alex_spit"], 80);
+		this.addAnimation("jump_spit", ["alex_jump_spit", "alex_jump_spit"], 80);
+		this.addAnimation("eat", ["alex_eat", "alex_eat"], 80);
 		this.addAnimation(
 			"roll",
 			["alex_ball0", "alex_ball1", "alex_ball2", "alex_ball3"],
@@ -122,10 +127,17 @@ export class PlayerEntity extends Sprite {
 	override onActivateEvent() {
 		const app = this.parentApp;
 		this.adapter = app.world.adapter;
-		app.viewport.follow(this, app.viewport.AXIS.HORIZONTAL, 0.1);
+		this.updateFocus();
+		app.viewport.follow(this.focus, app.viewport.AXIS.HORIZONTAL, 0.1);
+		app.viewport.setDeadzone(app.viewport.width / 5, app.viewport.height);
+	}
+
+	private updateFocus() {
+		this.focus.set(this.pos.x + this.width / 2, this.pos.y + this.height / 2);
 	}
 
 	override update(dt: number) {
+		this.updateFocus();
 		if (this.dying) {
 			// once out of the screen, let the play screen decide what's next
 			if (!this.gone && this.pos.y > game.viewport.height) {
@@ -152,10 +164,14 @@ export class PlayerEntity extends Sprite {
 
 		if (input.isKeyPressed("jump") && this.grounded) {
 			vel.y = -JUMP_SPEED;
+			this.jumpHeld = true;
 			audio.play("jump");
-		} else if (!input.keyStatus("jump") && vel.y < 0) {
+		} else if (this.jumpHeld && !input.keyStatus("jump")) {
 			// let go of the button for a shorter jump
-			vel.y /= 2;
+			this.jumpHeld = false;
+			if (vel.y < 0) {
+				vel.y /= 2;
+			}
 		}
 		this.body.setVelocity(vel.x, vel.y);
 
@@ -249,8 +265,10 @@ export class PlayerEntity extends Sprite {
 	}
 
 	/** jump off something we landed on */
-	bounce(height = 8) {
-		const vy = input.keyStatus("jump") ? -20 : -height;
+	bounce(height = 10) {
+		// higher when holding jump
+		this.jumpHeld = input.keyStatus("jump");
+		const vy = this.jumpHeld ? -JUMP_SPEED : -height;
 		this.body.setVelocity(this.body.getVelocity(this.vel).x, vy);
 	}
 
