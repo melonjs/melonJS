@@ -193,6 +193,11 @@ const ExampleMaterialTextures = lazy(() =>
 		default: m.ExampleMaterialTextures,
 	})),
 );
+const ExampleAlex4 = lazy(() =>
+	import("./examples/alex4/ExampleAlex4").then((m) => ({
+		default: m.ExampleAlex4,
+	})),
+);
 const ExamplePlatformer = lazy(() =>
 	import("./examples/platformer/ExamplePlatformer").then((m) => ({
 		default: m.ExamplePlatformer,
@@ -575,6 +580,14 @@ const examples: {
 		sourceDir: "platformer",
 		description:
 			"Side-scrolling platformer with physics, tile collisions, enemies, collectibles, custom shaders, blend modes, particles, and multi-camera minimap.",
+	},
+	{
+		component: <ExampleAlex4 />,
+		label: "Alex the Allegator 4",
+		path: "alex4",
+		sourceDir: "alex4",
+		description:
+			"A complete port of the 2003 Game Boy-style platformer: 12 levels, two guardians, and a fixed-step game loop on top of Tiled maps (GPL, like the original game).",
 	},
 	{
 		component: <ExamplePlatformerMatter />,

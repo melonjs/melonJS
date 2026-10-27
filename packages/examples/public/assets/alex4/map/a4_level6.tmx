@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="13" height="8" tilewidth="64" tileheight="64" infinite="0" backgroundcolor="#dfedd2" nextlayerid="8" nextobjectid="17">
+ <properties>
+  <property name="label" value="BOSS: spike truck"/>
+  <property name="levelid" type="int" value="6"/>
+  <property name="win" type="int" value="2"/>
+  <property name="boss" type="int" value="1"/>
+ </properties>
+ <tileset firstgid="1" name="a4_tileset" tilewidth="64" tileheight="64" spacing="1" margin="1" tilecount="63" columns="9">
+  <image source="a4_tileset.png" width="640" height="480"/>
+ </tileset>
+ <tileset firstgid="64" name="metatiles" tilewidth="64" tileheight="64" spacing="0" margin="0" tilecount="6" columns="6">
+  <image source="metatiles64x64.png" width="384" height="64"/>
+  <tile id="0">
+   <properties>
+    <property name="type" value="solid"/>
+   </properties>
+  </tile>
+  <tile id="5">
+   <properties>
+    <property name="type" value="breakable"/>
+   </properties>
+  </tile>
+ </tileset>
+ <imagelayer id="1" name="background" offsety="0" parallaxx="0.25" parallaxy="0" repeatx="1" repeaty="1">
+  <image source="../img/layer1.png" width="256" height="256"/>
+ </imagelayer>
+ <imagelayer id="2" name="hills" offsety="96" parallaxx="0.35" parallaxy="0" repeatx="1">
+  <image source="../img/layer2.png" width="320" height="384"/>
+ </imagelayer>
+ <imagelayer id="3" name="grass" offsety="0" parallaxx="0.5" parallaxy="0" repeatx="1">
+  <image source="../img/layer3.png" width="640" height="480"/>
+ </imagelayer>
+ <layer id="4" name="Foreground" width="13" height="8">
+  <data encoding="csv">
+1,33,33,33,33,33,33,33,33,33,33,33,28,
+1,0,0,0,0,0,57,0,0,0,0,0,28,
+1,0,0,0,0,0,24,0,0,0,0,0,28,
+1,0,0,41,0,0,0,0,0,41,0,0,28,
+1,0,0,0,0,0,0,0,0,0,0,0,28,
+1,23,0,0,0,0,0,0,0,0,0,23,28,
+10,11,11,11,11,11,11,11,11,11,11,11,10,
+0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="5" name="Collision" width="13" height="8" visible="0">
+  <data encoding="csv">
+64,0,0,0,0,0,0,0,0,0,0,0,64,
+64,0,0,0,0,0,64,0,0,0,0,0,64,
+64,0,0,0,0,0,64,0,0,0,0,0,64,
+64,0,0,64,0,0,0,0,0,64,0,0,64,
+64,0,0,0,0,0,0,0,0,0,0,0,64,
+64,64,0,0,0,0,0,0,0,0,0,64,64,
+64,64,64,64,64,64,64,64,64,64,64,64,64,
+0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="6" name="Entities">
+  <object id="1" name="cherry" x="320" y="128" width="64" height="64"/>
+  <object id="2" name="cherry" x="448" y="128" width="64" height="64"/>
+  <object id="3" name="star" x="576" y="64" width="64" height="64"/>
+  <object id="4" name="heart" x="64" y="64" width="64" height="64"/>
+  <object id="5" name="star" x="192" y="64" width="64" height="64"/>
+  <object id="6" name="cannon" x="384" y="64" width="64" height="64"/>
+  <object id="7" name="boss1" x="448" y="256" width="128" height="128"/>
+  <object id="8" name="enemy1" x="576" y="128" width="64" height="64"/>
+  <object id="9" name="enemy1" x="704" y="256" width="64" height="64"/>
+  <object id="10" name="enemy1" x="256" y="320" width="64" height="64"/>
+  <object id="11" name="enemy2" x="128" y="320" width="576" height="64"/>
+  <object id="12" name="enemy1" x="320" y="320" width="64" height="64"/>
+  <object id="13" name="spike" x="64" y="0" width="704" height="64">
+   <properties>
+    <property name="direction" value="down"/>
+   </properties>
+  </object>
+  <object id="14" name="player" x="64" y="256" width="64" height="64">
+   <properties>
+    <property name="facing" value="right"/>
+   </properties>
+  </object>
+  <object id="15" name="letsgo" x="192" y="128" width="448" height="64"/>
+  <object id="16" name="spin" x="576" y="192" width="64" height="64"/>
+ </objectgroup>
+</map>

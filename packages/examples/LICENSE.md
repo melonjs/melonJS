@@ -210,3 +210,26 @@ glyph coverage thresholded to hard edges and the game's own ramp and outline
 baked in. CC BY-NC-SA 4.0 permits the adaptation and requires it to carry the
 same license, which it does: the same attribution, share-alike and
 non-commercial terms apply to them as to the face they come from.
+
+### `alex4` example
+
+⚠️ **This example is GPL, not MIT.** It is a port of **"Alex the Allegator 4"**
+by **Johan Peitz** (design, code, graphics) and **Anders Svensson** (music,
+sound effects), © 2003 Free Lunch Design, whose source code and data were
+released under the **GNU General Public License, version 2 or later**:
+
+<https://sourceforge.net/projects/allegator/files/Alex4/>
+
+The game logic in `src/examples/alex4/` is translated from that C source, the
+levels, sprites, tiles and sound effects in `public/assets/alex4/` are
+converted from its data files (by the scripts in `scripts/alex4/`), and the
+whole example — code, assets and scripts — is therefore distributed under the
+same GPL-2.0-or-later terms. The full license text ships with the assets as
+`public/assets/alex4/LICENSE-GPL.txt`. If you reuse any of it, your work must
+be GPL too; the rest of the examples and melonJS itself stay MIT.
+
+It builds on **Alex4 Web Edition**, the melonJS 0.9 remake by Olivier Biot
+(<https://github.com/mixelstudio/Alex4-WE>): levels 1 to 6, the parallax
+backgrounds, HUD and title graphics, the bitmap fonts and the mp3/ogg music
+come from it. Levels 7 to 12, the remaining enemies, both guardians, egg
+spitting and the outro were completed from the original game data.
