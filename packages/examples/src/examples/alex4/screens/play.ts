@@ -4,7 +4,15 @@
  * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
-import { type Application, audio, input, level, Stage, state } from "melonjs";
+import {
+	type Application,
+	audio,
+	input,
+	level,
+	Stage,
+	state,
+	type TMXTileMap,
+} from "melonjs";
 import { FADE_COLOR, LEVELS } from "../constants";
 import { CherryEntity, StarEntity } from "../entities/collectables";
 import {
@@ -14,6 +22,13 @@ import {
 	PauseMessage,
 } from "../entities/hud";
 import { gameState } from "../gameState";
+
+// the custom properties of our Tiled maps
+export type LevelMap = TMXTileMap & {
+	label: string;
+	boss?: number;
+	win?: number;
+};
 
 // gamepad button -> key
 const GAMEPAD = [
@@ -30,8 +45,6 @@ export class PlayScreen extends Stage {
 	private hud: HUD | undefined;
 	private pauseMessage: PauseMessage | undefined;
 	private gameOver = false;
-	// to ignore the end of a jingle when something else happened since
-	private songId = 0;
 
 	override onResetEvent(app: Application) {
 		this.app = app;
@@ -72,7 +85,7 @@ export class PlayScreen extends Stage {
 		level.load(LEVELS[gameState.level], {
 			container: this.app.world,
 			onLoaded: () => {
-				const map = level.getCurrentLevel() as unknown as { label: string };
+				const map = level.getCurrentLevel() as LevelMap;
 				if (firstTry) {
 					this.app.world.addChild(new LetsGoMessage(map.label), 101);
 				}
@@ -83,13 +96,17 @@ export class PlayScreen extends Stage {
 
 	/** a short jingle, then the level (or boss) song */
 	private playLevelSong() {
-		const map = level.getCurrentLevel() as unknown as { boss?: number };
-		const id = ++this.songId;
+		const map = level.getCurrentLevel() as LevelMap;
 		audio.play(map.boss ? "boss_start" : "level_start", false, () => {
-			if (id === this.songId && state.isCurrent(state.PLAY)) {
-				audio.playTrack(map.boss ? "boss_song" : "level_song");
-			}
+			audio.playTrack(map.boss ? "boss_song" : "level_song");
 		});
+	}
+
+	/** stop the music (stopping the jingle also cancels the song after it) */
+	private stopLevelSong() {
+		audio.stop("level_start");
+		audio.stop("boss_start");
+		audio.stopTrack();
 	}
 
 	override update(dt: number) {
@@ -114,8 +131,7 @@ export class PlayScreen extends Stage {
 
 	/** Alex just died: some sad music */
 	onPlayerDying() {
-		this.songId++;
-		audio.stopTrack();
+		this.stopLevelSong();
 		audio.play(gameState.lives > 0 ? "player_dies" : "game_over");
 	}
 
@@ -139,8 +155,7 @@ export class PlayScreen extends Stage {
 
 	/** exit reached, or guardian defeated */
 	onLevelComplete() {
-		this.songId++;
-		audio.stopTrack();
+		this.stopLevelSong();
 		state.change(state.READY);
 	}
 
@@ -151,8 +166,7 @@ export class PlayScreen extends Stage {
 		if (this.hud) {
 			app.world.removeChild(this.hud);
 		}
-		this.songId++;
-		audio.stopTrack();
+		this.stopLevelSong();
 
 		for (const [button] of GAMEPAD) {
 			input.unbindGamepad(0, button);

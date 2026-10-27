@@ -44,7 +44,7 @@ import {
 	WaterEntity,
 } from "./entities/level";
 import { PlayerEntity } from "./entities/player";
-import { gameState, initSaveData } from "./gameState";
+import { gameState } from "./gameState";
 import { resources } from "./resources";
 import { CreditsScreen } from "./screens/credits";
 import { LevelCompleteScreen } from "./screens/levelComplete";
@@ -75,7 +75,6 @@ export const createGame = async () => {
 			loader.getJSON("sprites"),
 			loader.getImage("sprites") as HTMLImageElement,
 		);
-		initSaveData();
 
 		// the screens
 		state.set(state.MENU, new TitleScreen());

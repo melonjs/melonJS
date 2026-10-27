@@ -15,6 +15,7 @@ import {
 	type TMXLayer,
 	type TMXObject,
 	Trigger,
+	timer,
 } from "melonjs";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
@@ -164,27 +165,30 @@ export class WaterEntity extends Sprite {
 /*                                                                                  */
 /************************************************************************************/
 export class CannonEntity extends Renderable {
-	private reload = 2500;
+	private fireTimer = 0;
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
 	}
 
-	override update(dt: number) {
-		this.reload -= dt;
-		if (this.reload <= 0) {
-			this.reload = 2500;
-			const alex = game.world.getChildByName("alex")[0];
-			if (alex && this.inViewport) {
-				const left = alex.pos.x + 96 < this.pos.x + 32;
-				const x = left ? this.pos.x - 52 : this.pos.x + 64;
-				game.world.addChild(new CannonBall(x, this.pos.y + 4, left), 15);
-				burst(left ? this.pos.x : this.pos.x + 64, this.pos.y + 32, 8);
-				audio.play("shoot");
-			}
+	override onActivateEvent() {
+		this.fireTimer = timer.setInterval(() => this.fire(), 2500);
+	}
+
+	override onDeactivateEvent() {
+		timer.clearInterval(this.fireTimer);
+	}
+
+	private fire() {
+		const alex = game.world.getChildByName("alex")[0];
+		if (alex && this.inViewport) {
+			const left = alex.pos.x + 96 < this.pos.x + 32;
+			const x = left ? this.pos.x - 52 : this.pos.x + 64;
+			game.world.addChild(new CannonBall(x, this.pos.y + 4, left), 15);
+			burst(left ? this.pos.x : this.pos.x + 64, this.pos.y + 32, 8);
+			audio.play("shoot");
 		}
-		return false;
 	}
 }
 

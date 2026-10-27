@@ -20,16 +20,19 @@ import {
 import { PALETTE } from "../constants";
 import { gameState } from "../gameState";
 
+// the original script moved things one step every 20ms, at 1/4 of our scale
+const STEP = 20;
+
 /*---------------------------------------------------------------------
 
 	The end: Alex finds Lola... but the story is not over.
-	Same choreography as the original outro script.
+	Same timing as the original outro script.
 
   ---------------------------------------------------------------------	*/
 
 export class OutroScreen extends Stage {
 	private app!: Application;
-	private playing = false;
+	private timers: number[] = [];
 	private finished = false;
 
 	override onResetEvent(app: Application) {
@@ -45,10 +48,14 @@ export class OutroScreen extends Stage {
 			container: app.world,
 			onLoaded: () => {
 				audio.playTrack("level_song");
-				this.playing = true;
 				this.play();
 			},
 		});
+	}
+
+	/** run something at the given time of the story */
+	private at(ms: number, fn: () => void) {
+		this.timers.push(timer.setTimeout(fn, ms));
 	}
 
 	/** a sprite from the atlas, placed by its top left corner */
@@ -63,37 +70,19 @@ export class OutroScreen extends Stage {
 		return sprite;
 	}
 
-	private remove(...sprites: Sprite[]) {
-		for (const sprite of sprites) {
-			this.app.world.removeChild(sprite);
-		}
-	}
-
-	// both stop for good once we left the screen, which ends the story there
-	private wait(ms: number) {
-		return new Promise<void>((resolve) =>
-			timer.setTimeout(() => this.playing && resolve(), ms),
+	/** move a sprite by (dx, dy) during some steps of the original script */
+	private move(sprite: Sprite, dx: number, dy: number, steps: number) {
+		// relative values: "+8", "-8"
+		const by = (d: number) =>
+			d < 0 ? `${d * steps * 4}` : `+${d * steps * 4}`;
+		return new Tween(sprite.pos).to(
+			{ x: by(dx), y: by(dy) },
+			{ duration: steps * STEP },
 		);
 	}
 
-	/** move by (dx, dy), at the original script speed of one step every 20ms */
-	private move(sprite: Sprite, dx: number, dy: number, steps: number) {
-		return new Promise<void>((resolve) => {
-			new Tween(sprite.pos)
-				.to(
-					{
-						x: sprite.pos.x + dx * steps * 4,
-						y: sprite.pos.y + dy * steps * 4,
-					},
-					{ duration: steps * 20 },
-				)
-				.onComplete(() => this.playing && resolve())
-				.start();
-		});
-	}
-
 	/** a speech bubble above someone's head */
-	private async say(who: Sprite, lines: string[], ms: number) {
+	private say(who: Sprite, lines: string[], ms: number) {
 		const width = Math.max(...lines.map((line) => line.length)) * 16 + 24;
 		const height = lines.length * 16 + 20;
 		const x = Math.max(4, Math.min(who.pos.x + 32 - width / 2, 636 - width));
@@ -116,11 +105,11 @@ export class OutroScreen extends Stage {
 			);
 		});
 		this.app.world.addChild(bubble, 20);
-		await this.wait(ms);
-		this.app.world.removeChild(bubble);
+		this.at(ms, () => this.app.world.removeChild(bubble));
 	}
 
-	private async play() {
+	private play() {
+		const world = this.app.world;
 		const alex = this.actor("alex", 192, 256, true);
 		let lola = this.actor("lola", 576, 128);
 		const can1 = this.actor("drumcan", 448, 64);
@@ -128,67 +117,90 @@ export class OutroScreen extends Stage {
 		const beam = this.actor("ufobeam", 160, -480, true);
 		const ufo = this.actor("ufo0", 44, -120, true);
 		const dome = this.actor("ufo1", 156, -56, true);
+		let ball: Sprite;
+		let ship: Sprite;
+		let engine = 0;
+		let energy = 0;
 
-		await this.wait(200);
-		await this.say(alex, ["Lola! Are", "you ok?"], 2000);
+		this.at(200, () => this.say(alex, ["Lola! Are", "you ok?"], 2000));
 
 		// Lola rolls down, sending the drum cans flying
-		this.remove(lola);
-		const ball = this.actor("alex_ball0", 576 - 64, 128 - 32);
-		await this.move(ball, -2, 0, 10);
-		audio.play("crush");
-		await Promise.all([
-			this.move(ball, -2, 0, 16),
-			this.move(can1, -2, -1, 32),
-			this.move(can2, -1, -2, 32),
-		]);
-		this.remove(ball);
-		lola = this.actor("lola", 376, 128);
-		await this.move(lola, -1, 2, 16);
+		this.at(2200, () => {
+			world.removeChild(lola);
+			ball = this.actor("alex_ball0", 512, 96);
+			this.move(ball, -2, 0, 26).start();
+		});
+		this.at(2400, () => {
+			audio.play("crush");
+			this.move(can1, -2, -1, 32).start();
+			this.move(can2, -1, -2, 32).start();
+		});
+		this.at(2720, () => {
+			world.removeChild(ball);
+			lola = this.actor("lola", 376, 128);
+			this.move(lola, -1, 2, 16).start();
+		});
 
-		await this.say(lola, ["I'm fine. You came", "just in time!"], 2000);
-		await this.say(alex, ["I'm so happy", "to see you!"], 2000);
-		await this.say(lola, ["Thank you for", "saving me."], 2000);
-		const engine = audio.play("engine", true);
-		await this.say(alex, ["Wait, what's", "that sound?"], 2000);
+		this.at(3040, () =>
+			this.say(lola, ["I'm fine. You came", "just in time!"], 2000),
+		);
+		this.at(5040, () => this.say(alex, ["I'm so happy", "to see you!"], 2000));
+		this.at(7040, () => this.say(lola, ["Thank you for", "saving me."], 2000));
+		this.at(9040, () => {
+			engine = audio.play("engine", true);
+			this.say(alex, ["Wait, what's", "that sound?"], 2000);
+		});
 
 		// the UFO comes down, and beams Alex up
-		await Promise.all([
-			this.move(ufo, 0, 1, 30),
-			this.move(dome, 0, 1, 30),
-			this.move(beam, 0, 1, 30),
-		]);
-		await this.wait(1000);
-		const energy = audio.play("energy", true);
-		await this.move(beam, 0, 1, 90);
-		await this.say(lola, ["Alex!"], 1000);
-		await this.say(alex, ["Lola!"], 1000);
-		await Promise.all([
-			this.move(beam, 0, -1, 130),
-			this.move(alex, 0, -1, 130),
-			this.wait(2000).then(() =>
-				Promise.all([this.move(ufo, 0, -1, 30), this.move(dome, 0, -1, 30)]),
-			),
-		]);
-		audio.stop("energy", energy);
-		audio.stop("engine", engine);
-		await this.say(lola, ["I'll save you!"], 1000);
+		this.at(11040, () => {
+			for (const part of [ufo, dome, beam]) {
+				this.move(part, 0, 1, 30).start();
+			}
+		});
+		this.at(12640, () => {
+			energy = audio.play("energy", true);
+			this.move(beam, 0, 1, 90).start();
+		});
+		this.at(14440, () => this.say(lola, ["Alex!"], 1000));
+		this.at(15440, () => this.say(alex, ["Lola!"], 1000));
+		this.at(16440, () => {
+			this.move(beam, 0, -1, 130).start();
+			this.move(alex, 0, -1, 130).start();
+		});
+		this.at(18440, () => {
+			this.move(ufo, 0, -1, 30).start();
+			this.move(dome, 0, -1, 30).start();
+		});
+		this.at(19040, () => {
+			audio.stop("energy", energy);
+			audio.stop("engine", engine);
+			this.say(lola, ["I'll save you!"], 1000);
+		});
 
 		// Lola takes the ship, and goes after them
-		audio.play("ship");
-		const ship = this.actor("ship0", 640, 256);
-		await this.move(ship, -2, 0, 43);
-		await this.say(lola, ["Yay!"], 500);
-		this.remove(ship, lola);
-		const ship1 = this.actor("ship1", 296, 256);
-		await this.wait(1000);
-		audio.play("ship");
-		await this.move(ship1, -1, 0, 16);
-		await this.move(ship1, -2, -1, 8);
-		await this.move(ship1, -2, -2, 8);
-		await this.move(ship1, -2, -3, 50);
+		this.at(20040, () => {
+			audio.play("ship");
+			ship = this.actor("ship0", 640, 256);
+			this.move(ship, -2, 0, 43).start();
+		});
+		this.at(20900, () => this.say(lola, ["Yay!"], 500));
+		this.at(21400, () => {
+			world.removeChild(ship);
+			world.removeChild(lola);
+			ship = this.actor("ship1", 296, 256);
+		});
+		this.at(22400, () => {
+			audio.play("ship");
+			this.move(ship, -1, 0, 16)
+				.chain(
+					this.move(ship, -2, -1, 8).chain(
+						this.move(ship, -2, -2, 8).chain(this.move(ship, -2, -3, 50)),
+					),
+				)
+				.start();
+		});
 
-		if (this.playing) {
+		this.at(24400, () => {
 			this.finished = true;
 			gameState.record();
 			for (const [text, y, font] of [
@@ -196,15 +208,17 @@ export class OutroScreen extends Stage {
 				[`SCORE ${gameState.score}`, 220, "atascii32"],
 				["PRESS JUMP", 290, "atascii32"],
 			] as const) {
-				const label = new BitmapText(320, y, {
-					font,
-					text,
-					textAlign: "center",
-					fillStyle: PALETTE[0],
-				});
-				this.app.world.addChild(label, 30);
+				world.addChild(
+					new BitmapText(320, y, {
+						font,
+						text,
+						textAlign: "center",
+						fillStyle: PALETTE[0],
+					}),
+					30,
+				);
 			}
-		}
+		});
 	}
 
 	override update(dt: number) {
@@ -218,7 +232,10 @@ export class OutroScreen extends Stage {
 	}
 
 	override onDestroyEvent() {
-		this.playing = false;
+		for (const id of this.timers) {
+			timer.clearTimeout(id);
+		}
+		this.timers = [];
 		audio.stopTrack();
 		audio.stop("engine");
 		audio.stop("energy");

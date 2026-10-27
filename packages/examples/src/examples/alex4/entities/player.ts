@@ -320,7 +320,7 @@ export class PlayerEntity extends Sprite {
 				// landing on top of it?
 				const fromAbove =
 					response.normal.y < -0.7 && this.body.getVelocity(this.vel).y >= 0;
-				(other as unknown as Hazard).touchPlayer(this, fromAbove);
+				(other as Renderable & Hazard).touchPlayer(this, fromAbove);
 				break;
 			}
 		}

@@ -10,17 +10,19 @@ import {
 	collision,
 	game,
 	level,
+	math,
 	type PhysicsAdapter,
 	Rect,
 	type Renderable,
 	Sprite,
 	state,
 	type TMXObject,
+	timer,
 	Vector2d,
 } from "melonjs";
 import { PALETTE, WIN_KILL_GUARDIAN } from "../constants";
 import { gameState } from "../gameState";
-import type { PlayScreen } from "../screens/play";
+import type { LevelMap, PlayScreen } from "../screens/play";
 import { burst, dust } from "./effects";
 import { enemyShapes, GenericEnemyEntity } from "./enemies";
 import { Breakable } from "./level";
@@ -29,7 +31,7 @@ import { Spark } from "./projectiles";
 
 /** tell the play screen, if this guardian was the one to beat */
 function guardianDefeated() {
-	const map = level.getCurrentLevel() as unknown as { win?: number };
+	const map = level.getCurrentLevel() as LevelMap;
 	if ((map.win ?? 0) & WIN_KILL_GUARDIAN) {
 		(state.current() as PlayScreen).onLevelComplete();
 	}
@@ -93,15 +95,13 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 		} else {
 			this.kill(!this.walkLeft);
 			this.body.setVelocity(this.walkLeft ? 2 : -2, -16);
+			// a puff of smoke, and down it goes
+			burst(this.pos.x + 64, this.pos.y + 32, 48, PALETTE[1]);
 		}
 	}
 
 	override update(dt: number) {
 		if (!this.alive && !this.defeated) {
-			// smoking, on its way down
-			if (Math.random() < 0.2) {
-				burst(this.pos.x + 64, this.pos.y + 32, 4, PALETTE[1]);
-			}
 			if (this.pos.y > game.viewport.height) {
 				this.defeated = true;
 				guardianDefeated();
@@ -121,7 +121,7 @@ type PounderMode = "wait" | "jump" | "spikes" | "spikejump" | "landed" | "dead";
 
 export class GroundPounderEntity extends Sprite implements Hazard {
 	mode: PounderMode = "wait";
-	private delay = 1200;
+	private waitTimer = 0;
 	private leftGround = false;
 	private drilled = false;
 	private adapter!: PhysicsAdapter;
@@ -164,6 +164,17 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 
 	override onActivateEvent() {
 		this.adapter = this.parentApp.world.adapter;
+		this.wait(1200);
+	}
+
+	override onDeactivateEvent() {
+		timer.clearTimeout(this.waitTimer);
+	}
+
+	/** stay put for a while, then do the next thing */
+	private wait(ms: number) {
+		timer.clearTimeout(this.waitTimer);
+		this.waitTimer = timer.setTimeout(() => this.next(), ms);
 	}
 
 	override update(dt: number) {
@@ -174,27 +185,12 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 			this.setCurrentAnimation("jump");
 		}
 
-		switch (this.mode) {
-			case "wait":
-			case "spikes":
-			case "landed":
-				this.delay -= dt;
-				if (this.delay <= 0) {
-					this.next();
-				}
-				break;
-
-			case "jump":
-			case "spikejump":
-				if (!this.adapter.isGrounded?.(this)) {
-					this.leftGround = true;
-				} else if (this.leftGround) {
-					this.land();
-				}
-				break;
-
-			case "dead":
-				break;
+		if (this.mode === "jump" || this.mode === "spikejump") {
+			if (!this.adapter.isGrounded?.(this)) {
+				this.leftGround = true;
+			} else if (this.leftGround) {
+				this.land();
+			}
 		}
 
 		// fell into the water
@@ -221,8 +217,8 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 				// fire, then back to waiting
 				audio.play("shoot");
 				for (let i = 0; i < 3; i++) {
-					const vx = Math.random() * 4 - 2;
-					const vy = -(Math.random() * 4 + 3);
+					const vx = math.randomFloat(-2, 2);
+					const vy = -math.randomFloat(3, 7);
 					game.world.addChild(
 						new Spark(this.pos.x + 56, this.pos.y + 40, vx, vy),
 						15,
@@ -230,7 +226,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 				}
 				this.setCurrentAnimation("retract");
 				this.mode = "wait";
-				this.delay = 1200;
+				this.wait(1200);
 				break;
 		}
 	}
@@ -254,11 +250,11 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		if (this.mode === "spikejump") {
 			this.mode = "landed";
 			this.setCurrentAnimation("landed");
-			this.delay = 1000;
+			this.wait(1000);
 		} else {
 			this.mode = "wait";
 			this.setCurrentAnimation("wait");
-			this.delay = 1200;
+			this.wait(1200);
 		}
 	}
 
@@ -273,7 +269,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 			if (this.mode === "wait") {
 				this.mode = "spikes";
 				this.setCurrentAnimation("spikes");
-				this.delay = 1000;
+				this.wait(1000);
 			}
 		} else {
 			player.hurt();

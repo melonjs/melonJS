@@ -114,7 +114,7 @@ export class EggShot extends Projectile {
 			super.onCollisionStart(response, other);
 			return;
 		}
-		const enemy = other as unknown as Shootable;
+		const enemy = other as Renderable & Shootable;
 		if (enemy.shootable) {
 			enemy.shot(this.vx > 0);
 			this.explode();

@@ -9,11 +9,13 @@ import {
 	type CollisionResponse,
 	collision,
 	game,
+	math,
 	type PhysicsAdapter,
 	Rect,
 	type Renderable,
 	Sprite,
 	type TMXObject,
+	timer,
 	Vector2d,
 } from "melonjs";
 import { gameState } from "../gameState";
@@ -45,7 +47,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	walkSpeed = 1.7;
 	/** jumped on, waiting to be eaten */
 	flat = false;
-	protected flatTime = 0;
+	edible = false;
 
 	// what can be done to it
 	stompable = true;
@@ -55,6 +57,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 
 	protected adapter!: PhysicsAdapter;
 	protected vel = new Vector2d();
+	private timers: number[] = [];
 
 	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
 		const atlas = gameState.atlas.getAnimationSettings(frames);
@@ -79,9 +82,20 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		this.adapter = this.parentApp.world.adapter;
 	}
 
+	override onDeactivateEvent() {
+		for (const id of this.timers) {
+			timer.clearTimeout(id);
+		}
+	}
+
+	/** do something in a while (unless we are gone by then) */
+	protected later(ms: number, fn: () => void) {
+		this.timers.push(timer.setTimeout(fn, ms));
+	}
+
 	override update(dt: number) {
 		if (this.alive) {
-			this.think(dt);
+			this.think();
 		}
 
 		// fell out of the map
@@ -94,20 +108,10 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	}
 
 	/** what to do this frame, while alive */
-	think(dt: number) {
+	think() {
 		const vel = this.body.getVelocity(this.vel);
 		if (this.flat) {
 			this.body.setVelocity(0, vel.y);
-			// get back on its feet after a while
-			this.flatTime += dt;
-			if (this.flatTime > 4000 && !this.isFlickering()) {
-				this.flicker(1000, () => {
-					if (this.flat) {
-						this.flat = false;
-						this.setCurrentAnimation("walk");
-					}
-				});
-			}
 		} else {
 			this.walk(vel.y);
 		}
@@ -126,7 +130,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		if (this.flat) {
 			if (player.rolling) {
 				this.kill(player.facingLeft);
-			} else if (!fromAbove && player.grounded && this.flatTime > 250) {
+			} else if (!fromAbove && player.grounded && this.edible) {
 				// walked into it
 				this.eaten(player);
 			}
@@ -146,8 +150,20 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		flash("particle_bopp", this.pos.x + this.width / 2 - 32, this.pos.y - 32);
 		if (this.flatable) {
 			this.flat = true;
-			this.flatTime = 0;
+			this.edible = false;
 			this.setCurrentAnimation("flat");
+			this.later(250, () => {
+				this.edible = true;
+			});
+			// get back on its feet after a while
+			this.later(4000, () => {
+				this.flicker(1000, () => {
+					if (this.flat && this.alive) {
+						this.flat = false;
+						this.setCurrentAnimation("walk");
+					}
+				});
+			});
 		} else {
 			this.kill(false);
 		}
@@ -260,7 +276,6 @@ export class Enemy2Entity extends GenericEnemyEntity {
 export class CrusherEntity extends GenericEnemyEntity {
 	startY: number;
 	mode: "wait" | "fall" | "landed" | "rise" = "wait";
-	private delay = 0;
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings, ["enemy3"]);
@@ -281,7 +296,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 		this.startY = this.pos.y;
 	}
 
-	override think(dt: number) {
+	override think() {
 		switch (this.mode) {
 			case "wait": {
 				const alex = game.world.getChildByName("alex")[0];
@@ -294,16 +309,13 @@ export class CrusherEntity extends GenericEnemyEntity {
 			case "fall":
 				if (this.adapter.isGrounded?.(this)) {
 					this.mode = "landed";
-					this.delay = 500;
 					audio.play("impact");
 					dust(this.pos.x + 64, this.pos.y + this.height);
-				}
-				break;
-			case "landed":
-				this.delay -= dt;
-				if (this.delay <= 0) {
-					this.mode = "rise";
-					this.adapter.setGravityScale(this, 0);
+					// and back up, slowly
+					this.later(500, () => {
+						this.mode = "rise";
+						this.adapter.setGravityScale(this, 0);
+					});
 				}
 				break;
 			case "rise":
@@ -326,7 +338,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 /************************************************************************************/
 class FishEntity extends GenericEnemyEntity {
 	jumpSpeed: number;
-	private underwater: number;
+	private jumping = false;
 
 	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
 		super(x, y, settings, frames);
@@ -337,7 +349,6 @@ class FishEntity extends GenericEnemyEntity {
 		const height = game.viewport.height - this.pos.y;
 		this.jumpSpeed = Math.sqrt(2 * 0.98 * height);
 		this.pos.y = game.viewport.height;
-		this.underwater = 500 + Math.random() * 500;
 
 		// it swims through the walls and the water
 		const hitbox = new Rect(8, 8, this.width - 16, this.height - 8);
@@ -353,19 +364,25 @@ class FishEntity extends GenericEnemyEntity {
 		};
 	}
 
-	override think(dt: number) {
+	override onActivateEvent() {
+		super.onActivateEvent();
+		this.later(math.random(500, 1000), () => this.jump());
+	}
+
+	private jump() {
+		this.jumping = true;
+		this.adapter.setGravityScale(this, 1);
+		this.body.setVelocity(0, -this.jumpSpeed);
+	}
+
+	override think() {
 		const vy = this.body.getVelocity(this.vel).y;
-		if (this.underwater > 0) {
-			this.underwater -= dt;
-			if (this.underwater <= 0) {
-				this.adapter.setGravityScale(this, 1);
-				this.body.setVelocity(0, -this.jumpSpeed);
-			}
-		} else if (vy > 0 && this.pos.y >= game.viewport.height) {
+		if (this.jumping && vy > 0 && this.pos.y >= game.viewport.height) {
 			// back in the water, wait a bit
+			this.jumping = false;
 			this.adapter.setGravityScale(this, 0);
 			this.body.setVelocity(0, 0);
-			this.underwater = 800;
+			this.later(800, () => this.jump());
 		}
 		this.onJump(vy);
 	}

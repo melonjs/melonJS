@@ -24,8 +24,8 @@ export const gameState = {
 	// the sprites, converted from the original game data
 	atlas: undefined as unknown as TextureAtlas,
 
-	// remembered between sessions (in localStorage)
-	saved: undefined as unknown as { maxLevel: number; hiscore: number },
+	// remembered between sessions
+	saved: save.add({ maxLevel: 0, hiscore: 0 }),
 
 	/** reset everything for a new game */
 	reset(level = 0) {
@@ -42,7 +42,3 @@ export const gameState = {
 		this.saved.hiscore = Math.max(this.saved.hiscore, this.score);
 	},
 };
-
-export function initSaveData() {
-	gameState.saved = save.add({ maxLevel: 0, hiscore: 0 });
-}
