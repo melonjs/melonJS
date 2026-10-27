@@ -75,6 +75,36 @@ function fetchDataXHR(url, responseType, settings) {
 }
 
 /**
+ * The bytes of a percent-encoded string, as the URL standard decodes a
+ * `data:` URI's payload: each `%XX` is that byte, anything else its UTF-8
+ * bytes. Unlike `decodeURIComponent`, any byte can be spelled this way, not
+ * only those of valid UTF-8 text.
+ * @param {string} str - the payload
+ * @returns {Uint8Array} its bytes
+ * @ignore
+ * @internal
+ */
+function percentDecodeBytes(str) {
+	const input = new TextEncoder().encode(str);
+	const out = new Uint8Array(input.length);
+	const hex = (c) => {
+		return (
+			(c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102)
+		);
+	};
+	let n = 0;
+	for (let i = 0; i < input.length; i++) {
+		if (input[i] === 37 && hex(input[i + 1]) && hex(input[i + 2])) {
+			out[n++] = parseInt(String.fromCharCode(input[i + 1], input[i + 2]), 16);
+			i += 2;
+		} else {
+			out[n++] = input[i];
+		}
+	}
+	return out.slice(0, n);
+}
+
+/**
  * Decode a `data:` URI in place, with no network request. `fetch()` of a
  * `data:` URL is governed by the CSP `connect-src` directive, which hardened
  * pages (sandboxed embeds, hosted artifacts, ...) often restrict to `'self'`,
@@ -96,7 +126,13 @@ export function decodeDataURI(url) {
 		if (isBase64) {
 			meta.pop();
 		}
-		const type = meta.join(";") || "text/plain;charset=US-ASCII";
+		// no media type is text/plain, whether parameters follow or not
+		let type = meta.join(";");
+		if (type === "") {
+			type = "text/plain;charset=US-ASCII";
+		} else if (type.startsWith(";")) {
+			type = "text/plain" + type;
+		}
 		const payload = url.substring(comma + 1);
 
 		let bytes;
@@ -107,7 +143,7 @@ export function decodeDataURI(url) {
 				bytes[i] = binary.charCodeAt(i);
 			}
 		} else {
-			bytes = new TextEncoder().encode(decodeURIComponent(payload));
+			bytes = percentDecodeBytes(payload);
 		}
 
 		const text = () => {

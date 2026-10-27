@@ -70,6 +70,26 @@ describe("data: URI loading without fetch()", () => {
 		expect(await blob.text()).toBe("hi");
 	});
 
+	it("decodes percent-encoded bytes that are not UTF-8 text", async () => {
+		// decodeURIComponent throws on a lone %FF; fetch() and the URL
+		// standard take it as the byte 255
+		const buf = await fetchData(
+			"data:application/octet-stream,%FF%00%41",
+			"arrayBuffer",
+		);
+		expect([...new Uint8Array(buf)]).toEqual([255, 0, 65]);
+		// a % not followed by two hex digits is just a %
+		expect(await fetchData("data:,100%25%20and%2", "text")).toBe("100% and%2");
+		// characters outside ASCII are their UTF-8 bytes
+		expect(await fetchData("data:,é%C3%A9", "text")).toBe("éé");
+	});
+
+	it("takes a missing media type as text/plain, parameters or not", async () => {
+		const blob = await fetchData("data:;charset=utf-8,hi", "blob");
+		expect(blob.type.startsWith("text/plain")).toBe(true);
+		expect(await blob.text()).toBe("hi");
+	});
+
 	it("rejects a malformed data: URI", async () => {
 		await expect(decodeDataURI("data:image/png;base64")).rejects.toThrow(
 			/malformed/,
