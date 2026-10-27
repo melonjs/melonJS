@@ -118,6 +118,12 @@ class HazeSurface extends Sprite {
 	}
 
 	draw(renderer: Parameters<Sprite["draw"]>[0], viewport?: object) {
+		// the white sheet only carries the effect, which replaces every pixel
+		// of it: with no effect to run (the Canvas renderer, or a lost GPU
+		// context), the scene under it shows as it is
+		if (!this.effect.enabled) {
+			return;
+		}
 		const scene = renderer.toFrameTexture();
 		this.effect.setTexture("uScene", scene);
 		// biome-ignore lint/suspicious/noExplicitAny: viewport shape varies by call site
