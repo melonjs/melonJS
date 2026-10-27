@@ -75,6 +75,68 @@ function fetchDataXHR(url, responseType, settings) {
 }
 
 /**
+ * Decode a `data:` URI in place, with no network request. `fetch()` of a
+ * `data:` URL is governed by the CSP `connect-src` directive, which hardened
+ * pages (sandboxed embeds, hosted artifacts, ...) often restrict to `'self'`,
+ * so the browser refuses it, e.g. for the engine's inlined loading-screen logo.
+ * Resolves with the same minimal `Response`-shaped object as the XHR path.
+ * @param {string} url - a `data:[<mediatype>][;base64],<data>` URI
+ * @returns {Promise} resolves with a `Response`-like object
+ * @ignore
+ * @internal
+ */
+export function decodeDataURI(url) {
+	return Promise.resolve().then(() => {
+		const comma = url.indexOf(",");
+		if (comma < 0) {
+			throw new Error("fetchData: malformed data URI");
+		}
+		const meta = url.substring(5, comma).split(";");
+		const isBase64 = meta[meta.length - 1].toLowerCase() === "base64";
+		if (isBase64) {
+			meta.pop();
+		}
+		const type = meta.join(";") || "text/plain;charset=US-ASCII";
+		const payload = url.substring(comma + 1);
+
+		let bytes;
+		if (isBase64) {
+			const binary = atob(decodeURIComponent(payload));
+			bytes = new Uint8Array(binary.length);
+			for (let i = 0; i < binary.length; i++) {
+				bytes[i] = binary.charCodeAt(i);
+			}
+		} else {
+			bytes = new TextEncoder().encode(decodeURIComponent(payload));
+		}
+
+		const text = () => {
+			return new TextDecoder().decode(bytes);
+		};
+		return {
+			ok: true,
+			status: 200,
+			statusText: "OK",
+			json: () => {
+				return Promise.resolve().then(() => {
+					return JSON.parse(text());
+				});
+			},
+			text: () => {
+				return Promise.resolve(text());
+			},
+			blob: () => {
+				return Promise.resolve(new Blob([bytes], { type }));
+			},
+			arrayBuffer: () => {
+				// copy, so the caller owns an exact-length buffer
+				return Promise.resolve(bytes.slice().buffer);
+			},
+		};
+	});
+}
+
+/**
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
  * @param {string} responseType - The type of response expected ('json', 'text', 'blob', 'arrayBuffer').
@@ -97,16 +159,21 @@ export function fetchData(url, responseType, settings = {}) {
 	// and `fetch()` rejects with a network error. Route those through XHR, which
 	// supports the `file:` scheme and returns a `Response`-shaped object so the
 	// response handling below is shared verbatim between both transports.
-	const request = isFileProtocol(url)
-		? fetchDataXHR(url, responseType, settings)
-		: fetch(url, {
-				method: "GET",
-				// internally nocache is a string with a generated random number
-				cache: settings.nocache === "" ? "no-cache" : "reload",
-				credentials: settings.withCredentials === true ? "include" : "omit",
-				// see setting.crossorigin, "anonymous" is used for cross-origin requests
-				mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors",
-			});
+	// `data:` URIs are decoded locally: no request, so no CSP `connect-src`
+	// check. Checked first, as a `file:` document would otherwise route them
+	// to XHR.
+	const request = url.startsWith("data:")
+		? decodeDataURI(url)
+		: isFileProtocol(url)
+			? fetchDataXHR(url, responseType, settings)
+			: fetch(url, {
+					method: "GET",
+					// internally nocache is a string with a generated random number
+					cache: settings.nocache === "" ? "no-cache" : "reload",
+					credentials: settings.withCredentials === true ? "include" : "omit",
+					// see setting.crossorigin, "anonymous" is used for cross-origin requests
+					mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors",
+				});
 
 	return request.then((response) => {
 		// status = 0 when file protocol is used, or cross-domain origin
