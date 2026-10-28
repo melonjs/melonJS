@@ -269,6 +269,15 @@ export default class Application {
 	accumulatorMax: number;
 	accumulatorUpdateDelta: number;
 
+	/**
+	 * Set by {@link Application#reset}: the world was just rebuilt (a stage
+	 * started, a level was loaded), and the next frame steps it before it
+	 * draws it.
+	 * @ignore
+	 * @internal
+	 */
+	private _stepOwed: boolean;
+
 	// min update step size
 	stepSize: number;
 
@@ -383,6 +392,7 @@ export default class Application {
 		this.accumulator = 0.0;
 		this.accumulatorMax = 0.0;
 		this.accumulatorUpdateDelta = 0;
+		this._stepOwed = false;
 		this.stepSize = 1000 / 60;
 		this.updateDelta = 0;
 		this.lastUpdateStart = null;
@@ -839,6 +849,13 @@ export default class Application {
 
 		// Refresh internal variables for framerate  limiting
 		this.updateFrameRate();
+
+		// The world the next frame draws is new, and it has never been
+		// stepped. A step is where each object learns whether a camera sees
+		// it, and an object that has not is not drawn: the frame was the
+		// background alone. The timer is reset when the state starts, so the
+		// first frame was always shorter than a step and took none.
+		this._stepOwed = true;
 	}
 
 	/**
@@ -1201,10 +1218,13 @@ export default class Application {
 	 * @param time - current timestamp as provided by the RAF callback
 	 */
 	update(time: number): void {
+		// a world just rebuilt is stepped on this frame, skipped or not
+		const stepOwed = this._stepOwed;
 		// handle frame skipping if required
-		if (++this.frameCounter % this.frameRate === 0) {
+		if (++this.frameCounter % this.frameRate === 0 || stepOwed) {
 			// reset the frame counter
 			this.frameCounter = 0;
+			this._stepOwed = false;
 
 			// publish notification
 			emit(GAME_BEFORE_UPDATE, time);
@@ -1215,6 +1235,16 @@ export default class Application {
 			this.accumulatorUpdateDelta = timer.interpolation
 				? this.updateDelta
 				: Math.max(this.updateDelta, this.lastUpdateDelta);
+
+			if (stepOwed) {
+				// one step now rather than once a whole step of time has
+				// passed; the time it is ahead by is not paid back, which
+				// would leave the next frame without one
+				this.accumulator = Math.max(
+					this.accumulator,
+					this.accumulatorUpdateDelta,
+				);
+			}
 
 			while (
 				this.accumulator >= this.accumulatorUpdateDelta ||

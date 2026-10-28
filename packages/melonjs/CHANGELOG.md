@@ -18,6 +18,7 @@
 - Audio: `audio.setListener(app.viewport)` hears from the center of a `Camera2d`'s view, its `zoom` and `offset` included. It heard from the camera's `pos`, which is the view's top-left corner, so a sound in the middle of the screen was heard half a screen to the right of and below the listener, and everything panned right
 - Input: `input.bindPointer` keeps its bindings. Every pointer event copied the pooled pointer it was normalized into onto `input.pointer`, and with it that pointer's own empty `bind` list, so a binding was gone as soon as the mouse entered the canvas and a click mapped to a key only reached it now and then
 - Audio: a clip declared with `preload: false` is fetched when it is first played (`audio.play`, `audio.playTrack` or `autoplay`) and streamed, as with `stream: true`, so it starts as soon as enough of it has arrived ([#1784](https://github.com/melonjs/melonJS/issues/1784)). It was never fetched at all, so it never played; a clip that is never played is still never downloaded
+- State: the first frame of a new stage shows what it built, and the first frame after a level loaded while the game runs shows that level. That frame was drawn before the world had been stepped, and a renderable is drawn only once a step has found it on screen, so every state change showed one frame of background alone unless a transition covered it
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 

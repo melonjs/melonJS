@@ -50,7 +50,10 @@ a transition's reveal follow once the shaders the stage queued are ready, which
 is a few milliseconds once the browser has compiled them before, and at most
 1.5s on a first visit. So build the stage in `onResetEvent`: an object a
 `STATE_CHANGE` listener adds is not waited for, and its first draw may still
-compile what it needs.
+compile what it needs. That first frame steps the world once before drawing it,
+however short it is, so everything `onResetEvent` added is in it (the same goes
+for the frame after a `level.load` made while the game runs). Before 20.12 it
+was drawn unstepped, and showed the stage's background alone for one frame.
 
 `state.change` **throws** `Undefined Stage for state '<id>'` if nothing was
 registered for that id, and `state.set` throws if the second argument is not a
