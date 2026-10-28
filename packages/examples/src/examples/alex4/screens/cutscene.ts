@@ -44,9 +44,11 @@ const BACKDROP_Z = 0;
 // how long a looping sound takes to change its volume
 const LOOP_FADE = 300;
 
-// the speech bubbles fill up a letter every 30ms, or faster so as to be done
-// in the first third of the time they show
-const TYPE_DELAY = 30;
+// a speech bubble types its text in over this share of the time it shows,
+// and stays complete for the rest, to be read
+const TYPE_SHARE = 0.4;
+// but a short line is not typed slower than this, a letter every 60ms
+const TYPE_SLOWEST = 60;
 
 export type Facing = "left" | "right";
 
@@ -230,9 +232,11 @@ export abstract class Cutscene extends Stage {
 			radius: 8,
 		});
 		bubble.isClickable = false;
-		// typed in, one line after the other
-		const letters = lines.join("").length;
-		const delay = Math.min(TYPE_DELAY, ms / 3 / letters);
+		// typed in at an even pace, one line after the other
+		const delay = Math.min(
+			(ms * TYPE_SHARE) / lines.join("").length,
+			TYPE_SLOWEST,
+		);
 		let typing: Tween | undefined;
 		lines.forEach((line, i) => {
 			const text = new BitmapText(12, 10 + i * 20, {
