@@ -19,6 +19,12 @@ import { gameState } from "../gameState";
 const EFFECT_Z = 20;
 
 /**
+ * how long the game holds still on an impact, in ms (state.freeze: a
+ * hit-stop, the music goes on)
+ */
+export const HIT_STOP = { stomp: 60, hit: 90, knockout: 160 };
+
+/**
  * a little firework of pixels, for broken blocks and shot enemies
  */
 export function burst(

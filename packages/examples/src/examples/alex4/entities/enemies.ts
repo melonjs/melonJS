@@ -12,6 +12,7 @@ import {
 	Rect,
 	type Renderable,
 	Sprite,
+	state,
 	type TMXObject,
 	timer,
 	Vector2d,
@@ -19,7 +20,7 @@ import {
 import { HEIGHT, jumpSpeed, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
-import { dust, flash } from "./effects";
+import { dust, flash, HIT_STOP } from "./effects";
 import type { Hazard, PlayerEntity, Touch } from "./player";
 import type { Shootable } from "./projectiles";
 
@@ -178,6 +179,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 
 	/** jumped on */
 	stomp() {
+		state.freeze(HIT_STOP.stomp);
 		audio.play("stomp");
 		flash(
 			this.parentApp.world,

@@ -29,7 +29,7 @@ import {
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { LevelMap, PlayScreen } from "../screens/play";
-import { burst, dust, smoke } from "./effects";
+import { burst, dust, HIT_STOP, smoke } from "./effects";
 import { enemyShapes, GenericEnemyEntity } from "./enemies";
 import { Breakable } from "./level";
 import type { Hazard, PlayerEntity, Touch } from "./player";
@@ -119,6 +119,8 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 
 	private hit() {
 		audio.play("hit");
+		// the last one knocks it out
+		state.freeze(this.energy > 1 ? HIT_STOP.hit : HIT_STOP.knockout);
 		if (--this.energy > 0) {
 			this.setCurrentAnimation("hit");
 			this.flicker(1000, () => this.setCurrentAnimation("walk"));
@@ -342,6 +344,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		}
 		if (touch.above && !player.rolling) {
 			// bounce on its head, which makes it angry
+			state.freeze(HIT_STOP.stomp);
 			player.bounce(15);
 			audio.play("jump");
 			if (this.mode === "wait") {
