@@ -5,6 +5,7 @@
 ### Fixed
 - Geometry: the methods that take a point (`translate`, `shift` and `contains` on `Bounds`, `Polygon`, `Rect`, `RoundRect`, `Ellipse` and `Line`, and `translate` on `Matrix2d` and `Matrix3d`) take any object with `x` and `y`, such as a renderable's `pos`. Given anything but a `Vector2d` they treated it as a number and came out `NaN`, so `bounds.clone().translate(renderable.pos)` gave no world bounds and `overlaps()` then reported every area as taken
 - Loader: the default loading screen brings up its progress bar and the melonJS logo in the same frame. The bar was drawn first and the logo popped in a frame or so later; the bar now shows alone only when the logo cannot be decoded or the game's assets finish first
+- ImageLayer: a repeating layer (`"repeat"`, `"repeat-x"` or `"repeat-y"`) keeps covering the screen wherever the camera goes. Its offset was wrapped by the layer's size, which is `Infinity` on a tiling axis, so it never wrapped and the layer slid off the screen once the camera had moved far enough (a front parallax layer first); it now wraps by the image size, and an image wider or taller than the viewport is drawn far enough to cover it
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
