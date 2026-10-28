@@ -27,6 +27,9 @@ export const LEVELS = [
 	"a4_level12",
 ];
 
+/** temporary, for testing: every level can be picked from the menu */
+export const ALL_LEVELS_UNLOCKED = true;
+
 /** the level is won by killing its guardian (map `win` property) */
 export const WIN_KILL_GUARDIAN = 2;
 

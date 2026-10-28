@@ -7,6 +7,7 @@
 import {
 	type Application,
 	type Container,
+	DropShadowEffect,
 	event,
 	ShineEffect,
 	SwayEffect,
@@ -24,6 +25,8 @@ export const shaders = {
 	near: undefined as unknown as SwayEffect,
 	// a glint running over the stars and the title
 	shine: undefined as unknown as ShineEffect,
+	// a dark shadow under the menu text, to read it over the jungle
+	shadow: undefined as unknown as DropShadowEffect,
 
 	init(app: Application) {
 		this.far = new SwayEffect(app.renderer, {
@@ -40,7 +43,13 @@ export const shaders = {
 			speed: 0.35,
 			intensity: 0.4,
 		});
-		for (const effect of [this.far, this.near, this.shine]) {
+		this.shadow = new DropShadowEffect(app.renderer, {
+			offsetX: 4,
+			offsetY: 4,
+			color: [0.05, 0.27, 0],
+			opacity: 0.85,
+		});
+		for (const effect of [this.far, this.near, this.shine, this.shadow]) {
 			effect.shared = true;
 		}
 

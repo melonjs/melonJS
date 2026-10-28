@@ -14,7 +14,7 @@ import {
 	state,
 	Tween,
 } from "melonjs";
-import { INSET, LEVELS, WIDTH } from "../constants";
+import { ALL_LEVELS_UNLOCKED, INSET, LEVELS, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 import { addParallaxBackground } from "./background";
@@ -56,6 +56,7 @@ export class TitleScreen extends Stage {
 				font: "atascii40",
 			});
 			item.floating = true;
+			item.addPostEffect(shaders.shadow);
 			this.items.push(item);
 			app.world.addChild(item, 10);
 		}
@@ -83,6 +84,7 @@ export class TitleScreen extends Stage {
 				text: `HI SCORE ${gameState.saved.hiscore}`,
 			});
 			hiscore.floating = true;
+			hiscore.addPostEffect(shaders.shadow);
 			app.world.addChild(hiscore, 10);
 		}
 		const scroller = new BitmapText(WIDTH, 444, {
@@ -90,6 +92,7 @@ export class TitleScreen extends Stage {
 			text: SCROLLER,
 		});
 		scroller.floating = true;
+		scroller.addPostEffect(shaders.shadow);
 		app.world.addChild(scroller, 10);
 		const width = scroller.measureText().width;
 		new Tween(scroller.pos)
@@ -140,7 +143,9 @@ export class TitleScreen extends Stage {
 				? 1
 				: 0;
 		if (step !== 0 && this.selectedItem === 1) {
-			const count = Math.min(gameState.saved.maxLevel, LEVELS.length - 1) + 1;
+			const count = ALL_LEVELS_UNLOCKED
+				? LEVELS.length
+				: Math.min(gameState.saved.maxLevel, LEVELS.length - 1) + 1;
 			this.startLevel = (this.startLevel + step + count) % count;
 			this.updateMenu();
 			audio.play("menu");

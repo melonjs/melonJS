@@ -14,6 +14,7 @@ import {
 	state,
 } from "melonjs";
 import { INSET } from "../constants";
+import { shaders } from "../shaders";
 import { addParallaxBackground } from "./background";
 
 /*---------------------------------------------------------------------
@@ -46,6 +47,7 @@ export class CreditsScreen extends Stage {
 		for (const [text, x, y, font] of lines) {
 			const line = new BitmapText(INSET + x, y, { font, text });
 			line.floating = true;
+			line.addPostEffect(shaders.shadow);
 			app.world.addChild(line, 10);
 		}
 

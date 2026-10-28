@@ -276,6 +276,7 @@ export class Enemy2Entity extends GenericEnemyEntity {
 export class CrusherEntity extends GenericEnemyEntity {
 	startY: number;
 	mode: "wait" | "fall" | "landed" | "rise" = "wait";
+	private hitGround = false;
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings, ["enemy3"]);
@@ -307,7 +308,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 				break;
 			}
 			case "fall":
-				if (this.adapter.isGrounded?.(this)) {
+				if (this.hitGround) {
 					this.mode = "landed";
 					audio.play("impact");
 					dust(this.pos.x + 64, this.pos.y + this.height);
@@ -325,6 +326,17 @@ export class CrusherEntity extends GenericEnemyEntity {
 					this.mode = "wait";
 				}
 				break;
+		}
+		this.hitGround = false;
+	}
+
+	onCollisionStart(response: CollisionResponse, other: Renderable) {
+		// only flag it here, and land in think()
+		if (
+			other.body.collisionType === collision.types.WORLD_SHAPE &&
+			response.normal.y < -0.7
+		) {
+			this.hitGround = true;
 		}
 	}
 

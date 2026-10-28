@@ -47,6 +47,8 @@ export class PlayerEntity extends Sprite {
 	spitting = false;
 	dying = false;
 	grounded = false;
+	/** touched the level from above during the last physics step */
+	private standing = false;
 	/** still holding the button since the jump started */
 	private jumpHeld = false;
 	private gone = false;
@@ -154,7 +156,8 @@ export class PlayerEntity extends Sprite {
 		}
 
 		const vel = this.body.getVelocity(this.vel);
-		this.grounded = this.adapter.isGrounded?.(this) ?? false;
+		this.grounded = this.standing;
+		this.standing = false;
 
 		if (this.rolling) {
 			vel.x = this.facingLeft ? -ROLL_SPEED : ROLL_SPEED;
@@ -335,6 +338,10 @@ export class PlayerEntity extends Sprite {
 		}
 		switch (other.body.collisionType) {
 			case collision.types.WORLD_SHAPE:
+				// standing on it
+				if (response.normal.y < -0.7) {
+					this.standing = true;
+				}
 				// rolled into a wall
 				if (
 					this.rolling &&

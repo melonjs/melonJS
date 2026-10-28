@@ -122,7 +122,7 @@ type PounderMode = "wait" | "jump" | "spikes" | "spikejump" | "landed" | "dead";
 export class GroundPounderEntity extends Sprite implements Hazard {
 	mode: PounderMode = "wait";
 	private waitTimer = 0;
-	private leftGround = false;
+	private hitGround = false;
 	private drilled = false;
 	private adapter!: PhysicsAdapter;
 	private vel = new Vector2d();
@@ -185,13 +185,10 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 			this.setCurrentAnimation("jump");
 		}
 
-		if (this.mode === "jump" || this.mode === "spikejump") {
-			if (!this.adapter.isGrounded?.(this)) {
-				this.leftGround = true;
-			} else if (this.leftGround) {
-				this.land();
-			}
+		if (this.hitGround && (this.mode === "jump" || this.mode === "spikejump")) {
+			this.land();
 		}
+		this.hitGround = false;
 
 		// fell into the water
 		if (this.mode !== "dead" && this.pos.y > game.viewport.height) {
@@ -236,7 +233,6 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		const dx = alex ? alex.pos.x + 96 - (this.pos.x + 64) : 0;
 		this.mode = mode;
 		this.setCurrentAnimation(mode);
-		this.leftGround = false;
 		this.body.setVelocity(
 			Math.max(-5, Math.min(5, dx / 40)),
 			-Math.min(Math.max(Math.abs(dx) / 16, 12), 20),
@@ -276,15 +272,20 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		}
 	}
 
-	onCollisionStart(_response: CollisionResponse, other: Renderable) {
-		// spikes out: smash all the blocks it lands on, and fall through
+	onCollisionStart(response: CollisionResponse, other: Renderable) {
 		if (
-			this.mode === "spikejump" &&
-			other instanceof Breakable &&
-			this.body.getVelocity(this.vel).y >= 0
+			other.body.collisionType !== collision.types.WORLD_SHAPE ||
+			response.normal.y > -0.7
 		) {
+			return;
+		}
+		if (this.mode === "spikejump" && other instanceof Breakable) {
+			// spikes out: smash all the blocks it lands on, and fall through
 			other.shatter();
 			this.drilled = true;
+		} else {
+			// landed, see update()
+			this.hitGround = true;
 		}
 	}
 }
