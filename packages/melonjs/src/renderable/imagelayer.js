@@ -345,10 +345,6 @@ export default class ImageLayer extends Sprite {
 		renderer.translate(x * vZoom, y * vZoom);
 		renderer.scale(vZoom, vZoom);
 
-		// apply flip — pivot at the centre of the drawn pattern in the
-		// post-zoom local frame, so the mirror lands in the visible viewport
-		// regardless of `viewport.zoom`. Done here (not in preDraw) because
-		// preDraw runs before this translate/scale and would misalign.
 		// Clamp the draw extent to the source dimensions on any axis we
 		// are NOT tiling. Asking the renderer to fill past the source on
 		// a non-tiling axis is what makes Canvas (transparent fill per
@@ -369,9 +365,11 @@ export default class ImageLayer extends Sprite {
 			? viewport.height + Math.max(viewport.height, this.image.height)
 			: height;
 
+		// apply flip — pivot at the centre of the drawn pattern in the
+		// post-zoom local frame, so the mirror lands in the visible viewport
+		// regardless of `viewport.zoom`. Done here (not in preDraw) because
+		// preDraw runs before this translate/scale and would misalign.
 		if (this._flip.x || this._flip.y) {
-			// on a tiling axis, mirror around the centre of the drawn
-			// pattern so the mirrored pattern covers the same area
 			const px = this.repeatX ? drawW / 2 : viewport.width;
 			const py = this.repeatY ? drawH / 2 : viewport.height;
 			renderer.translate(px, py);
