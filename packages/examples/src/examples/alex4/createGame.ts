@@ -63,6 +63,9 @@ export const createGame = async () => {
 		antiAlias: false,
 		// steady motion on any display (one update every other frame at 120 Hz)
 		syncToDisplay: true,
+		// no snapping: it truncates, so a body resting at 223.99999 is drawn
+		// a pixel above one resting at 224, and Alex would shake on the floor
+		subPixel: true,
 	});
 	await app.init();
 
