@@ -398,7 +398,7 @@ throws, the same trap as the removed `loader.onload` / `onProgress`.
 
 | | |
 | --- | --- |
-| one streamed clip (`stream: true` / `html5: true`) ignores `withCredentials` | it plays through an `<audio>` element, which needs a `crossorigin` attribute rather than fetch credentials. Preload it buffered if it is behind auth |
+| one streamed clip (`stream: true` / `html5: true` / `preload: false`) ignores `withCredentials` | it plays through an `<audio>` element, which needs a `crossorigin` attribute rather than fetch credentials. Preload it buffered if it is behind auth |
 | credentials silently dropped for audio before 20.4 | the loader forwarded them under a pre-20.3 name the backend never read — a hung preload rather than an error |
 
 ## Symptom → cause
