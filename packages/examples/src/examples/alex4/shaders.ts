@@ -53,9 +53,11 @@ export const shaders = {
 			effect.shared = true;
 		}
 
-		// darken the corners a little, like an old screen
+		// darken the corners a little, like an old screen (a lower strength is
+		// lighter, and a bigger size keeps it closer to the corners: it covers the
+		// HUD too)
 		app.viewport.addPostEffect(
-			new VignetteEffect(app.renderer, { strength: 0.5, size: 30 }),
+			new VignetteEffect(app.renderer, { strength: 0.1, size: 60 }),
 		);
 
 		// not emitted while the game is paused, so the jungle pauses too

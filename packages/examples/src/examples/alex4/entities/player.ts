@@ -26,9 +26,15 @@ import type { PlayScreen } from "../screens/play";
 import { Breakable, RollBlock } from "./level";
 import { EggShot } from "./projectiles";
 
-const WALK_SPEED = 3.5;
-const ROLL_SPEED = 6.5;
-const JUMP_SPEED = 17;
+// The original game moved things 50 times a second, at a quarter of our
+// scale: one of its pixels per tick is this many of ours per frame.
+const TICK = 4 * (50 / 60);
+const WALK_SPEED = TICK;
+const ROLL_SPEED = 2 * TICK;
+// Its vertical speed was in quarter pixels per tick, -16 to jump, for a jump
+// 40 of its pixels high: 160 of ours, which this gives with our gravity.
+const DY = 18.2 / 16;
+const JUMP_SPEED = 16 * DY;
 
 /** anything that hurts (or can be stomped by) Alex */
 export interface Hazard {
@@ -55,6 +61,8 @@ export class PlayerEntity extends Sprite {
 	private standing = false;
 	/** still holding the button since the jump started */
 	private jumpHeld = false;
+	/** let go of the button while going up */
+	private jumpCut = false;
 	private gone = false;
 	private adapter!: PhysicsAdapter;
 	private vel = new Vector2d();
@@ -93,7 +101,7 @@ export class PlayerEntity extends Sprite {
 			type: "dynamic",
 			shapes: [new Rect(76, 36, 40, 60)],
 			collisionType: collision.types.PLAYER_OBJECT,
-			maxVelocity: { x: ROLL_SPEED, y: JUMP_SPEED + 4 },
+			maxVelocity: { x: ROLL_SPEED, y: 24 },
 		};
 
 		// keep updating when jumping out of the screen
@@ -182,12 +190,19 @@ export class PlayerEntity extends Sprite {
 		if (input.isKeyPressed("jump") && this.grounded) {
 			vel.y = -JUMP_SPEED;
 			this.jumpHeld = true;
+			this.jumpCut = false;
 			audio.play("jump");
 		} else if (this.jumpHeld && !input.keyStatus("jump")) {
-			// let go of the button for a shorter jump
 			this.jumpHeld = false;
+			this.jumpCut = true;
+		}
+		// let go of the button for a shorter jump: as in the original, the
+		// speed up is halved on every step until Alex falls again
+		if (this.jumpCut) {
 			if (vel.y < 0) {
 				vel.y /= 2;
+			} else {
+				this.jumpCut = false;
 			}
 		}
 		this.body.setVelocity(vel.x, vel.y);
@@ -313,12 +328,15 @@ export class PlayerEntity extends Sprite {
 		audio.play("hit");
 	}
 
-	/** jump off something we landed on */
-	bounce(height = 10) {
-		// higher when holding jump
+	/**
+	 * jump off something we landed on, `dy` in the original's quarter pixels
+	 * per tick: 20 when holding jump as in the original, which otherwise only
+	 * gave a tiny hop (5), a bit more here so the bounce shows
+	 */
+	bounce(dy = input.keyStatus("jump") ? 20 : 9) {
 		this.jumpHeld = input.keyStatus("jump");
-		const vy = this.jumpHeld ? -JUMP_SPEED : -height;
-		this.body.setVelocity(this.body.getVelocity(this.vel).x, vy);
+		this.jumpCut = false;
+		this.body.setVelocity(this.body.getVelocity(this.vel).x, -dy * DY);
 	}
 
 	/** ouch */
