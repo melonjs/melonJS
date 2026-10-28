@@ -19,6 +19,7 @@ import {
 import { INSET, LEVELS, WIDTH } from "../constants";
 import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
+import { go } from "../transition";
 import { addParallaxBackground } from "./background";
 
 type Row = {
@@ -171,9 +172,7 @@ export class LevelCompleteScreen extends Stage {
 			if (this.done) {
 				gameState.level++;
 				gameState.record();
-				state.change(
-					gameState.level < LEVELS.length ? state.PLAY : state.GAME_END,
-				);
+				go(gameState.level < LEVELS.length ? state.PLAY : state.GAME_END);
 			} else if (!this.counting) {
 				// don't wait for the title
 				this.startCounting(0);

@@ -13,7 +13,7 @@ import {
 	state,
 	type TMXTileMap,
 } from "melonjs";
-import { FADE_COLOR, LEVELS } from "../constants";
+import { LEVELS } from "../constants";
 import { CherryEntity, StarEntity } from "../entities/collectables";
 import {
 	GameOverMessage,
@@ -24,6 +24,7 @@ import {
 import { bindPads, PLAY_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
+import { go, pixelate } from "../transition";
 
 // the custom properties of our Tiled maps
 export type LevelMap = TMXTileMap & {
@@ -116,7 +117,7 @@ export class PlayScreen extends Stage {
 		}
 		if (input.isKeyPressed("quit")) {
 			gameState.record();
-			state.change(state.MENU);
+			go(state.MENU);
 		}
 		return super.update(dt);
 	}
@@ -129,19 +130,12 @@ export class PlayScreen extends Stage {
 
 	/** Alex fell out of the screen: try again, or game over */
 	onPlayerDeath() {
-		const viewport = this.app.viewport;
 		if (gameState.lives > 0) {
-			viewport.fadeIn(FADE_COLOR, 250, () => {
-				this.loadLevel(false);
-				viewport.fadeOut(FADE_COLOR, 250);
-			});
+			pixelate(() => this.loadLevel(false));
 		} else {
 			this.gameOver = true;
 			gameState.record();
-			this.app.world.addChild(
-				new GameOverMessage(() => state.change(state.MENU)),
-				101,
-			);
+			this.app.world.addChild(new GameOverMessage(() => go(state.MENU)), 101);
 		}
 	}
 

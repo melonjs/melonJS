@@ -8,6 +8,7 @@ import { audio, BitmapText, input, type Sprite, state } from "melonjs";
 import { PALETTE, WIDTH } from "../constants";
 import { wave } from "../entities/effects";
 import { gameState } from "../gameState";
+import { go } from "../transition";
 import { Cutscene, SCREEN_W } from "./cutscene";
 
 // Alex rolled up in a ball, turning to the left
@@ -191,7 +192,7 @@ export class OutroScreen extends Cutscene {
 	override update(dt: number) {
 		const next = input.isKeyPressed("start") || input.isKeyPressed("jump");
 		if (input.isKeyPressed("skip") || (this.finished && next)) {
-			state.change(state.CREDITS);
+			go(state.CREDITS);
 		}
 		return super.update(dt);
 	}

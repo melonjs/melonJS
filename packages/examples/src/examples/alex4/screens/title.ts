@@ -19,6 +19,7 @@ import { ALL_LEVELS_UNLOCKED, INSET, LEVELS, WIDTH } from "../constants";
 import { bindPads, MENU_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
+import { go } from "../transition";
 import { addParallaxBackground } from "./background";
 
 const SCROLLER =
@@ -190,7 +191,7 @@ export class TitleScreen extends Stage {
 			case 0:
 			case 1:
 				gameState.reset(this.startLevel);
-				state.change(state.PLAY);
+				go(state.PLAY);
 				break;
 			case 2:
 				if (audio.muted()) {
@@ -201,7 +202,7 @@ export class TitleScreen extends Stage {
 				this.updateMenu();
 				break;
 			case 3:
-				state.change(state.CREDITS);
+				go(state.CREDITS);
 				break;
 		}
 	}

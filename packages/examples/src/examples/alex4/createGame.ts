@@ -18,7 +18,7 @@ import {
 	TextureAtlas,
 	video,
 } from "melonjs";
-import { FADE_COLOR, HEIGHT, WIDTH } from "./constants";
+import { HEIGHT, WIDTH } from "./constants";
 import { GroundPounderEntity, SpikeTruckEntity } from "./entities/bosses";
 import {
 	CherryEntity,
@@ -52,6 +52,7 @@ import { OutroScreen } from "./screens/outro";
 import { PlayScreen } from "./screens/play";
 import { TitleScreen } from "./screens/title";
 import { shaders } from "./shaders";
+import { go, initTransitions } from "./transition";
 
 export const createGame = async () => {
 	// 4 times the original 160x120 resolution
@@ -68,6 +69,10 @@ export const createGame = async () => {
 
 	// add "#debug" to the URL to enable the debug Panel
 	plugin.register(DebugPanelPlugin, "debugPanel");
+
+	// the screens change through a pixelate transition (go()), but for the
+	// level complete one, which comes straight after the level
+	initTransitions(app);
 
 	// a touch of modern shading
 	shaders.init(app);
@@ -89,11 +94,6 @@ export const createGame = async () => {
 		state.set(state.READY, new LevelCompleteScreen());
 		state.set(state.GAME_END, new OutroScreen());
 		state.set(state.CREDITS, new CreditsScreen());
-
-		// set a global fading transition for the screen
-		state.transition("fade", FADE_COLOR, 250);
-		// but not when the level is done
-		state.setTransition(state.READY, false);
 
 		// the objects placed in the Tiled maps
 		registerTiledObjectClass("player", PlayerEntity);
@@ -118,6 +118,6 @@ export const createGame = async () => {
 
 		// startup sound, and the story begins
 		audio.play("startup");
-		state.change(INTRO);
+		go(INTRO);
 	});
 };

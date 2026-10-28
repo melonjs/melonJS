@@ -16,6 +16,7 @@ import {
 import { INSET } from "../constants";
 import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { shaders } from "../shaders";
+import { go } from "../transition";
 import { addParallaxBackground } from "./background";
 
 /*---------------------------------------------------------------------
@@ -67,7 +68,7 @@ export class CreditsScreen extends Stage {
 	override update(dt: number) {
 		if (input.isKeyPressed("enter")) {
 			audio.play("menu");
-			state.change(state.MENU);
+			go(state.MENU);
 		}
 		return super.update(dt);
 	}

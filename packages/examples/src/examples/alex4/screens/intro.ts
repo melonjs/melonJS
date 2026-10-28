@@ -6,6 +6,7 @@
  */
 import { input, Renderable, type Renderer, type Sprite, state } from "melonjs";
 import { HEIGHT, PALETTE, WIDTH } from "../constants";
+import { go } from "../transition";
 import { Cutscene, SCREEN_W } from "./cutscene";
 
 /** the intro is not one of the states melonJS knows about */
@@ -187,7 +188,7 @@ export class IntroScreen extends Cutscene {
 		);
 		this.at(4050, () => this.sound("talk"));
 		// and the game begins
-		this.at(7300, () => state.change(state.MENU));
+		this.at(7300, () => go(state.MENU));
 	}
 
 	override update(dt: number) {
@@ -198,7 +199,7 @@ export class IntroScreen extends Cutscene {
 			input.isKeyPressed("start") ||
 			input.isKeyPressed("jump")
 		) {
-			state.change(state.MENU);
+			go(state.MENU);
 		}
 		return super.update(dt);
 	}
