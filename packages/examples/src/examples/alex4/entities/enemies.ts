@@ -8,7 +8,6 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
-	game,
 	math,
 	type PhysicsAdapter,
 	Rect,
@@ -18,6 +17,7 @@ import {
 	timer,
 	Vector2d,
 } from "melonjs";
+import { HEIGHT } from "../constants";
 import { gameState } from "../gameState";
 import { dust, flash } from "./effects";
 import type { Hazard, PlayerEntity } from "./player";
@@ -99,8 +99,8 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		}
 
 		// fell out of the map
-		if (this.pos.y > game.viewport.height + 64) {
-			game.world.removeChild(this);
+		if (this.pos.y > HEIGHT + 64) {
+			this.parentApp.world.removeChild(this);
 		}
 
 		super.update(dt);
@@ -147,7 +147,12 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	/** jumped on */
 	stomp() {
 		audio.play("stomp");
-		flash("particle_bopp", this.pos.x + this.width / 2 - 32, this.pos.y - 32);
+		flash(
+			this.parentApp.world,
+			"particle_bopp",
+			this.pos.x + this.width / 2 - 32,
+			this.pos.y - 32,
+		);
 		if (this.flatable) {
 			this.flat = true;
 			this.edible = false;
@@ -172,7 +177,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	/** miam miam */
 	eaten(player: PlayerEntity) {
 		this.alive = false;
-		game.world.removeChild(this);
+		this.parentApp.world.removeChild(this);
 		gameState.score += 50;
 		audio.play("eat");
 		player.eat();
@@ -300,7 +305,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 	override think() {
 		switch (this.mode) {
 			case "wait": {
-				const alex = game.world.getChildByName("alex")[0];
+				const alex = this.parentApp.world.getChildByName("alex")[0];
 				if (alex && Math.abs(alex.pos.x + 96 - (this.pos.x + 64)) < 128) {
 					this.mode = "fall";
 					this.adapter.setGravityScale(this, 1);
@@ -311,7 +316,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 				if (this.hitGround) {
 					this.mode = "landed";
 					audio.play("impact");
-					dust(this.pos.x + 64, this.pos.y + this.height);
+					dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
 					// and back up, slowly
 					this.later(500, () => {
 						this.mode = "rise";
@@ -358,9 +363,9 @@ class FishEntity extends GenericEnemyEntity {
 		this.alwaysUpdate = true;
 
 		// jump high enough to reach where it was placed
-		const height = game.viewport.height - this.pos.y;
+		const height = HEIGHT - this.pos.y;
 		this.jumpSpeed = Math.sqrt(2 * 0.98 * height);
-		this.pos.y = game.viewport.height;
+		this.pos.y = HEIGHT;
 
 		// it swims through the walls and the water
 		const hitbox = new Rect(8, 8, this.width - 16, this.height - 8);
@@ -389,7 +394,7 @@ class FishEntity extends GenericEnemyEntity {
 
 	override think() {
 		const vy = this.body.getVelocity(this.vel).y;
-		if (this.jumping && vy > 0 && this.pos.y >= game.viewport.height) {
+		if (this.jumping && vy > 0 && this.pos.y >= HEIGHT) {
 			// back in the water, wait a bit
 			this.jumping = false;
 			this.adapter.setGravityScale(this, 0);

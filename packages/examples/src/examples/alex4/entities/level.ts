@@ -7,7 +7,6 @@
 import {
 	audio,
 	collision,
-	game,
 	Rect,
 	Renderable,
 	Sprite,
@@ -118,11 +117,13 @@ export class Breakable extends Renderable {
 			return;
 		}
 		// the block itself is drawn by the foreground layer
-		const layer = game.world.getChildByName("Foreground")[0] as TMXLayer;
+		const layer = this.parentApp.world.getChildByName(
+			"Foreground",
+		)[0] as TMXLayer;
 		layer.clearTile(Math.round(this.pos.x / 64), Math.round(this.pos.y / 64));
-		game.world.removeChild(this);
+		this.parentApp.world.removeChild(this);
 
-		burst(this.pos.x + 32, this.pos.y + 32, 32);
+		burst(this.parentApp.world, this.pos.x + 32, this.pos.y + 32, 32);
 		audio.play("crush");
 	}
 }
@@ -181,12 +182,20 @@ export class CannonEntity extends Renderable {
 	}
 
 	private fire() {
-		const alex = game.world.getChildByName("alex")[0];
+		const alex = this.parentApp.world.getChildByName("alex")[0];
 		if (alex && this.inViewport) {
 			const left = alex.pos.x + 96 < this.pos.x + 32;
 			const x = left ? this.pos.x - 52 : this.pos.x + 64;
-			game.world.addChild(new CannonBall(x, this.pos.y + 4, left), 15);
-			burst(left ? this.pos.x : this.pos.x + 64, this.pos.y + 32, 8);
+			this.parentApp.world.addChild(
+				new CannonBall(x, this.pos.y + 4, left),
+				15,
+			);
+			burst(
+				this.parentApp.world,
+				left ? this.pos.x : this.pos.x + 64,
+				this.pos.y + 32,
+				8,
+			);
 			audio.play("shoot");
 		}
 	}

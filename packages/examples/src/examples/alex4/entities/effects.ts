@@ -4,7 +4,13 @@
  * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
-import { game, loader, ParticleEmitter, Sprite, Tween } from "melonjs";
+import {
+	type Container,
+	loader,
+	ParticleEmitter,
+	Sprite,
+	Tween,
+} from "melonjs";
 import { PALETTE } from "../constants";
 import { gameState } from "../gameState";
 
@@ -14,7 +20,13 @@ const EFFECT_Z = 20;
 /**
  * a little firework of pixels, for broken blocks and shot enemies
  */
-export function burst(x: number, y: number, count = 16, color = PALETTE[1]) {
+export function burst(
+	world: Container,
+	x: number,
+	y: number,
+	count = 16,
+	color = PALETTE[1],
+) {
 	const emitter = new ParticleEmitter(x - 16, y - 16, {
 		width: 32,
 		height: 32,
@@ -30,14 +42,14 @@ export function burst(x: number, y: number, count = 16, color = PALETTE[1]) {
 		maxLife: 1200,
 		autoDestroyOnComplete: true,
 	});
-	game.world.addChild(emitter, EFFECT_Z);
+	world.addChild(emitter, EFFECT_Z);
 	emitter.burstParticles();
 }
 
 /**
  * a puff of dust, when something heavy lands
  */
-export function dust(x: number, y: number) {
+export function dust(world: Container, x: number, y: number) {
 	const emitter = new ParticleEmitter(x - 32, y - 8, {
 		image: loader.getImage("dust") as HTMLImageElement,
 		width: 64,
@@ -51,7 +63,7 @@ export function dust(x: number, y: number) {
 		maxLife: 500,
 		autoDestroyOnComplete: true,
 	});
-	game.world.addChild(emitter, EFFECT_Z);
+	world.addChild(emitter, EFFECT_Z);
 	emitter.burstParticles();
 }
 
@@ -59,6 +71,7 @@ export function dust(x: number, y: number) {
  * a sprite that shows up for a moment, drifting up
  */
 export function flash(
+	world: Container,
 	region: string,
 	x: number,
 	y: number,
@@ -66,11 +79,11 @@ export function flash(
 	duration = 100,
 ) {
 	const sprite = new Sprite(x, y, { image: gameState.atlas, region });
-	game.world.addChild(sprite, EFFECT_Z);
+	world.addChild(sprite, EFFECT_Z);
 	new Tween(sprite.pos)
 		.to({ y: y - rise }, { duration })
 		.onComplete(() => {
-			game.world.removeChild(sprite);
+			world.removeChild(sprite);
 		})
 		.start();
 }

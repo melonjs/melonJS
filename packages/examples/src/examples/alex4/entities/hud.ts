@@ -4,7 +4,7 @@
  * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
-import { BitmapText, Container, game, Sprite, Tween, UIPanel } from "melonjs";
+import { BitmapText, Container, Sprite, Tween, UIPanel } from "melonjs";
 import { HEIGHT, PALETTE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 
@@ -109,7 +109,7 @@ export class HUD extends Container {
 /************************************************************************************/
 export class LetsGoMessage extends Container {
 	constructor(label: string) {
-		super(0, 0, game.viewport.width, game.viewport.height);
+		super(0, 0, WIDTH, HEIGHT);
 		this.floating = true;
 
 		const sign = new Sprite(0, 0, {
@@ -137,7 +137,7 @@ export class LetsGoMessage extends Container {
 						{ duration: 1500, easing: Tween.Easing.Circular.Out },
 					)
 					.onComplete(() => {
-						game.world.removeChild(this);
+						this.parentApp.world.removeChild(this);
 					}),
 			)
 			.start();
@@ -160,7 +160,7 @@ export class GameOverMessage extends Sprite {
 	constructor(onComplete: () => void) {
 		super(0, 0, { image: "gameover", anchorPoint: { x: 0, y: 0 } });
 		this.floating = true;
-		this.pos.set((game.viewport.width - this.width) / 2, -this.height);
+		this.pos.set((WIDTH - this.width) / 2, -this.height);
 		new Tween(this.pos)
 			.to({ y: 200 }, { duration: 3000, easing: Tween.Easing.Bounce.Out })
 			.onComplete(onComplete)

@@ -7,7 +7,6 @@
 import {
 	type CollisionResponse,
 	collision,
-	game,
 	Rect,
 	type Renderable,
 	Sprite,
@@ -84,9 +83,14 @@ class Projectile extends Sprite {
 		}
 		this.done = true;
 		if (withBurst) {
-			burst(this.pos.x + this.width / 2, this.pos.y + this.height / 2, 8);
+			burst(
+				this.parentApp.world,
+				this.pos.x + this.width / 2,
+				this.pos.y + this.height / 2,
+				8,
+			);
 		}
-		game.world.removeChild(this);
+		this.parentApp.world.removeChild(this);
 	}
 
 	onCollisionStart(_response: CollisionResponse, other: Renderable) {

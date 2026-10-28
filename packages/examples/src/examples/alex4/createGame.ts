@@ -61,6 +61,8 @@ export const createGame = async () => {
 		scaleMethod: "fit",
 		renderer: video.AUTO,
 		antiAlias: false,
+		// steady motion on any display (one update every other frame at 120 Hz)
+		syncToDisplay: true,
 	});
 	await app.init();
 

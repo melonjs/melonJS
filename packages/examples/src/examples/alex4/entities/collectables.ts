@@ -9,7 +9,6 @@ import {
 	Collectable,
 	type CollisionResponse,
 	collision,
-	game,
 	Rect,
 	type Renderable,
 	type TMXObject,
@@ -45,7 +44,7 @@ class Pickup extends Collectable {
 		}
 		// avoid any further collision and remove it
 		this.body.setCollisionMask(collision.types.NO_OBJECT);
-		game.world.removeChild(this);
+		this.parentApp.world.removeChild(this);
 		this.collect();
 		other.eat();
 	}
@@ -68,7 +67,14 @@ export class CherryEntity extends Pickup {
 		gameState.cherries++;
 		// all the cherries of the level!
 		if (gameState.cherries === CherryEntity.count) {
-			flash("all100", this.pos.x + 16, this.pos.y, 100, 1000);
+			flash(
+				this.parentApp.world,
+				"all100",
+				this.pos.x + 16,
+				this.pos.y,
+				100,
+				1000,
+			);
 		}
 	}
 }
@@ -90,7 +96,14 @@ export class StarEntity extends Pickup {
 		gameState.score += 100;
 		gameState.stars++;
 		if (gameState.stars === StarEntity.count) {
-			flash("all100", this.pos.x + 16, this.pos.y, 100, 1000);
+			flash(
+				this.parentApp.world,
+				"all100",
+				this.pos.x + 16,
+				this.pos.y,
+				100,
+				1000,
+			);
 		}
 	}
 }
@@ -124,7 +137,7 @@ export class OneUpEntity extends Pickup {
 	override collect() {
 		audio.play("xtralife");
 		gameState.lives++;
-		burst(this.pos.x + 32, this.pos.y + 32, 32);
+		burst(this.parentApp.world, this.pos.x + 32, this.pos.y + 32, 32);
 	}
 }
 

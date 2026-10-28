@@ -6,10 +6,10 @@
  */
 import {
 	audio,
+	Bounds,
 	type CollisionResponse,
 	collision,
 	FlashEffect,
-	game,
 	input,
 	type PhysicsAdapter,
 	Rect,
@@ -20,6 +20,7 @@ import {
 	Tween,
 	Vector2d,
 } from "melonjs";
+import { HEIGHT } from "../constants";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
 import { Breakable, RollBlock } from "./level";
@@ -47,6 +48,9 @@ export class PlayerEntity extends Sprite {
 	spitting = false;
 	dying = false;
 	grounded = false;
+	/** the room ahead of a spinner, to know if we can roll */
+	private ahead = new Rect(0, 0, 64, 64);
+	private room = new Bounds();
 	/** touched the level from above during the last physics step */
 	private standing = false;
 	/** still holding the button since the jump started */
@@ -141,14 +145,18 @@ export class PlayerEntity extends Sprite {
 	}
 
 	private updateFocus() {
-		this.focus.set(this.pos.x + this.width / 2, this.pos.y + this.height / 2);
+		// on whole pixels, so the camera comes to rest on one
+		this.focus.set(
+			Math.round(this.pos.x + this.width / 2),
+			Math.round(this.pos.y + this.height / 2),
+		);
 	}
 
 	override update(dt: number) {
 		this.updateFocus();
 		if (this.dying) {
 			// once out of the screen, let the play screen decide what's next
-			if (!this.gone && this.pos.y > game.viewport.height) {
+			if (!this.gone && this.pos.y > HEIGHT) {
 				this.gone = true;
 				(state.current() as PlayScreen).onPlayerDeath();
 			}
@@ -189,7 +197,7 @@ export class PlayerEntity extends Sprite {
 		}
 
 		// fell in a hole
-		if (this.pos.y > game.viewport.height - 96) {
+		if (this.pos.y > HEIGHT - 96) {
 			this.die();
 		}
 
@@ -233,7 +241,8 @@ export class PlayerEntity extends Sprite {
 		}
 		this.eating = true;
 		this.spitting = false;
-		this.setCurrentAnimation("eat", {
+		// in the air Alex keeps his jumping pose, mouth open
+		this.setCurrentAnimation(this.grounded ? "eat" : "jump_spit", {
 			loop: false,
 			onComplete: () => {
 				this.eating = false;
@@ -250,16 +259,47 @@ export class PlayerEntity extends Sprite {
 		this.spitting = true;
 		this.eating = false;
 		const x = this.facingLeft ? this.pos.x + 36 : this.pos.x + 128;
-		game.world.addChild(
+		this.parentApp.world.addChild(
 			new EggShot(x, this.pos.y + 40, this.facingLeft),
 			this.depth,
 		);
 		audio.play("spit");
 	}
 
-	/** turn into a ball, until we hit a wall */
-	startRoll() {
+	/**
+	 * on a spinner: turn into a ball and roll until we hit a wall. As in the
+	 * original, the middle of Alex has to be over it, and the way ahead, just
+	 * above it, has to be free.
+	 */
+	startRoll(spinner: RollBlock) {
 		if (this.rolling || !this.grounded || this.dying) {
+			return;
+		}
+		const middle = this.pos.x + this.width / 2;
+		if (middle < spinner.pos.x || middle >= spinner.pos.x + spinner.width) {
+			return;
+		}
+		// the tile beside the spinner, one row up
+		const x =
+			spinner.pos.x + (this.facingLeft ? -spinner.width : spinner.width);
+		const y = spinner.pos.y - spinner.height;
+		this.ahead.pos.set(x, y);
+		this.room.setMinMax(
+			x + 1,
+			y + 1,
+			x + spinner.width - 1,
+			y + spinner.height - 1,
+		);
+		const blocked = this.adapter.queryAABB(this.ahead).some((other) => {
+			if (other.body?.collisionType !== collision.types.WORLD_SHAPE) {
+				return false;
+			}
+			// body bounds are relative to their renderable
+			const area = other.body.getBounds().clone();
+			area.translate(other.pos.x, other.pos.y);
+			return area.overlaps(this.room);
+		});
+		if (blocked) {
 			return;
 		}
 		this.rolling = true;
@@ -325,9 +365,7 @@ export class PlayerEntity extends Sprite {
 		if (this.dying) {
 			return;
 		}
-		if (other instanceof RollBlock) {
-			this.startRoll();
-		} else if (other instanceof Breakable && this.rolling) {
+		if (other instanceof Breakable && this.rolling) {
 			other.shatter();
 		}
 	}
@@ -349,6 +387,13 @@ export class PlayerEntity extends Sprite {
 					Math.abs(response.normal.x) > 0.7
 				) {
 					this.stopRoll();
+				}
+				break;
+
+			case collision.types.ACTION_OBJECT:
+				// standing on a spinner (checked every step, as we might land on it)
+				if (other instanceof RollBlock) {
+					this.startRoll(other);
 				}
 				break;
 

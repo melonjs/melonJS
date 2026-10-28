@@ -8,7 +8,6 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
-	game,
 	level,
 	math,
 	type PhysicsAdapter,
@@ -20,7 +19,7 @@ import {
 	timer,
 	Vector2d,
 } from "melonjs";
-import { PALETTE, WIN_KILL_GUARDIAN } from "../constants";
+import { HEIGHT, PALETTE, WIN_KILL_GUARDIAN } from "../constants";
 import { gameState } from "../gameState";
 import type { LevelMap, PlayScreen } from "../screens/play";
 import { burst, dust } from "./effects";
@@ -96,13 +95,19 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 			this.kill(!this.walkLeft);
 			this.body.setVelocity(this.walkLeft ? 2 : -2, -16);
 			// a puff of smoke, and down it goes
-			burst(this.pos.x + 64, this.pos.y + 32, 48, PALETTE[1]);
+			burst(
+				this.parentApp.world,
+				this.pos.x + 64,
+				this.pos.y + 32,
+				48,
+				PALETTE[1],
+			);
 		}
 	}
 
 	override update(dt: number) {
 		if (!this.alive && !this.defeated) {
-			if (this.pos.y > game.viewport.height) {
+			if (this.pos.y > HEIGHT) {
 				this.defeated = true;
 				guardianDefeated();
 			}
@@ -191,7 +196,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		this.hitGround = false;
 
 		// fell into the water
-		if (this.mode !== "dead" && this.pos.y > game.viewport.height) {
+		if (this.mode !== "dead" && this.pos.y > HEIGHT) {
 			this.mode = "dead";
 			audio.play("kill");
 			guardianDefeated();
@@ -216,7 +221,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 				for (let i = 0; i < 3; i++) {
 					const vx = math.randomFloat(-2, 2);
 					const vy = -math.randomFloat(3, 7);
-					game.world.addChild(
+					this.parentApp.world.addChild(
 						new Spark(this.pos.x + 56, this.pos.y + 40, vx, vy),
 						15,
 					);
@@ -229,7 +234,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 	}
 
 	private jumpAtAlex(mode: "jump" | "spikejump") {
-		const alex = game.world.getChildByName("alex")[0];
+		const alex = this.parentApp.world.getChildByName("alex")[0];
 		const dx = alex ? alex.pos.x + 96 - (this.pos.x + 64) : 0;
 		this.mode = mode;
 		this.setCurrentAnimation(mode);
@@ -241,7 +246,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 
 	private land() {
 		this.body.setVelocity(0, this.body.getVelocity(this.vel).y);
-		dust(this.pos.x + 64, this.pos.y + this.height);
+		dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
 		audio.play("impact");
 		if (this.mode === "spikejump") {
 			this.mode = "landed";
