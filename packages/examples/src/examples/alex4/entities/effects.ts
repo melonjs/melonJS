@@ -87,3 +87,19 @@ export function flash(
 		})
 		.start();
 }
+
+/**
+ * a puff of smoke, as the original left behind the dying spike truck
+ */
+export function smoke(world: Container, x: number, y: number) {
+	const frames = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `smoke${i}`);
+	const puff = new Sprite(x, y, {
+		...gameState.atlas.getAnimationSettings(frames),
+	});
+	puff.addAnimation("puff", frames, 40);
+	puff.setCurrentAnimation("puff", {
+		loop: false,
+		onComplete: () => world.removeChild(puff),
+	});
+	world.addChild(puff, EFFECT_Z);
+}

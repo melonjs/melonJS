@@ -11,6 +11,7 @@ import {
 	type Renderable,
 	Sprite,
 } from "melonjs";
+import { BULLET_GRAVITY, TICK } from "../constants";
 import { gameState } from "../gameState";
 import { burst } from "./effects";
 import type { PlayerEntity } from "./player";
@@ -107,7 +108,8 @@ export class EggShot extends Projectile {
 	constructor(x: number, y: number, left: boolean) {
 		super(x, y, {
 			frames: ["egg2"],
-			vx: left ? -8 : 8,
+			// 4 pixels per tick in the original
+			vx: (left ? -4 : 4) * TICK,
 			collisionType: collision.types.PROJECTILE_OBJECT,
 			collisionMask: collision.types.WORLD_SHAPE | collision.types.ENEMY_OBJECT,
 		});
@@ -141,7 +143,8 @@ export class CannonBall extends EnemyShot {
 	constructor(x: number, y: number, left: boolean) {
 		super(x, y, {
 			frames: ["enemy6"],
-			vx: left ? -5 : 5,
+			// 3 pixels per tick in the original
+			vx: (left ? -3 : 3) * TICK,
 			collisionType: collision.types.ENEMY_OBJECT,
 			collisionMask:
 				collision.types.WORLD_SHAPE | collision.types.PLAYER_OBJECT,
@@ -156,7 +159,7 @@ export class Spark extends EnemyShot {
 			frames: ["bullet_1", "bullet_2"],
 			vx,
 			vy,
-			gravityScale: 0.2,
+			gravityScale: BULLET_GRAVITY,
 			collisionType: collision.types.ENEMY_OBJECT,
 			collisionMask:
 				collision.types.WORLD_SHAPE | collision.types.PLAYER_OBJECT,

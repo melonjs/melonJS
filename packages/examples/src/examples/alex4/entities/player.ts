@@ -20,7 +20,7 @@ import {
 	Tween,
 	Vector2d,
 } from "melonjs";
-import { HEIGHT } from "../constants";
+import { HEIGHT, jumpSpeed, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
@@ -28,15 +28,10 @@ import { dust } from "./effects";
 import { Breakable, RollBlock } from "./level";
 import { EggShot } from "./projectiles";
 
-// The original game moved things 50 times a second, at a quarter of our
-// scale: one of its pixels per tick is this many of ours per frame.
-const TICK = 4 * (50 / 60);
+// the original values (see TICK and jumpSpeed)
 const WALK_SPEED = TICK;
 const ROLL_SPEED = 2 * TICK;
-// Its vertical speed was in quarter pixels per tick, -16 to jump, for a jump
-// 40 of its pixels high: 160 of ours, which this gives with our gravity.
-const DY = 18.2 / 16;
-const JUMP_SPEED = 16 * DY;
+const JUMP_SPEED = jumpSpeed(16);
 // The ball turns 8/256 of a turn per tick, as in the original.
 const SPIN = (8 / 256) * Math.PI * 2 * (50 / 60);
 
@@ -404,7 +399,7 @@ export class PlayerEntity extends Sprite {
 	bounce(dy = input.keyStatus("jump") ? 20 : 9) {
 		this.jumpHeld = input.keyStatus("jump");
 		this.jumpCut = false;
-		this.body.setVelocity(this.body.getVelocity(this.vel).x, -dy * DY);
+		this.body.setVelocity(this.body.getVelocity(this.vel).x, -jumpSpeed(dy));
 		this.squashTo(1.12, 250, Tween.Easing.Quadratic.Out);
 		rumble(80, 0.2, 0.6);
 	}

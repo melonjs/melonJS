@@ -8,7 +8,6 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
-	math,
 	type PhysicsAdapter,
 	Rect,
 	type Renderable,
@@ -17,7 +16,7 @@ import {
 	timer,
 	Vector2d,
 } from "melonjs";
-import { HEIGHT } from "../constants";
+import { HEIGHT, jumpSpeed, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import { dust, flash } from "./effects";
@@ -53,7 +52,10 @@ const BIG_HUMAN_BOX: Box = { w: 12, h: 19, ox: 2 };
 export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	alive = true;
 	walkLeft = true;
-	walkSpeed = 1.7;
+	/** one pixel every other tick in the original */
+	walkSpeed = TICK / 2;
+	/** shaking, in its last second flat */
+	private wobble = 0;
 	/** jumped on, waiting to be eaten */
 	flat = false;
 	edible = false;
@@ -116,6 +118,12 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	override update(dt: number) {
 		if (this.alive) {
 			this.think();
+		}
+		// about to get up: shake, a pixel of the original each way
+		if (this.wobble > 0) {
+			this.currentTransform
+				.identity()
+				.translate(((this.wobble++ % 3) - 1) * 4, 0);
 		}
 
 		// fell out of the map
@@ -180,9 +188,12 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 			this.later(250, () => {
 				this.edible = true;
 			});
-			// get back on its feet after a while
+			// get back on its feet after 5 seconds, shaking in the last one
 			this.later(4000, () => {
-				this.flicker(1000, () => {
+				this.wobble = 1;
+				this.later(1000, () => {
+					this.wobble = 0;
+					this.currentTransform.identity();
 					if (this.flat && this.alive) {
 						this.flat = false;
 						this.setCurrentAnimation("walk");
@@ -332,6 +343,8 @@ export class CrusherEntity extends GenericEnemyEntity {
 				if (alex && Math.abs(alex.pos.x + 96 - (this.pos.x + 64)) < 128) {
 					this.mode = "fall";
 					this.adapter.setGravityScale(this, 1);
+					// a little hop up first, as in the original
+					this.body.setVelocity(0, -jumpSpeed(4));
 				}
 				break;
 			}
@@ -352,7 +365,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 				}
 				break;
 			case "rise":
-				this.body.setVelocity(0, -1.5);
+				this.body.setVelocity(0, -TICK / 2);
 				if (this.pos.y <= this.startY) {
 					this.body.setVelocity(0, 0);
 					this.mode = "wait";
@@ -380,19 +393,25 @@ export class CrusherEntity extends GenericEnemyEntity {
 /************************************************************************************/
 /*      the fish: jumps out of the water, again and again                           */
 /************************************************************************************/
+/** the jump speeds of the fishes in the original, by height in tiles */
+const FISH_JUMP = [8, 14, 18, 21, 23, 26, 28];
+
 class FishEntity extends GenericEnemyEntity {
 	jumpSpeed: number;
 	private jumping = false;
+	private adapterPos = new Vector2d();
 
 	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
 		super(x, y, settings, frames);
 		this.flatable = false;
 		this.alwaysUpdate = true;
 
-		// jump high enough to reach where it was placed
-		const height = HEIGHT - this.pos.y;
-		this.jumpSpeed = Math.sqrt(2 * 0.98 * height);
-		this.pos.y = HEIGHT;
+		// the original jump speeds, by how many tiles above the bottom of the
+		// screen it was placed (it jumps from there, its feet at the bottom)
+		const rows = Math.floor((HEIGHT - (this.pos.y + this.height)) / 64);
+		this.jumpSpeed = jumpSpeed(FISH_JUMP[Math.min(Math.max(rows, 0), 6)]);
+		// hidden under the screen until it jumps
+		this.pos.y = HEIGHT + 40;
 
 		// it swims through the walls and the water
 		const hitbox = this.hitbox(HUMAN_BOX);
@@ -410,22 +429,32 @@ class FishEntity extends GenericEnemyEntity {
 
 	override onActivateEvent() {
 		super.onActivateEvent();
-		this.later(math.random(500, 1000), () => this.jump());
+		// right away, as in the original
+		this.jump();
 	}
 
 	private jump() {
 		this.jumping = true;
+		// from the bottom of the screen
+		this.adapter.setPosition(
+			this,
+			this.adapterPos.set(this.pos.x, HEIGHT - this.height),
+		);
 		this.adapter.setGravityScale(this, 1);
 		this.body.setVelocity(0, -this.jumpSpeed);
 	}
 
 	override think() {
 		const vy = this.body.getVelocity(this.vel).y;
-		if (this.jumping && vy > 0 && this.pos.y >= HEIGHT) {
-			// back in the water, wait a bit
+		if (this.jumping && vy > 0 && this.pos.y + this.height >= HEIGHT) {
+			// back in the water, out of sight for a bit
 			this.jumping = false;
 			this.adapter.setGravityScale(this, 0);
 			this.body.setVelocity(0, 0);
+			this.adapter.setPosition(
+				this,
+				this.adapterPos.set(this.pos.x, HEIGHT + 40),
+			);
 			this.later(800, () => this.jump());
 		}
 		this.onJump(vy);
