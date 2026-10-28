@@ -41,7 +41,8 @@ export function initTransitions(application: Application) {
 
 /** go to another screen, through the pixels */
 export function go(stateId: number) {
-	if (busy) {
+	// already there: no change, and so nothing would ever clear `busy`
+	if (busy || state.isCurrent(stateId)) {
 		return;
 	}
 	busy = true;
@@ -64,15 +65,20 @@ export function pixelate(middle: () => void) {
 		onComplete: () => {
 			camera.removeCameraEffect(cover);
 			middle();
-			app.viewport.addCameraEffect(
-				new PixelateTransitionEffect(app.viewport, {
-					...options,
-					direction: "reveal",
-					onComplete: () => {
-						busy = false;
-					},
-				}),
-			);
+			// Persistent, and taken away by itself: a level reload resets the
+			// camera a frame later (level.load defers it), which drops every
+			// other effect. Dropped, it never completed, and `busy` stayed set,
+			// so every change of screen after a death was ignored.
+			const reveal = new PixelateTransitionEffect(app.viewport, {
+				...options,
+				direction: "reveal",
+				onComplete: () => {
+					app.viewport.removeCameraEffect(reveal);
+					busy = false;
+				},
+			});
+			reveal.isPersistent = true;
+			app.viewport.addCameraEffect(reveal);
 		},
 	});
 	camera.addCameraEffect(cover);
