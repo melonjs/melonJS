@@ -850,9 +850,10 @@ export default class Body {
 			const poly = shape.toPolygon();
 			stored = poly;
 			this.shapes.push(poly);
-			// update the body bounds
-			this.bounds.add(poly.points);
-			this.bounds.translate(poly.pos);
+			// update the body bounds with the shape's own bounds, which already
+			// include its position. Translating the body bounds by the shape
+			// position instead would also move every shape added before it.
+			this.bounds.addBounds(poly.getBounds());
 		} else if (shape instanceof Bounds) {
 			// Bounds doesn't carry a `toPolygon` method — it's a primitive
 			// AABB that polygon.ts already depends on, so we keep the
@@ -867,25 +868,24 @@ export default class Body {
 			]);
 			stored = poly;
 			this.shapes.push(poly);
-			this.bounds.add(poly.points);
-			this.bounds.translate(poly.pos);
+			this.bounds.addBounds(poly.getBounds());
 		} else if (shape instanceof Ellipse) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
 				this.shapes.push(shape);
 			}
-			// update the body bounds
-			this.bounds.addBounds(shape.getBounds());
-			// use bounds position as ellipse position is center
-			this.bounds.translate(shape.getBounds().x, shape.getBounds().y);
+			// update the body bounds (they already sit around the center),
+			// refreshing the shape's own first in case its `pos` was edited
+			// directly
+			this.bounds.addBounds(shape.updateBounds());
 		} else if (shape instanceof Polygon) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
 				this.shapes.push(shape);
 			}
-			// update the body bounds
-			this.bounds.add(shape.points);
-			this.bounds.translate(shape.pos);
+			// update the body bounds, refreshing the shape's own first in case
+			// its `pos` or `points` were edited directly
+			this.bounds.addBounds(shape.updateBounds());
 		} else if (shape instanceof Point) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
@@ -973,8 +973,17 @@ export default class Body {
 	 * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
 	 * @param {number} [index=0] - the shape object for which to set the vertices
 	 * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
+	 * @throws {RangeError} if `index` is past the end of the shape list
 	 */
 	setVertices(vertices, index = 0, clear = true) {
+		// `index === shapes.length` appends a shape. Anything further would
+		// leave a gap in `shapes`, and the collision loops stop at the first
+		// missing shape, so the shapes below it would silently stop colliding.
+		if (index > this.shapes.length) {
+			throw new RangeError(
+				`Body#setVertices: index ${index} is past the end of the shape list (${this.shapes.length} shapes)`,
+			);
+		}
 		const polygon = this.getShape(index);
 		if (polygon instanceof Polygon) {
 			polygon.setShape(0, 0, vertices);
@@ -988,7 +997,17 @@ export default class Body {
 		}
 
 		// update the body bounds to take in account the new vertices
-		this.bounds.add(this.shapes[index].points, clear);
+		if (clear) {
+			// rebuild them from every shape, as `removeShape` does, so the other
+			// shapes of a multi-shape body stay inside them
+			this.bounds.clear();
+			this.hasDepth = false;
+			for (const shape of this.shapes) {
+				this.addShape(shape);
+			}
+		} else {
+			this.bounds.add(this.shapes[index].points);
+		}
 
 		if (typeof this.onBodyUpdate === "function") {
 			this.onBodyUpdate(this);

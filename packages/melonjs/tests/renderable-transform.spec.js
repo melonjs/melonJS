@@ -28,7 +28,7 @@ describe("renderable transforms", () => {
 			parent: "screen",
 			scale: "1.0",
 			// WebGL exposes the accumulated matrix directly, and sub-pixel
-			// snapping off keeps it from being floored between ops
+			// snapping off keeps it from being rounded between ops
 			renderer: video.WEBGL,
 			subPixel: true,
 		});

@@ -416,7 +416,10 @@ describe("sprites keep to their frame (WebGL, in pixels)", () => {
 		return { bleed, green };
 	};
 
-	// the target frame, drawn at `scale` from (x, y)
+	// the target frame, drawn at `scale` from (x, y). `subPixel` is off, so
+	// the renderer rounds (x, y) to a whole pixel first: the drawn-large
+	// scenes draw at (0, 0), where they always drew (they used to pass
+	// (-0.4, -0.6), which the old truncating snap also turned into (0, 0))
 	const drawTarget = (scale, x, y) => {
 		renderer.clearColor("#000000ff");
 		renderer.save();
@@ -573,7 +576,7 @@ describe("sprites keep to their frame (WebGL, in pixels)", () => {
 			renderer.setTextureFilter("linear");
 			renderer.beginTileLayer();
 			expect(clampMode()).toBe(FRAME_CLAMP.TEXEL);
-			drawTarget(3, -0.4, -0.6);
+			drawTarget(3, 0, 0);
 			renderer.endTileLayer();
 			renderer.flush();
 			expect(measure().bleed).toBeLessThanOrEqual(2);
@@ -722,7 +725,7 @@ describe("sprites keep to their frame (WebGL, in pixels)", () => {
 		it("CONTROL: a sprite drawn outside a tile layer still samples as it always did", (ctx) => {
 			requireWebGL(ctx);
 			renderer.setTextureFilter("linear");
-			drawTarget(3, -0.4, -0.6);
+			drawTarget(3, 0, 0);
 			renderer.flush();
 			expect(measure().bleed).toBeGreaterThan(8);
 		});
@@ -793,7 +796,7 @@ describe("sprites keep to their frame (WebGL, in pixels)", () => {
 			// sampling blends with the next frame
 			requireWebGL(ctx);
 			renderer.setTextureFilter("linear-mipmap");
-			drawTarget(3, -0.4, -0.6);
+			drawTarget(3, 0, 0);
 			renderer.flush();
 			expect(measure().bleed).toBeLessThanOrEqual(2);
 		});
@@ -803,7 +806,7 @@ describe("sprites keep to their frame (WebGL, in pixels)", () => {
 			// in along the top edge, as it did before
 			requireWebGL(ctx);
 			renderer.setTextureFilter("linear");
-			drawTarget(3, -0.4, -0.6);
+			drawTarget(3, 0, 0);
 			renderer.flush();
 			expect(measure().bleed).toBeGreaterThan(8);
 		});

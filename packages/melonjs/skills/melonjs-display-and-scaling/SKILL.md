@@ -195,11 +195,25 @@ A repeating pattern is left to wrap.
 
 ## `subPixel` is about position, not scale
 
-`subPixel: false` (the default) truncates a renderable's translation to whole
-pixels inside the frame. It is `|0`, so it truncates **toward zero** rather
-than rounding, which is worth knowing when something travels a short distance:
-an offset that should swing between -3 and +3 lands on -2 and +2, and parks at
-the extremes for longer than it should.
+`subPixel: false` (the default) draws everything on whole pixels. The snap
+happens **once, where a draw lands**, the same on every renderer: each edge of
+a sprite, a shape or a clip is rounded to the nearest pixel after every
+translation and scale it is drawn under. So:
+
+- nested containers add their positions up exactly first (10.6 then -6.5
+  lands on 4, the pixel 4.1 is in);
+- a flipped sprite covers the pixels it covers unflipped;
+- a sprite and a `fillRect` at the same position cover the same pixels, and a
+  shape has no half-grey edge on the Canvas renderer;
+- a position floating point error leaves a hair short of a pixel, such as a
+  body resting on the floor at `223.99999999999997` after a collision
+  push-out, draws on that pixel (224), so it does not shake every other frame.
+
+The camera's view starts on a whole pixel too, in world units (zoomed 2x, it
+moves in 2 px steps), and culling and the pointer use that same position:
+things standing still stay still against each other while the view scrolls,
+and a click lands on what is drawn under it. A rotated draw, and anything a
+`Camera3d` draws, is left where it is.
 
 It does nothing about how the frame reaches the screen. A game that carefully
 snaps positions and is then scaled by 2.667 has thrown that work away at the

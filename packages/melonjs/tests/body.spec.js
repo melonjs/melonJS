@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
 	Body,
 	Bounds,
+	Box3d,
 	collision,
 	Ellipse,
 	Line,
@@ -9,6 +10,8 @@ import {
 	Polygon,
 	Rect,
 	Renderable,
+	RoundRect,
+	Sphere,
 } from "../src/index.js";
 
 describe("Physics : Body", () => {
@@ -316,6 +319,221 @@ describe("Physics : Body", () => {
 			expect(body.getBounds().width).toEqual(60);
 			body.removeShapeAt(1);
 			expect(body.getBounds().width).toEqual(10);
+		});
+
+		// Each added shape used to translate the bounds accumulated so far by
+		// its own offset, so any body with several off-origin shapes reported
+		// an AABB bigger than (and shifted from) the union of its shapes.
+		const expectBounds = (bounds, left, top, right, bottom) => {
+			expect(bounds.left).toEqual(left);
+			expect(bounds.top).toEqual(top);
+			expect(bounds.right).toEqual(right);
+			expect(bounds.bottom).toEqual(bottom);
+		};
+
+		it("should return the union of two offset Rect shapes", () => {
+			// the alex4 player shapes
+			const body = new Body(new Renderable(0, 0, 192, 192));
+			body.addShape(new Rect(76, 36, 40, 60));
+			body.addShape(new Rect(76, 36, 40, 76));
+			expectBounds(body.getBounds(), 76, 36, 116, 112);
+		});
+
+		it("should return the union of two identical offset Rect shapes", () => {
+			const body = new Body(new Renderable(0, 0, 64, 64));
+			body.addShape(new Rect(8, 8, 48, 56));
+			body.addShape(new Rect(8, 8, 48, 56));
+			expectBounds(body.getBounds(), 8, 8, 56, 64);
+		});
+
+		it("should return the union of offset Polygon and Bounds shapes", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(
+				new Polygon(10, 20, [
+					{ x: 0, y: 0 },
+					{ x: 10, y: 0 },
+					{ x: 10, y: 10 },
+				]),
+			);
+			const b = new Bounds();
+			b.setMinMax(40, 50, 60, 70);
+			body.addShape(b);
+			expectBounds(body.getBounds(), 10, 20, 60, 70);
+		});
+
+		it("should not translate an offset Ellipse twice", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(new Ellipse(50, 50, 20, 20));
+			expectBounds(body.getBounds(), 40, 40, 60, 60);
+			body.addShape(new Rect(70, 10, 10, 10));
+			expectBounds(body.getBounds(), 40, 10, 80, 60);
+		});
+
+		it("should rebuild the union of offset shapes after removeShape", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Ellipse(50, 50, 20, 20));
+			body.addShape(new Rect(70, 70, 10, 10));
+			expectBounds(body.getBounds(), 10, 10, 80, 80);
+			body.removeShapeAt(2);
+			expectBounds(body.getBounds(), 10, 10, 60, 60);
+			body.removeShapeAt(0);
+			expectBounds(body.getBounds(), 40, 40, 60, 60);
+		});
+
+		it("should keep the other shapes in the bounds after setVertices", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Rect(50, 50, 10, 10));
+			body.setVertices(
+				[
+					{ x: 0, y: 0 },
+					{ x: 30, y: 0 },
+					{ x: 30, y: 5 },
+				],
+				1,
+			);
+			expectBounds(body.getBounds(), 0, 0, 30, 20);
+		});
+	});
+
+	describe("bounds of multi-shape bodies", () => {
+		const expectBounds = (bounds, left, top, right, bottom) => {
+			expect(bounds.left).toEqual(left);
+			expect(bounds.top).toEqual(top);
+			expect(bounds.right).toEqual(right);
+			expect(bounds.bottom).toEqual(bottom);
+		};
+		const triangle = () => {
+			return [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+				{ x: 10, y: 10 },
+			];
+		};
+		const box = (w, h) => {
+			return [
+				{ x: 0, y: 0 },
+				{ x: w, y: 0 },
+				{ x: w, y: h },
+				{ x: 0, y: h },
+			];
+		};
+		let body;
+
+		beforeEach(() => {
+			body = new Body(new Renderable(0, 0, 100, 100));
+		});
+
+		it("adds offset Polygon, Line and RoundRect shapes after another shape", () => {
+			body.addShape(new Rect(0, 0, 10, 10));
+			body.addShape(new Polygon(30, 40, triangle()));
+			expectBounds(body.getBounds(), 0, 0, 40, 50);
+			body.addShape(
+				new Line(60, 70, [
+					{ x: 0, y: 0 },
+					{ x: 10, y: 5 },
+				]),
+			);
+			expectBounds(body.getBounds(), 0, 0, 70, 75);
+			body.addShape(new RoundRect(80, 5, 10, 10, 2));
+			expectBounds(body.getBounds(), 0, 0, 90, 75);
+		});
+
+		it("handles negative offsets", () => {
+			body.addShape(new Rect(-30, -20, 10, 10));
+			body.addShape(new Rect(5, 5, 10, 10));
+			expectBounds(body.getBounds(), -30, -20, 15, 15);
+		});
+
+		it("places a lone Ellipse at a negative offset once", () => {
+			body.addShape(new Ellipse(-50, -50, 20, 20));
+			expectBounds(body.getBounds(), -60, -60, -40, -40);
+		});
+
+		it("picks up a Polygon pos changed directly", () => {
+			body.addShape(new Rect(0, 0, 10, 10));
+			const poly = new Polygon(0, 0, triangle());
+			poly.pos.set(30, 40);
+			body.addShape(poly);
+			expectBounds(body.getBounds(), 0, 0, 40, 50);
+		});
+
+		it("picks up a Polygon pos changed directly when removeShape rebuilds", () => {
+			body.addShape(new Rect(0, 0, 10, 10));
+			const poly = new Polygon(0, 0, triangle());
+			body.addShape(poly);
+			poly.pos.set(30, 40);
+			body.removeShapeAt(0);
+			expectBounds(body.getBounds(), 30, 40, 40, 50);
+		});
+
+		it("picks up an Ellipse pos changed directly", () => {
+			const ellipse = new Ellipse(0, 0, 20, 20);
+			ellipse.pos.set(50, 50);
+			body.addShape(ellipse);
+			expectBounds(body.getBounds(), 40, 40, 60, 60);
+		});
+
+		it("setVertices replacing a non-polygon keeps the other shapes", () => {
+			body.addShape(new Rect(10, 10, 10, 10));
+			const ellipse = new Ellipse(80, 80, 20, 20);
+			body.addShape(ellipse);
+			body.setVertices(box(30, 5), 1);
+			expect(body.shapes.length).toEqual(2);
+			expect(body.shapes[1]).toBeInstanceOf(Polygon);
+			expect(body.shapes.includes(ellipse)).toEqual(false);
+			expectBounds(body.getBounds(), 0, 0, 30, 20);
+		});
+
+		it("setVertices replacing the only Box3d clears hasDepth", () => {
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Box3d(50, 50, 0, 10, 10, 10));
+			expect(body.hasDepth).toEqual(true);
+			body.setVertices(box(5, 5), 1);
+			expect(body.hasDepth).toEqual(false);
+			expectBounds(body.getBounds(), 0, 0, 20, 20);
+		});
+
+		it("setVertices on another shape keeps hasDepth for a Box3d", () => {
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Box3d(50, 50, 0, 10, 10, 10));
+			body.setVertices(box(5, 5), 0);
+			expect(body.hasDepth).toEqual(true);
+			// a Box3d x/y is its center
+			expectBounds(body.getBounds(), 0, 0, 55, 55);
+		});
+
+		it("setVertices on another shape keeps hasDepth for a Sphere", () => {
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Sphere(50, 50, 0, 10));
+			body.setVertices(box(5, 5), 0);
+			expect(body.hasDepth).toEqual(true);
+			expectBounds(body.getBounds(), 0, 0, 60, 60);
+		});
+
+		it("setVertices recomputes pseudoInertia from the new bounds", () => {
+			body.addShape(new Rect(0, 0, 60, 80));
+			expect(body.pseudoInertia).toBeCloseTo((60 * 60 + 80 * 80) / 12);
+			body.setVertices(box(6, 8));
+			expect(body.pseudoInertia).toBeCloseTo((6 * 6 + 8 * 8) / 12);
+		});
+
+		it("setVertices at the end of the shape list appends a shape", () => {
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.setVertices(box(5, 5), 1);
+			expect(body.shapes.length).toEqual(2);
+			expectBounds(body.getBounds(), 0, 0, 20, 20);
+		});
+
+		it("setVertices past the end of the shape list throws", () => {
+			body.addShape(new Rect(10, 10, 10, 10));
+			expect(() => {
+				body.setVertices(box(5, 5), 3);
+			}).toThrow(RangeError);
+			// nothing changed, and no gap was left in the shape list
+			expect(body.shapes.length).toEqual(1);
+			expectBounds(body.getBounds(), 10, 10, 20, 20);
 		});
 	});
 

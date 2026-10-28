@@ -694,6 +694,12 @@ describe.each([
 		const renderer = {
 			currentBatcher: batcher,
 			setBatcher: vi.fn(),
+			// not what this tests: drawn where it is given (see
+			// Renderer#_pixelSnapBegin)
+			_pixelSnapBegin() {
+				return false;
+			},
+			_pixelSnapEnd() {},
 			currentTint: {
 				toUint32: () => {
 					return 0xffffffff;
@@ -720,6 +726,12 @@ describe("WebGPU drawImage", () => {
 		const renderer = {
 			settings: { subPixel: false },
 			batchers: new Map(),
+			// not what this tests: drawn where it is given (see
+			// Renderer#_pixelSnapBegin)
+			_pixelSnapBegin() {
+				return false;
+			},
+			_pixelSnapEnd() {},
 			customShader: undefined,
 			activeLightCount: 0,
 			currentNormalMap: null,
