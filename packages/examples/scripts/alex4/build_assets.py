@@ -58,6 +58,13 @@ for n, im in bmps.items():
         continue
     frames[n.lower()] = im
 
+# the jellyfish stretches up when it jumps: as in the original, its two
+# pictures stand on the same bottom, the short one with room above it
+short = frames["enemy5_01"]
+tall = frames["enemy5_02"]
+frames["enemy5_01"] = Image.new("RGBA", tall.size)
+frames["enemy5_01"].paste(short, (0, tall.height - short.height))
+
 # Alex is drawn from a separate head and body: bake every combination we need
 # into frames of one size (48x40), with the body always in the middle column
 # so that flipping the sprite never moves him. The feet sit on row 24.
