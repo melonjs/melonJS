@@ -5,7 +5,12 @@
  * @category Animation
  */
 export interface AnimationOptions {
-	/** called when the animation completes a cycle (each loop, or once if `loop: false`). */
+	/**
+	 * called when the animation completes a cycle (each loop, or once if `loop: false`).
+	 * A one-frame frame animation completes once its frame delay has elapsed when
+	 * played with `loop: false` or `next`; a looping one-frame animation does not
+	 * step, so it never calls `onComplete`.
+	 */
 	onComplete?: (() => unknown) | undefined;
 	/**
 	 * called with the index of each frame as playback reaches it, from frame 0
