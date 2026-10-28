@@ -354,15 +354,22 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		}
 	}
 
-	onCollisionStart(response: CollisionResponse, other: Renderable) {
+	/**
+	 * on the ground, checked on every step it touches it (not only when the
+	 * contact starts: when it drills through a block, it may already be
+	 * touching the one it lands on next)
+	 */
+	onCollisionActive(response: CollisionResponse, other: Renderable) {
 		if (
 			other.body.collisionType !== collision.types.WORLD_SHAPE ||
-			response.normal.y > -0.7
+			response.normal.y > -0.7 ||
+			// still going up, from where it jumped
+			this.body.getVelocity(this.vel).y < 0
 		) {
 			return;
 		}
 		if (this.mode === "spikejump" && other instanceof Breakable) {
-			// spikes out: smash all the blocks it lands on, and fall through
+			// spikes out: smash the blocks it lands on, and fall through
 			other.shatter();
 			this.drilled = true;
 		} else {
