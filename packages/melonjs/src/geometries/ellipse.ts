@@ -155,9 +155,12 @@ export class Ellipse {
 	}
 
 	/**
-	 * update the bounding box for this ellipse, taking rotation into account
+	 * update the bounding box for this ellipse, taking rotation into account.
+	 * Call it after changing `pos` directly; `setShape`, `translate`, `scale`
+	 * and `rotate` already do.
+	 * @returns this shape bounding box Rectangle object
 	 */
-	private updateBounds() {
+	updateBounds() {
 		// invalidate cached polygon
 		this._polygon = null;
 
@@ -184,6 +187,8 @@ export class Ellipse {
 				this.pos.y + ry,
 			);
 		}
+
+		return bounds;
 	}
 
 	/**
