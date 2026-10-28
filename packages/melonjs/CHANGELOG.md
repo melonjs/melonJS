@@ -2,13 +2,14 @@
 
 ## [20.11.1] (melonJS 2) - _unreleased_
 
+### Added
+- Geometry: `Ellipse#updateBounds()` is public, as `Polygon#updateBounds()` is, to refresh an ellipse's bounds after setting its `pos` directly. A body does it for the ellipses it is given, so one moved that way before being added is picked up
+
 ### Fixed
 - Geometry: the methods that take a point (`translate`, `shift` and `contains` on `Bounds`, `Polygon`, `Rect`, `RoundRect`, `Ellipse` and `Line`, and `translate` on `Matrix2d` and `Matrix3d`) take any object with `x` and `y`, such as a renderable's `pos`. Given anything but a `Vector2d` they treated it as a number and came out `NaN`, so `bounds.clone().translate(renderable.pos)` gave no world bounds and `overlaps()` then reported every area as taken
-- Physics: a body with several shapes reports the union of its shapes as its bounds. Each shape added after the first moved the bounds gathered so far by its own offset, so two shapes at 76,36 (40×60 and 40×76) gave a body 76,36 → 192,132 instead of 76,36 → 116,112, and a lone ellipse away from the origin came out shifted by its own position. `removeShape` rebuilds them the same way, and `setVertices` on one shape of several keeps the others inside them
-- Physics: `Body#setVertices` on one shape of several keeps the others inside the body's bounds and keeps `hasDepth` right, set while a `Box3d` or `Sphere` remains and cleared once none does. Like `addShape`, it now recomputes `pseudoInertia` from the new bounds, so a value set by hand is replaced; set it again afterwards if needed
-- Physics: `Body#setVertices` throws a `RangeError` for an index past the end of the shape list. It used to leave a gap in the list, and the collision checks stop at the first missing shape, so the shapes before the gap silently stopped colliding; the index right after the last shape still appends one
-- Physics: a body picks up a `Polygon` or `Ellipse` whose `pos` was changed directly before it was added, or before `removeShape` rebuilt the bounds. `Ellipse#updateBounds()` is now public, as `Polygon#updateBounds()` is, to refresh an ellipse's bounds after such a change
-- Physics: the builtin adapter's `updateShape`, and `addBody` on a renderable that already has a body, clear `hasDepth` along with the old shapes, so a body that drops its last `Box3d` or `Sphere` no longer resolves along z
+- Physics: a body with several shapes has the union of its shapes as its bounds. Each shape added after the first moved the bounds gathered so far by its own offset (shapes of 40×60 and 40×76 at 76,36 gave 76,36 → 192,132 instead of 76,36 → 116,112), and an ellipse away from the origin came out shifted by its own position; `removeShape` and `setVertices` rebuild the bounds the same way
+- Physics: `Body#setVertices` on one shape of several keeps the others inside the body's bounds and `hasDepth` right, and recomputes `pseudoInertia` as `addShape` does, so set it again afterwards if you set it by hand. An index past the end of the shape list throws a `RangeError`: it left a gap in the list, and the shapes before it silently stopped colliding
+- Physics: a body that drops its last `Box3d` or `Sphere`, through the builtin adapter's `updateShape` or `addBody` on a renderable that already has a body, no longer resolves along z
 - Loader: the default loading screen brings up its progress bar and the melonJS logo in the same frame. The bar was drawn first and the logo popped in a frame or so later; the bar now shows alone only when the logo cannot be decoded or the game's assets finish first
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
