@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	Application,
 	boot,
-	FadeEffect,
 	PixelateEffect,
 	PixelateTransitionEffect,
 	Stage,
@@ -15,13 +14,19 @@ import {
  * The pixelate transition: the frame breaks up into blocks growing to `size`
  * pixels, the state changes behind the largest of them, and the frame comes
  * back sharp. It drives a PixelateEffect FIRST in the camera's post-effect
- * chain for as long as it runs, and falls back to a fade where shaders do
- * not run (the Canvas renderer).
+ * chain for as long as it runs, and does nothing where shaders do not run
+ * (the Canvas renderer): the state changes directly.
  */
-const pixelates = (camera) =>
-	camera.postEffects.filter((fx) => fx instanceof PixelateEffect);
-const transitions = (camera) =>
-	camera.cameraEffects.filter((fx) => fx instanceof PixelateTransitionEffect);
+const pixelates = (camera) => {
+	return camera.postEffects.filter((fx) => {
+		return fx instanceof PixelateEffect;
+	});
+};
+const transitions = (camera) => {
+	return camera.cameraEffects.filter((fx) => {
+		return fx instanceof PixelateTransitionEffect;
+	});
+};
 
 /**
  * a state of its own, entered at once: a fresh application only has a camera
@@ -101,6 +106,70 @@ describe("PixelateTransitionEffect", () => {
 		effect.destroy();
 	});
 
+	it("waits for its pipeline to be built before the blocks start", async () => {
+		// a warm-up still building, as a cold WebGPU pipeline is: drawing the
+		// effect now would build it on the spot and freeze the frame
+		let built;
+		const warm = vi.spyOn(app.renderer, "_whenWarmed").mockReturnValue(
+			new Promise((resolve) => {
+				built = resolve;
+			}),
+		);
+		try {
+			const effect = new PixelateTransitionEffect(app.viewport, {
+				renderer: app.renderer,
+				size: 24,
+				duration: 60,
+				direction: "hide",
+			});
+			// off meanwhile: the frame draws as usual
+			expect(effect.effect.enabled).toBe(false);
+			await new Promise((resolve) => {
+				setTimeout(resolve, 150);
+			});
+			effect.update();
+			expect(effect.progress.value).toBe(0);
+			expect(effect.isComplete).toBe(false);
+
+			built();
+			await vi.waitFor(
+				() => {
+					effect.update();
+					expect(effect.isComplete).toBe(true);
+				},
+				{ timeout: 3000 },
+			);
+			expect(effect.effect.enabled).toBe(true);
+			effect.destroy();
+		} finally {
+			warm.mockRestore();
+		}
+	});
+
+	it("starts nothing when destroyed while it waits", async () => {
+		let built;
+		const warm = vi.spyOn(app.renderer, "_whenWarmed").mockReturnValue(
+			new Promise((resolve) => {
+				built = resolve;
+			}),
+		);
+		try {
+			const effect = new PixelateTransitionEffect(app.viewport, {
+				renderer: app.renderer,
+				duration: 60,
+			});
+			const pixelate = effect.effect;
+			effect.destroy();
+			built();
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+			expect(pixelate.enabled).toBe(false);
+		} finally {
+			warm.mockRestore();
+		}
+	});
+
 	it("reveals: from the largest blocks back to a sharp frame", async () => {
 		const effect = new PixelateTransitionEffect(app.viewport, {
 			renderer: app.renderer,
@@ -137,7 +206,9 @@ describe("PixelateTransitionEffect", () => {
 			renderer: app.renderer,
 		});
 		effect.destroy();
-		expect(() => effect.destroy()).not.toThrow();
+		expect(() => {
+			return effect.destroy();
+		}).not.toThrow();
 	});
 
 	it("covers, changes state, reveals, and leaves the camera as it was", async () => {
@@ -205,14 +276,37 @@ describe("pixelate transition on the Canvas renderer", () => {
 		app?.destroy();
 	});
 
-	it("fades in its color instead", () => {
+	it("does nothing: the state changes directly", async () => {
 		const next = newState();
-		state.transition("pixelate", "#123456", 50);
+		state.transition("pixelate", "#123456", 1000);
 		state.setTransition(next, true);
 		state.change(next);
-		expect(transitions(app.viewport)).toHaveLength(0);
-		expect(
-			app.viewport.cameraEffects.some((fx) => fx instanceof FadeEffect),
-		).toBe(true);
+		// no cover of any kind, a pixelate or the fade it used to be
+		expect(app.viewport.cameraEffects).toHaveLength(0);
+		// switched well within the transition's own duration
+		const start = performance.now();
+		while (!state.isCurrent(next) && performance.now() - start < 300) {
+			await new Promise((resolve) => {
+				setTimeout(resolve, 10);
+			});
+		}
+		expect(state.isCurrent(next)).toBe(true);
+	});
+
+	it("adds no shader to the camera, and warns nothing, when used alone", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		try {
+			const fx = new PixelateTransitionEffect(app.viewport, {
+				renderer: app.renderer,
+				duration: 50,
+			});
+			expect(fx.effect).toBeUndefined();
+			expect(pixelates(app.viewport)).toHaveLength(0);
+			fx.update();
+			fx.destroy();
+			expect(warn).not.toHaveBeenCalled();
+		} finally {
+			warn.mockRestore();
+		}
 	});
 });

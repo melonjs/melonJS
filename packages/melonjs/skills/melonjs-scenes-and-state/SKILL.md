@@ -119,8 +119,8 @@ app.freeze(150);                             // brief hit-stop (proxies state.fr
 `state.change`. The `"mask"` form needs its fourth argument, an `Ellipse` or
 `Polygon`; without one it warns and falls back to a direct switch. The
 `"pixelate"` form breaks the screen up into blocks (its fourth argument is the
-largest block size in pixels) and needs a GPU renderer: on Canvas it fades in
-its color instead.
+largest block size in pixels). It is a shader effect, so on Canvas it does
+nothing and the state changes directly.
 
 ### A Stage's own `update()` is NOT paused
 

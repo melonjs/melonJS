@@ -13,8 +13,9 @@ import CameraEffect from "./camera_effect.ts";
  * It works on what the camera draws, through a {@link PixelateEffect} it puts
  * FIRST in the camera's post-effect chain for as long as it runs, so the
  * effects after it (a vignette, scanlines) stay sharp over the blocks. That
- * needs a GPU renderer: on the Canvas renderer the blocks never show, which
- * is why {@link state.transition} falls back to a fade there.
+ * is a shader, so on the Canvas renderer the effect does nothing: it adds no
+ * shader to the camera and only keeps its timing, and
+ * {@link state.transition} skips a pixelate transition there altogether.
  * @category Camera
  * @example
  * // break the screen up into 32 pixel blocks over 300ms
@@ -45,9 +46,10 @@ export default class PixelateTransitionEffect extends CameraEffect {
 	onComplete: (() => void) | undefined;
 
 	/**
-	 * the shader effect this transition drives on the camera
+	 * the shader effect this transition drives on the camera, or `undefined`
+	 * on a renderer without shaders (Canvas)
 	 */
-	effect: PixelateEffect;
+	effect: PixelateEffect | undefined;
 
 	/**
 	 * @param camera - the camera to apply the effect to
@@ -77,12 +79,17 @@ export default class PixelateTransitionEffect extends CameraEffect {
 		const hide = this.direction === "hide";
 		this.progress = { value: hide ? 0 : 1 };
 
-		this.effect = new PixelateEffect(options.renderer, {
-			size: hide ? 1 : this.size,
-		});
-		// first in the chain, so the effects after it draw over the blocks
-		camera.addPostEffect(this.effect);
-		camera.postEffects.unshift(camera.postEffects.pop()!);
+		// a renderer without shaders (Canvas) gets none: nothing to draw
+		// the blocks with, and no warning about it
+		if (options.renderer.shaderLanguage !== null) {
+			const effect = new PixelateEffect(options.renderer, {
+				size: hide ? 1 : this.size,
+			});
+			// first in the chain, so the effects after it draw over the blocks
+			camera.addPostEffect(effect);
+			camera.postEffects.unshift(camera.postEffects.pop()!);
+			this.effect = effect;
+		}
 
 		// eased the way a lens goes out of focus and back: slow to start
 		// breaking up, slow to settle
@@ -95,13 +102,37 @@ export default class PixelateTransitionEffect extends CameraEffect {
 			},
 		);
 		this.tween.isPersistent = true;
-		this.tween.start();
+
+		// The first frame to draw the effect would build its pipeline on the
+		// spot, which on WebGPU froze the screen for well over a frame. So the
+		// blocks wait for the warm-up that attaching the effect queued: the
+		// effect stays off, and the frame draws as usual, until its pipeline
+		// is built. With nothing left to build (an earlier transition built
+		// it) the transition starts at once.
+		const effect = this.effect;
+		const warmed =
+			effect !== undefined ? options.renderer._whenWarmed() : undefined;
+		if (effect === undefined || warmed === undefined) {
+			this.tween.start();
+		} else {
+			effect.enabled = false;
+			const start = () => {
+				// destroyed while it waited: nothing left to start
+				if (this.effect !== effect) {
+					return;
+				}
+				effect.enabled = true;
+				this.tween.start();
+			};
+			// a warm-up that fails changes nothing: the draw builds it
+			void warmed.then(start, start);
+		}
 	}
 
 	override update(): void {
 		const value = this.progress.value;
 		// in whole pixels: a fraction of a block shimmers
-		this.effect.setSize(Math.max(1, Math.round(1 + (this.size - 1) * value)));
+		this.effect?.setSize(Math.max(1, Math.round(1 + (this.size - 1) * value)));
 
 		if (
 			(this.direction === "hide" && value >= 1) ||
@@ -132,7 +163,7 @@ export default class PixelateTransitionEffect extends CameraEffect {
 			} else {
 				this.effect.destroy();
 			}
-			this.effect = undefined as unknown as typeof this.effect;
+			this.effect = undefined;
 		}
 	}
 }

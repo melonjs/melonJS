@@ -671,10 +671,10 @@ const state = {
 	 * @param effect - "fade" for a color fade, "mask" for a shape-based mask
 	 * transition, "pixelate" for the screen breaking up into ever larger
 	 * blocks, changing behind the largest, and coming back sharp (see
-	 * {@link PixelateTransitionEffect}). A pixelate transition needs a GPU
-	 * renderer: on the Canvas renderer it is a fade in `color`.
-	 * @param color - a CSS color value (for "pixelate", the color of the fade
-	 * it falls back to on the Canvas renderer)
+	 * {@link PixelateTransitionEffect}). A pixelate transition is a shader
+	 * effect: on the Canvas renderer it does nothing, and the state changes
+	 * directly.
+	 * @param color - a CSS color value (not used by "pixelate")
 	 * @param [duration=1000] - expressed in milliseconds, for each half: the
 	 * cover, then the reveal
 	 * @param [shape] - an Ellipse or Polygon defining the mask shape (required
@@ -753,12 +753,7 @@ const state = {
 					defer(_switchState, state, stateId);
 				};
 
-				// a pixelate transition draws nothing without shaders: a fade then
-				const type =
-					_transitionType === "pixelate" && _app.renderer.shaderLanguage == null
-						? "fade"
-						: _transitionType;
-				switch (type) {
+				switch (_transitionType) {
 					case "fade": {
 						const color = _transitionConfig.color;
 						const duration = _transitionConfig.duration;
@@ -830,6 +825,12 @@ const state = {
 						break;
 					}
 					case "pixelate": {
+						// a shader: on a renderer without them (Canvas) it does
+						// nothing, and the state changes directly
+						if (_app.renderer.shaderLanguage === null) {
+							onComplete();
+							break;
+						}
 						const renderer = _app.renderer;
 						const size = _transitionConfig.size;
 						const duration = _transitionConfig.duration;
