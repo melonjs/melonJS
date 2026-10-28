@@ -10,6 +10,7 @@ import ToneMappingEffect, { CURVES } from "./effects/tonemap.js";
 import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
+import { is2dTransform, pixelSnap } from "./utils/pixel_snap.js";
 
 /**
  * @import RenderTargetPool from "./rendertarget/render_target_pool.js";
@@ -293,6 +294,14 @@ export default class Renderer {
 
 		// the projectionMatrix (set through setProjection)
 		this.projectionMatrix = new Matrix3d();
+
+		/**
+		 * what each nested {@link Renderer#_pixelSnapBegin} changed, to put
+		 * it back
+		 * @ignore
+		 */
+		this._pixelSnapStack = [];
+		this._pixelSnapDepth = 0;
 
 		/**
 		 * The distance fog installed by the camera currently drawing, or
@@ -2169,6 +2178,94 @@ export default class Renderer {
 	 */
 	setProjection(matrix) {
 		this.projectionMatrix.copy(matrix);
+	}
+
+	/**
+	 * With `subPixel` off, put the draw of a local box on whole pixels: its
+	 * edges, after the current transform, are rounded to the nearest pixel,
+	 * and the draw is moved and stretched by less than a pixel to fit (see
+	 * `video/utils/pixel_snap.js` for the rule every renderer follows). Lasts
+	 * until {@link Renderer#_pixelSnapEnd}, which gets the returned value.
+	 *
+	 * Calls nest: a draw made inside another one's snap (a gradient fill,
+	 * drawn as an image) is already on whole pixels, and is left as it is.
+	 *
+	 * This adjusts `currentTransform`, which the GPU batchers apply as they
+	 * take the draw's vertices; the Canvas renderer overrides it.
+	 * @ignore
+	 * @param {number} x - the local box the draw covers
+	 * @param {number} y - the local box the draw covers
+	 * @param {number} w - the local box the draw covers
+	 * @param {number} h - the local box the draw covers
+	 * @param {number} [pad=0] - added around the box, in local units: half the
+	 * line width of a stroke
+	 * @returns {boolean} whether anything changed
+	 */
+	_pixelSnapBegin(x, y, w, h, pad = 0) {
+		if (!this._snapsToPixels()) {
+			return false;
+		}
+		const v = this.currentTransform.val;
+		const k = pixelSnap(v[0], v[1], v[4], v[5], v[12], v[13], x, y, w, h, pad);
+		if (k === null) {
+			return false;
+		}
+		let saved = this._pixelSnapStack[this._pixelSnapDepth];
+		if (saved === undefined) {
+			saved = this._pixelSnapStack[this._pixelSnapDepth] = new Float64Array(6);
+		}
+		this._pixelSnapDepth++;
+		saved[0] = v[0];
+		saved[1] = v[4];
+		saved[2] = v[12];
+		saved[3] = v[1];
+		saved[4] = v[5];
+		saved[5] = v[13];
+		v[0] *= k[0];
+		v[4] *= k[0];
+		v[12] = k[0] * v[12] + k[1];
+		v[1] *= k[2];
+		v[5] *= k[2];
+		v[13] = k[2] * v[13] + k[3];
+		return true;
+	}
+
+	/**
+	 * Whether what is drawn now is snapped to whole pixels: `subPixel` is off,
+	 * and the current transform is a 2D one without rotation or skew, under a
+	 * flat projection (a perspective view, a `Camera3d`'s, has no pixel grid
+	 * to snap to).
+	 * @ignore
+	 * @returns {boolean}
+	 */
+	_snapsToPixels() {
+		const v = this.currentTransform.val;
+		return (
+			this.settings.subPixel === false &&
+			this.projectionMatrix.val[11] === 0 &&
+			is2dTransform(v) &&
+			v[1] === 0 &&
+			v[4] === 0
+		);
+	}
+
+	/**
+	 * Undo {@link Renderer#_pixelSnapBegin}.
+	 * @ignore
+	 * @param {boolean} snapped - what `_pixelSnapBegin` returned
+	 */
+	_pixelSnapEnd(snapped) {
+		if (snapped !== true) {
+			return;
+		}
+		const saved = this._pixelSnapStack[--this._pixelSnapDepth];
+		const v = this.currentTransform.val;
+		v[0] = saved[0];
+		v[4] = saved[1];
+		v[12] = saved[2];
+		v[1] = saved[3];
+		v[5] = saved[4];
+		v[13] = saved[5];
 	}
 
 	/**

@@ -12,6 +12,22 @@ import { resolveAnchorPoint } from "./anchorPoint.ts";
 import Sprite from "./sprite.js";
 
 /**
+ * Where the camera's view starts on one axis: on a whole pixel unless
+ * `subPixel` is set, as the world is drawn from it (see
+ * `Camera2d#_viewOrigin`), so a layer scrolling with the world (a ratio of 1)
+ * keeps to it.
+ * @ignore
+ * @param {Camera2d} viewport - the camera
+ * @param {number} value - its position plus its offset, on one axis
+ * @returns {number} where its view starts
+ */
+function viewOrigin(viewport, value) {
+	return typeof viewport._viewOrigin === "function"
+		? viewport._viewOrigin(value)
+		: value;
+}
+
+/**
  * additional import for TypeScript
  * @import {Vector2d} from "../math/vector2d.ts";
  * @import Camera2d from "../camera/camera2d.ts";
@@ -228,11 +244,11 @@ export default class ImageLayer extends Sprite {
 		const x =
 			ax * (rx - 1) * (bw - viewport.width) +
 			this.offset.x -
-			rx * (viewport.pos.x + viewport.offset.x);
+			rx * viewOrigin(viewport, viewport.pos.x + viewport.offset.x);
 		const y =
 			ay * (ry - 1) * (bh - viewport.height) +
 			this.offset.y -
-			ry * (viewport.pos.y + viewport.offset.y);
+			ry * viewOrigin(viewport, viewport.pos.y + viewport.offset.y);
 
 		// Repeat horizontally; start drawing from left boundary
 		if (this.repeatX) {
@@ -317,11 +333,11 @@ export default class ImageLayer extends Sprite {
 			x =
 				ax * (rx - 1) * (bw - viewport.width) +
 				this.offset.x -
-				rx * (viewport.pos.x + viewport.offset.x);
+				rx * viewOrigin(viewport, viewport.pos.x + viewport.offset.x);
 			y =
 				ay * (ry - 1) * (bh - viewport.height) +
 				this.offset.y -
-				ry * (viewport.pos.y + viewport.offset.y);
+				ry * viewOrigin(viewport, viewport.pos.y + viewport.offset.y);
 
 			if (this.repeatX) {
 				x = x % width;

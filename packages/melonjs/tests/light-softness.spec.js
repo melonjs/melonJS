@@ -248,7 +248,7 @@ for (const backend of [video.CANVAS, video.WEBGL]) {
 			expect(at(95, 95)).toBe(0);
 		});
 
-		// the renderer drops the fraction of the world translate (no
+		// the renderer snaps the world translate to a whole pixel (no
 		// `subPixel`), which moved the darkness up to a world unit in from
 		// the view's top left edge, leaving them lit: any smoothed follow does
 		// it. Zoomed in, that unit is two pixels

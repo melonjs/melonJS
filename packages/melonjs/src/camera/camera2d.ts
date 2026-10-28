@@ -520,13 +520,43 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
+	 * Where the view starts on one axis, given the camera's position shifted
+	 * by its offset: on a whole pixel (in world units) unless `subPixel` is
+	 * set. The world is drawn from it, culled against it ({@link worldView})
+	 * and the pointer is read from it ({@link localToWorld}), so a click lands
+	 * on what is drawn under it. The position itself keeps its fraction, so a
+	 * damped follow still converges.
+	 *
+	 * Rounding the view once, rather than leaving its fraction to every draw,
+	 * is what keeps things still against each other while the view scrolls: a
+	 * hero at x = 100.5 next to a tile at 96 stays 5 pixels from it, where a
+	 * view at x = 0.2 then 0.6 would draw them 4 then 5 pixels apart.
+	 * @param value - the position plus the offset, on one axis
+	 * @returns where the view starts on that axis
+	 * @ignore
+	 */
+	_viewOrigin(value: number): number {
+		return this._snapView ? Math.round(value) : value;
+	}
+
+	/**
+	 * Whether the view starts on a whole pixel ({@link _viewOrigin}): taken
+	 * from the `subPixel` setting of the renderer that draws this camera, at
+	 * the start of each {@link draw}, so a camera follows its own application
+	 * rather than whichever one was created last. `true` until the first
+	 * draw, which is `subPixel`'s default.
+	 * @ignore
+	 */
+	_snapView = true;
+
+	/**
 	 * The world-space bounds currently visible through this camera,
 	 * taking into account position, {@link Camera2d#offset} and zoom level.
 	 * @returns the visible world area
 	 */
 	get worldView(): Bounds {
-		const x = this.pos.x + this.offset.x;
-		const y = this.pos.y + this.offset.y;
+		const x = this._viewOrigin(this.pos.x + this.offset.x);
+		const y = this._viewOrigin(this.pos.y + this.offset.y);
 		this._worldView.setMinMax(
 			x,
 			y,
@@ -1065,11 +1095,11 @@ export default class Camera2d extends Renderable {
 	localToWorld(x: number, y: number, v?: Vector2d): Vector2d {
 		v = v || vector2dPool.get();
 		v.set(
-			(x - this.screenX) / this.zoom + this.offset.x,
-			(y - this.screenY) / this.zoom + this.offset.y,
-		)
-			.add(this.pos)
-			.sub(game.world.pos);
+			(x - this.screenX) / this.zoom +
+				this._viewOrigin(this.pos.x + this.offset.x),
+			(y - this.screenY) / this.zoom +
+				this._viewOrigin(this.pos.y + this.offset.y),
+		).sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
 			this.invCurrentTransform.apply(v);
 		}
@@ -1090,10 +1120,12 @@ export default class Camera2d extends Renderable {
 		if (!this.currentTransform.isIdentity()) {
 			this.currentTransform.apply(v);
 		}
-		v.sub(this.pos).add(game.world.pos);
+		v.add(game.world.pos);
 		return v.set(
-			(v.x - this.offset.x) * this.zoom + this.screenX,
-			(v.y - this.offset.y) * this.zoom + this.screenY,
+			(v.x - this._viewOrigin(this.pos.x + this.offset.x)) * this.zoom +
+				this.screenX,
+			(v.y - this._viewOrigin(this.pos.y + this.offset.y)) * this.zoom +
+				this.screenY,
 		);
 	}
 
@@ -1201,13 +1233,18 @@ export default class Camera2d extends Renderable {
 		}
 		// cast to any to access canvas/webgl renderer-specific methods not on base Renderer
 		const r = renderer as any;
+		// before anything below culls or translates by the view's origin
+		// (`settings` is typed as a bare object on the base Renderer)
+		this._snapView = r.settings.subPixel === false;
 		const isNonDefault = !this.isDefault;
 		// for non-default cameras, compensate for the world container's
 		// centering offset (applied inside container.draw via renderer.translate)
 		const containerOffsetX = isNonDefault ? container.pos.x : 0;
 		const containerOffsetY = isNonDefault ? container.pos.y : 0;
-		const translateX = this.pos.x + this.offset.x + containerOffsetX;
-		const translateY = this.pos.y + this.offset.y + containerOffsetY;
+		const translateX =
+			this._viewOrigin(this.pos.x + this.offset.x) + containerOffsetX;
+		const translateY =
+			this._viewOrigin(this.pos.y + this.offset.y) + containerOffsetY;
 
 		// sync the built-in colorMatrix: append as final pass if non-identity
 		const colorMatrixEffect = this._syncColorMatrixEffect(renderer);

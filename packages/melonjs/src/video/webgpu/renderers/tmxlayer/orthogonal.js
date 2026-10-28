@@ -265,6 +265,9 @@ export default class OrthogonalTMXLayerGPURenderer {
 		// the transformed quad, shared by every tileset pass, in the quad
 		// batcher's layout (its pipelines ride that layout). The shader keeps
 		// to its own tiles, so the quad carries no frame
+		// on whole pixels unless `subPixel` is set, as a sprite is: the tiles
+		// move with the quad (see Renderer#_pixelSnapBegin)
+		const snapped = renderer._pixelSnapBegin(worldX, worldY, worldW, worldH);
 		const corners = transformQuadCorners(
 			renderer.currentTransform,
 			worldX,
@@ -273,6 +276,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 			worldH,
 			renderer.currentDepth,
 		);
+		renderer._pixelSnapEnd(snapped);
 		if (this.vertexScratch?.vertexSize !== batcher.vertexSize) {
 			this.vertexScratch = new VertexArrayBuffer(batcher.vertexSize, 4);
 		}

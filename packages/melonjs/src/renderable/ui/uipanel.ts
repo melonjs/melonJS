@@ -116,9 +116,9 @@ export default class UIPanel extends UIBaseElement {
 	 * covers twice it over a cycle; 2 to 4 is the usual range, and it starts
 	 * by rising rather than sinking.
 	 *
-	 * Do not go much below 2. The renderer snaps a translation to whole
-	 * pixels, truncating, so an amplitude of 1 spends most of the cycle
-	 * reading as 0 and the panel twitches rather than drifts.
+	 * Do not go much below 2. The offset is a whole number of pixels, so an
+	 * amplitude of 1 has three positions to move between and the panel
+	 * twitches rather than drifts.
 	 *
 	 * The panel is CLICKABLE where it is drawn: the offset goes into
 	 * {@link UIPanel#getAbsolutePosition}, which is what the bounds pipeline
@@ -228,15 +228,12 @@ export default class UIPanel extends UIBaseElement {
 		if (this.bobAmplitude === 0 || this.bobPeriod <= 0) {
 			return 0;
 		}
-		// ROUNDED, and it is not a detail. The renderers snap a translation
-		// to the pixel grid with `|0`, which truncates TOWARD ZERO rather
-		// than rounding, and that does two things to a small bob. It clips
-		// the travel, since `trunc(3 * sin)` only reaches 3 at the single
-		// instant `sin` is exactly 1, so an amplitude of 3 moves 4px and not
-		// 6. And it piles the dwell at the extremes: the panel sits at 2 for
-		// about half the cycle, then hurries through the middle, which reads
-		// as a jerk rather than a float. Handing the renderer a whole number
-		// makes its own snap a no-op and restores even, full-amplitude steps.
+		// ROUNDED, and it is not a detail. Truncated, as the renderers used
+		// to snap, a small bob lost its travel (`trunc(3 * sin)` only reaches
+		// 3 at the single instant `sin` is exactly 1, so an amplitude of 3
+		// moved 4px and not 6) and piled its dwell at the extremes, which
+		// reads as a jerk rather than a float. Rounded, it steps evenly over
+		// its full amplitude, and the renderer's own snap leaves it as it is.
 		//
 		// It also makes the drawn position and the hit area agree EXACTLY
 		// rather than to within a pixel, since `getAbsolutePosition()` reads

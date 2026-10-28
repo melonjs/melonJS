@@ -1,11 +1,15 @@
 # Changelog
 
-## [20.11.1] (melonJS 2) - _unreleased_
+## [20.12.0] (melonJS 2) - _unreleased_
 
 ### Added
 - Geometry: `Ellipse#updateBounds()` is public, as `Polygon#updateBounds()` is, to refresh an ellipse's bounds after setting its `pos` directly. A body does it for the ellipses it is given, so one moved that way before being added is picked up
 
+### Changed
+- Camera: with `subPixel` off, `worldView`, `localToWorld` and `worldToLocal` use the view's position rounded to a whole pixel, which is where the world is now drawn from, so culling and pointer coordinates match the frame on screen. `pos` keeps its fraction; read `pos` and `offset` for the exact view position
+
 ### Fixed
+- Rendering: with `subPixel` off (the default), each draw is snapped to whole pixels once, where it lands, the same way on Canvas, WebGL and WebGPU, instead of every `translate` being truncated as it was applied ([#1765](https://github.com/melonjs/melonJS/issues/1765)). A flipped sprite no longer moves by a pixel, nested containers land on the same pixel on every renderer, shapes, clips and masks snap as sprites do (no half-grey edges on Canvas), and a body resting on the floor no longer shakes; anything that sat on a fraction of a pixel can draw one pixel over, a rotated draw is no longer snapped, and `subPixel: true` keeps fractional positions
 - Geometry: the methods that take a point (`translate`, `shift` and `contains` on `Bounds`, `Polygon`, `Rect`, `RoundRect`, `Ellipse` and `Line`, and `translate` on `Matrix2d` and `Matrix3d`) take any object with `x` and `y`, such as a renderable's `pos`. Given anything but a `Vector2d` they treated it as a number and came out `NaN`, so `bounds.clone().translate(renderable.pos)` gave no world bounds and `overlaps()` then reported every area as taken
 - Physics: a body with several shapes has the union of its shapes as its bounds. Each shape added after the first moved the bounds gathered so far by its own offset (shapes of 40×60 and 40×76 at 76,36 gave 76,36 → 192,132 instead of 76,36 → 116,112), and an ellipse away from the origin came out shifted by its own position; `removeShape` and `setVertices` rebuild the bounds the same way
 - Physics: `Body#setVertices` on one shape of several keeps the others inside the body's bounds and `hasDepth` right, and recomputes `pseudoInertia` as `addShape` does, so set it again afterwards if you set it by hand. An index past the end of the shape list throws a `RangeError`: it left a gap in the list, and the shapes before it silently stopped colliding
