@@ -285,7 +285,7 @@ alone; reach for `position()` (or `follow` / `at`) when distance falloff
 matters.
 
 **Spatial audio is WebAudio-only.** On a clip loaded with `stream: true` (or
-`html5: true`) `stereo` / `position` / `orientation` return early and do
+`html5: true`, or `preload: false`) `stereo` / `position` / `orientation` return early and do
 nothing — which is exactly the case for the long music tracks people reach for
 first. `follow` and `at` are equally inert on a streamed clip.
 
@@ -419,7 +419,7 @@ very next line.
   mute: false,
   loop: false,
   autoplay: false,
-  preload: true,      // or "metadata"
+  preload: true,      // false: fetched on first play, then streamed; or "metadata"
   format: "mp3",      // explicit hint when the URL has no usable extension
   stream: true,       // long music: stream rather than decode into memory
   on: { play() {}, end() {}, stop() {}, unlock() {} },
@@ -437,6 +437,25 @@ same switch under its backend name.) `on` accepts the full lifecycle set:
 `play`, `pause`, `stop`, `end`, `fade`, `seek`, `rate`, `volume`, `mute`,
 `unlock`.
 
+**`preload: false` keeps a clip out of the preload.** Nothing is downloaded for
+it until it is first played (`audio.play`, `audio.playTrack`, or `autoplay`).
+That play fetches it and streams it, as `stream: true` does, so the sound starts
+as soon as enough of the file has arrived, not once all of it has; a clip never
+played is never downloaded. Use it for music a player may never reach (a boss
+theme, the ending) to shorten the wait before the game starts.
+
+- The loader reports such a clip done at once: `audio.state(name)` is
+  `"unloaded"` until its first play, then `"loading"`, then `"loaded"`.
+- It starts with the short delay of a stream on its first play. Keep a sound
+  effect that must sound the instant it is triggered preloaded.
+- Being streamed, it has the limits of `stream: true`: positional sound does
+  not apply to it, and it ignores `withCredentials` (see below).
+- Before 20.12.0 such a clip was never fetched at all, and stayed silent.
+
+`stream: true` alone still fetches the clip during the preload; combine it with
+`preload: false` to defer that too. `preload: "metadata"` only matters for a
+streamed clip: the preload fetches just enough to know its duration.
+
 Outside a preload, `audio.load(asset, onload?, onerror?)` takes the same
 descriptor and loads one clip at runtime — for a level's sounds fetched when
 the level starts. The loader calls the same function, so the same rules apply.
@@ -447,7 +466,8 @@ Re-preloading a manifest that already contains a loaded clip is a no-op —
 **Credentials use the same global switch as every other asset type** —
 `loader.setOptions({ withCredentials: true })`, not an audio-specific option.
 Buffered audio fetches through the shared loader path, so it honours it exactly
-as an image or a JSON file does. A `stream: true` clip does not: it plays
+as an image or a JSON file does. A streamed clip (`stream: true`, or
+`preload: false`) does not: it plays
 through an `<audio>` element, which needs a `crossorigin` attribute rather than
 fetch credentials. Preload a clip buffered if it sits behind a login.
 
@@ -475,7 +495,8 @@ either way — blank screen, empty console.
 | music keeps playing after leaving a scene | used `play` instead of `playTrack`, or no `stopTrack` in teardown |
 | two music tracks playing at once, and `stopTrack()` only silences one | melonJS before 20.9.0: `playTrack` did not stop the previous track, so the scene that started it had to `stopTrack()` on the way out |
 | the music restarts when returning to a screen | `playTrack` with the track already playing restarts it; don't call it again if the bed should carry on |
-| `stereo` / `position` do nothing | the clip was loaded with `stream: true` — spatial is WebAudio-only |
+| `stereo` / `position` do nothing | the clip was loaded with `stream: true` or `preload: false` — spatial is WebAudio-only |
+| a `preload: false` clip never plays, and `audio.state()` stays `"unloaded"` | melonJS before 20.12.0 never fetched such a clip; preload it, or update |
 | one format works, another does not | that codec is not in the `audio.init()` list |
 | audio behind a login fails, or the preload hangs | `loader.setOptions({ withCredentials: true })` — the same switch every asset type uses |
 | a streamed clip ignores `withCredentials` | `stream: true` plays through an `<audio>` element; preload it buffered instead |

@@ -17,6 +17,7 @@
 - Animation: a one-frame animation played once (`loop: false`, `next`, or a callback returning `false`) completes after its frame delay, as a longer one does, on a `Sprite` or a `Sprite3d`. It never reached the end of its cycle, so `onComplete` never fired and `next` was never followed, and games had to list the frame twice
 - Audio: `audio.setListener(app.viewport)` hears from the center of a `Camera2d`'s view, its `zoom` and `offset` included. It heard from the camera's `pos`, which is the view's top-left corner, so a sound in the middle of the screen was heard half a screen to the right of and below the listener, and everything panned right
 - Input: `input.bindPointer` keeps its bindings. Every pointer event copied the pooled pointer it was normalized into onto `input.pointer`, and with it that pointer's own empty `bind` list, so a binding was gone as soon as the mouse entered the canvas and a click mapped to a key only reached it now and then
+- Audio: a clip declared with `preload: false` is fetched when it is first played (`audio.play`, `audio.playTrack` or `autoplay`) and streamed, as with `stream: true`, so it starts as soon as enough of it has arrived ([#1784](https://github.com/melonjs/melonJS/issues/1784)). It was never fetched at all, so it never played; a clip that is never played is still never downloaded
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
