@@ -170,10 +170,10 @@ export class PlayerEntity extends Sprite {
 		);
 		this.addAnimation("jump", ["alex_jump"]);
 		this.addAnimation("full_jump", ["alex_full_jump"]);
-		// shown twice, a single frame animation never completes
-		this.addAnimation("spit", ["alex_spit", "alex_spit"], 80);
-		this.addAnimation("jump_spit", ["alex_jump_spit", "alex_jump_spit"], 80);
-		this.addAnimation("eat", ["alex_eat", "alex_eat"], 80);
+		// held for 160ms, then back to walking (played once)
+		this.addAnimation("spit", ["alex_spit"], 160);
+		this.addAnimation("jump_spit", ["alex_jump_spit"], 160);
+		this.addAnimation("eat", ["alex_eat"], 160);
 		// turned smoothly in update(), at the speed of the original
 		this.addAnimation("roll", ["alex_ball0"]);
 		this.setCurrentAnimation("stand");

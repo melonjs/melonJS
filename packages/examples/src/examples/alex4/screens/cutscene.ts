@@ -20,7 +20,7 @@ import {
 	UIPanel,
 } from "melonjs";
 import { FADE_COLOR, HEIGHT, PALETTE, WIDTH } from "../constants";
-import { bindPads, bindTap, NEXT_PAD, unbindPads, unbindTap } from "../gamepad";
+import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 
@@ -43,6 +43,10 @@ const BACKDROP_Z = 0;
 
 // how long a looping sound takes to change its volume
 const LOOP_FADE = 300;
+
+// the speech bubbles fill up a letter every 30ms, or faster so as to be done
+// in the first third of the time they show
+const TYPE_DELAY = 30;
 
 export type Facing = "left" | "right";
 
@@ -92,7 +96,7 @@ export abstract class Cutscene extends Stage {
 		input.bindKey(input.KEY.SPACE, "jump", true);
 		bindPads(NEXT_PAD);
 		// a click or a tap is a jump
-		bindTap(app, input.KEY.X);
+		input.bindPointer(input.KEY.X);
 
 		level.load(this.map, {
 			container: app.world,
@@ -226,15 +230,31 @@ export abstract class Cutscene extends Stage {
 			radius: 8,
 		});
 		bubble.isClickable = false;
+		// typed in, one line after the other
+		const letters = lines.join("").length;
+		const delay = Math.min(TYPE_DELAY, ms / 3 / letters);
+		let typing: Tween | undefined;
 		lines.forEach((line, i) => {
-			bubble.addChild(
-				new BitmapText(12, 10 + i * 20, {
-					font: "atascii32",
-					size: 0.5,
-					fillStyle: PALETTE[0],
-					text: line.toUpperCase(),
-				}),
+			const text = new BitmapText(12, 10 + i * 20, {
+				font: "atascii32",
+				size: 0.5,
+				fillStyle: PALETTE[0],
+				text: line.toUpperCase(),
+			});
+			text.visibleCharacters = 0;
+			bubble.addChild(text);
+			const type = new Tween(text).to(
+				{ visibleRatio: 1 },
+				{ duration: line.length * delay },
 			);
+			// stopped with the bubble, if it goes first
+			this.moves.push([bubble, type]);
+			if (typing) {
+				typing.chain(type);
+			} else {
+				type.start();
+			}
+			typing = type;
 		});
 		if (tail !== "none") {
 			// over the bottom border, its tip at the point
@@ -326,6 +346,6 @@ export abstract class Cutscene extends Stage {
 			input.unbindKey(input.KEY[key]);
 		}
 		unbindPads(NEXT_PAD);
-		unbindTap(this.app);
+		input.unbindPointer();
 	}
 }

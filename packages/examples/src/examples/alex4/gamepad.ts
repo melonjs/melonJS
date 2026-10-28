@@ -4,7 +4,7 @@
  * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
-import { type Application, input } from "melonjs";
+import { input } from "melonjs";
 
 const { BUTTONS, AXES } = input.GAMEPAD;
 const { KEY } = input;
@@ -100,23 +100,4 @@ export function rumble(duration: number, strong: number, weak: number) {
 		strongMagnitude: strong,
 		weakMagnitude: weak,
 	});
-}
-
-/**
- * a click or a tap on the screen is that key, while the screen is up
- * (what input.bindPointer is for, but it loses its binding on the next
- * pointer event for now)
- */
-export function bindTap(app: Application, key: number) {
-	input.registerPointerEvent("pointerdown", app.viewport, () => {
-		input.triggerKeyEvent(key, true);
-	});
-	input.registerPointerEvent("pointerup", app.viewport, () => {
-		input.triggerKeyEvent(key, false);
-	});
-}
-
-export function unbindTap(app: Application) {
-	input.releasePointerEvent("pointerdown", app.viewport);
-	input.releasePointerEvent("pointerup", app.viewport);
 }
