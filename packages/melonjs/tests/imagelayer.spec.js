@@ -583,6 +583,185 @@ describe("ImageLayer", () => {
 			expectClose(actual.bottomRight, exp.topLeft);
 		});
 	});
+	describe("repeating layer keeps covering the viewport far from the origin", () => {
+		// A repeating layer is `Infinity` wide/high on its tiling axis, so the
+		// parallax offset has to wrap by the image size — `x % Infinity` never
+		// wraps and the pattern ends up sliding off the screen.
+		const VW = 800;
+		const VH = 600;
+
+		function makeImage(w, h) {
+			const img = document.createElement("canvas");
+			img.width = w;
+			img.height = h;
+			return img;
+		}
+
+		function makeLayer(image, repeat, ratio) {
+			const layer = new ImageLayer(0, 0, { image, repeat, ratio });
+			// what onActivateEvent() would do
+			layer.resize(VW, VH);
+			return layer;
+		}
+
+		function makeViewport(x, y, zoom = 1) {
+			return {
+				zoom,
+				width: VW,
+				height: VH,
+				pos: { x, y },
+				offset: { x: 0, y: 0 },
+				bounds: { width: 12800, height: 12800 },
+			};
+		}
+
+		// draw() and return the layer origin and drawn extent (local units)
+		function drawnRect(layer, viewport) {
+			const calls = { translate: [], drawPattern: [] };
+			const r = {
+				translate: (x, y) => {
+					calls.translate.push([x, y]);
+				},
+				scale: () => {},
+				setMask: () => {},
+				drawPattern: (...args) => {
+					calls.drawPattern.push(args);
+				},
+			};
+			layer.draw(r, viewport);
+			const [tx, ty] = calls.translate[0];
+			const [, , , w, h] = calls.drawPattern[0];
+			return {
+				x: tx / viewport.zoom,
+				y: ty / viewport.zoom,
+				w,
+				h,
+			};
+		}
+
+		const cameraX = [0, 1234, 11000, 100000, -100000, -777];
+		const ratios = [0.25, 0.5, 1, 1.5];
+
+		for (const ratio of ratios) {
+			for (const cx of cameraX) {
+				it(`repeat-x, ratio ${ratio}, camera x=${cx}: pattern covers the viewport`, () => {
+					const image = makeImage(64, 64);
+					const layer = makeLayer(image, "repeat-x", ratio);
+					const rect = drawnRect(layer, makeViewport(cx, 0));
+					// origin within one image width left of the viewport
+					expect(rect.x).toBeGreaterThan(-image.width);
+					expect(rect.x).toBeLessThanOrEqual(0);
+					// and the drawn pattern reaches the right edge
+					expect(rect.x + rect.w).toBeGreaterThanOrEqual(VW);
+					// non-tiling axis still draws exactly the source extent (#1290)
+					expect(rect.h).toEqual(layer.height);
+				});
+			}
+		}
+
+		for (const cx of cameraX) {
+			it(`repeat-x with an image wider than the viewport, camera x=${cx}`, () => {
+				const image = makeImage(1000, 64);
+				const layer = makeLayer(image, "repeat-x", 0.5);
+				const rect = drawnRect(layer, makeViewport(cx, 0));
+				expect(rect.x).toBeGreaterThan(-image.width);
+				expect(rect.x).toBeLessThanOrEqual(0);
+				expect(rect.x + rect.w).toBeGreaterThanOrEqual(VW);
+			});
+		}
+
+		for (const cy of [0, 100000, -100000]) {
+			it(`repeat-y, camera y=${cy}: pattern covers the viewport`, () => {
+				const image = makeImage(64, 48);
+				const layer = makeLayer(image, "repeat-y", 0.5);
+				const rect = drawnRect(layer, makeViewport(0, cy));
+				expect(rect.y).toBeGreaterThan(-image.height);
+				expect(rect.y).toBeLessThanOrEqual(0);
+				expect(rect.y + rect.h).toBeGreaterThanOrEqual(VH);
+				expect(rect.w).toEqual(layer.width);
+			});
+		}
+
+		it("repeat (both axes) at zoom 2 far from the origin", () => {
+			const image = makeImage(64, 48);
+			const layer = makeLayer(image, "repeat", 0.5);
+			const rect = drawnRect(layer, makeViewport(100000, -100000, 2));
+			expect(rect.x).toBeGreaterThan(-image.width);
+			expect(rect.x).toBeLessThanOrEqual(0);
+			expect(rect.y).toBeGreaterThan(-image.height);
+			expect(rect.y).toBeLessThanOrEqual(0);
+			expect(rect.x + rect.w).toBeGreaterThanOrEqual(VW);
+			expect(rect.y + rect.h).toBeGreaterThanOrEqual(VH);
+		});
+
+		it("wrapping keeps the pattern continuous (same phase as unwrapped)", () => {
+			const image = makeImage(64, 64);
+			const layer = makeLayer(image, "repeat-x", 0.5);
+			const cx = 100000 + 37;
+			const rect = drawnRect(layer, makeViewport(cx, 0));
+			const unwrapped = -0.5 * cx;
+			const phase = (rect.x - unwrapped) / image.width;
+			expect(phase).toBeCloseTo(Math.round(phase), 9);
+		});
+
+		it("flipped repeat-x mirrors around the drawn pattern centre and still covers the viewport", () => {
+			for (const iw of [64, 1000]) {
+				const image = makeImage(iw, 64);
+				const layer = makeLayer(image, "repeat-x", 0.5);
+				layer.flipX(true);
+				for (const cx of cameraX) {
+					const events = [];
+					const r = {
+						translate: (x, y) => {
+							events.push({ kind: "translate", args: [x, y] });
+						},
+						scale: (x, y) => {
+							events.push({ kind: "scale", args: [x, y] });
+						},
+						setMask: () => {},
+						drawPattern: (...args) => {
+							events.push({ kind: "drawPattern", args });
+						},
+					};
+					layer.draw(r, makeViewport(cx, 0));
+					const m = new Matrix2d();
+					let w = 0;
+					for (const e of events) {
+						if (e.kind === "translate") {
+							m.translate(e.args[0], e.args[1]);
+						} else if (e.kind === "scale") {
+							m.scale(e.args[0], e.args[1]);
+						} else {
+							w = e.args[3];
+						}
+					}
+					const a = { x: 0, y: 0 };
+					const b = { x: w, y: 0 };
+					m.apply(a);
+					m.apply(b);
+					expect(Math.min(a.x, b.x)).toBeLessThanOrEqual(0);
+					expect(Math.max(a.x, b.x)).toBeGreaterThanOrEqual(VW);
+				}
+			}
+		});
+
+		it("updateLayer() wraps pos by the image size too", () => {
+			const image = makeImage(64, 48);
+			const layer = makeLayer(image, "repeat", 0.5);
+			for (const [cx, cy] of [
+				[100000, 100000],
+				[-100000, -100000],
+				[11000, 0],
+			]) {
+				layer._parentApp = { viewport: makeViewport(cx, cy) };
+				layer.updateLayer();
+				expect(layer.pos.x).toBeGreaterThan(-image.width);
+				expect(layer.pos.x).toBeLessThanOrEqual(0);
+				expect(layer.pos.y).toBeGreaterThan(-image.height);
+				expect(layer.pos.y).toBeLessThanOrEqual(0);
+			}
+		});
+	});
 });
 
 describe("ImageLayer's own effect (WebGL)", () => {
