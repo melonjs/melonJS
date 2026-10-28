@@ -429,15 +429,16 @@ export default class Stage {
 	 * @param camera - the camera currently rendering this stage
 	 * @param translateX - the same world-to-screen X translate that
 	 *   `Camera2d.draw()` applies to the world container (i.e.
-	 *   `camera.pos.x + camera.offset.x` for the default camera, plus
-	 *   the container's own offset for non-default cameras)
+	 *   `camera.pos.x + camera.offset.x` for the default camera, on a whole
+	 *   pixel unless `subPixel` is set, plus the container's own offset for
+	 *   non-default cameras)
 	 * @param translateY - the world-to-screen Y translate (see `translateX`)
 	 */
 	drawLighting(
 		renderer: Renderer,
 		camera: Camera2d,
-		translateX: number = camera.pos.x + camera.offset.x,
-		translateY: number = camera.pos.y + camera.offset.y,
+		translateX: number = camera._viewOrigin(camera.pos.x + camera.offset.x),
+		translateY: number = camera._viewOrigin(camera.pos.y + camera.offset.y),
 	): void {
 		if (this.ambientLight.alpha === 0) {
 			return;
@@ -462,8 +463,8 @@ export default class Stage {
 		// renderer: from the camera origin, as wide as the world it shows
 		// (`width / zoom`: zoomed out, a camera-sized fill left part of the
 		// view lit), and a unit more on every side. Unless `subPixel` is set,
-		// the renderer rounds that translate to a whole pixel, which moves the
-		// view's edge by up to half a unit either way: a camera at a
+		// the fill is snapped to whole pixels as any draw is, which moves its
+		// edges by up to half a unit: without the margin, a camera at a
 		// fractional position (any smoothed follow) left its first column and
 		// row lit. The camera clips what reaches past its view. A whole number
 		// of pixels, so a renderer drawing the darkness at screen resolution

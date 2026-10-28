@@ -322,6 +322,12 @@ describe("WebGPU 2D lighting", () => {
 				batcherNames,
 				litBatcher,
 				settings: { subPixel: false },
+				// not what this tests: drawn where it is given (see
+				// Renderer#_pixelSnapBegin)
+				_pixelSnapBegin() {
+					return false;
+				},
+				_pixelSnapEnd() {},
 				batchers: new Map([["litQuad", litBatcher]]),
 				customShader: undefined,
 				activeLightCount: 1,

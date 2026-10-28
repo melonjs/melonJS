@@ -710,16 +710,11 @@ export default class Text extends Renderable {
 		// adjust x,y position based on the bounding box. The blit rises by the
 		// same padding the glyphs were drawn down by, so they land in exactly
 		// the pixels they always did and only the clipped ink is recovered.
-		let x = this.metrics.x;
-		let y = this.metrics.y - this.metrics.inkPadTop;
+		const x = this.metrics.x;
+		const y = this.metrics.y - this.metrics.inkPadTop;
 
-		// snap to the nearest pixel if required, as the renderers do
-		if (renderer.settings.subPixel === false) {
-			x = Math.round(x);
-			y = Math.round(y);
-		}
-
-		// draw the text
+		// draw the text (on whole pixels unless `subPixel` is set, where it
+		// lands, as any image is)
 		renderer.drawImage(this.canvasTexture.canvas, x, y);
 	}
 

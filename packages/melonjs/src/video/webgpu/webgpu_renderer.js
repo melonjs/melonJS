@@ -2799,14 +2799,9 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} y - distance to move in the vertical direction
 	 */
 	translate(x, y) {
-		if (this.settings.subPixel === false) {
-			// snap to the nearest pixel, as given, before it is applied, as the
-			// Canvas renderer does. Rounding the accumulated matrix instead
-			// put a sprite flipped about a half pixel a pixel off
-			this.currentTransform.translate(Math.round(x), Math.round(y));
-		} else {
-			this.currentTransform.translate(x, y);
-		}
+		// not snapped here: a draw is snapped once, where it lands (see
+		// _pixelSnapBegin)
+		this.currentTransform.translate(x, y);
 	}
 
 	/**
@@ -2837,41 +2832,15 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} [f] - the f component
 	 */
 	transform(a, b, c, d, e, f) {
-		const snap = this.settings.subPixel === false;
-		let m = a;
-		if (typeof a !== "object") {
+		if (typeof a === "object") {
+			// accepts both Matrix2d and Matrix3d (no temporary copy needed)
+			this.currentTransform.multiply(a);
+		} else {
 			// individual 2D affine components
-			m = tempMatrix.setTransform(
-				a,
-				b,
-				0,
-				0,
-				c,
-				d,
-				0,
-				0,
-				0,
-				0,
-				1,
-				0,
-				e,
-				f,
-				0,
-				1,
+			this.currentTransform.multiply(
+				tempMatrix.setTransform(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, e, f, 0, 1),
 			);
-		} else if (snap) {
-			// a Matrix2d or a Matrix3d: copied, so rounding its translation
-			// below leaves the caller's matrix alone
-			m = tempMatrix.identity().multiply(a);
 		}
-		if (snap) {
-			// snap to the nearest pixel, as given, before it is applied: what
-			// the Canvas renderer does, so both draw on the same pixel under
-			// any scale or flip (see translate)
-			m.val[12] = Math.round(m.val[12]);
-			m.val[13] = Math.round(m.val[13]);
-		}
-		this.currentTransform.multiply(m);
 	}
 
 	/**
@@ -3102,14 +3071,6 @@ export default class WebGPURenderer extends Renderer {
 			sy = 0;
 		}
 
-		if (this.settings.subPixel === false) {
-			// snap to the nearest pixel. Rounded, not truncated: a position a
-			// float error short of a whole pixel (223.99999999999997) must land
-			// on that pixel, not the one before it
-			dx = Math.round(dx);
-			dy = Math.round(dy);
-		}
-
 		// same lit gate as the GL backend: only normal-mapped sprites in a
 		// lit scene pay the lit path; everything else stays on "quad".
 		// Two extra conditions this backend needs:
@@ -3146,6 +3107,8 @@ export default class WebGPURenderer extends Renderer {
 			}
 		}
 		const uvs = texture._quadUVs(image, sx, sy, sw, sh);
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(dx, dy, dw, dh);
 		this.currentBatcher.addQuad(
 			texture,
 			dx,
@@ -3160,6 +3123,7 @@ export default class WebGPURenderer extends Renderer {
 			reupload,
 			useLit ? this.currentNormalMap : undefined,
 		);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3413,6 +3377,8 @@ export default class WebGPURenderer extends Renderer {
 		this.setBatcher("quad");
 		// computed last: it is a scratch array, valid until the next call
 		const uvs = pattern._quadUVs(pattern.getTexture(), 0, 0, width, height);
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(x, y, width, height);
 		this.currentBatcher.addQuad(
 			pattern,
 			x,
@@ -3425,6 +3391,7 @@ export default class WebGPURenderer extends Renderer {
 			uvs[3],
 			this.currentTint.toUint32(this.getGlobalAlpha()),
 		);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3474,10 +3441,14 @@ export default class WebGPURenderer extends Renderer {
 		const aabb = this.clipAABB;
 		aabb.clear();
 		aabb.addFrame(x, y, x + width, y + height, m);
-		let sx = Math.floor(aabb.min.x);
-		let sy = Math.floor(aabb.min.y);
-		let sw = Math.ceil(aabb.max.x - sx);
-		let sh = Math.ceil(aabb.max.y - sy);
+		// on whole pixels unless `subPixel` is set: each edge rounded to its
+		// nearest, as any draw is (see _pixelSnapBegin). Otherwise, or turned,
+		// the box covering every pixel the clip touches
+		const snap = this._snapsToPixels();
+		let sx = snap ? Math.round(aabb.min.x) : Math.floor(aabb.min.x);
+		let sy = snap ? Math.round(aabb.min.y) : Math.floor(aabb.min.y);
+		let sw = snap ? Math.round(aabb.max.x) - sx : Math.ceil(aabb.max.x - sx);
+		let sh = snap ? Math.round(aabb.max.y) - sy : Math.ceil(aabb.max.y - sy);
 
 		// full-canvas coverage → caller intent is "no clip"
 		if (
@@ -3773,10 +3744,19 @@ export default class WebGPURenderer extends Renderer {
 			this.fillArc(x, y, radius, start, end, antiClockwise);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			x - radius,
+			y - radius,
+			radius * 2,
+			radius * 2,
+			this.lineWidth / 2,
+		);
 		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.arc(x, y, radius, start, end, antiClockwise);
 		this.currentBatcher.drawVertices("line-list", this.path2D.points);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3801,6 +3781,13 @@ export default class WebGPURenderer extends Renderer {
 			);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			x - radius,
+			y - radius,
+			radius * 2,
+			radius * 2,
+		);
 		this.setBatcher("primitive");
 		let diff = Math.abs(end - start);
 		if (antiClockwise) {
@@ -3823,6 +3810,7 @@ export default class WebGPURenderer extends Renderer {
 				segments,
 			),
 		);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3838,10 +3826,19 @@ export default class WebGPURenderer extends Renderer {
 			this.fillEllipse(x, y, w, h);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			x - w,
+			y - h,
+			w * 2,
+			h * 2,
+			this.lineWidth / 2,
+		);
 		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.ellipse(x, y, w, h, 0, 0, 360);
 		this.currentBatcher.drawVertices("line-list", this.path2D.points);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3864,6 +3861,8 @@ export default class WebGPURenderer extends Renderer {
 			);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(x - w, y - h, w * 2, h * 2);
 		this.setBatcher("primitive");
 		const segments = Math.max(
 			8,
@@ -3873,6 +3872,7 @@ export default class WebGPURenderer extends Renderer {
 			"triangle-list",
 			generateTriangleFan(x, y, w, h, 0, Math.PI * 2, segments),
 		);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3883,6 +3883,14 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} endY - the end y coordinate
 	 */
 	strokeLine(startX, startY, endX, endY) {
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			Math.min(startX, endX),
+			Math.min(startY, endY),
+			Math.abs(endX - startX),
+			Math.abs(endY - startY),
+			this.lineWidth / 2,
+		);
 		this.setBatcher("primitive");
 		const dash = this.renderState.lineDash;
 		if (dash.length > 0) {
@@ -3896,6 +3904,7 @@ export default class WebGPURenderer extends Renderer {
 			this.path2D.lineTo(endX, endY);
 			this.currentBatcher.drawVertices("line-list", this.path2D.points);
 		}
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -3923,6 +3932,16 @@ export default class WebGPURenderer extends Renderer {
 		const len = points.length;
 
 		this.translate(poly.pos.x, poly.pos.y);
+		// the polygon's bounds include its position: the box is local to it
+		const bounds = poly.getBounds();
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			bounds.x - poly.pos.x,
+			bounds.y - poly.pos.y,
+			bounds.width,
+			bounds.height,
+			this.lineWidth / 2,
+		);
 
 		this.setBatcher("primitive");
 		this.path2D.beginPath();
@@ -3961,6 +3980,7 @@ export default class WebGPURenderer extends Renderer {
 			);
 		}
 
+		this._pixelSnapEnd(snapped);
 		this.translate(-poly.pos.x, -poly.pos.y);
 	}
 
@@ -3973,6 +3993,14 @@ export default class WebGPURenderer extends Renderer {
 			const bounds = poly.getBounds();
 			// translate to polygon's local space so gradient coords match
 			this.translate(poly.pos.x, poly.pos.y);
+			// on whole pixels unless `subPixel` is set: the mask and the
+			// gradient over it alike
+			const snapped = this._pixelSnapBegin(
+				bounds.x - poly.pos.x,
+				bounds.y - poly.pos.y,
+				bounds.width,
+				bounds.height,
+			);
 			this.gradientMask(
 				() => {
 					// draw polygon vertices directly (already translated)
@@ -3997,11 +4025,21 @@ export default class WebGPURenderer extends Renderer {
 				bounds.width,
 				bounds.height,
 			);
+			this._pixelSnapEnd(snapped);
 			this.translate(-poly.pos.x, -poly.pos.y);
 			return;
 		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
+		// the polygon's bounds include its position: the box is local to it
+		const bounds = poly.getBounds();
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			bounds.x - poly.pos.x,
+			bounds.y - poly.pos.y,
+			bounds.width,
+			bounds.height,
+		);
 		const indices = poly.getIndices();
 		const points = poly.points;
 		const verts = this.polyVerts;
@@ -4020,6 +4058,7 @@ export default class WebGPURenderer extends Renderer {
 		}
 
 		this.currentBatcher.drawVertices("triangle-list", verts, len);
+		this._pixelSnapEnd(snapped);
 		this.translate(-poly.pos.x, -poly.pos.y);
 	}
 
@@ -4036,6 +4075,14 @@ export default class WebGPURenderer extends Renderer {
 			this.fillRect(x, y, width, height);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			x,
+			y,
+			width,
+			height,
+			this.lineWidth / 2,
+		);
 		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.rect(x, y, width, height);
@@ -4056,6 +4103,7 @@ export default class WebGPURenderer extends Renderer {
 				),
 			);
 		}
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -4085,6 +4133,8 @@ export default class WebGPURenderer extends Renderer {
 			);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(x, y, width, height);
 		this.setBatcher("primitive");
 		// 2 triangles directly — avoids path2D + earcut overhead
 		const right = x + width;
@@ -4103,6 +4153,7 @@ export default class WebGPURenderer extends Renderer {
 		pts[5].x = x;
 		pts[5].y = bottom;
 		this.currentBatcher.drawVertices("triangle-list", pts);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -4119,10 +4170,19 @@ export default class WebGPURenderer extends Renderer {
 			this.fillRoundRect(x, y, width, height, radius);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(
+			x,
+			y,
+			width,
+			height,
+			this.lineWidth / 2,
+		);
 		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.roundRect(x, y, width, height, radius);
 		this.currentBatcher.drawVertices("line-list", this.path2D.points);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -4146,6 +4206,8 @@ export default class WebGPURenderer extends Renderer {
 			);
 			return;
 		}
+		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
+		const snapped = this._pixelSnapBegin(x, y, width, height);
 		this.setBatcher("primitive");
 		const r = Math.min(radius, width / 2, height / 2);
 		const verts = [];
@@ -4220,6 +4282,7 @@ export default class WebGPURenderer extends Renderer {
 		);
 
 		this.currentBatcher.drawVertices("triangle-list", verts);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**

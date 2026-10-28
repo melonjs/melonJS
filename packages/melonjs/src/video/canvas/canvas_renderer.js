@@ -12,6 +12,10 @@ import { Gradient } from "./../gradient.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { CanvasFrameTexture } from "./../texture/frametexture.js";
+import { pixelSnap } from "./../utils/pixel_snap.js";
+
+/** the projection before any is set: [sx, sy, tx, ty] */
+const NO_PROJECTION = [1, 1, 0, 0];
 
 /**
  * additional import for TypeScript
@@ -265,6 +269,79 @@ export default class CanvasRenderer extends Renderer {
 		const tx = (val[12] + 1) * w * 0.5;
 		const ty = (1 - val[13]) * h * 0.5;
 		this.getContext().setTransform(sx, 0, 0, sy, tx, ty);
+		// kept to snap draws in the renderer's units, before the projection,
+		// as the GPU renderers do (see _pixelSnapBegin)
+		if (this._projection === undefined) {
+			this._projection = new Float64Array(4);
+		}
+		const p = this._projection;
+		p[0] = sx;
+		p[1] = sy;
+		p[2] = tx;
+		p[3] = ty;
+	}
+
+	/**
+	 * @inheritdoc
+	 *
+	 * The 2D context holds the current transform with the projection applied
+	 * (see setProjection); the box is snapped without it, in the same units
+	 * as on the GPU renderers, and the corrected transform is set on the
+	 * context until `_pixelSnapEnd`.
+	 * @ignore
+	 */
+	_pixelSnapBegin(x, y, w, h, pad = 0) {
+		if (this.settings.subPixel !== false) {
+			return false;
+		}
+		const context = this.getContext();
+		// read live: code holding the context may have changed it
+		const t = context.getTransform();
+		// [sx, sy, tx, ty], or none before the first setProjection
+		const p = this._projection ?? NO_PROJECTION;
+		const sx = p[0];
+		const sy = p[1];
+		const tx = p[2];
+		const ty = p[3];
+		const k = pixelSnap(
+			t.a / sx,
+			t.b / sy,
+			t.c / sx,
+			t.d / sy,
+			(t.e - tx) / sx,
+			(t.f - ty) / sy,
+			x,
+			y,
+			w,
+			h,
+			pad,
+		);
+		if (k === null) {
+			return false;
+		}
+		this._pixelSnapStack[this._pixelSnapDepth++] = t;
+		context.setTransform(
+			k[0] * t.a,
+			k[2] * t.b,
+			k[0] * t.c,
+			k[2] * t.d,
+			k[0] * (t.e - tx) + sx * k[1] + tx,
+			k[2] * (t.f - ty) + sy * k[3] + ty,
+		);
+		return true;
+	}
+
+	/**
+	 * @inheritdoc
+	 * @ignore
+	 */
+	_pixelSnapEnd(snapped) {
+		if (snapped !== true) {
+			return;
+		}
+		const t = this._pixelSnapStack[--this._pixelSnapDepth];
+		this._pixelSnapStack[this._pixelSnapDepth] = undefined;
+		this.getContext().setTransform(t);
 	}
 
 	/**
@@ -459,14 +536,6 @@ export default class CanvasRenderer extends Renderer {
 			sy = 0;
 		}
 
-		if (this.settings.subPixel === false) {
-			// snap to the nearest pixel. Rounded, not truncated: a position a
-			// float error short of a whole pixel (223.99999999999997) must land
-			// on that pixel, not the one before it
-			dx = Math.round(dx);
-			dy = Math.round(dy);
-		}
-
 		// apply a tint if required
 		let source = image;
 		const tint = this.currentTint.toArray();
@@ -474,7 +543,9 @@ export default class CanvasRenderer extends Renderer {
 			// get a tinted version of this image from the texture cache
 			source = this.cache.tint(image, this.currentTint.toRGB());
 		}
+		const snapped = this._pixelSnapBegin(dx, dy, dw, dh);
 		context.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -639,10 +710,13 @@ export default class CanvasRenderer extends Renderer {
 		const context = this.getContext();
 		const fillStyle = context.fillStyle;
 		context.fillStyle = pattern;
-		// translate so the pattern origin aligns with the draw position
+		// translate so the pattern origin aligns with the draw position, and
+		// snap the fill as any other draw
 		context.save();
 		context.translate(x, y);
+		const snapped = this._pixelSnapBegin(0, 0, width, height);
 		context.fillRect(0, 0, width, height);
+		this._pixelSnapEnd(snapped);
 		context.restore();
 		context.fillStyle = fillStyle;
 	}
@@ -1066,12 +1140,19 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
-
+		const snapped = this._pixelSnapBegin(
+			x - radius,
+			y - radius,
+			radius * 2,
+			radius * 2,
+			fill === true ? 0 : this.lineWidth / 2,
+		);
 		context.translate(x, y);
 		context.beginPath();
 		context.arc(0, 0, radius, start, end, antiClockwise || false);
 		context[fill === true ? "fill" : "stroke"]();
 		context.translate(-x, -y);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1101,10 +1182,18 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
+		const snapped = this._pixelSnapBegin(
+			x - w,
+			y - h,
+			w * 2,
+			h * 2,
+			fill === true ? 0 : this.lineWidth / 2,
+		);
 		context.beginPath();
 		context.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
 		context[fill === true ? "fill" : "stroke"]();
 		context.closePath();
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1132,11 +1221,18 @@ export default class CanvasRenderer extends Renderer {
 		}
 
 		const context = this.getContext();
-
+		const snapped = this._pixelSnapBegin(
+			Math.min(startX, endX),
+			Math.min(startY, endY),
+			Math.abs(endX - startX),
+			Math.abs(endY - startY),
+			this.lineWidth / 2,
+		);
 		context.beginPath();
 		context.moveTo(startX, startY);
 		context.lineTo(endX, endY);
 		context.stroke();
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1183,6 +1279,15 @@ export default class CanvasRenderer extends Renderer {
 		const firstPoint = points[0];
 
 		this.translate(poly.pos.x, poly.pos.y);
+		// the polygon's bounds include its position: the box is local to it
+		const bounds = poly.getBounds();
+		const snapped = this._pixelSnapBegin(
+			bounds.x - poly.pos.x,
+			bounds.y - poly.pos.y,
+			bounds.width,
+			bounds.height,
+			fill === true ? 0 : this.lineWidth / 2,
+		);
 
 		context.beginPath();
 		context.moveTo(firstPoint.x, firstPoint.y);
@@ -1194,6 +1299,7 @@ export default class CanvasRenderer extends Renderer {
 		context[fill === true ? "fill" : "stroke"]();
 		context.closePath();
 
+		this._pixelSnapEnd(snapped);
 		this.translate(-poly.pos.x, -poly.pos.y);
 	}
 
@@ -1219,8 +1325,15 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
-
+		const snapped = this._pixelSnapBegin(
+			x,
+			y,
+			width,
+			height,
+			fill === true ? 0 : this.lineWidth / 2,
+		);
 		context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1249,10 +1362,17 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
-
+		const snapped = this._pixelSnapBegin(
+			x,
+			y,
+			width,
+			height,
+			fill === true ? 0 : this.lineWidth / 2,
+		);
 		context.beginPath();
 		context.roundRect(x, y, width, height, radius);
 		context[fill === true ? "fill" : "stroke"]();
+		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1486,11 +1606,6 @@ export default class CanvasRenderer extends Renderer {
 		}
 		// else individual components
 
-		if (this.settings.subPixel === false) {
-			e = Math.round(e);
-			f = Math.round(f);
-		}
-
 		this.getContext().transform(a, b, c, d, e, f);
 	}
 
@@ -1500,11 +1615,7 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} y - Distance to move in the vertical direction. Positive values are down, and negative are up.
 	 */
 	translate(x, y) {
-		if (this.settings.subPixel === false) {
-			this.getContext().translate(Math.round(x), Math.round(y));
-		} else {
-			this.getContext().translate(x, y);
-		}
+		this.getContext().translate(x, y);
 	}
 
 	/**
@@ -1519,6 +1630,17 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} height
 	 */
 	clipRect(x, y, width, height) {
+		// clipped on whole pixels as anything drawn is, so a clipped
+		// container keeps the edge its content is drawn to
+		const snapped = this._pixelSnapBegin(x, y, width, height);
+		this.#clipRect(x, y, width, height);
+		this._pixelSnapEnd(snapped);
+	}
+
+	/**
+	 * @ignore
+	 */
+	#clipRect(x, y, width, height) {
 		const context = this.getContext();
 		const t = context.getTransform();
 

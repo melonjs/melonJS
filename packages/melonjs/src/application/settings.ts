@@ -517,9 +517,13 @@ export type ApplicationSettings = {
 	highPrecisionShader: boolean;
 
 	/**
-	 * whether a renderable may sit on a fractional position WITHIN the frame. `false`, the default, snaps each translation to whole pixels, which is what stops a slowly moving or transformed sprite shimmering along its edges.
+	 * whether a renderable may sit on a fractional position WITHIN the frame. `false`, the default, draws everything on whole pixels, which is what stops a slowly moving or transformed sprite shimmering along its edges.
 	 *
-	 * The snap ROUNDS to the nearest pixel, the same on every renderer. A position that floating point error leaves a hair short of a whole pixel, such as a body resting on the floor at 223.99999999999997 after a collision push-out, lands on that pixel rather than the one before it, so it does not shake by a pixel from one frame to the next. A half pixel rounds up (toward positive infinity) on either side of zero, so moving something by a whole number of pixels never changes where its fraction lands, and an offset swinging between -3 and +3 reaches both.
+	 * The snap happens once, where a draw lands, and the same way on every renderer: each edge of what is drawn (a sprite, a shape, a clip) is rounded to the nearest pixel after every translation and scale it is drawn under. So nested containers add their positions up exactly before anything is rounded, a flipped sprite covers the pixels it covers unflipped, a sprite and a `fillRect` at the same position cover the same pixels, a shape has no half-grey edge on the Canvas renderer, and a position that floating point error leaves a hair short of a whole pixel (a body resting on the floor at 223.99999999999997 after a collision push-out) lands on that pixel.
+	 *
+	 * The camera's view starts on a whole pixel too, in world units (zoomed 2x, it moves in 2 px steps), and the world is culled and the pointer read from that same position: things standing still stay still against each other while the view scrolls, and a click lands on what is drawn under it. The camera's `pos` keeps its fraction, so a damped follow still settles.
+	 *
+	 * A rotated or skewed draw cannot sit on the pixel grid and is drawn where it is, as is anything a perspective `Camera3d` draws.
 	 *
 	 * It says nothing about how the frame reaches the screen. A game that snaps positions here and is then presented at a fractional scale has undone the work at the last step; {@link ApplicationSettings.scaleRounding} is what addresses that half.
 	 * @default false
