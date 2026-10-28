@@ -133,3 +133,41 @@ export function is2dTransform(v) {
 		v[15] === 1
 	);
 }
+
+/** [x, y, w, h]: the box {@link pointsBox} returns */
+const box = new Float64Array(4);
+
+/**
+ * The box around a list of points: the one a polygon covers, taken from the
+ * points it draws rather than from bounds that could be stale (a point moved
+ * without `recalc()`), since a draw is stretched to fit its box.
+ * @ignore
+ * @param {Array<{x: number, y: number}>} points - the points
+ * @returns {Float64Array} `[x, y, w, h]`, valid until the next call
+ */
+export function pointsBox(points) {
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	for (let i = 0; i < points.length; i++) {
+		const p = points[i];
+		if (p.x < minX) {
+			minX = p.x;
+		}
+		if (p.x > maxX) {
+			maxX = p.x;
+		}
+		if (p.y < minY) {
+			minY = p.y;
+		}
+		if (p.y > maxY) {
+			maxY = p.y;
+		}
+	}
+	box[0] = minX;
+	box[1] = minY;
+	box[2] = maxX - minX;
+	box[3] = maxY - minY;
+	return box;
+}

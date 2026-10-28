@@ -12,10 +12,38 @@ import { Gradient } from "./../gradient.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { CanvasFrameTexture } from "./../texture/frametexture.js";
-import { pixelSnap } from "./../utils/pixel_snap.js";
+import { pixelSnap, pointsBox } from "./../utils/pixel_snap.js";
 
 /** the projection before any is set: [sx, sy, tx, ty] */
 const NO_PROJECTION = [1, 1, 0, 0];
+
+/**
+ * The box a mask shape covers, as `fill` would snap it on a GPU renderer.
+ * @ignore
+ * @param {Rect|RoundRect|Polygon|Ellipse|Bounds} mask - the mask
+ * @returns {number[]|null} `[x, y, w, h]`, or null for any other shape
+ */
+function maskBox(mask) {
+	switch (mask.type) {
+		case "RoundRect":
+		case "Rectangle":
+		case "Bounds":
+			return [mask.left, mask.top, mask.width, mask.height];
+		case "Polygon": {
+			const box = pointsBox(mask.points);
+			return [mask.pos.x + box[0], mask.pos.y + box[1], box[2], box[3]];
+		}
+		case "Ellipse":
+			return [
+				mask.pos.x - mask.radiusV.x,
+				mask.pos.y - mask.radiusV.y,
+				mask.radiusV.x * 2,
+				mask.radiusV.y * 2,
+			];
+		default:
+			return null;
+	}
+}
 
 /**
  * additional import for TypeScript
@@ -1279,13 +1307,13 @@ export default class CanvasRenderer extends Renderer {
 		const firstPoint = points[0];
 
 		this.translate(poly.pos.x, poly.pos.y);
-		// the polygon's bounds include its position: the box is local to it
-		const bounds = poly.getBounds();
+		// the box the points drawn cover, local to the polygon
+		const box = pointsBox(poly.points);
 		const snapped = this._pixelSnapBegin(
-			bounds.x - poly.pos.x,
-			bounds.y - poly.pos.y,
-			bounds.width,
-			bounds.height,
+			box[0],
+			box[1],
+			box[2],
+			box[3],
 			fill === true ? 0 : this.lineWidth / 2,
 		);
 
@@ -1732,6 +1760,11 @@ export default class CanvasRenderer extends Renderer {
 		}
 
 		if (typeof mask !== "undefined") {
+			// on whole pixels as the shape is drawn (see _pixelSnapBegin), as the
+			// GPU renderers draw a mask, with `fill`
+			const box = maskBox(mask);
+			const snapped =
+				box !== null && this._pixelSnapBegin(box[0], box[1], box[2], box[3]);
 			switch (mask.type) {
 				// RoundRect
 				case "RoundRect":
@@ -1793,6 +1826,7 @@ export default class CanvasRenderer extends Renderer {
 				default:
 					throw new Error("Invalid geometry for setMask");
 			}
+			this._pixelSnapEnd(snapped);
 		}
 
 		this.maskLevel++;

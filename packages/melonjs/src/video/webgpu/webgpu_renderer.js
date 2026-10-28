@@ -30,6 +30,7 @@ import WebGPURenderTarget from "../rendertarget/webgpurendertarget.js";
 import { createAtlas, TextureAtlas } from "../texture/atlas.js";
 import TextureCache from "../texture/cache.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
+import { pointsBox } from "../utils/pixel_snap.js";
 import {
 	generateJoinCircles,
 	generateTriangleFan,
@@ -3932,14 +3933,14 @@ export default class WebGPURenderer extends Renderer {
 		const len = points.length;
 
 		this.translate(poly.pos.x, poly.pos.y);
-		// the polygon's bounds include its position: the box is local to it
-		const bounds = poly.getBounds();
+		// the box the points drawn cover, local to the polygon
+		const box = pointsBox(poly.points);
 		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
 		const snapped = this._pixelSnapBegin(
-			bounds.x - poly.pos.x,
-			bounds.y - poly.pos.y,
-			bounds.width,
-			bounds.height,
+			box[0],
+			box[1],
+			box[2],
+			box[3],
 			this.lineWidth / 2,
 		);
 
@@ -3995,12 +3996,8 @@ export default class WebGPURenderer extends Renderer {
 			this.translate(poly.pos.x, poly.pos.y);
 			// on whole pixels unless `subPixel` is set: the mask and the
 			// gradient over it alike
-			const snapped = this._pixelSnapBegin(
-				bounds.x - poly.pos.x,
-				bounds.y - poly.pos.y,
-				bounds.width,
-				bounds.height,
-			);
+			const box = pointsBox(poly.points);
+			const snapped = this._pixelSnapBegin(box[0], box[1], box[2], box[3]);
 			this.gradientMask(
 				() => {
 					// draw polygon vertices directly (already translated)
@@ -4031,15 +4028,10 @@ export default class WebGPURenderer extends Renderer {
 		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
-		// the polygon's bounds include its position: the box is local to it
-		const bounds = poly.getBounds();
+		// the box the points drawn cover, local to the polygon
+		const box = pointsBox(poly.points);
 		// on whole pixels unless `subPixel` is set (see _pixelSnapBegin)
-		const snapped = this._pixelSnapBegin(
-			bounds.x - poly.pos.x,
-			bounds.y - poly.pos.y,
-			bounds.width,
-			bounds.height,
-		);
+		const snapped = this._pixelSnapBegin(box[0], box[1], box[2], box[3]);
 		const indices = poly.getIndices();
 		const points = poly.points;
 		const verts = this.polyVerts;

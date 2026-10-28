@@ -548,6 +548,21 @@ describe("subPixel: false on Canvas, WebGL and WebGPU", () => {
 			expect(stroke.partial).toEqual([]);
 		});
 
+		it("masks on whole pixels", (ctx) => {
+			const at = draw(name, (r) => {
+				r.setMask(new Rect(10.6, 0, 19.8, H));
+				r.setColor("#ff0000");
+				r.fillRect(0, 0, W, H);
+				r.clearMask();
+			});
+			if (at === null) {
+				ctx.skip("no WebGL");
+			}
+			// 10.6 to 30.4: pixels 11 to 29, as a fill of the same shape is
+			expect(at.full).toEqual(span(11, 29));
+			expect(at.partial).toEqual([]);
+		});
+
 		it("clips on whole pixels", (ctx) => {
 			const at = draw(name, (r) => {
 				r.clipRect(10.6, 0, 19.8, H);
