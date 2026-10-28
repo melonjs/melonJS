@@ -97,9 +97,18 @@ export class PlayerEntity extends Sprite {
 		});
 		this.name = "alex";
 
+		// As in the original: the feet stand on the level, while what touches
+		// enemies and pickups reaches 4 of its pixels lower, where the legs
+		// hang when jumping. A trigger never pushes, so it can overlap the floor.
+		const feet = new Rect(76, 36, 40, 60);
+		feet.collisionMask = collision.types.WORLD_SHAPE;
+		const hitbox = new Rect(76, 36, 40, 76);
+		hitbox.collisionMask =
+			collision.types.ALL_OBJECT & ~collision.types.WORLD_SHAPE;
+		hitbox.isTrigger = true;
 		this.bodyDef = {
 			type: "dynamic",
-			shapes: [new Rect(76, 36, 40, 60)],
+			shapes: [feet, hitbox],
 			collisionType: collision.types.PLAYER_OBJECT,
 			maxVelocity: { x: ROLL_SPEED, y: 24 },
 		};
