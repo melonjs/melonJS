@@ -11,6 +11,7 @@
 - Physics: a body that drops its last `Box3d` or `Sphere`, through the builtin adapter's `updateShape` or `addBody` on a renderable that already has a body, no longer resolves along z
 - Loader: the default loading screen brings up its progress bar and the melonJS logo in the same frame. The bar was drawn first and the logo popped in a frame or so later; the bar now shows alone only when the logo cannot be decoded or the game's assets finish first
 - ImageLayer: a repeating layer (`"repeat"`, `"repeat-x"` or `"repeat-y"`) keeps covering the screen wherever the camera goes. Its offset was wrapped by the layer's size, which is `Infinity` on a tiling axis, so it never wrapped and the layer slid off the screen once the camera had moved far enough (a front parallax layer first); it now wraps by the image size, and an image wider or taller than the viewport is drawn far enough to cover it
+- Animation: a one-frame animation played once completes after its frame delay, as a longer one does: with `loop: false` it fires `onComplete` and holds its frame, with `next` it moves on, and a callback that returns `false` is called. It never reached the end of its cycle, so none of these happened and games had to list the frame twice. A looping one-frame animation still does not step, so it fires no `onComplete` at each cycle, as before; it applies to a `Sprite` and a `Sprite3d`
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
