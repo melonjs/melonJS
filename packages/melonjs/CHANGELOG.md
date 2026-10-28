@@ -19,6 +19,7 @@
 - Input: `input.bindPointer` keeps its bindings. Every pointer event copied the pooled pointer it was normalized into onto `input.pointer`, and with it that pointer's own empty `bind` list, so a binding was gone as soon as the mouse entered the canvas and a click mapped to a key only reached it now and then
 - Audio: a clip declared with `preload: false` is fetched when it is first played (`audio.play`, `audio.playTrack` or `autoplay`) and streamed, as with `stream: true`, so it starts as soon as enough of it has arrived ([#1784](https://github.com/melonjs/melonJS/issues/1784)). It was never fetched at all, so it never played; a clip that is never played is still never downloaded
 - State: the first frame of a new stage shows what it built, and the first frame after a level loaded while the game runs shows that level. That frame was drawn before the world had been stepped, and a renderable is drawn only once a step has found it on screen, so every state change showed one frame of background alone unless a transition covered it
+- State: a `state.change()` asked for while a transition covers the screen is made by that transition, to the last state asked for and with its arguments, as without a transition ([#1787](https://github.com/melonjs/melonJS/issues/1787)). It put up a second cover, and the first stayed on the camera for good, the screen black over a game still running; a change to a state with no transition of its own is still made at once, and takes the cover down
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
