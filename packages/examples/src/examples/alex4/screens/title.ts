@@ -100,7 +100,10 @@ export class TitleScreen extends Stage {
 			this.items.push(item);
 			app.world.addChild(item, 10);
 		}
-		this.startLevel = Math.min(gameState.saved.maxLevel, LEVELS.length - 1);
+		this.startLevel = Math.min(
+			gameState.saved.alex4MaxLevel,
+			LEVELS.length - 1,
+		);
 		this.updateMenu();
 
 		// the selection arrow, moving back and forth
@@ -117,11 +120,11 @@ export class TitleScreen extends Stage {
 			.start();
 
 		// best score, and the scrolling help text
-		if (gameState.saved.hiscore > 0) {
+		if (gameState.saved.alex4HiScore > 0) {
 			const hiscore = new BitmapText(WIDTH / 2, 405, {
 				font: "atascii32",
 				textAlign: "center",
-				text: `HI SCORE ${gameState.saved.hiscore}`,
+				text: `HI SCORE ${gameState.saved.alex4HiScore}`,
 			});
 			hiscore.floating = true;
 			hiscore.addPostEffect(shaders.shadow);
@@ -183,7 +186,7 @@ export class TitleScreen extends Stage {
 			}
 			const count = ALL_LEVELS_UNLOCKED
 				? LEVELS.length
-				: Math.min(gameState.saved.maxLevel, LEVELS.length - 1) + 1;
+				: Math.min(gameState.saved.alex4MaxLevel, LEVELS.length - 1) + 1;
 			this.startLevel = (this.startLevel + step + count) % count;
 			this.updateMenu();
 			audio.play("menu");

@@ -24,8 +24,10 @@ export const gameState = {
 	// the sprites, converted from the original game data
 	atlas: undefined as unknown as TextureAtlas,
 
-	// remembered between sessions
-	saved: save.add({ maxLevel: 0, hiscore: 0 }),
+	// remembered between sessions, in localStorage. The keys are the game's
+	// own: every page of a site shares that storage, and another melonJS game
+	// there (the whac-a-mole example, for one) keeps a "hiscore" of its own
+	saved: save.add({ alex4MaxLevel: 0, alex4HiScore: 0 }),
 
 	/** reset everything for a new game */
 	reset(level = 0) {
@@ -38,7 +40,7 @@ export const gameState = {
 
 	/** remember the furthest level reached and the best score */
 	record() {
-		this.saved.maxLevel = Math.max(this.saved.maxLevel, this.level);
-		this.saved.hiscore = Math.max(this.saved.hiscore, this.score);
+		this.saved.alex4MaxLevel = Math.max(this.saved.alex4MaxLevel, this.level);
+		this.saved.alex4HiScore = Math.max(this.saved.alex4HiScore, this.score);
 	},
 };
