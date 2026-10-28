@@ -30,7 +30,8 @@ class Pickup extends Collectable {
 				anchorPoint: { x: 0, y: 0 },
 				image: gameState.atlas,
 				region,
-				shapes: [new Rect(8, 8, 48, 48)],
+				// its whole cell, as the original checked Alex's mouth in it
+				shapes: [new Rect(0, 0, 64, 64)],
 			}),
 		);
 	}
@@ -38,8 +39,12 @@ class Pickup extends Collectable {
 	/** what happens when picked up */
 	collect() {}
 
-	onCollisionStart(_response: CollisionResponse, other: Renderable) {
-		if (!(other instanceof PlayerEntity) || other.dying) {
+	onCollisionActive(_response: CollisionResponse, other: Renderable) {
+		if (
+			!(other instanceof PlayerEntity) ||
+			other.dying ||
+			!other.mouthIn(this.getBounds())
+		) {
 			return;
 		}
 		// avoid any further collision and remove it

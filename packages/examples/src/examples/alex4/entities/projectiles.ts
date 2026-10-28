@@ -14,7 +14,7 @@ import {
 import { BULLET_GRAVITY, TICK } from "../constants";
 import { gameState } from "../gameState";
 import { burst } from "./effects";
-import type { PlayerEntity } from "./player";
+import type { PlayerEntity, Touch } from "./player";
 
 /** something that can be killed by an egg */
 export interface Shootable {
@@ -132,9 +132,11 @@ export class EggShot extends Projectile {
 /*      things fired at Alex                                                    */
 /********************************************************************************/
 class EnemyShot extends Projectile {
-	touchPlayer(player: PlayerEntity) {
-		player.hurt();
-		this.explode();
+	touchPlayer(player: PlayerEntity, touch: Touch) {
+		if (touch.center) {
+			player.hurt();
+			this.explode();
+		}
 	}
 }
 

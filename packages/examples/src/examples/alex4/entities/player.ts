@@ -35,9 +35,26 @@ const JUMP_SPEED = jumpSpeed(16);
 // The ball turns 8/256 of a turn per tick, as in the original.
 const SPIN = (8 / 256) * Math.PI * 2 * (50 / 60);
 
+/**
+ * How Alex touches something, with the boxes of the original game: it
+ * checked a different part of him for each thing that could happen.
+ */
+export type Touch = {
+	/** falling, his feet on its top: a stomp */
+	above: boolean;
+	/** his body, the half away from the snout: what gets hurt */
+	body: boolean;
+	/** low, right in front of his mouth: what eats */
+	mouth: boolean;
+	/** his middle: spikes and the exit */
+	middle: boolean;
+	/** his center: what the bullets hit */
+	center: boolean;
+};
+
 /** anything that hurts (or can be stomped by) Alex */
 export interface Hazard {
-	touchPlayer(player: PlayerEntity, fromAbove: boolean): void;
+	touchPlayer(player: PlayerEntity, touch: Touch): void;
 }
 
 /********************************************************************************/
@@ -63,6 +80,17 @@ export class PlayerEntity extends Sprite {
 	/** the room ahead of a spinner, to know if we can roll */
 	private ahead = new Rect(0, 0, 64, 64);
 	private room = new Bounds();
+	/** what he touches, and the boxes to test it against */
+	private touch: Touch = {
+		above: false,
+		body: false,
+		mouth: false,
+		middle: false,
+		center: false,
+	};
+	private area = new Bounds();
+	private part = new Bounds();
+	private zone = new Bounds();
 	/** touched the level from above during the last physics step */
 	private standing = false;
 	/** still holding the button since the jump started */
@@ -103,12 +131,13 @@ export class PlayerEntity extends Sprite {
 		});
 		this.name = "alex";
 
-		// As in the original: the feet stand on the level, while what touches
-		// enemies and pickups reaches 4 of its pixels lower, where the legs
-		// hang when jumping. A trigger never pushes, so it can overlap the floor.
+		// The feet stand on the level, while a trigger (it never pushes, so it
+		// can overlap the floor) reports everything else, which is then sorted
+		// with the boxes of the original (see touching()): it covers them all,
+		// from in front of the mouth to below the feet.
 		const feet = new Rect(76, 36, 40, 60);
 		feet.collisionMask = collision.types.WORLD_SHAPE;
-		const hitbox = new Rect(76, 36, 40, 76);
+		const hitbox = new Rect(32, 32, 128, 80);
 		hitbox.collisionMask =
 			collision.types.ALL_OBJECT & ~collision.types.WORLD_SHAPE;
 		hitbox.isTrigger = true;
@@ -368,15 +397,13 @@ export class PlayerEntity extends Sprite {
 			x + spinner.width - 1,
 			y + spinner.height - 1,
 		);
-		const blocked = this.adapter.queryAABB(this.ahead).some((other) => {
-			if (other.body?.collisionType !== collision.types.WORLD_SHAPE) {
-				return false;
-			}
-			// body bounds are relative to their renderable
-			const area = other.body.getBounds().clone();
-			area.translate(other.pos.x, other.pos.y);
-			return area.overlaps(this.room);
-		});
+		const blocked = this.adapter
+			.queryAABB(this.ahead)
+			.some(
+				(other) =>
+					other.body?.collisionType === collision.types.WORLD_SHAPE &&
+					this.areaOf(other).overlaps(this.room),
+			);
 		if (blocked) {
 			return;
 		}
@@ -447,6 +474,64 @@ export class PlayerEntity extends Sprite {
 		(state.current() as PlayScreen).onPlayerDying();
 	}
 
+	/**
+	 * a box of the original, in its pixels from the top left of Alex's 16x16
+	 * sprite (`y` up from his feet), in the world
+	 */
+	private box(x: number, y: number, w: number, h: number) {
+		const left = this.pos.x + 64 + x * 4;
+		const top = this.pos.y + 96 + y * 4;
+		this.part.setMinMax(left, top, left + w * 4, top + h * 4);
+		return this.part;
+	}
+
+	/** his middle, in the world, where the original checked spikes and exits */
+	middleIn(bounds: Bounds) {
+		return bounds.contains(this.pos.x + 64 + 7 * 4, this.pos.y + 96 - 7 * 4);
+	}
+
+	/** his mouth, in the world, where the original picked things up */
+	mouthIn(bounds: Bounds) {
+		const x = this.pos.x + 64 + (this.facingLeft ? 6 : 10) * 4;
+		return bounds.contains(x, this.pos.y + 96 - 10 * 4);
+	}
+
+	/**
+	 * the area of something in the world: its last shape, the one the enemies
+	 * are hit by (shapes are relative to their renderable)
+	 */
+	private areaOf(other: Renderable) {
+		const shapes = this.adapter.getBodyShapes(other);
+		const shape = shapes[shapes.length - 1].getBounds();
+		this.area.setMinMax(
+			other.pos.x + shape.left,
+			other.pos.y + shape.top,
+			other.pos.x + shape.right,
+			other.pos.y + shape.bottom,
+		);
+		return this.area;
+	}
+
+	/** how Alex touches something, as the original checked it */
+	private touching(other: Renderable): Touch {
+		const area = this.areaOf(other);
+		const right = !this.facingLeft;
+		const touch = this.touch;
+		const falling = !this.grounded && this.body.getVelocity(this.vel).y >= 0;
+
+		// the top 4 pixels of it, under a 12x8 box at his feet
+		this.zone.setMinMax(area.left, area.top, area.right, area.top + 16);
+		touch.above = falling && this.box(2, -4, 12, 8).overlaps(this.zone);
+		// the back half of his sprite
+		touch.body = this.box(right ? 0 : 8, -16, 8, 16).overlaps(area);
+		// in front of his mouth, against the lower half of it
+		this.zone.setMinMax(area.left, area.bottom - 32, area.right, area.bottom);
+		touch.mouth = this.box(right ? 16 : -8, -16, 8, 16).overlaps(this.zone);
+		touch.middle = this.middleIn(area);
+		touch.center = this.box(4, -16, 8, 16).overlaps(area);
+		return touch;
+	}
+
 	onCollisionStart(_response: CollisionResponse, other: Renderable) {
 		if (this.dying) {
 			return;
@@ -483,13 +568,9 @@ export class PlayerEntity extends Sprite {
 				}
 				break;
 
-			case collision.types.ENEMY_OBJECT: {
-				// landing on top of it?
-				const fromAbove =
-					response.normal.y < -0.7 && this.body.getVelocity(this.vel).y >= 0;
-				(other as Renderable & Hazard).touchPlayer(this, fromAbove);
+			case collision.types.ENEMY_OBJECT:
+				(other as Renderable & Hazard).touchPlayer(this, this.touching(other));
 				break;
-			}
 		}
 	}
 }

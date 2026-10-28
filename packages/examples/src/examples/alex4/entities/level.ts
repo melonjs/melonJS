@@ -6,6 +6,7 @@
  */
 import {
 	audio,
+	type CollisionResponse,
 	collision,
 	Rect,
 	Renderable,
@@ -19,7 +20,7 @@ import {
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
 import { burst } from "./effects";
-import type { PlayerEntity } from "./player";
+import { PlayerEntity, type Touch } from "./player";
 import { CannonBall } from "./projectiles";
 
 /************************************************************************************/
@@ -53,8 +54,7 @@ export class SpikeEntity extends Renderable {
 				shape = new Rect(0, 0, w / 2, h);
 				break;
 			default:
-				// the original game kills when Alex's middle is in the cell
-				shape = new Rect(16, 16, w - 32, h - 32);
+				shape = new Rect(0, 0, w, h);
 		}
 		this.bodyDef = {
 			type: "static",
@@ -65,8 +65,11 @@ export class SpikeEntity extends Renderable {
 		};
 	}
 
-	touchPlayer(player: PlayerEntity) {
-		player.die();
+	touchPlayer(player: PlayerEntity, touch: Touch) {
+		// the original killed when Alex's middle was in the cell
+		if (touch.middle) {
+			player.die();
+		}
 	}
 }
 
@@ -224,9 +227,13 @@ export class LolaEntity extends Sprite {
 export class ExitEntity extends Trigger {
 	private reached = false;
 
-	constructor(x: number, y: number, settings: TMXObject) {
-		// only react when Alex's middle gets into the exit, as in the original
-		super(x, y, { ...settings, shapes: [new Rect(16, 16, 32, 32)] });
+	/** only when Alex's middle gets into the exit, as in the original */
+	override onCollisionStart() {}
+
+	onCollisionActive(_response: CollisionResponse, other: Renderable) {
+		if (other instanceof PlayerEntity && other.middleIn(this.getBounds())) {
+			this.triggerEvent();
+		}
 	}
 
 	override triggerEvent() {

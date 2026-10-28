@@ -10,7 +10,6 @@ import {
 	collision,
 	level,
 	math,
-	type PhysicsAdapter,
 	Rect,
 	type Renderable,
 	Sprite,
@@ -32,7 +31,7 @@ import type { LevelMap, PlayScreen } from "../screens/play";
 import { burst, dust, smoke } from "./effects";
 import { enemyShapes, GenericEnemyEntity } from "./enemies";
 import { Breakable } from "./level";
-import type { Hazard, PlayerEntity } from "./player";
+import type { Hazard, PlayerEntity, Touch } from "./player";
 import { Spark } from "./projectiles";
 
 /** tell the play screen, if this guardian was the one to beat */
@@ -102,8 +101,8 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 		audio.stop("engine", this.engine);
 	}
 
-	override touchPlayer(player: PlayerEntity) {
-		if (!this.alive) {
+	override touchPlayer(player: PlayerEntity, touch: Touch) {
+		if (!this.alive || !touch.body) {
 			return;
 		}
 		// rolling into its back
@@ -184,7 +183,6 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 	private drilled = false;
 	/** where its middle is heading to, above where Alex was */
 	private targetX = 0;
-	private adapter!: PhysicsAdapter;
 	private vel = new Vector2d();
 
 	constructor(x: number, y: number, settings: TMXObject) {
@@ -223,7 +221,6 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 	}
 
 	override onActivateEvent() {
-		this.adapter = this.parentApp.world.adapter;
 		this.wait(LONG_WAIT);
 	}
 
@@ -339,11 +336,11 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		}
 	}
 
-	touchPlayer(player: PlayerEntity, fromAbove: boolean) {
+	touchPlayer(player: PlayerEntity, touch: Touch) {
 		if (this.mode === "dead") {
 			return;
 		}
-		if (fromAbove) {
+		if (touch.above && !player.rolling) {
 			// bounce on its head, which makes it angry
 			player.bounce(15);
 			audio.play("jump");
@@ -352,7 +349,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 				this.setCurrentAnimation("spikes");
 				this.wait(SPIKES_WAIT);
 			}
-		} else {
+		} else if (touch.body) {
 			player.hurt();
 		}
 	}

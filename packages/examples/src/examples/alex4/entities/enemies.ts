@@ -20,7 +20,7 @@ import { HEIGHT, jumpSpeed, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import { dust, flash } from "./effects";
-import type { Hazard, PlayerEntity } from "./player";
+import type { Hazard, PlayerEntity, Touch } from "./player";
 import type { Shootable } from "./projectiles";
 
 /**
@@ -151,24 +151,28 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		this.flipX(!this.walkLeft);
 	}
 
-	touchPlayer(player: PlayerEntity, fromAbove: boolean) {
+	/** in the order the original checked it */
+	touchPlayer(player: PlayerEntity, touch: Touch) {
 		if (!this.alive) {
 			return;
 		}
 		if (this.flat) {
 			if (player.rolling) {
-				this.kill(player.facingLeft);
-			} else if (!fromAbove && player.grounded && this.edible) {
-				// walked into it
+				if (touch.body) {
+					this.kill(player.facingLeft);
+				}
+			} else if (touch.mouth && this.edible) {
 				this.eaten(player);
 			}
-		} else if (player.rolling && this.rollable) {
-			this.kill(player.facingLeft);
-		} else if (fromAbove && this.stompable) {
+		} else if (touch.above && this.stompable && !player.rolling) {
 			this.stomp();
 			player.bounce();
-		} else {
-			player.hurt();
+		} else if (touch.body) {
+			if (player.rolling && this.rollable) {
+				this.kill(player.facingLeft);
+			} else {
+				player.hurt();
+			}
 		}
 	}
 
@@ -385,8 +389,10 @@ export class CrusherEntity extends GenericEnemyEntity {
 		}
 	}
 
-	override touchPlayer(player: PlayerEntity) {
-		player.hurt();
+	override touchPlayer(player: PlayerEntity, touch: Touch) {
+		if (touch.body) {
+			player.hurt();
+		}
 	}
 }
 
