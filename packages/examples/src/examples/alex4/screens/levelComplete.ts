@@ -170,6 +170,9 @@ export class LevelCompleteScreen extends Stage {
 	override update(dt: number) {
 		if (input.isKeyPressed("enter")) {
 			if (this.done) {
+				// once: the screen goes on running under the transition, and a
+				// second press would skip a level
+				this.done = false;
 				gameState.level++;
 				gameState.record();
 				go(gameState.level < LEVELS.length ? state.PLAY : state.GAME_END);
