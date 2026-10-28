@@ -30,6 +30,7 @@ import WebGPURenderTarget from "../rendertarget/webgpurendertarget.js";
 import { createAtlas, TextureAtlas } from "../texture/atlas.js";
 import TextureCache from "../texture/cache.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
+import { snapMatrixTranslation } from "../utils/pixel_snap.js";
 import {
 	generateJoinCircles,
 	generateTriangleFan,
@@ -2799,12 +2800,11 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} y - distance to move in the vertical direction
 	 */
 	translate(x, y) {
-		this.currentTransform.translate(x, y);
 		if (this.settings.subPixel === false) {
-			// snap position values to pixel grid
-			const a = this.currentTransform.val;
-			a[12] |= 0;
-			a[13] |= 0;
+			// snap to the nearest pixel, as given (see pixel_snap.js)
+			this.currentTransform.translate(Math.round(x), Math.round(y));
+		} else {
+			this.currentTransform.translate(x, y);
 		}
 	}
 
@@ -2836,20 +2836,22 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} [f] - the f component
 	 */
 	transform(a, b, c, d, e, f) {
+		const snap = this.settings.subPixel === false;
 		if (typeof a === "object") {
-			// accepts both Matrix2d and Matrix3d (no temporary copy needed)
-			this.currentTransform.multiply(a);
+			// accepts both Matrix2d and Matrix3d; copied only when its
+			// translation has to be rounded (see pixel_snap.js)
+			this.currentTransform.multiply(
+				snap ? snapMatrixTranslation(a, tempMatrix) : a,
+			);
 		} else {
+			if (snap) {
+				e = Math.round(e);
+				f = Math.round(f);
+			}
 			// individual 2D affine components
 			this.currentTransform.multiply(
 				tempMatrix.setTransform(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, e, f, 0, 1),
 			);
-		}
-		if (this.settings.subPixel === false) {
-			// snap position values to pixel grid
-			const m = this.currentTransform.val;
-			m[12] |= 0;
-			m[13] |= 0;
 		}
 	}
 
@@ -3082,9 +3084,11 @@ export default class WebGPURenderer extends Renderer {
 		}
 
 		if (this.settings.subPixel === false) {
-			// clamp to pixel grid
-			dx |= 0;
-			dy |= 0;
+			// snap to the nearest pixel. Rounded, not truncated: a position a
+			// float error short of a whole pixel (223.99999999999997) must land
+			// on that pixel, not the one before it
+			dx = Math.round(dx);
+			dy = Math.round(dy);
 		}
 
 		// same lit gate as the GL backend: only normal-mapped sprites in a

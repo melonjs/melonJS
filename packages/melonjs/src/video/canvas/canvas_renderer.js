@@ -460,9 +460,11 @@ export default class CanvasRenderer extends Renderer {
 		}
 
 		if (this.settings.subPixel === false) {
-			// clamp to pixel grid
-			dx = ~~dx;
-			dy = ~~dy;
+			// snap to the nearest pixel. Rounded, not truncated: a position a
+			// float error short of a whole pixel (223.99999999999997) must land
+			// on that pixel, not the one before it
+			dx = Math.round(dx);
+			dy = Math.round(dy);
 		}
 
 		// apply a tint if required
@@ -1485,8 +1487,8 @@ export default class CanvasRenderer extends Renderer {
 		// else individual components
 
 		if (this.settings.subPixel === false) {
-			e |= 0;
-			f |= 0;
+			e = Math.round(e);
+			f = Math.round(f);
 		}
 
 		this.getContext().transform(a, b, c, d, e, f);
@@ -1499,7 +1501,7 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	translate(x, y) {
 		if (this.settings.subPixel === false) {
-			this.getContext().translate(~~x, ~~y);
+			this.getContext().translate(Math.round(x), Math.round(y));
 		} else {
 			this.getContext().translate(x, y);
 		}

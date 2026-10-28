@@ -713,10 +713,10 @@ export default class Text extends Renderable {
 		let x = this.metrics.x;
 		let y = this.metrics.y - this.metrics.inkPadTop;
 
-		// clamp to pixel grid if required
+		// snap to the nearest pixel if required, as the renderers do
 		if (renderer.settings.subPixel === false) {
-			x = ~~x;
-			y = ~~y;
+			x = Math.round(x);
+			y = Math.round(y);
 		}
 
 		// draw the text

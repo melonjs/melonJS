@@ -462,12 +462,12 @@ export default class Stage {
 		// renderer: from the camera origin, as wide as the world it shows
 		// (`width / zoom`: zoomed out, a camera-sized fill left part of the
 		// view lit), and a unit more on every side. Unless `subPixel` is set,
-		// the renderer drops the fraction of that translate, which moves the
-		// view's edge by up to a unit: a camera at a fractional position (any
-		// smoothed follow) left its first column and row lit. The camera
-		// clips what reaches past its view. A whole number of pixels, so a
-		// renderer drawing the darkness at screen resolution keeps it on the
-		// screen's pixel grid
+		// the renderer rounds that translate to a whole pixel, which moves the
+		// view's edge by up to half a unit either way: a camera at a
+		// fractional position (any smoothed follow) left its first column and
+		// row lit. The camera clips what reaches past its view. A whole number
+		// of pixels, so a renderer drawing the darkness at screen resolution
+		// keeps it on the screen's pixel grid
 		const margin = Math.ceil(camera.zoom) / camera.zoom;
 		const x = tx - margin;
 		const y = ty - margin;

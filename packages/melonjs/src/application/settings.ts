@@ -519,7 +519,7 @@ export type ApplicationSettings = {
 	/**
 	 * whether a renderable may sit on a fractional position WITHIN the frame. `false`, the default, snaps each translation to whole pixels, which is what stops a slowly moving or transformed sprite shimmering along its edges.
 	 *
-	 * The snap TRUNCATES rather than rounds, and truncates toward zero, so a value that should swing symmetrically about the origin does not: an offset travelling between -3 and +3 lands on -2 and +2, and sits at each extreme a little longer than it should. Something animating over a short distance is where this shows.
+	 * The snap ROUNDS to the nearest pixel, the same on every renderer. A position that floating point error leaves a hair short of a whole pixel, such as a body resting on the floor at 223.99999999999997 after a collision push-out, lands on that pixel rather than the one before it, so it does not shake by a pixel from one frame to the next. A half pixel rounds up (toward positive infinity) on either side of zero, so moving something by a whole number of pixels never changes where its fraction lands, and an offset swinging between -3 and +3 reaches both.
 	 *
 	 * It says nothing about how the frame reaches the screen. A game that snaps positions here and is then presented at a fractional scale has undone the work at the last step; {@link ApplicationSettings.scaleRounding} is what addresses that half.
 	 * @default false

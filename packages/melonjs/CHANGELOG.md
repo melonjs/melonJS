@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.11.1] (melonJS 2) - _unreleased_
+
+### Fixed
+- Rendering: with `subPixel` off (the default), positions are rounded to the nearest pixel instead of truncated. A body resting on the floor in the built-in physics alternates between y = 224 and 223.99999999999997 after each collision push-out, which truncation drew a pixel apart, so the sprite shook by a pixel every other frame. Canvas, WebGL and WebGPU now also snap a translation the same way, in the units it is given, so they draw a scaled or flipped renderable on the same pixel; a flipped sprite whose center falls on a half pixel no longer moves by a pixel on WebGL and WebGPU
+
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
 ### Added

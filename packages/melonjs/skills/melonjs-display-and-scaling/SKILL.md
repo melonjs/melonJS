@@ -195,11 +195,13 @@ A repeating pattern is left to wrap.
 
 ## `subPixel` is about position, not scale
 
-`subPixel: false` (the default) truncates a renderable's translation to whole
-pixels inside the frame. It is `|0`, so it truncates **toward zero** rather
-than rounding, which is worth knowing when something travels a short distance:
-an offset that should swing between -3 and +3 lands on -2 and +2, and parks at
-the extremes for longer than it should.
+`subPixel: false` (the default) rounds a renderable's translation to the
+**nearest** whole pixel inside the frame, the same on every renderer. A
+position that floating point error leaves a hair short of a pixel, such as a
+body resting on the floor at `223.99999999999997` after a collision push-out,
+draws on that pixel (224), not the one before it, so it does not shake by a
+pixel every other frame. A half pixel rounds up on either side of zero, so an
+offset swinging between -3 and +3 reaches both ends.
 
 It does nothing about how the frame reaches the screen. A game that carefully
 snaps positions and is then scaled by 2.667 has thrown that work away at the
