@@ -317,6 +317,81 @@ describe("Physics : Body", () => {
 			body.removeShapeAt(1);
 			expect(body.getBounds().width).toEqual(10);
 		});
+
+		// Each added shape used to translate the bounds accumulated so far by
+		// its own offset, so any body with several off-origin shapes reported
+		// an AABB bigger than (and shifted from) the union of its shapes.
+		const expectBounds = (bounds, left, top, right, bottom) => {
+			expect(bounds.left).toEqual(left);
+			expect(bounds.top).toEqual(top);
+			expect(bounds.right).toEqual(right);
+			expect(bounds.bottom).toEqual(bottom);
+		};
+
+		it("should return the union of two offset Rect shapes", () => {
+			// the alex4 player shapes
+			const body = new Body(new Renderable(0, 0, 192, 192));
+			body.addShape(new Rect(76, 36, 40, 60));
+			body.addShape(new Rect(76, 36, 40, 76));
+			expectBounds(body.getBounds(), 76, 36, 116, 112);
+		});
+
+		it("should return the union of two identical offset Rect shapes", () => {
+			const body = new Body(new Renderable(0, 0, 64, 64));
+			body.addShape(new Rect(8, 8, 48, 56));
+			body.addShape(new Rect(8, 8, 48, 56));
+			expectBounds(body.getBounds(), 8, 8, 56, 64);
+		});
+
+		it("should return the union of offset Polygon and Bounds shapes", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(
+				new Polygon(10, 20, [
+					{ x: 0, y: 0 },
+					{ x: 10, y: 0 },
+					{ x: 10, y: 10 },
+				]),
+			);
+			const b = new Bounds();
+			b.setMinMax(40, 50, 60, 70);
+			body.addShape(b);
+			expectBounds(body.getBounds(), 10, 20, 60, 70);
+		});
+
+		it("should not translate an offset Ellipse twice", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(new Ellipse(50, 50, 20, 20));
+			expectBounds(body.getBounds(), 40, 40, 60, 60);
+			body.addShape(new Rect(70, 10, 10, 10));
+			expectBounds(body.getBounds(), 40, 10, 80, 60);
+		});
+
+		it("should rebuild the union of offset shapes after removeShape", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Ellipse(50, 50, 20, 20));
+			body.addShape(new Rect(70, 70, 10, 10));
+			expectBounds(body.getBounds(), 10, 10, 80, 80);
+			body.removeShapeAt(2);
+			expectBounds(body.getBounds(), 10, 10, 60, 60);
+			body.removeShapeAt(0);
+			expectBounds(body.getBounds(), 40, 40, 60, 60);
+		});
+
+		it("should keep the other shapes in the bounds after setVertices", () => {
+			const body = new Body(new Renderable(0, 0, 100, 100));
+			body.addShape(new Rect(10, 10, 10, 10));
+			body.addShape(new Rect(50, 50, 10, 10));
+			body.setVertices(
+				[
+					{ x: 0, y: 0 },
+					{ x: 30, y: 0 },
+					{ x: 30, y: 5 },
+				],
+				1,
+			);
+			expectBounds(body.getBounds(), 0, 0, 30, 20);
+		});
 	});
 
 	describe("setStatic", () => {

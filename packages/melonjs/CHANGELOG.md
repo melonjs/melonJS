@@ -4,6 +4,7 @@
 
 ### Fixed
 - Geometry: the methods that take a point (`translate`, `shift` and `contains` on `Bounds`, `Polygon`, `Rect`, `RoundRect`, `Ellipse` and `Line`, and `translate` on `Matrix2d` and `Matrix3d`) take any object with `x` and `y`, such as a renderable's `pos`. Given anything but a `Vector2d` they treated it as a number and came out `NaN`, so `bounds.clone().translate(renderable.pos)` gave no world bounds and `overlaps()` then reported every area as taken
+- Physics: a body with several shapes reports the union of its shapes as its bounds. Each shape added after the first moved the bounds gathered so far by its own offset, so two shapes at 76,36 (40×60 and 40×76) gave a body 76,36 → 192,132 instead of 76,36 → 116,112, and a lone ellipse away from the origin came out shifted by its own position. `removeShape`, `rotate` and `setVertices` rebuild the bounds the same way, and `setVertices` on one shape of several keeps the others inside them
 - Loader: the default loading screen brings up its progress bar and the melonJS logo in the same frame. The bar was drawn first and the logo popped in a frame or so later; the bar now shows alone only when the logo cannot be decoded or the game's assets finish first
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
