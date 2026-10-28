@@ -261,6 +261,17 @@ export default class Stage {
 			}
 		}
 
+		// Whether each camera starts its view on a whole pixel, from this
+		// application's `subPixel`: a view read before the first frame
+		// (`worldView`, `localToWorld`) already follows it, and from then on
+		// each camera takes it from the renderer that draws it
+		if (app) {
+			const snapView = !app.settings.subPixel;
+			this.cameras.forEach((camera) => {
+				camera._snapView = snapView;
+			});
+		}
+
 		// Re-apply the chosen camera's `defaultSortOn` to the world on
 		// the FIRST reset of this stage — NOT on re-resets (`isFirstReset`
 		// gate above), and NOT when the camera came from the

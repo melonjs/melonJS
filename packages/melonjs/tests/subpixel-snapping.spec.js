@@ -8,6 +8,7 @@ import {
 	Rect,
 	Renderable,
 	Sprite,
+	Stage,
 	state,
 	video,
 } from "../src/index.js";
@@ -766,6 +767,35 @@ describe("the camera draws, culls and reads the pointer from one whole pixel", (
 		} finally {
 			app.world.removeChildNow(hero);
 			app.world.removeChildNow(tile);
+		}
+	});
+
+	it("follows its application from the stage's reset, before any frame is drawn", async () => {
+		// The camera was last drawn by an application with subPixel off. One
+		// with it on switches to a stage, whose onResetEvent reads the view
+		// before anything has drawn: it is not rounded.
+		const other = new Application(32, 32, {
+			parent: "screen",
+			renderer: video.CANVAS,
+			subPixel: true,
+		});
+		await other.init();
+		let seen;
+		class Probe extends Stage {
+			onResetEvent() {
+				const cam = this.cameras.get("default");
+				cam.setBounds(-1000, -1000, 4000, 4000);
+				cam.moveTo(0.4, 0);
+				seen = cam.worldView.left;
+			}
+		}
+		const PROBE = state.USER + 17;
+		state.set(PROBE, new Probe());
+		try {
+			state.change(PROBE, true);
+			expect(seen).toBe(0.4);
+		} finally {
+			other.destroy();
 		}
 	});
 
