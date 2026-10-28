@@ -2,6 +2,9 @@
 
 ## [20.12.0] (melonJS 2) - _unreleased_
 
+### Added
+- State: a `"pixelate"` transition, `state.transition("pixelate", color, duration, size)`: the screen breaks up into blocks growing to `size` pixels (32 by default), the state changes behind the largest of them, and it comes back sharp, `duration` for each half. It is a `PixelateEffect` the new `PixelateTransitionEffect` camera effect puts first in the camera's post-effect chain while it runs, so the effects after it (a vignette, scanlines) stay sharp over the blocks. It needs a GPU renderer: on the Canvas renderer it is a fade in `color`
+
 ### Fixed
 - Rendering: with `subPixel` off (the default), each draw is snapped to whole pixels once, where it lands, the same way on Canvas, WebGL and WebGPU, instead of every `translate` being truncated as it was applied ([#1765](https://github.com/melonjs/melonJS/issues/1765)). A flipped sprite no longer moves by a pixel, nested containers land on the same pixel on every renderer, shapes, clips and masks snap as sprites do (no half-grey edges on Canvas), and a body resting on the floor no longer shakes; anything that sat on a fraction of a pixel can draw one pixel over, a rotated draw is no longer snapped, and `subPixel: true` keeps fractional positions
 - Camera: with `subPixel` off, `worldView`, `localToWorld` and `worldToLocal` use the view's position rounded to a whole pixel, which is where the world is now drawn from, so culling and pointer coordinates match the frame on screen. `pos` keeps its fraction; read `pos` and `offset` for the exact view position

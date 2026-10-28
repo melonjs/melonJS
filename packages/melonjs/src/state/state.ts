@@ -2,6 +2,7 @@ import type Application from "../application/application.ts";
 import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
 import FadeEffect from "../camera/effects/fade_effect.ts";
 import MaskEffect from "../camera/effects/mask_effect.ts";
+import PixelateTransitionEffect from "../camera/effects/pixelate_transition_effect.ts";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.ts";
 import {
@@ -40,7 +41,7 @@ let _isPaused: boolean = false;
 const _stages: Record<number, StageEntry> = {};
 
 // transition type and parameters
-let _transitionType: "fade" | "mask" = "fade";
+let _transitionType: "fade" | "mask" | "pixelate" = "fade";
 
 const _transitionConfig: {
 	color: string;
@@ -49,6 +50,8 @@ const _transitionConfig: {
 		| import("../geometries/ellipse.ts").Ellipse
 		| import("../geometries/polygon.ts").Polygon
 		| undefined;
+	// the largest blocks of a pixelate transition, in screen pixels
+	size?: number | undefined;
 } = {
 	color: "",
 	duration: 0,
@@ -665,10 +668,18 @@ const state = {
 
 	/**
 	 * specify a global transition effect
-	 * @param effect - "fade" for a color fade, "mask" for a shape-based mask transition
-	 * @param color - a CSS color value
-	 * @param [duration=1000] - expressed in milliseconds
-	 * @param [shape] - an Ellipse or Polygon defining the mask shape (required when effect is "mask")
+	 * @param effect - "fade" for a color fade, "mask" for a shape-based mask
+	 * transition, "pixelate" for the screen breaking up into ever larger
+	 * blocks, changing behind the largest, and coming back sharp (see
+	 * {@link PixelateTransitionEffect}). A pixelate transition needs a GPU
+	 * renderer: on the Canvas renderer it is a fade in `color`.
+	 * @param color - a CSS color value (for "pixelate", the color of the fade
+	 * it falls back to on the Canvas renderer)
+	 * @param [duration=1000] - expressed in milliseconds, for each half: the
+	 * cover, then the reveal
+	 * @param [shape] - an Ellipse or Polygon defining the mask shape (required
+	 * when effect is "mask"), or for "pixelate" the size of the largest
+	 * blocks, in screen pixels (32 by default)
 	 * @example
 	 * // classic fade to black
 	 * state.transition("fade", "#000", 500);
@@ -681,19 +692,26 @@ const state = {
 	 *     { x: 0, y: -1 }, { x: 1, y: 0 },
 	 *     { x: 0, y: 1 }, { x: -1, y: 0 },
 	 * ]));
+	 * @example
+	 * // the screen breaks up into 32 pixel blocks, and comes back
+	 * state.transition("pixelate", "#000", 300);
+	 * // into 16 pixel blocks
+	 * state.transition("pixelate", "#000", 300, 16);
 	 */
 	transition(
-		effect: "fade" | "mask",
+		effect: "fade" | "mask" | "pixelate",
 		color: string,
 		duration: number = 1000,
 		shape?:
 			| import("../geometries/ellipse.ts").Ellipse
-			| import("../geometries/polygon.ts").Polygon,
+			| import("../geometries/polygon.ts").Polygon
+			| number,
 	): void {
 		_transitionType = effect;
 		_transitionConfig.color = color;
 		_transitionConfig.duration = duration;
-		_transitionConfig.shape = shape;
+		_transitionConfig.shape = typeof shape === "number" ? undefined : shape;
+		_transitionConfig.size = typeof shape === "number" ? shape : undefined;
 	},
 
 	/**
@@ -735,7 +753,12 @@ const state = {
 					defer(_switchState, state, stateId);
 				};
 
-				switch (_transitionType) {
+				// a pixelate transition draws nothing without shaders: a fade then
+				const type =
+					_transitionType === "pixelate" && _app.renderer.shaderLanguage == null
+						? "fade"
+						: _transitionType;
+				switch (type) {
 					case "fade": {
 						const color = _transitionConfig.color;
 						const duration = _transitionConfig.duration;
@@ -804,6 +827,37 @@ const state = {
 							);
 						};
 						_app.viewport.addCameraEffect(maskEffect);
+						break;
+					}
+					case "pixelate": {
+						const renderer = _app.renderer;
+						const size = _transitionConfig.size;
+						const duration = _transitionConfig.duration;
+						const coverEffect = new PixelateTransitionEffect(_app.viewport, {
+							renderer,
+							size,
+							duration,
+							direction: "hide",
+							onComplete,
+						});
+						// see the note in the fade case: persistent is what
+						// keeps the largest blocks on screen until the switch
+						// lands, and the owner is what takes them away again
+						coverEffect.isPersistent = true;
+						const hidCamera = _app.viewport;
+						_onSwitchComplete = () => {
+							hidCamera.removeCameraEffect(coverEffect);
+							// create reveal with the post-switch viewport
+							_app.viewport.addCameraEffect(
+								new PixelateTransitionEffect(_app.viewport, {
+									renderer,
+									size,
+									duration,
+									direction: "reveal",
+								}),
+							);
+						};
+						_app.viewport.addCameraEffect(coverEffect);
 						break;
 					}
 					default:

@@ -109,6 +109,7 @@ app.world.addChild(this.HUD, 100);      // explicit z — see melonjs-renderable
 ```js
 state.transition("fade", "#FFFFFF", 250);
 state.transition("mask", "#000", 500, new Ellipse(0, 0, 1, 1));  // shape required
+state.transition("pixelate", "#000", 300);  // blocks up to 32px; a 4th argument sets the size
 state.pause();                               // freeze update, keep drawing
 state.resume();
 app.freeze(150);                             // brief hit-stop (proxies state.freeze)
@@ -116,7 +117,10 @@ app.freeze(150);                             // brief hit-stop (proxies state.fr
 
 `state.transition` is global and sticky — once set it applies to every later
 `state.change`. The `"mask"` form needs its fourth argument, an `Ellipse` or
-`Polygon`; without one it warns and falls back to a direct switch.
+`Polygon`; without one it warns and falls back to a direct switch. The
+`"pixelate"` form breaks the screen up into blocks (its fourth argument is the
+largest block size in pixels) and needs a GPU renderer: on Canvas it fades in
+its color instead.
 
 ### A Stage's own `update()` is NOT paused
 
