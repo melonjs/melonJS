@@ -459,6 +459,117 @@ for (const HOST of HOSTS) {
 			expect(s.current.length).toBe(1);
 		});
 
+		// ── single-frame animations ──────────────────────────────────────────
+
+		it("a single-frame play-once animation fires onComplete once, after its delay", () => {
+			const s = make();
+			s.addAnimation("eat", [1], 80);
+			const spy = vi.fn();
+			const f = frames();
+			s.setCurrentAnimation("eat", {
+				loop: false,
+				onComplete: spy,
+				onFrame: f.onFrame,
+			});
+			expect(f.seen).toEqual([0]); // frame 0 reported on start
+			s.update(79);
+			expect(spy).not.toHaveBeenCalled();
+			s.update(1); // the 80ms delay has elapsed
+			expect(spy).toHaveBeenCalledTimes(1);
+			s.update(10_000); // held: no further completion
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+			expect(f.seen).toEqual([0]); // the hold reports no extra frame
+		});
+
+		it("a single-frame play-once animation calls onended once", () => {
+			const s = make();
+			s.addAnimation("eat", [1], 80);
+			s.onended = vi.fn();
+			s.setCurrentAnimation("eat", { loop: false });
+			s.update(1000);
+			expect(s.onended).toHaveBeenCalledTimes(1);
+		});
+
+		it("a single-frame animation follows next after its delay", () => {
+			const s = make();
+			s.addAnimation("eat", [1], 80);
+			const spy = vi.fn();
+			s.setCurrentAnimation("eat", { next: "walk", onComplete: spy });
+			s.update(79);
+			expect(s.isCurrentAnimation("eat")).toBe(true);
+			s.update(1);
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(s.isCurrentAnimation("walk")).toBe(true);
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+			s.update(100); // walk keeps advancing
+			expect(s.getCurrentAnimationFrame()).toBe(1);
+		});
+
+		it("a single-frame animation follows the legacy string form", () => {
+			const s = make();
+			s.addAnimation("eat", [1], 80);
+			s.setCurrentAnimation("eat", "walk");
+			s.update(80);
+			expect(s.isCurrentAnimation("walk")).toBe(true);
+		});
+
+		it("a single-frame animation holds when a legacy callback returns false", () => {
+			const s = make();
+			s.addAnimation("die", [1], 80);
+			const spy = vi.fn(() => {
+				return false;
+			});
+			s.setCurrentAnimation("die", spy);
+			s.update(79);
+			expect(spy).not.toHaveBeenCalled();
+			s.update(1_000_000); // `false` bails out of the long tick: one call
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(s.isCurrentAnimation("die")).toBe(true);
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+		});
+
+		it("a single-frame play-once animation can be replayed after completing", () => {
+			const s = make();
+			s.addAnimation("eat", [1], 80);
+			const spy = vi.fn();
+			s.setCurrentAnimation("eat", { loop: false, onComplete: spy });
+			s.update(80);
+			expect(spy).toHaveBeenCalledTimes(1);
+			// re-selecting a completed play-once animation restarts it
+			s.setCurrentAnimation("eat", { loop: false, onComplete: spy });
+			s.update(79);
+			expect(spy).toHaveBeenCalledTimes(1);
+			s.update(1);
+			expect(spy).toHaveBeenCalledTimes(2);
+		});
+
+		it("a looping single-frame animation never steps, fires no onComplete, never hangs", () => {
+			const s = make();
+			s.addAnimation("solo", [1], 80);
+			const spy = vi.fn();
+			const f = frames();
+			s.onended = vi.fn();
+			s.setCurrentAnimation("solo", { onComplete: spy, onFrame: f.onFrame });
+			s.update(1_000_000);
+			expect(spy).not.toHaveBeenCalled();
+			expect(s.onended).not.toHaveBeenCalled();
+			expect(f.seen).toEqual([0]);
+			expect(s.dt).toBe(0); // the frame timer does not even run
+			expect(s.getCurrentAnimationFrame()).toBe(0);
+		});
+
+		it("chaining into a looping single-frame animation does not spin on a long tick", () => {
+			const s = make();
+			s.addAnimation("eat", [1], 80);
+			s.addAnimation("idle", [2], 80);
+			s.onended = vi.fn();
+			s.setCurrentAnimation("eat", { next: "idle" });
+			s.update(1_000_000);
+			expect(s.isCurrentAnimation("idle")).toBe(true);
+			expect(s.onended).toHaveBeenCalledTimes(1); // eat's cycle end only
+		});
+
 		it("ADVERSARIAL: setAnimationFrame wraps an out-of-range index", () => {
 			const s = make();
 			s.setCurrentAnimation("walk"); // 4 frames

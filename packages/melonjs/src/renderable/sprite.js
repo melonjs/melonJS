@@ -716,6 +716,10 @@ export default class Sprite extends Renderable {
 	/**
 	 * set the current animation, and reset the frame to zero. Selecting the
 	 * animation that is already current is a no-op unless it had completed.
+	 * A one-frame animation played once (`loop: false`, `next`, or a callback
+	 * returning `false`) completes after its frame delay, like any other; a
+	 * looping one-frame animation does not step and never fires its per-cycle
+	 * `onComplete`.
 	 * @param {string} name - animation id
 	 * @param {string|Function|object} [resetAnim] - animation id to switch to when complete, a callback, or an options object (`{ loop, next, speed, onComplete, onFrame }`)
 	 * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
