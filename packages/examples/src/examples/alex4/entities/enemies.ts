@@ -36,6 +36,14 @@ export function enemyShapes(solid: Rect, hitbox: Rect = solid.clone()) {
 	return [solid, hitbox];
 }
 
+/**
+ * The collision boxes of the original game, in its pixels (a quarter of
+ * ours): `w` by `h` up from the feet, `ox` from the left of the sprite.
+ */
+type Box = { w: number; h: number; ox: number };
+const HUMAN_BOX: Box = { w: 12, h: 14, ox: 2 };
+const BIG_HUMAN_BOX: Box = { w: 12, h: 19, ox: 2 };
+
 /************************************************************************************/
 /*                                                                                  */
 /*      a generic enemy                                                             */
@@ -59,7 +67,13 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	protected vel = new Vector2d();
 	private timers: number[] = [];
 
-	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
+	constructor(
+		x: number,
+		y: number,
+		settings: TMXObject,
+		frames: string[],
+		box = HUMAN_BOX,
+	) {
 		const atlas = gameState.atlas.getAnimationSettings(frames);
 		// stand on the bottom of the Tiled object
 		super(x, y + settings.height - atlas.frameheight, {
@@ -68,7 +82,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		});
 		this.bodyDef = {
 			type: "dynamic",
-			shapes: enemyShapes(new Rect(8, 8, this.width - 16, this.height - 8)),
+			shapes: enemyShapes(this.hitbox(box)),
 			collisionType: collision.types.ENEMY_OBJECT,
 			collisionMask:
 				collision.types.WORLD_SHAPE |
@@ -80,6 +94,11 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 
 	override onActivateEvent() {
 		this.adapter = this.parentApp.world.adapter;
+	}
+
+	/** the original collision box, at the bottom of the frame */
+	protected hitbox({ w, h, ox }: Box) {
+		return new Rect(ox * 4, this.height - h * 4, w * 4, h * 4);
 	}
 
 	override onDeactivateEvent() {
@@ -247,13 +266,13 @@ export class Enemy2Entity extends GenericEnemyEntity {
 	endX: number;
 
 	constructor(x: number, y: number, settings: TMXObject) {
-		super(x, y, settings, [
-			"enemy2_01",
-			"enemy2_02",
-			"enemy2_03",
-			"enemy2_04",
-			"enemy2_05",
-		]);
+		super(
+			x,
+			y,
+			settings,
+			["enemy2_01", "enemy2_02", "enemy2_03", "enemy2_04", "enemy2_05"],
+			BIG_HUMAN_BOX,
+		);
 		this.addAnimation(
 			"walk",
 			["enemy2_01", "enemy2_02", "enemy2_03", "enemy2_04"],
@@ -371,7 +390,7 @@ class FishEntity extends GenericEnemyEntity {
 		this.pos.y = HEIGHT;
 
 		// it swims through the walls and the water
-		const hitbox = new Rect(8, 8, this.width - 16, this.height - 8);
+		const hitbox = this.hitbox(HUMAN_BOX);
 		hitbox.isTrigger = true;
 		this.bodyDef = {
 			type: "dynamic",

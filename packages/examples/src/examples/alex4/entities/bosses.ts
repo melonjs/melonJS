@@ -46,16 +46,23 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 	private defeated = false;
 
 	constructor(x: number, y: number, settings: TMXObject) {
-		super(x, y, settings, [
-			"guard1_1",
-			"guard1_2",
-			"guard1_3",
-			"guard1_4",
-			"guard1_5",
-			"guard1_6",
-			"guard1_7",
-			"guard1_8",
-		]);
+		super(
+			x,
+			y,
+			settings,
+			[
+				"guard1_1",
+				"guard1_2",
+				"guard1_3",
+				"guard1_4",
+				"guard1_5",
+				"guard1_6",
+				"guard1_7",
+				"guard1_8",
+			],
+			// the whole 32x32 truck, as in the original
+			{ w: 32, h: 32, ox: 0 },
+		);
 		this.addAnimation(
 			"walk",
 			["guard1_1", "guard1_2", "guard1_3", "guard1_4"],
