@@ -146,7 +146,33 @@ for f in ("a4_tileset", "metatiles64x64"):
 for f in os.listdir(f"{WE}/audio/music"):
     shutil.copy(f"{WE}/audio/music/{f}", f"{OUT}/bgm/{f}")
 for f in os.listdir(f"{WE}/audio/sfx"):
-    shutil.copy(f"{WE}/audio/sfx/{f}", f"{OUT}/sfx/{f}")
+    # keep what is there: the leveled sounds below are re-encoded
+    if not os.path.exists(f"{OUT}/sfx/{f}"):
+        shutil.copy(f"{WE}/audio/sfx/{f}", f"{OUT}/sfx/{f}")
+
+# ---- sound levels -----------------------------------------------------------
+# the Alex4-WE effects sit around -22 dB (mean), the original samples are
+# full scale: bring the loud ones down to the same level as the others
+SFX_LEVEL = -22
+
+
+def mean_volume(path):
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-i", path, "-af", "volumedetect", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    return float(out.split("mean_volume:")[1].split("dB")[0])
+
+
+def encode(src, name, gain=0):
+    for ext, codec in (("ogg", ["-c:a", "libvorbis", "-q:a", "3"]), ("mp3", ["-c:a", "libmp3lame", "-b:a", "64k"])):
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-af", f"volume={gain}dB",
+                        *codec, f"{OUT}/sfx/{name}.{ext}"], check=True)
+
+
+# hit.ogg from Alex4-WE is much louder than the rest
+if mean_volume(f"{OUT}/sfx/hit.ogg") > SFX_LEVEL + 3:
+    shutil.copy(f"{OUT}/sfx/hit.ogg", f"{OUT}/sfx/hit_src.ogg")
+    encode(f"{OUT}/sfx/hit_src.ogg", "hit", SFX_LEVEL - mean_volume(f"{OUT}/sfx/hit_src.ogg"))
+    os.remove(f"{OUT}/sfx/hit_src.ogg")
 
 # ---- missing sound effects from the original sample data -------------------
 sfx = {p["NAME"]: d for t, p, d in parse_dat(unpack_file(f"{ORIG}/sfx_22.dat", password())) if t == "SAMP"}
@@ -161,7 +187,6 @@ for name in ("spit", "shoot", "ship", "energy"):
     tmp = f"{OUT}/sfx/{name}.wav"
     with wave.open(tmp, "wb") as wv:
         wv.setnchannels(ch); wv.setsampwidth(bits//8); wv.setframerate(freq); wv.writeframes(pcm)
-    for ext, codec in (("ogg", ["-c:a", "libvorbis", "-q:a", "3"]), ("mp3", ["-c:a", "libmp3lame", "-b:a", "64k"])):
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, *codec, f"{OUT}/sfx/{name}.{ext}"], check=True)
+    encode(tmp, name, SFX_LEVEL - mean_volume(tmp))
     os.remove(tmp)
     print("sfx", name, bits, freq, length, ch)
