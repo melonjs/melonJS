@@ -6,7 +6,13 @@ import {
 	getSoundOrThrow,
 	isGlobalMuted,
 } from "../src/audio/state.ts";
-import { Application, audio, Renderable } from "../src/index.js";
+import {
+	Application,
+	audio,
+	Camera2d,
+	Camera3d,
+	Renderable,
+} from "../src/index.js";
 import { emit, GAME_AFTER_UPDATE, on } from "../src/system/event.ts";
 
 /** a valid, silent WAV served as a data URL, so a clip really loads */
@@ -203,6 +209,58 @@ describe("spatial audio", () => {
 			expect(() => {
 				frame();
 			}).not.toThrow();
+		});
+
+		it("REGRESSION: a Camera2d is heard from the center of its view, not its top-left corner", async () => {
+			// `Camera2d#pos` is the view's TOP-LEFT corner. Reading it as the
+			// ear put a sound in the middle of the screen half a screen right
+			// of and below the listener, so everything panned right.
+			await loadClip("middle");
+			const camera = new Camera2d(0, 0, 800, 600);
+			camera.pos.set(1000, 500, 0);
+			audio.setListener(camera);
+			const id = audio.play("middle", { at: { x: 1400, y: 800 } });
+			frame();
+
+			expect(audio.listener()).toEqual([1400, 800, 0]);
+			// dead center: the panner sees the source exactly where the ear is
+			const source = voiceOf("middle", id)._pos;
+			const ear = getListenerPosition();
+			expect(source[0]).toBeCloseTo(ear[0], 5);
+			expect(source[1]).toBeCloseTo(ear[1], 5);
+			audio.stop("middle");
+		});
+
+		it("keeps a Camera2d listener at the view's center as it scrolls, zooms and shifts", () => {
+			const camera = new Camera2d(0, 0, 800, 600);
+			audio.setListener(camera);
+			// placed at once, without waiting for a frame
+			expect(audio.listener()).toEqual([400, 300, 0]);
+
+			camera.pos.set(2000, 100, 0);
+			frame();
+			expect(audio.listener()).toEqual([2400, 400, 0]);
+
+			// zoomed in 2x, the camera sees 400 x 300 world pixels
+			camera.zoom = 2;
+			frame();
+			expect(audio.listener()).toEqual([2200, 250, 0]);
+
+			// `offset` shifts the view, and the ear with it
+			camera.offset.set(0, -70);
+			frame();
+			expect(audio.listener()).toEqual([2200, 180, 0]);
+		});
+
+		it("hears a Camera3d from its eye, which is its pos", () => {
+			// unlike a Camera2d, a Camera3d's view translates by `-pos`: its
+			// `pos` is already where it looks from
+			const camera = new Camera3d(0, 0, 800, 600);
+			camera.pos.set(120, -40, 0);
+			camera.depth = -300;
+			audio.setListener(camera);
+			frame();
+			expect(audio.listener()).toEqual([120, -40, -300]);
 		});
 
 		it("takes orientation from a Camera3d, and only from a Camera3d", () => {

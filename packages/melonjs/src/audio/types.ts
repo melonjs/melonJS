@@ -315,6 +315,13 @@ export interface PlayOptions {
 	 * melonJS; the Y flip Web Audio wants is applied for you. Sounds placed
 	 * this way are given the pixel-shaped panner defaults, which
 	 * `audio.setSpatialDefaults()` can change and `audio.panner()` overrides.
+	 *
+	 * The sound sits at the renderable's `getAbsolutePosition()`, which is
+	 * where its `anchorPoint` sits: its center under the `(0.5, 0.5)` default
+	 * of a `Renderable` or a `Sprite`, but its TOP-LEFT corner under the
+	 * `(0, 0)` of an `Entity` or of any object loaded from Tiled. For a large
+	 * entity, such as a boss, that puts the sound half its size up and to the
+	 * left of where it looks to be.
 	 */
 	follow?: Renderable | undefined;
 	/**
