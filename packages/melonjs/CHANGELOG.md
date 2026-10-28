@@ -2,9 +2,11 @@
 
 ## [20.12.0] (melonJS 2) - _unreleased_
 
+### Fixed
+- Rendering: with `subPixel` off (the default), each draw is snapped to whole pixels once, where it lands, the same way on Canvas, WebGL and WebGPU, instead of every `translate` being truncated as it was applied, so a flipped sprite no longer moves by a pixel, nested containers no longer land a pixel apart between backends, shapes, clips and masks are snapped as sprites are (no half-grey edges on Canvas), and a body resting on the floor at y = 223.99999999999997 no longer shakes ([#1765](https://github.com/melonjs/melonJS/issues/1765)). Anything that sat on a fraction of a pixel can draw one pixel over, and a rotated draw is no longer snapped; set `subPixel: true` to keep fractional positions
+
 ### Changed
-- Rendering: with `subPixel` off (the default), what is drawn is snapped to whole pixels once, where it lands, and the same way on Canvas, WebGL and WebGPU: each edge of a sprite, a shape or a clip is rounded to the nearest pixel after every translation and scale it is drawn under, instead of each `translate` being truncated as it was applied ([#1765](https://github.com/melonjs/melonJS/issues/1765)). A flipped sprite no longer moves by a pixel; nested translations land where their sum does on every backend (10.6 then -6.5 drew at 3 on WebGL, 4 on Canvas); a sprite and a `fillRect` at the same position cover the same pixels, and shapes (rects, round rects, ellipses, lines, polygons) and clips are snapped too, so Canvas no longer draws them with half-grey edges; and a body resting on the floor, which the built-in physics leaves at y = 224 and 223.99999999999997 in turn, no longer shakes by a pixel. Rotated draws, and what a `Camera3d` draws, are left where they are. This moves output by up to a pixel in existing `subPixel: false` games
-- Camera: with `subPixel` off, the view starts on a whole pixel (in world units), and `worldView`, `localToWorld` and `worldToLocal` use that same position, so culling and the pointer agree with what is drawn, and things standing still no longer move a pixel against each other while the view scrolls. The camera's `pos` keeps its fraction
+- Camera: with `subPixel` off, `worldView`, `localToWorld` and `worldToLocal` use the view's position rounded to a whole pixel, which is where the world is now drawn from, so culling and pointer coordinates match the frame on screen. `pos` keeps its fraction; read `pos` and `offset` for the exact view position
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
