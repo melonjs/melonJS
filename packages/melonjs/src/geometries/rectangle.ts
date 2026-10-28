@@ -1,5 +1,6 @@
-import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 import { createPool } from "../system/pool.ts";
+import { XYPoint } from "../utils/types.ts";
 import { Polygon, PolygonVertices, polygonPool } from "./polygon.ts";
 
 /**
@@ -216,14 +217,15 @@ export class Rect extends Polygon {
 	}
 
 	override contains(x: number, y: number): boolean;
-	override contains(vector: Vector2d): boolean;
-	override contains(xOrVector: Vector2d | number, y?: number): boolean {
+	override contains(vector: XYPoint): boolean;
+	override contains(xOrVector: XYPoint | number, y?: number): boolean {
 		let _x1: number;
 		let _x2: number;
 		let _y1: number;
 		let _y2: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x1 = _x2 = xOrVector.x;
 			_y1 = _y2 = xOrVector.y;
 		} else {

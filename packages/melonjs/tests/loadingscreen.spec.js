@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Application, boot, event, video } from "../src/index.js";
 import DefaultLoadingScreen from "../src/loader/loadingscreen.js";
 
@@ -37,14 +37,80 @@ describe("DefaultLoadingScreen", () => {
 		return screen;
 	};
 
-	it("puts a progress bar in the world", () => {
+	/**
+	 * Wait until `test()` holds, a few frames at most.
+	 * @param {Function} test - the condition
+	 * @returns {Promise<boolean>} whether it came true in time
+	 */
+	const until = async (test) => {
+		for (let i = 0; i < 100 && !test(); i++) {
+			await new Promise((resolve) => {
+				setTimeout(resolve, 10);
+			});
+		}
+		return test();
+	};
+
+	it("shows the bar and the logo together, once the logo is decoded", async () => {
+		// The logo decodes a frame or so after the screen comes up. A bar put
+		// on screen at once made the logo pop in after it; now neither shows
+		// until both can.
 		const screen = mount();
 		try {
-			expect(screen.progressBar).toBeDefined();
-			expect(app.world.hasChild(screen.progressBar)).toBe(true);
+			const bar = screen.progressBar;
+			expect(bar).toBeDefined();
+			expect(app.world.hasChild(bar)).toBe(false);
+			expect(screen.logoSprite).toBe(null);
+
+			expect(
+				await until(() => {
+					return screen.logoSprite !== null;
+				}),
+			).toBe(true);
+			expect(app.world.hasChild(screen.logoSprite)).toBe(true);
+			expect(app.world.hasChild(bar)).toBe(true);
 		} finally {
 			screen.destroy(app);
 		}
+	});
+
+	it("shows the bar alone when the logo cannot be decoded", async () => {
+		const decode = vi
+			.spyOn(globalThis, "createImageBitmap")
+			.mockRejectedValue(new Error("cannot decode"));
+		const screen = mount();
+		try {
+			const bar = screen.progressBar;
+			expect(
+				await until(() => {
+					return app.world.hasChild(bar);
+				}),
+			).toBe(true);
+			expect(screen.logoSprite).toBe(null);
+		} finally {
+			decode.mockRestore();
+			screen.destroy(app);
+		}
+	});
+
+	it("tracks the load before the bar is on screen", () => {
+		const screen = mount();
+		try {
+			event.emit(event.LOADER_PROGRESS, 0.4);
+			expect(screen.progressBar.value).toBe(0.4);
+		} finally {
+			screen.destroy(app);
+		}
+	});
+
+	it("destroys a bar that was never shown, and its subscription with it", () => {
+		// torn down before the logo or the assets came in: the bar never
+		// reached the world, so the world will not destroy it
+		const screen = mount();
+		const bar = screen.progressBar;
+		screen.destroy(app);
+		event.emit(event.LOADER_PROGRESS, 0.7);
+		expect(bar.value).toBe(0);
 	});
 
 	it("stays on screen after the preloader reports done", () => {

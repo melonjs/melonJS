@@ -13,6 +13,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Application,
 	Body,
+	Box3d,
 	BuiltinAdapter,
 	boot,
 	collision,
@@ -281,6 +282,14 @@ describe("Physics : BuiltinAdapter (Body parity with body.spec.js)", () => {
 			expect(handle).toBe(before); // same instance, not replaced
 			expect(adapter.bodies.has(before)).toEqual(true);
 		});
+
+		it("clears hasDepth when the def's shapes replace a Box3d", () => {
+			const r = new Renderable(0, 0, 32, 32);
+			r.body = new Body(r, [new Box3d(16, 16, 0, 32, 32, 32)]);
+			expect(r.body.hasDepth).toEqual(true);
+			adapter.addBody(r, { type: "dynamic", shapes: [new Rect(0, 0, 32, 32)] });
+			expect(r.body.hasDepth).toEqual(false);
+		});
 	});
 
 	describe("removeBody", () => {
@@ -327,6 +336,17 @@ describe("Physics : BuiltinAdapter (Body parity with body.spec.js)", () => {
 			const r = new Renderable(0, 0, 32, 32);
 			adapter.updateShape(r, [new Rect(0, 0, 8, 8)]);
 			expect(r.body).toBeUndefined();
+		});
+
+		it("clears hasDepth when the new shapes have no depth", () => {
+			const r = new Renderable(0, 0, 32, 32);
+			adapter.addBody(r, {
+				type: "dynamic",
+				shapes: [new Box3d(16, 16, 0, 32, 32, 32)],
+			});
+			expect(r.body.hasDepth).toEqual(true);
+			adapter.updateShape(r, [new Rect(0, 0, 16, 16)]);
+			expect(r.body.hasDepth).toEqual(false);
 		});
 	});
 

@@ -99,13 +99,14 @@ describe("Entity", () => {
 		expect(entity.body.shapes.length).toEqual(2);
 	});
 
+	// the union of shape A (10,10 → 42,74) and shape B (-10,-10 → 22,54)
 	it("has the correct body bounds: B", () => {
 		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === -10 &&
 				bounds.y === -10 &&
-				bounds.width === 42 &&
-				bounds.height === 74,
+				bounds.width === 52 &&
+				bounds.height === 84,
 		).toEqual(true);
 	});
 
@@ -124,8 +125,8 @@ describe("Entity", () => {
 		expect(
 			bounds.x === -10 &&
 				bounds.y === -10 &&
-				bounds.width === 42 &&
-				bounds.height === 74,
+				bounds.width === 52 &&
+				bounds.height === 84,
 		).toEqual(true);
 	});
 
