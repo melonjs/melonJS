@@ -7,6 +7,7 @@ import Camera3d from "./camera/camera3d.ts";
 import CameraEffect from "./camera/effects/camera_effect.ts";
 import FadeEffect from "./camera/effects/fade_effect.ts";
 import MaskEffect from "./camera/effects/mask_effect.ts";
+import PixelateTransitionEffect from "./camera/effects/pixelate_transition_effect.ts";
 import ShakeEffect from "./camera/effects/shake_effect.ts";
 import Frustum from "./camera/frustum.ts";
 import Pointer from "./input/pointer.ts";
@@ -262,6 +263,7 @@ export {
 	ParticleEmitter,
 	ParticleEmitterSettings,
 	PixelateEffect,
+	PixelateTransitionEffect,
 	PORTABLE_TOPOLOGIES,
 	Pointer,
 	PrimitiveBatcher,
