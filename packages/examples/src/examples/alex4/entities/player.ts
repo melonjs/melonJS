@@ -38,6 +38,10 @@ const JUMP_SPEED = jumpSpeed(16);
 // he stands, from the feet's bottom edge (96) down to the frame's (120).
 const LEGS = 24;
 
+// After walking off an edge, Alex can still jump for this many steps (0.1s):
+// not in the original, a modern grace that makes a running jump easier.
+const COYOTE = 6;
+
 // The ball turns 8/256 of a turn per tick, as in the original.
 const SPIN = (8 / 256) * Math.PI * 2 * (50 / 60);
 
@@ -103,11 +107,19 @@ export class PlayerEntity extends Sprite {
 	private jumpHeld = false;
 	/** let go of the button while going up */
 	private jumpCut = false;
+	/**
+	 * the button has made its jump, and makes no other until let go. As in the
+	 * original, held down as Alex lands it jumps at once: the button had not
+	 * made one yet
+	 */
+	private jumpLatched = false;
+	/** steps left to jump after walking off an edge (see COYOTE) */
+	private coyote = 0;
 	private gone = false;
 	private adapter!: PhysicsAdapter;
 	private vel = new Vector2d();
-	/** a short ray down from his feet, and what it finds (see landingSoon) */
-	private ray = new Line(0, 0, [new Vector2d(0, 0), new Vector2d(0, LEGS)]);
+	/** a short ray down from his feet, and what it finds (see floorBelow) */
+	private ray = new Line(0, 0, [new Vector2d(0, 0), new Vector2d(0, 48)]);
 	private hits: Renderable[] = [];
 	/** what the camera looks at: Alex is in the middle of his frame */
 	private focus = new Vector2d();
@@ -256,15 +268,22 @@ export class PlayerEntity extends Sprite {
 			vel.x = 0;
 		}
 
-		if (input.isKeyPressed("jump") && this.grounded) {
+		this.coyote = this.grounded ? COYOTE : Math.max(this.coyote - 1, 0);
+		const held = input.keyStatus("jump");
+		if (held && !this.jumpLatched && (this.grounded || this.coyote > 0)) {
 			vel.y = -JUMP_SPEED;
 			this.jumpHeld = true;
 			this.jumpCut = false;
+			this.jumpLatched = true;
+			this.coyote = 0;
 			this.squashTo(1.12, 250, Tween.Easing.Quadratic.Out);
 			audio.play("jump");
-		} else if (this.jumpHeld && !input.keyStatus("jump")) {
+		} else if (this.jumpHeld && !held) {
 			this.jumpHeld = false;
 			this.jumpCut = true;
+		}
+		if (!held) {
+			this.jumpLatched = false;
 		}
 		// let go of the button for a shorter jump: as in the original, the
 		// speed up is halved on every step until Alex falls again
@@ -273,6 +292,19 @@ export class PlayerEntity extends Sprite {
 				vel.y /= 2;
 			} else {
 				this.jumpCut = false;
+			}
+		}
+		// coming down onto a ledge: the step that would take his feet into it
+		// ends on its top instead. Otherwise, with only a corner of the ledge
+		// under him, the physics pushed him out by the shortest way, sideways,
+		// and off it; the original lifts him on top of anything his feet sink in
+		if (!this.grounded && vel.y >= 0) {
+			const gravity = this.parentApp.world.gravity.y;
+			const fall = Math.min(vel.y + gravity, 24);
+			const floor = this.floorBelow(this.pos.x + vel.x);
+			if (floor < fall) {
+				// half a pixel in, so that the contact is there to stand on
+				vel.y = floor - gravity + 0.5;
 			}
 		}
 		this.body.setVelocity(vel.x, vel.y);
@@ -342,19 +374,24 @@ export class PlayerEntity extends Sprite {
 
 	private updateAnimation(vx: number) {
 		if (this.eating) {
+			// eaten in the air, and down while chewing: the rest of the chew on
+			// the ground, or the jumping pose would hang his legs in the floor
+			if (!this.inAir() && this.isCurrentAnimation("jump_spit")) {
+				this.chew("eat");
+			}
 			return;
 		}
 		const full = gameState.eggs > 0 ? "full_" : "";
 		if (this.rolling) {
 			this.setCurrentAnimation("roll");
 		} else if (this.spitting) {
-			this.setCurrentAnimation(this.grounded ? "spit" : "jump_spit", {
+			this.setCurrentAnimation(this.inAir() ? "jump_spit" : "spit", {
 				loop: false,
 				onComplete: () => {
 					this.spitting = false;
 				},
 			});
-		} else if (!this.grounded && !this.landingSoon()) {
+		} else if (this.inAir()) {
 			this.setCurrentAnimation(`${full}jump`);
 		} else if (vx !== 0) {
 			this.setCurrentAnimation(`${full}walk`);
@@ -368,20 +405,34 @@ export class PlayerEntity extends Sprite {
 	 * takes the landing pose a step early, or the legs would show in it
 	 */
 	private landingSoon() {
-		if (this.body.getVelocity(this.vel).y <= 0) {
-			return false;
-		}
-		// under both edges of his feet, so that a ledge counts too
-		for (const x of [78, 114]) {
-			this.ray.pos.set(this.pos.x + x, this.pos.y + 96);
+		return (
+			this.body.getVelocity(this.vel).y > 0 &&
+			this.floorBelow(this.pos.x) < LEGS
+		);
+	}
+
+	/**
+	 * how far below his feet the level is, with them at `x` (Infinity past the
+	 * length of the ray): under both edges of the feet and their middle, so
+	 * that the corner of a ledge counts too
+	 */
+	private floorBelow(x: number) {
+		const feet = this.pos.y + 96;
+		let floor = Infinity;
+		for (const dx of [77, 96, 115]) {
+			this.ray.pos.set(x + dx, feet);
 			this.hits.length = 0;
 			for (const hit of collision.rayCast(this.ray, this.hits)) {
 				if (hit.body.collisionType === collision.types.WORLD_SHAPE) {
-					return true;
+					const top = hit.getBounds().top;
+					// not what he is already in (a wall beside him)
+					if (top >= feet - 0.5) {
+						floor = Math.min(floor, top - feet);
+					}
 				}
 			}
 		}
-		return false;
+		return floor;
 	}
 
 	/** chew whatever was just picked up */
@@ -392,12 +443,24 @@ export class PlayerEntity extends Sprite {
 		this.eating = true;
 		this.spitting = false;
 		// in the air Alex keeps his jumping pose, mouth open
-		this.setCurrentAnimation(this.grounded ? "eat" : "jump_spit", {
+		this.chew(this.inAir() ? "jump_spit" : "eat");
+	}
+
+	private chew(pose: "eat" | "jump_spit") {
+		this.setCurrentAnimation(pose, {
 			loop: false,
 			onComplete: () => {
 				this.eating = false;
 			},
 		});
+	}
+
+	/**
+	 * in the air, and not about to land: the poses for it hang his legs lower
+	 * than his feet (see LEGS)
+	 */
+	private inAir() {
+		return !this.grounded && !this.landingSoon();
 	}
 
 	/** spit an egg, if we have one */
