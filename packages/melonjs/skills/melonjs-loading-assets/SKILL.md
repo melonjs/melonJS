@@ -183,7 +183,8 @@ the hard way:
 ### `DefaultLoadingScreen` lives in the WORLD, not on the screen
 
 The built-in loading screen is written for a `Camera2d`. Its progress bar and
-logo are added with `app.world.addChild(bar, 1)` / `addChild(logo, 2)` and are
+logo are added together, once the logo is decoded (a frame or so after the
+screen comes up), with `app.world.addChild(bar, 1)` / `addChild(logo, 2)`, and are
 **`floating === false`** — ordinary world-space renderables. They read as an
 overlay only because that stage's world is otherwise empty.
 
@@ -195,7 +196,7 @@ in front of a bar sitting at z = 1. What does NOT rescue it, all tried:
   depth, so the scene's own z values are geometry, not layering, and the bar
   still loses to the depth test.
 - **`moveToTop()`** — it early-returns for a child already at index 0, which the
-  loading screen's children always are, having been added before anything else.
+  loading screen's children usually are, having been added before anything else.
   It silently does nothing.
 - **Flipping them to `floating = true`** for the duration — the scene still
   covers them.
