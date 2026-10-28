@@ -1,5 +1,6 @@
 import { Point } from "../geometries/point.ts";
 import { createPool } from "../system/pool.ts";
+import { XYPoint } from "../utils/types.ts";
 import { EPSILON } from "./math.ts";
 import { Matrix2d } from "./matrix2d.ts";
 import { Vector2d } from "./vector2d.ts";
@@ -742,21 +743,23 @@ export class Matrix3d {
 	 * @returns Reference to this object for method chaining
 	 */
 	translate(x: number, y: number, z?: number): Matrix3d;
-	translate(vector: Vector3d | Vector2d): Matrix3d;
-	translate(xOrVector: Vector3d | Vector2d | number, y?: number, z?: number) {
+	translate(vector: XYPoint & { z?: number }): Matrix3d;
+	translate(
+		xOrVector: (XYPoint & { z?: number }) | number,
+		y?: number,
+		z?: number,
+	) {
 		const a = this.val;
 		let _x: number;
 		let _y: number;
 		let _z: number;
 
-		if (xOrVector instanceof Vector3d) {
+		// any {x, y} or {x, y, z} point: Vector2d, Vector3d, Point, or
+		// observable vectors (a 2D one translates by z = 0)
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
-			_z = xOrVector.z;
-		} else if (xOrVector instanceof Vector2d) {
-			_x = xOrVector.x;
-			_y = xOrVector.y;
-			_z = 0;
+			_z = xOrVector.z ?? 0;
 		} else {
 			_x = xOrVector;
 			_y = y!;

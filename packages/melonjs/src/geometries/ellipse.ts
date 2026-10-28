@@ -2,6 +2,7 @@ import type { Matrix2d } from "../math/matrix2d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { Bounds, boundsPool } from "../physics/bounds.ts";
 import { createPool } from "../system/pool.ts";
+import { XYPoint } from "../utils/types.ts";
 import { Polygon } from "./polygon.ts";
 
 /**
@@ -268,12 +269,13 @@ export class Ellipse {
 	 * ellipse.translate(myVector2d);
 	 */
 	translate(x: number, y: number): Ellipse;
-	translate(vector: Vector2d): Ellipse;
-	translate(xOrVector: Vector2d | number, y?: number) {
+	translate(vector: XYPoint): Ellipse;
+	translate(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {
@@ -304,12 +306,13 @@ export class Ellipse {
 	 * }
 	 */
 	contains(x: number, y: number): boolean;
-	contains(vector: Vector2d): boolean;
-	contains(xOrVector: Vector2d | number, y?: number) {
+	contains(vector: XYPoint): boolean;
+	contains(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			[_x, _y] = [xOrVector.x, xOrVector.y];
 		} else {
 			_x = xOrVector;
