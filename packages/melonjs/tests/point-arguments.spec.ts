@@ -119,9 +119,9 @@ describe("point arguments: any {x, y} object", () => {
 			const z = "z" in p ? 5 : 0;
 			expect([m.val[12], m.val[13], m.val[14]]).toEqual([10, 20, z]);
 		}
-		// a renderable's pos carries its own z
+		// a renderable's pos carries its own z, its depth
 		const sprite = new Renderable(10, 20, 32, 48);
-		sprite.pos.z = 7;
+		sprite.depth = 7;
 		const m = new Matrix3d().translate(sprite.pos);
 		expect([m.val[12], m.val[13], m.val[14]]).toEqual([10, 20, 7]);
 	});
