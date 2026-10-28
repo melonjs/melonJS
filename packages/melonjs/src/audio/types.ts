@@ -51,8 +51,20 @@ export interface SoundAsset {
 	/** Start muted. Defaults to `false`. */
 	mute?: boolean;
 	/**
-	 * Whether to begin downloading on load. `"metadata"` fetches only enough to
-	 * report duration. Defaults to `true`.
+	 * When the clip is downloaded. Defaults to `true`.
+	 *
+	 * - `true`: during the preload, so it plays the moment it is asked to.
+	 * - `false`: when it is first played (`audio.play`, `audio.playTrack`, or
+	 *   `autoplay`). That play fetches it and streams it, as `stream: true`
+	 *   does, so the sound starts as soon as enough of the file has arrived
+	 *   rather than once all of it has. A clip never played is never
+	 *   downloaded: for music a player may not reach, such as a boss or an
+	 *   ending theme, that keeps the wait before the game starts short. As a
+	 *   streamed clip it plays through an `<audio>` element, so positional
+	 *   sound (`follow`, `at`, `stereo`) does not apply to it.
+	 * - `"metadata"`: on a streamed clip, only enough to know its duration
+	 *   during the preload, the rest when it plays. A buffered clip is
+	 *   downloaded whole either way.
 	 */
 	preload?: boolean | "metadata";
 	/**
@@ -71,7 +83,10 @@ export interface SoundAsset {
 	loop?: boolean;
 	/**
 	 * Stream the resource instead of fully decoding upfront — preferred
-	 * for long music tracks. Defaults to `false`.
+	 * for long music tracks. It is still fetched during the preload; add
+	 * `preload: false` to fetch it only when it is first played. Plays
+	 * through an `<audio>` element, so positional sound (`follow`, `at`,
+	 * `stereo`) does not apply to it. Defaults to `false`.
 	 */
 	stream?: boolean;
 	/**
