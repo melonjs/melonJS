@@ -408,12 +408,13 @@ export class Polygon {
 	 * polygon.translate(myVector2d);
 	 */
 	translate(x: number, y: number): Polygon;
-	translate(vector: Vector2d): Polygon;
-	translate(xOrVector: Vector2d | number, y?: number) {
+	translate(vector: XYPoint): Polygon;
+	translate(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {
@@ -438,11 +439,12 @@ export class Polygon {
 	 * polygon.shift(myVector2d);
 	 */
 	shift(x: number, y: number): void;
-	shift(vector: Vector2d): void;
-	shift(xOrVector: Vector2d | number, y?: number) {
+	shift(vector: XYPoint): void;
+	shift(xOrVector: XYPoint | number, y?: number) {
 		let _x;
 		let _y;
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {
@@ -472,12 +474,13 @@ export class Polygon {
 	 * }
 	 */
 	contains(x: number, y: number): boolean;
-	contains(vector: Vector2d): boolean;
-	contains(xOrVector: Vector2d | number, y?: number) {
+	contains(vector: XYPoint): boolean;
+	contains(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {

@@ -365,20 +365,22 @@ export class Bounds {
 	 * @returns True if the bounds contain the point or vector, otherwise false.
 	 */
 	contains(x: number, y: number): boolean;
-	contains(vector: Vector2d | Bounds): boolean;
-	contains(xOrVectorOrBounds: Bounds | Vector2d | number, y?: number) {
+	contains(vector: XYPoint | Bounds): boolean;
+	contains(xOrVectorOrBounds: Bounds | XYPoint | number, y?: number) {
 		let _x1: number;
 		let _x2: number;
 		let _y1: number;
 		let _y2: number;
-		if (xOrVectorOrBounds instanceof Vector2d) {
-			_x1 = _x2 = xOrVectorOrBounds.x;
-			_y1 = _y2 = xOrVectorOrBounds.y;
-		} else if (xOrVectorOrBounds instanceof Bounds) {
+		// check for Bounds first, as it also exposes `x` and `y` accessors
+		if (xOrVectorOrBounds instanceof Bounds) {
 			_x1 = xOrVectorOrBounds.min.x;
 			_x2 = xOrVectorOrBounds.max.x;
 			_y1 = xOrVectorOrBounds.min.y;
 			_y2 = xOrVectorOrBounds.max.y;
+		} else if (typeof xOrVectorOrBounds === "object") {
+			// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+			_x1 = _x2 = xOrVectorOrBounds.x;
+			_y1 = _y2 = xOrVectorOrBounds.y;
 		} else {
 			_x1 = _x2 = xOrVectorOrBounds;
 			_y1 = _y2 = y!;
@@ -421,15 +423,16 @@ export class Bounds {
 
 	/**
 	 * Translates the bounds by the given point or vector.
-	 * @param xOrVector - The x coordinate or vector to translate by.
+	 * @param xOrVector - The x coordinate or point/vector (any object with `x` and `y`) to translate by.
 	 * @param [y] - The y coordinate if the first parameter is a number.
 	 */
 	translate(x: number, y: number): void;
-	translate(vector: Vector2d): void;
-	translate(xOrVector: Vector2d | number, y?: number) {
+	translate(vector: XYPoint): void;
+	translate(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {
@@ -444,16 +447,17 @@ export class Bounds {
 
 	/**
 	 * Shifts the bounds to the given x, y position or vector.
-	 * @param xOrVector - The x coordinate or vector to shift to.
+	 * @param xOrVector - The x coordinate or point/vector (any object with `x` and `y`) to shift to.
 	 * @param [y] - The y coordinate if the first parameter is a number.
 	 */
 	shift(x: number, y: number): void;
-	shift(vector: Vector2d): void;
-	shift(xOrVector: number | Vector2d, y?: number) {
+	shift(vector: XYPoint): void;
+	shift(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {

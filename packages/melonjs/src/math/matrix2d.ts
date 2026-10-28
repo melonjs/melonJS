@@ -1,5 +1,6 @@
 import { Point } from "../geometries/point.js";
 import { createPool } from "../system/pool.js";
+import { XYPoint } from "../utils/types.ts";
 import { Matrix3d } from "./matrix3d.js";
 import { Vector2d } from "./vector2d.js";
 import { Vector3d } from "./vector3d.js";
@@ -382,12 +383,13 @@ export class Matrix2d {
 	 * @returns Reference to this object for method chaining
 	 */
 	translate(x: number, y: number): Matrix2d;
-	translate(vector: Vector2d): Matrix2d;
-	translate(xOrVector: Vector2d | number, y?: number) {
+	translate(vector: XYPoint): Matrix2d;
+	translate(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {

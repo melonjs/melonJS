@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.11.1] (melonJS 2) - _unreleased_
+
+### Fixed
+- Geometry: the methods that take a point (`translate`, `shift` and `contains` on `Bounds`, `Polygon`, `Rect`, `RoundRect`, `Ellipse` and `Line`, and `translate` on `Matrix2d` and `Matrix3d`) take any object with `x` and `y`, such as a renderable's `pos`. Given anything but a `Vector2d` they treated it as a number and came out `NaN`, so `bounds.clone().translate(renderable.pos)` gave no world bounds and `overlaps()` then reported every area as taken
+
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
 ### Added

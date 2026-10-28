@@ -1,5 +1,6 @@
 import { Vector2d } from "../math/vector2d.ts";
 import { createPool } from "../system/pool.ts";
+import { XYPoint } from "../utils/types.ts";
 import { Polygon } from "./polygon.ts";
 
 // https://developer.chrome.com/blog/canvas2d/#round-rect
@@ -309,12 +310,13 @@ export class RoundRect extends Polygon {
 	 * @returns True if the rounded rectangle contains the given point
 	 */
 	override contains(x: number, y: number): boolean;
-	override contains(vector: Vector2d): boolean;
-	override contains(xOrVector: Vector2d | number, y?: number) {
+	override contains(vector: XYPoint): boolean;
+	override contains(xOrVector: XYPoint | number, y?: number) {
 		let _x: number;
 		let _y: number;
 
-		if (xOrVector instanceof Vector2d) {
+		// any {x, y} point: Vector2d, Vector3d, Point, or observable vectors
+		if (typeof xOrVector === "object") {
 			_x = xOrVector.x;
 			_y = xOrVector.y;
 		} else {
