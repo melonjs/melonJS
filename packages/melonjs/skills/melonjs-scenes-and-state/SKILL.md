@@ -125,6 +125,14 @@ app.freeze(150);                             // brief hit-stop (proxies state.fr
 largest block size in pixels). It is a shader effect, so on Canvas it does
 nothing and the state changes directly.
 
+A `state.change` asked for while a transition covers the screen (Enter pressed
+twice on a menu, a timer firing as the player skips a screen) needs no guard:
+the transition already under way makes it, switching to the last state asked
+for with the last arguments, and a second cover never goes up. A change to a
+state with no transition of its own (`state.setTransition(id, false)`) is made
+at once, and the cover comes down with it. Before 20.12 the second change left
+the first cover on the camera for good, the screen black over a running game.
+
 ### A Stage's own `update()` is NOT paused
 
 This one is easy to get wrong and hard to see. `Application.update` calls both

@@ -1,5 +1,7 @@
 import type Application from "../application/application.ts";
 import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
+import type Camera2d from "../camera/camera2d.ts";
+import type CameraEffect from "../camera/effects/camera_effect.ts";
 import FadeEffect from "../camera/effects/fade_effect.ts";
 import MaskEffect from "../camera/effects/mask_effect.ts";
 import PixelateTransitionEffect from "../camera/effects/pixelate_transition_effect.ts";
@@ -63,6 +65,33 @@ const _transitionConfig: {
  * @internal
  */
 let _onSwitchComplete: (() => void) | null = null;
+
+/**
+ * A change a transition's cover is up for: the state it switches to, the
+ * camera the cover is on, and the switch itself, which does nothing once the
+ * change has been made or dropped.
+ * @ignore
+ * @internal
+ */
+type PendingChange = {
+	stateId: number;
+	camera: Camera2d;
+	cover: CameraEffect;
+	finish: () => void;
+};
+
+/**
+ * The change a transition is covering the screen for, from the `change()`
+ * that put its cover up until its switch is made, or `null`.
+ *
+ * A further `change()` in that time takes this one to its own state rather
+ * than putting up a cover of its own: two covers shared the single
+ * `_onSwitchComplete`, and the one whose way down was overwritten stayed on
+ * the camera for good (#1787).
+ * @ignore
+ * @internal
+ */
+let _pendingChange: PendingChange | null = null;
 
 /**
  * The longest a state's first frame waits for its stage's warm-ups, in ms.
@@ -352,6 +381,15 @@ once(BOOT, () => {
 	// store the application reference when initialized
 	on(GAME_INIT, (app: Application) => {
 		_app = app;
+		// A transition the last application was destroyed under never
+		// completes, and is not this one's to finish. Its cover is taken
+		// off all the same: every stage without a camera class of its own
+		// shares one camera, this application's included.
+		if (_pendingChange !== null) {
+			_pendingChange.camera.removeCameraEffect(_pendingChange.cover);
+			_pendingChange = null;
+		}
+		_onSwitchComplete = null;
 	});
 	// enable by default as soon as the display is initialized
 	once(VIDEO_INIT, () => {
@@ -725,13 +763,25 @@ const state = {
 
 	/**
 	 * change the game/app state
+	 *
+	 * With a transition (see {@link state.transition}), the state changes once
+	 * the transition covers the screen. A change asked for until then is made
+	 * by that same transition rather than a second one: it switches to the
+	 * last state asked for, with the last arguments given. A change to a state
+	 * whose transition is off (see {@link state.setTransition}) does not wait
+	 * for it, and the cover comes down as the state changes.
 	 * @param stateId - State ID (see constants)
-	 * @param [forceChange=false] - if true the state will be changed immediately (without waiting for the next frame)
+	 * @param [forceChange=false] - if true the state will be changed immediately (without waiting for the next frame); ignored when a transition makes the change
 	 * @param extraArgs - extra arguments to be passed to the reset functions
 	 * @example
 	 * // The onResetEvent method on the play screen will receive two args:
 	 * // "level_1" and the number 3
 	 * state.change(state.PLAY, false, "level_1", 3);
+	 * @example
+	 * // asked twice, by a key pressed twice on a menu: one transition, to PLAY
+	 * state.transition("fade", "#000", 250);
+	 * state.change(state.PLAY);
+	 * state.change(state.PLAY);
 	 */
 	change(
 		stateId: number,
@@ -747,10 +797,63 @@ const state = {
 		if (!this.isCurrent(stateId)) {
 			// store extra arguments if any
 			_extraArgs = extraArgs.length > 0 ? extraArgs : null;
+			const transitions =
+				Boolean(_transitionConfig.duration) && _stages[stateId].transition;
+			// A transition already covering the screen makes this change, to
+			// this state and with these arguments, rather than a second cover
+			// going up: the last change asked for wins, as it does without a
+			// transition.
+			if (_pendingChange !== null) {
+				const pending = _pendingChange;
+				if (pending.camera.cameraEffects.includes(pending.cover)) {
+					pending.stateId = stateId;
+					// a change with no transition of its own does not wait
+					// for the cover: made now, or on the next frame, as
+					// before, and the cover comes down as it is made
+					if (!transitions) {
+						if (forceChange) {
+							pending.finish();
+						} else {
+							defer(pending.finish, null);
+						}
+					}
+					return;
+				}
+				// its cover was taken off before it completed, so it will never
+				// switch: dropped, and its way down with it
+				_pendingChange = null;
+				_onSwitchComplete = null;
+			}
 			// apply transition effect if configured
-			if (_transitionConfig.duration && _stages[stateId].transition) {
+			if (transitions) {
+				// set once the cover is up
+				let pending: PendingChange | null = null;
 				const onComplete = () => {
-					defer(_switchState, state, stateId);
+					// no cover was put up (see below): a switch of its own
+					if (pending === null) {
+						defer(_switchState, state, stateId);
+					} else {
+						defer(pending.finish, null);
+					}
+				};
+				const covering = (cover: CameraEffect) => {
+					const change: PendingChange = {
+						stateId,
+						camera: _app.viewport,
+						cover,
+						finish: () => {
+							// made already, or dropped (its cover taken off,
+							// its application destroyed): nothing to do
+							if (_pendingChange !== change) {
+								return;
+							}
+							_pendingChange = null;
+							// to whichever state was asked for last
+							_switchState(change.stateId);
+						},
+					};
+					pending = change;
+					_pendingChange = change;
 				};
 
 				switch (_transitionType) {
@@ -784,6 +887,7 @@ const state = {
 							);
 						};
 						_app.viewport.addCameraEffect(fadeEffect);
+						covering(fadeEffect);
 						break;
 					}
 					case "mask": {
@@ -822,6 +926,7 @@ const state = {
 							);
 						};
 						_app.viewport.addCameraEffect(maskEffect);
+						covering(maskEffect);
 						break;
 					}
 					case "pixelate": {
@@ -859,6 +964,7 @@ const state = {
 							);
 						};
 						_app.viewport.addCameraEffect(coverEffect);
+						covering(coverEffect);
 						break;
 					}
 					default:
