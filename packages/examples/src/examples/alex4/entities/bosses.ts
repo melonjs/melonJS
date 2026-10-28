@@ -10,6 +10,7 @@ import {
 	collision,
 	level,
 	math,
+	type ParticleEmitter,
 	Rect,
 	type Renderable,
 	Sprite,
@@ -55,6 +56,7 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 	energy = 4;
 	private defeated = false;
 	private engine = 0;
+	private smoke: ParticleEmitter | undefined;
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(
@@ -140,14 +142,12 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 
 	override update(dt: number) {
 		if (!this.alive && !this.defeated) {
-			// smoking all the way down, a puff every frame like the original
-			smoke(
-				this.parentApp.world,
-				this.pos.x + math.random(32, 96),
-				this.pos.y + this.height - math.random(64, 128),
-			);
+			// smoking all the way down, like the original
+			this.smoke ??= smoke(this.parentApp.world, 0, 0);
+			this.smoke.pos.set(this.pos.x + 32, this.pos.y + this.height - 128);
 			if (this.pos.y > HEIGHT) {
 				this.defeated = true;
+				this.smoke.stopStream();
 				guardianDefeated();
 			}
 		}

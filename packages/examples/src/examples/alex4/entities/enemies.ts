@@ -320,6 +320,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 	startY: number;
 	mode: "wait" | "fall" | "landed" | "rise" = "wait";
 	private hitGround = false;
+	private alex: Renderable | undefined;
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings, ["enemy3"]);
@@ -343,7 +344,9 @@ export class CrusherEntity extends GenericEnemyEntity {
 	override think() {
 		switch (this.mode) {
 			case "wait": {
-				const alex = this.parentApp.world.getChildByName("alex")[0];
+				// looked up once, not on every frame
+				this.alex ??= this.parentApp.world.getChildByName("alex")[0];
+				const alex = this.alex;
 				if (alex && Math.abs(alex.pos.x + 96 - (this.pos.x + 64)) < 128) {
 					this.mode = "fall";
 					this.adapter.setGravityScale(this, 1);

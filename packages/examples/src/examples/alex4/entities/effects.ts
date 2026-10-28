@@ -90,19 +90,35 @@ export function flash(
 }
 
 /**
- * a puff of smoke, as the original left behind the dying spike truck
+ * the smoke the original left behind the dying spike truck: a puff every
+ * frame, left where it was made, playing the 8 frames of the smoke over its
+ * life. Move the emitter along, and stop it with stopStream().
  */
 export function smoke(world: Container, x: number, y: number) {
-	const frames = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `smoke${i}`);
-	const puff = new Sprite(x, y, {
-		...gameState.atlas.getAnimationSettings(frames),
+	const emitter = new ParticleEmitter(x, y, {
+		image: loader.getImage("smoke") as HTMLImageElement,
+		framewidth: 64,
+		frameheight: 64,
+		// where the puffs come out, from the emitter's top left
+		width: 64,
+		height: 64,
+		// a puff stays where it was made, while the truck goes on
+		referenceSpace: "world",
+		frequency: 16,
+		maxParticles: 1,
+		// 8 frames of 40ms, as in the original
+		minLife: 320,
+		maxLife: 320,
+		speed: 0,
+		speedVariation: 0,
+		minEndScale: 1,
+		maxEndScale: 1,
+		onlyInViewport: false,
+		autoDestroyOnComplete: true,
 	});
-	puff.addAnimation("puff", frames, 40);
-	puff.setCurrentAnimation("puff", {
-		loop: false,
-		onComplete: () => world.removeChild(puff),
-	});
-	world.addChild(puff, EFFECT_Z);
+	world.addChild(emitter, EFFECT_Z);
+	emitter.streamParticles();
+	return emitter;
 }
 
 /**

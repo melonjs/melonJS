@@ -44,6 +44,7 @@ export const resources = [
 
 	// particles
 	image("dust"),
+	image("smoke"),
 
 	// bitmap fonts
 	image("atascii32", "fnt"),

@@ -74,6 +74,7 @@ class HUDEnergy extends Container {
 /************************************************************************************/
 export class HUD extends Container {
 	score: BitmapText;
+	private shown = -1;
 
 	constructor() {
 		super(0, HEIGHT - 40, WIDTH, 40);
@@ -101,7 +102,11 @@ export class HUD extends Container {
 	}
 
 	override update(dt: number) {
-		this.score.setText(gameState.score);
+		// only when it changes: setText measures the text again on every call
+		if (this.shown !== gameState.score) {
+			this.shown = gameState.score;
+			this.score.setText(this.shown);
+		}
 		return super.update(dt);
 	}
 }

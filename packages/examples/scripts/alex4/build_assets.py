@@ -51,7 +51,7 @@ print("water", strip.width // 16)
 
 # ---- sprite atlas ---------------------------------------------------------
 skip = {"BG0", "BG1", "BG2", "INTRO_BG", "ALEX_BG", "LEVELCOMPLETE", "GAME_OVER", "LETSGO", "ALEX_LOGO", "FLD_LOGO", "SHIP100", "POINTER",
-        "WATER", "WATER_SURFACE"}
+        "WATER", "WATER_SURFACE", *(f"SMOKE{i}" for i in range(1, 9))}
 frames = {}
 for n, im in bmps.items():
     if n.startswith("TILE") or n in skip:
@@ -88,6 +88,13 @@ for n in list(frames):
 
 # the particle emitter wants a plain image
 up(bmps["PARTICLE_DUST"]).save(f"{OUT}/img/dust.png", optimize=True)
+
+# and the smoke of the dying truck, its frames in a row: a particle plays them
+# over its life
+smoke = Image.new("RGBA", (16 * 8, 16))
+for i in range(8):
+    smoke.paste(bmps[f"SMOKE{i + 1}"], (i * 16, 0))
+up(smoke).save(f"{OUT}/img/smoke.png", optimize=True)
 
 # the treetops of the intro, made for a 4:3 screen: mirror their right side to
 # fill a 16:9 one (208 pixels wide at the original scale)
