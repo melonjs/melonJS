@@ -1033,6 +1033,18 @@ export default class Camera3d extends Camera2d {
 	}
 
 	/**
+	 * A 3D view is not snapped: its position is in world units under a
+	 * perspective projection, where rounding it would move the view in whole
+	 * units. See {@link Camera2d#_viewOrigin}.
+	 * @param value - the position plus the offset, on one axis
+	 * @returns the same value
+	 * @ignore
+	 */
+	override _viewOrigin(value: number): number {
+		return value;
+	}
+
+	/**
 	 * Apply the camera's full 3D view transform to the world container.
 	 * Order: rotate first (pitch, yaw), then translate by `-camera.pos`.
 	 * Post-multiplication semantics give us

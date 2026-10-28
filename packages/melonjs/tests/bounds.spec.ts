@@ -5,9 +5,15 @@ import {
 	Matrix2d,
 	Matrix3d,
 	math,
+	ObservablePoint,
+	ObservableVector2d,
+	ObservableVector3d,
+	Point,
 	Polygon,
 	Rect,
+	Renderable,
 	Vector2d,
+	Vector3d,
 } from "../src/index.js";
 
 describe("Physics : Bounds", () => {
@@ -443,6 +449,97 @@ describe("Physics : Bounds", () => {
 			expect(b.min.y).toEqual(7);
 			expect(b.width).toEqual(0);
 			expect(b.height).toEqual(0);
+		});
+	});
+
+	describe("non-Vector2d point arguments", () => {
+		// a renderable's `pos` is an ObservableVector3d, not a Vector2d
+		const renderable = new Renderable(100, 200, 32, 48);
+
+		const localBounds = () =>
+			new Bounds([
+				{ x: 0, y: 0 },
+				{ x: 32, y: 48 },
+			]);
+
+		it("translate by a renderable's pos gives world bounds", () => {
+			const world = localBounds().clone();
+			world.translate(renderable.pos);
+			expect(world.isFinite()).toEqual(true);
+			expect(world.left).toEqual(100);
+			expect(world.top).toEqual(200);
+			expect(world.right).toEqual(132);
+			expect(world.bottom).toEqual(248);
+		});
+
+		it("translated bounds only overlap what they actually touch", () => {
+			const world = localBounds().clone();
+			world.translate(renderable.pos);
+			const far = new Bounds([
+				{ x: 500, y: 500 },
+				{ x: 600, y: 600 },
+			]);
+			const near = new Bounds([
+				{ x: 120, y: 220 },
+				{ x: 140, y: 240 },
+			]);
+			expect(world.overlaps(far)).toEqual(false);
+			expect(world.overlaps(near)).toEqual(true);
+		});
+
+		it("shift to a renderable's pos", () => {
+			const b = localBounds();
+			b.shift(renderable.pos);
+			expect(b.isFinite()).toEqual(true);
+			expect(b.left).toEqual(100);
+			expect(b.top).toEqual(200);
+			expect(b.width).toEqual(32);
+			expect(b.height).toEqual(48);
+		});
+
+		it("contains a renderable's pos", () => {
+			const b = new Bounds([
+				{ x: 0, y: 0 },
+				{ x: 150, y: 250 },
+			]);
+			expect(b.contains(renderable.pos)).toEqual(true);
+			b.translate(-100, 0);
+			expect(b.contains(renderable.pos)).toEqual(false);
+		});
+
+		it("translate, shift and contains accept any {x, y} point", () => {
+			const points = [
+				new Vector2d(10, 20),
+				new Vector3d(10, 20, 5),
+				new Point(10, 20),
+				new ObservableVector2d(10, 20, () => {}),
+				new ObservableVector3d(10, 20, 5, () => {}),
+				new ObservablePoint(10, 20, () => {}),
+				{ x: 10, y: 20 },
+			];
+			for (const p of points) {
+				const t = localBounds();
+				t.translate(p);
+				expect([t.left, t.top, t.right, t.bottom]).toEqual([10, 20, 42, 68]);
+
+				const s = localBounds();
+				s.translate(5, 5);
+				s.shift(p);
+				expect([s.left, s.top, s.right, s.bottom]).toEqual([10, 20, 42, 68]);
+
+				expect(localBounds().contains(p)).toEqual(true);
+			}
+		});
+
+		it("contains still handles a Bounds argument", () => {
+			const outer = localBounds();
+			const inner = new Bounds([
+				{ x: 4, y: 4 },
+				{ x: 8, y: 8 },
+			]);
+			expect(outer.contains(inner)).toEqual(true);
+			inner.translate(100, 100);
+			expect(outer.contains(inner)).toEqual(false);
 		});
 	});
 });

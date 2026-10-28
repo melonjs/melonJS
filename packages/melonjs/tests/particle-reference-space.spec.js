@@ -36,7 +36,7 @@ describe("particle referenceSpace", () => {
 			// directly instead of through a fudge
 			scale: "1.0",
 			renderer: video.CANVAS,
-			// sub-pixel snapping floors the accumulated translation after every
+			// sub-pixel snapping rounds the accumulated translation after every
 			// op; without this, positions arrive rounded and every assertion
 			// below would need a 1px slop that hides real errors
 			subPixel: true,

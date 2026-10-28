@@ -423,6 +423,14 @@ export default class OrthogonalTMXLayerGPURenderer {
 			// emit one screen-quad. The batcher will bind the tileset's
 			// TextureAtlas to uSampler (single-texture fallback path is
 			// active because we have a custom ShaderEffect).
+			// on whole pixels unless `subPixel` is set, as a sprite is: the
+			// tiles move with the quad (see Renderer#_pixelSnapBegin)
+			const snapped = batcher.renderer._pixelSnapBegin(
+				worldX,
+				worldY,
+				worldW,
+				worldH,
+			);
 			batcher.addQuad(
 				tileset.texture,
 				worldX,
@@ -435,6 +443,7 @@ export default class OrthogonalTMXLayerGPURenderer {
 				1,
 				0xffffffff,
 			);
+			batcher.renderer._pixelSnapEnd(snapped);
 
 			// flush per-pass so each tileset's draw call uses its own
 			// uniforms (uGidRange / uTileSize / uTilesetCols differ)

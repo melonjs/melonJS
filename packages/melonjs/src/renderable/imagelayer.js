@@ -12,6 +12,40 @@ import { resolveAnchorPoint } from "./anchorPoint.ts";
 import Sprite from "./sprite.js";
 
 /**
+ * Wrap a parallax offset on a tiling axis into `(-size, 0]`, so that the
+ * pattern drawn from there covers the viewport whatever the camera position.
+ * The layer itself is `Infinity` wide/high on a tiling axis, so the wrap has
+ * to use the size of the pattern (the source image), not the layer's.
+ * @param {number} value - unwrapped offset
+ * @param {number} size - pattern size on that axis
+ * @returns {number} the wrapped offset
+ * @ignore
+ */
+function wrapOffset(value, size) {
+	if (!(size > 0) || !Number.isFinite(value)) {
+		return value;
+	}
+	const v = value % size;
+	return v > 0 ? v - size : v;
+}
+
+/**
+ * Where the camera's view starts on one axis: on a whole pixel unless
+ * `subPixel` is set, as the world is drawn from it (see
+ * `Camera2d#_viewOrigin`), so a layer scrolling with the world (a ratio of 1)
+ * keeps to it.
+ * @ignore
+ * @param {Camera2d} viewport - the camera
+ * @param {number} value - its position plus its offset, on one axis
+ * @returns {number} where its view starts
+ */
+function viewOrigin(viewport, value) {
+	return typeof viewport._viewOrigin === "function"
+		? viewport._viewOrigin(value)
+		: value;
+}
+
+/**
  * additional import for TypeScript
  * @import {Vector2d} from "../math/vector2d.ts";
  * @import Camera2d from "../camera/camera2d.ts";
@@ -212,8 +246,6 @@ export default class ImageLayer extends Sprite {
 			return;
 		}
 
-		const width = this.width;
-		const height = this.height;
 		const bw = viewport.bounds.width;
 		const bh = viewport.bounds.height;
 		const ax = this.anchorPoint.x;
@@ -228,25 +260,17 @@ export default class ImageLayer extends Sprite {
 		const x =
 			ax * (rx - 1) * (bw - viewport.width) +
 			this.offset.x -
-			rx * (viewport.pos.x + viewport.offset.x);
+			rx * viewOrigin(viewport, viewport.pos.x + viewport.offset.x);
 		const y =
 			ay * (ry - 1) * (bh - viewport.height) +
 			this.offset.y -
-			ry * (viewport.pos.y + viewport.offset.y);
+			ry * viewOrigin(viewport, viewport.pos.y + viewport.offset.y);
 
 		// Repeat horizontally; start drawing from left boundary
-		if (this.repeatX) {
-			this.pos.x = x % width;
-		} else {
-			this.pos.x = x;
-		}
+		this.pos.x = this.repeatX ? wrapOffset(x, this.image.width) : x;
 
 		// Repeat vertically; start drawing from top boundary
-		if (this.repeatY) {
-			this.pos.y = y % height;
-		} else {
-			this.pos.y = y;
-		}
+		this.pos.y = this.repeatY ? wrapOffset(y, this.image.height) : y;
 
 		this.isDirty = true;
 	}
@@ -317,17 +341,19 @@ export default class ImageLayer extends Sprite {
 			x =
 				ax * (rx - 1) * (bw - viewport.width) +
 				this.offset.x -
-				rx * (viewport.pos.x + viewport.offset.x);
+				rx * viewOrigin(viewport, viewport.pos.x + viewport.offset.x);
 			y =
 				ay * (ry - 1) * (bh - viewport.height) +
 				this.offset.y -
-				ry * (viewport.pos.y + viewport.offset.y);
+				ry * viewOrigin(viewport, viewport.pos.y + viewport.offset.y);
 
+			// wrap by the pattern size (the layer is Infinity wide/high on a
+			// tiling axis), into (-size, 0] so the pattern covers the viewport
 			if (this.repeatX) {
-				x = x % width;
+				x = wrapOffset(x, this.image.width);
 			}
 			if (this.repeatY) {
-				y = y % height;
+				y = wrapOffset(y, this.image.height);
 			}
 		}
 
@@ -335,13 +361,33 @@ export default class ImageLayer extends Sprite {
 		renderer.translate(x * vZoom, y * vZoom);
 		renderer.scale(vZoom, vZoom);
 
+		// Clamp the draw extent to the source dimensions on any axis we
+		// are NOT tiling. Asking the renderer to fill past the source on
+		// a non-tiling axis is what makes Canvas (transparent fill per
+		// HTML spec) and WebGL (GL_CLAMP_TO_EDGE stretches the edge
+		// pixel) diverge — Canvas leaves the overflow transparent while
+		// WebGL stretches the bottom row (repeat-x) or right column
+		// (repeat-y) to fill it. By drawing exactly the source extent on
+		// the non-tiling axis, neither renderer enters its overflow path
+		// and the two outputs converge (issue #1290).
+		// On a tiling axis the offset is wrapped into (-imageSize, 0], so
+		// the pattern must reach at least `viewport + imageSize` to cover
+		// the viewport, also when the image is larger than the viewport
+		// (and never less than the historical `viewport * 2`).
+		const drawW = this.repeatX
+			? viewport.width + Math.max(viewport.width, this.image.width)
+			: width;
+		const drawH = this.repeatY
+			? viewport.height + Math.max(viewport.height, this.image.height)
+			: height;
+
 		// apply flip — pivot at the centre of the drawn pattern in the
 		// post-zoom local frame, so the mirror lands in the visible viewport
 		// regardless of `viewport.zoom`. Done here (not in preDraw) because
 		// preDraw runs before this translate/scale and would misalign.
 		if (this._flip.x || this._flip.y) {
-			const px = viewport.width;
-			const py = viewport.height;
+			const px = this.repeatX ? drawW / 2 : viewport.width;
+			const py = this.repeatY ? drawH / 2 : viewport.height;
 			renderer.translate(px, py);
 			renderer.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);
 			renderer.translate(-px, -py);
@@ -354,17 +400,6 @@ export default class ImageLayer extends Sprite {
 			renderer.setMask(this.mask);
 		}
 
-		// Clamp the draw extent to the source dimensions on any axis we
-		// are NOT tiling. Asking the renderer to fill past the source on
-		// a non-tiling axis is what makes Canvas (transparent fill per
-		// HTML spec) and WebGL (GL_CLAMP_TO_EDGE stretches the edge
-		// pixel) diverge — Canvas leaves the overflow transparent while
-		// WebGL stretches the bottom row (repeat-x) or right column
-		// (repeat-y) to fill it. By drawing exactly the source extent on
-		// the non-tiling axis, neither renderer enters its overflow path
-		// and the two outputs converge (issue #1290).
-		const drawW = this.repeatX ? viewport.width * 2 : width;
-		const drawH = this.repeatY ? viewport.height * 2 : height;
 		renderer.drawPattern(this._pattern, 0, 0, drawW, drawH);
 	}
 

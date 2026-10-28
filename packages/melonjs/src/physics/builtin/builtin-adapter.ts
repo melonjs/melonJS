@@ -501,6 +501,10 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 			// it so `.length` doesn't narrow. Cast to the array form.
 			(body.shapes as BodyShape[]).length = 0;
 			body.getBounds().clear();
+			// `addShape` only ever raises `hasDepth`, so it is cleared with the
+			// shapes or a body that drops its last Box3d / Sphere would keep
+			// resolving along z. Read-only to users; cast as for `shapes`.
+			(body as { hasDepth: boolean }).hasDepth = false;
 			for (const s of def.shapes) {
 				body.addShape(s);
 			}
@@ -555,6 +559,8 @@ export default class BuiltinAdapter implements PhysicsAdapter {
 		// typed too widely (see `addBody`); cast to the array form.
 		(body.shapes as BodyShape[]).length = 0;
 		body.getBounds().clear();
+		// see `addBody`: cleared with the shapes, raised again by `addShape`
+		(body as { hasDepth: boolean }).hasDepth = false;
 		for (const s of shapes) {
 			body.addShape(s);
 		}

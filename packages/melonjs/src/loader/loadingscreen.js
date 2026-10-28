@@ -85,6 +85,11 @@ class DefaultLoadingScreen extends Stage {
 		//
 		// `barHeight / 2` because the private bar this replaces was built at 8
 		// and drew at half that, so the look is preserved exactly.
+		//
+		// Built now, so it follows the load from the first asset, but put on
+		// screen together with the logo (see `#showBar`): the logo decodes a
+		// frame or so after this, and a bar drawn on its own first made the
+		// logo pop in after it.
 		this.progressBar = new ProgressBar(0, height / 2, {
 			width,
 			height: barHeight / 2,
@@ -103,7 +108,6 @@ class DefaultLoadingScreen extends Stage {
 			// fill at the old scale until the next asset happened to land.
 			bindEvent: LOADER_PROGRESS,
 		});
-		app.world.addChild(this.progressBar, 1);
 
 		// Latch "the preloader is done" — and ONLY that.
 		//
@@ -142,9 +146,13 @@ class DefaultLoadingScreen extends Stage {
 					frameheight: 256,
 				});
 				app.world.addChild(this.logoSprite, 2);
+				// in the same frame as the logo
+				this.#showBar();
 			})
 			.catch(() => {
-				// the logo is decoration; a game must still be able to load
+				// the logo is decoration; a game must still be able to load,
+				// and to see that it is loading
+				this.#showBar();
 			});
 	}
 
@@ -156,6 +164,24 @@ class DefaultLoadingScreen extends Stage {
 	 */
 	#onLoaderComplete() {
 		this.#loadingComplete = true;
+		// the assets beat the logo: show the bar now rather than leave the
+		// screen empty while the game finishes setting up, and for a
+		// `state.transition()` to fade over
+		this.#showBar();
+	}
+
+	/**
+	 * Put the progress bar on screen, once: with the logo, or on its own when
+	 * the logo failed or the assets finished first.
+	 * @ignore
+	 * @internal
+	 */
+	#showBar() {
+		const bar = this.progressBar;
+		if (this.#cleanedUp || bar === null || this.#app.world.hasChild(bar)) {
+			return;
+		}
+		this.#app.world.addChild(bar, 1);
 	}
 
 	/**
@@ -176,6 +202,11 @@ class DefaultLoadingScreen extends Stage {
 		if (this.progressBar) {
 			if (this.#app.world.hasChild(this.progressBar)) {
 				this.#app.world.removeChild(this.progressBar);
+			} else {
+				// never shown (torn down before the logo or the assets came
+				// in), so the world will not destroy it: do it here, which
+				// also drops its LOADER_PROGRESS subscription
+				this.progressBar.destroy();
 			}
 			this.progressBar = null;
 		}

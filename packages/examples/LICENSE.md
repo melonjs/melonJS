@@ -47,6 +47,40 @@ These assets are released under **CC0 1.0 Universal (Public Domain
 Dedication)** — no attribution legally required, but provided here as a
 courtesy to the original creator.
 
+### `isometricDungeon` example
+
+The dungeon tileset (`public/assets/isometricDungeon/dungeon.png`) and the hero
+atlas (`hero.png` / `hero.json`) are built from **"Isometric Miniature
+Dungeon"** published by Kenney:
+
+<https://www.kenney.nl/assets/isometric-miniature-dungeon>
+
+The pieces and the character frames are scaled to half size and packed into
+one tileset image and one trimmed atlas; the map (`dungeon.tmx`) was generated
+for this example and can be edited in Tiled. Released under **CC0 1.0
+Universal (Public Domain Dedication)** — no attribution legally required,
+credited here as a courtesy.
+
+The wall torch (the last two pieces of the tileset) is not Kenney's: it was
+modelled and rendered for this example in the same projection and light as
+the pack, and is released under the same CC0 terms. Its flame is particles,
+drawn by the example.
+
+The sound effects in `public/assets/isometricDungeon/sfx/` (footsteps, the
+door, the chest's latch and coins, the gate) are from Kenney's **"RPG
+Audio"** and **"Impact Sounds"** packs, also CC0:
+
+<https://www.kenney.nl/assets/rpg-audio> ·
+<https://www.kenney.nl/assets/impact-sounds>
+
+The dungeon's ambience (`sfx/dungeonAmbience`, the draught and the water
+drips) was synthesised for this example rather than recorded, and is released
+under the same CC0 terms.
+
+The Kenney logo (`kenney-logo.png`), shown in the corner of the game to credit
+the assets, is Kenney's own (<https://www.kenney.nl>) and is not covered by
+the CC0 terms above.
+
 ### `multiMaterialMesh` example
 
 Spacecraft 3D models (`craft_speederA`, `craft_speederB`, `craft_racer`,

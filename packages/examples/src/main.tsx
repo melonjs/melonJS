@@ -93,9 +93,9 @@ const ExampleWebGPU = lazy(() =>
 		default: m.ExampleWebGPU,
 	})),
 );
-const ExampleIsometricRPG = lazy(() =>
-	import("./examples/isometricRpg/ExampleIsometricRPG").then((m) => ({
-		default: m.ExampleIsometricRPG,
+const ExampleIsometricDungeon = lazy(() =>
+	import("./examples/isometricDungeon/ExampleIsometricDungeon").then((m) => ({
+		default: m.ExampleIsometricDungeon,
 	})),
 );
 const ExampleLights = lazy(() =>
@@ -422,12 +422,12 @@ const examples: {
 			"The WebGPU backend: sprites, text, blend modes, primitives, clipping and stencil masks.",
 	},
 	{
-		component: <ExampleIsometricRPG />,
-		label: "Isometric RPG",
-		path: "isometric-rpg",
-		sourceDir: "isometricRpg",
+		component: <ExampleIsometricDungeon />,
+		label: "Isometric Dungeon",
+		path: "isometric-dungeon",
+		sourceDir: "isometricDungeon",
 		description:
-			"Isometric tile map rendering with Tiled map support, camera follow, and NPC entities.",
+			"A big isometric Tiled dungeon: depth-sorted walls, flickering wall torches, chests, doors and a locked gate.",
 	},
 	{
 		component: <ExampleLights />,

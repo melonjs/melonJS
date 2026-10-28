@@ -326,6 +326,11 @@ export function createMockWebGPURenderer() {
 		},
 		// the application settings the batchers read
 		settings: { textureFilter: "auto" },
+		// the real pixel snapping: with `subPixel` unset here, it leaves
+		// every draw where it is given
+		_pixelSnapBegin: Renderer.prototype._pixelSnapBegin,
+		_pixelSnapEnd: Renderer.prototype._pixelSnapEnd,
+		_snapsToPixels: Renderer.prototype._snapsToPixels,
 		wantsMipmaps(texture) {
 			return Renderer.prototype.wantsMipmaps.call(this, texture);
 		},

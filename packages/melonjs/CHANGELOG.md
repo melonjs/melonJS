@@ -1,6 +1,18 @@
 # Changelog
 
-## [20.11.0] (melonJS 2) - _unreleased_
+## [20.12.0] (melonJS 2) - _unreleased_
+
+### Fixed
+- Rendering: with `subPixel` off (the default), each draw is snapped to whole pixels once, where it lands, the same way on Canvas, WebGL and WebGPU, instead of every `translate` being truncated as it was applied ([#1765](https://github.com/melonjs/melonJS/issues/1765)). A flipped sprite no longer moves by a pixel, nested containers land on the same pixel on every renderer, shapes, clips and masks snap as sprites do (no half-grey edges on Canvas), and a body resting on the floor no longer shakes; anything that sat on a fraction of a pixel can draw one pixel over, a rotated draw is no longer snapped, and `subPixel: true` keeps fractional positions
+- Camera: with `subPixel` off, `worldView`, `localToWorld` and `worldToLocal` use the view's position rounded to a whole pixel, which is where the world is now drawn from, so culling and pointer coordinates match the frame on screen. `pos` keeps its fraction; read `pos` and `offset` for the exact view position
+- Geometry: the methods that take a point (`translate`, `shift` and `contains` on `Bounds`, `Polygon`, `Rect`, `RoundRect`, `Ellipse` and `Line`, and `translate` on `Matrix2d` and `Matrix3d`) take any object with `x` and `y`, such as a renderable's `pos`. Given anything but a `Vector2d` they treated it as a number and came out `NaN`, so `bounds.clone().translate(renderable.pos)` gave no world bounds and `overlaps()` then reported every area as taken
+- Physics: a body with several shapes has the union of its shapes as its bounds. Each shape added after the first moved the bounds gathered so far by its own offset (shapes of 40×60 and 40×76 at 76,36 gave 76,36 → 192,132 instead of 76,36 → 116,112), and an ellipse away from the origin came out shifted by its own position; `removeShape` and `setVertices` rebuild the bounds the same way
+- Physics: `Body#setVertices` on one shape of several keeps the others inside the body's bounds and `hasDepth` right, and recomputes `pseudoInertia` as `addShape` does, so set it again afterwards if you set it by hand. An index past the end of the shape list throws a `RangeError`: it left a gap in the list, and the shapes before it silently stopped colliding
+- Physics: a body that drops its last `Box3d` or `Sphere`, through the builtin adapter's `updateShape` or `addBody` on a renderable that already has a body, no longer resolves along z
+- Loader: the default loading screen brings up its progress bar and the melonJS logo in the same frame. The bar was drawn first and the logo popped in a frame or so later; the bar now shows alone only when the logo cannot be decoded or the game's assets finish first
+- ImageLayer: a repeating layer (`"repeat"`, `"repeat-x"` or `"repeat-y"`) keeps covering the screen wherever the camera goes. Its offset was wrapped by the layer's size, which is `Infinity` on a tiling axis, so it never wrapped and the layer slid off the screen once the camera had moved far enough (a front parallax layer first); it now wraps by the image size, and an image wider or taller than the viewport is drawn far enough to cover it
+
+## [20.11.0] (melonJS 2) - _2026-10-27_
 
 ### Added
 - Effects: colors take an alpha. Every color option and `setColor` takes `[r, g, b]` or `[r, g, b, a]`, the alpha being the color's opacity (`[r, g, b]` stays opaque), `RadialGradientEffect` honours the alpha of its `Color`, and `DropShadowEffect` gains the `setColor` the others have. Four values used to break an effect (WebGL rejected them, and on WebGPU the fourth overwrote the next setting, such as an outline's width); a color of any other length now throws a `TypeError` saying so
@@ -23,6 +35,7 @@
 - Rendering: a container sorted on `"x"` or `"y"` keeps its children in order as they move. With `autoSort` on, the default, it checks the order at the end of every update and re-sorts when anything is out of place, so a walking character no longer needs a `sort()` call to pass in front of and behind things. A frame where nothing moved costs one pass over the children and causes no redraw; turn `autoSort` off to keep the order you set. A `"z"` sort is unchanged
 
 ### Fixed
+- Loader: a `data:` URI is decoded in place instead of fetched, so it loads on a page whose Content-Security-Policy `connect-src` does not allow `data:` (sandboxed embeds, hardened sites), where the browser refused it. The default loading screen's logo, inlined as a `data:` URI, showed nothing on such pages; this covers a `data:` URI given to any asset type
 - Effects: a colored drop shadow below full opacity is no longer too bright, nor are the soft edges of an outline. Both added their color at full strength whatever its opacity
 - TextureAtlas: drawing part of an image, a bitmap font glyph or a repeating pattern no longer adds a region to the atlas for every new source rectangle, and on an atlas with pages of different sizes no longer reuses the UVs worked out for the same rectangle on another page. Those regions piled up for as long as the atlas lived, and turned up among the frames an animation is built from ([#1281](https://github.com/melonjs/melonJS/issues/1281), thanks @snowyukitty)
 - Tiled: objects on isometric maps are placed where Tiled draws them. Positions are measured in tile heights on both axes, which changes maps whose tiles are not 2:1, and tile objects are anchored at their bottom center, so a game that offset them to compensate should drop that offset (thanks @vtxe02023274)
