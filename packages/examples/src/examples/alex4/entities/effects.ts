@@ -5,6 +5,7 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 import {
+	type Camera2d,
 	type Container,
 	type GlyphEffect,
 	loader,
@@ -23,6 +24,35 @@ const EFFECT_Z = 20;
  * hit-stop, the music goes on)
  */
 export const HIT_STOP = { stomp: 60, hit: 90, knockout: 160 };
+
+/**
+ * how hard and how long the screen shakes on an impact: the view moves by up
+ * to half the strength, in screen pixels (4 to an original one), and only up
+ * and down for what lands
+ */
+const SHAKE = {
+	stomp: [6, 100, false],
+	shatter: [8, 120, false],
+	crusher: [12, 250, true],
+	hurt: [12, 200, false],
+	hit: [16, 250, false],
+	die: [20, 350, false],
+	pounder: [24, 400, true],
+	knockout: [24, 500, false],
+} as const;
+
+// the screen holds still for whoever asked their system for less motion
+const calm = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)");
+
+/** shake the screen for an impact (a stronger one takes over a weaker) */
+export function shake(viewport: Camera2d, impact: keyof typeof SHAKE) {
+	if (calm?.matches) {
+		return;
+	}
+	const [strength, duration, vertical] = SHAKE[impact];
+	const axis = vertical ? viewport.AXIS.VERTICAL : viewport.AXIS.BOTH;
+	viewport.shake(strength, duration, axis, undefined, strength >= 12);
+}
 
 /**
  * a little firework of pixels, for broken blocks and shot enemies

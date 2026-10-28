@@ -20,7 +20,7 @@ import {
 import { HEIGHT, jumpSpeed, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
-import { dust, flash, HIT_STOP } from "./effects";
+import { dust, flash, HIT_STOP, shake } from "./effects";
 import type { Hazard, PlayerEntity, Touch } from "./player";
 import type { Shootable } from "./projectiles";
 
@@ -180,6 +180,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	/** jumped on, Alex's feet at `feet` */
 	stomp(feet: number) {
 		state.freeze(HIT_STOP.stomp);
+		shake(this.parentApp.viewport, "stomp");
 		audio.play("stomp");
 		// where they meet, as in the original: over its middle, at his feet
 		flash(
@@ -364,8 +365,7 @@ export class CrusherEntity extends GenericEnemyEntity {
 					audio.play("impact");
 					dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
 					// the ground shakes
-					const viewport = this.parentApp.viewport;
-					viewport.shake(6, 250, viewport.AXIS.VERTICAL);
+					shake(this.parentApp.viewport, "crusher");
 					rumble(150, 0.8, 0.3);
 					// and back up, slowly
 					this.later(500, () => {

@@ -29,7 +29,7 @@ import {
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { LevelMap, PlayScreen } from "../screens/play";
-import { burst, dust, HIT_STOP, smoke } from "./effects";
+import { burst, dust, HIT_STOP, shake, smoke } from "./effects";
 import { enemyShapes, GenericEnemyEntity } from "./enemies";
 import { Breakable } from "./level";
 import type { Hazard, PlayerEntity, Touch } from "./player";
@@ -121,6 +121,7 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 		audio.play("hit");
 		// the last one knocks it out
 		state.freeze(this.energy > 1 ? HIT_STOP.hit : HIT_STOP.knockout);
+		shake(this.parentApp.viewport, this.energy > 1 ? "hit" : "knockout");
 		if (--this.energy > 0) {
 			this.setCurrentAnimation("hit");
 			this.flicker(1000, () => this.setCurrentAnimation("walk"));
@@ -129,7 +130,6 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 			audio.stop("engine", this.engine);
 			// as in the original: up at -16, backwards at a pixel per tick
 			this.body.setVelocity(this.walkLeft ? TICK : -TICK, -jumpSpeed(16));
-			this.parentApp.viewport.shake(8, 400);
 			rumble(300, 0.8, 0.8);
 			// a puff of smoke, and down it goes
 			burst(
@@ -324,8 +324,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
 		audio.play("impact");
 		// it is heavy
-		const viewport = this.parentApp.viewport;
-		viewport.shake(10, 350, viewport.AXIS.VERTICAL);
+		shake(this.parentApp.viewport, "pounder");
 		rumble(250, 1, 0.4);
 		if (this.mode === "spikejump") {
 			this.mode = "landed";
@@ -345,6 +344,7 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		if (touch.above && !player.rolling) {
 			// bounce on its head, which makes it angry
 			state.freeze(HIT_STOP.stomp);
+			shake(this.parentApp.viewport, "stomp");
 			player.bounce(15);
 			audio.play("jump");
 			if (this.mode === "wait") {

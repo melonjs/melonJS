@@ -26,7 +26,7 @@ import { HEIGHT, jumpSpeed, PALETTE, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
-import { dust } from "./effects";
+import { dust, shake } from "./effects";
 import { Breakable, RollBlock } from "./level";
 import { EggShot } from "./projectiles";
 
@@ -484,6 +484,7 @@ export class PlayerEntity extends Sprite {
 			this.die();
 		} else {
 			audio.play("hurt");
+			shake(this.parentApp.viewport, "hurt");
 			rumble(200, 0.6, 0.9);
 			this.flicker(2000);
 			this.hit.setIntensity(1);
@@ -513,6 +514,7 @@ export class PlayerEntity extends Sprite {
 		this.body.setVelocity(0, -15);
 
 		audio.play("die");
+		shake(this.parentApp.viewport, "die");
 		rumble(400, 1, 1);
 		(state.current() as PlayScreen).onPlayerDying();
 	}
