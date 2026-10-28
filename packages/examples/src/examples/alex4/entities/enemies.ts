@@ -18,6 +18,7 @@ import {
 	Vector2d,
 } from "melonjs";
 import { HEIGHT } from "../constants";
+import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import { dust, flash } from "./effects";
 import type { Hazard, PlayerEntity } from "./player";
@@ -339,6 +340,10 @@ export class CrusherEntity extends GenericEnemyEntity {
 					this.mode = "landed";
 					audio.play("impact");
 					dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
+					// the ground shakes
+					const viewport = this.parentApp.viewport;
+					viewport.shake(6, 250, viewport.AXIS.VERTICAL);
+					rumble(150, 0.8, 0.3);
 					// and back up, slowly
 					this.later(500, () => {
 						this.mode = "rise";

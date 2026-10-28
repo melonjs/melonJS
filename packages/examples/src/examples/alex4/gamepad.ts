@@ -92,3 +92,12 @@ export function unbindPads(mapping: PadMapping) {
 		}
 	}
 }
+
+/** a short rumble on the pad in use (nothing happens without one) */
+export function rumble(duration: number, strong: number, weak: number) {
+	input.vibrateGamepad(input.activeGamepad(), {
+		duration,
+		strongMagnitude: strong,
+		weakMagnitude: weak,
+	});
+}

@@ -21,8 +21,10 @@ import {
 	Vector2d,
 } from "melonjs";
 import { HEIGHT } from "../constants";
+import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
+import { dust } from "./effects";
 import { Breakable, RollBlock } from "./level";
 import { EggShot } from "./projectiles";
 
@@ -35,6 +37,8 @@ const ROLL_SPEED = 2 * TICK;
 // 40 of its pixels high: 160 of ours, which this gives with our gravity.
 const DY = 18.2 / 16;
 const JUMP_SPEED = 16 * DY;
+// The ball turns 8/256 of a turn per tick, as in the original.
+const SPIN = (8 / 256) * Math.PI * 2 * (50 / 60);
 
 /** anything that hurts (or can be stomped by) Alex */
 export interface Hazard {
@@ -54,6 +58,13 @@ export class PlayerEntity extends Sprite {
 	spitting = false;
 	dying = false;
 	grounded = false;
+	/** squash and stretch, eased back to 1 */
+	private squash = { y: 1 };
+	private squashTween: Tween | undefined;
+	/** the angle of the ball when rolling */
+	private spin = 0;
+	private wasGrounded = true;
+	private fallSpeed = 0;
 	/** the room ahead of a spinner, to know if we can roll */
 	private ahead = new Rect(0, 0, 64, 64);
 	private room = new Bounds();
@@ -139,11 +150,8 @@ export class PlayerEntity extends Sprite {
 		this.addAnimation("spit", ["alex_spit", "alex_spit"], 80);
 		this.addAnimation("jump_spit", ["alex_jump_spit", "alex_jump_spit"], 80);
 		this.addAnimation("eat", ["alex_eat", "alex_eat"], 80);
-		this.addAnimation(
-			"roll",
-			["alex_ball0", "alex_ball1", "alex_ball2", "alex_ball3"],
-			50,
-		);
+		// turned smoothly in update(), at the speed of the original
+		this.addAnimation("roll", ["alex_ball0"]);
 		this.setCurrentAnimation("stand");
 
 		// the original sprites look to the left
@@ -184,6 +192,15 @@ export class PlayerEntity extends Sprite {
 		this.grounded = this.standing;
 		this.standing = false;
 
+		// just landed: a little squash, the harder the more
+		if (this.grounded && !this.wasGrounded) {
+			this.land(this.fallSpeed);
+		}
+		this.wasGrounded = this.grounded;
+		if (!this.grounded) {
+			this.fallSpeed = vel.y;
+		}
+
 		if (this.rolling) {
 			vel.x = this.facingLeft ? -ROLL_SPEED : ROLL_SPEED;
 		} else if (input.isKeyPressed("left")) {
@@ -200,6 +217,7 @@ export class PlayerEntity extends Sprite {
 			vel.y = -JUMP_SPEED;
 			this.jumpHeld = true;
 			this.jumpCut = false;
+			this.squashTo(1.12, 250, Tween.Easing.Quadratic.Out);
 			audio.play("jump");
 		} else if (this.jumpHeld && !input.keyStatus("jump")) {
 			this.jumpHeld = false;
@@ -226,8 +244,49 @@ export class PlayerEntity extends Sprite {
 		}
 
 		this.updateAnimation(vel.x);
+		this.shape();
 		super.update(dt);
 		return true;
+	}
+
+	/** the ball turning, or squash and stretch about the feet */
+	private shape() {
+		const transform = this.currentTransform.identity();
+		if (this.rolling) {
+			// counting down: the flip makes it turn the way Alex rolls
+			this.spin -= SPIN;
+			transform.translate(96, 64).rotate(this.spin).translate(-96, -64);
+		} else if (this.squash.y !== 1) {
+			// as much wider as it is shorter
+			const s = this.squash.y;
+			transform
+				.translate(96, 96)
+				.scale(1 / s, s)
+				.translate(-96, -96);
+		}
+	}
+
+	/** squash (below 1) or stretch (above 1), and back */
+	private squashTo(
+		y: number,
+		duration: number,
+		easing = Tween.Easing.Back.Out,
+	) {
+		this.squashTween?.stop();
+		this.squash.y = y;
+		this.squashTween = new Tween(this.squash)
+			.to({ y: 1 }, { duration, easing })
+			.start();
+	}
+
+	private land(speed: number) {
+		if (speed < 4) {
+			return;
+		}
+		this.squashTo(1 - Math.min(speed / 60, 0.3), 220);
+		if (speed > 16) {
+			dust(this.parentApp.world, this.pos.x + 96, this.pos.y + 96);
+		}
 	}
 
 	private face(left: boolean) {
@@ -346,6 +405,8 @@ export class PlayerEntity extends Sprite {
 		this.jumpHeld = input.keyStatus("jump");
 		this.jumpCut = false;
 		this.body.setVelocity(this.body.getVelocity(this.vel).x, -dy * DY);
+		this.squashTo(1.12, 250, Tween.Easing.Quadratic.Out);
+		rumble(80, 0.2, 0.6);
 	}
 
 	/** ouch */
@@ -358,6 +419,7 @@ export class PlayerEntity extends Sprite {
 			this.die();
 		} else {
 			audio.play("hurt");
+			rumble(200, 0.6, 0.9);
 			this.flicker(2000);
 			this.hit.setIntensity(1);
 			new Tween(this.hit)
@@ -379,12 +441,14 @@ export class PlayerEntity extends Sprite {
 		gameState.eggs = 0;
 
 		// flip upside down, jump and fall through everything
+		this.currentTransform.identity();
 		this.flipY(true);
 		this.setCurrentAnimation("jump");
 		this.body.setCollisionMask(collision.types.NO_OBJECT);
 		this.body.setVelocity(0, -15);
 
 		audio.play("die");
+		rumble(400, 1, 1);
 		(state.current() as PlayScreen).onPlayerDying();
 	}
 

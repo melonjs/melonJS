@@ -20,6 +20,7 @@ import {
 	Vector2d,
 } from "melonjs";
 import { HEIGHT, PALETTE, WIN_KILL_GUARDIAN } from "../constants";
+import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { LevelMap, PlayScreen } from "../screens/play";
 import { burst, dust } from "./effects";
@@ -101,6 +102,8 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 		} else {
 			this.kill(!this.walkLeft);
 			this.body.setVelocity(this.walkLeft ? 2 : -2, -16);
+			this.parentApp.viewport.shake(8, 400);
+			rumble(300, 0.8, 0.8);
 			// a puff of smoke, and down it goes
 			burst(
 				this.parentApp.world,
@@ -255,6 +258,10 @@ export class GroundPounderEntity extends Sprite implements Hazard {
 		this.body.setVelocity(0, this.body.getVelocity(this.vel).y);
 		dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
 		audio.play("impact");
+		// it is heavy
+		const viewport = this.parentApp.viewport;
+		viewport.shake(10, 350, viewport.AXIS.VERTICAL);
+		rumble(250, 1, 0.4);
 		if (this.mode === "spikejump") {
 			this.mode = "landed";
 			this.setCurrentAnimation("landed");
