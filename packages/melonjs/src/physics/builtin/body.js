@@ -850,8 +850,10 @@ export default class Body {
 			const poly = shape.toPolygon();
 			stored = poly;
 			this.shapes.push(poly);
-			// update the body bounds
-			this._addShapeBounds(poly);
+			// update the body bounds with the shape's own bounds, which already
+			// include its position. Translating the body bounds by the shape
+			// position instead would also move every shape added before it.
+			this.bounds.addBounds(poly.getBounds());
 		} else if (shape instanceof Bounds) {
 			// Bounds doesn't carry a `toPolygon` method — it's a primitive
 			// AABB that polygon.ts already depends on, so we keep the
@@ -866,27 +868,28 @@ export default class Body {
 			]);
 			stored = poly;
 			this.shapes.push(poly);
-			this._addShapeBounds(poly);
+			this.bounds.addBounds(poly.getBounds());
 		} else if (shape instanceof Ellipse) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
 				this.shapes.push(shape);
 			}
-			// update the body bounds
-			this._addShapeBounds(shape);
+			// update the body bounds (they already sit around the center)
+			this.bounds.addBounds(shape.getBounds());
 		} else if (shape instanceof Polygon) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
 				this.shapes.push(shape);
 			}
-			// update the body bounds
-			this._addShapeBounds(shape);
+			// update the body bounds, refreshing the shape's own first in case
+			// its `pos` or `points` were edited directly
+			this.bounds.addBounds(shape.updateBounds());
 		} else if (shape instanceof Point) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
 				this.shapes.push(shape);
 			}
-			this._addShapeBounds(shape);
+			this.bounds.addPoint(shape);
 		} else if (shape instanceof Sphere) {
 			if (!this.shapes.includes(shape)) {
 				// see removeShape
@@ -896,7 +899,13 @@ export default class Body {
 			// that bounds is 2D and feeds the broadphase pre-gate, the debug
 			// draw and `containsPoint`. The depth lives on the shape and the
 			// narrowphase reads it there.
-			this._addShapeBounds(shape);
+			const r = Math.abs(shape.radius);
+			this.bounds.addFrame(
+				shape.pos.x - r,
+				shape.pos.y - r,
+				shape.pos.x + r,
+				shape.pos.y + r,
+			);
 			this.hasDepth = true;
 		} else if (shape instanceof Box3d) {
 			if (!this.shapes.includes(shape)) {
@@ -907,7 +916,7 @@ export default class Body {
 			// 2D `Bounds` and feeds the broadphase pre-gate, debug draw and
 			// `containsPoint` — all of which stay 2D. The depth extent lives
 			// on the shape and is read by the narrowphase directly.
-			this._addShapeBounds(shape);
+			this.bounds.addBounds(shape.getBounds());
 			this.hasDepth = true;
 		} else {
 			// JSON object — `_fromJSON` re-enters `addShape` per shape it
@@ -939,36 +948,6 @@ export default class Body {
 
 		// return the length of the shape list
 		return this.shapes.length;
-	}
-
-	/**
-	 * Grow the body bounds to include the given shape. Each shape's own
-	 * bounds already include its position, so they are added as they are:
-	 * translating the accumulated body bounds by the shape position instead
-	 * would also move every shape added before it.
-	 * @param {Polygon|Ellipse|Point|Sphere|Box3d} shape - a shape of this body
-	 * @ignore
-	 * @internal
-	 */
-	_addShapeBounds(shape) {
-		if (shape instanceof Polygon) {
-			// refreshed first, in case `pos` or `points` were edited directly
-			this.bounds.addBounds(shape.updateBounds());
-		} else if (shape instanceof Point) {
-			this.bounds.addPoint(shape);
-		} else if (shape instanceof Sphere) {
-			// Only the XY footprint goes into `this.bounds`
-			const r = Math.abs(shape.radius);
-			this.bounds.addFrame(
-				shape.pos.x - r,
-				shape.pos.y - r,
-				shape.pos.x + r,
-				shape.pos.y + r,
-			);
-		} else {
-			// Ellipse (bounds sit around its center) and Box3d (XY footprint)
-			this.bounds.addBounds(shape.getBounds());
-		}
 	}
 
 	/**
@@ -1006,18 +985,19 @@ export default class Body {
 			this._initShapeCollision(this.shapes[index], undefined);
 		}
 
-		// update the body bounds to take in account the new vertices. A clear
-		// rebuilds them from every shape, so the other shapes of a multi-shape
-		// body stay inside the AABB.
+		// update the body bounds to take in account the new vertices
 		if (clear) {
+			// rebuild them from every shape, as `removeShape` does, so the other
+			// shapes of a multi-shape body stay inside them
 			this.bounds.clear();
+			this.hasDepth = false;
 			for (const shape of this.shapes) {
 				if (shape !== undefined) {
-					this._addShapeBounds(shape);
+					this.addShape(shape);
 				}
 			}
 		} else {
-			this._addShapeBounds(this.shapes[index]);
+			this.bounds.add(this.shapes[index].points);
 		}
 
 		if (typeof this.onBodyUpdate === "function") {
@@ -1431,7 +1411,13 @@ export default class Body {
 				if (typeof shape.rotate === "function") {
 					shape.rotate(angle, v);
 				}
-				this._addShapeBounds(shape);
+				this.bounds.addBounds(shape.getBounds());
+				/*
+                if (!(shape instanceof Ellipse)) {
+                    // ellipse position is center
+                    this.bounds.translate(shape.pos);
+                }
+                */
 			});
 			// Tell the renderable its body changed shape. Without this its
 			// cached bounds keep the pre-rotation extent, and since the
