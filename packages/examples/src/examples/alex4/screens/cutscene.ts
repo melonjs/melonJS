@@ -9,6 +9,7 @@ import {
 	audio,
 	BitmapText,
 	ColorLayer,
+	Container,
 	input,
 	level,
 	type Renderable,
@@ -18,7 +19,7 @@ import {
 	timer,
 	UIPanel,
 } from "melonjs";
-import { FADE_COLOR, PALETTE, WIDTH } from "../constants";
+import { FADE_COLOR, HEIGHT, PALETTE, WIDTH } from "../constants";
 import { bindPads, bindTap, NEXT_PAD, unbindPads, unbindTap } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
@@ -35,8 +36,13 @@ const STEP = 20;
 // and fade in or out of a scene in three steps of 100ms
 const FADE = 300;
 
-// the backgrounds of the scenes away from the map go over it, and its water
-const BACKDROP_Z = 6;
+// a scene is drawn over the map, and its water
+const SCENE_Z = 10;
+// in a scene, the backgrounds away from the map go under everything else
+const BACKDROP_Z = 0;
+
+// how long a looping sound takes to change its volume
+const LOOP_FADE = 300;
 
 export type Facing = "left" | "right";
 
@@ -55,9 +61,12 @@ export abstract class Cutscene extends Stage {
 	private song: string;
 	private timers: number[] = [];
 	private sounds: [name: string, id: number][] = [];
+	// the looping sounds, by name, and their volume
+	private loops = new Map<string, { id: number; volume: number }>();
+	// the moves of the current scene (a tween outlives what it moves)
 	private moves: [actor: Renderable, tween: Tween][] = [];
-	// what the current scene added, cleared by the next one
-	private cast: Renderable[] = [];
+	// everything the current scene added, cleared by the next one
+	private scene!: Container;
 	private running = false;
 
 	/**
@@ -89,6 +98,7 @@ export abstract class Cutscene extends Stage {
 			container: app.world,
 			onLoaded: () => {
 				shaders.sway(app.world);
+				this.newScene();
 				this.sound(this.song);
 				this.play();
 			},
@@ -100,16 +110,29 @@ export abstract class Cutscene extends Stage {
 		this.timers.push(timer.setTimeout(fn, ms));
 	}
 
+	/** clear the current scene, for a new one */
+	private newScene() {
+		for (const [, tween] of this.moves) {
+			tween.stop();
+		}
+		this.moves = [];
+		if (this.scene?.ancestor) {
+			this.app.world.removeChild(this.scene);
+		}
+		// as big as the screen (it would have no bounds otherwise, and never be
+		// in view), what it holds can still go past it: it does not clip
+		this.scene = new Container(0, 0, WIDTH, HEIGHT);
+		this.app.world.addChild(this.scene, SCENE_Z);
+	}
+
 	/** add something to the current scene */
 	protected add<T extends Renderable>(renderable: T, z: number) {
-		this.cast.push(renderable);
-		this.app.world.addChild(renderable, z);
+		this.scene.addChild(renderable, z);
 		return renderable;
 	}
 
 	/** take something out of the scene, if it is still there */
 	protected remove(renderable: Renderable) {
-		this.cast = this.cast.filter((r) => r !== renderable);
 		// and stop it, if it was still going somewhere
 		for (const [actor, tween] of this.moves) {
 			if (actor === renderable) {
@@ -117,8 +140,8 @@ export abstract class Cutscene extends Stage {
 			}
 		}
 		this.moves = this.moves.filter(([actor]) => actor !== renderable);
-		if (this.app.world.hasChild(renderable)) {
-			this.app.world.removeChild(renderable);
+		if (this.scene.hasChild(renderable)) {
+			this.scene.removeChild(renderable);
 		}
 	}
 
@@ -251,9 +274,7 @@ export abstract class Cutscene extends Stage {
 				if (!this.running) {
 					return;
 				}
-				for (const renderable of [...this.cast]) {
-					this.remove(renderable);
-				}
+				this.newScene();
 				next();
 				this.app.viewport.fadeOut(FADE_COLOR, FADE);
 			});
@@ -267,17 +288,24 @@ export abstract class Cutscene extends Stage {
 		return id;
 	}
 
-	/** keep a sound playing in a loop at the given volume, or stop it at 0 */
+	/**
+	 * keep a sound playing in a loop, fading it to the given volume (and
+	 * stopping it, at 0)
+	 */
 	protected loop(name: string, volume: number) {
-		this.stopSound(name);
-		if (volume > 0) {
-			this.sound(name, volume, true);
+		const playing = this.loops.get(name);
+		if (!playing) {
+			if (volume > 0) {
+				this.loops.set(name, { id: this.sound(name, volume, true), volume });
+			}
+			return;
 		}
-	}
-
-	protected stopSound(name: string) {
-		audio.stop(name);
-		this.sounds = this.sounds.filter(([sound]) => sound !== name);
+		audio.fade(name, playing.volume, volume, LOOP_FADE, playing.id);
+		playing.volume = volume;
+		if (volume === 0) {
+			this.loops.delete(name);
+			this.at(LOOP_FADE, () => audio.stop(name, playing.id));
+		}
 	}
 
 	override onDestroyEvent() {
@@ -290,11 +318,10 @@ export abstract class Cutscene extends Stage {
 			audio.stop(name, id);
 		}
 		this.sounds = [];
-		for (const [, tween] of this.moves) {
-			tween.stop();
-		}
+		this.loops.clear();
+		// the moves are stopped by the engine, with every tween, on the next
+		// screen
 		this.moves = [];
-		this.cast = [];
 		for (const key of ["ESC", "ENTER", "X", "SPACE"] as const) {
 			input.unbindKey(input.KEY[key]);
 		}

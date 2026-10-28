@@ -8,6 +8,7 @@ import { BitmapText, Container, Sprite, Tween, UIPanel } from "melonjs";
 import { HEIGHT, PALETTE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
+import { wave } from "./effects";
 
 /************************************************************************************/
 /*      a HUD item: an icon and a number                                            */
@@ -126,6 +127,7 @@ export class LetsGoMessage extends Container {
 		});
 		// the same shadow as the menus, to read it over the level
 		title.addPostEffect(shaders.shadow);
+		title.glyphEffect = wave;
 		const width = title.measureText().width;
 		title.pos.x = -width;
 		this.addChild(title);

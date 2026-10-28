@@ -6,6 +6,7 @@
  */
 import {
 	type Container,
+	type GlyphEffect,
 	loader,
 	ParticleEmitter,
 	Sprite,
@@ -103,3 +104,14 @@ export function smoke(world: Container, x: number, y: number) {
 	});
 	world.addChild(puff, EFFECT_Z);
 }
+
+/**
+ * A wave running along a title, for BitmapText#glyphEffect: it moves the
+ * glyphs inside the text batch, with no new layout. Its phase comes from where
+ * a glyph is, not from its index, so the wave keeps one length whatever the
+ * line spells, and it moves by whole pixels of the original (4 of ours), like
+ * everything else on the screen.
+ */
+export const wave: GlyphEffect = (out, ctx) => {
+	out.offsetY = Math.round(Math.sin(ctx.time * 0.005 + ctx.x * 0.02) * 2) * 4;
+};

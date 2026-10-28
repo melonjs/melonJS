@@ -6,6 +6,7 @@
  */
 import { audio, BitmapText, input, type Sprite, state } from "melonjs";
 import { PALETTE, WIDTH } from "../constants";
+import { wave } from "../entities/effects";
 import { gameState } from "../gameState";
 import { Cutscene, SCREEN_W } from "./cutscene";
 
@@ -167,20 +168,23 @@ export class OutroScreen extends Cutscene {
 		this.finished = true;
 		gameState.record();
 		this.fill(PALETTE[3]);
-		for (const [text, y, font] of [
+		const lines = [
 			["THE END ?", 150, "atascii40"],
 			[`SCORE ${gameState.score}`, 220, "atascii32"],
 			["PRESS JUMP", 290, "atascii32"],
-		] as const) {
-			this.add(
-				new BitmapText(WIDTH / 2, y, {
-					font,
-					text,
-					textAlign: "center",
-					fillStyle: PALETTE[0],
-				}),
-				30,
-			);
+		] as const;
+		for (const [text, y, font] of lines) {
+			const line = new BitmapText(WIDTH / 2, y, {
+				font,
+				text,
+				textAlign: "center",
+				fillStyle: PALETTE[0],
+			});
+			// the title waves
+			if (text === lines[0][0]) {
+				line.glyphEffect = wave;
+			}
+			this.add(line, 30);
 		}
 	}
 
