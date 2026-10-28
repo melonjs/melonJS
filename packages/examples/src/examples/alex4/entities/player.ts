@@ -11,6 +11,7 @@ import {
 	collision,
 	FlashEffect,
 	input,
+	Line,
 	type PhysicsAdapter,
 	Rect,
 	type Renderable,
@@ -33,6 +34,10 @@ import { EggShot } from "./projectiles";
 const WALK_SPEED = TICK;
 const ROLL_SPEED = 2 * TICK;
 const JUMP_SPEED = jumpSpeed(16);
+// In the jumping pose his legs hang this much lower than his feet do when
+// he stands, from the feet's bottom edge (96) down to the frame's (120).
+const LEGS = 24;
+
 // The ball turns 8/256 of a turn per tick, as in the original.
 const SPIN = (8 / 256) * Math.PI * 2 * (50 / 60);
 
@@ -101,6 +106,9 @@ export class PlayerEntity extends Sprite {
 	private gone = false;
 	private adapter!: PhysicsAdapter;
 	private vel = new Vector2d();
+	/** a short ray down from his feet, and what it finds (see landingSoon) */
+	private ray = new Line(0, 0, [new Vector2d(0, 0), new Vector2d(0, LEGS)]);
+	private hits: Renderable[] = [];
 	/** what the camera looks at: Alex is in the middle of his frame */
 	private focus = new Vector2d();
 	/** turns Alex white for a moment when he gets hurt */
@@ -346,13 +354,34 @@ export class PlayerEntity extends Sprite {
 					this.spitting = false;
 				},
 			});
-		} else if (!this.grounded) {
+		} else if (!this.grounded && !this.landingSoon()) {
 			this.setCurrentAnimation(`${full}jump`);
 		} else if (vx !== 0) {
 			this.setCurrentAnimation(`${full}walk`);
 		} else {
 			this.setCurrentAnimation(`${full}stand`);
 		}
+	}
+
+	/**
+	 * falling, with the floor closer under his feet than his hanging legs: he
+	 * takes the landing pose a step early, or the legs would show in it
+	 */
+	private landingSoon() {
+		if (this.body.getVelocity(this.vel).y <= 0) {
+			return false;
+		}
+		// under both edges of his feet, so that a ledge counts too
+		for (const x of [78, 114]) {
+			this.ray.pos.set(this.pos.x + x, this.pos.y + 96);
+			this.hits.length = 0;
+			for (const hit of collision.rayCast(this.ray, this.hits)) {
+				if (hit.body.collisionType === collision.types.WORLD_SHAPE) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/** chew whatever was just picked up */
@@ -555,6 +584,14 @@ export class PlayerEntity extends Sprite {
 				// standing on it
 				if (response.normal.y < -0.7) {
 					this.standing = true;
+					// touching down: the pose changes now, not on the next update.
+					// The jumping one has his legs hanging lower, and would show
+					// them in the floor for a frame (the landing squash still
+					// starts on the next update, which compares with wasGrounded)
+					if (!this.grounded) {
+						this.grounded = true;
+						this.updateAnimation(this.body.getVelocity(this.vel).x);
+					}
 				}
 				// rolled into a wall: a breakable block breaks (as in the original,
 				// the one beside him, not under him), anything else stops him. On

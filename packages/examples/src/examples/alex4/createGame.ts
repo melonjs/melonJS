@@ -70,10 +70,6 @@ export const createGame = async () => {
 	// add "#debug" to the URL to enable the debug Panel
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	// the screens change through a pixelate transition (go()), but for the
-	// level complete one, which comes straight after the level
-	initTransitions(app);
-
 	// a touch of modern shading
 	shaders.init(app);
 
@@ -94,6 +90,9 @@ export const createGame = async () => {
 		state.set(state.READY, new LevelCompleteScreen());
 		state.set(state.GAME_END, new OutroScreen());
 		state.set(state.CREDITS, new CreditsScreen());
+		// they change through a pixelate transition (go()), but for the level
+		// complete one, which comes straight after the level
+		initTransitions(app);
 
 		// the objects placed in the Tiled maps
 		registerTiledObjectClass("player", PlayerEntity);

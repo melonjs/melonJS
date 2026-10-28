@@ -54,7 +54,7 @@ const ROLL: Line[] = [
 const TOP = 150;
 const BOTTOM = 470;
 /** how far apart the lines are, and how fast they roll (px per second) */
-const LINE = 40;
+const LINE = 44;
 const SPEED = 45;
 
 /*---------------------------------------------------------------------
