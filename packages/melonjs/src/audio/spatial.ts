@@ -13,6 +13,7 @@
 
 import type Camera3d from "../camera/camera3d.ts";
 import { Vector3d } from "../math/vector3d.ts";
+import type { Bounds } from "../physics/bounds.ts";
 import type Renderable from "../renderable/renderable.js";
 import { GAME_AFTER_UPDATE, off, on } from "../system/event.ts";
 import { position as setPosition, stop as stopSound } from "./playback.ts";
@@ -109,6 +110,39 @@ function worldPositionOf(target: Renderable) {
 	return target.getAbsolutePosition();
 }
 
+/** scratch for the listener's position, reused every frame */
+const _listenerPos = new Vector3d();
+
+/**
+ * Where the listener hears from, in WORLD coordinates.
+ *
+ * A camera's `pos` does not mean the same thing in 2D and 3D:
+ *
+ * - a {@link Camera3d}'s `pos` IS the eye (its view translates by `-pos`),
+ *   so it is used as is, like any renderable's.
+ * - a `Camera2d`'s `pos` is the TOP-LEFT corner of the view. Hearing from
+ *   there puts a sound in the middle of the screen half a screen right of and
+ *   below the ear, so everything pans right. The ear goes at the center of
+ *   what the camera shows instead: its `worldView`, which already counts
+ *   `offset` and `zoom`.
+ *
+ * Anything else is placed by `getAbsolutePosition()`, as a followed sound is.
+ * @param target - the listener target
+ * @returns the world position, in a vector reused every call
+ */
+function listenerPositionOf(target: Renderable) {
+	const p = worldPositionOf(target);
+	const camera = target as Renderable & {
+		getBasis?: unknown;
+		worldView?: Bounds;
+	};
+	if (typeof camera.getBasis !== "function" && camera.worldView !== undefined) {
+		const view = camera.worldView;
+		return _listenerPos.set(view.centerX, view.centerY, p.z);
+	}
+	return p;
+}
+
 /** Subscribe to the frame loop, but only once something needs it. */
 function startTicking() {
 	if (!ticking) {
@@ -144,7 +178,7 @@ function tick() {
 			// owns its camera destroys it on every state change
 			setListener(null);
 		} else {
-			const p = worldPositionOf(listenerTarget);
+			const p = listenerPositionOf(listenerTarget);
 			listener(p.x, p.y, p.z);
 			const camera = listenerTarget as Camera3d;
 			if (typeof camera.getBasis === "function") {
@@ -309,8 +343,19 @@ export function listenerOrientation(
  * with a lagging camera wants. Pass `null` to stop, leaving the listener
  * where it was.
  *
- * A {@link Camera3d} also contributes its ORIENTATION, so turning the camera
- * swings the stereo image. Anything else contributes position only.
+ * Where the ear goes depends on the target:
+ *
+ * - a `Camera2d` is heard from the CENTER of its view (`worldView`, so its
+ *   `offset` and `zoom` count), not from its `pos`, which is the view's
+ *   top-left corner.
+ * - a {@link Camera3d} is heard from its `pos`, which is its eye, and also
+ *   contributes its ORIENTATION, so turning the camera swings the stereo
+ *   image.
+ * - any other renderable is heard from `getAbsolutePosition()`, position
+ *   only: its `pos`, which is where its `anchorPoint` sits. That is its
+ *   center under the `(0.5, 0.5)` default of a `Renderable` or a `Sprite`,
+ *   but its TOP-LEFT corner under the `(0, 0)` of an `Entity` or of any
+ *   object loaded from Tiled.
  *
  * Following stops on its own if the target is destroyed, which a stage that
  * owns its camera does on every state change.
