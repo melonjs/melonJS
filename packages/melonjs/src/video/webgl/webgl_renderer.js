@@ -30,7 +30,6 @@ import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
 import { FrameTexture } from "./../texture/frametexture.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
-import { snapMatrixTranslation } from "../utils/pixel_snap.js";
 import {
 	generateJoinCircles,
 	generateTriangleFan,
@@ -4206,39 +4205,40 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	transform(a, b, c, d, e, f) {
 		const snap = this.settings.subPixel === false;
-		if (typeof a === "object") {
-			// accepts both Matrix2d and Matrix3d; copied only when its
-			// translation has to be rounded (see pixel_snap.js)
-			this.currentTransform.multiply(
-				snap ? snapMatrixTranslation(a, _tempMatrix) : a,
-			);
-		} else {
-			if (snap) {
-				e = Math.round(e);
-				f = Math.round(f);
-			}
+		let m = a;
+		if (typeof a !== "object") {
 			// individual 2D affine components
-			this.currentTransform.multiply(
-				_tempMatrix.setTransform(
-					a,
-					b,
-					0,
-					0,
-					c,
-					d,
-					0,
-					0,
-					0,
-					0,
-					1,
-					0,
-					e,
-					f,
-					0,
-					1,
-				),
+			m = _tempMatrix.setTransform(
+				a,
+				b,
+				0,
+				0,
+				c,
+				d,
+				0,
+				0,
+				0,
+				0,
+				1,
+				0,
+				e,
+				f,
+				0,
+				1,
 			);
+		} else if (snap) {
+			// a Matrix2d or a Matrix3d: copied, so rounding its translation
+			// below leaves the caller's matrix alone
+			m = _tempMatrix.identity().multiply(a);
 		}
+		if (snap) {
+			// snap to the nearest pixel, as given, before it is applied: what
+			// the Canvas renderer does, so both draw on the same pixel under
+			// any scale or flip (see translate)
+			m.val[12] = Math.round(m.val[12]);
+			m.val[13] = Math.round(m.val[13]);
+		}
+		this.currentTransform.multiply(m);
 	}
 
 	/**
@@ -4248,7 +4248,9 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	translate(x, y) {
 		if (this.settings.subPixel === false) {
-			// snap to the nearest pixel, as given (see pixel_snap.js)
+			// snap to the nearest pixel, as given, before it is applied, as the
+			// Canvas renderer does. Rounding the accumulated matrix instead
+			// put a sprite flipped about a half pixel a pixel off
 			this.currentTransform.translate(Math.round(x), Math.round(y));
 		} else {
 			this.currentTransform.translate(x, y);
