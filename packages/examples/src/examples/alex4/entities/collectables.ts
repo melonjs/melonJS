@@ -15,7 +15,7 @@ import {
 } from "melonjs";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
-import { burst, flash } from "./effects";
+import { burst, flash, sparkle } from "./effects";
 import { PlayerEntity } from "./player";
 
 /**
@@ -47,9 +47,11 @@ class Pickup extends Collectable {
 		) {
 			return;
 		}
-		// avoid any further collision and remove it
+		// avoid any further collision and remove it, with a sparkle
 		this.body.setCollisionMask(collision.types.NO_OBJECT);
-		this.parentApp.world.removeChild(this);
+		const world = this.parentApp.world;
+		sparkle(world, this.pos.x + 32, this.pos.y + 32);
+		world.removeChild(this);
 		this.collect();
 		other.eat();
 	}

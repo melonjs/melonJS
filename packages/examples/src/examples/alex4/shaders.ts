@@ -6,6 +6,7 @@
  */
 import {
 	type Application,
+	BlurEffect,
 	type Container,
 	DropShadowEffect,
 	event,
@@ -14,13 +15,21 @@ import {
 	SwayEffect,
 	timer,
 	VignetteEffect,
+	WaveEffect,
 } from "melonjs";
+
+// how far the water ripples to each side, in pixels, and how many rows of
+// pixels make one ripple
+const RIPPLE = 4;
+const RIPPLE_ROWS = 24;
 
 /**
  * A few shaders on top of the original look, made once and shared by
  * everything using them (they do nothing on the Canvas renderer).
  */
 export const shaders = {
+	// the farthest jungle layer is a little out of focus
+	blur: undefined as unknown as BlurEffect,
 	// the two jungle layers sway in the breeze, the nearest one a bit faster
 	far: undefined as unknown as SwayEffect,
 	near: undefined as unknown as SwayEffect,
@@ -28,8 +37,14 @@ export const shaders = {
 	shine: undefined as unknown as ShineEffect,
 	// a dark shadow under the menu text, to read it over the jungle
 	shadow: undefined as unknown as DropShadowEffect,
+	// the water of the current level ripples (made for each level: its
+	// strength depends on the size of the layer)
+	water: undefined as WaveEffect | undefined,
+	app: undefined as unknown as Application,
 
 	init(app: Application) {
+		this.app = app;
+		this.blur = new BlurEffect(app.renderer, { strength: 1.5 });
 		this.far = new SwayEffect(app.renderer, {
 			strength: 0.012,
 			frequency: 1.5,
@@ -50,7 +65,13 @@ export const shaders = {
 			color: [0.05, 0.27, 0],
 			opacity: 0.85,
 		});
-		for (const effect of [this.far, this.near, this.shine, this.shadow]) {
+		for (const effect of [
+			this.blur,
+			this.far,
+			this.near,
+			this.shine,
+			this.shadow,
+		]) {
 			effect.shared = true;
 		}
 
@@ -71,12 +92,30 @@ export const shaders = {
 			this.far.setTime(seconds);
 			this.near.setTime(seconds);
 			this.shine.setTime(seconds);
+			if (this.water && !this.water.destroyed) {
+				this.water.setTime(seconds);
+			}
 		});
 	},
 
-	/** make the jungle layers of the current screen sway */
-	sway(world: Container) {
+	/**
+	 * bring the jungle of the current screen to life: the far layer out of
+	 * focus, the next two swaying, and the water rippling
+	 */
+	jungle(world: Container) {
+		world.getChildByName("layer1")[0]?.addPostEffect(this.blur);
 		world.getChildByName("layer2")[0]?.addPostEffect(this.far);
 		world.getChildByName("layer3")[0]?.addPostEffect(this.near);
+		const water = world.getChildByName("Water")[0];
+		this.water = undefined;
+		if (water) {
+			// its strength is a share of the layer, as wide as the level
+			this.water = new WaveEffect(this.app.renderer, {
+				amplitude: RIPPLE / water.width,
+				frequency: ((water.height / RIPPLE_ROWS) * Math.PI) / 2,
+				speed: 3,
+			});
+			water.addPostEffect(this.water);
+		}
 	},
 };

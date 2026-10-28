@@ -103,7 +103,7 @@ export abstract class Cutscene extends Stage {
 		level.load(this.map, {
 			container: app.world,
 			onLoaded: () => {
-				shaders.sway(app.world);
+				shaders.jungle(app.world);
 				this.newScene();
 				this.sound(this.song);
 				this.play();

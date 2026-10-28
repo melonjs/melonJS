@@ -54,6 +54,30 @@ export function burst(
 }
 
 /**
+ * a sparkle of pixels, when something is picked up: they fly out, fading from
+ * the lightest color of the palette to the darkest
+ */
+export function sparkle(world: Container, x: number, y: number) {
+	const emitter = new ParticleEmitter(x - 16, y - 16, {
+		width: 32,
+		height: 32,
+		textureSize: 4,
+		tintOverLife: [PALETTE[3], PALETTE[2], PALETTE[1]],
+		totalParticles: 14,
+		angle: Math.PI / 2,
+		angleVariation: Math.PI,
+		speed: 2.5,
+		speedVariation: 1.5,
+		gravity: 0.05,
+		minLife: 250,
+		maxLife: 550,
+		autoDestroyOnComplete: true,
+	});
+	world.addChild(emitter, EFFECT_Z);
+	emitter.burstParticles();
+}
+
+/**
  * a puff of dust, when something heavy lands
  */
 export function dust(world: Container, x: number, y: number) {

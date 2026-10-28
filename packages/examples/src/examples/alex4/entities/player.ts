@@ -17,10 +17,11 @@ import {
 	Sprite,
 	state,
 	type TMXObject,
+	Trail,
 	Tween,
 	Vector2d,
 } from "melonjs";
-import { HEIGHT, jumpSpeed, TICK } from "../constants";
+import { HEIGHT, jumpSpeed, PALETTE, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
@@ -104,6 +105,9 @@ export class PlayerEntity extends Sprite {
 	private focus = new Vector2d();
 	/** turns Alex white for a moment when he gets hurt */
 	private hit!: FlashEffect;
+	/** the streak the ball leaves behind it, and the middle of the ball */
+	private trail!: Trail;
+	private ball = new Vector2d();
 
 	constructor(x: number, y: number, settings: TMXObject & { facing?: string }) {
 		// the frames are 192x160: Alex stands in the middle column, feet 96px down
@@ -190,6 +194,15 @@ export class PlayerEntity extends Sprite {
 		this.addPostEffect(this.hit);
 		this.updateFocus();
 		app.viewport.follow(this.focus, app.viewport.AXIS.HORIZONTAL, 0.1);
+		// behind Alex, and only fed while he rolls
+		this.trail = new Trail({
+			length: 12,
+			lifetime: 180,
+			minDistance: 8,
+			width: 52,
+			gradient: [PALETTE[2], `${PALETTE[2]}00`],
+		});
+		app.world.addChild(this.trail, this.depth - 1);
 		app.viewport.setDeadzone(app.viewport.width / 5, app.viewport.height);
 		// the sounds placed in the level are heard from where Alex is
 		audio.setListener(this);
@@ -267,6 +280,9 @@ export class PlayerEntity extends Sprite {
 
 		this.updateAnimation(vel.x);
 		this.shape();
+		// the ball is 64 pixels down the frame, in the middle
+		this.ball.set(this.pos.x + 96, this.pos.y + 64);
+		this.trail.target = this.rolling ? this.ball : null;
 		super.update(dt);
 		return true;
 	}

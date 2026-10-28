@@ -12,7 +12,11 @@ import { shaders } from "../shaders";
  */
 export function addParallaxBackground(app: Application) {
 	app.world.addChild(
-		new ImageLayer(0, 0, { image: "layer1", ratio: new Vector2d(0.25, 0) }),
+		new ImageLayer(0, 0, {
+			name: "layer1",
+			image: "layer1",
+			ratio: new Vector2d(0.25, 0),
+		}),
 		1,
 	);
 	app.world.addChild(
@@ -34,7 +38,7 @@ export function addParallaxBackground(app: Application) {
 		3,
 	);
 
-	shaders.sway(app.world);
+	shaders.jungle(app.world);
 
 	// move the camera around a huge world to scroll the layers
 	app.viewport.setBounds(0, 0, 1e7, app.viewport.height);
