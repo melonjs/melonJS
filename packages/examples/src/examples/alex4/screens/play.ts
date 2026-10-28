@@ -21,6 +21,7 @@ import {
 	LetsGoMessage,
 	PauseMessage,
 } from "../entities/hud";
+import { bindPads, PLAY_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 
@@ -30,15 +31,6 @@ export type LevelMap = TMXTileMap & {
 	boss?: number;
 	win?: number;
 };
-
-// gamepad button -> key
-const GAMEPAD = [
-	[input.GAMEPAD.BUTTONS.LEFT, input.KEY.LEFT],
-	[input.GAMEPAD.BUTTONS.RIGHT, input.KEY.RIGHT],
-	[input.GAMEPAD.BUTTONS.FACE_1, input.KEY.X],
-	[input.GAMEPAD.BUTTONS.FACE_2, input.KEY.Z],
-	[input.GAMEPAD.BUTTONS.START, input.KEY.P],
-];
 
 /* the in game stuff */
 export class PlayScreen extends Stage {
@@ -63,10 +55,8 @@ export class PlayScreen extends Stage {
 		input.bindKey(input.KEY.P, "pause", true);
 		input.bindKey(input.KEY.ESC, "quit", true);
 
-		// and the first gamepad
-		for (const [button, key] of GAMEPAD) {
-			input.bindGamepad(0, { type: "buttons", code: button }, key);
-		}
+		// and the gamepads
+		bindPads(PLAY_PAD);
 
 		// add the HUD, it stays when the level reloads
 		this.hud = new HUD();
@@ -170,9 +160,7 @@ export class PlayScreen extends Stage {
 		}
 		this.stopLevelSong();
 
-		for (const [button] of GAMEPAD) {
-			input.unbindGamepad(0, button);
-		}
+		unbindPads(PLAY_PAD);
 		for (const key of [
 			"LEFT",
 			"RIGHT",

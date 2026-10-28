@@ -17,6 +17,7 @@ import {
 	timer,
 } from "melonjs";
 import { INSET, LEVELS, WIDTH } from "../constants";
+import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { addParallaxBackground } from "./background";
 
@@ -125,6 +126,7 @@ export class LevelCompleteScreen extends Stage {
 		input.bindKey(input.KEY.ENTER, "enter", true);
 		input.bindKey(input.KEY.X, "enter", true);
 		input.bindKey(input.KEY.SPACE, "enter", true);
+		bindPads(NEXT_PAD);
 
 		audio.play("level_done");
 	}
@@ -187,5 +189,6 @@ export class LevelCompleteScreen extends Stage {
 		for (const key of ["ENTER", "X", "SPACE"] as const) {
 			input.unbindKey(input.KEY[key]);
 		}
+		unbindPads(NEXT_PAD);
 	}
 }

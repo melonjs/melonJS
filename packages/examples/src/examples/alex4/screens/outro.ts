@@ -18,6 +18,7 @@ import {
 	UIPanel,
 } from "melonjs";
 import { PALETTE, WIDTH } from "../constants";
+import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 
 // the original script moved things one step every 20ms, at 1/4 of our scale
@@ -43,6 +44,7 @@ export class OutroScreen extends Stage {
 		input.bindKey(input.KEY.X, "enter", true);
 		input.bindKey(input.KEY.SPACE, "enter", true);
 		input.bindKey(input.KEY.ESC, "skip", true);
+		bindPads(NEXT_PAD);
 
 		level.load("a4_outro", {
 			container: app.world,
@@ -245,5 +247,6 @@ export class OutroScreen extends Stage {
 		for (const key of ["ENTER", "X", "SPACE", "ESC"] as const) {
 			input.unbindKey(input.KEY[key]);
 		}
+		unbindPads(NEXT_PAD);
 	}
 }

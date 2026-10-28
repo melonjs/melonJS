@@ -15,6 +15,7 @@ import {
 	Tween,
 } from "melonjs";
 import { ALL_LEVELS_UNLOCKED, INSET, LEVELS, WIDTH } from "../constants";
+import { bindPads, MENU_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 import { addParallaxBackground } from "./background";
@@ -107,6 +108,8 @@ export class TitleScreen extends Stage {
 		input.bindKey(input.KEY.ENTER, "enter", true);
 		input.bindKey(input.KEY.X, "enter", true);
 		input.bindKey(input.KEY.SPACE, "enter", true);
+		// and the gamepads
+		bindPads(MENU_PAD);
 
 		// play menu song
 		audio.playTrack("menu_song");
@@ -187,5 +190,6 @@ export class TitleScreen extends Stage {
 		] as const) {
 			input.unbindKey(input.KEY[key]);
 		}
+		unbindPads(MENU_PAD);
 	}
 }
