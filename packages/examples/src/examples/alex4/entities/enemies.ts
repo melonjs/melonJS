@@ -179,6 +179,9 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		this.alive = false;
 		this.parentApp.world.removeChild(this);
 		gameState.score += 50;
+		// an eaten enemy is an egg to spit (the original only had the eggs
+		// lying around in a few levels)
+		gameState.eggs++;
 		audio.play("eat");
 		player.eat();
 	}
