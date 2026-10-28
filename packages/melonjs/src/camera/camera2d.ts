@@ -536,11 +536,18 @@ export default class Camera2d extends Renderable {
 	 * @ignore
 	 */
 	_viewOrigin(value: number): number {
-		// the application's settings, which its renderer was made with; not
-		// there before the application is
-		const settings = game.settings as typeof game.settings | undefined;
-		return settings?.subPixel === false ? Math.round(value) : value;
+		return this._snapView ? Math.round(value) : value;
 	}
+
+	/**
+	 * Whether the view starts on a whole pixel ({@link _viewOrigin}): taken
+	 * from the `subPixel` setting of the renderer that draws this camera, at
+	 * the start of each {@link draw}, so a camera follows its own application
+	 * rather than whichever one was created last. `true` until the first
+	 * draw, which is `subPixel`'s default.
+	 * @ignore
+	 */
+	_snapView = true;
 
 	/**
 	 * The world-space bounds currently visible through this camera,
@@ -1226,6 +1233,9 @@ export default class Camera2d extends Renderable {
 		}
 		// cast to any to access canvas/webgl renderer-specific methods not on base Renderer
 		const r = renderer as any;
+		// before anything below culls or translates by the view's origin
+		// (`settings` is typed as a bare object on the base Renderer)
+		this._snapView = r.settings.subPixel === false;
 		const isNonDefault = !this.isDefault;
 		// for non-default cameras, compensate for the world container's
 		// centering offset (applied inside container.draw via renderer.translate)

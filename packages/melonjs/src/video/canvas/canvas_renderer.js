@@ -360,6 +360,60 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
+	 * The rectangle a draw lands on, snapped as {@link _pixelSnapBegin} snaps
+	 * it, given back in the draw's own units for the draw to use instead,
+	 * rather than set on the context as a transform. A `setTransform` around
+	 * every draw cost the canvas more than the draw itself, so the draws that
+	 * take a rectangle (images, patterns, rectangles, clips) move their own
+	 * corners; paths keep `_pixelSnapBegin`. It still reads the live
+	 * transform, so a draw made after code that moved the context directly
+	 * lands where that code put it.
+	 * @param {number} x - left of the rectangle, in the draw's units
+	 * @param {number} y - top of the rectangle
+	 * @param {number} w - its width
+	 * @param {number} h - its height
+	 * @param {number} [pad=0] - how far a stroke reaches past the rectangle
+	 * @returns {Float64Array|null} `[x, y, w, h]` to draw instead, or null to
+	 *   draw as given (`subPixel` on, a rotated or skewed transform, or a
+	 *   rectangle already on whole pixels)
+	 * @ignore
+	 */
+	_pixelSnapRect(x, y, w, h, pad = 0) {
+		if (this.settings.subPixel !== false) {
+			return null;
+		}
+		const t = this.getContext().getTransform();
+		// [sx, sy, tx, ty], or none before the first setProjection
+		const p = this._projection ?? NO_PROJECTION;
+		const a = t.a / p[0];
+		const d = t.d / p[1];
+		if (a === 0 || d === 0) {
+			return null;
+		}
+		const e = (t.e - p[2]) / p[0];
+		const f = (t.f - p[3]) / p[1];
+		const k = pixelSnap(a, t.b / p[1], t.c / p[0], d, e, f, x, y, w, h, pad);
+		if (k === null) {
+			return null;
+		}
+		// `_pixelSnapBegin` maps each axis X = a * x + e to k0 * X + k1;
+		// solved for the x that the unchanged transform takes there
+		if (this._snapRect === undefined) {
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			this._snapRect = new Float64Array(4);
+		}
+		const r = this._snapRect;
+		r[0] = k[0] * x + (k[1] + (k[0] - 1) * e) / a;
+		r[1] = k[2] * y + (k[3] + (k[2] - 1) * f) / d;
+		r[2] = k[0] * w;
+		r[3] = k[2] * h;
+		return r;
+	}
+
+	/**
 	 * @inheritdoc
 	 * @ignore
 	 */
@@ -571,9 +625,14 @@ export default class CanvasRenderer extends Renderer {
 			// get a tinted version of this image from the texture cache
 			source = this.cache.tint(image, this.currentTint.toRGB());
 		}
-		const snapped = this._pixelSnapBegin(dx, dy, dw, dh);
+		const r = this._pixelSnapRect(dx, dy, dw, dh);
+		if (r !== null) {
+			dx = r[0];
+			dy = r[1];
+			dw = r[2];
+			dh = r[3];
+		}
 		context.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
-		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -739,12 +798,18 @@ export default class CanvasRenderer extends Renderer {
 		const fillStyle = context.fillStyle;
 		context.fillStyle = pattern;
 		// translate so the pattern origin aligns with the draw position, and
-		// snap the fill as any other draw
+		// snap the fill as any other draw: the origin as well, so the
+		// pattern's texels land on whole pixels with it
+		const r = this._pixelSnapRect(x, y, width, height);
+		if (r !== null) {
+			x = r[0];
+			y = r[1];
+			width = r[2];
+			height = r[3];
+		}
 		context.save();
 		context.translate(x, y);
-		const snapped = this._pixelSnapBegin(0, 0, width, height);
 		context.fillRect(0, 0, width, height);
-		this._pixelSnapEnd(snapped);
 		context.restore();
 		context.fillStyle = fillStyle;
 	}
@@ -1353,15 +1418,20 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
-		const snapped = this._pixelSnapBegin(
+		const r = this._pixelSnapRect(
 			x,
 			y,
 			width,
 			height,
 			fill === true ? 0 : this.lineWidth / 2,
 		);
+		if (r !== null) {
+			x = r[0];
+			y = r[1];
+			width = r[2];
+			height = r[3];
+		}
 		context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
-		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1390,17 +1460,22 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
-		const snapped = this._pixelSnapBegin(
+		const r = this._pixelSnapRect(
 			x,
 			y,
 			width,
 			height,
 			fill === true ? 0 : this.lineWidth / 2,
 		);
+		if (r !== null) {
+			x = r[0];
+			y = r[1];
+			width = r[2];
+			height = r[3];
+		}
 		context.beginPath();
 		context.roundRect(x, y, width, height, radius);
 		context[fill === true ? "fill" : "stroke"]();
-		this._pixelSnapEnd(snapped);
 	}
 
 	/**
@@ -1660,9 +1735,12 @@ export default class CanvasRenderer extends Renderer {
 	clipRect(x, y, width, height) {
 		// clipped on whole pixels as anything drawn is, so a clipped
 		// container keeps the edge its content is drawn to
-		const snapped = this._pixelSnapBegin(x, y, width, height);
-		this.#clipRect(x, y, width, height);
-		this._pixelSnapEnd(snapped);
+		const r = this._pixelSnapRect(x, y, width, height);
+		if (r !== null) {
+			this.#clipRect(r[0], r[1], r[2], r[3]);
+		} else {
+			this.#clipRect(x, y, width, height);
+		}
 	}
 
 	/**

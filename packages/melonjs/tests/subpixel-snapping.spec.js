@@ -454,6 +454,23 @@ describe("subPixel: false on Canvas, WebGL and WebGPU", () => {
 	};
 
 	describe.for(["Canvas", "WebGL", "WebGPU"])("%s", (name) => {
+		it("draws a sprite where the rule puts it: its left edge rounded", (ctx) => {
+			// a 13 px sprite anchored at its centre starts at x - 6.5, so at a
+			// whole x its edges sit on half pixels, where the canvas's own
+			// rasterization and the rule part ways
+			for (const x of [20, 20.25, 20.5, 20.75, 21.4, 21.6, 22]) {
+				const at = draw(name, (r) => {
+					sprite(r, x, false);
+				});
+				if (at === null) {
+					ctx.skip("no WebGL");
+				}
+				const left = Math.round(x - 6.5);
+				expect(at.full, `x ${x}`).toEqual(span(left, left + 12));
+				expect(at.partial, `x ${x}`).toEqual([]);
+			}
+		});
+
 		it("draws a flipped sprite on the pixels it covers unflipped", (ctx) => {
 			for (const x of [20, 20.25, 20.5, 20.75]) {
 				const plain = draw(name, (r) => {
@@ -749,6 +766,117 @@ describe("the camera draws, culls and reads the pointer from one whole pixel", (
 		} finally {
 			app.world.removeChildNow(hero);
 			app.world.removeChildNow(tile);
+		}
+	});
+
+	it("follows the renderer that draws it, not the last application made", async () => {
+		// `game` is the last application to init(): one with subPixel on,
+		// made after this one. The camera still snaps when this application
+		// draws it, and stops when the other one does.
+		const other = new Application(32, 32, {
+			parent: "screen",
+			renderer: video.CANVAS,
+			subPixel: true,
+		});
+		await other.init();
+		try {
+			const cam = state.current().cameras.get("default");
+			cam.setBounds(-1000, -1000, 4000, 4000);
+			cam.moveTo(0.4, 0);
+			app.world.update(0);
+			app.repaint();
+			app.draw();
+			expect(cam.worldView.left).toBe(0);
+
+			other.repaint();
+			other.draw();
+			expect(cam.worldView.left).toBe(0.4);
+		} finally {
+			other.destroy();
+		}
+	});
+});
+
+describe("Canvas with smoothing on", () => {
+	// With smoothing off the canvas already draws image edges whole, so it is
+	// with smoothing on that a draw left between pixels shows: blended edges
+	let app;
+
+	beforeAll(async () => {
+		boot();
+		app = new Application(W, H, {
+			parent: "screen",
+			renderer: video.CANVAS,
+			antiAlias: true,
+			subPixel: false,
+		});
+		await app.init();
+	});
+
+	afterAll(() => {
+		app?.destroy();
+	});
+
+	it("draws a sprite at a fractional position on whole pixels, unblended", () => {
+		// red and black stripes, a pixel wide: a draw left between pixels
+		// blends neighbouring stripes into in-between reds, which a solid
+		// image would hide
+		const image = document.createElement("canvas");
+		image.width = 13;
+		image.height = H;
+		const c = image.getContext("2d");
+		for (let i = 0; i < 13; i += 2) {
+			c.fillStyle = "#ff0000";
+			c.fillRect(i, 0, 1, H);
+		}
+		const r = app.renderer;
+		for (const x of [20.25, 20.5, 20.75]) {
+			r.clearColor("#000000ff");
+			r.save();
+			r.setProjection(new Matrix3d().ortho(0, W, H, 0, -1000, 1000));
+			r.resetTransform();
+			const s = new Sprite(x, ROW, { image });
+			s.preDraw(r);
+			s.draw(r);
+			s.postDraw(r);
+			r.restore();
+			const at = readBack(r);
+			const left = Math.round(x - 6.5);
+			expect(at.full, `x ${x}`).toEqual(
+				span(0, 6).map((i) => {
+					return left + i * 2;
+				}),
+			);
+			expect(at.partial, `x ${x}`).toEqual([]);
+		}
+	});
+
+	it("draws a pattern at a fractional position from a whole pixel, unblended", () => {
+		// a red pixel then a black one, repeated: the pattern starts where
+		// the fill does, so a fill left between pixels blends the stripes
+		const tile = document.createElement("canvas");
+		tile.width = 2;
+		tile.height = H;
+		const c = tile.getContext("2d");
+		c.fillStyle = "#ff0000";
+		c.fillRect(0, 0, 1, H);
+		const r = app.renderer;
+		const pattern = r.createPattern(tile, "repeat");
+		for (const x of [20.25, 20.5, 20.75]) {
+			r.clearColor("#000000ff");
+			r.save();
+			r.setProjection(new Matrix3d().ortho(0, W, H, 0, -1000, 1000));
+			r.resetTransform();
+			r.drawPattern(pattern, x, 0, 14, H);
+			r.restore();
+			const at = readBack(r);
+			const left = Math.round(x);
+			expect(at.full, `x ${x}`).toEqual(
+				span(0, 6).map((i) => {
+					return left + i * 2;
+				}),
+			);
+			expect(at.partial, `x ${x}`).toEqual([]);
 		}
 	});
 });
