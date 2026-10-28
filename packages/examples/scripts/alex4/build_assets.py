@@ -39,7 +39,7 @@ ts.save(f"{OUT}/map/a4_tiles.png", optimize=True)
 print("tiles", len(tiles))
 
 # ---- sprite atlas ---------------------------------------------------------
-skip = {"BG0", "BG1", "BG2", "INTRO_BG", "ALEX_BG", "CHAIN", "CHOPPER1", "CHOPPER2", "CHOPPER3", "CHOPPER4", "LEVELCOMPLETE", "GAME_OVER", "LETSGO", "ALEX_LOGO", "FLD_LOGO", "SHIP100", "UFO_BIG", "CAGE_BIG", "CAGE_SML1", "CAGE_SML2", "POINTER"}
+skip = {"BG0", "BG1", "BG2", "INTRO_BG", "ALEX_BG", "LEVELCOMPLETE", "GAME_OVER", "LETSGO", "ALEX_LOGO", "FLD_LOGO", "SHIP100", "POINTER"}
 frames = {}
 for n, im in bmps.items():
     if n.startswith("TILE") or n in skip:
@@ -83,6 +83,14 @@ for n in list(frames):
 
 # the particle emitter wants a plain image
 up(bmps["PARTICLE_DUST"]).save(f"{OUT}/img/dust.png", optimize=True)
+
+# the treetops of the intro, made for a 4:3 screen: mirror their right side to
+# fill a 16:9 one (208 pixels wide at the original scale)
+bg = bmps["INTRO_BG"]
+wide = Image.new("RGBA", (208, bg.height))
+wide.paste(bg, (0, 0))
+wide.paste(bg.crop((bg.width - 48, 0, bg.width, bg.height)).transpose(Image.FLIP_LEFT_RIGHT), (bg.width, 0))
+up(wide).save(f"{OUT}/img/treetops.png", optimize=True)
 
 PAD = 2
 items = sorted(frames.items(), key=lambda kv: (-kv[1].height, kv[0]))
@@ -176,7 +184,7 @@ if mean_volume(f"{OUT}/sfx/hit.ogg") > SFX_LEVEL + 3:
 
 # ---- missing sound effects from the original sample data -------------------
 sfx = {p["NAME"]: d for t, p, d in parse_dat(unpack_file(f"{ORIG}/sfx_22.dat", password())) if t == "SAMP"}
-for name in ("spit", "shoot", "ship", "energy"):
+for name in ("spit", "shoot", "ship", "energy", "chopper", "talk"):
     if os.path.exists(f"{OUT}/sfx/{name}.ogg"):
         continue  # the encoders are not deterministic, keep what is there
     d = sfx[name]
@@ -190,3 +198,25 @@ for name in ("spit", "shoot", "ship", "energy"):
     encode(tmp, name, SFX_LEVEL - mean_volume(tmp))
     os.remove(tmp)
     print("sfx", name, bits, freq, length, ch)
+
+# ---- the intro and outro songs, from the original music module --------------
+# MSC_GAME holds all the songs of the game, each one starting at its own
+# position of the order list (MOD_INTRO_SONG... in main.c). Alex4-WE has the
+# others: cut these two out into a module of their own, and render them at the
+# level of the Alex4-WE songs.
+mod = bytearray(next(d for t, p, d in objs if p.get("NAME") == "MSC_GAME"))
+orders = bytes(mod[952:952 + 128])
+for name, first, last in (("intro_song", 0x00, 0x07), ("outro_song", 0x11, 0x19)):
+    if os.path.exists(f"{OUT}/bgm/{name}.ogg"):
+        continue
+    song = orders[first:last + 1]
+    mod[950] = len(song)
+    mod[952:952 + 128] = song + bytes(128 - len(song))
+    tmp = f"{OUT}/bgm/{name}.mod"
+    open(tmp, "wb").write(mod)
+    gain = mean_volume(f"{OUT}/bgm/level_song.ogg") - mean_volume(tmp)
+    for ext, codec in (("ogg", ["-c:a", "libvorbis", "-q:a", "5"]), ("mp3", ["-c:a", "libmp3lame", "-b:a", "128k"])):
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-af", f"volume={gain}dB", "-ar", "44100",
+                        *codec, f"{OUT}/bgm/{name}.{ext}"], check=True)
+    os.remove(tmp)
+    print("song", name, len(song))

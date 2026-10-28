@@ -4,198 +4,130 @@
  * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
-import {
-	type Application,
-	audio,
-	BitmapText,
-	input,
-	level,
-	Sprite,
-	Stage,
-	state,
-	Tween,
-	timer,
-	UIPanel,
-} from "melonjs";
+import { audio, BitmapText, input, type Sprite, state } from "melonjs";
 import { PALETTE, WIDTH } from "../constants";
-import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { gameState } from "../gameState";
+import { Cutscene, SCREEN_W } from "./cutscene";
 
-// the original script moved things one step every 20ms, at 1/4 of our scale
-const STEP = 20;
+// Alex rolled up in a ball, turning to the left
+const BALL = ["alex_ball0", "alex_ball3", "alex_ball2", "alex_ball1"];
 
 /*---------------------------------------------------------------------
 
 	The end: Alex finds Lola... but the story is not over.
-	Same timing as the original outro script.
+	Same scenes and timing as the original outro script.
 
   ---------------------------------------------------------------------	*/
 
-export class OutroScreen extends Stage {
-	private app!: Application;
-	private timers: number[] = [];
+export class OutroScreen extends Cutscene {
 	private finished = false;
 
-	override onResetEvent(app: Application) {
-		this.app = app;
+	constructor() {
+		super("a4_outro", "outro_song");
+	}
+
+	protected play() {
 		this.finished = false;
-
-		input.bindKey(input.KEY.ENTER, "enter", true);
-		input.bindKey(input.KEY.X, "enter", true);
-		input.bindKey(input.KEY.SPACE, "enter", true);
-		input.bindKey(input.KEY.ESC, "skip", true);
-		bindPads(NEXT_PAD);
-
-		level.load("a4_outro", {
-			container: app.world,
-			onLoaded: () => {
-				audio.playTrack("level_song");
-				this.play();
-			},
-		});
+		this.reunion();
 	}
 
-	/** run something at the given time of the story */
-	private at(ms: number, fn: () => void) {
-		this.timers.push(timer.setTimeout(fn, ms));
-	}
-
-	/** a sprite from the atlas, placed by its top left corner */
-	private actor(region: string, x: number, y: number, facingRight = false) {
-		const sprite = new Sprite(x, y, {
-			image: gameState.atlas,
-			region,
-			anchorPoint: { x: 0, y: 0 },
-		});
-		sprite.flipX(facingRight);
-		this.app.world.addChild(sprite, 10);
-		return sprite;
-	}
-
-	/** move a sprite by (dx, dy) during some steps of the original script */
-	private move(sprite: Sprite, dx: number, dy: number, steps: number) {
-		// relative values: "+8", "-8"
-		const by = (d: number) =>
-			d < 0 ? `${d * steps * 4}` : `+${d * steps * 4}`;
-		return new Tween(sprite.pos).to(
-			{ x: by(dx), y: by(dy) },
-			{ duration: steps * STEP },
-		);
-	}
-
-	/** a speech bubble above someone's head */
-	private say(who: Sprite, lines: string[], ms: number) {
-		const width = Math.max(...lines.map((line) => line.length)) * 16 + 24;
-		const height = lines.length * 16 + 20;
-		const x = Math.max(
-			4,
-			Math.min(who.pos.x + 32 - width / 2, WIDTH - 4 - width),
-		);
-		const bubble = new UIPanel(x, who.pos.y - height - 16, {
-			width,
-			height,
-			fillColor: PALETTE[3],
-			borderColor: PALETTE[0],
-			borderWidth: 4,
-			radius: 8,
-		});
-		lines.forEach((line, i) => {
-			bubble.addChild(
-				new BitmapText(12, 10 + i * 16, {
-					font: "atascii32",
-					size: 0.5,
-					fillStyle: PALETTE[0],
-					text: line.toUpperCase(),
-				}),
-			);
-		});
-		this.app.world.addChild(bubble, 20);
-		this.at(ms, () => this.app.world.removeChild(bubble));
-	}
-
-	private play() {
-		const world = this.app.world;
-		const alex = this.actor("alex", 192, 256, true);
-		let lola = this.actor("lola", 576, 128);
-		const can1 = this.actor("drumcan", 448, 64);
-		const can2 = this.actor("drumcan", 448, 128);
-		const beam = this.actor("ufobeam", 160, -480, true);
-		const ufo = this.actor("ufo0", 44, -120, true);
-		const dome = this.actor("ufo1", 156, -56, true);
+	/** Alex finds Lola, until the UFO comes */
+	private reunion() {
+		const alex = this.actor("alex", 48, 64, "right");
+		let lola = this.actor("lola", 144, 32);
+		const can1 = this.actor("drumcan", 112, 16);
+		const can2 = this.actor("drumcan", 112, 32);
+		const dome = this.actor("ufo1", 39, -14, "right", 9);
+		const beam = this.actor("ufobeam", 40, -120, "right", 11);
+		const ufo = this.actor("ufo0", 11, -30, "right", 12);
 		let ball: Sprite;
 		let ship: Sprite;
-		let engine = 0;
-		let energy = 0;
 
-		this.at(200, () => this.say(alex, ["Lola! Are", "you ok?"], 2000));
+		this.at(200, () =>
+			this.speak(60, 60, "left", ["Lola! Are", "you ok?"], 2000),
+		);
 
 		// Lola rolls down, sending the drum cans flying
 		this.at(2200, () => {
-			world.removeChild(lola);
-			ball = this.actor("alex_ball0", 512, 96);
+			this.remove(lola);
+			// the ball is in the middle of a bigger picture
+			ball = this.animated(BALL, 160, 128, 24);
 			this.move(ball, -2, 0, 26).start();
 		});
 		this.at(2400, () => {
-			audio.play("crush");
+			this.sound("crush");
 			this.move(can1, -2, -1, 32).start();
 			this.move(can2, -1, -2, 32).start();
 		});
 		this.at(2720, () => {
-			world.removeChild(ball);
-			lola = this.actor("lola", 376, 128);
+			this.remove(ball);
+			lola = this.actor("lola", 94, 32);
 			this.move(lola, -1, 2, 16).start();
 		});
 
 		this.at(3040, () =>
-			this.say(lola, ["I'm fine. You came", "just in time!"], 2000),
+			this.speak(
+				80,
+				50,
+				"right",
+				["I'm fine. You came", "just in time!"],
+				2000,
+			),
 		);
-		this.at(5040, () => this.say(alex, ["I'm so happy", "to see you!"], 2000));
-		this.at(7040, () => this.say(lola, ["Thank you for", "saving me."], 2000));
+		this.at(5040, () =>
+			this.speak(60, 60, "left", ["I'm so happy", "to see you!"], 2000),
+		);
+		this.at(7040, () =>
+			this.speak(80, 50, "right", ["Thank you for", "saving me."], 2000),
+		);
 		this.at(9040, () => {
-			engine = audio.play("engine", true);
-			this.say(alex, ["Wait, what's", "that sound?"], 2000);
+			this.loop("engine", 0.5);
+			this.speak(60, 60, "left", ["Wait, what's", "that sound?"], 2000);
 		});
 
 		// the UFO comes down, and beams Alex up
 		this.at(11040, () => {
+			this.loop("engine", 1);
 			for (const part of [ufo, dome, beam]) {
 				this.move(part, 0, 1, 30).start();
 			}
 		});
 		this.at(12640, () => {
-			energy = audio.play("energy", true);
+			this.loop("energy", 1);
 			this.move(beam, 0, 1, 90).start();
 		});
-		this.at(14440, () => this.say(lola, ["Alex!"], 1000));
-		this.at(15440, () => this.say(alex, ["Lola!"], 1000));
+		this.at(14440, () => this.speak(80, 50, "right", ["Alex!"], 1000));
+		this.at(15440, () => this.speak(60, 60, "left", ["Lola!"], 1000));
 		this.at(16440, () => {
 			this.move(beam, 0, -1, 130).start();
 			this.move(alex, 0, -1, 130).start();
 		});
 		this.at(18440, () => {
+			this.loop("energy", 0);
+			this.loop("engine", 0.5);
 			this.move(ufo, 0, -1, 30).start();
 			this.move(dome, 0, -1, 30).start();
 		});
 		this.at(19040, () => {
-			audio.stop("energy", energy);
-			audio.stop("engine", engine);
-			this.say(lola, ["I'll save you!"], 1000);
+			this.loop("engine", 0);
+			this.speak(80, 50, "right", ["I'll save you!"], 1000);
 		});
 
-		// Lola takes the ship, and goes after them
+		// Lola takes the ship, and goes after them: it comes in from the right
+		// edge of our wider screen, in the same time
 		this.at(20040, () => {
-			audio.play("ship");
-			ship = this.actor("ship0", WIDTH, 256);
-			this.move(ship, -2, 0, 43).start();
+			this.sound("ship");
+			ship = this.actor("ship0", SCREEN_W, 64);
+			this.move(ship, -(SCREEN_W - 74) / 43, 0, 43).start();
 		});
-		this.at(20900, () => this.say(lola, ["Yay!"], 500));
+		this.at(20900, () => this.speak(80, 50, "right", ["Yay!"], 500));
 		this.at(21400, () => {
-			world.removeChild(ship);
-			world.removeChild(lola);
-			ship = this.actor("ship1", 296, 256);
+			this.remove(lola);
+			this.remove(ship);
+			ship = this.actor("ship1", 74, 64);
 		});
 		this.at(22400, () => {
-			audio.play("ship");
+			this.sound("ship");
 			this.move(ship, -1, 0, 16)
 				.chain(
 					this.move(ship, -2, -1, 8).chain(
@@ -204,49 +136,59 @@ export class OutroScreen extends Stage {
 				)
 				.start();
 		});
+		this.cut(24040, () => this.chase());
+	}
 
-		this.at(24400, () => {
-			this.finished = true;
-			gameState.record();
-			for (const [text, y, font] of [
-				["THE END ?", 150, "atascii40"],
-				[`SCORE ${gameState.score}`, 220, "atascii32"],
-				["PRESS JUMP", 290, "atascii32"],
-			] as const) {
-				world.addChild(
-					new BitmapText(WIDTH / 2, y, {
-						font,
-						text,
-						textAlign: "center",
-						fillStyle: PALETTE[0],
-					}),
-					30,
-				);
-			}
+	/** over the treetops, the UFO flies away, with Lola in pursuit */
+	private chase() {
+		this.treetops();
+		this.loop("engine", 1);
+		const ufo = this.actor("ufo_big", -32, 120);
+		this.at(300, () => this.move(ufo, 1, -1, 150).start());
+
+		this.at(3300, () => {
+			// the ship sound, lower
+			audio.rate("ship", 0.6, this.sound("ship"));
+			const ship = this.actor("ship1", -32, 80, "right");
+			this.move(ship, 2, -1, 100).start();
 		});
+		this.at(5300, () => {
+			this.loop("engine", 0);
+			this.speak(SCREEN_W / 2, 60, "none", [" The end  "], 1000);
+		});
+		this.at(6300, () =>
+			this.speak(SCREEN_W / 2, 60, "none", [" The end? "], 1000),
+		);
+		this.cut(6800, () => this.theEnd());
+	}
+
+	/** the score, and on to the credits */
+	private theEnd() {
+		this.finished = true;
+		gameState.record();
+		this.fill(PALETTE[3]);
+		for (const [text, y, font] of [
+			["THE END ?", 150, "atascii40"],
+			[`SCORE ${gameState.score}`, 220, "atascii32"],
+			["PRESS JUMP", 290, "atascii32"],
+		] as const) {
+			this.add(
+				new BitmapText(WIDTH / 2, y, {
+					font,
+					text,
+					textAlign: "center",
+					fillStyle: PALETTE[0],
+				}),
+				30,
+			);
+		}
 	}
 
 	override update(dt: number) {
-		if (
-			input.isKeyPressed("skip") ||
-			(this.finished && input.isKeyPressed("enter"))
-		) {
+		const next = input.isKeyPressed("start") || input.isKeyPressed("jump");
+		if (input.isKeyPressed("skip") || (this.finished && next)) {
 			state.change(state.CREDITS);
 		}
 		return super.update(dt);
-	}
-
-	override onDestroyEvent() {
-		for (const id of this.timers) {
-			timer.clearTimeout(id);
-		}
-		this.timers = [];
-		audio.stopTrack();
-		audio.stop("engine");
-		audio.stop("energy");
-		for (const key of ["ENTER", "X", "SPACE", "ESC"] as const) {
-			input.unbindKey(input.KEY[key]);
-		}
-		unbindPads(NEXT_PAD);
 	}
 }

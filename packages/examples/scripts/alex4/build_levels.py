@@ -2,7 +2,8 @@
 
 levels 1-6  : the Alex4-WE hand-made Tiled maps, brought up to date
 levels 7-12 : converted from the original game (`maps.dat`)
-outro       : the outro scene (SCRIPTMAP1 in `data.dat`)
+intro, outro: the scenes of the intro and the outro (SCRIPTMAP0 and SCRIPTMAP1
+              in `data.dat`)
 
 Every map gets the same layout: three parallax image layers, the
 "Foreground" tile layer, a "collision" object layer (solid rectangles plus
@@ -183,7 +184,7 @@ def convert_original(m, levelid, path, scene=False):
                 objects.append(dict(name=ACTORS[typ], x=x * T, y=y * T))
 
     if scene:
-        # the outro is a cut scene: only keep the water
+        # the scenes are cut scenes: only keep the water
         objects = [o for o in objects if o["name"] == "water"]
     flags = m["flags"]
     props = {"label": m["name"], "levelid": levelid, "win": flags[4], "boss": flags[3]}
@@ -239,14 +240,16 @@ for i in range(6, 12):
     o = convert_original(maps[i], i + 1, f"{OUT}/a4_level{i + 1}.tmx")
     print("ORIG", i + 1, maps[i]["name"], len(o))
 
+SCENES = {"SCRIPTMAP0": "intro", "SCRIPTMAP1": "outro"}
 for t, p, d in parse_dat(unpack_file(f"{ORIG}/data.dat", password())):
-    if p.get("NAME") == "SCRIPTMAP1":
+    name = SCENES.get(p.get("NAME"))
+    if name:
         h = d[6:102]
         w, hh = struct.unpack("<ii", h[64:72])
         cells = d[102:102 + w * hh * 4]
-        # the scene was made for a 4:3 screen: repeat its right column to fill a 16:9 one
+        # the scenes were made for a 4:3 screen: repeat their right column to fill a 16:9 one
         rows = [cells[y * w * 4:(y + 1) * w * 4] for y in range(hh)]
         rows = [row + row[-4:] * (WIDE - w) for row in rows]
-        m = dict(name="outro", w=WIDE, h=hh, flags=[0, 0, 0, 0, 0], start=(3, 4), cells=b"".join(rows))
-        convert_original(m, 13, f"{OUT}/a4_outro.tmx", scene=True)
-        print("outro", w, hh)
+        m = dict(name=name, w=WIDE, h=hh, flags=[0, 0, 0, 0, 0], start=(3, 4), cells=b"".join(rows))
+        convert_original(m, 13, f"{OUT}/a4_{name}.tmx", scene=True)
+        print(name, w, hh)

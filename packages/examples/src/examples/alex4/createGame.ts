@@ -47,6 +47,7 @@ import { PlayerEntity } from "./entities/player";
 import { gameState } from "./gameState";
 import { resources } from "./resources";
 import { CreditsScreen } from "./screens/credits";
+import { INTRO, IntroScreen } from "./screens/intro";
 import { LevelCompleteScreen } from "./screens/levelComplete";
 import { OutroScreen } from "./screens/outro";
 import { PlayScreen } from "./screens/play";
@@ -86,6 +87,7 @@ export const createGame = async () => {
 		);
 
 		// the screens
+		state.set(INTRO, new IntroScreen());
 		state.set(state.MENU, new TitleScreen());
 		state.set(state.PLAY, new PlayScreen());
 		state.set(state.READY, new LevelCompleteScreen());
@@ -119,8 +121,8 @@ export const createGame = async () => {
 		registerTiledObjectClass("water", WaterEntity);
 		registerTiledObjectClass("exit", ExitEntity);
 
-		// startup sound, and to the menu
+		// startup sound, and the story begins
 		audio.play("startup");
-		state.change(state.MENU);
+		state.change(INTRO);
 	});
 };

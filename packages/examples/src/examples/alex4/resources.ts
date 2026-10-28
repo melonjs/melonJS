@@ -34,6 +34,9 @@ export const resources = [
 	image("gameover"),
 	image("levelcomplete"),
 
+	// the treetops of the cut scenes, from the original game
+	image("treetops"),
+
 	// tilesets
 	image("a4_tileset", "map"),
 	image("a4_tiles", "map"),
@@ -53,6 +56,7 @@ export const resources = [
 		type: "tmx",
 		src: `${base}map/${name}.tmx`,
 	})),
+	{ name: "a4_intro", type: "tmx", src: `${base}map/a4_intro.tmx` },
 	{ name: "a4_outro", type: "tmx", src: `${base}map/a4_outro.tmx` },
 
 	// sound effects
@@ -79,6 +83,8 @@ export const resources = [
 		"engine",
 		"ship",
 		"energy",
+		"chopper",
+		"talk",
 	].map(sfx),
 
 	// music
@@ -91,5 +97,8 @@ export const resources = [
 		"game_over",
 		"level_done",
 		"player_dies",
+		// from the original game
+		"intro_song",
+		"outro_song",
 	].map(bgm),
 ];
