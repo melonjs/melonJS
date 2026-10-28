@@ -9,6 +9,7 @@ import {
 	type Container,
 	DropShadowEffect,
 	event,
+	ScanlineEffect,
 	ShineEffect,
 	SwayEffect,
 	timer,
@@ -58,6 +59,10 @@ export const shaders = {
 		// HUD too)
 		app.viewport.addPostEffect(
 			new VignetteEffect(app.renderer, { strength: 0.1, size: 60 }),
+		);
+		// and light scanlines: about one per pixel of the original 120 rows
+		app.viewport.addPostEffect(
+			new ScanlineEffect(app.renderer, { opacity: 0.12 }),
 		);
 
 		// not emitted while the game is paused, so the jungle pauses too
