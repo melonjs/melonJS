@@ -40,6 +40,7 @@ export const resources = [
 	// tilesets
 	image("a4_tileset", "map"),
 	image("a4_tiles", "map"),
+	image("a4_water", "map"),
 
 	// particles
 	image("dust"),

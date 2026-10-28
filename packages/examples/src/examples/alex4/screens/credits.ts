@@ -14,7 +14,7 @@ import {
 	state,
 } from "melonjs";
 import { INSET } from "../constants";
-import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
+import { bindPads, bindTap, NEXT_PAD, unbindPads, unbindTap } from "../gamepad";
 import { shaders } from "../shaders";
 import { addParallaxBackground } from "./background";
 
@@ -58,6 +58,8 @@ export class CreditsScreen extends Stage {
 		input.bindKey(input.KEY.SPACE, "enter", true);
 		input.bindKey(input.KEY.ESC, "enter", true);
 		bindPads(NEXT_PAD);
+		// a click or a tap goes back too
+		bindTap(app, input.KEY.ENTER);
 
 		audio.playTrack("menu_song");
 	}
@@ -70,10 +72,11 @@ export class CreditsScreen extends Stage {
 		return super.update(dt);
 	}
 
-	override onDestroyEvent() {
+	override onDestroyEvent(app: Application) {
 		for (const key of ["ENTER", "X", "SPACE", "ESC"] as const) {
 			input.unbindKey(input.KEY[key]);
 		}
 		unbindPads(NEXT_PAD);
+		unbindTap(app);
 	}
 }

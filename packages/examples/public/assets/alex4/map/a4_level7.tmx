@@ -9,6 +9,29 @@
  <tileset firstgid="1" name="a4_tiles" tilewidth="64" tileheight="64" spacing="0" margin="0" tilecount="96" columns="12">
   <image source="a4_tiles.png" width="768" height="512"/>
  </tileset>
+ <tileset firstgid="97" name="a4_water" tilewidth="64" tileheight="64" tilecount="12" columns="12">
+  <image source="a4_water.png" width="768" height="64"/>
+  <tile id="0">
+   <animation>
+    <frame tileid="0" duration="80"/>
+    <frame tileid="1" duration="80"/>
+    <frame tileid="2" duration="80"/>
+    <frame tileid="3" duration="80"/>
+   </animation>
+  </tile>
+  <tile id="4">
+   <animation>
+    <frame tileid="4" duration="80"/>
+    <frame tileid="5" duration="80"/>
+    <frame tileid="6" duration="80"/>
+    <frame tileid="7" duration="80"/>
+    <frame tileid="8" duration="80"/>
+    <frame tileid="9" duration="80"/>
+    <frame tileid="10" duration="80"/>
+    <frame tileid="11" duration="80"/>
+   </animation>
+  </tile>
+ </tileset>
  <imagelayer id="1" name="layer1" parallaxx="0.25" parallaxy="0" repeatx="1" repeaty="1">
   <image source="../img/layer1.png" width="256" height="256"/>
  </imagelayer>
@@ -27,6 +50,18 @@
 24,0,0,22,23,23,23,23,23,23,23,24,60,74,60,59,60,59,87,0,0,0,10,11,12,0,63,64,0,68,69,0,0,68,69,0,70,0,2,77,73,74,19,18,84,84,28,21,78,0,0,4,5,5,6,0,0,0,0,55,16,5,5,6,77,78,55,57,0,0,70,0,0,0,66,67,0,0,0,2,0,0,22,23,23,23,24,57,90,87,0,0,0,0,0,0,0,0,0,0,79,0,0,0,0,0,80,0,40,41,37,37,37,38,37,37,
 23,11,11,23,23,23,23,23,23,23,23,23,11,11,11,11,11,11,12,0,0,10,23,23,23,12,0,65,53,70,0,0,0,70,0,0,3,0,73,74,74,74,31,30,84,84,34,33,75,0,0,55,56,56,57,0,0,0,0,4,18,56,16,18,74,75,0,0,13,87,65,13,0,0,68,69,0,2,0,0,0,0,55,56,56,56,57,0,10,11,11,12,0,0,0,0,0,0,0,0,81,0,0,0,0,0,81,40,41,37,38,44,45,39,0,0,
 23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,24,84,84,22,23,23,23,23,11,11,11,12,0,0,0,10,11,11,11,11,11,11,11,11,34,24,84,84,46,35,11,11,11,11,11,11,11,12,0,0,4,17,17,5,17,18,10,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,23,23,23,24,0,0,26,0,0,0,0,26,0,0,0,26,0,0,0,26,0,0,39,40,41,37,38,37,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="7" name="Water" width="116" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
@@ -145,232 +180,67 @@
   <object id="106" name="cherry" x="1216" y="128" width="64" height="64"/>
   <object id="107" name="cherry" x="1280" y="128" width="64" height="64"/>
   <object id="108" name="cherry" x="2560" y="128" width="64" height="64"/>
-  <object id="109" name="water" x="2816" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="110" name="water" x="2880" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="111" name="cherry" x="4992" y="128" width="64" height="64"/>
-  <object id="112" name="cherry" x="5056" y="128" width="64" height="64"/>
-  <object id="113" name="cherry" x="5312" y="128" width="64" height="64"/>
-  <object id="114" name="enemy1" x="5376" y="128" width="64" height="64"/>
-  <object id="115" name="cherry" x="5440" y="128" width="64" height="64"/>
-  <object id="116" name="cherry" x="5696" y="128" width="64" height="64"/>
-  <object id="117" name="cherry" x="7168" y="128" width="64" height="64"/>
-  <object id="118" name="cherry" x="7232" y="128" width="64" height="64"/>
-  <object id="119" name="cherry" x="64" y="192" width="64" height="64"/>
-  <object id="120" name="cherry" x="128" y="192" width="64" height="64"/>
-  <object id="121" name="cherry" x="960" y="192" width="64" height="64"/>
-  <object id="122" name="cherry" x="1024" y="192" width="64" height="64"/>
-  <object id="123" name="heart" x="1472" y="192" width="64" height="64"/>
-  <object id="124" name="enemy1" x="1536" y="192" width="64" height="64"/>
-  <object id="125" name="star" x="1984" y="192" width="64" height="64"/>
-  <object id="126" name="cherry" x="2432" y="192" width="64" height="64"/>
-  <object id="127" name="cherry" x="3072" y="192" width="64" height="64"/>
-  <object id="128" name="enemy2" x="3264" y="192" width="256" height="64"/>
-  <object id="129" name="star" x="3712" y="192" width="64" height="64"/>
-  <object id="130" name="cherry" x="5056" y="192" width="64" height="64"/>
-  <object id="131" name="star" x="6848" y="192" width="64" height="64"/>
-  <object id="132" name="exit" x="7040" y="192" width="64" height="64"/>
-  <object id="133" name="cherry" x="7168" y="192" width="64" height="64"/>
-  <object id="134" name="cherry" x="7232" y="192" width="64" height="64"/>
-  <object id="135" name="cherry" x="64" y="256" width="64" height="64"/>
-  <object id="136" name="cherry" x="128" y="256" width="64" height="64"/>
-  <object id="137" name="spin" x="1472" y="256" width="64" height="64"/>
-  <object id="138" name="star" x="1920" y="256" width="64" height="64"/>
-  <object id="139" name="star" x="2048" y="256" width="64" height="64"/>
-  <object id="140" name="cherry" x="2304" y="256" width="64" height="64"/>
-  <object id="141" name="star" x="2496" y="256" width="64" height="64"/>
-  <object id="142" name="star" x="2624" y="256" width="64" height="64"/>
-  <object id="143" name="star" x="3072" y="256" width="64" height="64"/>
-  <object id="144" name="cherry" x="3136" y="256" width="64" height="64"/>
-  <object id="145" name="star" x="3712" y="256" width="64" height="64"/>
-  <object id="146" name="star" x="3776" y="256" width="64" height="64"/>
-  <object id="147" name="cherry" x="4992" y="256" width="64" height="64"/>
-  <object id="148" name="star" x="5824" y="256" width="64" height="64"/>
-  <object id="149" name="star" x="6848" y="256" width="64" height="64"/>
-  <object id="150" name="water" x="1216" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="151" name="water" x="1280" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="152" name="enemy2" x="1664" y="320" width="256" height="64"/>
-  <object id="153" name="cherry" x="1856" y="320" width="64" height="64"/>
-  <object id="154" name="cherry" x="2112" y="320" width="64" height="64"/>
-  <object id="155" name="enemy2" x="2112" y="320" width="192" height="64"/>
-  <object id="156" name="star" x="2432" y="320" width="64" height="64"/>
-  <object id="157" name="enemy1" x="2432" y="320" width="64" height="64"/>
-  <object id="158" name="star" x="2560" y="320" width="64" height="64"/>
-  <object id="159" name="star" x="3072" y="320" width="64" height="64"/>
-  <object id="160" name="star" x="3136" y="320" width="64" height="64"/>
-  <object id="161" name="cherry" x="3200" y="320" width="64" height="64"/>
-  <object id="162" name="enemy2" x="3072" y="320" width="512" height="64"/>
-  <object id="163" name="star" x="3712" y="320" width="64" height="64"/>
-  <object id="164" name="oneup" x="3904" y="320" width="64" height="64"/>
-  <object id="165" name="enemy2" x="4096" y="320" width="832" height="64"/>
-  <object id="166" name="enemy1" x="4480" y="320" width="64" height="64"/>
-  <object id="167" name="enemy1" x="4608" y="320" width="64" height="64"/>
-  <object id="168" name="cherry" x="4992" y="320" width="64" height="64"/>
-  <object id="169" name="cherry" x="5056" y="320" width="64" height="64"/>
-  <object id="170" name="spin" x="5696" y="320" width="64" height="64"/>
-  <object id="171" name="star" x="6016" y="320" width="64" height="64"/>
-  <object id="172" name="star" x="6336" y="320" width="64" height="64"/>
-  <object id="173" name="star" x="6592" y="320" width="64" height="64"/>
-  <object id="174" name="water" x="1920" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="175" name="water" x="1984" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="176" name="water" x="2048" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="177" name="spin" x="3072" y="384" width="64" height="64"/>
-  <object id="178" name="water" x="3584" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="179" name="water" x="3648" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="180" name="water" x="5888" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="181" name="water" x="5952" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="182" name="water" x="6016" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="183" name="water" x="6080" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="184" name="water" x="6144" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="185" name="water" x="6208" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="186" name="water" x="6272" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="187" name="water" x="6336" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="188" name="water" x="6400" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="189" name="water" x="6464" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="190" name="water" x="6528" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="191" name="water" x="6592" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="192" name="water" x="6656" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="193" name="water" x="6720" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="194" name="water" x="6784" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="195" name="water" x="6848" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="196" name="water" x="6912" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="197" name="water" x="6976" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="198" name="water" x="7040" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="199" name="water" x="7104" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="200" name="water" x="7168" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="201" name="water" x="7232" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="202" name="water" x="7296" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="203" name="water" x="7360" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
+  <object id="109" name="cherry" x="4992" y="128" width="64" height="64"/>
+  <object id="110" name="cherry" x="5056" y="128" width="64" height="64"/>
+  <object id="111" name="cherry" x="5312" y="128" width="64" height="64"/>
+  <object id="112" name="enemy1" x="5376" y="128" width="64" height="64"/>
+  <object id="113" name="cherry" x="5440" y="128" width="64" height="64"/>
+  <object id="114" name="cherry" x="5696" y="128" width="64" height="64"/>
+  <object id="115" name="cherry" x="7168" y="128" width="64" height="64"/>
+  <object id="116" name="cherry" x="7232" y="128" width="64" height="64"/>
+  <object id="117" name="cherry" x="64" y="192" width="64" height="64"/>
+  <object id="118" name="cherry" x="128" y="192" width="64" height="64"/>
+  <object id="119" name="cherry" x="960" y="192" width="64" height="64"/>
+  <object id="120" name="cherry" x="1024" y="192" width="64" height="64"/>
+  <object id="121" name="heart" x="1472" y="192" width="64" height="64"/>
+  <object id="122" name="enemy1" x="1536" y="192" width="64" height="64"/>
+  <object id="123" name="star" x="1984" y="192" width="64" height="64"/>
+  <object id="124" name="cherry" x="2432" y="192" width="64" height="64"/>
+  <object id="125" name="cherry" x="3072" y="192" width="64" height="64"/>
+  <object id="126" name="enemy2" x="3264" y="192" width="256" height="64"/>
+  <object id="127" name="star" x="3712" y="192" width="64" height="64"/>
+  <object id="128" name="cherry" x="5056" y="192" width="64" height="64"/>
+  <object id="129" name="star" x="6848" y="192" width="64" height="64"/>
+  <object id="130" name="exit" x="7040" y="192" width="64" height="64"/>
+  <object id="131" name="cherry" x="7168" y="192" width="64" height="64"/>
+  <object id="132" name="cherry" x="7232" y="192" width="64" height="64"/>
+  <object id="133" name="cherry" x="64" y="256" width="64" height="64"/>
+  <object id="134" name="cherry" x="128" y="256" width="64" height="64"/>
+  <object id="135" name="spin" x="1472" y="256" width="64" height="64"/>
+  <object id="136" name="star" x="1920" y="256" width="64" height="64"/>
+  <object id="137" name="star" x="2048" y="256" width="64" height="64"/>
+  <object id="138" name="cherry" x="2304" y="256" width="64" height="64"/>
+  <object id="139" name="star" x="2496" y="256" width="64" height="64"/>
+  <object id="140" name="star" x="2624" y="256" width="64" height="64"/>
+  <object id="141" name="star" x="3072" y="256" width="64" height="64"/>
+  <object id="142" name="cherry" x="3136" y="256" width="64" height="64"/>
+  <object id="143" name="star" x="3712" y="256" width="64" height="64"/>
+  <object id="144" name="star" x="3776" y="256" width="64" height="64"/>
+  <object id="145" name="cherry" x="4992" y="256" width="64" height="64"/>
+  <object id="146" name="star" x="5824" y="256" width="64" height="64"/>
+  <object id="147" name="star" x="6848" y="256" width="64" height="64"/>
+  <object id="148" name="enemy2" x="1664" y="320" width="256" height="64"/>
+  <object id="149" name="cherry" x="1856" y="320" width="64" height="64"/>
+  <object id="150" name="cherry" x="2112" y="320" width="64" height="64"/>
+  <object id="151" name="enemy2" x="2112" y="320" width="192" height="64"/>
+  <object id="152" name="star" x="2432" y="320" width="64" height="64"/>
+  <object id="153" name="enemy1" x="2432" y="320" width="64" height="64"/>
+  <object id="154" name="star" x="2560" y="320" width="64" height="64"/>
+  <object id="155" name="star" x="3072" y="320" width="64" height="64"/>
+  <object id="156" name="star" x="3136" y="320" width="64" height="64"/>
+  <object id="157" name="cherry" x="3200" y="320" width="64" height="64"/>
+  <object id="158" name="enemy2" x="3072" y="320" width="512" height="64"/>
+  <object id="159" name="star" x="3712" y="320" width="64" height="64"/>
+  <object id="160" name="oneup" x="3904" y="320" width="64" height="64"/>
+  <object id="161" name="enemy2" x="4096" y="320" width="832" height="64"/>
+  <object id="162" name="enemy1" x="4480" y="320" width="64" height="64"/>
+  <object id="163" name="enemy1" x="4608" y="320" width="64" height="64"/>
+  <object id="164" name="cherry" x="4992" y="320" width="64" height="64"/>
+  <object id="165" name="cherry" x="5056" y="320" width="64" height="64"/>
+  <object id="166" name="spin" x="5696" y="320" width="64" height="64"/>
+  <object id="167" name="star" x="6016" y="320" width="64" height="64"/>
+  <object id="168" name="star" x="6336" y="320" width="64" height="64"/>
+  <object id="169" name="star" x="6592" y="320" width="64" height="64"/>
+  <object id="170" name="spin" x="3072" y="384" width="64" height="64"/>
  </objectgroup>
 </map>

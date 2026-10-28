@@ -383,8 +383,8 @@
    "frame": {
     "h": 28,
     "w": 72,
-    "x": 612,
-    "y": 1776
+    "x": 810,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -404,8 +404,8 @@
    "frame": {
     "h": 28,
     "w": 24,
-    "x": 686,
-    "y": 1776
+    "x": 884,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -425,8 +425,8 @@
    "frame": {
     "h": 28,
     "w": 28,
-    "x": 712,
-    "y": 1776
+    "x": 910,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -446,8 +446,8 @@
    "frame": {
     "h": 28,
     "w": 24,
-    "x": 742,
-    "y": 1776
+    "x": 940,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -467,8 +467,8 @@
    "frame": {
     "h": 28,
     "w": 28,
-    "x": 768,
-    "y": 1776
+    "x": 966,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -488,8 +488,8 @@
    "frame": {
     "h": 40,
     "w": 44,
-    "x": 428,
-    "y": 1776
+    "x": 626,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -509,8 +509,8 @@
    "frame": {
     "h": 40,
     "w": 44,
-    "x": 474,
-    "y": 1776
+    "x": 672,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -530,8 +530,8 @@
    "frame": {
     "h": 36,
     "w": 44,
-    "x": 520,
-    "y": 1776
+    "x": 718,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -551,8 +551,8 @@
    "frame": {
     "h": 36,
     "w": 44,
-    "x": 566,
-    "y": 1776
+    "x": 764,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -572,7 +572,7 @@
    "frame": {
     "h": 16,
     "w": 16,
-    "x": 968,
+    "x": 172,
     "y": 1776
    },
    "rotated": false,
@@ -593,7 +593,7 @@
    "frame": {
     "h": 16,
     "w": 16,
-    "x": 986,
+    "x": 190,
     "y": 1776
    },
    "rotated": false,
@@ -635,8 +635,8 @@
    "frame": {
     "h": 52,
     "w": 52,
-    "x": 266,
-    "y": 1776
+    "x": 464,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -656,8 +656,8 @@
    "frame": {
     "h": 52,
     "w": 52,
-    "x": 320,
-    "y": 1776
+    "x": 518,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -845,7 +845,7 @@
    "frame": {
     "h": 24,
     "w": 28,
-    "x": 798,
+    "x": 2,
     "y": 1776
    },
    "rotated": false,
@@ -1160,8 +1160,8 @@
    "frame": {
     "h": 52,
     "w": 52,
-    "x": 374,
-    "y": 1776
+    "x": 572,
+    "y": 1710
    },
    "rotated": false,
    "sourceSize": {
@@ -1622,7 +1622,7 @@
    "frame": {
     "h": 24,
     "w": 24,
-    "x": 828,
+    "x": 32,
     "y": 1776
    },
    "rotated": false,
@@ -1954,174 +1954,6 @@
    "trimmed": false
   },
   {
-   "filename": "surface_0",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 464,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_1",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 530,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_2",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 596,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_3",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 662,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_4",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 728,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_5",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 794,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_6",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 860,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "surface_7",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 926,
-    "y": 1710
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
    "filename": "ufo0",
    "frame": {
     "h": 76,
@@ -2147,7 +1979,7 @@
    "frame": {
     "h": 24,
     "w": 112,
-    "x": 854,
+    "x": 58,
     "y": 1776
    },
    "rotated": false,
@@ -2200,90 +2032,6 @@
    "spriteSourceSize": {
     "h": 360,
     "w": 112,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "water_0",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 2,
-    "y": 1776
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "water_1",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 68,
-    "y": 1776
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "water_2",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 134,
-    "y": 1776
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
-    "x": 0,
-    "y": 0
-   },
-   "trimmed": false
-  },
-  {
-   "filename": "water_3",
-   "frame": {
-    "h": 64,
-    "w": 64,
-    "x": 200,
-    "y": 1776
-   },
-   "rotated": false,
-   "sourceSize": {
-    "h": 64,
-    "w": 64
-   },
-   "spriteSourceSize": {
-    "h": 64,
-    "w": 64,
     "x": 0,
     "y": 0
    },

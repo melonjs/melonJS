@@ -13,6 +13,7 @@ import {
 	Stage,
 	state,
 	Tween,
+	UIBaseElement,
 } from "melonjs";
 import { ALL_LEVELS_UNLOCKED, INSET, LEVELS, WIDTH } from "../constants";
 import { bindPads, MENU_PAD, unbindPads } from "../gamepad";
@@ -25,6 +26,35 @@ const SCROLLER =
 	"USING ARROWS TO MOVE , X TO JUMP AND Z TO SPIT EGGS . " +
 	"JUMP ON ENEMIES TO EAT THEM , AND PICK UP STARS AND CHERRIES ON THE WAY     ";
 
+/**
+ * a line of the menu, that the mouse (or a finger) can point at and pick
+ */
+class MenuItem extends UIBaseElement {
+	label: BitmapText;
+	private point: () => void;
+	private pick: () => void;
+
+	constructor(x: number, y: number, point: () => void, pick: () => void) {
+		// as wide as the longest line
+		super(x, y, 480, 44);
+		this.point = point;
+		this.pick = pick;
+		this.label = new BitmapText(0, 0, { font: "atascii40" });
+		this.label.addPostEffect(shaders.shadow);
+		this.addChild(this.label);
+	}
+
+	override onOver() {
+		this.point();
+	}
+
+	override onClick() {
+		this.pick();
+		// handled: nothing under it gets the click
+		return false;
+	}
+}
+
 /*---------------------------------------------------------------------
 
 	A title screen
@@ -32,7 +62,7 @@ const SCROLLER =
   ---------------------------------------------------------------------	*/
 
 export class TitleScreen extends Stage {
-	private items: BitmapText[] = [];
+	private items: MenuItem[] = [];
 	private arrow!: Sprite;
 	private selectedItem = 0;
 	private startLevel = 0;
@@ -53,11 +83,16 @@ export class TitleScreen extends Stage {
 		// the menu items
 		this.items = [];
 		for (let i = 0; i < 4; i++) {
-			const item = new BitmapText(INSET + 140, 205 + i * 50, {
-				font: "atascii40",
-			});
-			item.floating = true;
-			item.addPostEffect(shaders.shadow);
+			const item = new MenuItem(
+				INSET + 140,
+				205 + i * 50,
+				() => this.selectItem(i),
+				() => {
+					this.selectItem(i);
+					// a click on the level picks the next one
+					this.activate(i === 1 ? 1 : 0);
+				},
+			);
 			this.items.push(item);
 			app.world.addChild(item, 10);
 		}
@@ -116,19 +151,59 @@ export class TitleScreen extends Stage {
 	}
 
 	private updateMenu() {
-		this.items[0].setText("START GAME");
-		this.items[1].setText(`LEVEL : ${this.startLevel + 1}`);
-		this.items[2].setText(`SOUND : ${audio.muted() ? "OFF" : "ON"}`);
-		this.items[3].setText("CREDITS");
+		this.items[0].label.setText("START GAME");
+		this.items[1].label.setText(`LEVEL : ${this.startLevel + 1}`);
+		this.items[2].label.setText(`SOUND : ${audio.muted() ? "OFF" : "ON"}`);
+		this.items[3].label.setText("CREDITS");
 	}
 
 	private selectItem(index: number) {
 		if (index < 0 || index >= this.items.length) {
 			return;
 		}
+		if (index === this.selectedItem) {
+			return;
+		}
 		this.selectedItem = index;
 		this.arrow.pos.y = this.items[index].pos.y - 4;
 		audio.play("menu");
+	}
+
+	/**
+	 * act on the selected item: pick it (0), or change its value (-1, 1)
+	 */
+	private activate(step: number) {
+		if (step !== 0) {
+			if (this.selectedItem !== 1) {
+				return;
+			}
+			const count = ALL_LEVELS_UNLOCKED
+				? LEVELS.length
+				: Math.min(gameState.saved.maxLevel, LEVELS.length - 1) + 1;
+			this.startLevel = (this.startLevel + step + count) % count;
+			this.updateMenu();
+			audio.play("menu");
+			return;
+		}
+		audio.play("menu");
+		switch (this.selectedItem) {
+			case 0:
+			case 1:
+				gameState.reset(this.startLevel);
+				state.change(state.PLAY);
+				break;
+			case 2:
+				if (audio.muted()) {
+					audio.unmuteAll();
+				} else {
+					audio.muteAll();
+				}
+				this.updateMenu();
+				break;
+			case 3:
+				state.change(state.CREDITS);
+				break;
+		}
 	}
 
 	override update(dt: number) {
@@ -139,41 +214,13 @@ export class TitleScreen extends Stage {
 			this.selectItem(this.selectedItem + 1);
 		}
 
-		// change the starting level, among the ones already reached
-		const step = input.isKeyPressed("left")
-			? -1
-			: input.isKeyPressed("right")
-				? 1
-				: 0;
-		if (step !== 0 && this.selectedItem === 1) {
-			const count = ALL_LEVELS_UNLOCKED
-				? LEVELS.length
-				: Math.min(gameState.saved.maxLevel, LEVELS.length - 1) + 1;
-			this.startLevel = (this.startLevel + step + count) % count;
-			this.updateMenu();
-			audio.play("menu");
-		}
-
-		if (input.isKeyPressed("enter")) {
-			audio.play("menu");
-			switch (this.selectedItem) {
-				case 0:
-				case 1:
-					gameState.reset(this.startLevel);
-					state.change(state.PLAY);
-					break;
-				case 2:
-					if (audio.muted()) {
-						audio.unmuteAll();
-					} else {
-						audio.muteAll();
-					}
-					this.updateMenu();
-					break;
-				case 3:
-					state.change(state.CREDITS);
-					break;
-			}
+		// change the starting level (among the ones reached), or pick
+		if (input.isKeyPressed("left")) {
+			this.activate(-1);
+		} else if (input.isKeyPressed("right")) {
+			this.activate(1);
+		} else if (input.isKeyPressed("enter")) {
+			this.activate(0);
 		}
 		return super.update(dt);
 	}

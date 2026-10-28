@@ -17,7 +17,7 @@ import {
 	timer,
 } from "melonjs";
 import { INSET, LEVELS, WIDTH } from "../constants";
-import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
+import { bindPads, bindTap, NEXT_PAD, unbindPads, unbindTap } from "../gamepad";
 import { gameState } from "../gameState";
 import { addParallaxBackground } from "./background";
 
@@ -127,6 +127,8 @@ export class LevelCompleteScreen extends Stage {
 		input.bindKey(input.KEY.X, "enter", true);
 		input.bindKey(input.KEY.SPACE, "enter", true);
 		bindPads(NEXT_PAD);
+		// a click or a tap goes on too
+		bindTap(app, input.KEY.ENTER);
 
 		audio.play("level_done");
 	}
@@ -180,7 +182,7 @@ export class LevelCompleteScreen extends Stage {
 		return super.update(dt);
 	}
 
-	override onDestroyEvent() {
+	override onDestroyEvent(app: Application) {
 		timer.clearInterval(this.counter);
 		timer.clearTimeout(this.counter);
 		this.counter = -1;
@@ -190,5 +192,6 @@ export class LevelCompleteScreen extends Stage {
 			input.unbindKey(input.KEY[key]);
 		}
 		unbindPads(NEXT_PAD);
+		unbindTap(app);
 	}
 }

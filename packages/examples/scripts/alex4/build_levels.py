@@ -41,6 +41,10 @@ WE_NAMES = {"playerspawnpoint": "player", "cherryentity": "cherry", "heartentity
 WIDE = 13
 
 TILESET_WE = dict(name="a4_tileset", image="a4_tileset.png", w=640, h=480, count=63, columns=9, spacing=1, margin=1)
+# the water, animated: its 4 frames (tile 0), then the 8 of its surface (tile 4)
+TILESET_WATER = dict(name="a4_water", image="a4_water.png", w=768, h=64, count=12, columns=12)
+WATER_FRAMES = {0: range(0, 4), 4: range(4, 12)}
+
 TILESET_ORIG = dict(name="a4_tiles", image="a4_tiles.png", w=768, h=512, count=96, columns=12, spacing=0, margin=0)
 
 
@@ -91,7 +95,7 @@ def object_xml(oid, o):
     return [f"  <object {attrs}>", *props_xml(o["props"], "   "), "  </object>"]
 
 
-def write_tmx(path, w, props, tileset, fg, solid, breakables, objects):
+def write_tmx(path, w, props, tileset, fg, solid, breakables, objects, water=()):
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            f'<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" '
            f'width="{w}" height="{H}" tilewidth="{T}" tileheight="{T}" infinite="0" backgroundcolor="#dfedd2">',
@@ -101,6 +105,18 @@ def write_tmx(path, w, props, tileset, fg, solid, breakables, objects):
            f'columns="{tileset["columns"]}">',
            f'  <image source="{tileset["image"]}" width="{tileset["w"]}" height="{tileset["h"]}"/>',
            " </tileset>"]
+    # the water is a layer of its own, its tiles animated
+    water_gid = tileset["count"] + 1
+    if water:
+        ws = TILESET_WATER
+        out += [f' <tileset firstgid="{water_gid}" name="{ws["name"]}" tilewidth="{T}" tileheight="{T}" '
+                f'tilecount="{ws["count"]}" columns="{ws["columns"]}">',
+                f'  <image source="{ws["image"]}" width="{ws["w"]}" height="{ws["h"]}"/>']
+        for tid, frames in WATER_FRAMES.items():
+            out += [f'  <tile id="{tid}">', "   <animation>",
+                    *[f'    <frame tileid="{f}" duration="80"/>' for f in frames],
+                    "   </animation>", "  </tile>"]
+        out.append(" </tileset>")
     # the parallax layers, as in Alex4-WE
     for lid, (name, iw, ih, ratio, rep) in enumerate((
             ("layer1", 256, 256, 0.25, 'repeatx="1" repeaty="1"'),
@@ -111,6 +127,13 @@ def write_tmx(path, w, props, tileset, fg, solid, breakables, objects):
     rows = [",".join(str(g) for g in fg[y * w:(y + 1) * w]) for y in range(H)]
     out += [f' <layer id="4" name="Foreground" width="{w}" height="{H}">',
             '  <data encoding="csv">', ",\n".join(rows), "</data>", " </layer>"]
+    if water:
+        cells = [0] * (w * H)
+        for x, y, surface in water:
+            cells[y * w + x] = water_gid + (4 if surface else 0)
+        rows = [",".join(str(g) for g in cells[y * w:(y + 1) * w]) for y in range(H)]
+        out += [f' <layer id="7" name="Water" width="{w}" height="{H}">',
+                '  <data encoding="csv">', ",\n".join(rows), "</data>", " </layer>"]
 
     oid = 1
     out.append(' <objectgroup id="5" name="collision">')
@@ -151,6 +174,7 @@ def convert_original(m, levelid, path, scene=False):
     fg = [0] * (w * H)
     solid = [False] * (w * ROWS)
     breakables = []
+    water = []
     objects = []
     for y in range(ROWS):
         for x in range(w):
@@ -175,7 +199,7 @@ def convert_original(m, levelid, path, scene=False):
             elif typ == T_SPIN:
                 objects.append(dict(name="spin", x=x * T, y=y * T))
             elif typ in (T_WATER, T_SURFACE):
-                objects.append(dict(name="water", x=x * T, y=y * T, props={"surface": int(typ == T_SURFACE)}))
+                water.append((x, y, typ == T_SURFACE))
             elif typ == 102:
                 # big humans walk back and forth on their own platform
                 left, right = patrol(solid, w, x, y)
@@ -184,11 +208,11 @@ def convert_original(m, levelid, path, scene=False):
                 objects.append(dict(name=ACTORS[typ], x=x * T, y=y * T))
 
     if scene:
-        # the scenes are cut scenes: only keep the water
-        objects = [o for o in objects if o["name"] == "water"]
+        # the scenes are cut scenes: nothing but the map
+        objects = []
     flags = m["flags"]
     props = {"label": m["name"], "levelid": levelid, "win": flags[4], "boss": flags[3]}
-    write_tmx(path, w, props, TILESET_ORIG, fg, solid, breakables, objects)
+    write_tmx(path, w, props, TILESET_ORIG, fg, solid, breakables, objects, water)
     return objects
 
 

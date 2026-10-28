@@ -191,14 +191,12 @@ export class PlayerEntity extends Sprite {
 		this.updateFocus();
 		app.viewport.follow(this.focus, app.viewport.AXIS.HORIZONTAL, 0.1);
 		app.viewport.setDeadzone(app.viewport.width / 5, app.viewport.height);
+		// the sounds placed in the level are heard from where Alex is
+		audio.setListener(this);
 	}
 
 	private updateFocus() {
-		// on whole pixels, so the camera comes to rest on one
-		this.focus.set(
-			Math.round(this.pos.x + this.width / 2),
-			Math.round(this.pos.y + this.height / 2),
-		);
+		this.focus.set(this.pos.x + this.width / 2, this.pos.y + this.height / 2);
 	}
 
 	override update(dt: number) {

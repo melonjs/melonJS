@@ -133,38 +133,6 @@ export class Breakable extends Renderable {
 
 /************************************************************************************/
 /*                                                                                  */
-/*      water, and its surface                                                      */
-/*                                                                                  */
-/************************************************************************************/
-export class WaterEntity extends Sprite {
-	constructor(
-		x: number,
-		y: number,
-		settings: TMXObject & { surface?: number },
-	) {
-		const frames = settings.surface
-			? [
-					"surface_0",
-					"surface_1",
-					"surface_2",
-					"surface_3",
-					"surface_4",
-					"surface_5",
-					"surface_6",
-					"surface_7",
-				]
-			: ["water_0", "water_1", "water_2", "water_3"];
-		super(x, y, {
-			...gameState.atlas.getAnimationSettings(frames),
-			anchorPoint: { x: 0, y: 0 },
-		});
-		this.addAnimation("flow", frames, 80);
-		this.setCurrentAnimation("flow");
-	}
-}
-
-/************************************************************************************/
-/*                                                                                  */
 /*      a hidden cannon, firing at Alex                                             */
 /*                                                                                  */
 /************************************************************************************/

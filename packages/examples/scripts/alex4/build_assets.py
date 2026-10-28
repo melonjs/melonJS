@@ -38,20 +38,25 @@ for i, n in enumerate(tiles):
 ts.save(f"{OUT}/map/a4_tiles.png", optimize=True)
 print("tiles", len(tiles))
 
+# ---- the water: its frames side by side, animated by the maps -------------
+# (the 4 frames of the water, then the 8 of its surface, see build_levels.py)
+water = [bmps["WATER"], bmps["WATER_SURFACE"]]
+strip = Image.new("RGBA", (sum(im.width for im in water), 16))
+x = 0
+for im in water:
+    strip.paste(im, (x, 0))
+    x += im.width
+up(strip).save(f"{OUT}/map/a4_water.png", optimize=True)
+print("water", strip.width // 16)
+
 # ---- sprite atlas ---------------------------------------------------------
-skip = {"BG0", "BG1", "BG2", "INTRO_BG", "ALEX_BG", "LEVELCOMPLETE", "GAME_OVER", "LETSGO", "ALEX_LOGO", "FLD_LOGO", "SHIP100", "POINTER"}
+skip = {"BG0", "BG1", "BG2", "INTRO_BG", "ALEX_BG", "LEVELCOMPLETE", "GAME_OVER", "LETSGO", "ALEX_LOGO", "FLD_LOGO", "SHIP100", "POINTER",
+        "WATER", "WATER_SURFACE"}
 frames = {}
 for n, im in bmps.items():
     if n.startswith("TILE") or n in skip:
         continue
-    if n == "WATER":
-        for i in range(im.width // 16):
-            frames[f"water_{i}"] = im.crop((i*16, 0, i*16+16, 16))
-    elif n == "WATER_SURFACE":
-        for i in range(im.width // 16):
-            frames[f"surface_{i}"] = im.crop((i*16, 0, i*16+16, 16))
-    else:
-        frames[n.lower()] = im
+    frames[n.lower()] = im
 
 # Alex is drawn from a separate head and body: bake every combination we need
 # into frames of one size (48x40), with the body always in the middle column

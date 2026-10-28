@@ -9,6 +9,29 @@
  <tileset firstgid="1" name="a4_tiles" tilewidth="64" tileheight="64" spacing="0" margin="0" tilecount="96" columns="12">
   <image source="a4_tiles.png" width="768" height="512"/>
  </tileset>
+ <tileset firstgid="97" name="a4_water" tilewidth="64" tileheight="64" tilecount="12" columns="12">
+  <image source="a4_water.png" width="768" height="64"/>
+  <tile id="0">
+   <animation>
+    <frame tileid="0" duration="80"/>
+    <frame tileid="1" duration="80"/>
+    <frame tileid="2" duration="80"/>
+    <frame tileid="3" duration="80"/>
+   </animation>
+  </tile>
+  <tile id="4">
+   <animation>
+    <frame tileid="4" duration="80"/>
+    <frame tileid="5" duration="80"/>
+    <frame tileid="6" duration="80"/>
+    <frame tileid="7" duration="80"/>
+    <frame tileid="8" duration="80"/>
+    <frame tileid="9" duration="80"/>
+    <frame tileid="10" duration="80"/>
+    <frame tileid="11" duration="80"/>
+   </animation>
+  </tile>
+ </tileset>
  <imagelayer id="1" name="layer1" parallaxx="0.25" parallaxy="0" repeatx="1" repeaty="1">
   <image source="../img/layer1.png" width="256" height="256"/>
  </imagelayer>
@@ -27,6 +50,18 @@
 20,9,84,7,20,20,9,84,84,84,84,84,7,20,21,84,84,84,84,84,84,84,84,84,84,84,19,21,84,84,84,84,84,84,84,16,17,18,0,0,0,26,0,0,0,0,0,26,0,0,0,19,21,0,0,3,0,0,0,19,21,37,37,37,38,37,25,0,39,0,43,45,0,55,19,20,20,20,21,57,0,0,0,0,39,0,0,0,38,7,8,9,0,0,0,0,0,0,0,0,0,0,0,39,0,0,0,0,0,0,88,59,74,60,59,0,19,20,32,32,
 20,21,85,31,20,20,20,9,85,85,85,7,20,33,21,85,85,85,85,85,85,85,85,85,85,85,19,21,85,85,85,85,85,85,85,16,17,18,0,0,0,0,0,0,0,0,0,0,0,0,0,19,21,0,0,7,9,0,0,19,21,0,0,0,39,0,39,0,39,0,0,43,45,0,55,56,56,56,57,0,26,0,0,0,39,26,0,0,39,19,20,21,0,0,40,41,44,45,0,0,0,0,0,39,0,38,0,0,38,0,40,41,37,44,45,0,31,32,36,74,
 32,33,74,46,33,33,33,33,11,11,11,33,33,74,33,74,74,74,74,7,8,8,8,9,74,74,19,21,74,7,8,8,9,74,74,16,17,18,0,0,0,0,0,0,0,0,0,0,0,0,0,19,21,0,0,19,21,0,0,19,21,0,0,0,39,0,37,37,25,0,25,37,38,37,37,37,37,38,37,37,37,25,0,0,25,37,37,37,25,19,20,21,0,0,0,0,0,0,0,0,0,0,0,39,0,39,0,0,39,0,0,39,0,0,39,0,34,74,74,36,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="7" name="Water" width="120" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,101,101,101,101,101,101,101,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,97,97,97,97,97,97,97,97,97,97,97,97,97,0,0,101,101,101,101,101,101,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,101,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,97,97,97,97,97,97,97,97,97,97,97,97,97,0,0,97,97,97,97,97,97,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
@@ -127,630 +162,65 @@
   <object id="88" name="cherry" x="2368" y="64" width="64" height="64"/>
   <object id="89" name="spikefish" x="3456" y="64" width="64" height="64"/>
   <object id="90" name="star" x="4800" y="64" width="64" height="64"/>
-  <object id="91" name="water" x="4800" y="64" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="92" name="star" x="4864" y="64" width="64" height="64"/>
-  <object id="93" name="water" x="4864" y="64" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="94" name="star" x="4928" y="64" width="64" height="64"/>
-  <object id="95" name="water" x="4928" y="64" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="96" name="cherry" x="7488" y="64" width="64" height="64"/>
-  <object id="97" name="cherry" x="7552" y="64" width="64" height="64"/>
-  <object id="98" name="star" x="128" y="128" width="64" height="64"/>
-  <object id="99" name="cherry" x="384" y="128" width="64" height="64"/>
-  <object id="100" name="water" x="640" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="101" name="water" x="704" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="102" name="water" x="768" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="103" name="jellyfish" x="1088" y="128" width="64" height="64"/>
-  <object id="104" name="cherry" x="1664" y="128" width="64" height="64"/>
-  <object id="105" name="cherry" x="1728" y="128" width="64" height="64"/>
-  <object id="106" name="water" x="2048" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="107" name="water" x="2112" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="108" name="water" x="2176" y="128" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="109" name="egg" x="3008" y="128" width="64" height="64"/>
-  <object id="110" name="jellyfish" x="3136" y="128" width="64" height="64"/>
-  <object id="111" name="egg" x="3264" y="128" width="64" height="64"/>
-  <object id="112" name="spikefish" x="3648" y="128" width="64" height="64"/>
-  <object id="113" name="spin" x="4224" y="128" width="64" height="64"/>
-  <object id="114" name="egg" x="4416" y="128" width="64" height="64"/>
-  <object id="115" name="egg" x="4480" y="128" width="64" height="64"/>
-  <object id="116" name="heart" x="5760" y="128" width="64" height="64"/>
-  <object id="117" name="jellyfish" x="6400" y="128" width="64" height="64"/>
-  <object id="118" name="cherry" x="6592" y="128" width="64" height="64"/>
-  <object id="119" name="jellyfish" x="6848" y="128" width="64" height="64"/>
-  <object id="120" name="cherry" x="7488" y="128" width="64" height="64"/>
-  <object id="121" name="star" x="7552" y="128" width="64" height="64"/>
-  <object id="122" name="star" x="64" y="192" width="64" height="64"/>
-  <object id="123" name="star" x="192" y="192" width="64" height="64"/>
-  <object id="124" name="cherry" x="448" y="192" width="64" height="64"/>
-  <object id="125" name="cherry" x="576" y="192" width="64" height="64"/>
-  <object id="126" name="cherry" x="704" y="192" width="64" height="64"/>
-  <object id="127" name="water" x="960" y="192" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="128" name="water" x="1024" y="192" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="129" name="water" x="1088" y="192" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="130" name="water" x="1152" y="192" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="131" name="water" x="1216" y="192" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="132" name="jellyfish" x="2112" y="192" width="64" height="64"/>
-  <object id="133" name="jellyfish" x="2496" y="192" width="64" height="64"/>
-  <object id="134" name="egg" x="2624" y="192" width="64" height="64"/>
-  <object id="135" name="egg" x="3520" y="192" width="64" height="64"/>
-  <object id="136" name="egg" x="4544" y="192" width="64" height="64"/>
-  <object id="137" name="cherry" x="6080" y="192" width="64" height="64"/>
-  <object id="138" name="cherry" x="6144" y="192" width="64" height="64"/>
-  <object id="139" name="star" x="128" y="256" width="64" height="64"/>
-  <object id="140" name="cherry" x="512" y="256" width="64" height="64"/>
-  <object id="141" name="cherry" x="640" y="256" width="64" height="64"/>
-  <object id="142" name="cherry" x="1344" y="256" width="64" height="64"/>
-  <object id="143" name="jellyfish" x="1792" y="256" width="64" height="64"/>
-  <object id="144" name="water" x="2432" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="145" name="water" x="2496" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="146" name="water" x="2560" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="147" name="water" x="2624" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="148" name="water" x="2688" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="149" name="water" x="2752" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="150" name="water" x="2816" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="151" name="water" x="2880" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="152" name="water" x="2944" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="153" name="water" x="3008" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="154" name="water" x="3072" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="155" name="water" x="3136" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="156" name="water" x="3200" y="256" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="157" name="egg" x="4608" y="256" width="64" height="64"/>
-  <object id="158" name="egg" x="5120" y="256" width="64" height="64"/>
-  <object id="159" name="cherry" x="5440" y="256" width="64" height="64"/>
-  <object id="160" name="cherry" x="5504" y="256" width="64" height="64"/>
-  <object id="161" name="cherry" x="5568" y="256" width="64" height="64"/>
-  <object id="162" name="cherry" x="6080" y="256" width="64" height="64"/>
-  <object id="163" name="cherry" x="6144" y="256" width="64" height="64"/>
-  <object id="164" name="cherry" x="6720" y="256" width="64" height="64"/>
-  <object id="165" name="cherry" x="576" y="320" width="64" height="64"/>
-  <object id="166" name="cherry" x="1280" y="320" width="64" height="64"/>
-  <object id="167" name="egg" x="1344" y="320" width="64" height="64"/>
-  <object id="168" name="cherry" x="1408" y="320" width="64" height="64"/>
-  <object id="169" name="cherry" x="1856" y="320" width="64" height="64"/>
-  <object id="170" name="star" x="1920" y="320" width="64" height="64"/>
-  <object id="171" name="star" x="1984" y="320" width="64" height="64"/>
-  <object id="172" name="cherry" x="2048" y="320" width="64" height="64"/>
-  <object id="173" name="water" x="2432" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="174" name="water" x="2496" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="175" name="water" x="2560" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="176" name="water" x="2624" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="177" name="water" x="2688" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="178" name="water" x="2752" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="179" name="water" x="2816" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="180" name="water" x="2880" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="181" name="water" x="2944" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="182" name="water" x="3008" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="183" name="water" x="3072" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="184" name="water" x="3136" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="185" name="water" x="3200" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="186" name="water" x="3392" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="187" name="water" x="3456" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="188" name="water" x="3520" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="189" name="water" x="3584" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="190" name="water" x="3648" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="191" name="water" x="3712" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="192" name="enemy1" x="4672" y="320" width="64" height="64"/>
-  <object id="193" name="star" x="5504" y="320" width="64" height="64"/>
-  <object id="194" name="star" x="5568" y="320" width="64" height="64"/>
-  <object id="195" name="enemy1" x="5568" y="320" width="64" height="64"/>
-  <object id="196" name="water" x="5888" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="197" name="water" x="5952" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="198" name="water" x="6016" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="199" name="water" x="6080" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="200" name="water" x="6144" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="201" name="water" x="6208" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="202" name="water" x="6272" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="203" name="water" x="6336" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="204" name="water" x="6400" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="205" name="water" x="6464" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="206" name="water" x="6528" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="207" name="water" x="6592" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="208" name="water" x="6656" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="209" name="water" x="6720" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="210" name="water" x="6784" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="211" name="water" x="6848" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="212" name="water" x="6912" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="213" name="water" x="6976" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="214" name="water" x="7040" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="215" name="water" x="7104" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="216" name="water" x="7168" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="217" name="water" x="7232" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="218" name="water" x="7296" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="219" name="water" x="7360" y="320" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="1"/>
-   </properties>
-  </object>
-  <object id="220" name="exit" x="128" y="384" width="64" height="64"/>
-  <object id="221" name="water" x="2432" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="222" name="water" x="2496" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="223" name="water" x="2560" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="224" name="water" x="2624" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="225" name="water" x="2688" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="226" name="water" x="2752" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="227" name="water" x="2816" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="228" name="water" x="2880" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="229" name="water" x="2944" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="230" name="water" x="3008" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="231" name="water" x="3072" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="232" name="water" x="3136" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="233" name="water" x="3200" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="234" name="water" x="3392" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="235" name="water" x="3456" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="236" name="water" x="3520" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="237" name="water" x="3584" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="238" name="water" x="3648" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="239" name="water" x="3712" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="240" name="water" x="5888" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="241" name="water" x="5952" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="242" name="water" x="6016" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="243" name="water" x="6080" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="244" name="water" x="6144" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="245" name="water" x="6208" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="246" name="water" x="6272" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="247" name="water" x="6336" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="248" name="water" x="6400" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="249" name="water" x="6464" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="250" name="water" x="6528" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="251" name="water" x="6592" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="252" name="water" x="6656" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="253" name="water" x="6720" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="254" name="water" x="6784" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="255" name="water" x="6848" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="256" name="water" x="6912" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="257" name="water" x="6976" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="258" name="water" x="7040" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="259" name="water" x="7104" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="260" name="water" x="7168" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="261" name="water" x="7232" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="262" name="water" x="7296" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
-  <object id="263" name="water" x="7360" y="384" width="64" height="64">
-   <properties>
-    <property name="surface" type="int" value="0"/>
-   </properties>
-  </object>
+  <object id="91" name="star" x="4864" y="64" width="64" height="64"/>
+  <object id="92" name="star" x="4928" y="64" width="64" height="64"/>
+  <object id="93" name="cherry" x="7488" y="64" width="64" height="64"/>
+  <object id="94" name="cherry" x="7552" y="64" width="64" height="64"/>
+  <object id="95" name="star" x="128" y="128" width="64" height="64"/>
+  <object id="96" name="cherry" x="384" y="128" width="64" height="64"/>
+  <object id="97" name="jellyfish" x="1088" y="128" width="64" height="64"/>
+  <object id="98" name="cherry" x="1664" y="128" width="64" height="64"/>
+  <object id="99" name="cherry" x="1728" y="128" width="64" height="64"/>
+  <object id="100" name="egg" x="3008" y="128" width="64" height="64"/>
+  <object id="101" name="jellyfish" x="3136" y="128" width="64" height="64"/>
+  <object id="102" name="egg" x="3264" y="128" width="64" height="64"/>
+  <object id="103" name="spikefish" x="3648" y="128" width="64" height="64"/>
+  <object id="104" name="spin" x="4224" y="128" width="64" height="64"/>
+  <object id="105" name="egg" x="4416" y="128" width="64" height="64"/>
+  <object id="106" name="egg" x="4480" y="128" width="64" height="64"/>
+  <object id="107" name="heart" x="5760" y="128" width="64" height="64"/>
+  <object id="108" name="jellyfish" x="6400" y="128" width="64" height="64"/>
+  <object id="109" name="cherry" x="6592" y="128" width="64" height="64"/>
+  <object id="110" name="jellyfish" x="6848" y="128" width="64" height="64"/>
+  <object id="111" name="cherry" x="7488" y="128" width="64" height="64"/>
+  <object id="112" name="star" x="7552" y="128" width="64" height="64"/>
+  <object id="113" name="star" x="64" y="192" width="64" height="64"/>
+  <object id="114" name="star" x="192" y="192" width="64" height="64"/>
+  <object id="115" name="cherry" x="448" y="192" width="64" height="64"/>
+  <object id="116" name="cherry" x="576" y="192" width="64" height="64"/>
+  <object id="117" name="cherry" x="704" y="192" width="64" height="64"/>
+  <object id="118" name="jellyfish" x="2112" y="192" width="64" height="64"/>
+  <object id="119" name="jellyfish" x="2496" y="192" width="64" height="64"/>
+  <object id="120" name="egg" x="2624" y="192" width="64" height="64"/>
+  <object id="121" name="egg" x="3520" y="192" width="64" height="64"/>
+  <object id="122" name="egg" x="4544" y="192" width="64" height="64"/>
+  <object id="123" name="cherry" x="6080" y="192" width="64" height="64"/>
+  <object id="124" name="cherry" x="6144" y="192" width="64" height="64"/>
+  <object id="125" name="star" x="128" y="256" width="64" height="64"/>
+  <object id="126" name="cherry" x="512" y="256" width="64" height="64"/>
+  <object id="127" name="cherry" x="640" y="256" width="64" height="64"/>
+  <object id="128" name="cherry" x="1344" y="256" width="64" height="64"/>
+  <object id="129" name="jellyfish" x="1792" y="256" width="64" height="64"/>
+  <object id="130" name="egg" x="4608" y="256" width="64" height="64"/>
+  <object id="131" name="egg" x="5120" y="256" width="64" height="64"/>
+  <object id="132" name="cherry" x="5440" y="256" width="64" height="64"/>
+  <object id="133" name="cherry" x="5504" y="256" width="64" height="64"/>
+  <object id="134" name="cherry" x="5568" y="256" width="64" height="64"/>
+  <object id="135" name="cherry" x="6080" y="256" width="64" height="64"/>
+  <object id="136" name="cherry" x="6144" y="256" width="64" height="64"/>
+  <object id="137" name="cherry" x="6720" y="256" width="64" height="64"/>
+  <object id="138" name="cherry" x="576" y="320" width="64" height="64"/>
+  <object id="139" name="cherry" x="1280" y="320" width="64" height="64"/>
+  <object id="140" name="egg" x="1344" y="320" width="64" height="64"/>
+  <object id="141" name="cherry" x="1408" y="320" width="64" height="64"/>
+  <object id="142" name="cherry" x="1856" y="320" width="64" height="64"/>
+  <object id="143" name="star" x="1920" y="320" width="64" height="64"/>
+  <object id="144" name="star" x="1984" y="320" width="64" height="64"/>
+  <object id="145" name="cherry" x="2048" y="320" width="64" height="64"/>
+  <object id="146" name="enemy1" x="4672" y="320" width="64" height="64"/>
+  <object id="147" name="star" x="5504" y="320" width="64" height="64"/>
+  <object id="148" name="star" x="5568" y="320" width="64" height="64"/>
+  <object id="149" name="enemy1" x="5568" y="320" width="64" height="64"/>
+  <object id="150" name="exit" x="128" y="384" width="64" height="64"/>
  </objectgroup>
 </map>

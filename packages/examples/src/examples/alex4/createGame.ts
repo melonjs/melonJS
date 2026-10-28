@@ -41,7 +41,6 @@ import {
 	LolaEntity,
 	RollBlock,
 	SpikeEntity,
-	WaterEntity,
 } from "./entities/level";
 import { PlayerEntity } from "./entities/player";
 import { gameState } from "./gameState";
@@ -115,7 +114,6 @@ export const createGame = async () => {
 		registerTiledObjectClass("spike", SpikeEntity);
 		registerTiledObjectClass("spin", RollBlock);
 		registerTiledObjectClass("breakable", Breakable);
-		registerTiledObjectClass("water", WaterEntity);
 		registerTiledObjectClass("exit", ExitEntity);
 
 		// startup sound, and the story begins

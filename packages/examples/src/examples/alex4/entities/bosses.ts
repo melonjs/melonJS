@@ -92,13 +92,13 @@ export class SpikeTruckEntity extends GenericEnemyEntity {
 
 	override onActivateEvent() {
 		super.onActivateEvent();
-		// its engine runs all the time, as in the original
-		this.engine = audio.play("engine", true);
-	}
-
-	override onDeactivateEvent() {
-		super.onDeactivateEvent();
-		audio.stop("engine", this.engine);
+		// its engine runs all the time, as in the original: heard from where
+		// the truck is, and gone with it
+		this.engine = audio.play("engine", {
+			loop: true,
+			follow: this,
+			stopWithTarget: true,
+		});
 	}
 
 	override touchPlayer(player: PlayerEntity, touch: Touch) {
