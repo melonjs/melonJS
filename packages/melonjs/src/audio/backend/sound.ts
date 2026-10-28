@@ -310,7 +310,13 @@ class Sound {
 			});
 		}
 
-		if (this._preload === true || this._preload === "metadata") {
+		// `autoplay` plays as soon as the clip can: on a clip declared with
+		// `preload: false` that means fetching it now, as a first play would
+		if (
+			this._preload === true ||
+			this._preload === "metadata" ||
+			this._autoplay
+		) {
 			this.load();
 		}
 
@@ -319,6 +325,13 @@ class Sound {
 
 	load(): this {
 		let url: string | null = null;
+
+		// loading is asking for the clip: `preload: false` only deferred WHEN.
+		// Left false, a streamed clip's element would get `preload="none"`,
+		// fetch nothing and never become playable
+		if (this._preload === false) {
+			this._preload = true;
+		}
 
 		if (audioEngine.noAudio) {
 			this._emit("loaderror", null, "No audio support.");
@@ -396,6 +409,14 @@ class Sound {
 
 	play(sprite?: string | number, internal?: boolean): number | null {
 		let id: number | null = null;
+
+		// a clip declared with `preload: false` is fetched by its first play.
+		// The play then waits in the queue below until the clip can play,
+		// and a second play while it loads only queues, it does not fetch
+		// again (`load()` leaves the clip "loading")
+		if (this._state === "unloaded") {
+			this.load();
+		}
 
 		if (typeof sprite === "number") {
 			id = sprite;

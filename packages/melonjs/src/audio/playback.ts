@@ -101,7 +101,11 @@ export function load(
 		...(sound.on?.volume !== undefined ? { onvolume: sound.on.volume } : {}),
 		...(sound.on?.mute !== undefined ? { onmute: sound.on.mute } : {}),
 		...(sound.on?.unlock !== undefined ? { onunlock: sound.on.unlock } : {}),
-		html5: sound.stream === true || sound.html5 === true,
+		// a clip fetched on its first play (`preload: false`) is streamed, so
+		// it starts as soon as enough has arrived rather than after the whole
+		// file has downloaded and decoded
+		html5:
+			sound.stream === true || sound.html5 === true || sound.preload === false,
 		// the nested form the backend actually reads — the flat
 		// `xhrWithCredentials` this used to pass is a pre-20.3 spelling that
 		// the in-tree backend never looked at, so credentials were dropped
@@ -127,8 +131,9 @@ export function load(
 
 	// `preload: false` asks the backend NOT to fetch anything now, so neither
 	// `onload` nor `onloaderror` will ever fire — a preload manifest waiting on
-	// this asset would never settle. The clip exists and is playable on demand,
-	// which is what the caller asked for, so report it as done.
+	// this asset would never settle. The clip exists, and its first play
+	// fetches and streams it, which is what the caller asked for, so report
+	// it as done.
 	if (sound.preload === false) {
 		onloadcb?.();
 	}

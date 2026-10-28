@@ -222,6 +222,9 @@ queries one at a time, usually not. See `melonjs-3d` for the decision table.
 
 - `stream: true` on long music tracks plays through a streaming element instead
   of decoding the whole file into memory.
+- `preload: false` on music a player may never reach (a boss theme, the
+  ending) keeps it out of the initial download: it is fetched and streamed
+  when first played.
 - `pool` on an audio clip sizes the reuse pool for finished instances — it is
   **not** a concurrency cap.
 - `loader.unloadAll()` between large levels drops every loaded asset and
