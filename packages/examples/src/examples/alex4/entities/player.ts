@@ -546,15 +546,6 @@ export class PlayerEntity extends Sprite {
 		return touch;
 	}
 
-	onCollisionStart(_response: CollisionResponse, other: Renderable) {
-		if (this.dying) {
-			return;
-		}
-		if (other instanceof Breakable && this.rolling) {
-			other.shatter();
-		}
-	}
-
 	onCollisionActive(response: CollisionResponse, other: Renderable) {
 		if (this.dying) {
 			return;
@@ -565,13 +556,16 @@ export class PlayerEntity extends Sprite {
 				if (response.normal.y < -0.7) {
 					this.standing = true;
 				}
-				// rolled into a wall
-				if (
-					this.rolling &&
-					!(other instanceof Breakable) &&
-					Math.abs(response.normal.x) > 0.7
-				) {
-					this.stopRoll();
+				// rolled into a wall: a breakable block breaks (as in the original,
+				// the one beside him, not under him), anything else stops him. On
+				// every step of the contact, not only when it starts: he can be
+				// against the block already when he starts rolling
+				if (this.rolling && Math.abs(response.normal.x) > 0.7) {
+					if (other instanceof Breakable) {
+						other.shatter();
+					} else {
+						this.stopRoll();
+					}
 				}
 				break;
 

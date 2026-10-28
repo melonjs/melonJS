@@ -166,7 +166,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 				this.eaten(player);
 			}
 		} else if (touch.above && this.stompable && !player.rolling) {
-			this.stomp();
+			this.stomp(player.pos.y + 96);
 			player.bounce();
 		} else if (touch.body) {
 			if (player.rolling && this.rollable) {
@@ -177,15 +177,16 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		}
 	}
 
-	/** jumped on */
-	stomp() {
+	/** jumped on, Alex's feet at `feet` */
+	stomp(feet: number) {
 		state.freeze(HIT_STOP.stomp);
 		audio.play("stomp");
+		// where they meet, as in the original: over its middle, at his feet
 		flash(
 			this.parentApp.world,
 			"particle_bopp",
-			this.pos.x + this.width / 2 - 32,
-			this.pos.y - 32,
+			this.pos.x + this.width / 2,
+			feet,
 		);
 		if (this.flatable) {
 			this.flat = true;
