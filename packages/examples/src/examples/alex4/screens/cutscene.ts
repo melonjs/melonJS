@@ -82,7 +82,7 @@ export abstract class Cutscene extends Stage {
 		input.bindKey(input.KEY.X, "jump", true);
 		input.bindKey(input.KEY.SPACE, "jump", true);
 		bindPads(NEXT_PAD);
-		// a click or a tap is a jump (it ends the outro, never skips the intro)
+		// a click or a tap is a jump
 		bindTap(app, input.KEY.X);
 
 		level.load(this.map, {

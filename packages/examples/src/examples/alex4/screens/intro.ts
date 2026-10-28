@@ -191,8 +191,13 @@ export class IntroScreen extends Cutscene {
 	}
 
 	override update(dt: number) {
-		// escape skips it, as in the original (and enter, or start on a pad)
-		if (input.isKeyPressed("skip") || input.isKeyPressed("start")) {
+		// escape skips it, as in the original, and so do enter, jump (space,
+		// or a click or a tap), and start or A on a pad
+		if (
+			input.isKeyPressed("skip") ||
+			input.isKeyPressed("start") ||
+			input.isKeyPressed("jump")
+		) {
 			state.change(state.MENU);
 		}
 		return super.update(dt);
