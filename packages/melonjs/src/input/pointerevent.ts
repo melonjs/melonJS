@@ -584,9 +584,14 @@ function normalizeEvent(originalEvent: any): Pointer[] {
 		return normalizedEvents;
 	}
 
-	// else use the first entry to simulate mouse event
+	// else use the first entry to simulate mouse event: its event state only.
+	// The button bindings (`bind`, set by bindPointer) belong to the global
+	// pointer: every pooled pointer has its own empty list, which would
+	// otherwise replace them on each event.
 	normalizedEvents[0].isPrimary = true;
+	const bind = pointer.bind;
 	Object.assign(pointer, normalizedEvents[0]);
+	pointer.bind = bind;
 
 	return normalizedEvents;
 }
