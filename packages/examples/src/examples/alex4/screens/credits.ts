@@ -8,16 +8,54 @@ import {
 	type Application,
 	audio,
 	BitmapText,
+	Container,
 	input,
 	Sprite,
 	Stage,
 	state,
+	Tween,
 } from "melonjs";
-import { INSET } from "../constants";
+import { WIDTH } from "../constants";
 import { bindPads, NEXT_PAD, unbindPads } from "../gamepad";
 import { shaders } from "../shaders";
 import { go } from "../transition";
 import { addParallaxBackground } from "./background";
+
+/** a heading, a name, or a blank line */
+type Line = [text: string, kind: "head" | "name" | "gap"];
+
+/** who made the game, rolling up under the title */
+const ROLL: Line[] = [
+	[">ORIGINAL GAME<", "head"],
+	["FREE LUNCH DESIGN", "name"],
+	["2003", "name"],
+	["", "gap"],
+	["DESIGN CODE GFX", "head"],
+	["JOHAN PEITZ", "name"],
+	["", "gap"],
+	["MUSIC SFX", "head"],
+	["ANDERS SVENSSON", "name"],
+	["", "gap"],
+	[">WEB EDITION<", "head"],
+	["OLIVIER BIOT", "name"],
+	["2012 - 2026", "name"],
+	["", "gap"],
+	[">GAME ENGINE<", "head"],
+	["MELONJS", "name"],
+	["MELONJS.ORG", "name"],
+	["", "gap"],
+	["FREE SOFTWARE", "name"],
+	["UNDER THE GNU GPL", "name"],
+	["", "gap"],
+	["THANKS FOR PLAYING!", "head"],
+];
+
+/** where the roll shows, under the title */
+const TOP = 150;
+const BOTTOM = 470;
+/** how far apart the lines are, and how fast they roll (px per second) */
+const LINE = 40;
+const SPEED = 45;
 
 /*---------------------------------------------------------------------
 
@@ -37,21 +75,39 @@ export class CreditsScreen extends Stage {
 		title.floating = true;
 		app.world.addChild(title, 10);
 
-		const lines: [string, number, number, "atascii32" | "atascii40"][] = [
-			[">ORIGINAL GAME<", 40, 160, "atascii40"],
-			["DESIGN CODE GFX :", 40, 210, "atascii32"],
-			["JOHAN PEITZ", 100, 245, "atascii32"],
-			["MUSIC SFX :", 40, 285, "atascii32"],
-			["ANDERS SVENSSON", 100, 320, "atascii32"],
-			[">WEB EDITION<", 40, 365, "atascii40"],
-			["OLIVIER BIOT", 100, 410, "atascii32"],
-		];
-		for (const [text, x, y, font] of lines) {
-			const line = new BitmapText(INSET + x, y, { font, text });
-			line.floating = true;
-			line.addPostEffect(shaders.shadow);
-			app.world.addChild(line, 10);
-		}
+		// the window the names roll through: it clips them under the title
+		const view = new Container(0, TOP, WIDTH, BOTTOM - TOP);
+		view.floating = true;
+		view.clipping = true;
+		app.world.addChild(view, 10);
+
+		const roll = new Container(0, 0, WIDTH, ROLL.length * LINE);
+		// the names move with it: without this they keep the bounds they had
+		// when added, and are left out as off screen once those are
+		roll.enableChildBoundsUpdate = true;
+		ROLL.forEach(([text, kind], i) => {
+			if (kind !== "gap") {
+				const line = new BitmapText(WIDTH / 2, i * LINE, {
+					font: kind === "head" ? "atascii40" : "atascii32",
+					textAlign: "center",
+					text,
+				});
+				line.addPostEffect(shaders.shadow);
+				roll.addChild(line);
+			}
+		});
+		view.addChild(roll);
+
+		// up from under the window until the last line has left it, then again
+		const height = view.height;
+		const run = height + roll.height;
+		roll.pos.y = height;
+		new Tween(roll.pos)
+			.to(
+				{ y: -roll.height },
+				{ duration: (run / SPEED) * 1000, repeat: Infinity },
+			)
+			.start();
 
 		// enable the keyboard
 		input.bindKey(input.KEY.ENTER, "enter", true);

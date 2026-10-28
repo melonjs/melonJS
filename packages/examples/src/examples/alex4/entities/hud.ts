@@ -10,6 +10,15 @@ import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 import { wave } from "./effects";
 
+/** the status bar is cut in four equal columns, one item centered in each */
+const COLUMN = WIDTH / 4;
+/** one digit of the atascii40 font */
+const DIGIT = 40;
+
+/** the x to center an item `width` wide in the given column */
+const column = (index: number, width: number) =>
+	Math.round(COLUMN * index + (COLUMN - width) / 2);
+
 /************************************************************************************/
 /*      a HUD item: an icon and a number                                            */
 /************************************************************************************/
@@ -18,16 +27,17 @@ class HUDCounter extends Container {
 	value = -1;
 
 	constructor(
-		x: number,
-		y: number,
+		index: number,
 		icon: string,
 		private read: () => number,
 	) {
-		super(x, y, 140, 40);
+		super(0, 0, 140, 40);
 		const sprite = new Sprite(0, 2, {
 			image: icon,
 			anchorPoint: { x: 0, y: 0 },
 		});
+		// centered as the icon and a single digit: more digits grow rightward
+		this.pos.x = column(index, sprite.width + DIGIT);
 		this.addChild(sprite);
 		this.label = new BitmapText(sprite.width, -2, { font: "atascii40" });
 		this.addChild(this.label);
@@ -49,8 +59,8 @@ class HUDCounter extends Container {
 class HUDEnergy extends Container {
 	hearts: Sprite[] = [];
 
-	constructor(x: number, y: number) {
-		super(x, y, 80, 40);
+	constructor(index: number) {
+		super(0, 0, 80, 40);
 		for (let i = 0; i < 2; i++) {
 			const heart = new Sprite(i * 34, 3, {
 				image: "hud_heart",
@@ -59,6 +69,7 @@ class HUDEnergy extends Container {
 			this.hearts.push(heart);
 			this.addChild(heart);
 		}
+		this.pos.x = column(index, 34 + this.hearts[0].width);
 	}
 
 	override update(dt: number) {
@@ -91,12 +102,13 @@ export class HUD extends Container {
 				borderColor: null,
 			}),
 		);
-		this.addChild(new HUDCounter(4, 0, "hud_life", () => gameState.lives));
-		this.addChild(new HUDEnergy(180, 0));
-		this.addChild(new HUDCounter(300, 0, "hud_egg", () => gameState.eggs));
-		this.score = new BitmapText(WIDTH - 4, -2, {
+		// lives, hearts, eggs and score, spread evenly over the bar
+		this.addChild(new HUDCounter(0, "hud_life", () => gameState.lives));
+		this.addChild(new HUDEnergy(1));
+		this.addChild(new HUDCounter(2, "hud_egg", () => gameState.eggs));
+		this.score = new BitmapText(COLUMN * 3.5, -2, {
 			font: "atascii40",
-			textAlign: "right",
+			textAlign: "center",
 		});
 		this.addChild(this.score);
 	}
