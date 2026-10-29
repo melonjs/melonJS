@@ -8,7 +8,8 @@
  * seconds (click it for the next one), up to two effects chained. Coins cut
  * from a TexturePacker atlas orbit it, spinning and passing in front of it
  * and behind it; the astronaut drifts by, walking in mid-air; flies buzz
- * around; tinted, fading and additive little monsters float in the dark.
+ * around; tinted, fading and additive little monsters float in the dark,
+ * one of them fading through two effects.
  * The nebula behind them is Earth Defender's sky, drawn once at the size of
  * the screen with the same noise.
  */
@@ -79,7 +80,8 @@ class Showcase extends Stage {
 			0,
 		);
 
-		// ---- little monsters, tinted, fading, two of them added on --------
+		// ---- little monsters, tinted, fading, two of them added on, one
+		// of them fading through two effects ---------------------------------
 		const minions = [
 			{ x: 170, y: 150, tint: "#ff7a6e", blend: "normal" },
 			{ x: 1050, y: 560, tint: "#7ab8ff", blend: "normal" },
@@ -91,6 +93,20 @@ class Showcase extends Stage {
 			minion.scale(0.13);
 			minion.tint.parseCSS(m.tint);
 			minion.blendMode = m.blend;
+			if (i === 0 && app.renderer.shaderLanguage !== null) {
+				// two effects: drawn apart and composited, at the opacity it
+				// fades to like any other sprite
+				minion.addPostEffect(
+					new OutlineEffect(app.renderer, { color: [1, 0.9, 0.85], width: 2 }),
+				);
+				minion.addPostEffect(
+					new GlowEffect(app.renderer, {
+						color: [1.0, 0.5, 0.4],
+						width: 8,
+						intensity: 1.5,
+					}),
+				);
+			}
 			world.addChild(minion, 1);
 			move((time, step) => {
 				minion.setOpacity(0.45 + 0.4 * Math.sin(time * 0.8 + i * 1.7));

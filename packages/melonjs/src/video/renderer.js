@@ -1442,9 +1442,10 @@ export default class Renderer {
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} shader - the shader effect to apply
 	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
+	 * @param {number} [alpha=1] - the opacity to composite the blit at (0.0 to 1.0)
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	blitEffect(source, x, y, width, height, shader, keepBlend) {}
+	blitEffect(source, x, y, width, height, shader, keepBlend, alpha) {}
 
 	/**
 	 * Sets the viewport for the renderer.

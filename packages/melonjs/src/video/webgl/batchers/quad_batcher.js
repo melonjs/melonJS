@@ -1,3 +1,4 @@
+import { Color } from "../../../math/color.ts";
 import { FRAME_UNBOUNDED, frameClampMode, isFramed } from "../../gpu/frame.js";
 import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
 import IndexBuffer from "../buffer/index.js";
@@ -5,6 +6,12 @@ import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
 import quadMultiVertex from "./../shaders/quad-multi.vert";
 import { resolveTopology } from "../utils/topology.js";
 import { MaterialBatcher } from "./material_batcher.js";
+
+/**
+ * the blit's tint: white, at the opacity the blit composites at
+ * @ignore
+ */
+const blitTint = new Color(255, 255, 255);
 
 /**
  * additional import for TypeScript
@@ -246,8 +253,9 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * @param {number} width - destination width
 	 * @param {number} height - destination height
 	 * @param {GLShader|ShaderEffect} shader - the shader effect to apply
+	 * @param {number} [alpha=1] - the opacity to composite at (0.0 to 1.0)
 	 */
-	blitTexture(source, x, y, width, height, shader) {
+	blitTexture(source, x, y, width, height, shader, alpha = 1) {
 		const gl = this.gl;
 
 		this.useShader(shader);
@@ -300,7 +308,7 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		// blits stay at z = 0 (screen-space, ortho); pre-PR behavior
 		// preserved unchanged. A blit draws the whole target: no frame
-		const tint = 0xffffffff;
+		const tint = blitTint.toUint32(alpha);
 		const open = FRAME_UNBOUNDED;
 		const vertexData = this.vertexData;
 		vertexData.pushSprite(vec0.x, vec0.y, 0, 0, 1, tint, 0, open, open);
