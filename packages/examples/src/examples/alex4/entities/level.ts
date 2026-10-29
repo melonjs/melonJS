@@ -81,6 +81,8 @@ export class RollBlock extends Sprite {
 /*                                                                                  */
 /************************************************************************************/
 export class Breakable extends Renderable {
+	private shattered = false;
+
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
@@ -92,9 +94,13 @@ export class Breakable extends Renderable {
 	}
 
 	shatter() {
-		if (!this.ancestor) {
+		// once: the removal below waits for the end of the frame, and a frame
+		// can run several physics steps, each of them hitting the block again
+		if (this.shattered) {
 			return;
 		}
+		this.shattered = true;
+		this.body.setCollisionMask(collision.types.NO_OBJECT);
 		// the block itself is drawn by the foreground layer
 		const layer = this.parentApp.world.getChildByName(
 			"Foreground",

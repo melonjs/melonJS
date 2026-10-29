@@ -90,6 +90,8 @@ export class PlayScreen extends Stage {
 	/** a short jingle, then the level (or boss) song */
 	private playLevelSong() {
 		const map = level.getCurrentLevel() as LevelMap;
+		// the menu song was the track until now: the jingle plays alone
+		audio.stopTrack();
 		audio.play(map.boss ? "boss_start" : "level_start", false, () => {
 			audio.playTrack(map.boss ? "boss_song" : "level_song");
 		});
@@ -104,13 +106,21 @@ export class PlayScreen extends Stage {
 
 	override update(dt: number) {
 		if (!this.gameOver && input.isKeyPressed("pause")) {
-			if (state.isPaused()) {
+			// our own pause, not state.isPaused(): a hit-stop (state.freeze)
+			// pauses the game too, for a few frames
+			if (this.pauseMessage) {
 				state.resume(true);
-				if (this.pauseMessage) {
-					this.app.world.removeChild(this.pauseMessage);
-				}
+				this.resumeJingle(true);
+				this.app.world.removeChild(this.pauseMessage);
+				this.pauseMessage = undefined;
 			} else {
+				// end a hit-stop first, or the pause would do nothing and the
+				// end of the hit-stop would resume the game under the panel
+				if (state.isPaused()) {
+					state.resume();
+				}
 				state.pause(true);
+				this.resumeJingle(false);
 				this.pauseMessage = new PauseMessage();
 				this.app.world.addChild(this.pauseMessage, 102);
 			}
@@ -139,10 +149,26 @@ export class PlayScreen extends Stage {
 		}
 	}
 
+	/**
+	 * the jingle before the level song is not the track, which is all that
+	 * state.pause(true) pauses: it holds still too (and the song it starts
+	 * once over waits)
+	 */
+	private resumeJingle(resume: boolean) {
+		for (const name of ["level_start", "boss_start"]) {
+			if (resume) {
+				audio.resume(name);
+			} else {
+				audio.pause(name);
+			}
+		}
+	}
+
 	/** exit reached, or guardian defeated */
 	onLevelComplete() {
 		this.stopLevelSong();
-		state.change(state.READY);
+		// through go(), so that it waits for a death reload behind the pixels
+		go(state.READY);
 	}
 
 	override onDestroyEvent(app: Application) {

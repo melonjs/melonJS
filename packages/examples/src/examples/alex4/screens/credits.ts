@@ -118,7 +118,10 @@ export class CreditsScreen extends Stage {
 		// a click or a tap goes back too
 		input.bindPointer(input.KEY.ENTER);
 
-		audio.playTrack("menu_song");
+		// on from the title or the credits, where it already plays
+		if (audio.getCurrentTrack() !== "menu_song") {
+			audio.playTrack("menu_song");
+		}
 	}
 
 	override update(dt: number) {

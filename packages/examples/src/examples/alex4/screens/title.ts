@@ -153,8 +153,10 @@ export class TitleScreen extends Stage {
 		// and the gamepads
 		bindPads(MENU_PAD);
 
-		// play menu song
-		audio.playTrack("menu_song");
+		// the menu song, on from the title or the credits, where it already plays
+		if (audio.getCurrentTrack() !== "menu_song") {
+			audio.playTrack("menu_song");
+		}
 	}
 
 	private updateMenu() {
