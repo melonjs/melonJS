@@ -154,14 +154,27 @@ sprite.
 **Their widths, offsets and sizes are in pixels of the texture they draw, with
 nothing to pass.** Each of those effects takes the size of what it draws: the
 sprite's whole texture (the atlas image, not the frame), the screen for a
-camera's effect, a mesh's texture. Do not pass `textureSize` to get this: a
+camera's effect, a mesh's texture. With other effects after it, it still
+measures in the sprite's own pixels, at any scale and under a camera's zoom
+(on a container, in the container's own), so adding a second effect never
+changes how wide the first comes out. Do not pass `textureSize` to get this: a
 `textureSize` (or `setTextureSize()`) fixes the size instead, for a width
 meant in some other texture's pixels.
 
 ```js
-// 2 pixels of the sprite's art, whatever the size of its atlas
+// 2 pixels of the sprite's art, whatever the size of its atlas, its scale,
+// the camera's zoom, or the effects after it
 sprite.addPostEffect(new OutlineEffect(app.renderer, { width: 2 }));
+sprite.addPostEffect(new GlowEffect(app.renderer, { width: 6 }));
 ```
+
+With two or more effects, the sprite is drawn into a capture and each effect
+reads that, at the game's texture filter, as a sprite reads its own texture:
+under `"nearest"` (or `antiAlias` off) a width that lands between two screen
+pixels, such as 2 pixels of a sprite drawn at 0.3, stays crisp, and under
+`"linear"` it blends, on WebGL and WebGPU alike. The result lands inside the
+clip the sprite is drawn under, a minimap camera's view or a clipping
+container, as with one effect.
 
 `SwayEffect` leans a sprite or a layer from side to side, as if in a breeze: the
 top sways most and everything from its `anchor` row down stays put, so a tree's

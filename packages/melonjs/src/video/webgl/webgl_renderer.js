@@ -2234,6 +2234,9 @@ export default class WebGLRenderer extends Renderer {
 			? 1
 			: this._effectAlphaStack[this._effectPassDepth - 1];
 		if (effects.length === 1) {
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
 			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend, alpha);
 		} else {
 			// multi-pass: ping-pong between two render targets
@@ -2256,6 +2259,9 @@ export default class WebGLRenderer extends Renderer {
 				parentRT.bind();
 			}
 			this.setViewport(0, 0, w, h);
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
 
 			this.blitEffect(
 				src.texture,
@@ -2590,6 +2596,35 @@ export default class WebGLRenderer extends Renderer {
 		this.currentScissor[1] = sy;
 		this.currentScissor[2] = sw;
 		this.currentScissor[3] = sh;
+	}
+
+	/**
+	 * Put back the clip a renderable's effect pass was begun under, for its
+	 * composite to land inside it: a camera's view on the screen, a
+	 * clipping container. The pass drops it (see `beginPostEffect`) to
+	 * capture the whole canvas, and the `restore()` that ends the pass
+	 * would only put it back once the composite has drawn.
+	 * @ignore
+	 * @internal
+	 */
+	_resumeSavedClip() {
+		const saved = this.renderState.peekScissor();
+		if (saved === null) {
+			return;
+		}
+		const gl = this.gl;
+		const canvas = this.getCanvas();
+		this.flush();
+		gl.enable(gl.SCISSOR_TEST);
+		this._scissorActive = true;
+		this.currentScissor.set(saved);
+		// screen-space coords (see `clipRect`), with GL's bottom-left y-flip
+		gl.scissor(
+			saved[0],
+			canvas.height - saved[3] - saved[1],
+			saved[2],
+			saved[3],
+		);
 	}
 
 	/**

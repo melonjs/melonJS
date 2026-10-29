@@ -575,8 +575,13 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// the uniform snapshot below
 		effect?._setNoiseUVRect?.(w, h, w, h, 0, 0);
 		// and the whole texture is the frame: sampling stays unbounded. The
-		// texture is the pass's render target, the size of the quad
-		effect?._clearFrameRect?.(source.width ?? w, source.height ?? h);
+		// texture is the pass's render target, the size of the quad, and a
+		// renderable's chain measures in the renderable's own pixels
+		effect?._clearFrameRect?.(
+			source.width ?? w,
+			source.height ?? h,
+			renderer._chainScale,
+		);
 		// a pass of a renderable's chain: where the renderable is, for the
 		// effects that place a pattern on it (local_space.js)
 		effect?._setLocalSpace?.(renderer._chainSpace);
