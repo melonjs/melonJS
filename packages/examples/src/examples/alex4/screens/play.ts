@@ -84,6 +84,8 @@ export class PlayScreen extends Stage {
 		StarEntity.count = 0;
 		gameState.cherries = 0;
 		gameState.stars = 0;
+		// a reload stops the points on their way: they are in the score already
+		gameState.flying = 0;
 		gameState.energy = Math.max(gameState.energy, 1);
 
 		level.load(LEVELS[gameState.level], {

@@ -124,9 +124,11 @@ export class HUD extends Container {
 
 	override update(dt: number) {
 		// only when it changes: setText measures the text again on every call
-		if (this.shown !== gameState.score) {
-			this.shown = gameState.score;
-			this.score.setText(this.shown);
+		// without the points still on their way to it
+		const score = gameState.score - gameState.flying;
+		if (this.shown !== score) {
+			this.shown = score;
+			this.score.setText(score);
 		}
 		if (this.hop > 0) {
 			this.hop -= dt;

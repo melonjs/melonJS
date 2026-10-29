@@ -179,6 +179,8 @@ export function points(app: Application, x: number, y: number, value: number) {
 	text.addPostEffect(shaders.outline);
 	// over the HUD, where it lands
 	world.addChild(text, 101);
+	// counted in by the HUD once they get there
+	gameState.flying += value;
 
 	// up, quickly
 	new Tween(text.pos)
@@ -194,6 +196,7 @@ export function points(app: Application, x: number, y: number, value: number) {
 				.to({ y: SCORE_Y }, { duration: 500, easing: Tween.Easing.Back.In })
 				.onComplete(() => {
 					world.removeChild(text);
+					gameState.flying = Math.max(gameState.flying - value, 0);
 					(world.getChildByName("HUD")[0] as { bump?: () => void })?.bump?.();
 				})
 				.start();

@@ -17,6 +17,10 @@ export const gameState = {
 	// index of the current level in LEVELS
 	level: 0,
 
+	// points won but still flying to the score: the HUD counts them in as
+	// they land (the score itself has them already)
+	flying: 0,
+
 	// pickups in the current level, for the level complete screen
 	stars: 0,
 	cherries: 0,
@@ -32,6 +36,7 @@ export const gameState = {
 	/** reset everything for a new game */
 	reset(level = 0) {
 		this.score = 0;
+		this.flying = 0;
 		this.lives = 2;
 		this.energy = 1;
 		this.eggs = 0;
