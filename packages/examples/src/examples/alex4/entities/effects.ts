@@ -5,6 +5,7 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 import {
+	type Application,
 	BitmapText,
 	type Camera2d,
 	type Container,
@@ -13,8 +14,9 @@ import {
 	ParticleEmitter,
 	Sprite,
 	Tween,
+	Vector2d,
 } from "melonjs";
-import { PALETTE } from "../constants";
+import { HEIGHT, PALETTE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
 
@@ -151,31 +153,50 @@ export function flash(
 		.start();
 }
 
+/** where the score is, on the screen: centered in the last column of the HUD */
+const SCORE_X = (WIDTH * 7) / 8;
+const SCORE_Y = HEIGHT - 40;
+
 /**
- * the points just won, rising from where they were won and fading away:
- * "+10" for a cherry, "+100" for a star. At 24 pixels, each pixel of the
- * font a whole 3 of the screen, in the darkest green over a light shadow, so
- * that it reads on any part of the jungle
+ * the points just won: "+10" for a cherry, "+100" for a star. They pop up
+ * from where they were won, then fly in an arc into the score, and the score
+ * hops as they land. At 24 pixels, each pixel of the font a whole 3 of the
+ * screen, dark with a light outline, so that they read on any part of the
+ * jungle, light or dark
  */
-export function points(world: Container, x: number, y: number, value: number) {
-	const text = new BitmapText(x, y, {
+export function points(app: Application, x: number, y: number, value: number) {
+	const world = app.world;
+	// in screen space from the start, to end up over the HUD
+	const start = app.viewport.worldToLocal(x, y, new Vector2d());
+	const text = new BitmapText(start.x, start.y, {
 		font: "atascii32",
 		size: 0.75,
 		textAlign: "center",
 		text: `+${value}`,
 	});
+	text.floating = true;
 	text.addPostEffect(shaders.dark);
-	text.addPostEffect(shaders.lightShadow);
-	world.addChild(text, EFFECT_Z);
+	text.addPostEffect(shaders.outline);
+	// over the HUD, where it lands
+	world.addChild(text, 101);
+
+	// up, quickly
 	new Tween(text.pos)
-		.to({ y: y - 48 }, { duration: 700, easing: Tween.Easing.Quadratic.Out })
-		.start();
-	const fade = { alpha: 1 };
-	new Tween(fade)
-		.to({ alpha: 0 }, { duration: 300, delay: 400 })
-		.onUpdate(() => text.setOpacity(fade.alpha))
+		.to(
+			{ y: start.y - 40 },
+			{ duration: 180, easing: Tween.Easing.Quadratic.Out },
+		)
 		.onComplete(() => {
-			world.removeChild(text);
+			// then across at an even pace, while it rises a little more and
+			// drops faster and faster: an arc into the score
+			new Tween(text.pos).to({ x: SCORE_X }, { duration: 500 }).start();
+			new Tween(text.pos)
+				.to({ y: SCORE_Y }, { duration: 500, easing: Tween.Easing.Back.In })
+				.onComplete(() => {
+					world.removeChild(text);
+					(world.getChildByName("HUD")[0] as { bump?: () => void })?.bump?.();
+				})
+				.start();
 		})
 		.start();
 }
