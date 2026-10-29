@@ -141,12 +141,14 @@ for size in (32, 40):
     src = f"{WE}/hud/atascii_{size}px.png"
     font = Image.open(src).convert("RGBA")
     w, h = font.size
-    # the font has no ' ! , glyphs: draw them in the same 8x8 pixel style
+    # the font has no ' ! , glyphs, and its + is a -: draw them in the same
+    # 8x8 pixel style
     u = size // 8
     color = (224, 238, 210, 255)
     extra = {"!": ["...##...", "...##...", "...##...", "...##...", "........", "...##...", "........"],
              "'": ["...##...", "...##...", "..##....", "........", "........", "........", "........"],
-             ",": ["........", "........", "........", "........", "...##...", "...##...", "..##...."]}
+             ",": ["........", "........", "........", "........", "...##...", "...##...", "..##...."],
+             "+": ["...##...", "...##...", ".######.", "...##...", "...##...", "........", "........"]}
     for ch, rows in extra.items():
         cx = (ord(ch) - 32) * size
         font.paste((0, 0, 0, 0), (cx, 0, cx + size, h))

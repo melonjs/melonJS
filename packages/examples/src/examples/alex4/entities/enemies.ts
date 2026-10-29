@@ -22,7 +22,7 @@ import {
 import { HEIGHT, jumpSpeed, TICK } from "../constants";
 import { rumble } from "../gamepad";
 import { gameState } from "../gameState";
-import { dust, flash, HIT_STOP, shake } from "./effects";
+import { dust, flash, HIT_STOP, points, shake } from "./effects";
 import type { Hazard, PlayerEntity, Touch } from "./player";
 import type { Shootable } from "./projectiles";
 
@@ -220,6 +220,7 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 		this.alive = false;
 		this.parentApp.world.removeChild(this);
 		gameState.score += 50;
+		points(this.parentApp.world, this.pos.x + this.width / 2, this.pos.y, 50);
 		// an eaten enemy is an egg to spit (the original only had the eggs
 		// lying around in a few levels)
 		gameState.eggs++;

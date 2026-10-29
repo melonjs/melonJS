@@ -5,6 +5,7 @@
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
 import {
+	BitmapText,
 	type Camera2d,
 	type Container,
 	type GlyphEffect,
@@ -15,6 +16,7 @@ import {
 } from "melonjs";
 import { PALETTE } from "../constants";
 import { gameState } from "../gameState";
+import { shaders } from "../shaders";
 
 // draw the effects above the map and the actors
 const EFFECT_Z = 20;
@@ -145,6 +147,35 @@ export function flash(
 		.to({ y: y - rise }, { duration })
 		.onComplete(() => {
 			world.removeChild(sprite);
+		})
+		.start();
+}
+
+/**
+ * the points just won, rising from where they were won and fading away:
+ * "+10" for a cherry, "+100" for a star. At 24 pixels, each pixel of the
+ * font a whole 3 of the screen, in the darkest green over a light shadow, so
+ * that it reads on any part of the jungle
+ */
+export function points(world: Container, x: number, y: number, value: number) {
+	const text = new BitmapText(x, y, {
+		font: "atascii32",
+		size: 0.75,
+		textAlign: "center",
+		text: `+${value}`,
+	});
+	text.addPostEffect(shaders.dark);
+	text.addPostEffect(shaders.lightShadow);
+	world.addChild(text, EFFECT_Z);
+	new Tween(text.pos)
+		.to({ y: y - 48 }, { duration: 700, easing: Tween.Easing.Quadratic.Out })
+		.start();
+	const fade = { alpha: 1 };
+	new Tween(fade)
+		.to({ alpha: 0 }, { duration: 300, delay: 400 })
+		.onUpdate(() => text.setOpacity(fade.alpha))
+		.onComplete(() => {
+			world.removeChild(text);
 		})
 		.start();
 }

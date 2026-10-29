@@ -10,6 +10,7 @@ import {
 	type Container,
 	DropShadowEffect,
 	event,
+	FlashEffect,
 	ScanlineEffect,
 	ShineEffect,
 	SwayEffect,
@@ -37,6 +38,11 @@ export const shaders = {
 	shine: undefined as unknown as ShineEffect,
 	// a dark shadow under the menu text, to read it over the jungle
 	shadow: undefined as unknown as DropShadowEffect,
+	// the points rising from a pickup: dark (a text tint would darken the
+	// shadow with them), over a light shadow, to read on the light and the
+	// dark parts of the jungle alike
+	dark: undefined as unknown as FlashEffect,
+	lightShadow: undefined as unknown as DropShadowEffect,
 	// the water of the current level ripples (made for each level: its
 	// strength depends on the size of the layer)
 	water: undefined as WaveEffect | undefined,
@@ -65,12 +71,26 @@ export const shaders = {
 			color: [0.05, 0.27, 0],
 			opacity: 0.85,
 		});
+		this.dark = new FlashEffect(app.renderer, {
+			// the darkest green of the game (#0c4400), all over
+			color: [12 / 255, 68 / 255, 0],
+			intensity: 1,
+		});
+		this.lightShadow = new DropShadowEffect(app.renderer, {
+			// a pixel of the 24 pixel font, in the lightest green (#deeed2)
+			offsetX: 3,
+			offsetY: 3,
+			color: [222 / 255, 238 / 255, 210 / 255],
+			opacity: 1,
+		});
 		for (const effect of [
 			this.blur,
 			this.far,
 			this.near,
 			this.shine,
 			this.shadow,
+			this.dark,
+			this.lightShadow,
 		]) {
 			effect.shared = true;
 		}
