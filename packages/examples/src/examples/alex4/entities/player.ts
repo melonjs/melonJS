@@ -496,7 +496,9 @@ export class PlayerEntity extends Sprite {
 		const x =
 			spinner.pos.x + (this.facingLeft ? -spinner.width : spinner.width);
 		const y = spinner.pos.y - spinner.height;
-		this.ahead.pos.set(x, y);
+		// shift, not pos.set: that leaves the bounds behind, and the query
+		// looked at the top left of the level, never finding the wall
+		this.ahead.shift(x, y);
 		this.room.setMinMax(
 			x + 1,
 			y + 1,
