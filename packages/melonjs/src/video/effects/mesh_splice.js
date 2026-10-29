@@ -39,6 +39,12 @@
  * @internal
  */
 
+import {
+	LOCAL_MESH_SHIM_GLSL,
+	LOCAL_MESH_SHIM_WGSL,
+	LOCAL_SPACE_IDENTIFIER,
+} from "./local_space.js";
+
 /**
  * The identity hook each mesh shader declares, in both languages. Matching is
  * whitespace-tolerant because the shader pipeline reformats as it strips
@@ -50,12 +56,20 @@ const HOOKS = [
 		pattern:
 			/vec4\s+ME_effect\s*\(\s*vec4\s+c\s*,\s*vec2\s+uv\s*\)\s*\{[^}]*\}/,
 		replacement: "vec4 ME_effect(vec4 c, vec2 uv) { return apply(c, uv); }",
+		// a mesh has no renderable space of its own to offer: a body
+		// reading one is given `uv`, as it always was (local_space.js)
+		localShim: LOCAL_MESH_SHIM_GLSL,
+		localReplacement:
+			"vec4 ME_effect(vec4 c, vec2 uv) { ME_local = uv; ME_art = uv; return apply(c, uv); }",
 	},
 	{
 		pattern:
 			/fn\s+ME_effect\s*\(\s*c\s*:\s*vec4f\s*,\s*uv\s*:\s*vec2f\s*\)\s*->\s*vec4f\s*\{[^}]*\}/,
 		replacement:
 			"fn ME_effect(c : vec4f, uv : vec2f) -> vec4f { return apply(c, uv); }",
+		localShim: LOCAL_MESH_SHIM_WGSL,
+		localReplacement:
+			"fn ME_effect(c : vec4f, uv : vec2f) -> vec4f { ME_local = uv; ME_art = uv; return apply(c, uv); }",
 	},
 ];
 
@@ -160,10 +174,13 @@ export function spliceEffect(source, body) {
 	if (typeof source !== "string" || typeof body !== "string") {
 		return null;
 	}
+	const local = LOCAL_SPACE_IDENTIFIER.test(body);
 	for (const hook of HOOKS) {
 		if (hook.pattern.test(source)) {
 			return source.replace(hook.pattern, () => {
-				return `${body}\n${hook.replacement}`;
+				return local
+					? `${hook.localShim}\n${body}\n${hook.localReplacement}`
+					: `${body}\n${hook.replacement}`;
 			});
 		}
 	}

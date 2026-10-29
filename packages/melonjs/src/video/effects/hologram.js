@@ -20,7 +20,8 @@ struct HologramUniforms {
 
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	// scan line
-	let scan = sin(uv.y * 200.0 + fx.uTime * 5.0) * 0.5 + 0.5;
+	// lines of its texture, fixed on the sprite
+	let scan = sin(ME_art.y * 200.0 + fx.uTime * 5.0) * 0.5 + 0.5;
 	// flicker
 	let flicker = 0.95 + 0.05 * sin(fx.uTime * 30.0);
 	// color shift
@@ -62,7 +63,8 @@ export default class HologramEffect extends ShaderEffect {
 			uniform float uTime;
 			vec4 apply(vec4 color, vec2 uv) {
 				// scan line
-				float scan = sin(uv.y * 200.0 + uTime * 5.0) * 0.5 + 0.5;
+				// lines of its texture, fixed on the sprite
+				float scan = sin(ME_art.y * 200.0 + uTime * 5.0) * 0.5 + 0.5;
 				// flicker
 				float flicker = 0.95 + 0.05 * sin(uTime * 30.0);
 				// color shift

@@ -15,6 +15,8 @@
  * @internal
  */
 
+import { ME_LAYOUT } from "../effects/local_space.js";
+
 /**
  * round up to a power-of-two alignment
  * @ignore
@@ -25,11 +27,12 @@ function alignUp(value, alignment) {
 }
 
 /**
- * byte size of the engine MEBuiltins struct (3×vec2f, 16-byte rounded)
+ * byte size of the engine MEBuiltins struct: the `noise_uv` rect and the
+ * local space (see local_space.js)
  * @ignore
  * @internal
  */
-const ME_SIZE = 32;
+const ME_SIZE = ME_LAYOUT.length * 4;
 
 /**
  * (Re)build the device-scoped GPU state of a WGSL effect realization —
@@ -60,7 +63,8 @@ export function buildEffectGPU(renderer, effect, realization) {
 	const bindings = realization.builtinBindings;
 	const builtins = realization.builtins;
 	const hasUniform = realization.structSize > 0;
-	const hasME = builtins.noiseUV;
+	// `noise_uv`'s rect and the local space (local_space.js)
+	const hasME = builtins.noiseUV || builtins.local === true;
 
 	// ---- the group-3 layout, shared per shape signature ------------------
 	const entries = [];
@@ -93,7 +97,9 @@ export function buildEffectGPU(renderer, effect, realization) {
 	if (hasME) {
 		entries.push({
 			binding: bindings.me,
-			visibility: GPUShaderStage.VERTEX,
+			// the vertex stage works out where it is, and the local
+			// space's helpers turn a displacement in the fragment stage
+			visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 			buffer: {
 				type: "uniform",
 				hasDynamicOffset: true,

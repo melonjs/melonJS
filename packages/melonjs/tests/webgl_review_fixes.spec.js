@@ -201,19 +201,19 @@ describe("WebGL setBlendMode('none')", () => {
 	});
 });
 
-describe("ShineEffect uUVYDir adoption", () => {
-	it("declares the directional uniform, defaulted top-down, and accepts the feed", (ctx) => {
+describe("ShineEffect takes the space's direction", () => {
+	it("reads it through its local space, and accepts the feed", (ctx) => {
 		requireWebGL(ctx, renderer);
 		const fx = new ShineEffect(renderer, { angle: Math.PI / 2 });
 		try {
-			// active on the compiled program (the sweep uses it, so the
-			// compiler cannot eliminate it) — the batcher feed sites can
-			// flip it on the bottom-up pooled path
-			expect(typeof fx._shader.uniforms.uUVYDir).not.toBe("undefined");
-			expect(() => {
-				fx._setUVYDir(-1);
-				fx._setUVYDir(1);
-			}).not.toThrow();
+			// the sweep is placed in the local space (local_space.js), which
+			// runs top to bottom on the bottom-up pooled path by the
+			// direction the batchers feed — active on the compiled program
+			expect(typeof fx._shader.uniforms.ME_ydir).not.toBe("undefined");
+			fx._setUVYDir(-1);
+			expect(fx._shader._uniformCache.ME_ydir).toBe(-1);
+			fx._setUVYDir(1);
+			expect(fx._shader._uniformCache.ME_ydir).toBe(1);
 		} finally {
 			fx.destroy();
 		}

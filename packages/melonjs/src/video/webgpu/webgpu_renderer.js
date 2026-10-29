@@ -1872,8 +1872,9 @@ export default class WebGPURenderer extends Renderer {
 		if (effects.length === 0) {
 			return;
 		}
-		// the fast path set customShader — nothing offscreen to composite
-		if (this._usesPostEffectFastPath(renderable, effects)) {
+		// the fast path set customShader — nothing offscreen to composite;
+		// its effect is put back to the space `uv` always was
+		if (this._endEffectSpace(renderable, effects)) {
 			return;
 		}
 
@@ -1922,6 +1923,8 @@ export default class WebGPURenderer extends Renderer {
 			this.captureFrame();
 		}
 
+		// the chain's passes are told where the renderable is
+		this._beginChainSpace(renderable);
 		if (effects.length === 1) {
 			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend);
 		} else {
@@ -1942,6 +1945,7 @@ export default class WebGPURenderer extends Renderer {
 		if (isCamera && renderable.isDefault === false) {
 			this.disableScissor();
 		}
+		this._clearChainSpace();
 
 		// restore renderer state and the projection saved in beginPostEffect
 		this.restore();

@@ -47,7 +47,8 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	if (fx.uDissolveProgress <= 0.0) {
 		return color;
 	}
-	let n = dissolveFBM(uv * 8.0);
+	// grain of its texture, fixed on the sprite
+	let n = dissolveFBM(ME_art * 8.0);
 	if (n < fx.uDissolveProgress) {
 		discard;
 	}
@@ -123,7 +124,8 @@ export default class DissolveEffect extends ShaderEffect {
 				if (uDissolveProgress <= 0.0) {
 					return color;
 				}
-				float n = fbm(uv * 8.0);
+				// grain of its texture, fixed on the sprite
+				float n = fbm(ME_art * 8.0);
 				if (n < uDissolveProgress) {
 					discard;
 				}

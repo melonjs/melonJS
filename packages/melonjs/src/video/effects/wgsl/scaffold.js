@@ -15,6 +15,12 @@
  * @internal
  */
 
+import {
+	LOCAL_HELPERS_WGSL,
+	localVertexStatementsWGSL,
+	ME_STRUCT_WGSL,
+} from "../local_space.js";
+
 /**
  * reads of the frame uniform by frame.js's FRAME_WGSL helpers (not of
  * `fx.ME_frame_half`: no word boundary inside the longer name)
@@ -45,7 +51,8 @@ export function assignBuiltinBindings(parsed) {
 		screenSamplerClamp: -1,
 		screenSamplerRepeat: -1,
 	};
-	if (parsed.builtins.noiseUV) {
+	// the `MEBuiltins` block: `noise_uv`'s rect and the local space
+	if (parsed.builtins.noiseUV || parsed.builtins.local) {
 		bindings.me = next++;
 	}
 	if (parsed.builtins.screenTexture) {
@@ -72,6 +79,8 @@ export function assignBuiltinBindings(parsed) {
 export function buildWGSLModule(body, parsed) {
 	const builtins = parsed.builtins;
 	const bindings = assignBuiltinBindings(parsed);
+	// `noise_uv` and the local space both read the `MEBuiltins` block
+	const space = builtins.noiseUV || builtins.local;
 	// a body keeping its samples inside its frame (frame.js's FRAME_WGSL):
 	// on a sprite the frame comes with the quad, so its reads of the
 	// uniform become reads of the frame the vertex stage hands over. The
@@ -104,15 +113,16 @@ export function buildWGSLModule(body, parsed) {
 		scaffold.push("var<private> ME_frame_v : vec4f;");
 	}
 	if (builtins.noiseUV) {
+		scaffold.push("var<private> noise_uv : vec2f;");
+	}
+	if (space) {
 		scaffold.push(
-			"var<private> noise_uv : vec2f;",
-			"struct MEBuiltins {",
-			"\tsize_obj : vec2f,",
-			"\tsize_img : vec2f,",
-			"\toffset : vec2f,",
-			"};",
+			...ME_STRUCT_WGSL,
 			`@group(3) @binding(${bindings.me}) var<uniform> ME : MEBuiltins;`,
 		);
+	}
+	if (builtins.local) {
+		scaffold.push(...LOCAL_HELPERS_WGSL);
 	}
 	if (builtins.screenTexture) {
 		scaffold.push(
@@ -138,6 +148,9 @@ export function buildWGSLModule(body, parsed) {
 		...(builtins.screenUV ? ["\t@location(2) vScreenUV : vec2f,"] : []),
 		...(builtins.noiseUV ? ["\t@location(3) vNoiseUV : vec2f,"] : []),
 		...(spriteFrame ? ["\t@location(4) vFrame : vec4f,"] : []),
+		...(builtins.local
+			? ["\t@location(5) vLocal : vec2f,", "\t@location(6) vArt : vec2f,"]
+			: []),
 		"};",
 		"",
 		"@vertex",
@@ -161,11 +174,7 @@ export function buildWGSLModule(body, parsed) {
 					"\tout.vScreenUV = vec2f(ndc.x * 0.5 + 0.5, 0.5 - ndc.y * 0.5);",
 				]
 			: []),
-		...(builtins.noiseUV
-			? [
-					"\tout.vNoiseUV = aRegion * (ME.size_img / ME.size_obj) - ME.offset / ME.size_obj;",
-				]
-			: []),
+		...(space ? localVertexStatementsWGSL(builtins) : []),
 		...(spriteFrame
 			? [
 					"\tout.vFrame = select(",
@@ -185,6 +194,9 @@ export function buildWGSLModule(body, parsed) {
 		"fn fragment_main(in : VSOut) -> @location(0) vec4f {",
 		...(builtins.screenUV ? ["\tscreen_uv = in.vScreenUV;"] : []),
 		...(builtins.noiseUV ? ["\tnoise_uv = in.vNoiseUV;"] : []),
+		...(builtins.local
+			? ["\tME_local = in.vLocal;", "\tME_art = in.vArt;"]
+			: []),
 		...(builtins.vColor ? ["\tvColor = in.vColor;"] : []),
 		...(spriteFrame
 			? [

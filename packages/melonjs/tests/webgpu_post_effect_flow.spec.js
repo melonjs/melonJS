@@ -67,6 +67,10 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 			customShader: undefined,
 			effectProjectionStack: [],
 			effectPassDepth: 0,
+			// where each renderable with a chain is, for its passes
+			// (Renderer#_setEffectSpace)
+			_effectSpaces: new WeakMap(),
+			_chainSpace: null,
 			projectionMatrix: new Matrix3d(),
 			backgroundColor: new Color(16, 32, 48),
 			currentBatcher: null,

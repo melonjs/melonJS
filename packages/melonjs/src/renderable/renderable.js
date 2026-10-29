@@ -1390,6 +1390,13 @@ export default class Renderable extends Rect {
 			renderer.translate(-ax, -ay);
 		}
 
+		// its own transform applied: its effects learn where it is, for the
+		// ones that place a pattern on it (a sway's planted row, a shine's
+		// sweep). Optional, for a renderer that is not a `Renderer`
+		if (!this._postEffectManaged && this.postEffects.length > 0) {
+			renderer._setEffectSpace?.(this);
+		}
+
 		// Apply the current tint and opacity.
 		//
 		// Multiplied by the alpha already on the renderer, so opacity

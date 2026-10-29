@@ -272,6 +272,9 @@ export default class QuadBatcher extends MaterialBatcher {
 		// below): uv.y grows UPWARD inside apply(), so directional bodies
 		// (DropShadow) flip their y arithmetic to keep "down" down
 		shader._setUVYDir?.(-1);
+		// a pass of a renderable's chain: where the renderable is, for the
+		// effects that place a pattern on it (local_space.js)
+		shader._setLocalSpace?.(this.renderer._chainSpace);
 
 		// (re)bind any extra textures a ShaderEffect declared via setTexture,
 		// to their reserved high units — after the source claims unit 0
@@ -306,6 +309,8 @@ export default class QuadBatcher extends MaterialBatcher {
 		vertexData.pushSprite(vec3.x, vec3.y, 0, 1, 0, tint, 0, open, open);
 
 		this.flush();
+		// and back to the space `uv` always was, for whatever draws next
+		shader._setLocalSpace?.(null);
 
 		// unbind the texture to prevent feedback loop on next frame, and drop
 		// EVERY batcher's unit-0 slot — unit 0's GL binding is now null, and a

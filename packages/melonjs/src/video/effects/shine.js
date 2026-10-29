@@ -21,7 +21,6 @@ struct ShineUniforms {
 	uPulseDepth : f32,
 	uPulseSpeed : f32,
 	uTime : f32,
-	uUVYDir : f32,
 };
 @group(3) @binding(0) var<uniform> fx : ShineUniforms;
 
@@ -31,13 +30,14 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	}
 	// Optional brightness pulse on the base color.
 	let pulse = (1.0 - fx.uPulseDepth) + fx.uPulseDepth * sin(fx.uTime * fx.uPulseSpeed);
-	// Directional UV arithmetic — an ABSOLUTE coordinate, so a flipped
-	// space mirrors the position (1 - uv.y), not merely the sign (see the
-	// ShaderEffect uUVYDir docs; the renderer feeds the space's direction)
-	let y = select(uv.y, 1.0 - uv.y, fx.uUVYDir < 0.0);
-	// Project uv along the sweep axis; tile by uShineBands (wrap-around
-	// distance keeps sweeps gapless — see the GLSL twin's rationale).
-	let pos = uv.x * cos(fx.uShineAngle) + y * sin(fx.uShineAngle);
+	// Project the coordinate in its texture along the sweep axis, as it
+	// always was (on an atlas sprite, across the atlas), top to bottom on
+	// every path: a capture the camera's effects read runs bottom-up on
+	// WebGL. Tile by uShineBands (wrap-around distance keeps sweeps
+	// gapless — see the GLSL twin's rationale).
+	let art = ME_art;
+	let y = select(art.y, 1.0 - art.y, ME.mode < 0.5 && ME.ydir < 0.0);
+	let pos = art.x * cos(fx.uShineAngle) + y * sin(fx.uShineAngle);
 	let localX = fract(pos * fx.uShineBands);
 	let sweep = fract(fx.uTime * fx.uShineSpeed);
 	let d = abs(localX - sweep);
@@ -58,6 +58,11 @@ fn apply(color : vec4f, uv : vec2f) -> vec4f {
  * Set `bands` > 1 to tile the sweep into N parallel glints (useful for the
  * "etched grooves" look of a coin's rim). An optional subtle brightness
  * pulse can be layered on top via `pulseDepth` — set to 0 to disable.
+ *
+ * The sweep, its bands and its width are measured across the texture the
+ * sprite is drawn from: on a sprite cut from an atlas, across the atlas, so
+ * a single sweep crosses the sprite only part of the time. With other
+ * effects after it, it stays on the sprite.
  *
  * The `time` uniform must be updated each frame for the animation.
  * @category Effects
@@ -114,18 +119,18 @@ export default class ShineEffect extends ShaderEffect {
 			uniform float uPulseDepth;
 			uniform float uPulseSpeed;
 			uniform float uTime;
-			uniform float uUVYDir;
 			vec4 apply(vec4 color, vec2 uv) {
 				if (color.a == 0.0) return color;
 				// Optional brightness pulse on the base color.
 				float pulse = (1.0 - uPulseDepth) + uPulseDepth * sin(uTime * uPulseSpeed);
-				// Directional UV arithmetic — an ABSOLUTE coordinate, so a
-				// flipped space mirrors the position (1.0 - uv.y), not just
-				// the sign (see the ShaderEffect uUVYDir docs); without it,
-				// a vertical sweep runs backwards on bottom-up captures
-				float y = uUVYDir < 0.0 ? 1.0 - uv.y : uv.y;
-				// Project uv along the sweep axis (uShineAngle).
-				float pos = uv.x * cos(uShineAngle) + y * sin(uShineAngle);
+				// Project the coordinate in its texture along the sweep axis
+				// (uShineAngle), as it always was: on an atlas sprite, across
+				// the atlas. Top to bottom on every path: a capture the
+				// camera's effects read runs bottom-up on WebGL, and with
+				// several effects the coordinate is the sprite's frame
+				vec2 art = ME_art;
+				float y = ME_mode < 0.5 && ME_ydir < 0.0 ? 1.0 - art.y : art.y;
+				float pos = art.x * cos(uShineAngle) + y * sin(uShineAngle);
 				// Tile by uShineBands so we get N parallel glints in unison.
 				// localX and sweep both live in [0,1] tile-space; the
 				// wrap-around distance (min(d, 1-d)) lets the glint exit
@@ -160,9 +165,6 @@ export default class ShineEffect extends ShaderEffect {
 		this.setUniform("uPulseDepth", options.pulseDepth ?? 0.0);
 		this.setUniform("uPulseSpeed", options.pulseSpeed ?? 3.0);
 		this.setUniform("uTime", 0.0);
-		// top-down default; the batchers feed the actual space direction
-		// per draw through _setUVYDir (bottom-up pooled captures on GL)
-		this.setUniform("uUVYDir", 1.0);
 	}
 
 	/**

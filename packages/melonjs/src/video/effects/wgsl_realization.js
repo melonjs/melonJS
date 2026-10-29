@@ -1,3 +1,4 @@
+import { ME_LAYOUT } from "./local_space.js";
 import { shiftGroup3, spliceEffect } from "./mesh_splice.js";
 import { parseWGSLBody } from "./wgsl/parse.js";
 import { buildWGSLModule } from "./wgsl/scaffold.js";
@@ -102,9 +103,10 @@ export default class WGSLEffectRealization {
 		this.i32 = new Int32Array(this.cpu);
 		this.u32 = new Uint32Array(this.cpu);
 
-		// CPU mirror of the engine `MEBuiltins` struct (noise_uv): size_obj
-		// at float 0, size_img at 2, offset at 4; 32 bytes with tail padding
-		this.meMirror = new Float32Array(8);
+		// CPU mirror of the engine `MEBuiltins` struct: the noise_uv rect
+		// (size_obj at float 0, size_img at 2, offset at 4) and the local
+		// space after it (see local_space.js for the layout)
+		this.meMirror = new Float32Array(ME_LAYOUT.length);
 
 		/**
 		 * last user-set value per uniform name — the clone-replay source
