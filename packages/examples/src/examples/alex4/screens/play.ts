@@ -132,7 +132,7 @@ export class PlayScreen extends Stage {
 				}
 				state.pause(true);
 				this.resumeJingle(false);
-				this.showPause();
+				this.showPause("P OR START");
 			}
 		}
 		if (input.isKeyPressed("quit")) {
@@ -159,8 +159,9 @@ export class PlayScreen extends Stage {
 		}
 	}
 
-	private showPause() {
-		this.pauseMessage = new PauseMessage();
+	/** @param hint - what brings the game back */
+	private showPause(hint: string) {
+		this.pauseMessage = new PauseMessage(hint);
 		this.app.world.addChild(this.pauseMessage, 102);
 	}
 
@@ -175,7 +176,7 @@ export class PlayScreen extends Stage {
 	/** the window lost the focus (a tab switch fires this twice) */
 	private onBlur = () => {
 		if (!this.pauseMessage && !this.gameOver) {
-			this.showPause();
+			this.showPause("CLICK TO PLAY");
 			this.pausedByBlur = true;
 		}
 	};

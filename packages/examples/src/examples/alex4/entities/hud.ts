@@ -193,21 +193,51 @@ export class GameOverMessage extends Sprite {
 /************************************************************************************/
 /*      the pause sign                                                              */
 /************************************************************************************/
-export class PauseMessage extends UIPanel {
-	constructor() {
-		super(0, 210, {
-			width: WIDTH,
-			height: 60,
-			fillColor: "rgba(0, 0, 0, 0.8)",
-			borderColor: null,
-		});
+export class PauseMessage extends Container {
+	/** @param hint - what brings the game back, on the line under the title */
+	constructor(hint: string) {
+		super(0, 0, WIDTH, HEIGHT);
+		this.floating = true;
+		// it waves while everything else holds still
 		this.updateWhenPaused = true;
+
+		// the jungle, dimmed in its own darkest green
 		this.addChild(
-			new BitmapText(WIDTH / 2, 10, {
-				font: "atascii40",
-				textAlign: "center",
-				text: "P A U S E",
+			new UIPanel(0, 0, {
+				width: WIDTH,
+				height: HEIGHT,
+				fillColor: "rgba(12, 68, 0, 0.55)",
+				borderColor: null,
 			}),
 		);
+
+		// a sign in the colors of the speech bubbles of the cut scenes
+		const width = 480;
+		const height = 136;
+		const sign = new UIPanel((WIDTH - width) / 2, (HEIGHT - height) / 2 - 20, {
+			width,
+			height,
+			fillColor: PALETTE[3],
+			borderColor: PALETTE[0],
+			borderWidth: 4,
+			radius: 8,
+		});
+		const title = new BitmapText(width / 2, 24, {
+			font: "atascii40",
+			textAlign: "center",
+			fillStyle: PALETTE[0],
+			text: "P A U S E",
+		});
+		title.glyphEffect = wave;
+		sign.addChild(title);
+		sign.addChild(
+			new BitmapText(width / 2, 84, {
+				font: "atascii32",
+				textAlign: "center",
+				fillStyle: PALETTE[1],
+				text: hint,
+			}),
+		);
+		this.addChild(sign);
 	}
 }
