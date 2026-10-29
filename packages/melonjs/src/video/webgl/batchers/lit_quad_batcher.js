@@ -1,3 +1,4 @@
+import { Color } from "../../../math/color.ts";
 import { off, on, TEXTURE2D_DESTROYED } from "../../../system/event.ts";
 import { FRAME_UNBOUNDED, isFramed } from "../../gpu/frame.js";
 import { scaleQuad, transformQuadCorners } from "../../gpu/quadcorners.ts";
@@ -12,6 +13,12 @@ import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
 import { WebGLTextureStore } from "../texture/store.js";
 import QuadBatcher from "./quad_batcher.js";
+
+/**
+ * the blit's tint: white, at the opacity the blit composites at
+ * @ignore
+ */
+const blitTint = new Color(255, 255, 255);
 
 /**
  * additional import for TypeScript
@@ -697,8 +704,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * @param {number} width - destination width
 	 * @param {number} height - destination height
 	 * @param {GLShader|ShaderEffect} shader - the shader effect to apply
+	 * @param {number} [alpha=1] - the opacity to composite at (0.0 to 1.0)
 	 */
-	blitTexture(source, x, y, width, height, shader) {
+	blitTexture(source, x, y, width, height, shader, alpha = 1) {
 		const gl = this.gl;
 
 		this.useShader(shader);
@@ -741,7 +749,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// blits are always rendered at z = 0 (screen-space, ortho), carry no
 		// normal map (-1) and no material (shininess 0), and draw the whole
 		// target: no frame
-		const tint = 0xffffffff;
+		const tint = blitTint.toUint32(alpha);
 		const open = FRAME_UNBOUNDED;
 		const vertexData = this.vertexData;
 		vertexData.pushSprite(vec0.x, vec0.y, 0, 0, 1, tint, 0, open, open, -1, 0);

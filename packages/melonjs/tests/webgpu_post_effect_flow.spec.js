@@ -16,6 +16,8 @@ import WebGPURenderer from "../src/video/webgpu/webgpu_renderer.js";
 describe("WebGPU post-effect control flow (recorded primitives)", () => {
 	let renderer;
 	let log;
+	// the alpha each blit composites at, by effect
+	let alphas;
 
 	function fakeTarget(name) {
 		return {
@@ -61,12 +63,19 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 
 	beforeEach(() => {
 		log = [];
+		alphas = [];
 		let targetCount = 0;
 		renderer = Object.create(WebGPURenderer.prototype);
 		Object.assign(renderer, {
 			customShader: undefined,
 			effectProjectionStack: [],
 			effectPassDepth: 0,
+			// the opacity each pass begins under, and the one drawn at now
+			effectAlphaStack: [],
+			alpha: 1,
+			globalAlpha() {
+				return this.alpha;
+			},
 			// where each renderable with a chain is, for its passes
 			// (Renderer#_setEffectSpace)
 			_effectSpaces: new WeakMap(),
@@ -96,10 +105,11 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 			captureFrame() {
 				log.push(`capture:${this.currentRenderTarget?.name ?? "canvas"}`);
 			},
-			blitEffect(source, x, y, w, h, effect, keepBlend) {
+			blitEffect(source, x, y, w, h, effect, keepBlend, alpha = 1) {
 				log.push(
 					`blit:${source.name}→${effect.name}:keep=${keepBlend === true}`,
 				);
+				alphas.push(`${effect.name}@${alpha}`);
 			},
 			clipRect(x, y, w, h) {
 				log.push(`clip:${x},${y},${w},${h}`);
@@ -175,6 +185,50 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 		// the final blit composites WITH blending (transparent texels must
 		// not overwrite the scene)
 		expect(log.at(-3)).toBe("blit:rt1→fx2:keep=true");
+	});
+
+	it("a sprite chain lands at the opacity it began under, by its last blit only", () => {
+		const sprite = makeRenderable([
+			makeEffect({ name: "a" }),
+			makeEffect({ name: "b" }),
+			makeEffect({ name: "c" }),
+		]);
+		// drawn at 0.3: its content goes into the pass opaque
+		renderer.alpha = 0.3;
+		renderer.beginPostEffect(sprite);
+		renderer.endPostEffect(sprite);
+		// the ping-pong passes stay whole; the composite onto the parent fades
+		expect(alphas).toEqual(["a@1", "b@1", "c@0.3"]);
+	});
+
+	it("a camera's chain composites whole, whatever the alpha it began under", () => {
+		const camera = makeRenderable(
+			[makeEffect({ name: "c1" }), makeEffect({ name: "c2" })],
+			{ camera: true },
+		);
+		renderer.alpha = 0.3;
+		renderer.beginPostEffect(camera);
+		renderer.endPostEffect(camera);
+		expect(alphas).toEqual(["c1@1", "c2@1"]);
+	});
+
+	it("a sprite chain inside another lands at its own opacity", () => {
+		const outer = makeRenderable([
+			makeEffect({ name: "o1" }),
+			makeEffect({ name: "o2" }),
+		]);
+		const inner = makeRenderable([
+			makeEffect({ name: "i1" }),
+			makeEffect({ name: "i2" }),
+		]);
+		renderer.alpha = 0.5;
+		renderer.beginPostEffect(outer);
+		// inside the outer pass: drawn at its own opacity
+		renderer.alpha = 0.25;
+		renderer.beginPostEffect(inner);
+		renderer.endPostEffect(inner);
+		renderer.endPostEffect(outer);
+		expect(alphas).toEqual(["i1@1", "i2@0.25", "o1@1", "o2@0.5"]);
 	});
 
 	it("nesting: a sprite pass inside a camera pass restores the camera's projection slot", () => {

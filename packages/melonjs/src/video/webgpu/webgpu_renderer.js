@@ -401,6 +401,16 @@ export default class WebGPURenderer extends Renderer {
 		/** @ignore
 		 * @internal */
 		this.effectProjectionStack = [];
+
+		/**
+		 * The opacity each (possibly nested) post-effect pass was begun
+		 * under, by depth: the pass draws its content opaque, and the last
+		 * blit of a renderable's chain composites it at this.
+		 * @type {number[]}
+		 * @ignore
+		 * @internal
+		 */
+		this.effectAlphaStack = [];
 		/** @ignore
 		 * @internal */
 		this.effectPassDepth = 0;
@@ -1829,6 +1839,9 @@ export default class WebGPURenderer extends Renderer {
 				new Matrix3d();
 		}
 		savedProjection.copy(this.projectionMatrix);
+		// the opacity the renderable is drawn at: its content goes into the
+		// target opaque, and the chain's last blit composites it at this
+		this.effectAlphaStack[this.effectPassDepth] = this.globalAlpha();
 		this.effectPassDepth++;
 
 		const rt = this._postEffectPool().begin(
@@ -1925,8 +1938,13 @@ export default class WebGPURenderer extends Renderer {
 
 		// the chain's passes are told where the renderable is
 		this._beginChainSpace(renderable);
+		// a renderable's chain lands at the opacity it is drawn at, by its
+		// last blit only; a camera's composites whole
+		const alpha = isCamera
+			? 1
+			: this.effectAlphaStack[this.effectPassDepth - 1];
 		if (effects.length === 1) {
-			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend);
+			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend, alpha);
 		} else {
 			// multi-pass: ping-pong between the two pool targets
 			let src = rt1;
@@ -1939,7 +1957,16 @@ export default class WebGPURenderer extends Renderer {
 				dst = tmp;
 			}
 			this.setRenderTarget(parentRT);
-			this.blitEffect(src, 0, 0, w, h, effects[effects.length - 1], keepBlend);
+			this.blitEffect(
+				src,
+				0,
+				0,
+				w,
+				h,
+				effects[effects.length - 1],
+				keepBlend,
+				alpha,
+			);
 		}
 
 		if (isCamera && renderable.isDefault === false) {
@@ -1969,9 +1996,19 @@ export default class WebGPURenderer extends Renderer {
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} effect - the effect to composite with
 	 * @param {boolean} [keepBlend=false] - keep the current blend mode
+	 * @param {number} [alpha=1] - the opacity to composite the blit at (0.0 to 1.0)
 	 * @override
 	 */
-	blitEffect(source, x, y, width, height, effect, keepBlend = false) {
+	blitEffect(
+		source,
+		x,
+		y,
+		width,
+		height,
+		effect,
+		keepBlend = false,
+		alpha = 1,
+	) {
 		// A blit is compositing machinery, not a scene draw: it must never
 		// open an advanced-blend bracket of its own. Covers both the
 		// post-effect chain's ping-pong blits (which run under the
@@ -1984,7 +2021,7 @@ export default class WebGPURenderer extends Renderer {
 		blitSavedProjection.copy(this.projectionMatrix);
 		this.projectionMatrix.ortho(0, width, height, 0, -1, 1);
 		this.pushFrameGlobals();
-		batcher.blitTexture(source, x, y, width, height, effect, keepBlend);
+		batcher.blitTexture(source, x, y, width, height, effect, keepBlend, alpha);
 		this.projectionMatrix.copy(blitSavedProjection);
 		this.pushFrameGlobals();
 		this._advancedBlendBusy--;

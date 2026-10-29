@@ -240,6 +240,16 @@ export default class WebGLRenderer extends Renderer {
 		 * @internal
 		 */
 		this._effectProjectionStack = [];
+
+		/**
+		 * The opacity each (possibly nested) post-effect pass was begun
+		 * under, by depth: the pass draws its content opaque, and the last
+		 * blit of a renderable's chain composites it at this.
+		 * @type {number[]}
+		 * @ignore
+		 * @internal
+		 */
+		this._effectAlphaStack = [];
 		/**
 		 * @ignore
 		 * @internal
@@ -2107,6 +2117,9 @@ export default class WebGLRenderer extends Renderer {
 				new Matrix3d();
 		}
 		savedProjection.copy(this.projectionMatrix);
+		// the opacity the renderable is drawn at: its content goes into the
+		// target opaque, and the chain's last blit composites it at this
+		this._effectAlphaStack[this._effectPassDepth] = this.globalAlpha();
 		this._effectPassDepth++;
 
 		const rt = this._renderTargetPool.begin(
@@ -2215,8 +2228,13 @@ export default class WebGLRenderer extends Renderer {
 
 		// the chain's passes are told where the renderable is
 		this._beginChainSpace(renderable);
+		// a renderable's chain lands at the opacity it is drawn at, by its
+		// last blit only; a camera's composites whole
+		const alpha = isCamera
+			? 1
+			: this._effectAlphaStack[this._effectPassDepth - 1];
 		if (effects.length === 1) {
-			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
+			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend, alpha);
 		} else {
 			// multi-pass: ping-pong between two render targets
 			let src = rt1;
@@ -2247,6 +2265,7 @@ export default class WebGLRenderer extends Renderer {
 				h,
 				effects[effects.length - 1],
 				keepBlend,
+				alpha,
 			);
 		}
 
@@ -2450,8 +2469,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} shader - the shader effect to apply
 	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
+	 * @param {number} [alpha=1] - the opacity to composite the blit at (0.0 to 1.0)
 	 */
-	blitEffect(source, x, y, width, height, shader, keepBlend = false) {
+	blitEffect(
+		source,
+		x,
+		y,
+		width,
+		height,
+		shader,
+		keepBlend = false,
+		alpha = 1,
+	) {
 		// A blit is compositing machinery, not a scene draw: it must never
 		// open an advanced-blend bracket of its own. That covers both the
 		// post-effect chain's ping-pong blits (which run under the
@@ -2475,7 +2504,7 @@ export default class WebGLRenderer extends Renderer {
 		if (!keepBlend) {
 			this.setBlendEnabled(false);
 		}
-		batcher.blitTexture(source, x, y, width, height, shader);
+		batcher.blitTexture(source, x, y, width, height, shader, alpha);
 		if (!keepBlend) {
 			this.setBlendEnabled(true);
 		}
