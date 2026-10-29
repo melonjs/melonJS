@@ -16,7 +16,7 @@ git clone https://github.com/mixelstudio/Alex4-WE /tmp/alex4-we
 python3 build_assets.py /tmp/alex4/alex4src/data /tmp/alex4-we/data ../../public/assets/alex4
 
 # Tiled maps
-python3 build_levels.py /tmp/alex4/alex4src/data /tmp/alex4-we/data ../../public/assets/alex4/map
+python3 build_levels.py /tmp/alex4/alex4src/data ../../public/assets/alex4/map
 ```
 
 - `allegro_dat.py` reads the password-protected Allegro 4 datafiles
@@ -26,9 +26,8 @@ python3 build_levels.py /tmp/alex4/alex4src/data /tmp/alex4-we/data ../../public
   the missing punctuation to the Alex4-WE bitmap fonts, converts the sound
   effects Alex4-WE did not have, and renders the intro and outro songs from
   the original music module (needs ffmpeg built with libopenmpt)
-- `build_levels.py` writes levels 1-6 from the Alex4-WE Tiled maps, and
-  converts levels 7-12 and the scenes of the intro and the outro from the
-  original data. Every map
+- `build_levels.py` converts the 12 levels and the scenes of the intro and
+  the outro from the original data. Every map
   gets the same layers: the parallax images, a "Foreground" tile layer, a
   "collision" object layer (solid rectangles and the breakable blocks) and an
   "entities" object layer matched to the classes registered in `createGame.ts`

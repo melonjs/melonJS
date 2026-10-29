@@ -29,36 +29,12 @@ import { CannonBall } from "./projectiles";
 /*                                                                                  */
 /************************************************************************************/
 export class SpikeEntity extends Renderable {
-	constructor(
-		x: number,
-		y: number,
-		settings: TMXObject & { direction?: string },
-	) {
+	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
-
-		// only the pointy half of the Alex4-WE spikes is deadly
-		const { width: w, height: h } = settings;
-		let shape: Rect;
-		switch (settings.direction) {
-			case "up":
-				shape = new Rect(0, h / 2, w, h / 2);
-				break;
-			case "down":
-				shape = new Rect(0, 0, w, h / 2);
-				break;
-			case "left":
-				shape = new Rect(w / 2, 0, w / 2, h);
-				break;
-			case "right":
-				shape = new Rect(0, 0, w / 2, h);
-				break;
-			default:
-				shape = new Rect(0, 0, w, h);
-		}
 		this.bodyDef = {
 			type: "static",
-			shapes: [shape],
+			shapes: [new Rect(0, 0, settings.width, settings.height)],
 			collisionType: collision.types.ENEMY_OBJECT,
 			collisionMask: collision.types.PLAYER_OBJECT,
 			isSensor: true,

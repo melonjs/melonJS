@@ -168,8 +168,6 @@ for f in ("layer1", "layer2", "layer3"):
     shutil.copy(f"{WE}/background/{f}.png", f"{OUT}/img/{f}.png")
 for f in ("hud_egg", "hud_heart", "hud_life", "menu_title", "menu_arrow", "lets_go_msg", "gameover", "levelcomplete"):
     shutil.copy(f"{WE}/hud/{f}.png", f"{OUT}/img/{f}.png")
-for f in ("a4_tileset", "metatiles64x64"):
-    shutil.copy(f"{WE}/level/{f}.png", f"{OUT}/map/{f}.png")
 for f in os.listdir(f"{WE}/audio/music"):
     shutil.copy(f"{WE}/audio/music/{f}", f"{OUT}/bgm/{f}")
 for f in os.listdir(f"{WE}/audio/sfx"):

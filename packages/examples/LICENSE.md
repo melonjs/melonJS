@@ -263,7 +263,8 @@ same GPL-2.0-or-later terms. The full license text ships with the assets as
 be GPL too; the rest of the examples and melonJS itself stay MIT.
 
 It builds on **Alex4 Web Edition**, the melonJS 0.9 remake by Olivier Biot
-(<https://github.com/mixelstudio/Alex4-WE>): levels 1 to 6, the parallax
-backgrounds, HUD and title graphics, the bitmap fonts and the mp3/ogg music
-come from it. Levels 7 to 12, the remaining enemies, both guardians, egg
-spitting and the outro were completed from the original game data.
+(<https://github.com/mixelstudio/Alex4-WE>): the parallax backgrounds, HUD
+and title graphics, the bitmap fonts and the mp3/ogg music come from it. All
+12 levels are converted from the original game data, and the remaining
+enemies, both guardians, egg spitting, the intro and the outro were completed
+from it.

@@ -38,7 +38,6 @@ export const resources = [
 	image("treetops"),
 
 	// tilesets
-	image("a4_tileset", "map"),
 	image("a4_tiles", "map"),
 	image("a4_water", "map"),
 

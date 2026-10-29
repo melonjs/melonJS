@@ -1,7 +1,6 @@
 """Build the Alex4 Tiled maps for the melonJS example.
 
-levels 1-6  : the Alex4-WE hand-made Tiled maps, brought up to date
-levels 7-12 : converted from the original game (`maps.dat`)
+levels 1-12 : converted from the original game (`maps.dat`)
 intro, outro: the scenes of the intro and the outro (SCRIPTMAP0 and SCRIPTMAP1
               in `data.dat`)
 
@@ -12,14 +11,12 @@ the breakable blocks) and an "entities" object layer.
 import os
 import struct
 import sys
-import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from allegro_dat import parse_dat, password, unpack_file  # noqa: E402
 from maps import load_maps  # noqa: E402
-from tmxread import layers as read_layers  # noqa: E402
 
-ORIG, WE, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+ORIG, OUT = sys.argv[1], sys.argv[2]
 T = 64          # tile size in pixels (4x the original 16)
 H = 8           # map height in tiles: 7 rows, plus one under the HUD
 ROWS = 7
@@ -31,16 +28,9 @@ T_WATER, T_SURFACE = 201, 202
 ACTORS = {101: "enemy1", 102: "enemy2", 103: "crusher", 104: "spikefish", 105: "jellyfish",
           106: "cannon", 151: "boss1", 152: "boss2"}
 
-# Alex4-WE object names -> the names registered by the example
-WE_NAMES = {"playerspawnpoint": "player", "cherryentity": "cherry", "heartentity": "heart",
-            "starentity": "star", "1upentity": "oneup", "rollblockentity": "spin",
-            "enemy1entity": "enemy1", "enemy2entity": "enemy2", "boss1entity": "boss1",
-            "canonentity": "cannon", "spikeentity": "spike", "tmxlevelentity": "exit"}
-
 # the width of the screen, in tiles (832 pixels)
 WIDE = 13
 
-TILESET_WE = dict(name="a4_tileset", image="a4_tileset.png", w=640, h=480, count=63, columns=9, spacing=1, margin=1)
 # the water, animated: its 4 frames (tile 0), then the 8 of its surface (tile 4)
 TILESET_WATER = dict(name="a4_water", image="a4_water.png", w=768, h=64, count=12, columns=12)
 WATER_FRAMES = {0: range(0, 4), 4: range(4, 12)}
@@ -216,53 +206,10 @@ def convert_original(m, levelid, path, scene=False):
     return objects
 
 
-def convert_we(src, orig, levelid, path):
-    root = ET.parse(src).getroot()
-    w = int(root.get("width"))
-    layers = read_layers(src)
-    fg = list(layers["Foreground"][2])
-    # WE collision tiles: metatile 0 is solid, metatile 5 breakable
-    coll = layers["Collision"][2]
-    solid = [coll[i] == 64 for i in range(w * ROWS)]
-    breakables = [(i % w, i // w) for i in range(w * ROWS) if coll[i] == 69]
-
-    objects = []
-    for og in root.iter("objectgroup"):
-        for o in og.iter("object"):
-            name = WE_NAMES.get(o.get("name").lower())
-            if name is None:
-                continue
-            ob = dict(name=name, x=int(o.get("x")), y=int(o.get("y")), w=int(o.get("width")), h=int(o.get("height")))
-            props = {p.get("name"): p.get("value") for p in o.iter("property")}
-            if name == "spike" and "direction" in props:
-                ob["props"] = {"direction": props["direction"]}
-            if name == "player":
-                ob["props"] = {"facing": "right"}
-            if name == "exit" and ob["x"] >= w * T:
-                continue  # the unreachable exit of the WE boss level
-            if name == "boss1":
-                # the WE box is the 128x128 sprite: keep the cell it stands in
-                ob.update(y=ob["y"] + ob["h"] - T, w=T, h=T)
-            objects.append(ob)
-    # WE had no spitting, so it never placed the eggs: put them back
-    if orig["w"] == w:
-        oc = orig["cells"]
-        for k in range(len(oc) // 4):
-            if oc[k * 4 + 3] == 1:
-                objects.append(dict(name="egg", x=(k % w) * T, y=(k // w) * T))
-    flags = orig["flags"]
-    props = {"label": orig["name"], "levelid": levelid, "win": flags[4], "boss": flags[3]}
-    write_tmx(path, w, props, TILESET_WE, fg, solid, breakables, objects)
-    return objects
-
-
 maps = load_maps(f"{ORIG}/maps.dat")
-for i in range(6):
-    o = convert_we(f"{WE}/level/a4_level{i + 1}.tmx", maps[i], i + 1, f"{OUT}/a4_level{i + 1}.tmx")
-    print("WE  ", i + 1, maps[i]["name"], len(o))
-for i in range(6, 12):
+for i in range(12):
     o = convert_original(maps[i], i + 1, f"{OUT}/a4_level{i + 1}.tmx")
-    print("ORIG", i + 1, maps[i]["name"], len(o))
+    print(i + 1, maps[i]["name"], len(o))
 
 SCENES = {"SCRIPTMAP0": "intro", "SCRIPTMAP1": "outro"}
 for t, p, d in parse_dat(unpack_file(f"{ORIG}/data.dat", password())):
