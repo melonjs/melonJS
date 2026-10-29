@@ -15,8 +15,13 @@ const TURN = Math.PI * 2;
  * sways most and everything from the anchor down stays put. For grass, trees,
  * reeds or a whole background layer: anything planted at its bottom.
  *
+ * Everything is measured across the sprite itself: its strength is a
+ * fraction of the sprite's width and its anchor a row of the sprite, so a
+ * sprite sways the same whether it has a texture of its own or is cut from
+ * an atlas, and whatever else it draws through.
+ *
  * It is a {@link WaveEffect} with an anchor and sway-sized defaults, so it
- * shares its shader rather than adding one. The difference is the time:
+ * shares its shader rather than adding one. The other difference is the time:
  * {@link SwayEffect#setTime} wraps the phase to one turn on the CPU before
  * the shader sees it. A raw clock grows without bound, and a medium-precision
  * float, the default on most phones, runs out of digits a few minutes into a
@@ -34,8 +39,8 @@ export default class SwayEffect extends WaveEffect {
 	/**
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
-	 * @param {number} [options.strength=0.02] - how far the top moves each way, as a fraction of the texture's width
-	 * @param {number} [options.anchor=1.0] - the row that stays put, as a fraction of the height from the top (1 = the bottom row)
+	 * @param {number} [options.strength=0.02] - how far the top moves each way, as a fraction of the sprite's width
+	 * @param {number} [options.anchor=1.0] - the row of the sprite that stays put, as a fraction of its height from the top (1 = the bottom row)
 	 * @param {number} [options.speed=1.5] - how fast it sways, in radians per second
 	 * @param {number} [options.frequency=3.0] - how much the sway bends along the height: low values lean the whole sprite as one, high ones ripple it
 	 */
@@ -53,6 +58,8 @@ export default class SwayEffect extends WaveEffect {
 		 * @type {number}
 		 */
 		this.speed = options.speed ?? 1.5;
+		// across the sprite, not the texture it is drawn from
+		this.setUniform("uAcrossSprite", 1);
 	}
 
 	/**
@@ -67,7 +74,7 @@ export default class SwayEffect extends WaveEffect {
 
 	/**
 	 * set how far the top moves each way
-	 * @param {number} strength - a fraction of the texture's width
+	 * @param {number} strength - a fraction of the sprite's width
 	 */
 	setStrength(strength) {
 		this.setAmplitude(strength);

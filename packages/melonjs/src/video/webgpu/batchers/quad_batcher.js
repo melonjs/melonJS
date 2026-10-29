@@ -569,6 +569,9 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		// and the whole texture is the frame: sampling stays unbounded. The
 		// texture is the pass's render target, the size of the quad
 		effect?._clearFrameRect?.(source.width ?? w, source.height ?? h);
+		// a pass of a renderable's chain: where the renderable is, for the
+		// effects that place a pattern on it (local_space.js)
+		effect?._setLocalSpace?.(renderer._chainSpace);
 		const binding = effect ? prepareEffectBinding(renderer, effect) : null;
 
 		const pass = renderer.ensurePass();
@@ -618,6 +621,8 @@ export default class WebGPUQuadBatcher extends WebGPUBatcher {
 		pass.setIndexBuffer(this.indexBuffer, "uint32");
 		pass.drawIndexed(6);
 		vertexData.clear();
+		// drawn, its values uploaded: back to the space `uv` always was
+		effect?._setLocalSpace?.(null);
 	}
 
 	/**

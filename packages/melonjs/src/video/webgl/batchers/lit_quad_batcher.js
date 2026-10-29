@@ -720,6 +720,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// bottom-up capture FBO: uv.y grows upward inside apply() — see
 		// QuadBatcher.blitTexture
 		shader._setUVYDir?.(-1);
+		// a pass of a renderable's chain: where the renderable is, for the
+		// effects that place a pattern on it (local_space.js)
+		shader._setLocalSpace?.(this.renderer._chainSpace);
 
 		// transform corners through the renderer transform — see
 		// `QuadBatcher.blitTexture` for the rationale. Only caller today
@@ -747,6 +750,8 @@ export default class LitQuadBatcher extends QuadBatcher {
 		vertexData.pushSprite(vec3.x, vec3.y, 0, 1, 0, tint, 0, open, open, -1, 0);
 
 		this.flush();
+		// and back to the space `uv` always was, for whatever draws next
+		shader._setLocalSpace?.(null);
 
 		// see QuadBatcher.blitTexture — unit 0 is nulled renderer-wide
 		gl.activeTexture(gl.TEXTURE0);

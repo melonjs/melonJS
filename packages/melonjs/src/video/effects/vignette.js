@@ -14,7 +14,8 @@ const fragment = `
 			uniform float uStrength;
 			uniform float uSize;
 			vec4 apply(vec4 color, vec2 uv) {
-				vec2 vig = uv * (1.0 - uv);
+				// across the sprite, wherever it sits in its texture
+				vec2 vig = ME_local * (1.0 - ME_local);
 				float v = clamp(pow(vig.x * vig.y * uSize, uStrength), 0.0, 1.0);
 				return vec4(color.rgb * v, color.a);
 			}
@@ -28,7 +29,8 @@ struct VignetteUniforms {
 @group(3) @binding(0) var<uniform> fx : VignetteUniforms;
 
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
-	let vig = uv * (1.0 - uv);
+	// across the sprite, wherever it sits in its texture
+	let vig = ME_local * (1.0 - ME_local);
 	let v = clamp(pow(vig.x * vig.y * fx.uSize, fx.uStrength), 0.0, 1.0);
 	return vec4f(color.rgb * v, color.a);
 }

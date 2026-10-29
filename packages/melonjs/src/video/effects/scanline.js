@@ -19,26 +19,31 @@ struct ScanlineUniforms {
 
 fn apply(color : vec4f, uv : vec2f) -> vec4f {
 	var c = color;
-	var coords = uv;
+	// where on the sprite (curved around its own centre), and the lines of
+	// its texture there
+	var spot = ME_local;
+	var art = ME_art;
 
 	// barrel distortion (CRT curvature)
 	if (fx.uCurvature > 0.0) {
-		var centered = uv * 2.0 - 1.0;
+		var centered = ME_local * 2.0 - 1.0;
 		centered *= 1.0 + fx.uCurvature * dot(centered, centered);
-		coords = centered * 0.5 + 0.5;
-		if (coords.x < 0.0 || coords.x > 1.0 || coords.y < 0.0 || coords.y > 1.0) {
+		spot = centered * 0.5 + 0.5;
+		if (spot.x < 0.0 || spot.x > 1.0 || spot.y < 0.0 || spot.y > 1.0) {
 			discard;
 		}
-		c = textureSampleLevel(uTexture, uSampler, coords, 0.0) * vColor;
+		let shift = spot - ME_local;
+		art = ME_art + ME_localToArt(shift);
+		c = textureSampleLevel(uTexture, uSampler, uv + ME_localToUV(shift), 0.0) * vColor;
 	}
 
 	// scanlines
-	let line = sin(coords.y * 800.0) * 0.5 + 0.5;
+	let line = sin(art.y * 800.0) * 0.5 + 0.5;
 	c = vec4f(c.rgb * (1.0 - line * fx.uScanlineOpacity), c.a);
 
 	// vignette
 	if (fx.uVignetteStrength > 0.0) {
-		let vig = coords * (1.0 - coords);
+		let vig = spot * (1.0 - spot);
 		let vigFactor = vig.x * vig.y * 15.0;
 		c = vec4f(c.rgb * clamp(pow(vigFactor, fx.uVignetteStrength), 0.0, 1.0), c.a);
 	}
@@ -78,26 +83,31 @@ export default class ScanlineEffect extends ShaderEffect {
 			uniform float uCurvature;
 			uniform float uVignetteStrength;
 			vec4 apply(vec4 color, vec2 uv) {
-				vec2 coords = uv;
+				// where on the sprite (curved around its own centre), and the
+				// lines of its texture there
+				vec2 spot = ME_local;
+				vec2 art = ME_art;
 
 				// barrel distortion (CRT curvature)
 				if (uCurvature > 0.0) {
-					vec2 centered = uv * 2.0 - 1.0;
+					vec2 centered = ME_local * 2.0 - 1.0;
 					centered *= 1.0 + uCurvature * dot(centered, centered);
-					coords = centered * 0.5 + 0.5;
-					if (coords.x < 0.0 || coords.x > 1.0 || coords.y < 0.0 || coords.y > 1.0) {
+					spot = centered * 0.5 + 0.5;
+					if (spot.x < 0.0 || spot.x > 1.0 || spot.y < 0.0 || spot.y > 1.0) {
 						discard;
 					}
-					color = texture2D(uSampler, coords) * vColor;
+					vec2 shift = spot - ME_local;
+					art = ME_art + ME_localToArt(shift);
+					color = texture2D(uSampler, uv + ME_localToUV(shift)) * vColor;
 				}
 
 				// scanlines
-				float line = sin(coords.y * 800.0) * 0.5 + 0.5;
+				float line = sin(art.y * 800.0) * 0.5 + 0.5;
 				color.rgb *= 1.0 - line * uScanlineOpacity;
 
 				// vignette
 				if (uVignetteStrength > 0.0) {
-					vec2 vig = coords * (1.0 - coords);
+					vec2 vig = spot * (1.0 - spot);
 					float vigFactor = vig.x * vig.y * 15.0;
 					color.rgb *= clamp(pow(vigFactor, uVignetteStrength), 0.0, 1.0);
 				}

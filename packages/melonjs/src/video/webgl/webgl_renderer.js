@@ -426,6 +426,9 @@ export default class WebGLRenderer extends Renderer {
 		 */
 		this.currentTransform = this.renderState.currentTransform;
 
+		// an effect pass's capture is a framebuffer, read bottom-up
+		this._captureFlipsY = true;
+
 		/**
 		 * The current batcher used by the renderer
 		 * @type {WebGLBatcher}
@@ -2144,8 +2147,9 @@ export default class WebGLRenderer extends Renderer {
 		if (effects.length === 0) {
 			return;
 		}
-		// single effect on non-managed renderable used customShader — no FBO to unbind
-		if (this._usesPostEffectFastPath(renderable, effects)) {
+		// single effect on non-managed renderable used customShader — no FBO
+		// to unbind; its effect is put back to the space `uv` always was
+		if (this._endEffectSpace(renderable, effects)) {
 			return;
 		}
 
@@ -2209,6 +2213,8 @@ export default class WebGLRenderer extends Renderer {
 			this.toFrameTexture();
 		}
 
+		// the chain's passes are told where the renderable is
+		this._beginChainSpace(renderable);
 		if (effects.length === 1) {
 			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
 		} else {
@@ -2247,6 +2253,7 @@ export default class WebGLRenderer extends Renderer {
 		if (isCamera && renderable.isDefault === false) {
 			this.disableScissor();
 		}
+		this._clearChainSpace();
 
 		// restore renderer state and projection saved in beginPostEffect
 		this.restore();

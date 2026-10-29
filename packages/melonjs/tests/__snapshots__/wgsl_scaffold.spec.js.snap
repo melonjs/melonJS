@@ -15,6 +15,12 @@ struct MEBuiltins {
 	size_obj : vec2f,
 	size_img : vec2f,
 	offset : vec2f,
+	mode : f32,
+	ydir : f32,
+	local_x : vec4f,
+	local_y : vec4f,
+	to_uv : vec4f,
+	art : vec4f,
 };
 @group(3) @binding(1) var<uniform> ME : MEBuiltins;
 @group(3) @binding(2) var screen_texture : texture_2d<f32>;
@@ -43,7 +49,9 @@ fn vertex_main(
 	let ndc = clip.xy / clip.w;
 	// y-down: capture row 0 = screen top under WebGPU
 	out.vScreenUV = vec2f(ndc.x * 0.5 + 0.5, 0.5 - ndc.y * 0.5);
-	out.vNoiseUV = aRegion * (ME.size_img / ME.size_obj) - ME.offset / ME.size_obj;
+	let meV = vec3f(aVertex.xy, 1.0);
+	let mePx = vec2f(dot(ME.local_x.xyz, meV), dot(ME.local_y.xyz, meV));
+	out.vNoiseUV = select(aRegion * (ME.size_img / ME.size_obj) - ME.offset / ME.size_obj, mePx, ME.mode > 1.5);
 	return out;
 }
 
