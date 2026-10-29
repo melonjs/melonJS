@@ -212,7 +212,7 @@ export class PauseMessage extends Container {
 		);
 
 		// a sign in the colors of the speech bubbles of the cut scenes
-		const width = 480;
+		const width = 544;
 		const height = 136;
 		const sign = new UIPanel((WIDTH - width) / 2, (HEIGHT - height) / 2 - 20, {
 			width,
@@ -231,8 +231,10 @@ export class PauseMessage extends Container {
 		title.glyphEffect = wave;
 		sign.addChild(title);
 		sign.addChild(
-			new BitmapText(width / 2, 84, {
+			new BitmapText(width / 2, 88, {
 				font: "atascii32",
+				// 24 pixels: each pixel of the font stays a whole 3 of the screen
+				size: 0.75,
 				textAlign: "center",
 				fillStyle: PALETTE[1],
 				text: hint,
