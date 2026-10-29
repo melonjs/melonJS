@@ -49,7 +49,7 @@ export default class BlurEffect extends ShaderEffect {
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.strength=1.0] - blur strength in texels
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its strength is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its strength is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {

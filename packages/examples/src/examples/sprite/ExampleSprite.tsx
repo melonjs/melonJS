@@ -97,12 +97,12 @@ class Showcase extends Stage {
 				// two effects: drawn apart and composited, at the opacity it
 				// fades to like any other sprite
 				minion.addPostEffect(
-					new OutlineEffect(app.renderer, { color: [1, 0.9, 0.85], width: 2 }),
+					new OutlineEffect(app.renderer, { color: [1, 0.9, 0.85], width: 15 }),
 				);
 				minion.addPostEffect(
 					new GlowEffect(app.renderer, {
 						color: [1.0, 0.5, 0.4],
-						width: 8,
+						width: 60,
 						intensity: 1.5,
 					}),
 				);
@@ -162,7 +162,7 @@ class Showcase extends Stage {
 				width: 9,
 				intensity: 3,
 			});
-			const outline = new OutlineEffect(r, { color: [1, 1, 1], width: 5 });
+			const outline = new OutlineEffect(r, { color: [1, 1, 1], width: 9 });
 			const shine = new ShineEffect(r, {
 				color: [1.0, 0.95, 0.75],
 				speed: 0.6,

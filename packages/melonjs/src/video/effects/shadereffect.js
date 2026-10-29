@@ -778,15 +778,23 @@ export default class ShaderEffect {
 	/**
 	 * For a pass over a whole texture (a render target blit), which draws
 	 * its quad with no frame: `frameTexel()` then samples as it always did,
-	 * clamped by the texture's own wrap mode.
+	 * clamped by the texture's own wrap mode. An effect measuring in texels
+	 * (see `_initTextureSize`) measures in the texture's pixels, or, on a
+	 * pass of a renderable's chain, in the renderable's own (a sprite's
+	 * texels), as it does on the renderable drawn with it alone.
 	 * @param {number} [width] - the texture's width, in pixels
 	 * @param {number} [height] - the texture's height, in pixels
+	 * @param {number[]|null} [scale=null] - on a pass of a renderable's chain, how many of the texture's pixels each pixel of the renderable covers, across and down (see `Renderer#_effectScaleOf`)
 	 * @ignore
 	 * @internal
 	 */
-	_clearFrameRect(width, height) {
+	_clearFrameRect(width, height, scale = null) {
 		this._writeFrameHalf(0, 0);
 		if (width !== undefined && height !== undefined) {
+			if (scale !== null) {
+				width /= scale[0];
+				height /= scale[1];
+			}
 			this._setSourceSize(width, height);
 		}
 	}

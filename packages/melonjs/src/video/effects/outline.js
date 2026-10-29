@@ -69,7 +69,7 @@ export default class OutlineEffect extends ShaderEffect {
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - outline color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the outline's opacity
 	 * @param {number} [options.width=1.0] - outline width in pixels
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its width is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its width is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {

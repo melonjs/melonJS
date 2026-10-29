@@ -45,7 +45,7 @@ export default class ChromaticAberrationEffect extends ShaderEffect {
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.offset=3.0] - channel offset in texels
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its offset is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its offset is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {

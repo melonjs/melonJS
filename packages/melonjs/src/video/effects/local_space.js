@@ -31,8 +31,9 @@
  *   renderable even when it is drawn in several quads. `ME_art` stays `uv`,
  *   and `ME_to_uv` turns a local displacement into one of `uv`.
  * - 2, a pass of a renderable's effect chain: `ME_local` the same way, over
- *   the capture, and `ME_art` the renderable's frame in its texture
- *   (`ME_art_rect`, origin and size) at that point. `noise_uv` is
+ *   the capture (whose pixels the camera's projection, its zoom included,
+ *   put the renderable on), and `ME_art` the renderable's frame in its
+ *   texture (`ME_art_rect`, origin and size) at that point. `noise_uv` is
  *   `ME_local` too, so it runs across the renderable as it does when the
  *   renderable is drawn with its one effect.
  *

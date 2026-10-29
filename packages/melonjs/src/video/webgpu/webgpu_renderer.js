@@ -1944,6 +1944,9 @@ export default class WebGPURenderer extends Renderer {
 			? 1
 			: this.effectAlphaStack[this.effectPassDepth - 1];
 		if (effects.length === 1) {
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
 			this.blitEffect(rt1, 0, 0, w, h, effects[0], keepBlend, alpha);
 		} else {
 			// multi-pass: ping-pong between the two pool targets
@@ -1957,6 +1960,9 @@ export default class WebGPURenderer extends Renderer {
 				dst = tmp;
 			}
 			this.setRenderTarget(parentRT);
+			if (!isCamera) {
+				this._resumeSavedClip();
+			}
 			this.blitEffect(
 				src,
 				0,
@@ -3508,6 +3514,22 @@ export default class WebGPURenderer extends Renderer {
 		}
 
 		this.setScissorRect(sx, sy, sw, sh);
+	}
+
+	/**
+	 * Put back the clip a renderable's effect pass was begun under, for its
+	 * composite to land inside it: a camera's view on the screen, a
+	 * clipping container. The pass drops it (see `beginPostEffect`) to
+	 * capture the whole canvas, and the `restore()` that ends the pass
+	 * would only put it back once the composite has drawn.
+	 * @ignore
+	 * @internal
+	 */
+	_resumeSavedClip() {
+		const saved = this.renderState.peekScissor();
+		if (saved !== null) {
+			this.setScissorRect(saved[0], saved[1], saved[2], saved[3]);
+		}
 	}
 
 	/**

@@ -64,7 +64,7 @@ export default class GlowEffect extends ShaderEffect {
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - glow color as [r, g, b] or [r, g, b, a] (0.0–1.0); the alpha is the halo's opacity
 	 * @param {number} [options.width=3.0] - glow spread in pixels
 	 * @param {number} [options.intensity=1.0] - glow brightness multiplier
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its spread is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its spread is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {

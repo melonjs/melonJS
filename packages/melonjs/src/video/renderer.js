@@ -13,6 +13,10 @@ import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 import { is2dTransform, pixelSnap } from "./utils/pixel_snap.js";
 
+// scratch: the transform a renderable is drawn through (see
+// Renderer#_drawnTransform), `[a, b, c, d, e, f]`
+const drawnTransform = new Float64Array(6);
+
 /**
  * @import RenderTargetPool from "./rendertarget/render_target_pool.js";
  * @import Application from "../application/application.ts";
@@ -126,6 +130,26 @@ export default class Renderer {
 		 * @internal
 		 */
 		this._chainSpace = null;
+
+		/**
+		 * How many of the target's pixels each pixel of a renderable whose
+		 * chain is under way covers, across and down (see
+		 * `_setEffectSpace`); keyed by the renderable.
+		 * @type {WeakMap<object, number[]>}
+		 * @ignore
+		 * @internal
+		 */
+		this._effectScales = new WeakMap();
+
+		/**
+		 * How many of the target's pixels each pixel of the renderable whose
+		 * chain is being composited covers, for the blits of that chain to
+		 * measure its effects in; `null` otherwise.
+		 * @type {number[]|null}
+		 * @ignore
+		 * @internal
+		 */
+		this._chainScale = null;
 
 		/**
 		 * Whether an effect pass's capture runs bottom-up (WebGL's
@@ -1200,7 +1224,8 @@ export default class Renderer {
 	 *
 	 * Drawn with its one effect, the effect is told now, for the draws that
 	 * follow; with a chain, its passes are, as each one is composited (see
-	 * `_endEffectSpace`). A renderable this cannot place (no finite size, a
+	 * `_endEffectSpace`), along with the size of its pixels on the target
+	 * (see `_effectScaleOf`). A renderable this cannot place (no finite size, a
 	 * perspective view, a transform that is not 2D) leaves its effects in
 	 * the space `uv` always was.
 	 * @param {Renderable} renderable - the renderable about to draw
@@ -1227,6 +1252,10 @@ export default class Renderer {
 		if (space !== null) {
 			this._effectSpaces.set(renderable, space);
 		}
+		const scale = this._effectScaleOf(renderable);
+		if (scale !== null) {
+			this._effectScales.set(renderable, scale);
+		}
 	}
 
 	/**
@@ -1249,17 +1278,23 @@ export default class Renderer {
 
 	/**
 	 * A chain is about to be composited: its blits hand its effects where
-	 * the renderable is (`_chainSpace`), until `_clearChainSpace`. A
-	 * camera's chain has no renderable space.
+	 * the renderable is (`_chainSpace`) and the size of its pixels
+	 * (`_chainScale`), until `_clearChainSpace`. A camera's chain has
+	 * neither: its effects measure in the screen's pixels.
 	 * @param {Renderable} renderable - the renderable whose chain it is
 	 * @ignore
 	 * @internal
 	 */
 	_beginChainSpace(renderable) {
-		this._chainSpace = renderable._postEffectManaged
-			? null
-			: (this._effectSpaces.get(renderable) ?? null);
+		const own = renderable._postEffectManaged !== true;
+		this._chainSpace = own
+			? (this._effectSpaces.get(renderable) ?? null)
+			: null;
+		this._chainScale = own
+			? (this._effectScales.get(renderable) ?? null)
+			: null;
 		this._effectSpaces.delete(renderable);
+		this._effectScales.delete(renderable);
 	}
 
 	/**
@@ -1269,6 +1304,106 @@ export default class Renderer {
 	 */
 	_clearChainSpace() {
 		this._chainSpace = null;
+		this._chainScale = null;
+	}
+
+	/**
+	 * The transform the renderable about to draw is drawn through, as
+	 * `[a, b, c, d, e, f]` (x' = a x + c y + e, y' = b x + d y + f): its
+	 * transform, to the vertices it draws, or with `toTarget`, on to the
+	 * target's pixels (from its top-left corner) through the projection as
+	 * well: a camera's zoom, and where the camera sits on the screen.
+	 * `null` when it is not drawn onto a pixel grid (a perspective view, a
+	 * 3D transform) or is squashed to no area at all. The array is reused.
+	 * @param {boolean} toTarget - on to the target's pixels
+	 * @returns {Float64Array|null} the transform
+	 * @ignore
+	 * @internal
+	 */
+	_drawnTransform(toTarget) {
+		// a perspective view (Camera3d) has no pixel grid to be placed on
+		const p = this.projectionMatrix.val;
+		if (p[11] !== 0) {
+			return null;
+		}
+		// target x and y must come from the 2D part alone: a 3D view
+		// matrix mixes the depth in
+		const v = this.currentTransform.val;
+		if (v[8] !== 0 || v[9] !== 0) {
+			return null;
+		}
+		let a = v[0];
+		let b = v[1];
+		let c = v[4];
+		let d = v[5];
+		let e = v[12];
+		let f = v[13];
+		if (toTarget) {
+			// clip space to the target's pixels, y down
+			const canvas = this.getCanvas();
+			const hw = (canvas.width || 1) / 2;
+			const hh = (canvas.height || 1) / 2;
+			const pa = hw * p[0];
+			const pc = hw * p[4];
+			const pb = -hh * p[1];
+			const pd = -hh * p[5];
+			const pe = hw * (p[12] + 1);
+			const pf = hh * (1 - p[13]);
+			const ta = pa * a + pc * b;
+			const tb = pb * a + pd * b;
+			const tc = pa * c + pc * d;
+			const td = pb * c + pd * d;
+			const te = pa * e + pc * f + pe;
+			f = pb * e + pd * f + pf;
+			a = ta;
+			b = tb;
+			c = tc;
+			d = td;
+			e = te;
+		}
+		if (Math.abs(a * d - b * c) < 1e-12) {
+			return null;
+		}
+		const out = drawnTransform;
+		out[0] = a;
+		out[1] = b;
+		out[2] = c;
+		out[3] = d;
+		out[4] = e;
+		out[5] = f;
+		return out;
+	}
+
+	/**
+	 * How many of the target's pixels each pixel of the renderable about to
+	 * draw covers, across and down the target: what a pass of its chain
+	 * measures an effect's width, offset or size in (see
+	 * `ShaderEffect#_clearFrameRect`), so they come out in its own pixels
+	 * (a sprite's texels) as they do with one effect, at any scale or zoom.
+	 * `null` when it cannot be measured (see `_drawnTransform`).
+	 * @param {Renderable} renderable - the renderable
+	 * @returns {number[]|null} `[across, down]`, reused per renderable
+	 * @ignore
+	 * @internal
+	 */
+	_effectScaleOf(renderable) {
+		const m = this._drawnTransform(true);
+		if (m === null) {
+			return null;
+		}
+		let scale = renderable._effectScale;
+		if (scale === undefined) {
+			scale = [1, 1];
+			/**
+			 * @ignore
+			 * @internal
+			 */
+			renderable._effectScale = scale;
+		}
+		// the length of a pixel of its own, along each axis of the target
+		scale[0] = Math.hypot(m[0], m[2]);
+		scale[1] = Math.hypot(m[1], m[3]);
+		return scale;
 	}
 
 	/**
@@ -1289,26 +1424,19 @@ export default class Renderer {
 		if (!Number.isFinite(w) || !Number.isFinite(h) || w === 0 || h === 0) {
 			return null;
 		}
-		// a perspective view (Camera3d) has no pixel grid to be placed on
-		if (this.projectionMatrix.val[11] !== 0) {
+		// with its one effect, it is placed by the vertices it draws, which
+		// the projection has not touched yet; a pass runs over the target
+		const m = this._drawnTransform(mode === LOCAL_MODE.chain);
+		if (m === null) {
 			return null;
 		}
-		// target x and y must come from the 2D part alone: a 3D view
-		// matrix mixes the depth in
-		const v = this.currentTransform.val;
-		if (v[8] !== 0 || v[9] !== 0) {
-			return null;
-		}
-		const a = v[0];
-		const b = v[1];
-		const c = v[4];
-		const d = v[5];
-		const e = v[12];
-		const f = v[13];
+		const a = m[0];
+		const b = m[1];
+		const c = m[2];
+		const d = m[3];
+		const e = m[4];
+		const f = m[5];
 		const det = a * d - b * c;
-		if (Math.abs(det) < 1e-12) {
-			return null;
-		}
 		// the frame drawn, for a sprite: its texture, and where in it
 		const frame = renderable.current;
 		const image = renderable.image;
@@ -1368,8 +1496,8 @@ export default class Renderer {
 			toUV[2] = (-h * sin) / texW;
 			toUV[3] = (h * cos) / texH;
 		} else {
-			// across the renderable, in the capture: the transform, scaled
-			// to the capture (bottom-up on WebGL)
+			// across the renderable, in the capture: its transform onto the
+			// target, scaled to the capture (bottom-up on WebGL)
 			const canvas = this.getCanvas();
 			const W = canvas.width || 1;
 			const H = canvas.height || 1;

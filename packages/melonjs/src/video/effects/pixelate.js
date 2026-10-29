@@ -41,7 +41,7 @@ export default class PixelateEffect extends ShaderEffect {
 	 * @param {Renderer} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.size=4.0] - pixel size in texels (higher = more pixelated)
-	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its pixel size is measured in; by default the texture it draws (a sprite's own, the screen for a camera's effect)
+	 * @param {number[]} [options.textureSize] - the size, `[width, height]`, of the texture its pixel size is measured in; by default the texture it draws: a sprite's own, alone or with other effects and at any scale or zoom, the screen for a camera's effect
 	 */
 	constructor(renderer, options = {}) {
 		super(renderer, {

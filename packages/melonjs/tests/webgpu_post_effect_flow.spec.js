@@ -79,7 +79,9 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 			// where each renderable with a chain is, for its passes
 			// (Renderer#_setEffectSpace)
 			_effectSpaces: new WeakMap(),
+			_effectScales: new WeakMap(),
 			_chainSpace: null,
+			_chainScale: null,
 			projectionMatrix: new Matrix3d(),
 			backgroundColor: new Color(16, 32, 48),
 			currentBatcher: null,
@@ -113,6 +115,16 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 			},
 			clipRect(x, y, w, h) {
 				log.push(`clip:${x},${y},${w},${h}`);
+			},
+			// the clip saved by the pass's own save(): none by default
+			renderState: {
+				saved: null,
+				peekScissor() {
+					return this.saved;
+				},
+			},
+			setScissorRect(x, y, w, h) {
+				log.push(`scissor:${x},${y},${w},${h}`);
 			},
 			disableScissor() {
 				log.push("descissor");
@@ -199,6 +211,47 @@ describe("WebGPU post-effect control flow (recorded primitives)", () => {
 		renderer.endPostEffect(sprite);
 		// the ping-pong passes stay whole; the composite onto the parent fades
 		expect(alphas).toEqual(["a@1", "b@1", "c@0.3"]);
+	});
+
+	it("a sprite chain composites inside the clip it began under, its passes whole", () => {
+		const sprite = makeRenderable([
+			makeEffect({ name: "a" }),
+			makeEffect({ name: "b" }),
+		]);
+		// drawn inside a clip: a minimap camera's view, a clipping container
+		renderer.renderState.saved = [5, 6, 70, 80];
+		renderer.beginPostEffect(sprite);
+		renderer.endPostEffect(sprite);
+		const clip = log.indexOf("scissor:5,6,70,80");
+		// after the pass between the two effects, right before the composite
+		expect(clip).toBeGreaterThan(log.indexOf("blit:rt0→a:keep=false"));
+		expect(log[clip + 1]).toBe("blit:rt1→b:keep=true");
+	});
+
+	it("so does one effect drawn into a target of its own", () => {
+		const panel = makeRenderable([makeEffect({ name: "solo" })]);
+		panel.postEffectNeedsCapture = true;
+		renderer.renderState.saved = [5, 6, 70, 80];
+		renderer.beginPostEffect(panel);
+		renderer.endPostEffect(panel);
+		const clip = log.indexOf("scissor:5,6,70,80");
+		expect(clip).toBeGreaterThan(-1);
+		expect(log[clip + 1]).toBe("blit:rt0→solo:keep=true");
+	});
+
+	it("a camera's chain clips to its own view, not to what it began under", () => {
+		const camera = makeRenderable(
+			[makeEffect({ name: "c1" }), makeEffect({ name: "c2" })],
+			{ camera: true },
+		);
+		renderer.renderState.saved = [5, 6, 70, 80];
+		renderer.beginPostEffect(camera);
+		renderer.endPostEffect(camera);
+		expect(
+			log.some((entry) => {
+				return entry.startsWith("scissor:");
+			}),
+		).toBe(false);
 	});
 
 	it("a camera's chain composites whole, whatever the alpha it began under", () => {

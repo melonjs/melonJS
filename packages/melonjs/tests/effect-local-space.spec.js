@@ -22,6 +22,7 @@ import {
 	boot,
 	DissolveEffect,
 	HologramEffect,
+	Matrix3d,
 	OutlineEffect,
 	RadialGradientEffect,
 	ScanlineEffect,
@@ -166,13 +167,18 @@ describe("effects place their pattern on the renderable (WebGL)", () => {
 	};
 
 	/** the sprite: the art with its own texture, or cut from the atlas */
-	const sprite = ({ fromAtlas = false, angle = 0, flip = false } = {}) => {
+	const sprite = ({
+		fromAtlas = false,
+		angle = 0,
+		flip = false,
+		scale = SCALE,
+	} = {}) => {
 		const s = fromAtlas
 			? atlas.createSpriteFromName("art")
 			: new Sprite(0, 0, { image: own });
 		s.pos.x = CENTRE;
 		s.pos.y = CENTRE;
-		s.scale(SCALE);
+		s.scale(scale);
 		if (angle !== 0) {
 			s.rotate(angle);
 		}
@@ -493,6 +499,46 @@ describe("effects place their pattern on the renderable (WebGL)", () => {
 		});
 	});
 
+	// a zoomed camera (or one drawn away from the screen's corner) scales
+	// the world through its projection, not the renderable's transform: a
+	// chain's passes run in the target's pixels, so they go through it too
+	describe("two effects, under a camera's zoom", () => {
+		/** draw with a camera zoomed in twice on the middle of the screen */
+		const zoomed = (draw) => {
+			const saved = renderer.projectionMatrix.clone();
+			const half = SIZE / 4;
+			renderer.setProjection(
+				new Matrix3d().ortho(
+					CENTRE - half,
+					CENTRE + half,
+					CENTRE + half,
+					CENTRE - half,
+					-1000,
+					1000,
+				),
+			);
+			try {
+				return draw();
+			} finally {
+				renderer.setProjection(saved);
+			}
+		};
+		const ALL = { ...EFFECTS, ...TEXTURE_PATTERNS };
+
+		it.for(Object.keys(ALL))("%s draws as it does alone", (name, ctx) => {
+			requireWebGL(ctx);
+			const make = ALL[name];
+			// at its own size, zoomed to the same span on the screen
+			const alone = zoomed(() => {
+				return drawn({ scale: 1 }, make());
+			});
+			const chained = zoomed(() => {
+				return drawn({ scale: 1 }, make(), passThrough());
+			});
+			expect(differing(alone, chained)).toBeLessThan(0.01);
+		});
+	});
+
 	describe("unchanged where nothing was wrong", () => {
 		it.for(Object.keys({ ...EFFECTS, ...TEXTURE_PATTERNS }))(
 			"%s on a sprite with its own texture draws as the effect always drew",
@@ -713,6 +759,57 @@ describe("effects place their pattern on the renderable (WebGL)", () => {
 			renderer.restore();
 		});
 
+		it("in a chain, maps them from the target's pixels, through a camera's zoom", (ctx) => {
+			requireWebGL(ctx);
+			const s = sprite({ angle: 0.7, flip: true });
+			const saved = renderer.projectionMatrix.clone();
+			// zoomed in twice, the view's corner at (20, 10)
+			renderer.setProjection(
+				new Matrix3d().ortho(20, 20 + SIZE / 2, 10 + SIZE / 2, 10, -1000, 1000),
+			);
+			renderer.save();
+			renderer.resetTransform();
+			try {
+				s.addPostEffect(EFFECTS.Vignette());
+				s.addPostEffect(passThrough());
+				s.preDraw(renderer);
+				const space = s._effectSpace;
+				expect(space.mode).toBe(LOCAL_MODE.chain);
+				// where the corners of the art land on the target, in pixels
+				const m = renderer.currentTransform.val;
+				const toTarget = (x, y) => {
+					const wx = m[0] * x + m[4] * y + m[12];
+					const wy = m[1] * x + m[5] * y + m[13];
+					return [(wx - 20) * 2, (wy - 10) * 2];
+				};
+				const local = ([x, y]) => {
+					return [
+						space.localX[0] * x + space.localX[1] * y + space.localX[2],
+						space.localY[0] * x + space.localY[1] * y + space.localY[2],
+					];
+				};
+				const corners = [
+					[s.pos.x, s.pos.y, 0, 0],
+					[s.pos.x + ART, s.pos.y, 1, 0],
+					[s.pos.x, s.pos.y + ART, 0, 1],
+					[s.pos.x + ART, s.pos.y + ART, 1, 1],
+				];
+				for (const [x, y, u, v] of corners) {
+					const [lu, lv] = local(toTarget(x, y));
+					expect(lu).toBeCloseTo(u, 5);
+					expect(lv).toBeCloseTo(v, 5);
+				}
+				// and its pixels are twice its size there, scaled and zoomed
+				const scale = renderer._effectScales.get(s);
+				expect(scale[0]).toBeCloseTo(SCALE * 2, 5);
+				expect(scale[1]).toBeCloseTo(SCALE * 2, 5);
+				s.postDraw(renderer);
+			} finally {
+				renderer.restore();
+				renderer.setProjection(saved);
+			}
+		});
+
 		it("leaves a renderable it cannot place in the space uv always was", (ctx) => {
 			requireWebGL(ctx);
 			// no finite size: nothing to be 0..1 across
@@ -737,14 +834,33 @@ describe("effects place their pattern on the renderable (WebGL)", () => {
 			expect(fx._shader._uniformCache.ME_mode).toBe(LOCAL_MODE.uv);
 		});
 
-		it("gives a camera's chain no renderable space", () => {
+		it("gives a camera's chain no renderable space, nor its pixel size", () => {
 			const bare = Object.create(Renderer.prototype);
 			bare._effectSpaces = new WeakMap();
+			bare._effectScales = new WeakMap();
 			bare._chainSpace = { mode: LOCAL_MODE.chain };
+			bare._chainScale = [2, 2];
 			const camera = { _postEffectManaged: true };
 			bare._effectSpaces.set(camera, { mode: LOCAL_MODE.chain });
+			bare._effectScales.set(camera, [2, 2]);
 			bare._beginChainSpace(camera);
 			expect(bare._chainSpace).toBe(null);
+			expect(bare._chainScale).toBe(null);
+		});
+
+		it("hands a chain the size of its renderable's pixels, until it is done", () => {
+			const bare = Object.create(Renderer.prototype);
+			bare._effectSpaces = new WeakMap();
+			bare._effectScales = new WeakMap();
+			const sprite = {};
+			const scale = [3, 0.5];
+			bare._effectScales.set(sprite, scale);
+			bare._beginChainSpace(sprite);
+			expect(bare._chainScale).toBe(scale);
+			// taken once: a later chain of the same renderable is measured anew
+			expect(bare._effectScales.has(sprite)).toBe(false);
+			bare._clearChainSpace();
+			expect(bare._chainScale).toBe(null);
 		});
 	});
 

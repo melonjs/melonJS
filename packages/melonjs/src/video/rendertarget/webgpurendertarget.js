@@ -96,10 +96,12 @@ export default class WebGPURenderTarget extends RenderTarget {
 		 * @type {number}
 		 */
 		this.generation = 0;
-		// lazy (view + linear clamp sampler) pairing against the material
-		// layout — what a blit binds at group 1 to sample this target
+		// lazy (view + clamp sampler) pairing against the material layout —
+		// what a blit binds at group 1 to sample this target
 		this.materialBindGroup = null;
 		this.materialBindGroupGeneration = -1;
+		// the texture filter that bind group samples at
+		this.materialBindGroupFilter = null;
 		// consumed by the renderer as a colorLoadOp "clear" on next retarget
 		this.pendingClear = false;
 
@@ -181,19 +183,22 @@ export default class WebGPURenderTarget extends RenderTarget {
 	}
 
 	/**
-	 * The group-1 (material) bind group sampling this target with a linear
-	 * clamp sampler — what the effect blit binds as its source. Rebuilt
-	 * lazily when the backing texture was reallocated.
+	 * The group-1 (material) bind group sampling this target with a clamp
+	 * sampler at the game's texture filter, as a sprite samples its own
+	 * texture — what the effect blit binds as its source. Rebuilt lazily
+	 * when the backing texture was reallocated or the filter changed.
 	 * @returns {GPUBindGroup} the bind group
 	 * @ignore
 	 * @internal
 	 */
 	getMaterialBindGroup() {
+		const renderer = this.renderer;
+		const filter = renderer.getDefaultTextureFilter();
 		if (
 			this.materialBindGroup === null ||
-			this.materialBindGroupGeneration !== this.generation
+			this.materialBindGroupGeneration !== this.generation ||
+			this.materialBindGroupFilter !== filter
 		) {
-			const renderer = this.renderer;
 			this.materialBindGroup = renderer.device.createBindGroup({
 				label: "melonJS render-target material",
 				layout: renderer.pipelineCache.materialLayout,
@@ -201,11 +206,12 @@ export default class WebGPURenderTarget extends RenderTarget {
 					{ binding: 0, resource: this.colorView },
 					{
 						binding: 1,
-						resource: renderer.textureStore.getSampler("linear", "no-repeat"),
+						resource: renderer.textureStore.getSampler(filter, "no-repeat"),
 					},
 				],
 			});
 			this.materialBindGroupGeneration = this.generation;
+			this.materialBindGroupFilter = filter;
 		}
 		return this.materialBindGroup;
 	}
