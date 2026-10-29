@@ -115,7 +115,15 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 
 	/** do something in a while (unless we are gone by then) */
 	protected later(ms: number, fn: () => void) {
-		this.timers.push(timer.setTimeout(fn, ms));
+		this.timers.push(
+			timer.setTimeout(() => {
+				// gone, and maybe destroyed already: a flattened enemy eaten or
+				// knocked out, or its level reloaded, before it got back up
+				if (this.ancestor) {
+					fn();
+				}
+			}, ms),
+		);
 	}
 
 	override update(dt: number) {
