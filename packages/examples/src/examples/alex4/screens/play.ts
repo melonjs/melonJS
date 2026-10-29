@@ -7,6 +7,7 @@
 import {
 	type Application,
 	audio,
+	event,
 	input,
 	level,
 	Stage,
@@ -38,11 +39,22 @@ export class PlayScreen extends Stage {
 	private app!: Application;
 	private hud: HUD | undefined;
 	private pauseMessage: PauseMessage | undefined;
+	/** the banner is up because the window lost the focus, not for P */
+	private pausedByBlur = false;
 	private gameOver = false;
 
 	override onResetEvent(app: Application) {
 		this.app = app;
 		this.gameOver = false;
+		// a game left while paused took its banner with it
+		this.pauseMessage = undefined;
+		this.pausedByBlur = false;
+
+		// melonJS pauses the game when the window loses the focus (pauseOnBlur)
+		// and resumes it when it comes back: the banner says so, as it did in
+		// the original
+		event.on(event.BLUR, this.onBlur);
+		event.on(event.FOCUS, this.onFocus);
 
 		// enable the keyboard
 		input.bindKey(input.KEY.LEFT, "left");
@@ -111,8 +123,7 @@ export class PlayScreen extends Stage {
 			if (this.pauseMessage) {
 				state.resume(true);
 				this.resumeJingle(true);
-				this.app.world.removeChild(this.pauseMessage);
-				this.pauseMessage = undefined;
+				this.hidePause();
 			} else {
 				// end a hit-stop first, or the pause would do nothing and the
 				// end of the hit-stop would resume the game under the panel
@@ -121,8 +132,7 @@ export class PlayScreen extends Stage {
 				}
 				state.pause(true);
 				this.resumeJingle(false);
-				this.pauseMessage = new PauseMessage();
-				this.app.world.addChild(this.pauseMessage, 102);
+				this.showPause();
 			}
 		}
 		if (input.isKeyPressed("quit")) {
@@ -149,6 +159,34 @@ export class PlayScreen extends Stage {
 		}
 	}
 
+	private showPause() {
+		this.pauseMessage = new PauseMessage();
+		this.app.world.addChild(this.pauseMessage, 102);
+	}
+
+	private hidePause() {
+		if (this.pauseMessage) {
+			this.app.world.removeChild(this.pauseMessage);
+			this.pauseMessage = undefined;
+		}
+		this.pausedByBlur = false;
+	}
+
+	/** the window lost the focus (a tab switch fires this twice) */
+	private onBlur = () => {
+		if (!this.pauseMessage && !this.gameOver) {
+			this.showPause();
+			this.pausedByBlur = true;
+		}
+	};
+
+	/** and got it back: the game resumes, unless P paused it */
+	private onFocus = () => {
+		if (this.pausedByBlur) {
+			this.hidePause();
+		}
+	};
+
 	/**
 	 * the jingle before the level song is not the track, which is all that
 	 * state.pause(true) pauses: it holds still too (and the song it starts
@@ -172,6 +210,8 @@ export class PlayScreen extends Stage {
 	}
 
 	override onDestroyEvent(app: Application) {
+		event.off(event.BLUR, this.onBlur);
+		event.off(event.FOCUS, this.onFocus);
 		if (state.isPaused()) {
 			state.resume();
 		}
