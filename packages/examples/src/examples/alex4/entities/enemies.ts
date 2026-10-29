@@ -8,12 +8,14 @@ import {
 	audio,
 	type CollisionResponse,
 	collision,
+	FlashEffect,
 	type PhysicsAdapter,
 	Rect,
 	type Renderable,
 	Sprite,
 	state,
 	type TMXObject,
+	Tween,
 	timer,
 	Vector2d,
 } from "melonjs";
@@ -228,7 +230,30 @@ export class GenericEnemyEntity extends Sprite implements Hazard, Shootable {
 	shot(fromLeft: boolean) {
 		if (this.alive) {
 			this.kill(!fromLeft);
+			// an egg hits as hard as a stomp: the enemy flashes, the
+			// action holds still a moment and the screen shakes
+			this.flashLight();
+			state.freeze(HIT_STOP.stomp);
+			shake(this.parentApp.viewport, "stomp");
+			rumble(80, 0.3, 0.5);
 		}
+	}
+
+	/**
+	 * all over in the lightest green of the game (#deeed2), fading back in a
+	 * third of a second
+	 */
+	private flashLight() {
+		const effect = new FlashEffect(this.parentApp.renderer, {
+			color: [222 / 255, 238 / 255, 210 / 255],
+		});
+		effect.setIntensity(1);
+		this.addPostEffect(effect);
+		const fade = { intensity: 1 };
+		new Tween(fade)
+			.to({ intensity: 0 }, { duration: 300 })
+			.onUpdate(() => effect.setIntensity(fade.intensity))
+			.start();
 	}
 
 	/** knocked out: flip over and fall out of the screen */
