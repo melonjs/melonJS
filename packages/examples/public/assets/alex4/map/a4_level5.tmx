@@ -215,29 +215,28 @@
   <object id="176" name="cherry" x="2688" y="320" width="64" height="64"/>
   <object id="177" name="cherry" x="3008" y="320" width="64" height="64"/>
   <object id="178" name="enemy1" x="3200" y="320" width="64" height="64"/>
-  <object id="179" name="egg" x="3392" y="320" width="64" height="64"/>
-  <object id="180" name="spin" x="3392" y="320" width="64" height="64"/>
-  <object id="181" name="star" x="3520" y="320" width="64" height="64"/>
-  <object id="182" name="star" x="3776" y="320" width="64" height="64"/>
-  <object id="183" name="spike" x="4864" y="320" width="64" height="64"/>
-  <object id="184" name="star" x="5184" y="320" width="64" height="64"/>
-  <object id="185" name="enemy1" x="5248" y="320" width="64" height="64"/>
-  <object id="186" name="star" x="5504" y="320" width="64" height="64"/>
-  <object id="187" name="enemy1" x="5760" y="320" width="64" height="64"/>
-  <object id="188" name="enemy1" x="5824" y="320" width="64" height="64"/>
-  <object id="189" name="star" x="8256" y="320" width="64" height="64"/>
-  <object id="190" name="spin" x="512" y="384" width="64" height="64"/>
-  <object id="191" name="spin" x="1664" y="384" width="64" height="64"/>
-  <object id="192" name="spike" x="4416" y="384" width="64" height="64"/>
-  <object id="193" name="spike" x="4480" y="384" width="64" height="64"/>
-  <object id="194" name="spike" x="4544" y="384" width="64" height="64"/>
-  <object id="195" name="spike" x="4608" y="384" width="64" height="64"/>
-  <object id="196" name="spike" x="7680" y="384" width="64" height="64"/>
-  <object id="197" name="spike" x="7744" y="384" width="64" height="64"/>
-  <object id="198" name="spike" x="7808" y="384" width="64" height="64"/>
-  <object id="199" name="spike" x="7936" y="384" width="64" height="64"/>
-  <object id="200" name="spike" x="8000" y="384" width="64" height="64"/>
-  <object id="201" name="spike" x="8064" y="384" width="64" height="64"/>
-  <object id="202" name="spin" x="8192" y="384" width="64" height="64"/>
+  <object id="179" name="spin" x="3392" y="320" width="64" height="64"/>
+  <object id="180" name="star" x="3520" y="320" width="64" height="64"/>
+  <object id="181" name="star" x="3776" y="320" width="64" height="64"/>
+  <object id="182" name="spike" x="4864" y="320" width="64" height="64"/>
+  <object id="183" name="star" x="5184" y="320" width="64" height="64"/>
+  <object id="184" name="enemy1" x="5248" y="320" width="64" height="64"/>
+  <object id="185" name="star" x="5504" y="320" width="64" height="64"/>
+  <object id="186" name="enemy1" x="5760" y="320" width="64" height="64"/>
+  <object id="187" name="enemy1" x="5824" y="320" width="64" height="64"/>
+  <object id="188" name="star" x="8256" y="320" width="64" height="64"/>
+  <object id="189" name="spin" x="512" y="384" width="64" height="64"/>
+  <object id="190" name="spin" x="1664" y="384" width="64" height="64"/>
+  <object id="191" name="spike" x="4416" y="384" width="64" height="64"/>
+  <object id="192" name="spike" x="4480" y="384" width="64" height="64"/>
+  <object id="193" name="spike" x="4544" y="384" width="64" height="64"/>
+  <object id="194" name="spike" x="4608" y="384" width="64" height="64"/>
+  <object id="195" name="spike" x="7680" y="384" width="64" height="64"/>
+  <object id="196" name="spike" x="7744" y="384" width="64" height="64"/>
+  <object id="197" name="spike" x="7808" y="384" width="64" height="64"/>
+  <object id="198" name="spike" x="7936" y="384" width="64" height="64"/>
+  <object id="199" name="spike" x="8000" y="384" width="64" height="64"/>
+  <object id="200" name="spike" x="8064" y="384" width="64" height="64"/>
+  <object id="201" name="spin" x="8192" y="384" width="64" height="64"/>
  </objectgroup>
 </map>

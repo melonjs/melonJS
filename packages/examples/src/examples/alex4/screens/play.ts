@@ -41,6 +41,8 @@ export class PlayScreen extends Stage {
 	private pauseMessage: PauseMessage | undefined;
 	/** the banner is up because the window lost the focus, not for P */
 	private pausedByBlur = false;
+	/** the jingle before the level song, while it plays */
+	private jingle: { name: string; id: number } | undefined;
 	private gameOver = false;
 
 	override onResetEvent(app: Application) {
@@ -106,15 +108,19 @@ export class PlayScreen extends Stage {
 		const map = level.getCurrentLevel() as LevelMap;
 		// the menu song was the track until now: the jingle plays alone
 		audio.stopTrack();
-		audio.play(map.boss ? "boss_start" : "level_start", false, () => {
+		const name = map.boss ? "boss_start" : "level_start";
+		const id = audio.play(name, false, () => {
+			this.jingle = undefined;
 			audio.playTrack(map.boss ? "boss_song" : "level_song");
 		});
+		this.jingle = { name, id };
 	}
 
 	/** stop the music (stopping the jingle also cancels the song after it) */
 	private stopLevelSong() {
 		audio.stop("level_start");
 		audio.stop("boss_start");
+		this.jingle = undefined;
 		audio.stopTrack();
 	}
 
@@ -196,12 +202,17 @@ export class PlayScreen extends Stage {
 	 * once over waits)
 	 */
 	private resumeJingle(resume: boolean) {
-		for (const name of ["level_start", "boss_start"]) {
-			if (resume) {
-				audio.resume(name);
-			} else {
-				audio.pause(name);
-			}
+		// by its id, and only while it plays: audio.resume() starts a sound
+		// that is not paused from the beginning, so P played the jingles again
+		// over the song
+		if (!this.jingle) {
+			return;
+		}
+		const { name, id } = this.jingle;
+		if (resume) {
+			audio.resume(name, id);
+		} else {
+			audio.pause(name, id);
 		}
 	}
 

@@ -4,14 +4,7 @@
  * Unlike the other examples, this one is GPL-2.0-or-later, as is the original
  * game it is ported from — see `packages/examples/LICENSE.md`.
  */
-import {
-	BitmapText,
-	Container,
-	type GlyphEffect,
-	Sprite,
-	Tween,
-	UIPanel,
-} from "melonjs";
+import { BitmapText, Container, Sprite, Tween, UIPanel } from "melonjs";
 import { HEIGHT, PALETTE, WIDTH } from "../constants";
 import { gameState } from "../gameState";
 import { shaders } from "../shaders";
@@ -48,6 +41,13 @@ class HUDCounter extends Container {
 		this.addChild(sprite);
 		this.label = new BitmapText(sprite.width, -2, { font: "atascii40" });
 		this.addChild(this.label);
+	}
+
+	/** where its number ends, with a digit's gap after it */
+	numberEnd() {
+		return (
+			this.pos.x + this.label.pos.x + (String(this.value).length + 0.5) * DIGIT
+		);
 	}
 
 	override update(dt: number) {
@@ -92,9 +92,10 @@ class HUDEnergy extends Container {
 /************************************************************************************/
 export class HUD extends Container {
 	score: BitmapText;
+	private eggs: HUDCounter;
 	private shown = -1;
-	/** time left of the score's hop, when points land in it */
-	private hop = 0;
+	/** time since points last landed in the score, while it bounces */
+	private bounce = -1;
 
 	constructor() {
 		super(0, HEIGHT - 40, WIDTH, 40);
@@ -114,7 +115,8 @@ export class HUD extends Container {
 		// lives, hearts, eggs and score, spread evenly over the bar
 		this.addChild(new HUDCounter(0, "hud_life", () => gameState.lives));
 		this.addChild(new HUDEnergy(1));
-		this.addChild(new HUDCounter(2, "hud_egg", () => gameState.eggs));
+		this.eggs = new HUDCounter(2, "hud_egg", () => gameState.eggs);
+		this.addChild(this.eggs);
 		this.score = new BitmapText(COLUMN * 3.5, -2, {
 			font: "atascii40",
 			textAlign: "center",
@@ -130,10 +132,31 @@ export class HUD extends Container {
 			this.shown = score;
 			this.score.setText(score);
 		}
-		if (this.hop > 0) {
-			this.hop -= dt;
-			if (this.hop <= 0) {
-				this.score.glyphEffect = null;
+		if (this.bounce >= 0) {
+			this.bounce += dt;
+			const size = bounceSize(this.bounce);
+			// as wide as there is room for, between the eggs and the right edge
+			// of the screen (a long score has hardly any): taller all the same
+			const width = String(this.shown).length * DIGIT;
+			const room = WIDTH - 4 - this.eggs.numberEnd();
+			const wide = Math.min(
+				size,
+				Math.max(Math.floor(room / width / STEP) * STEP, 1),
+			);
+			// about the middle of the digits, so that it grows every way, but
+			// pushed back in from the right edge
+			const over = Math.max(
+				this.score.pos.x + (width * wide) / 2 - (WIDTH - 4),
+				0,
+			);
+			this.score.currentTransform
+				.identity()
+				.translate(-over, DIGIT / 2)
+				.scale(wide, size)
+				.translate(0, -DIGIT / 2);
+			if (this.bounce >= GROW + SETTLE) {
+				this.bounce = -1;
+				this.score.currentTransform.identity();
 			}
 		}
 		return super.update(dt);
@@ -141,18 +164,38 @@ export class HUD extends Container {
 
 	/** points just landed in the score */
 	bump() {
-		// assigned again, so that its clock starts over
-		this.score.glyphEffect = hop;
-		this.hop = HOP;
+		// from the start again, at whatever size it is
+		this.bounce = 0;
 	}
 }
 
-/** the score hops up and back down, a pixel of the original at a time */
-const hop: GlyphEffect = (out, ctx) => {
-	const k = Math.min(ctx.time / HOP, 1);
-	out.offsetY = -Math.round(Math.sin(k * Math.PI) * 2) * 4;
-};
-const HOP = 200;
+/** how big the score swells when points land in it */
+const PEAK = 1.4;
+/** how long it takes to swell */
+const GROW = 80;
+/** then it bounces back to its size: once every BOUNCE, less each time */
+const BOUNCE = 300;
+const DAMPING = 250;
+const SETTLE = 560;
+/** one pixel of the original more or less, on each pixel of the digits */
+const STEP = 1 / 5;
+
+/** the size of the score, `time` after points landed in it */
+function bounceSize(time: number) {
+	if (time < GROW) {
+		return snap(1 + (PEAK - 1) * Tween.Easing.Quadratic.Out(time / GROW));
+	}
+	const t = time - GROW;
+	return snap(
+		1 +
+			(PEAK - 1) *
+				Math.cos((t / BOUNCE) * 2 * Math.PI) *
+				Math.exp(-t / DAMPING),
+	);
+}
+
+/** in whole pixels of the original, so that the digits stay sharp */
+const snap = (size: number) => Math.round(size / STEP) * STEP;
 
 /************************************************************************************/
 /*      the bouncing "let's go!" sign, and the level name                           */

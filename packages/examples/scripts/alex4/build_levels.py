@@ -180,7 +180,9 @@ def convert_original(m, levelid, path, scene=False):
     for y in range(ROWS):
         for x in range(w):
             tile, mask, typ, item = cell(x, y)
-            if item in ITEMS:
+            # but in a solid block that does not break: the egg in a spinner
+            # of level 5, which the original draws over and Alex never reaches
+            if item in ITEMS and not (mask and typ != T_BRK):
                 objects.append(dict(name=ITEMS[item], x=x * T, y=y * T))
             if typ == T_DEAD:
                 objects.append(dict(name="spike", x=x * T, y=y * T))
