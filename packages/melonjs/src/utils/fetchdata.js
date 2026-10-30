@@ -34,6 +34,9 @@ function fetchDataXHR(url, responseType, settings) {
 	return new Promise((resolve, reject) => {
 		const xhr = new XMLHttpRequest();
 		xhr.open("GET", url, true);
+		// XHR always sends same-origin credentials; `withCredentials` only adds
+		// them to cross-origin requests, matching the `fetch` path's
+		// "same-origin" / "include"
 		xhr.withCredentials = settings.withCredentials === true;
 		// `json` is parsed from the response text (matches `fetch`'s throw-on-
 		// invalid-JSON); blob/arrayBuffer use the native XHR response types.
@@ -206,8 +209,14 @@ export function fetchData(url, responseType, settings = {}) {
 					method: "GET",
 					// internally nocache is a string with a generated random number
 					cache: settings.nocache === "" ? "no-cache" : "reload",
-					credentials: settings.withCredentials === true ? "include" : "omit",
-					// see setting.crossorigin, "anonymous" is used for cross-origin requests
+					// same-origin requests always carry cookies / HTTP auth (the
+					// browser's own `fetch` default), so assets behind a same-origin
+					// session load; `withCredentials` extends that to cross-origin.
+					credentials:
+						settings.withCredentials === true ? "include" : "same-origin",
+					// see setting.crossorigin, "anonymous" is used for cross-origin
+					// requests. A same-origin response is readable in either mode; a
+					// cross-origin one under "no-cors" is opaque (status 0, empty body).
 					mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors",
 				});
 
