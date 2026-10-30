@@ -21,6 +21,8 @@ interface ButtonBinding {
 	value: number;
 	pressed: boolean;
 	threshold?: number | undefined;
+	/** the source the key was pressed with, to release it with the same */
+	trigger?: number | undefined;
 }
 
 interface GamepadBindings {
@@ -105,6 +107,43 @@ const bindings: Record<string, GamepadBindings | undefined> = {};
 // mapping list
 const remap: Map<string, GamepadMapping> = new Map();
 
+/**
+ * A gamepad the game drives itself, such as on-screen touch controls.
+ *
+ * Added to a slot with {@link input.addVirtualGamepad}, it is read there as a
+ * pad the browser reports would be, so everything bound with
+ * {@link input.bindGamepad} answers to it. Its buttons and axes are in the
+ * standard layout ({@link input.GAMEPAD}), and the game changes them in place
+ * as the player presses: they are read again every frame.
+ * @category Input
+ */
+export interface VirtualGamepad {
+	/** what the pad is known by, as a real pad's `id` */
+	readonly id: string;
+	/**
+	 * the buttons, indexed by {@link input.GAMEPAD}.BUTTONS. A button that is
+	 * not there reads as released.
+	 */
+	readonly buttons: readonly {
+		readonly pressed: boolean;
+		readonly value: number;
+	}[];
+	/**
+	 * the axes, indexed by {@link input.GAMEPAD}.AXES, each from -1 to 1. An
+	 * axis that is not there is not read.
+	 */
+	readonly axes: readonly number[];
+	/**
+	 * what {@link input.vibrateGamepad} drives when the slot holds no real
+	 * pad, such as one built on `navigator.vibrate`. Without it a vibration
+	 * on the virtual pad does nothing.
+	 */
+	readonly vibrationActuator?: GamepadHapticActuator;
+}
+
+// virtual pads, by slot
+const virtualGamepads: (VirtualGamepad | undefined)[] = [];
+
 // Default gamepad mappings
 (
 	[
@@ -133,22 +172,167 @@ const remap: Map<string, GamepadMapping> = new Map();
 });
 
 /**
+ * A button that is not there reads as released
+ * @ignore
+ * @internal
+ */
+const RELEASED: Readonly<{ value: number; pressed: boolean }> = Object.freeze({
+	value: 0,
+	pressed: false,
+});
+
+/**
+ * A button of a real pad, after its mapping, or null when the mapping has no
+ * such button.
+ * @ignore
+ * @internal
+ */
+function readButton(
+	gamepad: Gamepad,
+	mapping: GamepadMapping | null,
+	button: number,
+): { value: number; pressed: boolean } | null {
+	let mapped_button = button;
+	let mapped_axis = -1;
+
+	// Remap buttons if necessary
+	if (mapping) {
+		mapped_button = mapping.buttons[button];
+		mapped_axis = mapping.analog[button];
+		if (mapped_button < 0 && mapped_axis < 0) {
+			// Button is not mapped
+			return null;
+		}
+	}
+
+	// Get mapped button
+	let current: { value: number; pressed: boolean } =
+		gamepad.buttons[mapped_button] || RELEASED;
+
+	// Remap an axis to an analog button
+	if (mapping && mapped_axis >= 0) {
+		const value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, button);
+
+		// Create a new object, because GamepadButton is read-only
+		current = {
+			value: value,
+			pressed: current.pressed || Math.abs(value) >= deadzone,
+		};
+	}
+	return current;
+}
+
+/**
+ * An axis of a real pad, after its mapping, or undefined when the mapping
+ * has no such axis or the pad does not report it.
+ * @ignore
+ * @internal
+ */
+function readAxis(
+	gamepad: Gamepad,
+	mapping: GamepadMapping | null,
+	axis: number,
+): number | undefined {
+	let mapped_axis = axis;
+
+	// Remap axes if necessary
+	if (mapping) {
+		mapped_axis = mapping.axes[axis];
+		if (mapped_axis < 0) {
+			// axe is not mapped
+			return undefined;
+		}
+	}
+
+	// retrieve the current value and normalize if necessary
+	const value = gamepad.axes[mapped_axis];
+	if (typeof value === "undefined") {
+		return undefined;
+	}
+	return mapping ? mapping.normalize_fn(value, axis, -1) : value;
+}
+
+/**
+ * Let go of a pressed binding, with the source it was pressed with
+ * @ignore
+ * @internal
+ */
+function release(binding: ButtonBinding): void {
+	triggerKeyEvent(binding.keyCode, false, binding.trigger);
+	binding.value = 0;
+	binding.pressed = false;
+}
+
+/**
+ * Let go of everything a slot holds pressed
+ * @ignore
+ * @internal
+ */
+function releaseAll(index: string): void {
+	const binding = bindings[index];
+	if (!binding) {
+		return;
+	}
+	for (const button of Object.values(binding.buttons)) {
+		if (button.pressed) {
+			release(button);
+		}
+	}
+	for (const axis of Object.values(binding.axes)) {
+		for (const half of Object.values(axis)) {
+			if (half.pressed) {
+				release(half);
+			}
+		}
+	}
+}
+
+/**
+ * The pads the browser reports, as an array that is empty without the
+ * Gamepad API
+ * @ignore
+ * @internal
+ */
+function browserGamepads(): readonly (Gamepad | null)[] {
+	return hasGamepadApi() ? globalThis.navigator.getGamepads() : [];
+}
+
+/**
+ * Whether the browser has the Gamepad API
+ * @ignore
+ * @internal
+ */
+function hasGamepadApi(): boolean {
+	// typed as always there, which it is not outside a browser window
+	return typeof globalThis.navigator?.getGamepads === "function";
+}
+
+/**
  * Update gamepad status
+ *
+ * A slot is read from the pad the browser reports in it and from the virtual
+ * pad added to it, whichever has one: a button is pressed when either has it
+ * pressed, and an axis takes the value furthest from rest. A real pad's
+ * mapping applies to the real pad only, as a virtual pad is in the standard
+ * layout already.
  * @ignore
  * @internal
  */
 const updateGamepads = function (): void {
-	const gamepads = navigator.getGamepads();
+	const gamepads = browserGamepads();
 
 	// Trigger button bindings
 	Object.keys(bindings).forEach((index) => {
-		const gamepad = gamepads[index as any];
-		if (!gamepad) {
+		const gamepad = gamepads[index as any] ?? null;
+		const virtual = virtualGamepads[index as any];
+		if (!gamepad && !virtual) {
+			// the pad is gone: let go of what it held, or it stays pressed
+			releaseAll(index);
 			return;
 		}
 
 		let mapping: GamepadMapping | null = null;
-		if (gamepad.mapping !== "standard") {
+		if (gamepad && gamepad.mapping !== "standard") {
 			mapping = remap.get(gamepad.id) || null;
 		}
 
@@ -157,45 +341,35 @@ const updateGamepads = function (): void {
 			return;
 		}
 
+		// the slot is known by its real pad when it has one, as
+		// `activeGamepad` and the vibration calls see it
+		const id = gamepad ? gamepad.id : (virtual?.id ?? "");
+
 		// Iterate all buttons that have active bindings
 		Object.keys(binding.buttons).forEach((button) => {
 			const last = binding.buttons[button];
-			let mapped_button: any = button;
-			let mapped_axis = -1;
 
-			// Remap buttons if necessary
-			if (mapping) {
-				mapped_button = mapping.buttons[button as any];
-				mapped_axis = mapping.analog[button as any];
-				if (mapped_button < 0 && mapped_axis < 0) {
-					// Button is not mapped
-					return;
-				}
+			const fromPad = gamepad ? readButton(gamepad, mapping, +button) : null;
+			const fromVirtual = virtual ? virtual.buttons[+button] || RELEASED : null;
+			let current = fromPad ?? fromVirtual;
+			if (!current) {
+				// Button is not mapped
+				return;
 			}
-
-			// Get mapped button
-			let current: { value: number; pressed: boolean } = gamepad.buttons[
-				mapped_button
-			] || { value: 0, pressed: false };
-
-			// Remap an axis to an analog button
-			if (mapping) {
-				if (mapped_axis >= 0) {
-					const value = mapping.normalize_fn(
-						gamepad.axes[mapped_axis],
-						-1,
-						+button,
-					);
-
-					// Create a new object, because GamepadButton is read-only
-					current = {
-						value: value,
-						pressed: current.pressed || Math.abs(value) >= deadzone,
-					};
-				}
+			if (fromPad && fromVirtual) {
+				current = {
+					value: Math.max(fromPad.value, fromVirtual.value),
+					pressed: fromPad.pressed || fromVirtual.pressed,
+				};
 			}
 
 			emit(GAMEPAD_UPDATE, index, "buttons", +button, current);
+
+			// the key event carries the button the binding names, as with a
+			// standard pad (a remapped one reports its own index in the
+			// browser, which a virtual pad does not have)
+			const mapped_button =
+				mapping && fromPad ? mapping.buttons[+button] : +button;
 
 			// Edge detection
 			if (!last.pressed && current.pressed) {
@@ -206,10 +380,11 @@ const updateGamepads = function (): void {
 				// can legitimately hold a zero, since binding one half auto
 				// creates the other.
 				lastActiveIndex = Number(index);
-				lastActiveId = gamepad.id;
-				triggerKeyEvent(last.keyCode, true, Number(mapped_button) + 256);
+				lastActiveId = id;
+				last.trigger = mapped_button + 256;
+				triggerKeyEvent(last.keyCode, true, last.trigger);
 			} else if (last.pressed && !current.pressed) {
-				triggerKeyEvent(last.keyCode, false, Number(mapped_button) + 256);
+				release(last);
 			}
 
 			// Update last button state
@@ -220,54 +395,53 @@ const updateGamepads = function (): void {
 		// Iterate all axes that have active bindings
 		Object.keys(binding.axes).forEach((axis) => {
 			const last = binding.axes[axis];
-			let mapped_axis: any = axis;
 
-			// Remap buttons if necessary
-			if (mapping) {
-				mapped_axis = mapping.axes[axis as any];
-				if (mapped_axis < 0) {
-					// axe is not mapped
-					return;
-				}
-			}
-
-			// retrieve the current value and normalize if necessary
-			let value = gamepad.axes[mapped_axis];
-			if (typeof value === "undefined") {
+			const fromPad = gamepad ? readAxis(gamepad, mapping, +axis) : undefined;
+			const fromVirtual = virtual ? virtual.axes[+axis] : undefined;
+			let value: number;
+			if (fromPad !== undefined && fromVirtual !== undefined) {
+				value =
+					Math.abs(fromVirtual) > Math.abs(fromPad) ? fromVirtual : fromPad;
+			} else if (fromPad !== undefined) {
+				value = fromPad;
+			} else if (fromVirtual !== undefined) {
+				value = fromVirtual;
+			} else {
+				// axis is not mapped, or not reported
 				return;
 			}
-			if (mapping) {
-				value = mapping.normalize_fn(value, +axis, -1);
-			}
+
+			const mapped_axis =
+				mapping && fromPad !== undefined ? mapping.axes[+axis] : +axis;
+
 			// normalize value into a [-1, 1] range value (treat 0 as positive)
 			let range: number = Math.sign(value) || 1;
-			if (last[range].keyCode === 0) {
-				return;
-			}
+			// a half bound to no key never presses, but the stick crossing
+			// into it still lets go of the other half: a stick released hard
+			// often comes to rest just past the centre
+			const bound = last[range].keyCode !== 0;
 			const pressed =
+				bound &&
 				Math.abs(value) >= deadzone + Math.abs(last[range].threshold || 0);
 
-			emit(GAMEPAD_UPDATE, index, "axes", +axis, value as any);
+			if (bound) {
+				emit(GAMEPAD_UPDATE, index, "axes", +axis, value as any);
+			}
 
 			// Edge detection
 			if (!last[range].pressed && pressed) {
 				// Release the opposite direction, if necessary
 				if (last[-range].pressed) {
-					triggerKeyEvent(
-						last[-range].keyCode,
-						false,
-						Number(mapped_axis) + 256,
-					);
-					last[-range].value = 0;
-					last[-range].pressed = false;
+					release(last[-range]);
 				}
 
 				lastActiveIndex = Number(index);
-				lastActiveId = gamepad.id;
-				triggerKeyEvent(last[range].keyCode, true, Number(mapped_axis) + 256);
+				lastActiveId = id;
+				last[range].trigger = mapped_axis + 256;
+				triggerKeyEvent(last[range].keyCode, true, last[range].trigger);
 			} else if ((last[range].pressed || last[-range].pressed) && !pressed) {
 				range = last[range].pressed ? range : -range;
-				triggerKeyEvent(last[range].keyCode, false, Number(mapped_axis) + 256);
+				release(last[range]);
 			}
 
 			// Update last axis state
@@ -408,12 +582,9 @@ export function bindGamepad(
 		throw new Error(`no action defined for keycode ${keyCode}`);
 	}
 
-	// register to the the update event if not yet done and supported by the browser
-	// if not supported, the function will fail silently (-> update loop won't be called)
-	if (
-		!has(GAME_BEFORE_UPDATE, updateGamepads) &&
-		typeof navigator.getGamepads === "function"
-	) {
+	// register to the update event if not yet done. Without the Gamepad API
+	// the loop still runs, for the virtual pads, and finds no real ones
+	if (!has(GAME_BEFORE_UPDATE, updateGamepads)) {
 		on(GAME_BEFORE_UPDATE, updateGamepads);
 	}
 
@@ -568,7 +739,9 @@ export interface GamepadVibration {
 }
 
 /**
- * The pads the browser is reporting, or undefined where it reports none.
+ * The pad in each slot: the one the browser reports, else the virtual pad
+ * added there. Undefined where the browser has no Gamepad API and no virtual
+ * pad was added.
  *
  * `vibrationActuator` is restated as OPTIONAL here. lib.dom declares it
  * always present, which is optimistic: a pad without motors does not have
@@ -578,20 +751,88 @@ export interface GamepadVibration {
  * @internal
  */
 function gamepads():
-	| (
-			| (Omit<Gamepad, "vibrationActuator"> & {
-					vibrationActuator?: GamepadHapticActuator;
-			  })
-			| null
-	  )[]
+	| readonly ({
+			readonly id: string;
+			readonly vibrationActuator?: GamepadHapticActuator | undefined;
+	  } | null)[]
 	| undefined {
-	if (
-		!globalThis.navigator ||
-		typeof globalThis.navigator.getGamepads !== "function"
-	) {
-		return undefined;
+	if (virtualGamepads.length === 0) {
+		return hasGamepadApi() ? globalThis.navigator.getGamepads() : undefined;
 	}
-	return globalThis.navigator.getGamepads();
+	const real = browserGamepads();
+	const slots = [];
+	const count = Math.max(real.length, virtualGamepads.length);
+	for (let i = 0; i < count; i++) {
+		slots.push(real[i] ?? virtualGamepads[i] ?? null);
+	}
+	return slots;
+}
+
+/**
+ * Add a virtual gamepad, such as on-screen touch controls, to a slot.
+ *
+ * Everything bound to that slot with {@link input.bindGamepad} answers to it,
+ * so a game reads touch controls and a real pad with the same code. The
+ * {@link VirtualGamepad} is read every frame: change its buttons and axes in
+ * place as the player presses.
+ *
+ * A real pad the browser reports in the same slot is read too, and either
+ * one presses a button, so a player can switch between them at any time.
+ * `activeGamepad`, `vibrateGamepad` and `hasGamepadVibration` see the real pad
+ * when there is one, and the virtual one otherwise.
+ *
+ * No {@link event.GAMEPAD_CONNECTED} is sent for a virtual pad: that event
+ * stays about hardware, so a game can listen to it to hide its touch
+ * controls when the player picks up a real pad.
+ * @param gamepad - the virtual pad
+ * @param [index=0] - the slot, 0 for the one most games bind
+ * @throws {Error} if the slot already holds a virtual pad
+ * @example
+ * const pad = {
+ *     id: "touch controls",
+ *     buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })),
+ *     axes: [0, 0, 0, 0],
+ * };
+ * me.input.addVirtualGamepad(pad);
+ * // the jump button, pressed
+ * pad.buttons[me.input.GAMEPAD.BUTTONS.FACE_1] = { pressed: true, value: 1 };
+ * // the stick, pushed right
+ * pad.axes[me.input.GAMEPAD.AXES.LX] = 1;
+ * @category Input
+ */
+export function addVirtualGamepad(gamepad: VirtualGamepad, index = 0): void {
+	if (!Number.isInteger(index) || index < 0) {
+		throw new RangeError(`invalid gamepad index ${index}`);
+	}
+	if (virtualGamepads[index]) {
+		throw new Error(`gamepad ${index} already holds a virtual gamepad`);
+	}
+	virtualGamepads[index] = gamepad;
+}
+
+/**
+ * Take a virtual gamepad out of its slot.
+ *
+ * What it held pressed is released on the next frame, as when a real pad is
+ * unplugged.
+ * @param gamepad - the virtual pad given to {@link input.addVirtualGamepad}
+ * @returns false when it was not in any slot
+ * @category Input
+ */
+export function removeVirtualGamepad(gamepad: VirtualGamepad): boolean {
+	const index = virtualGamepads.indexOf(gamepad);
+	if (index < 0) {
+		return false;
+	}
+	virtualGamepads[index] = undefined;
+	// drop the empty slots at the end, so no virtual pad means none at all
+	while (
+		virtualGamepads.length > 0 &&
+		virtualGamepads[virtualGamepads.length - 1] === undefined
+	) {
+		virtualGamepads.length--;
+	}
+	return true;
 }
 
 /**
