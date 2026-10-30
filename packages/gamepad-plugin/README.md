@@ -17,7 +17,7 @@ The sticks and buttons are drawn over the game and read by the engine as a pad i
 - drawn over the whole frame, above every renderable and every camera (a minimap does not show them), and kept across stage changes
 - drawn with the renderer's own shapes: no images to load
 - hidden while the player uses a real pad, and back on the next touch
-- a light vibration on each button press, as a real button gives, and `input.vibrateGamepad` vibrating the phone, where the browser can (Android, not iOS)
+- a light vibration on each button press, as a real button gives, and `input.vibrateGamepad` vibrating the phone, where the browser has `navigator.vibrate`: Android browsers, and apps that provide it; not Safari or the other iPhone browsers
 
 ## Install
 
