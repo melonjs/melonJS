@@ -110,15 +110,14 @@ const remap: Map<string, GamepadMapping> = new Map();
 /**
  * A gamepad the game drives itself, such as on-screen touch controls.
  *
- * Added to a slot with {@link input.addVirtualGamepad}, it is read there as a
- * pad the browser reports would be, so everything bound with
- * {@link input.bindGamepad} answers to it. Its buttons and axes are in the
- * standard layout ({@link input.GAMEPAD}), and the game changes them in place
- * as the player presses: they are read again every frame.
+ * Added to a slot with {@link input.addVirtualGamepad}, it is read every
+ * frame like a real pad in that slot, so everything bound there with
+ * {@link input.bindGamepad} works with it. Its buttons and axes follow the
+ * standard layout ({@link input.GAMEPAD}); the game updates them in place.
  * @category Input
  */
 export interface VirtualGamepad {
-	/** what the pad is known by, as a real pad's `id` */
+	/** an identifier, as a real pad's `id` */
 	readonly id: string;
 	/**
 	 * the buttons, indexed by {@link input.GAMEPAD}.BUTTONS. A button that is
@@ -365,9 +364,8 @@ const updateGamepads = function (): void {
 
 			emit(GAMEPAD_UPDATE, index, "buttons", +button, current);
 
-			// the key event carries the button the binding names, as with a
-			// standard pad (a remapped one reports its own index in the
-			// browser, which a virtual pad does not have)
+			// the trigger id: the raw index on a remapped real pad, the
+			// standard one otherwise
 			const mapped_button =
 				mapping && fromPad ? mapping.buttons[+button] : +button;
 
@@ -452,10 +450,7 @@ const updateGamepads = function (): void {
 };
 
 // gamepad connected callback
-if (
-	globalThis.navigator &&
-	typeof globalThis.navigator.getGamepads === "function"
-) {
+if (hasGamepadApi()) {
 	globalThis.addEventListener(
 		"gamepadconnected",
 		(e: GamepadEvent) => {
@@ -786,7 +781,9 @@ function gamepads():
  * controls when the player picks up a real pad.
  * @param gamepad - the virtual pad
  * @param [index=0] - the slot, 0 for the one most games bind
- * @throws {Error} if the slot already holds a virtual pad
+ * @throws {RangeError} if the index is not a slot number
+ * @throws {Error} if the slot already holds a virtual pad, or the pad is
+ * already in a slot
  * @example
  * const pad = {
  *     id: "touch controls",
@@ -806,6 +803,9 @@ export function addVirtualGamepad(gamepad: VirtualGamepad, index = 0): void {
 	}
 	if (virtualGamepads[index]) {
 		throw new Error(`gamepad ${index} already holds a virtual gamepad`);
+	}
+	if (virtualGamepads.includes(gamepad)) {
+		throw new Error("this virtual gamepad is already in a slot");
 	}
 	virtualGamepads[index] = gamepad;
 }

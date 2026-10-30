@@ -9,6 +9,7 @@ import {
 	Camera2d,
 	event,
 	input,
+	math,
 	Renderable,
 	type Renderer,
 	Stage,
@@ -26,10 +27,10 @@ const renderers: Record<string, (typeof video)[keyof typeof video]> = {
 	webgpu: video.WEBGPU,
 	auto: video.AUTO,
 };
-// `?renderer=webgl`, or `#webgl` where only the hash reaches the page
+// `#webgl`, or `?renderer=webgl`; the renderer menu sets the hash
 const rendererName =
-	new URLSearchParams(location.search).get("renderer") ??
-	(location.hash.slice(1) || "auto");
+	location.hash.slice(1) ||
+	(new URLSearchParams(location.search).get("renderer") ?? "auto");
 
 const app = new Application(960, 540, {
 	parent: "screen",
@@ -115,8 +116,8 @@ class Dot extends Renderable {
 			dy = Number(input.keyStatus("down")) - Number(input.keyStatus("up"));
 		}
 		const { width, height } = app.viewport;
-		this.pos.x = Math.min(Math.max(this.pos.x + dx * speed, 20), width - 20);
-		this.pos.y = Math.min(Math.max(this.pos.y + dy * speed, 20), height - 20);
+		this.pos.x = math.clamp(this.pos.x + dx * speed, 20, width - 20);
+		this.pos.y = math.clamp(this.pos.y + dy * speed, 20, height - 20);
 		return true;
 	}
 

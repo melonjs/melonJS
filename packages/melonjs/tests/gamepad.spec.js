@@ -703,6 +703,81 @@ describe("Gamepad", () => {
 			expect(input.keyStatus("vpadRight")).toBe(false);
 		});
 
+		it("lets go of a stick bound on its negative side when it comes back to 0", () => {
+			// 0 counts as the positive half, which has no key here
+			input.bindKey(input.KEY.E, "vpadUp");
+			input.bindGamepad(
+				0,
+				{ type: "axes", code: AXES.LY, threshold: -0.3 },
+				input.KEY.E,
+			);
+			const pad = add(virtualPad());
+			pad.axes[AXES.LY] = -0.9;
+			poll();
+			expect(input.keyStatus("vpadUp")).toBe(true);
+
+			pad.axes[AXES.LY] = 0;
+			poll();
+			expect(input.keyStatus("vpadUp")).toBe(false);
+			input.unbindGamepad(0, AXES.LY, "axes");
+			input.unbindKey(input.KEY.E);
+		});
+
+		it("keeps an action held on the keyboard when the pad lets go of it", () => {
+			const pad = add(virtualPad());
+			input.triggerKeyEvent(input.KEY.Q, true);
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			press(pad, BUTTONS.FACE_1, false);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+			input.triggerKeyEvent(input.KEY.Q, false);
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("releases a remapped pad's key with the id it was pressed with", () => {
+			// a non-standard pad whose FACE_1 is its raw button 1: the key is
+			// pressed with that raw index, and must be let go with it when
+			// the slot falls back to the virtual pad, or the next press of
+			// the same button is ignored
+			input.setGamepadMapping("Remapped Pad", {
+				axes: [0, 1, 2, 3],
+				buttons: [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+			});
+			const real = padWithoutMotors();
+			real.id = "Remapped Pad";
+			real.mapping = "";
+			pads[0] = real;
+			add(virtualPad());
+
+			real.buttons[1] = { pressed: true, value: 1 };
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+
+			// unplugged while held: the virtual pad is all the slot has
+			pads[0] = null;
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+
+			// plugged back in and pressed again
+			pads[0] = real;
+			real.buttons[1] = { pressed: false, value: 0 };
+			poll();
+			real.buttons[1] = { pressed: true, value: 1 };
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+			real.buttons[1] = { pressed: false, value: 0 };
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("refuses to put one pad in two slots", () => {
+			const pad = add(virtualPad());
+			expect(() => {
+				input.addVirtualGamepad(pad, 1);
+			}).toThrow();
+		});
+
 		it("lets go of what a real pad held when it is unplugged", () => {
 			const real = padWithoutMotors();
 			pads[0] = real;

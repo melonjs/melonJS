@@ -1,4 +1,4 @@
-import { input, type Renderer, Text } from "melonjs";
+import { input, math, type Renderer, Text } from "melonjs";
 import type { VirtualPad } from "./pad.ts";
 import type {
 	ButtonOptions,
@@ -9,11 +9,8 @@ import type {
 
 const { AXES, BUTTONS } = input.GAMEPAD;
 
-/**
- * Key events from the controls are told apart from the keyboard's by their
- * source, so a key held on both is only let go once both let go of it. The
- * engine uses 256 and up for gamepads; this stays clear of them.
- */
+// each control presses its keys under its own source id, so a key also held
+// on the keyboard stays down until both let go (gamepads use 256 and up)
 let nextKeySource = 1024;
 
 /** a key pressed or released by a control */
@@ -103,7 +100,7 @@ export class VirtualStick {
 		this.options = options;
 		this.side = options.side ?? side;
 		this.floating = options.floating ?? false;
-		this.deadzone = Math.min(Math.max(options.deadzone ?? 0.1, 0), 0.95);
+		this.deadzone = math.clamp(options.deadzone ?? 0.1, 0, 0.95);
 		this.axisX = this.side === "left" ? AXES.LX : AXES.RX;
 		this.axisY = this.side === "left" ? AXES.LY : AXES.RY;
 		this.dpad = options.dpad ?? this.side === "left";
@@ -150,14 +147,13 @@ export class VirtualStick {
 			// its half of the screen
 			return this.side === "left" ? x < width / 2 : x >= width / 2;
 		}
-		// a little past its base, as a thumb is not a mouse
+		// a little past its base, for a thumb
 		return (
 			Math.hypot(x - this.center.x, y - this.center.y) <= this.radius * 1.25
 		);
 	}
 
 	/**
-	 * a finger takes the stick
 	 * @param pointerId - the pointer
 	 * @param x - in viewport pixels
 	 * @param y - in viewport pixels
@@ -172,7 +168,6 @@ export class VirtualStick {
 	}
 
 	/**
-	 * the finger holding it moves
 	 * @param x - in viewport pixels
 	 * @param y - in viewport pixels
 	 */
@@ -181,7 +176,7 @@ export class VirtualStick {
 		const dy = y - this.center.y;
 		const distance = Math.hypot(dx, dy);
 		const lean = Math.min(distance / this.radius, 1);
-		if (lean <= this.deadzone || distance === 0) {
+		if (lean <= this.deadzone) {
 			this.value.x = 0;
 			this.value.y = 0;
 		} else {
@@ -193,7 +188,7 @@ export class VirtualStick {
 		this.report();
 	}
 
-	/** the finger lets go: the stick goes back to rest */
+	/** back to rest */
 	release(): void {
 		this.pointerId = null;
 		this.value.x = 0;
@@ -208,8 +203,8 @@ export class VirtualStick {
 		this.pad.axes[this.axisX] = this.value.x;
 		this.pad.axes[this.axisY] = this.value.y;
 
-		// 8 directions, past half the travel: a sector of 45 degrees each,
-		// the diagonals pressing two
+		// 8 directions past half the travel, 45 degrees each; a diagonal
+		// presses two
 		const { x, y } = this.value;
 		const lean = Math.hypot(x, y);
 		const directions = this.directions;
@@ -241,21 +236,18 @@ export class VirtualStick {
 		const { x, y } = this.center;
 		const r = this.radius;
 		const held = this.pointerId !== null;
-		const alpha = look.opacity * (held ? 2 : 1);
+		const alpha = math.clamp(look.opacity * (held ? 2 : 1), 0, 1);
 		renderer.setColor(look.color);
 		renderer.setGlobalAlpha(alpha * 0.5);
 		renderer.fillEllipse(x, y, r, r);
 		renderer.setGlobalAlpha(alpha);
 		renderer.strokeEllipse(x, y, r, r);
-		// the thumb, out to the rim at full travel
+		// the thumb reaches the rim at full travel
 		const thumb = r * 0.45;
 		const travel = r - thumb;
-		const lean = Math.hypot(this.value.x, this.value.y);
-		const reach = lean > 0 ? travel * lean : 0;
-		const angle = Math.atan2(this.value.y, this.value.x);
 		renderer.fillEllipse(
-			x + Math.cos(angle) * reach,
-			y + Math.sin(angle) * reach,
+			x + this.value.x * travel,
+			y + this.value.y * travel,
 			thumb,
 			thumb,
 		);
@@ -275,8 +267,10 @@ const BUTTON_GRID = [
 	[2, 1.1],
 ] as const;
 
+const LABEL_FONT = "sans-serif";
+
 /**
- * A button: pressed while a finger is on it.
+ * A button, pressed while a finger is on it.
  */
 export class VirtualButton {
 	/** the pad button it presses, or null */
@@ -333,8 +327,8 @@ export class VirtualButton {
 	set label(value: string) {
 		if (value !== this._label) {
 			this._label = value;
-			// built again on the next draw, sized for the new text
-			this.destroyText();
+			this.text?.setText(value);
+			this.text?.setFont(LABEL_FONT, this.labelSize());
 			this.changed();
 		}
 	}
@@ -397,7 +391,13 @@ export class VirtualButton {
 		this.center.y = y;
 		if (this.text) {
 			this.text.pos.set(x, y);
+			this.text.setFont(LABEL_FONT, this.labelSize());
 		}
+	}
+
+	/** a short label fills the button, a word is set smaller */
+	private labelSize(): number {
+		return Math.round(this.radius * (this._label.length > 2 ? 0.55 : 0.8));
 	}
 
 	/**
@@ -413,7 +413,6 @@ export class VirtualButton {
 	}
 
 	/**
-	 * a finger presses it
 	 * @param pointerId - the pointer
 	 */
 	press(pointerId: number): void {
@@ -422,7 +421,6 @@ export class VirtualButton {
 	}
 
 	/**
-	 * a finger leaves it
 	 * @param pointerId - the pointer
 	 */
 	release(pointerId: number): void {
@@ -431,7 +429,6 @@ export class VirtualButton {
 		}
 	}
 
-	/** every finger leaves it */
 	releaseAll(): void {
 		this.pointers.clear();
 		this.report();
@@ -451,8 +448,11 @@ export class VirtualButton {
 		}
 		const { x, y } = this.center;
 		const r = this.radius;
-		const alpha =
-			look.opacity * (this.pressed ? 2 : 1) * (this._dimmed ? 0.4 : 1);
+		const alpha = math.clamp(
+			look.opacity * (this.pressed ? 2 : 1) * (this._dimmed ? 0.4 : 1),
+			0,
+			1,
+		);
 		renderer.setColor(look.color);
 		renderer.setGlobalAlpha(alpha * (this.pressed ? 0.8 : 0.5));
 		renderer.fillEllipse(x, y, r, r);
@@ -461,8 +461,8 @@ export class VirtualButton {
 		if (this._label !== "") {
 			if (this.text === null) {
 				this.text = new Text(x, y, {
-					font: "sans-serif",
-					size: Math.round(r * (this._label.length > 2 ? 0.55 : 0.8)),
+					font: LABEL_FONT,
+					size: this.labelSize(),
 					fillStyle: look.color,
 					textAlign: "center",
 					textBaseline: "middle",
@@ -476,12 +476,8 @@ export class VirtualButton {
 	}
 
 	destroy(): void {
-		this.destroyText();
-	}
-
-	private destroyText(): void {
-		// a label outside any container is ours to free: its canvas and
-		// texture go with `destroy()`, which a container calls on removal
+		// `Text.destroy()` is internal, as a container normally calls it, but
+		// this label is in none
 		(this.text as unknown as { destroy(): void } | null)?.destroy();
 		this.text = null;
 	}

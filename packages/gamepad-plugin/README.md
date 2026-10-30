@@ -59,7 +59,7 @@ plugin.register(GamepadPlugin, "gamepad", {
 
 | Option | Default | |
 | --- | --- | --- |
-| `enabled` | `device.touch` | show the controls; on phones and tablets only by default |
+| `enabled` | `device.touch` | show the controls: by default on any touch screen, touch laptops included |
 | `index` | `0` | the gamepad slot they report in |
 | `sticks` | `1` | how many sticks (0 to 2), or a list of [stick options](#sticks) |
 | `buttons` | `1` | how many buttons, or a list of [button options](#buttons) |
@@ -120,7 +120,7 @@ const prompt = gamepad.visible ? "Tap A to start" : "Press X to start";
 
 ## Hidden for a real pad
 
-With `hideOnGamepad` (on by default) the controls hide when a real pad is connected, and come back when it is unplugged or the screen is touched. Browsers only report a pad once one of its buttons is pressed, so in practice they hide as soon as the player picks up the pad.
+With `hideOnGamepad` (on by default) the controls hide as soon as the player uses a real pad, a button pressed or a stick pushed, and come back when the screen is touched or the pad is unplugged. Any pad counts, whatever its slot.
 
 A real pad and the touch controls can share a slot: the engine reads both, and either one presses a button.
 
@@ -128,9 +128,9 @@ A real pad and the touch controls can share a slot: the engine reads both, and e
 
 | Symptom | Cause |
 | --- | --- |
-| The controls do not show | `enabled` is `device.touch` by default, false on a desktop: pass `enabled: true` to try them there. They also hide while a real pad is connected |
+| The controls do not show | `enabled` defaults to `device.touch`, false without a touch screen: pass `enabled: true` to try them on a desktop. They also hide while a real pad is in use |
 | Touch controls do nothing | Nothing is bound to their slot: bind with `input.bindGamepad(index, ...)` on the plugin's `index` (0 by default), or use `key` options |
-| The stick moves but nothing walks | The game binds the stick's axes (`LX`) with a `threshold`, or the D-pad buttons; the left stick presses the D-pad, the right one does not by default |
+| The stick moves but nothing walks | Nothing is bound to what the stick reports: its axes (`LX`, `LY`), or the D-pad buttons, which only the left stick presses by default |
 | `gamepad 0 already holds a virtual gamepad` | Two sets of controls in one slot: give the second one another `index` |
 
 ## Developing

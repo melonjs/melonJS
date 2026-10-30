@@ -25,6 +25,7 @@ class PhoneVibration {
 	): Promise<GamepadHapticsResult> {
 		// a new effect cuts the one playing short, as on a pad
 		this.settle("preempted");
+		navigator.vibrate(0);
 		const {
 			duration = 0,
 			startDelay = 0,
@@ -76,7 +77,7 @@ export class VirtualPad implements input.VirtualGamepad {
 			return { pressed: false, value: 0 };
 		});
 		this.axes = new Array<number>(AXIS_COUNT).fill(0);
-		if (vibrate && typeof globalThis.navigator?.vibrate === "function") {
+		if (vibrate && typeof navigator.vibrate === "function") {
 			this.vibrationActuator = new PhoneVibration();
 		}
 	}

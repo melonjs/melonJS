@@ -1,4 +1,4 @@
-export { VirtualButton, VirtualStick } from "./controls.ts";
+export type { VirtualButton, VirtualStick } from "./controls.ts";
 export { GamepadPlugin } from "./plugin.ts";
 export type {
 	ButtonOptions,

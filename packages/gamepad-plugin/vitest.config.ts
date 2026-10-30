@@ -2,9 +2,8 @@
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
-// The panel builds real DOM and reads live engine state, so these run in a
-// browser rather than a simulated DOM — same provider the engine and the
-// physics adapters use.
+// The controls listen to real pointer events and draw with the renderer, so
+// the tests run in a browser, as the engine's do.
 export default defineConfig({
 	test: {
 		include: ["**/*.{test,spec}.[jt]s?(x)"],

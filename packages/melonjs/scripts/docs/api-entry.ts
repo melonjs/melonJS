@@ -33,8 +33,8 @@ export {
 	type Placement,
 	type StickKeys,
 	type StickOptions,
-	VirtualButton,
-	VirtualStick,
+	type VirtualButton,
+	type VirtualStick,
 } from "../../../gamepad-plugin/src/index.ts";
 export {
 	MatterAdapter,

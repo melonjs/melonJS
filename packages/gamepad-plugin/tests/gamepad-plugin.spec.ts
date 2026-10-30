@@ -31,6 +31,8 @@ let canvas: HTMLCanvasElement;
 let pads: (Gamepad | null)[];
 const realGetGamepads = navigator.getGamepads;
 
+const stageDraw = Stage.prototype.draw;
+
 /** the engine reads the gamepads once a frame */
 const poll = (): void => {
 	event.emit(event.GAME_BEFORE_UPDATE, performance.now());
@@ -175,6 +177,12 @@ describe("GamepadPlugin", () => {
 		expect(input.activeGamepad()).toBe(0);
 	});
 
+	it("refuses a slot taken by other controls, even switched off", () => {
+		expect(() => {
+			return new GamepadPlugin({ enabled: false }, app);
+		}).toThrow(/already has touch controls/);
+	});
+
 	it("refuses a slot already taken, leaving nothing behind", () => {
 		const hooked = Stage.prototype.draw;
 		expect(() => {
@@ -188,7 +196,7 @@ describe("GamepadPlugin", () => {
 	});
 
 	it("is hidden by default where there is no touch screen", () => {
-		const desktop = new GamepadPlugin({}, app);
+		const desktop = new GamepadPlugin({ index: 3 }, app);
 		// the test browser has no touch screen
 		expect(desktop.enabled).toBe(false);
 		expect(desktop.visible).toBe(false);
@@ -290,6 +298,23 @@ describe("GamepadPlugin", () => {
 		expect(input.keyStatus("stickRight")).toBe(false);
 	});
 
+	it("finds the controls on a scrolled page", () => {
+		const spacer = document.createElement("div");
+		spacer.style.height = "3000px";
+		document.body.appendChild(spacer);
+		window.scrollTo(0, 200);
+		try {
+			expect(window.scrollY).toBe(200);
+			down(1, button.center);
+			expect(button.pressed).toBe(true);
+			up(1, button.center);
+			expect(button.pressed).toBe(false);
+		} finally {
+			window.scrollTo(0, 0);
+			spacer.remove();
+		}
+	});
+
 	it("keeps a touch on the controls from the game, and not the others", () => {
 		const spy = vi.fn();
 		input.registerPointerEvent("pointerdown", app.viewport, spy);
@@ -359,8 +384,8 @@ describe("GamepadPlugin", () => {
 				mapping: "standard",
 				connected: true,
 				timestamp: 0,
-				buttons: [],
-				axes: [],
+				buttons: [{ pressed: false, value: 0 }],
+				axes: [0, 0],
 			} as unknown as Gamepad;
 		};
 
@@ -385,6 +410,22 @@ describe("GamepadPlugin", () => {
 			// and the touch presses the button it landed on
 			expect(button.pressed).toBe(true);
 			up(1, button.center);
+		});
+
+		it("hides again when the player goes back to the pad", () => {
+			const pad = realPad();
+			pads[1] = pad;
+			event.emit(event.GAMEPAD_CONNECTED, pad);
+			down(1, button.center);
+			up(1, button.center);
+			expect(gamepad.visible).toBe(true);
+
+			// no event for this one: the pad is watched each frame
+			poll();
+			expect(gamepad.visible).toBe(true);
+			(pad.buttons as unknown as { pressed: boolean }[])[0].pressed = true;
+			poll();
+			expect(gamepad.visible).toBe(false);
 		});
 
 		it("stays hidden on a click of the mouse", () => {
@@ -472,10 +513,8 @@ describe("GamepadPlugin", () => {
 			const { x } = button.center;
 			const { width, height } = app.viewport;
 			app.viewport.resize(width + 100, height);
-			event.emit(event.VIEWPORT_ONRESIZE, width + 100, height);
 			expect(button.center.x).toBe(x + 100);
 			app.viewport.resize(width, height);
-			event.emit(event.VIEWPORT_ONRESIZE, width, height);
 		});
 	});
 
@@ -580,22 +619,24 @@ describe("GamepadPlugin", () => {
 				value: vibrate,
 				configurable: true,
 			});
-			gamepad.destroy();
-			gamepad = new GamepadPlugin({ enabled: true }, app);
-			expect(input.hasGamepadVibration(0)).toBe(true);
-			await input.vibrateGamepad(0, { duration: 30 });
-			expect(vibrate).toHaveBeenCalledWith(30);
-			Object.defineProperty(navigator, "vibrate", {
-				value: real,
-				configurable: true,
-			});
+			try {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin({ enabled: true }, app);
+				expect(input.hasGamepadVibration(0)).toBe(true);
+				await input.vibrateGamepad(0, { duration: 30 });
+				expect(vibrate).toHaveBeenCalledWith(30);
+			} finally {
+				Object.defineProperty(navigator, "vibrate", {
+					value: real,
+					configurable: true,
+				});
+			}
 		});
 	});
 
 	it("leaves the stage draw and the slot as they were once destroyed", () => {
-		const hooked = Stage.prototype.draw;
 		gamepad.destroy();
-		expect(Stage.prototype.draw).not.toBe(hooked);
+		expect(Stage.prototype.draw).toBe(stageDraw);
 		expect(input.activeGamepad()).toBe(-1);
 		// a touch is the game's again
 		down(1, button.center);
@@ -620,5 +661,17 @@ describe("GamepadPlugin", () => {
 			app.draw();
 			orphan.destroy();
 		}).not.toThrow();
+	});
+
+	it("refuses an application that is not initialized yet", () => {
+		const hooked = Stage.prototype.draw;
+		const early = new Application(200, 100, {
+			parent: document.body,
+			renderer: video.CANVAS,
+		});
+		expect(() => {
+			return new GamepadPlugin({ enabled: true, index: 2 }, early);
+		}).toThrow(/app.init/);
+		expect(Stage.prototype.draw).toBe(hooked);
 	});
 });

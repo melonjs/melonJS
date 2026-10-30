@@ -1,5 +1,6 @@
 import {
 	type Application,
+	type Camera2d,
 	device,
 	event,
 	input,
@@ -7,7 +8,9 @@ import {
 	plugin,
 	type Renderer,
 	Stage,
+	utils,
 	Vector2d,
+	version,
 } from "melonjs";
 import packageJson from "../package.json" with { type: "json" };
 import { type Look, VirtualButton, VirtualStick } from "./controls.ts";
@@ -19,9 +22,7 @@ import type {
 } from "./types.ts";
 
 /**
- * The lowest melonJS version this plugin runs on, from the package's peer
- * range, so it is kept in one place: `plugin.register` refuses an older
- * engine, where the peer range alone only warns at install time.
+ * the lowest melonJS version supported, taken from the peer dependency
  * @ignore
  */
 function minimumEngineVersion(): string {
@@ -46,15 +47,35 @@ function listOf<T extends object>(
 	});
 }
 
-/** whether the browser reports a real gamepad */
-function realGamepadConnected(): boolean {
-	if (typeof globalThis.navigator?.getGamepads !== "function") {
-		return false;
+/** the gamepads the browser reports */
+function realGamepads(): Gamepad[] {
+	if (typeof navigator.getGamepads !== "function") {
+		return [];
 	}
-	return globalThis.navigator.getGamepads().some((pad) => {
+	return navigator.getGamepads().filter((pad) => {
 		return pad !== null;
 	});
 }
+
+/**
+ * whether the player is using a real pad: a button down or a stick pushed
+ * @param pads - the gamepads the browser reports
+ */
+function inUse(pads: Gamepad[]): boolean {
+	return pads.some((pad) => {
+		return (
+			pad.buttons.some((button) => {
+				return button.pressed;
+			}) ||
+			pad.axes.some((axis) => {
+				return Math.abs(axis) > 0.5;
+			})
+		);
+	});
+}
+
+/** the gamepad slots taken by touch controls */
+const claimed = new Set<number>();
 
 const POINTER_EVENTS = [
 	"pointerdown",
@@ -96,6 +117,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	private _enabled: boolean;
 	/** hidden while a real pad is in use */
 	private hiddenByGamepad = false;
+	/** a real pad is connected, so the pads are watched for use */
+	private padsConnected = false;
 	/** whether the pad is in its slot */
 	private added = false;
 	/** the pointers taken by the controls, and what each one holds */
@@ -120,7 +143,23 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		super(app);
 		this.version = minimumEngineVersion();
 
+		// checked here rather than left to `plugin.register`, which only
+		// checks once the constructor has hooked everything
+		if (utils.checkVersion(this.version, version) > 0) {
+			throw new Error(
+				`GamepadPlugin needs melonJS ${this.version} or later, not ${version}`,
+			);
+		}
+		if (!this.app.isInitialized) {
+			throw new Error("GamepadPlugin: register it once app.init() is done");
+		}
 		this.index = options.index ?? 0;
+		if (claimed.has(this.index)) {
+			throw new Error(
+				`gamepad ${this.index} already has touch controls, give these another index`,
+			);
+		}
+
 		this.hideOnGamepad = options.hideOnGamepad ?? true;
 		this.marginOption = options.margin;
 		this.look = {
@@ -130,7 +169,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		this.pad = new VirtualPad(options.vibrate ?? true);
 
 		const repaint = (): void => {
-			if (this.appAlive) {
+			if (this.ready) {
 				this.app.repaint();
 			}
 		};
@@ -145,16 +184,16 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			},
 		);
 
-		this.hiddenByGamepad = this.hideOnGamepad && realGamepadConnected();
+		this.padsConnected = realGamepads().length > 0;
+		this.hiddenByGamepad = this.hideOnGamepad && this.padsConnected;
 		this._enabled = options.enabled ?? device.touch;
-		if (this.appAlive) {
+		if (this.ready) {
 			this.layout();
 		}
-		// the slot first: taken already, it throws before anything is hooked
 		this.update();
+		claimed.add(this.index);
 
-		// drawn after the stage, so over every camera and everything in them
-		// (called back with the stage as `this`, below)
+		// drawn after the stage: over every camera and everything they draw
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		const original = Stage.prototype.draw;
 		this.originalDraw = original;
@@ -171,6 +210,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 
 		event.on(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.on(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
+		event.on(event.GAME_BEFORE_UPDATE, this.watchPads);
 		event.on(event.VIEWPORT_ONRESIZE, this.onResize);
 		this.listen();
 	}
@@ -211,12 +251,14 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		}
 		this.destroyed = true;
 		this.update();
+		claimed.delete(this.index);
 		this.unlisten();
 		event.off(event.GAMEPAD_CONNECTED, this.onConnected);
 		event.off(event.GAMEPAD_DISCONNECTED, this.onDisconnected);
+		event.off(event.GAME_BEFORE_UPDATE, this.watchPads);
 		event.off(event.VIEWPORT_ONRESIZE, this.onResize);
-		// unhooked when nothing was hooked over it since; otherwise the hook
-		// stays, and only calls through
+		// another plugin may have wrapped the draw since; then ours stays in
+		// the chain, and does nothing once destroyed
 		if (Stage.prototype.draw === this.drawStage) {
 			Stage.prototype.draw = this.originalDraw;
 		}
@@ -238,7 +280,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			input.removeVirtualGamepad(this.pad);
 			this.added = false;
 		}
-		if (this.appAlive) {
+		if (this.ready) {
 			this.app.repaint();
 		}
 	}
@@ -257,35 +299,50 @@ export class GamepadPlugin extends plugin.BasePlugin {
 		this.pad.reset();
 	}
 
-	private readonly onConnected = (): void => {
+	/** hide the controls, for a real pad */
+	private hideForGamepad(): void {
 		if (this.hideOnGamepad && !this.hiddenByGamepad) {
 			this.hiddenByGamepad = true;
 			this.update();
 		}
+	}
+
+	private readonly onConnected = (): void => {
+		// browsers report a pad once one of its buttons is pressed
+		this.padsConnected = true;
+		this.hideForGamepad();
 	};
 
 	private readonly onDisconnected = (): void => {
-		if (this.hiddenByGamepad && !realGamepadConnected()) {
+		this.padsConnected = realGamepads().length > 0;
+		if (this.hiddenByGamepad && !this.padsConnected) {
 			this.hiddenByGamepad = false;
 			this.update();
 		}
 	};
 
+	// hide again when the player goes back to the pad after touching the
+	// screen, which no event reports
+	private readonly watchPads = (): void => {
+		if (this.padsConnected && this.visible && inUse(realGamepads())) {
+			this.hideForGamepad();
+		}
+	};
+
 	/**
-	 * whether the application is still there: one destroyed before the
-	 * plugin leaves it with no viewport or renderer
+	 * whether the application can be drawn to: initialized, not destroyed,
+	 * and with a viewport, which comes with its first stage
 	 */
-	private get appAlive(): boolean {
+	private get ready(): boolean {
 		return (
-			(this.app.viewport as unknown) !== undefined &&
-			(this.app.renderer as unknown) !== undefined
+			this.app.isInitialized &&
+			(this.app.viewport as Camera2d | undefined) !== undefined
 		);
 	}
 
 	private readonly onResize = (): void => {
-		// sent for any camera resized, a minimap's too: laid out again only
-		// when the viewport changed size
-		if (this.appAlive) {
+		// sent when any camera is resized, a minimap too
+		if (this.ready) {
 			this.ensureLayout();
 			this.app.repaint();
 		}
@@ -313,9 +370,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	/** listen to the pointers before the engine does */
 	private listen(): void {
 		const canvas = this.app.renderer.getCanvas();
-		// the parent, in the capture phase: called before the engine's own
-		// listeners on the canvas, so a touch on the controls can be kept
-		// from them
+		// capturing on the parent runs before the engine's listeners on the
+		// canvas, so touches on the controls can be stopped here
 		this.target = canvas.parentElement ?? canvas;
 		for (const type of POINTER_EVENTS) {
 			this.target.addEventListener(type, this.onPointer, {
@@ -338,7 +394,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	}
 
 	private readonly onPointer = (e: PointerEvent): void => {
-		if (!this.appAlive) {
+		if (!this.ready) {
 			return;
 		}
 		const canvas = this.app.renderer.getCanvas();
@@ -368,9 +424,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			} else {
 				control.press(e.pointerId);
 			}
-			// moves and the release keep coming here even off the canvas.
-			// It throws for a pointer the browser no longer counts as down,
-			// which only loses the moves made off the canvas
+			// so moves and the release still come here off the canvas
 			try {
 				canvas.setPointerCapture(e.pointerId);
 			} catch {
@@ -425,11 +479,18 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	}
 
 	/**
-	 * where a pointer is, in viewport pixels
+	 * where a pointer is, in viewport pixels, as `input.globalToLocal` gives
+	 * it but on this application's canvas
 	 * @param e - the pointer event
 	 */
 	private toViewport(e: PointerEvent): Vector2d {
-		return input.globalToLocal(e.clientX, e.clientY, this.point);
+		const rect = this.app.renderer.getCanvas().getBoundingClientRect();
+		const scale = this.app.renderer.scaleRatio;
+		const ratio = globalThis.devicePixelRatio || 1;
+		return this.point.set(
+			((e.clientX - rect.left) / scale.x) * ratio,
+			((e.clientY - rect.top) / scale.y) * ratio,
+		);
 	}
 
 	/**
@@ -478,7 +539,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	 * @param renderer - the renderer drawing the frame
 	 */
 	private draw(renderer: Renderer): void {
-		if (!this.visible || !this.appAlive || renderer !== this.app.renderer) {
+		if (!this.visible || !this.ready || renderer !== this.app.renderer) {
 			return;
 		}
 		this.ensureLayout();
