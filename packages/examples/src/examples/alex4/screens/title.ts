@@ -9,6 +9,7 @@ import {
 	audio,
 	BitmapText,
 	input,
+	type Pointer,
 	Sprite,
 	Stage,
 	state,
@@ -49,8 +50,13 @@ class MenuItem extends UIBaseElement {
 		this.addChild(this.label);
 	}
 
-	override onOver() {
-		this.point();
+	override onOver(event?: Pointer) {
+		// a mouse points, a finger has no hover: it only taps (and a touch on
+		// the on-screen pad over the menu also comes here, as a hover)
+		const e = event?.event;
+		if (!(e && "pointerType" in e && e.pointerType === "touch")) {
+			this.point();
+		}
 	}
 
 	override onClick() {
