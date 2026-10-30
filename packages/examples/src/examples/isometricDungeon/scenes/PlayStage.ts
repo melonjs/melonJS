@@ -6,7 +6,6 @@
 import {
 	type Application,
 	audio,
-	BloomEffect,
 	type Camera2d,
 	input,
 	Light2d,
@@ -15,6 +14,7 @@ import {
 	Stage,
 	state,
 	type TMXLayer,
+	Tween,
 	timer,
 	type World,
 } from "melonjs";
@@ -31,6 +31,7 @@ import { Dungeon } from "../entities/dungeon";
 import type { Hero } from "../entities/Hero";
 import type { Usable } from "../entities/usables";
 import { footDust, Motes } from "../fx/dust";
+import { dungeonEffects } from "../fx/effects";
 import { SFX } from "../fx/sound";
 import { Hud } from "../ui/Hud";
 import { Minimap } from "../ui/Minimap";
@@ -45,7 +46,7 @@ const ACTION_KEYS = [input.KEY.SPACE, input.KEY.E, input.KEY.ENTER];
 
 export class PlayStage extends Stage {
 	private started = 0;
-	private bloom: BloomEffect | undefined;
+	private pulse: Tween | undefined;
 	private hud: Hud | undefined;
 
 	override onResetEvent(app: Application) {
@@ -142,15 +143,25 @@ export class PlayStage extends Stage {
 		// positional sounds are heard from the hero
 		audio.setListener(hero);
 
-		// a shader effect: on the Canvas renderer it does nothing. The
-		// threshold is high enough that only the sparks bloom, not the lit
-		// floor
-		this.bloom = new BloomEffect(app.renderer, {
-			threshold: 0.94,
-			intensity: 0.6,
-			radius: 3,
-		});
-		app.viewport.addPostEffect(this.bloom);
+		// the effects made while the loading screen was up (fx/effects.ts)
+		const { bloom, chestGlow } = dungeonEffects();
+		app.viewport.addPostEffect(bloom);
+		// the closed chests share one outline, so they pulse together
+		const glowLevel = { value: 0.7 };
+		this.pulse = new Tween(glowLevel)
+			.to(
+				{ value: 1.8 },
+				{
+					duration: 900,
+					easing: Tween.Easing.Sinusoidal.InOut,
+					yoyo: true,
+					repeat: Infinity,
+				},
+			)
+			.onUpdate(() => {
+				chestGlow.setIntensity(glowLevel.value);
+			})
+			.start();
 
 		app.viewport.follow(hero.focus, app.viewport.AXIS.BOTH, 0.12);
 		// frame the hero's body rather than the feet
@@ -187,11 +198,11 @@ export class PlayStage extends Stage {
 		// it is in no container, so nothing else frees its texts and logo
 		this.hud?.reset();
 		this.hud = undefined;
-		// the viewport outlives the stage (removing the effect also destroys it)
-		if (this.bloom) {
-			app.viewport.removePostEffect(this.bloom);
-			this.bloom = undefined;
-		}
+		// the viewport outlives the stage; the bloom is kept (shared) for the
+		// next time the level is played
+		app.viewport.removePostEffect(dungeonEffects().bloom);
+		this.pulse?.stop();
+		this.pulse = undefined;
 		for (const [key] of KEYS) {
 			input.unbindKey(key);
 		}

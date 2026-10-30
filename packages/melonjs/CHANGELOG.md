@@ -27,6 +27,7 @@
 - Effects: on WebGPU, effects read their capture at the game's texture filter, as on WebGL, so pixel-art games stay crisp
 - Input: a gamepad unplugged while a button or the stick is held lets go of the keys bound to them, instead of leaving them pressed
 - Input: a stick with only one side bound lets go of its key when it returns to the centre or rests just past it, instead of holding it until pushed that way again
+- Lighting: a `Light2d`'s glow and the darkness around it compile when the light is added to the world, not inside the first frame that draws it
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 

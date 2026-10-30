@@ -4,6 +4,7 @@ import {
 	Camera2d,
 	Color,
 	ColorMatrix,
+	Light2d,
 	ShaderEffect,
 	WebGPURenderer,
 } from "../src/index.js";
@@ -53,6 +54,8 @@ const WARM_METHODS = [
 	"_warmRenderable",
 	"_warmPostEffects",
 	"_warmDraw",
+	"_warmLight",
+	"drawLight",
 	"_warmHostedEffect",
 	"_warmMeshDraw",
 	"_warmMeshDrawFog",
@@ -122,6 +125,9 @@ function makeRenderer(options = {}) {
 		},
 		setBatcher(name) {
 			return this.batchers.get(name);
+		},
+		getLightAtlas() {
+			return ATLAS;
 		},
 		getCanvas() {
 			return { width: 320, height: 240 };
@@ -364,6 +370,43 @@ describe("warm-up keys match the draw path (WebGPU)", () => {
 			quad.flush();
 		}
 		expect(renderer.pipelinesBuilt()).toBe(warmed);
+	});
+
+	// the renderer draws a light through effects of its own, made the first
+	// time a frame draws one: nothing attached them, so nothing warmed them,
+	// and their pipelines were built inside that frame
+	it("a light's own draw: its glow, and the darkness around a soft one", async () => {
+		renderer.shaderLanguage = "wgsl";
+		const light = new Light2d(0, 0, 16, 16, "#ffffff", 1);
+		light.softness = 1;
+		renderer._warmDraw(light);
+		await settle();
+		const warmed = renderer.pipelinesBuilt();
+		expect(warmed).toBeGreaterThan(0);
+		for (const format of ["bgra8unorm", "rgba16float"]) {
+			bindTarget(renderer, format, 1);
+			// the glow, in the light's own blend mode ("lighter", see
+			// Light2d#draw), through the renderer's own draw
+			renderer.currentBlendMode = "additive";
+			renderer.customShader = undefined;
+			renderer.drawLight(light);
+			quad.flush();
+			// the darkness, as `drawAmbientLight` draws it
+			renderer.currentBlendMode = "normal";
+			renderer.customShader = renderer._ambientShader;
+			quad.addQuad(ATLAS, 0, 0, 8, 8, 0, 0, 1, 1, 0xffffffff);
+			quad.flush();
+		}
+		expect(renderer.pipelinesBuilt()).toBe(warmed);
+	});
+
+	it("no darkness for a light with a hard edge, which the stage cuts out instead", async () => {
+		renderer.shaderLanguage = "wgsl";
+		const light = new Light2d(0, 0, 16, 16, "#ffffff", 1);
+		renderer._warmDraw(light);
+		await settle();
+		expect(renderer.lightShader).toBeDefined();
+		expect(renderer._ambientShader).toBeUndefined();
 	});
 
 	it("warms nothing for a container's own draw, or a camera's", async () => {
