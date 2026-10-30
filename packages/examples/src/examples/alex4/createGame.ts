@@ -8,9 +8,11 @@
  * with the levels, enemies and guardians of the original game.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { GamepadPlugin } from "@melonjs/gamepad-plugin";
 import {
 	Application,
 	audio,
+	input,
 	loader,
 	plugin,
 	registerTiledObjectClass,
@@ -18,7 +20,7 @@ import {
 	TextureAtlas,
 	video,
 } from "melonjs";
-import { HEIGHT, WIDTH } from "./constants";
+import { HEIGHT, PALETTE, WIDTH } from "./constants";
 import { GroundPounderEntity, SpikeTruckEntity } from "./entities/bosses";
 import {
 	CherryEntity,
@@ -69,6 +71,25 @@ export const createGame = async () => {
 
 	// add "#debug" to the URL to enable the debug Panel
 	plugin.register(DebugPanelPlugin, "debugPanel");
+
+	// touch controls, on touch screens: read through the game's own gamepad
+	// bindings, so the stick moves (and points in the menus), A jumps or
+	// picks, B spits or skips, and the small one pauses, as Start does. Kept
+	// clear of the status bar, in the game's lightest color.
+	plugin.register(GamepadPlugin, "gamepad", {
+		buttons: [
+			{ label: "A" },
+			{ label: "B" },
+			{
+				button: input.GAMEPAD.BUTTONS.START,
+				label: "II",
+				radius: 26,
+				position: { left: 56, top: 56 },
+			},
+		],
+		color: PALETTE[3],
+		margin: 56,
+	});
 
 	// a touch of modern shading
 	shaders.init(app);
