@@ -441,10 +441,16 @@ export class CrusherEntity extends GenericEnemyEntity {
 /************************************************************************************/
 /** the jump speeds of the fishes in the original, by height in tiles */
 const FISH_JUMP = [8, 14, 18, 21, 23, 26, 28];
+/** the wait in the water between two jumps, in steps */
+const REST = 48;
+/** how far off the screen a fish still moves (32 pixels of the original) */
+const NEAR = 128;
 
 class FishEntity extends GenericEnemyEntity {
 	jumpSpeed: number;
 	private jumping = false;
+	/** steps before the next jump (none before the first one) */
+	private rest = 0;
 	private adapterPos = new Vector2d();
 
 	constructor(x: number, y: number, settings: TMXObject, frames: string[]) {
@@ -473,10 +479,20 @@ class FishEntity extends GenericEnemyEntity {
 		};
 	}
 
-	override onActivateEvent() {
-		super.onActivateEvent();
-		// right away, as in the original
-		this.jump();
+	/**
+	 * As the original, which moves an enemy only while it is on the screen,
+	 * or nearly: a fish jumps the moment it comes in sight, and waits between
+	 * jumps only there. They would otherwise all have been jumping since the
+	 * level started, out of step with each other, by the time Alex comes:
+	 * the bounces off the jellyfish that level 8 is built on are then a
+	 * matter of luck, when they are possible at all.
+	 */
+	private nearScreen() {
+		const view = this.parentApp.viewport;
+		return (
+			this.pos.x > view.pos.x - NEAR &&
+			this.pos.x < view.pos.x + view.width + NEAR
+		);
 	}
 
 	private jump() {
@@ -501,7 +517,9 @@ class FishEntity extends GenericEnemyEntity {
 				this,
 				this.adapterPos.set(this.pos.x, HEIGHT + 40),
 			);
-			this.later(800, () => this.jump());
+			this.rest = REST;
+		} else if (!this.jumping && this.nearScreen() && --this.rest <= 0) {
+			this.jump();
 		}
 		this.onJump(vy);
 	}
