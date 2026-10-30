@@ -52,6 +52,9 @@ function resolve(
 	};
 }
 
+/** a stick's thumb, as a fraction of its base's radius */
+const THUMB = 0.45;
+
 /** the look shared by every control */
 export interface Look {
 	color: string;
@@ -74,6 +77,8 @@ export class VirtualStick {
 	readonly center = { x: 0, y: 0 };
 	/** how far it leans, from -1 to 1 on each axis, after the deadzone */
 	readonly value = { x: 0, y: 0 };
+	/** where the thumb is drawn, from the center: under the finger, as far as it goes */
+	private readonly thumb = { x: 0, y: 0 };
 	/** the pointer holding it, or null */
 	pointerId: number | null = null;
 
@@ -81,6 +86,7 @@ export class VirtualStick {
 	/** where it rests, set by the layout */
 	private readonly home = { x: 0, y: 0 };
 	private readonly deadzone: number;
+	private readonly dpadThreshold: number;
 	private readonly axisX: number;
 	private readonly axisY: number;
 	private readonly dpad: boolean;
@@ -101,6 +107,7 @@ export class VirtualStick {
 		this.side = options.side ?? side;
 		this.floating = options.floating ?? false;
 		this.deadzone = math.clamp(options.deadzone ?? 0.1, 0, 0.95);
+		this.dpadThreshold = math.clamp(options.dpadThreshold ?? 0.5, 0.05, 1);
 		this.axisX = this.side === "left" ? AXES.LX : AXES.RX;
 		this.axisY = this.side === "left" ? AXES.LY : AXES.RY;
 		this.dpad = options.dpad ?? this.side === "left";
@@ -175,12 +182,15 @@ export class VirtualStick {
 		const dx = x - this.center.x;
 		const dy = y - this.center.y;
 		const distance = Math.hypot(dx, dy);
-		const lean = Math.min(distance / this.radius, 1);
+		const lean = Math.min(distance / this.reach, 1);
+		const shown = distance > 0 ? (lean * this.reach) / distance : 0;
+		this.thumb.x = dx * shown;
+		this.thumb.y = dy * shown;
 		if (lean <= this.deadzone) {
 			this.value.x = 0;
 			this.value.y = 0;
 		} else {
-			// from 0 at the deadzone to 1 at the rim
+			// from 0 at the deadzone to 1 at full reach
 			const scaled = (lean - this.deadzone) / (1 - this.deadzone);
 			this.value.x = (dx / distance) * scaled;
 			this.value.y = (dy / distance) * scaled;
@@ -188,11 +198,21 @@ export class VirtualStick {
 		this.report();
 	}
 
+	/**
+	 * how far the thumb moves from the center, in viewport pixels: the stick
+	 * reads full when the finger is this far
+	 */
+	get reach(): number {
+		return this.radius * (1 - THUMB);
+	}
+
 	/** back to rest */
 	release(): void {
 		this.pointerId = null;
 		this.value.x = 0;
 		this.value.y = 0;
+		this.thumb.x = 0;
+		this.thumb.y = 0;
 		this.center.x = this.home.x;
 		this.center.y = this.home.y;
 		this.report();
@@ -203,12 +223,12 @@ export class VirtualStick {
 		this.pad.axes[this.axisX] = this.value.x;
 		this.pad.axes[this.axisY] = this.value.y;
 
-		// 8 directions past half the travel, 45 degrees each; a diagonal
+		// 8 directions past the threshold, 45 degrees each; a diagonal
 		// presses two
 		const { x, y } = this.value;
 		const lean = Math.hypot(x, y);
 		const directions = this.directions;
-		if (lean < 0.5) {
+		if (lean < this.dpadThreshold) {
 			directions.up = directions.down = false;
 			directions.left = directions.right = false;
 		} else {
@@ -242,15 +262,8 @@ export class VirtualStick {
 		renderer.fillEllipse(x, y, r, r);
 		renderer.setGlobalAlpha(alpha);
 		renderer.strokeEllipse(x, y, r, r);
-		// the thumb reaches the rim at full travel
-		const thumb = r * 0.45;
-		const travel = r - thumb;
-		renderer.fillEllipse(
-			x + this.value.x * travel,
-			y + this.value.y * travel,
-			thumb,
-			thumb,
-		);
+		const thumb = r * THUMB;
+		renderer.fillEllipse(x + this.thumb.x, y + this.thumb.y, thumb, thumb);
 	}
 }
 

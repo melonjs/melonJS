@@ -51,10 +51,15 @@ export interface StickOptions {
 	deadzone?: number;
 	/**
 	 * also press the D-pad buttons (`GAMEPAD.BUTTONS.UP`, `DOWN`, `LEFT`,
-	 * `RIGHT`) in 8 directions as the stick leans past half its travel. On by
-	 * default for the left stick.
+	 * `RIGHT`) in 8 directions as the stick leans. On by default for the left
+	 * stick.
 	 */
 	dpad?: boolean;
+	/**
+	 * how far the stick must lean, from 0 to 1, to press the D-pad and its
+	 * `keys`. 0.5 by default: half the thumb's travel.
+	 */
+	dpadThreshold?: number;
 	/**
 	 * keys to press, as the D-pad would, for a game that reads the keyboard
 	 * rather than a pad

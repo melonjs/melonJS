@@ -86,7 +86,8 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `radius` | 13% of the shorter side | the radius of its base |
 | `floating` | `false` | centered where the thumb lands on its half of the screen |
 | `deadzone` | `0.1` | how far it must lean (0 to 1) before it reads anything |
-| `dpad` | on for the left stick | press the D-pad buttons in 8 directions, past half its travel |
+| `dpad` | on for the left stick | press the D-pad buttons in 8 directions |
+| `dpadThreshold` | `0.5` | how far it must lean (0 to 1) to press the D-pad and its `keys`; lower for a stick that answers sooner |
 | `keys` | none | `{ up, down, left, right }`: keys to press as it leans |
 
 ### Buttons

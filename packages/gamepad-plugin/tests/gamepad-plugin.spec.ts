@@ -78,15 +78,15 @@ const up = (id: number, at: { x: number; y: number }) => {
 };
 
 /**
- * a point leaning a stick by this much of its radius
+ * a point leaning a stick by this much of its thumb's reach
  * @param stick - the stick
  * @param dx - across, in radii
  * @param dy - down, in radii
  */
 const lean = (stick: VirtualStick, dx: number, dy: number) => {
 	return {
-		x: stick.center.x + dx * stick.radius,
-		y: stick.center.y + dy * stick.radius,
+		x: stick.center.x + dx * stick.reach,
+		y: stick.center.y + dy * stick.reach,
 	};
 };
 
@@ -248,6 +248,34 @@ describe("GamepadPlugin", () => {
 		move(1, far.x, far.y);
 		expect(stick.value.x).toBeCloseTo(1, 5);
 		up(1, far);
+	});
+
+	it("reads full where the thumb stops, with the thumb under the finger", () => {
+		down(1, stick.center);
+		const edge = lean(stick, 1, 0);
+		move(1, edge.x, edge.y);
+		expect(stick.value.x).toBeCloseTo(1, 5);
+		// half way out reads about half, past the deadzone
+		const half = lean(stick, 0.5, 0);
+		move(1, half.x, half.y);
+		expect(stick.value.x).toBeCloseTo((0.5 - 0.1) / 0.9, 5);
+		up(1, half);
+	});
+
+	it("presses the D-pad sooner with a lower threshold", () => {
+		gamepad.destroy();
+		gamepad = new GamepadPlugin(
+			{ enabled: true, sticks: [{ dpadThreshold: 0.2 }] },
+			app,
+		);
+		const [soft] = gamepad.sticks;
+		down(1, soft.center);
+		const near = lean(soft, 0.35, 0);
+		move(1, near.x, near.y);
+		poll();
+		expect(input.keyStatus("right")).toBe(true);
+		up(1, near);
+		poll();
 	});
 
 	it("presses the D-pad in 8 directions", () => {
