@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import { ParticleEmitterSettings as defaults } from "melonjs";
+import { ParticleEmitterSettings as defaults, math } from "melonjs";
 
 /**
  * The emitter settings the editor edits, as plain values that survive a
@@ -62,7 +62,7 @@ export const ANGLES = new Set<keyof Effect>([
 ]);
 
 const deg = (radians: number) => {
-	return Math.round((radians * 180) / Math.PI);
+	return Math.round(math.radToDeg(radians));
 };
 
 /** the emitter's own defaults, in the editor's units */
@@ -192,7 +192,7 @@ export const GROUPS: Group[] = [
 				max: 30000,
 				step: 100,
 				unit: "ms",
-				help: "how long a stream emits for; 0 for ever",
+				help: "how long a stream emits for; 0 for no end",
 			},
 			{
 				key: "width",

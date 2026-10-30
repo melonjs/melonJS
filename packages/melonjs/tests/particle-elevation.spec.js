@@ -193,6 +193,23 @@ describe("particle elevation", () => {
 			expect(burst({ depth: 50, blendMode: "normal" }).autoSort).toBe(true);
 			expect(burst({ depth: 50, blendMode: "additive" }).autoSort).toBe(false);
 		});
+
+		it("stops sorting once the depth is taken off", () => {
+			const e = burst({ depth: 50, blendMode: "normal" });
+			e.reset({ depth: 0, blendMode: "normal" });
+			expect(e.autoSort).toBe(false);
+		});
+
+		it("keeps each particle's depth when the reference space changes", () => {
+			const e = burst({ depth: 200, angle: 0 });
+			const before = e.getChildren().map((p) => {
+				return p.depth;
+			});
+			e.referenceSpace = "world";
+			e.getChildren().forEach((p, i) => {
+				expect(p.depth).toBe(before[i]);
+			});
+		});
 	});
 
 	describe("sorting keys off the BLEND MODE, not off the 3D flag", () => {

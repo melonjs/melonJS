@@ -3,7 +3,9 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
+import { Color, utils } from "melonjs";
 import { DEFAULT_EFFECT, type Effect } from "./fields";
+import type { Motion } from "./presets";
 import type { EditorState } from "./state";
 
 const between = (min: number, max: number, step = 0.01) => {
@@ -14,23 +16,13 @@ const chance = (p: number) => {
 	return Math.random() < p;
 };
 
-const pick = <T>(list: readonly T[]): T => {
-	return list[Math.floor(Math.random() * list.length)];
+const pick = <T>(list: T[]): T => {
+	return utils.array.random(list);
 };
 
-/** a CSS color from hue, saturation and lightness */
+/** a CSS color from a hue in degrees, and saturation and lightness (0 to 1) */
 const hsl = (h: number, s: number, l: number) => {
-	const k = (n: number) => {
-		return (n + h / 30) % 12;
-	};
-	const a = s * Math.min(l, 1 - l);
-	const f = (n: number) => {
-		const v = l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
-		return Math.round(v * 255)
-			.toString(16)
-			.padStart(2, "0");
-	};
-	return `#${f(0)}${f(8)}${f(4)}`;
+	return new Color().setHSLDeg(h, s, l).toHex();
 };
 
 /**
@@ -44,7 +36,7 @@ const palette = () => {
 	return Array.from({ length: count }, (_, i) => {
 		const t = i / (count - 1);
 		return hsl(
-			(hue + drift * t + 360) % 360,
+			hue + drift * t,
 			0.85,
 			// start near white, end dark
 			0.92 - t * 0.7,
@@ -76,7 +68,7 @@ export const randomState = (
 	const endScale = chance(0.6) ? between(0, 0.4, 0.05) : between(1, 2.5, 0.05);
 	const wide = chance(0.3);
 	const is3d = current.camera === "3d";
-	const motion = chance(0.2) ? pick(["sway", "circle"] as const) : "still";
+	const motion = chance(0.2) ? pick<Motion>(["sway", "circle"]) : "still";
 
 	const effect: Effect = {
 		...DEFAULT_EFFECT,

@@ -9,6 +9,8 @@
  * archived https://github.com/melonjs/examples repository, whose effects are
  * the first presets.
  */
+
+import { Color } from "melonjs";
 import {
 	type ChangeEvent,
 	useCallback,
@@ -28,7 +30,7 @@ import {
 	sameValue,
 } from "./fields";
 import { type Motion, PRESETS } from "./presets";
-import { createPreview, type Preview } from "./preview";
+import { createPreview, type Preview, rendererChoice } from "./preview";
 import { randomState } from "./random";
 import {
 	type Background,
@@ -38,21 +40,43 @@ import {
 	fromPreset,
 	type Language,
 	type Sprite,
+	type SpriteFrames,
 	toCode,
 	toJSON,
 } from "./state";
-import { BUILT_IN, builtIn, download, loadFile } from "./textures";
+import { BUILT_IN, builtIn, download, loadFile, square } from "./textures";
 
 const imageOf = (state: EditorState) => {
-	return state.texture === "sprite"
-		? state.sprite?.image
+	if (state.texture === "sprite") {
+		return state.sprite?.image;
+	}
+	return state.texture === "square"
+		? square(state.effect.textureSize)
 		: builtIn(state.texture).image;
+};
+
+/** where the effect waits while the page reloads on another renderer */
+const KEPT = "melonjs-particle-editor";
+
+/** the effect kept over a renderer change, or the first preset */
+const startState = (): EditorState => {
+	const first = fromPreset(PRESETS[0], "2d", "dark", true);
+	try {
+		const kept = sessionStorage.getItem(KEPT);
+		sessionStorage.removeItem(KEPT);
+		if (kept) {
+			return { ...first, ...(JSON.parse(kept) as Partial<EditorState>) };
+		}
+	} catch {
+		// storage blocked, or a bad entry: start from the preset
+	}
+	return first;
 };
 
 // ---- the bridge between the React panels and the engine preview ----------
 // The preview is started by `createExampleComponent`, which owns the engine's
 // life on this page; the panels reach it through these.
-let latest: EditorState = fromPreset(PRESETS[0], "2d", "dark", true);
+let latest: EditorState = startState();
 let preview: Preview | undefined;
 const whenReady: ((p: Preview) => void)[] = [];
 const fromPreview = {
@@ -80,12 +104,11 @@ const PreviewHost = createExampleComponent(async () => {
 		);
 		return;
 	}
+	// no teardown: the preview listens on the engine's own canvas, which
+	// outlives this component and is put back when it mounts again
 	for (const ready of whenReady.splice(0)) {
 		ready(preview);
 	}
-	return () => {
-		preview?.destroy();
-	};
 });
 
 const usePreview = () => {
@@ -337,14 +360,7 @@ const FieldRow = ({
 
 /** a CSS color as `#rrggbb`, which a color input needs */
 const toHex = (css: string) => {
-	if (/^#[0-9a-f]{6}$/i.test(css)) {
-		return css;
-	}
-	const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(css);
-	if (short) {
-		return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`;
-	}
-	return "#ffffff";
+	return new Color().parseCSS(css).toHex();
 };
 
 const RENDERERS: [string, string][] = [
@@ -368,12 +384,20 @@ const rendererLabel = (type: string | undefined) => {
 	}
 };
 
-const currentRenderer = () => {
-	const query = globalThis.location.hash.split("?")[1] ?? "";
-	return new URLSearchParams(query).get("renderer") ?? "auto";
-};
-
-const chooseRenderer = (name: string) => {
+const chooseRenderer = (name: string, state: EditorState) => {
+	// keep the effect over the reload; a sprite from disk cannot be kept
+	try {
+		const { sprite, ...kept } = state;
+		sessionStorage.setItem(
+			KEPT,
+			JSON.stringify({
+				...kept,
+				texture: sprite && kept.texture === "sprite" ? "square" : kept.texture,
+			}),
+		);
+	} catch {
+		// storage blocked: the page starts from the first preset
+	}
 	const [path] = globalThis.location.hash.split("?");
 	globalThis.location.hash =
 		name === "auto" ? path : `${path}?renderer=${name}`;
@@ -403,11 +427,15 @@ const Editor = () => {
 	const [error, setError] = useState<string | undefined>();
 	const [output, setOutput] = useState<"code" | "json">("code");
 	const [language, setLanguage] = useState<Language>("ts");
-	const [copied, setCopied] = useState(false);
+	const [copied, setCopied] = useState<string | undefined>();
 	const [tab, setTab] = useState<Tab>("properties");
 	const [notice, setNotice] = useState<string | undefined>();
 	/** whether the effect was changed since its preset was loaded */
 	const edited = useRef(false);
+	/** how to cut the sprite an opened effect asks to choose again */
+	const pendingFrames = useRef<
+		{ name: string; frames: SpriteFrames } | undefined
+	>(undefined);
 	const live = usePreview();
 	const spriteInput = useRef<HTMLInputElement>(null);
 	const jsonInput = useRef<HTMLInputElement>(null);
@@ -485,7 +513,12 @@ const Editor = () => {
 					: undefined,
 			);
 			setState((s) => {
-				return fromPreset(found, s.camera, s.background, s.grid);
+				return fromPreset(
+					found,
+					found.camera ?? s.camera,
+					s.background,
+					s.grid,
+				);
 			});
 		}
 	};
@@ -501,16 +534,26 @@ const Editor = () => {
 			const name =
 				file.name.replace(/\.[^.]*$/, "").replace(/[^\w-]+/g, "-") ||
 				"particle";
+			const pending = pendingFrames.current;
+			pendingFrames.current = undefined;
 			const sprite: Sprite = {
 				name,
 				image,
-				framewidth: undefined,
-				frameheight: undefined,
-				frames: undefined,
-				randomFrame: false,
+				...(pending?.name === name
+					? pending.frames
+					: {
+							framewidth: undefined,
+							frameheight: undefined,
+							frames: undefined,
+							randomFrame: false,
+						}),
 			};
 			edited.current = true;
 			setState((s) => {
+				// the replaced sprite's file is no longer shown anywhere
+				if (s.sprite) {
+					URL.revokeObjectURL(s.sprite.image.src);
+				}
 				return { ...s, texture: "sprite", sprite };
 			});
 		} catch (err) {
@@ -540,9 +583,10 @@ const Editor = () => {
 			setState(next);
 			setPreset("");
 			setCustom("From a file");
+			pendingFrames.current = missing;
 			setNotice(
 				missing
-					? `The effect uses the image "${missing}": choose it again with "Sprite from a file".`
+					? `The effect uses the image "${missing.name}": choose it again with "Sprite from a file".`
 					: undefined,
 			);
 		} catch (err) {
@@ -557,12 +601,24 @@ const Editor = () => {
 	}, [state, output, language]);
 
 	const copy = () => {
-		void navigator.clipboard?.writeText(text).then(() => {
-			setCopied(true);
+		const done = (label: string) => {
+			setCopied(label);
 			setTimeout(() => {
-				setCopied(false);
+				setCopied(undefined);
 			}, 1500);
-		});
+		};
+		if (!navigator.clipboard) {
+			done("Select and copy");
+			return;
+		}
+		navigator.clipboard.writeText(text).then(
+			() => {
+				done("Copied");
+			},
+			() => {
+				done("Copy failed");
+			},
+		);
 	};
 
 	const is3d = state.camera === "3d" && (live?.supports3d ?? true);
@@ -629,7 +685,9 @@ const Editor = () => {
 				<span className="pe-hint">
 					{is3d
 						? "drag to orbit · scroll or pinch to zoom"
-						: "drag the dot to aim · drag the emitter to move it"}
+						: state.motion === "still"
+							? "drag the dot to aim · drag the emitter to move it"
+							: "drag the dot to aim · the emitter moves on its own"}
 				</span>
 			</div>
 
@@ -787,7 +845,11 @@ const Editor = () => {
 						</div>
 					)}
 					{state.texture === "sprite" && state.sprite && (
-						<SpriteSettings sprite={state.sprite} onChange={setSprite} />
+						<SpriteSettings
+							key={state.sprite.image.src}
+							sprite={state.sprite}
+							onChange={setSprite}
+						/>
 					)}
 					<p className="pe-note">
 						A file you choose stays on this device: it is read here, never
@@ -853,9 +915,9 @@ const Editor = () => {
 					<h3>Renderer</h3>
 					<select
 						aria-label="Renderer"
-						value={currentRenderer()}
+						value={rendererChoice()}
 						onChange={(e) => {
-							chooseRenderer(e.target.value);
+							chooseRenderer(e.target.value, state);
 						}}
 					>
 						{RENDERERS.map(([id, label]) => {
@@ -947,7 +1009,7 @@ const Editor = () => {
 					)}
 					<span className="pe-spacer" />
 					<button type="button" className="pe-button" onClick={copy}>
-						{copied ? "Copied" : "Copy"}
+						{copied ?? "Copy"}
 					</button>
 					{output === "json" && (
 						<>

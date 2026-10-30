@@ -4,8 +4,15 @@
  * Copyright (C) 2011 - 2026 AltByte Pte Ltd — MIT License.
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
-import type { ParticleEmitter } from "melonjs";
-import { ANGLES, DEFAULT_EFFECT, type Effect, sameValue } from "./fields";
+import { math, type ParticleEmitter } from "melonjs";
+import {
+	ANGLES,
+	DEFAULT_EFFECT,
+	type Effect,
+	type Field,
+	GROUPS,
+	sameValue,
+} from "./fields";
 import type { Mode, Motion, Preset } from "./presets";
 
 /** what the emitter's constructor and `reset()` take */
@@ -13,15 +20,19 @@ export type EmitterSettings = NonNullable<
 	ConstructorParameters<typeof ParticleEmitter>[2]
 >;
 
-/** a sprite chosen from disk, with how to cut it when it is a sheet */
-export interface Sprite {
-	/** the file name without its extension, used as the loader name */
-	name: string;
-	image: HTMLImageElement;
+/** how a sprite sheet is cut into frames */
+export interface SpriteFrames {
 	framewidth: number | undefined;
 	frameheight: number | undefined;
 	frames: number[] | undefined;
 	randomFrame: boolean;
+}
+
+/** a sprite chosen from disk */
+export interface Sprite extends SpriteFrames {
+	/** the file name without its extension, used as the loader name */
+	name: string;
+	image: HTMLImageElement;
 }
 
 export type Background = "dark" | "light" | "checker";
@@ -45,8 +56,8 @@ export interface EditorState {
 /**
  * The state a preset starts from.
  * @param preset - the preset
- * @param camera - the camera in use, kept unless the preset needs 3D; with
- *   3D, the preset's 3D spread is added
+ * @param camera - the camera to show it with; with 3D, the preset's 3D
+ *   spread is added
  * @param background - the background in use, kept
  * @param grid - whether the grid is shown, kept
  * @returns the new state, without a sprite
@@ -57,26 +68,21 @@ export const fromPreset = (
 	background: Background,
 	grid: boolean,
 ): EditorState => {
-	const view = preset.camera ?? camera;
 	return {
 		effect: {
 			...DEFAULT_EFFECT,
 			...preset.effect,
-			...(view === "3d" ? preset.effect3d : {}),
+			...(camera === "3d" ? preset.effect3d : {}),
 		},
 		texture: preset.texture,
 		sprite: undefined,
 		mode: preset.mode,
-		camera: view,
+		camera,
 		motion: preset.motion ?? "still",
 		offset: preset.offset ?? { x: 0, y: 0 },
 		background,
 		grid,
 	};
-};
-
-const radians = (degrees: number) => {
-	return (degrees * Math.PI) / 180;
 };
 
 /**
@@ -92,7 +98,7 @@ export const emitterSettings = (
 	const settings: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(state.effect)) {
 		settings[key] = ANGLES.has(key as keyof Effect)
-			? radians(value as number)
+			? math.degToRad(value as number)
 			: value;
 	}
 	settings.duration =
@@ -108,34 +114,46 @@ export const emitterSettings = (
 	return settings as EmitterSettings;
 };
 
-/** the settings that differ from the emitter's defaults, in editor units */
-const changed = (effect: Effect) => {
-	return (Object.keys(effect) as (keyof Effect)[]).filter((key) => {
-		return !sameValue(effect[key], DEFAULT_EFFECT[key]);
-	});
-};
+/** settings a burst does not use */
+const STREAM_ONLY = new Set<keyof Effect>([
+	"maxParticles",
+	"frequency",
+	"duration",
+]);
 
-const round = (n: number, places = 3) => {
-	const f = 10 ** places;
-	return Math.round(n * f) / f;
-};
-
-const literal = (value: unknown): string => {
-	if (typeof value === "number") {
-		return String(round(value));
-	}
-	if (Array.isArray(value)) {
-		return `[${value.map(literal).join(", ")}]`;
-	}
-	return JSON.stringify(value);
-};
-
-/** the loader name of the image, undefined for the emitter's own square */
+/** the loader name of the image; undefined for the plain square */
 const imageName = (state: EditorState) => {
 	if (state.texture === "sprite") {
 		return state.sprite?.name;
 	}
 	return state.texture === "square" ? undefined : state.texture;
+};
+
+/**
+ * The settings written out as code or JSON: those that differ from the
+ * emitter's defaults and do something with the current choices.
+ */
+const exported = (state: EditorState) => {
+	const withImage = imageName(state) !== undefined;
+	return (Object.keys(state.effect) as (keyof Effect)[]).filter((key) => {
+		if (sameValue(state.effect[key], DEFAULT_EFFECT[key])) {
+			return false;
+		}
+		if (key === "textureSize" && withImage) {
+			return false;
+		}
+		return !(state.mode === "burst" && STREAM_ONLY.has(key));
+	});
+};
+
+const literal = (value: unknown): string => {
+	if (typeof value === "number") {
+		return String(math.round(value, 3));
+	}
+	if (Array.isArray(value)) {
+		return `[${value.map(literal).join(", ")}]`;
+	}
+	return JSON.stringify(value);
 };
 
 export type Language = "ts" | "js";
@@ -149,9 +167,7 @@ export type Language = "ts" | "js";
 export const toCode = (state: EditorState, language: Language): string => {
 	const name = imageName(state);
 	const lines: string[] = [];
-	const keys = changed(state.effect).filter((key) => {
-		return !(name !== undefined && key === "textureSize");
-	});
+	const keys = exported(state);
 	const usesMath = keys.some((key) => {
 		return ANGLES.has(key);
 	});
@@ -196,12 +212,7 @@ export const toCode = (state: EditorState, language: Language): string => {
 	}
 	for (const key of keys) {
 		const value = state.effect[key];
-		if (key === "duration") {
-			// only a stream has a duration
-			if (state.mode === "stream") {
-				lines.push(`\tduration: ${literal(value)},`);
-			}
-		} else if (ANGLES.has(key)) {
+		if (ANGLES.has(key)) {
 			lines.push(`\t${key}: math.degToRad(${literal(value)}),`);
 		} else {
 			lines.push(`\t${key}: ${literal(value)},`);
@@ -237,19 +248,11 @@ interface SavedEffect {
 export const toJSON = (state: EditorState): string => {
 	const settings: Record<string, unknown> = {};
 	const name = imageName(state);
-	for (const key of changed(state.effect)) {
+	for (const key of exported(state)) {
 		const value = state.effect[key];
-		if (key === "duration") {
-			if (state.mode === "stream") {
-				settings.duration = value;
-			}
-		} else if (key === "textureSize" && name !== undefined) {
-			// unused with an image
-		} else {
-			settings[key] = ANGLES.has(key)
-				? round(radians(value as number), 6)
-				: value;
-		}
+		settings[key] = ANGLES.has(key)
+			? math.round(math.degToRad(value as number), 6)
+			: value;
 	}
 	const sprite = state.texture === "sprite" ? state.sprite : undefined;
 	if (sprite) {
@@ -272,20 +275,95 @@ export const toJSON = (state: EditorState): string => {
 	return `${JSON.stringify(saved, null, "\t")}\n`;
 };
 
+/** every field of the properties panel, by setting */
+const FIELDS = new Map<string, Field>(
+	GROUPS.flatMap((group) => {
+		return group.fields.map((field) => {
+			return [field.key, field] as const;
+		});
+	}),
+);
+
+/**
+ * A saved value, if the panel could have made it: numbers kept within the
+ * field's range (a file asking for ten million particles would freeze the
+ * page), choices among the field's options.
+ */
+const valid = (key: keyof Effect, value: unknown): unknown => {
+	const field = FIELDS.get(key);
+	if (!field) {
+		return undefined;
+	}
+	switch (field.kind) {
+		case "number": {
+			if (typeof value !== "number" || !Number.isFinite(value)) {
+				return undefined;
+			}
+			const n = ANGLES.has(key) ? math.round(math.radToDeg(value), 2) : value;
+			return math.clamp(n, field.min, field.max);
+		}
+		case "boolean":
+			return typeof value === "boolean" ? value : undefined;
+		case "color":
+			return typeof value === "string" ? value : undefined;
+		case "colors":
+			return Array.isArray(value) &&
+				value.length > 0 &&
+				value.every((c) => {
+					return typeof c === "string";
+				})
+				? value
+				: undefined;
+		case "select":
+			return field.options.includes(value as string) ? value : undefined;
+	}
+};
+
+const positiveInteger = (value: unknown) => {
+	return Number.isInteger(value) && (value as number) > 0
+		? (value as number)
+		: undefined;
+};
+
+/** the sprite sheet settings of a saved effect */
+const savedFrames = (settings: Record<string, unknown>): SpriteFrames => {
+	const frames = settings.frames;
+	return {
+		framewidth: positiveInteger(settings.framewidth),
+		frameheight: positiveInteger(settings.frameheight),
+		frames:
+			Array.isArray(frames) &&
+			frames.length > 0 &&
+			frames.every((i) => {
+				return Number.isInteger(i) && i >= 0;
+			})
+				? frames
+				: undefined,
+		randomFrame: settings.randomFrame === true,
+	};
+};
+
+/** what opening a saved effect gives */
+export interface Opened {
+	state: EditorState;
+	/** an image of the user's to choose again, and how to cut it */
+	missing: { name: string; frames: SpriteFrames } | undefined;
+}
+
 /**
  * Read back an effect saved with {@link toJSON}. A built-in texture comes
  * back by name; any other image has to be chosen again.
  * @param text - the JSON text
  * @param current - the state it replaces, for what the file does not hold
- * @param builtIns - the built-in texture ids, which come back by name
- * @returns the new state, and the name of an image to choose again, if any
+ * @param builtIns - the built-in texture ids
+ * @returns the new state, and the image to choose again, if any
  * @throws {Error} if the text is not a saved effect
  */
 export const fromJSON = (
 	text: string,
 	current: EditorState,
 	builtIns: readonly string[],
-): { state: EditorState; missing: string | undefined } => {
+): Opened => {
 	const saved = JSON.parse(text) as Partial<SavedEffect>;
 	if (
 		saved?.format !== "melonjs-particle-effect" ||
@@ -297,24 +375,9 @@ export const fromJSON = (
 	const effect: Effect = { ...DEFAULT_EFFECT };
 	const target = effect as unknown as Record<string, unknown>;
 	for (const [key, value] of Object.entries(saved.settings)) {
-		if (!(key in DEFAULT_EFFECT)) {
-			continue;
-		}
-		const expected = typeof DEFAULT_EFFECT[key as keyof Effect];
-		if (key === "tintOverLife") {
-			if (
-				Array.isArray(value) &&
-				value.length > 0 &&
-				value.every((c) => {
-					return typeof c === "string";
-				})
-			) {
-				target[key] = value;
-			}
-		} else if (typeof value === expected) {
-			target[key] = ANGLES.has(key as keyof Effect)
-				? round(((value as number) * 180) / Math.PI, 2)
-				: value;
+		const checked = valid(key as keyof Effect, value);
+		if (checked !== undefined) {
+			target[key] = checked;
 		}
 	}
 	const image = typeof saved.image === "string" ? saved.image : undefined;
@@ -324,9 +387,12 @@ export const fromJSON = (
 			...current,
 			effect,
 			mode: saved.mode === "burst" ? "burst" : "stream",
-			texture: image === undefined ? "square" : known ? image : "square",
+			texture: image !== undefined && known ? image : "square",
 			sprite: undefined,
 		},
-		missing: known ? undefined : image,
+		missing:
+			image !== undefined && !known
+				? { name: image, frames: savedFrames(saved.settings) }
+				: undefined,
 	};
 };

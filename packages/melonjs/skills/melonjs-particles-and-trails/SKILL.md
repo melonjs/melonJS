@@ -40,10 +40,12 @@ defaults, and the same settings as JSON, in the emitter's own units, to load at
 run time:
 
 ```js
-const effect = await (await fetch("data/fx/smoke.json")).json();
+// preloaded with { name: "smoke-fx", type: "json", src: "data/fx/smoke.json" }
+const effect = loader.getJSON("smoke-fx");
 const emitter = new ParticleEmitter(x, y, {
     ...effect.settings,
-    image: loader.getImage(effect.image),
+    // no `image` for the plain square: `getImage` would give null
+    ...(effect.image ? { image: loader.getImage(effect.image) } : {}),
 });
 ```
 
@@ -140,12 +142,12 @@ const emitter = new ParticleEmitter(x - area / 2, y - area / 2, {
 ```
 
 Under a `Camera3d`, `depth` (20.13) gives the area its third side: each
-particle is born at a random depth within it, CENTRED on the emitter's own
+particle is born at a random depth within it, centered on the emitter's own
 depth, unlike `width` and `height`. Without it every particle starts on one
 plane facing the camera, so rain or dust seen from the side is a flat sheet. A
-2D camera does not show depth, so it changes nothing there. It is the spawn
-box's size, not the emitter's `depth` property, which is where the emitter
-sits along Z.
+2D camera does not show depth, though with an order-dependent blend the
+particles are still sorted by it. It is the spawn box's size, not the
+emitter's `depth` property, which is where the emitter sits along Z.
 
 ```js
 new ParticleEmitter(x, y, { width: 600, height: 20, depth: 400 });   // a volume of rain

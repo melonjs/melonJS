@@ -27,10 +27,10 @@ export interface ParticleEmitterSettings {
 	 * {@link ParticleEmitterSettings.width} and
 	 * {@link ParticleEmitterSettings.height} it makes the area a box, so under
 	 * a {@link Camera3d} rain falls through a volume instead of a sheet facing
-	 * the viewer. A 2D camera does not show depth, so it changes nothing
-	 * there.
+	 * the viewer. A 2D camera does not show the depth itself; with an order
+	 * dependent blend mode, the particles are then sorted by it.
 	 * <br><br>
-	 * Not the emitter's own `depth`, which is where the emitter sits along Z.
+	 * Not {@link Renderable#depth}, the emitter's own position along Z.
 	 * @default 0
 	 */
 	depth: number;
