@@ -354,10 +354,28 @@ export class Enemy2Entity extends GenericEnemyEntity {
 /************************************************************************************/
 /*      the crusher: falls on Alex when he walks under it                           */
 /************************************************************************************/
+/**
+ * How far the crusher of the original has fallen after n of its steps, in its
+ * pixels: a little hop up first (-4), then 1 more on each step, and it moves
+ * by `dy >> 2`, rounded down: slower than a smooth fall, and Alex rolling
+ * under a row of them gets through by a few pixels.
+ */
+const drops = [0];
+function fallDrop(n: number) {
+	// on step i its speed is i - 4
+	for (let i = drops.length; i <= n; i++) {
+		drops.push(drops[i - 1] + ((i - 4) >> 2));
+	}
+	return drops[n];
+}
+
 export class CrusherEntity extends GenericEnemyEntity {
 	startY: number;
 	mode: "wait" | "fall" | "landed" | "rise" = "wait";
 	private hitGround = false;
+	/** since it started to fall, in ms, and from where */
+	private fallTime = 0;
+	private fallY = 0;
 	private alex: Renderable | undefined;
 
 	constructor(x: number, y: number, settings: TMXObject) {
@@ -374,9 +392,16 @@ export class CrusherEntity extends GenericEnemyEntity {
 			collisionMask:
 				collision.types.WORLD_SHAPE | collision.types.PLAYER_OBJECT,
 			gravityScale: 0,
-			maxVelocity: { x: 0, y: 20 },
+			maxVelocity: { x: 0, y: 64 },
 		};
 		this.startY = this.pos.y;
+	}
+
+	override update(dt: number) {
+		if (this.mode === "fall") {
+			this.fallTime += dt;
+		}
+		return super.update(dt);
 	}
 
 	override think() {
@@ -387,15 +412,15 @@ export class CrusherEntity extends GenericEnemyEntity {
 				const alex = this.alex;
 				if (alex && Math.abs(alex.pos.x + 96 - (this.pos.x + 64)) < 128) {
 					this.mode = "fall";
-					this.adapter.setGravityScale(this, 1);
-					// a little hop up first, as in the original
-					this.body.setVelocity(0, -jumpSpeed(4));
+					this.fallTime = 0;
+					this.fallY = this.pos.y;
 				}
 				break;
 			}
 			case "fall":
 				if (this.hitGround) {
 					this.mode = "landed";
+					this.body.setVelocity(0, 0);
 					audio.play("impact");
 					dust(this.parentApp.world, this.pos.x + 64, this.pos.y + this.height);
 					// the ground shakes
@@ -404,8 +429,13 @@ export class CrusherEntity extends GenericEnemyEntity {
 					// and back up, slowly
 					this.later(500, () => {
 						this.mode = "rise";
-						this.adapter.setGravityScale(this, 0);
 					});
+				} else {
+					// where the original has it by now (between two of its steps)
+					const t = this.fallTime / (1000 / 50);
+					const n = Math.floor(t);
+					const y = fallDrop(n) + (fallDrop(n + 1) - fallDrop(n)) * (t - n);
+					this.body.setVelocity(0, this.fallY + y * 4 - this.pos.y);
 				}
 				break;
 			case "rise":
