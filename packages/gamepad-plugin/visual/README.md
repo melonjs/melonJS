@@ -26,4 +26,4 @@ What to look for:
   and the run-time changes
 - **hide on pad**: plug in a pad and press a button, and the controls hide;
   touch the screen and they come back
-- **vibrate**: the phone vibrates, where the browser can (not iOS)
+- **vibrate**: the phone vibrates, where the browser supports it

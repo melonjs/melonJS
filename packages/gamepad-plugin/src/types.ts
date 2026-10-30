@@ -130,8 +130,7 @@ export interface GamepadPluginOptions {
 	/**
 	 * how long the phone vibrates when a button is pressed, in milliseconds,
 	 * for the feel of a real button. 10 by default, a light tick; 0 for none.
-	 * Where the browser has `navigator.vibrate`: Android browsers, and apps
-	 * that provide it; not Safari or the other iPhone browsers.
+	 * Where the browser supports it (`navigator.vibrate`).
 	 */
 	haptics?: number;
 }
