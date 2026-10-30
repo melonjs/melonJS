@@ -100,10 +100,8 @@ export const baseURL = {};
 export let crossOrigin;
 
 /**
- * indicates whether or not cross-origin requests should be made using credentials such as cookies,
- * authorization headers or TLS client certificates. Requests to the page's own origin always carry
- * credentials, whatever this is set to; enable it only for assets served from another origin
- * behind a session cookie or login (that server must allow credentialed CORS requests).
+ * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
+ * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
  * @public
  * @type {boolean}
  * @see {@link setOptions}
@@ -113,7 +111,7 @@ export let crossOrigin;
  * {@link setOptions}. This is a module binding, so assigning to it throws a
  * `TypeError`; the example below never worked.
  * @example
- *  // enable withCredentials, for assets on another origin behind a session cookie or login
+ *  // enable withCredentials, for assets behind a session cookie or login
  * me.loader.setOptions({ withCredentials: true });
  *
  * // set all resources to be loaded
@@ -135,7 +133,7 @@ export function setNocache(enable = false) {
  * @param {Object} options - The options to set.
  * @param {string} [options.crossOrigin] - The crossOrigin attribute to configure the CORS requests for Image and Video data element.
  * @param {boolean} [options.nocache] - Enable or disable the nocache mechanism.
- * @param {boolean} [options.withCredentials] - Indicates whether or not cross-origin requests should be made using credentials (same-origin requests always carry them).
+ * @param {boolean} [options.withCredentials] - Indicates whether or not cross-site Access-Control requests should be made using credentials.
  * @example
  * // Set the crossOrigin attribute to "anonymous"
  * me.loader.setOptions({ crossOrigin: "anonymous" });
