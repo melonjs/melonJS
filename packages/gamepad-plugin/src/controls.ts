@@ -79,6 +79,8 @@ export class VirtualStick {
 	readonly value = { x: 0, y: 0 };
 	/** where the thumb is drawn, from the center: under the finger, as far as it goes */
 	private readonly thumb = { x: 0, y: 0 };
+	/** how far the thumb is out, from 0 to its full reach, 1 */
+	private lean = 0;
 	/** the pointer holding it, or null */
 	pointerId: number | null = null;
 
@@ -183,6 +185,7 @@ export class VirtualStick {
 		const dy = y - this.center.y;
 		const distance = Math.hypot(dx, dy);
 		const lean = Math.min(distance / this.reach, 1);
+		this.lean = lean;
 		const shown = distance > 0 ? (lean * this.reach) / distance : 0;
 		this.thumb.x = dx * shown;
 		this.thumb.y = dy * shown;
@@ -213,6 +216,7 @@ export class VirtualStick {
 		this.value.y = 0;
 		this.thumb.x = 0;
 		this.thumb.y = 0;
+		this.lean = 0;
 		this.center.x = this.home.x;
 		this.center.y = this.home.y;
 		this.report();
@@ -223,12 +227,11 @@ export class VirtualStick {
 		this.pad.axes[this.axisX] = this.value.x;
 		this.pad.axes[this.axisY] = this.value.y;
 
-		// 8 directions past the threshold, 45 degrees each; a diagonal
-		// presses two
+		// 8 directions once the thumb is past the threshold, 45 degrees
+		// each; a diagonal presses two
 		const { x, y } = this.value;
-		const lean = Math.hypot(x, y);
 		const directions = this.directions;
-		if (lean < this.dpadThreshold) {
+		if (this.lean < this.dpadThreshold || (x === 0 && y === 0)) {
 			directions.up = directions.down = false;
 			directions.left = directions.right = false;
 		} else {

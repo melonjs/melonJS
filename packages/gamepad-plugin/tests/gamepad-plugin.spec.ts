@@ -262,6 +262,20 @@ describe("GamepadPlugin", () => {
 		up(1, half);
 	});
 
+	it("presses the D-pad once the thumb is half way out", () => {
+		down(1, stick.center);
+		const short = lean(stick, 0.45, 0);
+		move(1, short.x, short.y);
+		poll();
+		expect(input.keyStatus("right")).toBe(false);
+		const half = lean(stick, 0.52, 0);
+		move(1, half.x, half.y);
+		poll();
+		expect(input.keyStatus("right")).toBe(true);
+		up(1, half);
+		poll();
+	});
+
 	it("presses the D-pad sooner with a lower threshold", () => {
 		gamepad.destroy();
 		gamepad = new GamepadPlugin(
@@ -685,6 +699,67 @@ describe("GamepadPlugin", () => {
 			expect(input.keyStatus("jump")).toBe(false);
 			expect(input.activeGamepad()).toBe(2);
 			up(1, gamepad.buttons[0].center);
+		});
+
+		it("gives a light tick on a button press, unless turned off", () => {
+			const vibrate = vi.fn(() => {
+				return true;
+			});
+			const real = navigator.vibrate;
+			Object.defineProperty(navigator, "vibrate", {
+				value: vibrate,
+				configurable: true,
+			});
+			try {
+				down(1, button.center);
+				up(1, button.center);
+				expect(vibrate).toHaveBeenCalledWith(10);
+				// the stick gives none
+				vibrate.mockClear();
+				down(2, stick.center);
+				up(2, stick.center);
+				expect(vibrate).not.toHaveBeenCalled();
+
+				gamepad.destroy();
+				gamepad = new GamepadPlugin({ enabled: true, haptics: 0 }, app);
+				down(3, gamepad.buttons[0].center);
+				up(3, gamepad.buttons[0].center);
+				expect(vibrate).not.toHaveBeenCalled();
+			} finally {
+				Object.defineProperty(navigator, "vibrate", {
+					value: real,
+					configurable: true,
+				});
+			}
+		});
+
+		it("does not cut a rumble short with a tick", async () => {
+			const vibrate = vi.fn(() => {
+				return true;
+			});
+			const real = navigator.vibrate;
+			Object.defineProperty(navigator, "vibrate", {
+				value: vibrate,
+				configurable: true,
+			});
+			try {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin({ enabled: true }, app);
+				const rumble = input.vibrateGamepad(0, { duration: 200 });
+				await new Promise((resolve) => {
+					setTimeout(resolve, 20);
+				});
+				vibrate.mockClear();
+				down(1, gamepad.buttons[0].center);
+				up(1, gamepad.buttons[0].center);
+				expect(vibrate).not.toHaveBeenCalled();
+				await rumble;
+			} finally {
+				Object.defineProperty(navigator, "vibrate", {
+					value: real,
+					configurable: true,
+				});
+			}
 		});
 
 		it("vibrates the phone where the browser can", async () => {

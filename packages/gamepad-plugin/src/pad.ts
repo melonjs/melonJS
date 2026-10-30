@@ -28,6 +28,11 @@ const AXIS_COUNT = 4;
  */
 class PhoneVibration {
 	private pending: ((result: GamepadHapticsResult) => void) | null = null;
+
+	/** whether an effect is playing */
+	get playing(): boolean {
+		return this.pending !== null;
+	}
 	private timer: ReturnType<typeof setTimeout> | undefined;
 
 	playEffect(
@@ -90,6 +95,21 @@ export class VirtualPad {
 		if (vibrate && typeof navigator.vibrate === "function") {
 			this.vibrationActuator = new PhoneVibration();
 		}
+	}
+
+	/**
+	 * a short vibration, as a button gives when pressed. Skipped while the
+	 * game plays a rumble, which it would cut short.
+	 * @param duration - in milliseconds
+	 */
+	tick(duration: number): void {
+		if (duration <= 0 || typeof navigator.vibrate !== "function") {
+			return;
+		}
+		if ((this.vibrationActuator as PhoneVibration | undefined)?.playing) {
+			return;
+		}
+		navigator.vibrate(duration);
 	}
 
 	/**

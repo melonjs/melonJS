@@ -56,8 +56,8 @@ export interface StickOptions {
 	 */
 	dpad?: boolean;
 	/**
-	 * how far the stick must lean, from 0 to 1, to press the D-pad and its
-	 * `keys`. 0.5 by default: half the thumb's travel.
+	 * how far the thumb must travel, from 0 to 1, to press the D-pad and its
+	 * `keys`. 0.5 by default: half way.
 	 */
 	dpadThreshold?: number;
 	/**
@@ -127,4 +127,10 @@ export interface GamepadPluginOptions {
 	 * (`navigator.vibrate`). On by default.
 	 */
 	vibrate?: boolean;
+	/**
+	 * how long the phone vibrates when a button is pressed, in milliseconds,
+	 * for the feel of a real button. 10 by default, a light tick; 0 for none.
+	 * Where the browser can: Android, not iOS.
+	 */
+	haptics?: number;
 }

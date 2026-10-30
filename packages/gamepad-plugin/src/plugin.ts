@@ -119,6 +119,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	readonly index: number;
 
 	private readonly pad: VirtualPad;
+	/** how long a button press vibrates, in milliseconds */
+	private readonly haptics: number;
 	private readonly look: Look;
 	private readonly hideOnGamepad: boolean;
 	private readonly marginOption: number | undefined;
@@ -177,6 +179,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			opacity: options.opacity ?? 0.35,
 		};
 		this.pad = new VirtualPad(options.vibrate ?? true);
+		this.haptics = options.haptics ?? 10;
 
 		const repaint = (): void => {
 			if (this.ready) {
@@ -480,6 +483,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				control.grab(e.pointerId, x, y);
 			} else {
 				control.press(e.pointerId);
+				this.pad.tick(this.haptics);
 			}
 			// so moves and the release still come here off the canvas
 			try {
@@ -507,7 +511,10 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				const next = this.buttonAt(x, y);
 				if (next !== control) {
 					control?.release(e.pointerId);
-					next?.press(e.pointerId);
+					if (next) {
+						next.press(e.pointerId);
+						this.pad.tick(this.haptics);
+					}
 					this.pointers.set(e.pointerId, next);
 				}
 			}
