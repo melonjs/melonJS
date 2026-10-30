@@ -183,6 +183,17 @@ body.pe-open #stage {
 	cursor: pointer;
 }
 
+.pe-button.on {
+	border-color: var(--pe-accent);
+	color: var(--pe-accent);
+}
+
+.pe-random {
+	width: 100%;
+	margin-top: 8px;
+	padding: 6px 9px;
+}
+
 .pe-button:hover,
 .pe-seg button:hover {
 	border-color: #5a5a6a;

@@ -38,6 +38,8 @@ export interface EditorState {
 	/** where the emitter sits, as a share of the preview from its center */
 	offset: { x: number; y: number };
 	background: Background;
+	/** a grid, and a floor, to judge sizes and motion against */
+	grid: boolean;
 }
 
 /**
@@ -45,12 +47,14 @@ export interface EditorState {
  * @param preset - the preset
  * @param camera - the camera in use, kept unless the preset needs 3D
  * @param background - the background in use, kept
+ * @param grid - whether the grid is shown, kept
  * @returns the new state, without a sprite
  */
 export const fromPreset = (
 	preset: Preset,
 	camera: CameraKind,
 	background: Background,
+	grid: boolean,
 ): EditorState => {
 	return {
 		effect: { ...DEFAULT_EFFECT, ...preset.effect },
@@ -61,6 +65,7 @@ export const fromPreset = (
 		motion: preset.motion ?? "still",
 		offset: preset.offset ?? { x: 0, y: 0 },
 		background,
+		grid,
 	};
 };
 

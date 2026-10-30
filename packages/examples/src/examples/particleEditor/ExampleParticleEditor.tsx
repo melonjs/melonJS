@@ -29,6 +29,7 @@ import {
 } from "./fields";
 import { type Motion, PRESETS } from "./presets";
 import { createPreview, type Preview } from "./preview";
+import { randomState } from "./random";
 import {
 	type Background,
 	type CameraKind,
@@ -51,7 +52,7 @@ const imageOf = (state: EditorState) => {
 // ---- the bridge between the React panels and the engine preview ----------
 // The preview is started by `createExampleComponent`, which owns the engine's
 // life on this page; the panels reach it through these.
-let latest: EditorState = fromPreset(PRESETS[0], "2d", "dark");
+let latest: EditorState = fromPreset(PRESETS[0], "2d", "dark", true);
 let preview: Preview | undefined;
 const whenReady: ((p: Preview) => void)[] = [];
 const fromPreview = {
@@ -396,6 +397,8 @@ type Tab = "effect" | "properties" | "code";
 const Editor = () => {
 	const [state, setState] = useState<EditorState>(latest);
 	const [preset, setPreset] = useState(PRESETS[0].id);
+	/** what the effect list shows when the effect is not a preset */
+	const [custom, setCustom] = useState("From a file");
 	const [paused, setPaused] = useState(false);
 	const [error, setError] = useState<string | undefined>();
 	const [output, setOutput] = useState<"code" | "json">("code");
@@ -476,7 +479,7 @@ const Editor = () => {
 					: undefined,
 			);
 			setState((s) => {
-				return fromPreset(found, s.camera, s.background);
+				return fromPreset(found, s.camera, s.background, s.grid);
 			});
 		}
 	};
@@ -528,6 +531,7 @@ const Editor = () => {
 			);
 			setState(next);
 			setPreset("");
+			setCustom("From a file");
 			setNotice(
 				missing
 					? `The effect uses the image "${missing}": choose it again with "Sprite from a file".`
@@ -591,6 +595,18 @@ const Editor = () => {
 						});
 					}}
 				/>
+				<button
+					type="button"
+					className={`pe-button${state.grid ? " on" : ""}`}
+					aria-pressed={state.grid}
+					onClick={() => {
+						setState((s) => {
+							return { ...s, grid: !s.grid };
+						});
+					}}
+				>
+					# Grid
+				</button>
 				{is3d && (
 					<button
 						type="button"
@@ -662,7 +678,7 @@ const Editor = () => {
 					>
 						{preset === "" && (
 							<option value="" disabled>
-								From a file
+								{custom}
 							</option>
 						)}
 						{PRESETS.map((p) => {
@@ -674,6 +690,20 @@ const Editor = () => {
 							);
 						})}
 					</select>
+					<button
+						type="button"
+						className="pe-button pe-random"
+						onClick={() => {
+							setPreset("");
+							setCustom("Random");
+							setNotice(undefined);
+							setState((s) => {
+								return randomState(s, BUILT_IN);
+							});
+						}}
+					>
+						🎲 Random
+					</button>
 					<div style={{ marginTop: 8 }}>
 						<Segmented
 							value={state.mode}

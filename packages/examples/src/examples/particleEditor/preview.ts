@@ -41,6 +41,10 @@ const MAX_PITCH = (60 * Math.PI) / 180;
 /** what the 3D camera looks at: the emitter's resting place */
 const ORIGIN = { x: 0, y: 0, z: 0 };
 
+/** the 2D grid's spacing, and its floor, as a share of the preview's height */
+const GRID = 40;
+const FLOOR_2D = 0.9;
+
 const BACKGROUNDS = { dark: "#15151d", light: "#e9e9ef" };
 
 /** what the preview tells the editor */
@@ -136,6 +140,37 @@ class Backdrop extends Renderable {
 			renderer.setColor(BACKGROUNDS[background]);
 			renderer.fillRect(0, 0, w, h);
 		}
+		if (this.preview.state.grid && this.preview.flat) {
+			this.drawGrid(renderer, w, h, background === "light");
+		}
+	}
+
+	/**
+	 * The 2D grid: graph paper over the whole preview, and a floor along the
+	 * bottom, in the colors of the 3D floor. Fixed to the preview, so it
+	 * shows how far and how fast the particles travel.
+	 */
+	private drawGrid(renderer: Renderer, w: number, h: number, light: boolean) {
+		const floor = Math.round(h * FLOOR_2D);
+		renderer.setColor(light ? "#30303a" : "#ffffff");
+		renderer.setGlobalAlpha(light ? 0.1 : 0.07);
+		renderer.lineWidth = 1;
+		for (let x = GRID; x < w; x += GRID) {
+			renderer.strokeLine(x, 0, x, floor);
+		}
+		for (let y = floor - GRID; y > 0; y -= GRID) {
+			renderer.strokeLine(0, y, w, y);
+		}
+		renderer.setGlobalAlpha(1);
+		renderer.setColor(light ? "#c9cad6" : "#1c1d28");
+		renderer.fillRect(0, floor, w, h - floor);
+		renderer.setColor(light ? "#9a9cb0" : "#343850");
+		for (let x = GRID; x < w; x += GRID) {
+			renderer.strokeLine(x, floor, x, h);
+		}
+		renderer.lineWidth = 2;
+		renderer.strokeLine(0, floor, w, floor);
+		renderer.lineWidth = 1;
 	}
 }
 
@@ -244,6 +279,7 @@ export class Preview {
 	readonly tip = { x: 0, y: 0 };
 	private emitter: PreviewEmitter | undefined;
 	private kind: CameraKind | undefined;
+	private floorMesh: Mesh | undefined;
 	private camera3d: Camera3d | undefined;
 	private paused = false;
 	private time = 0;
@@ -297,7 +333,8 @@ export class Preview {
 				camera.fov = FOV;
 				camera.setClipPlanes(4, 8000);
 			}
-			world.addChild(this.floor(), -1);
+			this.floorMesh = this.floor();
+			this.syncFloor();
 			// The 3D camera sorts the world by distance to each child's
 			// position, and one point cannot stand for a floor: seen from
 			// the side, its center comes nearer than the emitter and it is
@@ -345,6 +382,27 @@ export class Preview {
 		});
 		floor.pos.set(0, 0);
 		return floor;
+	}
+
+	/** whether the preview is the 2D one */
+	get flat() {
+		return this.kind !== "3d";
+	}
+
+	/** show or hide the 3D floor with the grid */
+	private syncFloor() {
+		const mesh = this.floorMesh;
+		if (this.kind !== "3d" || !mesh) {
+			return;
+		}
+		const world = this.app.world;
+		const shown = world.hasChild(mesh);
+		if (this.state.grid && !shown) {
+			world.addChild(mesh, -1);
+		} else if (!this.state.grid && shown) {
+			// kept, to be added back
+			world.removeChildNow(mesh, true);
+		}
 	}
 
 	/** the size of the preview, in world units at the emitter's depth */
@@ -467,6 +525,7 @@ export class Preview {
 			this.show(kind);
 			return;
 		}
+		this.syncFloor();
 		const emitter = this.emitter;
 		if (!emitter || previous.mode !== next.mode) {
 			this.restart();
