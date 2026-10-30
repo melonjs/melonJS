@@ -1,6 +1,6 @@
 # Changelog
 
-## [20.12.0] (melonJS 2) - _unreleased_
+## [20.12.0] (melonJS 2) - _2026-10-30_
 
 ### Added
 - State: a `"pixelate"` transition, `state.transition("pixelate", color, duration, size)`: the screen breaks into growing blocks and comes back sharp. Skipped on Canvas
@@ -26,6 +26,7 @@
 - Effects: a renderable drawn through two or more effects stays inside its clip, such as a minimap camera's view, instead of spilling over the canvas
 - Effects: on WebGPU, effects read their capture at the game's texture filter, as on WebGL, so pixel-art games stay crisp
 - Lighting: a `Light2d`'s glow and the darkness around it compile when the light is added to the world, not inside the first frame that draws it
+- Typings: `TextureAtlas#createAnimationFromName` declares both of its arguments optional, as they are at runtime, and is documented again
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 
