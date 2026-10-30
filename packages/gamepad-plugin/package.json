@@ -1,0 +1,78 @@
+{
+	"name": "@melonjs/gamepad-plugin",
+	"version": "1.0.0",
+	"description": "melonJS virtual gamepad plugin",
+	"homepage": "https://www.npmjs.com/package/@melonjs/gamepad-plugin",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"ES6",
+		"Canvas",
+		"WebGL",
+		"WebGPU",
+		"melonjs",
+		"plugin",
+		"gamepad",
+		"joystick",
+		"touch",
+		"mobile",
+		"controls"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/gamepad-plugin"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/melonJS/issues"
+	},
+	"license": "MIT",
+	"author": "AltByte Pte Ltd",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": ">=24.0.0"
+	},
+	"exports": {
+		".": "./build/index.js"
+	},
+	"types": "./build/index.d.ts",
+	"sideEffects": false,
+	"files": [
+		"build/",
+		"gamepad.png",
+		"package.json",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"peerDependencies": {
+		"melonjs": ">=20.12.0"
+	},
+	"devDependencies": {
+		"@types/node": "^25.6.0",
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.28.0",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.23.1",
+		"typescript": "^6.0.2",
+		"vite": "8.1.5",
+		"vitest": "^4.1.11"
+	},
+	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
+		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput",
+		"test": "vitest run",
+		"test:types": "tsc",
+		"lint": "eslint src tests",
+		"visual": "vite --config visual/vite.config.ts"
+	}
+}

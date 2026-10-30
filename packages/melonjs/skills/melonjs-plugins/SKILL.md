@@ -1,6 +1,6 @@
 ---
 name: melonjs-plugins
-description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
+description: "Use this skill when adding a melonJS plugin or adapter — the debug panel, Spine skeletal animation, compressed Tiled map support, on-screen touch controls, Capacitor packaging — or when writing your own plugin. Covers plugin.register and its version gate, plugin.cache, plugin.patch, and why physics adapters are not plugins. Triggers on: plugin, plugin.register, plugin.cache, plugin.get, plugin.patch, BasePlugin, debug-plugin, DebugPanelPlugin, SpinePlugin, TiledInflatePlugin, GamepadPlugin, gamepad-plugin, touch controls, virtual joystick, CapacitorPlugin, adapter, custom plugin, plugin version mismatch, already registered."
 license: MIT
 ---
 
@@ -87,6 +87,25 @@ Spine 4.x skeletal animation as a melonJS renderable, on all three backends.
 This is the answer for deforming animated characters — glTF import does not read
 vertex skinning. It also registers a Tiled object class, so Spine skeletons can
 be placed from a map.
+
+### `@melonjs/gamepad-plugin`
+
+On-screen touch controls, reported as a gamepad: one or two sticks and any
+number of buttons, drawn over the game and read by the engine as a pad in a
+gamepad slot. The game's `bindGamepad` bindings drive it unchanged, so one set
+of bindings covers a real pad and a touch screen.
+
+```js
+import { GamepadPlugin } from "@melonjs/gamepad-plugin";
+plugin.register(GamepadPlugin, "gamepad", {
+    buttons: [{ label: "A" }, { label: "B" }],
+});
+// plugin.cache.gamepad.visible — showing, to word prompts ("tap" or a key)
+```
+
+Shown on touch screens by default (`enabled`), hidden while a real pad is in
+use. The left stick also presses the D-pad; a button can press a key instead
+of a pad button. See `melonjs-input` for the bindings.
 
 ### `@melonjs/capacitor-plugin`
 

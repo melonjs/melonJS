@@ -69,6 +69,7 @@ engine, and each entry carries that package's own README.
 | **Box2D physics** | `@melonjs/planck-adapter` | {@link PlanckAdapter | PlanckAdapter} |
 | **Spine animation** | `@melonjs/spine-plugin` | {@link SpinePlugin | SpinePlugin} |
 | **Debug panel** | `@melonjs/debug-plugin` | {@link DebugPanelPlugin | DebugPanelPlugin} |
+| **Touch controls** | `@melonjs/gamepad-plugin` | {@link GamepadPlugin | GamepadPlugin} |
 | **Compressed Tiled maps** | `@melonjs/tiled-inflate-plugin` | {@link TiledInflatePlugin | TiledInflatePlugin} |
 | **Capacitor / native** | `@melonjs/capacitor-plugin` | {@link CapacitorPlugin | CapacitorPlugin} |
 

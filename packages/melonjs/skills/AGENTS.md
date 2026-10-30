@@ -64,4 +64,5 @@ Before hand-rolling: `ParticleEmitter`, `Trail`, `Tween`, the built-in
 Companion packages cover the rest: `@melonjs/planck-adapter` and
 `@melonjs/matter-adapter` (physics), `@melonjs/spine-plugin` (skeletal
 animation), `@melonjs/tiled-inflate-plugin` (**required** for compressed Tiled
-maps), `@melonjs/debug-plugin`, `@melonjs/capacitor-plugin`.
+maps), `@melonjs/debug-plugin`, `@melonjs/gamepad-plugin` (touch controls
+reported as a gamepad), `@melonjs/capacitor-plugin`.

@@ -515,4 +515,354 @@ describe("Gamepad", () => {
 			expect(input.isKeyPressed("padAxisTest")).toBe(false);
 		});
 	});
+
+	describe("virtual gamepad", () => {
+		const { BUTTONS, AXES } = input.GAMEPAD;
+
+		const poll = () => {
+			event.emit(event.GAME_BEFORE_UPDATE);
+		};
+
+		const virtualPad = () => {
+			return {
+				id: "Virtual Pad",
+				buttons: Array.from({ length: 17 }, () => {
+					return { pressed: false, value: 0 };
+				}),
+				axes: [0, 0, 0, 0],
+			};
+		};
+
+		const press = (pad, button, pressed = true) => {
+			pad.buttons[button] = { pressed, value: pressed ? 1 : 0 };
+		};
+
+		/** the virtual pads added by a test, taken out after it */
+		let added;
+
+		const add = (pad, index) => {
+			input.addVirtualGamepad(pad, index);
+			added.push(pad);
+			return pad;
+		};
+
+		beforeEach(() => {
+			added = [];
+			input.bindKey(input.KEY.Q, "vpadJump");
+			input.bindKey(input.KEY.W, "vpadRight");
+			input.bindGamepad(
+				0,
+				{ type: "buttons", code: BUTTONS.FACE_1 },
+				input.KEY.Q,
+			);
+			input.bindGamepad(
+				0,
+				{ type: "axes", code: AXES.LX, threshold: 0.3 },
+				input.KEY.W,
+			);
+		});
+
+		afterEach(() => {
+			for (const pad of added) {
+				input.removeVirtualGamepad(pad);
+			}
+			// let go of whatever a test left held
+			poll();
+			input.unbindGamepad(0, BUTTONS.FACE_1);
+			input.unbindGamepad(0, AXES.LX, "axes");
+			input.unbindKey(input.KEY.Q);
+			input.unbindKey(input.KEY.W);
+		});
+
+		it("presses what is bound to its slot", () => {
+			const pad = add(virtualPad());
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+
+			press(pad, BUTTONS.FACE_1, false);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("moves what is bound to an axis, past the deadzone and threshold", () => {
+			const pad = add(virtualPad());
+			pad.axes[AXES.LX] = 0.35;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(false);
+
+			pad.axes[AXES.LX] = 0.9;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(true);
+
+			pad.axes[AXES.LX] = 0;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(false);
+		});
+
+		it("is read in its own slot only", () => {
+			const pad = add(virtualPad(), 1);
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			// the bindings are on slot 0
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("works where the browser has no Gamepad API", () => {
+			navigator.getGamepads = undefined;
+			const pad = add(virtualPad());
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+			expect(input.activeGamepad()).toBe(0);
+		});
+
+		it("shares a slot with a real pad: either one presses", () => {
+			const real = padWithoutMotors();
+			pads[0] = real;
+			const pad = add(virtualPad());
+
+			press(real, BUTTONS.FACE_1);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+
+			// both held, then the real one let go: still held
+			press(pad, BUTTONS.FACE_1);
+			press(real, BUTTONS.FACE_1, false);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+
+			press(pad, BUTTONS.FACE_1, false);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("takes the axis furthest from rest when a real pad shares the slot", () => {
+			const real = padWithoutMotors();
+			pads[0] = real;
+			const pad = add(virtualPad());
+
+			// the real stick resting a little left must not hide the virtual one
+			real.axes[AXES.LX] = -0.05;
+			pad.axes[AXES.LX] = 0.9;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(true);
+
+			pad.axes[AXES.LX] = 0;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(false);
+		});
+
+		it("fires a locked key once per press, however long it is held", () => {
+			input.bindKey(input.KEY.Q, "vpadJump", true);
+			const pad = add(virtualPad());
+
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			expect(input.isKeyPressed("vpadJump")).toBe(true);
+			poll();
+			poll();
+			expect(input.isKeyPressed("vpadJump")).toBe(false);
+
+			press(pad, BUTTONS.FACE_1, false);
+			poll();
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			expect(input.isKeyPressed("vpadJump")).toBe(true);
+		});
+
+		it("lets go of what it held when taken out", () => {
+			const pad = virtualPad();
+			input.addVirtualGamepad(pad);
+			press(pad, BUTTONS.FACE_1);
+			pad.axes[AXES.LX] = 1;
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+			expect(input.keyStatus("vpadRight")).toBe(true);
+
+			expect(input.removeVirtualGamepad(pad)).toBe(true);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+			expect(input.keyStatus("vpadRight")).toBe(false);
+		});
+
+		it("lets go of a stick half that springs back just past the centre", () => {
+			// only the right half is bound; a stick let go comes to rest a
+			// little to the left, which must still release the right
+			const real = padWithoutMotors();
+			pads[0] = real;
+			real.axes[AXES.LX] = 0.9;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(true);
+
+			real.axes[AXES.LX] = -0.05;
+			poll();
+			expect(input.keyStatus("vpadRight")).toBe(false);
+		});
+
+		it("lets go of a stick bound on its negative side when it comes back to 0", () => {
+			// 0 counts as the positive half, which has no key here
+			input.bindKey(input.KEY.E, "vpadUp");
+			input.bindGamepad(
+				0,
+				{ type: "axes", code: AXES.LY, threshold: -0.3 },
+				input.KEY.E,
+			);
+			const pad = add(virtualPad());
+			pad.axes[AXES.LY] = -0.9;
+			poll();
+			expect(input.keyStatus("vpadUp")).toBe(true);
+
+			pad.axes[AXES.LY] = 0;
+			poll();
+			expect(input.keyStatus("vpadUp")).toBe(false);
+			input.unbindGamepad(0, AXES.LY, "axes");
+			input.unbindKey(input.KEY.E);
+		});
+
+		it("keeps an action held on the keyboard when the pad lets go of it", () => {
+			const pad = add(virtualPad());
+			input.triggerKeyEvent(input.KEY.Q, true);
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			press(pad, BUTTONS.FACE_1, false);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+			input.triggerKeyEvent(input.KEY.Q, false);
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("releases a remapped pad's key with the id it was pressed with", () => {
+			// a non-standard pad whose FACE_1 is its raw button 1: the key is
+			// pressed with that raw index, and must be let go with it when
+			// the slot falls back to the virtual pad, or the next press of
+			// the same button is ignored
+			input.setGamepadMapping("Remapped Pad", {
+				axes: [0, 1, 2, 3],
+				buttons: [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+			});
+			const real = padWithoutMotors();
+			real.id = "Remapped Pad";
+			real.mapping = "";
+			pads[0] = real;
+			add(virtualPad());
+
+			real.buttons[1] = { pressed: true, value: 1 };
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+
+			// unplugged while held: the virtual pad is all the slot has
+			pads[0] = null;
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+
+			// plugged back in and pressed again
+			pads[0] = real;
+			real.buttons[1] = { pressed: false, value: 0 };
+			poll();
+			real.buttons[1] = { pressed: true, value: 1 };
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+			real.buttons[1] = { pressed: false, value: 0 };
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("refuses to put one pad in two slots", () => {
+			const pad = add(virtualPad());
+			expect(() => {
+				input.addVirtualGamepad(pad, 1);
+			}).toThrow();
+		});
+
+		it("lets go of what a real pad held when it is unplugged", () => {
+			const real = padWithoutMotors();
+			pads[0] = real;
+			press(real, BUTTONS.FACE_1);
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(true);
+
+			pads[0] = null;
+			poll();
+			expect(input.keyStatus("vpadJump")).toBe(false);
+		});
+
+		it("is the active gamepad once used, the real pad when it shares the slot", () => {
+			const pad = add(virtualPad(), 1);
+			input.bindGamepad(
+				1,
+				{ type: "buttons", code: BUTTONS.FACE_1 },
+				input.KEY.Q,
+			);
+			pads[0] = padWithoutMotors();
+			expect(input.activeGamepad()).toBe(0);
+
+			press(pad, BUTTONS.FACE_1);
+			poll();
+			expect(input.activeGamepad()).toBe(1);
+			press(pad, BUTTONS.FACE_1, false);
+			poll();
+			input.unbindGamepad(1, BUTTONS.FACE_1);
+		});
+
+		it("vibrates through its own actuator when no real pad is there", async () => {
+			const pad = virtualPad();
+			pad.vibrationActuator = {
+				playEffect: vi.fn(() => {
+					return Promise.resolve("complete");
+				}),
+				reset: vi.fn(() => {
+					return Promise.resolve("complete");
+				}),
+			};
+			add(pad);
+			expect(input.hasGamepadVibration(0)).toBe(true);
+			await expect(input.vibrateGamepad(0)).resolves.toBe(true);
+			expect(pad.vibrationActuator.playEffect).toHaveBeenCalledOnce();
+
+			// a real pad in the slot is the one vibrated
+			const real = padWithMotors();
+			pads[0] = real;
+			await input.vibrateGamepad(0);
+			expect(real.vibrationActuator.playEffect).toHaveBeenCalledOnce();
+			expect(pad.vibrationActuator.playEffect).toHaveBeenCalledOnce();
+		});
+
+		it("does not vibrate without an actuator", async () => {
+			add(virtualPad());
+			expect(input.hasGamepadVibration(0)).toBe(false);
+			await expect(input.vibrateGamepad(0)).resolves.toBe(false);
+		});
+
+		it("refuses a slot that already holds one, and a bad index", () => {
+			add(virtualPad());
+			expect(() => {
+				input.addVirtualGamepad(virtualPad());
+			}).toThrow();
+			expect(() => {
+				input.addVirtualGamepad(virtualPad(), -1);
+			}).toThrow(RangeError);
+			expect(() => {
+				input.addVirtualGamepad(virtualPad(), 0.5);
+			}).toThrow(RangeError);
+		});
+
+		it("reports a pad that was never added as not removed", () => {
+			expect(input.removeVirtualGamepad(virtualPad())).toBe(false);
+		});
+
+		it("leaves no trace once removed", () => {
+			const pad = virtualPad();
+			input.addVirtualGamepad(pad, 2);
+			expect(input.activeGamepad()).toBe(2);
+			input.removeVirtualGamepad(pad);
+			expect(input.activeGamepad()).toBe(-1);
+			// and the slot can be used again
+			input.addVirtualGamepad(pad, 2);
+			input.removeVirtualGamepad(pad);
+		});
+	});
 });

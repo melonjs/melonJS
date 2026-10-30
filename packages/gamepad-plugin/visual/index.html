@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+		/>
+		<title>Gamepad plugin: visual test</title>
+		<style>
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+				background: #111;
+				color: #eee;
+				font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
+				overflow: hidden;
+			}
+			#screen {
+				position: absolute;
+				inset: 0;
+			}
+			#panel {
+				position: absolute;
+				top: 8px;
+				left: 8px;
+				max-width: min(360px, calc(100vw - 16px));
+				background: rgba(0, 0, 0, 0.7);
+				border-radius: 6px;
+				padding: 6px 8px;
+				z-index: 10;
+			}
+			#panel summary {
+				cursor: pointer;
+				font-weight: bold;
+			}
+			#state {
+				margin: 6px 0;
+				white-space: pre;
+			}
+			#toggles {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+			}
+			#toggles button,
+			#toggles select {
+				font: inherit;
+				background: #333;
+				color: #eee;
+				border: 1px solid #666;
+				border-radius: 4px;
+				padding: 3px 6px;
+			}
+			#toggles button[aria-pressed="true"] {
+				background: #3a6ea5;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="screen"></div>
+		<details id="panel" open>
+			<summary>gamepad plugin</summary>
+			<div id="state"></div>
+			<div id="toggles"></div>
+		</details>
+		<script type="module" src="./main.ts"></script>
+	</body>
+</html>
