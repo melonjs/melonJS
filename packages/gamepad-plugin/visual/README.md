@@ -10,8 +10,8 @@ pnpm -F @melonjs/gamepad-plugin visual
 ```
 
 Open the printed URL. The "Network" one works from a phone on the same
-network, to try real touches. Add `?renderer=canvas`, `webgl` or `webgpu` to
-pick the renderer (the select in the panel does the same).
+network, to try real touches. Add `?renderer=canvas`, `webgl` or `webgpu` (or
+`#webgl`) to pick the renderer (the select in the panel does the same).
 
 What to look for:
 

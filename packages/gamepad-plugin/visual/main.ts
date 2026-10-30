@@ -26,8 +26,10 @@ const renderers: Record<string, (typeof video)[keyof typeof video]> = {
 	webgpu: video.WEBGPU,
 	auto: video.AUTO,
 };
+// `?renderer=webgl`, or `#webgl` where only the hash reaches the page
 const rendererName =
-	new URLSearchParams(location.search).get("renderer") ?? "auto";
+	new URLSearchParams(location.search).get("renderer") ??
+	(location.hash.slice(1) || "auto");
 
 const app = new Application(960, 540, {
 	parent: "screen",
@@ -314,7 +316,8 @@ for (const name of Object.keys(renderers)) {
 	select.appendChild(option);
 }
 select.addEventListener("change", () => {
-	location.search = `?renderer=${select.value}`;
+	location.hash = select.value;
+	location.reload();
 });
 toggles.appendChild(select);
 
