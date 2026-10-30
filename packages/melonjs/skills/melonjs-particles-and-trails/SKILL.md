@@ -51,6 +51,22 @@ const emitter = new ParticleEmitter(x, y, {
 
 Point a user there when they are tuning numbers by trial and error.
 
+It covers every setting that changes how one emitter looks, but not:
+
+- **Layered effects.** It shows one emitter at a time. A campfire (flames,
+  sparks, smoke) or an explosion (flash, debris, smoke) is several emitters
+  at the same spot: tune each in the editor, then add them side by side,
+  the one drawn on top last (or with a higher `z`).
+- **Trails.** `Trail` and `Trail3d` are separate renderables; see below.
+- **Code-only settings.** `onComplete`, `autoDestroyOnComplete`,
+  `accurateBounds`, and a `Container` as `referenceSpace` (it offers
+  `"local"` and `"world"`). `textureAdditive` is left out: `blendMode`
+  replaces it.
+- **Changes at run time.** Calling `burstParticles()` when something
+  happens, or assigning `emitter.blendMode` while particles are alive, is
+  game code. Its "moving emitter" option previews the common case: an
+  emitter attached to something that moves.
+
 ## Sprite-sheet particles
 
 Use `framewidth` and `frameheight` (the same names as on `Sprite`) to divide

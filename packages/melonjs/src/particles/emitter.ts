@@ -221,6 +221,7 @@ function particleFrames(
  * const emitter = new ParticleEmitter(x, y, { referenceSpace: "world" });
  * ```
  * @category Particles
+ * @see [Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor) — tune an emitter live, in 2D or 3D, and copy the matching code
  */
 export default class ParticleEmitter extends Container {
 	/**

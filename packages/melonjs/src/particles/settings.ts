@@ -7,6 +7,7 @@ import type ParticleEmitter from "./emitter.ts";
  * to the constructor or {@link ParticleEmitter#reset}.
  * @category Particles
  * @see {@link ParticleEmitter}
+ * @see [Particle Editor](https://melonjs.github.io/melonJS/examples/#/particle-editor) — every setting on a slider, with the code or JSON to copy
  */
 export interface ParticleEmitterSettings {
 	/**
