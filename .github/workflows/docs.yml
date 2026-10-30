@@ -34,6 +34,8 @@ jobs:
         run: pnpm -F melonjs build
       - name: Build debug plugin
         run: pnpm -F @melonjs/debug-plugin build
+      - name: Build gamepad-plugin
+        run: pnpm -F @melonjs/gamepad-plugin build
       - name: Build tiled-inflate-plugin
         run: pnpm -F @melonjs/tiled-inflate-plugin build
       - name: Build spine-plugin
