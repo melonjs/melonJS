@@ -731,11 +731,13 @@ that against your request detects the fallback.
 
 ## The Canvas fallback
 
-`ShaderEffect` on a Canvas renderer logs a warning, leaves `enabled = false`, and
-turns every method into a no-op. Nothing throws. The same happens on a GPU
-backend when no body matches its language — a GLSL-only effect under WebGPU.
+`ShaderEffect` on a Canvas renderer leaves `enabled = false` and turns every
+method into a no-op. Nothing throws, and the console gets one warning, from the
+first such effect; the rest stay quiet. The same happens on a GPU backend when
+no body matches its language — a GLSL-only effect under WebGPU.
 
-That is fine for decoration. It is **not** fine when the shader draws your
+That is fine for decoration, which needs no guard: create and add the effect as
+on any renderer. It is **not** fine when the shader draws your
 content — the carrier renderable then shows through raw. A 1×1 white texture
 stretched to 280×156 renders as a white box where the effect should be.
 

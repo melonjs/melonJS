@@ -11,6 +11,7 @@ import {
 	Vector3d,
 	video,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 
 /**
  * A `Trail3d` is a `Mesh`, so it needs a live renderer for the white-pixel
@@ -233,6 +234,8 @@ describe("Trail3d", () => {
 
 	describe("camera requirement", () => {
 		it("draws nothing under a 2D camera, and says so once", () => {
+			// a page that has not said it yet
+			resetWarnOnce();
 			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 			const flat = new Camera2d(0, 0, 800, 600);
 			const a = new Trail3d(0, 0, { minDistance: 0 });
@@ -260,12 +263,6 @@ describe("Trail3d", () => {
 			expect(rb.calls.length).toBe(0);
 			// EXACTLY once. `toBeLessThanOrEqual(1)` passed with zero, so it
 			// was green with the warning deleted outright — decoration.
-			//
-			// `_warnedNo3dCameraOnce` is module scope, so this has to be the
-			// first test in the file that draws under a 2D camera. Insert a
-			// spec above it and the count here becomes 0 and the assertion
-			// starts failing, which is the right way round: it complains
-			// rather than going quiet.
 			expect(warn.mock.calls.length).toBe(1);
 			warn.mockRestore();
 			a.destroy();

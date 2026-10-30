@@ -1,3 +1,4 @@
+import { warnOnce } from "../../../lang/console.js";
 import { Matrix3d } from "../../../math/matrix3d.ts";
 import { instanceAttributes } from "../../gpu/instancerecord.ts";
 import {
@@ -284,9 +285,8 @@ export default class WebGPUMeshBatcher extends WebGPUBatcher {
 		// per-instance group at pinned locations), which a custom module does
 		// not declare. Same limitation as the WebGL backend, warned the same
 		// way, so the two agree rather than one silently ignoring it.
-		if (this.customShader != null && this.instancedShaderWarned !== true) {
-			this.instancedShaderWarned = true;
-			console.warn(
+		if (this.customShader != null) {
+			warnOnce(
 				"melonJS: a custom shader cannot be hosted on an InstancedMesh — the mesh draws with the built-in instanced shading",
 			);
 		}

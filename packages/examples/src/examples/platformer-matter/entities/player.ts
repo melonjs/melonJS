@@ -214,8 +214,8 @@ export class PlayerEntity extends Sprite {
 		// set the viewport to follow this renderable on both axis, and enable damping
 		app.viewport.follow(this, app.viewport.AXIS.BOTH, 0.1);
 		// the bulge that keeps a stretched or squashed player's volume is a
-		// shader effect, so on the GPU renderers only
-		if (this.squish === undefined && app.renderer.shaderLanguage !== null) {
+		// shader effect: on the Canvas renderer it does nothing
+		if (this.squish === undefined) {
 			this.squish = new SquishEffect(app.renderer);
 			this.addPostEffect(this.squish);
 		}

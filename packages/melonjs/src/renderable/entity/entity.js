@@ -164,12 +164,6 @@ import Sprite from "../sprite.js";
  */
 export default class Entity extends Renderable {
 	/**
-	 * @ignore
-	 * @internal
-	 */
-	static _deprecationWarned = false;
-
-	/**
 	 * @param {number} x - the x coordinates of the entity object
 	 * @param {number} y - the y coordinates of the entity object
 	 * @param {object} settings - Entity properties, to be defined through Tiled or when calling the entity constructor
@@ -189,11 +183,7 @@ export default class Entity extends Renderable {
 	 * @deprecated since 18.1.0 — see the class-level documentation for migration examples
 	 */
 	constructor(x, y, settings) {
-		// deprecation warning (once per session)
-		if (!Entity._deprecationWarned) {
-			warning("me.Entity", "me.Sprite combined with me.Body", "18.1.0");
-			Entity._deprecationWarned = true;
-		}
+		warning("me.Entity", "me.Sprite combined with me.Body", "18.1.0");
 
 		// call the super constructor
 		super(x, y, settings.width, settings.height);

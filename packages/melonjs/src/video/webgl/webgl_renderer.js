@@ -1,3 +1,4 @@
+import { warnOnce } from "../../lang/console.js";
 import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
@@ -301,11 +302,6 @@ export default class WebGLRenderer extends Renderer {
 		 * @internal
 		 */
 		this._advancedBlendStencil = false;
-		/**
-		 * @ignore
-		 * @internal
-		 */
-		this._advancedBlendWarned = new Set();
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -601,7 +597,6 @@ export default class WebGLRenderer extends Renderer {
 				// Clearing the memo alone is not enough — the flags were
 				// captured at construction and nothing else recomputes them.
 				this._extensions.clear();
-				this._hdrRefusalWarned = false;
 				this._deriveCapabilities();
 				// and the format derived from them: a restored context is a
 				// NEW context and need not offer what the old one did. Left
@@ -799,21 +794,12 @@ export default class WebGLRenderer extends Renderer {
 			this._renderTargetPool.destroy();
 		}
 
-		if (wanted && granted !== true && this._hdrRefusalWarned !== true) {
-			// Once. `setHDR` is meant to be driven from a settings toggle,
-			// and a refusal repeated on every press is noise that teaches
-			// people to ignore the console. Cleared on context restore,
-			// where a NEW context may refuse for a new reason.
-			//
-			// `warning()` is the deprecation helper and would format this as
-			// one, so this uses the plain console form the other capability
-			// notices take. A game that never asked is never nagged.
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._hdrRefusalWarned = true;
-			console.warn(
+		if (wanted && granted !== true) {
+			// once per page: `setHDR` is meant to be driven from a settings
+			// toggle, and a refusal repeated on every press is noise that
+			// teaches people to ignore the console. A game that never asked
+			// is never nagged.
+			warnOnce(
 				"hdr: true was requested but this WebGL2 driver cannot render into a half-float color buffer (neither EXT_color_buffer_float nor EXT_color_buffer_half_float is available) — falling back to 8 bits per channel",
 			);
 		}
@@ -2299,12 +2285,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @internal
 	 */
 	_warnAdvancedBlendFallback(what) {
-		const key = `${what}:${this.currentBlendMode}`;
-		if (this._advancedBlendWarned.has(key)) {
-			return;
-		}
-		this._advancedBlendWarned.add(key);
-		console.warn(
+		warnOnce(
 			`WebGLRenderer: blend mode "${this.currentBlendMode}" is not supported for ${what} and falls back to "normal"`,
 		);
 	}
@@ -3069,15 +3050,9 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(this.customShader);
 		} else if (
 			this.customShader != null &&
-			this.customShader.isWebGL !== true &&
-			this._meshShaderWarned !== true
+			this.customShader.isWebGL !== true
 		) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._meshShaderWarned = true;
-			console.warn(
+			warnOnce(
 				"melonJS: this custom shader cannot be hosted on a Mesh by the WebGL renderer (no compiled GLSL program) — the mesh draws with the built-in shading",
 			);
 		}
@@ -3616,13 +3591,8 @@ export default class WebGLRenderer extends Renderer {
 	setHDROutput(enable = false) {
 		super.setHDROutput(enable);
 		this.supportsHDROutput = false;
-		if (enable === true && this._hdrOutputRefusalWarned !== true) {
-			/**
-			 * @ignore
-			 * @internal
-			 */
-			this._hdrOutputRefusalWarned = true;
-			console.warn(
+		if (enable === true) {
+			warnOnce(
 				"hdrOutput: true was requested but the WebGL2 backend cannot present in extended range (no browser implements the drawing-buffer tone mapping that would allow it) — presenting in SDR",
 			);
 		}
@@ -4516,16 +4486,7 @@ export default class WebGLRenderer extends Renderer {
 			// reserved as #gradientMask's temporary marker, and an 8-bit
 			// stencil couldn't represent deeper nesting anyway
 			this.maskLevel = 0x7f;
-			if (this._maskDepthWarned !== true) {
-				/**
-				 * @ignore
-				 * @internal
-				 */
-				this._maskDepthWarned = true;
-				console.warn(
-					"melonJS: setMask nesting deeper than 127 — mask level clamped",
-				);
-			}
+			warnOnce("melonJS: setMask nesting deeper than 127 — mask level clamped");
 		}
 
 		// Write phase: increment stencil for the drawn shape's pixels so each

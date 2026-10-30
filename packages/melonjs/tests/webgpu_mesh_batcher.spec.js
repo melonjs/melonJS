@@ -265,7 +265,6 @@ describe("WebGPURenderer.drawMesh (real prototype over a stub)", () => {
 			},
 			customShader: undefined,
 			meshDepthActive: false,
-			meshEffectWarned: false,
 			pendingDepthClear: false,
 		};
 	}

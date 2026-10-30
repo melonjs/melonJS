@@ -174,9 +174,10 @@ the soft one is one shader pass on the GPU backends and an offscreen canvas on
 Canvas. So the lit-spot look, soft or hard, works everywhere, Canvas included.
 
 What Canvas cannot do is **per-pixel normal-map lighting**:
-`renderer.setLightUniforms()` is a no-op there, and the first frame that passes a
-non-empty light list logs a one-shot warning. Normal-mapped sprites simply render
-unlit — no error.
+`renderer.setLightUniforms()` is a no-op there, and the first normal-mapped
+sprite drawn while lights are on logs a one-shot warning (a scene with lights
+and no normal maps stays quiet). Normal-mapped sprites simply render unlit — no
+error.
 
 ```js
 if (app.renderer.shaderLanguage === null) {

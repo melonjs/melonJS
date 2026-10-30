@@ -105,7 +105,6 @@ describe("WebGPU advanced-blend bracket (recorded primitives)", () => {
 			_advancedBlendOpen: false,
 			_advancedBlendBusy: 0,
 			_advancedBlendParent: null,
-			_advancedBlendWarned: new Set(),
 			getCanvas() {
 				return { width: 320, height: 200 };
 			},

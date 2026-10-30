@@ -40,6 +40,7 @@ import {
 	state,
 	video,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import Renderer from "../src/video/renderer.js";
 import WebGPUMeshBatcher from "../src/video/webgpu/batchers/mesh_batcher.js";
 import WebGPUQuadBatcher from "../src/video/webgpu/batchers/quad_batcher.js";
@@ -814,7 +815,6 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 			},
 			customShader: undefined,
 			meshDepthActive: false,
-			meshEffectWarned: false,
 			pendingDepthClear: false,
 		};
 		// the one of the seven a WGSL mesh can host: the others read the
@@ -823,6 +823,8 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 			return new BloomEffect({ shaderLanguage: "wgsl" });
 		});
 		stub.customShader = bloom;
+		resetWarnOnce();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		WebGPURenderer.prototype.drawMesh.call(stub, {
 			vertices: new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
 			uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
@@ -838,7 +840,12 @@ describe("effects measure in the texels of the texture they draw (WebGPU, mock r
 			rightHanded: false,
 		});
 		// hosted, not refused
-		expect(stub.meshEffectWarned).toBe(false);
+		expect(
+			warn.mock.calls.filter((call) => {
+				return /hosted on a Mesh/.test(String(call[0]));
+			}),
+		).toEqual([]);
+		warn.mockRestore();
 		expect(sizeOf(bloom)).toEqual([32, 16]);
 	});
 });

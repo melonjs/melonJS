@@ -11,6 +11,7 @@ import {
 	state,
 	video,
 } from "../src/index.js";
+import { resetWarnOnce } from "../src/lang/console.js";
 import Renderer from "../src/video/renderer.js";
 import { MAX_LIGHTS } from "../src/video/webgl/lighting/constants.ts";
 import {
@@ -1601,7 +1602,7 @@ describe("Light2d + Stage lighting", () => {
 		// that has not warned yet
 		const warningsDuring = (run) => {
 			const renderer = app.renderer;
-			renderer._litPipelineWarned = false;
+			resetWarnOnce();
 			const orig = console.warn;
 			const warnings = [];
 			console.warn = (...args) => {

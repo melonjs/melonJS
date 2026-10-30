@@ -47,8 +47,8 @@ once and then degrades or no-ops, so the game runs and looks wrong.
 Two Canvas rows are worth spelling out because they are easy to misread as total
 failures. A `Light2d` still *draws* — the Canvas renderer bakes a radial gradient
 per light and blits it — what disappears is per-pixel normal-map shading, which
-warns once (`Light2d normal-map lighting requires the WebGL renderer`) and then
-renders sprites unlit. A `Mesh` still draws too, sorted with the painter's
+warns once (`Light2d normal-map lighting requires a GPU backend`), the first time
+a normal-mapped sprite is drawn under a light, and then renders sprites unlit. A `Mesh` still draws too, sorted with the painter's
 algorithm and no depth buffer, so convex models look right and anything
 self-overlapping does not. `"none"` (replace, alpha included) is the one blend
 mode Canvas cannot express — there is no `globalCompositeOperation` that

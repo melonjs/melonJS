@@ -1,6 +1,7 @@
 import { game } from "../application/application.ts";
 import Camera3d from "../camera/camera3d.ts";
 import { Polygon } from "../geometries/polygon.ts";
+import { warnOnce } from "../lang/console.js";
 import { getImage, getMTL, getOBJ } from "./../loader/loader.js";
 import { specularFromMetallicRoughness } from "./../loader/parsers/pbr.ts";
 import { Color } from "../math/color.ts";
@@ -26,12 +27,6 @@ import {
 	tiltOntoPlane,
 } from "./groundshadow.js";
 import Renderable from "./renderable.js";
-
-// Fired at most once per session: a `lit` mesh drawn under a 2D camera cannot
-// be lit, and saying so every frame would bury the rest of the console. Module
-// scope rather than per-instance, matching `_warnedNoGpuTileSupportOnce` in
-// TMXLayer — the message is about the scene's setup, not about one mesh.
-let _warnedLitUnder2dOnce = false;
 
 /**
  * additional import for TypeScript
@@ -2749,13 +2744,8 @@ export default class Mesh extends Renderable {
 			// with a Camera3d main view and a Camera2d minimap is supported and
 			// documented, and its mesh really is lit — on the pass that counts.
 			// Nagging it would be wrong, and its remedy is already in place.
-			if (
-				this.lit === true &&
-				this._useWorldSpace !== true &&
-				_warnedLitUnder2dOnce === false
-			) {
-				_warnedLitUnder2dOnce = true;
-				console.warn(
+			if (this.lit === true && this._useWorldSpace !== true) {
+				warnOnce(
 					"melonJS: `lit: true` has no effect under a Camera2d — a lit mesh needs world-space normals, which only the 3D path writes. Set `cameraClass: Camera3d` in the application settings to light it, or `lit: false` to silence this.",
 				);
 			}
