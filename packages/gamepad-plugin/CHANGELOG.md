@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1] - _2026-10-30_
+
+### Changed
+- Published from the melonJS release workflow, with npm provenance; the plugin itself is unchanged from 1.0.0
+
 ## [1.0.0] - _2026-10-30_
 
 ### Added
