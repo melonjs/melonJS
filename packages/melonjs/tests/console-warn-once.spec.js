@@ -5,7 +5,7 @@
  * other test prints (vitest runs each spec file in a page of its own).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resetWarnOnce, warnOnce } from "../src/lang/console.js";
+import { resetWarnOnce, warning, warnOnce } from "../src/lang/console.js";
 
 describe("warnOnce", () => {
 	let warn;
@@ -57,5 +57,44 @@ describe("warnOnce", () => {
 		fromHere();
 		fromThere();
 		expect(printed()).toEqual(["melonJS: shared"]);
+	});
+});
+
+describe("warning", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("says a deprecation in a collapsed group, with the stack, once per page", () => {
+		const group = vi
+			.spyOn(console, "groupCollapsed")
+			.mockImplementation(() => {});
+		const end = vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		warning("oldThing()", "newThing()", "1.2.3");
+		warning("oldThing()", "newThing()", "1.2.3");
+		// one group, titled with the name, version and replacement
+		expect(group).toHaveBeenCalledTimes(1);
+		expect(group.mock.calls[0].join(" ")).toContain(
+			"is deprecated since version",
+		);
+		expect(group.mock.calls[0]).toContain("oldThing()");
+		expect(group.mock.calls[0]).toContain("1.2.3");
+		expect(group.mock.calls[0]).toContain("newThing()");
+		// the stack inside it, and the group closed
+		expect(warn).toHaveBeenCalledTimes(1);
+		expect(String(warn.mock.calls[0][0])).toMatch(/Error|at /);
+		expect(end).toHaveBeenCalledTimes(1);
+	});
+
+	it("says another deprecation on its own", () => {
+		const group = vi
+			.spyOn(console, "groupCollapsed")
+			.mockImplementation(() => {});
+		vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		warning("firstOld()", "firstNew()", "1.0.0");
+		warning("secondOld()", "secondNew()", "1.0.0");
+		expect(group).toHaveBeenCalledTimes(2);
 	});
 });

@@ -17,9 +17,11 @@ describe("legacy pool deprecation notice", () => {
 	/** capture what the notice prints */
 	const capture = () => {
 		const seen = [];
-		vi.spyOn(console, "warn").mockImplementation((...args) => {
+		vi.spyOn(console, "groupCollapsed").mockImplementation((...args) => {
 			seen.push(args.join(" "));
 		});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		vi.spyOn(console, "groupEnd").mockImplementation(() => {});
 		return seen;
 	};
 
@@ -34,6 +36,8 @@ describe("legacy pool deprecation notice", () => {
 		const seen = capture();
 		pool.register("deprecation-probe", Poolable, true);
 
+		// the format string and its arguments arrive separately, so assert on
+		// the joined output rather than on a substituted sentence
 		const text = seen.join(" ");
 		expect(text).toMatch(/deprecated since version/);
 		expect(text).toMatch(/pool\.register\(\)/);
@@ -56,8 +60,9 @@ describe("legacy pool deprecation notice", () => {
 	});
 
 	it("warns ONCE per method, however many times it is called", () => {
-		// `pull` runs in the hot path of any game that pools its bullets: a
-		// notice per call would cost more than the thing it warns about.
+		// `pull` runs in the hot path of any game that pools its bullets, and
+		// the notice prints a stack trace. Per call would cost more than the
+		// thing it is warning about.
 		const seen = capture();
 		pool.pull("deprecation-probe");
 		pool.pull("deprecation-probe");
