@@ -78,15 +78,15 @@ const up = (id: number, at: { x: number; y: number }) => {
 };
 
 /**
- * a point leaning a stick by this much of its radius
+ * a point leaning a stick by this much of its thumb's reach
  * @param stick - the stick
  * @param dx - across, in radii
  * @param dy - down, in radii
  */
 const lean = (stick: VirtualStick, dx: number, dy: number) => {
 	return {
-		x: stick.center.x + dx * stick.radius,
-		y: stick.center.y + dy * stick.radius,
+		x: stick.center.x + dx * stick.reach,
+		y: stick.center.y + dy * stick.reach,
 	};
 };
 
@@ -250,6 +250,48 @@ describe("GamepadPlugin", () => {
 		up(1, far);
 	});
 
+	it("reads full where the thumb stops, with the thumb under the finger", () => {
+		down(1, stick.center);
+		const edge = lean(stick, 1, 0);
+		move(1, edge.x, edge.y);
+		expect(stick.value.x).toBeCloseTo(1, 5);
+		// half way out reads about half, past the deadzone
+		const half = lean(stick, 0.5, 0);
+		move(1, half.x, half.y);
+		expect(stick.value.x).toBeCloseTo((0.5 - 0.1) / 0.9, 5);
+		up(1, half);
+	});
+
+	it("presses the D-pad once the thumb is half way out", () => {
+		down(1, stick.center);
+		const short = lean(stick, 0.45, 0);
+		move(1, short.x, short.y);
+		poll();
+		expect(input.keyStatus("right")).toBe(false);
+		const half = lean(stick, 0.52, 0);
+		move(1, half.x, half.y);
+		poll();
+		expect(input.keyStatus("right")).toBe(true);
+		up(1, half);
+		poll();
+	});
+
+	it("presses the D-pad sooner with a lower threshold", () => {
+		gamepad.destroy();
+		gamepad = new GamepadPlugin(
+			{ enabled: true, sticks: [{ dpadThreshold: 0.2 }] },
+			app,
+		);
+		const [soft] = gamepad.sticks;
+		down(1, soft.center);
+		const near = lean(soft, 0.35, 0);
+		move(1, near.x, near.y);
+		poll();
+		expect(input.keyStatus("right")).toBe(true);
+		up(1, near);
+		poll();
+	});
+
 	it("presses the D-pad in 8 directions", () => {
 		down(1, stick.center);
 		const upLeft = lean(stick, -0.7, -0.7);
@@ -313,6 +355,55 @@ describe("GamepadPlugin", () => {
 			window.scrollTo(0, 0);
 			spacer.remove();
 		}
+	});
+
+	it("does not let a finger held on the controls select the canvas", () => {
+		// (-webkit-touch-callout, for iOS, is not read back by Chromium)
+		expect(canvas.style.getPropertyValue("user-select")).toBe("none");
+
+		const touchAt = (x: number, y: number): TouchEvent => {
+			const rect = canvas.getBoundingClientRect();
+			const touch = new Touch({
+				identifier: 1,
+				target: canvas,
+				clientX: rect.left + (x * rect.width) / app.viewport.width,
+				clientY: rect.top + (y * rect.height) / app.viewport.height,
+			});
+			const e = new TouchEvent("touchstart", {
+				touches: [touch],
+				changedTouches: [touch],
+				bubbles: true,
+				cancelable: true,
+			});
+			canvas.dispatchEvent(e);
+			return e;
+		};
+		// on a control: no selection, magnifier or image menu
+		expect(touchAt(button.center.x, button.center.y).defaultPrevented).toBe(
+			true,
+		);
+		expect(touchAt(stick.center.x, stick.center.y).defaultPrevented).toBe(true);
+		// elsewhere: the page's and the game's own business
+		expect(touchAt(app.viewport.width / 2, 20).defaultPrevented).toBe(false);
+	});
+
+	it("blocks the context menu only while the controls show", () => {
+		const menu = (): boolean => {
+			const e = new MouseEvent("contextmenu", {
+				bubbles: true,
+				cancelable: true,
+			});
+			canvas.dispatchEvent(e);
+			return e.defaultPrevented;
+		};
+		expect(menu()).toBe(true);
+		gamepad.enabled = false;
+		expect(menu()).toBe(false);
+	});
+
+	it("puts the canvas styles back once destroyed", () => {
+		gamepad.destroy();
+		expect(canvas.style.getPropertyValue("user-select")).toBe("");
 	});
 
 	it("keeps a touch on the controls from the game, and not the others", () => {
@@ -608,6 +699,82 @@ describe("GamepadPlugin", () => {
 			expect(input.keyStatus("jump")).toBe(false);
 			expect(input.activeGamepad()).toBe(2);
 			up(1, gamepad.buttons[0].center);
+		});
+
+		it("gives a light tick on a button press, unless turned off", () => {
+			const vibrate = vi.fn(() => {
+				return true;
+			});
+			const real = navigator.vibrate;
+			const tapped = (hasBeenActive: boolean): void => {
+				Object.defineProperty(navigator, "userActivation", {
+					value: { hasBeenActive },
+					configurable: true,
+				});
+			};
+			Object.defineProperty(navigator, "vibrate", {
+				value: vibrate,
+				configurable: true,
+			});
+			try {
+				// before the first tap has ended, the browser would refuse
+				tapped(false);
+				down(1, button.center);
+				up(1, button.center);
+				expect(vibrate).not.toHaveBeenCalled();
+
+				tapped(true);
+				down(1, button.center);
+				up(1, button.center);
+				expect(vibrate).toHaveBeenCalledWith(10);
+				// the stick gives none
+				vibrate.mockClear();
+				down(2, stick.center);
+				up(2, stick.center);
+				expect(vibrate).not.toHaveBeenCalled();
+
+				gamepad.destroy();
+				gamepad = new GamepadPlugin({ enabled: true, haptics: 0 }, app);
+				down(3, gamepad.buttons[0].center);
+				up(3, gamepad.buttons[0].center);
+				expect(vibrate).not.toHaveBeenCalled();
+			} finally {
+				// back to the browser's own, on the prototype
+				delete (navigator as { userActivation?: unknown }).userActivation;
+				Object.defineProperty(navigator, "vibrate", {
+					value: real,
+					configurable: true,
+				});
+			}
+		});
+
+		it("does not cut a rumble short with a tick", async () => {
+			const vibrate = vi.fn(() => {
+				return true;
+			});
+			const real = navigator.vibrate;
+			Object.defineProperty(navigator, "vibrate", {
+				value: vibrate,
+				configurable: true,
+			});
+			try {
+				gamepad.destroy();
+				gamepad = new GamepadPlugin({ enabled: true }, app);
+				const rumble = input.vibrateGamepad(0, { duration: 200 });
+				await new Promise((resolve) => {
+					setTimeout(resolve, 20);
+				});
+				vibrate.mockClear();
+				down(1, gamepad.buttons[0].center);
+				up(1, gamepad.buttons[0].center);
+				expect(vibrate).not.toHaveBeenCalled();
+				await rumble;
+			} finally {
+				Object.defineProperty(navigator, "vibrate", {
+					value: real,
+					configurable: true,
+				});
+			}
 		});
 
 		it("vibrates the phone where the browser can", async () => {

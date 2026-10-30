@@ -77,6 +77,14 @@ function inUse(pads: Gamepad[]): boolean {
 /** the gamepad slots taken by touch controls */
 const claimed = new Set<number>();
 
+/** styles that keep a held finger from selecting the canvas or opening a menu */
+const NO_SELECTION: [string, string][] = [
+	["user-select", "none"],
+	["-webkit-user-select", "none"],
+	["-webkit-touch-callout", "none"],
+	["-webkit-tap-highlight-color", "transparent"],
+];
+
 const POINTER_EVENTS = [
 	"pointerdown",
 	"pointermove",
@@ -111,6 +119,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	readonly index: number;
 
 	private readonly pad: VirtualPad;
+	/** how long a button press vibrates, in milliseconds */
+	private readonly haptics: number;
 	private readonly look: Look;
 	private readonly hideOnGamepad: boolean;
 	private readonly marginOption: number | undefined;
@@ -130,6 +140,8 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	private readonly savedProjection = new Matrix3d();
 	private laidOut = { width: -1, height: -1 };
 	private target: HTMLElement | null = null;
+	/** the canvas styles changed while listening, to put back */
+	private savedStyles: [string, string][] = [];
 	private destroyed = false;
 	private readonly originalDraw: Stage["draw"];
 	private readonly drawStage: Stage["draw"];
@@ -167,6 +179,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			opacity: options.opacity ?? 0.35,
 		};
 		this.pad = new VirtualPad(options.vibrate ?? true);
+		this.haptics = options.haptics ?? 10;
 
 		const repaint = (): void => {
 			if (this.ready) {
@@ -379,6 +392,21 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				passive: false,
 			});
 		}
+		// a finger held on the controls starts a selection, the iOS image
+		// menu or the context menu, none of which a pointer event can cancel
+		this.target.addEventListener("touchstart", this.onTouchStart, {
+			capture: true,
+			passive: false,
+		});
+		canvas.addEventListener("contextmenu", this.onContextMenu);
+		this.savedStyles = NO_SELECTION.map(([name, value]) => {
+			const saved: [string, string] = [
+				name,
+				canvas.style.getPropertyValue(name),
+			];
+			canvas.style.setProperty(name, value);
+			return saved;
+		});
 		// no scrolling or zooming the page from the controls, even in a game
 		// that never listens to the pointer itself
 		input.setTouchAction(canvas);
@@ -390,8 +418,40 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				capture: true,
 			});
 		}
+		this.target?.removeEventListener("touchstart", this.onTouchStart, {
+			capture: true,
+		});
 		this.target = null;
+		if (this.app.isInitialized) {
+			const canvas = this.app.renderer.getCanvas();
+			canvas.removeEventListener("contextmenu", this.onContextMenu);
+			// in reverse: browsers alias some of them (user-select and its
+			// -webkit- form), so the first saved holds the value from before
+			for (const [name, value] of [...this.savedStyles].reverse()) {
+				canvas.style.setProperty(name, value);
+			}
+		}
+		this.savedStyles = [];
 	}
+
+	private readonly onTouchStart = (e: TouchEvent): void => {
+		if (!this.visible || !this.ready) {
+			return;
+		}
+		for (const touch of Array.from(e.changedTouches)) {
+			const { x, y } = this.toViewport(touch);
+			if (this.onControls(x, y)) {
+				e.preventDefault();
+				return;
+			}
+		}
+	};
+
+	private readonly onContextMenu = (e: Event): void => {
+		if (this.visible) {
+			e.preventDefault();
+		}
+	};
 
 	private readonly onPointer = (e: PointerEvent): void => {
 		if (!this.ready) {
@@ -423,6 +483,7 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				control.grab(e.pointerId, x, y);
 			} else {
 				control.press(e.pointerId);
+				this.pad.tick(this.haptics);
 			}
 			// so moves and the release still come here off the canvas
 			try {
@@ -450,7 +511,10 @@ export class GamepadPlugin extends plugin.BasePlugin {
 				const next = this.buttonAt(x, y);
 				if (next !== control) {
 					control?.release(e.pointerId);
-					next?.press(e.pointerId);
+					if (next) {
+						next.press(e.pointerId);
+						this.pad.tick(this.haptics);
+					}
 					this.pointers.set(e.pointerId, next);
 				}
 			}
@@ -481,9 +545,11 @@ export class GamepadPlugin extends plugin.BasePlugin {
 	/**
 	 * where a pointer is, in viewport pixels, as `input.globalToLocal` gives
 	 * it but on this application's canvas
-	 * @param e - the pointer event
+	 * @param e - the pointer or touch
+	 * @param e.clientX - its position in the window
+	 * @param e.clientY - its position in the window
 	 */
-	private toViewport(e: PointerEvent): Vector2d {
+	private toViewport(e: { clientX: number; clientY: number }): Vector2d {
 		const rect = this.app.renderer.getCanvas().getBoundingClientRect();
 		const scale = this.app.renderer.scaleRatio;
 		const ratio = globalThis.devicePixelRatio || 1;
@@ -515,6 +581,22 @@ export class GamepadPlugin extends plugin.BasePlugin {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * whether a point is on a control, held or not
+	 * @param x - in viewport pixels
+	 * @param y - in viewport pixels
+	 */
+	private onControls(x: number, y: number): boolean {
+		this.ensureLayout();
+		const { width } = this.app.viewport;
+		return (
+			this.buttonAt(x, y) !== null ||
+			this.sticks.some((stick) => {
+				return stick.hits(x, y, width);
+			})
+		);
 	}
 
 	private buttonAt(x: number, y: number): VirtualButton | null {

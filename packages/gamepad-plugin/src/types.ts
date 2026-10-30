@@ -51,10 +51,15 @@ export interface StickOptions {
 	deadzone?: number;
 	/**
 	 * also press the D-pad buttons (`GAMEPAD.BUTTONS.UP`, `DOWN`, `LEFT`,
-	 * `RIGHT`) in 8 directions as the stick leans past half its travel. On by
-	 * default for the left stick.
+	 * `RIGHT`) in 8 directions as the stick leans. On by default for the left
+	 * stick.
 	 */
 	dpad?: boolean;
+	/**
+	 * how far the thumb must travel, from 0 to 1, to press the D-pad and its
+	 * `keys`. 0.5 by default: half way.
+	 */
+	dpadThreshold?: number;
 	/**
 	 * keys to press, as the D-pad would, for a game that reads the keyboard
 	 * rather than a pad
@@ -122,4 +127,10 @@ export interface GamepadPluginOptions {
 	 * (`navigator.vibrate`). On by default.
 	 */
 	vibrate?: boolean;
+	/**
+	 * how long the phone vibrates when a button is pressed, in milliseconds,
+	 * for the feel of a real button. 10 by default, a light tick; 0 for none.
+	 * Where the browser supports it (`navigator.vibrate`).
+	 */
+	haptics?: number;
 }

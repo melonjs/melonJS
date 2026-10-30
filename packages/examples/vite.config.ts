@@ -34,6 +34,7 @@ export default defineConfig({
 		exclude: [
 			"melonjs",
 			"@melonjs/debug-plugin",
+			"@melonjs/gamepad-plugin",
 			"@melonjs/tiled-inflate-plugin",
 		],
 	},

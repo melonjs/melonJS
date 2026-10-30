@@ -136,6 +136,9 @@ importers:
       '@melonjs/debug-plugin':
         specifier: workspace:*
         version: link:../debug-plugin
+      '@melonjs/gamepad-plugin':
+        specifier: workspace:*
+        version: link:../gamepad-plugin
       '@melonjs/matter-adapter':
         specifier: workspace:*
         version: link:../matter-adapter

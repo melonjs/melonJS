@@ -17,7 +17,7 @@ The sticks and buttons are drawn over the game and read by the engine as a pad i
 - drawn over the whole frame, above every renderable and every camera (a minimap does not show them), and kept across stage changes
 - drawn with the renderer's own shapes: no images to load
 - hidden while the player uses a real pad, and back on the next touch
-- `input.vibrateGamepad` vibrates the phone, where the browser can
+- a light vibration on each button press, as a real button gives, and `input.vibrateGamepad` vibrating the phone, where the browser supports it
 
 ## Install
 
@@ -74,6 +74,7 @@ plugin.register(GamepadPlugin, "gamepad", {
 | `opacity` | `0.35` | how opaque they are at rest; a press doubles it |
 | `margin` | 6% of the shorter side | the space kept from the edges of the viewport |
 | `vibrate` | `true` | let `input.vibrateGamepad` vibrate the phone |
+| `haptics` | `10` | how long a button press vibrates, in milliseconds, for the feel of a real button; `0` for none |
 
 Sizes and positions are in viewport pixels, the same units the game is drawn in. The controls keep their place when the viewport is resized or turned.
 
@@ -86,7 +87,8 @@ Sizes and positions are in viewport pixels, the same units the game is drawn in.
 | `radius` | 13% of the shorter side | the radius of its base |
 | `floating` | `false` | centered where the thumb lands on its half of the screen |
 | `deadzone` | `0.1` | how far it must lean (0 to 1) before it reads anything |
-| `dpad` | on for the left stick | press the D-pad buttons in 8 directions, past half its travel |
+| `dpad` | on for the left stick | press the D-pad buttons in 8 directions |
+| `dpadThreshold` | `0.5` | how far the thumb must travel (0 to 1) to press the D-pad and its `keys`; lower for a stick that answers sooner |
 | `keys` | none | `{ up, down, left, right }`: keys to press as it leans |
 
 ### Buttons

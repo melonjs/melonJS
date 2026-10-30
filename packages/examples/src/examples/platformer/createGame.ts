@@ -4,6 +4,7 @@
  * See `packages/examples/LICENSE.md` for full license + asset credits.
  */
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { GamepadPlugin } from "@melonjs/gamepad-plugin";
 import {
 	Application,
 	audio,
@@ -38,6 +39,10 @@ export const createGame = async () => {
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");
+
+	// touch controls, on touch screens: a stick and a jump button, read
+	// through the player's gamepad bindings
+	plugin.register(GamepadPlugin, "gamepad", { buttons: [{ label: "A" }] });
 
 	// initialize the sound engine
 	audio.init("mp3,ogg");
