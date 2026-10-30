@@ -15,6 +15,7 @@ on:
           - matter-adapter
           - planck-adapter
           - capacitor-plugin
+          - gamepad-plugin
           - create-melonjs
       dry-run:
         description: "Dry run (skip actual publish)"
@@ -73,6 +74,9 @@ jobs:
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "capacitor-plugin" ]; then
             echo "dir=packages/capacitor-plugin" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.package }}" = "gamepad-plugin" ]; then
+            echo "dir=packages/gamepad-plugin" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "create-melonjs" ]; then
             echo "dir=packages/create-melonjs" >> "$GITHUB_OUTPUT"

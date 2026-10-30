@@ -104,6 +104,7 @@ jobs:
       - run: pnpm -F @melonjs/matter-adapter test
       - run: pnpm -F @melonjs/planck-adapter test
       - run: pnpm -F @melonjs/debug-plugin test
+      - run: pnpm -F @melonjs/gamepad-plugin test
 
   # Windows build — only on master push, not on PRs
   windows:
