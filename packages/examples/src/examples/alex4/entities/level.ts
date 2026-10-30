@@ -15,11 +15,11 @@ import {
 	type TMXLayer,
 	type TMXObject,
 	Trigger,
-	timer,
 } from "melonjs";
 import { gameState } from "../gameState";
 import type { PlayScreen } from "../screens/play";
 import { burst, shake } from "./effects";
+import { nearScreen } from "./enemies";
 import { PlayerEntity, type Touch } from "./player";
 import { CannonBall } from "./projectiles";
 
@@ -120,24 +120,33 @@ export class Breakable extends Renderable {
 /*                                                                                  */
 /************************************************************************************/
 export class CannonEntity extends Renderable {
-	private fireTimer = 0;
+	/**
+	 * the time since its last shot, counted as in the original only while it
+	 * is on the screen or nearly: its first shot comes 2.5 seconds after it
+	 * shows up, not whenever a clock started with the level says
+	 */
+	private wait = 0;
 
 	constructor(x: number, y: number, settings: TMXObject) {
 		super(x, y, settings.width, settings.height);
 		this.anchorPoint.set(0, 0);
+		this.alwaysUpdate = true;
 	}
 
-	override onActivateEvent() {
-		this.fireTimer = timer.setInterval(() => this.fire(), 2500);
-	}
-
-	override onDeactivateEvent() {
-		timer.clearInterval(this.fireTimer);
+	override update(dt: number) {
+		if (nearScreen(this)) {
+			this.wait += dt;
+			if (this.wait >= 2500) {
+				this.wait = 0;
+				this.fire();
+			}
+		}
+		return super.update(dt);
 	}
 
 	private fire() {
 		const alex = this.parentApp.world.getChildByName("alex")[0];
-		if (alex && this.inViewport) {
+		if (alex) {
 			const left = alex.pos.x + 96 < this.pos.x + 32;
 			const x = left ? this.pos.x - 52 : this.pos.x + 64;
 			this.parentApp.world.addChild(

@@ -443,8 +443,19 @@ export class CrusherEntity extends GenericEnemyEntity {
 const FISH_JUMP = [8, 14, 18, 21, 23, 26, 28];
 /** the wait in the water between two jumps, in steps */
 const REST = 48;
-/** how far off the screen a fish still moves (32 pixels of the original) */
+/** how far off the screen an enemy still moves (32 pixels of the original) */
 const NEAR = 128;
+
+/**
+ * The original moves an enemy (and counts a cannon's time between two shots)
+ * only while it is on the screen, or nearly.
+ */
+export function nearScreen(r: Renderable) {
+	const view = r.parentApp.viewport;
+	return (
+		r.pos.x > view.pos.x - NEAR && r.pos.x < view.pos.x + view.width + NEAR
+	);
+}
 
 class FishEntity extends GenericEnemyEntity {
 	jumpSpeed: number;
@@ -479,22 +490,6 @@ class FishEntity extends GenericEnemyEntity {
 		};
 	}
 
-	/**
-	 * As the original, which moves an enemy only while it is on the screen,
-	 * or nearly: a fish jumps the moment it comes in sight, and waits between
-	 * jumps only there. They would otherwise all have been jumping since the
-	 * level started, out of step with each other, by the time Alex comes:
-	 * the bounces off the jellyfish that level 8 is built on are then a
-	 * matter of luck, when they are possible at all.
-	 */
-	private nearScreen() {
-		const view = this.parentApp.viewport;
-		return (
-			this.pos.x > view.pos.x - NEAR &&
-			this.pos.x < view.pos.x + view.width + NEAR
-		);
-	}
-
 	private jump() {
 		this.jumping = true;
 		// from the bottom of the screen
@@ -518,7 +513,11 @@ class FishEntity extends GenericEnemyEntity {
 				this.adapterPos.set(this.pos.x, HEIGHT + 40),
 			);
 			this.rest = REST;
-		} else if (!this.jumping && this.nearScreen() && --this.rest <= 0) {
+		} else if (!this.jumping && nearScreen(this) && --this.rest <= 0) {
+			// it jumps the moment it comes in sight, and waits between jumps
+			// only there: they would otherwise all have been jumping since the
+			// level started, out of step, by the time Alex comes, and the
+			// bounces off the jellyfish that level 8 is built on would be luck
 			this.jump();
 		}
 		this.onJump(vy);
