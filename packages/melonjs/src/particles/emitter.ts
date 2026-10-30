@@ -317,10 +317,13 @@ export default class ParticleEmitter extends Container {
 		// off an axis throws particles out of the emitter's plane whatever
 		// the axis itself is, so a ring with `elevation` left at 0 still
 		// moves in Z.
+		// A spawn `depth` counts as well: particles born at different depths
+		// overlap in a different order from each side, even moving flat.
 		const moves3d =
 			this.settings.elevation !== 0 ||
 			this.settings.elevationVariation !== 0 ||
-			this.settings.maxSpread !== 0;
+			this.settings.maxSpread !== 0 ||
+			this.settings.depth !== 0;
 		const commutative =
 			this.blendMode === "additive" ||
 			(this.blendMode === "normal" && this.settings.textureAdditive);
@@ -710,15 +713,20 @@ export default class ParticleEmitter extends Container {
 			}
 		}
 
+		const depth = this.settings.depth;
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
-			// `z = 0`: a particle's `pos` is LOCAL to its emitter, the z
-			// component included, exactly like any other child of any other
-			// container. The explicit 0 is not decoration — left out,
-			// `Container.autoDepth` would number the particles 1, 2, 3...
-			// {@link Particle#preDraw} is what puts the burst back on the
-			// emitter's perspective slice, by ADDING the depth it inherits.
-			this.addChild(particlePool.get(this), 0);
+			// `z`: a particle's `pos` is LOCAL to its emitter, the z component
+			// included, exactly like any other child of any other container:
+			// 0, or a random depth within the spawn area's `depth`. Always
+			// given — left out, `Container.autoDepth` would number the
+			// particles 1, 2, 3... {@link Particle#preDraw} is what puts the
+			// burst back on the emitter's perspective slice, by ADDING the
+			// depth it inherits.
+			this.addChild(
+				particlePool.get(this),
+				depth > 0 ? randomFloat(-depth / 2, depth / 2) : 0,
+			);
 		}
 		if (count > 0) {
 			this._hasSpawned = true;

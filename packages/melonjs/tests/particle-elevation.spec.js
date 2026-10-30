@@ -159,6 +159,42 @@ describe("particle elevation", () => {
 		});
 	});
 
+	describe("a spawn area with depth", () => {
+		it("is born across the depth, centered on the emitter", () => {
+			const e = burst({ depth: 200, totalParticles: 200 });
+			const zs = e.getChildren().map((p) => {
+				return p.depth;
+			});
+			expect(Math.min(...zs)).toBeGreaterThanOrEqual(-100);
+			expect(Math.max(...zs)).toBeLessThanOrEqual(100);
+			// spread over the box, not stacked at its center
+			expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(100);
+		});
+
+		it("keeps that depth while flying flat", () => {
+			const e = burst({ depth: 200, angle: 0 });
+			const before = e.getChildren().map((p) => {
+				return p.depth;
+			});
+			e.update(16);
+			e.getChildren().forEach((p, i) => {
+				expect(p.moves3d).toBe(false);
+				expect(p.depth).toBe(before[i]);
+			});
+		});
+
+		it("is born at the emitter's depth without one", () => {
+			for (const p of burst({ angle: 0 }).getChildren()) {
+				expect(p.depth).toBe(0);
+			}
+		});
+
+		it("is sorted with an order-dependent blend, as a 3D burst is", () => {
+			expect(burst({ depth: 50, blendMode: "normal" }).autoSort).toBe(true);
+			expect(burst({ depth: 50, blendMode: "additive" }).autoSort).toBe(false);
+		});
+	});
+
 	describe("sorting keys off the BLEND MODE, not off the 3D flag", () => {
 		it("sorts a 3D burst drawn with an order-dependent blend", () => {
 			const e = burst({ elevation: Math.PI / 4, blendMode: "normal" });

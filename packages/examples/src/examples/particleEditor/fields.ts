@@ -15,6 +15,7 @@ import { ParticleEmitterSettings as defaults } from "melonjs";
 export interface Effect {
 	width: number;
 	height: number;
+	depth: number;
 	totalParticles: number;
 	maxParticles: number;
 	frequency: number;
@@ -68,6 +69,7 @@ const deg = (radians: number) => {
 export const DEFAULT_EFFECT: Effect = {
 	width: defaults.width,
 	height: defaults.height,
+	depth: defaults.depth,
 	totalParticles: defaults.totalParticles,
 	maxParticles: defaults.maxParticles,
 	frequency: defaults.frequency,
@@ -211,6 +213,17 @@ export const GROUPS: Group[] = [
 				step: 1,
 				unit: "px",
 				help: "the height of the area particles are born in",
+			},
+			{
+				key: "depth",
+				label: "Area depth",
+				kind: "number",
+				min: 0,
+				max: 800,
+				step: 1,
+				unit: "px",
+				only3d: true,
+				help: "the depth of the area particles are born in, along Z: a volume instead of a flat sheet",
 			},
 		],
 	},

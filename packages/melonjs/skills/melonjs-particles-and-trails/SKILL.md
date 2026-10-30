@@ -1,6 +1,6 @@
 ---
 name: melonjs-particles-and-trails
-description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, particle editor, tune particles, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
+description: "Use this skill for particle effects and motion trails in melonJS — ParticleEmitter configuration, burst versus stream emission, the referenceSpace frame of reference introduced in 20.2, 3D particle motion through elevation and minSpread/maxSpread in 20.8, and the Trail renderable. Covers the emitter that silently does nothing until you call an emit method. Triggers on: Trail3d, ribbon, exhaust trail, speed streak, ski track, tyre mark, ribbonNormal, ParticleEmitter, particles, particle editor, tune particles, spawn depth, volume, burstParticles, streamParticles, referenceSpace, ParticleEmitterSettings, elevation, minSpread, maxSpread, spawn area, Trail, explosion, smoke, sparks, debris, ring, exhaust, emitter, tintOverLife, colour over life, color over life, flame, fire."
 license: MIT
 ---
 
@@ -137,6 +137,18 @@ const area = radius * 2;
 const emitter = new ParticleEmitter(x - area / 2, y - area / 2, {
     width: area, height: area,
 });
+```
+
+Under a `Camera3d`, `depth` (20.13) gives the area its third side: each
+particle is born at a random depth within it, CENTRED on the emitter's own
+depth, unlike `width` and `height`. Without it every particle starts on one
+plane facing the camera, so rain or dust seen from the side is a flat sheet. A
+2D camera does not show depth, so it changes nothing there. It is the spawn
+box's size, not the emitter's `depth` property, which is where the emitter
+sits along Z.
+
+```js
+new ParticleEmitter(x, y, { width: 600, height: 20, depth: 400 });   // a volume of rain
 ```
 
 ## Particles in 3D

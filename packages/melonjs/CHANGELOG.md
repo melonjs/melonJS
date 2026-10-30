@@ -1,5 +1,10 @@
 # Changelog
 
+## [20.13.0] (melonJS 2) - _unreleased_
+
+### Added
+- Particles: a `depth` setting, the spawn area's size along Z, with `width` and `height`. Under a `Camera3d`, particles are born through a volume instead of on a flat sheet
+
 ## [20.12.0] (melonJS 2) - _2026-10-30_
 
 ### Added

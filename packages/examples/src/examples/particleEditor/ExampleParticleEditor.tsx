@@ -406,6 +406,8 @@ const Editor = () => {
 	const [copied, setCopied] = useState(false);
 	const [tab, setTab] = useState<Tab>("properties");
 	const [notice, setNotice] = useState<string | undefined>();
+	/** whether the effect was changed since its preset was loaded */
+	const edited = useRef(false);
 	const live = usePreview();
 	const spriteInput = useRef<HTMLInputElement>(null);
 	const jsonInput = useRef<HTMLInputElement>(null);
@@ -446,11 +448,13 @@ const Editor = () => {
 
 	useEffect(() => {
 		fromPreview.angle = (degrees) => {
+			edited.current = true;
 			setState((s) => {
 				return { ...s, effect: { ...s.effect, angle: degrees } };
 			});
 		};
 		fromPreview.offset = (x, y) => {
+			edited.current = true;
 			setState((s) => {
 				return { ...s, offset: { x, y } };
 			});
@@ -460,6 +464,7 @@ const Editor = () => {
 
 	const setEffect = useCallback(
 		(key: keyof Effect, value: Effect[keyof Effect]) => {
+			edited.current = true;
 			setState((s) => {
 				return { ...s, effect: { ...s.effect, [key]: value } };
 			});
@@ -472,6 +477,7 @@ const Editor = () => {
 			return p.id === id;
 		});
 		if (found) {
+			edited.current = false;
 			setPreset(id);
 			setNotice(
 				found.camera === "3d" && live && !live.supports3d
@@ -503,6 +509,7 @@ const Editor = () => {
 				frames: undefined,
 				randomFrame: false,
 			};
+			edited.current = true;
 			setState((s) => {
 				return { ...s, texture: "sprite", sprite };
 			});
@@ -512,6 +519,7 @@ const Editor = () => {
 	};
 
 	const setSprite = (patch: Partial<Sprite>) => {
+		edited.current = true;
 		setState((s) => {
 			return s.sprite ? { ...s, sprite: { ...s.sprite, ...patch } } : s;
 		});
@@ -712,6 +720,7 @@ const Editor = () => {
 								["burst", "Burst"],
 							]}
 							onChange={(mode) => {
+								edited.current = true;
 								setState((s) => {
 									return { ...s, mode };
 								});
@@ -735,6 +744,7 @@ const Editor = () => {
 								spriteInput.current?.click();
 							} else {
 								const value = e.target.value;
+								edited.current = true;
 								setState((s) => {
 									return { ...s, texture: value };
 								});
@@ -797,8 +807,15 @@ const Editor = () => {
 							return c === "3d" && live !== undefined && !live.supports3d;
 						}}
 						onChange={(camera) => {
+							const found = PRESETS.find((p) => {
+								return p.id === preset;
+							});
 							setState((s) => {
-								return { ...s, camera };
+								// an untouched preset is reloaded for the new camera,
+								// with or without its 3D spread
+								return found && !edited.current
+									? fromPreset(found, camera, s.background, s.grid)
+									: { ...s, camera };
 							});
 						}}
 					/>
@@ -821,6 +838,7 @@ const Editor = () => {
 							["circle", "Circle"],
 						]}
 						onChange={(motion) => {
+							edited.current = true;
 							setState((s) => {
 								return { ...s, motion };
 							});

@@ -108,6 +108,11 @@ export const randomState = (
 		// a moving emitter mostly leaves a trail
 		referenceSpace: motion !== "still" && chance(0.7) ? "world" : "local",
 	};
+	if (is3d) {
+		// fill a volume rather than a sheet facing the camera
+		effect.depth = chance(0.5) ? between(40, 400, 1) : 0;
+		effect.elevationVariation = between(0, 60, 1);
+	}
 	if (is3d && chance(0.6)) {
 		// a cone, a ring or a sphere around a random axis
 		effect.elevation = between(-60, 60, 1);

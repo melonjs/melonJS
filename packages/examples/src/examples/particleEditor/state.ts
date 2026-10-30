@@ -45,7 +45,8 @@ export interface EditorState {
 /**
  * The state a preset starts from.
  * @param preset - the preset
- * @param camera - the camera in use, kept unless the preset needs 3D
+ * @param camera - the camera in use, kept unless the preset needs 3D; with
+ *   3D, the preset's 3D spread is added
  * @param background - the background in use, kept
  * @param grid - whether the grid is shown, kept
  * @returns the new state, without a sprite
@@ -56,12 +57,17 @@ export const fromPreset = (
 	background: Background,
 	grid: boolean,
 ): EditorState => {
+	const view = preset.camera ?? camera;
 	return {
-		effect: { ...DEFAULT_EFFECT, ...preset.effect },
+		effect: {
+			...DEFAULT_EFFECT,
+			...preset.effect,
+			...(view === "3d" ? preset.effect3d : {}),
+		},
 		texture: preset.texture,
 		sprite: undefined,
 		mode: preset.mode,
-		camera: preset.camera ?? camera,
+		camera: view,
 		motion: preset.motion ?? "still",
 		offset: preset.offset ?? { x: 0, y: 0 },
 		background,

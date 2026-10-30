@@ -22,6 +22,20 @@ export interface ParticleEmitterSettings {
 	height: number;
 
 	/**
+	 * Depth of the particle spawn area, along Z: each particle is born at a
+	 * random depth within it, centered on the emitter. With
+	 * {@link ParticleEmitterSettings.width} and
+	 * {@link ParticleEmitterSettings.height} it makes the area a box, so under
+	 * a {@link Camera3d} rain falls through a volume instead of a sheet facing
+	 * the viewer. A 2D camera does not show depth, so it changes nothing
+	 * there.
+	 * <br><br>
+	 * Not the emitter's own `depth`, which is where the emitter sits along Z.
+	 * @default 0
+	 */
+	depth: number;
+
+	/**
 	 * Image used for particles texture (by default melonJS will create a white
 	 * 8x8 texture image).
 	 * @default undefined
@@ -417,6 +431,7 @@ export interface ParticleEmitterSettings {
 const defaultParticleEmitterSettings: ParticleEmitterSettings = {
 	width: 1,
 	height: 1,
+	depth: 0,
 	image: undefined,
 	framewidth: undefined,
 	frameheight: undefined,

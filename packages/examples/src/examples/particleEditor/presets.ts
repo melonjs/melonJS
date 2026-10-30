@@ -26,6 +26,12 @@ export interface Preset {
 	/** where the emitter sits, as a share of the preview from its center */
 	offset?: { x: number; y: number };
 	effect: Partial<Effect>;
+	/**
+	 * With the 3D camera, on top of `effect`: a spawn depth and a spread out
+	 * of the screen's plane, so the effect fills a volume instead of
+	 * showing as a flat sheet.
+	 */
+	effect3d?: Partial<Effect>;
 }
 
 export const PRESETS: Preset[] = [
@@ -35,6 +41,7 @@ export const PRESETS: Preset[] = [
 		texture: "glow",
 		mode: "stream",
 		offset: { x: 0, y: 0.25 },
+		effect3d: { depth: 80, elevationVariation: 12 },
 		effect: {
 			width: 80,
 			height: 0,
@@ -61,6 +68,7 @@ export const PRESETS: Preset[] = [
 		texture: "smoke",
 		mode: "stream",
 		offset: { x: 0, y: 0.3 },
+		effect3d: { depth: 20, elevationVariation: 20 },
 		effect: {
 			width: 20,
 			height: 0,
@@ -89,6 +97,7 @@ export const PRESETS: Preset[] = [
 		texture: "dot",
 		mode: "stream",
 		offset: { x: 0, y: 0.35 },
+		effect3d: { elevationVariation: 8 },
 		effect: {
 			width: 0,
 			height: 0,
@@ -115,6 +124,7 @@ export const PRESETS: Preset[] = [
 		texture: "glow",
 		mode: "stream",
 		offset: { x: -0.35, y: 0 },
+		effect3d: { elevationVariation: 20 },
 		effect: {
 			width: 0,
 			height: 0,
@@ -141,6 +151,7 @@ export const PRESETS: Preset[] = [
 		texture: "drop",
 		mode: "stream",
 		offset: { x: 0, y: -0.45 },
+		effect3d: { depth: 500 },
 		effect: {
 			width: 700,
 			height: 20,
@@ -168,6 +179,7 @@ export const PRESETS: Preset[] = [
 		texture: "spark",
 		mode: "stream",
 		offset: { x: -0.35, y: 0.35 },
+		effect3d: { depth: 300 },
 		effect: {
 			width: 0,
 			height: 0,
@@ -194,6 +206,7 @@ export const PRESETS: Preset[] = [
 		label: "Radial explosion",
 		texture: "glow",
 		mode: "burst",
+		effect3d: { elevationVariation: 90 },
 		effect: {
 			width: 10,
 			height: 10,
@@ -218,6 +231,7 @@ export const PRESETS: Preset[] = [
 		texture: "glow",
 		mode: "burst",
 		offset: { x: -0.3, y: 0 },
+		effect3d: { elevationVariation: 25 },
 		effect: {
 			width: 0,
 			height: 0,
@@ -243,6 +257,7 @@ export const PRESETS: Preset[] = [
 		mode: "stream",
 		// water leaving a ledge: thrown sideways and pulled down into a sheet
 		offset: { x: -0.3, y: -0.35 },
+		effect3d: { depth: 160 },
 		effect: {
 			width: 0,
 			height: 30,
@@ -321,6 +336,7 @@ export const PRESETS: Preset[] = [
 		label: "Sparkle",
 		texture: "star",
 		mode: "stream",
+		effect3d: { depth: 160 },
 		effect: {
 			width: 220,
 			height: 160,
@@ -349,6 +365,7 @@ export const PRESETS: Preset[] = [
 		texture: "glow",
 		mode: "stream",
 		motion: "circle",
+		effect3d: { elevationVariation: 90 },
 		effect: {
 			width: 4,
 			height: 4,
