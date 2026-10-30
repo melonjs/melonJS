@@ -16,6 +16,7 @@ import { VIEW_H, VIEW_W } from "./constants";
 import { Hero } from "./entities/Hero";
 import { Chest, Door, Exit, Gate } from "./entities/usables";
 import { WallTorch } from "./entities/WallTorch";
+import { prepareEffects } from "./fx/effects";
 import { resources } from "./resources";
 import { EscapedStage } from "./scenes/EscapedStage";
 import { PlayStage } from "./scenes/PlayStage";
@@ -55,6 +56,9 @@ export const createGame = async () => {
 	audio.init("mp3,ogg");
 
 	await loader.preload(resources);
+	// the level's shader effects, made while the loading screen is still up,
+	// so their shaders compile here and not behind the fade into the level
+	prepareEffects(app);
 
 	state.set(state.PLAY, new PlayStage());
 	state.set(state.GAME_END, new EscapedStage());

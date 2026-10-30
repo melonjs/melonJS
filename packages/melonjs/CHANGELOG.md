@@ -25,6 +25,7 @@
 - Effects: through two or more effects, widths, offsets and sizes are in the renderable's own pixels at any scale or zoom, as with one effect. Check widths tuned on a scaled renderable
 - Effects: a renderable drawn through two or more effects stays inside its clip, such as a minimap camera's view, instead of spilling over the canvas
 - Effects: on WebGPU, effects read their capture at the game's texture filter, as on WebGL, so pixel-art games stay crisp
+- Lighting: a `Light2d`'s glow and the darkness around it compile when the light is added to the world, not inside the first frame that draws it
 
 ## [20.11.0] (melonJS 2) - _2026-10-27_
 

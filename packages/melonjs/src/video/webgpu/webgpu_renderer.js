@@ -1,4 +1,5 @@
 import { warnOnce } from "../../lang/console.js";
+import Light2d from "../../lighting/light2d.ts";
 import { shaderList } from "../../loader/cache.js";
 import { Color, colorPool } from "../../math/color.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
@@ -61,7 +62,6 @@ import WebGPUTextureStore from "./texture/store.js";
  * additional import for TypeScript
  * @import {ApplicationSettings} from "../../application/settings.ts";
  * @import {Ellipse} from "../../geometries/ellipse.ts";
- * @import Light2d from "../../lighting/light2d.ts";
  * @import {Line} from "../../geometries/line.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Polygon} from "../../geometries/polygon.ts";
@@ -1602,10 +1602,51 @@ export default class WebGPURenderer extends Renderer {
 	}
 
 	/**
+	 * Build, off the frame, what a light draws with: its glow, through the
+	 * radial-gradient effect in its own blend mode, and for a light with a
+	 * soft edge the stage's darkness, through the ambient-light effect (see
+	 * `drawLight`, `drawAmbientLight`). The renderer makes both effects the
+	 * first time a frame draws a light, so their pipelines were built inside
+	 * that frame.
+	 * @param {Light2d} light - the light to warm for
+	 * @param {Array<Array<string|number>>} scene - the targets a scene draws into, as `[format, sampleCount]`
+	 * @ignore
+	 * @internal
+	 */
+	_warmLight(light, scene) {
+		this.lightShader ??= new RadialGradientEffect(this);
+		const warm = (effect, blendMode) => {
+			// an effect that cannot run here has nothing to build
+			if (effect.wgslRealization?.valid !== true) {
+				return;
+			}
+			const family = this._effectFamily(effect);
+			for (const [format, sampleCount] of scene) {
+				void this.pipelineCache.warm(
+					family,
+					"triangle-list",
+					blendMode,
+					true,
+					"none",
+					undefined,
+					format,
+					sampleCount,
+				);
+			}
+		};
+		warm(this.lightShader, light.blendMode ?? "normal");
+		if (light.softness > 0) {
+			this._ambientShader ??= new AmbientLightEffect(this);
+			warm(this._ambientShader, "normal");
+		}
+	}
+
+	/**
 	 * Warm the renderable's own draw: a mesh through its mesh family, and
 	 * everything else that draws a texture through the quad family, each with
-	 * the renderable's blend mode. Containers draw nothing of their own, and
-	 * a camera is a chain, warmed with its effects.
+	 * the renderable's blend mode, and a light through the renderer's light
+	 * effects. Containers draw nothing of their own, and a camera is a chain,
+	 * warmed with its effects.
 	 * @param {Renderable} renderable - the renderable to warm for
 	 * @override
 	 * @ignore
@@ -1620,6 +1661,10 @@ export default class WebGPURenderer extends Renderer {
 			return;
 		}
 		const scene = this._sceneTargets();
+		if (renderable instanceof Light2d) {
+			this._warmLight(renderable, scene);
+			return;
+		}
 		if (this._hostsMeshEffect(renderable)) {
 			const batcher = this._meshBatcherFor(renderable);
 			if (batcher?.shaderKey !== undefined) {
