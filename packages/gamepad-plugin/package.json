@@ -42,6 +42,7 @@
 	"sideEffects": false,
 	"files": [
 		"build/",
+		"gamepad.png",
 		"package.json",
 		"README.md",
 		"LICENSE",

@@ -1,6 +1,12 @@
-# @melonjs/gamepad-plugin
+# melonJS Gamepad Plugin
+![melonJS Logo](https://github.com/melonjs/melonJS/raw/master/media/Banner/Banner%20-%20Billboard%20-%20Original%20Logo%20-%20horizontal.png)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/melonjs/melonJS/blob/master/LICENSE)
+[![NPM Package](https://img.shields.io/npm/v/@melonjs/gamepad-plugin)](https://www.npmjs.com/package/@melonjs/gamepad-plugin)
 
 On-screen touch controls for [melonJS](https://melonjs.org/) games, reported as a gamepad.
+
+![the virtual gamepad: a stick on the left, held and leaning, and four buttons on the right, A pressed](gamepad.png)
 
 The sticks and buttons are drawn over the game and read by the engine as a pad in a gamepad slot, so everything a game binds with `input.bindGamepad` answers to them. One set of bindings covers a real pad and the touch controls.
 
